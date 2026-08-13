@@ -35,6 +35,7 @@ import {
   selectRecentChatTasks,
   formatRecentTasksBlock,
   type ChatContext,
+  normalizeWebReadUrl,
   type RecentTaskTruth,
 } from "./chat-context";
 import {
@@ -1947,7 +1948,25 @@ export async function buildChatAssembly(
           "网页正文读取能力当前未接入(服务端未装配带登录态浏览器) —— 暂时无法读取。",
         );
       }
-      return deps.readWebUrlPort(ctx, { url, signal });
+      const modelUrl = normalizeWebReadUrl(url);
+      const boundUrl = chatContext.webReadUrl
+        ? normalizeWebReadUrl(chatContext.webReadUrl)
+        : null;
+      // [T-813] 搜索卡点击锚在浏览器端口前生效。模型即使提交另一 URL，也只能读绑定来源。
+      const targetUrl = boundUrl ?? modelUrl;
+      if (!targetUrl) {
+        throw new Error("要读取的网页地址无效，请重新选择来源。");
+      }
+      const result = await deps.readWebUrlPort(ctx, { url: targetUrl, signal });
+      if (
+        boundUrl &&
+        "needLogin" in result &&
+        result.needLogin === false &&
+        normalizeWebReadUrl(result.sourceUrl) !== boundUrl
+      ) {
+        throw new Error("网页读取结果与所选来源不一致，已停止保存。");
+      }
+      return result;
     },
     // [T-253] local.read:端口未装配 → 诚实抛错(工具 execute 接住转 error);装配了则端口内
     // 走「授权表 → 敏感硬门 → 大小/二进制门 → 读文件/列目录」全链(四态返回,不在这里拆)。

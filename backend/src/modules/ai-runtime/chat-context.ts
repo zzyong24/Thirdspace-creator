@@ -38,6 +38,8 @@ export interface ChatContext {
   surface: string;
   /** 按钮层 —— 在基础 skill 上叠加专用工具白名单(本切片留口子)。 */
   functionKey?: string;
+  /** [T-813] 搜索结果卡“阅读全文”的一次性 URL 锚；只在 functionKey=web.read 本轮生效。 */
+  webReadUrl?: string;
   /** 当前项目(数据层装配 项目相关 facets 用)。 */
   projectId?: string | null;
   /** 选中的候选/作品(T-027 selection-aware:注入 system + 工具入参兜底)。 */
@@ -49,6 +51,18 @@ export interface ChatContext {
    * 不进入模型提示词、不由客户端决定，也不得承载用户正文、附件或任何凭据。
    */
   diagnosticRef?: string;
+}
+
+/** [T-813] web.read 点击锚的唯一规范化规则；只允许 http(s)，去 fragment 防同页假分叉。 */
+export function normalizeWebReadUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
 
 // [T-134 / T-147 P4①] prompt-injection 加固:注进 system 的**用户可控内容**(逐字稿、观众评论、

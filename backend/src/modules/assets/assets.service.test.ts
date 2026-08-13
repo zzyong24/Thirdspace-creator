@@ -363,6 +363,34 @@ describe("assets.service — [T-219] pending 截图 → 确认门 commitPendingA
     expect(asset.status).toBe("active");
   });
 
+  it("网页正文 commit 校验真实全文、done 状态与 expectedSourceUrl", async () => {
+    const sourceUrl = "https://example.com/article";
+    const asset = await service.createGeneratedAsset(ctxA, {
+      assetType: "document",
+      name: "正文·Article",
+      bytes: new TextEncoder().encode("正文首段\n正文末段"),
+      mimeType: "text/plain",
+      pending: true,
+    });
+    await service.mergeAiAnnotation(ctxA, asset.id, { sourceUrl });
+    await service.updateFileExtraction(ctxA, asset.id, {
+      extractedText: "正文首段\n正文末段",
+      extractStatus: "done",
+    });
+    await expect(
+      service.commitPendingAsset(ctxA, asset.id, "https://example.com/other"),
+    ).rejects.toBeInstanceOf(UploadValidationError);
+    await expect(service.commitPendingAsset(ctxA, asset.id, sourceUrl)).resolves.toMatchObject({
+      id: asset.id,
+      status: "active",
+    });
+    // 第一步响应丢失或项目关联失败后重试：同一正文不重抓，active 仍幂等返回。
+    await expect(service.commitPendingAsset(ctxA, asset.id, sourceUrl)).resolves.toMatchObject({
+      id: asset.id,
+      status: "active",
+    });
+  });
+
   it("commitPendingAsset 越权 / 不存在 → OwnershipError(404)", async () => {
     const asset = await service.createGeneratedAsset(ctxA, {
       assetType: "image",

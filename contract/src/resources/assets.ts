@@ -37,6 +37,8 @@ export const assetResource = z.object({
   extractStatus: z.string().nullable(),
   materialSummary: z.record(z.string(), z.unknown()).nullable(),
   extractedText: z.string().nullable(),
+  // [T-813] 当前文件 mediaMetadata.sourceUrl 的只读投影；网页正文详情据此显示真实来源。
+  sourceUrl: z.string().nullable(),
   deletedAt: iso8601.nullable(),
   ...timestamps,
 });

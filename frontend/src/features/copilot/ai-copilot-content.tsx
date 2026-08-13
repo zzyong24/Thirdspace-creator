@@ -978,6 +978,9 @@ export function AICopilotContent({
   // **读后即清**(一次性)—— 不污染后续自由对话轮次。放 ref 不放 state:body 是
   // Resolvable(每次请求求值),ref 更新不重建 transport(重建会打断进行中的流)。
   const quickFunctionKeyRef = React.useRef<string | null>(null);
+  // [T-813] 搜索卡「阅读全文」的一次性执行锚。和 functionKey 同轮消费，服务端在浏览器
+  // 抓取前把 web.read 绑定到这个 URL，模型不能换成另一条搜索结果。
+  const quickWebReadUrlRef = React.useRef<string | null>(null);
   // 附件只把素材 id 放进本轮 transport body。字节由服务端按当前用户/账号重新验属主后临时读取，
   // 不进对话 JSON、URL、localStorage 或日志。ref 持有“正在发出的这一轮”，避免 picker 清空后丢失。
   const requestAttachmentIdsRef = React.useRef<string[]>([]);
@@ -1010,6 +1013,9 @@ export function AICopilotContent({
           quickFunctionKeyRef.current = null;
           const requestedFn =
             quickFn ?? entryFunctionKeyRef.current?.consume() ?? null;
+          const webReadUrl =
+            requestedFn === "web.read" ? quickWebReadUrlRef.current : null;
+          quickWebReadUrlRef.current = null;
           const latestChatContext = chatContextBodyRef.current.chatContext;
           const chatContext = requestedFn
             ? { ...latestChatContext, functionKey: requestedFn }
@@ -1017,6 +1023,7 @@ export function AICopilotContent({
           return {
             chatContext: {
               ...chatContext,
+              ...(webReadUrl ? { webReadUrl } : {}),
               ...(Object.keys(assetAliasRegistryRef.current.aliases).length
                 ? { assetAliases: assetAliasRegistryRef.current.aliases }
                 : {}),
@@ -2532,6 +2539,13 @@ export function AICopilotContent({
                           items={o.items ?? []}
                           projectId={activeProjectChip?.id ?? null}
                           grounding={o.grounding ?? "unavailable"}
+                          reading={streaming}
+                          onRead={(url) => {
+                            if (streaming) return;
+                            quickFunctionKeyRef.current = "web.read";
+                            quickWebReadUrlRef.current = url;
+                            void sendMessage({ text: `请阅读全文：${url}` });
+                          }}
                         />
                       );
                     }
@@ -2560,6 +2574,8 @@ export function AICopilotContent({
                         asset?: ChatWebReadAsset | null;
                         needLogin?: { domain: string } | null;
                         error?: string | null;
+                        window?: { offset: number; length: number; total: number } | null;
+                        hasMore?: boolean;
                       };
                       return (
                         <ChatWebReadCard
@@ -2568,6 +2584,8 @@ export function AICopilotContent({
                           needLogin={o.needLogin ?? null}
                           error={o.error ?? null}
                           projectId={activeProjectChip?.id ?? null}
+                          window={o.window ?? null}
+                          hasMore={o.hasMore ?? false}
                         />
                       );
                     }

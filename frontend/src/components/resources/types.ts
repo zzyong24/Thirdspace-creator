@@ -32,6 +32,7 @@ export interface ResourceAsset {
     readonly sellingPoints?: ReadonlyArray<string>;
   } | null;
   readonly extractedText?: string | null;
+  readonly sourceUrl?: string | null;
 }
 
 export interface ResourceAssetUsage {

@@ -145,6 +145,8 @@ export function MaterialSummaryModal({
   summary,
   fullText,
   previewUrl,
+  sourceUrl,
+  extractStatus,
 }: {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -153,6 +155,10 @@ export function MaterialSummaryModal({
   readonly fullText?: string | null;
   /** 图片素材签名预览 URL(块1 同款);非图片 / 取不到 → 不渲图。 */
   readonly previewUrl?: string | null;
+  /** 网页正文来源；只读自 asset current file 的 sourceUrl 投影。 */
+  readonly sourceUrl?: string | null;
+  /** 当前文件的真实提取状态；项目素材与素材中心共用同一投影。 */
+  readonly extractStatus?: string | null;
 }) {
   const hasCard = materialSummaryHasCard(summary);
   const text = fullText ?? "";
@@ -170,6 +176,22 @@ export function MaterialSummaryModal({
           </DialogDescription>
         </DialogHeader>
         <div className="flex max-h-[65vh] flex-col gap-3 overflow-auto pr-1">
+          {extractStatus ? (
+            <p data-slot="material-modal-extract-status" className="text-[11px] text-text-subtle">
+              提取状态：{extractStatus === "done" ? "已提取全文" : extractStatus}
+            </p>
+          ) : null}
+          {sourceUrl ? (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              data-slot="material-modal-source"
+              className="break-all text-[11px] text-brand underline underline-offset-2"
+            >
+              来源：{sourceUrl}
+            </a>
+          ) : null}
           {previewUrl ? (
             <ModalImage key={previewUrl} src={previewUrl} alt={title} />
           ) : null}

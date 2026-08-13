@@ -76,6 +76,16 @@ vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
         : ["chatbox.topic"],
   runChatStream: (...args: unknown[]) => runChatStream(...args),
   formatErrorDiagnostic: () => "class=Error reason=unknown",
+  normalizeWebReadUrl: (value: string) => {
+    try {
+      const url = new URL(value.trim());
+      if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+      url.hash = "";
+      return url.toString();
+    } catch {
+      return null;
+    }
+  },
 }));
 
 vi.mock("@creatoros/ai-worker", () => ({
@@ -329,6 +339,51 @@ describe("POST /api/chat — 鉴权门", () => {
 });
 
 describe("POST /api/chat — 装配 + 持久化", () => {
+  it("[T-813] 全文阅读动作规范化并绑定用户点击的 URL", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请阅读全文：https://example.com/article#part")],
+          chatContext: {
+            surface: "topics",
+            functionKey: "web.read",
+            webReadUrl: "https://example.com/article#part",
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const [, input] = runChatStream.mock.calls[0];
+    expect(input.chatContext).toMatchObject({
+      functionKey: "web.read",
+      webReadUrl: "https://example.com/article",
+    });
+  });
+
+  it("[T-813] 非 http(s) 阅读地址在进入模型与浏览器前拒绝", async () => {
+    const res = await POST(
+      chatReq(
+        {
+          messages: [userMessage("请阅读全文")],
+          chatContext: {
+            surface: "topics",
+            functionKey: "web.read",
+            webReadUrl: "javascript:alert(1)",
+          },
+        },
+        "creatoros_session=tok",
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({
+      code: "WEB_READ_URL_INVALID",
+    });
+    expect(runChatStream).not.toHaveBeenCalled();
+  });
+
   it("[T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch", async () => {
     resolveCurrentScriptSelection.mockResolvedValueOnce({
       artifactId: "artifact-script",

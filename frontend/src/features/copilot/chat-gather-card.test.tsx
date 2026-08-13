@@ -8,30 +8,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 //   - 带 sourceUrl 的条目 → 可点域名链接(新窗打开真实来源)。
 //   - 无 sourceUrl 的条目 → 「需核实」徽标(非查证过的真信源)。
 //   - grounding=web → 不显黄条,头部文案「联网找到资料」。
-// [T-264] 批量入库门:每条可勾选,「保存选中 N 条」一次 persist + 一次 refresh。
-
-const createKnowledge = vi.fn();
-const createMaterialLink = vi.fn();
-const routerRefresh = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: routerRefresh, push: vi.fn(), replace: vi.fn() }),
-}));
-vi.mock("@/lib/contract-client", () => ({
-  client: {
-    createKnowledge: (...a: unknown[]) => createKnowledge(...a),
-    createMaterialLink: (...a: unknown[]) => createMaterialLink(...a),
-  },
-}));
+// [T-813] 搜索结果只是线索：只能阅读全文，读成功后才由 web.read 卡保存。
 
 import { ChatGatherCard } from "./chat-gather-card";
 
 afterEach(() => cleanup());
 beforeEach(() => {
-  createKnowledge.mockReset();
-  createKnowledge.mockResolvedValue({ id: "k-1" });
-  createMaterialLink.mockReset();
-  createMaterialLink.mockResolvedValue({ id: "ml-1" });
-  routerRefresh.mockReset();
+  vi.clearAllMocks();
 });
 
 const WEB_ITEM = {
@@ -97,50 +80,61 @@ describe("ChatGatherCard — T-084a/T-684 诚实失败", () => {
   });
 });
 
-describe("ChatGatherCard — T-264 批量入库", () => {
-  it("有项目 + ≥2 条 → 渲批量门;「保存选中 N 条」逐条 persist 但只 refresh 一次", async () => {
-    const user = userEvent.setup();
+describe("ChatGatherCard — T-813 先读后存", () => {
+  it("真实 URL 只显示阅读全文，不显示单条/批量保存", () => {
     render(
       <ChatGatherCard
         items={[WEB_ITEM, { ...WEB_ITEM, title: "第二条素材" }]}
         projectId="p-1"
         grounding="web"
+        onRead={vi.fn()}
       />,
     );
-    await user.click(screen.getByText("保存选中 2 条"));
-    // 两条各 create 一次 knowledge + 一次 materialLink。
-    await vi.waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(2));
-    expect(createMaterialLink).toHaveBeenCalledTimes(2);
-    // 关键:批量只刷新一次(而非逐条 N 次)。
-    expect(routerRefresh).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByRole("button", { name: "阅读全文" })).toHaveLength(2);
+    expect(screen.queryByText(/保存到项目/)).toBeNull();
+    expect(screen.queryByText(/保存选中/)).toBeNull();
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
   });
 
-  it("取消勾选一条 → 批量按钮条数跟着变,未选中的不入库", async () => {
+  it("点击阅读全文把该卡精确 URL 交给对话层", async () => {
     const user = userEvent.setup();
+    const onRead = vi.fn();
     render(
       <ChatGatherCard
-        items={[WEB_ITEM, { ...WEB_ITEM, title: "第二条素材" }]}
+        items={[WEB_ITEM]}
         projectId="p-1"
         grounding="web"
+        onRead={onRead}
       />,
     );
-    const checkboxes = screen.getAllByRole("checkbox");
-    await user.click(checkboxes[0]); // 取消第 1 条
-    await user.click(screen.getByText("保存选中 1 条"));
-    await vi.waitFor(() => expect(createKnowledge).toHaveBeenCalledTimes(1));
-    expect(createKnowledge.mock.calls[0][0].body.title).toBe("第二条素材");
+    await user.click(screen.getByRole("button", { name: "阅读全文" }));
+    expect(onRead).toHaveBeenCalledTimes(1);
+    expect(onRead).toHaveBeenCalledWith("https://blog.example.com/rag");
   });
 
-  it("无项目 → 不渲批量门(存不进弹药)", () => {
+  it("无真实 URL 的线索只显示需核实，不出现阅读全文", () => {
     render(
       <ChatGatherCard
-        items={[WEB_ITEM, { ...WEB_ITEM, title: "第二条素材" }]}
+        items={[MEMORY_ITEM]}
+        projectId="p-1"
+        grounding="unavailable"
+        onRead={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("需核实")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "阅读全文" })).toBeNull();
+  });
+
+  it("对话正在生成时禁用阅读全文", () => {
+    render(
+      <ChatGatherCard
+        items={[WEB_ITEM]}
         projectId={null}
         grounding="web"
+        onRead={vi.fn()}
+        reading
       />,
     );
-    expect(
-      document.querySelector('[data-slot="chat-gather-batch"]'),
-    ).toBeNull();
+    expect(screen.getByRole("button", { name: "阅读中…" })).toBeDisabled();
   });
 });

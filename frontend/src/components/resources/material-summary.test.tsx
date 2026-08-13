@@ -75,8 +75,10 @@ describe("MaterialSummaryModal — 查看全文弹层", () => {
           onOpenChange={setOpen}
           title="产品资料.pdf"
           summary={{ keyPoints: FIVE_POINTS }}
-          fullText="这是抽取的全文内容。"
+          fullText="正文首段。\n正文中段。\n正文末段。"
           previewUrl={url ?? null}
+          sourceUrl="https://example.com/source"
+          extractStatus="done"
         />
       </div>
     );
@@ -84,7 +86,7 @@ describe("MaterialSummaryModal — 查看全文弹层", () => {
 
   it("闭合时不渲染内容;打开后显完整要点(Modal 内 limit=∞ 全展开)+ 全文", () => {
     render(<Harness />);
-    expect(screen.queryByText("这是抽取的全文内容。")).toBeNull();
+    expect(screen.queryByText(/正文首段/)).toBeNull();
     fireEvent.click(screen.getByText("开"));
     const modal = document.querySelector(
       '[data-slot="material-summary-modal"]',
@@ -94,7 +96,14 @@ describe("MaterialSummaryModal — 查看全文弹层", () => {
     expect(screen.getByText("点5")).toBeTruthy();
     expect(screen.queryByText(/展开全部/)).toBeNull();
     // 全文渲染。
-    expect(screen.getByText("这是抽取的全文内容。")).toBeTruthy();
+    expect(
+      screen.getByText(/正文首段。[\s\S]*正文中段。[\s\S]*正文末段。/),
+    ).toBeTruthy();
+    expect(screen.getByText("提取状态：已提取全文")).toBeTruthy();
+    const source = document.querySelector(
+      '[data-slot="material-modal-source"]',
+    ) as HTMLAnchorElement | null;
+    expect(source?.href).toBe("https://example.com/source");
   });
 
   it("图片 previewUrl → Modal 顶部渲真图(块1 同款签名 URL)", () => {

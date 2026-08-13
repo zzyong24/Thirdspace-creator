@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, isNull, type Db } from "@creatoros/backend";
 import { materialLinks } from "./material-links.db-schema";
 import { OwnershipError } from "./material-links.errors";
 
@@ -80,6 +80,28 @@ export function createMaterialLinkRepository(
     },
 
     async create(input) {
+      // [T-813] 保存重试幂等：响应丢失/刷新后再次保存同一项目素材时返回既有边，
+      // 不让一份正文在长期上下文里重复出现。
+      const role = input.role ?? "reference";
+      const stage = input.stage ?? "research";
+      const existing = await db
+        .select()
+        .from(materialLinks)
+        .where(
+          and(
+            eq(materialLinks.userId, deps.userId),
+            eq(materialLinks.projectId, input.projectId),
+            input.contentOutputId
+              ? eq(materialLinks.contentOutputId, input.contentOutputId)
+              : isNull(materialLinks.contentOutputId),
+            eq(materialLinks.entityType, input.entityType),
+            eq(materialLinks.entityId, input.entityId),
+            eq(materialLinks.role, role),
+            eq(materialLinks.stage, stage),
+          ),
+        )
+        .limit(1);
+      if (existing[0]) return existing[0];
       const inserted = await db
         .insert(materialLinks)
         .values({
@@ -89,8 +111,8 @@ export function createMaterialLinkRepository(
           contentOutputId: input.contentOutputId ?? null,
           entityType: input.entityType,
           entityId: input.entityId,
-          role: input.role ?? "reference",
-          stage: input.stage ?? "research",
+          role,
+          stage,
           addedByType: input.addedByType ?? "user",
           priority: input.priority ?? "normal",
           createdAt: deps.now(),

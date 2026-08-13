@@ -2883,6 +2883,74 @@ describe("[T-239c] 长工具 signal 透传(material.screenshot / web.read)", () 
   });
 });
 
+describe("[T-813] 搜索卡选择的网页地址在浏览器调用前硬绑定", () => {
+  it("模型提交另一地址时，端口仍只读取用户点击的来源", async () => {
+    const readWebUrlPort = vi.fn(
+      async (_ctx: unknown, input: { url: string; signal?: AbortSignal }) => ({
+        needLogin: false as const,
+        assetId: "asset-read-1",
+        name: "所选网页正文",
+        previewUrl: null,
+        sourceUrl: input.url,
+        title: "所选网页正文",
+        excerpt: "真实正文",
+        extractor: "article",
+        fullText: "真实正文全文",
+      }),
+    );
+    const { deps } = makeDeps({ readWebUrlPort });
+    const assembly = await buildChatAssembly(
+      ctx,
+      {
+        surface: "topics",
+        functionKey: "web.read",
+        webReadUrl: "https://example.com/chosen#section",
+      },
+      deps,
+    );
+
+    const result = (await runToolExecute(assembly.tools["web.read"]!, {
+      url: "https://evil.example/changed",
+    })) as { error: string | null };
+
+    expect(readWebUrlPort).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({ url: "https://example.com/chosen" }),
+    );
+    expect(result.error).toBeNull();
+  });
+
+  it("端口返回的来源与绑定地址不一致时拒绝结果", async () => {
+    const readWebUrlPort = vi.fn(async () => ({
+      needLogin: false as const,
+      assetId: "asset-wrong",
+      name: "错误来源",
+      previewUrl: null,
+      sourceUrl: "https://evil.example/changed",
+      title: "错误来源",
+      excerpt: "不应进入上下文",
+      extractor: "article",
+      fullText: "不应进入上下文",
+    }));
+    const { deps } = makeDeps({ readWebUrlPort });
+    const assembly = await buildChatAssembly(
+      ctx,
+      {
+        surface: "topics",
+        functionKey: "web.read",
+        webReadUrl: "https://example.com/chosen",
+      },
+      deps,
+    );
+
+    const result = (await runToolExecute(assembly.tools["web.read"]!, {
+      url: "https://example.com/chosen",
+    })) as { error: string | null };
+
+    expect(result.error).toContain("与所选来源不一致");
+  });
+});
+
 // [T-256a] 环境感知能力认知接线 —— honesty 第 13 条(编导知道能探测本机工具 + 列已授权工作区目录,
 // 缺工具诚实引导安装、绝不假装工具存在/编造版本/臆造未授权目录;只读不装不跑命令)。
 describe("[T-256a] 环境感知能力认知 — honesty 第 13 条", () => {

@@ -287,6 +287,66 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
+  it("[T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定", async () => {
+    const user = userEvent.setup();
+    mockMessages = [
+      {
+        id: "a-web-gather",
+        role: "assistant",
+        parts: [
+          {
+            type: "tool-material.gather",
+            toolCallId: "tc-web-gather",
+            state: "output-available",
+            input: { query: "DeepSeek Harness" },
+            output: {
+              kind: "material.gather",
+              grounding: "web",
+              items: [
+                {
+                  title: "DeepSeek Harness 开发者预览版",
+                  url: "https://example.com/harness#intro",
+                  sourceUrl: "https://example.com/harness#intro",
+                  source: "example.com",
+                  whyRelevant: "介绍插件式 Harness",
+                  category: "产品资料",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+
+    await user.click(screen.getByRole("button", { name: "阅读全文" }));
+    expect(sendMessage).toHaveBeenCalledWith({
+      text: "请阅读全文：https://example.com/harness#intro",
+    });
+
+    const resolver = initialChatTransport?.body;
+    expect(typeof resolver).toBe("function");
+    const firstBody = await (
+      resolver as () => Promise<Record<string, unknown>> | Record<string, unknown>
+    )();
+    expect(firstBody).toMatchObject({
+      chatContext: {
+        functionKey: "web.read",
+        webReadUrl: "https://example.com/harness#intro",
+      },
+    });
+
+    const nextBody = await (
+      resolver as () => Promise<Record<string, unknown>> | Record<string, unknown>
+    )();
+    expect(nextBody).not.toMatchObject({
+      chatContext: { functionKey: "web.read" },
+    });
+    expect(nextBody).not.toMatchObject({
+      chatContext: { webReadUrl: expect.any(String) },
+    });
+  });
+
   it("slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)", () => {
     mockMessages = [
       {

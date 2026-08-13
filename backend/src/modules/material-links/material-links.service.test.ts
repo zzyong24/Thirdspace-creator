@@ -57,6 +57,27 @@ describe("material-links service", () => {
     expect(listed.rows[0]?.id).toBe(link.id);
   });
 
+  it("同一项目/实体/角色/阶段重复保存返回同一条 link", async () => {
+    const first = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "asset-web-1",
+      role: "reference",
+      stage: "script",
+      addedByType: "ai",
+    });
+    const retry = await svc.create(ctxA, {
+      projectId: "proj-1",
+      entityType: "asset",
+      entityId: "asset-web-1",
+      role: "reference",
+      stage: "script",
+      addedByType: "ai",
+    });
+    expect(retry.id).toBe(first.id);
+    expect((await svc.list(ctxA, { projectId: "proj-1", page: 1, pageSize: 100 })).total).toBe(1);
+  });
+
   // [T-146 切片 b] priority 自动派生(用户裁决②:二元自动,用户上传 = 最高)。规则在
   // SERVICE 层(本仓枚举一律 service 校验,不加 DB CHECK):addedByType='user'(含默认)→ high;
   // addedByType='ai'(AI 找的二手素材)→ normal。显式传 priority 覆盖派生(逃生口)。

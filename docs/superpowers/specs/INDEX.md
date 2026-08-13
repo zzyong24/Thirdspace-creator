@@ -33,6 +33,7 @@
 | 文件 | 摘要 | 状态 |
 |---|---|---|
 | [2026-06-21-ai-orchestration-agent-sdk-design.md](2026-06-21-ai-orchestration-agent-sdk-design.md) | 用 Claude Agent SDK 建统一可审计的 AI 执行层(候选-确认边界) | — |
+| [2026-08-13-web-material-read-save-context.md](2026-08-13-web-material-read-save-context.md) | T-813 将联网搜索线索、网页全文阅读、对话临时上下文、项目长期素材与全文预览收成一条真实链 | 📋 待独立评审 |
 | [2026-06-23-configurable-llm-design.md](2026-06-23-configurable-llm-design.md) | 纯 prompt 节点走供应商无关的可配置 LLM 薄抽象层(不写死 Agent SDK) | — |
 | [2026-07-01-multimodal-model-config-and-recording-design.md](2026-07-01-multimodal-model-config-and-recording-design.md) | 多模态生图/生视频 model-config 抽象 + L5 录制阶段(T-020) | ⚠️ 已处置→可开工 |
 | [2026-07-02-server-configurable-prompts-design.md](2026-07-02-server-configurable-prompts-design.md) | 提示词/skill 服务端可配可热更(接线既有 override 通道,T-040) | v1 ⛔→v2 ⚠️ 已处置→可开工 |

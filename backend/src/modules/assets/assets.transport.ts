@@ -68,10 +68,18 @@ function toAssetResource(row: AssetRow, file: AssetFileRow | null): AssetResourc
     extractStatus: file?.extractStatus ?? null,
     materialSummary: extractMaterialSummary(file),
     extractedText: file?.extractedText ?? null,
+    sourceUrl: extractSourceUrl(file),
     deletedAt: row.deletedAt ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
+}
+
+function extractSourceUrl(file: AssetFileRow | null): string | null {
+  const meta = (file?.mediaMetadata ?? null) as Record<string, unknown> | null;
+  return typeof meta?.sourceUrl === "string" && meta.sourceUrl.trim()
+    ? meta.sourceUrl.trim()
+    : null;
 }
 
 // [T-146 切片 a] 从 current file 的 mediaMetadata 取「资料要点卡」。存在且为对象 → 原样透传
@@ -237,7 +245,12 @@ export function createAssetsTransport(
         }
         case "assets.commit": {
           // [T-219] 确认门:pending → active + stamp 当前号,返回更新后 asset(进素材库)。
-          const row = await service.commitPendingAsset(ctx, p.assetId ?? "");
+          const b = (input.body ?? {}) as { expectedSourceUrl?: string };
+          const row = await service.commitPendingAsset(
+            ctx,
+            p.assetId ?? "",
+            b.expectedSourceUrl,
+          );
           return {
             data: await withFile(row),
             meta: { requestId: ctx.requestId },

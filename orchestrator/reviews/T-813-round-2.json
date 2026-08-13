@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "Round 2 增量复审确认 REV-001..003 均已由本轮修订行闭环，修订未引入新的合法 finding。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-813-02",
+        "quote": "使用该卡显示的确切 URL"
+      },
+      "acceptance_anchor": {
+        "id": "AC-813-01",
+        "quote": "点击某条后，当前会话发起一次 web.read，消息 URL 与所点来源一致"
+      },
+      "where": "§4.1 搜索结果卡第 2—4 步",
+      "failure_mode": "点击来源 A 后，前端只把 A 放进模型可见消息并固定工具名称；模型仍可用来源 B 调用 web.read。当前确定性相等校验发生在工具结果返回后，此时 B 已经被抓取并可能进入对话。系统随后虽然可把结果标为失败，却没有完成用户对 A 的阅读全文动作。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-13-web-material-read-save-context.md#41-搜索结果卡",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定外部抓取发生前必须由确定性服务端约束把本次点击的规范化 URL 与 web.read 实际参数绑定；不一致时应在发起请求前终止，不能只依赖结果返回后的比较。",
+      "resolution_evidence": "SPEC-LINE:58:98526d7ad1ccf493 与 SPEC-LINE:59:0f90c89099a5870e 将所点 URL 作为一次性 chatContext.webReadUrl 交给服务端，并要求 web.read 在调用浏览器端口前使用 boundWebReadUrl；模型参数不一致时只能读取绑定 URL 或零抓取报错。SPEC-LINE:62:71b67cbaf8542cde 另规定端口返回后二次来源校验，AC-813-01 已由 SPEC-LINE:118:28b977d09e8bf3f8 同步约束。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-813-04",
+        "quote": "只有 web.read 成功并返回真实正文资产后，才显示“保存到项目”"
+      },
+      "acceptance_anchor": {
+        "id": "AC-813-04",
+        "quote": "点击“保存到项目”后同一 asset 变 active 且只有一条当前项目 material link"
+      },
+      "where": "§4.1 返回现有 web.read 结果卡、§4.2 保存动作、§6 保存失败恢复",
+      "failure_mode": "SPEC 要求保存和重试始终操作“同一 asset”，但没有规定 web.read 成功结果必须携带哪个稳定、服务端签发的 asset 身份，也没有把该身份绑定到保存操作输入。两个合理实现可能分别依赖 URL 反查或前端/模型暂存 ID；在同 URL 多缓存、刷新或响应丢失后可能激活错误资产、重新抓取或创建重复关联。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-13-web-material-read-save-context.md#42-阅读结果卡",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确 web.read 成功结果与保存操作之间的最小契约：返回稳定 assetId；保存时以该 ID 重新读取当前资产、文件、归属和状态；刷新及重试仍解析到同一资产，不能用 URL、标题或模型记忆重新猜测。",
+      "resolution_evidence": "SPEC-LINE:73:86036e143fc63627 要求成功结果持久化服务端签发的稳定 asset.id，刷新与重试只使用该 ID，禁止按 URL、标题、模型记忆或列表顺序反查。SPEC-LINE:77:0b85780d8ccb6eb0 要求 assets.commit 按该 ID 和当前 RequestContext 重读资产、当前文件、归属及状态并校验来源；SPEC-LINE:121:32392acda333d9db 将同一身份与幂等、不重抓及唯一项目关联写入 AC-813-04。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-813-06",
+        "quote": "显示全文、来源 URL 和提取状态"
+      },
+      "acceptance_anchor": {
+        "id": "AC-813-05",
+        "quote": "保存后在素材中心和项目素材详情均能查看真实全文与来源"
+      },
+      "where": "§3.2 旧缓存补齐分支与 §4.3 预览来源规则",
+      "failure_mode": "旧缓存分支只明确补齐 extractedText，却未要求当前文件同时具有与本次读取一致的 mediaMetadata.sourceUrl；预览又规定来源只能读取该字段。因此旧缓存正文可以读取成功、变成可保存状态并通过全文断言，但保存后的两个详情页仍没有来源，直接使 AC-813-05 失败。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-13-web-material-read-save-context.md#32-正文唯一真值与投影",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定新抓取和旧缓存复用都必须在进入可保存状态前验证当前文件的 sourceUrl 与本次规范化 URL 一致；字段缺失时只能用本次确定性读取 URL 补齐，补齐失败则不得返回可保存状态。",
+      "resolution_evidence": "SPEC-LINE:45:07000957707a21ff 要求新抓取和旧缓存进入可保存状态前验证当前文件 sourceUrl 与本次规范化 URL 一致，写入或回读失败即不可保存。SPEC-LINE:46:4a59338e1c39b2a2 限定旧缓存缺失来源时只能用服务端绑定 URL 补齐，并对失败关闭可保存状态；SPEC-LINE:86:03d992616da13bbf 与 SPEC-LINE:120:24dcb9c6e294644c 分别固定预览来源投影和验收约束。",
+      "parent_id": ""
+    }
+  ]
+}

@@ -106,6 +106,8 @@ export function DocumentSummaryCard({ asset }: { asset: ResourceAsset }) {
         summary={summary}
         fullText={fullText}
         previewUrl={null}
+        sourceUrl={asset.sourceUrl ?? null}
+        extractStatus={asset.extractStatus ?? null}
       />
     </SectionCard>
   );

@@ -30,6 +30,7 @@ export const materialLinksOperations = {
       entityId: id,
       role: z.string().optional(),
       stage: z.string().optional(),
+      addedByType: z.enum(["user", "ai"]).optional(),
     }),
     response: materialLinkResource,
     fr: ["FR-MATERIAL-LINK-CREATE"],

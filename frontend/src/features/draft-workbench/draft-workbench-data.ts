@@ -125,6 +125,7 @@ interface AssetDto {
     readonly sellingPoints?: ReadonlyArray<string>;
   } | null;
   readonly extractedText?: string | null;
+  readonly sourceUrl?: string | null;
 }
 
 export interface DraftWorkbenchClient extends ScriptDataClient {
@@ -300,6 +301,7 @@ export interface DraftWorkbenchVm {
       readonly sellingPoints?: ReadonlyArray<string>;
     } | null;
     readonly extractedText?: string | null;
+    readonly sourceUrl?: string | null;
   }>;
   /**
    * [T-086] 稿面审核门首屏报告(scriptReviews.getLatest;null = 未审)。稿面客户端岛
@@ -473,6 +475,7 @@ async function readAmmo(
             extractStatus: a.extractStatus ?? null,
             materialSummary: a.materialSummary ?? null,
             extractedText: a.extractedText ?? null,
+            sourceUrl: a.sourceUrl ?? null,
           };
         } catch {
           return null;

@@ -5,14 +5,13 @@
  *
  * web.read 工具带 `.auth/web` 登录态读一个 URL 的正文全文 → 落 **pending** 逐字稿文本素材(带
  * sourceUrl 存证,素材库 list 按 active 过滤 → 未确认前不进库)。三态:
- *   ① asset 非 null → 读到正文,渲标题 + 正文摘要 + 来源 + 两级确认门(存入素材库 → 加入弹药),
- *      与 ChatScreenshotCard 同款(铁律②:AI 写入需人确认才进库);
+ *   ① asset 非 null → 读到正文,作为当前对话临时上下文；有项目时一键「保存到项目」
+ *      (commit pending asset → materialLink)，搜索线索本身没有保存入口；
  *   ② needLogin 非 null → 该站需先在保管库登录一次 → 渲引导条 +「去网站登录保管库」(跳设置);
  *   ③ error 非 null → 逐类诚实错误态(打不开 / HTTP 码 / 抽不出正文),不摆假正文。
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
 
@@ -39,39 +38,33 @@ export function ChatWebReadCard({
   needLogin,
   error,
   projectId,
+  window,
+  hasMore = false,
 }: {
   asset: ChatWebReadAsset | null;
   needLogin: { domain: string } | null;
   error: string | null;
   projectId: string | null;
+  window?: { offset: number; length: number; total: number } | null;
+  hasMore?: boolean;
 }) {
-  const router = useRouter();
   const [saveState, setSaveState] = React.useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-  const [linkState, setLinkState] = React.useState<
-    "idle" | "linking" | "linked" | "error"
+    "idle" | "saving" | "saved" | "commit-error" | "link-error"
   >("idle");
 
-  const commit = React.useCallback(async () => {
-    if (!asset) return;
+  const saveToProject = React.useCallback(async () => {
+    if (!asset || !projectId) return;
     setSaveState("saving");
     try {
       await client.commitPendingAsset({
         params: { assetId: asset.id },
         query: undefined,
-        body: undefined,
+        body: { expectedSourceUrl: asset.sourceUrl },
       });
-      setSaveState("saved");
-      router.refresh();
     } catch {
-      setSaveState("error");
+      setSaveState("commit-error");
+      return;
     }
-  }, [asset, router]);
-
-  const link = React.useCallback(async () => {
-    if (!asset || !projectId) return;
-    setLinkState("linking");
     try {
       await client.createMaterialLink({
         params: undefined,
@@ -82,14 +75,21 @@ export function ChatWebReadCard({
           entityId: asset.id,
           role: "reference",
           stage: "script",
+          addedByType: "ai",
         },
       });
-      setLinkState("linked");
-      router.refresh();
+      setSaveState("saved");
     } catch {
-      setLinkState("error");
+      setSaveState("link-error");
     }
-  }, [asset, projectId, router]);
+  }, [asset, projectId]);
+
+  const coverage = window
+    ? {
+        read: Math.min(window.total, window.offset + window.length),
+        total: window.total,
+      }
+    : null;
 
   // 需登录降级:不截登录页糊弄,引导去保管库登录一次。
   if (needLogin) {
@@ -140,7 +140,7 @@ export function ChatWebReadCard({
       className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        网页正文 · 逐字稿 · {saveState === "saved" ? "已存素材库" : "待确认存入"}
+        已阅读 · 当前对话临时上下文
       </span>
       <div
         className="min-w-0 truncate text-[12px] font-medium text-foreground"
@@ -155,6 +155,19 @@ export function ChatWebReadCard({
         {asset.excerpt}
         {asset.excerpt.length >= 280 ? "…" : ""}
       </p>
+      <p data-slot="chat-web-read-extractor" className="text-[10px] text-text-subtle">
+        提取方式：{asset.extractor}
+      </p>
+      {coverage ? (
+        <p data-slot="chat-web-read-coverage" className="text-[10px] text-text-subtle">
+          已读 {coverage.read.toLocaleString("zh-CN")} / 共 {coverage.total.toLocaleString("zh-CN")} 字
+          {hasMore && coverage.total > coverage.read
+            ? ` · 还有 ${(coverage.total - coverage.read).toLocaleString("zh-CN")} 字未读`
+            : " · 本页正文已读完"}
+        </p>
+      ) : (
+        <p className="text-[10px] text-text-subtle">已读取正文，当前来源未返回覆盖度。</p>
+      )}
       <div className="flex items-center justify-between gap-2">
         <a
           href={asset.sourceUrl}
@@ -167,50 +180,37 @@ export function ChatWebReadCard({
           🔗 {domainOf(asset.sourceUrl)}
         </a>
         {saveState === "saved" ? (
-          projectId ? (
-            linkState === "linked" ? (
-              <span className="shrink-0 text-[10px] font-medium text-success">
-                已进弹药
-              </span>
-            ) : (
-              <button
-                type="button"
-                data-slot="chat-web-read-link"
-                disabled={linkState === "linking"}
-                onClick={() => void link()}
-                className="inline-flex h-6 shrink-0 items-center rounded-control border border-brand/40 px-2 text-[10px] font-medium text-brand hover:bg-brand-soft disabled:opacity-50"
-              >
-                {linkState === "linking"
-                  ? "加入中…"
-                  : linkState === "error"
-                    ? "重试"
-                    : "加入弹药"}
-              </button>
-            )
-          ) : (
-            <span className="shrink-0 text-[10px] font-medium text-success">
-              已存素材库
-            </span>
-          )
-        ) : (
+          <span className="shrink-0 text-[10px] font-medium text-success">
+            已保存到项目
+          </span>
+        ) : projectId ? (
           <button
             type="button"
             data-slot="chat-web-read-save"
             disabled={saveState === "saving"}
-            onClick={() => void commit()}
+            onClick={() => void saveToProject()}
             className="inline-flex h-6 shrink-0 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
           >
             {saveState === "saving"
-              ? "存入中…"
-              : saveState === "error"
-                ? "重试"
-                : "存入素材库"}
+              ? "保存中…"
+              : saveState === "idle"
+                ? "保存到项目"
+                : "重试保存"}
           </button>
-        )}
+        ) : null}
       </div>
-      {saveState === "saved" && !projectId ? (
+      {saveState === "link-error" ? (
+        <p role="alert" className="text-[11px] text-destructive">
+          素材已入库，项目关联失败；请重试保存，正文不会重新抓取。
+        </p>
+      ) : saveState === "commit-error" ? (
+        <p role="alert" className="text-[11px] text-destructive">
+          正文确认入库失败；请重试，系统会继续使用同一份已读素材。
+        </p>
+      ) : null}
+      {!projectId ? (
         <p className="text-[11px] text-text-subtle">
-          已进素材库 —— 输入 @ 引用一个项目后可把这段正文加进它的弹药。
+          已进入当前对话临时上下文。请先 @ 引用当前项目，再保存这份正文。
         </p>
       ) : null}
     </div>

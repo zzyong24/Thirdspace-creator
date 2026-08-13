@@ -13,6 +13,7 @@ import {
   formatErrorDiagnostic,
   type ChatContext,
   type VerbatimSource,
+  normalizeWebReadUrl,
 } from "@creatoros/backend/modules/ai-runtime";
 import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import { readSessionCookie } from "../v1/auth/_session";
@@ -365,12 +366,28 @@ export async function POST(req: Request): Promise<Response> {
   // 每轮生成一个不含业务/用户信息的短参考号。流式错误经 AI SDK 异步抵达，HTTP 状态已无法
   // 改写；参考号同时进入安全日志和用户提示，才能把“请重试”与真实根因对应起来。
   const diagnosticRef = `chat-${randomUUID().replaceAll("-", "").slice(0, 10)}`;
+  const requestedWebReadUrl =
+    body.chatContext?.functionKey === "web.read" &&
+    typeof body.chatContext?.webReadUrl === "string"
+      ? normalizeWebReadUrl(body.chatContext.webReadUrl)
+      : undefined;
+  if (
+    body.chatContext?.functionKey === "web.read" &&
+    body.chatContext?.webReadUrl !== undefined &&
+    !requestedWebReadUrl
+  ) {
+    return NextResponse.json(
+      { error: "要阅读的网页地址无效，请重新点击来源卡片。", code: "WEB_READ_URL_INVALID" },
+      { status: 400 },
+    );
+  }
   const chatContext: ChatContext = {
     surface:
       typeof body.chatContext?.surface === "string"
         ? body.chatContext.surface
         : "topics",
     functionKey: body.chatContext?.functionKey,
+    ...(requestedWebReadUrl ? { webReadUrl: requestedWebReadUrl } : {}),
     projectId: body.chatContext?.projectId ?? null,
     selection: body.chatContext?.selection,
     assetAliases,

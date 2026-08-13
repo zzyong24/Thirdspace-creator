@@ -97,6 +97,8 @@ export function AmmoCardList({ ammo }: { ammo: DraftWorkbenchVm["ammo"] }) {
         summary={previewItem?.materialSummary ?? null}
         fullText={previewItem?.extractedText ?? null}
         previewUrl={previewItem?.previewUrl ?? null}
+        sourceUrl={previewItem?.sourceUrl ?? null}
+        extractStatus={previewItem?.extractStatus ?? null}
       />
     </>
   );

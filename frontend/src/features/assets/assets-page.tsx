@@ -161,6 +161,7 @@ export interface AssetSummary {
     readonly sellingPoints?: ReadonlyArray<string>;
   } | null;
   readonly extractedText?: string | null;
+  readonly sourceUrl?: string | null;
 }
 
 export interface AssetTypeCount {

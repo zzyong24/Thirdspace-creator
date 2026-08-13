@@ -90,6 +90,7 @@ export interface AssetListRow {
     readonly sellingPoints?: ReadonlyArray<string>;
   } | null;
   readonly extractedText?: string | null;
+  readonly sourceUrl?: string | null;
 }
 
 export function buildAssetSummariesFromResources(
@@ -126,6 +127,7 @@ export function buildAssetSummariesFromResources(
       extractStatus: asset.extractStatus ?? null,
       materialSummary: asset.materialSummary ?? null,
       extractedText: asset.extractedText ?? null,
+      sourceUrl: asset.sourceUrl ?? null,
     };
   });
 }

@@ -108,6 +108,7 @@ export const assetsOperations = {
     method: "POST",
     path: "/assets/:assetId/commit",
     params: assetParams,
+    body: z.object({ expectedSourceUrl: z.string().url().optional() }).optional(),
     response: assetResource,
     fr: ["FR-ASSETS-COMMIT"],
   }),

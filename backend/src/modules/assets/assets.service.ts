@@ -157,7 +157,11 @@ export interface AssetsService {
   ): Promise<AssetRow>;
   // [T-219] 确认门:把某 pending asset 翻 active 进素材库 + stamp 当前号(ctx.accountId)。
   //   非 pending / 越权 / 不存在 → OwnershipError(404)。铁律②:AI 只落 pending,人确认才进库。
-  commitPendingAsset(ctx: RequestContext, assetId: string): Promise<AssetRow>;
+  commitPendingAsset(
+    ctx: RequestContext,
+    assetId: string,
+    expectedSourceUrl?: string,
+  ): Promise<AssetRow>;
   addAssetFile(
     ctx: RequestContext,
     assetId: string,
@@ -322,13 +326,46 @@ export function createAssetsService(
   }
 
   return {
-    async commitPendingAsset(ctx, assetId) {
+    async commitPendingAsset(ctx, assetId, expectedSourceUrl) {
+      const accountId = requireAccountId(ctx.accountId, "assets.commitPendingAsset");
+      if (expectedSourceUrl !== undefined) {
+        const owned = await repo.getAsset(ctx.userId, assetId, accountId);
+        if (!owned || !owned.currentFileId || owned.assetType !== "document") {
+          throw new OwnershipError("Asset not found");
+        }
+        const [file] = await repo.listFilesByIds([owned.currentFileId]);
+        const metadata = (file?.mediaMetadata ?? {}) as Record<string, unknown>;
+        const actualSource =
+          typeof metadata.sourceUrl === "string" ? metadata.sourceUrl : "";
+        const normalizeSource = (value: string): string | null => {
+          try {
+            const parsed = new URL(value.trim());
+            if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+            parsed.hash = "";
+            return parsed.toString();
+          } catch {
+            return null;
+          }
+        };
+        if (
+          !file ||
+          file.mimeType !== "text/plain" ||
+          file.extractStatus !== "done" ||
+          !file.extractedText?.trim() ||
+          !normalizeSource(expectedSourceUrl) ||
+          normalizeSource(actualSource) !== normalizeSource(expectedSourceUrl)
+        ) {
+          throw new UploadValidationError(
+            "网页正文尚未完成可信提取或来源校验，不能保存到项目。",
+          );
+        }
+      }
       // pending → active(确认门经 dispatch route,ctx 带 x-account-id 校验后的号)。
       // [T-332 S2] 确认门二次校验(SPEC §4.6):repo WHERE 叠账号门,跨号 pending → null → 404。
       const row = await repo.commitPendingAsset(
         ctx.userId,
         assetId,
-        requireAccountId(ctx.accountId, "assets.commitPendingAsset"),
+        accountId,
       );
       if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 跨号 / 不存在
       return row;

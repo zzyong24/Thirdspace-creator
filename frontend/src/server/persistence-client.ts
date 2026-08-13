@@ -12275,38 +12275,56 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // [T-251] 重读同 URL 不重新抓取:先按 sourceUrl 反查已落库的 document asset(pending/active
       // 都算 —— pending = 已抓到全文只是用户还没点「存入素材库」),命中则直接读回其正文全文按窗
       // 返回(fromCache=true),不再开浏览器。查/读失败(极端:字节丢失)→ 静默回落真抓。
+      let cached: Awaited<ReturnType<typeof assetsService.findAssetBySourceUrl>> = null;
       try {
-        const cached = await assetsService.findAssetBySourceUrl(ctx, input.url);
-        if (cached) {
+        cached = await assetsService.findAssetBySourceUrl(ctx, input.url);
+      } catch (err) {
+        console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", err);
+      }
+      if (cached) {
+        let cachedFullText: string | null = null;
+        try {
           const blob = await assetsService.getAssetBytes(ctx, cached.id);
           if (blob && blob.mimeType.startsWith("text/")) {
             const fullText = new TextDecoder().decode(blob.bytes);
-            let previewUrl: string | null = null;
-            try {
-              const dl = await assetsService.getDownloadUrl(ctx, cached.id);
-              previewUrl = dl.url ?? null;
-            } catch {
-              previewUrl = null;
-            }
-            return {
-              needLogin: false as const,
-              assetId: cached.id,
-              name: cached.name,
-              previewUrl,
-              sourceUrl: input.url,
-              title: cached.name.replace(/^正文·/, ""),
-              excerpt: fullText.slice(0, 280),
-              extractor: "cached",
-              turnCount: null,
-              extraction: `复用已存正文素材(未重新抓取;全文 ${fullText.length} 字,按窗读取)`,
-              fullText,
-              fromCache: true,
-            };
+            if (!fullText.trim()) throw new Error("缓存正文为空");
+            cachedFullText = fullText;
           }
+        } catch (err) {
+          console.warn("[chat-runtime] web.read 缓存字节不可用,回落真抓:", err);
         }
-      } catch (err) {
-        // 缓存路是增强:任何失败都回落真抓,不阻断。
-        console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", err);
+        if (cachedFullText !== null) {
+          // [T-813] 网页正文已经是确定性纯文本，不再等异步文档抽取。来源、全文投影和
+          // done 状态是进入“可保存”的硬条件；写失败直接失败，不创建另一条重复缓存。
+          await assetsService.mergeAiAnnotation(ctx, cached.id, {
+            sourceUrl: input.url,
+          });
+          await assetsService.updateFileExtraction(ctx, cached.id, {
+            extractedText: cachedFullText,
+            extractStatus: "done",
+          });
+          let previewUrl: string | null = null;
+          try {
+            const dl = await assetsService.getDownloadUrl(ctx, cached.id);
+            previewUrl = dl.url ?? null;
+          } catch {
+            previewUrl = null;
+          }
+          return {
+            needLogin: false as const,
+            assetId: cached.id,
+            name: cached.name,
+            previewUrl,
+            sourceUrl: input.url,
+            title: cached.name.replace(/^正文·/, ""),
+            excerpt: cachedFullText.slice(0, 280),
+            extractor: "cached",
+            turnCount: null,
+            extraction: `复用已存正文素材(未重新抓取;全文 ${cachedFullText.length} 字,按窗读取)`,
+            fullText: cachedFullText,
+            fromCache: true,
+          };
+        }
       }
       const domain = webDomainFromUrl(input.url);
       let read;
@@ -12391,9 +12409,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         mimeType: "text/plain",
         pending: true,
       });
-      await assetsService
-        .mergeAiAnnotation(ctx, asset.id, { sourceUrl: input.url })
-        .catch(() => {});
+      // [T-813] 来源与全文投影是保存/预览真值，不再 best-effort。任一写失败时本轮报错，
+      // pending 仍隐藏且不会出现“保存到项目”。
+      await assetsService.mergeAiAnnotation(ctx, asset.id, {
+        sourceUrl: input.url,
+      });
+      await assetsService.updateFileExtraction(ctx, asset.id, {
+        extractedText: read.text,
+        extractStatus: "done",
+      });
       let previewUrl: string | null = null;
       try {
         const dl = await assetsService.getDownloadUrl(ctx, asset.id);
