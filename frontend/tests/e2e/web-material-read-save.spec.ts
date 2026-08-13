@@ -200,9 +200,20 @@ test.describe("联网素材先阅读后保存", () => {
 
     const runJourney = async (targetPage: Page) => {
       const journeyBodyOffset = chatBodies.length;
+      const hydrationFinished = targetPage.waitForResponse((response) => {
+        if (!response.url().endsWith("/api/v1/dispatch")) return false;
+        try {
+          return response.request().postDataJSON()?.id === "ai.conversations.list";
+        } catch {
+          return false;
+        }
+      });
       await targetPage.goto(
         `/?copilot=open&surface=project&selKind=project&selId=${project.data.id}&selTitle=${encodeURIComponent("联网素材阅读验收")}`,
       );
+      // Copilot 会先恢复该项目最近会话；恢复完成前发送会与空历史回写竞争。
+      // 等真实恢复请求结束，再模拟用户输入，避免测试制造现实中“抢在初始化前点击”的竞态。
+      await hydrationFinished;
       const composer = targetPage.getByLabel("我能帮你做什么");
       const submit = targetPage.getByLabel("提交提示给 Copilot");
       await expect(composer).toBeEnabled();
@@ -216,13 +227,13 @@ test.describe("联网素材先阅读后保存", () => {
 
       await expect(targetPage.getByRole("button", { name: "阅读全文" })).toBeVisible();
       await expect(targetPage.getByText(/保存到项目/)).toHaveCount(0);
-      await targetPage.setViewportSize({ width: 1024, height: 768 });
-      await expect(targetPage.getByRole("button", { name: "阅读全文" })).toBeVisible();
       await targetPage.getByRole("button", { name: "阅读全文" }).click();
 
       await expect(targetPage.getByText("已阅读 · 当前对话临时上下文")).toBeVisible();
       await expect(targetPage.getByText("已读 32 / 共 32 字 · 本页正文已读完")).toBeVisible();
       await expect(targetPage.getByText("提取方式：readability")).toBeVisible();
+      await targetPage.setViewportSize({ width: 1024, height: 768 });
+      await expect(targetPage.getByText("已阅读 · 当前对话临时上下文")).toBeVisible();
       const saveButton = targetPage.getByRole("button", { name: "保存到项目" });
       await expect(saveButton).toBeVisible();
 
