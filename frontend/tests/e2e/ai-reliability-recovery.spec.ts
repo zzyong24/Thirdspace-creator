@@ -98,8 +98,24 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
     account.id,
   );
 
-  // 先生成一条真实 terminal video.decisions 任务。无效 SRT 会在备料阶段立即取消，
-  // 不调用任何外部模型；浏览器随后只复用这条真实任务来验证 UI 的终态与重试协议。
+  await selectAccount(page, account.id, baseURL);
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto(`/projects/${project.id}/production`);
+  await page
+    .locator('input[aria-label="上传粗剪人物视频"]')
+    .setInputFiles(
+      resolve(
+        process.cwd(),
+        "../output/content-samples/composable-scene-graph-loop/archive-understanding.landscape.mp4",
+      ),
+    );
+  await page
+    .locator('input[aria-label="上传 SRT 字幕"]')
+    .setInputFiles({ name: "t804.srt", mimeType: "text/plain", buffer: Buffer.from(SRT) });
+  await expect(page.getByText("已上传:t804.srt")).toBeVisible();
+
+  // 页面初始状态确认无历史失败后，再生成一条真实 terminal 任务。无效 SRT 在备料阶段
+  // 立即取消且不调用外部模型；首次按钮点击仍代表“本轮新发起”，刷新后则应恢复它。
   const terminalTask = await dispatch<{ id: string; status: string }>(
     page,
     "ai.tasks.create",
@@ -132,7 +148,6 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
     )
     .toBe("cancelled");
 
-  await selectAccount(page, account.id, baseURL);
   const createBodies: Array<Record<string, unknown>> = [];
   let taskGetCount = 0;
   await page.route("**/api/v1/dispatch", async (route) => {
@@ -147,7 +162,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
         contentType: "application/json",
         body: JSON.stringify({
           data: terminalTask,
-          meta: { requestId: "e2e-t804" },
+          meta: { requestId: "e2e-t805" },
         }),
       });
       return;
@@ -156,36 +171,38 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
     await route.continue();
   });
 
-  await page.setViewportSize({ width: 1536, height: 1024 });
-  await page.goto(`/projects/${project.id}/production`);
-  await page
-    .locator('input[aria-label="上传粗剪人物视频"]')
-    .setInputFiles(
-      resolve(
-        process.cwd(),
-        "../output/content-samples/composable-scene-graph-loop/archive-understanding.landscape.mp4",
-      ),
-    );
-  await page
-    .locator('input[aria-label="上传 SRT 字幕"]')
-    .setInputFiles({ name: "t804.srt", mimeType: "text/plain", buffer: Buffer.from(SRT) });
-  await expect(page.getByText("已上传:t804.srt")).toBeVisible();
-
   const button = page.locator('[data-slot="dispatch-decisions"]');
   await expect(button).toBeEnabled();
   await button.click();
   await expect(page.locator('[data-slot="production-decisions"]')).toContainText(
-    "失败",
+    "如已有完成步骤，系统会保留",
     { timeout: 15_000 },
   );
+  await expect(page.locator('[data-slot="decisions-error"]')).not.toContainText(
+    /provider|HTTP|端点/i,
+  );
+  await expect(button).toHaveText("继续上次分场");
+  await page.locator('[data-slot="production-decisions"]').screenshot({
+    path: resolve(process.cwd(), "../.codex-tmp/t805-recovery-regular.png"),
+  });
   expect(createBodies[0]?.retryOfTaskId).toBeUndefined();
 
   const terminalGetCount = taskGetCount;
   await page.waitForTimeout(4_500);
   expect(taskGetCount).toBe(terminalGetCount);
 
+  // 真实刷新后由任务列表与步骤流恢复失败上下文，不依赖组件内存。
+  await page.reload();
+  await expect(page.locator('[data-slot="decisions-error"]')).toContainText(
+    "如已有完成步骤，系统会保留",
+  );
+  await expect(button).toHaveText("继续上次分场");
+
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(button).toBeVisible();
+  await page.locator('[data-slot="production-decisions"]').screenshot({
+    path: resolve(process.cwd(), "../.codex-tmp/t805-recovery-compact.png"),
+  });
   await button.click();
   await expect.poll(() => createBodies.length).toBe(2);
   expect(createBodies[1]?.retryOfTaskId).toBe(terminalTask.id);

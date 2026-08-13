@@ -467,8 +467,11 @@ describe("ProductionWorkbench", () => {
 
     fireEvent.click(dispatchButton(container));
     await waitFor(() =>
-      expect(container.textContent).toContain("③B-roll 匹配 失败"),
+      expect(container.textContent).toContain("③B-roll 匹配暂时失败"),
     );
+    expect(container.textContent).not.toContain("provider 503");
+    expect(dispatchButton(container).textContent).toBe("继续上次分场");
+    expect(container.textContent).toContain("如已有完成步骤，系统会保留");
     fireEvent.click(dispatchButton(container));
     await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(2));
 
@@ -480,6 +483,37 @@ describe("ProductionWorkbench", () => {
         body: expect.objectContaining({
           taskType: "video.decisions",
           retryOfTaskId: "ai-task-1",
+        }),
+      }),
+    );
+  });
+
+  it("刷新后恢复最新失败分场任务与继续入口，不让用户从头猜下一步", async () => {
+    mockClient.listAITasks.mockResolvedValueOnce([
+      { id: "ai-failed-latest", status: "cancelled" },
+    ]);
+    mockClient.listTaskSteps.mockResolvedValueOnce([
+      { text: "③B-roll 匹配 失败:provider 503" },
+    ]);
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+
+    await waitFor(() =>
+      expect(dispatchButton(container).textContent).toBe("继续上次分场"),
+    );
+    expect(container.textContent).toContain("③B-roll 匹配暂时失败");
+    expect(container.textContent).toContain("如已有完成步骤，系统会保留");
+    expect(container.textContent).not.toContain("provider 503");
+
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+    fireEvent.click(dispatchButton(container));
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalledTimes(1));
+    expect(mockClient.createAITask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          taskType: "video.decisions",
+          retryOfTaskId: "ai-failed-latest",
         }),
       }),
     );

@@ -35,6 +35,7 @@ import {
   runOrderedChunks,
   type ChunkProgressListener,
 } from "./chunk-and-merge";
+import { classifyLlmError } from "./llm/retry-policy";
 
 // [T-254b/T-712] 制作视频「四决策 + 总导演审片」runner —— 执行层 video.render 管线的「脑」侧
 // (SPEC 2026-07-11 §3.1 步骤 2-3):粗剪 SRT + 口播稿(+ 项目素材清单投影)→
@@ -60,6 +61,31 @@ export const SNAP_TOLERANCE_SEC = 2.5;
 export const VIDEO_DECISIONS_TASK_TYPE = "video.decisions";
 /** 候选结果 resultType(recordCandidate;T-254c 预览卡从 result 行读它)。 */
 export const VIDEO_DECISIONS_RESULT_TYPE = "video_decisions";
+
+/**
+ * 面向制作页的失败说明。内部日志保留原始异常，任务步骤只告诉用户发生了什么和下一步。
+ * SEMANTIC_BOUNDARY_ALLOW: 这里只按协议/网络/鉴权错误类别选择安全提示，不参与任何内容创作判断。
+ */
+export function describeVideoDecisionFailure(
+  err: unknown,
+  where: string,
+): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const classified = classifyLlmError(err);
+  let reason = "生成结果暂时不完整";
+  if (where.startsWith("备料")) {
+    reason = raw.replace(/\([^)]*\)/g, "").replace(/[:：].*$/, "").trim();
+  } else if (classified.reason.startsWith("auth_")) {
+    reason = "模型连接已失效，请先到设置检查模型配置";
+  } else if (classified.retryable) {
+    reason = "生成服务暂时繁忙";
+  } else if (/schema|结构|json|解析|无法识别|不完整/i.test(raw)) {
+    reason = "生成结果格式暂时不完整";
+  } else if (/未配置|缺少.*配置|找不到模型/i.test(raw)) {
+    reason = "尚未配置可用模型，请先到设置完成配置";
+  }
+  return `${where}暂时失败：${reason}。请继续上次分场。`;
+}
 
 // ── 决策产物类型(预览卡/props 组装的输入形状)────────────────────────────────
 
@@ -2791,12 +2817,14 @@ export async function runVideoDecisions(
     });
   } catch (err) {
     const where =
-      stepIdx >= 0 ? VIDEO_DECISION_STEPS[stepIdx] : "备料(SRT/口播稿校验)";
+      stepIdx >= 0
+        ? (VIDEO_DECISION_STEPS[stepIdx] ?? "AI 分场")
+        : "备料(SRT/口播稿校验)";
     try {
       await deps.ai.recordStep(ctx, task.id, {
         stepNo: stepIdx + 2,
         kind: "failed",
-        text: `${where} 失败:${err instanceof Error ? err.message : String(err)}`,
+        text: describeVideoDecisionFailure(err, where),
         toolCalls: [],
       });
     } catch {

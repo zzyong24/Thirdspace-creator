@@ -2035,7 +2035,8 @@ describe("runVideoDecisions(编排)", () => {
       .map((c) => (c as unknown as [unknown, string, { kind: string; text: string }])[2])
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain(VIDEO_DECISION_STEPS[1]);
-    expect(failStep?.text).toContain("模型端点 500");
+    expect(failStep?.text).toContain("请继续上次分场");
+    expect(failStep?.text).not.toContain("模型端点 500");
   });
 
   it("显式重试复用同输入已完成的分场，不从第①步重新扣一遍执行", async () => {

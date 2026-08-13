@@ -110,6 +110,17 @@ interface WireAITask {
   id: string;
   status: string;
   retryOfTaskId?: string | null;
+  requestedAt?: string;
+}
+
+function humanizeDecisionFailure(raw: string): string {
+  const where = raw.match(/^(①[^：:]*|②[^：:]*|③[^：:]*|④[^：:]*|⑤[^：:]*|备料[^：:]*)/)?.[1]
+    ?.replace(/\s*失败\s*$/, "")
+    .trim();
+  if (/provider|http\s*\d|端点|econn|fetch failed|network|timeout/i.test(raw)) {
+    return `${where || "AI 分场"}暂时失败：生成服务暂时繁忙。请继续上次分场。`;
+  }
+  return raw || "AI 分场暂时失败。请继续上次分场。";
 }
 
 interface WireTaskResult {
@@ -127,6 +138,7 @@ interface WireExecTask {
   id: string;
   execType: string;
   status: string;
+  requestedAt?: string;
   spec?: {
     params?: Record<string, unknown>;
   };
@@ -1519,7 +1531,7 @@ export function ProductionWorkbench({
             } catch {
               /* 步骤读取失败不影响错误主信息 */
             }
-            setDecisionsError(detail || "AI 分场决策失败,可重新发起");
+            setDecisionsError(humanizeDecisionFailure(detail));
             setDecisionsRetryOfTaskId(decisionsTaskId);
             setDecisionsTaskId(null);
             return;
@@ -1942,10 +1954,43 @@ export function ProductionWorkbench({
           return;
         }
 
-        // [T-292] 没有活跃决策时才恢复历史成功渲染(回到本页仍能看/播成片)。
         const doneRender = execs.find(
           (t) => t.execType === "video.render" && t.status === "succeeded",
         );
+        // 没有活跃任务时恢复最新失败任务。只有它确实晚于已完成成片（或还没有成片）才
+        // 抢占主状态，避免一条很老的失败任务遮住用户更新的成片。
+        const newestDecision = tasks[0];
+        const failedDecision =
+          newestDecision?.status === "failed" || newestDecision?.status === "cancelled"
+            ? newestDecision
+            : undefined;
+        const failedDecisionIsLatest =
+          Boolean(failedDecision) &&
+          (!doneRender ||
+            (Boolean(failedDecision?.requestedAt) &&
+              Boolean(doneRender.requestedAt) &&
+              Date.parse(failedDecision!.requestedAt!) >=
+                Date.parse(doneRender.requestedAt!)));
+        if (failedDecision && failedDecisionIsLatest && !abandoned) {
+          let detail = "";
+          try {
+            const steps = (await client.listTaskSteps({
+              params: { taskId: failedDecision.id },
+              query: undefined,
+              body: undefined,
+            })) as unknown as Array<{ text: string }>;
+            detail = steps[steps.length - 1]?.text ?? "";
+          } catch {
+            /* 步骤读取失败仍保留可继续入口 */
+          }
+          if (!abandoned) {
+            setDecisionsError(humanizeDecisionFailure(detail));
+            setDecisionsRetryOfTaskId(failedDecision.id);
+          }
+          return;
+        }
+
+        // [T-292] 没有活跃决策时才恢复历史成功渲染(回到本页仍能看/播成片)。
         if (doneRender && !abandoned) {
           const aid = doneRender.adoptedAssetIds?.[0];
           if (aid) {
@@ -2558,6 +2603,19 @@ export function ProductionWorkbench({
         className="flex flex-col gap-2 rounded-control border border-border bg-surface p-4"
       >
         <h3 className="text-sm font-medium">④ AI 分场决策</h3>
+        {decisionsError ? (
+          <div
+            data-slot="decisions-error"
+            className="rounded-control border border-amber-500/30 bg-amber-500/5 px-3 py-2"
+          >
+            <p className="text-xs text-foreground">{decisionsError}</p>
+            {decisionsRetryOfTaskId ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                如已有完成步骤，系统会保留；如果素材、字幕或画幅有变化，则自动重新计算。
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {!decisionsTaskId && !decisions ? (
           <>
             <button
@@ -2567,7 +2625,13 @@ export function ProductionWorkbench({
               onClick={() => void dispatchDecisions()}
               className="inline-flex h-8 w-fit items-center rounded-control bg-brand px-3 text-sm font-medium text-brand-foreground disabled:opacity-50"
             >
-              {decisionsBusy ? "创建任务中…" : "AI 分场决策"}
+              {decisionsBusy
+                ? decisionsRetryOfTaskId
+                  ? "正在继续…"
+                  : "创建任务中…"
+                : decisionsRetryOfTaskId
+                  ? "继续上次分场"
+                  : "AI 分场决策"}
             </button>
             {!materialsReady ? (
               <p className="text-xs text-muted-foreground">
@@ -2586,11 +2650,6 @@ export function ProductionWorkbench({
             <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             分镜统筹中(分场/信息卡/素材/字幕/总导演审片)…任务后台跑,可离开本页
           </div>
-        ) : null}
-        {decisionsError ? (
-          <p data-slot="decisions-error" className="text-xs text-destructive">
-            {decisionsError}
-          </p>
         ) : null}
         {decisions ? (
           <>

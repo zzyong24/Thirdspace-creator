@@ -325,6 +325,16 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
 
     expect(runStructuredNode.mock.calls.length - structuredCallsBefore).toBe(1);
     expect(generateImage).toHaveBeenCalledTimes(2);
+    const recordedSteps = made.recordStep.mock.calls as unknown as Array<[
+      unknown,
+      string,
+      { text?: string },
+    ]>;
+    expect(
+      recordedSteps.some((call) =>
+        String(call[2]?.text ?? "").includes("封面方案已保留"),
+      ),
+    ).toBe(true);
     expect(sleep).toHaveBeenCalledTimes(1);
     const imageCalls = generateImage.mock.calls as unknown as Array<[
       unknown,

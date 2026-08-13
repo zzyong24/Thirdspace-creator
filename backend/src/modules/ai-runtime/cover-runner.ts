@@ -377,6 +377,16 @@ export async function runCoverGenerate(
       // 只重试 provider 已明确拒绝受理的瞬时 HTTP 响应；断网/超时等“可能已受理但响应
       // 丢失”的未知提交绝不重放。重试沿用同一幂等键，避免渠道侧重复创建。
       if (!isExplicitRetryableSubmitRejection(error)) throw error;
+      try {
+        await deps.ai.recordStep(ctx, task.id, {
+          stepNo: 4,
+          kind: "step",
+          text: "生图服务暂时繁忙，正在自动恢复；封面方案已保留，不会重新策划。",
+          toolCalls: [],
+        });
+      } catch {
+        /* 恢复提示失败不阻断安全重试 */
+      }
       await (deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))))(250);
       generated = await generateImage(imgSpec, generateOptions, deps.registry);
     }
