@@ -6,7 +6,7 @@
   "task_id": "T-806",
   "contract_path": "orchestrator/T806-FRONTEND-JOURNEY.md",
   "contract_sha": "f0e6853e6897",
-  "commit_sha": "3aea939aa47aca718a03623facb5ccfc32266bc0",
+  "commit_sha": "8d176bbf337f59b73c88a8001f520c6b37e8f0d7",
   "observed_at": "2026-08-13T12:27:48Z",
   "run": {
     "verify_key": "ai-reliability-recovery:e2e",
