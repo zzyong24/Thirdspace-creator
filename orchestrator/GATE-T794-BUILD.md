@@ -4,6 +4,65 @@
 
 状态：PASS（Skill、内部契约、确定性渲染与真实 Chromium；不含用户真实模型端到端出片）
 
+```frontend-validation
+{
+  "schema": "frontend-validation/v1",
+  "task_id": "T-794",
+  "contract_path": "orchestrator/T794-FRONTEND-JOURNEY.md",
+  "contract_sha": "5331b21b16b1",
+  "commit_sha": "c1844db15675a5aaceb9c9f2736e77e53809fff9",
+  "observed_at": "2026-08-12T19:31:00.000Z",
+  "run": {
+    "verify_key": "motion-card-preview:e2e",
+    "command": "node orchestrator/process/verify-t794-motion-card-preview.mjs",
+    "exit_code": 0,
+    "output_ref": "真实 Chromium 横竖两档、五种关系、字幕安全区与虚线网格全部通过"
+  },
+  "environment": {
+    "surface": "browser",
+    "runtime": "Chromium headless shell 1223 / Playwright 1.60 / Node 25.9",
+    "viewports": [
+      { "width": 1920, "height": 1080, "result": "pass" },
+      { "width": 1080, "height": 1920, "result": "pass" }
+    ]
+  },
+  "data": {
+    "mode": "non-fixture",
+    "witnesses": [
+      { "id": "official-render-template", "role": "正式视频模板与时间线" },
+      { "id": "content-relation-set", "role": "五种冻结内容关系" }
+    ]
+  },
+  "levels": {
+    "logic": { "status": "pass", "evidence_ref": "原文溯源、必要角色与坏计划降级测试通过" },
+    "surface": { "status": "pass", "evidence_ref": "五种关系独立结构与静态虚线网格在两档画幅可见" },
+    "journey": { "status": "pass", "evidence_ref": "正式模板生成本地成片页面并由真实浏览器加载时间线" },
+    "experience": { "status": "not-requested", "evidence_ref": "机器验收不冒充用户主观观看确认" }
+  },
+  "checks": [
+    { "id": "AC-MOTION-RELATIONS", "test_id": "E2E-MOTION-01", "result": "pass", "evidence_ref": "数字、对比、步骤、因果、建立后推翻均有独立结构" },
+    { "id": "AC-MOTION-SAFE-AREA", "test_id": "E2E-MOTION-02", "result": "pass", "evidence_ref": "两档画幅内全部未越界且与字幕至少保留 20 像素间隔" },
+    { "id": "AC-MOTION-GRID", "test_id": "E2E-MOTION-03", "result": "pass", "evidence_ref": "正式成片页面含 64 像素低对比静态细虚线网格" },
+    { "id": "AC-MOTION-FALLBACK", "test_id": "TEST-MOTION-04", "result": "pass", "evidence_ref": "坏计划只移除计划，合法旧卡和旧 motion 继续渲染" }
+  ],
+  "coverage": [
+    { "condition": "real-chromium", "result": "pass", "evidence_ref": "Playwright 启动本机真实 Chromium 并加载正式模板页面", "reason": "" },
+    { "condition": "five-content-relations", "result": "pass", "evidence_ref": "五个关系标记与页面结构逐一核验", "reason": "" },
+    { "condition": "landscape-delivery", "result": "pass", "evidence_ref": "1920×1080 逐卡浏览器几何核验", "reason": "" },
+    { "condition": "portrait-delivery", "result": "pass", "evidence_ref": "1080×1920 逐卡浏览器几何核验", "reason": "" },
+    { "condition": "subtitle-safe-area", "result": "pass", "evidence_ref": "横版卡片底边 702/字幕顶边 954；竖版 1762/1794", "reason": "" },
+    { "condition": "invalid-plan-fallback", "result": "pass", "evidence_ref": "runner 聚焦测试覆盖不可溯与角色不完整计划", "reason": "" }
+  ],
+  "visible_copy": {
+    "artifact_path": "orchestrator/evidence/T-794-visible-copy.json",
+    "artifact_sha256": "bf01ea420b1971030a6356c9e354162a891b56efe1cbdd16ee59dcc9f2ecbaac"
+  },
+  "tdd_red_ref": "v2 测试先失败于旧模板仍为 v1 且 visualPlan 不存在；实现后聚焦测试转绿。",
+  "open_defects": [],
+  "status": "pass"
+}
+```
+
 ## 落地范围
 
 - `video.cards v1 → v2`：新增可选 `visualPlan`，先声明 magnitude、contrast、sequence、
