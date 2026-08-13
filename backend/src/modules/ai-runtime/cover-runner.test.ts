@@ -203,6 +203,46 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(facets.scriptClaim).toContain("工具越多越焦虑");
   });
 
+  it("用户画面要求同时进入封面策划 Skill 与最终生图 prompt，并写入候选诊断", async () => {
+    const { deps, recordCandidate } = makeDeps(FULL_PLAN);
+    await runCoverGenerate(
+      ctx,
+      {
+        id: "t1",
+        projectId: "p1",
+        inputData: {
+          visualRequirements: "画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑",
+        },
+      },
+      deps,
+    );
+    const lastCall = runStructuredNode.mock.calls.at(-1) as unknown as [
+      { facets: Record<string, string | undefined> },
+    ];
+    expect(lastCall[0].facets.userVisualRequirements).toContain("剪刀切断混乱流程");
+    const imgCall = generateImage.mock.calls.at(-1) as unknown as [
+      unknown,
+      { prompt: string },
+      unknown,
+    ];
+    expect(imgCall[1].prompt).toContain("用户明确画面要求（硬约束");
+    expect(imgCall[1].prompt).toContain("人物在右侧，不要电脑");
+    expect(recordCandidate.mock.calls[0]![2].resultData.visualRequirements).toBe(
+      "画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑",
+    );
+  });
+
+  it("未传用户画面要求时不注入空白硬约束块，保持旧 prompt", async () => {
+    const { deps } = makeDeps(FULL_PLAN);
+    await runCoverGenerate(ctx, { id: "t1", projectId: "p1", inputData: {} }, deps);
+    const imgCall = generateImage.mock.calls.at(-1) as unknown as [
+      unknown,
+      { prompt: string },
+      unknown,
+    ];
+    expect(imgCall[1].prompt).not.toContain("用户明确画面要求（硬约束）");
+  });
+
   it("封面文案诚实门:headline 含语料里没有的编造数字 → coverPlan 追加未溯源标注(原文保留)", async () => {
     // 口播稿/brief 里都没有「月入 10 万」——封面自创的成绩数字,应被标注未溯源。
     const { deps, recordCandidate } = makeDeps(

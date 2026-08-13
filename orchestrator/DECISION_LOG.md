@@ -2485,3 +2485,28 @@ Skill、契约、渲染与评分 Loop 的迭代。
 **Asset-Ref**：既有 `video.cards`、`videoRenderCard` 与 HyperFrames/GSAP renderer。
 
 **Status**：用户已确认，T-794 进入 BUILD。
+
+## DEC-AI-046 (2026-08-12) — 用户封面画面要求使用独立约束参数贯穿生成链
+
+**来源**：用户要求封面工具支持自己写提示词，尤其能明确指定图里必须出现的人物、物体、场景、
+动作、构图与排除项，并询问是否可作为参数传入。
+
+**决策**：
+
+1. 在既有 `cover.generate` 增加可选 `visualRequirements`，只承接用户本轮明确表达的画面要求；
+   不把整段聊天或系统自动推断伪装成用户要求。
+2. 该参数原样贯穿工具、chat runner、任务 `inputData` 与 cover runner，同时进入 `cover.brief`
+   Skill 和最终生图 prompt。最终生图层必须再次注入，避免自定义 Skill 或结构化方案遗漏。
+3. 用户主体、场景、动作、构图和排除项优先于系统自动视觉建议；事实、版权、安全和封面文案诚实门
+   仍然优先。该字段不是数字、成绩、人物身份或新闻事实的可溯来源。
+4. 留空保持旧行为；工具边界 trim 并有界裁到 1200 字。不新增页面、数据库、生成 provider 或第二套
+   封面工具，继续走候选与用户采纳门。
+
+**理由**：自由对话中的创作要求若没有一等参数，会在多层结构化调用中漂移或丢失；独立字段能保留
+用户控制权，又不污染内容事实和系统上下文。
+
+**Pattern-Ref**：DEC-AI-039（语义归 AI，代码守边界）。
+
+**Asset-Ref**：既有 `cover.generate`、`cover.brief`、cover runner 与 image adapter。
+
+**Status**：用户已确认，T-795 进入 BUILD。

@@ -1587,7 +1587,12 @@ export interface ChatRuntime {
   // → awaiting_confirmation 渲封面方案 + 封面图候选 → 采纳 confirmTask(既有 asset 采纳门绑进项目)。
   dispatchGenerateCover: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string; referenceAssetId?: string },
+    input: {
+      projectId: string;
+      topic?: string;
+      referenceAssetId?: string;
+      visualRequirements?: string;
+    },
   ) => Promise<{ taskId: string }>;
   // 抖音分享走 intelligence 持久父任务；普通建档与明确转写使用不同幂等指纹。
   dispatchDouyinShare: (
@@ -12838,7 +12843,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       // [T-380] referenceAssetId = 以图生图风格参考(素材库 asset id,走 inputData 透传;
       // cover-runner host 侧 getAssetBytes 读字节喂生图 adapter 的 image-to-image)。
-      input: { projectId: string; topic?: string; referenceAssetId?: string },
+      input: {
+        projectId: string;
+        topic?: string;
+        referenceAssetId?: string;
+        visualRequirements?: string;
+      },
     ) => {
       const res = await ai.request(
         // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
@@ -12854,6 +12864,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ...(input.topic ? { topic: input.topic } : {}),
               ...(input.referenceAssetId
                 ? { referenceAssetId: input.referenceAssetId }
+                : {}),
+              ...(input.visualRequirements
+                ? { visualRequirements: input.visualRequirements }
                 : {}),
             },
           },

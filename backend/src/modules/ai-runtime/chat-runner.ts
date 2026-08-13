@@ -332,7 +332,12 @@ export interface AssembleChatDeps extends ContextDeps {
     ctx: RequestContext,
     // [T-380] referenceAssetId = 以图生图风格参考(素材库 asset id;绑定层写进 task.inputData,
     // cover-runner host 侧读字节喂生图 adapter 的 image-to-image)。可选,不传行为不变。
-    input: { projectId: string; topic?: string; referenceAssetId?: string },
+    input: {
+      projectId: string;
+      topic?: string;
+      referenceAssetId?: string;
+      visualRequirements?: string;
+    },
   ) => Promise<{ taskId: string }>;
   /**
    * [T-523] Copilot 抖音分享编排端口：只经 intelligence service 创建持久任务。
@@ -2073,7 +2078,12 @@ export async function buildChatAssembly(
     // 模型显式传参优先,否则用 chatContext.projectId(稿面右栏对话恒有)。无项目上下文 → 不 dispatch,
     // 诚实回 error(卡渲「去项目稿面生成封面」);端口未装配 → 同样诚实 error(不抛裸码)。topic 缺省
     // 用工作台选中标题兜底(与写稿同款 selection.label 派生)。
-    dispatchGenerateCover: async ({ projectId, topic, referenceAssetId }) => {
+    dispatchGenerateCover: async ({
+      projectId,
+      topic,
+      referenceAssetId,
+      visualRequirements,
+    }) => {
       const pid =
         (typeof projectId === "string" && projectId.trim() ? projectId.trim() : "") ||
         chatContext.projectId ||
@@ -2155,6 +2165,9 @@ export async function buildChatAssembly(
         const { taskId } = await deps.dispatchGenerateCoverPort(ctx, {
           projectId: pid,
           ...(effTopic ? { topic: effTopic } : {}),
+          ...(typeof visualRequirements === "string" && visualRequirements.trim()
+            ? { visualRequirements: visualRequirements.trim().slice(0, 1200) }
+            : {}),
           // [T-380] 以图生图风格参考透传(可选;素材库 asset id)。
           ...(resolvedReferenceAssetId
             ? { referenceAssetId: resolvedReferenceAssetId }

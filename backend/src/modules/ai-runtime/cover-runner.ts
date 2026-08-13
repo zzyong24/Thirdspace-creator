@@ -94,6 +94,7 @@ export const COVER_HEADLINE_MAX = 20; // 主标题(模板要 ≤14,留余量后�
 export const COVER_SUBHEADLINE_MAX = 28; // 副标题(模板 ≤20)
 export const COVER_KEYPOINT_MAX = 14; // 单条信息点(模板 ≤10)
 export const COVER_KEYPOINTS_MAX = 3; // 信息点条数
+export const COVER_VISUAL_REQUIREMENTS_MAX = 1200;
 
 /** 已裁剪的封面方案(runner 内部形态;导出供单测)。 */
 export interface ClampedCoverPlan {
@@ -131,6 +132,7 @@ export function clampCoverPlan(obj: Partial<CoverBriefOutput>): ClampedCoverPlan
 const SCRIPT_CLAIM_MAX = 800; // 口播稿注入截断(封面只需主张,不需全稿)
 export function coverFacets(
   context: CreativeContext,
+  opts: { userVisualRequirements?: string } = {},
 ): Record<string, string | undefined> {
   return {
     positioning: context.positioningBrief
@@ -162,6 +164,9 @@ export function coverFacets(
           context.topic.angle ? `（切入：${context.topic.angle}）` : ""
         }`
       : "",
+    userVisualRequirements: opts.userVisualRequirements
+      ? `\n【用户明确画面要求（硬约束；只约束画面，不是事实出处）】\n${opts.userVisualRequirements}`
+      : "",
   };
 }
 
@@ -172,7 +177,7 @@ export function coverFacets(
  */
 export function composeCoverImagePrompt(
   plan: ClampedCoverPlan,
-  opts: { orientation?: string } = {},
+  opts: { orientation?: string; userVisualRequirements?: string } = {},
 ): string {
   const parts: string[] = [
     "为一条短视频/图文内容设计封面图。视觉任务：让目标观众第一眼看懂这条内容最核心的冲突、关系、变化或后果，而不是只看到一张漂亮背景。",
@@ -180,6 +185,11 @@ export function composeCoverImagePrompt(
   ];
   if (plan.visualConcept) parts.push(`主视觉：${plan.visualConcept}`);
   if (plan.composition) parts.push(`构图：${plan.composition}`);
+  if (opts.userVisualRequirements) {
+    parts.push(
+      `用户明确画面要求（硬约束，优先于自动主视觉与构图建议）：${opts.userVisualRequirements}`,
+    );
+  }
   const overlay = [
     plan.headline ? `主标题「${plan.headline}」` : "",
     plan.subheadline ? `副标题「${plan.subheadline}」` : "",
@@ -230,6 +240,10 @@ export async function runCoverGenerate(
 
     const topic =
       typeof task.inputData.topic === "string" ? task.inputData.topic : "";
+    const userVisualRequirements =
+      typeof task.inputData.visualRequirements === "string"
+        ? clip(task.inputData.visualRequirements, COVER_VISUAL_REQUIREMENTS_MAX)
+        : "";
     const context = await assembleCreativeContext(
       ctx,
       { projectId: task.projectId, topic },
@@ -251,7 +265,7 @@ export async function runCoverGenerate(
       model: modelFor(spec),
       // 运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(吃 skill_config_overrides)。
       template: getTemplate("cover.brief"),
-      facets: coverFacets(context),
+      facets: coverFacets(context, { userVisualRequirements }),
     });
     const plan = clampCoverPlan(object);
 
@@ -281,7 +295,10 @@ export async function runCoverGenerate(
 
     // 3) 生图 prompt 由结构化方案确定性组装(非自由文本)。用 RAW plan 拼画面(标注只进展示层)。
     const orientation = context.orientationHint; // 横屏/竖屏/""
-    const imagePrompt = composeCoverImagePrompt(plan, { orientation });
+    const imagePrompt = composeCoverImagePrompt(plan, {
+      orientation,
+      userVisualRequirements,
+    });
     const aspectRatio =
       orientation === "竖屏" ? "9:16" : orientation === "横屏" ? "16:9" : undefined;
 
@@ -375,6 +392,9 @@ export async function runCoverGenerate(
         assetType: "image",
         name: asset.name,
         prompt: imagePrompt,
+        ...(userVisualRequirements
+          ? { visualRequirements: userVisualRequirements }
+          : {}),
         // [T-271] 结构化封面方案(封面文案已过诚实门,ungrounded 已在字段内以⚠️标注)。
         coverPlan: {
           headline: headlineAnn.text,

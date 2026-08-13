@@ -490,6 +490,8 @@ export interface ChatToolDeps {
      * 行为完全不变。
      */
     referenceAssetId?: string;
+    /** 用户本轮明确写出的画面内容/构图/排除要求；作为创作硬约束，不是事实来源。 */
+    visualRequirements?: string;
   }) => Promise<{
     taskId: string | null;
     projectId: string | null;
@@ -2408,6 +2410,7 @@ const COVER_GENERATE_PARAMS = jsonSchema<{
   projectId?: string;
   topic?: string;
   referenceAssetId?: string;
+  visualRequirements?: string;
 }>({
   type: "object",
   properties: {
@@ -2424,6 +2427,11 @@ const COVER_GENERATE_PARAMS = jsonSchema<{
       type: "string",
       description:
         "[以图生图]风格参考图的素材 id(可选)。用户明确指定素材时从 context.materials 取 asset id；要延续已发布作品封面风格时从 context.publications 的合格作品取 coverAssetId。原样传入后生图会以它为参考。用户要求参考图但拿不到真实 id 时不得省略本参数并降级纯文生图。",
+    },
+    visualRequirements: {
+      type: "string",
+      description:
+        "用户本轮明确写出的封面画面要求(可选)，例如必须出现的人物/物体/场景/动作、主体位置、构图、色调和不要出现的元素。尽量保留用户原意并原样传入，不要擅自补成用户没说过的要求；它是视觉硬约束，不是数字、成绩、人物身份或新闻事实的出处。",
     },
   },
   additionalProperties: false,
@@ -3792,12 +3800,13 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 文案诚实门(数字/成绩只从内容提取禁编造),生图 prompt 由结构化方案组装(非裸自由文本)。
     "cover.generate": defineChatTool("cover.generate", {
       description:
-        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。直接调用本工具即可，生图配置由任务自行检查并在卡上返回真实结果，**不得先用 local.tools 探测模型**。支持以图生图:用户明确给素材时从 context.materials 取 asset id；要延续已发布作品封面时从 context.publications 取真实 coverAssetId，经 referenceAssetId 传入。",
+        "为**当前项目**生成封面(先产结构化封面方案:封面主标题/副标题/信息点 + 主视觉 + 构图,再生图)。当用户说「生成封面/做张封面/封面图/设计个封面」时调用。用户本轮如果明确说了画面里必须有什么、如何构图或不要什么，必须把这些原意放进 visualRequirements，不能只留在聊天里。封面文案会硬锚这条内容的立项核心信息 + 口播稿主张(封面承载钦定主张,不自创),且过诚实门——封面上的数字/成绩/榜单名只能从立项资料/口播稿/素材提取,**绝不编造数字博眼球**。生成在后台跑(不阻塞对话),结果渲成封面候选卡(封面方案 + 封面图);用户点卡上「采纳」才把封面图绑进项目(铁律②确认门)——你没有直接落封面的能力,绝不宣称「封面已生成/已设置」。只能为项目对话生成封面(封面要锚项目的核心信息/口播稿);没有项目上下文时会诚实提示去项目稿面里生成。直接调用本工具即可，生图配置由任务自行检查并在卡上返回真实结果，**不得先用 local.tools 探测模型**。支持以图生图:用户明确给素材时从 context.materials 取 asset id；要延续已发布作品封面时从 context.publications 取真实 coverAssetId，经 referenceAssetId 传入。",
       inputSchema: COVER_GENERATE_PARAMS,
       execute: async ({
         projectId,
         topic,
         referenceAssetId,
+        visualRequirements,
       }): Promise<CoverGenerateToolResult> => {
         try {
           const {
@@ -3816,6 +3825,10 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
             referenceAssetId:
               typeof referenceAssetId === "string" && referenceAssetId.trim()
                 ? referenceAssetId.trim()
+                : undefined,
+            visualRequirements:
+              typeof visualRequirements === "string" && visualRequirements.trim()
+                ? visualRequirements.trim().slice(0, 1200)
                 : undefined,
           });
           return {

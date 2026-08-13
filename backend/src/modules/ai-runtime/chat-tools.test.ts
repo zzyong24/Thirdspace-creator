@@ -1464,6 +1464,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
     const result = (await runExecute(tools["cover.generate"]!, {
       projectId: "  proj-1  ",
       topic: "  纪律是护城河  ",
+      visualRequirements: "  画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑  ",
     })) as {
       kind: string;
       taskId: string | null;
@@ -1475,6 +1476,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
       projectId: "proj-1",
       topic: "纪律是护城河",
       referenceAssetId: undefined,
+      visualRequirements: "画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑",
     });
     expect(result.kind).toBe("cover.generate");
     expect(result.taskId).toBe("task-cover-1");
@@ -1490,6 +1492,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
       projectId: undefined,
       topic: undefined,
       referenceAssetId: undefined,
+      visualRequirements: undefined,
     });
   });
 
@@ -1505,6 +1508,7 @@ describe("[T-271] cover.generate 工具 — 制作封面链对话内真生成", 
       projectId: "proj-1",
       topic: undefined,
       referenceAssetId: "asset-ref-9",
+      visualRequirements: undefined,
     });
   });
 

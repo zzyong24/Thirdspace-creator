@@ -616,6 +616,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 - **验证影响**：新增 prompt、runner、contract/assembler、renderer 聚焦测试；同题 v1/v2 评分与横竖版浏览器预览。
 - **不受影响**：制作确认、真实素材优先级、用户采纳、主视觉互斥、数据库、模型配置与视频执行器入口。
 
+## CI-COVER-795 — 封面生成新增可选用户画面要求（2026-08-12）
+
+- **变更源**：用户确认 DEC-AI-046，希望自己指定封面里必须出现或排除的内容。
+- **受影响契约**：内部 `cover.generate` 与分派端口新增可选 `visualRequirements`；旧调用不传时行为不变。
+- **重新派生**：`cover.brief` v3 把该字段作为视觉硬约束，cover runner 在最终生图 prompt 再次注入，
+  候选诊断记录实际使用的要求。
+- **安全边界**：该字段只约束视觉，不成为数字、成绩、身份或新闻事实来源；事实、版权、安全和内容
+  审核仍然 fail closed。
+- **验证影响**：新增 Skill 模板、工具 trim/透传、chat runner、cover runner 双层注入与空值兼容测试。
+- **不受影响**：项目归属、参考图读取、模型配置、生成 provider、数据库、资产 pending 状态与用户采纳门。
+
 ### How to use this file going forward
 
 1. Any confirmed change to an **approved** upstream artifact (FR/NFR/FLOW/ENT/IA/PAGE/COMP/contract/security/

@@ -369,12 +369,19 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
       options: unknown,
     ) => Promise<unknown>;
     const result = (await execute(
-      {},
+      {
+        visualRequirements:
+          "画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑",
+      },
       { toolCallId: "tc", messages: [], context: {} },
     )) as { reference?: { status: string; assetId?: string } };
     expect(dispatchGenerateCoverPort).toHaveBeenCalledWith(
       ctx,
-      expect.objectContaining({ referenceAssetId: "asset-only" }),
+      expect.objectContaining({
+        referenceAssetId: "asset-only",
+        visualRequirements:
+          "画面里要有一把剪刀切断混乱流程，人物在右侧，不要电脑",
+      }),
     );
     expect(result.reference).toMatchObject({
       status: "selected",

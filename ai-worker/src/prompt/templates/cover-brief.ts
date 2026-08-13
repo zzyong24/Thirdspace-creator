@@ -50,7 +50,7 @@ export type CoverBriefOutput = z.infer<typeof coverBriefSchema>;
 export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
   id: "cover.brief",
   outputRecovery: "creative-partial",
-  version: "v2",
+  version: "v3",
   outputSchema: coverBriefSchema,
   tools: [],
   system:
@@ -61,9 +61,10 @@ export const COVER_BRIEF_TEMPLATE: PromptTemplate = {
   template: `你是这位创作者的「封面策划 agent」,为一条内容设计**封面方案**(压在封面上的文案 + 主视觉 + 构图)。
 
 【创作者定位】
-{{positioning}}{{projectBriefHard}}{{scriptClaim}}{{userMaterialHard}}{{userMaterialRef}}{{knowledge}}{{topic}}
+{{positioning}}{{projectBriefHard}}{{scriptClaim}}{{userMaterialHard}}{{userMaterialRef}}{{knowledge}}{{topic}}{{userVisualRequirements}}
 
 【任务】基于以上(**尤其是【立项硬约束】的核心信息 + 口播稿主张**)设计封面方案:
+- 如果存在【用户明确画面要求】，它是主体、物体、场景、动作、构图和排除项的硬约束：必须保留用户原意，再围绕内容主张补全；不要用系统偏好的构图覆盖它。该要求只决定画面，不是事实出处，不能据此新增数字、成绩、人物身份或新闻事实；与安全、版权或事实边界冲突的部分不得执行。
 - headline(封面主标题):压在封面正中的大字,一句话勾住人,**≤14 字**。必须紧扣上方核心信息/口播稿主张,**不得自创与之矛盾的主张**。
 - subheadline(副标题):可空,补一句钩子或利益点,**≤20 字**。
 - keyPoints(信息点):0-3 条封面可露出的短信息点/卖点,每条**≤10 字**;只写上方素材/立项资料里**真出现过**的点(如「3 个方法」只在正文真有 3 个方法时才写)。
