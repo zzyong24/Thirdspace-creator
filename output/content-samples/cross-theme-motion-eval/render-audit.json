@@ -1,0 +1,488 @@
+{
+  "status": "fail",
+  "collisionCount": 6,
+  "collisions": [
+    {
+      "theme": "content-creation",
+      "orientation": "portrait",
+      "time": 9.2,
+      "text": "再用发布后的真实数据留下赢家",
+      "moving": "scene-runner",
+      "area": 1927
+    },
+    {
+      "theme": "content-creation",
+      "orientation": "landscape",
+      "time": 9.2,
+      "text": "再用发布后的真实数据留下赢家",
+      "moving": "scene-runner",
+      "area": 3460
+    },
+    {
+      "theme": "personal-growth",
+      "orientation": "portrait",
+      "time": 9.2,
+      "text": "再决定要不要保留这个改变",
+      "moving": "scene-runner",
+      "area": 1927
+    },
+    {
+      "theme": "personal-growth",
+      "orientation": "landscape",
+      "time": 9.2,
+      "text": "再决定要不要保留这个改变",
+      "moving": "scene-runner",
+      "area": 3460
+    },
+    {
+      "theme": "product-thinking",
+      "orientation": "portrait",
+      "time": 9.2,
+      "text": "把验证过的路径留在主流程",
+      "moving": "scene-runner",
+      "area": 1927
+    },
+    {
+      "theme": "product-thinking",
+      "orientation": "landscape",
+      "time": 9.2,
+      "text": "把验证过的路径留在主流程",
+      "moving": "scene-runner",
+      "area": 3460
+    }
+  ],
+  "samples": [
+    {
+      "theme": "content-creation",
+      "orientation": "portrait",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "再用发布后的真实数据留下赢家",
+              "moving": "scene-runner",
+              "area": 1927
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    },
+    {
+      "theme": "content-creation",
+      "orientation": "landscape",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 2
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "再用发布后的真实数据留下赢家",
+              "moving": "scene-runner",
+              "area": 3460
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    },
+    {
+      "theme": "personal-growth",
+      "orientation": "portrait",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "再决定要不要保留这个改变",
+              "moving": "scene-runner",
+              "area": 1927
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    },
+    {
+      "theme": "personal-growth",
+      "orientation": "landscape",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "再决定要不要保留这个改变",
+              "moving": "scene-runner",
+              "area": 3460
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    },
+    {
+      "theme": "product-thinking",
+      "orientation": "portrait",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "把验证过的路径留在主流程",
+              "moving": "scene-runner",
+              "area": 1927
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    },
+    {
+      "theme": "product-thinking",
+      "orientation": "landscape",
+      "frameAudit": [
+        {
+          "time": 0.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 1.2,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 2.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 3.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 4.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 5.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 6.8,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 7.6,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 8.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 9.2,
+          "collisions": [
+            {
+              "text": "把验证过的路径留在主流程",
+              "moving": "scene-runner",
+              "area": 3460
+            }
+          ],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 10.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        },
+        {
+          "time": 11.4,
+          "collisions": [],
+          "activeVisualCount": 1
+        }
+      ]
+    }
+  ]
+}

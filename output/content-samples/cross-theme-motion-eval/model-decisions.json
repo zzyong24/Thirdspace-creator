@@ -1,0 +1,140 @@
+{
+  "schema": "creatoros-t800-cross-theme-motion-eval/v1",
+  "model": "MiniMax-M3",
+  "skillId": "video.cards",
+  "skillVersion": "v3",
+  "generatedAt": "2026-08-13T05:25:32.972Z",
+  "results": [
+    {
+      "id": "content-creation",
+      "title": "追热点不等于更会做内容",
+      "cardCount": 2,
+      "relations": [
+        "contrast",
+        "sequence"
+      ],
+      "cards": [
+        {
+          "sceneIdx": 0,
+          "kind": "compare",
+          "content": "选题列表 越长 vs 发布频率 没变",
+          "at": 0,
+          "motion": "bar",
+          "visualPlan": {
+            "relation": "contrast",
+            "parts": [
+              {
+                "text": "每天追更多热点，选题列表越来越长",
+                "role": "old"
+              },
+              {
+                "text": "发布频率却没有变",
+                "role": "new"
+              }
+            ]
+          }
+        },
+        {
+          "sceneIdx": 0,
+          "kind": "list",
+          "content": "冻结受众和目标 → 只改一个选题变量 → 用真实数据留下赢家",
+          "at": 8,
+          "motion": "reveal",
+          "visualPlan": {
+            "relation": "sequence",
+            "parts": [
+              {
+                "text": "冻结受众和目标",
+                "role": "step"
+              },
+              {
+                "text": "只改一个选题变量",
+                "role": "step"
+              },
+              {
+                "text": "再用发布后的真实数据留下赢家",
+                "role": "step"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "personal-growth",
+      "title": "改变习惯不是把计划表塞满",
+      "cardCount": 1,
+      "relations": [
+        "sequence"
+      ],
+      "cards": [
+        {
+          "sceneIdx": 0,
+          "kind": "list",
+          "content": "连续记录七天 → 比较入睡时间与第二天状态 → 决定是否保留",
+          "at": 8,
+          "motion": "reveal",
+          "visualPlan": {
+            "relation": "sequence",
+            "parts": [
+              {
+                "text": "连续记录七天",
+                "role": "step"
+              },
+              {
+                "text": "比较入睡时间和第二天状态",
+                "role": "step"
+              },
+              {
+                "text": "再决定要不要保留这个改变",
+                "role": "step"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "product-thinking",
+      "title": "功能越多，不等于产品越好",
+      "cardCount": 2,
+      "relations": [
+        null,
+        "sequence"
+      ],
+      "cards": [
+        {
+          "sceneIdx": 0,
+          "kind": "quote",
+          "content": "用户真正购买的不是功能清单，而是一个问题被更省力地解决。",
+          "at": 4,
+          "motion": "plain"
+        },
+        {
+          "sceneIdx": 0,
+          "kind": "list",
+          "content": "先观察真实卡点 → 删掉不影响结果的步骤 → 把验证过的路径留在主流程",
+          "at": 8,
+          "motion": "reveal",
+          "visualPlan": {
+            "relation": "sequence",
+            "parts": [
+              {
+                "text": "先观察真实卡点",
+                "role": "step"
+              },
+              {
+                "text": "再删掉不影响结果的步骤",
+                "role": "step"
+              },
+              {
+                "text": "把验证过的路径留在主流程",
+                "role": "step"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

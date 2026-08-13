@@ -1,0 +1,77 @@
+{
+  "scenes": [
+    {
+      "title": "改变习惯不是把计划表塞满",
+      "summary": "睡前多刷一个小时手机，第二天的专注力反而更差。改变不是给计划表加更多任务，而是先移走一个高频干扰。连续记录七天，比较入睡时间和第二天状态，再决定要不要保留这个改变。",
+      "startSec": 0,
+      "endSec": 12
+    }
+  ],
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "连续记录七天 → 比较入睡时间与第二天状态 → 决定是否保留",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "连续记录七天",
+            "role": "step"
+          },
+          {
+            "text": "比较入睡时间和第二天状态",
+            "role": "step"
+          },
+          {
+            "text": "再决定要不要保留这个改变",
+            "role": "step"
+          }
+        ]
+      }
+    }
+  ],
+  "broll": [],
+  "subtitles": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "zh": "睡前多刷一个小时手机，第二天的专注力反而更差。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "zh": "改变不是给计划表加更多任务，而是先移走一个高频干扰。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "zh": "连续记录七天，比较入睡时间和第二天状态，再决定要不要保留这个改变。"
+    }
+  ],
+  "srtLines": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "text": "睡前多刷一个小时手机，第二天的专注力反而更差。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "text": "改变不是给计划表加更多任务，而是先移走一个高频干扰。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "text": "连续记录七天，比较入睡时间和第二天状态，再决定要不要保留这个改变。"
+    }
+  ]
+}

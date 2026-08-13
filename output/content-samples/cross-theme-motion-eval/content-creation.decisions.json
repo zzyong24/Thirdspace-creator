@@ -1,0 +1,97 @@
+{
+  "scenes": [
+    {
+      "title": "追热点不等于更会做内容",
+      "summary": "每天追更多热点，选题列表越来越长，发布频率却没有变。真正缺的不是灵感，而是一套筛选标准。冻结受众和目标，只改一个选题变量，再用发布后的真实数据留下赢家。",
+      "startSec": 0,
+      "endSec": 12
+    }
+  ],
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "compare",
+      "content": "选题列表 越长 vs 发布频率 没变",
+      "at": 0,
+      "motion": "bar",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "每天追更多热点，选题列表越来越长",
+            "role": "old"
+          },
+          {
+            "text": "发布频率却没有变",
+            "role": "new"
+          }
+        ]
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "冻结受众和目标 → 只改一个选题变量 → 用真实数据留下赢家",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "冻结受众和目标",
+            "role": "step"
+          },
+          {
+            "text": "只改一个选题变量",
+            "role": "step"
+          },
+          {
+            "text": "再用发布后的真实数据留下赢家",
+            "role": "step"
+          }
+        ]
+      }
+    }
+  ],
+  "broll": [],
+  "subtitles": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "zh": "每天追更多热点，选题列表越来越长，发布频率却没有变。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "zh": "真正缺的不是灵感，而是一套筛选标准。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "zh": "冻结受众和目标，只改一个选题变量，再用发布后的真实数据留下赢家。"
+    }
+  ],
+  "srtLines": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "text": "每天追更多热点，选题列表越来越长，发布频率却没有变。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "text": "真正缺的不是灵感，而是一套筛选标准。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "text": "冻结受众和目标，只改一个选题变量，再用发布后的真实数据留下赢家。"
+    }
+  ]
+}

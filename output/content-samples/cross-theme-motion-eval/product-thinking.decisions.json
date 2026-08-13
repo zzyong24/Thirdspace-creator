@@ -1,0 +1,84 @@
+{
+  "scenes": [
+    {
+      "title": "功能越多，不等于产品越好",
+      "summary": "功能越多，不等于产品越好。用户真正购买的不是功能清单，而是一个问题被更省力地解决。先观察真实卡点，再删掉不影响结果的步骤，把验证过的路径留在主流程。",
+      "startSec": 0,
+      "endSec": 12
+    }
+  ],
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "用户真正购买的不是功能清单，而是一个问题被更省力地解决。",
+      "at": 4,
+      "motion": "plain"
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "先观察真实卡点 → 删掉不影响结果的步骤 → 把验证过的路径留在主流程",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "先观察真实卡点",
+            "role": "step"
+          },
+          {
+            "text": "再删掉不影响结果的步骤",
+            "role": "step"
+          },
+          {
+            "text": "把验证过的路径留在主流程",
+            "role": "step"
+          }
+        ]
+      }
+    }
+  ],
+  "broll": [],
+  "subtitles": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "zh": "功能越多，不等于产品越好。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "zh": "用户真正购买的不是功能清单，而是一个问题被更省力地解决。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "zh": "先观察真实卡点，再删掉不影响结果的步骤，把验证过的路径留在主流程。"
+    }
+  ],
+  "srtLines": [
+    {
+      "index": 1,
+      "startSec": 0,
+      "endSec": 4,
+      "text": "功能越多，不等于产品越好。"
+    },
+    {
+      "index": 2,
+      "startSec": 4,
+      "endSec": 8,
+      "text": "用户真正购买的不是功能清单，而是一个问题被更省力地解决。"
+    },
+    {
+      "index": 3,
+      "startSec": 8,
+      "endSec": 12,
+      "text": "先观察真实卡点，再删掉不影响结果的步骤，把验证过的路径留在主流程。"
+    }
+  ]
+}
