@@ -61,6 +61,14 @@ export function safeErrorMessage(err: unknown): string {
     : `${redacted.slice(0, MAX_DIAGNOSTIC_MESSAGE_CHARS)}…`;
 }
 
+/**
+ * 用户主动查看的脱敏原始错误：尽量保留 HTTP 状态、provider 文案、模型返回与节点原因，
+ * 只移除秘密和私有地址。它不是“人话翻译”，也不应被模型拿来推断错误之外的系统状态。
+ */
+export function redactedRawErrorMessage(err: unknown): string {
+  return safeErrorMessage(err);
+}
+
 export function observableModelKey(spec: {
   model: string;
   displayModelKey?: "channel-managed";

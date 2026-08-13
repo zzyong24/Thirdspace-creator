@@ -2030,13 +2030,13 @@ describe("runVideoDecisions(编排)", () => {
     await runVideoDecisions(ctx, TASK, deps);
     spy.mockRestore();
     expect(calls.recordCandidate).not.toHaveBeenCalled();
-    expect(calls.cancelTask).toHaveBeenCalledWith(ctx, "task-1");
+    expect(calls.cancelTask).toHaveBeenCalledWith(ctx, "task-1", "模型端点 500");
     const failStep = calls.recordStep.mock.calls
       .map((c) => (c as unknown as [unknown, string, { kind: string; text: string }])[2])
       .find((s) => s.kind === "failed");
     expect(failStep?.text).toContain(VIDEO_DECISION_STEPS[1]);
     expect(failStep?.text).toContain("请继续上次分场");
-    expect(failStep?.text).not.toContain("模型端点 500");
+    expect(failStep?.text).toContain("原始错误（已脱敏）：模型端点 500");
   });
 
   it("显式重试复用同输入已完成的分场，不从第①步重新扣一遍执行", async () => {
@@ -2133,7 +2133,11 @@ describe("runVideoDecisions(编排)", () => {
     spy.mockRestore();
     expect(listSpy).not.toHaveBeenCalled();
     expect(calls.recordCandidate).not.toHaveBeenCalled();
-    expect(calls.cancelTask).toHaveBeenCalledWith(ctx, "task-1");
+    expect(calls.cancelTask).toHaveBeenCalledWith(
+      ctx,
+      "task-1",
+      "缺少项目范围(备料:B-roll 只允许读取当前项目素材)",
+    );
     const failed = (calls.recordStep.mock.calls as unknown as Array<
       [unknown, string, { kind: string; text: string }]
     >)

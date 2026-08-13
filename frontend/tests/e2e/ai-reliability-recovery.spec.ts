@@ -179,11 +179,15 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
     { timeout: 15_000 },
   );
   await expect(page.locator('[data-slot="decisions-error"]')).not.toContainText(
-    /provider|HTTP|端点/i,
+    /sk-[A-Za-z0-9_-]{6,}|Bearer\s+\S+/i,
   );
+  await expect(page.locator('[data-slot="decision-error-detail"]')).toContainText(
+    "SRT 解析不出任何字幕行",
+  );
+  await expect(page.locator('[data-slot="copy-decision-error"]')).toBeVisible();
   await expect(button).toHaveText("继续上次分场");
   await page.locator('[data-slot="production-decisions"]').screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t805-recovery-regular.png"),
+    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-regular.png"),
   });
   expect(createBodies[0]?.retryOfTaskId).toBeUndefined();
 
@@ -196,12 +200,15 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来�
   await expect(page.locator('[data-slot="decisions-error"]')).toContainText(
     "如已有完成步骤，系统会保留",
   );
+  await expect(page.locator('[data-slot="decision-error-detail"]')).toContainText(
+    "SRT 解析不出任何字幕行",
+  );
   await expect(button).toHaveText("继续上次分场");
 
   await page.setViewportSize({ width: 1024, height: 768 });
   await expect(button).toBeVisible();
   await page.locator('[data-slot="production-decisions"]').screenshot({
-    path: resolve(process.cwd(), "../.codex-tmp/t805-recovery-compact.png"),
+    path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-compact.png"),
   });
   await button.click();
   await expect.poll(() => createBodies.length).toBe(2);

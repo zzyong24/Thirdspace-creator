@@ -303,6 +303,40 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 
+  it("自配生图失败 → 步骤与终态保留脱敏原始错误，密钥和私有 URL 不外泄", async () => {
+    const made = makeDeps(FULL_PLAN);
+    generateImage.mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          "HTTP 422 content_filter token=sk-super-secret-123456 https://private.example/v1/images",
+        ),
+        { status: 422, stage: "submit", retryable: false },
+      ),
+    );
+
+    await runCoverGenerate(
+      ctx,
+      { id: "t-raw-error", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+
+    const failureStep = made.recordStep.mock.calls
+      .map(
+        (call) =>
+          (call as unknown as [unknown, unknown, { kind: string; text: string }])[2],
+      )
+      .find((step) => step.kind === "error");
+    expect(failureStep?.text).toContain("原始错误（已脱敏）：HTTP 422 content_filter");
+    expect(failureStep?.text).toContain("[REDACTED]");
+    expect(failureStep?.text).not.toContain("sk-super-secret-123456");
+    expect(failureStep?.text).not.toContain("private.example");
+    expect(made.cancelTask).toHaveBeenCalledWith(
+      ctx,
+      "t-raw-error",
+      expect.stringContaining("HTTP 422 content_filter"),
+    );
+  });
+
   it("provider 明确返回可重试 503 时使用同一幂等键短重试，不重复生成封面方案", async () => {
     const made = makeDeps(FULL_PLAN);
     const structuredCallsBefore = runStructuredNode.mock.calls.length;

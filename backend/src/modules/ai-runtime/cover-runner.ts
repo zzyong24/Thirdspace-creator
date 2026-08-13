@@ -18,6 +18,7 @@ import {
 } from "./multimodal/resolve";
 import {
   formatErrorDiagnostic,
+  redactedRawErrorMessage,
   safeModelFailureMessage,
 } from "./error-diagnostics";
 
@@ -471,15 +472,24 @@ export async function runCoverGenerate(
     }
     // [T-376] 失败原因分类后写进步骤流末条(kind:"error")—— 前端失败卡读末条原样展示,
     // 区分「未配置生图模型」vs「配置了但调用失败:<真实原因>」vs「文本模型凭据问题」。
+    const publicFailure = redactedRawErrorMessage(
+      channelManaged
+        ? safeModelFailureMessage(err, {
+            displayModelKey: "channel-managed",
+          })
+        : describeMultimodalFailure(err, "生图"),
+    );
+    // 受管渠道不能把上游供应商/模型细节反向泄漏给终端用户；这类错误的
+    // publicFailure 本身就是渠道安全的直接错误。用户自配模型则保留脱敏后的原文。
+    const rawFailure = channelManaged
+      ? publicFailure
+      : redactedRawErrorMessage(err);
+    const recordedFailure = `${publicFailure}\n原始错误（已脱敏）：${rawFailure}`;
     try {
       await deps.ai.recordStep(ctx, task.id, {
         stepNo: 99,
         kind: "error",
-        text: channelManaged
-          ? safeModelFailureMessage(err, {
-              displayModelKey: "channel-managed",
-            })
-          : describeMultimodalFailure(err, "生图"),
+        text: recordedFailure,
         toolCalls: [],
       });
     } catch {
@@ -488,7 +498,7 @@ export async function runCoverGenerate(
     // Best-effort cancel; swallow so a background failure never crashes the server.
     // 「未配文本/生图模型 / 生成失败 / 内容审核 / 轮询超时」全部坍缩到这里 → 诚实终态(cancelled)。
     try {
-      await deps.ai.cancelTask(ctx, task.id);
+      await deps.ai.cancelTask(ctx, task.id, rawFailure);
     } catch {
       /* task may already be terminal */
     }

@@ -36,6 +36,7 @@ import {
   type ChunkProgressListener,
 } from "./chunk-and-merge";
 import { classifyLlmError } from "./llm/retry-policy";
+import { redactedRawErrorMessage } from "./error-diagnostics";
 
 // [T-254b/T-712] 制作视频「四决策 + 总导演审片」runner —— 执行层 video.render 管线的「脑」侧
 // (SPEC 2026-07-11 §3.1 步骤 2-3):粗剪 SRT + 口播稿(+ 项目素材清单投影)→
@@ -84,7 +85,7 @@ export function describeVideoDecisionFailure(
   } else if (/未配置|缺少.*配置|找不到模型/i.test(raw)) {
     reason = "尚未配置可用模型，请先到设置完成配置";
   }
-  return `${where}暂时失败：${reason}。请继续上次分场。`;
+  return `${where}暂时失败：${reason}。请继续上次分场。\n原始错误（已脱敏）：${redactedRawErrorMessage(err)}`;
 }
 
 // ── 决策产物类型(预览卡/props 组装的输入形状)────────────────────────────────
@@ -2285,7 +2286,11 @@ export interface VideoDecisionsDeps {
       taskId: string,
       result: { resultType: string; resultData: Record<string, unknown> },
     ): Promise<unknown>;
-    cancelTask(ctx: RequestContext, taskId: string): Promise<unknown>;
+    cancelTask(
+      ctx: RequestContext,
+      taskId: string,
+      errorMessage?: string,
+    ): Promise<unknown>;
     getTaskRuntimeData(
       ctx: RequestContext,
       taskId: string,
@@ -2831,7 +2836,11 @@ export async function runVideoDecisions(
       /* 留痕失败不阻断终态 */
     }
     try {
-      await deps.ai.cancelTask(ctx, task.id);
+      await deps.ai.cancelTask(
+        ctx,
+        task.id,
+        redactedRawErrorMessage(err),
+      );
     } catch {
       /* already terminal */
     }

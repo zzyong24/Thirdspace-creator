@@ -113,14 +113,35 @@ interface WireAITask {
   requestedAt?: string;
 }
 
-function humanizeDecisionFailure(raw: string): string {
-  const where = raw.match(/^(①[^：:]*|②[^：:]*|③[^：:]*|④[^：:]*|⑤[^：:]*|备料[^：:]*)/)?.[1]
+interface DecisionFailureDisplay {
+  summary: string;
+  detail: string | null;
+}
+
+function decisionFailureDisplay(raw: string): DecisionFailureDisplay {
+  const [summaryPart = "", ...detailParts] = raw.split(/\n原始错误（已脱敏）：/);
+  const detail = detailParts.join("\n原始错误（已脱敏）：").trim() || null;
+  const where = summaryPart.match(/^(①[^：:]*|②[^：:]*|③[^：:]*|④[^：:]*|⑤[^：:]*|备料[^：:]*)/)?.[1]
     ?.replace(/\s*失败\s*$/, "")
     .trim();
-  if (/provider|http\s*\d|端点|econn|fetch failed|network|timeout/i.test(raw)) {
-    return `${where || "AI 分场"}暂时失败：生成服务暂时繁忙。请继续上次分场。`;
+  if (detail) {
+    return {
+      summary: summaryPart || `${where || "AI 分场"}暂时失败，请继续上次分场。`,
+      detail,
+    };
   }
-  return raw || "AI 分场暂时失败。请继续上次分场。";
+  // 兼容旧任务：旧步骤把摘要和原始错误写在同一行，尽量保留冒号后的原文。
+  const legacy = raw.match(/失败\s*[:：]\s*(.+)$/)?.[1]?.trim() ?? null;
+  if (/provider|http\s*\d|端点|econn|fetch failed|network|timeout/i.test(raw)) {
+    return {
+      summary: `${where || "AI 分场"}暂时失败，请继续上次分场。`,
+      detail: legacy,
+    };
+  }
+  return {
+    summary: raw || "AI 分场暂时失败，请继续上次分场。",
+    detail: null,
+  };
 }
 
 interface WireTaskResult {
@@ -430,6 +451,9 @@ export function ProductionWorkbench({
   const [copyVoiceoverStatus, setCopyVoiceoverStatus] = React.useState<
     "idle" | "copied" | "error"
   >("idle");
+  const [copyDecisionErrorStatus, setCopyDecisionErrorStatus] = React.useState<
+    "idle" | "copied" | "error"
+  >("idle");
   const voiceoverText = React.useMemo(
     () => extractVoiceoverText(scriptText ?? ""),
     [scriptText],
@@ -464,6 +488,18 @@ export function ProductionWorkbench({
   const [decisionsError, setDecisionsError] = React.useState<string | null>(
     null,
   );
+  const [decisionsErrorDetail, setDecisionsErrorDetail] = React.useState<
+    string | null
+  >(null);
+  const copyDecisionError = React.useCallback(async () => {
+    if (!decisionsErrorDetail) return;
+    try {
+      await writeClipboardText(decisionsErrorDetail);
+      setCopyDecisionErrorStatus("copied");
+    } catch {
+      setCopyDecisionErrorStatus("error");
+    }
+  }, [decisionsErrorDetail]);
   const [decisions, setDecisions] = React.useState<VideoDecisions | null>(null);
   const [editingPlanRevision, setEditingPlanRevision] = React.useState(0);
   const [decisionsConfirmed, setDecisionsConfirmed] = React.useState(false);
@@ -1355,6 +1391,7 @@ export function ProductionWorkbench({
       if (!srt || !voiceoverText) return;
       setDecisionsBusy(true);
       setDecisionsError(null);
+      setDecisionsErrorDetail(null);
       setBrollRevisionNotice(null);
       try {
         const task = (await client.createAITask({
@@ -1448,6 +1485,7 @@ export function ProductionWorkbench({
       materialAdjustmentInFlight.current = true;
       setDecisionsBusy(true);
       setDecisionsError(null);
+      setDecisionsErrorDetail(null);
       try {
         const attemptId = materialAdjustmentAttemptId({
           projectId,
@@ -1531,7 +1569,9 @@ export function ProductionWorkbench({
             } catch {
               /* 步骤读取失败不影响错误主信息 */
             }
-            setDecisionsError(humanizeDecisionFailure(detail));
+            const failure = decisionFailureDisplay(detail);
+            setDecisionsError(failure.summary);
+            setDecisionsErrorDetail(failure.detail);
             setDecisionsRetryOfTaskId(decisionsTaskId);
             setDecisionsTaskId(null);
             return;
@@ -1984,7 +2024,9 @@ export function ProductionWorkbench({
             /* 步骤读取失败仍保留可继续入口 */
           }
           if (!abandoned) {
-            setDecisionsError(humanizeDecisionFailure(detail));
+            const failure = decisionFailureDisplay(detail);
+            setDecisionsError(failure.summary);
+            setDecisionsErrorDetail(failure.detail);
             setDecisionsRetryOfTaskId(failedDecision.id);
           }
           return;
@@ -2609,6 +2651,33 @@ export function ProductionWorkbench({
             className="rounded-control border border-amber-500/30 bg-amber-500/5 px-3 py-2"
           >
             <p className="text-xs text-foreground">{decisionsError}</p>
+            {decisionsErrorDetail ? (
+              <div className="mt-2 rounded-control border border-border/70 bg-background/70 px-2.5 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-medium text-muted-foreground">
+                    原始错误（已脱敏）
+                  </p>
+                  <button
+                    type="button"
+                    data-slot="copy-decision-error"
+                    onClick={() => void copyDecisionError()}
+                    className="shrink-0 text-[11px] text-brand hover:underline"
+                  >
+                    {copyDecisionErrorStatus === "copied"
+                      ? "已复制"
+                      : copyDecisionErrorStatus === "error"
+                        ? "复制失败"
+                        : "复制错误"}
+                  </button>
+                </div>
+                <code
+                  data-slot="decision-error-detail"
+                  className="mt-1 block whitespace-pre-wrap break-all text-[11px] leading-relaxed text-foreground"
+                >
+                  {decisionsErrorDetail}
+                </code>
+              </div>
+            ) : null}
             {decisionsRetryOfTaskId ? (
               <p className="mt-1 text-xs text-muted-foreground">
                 如已有完成步骤，系统会保留；如果素材、字幕或画幅有变化，则自动重新计算。

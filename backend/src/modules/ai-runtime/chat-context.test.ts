@@ -337,14 +337,42 @@ describe("[T-386] formatRecentTasksBlock — 状态人话 + 硬指令", () => {
     expect(block).toContain("等用户在卡片上点「采纳」(还没写入)");
     expect(block).toContain("后台运行中");
     expect(block).toContain("已失败:");
-    // errorMessage 截 80 字(不整段灌)。
-    expect(block).not.toContain("x".repeat(81));
-    expect(block).toContain("x".repeat(80));
+    // errorMessage 有界截断(不整段灌)。
+    expect(block).not.toContain("x".repeat(201));
+    expect(block).toContain("x".repeat(200));
     // 硬指令:只信本块与卡片,完成的不再说还在跑。
     expect(block).toContain("绝不凭你上一轮的记忆断言");
     expect(block).toContain("绝不再说「还在跑/还没好/先等等」");
     // 时间人话(5 分钟前完成)。
     expect(block).toContain("5 分钟前");
+  });
+
+  it("失败与取消任务把脱敏原始错误作为归因证据注入，不把密钥交给模型", () => {
+    const block = formatRecentTasksBlock(
+      [
+        {
+          id: "t-failed",
+          taskType: "cover.generate",
+          status: "failed",
+          requestedAt: at(60_000),
+          completedAt: at(30_000),
+          errorMessage: "HTTP 503 provider unavailable token=sk-super-secret-123456",
+        },
+        {
+          id: "t-cancelled",
+          taskType: "asset.generate",
+          status: "cancelled",
+          requestedAt: at(60_000),
+          completedAt: at(30_000),
+          errorMessage: "content_filter: rejected by upstream",
+        },
+      ],
+      NOW,
+    );
+    expect(block).toContain("HTTP 503 provider unavailable");
+    expect(block).toContain("content_filter: rejected by upstream");
+    expect(block).toContain("[REDACTED]");
+    expect(block).not.toContain("sk-super-secret-123456");
   });
 
   it("未知状态原样透出(诚实,不猜语义)", () => {

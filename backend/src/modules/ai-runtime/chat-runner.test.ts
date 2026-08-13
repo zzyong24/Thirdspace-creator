@@ -2415,6 +2415,15 @@ describe("[T-081⑤] honestyBlock — 工具边界诚实", () => {
     expect(a.system).toContain("说明当前工具边界");
   });
 
+  it("[T-806] 没有运行时证据时禁止把失败归因成系统、平台或配置问题", async () => {
+    const { deps } = makeDeps();
+    const a = await buildChatAssembly(ctx, { surface: "topics" }, deps);
+    expect(a.system).toContain("故障归因必须有运行时证据");
+    expect(a.system).toContain("原因尚未确认");
+    expect(a.system).toContain("不得笼统说“系统有问题”");
+    expect(a.system).toContain("引用脱敏后的原始错误");
+  });
+
   // [T-098] 第 6 条:context.* 数据卡直渲后,模型只有指针权、无转录权 —— 禁逐字口播清单。
   it("[T-098] system 注入「指针权/禁逐字复述清单」规则", async () => {
     const { deps } = makeDeps();

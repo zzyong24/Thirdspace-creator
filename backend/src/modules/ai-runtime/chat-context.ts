@@ -1,4 +1,5 @@
 import type { CreativeContext } from "./creative-context";
+import { redactedRawErrorMessage } from "./error-diagnostics";
 
 // 上下文感知 ChatBox 的「三层注入」装配纯函数(SPEC §3.2)—— ChatBox 的心脏。
 //
@@ -265,11 +266,17 @@ function taskStatusPhrase(t: RecentTaskTruth): string {
     case "succeeded":
       return "已完成(采纳/写入类任务 = 结果已生效)";
     case "failed": {
-      const why = (t.errorMessage ?? "").trim();
-      return why ? `已失败:${why.slice(0, 80)}` : "已失败";
+      const why = t.errorMessage
+        ? redactedRawErrorMessage(t.errorMessage).trim()
+        : "";
+      return why ? `已失败:${why.slice(0, 200)}` : "已失败";
     }
-    case "cancelled":
-      return "已取消";
+    case "cancelled": {
+      const why = t.errorMessage
+        ? redactedRawErrorMessage(t.errorMessage).trim()
+        : "";
+      return why ? `已取消:${why.slice(0, 200)}` : "已取消";
+    }
     default:
       return t.status; // 未知状态原样透出(诚实,不猜语义)
   }
@@ -321,6 +328,6 @@ export function formatRecentTasksBlock(
   return [
     "【后台任务状态真值 —— 系统本轮刚查的库内真实状态,以此为准】",
     ...lines,
-    "任务状态**只信本块与界面卡片**,绝不凭你上一轮的记忆断言(你说「在后台跑」之后它很可能已经完成/失败了)。本块显示已完成的任务,绝不再说「还在跑/还没好/先等等」;awaiting_confirmation 表示候选已出、等用户在卡片上采纳,引导 TA 看卡片操作即可。本块没列的任务不确定时,直说「以卡片显示的状态为准」。",
+    "任务状态**只信本块与界面卡片**,绝不凭你上一轮的记忆断言(你说「在后台跑」之后它很可能已经完成/失败了)。本块显示已完成的任务,绝不再说「还在跑/还没好/先等等」;awaiting_confirmation 表示候选已出、等用户在卡片上采纳,引导 TA 看卡片操作即可。失败/取消行里的 errorMessage 是本次任务的脱敏原始错误，可引用它说明这次具体失败；它没有证明的系统、平台或配置状态一律不得推断。本块没列的任务不确定时,直说「以卡片显示的状态为准」。",
   ].join("\n");
 }

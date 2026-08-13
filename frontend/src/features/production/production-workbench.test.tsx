@@ -469,7 +469,12 @@ describe("ProductionWorkbench", () => {
     await waitFor(() =>
       expect(container.textContent).toContain("③B-roll 匹配暂时失败"),
     );
-    expect(container.textContent).not.toContain("provider 503");
+    expect(container.textContent).toContain("原始错误（已脱敏）");
+    expect(container.textContent).toContain("provider 503");
+    fireEvent.click(
+      container.querySelector('[data-slot="copy-decision-error"]')!,
+    );
+    await waitFor(() => expect(state.copiedText).toBe("provider 503"));
     expect(dispatchButton(container).textContent).toBe("继续上次分场");
     expect(container.textContent).toContain("如已有完成步骤，系统会保留");
     fireEvent.click(dispatchButton(container));
@@ -503,7 +508,8 @@ describe("ProductionWorkbench", () => {
     );
     expect(container.textContent).toContain("③B-roll 匹配暂时失败");
     expect(container.textContent).toContain("如已有完成步骤，系统会保留");
-    expect(container.textContent).not.toContain("provider 503");
+    expect(container.textContent).toContain("原始错误（已脱敏）");
+    expect(container.textContent).toContain("provider 503");
 
     await uploadVideo(container);
     await uploadSrt(container, GOOD_SRT);
