@@ -1,0 +1,168 @@
+{
+  "item": {
+    "id": "sleep-notifications",
+    "domain": "个人成长",
+    "title": "通知正在偷走你的睡眠",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "睡前通知越多，真正留给睡眠的时间越短。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "改变不是把计划表塞满，而是先移走一个高频干扰。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "连续记录七天，再比较入睡时间和第二天状态。"
+      }
+    ],
+    "script": "睡前通知越多，真正留给睡眠的时间越短。改变不是把计划表塞满，而是先移走一个高频干扰。连续记录七天，再比较入睡时间和第二天状态。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "stat",
+      "content": "睡前通知越多，真正留给睡眠的时间越短",
+      "at": 0,
+      "motion": "counter",
+      "visualPlan": {
+        "relation": "statement",
+        "parts": [
+          {
+            "text": "睡前通知越多，真正留给睡眠的时间越短",
+            "role": "claim"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看到通知数量与睡眠时间在一条时间轴上被此消彼长地挤压",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "sleep_meter",
+              "kind": "meter",
+              "glyph": "moon",
+              "semantic": "剩余睡眠时间"
+            },
+            {
+              "id": "notification_meter",
+              "kind": "meter",
+              "glyph": "notification",
+              "semantic": "睡前通知量"
+            }
+          ],
+          "beats": [
+            {
+              "action": "grow",
+              "target": "notification_meter",
+              "start": 0,
+              "duration": 0.5,
+              "from": {
+                "scale": 0.6
+              },
+              "to": {
+                "scale": 1.4
+              }
+            },
+            {
+              "action": "shrink",
+              "target": "sleep_meter",
+              "start": 0.5,
+              "duration": 0.5,
+              "from": {
+                "scale": 1.2
+              },
+              "to": {
+                "scale": 0.5
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "连续记录七天，再比较入睡时间和第二天状态",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "连续记录七天",
+            "role": "step"
+          },
+          {
+            "text": "比较入睡时间和第二天状态",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看到七天逐日记录表逐格点亮，结尾一格被高亮提示要比较的两项",
+          "layout": "path",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "day_track",
+              "kind": "path",
+              "glyph": "calendar",
+              "semantic": "七天记录路径"
+            },
+            {
+              "id": "day_cell_7",
+              "kind": "tile_collection",
+              "glyph": "none",
+              "semantic": "第七天格子"
+            },
+            {
+              "id": "sleep_clock",
+              "kind": "clock",
+              "glyph": "clock",
+              "semantic": "入睡时间"
+            },
+            {
+              "id": "status_note",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "第二天状态记录"
+            }
+          ],
+          "beats": [
+            {
+              "action": "trace",
+              "target": "day_track",
+              "start": 0,
+              "duration": 0.6,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "day_cell_7",
+              "start": 0.6,
+              "duration": 0.4,
+              "from": {
+                "scale": 0.9
+              },
+              "to": {
+                "scale": 1.2
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

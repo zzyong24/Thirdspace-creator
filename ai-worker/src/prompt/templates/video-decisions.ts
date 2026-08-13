@@ -77,6 +77,110 @@ export const VIDEO_CARD_VISUAL_ROLES = [
 ] as const;
 export type VideoCardVisualRole = (typeof VIDEO_CARD_VISUAL_ROLES)[number];
 
+export const VIDEO_SCENE_LAYOUTS = [
+  "stage",
+  "path",
+  "stack",
+  "field",
+  "orbit",
+  "split",
+  "flow",
+] as const;
+export const VIDEO_SCENE_ENTITY_KINDS = [
+  "text",
+  "shape",
+  "icon",
+  "document",
+  "tile_collection",
+  "node",
+  "path",
+  "container",
+  "target",
+  "meter",
+  "device",
+  "archive",
+  "clock",
+] as const;
+export const VIDEO_SCENE_GLYPHS = [
+  "none",
+  "document",
+  "message",
+  "notification",
+  "moon",
+  "clock",
+  "folder",
+  "archive",
+  "route",
+  "target",
+  "filter",
+  "feature",
+  "person",
+  "team",
+  "chart",
+  "calendar",
+  "inbox",
+] as const;
+export const VIDEO_SCENE_BEAT_ACTIONS = [
+  "enter",
+  "exit",
+  "move",
+  "grow",
+  "shrink",
+  "overflow",
+  "compress",
+  "replace",
+  "trace",
+  "reveal",
+  "focus",
+] as const;
+
+const videoSceneStateSchema = z.object({
+  x: z.number().min(-1).max(1).optional(),
+  y: z.number().min(-1).max(1).optional(),
+  scale: z.number().min(0).max(1.5).optional(),
+  opacity: z.number().min(0).max(1).optional(),
+  progress: z.number().min(0).max(1).optional(),
+  count: z.number().int().min(0).max(12).optional(),
+  rotation: z.number().min(-180).max(180).optional(),
+  direction: z
+    .enum(["left", "right", "up", "down", "inward", "outward"])
+    .optional(),
+});
+
+export const videoCardSceneGraphSchema = z.object({
+  cognitiveGoal: z.string().min(1).max(80),
+  layout: z.enum(VIDEO_SCENE_LAYOUTS),
+  aspectStrategy: z.literal("reflow"),
+  entities: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z][a-z0-9_-]{0,31}$/),
+        kind: z.enum(VIDEO_SCENE_ENTITY_KINDS),
+        glyph: z.enum(VIDEO_SCENE_GLYPHS),
+        semantic: z.string().min(1).max(40),
+        textRole: z.enum(VIDEO_CARD_VISUAL_ROLES).optional(),
+      }),
+    )
+    .min(1)
+    .max(8),
+  beats: z
+    .array(
+      z.object({
+        action: z.enum(VIDEO_SCENE_BEAT_ACTIONS),
+        target: z.string().min(1),
+        with: z.string().min(1).optional(),
+        affects: z.array(z.string().min(1)).max(4).optional(),
+        start: z.number().min(0).max(1),
+        duration: z.number().positive().max(1),
+        from: videoSceneStateSchema,
+        to: videoSceneStateSchema,
+      }),
+    )
+    .min(1)
+    .max(8),
+});
+export type VideoCardSceneGraph = z.infer<typeof videoCardSceneGraphSchema>;
+
 export const videoCardVisualPlanSchema = z.object({
   relation: z.enum(VIDEO_CARD_VISUAL_RELATIONS),
   parts: z
@@ -88,6 +192,7 @@ export const videoCardVisualPlanSchema = z.object({
     )
     .min(1)
     .max(6),
+  scene: videoCardSceneGraphSchema.optional(),
 });
 export type VideoCardVisualPlan = z.infer<typeof videoCardVisualPlanSchema>;
 
@@ -153,7 +258,7 @@ export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
 
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   id: "video.cards",
-  version: "v3",
+  version: "v4",
   outputSchema: videoCardsSchema,
   tools: [],
   system:
@@ -180,14 +285,15 @@ export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
 - replacement：旧判断先建立、随后被推翻并由新判断接管；parts 用 old/new。
 - statement：结论与依据/收束分拍出现；parts 用 claim/evidence/conclusion。
 visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括、不补字。关系拿不准就不填 visualPlan，禁止为了动效硬凑因果、对比或推翻。
-【v3 场景化运动语法】关系正确只是第一层；画面还必须让**对象真的发生变化**。不得把名词分别塞进圆角框，再用编号和连线说明关系——那仍是动态 PPT：
-- cause_effect：把因果落实成同一物件的状态变化，例如输入纸卷持续变长、机器压力升高，但输出纸张仍保持同一尺寸；默认不能使用三个并排圆角框。
-- sequence：让一个候选/标记沿路径穿过步骤，当前步骤被它触发，失败者退出、赢家沿回路返回起点；不要四个编号同时排开。
-- replacement：旧判断先占满舞台并真实建立，再被折叠、卷走、压扁或移出视野；新判断从空出的舞台接管。禁止左右两张卡常驻对照。
-- magnitude：量级必须改变对象的长度、面积、密度或计量轨道，不只是大号数字弹出。
-- contrast：尽量让同一舞台从旧状态变到新状态；只有两者必须同时比较时才做分区，但不得只是两张对称卡换颜色。
-- statement：用遮罩、聚焦和证据落位建立阅读顺序，不加装饰性容器。
-自检：静音并遮住文字后，仍能从物体运动看出“变长却无改善 / 候选跑完一轮 / 旧物退出新物接管”吗？不能就重做，不得产出 visualPlan。
+【v4 可组合 Scene Graph】关系正确只是第一层；画面还必须让**内容里的对象真的发生变化**。禁止从 relation 反推固定隐喻：cause_effect 不等于纸张+机器，sequence 不等于固定回路，replacement 不等于左右两张卡。同一关系也要因内容选择不同对象、布局和状态轨迹。
+- 先写 cognitiveGoal：观众静音看完后多理解的那一个关系，≤40 字。
+- 再从口播内容选择 1–8 个 entities。id 只能用小写英文字母开头的 a-z/0-9/_/-（例如 sleep_meter，禁止中文 id）；kind 只选 text/shape/icon/document/tile_collection/node/path/container/target/meter/device/archive/clock；glyph 只选 none/document/message/notification/moon/clock/folder/archive/route/target/filter/feature/person/team/chart/calendar/inbox。每个实体还要写 semantic；需要上屏原话时用 textRole 指向 parts 中唯一角色。semantic 只供编导/渲染语义标记，绝不上屏。
+- layout 只选 stage/path/stack/field/orbit/split/flow；aspectStrategy 固定为 reflow，表示横竖屏重新排布，不缩放整张横版画面冒充适配。
+- 用 1–8 个 beats 描述实体从 from 到 to 的真实状态变化。每个 beat 必须逐项写全 action、target、start、duration、from:{}、to:{} 六个字段，from 和 to 都不能省略、不能改名为 before/after/state，也不能把变化写成自然语言。affects 若填写必须是实体 ID 数组（例如 ["path"]，不能写成 "path"）；with 若填写则是单个实体 ID 字符串。action 只选 enter/exit/move/grow/shrink/overflow/compress/replace/trace/reveal/focus；start 与 duration 都是该卡时长 0–1 的比例，且 start+duration≤1。
+- 状态只写该 action 唯一允许变化的属性，不能顺手补位置、透明度或缩放，哪怕数值保持不变也不能写：enter 只能让 opacity 增大，exit 只能让 opacity 减小；move 只能改变 x/y；grow/focus 只能让 scale 增大，shrink/compress 只能让 scale 减小；overflow 只能让 count 增大；trace/reveal 只能让 progress 增大；replace 只能让 target 的 opacity 减小且必须填写 with。合法例：enter={from:{opacity:0},to:{opacity:1}}；move={from:{x:-0.6,y:0},to:{x:0.3,y:0}}；grow={from:{scale:0.6},to:{scale:1.2}}；shrink={from:{scale:1},to:{scale:0.45}}；reveal={from:{progress:0},to:{progress:1}}。若想让同一实体先移动再显现，拆成两个 beat，不能塞进一个 beat。
+- textRole 只能绑定 parts 中只出现一次的 role。sequence 常有多个 step，因此这类实体默认不写 textRole；上屏原话由卡片文字层承担，不能把同一个 step 角色绑定给多个实体。
+- 默认不能使用三个并排圆角框。圆角框+编号+PPT 连线、整卡淡入、所有字同时冒出来，都不算完成。
+自检：遮住文字后，观众还能从对象、空间关系和状态变化看出认知动作吗？如果把实体换成任意三个方块仍不影响表达，说明设计与内容无关，重做或不填 scene。
 【硬约束(诚实门,违反即废)】
 - 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
 - kind 只能是 stat/quote/list/compare/code/image 六选一。
@@ -203,6 +309,7 @@ visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括�
   motion 是**可选**产出:拿不准就不填,系统会按卡类型派生兜底(stat→counter / compare→bar / list·code→reveal / quote·image→plain)。别硬凑。
 【信息密度与节拍(这是成片主视觉，不是角落提示)】
 - 先按 SRT 划分语义 beat，再决定卡片：8–14 秒且没有真实素材的场景安排 2 个不同信息节拍；14–24 秒安排 3 个；超过 24 秒最多 4 个。相邻节拍分别落在对应原句的 SRT 起秒，不能把 3 张卡堆在同一时刻。
+- 当场景明确出现可见对象及其状态变化（例如数量增减、路径受阻、时间被挤压、旧物退出、新物接管），至少一个信息节拍必须填写合法 scene；不能因为 Scene Graph 字段多就退回纯文字卡。只有内容本身确实没有可观察变化时才省略 scene。
 - 同一长场景优先混用不同表达：数字/量级用 stat，过程/方法用 list，过去与现在用 compare，真正值得记住的结论才用 quote。除非原文确实只有一句金句，否则不要整场只产 quote。
 - 每张卡只承担一个认知动作：先给大数字或大结论，再逐项揭示支撑信息；不要把整段口播缩成一行小字，也不要重复上一张卡的同义内容。
 - 只要场景中任意连续视觉空档预计超过 7 秒，就必须在空档对应的原句起秒补一个新节拍；“已经有一张卡”不等于整场已覆盖。
@@ -215,7 +322,7 @@ visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括�
 - 超过 8 秒且没有已指定素材的场景，必须按上面的节拍数量从本场原文连续提取信息卡；不能复制整段口播，也不能让整个长场景只有黑底、一个靠边小人物或一张孤零零的小标签。
 - 开场若有明确的数字、岗位、人物或事实（例如“时薪 300 元”），优先提取一张 stat/quote 卡，不要只留内部“钩子”标签和空黑画面。
 【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
-{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一),"visualPlan"(可选,{"relation"(六选一),"parts":[{"text"(原文片段),"role"(十一选一)}]})}。没有值得做卡的就返回 {"cards": []}。`,
+{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一),"visualPlan"(可选,{"relation"(六选一),"parts":[{"text"(原文片段),"role"(十一选一)}],"scene"(可选,{"cognitiveGoal","layout","aspectStrategy":"reflow","entities":[{"id","kind","glyph","semantic","textRole"(可选)}],"beats":[{"action","target","with"(可选),"affects"(可选),"start","duration","from":{},"to":{}}]})})}。没有值得做卡的就返回 {"cards": []}。`,
   requiredFacets: ["scenes", "srt", "script"],
 };
 

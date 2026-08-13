@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "winner", "candidates", "decisiveDifference", "promotionEligible"],
+  "properties": {
+    "schema": { "type": "string", "const": "creatoros-t802-loop-iteration/v1" },
+    "winner": { "type": "integer", "minimum": 0, "maximum": 2 },
+    "decisiveDifference": { "type": "string" },
+    "promotionEligible": { "type": "boolean" },
+    "candidates": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidateIndex", "contentRelevance", "cognitiveGain", "silentReadability", "motionNarrative", "nonTemplate", "visualSafety", "total", "hardFail", "reason"],
+        "properties": {
+          "candidateIndex": { "type": "integer", "minimum": 0, "maximum": 2 },
+          "contentRelevance": { "type": "integer", "minimum": 0, "maximum": 20 },
+          "cognitiveGain": { "type": "integer", "minimum": 0, "maximum": 20 },
+          "silentReadability": { "type": "integer", "minimum": 0, "maximum": 15 },
+          "motionNarrative": { "type": "integer", "minimum": 0, "maximum": 15 },
+          "nonTemplate": { "type": "integer", "minimum": 0, "maximum": 15 },
+          "visualSafety": { "type": "integer", "minimum": 0, "maximum": 15 },
+          "total": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "hardFail": { "type": "boolean" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

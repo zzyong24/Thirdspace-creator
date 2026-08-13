@@ -1,0 +1,113 @@
+{
+  "item": {
+    "id": "meeting-overload",
+    "domain": "组织协作",
+    "title": "会议越多，决定不一定越快",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "日历上的会议越叠越满，真正的决定反而被挤到最后。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "同步信息和做决定不是同一件事。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "先把信息放进共享文档，只把分歧带进会议。"
+      }
+    ],
+    "script": "日历上的会议越叠越满，真正的决定反而被挤到最后。同步信息和做决定不是同一件事。先把信息放进共享文档，只把分歧带进会议。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "先把信息放进共享文档；只把分歧带进会议",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "先把信息放进共享文档",
+            "role": "step"
+          },
+          {
+            "text": "只把分歧带进会议",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看到信息先沉淀到文档、只剩分歧进入会议的两步处理流程",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "doc",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "共享文档承接信息"
+            },
+            {
+              "id": "meeting",
+              "kind": "container",
+              "glyph": "calendar",
+              "semantic": "只接纳分歧的会议"
+            },
+            {
+              "id": "flow_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "两步流向"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "doc",
+              "start": 0,
+              "duration": 0.35,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "meeting",
+              "start": 0.5,
+              "duration": 0.35,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "trace",
+              "target": "flow_path",
+              "start": 0.15,
+              "duration": 0.7,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -122,6 +122,41 @@ describe("动态 refine schema(zod,绑定本次输入)", () => {
     ).toBe(false);
   });
 
+  it("② Scene Graph 坏动作在模型输出 schema 阶段失败，不能等后处理静默降级", () => {
+    const schema = buildCardsDecisionSchema(1, [0]);
+    const visualPlan = {
+      relation: "cause_effect",
+      parts: [
+        { text: "原因", role: "cause" },
+        { text: "结果", role: "result" },
+      ],
+      scene: {
+        cognitiveGoal: "看见原因导向结果",
+        layout: "flow",
+        aspectStrategy: "reflow",
+        entities: [
+          { id: "cause", kind: "node", glyph: "feature", semantic: "原因" },
+          { id: "result", kind: "target", glyph: "target", semantic: "结果" },
+        ],
+        beats: [
+          {
+            action: "trace",
+            target: "cause",
+            start: 0,
+            duration: 0.5,
+            from: { opacity: 1, progress: 0 },
+            to: { opacity: 1, progress: 1 },
+          },
+        ],
+      },
+    };
+    expect(
+      schema.safeParse({
+        cards: [{ sceneIdx: 0, kind: "quote", content: "原因", at: 0, visualPlan }],
+      }).success,
+    ).toBe(false);
+  });
+
   it("③ B-roll:assetId 清单外 → 校验失败(禁编造)", () => {
     const schema = buildBrollDecisionSchema(["asset-1", "asset-2"], 3);
     expect(
@@ -806,6 +841,87 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     expect(cards[1]?.visualPlan).toBeUndefined();
     expect(cards[2]).toMatchObject({ content: "给模型一个角色" });
     expect(cards[2]?.visualPlan).toBeUndefined();
+  });
+
+  it("[T-802 RED] part 必须是完整原文子串，真实短片段后追加新主张仍丢计划", async () => {
+    const call = fakeCall({
+      "video.cards": {
+        cards: [
+          {
+            sceneIdx: 1,
+            kind: "quote",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "statement",
+              parts: [{ text: "给模型一个角色就一定能爆款", role: "claim" }],
+            },
+          },
+        ],
+      },
+    });
+
+    const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({ content: "给模型一个角色" });
+    expect(cards[0]?.visualPlan).toBeUndefined();
+  });
+
+  it("Scene Graph 引用、唯一角色和动作属性不合时整段计划降级，合法计划完整透传", async () => {
+    const baseScene = {
+      cognitiveGoal: "看见提示词进入模型",
+      layout: "flow" as const,
+      aspectStrategy: "reflow" as const,
+      entities: [
+        { id: "prompt", kind: "document" as const, glyph: "document" as const, semantic: "提示词", textRole: "step" as const },
+        { id: "model", kind: "device" as const, glyph: "feature" as const, semantic: "模型" },
+      ],
+      beats: [
+        { action: "move" as const, target: "prompt", start: 0, duration: 0.5, from: { x: -0.6 }, to: { x: 0.3 } },
+      ],
+    };
+    const call = fakeCall({
+      "video.cards": {
+        cards: [
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "sequence",
+              parts: [
+                { text: "给模型", role: "step" },
+                { text: "一个角色", role: "step" },
+              ],
+              scene: baseScene,
+            },
+          },
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "sequence",
+              parts: [
+                { text: "给模型", role: "step" },
+                { text: "一个角色", role: "step" },
+              ],
+              scene: {
+                ...baseScene,
+                entities: baseScene.entities.map((entity) => ({ ...entity, textRole: undefined })),
+                beats: [{ ...baseScene.beats[0], target: "missing" }],
+              },
+            },
+          },
+        ],
+      },
+    });
+    const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
+    // 第一稿 textRole 指向重复的 step，按协议不能唯一绑定，也应降级。
+    expect(cards[0]?.visualPlan).toBeUndefined();
+    expect(cards[1]?.visualPlan).toBeUndefined();
   });
 });
 

@@ -216,6 +216,8 @@ export * from "./resources/intelligence";
 export {
   videoRenderTone,
   videoCardMotion,
+  videoCardVisualPlan,
+  videoCardSceneGraph,
   videoRenderDelivery,
   videoRenderMeta,
   videoRenderTalkingHead,
@@ -228,6 +230,8 @@ export {
   videoRenderParams,
   type VideoRenderTone,
   type VideoCardMotion,
+  type VideoCardVisualPlan,
+  type VideoCardSceneGraph,
   type VideoRenderDelivery,
   type VideoRenderMeta,
   type VideoRenderTalkingHead,

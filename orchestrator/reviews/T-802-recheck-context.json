@@ -1,0 +1,217 @@
+{
+  "schema": "spec-review-recheck-context/v1",
+  "task_id": "T-802",
+  "previous_round": 1,
+  "previous_verdict": "CONCERNS",
+  "previous_spec_sha256": "47abd20944a999cf25d77589bbe017c2de02c4f4f2e6817051cf0600af25268e",
+  "previous_packet": {
+    "schema": "spec-review-round/v2",
+    "review_kind": "initial",
+    "summary": "发现 3 个会使已确认验收产生假阳性或生产行为不确定的 major，以及 1 个超出确认范围的 minor。",
+    "findings": [
+      {
+        "id": "REV-001",
+        "status": "open",
+        "severity": "major",
+        "category": "testability",
+        "requirement_anchor": {
+          "id": "FR-802-06",
+          "quote": "用多主题、多候选 Loop 验证“不千篇一律”"
+        },
+        "acceptance_anchor": {
+          "id": "AC-802-02",
+          "quote": "6 个跨主题赢家满足 §6.2 全部确定性指标"
+        },
+        "where": "§3.1 beat 状态约束与 §6.2 运动轴指纹",
+        "failure_mode": "当前文本没有约束 action 与实际状态轨迹的对应关系，例如 grow 和 reveal 都可合法地只执行 opacity 0→1。两个候选可以呈现相同动画，仅改 action 标签就得到不同运动轴；即使从实际 GSAP timeline 读取并确认存在状态变化，AC-802-02 仍可在画面千篇一律时通过。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/superpowers/specs/2026-08-12-composable-scene-graph-motion.md:126-130,190-209",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "规定运动轴必须反映实际渲染属性轨迹的等价类，或约束不同 action 不得编译为同一种可见变化；加入仅改 action 名称但画面轨迹相同仍判重复的反例。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-002",
+        "status": "open",
+        "severity": "major",
+        "category": "operability",
+        "requirement_anchor": {
+          "id": "FR-802-04",
+          "quote": "横屏和竖屏由 renderer 在统一安全约束下重排"
+        },
+        "acceptance_anchor": {
+          "id": "AC-802-06",
+          "quote": "现有用户确认、素材优先、预览、渲染和普通信息卡 fallback 不变"
+        },
+        "where": "§3.2 兼容降级与 §6.4 全程碰撞检查之间",
+        "failure_mode": "结构合法的 scene 仍可能因实体密度、文字长度或运动轨迹而无法在某一画幅安全布局。SPEC 只规定结构或引用非法时降级，却把运行后的越界和碰撞定义为硬失败，没有规定生产预览或正式渲染遇到该失败时是丢弃 scene、回退旧卡还是让整条渲染失败。两个合理实现会产生不同用户结果，其中至少一种会破坏既有渲染或 fallback。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/superpowers/specs/2026-08-12-composable-scene-graph-motion.md:132-137,213-233,263-266",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "clarify",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "为结构合法但布局或逐帧安全检查失败的 scene 规定唯一生产后置状态，并用横竖屏失败样例验证不会输出碰撞画面或中断既有普通卡渲染。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-003",
+        "status": "open",
+        "severity": "major",
+        "category": "correctness",
+        "requirement_anchor": {
+          "id": "FR-802-03",
+          "quote": "需要上屏的 parts[].text 继续逐段溯源于口播原文"
+        },
+        "acceptance_anchor": {
+          "id": "AC-802-01",
+          "quote": "新旧 schema、runner、assembler、contract 和 renderer 聚焦测试全绿"
+        },
+        "where": "§3 visualPlan v2 的原文溯源约束及 runner 验收",
+        "failure_mode": "SPEC 没有把“逐段溯源”落实为可判定条件或必测反例，而当前 runner 只要求任意一个中文 4-gram 或拉丁 token 与原文重合。模型可在一小段原文后追加未经支持的新主张并通过检查，随后进入上屏文字层；runner 聚焦测试仍可全绿，FR-802-03 和 §6.3 的事实硬失败却已发生。",
+        "evidence_kind": "deterministic-check",
+        "evidence_ref": "backend/src/modules/ai-runtime/video-decisions-runner.ts:552-567,1606-1613",
+        "risk_class": "confirmed-requirement",
+        "disposition": "mitigate",
+        "remedy_type": "constraint",
+        "scope_effect": "none",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "明确 parts[].text 的确定性原文锚定规则，并加入“含真实短片段但追加原文外主张”的负例，保证该 scene 被丢弃且合法旧卡保留。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      },
+      {
+        "id": "REV-004",
+        "status": "open",
+        "severity": "minor",
+        "category": "scope",
+        "requirement_anchor": {
+          "id": "FR-802-05",
+          "quote": "video.cards 官方模板是运行时和设置页的共同真值"
+        },
+        "acceptance_anchor": {
+          "id": "AC-802-05",
+          "quote": "全局 video-editing Skill 删除固定关系→固定隐喻规则"
+        },
+        "where": "§7 AC-802-05 与 §8 预计修改",
+        "failure_mode": "用户确认范围只包含 video.cards 官方 Skill、其设置页投影及仓内生成渲染链；把全局已安装 video-editing Skill 的修改和 validator 设为完成条件，新增了另一个独立工件的写入与验收责任，并可能使仓内全部确认结果已完成时仍无法完成任务。",
+        "evidence_kind": "spec-contradiction",
+        "evidence_ref": "docs/superpowers/specs/2026-08-12-composable-scene-graph-motion.md:5-12,61-65,257-261,270-279",
+        "risk_class": "preference",
+        "disposition": "future",
+        "remedy_type": "future",
+        "scope_effect": "expansion",
+        "origin": "baseline",
+        "origin_ref": "round-1 full review",
+        "suggestion": "从本任务完成条件移除全局 video-editing Skill 修改，作为 future 建议；若用户明确确认扩围，再单独纳入当前范围。",
+        "resolution_evidence": "",
+        "parent_id": ""
+      }
+    ]
+  },
+  "changed_line_refs": [
+    {
+      "origin_ref": "SPEC-LINE:112:16430653e916350c",
+      "text": "- `beat.action`：第一版只开放 `enter / exit / move / grow / shrink / overflow / compress / replace /"
+    },
+    {
+      "origin_ref": "SPEC-LINE:113:57f57441dc7d3ff7",
+      "text": "trace / reveal / focus`。无法唯一执行的 `split / merge / filter / block / connect` 暂不进入契约。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:126:34593d99d44a3bb7",
+      "text": "动作与允许变化的状态键唯一绑定：`enter / exit` 只改变 `opacity`；`move` 只改变 `x / y` 且起止"
+    },
+    {
+      "origin_ref": "SPEC-LINE:127:fd36dc83444819cb",
+      "text": "坐标不同；`grow / shrink / compress / focus` 只改变 `scale`，并分别要求变大、变小、变小、变大；"
+    },
+    {
+      "origin_ref": "SPEC-LINE:128:824c7243a5b50219",
+      "text": "`overflow` 只改变 `count` 且增加；`trace / reveal` 只改变 `progress` 且从小到大；`replace` 必须用"
+    },
+    {
+      "origin_ref": "SPEC-LINE:129:552fb46013da482b",
+      "text": "`with` 指向接管实体，并让 target 的 opacity 从 1 到 0、with 实体从 0 到 1。任何额外状态键、错误"
+    },
+    {
+      "origin_ref": "SPEC-LINE:130:15fa34215c407ecc",
+      "text": "方向或无可观察状态差都使整个 `scene` 结构无效。模型由此决定“什么"
+    },
+    {
+      "origin_ref": "SPEC-LINE:134:03d8ba7ed223a2fb",
+      "text": "`parts[].text` 采用严格原文锚定：双方先做 Unicode NFC、把连续 Unicode 空白折叠成一个空格并"
+    },
+    {
+      "origin_ref": "SPEC-LINE:135:722e1b65878c98bc",
+      "text": "trim；归一后的整个 part 必须是归一后完整口播稿的连续子串。不能删除、同义替换或在真实短片段后"
+    },
+    {
+      "origin_ref": "SPEC-LINE:136:9473300b713f9609",
+      "text": "追加新主张。任一 part 失败时丢弃整个 `visualPlan`，但保留已经通过自身 content 溯源的普通卡片。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:142:39a7ddd7796d9926",
+      "text": "- `scene` 结构合法但当前画幅的布局预检或逐帧安全检查失败：该画幅唯一后置状态是丢弃 `scene`，"
+    },
+    {
+      "origin_ref": "SPEC-LINE:143:8179f7a5b566f68a",
+      "text": "使用同一张卡的旧 `relation + parts` renderer；旧计划也不可用时再走普通信息卡。不得输出碰撞画面，"
+    },
+    {
+      "origin_ref": "SPEC-LINE:144:ecd1d5db39330c8c",
+      "text": "也不得因此让整条视频渲染失败。评测 Loop 中发生任何降级仍记为 v2 候选硬失败，不能用 fallback 晋级；"
+    },
+    {
+      "origin_ref": "SPEC-LINE:208:3111bfe9889dfb4b",
+      "text": "- 运动轴：按时间排序后的实际属性轨迹等价类，例如 `opacity:0→1 / count:2→9 / scale:1→.35`；"
+    },
+    {
+      "origin_ref": "SPEC-LINE:209:c81cbe3d55713d44",
+      "text": "action 名称不进入指纹。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:211:a1d235c8a12c8070",
+      "text": "只有成功渲染、非零可见面积、并在有效时间域内产生可观察状态差的实体/beat 才计入指纹；属性轨迹"
+    },
+    {
+      "origin_ref": "SPEC-LINE:212:d937e36380695b16",
+      "text": "从实际 GSAP tween 的 target、起止属性和值域桶读取，所以只改 action 标签不会改变运动轴。未消费的"
+    },
+    {
+      "origin_ref": "SPEC-LINE:221:776057e822ae07df",
+      "text": "- 增加反例：两个候选只有 action 名称不同、实际属性轨迹相同，必须得到相同运动轴并判重复。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:271:993a086d1dc9809b",
+      "text": "`VIDEO_CARDS_TEMPLATE` 版本递增，运行时 official registry 与设置页返回同一新版正文；设置页"
+    },
+    {
+      "origin_ref": "SPEC-LINE:272:927c190d8f0bf9e6",
+      "text": "恢复官方默认后能看到同一 Scene Graph、多候选和丰富度自检规则。外部全局 `video-editing` Skill"
+    },
+    {
+      "origin_ref": "SPEC-LINE:273:a4f914e1cdec6409",
+      "text": "本轮只作为执行方法使用，不作为产品完成条件，也不修改其文件。"
+    },
+    {
+      "origin_ref": "SPEC-LINE:291:93b8af66fbc4befd",
+      "text": "- 设置页 official Skill 投影与恢复默认回归测试。"
+    }
+  ],
+  "origin_ref_formats": {
+    "changed_lines": "SPEC-LINE:<line>:<16hex>（从 changed_line_refs 选择）",
+    "new_evidence": "EVIDENCE-SHA256:<64hex>:<project-relative-path>",
+    "late_critical": "SPEC-LINE:<line>:<16hex> | CONSTITUTION-LINE:<line>:<16hex> | EVIDENCE-SHA256:<64hex>:<path>"
+  }
+}

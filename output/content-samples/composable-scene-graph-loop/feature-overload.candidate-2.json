@@ -1,0 +1,126 @@
+{
+  "item": {
+    "id": "feature-overload",
+    "domain": "产品思考",
+    "title": "功能越多，不等于产品越好",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "功能越堆越多，用户完成任务反而更难。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "用户购买的不是功能清单，而是一条更省力的路径。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "删掉不影响结果的步骤，把验证过的路径留在主流程。"
+      }
+    ],
+    "script": "功能越堆越多，用户完成任务反而更难。用户购买的不是功能清单，而是一条更省力的路径。删掉不影响结果的步骤，把验证过的路径留在主流程。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "compare",
+      "content": "功能越堆越多 = 任务更难\n只留验证过的路径 = 更省力",
+      "at": 0,
+      "motion": "bar",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "功能越堆越多，用户完成任务反而更难。",
+            "role": "old"
+          },
+          {
+            "text": "删掉不影响结果的步骤，把验证过的路径留在主流程。",
+            "role": "new"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看到功能堆叠与流程精简这两种状态的对照关系",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "cluttered_stack",
+              "kind": "tile_collection",
+              "glyph": "feature",
+              "semantic": "杂乱堆积的无效功能"
+            },
+            {
+              "id": "clean_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "留在主流程的省力路径"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "cluttered_stack",
+              "start": 0,
+              "duration": 0.45,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "grow",
+              "target": "cluttered_stack",
+              "start": 0.45,
+              "duration": 0.35,
+              "from": {
+                "scale": 0.6
+              },
+              "to": {
+                "scale": 1.2
+              }
+            },
+            {
+              "action": "exit",
+              "target": "cluttered_stack",
+              "start": 0.8,
+              "duration": 0.2,
+              "from": {
+                "opacity": 1
+              },
+              "to": {
+                "opacity": 0
+              }
+            },
+            {
+              "action": "enter",
+              "target": "clean_path",
+              "start": 0.8,
+              "duration": 0.2,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "用户购买的，不是功能清单，而是一条更省力的路径。",
+      "at": 4,
+      "motion": "plain"
+    }
+  ]
+}

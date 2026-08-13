@@ -15,6 +15,7 @@
 //   本文件是 HyperFrames 专用实现。
 import type {
   VideoCardMotion,
+  VideoCardSceneGraph,
   VideoRenderBroll,
   VideoRenderCard,
   VideoRenderProps,
@@ -471,6 +472,76 @@ function growbarTop(): string {
   return `<div class="growbar ovl" style="height:8px;border-radius:4px;background:${TK.accent};transform-origin:left center;margin-bottom:12px"></div>`;
 }
 
+function sceneStateProps(state: SceneBeat["from"]): Record<string, string | number> {
+  const props: Record<string, string | number> = {};
+  if (state.x !== undefined) props.x = Math.round(state.x * 120);
+  if (state.y !== undefined) props.y = Math.round(state.y * 80);
+  if (state.scale !== undefined) props.scale = state.scale;
+  if (state.opacity !== undefined) props.autoAlpha = state.opacity;
+  if (state.rotation !== undefined) props.rotation = state.rotation;
+  return props;
+}
+
+function gsapObject(value: Record<string, string | number>): string {
+  return `{${Object.entries(value)
+    .map(([key, item]) => `${key}:${typeof item === "number" ? fmt(item) : JSON.stringify(item)}`)
+    .join(",")}}`;
+}
+
+function sceneGraphTween(
+  ctx: Ctx,
+  id: string,
+  scene: VideoCardSceneGraph,
+  at: number,
+  endAt: number,
+): void {
+  const windowSec = Math.max(0.1, endAt - at);
+  ctx.tweens.push(`tl.set("#${id}",{autoAlpha:1},${fmt(at)});`);
+  for (const beat of scene.beats) {
+    const startAt = at + beat.start * windowSec;
+    const duration = Math.max(0.08, beat.duration * windowSec);
+    const selector = `#${id} [data-entity-id='${beat.target}']`;
+    const from = sceneStateProps(beat.from);
+    const to = { ...sceneStateProps(beat.to), duration: fmt(duration), ease: "power2.inOut" };
+    if (beat.action === "overflow") {
+      const fromCount = beat.from.count ?? 0;
+      const toCount = beat.to.count ?? fromCount;
+      ctx.tweens.push(
+        `tl.set("${selector} .scene-unit",{autoAlpha:0,scale:.55},${fmt(startAt)});`,
+        `tl.set("${selector} .scene-unit:nth-child(-n+${Math.max(0, fromCount)})",{autoAlpha:1,scale:1},${fmt(startAt)});`,
+        `tl.to("${selector} .scene-unit:nth-child(-n+${Math.max(0, toCount)})",{autoAlpha:1,scale:1,duration:${fmt(duration)},stagger:${fmt(duration / Math.max(1, Math.abs(toCount - fromCount)))},ease:"back.out(1.5)"},${fmt(startAt)});`,
+      );
+      continue;
+    }
+    if (beat.action === "trace" || beat.action === "reveal") {
+      const fromProgress = beat.from.progress ?? 0;
+      const toProgress = beat.to.progress ?? 1;
+      ctx.tweens.push(
+        `tl.fromTo("${selector} .scene-progress",{scaleX:${fmt(fromProgress)}},{scaleX:${fmt(toProgress)},duration:${fmt(duration)},ease:"power2.inOut",transformOrigin:"left center"},${fmt(startAt)});`,
+      );
+      if (beat.action === "reveal") {
+        ctx.tweens.push(
+          `tl.fromTo("${selector} .scene-entity-visual",{clipPath:"inset(0 100% 0 0)"},{clipPath:"inset(0 0% 0 0)",duration:${fmt(duration)},ease:"power2.out"},${fmt(startAt)});`,
+        );
+      }
+      continue;
+    }
+    if (beat.action === "replace" && beat.with) {
+      const withSelector = `#${id} [data-entity-id='${beat.with}']`;
+      ctx.tweens.push(
+        `tl.fromTo("${selector}",${gsapObject(from)},{...${gsapObject(to)},autoAlpha:0},${fmt(startAt)});`,
+        `tl.fromTo("${withSelector}",{autoAlpha:0,scale:.82},{autoAlpha:1,scale:1,duration:${fmt(duration)},ease:"power3.out"},${fmt(startAt + duration * 0.35)});`,
+      );
+      continue;
+    }
+    ctx.tweens.push(
+      `tl.fromTo("${selector}",${gsapObject(from)},${gsapObject(to)},${fmt(startAt)});`,
+    );
+  }
+  ctx.tweens.push(`tl.to("#${id}",{autoAlpha:0,duration:.3},${fmt(Math.max(at, endAt - 0.3))});`);
+  ctx.tweens.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
+}
+
 /**
  * 卡片富动画分派:按 motion 生成进场配方(编排在 [at, endAt) 可见窗内),替换整块 `appear`。
  * 末尾统一淡出 + 硬关(沿用 appear 收尾)。进场选择器一律 `:not(.ovl)` 排除叠层钩子。
@@ -485,6 +556,10 @@ function motionTween(
   const t = ctx.tweens;
   const S = fmt(at);
   if (card.visualPlan) {
+    if (card.visualPlan.scene && isRenderableSceneGraph(card.visualPlan)) {
+      sceneGraphTween(ctx, id, card.visualPlan.scene, at, endAt);
+      return;
+    }
     const relation = card.visualPlan.relation;
     const partSelector = `#${id} [data-visual-part]`;
     const lineSelector = `#${id} [data-relation-line]`;
@@ -709,9 +784,206 @@ interface CardBox {
   inner: string;
 }
 
-function renderVisualSentence(card: VideoRenderCard): CardBox | null {
+type SceneEntity = VideoCardSceneGraph["entities"][number];
+type SceneBeat = VideoCardSceneGraph["beats"][number];
+
+/**
+ * [T-802] 受限 Scene Graph 只把模型已选定的对象和状态轨迹翻译为 DOM/GSAP。
+ * SEMANTIC_BOUNDARY_ALLOW: 这些函数仅做几何重排、图元绘制和白名单动作执行；不根据
+ * relation/文案关键词选择隐喻，也不会生成新的上屏文字。
+ */
+function sceneGlyph(entity: SceneEntity): string {
+  const line = (style: string) => `<i style="position:absolute;${style}"></i>`;
+  switch (entity.glyph) {
+    case "document":
+      return `<div class="glyph-document" style="position:absolute;inset:12px 20px;background:#ece8de;clip-path:polygon(0 0,82% 0,100% 18%,100% 100%,0 100%);box-shadow:0 16px 30px #0008">${line(`left:18%;right:18%;top:34%;height:5px;background:#777168;box-shadow:0 20px 0 #777168,0 40px 0 #aaa49a`)}</div>`;
+    case "message":
+      return `<div style="position:absolute;left:14%;right:14%;top:20%;bottom:25%;border:4px solid ${TK.accentH};border-radius:22px;background:${TK.accent}22;clip-path:polygon(0 0,100% 0,100% 78%,68% 78%,54% 100%,50% 78%,0 78%)"></div>`;
+    case "notification":
+      return `<div style="position:absolute;left:31%;top:14%;width:38%;height:58%;border-radius:50% 50% 18% 18%;background:${TK.amber};box-shadow:0 0 30px ${TK.amber}55"></div>${line(`left:43%;top:73%;width:14%;height:10%;border-radius:0 0 999px 999px;background:${TK.fg}`)}`;
+    case "moon":
+      return `<div style="position:absolute;left:24%;top:12%;width:52%;aspect-ratio:1;border-radius:50%;background:${TK.accentH};box-shadow:0 0 42px ${TK.accent}66"><i style="position:absolute;left:30%;top:-8%;width:86%;height:86%;border-radius:50%;background:${TK.bg}"></i></div>`;
+    case "clock":
+      return `<div style="position:absolute;left:20%;top:10%;width:60%;aspect-ratio:1;border:6px solid ${TK.fg2};border-radius:50%">${line(`left:47%;top:18%;width:6%;height:34%;background:${TK.accentH};transform-origin:50% 100%`)}${line(`left:48%;top:47%;width:28%;height:5%;background:${TK.green};transform-origin:0 50%;transform:rotate(28deg)`)}</div>`;
+    case "folder":
+      return `<div style="position:absolute;left:10%;right:10%;top:28%;bottom:18%;border:3px solid ${TK.amber};border-radius:10px;background:${TK.amber}28"><i style="position:absolute;left:7%;top:-22%;width:38%;height:24%;border-radius:8px 8px 0 0;background:${TK.amber}"></i></div>`;
+    case "archive":
+      return `<div style="position:absolute;left:12%;right:12%;top:18%;bottom:18%;border:4px solid ${TK.fg2};background:${TK.surface2};box-shadow:0 16px 28px #0008">${line(`left:-5%;right:-5%;top:-8%;height:16%;background:${TK.fg2}`)}${line(`left:30%;right:30%;top:38%;height:8%;background:${TK.accentH}`)}</div>`;
+    case "route":
+      return `<svg viewBox="0 0 220 120" style="position:absolute;inset:8%;width:84%;height:76%;overflow:visible"><path d="M12 92 C54 18 110 112 150 44 S198 22 210 30" fill="none" stroke="${TK.accentH}" stroke-width="8" stroke-linecap="round" stroke-dasharray="14 13"/><circle cx="12" cy="92" r="10" fill="${TK.green}"/><circle cx="210" cy="30" r="13" fill="${TK.amber}"/></svg>`;
+    case "target":
+      return `<div style="position:absolute;left:20%;top:8%;width:60%;aspect-ratio:1;border:5px solid ${TK.accentH};border-radius:50%;box-shadow:inset 0 0 0 18px ${TK.bg},inset 0 0 0 23px ${TK.green},0 0 35px ${TK.accent}55"></div>`;
+    case "filter":
+      return `<div style="position:absolute;left:16%;right:16%;top:14%;bottom:18%;background:linear-gradient(${TK.accentH},${TK.accent});clip-path:polygon(0 0,100% 0,62% 48%,62% 100%,38% 84%,38% 48%)"></div>`;
+    case "feature":
+      return `<div class="scene-units" style="position:absolute;inset:10%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${Array.from({ length: 12 }, (_, index) => `<i class="scene-unit" data-unit-index="${index}" style="border:2px solid ${index % 3 === 0 ? TK.green : TK.accentH};border-radius:9px;background:${TK.surface2};box-shadow:0 8px 14px #0006"></i>`).join("")}</div>`;
+    case "person":
+      return `<div style="position:absolute;left:39%;top:10%;width:22%;aspect-ratio:1;border-radius:50%;background:${TK.fg2}"></div><div style="position:absolute;left:25%;right:25%;top:42%;bottom:10%;border-radius:50% 50% 12px 12px;background:${TK.accent}"></div>`;
+    case "team":
+      return `<div style="position:absolute;inset:10%">${[18, 50, 82].map((x, index) => `<i style="position:absolute;left:${x}%;top:${index === 1 ? 3 : 18}%;width:26%;height:26%;transform:translateX(-50%);border-radius:50%;background:${index === 1 ? TK.green : TK.fg2}"></i><b style="position:absolute;left:${x}%;top:${index === 1 ? 31 : 45}%;width:32%;height:42%;transform:translateX(-50%);border-radius:50% 50% 10px 10px;background:${index === 1 ? TK.accent : TK.surface2}"></b>`).join("")}</div>`;
+    case "chart":
+      return `<div style="position:absolute;inset:12%;display:flex;align-items:flex-end;gap:10px;border-left:3px solid ${TK.fg2};border-bottom:3px solid ${TK.fg2};padding:10px">${[36, 72, 52, 94].map((height, index) => `<i class="scene-unit" style="flex:1;height:${height}%;background:${index === 3 ? TK.green : TK.accent};border-radius:6px 6px 0 0"></i>`).join("")}</div>`;
+    case "calendar":
+      return `<div style="position:absolute;left:15%;right:15%;top:12%;bottom:12%;border:4px solid ${TK.fg2};border-radius:14px;background:${TK.surface2}">${line(`left:0;right:0;top:22%;height:4px;background:${TK.accent}`)}<div style="position:absolute;left:12%;right:12%;top:36%;bottom:12%;display:grid;grid-template-columns:repeat(4,1fr);gap:7px">${Array.from({ length: 12 }, (_, index) => `<i style="border-radius:4px;background:${index === 9 ? TK.green : TK.meta}"></i>`).join("")}</div></div>`;
+    case "inbox":
+      return `<div style="position:absolute;left:12%;right:12%;top:32%;bottom:15%;border:5px solid ${TK.fg2};border-radius:8px 8px 20px 20px;background:${TK.surface2};clip-path:polygon(0 0,32% 0,39% 24%,61% 24%,68% 0,100% 0,100% 100%,0 100%)"></div>`;
+    case "none":
+    default:
+      return `<div style="position:absolute;left:20%;top:12%;width:60%;aspect-ratio:1;border-radius:${entity.kind === "node" || entity.kind === "target" ? "50%" : "18px"};border:4px solid ${TK.accentH};background:${TK.accent}24;box-shadow:0 0 34px ${TK.accent}33"></div>`;
+  }
+}
+
+function sceneEntitySize(kind: SceneEntity["kind"], portrait: boolean) {
+  const base = portrait ? { width: 300, height: 240 } : { width: 300, height: 230 };
+  if (kind === "path") return portrait ? { width: 400, height: 190 } : { width: 480, height: 190 };
+  if (kind === "tile_collection") return portrait ? { width: 390, height: 300 } : { width: 420, height: 290 };
+  if (kind === "device") return portrait ? { width: 300, height: 360 } : { width: 310, height: 340 };
+  if (kind === "text") return { width: portrait ? 420 : 440, height: 190 };
+  return base;
+}
+
+function scenePosition(
+  layout: VideoCardSceneGraph["layout"],
+  index: number,
+  count: number,
+  width: number,
+  height: number,
+  entityWidth: number,
+  entityHeight: number,
+  portrait: boolean,
+) {
+  const pad = portrait ? 42 : 54;
+  const headingSpace = portrait ? 270 : 190;
+  const usableW = width - pad * 2 - entityWidth;
+  const usableH = height - headingSpace - pad * 2 - entityHeight;
+  const ratio = count <= 1 ? 0.5 : index / (count - 1);
+  if (layout === "path" || layout === "flow") {
+    if (portrait) return { left: pad + (index % 2) * Math.max(0, usableW), top: headingSpace + pad + usableH * ratio };
+    return { left: pad + usableW * ratio, top: headingSpace + pad + (index % 2) * Math.max(0, usableH) };
+  }
+  if (layout === "stack") {
+    const step = Math.min(
+      portrait ? 78 : 88,
+      Math.max(28, usableH / Math.max(1, count - 1)),
+    );
+    const offset = (index - (count - 1) / 2) * step;
+    return { left: (width - entityWidth) / 2 + offset * 0.42, top: headingSpace + (height - headingSpace - entityHeight) / 2 + offset };
+  }
+  if (layout === "field") {
+    const cols = portrait ? 2 : Math.min(3, Math.max(2, Math.ceil(Math.sqrt(count))));
+    const rows = Math.ceil(count / cols);
+    const colIndex = index % cols;
+    const rowIndex = Math.floor(index / cols);
+    return {
+      left: pad + (cols === 1 ? usableW / 2 : (usableW * colIndex) / (cols - 1)),
+      top: headingSpace + pad + (rows === 1 ? usableH / 2 : (usableH * rowIndex) / (rows - 1)),
+    };
+  }
+  if (layout === "orbit") {
+    const angle = -Math.PI / 2 + (Math.PI * 2 * index) / Math.max(1, count);
+    const rx = Math.max(0, usableW * 0.42);
+    const ry = Math.max(0, usableH * 0.42);
+    return { left: (width - entityWidth) / 2 + Math.cos(angle) * rx, top: headingSpace + (height - headingSpace - entityHeight) / 2 + Math.sin(angle) * ry };
+  }
+  if (layout === "split") {
+    const firstCount = Math.ceil(count / 2);
+    const first = index < firstCount;
+    const localIndex = first ? index : index - firstCount;
+    const localCount = first ? firstCount : count - firstCount;
+    const localRatio = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
+    return portrait
+      ? { left: pad + usableW * localRatio, top: headingSpace + pad + (first ? 0 : usableH) }
+      : { left: pad + (first ? 0 : usableW), top: headingSpace + pad + usableH * localRatio };
+  }
+  const cols = portrait ? 2 : Math.min(4, count);
+  const colIndex = index % cols;
+  const rowIndex = Math.floor(index / cols);
+  const rows = Math.ceil(count / cols);
+  return {
+    left: pad + (cols === 1 ? usableW / 2 : (usableW * colIndex) / (cols - 1)),
+    top: headingSpace + pad + (rows === 1 ? usableH / 2 : (usableH * rowIndex) / (rows - 1)),
+  };
+}
+
+function isRenderableSceneGraph(
+  plan: NonNullable<VideoRenderCard["visualPlan"]>,
+): boolean {
+  const scene = plan.scene;
+  if (!scene) return false;
+  const ids = new Set(scene.entities.map((entity) => entity.id));
+  if (ids.size !== scene.entities.length) return false;
+  const roleCounts = new Map<string, number>();
+  for (const part of plan.parts) roleCounts.set(part.role, (roleCounts.get(part.role) ?? 0) + 1);
+  if (scene.entities.some((entity) => entity.textRole && roleCounts.get(entity.textRole) !== 1)) return false;
+  return scene.beats.every((beat) => {
+    if (!ids.has(beat.target) || beat.start + beat.duration > 1.000001) return false;
+    if (beat.with && !ids.has(beat.with)) return false;
+    if (beat.affects?.some((entityId) => !ids.has(entityId))) return false;
+    const keys = new Set([...Object.keys(beat.from), ...Object.keys(beat.to)]);
+    const only = (...allowed: string[]) => [...keys].every((key) => allowed.includes(key));
+    const from = beat.from;
+    const to = beat.to;
+    switch (beat.action) {
+      case "enter": return only("opacity") && (to.opacity ?? 0) > (from.opacity ?? 0);
+      case "exit": return only("opacity") && (to.opacity ?? 1) < (from.opacity ?? 1);
+      case "move": return only("x", "y") && (to.x !== from.x || to.y !== from.y);
+      case "grow":
+      case "focus": return only("scale") && (to.scale ?? 0) > (from.scale ?? 0);
+      case "shrink":
+      case "compress": return only("scale") && (to.scale ?? 1) < (from.scale ?? 1);
+      case "overflow": return only("count") && (to.count ?? 0) > (from.count ?? 0);
+      case "trace":
+      case "reveal": return only("progress") && (to.progress ?? 0) > (from.progress ?? 0);
+      case "replace": return Boolean(beat.with) && only("opacity") && (to.opacity ?? 1) < (from.opacity ?? 1);
+    }
+  });
+}
+
+function renderSceneGraph(card: VideoRenderCard, portrait: boolean): CardBox | null {
+  const plan = card.visualPlan;
+  const scene = plan?.scene;
+  if (!plan || !scene || !isRenderableSceneGraph(plan)) return null;
+  const width = portrait ? 920 : 1480;
+  const height = portrait ? 1080 : 700;
+  const partForRole = (role?: string) =>
+    role ? plan.parts.find((part) => part.role === role)?.text : undefined;
+  const entities = scene.entities.map((entity, index) => {
+    const size = sceneEntitySize(entity.kind, portrait);
+    const pos = scenePosition(scene.layout, index, scene.entities.length, width, height, size.width, size.height, portrait);
+    const label = partForRole(entity.textRole);
+    return `<div class="scene-entity scene-kind-${esc(entity.kind)}" data-entity-id="${esc(entity.id)}" data-entity-kind="${esc(entity.kind)}" data-entity-glyph="${esc(entity.glyph)}" style="position:absolute;left:${Math.round(pos.left)}px;top:${Math.round(pos.top)}px;width:${size.width}px;height:${size.height}px;z-index:${20 + index};transform-origin:center center">` +
+      `<div class="scene-entity-visual" data-text-avoid style="position:absolute;inset:0;border:${entity.kind === "text" ? "0" : `1px solid ${TK.border}`};border-radius:${entity.kind === "device" ? "30px" : "20px"};background:${entity.kind === "text" ? "transparent" : `${TK.surface}d9`};box-shadow:0 18px 42px #0008;overflow:hidden">${sceneGlyph(entity)}<i class="scene-progress" style="position:absolute;left:8%;right:8%;bottom:6%;height:5px;border-radius:999px;background:${TK.green};transform-origin:left center"></i></div>` +
+      (label ? `<div data-text-safe data-visual-part data-role="${esc(entity.textRole!)}" style="position:absolute;left:4%;right:4%;bottom:5%;z-index:8;padding:7px 10px;border-radius:9px;background:${TK.bg}f2;color:${TK.fg};font-size:${portrait ? 24 : 22}px;line-height:1.18;font-weight:760;text-align:center;box-shadow:0 8px 20px #0008">${esc(label)}</div>` : "") +
+      `</div>`;
+  }).join("");
+  const traces = scene.beats.map((beat, index) => {
+    const keys = Array.from(new Set([...Object.keys(beat.from), ...Object.keys(beat.to)])).sort();
+    const trajectory = keys.map((key) => `${key}:${String((beat.from as Record<string, unknown>)[key])}>${String((beat.to as Record<string, unknown>)[key])}`).join("|");
+    return `<i data-scene-beat="${index}" data-beat-action="${esc(beat.action)}" data-beat-target="${esc(beat.target)}" data-motion-trace="${esc(trajectory)}" style="display:none"></i>`;
+  }).join("");
+  const thoughtRail = plan.parts
+    .slice(0, 3)
+    .map((part) => `<span style="display:inline-flex;align-items:center;max-width:${portrait ? 760 : 620}px;min-height:54px;padding:10px 18px;border:1px solid ${TK.border};border-radius:24px;background:${TK.bg}e8;color:${TK.fg};font-size:${portrait ? 25 : 27}px;line-height:1.25;font-weight:760;text-align:center;box-shadow:0 10px 28px #0007">${esc(part.text)}</span>`)
+    .join(`<i aria-hidden="true" style="width:30px;height:2px;background:${TK.accentH};opacity:.7"></i>`);
+  return {
+    width,
+    height,
+    style: `background:radial-gradient(520px 300px at 50% 45%,${TK.accent}18,transparent 72%);border:0;border-radius:0;box-shadow:none;padding:0;overflow:hidden;`,
+    inner: `<div class="visual-scene-graph" data-scene-layout="${esc(scene.layout)}" data-aspect-strategy="reflow" style="position:relative;width:100%;height:100%"><div class="scene-thought-rail" data-text-safe style="position:absolute;left:5%;right:5%;top:24px;min-height:72px;z-index:120;display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap">${thoughtRail}</div>${entities}${traces}</div>`,
+  };
+}
+
+function renderVisualSentence(card: VideoRenderCard, portrait: boolean): CardBox | null {
   const plan = card.visualPlan;
   if (!plan) return null;
+  if (plan.scene) {
+    try {
+      const sceneBox = renderSceneGraph(card, portrait);
+      if (sceneBox) return sceneBox;
+    } catch {
+      // 非法历史候选只降级到现有 relation+parts，再由卡片基座兜底；不让整片失败。
+    }
+  }
   const parts = plan.parts;
   const byRole = (role: string, fallbackIndex: number) =>
     parts.find((part) => part.role === role) ?? parts[fallbackIndex] ?? parts[0]!;
@@ -986,8 +1258,8 @@ function renderCardBase(
  * 钩子绝对定位(.ovl,不占 flow):strike→红删除线、metaphor→底部绿线;非 compare 的 bar 补顶部生长条
  * (compare 的两条在 renderCardBase 各侧内)。motionTween 按 motion 选中这些钩子做 GSAP 动画。
  */
-function renderCard(card: VideoRenderCard, mediaPrefix: string): CardBox {
-  const visualSentence = renderVisualSentence(card);
+function renderCard(card: VideoRenderCard, mediaPrefix: string, portrait = false): CardBox {
+  const visualSentence = renderVisualSentence(card, portrait);
   if (visualSentence) return visualSentence;
   const motion = resolveMotion(card);
   const box = renderCardBase(card, mediaPrefix, motion);
@@ -1259,7 +1531,7 @@ export function generateVideoRenderHtml(
         .find((candidate) => isOccludingVisual(candidate))?.at;
       const endAt = scene.endSec;
       if (item.type === "card") {
-        const box = renderCard(item.card, mediaPrefix);
+        const box = renderCard(item.card, mediaPrefix, props.delivery.height > props.delivery.width);
         // 信息卡是当前口播 beat 的主视觉，不是左上角的小标签。每个 beat 复用同一
         // 信息舞台并替换上一个，避免卡片沿 flow 越堆越散、大片区域仍然空黑。
         const stageWidth = Math.max(1, rightEdge - L.contentX);
@@ -1293,7 +1565,10 @@ export function generateVideoRenderHtml(
         // 该时间段会由后续真实素材承接；信息卡只服务真正的空镜与语义节拍。
         if (cardEnd - item.at < 1.2) continue;
         const id = `c${nextTrack(ctx)}`;
-        const visualOnlyScale = visualOnly && width > height && item.card.visualPlan ? 1.34 : 1;
+        const visualOnlyScale =
+          visualOnly && width > height && item.card.visualPlan && !item.card.visualPlan.scene
+            ? 1.34
+            : 1;
         clip(
           ctx,
           id,

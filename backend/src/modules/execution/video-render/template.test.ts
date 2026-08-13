@@ -494,6 +494,58 @@ describe("generateVideoRenderHtml · [T-794] 内容驱动视觉句子", () => {
     expect(replacementHtml).toContain("scene-manual-label");
     expect(replacementHtml).toContain("top:132px;width:375px");
   });
+
+  it("[T-802 RED] 同一 relation 可由 Scene Graph 渲染成不同对象、构图与实际轨迹", () => {
+    const make = (scene: unknown) => generateVideoRenderHtml(videoRenderProps.parse({
+      meta: { title: "可组合场景" },
+      talkingHead: { file: "th.mp4", durationSec: 8 },
+      scenes: [{
+        id: "s1", label: "L", title: "T", startSec: 0, endSec: 8,
+        cards: [{
+          kind: "quote", at: 0, text: "原因导致结果",
+          visualPlan: {
+            relation: "cause_effect",
+            parts: [{ text: "原因", role: "cause" }, { text: "结果", role: "result" }],
+            scene,
+          },
+        }],
+      }],
+    }));
+    const blockedPath = make({
+      cognitiveGoal: "看见功能堵住路径",
+      layout: "path",
+      aspectStrategy: "reflow",
+      entities: [
+        { id: "features", kind: "tile_collection", glyph: "feature", semantic: "功能" },
+        { id: "route", kind: "path", glyph: "route", semantic: "路径" },
+      ],
+      beats: [
+        { action: "overflow", target: "features", start: 0, duration: 0.45, from: { count: 2 }, to: { count: 9 } },
+        { action: "compress", target: "route", start: 0.4, duration: 0.35, from: { scale: 1 }, to: { scale: 0.35 } },
+      ],
+    });
+    const sleepErosion = make({
+      cognitiveGoal: "看见通知侵蚀睡眠",
+      layout: "stack",
+      aspectStrategy: "reflow",
+      entities: [
+        { id: "notices", kind: "icon", glyph: "notification", semantic: "通知" },
+        { id: "sleep", kind: "meter", glyph: "moon", semantic: "睡眠" },
+      ],
+      beats: [
+        { action: "enter", target: "notices", start: 0, duration: 0.25, from: { opacity: 0 }, to: { opacity: 1 } },
+        { action: "shrink", target: "sleep", start: 0.25, duration: 0.5, from: { scale: 1 }, to: { scale: 0.4 } },
+      ],
+    });
+    expect(blockedPath).toContain('data-scene-layout="path"');
+    expect(blockedPath).toContain('data-entity-kind="tile_collection"');
+    expect(blockedPath).toContain('data-beat-action="overflow"');
+    expect(sleepErosion).toContain('data-scene-layout="stack"');
+    expect(sleepErosion).toContain('data-entity-kind="meter"');
+    expect(sleepErosion).toContain('data-beat-action="shrink"');
+    expect(blockedPath).not.toContain("scene-machine");
+    expect(sleepErosion).not.toContain("scene-machine");
+  });
 });
 
 describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素材窗口内切 PiP)", () => {

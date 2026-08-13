@@ -1,0 +1,197 @@
+{
+  "schema": "creatoros-t802-independent-judge/v1",
+  "judge": "Codex independent semantic judge",
+  "cases": [
+    {
+      "id": "feature-overload",
+      "winner": 1,
+      "decisiveDifference": "候选1直接呈现“功能堆叠使任务变难”与“精简路径更省力”的状态替换；候选0只画删除步骤，未充分表现功能过载造成的负担。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 16,
+          "cognitiveGain": 15,
+          "silentReadability": 12,
+          "motionNarrative": 12,
+          "nonTemplate": 11,
+          "visualSafety": 13,
+          "total": 79,
+          "hardFail": false,
+          "reason": "路径、被删步骤和保留节点均来自原文，收缩动作也有叙事性，但缺少功能堆积如何增加任务负担的可见状态。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 18,
+          "cognitiveGain": 17,
+          "silentReadability": 13,
+          "motionNarrative": 13,
+          "nonTemplate": 12,
+          "visualSafety": 14,
+          "total": 87,
+          "hardFail": false,
+          "reason": "杂乱功能栈先膨胀退出、省力路径随后出现，把核心对照转成了可见的状态变化；对象少且适合重排。"
+        }
+      ]
+    },
+    {
+      "id": "sleep-notifications",
+      "winner": 1,
+      "decisiveDifference": "候选0生成失败且没有场景，依法硬失败；候选1同时画出了通知挤压睡眠和七天记录比较。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 0,
+          "cognitiveGain": 0,
+          "silentReadability": 0,
+          "motionNarrative": 0,
+          "nonTemplate": 0,
+          "visualSafety": 0,
+          "total": 0,
+          "hardFail": true,
+          "reason": "generationError 非空且 sceneCount=0，必须硬失败。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 19,
+          "cognitiveGain": 18,
+          "silentReadability": 13,
+          "motionNarrative": 13,
+          "nonTemplate": 13,
+          "visualSafety": 13,
+          "total": 89,
+          "hardFail": false,
+          "reason": "双 meter 的此消彼长具体表现通知挤压睡眠，七天路径、时钟和状态记录又把验证方法画成第二种机制；协议可重排。"
+        }
+      ]
+    },
+    {
+      "id": "material-bottleneck",
+      "winner": 0,
+      "decisiveDifference": "候选0不仅对照素材与发布状态，还用溢出、流向和断点把“供给充足但交付堵塞”的瓶颈机制画了出来。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 19,
+          "cognitiveGain": 19,
+          "silentReadability": 13,
+          "motionNarrative": 14,
+          "nonTemplate": 14,
+          "visualSafety": 12,
+          "total": 91,
+          "hardFail": false,
+          "reason": "收件箱溢出、预期路径追踪、发布端断点和空日历共同形成完整因果读法；对象较多，跨画幅重排难度略高。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 17,
+          "cognitiveGain": 16,
+          "silentReadability": 12,
+          "motionNarrative": 10,
+          "nonTemplate": 11,
+          "visualSafety": 14,
+          "total": 80,
+          "hardFail": false,
+          "reason": "素材栈与空缺量保持原文相关，但主要依赖同时放大和揭示，未表现素材为何无法进入发布轨道，运动叙事较弱。"
+        }
+      ]
+    },
+    {
+      "id": "meeting-overload",
+      "winner": 1,
+      "decisiveDifference": "候选1把信息碎片进入共享文档和“同步信息/做决定”两条断开的轨道分别可视化，比候选0的简单文档到会议连线多出关键认知层。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 16,
+          "cognitiveGain": 14,
+          "silentReadability": 12,
+          "motionNarrative": 10,
+          "nonTemplate": 10,
+          "visualSafety": 14,
+          "total": 76,
+          "hardFail": false,
+          "reason": "文档、会议和流向符合两步流程，但没有具体画出信息被沉淀后只剩分歧进入会议，容易读成普通流程图。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 18,
+          "cognitiveGain": 18,
+          "silentReadability": 13,
+          "motionNarrative": 14,
+          "nonTemplate": 14,
+          "visualSafety": 12,
+          "total": 89,
+          "hardFail": false,
+          "reason": "信息碎片移动入文档形成动作叙事，第二场用双轨断点区分同步与决策；会议空间未参与 beat，且多场景重排需更谨慎。"
+        }
+      ]
+    },
+    {
+      "id": "archive-understanding",
+      "winner": 0,
+      "decisiveDifference": "候选0用收藏归档、连接旧结论、生成改变后判断的连续状态变化，完整覆盖了“记录—连接—改变”的认知链。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 19,
+          "cognitiveGain": 19,
+          "silentReadability": 13,
+          "motionNarrative": 14,
+          "nonTemplate": 14,
+          "visualSafety": 12,
+          "total": 91,
+          "hardFail": false,
+          "reason": "资料进入档案、桥接旧判断并产生改变后节点，具体区分保存动作和理解动作；两场景实体较多，重排安全性需保守看待。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 19,
+          "cognitiveGain": 18,
+          "silentReadability": 13,
+          "motionNarrative": 13,
+          "nonTemplate": 13,
+          "visualSafety": 13,
+          "total": 89,
+          "hardFail": false,
+          "reason": "连接弧和决策点准确对应原文，流程清楚；第一场两个同类资料块的差异较依赖语义标签，状态转变不如候选0具体。"
+        }
+      ]
+    },
+    {
+      "id": "customer-evidence",
+      "winner": 0,
+      "decisiveDifference": "第二轮胜者用证据强度量度把“口头喜欢→真实下单”的信号升级可视化，又用小订单实体、承接路径和放大动作呈现“验证→放量”；遮住文字后仍能辨认两次证据升级。首轮胜者后半段退化为三个等权步骤框，第二轮另一候选主要依赖同类卡片换字与连线路径，均更像动态PPT。",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "contentRelevance": 19,
+          "cognitiveGain": 19,
+          "silentReadability": 14,
+          "motionNarrative": 14,
+          "nonTemplate": 13,
+          "visualSafety": 14,
+          "total": 93,
+          "hardFail": false,
+          "reason": "消息通道、付费通道与增长量表共同呈现证据强弱，小订单经路径进入放大对象，实体和运动都服务于原文逻辑；即使遮字，也能读出从表态到付费、从试单到放大的升级。"
+        },
+        {
+          "candidateIndex": 1,
+          "contentRelevance": 15,
+          "cognitiveGain": 13,
+          "silentReadability": 11,
+          "motionNarrative": 8,
+          "nonTemplate": 10,
+          "visualSafety": 14,
+          "total": 71,
+          "hardFail": false,
+          "reason": "话语气泡与未触发目标能表达“喜欢不是付费”，但没有呈现真实下单和逐步验证，focus 动作也未形成完整证据变化。"
+        }
+      ]
+    }
+  ],
+  "crossCase": {
+    "winnerUniqueEnough": true,
+    "sameRelationAxesDiverse": true,
+    "summary": "六个赢家分别采用功能栈退出与路径替换、双 meter 挤压与七日追踪、收件箱溢出与发布断点、信息入库与双轨分离、资料桥接与判断更新、口头判断纠正与购买验证路径。虽然 path/flow 原语重复出现，但核心对象、构图重点和运动机制足够不同；相同 relation 也至少在对象轴与运动轴上形成多样性。"
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "item": {
+    "id": "material-bottleneck",
+    "domain": "内容生产",
+    "title": "素材越多，发布反而越慢",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "素材不断涌进收件箱，发布轨道却一直空着。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "真正缺的不是更多素材，而是筛选和交付的标准。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "先让素材经过同一把尺，再把合格内容送进发布日历。"
+      }
+    ],
+    "script": "素材不断涌进收件箱，发布轨道却一直空着。真正缺的不是更多素材，而是筛选和交付的标准。先让素材经过同一把尺，再把合格内容送进发布日历。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "compare",
+      "content": "素材涌进收件箱\n发布轨道空着",
+      "at": 0,
+      "motion": "bar",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "素材不断涌进收件箱",
+            "role": "old"
+          },
+          {
+            "text": "发布轨道却一直空着",
+            "role": "new"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看清素材涌入与发布空缺两个状态并存形成的反差",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "inbox",
+              "kind": "device",
+              "glyph": "inbox",
+              "semantic": "素材来源,持续涌入"
+            },
+            {
+              "id": "calendar",
+              "kind": "device",
+              "glyph": "calendar",
+              "semantic": "发布轨道,长期空置"
+            },
+            {
+              "id": "flow_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "从收件箱流向日历的预期路径"
+            },
+            {
+              "id": "gap_marker",
+              "kind": "shape",
+              "glyph": "none",
+              "semantic": "标识轨道空缺的红色断开点"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "inbox",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "overflow",
+              "target": "inbox",
+              "start": 0.2,
+              "duration": 0.55,
+              "from": {
+                "count": 0
+              },
+              "to": {
+                "count": 6
+              }
+            },
+            {
+              "action": "enter",
+              "target": "flow_path",
+              "start": 0.3,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "trace",
+              "target": "flow_path",
+              "start": 0.45,
+              "duration": 0.35,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "gap_marker",
+              "start": 0.7,
+              "duration": 0.15,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "calendar",
+              "start": 0.55,
+              "duration": 0.4,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "gap_marker",
+              "start": 0.85,
+              "duration": 0.1,
+              "from": {
+                "scale": 1
+              },
+              "to": {
+                "scale": 1.3
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

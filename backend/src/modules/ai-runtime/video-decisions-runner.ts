@@ -455,7 +455,7 @@ export function buildScenesDecisionSchema(srtStarts: readonly number[]) {
   );
 }
 
-/** ② 信息卡:sceneIdx 越界即废;at 离某 SRT 行 start ≤ 容差。 */
+/** ② 信息卡:时间/场景 + Scene Graph 协议同时进动态 schema，坏动作先返给模型重试。 */
 export function buildCardsDecisionSchema(
   sceneCount: number,
   srtStarts: readonly number[],
@@ -467,9 +467,13 @@ export function buildCardsDecisionSchema(
           c.sceneIdx >= 0 &&
           c.sceneIdx < sceneCount &&
           Math.abs(c.at - nearestSrtStart(c.at, srtStarts)) <=
-            SNAP_TOLERANCE_SEC,
+            SNAP_TOLERANCE_SEC &&
+          (!c.visualPlan || isVideoCardVisualPlanStructurallyValid(c.visualPlan)),
       ),
-    { message: "卡片 sceneIdx 必须在场景范围内、at 必须落在 SRT 行 start(容差内)" },
+    {
+      message:
+        "卡片 sceneIdx/at 必须合法；visualPlan 必须满足 role、引用与动作属性协议：enter 增 opacity、exit 减 opacity、grow/focus 增 scale、shrink/compress 减 scale、overflow 增 count、trace/reveal 增 progress；一个 action 只保留其允许属性，重复 role 不得绑 textRole",
+    },
   );
 }
 
@@ -568,6 +572,21 @@ export function isCardContentTraceable(
 }
 
 /**
+ * [T-802] Scene Graph 的上屏部件必须是原文中的完整连续片段。
+ * 仅做 Unicode/空白规范化，不删标点、不做同义替换，避免“有几个关键词相同”就把
+ * 模型改写后的新主张带进成片。
+ */
+export function isCardPartStrictlyTraceable(
+  part: string,
+  script: string,
+): boolean {
+  const normalize = (value: string) =>
+    value.normalize("NFC").replace(/\s+/gu, " ").trim();
+  const wanted = normalize(part);
+  return wanted.length > 0 && normalize(script).includes(wanted);
+}
+
+/**
  * [T-794] visualPlan 只做协议形状检查，不判断创作关系是否选得好。
  * SEMANTIC_BOUNDARY_ALLOW: 必需 role、部件数与上屏长度都是渲染协议/版式边界；
  * “这段口播是不是因果”仍完全由 video.cards Skill 决定。
@@ -586,19 +605,110 @@ export function isVideoCardVisualPlanStructurallyValid(
   }
   const has = (role: VideoCardVisualPlan["parts"][number]["role"]) =>
     plan.parts.some((part) => part.role === role);
+  let relationValid = false;
   switch (plan.relation) {
     case "magnitude":
-      return has("measure");
+      relationValid = has("measure");
+      break;
     case "contrast":
     case "replacement":
-      return has("old") && has("new");
+      relationValid = has("old") && has("new");
+      break;
     case "sequence":
-      return plan.parts.filter((part) => part.role === "step").length >= 2;
+      relationValid = plan.parts.filter((part) => part.role === "step").length >= 2;
+      break;
     case "cause_effect":
-      return has("cause") && has("result");
+      relationValid = has("cause") && has("result");
+      break;
     case "statement":
-      return has("claim") || has("conclusion");
+      relationValid = has("claim") || has("conclusion");
+      break;
   }
+  if (!relationValid || !plan.scene) return relationValid;
+
+  const scene = plan.scene;
+  const entityIds = new Set(scene.entities.map((entity) => entity.id));
+  if (entityIds.size !== scene.entities.length) return false;
+  const roleCount = new Map<string, number>();
+  for (const part of plan.parts) {
+    roleCount.set(part.role, (roleCount.get(part.role) ?? 0) + 1);
+  }
+  if (
+    scene.entities.some(
+      (entity) => entity.textRole && roleCount.get(entity.textRole) !== 1,
+    )
+  ) {
+    return false;
+  }
+
+  const changed = (
+    beat: (typeof scene.beats)[number],
+    key: keyof (typeof beat)["from"],
+  ) => beat.from[key] !== beat.to[key];
+  const onlyKeys = (
+    beat: (typeof scene.beats)[number],
+    allowed: readonly string[],
+  ) => {
+    const used = new Set([...Object.keys(beat.from), ...Object.keys(beat.to)]);
+    return [...used].every((key) => allowed.includes(key));
+  };
+  const increasing = (
+    beat: (typeof scene.beats)[number],
+    key: "opacity" | "scale" | "progress" | "count",
+  ) =>
+    typeof beat.from[key] === "number" &&
+    typeof beat.to[key] === "number" &&
+    beat.to[key]! > beat.from[key]!;
+  const decreasing = (
+    beat: (typeof scene.beats)[number],
+    key: "opacity" | "scale",
+  ) =>
+    typeof beat.from[key] === "number" &&
+    typeof beat.to[key] === "number" &&
+    beat.to[key]! < beat.from[key]!;
+  for (const beat of scene.beats) {
+    if (beat.start + beat.duration > 1.000001) return false;
+    if (!entityIds.has(beat.target)) return false;
+    if (beat.with && !entityIds.has(beat.with)) return false;
+    if (beat.affects?.some((id) => !entityIds.has(id))) return false;
+    switch (beat.action) {
+      case "enter":
+        if (!onlyKeys(beat, ["opacity"]) || !increasing(beat, "opacity")) return false;
+        break;
+      case "exit":
+        if (!onlyKeys(beat, ["opacity"]) || !decreasing(beat, "opacity")) return false;
+        break;
+      case "move":
+        if (
+          !onlyKeys(beat, ["x", "y"]) ||
+          (!changed(beat, "x") && !changed(beat, "y"))
+        ) return false;
+        break;
+      case "grow":
+      case "focus":
+        if (!onlyKeys(beat, ["scale"]) || !increasing(beat, "scale")) return false;
+        break;
+      case "shrink":
+      case "compress":
+        if (!onlyKeys(beat, ["scale"]) || !decreasing(beat, "scale")) return false;
+        break;
+      case "overflow":
+        if (!onlyKeys(beat, ["count"]) || !increasing(beat, "count")) return false;
+        break;
+      case "trace":
+      case "reveal":
+        if (!onlyKeys(beat, ["progress"]) || !increasing(beat, "progress")) return false;
+        break;
+      case "replace":
+        if (
+          !beat.with ||
+          !onlyKeys(beat, ["opacity"]) ||
+          !decreasing(beat, "opacity")
+        ) return false;
+        break;
+    }
+  }
+  return true;
 }
 
 // ── facet 序列化(模板占位块)────────────────────────────────────────────────
@@ -1609,7 +1719,9 @@ export async function decideCards(
     const traceableVisualPlan =
       visualPlan &&
       isVideoCardVisualPlanStructurallyValid(visualPlan) &&
-      visualPlan.parts.every((part) => isCardContentTraceable(part.text.trim(), input.script))
+      visualPlan.parts.every((part) =>
+        isCardPartStrictlyTraceable(part.text, input.script),
+      )
         ? visualPlan
         : undefined;
     kept.push({

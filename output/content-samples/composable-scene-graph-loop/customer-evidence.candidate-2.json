@@ -1,0 +1,95 @@
+{
+  "item": {
+    "id": "customer-evidence",
+    "domain": "经营",
+    "title": "客户说喜欢，不等于愿意购买",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "客户说喜欢，只能证明表达让他舒服。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "只有真实下单，才证明方案解决了值得付费的问题。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "先用小订单验证，再把有效方案放大。"
+      }
+    ],
+    "script": "客户说喜欢，只能证明表达让他舒服。只有真实下单，才证明方案解决了值得付费的问题。先用小订单验证，再把有效方案放大。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "客户说喜欢，只能证明表达让他舒服",
+      "at": 0,
+      "motion": "plain",
+      "visualPlan": {
+        "relation": "statement",
+        "parts": [
+          {
+            "text": "客户说喜欢",
+            "role": "claim"
+          },
+          {
+            "text": "只能证明表达让他舒服",
+            "role": "evidence"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看到客户的‘喜欢’只停留在表达层面，并非付费信号",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "words_bubble",
+              "kind": "container",
+              "glyph": "message",
+              "semantic": "客户口头喜欢"
+            },
+            {
+              "id": "real_signal",
+              "kind": "target",
+              "glyph": "target",
+              "semantic": "真正付费信号尚未触发"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "words_bubble",
+              "start": 0,
+              "duration": 0.5,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "real_signal",
+              "start": 0.5,
+              "duration": 0.5,
+              "from": {
+                "scale": 0.7
+              },
+              "to": {
+                "scale": 1.2
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

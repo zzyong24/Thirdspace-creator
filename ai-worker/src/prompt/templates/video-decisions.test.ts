@@ -8,6 +8,7 @@ import {
   videoBrollSchema,
   videoDirectorReviewSchema,
 } from "./video-decisions";
+import { _resetRegistry, getOfficialSkillBase } from "../registry";
 
 const slot = (purpose: string, index: number) => ({
   sceneIdx: index,
@@ -146,6 +147,14 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
 });
 
 describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
+  it("设置页 official Skill 与运行时共用 v4 单一真值，可恢复到同一版本", () => {
+    _resetRegistry();
+    const official = getOfficialSkillBase("video.cards");
+    expect(official?.baseVersion).toBe("v4");
+    expect(official?.template).toContain("可组合 Scene Graph");
+    expect(official?.outputSchema).toMatchObject({ type: "object" });
+  });
+
   it("长场景按时长安排连续信息节拍，不允许用一张角落标签冒充视觉覆盖", () => {
     expect(VIDEO_CARDS_TEMPLATE.template).toContain(
       "超过 8 秒且没有已指定素材",
@@ -164,8 +173,8 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     );
   });
 
-  it("v3 先声明内容关系和原文部件，拒绝把框和连线当作视觉化", () => {
-    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v3");
+  it("v4 先声明内容关系和原文部件，拒绝把框和连线当作视觉化", () => {
+    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v4");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("观众需要看见什么关系");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("cause_effect");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("replacement");
@@ -173,6 +182,20 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("动态 PPT");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("对象真的发生变化");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("默认不能使用三个并排圆角框");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("cognitiveGoal");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("aspectStrategy");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("entities");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("beats");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("禁止从 relation 反推固定隐喻");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("同一关系也要因内容选择不同对象");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("kind 只选 text/shape/icon/document");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("禁止中文 id");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("glyph 只选 none/document/message");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("from 和 to 都不能省略");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("affects 若填写必须是实体 ID 数组");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("不能因为 Scene Graph 字段多就退回纯文字卡");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("哪怕数值保持不变也不能写");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("sequence 常有多个 step，因此这类实体默认不写 textRole");
 
     expect(
       videoCardsSchema.parse({
@@ -189,11 +212,24 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
                 { text: "处理", role: "process" },
                 { text: "输出", role: "result" },
               ],
+              scene: {
+                cognitiveGoal: "看见输入经过处理到输出",
+                layout: "flow",
+                aspectStrategy: "reflow",
+                entities: [
+                  { id: "input", kind: "document", glyph: "document", semantic: "输入", textRole: "cause" },
+                  { id: "output", kind: "target", glyph: "target", semantic: "输出", textRole: "result" },
+                ],
+                beats: [
+                  { action: "move", target: "input", start: 0, duration: 0.5, from: { x: -0.7, y: 0 }, to: { x: 0.2, y: 0 } },
+                  { action: "reveal", target: "output", start: 0.55, duration: 0.35, from: { progress: 0 }, to: { progress: 1 } },
+                ],
+              },
             },
           },
         ],
       }).cards[0]?.visualPlan,
-    ).toMatchObject({ relation: "cause_effect" });
+    ).toMatchObject({ relation: "cause_effect", scene: { layout: "flow" } });
   });
 });
 

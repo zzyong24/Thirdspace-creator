@@ -1,0 +1,62 @@
+[
+  {
+    "id": "feature-overload",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/feature-overload.landscape.mp4"
+  },
+  {
+    "id": "feature-overload",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/feature-overload.portrait.mp4"
+  },
+  {
+    "id": "sleep-notifications",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/sleep-notifications.landscape.mp4"
+  },
+  {
+    "id": "sleep-notifications",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/sleep-notifications.portrait.mp4"
+  },
+  {
+    "id": "material-bottleneck",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/material-bottleneck.landscape.mp4"
+  },
+  {
+    "id": "material-bottleneck",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/material-bottleneck.portrait.mp4"
+  },
+  {
+    "id": "meeting-overload",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/meeting-overload.landscape.mp4"
+  },
+  {
+    "id": "meeting-overload",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/meeting-overload.portrait.mp4"
+  },
+  {
+    "id": "archive-understanding",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/archive-understanding.landscape.mp4"
+  },
+  {
+    "id": "archive-understanding",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/archive-understanding.portrait.mp4"
+  },
+  {
+    "id": "customer-evidence",
+    "orientation": "landscape",
+    "output": "output/content-samples/composable-scene-graph-loop/customer-evidence.landscape.mp4"
+  },
+  {
+    "id": "customer-evidence",
+    "orientation": "portrait",
+    "output": "output/content-samples/composable-scene-graph-loop/customer-evidence.portrait.mp4"
+  }
+]

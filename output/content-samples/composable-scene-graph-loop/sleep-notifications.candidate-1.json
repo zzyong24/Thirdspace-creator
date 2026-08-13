@@ -1,0 +1,182 @@
+{
+  "item": {
+    "id": "sleep-notifications",
+    "domain": "个人成长",
+    "title": "通知正在偷走你的睡眠",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "睡前通知越多，真正留给睡眠的时间越短。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "改变不是把计划表塞满，而是先移走一个高频干扰。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "连续记录七天，再比较入睡时间和第二天状态。"
+      }
+    ],
+    "script": "睡前通知越多，真正留给睡眠的时间越短。改变不是把计划表塞满，而是先移走一个高频干扰。连续记录七天，再比较入睡时间和第二天状态。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "stat",
+      "content": "睡前通知越多 真正留给睡眠的时间越短",
+      "at": 0,
+      "motion": "counter",
+      "visualPlan": {
+        "relation": "magnitude",
+        "parts": [
+          {
+            "text": "睡前通知越多",
+            "role": "subject"
+          },
+          {
+            "text": "真正留给睡眠的时间越短",
+            "role": "measure"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看到通知数量上升时，睡眠时间被持续挤压直至归零",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "notifications",
+              "kind": "tile_collection",
+              "glyph": "notification",
+              "semantic": "高频干扰的推送队列"
+            },
+            {
+              "id": "sleep_meter",
+              "kind": "meter",
+              "glyph": "moon",
+              "semantic": "剩余睡眠时间的刻度"
+            }
+          ],
+          "beats": [
+            {
+              "action": "overflow",
+              "target": "notifications",
+              "start": 0,
+              "duration": 0.5,
+              "from": {
+                "count": 0
+              },
+              "to": {
+                "count": 6
+              }
+            },
+            {
+              "action": "compress",
+              "target": "sleep_meter",
+              "start": 0.5,
+              "duration": 0.5,
+              "from": {
+                "scale": 1
+              },
+              "to": {
+                "scale": 0.15
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "先移走一个高频干扰 连续记录七天 比较入睡时间",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "先移走一个高频干扰",
+            "role": "step"
+          },
+          {
+            "text": "连续记录七天",
+            "role": "step"
+          },
+          {
+            "text": "再比较入睡时间和第二天状态",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看清三步前后接力：移除干扰→连续记录→比较效果",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "notification_block",
+              "kind": "container",
+              "glyph": "notification",
+              "semantic": "被移走的高频干扰"
+            },
+            {
+              "id": "calendar_log",
+              "kind": "device",
+              "glyph": "calendar",
+              "semantic": "连续七天的记录载体"
+            },
+            {
+              "id": "compare_result",
+              "kind": "document",
+              "glyph": "chart",
+              "semantic": "比较入睡时间与次日状态"
+            }
+          ],
+          "beats": [
+            {
+              "action": "exit",
+              "target": "notification_block",
+              "start": 0,
+              "duration": 0.3,
+              "from": {
+                "opacity": 1
+              },
+              "to": {
+                "opacity": 0
+              }
+            },
+            {
+              "action": "enter",
+              "target": "calendar_log",
+              "start": 0.3,
+              "duration": 0.3,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "reveal",
+              "target": "compare_result",
+              "start": 0.65,
+              "duration": 0.3,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

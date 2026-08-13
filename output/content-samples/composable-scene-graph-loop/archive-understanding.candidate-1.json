@@ -1,0 +1,242 @@
+{
+  "item": {
+    "id": "archive-understanding",
+    "domain": "知识管理",
+    "title": "保存不等于理解",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "资料全部进了档案库，不代表它们已经变成你的判断。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "保存解决的是记录，理解需要建立连接。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "让一条新资料连接旧结论，再决定它改变了什么。"
+      }
+    ],
+    "script": "资料全部进了档案库，不代表它们已经变成你的判断。保存解决的是记录，理解需要建立连接。让一条新资料连接旧结论，再决定它改变了什么。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "保存 ≠ 建立连接",
+      "at": 4,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "保存解决的是记录",
+            "role": "step"
+          },
+          {
+            "text": "理解需要建立连接",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看到记录与连接是两步不同动作，新资料必须主动搭桥到旧结论。",
+          "layout": "path",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "saved_item",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "已保存的资料"
+            },
+            {
+              "id": "archive_box",
+              "kind": "archive",
+              "glyph": "folder",
+              "semantic": "档案库/收藏夹"
+            },
+            {
+              "id": "old_conclusion",
+              "kind": "node",
+              "glyph": "none",
+              "semantic": "已有的旧判断"
+            },
+            {
+              "id": "bridge",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "新旧之间的连接动作"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "archive_box",
+              "start": 0,
+              "duration": 0.15,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "saved_item",
+              "start": 0.15,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "move",
+              "target": "saved_item",
+              "start": 0.4,
+              "duration": 0.25,
+              "from": {
+                "x": -0.4,
+                "y": 0.3
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "action": "enter",
+              "target": "old_conclusion",
+              "start": 0.65,
+              "duration": 0.15,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "reveal",
+              "target": "bridge",
+              "start": 0.8,
+              "duration": 0.2,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "让一条新资料连接旧结论，再决定它改变了什么。",
+      "at": 8,
+      "motion": "plain",
+      "visualPlan": {
+        "relation": "cause_effect",
+        "parts": [
+          {
+            "text": "让一条新资料连接旧结论",
+            "role": "cause"
+          },
+          {
+            "text": "再决定它改变了什么",
+            "role": "result"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看清新资料必须先连上旧结论，才能判断它对旧结论做了什么。",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "new_doc",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "一条新资料"
+            },
+            {
+              "id": "old_node",
+              "kind": "node",
+              "glyph": "none",
+              "semantic": "旧结论"
+            },
+            {
+              "id": "result_node",
+              "kind": "node",
+              "glyph": "none",
+              "semantic": "改变后的判断"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "old_node",
+              "start": 0,
+              "duration": 0.2,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "new_doc",
+              "start": 0.2,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "move",
+              "target": "new_doc",
+              "start": 0.5,
+              "duration": 0.25,
+              "from": {
+                "x": -0.5,
+                "y": -0.2
+              },
+              "to": {
+                "x": -0.1,
+                "y": 0
+              }
+            },
+            {
+              "action": "grow",
+              "target": "result_node",
+              "start": 0.75,
+              "duration": 0.25,
+              "from": {
+                "scale": 0.5
+              },
+              "to": {
+                "scale": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

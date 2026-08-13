@@ -1,0 +1,1727 @@
+{
+  "schema": "creatoros-t802-scene-graph-loop/v1",
+  "model": "MiniMax-M3",
+  "skill": "video.cards@v4",
+  "generationPath": "same official Skill + MiniMax credential + decideCards; local DB snapshot bypassed because existing migration gate blocks old unscoped rows",
+  "generatedAt": "2026-08-13T07:24:25.792Z",
+  "results": [
+    {
+      "id": "feature-overload",
+      "domain": "产品思考",
+      "title": "功能越多，不等于产品越好",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "删掉不影响的步骤\n保留验证过的路径",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "删掉不影响结果的步骤",
+                    "role": "step"
+                  },
+                  {
+                    "text": "把验证过的路径留在主流程",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看清路径从杂乱走向精简，只留下被验证过的步骤",
+                  "layout": "path",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "main_path",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "主流程路径"
+                    },
+                    {
+                      "id": "step_a",
+                      "kind": "tile_collection",
+                      "glyph": "filter",
+                      "semantic": "被删掉的步骤"
+                    },
+                    {
+                      "id": "step_b",
+                      "kind": "tile_collection",
+                      "glyph": "feature",
+                      "semantic": "被删掉的步骤"
+                    },
+                    {
+                      "id": "kept_step",
+                      "kind": "target",
+                      "glyph": "target",
+                      "semantic": "保留的验证步骤"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "main_path",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "reveal",
+                      "target": "main_path",
+                      "start": 0,
+                      "duration": 0.4,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "kept_step",
+                      "start": 0.45,
+                      "duration": 0.25,
+                      "from": {
+                        "scale": 0.6
+                      },
+                      "to": {
+                        "scale": 1
+                      }
+                    },
+                    {
+                      "action": "shrink",
+                      "target": "step_a",
+                      "start": 0.55,
+                      "duration": 0.2,
+                      "from": {
+                        "scale": 1
+                      },
+                      "to": {
+                        "scale": 0.45
+                      }
+                    },
+                    {
+                      "action": "shrink",
+                      "target": "step_b",
+                      "start": 0.7,
+                      "duration": 0.2,
+                      "from": {
+                        "scale": 1
+                      },
+                      "to": {
+                        "scale": 0.45
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "quote",
+              "content": "用户购买的从来不是功能清单，而是一条更省力的路径",
+              "at": 4,
+              "motion": "plain"
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "path"
+          ],
+          "entityKinds": [
+            "path",
+            "tile_collection",
+            "tile_collection",
+            "target"
+          ],
+          "generationError": null
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "compare",
+              "content": "功能越堆越多 = 任务更难\n只留验证过的路径 = 更省力",
+              "at": 0,
+              "motion": "bar",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "功能越堆越多，用户完成任务反而更难。",
+                    "role": "old"
+                  },
+                  {
+                    "text": "删掉不影响结果的步骤，把验证过的路径留在主流程。",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看到功能堆叠与流程精简这两种状态的对照关系",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "cluttered_stack",
+                      "kind": "tile_collection",
+                      "glyph": "feature",
+                      "semantic": "杂乱堆积的无效功能"
+                    },
+                    {
+                      "id": "clean_path",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "留在主流程的省力路径"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "cluttered_stack",
+                      "start": 0,
+                      "duration": 0.45,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "cluttered_stack",
+                      "start": 0.45,
+                      "duration": 0.35,
+                      "from": {
+                        "scale": 0.6
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    },
+                    {
+                      "action": "exit",
+                      "target": "cluttered_stack",
+                      "start": 0.8,
+                      "duration": 0.2,
+                      "from": {
+                        "opacity": 1
+                      },
+                      "to": {
+                        "opacity": 0
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "clean_path",
+                      "start": 0.8,
+                      "duration": 0.2,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "quote",
+              "content": "用户购买的，不是功能清单，而是一条更省力的路径。",
+              "at": 4,
+              "motion": "plain"
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "split"
+          ],
+          "entityKinds": [
+            "tile_collection",
+            "path"
+          ],
+          "generationError": null
+        }
+      ]
+    },
+    {
+      "id": "sleep-notifications",
+      "domain": "个人成长",
+      "title": "通知正在偷走你的睡眠",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [],
+          "sceneCount": 0,
+          "layouts": [],
+          "entityKinds": [],
+          "generationError": "MiniMax 返回未通过 video.cards v4 schema:[\n  {\n    \"expected\": \"object\",\n    \"code\": \"invalid_type\",\n    \"path\": [],\n    \"message\": \"Invalid input: expected object, received undefined\"\n  }\n]"
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "stat",
+              "content": "睡前通知越多，真正留给睡眠的时间越短",
+              "at": 0,
+              "motion": "counter",
+              "visualPlan": {
+                "relation": "statement",
+                "parts": [
+                  {
+                    "text": "睡前通知越多，真正留给睡眠的时间越短",
+                    "role": "claim"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看到通知数量与睡眠时间在一条时间轴上被此消彼长地挤压",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "sleep_meter",
+                      "kind": "meter",
+                      "glyph": "moon",
+                      "semantic": "剩余睡眠时间"
+                    },
+                    {
+                      "id": "notification_meter",
+                      "kind": "meter",
+                      "glyph": "notification",
+                      "semantic": "睡前通知量"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "grow",
+                      "target": "notification_meter",
+                      "start": 0,
+                      "duration": 0.5,
+                      "from": {
+                        "scale": 0.6
+                      },
+                      "to": {
+                        "scale": 1.4
+                      }
+                    },
+                    {
+                      "action": "shrink",
+                      "target": "sleep_meter",
+                      "start": 0.5,
+                      "duration": 0.5,
+                      "from": {
+                        "scale": 1.2
+                      },
+                      "to": {
+                        "scale": 0.5
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "连续记录七天，再比较入睡时间和第二天状态",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "连续记录七天",
+                    "role": "step"
+                  },
+                  {
+                    "text": "比较入睡时间和第二天状态",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看到七天逐日记录表逐格点亮，结尾一格被高亮提示要比较的两项",
+                  "layout": "path",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "day_track",
+                      "kind": "path",
+                      "glyph": "calendar",
+                      "semantic": "七天记录路径"
+                    },
+                    {
+                      "id": "day_cell_7",
+                      "kind": "tile_collection",
+                      "glyph": "none",
+                      "semantic": "第七天格子"
+                    },
+                    {
+                      "id": "sleep_clock",
+                      "kind": "clock",
+                      "glyph": "clock",
+                      "semantic": "入睡时间"
+                    },
+                    {
+                      "id": "status_note",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "第二天状态记录"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "trace",
+                      "target": "day_track",
+                      "start": 0,
+                      "duration": 0.6,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    },
+                    {
+                      "action": "focus",
+                      "target": "day_cell_7",
+                      "start": 0.6,
+                      "duration": 0.4,
+                      "from": {
+                        "scale": 0.9
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 2,
+          "layouts": [
+            "split",
+            "path"
+          ],
+          "entityKinds": [
+            "meter",
+            "meter",
+            "path",
+            "tile_collection",
+            "clock",
+            "document"
+          ],
+          "generationError": null
+        }
+      ]
+    },
+    {
+      "id": "material-bottleneck",
+      "domain": "内容生产",
+      "title": "素材越多，发布反而越慢",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "compare",
+              "content": "素材涌进收件箱\n发布轨道空着",
+              "at": 0,
+              "motion": "bar",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "素材不断涌进收件箱",
+                    "role": "old"
+                  },
+                  {
+                    "text": "发布轨道却一直空着",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看清素材涌入与发布空缺两个状态并存形成的反差",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "inbox",
+                      "kind": "device",
+                      "glyph": "inbox",
+                      "semantic": "素材来源,持续涌入"
+                    },
+                    {
+                      "id": "calendar",
+                      "kind": "device",
+                      "glyph": "calendar",
+                      "semantic": "发布轨道,长期空置"
+                    },
+                    {
+                      "id": "flow_path",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "从收件箱流向日历的预期路径"
+                    },
+                    {
+                      "id": "gap_marker",
+                      "kind": "shape",
+                      "glyph": "none",
+                      "semantic": "标识轨道空缺的红色断开点"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "inbox",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "overflow",
+                      "target": "inbox",
+                      "start": 0.2,
+                      "duration": 0.55,
+                      "from": {
+                        "count": 0
+                      },
+                      "to": {
+                        "count": 6
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "flow_path",
+                      "start": 0.3,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "trace",
+                      "target": "flow_path",
+                      "start": 0.45,
+                      "duration": 0.35,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "gap_marker",
+                      "start": 0.7,
+                      "duration": 0.15,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "calendar",
+                      "start": 0.55,
+                      "duration": 0.4,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "focus",
+                      "target": "gap_marker",
+                      "start": 0.85,
+                      "duration": 0.1,
+                      "from": {
+                        "scale": 1
+                      },
+                      "to": {
+                        "scale": 1.3
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "split"
+          ],
+          "entityKinds": [
+            "device",
+            "device",
+            "path",
+            "shape"
+          ],
+          "generationError": null
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "compare",
+              "content": "素材涌进收件箱  ↔  发布轨道空着",
+              "at": 0,
+              "motion": "bar",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "素材不断涌进收件箱",
+                    "role": "old"
+                  },
+                  {
+                    "text": "发布轨道却一直空着",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看到素材堆积与发布空缺的反差，理解瓶颈在交付而非供给",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "inbox_stack",
+                      "kind": "archive",
+                      "glyph": "inbox",
+                      "semantic": "涌进的素材"
+                    },
+                    {
+                      "id": "calendar_grid",
+                      "kind": "container",
+                      "glyph": "calendar",
+                      "semantic": "发布轨道"
+                    },
+                    {
+                      "id": "gap_meter",
+                      "kind": "meter",
+                      "glyph": "none",
+                      "semantic": "发布空缺量"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "inbox_stack",
+                      "start": 0,
+                      "duration": 0.5,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "inbox_stack",
+                      "start": 0,
+                      "duration": 0.5,
+                      "from": {
+                        "scale": 0.6
+                      },
+                      "to": {
+                        "scale": 1.4
+                      }
+                    },
+                    {
+                      "action": "reveal",
+                      "target": "gap_meter",
+                      "start": 0,
+                      "duration": 0.5,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "split"
+          ],
+          "entityKinds": [
+            "archive",
+            "container",
+            "meter"
+          ],
+          "generationError": null
+        }
+      ]
+    },
+    {
+      "id": "meeting-overload",
+      "domain": "组织协作",
+      "title": "会议越多，决定不一定越快",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "先把信息放进共享文档；只把分歧带进会议",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "先把信息放进共享文档",
+                    "role": "step"
+                  },
+                  {
+                    "text": "只把分歧带进会议",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看到信息先沉淀到文档、只剩分歧进入会议的两步处理流程",
+                  "layout": "flow",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "doc",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "共享文档承接信息"
+                    },
+                    {
+                      "id": "meeting",
+                      "kind": "container",
+                      "glyph": "calendar",
+                      "semantic": "只接纳分歧的会议"
+                    },
+                    {
+                      "id": "flow_path",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "两步流向"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "doc",
+                      "start": 0,
+                      "duration": 0.35,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "meeting",
+                      "start": 0.5,
+                      "duration": 0.35,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "trace",
+                      "target": "flow_path",
+                      "start": 0.15,
+                      "duration": 0.7,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "flow"
+          ],
+          "entityKinds": [
+            "document",
+            "container",
+            "path"
+          ],
+          "generationError": null
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "把信息放进共享文档",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "先把信息放进共享文档",
+                    "role": "step"
+                  },
+                  {
+                    "text": "只把分歧带进会议",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看清：先共享信息再带分歧进会议的接力顺序",
+                  "layout": "flow",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "shared_doc",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "信息共享容器"
+                    },
+                    {
+                      "id": "meeting_room",
+                      "kind": "device",
+                      "glyph": "inbox",
+                      "semantic": "会议空间"
+                    },
+                    {
+                      "id": "info_items",
+                      "kind": "tile_collection",
+                      "glyph": "message",
+                      "semantic": "待共享的信息碎片"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "shared_doc",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "overflow",
+                      "target": "info_items",
+                      "start": 0.25,
+                      "duration": 0.35,
+                      "from": {
+                        "count": 0
+                      },
+                      "to": {
+                        "count": 4
+                      }
+                    },
+                    {
+                      "action": "move",
+                      "target": "info_items",
+                      "with": "shared_doc",
+                      "start": 0.6,
+                      "duration": 0.4,
+                      "from": {
+                        "x": -0.6,
+                        "y": 0.4
+                      },
+                      "to": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "action": "reveal",
+                      "target": "shared_doc",
+                      "start": 0.6,
+                      "duration": 0.4,
+                      "from": {
+                        "progress": 0.3
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "compare",
+              "content": "同步信息 ≠ 做决定",
+              "at": 4,
+              "motion": "bar",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "同步信息",
+                    "role": "old"
+                  },
+                  {
+                    "text": "做决定",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看清：信息同步与做决定是两条独立的轨道",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "sync_rail",
+                      "kind": "path",
+                      "glyph": "filter",
+                      "semantic": "信息同步通道"
+                    },
+                    {
+                      "id": "decide_rail",
+                      "kind": "path",
+                      "glyph": "target",
+                      "semantic": "决定产出通道"
+                    },
+                    {
+                      "id": "gap_marker",
+                      "kind": "shape",
+                      "glyph": "none",
+                      "semantic": "两轨之间的断点"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "sync_rail",
+                      "start": 0,
+                      "duration": 0.3,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "decide_rail",
+                      "start": 0.05,
+                      "duration": 0.3,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "sync_rail",
+                      "start": 0.3,
+                      "duration": 0.6,
+                      "from": {
+                        "scale": 0.4
+                      },
+                      "to": {
+                        "scale": 1
+                      }
+                    },
+                    {
+                      "action": "focus",
+                      "target": "gap_marker",
+                      "start": 0.7,
+                      "duration": 0.3,
+                      "from": {
+                        "scale": 0.8
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 2,
+          "layouts": [
+            "flow",
+            "split"
+          ],
+          "entityKinds": [
+            "document",
+            "device",
+            "tile_collection",
+            "path",
+            "path",
+            "shape"
+          ],
+          "generationError": null
+        }
+      ]
+    },
+    {
+      "id": "archive-understanding",
+      "domain": "知识管理",
+      "title": "保存不等于理解",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "保存 ≠ 建立连接",
+              "at": 4,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "保存解决的是记录",
+                    "role": "step"
+                  },
+                  {
+                    "text": "理解需要建立连接",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看到记录与连接是两步不同动作，新资料必须主动搭桥到旧结论。",
+                  "layout": "path",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "saved_item",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "已保存的资料"
+                    },
+                    {
+                      "id": "archive_box",
+                      "kind": "archive",
+                      "glyph": "folder",
+                      "semantic": "档案库/收藏夹"
+                    },
+                    {
+                      "id": "old_conclusion",
+                      "kind": "node",
+                      "glyph": "none",
+                      "semantic": "已有的旧判断"
+                    },
+                    {
+                      "id": "bridge",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "新旧之间的连接动作"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "archive_box",
+                      "start": 0,
+                      "duration": 0.15,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "saved_item",
+                      "start": 0.15,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "move",
+                      "target": "saved_item",
+                      "start": 0.4,
+                      "duration": 0.25,
+                      "from": {
+                        "x": -0.4,
+                        "y": 0.3
+                      },
+                      "to": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "old_conclusion",
+                      "start": 0.65,
+                      "duration": 0.15,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "reveal",
+                      "target": "bridge",
+                      "start": 0.8,
+                      "duration": 0.2,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "quote",
+              "content": "让一条新资料连接旧结论，再决定它改变了什么。",
+              "at": 8,
+              "motion": "plain",
+              "visualPlan": {
+                "relation": "cause_effect",
+                "parts": [
+                  {
+                    "text": "让一条新资料连接旧结论",
+                    "role": "cause"
+                  },
+                  {
+                    "text": "再决定它改变了什么",
+                    "role": "result"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "看清新资料必须先连上旧结论，才能判断它对旧结论做了什么。",
+                  "layout": "flow",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "new_doc",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "一条新资料"
+                    },
+                    {
+                      "id": "old_node",
+                      "kind": "node",
+                      "glyph": "none",
+                      "semantic": "旧结论"
+                    },
+                    {
+                      "id": "result_node",
+                      "kind": "node",
+                      "glyph": "none",
+                      "semantic": "改变后的判断"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "old_node",
+                      "start": 0,
+                      "duration": 0.2,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "new_doc",
+                      "start": 0.2,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "move",
+                      "target": "new_doc",
+                      "start": 0.5,
+                      "duration": 0.25,
+                      "from": {
+                        "x": -0.5,
+                        "y": -0.2
+                      },
+                      "to": {
+                        "x": -0.1,
+                        "y": 0
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "result_node",
+                      "start": 0.75,
+                      "duration": 0.25,
+                      "from": {
+                        "scale": 0.5
+                      },
+                      "to": {
+                        "scale": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 2,
+          "layouts": [
+            "path",
+            "flow"
+          ],
+          "entityKinds": [
+            "document",
+            "archive",
+            "node",
+            "path",
+            "document",
+            "node",
+            "node"
+          ],
+          "generationError": null
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "quote",
+              "content": "保存解决的是记录，理解需要建立连接。",
+              "at": 4,
+              "motion": "plain",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "保存解决的是记录",
+                    "role": "old"
+                  },
+                  {
+                    "text": "理解需要建立连接",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看到两条原本各自孤立的内容被一条连线接通，理解从记录到理解的差异发生在\"建立连接\"这一步。",
+                  "layout": "path",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "saved_node",
+                      "kind": "tile_collection",
+                      "glyph": "document",
+                      "semantic": "已保存但未被理解的资料条目"
+                    },
+                    {
+                      "id": "linked_node",
+                      "kind": "tile_collection",
+                      "glyph": "document",
+                      "semantic": "与旧结论建立连接后的资料条目"
+                    },
+                    {
+                      "id": "connect_link",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "新资料到旧结论之间的认知连接"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "saved_node",
+                      "start": 0,
+                      "duration": 0.4,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "linked_node",
+                      "start": 0.4,
+                      "duration": 0.4,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "trace",
+                      "target": "connect_link",
+                      "start": 0.8,
+                      "duration": 0.2,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "让一条新资料连接旧结论，再决定它改变了什么",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "让一条新资料",
+                    "role": "step"
+                  },
+                  {
+                    "text": "连接旧结论",
+                    "role": "step"
+                  },
+                  {
+                    "text": "再决定它改变了什么",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看到一份新资料先挂上旧结论的节点，再被判定是否改写该结论，分三步走完理解流程。",
+                  "layout": "flow",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "new_doc",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "尚未接入理解网络的新资料"
+                    },
+                    {
+                      "id": "old_conclusion",
+                      "kind": "node",
+                      "glyph": "folder",
+                      "semantic": "已形成的旧结论节点"
+                    },
+                    {
+                      "id": "linking_arc",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "新资料挂接到旧结论的连接动作"
+                    },
+                    {
+                      "id": "decision_mark",
+                      "kind": "target",
+                      "glyph": "target",
+                      "semantic": "判断新资料是否改写旧结论的决策点"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "new_doc",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "old_conclusion",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "trace",
+                      "target": "linking_arc",
+                      "start": 0.25,
+                      "duration": 0.35,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    },
+                    {
+                      "action": "focus",
+                      "target": "decision_mark",
+                      "start": 0.6,
+                      "duration": 0.4,
+                      "from": {
+                        "scale": 0.6
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 2,
+          "layouts": [
+            "path",
+            "flow"
+          ],
+          "entityKinds": [
+            "tile_collection",
+            "tile_collection",
+            "path",
+            "document",
+            "node",
+            "path",
+            "target"
+          ],
+          "generationError": null
+        }
+      ]
+    },
+    {
+      "id": "customer-evidence",
+      "domain": "经营",
+      "title": "客户说喜欢，不等于愿意购买",
+      "candidates": [
+        {
+          "candidateIndex": 0,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "compare",
+              "content": "口头喜欢 ≠ 真实下单",
+              "at": 0,
+              "motion": "bar",
+              "visualPlan": {
+                "relation": "contrast",
+                "parts": [
+                  {
+                    "text": "客户说喜欢，只能证明表达让他舒服。",
+                    "role": "old"
+                  },
+                  {
+                    "text": "只有真实下单，才证明方案解决了值得付费的问题。",
+                    "role": "new"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "让观众看见口头反馈与真实付费信号是两条证据强度不同的链路",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "verbal_signal",
+                      "kind": "device",
+                      "glyph": "message",
+                      "semantic": "口头反馈通道"
+                    },
+                    {
+                      "id": "paid_signal",
+                      "kind": "device",
+                      "glyph": "target",
+                      "semantic": "付费转化通道"
+                    },
+                    {
+                      "id": "evidence_bar",
+                      "kind": "meter",
+                      "glyph": "chart",
+                      "semantic": "证据强度量度"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "verbal_signal",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "enter",
+                      "target": "paid_signal",
+                      "start": 0.3,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "evidence_bar",
+                      "start": 0.55,
+                      "duration": 0.4,
+                      "from": {
+                        "scale": 0.3
+                      },
+                      "to": {
+                        "scale": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "sceneIdx": 0,
+              "kind": "list",
+              "content": "先小单验证 → 再放大有效方案",
+              "at": 8,
+              "motion": "reveal",
+              "visualPlan": {
+                "relation": "sequence",
+                "parts": [
+                  {
+                    "text": "先用小订单验证",
+                    "role": "step"
+                  },
+                  {
+                    "text": "再把有效方案放大",
+                    "role": "step"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "让观众看见方案从一次小规模验证升级为被放大的放量动作",
+                  "layout": "path",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "pilot_order",
+                      "kind": "document",
+                      "glyph": "document",
+                      "semantic": "小订单验证"
+                    },
+                    {
+                      "id": "scale_path",
+                      "kind": "path",
+                      "glyph": "route",
+                      "semantic": "放大承接路径"
+                    },
+                    {
+                      "id": "final_plan",
+                      "kind": "archive",
+                      "glyph": "archive",
+                      "semantic": "被放大的有效方案"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "pilot_order",
+                      "start": 0,
+                      "duration": 0.25,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "reveal",
+                      "target": "scale_path",
+                      "start": 0.3,
+                      "duration": 0.35,
+                      "from": {
+                        "progress": 0
+                      },
+                      "to": {
+                        "progress": 1
+                      }
+                    },
+                    {
+                      "action": "grow",
+                      "target": "final_plan",
+                      "start": 0.7,
+                      "duration": 0.3,
+                      "from": {
+                        "scale": 0.5
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 2,
+          "layouts": [
+            "split",
+            "path"
+          ],
+          "entityKinds": [
+            "device",
+            "device",
+            "meter",
+            "document",
+            "path",
+            "archive"
+          ],
+          "generationError": null
+        },
+        {
+          "candidateIndex": 1,
+          "cards": [
+            {
+              "sceneIdx": 0,
+              "kind": "quote",
+              "content": "客户说喜欢，只能证明表达让他舒服",
+              "at": 0,
+              "motion": "plain",
+              "visualPlan": {
+                "relation": "statement",
+                "parts": [
+                  {
+                    "text": "客户说喜欢",
+                    "role": "claim"
+                  },
+                  {
+                    "text": "只能证明表达让他舒服",
+                    "role": "evidence"
+                  }
+                ],
+                "scene": {
+                  "cognitiveGoal": "观众看到客户的‘喜欢’只停留在表达层面，并非付费信号",
+                  "layout": "split",
+                  "aspectStrategy": "reflow",
+                  "entities": [
+                    {
+                      "id": "words_bubble",
+                      "kind": "container",
+                      "glyph": "message",
+                      "semantic": "客户口头喜欢"
+                    },
+                    {
+                      "id": "real_signal",
+                      "kind": "target",
+                      "glyph": "target",
+                      "semantic": "真正付费信号尚未触发"
+                    }
+                  ],
+                  "beats": [
+                    {
+                      "action": "enter",
+                      "target": "words_bubble",
+                      "start": 0,
+                      "duration": 0.5,
+                      "from": {
+                        "opacity": 0
+                      },
+                      "to": {
+                        "opacity": 1
+                      }
+                    },
+                    {
+                      "action": "focus",
+                      "target": "real_signal",
+                      "start": 0.5,
+                      "duration": 0.5,
+                      "from": {
+                        "scale": 0.7
+                      },
+                      "to": {
+                        "scale": 1.2
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "sceneCount": 1,
+          "layouts": [
+            "split"
+          ],
+          "entityKinds": [
+            "container",
+            "target"
+          ],
+          "generationError": null
+        }
+      ]
+    }
+  ]
+}

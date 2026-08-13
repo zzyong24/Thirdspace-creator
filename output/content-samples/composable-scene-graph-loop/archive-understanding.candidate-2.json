@@ -1,0 +1,218 @@
+{
+  "item": {
+    "id": "archive-understanding",
+    "domain": "知识管理",
+    "title": "保存不等于理解",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "资料全部进了档案库，不代表它们已经变成你的判断。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "保存解决的是记录，理解需要建立连接。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "让一条新资料连接旧结论，再决定它改变了什么。"
+      }
+    ],
+    "script": "资料全部进了档案库，不代表它们已经变成你的判断。保存解决的是记录，理解需要建立连接。让一条新资料连接旧结论，再决定它改变了什么。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "保存解决的是记录，理解需要建立连接。",
+      "at": 4,
+      "motion": "plain",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "保存解决的是记录",
+            "role": "old"
+          },
+          {
+            "text": "理解需要建立连接",
+            "role": "new"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看到两条原本各自孤立的内容被一条连线接通，理解从记录到理解的差异发生在\"建立连接\"这一步。",
+          "layout": "path",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "saved_node",
+              "kind": "tile_collection",
+              "glyph": "document",
+              "semantic": "已保存但未被理解的资料条目"
+            },
+            {
+              "id": "linked_node",
+              "kind": "tile_collection",
+              "glyph": "document",
+              "semantic": "与旧结论建立连接后的资料条目"
+            },
+            {
+              "id": "connect_link",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "新资料到旧结论之间的认知连接"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "saved_node",
+              "start": 0,
+              "duration": 0.4,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "linked_node",
+              "start": 0.4,
+              "duration": 0.4,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "trace",
+              "target": "connect_link",
+              "start": 0.8,
+              "duration": 0.2,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "让一条新资料连接旧结论，再决定它改变了什么",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "让一条新资料",
+            "role": "step"
+          },
+          {
+            "text": "连接旧结论",
+            "role": "step"
+          },
+          {
+            "text": "再决定它改变了什么",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看到一份新资料先挂上旧结论的节点，再被判定是否改写该结论，分三步走完理解流程。",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "new_doc",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "尚未接入理解网络的新资料"
+            },
+            {
+              "id": "old_conclusion",
+              "kind": "node",
+              "glyph": "folder",
+              "semantic": "已形成的旧结论节点"
+            },
+            {
+              "id": "linking_arc",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "新资料挂接到旧结论的连接动作"
+            },
+            {
+              "id": "decision_mark",
+              "kind": "target",
+              "glyph": "target",
+              "semantic": "判断新资料是否改写旧结论的决策点"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "new_doc",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "old_conclusion",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "trace",
+              "target": "linking_arc",
+              "start": 0.25,
+              "duration": 0.35,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "decision_mark",
+              "start": 0.6,
+              "duration": 0.4,
+              "from": {
+                "scale": 0.6
+              },
+              "to": {
+                "scale": 1.2
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

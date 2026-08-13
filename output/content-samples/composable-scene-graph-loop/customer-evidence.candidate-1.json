@@ -1,0 +1,196 @@
+{
+  "item": {
+    "id": "customer-evidence",
+    "domain": "经营",
+    "title": "客户说喜欢，不等于愿意购买",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "客户说喜欢，只能证明表达让他舒服。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "只有真实下单，才证明方案解决了值得付费的问题。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "先用小订单验证，再把有效方案放大。"
+      }
+    ],
+    "script": "客户说喜欢，只能证明表达让他舒服。只有真实下单，才证明方案解决了值得付费的问题。先用小订单验证，再把有效方案放大。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "compare",
+      "content": "口头喜欢 ≠ 真实下单",
+      "at": 0,
+      "motion": "bar",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "客户说喜欢，只能证明表达让他舒服。",
+            "role": "old"
+          },
+          {
+            "text": "只有真实下单，才证明方案解决了值得付费的问题。",
+            "role": "new"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "让观众看见口头反馈与真实付费信号是两条证据强度不同的链路",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "verbal_signal",
+              "kind": "device",
+              "glyph": "message",
+              "semantic": "口头反馈通道"
+            },
+            {
+              "id": "paid_signal",
+              "kind": "device",
+              "glyph": "target",
+              "semantic": "付费转化通道"
+            },
+            {
+              "id": "evidence_bar",
+              "kind": "meter",
+              "glyph": "chart",
+              "semantic": "证据强度量度"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "verbal_signal",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "paid_signal",
+              "start": 0.3,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "grow",
+              "target": "evidence_bar",
+              "start": 0.55,
+              "duration": 0.4,
+              "from": {
+                "scale": 0.3
+              },
+              "to": {
+                "scale": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "先小单验证 → 再放大有效方案",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "先用小订单验证",
+            "role": "step"
+          },
+          {
+            "text": "再把有效方案放大",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "让观众看见方案从一次小规模验证升级为被放大的放量动作",
+          "layout": "path",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "pilot_order",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "小订单验证"
+            },
+            {
+              "id": "scale_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "放大承接路径"
+            },
+            {
+              "id": "final_plan",
+              "kind": "archive",
+              "glyph": "archive",
+              "semantic": "被放大的有效方案"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "pilot_order",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "reveal",
+              "target": "scale_path",
+              "start": 0.3,
+              "duration": 0.35,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            },
+            {
+              "action": "grow",
+              "target": "final_plan",
+              "start": 0.7,
+              "duration": 0.3,
+              "from": {
+                "scale": 0.5
+              },
+              "to": {
+                "scale": 1.2
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

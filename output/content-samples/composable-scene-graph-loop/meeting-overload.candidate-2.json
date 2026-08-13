@@ -1,0 +1,223 @@
+{
+  "item": {
+    "id": "meeting-overload",
+    "domain": "组织协作",
+    "title": "会议越多，决定不一定越快",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "日历上的会议越叠越满，真正的决定反而被挤到最后。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "同步信息和做决定不是同一件事。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "先把信息放进共享文档，只把分歧带进会议。"
+      }
+    ],
+    "script": "日历上的会议越叠越满，真正的决定反而被挤到最后。同步信息和做决定不是同一件事。先把信息放进共享文档，只把分歧带进会议。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "把信息放进共享文档",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "sequence",
+        "parts": [
+          {
+            "text": "先把信息放进共享文档",
+            "role": "step"
+          },
+          {
+            "text": "只把分歧带进会议",
+            "role": "step"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看清：先共享信息再带分歧进会议的接力顺序",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "shared_doc",
+              "kind": "document",
+              "glyph": "document",
+              "semantic": "信息共享容器"
+            },
+            {
+              "id": "meeting_room",
+              "kind": "device",
+              "glyph": "inbox",
+              "semantic": "会议空间"
+            },
+            {
+              "id": "info_items",
+              "kind": "tile_collection",
+              "glyph": "message",
+              "semantic": "待共享的信息碎片"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "shared_doc",
+              "start": 0,
+              "duration": 0.25,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "overflow",
+              "target": "info_items",
+              "start": 0.25,
+              "duration": 0.35,
+              "from": {
+                "count": 0
+              },
+              "to": {
+                "count": 4
+              }
+            },
+            {
+              "action": "move",
+              "target": "info_items",
+              "with": "shared_doc",
+              "start": 0.6,
+              "duration": 0.4,
+              "from": {
+                "x": -0.6,
+                "y": 0.4
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "action": "reveal",
+              "target": "shared_doc",
+              "start": 0.6,
+              "duration": 0.4,
+              "from": {
+                "progress": 0.3
+              },
+              "to": {
+                "progress": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "compare",
+      "content": "同步信息 ≠ 做决定",
+      "at": 4,
+      "motion": "bar",
+      "visualPlan": {
+        "relation": "contrast",
+        "parts": [
+          {
+            "text": "同步信息",
+            "role": "old"
+          },
+          {
+            "text": "做决定",
+            "role": "new"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "观众看清：信息同步与做决定是两条独立的轨道",
+          "layout": "split",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "sync_rail",
+              "kind": "path",
+              "glyph": "filter",
+              "semantic": "信息同步通道"
+            },
+            {
+              "id": "decide_rail",
+              "kind": "path",
+              "glyph": "target",
+              "semantic": "决定产出通道"
+            },
+            {
+              "id": "gap_marker",
+              "kind": "shape",
+              "glyph": "none",
+              "semantic": "两轨之间的断点"
+            }
+          ],
+          "beats": [
+            {
+              "action": "enter",
+              "target": "sync_rail",
+              "start": 0,
+              "duration": 0.3,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "enter",
+              "target": "decide_rail",
+              "start": 0.05,
+              "duration": 0.3,
+              "from": {
+                "opacity": 0
+              },
+              "to": {
+                "opacity": 1
+              }
+            },
+            {
+              "action": "grow",
+              "target": "sync_rail",
+              "start": 0.3,
+              "duration": 0.6,
+              "from": {
+                "scale": 0.4
+              },
+              "to": {
+                "scale": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "gap_marker",
+              "start": 0.7,
+              "duration": 0.3,
+              "from": {
+                "scale": 0.8
+              },
+              "to": {
+                "scale": 1.2
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

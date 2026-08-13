@@ -1,0 +1,224 @@
+{
+  "item": {
+    "id": "feature-overload",
+    "domain": "产品思考",
+    "title": "功能越多，不等于产品越好",
+    "lines": [
+      {
+        "index": 1,
+        "startSec": 0,
+        "endSec": 4,
+        "text": "功能越堆越多，用户完成任务反而更难。"
+      },
+      {
+        "index": 2,
+        "startSec": 4,
+        "endSec": 8,
+        "text": "用户购买的不是功能清单，而是一条更省力的路径。"
+      },
+      {
+        "index": 3,
+        "startSec": 8,
+        "endSec": 12,
+        "text": "删掉不影响结果的步骤，把验证过的路径留在主流程。"
+      }
+    ],
+    "script": "功能越堆越多，用户完成任务反而更难。用户购买的不是功能清单，而是一条更省力的路径。删掉不影响结果的步骤，把验证过的路径留在主流程。"
+  },
+  "cards": [
+    {
+      "sceneIdx": 0,
+      "kind": "quote",
+      "content": "功能越堆越多，用户完成任务反而更难。",
+      "at": 0,
+      "motion": "metaphor",
+      "visualPlan": {
+        "relation": "cause_effect",
+        "parts": [
+          {
+            "text": "功能越堆越多",
+            "role": "cause"
+          },
+          {
+            "text": "用户完成任务反而更难",
+            "role": "result"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看见功能堆积如何挤压路径，让任务更难完成",
+          "layout": "path",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "feature_stack",
+              "kind": "tile_collection",
+              "glyph": "feature",
+              "semantic": "持续堆积的功能"
+            },
+            {
+              "id": "task_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "用户完成任务的路径"
+            },
+            {
+              "id": "task_target",
+              "kind": "target",
+              "glyph": "target",
+              "semantic": "用户需要完成的任务目标"
+            }
+          ],
+          "beats": [
+            {
+              "action": "overflow",
+              "target": "feature_stack",
+              "affects": [
+                "task_path",
+                "task_target"
+              ],
+              "start": 0,
+              "duration": 0.35,
+              "from": {
+                "count": 1
+              },
+              "to": {
+                "count": 5
+              }
+            },
+            {
+              "action": "compress",
+              "target": "task_path",
+              "start": 0.28,
+              "duration": 0.32,
+              "from": {
+                "scale": 1
+              },
+              "to": {
+                "scale": 0.55
+              }
+            },
+            {
+              "action": "move",
+              "target": "task_target",
+              "start": 0.52,
+              "duration": 0.35,
+              "from": {
+                "x": 0.3,
+                "y": 0
+              },
+              "to": {
+                "x": 0.78,
+                "y": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sceneIdx": 0,
+      "kind": "list",
+      "content": "删掉不影响结果的步骤\n把验证过的路径留在主流程",
+      "at": 8,
+      "motion": "reveal",
+      "visualPlan": {
+        "relation": "statement",
+        "parts": [
+          {
+            "text": "删掉不影响结果的步骤",
+            "role": "claim"
+          },
+          {
+            "text": "把验证过的路径留在主流程",
+            "role": "conclusion"
+          }
+        ],
+        "scene": {
+          "cognitiveGoal": "看见无关步骤退出，验证过的路径进入主流程",
+          "layout": "flow",
+          "aspectStrategy": "reflow",
+          "entities": [
+            {
+              "id": "extra_steps",
+              "kind": "tile_collection",
+              "glyph": "feature",
+              "semantic": "不影响结果的步骤",
+              "textRole": "claim"
+            },
+            {
+              "id": "validated_path",
+              "kind": "path",
+              "glyph": "route",
+              "semantic": "验证过的路径",
+              "textRole": "conclusion"
+            },
+            {
+              "id": "main_flow",
+              "kind": "container",
+              "glyph": "route",
+              "semantic": "产品主流程"
+            }
+          ],
+          "beats": [
+            {
+              "action": "exit",
+              "target": "extra_steps",
+              "start": 0,
+              "duration": 0.3,
+              "from": {
+                "opacity": 1
+              },
+              "to": {
+                "opacity": 0
+              }
+            },
+            {
+              "action": "move",
+              "target": "validated_path",
+              "affects": [
+                "main_flow"
+              ],
+              "start": 0.22,
+              "duration": 0.36,
+              "from": {
+                "x": -0.55,
+                "y": 0.25
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "action": "reveal",
+              "target": "validated_path",
+              "affects": [
+                "main_flow"
+              ],
+              "start": 0.5,
+              "duration": 0.35,
+              "from": {
+                "progress": 0
+              },
+              "to": {
+                "progress": 1
+              }
+            },
+            {
+              "action": "focus",
+              "target": "main_flow",
+              "start": 0.76,
+              "duration": 0.2,
+              "from": {
+                "scale": 1
+              },
+              "to": {
+                "scale": 1.1
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

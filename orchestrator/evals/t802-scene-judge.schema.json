@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "judge", "cases", "crossCase"],
+  "properties": {
+    "schema": { "type": "string", "const": "creatoros-t802-independent-judge/v1" },
+    "judge": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "winner", "candidates", "decisiveDifference"],
+        "properties": {
+          "id": { "type": "string" },
+          "winner": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "decisiveDifference": { "type": "string", "minLength": 1 },
+          "candidates": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["candidateIndex", "contentRelevance", "cognitiveGain", "silentReadability", "motionNarrative", "nonTemplate", "visualSafety", "total", "hardFail", "reason"],
+              "properties": {
+                "candidateIndex": { "type": "integer", "minimum": 0, "maximum": 1 },
+                "contentRelevance": { "type": "integer", "minimum": 0, "maximum": 20 },
+                "cognitiveGain": { "type": "integer", "minimum": 0, "maximum": 20 },
+                "silentReadability": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "motionNarrative": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "nonTemplate": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "visualSafety": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "total": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "hardFail": { "type": "boolean" },
+                "reason": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "crossCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["winnerUniqueEnough", "sameRelationAxesDiverse", "summary"],
+      "properties": {
+        "winnerUniqueEnough": { "type": "boolean" },
+        "sameRelationAxesDiverse": { "type": "boolean" },
+        "summary": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -62,12 +62,114 @@ export const videoCardVisualRole = z.enum([
   "evidence",
   "conclusion",
 ]);
+export const videoSceneLayout = z.enum([
+  "stage",
+  "path",
+  "stack",
+  "field",
+  "orbit",
+  "split",
+  "flow",
+]);
+export const videoSceneEntityKind = z.enum([
+  "text",
+  "shape",
+  "icon",
+  "document",
+  "tile_collection",
+  "node",
+  "path",
+  "container",
+  "target",
+  "meter",
+  "device",
+  "archive",
+  "clock",
+]);
+export const videoSceneGlyph = z.enum([
+  "none",
+  "document",
+  "message",
+  "notification",
+  "moon",
+  "clock",
+  "folder",
+  "archive",
+  "route",
+  "target",
+  "filter",
+  "feature",
+  "person",
+  "team",
+  "chart",
+  "calendar",
+  "inbox",
+]);
+export const videoSceneBeatAction = z.enum([
+  "enter",
+  "exit",
+  "move",
+  "grow",
+  "shrink",
+  "overflow",
+  "compress",
+  "replace",
+  "trace",
+  "reveal",
+  "focus",
+]);
+const videoSceneState = z.object({
+  x: z.number().min(-1).max(1).optional(),
+  y: z.number().min(-1).max(1).optional(),
+  scale: z.number().min(0).max(1.5).optional(),
+  opacity: z.number().min(0).max(1).optional(),
+  progress: z.number().min(0).max(1).optional(),
+  count: z.number().int().min(0).max(12).optional(),
+  rotation: z.number().min(-180).max(180).optional(),
+  direction: z
+    .enum(["left", "right", "up", "down", "inward", "outward"])
+    .optional(),
+});
+export const videoCardSceneGraph = z.object({
+  cognitiveGoal: z.string().min(1).max(80),
+  layout: videoSceneLayout,
+  aspectStrategy: z.literal("reflow"),
+  entities: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[a-z][a-z0-9_-]{0,31}$/),
+        kind: videoSceneEntityKind,
+        glyph: videoSceneGlyph,
+        semantic: z.string().min(1).max(40),
+        textRole: videoCardVisualRole.optional(),
+      }),
+    )
+    .min(1)
+    .max(8),
+  beats: z
+    .array(
+      z.object({
+        action: videoSceneBeatAction,
+        target: z.string().min(1),
+        with: z.string().min(1).optional(),
+        affects: z.array(z.string().min(1)).max(4).optional(),
+        start: z.number().min(0).max(1),
+        duration: z.number().positive().max(1),
+        from: videoSceneState,
+        to: videoSceneState,
+      }),
+    )
+    .min(1)
+    .max(8),
+});
+export type VideoCardSceneGraph = z.infer<typeof videoCardSceneGraph>;
 export const videoCardVisualPlan = z.object({
   relation: videoCardVisualRelation,
   parts: z
     .array(z.object({ text: z.string().min(1), role: videoCardVisualRole }))
     .min(1)
     .max(6),
+  scene: videoCardSceneGraph.optional(),
 });
 export type VideoCardVisualPlan = z.infer<typeof videoCardVisualPlan>;
 
