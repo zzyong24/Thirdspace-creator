@@ -1150,10 +1150,18 @@ export async function buildChatAssembly(
           mediaRoute?.kind === "cover.publication_reference"
         ? "cover.generate"
         : null;
+  const forcedMaterialKind =
+    chatContext.functionKey === "material.generate.image"
+      ? "image"
+      : chatContext.functionKey === "material.generate.video"
+        ? "video"
+        : undefined;
   const forcedToolSequence =
     mediaRoute?.kind === "cover.publication_reference"
       ? ["context.publications", "cover.generate"]
-      : undefined;
+      : forcedMaterialKind && chatContext.projectId
+        ? ["context.artifact.text", "material.generate"]
+        : undefined;
   if (forcedToolSequence) {
     for (const toolName of forcedToolSequence) {
       if (!baseAllowed.includes(toolName)) baseAllowed = [...baseAllowed, toolName];
@@ -1176,7 +1184,9 @@ export async function buildChatAssembly(
         ? undefined
       : chatContext.projectId && chatContext.functionKey === "context.projects"
         ? undefined
-        : chatContext.functionKey;
+        : forcedMaterialKind
+          ? undefined
+          : chatContext.functionKey;
   // [T-716] 局部改稿是一个已由 UI 明确锚定目标段落的原子动作，不是开放式 Copilot
   // 对话。若继续把项目分析、联网、生成整稿等几十个工具一并发给模型，不仅浪费上下文，
   // OpenAI-compatible 模型还可能在强制 tool_choice 后于流中途拒绝复杂 schema，最终只剩
@@ -1461,6 +1471,7 @@ export async function buildChatAssembly(
       : undefined,
     // [T-642] 单项目只读工具使用可信 ChatContext 绑定，不让模型靠标题/自造 id 改绑。
     boundProjectId: chatContext.projectId ?? undefined,
+    ...(forcedMaterialKind ? { forcedMaterialKind } : {}),
     verbatimSources: options.verbatimSources ?? [],
     latestUserInstruction: options.latestUserInstruction ?? "",
     ...(options.latestUserInstruction?.trim()

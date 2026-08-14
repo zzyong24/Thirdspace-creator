@@ -3065,9 +3065,9 @@ const MULTIMODAL_META = {
     providerHelp:
       "支持已接入的视频生成接口；旧配置中的 seedance / seeddance 会自动兼容。",
     // [T-377] 模型 id 自由填,不预置候选 —— 供应商上新频繁,示例仅供参考。
-    modelHelp: "文生视频模型 id 自由填(示例:seedance/seedance-2.0-fast;以服务商控制台为准)。",
-    modelPlaceholder: "示例:seedance/seedance-2.0-fast",
-    baseUrlPlaceholder: "示例：https://api.example.com/media/v1（留空使用默认地址）",
+    modelHelp: "文生视频模型 id 自由填(示例:seedance/seedance-2.0-fast / MiniMax-H3;以服务商控制台为准)。",
+    modelPlaceholder: "示例:seedance/seedance-2.0-fast 或 MiniMax-H3",
+    baseUrlPlaceholder: "示例：https://api.example.com/media/v1（MiniMax 留空使用官方地址）",
     disabledHint: "未配 → 录制页 AI 生成禁用。",
   },
   // 逐字稿 ASR(T-641)—— 建议配置但不阻断。普通用户只需要选供应商、填模型名和 Key；provider/baseUrl

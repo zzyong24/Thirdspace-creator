@@ -1250,6 +1250,8 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
     expect(desc).toContain("默认不要文字");
     expect(desc).toContain("定位只影响视觉语言");
     expect(desc).toContain("万能 AI 海报");
+    expect(desc).toContain("连续短镜头");
+    expect(desc).toContain("禁止音乐与人声");
   });
 
   it("execute 调注入的 dispatchGenerateAsset,返回 taskId + queued(kind=material.generate)", async () => {
@@ -1344,6 +1346,22 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
     });
     expect(result.kindOf).toBe("video");
     expect(result.taskId).toBe("task-gen-1");
+  });
+
+  it("可信快捷按钮固定素材类型，模型入参不能把图片改成视频", async () => {
+    const { deps, dispatchGenerateAsset } = makeDeps({
+      forcedMaterialKind: "image",
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "video",
+      prompt: "一个连续镜头",
+    })) as { kindOf: string };
+
+    expect(dispatchGenerateAsset).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "image" }),
+    );
+    expect(result.kindOf).toBe("image");
   });
 
   it("空 prompt → 诚实报错,不 dispatch", async () => {

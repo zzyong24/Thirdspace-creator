@@ -62,6 +62,7 @@ export interface AssetGenerateAssetsPort {
     input: {
       assetType: "image" | "video";
       name: string;
+      description?: string;
       bytes: Uint8Array;
       mimeType: string;
       // [DATA-H07] true → 资产生为 pending 候选态(采纳前不进素材库;T-219 机制)。host 端口
@@ -108,6 +109,8 @@ function generationFingerprint(input: {
   capability: string;
   prompt: string;
   aspectRatio?: string;
+  durationSec?: number;
+  resolution?: string;
   spec: ResolvedMultimodalSpec;
 }): string {
   return `sha256:${createHash("sha256")
@@ -116,6 +119,8 @@ function generationFingerprint(input: {
         capability: input.capability,
         prompt: input.prompt,
         aspectRatio: input.aspectRatio ?? null,
+        durationSec: input.durationSec ?? null,
+        resolution: input.resolution ?? null,
         provider: input.spec.provider,
         baseUrl: input.spec.baseUrl,
         model: input.spec.model,
@@ -123,6 +128,16 @@ function generationFingerprint(input: {
       }),
     )
     .digest("hex")}`;
+}
+
+/**
+ * SEMANTIC_BOUNDARY_ALLOW: 这里只剥离工具注入的版本/正文包裹并做长度上限，不判断画面语义；
+ * 视觉选择和描述正文仍完全来自编导模型已产出的 prompt。
+ */
+function generatedAssetDescription(prompt: string): string {
+  const marker = "【视觉方案】";
+  const visual = prompt.includes(marker) ? prompt.split(marker).slice(1).join(marker) : prompt;
+  return visual.trim().slice(0, 1_000);
 }
 
 function parseProviderCheckpoint(
@@ -190,6 +205,16 @@ export async function runAssetGenerate(
       typeof task.inputData.aspectRatio === "string"
         ? task.inputData.aspectRatio
         : undefined;
+    const durationSec =
+      kind === "video" &&
+      typeof task.inputData.durationSec === "number" &&
+      Number.isInteger(task.inputData.durationSec)
+        ? task.inputData.durationSec
+        : kind === "video"
+          ? 6
+          : undefined;
+    const resolution =
+      kind === "video" && task.inputData.resolution === "2K" ? "2K" : "768P";
 
     // 1) 解析用户配的多模态 model(未配 → MultimodalConfigError,下方 catch → cancelTask)。
     const spec = await deps.resolveMultimodalSpec(ctx, capability);
@@ -198,6 +223,8 @@ export async function runAssetGenerate(
       capability,
       prompt,
       aspectRatio,
+      durationSec,
+      resolution,
       spec,
     });
 
@@ -260,6 +287,7 @@ export async function runAssetGenerate(
     const videoOptions: GenerateVideoOptions = {
       prompt,
       aspectRatio,
+      ...(kind === "video" ? { durationSec, resolution } : {}),
       idempotencyKey,
       ...(resumeJobId ? { resumeJobId } : {}),
       onJobSubmitted: async (jobId) => {
@@ -304,6 +332,7 @@ export async function runAssetGenerate(
     const asset = await deps.assets.createGeneratedAsset(ctx, {
       assetType: kind,
       name,
+      description: generatedAssetDescription(prompt),
       bytes: assetBytes,
       mimeType: MIME_BY_KIND[kind],
       pending: true,
@@ -321,6 +350,7 @@ export async function runAssetGenerate(
         name: asset.name,
         prompt,
         ...(aspectRatio ? { aspectRatio } : {}),
+        ...(kind === "video" ? { durationSec, resolution } : {}),
       },
     });
   } catch (err) {

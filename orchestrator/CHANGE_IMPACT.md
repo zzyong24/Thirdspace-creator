@@ -11,6 +11,27 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-VIDEO-836 H3 生成片段成为可采纳、可再引用的项目 B-roll（2026-08-14）
+
+- **上游变化**：用户用真机截图指定入口：在编导输入框快捷行加“生成图片素材 / 生成视频素材”，
+  两者都必须先读当前确认稿、基于稿件语义生成；视频继续走已接 Seedance 的同一路径并新增 H3。
+- **失效前提**：现有 MiniMax adapter 只实现旧 v1；`asset.generate` 只接 prompt/画幅；制作页不展示
+  `visualSlots` 的生成清单；生成 asset 的 description 为空，后续语义清单只看到弱文件名。
+- **重新派生**：新增两个可信预调 functionKey，强制 `context.artifact.text → material.generate`；
+  MiniMax H3 在既有 provider 内分流 v2；`material.generate(kind=video)` 与 runner
+  复用 checkpoint/pending/采纳门；采纳素材写入有界语义 description；借鉴外部 H3 prompt 顺序提升
+  tool/Skill 提示，不新增产品表面。
+- **下游影响**：需要重验 ai-worker 多模态契约、backend asset runner、Assets service 语义字段、
+  production workbench/候选卡、settings 鉴权探测和最终 B-roll 音频边界；公开 AI task API、数据库表、
+  原有素材采纳和渲染引擎保持。
+- **成本/安全影响**：沿用现有用户明确要求后才调用 `material.generate` 的生成意图和 provider
+  checkpoint；提交未知仍 fail-closed。自动化不授权付费真调。
+- **UI 影响**：只修改现有快捷 chip 数据和两步工具路由，不新增页面或面板；需重验点击只预填、
+  image/video kind 固定、稿件读取失败不脱稿生成。
+- **被移除影响**：不再新增逐镜批量费用 UI、制作页生成面板、首尾帧/参考素材选择器及其任务契约。
+- **当前 Gate**：范围收窄后的 SPEC 已 `PASS[REV:fd1747eb2d8d]`，两档真实浏览器旅程通过；真 H3 smoke
+  仍需用户明确预算授权。
+
 ## CI-COPY-792 资料驱动生成从 T-790 拆为独立工具任务 T-791（2026-08-12）
 
 - **上游变化**：用户确认乱资料、文件、长文本和既有文案都应成为写稿 Skill 的一等输入，Skill 负责按正式结构产出；当前仅 `generate(topic/extraBrief)` 与 `verbatim` 的二分不完整。

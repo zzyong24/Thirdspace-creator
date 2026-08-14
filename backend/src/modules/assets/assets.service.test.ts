@@ -171,12 +171,14 @@ describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
     const asset = await service.createGeneratedAsset(ctxA, {
       assetType: "image",
       name: "AI 生成图",
+      description: "服务稿件第二段：展示流程仍然混乱",
       bytes,
       mimeType: "image/png",
     });
     expect(asset.status).toBe("active");
     expect(asset.assetType).toBe("image");
     expect(asset.name).toBe("AI 生成图");
+    expect(asset.description).toBe("服务稿件第二段：展示流程仍然混乱");
     expect(asset.currentFileId).toBeTruthy();
     // The generated asset is listable for its owner (born in the library).
     const list = await service.listAssets(ctxA, { limit: 50, cursor: null });
@@ -189,6 +191,15 @@ describe("assets.service — createGeneratedAsset (L5 asset.generate)", () => {
         assetType: "image",
         name: "n",
         bytes: new Uint8Array([]),
+        mimeType: "image/png",
+      }),
+    ).rejects.toBeInstanceOf(UploadValidationError);
+    await expect(
+      service.createGeneratedAsset(ctxA, {
+        assetType: "image",
+        name: "n",
+        description: "x".repeat(1_001),
+        bytes: new Uint8Array([1]),
         mimeType: "image/png",
       }),
     ).rejects.toBeInstanceOf(UploadValidationError);

@@ -138,6 +138,7 @@ import {
   FolderOpen,
   Plus,
   Sparkles,
+  Video,
   Wand2,
   Image as ImageIcon,
 } from "lucide-react";
@@ -250,6 +251,7 @@ export interface CopilotContentViewModel extends BasePageViewModel {
       | "file-search"
       | "sparkles"
       | "image"
+      | "video"
       | "line-chart";
     // [T-231⑨] 真预调:点 chip = 完整话术预填输入框 + 该工具置顶(下一次发送的
     // chatContext.functionKey)。缺省(老数据)退化为填 label 的字条,不置顶工具。
@@ -405,6 +407,7 @@ function ChipIcon({
     | "file-search"
     | "sparkles"
     | "image"
+    | "video"
     | "line-chart";
 }) {
   switch (kind) {
@@ -418,6 +421,8 @@ function ChipIcon({
       return <Sparkles className="size-3.5" aria-hidden="true" />;
     case "image":
       return <ImageIcon className="size-3.5" aria-hidden="true" />;
+    case "video":
+      return <Video className="size-3.5" aria-hidden="true" />;
     case "line-chart":
       return <ChartLine className="size-3.5" aria-hidden="true" />;
   }
@@ -567,6 +572,10 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
   "material.generate":
     "帮我为这条内容生成一张配图/一个画面素材(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
+  "material.generate.image":
+    "先读取当前确认稿并选择唯一服务段落，再基于该段语义生成一张图片素材候选。",
+  "material.generate.video":
+    "先读取当前确认稿并选择唯一服务段落，再基于该段语义生成一个连续短视频素材候选。",
   // [T-271] 制作封面链 —— 硬锚立项核心信息 + 口播稿产结构化封面文案(过诚实门,不编数字)并生图。
   "cover.generate":
     "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",

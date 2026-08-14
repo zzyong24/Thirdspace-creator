@@ -41,6 +41,22 @@ const SUGGESTED_ACTIONS: CopilotContentViewModel["chips"] = [
     prefill: "围绕这条内容的主题帮我搜一批可用素材(案例、数据、金句)。",
   },
   {
+    id: "generate-image-material",
+    label: "生成图片素材",
+    icon: "image",
+    functionKey: "material.generate.image",
+    prefill:
+      "请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一张图片素材候选。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。",
+  },
+  {
+    id: "generate-video-material",
+    label: "生成视频素材",
+    icon: "video",
+    functionKey: "material.generate.video",
+    prefill:
+      "请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一个视频素材候选。设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾，不要脱离稿件自由发挥。",
+  },
+  {
     id: "cover",
     label: "生成封面",
     icon: "image",

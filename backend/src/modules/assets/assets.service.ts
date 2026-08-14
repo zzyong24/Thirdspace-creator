@@ -147,6 +147,8 @@ export interface AssetsService {
     input: {
       assetType: string;
       name: string;
+      /** AI 生成素材的有界视觉语义；后续分镜 inventory 读取，不参与权限判断。 */
+      description?: string;
       bytes: Uint8Array;
       mimeType: string;
       // [T-219] 待确认落库:截图端口传 true → asset 生为 'pending'(不进素材库 list),由对话
@@ -648,6 +650,9 @@ export function createAssetsService(
       if (!(input.bytes.byteLength > 0)) {
         throw new UploadValidationError("generated asset has no bytes");
       }
+      if ((input.description?.length ?? 0) > 1_000) {
+        throw new UploadValidationError("generated asset description exceeds 1000 chars");
+      }
       const storage = await objectStorageForCtx(ctx);
       // Mint a key exactly like the presigned path would (assetType-prefixed) so the
       // on-disk / bucket layout is identical to a client upload.
@@ -675,6 +680,7 @@ export function createAssetsService(
         {
           assetType: input.assetType,
           name: input.name,
+          description: input.description?.trim() ?? "",
           currentFileId: null,
           // [T-219] 截图端口传 pending → 生为待确认态(素材库 list 按 active 过滤,不显示)。
           status: input.pending ? "pending" : "active",

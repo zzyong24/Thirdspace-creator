@@ -47,6 +47,8 @@ export interface ChatToolDeps {
    * 同时防止模型幻觉/伪造 id 越过当前对象边界。
    */
   boundProjectId?: string;
+  /** T-836：来自快捷按钮的可信媒体类型；模型不得把“生成图片”改成视频，反之亦然。 */
+  forcedMaterialKind?: "image" | "video";
   /**
    * [T-716] 稿面按钮随可信 ChatContext 绑定的局部改稿锚点。锚点不是模型要推理/复述的
    * 参数：模型只负责产 replacementText，execute 必须用这里的 artifact/version/section/
@@ -2459,7 +2461,7 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
     prompt: {
       type: "string",
       description:
-        "生成描述。用于内容配图时必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和不应出现的额外元素；默认不在图里生成文字。生成的是 AI 素材、非真实拍摄。",
+        "生成描述。图片必须写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩、画幅和排除项。视频必须只设计一个连续短镜头，按主体、主要动作、环境、构图与景深、单一路径运镜、光线/色彩/材质、平稳收尾的顺序描述；可有克制的同步环境音，不要音乐和人声。默认不出现文字、数字、logo、水印或伪造界面。生成的是 AI 素材、非真实拍摄。",
     },
     style: {
       type: "string",
@@ -3899,7 +3901,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
     "material.generate": defineChatTool("material.generate", {
       description:
-        "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由文生图；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。prompt 必须把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光线/色彩与画幅，默认不要文字、数字、logo、水印、假产品界面或假新闻截图，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
+        "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
       execute: async ({
         kind,
@@ -3909,7 +3911,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         visualPurpose,
         mediaKind,
       }): Promise<MaterialGenerateToolResult> => {
-        const effKind: "image" | "video" = kind === "video" ? "video" : "image";
+        const effKind: "image" | "video" =
+          deps.forcedMaterialKind ?? (kind === "video" ? "video" : "image");
         const effPrompt = typeof prompt === "string" ? prompt.trim() : "";
         const effMediaKind = mediaKind ?? "illustration";
         if (effMediaKind !== "illustration") {

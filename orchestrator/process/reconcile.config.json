@@ -165,6 +165,7 @@
     "motion-card-preview:e2e": "node orchestrator/process/verify-t794-motion-card-preview.mjs",
     "scene-graph-loop:e2e": "node orchestrator/process/verify-t802-scene-graph.mjs",
     "ai-reliability-recovery:e2e": "CREATOROS_TEST_PORT=3434 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-reliability-recovery.spec.ts --project=e2e",
-    "web-material-read-save:e2e": "CREATOROS_TEST_PORT=3435 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/web-material-read-save.spec.ts --project=e2e"
+    "web-material-read-save:e2e": "CREATOROS_TEST_PORT=3435 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/web-material-read-save.spec.ts --project=e2e",
+    "semantic-material-generation:e2e": "CREATOROS_TEST_PORT=3436 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/semantic-material-generation.spec.ts --project=e2e"
   }
 }

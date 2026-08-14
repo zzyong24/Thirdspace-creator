@@ -345,3 +345,18 @@
   预览后再用当前项目重跑正式成片，不能拿小样冒充最终导出。
 - **Ref**: T-823；`objkey-016270fc-6527.mp4`；用户 2026-08-13 成片截图；
   `video-decisions-runner.ts`；`video-render/template.ts`。
+
+## LED-026 — 把外部生成仓整包接入，会形成第二套分镜、审批、素材和成片真相
+- **Date**: 2026-08-14 · **Stage**: DISCOVER/DEFINE · **Severity**: high · **Status**: rule
+- **WhatFailed**: 外部 H3 B-roll 仓库同时提供计划 JSON、文件审批、Python 调用与 FFmpeg 成片；若按
+  “功能齐全”直接安装，CreatorOS 将出现一套数据库任务/候选/素材/渲染链和一套可手改文件链。
+- **RootCause**: 把“可借鉴的创作方法”与“可作为产品运行时收养的系统边界”混为一谈，没有先做
+  borrow-before-build 和现有能力盘点。
+- **GuardRule**: 接入外部 AI 媒体项目时先拆成方法、协议、运行时三层。方法可进 Skill/rubric；协议
+  只进既有 provider adapter；任务、费用确认、候选、采纳、素材和渲染必须复用单一数据库真相。
+  只有现有边界确实不存在且独立 SPEC 通过，才允许新增模块。外部许可与模型权重许可分开审查。
+- **GuardCheck**: T-836 必须通过旧 MiniMax v1 回归、H3 v2 adapter、source-slot 冻结、checkpoint、
+  pending→adopt→material link→restoryboard、boundary/orphan/reconcile 测试；仓内不得新增
+  `broll-plan.json`、平行 FFmpeg 生成链或运行时 Python H3 CLI。
+- **Outcome(T+N)**: 待 T-836 实现和真实付费 smoke 后回填；当前调研已决定采用 PAT-001 T1 薄适配。
+- **Ref**: T-834；T-836；DEC-AI-049；PAT-001/PAT-003/PAT-004；MOD-002。

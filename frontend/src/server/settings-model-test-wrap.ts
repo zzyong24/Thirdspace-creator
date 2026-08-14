@@ -242,7 +242,12 @@ async function generationAuthProbe(
     const provider = spec.provider.toLowerCase();
     const omnihi = provider === "omnihi" || provider === "seedance" || provider === "seeddance";
     const defaultBase = omnihi ? OMNIHI_VIDEO_DEFAULT : MINIMAX_DEFAULT;
-    const path = omnihi ? "/videos/generations" : "/v1/video_generation";
+    const h3 = provider === "minimax" && spec.model.trim().toLowerCase() === "minimax-h3";
+    const path = omnihi
+      ? "/videos/generations"
+      : h3
+        ? "/v2/video_generation"
+        : "/v1/video_generation";
     const url = `${trimBase(spec.baseUrl ?? defaultBase)}${path}`;
     const res = await fetchImpl(url, {
       method: "POST",

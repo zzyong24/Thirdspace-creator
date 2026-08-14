@@ -110,6 +110,7 @@ export interface AssetRepository {
     input: {
       assetType: string;
       name: string;
+      description?: string;
       currentFileId: string | null;
       // [T-219] 出生态(缺省 active,兼容所有既有调用)。截图端口传 'pending' → 待确认门翻转
       //   才进素材库(list 按 active 过滤,pending 天然不显示)。
@@ -386,7 +387,7 @@ export function createAssetRepository(
         currentFileId: input.currentFileId,
         assetType: input.assetType,
         name: input.name,
-        description: "",
+        description: input.description ?? "",
         // [T-219] 出生态可选(缺省 active,兼容既有);截图端口传 'pending' 待确认门翻转。
         status: input.status ?? "active",
         deletedAt: null,

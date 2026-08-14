@@ -110,11 +110,10 @@ describe("AI Copilot dialog (Task 24)", () => {
   it("renders the reference fixture counts", () => {
     renderDialog();
     const dialog = screen.getByRole("dialog");
-    // [T-231⑨] 6 → 5:「优化标题」chip 已删(无对应工具,诚实优先);余下 5 个全部
-    // 绑 functionKey + 完整预填话术(真预调,见 fixtures/selectors/copilot.ts)。
+    // [T-836] 原 5 个真入口旁增加按当前稿语义生成图片/视频素材两个入口。
     // [T-354] 次区计数断言随次区下架删除(recommended-command/recent-task/continuing-task/
     // quick-entry/smart-recommendation 均不再渲染)。
-    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(5);
+    expect(dialog.querySelectorAll('[data-slot="suggested-chip"]')).toHaveLength(7);
     expect(dialog.querySelectorAll('[data-slot="recommended-command"]')).toHaveLength(0);
     expect(dialog.querySelectorAll('[data-slot="recent-task"]')).toHaveLength(0);
     expect(dialog.querySelectorAll('[data-slot="continuing-task"]')).toHaveLength(0);
@@ -133,6 +132,26 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(cover?.functionKey).toBe("cover.generate");
     expect(cover?.prefill).toContain("最新且最关联");
     expect(cover?.prefill).toContain("直接生成");
+  });
+
+  it("图片/视频素材入口绑定不同可信类型，并要求先读取当前确认稿", () => {
+    const viewModel = buildCopilotViewModel();
+    const image = viewModel.chips.find((chip) => chip.id === "generate-image-material");
+    const video = viewModel.chips.find((chip) => chip.id === "generate-video-material");
+
+    expect(image).toMatchObject({
+      label: "生成图片素材",
+      functionKey: "material.generate.image",
+    });
+    expect(video).toMatchObject({
+      label: "生成视频素材",
+      functionKey: "material.generate.video",
+    });
+    expect(image?.prefill).toContain("先读取当前确认稿");
+    expect(video?.prefill).toContain("先读取当前确认稿");
+    expect(image?.prefill).not.toContain("context.artifact.text");
+    expect(video?.prefill).not.toContain("material.generate");
+    expect(video?.prefill).toContain("连续短镜头");
   });
 
   it("renders the close button with data-overlay-close so the controller's delegated click handler closes the dialog", () => {

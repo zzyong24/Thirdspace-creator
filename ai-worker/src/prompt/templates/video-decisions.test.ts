@@ -135,7 +135,7 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
   });
 
   it("提示词先定画面在论证中的职责，再落成一个可见关系而不是复述口播", () => {
-    expect(VIDEO_BROLL_TEMPLATE.version).toBe("v5");
+    expect(VIDEO_BROLL_TEMPLATE.version).toBe("v6");
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("观众看完这张图应多理解什么");
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("一个画面只完成一个认知动作");
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("主体、动作或关系、环境、构图");
@@ -143,6 +143,9 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("generationPrompt 必须留空");
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("定位只影响视觉语言");
     expect(VIDEO_BROLL_TEMPLATE.template).toContain("万能 AI 海报");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("约 6 秒的连续镜头");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("平稳开始与稳定结尾");
+    expect(VIDEO_BROLL_TEMPLATE.template).toContain("禁止音乐和人声");
   });
 });
 

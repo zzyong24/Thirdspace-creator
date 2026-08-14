@@ -53,6 +53,7 @@ function makeDeps(opts: {
       input: {
         assetType: "image" | "video";
         name: string;
+        description?: string;
         bytes: Uint8Array;
         mimeType: string;
         pending?: boolean;
@@ -248,7 +249,11 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
       {
         id: "t2",
         projectId: "p1",
-        inputData: { prompt: "一段 B-roll", kind: "video" },
+        inputData: {
+          prompt:
+            "【当前确认稿绑定】\n段落原文:工具变了，模糊流程没有变\n【视觉方案】\n同一个纸箱任务在两台机器间传递，单一平滑运镜",
+          kind: "video",
+        },
       },
       deps,
     );
@@ -262,10 +267,12 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
     expect(assetArg.assetType).toBe("video");
     expect(assetArg.mimeType).toBe("video/mp4");
     expect(Array.from(assetArg.bytes)).toEqual([7, 7, 7, 7]);
+    expect(assetArg.description).toBe("同一个纸箱任务在两台机器间传递，单一平滑运镜");
     // 候选 generated_asset。
     const cand = recordCandidate.mock.calls[0]![2];
     expect(cand.resultType).toBe("generated_asset");
     expect(cand.assetId).toBe("asset-vid-9");
+    expect(cand.resultData).toMatchObject({ durationSec: 6, resolution: "768P" });
   });
 
   it("[T-735] provider job 已提交后本地失败，重试沿原 job 恢复而不二次提交", async () => {

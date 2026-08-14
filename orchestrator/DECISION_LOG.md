@@ -2603,3 +2603,38 @@ T-814 暂缓决定，也不授权公开发布。
 与采纳链。
 
 **任务**：T-824 → 本地验收包；T-820/T-814 保持暂缓。
+
+# DEC-AI-049 (2026-08-14) — H3 生成片段进入现有分镜素材闭环，不建立第二套制作系统
+
+**Status**：confirmed
+
+**用户决定**：像现有文生图生成素材一样，在同一入口增加 MiniMax H3 文生视频；用户预览采纳后，
+视频素材进入当前项目，并在后续分镜中使用。外部仓库主要借鉴提示词，不搬运行系统。
+
+**决策**：
+
+1. `MiniMax-H3` 作为既有 `video.generate` 的 v2 provider 能力接入；旧 MiniMax v1 保持兼容。
+2. 在编导输入框现有快捷行增加“生成图片素材 / 生成视频素材”两个真实按钮。点击预填、不自动发送；
+   发送后按可信 functionKey 强制 `context.artifact.text → material.generate`，先读当前确认稿和唯一段落，
+   再分别以 image/video kind 生成，不能脱稿使用万能提示词。
+3. 不新增逐镜批量生成页；复用现有 `material.generate`、`asset.generate` 与候选卡。首版 H3 只接纯
+   文生视频，默认 6 秒/768P，不新增首尾帧或参考素材业务入口。
+4. 复用 server-only provider checkpoint：提交未知不重发，已拿 job ID 只恢复查询。生成结果仍是
+   pending candidate，采纳后才 active 并通过现有 material link 绑定项目。
+5. 生成素材把有界视觉 prompt 写入既有 asset description；后续分镜由 AI 读取语义选择，用户明确
+   assetId→sceneIdx 时继续作为硬约束，代码不做关键词/字符串匹配。
+6. 外部 MIT 仓库只吸收 H3 提示词顺序、单镜单认知、连续运镜、缺陷限制和无音乐人声规则；不安装其 Python/FFmpeg
+   运行链，不新增 `broll-plan`，不自托管 H3 权重。
+7. 事实证据、精确文字/数据/UI 继续走真实素材或 HyperFrames。自动化实现不授权真实付费调用；
+   真 H3 smoke 需另行明确预算。
+8. 极端提交未知时旧任务不可自动重提；用户若在 MiniMax 控制台找到已付费成片，沿截图中现有
+   “上传 / 管理素材”导入当前项目，再由分镜人工指定，复用同一素材链且不产生第二次 POST。
+
+**Pattern-Ref**：PAT-001 T1（薄适配与提示词借鉴，而非整包收养）；PAT-003（异步状态机与 checkpoint）；
+PAT-004（复用现有公开任务契约）。
+
+**Asset-Ref**：MOD-002 configurable provider adapter；既有 `video.decisions`、`asset.generate`、
+pending asset、material link、`material.match` 和 video renderer。明确不采用 MOD-006 文件队列，因为
+CreatorOS 现有数据库任务链已提供更强的恢复与审计。
+
+**任务**：T-836；详细契约见 `docs/superpowers/specs/2026-08-14-minimax-h3-storyboard-broll-integration.md`。

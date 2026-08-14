@@ -330,6 +330,32 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
       expect.objectContaining({ method: "POST" }),
     );
   });
+
+  it("MiniMax-H3 使用 v2 端点做缺内容的零计费鉴权探测", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse(400, { error: "content required" }),
+    ) as unknown as typeof fetch;
+    const deps = makeDeps({
+      resolveMultimodal: vi.fn(async () => ({
+        provider: "minimax",
+        baseUrl: null,
+        model: "MiniMax-H3",
+        token: "key",
+      })),
+      fetchImpl,
+    });
+
+    const r = await runModelConnectionTest(ctx, "video.generate", deps);
+
+    expect(r.ok).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://api.minimax.io/v2/video_generation",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ model: "MiniMax-H3" }),
+      }),
+    );
+  });
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search", () => {

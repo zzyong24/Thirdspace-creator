@@ -449,6 +449,30 @@ describe("[T-523] Copilot 媒体意图确定性路由", () => {
     expect(assembly.system).toContain("不要把 A/B 选择抛回用户");
   });
 
+  it.each([
+    ["material.generate.image", "image"],
+    ["material.generate.video", "video"],
+  ] as const)("素材快捷键 %s 先强制读当前稿，再强制生成固定类型", async (functionKey, kind) => {
+    const { deps } = makeDeps();
+    const assembly = await buildChatAssembly(
+      ctx,
+      { surface: "project", projectId: "project-1", functionKey },
+      deps,
+    );
+
+    expect(assembly.forcedToolSequence).toEqual([
+      "context.artifact.text",
+      "material.generate",
+    ]);
+    expect(assembly.forcedTool).toBe("context.artifact.text");
+    const tool = assembly.tools["material.generate"]!;
+    const result = (await runToolExecute(tool, {
+      kind: kind === "image" ? "video" : "image",
+      prompt: "服务当前段落的单一画面",
+    })) as { kindOf: string };
+    expect(result.kindOf).toBe(kind);
+  });
+
   it("发布作品参考链第二步没拿到真实 coverAssetId 时不降级纯文封面", async () => {
     const dispatchGenerateCoverPort = vi.fn(async () => ({ taskId: "must-not-run" }));
     const { deps } = makeDeps({ dispatchGenerateCoverPort });

@@ -185,3 +185,138 @@ describe("MiniMax 适配器 —— video(异步:提交→轮询→下载,全在�
     ).rejects.toThrow(/轮询超时/);
   });
 });
+
+describe("MiniMax H3 v2 —— 分镜短片", () => {
+  const h3Spec: MultimodalSpec = {
+    ...spec,
+    model: "MiniMax-H3",
+    kind: "video",
+  };
+
+  it("纯文生视频走 /v2，冻结 duration/resolution/ratio，成功从 task.content.url 下载", async () => {
+    const bodies: Array<Record<string, unknown>> = [];
+    const urls: string[] = [];
+    const fakeFetch = (async (url: string, init?: RequestInit) => {
+      urls.push(String(url));
+      if (String(url).endsWith("/v2/video_generation")) {
+        bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+        return jsonResponse({ task_id: "h3-task" });
+      }
+      if (String(url).includes("/v2/query/video_generation/h3-task")) {
+        return jsonResponse({
+          task: {
+            status: "succeeded",
+            content: { url: "https://dl.example/h3.mp4" },
+          },
+        });
+      }
+      return bytesResponse(new Uint8Array([8, 3, 6]));
+    }) as unknown as typeof fetch;
+
+    const submitted: string[] = [];
+    const out = await createMinimaxAdapter(deps(fakeFetch)).generateVideo!(
+      h3Spec,
+      {
+        prompt: "one clear visual task",
+        aspectRatio: "9:16",
+        durationSec: 6,
+        resolution: "768P",
+        onJobSubmitted: async (jobId) => {
+          submitted.push(jobId);
+        },
+      },
+    );
+
+    expect(Array.from(out.assetBytes)).toEqual([8, 3, 6]);
+    expect(submitted).toEqual(["h3-task"]);
+    expect(bodies[0]).toEqual({
+      model: "MiniMax-H3",
+      content: [{ type: "text", text: "one clear visual task" }],
+      duration: 6,
+      resolution: "768P",
+      ratio: "9:16",
+    });
+    expect(urls).toEqual([
+      "https://api.minimax.io/v2/video_generation",
+      "https://api.minimax.io/v2/query/video_generation/h3-task",
+      "https://dl.example/h3.mp4",
+    ]);
+  });
+
+  it("时长越界在 POST 前失败", async () => {
+    let called = false;
+    const fakeFetch = (async () => {
+      called = true;
+      return jsonResponse({});
+    }) as unknown as typeof fetch;
+    await expect(
+      createMinimaxAdapter(deps(fakeFetch)).generateVideo!(h3Spec, {
+        prompt: "x",
+        durationSec: 3,
+        resolution: "768P",
+      }),
+    ).rejects.toBeInstanceOf(MultimodalGenerationError);
+    expect(called).toBe(false);
+  });
+
+  it.each([
+    [401, "authentication"],
+    [402, "credit_exhausted"],
+    [422, "response_contract"],
+    [429, "rate_limited"],
+    [503, "upstream"],
+  ] as const)("提交 HTTP %s 保留可诊断错误分类 %s", async (status, reason) => {
+    const fakeFetch = (async () =>
+      jsonResponse({ error: "provider failure" }, false, status)) as unknown as typeof fetch;
+    const promise = createMinimaxAdapter(deps(fakeFetch)).generateVideo!(h3Spec, {
+      prompt: "one shot",
+    });
+
+    await expect(promise).rejects.toMatchObject({
+      reason,
+      stage: "submit",
+      status,
+    });
+  });
+
+  it("成功态缺少 HTTPS 成片地址时拒绝伪装成功", async () => {
+    const fakeFetch = (async (url: string) => {
+      if (String(url).endsWith("/v2/video_generation")) {
+        return jsonResponse({ task_id: "missing-url" });
+      }
+      return jsonResponse({ task: { status: "succeeded", content: {} } });
+    }) as unknown as typeof fetch;
+
+    await expect(
+      createMinimaxAdapter(deps(fakeFetch)).generateVideo!(h3Spec, {
+        prompt: "one shot",
+      }),
+    ).rejects.toMatchObject({ reason: "response_contract", stage: "poll" });
+  });
+
+  it("resumeJobId 跳过计费 POST，只查询并下载", async () => {
+    const urls: string[] = [];
+    const fakeFetch = (async (url: string) => {
+      urls.push(String(url));
+      if (String(url).includes("/v2/query/")) {
+        return jsonResponse({
+          task: {
+            status: "succeeded",
+            content: { url: "https://dl.example/resumed.mp4" },
+          },
+        });
+      }
+      return bytesResponse(new Uint8Array([9]));
+    }) as unknown as typeof fetch;
+
+    await createMinimaxAdapter(deps(fakeFetch)).generateVideo!(h3Spec, {
+      prompt: "same frozen prompt",
+      durationSec: 4,
+      resolution: "768P",
+      resumeJobId: "persisted-job",
+    });
+
+    expect(urls[0]).toContain("/v2/query/video_generation/persisted-job");
+    expect(urls.some((url) => url.endsWith("/v2/video_generation"))).toBe(false);
+  });
+});

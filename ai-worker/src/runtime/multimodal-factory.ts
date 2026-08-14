@@ -80,6 +80,9 @@ export interface GenerateVideoOptions {
   aspectRatio?: string;
   /** 首帧图(image-to-video 起始帧),可选。 */
   firstFrame?: Uint8Array;
+  /** H3 v2 输出规格。旧 provider 可忽略；MiniMax H3 必须校验。 */
+  durationSec?: number;
+  resolution?: "768P" | "2K";
   /**
    * T-735：本地任务在提交后失败/重启时，使用已持久化的 provider job 继续轮询，
    * 绝不能再 POST 一次计费生成。该字段只存在于 server-only 运行时。

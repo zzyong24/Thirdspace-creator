@@ -1,4 +1,4 @@
-// MiniMax 多模态适配器(SPEC 2026-07-01 §2.2 / §8 M1)—— 实现 MultimodalProviderAdapter,
+// MiniMax 多模态适配器(SPEC 2026-07-01 §2.2 / §8 M1;T-836 H3 v2)—— 实现 MultimodalProviderAdapter,
 // 直连 MiniMax 官方 REST(**不是** anthropic 兼容端点)。image 同步、video 异步(提交 →
 // 轮询 task_id → 下载),异步全部在本适配器内消化,对上层只返 `{ assetBytes }`([gate-F1])。
 //
@@ -27,6 +27,7 @@ import {
   type MultimodalProviderAdapter,
   type MultimodalSpec,
 } from "./multimodal-factory";
+import { createHash } from "node:crypto";
 
 const DEFAULT_BASE_URL = "https://api.minimax.io";
 
@@ -39,6 +40,8 @@ export interface MinimaxAdapterDeps {
   pollIntervalMs: number;
   /** 轮询最大次数(超出 → 超时失败,上层可接住)。M2 会把它接进 task 超时态。 */
   maxPollAttempts: number;
+  /** H3 首版保守 20 分钟上限；测试可省略并复用 maxPollAttempts。 */
+  h3MaxPollAttempts?: number;
 }
 
 const REAL_DEPS: MinimaxAdapterDeps = {
@@ -46,6 +49,7 @@ const REAL_DEPS: MinimaxAdapterDeps = {
   sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
   pollIntervalMs: 5_000,
   maxPollAttempts: 60, // 5s × 60 ≈ 5 min 上限
+  h3MaxPollAttempts: 240,
 };
 
 function base(spec: MultimodalSpec): string {
@@ -63,6 +67,40 @@ function authHeaders(spec: MultimodalSpec): Record<string, string> {
 function decodeBase64(b64: string): Uint8Array {
   // Node/edge 皆有 Buffer(ai-worker types:["node"]);避免额外依赖。
   return new Uint8Array(Buffer.from(b64, "base64"));
+}
+
+function isH3(spec: MultimodalSpec): boolean {
+  return spec.model.trim().toLowerCase() === "minimax-h3";
+}
+
+function safeReference(value: string): string {
+  return `mmx-${createHash("sha256").update(value).digest("hex").slice(0, 12)}`;
+}
+
+function httpFailure(
+  stage: "submit" | "poll" | "download",
+  status: number,
+  detail: string,
+): MultimodalGenerationError {
+  const reason =
+    status === 401 || status === 403
+      ? "authentication"
+      : status === 402
+        ? "credit_exhausted"
+        : status === 429
+          ? "rate_limited"
+          : status >= 500
+            ? "upstream"
+            : "response_contract";
+  return new MultimodalGenerationError(
+    `MiniMax H3 ${stage} HTTP ${status}: ${detail}`,
+    {
+      reason,
+      stage,
+      status,
+      retryable: stage !== "submit" && (status === 429 || status >= 500),
+    },
+  );
 }
 
 // ── image(同步)───────────────────────────────────────────────────────────
@@ -119,6 +157,7 @@ async function generateVideo(
   opts: GenerateVideoOptions,
   deps: MinimaxAdapterDeps,
 ): Promise<GeneratedAsset> {
+  if (isH3(spec)) return generateH3Video(spec, opts, deps);
   // 1) 提交 → 拿 task_id
   const submitRes = await deps.fetch(`${base(spec)}/v1/video_generation`, {
     method: "POST",
@@ -151,6 +190,173 @@ async function generateVideo(
 
   // 3) file_id → 下载字节
   return { assetBytes: await retrieveFile(spec, fileId, deps) };
+}
+
+async function generateH3Video(
+  spec: MultimodalSpec,
+  opts: GenerateVideoOptions,
+  deps: MinimaxAdapterDeps,
+): Promise<GeneratedAsset> {
+  const prompt = opts.prompt.trim();
+  const duration = opts.durationSec ?? 6;
+  const resolution = opts.resolution ?? "768P";
+  const ratio = opts.aspectRatio ?? "9:16";
+  if (!prompt || prompt.length > 7_000) {
+    throw new MultimodalGenerationError("MiniMax H3 prompt 必须为 1–7000 字", {
+      reason: "response_contract",
+      stage: "submit",
+    });
+  }
+  if (!Number.isInteger(duration) || duration < 4 || duration > 15) {
+    throw new MultimodalGenerationError("MiniMax H3 duration 必须为 4–15 秒整数", {
+      reason: "response_contract",
+      stage: "submit",
+    });
+  }
+  if (resolution !== "768P" && resolution !== "2K") {
+    throw new MultimodalGenerationError("MiniMax H3 resolution 只支持 768P / 2K", {
+      reason: "response_contract",
+      stage: "submit",
+    });
+  }
+  if (!["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"].includes(ratio)) {
+    throw new MultimodalGenerationError("MiniMax H3 ratio 不受支持", {
+      reason: "response_contract",
+      stage: "submit",
+    });
+  }
+
+  let taskId = opts.resumeJobId;
+  if (!taskId) {
+    let submitRes: Response;
+    try {
+      submitRes = await deps.fetch(`${base(spec)}/v2/video_generation`, {
+        method: "POST",
+        headers: authHeaders(spec),
+        body: JSON.stringify({
+          model: spec.model,
+          content: [{ type: "text", text: prompt }],
+          duration,
+          resolution,
+          ratio,
+        }),
+      });
+    } catch (error) {
+      throw new MultimodalGenerationError(
+        "MiniMax H3 提交结果未知，请勿直接重试；请先去 MiniMax 控制台核对",
+        {
+          reason: "network",
+          stage: "submit",
+          reference: safeReference(opts.idempotencyKey ?? prompt),
+          retryable: false,
+        },
+      );
+    }
+    if (!submitRes.ok) {
+      throw httpFailure("submit", submitRes.status, await safeText(submitRes));
+    }
+    const submit = (await submitRes.json()) as MinimaxVideoSubmitResponse;
+    taskId = submit.task_id;
+    if (!taskId) {
+      throw new MultimodalGenerationError(
+        "MiniMax H3 提交响应缺 task_id，结果未知，请先去控制台核对",
+        {
+          reason: "response_contract",
+          stage: "submit",
+          reference: safeReference(opts.idempotencyKey ?? prompt),
+          retryable: false,
+        },
+      );
+    }
+    if (opts.onJobSubmitted) await opts.onJobSubmitted(taskId);
+  }
+
+  const downloadUrl = await pollH3VideoTask(spec, taskId, deps);
+  let bytesRes: Response;
+  try {
+    bytesRes = await deps.fetch(downloadUrl, { method: "GET" });
+  } catch {
+    throw new MultimodalGenerationError("MiniMax H3 成片下载网络失败", {
+      reason: "download",
+      stage: "download",
+      reference: safeReference(taskId),
+      retryable: true,
+    });
+  }
+  if (!bytesRes.ok) {
+    throw httpFailure("download", bytesRes.status, "成片下载失败");
+  }
+  const assetBytes = new Uint8Array(await bytesRes.arrayBuffer());
+  if (!assetBytes.byteLength) {
+    throw new MultimodalGenerationError("MiniMax H3 成片下载为空", {
+      reason: "download",
+      stage: "download",
+      reference: safeReference(taskId),
+    });
+  }
+  return { assetBytes };
+}
+
+async function pollH3VideoTask(
+  spec: MultimodalSpec,
+  taskId: string,
+  deps: MinimaxAdapterDeps,
+): Promise<string> {
+  const maxAttempts = deps.h3MaxPollAttempts ?? deps.maxPollAttempts;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    let res: Response;
+    try {
+      res = await deps.fetch(
+        `${base(spec)}/v2/query/video_generation/${encodeURIComponent(taskId)}`,
+        { method: "GET", headers: authHeaders(spec) },
+      );
+    } catch {
+      throw new MultimodalGenerationError("MiniMax H3 查询网络失败", {
+        reason: "network",
+        stage: "poll",
+        reference: safeReference(taskId),
+        retryable: true,
+      });
+    }
+    if (!res.ok) throw httpFailure("poll", res.status, await safeText(res));
+    const json = (await res.json()) as MinimaxH3QueryResponse;
+    const status = json.task?.status;
+    if (status === "succeeded") {
+      const url = json.task?.content?.url;
+      if (!url || !url.startsWith("https://")) {
+        throw new MultimodalGenerationError("MiniMax H3 succeeded 但无安全下载 URL", {
+          reason: "response_contract",
+          stage: "poll",
+          reference: safeReference(taskId),
+        });
+      }
+      return url;
+    }
+    if (status === "failed" || status === "cancelled") {
+      throw new MultimodalGenerationError(
+        status === "cancelled" ? "MiniMax H3 任务已取消" : "MiniMax H3 任务生成失败",
+        {
+          reason: "upstream",
+          stage: "poll",
+          reference: safeReference(taskId),
+        },
+      );
+    }
+    if (status !== "queued" && status !== "running") {
+      throw new MultimodalGenerationError("MiniMax H3 查询返回未知状态", {
+        reason: "response_contract",
+        stage: "poll",
+        reference: safeReference(taskId),
+      });
+    }
+    await deps.sleep(deps.pollIntervalMs);
+  }
+  throw new MultimodalGenerationError("MiniMax H3 生成超时", {
+    reason: "timeout",
+    stage: "poll",
+    reference: safeReference(taskId),
+    retryable: true,
+  });
 }
 
 async function pollVideoTask(
@@ -246,6 +452,12 @@ interface MinimaxVideoQueryResponse {
 }
 interface MinimaxFileRetrieveResponse {
   file?: { download_url?: string };
+}
+interface MinimaxH3QueryResponse {
+  task?: {
+    status?: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+    content?: { url?: string };
+  };
 }
 
 /** 构造 MiniMax 适配器。deps 可注入(测试零成本);默认走真 fetch + 真 setTimeout 轮询。 */
