@@ -784,3 +784,4 @@
 {"ts":"2026-08-13T17:06:21.043Z","actor":"taskctl","action":"start","task":"T-823","sha_before":"1ba4ec3b2e37","sha_after":"cdb0108015b2"}
 {"ts":"2026-08-13T17:19:13.152Z","actor":"taskctl","action":"start","task":"T-824","sha_before":"c61eabb89d61","sha_after":"45535ead6a5d"}
 {"ts":"2026-08-14T01:17:47.636Z","actor":"taskctl","action":"start","task":"T-825","sha_before":"3124bc50ecfa","sha_after":"67aecd6180a1"}
+{"ts":"2026-08-14T02:05:49.619Z","actor":"taskctl","action":"complete","task":"T-825","evidence":"orchestrator/T825-RELEASE-VALIDATION.md","sha_before":"39e65af2f37d","sha_after":"bfdd2d8e6f1a"}
