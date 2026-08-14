@@ -114,6 +114,19 @@ function topicsHref(
     : `/topics?sort=${sort}`;
 }
 
+/** 打开选题 Copilot 时保留候选池状态；关闭浮层后仍回到用户刚才筛过的列表。 */
+function preserveTopicsState(
+  href: string,
+  sort?: CandidateSortKey,
+  sourceFilter?: CandidateSourceFilter | null,
+): string {
+  if (!sort && !sourceFilter) return href;
+  const params = new URLSearchParams(href.startsWith("?") ? href.slice(1) : href);
+  if (sort) params.set("sort", sort);
+  if (sourceFilter) params.set("source", sourceFilter);
+  return `?${params.toString()}`;
+}
+
 // ── shared mutation seam ────────────────────────────────────────────────────────
 // A `pending` guard blocks concurrent writes; on success it runs `after` (defaults to
 // router.refresh) so the server re-reads persisted rows.
@@ -253,9 +266,13 @@ function ScoreChip({
 export function CandidateCard({
   candidate,
   sourceLabel,
+  sort,
+  sourceFilter,
 }: {
   readonly candidate: CandidateResource;
   readonly sourceLabel?: string;
+  readonly sort?: CandidateSortKey;
+  readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
   const { pending, run, router } = useMutation();
   const { selectedId, select } = React.useContext(SelectionCtx);
@@ -386,7 +403,7 @@ export function CandidateCard({
           <Eye className="size-3.5" />
           查看选题卡
         </Button>
-        <EnrichButton candidate={candidate} />
+        <EnrichButton candidate={candidate} sort={sort} sourceFilter={sourceFilter} />
         <Button
           type="button"
           variant="outline"
@@ -519,18 +536,26 @@ const TOPIC_ENRICH_PREFILL =
 export function EnrichButton({
   candidate,
   className,
+  sort,
+  sourceFilter,
 }: {
   readonly candidate: CandidateResource;
   readonly className?: string;
+  readonly sort?: CandidateSortKey;
+  readonly sourceFilter?: CandidateSourceFilter | null;
 }) {
   const hasCard = Boolean(candidate.card.oneLiner);
   const label = hasCard ? "补充信息" : "补全选题卡";
   // query-only 深链 → 就地开 Copilot 浮层不跳页;selection.kind=candidate 让编导知道"这条"指哪条。
-  const href = copilotDeepLink(
-    "topics",
-    "topic.enrich",
-    { kind: "candidate", id: candidate.id, title: candidate.title },
-    TOPIC_ENRICH_PREFILL,
+  const href = preserveTopicsState(
+    copilotDeepLink(
+      "topics",
+      "topic.enrich",
+      { kind: "candidate", id: candidate.id, title: candidate.title },
+      TOPIC_ENRICH_PREFILL,
+    ),
+    sort,
+    sourceFilter,
   );
 
   return (
@@ -950,6 +975,9 @@ function SourcesColumn({
         {sources.map((s) => {
           const Icon = SOURCE_ICONS[s.key] ?? Lightbulb;
           const filter = SOURCE_ROW_FILTERS[s.key] ?? null;
+          const displayCount = filter
+            ? candidateCountsBySource[filter] ?? 0
+            : s.count;
           const content = (
             <>
               <span className="flex size-7 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand">
@@ -959,7 +987,7 @@ function SourcesColumn({
                 {s.label}
               </span>
               <Badge variant="secondary" className="text-[10px] tabular-nums">
-                {s.count}
+                {displayCount}
               </Badge>
             </>
           );
@@ -968,11 +996,14 @@ function SourcesColumn({
               <li
                 key={s.key}
                 data-testid="topics-source-row"
+                data-filter-availability="summary-only"
+                title="仅统计：这个数量是上游信号或资料存量，现有候选尚不能按该来源精确区分。"
                 // [T-051 2c] 纯信息行:无 hover 高亮 / 指针 —— 该来源分类映射不到
                 // candidates.source 枚举(见 SOURCE_ROW_FILTERS),做可点就是假过滤。
                 className="flex items-center gap-2.5 rounded-control px-2 py-2 text-sm"
               >
                 {content}
+                <span className="shrink-0 text-[10px] text-text-subtle">仅统计</span>
               </li>
             );
           }
@@ -1041,8 +1072,12 @@ function DetailIcon({ icon: Icon, label }: { readonly icon: LucideIcon; readonly
 
 function CandidateDetailPanel({
   candidate,
+  sort,
+  sourceFilter,
 }: {
   readonly candidate: CandidateResource | null;
+  readonly sort: CandidateSortKey;
+  readonly sourceFilter: CandidateSourceFilter | null;
 }) {
   return (
     <aside
@@ -1078,10 +1113,19 @@ function CandidateDetailPanel({
             <p className="text-sm text-muted-foreground">
               这条还没有选题卡。让 AI 按你的定位 + 素材补全一句话选题、观众痛点、推荐结构等。
             </p>
-            <EnrichButton candidate={candidate} className="h-8 px-3" />
+            <EnrichButton
+              candidate={candidate}
+              className="h-8 px-3"
+              sort={sort}
+              sourceFilter={sourceFilter}
+            />
           </div>
         ) : (
-          <CandidateCardDetail candidate={candidate} />
+          <CandidateCardDetail
+            candidate={candidate}
+            sort={sort}
+            sourceFilter={sourceFilter}
+          />
         )}
       </div>
     </aside>
@@ -1090,8 +1134,12 @@ function CandidateDetailPanel({
 
 function CandidateCardDetail({
   candidate,
+  sort,
+  sourceFilter,
 }: {
   readonly candidate: CandidateResource;
+  readonly sort: CandidateSortKey;
+  readonly sourceFilter: CandidateSourceFilter | null;
 }) {
   const { pending, run, router } = useMutation();
   const card = candidate.card;
@@ -1204,7 +1252,12 @@ function CandidateCardDetail({
 
       {/* 底部动作 */}
       <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
-        <EnrichButton candidate={candidate} className="h-8 px-3" />
+        <EnrichButton
+          candidate={candidate}
+          className="h-8 px-3"
+          sort={sort}
+          sourceFilter={sourceFilter}
+        />
         <Button
           type="button"
           size="sm"
@@ -1224,7 +1277,13 @@ function CandidateCardDetail({
 // 人只打一句意图;**T-103c 起改为对话内即时反馈**:编导先建裸卡(createCandidate),再打开 Copilot
 // 深链(fn=topic.enrich + selection=新建候选 + 预填话术,不自动发)——补全在对话里流式进行,产 enrich
 // 卡逐条采纳落库,不再后台轮询 confirm。裸卡已进池(title 在),补全没走完也可在卡上再点「补全选题卡」。
-export function IdeaDraftForm() {
+export function IdeaDraftForm({
+  sort,
+  sourceFilter,
+}: {
+  readonly sort?: CandidateSortKey;
+  readonly sourceFilter?: CandidateSourceFilter | null;
+} = {}) {
   const router = useRouter();
   const [idea, setIdea] = React.useState("");
   const [phase, setPhase] = React.useState<"idle" | "opening" | "error">("idle");
@@ -1251,11 +1310,15 @@ export function IdeaDraftForm() {
         if (cancelledRef.current) return;
         // 深链:surface=topics,fn=topic.enrich,selection=刚建的候选(免编导索要 id/标题),预填
         // 话术(不自动发)。query-only href → 就地开 Copilot 浮层不跳页;补全的 enrich 卡对话内采纳。
-        const href = copilotDeepLink(
-          "topics",
-          "topic.enrich",
-          { kind: "candidate", id: created.id, title },
-          TOPIC_ENRICH_PREFILL,
+        const href = preserveTopicsState(
+          copilotDeepLink(
+            "topics",
+            "topic.enrich",
+            { kind: "candidate", id: created.id, title },
+            TOPIC_ENRICH_PREFILL,
+          ),
+          sort,
+          sourceFilter,
         );
         router.push(href);
         if (!cancelledRef.current) {
@@ -1318,6 +1381,7 @@ function PoolColumn({
   /** [T-244] 当前来源过滤 —— 标题旁给「已按来源过滤」提示,换排序时保留。 */
   readonly sourceFilter: CandidateSourceFilter | null;
 }) {
+  const router = useRouter();
   const [q, setQ] = React.useState("");
   const filtered = q.trim()
     ? pool.filter(
@@ -1336,19 +1400,22 @@ function PoolColumn({
           </h3>
           {/* [T-244] 过滤态提示:让用户知道池子当前不是全量,以及在哪取消。 */}
           {sourceFilter ? (
-            <span
+            <button
+              type="button"
+              aria-label="清除来源筛选"
               data-testid="pool-source-filter-hint"
-              className="truncate rounded-full bg-brand-soft px-2 py-0.5 text-[11px] text-brand"
+              onClick={() => router.push(topicsHref(sort, null))}
+              className="truncate rounded-full bg-brand-soft px-2 py-0.5 text-[11px] text-brand hover:bg-brand/15"
             >
-              已按来源过滤:{SOURCE_FILTER_LABELS[sourceFilter]}(点左栏来源可取消)
-            </span>
+              已筛选：{SOURCE_FILTER_LABELS[sourceFilter]} · 清除
+            </button>
           ) : null}
         </div>
         <CreateCandidateForm />
       </div>
 
       {/* A1 主路径:一句话让编导补全(12 字段表单降级成上面的「手动详填」)。 */}
-      <IdeaDraftForm />
+      <IdeaDraftForm sort={sort} sourceFilter={sourceFilter} />
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <span className="relative flex-1">
@@ -1403,7 +1470,14 @@ function PoolColumn({
             )}
           </li>
         ) : (
-          filtered.map((c) => <CandidateCard key={c.id} candidate={c} />)
+          filtered.map((c) => (
+            <CandidateCard
+              key={c.id}
+              candidate={c}
+              sort={sort}
+              sourceFilter={sourceFilter}
+            />
+          ))
         )}
       </ul>
     </section>
@@ -1483,7 +1557,11 @@ export function TopicsWorkspace({
           candidateCountsBySource={candidateCountsBySource}
         />
         <PoolColumn pool={pool} sort={sort} sourceFilter={sourceFilter} />
-        <CandidateDetailPanel candidate={selected} />
+        <CandidateDetailPanel
+          candidate={selected}
+          sort={sort}
+          sourceFilter={sourceFilter}
+        />
       </div>
     </SelectionCtx.Provider>
   );

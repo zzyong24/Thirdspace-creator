@@ -402,7 +402,11 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
   async function rankGuardrail(
     ctx: RequestContext,
     query: RankTopicsQuery,
-  ): Promise<RankedTopicResource[]> {
+    listFilter?: Pick<
+      ListCandidatesQuery,
+      "status" | "source" | "createdAfter" | "offset"
+    >,
+  ): Promise<{ rows: RankedTopicResource[]; total: number }> {
     const repo = repoFor(ctx, "candidate.rankTopicsWithGuardrails");
     // 护栏③:读前先归档过期偏好(lastReinforcedAt 早于 now-8周)——过期偏好不再注入评分。
     const cutoff = new Date(
@@ -423,8 +427,10 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     }));
 
     // 池内候选(待评估/待补充)。量级百条内,一次读全再算。
-    const { rows } = await repo.listCandidates({
-      status: "pool",
+    const { rows, total } = await repo.listCandidates({
+      status: listFilter?.status ?? "pool",
+      source: listFilter?.source,
+      createdAfter: listFilter?.createdAfter,
       limit: 1000,
       offset: 0,
     });
@@ -443,16 +449,23 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       return { id: dto.id, baseScore, adjustedScore };
     });
 
+    const offset = listFilter?.offset ?? 0;
     const ranked = rankWithExploration(scored, {
-      limit: query.limit,
+      // 先把 offset 之前的排序结果算出来再切页；否则第二页会从错误的排名起点开始。
+      // 不能按 rows.length 收窄 limit：探索位算法会用 limit 计算“利用位”，收窄会
+      // 把一个很小的池子全部误判为探索位，从而改变既有的 adjustedScore 顺序。
+      limit: query.limit + offset,
       explorationSlots: query.explorationSlots ?? 2,
     });
-    return ranked.map((s) => ({
-      ...(dtoById.get(s.id) as CandidateResource),
-      baseScore: s.baseScore,
-      preferenceAdjustment: s.adjustedScore - s.baseScore,
-      adjustedScore: s.adjustedScore,
-    }));
+    return {
+      rows: ranked.slice(offset).map((s) => ({
+        ...(dtoById.get(s.id) as CandidateResource),
+        baseScore: s.baseScore,
+        preferenceAdjustment: s.adjustedScore - s.baseScore,
+        adjustedScore: s.adjustedScore,
+      })),
+      total,
+    };
   }
 
   return {
@@ -461,8 +474,16 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       // 护栏只排 pool 候选,返回偏好注入后分序 + 探索位;RankedTopicResource 是 CandidateResource
       // 的超集,list 契约(response=candidateResource)会剥掉额外分字段,不破坏 wire 形状。
       if (query.sort === "guardrail") {
-        const ranked = await rankGuardrail(ctx, { limit: query.limit });
-        return { rows: ranked, total: ranked.length };
+        return rankGuardrail(
+          ctx,
+          { limit: query.limit },
+          {
+            status: query.status,
+            source: query.source,
+            createdAfter: query.createdAfter,
+            offset: query.offset,
+          },
+        );
       }
       const { rows, total } = await repoFor(ctx, "candidate.listCandidates").listCandidates(query);
       return { rows: rows.map(toCandidateDto), total };
@@ -832,7 +853,7 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
 
     async rankTopicsWithGuardrails(ctx, query) {
       // [T-216] 实体抽到闭包 rankGuardrail(与 listCandidates 的 sort=guardrail 共用同一逻辑)。
-      return rankGuardrail(ctx, query);
+      return (await rankGuardrail(ctx, query)).rows;
     },
   };
 }

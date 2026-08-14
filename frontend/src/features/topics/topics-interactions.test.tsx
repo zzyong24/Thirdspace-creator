@@ -450,7 +450,13 @@ describe("topics islands (needs-backend wiring)", () => {
   });
 
   it("[T-103c] 补全选题卡 → Copilot 深链预填(topic.enrich, selection=候选;不再 createAITask 轮询)", () => {
-    render(<CandidateCard candidate={candidate()} />);
+    render(
+      <CandidateCard
+        candidate={candidate()}
+        sort="guardrail"
+        sourceFilter="idea"
+      />,
+    );
     const link = screen.getByTestId("enrich-button");
     const href = link.getAttribute("href") ?? "";
     expect(href).toContain("copilot=open");
@@ -459,6 +465,9 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(href).toContain("selKind=candidate");
     expect(href).toContain("selId=cand-1");
     expect(href).toContain("prefill=");
+    // [T-827] 打开浮层不能清掉用户正在看的来源/排序,关闭后仍回原候选池。
+    expect(href).toContain("sort=guardrail");
+    expect(href).toContain("source=idea");
     // 补全不再后台起任务 —— 走对话确认门物化。
     expect(mockClient.createAITask).not.toHaveBeenCalled();
   });
@@ -513,7 +522,7 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     ];
   }
 
-  it("7 行仍全渲染:2 行(热点/灵感)是可点 button,其余 5 行纯展示非按钮", () => {
+  it("7 行仍全渲染:2 行是真筛选按钮,其余 5 行明确标为仅统计", () => {
     render(
       <TopicsWorkspace
         candidates={pool()}
@@ -530,6 +539,11 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     ]);
     // 不可映射的 5 行不是按钮(无 onClick 语义,T-051 去假可点样式继续适用)。
     expect(rows.filter((r) => r.tagName === "LI")).toHaveLength(5);
+    for (const row of rows.filter((r) => r.tagName === "LI")) {
+      expect(row).toHaveAttribute("data-filter-availability", "summary-only");
+      expect(row.textContent).toContain("仅统计");
+      expect(row).toHaveAttribute("title");
+    }
   });
 
   it("点「手动灵感」→ URL 导航 ?source=idea(保留 sort)", () => {
@@ -560,10 +574,33 @@ describe("[T-244] 来源行 → 候选池过滤器", () => {
     expect(screen.getByTestId("pool-source-filter-hint").textContent).toContain(
       "手动灵感",
     );
+    fireEvent.click(screen.getByRole("button", { name: "清除来源筛选" }));
+    expect(mockRouter.push).toHaveBeenCalledWith("/topics?sort=predictedScore");
+    mockRouter.push.mockClear();
     const active = screen.getByRole("button", { name: "取消按手动灵感过滤" });
     expect(active).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(active);
     expect(mockRouter.push).toHaveBeenCalledWith("/topics?sort=predictedScore");
+  });
+
+  it("可筛选来源显示候选池真实数量,不拿信号统计冒充筛选结果数", () => {
+    render(
+      <TopicsWorkspace
+        candidates={pool()}
+        sources={overview({
+          sources: overview().sources.map((s) =>
+            s.key === "idea" ? { ...s, count: 99 } : s,
+          ),
+        }).sources}
+        sort="predictedScore"
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "按手动灵感过滤候选池" }).textContent,
+    ).toContain("1");
+    expect(
+      screen.getByRole("button", { name: "按手动灵感过滤候选池" }).textContent,
+    ).not.toContain("99");
   });
 
   it("池里没有该来源的候选 → 来源行禁用(点了不导航)", () => {

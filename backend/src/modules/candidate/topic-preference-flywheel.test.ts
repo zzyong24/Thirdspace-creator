@@ -310,6 +310,24 @@ describe("[T-216] listCandidates sort=guardrail 路由到护栏排序", () => {
     expect(total).toBe(1);
   });
 
+  it("[T-827] sort=guardrail 仍服从来源过滤,不会把别的来源混回候选池", async () => {
+    await svc.createCandidate(ctx, { title: "手动灵感一", source: "idea" });
+    await svc.createCandidate(ctx, { title: "手动灵感二", source: "idea" });
+    await svc.createCandidate(ctx, { title: "行业热点", source: "trend" });
+
+    const { rows, total } = await svc.listCandidates(ctx, {
+      sort: "guardrail",
+      source: "idea",
+      status: "pool",
+      limit: 100,
+      offset: 0,
+    });
+
+    expect(rows.map((r) => r.title).sort()).toEqual(["手动灵感一", "手动灵感二"]);
+    expect(rows.every((r) => r.source === "idea")).toBe(true);
+    expect(total).toBe(2);
+  });
+
   it("sort=predictedScore 仍走原 SQL 排序(不受 guardrail 影响)", async () => {
     await svc.createCandidate(ctx, { title: "普通一" });
     await svc.createCandidate(ctx, { title: "普通二" });
