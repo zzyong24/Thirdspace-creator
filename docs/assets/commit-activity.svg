@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="412" viewBox="0 0 900 412" role="img" aria-label="CreatorOS 提交活动">
 <g font-family="-apple-system,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif">
-<text x="32" y="40" font-size="26" font-weight="700" fill="#1f2328">1833</text>
+<text x="32" y="40" font-size="26" font-weight="700" fill="#1f2328">1919</text>
 <text x="32" y="60" font-size="12" fill="#59636e">总提交</text>
-<text x="202" y="40" font-size="26" font-weight="700" fill="#1f2328">580</text>
+<text x="202" y="40" font-size="26" font-weight="700" fill="#1f2328">601</text>
 <text x="202" y="60" font-size="12" fill="#59636e">近 30 天</text>
 <text x="372" y="40" font-size="26" font-weight="700" fill="#1f2328">0</text>
 <text x="372" y="60" font-size="12" fill="#59636e">今日</text>
@@ -343,7 +343,7 @@
 <rect x="707" y="190" width="12" height="12" rx="2" fill="#ebedf0"/>
 <rect x="722" y="100" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="722" y="115" width="12" height="12" rx="2" fill="#30a14e"/>
-<rect x="722" y="130" width="12" height="12" rx="2" fill="#216e39"/>
+<rect x="722" y="130" width="12" height="12" rx="2" fill="#30a14e"/>
 <rect x="722" y="145" width="12" height="12" rx="2" fill="#216e39"/>
 <rect x="722" y="160" width="12" height="12" rx="2" fill="#216e39"/>
 <rect x="722" y="175" width="12" height="12" rx="2" fill="#216e39"/>
@@ -356,7 +356,7 @@
 <rect x="737" y="160" width="12" height="12" rx="2" fill="#ebedf0"/>
 <rect x="737" y="175" width="12" height="12" rx="2" fill="#30a14e"/>
 <rect x="737" y="190" width="12" height="12" rx="2" fill="#216e39"/>
-<rect x="752" y="100" width="12" height="12" rx="2" fill="#30a14e"/>
+<rect x="752" y="100" width="12" height="12" rx="2" fill="#40c463"/>
 <rect x="752" y="115" width="12" height="12" rx="2" fill="#40c463"/>
 <rect x="752" y="130" width="12" height="12" rx="2" fill="#40c463"/>
 <rect x="752" y="145" width="12" height="12" rx="2" fill="#216e39"/>
@@ -365,7 +365,7 @@
 <rect x="752" y="190" width="12" height="12" rx="2" fill="#30a14e"/>
 <rect x="767" y="100" width="12" height="12" rx="2" fill="#30a14e"/>
 <rect x="767" y="115" width="12" height="12" rx="2" fill="#9be9a8"/>
-<rect x="767" y="130" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="767" y="130" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="767" y="145" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="767" y="160" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="767" y="175" width="12" height="12" rx="2" fill="#9be9a8"/>
@@ -374,22 +374,23 @@
 <rect x="782" y="115" width="12" height="12" rx="2" fill="#30a14e"/>
 <rect x="782" y="130" width="12" height="12" rx="2" fill="#40c463"/>
 <rect x="782" y="145" width="12" height="12" rx="2" fill="#40c463"/>
-<rect x="782" y="160" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="782" y="160" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="782" y="175" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="782" y="190" width="12" height="12" rx="2" fill="#ebedf0"/>
 <text x="797" y="92" font-size="11" fill="#59636e">8月</text>
-<rect x="797" y="100" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="797" y="100" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="797" y="115" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="797" y="130" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="797" y="145" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="797" y="160" width="12" height="12" rx="2" fill="#ebedf0"/>
 <rect x="797" y="175" width="12" height="12" rx="2" fill="#ebedf0"/>
-<rect x="797" y="190" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="797" y="190" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="812" y="100" width="12" height="12" rx="2" fill="#30a14e"/>
-<rect x="812" y="115" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="812" y="115" width="12" height="12" rx="2" fill="#9be9a8"/>
 <rect x="812" y="130" width="12" height="12" rx="2" fill="#40c463"/>
-<rect x="812" y="145" width="12" height="12" rx="2" fill="#9be9a8"/>
-<rect x="812" y="160" width="12" height="12" rx="2" fill="#ebedf0"/>
+<rect x="812" y="145" width="12" height="12" rx="2" fill="#216e39"/>
+<rect x="812" y="160" width="12" height="12" rx="2" fill="#40c463"/>
+<rect x="812" y="175" width="12" height="12" rx="2" fill="#ebedf0"/>
 <text x="26" y="125" font-size="10" fill="#818b98" text-anchor="end">一</text>
 <text x="26" y="155" font-size="10" fill="#818b98" text-anchor="end">三</text>
 <text x="26" y="185" font-size="10" fill="#818b98" text-anchor="end">五</text>
@@ -401,63 +402,63 @@
 <rect x="809" y="211" width="12" height="12" rx="2" fill="#216e39"/>
 <text x="828" y="221" font-size="11" fill="#59636e">多</text>
 <text x="32" y="262" font-size="13" font-weight="600" fill="#1f2328">近 30 天每日提交</text>
-<path d="M36.93333333333334 354 v-70 q0 -2 2 -2 h14 q2 0 2 2 v70 z" fill="#2da44e"/>
-<text x="45.93333333333334" y="278" font-size="9" fill="#59636e" text-anchor="middle">65</text>
-<text x="45.93333333333334" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/15</text>
-<path d="M64.8 354 v-23.47692307692308 q0 -2 2 -2 h14 q2 0 2 2 v23.47692307692308 z" fill="#2da44e"/>
-<text x="73.8" y="324.5230769230769" font-size="9" fill="#59636e" text-anchor="middle">23</text>
-<path d="M92.66666666666667 354 v-66.67692307692307 q0 -2 2 -2 h14 q2 0 2 2 v66.67692307692307 z" fill="#2da44e"/>
-<text x="101.66666666666667" y="281.32307692307694" font-size="9" fill="#59636e" text-anchor="middle">62</text>
-<path d="M120.53333333333333 354 v-56.707692307692305 q0 -2 2 -2 h14 q2 0 2 2 v56.707692307692305 z" fill="#2da44e"/>
-<text x="129.53333333333333" y="291.2923076923077" font-size="9" fill="#59636e" text-anchor="middle">53</text>
-<path d="M148.4 354 v-35.66153846153846 q0 -2 2 -2 h14 q2 0 2 2 v35.66153846153846 z" fill="#2da44e"/>
-<text x="157.4" y="312.33846153846156" font-size="9" fill="#59636e" text-anchor="middle">34</text>
-<path d="M176.26666666666668 354 v-2.430769230769231 q0 -2 2 -2 h14 q2 0 2 2 v2.430769230769231 z" fill="#2da44e"/>
-<text x="185.26666666666668" y="345.5692307692308" font-size="9" fill="#59636e" text-anchor="middle">4</text>
-<text x="185.26666666666668" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/20</text>
-<path d="M204.13333333333333 354 v-17.93846153846154 q0 -2 2 -2 h14 q2 0 2 2 v17.93846153846154 z" fill="#2da44e"/>
-<text x="213.13333333333333" y="330.0615384615385" font-size="9" fill="#59636e" text-anchor="middle">18</text>
-<path d="M232 354 v-2.430769230769231 q0 -2 2 -2 h14 q2 0 2 2 v2.430769230769231 z" fill="#2da44e"/>
-<text x="241" y="345.5692307692308" font-size="9" fill="#59636e" text-anchor="middle">4</text>
-<path d="M259.8666666666667 354 v-9.076923076923077 q0 -2 2 -2 h14 q2 0 2 2 v9.076923076923077 z" fill="#2da44e"/>
-<text x="268.8666666666667" y="338.9230769230769" font-size="9" fill="#59636e" text-anchor="middle">10</text>
-<path d="M287.73333333333335 354 v-1 q0 -2 2 -2 h14 q2 0 2 2 v1 z" fill="#2da44e"/>
-<text x="296.73333333333335" y="347" font-size="9" fill="#59636e" text-anchor="middle">1</text>
-<text x="324.6" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/25</text>
-<path d="M343.4666666666667 354 v-52.276923076923076 q0 -2 2 -2 h14 q2 0 2 2 v52.276923076923076 z" fill="#2da44e"/>
-<text x="352.4666666666667" y="295.7230769230769" font-size="9" fill="#59636e" text-anchor="middle">49</text>
-<path d="M371.3333333333333 354 v-42.30769230769231 q0 -2 2 -2 h14 q2 0 2 2 v42.30769230769231 z" fill="#2da44e"/>
-<text x="380.3333333333333" y="305.6923076923077" font-size="9" fill="#59636e" text-anchor="middle">40</text>
-<path d="M399.2 354 v-23.47692307692308 q0 -2 2 -2 h14 q2 0 2 2 v23.47692307692308 z" fill="#2da44e"/>
-<text x="408.2" y="324.5230769230769" font-size="9" fill="#59636e" text-anchor="middle">23</text>
-<path d="M427.06666666666666 354 v-23.47692307692308 q0 -2 2 -2 h14 q2 0 2 2 v23.47692307692308 z" fill="#2da44e"/>
-<text x="436.06666666666666" y="324.5230769230769" font-size="9" fill="#59636e" text-anchor="middle">23</text>
-<path d="M454.93333333333334 354 v-17.93846153846154 q0 -2 2 -2 h14 q2 0 2 2 v17.93846153846154 z" fill="#2da44e"/>
-<text x="463.93333333333334" y="330.0615384615385" font-size="9" fill="#59636e" text-anchor="middle">18</text>
-<text x="463.93333333333334" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/30</text>
-<path d="M482.8 354 v-15.723076923076924 q0 -2 2 -2 h14 q2 0 2 2 v15.723076923076924 z" fill="#2da44e"/>
-<text x="491.8" y="332.2769230769231" font-size="9" fill="#59636e" text-anchor="middle">16</text>
-<path d="M538.5333333333333 354 v-17.93846153846154 q0 -2 2 -2 h14 q2 0 2 2 v17.93846153846154 z" fill="#2da44e"/>
-<text x="547.5333333333333" y="330.0615384615385" font-size="9" fill="#59636e" text-anchor="middle">18</text>
-<path d="M566.4 354 v-10.184615384615386 q0 -2 2 -2 h14 q2 0 2 2 v10.184615384615386 z" fill="#2da44e"/>
-<text x="575.4" y="337.81538461538463" font-size="9" fill="#59636e" text-anchor="middle">11</text>
-<path d="M594.2666666666667 354 v-2.430769230769231 q0 -2 2 -2 h14 q2 0 2 2 v2.430769230769231 z" fill="#2da44e"/>
-<text x="603.2666666666667" y="345.5692307692308" font-size="9" fill="#59636e" text-anchor="middle">4</text>
-<text x="603.2666666666667" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/4</text>
-<path d="M622.1333333333333 354 v-4.6461538461538465 q0 -2 2 -2 h14 q2 0 2 2 v4.6461538461538465 z" fill="#2da44e"/>
-<text x="631.1333333333333" y="343.3538461538462" font-size="9" fill="#59636e" text-anchor="middle">6</text>
-<path d="M705.7333333333332 354 v-16.83076923076923 q0 -2 2 -2 h14 q2 0 2 2 v16.83076923076923 z" fill="#2da44e"/>
-<text x="714.7333333333332" y="331.16923076923075" font-size="9" fill="#59636e" text-anchor="middle">17</text>
-<path d="M733.5999999999999 354 v-42.30769230769231 q0 -2 2 -2 h14 q2 0 2 2 v42.30769230769231 z" fill="#2da44e"/>
-<text x="742.5999999999999" y="305.6923076923077" font-size="9" fill="#59636e" text-anchor="middle">40</text>
-<text x="742.5999999999999" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/9</text>
-<path d="M761.4666666666666 354 v-17.93846153846154 q0 -2 2 -2 h14 q2 0 2 2 v17.93846153846154 z" fill="#2da44e"/>
-<text x="770.4666666666666" y="330.0615384615385" font-size="9" fill="#59636e" text-anchor="middle">18</text>
-<path d="M789.3333333333333 354 v-20.153846153846153 q0 -2 2 -2 h14 q2 0 2 2 v20.153846153846153 z" fill="#2da44e"/>
-<text x="798.3333333333333" y="327.84615384615387" font-size="9" fill="#59636e" text-anchor="middle">20</text>
-<path d="M817.1999999999999 354 v-1.3230769230769233 q0 -2 2 -2 h14 q2 0 2 2 v1.3230769230769233 z" fill="#2da44e"/>
-<text x="826.1999999999999" y="346.67692307692306" font-size="9" fill="#59636e" text-anchor="middle">3</text>
-<text x="854.0666666666666" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/13</text>
+<path d="M36.93333333333334 354 v-24.70967741935484 q0 -2 2 -2 h14 q2 0 2 2 v24.70967741935484 z" fill="#2da44e"/>
+<text x="45.93333333333334" y="323.2903225806452" font-size="9" fill="#59636e" text-anchor="middle">23</text>
+<text x="45.93333333333334" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/16</text>
+<path d="M64.8 354 v-70 q0 -2 2 -2 h14 q2 0 2 2 v70 z" fill="#2da44e"/>
+<text x="73.8" y="278" font-size="9" fill="#59636e" text-anchor="middle">62</text>
+<path d="M92.66666666666667 354 v-59.54838709677419 q0 -2 2 -2 h14 q2 0 2 2 v59.54838709677419 z" fill="#2da44e"/>
+<text x="101.66666666666667" y="288.4516129032258" font-size="9" fill="#59636e" text-anchor="middle">53</text>
+<path d="M120.53333333333333 354 v-37.483870967741936 q0 -2 2 -2 h14 q2 0 2 2 v37.483870967741936 z" fill="#2da44e"/>
+<text x="129.53333333333333" y="310.51612903225805" font-size="9" fill="#59636e" text-anchor="middle">34</text>
+<path d="M148.4 354 v-2.64516129032258 q0 -2 2 -2 h14 q2 0 2 2 v2.64516129032258 z" fill="#2da44e"/>
+<text x="157.4" y="345.35483870967744" font-size="9" fill="#59636e" text-anchor="middle">4</text>
+<path d="M176.26666666666668 354 v-18.903225806451616 q0 -2 2 -2 h14 q2 0 2 2 v18.903225806451616 z" fill="#2da44e"/>
+<text x="185.26666666666668" y="329.0967741935484" font-size="9" fill="#59636e" text-anchor="middle">18</text>
+<text x="185.26666666666668" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/21</text>
+<path d="M204.13333333333333 354 v-2.64516129032258 q0 -2 2 -2 h14 q2 0 2 2 v2.64516129032258 z" fill="#2da44e"/>
+<text x="213.13333333333333" y="345.35483870967744" font-size="9" fill="#59636e" text-anchor="middle">4</text>
+<path d="M232 354 v-9.612903225806452 q0 -2 2 -2 h14 q2 0 2 2 v9.612903225806452 z" fill="#2da44e"/>
+<text x="241" y="338.38709677419354" font-size="9" fill="#59636e" text-anchor="middle">10</text>
+<path d="M259.8666666666667 354 v-1 q0 -2 2 -2 h14 q2 0 2 2 v1 z" fill="#2da44e"/>
+<text x="268.8666666666667" y="347" font-size="9" fill="#59636e" text-anchor="middle">1</text>
+<path d="M315.6 354 v-54.90322580645161 q0 -2 2 -2 h14 q2 0 2 2 v54.90322580645161 z" fill="#2da44e"/>
+<text x="324.6" y="293.0967741935484" font-size="9" fill="#59636e" text-anchor="middle">49</text>
+<text x="324.6" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/26</text>
+<path d="M343.4666666666667 354 v-44.45161290322581 q0 -2 2 -2 h14 q2 0 2 2 v44.45161290322581 z" fill="#2da44e"/>
+<text x="352.4666666666667" y="303.5483870967742" font-size="9" fill="#59636e" text-anchor="middle">40</text>
+<path d="M371.3333333333333 354 v-24.70967741935484 q0 -2 2 -2 h14 q2 0 2 2 v24.70967741935484 z" fill="#2da44e"/>
+<text x="380.3333333333333" y="323.2903225806452" font-size="9" fill="#59636e" text-anchor="middle">23</text>
+<path d="M399.2 354 v-24.70967741935484 q0 -2 2 -2 h14 q2 0 2 2 v24.70967741935484 z" fill="#2da44e"/>
+<text x="408.2" y="323.2903225806452" font-size="9" fill="#59636e" text-anchor="middle">23</text>
+<path d="M427.06666666666666 354 v-18.903225806451616 q0 -2 2 -2 h14 q2 0 2 2 v18.903225806451616 z" fill="#2da44e"/>
+<text x="436.06666666666666" y="329.0967741935484" font-size="9" fill="#59636e" text-anchor="middle">18</text>
+<path d="M454.93333333333334 354 v-16.58064516129032 q0 -2 2 -2 h14 q2 0 2 2 v16.58064516129032 z" fill="#2da44e"/>
+<text x="463.93333333333334" y="331.4193548387097" font-size="9" fill="#59636e" text-anchor="middle">16</text>
+<text x="463.93333333333334" y="370" font-size="9" fill="#818b98" text-anchor="middle">7/31</text>
+<path d="M510.6666666666667 354 v-18.903225806451616 q0 -2 2 -2 h14 q2 0 2 2 v18.903225806451616 z" fill="#2da44e"/>
+<text x="519.6666666666667" y="329.0967741935484" font-size="9" fill="#59636e" text-anchor="middle">18</text>
+<path d="M538.5333333333333 354 v-10.774193548387098 q0 -2 2 -2 h14 q2 0 2 2 v10.774193548387098 z" fill="#2da44e"/>
+<text x="547.5333333333333" y="337.2258064516129" font-size="9" fill="#59636e" text-anchor="middle">11</text>
+<path d="M566.4 354 v-2.64516129032258 q0 -2 2 -2 h14 q2 0 2 2 v2.64516129032258 z" fill="#2da44e"/>
+<text x="575.4" y="345.35483870967744" font-size="9" fill="#59636e" text-anchor="middle">4</text>
+<path d="M594.2666666666667 354 v-4.967741935483871 q0 -2 2 -2 h14 q2 0 2 2 v4.967741935483871 z" fill="#2da44e"/>
+<text x="603.2666666666667" y="343.03225806451616" font-size="9" fill="#59636e" text-anchor="middle">6</text>
+<text x="603.2666666666667" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/5</text>
+<path d="M677.8666666666667 354 v-17.741935483870968 q0 -2 2 -2 h14 q2 0 2 2 v17.741935483870968 z" fill="#2da44e"/>
+<text x="686.8666666666667" y="330.258064516129" font-size="9" fill="#59636e" text-anchor="middle">17</text>
+<path d="M705.7333333333332 354 v-44.45161290322581 q0 -2 2 -2 h14 q2 0 2 2 v44.45161290322581 z" fill="#2da44e"/>
+<text x="714.7333333333332" y="303.5483870967742" font-size="9" fill="#59636e" text-anchor="middle">40</text>
+<path d="M733.5999999999999 354 v-18.903225806451616 q0 -2 2 -2 h14 q2 0 2 2 v18.903225806451616 z" fill="#2da44e"/>
+<text x="742.5999999999999" y="329.0967741935484" font-size="9" fill="#59636e" text-anchor="middle">18</text>
+<text x="742.5999999999999" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/10</text>
+<path d="M761.4666666666666 354 v-21.225806451612904 q0 -2 2 -2 h14 q2 0 2 2 v21.225806451612904 z" fill="#2da44e"/>
+<text x="770.4666666666666" y="326.7741935483871" font-size="9" fill="#59636e" text-anchor="middle">20</text>
+<path d="M789.3333333333333 354 v-68.83870967741936 q0 -2 2 -2 h14 q2 0 2 2 v68.83870967741936 z" fill="#2da44e"/>
+<text x="798.3333333333333" y="279.1612903225806" font-size="9" fill="#59636e" text-anchor="middle">61</text>
+<path d="M817.1999999999999 354 v-30.516129032258064 q0 -2 2 -2 h14 q2 0 2 2 v30.516129032258064 z" fill="#2da44e"/>
+<text x="826.1999999999999" y="317.48387096774195" font-size="9" fill="#59636e" text-anchor="middle">28</text>
+<text x="854.0666666666666" y="370" font-size="9" fill="#818b98" text-anchor="middle">8/14</text>
 <line x1="32" y1="354" x2="868" y2="354" stroke="#d1d9e0" stroke-width="1"/>
-<text x="868" y="404" font-size="10" fill="#818b98" text-anchor="end">更新于 2026-08-13 02:40 (UTC-7) · CI 每日自动生成</text>
+<text x="868" y="404" font-size="10" fill="#818b98" text-anchor="end">更新于 2026-08-14 02:34 (UTC-7) · CI 每日自动生成</text>
 </g></svg>
