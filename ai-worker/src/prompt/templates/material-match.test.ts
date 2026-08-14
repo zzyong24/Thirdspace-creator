@@ -57,6 +57,12 @@ describe("material.match 视频呈现契约", () => {
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "任意时刻只允许一个非 overlay 主素材",
     );
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
+      "架构图、流程图、数据表、界面截图、代码截图等高信息静态图",
+    );
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
+      "禁止把高信息主图缩在角落，再用一张大信息卡覆盖它",
+    );
   });
 
   it("把原文件名和人工选材当高价值上下文，但禁止机械字符串匹配", () => {

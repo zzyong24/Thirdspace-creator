@@ -1506,6 +1506,22 @@ describe("SettingsDialog — ?highlight 深链定位", () => {
     expect(storagePanel.getAttribute("data-active")).toBe("true");
   });
 
+  it("highlight=web-session-vault → 定位到账户页的网站登录保管库", async () => {
+    mockSearchParams = new URLSearchParams("highlight=web-session-vault");
+    const doc = renderDialog();
+    await flushRaf();
+
+    const card = doc.querySelector(
+      '[data-highlight="web-session-vault"]',
+    ) as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(scrollSpy).toHaveBeenCalled();
+    const accountPanel = doc.querySelector(
+      '[data-slot="settings-panel"][data-tab-id="account"]',
+    ) as HTMLElement;
+    expect(accountPanel.getAttribute("data-active")).toBe("true");
+  });
+
   it("无 highlight → 无副作用(不滚动、默认页签)", async () => {
     mockSearchParams = new URLSearchParams();
     const doc = renderDialog();

@@ -1333,6 +1333,30 @@ function renderCard(card: VideoRenderCard, mediaPrefix: string, portrait = false
   return { ...box, inner, height };
 }
 
+/** 主图存在时，信息卡只保留为舞台外的短标注；文字仅取契约已有内容，不做语义改写。 */
+function mainVisualAnnotationText(card: VideoRenderCard): string {
+  const raw = (() => {
+    switch (card.kind) {
+      case "stat":
+        return `${card.label} ${card.value}${card.unit ?? ""}`;
+      case "quote":
+        return card.text;
+      case "list":
+        return [card.title, ...card.items.map((item) => item.text)]
+          .filter(Boolean)
+          .join(" · ");
+      case "compare":
+        return `${card.left.title} / ${card.right.title}`;
+      case "code":
+        return card.label ?? card.code.replace(/\s+/g, " ");
+      case "image":
+        return card.label;
+    }
+  })().trim();
+  const chars = Array.from(raw);
+  return chars.length <= 34 ? raw : `${chars.slice(0, 33).join("")}…`;
+}
+
 // ── special 预设动画(枚举 3)────────────────────────────────────────────────────
 // [T-290/T-295] special 目前是死代码(decideScenes 从不产 special);坐标仍按横版硬编码。
 // T-295 接入富动画时会把 special 决策产出打通并按画幅(L)重排;此处保留横版 CONTENT_X 兜编译。
@@ -1579,8 +1603,11 @@ export function generateVideoRenderHtml(
 
     const resolvePresentation = (broll: VideoRenderBroll) =>
       resolveBrollPresentation(broll);
-    const isOccludingVisual = (candidate: (typeof flowItems)[number]) =>
-      candidate.type === "card" || resolvePresentation(candidate.broll) !== "overlay";
+    // 任意真实素材进场都结束上一张信息卡。overlay 只是素材自身的尺寸层级，不是
+    // “允许藏在大卡后面”的许可；否则高信息图片一旦被上游误标 overlay，就会出现
+    // 图片在后、巨型黑卡在前的反向层级。新任务由 material.match 把需要阅读的图选为
+    // large_stage，这里再以互斥时间窗守住最坏情况。
+    const isOccludingVisual = (_candidate: (typeof flowItems)[number]) => true;
 
     for (const [itemIndex, item] of flowItems.entries()) {
       // 卡片只活到下一张真正会占据主舞台的视觉。旧实现只看“紧邻下一项”，且
@@ -1590,6 +1617,55 @@ export function generateVideoRenderHtml(
         .find((candidate) => isOccludingVisual(candidate))?.at;
       const endAt = scene.endSec;
       if (item.type === "card") {
+        const activeLargeStage = (brollByScene.get(scene.id) ?? []).find((broll) => {
+          if (resolvePresentation(broll) !== "large_stage") return false;
+          const brollEnd = Math.min(
+            scene.endSec,
+            broll.durationSec ? broll.at + broll.durationSec : scene.endSec,
+          );
+          return broll.at <= item.at + 0.001 && brollEnd > item.at + 0.01;
+        });
+        if (activeLargeStage) {
+          const geometry = resolveMainBrollGeometry(
+            props.delivery.width,
+            props.delivery.height,
+            "large_stage",
+          );
+          const activeEnd = Math.min(
+            scene.endSec,
+            activeLargeStage.durationSec
+              ? activeLargeStage.at + activeLargeStage.durationSec
+              : scene.endSec,
+          );
+          const nextAnnotationBoundary = flowItems
+            .slice(itemIndex + 1)
+            .find((candidate) => candidate.at > item.at + 0.05)?.at;
+          const annotationEnd = Math.min(
+            activeEnd,
+            nextAnnotationBoundary ?? activeEnd,
+          );
+          if (annotationEnd - item.at >= 0.6) {
+            const annotationId = `ann${nextTrack(ctx)}`;
+            const annotationHeight = props.delivery.height > props.delivery.width ? 54 : 58;
+            const annotationY = Math.max(12, geometry.y - annotationHeight - 20);
+            const annotationWidth = Math.min(
+              geometry.width,
+              props.delivery.height > props.delivery.width ? 720 : 820,
+            );
+            clip(
+              ctx,
+              annotationId,
+              nextTrack(ctx),
+              item.at,
+              f2(annotationEnd - item.at),
+              `left:${geometry.x}px;top:${annotationY}px;z-index:760;width:${annotationWidth}px;height:${annotationHeight}px;border-radius:12px;background:${TK.surface}f2;border:1px solid ${TK.accent}66;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;`,
+              `<span data-text-safe style="display:block;width:100%;color:${TK.fg};font-size:${props.delivery.height > props.delivery.width ? 25 : 28}px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mainVisualAnnotationText(item.card))}</span>`,
+              "clip main-visual-annotation",
+            );
+            appear(ctx, annotationId, item.at, annotationEnd);
+          }
+          continue;
+        }
         const box = renderCard(item.card, mediaPrefix, props.delivery.height > props.delivery.width);
         // 信息卡是当前口播 beat 的主视觉，不是左上角的小标签。每个 beat 复用同一
         // 信息舞台并替换上一个，避免卡片沿 flow 越堆越散、大片区域仍然空黑。

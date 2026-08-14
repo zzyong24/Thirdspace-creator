@@ -274,6 +274,29 @@ describe("artifacts.service — append-only versioning", () => {
       }),
     ).rejects.toBeInstanceOf(ConflictError);
   });
+
+  it("[T-812/T-819] applyScriptPatch 拒绝 no-op，不新增版本", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文保持不变",
+      contentData: {
+        sections: [{ id: "section-1", body: "原文保持不变" }],
+      },
+      changeSummary: "建立稿面",
+    });
+    const before = await service.listVersions(ctxA, artifact.id);
+    await expect(
+      service.applyScriptPatch(ctxA, artifact.id, {
+        expectedVersionId: source.id,
+        sectionId: "section-1",
+        expectedOriginalText: "原文保持不变",
+        replacementText: "  原文保持不变  ",
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+    expect(await service.listVersions(ctxA, artifact.id)).toHaveLength(
+      before.length,
+    );
+  });
 });
 
 describe("artifacts.service — ownership", () => {

@@ -319,6 +319,9 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       if (!replacementText) {
         throw new ConflictError("局部改稿候选为空，未写入稿面");
       }
+      if (normalized(sections[targetIndex]?.body) === normalized(replacementText)) {
+        throw new ConflictError("建议稿与当前段原文相同，没有可写入的修改");
+      }
       const nextSections = sections.map((section, index) =>
         index === targetIndex
           ? { ...section, body: replacementText }

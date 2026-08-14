@@ -1219,7 +1219,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
     });
   });
 
-  it("[T-732] 无可信段落锚点时不挂载、不强制、不宣传 script.patch", async () => {
+  it("[T-732/T-819] 失效快捷命令不强制；普通项目对话改为开放语义定位候选工具", async () => {
     const { deps } = makeDeps();
     const staleCommand = await buildChatAssembly(
       ctx,
@@ -1246,8 +1246,10 @@ describe("buildChatAssembly — 三层注入装配", () => {
       { surface: "project", projectId: "proj-1" },
       deps,
     );
-    expect(ordinaryChat.tools["script.patch"]).toBeUndefined();
-    expect(ordinaryChat.system).not.toContain("script.patch");
+    expect(ordinaryChat.tools["script.patch"]).toBeDefined();
+    expect(ordinaryChat.forcedTool).toBeUndefined();
+    expect(ordinaryChat.system).toContain("先读 context.artifact.text");
+    expect(ordinaryChat.system).toContain("唯一目标时调用 script.patch");
   });
 
   it("[T-732] 连续对话的段落锚点同时开放局部与整稿工具，由模型按本轮语义选择", async () => {
@@ -1876,7 +1878,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(names).not.toContain("project.transcribe");
       expect(names).not.toContain("context.projects"); // [T-642] 已绑定项目不再暴露全量库
       expect(names).toContain("video.edit.render");
-      expect(names.length).toBe(39);
+      expect(names.length).toBe(40);
     });
 
     it("③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底", async () => {
@@ -1899,7 +1901,7 @@ describe("buildChatAssembly — 三层注入装配", () => {
       expect(Object.keys(a.tools)).toContain("review.analyze");
       expect(Object.keys(a.tools)).toContain("video.edit.render");
       expect(Object.keys(a.tools)).not.toContain("context.projects");
-      expect(Object.keys(a.tools).length).toBe(41);
+      expect(Object.keys(a.tools).length).toBe(42);
       // 阶段未知(读端口未装配)→ project 全集(诚实兜底,不误砍)。
       const { deps: noReaders } = makeDeps({
         contextReaders: undefined,

@@ -2574,6 +2574,8 @@ export function AICopilotContent({
                         asset?: ChatWebReadAsset | null;
                         needLogin?: { domain: string } | null;
                         error?: string | null;
+                        httpStatus?: number | null;
+                        loginSuggested?: boolean;
                         window?: { offset: number; length: number; total: number } | null;
                         hasMore?: boolean;
                       };
@@ -2583,6 +2585,8 @@ export function AICopilotContent({
                           asset={o.asset ?? null}
                           needLogin={o.needLogin ?? null}
                           error={o.error ?? null}
+                          httpStatus={o.httpStatus ?? null}
+                          loginSuggested={o.loginSuggested ?? false}
                           projectId={activeProjectChip?.id ?? null}
                           window={o.window ?? null}
                           hasMore={o.hasMore ?? false}

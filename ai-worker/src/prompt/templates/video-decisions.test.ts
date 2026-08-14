@@ -147,10 +147,10 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
 });
 
 describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
-  it("设置页 official Skill 与运行时共用 v4 单一真值，可恢复到同一版本", () => {
+  it("设置页 official Skill 与运行时共用 v5 单一真值，可恢复到同一版本", () => {
     _resetRegistry();
     const official = getOfficialSkillBase("video.cards");
-    expect(official?.baseVersion).toBe("v4");
+    expect(official?.baseVersion).toBe("v5");
     expect(official?.template).toContain("可组合 Scene Graph");
     expect(official?.outputSchema).toMatchObject({ type: "object" });
   });
@@ -173,10 +173,12 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     );
   });
 
-  it("v4 先声明内容关系和原文部件，拒绝把框和连线当作视觉化", () => {
-    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v4");
+  it("v5 先声明内容关系和原文部件，并把卡片绑定真实 SRT 行", () => {
+    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v5");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("观众需要看见什么关系");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("cause_effect");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("srtLineIndex");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("系统会以该行真实起秒为准");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("replacement");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("整卡淡入");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("动态 PPT");

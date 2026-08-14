@@ -325,3 +325,23 @@
 - **Outcome(T+N)**: 五种核心关系横竖版真实 Chromium PASS；三题自评平均 `68.67→96.33`。待用户
   下一条真实稿件端到端出片后，复核模型 visualPlan 产出率和实际观看节奏。
 - **Ref**: DEC-AI-045；T-794；`content-driven-motion-rubric.md`。
+
+## LED-025 — 高信息主图被当辅助叠画，旧信息卡跨口播段继续占屏
+- **Date**: 2026-08-13 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: DeepSeek Harness 成片已有四层架构图，但素材被选成 `overlay`，渲染后只在左上露出
+  一小块；同场的巨型黑色信息卡持续盖住主图。口播和字幕已经进入“可观测层”约 6 秒，画面仍显示
+  上一段“模式层”，直到后续插点才切换。
+- **RootCause**: `material.match` 只区分 still image/live footage，没有明确“需要阅读素材本身”的
+  高信息静态图必须成为主视觉；渲染器又把 `overlay` 当成可与信息卡共存，两个图层使用同一舞台。
+  信息卡仅保存模型手填秒数，没有绑定它服务的真实 SRT 行，录制节奏偏离稿件计划后就会跨段滞留。
+- **GuardRule**: 架构图、流程图、数据表、界面/代码截图等需要阅读文字或结构的静态图，只要承担
+  当前口播解释或证据，素材 Skill 必须选择 `large_stage`；`overlay` 只用于无需阅读细节的辅助画面。
+  主图持续期间，信息卡只能降为主图边界外的短标注，禁止生成遮图大卡；任何真实素材进场都结束
+  此前大卡。新信息卡必须由 AI 返回所服务的 `srtLineIndex`，代码以该行真实起秒落轴，旧任务才兼容
+  `at` 吸附。语义选择仍归 AI，代码只执行显式层级、行号与几何安全边界。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts && node orchestrator/process/verify-t823-main-visual-preview.mjs <talking-head-video> <architecture-image>`。
+- **Outcome(T+N)**: 真实 Harness 架构图 + 本人口播源的横屏 Chromium 双关键帧通过：主图、人物、字幕
+  零重叠，大卡数量为 0；第 2 秒显示“模式层”，第 8 秒按下一条 SRT 切成“可观测层”。待用户确认
+  预览后再用当前项目重跑正式成片，不能拿小样冒充最终导出。
+- **Ref**: T-823；`objkey-016270fc-6527.mp4`；用户 2026-08-13 成片截图；
+  `video-decisions-runner.ts`；`video-render/template.ts`。

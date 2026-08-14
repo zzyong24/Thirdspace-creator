@@ -42,7 +42,7 @@ export type MaterialMatchOutput = z.infer<typeof materialMatchSchema>;
 
 export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
   id: "material.match",
-  version: "v8",
+  version: "v9",
   outputSchema: materialMatchSchema,
   tools: [],
   system:
@@ -82,6 +82,7 @@ export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
 - 每条被选素材必须额外返回 sceneIdx、at、durationSec；sceneIdx 必须来自场景列表，at 必须落在该场景时间内。
 - 每条被选素材必须返回 visualRole：screen_recording=界面/操作录屏，still_image=静态图片/截图/插画，live_footage=真人或实景拍摄，cover=只用于发布封面的设计稿。必须综合真实内容、原始文件名、类型、尺寸/时长和描述来判断；不要用扩展名或单个词机械决定。
 - 每条被选素材必须返回 presentation：只有 screen_recording 在需要阅读文字或观察连续操作时可选 full_frame，人物会保留为左下角画中画；still_image 与 live_footage 绝不能 full_frame，只能 large_stage 或 overlay，并保持原始比例，不压住标题、字幕和人物。持续操作应给足看清动作的 durationSec，不要机械截成 3–4 秒；尤其是竖屏成片，口播正在解释界面步骤时，应让相关录屏连续承担主视觉直到这一信息点讲完，再切回真人或信息卡。
+- presentation 取决于观众是否需要读懂素材本身：架构图、流程图、数据表、界面截图、代码截图等高信息静态图，只要它承担当前口播的解释或证据，就必须选 large_stage，让图成为当前唯一主视觉；overlay 只用于不读文字和细节也成立的辅助装饰、氛围或旁证。禁止把高信息主图缩在角落，再用一张大信息卡覆盖它。
 - 任意时刻只允许一个非 overlay 主素材；下一张主素材开始前必须结束上一张，不得让横图、竖图、旧标题或旧信息卡多层叠放。
 - 每条被选素材必须返回 motion：static/push_in/pan_left/pan_right。界面截图、录屏默认 static，除非轻微运动不会影响文字和操作可读性；照片、插画可按叙事选择轻推近或平移。不要为了“有动效”牺牲可读性。
 - 新生成素材必须直接按本次交付画幅构图：竖屏 9:16 使用竖向主体和手机安全区，横屏 16:9 使用宽屏构图；不得先生成相反画幅再靠强行裁切、拉伸或缩成小图补救。

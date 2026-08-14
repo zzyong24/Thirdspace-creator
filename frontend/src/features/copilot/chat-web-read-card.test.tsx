@@ -38,6 +38,59 @@ beforeEach(() => {
 });
 
 describe("ChatWebReadCard — T-813 阅读后保存", () => {
+  it("明确需登录时直达网站登录保管库，而不是只跳到设置首页", () => {
+    render(
+      <ChatWebReadCard
+        asset={null}
+        needLogin={{ domain: "example.com" }}
+        error={null}
+        projectId={null}
+      />,
+    );
+    const link = screen.getByRole("link", { name: /去网站登录保管库/ });
+    expect(link.getAttribute("href")).toBe(
+      "/settings?highlight=web-session-vault",
+    );
+  });
+
+  it("网站被拒时用简短行动提示替代内部恢复说明，并建议先登录", () => {
+    render(
+      <ChatWebReadCard
+        asset={null}
+        needLogin={null}
+        error={
+          "页面返回 HTTP 404:该链接不可访问——已自动用搜索引擎找到可能的替代来源(见 alternates 列表),用 web.read 读取"
+        }
+        httpStatus={404}
+        loginSuggested
+        projectId={null}
+      />,
+    );
+    expect(screen.getByText(/当前没有拿到原文/)).toBeTruthy();
+    expect(screen.getByText(/HTTP 404/)).toBeTruthy();
+    expect(screen.queryByText(/alternates 列表/)).toBeNull();
+    expect(screen.queryByText(/web\.read/)).toBeNull();
+    const link = screen.getByRole("link", { name: /前往网站登录/ });
+    expect(link.getAttribute("href")).toBe(
+      "/settings?highlight=web-session-vault",
+    );
+  });
+
+  it("缺少 URL 这类输入错误不误导用户去登录", () => {
+    render(
+      <ChatWebReadCard
+        asset={null}
+        needLogin={null}
+        error="没有收到要读取的 URL —— 请给一个网页链接。"
+        httpStatus={null}
+        loginSuggested={false}
+        projectId={null}
+      />,
+    );
+    expect(screen.getByText(/没有收到要读取的 URL/)).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /网站登录/ })).toBeNull();
+  });
+
   it("成功卡显示临时上下文与准确覆盖度", () => {
     render(
       <ChatWebReadCard

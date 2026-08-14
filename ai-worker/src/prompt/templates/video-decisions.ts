@@ -246,6 +246,8 @@ export const videoCardSchema = z.object({
   kind: z.enum(VIDEO_CARD_KINDS),
   content: z.string().default(""),
   at: z.number().default(0),
+  /** [T-823] AI 选择语义锚点，代码用该 SRT 行的真实起秒替代模型手填秒数。 */
+  srtLineIndex: z.number().int().positive().optional(),
   // [T-295] 动画意图(可选;弱模型不产 → template 按 kind 派生)。
   motion: z.enum(VIDEO_CARD_MOTIONS).optional(),
   // [T-794] AI 声明内容关系与原文部件；renderer 只执行，不猜创作语义。
@@ -258,7 +260,7 @@ export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
 
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   id: "video.cards",
-  version: "v4",
+  version: "v5",
   outputSchema: videoCardsSchema,
   tools: [],
   system:
@@ -298,6 +300,7 @@ visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括�
 - 卡片上的**数值、文案只能从口播稿原文提取**,一个数字都不许编造、不许换算、不许"优化措辞"。
 - kind 只能是 stat/quote/list/compare/code/image 六选一。
 - at(卡片出现时刻,秒)**必须等于某一 SRT 行的起秒**,且落在所属场景的时间范围内。
+- srtLineIndex 必须填写这张卡所服务的**第一句口播**对应的 SRT 行序号。不要按稿件计划时间、场景尾部或上一张卡结束时间估算；系统会以该行真实起秒为准。口播进入下一层、下一步骤或下一结论时，必须切到对应的新卡，不能让上一段卡片继续占画面。
 - sceneIdx 是上面场景列表的场景序号(从 0 起)。
 【动画意图 motion(每张卡按「5 问」选一个,让画面"长出来"而非"整块淡入弹出")】
   1. 有前后/多少/快慢**对比**? → bar(对比条从 0 生长)
@@ -322,7 +325,7 @@ visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括�
 - 超过 8 秒且没有已指定素材的场景，必须按上面的节拍数量从本场原文连续提取信息卡；不能复制整段口播，也不能让整个长场景只有黑底、一个靠边小人物或一张孤零零的小标签。
 - 开场若有明确的数字、岗位、人物或事实（例如“时薪 300 元”），优先提取一张 stat/quote 卡，不要只留内部“钩子”标签和空黑画面。
 【输出】只输出一个 JSON 对象 {"cards": [...]}(不要多余文字、不要代码块),每张:
-{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"motion"(可选,六选一),"visualPlan"(可选,{"relation"(六选一),"parts":[{"text"(原文片段),"role"(十一选一)}],"scene"(可选,{"cognitiveGoal","layout","aspectStrategy":"reflow","entities":[{"id","kind","glyph","semantic","textRole"(可选)}],"beats":[{"action","target","with"(可选),"affects"(可选),"start","duration","from":{},"to":{}}]})})}。没有值得做卡的就返回 {"cards": []}。`,
+{"sceneIdx"(整数),"kind"(六选一),"content"(卡片文案,原文提取),"at"(数字,秒),"srtLineIndex"(对应第一句口播的 SRT 行序号),"motion"(可选,六选一),"visualPlan"(可选,{"relation"(六选一),"parts":[{"text"(原文片段),"role"(十一选一)}],"scene"(可选,{"cognitiveGoal","layout","aspectStrategy":"reflow","entities":[{"id","kind","glyph","semantic","textRole"(可选)}],"beats":[{"action","target","with"(可选),"affects"(可选),"start","duration","from":{},"to":{}}]})})}。没有值得做卡的就返回 {"cards": []}。`,
   requiredFacets: ["scenes", "srt", "script"],
 };
 

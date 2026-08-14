@@ -48,7 +48,7 @@
 ## T-716
 原始表头：ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话
 
-| T-716 | 完善 Copilot 局部改稿、脚本版本回退、附件上下文与素材中心稳定排序【创作编辑闭环·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [实现规格](docs/superpowers/specs/2026-08-06-copilot-script-editing-and-attachments.md) · [T-691 Copilot 生命周期](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md) | 素材中心统一按真实 `createdAt DESC` 稳定排序，最新素材始终在前；稿面段落支持把明确选区/段落锚点交给 Copilot 定点改写，AI 只产局部补丁候选，用户确认后合并为新的完整脚本版本，不再默认整稿重生成；口播脚本提供版本下拉、预览与恢复，恢复只切换到既有不可变版本、不制造重复版本；所有工具在执行前重读服务端当下真值，不使用对话或客户端旧快照；分镜“点名素材”展示真实文件名/标题而非裸 `assetId`；Copilot 输入框支持拖拽或选择文件与图片，复用项目素材上传和安全读取链形成显式上下文，支持视觉的模型可读图片，不支持时给出清晰能力提示且不得假装已识别。全部闭环后按 T-713 统一生成 CreatorOS 0.3.0 macOS 本地测试包。 |
+| T-716 | 完善 Copilot 局部改稿、脚本版本回退、附件上下文与素材中心稳定排序【创作编辑闭环·用户 2026-08-06】 | 🔨 待办 | — | 部分通过；整项未验收 | [实现规格](docs/superpowers/specs/2026-08-06-copilot-script-editing-and-attachments.md) · [验收审计](docs/research/2026-08-13-t716-t732-acceptance-audit.md) · [T-691 Copilot 生命周期](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md) | 素材中心统一按真实 `createdAt DESC` 稳定排序，最新素材始终在前；稿面段落支持把明确选区/段落锚点交给 Copilot 定点改写，AI 只产局部补丁候选，用户确认后合并为新的完整脚本版本，不再默认整稿重生成；口播脚本提供版本下拉、预览与恢复，恢复只切换到既有不可变版本、不制造重复版本；所有工具在执行前重读服务端当下真值，不使用对话或客户端旧快照；分镜“点名素材”展示真实文件名/标题而非裸 `assetId`；Copilot 输入框支持拖拽或选择文件与图片，复用项目素材上传和安全读取链形成显式上下文，支持视觉的模型可读图片，不支持时给出清晰能力提示且不得假装已识别。全部闭环后按 T-713 统一生成 CreatorOS 0.3.0 macOS 本地测试包。 |
 
 <a id="t-715"></a>
 ## T-715

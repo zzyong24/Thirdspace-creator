@@ -1050,6 +1050,68 @@ describe("信息卡主舞台与高密度排版([T-712])", () => {
     expect(cards[1]).toMatchObject({ start: 6, duration: 6 });
     expect(cards[2]).toMatchObject({ start: 12, duration: 18 });
   });
+
+  it("[T-823] 辅助素材进场也必须结束上一张大卡，禁止把真实图藏在卡片后面", () => {
+    const props = vProps([{ kind: "quote", at: 1, text: "模式层" }]);
+    props.broll = [
+      {
+        at: 6,
+        file: "architecture.png",
+        label: "四层架构图",
+        big: false,
+        durationSec: 8,
+        presentation: "overlay",
+        visualRole: "still_image",
+        motion: "static",
+      },
+    ];
+    const html = generateVideoRenderHtml(props, {
+      imageFiles: new Set(["architecture.png"]),
+    });
+    const card = html.match(
+      /id="c\d+"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"/,
+    );
+
+    expect(card?.[1]).toBe("1.00");
+    expect(card?.[2]).toBe("5.00");
+    expect(html).toContain('src="media/architecture.png"');
+  });
+
+  it("[T-823] 主图持续期间的新卡降为舞台外短标注，不再生成遮图大卡", () => {
+    const props = vProps([
+      { kind: "quote", at: 2, text: "模式层 · 标准 / PTC / 极简 / 创造" },
+      { kind: "quote", at: 8, text: "可观测层 · append-only 事件流" },
+    ]);
+    props.broll = [
+      {
+        at: 0,
+        file: "architecture.png",
+        label: "四层架构图",
+        big: false,
+        durationSec: 14,
+        presentation: "large_stage",
+        visualRole: "still_image",
+        motion: "static",
+      },
+    ];
+    const html = generateVideoRenderHtml(props, {
+      imageFiles: new Set(["architecture.png"]),
+    });
+    const annotations = [...html.matchAll(
+      /class="clip main-visual-annotation"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"[^>]*top:(\d+)px;[^>]*height:(\d+)px/g,
+    )].map((match) => ({
+      start: Number(match[1]),
+      duration: Number(match[2]),
+      top: Number(match[3]),
+      height: Number(match[4]),
+    }));
+
+    expect(annotations).toHaveLength(2);
+    expect(annotations[0]).toMatchObject({ start: 2, duration: 6 });
+    expect(annotations[1]).toMatchObject({ start: 8, duration: 6 });
+    expect(annotations.every((item) => item.top + item.height <= 190)).toBe(true);
+    expect(html).not.toContain('id="c');
+  });
 });
 
 describe("collectMediaFiles", () => {

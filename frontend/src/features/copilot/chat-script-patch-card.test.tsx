@@ -65,4 +65,21 @@ describe("[T-716] ChatScriptPatchCard", () => {
     ).toBeInTheDocument();
     expect(applyScriptPatch).toHaveBeenCalledTimes(1);
   });
+
+  it("[T-812/T-819] 建议稿与原文相同则禁用采纳并明确提示", () => {
+    render(
+      <ChatScriptPatchCard
+        candidate={{
+          ...candidate,
+          originalText: "原文  没变化",
+          replacementText: "  原文 没变化 ",
+        }}
+      />,
+    );
+    expect(screen.getByText(/没有可采纳的修改/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "采纳这处修改" }),
+    ).toBeDisabled();
+    expect(applyScriptPatch).not.toHaveBeenCalled();
+  });
 });

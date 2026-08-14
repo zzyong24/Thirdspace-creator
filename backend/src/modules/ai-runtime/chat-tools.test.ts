@@ -810,6 +810,75 @@ describe("工具 execute — 复用 runner 产候选(非实体)", () => {
     });
   });
 
+  it("[T-819] 普通项目对话先读当前稿，再用稳定 sectionRef 产同一种局部候选", async () => {
+    const getArtifactText = vi.fn(async () => ({
+      artifactType: "output_script",
+      projectId: "project-1",
+      artifactId: "artifact-current",
+      currentVersionId: "version-current",
+      versionNumber: 4,
+      contentHash: "hash-current",
+      truthPriority: "current_confirmed_script" as const,
+      fullText: "第一段\n\n项目对照段",
+      sections: [
+        {
+          sectionRef: "script-saved-0",
+          index: 0,
+          heading: "开头",
+          body: "第一段",
+          sectionType: "hook",
+          startSeconds: 0,
+          endSeconds: 12,
+        },
+        {
+          sectionRef: "script-saved-1",
+          index: 1,
+          heading: "项目对照",
+          body: "项目对照段",
+          sectionType: "body",
+          startSeconds: 64,
+          endSeconds: 72,
+        },
+      ],
+    }));
+    const { deps } = makeDeps({ boundProjectId: "project-1", getArtifactText });
+    const tools = buildChatTools(["script.patch"], deps);
+    const result = await runExecute(tools["script.patch"]!, {
+      sectionRef: "script-saved-1",
+      replacementText: "缩短后的项目对照段",
+      summary: "压缩项目对照",
+    });
+    expect(getArtifactText).toHaveBeenCalledWith({
+      projectId: "project-1",
+      artifactType: "output_script",
+    });
+    expect(result).toEqual({
+      kind: "script.patch",
+      artifactId: "artifact-current",
+      versionId: "version-current",
+      sectionId: "script-saved-1",
+      originalText: "项目对照段",
+      replacementText: "缩短后的项目对照段",
+      summary: "压缩项目对照",
+    });
+  });
+
+  it("[T-812/T-819] 相同建议稿返回明确 no-op，不能冒充已改", async () => {
+    const { deps } = makeDeps({
+      scriptPatchAnchor: {
+        artifactId: "artifact-current",
+        versionId: "version-current",
+        sectionId: "section-current",
+        originalText: "原文  保持不变",
+      },
+    });
+    const tools = buildChatTools(["script.patch"], deps);
+    const result = (await runExecute(tools["script.patch"]!, {
+      replacementText: " 原文 保持不变 ",
+    })) as { error?: string };
+    expect(result.error).toContain("相同");
+  });
+
   it("calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)", async () => {
     const { deps, diagnoseContent } = makeDeps();
     const tools = buildChatTools(["calibration.diagnose"], deps);
@@ -1208,6 +1277,57 @@ describe("[T-084c] material.generate 工具 — AI 生成素材对话化", () =>
     expect(result.kindOf).toBe("image");
     expect(result.status).toBe("queued");
     expect(result.error).toBeNull();
+  });
+
+  it("[T-816] 项目配图重读当前段并把版本、hash、原文冻结进 prompt", async () => {
+    const getArtifactText = vi.fn(async () => ({
+      artifactType: "output_script",
+      artifactId: "artifact-1",
+      currentVersionId: "version-4",
+      contentHash: "sha-current",
+      fullText: "项目对照正文",
+      sections: [
+        {
+          sectionRef: "section-7",
+          index: 6,
+          heading: "项目对照",
+          body: "项目对照正文",
+          sectionType: "body",
+          startSeconds: 64,
+          endSeconds: 72,
+        },
+      ],
+    }));
+    const { deps, dispatchGenerateAsset } = makeDeps({
+      boundProjectId: "project-1",
+      getArtifactText,
+    });
+    const tools = buildChatTools(WHITELIST, deps);
+    await runExecute(tools["material.generate"]!, {
+      kind: "image",
+      prompt: "四层结构关系",
+      sectionRef: "section-7",
+      visualPurpose: "comparison",
+      mediaKind: "illustration",
+    });
+    const call = dispatchGenerateAsset.mock.calls[0]?.[0];
+    expect(call.prompt).toContain("版本:version-4");
+    expect(call.prompt).toContain("内容指纹:sha-current");
+    expect(call.prompt).toContain("段落原文:项目对照正文");
+    expect(call.prompt).toContain("画面职责:comparison");
+  });
+
+  it("[T-816] 精确文字数字信息卡拒绝自由文生图", async () => {
+    const { deps, dispatchGenerateAsset } = makeDeps();
+    const tools = buildChatTools(WHITELIST, deps);
+    const result = (await runExecute(tools["material.generate"]!, {
+      kind: "image",
+      prompt: "价格对比表，数字必须准确",
+      mediaKind: "information_card",
+    })) as { taskId: string | null; error: string | null };
+    expect(dispatchGenerateAsset).not.toHaveBeenCalled();
+    expect(result.taskId).toBeNull();
+    expect(result.error).toContain("不能交给自由文生图");
   });
 
   it("kind=video 透传(视频异步不阻塞);无 style 时不传该键", async () => {
@@ -2452,6 +2572,45 @@ describe("[T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗
     expect(result.offset).toBe(0);
     expect(result.totalChars).toBe(500);
     expect(result.hasMore).toBe(true);
+  });
+
+  it("[T-816] context.artifact.text 透出 currentVersion 身份、hash 与稳定段落引用", async () => {
+    const { deps } = makeDeps({
+      getArtifactText: vi.fn(async () => ({
+        artifactType: "output_script",
+        projectId: "project-1",
+        artifactId: "artifact-1",
+        currentVersionId: "version-4",
+        versionNumber: 4,
+        updatedAt: "2026-08-13T00:00:00.000Z",
+        contentHash: "sha-current",
+        truthPriority: "current_confirmed_script" as const,
+        fullText: "当前正文",
+        sections: [
+          {
+            sectionRef: "section-7",
+            index: 6,
+            heading: "项目对照",
+            body: "当前正文",
+            sectionType: "body",
+            startSeconds: 64,
+            endSeconds: 72,
+          },
+        ],
+      })),
+    });
+    const tools = buildChatTools([...FULLTEXT_WHITELIST], deps);
+    const result = (await runExecute(tools["context.artifact.text"]!, {
+      projectId: "project-1",
+      artifactType: "output_script",
+    })) as Record<string, unknown>;
+    expect(result).toMatchObject({
+      currentVersionId: "version-4",
+      versionNumber: 4,
+      contentHash: "sha-current",
+      truthPriority: "current_confirmed_script",
+      sections: [{ sectionRef: "section-7", body: "当前正文" }],
+    });
   });
 
   it("[T-405] context.artifact.text:读不到该 type → found:false 且带 availableTypes 自纠清单", async () => {
@@ -4290,12 +4449,16 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
       asset: unknown;
       needLogin: unknown;
       error: string | null;
+      httpStatus?: number | null;
+      loginSuggested?: boolean;
       alternates?: Array<{ title: string; url: string }>;
     };
     expect(result.asset).toBeNull();
     expect(result.needLogin).toBeNull();
     expect(result.error).toContain("HTTP 403");
     expect(result.error).toContain(WEB_READ_BLOCKED_ALTERNATES_NOTE.trim());
+    expect(result.httpStatus).toBe(403);
+    expect(result.loginSuggested).toBe(true);
     expect(result.alternates).toHaveLength(2);
     expect(result.alternates?.[0]?.url).toBe("https://other.example.com/a");
     // 指引本身:挑一条再读 + 不编内容。

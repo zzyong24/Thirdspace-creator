@@ -138,6 +138,12 @@
       "what": "信息卡再次只产单字符串与通用进场，不同内容关系退化为同一张圆角卡和文字冒出",
       "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && node orchestrator/process/verify-t794-motion-card-preview.mjs",
       "onFail": "内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。"
+    },
+    {
+      "led": "LED-025",
+      "what": "高信息架构图/流程图再次被缩成 overlay 并藏在大卡后，或信息卡不绑定真实 SRT 行而跨段滞留",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "onFail": "主视觉与时序门回归：需要阅读结构/文字的静态图必须由 material.match 选为 large_stage；主图期间信息卡只能成为舞台外短标注；新卡以 AI 选择的 srtLineIndex 映射真实起秒，禁止大卡遮图与上一段内容跨字幕滞留。"
     }
   ],
   "program_completion_required": false,

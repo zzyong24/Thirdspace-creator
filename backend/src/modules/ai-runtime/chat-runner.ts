@@ -1187,6 +1187,13 @@ export async function buildChatAssembly(
     Boolean(chatContext.selection.versionId?.trim()) &&
     Boolean(chatContext.selection.ids[0]?.trim()) &&
     Boolean(chatContext.selection.excerpt?.trim());
+  // T-819：普通项目对话也可提供候选工具，但它必须依赖当前稿只读端口；模型先读结构化
+  // currentVersion，再提交 sectionRef，execute 仍会重读一次。非项目/无读端口继续物理排除。
+  const hasContextualScriptPatch = Boolean(
+    chatContext.projectId &&
+      deps.contextReaders?.getArtifactText &&
+      effectiveFunctionKey !== "script.patch",
+  );
   const isScriptPatchAction =
     effectiveFunctionKey === "script.patch" && hasTrustedScriptPatchAnchor;
   let allowedNames =
@@ -1201,7 +1208,7 @@ export async function buildChatAssembly(
   // [T-732] allChatTools 只会在可信段落锚点完整时真实挂载 script.patch。若仅从 surface
   // skill 或失效 functionKey 把它留在白名单，技能简介会宣传一个不存在的工具，forcedTool
   // 还会继续强制调用它。白名单必须与真实挂载条件使用同一真值。
-  if (!hasTrustedScriptPatchAnchor) {
+  if (!hasTrustedScriptPatchAnchor && !hasContextualScriptPatch) {
     allowedNames = allowedNames.filter((name) => name !== "script.patch");
   }
   const preferredTools = applyFunctionKey(
@@ -1398,6 +1405,16 @@ export async function buildChatAssembly(
     "用户要求原文不改/一字不改/逐字写入时，必须使用 script.draft 的 verbatim 模式与受信 sourceRef；禁止把原文压缩进 extraBrief 后交给写稿模型重写。权限归属、隐私安全、外部发布、破坏性操作、事实不可伪造和候选确认门仍然 fail-closed。",
     "用户可能在一条消息里先交代视频状态、操作背景，再紧接着粘贴完整稿件。仅收到稿件时先正常回应，不自动创建候选；等用户明确要求写入后，稿面只收稿件正文。必须由你理解“对助手说的话”和“面向视频观众的稿件”并用 startAnchor / endAnchor 选择边界，不能把对话说明一起写入，也不能漏掉说明结束后的第一句稿件开场；代码只负责按你选定的精确边界恢复原字符。",
   ].join("\n");
+  const currentScriptPriorityBlock = chatContext.projectId
+    ? [
+        "【当前确认稿优先级】",
+        "当用户问当前稿的内容、结构、时长，或要做单段改写、配图、信息卡、封面时，必须先调用 context.artifact.text 读取 output_script 的 currentVersionId 真值。工具返回的 truthPriority=current_confirmed_script、版本、contentHash 与 sections 是‘这条内容现在在说什么’的第一内容真相。",
+        "本轮明确要求 > 当前确认稿 > 当前段落/分镜 > 联网原文与项目素材事实证据 > 项目 Brief/定位/历史对话/旧候选。Brief 只在没有当前稿时作为首次创作基线；与当前确认稿冲突时不得用 Brief 覆盖当前稿，须按当前稿回答并可指出冲突。",
+        hasContextualScriptPatch
+          ? "普通对话中用户说‘改第 N 段’、按语义点名某段或引用当前稿一句话时：先读 context.artifact.text，由你做语义定位；唯一目标时调用 script.patch 并逐字使用返回的 sectionRef。零段或多段可能匹配才澄清，不向用户索要任何技术 ID。整稿改写请求不要调用局部工具。"
+          : "如果本轮局部改稿的快捷锚点已经失效，只结束这次快捷动作；不要把旧锚点带入后续普通对话。",
+      ].join("\n")
+    : "";
   const verbatimSourceBlock = formatVerbatimSourceInventory(
     options.verbatimSources ?? [],
   );
@@ -1421,6 +1438,7 @@ export async function buildChatAssembly(
         currentProjectBlock,
         briefHardBlock,
         currentInstructionPriorityBlock,
+        currentScriptPriorityBlock,
         verbatimSourceBlock,
         stageBlock,
         taskTruthBlock,

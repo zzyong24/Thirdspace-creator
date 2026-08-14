@@ -265,6 +265,7 @@ const HIGHLIGHT_TAB: Record<string, string> = {
   "asr-model": "models",
   "review-rules": "models",
   "storage-root": "storage",
+  "web-session-vault": "account",
 };
 
 export function SettingsDialog({
@@ -408,7 +409,12 @@ export function SettingsDialog({
                   douyinAccount={viewModel.douyinAccount}
                 />
                 {/* [T-217a] 网站登录保管库:登录一次网站 → 编导带登录态读正文(web.read)。 */}
-                <WebSessionVaultCard />
+                <div
+                  data-slot="web-session-vault-highlight"
+                  data-highlight="web-session-vault"
+                >
+                  <WebSessionVaultCard />
+                </div>
                 {/* [T-167] 激活状态卡:桌面端读真态四态诚实展示;web/未装配 → 桌面端专属空态。 */}
                 <ActivationStatusCard
                   activation={activation}

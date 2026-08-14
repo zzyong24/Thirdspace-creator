@@ -830,6 +830,23 @@ export interface ArtifactTextRaw {
   artifactType: string;
   /** 当前版本正文全文(未截断)。无正文 → 空串。 */
   fullText: string;
+  /** T-816：当前确认稿身份。非脚本产物或兼容 seed 可为空。 */
+  projectId?: string;
+  artifactId?: string;
+  currentVersionId?: string;
+  versionNumber?: number;
+  updatedAt?: string | null;
+  contentHash?: string;
+  truthPriority?: "current_confirmed_script";
+  sections?: Array<{
+    sectionRef: string;
+    index: number;
+    heading: string;
+    body: string;
+    sectionType: string | null;
+    startSeconds: number | null;
+    endSeconds: number | null;
+  }>;
 }
 
 // [T-099c] context.knowledge.text 的原始全值(正文未截断,窗口截断在 execute 侧强制)。
@@ -1056,6 +1073,7 @@ export interface ScriptPatchToolResult {
   originalText: string;
   replacementText: string;
   summary: string;
+  error?: string | null;
 }
 
 // [T-268] script.draft 工具结果 —— dispatch 了一次异步整稿生成(立即返回,后台跑,不阻塞对话回合)。
@@ -1159,6 +1177,10 @@ export interface WebReadToolResult {
   needLogin: { domain: string } | null;
   /** 失败时的诚实错误(打不开/HTTP 码/抽不出正文);成功或需登录时为 null。 */
   error: string | null;
+  /** HTTP 被拒时的结构化状态；前端据此显示简短诊断，不解析内部错误长文。 */
+  httpStatus?: number | null;
+  /** true = 失败可能与登录态/权限有关，前端应给出保管库入口，但不得承诺登录一定恢复。 */
+  loginSuggested?: boolean;
   /**
    * [T-251] 正文窗口文本(从 offset 起、≤ maxChars;给模型读的主载荷,前端卡不渲它 —— 卡仍渲
    * asset.excerpt 摘要)。旧端口无 fullText 时退回 excerpt(此时 window=null,诚实无窗口真相)。
@@ -1746,6 +1768,15 @@ export interface ContextArtifactTextToolResult extends TextWindow {
    * 编造「被覆写/没入库」推测 → 再列索引 → 才试对,浪费两轮还输出误导)。found:true 缺席。
    */
   availableTypes?: Array<{ artifactType: string; totalChars: number }>;
+  /** T-816：这些字段证明窗口来自哪个 currentVersion，而不是仅给一段无身份文本。 */
+  projectId?: string;
+  artifactId?: string;
+  currentVersionId?: string;
+  versionNumber?: number;
+  updatedAt?: string | null;
+  contentHash?: string;
+  truthPriority?: "current_confirmed_script";
+  sections?: ArtifactTextRaw["sections"];
 }
 
 // [T-099c] context.knowledge.text 工具结果 —— 知识长文窗口(全文档,SPEC §1 行#11,复用全文阅读卡)。
@@ -2114,6 +2145,39 @@ const SCRIPT_PATCH_BOUND_PARAMS = jsonSchema<{
   additionalProperties: false,
 });
 
+/**
+ * T-819：普通项目对话没有按钮锚点时，模型只能从 context.artifact.text 刚返回的
+ * sections[].sectionRef 中选一个。sectionRef 不代表授权，execute 会重读 currentVersion 校验。
+ */
+const SCRIPT_PATCH_CONTEXT_PARAMS = jsonSchema<{
+  sectionRef: string;
+  replacementText: string;
+  summary?: string;
+}>({
+  type: "object",
+  properties: {
+    sectionRef: {
+      type: "string",
+      minLength: 1,
+      description:
+        "目标段落引用。必须逐字使用本轮 context.artifact.text 返回的 sections[].sectionRef；不要猜、不要让用户提供。",
+    },
+    replacementText: {
+      type: "string",
+      minLength: 1,
+      maxLength: 12000,
+      description: "按用户要求改写后的目标段完整正文。只返回这一段。",
+    },
+    summary: {
+      type: "string",
+      maxLength: 120,
+      description: "本次局部修改的一句话说明。",
+    },
+  },
+  required: ["sectionRef", "replacementText"],
+  additionalProperties: false,
+});
+
 const SCRIPT_DRAFT_PARAMS = jsonSchema<{
   mode?: "generate" | "verbatim";
   topic?: string;
@@ -2381,6 +2445,9 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
   kind: "image" | "video";
   prompt: string;
   style?: string;
+  sectionRef?: string;
+  visualPurpose?: "evidence" | "mechanism" | "comparison" | "consequence" | "emotion" | "analogy";
+  mediaKind?: "illustration" | "information_card" | "fact_capture";
 }>({
   type: "object",
   properties: {
@@ -2397,6 +2464,22 @@ const MATERIAL_GENERATE_PARAMS = jsonSchema<{
     style: {
       type: "string",
       description: "可选风格/画风(如「扁平插画」「写实摄影」「赛博朋克」),会拼进生成 prompt。",
+    },
+    sectionRef: {
+      type: "string",
+      description:
+        "项目内容配图所服务的当前稿段落引用。先调 context.artifact.text，再逐字使用 sections[].sectionRef；不要让用户提供。",
+    },
+    visualPurpose: {
+      type: "string",
+      enum: ["evidence", "mechanism", "comparison", "consequence", "emotion", "analogy"],
+      description: "画面承担的单一认知任务。",
+    },
+    mediaKind: {
+      type: "string",
+      enum: ["illustration", "information_card", "fact_capture"],
+      description:
+        "illustration=可自由生成的配图；information_card=要求精确文字/数字/节点的信息卡；fact_capture=真实网页/公告/仓库事实截图。后两类不得走自由文生图。",
     },
   },
   required: ["kind", "prompt"],
@@ -3051,25 +3134,84 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     Promise<MaterialGatherToolResult>
   >();
   const trustedScriptPatchAnchor = deps.scriptPatchAnchor;
+  const normalizePatchText = (value: unknown): string =>
+    typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
   const scriptPatchTool = trustedScriptPatchAnchor
     ? defineChatTool("script.patch", {
         description:
           "只修改用户在稿面明确选中的一个口播稿段落。系统已经锁定目标段落和当前版本；不要向用户索要 artifactId、versionId、sectionId 或原文，也不要在参数里复述这些技术信息。只把改写后的该段完整正文放进 replacementText。工具返回局部补丁候选，用户确认后才写入稿面；禁止重写整稿。",
         inputSchema: SCRIPT_PATCH_BOUND_PARAMS,
-        execute: async ({ replacementText, summary }): Promise<ScriptPatchToolResult> => ({
-          kind: "script.patch",
-          artifactId: trustedScriptPatchAnchor.artifactId,
-          versionId: trustedScriptPatchAnchor.versionId,
-          sectionId: trustedScriptPatchAnchor.sectionId,
-          originalText: trustedScriptPatchAnchor.originalText,
-          replacementText: replacementText.trim(),
-          summary:
-            typeof summary === "string" && summary.trim()
-              ? summary.trim().slice(0, 120)
-              : "Copilot 局部改稿",
-        }),
+        execute: async ({ replacementText, summary }): Promise<ScriptPatchToolResult> => {
+          const next = replacementText.trim();
+          const noOp =
+            normalizePatchText(next) ===
+            normalizePatchText(trustedScriptPatchAnchor.originalText);
+          return {
+            kind: "script.patch",
+            artifactId: trustedScriptPatchAnchor.artifactId,
+            versionId: trustedScriptPatchAnchor.versionId,
+            sectionId: trustedScriptPatchAnchor.sectionId,
+            originalText: trustedScriptPatchAnchor.originalText,
+            replacementText: next,
+            summary:
+              typeof summary === "string" && summary.trim()
+                ? summary.trim().slice(0, 120)
+                : "Copilot 局部改稿",
+            ...(noOp
+              ? { error: "这次建议稿与当前段原文相同，没有产生可采纳的修改。" }
+              : {}),
+          };
+        },
       }, deps.humanizeError)
-    : null;
+    : boundProjectId && deps.getArtifactText
+      ? defineChatTool("script.patch", {
+          description:
+            "按用户自然语言修改当前项目稿件中的一个段落。必须先调用 context.artifact.text 读取 output_script，再由你根据用户语义从 sections 中选择唯一 sectionRef；不要猜引用，不要让用户提供技术 ID。工具会在执行时重读当前版本并校验引用，只返回局部候选，用户采纳后才写入。若目标不唯一，先在对话里澄清，不要调用本工具。",
+          inputSchema: SCRIPT_PATCH_CONTEXT_PARAMS,
+          execute: async ({
+            sectionRef,
+            replacementText,
+            summary,
+          }): Promise<ScriptPatchToolResult> => {
+            const raw = await deps.getArtifactText!({
+              projectId: boundProjectId,
+              artifactType: "output_script",
+            });
+            const ref = sectionRef.trim();
+            const matches = (raw?.sections ?? []).filter(
+              (section) => section.sectionRef === ref,
+            );
+            if (
+              !raw?.artifactId ||
+              !raw.currentVersionId ||
+              matches.length !== 1
+            ) {
+              throw new Error(
+                "目标段落不在执行当下的当前稿中。请重新读取当前稿；若仍不能唯一定位，只澄清用户想改哪一段。",
+              );
+            }
+            const target = matches[0]!;
+            const next = replacementText.trim();
+            const noOp =
+              normalizePatchText(next) === normalizePatchText(target.body);
+            return {
+              kind: "script.patch",
+              artifactId: raw.artifactId,
+              versionId: raw.currentVersionId,
+              sectionId: target.sectionRef,
+              originalText: target.body,
+              replacementText: next,
+              summary:
+                typeof summary === "string" && summary.trim()
+                  ? summary.trim().slice(0, 120)
+                  : "Copilot 自然语言局部改稿",
+              ...(noOp
+                ? { error: "这次建议稿与当前段原文相同，没有产生可采纳的修改。" }
+                : {}),
+            };
+          },
+        }, deps.humanizeError)
+      : null;
   return {
     "creatoros.guide": defineChatTool("creatoros.guide", {
       description:
@@ -3518,6 +3660,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                 (hasAlternates
                   ? WEB_READ_BLOCKED_ALTERNATES_NOTE
                   : WEB_READ_BLOCKED_NO_ALTERNATES_NOTE),
+              httpStatus: res.status,
+              loginSuggested: true,
               text: null,
               window: null,
               hasMore: false,
@@ -3755,11 +3899,31 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     // 轮询 → 完成渲缩略图 + 采纳。未配生图/生视频模型 → task cancelled,卡内诚实「去设置」。
     "material.generate": defineChatTool("material.generate", {
       description:
-        "用 AI 生成图片或视频素材(文生图/文生视频)。生成的是 AI 图/视频素材(非真实拍摄/截图);创作者采纳后才进素材中心。当用户要「生成一张配图/做个 B-roll/AI 出个画面」时调用。若画面服务一条内容，调用前先判断它要替哪一句内容完成什么认知任务：事实证据、机制/过程、类比、对比、后果或情绪。事实证据优先真实截图/网页/图表，不得用 AI 图冒充；只有类比、示意、对比和氛围缺口适合生成。prompt 必须把一个认知任务落实为一个可见关系，写清视觉媒介、主体、动作或关系、环境、构图、光线/色彩与画幅；默认不要文字、数字、logo、水印、假产品界面或假新闻截图，禁止“科技感背景、AI 粒子、商务人士看电脑”等万能 AI 海报。创作者定位只影响视觉语言、熟悉场景、信息密度和审美语气，不得改变内容主张或杜撰事实。视频异步、分钟级——提交后后台跑,卡片会显示进度。若未配置生图/生视频模型,任务会失败并在卡上提示去设置(不假装能生成)。**注意:要「生成封面」请改用 cover.generate 工具**(它会硬锚立项核心信息 + 口播稿产结构化封面文案并过诚实门,不会在封面上编数字);本工具不拿来生成封面。",
+        "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由文生图；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。prompt 必须把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光线/色彩与画幅，默认不要文字、数字、logo、水印、假产品界面或假新闻截图，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
-      execute: async ({ kind, prompt, style }): Promise<MaterialGenerateToolResult> => {
+      execute: async ({
+        kind,
+        prompt,
+        style,
+        sectionRef,
+        visualPurpose,
+        mediaKind,
+      }): Promise<MaterialGenerateToolResult> => {
         const effKind: "image" | "video" = kind === "video" ? "video" : "image";
         const effPrompt = typeof prompt === "string" ? prompt.trim() : "";
+        const effMediaKind = mediaKind ?? "illustration";
+        if (effMediaKind !== "illustration") {
+          return {
+            kind: "material.generate",
+            taskId: null,
+            kindOf: effKind,
+            status: "queued",
+            error:
+              effMediaKind === "information_card"
+                ? "这张画面要求精确文字、数字或节点关系，不能交给自由文生图。请使用真实截图或确定性信息卡/图表能力；当前没有对应工具时直接说明，不能生成一张看似正确的假表格。"
+                : "事实页面和公告不能用 AI 图冒充。请使用 web.read / material.screenshot 获取真实来源画面。",
+          };
+        }
         if (!effPrompt) {
           return {
             kind: "material.generate",
@@ -3770,9 +3934,38 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           };
         }
         try {
+          let groundedPrompt = effPrompt;
+          if (boundProjectId && deps.getArtifactText) {
+            const raw = await deps.getArtifactText({
+              projectId: boundProjectId,
+              artifactType: "output_script",
+            });
+            if (raw?.sections?.length) {
+              const ref = typeof sectionRef === "string" ? sectionRef.trim() : "";
+              const matches = raw.sections.filter(
+                (section) => section.sectionRef === ref,
+              );
+              if (matches.length !== 1) {
+                throw new Error(
+                  "项目内容配图必须绑定执行当下当前稿中的唯一段落。请先重新读取 context.artifact.text，再使用它返回的 sectionRef 重试。",
+                );
+              }
+              const target = matches[0]!;
+              groundedPrompt = [
+                "【当前确认稿绑定】",
+                `版本:${raw.currentVersionId ?? "unknown"}`,
+                `内容指纹:${raw.contentHash ?? "unknown"}`,
+                `目标段落:${target.heading || `第 ${target.index + 1} 段`}`,
+                `段落原文:${target.body}`,
+                `画面职责:${visualPurpose ?? "未说明"}`,
+                "【视觉方案】",
+                effPrompt,
+              ].join("\n");
+            }
+          }
           const { taskId } = await deps.dispatchGenerateAsset({
             kind: effKind,
-            prompt: effPrompt,
+            prompt: groundedPrompt,
             style: typeof style === "string" && style.trim() ? style.trim() : undefined,
           });
           return {
@@ -4490,6 +4683,20 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           kind: "context.artifact.text",
           found: true,
           artifactType: raw.artifactType,
+          ...(raw.projectId ? { projectId: raw.projectId } : {}),
+          ...(raw.artifactId ? { artifactId: raw.artifactId } : {}),
+          ...(raw.currentVersionId
+            ? { currentVersionId: raw.currentVersionId }
+            : {}),
+          ...(typeof raw.versionNumber === "number"
+            ? { versionNumber: raw.versionNumber }
+            : {}),
+          ...(raw.updatedAt !== undefined ? { updatedAt: raw.updatedAt } : {}),
+          ...(raw.contentHash ? { contentHash: raw.contentHash } : {}),
+          ...(raw.truthPriority
+            ? { truthPriority: raw.truthPriority }
+            : {}),
+          ...(raw.sections ? { sections: raw.sections } : {}),
           ...window,
         };
       },

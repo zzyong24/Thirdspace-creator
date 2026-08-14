@@ -264,6 +264,23 @@ export async function runCoverGenerate(
       { projectId: task.projectId, topic },
       deps,
     );
+    // T-816：dispatch 时冻结的 currentVersion 快照优先于随后装配出的旧 Brief/派生脚本。
+    // runner 仍会使用材料做事实诚实门，但“这条内容在说什么”先信当前确认稿正文。
+    const frozenScriptSnapshot =
+      task.inputData.scriptSnapshot &&
+      typeof task.inputData.scriptSnapshot === "object" &&
+      !Array.isArray(task.inputData.scriptSnapshot)
+        ? (task.inputData.scriptSnapshot as Record<string, unknown>)
+        : null;
+    const frozenScriptText =
+      frozenScriptSnapshot &&
+      typeof frozenScriptSnapshot.fullText === "string" &&
+      frozenScriptSnapshot.fullText.trim()
+        ? frozenScriptSnapshot.fullText
+        : "";
+    const effectiveContext = frozenScriptText
+      ? { ...context, reviewScript: frozenScriptText }
+      : context;
 
     // 1) 结构化封面方案(文案接地）—— 复用 copy.generate 文本模型 + cover.brief 模板(硬锚 brief+script）。
     const spec = await deps.resolveModelSpec(ctx, "copy.generate");
@@ -280,7 +297,7 @@ export async function runCoverGenerate(
       model: modelFor(spec),
       // 运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(吃 skill_config_overrides)。
       template: getTemplate("cover.brief"),
-      facets: coverFacets(context, { userVisualRequirements }),
+      facets: coverFacets(effectiveContext, { userVisualRequirements }),
     });
     const plan = clampCoverPlan(object);
 
@@ -288,14 +305,14 @@ export async function runCoverGenerate(
     //    (数字/命名事实/成绩)必须命中已注入的立项 brief/口播稿/素材/知识库;不可溯 → 非破坏式追加
     //    「⚠️含未溯源数据」标注(不删,提示用户核实出处)。治「封面上压编造数字博眼球」。
     const haystack = buildGroundingHaystack(
-      context.projectBriefHard,
-      context.reviewScript,
-      context.positioningBrief,
-      context.userMaterialHardBrief,
-      context.userMaterialRefBrief,
-      context.knowledgeBrief,
-      context.topic.title,
-      context.topic.angle,
+      effectiveContext.projectBriefHard,
+      effectiveContext.reviewScript,
+      effectiveContext.positioningBrief,
+      effectiveContext.userMaterialHardBrief,
+      effectiveContext.userMaterialRefBrief,
+      effectiveContext.knowledgeBrief,
+      effectiveContext.topic.title,
+      effectiveContext.topic.angle,
     );
     const ungrounded: string[] = [];
     const headlineAnn = annotateUngroundedClaims(plan.headline, haystack);
@@ -309,7 +326,7 @@ export async function runCoverGenerate(
     });
 
     // 3) 生图 prompt 由结构化方案确定性组装(非自由文本)。用 RAW plan 拼画面(标注只进展示层)。
-    const orientation = context.orientationHint; // 横屏/竖屏/""
+    const orientation = effectiveContext.orientationHint; // 横屏/竖屏/""
     const imagePrompt = composeCoverImagePrompt(plan, {
       orientation,
       userVisualRequirements,

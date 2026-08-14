@@ -1,6 +1,6 @@
 [package]
 name = "creatoros-desktop"
-version = "1.0.0"
+version = "1.1.0"
 description = "CreatorOS 桌面壳(Tauri v2)—— T-147 P1 底座"
 authors = ["CreatorOS"]
 edition = "2021"

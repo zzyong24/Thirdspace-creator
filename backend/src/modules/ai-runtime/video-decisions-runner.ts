@@ -102,6 +102,8 @@ export interface VideoInfoCard {
   kind: VideoCardKind;
   content: string;
   at: number;
+  /** AI 选定的 SRT 语义锚点；存在时 at 由该行真实起秒确定。 */
+  srtLineIndex?: number;
   /** [T-295] 动画意图(决策层可选产出;缺省组装器/template 按 kind 派生)。 */
   motion?: VideoCardMotion;
   /** [T-794] AI 选定的内容关系；代码只做溯源校验与渲染执行。 */
@@ -1728,9 +1730,21 @@ export async function decideCards(
     if (!content) continue;
     // 可溯校验(T-224 同源):数值/关键词不在口播原文 → 剔除,绝不带编造进预览卡。
     if (!isCardContentTraceable(content, input.script)) continue;
+    // 新计划由 AI 选择所服务的 SRT 行，代码只把行号落实为权威起秒；旧计划没有
+    // srtLineIndex 时才沿用 at 吸附。这样录音比稿件计划慢/快时，卡片仍跟当前字幕切换。
+    const anchoredLine =
+      typeof c.srtLineIndex === "number"
+        ? input.srtLines.find(
+            (line) =>
+              line.index === c.srtLineIndex &&
+              line.startSec >= scene.startSec &&
+              line.startSec < scene.endSec,
+          )
+        : undefined;
+    const requestedAt = anchoredLine?.startSec ?? c.at;
     // at:先钳进场景范围,再吸附行 start(吸附结果仍钳一次,防吸到邻场行)。
     const clamped = Math.min(
-      Math.max(c.at, scene.startSec),
+      Math.max(requestedAt, scene.startSec),
       Math.max(scene.startSec, scene.endSec - 0.001),
     );
     const sceneStarts = starts.filter(
@@ -1757,6 +1771,7 @@ export async function decideCards(
       kind: c.kind,
       content,
       at,
+      ...(anchoredLine ? { srtLineIndex: anchoredLine.index } : {}),
       ...(c.motion ? { motion: c.motion } : {}),
       ...(traceableVisualPlan ? { visualPlan: traceableVisualPlan } : {}),
     });

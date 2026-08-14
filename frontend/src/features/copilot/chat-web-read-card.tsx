@@ -37,6 +37,8 @@ export function ChatWebReadCard({
   asset,
   needLogin,
   error,
+  httpStatus = null,
+  loginSuggested = false,
   projectId,
   window,
   hasMore = false,
@@ -44,6 +46,8 @@ export function ChatWebReadCard({
   asset: ChatWebReadAsset | null;
   needLogin: { domain: string } | null;
   error: string | null;
+  httpStatus?: number | null;
+  loginSuggested?: boolean;
   projectId: string | null;
   window?: { offset: number; length: number; total: number } | null;
   hasMore?: boolean;
@@ -106,7 +110,7 @@ export function ChatWebReadCard({
           「{needLogin.domain}」需要先登录才能读到正文。去设置里的「网站登录保管库」把它登录一次(会弹独立浏览器窗口,你自己登),登好回来我再读。
         </p>
         <a
-          href="/settings"
+          href="/settings?highlight=web-session-vault"
           data-slot="chat-web-read-login-link"
           className="inline-flex h-6 w-fit items-center rounded-control border border-warning/50 px-2 text-[11px] font-medium text-warning hover:bg-warning/10"
         >
@@ -118,18 +122,45 @@ export function ChatWebReadCard({
 
   // 失败态:诚实渲错误,不摆假正文。
   if (!asset || error) {
+    const blockedByWebsite = Boolean(error && loginSuggested);
     return (
       <div
         data-slot="chat-web-read-card"
         data-error="true"
-        className="mt-1 flex w-full max-w-[420px] flex-col gap-1 rounded-[10px] border border-destructive/40 bg-destructive/5 px-3 py-2"
+        className="mt-1 flex w-full max-w-[420px] flex-col gap-1.5 rounded-[10px] border border-destructive/40 bg-destructive/5 px-3 py-2"
       >
         <span className="text-[10px] font-medium uppercase tracking-wide text-destructive">
           读取失败
         </span>
-        <p className="text-[12px] leading-relaxed text-destructive">
-          {error || "没读到正文 —— 换一个有正文内容的链接再试。"}
-        </p>
+        {blockedByWebsite ? (
+          <>
+            <p className="text-[12px] leading-relaxed text-foreground">
+              当前没有拿到原文。这个页面可能已下架，也可能需要登录或额外权限。
+            </p>
+            {httpStatus ? (
+              <p
+                data-slot="chat-web-read-http-status"
+                className="text-[11px] text-text-subtle"
+              >
+                网站返回 HTTP {httpStatus}
+              </p>
+            ) : null}
+            <p className="text-[11px] leading-relaxed text-text-subtle">
+              可以先登录这个网站后重试；如果仍失败，再换一个来源。系统不会根据没读到的原文编内容。
+            </p>
+            <a
+              href="/settings?highlight=web-session-vault"
+              data-slot="chat-web-read-login-suggestion"
+              className="inline-flex h-6 w-fit items-center rounded-control border border-warning/50 px-2 text-[11px] font-medium text-warning hover:bg-warning/10"
+            >
+              前往网站登录 →
+            </a>
+          </>
+        ) : (
+          <p className="text-[12px] leading-relaxed text-destructive">
+            {error || "没读到正文 —— 换一个有正文内容的链接再试。"}
+          </p>
+        )}
       </div>
     );
   }

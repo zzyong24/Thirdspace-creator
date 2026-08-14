@@ -794,6 +794,35 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     expect(cards[0]!.at).toBe(12);
   });
 
+  it("[T-823] 卡片绑定当前 SRT 行，忽略稿件计划秒数，跨段时立即切换", async () => {
+    const call = fakeCall({
+      "video.cards": {
+        cards: [
+          {
+            sceneIdx: 1,
+            kind: "quote",
+            content: "给模型一个角色",
+            at: 7.9,
+            srtLineIndex: 2,
+          },
+          {
+            sceneIdx: 1,
+            kind: "quote",
+            content: "提供示例",
+            at: 11.9,
+            srtLineIndex: 3,
+          },
+        ],
+      },
+    });
+
+    const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
+    expect(cards).toMatchObject([
+      { content: "给模型一个角色", at: 3.5, srtLineIndex: 2 },
+      { content: "提供示例", at: 8, srtLineIndex: 3 },
+    ]);
+  });
+
   it("visualPlan 的 role 结构和每个部件都合法可溯才透传；坏计划只降级计划，不误删合法旧卡", async () => {
     const call = fakeCall({
       "video.cards": {

@@ -35,6 +35,12 @@ export function ChatScriptPatchCard({
 }) {
   const router = useRouter();
   const [state, setState] = React.useState<ApplyState>({ phase: "idle" });
+  const normalize = React.useCallback(
+    (value: string) => value.replace(/\s+/g, " ").trim(),
+    [],
+  );
+  const isNoOp =
+    normalize(candidate.originalText) === normalize(candidate.replacementText);
 
   const apply = React.useCallback(async () => {
     if (state.phase === "applying" || state.phase === "applied") return;
@@ -45,9 +51,15 @@ export function ChatScriptPatchCard({
         !candidate.versionId ||
         !candidate.sectionId ||
         !candidate.originalText.trim() ||
-        !candidate.replacementText.trim()
+        !candidate.replacementText.trim() ||
+        isNoOp
       ) {
-        throw new Error(candidate.error || "这次没有生成可应用的局部修改，请重新描述要求。");
+        throw new Error(
+          candidate.error ||
+            (isNoOp
+              ? "建议稿与当前段原文相同，没有可采纳的修改。"
+              : "这次没有生成可应用的局部修改，请重新描述要求。"),
+        );
       }
 
       await client.applyScriptPatch({
@@ -69,7 +81,7 @@ export function ChatScriptPatchCard({
         message: describeUserError(error, "局部改稿应用失败，请重试。"),
       });
     }
-  }, [candidate, router, state.phase]);
+  }, [candidate, isNoOp, router, state.phase]);
 
   const undo = React.useCallback(async () => {
     if (state.phase !== "applied") return;
@@ -112,9 +124,11 @@ export function ChatScriptPatchCard({
           </p>
         </div>
       </div>
-      {state.phase === "error" || candidate.error ? (
+      {state.phase === "error" || candidate.error || isNoOp ? (
         <p role="alert" className="text-[11px] text-destructive">
-          {state.phase === "error" ? state.message : candidate.error}
+          {state.phase === "error"
+            ? state.message
+            : candidate.error || "建议稿与当前段原文相同，没有可采纳的修改。"}
         </p>
       ) : null}
       <div className="flex items-center justify-end gap-2">
@@ -136,7 +150,9 @@ export function ChatScriptPatchCard({
           <button
             type="button"
             data-slot="chat-script-patch-apply"
-            disabled={state.phase === "applying" || Boolean(candidate.error)}
+            disabled={
+              state.phase === "applying" || Boolean(candidate.error) || isNoOp
+            }
             onClick={() => void apply()}
             className="h-7 rounded-md bg-brand px-3 text-xs font-medium text-brand-foreground disabled:opacity-50"
           >

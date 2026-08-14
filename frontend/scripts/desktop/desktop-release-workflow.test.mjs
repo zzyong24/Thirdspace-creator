@@ -8,7 +8,7 @@ const workflow = readFileSync(
 );
 
 describe("桌面正式构建的 Runtime Image 缓存契约", () => {
-  it("桌面版本权威统一为 1.0.0，且不直接覆盖公共更新清单", () => {
+  it("桌面版本权威统一为 1.1.0，且不直接覆盖公共更新清单", () => {
     const frontendPackage = JSON.parse(
       readFileSync(join(process.cwd(), "package.json"), "utf8"),
     );
@@ -23,11 +23,11 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
       join(process.cwd(), "src-tauri", "Cargo.lock"),
       "utf8",
     );
-    expect(frontendPackage.version).toBe("1.0.0");
-    expect(tauriConfig.version).toBe("1.0.0");
-    expect(cargoToml).toContain('version = "1.0.0"');
+    expect(frontendPackage.version).toBe("1.1.0");
+    expect(tauriConfig.version).toBe("1.1.0");
+    expect(cargoToml).toContain('version = "1.1.0"');
     expect(cargoLock).toMatch(
-      /name = "creatoros-desktop"\nversion = "1\.0\.0"/,
+      /name = "creatoros-desktop"\nversion = "1\.1\.0"/,
     );
     expect(workflow).not.toContain("sites/creatoros/updates/latest.json");
   });

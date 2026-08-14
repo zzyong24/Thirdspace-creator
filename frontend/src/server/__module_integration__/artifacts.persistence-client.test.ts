@@ -161,6 +161,68 @@ describe("artifacts ops registered in the composite transport", () => {
     expect(versionsAfter.data).toHaveLength(versionsBefore.data.length);
   });
 
+  it("[T-816] context readers 跟随 currentVersionId，而不是把最大版本当当前稿", async () => {
+    const owner = ctx(canonicalDataset.user.id);
+    const older = (await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          contentText: "旧正文快照",
+          contentData: {
+            sections: [{ id: "stable-1", heading: "旧版", body: "旧正文" }],
+          },
+          changeSummary: "旧版",
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string; versionNumber: number } };
+    await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: {
+          contentText: "最大版本正文",
+          contentData: {
+            sections: [{ id: "stable-1", heading: "新版", body: "最大版本正文" }],
+          },
+          changeSummary: "新版",
+        },
+      } as never,
+      owner,
+    );
+    await compositeTransport.request(
+      ep("artifacts.restore"),
+      {
+        params: { artifactId: SCRIPT_ARTIFACT_ID },
+        query: undefined,
+        body: { versionId: older.data.id },
+      } as never,
+      owner,
+    );
+
+    const runtime = await getChatRuntime();
+    const index = await runtime.contextReaders.listProjectArtifacts?.(owner, {
+      projectId: PROJECT_ID,
+    });
+    const text = await runtime.contextReaders.getArtifactText?.(owner, {
+      projectId: PROJECT_ID,
+      artifactType: "master_script",
+    });
+    expect(index?.items.find((item) => item.artifactType === "master_script"))
+      .toMatchObject({ currentVersion: older.data.versionNumber });
+    expect(text).toMatchObject({
+      currentVersionId: older.data.id,
+      versionNumber: older.data.versionNumber,
+      truthPriority: "current_confirmed_script",
+      fullText: "旧版\n旧正文",
+      sections: [{ sectionRef: "stable-1", body: "旧正文" }],
+    });
+    expect(text?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
   it("artifacts.scriptPatches.apply round-trips through the deterministic write command", async () => {
     const owner = ctx(canonicalDataset.user.id);
     const source = (await compositeTransport.request(

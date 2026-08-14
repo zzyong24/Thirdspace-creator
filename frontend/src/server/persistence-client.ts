@@ -1157,8 +1157,8 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // + toKnowledgeRow/toRevisionRow mapper 一并移除(知识全由用户真实采集/录入进库,不再 seed)。
 
 // [T-099c] 产物版本正文抽取(单一真值,context.artifacts 字数 + context.artifact.text 全文共用)——
-// output_script transcript 优先(与 makeReviewSubjectReader.getScript 同读法),回退 contentText,
-// 再回退 contentData.sections 拼段 / body(与 scriptSource.getLatestScript 同抽取口径)。无正文 → 空串。
+// T-816：稿面实际渲染的 contentData.sections 是当前确认稿第一真相；旧 transcript/contentText
+// 可能只是同版本的派生快照，不能反向覆盖结构稿。无 sections 时再兼容 transcript/contentText/body。
 function extractArtifactText(
   contentText: string | null | undefined,
   contentData: unknown,
@@ -1167,27 +1167,34 @@ function extractArtifactText(
     contentData && typeof contentData === "object"
       ? (contentData as Record<string, unknown>)
       : null;
-  // 逐字稿:contentData.transcript 优先(output_script 的正文落这里)。
+  // 结构化稿面：用与稳定段落引用相同的规范化顺序拼正文。
+  if (data && Array.isArray(data.sections)) {
+    const joined = canonicalizeScriptSectionRecords(data.sections)
+      .map((section) => {
+        const heading = [section.heading, section.label].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        const body = [
+          section.body,
+          section.narration,
+          section.text,
+          section.content,
+        ].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        return [heading, body].filter(Boolean).join("\n");
+      })
+      .filter((line) => line.length > 0)
+      .join("\n\n");
+    if (joined.trim()) return joined;
+  }
   if (data && typeof data.transcript === "string" && data.transcript.trim()) {
     return data.transcript;
   }
-  // 通用回退:artifact 版本的 contentText(结构化编辑器落的纯文本快照)。
   if (typeof contentText === "string" && contentText.trim()) {
     return contentText;
-  }
-  // 结构化产物:sections 拼段(label/text/narration/body 任一非空即取)。
-  if (data && Array.isArray(data.sections)) {
-    const joined = (data.sections as unknown[])
-      .map((s) => {
-        const so =
-          s && typeof s === "object" ? (s as Record<string, unknown>) : {};
-        return [so.label, so.text, so.narration, so.body]
-          .filter((x): x is string => typeof x === "string" && x.length > 0)
-          .join(" ");
-      })
-      .filter((line) => line.length > 0)
-      .join("\n");
-    if (joined.trim()) return joined;
   }
   // 兜底:contentData.body 纯文本字段。
   if (data && typeof data.body === "string" && data.body.trim()) {
@@ -10620,6 +10627,114 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // **任何**库 → 部署给新用户时会把私人内容泄漏给每个人,且令「开箱空」不成立。知识改由用户
   // 真实采集(douyin-anchor-transcribe / 知识库录入)进库,不再 seed 固化内容。
 
+  /**
+   * T-816：当前 artifact 指针、规范正文、稳定段落引用和内容 hash 的单一读源。
+   * context.artifact.text、自然语言 script.patch 与生成任务快照都必须调用这里，避免各自
+   * 猜“当前版本”。只走现有 projects/artifacts public service；不写库。
+   */
+  const readCurrentArtifactTruth = async (
+    c: RequestContext,
+    projectId: string,
+    artifactType: string,
+  ) => {
+    await projectsRepo.get(c, projectId);
+    const artifactRows = await artifactsService.listProjectArtifacts(c, projectId);
+    const target = artifactRows.find((row) => row.artifactType === artifactType);
+    if (!target?.currentVersionId) return null;
+    const versions = await artifactsService.listVersions(c, target.id);
+    const current = versions.find(
+      (version) => version.id === target.currentVersionId,
+    );
+    if (!current) return null;
+
+    const data =
+      current.contentData &&
+      typeof current.contentData === "object" &&
+      !Array.isArray(current.contentData)
+        ? (current.contentData as Record<string, unknown>)
+        : {};
+    let sections = canonicalizeScriptSectionRecords(data.sections).map(
+      (section, index) => {
+        const heading = [section.heading, section.label].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        const body = [
+          section.body,
+          section.narration,
+          section.text,
+          section.content,
+        ].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        const sectionType = [section.sectionType, section.type, section.role].find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        );
+        const finite = (value: unknown): number | null =>
+          typeof value === "number" && Number.isFinite(value) ? value : null;
+        return {
+          sectionRef: section.id,
+          index,
+          heading: heading?.trim() ?? "",
+          body: body ?? "",
+          sectionType: sectionType?.trim() ?? null,
+          startSeconds: finite(section.startSeconds ?? section.start),
+          endSeconds: finite(section.endSeconds ?? section.end),
+        };
+      },
+    );
+    if (sections.length === 0 && artifactType === "output_script") {
+      const rows = await artifactsService.getScriptSections(c, current.id);
+      sections = rows.flatMap((section, index) => {
+        const body =
+          typeof section.content === "string" ? section.content : "";
+        const sectionRef =
+          typeof section.id === "string" ? section.id.trim() : "";
+        if (!body.trim() || !sectionRef) return [];
+        return [
+          {
+            sectionRef,
+            index,
+            heading: "",
+            body,
+            sectionType:
+              typeof section.sectionType === "string"
+                ? section.sectionType
+                : null,
+            startSeconds:
+              typeof section.startSeconds === "number"
+                ? section.startSeconds
+                : null,
+            endSeconds:
+              typeof section.endSeconds === "number" ? section.endSeconds : null,
+          },
+        ];
+      });
+    }
+    const fullText =
+      sections.length > 0
+        ? sections
+            .map((section) =>
+              [section.heading, section.body].filter(Boolean).join("\n"),
+            )
+            .join("\n\n")
+        : extractArtifactText(current.contentText, current.contentData);
+    return {
+      artifactType: target.artifactType,
+      projectId,
+      artifactId: target.id,
+      currentVersionId: current.id,
+      versionNumber: current.versionNumber,
+      updatedAt: target.updatedAt ?? null,
+      contentHash: createHash("sha256").update(fullText).digest("hex"),
+      truthPriority: "current_confirmed_script" as const,
+      sections,
+      fullText,
+    };
+  };
+
   // T-004 ChatBox runtime — bundle the /api/chat route's needs: persist (aiService),
   // resolve model (resolveModelSpec), and the bound CreativeContext readers (定位/飞轮/
   // 受众信号/知识库 数据层注入). The readers reach peer modules ONLY through their public
@@ -11721,9 +11836,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               let totalChars = 0;
               try {
                 const versions = await artifactsService.listVersions(c, a.id);
-                const current = versions
-                  .slice()
-                  .sort((x, y) => y.versionNumber - x.versionNumber)[0];
+                // T-816：恢复历史版本后 currentVersionId 可能指向较小版本号；不能用 max 冒充当前。
+                const current = a.currentVersionId
+                  ? versions.find((version) => version.id === a.currentVersionId)
+                  : undefined;
                 currentVersion = current?.versionNumber ?? null;
               } catch {
                 currentVersion = null;
@@ -11785,33 +11901,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         opts: { projectId: string; artifactType: string },
       ) => {
         try {
-          await projectsRepo.get(c, opts.projectId); // ownership 门(越权/不存在 → 抛 → null)
-          const artifactRows = await artifactsService.listProjectArtifacts(
+          const truth = await readCurrentArtifactTruth(
             c,
             opts.projectId,
+            opts.artifactType,
           );
-          const target = artifactRows.find(
-            (a) => a.artifactType === opts.artifactType,
-          );
-          if (!target || !target.currentVersionId) {
+          if (!truth) {
             if (opts.artifactType !== "output_script") return null;
             const seed = await readProjectRadarDraftSeed(c, opts.projectId);
             return seed
               ? { artifactType: "output_script", fullText: seed }
               : null;
           }
-          const repo = createArtifactRepository(db, {
-            ...deps,
-            userId: c.userId,
-            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-          });
-          const version = await repo.getVersion(target.currentVersionId);
-          const fullText = extractArtifactText(
-            version.contentText,
-            version.contentData,
-          );
-          return { artifactType: target.artifactType, fullText };
+          return truth;
         } catch {
           return null;
         }
@@ -12755,6 +12857,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
     ) => {
+      const scriptSnapshot = input.projectId
+        ? await readCurrentArtifactTruth(ctx, input.projectId, "output_script").catch(
+            () => null,
+          )
+        : null;
       const res = await ai.request(
         // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
         ENDPOINTS.createAITask,
@@ -12768,6 +12875,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               kind: input.kind,
               prompt: input.prompt,
               ...(input.projectId ? { projectId: input.projectId } : {}),
+              ...(scriptSnapshot ? { scriptSnapshot } : {}),
             },
           },
         },
@@ -12884,6 +12992,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         visualRequirements?: string;
       },
     ) => {
+      const scriptSnapshot = await readCurrentArtifactTruth(
+        ctx,
+        input.projectId,
+        "output_script",
+      ).catch(() => null);
       const res = await ai.request(
         // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
         ENDPOINTS.createAITask,
@@ -12902,6 +13015,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               ...(input.visualRequirements
                 ? { visualRequirements: input.visualRequirements }
                 : {}),
+              ...(scriptSnapshot ? { scriptSnapshot } : {}),
             },
           },
         },
