@@ -375,3 +375,17 @@
 - **Outcome(T+N)**: 并发双写红测已从“两者都成功”收口为恰好一个成功，陈旧撤销零写入；待本地包
   真实连续采纳多张卡并手动保存冲突后回填。
 - **Ref**: T-833；DEC-DATA-051；PAT-002 RF-002/RF-003。
+
+## LED-028 — 可配置 Base URL 不能假定永远是纯域名
+
+- **Date**: 2026-08-14 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: 官方渠道保存了完整 `https://api.minimaxi.com/v2/video_generation`，H3 adapter 和
+  设置探测仍无条件追加 `/v2/video_generation`，真实请求变成重复路径并返回 HTTP 404。
+- **RootCause**: 配置字段名叫 Base URL，但实际兼容输入允许域名、版本根、完整端点和中转前缀；生成
+  与设置探测各自手拼路径，而且测试只覆盖了纯域名默认值。
+- **GuardRule**: 可配置 provider 端点必须先由共享纯函数确定性规范化，再同时派生提交/查询地址；
+  至少覆盖纯域名、版本根、完整端点和带路径中转。付费生成 POST 不得在 404 后盲试候选路径。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/runtime/multimodal-minimax.test.ts && pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts`（已登记进 `reconcile.config.json`）。
+- **Outcome(T+N)**: 红测复现三种重复拼接，修复后 H3 21 项、设置探测 28 项通过；旧 MiniMax v1、
+  OmniHi/Seedance 与 checkpoint 恢复回归通过。真实付费成片仍待用户用新本地包验收。
+- **Ref**: T-837；DEC-MODEL-052；MOD-002；用户真机任务 `ai-task-b269a0a7-610` 的脱敏日志。

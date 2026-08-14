@@ -1,5 +1,6 @@
 import { ENDPOINTS, type Transport } from "@creatoros/contract";
 import type { RequestContext } from "@creatoros/contract";
+import { resolveMinimaxH3Endpoints } from "@creatoros/ai-worker";
 
 /**
  * [T-377] 「测试连接」composition-only op(settings.models.test):wrap settings transport,
@@ -240,15 +241,19 @@ async function generationAuthProbe(
 ): Promise<{ ok: boolean; detail: string }> {
   try {
     const provider = spec.provider.toLowerCase();
-    const omnihi = provider === "omnihi" || provider === "seedance" || provider === "seeddance";
+    const omnihi =
+      provider === "omnihi" ||
+      provider === "seedance" ||
+      provider === "seeddance";
     const defaultBase = omnihi ? OMNIHI_VIDEO_DEFAULT : MINIMAX_DEFAULT;
-    const h3 = provider === "minimax" && spec.model.trim().toLowerCase() === "minimax-h3";
-    const path = omnihi
-      ? "/videos/generations"
-      : h3
-        ? "/v2/video_generation"
-        : "/v1/video_generation";
-    const url = `${trimBase(spec.baseUrl ?? defaultBase)}${path}`;
+    const h3 =
+      provider === "minimax" &&
+      spec.model.trim().toLowerCase() === "minimax-h3";
+    const url = h3
+      ? resolveMinimaxH3Endpoints(spec.baseUrl).submitUrl
+      : `${trimBase(spec.baseUrl ?? defaultBase)}${
+          omnihi ? "/videos/generations" : "/v1/video_generation"
+        }`;
     const res = await fetchImpl(url, {
       method: "POST",
       headers: {

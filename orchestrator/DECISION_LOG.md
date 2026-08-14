@@ -2680,3 +2680,25 @@ CreatorOS 现有数据库任务链已提供更强的恢复与审计。
 **Asset-Ref**：既有 Postgres/PGlite 共用 Drizzle transaction 与 artifacts repository。
 
 **任务**：T-833。
+
+# DEC-MODEL-052 (2026-08-14) — MiniMax H3 Base URL 先规范化一次，禁止 404 后盲试提交端点
+
+**Status**：confirmed
+
+**用户决定**：本地包必须修复官方渠道 MiniMax H3 “生视频模型已配置但提交 404”的阻断；同时保留
+官方直连与自建中转兼容，不能破坏旧 MiniMax v1 或 Seedance。
+
+**决策**：
+
+1. `video.generate` 保存的 Base URL 可为纯域名、`/v2` 版本根、完整
+   `/v2/video_generation` 提交接口，或前面带中转路径的同类地址；代码先确定性归一到唯一 v2 根。
+2. H3 提交与查询从同一个归一结果派生；设置页无计费鉴权探测复用同一解析器，禁止各自拼路径。
+3. 兼容逻辑只处理已知协议后缀，不按供应商品牌、模型内容或业务词做创作判断。
+4. 提交 404、网络错误或未知响应不得轮流试多个 POST 端点；保持一次提交和既有 checkpoint/人工恢复
+   纪律，防止重复生成与重复计费。
+
+**Pattern-Ref**：PAT-001 T1（薄适配）；PAT-003（异步状态机与 checkpoint）。
+
+**Asset-Ref**：MOD-002 configurable provider adapter；DEC-AI-049 的 H3 v2 适配器。
+
+**任务**：T-837。

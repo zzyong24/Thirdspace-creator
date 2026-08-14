@@ -150,6 +150,12 @@
       "what": "局部改稿采纳或撤销退回先检查版本、后无条件移动当前指针，或响应上一版由 transport 提前读取",
       "check": "pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.repository.integration.test.ts src/modules/artifacts/artifacts.service.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-patch-card.test.tsx",
       "onFail": "稿件并发门回归：带 expected version 的版本追加与指针移动必须共享数据库事务和条件更新，竞争失败回滚新增行；撤销同样 CAS，previousVersionId 只能由成功服务事务返回。"
+    },
+    {
+      "led": "LED-028",
+      "what": "MiniMax H3 对完整提交接口或版本根再次追加 v2 路径，或在 404 后盲试多个可能计费的 POST",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-minimax.test.ts && pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
+      "onFail": "H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。"
     }
   ],
   "program_completion_required": false,

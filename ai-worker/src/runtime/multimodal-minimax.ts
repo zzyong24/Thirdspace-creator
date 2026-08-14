@@ -28,6 +28,7 @@ import {
   type MultimodalSpec,
 } from "./multimodal-factory";
 import { createHash } from "node:crypto";
+import { resolveMinimaxH3Endpoints } from "./minimax-h3-endpoints";
 
 const DEFAULT_BASE_URL = "https://api.minimax.io";
 
@@ -227,10 +228,11 @@ async function generateH3Video(
   }
 
   let taskId = opts.resumeJobId;
+  const endpoints = resolveMinimaxH3Endpoints(spec.baseUrl);
   if (!taskId) {
     let submitRes: Response;
     try {
-      submitRes = await deps.fetch(`${base(spec)}/v2/video_generation`, {
+      submitRes = await deps.fetch(endpoints.submitUrl, {
         method: "POST",
         headers: authHeaders(spec),
         body: JSON.stringify({
@@ -271,7 +273,7 @@ async function generateH3Video(
     if (opts.onJobSubmitted) await opts.onJobSubmitted(taskId);
   }
 
-  const downloadUrl = await pollH3VideoTask(spec, taskId, deps);
+  const downloadUrl = await pollH3VideoTask(spec, taskId, endpoints, deps);
   let bytesRes: Response;
   try {
     bytesRes = await deps.fetch(downloadUrl, { method: "GET" });
@@ -300,16 +302,17 @@ async function generateH3Video(
 async function pollH3VideoTask(
   spec: MultimodalSpec,
   taskId: string,
+  endpoints: ReturnType<typeof resolveMinimaxH3Endpoints>,
   deps: MinimaxAdapterDeps,
 ): Promise<string> {
   const maxAttempts = deps.h3MaxPollAttempts ?? deps.maxPollAttempts;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let res: Response;
     try {
-      res = await deps.fetch(
-        `${base(spec)}/v2/query/video_generation/${encodeURIComponent(taskId)}`,
-        { method: "GET", headers: authHeaders(spec) },
-      );
+      res = await deps.fetch(endpoints.queryUrl(taskId), {
+        method: "GET",
+        headers: authHeaders(spec),
+      });
     } catch {
       throw new MultimodalGenerationError("MiniMax H3 查询网络失败", {
         reason: "network",

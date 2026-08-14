@@ -55,6 +55,10 @@ export {
   createMinimaxAdapter,
   type MinimaxAdapterDeps,
 } from "./runtime/multimodal-minimax";
+export {
+  resolveMinimaxH3Endpoints,
+  type MinimaxH3Endpoints,
+} from "./runtime/minimax-h3-endpoints";
 // OmniHi / Seedance 文生视频适配器：POST generations → GET job → 下载成品。
 // 宿主会把规范 provider `omnihi` 与历史 `seedance` / `seeddance` 拼写都指向同一实例。
 export {

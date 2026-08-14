@@ -30,7 +30,9 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   image/video kind 固定、稿件读取失败不脱稿生成。
 - **被移除影响**：不再新增逐镜批量费用 UI、制作页生成面板、首尾帧/参考素材选择器及其任务契约。
 - **当前 Gate**：范围收窄后的 SPEC 已 `PASS[REV:fd1747eb2d8d]`，两档真实浏览器旅程通过；真 H3 smoke
-  仍需用户明确预算授权。
+  仍需用户明确预算授权。T-837 真机回归发现渠道保存完整 `/v2/video_generation` 时被再次追加路径；
+  已将纯域名、v2 根、完整提交接口和带前缀中转统一到共享的确定性端点解析器，生成与设置探测共用，
+  不改变 v1/Seedance 协议，也不以 404 后重试其他 POST 作为兼容手段。
 
 ## CI-COPY-792 资料驱动生成从 T-790 拆为独立工具任务 T-791（2026-08-12）
 

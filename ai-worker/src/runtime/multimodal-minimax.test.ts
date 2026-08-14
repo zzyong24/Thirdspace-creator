@@ -243,6 +243,71 @@ describe("MiniMax H3 v2 —— 分镜短片", () => {
     ]);
   });
 
+  it.each([
+    [
+      "纯域名",
+      "https://api.minimaxi.com",
+      "https://api.minimaxi.com/v2/video_generation",
+      "https://api.minimaxi.com/v2/query/video_generation/h3-task",
+    ],
+    [
+      "v2 版本根地址",
+      "https://api.minimaxi.com/v2/",
+      "https://api.minimaxi.com/v2/video_generation",
+      "https://api.minimaxi.com/v2/query/video_generation/h3-task",
+    ],
+    [
+      "完整提交接口",
+      "https://api.minimaxi.com/v2/video_generation",
+      "https://api.minimaxi.com/v2/video_generation",
+      "https://api.minimaxi.com/v2/query/video_generation/h3-task",
+    ],
+    [
+      "带路径的中转前缀",
+      "https://relay.example/minimax",
+      "https://relay.example/minimax/v2/video_generation",
+      "https://relay.example/minimax/v2/query/video_generation/h3-task",
+    ],
+    [
+      "中转完整提交接口",
+      "https://relay.example/minimax/v2/video_generation/",
+      "https://relay.example/minimax/v2/video_generation",
+      "https://relay.example/minimax/v2/query/video_generation/h3-task",
+    ],
+  ])("baseUrl=%s 时只规范化一次，并从同一 v2 根地址查询", async (
+    _label,
+    baseUrl,
+    expectedSubmit,
+    expectedQuery,
+  ) => {
+    const urls: string[] = [];
+    const fakeFetch = (async (url: string, init?: RequestInit) => {
+      urls.push(String(url));
+      if (init?.method === "POST") return jsonResponse({ task_id: "h3-task" });
+      if (String(url).includes("/query/video_generation/")) {
+        return jsonResponse({
+          task: {
+            status: "succeeded",
+            content: { url: "https://dl.example/h3.mp4" },
+          },
+        });
+      }
+      return bytesResponse(new Uint8Array([8, 3, 7]));
+    }) as unknown as typeof fetch;
+
+    await createMinimaxAdapter(deps(fakeFetch)).generateVideo!(
+      { ...h3Spec, baseUrl },
+      { prompt: "one shot" },
+    );
+
+    expect(urls).toEqual([
+      expectedSubmit,
+      expectedQuery,
+      "https://dl.example/h3.mp4",
+    ]);
+    expect(urls.filter((url) => url === expectedSubmit)).toHaveLength(1);
+  });
+
   it("时长越界在 POST 前失败", async () => {
     let called = false;
     const fakeFetch = (async () => {

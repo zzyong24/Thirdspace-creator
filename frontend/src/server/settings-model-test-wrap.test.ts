@@ -356,6 +356,30 @@ describe("runModelConnectionTest — video.generate(鉴权探测,不真生成)",
       }),
     );
   });
+
+  it("MiniMax-H3 已保存完整提交接口时不重复拼接 v2 路径", async () => {
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse(400, { error: "content required" }),
+    ) as unknown as typeof fetch;
+    const deps = makeDeps({
+      resolveMultimodal: vi.fn(async () => ({
+        provider: "minimax",
+        baseUrl: "https://api.minimaxi.com/v2/video_generation",
+        model: "MiniMax-H3",
+        token: "key",
+      })),
+      fetchImpl,
+    });
+
+    const r = await runModelConnectionTest(ctx, "video.generate", deps);
+
+    expect(r.ok).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "https://api.minimaxi.com/v2/video_generation",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });
 
 describe("runModelConnectionTest — transcribe.audio / web.search", () => {
