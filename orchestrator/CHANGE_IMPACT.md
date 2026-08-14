@@ -648,3 +648,16 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   和正在运行任务使用各自冻结快照，不重写。
 - **当前 Gate**：新 SPEC 必须独立评审 PASS 后才能 BUILD；本地包只作为真实用户验收入口，不能把
   自动化绿或旧冻结样题评分写成文稿质量 PASS。
+
+## CI-REL-826 Windows runtime 迁移从“目录存在即跳过”改为版本完整性判断（2026-08-13）
+
+- **变更源**：用户 v1.1 真机日志证明安装过旧版的机器无法启动；只读展开确认安装包实际包含
+  `sidecar.tar.gz`，旧 appData runtime 与新安装 runtime 并存才是根因。
+- **失效工件**：T-825 的 Windows 干净 runner 真启动证据不能代表存量用户升级；LED-006 只要求
+  启动 GUI 但没有要求注入旧 runtime 的门卫口径失效。
+- **重新派生**：迁移先判断 appData 是否通过当前版本入口 hash；否则验证安装目录副本后原子替换，
+  提交失败恢复旧副本。正式首启与候选 RAT 都加入旧 appData runtime 状态并验证当前 runtime 接管。
+- **数据边界**：仅处理可再生 `runtime-images`；项目、数据库、密钥、日志、账号和业务数据不在范围内，
+  无数据库迁移、公开 API 或页面变化。
+- **当前 Gate**：本地算法和工作流契约通过只算 BUILD 证据；新 Windows 包还必须在真实安装环境通过
+  GUI、sidecar health、主页面与卸载验证，并由原故障机器复验后才能完成 T-826。

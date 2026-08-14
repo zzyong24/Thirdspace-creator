@@ -755,6 +755,13 @@ jobs:
           if (-not (Test-Path $appExe -PathType Leaf)) {
             throw "[T-562] 安装完成但缺 CreatorOS.exe"
           }
+          # T-826：真实用户升级机已有旧版 appData runtime；过去只测干净 runner，
+          # 导致新安装 runtime 与旧 appData runtime 并存时启动前误丢当前版本。
+          $appDataRuntime = Join-Path $env:APPDATA "cloud.aitongban.creatoros/runtime-images"
+          Remove-Item -Recurse -Force $appDataRuntime -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force $appDataRuntime | Out-Null
+          Set-Content (Join-Path $appDataRuntime "runtime-current.txt") `
+            "creatoros-stale-runtime-for-upgrade"
 
           $stdout = Join-Path $env:RUNNER_TEMP "creatoros-startup.stdout.log"
           $stderr = Join-Path $env:RUNNER_TEMP "creatoros-startup.stderr.log"
@@ -791,6 +798,20 @@ jobs:
             if ($launchWatch.Elapsed.TotalSeconds -gt 45) {
               Write-Warning "[T-775] Windows 首次启动超过 45 秒（继续发布验证，120 秒真实主页加载仍为硬门）:$($launchWatch.Elapsed)"
             }
+            $migratedPointer = Join-Path $appDataRuntime "runtime-current.txt"
+            if (-not (Test-Path $migratedPointer -PathType Leaf)) {
+              throw "[T-826] 升级机旧 runtime 未被当前安装 runtime 替换"
+            }
+            $migratedRuntimeId = (Get-Content $migratedPointer -Raw).Trim()
+            if ($migratedRuntimeId -eq "creatoros-stale-runtime-for-upgrade") {
+              throw "[T-826] runtime-current.txt 仍指向旧 runtime"
+            }
+            $migratedServer = Join-Path `
+              $appDataRuntime "$migratedRuntimeId/sidecar/frontend/server.js"
+            if (-not (Test-Path $migratedServer -PathType Leaf)) {
+              throw "[T-826] 升级机迁移后的当前 runtime 缺 frontend/server.js"
+            }
+            Write-Host "[T-826] ✓ 升级机旧 runtime 已被当前安装 runtime 替换"
             $evidencePath = "tools/windows-closure-rat/out/official-package-results.json"
             $evidence = Get-Content $evidencePath -Raw | ConvertFrom-Json
             $evidence | Add-Member -NotePropertyName firstLaunchMilliseconds `
@@ -1037,6 +1058,11 @@ jobs:
           if (-not (Test-Path $appExe -PathType Leaf)) {
             throw "[T-565] 安装后缺 CreatorOS.exe"
           }
+          $appDataRuntime = Join-Path $env:APPDATA "cloud.aitongban.creatoros/runtime-images"
+          Remove-Item -Recurse -Force $appDataRuntime -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force $appDataRuntime | Out-Null
+          Set-Content (Join-Path $appDataRuntime "runtime-current.txt") `
+            "creatoros-stale-runtime-for-upgrade"
           $firewallRules = @()
           $portProbe = [Net.Sockets.TcpListener]::new(
             [Net.IPAddress]::Loopback,
@@ -1095,6 +1121,21 @@ jobs:
             if ($launchWatch.Elapsed.TotalSeconds -gt 45) {
               Write-Warning "[T-775] Windows 候选首次启动超过 45 秒（继续发布验证，120 秒真实主页加载仍为硬门）:$($launchWatch.Elapsed)"
             }
+            $migratedPointer = Join-Path $appDataRuntime "runtime-current.txt"
+            if (-not (Test-Path $migratedPointer -PathType Leaf)) {
+              throw "[T-826] 升级机旧 runtime 未被当前安装 runtime 替换"
+            }
+            $migratedRuntimeId = (Get-Content $migratedPointer -Raw).Trim()
+            if ($migratedRuntimeId -eq "creatoros-stale-runtime-for-upgrade") {
+              throw "[T-826] runtime-current.txt 仍指向旧 runtime"
+            }
+            $migratedServer = Join-Path `
+              $appDataRuntime "$migratedRuntimeId/sidecar/frontend/server.js"
+            if (-not (Test-Path $migratedServer -PathType Leaf)) {
+              throw "[T-826] 升级机迁移后的当前 runtime 缺 frontend/server.js"
+            }
+            $runtime = Join-Path $appDataRuntime "$migratedRuntimeId/sidecar"
+            Write-Host "[T-826] ✓ 升级机旧 runtime 已被当前安装 runtime 替换"
             Write-Host (
               "[T-565] setupBytes=$($setup.Length) " +
               "installMs=$($installWatch.ElapsedMilliseconds) " +

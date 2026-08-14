@@ -71,12 +71,12 @@
 
 ## LED-006 — 桌面流水线只验安装文件存在，真实应用可以带着永久白屏出包
 - **Date**: 2026-07-27 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
-- **WhatFailed**: Windows 流水线执行了安装器特殊入口并确认 runtime 文件存在，却从未启动用户真正点击的 `CreatorOS.exe`；sidecar 工作目录依赖、verdict 公钥读取和 WebView 导航全部未被执行，最终流水线全绿但用户真机仍永久白屏。
-- **RootCause**: 把“安装期物化成功”误当成“应用启动成功”；同时以 `about:blank` 注入脚本动态生成 splash，启动失败时脚本若未执行就没有可见错误页；runtime 解析还在 logger 初始化前 panic，证据也没有落盘。
-- **GuardRule**: Windows 安装包上传后必须真启动已安装 GUI，只有 sidecar 完成启动门且 WebView 完成 `127.0.0.1` 主页面加载才算启动 Gate 通过；sidecar cwd 必须显式固定到随包 frontend；任何 runtime 失败必须保留静态可见页并先落日志。
+- **WhatFailed**: Windows 流水线执行了安装器特殊入口并确认 runtime 文件存在，却从未启动用户真正点击的 `CreatorOS.exe`；后续虽补了干净 runner 真启动，仍没有覆盖“用户目录已有旧版 runtime、新安装目录已有当前 runtime”的升级机状态。sidecar 工作目录依赖、verdict 公钥读取、WebView 导航和跨版本 runtime 选择任一失真，都可能在流水线全绿后让用户真机无法启动。
+- **RootCause**: 把“安装期物化成功”误当成“应用启动成功”，又把“干净 CI 首启成功”误当成“存量用户升级成功”；迁移代码见到 appData 已存在就直接跳过，没有先判断它是否属于当前安装版本。安装器随后清掉已经物化的归档，启动兜底只能报安装目录缺 `sidecar.tar.gz`。同时以 `about:blank` 注入脚本动态生成 splash，启动失败时脚本若未执行就没有可见错误页；早期 runtime 解析还曾在 logger 初始化前 panic，证据也没有落盘。
+- **GuardRule**: Windows 安装包上传后必须真启动已安装 GUI，且至少覆盖干净首装与“旧 appData runtime + 新安装 runtime”升级两种状态；只有当前版本 runtime 完整性校验通过、sidecar 完成启动门且 WebView 完成 `127.0.0.1` 主页面加载才算启动 Gate 通过。替换旧 runtime 前必须验证新副本，切换失败必须恢复旧副本；sidecar cwd 必须显式固定到随包 frontend，任何 runtime 失败必须保留静态可见页并先落日志。
 - **GuardCheck**: `pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`（已登记进 `reconcile.config.json` lessons[]）
-- **Outcome(T+N)**: 待 Windows 新包流水线与用户真机复验后回填。
-- **Ref**: T-562；用户真机 2026-07-27；`docs/research/2026-07-24-windows-first-launch-white-screen.md`
+- **Outcome(T+N)**: 2026-08-13 T-826 再次由 v1.1 用户升级机命中；已补升级状态回归和安全替换，待 Windows 新包流水线与用户真机复验后回填最终结果。
+- **Ref**: T-562、T-826；用户真机 2026-07-27、2026-08-13；`docs/research/2026-07-24-windows-first-launch-white-screen.md`；`docs/research/2026-08-13-windows-v1.1-upgrade-startup-failure.md`
 
 ## LED-007 — 模型连通探针只读正文流，思考流与流内错误都会被误报为空响应
 - **Date**: 2026-07-27 · **Stage**: BUILD · **Severity**: high · **Status**: active

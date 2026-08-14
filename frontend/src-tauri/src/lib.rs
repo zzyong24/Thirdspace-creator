@@ -1063,12 +1063,22 @@ fn migrate_windows_runtime_to_app_data(
 ) -> Result<(), String> {
     let legacy = install_dir.join("runtime-images");
     let current = app_data_dir.join("runtime-images");
-    if current.exists() || !legacy.exists() {
+    if !legacy.exists() {
+        return Ok(());
+    }
+    if current.exists()
+        && matches!(
+            resolve_installed_runtime_with_hash(app_data_dir, expected_entry_hash),
+            Ok(Some(_))
+        )
+    {
         return Ok(());
     }
     std::fs::create_dir_all(app_data_dir).map_err(|e| format!("创建 appDataDir 失败: {e}"))?;
     let staging = app_data_dir.join(format!(".runtime-images-migration-{}", std::process::id()));
+    let replaced = app_data_dir.join(format!(".runtime-images-replaced-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&staging);
+    let _ = std::fs::remove_dir_all(&replaced);
     copy_runtime_tree(&legacy, &staging)?;
     let pointer = staging.join("runtime-current.txt");
     let runtime_id = match std::fs::read_to_string(&pointer) {
@@ -1111,9 +1121,27 @@ fn migrate_windows_runtime_to_app_data(
     .inspect_err(|_| {
         let _ = std::fs::remove_dir_all(&staging);
     })?;
-    std::fs::rename(&staging, &current).map_err(|e| format!("提交 runtime 迁移失败: {e}"))?;
-    std::fs::remove_dir_all(&legacy)
-        .map_err(|e| format!("新 runtime 已可用，但清理旧安装目录失败: {e}"))?;
+    let had_current = current.exists();
+    if had_current {
+        std::fs::rename(&current, &replaced)
+            .map_err(|e| format!("暂存旧 appData runtime 失败: {e}"))?;
+    }
+    if let Err(error) = std::fs::rename(&staging, &current) {
+        if had_current {
+            let _ = std::fs::rename(&replaced, &current);
+        }
+        return Err(format!("提交 runtime 迁移失败: {error}"));
+    }
+    // 安装目录与旧 appData 都只含可再生 runtime。新副本通过完整性校验并原子切换后，
+    // 清理失败不再反向阻断已经可用的启动路径；用户项目、数据库、密钥和日志不在这些目录内。
+    if let Err(error) = std::fs::remove_dir_all(&legacy) {
+        eprintln!("[shell] 新 runtime 已可用，旧安装目录清理延后: {error}");
+    }
+    if had_current {
+        if let Err(error) = std::fs::remove_dir_all(&replaced) {
+            eprintln!("[shell] 新 runtime 已可用，旧 appData runtime 清理延后: {error}");
+        }
+    }
     Ok(())
 }
 
@@ -3212,6 +3240,116 @@ mod runtime_cleanup_tests {
                 .unwrap()
                 .is_some()
         );
+        let _ = std::fs::remove_dir_all(&install_dir);
+        let _ = std::fs::remove_dir_all(&app_data);
+    }
+
+    #[test]
+    fn windows_已有旧_app_data_runtime_时用新安装_runtime_安全替换() {
+        let install_dir = temp_runtime_root("runtime-upgrade-install");
+        let app_data = temp_runtime_root("runtime-upgrade-appdata");
+        let install_runtime_root = install_dir.join("runtime-images");
+        let app_data_runtime_root = app_data.join("runtime-images");
+        write_valid_layered_windows_runtime(&install_runtime_root, "1.1.0-current");
+        std::fs::write(
+            install_runtime_root.join("runtime-current.txt"),
+            "1.1.0-current\n",
+        )
+        .unwrap();
+        write_valid_layered_windows_runtime(&app_data_runtime_root, "1.0.0-stale");
+        std::fs::write(
+            app_data_runtime_root.join("runtime-current.txt"),
+            "1.0.0-stale\n",
+        )
+        .unwrap();
+        std::fs::write(
+            app_data_runtime_root
+                .join("1.0.0-stale")
+                .join("sidecar")
+                .join("frontend")
+                .join("server.js"),
+            "old-version",
+        )
+        .unwrap();
+        let current_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+        super::migrate_windows_runtime_to_app_data(&install_dir, &app_data, current_sha).unwrap();
+
+        assert!(!install_runtime_root.exists());
+        assert_eq!(
+            std::fs::read_to_string(app_data_runtime_root.join("runtime-current.txt")).unwrap(),
+            "1.1.0-current\n"
+        );
+        assert!(app_data_runtime_root
+            .join("1.1.0-current")
+            .join("sidecar")
+            .exists());
+        assert!(!app_data_runtime_root.join("1.0.0-stale").exists());
+        assert!(
+            super::resolve_installed_runtime_with_hash(&app_data, current_sha)
+                .unwrap()
+                .is_some()
+        );
+        let _ = std::fs::remove_dir_all(&install_dir);
+        let _ = std::fs::remove_dir_all(&app_data);
+    }
+
+    #[test]
+    fn windows_新安装_runtime_校验失败时保留旧_app_data_runtime() {
+        let install_dir = temp_runtime_root("runtime-upgrade-invalid-install");
+        let app_data = temp_runtime_root("runtime-upgrade-invalid-appdata");
+        let install_runtime_root = install_dir.join("runtime-images");
+        let app_data_runtime_root = app_data.join("runtime-images");
+        std::fs::create_dir_all(
+            install_runtime_root
+                .join("1.1.0-invalid")
+                .join("sidecar")
+                .join("frontend"),
+        )
+        .unwrap();
+        std::fs::write(
+            install_runtime_root.join("runtime-current.txt"),
+            "1.1.0-invalid\n",
+        )
+        .unwrap();
+        write_valid_layered_windows_runtime(&app_data_runtime_root, "1.0.0-stale");
+        std::fs::write(
+            app_data_runtime_root.join("runtime-current.txt"),
+            "1.0.0-stale\n",
+        )
+        .unwrap();
+        std::fs::write(
+            app_data_runtime_root
+                .join("1.0.0-stale")
+                .join("sidecar")
+                .join("frontend")
+                .join("server.js"),
+            "old-version",
+        )
+        .unwrap();
+        let current_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+
+        assert!(
+            super::migrate_windows_runtime_to_app_data(&install_dir, &app_data, current_sha)
+                .is_err()
+        );
+
+        assert_eq!(
+            std::fs::read_to_string(app_data_runtime_root.join("runtime-current.txt")).unwrap(),
+            "1.0.0-stale\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(
+                app_data_runtime_root
+                    .join("1.0.0-stale")
+                    .join("sidecar")
+                    .join("frontend")
+                    .join("server.js")
+            )
+            .unwrap(),
+            "old-version"
+        );
+        assert!(install_runtime_root.exists());
         let _ = std::fs::remove_dir_all(&install_dir);
         let _ = std::fs::remove_dir_all(&app_data);
     }

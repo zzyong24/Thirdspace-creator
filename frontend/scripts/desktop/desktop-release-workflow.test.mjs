@@ -428,6 +428,14 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     );
   });
 
+  it("Windows 首启冒烟覆盖旧 appData runtime 与新安装 runtime 并存的升级机器", () => {
+    expect(
+      workflow.match(/creatoros-stale-runtime-for-upgrade/g)?.length,
+    ).toBeGreaterThanOrEqual(2);
+    expect(workflow).toContain("升级机旧 runtime 已被当前安装 runtime 替换");
+    expect(workflow).toContain("runtime-current.txt 仍指向旧 runtime");
+  });
+
   it("macOS 按用户机语义回放 sidecar 归档，真启动通过后才允许上传", () => {
     const archiveGate = workflow.indexOf(
       "macOS sidecar 可搬运归档与解压后签名门(T-705)",
