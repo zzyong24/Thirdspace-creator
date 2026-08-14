@@ -75,7 +75,7 @@
 - **RootCause**: 把“安装期物化成功”误当成“应用启动成功”，又把“干净 CI 首启成功”误当成“存量用户升级成功”；迁移代码见到 appData 已存在就直接跳过，没有先判断它是否属于当前安装版本。安装器随后清掉已经物化的归档，启动兜底只能报安装目录缺 `sidecar.tar.gz`。同时以 `about:blank` 注入脚本动态生成 splash，启动失败时脚本若未执行就没有可见错误页；早期 runtime 解析还曾在 logger 初始化前 panic，证据也没有落盘。
 - **GuardRule**: Windows 安装包上传后必须真启动已安装 GUI，且至少覆盖干净首装与“旧 appData runtime + 新安装 runtime”升级两种状态；只有当前版本 runtime 完整性校验通过、sidecar 完成启动门且 WebView 完成 `127.0.0.1` 主页面加载才算启动 Gate 通过。替换旧 runtime 前必须验证新副本，切换失败必须恢复旧副本；sidecar cwd 必须显式固定到随包 frontend，任何 runtime 失败必须保留静态可见页并先落日志。
 - **GuardCheck**: `pnpm --dir frontend exec vitest run scripts/desktop/startup-safety-contract.test.mjs scripts/desktop/windows-runtime-config.test.mjs scripts/desktop/desktop-release-workflow.test.mjs`（已登记进 `reconcile.config.json` lessons[]）
-- **Outcome(T+N)**: 2026-08-13 T-826 再次由 v1.1 用户升级机命中；已补升级状态回归和安全替换，待 Windows 新包流水线与用户真机复验后回填最终结果。
+- **Outcome(T+N)**: 2026-08-13 T-826 再次由 v1.1 用户升级机命中；新 Windows 验收包 run `31766801381` 已在模拟旧 runtime 状态下完成当前 runtime 接管、GUI/主页面真启动和卸载，待用户原故障机器复验后回填最终结果。
 - **Ref**: T-562、T-826；用户真机 2026-07-27、2026-08-13；`docs/research/2026-07-24-windows-first-launch-white-screen.md`；`docs/research/2026-08-13-windows-v1.1-upgrade-startup-failure.md`
 
 ## LED-007 — 模型连通探针只读正文流，思考流与流内错误都会被误报为空响应

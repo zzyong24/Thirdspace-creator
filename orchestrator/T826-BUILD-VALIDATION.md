@@ -33,8 +33,19 @@ flowchart LR
 - 全局 `reconcile` 的 LED-006 新门卫 PASS；全局仍有 14 个既有错误，来源是 BACKLOG 体积、三份旧
   SPEC 审核回执过期和其他历史任务 frontend receipt 漂移，并非 T-826 新增失败，未冒充全局全绿。
 
-## 尚未冒充通过的验收
+## Windows 验收包证据
 
-- 尚未从本次修复提交构建新的 Windows 安装包。
-- 尚未取得 Windows runner 的真安装、GUI 启动、sidecar health、主页面加载和卸载证据。
-- 尚未由用户在原故障机器复验。因此 T-826 保持进行中、验收为“待验”，不得写成已完成或公开发布。
+- 候选提交：`fc4cb965095aeeae2741d616bca45bb07b46e1bc`。
+- GitHub Actions：[desktop-release #31766801381](https://github.com/zzyong24/Thirdspace-creator/actions/runs/31766801381)，
+  Windows job SUCCESS；没有运行 macOS、创建 tag 或 GitHub Release。
+- 流水线在 appData 注入旧 runtime 后启动已安装的 `CreatorOS.exe`，日志明确记录
+  `[T-826] ✓ 升级机旧 runtime 已被当前安装 runtime 替换`。
+- GUI、sidecar 与主页面真实加载耗时 `40.691s`，随后官方卸载器完成 runtime 与安装目录清理。
+- 本机下载路径：`/Users/zyongzhu/Downloads/CreatorOS-v1.1.0-build-31766801381/windows/CreatorOS_1.1.0_x64-setup.exe`。
+- 安装包 SHA-256：`53d71dcfa921042f5867e5293062fbdfbd032e20fb5b17b37bc6cc437ed78aef`。
+- Windows 安装包当前没有 Authenticode 签名，仅作为用户验收包，不公开分发。
+
+## 尚未冒充通过的最终验收
+
+- 尚未由用户在原故障机器复验。因此 T-826 保持进行中、验收为“待验”；只有该机器直接安装本包并
+  成功进入主页面后，才能完成任务。当前也没有合并 `main`、创建 tag/Release、更新下载地址或公开放量。
