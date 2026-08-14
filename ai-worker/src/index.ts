@@ -258,6 +258,12 @@ export {
   type ScriptDraftOutput,
 } from "./prompt/templates/script-draft";
 export {
+  SCRIPT_VOICEOVER_COMPOSE_TEMPLATE,
+  SCRIPT_STORYBOARD_SEGMENT_TEMPLATE,
+  voiceoverComposeSchema,
+  type VoiceoverComposeOutput,
+} from "./prompt/templates/script-voiceover-storyboard";
+export {
   SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
   scriptSourceSimilaritySchema,
 } from "./prompt/templates/script-source-similarity";
@@ -376,6 +382,15 @@ export {
   type RunScriptNodeInput,
   type RunScriptNodeResult,
 } from "./nodes/script-node";
+export {
+  runVoiceoverComposeNode,
+  runStoryboardSegmentNode,
+  SCRIPT_PIPELINE_MODEL_TIMEOUT_MS,
+  type RunVoiceoverComposeNodeInput,
+  type RunVoiceoverComposeNodeResult,
+  type RunStoryboardSegmentNodeInput,
+  type RunStoryboardSegmentNodeResult,
+} from "./nodes/script-pipeline";
 // 素材搜集节点 —— L2 创作向重写:generateObject 绑四类 outputSchema(钩子/案例/数据点/金句),
 // schema 强约束让任何模型(MiniMax/Claude)都产可解析输出,根治旧版自由文本解析的卡死。
 export {

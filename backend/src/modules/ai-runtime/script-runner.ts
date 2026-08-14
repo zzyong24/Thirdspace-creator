@@ -32,6 +32,115 @@ export interface ScriptTask {
   id: string;
   projectId: string | null;
   inputData: Record<string, unknown>;
+  retryOfTaskId?: string;
+}
+
+interface ScriptDraftCheckpoint extends Record<string, unknown> {
+  schemaVersion: 1;
+  inputFingerprint: string;
+  stage: "voiceover_started" | "voiceover_failed" | "voiceover_complete";
+  voiceover?: string;
+  centralClaim?: string;
+  audienceOldBelief?: string;
+  charCount?: number;
+  sha256?: string;
+  voiceoverSkillVersion: string;
+  storyboardAttemptCount: number;
+  voiceoverGeneration?: {
+    finishReason: string;
+    usage: {
+      inputTokens: number | null;
+      outputTokens: number | null;
+      cachedTokens: number | null;
+      totalTokens: number | null;
+    };
+    attempts: Array<Record<string, unknown>>;
+  };
+}
+
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+function scriptDraftInputFingerprint(value: unknown): string {
+  // SEMANTIC_BOUNDARY_ALLOW: 指纹只判断恢复输入与 Skill 快照是否逐字段相同，
+  // 不做写作语义、内容质量或素材匹配判断。
+  return `sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
+}
+
+function effectiveVersion(skill: {
+  baseVersion: string;
+  overlayVersion: string | null;
+}): string {
+  return skill.overlayVersion ?? skill.baseVersion;
+}
+
+function readScriptDraftCheckpoint(
+  runtimeData: Record<string, unknown>,
+  expected: { inputFingerprint: string; voiceoverSkillVersion: string },
+): ScriptDraftCheckpoint | null {
+  const raw = runtimeData.scriptDraftCheckpoint;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const value = raw as Record<string, unknown>;
+  if (
+    value.schemaVersion !== 1 ||
+    value.inputFingerprint !== expected.inputFingerprint ||
+    value.voiceoverSkillVersion !== expected.voiceoverSkillVersion ||
+    !["voiceover_started", "voiceover_failed", "voiceover_complete"].includes(
+      String(value.stage),
+    ) ||
+    typeof value.storyboardAttemptCount !== "number" ||
+    !Number.isInteger(value.storyboardAttemptCount) ||
+    value.storyboardAttemptCount < 0 ||
+    value.storyboardAttemptCount > 2
+  ) {
+    throw new Error("写稿恢复断点与当前输入或 Skill 版本不一致，已停止重复生成。");
+  }
+  const checkpoint = value as unknown as ScriptDraftCheckpoint;
+  if (checkpoint.stage === "voiceover_complete") {
+    const voiceover = typeof checkpoint.voiceover === "string" ? checkpoint.voiceover : "";
+    const hash = createHash("sha256").update(voiceover).digest("hex");
+    if (
+      !voiceover ||
+      checkpoint.charCount !== voiceover.length ||
+      checkpoint.sha256 !== hash ||
+      !checkpoint.voiceoverGeneration
+    ) {
+      throw new Error("写稿恢复断点中的连续口播不完整，已停止重复生成。");
+    }
+  }
+  return checkpoint;
+}
+
+function addUsage(
+  left: ScriptDraftCheckpoint["voiceoverGeneration"] extends infer T
+    ? T extends { usage: infer U }
+      ? U
+      : never
+    : never,
+  right: {
+    inputTokens: number | null;
+    outputTokens: number | null;
+    cachedTokens: number | null;
+    totalTokens: number | null;
+  },
+) {
+  const add = (a: number | null, b: number | null) =>
+    a === null && b === null ? null : (a ?? 0) + (b ?? 0);
+  return {
+    inputTokens: add(left.inputTokens, right.inputTokens),
+    outputTokens: add(left.outputTokens, right.outputTokens),
+    cachedTokens: add(left.cachedTokens, right.cachedTokens),
+    totalTokens: add(left.totalTokens, right.totalTokens),
+  };
 }
 
 interface Storyboard {
@@ -266,13 +375,24 @@ export async function runScriptDraft(
     const {
       modelFor,
       runScriptNode,
+      runStoryboardSegmentNode,
+      runVoiceoverComposeNode,
       getActiveEffectiveSkillSnapshot,
       getEffectiveSkill,
     } = await import("@creatoros/ai-worker");
     const activeSnapshot = getActiveEffectiveSkillSnapshot();
     const effectiveSkill = getEffectiveSkill("script.draft");
-    const result = await runScriptNode({
-      model: modelFor(spec),
+    const snapshotSkillIds = new Set(
+      activeSnapshot.skills.map((skill) => skill.skillId),
+    );
+    const hasTwoStageSkills =
+      snapshotSkillIds.has("script.voiceover.compose") &&
+      snapshotSkillIds.has("script.storyboard.segment");
+    const useLegacyPipeline =
+      effectiveSkill.overlayVersion !== null || !hasTwoStageSkills;
+    const model = modelFor(spec);
+    const nodeInput = {
+      model,
       positioningBrief: context.positioningBrief,
       learningsBrief: context.learningsBrief,
       // [T-182a 已接] 知识库沉淀喂进写文案 prompt:组合根 runScriptDraft dispatch 已绑 knowledge
@@ -313,25 +433,253 @@ export async function runScriptDraft(
       // [T-387b] 项目素材库清单(assets reader 装配「· id | 名称 (类型)」行)—— visual.assetRefs
       // 点名真实 assetId 的唯一可选集;库空/未装配 → undefined(模板整段省略,missing 承接诚实缺)。
       assetsBrief: context.assetsBrief || undefined,
-      onStep: async (e) => {
-        const terminal = JSON.stringify({
-          taskId: task.id,
-          accountId: activeSnapshot.accountId,
-          skillId: effectiveSkill.skillId,
-          baseVersion: effectiveSkill.baseVersion,
-          overlayVersion: effectiveSkill.overlayVersion,
-          completionPolicy: effectiveSkill.effective.completionPolicy,
-          finishReason: e.finishReason,
-          ...(e.usage ? { usage: e.usage } : {}),
-        });
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: e.stepNo,
-          kind: e.toolCalls.length > 0 ? "tool_call" : "step",
-          text: `${e.text}\n${terminal}`,
-          toolCalls: e.toolCalls,
-        });
-      },
-    });
+    };
+    let pipelineMetadata: Record<string, unknown> = {};
+    const result = useLegacyPipeline
+      ? await runScriptNode({
+          ...nodeInput,
+          onStep: async (e) => {
+            const terminal = JSON.stringify({
+              taskId: task.id,
+              accountId: activeSnapshot.accountId,
+              skillId: effectiveSkill.skillId,
+              baseVersion: effectiveSkill.baseVersion,
+              overlayVersion: effectiveSkill.overlayVersion,
+              completionPolicy: effectiveSkill.effective.completionPolicy,
+              mode: effectiveSkill.overlayVersion
+                ? "legacy_overlay_compat"
+                : "legacy_snapshot_compat",
+              finishReason: e.finishReason,
+              ...(e.usage ? { usage: e.usage } : {}),
+            });
+            await deps.ai.recordStep(ctx, task.id, {
+              stepNo: e.stepNo,
+              kind: e.toolCalls.length > 0 ? "tool_call" : "step",
+              text: `${e.text}\n${terminal}`,
+              toolCalls: e.toolCalls,
+            });
+          },
+        })
+      : await (async () => {
+          const voiceoverSkill = getEffectiveSkill("script.voiceover.compose");
+          const storyboardSkill = getEffectiveSkill("script.storyboard.segment");
+          const voiceoverSkillVersion = effectiveVersion(voiceoverSkill);
+          const inputFingerprint = scriptDraftInputFingerprint({
+            projectId: task.projectId,
+            inputData: task.inputData,
+            context: {
+              positioningBrief: context.positioningBrief,
+              learningsBrief: context.learningsBrief,
+              knowledgeBrief: context.knowledgeBrief,
+              projectBriefHard: context.projectBriefHard,
+              benchmarkRefBrief: context.benchmarkRefBrief,
+              projectIntelligenceBrief: context.projectIntelligenceBrief,
+              topic: context.topic,
+              orientationHint: context.orientationHint,
+              thesisBrief: context.thesisBrief,
+              contractBrief: context.contractBrief,
+              outlineBrief: context.outlineBrief,
+              userMaterialHardBrief: context.userMaterialHardBrief,
+              userMaterialRefBrief: context.userMaterialRefBrief,
+              assetsBrief: context.assetsBrief,
+            },
+            skills: activeSnapshot.skills
+              .filter((skill) => skill.skillId.startsWith("script."))
+              .map((skill) => ({
+                skillId: skill.skillId,
+                baseVersion: skill.baseVersion,
+                overlayRevision: skill.overlayRevision,
+                overlayVersion: skill.overlayVersion,
+              })),
+          });
+          const checkpointTaskId = task.retryOfTaskId ?? task.id;
+          const sourceRuntime = await deps.ai.getTaskRuntimeData(
+            ctx,
+            checkpointTaskId,
+          );
+          let checkpoint = readScriptDraftCheckpoint(sourceRuntime, {
+            inputFingerprint,
+            voiceoverSkillVersion,
+          });
+          if (
+            checkpoint &&
+            checkpoint.stage !== "voiceover_complete" &&
+            !(task.retryOfTaskId && checkpoint.stage === "voiceover_failed")
+          ) {
+            throw new Error(
+              "连续口播生成状态不完整，无法安全恢复，已停止重复调用模型。",
+            );
+          }
+
+          if (!checkpoint || checkpoint.stage === "voiceover_failed") {
+            const started: ScriptDraftCheckpoint = {
+              schemaVersion: 1,
+              inputFingerprint,
+              stage: "voiceover_started",
+              voiceoverSkillVersion,
+              storyboardAttemptCount: 0,
+            };
+            await deps.ai.putScriptDraftCheckpoint(ctx, task.id, started);
+            try {
+              const voiceover = await runVoiceoverComposeNode({
+                ...nodeInput,
+                model,
+              });
+              const sha256 = createHash("sha256")
+                .update(voiceover.voiceover)
+                .digest("hex");
+              checkpoint = {
+                ...started,
+                stage: "voiceover_complete",
+                voiceover: voiceover.voiceover,
+                centralClaim: voiceover.centralClaim,
+                audienceOldBelief: voiceover.audienceOldBelief,
+                charCount: voiceover.voiceover.length,
+                sha256,
+                voiceoverGeneration: {
+                  finishReason: voiceover.generation.finishReason,
+                  usage: voiceover.generation.usage,
+                  attempts: voiceover.generation.attempts,
+                },
+              };
+              await deps.ai.putScriptDraftCheckpoint(ctx, task.id, checkpoint);
+            } catch (error) {
+              try {
+                await deps.ai.putScriptDraftCheckpoint(ctx, task.id, {
+                  ...started,
+                  stage: "voiceover_failed",
+                });
+              } catch {
+                /* 原始模型/断点错误优先 */
+              }
+              throw error;
+            }
+          } else if (checkpointTaskId !== task.id) {
+            await deps.ai.putScriptDraftCheckpoint(ctx, task.id, checkpoint);
+          }
+
+          let frozen = checkpoint;
+          if (
+            frozen.stage !== "voiceover_complete" ||
+            !frozen.voiceover ||
+            !frozen.sha256 ||
+            !frozen.voiceoverGeneration
+          ) {
+            throw new Error("连续口播断点不完整，无法进入制作分镜。");
+          }
+          const frozenVoiceover = frozen.voiceover;
+          const frozenSha256 = frozen.sha256;
+          const voiceoverGeneration = frozen.voiceoverGeneration;
+          await deps.ai.recordStep(ctx, task.id, {
+            stepNo: 1,
+            kind: "step",
+            text: JSON.stringify({
+              taskId: task.id,
+              skillId: voiceoverSkill.skillId,
+              baseVersion: voiceoverSkill.baseVersion,
+              overlayVersion: voiceoverSkill.overlayVersion,
+              stage: "voiceover_complete",
+              reused: checkpointTaskId !== task.id,
+              charCount: frozen.charCount,
+              sha256: frozenSha256,
+              finishReason: voiceoverGeneration.finishReason,
+              usage: voiceoverGeneration.usage,
+            }),
+            toolCalls: [],
+          });
+
+          let storyboardResult: Awaited<
+            ReturnType<typeof runStoryboardSegmentNode>
+          > | null = null;
+          let retryGuidance: string | undefined;
+          while (frozen.storyboardAttemptCount < 2) {
+            frozen = {
+              ...frozen,
+              storyboardAttemptCount: frozen.storyboardAttemptCount + 1,
+            };
+            await deps.ai.putScriptDraftCheckpoint(ctx, task.id, frozen);
+            storyboardResult = await runStoryboardSegmentNode({
+              model,
+              voiceover: frozenVoiceover,
+              voiceoverSha256: frozenSha256,
+              storyboardAttempt: frozen.storyboardAttemptCount,
+              orientation: context.orientationHint || undefined,
+              targetDurationSeconds:
+                typeof task.inputData.targetDurationSeconds === "number" &&
+                Number.isFinite(task.inputData.targetDurationSeconds) &&
+                task.inputData.targetDurationSeconds > 0
+                  ? task.inputData.targetDurationSeconds
+                  : undefined,
+              assetsBrief: context.assetsBrief || undefined,
+              retryGuidance,
+            });
+            const joined = storyboardResult.shots
+              .map((shot) => shot.口播)
+              .join("");
+            if (
+              joined === frozenVoiceover &&
+              createHash("sha256").update(joined).digest("hex") === frozenSha256
+            ) {
+              break;
+            }
+            storyboardResult = null;
+            retryGuidance =
+              "上次逐字切分失败：shots[].口播 无分隔拼接后与冻结口播不一致。只重新切分原文，不得改任何字符。";
+          }
+          if (!storyboardResult) {
+            throw new Error(
+              "制作分镜未能保留完整口播，已停止生成候选；请检查模型后重试。",
+            );
+          }
+          await deps.ai.recordStep(ctx, task.id, {
+            stepNo: 2,
+            kind: "step",
+            text: JSON.stringify({
+              taskId: task.id,
+              skillId: storyboardSkill.skillId,
+              baseVersion: storyboardSkill.baseVersion,
+              overlayVersion: storyboardSkill.overlayVersion,
+              stage: "storyboard_complete",
+              storyboardAttemptCount: frozen.storyboardAttemptCount,
+              voiceoverSha256: frozenSha256,
+              finishReason: storyboardResult.generation.finishReason,
+              usage: storyboardResult.generation.usage,
+            }),
+            toolCalls: [],
+          });
+          pipelineMetadata = {
+            generationPipeline: "voiceover_storyboard_v1",
+            voiceoverSha256: frozenSha256,
+            generationSkills: [
+              {
+                skillId: voiceoverSkill.skillId,
+                baseVersion: voiceoverSkill.baseVersion,
+                overlayVersion: voiceoverSkill.overlayVersion,
+              },
+              {
+                skillId: storyboardSkill.skillId,
+                baseVersion: storyboardSkill.baseVersion,
+                overlayVersion: storyboardSkill.overlayVersion,
+              },
+            ],
+          };
+          return {
+            shots: storyboardResult.shots,
+            steps: [],
+            generation: {
+              finishReason: storyboardResult.generation.finishReason,
+              usage: addUsage(
+                voiceoverGeneration.usage,
+                storyboardResult.generation.usage,
+              ),
+              attempts: [
+                ...voiceoverGeneration.attempts,
+                ...storyboardResult.generation.attempts,
+              ],
+            },
+            validation: storyboardResult.validation,
+          };
+        })();
     const { shots, generation, validation } = result;
     if (!validation) {
       throw new Error(
@@ -387,6 +735,7 @@ export async function runScriptDraft(
         finishReason: generation.finishReason,
         usage: generation.usage,
         generationAttempts: generation.attempts,
+        ...pipelineMetadata,
         ...(frozenSources.metadata.length > 0
           ? { sourceSnapshots: frozenSources.metadata }
           : {}),

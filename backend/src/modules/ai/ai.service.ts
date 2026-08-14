@@ -426,6 +426,12 @@ export interface AiService {
     taskId: string,
     checkpoint: Record<string, unknown>,
   ): Promise<void>;
+  /** T-824 server-only：保存连续口播断点；固定键合并，不通过 transport/DTO 暴露。 */
+  putScriptDraftCheckpoint(
+    ctx: RequestContext,
+    taskId: string,
+    checkpoint: Record<string, unknown>,
+  ): Promise<void>;
   // The composition-layer runner flips queued→running when the agent STARTS (so the UI's
   // status is honest while the agent works), before recordCandidate flips it to
   // awaiting_confirmation. No-op if already past queued. (机制④ async exec.)
@@ -1807,6 +1813,16 @@ export function createAiService(deps: ServiceDeps): AiService {
       await repo.updateTaskRuntimeData(taskId, {
         ...current,
         videoDecisionsCheckpoint: { ...checkpoint },
+      });
+    },
+
+    async putScriptDraftCheckpoint(ctx, taskId, checkpoint) {
+      const repo = repoFor(ctx, "ai.putScriptDraftCheckpoint");
+      const task = await repo.requireTask(taskId);
+      const current = (task.runtimeData ?? {}) as Record<string, unknown>;
+      await repo.updateTaskRuntimeData(taskId, {
+        ...current,
+        scriptDraftCheckpoint: { ...checkpoint },
       });
     },
 

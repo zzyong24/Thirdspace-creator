@@ -69,6 +69,8 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "research.gather",
   "review.insights",
   "script.draft",
+  "script.storyboard.segment",
+  "script.voiceover.compose",
   "script.review",
   "topic.attribution",
   "topic.enrich",
@@ -88,9 +90,21 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "cover.generate": ["cover.brief"],
   "publish.platform_adapt": ["platform.adapt"],
   "research.gather_material": ["research.gather"],
-  "script.generate": ["script.draft"],
-  "script.rewrite": ["script.draft"],
-  script_polish: ["script.draft"],
+  "script.generate": [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ],
+  "script.rewrite": [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ],
+  script_polish: [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ],
   // 定时采集任务的 taskType 是 `scheduled.${sourceKind}`。其中四类采集器会在同一
   // task/lease 内继续调用 Skill；这里必须把完整闭包固化进创建时 snapshot，不能等
   // runner 启动后再读当前账号配置（否则重试与并发账号会漂移）。
@@ -166,6 +180,13 @@ export function requiredSkillIdsForTask(
   taskType: string,
   inputData: Readonly<Record<string, unknown>>,
 ): readonly string[] {
+  if (taskType === "script.draft") {
+    return [
+      "script.draft",
+      "script.storyboard.segment",
+      "script.voiceover.compose",
+    ];
+  }
   if (REGISTERED_SKILLS.has(taskType)) return [taskType];
   const aliases = TASK_ALIASES[taskType];
   if (aliases) return [...aliases];

@@ -29,6 +29,10 @@ import type {
 // 内置 skill(三位一体的模板本体)。registerAllTemplates 全量注册它们。
 import { TOPIC_GENERATE_TEMPLATE } from "./templates/topic-generate";
 import { SCRIPT_DRAFT_TEMPLATE } from "./templates/script-draft";
+import {
+  SCRIPT_STORYBOARD_SEGMENT_TEMPLATE,
+  SCRIPT_VOICEOVER_COMPOSE_TEMPLATE,
+} from "./templates/script-voiceover-storyboard";
 import { PLANNING_THESIS_TEMPLATE } from "./templates/planning-thesis";
 // T-086 文案审核门:L2 语义审 skill(generateObject 绑结构化报告 schema)。
 import { SCRIPT_REVIEW_TEMPLATE } from "./templates/script-review";
@@ -106,6 +110,8 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CREATOROS_GUIDE_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,
+  SCRIPT_STORYBOARD_SEGMENT_TEMPLATE,
+  SCRIPT_VOICEOVER_COMPOSE_TEMPLATE,
   PLANNING_THESIS_TEMPLATE,
   // T-086 文案审核门 L2 语义审(script.review)。
   SCRIPT_REVIEW_TEMPLATE,

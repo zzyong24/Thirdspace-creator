@@ -4,6 +4,14 @@ import type { RequestContext } from "@creatoros/contract";
 
 const worker = vi.hoisted(() => ({
   runScriptNode: vi.fn(),
+  runVoiceoverComposeNode: vi.fn(),
+  runStoryboardSegmentNode: vi.fn(),
+  legacyOverlayVersion: "overlay-3" as string | null,
+  snapshotSkillIds: [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ] as string[],
   getActiveEffectiveSkillSnapshot: vi.fn(() => ({
     snapshotVersion: 1,
     userId: "u1",
@@ -11,13 +19,14 @@ const worker = vi.hoisted(() => ({
     resolvedAt: "2026-07-24T00:00:00.000Z",
     platformPolicyVersion: "policy-v1",
     platformPolicy: "AI 只产候选",
-    skills: [],
+    skills: worker.snapshotSkillIds.map((skillId) => ({ skillId })),
   })),
-  getEffectiveSkill: vi.fn(() => ({
-    skillId: "script.draft",
-    baseVersion: "v6",
+  getEffectiveSkill: vi.fn((skillId: string) => ({
+    skillId,
+    baseVersion: skillId === "script.draft" ? "v9" : "v1",
     overlayRevision: 3,
-    overlayVersion: "overlay-3",
+    overlayVersion:
+      skillId === "script.draft" ? worker.legacyOverlayVersion : null,
     effective: {
       methodSystem: "system",
       template: "template",
@@ -43,6 +52,8 @@ const worker = vi.hoisted(() => ({
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runScriptNode: worker.runScriptNode,
+  runVoiceoverComposeNode: worker.runVoiceoverComposeNode,
+  runStoryboardSegmentNode: worker.runStoryboardSegmentNode,
   getActiveEffectiveSkillSnapshot: worker.getActiveEffectiveSkillSnapshot,
   getEffectiveSkill: worker.getEffectiveSkill,
 }));
@@ -121,6 +132,8 @@ function deps(): ScriptDeps {
       recordCandidate: vi.fn(async () => undefined),
       recordStep: vi.fn(async () => undefined),
       cancelTask: vi.fn(async () => undefined),
+      getTaskRuntimeData: vi.fn(async () => ({})),
+      putScriptDraftCheckpoint: vi.fn(async () => undefined),
     },
     positioning: {
       getPositioningCenter: async () => ({
@@ -139,6 +152,180 @@ function deps(): ScriptDeps {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  worker.legacyOverlayVersion = "overlay-3";
+  worker.snapshotSkillIds = [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ];
+});
+
+describe("T-824 两阶段写稿", () => {
+  it("升级前已排队且只冻结旧 script.draft 的任务继续走兼容单阶段", async () => {
+    worker.legacyOverlayVersion = null;
+    worker.snapshotSkillIds = ["script.draft"];
+    worker.runScriptNode.mockResolvedValueOnce(successResult());
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-old-snapshot", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runScriptNode).toHaveBeenCalledOnce();
+    expect(worker.runVoiceoverComposeNode).not.toHaveBeenCalled();
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledOnce();
+  });
+
+  it("无旧覆盖时先冻结连续口播，再逐字切分并只在校验通过后产候选", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "先说结论。再解释原因。";
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "先结论后原因",
+      audienceOldBelief: "目录介绍就够了",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 100, outputTokens: 50, cachedTokens: 0, totalTokens: 150 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockResolvedValueOnce({
+      ...successResult(),
+      shots: [
+        { role: "hook", 口播: "先说结论。", 画面: "结论卡", 字幕: "结论", 时长: "0-3s" },
+        { role: "body", 口播: "再解释原因。", 画面: "因果图", 字幕: "原因", 时长: "3-7s" },
+      ],
+    });
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-two-stage", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runScriptNode).not.toHaveBeenCalled();
+    expect(worker.runVoiceoverComposeNode).toHaveBeenCalledOnce();
+    expect(runtimeDeps.ai.putScriptDraftCheckpoint).toHaveBeenNthCalledWith(
+      2,
+      ctx,
+      "task-two-stage",
+      expect.objectContaining({
+        stage: "voiceover_complete",
+        voiceover,
+        charCount: voiceover.length,
+        sha256: createHash("sha256").update(voiceover).digest("hex"),
+        storyboardAttemptCount: 0,
+      }),
+    );
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledWith(
+      expect.objectContaining({ voiceover, storyboardAttempt: 1 }),
+    );
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledWith(
+      ctx,
+      "task-two-stage",
+      expect.objectContaining({
+        resultData: expect.objectContaining({
+          generationPipeline: "voiceover_storyboard_v1",
+          voiceoverSha256: createHash("sha256").update(voiceover).digest("hex"),
+        }),
+      }),
+    );
+  });
+
+  it("显式重试复用合法口播断点，不重复调用第一阶段", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "冻结口播。";
+    const runtimeDeps = deps();
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    vi.mocked(runtimeDeps.ai.getTaskRuntimeData).mockImplementation(async (_ctx, taskId) =>
+      runtimeByTask.get(taskId) ?? {},
+    );
+    vi.mocked(runtimeDeps.ai.putScriptDraftCheckpoint).mockImplementation(async (_ctx, taskId, checkpoint) => {
+      runtimeByTask.set(taskId, { scriptDraftCheckpoint: { ...checkpoint } });
+    });
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "冻结",
+      audienceOldBelief: "旧判断",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockRejectedValueOnce(new Error("第二阶段 provider 失败"));
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-source", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    worker.runVoiceoverComposeNode.mockClear();
+    worker.runStoryboardSegmentNode.mockClear();
+    worker.runStoryboardSegmentNode.mockResolvedValueOnce({
+      ...successResult(),
+      shots: [{ role: "hook", 口播: voiceover, 画面: "口播", 字幕: "冻结", 时长: "0-3s" }],
+    });
+
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-retry",
+        retryOfTaskId: "task-source",
+        projectId: null,
+        inputData: { artifactId: "artifact-script" },
+      },
+      runtimeDeps,
+    );
+
+    expect(worker.runVoiceoverComposeNode).not.toHaveBeenCalled();
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledOnce();
+  });
+
+  it("分镜首次改动口播时只重做分镜一次，不重跑连续口播", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "原文不能改。";
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "原文保真",
+      audienceOldBelief: "分镜可以顺手改稿",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode
+      .mockResolvedValueOnce({
+        ...successResult(),
+        shots: [{ role: "hook", 口播: "原文被改了。", 画面: "错", 字幕: "错", 时长: "0-3s" }],
+      })
+      .mockResolvedValueOnce({
+        ...successResult(),
+        shots: [{ role: "hook", 口播: voiceover, 画面: "对", 字幕: "对", 时长: "0-3s" }],
+      });
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-integrity-repair", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runVoiceoverComposeNode).toHaveBeenCalledOnce();
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledTimes(2);
+    expect(worker.runStoryboardSegmentNode).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        storyboardAttempt: 2,
+        retryGuidance: expect.stringContaining("逐字切分失败"),
+      }),
+    );
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledOnce();
+  });
 });
 
 describe("runScriptDraft 完整性闭环 (T-512)", () => {
@@ -265,7 +452,7 @@ describe("runScriptDraft 完整性闭环 (T-512)", () => {
           usage: result.generation.usage,
           skillSnapshot: expect.objectContaining({
             skillId: "script.draft",
-            baseVersion: "v6",
+            baseVersion: "v9",
             overlayVersion: "overlay-3",
             completionPolicy: result.validation.policySnapshot.policy,
           }),

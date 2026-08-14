@@ -634,3 +634,17 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 2. List the invalidated downstream artifacts explicitly and mark each: re-derived / re-verified / still-stale.
 3. `node orchestrator/process/reconcile.mjs` checks that decisions tagged as invalidating have a matching
    `CI-###` entry (see process/README.md).
+## CI-COPY-824 连续口播与制作分镜从单次生成拆为两个 Skill（2026-08-13）
+
+- **上游变化**：用户确认除 T-820/T-814 外完成剩余事项并打本地验收包，接受 T-824 每次写稿新增
+  一次文本模型调用及等待时间。
+- **失效工件**：DEC-REL-017 中“T-824 不进入 v1.1 当前候选”的临时顺序被 DEC-AI-048 覆盖；
+  T-790 “只改 prompt、不改 runner”的历史范围不再能证明当前真实长稿质量。
+- **重新派生**：`script.draft` 用户入口保持不变，内部改为 `script.voiceover.compose` 先产连续口播、
+  `script.storyboard.segment` 后做逐字分镜；服务端冻结正文 hash，只在两阶段全部通过后记录既有候选。
+- **下游影响**：Skill registry、effective snapshot 映射、script runner、Skill 设置目录和聚焦测试需
+  更新；不改数据库、公开 API、候选采纳、artifact 版本、T-820 数据血缘或 T-814 对话架构。
+- **兼容边界**：存在旧 `script.draft` 账号覆盖的任务继续走旧单阶段；无覆盖账号进入新链。历史任务
+  和正在运行任务使用各自冻结快照，不重写。
+- **当前 Gate**：新 SPEC 必须独立评审 PASS 后才能 BUILD；本地包只作为真实用户验收入口，不能把
+  自动化绿或旧冻结样题评分写成文稿质量 PASS。

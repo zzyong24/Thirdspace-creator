@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "第二阶段失败后不得重跑第一阶段的要求缺少可恢复的持久阶段状态，现有文字不足以保证进程重试、崩溃或任务恢复时不重复计费并改写已冻结口播。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "FR-3.4",
+        "quote": "首次拼接不一致时，只允许带明确“逐字切分失败”原因重做一次分镜阶段；不得重跑已成功的连续口播。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-5",
+        "quote": "第二阶段 provider 失败不重跑第一阶段；任何失败都不留下可采纳的半成品。"
+      },
+      "where": "SPEC §3“执行与数据边界”第 1–5 项与 §5“等待、成本与恢复”",
+      "failure_mode": "规格只要求任务创建时冻结三份 Skill snapshot，并要求 runner 计算 hash、日志记录摘要，但没有规定在第一阶段成功后把冻结口播、hash、阶段完成状态及第二阶段重做次数持久到可恢复的任务状态。worker 在第二阶段 provider 失败、超时、崩溃或既有任务重试后，合理实现可从整个任务入口重新执行第一阶段，造成已成功口播重复调用、重复计费，并违反 AC-5；或因内存中的冻结口播丢失而无法合法只重做第二阶段。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "2026-08-13-continuous-voiceover-storyboard-pipeline.md §3.1 仅冻结 Skill 快照，§3.2–3.4 仅描述 runner 内的 hash/重做规则，§5 要求恢复预算只用于冻结口播的分镜重做；DEC-AI-048 第 2 项要求服务端以冻结正文 hash 守完整性。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定第一阶段成功后在既有任务持久状态中原子保存冻结口播、hash、阶段状态和第二阶段重做计数；任何恢复只能依据该状态进入第二阶段，缺失或校验不符则失败关闭，不得重新调用第一阶段。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

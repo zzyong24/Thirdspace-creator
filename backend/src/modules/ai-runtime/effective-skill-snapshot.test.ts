@@ -107,6 +107,8 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     ]);
     expect(requiredSkillIdsForTask("script.draft", {})).toEqual([
       "script.draft",
+      "script.storyboard.segment",
+      "script.voiceover.compose",
     ]);
     // [T-730 regression] 恢复可选论点能力时必须同步恢复运行时 Skill 快照映射。
     expect(requiredSkillIdsForTask("planning.thesis", {})).toEqual([
