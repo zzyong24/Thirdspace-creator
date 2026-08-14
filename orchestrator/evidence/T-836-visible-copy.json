@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-836",
+  "commit_sha": "a14e501ff8e87c1830bc51bba0161933800e35cc",
+  "captures": [
+    {
+      "checkpoint": "desktop-semantic-material-buttons",
+      "check_ids": [
+        "AC-MATERIAL-BUTTONS",
+        "AC-IMAGE-SEMANTIC-PREFILL",
+        "AC-VIDEO-SEMANTIC-PREFILL",
+        "AC-MATERIAL-NO-AUTO-SEND"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "生成图片素材\n生成视频素材\n请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一张图片素材候选。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。\n请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一个视频素材候选。设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾，不要脱离稿件自由发挥。"
+    },
+    {
+      "checkpoint": "minimum-semantic-material-buttons",
+      "check_ids": [
+        "AC-MATERIAL-BUTTONS",
+        "AC-IMAGE-SEMANTIC-PREFILL",
+        "AC-VIDEO-SEMANTIC-PREFILL",
+        "AC-MATERIAL-NO-AUTO-SEND"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "text": "生成图片素材\n生成视频素材\n请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一个视频素材候选。设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾，不要脱离稿件自由发挥。"
+    }
+  ]
+}
