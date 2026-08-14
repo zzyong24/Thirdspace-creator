@@ -5,8 +5,8 @@ import { ChatScriptPatchCard } from "./chat-script-patch-card";
 
 const refresh = vi.fn();
 const applyScriptPatch = vi
-  .fn<(input: unknown) => Promise<{ id: string }>>()
-  .mockResolvedValue({ id: "version-7" });
+  .fn<(input: unknown) => Promise<{ id: string; previousVersionId: string }>>()
+  .mockResolvedValue({ id: "version-7", previousVersionId: "version-6" });
 const restoreArtifact = vi
   .fn<(input: unknown) => Promise<{ id: string }>>()
   .mockResolvedValue({ id: "version-8" });
@@ -32,7 +32,10 @@ const candidate = {
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
-  applyScriptPatch.mockResolvedValue({ id: "version-7" });
+  applyScriptPatch.mockResolvedValue({
+    id: "version-7",
+    previousVersionId: "version-6",
+  });
 });
 
 describe("[T-716] ChatScriptPatchCard", () => {
@@ -64,6 +67,57 @@ describe("[T-716] ChatScriptPatchCard", () => {
       await screen.findByText(/脚本在补丁生成后已经更新/),
     ).toBeInTheDocument();
     expect(applyScriptPatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("[T-833] 同一回复的两张局部改稿卡可以依次采纳", async () => {
+    applyScriptPatch
+      .mockResolvedValueOnce({
+        id: "version-7",
+        previousVersionId: "version-6",
+      })
+      .mockResolvedValueOnce({
+        id: "version-8",
+        previousVersionId: "version-7",
+      });
+    render(
+      <>
+        <ChatScriptPatchCard candidate={candidate} />
+        <ChatScriptPatchCard
+          candidate={{
+            ...candidate,
+            sectionId: "section-2",
+            originalText: "第二段旧文",
+            replacementText: "第二段新文",
+          }}
+        />
+      </>,
+    );
+
+    const buttons = screen.getAllByRole("button", { name: "采纳这处修改" });
+    fireEvent.click(buttons[0]!);
+    await waitFor(() => expect(applyScriptPatch).toHaveBeenCalledTimes(1));
+    fireEvent.click(buttons[1]!);
+    await waitFor(() => expect(applyScriptPatch).toHaveBeenCalledTimes(2));
+    expect(screen.getAllByText("已写入稿面并保存为新版本")).toHaveLength(2);
+  });
+
+  it("[T-833] 重绑定后的候选撤销到自己写入前的权威版本", async () => {
+    applyScriptPatch.mockResolvedValue({
+      id: "version-8",
+      previousVersionId: "version-7",
+    });
+    render(<ChatScriptPatchCard candidate={candidate} />);
+    fireEvent.click(screen.getByRole("button", { name: "采纳这处修改" }));
+    fireEvent.click(await screen.findByRole("button", { name: "撤销" }));
+    await waitFor(() => expect(restoreArtifact).toHaveBeenCalledTimes(1));
+    expect(restoreArtifact).toHaveBeenCalledWith({
+      params: { artifactId: "artifact-1" },
+      query: undefined,
+      body: {
+        versionId: "version-7",
+        expectedCurrentVersionId: "version-8",
+      },
+    });
   });
 
   it("[T-812/T-819] 建议稿与原文相同则禁用采纳并明确提示", () => {

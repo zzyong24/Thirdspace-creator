@@ -74,7 +74,9 @@ export const artifactsOperations = {
       replacementText: z.string().min(1).max(12_000),
       changeSummary: z.string().default("Copilot 局部改稿"),
     }),
-    response: artifactVersionResource,
+    // 返回本次写入前的权威版本，确保多卡顺序采纳后每张卡的“撤销”只撤销自己，
+    // 不会跳回所有候选共同绑定的旧 base version。
+    response: artifactVersionResource.extend({ previousVersionId: id }),
     fr: ["FR-ARTIFACTS-VERSION-CREATE"],
   }),
   listArtifactVersions: defineEndpoint({
@@ -92,7 +94,12 @@ export const artifactsOperations = {
     method: "POST",
     path: "/artifacts/:artifactId/restore",
     params: artifactParams,
-    body: z.object({ versionId: id }),
+    body: z.object({
+      versionId: id,
+      // 局部改稿撤销会携带自己写出的版本；若之后又有新保存，服务端拒绝旧卡回滚，
+      // 避免撤销前一张卡时覆盖后续卡片或用户编辑。普通历史版本恢复可继续省略。
+      expectedCurrentVersionId: id.optional(),
+    }),
     response: artifactResource,
     fr: ["FR-ARTIFACTS-RESTORE"],
   }),

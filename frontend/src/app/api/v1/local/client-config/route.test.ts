@@ -87,6 +87,24 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
     );
   });
 
+  it("T-829 同步安全失败投影记为 blocked，不再把失败日志写成 completed", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    refreshClientConfig.mockResolvedValue({
+      authority: "local",
+      outcome: "security_error",
+      action: "本地模型正在使用 · 渠道配置安全校验未通过",
+      retryable: false,
+    });
+
+    const response = await POST(localRequest());
+
+    expect(response.status).toBe(200);
+    expect(log).toHaveBeenCalledWith(
+      '[client-config] {"phase":"config_sync","reason":"security_error","trigger":"unknown","status":"blocked"}',
+    );
+    log.mockRestore();
+  });
+
   it("真实 Node/Next 代理把零字节 POST 表示为 body stream 时仍进入配置同步", async () => {
     refreshClientConfig.mockResolvedValue({
       authority: "channel",
@@ -147,7 +165,7 @@ describe("POST /api/v1/local/client-config（API-575-002）", () => {
       /channelRef|projectKey|machineId|licenseCode|ticket|signature|secret/i,
     );
     expect(log).toHaveBeenCalledWith(
-      '[client-config] {"phase":"activation_scope","reason":"signed_channel_ref_missing","trigger":"unknown","status":"blocked"}',
+      '[client-config] {"phase":"activation_scope","reason":"signed_channel_ref_missing","trigger":"unknown","status":"blocked","errorCode":"CLIENT_CONFIG_ACTIVATION_SCOPE_MISSING"}',
     );
     log.mockRestore();
   });

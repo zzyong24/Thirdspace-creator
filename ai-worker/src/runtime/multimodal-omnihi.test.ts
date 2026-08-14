@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  MultimodalConfigError,
   MultimodalGenerationError,
   type MultimodalSpec,
 } from "./multimodal-factory";
@@ -46,6 +47,22 @@ function deps(fetchImpl: typeof fetch): OmnihiVideoAdapterDeps {
 }
 
 describe("OmniHi / Seedance 文生视频适配器", () => {
+  it("[T-829] 首帧参考图不被静默丢弃，渠道未声明 i2v 时零请求明确拒绝", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+
+    await expect(
+      createOmnihiVideoAdapter(deps(fetchImpl)).generateVideo!(spec, {
+        prompt: "让参考图动起来",
+        firstFrame: new Uint8Array([1, 2, 3]),
+      }),
+    ).rejects.toEqual(
+      new MultimodalConfigError(
+        "当前 OmniHi 渠道只支持文生视频，不支持参考图/首帧生视频。请移除参考图后重试。",
+      ),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("按 videos/generations → jobs/{id} → 下载编排，兼容 seeddance 历史 provider", async () => {
     const calls: Array<{ url: string; init?: RequestInit }> = [];
     const sequence: Response[] = [

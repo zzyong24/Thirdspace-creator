@@ -3,6 +3,8 @@ import type { RequestContext } from "@creatoros/contract";
 
 const worker = vi.hoisted(() => ({
   runScriptNode: vi.fn(),
+  runVoiceoverComposeNode: vi.fn(),
+  runStoryboardSegmentNode: vi.fn(),
   getActiveEffectiveSkillSnapshot: vi.fn(() => ({
     snapshotVersion: 1,
     userId: "u1",
@@ -39,6 +41,8 @@ const worker = vi.hoisted(() => ({
 vi.mock("@creatoros/ai-worker", () => ({
   modelFor: vi.fn(() => ({}) as never),
   runScriptNode: worker.runScriptNode,
+  runVoiceoverComposeNode: worker.runVoiceoverComposeNode,
+  runStoryboardSegmentNode: worker.runStoryboardSegmentNode,
   getActiveEffectiveSkillSnapshot: worker.getActiveEffectiveSkillSnapshot,
   getEffectiveSkill: worker.getEffectiveSkill,
 }));

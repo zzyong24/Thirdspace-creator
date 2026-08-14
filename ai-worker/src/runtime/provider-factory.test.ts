@@ -67,6 +67,24 @@ describe("modelFor", () => {
     });
   });
 
+  it("[T-829] 中转站用 HTTP 400 包装 upstream_error 时仍归为可重试上游故障", () => {
+    const error = toChannelManagedError(
+      Object.assign(new Error("服务暂时无法完成请求，请稍后重试"), {
+        status: 400,
+        responseBody:
+          '{"error":{"code":"upstream_error","type":"upstream_error"}}',
+      }),
+    );
+
+    expect(error).toMatchObject({
+      code: "CHANNEL_MODEL_UPSTREAM",
+      reason: "upstream",
+      status: 400,
+      retryable: true,
+    });
+    expect(error.message).toContain("暂时不可用");
+  });
+
   it("anthropic(官方)", () => {
     const m = modelFor({
       apiFormat: "anthropic",

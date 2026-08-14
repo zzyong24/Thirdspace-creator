@@ -33,25 +33,17 @@ vi.mock("../../auth/_session", () => ({ readSessionCookie: vi.fn(() => "session"
 import { POST } from "./route";
 
 const textModels = [
-  "minimax-m3",
-  "gpt-5.6-luna",
-  "gpt-5.6-terra",
-  "gpt-5.6-sol",
   "claude-haiku-4.5",
-  "claude-sonnet-4.6",
-  "claude-opus-4.8",
-  "gemini-3.5-flash",
-  "gemini-3.1-pro-preview",
-  "deepseek-v4-flash",
-  "deepseek-v4-pro",
   "kimi-k2.6",
-  "glm-5.2",
+  "gemini-3.5-flash",
+  "claude-sonnet-4.6",
+  "gpt-5.6-sol",
+  "minimax-m3",
+  "deepseek-v4-pro",
 ] as const;
 
 function optionId(model: (typeof textModels)[number]): string {
-  if (model === "gemini-3.1-pro-preview") return "gemini-3-1-pro";
   if (model === "kimi-k2.6") return "kimi-k2-6";
-  if (model === "glm-5.2") return "glm-5-2";
   return model.replaceAll(".", "-");
 }
 
@@ -112,21 +104,21 @@ describe("POST /api/v1/local/channel-model-selection", () => {
   });
 
   it("只保存 Growth 签名清单里的真实 id/model，不保存显示名或用户自由输入", async () => {
-    const response = await POST(request("gpt-5-6-terra"));
+    const response = await POST(request("kimi-k2-6"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toContain("no-store");
     expect(await response.json()).toEqual({
       ok: true,
       capability: "default",
-      optionId: "gpt-5-6-terra",
-      model: "gpt-5.6-terra",
+      optionId: "kimi-k2-6",
+      model: "kimi-k2.6",
     });
     expect(setChannelModelCredential).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "u-1", accountId: "acct-1" }),
       "scope-1",
       "__model_selection__:default",
-      JSON.stringify({ id: "gpt-5-6-terra", model: "gpt-5.6-terra" }),
+      JSON.stringify({ id: "kimi-k2-6", model: "kimi-k2.6" }),
     );
   });
 

@@ -22,6 +22,7 @@ import {
  *  (settings/ai resources 皆 `z.string()`,无枚举校验),故新增此值零 contract 改动。 */
 export type MultimodalCapability =
   | "image.generate"
+  | "image.edit"
   | "video.generate"
   | "transcribe.audio"
   // [T-055h SPEC §6.2 第二层] 素材 AI 归类:视觉模型看图打标签+一句话描述。
@@ -102,6 +103,7 @@ type MultimodalKind = "image" | "video" | "audio" | "vision";
 
 const CAP_TO_KIND: Record<MultimodalCapability, MultimodalKind> = {
   "image.generate": "image",
+  "image.edit": "image",
   "video.generate": "video",
   "transcribe.audio": "audio",
   "asset.classify": "vision",
@@ -111,6 +113,7 @@ const CAP_TO_KIND: Record<MultimodalCapability, MultimodalKind> = {
 // 按 kind 分开回退:image.default / video.default / asr.default)。
 const CAP_DEFAULT: Record<MultimodalCapability, string> = {
   "image.generate": "image.default",
+  "image.edit": "image.edit.default",
   "video.generate": "video.default",
   "transcribe.audio": "asr.default",
   "asset.classify": "vision.default",
@@ -158,6 +161,12 @@ const ENV_KEYS: Record<
     baseUrl: "CREATOROS_IMAGE_BASE_URL",
     provider: "CREATOROS_IMAGE_PROVIDER",
     model: "CREATOROS_IMAGE_MODEL",
+  },
+  "image.edit": {
+    secretRef: "CREATOROS_IMAGE_EDIT_SECRET_REF",
+    baseUrl: "CREATOROS_IMAGE_EDIT_BASE_URL",
+    provider: "CREATOROS_IMAGE_EDIT_PROVIDER",
+    model: "CREATOROS_IMAGE_EDIT_MODEL",
   },
   "video.generate": {
     secretRef: "CREATOROS_VIDEO_SECRET_REF",
@@ -219,9 +228,10 @@ export async function resolveMultimodalSpec(
   const { env } = deps;
   const kind = CAP_TO_KIND[capability];
   const channel = await deps.getChannelModelConfig?.();
+  const selectedOptionId = await deps.getChannelModelSelection?.(capability);
   if (channel) {
     const route = resolveChannelCapabilityRoute(channel, capability, {
-      selectedOptionId: await deps.getChannelModelSelection?.(capability),
+      selectedOptionId,
     });
     if (route && route.kind === kind) {
       const credential = route.serviceId
@@ -245,6 +255,39 @@ export async function resolveMultimodalSpec(
   // Tier 2 — env 默认档。
   const fromEnv = tryEnvRow(capability, kind, env);
   if (fromEnv) return fromEnv;
+
+  if (capability === "image.edit") {
+    // T-831：官方托管渠道按 capability 独立裁决。若官方已经接管 image.generate，
+    // 参考图就只能由官方明确声明的 image.edit 承担，不能偷偷拿本地文生图配置替代。
+    // 反之，本地自配（包括既有 Dudu/OpenAI-compatible 中转站）继续兼容复用原来的
+    // image.generate/image.default 与 CREATOROS_IMAGE_*，不要求用户重复配置一份 Key。
+    const channelImageGenerate = channel
+      ? resolveChannelCapabilityRoute(channel, "image.generate", {
+          selectedOptionId:
+            await deps.getChannelModelSelection?.("image.generate"),
+        })
+      : null;
+    if (channelImageGenerate?.kind === "image") {
+      throw new MultimodalConfigError(
+        "官方渠道暂未配置参考图模型（image.edit），已停止调用以免把文生图模型误送到图片编辑接口。",
+      );
+    }
+
+    const legacyGenerate = tryDbRow(
+      await deps.getModelConfig(ctx, "image.generate"),
+      kind,
+      env,
+    );
+    if (legacyGenerate) return legacyGenerate;
+    const legacyDefault = tryDbRow(
+      await deps.getModelConfig(ctx, "image.default"),
+      kind,
+      env,
+    );
+    if (legacyDefault) return legacyDefault;
+    const legacyEnv = tryEnvRow("image.generate", kind, env);
+    if (legacyEnv) return legacyEnv;
+  }
 
   // Tier 3 — 未配:诚实抛错(不假装能生成)。
   const label =

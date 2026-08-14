@@ -157,7 +157,13 @@ export function createArtifactsTransport(
             p.artifactId ?? "",
             b,
           );
-          return { data: toVersionResource(row), meta: { requestId } };
+          return {
+            data: {
+              ...toVersionResource(row),
+              previousVersionId: row.previousVersionId,
+            },
+            meta: { requestId },
+          };
         }
         case "artifacts.versions.list": {
           const page = q.page ?? 1;
@@ -169,11 +175,15 @@ export function createArtifactsTransport(
           };
         }
         case "artifacts.restore": {
-          const b = (body ?? {}) as { versionId: string };
+          const b = (body ?? {}) as {
+            versionId: string;
+            expectedCurrentVersionId?: string;
+          };
           const row = await service.restoreVersion(
             ctx,
             p.artifactId ?? "",
             b.versionId,
+            b.expectedCurrentVersionId,
           );
           return { data: toArtifactResource(row), meta: { requestId } };
         }

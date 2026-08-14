@@ -326,6 +326,185 @@ describe("T-824 两阶段写稿", () => {
     );
     expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledOnce();
   });
+
+  it("[T-835] 分镜连续改字也自动产出保留完整原文的基础分镜，不再取消任务", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover =
+      "第一句必须完整保留。第二句也不能丢。第三句继续说明原因。最后一句自然收尾。";
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "完整保留",
+      audienceOldBelief: "分镜可以改写口播",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockResolvedValue({
+      ...successResult(),
+      shots: [
+        { role: "hook", 口播: "第一句被模型改写。", 画面: "错误建议", 字幕: "错误", 时长: "0-3s" },
+      ],
+    });
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-storyboard-fallback", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledTimes(2);
+    expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledOnce();
+    const candidate = vi.mocked(runtimeDeps.ai.recordCandidate).mock.calls[0]![2] as unknown as {
+      resultData: {
+        sections: Array<{ 口播: string }>;
+        storyboardRecovery: { mode: string };
+      };
+    };
+    expect(candidate.resultData.sections.map((shot) => shot.口播).join(""))
+      .toBe(voiceover);
+    expect(candidate.resultData.storyboardRecovery.mode).toBe(
+      "deterministic_fallback",
+    );
+  });
+
+  it("[T-835] 分镜模型临时失败时直接降级为基础分镜候选，不要求用户重跑整稿", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "模型失败也不能让已经写好的口播消失。系统应当继续给出基础分镜。";
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "口播优先",
+      audienceOldBelief: "分镜失败等于整稿失败",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockRejectedValueOnce(
+      new Error("第二阶段 provider 失败"),
+    );
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-storyboard-provider-fallback", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledOnce();
+    expect(runtimeDeps.ai.cancelTask).not.toHaveBeenCalled();
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledOnce();
+    const candidate = vi.mocked(runtimeDeps.ai.recordCandidate).mock.calls[0]![2] as unknown as {
+      resultData: {
+        sections: Array<{ 口播: string }>;
+        storyboardRecovery: { mode: string; reason: string };
+      };
+    };
+    expect(candidate.resultData.sections.map((shot) => shot.口播).join(""))
+      .toBe(voiceover);
+    expect(candidate.resultData.storyboardRecovery).toMatchObject({
+      mode: "deterministic_fallback",
+      reason: "model_error",
+    });
+  });
+
+  it("[T-835] 基础分镜在目标时长短于镜头数时仍保持正时长且不重叠", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = `${"第一段需要完整保留并形成基础分镜。".repeat(8)}${"第二段同样不能丢失任何字符。".repeat(8)}`;
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "时间轴有效",
+      audienceOldBelief: "短目标时长可以产生零时长镜头",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockRejectedValueOnce(
+      new Error("第二阶段 provider 失败"),
+    );
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      {
+        id: "task-storyboard-valid-timeline",
+        projectId: null,
+        inputData: {
+          artifactId: "artifact-script",
+          targetDurationSeconds: 1,
+        },
+      },
+      runtimeDeps,
+    );
+
+    const candidate = vi.mocked(runtimeDeps.ai.recordCandidate).mock.calls[0]![2] as unknown as {
+      resultData: { sections: Array<{ 时长: string }> };
+    };
+    const ranges = candidate.resultData.sections.map((shot) => {
+      const match = /^(\d+)-(\d+)s$/.exec(shot.时长);
+      expect(match).not.toBeNull();
+      return { start: Number(match![1]), end: Number(match![2]) };
+    });
+    expect(ranges.length).toBeGreaterThan(1);
+    for (const [index, range] of ranges.entries()) {
+      expect(range.end).toBeGreaterThan(range.start);
+      if (index > 0) {
+        expect(range.start).toBeGreaterThanOrEqual(ranges[index - 1]!.end);
+      }
+    }
+  });
+
+  it("[T-835] 仅空白分隔漂移时按冻结原文重新锚定并保留模型分镜字段", async () => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "第一句。\n第二句。";
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      centralClaim: "空白也保真",
+      audienceOldBelief: "换行不重要",
+      voiceover,
+      generation: {
+        finishReason: "stop",
+        usage: { inputTokens: 20, outputTokens: 10, cachedTokens: 0, totalTokens: 30 },
+        attempts: [],
+      },
+    });
+    worker.runStoryboardSegmentNode.mockResolvedValueOnce({
+      ...successResult(),
+      shots: [
+        { role: "hook", 口播: "第一句。", 画面: "画面一", 字幕: "一", 时长: "0-2s" },
+        { role: "body", 口播: "第二句。", 画面: "画面二", 字幕: "二", 时长: "2-4s" },
+      ],
+    });
+    const runtimeDeps = deps();
+
+    await runScriptDraft(
+      ctx,
+      { id: "task-storyboard-whitespace-reanchor", projectId: null, inputData: { artifactId: "artifact-script" } },
+      runtimeDeps,
+    );
+
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledOnce();
+    const candidate = vi.mocked(runtimeDeps.ai.recordCandidate).mock.calls[0]![2] as unknown as {
+      resultData: {
+        sections: Array<{ 口播: string; 画面: string }>;
+        storyboardRecovery: { mode: string };
+      };
+    };
+    expect(candidate.resultData.sections.map((shot) => shot.口播).join(""))
+      .toBe(voiceover);
+    expect(candidate.resultData.sections.map((shot) => shot.画面)).toEqual([
+      "画面一",
+      "画面二",
+    ]);
+    expect(candidate.resultData.storyboardRecovery.mode).toBe(
+      "whitespace_reanchored",
+    );
+  });
 });
 
 describe("runScriptDraft 完整性闭环 (T-512)", () => {

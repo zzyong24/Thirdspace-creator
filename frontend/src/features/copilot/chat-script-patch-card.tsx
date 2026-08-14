@@ -20,7 +20,11 @@ export interface ChatScriptPatchCandidate {
 type ApplyState =
   | { phase: "idle" }
   | { phase: "applying" }
-  | { phase: "applied"; previousVersionId: string }
+  | {
+      phase: "applied";
+      appliedVersionId: string;
+      previousVersionId: string;
+    }
   | { phase: "undone" }
   | { phase: "error"; message: string };
 
@@ -62,7 +66,7 @@ export function ChatScriptPatchCard({
         );
       }
 
-      await client.applyScriptPatch({
+      const applied = await client.applyScriptPatch({
         params: { artifactId: candidate.artifactId },
         query: undefined,
         body: {
@@ -73,7 +77,11 @@ export function ChatScriptPatchCard({
           changeSummary: candidate.summary || "Copilot 局部改稿",
         },
       });
-      setState({ phase: "applied", previousVersionId: candidate.versionId });
+      setState({
+        phase: "applied",
+        appliedVersionId: applied.id,
+        previousVersionId: applied.previousVersionId,
+      });
       router.refresh();
     } catch (error) {
       setState({
@@ -89,7 +97,10 @@ export function ChatScriptPatchCard({
       await client.restoreArtifact({
         params: { artifactId: candidate.artifactId },
         query: undefined,
-        body: { versionId: state.previousVersionId },
+        body: {
+          versionId: state.previousVersionId,
+          expectedCurrentVersionId: state.appliedVersionId,
+        },
       });
       setState({ phase: "undone" });
       router.refresh();

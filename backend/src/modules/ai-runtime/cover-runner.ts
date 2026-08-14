@@ -66,7 +66,7 @@ export interface CoverGenerateDeps extends ContextDeps {
    *  MultimodalConfigError,本 runner catch → cancelTask(录制/稿面卡渲「去设置配生图模型」)。 */
   resolveMultimodalSpec: (
     ctx: RequestContext,
-    capability: "image.generate",
+    capability: "image.generate" | "image.edit",
   ) => Promise<MultimodalSpec>;
   /** 多模态 provider 适配器注册表(host 注册真 minimax,单测注册 fake)。 */
   registry: MultimodalProviderRegistry;
@@ -375,8 +375,10 @@ export async function runCoverGenerate(
       }
     }
 
-    // 4) 生图(image.generate 用户可配;上层统一 { assetBytes };未配/超时/审核 → 抛 → 下方 catch）。
-    const imgSpec = await deps.resolveMultimodalSpec(ctx, "image.generate");
+    // 4) 纯文生图走 image.generate；真实读到参考图时走独立 image.edit，避免把文生图模型 ID
+    //    错送到 /images/edits。两项能力分别由已验签渠道图或本地配置裁决，互不猜测。
+    const imageCapability = referenceImage ? "image.edit" : "image.generate";
+    const imgSpec = await deps.resolveMultimodalSpec(ctx, imageCapability);
     channelManaged ||= imgSpec.displayModelKey === "channel-managed";
     const idempotencyKey = `sha256:${createHash("sha256")
       .update(JSON.stringify({ taskId: task.id, imagePrompt, aspectRatio, model: imgSpec.model }))

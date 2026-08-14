@@ -91,24 +91,16 @@ function graph(overrides: Record<string, unknown> = {}) {
 describe("T-645 渠道模型逐 capability parser", () => {
   it("T-679 接受单一 activation_managed OmniHi service，并按真实模型 ID 选择", () => {
     const textModels = [
-      "minimax-m3",
-      "gpt-5.6-luna",
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
       "claude-haiku-4.5",
-      "claude-sonnet-4.6",
-      "claude-opus-4.8",
-      "gemini-3.5-flash",
-      "gemini-3.1-pro-preview",
-      "deepseek-v4-flash",
-      "deepseek-v4-pro",
       "kimi-k2.6",
-      "glm-5.2",
+      "gemini-3.5-flash",
+      "claude-sonnet-4.6",
+      "gpt-5.6-sol",
+      "minimax-m3",
+      "deepseek-v4-pro",
     ];
     const optionId = (model: string) => {
-      if (model === "gemini-3.1-pro-preview") return "gemini-3-1-pro";
       if (model === "kimi-k2.6") return "kimi-k2-6";
-      if (model === "glm-5.2") return "glm-5-2";
       return model.replaceAll(".", "-");
     };
     const payload = {
@@ -168,6 +160,16 @@ describe("T-645 渠道模型逐 capability parser", () => {
             settings: {},
           },
         ],
+        "image.edit": [
+          {
+            id: "gpt-image-2-edit",
+            name: "GPT Image 2 图片编辑",
+            connectionId: "relay-image",
+            model: "openai/gpt-image-2-edit",
+            isDefault: true,
+            settings: { n: 1, size: "1024x1024" },
+          },
+        ],
         "video.generate": [
           {
             id: "seedance-fast",
@@ -198,13 +200,18 @@ describe("T-645 渠道模型逐 capability parser", () => {
       selectedOptionId: "growth-removed-this-model",
     });
     expect(removedSelection).toMatchObject({
-      optionId: "minimax-m3",
-      model: "minimax-m3",
-      modelName: "显示名 minimax-m3",
+      optionId: "claude-haiku-4-5",
+      model: "claude-haiku-4.5",
+      modelName: "显示名 claude-haiku-4.5",
     });
     expect(resolveChannelCapabilityRoute(payload, "image.generate")).toMatchObject({
       serviceId: "omnihi-main",
       model: "openai/gpt-image-2-text-to-image",
+    });
+    expect(resolveChannelCapabilityRoute(payload, "image.edit")).toMatchObject({
+      kind: "image",
+      serviceId: "omnihi-main",
+      model: "openai/gpt-image-2-edit",
     });
     expect(resolveChannelCapabilityRoute(payload, "video.generate")).toMatchObject({
       serviceId: "omnihi-main",

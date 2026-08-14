@@ -360,3 +360,18 @@
   `broll-plan.json`、平行 FFmpeg 生成链或运行时 Python H3 CLI。
 - **Outcome(T+N)**: 待 T-836 实现和真实付费 smoke 后回填；当前调研已决定采用 PAT-001 T1 薄适配。
 - **Ref**: T-834；T-836；DEC-AI-049；PAT-001/PAT-003/PAT-004；MOD-002。
+
+## LED-027 — 先检查版本再无条件写，仍会在检查后覆盖并发保存
+- **Date**: 2026-08-14 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 局部改稿和撤销都先读取 `currentVersionId` 做比较，再通过另一条无条件更新移动
+  当前版本指针；并发保存可落在两步之间。transport 还提前读取“上一版”，可能把撤销目标绑到
+  实际写入前更早的版本。
+- **RootCause**: 把 service 层的先读后验当成并发控制，没有把 expected version 放进数据库写条件，
+  也没有让版本追加与指针移动共享事务。
+- **GuardRule**: 所有会移动当前稿指针的采纳、保存和撤销，只要带 expected version，就必须在同一
+  数据库事务内执行条件更新；零行更新即冲突并回滚全部新增行。响应里的 previous version 必须来自
+  成功事务采用的真实当前值，禁止 transport 预读拼接。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.repository.integration.test.ts src/modules/artifacts/artifacts.service.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-patch-card.test.tsx`。
+- **Outcome(T+N)**: 并发双写红测已从“两者都成功”收口为恰好一个成功，陈旧撤销零写入；待本地包
+  真实连续采纳多张卡并手动保存冲突后回填。
+- **Ref**: T-833；DEC-DATA-051；PAT-002 RF-002/RF-003。

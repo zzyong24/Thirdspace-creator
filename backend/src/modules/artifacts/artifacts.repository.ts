@@ -6,7 +6,7 @@ import {
   scriptSections,
   timelineSegments,
 } from "./artifacts.db-schema";
-import { OwnershipError } from "./artifacts.errors";
+import { ConflictError, OwnershipError } from "./artifacts.errors";
 
 // Artifacts repository (foundation §5.2) — user-scoped queries ONLY. `user_id`
 // lives on the owned-root row (`artifacts`); every read/write of an artifact row
@@ -81,6 +81,7 @@ export interface ArtifactRepository {
   createVersion(
     artifactId: string,
     input: {
+      expectedCurrentVersionId?: string;
       contentText?: string;
       changeSummary?: string;
       contentData?: Record<string, unknown>;
@@ -91,7 +92,11 @@ export interface ArtifactRepository {
   ): Promise<ArtifactVersionRow>;
   listVersions(artifactId: string): Promise<ArtifactVersionRow[]>;
   getVersion(versionId: string): Promise<ArtifactVersionRow>;
-  restore(artifactId: string, versionId: string): Promise<ArtifactRow>;
+  restore(
+    artifactId: string,
+    versionId: string,
+    expectedCurrentVersionId?: string,
+  ): Promise<ArtifactRow>;
   createRelation(
     sourceArtifactId: string,
     input: { targetArtifactId: string; relationType: string },
@@ -264,41 +269,86 @@ export function createArtifactRepository(
     },
 
     async createVersion(artifactId, input) {
-      // Ownership gate: a cross-user / unknown id throws before any write.
-      const artifact = await requireArtifact(artifactId);
-      const versionNumber = await nextVersionNumber(artifactId);
-      const version = await insertVersion(artifactId, versionNumber, input);
-      // Promotion is a parent-row pointer move; the version itself is never
-      // mutated (append-only, data-model §9 rule 6).
-      //
-      // F1 origin lifecycle (T-030-D4, SPEC §4.5): the version carries content,
-      // the ROOT row carries `origin` (provenance of the CURRENT content). On a
-      // new current version we resolve the parent's origin:
-      //   - explicit `input.origin` → set it (auto-fill passes 'reconstructed').
-      //   - omitted + user-authored version (createdByType !== 'ai') that lands
-      //     on a 'reconstructed' artifact → FLIP to 'user' (the user edited/
-      //     confirmed the AI reconstruction; §7 边界② "方视为确认").
-      //   - omitted + AI version → leave origin untouched (AI edits don't confirm).
-      const nextOrigin = resolveNextOrigin(
-        artifact.origin,
-        input.origin,
-        input.createdByType,
-      );
-      await db
-        .update(artifacts)
-        .set({
-          currentVersionId: version.id,
-          origin: nextOrigin,
-          updatedAt: deps.now(),
-        })
-        .where(
-          and(
-            eq(artifacts.id, artifactId),
-            eq(artifacts.userId, userId),
-            accountGate,
-          ),
-        );
-      return version;
+      return db.transaction(async (tx) => {
+        const artifactRows = await tx
+          .select()
+          .from(artifacts)
+          .where(
+            and(
+              eq(artifacts.id, artifactId),
+              eq(artifacts.userId, userId),
+              accountGate,
+            ),
+          );
+        const artifact = artifactRows[0];
+        if (!artifact) throw new OwnershipError("Artifact not found");
+        if (
+          input.expectedCurrentVersionId &&
+          artifact.currentVersionId !== input.expectedCurrentVersionId
+        ) {
+          throw new ConflictError(
+            "内容已在其他页面更新，请刷新后基于当前版本重试",
+          );
+        }
+
+        const existing = await tx
+          .select()
+          .from(artifactVersions)
+          .where(eq(artifactVersions.artifactId, artifactId))
+          .orderBy(desc(artifactVersions.versionNumber));
+        const versionNumber = (existing[0]?.versionNumber ?? 0) + 1;
+        const now = deps.now();
+        const versionId = deps.nextId("artifactversion");
+        const inserted = await tx
+          .insert(artifactVersions)
+          .values({
+            id: versionId,
+            artifactId,
+            versionNumber,
+            contentText: input.contentText ?? "",
+            contentData: input.contentData ?? {},
+            changeSummary: input.changeSummary ?? "",
+            createdByType: input.createdByType ?? "user",
+            aiTaskId: input.aiTaskId ?? null,
+            createdAt: now,
+          })
+          .returning();
+        const version = inserted[0]!;
+
+        // T-833：候选应用与当前版本指针移动必须是同一个数据库事务。条件更新失败会抛错，
+        // 整个事务回滚，因此既不会覆盖并发保存，也不会留下孤儿版本。
+        const updated = await tx
+          .update(artifacts)
+          .set({
+            currentVersionId: version.id,
+            origin: resolveNextOrigin(
+              artifact.origin,
+              input.origin,
+              input.createdByType,
+            ),
+            updatedAt: now,
+          })
+          .where(
+            and(
+              eq(artifacts.id, artifactId),
+              eq(artifacts.userId, userId),
+              accountGate,
+              input.expectedCurrentVersionId
+                ? eq(
+                    artifacts.currentVersionId,
+                    input.expectedCurrentVersionId,
+                  )
+                : undefined,
+            ),
+          )
+          .returning({ id: artifacts.id });
+        if (updated.length === 0) {
+          throw new ConflictError(
+            "内容已在其他页面更新，请刷新后基于当前版本重试",
+          );
+        }
+        return version;
+      });
     },
 
     async listVersions(artifactId) {
@@ -322,33 +372,54 @@ export function createArtifactRepository(
       return row;
     },
 
-    async restore(artifactId, versionId) {
-      const artifact = await requireArtifact(artifactId);
-      // Load the target version and assert it belongs to THIS artifact (rule 7).
-      const targetRows = await db
-        .select()
-        .from(artifactVersions)
-        .where(eq(artifactVersions.id, versionId));
-      const target = targetRows[0];
-      if (!target || target.artifactId !== artifactId) {
-        throw new OwnershipError("Version not found for this artifact");
-      }
+    async restore(artifactId, versionId, expectedCurrentVersionId) {
+      return db.transaction(async (tx) => {
+        const artifactRows = await tx
+          .select()
+          .from(artifacts)
+          .where(
+            and(
+              eq(artifacts.id, artifactId),
+              eq(artifacts.userId, userId),
+              accountGate,
+            ),
+          );
+        const artifact = artifactRows[0];
+        if (!artifact) throw new OwnershipError("Artifact not found");
 
-      // A restore is a selection of an existing immutable snapshot, not an edit.
-      // Move the current pointer directly so browsing/restoring never creates
-      // vN+1 noise. A later real save still appends max+1 as usual.
-      if (artifact.currentVersionId === target.id) return artifact;
-      await db
-        .update(artifacts)
-        .set({ currentVersionId: target.id, updatedAt: deps.now() })
-        .where(
-          and(
-            eq(artifacts.id, artifactId),
-            eq(artifacts.userId, userId),
-            accountGate,
-          ),
-        );
-      return requireArtifact(artifactId);
+        const targetRows = await tx
+          .select()
+          .from(artifactVersions)
+          .where(eq(artifactVersions.id, versionId));
+        const target = targetRows[0];
+        if (!target || target.artifactId !== artifactId) {
+          throw new OwnershipError("Version not found for this artifact");
+        }
+
+        // T-833：撤销必须把“我写出的版本仍是当前版本”放进同一条条件更新；
+        // 不能先查再无条件移动指针，否则会覆盖检查后到达的用户保存。
+        const updated = await tx
+          .update(artifacts)
+          .set({ currentVersionId: target.id, updatedAt: deps.now() })
+          .where(
+            and(
+              eq(artifacts.id, artifactId),
+              eq(artifacts.userId, userId),
+              accountGate,
+              expectedCurrentVersionId
+                ? eq(artifacts.currentVersionId, expectedCurrentVersionId)
+                : undefined,
+            ),
+          )
+          .returning();
+        const restored = updated[0];
+        if (!restored) {
+          throw new ConflictError(
+            "脚本在这次修改后又有新版本，不能直接撤销以免覆盖后续修改",
+          );
+        }
+        return restored;
+      });
     },
 
     async createRelation(sourceArtifactId, input) {

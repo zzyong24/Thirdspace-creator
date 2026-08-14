@@ -36,6 +36,7 @@ function logSync(fields: {
   reason: string;
   trigger: string;
   status: string;
+  errorCode?: string;
 }): void {
   console.info(`[client-config] ${JSON.stringify(fields)}`);
 }
@@ -123,7 +124,7 @@ export async function POST(request: Request): Promise<Response> {
         phase: "config_sync",
         reason: result.outcome,
         trigger,
-        status: "completed",
+        status: result.outcome === "security_error" ? "blocked" : "completed",
       });
       return response(result, 200);
     },
@@ -143,6 +144,7 @@ export async function POST(request: Request): Promise<Response> {
           reason: scopeMissing ? "signed_channel_ref_missing" : outcome,
           trigger,
           status: "blocked",
+          errorCode: error.code,
         });
         return response(
           {

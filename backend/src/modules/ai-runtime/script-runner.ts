@@ -143,6 +143,136 @@ function addUsage(
   };
 }
 
+function compactWhitespace(value: string): string {
+  return value.replace(/\s/gu, "");
+}
+
+/**
+ * 仅修复模型把原文段间换行/空格吞掉或挪位的协议漂移。
+ * SEMANTIC_BOUNDARY_ALLOW: 逐个非空白字符必须完全相同；这里只把冻结原文的空白
+ * 重新分配回原分镜边界，不做相似度、纠错、改写或内容判断。
+ */
+function reanchorWhitespaceOnly(
+  voiceover: string,
+  shots: readonly ScriptShot[],
+): ScriptShot[] | null {
+  if (
+    shots.length === 0 ||
+    compactWhitespace(shots.map((shot) => shot.口播).join("")) !==
+      compactWhitespace(voiceover)
+  ) {
+    return null;
+  }
+  let cursor = 0;
+  const reanchored: ScriptShot[] = [];
+  for (const [index, shot] of shots.entries()) {
+    if (index === shots.length - 1) {
+      reanchored.push({ ...shot, 口播: voiceover.slice(cursor) });
+      cursor = voiceover.length;
+      continue;
+    }
+    const targetNonWhitespace = compactWhitespace(shot.口播).length;
+    let consumed = 0;
+    const start = cursor;
+    while (cursor < voiceover.length && consumed < targetNonWhitespace) {
+      if (!/\s/u.test(voiceover[cursor]!)) consumed += 1;
+      cursor += 1;
+    }
+    while (cursor < voiceover.length && /\s/u.test(voiceover[cursor]!)) {
+      cursor += 1;
+    }
+    reanchored.push({ ...shot, 口播: voiceover.slice(start, cursor) });
+  }
+  return cursor === voiceover.length ? reanchored : null;
+}
+
+function splitFrozenVoiceover(voiceover: string): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+  for (let index = 0; index < voiceover.length; index += 1) {
+    const length = index - start + 1;
+    const preferredBoundary = /[。！？!?；;\n]/u.test(voiceover[index]!);
+    if ((preferredBoundary && length >= 24) || length >= 110) {
+      let end = index + 1;
+      while (end < voiceover.length && /\s/u.test(voiceover[end]!)) end += 1;
+      chunks.push(voiceover.slice(start, end));
+      start = end;
+      index = end - 1;
+    }
+  }
+  if (start < voiceover.length) chunks.push(voiceover.slice(start));
+  return chunks.length > 0 ? chunks : [voiceover];
+}
+
+/**
+ * 分镜模型不可用或真实改写了冻结口播时的最终安全底座。
+ * SEMANTIC_BOUNDARY_ALLOW: 代码只按字符与标点确定性切片，并填入不含新事实的通用制作字段；
+ * 不判断内容优劣、不匹配素材、不创作新口播，所有口播字符均直接来自冻结原文。
+ */
+function buildDeterministicStoryboard(
+  voiceover: string,
+  targetDurationSeconds?: number,
+): ScriptShot[] {
+  const chunks = splitFrozenVoiceover(voiceover);
+  const totalWeight = Math.max(
+    1,
+    chunks.reduce((sum, chunk) => sum + compactWhitespace(chunk).length, 0),
+  );
+  const requestedTotalSeconds =
+    typeof targetDurationSeconds === "number" &&
+    Number.isFinite(targetDurationSeconds) &&
+    targetDurationSeconds > 0
+      ? targetDurationSeconds
+      : Math.max(3, Math.ceil(totalWeight / 4));
+  // T-835：基础分镜不能为了强塞进过短目标时长而生成重叠或 0 秒镜头。
+  // 每镜至少 1 秒；目标时长不足时诚实延长到镜头数，剩余秒数再按口播字数分配。
+  const totalSeconds = Math.max(chunks.length, Math.ceil(requestedTotalSeconds));
+  const extraSeconds = totalSeconds - chunks.length;
+  let elapsedWeight = 0;
+  let allocatedExtraSeconds = 0;
+  let elapsedSeconds = 0;
+  return chunks.map((chunk, index) => {
+    const startSeconds = elapsedSeconds;
+    elapsedWeight += compactWhitespace(chunk).length;
+    const cumulativeExtraSeconds =
+      index === chunks.length - 1
+        ? extraSeconds
+        : Math.round((elapsedWeight / totalWeight) * extraSeconds);
+    const endSeconds =
+      startSeconds + 1 + cumulativeExtraSeconds - allocatedExtraSeconds;
+    allocatedExtraSeconds = cumulativeExtraSeconds;
+    elapsedSeconds = endSeconds;
+    const subtitle = chunk.trim();
+    return {
+      role:
+        chunks.length === 1
+          ? "body"
+          : index === 0
+            ? "hook"
+            : index === chunks.length - 1
+              ? "cta"
+              : "body",
+      口播: chunk,
+      画面: "主播口播，辅以与本段原文一致的画面",
+      字幕: subtitle.length > 32 ? `${subtitle.slice(0, 31)}…` : subtitle,
+      时长: `${startSeconds}-${endSeconds}s`,
+      visual: {
+        description: "基础分镜：画面只承接本段冻结口播，不引入新事实",
+        assetRefs: [],
+        missing: [],
+      },
+    };
+  });
+}
+
+function firstMismatchIndex(left: string, right: string): number | null {
+  const length = Math.min(left.length, right.length);
+  for (let index = 0; index < length; index += 1) {
+    if (left[index] !== right[index]) return index;
+  }
+  return left.length === right.length ? null : length;
+}
+
 interface Storyboard {
   sections: ScriptShot[];
 }
@@ -591,28 +721,52 @@ export async function runScriptDraft(
           let storyboardResult: Awaited<
             ReturnType<typeof runStoryboardSegmentNode>
           > | null = null;
+          let storyboardRecovery:
+            | {
+                mode: "whitespace_reanchored" | "deterministic_fallback";
+                reason: "whitespace_only" | "voiceover_mismatch" | "model_error";
+                firstMismatchIndex: number | null;
+                expectedLength: number;
+                actualLength: number | null;
+                diagnostic?: string;
+              }
+            | undefined;
           let retryGuidance: string | undefined;
+          const storyboardDurationTarget =
+            typeof task.inputData.targetDurationSeconds === "number" &&
+            Number.isFinite(task.inputData.targetDurationSeconds) &&
+            task.inputData.targetDurationSeconds > 0
+              ? task.inputData.targetDurationSeconds
+              : undefined;
           while (frozen.storyboardAttemptCount < 2) {
             frozen = {
               ...frozen,
               storyboardAttemptCount: frozen.storyboardAttemptCount + 1,
             };
             await deps.ai.putScriptDraftCheckpoint(ctx, task.id, frozen);
-            storyboardResult = await runStoryboardSegmentNode({
-              model,
-              voiceover: frozenVoiceover,
-              voiceoverSha256: frozenSha256,
-              storyboardAttempt: frozen.storyboardAttemptCount,
-              orientation: context.orientationHint || undefined,
-              targetDurationSeconds:
-                typeof task.inputData.targetDurationSeconds === "number" &&
-                Number.isFinite(task.inputData.targetDurationSeconds) &&
-                task.inputData.targetDurationSeconds > 0
-                  ? task.inputData.targetDurationSeconds
-                  : undefined,
-              assetsBrief: context.assetsBrief || undefined,
-              retryGuidance,
-            });
+            try {
+              storyboardResult = await runStoryboardSegmentNode({
+                model,
+                voiceover: frozenVoiceover,
+                voiceoverSha256: frozenSha256,
+                storyboardAttempt: frozen.storyboardAttemptCount,
+                orientation: context.orientationHint || undefined,
+                targetDurationSeconds: storyboardDurationTarget,
+                assetsBrief: context.assetsBrief || undefined,
+                retryGuidance,
+              });
+            } catch (error) {
+              storyboardResult = null;
+              storyboardRecovery = {
+                mode: "deterministic_fallback",
+                reason: "model_error",
+                firstMismatchIndex: null,
+                expectedLength: frozenVoiceover.length,
+                actualLength: null,
+                diagnostic: formatErrorDiagnostic(error),
+              };
+              break;
+            }
             const joined = storyboardResult.shots
               .map((shot) => shot.口播)
               .join("");
@@ -620,16 +774,92 @@ export async function runScriptDraft(
               joined === frozenVoiceover &&
               createHash("sha256").update(joined).digest("hex") === frozenSha256
             ) {
+              storyboardRecovery = undefined;
               break;
             }
+            const reanchored = reanchorWhitespaceOnly(
+              frozenVoiceover,
+              storyboardResult.shots,
+            );
+            if (reanchored) {
+              storyboardResult = { ...storyboardResult, shots: reanchored };
+              storyboardRecovery = {
+                mode: "whitespace_reanchored",
+                reason: "whitespace_only",
+                firstMismatchIndex: firstMismatchIndex(
+                  frozenVoiceover,
+                  joined,
+                ),
+                expectedLength: frozenVoiceover.length,
+                actualLength: joined.length,
+              };
+              break;
+            }
+            storyboardRecovery = {
+              mode: "deterministic_fallback",
+              reason: "voiceover_mismatch",
+              firstMismatchIndex: firstMismatchIndex(
+                frozenVoiceover,
+                joined,
+              ),
+              expectedLength: frozenVoiceover.length,
+              actualLength: joined.length,
+            };
             storyboardResult = null;
             retryGuidance =
               "上次逐字切分失败：shots[].口播 无分隔拼接后与冻结口播不一致。只重新切分原文，不得改任何字符。";
           }
           if (!storyboardResult) {
-            throw new Error(
-              "制作分镜未能保留完整口播，已停止生成候选；请检查模型后重试。",
+            const recoveryViolation = {
+              code: "OUTPUT_INCOMPLETE" as const,
+              path: "shots[].口播",
+              message:
+                "分镜建议未通过逐字保真校验，已自动使用冻结原文生成基础分镜；口播内容完整保留。",
+            };
+            const policy = storyboardSkill.effective.completionPolicy ?? {
+              schemaVersion: 1 as const,
+              minSegments: 1,
+              maxSegments: null,
+              requiredSequence: [],
+              repairAttempts: 0,
+            };
+            const adapter = storyboardSkill.effective.completionPolicyAdapter ?? {
+              id: "script.draft.shots",
+              version: "1",
+            };
+            const fallbackShots = buildDeterministicStoryboard(
+              frozenVoiceover,
+              storyboardDurationTarget,
             );
+            storyboardRecovery ??= {
+              mode: "deterministic_fallback",
+              reason: "voiceover_mismatch",
+              firstMismatchIndex: null,
+              expectedLength: frozenVoiceover.length,
+              actualLength: null,
+            };
+            storyboardResult = {
+              shots: fallbackShots,
+              generation: {
+                finishReason: "deterministic_fallback",
+                usage: {
+                  inputTokens: null,
+                  outputTokens: null,
+                  cachedTokens: null,
+                  totalTokens: null,
+                },
+                attempts: [],
+              },
+              validation: {
+                status: "partial",
+                errors: [recoveryViolation],
+                policySnapshot: { policy, adapter },
+                originalSegmentCount: fallbackShots.length,
+                finalSegmentCount: fallbackShots.length,
+                repairAttemptsUsed: frozen.storyboardAttemptCount,
+                repairReasons: [recoveryViolation],
+              },
+            };
           }
           await deps.ai.recordStep(ctx, task.id, {
             stepNo: 2,
@@ -644,12 +874,14 @@ export async function runScriptDraft(
               voiceoverSha256: frozenSha256,
               finishReason: storyboardResult.generation.finishReason,
               usage: storyboardResult.generation.usage,
+              ...(storyboardRecovery ? { storyboardRecovery } : {}),
             }),
             toolCalls: [],
           });
           pipelineMetadata = {
             generationPipeline: "voiceover_storyboard_v1",
             voiceoverSha256: frozenSha256,
+            ...(storyboardRecovery ? { storyboardRecovery } : {}),
             generationSkills: [
               {
                 skillId: voiceoverSkill.skillId,

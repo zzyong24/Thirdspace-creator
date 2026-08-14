@@ -2638,3 +2638,45 @@ pending asset、material link、`material.match` 和 video renderer。明确不�
 CreatorOS 现有数据库任务链已提供更强的恢复与审计。
 
 **任务**：T-836；详细契约见 `docs/superpowers/specs/2026-08-14-minimax-h3-storyboard-broll-integration.md`。
+
+# DEC-MODEL-050 (2026-08-14) — 官方参考图独立路由，本地中转站兼容旧生图配置
+
+**Status**：confirmed
+
+**用户决定**：本地 Dudu 中转站原有图生图可以继续使用；OmniHi 主要属于 CreatorOS 官方渠道，
+官方用户以后应使用渠道明确配置的参考图模型。当前改动是兼容模式，不能让本地自配用户失效。
+
+**决策**：
+
+1. 官方托管渠道带参考图时只消费已验签 `image.edit` capability；缺失时明确停止，禁止把
+   `image.generate` 模型误送到图片编辑接口。
+2. 本地自配优先读取显式 `image.edit`；没有时兼容回落到原 `image.generate`、`image.default`
+   与 `CREATOROS_IMAGE_*`，保持 Dudu/OpenAI-compatible 既有用法。
+3. 路由判断只依据 capability authority，禁止按 OmniHi、Dudu、模型名或 URL 字符串写死分支。
+4. 本地包不修改 Growth、官方生产配置或真实用户选择；生产 v3 保存与权威回读仍由 T-831 后续闭环。
+
+**Pattern-Ref**：DEC-MODEL-027（渠道模型按 capability 独立管控）。
+
+**Asset-Ref**：MOD-002（可配置 provider adapter）及既有 `resolveMultimodalSpec`。
+
+**任务**：T-831。
+
+# DEC-DATA-051 (2026-08-14) — 局部改稿版本保护下沉为数据库原子条件写
+
+**Status**：confirmed
+
+**用户决定**：修复本地包审查发现的阻断性问题，不能让局部改稿采纳或撤销覆盖用户随后保存的稿件。
+
+**决策**：
+
+1. `artifact_versions` 追加与 `artifacts.current_version_id` 移动必须在同一数据库事务完成；
+   带 `expectedCurrentVersionId` 时，指针更新必须在同一条 SQL 条件中比较当前版本。
+2. 条件竞争失败抛 `ConflictError` 并回滚整个事务，不留下孤儿版本；不采用“先 GET、再无条件写”。
+3. 撤销复用相同原子 CAS；补丁成功返回的 `previousVersionId` 必须来自实际成功写入时采用的当前版本，
+   transport 不得在服务调用前另读一份可能漂移的旧值。
+
+**Pattern-Ref**：PAT-002 RF-002 / RF-003（用户持久数据与并发写强制真数据库约束）。
+
+**Asset-Ref**：既有 Postgres/PGlite 共用 Drizzle transaction 与 artifacts repository。
+
+**任务**：T-833。

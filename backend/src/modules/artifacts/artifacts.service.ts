@@ -126,7 +126,7 @@ export interface ArtifactsService {
       replacementText: string;
       changeSummary?: string;
     },
-  ): Promise<ArtifactVersionRow>;
+  ): Promise<ArtifactVersionRow & { previousVersionId: string }>;
   listVersions(
     ctx: RequestContext,
     artifactId: string,
@@ -135,6 +135,7 @@ export interface ArtifactsService {
     ctx: RequestContext,
     artifactId: string,
     versionId: string,
+    expectedCurrentVersionId?: string,
   ): Promise<ArtifactRow>;
   createRelation(
     ctx: RequestContext,
@@ -188,15 +189,6 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     async createVersion(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.createVersion");
       const artifactForWrite = await repo.requireArtifact(artifactId);
-      if (input.expectedCurrentVersionId) {
-        if (
-          artifactForWrite.currentVersionId !== input.expectedCurrentVersionId
-        ) {
-          throw new ConflictError(
-            "内容已在其他页面更新，请刷新后基于当前版本重试",
-          );
-        }
-      }
       const isScriptArtifact =
         artifactForWrite.artifactType === "output_script" ||
         artifactForWrite.artifactType === "master_script";
@@ -275,20 +267,28 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
       return repoFor(ctx, "artifacts.listVersions").listVersions(artifactId);
     },
 
-    async restoreVersion(ctx, artifactId, versionId) {
-      return repoFor(ctx, "artifacts.restoreVersion").restore(artifactId, versionId);
+    async restoreVersion(ctx, artifactId, versionId, expectedCurrentVersionId) {
+      const repo = repoFor(ctx, "artifacts.restoreVersion");
+      return repo.restore(artifactId, versionId, expectedCurrentVersionId);
     },
 
     async applyScriptPatch(ctx, artifactId, input) {
       const repo = repoFor(ctx, "artifacts.applyScriptPatch");
       const artifact = await repo.requireArtifact(artifactId);
-      if (artifact.currentVersionId !== input.expectedVersionId) {
-        throw new ConflictError(
-          "脚本在补丁生成后已经更新，请基于当前稿面重新发起局部改稿",
-        );
+      const expected = await repo.getVersion(input.expectedVersionId);
+      if (expected.artifactId !== artifactId) {
+        throw new ConflictError("局部改稿候选不属于当前脚本，未写入稿面");
       }
-
-      const current = await repo.getVersion(input.expectedVersionId);
+      if (!artifact.currentVersionId) {
+        throw new ConflictError("当前脚本没有可应用局部改稿的版本");
+      }
+      // T-833：同一次回复的多张候选都锚在同一旧版本。第一张采纳后，后续候选应
+      // 基于权威当前稿安全重放，而不是仅因版本号变化全部过期。目标段原文的逐字
+      // 比对仍是最终冲突门：同段已被用户或另一候选修改时绝不覆盖。
+      const current =
+        artifact.currentVersionId === expected.id
+          ? expected
+          : await repo.getVersion(artifact.currentVersionId);
       const data: Record<string, unknown> =
         current.contentData &&
         typeof current.contentData === "object" &&
@@ -345,12 +345,14 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
         .filter(Boolean)
         .join("\n\n");
 
-      return service.createVersion(ctx, artifactId, {
+      const version = await service.createVersion(ctx, artifactId, {
+        expectedCurrentVersionId: current.id,
         contentText,
         contentData: nextContentData,
         changeSummary: input.changeSummary?.trim() || "Copilot 局部改稿",
         createdByType: "user",
       });
+      return { ...version, previousVersionId: current.id };
     },
 
     async createRelation(ctx, artifactId, input) {

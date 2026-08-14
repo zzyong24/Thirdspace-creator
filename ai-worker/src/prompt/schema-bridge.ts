@@ -44,6 +44,11 @@ export function exportZodToJsonSchema(schema: z.ZodType): JsonSchema {
 export interface SchemaValidator {
   /** 校验一个值是否合该 JSON Schema。失败时 errors 带具体原因(供日志/重试上下文)。 */
   validate(data: unknown): { valid: boolean; errors: ErrorObject[] };
+  /**
+   * 协议级归一化：只按 `additionalProperties:false` 删除模型多吐的键。
+   * 不补字段、不改类型，返回值仍必须经过上面的严格 validate。
+   */
+  normalize(data: unknown): unknown;
   /** 原始 JSON Schema(回带,便于二次导出/审计)。 */
   jsonSchema: JsonSchema;
 }
@@ -55,8 +60,17 @@ export interface SchemaValidator {
  */
 export function applySchemaOverride(jsonSchema: JsonSchema): SchemaValidator {
   let compiled: ValidateFunction;
+  let normalizer: ValidateFunction;
   try {
     compiled = ajv.compile(jsonSchema);
+    // SEMANTIC_BOUNDARY_ALLOW: 这里只修正 JSON 协议漂移，不参与任何内容判断或创作取舍。
+    // `removeAdditional:true` 只响应 schema 明确写出的 additionalProperties:false；必填
+    // 缺失、类型错误和其他约束仍由严格 compiled 判失败。
+    normalizer = new Ajv2020({
+      allErrors: true,
+      strict: false,
+      removeAdditional: true,
+    }).compile(jsonSchema);
   } catch (err) {
     throw new Error(
       `applySchemaOverride: 下发的 JSON Schema 非法,无法编译成校验器: ${
@@ -66,6 +80,16 @@ export function applySchemaOverride(jsonSchema: JsonSchema): SchemaValidator {
   }
   return {
     jsonSchema,
+    normalize(data: unknown) {
+      let candidate: unknown;
+      try {
+        candidate = structuredClone(data);
+      } catch {
+        candidate = data;
+      }
+      normalizer(candidate);
+      return candidate;
+    },
     validate(data: unknown) {
       const valid = compiled(data) as boolean;
       return { valid, errors: valid ? [] : (compiled.errors ?? []) };

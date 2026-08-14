@@ -106,6 +106,7 @@ function capabilityKind(capability: string): ChannelCapabilityKind {
     case "transcribe.audio":
       return "audio";
     case "image.generate":
+    case "image.edit":
       return "image";
     case "video.generate":
       return "video";

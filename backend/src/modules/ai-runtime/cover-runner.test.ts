@@ -401,6 +401,7 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
       made.deps,
     );
     expect(getAssetBytes).toHaveBeenCalledWith(ctx, "asset-ref-1");
+    expect(made.resolveMultimodalSpec).toHaveBeenCalledWith(ctx, "image.edit");
     const imgCall = generateImage.mock.calls.at(-1) as unknown as [
       unknown,
       { referenceImage?: { bytes: Uint8Array; mimeType: string } },
@@ -467,6 +468,7 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
       made.deps,
     );
     expect(getAssetBytes).not.toHaveBeenCalled();
+    expect(made.resolveMultimodalSpec).toHaveBeenCalledWith(ctx, "image.generate");
     const imgCall = generateImage.mock.calls.at(-1) as unknown as [
       unknown,
       { referenceImage?: unknown },

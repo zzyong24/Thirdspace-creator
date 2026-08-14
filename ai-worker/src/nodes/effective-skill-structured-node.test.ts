@@ -133,6 +133,91 @@ describe("[T-513] structured node 强制消费 active effective Skill", () => {
     expect(result.object).toEqual({ marker: "A", segments: [] });
   });
 
+  it("[T-833] effective schema 只剔除模型多吐的协议外字段，不因 additionalProperties 拖垮任务", async () => {
+    const strictSnapshot: EffectiveSkillSnapshotV1 = {
+      ...effectiveSnapshot,
+      skills: [
+        {
+          ...effectiveSnapshot.skills[0]!,
+          effective: {
+            ...effectiveSnapshot.skills[0]!.effective,
+            outputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                marker: { type: "string" },
+                segments: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: { role: { type: "string" } },
+                    required: ["role"],
+                  },
+                },
+              },
+              required: ["marker", "segments"],
+            },
+            completionPolicy: null,
+            completionPolicyAdapter: null,
+          },
+        },
+      ],
+    };
+
+    const result = await runWithEffectiveSkillSnapshot(strictSnapshot, () =>
+      runStructuredNode({
+        model: modelFor({
+          marker: "A",
+          staleTopLevelField: "旧协议残留",
+          segments: [{ role: "body", staleNestedField: true }],
+        }),
+        template: forgedTemplate,
+        facets: { right: "来自 A 账号" },
+      }),
+    );
+
+    expect(result.object).toEqual({
+      marker: "A",
+      segments: [{ role: "body" }],
+    });
+  });
+
+  it("[T-833] effective schema 必填字段缺失仍然 fail-closed", async () => {
+    const strictSnapshot: EffectiveSkillSnapshotV1 = {
+      ...effectiveSnapshot,
+      skills: [
+        {
+          ...effectiveSnapshot.skills[0]!,
+          effective: {
+            ...effectiveSnapshot.skills[0]!.effective,
+            outputSchema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                marker: { type: "string" },
+                segments: { type: "array", items: { type: "object" } },
+              },
+              required: ["marker", "segments"],
+            },
+            completionPolicy: null,
+            completionPolicyAdapter: null,
+          },
+        },
+      ],
+    };
+
+    await expect(
+      runWithEffectiveSkillSnapshot(strictSnapshot, () =>
+        runStructuredNode({
+          model: modelFor({ segments: [], extra: "不能拿来补 marker" }),
+          template: forgedTemplate,
+          facets: { right: "来自 A 账号" },
+        }),
+      ),
+    ).rejects.toThrow(/required|schema|object/i);
+  });
+
   it("显式 outputSchema 也不能绕过 snapshot completionPolicy", async () => {
     await expect(
       runWithEffectiveSkillSnapshot(effectiveSnapshot, () =>

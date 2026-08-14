@@ -1787,6 +1787,14 @@ export async function refreshClientConfig(
       : project("local", "not_configured");
   } catch (error) {
     if (error instanceof ClientConfigPullError) {
+      console.info(
+        `[client-config] ${JSON.stringify({
+          phase: "refresh",
+          status: "failed",
+          errorCode: error.code,
+          retryable: error.retryable,
+        })}`,
+      );
       if (error.code === "CLIENT_CONFIG_NOT_APPLICABLE") {
         await store.save({
           state: "local",

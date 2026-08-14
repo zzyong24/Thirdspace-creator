@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import {
+  MultimodalConfigError,
   MultimodalGenerationError,
   type GeneratedAsset,
   type GenerateVideoOptions,
@@ -401,6 +402,11 @@ async function generateVideo(
   opts: GenerateVideoOptions,
   deps: OmnihiVideoAdapterDeps,
 ): Promise<GeneratedAsset> {
+  if (opts.firstFrame) {
+    throw new MultimodalConfigError(
+      "当前 OmniHi 渠道只支持文生视频，不支持参考图/首帧生视频。请移除参考图后重试。",
+    );
+  }
   const jobId = opts.resumeJobId ?? (await submit(spec, opts, deps));
   if (!opts.resumeJobId) await opts.onJobSubmitted?.(jobId);
   const outputUrl = await waitForOutputUrl(spec, jobId, deps);

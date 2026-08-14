@@ -43,3 +43,8 @@ backups/
 
 # 可分发 PDF 是本地/渠道交付产物，不进入源码仓库与 Git 历史。
 /output/pdf/
+
+# Codex 本机审查证据与临时授权截图，只保留在当前机器。
+.codex-tmp/
+/lark-auth-search-message.png
+/outputs/T831/

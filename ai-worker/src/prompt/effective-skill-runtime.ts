@@ -146,9 +146,10 @@ export function resolveEffectiveOutputSchema(
   const validator = applySchemaOverride(jsonSchema);
   return sdkJsonSchema(validator.jsonSchema as never, {
     validate: (value) => {
-      const result = validator.validate(value);
+      const normalized = validator.normalize(value);
+      const result = validator.validate(normalized);
       return result.valid
-        ? { success: true, value }
+        ? { success: true, value: normalized }
         : {
             success: false,
             error: new Error(

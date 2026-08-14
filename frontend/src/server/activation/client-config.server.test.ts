@@ -601,6 +601,7 @@ describe("T-575 config.pull Creator consumer", () => {
   });
 
   it("坏签名、额外 envelope 字段和未知产品协议均 fail-closed", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => undefined);
     const tampered = structuredClone(
       signedBundle(growthKeys.privateKey),
     ) as unknown as {
@@ -663,6 +664,12 @@ describe("T-575 config.pull Creator consumer", () => {
       outcome: "security_error",
     });
     expect(store.record?.state).toBe("quarantined");
+    expect(log).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^\[client-config\] \{"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_[A-Z_]+","retryable":false\}$/,
+      ),
+    );
+    log.mockRestore();
   });
 
   it("Activity/Growth exact response headers 漂移时 fail-closed", async () => {

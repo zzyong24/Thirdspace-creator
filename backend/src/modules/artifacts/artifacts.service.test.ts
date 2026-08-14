@@ -113,6 +113,31 @@ describe("artifacts.service — append-only versioning", () => {
     expect(await service.listVersions(ctxA, artifact.id)).toHaveLength(2);
   });
 
+  it("[T-833] 局部改稿撤销发现后续版本时拒绝覆盖", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const sourceId = artifact.currentVersionId!;
+    const patchVersion = await service.createVersion(ctxA, artifact.id, {
+      contentText: "局部改稿版",
+      changeSummary: "局部改稿",
+    });
+    await service.createVersion(ctxA, artifact.id, {
+      contentText: "后续用户编辑",
+      changeSummary: "继续修改",
+    });
+
+    await expect(
+      service.restoreVersion(
+        ctxA,
+        artifact.id,
+        sourceId,
+        patchVersion.id,
+      ),
+    ).rejects.toBeInstanceOf(ConflictError);
+    expect((await service.getArtifact(ctxA, artifact.id)).currentVersionId).not.toBe(
+      sourceId,
+    );
+  });
+
   it("createVersion with createdByType 'ai' + aiTaskId records candidate provenance", async () => {
     const artifact = await seedArtifact(ctxA);
     const v = await service.createVersion(ctxA, artifact.id, {
@@ -171,6 +196,79 @@ describe("artifacts.service — append-only versioning", () => {
     expect((await service.getArtifact(ctxA, artifact.id)).currentVersionId).toBe(
       patched.id,
     );
+  });
+
+  it("[T-833] 同一旧稿生成的多张候选可按未变化段落顺序全部采纳", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文一\n\n原文二",
+      contentData: {
+        sections: [
+          { id: "section-1", body: "原文一" },
+          { id: "section-2", body: "原文二" },
+        ],
+      },
+      changeSummary: "建立两段稿面",
+    });
+
+    const first = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: source.id,
+      sectionId: "section-1",
+      expectedOriginalText: "原文一",
+      replacementText: "修改一",
+    });
+    const second = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: source.id,
+      sectionId: "section-2",
+      expectedOriginalText: "原文二",
+      replacementText: "修改二",
+    });
+
+    expect(first.id).not.toBe(second.id);
+    expect(first.previousVersionId).toBe(source.id);
+    expect(second.previousVersionId).toBe(first.id);
+    expect((second.contentData as { sections: unknown[] }).sections).toEqual([
+      { id: "section-1", body: "修改一" },
+      { id: "section-2", body: "修改二" },
+    ]);
+    expect(second.contentText).toContain("修改一");
+    expect(second.contentText).toContain("修改二");
+  });
+
+  it("[T-833] 旧候选重放时保留最新稿的其他改动", async () => {
+    const artifact = await seedArtifact(ctxA);
+    const source = await service.createVersion(ctxA, artifact.id, {
+      contentText: "原文一\n\n原文二",
+      contentData: {
+        sections: [
+          { id: "section-1", body: "原文一" },
+          { id: "section-2", body: "原文二" },
+        ],
+      },
+      changeSummary: "建立两段稿面",
+    });
+    await service.createVersion(ctxA, artifact.id, {
+      contentText: "用户手改一\n\n原文二",
+      contentData: {
+        sections: [
+          { id: "section-1", body: "用户手改一" },
+          { id: "section-2", body: "原文二" },
+        ],
+      },
+      changeSummary: "用户修改第一段",
+    });
+
+    const patched = await service.applyScriptPatch(ctxA, artifact.id, {
+      expectedVersionId: source.id,
+      sectionId: "section-2",
+      expectedOriginalText: "原文二",
+      replacementText: "候选修改二",
+    });
+
+    expect((patched.contentData as { sections: unknown[] }).sections).toEqual([
+      { id: "section-1", body: "用户手改一" },
+      { id: "section-2", body: "候选修改二" },
+    ]);
   });
 
   it("[T-732] createVersion 为脚本的无 ID 段落持久化稳定锚点", async () => {

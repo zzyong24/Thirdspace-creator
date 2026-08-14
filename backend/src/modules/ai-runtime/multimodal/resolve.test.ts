@@ -11,6 +11,75 @@ const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 const noRow = async () => null;
 
 describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
+  it("[T-831] 本地参考图兼容复用既有 image.generate 配置", async () => {
+    const reads: string[] = [];
+    const spec = await resolveMultimodalSpec(ctx, "image.edit", {
+      getModelConfig: async (_ctx, capability) => {
+        reads.push(capability);
+        return capability === "image.generate"
+          ? {
+              provider: "openai",
+              modelName: "dudu-image",
+              baseUrl: "https://dudu.example/v1",
+              apiFormat: "openai_chat",
+              secretReference: "",
+              secretValue: "local-dudu-key",
+              settings: {},
+            }
+          : null;
+      },
+      env: {},
+    });
+
+    expect(reads).toContain("image.generate");
+    expect(spec).toMatchObject({
+      provider: "openai",
+      model: "dudu-image",
+      baseUrl: "https://dudu.example/v1",
+    });
+    expect(spec.displayModelKey).toBeUndefined();
+  });
+
+  it("[T-831] 官方渠道已托管生图但未声明 image.edit 时不误用本地兼容配置", async () => {
+    let localGenerateReads = 0;
+    await expect(
+      resolveMultimodalSpec(ctx, "image.edit", {
+        getChannelModelConfig: async () => ({
+          schemaVersion: 3,
+          revision: "official-v2-compatible",
+          capabilities: {
+            "image.generate": {
+              kind: "image",
+              provider: "openai",
+              model: "omnihi-text-to-image",
+              baseURL: "https://api.omnihi.example/v1",
+              apiFormat: "openai-images",
+              credentialLifecycle: "persistent",
+              serviceId: "omnihi-image-generate",
+            },
+          },
+        } as never),
+        getChannelModelCredential: async () => "official-key",
+        getModelConfig: async (_ctx, capability) => {
+          if (capability === "image.generate") localGenerateReads += 1;
+          return capability === "image.generate"
+            ? {
+                provider: "openai",
+                modelName: "dudu-image",
+                baseUrl: "https://dudu.example/v1",
+                apiFormat: "openai_chat",
+                secretReference: "",
+                secretValue: "local-dudu-key",
+                settings: {},
+              }
+            : null;
+        },
+        env: {},
+      }),
+    ).rejects.toThrow(/官方|image\.edit|参考图/);
+    expect(localGenerateReads).toBe(0);
+  });
+
   it("T-645 渠道仅配置文本时，ASR 仍读取用户本地配置", async () => {
     let localReads = 0;
     const spec = await resolveTranscribeSpec(ctx, {
@@ -132,6 +201,37 @@ describe("resolveMultimodalSpec — tier 1 DB row(库存密钥优先)", () => {
       baseUrl: "https://image-quality.example/v1",
       model: "quality-image",
       token: "quality-image-key",
+      kind: "image",
+      displayModelKey: "channel-managed",
+    });
+  });
+
+  it("参考图编辑按独立 image.edit capability 解析渠道编辑模型", async () => {
+    const spec = await resolveMultimodalSpec(ctx, "image.edit", {
+      getChannelModelConfig: async () => ({
+        models: {
+          "image.edit": [
+            {
+              id: "gpt-image-2-edit",
+              name: "GPT Image 2 图片编辑",
+              isDefault: true,
+              provider: "openai",
+              baseURL: "https://api.omnihi.ai/openai",
+              apiKey: "managed-edit-key",
+              model: "openai/gpt-image-2-edit",
+              settings: { size: "1024x1024" },
+            },
+          ],
+        },
+      }),
+      getModelConfig: noRow,
+      env: {},
+    });
+    expect(spec).toMatchObject({
+      provider: "openai",
+      baseUrl: "https://api.omnihi.ai/openai",
+      model: "openai/gpt-image-2-edit",
+      token: "managed-edit-key",
       kind: "image",
       displayModelKey: "channel-managed",
     });

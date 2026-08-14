@@ -268,6 +268,8 @@ export function toChannelManagedError(error: unknown): Error {
       ? "authentication"
       : status === 429
         ? "rate_limited"
+        : /\bupstream_error\b|\bno_available_channel\b|temporarily unavailable|服务暂时无法|暂无可用渠道/i.test(signals)
+          ? "upstream"
         : typeof status === "number" && status >= 500
           ? "upstream"
           : /timeout|timed out|超时/i.test(signals)
@@ -292,7 +294,8 @@ export function toChannelManagedError(error: unknown): Error {
     stage,
     ...(status === undefined ? {} : { status }),
     ...(reference ? { reference } : {}),
-    retryable: row.retryable === true,
+    retryable:
+      row.retryable === true || reason === "upstream" || reason === "rate_limited",
   });
 }
 

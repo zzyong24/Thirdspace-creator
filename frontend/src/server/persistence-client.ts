@@ -10146,7 +10146,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 未配 → 抛 MultimodalConfigError(runner 接住 → cancelTask + 录制页「未配置生图/生视频模型」)。
   const resolveMultimodalSpec = (
     ctx: RequestContext,
-    capability: "image.generate" | "video.generate",
+    capability: "image.generate" | "image.edit" | "video.generate",
   ) =>
     resolveMultimodalSpecFn(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),

@@ -101,6 +101,44 @@ describe("artifacts.repository — ownership boundary (Step 2)", () => {
 });
 
 describe("artifacts.repository — append-only versioning (Step 2)", () => {
+  it("[T-833] two writes from the same current version allow only one atomic winner", async () => {
+    const artifact = await makeArtifact(repoA);
+    const expectedCurrentVersionId = artifact.currentVersionId!;
+
+    const results = await Promise.allSettled([
+      repoA.createVersion(artifact.id, {
+        contentText: "并发版本 A",
+        changeSummary: "A",
+        expectedCurrentVersionId,
+      }),
+      repoA.createVersion(artifact.id, {
+        contentText: "并发版本 B",
+        changeSummary: "B",
+        expectedCurrentVersionId,
+      }),
+    ]);
+
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect(await repoA.listVersions(artifact.id)).toHaveLength(2);
+  });
+
+  it("[T-833] stale conditional restore changes nothing", async () => {
+    const artifact = await makeArtifact(repoA);
+    const v1Id = artifact.currentVersionId!;
+    const v2 = await repoA.createVersion(artifact.id, {
+      contentText: "第二版",
+      changeSummary: "edit",
+    });
+    const v3 = await repoA.createVersion(artifact.id, {
+      contentText: "第三版",
+      changeSummary: "edit again",
+    });
+
+    await expect(repoA.restore(artifact.id, v1Id, v2.id)).rejects.toThrow();
+    expect((await repoA.requireArtifact(artifact.id)).currentVersionId).toBe(v3.id);
+  });
+
   it("createVersion appends max+1 and re-points currentVersionId", async () => {
     const artifact = await makeArtifact(repoA);
     const v2 = await repoA.createVersion(artifact.id, {
