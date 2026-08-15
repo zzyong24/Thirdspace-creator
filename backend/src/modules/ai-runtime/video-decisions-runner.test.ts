@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
-import { parseSrt } from "./srt";
+import { parseSrt, type SrtLine } from "./srt";
 import {
   decideScenes,
   decideCards,
@@ -695,10 +695,11 @@ describe("closeDirectorReview(修完再通过)", () => {
     expect(result.directorReview).toEqual(
       expect.objectContaining({
         status: "ready",
-        source: "auto_repaired",
+        source: "deterministic_fallback",
         issues: [],
       }),
     );
+    expect(result.directorReview.summary).toMatch(/基础信息卡补位.*未生成 Scene Graph 内容动效/);
     expect(result.broll).toEqual([
       expect.objectContaining({ assetId: "asset-1", sceneIdx: 0 }),
     ]);
@@ -782,6 +783,95 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     expect(cards).toHaveLength(2);
     expect(cards[0]).toMatchObject({ kind: "stat", at: 0 });
     expect(cards[1]).toMatchObject({ kind: "quote", at: 3.5 });
+  });
+
+  it("[T-839 RED] 口播实录与冻结稿措辞不同时，权威 SRT 原句及其 Scene Graph 仍可溯", async () => {
+    const spokenSrt: SrtLine[] = [
+      {
+        index: 1,
+        startSec: 0,
+        endSec: 4,
+        text: "对话会串味，拆开以后流程才能稳定",
+      },
+    ];
+    const call = fakeCall({
+      "video.cards": {
+        cards: [
+          {
+            sceneIdx: 0,
+            kind: "compare",
+            content: "对话会串味，拆开以后流程才能稳定",
+            at: 0,
+            srtLineIndex: 1,
+            motion: "reveal",
+            visualPlan: {
+              relation: "statement",
+              parts: [
+                { text: "对话会串味", role: "claim" },
+                { text: "拆开以后流程才能稳定", role: "conclusion" },
+              ],
+              scene: {
+                cognitiveGoal: "看见旧对话被拆开后流程恢复稳定",
+                layout: "split",
+                aspectStrategy: "reflow",
+                entities: [
+                  {
+                    id: "mixed_chat",
+                    kind: "container",
+                    glyph: "message",
+                    semantic: "串味对话",
+                    textRole: "claim",
+                  },
+                  {
+                    id: "stable_flow",
+                    kind: "path",
+                    glyph: "route",
+                    semantic: "稳定流程",
+                    textRole: "conclusion",
+                  },
+                ],
+                beats: [
+                  {
+                    action: "exit",
+                    target: "mixed_chat",
+                    start: 0,
+                    duration: 0.35,
+                    from: { opacity: 1 },
+                    to: { opacity: 0 },
+                  },
+                  {
+                    action: "reveal",
+                    target: "stable_flow",
+                    start: 0.4,
+                    duration: 0.5,
+                    from: { progress: 0 },
+                    to: { progress: 1 },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    const cards = await decideCards({
+      scenes: [
+        { title: "流程边界", startSec: 0, endSec: 4, summary: "拆开上下文" },
+      ],
+      srtLines: spokenSrt,
+      script: "冻结稿只写了把三个步骤分开执行",
+    }, call);
+
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({
+      content: "对话会串味，拆开以后流程才能稳定",
+      srtLineIndex: 1,
+      visualPlan: {
+        relation: "statement",
+        scene: { cognitiveGoal: "看见旧对话被拆开后流程恢复稳定" },
+      },
+    });
   });
 
   it("at 吸附不越场:卡属场景 2(12-15s),模型给 11.9 → 吸到场内 12 而非邻场 8", async () => {

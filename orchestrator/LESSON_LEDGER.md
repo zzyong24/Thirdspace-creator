@@ -392,7 +392,7 @@
 
 ## LED-029 — 兜底卡数量达标不等于内容动效生效，场景级布局会把局部空窗放大成黑屏
 
-- **Date**: 2026-08-14 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **Date**: 2026-08-14 · **Stage**: BUILD · **Severity**: high · **Status**: rule
 - **WhatFailed**: 157 秒真实成片的 `video.cards` 经可溯校验后为 0，系统自动补了 14 张
   `list + reveal` 卡并让总导演复审通过；这些卡没有 `visualPlan`，8 条 B-roll 又全部是 `static`。
   横屏布局因“本场存在过视觉节点”把真人整场固定在右侧，最终出现约 15.3 秒真实空舞台，左侧约
@@ -404,9 +404,13 @@
   空窗；`visualPlan=0` 且全为同类兜底卡时不得冒充“动效已优化”。人物/舞台布局按当前时间窗切换，
   卡片与 `large_stage` 重叠后必须恢复接力。视觉审核未配置或返回 warn 必须对用户可见，编码成功不
   等于观看质量通过。
-- **GuardCheck**: 待后续修复任务把本条 157 秒时间线固化为回归：验证 Scene Graph 实际命中率、
-  0–3.37s / 25.40–35.53s / 84.48–86.33s 三段空舞台被消除，并对最终 MP4 运行接触表、左舞台
-  亮度/运动统计与视觉审核；未实现前保持 candidate，不登记为已落地门卫。
-- **Outcome(T+N)**: 已完成只读根因诊断；未改写或重做用户成片，修复待用户授权。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts
+  src/modules/execution/video-render/template.test.ts && node orchestrator/process/verify-t839-real-timeline-preview.mjs
+  <task-record.json> <pglite-db> <media-root> <talking-head-video> <output-dir>`（固定测试已登记进
+  `reconcile.config.json`；真实时间线验收按证据任务显式运行，避免门卫依赖用户私有素材）。
+- **Outcome(T+N)**: T-839 已让卡片可溯真值同时覆盖冻结稿与权威 SRT，合法 Scene Graph 不再被误删；
+  纯基础补位明确显示“未生成内容动效”，不再冒充成功。`large_stage` 结束后信息卡恢复，横屏统一用
+  同源低亮度人像承接短空窗。原 157 秒时间线的 1.5s、25.6s、30s、35s、85s、86.5s 六帧回归
+  通过，接触表见 `orchestrator/evidence/T-839/contact-sheet.jpg`。
 - **Ref**: T-838；`objkey-62e5771a-1694.mp4`；`ai-task-b269a0a7-699`；
   `ai-task-62e5771a-391`；`docs/research/2026-08-14-video-editing-regression-black-stage-diagnosis.md`。

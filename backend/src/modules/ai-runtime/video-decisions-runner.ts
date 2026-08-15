@@ -1709,6 +1709,13 @@ export async function decideCards(
   call: StructuredCall,
 ): Promise<VideoInfoCard[]> {
   const starts = srtStartSet(input.srtLines);
+  // SEMANTIC_BOUNDARY_ALLOW: 冻结稿与真实口播可能因现场省略、口误或即兴表达而不同；
+  // `video.cards` 同时消费两者，所以上屏可溯真值也必须同时包含冻结稿和权威 SRT。
+  // 这里只扩大“逐字可从已说内容找到”的安全语料，不做同义匹配、创作补写或关键词猜测。
+  const traceabilityCorpus = [
+    input.script,
+    ...input.srtLines.map((line) => line.text),
+  ].join("\n");
   const out = await call<VideoCardsOutput>({
     skillId: "video.cards",
     facets: {
@@ -1729,7 +1736,7 @@ export async function decideCards(
     const content = c.content.trim();
     if (!content) continue;
     // 可溯校验(T-224 同源):数值/关键词不在口播原文 → 剔除,绝不带编造进预览卡。
-    if (!isCardContentTraceable(content, input.script)) continue;
+    if (!isCardContentTraceable(content, traceabilityCorpus)) continue;
     // 新计划由 AI 选择所服务的 SRT 行，代码只把行号落实为权威起秒；旧计划没有
     // srtLineIndex 时才沿用 at 吸附。这样录音比稿件计划慢/快时，卡片仍跟当前字幕切换。
     const anchoredLine =
@@ -1762,7 +1769,7 @@ export async function decideCards(
       visualPlan &&
       isVideoCardVisualPlanStructurallyValid(visualPlan) &&
       visualPlan.parts.every((part) =>
-        isCardPartStrictlyTraceable(part.text, input.script),
+        isCardPartStrictlyTraceable(part.text, traceabilityCorpus),
       )
         ? visualPlan
         : undefined;
@@ -2254,6 +2261,7 @@ export async function closeDirectorReview(
   }
 
   const repairs = [...new Set(allRepairs)];
+  const fallbackCardsOnly = input.cards.length === 0 && current.cards.length > 0;
   return {
     cards: current.cards,
     broll: current.broll,
@@ -2263,13 +2271,17 @@ export async function closeDirectorReview(
     directorReview: {
       status: "ready",
       summary:
-        repairs.length > 0
+        fallbackCardsOnly
+          ? "信息卡模型未留下可溯候选；本次仅使用基础信息卡补位，未生成 Scene Graph 内容动效，建议重新生成分镜。"
+          : repairs.length > 0
           ? `总导演已在当前分镜内自动完成 ${repairs.length} 类修正并复审，可进入渲染。`
           : lastReview.summary || "总导演审片通过。",
       // 通过态不再夹带“建议删除/请手动选择”等未执行意见；审片工作记录只留日志。
       issues: [],
       source:
-        repairs.length > 0 ||
+        fallbackCardsOnly
+          ? "deterministic_fallback"
+          : repairs.length > 0 ||
         firstReview.status === "needs_attention" ||
         repeatedSubjectiveIssues.length > 0
           ? "auto_repaired"
@@ -2791,11 +2803,14 @@ export async function runVideoDecisions(
       call,
     );
     const directorReview = directorClosure.directorReview;
+    const contentMotionCards = cards.filter((card) => card.visualPlan?.scene).length;
+    const basicFallbackCards = Math.max(0, directorClosure.cards.length - cards.length);
     await step(
       4,
       `${VIDEO_DECISION_STEPS[4]}:通过` +
+        `（内容动效 ${contentMotionCards} 张 / 基础补位 ${basicFallbackCards} 张）` +
         (directorClosure.repairs.length > 0
-          ? `（自动修片 ${directorClosure.repairs.length} 类 / 复审 ${directorClosure.reviewPasses} 次）`
+          ? `；自动修片 ${directorClosure.repairs.length} 类 / 复审 ${directorClosure.reviewPasses} 次`
           : ""),
       [
         {

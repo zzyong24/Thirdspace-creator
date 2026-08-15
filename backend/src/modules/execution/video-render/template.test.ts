@@ -667,6 +667,40 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
     expect(html).toContain('id="th"');
     expect(html).toContain("left:688px;top:56px;width:544px;height:968px");
   });
+
+  it("[T-839 RED] 横屏即使本场稍后有素材，也预铺同源氛围层承接素材前后的短空窗", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      scenes: [
+        {
+          id: "has-later-visual",
+          label: "L",
+          title: "稍后进入素材",
+          startSec: 0,
+          endSec: 8,
+          role: "body",
+          cards: [],
+        },
+      ],
+      talkingHead: { ...props.talkingHead, durationSec: 8 },
+      broll: [
+        {
+          at: 3.3,
+          file: "later.png",
+          label: "稍后主图",
+          big: false,
+          durationSec: 3,
+          presentation: "large_stage",
+          visualRole: "still_image",
+          motion: "static",
+        },
+      ],
+    }, { imageFiles: new Set(["later.png"]) });
+
+    expect(html).toContain('id="thAmbient"');
+    expect(html).toContain('data-duration="8.00" data-track-index="899"');
+  });
 });
 
 describe("竖屏界面素材可读性", () => {
@@ -1110,7 +1144,44 @@ describe("信息卡主舞台与高密度排版([T-712])", () => {
     expect(annotations[0]).toMatchObject({ start: 2, duration: 6 });
     expect(annotations[1]).toMatchObject({ start: 8, duration: 6 });
     expect(annotations.every((item) => item.top + item.height <= 190)).toBe(true);
-    expect(html).not.toContain('id="c');
+    const resumedCards = [...html.matchAll(
+      /id="c\d+"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"/g,
+    )].map((match) => ({
+      start: Number(match[1]),
+      duration: Number(match[2]),
+    }));
+    expect(resumedCards).toEqual([{ start: 14, duration: 16 }]);
+  });
+
+  it("[T-839 RED] 卡片落在 large_stage 尾部时不闪短标注，主图结束后恢复为信息卡接力", () => {
+    const props = vProps([
+      { kind: "list", at: 25, items: [{ text: "拆开上下文" }, { text: "流程才稳定" }] },
+    ]);
+    props.talkingHead.durationSec = 35.53;
+    props.scenes[0]!.endSec = 35.53;
+    props.broll = [
+      {
+        at: 21.4,
+        file: "process.png",
+        label: "流程图",
+        big: false,
+        durationSec: 4,
+        presentation: "large_stage",
+        visualRole: "still_image",
+        motion: "static",
+      },
+    ];
+
+    const html = generateVideoRenderHtml(props, {
+      imageFiles: new Set(["process.png"]),
+    });
+    const resumedCard = html.match(
+      /id="c\d+"[^>]*data-start="([\d.]+)" data-duration="([\d.]+)"/,
+    );
+
+    expect(html).not.toContain('class="clip main-visual-annotation"');
+    expect(resumedCard?.[1]).toBe("25.40");
+    expect(resumedCard?.[2]).toBe("10.13");
   });
 });
 

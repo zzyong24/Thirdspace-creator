@@ -1526,9 +1526,10 @@ export function generateVideoRenderHtml(
   });
   const initialMode = modes[0] ?? "pip";
   const initPos = resolveHeadBox(L, initialMode);
-  // 横屏无素材场景的兜底背景：复用同一口播源做低亮度模糊氛围层，前景人物仍完整
-  // contain 展示。它只消除大片死黑，不创造任何内容，也不会与主音轨重复出声。
-  if (!isPortraitDelivery && modes.includes("focus")) {
+  // 横屏统一预铺同源低亮度氛围层：前景人物仍完整 contain 展示。场景里“稍后有素材”
+  // 不能让素材进场前/退场后的短空窗重新露出纯黑舞台；主素材与信息卡都有更高层级，
+  // 因而该层只负责诚实承接空窗，不创造内容，也不会与主音轨重复出声。
+  if (!isPortraitDelivery) {
     ctx.clips.push(
       `<video id="thAmbient" class="clip talking-head-ambient" src="${esc(mediaPrefix + props.talkingHead.file)}" aria-hidden="true" muted data-start="0" data-duration="${fmt(DUR)}" data-track-index="899" ` +
         `style="position:absolute;left:0;top:0;width:${width}px;height:${height}px;object-fit:cover;filter:blur(42px) brightness(.28) saturate(.82);transform:scale(1.08);opacity:.9;"></video>`,
@@ -1617,6 +1618,7 @@ export function generateVideoRenderHtml(
         .find((candidate) => isOccludingVisual(candidate))?.at;
       const endAt = scene.endSec;
       if (item.type === "card") {
+        let cardStart = item.at;
         const activeLargeStage = (brollByScene.get(scene.id) ?? []).find((broll) => {
           if (resolvePresentation(broll) !== "large_stage") return false;
           const brollEnd = Math.min(
@@ -1664,7 +1666,19 @@ export function generateVideoRenderHtml(
             );
             appear(ctx, annotationId, item.at, annotationEnd);
           }
-          continue;
+          // 卡片落在主图尾部时，先作为主图标注；主图结束后若没有更新的视觉节拍，
+          // 同一张卡必须恢复到信息舞台继续承接。旧逻辑直接 continue，导致本次真实
+          // 成片 25.40–35.53s 出现十秒空黑。若主图窗内已有更新卡片，则当前卡已被
+          // 后续语义节拍取代，不重复恢复。
+          const supersededInsideMainVisual = flowItems
+            .slice(itemIndex + 1)
+            .some(
+              (candidate) =>
+                candidate.at > item.at + 0.05 &&
+                candidate.at < activeEnd - 0.01,
+            );
+          if (supersededInsideMainVisual) continue;
+          cardStart = Math.max(item.at, activeEnd);
         }
         const box = renderCard(item.card, mediaPrefix, props.delivery.height > props.delivery.width);
         // 信息卡是当前口播 beat 的主视觉，不是左上角的小标签。每个 beat 复用同一
@@ -1692,13 +1706,18 @@ export function generateVideoRenderHtml(
         // 进场或本场结束。旧的 5.8 秒硬上限会在长口播中制造 4~10 秒纯黑空档，
         // 即使总导演已经给本场配了卡片，成片仍像“卡片播完后断电”。卡片内部已有
         // 持续的轻量 motion，延长的是承接时间，不是在代码里替 AI 选择创作语义。
+        const nextAfterCardStart = flowItems
+          .slice(itemIndex + 1)
+          .find((candidate) => candidate.at > cardStart + 0.05)?.at;
         const cardEnd = Math.min(
           scene.endSec,
-          nextOccludingAt ?? scene.endSec,
+          activeLargeStage
+            ? nextAfterCardStart ?? scene.endSec
+            : nextOccludingAt ?? scene.endSec,
         );
         // 下一段真实主画面马上进场时，不闪一张不到 1.2 秒、来不及阅读的信息卡。
         // 该时间段会由后续真实素材承接；信息卡只服务真正的空镜与语义节拍。
-        if (cardEnd - item.at < 1.2) continue;
+        if (cardEnd - cardStart < 1.2) continue;
         const id = `c${nextTrack(ctx)}`;
         const visualOnlyScale =
           visualOnly && width > height && item.card.visualPlan && !item.card.visualPlan.scene
@@ -1708,14 +1727,14 @@ export function generateVideoRenderHtml(
           ctx,
           id,
           nextTrack(ctx),
-          item.at,
-          f2(cardEnd - item.at),
+          cardStart,
+          f2(cardEnd - cardStart),
           `left:${pos.x}px;top:${pos.y}px;width:${box.width}px;height:${box.height}px;z-index:420;transform:scale(${visualOnlyScale});transform-origin:center center;${box.style}`,
           box.inner,
         );
         // [T-295] 富动画:按 card.motion(缺省按 kind 派生)落配方,替换整块 appear。
         // list 逐条进场已并入 motionTween 的 reveal 分支。
-        motionTween(ctx, id, item.card, item.at, cardEnd);
+        motionTween(ctx, id, item.card, cardStart, cardEnd);
       } else {
         // B-roll:图片与视频必须按物化输入的权威 MIME 分流。旧实现无条件生成 <video>，
         // PNG/JPEG 会解码失败，只剩黑框和标题却仍被记为渲染成功。

@@ -156,6 +156,12 @@
       "what": "MiniMax H3 对完整提交接口或版本根再次追加 v2 路径，或在 404 后盲试多个可能计费的 POST",
       "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-minimax.test.ts && pnpm --dir frontend exec vitest run src/server/settings-model-test-wrap.test.ts",
       "onFail": "H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。"
+    },
+    {
+      "led": "LED-029",
+      "what": "基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
+      "onFail": "成片视觉承接门回归：可溯真值必须同时覆盖冻结稿与权威 SRT；纯基础补位必须明确标注未生成 Scene Graph；large_stage 结束后恢复信息卡，横屏短空窗由同源低亮度人像承接。"
     }
   ],
   "program_completion_required": false,
