@@ -2,7 +2,7 @@
 
 > 日期：2026-08-14
 >
-> 阶段：4-build；本地安装包结果在代码冻结构建后回填。
+> 阶段：4-build + 本地包验收完成。
 >
 > 真实回归来源：T-838 的 157.27 秒渲染任务时间线、原口播和 8 个真实素材。
 
@@ -36,4 +36,24 @@
 
 ## 本地包
 
-待代码提交并冻结后，按官方 `desktop:package-local` 流程构建；随后回填文件、SHA-256、DMG 校验、真安装与真实启动结果。
+修复以 `2301547c` 提交，门卫统计以 `cd2051e5` 提交；工作树清空后才进入官方
+`desktop:package-local` 冻结构建。构建期间没有修改产品代码、测试或文档。
+
+| 项目 | 结果 |
+| --- | --- |
+| 文件 | `/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg` |
+| 大小 | 430,086,131 bytes |
+| SHA-256 | `f80b35cd802af559384dff2f416ac059a82e4056c52721fdb18e9e912666175f` |
+| DMG 完整性 | `hdiutil verify`：VALID |
+| 安装 | 已替换安装为唯一 `/Applications/CreatorOS.app` |
+| 应用结构签名 | `codesign --verify --deep --strict`：valid on disk，满足 Designated Requirement |
+| 版本 / 最低系统 | 1.1.0 / macOS 13.5 |
+| 真实启动 | GUI PID 3264 持续运行；内嵌 Next 服务 PID 3441 由 GUI 拉起 |
+| 主页面 | `http://127.0.0.1:62357/` 真实返回 HTTP 200 |
+| 正式签名 / 公证 | 未配置 Apple Developer ID 与公证凭据；`signed:false`、`notarized:false`，仅为本地验收包 |
+
+## 全局对账保留项
+
+`reconcile` 中本任务新增的 LED-029、边界、孤儿、资产和知识层门卫均通过；全局仍因看板超过硬上限、
+3 份历史 SPEC 收据过期、若干旧前端验收收据漂移等 15 项既有治理欠账判红。它们不属于 T-839 的
+视频修复或本地包范围，本次没有篡改旧收据，也没有把全局结果写成全绿。
