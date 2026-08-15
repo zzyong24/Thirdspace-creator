@@ -612,11 +612,13 @@ describe("ProductionWorkbench", () => {
           taskType: string;
           inputs: { assetId: string; mountAs: string }[];
           params: { props?: { talkingHead?: { file?: string } } };
+          constraints: { timeoutSec: number | null };
         };
       };
     };
     expect(call.body.projectId).toBe("p-1");
     expect(call.body.spec.taskType).toBe("video.render");
+    expect(call.body.spec.constraints.timeoutSec).toBeNull();
     // props 组装对齐 contract 单一真值(talkingHead.file = 视频 assetId)。
     expect(call.body.spec.params.props?.talkingHead?.file).toBe("asset-video-1");
     // inputs:mountAs 必须 = assetId(闭环约定),含口播头 + B-roll 两个资产。

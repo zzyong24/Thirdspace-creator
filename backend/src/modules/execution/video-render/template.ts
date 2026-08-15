@@ -1526,13 +1526,13 @@ export function generateVideoRenderHtml(
   });
   const initialMode = modes[0] ?? "pip";
   const initPos = resolveHeadBox(L, initialMode);
-  // 横屏统一预铺同源低亮度氛围层：前景人物仍完整 contain 展示。场景里“稍后有素材”
-  // 不能让素材进场前/退场后的短空窗重新露出纯黑舞台；主素材与信息卡都有更高层级，
-  // 因而该层只负责诚实承接空窗，不创造内容，也不会与主音轨重复出声。
+  // 横屏统一预铺低成本静态氛围底：前景人物仍完整 contain 展示。不能用第二路全长视频
+  // 加大半径动态 blur 承接空窗——它会让 Chromium 每个输出帧重复合成重媒体，真实 157 秒
+  // 回归已使捕帧吞吐下降约 31.5%。静态渐变不创造内容，只避免素材前后退回纯黑舞台。
   if (!isPortraitDelivery) {
     ctx.clips.push(
-      `<video id="thAmbient" class="clip talking-head-ambient" src="${esc(mediaPrefix + props.talkingHead.file)}" aria-hidden="true" muted data-start="0" data-duration="${fmt(DUR)}" data-track-index="899" ` +
-        `style="position:absolute;left:0;top:0;width:${width}px;height:${height}px;object-fit:cover;filter:blur(42px) brightness(.28) saturate(.82);transform:scale(1.08);opacity:.9;"></video>`,
+      `<div id="thAmbient" class="clip talking-head-ambient-static" aria-hidden="true" data-start="0" data-duration="${fmt(DUR)}" data-track-index="899" ` +
+        `style="position:absolute;left:0;top:0;width:${width}px;height:${height}px;background:radial-gradient(ellipse at 50% 42%,rgba(94,106,210,.24) 0%,rgba(24,27,48,.18) 38%,transparent 68%),linear-gradient(135deg,#151827 0%,#0d0f18 48%,#171324 100%);"></div>`,
     );
   }
   if (!visualOnly) {

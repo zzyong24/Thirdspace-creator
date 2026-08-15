@@ -68,20 +68,26 @@ class ExecutionTimeoutError extends Error {
   }
 }
 
-/** 超时 race(T-239c 模式):到点 abort + 抛 ExecutionTimeoutError。 */
-async function withTimeout<T>(
+/**
+ * 执行策略 race：普通任务到总时限 abort；video.render 可显式传 null 关闭固定总时限。
+ * 两条路径都保留 aborted race，所以用户丢弃任务时即使 executor 尚未响应，也会立即收尾。
+ */
+async function withExecutionDeadline<T>(
   work: Promise<T>,
-  timeoutSec: number,
+  timeoutSec: number | null,
   controller: AbortController,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      const err = new ExecutionTimeoutError(timeoutSec);
-      controller.abort(err);
-      reject(err);
-    }, timeoutSec * 1000);
-  });
+  const timeout =
+    timeoutSec === null
+      ? null
+      : new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            const err = new ExecutionTimeoutError(timeoutSec);
+            controller.abort(err);
+            reject(err);
+          }, timeoutSec * 1000);
+        });
   // 丢弃中止:executor 若不响应 signal(挂死),这条 race 腿保证编排立即收尾
   // (任务由 discard 落 cancelled;悬空的 work promise 无人等待,进程内自然回收)。
   let onAbort: (() => void) | undefined;
@@ -94,7 +100,7 @@ async function withTimeout<T>(
     controller.signal.addEventListener("abort", onAbort, { once: true });
   });
   try {
-    return await Promise.race([work, timeout, aborted]);
+    return await Promise.race(timeout ? [work, timeout, aborted] : [work, aborted]);
   } finally {
     if (timer) clearTimeout(timer);
     if (onAbort) controller.signal.removeEventListener("abort", onAbort);
@@ -194,10 +200,14 @@ export async function runExecutionTask(
         deps.assets.materializeAsset(ctx, assetId, destinationPath),
     );
 
-    // 4) executor 执行(超时 + abort 贯通)。goal 透传进 params 供 demo/日志用,
+    // 4) executor 执行(可选总超时 + abort 贯通)。goal 透传进 params 供 demo/日志用,
     //    不覆盖 executor 自己的同名 param。
-    await step(`执行 ${spec.taskType}(超时 ${spec.constraints.timeoutSec}s)`);
-    const result = await withTimeout(
+    await step(
+      spec.constraints.timeoutSec === null
+        ? `执行 ${spec.taskType}(无固定总超时，可由用户取消)`
+        : `执行 ${spec.taskType}(超时 ${spec.constraints.timeoutSec}s)`,
+    );
+    const result = await withExecutionDeadline(
       executor.run(
         { ...sandbox, inputs },
         { goal: spec.goal, ...params },

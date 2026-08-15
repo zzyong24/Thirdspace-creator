@@ -644,7 +644,7 @@ describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素�
 });
 
 describe("横屏无视觉节点的确定性画面兜底", () => {
-  it("用同源氛围层填满背景，并把竖版主讲画面置中放大", () => {
+  it("[T-841 RED] 用低成本静态氛围底承接空窗，并把竖版主讲画面置中放大", () => {
     const props = fullProps();
     const scene = {
       ...props.scenes[1]!,
@@ -661,14 +661,15 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
       broll: [],
     });
 
-    expect(html).toContain('id="thAmbient"');
-    expect(html).toContain('class="clip talking-head-ambient"');
-    expect(html).toContain('object-fit:cover;filter:blur(');
+    expect(html).toContain('<div id="thAmbient"');
+    expect(html).toContain('class="clip talking-head-ambient-static"');
+    expect(html).not.toContain('<video id="thAmbient"');
+    expect(html).not.toContain('filter:blur(42px)');
     expect(html).toContain('id="th"');
     expect(html).toContain("left:688px;top:56px;width:544px;height:968px");
   });
 
-  it("[T-839 RED] 横屏即使本场稍后有素材，也预铺同源氛围层承接素材前后的短空窗", () => {
+  it("[T-839/T-841] 横屏即使本场稍后有素材，也预铺低成本静态氛围底承接素材前后的短空窗", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({
       ...props,
@@ -698,7 +699,8 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
       ],
     }, { imageFiles: new Set(["later.png"]) });
 
-    expect(html).toContain('id="thAmbient"');
+    expect(html).toContain('<div id="thAmbient"');
+    expect(html).not.toContain('<video id="thAmbient"');
     expect(html).toContain('data-duration="8.00" data-track-index="899"');
   });
 });

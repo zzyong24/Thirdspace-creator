@@ -193,6 +193,40 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     expect(ai.failures[0]).toContain("执行超时");
   }, 10_000);
 
+  it("[T-841 RED] video.render without a fixed total timeout may finish after an arbitrary delay", async () => {
+    const registry = createExecutorRegistry();
+    registry.register({
+      taskType: "video.render",
+      async run(sandbox) {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        await fs.writeFile(path.join(sandbox.outDir, "final.mp4"), "video-bytes");
+        return { summary: "长渲染完成" };
+      },
+    });
+    const ai = makeFakeAi();
+
+    await runExecutionTask(
+      ctx,
+      {
+        id: "t-render-no-deadline",
+        inputData: {
+          spec: {
+            taskType: "video.render",
+            goal: "长视频高质量渲染",
+            constraints: { timeoutSec: null, network: "deny", maxOutputMB: 8 },
+          },
+        },
+      },
+      depsWith(registry, ai),
+    );
+
+    expect(ai.failures).toEqual([]);
+    expect(ai.statuses).toEqual(["running", "awaiting_confirmation"]);
+    expect(ai.steps).toContainEqual(
+      expect.objectContaining({ text: expect.stringContaining("无固定总超时") }),
+    );
+  });
+
   // [RT-H06] network 约束的诚实执行门。
   describe("network constraint gate (RT-H06)", () => {
     it("rejects network: allowlist honestly (no enforcement mechanism exists)", async () => {
@@ -251,14 +285,14 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     });
   });
 
-  it("abortExecutionTask (discard) interrupts an in-flight run", async () => {
+  it("abortExecutionTask (discard) interrupts a no-deadline video render", async () => {
     const registry = createExecutorRegistry();
     let started: (() => void) | null = null;
     const startedPromise = new Promise<void>((r) => {
       started = r;
     });
     registry.register({
-      taskType: "echo.manifest",
+      taskType: "video.render",
       async run(_sandbox, _params, { signal }) {
         started!();
         await new Promise<never>((_, reject) => {
@@ -270,7 +304,16 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     const ai = makeFakeAi();
     const run = runExecutionTask(
       ctx,
-      { id: "t-abort", inputData: { spec: { taskType: "echo.manifest", goal: "g" } } },
+      {
+        id: "t-abort",
+        inputData: {
+          spec: {
+            taskType: "video.render",
+            goal: "g",
+            constraints: { timeoutSec: null, network: "deny", maxOutputMB: 8 },
+          },
+        },
+      },
       depsWith(registry, ai),
     );
     await startedPromise;

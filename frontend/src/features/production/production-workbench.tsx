@@ -1637,7 +1637,7 @@ export function ProductionWorkbench({
               inputs: buildRenderInputs(payload.renderProps),
               params: { props: payload.renderProps },
               constraints: {
-                timeoutSec: 1800,
+                timeoutSec: null,
                 network: "deny",
                 maxOutputMB: 2048,
               },

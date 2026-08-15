@@ -68,6 +68,23 @@ describe("executionTaskSpec", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("[T-841 RED] accepts null timeout for a render that must not be killed by a fixed total deadline", () => {
+    const parsed = executionTaskSpec.parse({
+      taskType: "video.render",
+      goal: "长视频高质量渲染",
+      constraints: { timeoutSec: null, network: "deny", maxOutputMB: 2048 },
+    });
+
+    expect(parsed.constraints.timeoutSec).toBeNull();
+    expect(
+      executionTaskSpec.safeParse({
+        taskType: "echo.manifest",
+        goal: "普通执行任务仍需硬顶",
+        constraints: { timeoutSec: null, network: "deny", maxOutputMB: 8 },
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("executionManifest / executionTaskResource", () => {

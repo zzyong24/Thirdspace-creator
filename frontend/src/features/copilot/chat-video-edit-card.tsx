@@ -64,7 +64,7 @@ export function ChatVideoEditCard({ candidate }: { candidate: ChatVideoEditCandi
             goal: `按意见重渲染：${candidate.instruction}`,
             inputs: buildRenderInputs(props),
             params: { props },
-            constraints: { timeoutSec: 1800, network: "deny", maxOutputMB: 2048 },
+            constraints: { timeoutSec: null, network: "deny", maxOutputMB: 2048 },
           },
         },
       })) as unknown as { id: string };

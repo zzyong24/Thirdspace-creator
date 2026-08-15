@@ -64,13 +64,20 @@ describe("ChatVideoEditCard", () => {
       }),
     );
     const executionInput = createExecutionTask.mock.calls[0]![0] as {
-      body: { projectId: string; spec: { inputs: Array<{ assetId: string }> } };
+      body: {
+        projectId: string;
+        spec: {
+          inputs: Array<{ assetId: string }>;
+          constraints: { timeoutSec: number | null };
+        };
+      };
     };
     expect(executionInput.body.projectId).toBe("project-1");
     expect(executionInput.body.spec.inputs.map((item) => item.assetId).sort()).toEqual([
       "screen.mp4",
       "talking.mp4",
     ]);
+    expect(executionInput.body.spec.constraints.timeoutSec).toBeNull();
     expect(confirmProductionEditingPlan).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({

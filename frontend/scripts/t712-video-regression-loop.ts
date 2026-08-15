@@ -474,7 +474,7 @@ async function main(): Promise<void> {
             goal: `T-712 ${orientation} 回归渲染:${String((renderProps.meta as Json).title ?? "成片")}`,
             inputs: production.buildRenderInputs(renderProps),
             params: { props: renderProps },
-            constraints: { timeoutSec: 1800, network: "deny", maxOutputMB: 2048 },
+            constraints: { timeoutSec: null, network: "deny", maxOutputMB: 2048 },
           },
         },
       }),

@@ -29,14 +29,16 @@ export const executionTaskInput = z.object({
 });
 export type ExecutionTaskInput = z.infer<typeof executionTaskInput>;
 
-// 执行约束:超时硬顶 + 网络策略 + 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
+// 执行约束:可选总超时 + 网络策略 + 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
+// timeoutSec=null 只允许 video.render：长视频的总耗时随时长/帧率/图层变化，固定总时限会把
+// 仍持续产出捕帧心跳的健康任务误杀。其他执行类型仍保留有界总时限。
 // [RT-H06] network 的诚实语义(执行在 backend run-execution-task 的 network 门):
 //   - "deny"(默认):平台无 OS 级网络沙箱,不假装隔离 —— 以「executor 网络姿态声明
 //     (不出网/仅经平台受控端口)+ 子进程 env allowlist 收窄(密钥/DB/S3 不进沙箱进程树)」
 //     降级满足,降级明示进步骤流;声明直接联网的 executor 收到 deny 会被诚实拒绝;
 //   - "allowlist":尚无强制机制(无域名代理)→ 执行门诚实拒绝,枚举保留为将来真机制落地位。
 export const executionConstraints = z.object({
-  timeoutSec: z.number().int().positive().max(3600).default(600),
+  timeoutSec: z.number().int().positive().max(3600).nullable().default(600),
   network: z.enum(["deny", "allowlist"]).default("deny"),
   maxOutputMB: z.number().int().positive().max(2048).default(512),
 });
@@ -44,17 +46,27 @@ export type ExecutionConstraints = z.infer<typeof executionConstraints>;
 
 // 任务契约(脑→手):taskType 枚举 + goal + inputs 物化声明 + per-taskType params
 // (params 的细化 zod 由各 executor 自带 paramsSchema 二次校验)+ constraints。
-export const executionTaskSpec = z.object({
-  taskType: executionTaskType,
-  goal: z.string().min(1),
-  inputs: z.array(executionTaskInput).default([]),
-  params: z.record(z.string(), z.unknown()).default({}),
-  constraints: executionConstraints.default({
-    timeoutSec: 600,
-    network: "deny",
-    maxOutputMB: 512,
-  }),
-});
+export const executionTaskSpec = z
+  .object({
+    taskType: executionTaskType,
+    goal: z.string().min(1),
+    inputs: z.array(executionTaskInput).default([]),
+    params: z.record(z.string(), z.unknown()).default({}),
+    constraints: executionConstraints.default({
+      timeoutSec: 600,
+      network: "deny",
+      maxOutputMB: 512,
+    }),
+  })
+  .superRefine((spec, ctx) => {
+    if (spec.constraints.timeoutSec === null && spec.taskType !== "video.render") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["constraints", "timeoutSec"],
+        message: "只有 video.render 可关闭固定总超时",
+      });
+    }
+  });
 export type ExecutionTaskSpec = z.infer<typeof executionTaskSpec>;
 
 // 单个产物(收割自沙箱 out/):path 是相对 out/ 的路径(采纳时服务端按它读实体,
