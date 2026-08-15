@@ -41,6 +41,26 @@ describe("videoRenderProps", () => {
     expect(parsed.talkingHead.hasAudio).toBe(true);
   });
 
+  it("全屏录屏允许开场隐藏人物，也允许后续使用左下画中画", () => {
+    for (const speakerMode of ["hidden", "pip_bottom_left"] as const) {
+      const parsed = videoRenderProps.parse({
+        ...base,
+        broll: [
+          {
+            at: 0,
+            file: "screen.mp4",
+            label: "真实操作录屏",
+            durationSec: 3,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+            speakerMode,
+          },
+        ],
+      });
+      expect(parsed.broll[0]?.speakerMode).toBe(speakerMode);
+    }
+  });
+
   it("[T-295] motion 可选:缺省不带该字段;显式六值皆可校验、往返保留", () => {
     // 缺省:不产 motion(弱模型兜底靠 template 派生)。
     const noMotion = videoRenderProps.parse(base);

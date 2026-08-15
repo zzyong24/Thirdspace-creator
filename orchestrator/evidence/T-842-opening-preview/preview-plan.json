@@ -1,0 +1,18 @@
+{
+  "sourceTaskRecord": "/private/tmp/t838-task-record.json",
+  "previewWindow": [
+    0,
+    3.37
+  ],
+  "principle": "第一帧起连续三秒优先真实素材；本预览不修改三秒后的画中画布局",
+  "broll": [
+    {
+      "assetId": "asset-b269a0a7-510",
+      "label": "creatoros选题写稿页面.mov",
+      "at": 0,
+      "durationSec": 3.37,
+      "presentation": "full_frame",
+      "speakerMode": "hidden"
+    }
+  ]
+}

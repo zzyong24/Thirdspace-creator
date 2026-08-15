@@ -58,6 +58,68 @@ const OPTS = {
 };
 
 describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () => {
+  it("开场录屏从第一句连续覆盖前三秒时隐藏人物，后续录屏仍使用左下小窗", () => {
+    const props = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        scenes: [
+          { ...DECISIONS.scenes[0]!, startSec: 0.05 },
+          DECISIONS.scenes[1]!,
+        ],
+        cards: [
+          { ...DECISIONS.cards[0]!, at: 0.05 },
+          DECISIONS.cards[1]!,
+        ],
+        subtitles: [
+          { ...DECISIONS.subtitles[0]!, startSec: 0.05 },
+          DECISIONS.subtitles[1]!,
+        ],
+        srtLines: [
+          { ...DECISIONS.srtLines[0]!, startSec: 0.05 },
+          DECISIONS.srtLines[1]!,
+        ],
+        broll: [
+          {
+            sceneIdx: 0,
+            assetId: "opening-screen",
+            at: 0.05,
+            durationSec: 3.45,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+          },
+          ...DECISIONS.broll,
+        ],
+      },
+      {
+        ...OPTS,
+        inventory: [
+          ...OPTS.inventory,
+          {
+            assetId: "opening-screen",
+            label: "开场真实操作",
+            kind: "video",
+            description: "第一句对应的操作录屏",
+            width: 1920,
+            height: 1080,
+            durationMs: 5_000,
+          },
+        ],
+      },
+    );
+
+    expect(props.broll[0]).toMatchObject({
+      at: 0,
+      durationSec: 3.5,
+      visualRole: "screen_recording",
+      presentation: "full_frame",
+      speakerMode: "hidden",
+    });
+    expect(props.broll[1]).toMatchObject({
+      at: 3.5,
+      speakerMode: "pip_bottom_left",
+    });
+  });
+
   it("界面视频即使 AI 误给 large_stage 也提升为 full_frame，静态图仍保留安全舞台", () => {
     const props = assembleVideoRenderProps(
       {

@@ -194,9 +194,10 @@ export function assertVideoLayoutSafety(props: VideoRenderProps): void {
     }
     if (
       presentation === "full_frame" &&
-      broll.speakerMode !== "pip_bottom_left"
+      broll.speakerMode !== "pip_bottom_left" &&
+      broll.speakerMode !== "hidden"
     ) {
-      throw new Error(`全屏录屏必须保留左下角人物画中画:${broll.label}`);
+      throw new Error(`全屏录屏必须明确人物隐藏或画中画:${broll.label}`);
     }
     if (presentation === "overlay") continue;
     const scene = props.scenes.find(
@@ -394,6 +395,17 @@ function appear(ctx: Ctx, id: string, at: number, endAt: number, y = 16): void {
   );
   ctx.tweens.push(`tl.to("#${id}",{autoAlpha:0,duration:.3},${fmt(Math.max(at, endAt - 0.3))});`);
   ctx.tweens.push(`tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`);
+}
+
+/**
+ * 全屏主素材必须从插点起完全盖住人物与氛围底，不能在 0.45 秒淡入期间再次露出
+ * 背后人物或黑舞台。相邻全屏素材直接干净切换；轻量运镜仍由 animateBrollMedia 执行。
+ */
+function showSolid(ctx: Ctx, id: string, at: number, endAt: number): void {
+  ctx.tweens.push(
+    `tl.set("#${id}",{autoAlpha:1,y:0,scale:1},${fmt(at)});`,
+    `tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`,
+  );
 }
 
 /** AI 决定的轻量素材运镜。布局、遮挡和可读性仍由渲染器硬约束。 */
@@ -1506,7 +1518,11 @@ export function generateVideoRenderHtml(
   // 每场景 B-roll 归属(按 at 落区间;区间外的丢给最近场景不做,诚实按区间)
   const brollByScene = new Map<string, VideoRenderBroll[]>();
   for (const b of props.broll) {
-    const scene = props.scenes.find((s) => b.at >= s.startSec && b.at < s.endSec);
+    const scene =
+      props.scenes.find((s) => b.at >= s.startSec && b.at < s.endSec) ??
+      // 第一条 SRT 常在 0.03～0.10 秒起；开场实拍会被组装器前移到绝对 0 秒，
+      // 仍归第一场，避免被“场景尚未开始”过滤掉而重新露出空舞台。
+      (b.at <= 0.001 ? props.scenes[0] : undefined);
     if (!scene) continue; // superRefine 已保证 at < 片长;缝隙区间(无场景)不渲染
     const list = brollByScene.get(scene.id) ?? [];
     list.push(b);
@@ -1865,7 +1881,8 @@ export function generateVideoRenderHtml(
           frameStyle,
           `<div style="height:${Math.max(0, visibleFrame.height - padding * 2)}px"></div>`,
         );
-        appear(ctx, frameId, b.at, brollEnd);
+        if (presentation === "full_frame") showSolid(ctx, frameId, b.at, brollEnd);
+        else appear(ctx, frameId, b.at, brollEnd);
 
         // 横图/方图进入竖屏时，完整前景必须 contain 才可读，但只放完整前景会形成
         // “中央窄条 + 巨幅黑边”。同源氛围层只负责填满该舞台，真正可读内容仍由
@@ -1887,7 +1904,11 @@ export function generateVideoRenderHtml(
                 `data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${ambientStyle}"></video>`,
             );
           }
-          appear(ctx, ambientId, b.at, brollEnd);
+          if (presentation === "full_frame") {
+            showSolid(ctx, ambientId, b.at, brollEnd);
+          } else {
+            appear(ctx, ambientId, b.at, brollEnd);
+          }
         }
         const mediaId = `${frameId}${isImage ? "i" : "v"}`;
         const mediaStyle =
@@ -1906,7 +1927,8 @@ export function generateVideoRenderHtml(
               `style="${mediaStyle}"></video>`,
           );
         }
-        appear(ctx, mediaId, b.at, brollEnd);
+        if (presentation === "full_frame") showSolid(ctx, mediaId, b.at, brollEnd);
+        else appear(ctx, mediaId, b.at, brollEnd);
         animateBrollMedia(ctx, mediaId, b.motion ?? "static", b.at, brollEnd);
         if (
           presentation === "full_frame" &&

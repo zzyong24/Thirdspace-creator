@@ -1132,6 +1132,8 @@ function issueKey(issue: VideoDirectorIssue): string {
 
 const DIRECTOR_MAX_VISUAL_GAP_SEC = 7;
 const DIRECTOR_CARD_VISIBLE_SEC = 5;
+const DIRECTOR_OPENING_WINDOW_SEC = 3;
+const DIRECTOR_OPENING_GAP_TOLERANCE_SEC = 0.12;
 
 function requiredInformationBeatCount(durationSec: number): number {
   if (durationSec > 24) return 4;
@@ -1201,6 +1203,46 @@ function maximumVisualGap(
 }
 
 /**
+ * 开场三秒是整条成片的连续窗口，可能跨越多个短场景，因此不能复用单场景审计。
+ * SEMANTIC_BOUNDARY_ALLOW:这里只确认上游已选择的信息卡或非 overlay 主素材是否在
+ * 物理时间线上连续覆盖开场；不按文件名、关键词或业务名称判断该用哪一条素材。
+ * 真人、字幕、品牌角标与氛围背景均不在候选集合中，不能冒充实质视觉。
+ */
+function openingVisualGap(input: {
+  scenes: readonly VideoScene[];
+  cards: readonly VideoInfoCard[];
+  broll: readonly VideoBrollPick[];
+}): number {
+  const firstScene = input.scenes[0];
+  const lastScene = input.scenes.at(-1);
+  if (!firstScene || !lastScene) return 0;
+  const openingWindow: VideoScene = {
+    title: "开场前三秒",
+    summary: "开场实质视觉覆盖",
+    startSec: firstScene.startSec,
+    endSec: Math.min(
+      lastScene.endSec,
+      firstScene.startSec + DIRECTOR_OPENING_WINDOW_SEC,
+    ),
+  };
+  return maximumVisualGap(
+    openingWindow,
+    mergeVisualIntervals(openingWindow, [
+      ...input.cards.map(
+        (card) =>
+          [card.at, card.at + DIRECTOR_CARD_VISIBLE_SEC] as const,
+      ),
+      ...input.broll
+        .filter((pick) => pick.presentation !== "overlay")
+        .map(
+          (pick) =>
+            [pick.at, pick.at + pick.durationSec] as const,
+        ),
+    ]),
+  );
+}
+
+/**
  * 不依赖模型的片场安全检查：只检查时间线、真实素材 id 与视觉覆盖这些可确定事实，
  * 不用代码猜创意语义。即使总导演模型暂时不可用，也不能让结构损坏的方案进入渲染。
  */
@@ -1215,6 +1257,18 @@ export function auditVideoDecisions(input: {
   const issues: VideoDirectorIssue[] = [];
   const assetIds = new Set(input.inventory.map((asset) => asset.assetId));
   const totalDuration = srtTotalDurationSec(input.srtLines);
+
+  const openingGapSec = openingVisualGap(input);
+  if (openingGapSec > DIRECTOR_OPENING_GAP_TOLERANCE_SEC) {
+    issues.push({
+      sceneIdx: 0,
+      severity: "blocking",
+      code: "visual_gap",
+      message:
+        `开场前三秒仍有约 ${openingGapSec.toFixed(1)} 秒没有实质视觉；` +
+        "应优先由与第一句语义相关的真实素材连续承接，缺少合适素材时降级为第一句原文信息卡。真人、字幕、品牌角标和纯背景不计入。",
+    });
+  }
 
   input.scenes.forEach((scene, sceneIdx) => {
     const previous = input.scenes[sceneIdx - 1];
@@ -1534,7 +1588,11 @@ export function autoRepairVideoDecisions(input: {
     repairs.push("语义承接不足的已绑定素材已改为短镜头并由信息卡接力");
   }
 
-  const ensureCardAt = (sceneIdx: number, requestedAt: number) => {
+  const ensureCardAt = (
+    sceneIdx: number,
+    requestedAt: number,
+    options?: { nearToleranceSec?: number; repairMessage?: string },
+  ) => {
     const scene = input.scenes[sceneIdx];
     if (!scene) return;
     const at = Math.min(
@@ -1544,7 +1602,8 @@ export function autoRepairVideoDecisions(input: {
     if (
       cards.some(
         (card) =>
-          card.sceneIdx === sceneIdx && Math.abs(card.at - at) < 1.5,
+          card.sceneIdx === sceneIdx &&
+          Math.abs(card.at - at) < (options?.nearToleranceSec ?? 1.5),
       )
     ) return;
     const fallback = groundedCard({ scene, at, srtLines: input.srtLines });
@@ -1553,8 +1612,23 @@ export function autoRepairVideoDecisions(input: {
       ...fallback,
       at,
     });
-    repairs.push("视觉空档已用口播原文信息节拍补齐");
+    repairs.push(
+      options?.repairMessage ?? "视觉空档已用口播原文信息节拍补齐",
+    );
   };
+
+  // 开场真实素材的选择与插点必须由 video.broll + material.match 完成；若两次 AI
+  // 编导仍没把合法主素材放到首屏，确定性层只引用第一句原文做诚实降级，不擅自移动
+  // 晚到素材（那会改变素材与口播的语义对应）。
+  if (
+    openingVisualGap({ scenes: input.scenes, cards, broll }) >
+    DIRECTOR_OPENING_GAP_TOLERANCE_SEC
+  ) {
+    ensureCardAt(0, input.scenes[0]?.startSec ?? 0, {
+      nearToleranceSec: DIRECTOR_OPENING_GAP_TOLERANCE_SEC,
+      repairMessage: "开场前三秒已用第一句原文信息卡连续承接",
+    });
+  }
 
   for (const [sceneIdx, scene] of input.scenes.entries()) {
     const sceneBroll = broll.filter((pick) => pick.sceneIdx === sceneIdx);

@@ -93,6 +93,15 @@ describe("T-712 视频真实回归审计", () => {
     );
   });
 
+  it("接受开场录屏隐藏人物，不把已明确的 hidden 误报成缺画中画", () => {
+    const opening = props();
+    opening.broll[0] = {
+      ...opening.broll[0]!,
+      speakerMode: "hidden",
+    };
+    expect(auditVideoRenderProps(opening).passed).toBe(true);
+  });
+
   it("横屏与竖屏使用各自交付尺寸，不能拿横屏结果冒充竖屏验收", () => {
     const portrait = props();
     portrait.delivery = { width: 1080, height: 1920, fps: 30 };

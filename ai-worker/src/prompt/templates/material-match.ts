@@ -42,7 +42,7 @@ export type MaterialMatchOutput = z.infer<typeof materialMatchSchema>;
 
 export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
   id: "material.match",
-  version: "v9",
+  version: "v10",
   outputSchema: materialMatchSchema,
   tools: [],
   system:
@@ -86,6 +86,7 @@ export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
 - 任意时刻只允许一个非 overlay 主素材；下一张主素材开始前必须结束上一张，不得让横图、竖图、旧标题或旧信息卡多层叠放。
 - 每条被选素材必须返回 motion：static/push_in/pan_left/pan_right。界面截图、录屏默认 static，除非轻微运动不会影响文字和操作可读性；照片、插画可按叙事选择轻推近或平移。不要为了“有动效”牺牲可读性。
 - 新生成素材必须直接按本次交付画幅构图：竖屏 9:16 使用竖向主体和手机安全区，横屏 16:9 使用宽屏构图；不得先生成相反画幅再靠强行裁切、拉伸或缩成小图补救。
+- 开场前三秒优先使用与第一句语义直接相关的真实素材留人：若清单中存在合适的真实操作、结果、案例或证据，必须把它安排在第一场第一句的 SRT 起秒，durationSec 连续覆盖前三秒（受素材真实时长和场景边界限制）。产品界面/操作录屏需要看清时使用 full_frame，让素材成为开场主画面，真人不作为主视觉；不要把合适素材拖到三秒以后才进入。若清单中没有语义匹配的真实素材，宁可不选，由可溯信息卡补位，禁止用随机库存或通用氛围画面填满前三秒。
 - 同一素材不要重复选择；不要用 cover 角色的封面进入 B-roll 时间线。
 【输出】只输出一个 JSON 对象 {"matches": [...]}(不要多余文字、不要代码块包裹),matches 是数组,每条:
 {"assetId"(必须来自上面列表的真实 id),"role"(broll空镜/clip片段/cover封面 三选一),"reason"(为什么用它、用在哪里,一句中文),"sceneIdx"(视频模式必填),"at"(视频模式必填),"durationSec"(视频模式必填),"visualRole"(视频模式必填:screen_recording/still_image/live_footage/cover),"presentation"(视频模式必填:full_frame/large_stage/overlay),"motion"(视频模式必填:static/push_in/pan_left/pan_right)}。`,

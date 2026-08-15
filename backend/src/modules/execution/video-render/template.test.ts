@@ -926,6 +926,53 @@ describe("B-roll 主视觉安全区", () => {
     expect(html).toContain("bottom:56px;text-align:center;z-index:950");
   });
 
+  it("开场 full_frame 录屏选择 hidden 时覆盖人物且不生成画中画抬层动画", () => {
+    const props = fullProps();
+    const opening = generateVideoRenderHtml({
+      ...props,
+      scenes: [
+        { ...props.scenes[0]!, startSec: 0.05 },
+        ...props.scenes.slice(1),
+      ],
+      broll: [
+        {
+          at: 0,
+          file: "opening-screen.mp4",
+          durationSec: 3,
+          label: "开场真实操作",
+          big: false,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "hidden",
+        },
+      ],
+    });
+    expect(opening).toContain("left:0px;top:0px;z-index:940");
+    expect(opening).toContain('data-start="0.00"');
+    expect(opening).not.toContain('tl.set("#th",{zIndex:945}');
+    expect(opening).toMatch(
+      /tl\.set\("#br\d+v",\{autoAlpha:1,y:0,scale:1\},0\.00\)/,
+    );
+    expect(opening).not.toMatch(/tl\.fromTo\("#br\d+v",\{autoAlpha:0/);
+    expect(() =>
+      assertVideoLayoutSafety({
+        ...props,
+        broll: [
+          {
+            at: 0,
+            file: "opening-screen.mp4",
+            durationSec: 3,
+            label: "开场真实操作",
+            big: false,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+            speakerMode: "hidden",
+          },
+        ],
+      }),
+    ).not.toThrow();
+  });
+
   it("横屏 large_stage 固定在人物左侧，素材右边界 1300 小于人物左边界 1330", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({

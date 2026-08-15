@@ -248,7 +248,7 @@ describe("auditVideoDecisions(总导演确定性安全检查)", () => {
     );
   });
 
-  it("时间线完整且长场景有真实素材时通过确定性检查", () => {
+  it("第一场不足 8 秒但前三秒没有实质视觉时仍阻断，不能让短开场绕过长场景门", () => {
     const issues = auditVideoDecisions({
       scenes: [
         { title: "开场", startSec: 0, endSec: 3.5, summary: "开场" },
@@ -257,6 +257,46 @@ describe("auditVideoDecisions(总导演确定性安全检查)", () => {
       cards: [],
       broll: [
         { sceneIdx: 1, assetId: "asset-1", at: 3.5, durationSec: 11.5 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines,
+      inventory: INVENTORY,
+    });
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "blocking",
+          code: "visual_gap",
+          sceneIdx: 0,
+        }),
+      ]),
+    );
+    expect(issues[0]?.message).toContain("开场前三秒");
+  });
+
+  it("真实主素材从第一句开始连续承接前三秒时通过开场检查", () => {
+    const issues = auditVideoDecisions({
+      scenes: [
+        { title: "开场事实", startSec: 0, endSec: 3.5, summary: "展示真实操作" },
+        { title: "正文", startSec: 3.5, endSec: 15, summary: "正文" },
+      ],
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-1",
+          at: 0,
+          durationSec: 3.5,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+        },
+        { sceneIdx: 1, assetId: "asset-2", at: 3.5, durationSec: 11.5 },
       ],
       subtitles: srtLines.map((line) => ({
         index: line.index,
@@ -390,6 +430,54 @@ describe("normalizeBrollTimeline(素材唯一 + 主视觉不重叠)", () => {
 });
 
 describe("autoRepairVideoDecisions(总导演内部修片)", () => {
+  it("首条真实素材排到 3 秒后时，用第一句原文信息卡补齐前三秒且不改素材语义插点", () => {
+    const repaired = autoRepairVideoDecisions({
+      scenes: [{ title: "选题写稿", startSec: 0, endSec: 8, summary: "展示工作流" }],
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-1",
+          at: 3.5,
+          durationSec: 4.5,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+        },
+      ],
+      subtitles: srtLines.slice(0, 2).map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: srtLines.slice(0, 2),
+      inventory: INVENTORY,
+    });
+
+    expect(repaired.broll[0]).toEqual(
+      expect.objectContaining({ assetId: "asset-1", at: 3.5 }),
+    );
+    expect(repaired.cards[0]).toEqual(
+      expect.objectContaining({
+        sceneIdx: 0,
+        at: 0,
+        content: expect.stringContaining("大家好"),
+      }),
+    );
+    expect(repaired.repairs.join("；")).toContain("开场前三秒");
+    expect(
+      auditVideoDecisions({
+        scenes: [{ title: "选题写稿", startSec: 0, endSec: 8, summary: "展示工作流" }],
+        cards: repaired.cards,
+        broll: repaired.broll,
+        subtitles: repaired.subtitles,
+        srtLines: srtLines.slice(0, 2),
+        inventory: INVENTORY,
+      }),
+    ).toEqual([]);
+  });
+
   it("保留已绑定素材，并用口播原文信息卡自动补齐长场景空档", () => {
     const repaired = autoRepairVideoDecisions({
       scenes: [{ title: "完整论点", startSec: 0, endSec: 15, summary: "完整论点" }],

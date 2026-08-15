@@ -209,6 +209,8 @@ export function assembleVideoRenderProps(
     opts.inventory?.find((a) => a.assetId === assetId)?.label ?? assetId;
   const inventoryItem = (assetId: string) =>
     opts.inventory?.find((a) => a.assetId === assetId);
+  const openingStartSec = decisions.scenes[0]?.startSec ?? 0;
+  const openingEndSec = Math.min(durationSec, openingStartSec + 3);
 
   const broll = decisions.broll
     .filter((b: VideoBrollPick) => inScene(b.sceneIdx))
@@ -227,17 +229,34 @@ export function assembleVideoRenderProps(
           : requestedPresentation === "full_frame"
             ? "large_stage"
             : requestedPresentation;
+      // 用户确认的开场版式：AI 已选择的录屏若从第一句起连续覆盖前三秒，素材就是
+      // 唯一主视觉，人物暂时隐藏；之后的全屏录屏仍保留左下小窗。这里只执行时间、
+      // visualRole 与 presentation，不按文件名或口播关键词判断视频类型。
+      // SEMANTIC_BOUNDARY_ALLOW:创作语义仍来自 material.match，代码仅落实首屏版式。
+      const isOpeningScreenRecording =
+        presentation === "full_frame" &&
+        b.visualRole === "screen_recording" &&
+        b.at <= openingStartSec + 0.12 &&
+        b.at + b.durationSec >= openingEndSec - 0.12;
+      // SRT 第一行通常从 0.03～0.10 秒开始，但成片第 0 帧不能先露出旧底画面。
+      // 开场素材只前移时间、不改变原结束点，三秒后的分镜与画中画完全不受影响。
+      const renderAt = isOpeningScreenRecording ? 0 : b.at;
+      const renderDurationSec = b.durationSec + (b.at - renderAt);
       return {
-        at: b.at,
+        at: renderAt,
         // mountAs=assetId 约定(与 talkingHead.file 同域,T-254c dispatch 对齐)。
         file: b.assetId,
-        durationSec: b.durationSec,
+        durationSec: renderDurationSec,
         label: labelOf(b.assetId),
         presentation,
         ...(b.visualRole ? { visualRole: b.visualRole } : {}),
         ...(presentation === "full_frame" &&
         b.visualRole === "screen_recording"
-          ? { speakerMode: "pip_bottom_left" as const }
+          ? {
+              speakerMode: isOpeningScreenRecording
+                ? ("hidden" as const)
+                : ("pip_bottom_left" as const),
+            }
           : {}),
         motion: b.motion ?? "static",
         ...(asset?.width ? { sourceWidth: asset.width } : {}),

@@ -496,16 +496,17 @@ export const videoRenderProps = z
       if (
         presentation === "full_frame" &&
         b.visualRole === "screen_recording" &&
-        b.speakerMode !== "pip_bottom_left"
+        b.speakerMode !== "pip_bottom_left" &&
+        b.speakerMode !== "hidden"
       ) {
         ctx.addIssue({
           code: "custom",
           path: ["broll", i, "speakerMode"],
-          message: "全屏录屏必须保留左下角人物画中画",
+          message: "全屏录屏必须明确隐藏人物或保留左下角人物画中画",
         });
       }
       if (
-        b.speakerMode === "pip_bottom_left" &&
+        (b.speakerMode === "pip_bottom_left" || b.speakerMode === "hidden") &&
         !(
           presentation === "full_frame" &&
           b.visualRole === "screen_recording"
@@ -514,7 +515,7 @@ export const videoRenderProps = z
         ctx.addIssue({
           code: "custom",
           path: ["broll", i, "speakerMode"],
-          message: "人物画中画只用于全屏录屏",
+          message: "人物隐藏或画中画模式只用于全屏录屏",
         });
       }
     });

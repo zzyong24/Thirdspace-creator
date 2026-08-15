@@ -223,12 +223,13 @@ export function auditVideoRenderProps(
     if (
       item.presentation === "full_frame" &&
       item.visualRole === "screen_recording" &&
-      item.speakerMode !== "pip_bottom_left"
+      item.speakerMode !== "pip_bottom_left" &&
+      item.speakerMode !== "hidden"
     ) {
       issues.push({
         severity: "error",
-        code: "screen_recording_missing_pip",
-        message: "全屏录屏缺少左下角人物画中画",
+        code: "screen_recording_missing_speaker_mode",
+        message: "全屏录屏没有明确人物隐藏或画中画模式",
         assetId: item.file,
       });
     }

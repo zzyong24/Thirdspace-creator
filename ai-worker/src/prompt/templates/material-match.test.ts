@@ -36,6 +36,7 @@ describe("material.match 视频呈现契约", () => {
   });
 
   it("把项目画幅、界面可读性和展示时长交给 Skill 判断", () => {
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v10");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{orientation}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "still_image 与 live_footage 绝不能 full_frame",
@@ -63,6 +64,9 @@ describe("material.match 视频呈现契约", () => {
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "禁止把高信息主图缩在角落，再用一张大信息卡覆盖它",
     );
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("开场前三秒优先使用");
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("第一场第一句的 SRT 起秒");
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不要把合适素材拖到三秒以后");
   });
 
   it("把原文件名和人工选材当高价值上下文，但禁止机械字符串匹配", () => {
