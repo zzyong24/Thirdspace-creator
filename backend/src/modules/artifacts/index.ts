@@ -32,7 +32,11 @@ export {
 
 export { ARTIFACTS_DDL } from "./artifacts.db-schema";
 
-export { OwnershipError, ConflictError } from "./artifacts.errors";
+export {
+  OwnershipError,
+  ConflictError,
+  ValidationError,
+} from "./artifacts.errors";
 
 export {
   canonicalizeScriptContentData,

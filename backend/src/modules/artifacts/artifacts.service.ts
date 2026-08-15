@@ -9,7 +9,7 @@ import {
   type ScriptSectionRow,
   type StructuredContent,
 } from "./artifacts.repository";
-import { ConflictError } from "./artifacts.errors";
+import { ConflictError, ValidationError } from "./artifacts.errors";
 import {
   canonicalizeScriptContentData,
   canonicalizeScriptSectionRecords,
@@ -72,6 +72,12 @@ export interface ServiceDeps {
   /** Optional evidence-target validators (MODULE-ARCH §4.3). */
   assertKnowledgeOwned?: AssertOwned;
   assertAssetOwned?: AssertOwned;
+  /** Project/output association guards supplied by the Projects public service. */
+  assertProjectOwned?: AssertOwned;
+  resolveOutputProjectId?: (
+    ctx: RequestContext,
+    outputId: string,
+  ) => Promise<string | null>;
   /** [T-183] Optional 改稿 delta → 品味信号 best-effort seam. */
   recordEditDelta?: RecordEditDelta;
 }
@@ -181,6 +187,23 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
     },
 
     async createArtifact(ctx, input) {
+      // Artifact owns its content/version lifecycle, while Projects owns the
+      // project/output relationship. Validate through injected public-service
+      // ports before persisting so CLI/API callers cannot create orphan scripts.
+      if (deps.assertProjectOwned) {
+        await deps.assertProjectOwned(ctx, input.projectId);
+      }
+      if (input.contentOutputId && deps.resolveOutputProjectId) {
+        const outputProjectId = await deps.resolveOutputProjectId(
+          ctx,
+          input.contentOutputId,
+        );
+        if (outputProjectId !== input.projectId) {
+          throw new ValidationError(
+            "ValidationError: contentOutputId does not belong to projectId",
+          );
+        }
+      }
       // origin threads straight to the repo (default null ≡ 'user'; auto-fill
       // passes 'reconstructed' — F1, SPEC §4.5).
       return repoFor(ctx, "artifacts.createArtifact").create(input);

@@ -121,12 +121,14 @@ export function createArtifactsTransport(
             title: string;
             artifactType: string;
             stage: string;
+            contentOutputId?: string | null;
           };
           const row = await service.createArtifact(ctx, {
             projectId: p.projectId ?? "",
             title: b.title,
             artifactType: b.artifactType,
             stage: b.stage,
+            contentOutputId: b.contentOutputId ?? null,
           });
           return { data: toArtifactResource(row), meta: { requestId } };
         }

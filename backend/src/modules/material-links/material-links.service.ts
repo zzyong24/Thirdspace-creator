@@ -14,8 +14,8 @@ import { OwnershipError, ValidationError } from "./material-links.errors";
 // MaterialLink service (foundation §5.3) — every public method takes
 // `(ctx: RequestContext, …)` and builds a repository bound to `ctx.userId` so scoping is
 // structural. The service owns the 用料链 (Bill-of-Materials, Plan A4) — the 料库⇄创作
-// edge. No external port: links are pure local records (entityId / contentOutputId are
-// soft references validated by a peer service at the caller's seam, not here).
+// edge. Cross-module identity remains a soft reference in SQL, but production binds
+// public-service validator ports so an API/CLI write cannot create a dangling edge.
 
 const VALID_ENTITY_TYPES = new Set(["knowledge", "asset"]);
 // [T-146 切片 b] priority 枚举:二元(用户裁决②)。枚举一律 service 校验(gate minor 驳回加
@@ -26,6 +26,23 @@ export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
+  /** Cross-module ownership/association ports; production composition must bind them. */
+  assertProjectOwned?: (
+    ctx: RequestContext,
+    projectId: string,
+  ) => Promise<unknown>;
+  resolveOutputProjectId?: (
+    ctx: RequestContext,
+    outputId: string,
+  ) => Promise<string | null>;
+  assertKnowledgeOwned?: (
+    ctx: RequestContext,
+    knowledgeId: string,
+  ) => Promise<unknown>;
+  assertAssetOwned?: (
+    ctx: RequestContext,
+    assetId: string,
+  ) => Promise<unknown>;
 }
 
 export interface CreateMaterialLinkInput {
@@ -108,6 +125,26 @@ export function createMaterialLinksService(
 
     async create(ctx, input) {
       guardCreateInput(input);
+      if (deps.assertProjectOwned) {
+        await deps.assertProjectOwned(ctx, input.projectId);
+      }
+      if (input.contentOutputId && deps.resolveOutputProjectId) {
+        const outputProjectId = await deps.resolveOutputProjectId(
+          ctx,
+          input.contentOutputId,
+        );
+        if (outputProjectId !== input.projectId) {
+          throw new ValidationError(
+            "ValidationError: contentOutputId does not belong to projectId",
+          );
+        }
+      }
+      if (input.entityType === "knowledge" && deps.assertKnowledgeOwned) {
+        await deps.assertKnowledgeOwned(ctx, input.entityId);
+      }
+      if (input.entityType === "asset" && deps.assertAssetOwned) {
+        await deps.assertAssetOwned(ctx, input.entityId);
+      }
       const row = await repoFor(ctx).create({
         projectId: input.projectId,
         contentOutputId: input.contentOutputId ?? null,

@@ -54,4 +54,25 @@ describe("artifacts contract", () => {
     );
     expect(artifactsOperations.listArtifacts.fr.length).toBeGreaterThan(0);
   });
+
+  it("artifacts.create exposes the exact type/stage enums and an optional output association", () => {
+    const parsed = artifactsOperations.createArtifact.body.parse({
+      title: "项目口播稿",
+      artifactType: "output_script",
+      stage: "script",
+      contentOutputId: "output-1",
+    });
+    expect(parsed).toMatchObject({
+      artifactType: "output_script",
+      stage: "script",
+      contentOutputId: "output-1",
+    });
+    expect(() =>
+      artifactsOperations.createArtifact.body.parse({
+        title: "非法稿件",
+        artifactType: "script-ish",
+        stage: "writing",
+      }),
+    ).toThrow();
+  });
 });

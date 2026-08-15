@@ -5,6 +5,8 @@ import {
   artifactResource,
   artifactVersionResource,
   artifactRelationResource,
+  artifactStage,
+  artifactType,
 } from "../resources/artifacts";
 
 const projectParams = z.object({ projectId: id });
@@ -29,8 +31,10 @@ export const artifactsOperations = {
     params: projectParams,
     body: z.object({
       title: z.string().min(1),
-      artifactType: z.string().min(1),
-      stage: z.string().min(1),
+      artifactType,
+      stage: artifactStage,
+      // 将脚本/平台文案等 artifact 正式锚到 ContentOutput；省略表示项目级产物。
+      contentOutputId: id.nullable().optional(),
     }),
     response: artifactResource,
     fr: ["FR-ARTIFACTS-CREATE"],

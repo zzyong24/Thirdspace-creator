@@ -69,6 +69,15 @@ describe("endpointInputSchema(zod v4 → JSON Schema)", () => {
       expect(schema.type).toBe("object");
     }
   });
+
+  it("artifacts.create 的 MCP schema 与服务端枚举、output 关联一致", () => {
+    const schema = endpointInputSchema(ENDPOINTS.createArtifact);
+    const body = (schema.properties as Record<string, any>).body;
+    expect(body.properties.artifactType.enum).toContain("output_script");
+    expect(body.properties.artifactType.enum).not.toContain("script-ish");
+    expect(body.properties.stage.enum).toContain("script");
+    expect(body.properties.contentOutputId).toBeDefined();
+  });
 });
 
 describe("buildTools", () => {

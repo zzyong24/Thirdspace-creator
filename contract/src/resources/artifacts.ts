@@ -9,9 +9,9 @@ import {
 const timestamps = { createdAt: iso8601, updatedAt: iso8601 };
 
 // ArtifactStage = ProjectStageName (alias).
-const artifactStage = projectStageName;
+export const artifactStage = projectStageName;
 
-const artifactType = z.enum([
+export const artifactType = z.enum([
   "project_idea",
   "trend_analysis",
   "market_analysis",

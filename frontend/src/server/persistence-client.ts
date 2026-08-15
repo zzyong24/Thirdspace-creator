@@ -14,7 +14,13 @@ import {
   // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
   restorePreservedUserAssets,
 } from "@creatoros/backend";
-import { videoRenderProps, type Endpoint, type Transport, type RequestContext } from "@creatoros/contract";
+import {
+  videoRenderProps,
+  type Endpoint,
+  type Transport,
+  type RequestContext,
+  type ProjectOverviewPage,
+} from "@creatoros/contract";
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
@@ -2508,6 +2514,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
     assertKnowledgeOwned: (ctx, id) => knowledgeService.getKnowledge(ctx, id),
     assertAssetOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    assertProjectOwned: async (ctx, projectId) => {
+      await projectsService.listOutputIdsByProject(ctx, projectId);
+    },
+    resolveOutputProjectId: (ctx, outputId) =>
+      projectsService.getProjectIdByOutput(ctx, outputId),
     // [T-183] 改稿 delta → 品味信号 best-effort seam。Lazy 箭头:`learningsService` 在下方
     // 构造(request 时才求值,TDZ-safe,同 calibration/AI confirm thunk 范式)。用户手改
     // AI 产出的脚本 → 一条 edit_delta candidate learning 进裁决台。
@@ -8796,15 +8807,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // MaterialLinks (用料链 / Bill-of-Materials, Plan A4): the service builds a per-ctx
   // user-scoped repo over the shared db (the service mints one per request; the repo
-  // bakes userId in). The transport returns this ONE shared service. No external port +
-  // no peer fan-out — links are pure local records (entityId/contentOutputId are soft
-  // references validated at the caller's seam, never a DB FK across module schemas).
+  // bakes userId in). The transport returns this ONE shared service. Entity/project/
+  // output references remain soft SQL references, but the injected public-service
+  // ports validate every production write without importing peer repositories.
   // delete is ownership-gated (cross-user → OwnershipError → 404). Clock/ids share the
   // deterministic `deps` (createSeq keeps matlink ids collision-free across requests).
   const materialLinksService = createMaterialLinksService({
     db,
     now: deps.now,
     nextId: deps.nextId,
+    assertProjectOwned: async (ctx, projectId) => {
+      await projectsService.listOutputIdsByProject(ctx, projectId);
+    },
+    resolveOutputProjectId: (ctx, outputId) =>
+      projectsService.getProjectIdByOutput(ctx, outputId),
+    assertKnowledgeOwned: (ctx, knowledgeId) =>
+      knowledgeService.getKnowledge(ctx, knowledgeId),
+    assertAssetOwned: (ctx, assetId) => assetsService.getAsset(ctx, assetId),
   });
   const materialLinks = createMaterialLinksTransport(
     () => materialLinksService,
@@ -8891,20 +8910,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // / searchService). The request's `ctx` is threaded UNCHANGED into every facade
   // call, so each downstream service enforces its own eq(userId, ctx.userId) scope.
   //
-  // Open question #1: several SPEC §19 read methods are NOT yet on the frozen
-  // upstream index.ts (Projects has no getDashboardSummary / project-overview read;
-  // Analytics has no dashboard/publishing metric rollup). Rather than read a peer
-  // repository (forbidden, SPEC §19/§22), the gap sections compose to DTO-valid
-  // EMPTY/zero projections — the page renders a real (possibly empty) composition,
-  // never a 500, and slots real data the moment those upstream reads land. The
-  // ownership-404 path is REAL: getProjectOverview gates via
-  // projectsService.listOutputIdsByProject (throws OwnershipError for a cross-user /
-  // unknown project id).
+  // Every page facade below binds only to public module services. Project Overview
+  // reads its root/stages/outputs/activities through Projects' narrow composition
+  // port, then joins Artifacts, MaterialLinks/Assets and Publishing here. No peer
+  // repository access and no synthetic empty project projection.
   const notificationsServiceForQuery = createNotificationsService(
     notificationsRepo,
     deps,
   );
-  const EMPTY_STAGE = "research" as const;
 
   const dashboardQuery = createDashboardQueryService({
     projects: {
@@ -9322,33 +9335,182 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
 
+  const overviewActivity = (
+    row: { id: string; eventType: string; occurredAt: string },
+  ): ProjectOverviewPage["activities"][number] => {
+    const labels: Record<string, string> = {
+      project_created: "项目已创建",
+      project_archived: "项目已归档",
+      stage_transition: "项目阶段已更新",
+      stage_gate_blocked: "阶段交付物待补齐",
+      output_created: "已创建内容产出",
+      output_updated: "内容产出已更新",
+      task_created: "已创建项目任务",
+      artifact_updated: "脚本或内容产物已更新",
+      evidence_linked: "项目已关联新资料",
+    };
+    return {
+      id: row.id,
+      title: labels[row.eventType] ?? "项目状态变化",
+      eventType: row.eventType,
+      occurredAt: row.occurredAt,
+      tone: row.eventType === "stage_gate_blocked" ? "warning" : "info",
+    };
+  };
+  const overviewMetric = (
+    id: string,
+    label: string,
+    value: number,
+  ): ProjectOverviewPage["assetStats"][number] => ({
+    id,
+    label,
+    value: String(value),
+    delta: "",
+    trend: "flat",
+    tone: "neutral",
+  });
+  const artifactFileKind = (
+    artifactType: string,
+  ): ProjectOverviewPage["recentFiles"][number]["fileKind"] =>
+    artifactType === "output_script" || artifactType === "master_script"
+      ? "script"
+      : artifactType === "shot_list" || artifactType === "timeline"
+        ? "shot"
+        : "document";
+  const assetFileKind = (
+    assetType: string,
+  ): ProjectOverviewPage["recentFiles"][number]["fileKind"] =>
+    assetType === "video" || assetType === "image"
+      ? "shot"
+      : assetType === "document" || assetType === "subtitle"
+        ? "document"
+        : "data";
+
   const overviewQuery = createProjectOverviewQueryService({
     projects: {
       getProjectOverview: async (ctx, projectId) => {
-        // listOutputIdsByProject GATES ownership: a cross-user / unknown project
-        // throws OwnershipError (→404) BEFORE any overview section is composed.
-        await projectsService.listOutputIdsByProject(ctx, projectId);
+        const { project, stages, outputs, activities } =
+          await projectsService.getProjectOverviewCore(ctx, projectId);
         return {
-          projectId,
-          projectTitle: "",
-          stage: EMPTY_STAGE,
-          progressPct: 0,
-          stages: [],
-          outputs: [],
-          activities: [],
-          projectInfo: [],
+          projectId: project.id,
+          projectTitle: project.title,
+          stage: project.currentStage as ProjectStageName,
+          progressPct: project.progressPct,
+          stages: stages.map((row) => ({
+            stage: row.stage as ProjectStageName,
+            // `blocked` is an internal transition state and is never serialized.
+            status: (row.status === "blocked" ? "needs_review" : row.status) as
+              ProjectOverviewPage["stages"][number]["status"],
+            progressPct: row.progressPct,
+          })),
+          outputs: outputs.map((row) => ({
+            id: row.id,
+            title: row.title,
+            contentType:
+              row.contentType as ProjectOverviewPage["outputs"][number]["contentType"],
+            status:
+              row.status as ProjectOverviewPage["outputs"][number]["status"],
+          })),
+          activities: activities
+            .slice()
+            .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+            .map(overviewActivity),
+          projectInfo: [
+            { label: "内容分类", value: project.contentCategory || "—" },
+            { label: "创建模式", value: project.creationMode || "—" },
+            { label: "项目状态", value: project.status || "—" },
+            { label: "开始时间", value: project.startedAt },
+            { label: "目标完成", value: project.targetCompletedAt ?? "—" },
+          ],
           milestones: [],
         };
       },
     },
     assets: {
-      getProjectAssetStats: async () => ({
-        assetStats: [],
-        recentFiles: [],
-      }),
+      getProjectAssetStats: async (ctx, projectId) => {
+        // Repeat the project ownership gate because this facade runs concurrently
+        // with the core facade; no project-scoped child read may become an oracle.
+        await projectsService.listOutputIdsByProject(ctx, projectId);
+        const [{ rows: links }, artifacts] = await Promise.all([
+          materialLinksService.list(ctx, { projectId, page: 1, pageSize: 500 }),
+          artifactsService.listProjectArtifacts(ctx, projectId),
+        ]);
+        const assetLinks = links.filter((row) => row.entityType === "asset");
+        const knowledgeCount = links.filter(
+          (row) => row.entityType === "knowledge",
+        ).length;
+        const uniqueAssetIds = [...new Set(assetLinks.map((row) => row.entityId))];
+        const linkedAssets = (
+          await Promise.all(
+            uniqueAssetIds.map(async (assetId) => {
+              try {
+                return await assetsService.getAsset(ctx, assetId);
+              } catch (err) {
+                // Legacy dangling soft links are omitted honestly; new writes are
+                // prevented by the MaterialLinks ownership validators.
+                if (
+                  err instanceof OwnershipError ||
+                  (typeof err === "object" &&
+                    err !== null &&
+                    "code" in err &&
+                    String(err.code).includes("Ownership"))
+                ) {
+                  return null;
+                }
+                throw err;
+              }
+            }),
+          )
+        ).filter((row): row is NonNullable<typeof row> => row !== null);
+
+        const recentFiles: ProjectOverviewPage["recentFiles"] = [
+          ...artifacts.map((row) => ({
+            id: row.id,
+            name: row.title,
+            type: row.artifactType,
+            fileKind: artifactFileKind(row.artifactType),
+            updatedAt: row.updatedAt,
+          })),
+          ...linkedAssets.map((row) => ({
+            id: row.id,
+            name: row.name,
+            type: row.assetType,
+            fileKind: assetFileKind(row.assetType),
+            updatedAt: row.updatedAt,
+          })),
+        ]
+          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+          .slice(0, 12);
+
+        return {
+          assetStats: [
+            overviewMetric("stat-assets", "关联素材", assetLinks.length),
+            overviewMetric("stat-knowledge", "关联知识", knowledgeCount),
+            overviewMetric("stat-artifacts", "内容产物", artifacts.length),
+          ],
+          recentFiles,
+        };
+      },
     },
     publishing: {
-      getProjectPublishing: async () => [],
+      getProjectPublishing: async (ctx, projectId) => {
+        const outputIds = await projectsService.listOutputIdsByProject(
+          ctx,
+          projectId,
+        );
+        const rows = await publishingService.listPublicationsByOutputIds(
+          ctx,
+          outputIds,
+        );
+        return rows.map((row) => ({
+          id: row.id,
+          platform:
+            row.platform as ProjectOverviewPage["publishing"][number]["platform"],
+          status:
+            row.status as ProjectOverviewPage["publishing"][number]["status"],
+          publishedAt: row.publishedAt ?? null,
+        }));
+      },
     },
   });
 

@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import type { Endpoint, RequestContext } from "@creatoros/contract";
+import type {
+  Endpoint,
+  RequestContext,
+  ProjectOverviewPage,
+} from "@creatoros/contract";
 import {
   dashboardPage,
   projectOverviewPage,
@@ -11,6 +15,11 @@ import {
 } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
 import { QUERY_SERVICES_OP_IDS } from "@creatoros/backend/modules/query-services";
+import {
+  loadScriptEditorData,
+  resolveScriptArtifactIdFromDb,
+  type ScriptDataClient,
+} from "@/features/script/script-editor-data";
 
 // Task 4/6 — the 3 page-read ops are registered into the composite (PERSISTED_OPS)
 // and resolve through compositeTransport against the seeded pglite store. Proves
@@ -49,7 +58,17 @@ beforeEach(async () => {
     {
       params: undefined,
       query: undefined,
-      body: { title: "query-services 集成测试项目", brief: "" },
+      body: {
+        title: "query-services 集成测试项目",
+        brief: "用于验证 CLI 写后读回",
+        briefDetail: {
+          targetAudience: "内容创作者",
+          contentGoal: "验证真实项目概览",
+          contentFormat: "口播",
+          targetPlatforms: ["douyin"],
+          coreMessage: "所有写入都应从正式读模型回显",
+        },
+      },
     } as never,
     ctx(OWNER),
   )) as { data: { id: string } };
@@ -96,6 +115,239 @@ describe("query-services ops registered in the composite transport", () => {
     )) as { data: { projectId: string } };
     expect(() => projectOverviewPage.parse(res.data)).not.toThrow();
     expect(res.data.projectId).toBe(PROJECT_ID);
+  });
+
+  it("CLI 等价写链：项目→输出/脚本/素材→overview 全部真实回显", async () => {
+    const owner = ctx(OWNER);
+    const output = (await compositeTransport.request(
+      ep("projects.outputs.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: { title: "抖音主成片" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    const artifact = (await compositeTransport.request(
+      ep("artifacts.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: {
+          title: "项目口播稿",
+          artifactType: "output_script",
+          stage: "script",
+          contentOutputId: output.data.id,
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string; contentOutputId: string | null } };
+    expect(artifact.data.contentOutputId).toBe(output.data.id);
+    await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: artifact.data.id },
+        query: undefined,
+        body: { contentText: "这是 CLI 写入后必须能读回的正式口播稿。", changeSummary: "测试读回" },
+      } as never,
+      owner,
+    );
+
+    const upload = (await compositeTransport.request(
+      ep("assets.uploads.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: { assetType: "video", mimeType: "video/mp4", fileSize: 1024 },
+      } as never,
+      owner,
+    )) as { data: { uploadId: string } };
+    const asset = (await compositeTransport.request(
+      ep("assets.uploads.complete"),
+      {
+        params: { uploadId: upload.data.uploadId },
+        query: undefined,
+        body: { name: "前三秒真实素材.mp4" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    await compositeTransport.request(
+      ep("materialLinks.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: {
+          projectId: PROJECT_ID,
+          contentOutputId: output.data.id,
+          entityType: "asset",
+          entityId: asset.data.id,
+          role: "clip",
+          stage: "production",
+        },
+      } as never,
+      owner,
+    );
+
+    const result = (await compositeTransport.request(
+      ep("pages.projectOverview.get"),
+      { params: { projectId: PROJECT_ID }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: ProjectOverviewPage };
+    expect(() => projectOverviewPage.parse(result.data)).not.toThrow();
+    expect(result.data).toMatchObject({
+      scenario: "default",
+      projectId: PROJECT_ID,
+      projectTitle: "query-services 集成测试项目",
+      stage: "brief",
+      progressPct: 0,
+    });
+    expect(result.data.stages).toHaveLength(7);
+    expect(result.data.outputs).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: output.data.id, title: "抖音主成片" })]),
+    );
+    expect(result.data.recentFiles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: artifact.data.id, name: "项目口播稿", fileKind: "script" }),
+        expect.objectContaining({ id: asset.data.id, name: "前三秒真实素材.mp4", fileKind: "shot" }),
+      ]),
+    );
+
+    const listedArtifacts = (await compositeTransport.request(
+      ep("artifacts.list"),
+      { params: { projectId: PROJECT_ID }, query: { page: 1, pageSize: 20 }, body: undefined } as never,
+      owner,
+    )) as { data: Array<{ id: string; contentOutputId: string | null }> };
+    expect(listedArtifacts.data).toContainEqual(
+      expect.objectContaining({ id: artifact.data.id, contentOutputId: output.data.id }),
+    );
+
+    // 脚本页使用的正式 reader 也必须命中同一个 output_script + 当前版本。
+    const scriptClient: ScriptDataClient = {
+      listArtifacts: async (input) =>
+        (
+          (await compositeTransport.request(
+            ep("artifacts.list"),
+            input as never,
+            owner,
+          )) as { data: unknown }
+        ).data,
+      getArtifact: async (input) =>
+        (
+          (await compositeTransport.request(
+            ep("artifacts.get"),
+            input as never,
+            owner,
+          )) as { data: { currentVersionId: string } }
+        ).data,
+      listArtifactVersions: async (input) =>
+        (
+          (await compositeTransport.request(
+            ep("artifacts.versions.list"),
+            input as never,
+            owner,
+          )) as { data: unknown }
+        ).data,
+    };
+    const readableArtifactId = await resolveScriptArtifactIdFromDb(
+      PROJECT_ID,
+      scriptClient,
+    );
+    expect(readableArtifactId).toBe(artifact.data.id);
+    const scriptPageData = await loadScriptEditorData(
+      readableArtifactId,
+      scriptClient,
+    );
+    expect(scriptPageData?.editorHtml).toContain(
+      "这是 CLI 写入后必须能读回的正式口播稿。",
+    );
+    expect(scriptPageData?.versions[0]).toMatchObject({
+      versionNumber: 2,
+      isCurrent: true,
+    });
+  });
+
+  it("stage transition 的响应、projects.get 与 overview 使用同一 currentStage/progress", async () => {
+    const owner = ctx(OWNER);
+    const transitioned = (await compositeTransport.request(
+      ep("projects.stage.transition"),
+      {
+        params: { projectId: PROJECT_ID, stage: "brief" },
+        query: undefined,
+        body: {},
+      } as never,
+      owner,
+    )) as { data: { currentStage: string; progressPct: number } };
+    const reread = (await compositeTransport.request(
+      ep("projects.get"),
+      { params: { projectId: PROJECT_ID }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { currentStage: string; progressPct: number } };
+    const overview = (await compositeTransport.request(
+      ep("pages.projectOverview.get"),
+      { params: { projectId: PROJECT_ID }, query: undefined, body: undefined } as never,
+      owner,
+    )) as { data: { stage: string; progressPct: number } };
+    expect(reread.data).toMatchObject(transitioned.data);
+    expect(overview.data).toMatchObject({
+      stage: transitioned.data.currentStage,
+      progressPct: transitioned.data.progressPct,
+    });
+  });
+
+  it("artifact 与 material link 拒绝关联另一个项目的 output", async () => {
+    const owner = ctx(OWNER);
+    const otherProject = (await compositeTransport.request(
+      ep("projects.create"),
+      {
+        params: undefined,
+        query: undefined,
+        body: { title: "另一个项目" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    const foreignOutput = (await compositeTransport.request(
+      ep("projects.outputs.create"),
+      {
+        params: { projectId: otherProject.data.id },
+        query: undefined,
+        body: { title: "另一个项目的输出" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+
+    await expect(
+      compositeTransport.request(
+        ep("artifacts.create"),
+        {
+          params: { projectId: PROJECT_ID },
+          query: undefined,
+          body: {
+            title: "错误关联稿",
+            artifactType: "output_script",
+            stage: "script",
+            contentOutputId: foreignOutput.data.id,
+          },
+        } as never,
+        owner,
+      ),
+    ).rejects.toMatchObject({ code: "ValidationError" });
+
+    await expect(
+      compositeTransport.request(
+        ep("materialLinks.create"),
+        {
+          params: undefined,
+          query: undefined,
+          body: {
+            projectId: PROJECT_ID,
+            contentOutputId: foreignOutput.data.id,
+            entityType: "asset",
+            entityId: "asset-not-reached",
+          },
+        } as never,
+        owner,
+      ),
+    ).rejects.toMatchObject({ code: "ValidationError" });
   });
 
   it("pages.projectOverview.get on ANOTHER user's project id → 404/OwnershipError (no leak)", async () => {

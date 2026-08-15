@@ -383,6 +383,20 @@ export interface ProjectsService {
     projectId: string,
   ): Promise<string[]>;
   /**
+   * Project Overview composition port. Projects remains the single owner of the
+   * root row, stages, outputs and activities; page composers never reach into
+   * this module's repository directly.
+   */
+  getProjectOverviewCore(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{
+    project: ProjectRow;
+    stages: StageRow[];
+    outputs: ContentOutputRow[];
+    activities: ActivityRow[];
+  }>;
+  /**
    * 组合层批量读取一页项目的 output 引用；所有行由 Projects 模块按联合归属收窄。
    */
   listOutputRefsByProjects(
@@ -1577,6 +1591,19 @@ export function createProjectsService(
       // only the ids so downstream resolvers never see the full row.
       const outputs = await repo.listOutputs(ctx, projectId);
       return outputs.map((o) => o.id);
+    },
+
+    async getProjectOverviewCore(ctx, projectId) {
+      requireAccountId(ctx.accountId, "projects.getProjectOverviewCore");
+      // Read the root first so unknown/cross-account ids fail closed before any
+      // child query. Child repository reads repeat the same parent ownership gate.
+      const project = await repo.get(ctx, projectId);
+      const [stages, outputs, activities] = await Promise.all([
+        repo.listStages(ctx, projectId),
+        repo.listOutputs(ctx, projectId),
+        repo.listActivity(ctx, projectId),
+      ]);
+      return { project, stages, outputs, activities };
     },
 
     async listOutputRefsByProjects(ctx, projectIds) {

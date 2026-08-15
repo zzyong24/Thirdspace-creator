@@ -51,6 +51,19 @@ describe("T-843 creatoros CLI", () => {
     });
   });
 
+  it("operations describe 与 MCP/服务端共享 artifact 枚举和关联字段", async () => {
+    const described = (await runCliCommand([
+      "operations",
+      "describe",
+      "artifacts.create",
+      "--json",
+    ])) as any;
+    const body = described.inputSchema.properties.body;
+    expect(body.properties.artifactType.enum).toContain("output_script");
+    expect(body.properties.stage.enum).toContain("script");
+    expect(body.properties.contentOutputId).toBeDefined();
+  });
+
   it("自动调用不静默套用默认账号，显式 --account 才发送账号头", async () => {
     const fetchMock = vi.fn(async (_url: unknown, _init?: RequestInit) => new Response(
       JSON.stringify({ data: { id: "project-1" }, meta: { requestId: "request-1" } }),
