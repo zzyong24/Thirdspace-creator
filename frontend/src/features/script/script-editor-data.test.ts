@@ -25,6 +25,7 @@ vi.mock("@/lib/contract-client.server", () => ({
 import {
   loadPlanningOutline,
   loadScriptEditorSections,
+  resolveScriptArtifactIdFromDb,
 } from "./script-editor-data";
 import type { ScriptDataClient } from "./script-editor-data";
 
@@ -212,5 +213,75 @@ describe("loadScriptEditorSections — T-387b visual 读回", () => {
     });
     const sections = await loadScriptEditorSections("art-1", client);
     expect(sections![0]!.visual).toBeUndefined();
+  });
+});
+
+describe("resolveScriptArtifactIdFromDb — 空壳脚本兼容", () => {
+  it("空 output_script 不遮住有正文的 master_script", async () => {
+    const client: ScriptDataClient = {
+      async listArtifacts() {
+        return [
+          { id: "output-empty", artifactType: "output_script", stage: "script" },
+          { id: "master-full", artifactType: "master_script", stage: "script" },
+        ];
+      },
+      async getArtifact({ params }) {
+        return {
+          currentVersionId:
+            params.artifactId === "output-empty" ? "output-v1" : "master-v2",
+        };
+      },
+      async listArtifactVersions({ params }) {
+        return params.artifactId === "output-empty"
+          ? [
+              {
+                id: "output-v1",
+                versionNumber: 1,
+                contentText: "",
+                contentData: {},
+              },
+            ]
+          : [
+              {
+                id: "master-v2",
+                versionNumber: 2,
+                contentText: "这份母稿正文必须在桌面项目页回显。",
+                contentData: {},
+              },
+            ];
+      },
+    };
+
+    await expect(
+      resolveScriptArtifactIdFromDb("project-real", client),
+    ).resolves.toBe("master-full");
+  });
+
+  it("所有候选都为空时仍返回 output_script，保留正式写入目标", async () => {
+    const client: ScriptDataClient = {
+      async listArtifacts() {
+        return [
+          { id: "output-empty", artifactType: "output_script", stage: "script" },
+          { id: "master-empty", artifactType: "master_script", stage: "script" },
+        ];
+      },
+      async getArtifact({ params }) {
+        return { currentVersionId: `${params.artifactId}-v1` };
+      },
+      async listArtifactVersions({ params }) {
+        return [
+          {
+            id: `${params.artifactId}-v1`,
+            versionNumber: 1,
+            contentText: "",
+            contentData: {},
+          },
+        ];
+      },
+    };
+
+    await expect(
+      resolveScriptArtifactIdFromDb("project-empty", client),
+    ).resolves.toBe("output-empty");
   });
 });

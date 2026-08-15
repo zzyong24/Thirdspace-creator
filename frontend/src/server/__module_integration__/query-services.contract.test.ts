@@ -331,6 +331,104 @@ describe("query-services ops registered in the composite transport", () => {
     );
   });
 
+  it("真实稿面不让空 output_script 遮住已有 master_script 正文", async () => {
+    const owner = ctx(OWNER);
+    const output = (await compositeTransport.request(
+      ep("projects.outputs.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: { title: "兼容回显成片" },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    const master = (await compositeTransport.request(
+      ep("artifacts.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: {
+          title: "已有母稿",
+          artifactType: "master_script",
+          stage: "script",
+          contentOutputId: output.data.id,
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
+    await compositeTransport.request(
+      ep("artifacts.versions.create"),
+      {
+        params: { artifactId: master.data.id },
+        query: undefined,
+        body: {
+          contentText: "空壳 output_script 不能遮住这段真实母稿正文。",
+          changeSummary: "母稿正文",
+        },
+      } as never,
+      owner,
+    );
+    await compositeTransport.request(
+      ep("artifacts.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: {
+          title: "尚未写入的成片脚本",
+          artifactType: "output_script",
+          stage: "script",
+          contentOutputId: output.data.id,
+        },
+      } as never,
+      owner,
+    );
+    await compositeTransport.request(
+      ep("artifacts.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: {
+          title: "历史封面文案",
+          artifactType: "cover_copy",
+          stage: "publishing",
+          contentOutputId: output.data.id,
+        },
+      } as never,
+      owner,
+    );
+
+    const request = async (operation: string, input: unknown) =>
+      (
+        (await compositeTransport.request(
+          ep(operation),
+          input as never,
+          owner,
+        )) as { data: unknown }
+      ).data;
+    const draftClient = {
+      getProject: (input: unknown) => request("projects.get", input),
+      listArtifacts: (input: unknown) => request("artifacts.list", input),
+      getArtifact: (input: unknown) => request("artifacts.get", input),
+      listArtifactVersions: (input: unknown) =>
+        request("artifacts.versions.list", input),
+      listOutputs: (input: unknown) => request("projects.outputs.list", input),
+      listPublications: (input: unknown) =>
+        request("outputs.publications.list", input),
+      listPublicationRevisions: (input: unknown) =>
+        request("publications.revisions.list", input),
+      listMaterialLinks: (input: unknown) => request("materialLinks.list", input),
+      getKnowledge: (input: unknown) => request("knowledge.get", input),
+      getAsset: (input: unknown) => request("assets.get", input),
+      getDownloadUrl: (input: unknown) => request("assets.downloadUrl", input),
+    } as unknown as DraftWorkbenchClient;
+    const draftVm = await buildDraftWorkbenchVm(PROJECT_ID, draftClient);
+
+    expect(draftVm.scriptArtifactId).toBe(master.data.id);
+    expect(draftVm.script.editorHtml).toContain(
+      "空壳 output_script 不能遮住这段真实母稿正文。",
+    );
+  });
+
   it("stage transition 的响应、projects.get 与 overview 使用同一 currentStage/progress", async () => {
     const owner = ctx(OWNER);
     const transitioned = (await compositeTransport.request(

@@ -329,8 +329,11 @@ interface OutlineArtifactDto {
 /**
  * [T-050] Resolve the script artifact id from the DB (was: fixture 查表旁路 —— selector
  * 查 canonicalDataset.artifacts,真项目永远 null → 页面渲染 demo sections)。语义与旧
- * selector 一致:优先 分镜脚本(output_script),回退 主脚本(master_script),都没有 → null
- * (真实空:项目还没进脚本阶段)。任何读失败 → null,不炸页面。
+ * selector 一致:优先**有正文**的分镜脚本(output_script),回退有正文的主脚本
+ * (master_script)。历史 CLI/Agent 可能先铸出一个空 output_script v1；它不能遮住
+ * 已有母稿，否则项目页会显示“v1”但编辑器正文为空。所有候选都没有正文时仍返回
+ * 第一个 output_script 作为正式写入目标；两类都没有 → null。任何读失败按候选降级，
+ * 不让一条损坏版本拖空整个项目。
  */
 export async function resolveScriptArtifactIdFromDb(
   projectId: string | null,
@@ -345,10 +348,33 @@ export async function resolveScriptArtifactIdFromDb(
     });
     const artifacts = (Array.isArray(listed) ? listed : []) as OutlineArtifactDto[];
     const scriptArtifacts = artifacts.filter((a) => a.stage === "script");
-    const output = scriptArtifacts.find((a) => a.artifactType === "output_script");
-    if (output) return output.id;
-    const master = scriptArtifacts.find((a) => a.artifactType === "master_script");
-    return master?.id ?? null;
+    const outputs = scriptArtifacts.filter(
+      (a) => a.artifactType === "output_script",
+    );
+    const masters = scriptArtifacts.filter(
+      (a) => a.artifactType === "master_script",
+    );
+    const candidates = [...outputs, ...masters];
+
+    for (const candidate of candidates) {
+      try {
+        const fetched = await fetchVersionsAndCurrent(client, candidate.id);
+        if (!fetched) continue;
+        const data = fetched.current.contentData as
+          | { html?: unknown }
+          | undefined;
+        const hasHtml =
+          typeof data?.html === "string" && data.html.trim().length > 0;
+        const sections = sectionsFromVersion(fetched.current);
+        if (hasHtml || (sections?.length ?? 0) > 0) return candidate.id;
+      } catch {
+        // 单个候选损坏/读失败：继续尝试同项目其他正式脚本。
+      }
+    }
+
+    // 全部都是空壳时保留 output_script 作为正式写入目标；没有 output 才退
+    // master。这样“新项目尚未写稿”仍会写到既有正式 artifact，而不是重复创建。
+    return outputs[0]?.id ?? masters[0]?.id ?? null;
   } catch {
     return null;
   }
