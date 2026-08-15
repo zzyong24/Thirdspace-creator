@@ -35,6 +35,9 @@ export const artifactType = z.enum([
   "export_config",
   "publish_package",
   "platform_copy",
+  // 历史版本正式写入过的封面文案类型。必须保留在读写契约中；
+  // 否则 artifacts.list 会因单条旧记录解析失败，连同合法脚本整批丢弃。
+  "cover_copy",
   "cover_brief",
   "review_report",
   "comparison_report",

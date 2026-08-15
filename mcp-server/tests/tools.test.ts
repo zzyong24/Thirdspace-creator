@@ -74,6 +74,7 @@ describe("endpointInputSchema(zod v4 → JSON Schema)", () => {
     const schema = endpointInputSchema(ENDPOINTS.createArtifact);
     const body = (schema.properties as Record<string, any>).body;
     expect(body.properties.artifactType.enum).toContain("output_script");
+    expect(body.properties.artifactType.enum).toContain("cover_copy");
     expect(body.properties.artifactType.enum).not.toContain("script-ish");
     expect(body.properties.stage.enum).toContain("script");
     expect(body.properties.contentOutputId).toBeDefined();

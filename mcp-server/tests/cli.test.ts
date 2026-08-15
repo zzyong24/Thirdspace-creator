@@ -60,6 +60,9 @@ describe("T-843 creatoros CLI", () => {
     ])) as any;
     const body = described.inputSchema.properties.body;
     expect(body.properties.artifactType.enum).toContain("output_script");
+    // 历史正式数据曾写入 cover_copy；CLI/页面读侧必须继续能解析，
+    // 否则 artifacts.list 会因一条旧产物让整个项目脚本区降级为空。
+    expect(body.properties.artifactType.enum).toContain("cover_copy");
     expect(body.properties.stage.enum).toContain("script");
     expect(body.properties.contentOutputId).toBeDefined();
   });

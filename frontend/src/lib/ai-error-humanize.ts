@@ -335,6 +335,7 @@ export const ARTIFACT_TYPE_LABELS: Readonly<Record<ArtifactType, string>> = {
   export_config: "导出配置",
   publish_package: "发布物料",
   platform_copy: "平台文案",
+  cover_copy: "封面文案",
   cover_brief: "封面简报",
   review_report: "复盘报告",
   comparison_report: "横评报告",

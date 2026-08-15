@@ -20,6 +20,10 @@ import {
   resolveScriptArtifactIdFromDb,
   type ScriptDataClient,
 } from "@/features/script/script-editor-data";
+import {
+  buildDraftWorkbenchVm,
+  type DraftWorkbenchClient,
+} from "@/features/draft-workbench/draft-workbench-data";
 
 // Task 4/6 — the 3 page-read ops are registered into the composite (PERSISTED_OPS)
 // and resolve through compositeTransport against the seeded pglite store. Proves
@@ -152,6 +156,22 @@ describe("query-services ops registered in the composite transport", () => {
       } as never,
       owner,
     );
+    // 真实存量项目含这个历史类型；它不能再让 artifacts.list 整批解析失败，
+    // 更不能把同项目合法的 output_script 从桌面稿面一起拖成空态。
+    const legacyCoverCopy = (await compositeTransport.request(
+      ep("artifacts.create"),
+      {
+        params: { projectId: PROJECT_ID },
+        query: undefined,
+        body: {
+          title: "历史封面文案",
+          artifactType: "cover_copy",
+          stage: "publishing",
+          contentOutputId: output.data.id,
+        },
+      } as never,
+      owner,
+    )) as { data: { id: string } };
 
     const upload = (await compositeTransport.request(
       ep("assets.uploads.create"),
@@ -220,6 +240,9 @@ describe("query-services ops registered in the composite transport", () => {
     expect(listedArtifacts.data).toContainEqual(
       expect.objectContaining({ id: artifact.data.id, contentOutputId: output.data.id }),
     );
+    expect(listedArtifacts.data).toContainEqual(
+      expect.objectContaining({ id: legacyCoverCopy.data.id, contentOutputId: output.data.id }),
+    );
 
     // 脚本页使用的正式 reader 也必须命中同一个 output_script + 当前版本。
     const scriptClient: ScriptDataClient = {
@@ -264,6 +287,48 @@ describe("query-services ops registered in the composite transport", () => {
       versionNumber: 2,
       isCurrent: true,
     });
+
+    // `/projects/[projectId]` 实际使用的不是 overview DTO，而是这个稿面组合读。
+    // 直接复用同一正式 transport 验证项目标题、脚本正文和视频素材卡同时非空。
+    const request = async (operation: string, input: unknown) =>
+      (
+        (await compositeTransport.request(
+          ep(operation),
+          input as never,
+          owner,
+        )) as { data: unknown }
+      ).data;
+    const draftClient = {
+      getProject: (input: unknown) => request("projects.get", input),
+      listArtifacts: (input: unknown) => request("artifacts.list", input),
+      getArtifact: (input: unknown) => request("artifacts.get", input),
+      listArtifactVersions: (input: unknown) =>
+        request("artifacts.versions.list", input),
+      listOutputs: (input: unknown) => request("projects.outputs.list", input),
+      listPublications: (input: unknown) =>
+        request("outputs.publications.list", input),
+      listPublicationRevisions: (input: unknown) =>
+        request("publications.revisions.list", input),
+      listMaterialLinks: (input: unknown) => request("materialLinks.list", input),
+      getKnowledge: (input: unknown) => request("knowledge.get", input),
+      getAsset: (input: unknown) => request("assets.get", input),
+      getDownloadUrl: (input: unknown) => request("assets.downloadUrl", input),
+    } as unknown as DraftWorkbenchClient;
+    const draftVm = await buildDraftWorkbenchVm(PROJECT_ID, draftClient);
+    expect(draftVm.project.title).toBe("query-services 集成测试项目");
+    expect(draftVm.script.editorHtml).toContain(
+      "这是 CLI 写入后必须能读回的正式口播稿。",
+    );
+    expect(draftVm.ammo).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: asset.data.id,
+          kind: "asset",
+          title: "前三秒真实素材.mp4",
+          assetType: "video",
+        }),
+      ]),
+    );
   });
 
   it("stage transition 的响应、projects.get 与 overview 使用同一 currentStage/progress", async () => {

@@ -274,6 +274,7 @@ describe("humanizeArtifactType — 产物类型码 → 中文", () => {
     expect(humanizeArtifactType("thesis_tree")).toBe("论点树");
     expect(humanizeArtifactType("content_outline")).toBe("内容大纲");
     expect(humanizeArtifactType("content_contract")).toBe("内容合同");
+    expect(humanizeArtifactType("cover_copy")).toBe("封面文案");
     expect(humanizeArtifactType("review_report")).toBe("复盘报告");
   });
 
@@ -302,6 +303,7 @@ describe("humanizeArtifactType — 产物类型码 → 中文", () => {
       "export_config",
       "publish_package",
       "platform_copy",
+      "cover_copy",
       "cover_brief",
       "review_report",
       "comparison_report",

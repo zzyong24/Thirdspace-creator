@@ -278,6 +278,7 @@ export type ArtifactType =
   | "export_config"
   | "publish_package"
   | "platform_copy"
+  | "cover_copy"
   | "cover_brief"
   | "review_report"
   | "comparison_report"
