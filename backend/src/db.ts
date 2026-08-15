@@ -41,6 +41,7 @@ import * as activationSchema from "./schema/activation";
 import * as browserSessionsSchema from "./schema/browser-sessions";
 // T-482 内容情报唯一真值 + 通用持久任务租约。
 import * as intelligenceSchema from "./schema/intelligence";
+import * as cliInvocationsSchema from "./schema/cli-invocations";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -92,6 +93,7 @@ const schema = {
   ...activationSchema,
   ...browserSessionsSchema,
   ...intelligenceSchema,
+  ...cliInvocationsSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

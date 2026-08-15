@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   dispatchErrorResponse,
   safeDispatchErrorDiagnostic,
+  validateCliInvocation,
   POST,
 } from "./route";
+import { ENDPOINTS } from "@creatoros/contract";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests } from "@/server/persistence-client";
 import { ConflictError as PublishingConflictError } from "@creatoros/backend/modules/publishing";
@@ -13,6 +18,109 @@ import { ConflictError as PublishingConflictError } from "@creatoros/backend/mod
 // 走 T-046 单机免登录:不带 cookie → 本机主用户(= seed canonical user-zyongzhu)直通,
 // dispatch 照旧解析到规范租户,无需 mint 会话。
 const SESSION_COOKIE = "";
+
+describe("T-843 CLI 完整访问调用门", () => {
+  const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;
+  const clientId = "cli-test-client";
+
+  beforeEach(() => {
+    process.env.CREATOROS_CLI_ACCESS_TOKEN = "cli-grant-secret";
+  });
+
+  it("读操作持有效 grant 可直接通过，错 grant 拒绝", async () => {
+    const valid = new Request("http://localhost/api/v1/dispatch", {
+      headers: {
+        "x-creatoros-cli-access": "cli-grant-secret",
+        "x-creatoros-cli-client-id": clientId,
+      },
+    });
+    expect(validateCliInvocation(valid, ENDPOINTS.listProjects)).toBeNull();
+
+    const invalid = new Request("http://localhost/api/v1/dispatch", {
+      headers: {
+        "x-creatoros-cli-access": "wrong",
+        "x-creatoros-cli-client-id": clientId,
+      },
+    });
+    const rejection = validateCliInvocation(invalid, ENDPOINTS.listProjects)!;
+    expect(rejection.status).toBe(403);
+  });
+
+  it("正式桌面凭据还必须匹配产品、包身份与本次启动 nonce", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-cli-credential-"));
+    const credential = join(root, "credential.json");
+    const previousFile = process.env.CREATOROS_CLI_ACCESS_FILE;
+    try {
+      writeFileSync(credential, JSON.stringify({
+        schema: "creatoros-cli-credential/v1",
+        productId: "creatoros",
+        packageId: "cloud.aitongban.creatoros",
+        cliAccessToken: "bound-token",
+        launchNonce: "launch-nonce",
+      }));
+      process.env.CREATOROS_CLI_ACCESS_FILE = credential;
+      const missingIdentity = new Request("http://localhost/api/v1/dispatch", {
+        headers: {
+          "x-creatoros-cli-access": "bound-token",
+          "x-creatoros-cli-client-id": clientId,
+        },
+      });
+      expect(validateCliInvocation(missingIdentity, ENDPOINTS.listProjects)?.status).toBe(403);
+
+      const valid = new Request("http://localhost/api/v1/dispatch", {
+        headers: {
+          "x-creatoros-cli-access": "bound-token",
+          "x-creatoros-cli-client-id": clientId,
+          "x-creatoros-cli-product-id": "creatoros",
+          "x-creatoros-cli-package-id": "cloud.aitongban.creatoros",
+          "x-creatoros-cli-launch-nonce": "launch-nonce",
+        },
+      });
+      expect(validateCliInvocation(valid, ENDPOINTS.listProjects)).toBeNull();
+    } finally {
+      if (previousFile === undefined) delete process.env.CREATOROS_CLI_ACCESS_FILE;
+      else process.env.CREATOROS_CLI_ACCESS_FILE = previousFile;
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("写操作必须同时有 --apply 语义与幂等键", async () => {
+    const missingApply = new Request("http://localhost/api/v1/dispatch", {
+      headers: {
+        "x-creatoros-cli-access": "cli-grant-secret",
+        "x-creatoros-cli-client-id": clientId,
+      },
+    });
+    expect(validateCliInvocation(missingApply, ENDPOINTS.createProject)?.status).toBe(409);
+
+    const valid = new Request("http://localhost/api/v1/dispatch", {
+      headers: {
+        "x-creatoros-cli-access": "cli-grant-secret",
+        "x-creatoros-cli-client-id": clientId,
+        "x-creatoros-cli-apply": "1",
+        "x-idempotency-key": "idem-1",
+      },
+    });
+    expect(validateCliInvocation(valid, ENDPOINTS.createProject)).toBeNull();
+  });
+
+  it("DELETE 还必须声明真实影响目标", () => {
+    const noImpact = new Request("http://localhost/api/v1/dispatch", {
+      headers: {
+        "x-creatoros-cli-access": "cli-grant-secret",
+        "x-creatoros-cli-client-id": clientId,
+        "x-creatoros-cli-apply": "1",
+        "x-idempotency-key": "idem-delete",
+      },
+    });
+    expect(validateCliInvocation(noImpact, ENDPOINTS.deleteProject)?.status).toBe(409);
+  });
+
+  afterAll(() => {
+    if (previous === undefined) delete process.env.CREATOROS_CLI_ACCESS_TOKEN;
+    else process.env.CREATOROS_CLI_ACCESS_TOKEN = previous;
+  });
+});
 
 // [T-332 S2] strict 账号门:per-account op(projects/pages 等)必须解析出 ctx.accountId,
 // dispatch 链路的号来自 `x-account-id` header(route 内 withVerifiedAccount 以真实 userId
@@ -42,8 +150,32 @@ function dispatch(
   );
 }
 
+function cliDispatch(
+  id: string,
+  input: unknown,
+  accountId: string,
+  idempotencyKey: string,
+  confirmImpact?: string,
+) {
+  return POST(
+    new Request("http://localhost/api/v1/dispatch", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-account-id": accountId,
+        "x-creatoros-cli-access": "cli-integration-grant",
+        "x-creatoros-cli-client-id": "cli-integration-client",
+        "x-creatoros-cli-apply": "1",
+        "x-idempotency-key": idempotencyKey,
+        ...(confirmImpact ? { "x-creatoros-cli-confirm-impact": confirmImpact } : {}),
+      },
+      body: JSON.stringify({ id, input }),
+    }),
+  );
+}
+
 // 真建一条 platform account(user 级 op,不需要选号),返回 id 作后续请求的当前号。
-async function createFixtureAccount(): Promise<string> {
+async function createFixtureAccount(handle = "@dispatch-route-fixture"): Promise<string> {
   const res = await dispatch(
     "accounts.create",
     {
@@ -51,7 +183,7 @@ async function createFixtureAccount(): Promise<string> {
       query: undefined,
       body: {
         platform: "douyin",
-        accountHandle: "@dispatch-route-fixture",
+        accountHandle: handle,
         followerBaseline: 300,
       },
     },
@@ -79,6 +211,71 @@ describe("POST /api/v1/dispatch (FE<->BE seam over HTTP; project ops on real SQL
     // 免登录:不 mint 会话,dispatch 不带 cookie → 本机主用户直通(seed canonical)。
     // [T-332 S2] 真建当前号(开箱空,canonical account seed 已随 T-135 退役)。
     ACCOUNT_ID = await createFixtureAccount();
+  });
+
+  it("[T-843] CLI 同号重复写返回原结果、异输入冲突，三个号同 key 不串号", async () => {
+    const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;
+    process.env.CREATOROS_CLI_ACCESS_TOKEN = "cli-integration-grant";
+    try {
+      const secondId = await createFixtureAccount("@dispatch-route-fixture-b");
+      const thirdId = await createFixtureAccount("@dispatch-route-fixture-c");
+      const payload = (title: string) => ({
+        params: undefined,
+        query: undefined,
+        body: { title, brief: "CLI gateway" },
+      });
+
+      const first = await cliDispatch("projects.create", payload("账号 A"), ACCOUNT_ID, "parallel-key");
+      expect(first.status).toBe(200);
+      const firstJson = (await first.json()) as { data: { id: string } };
+
+      const duplicate = await cliDispatch("projects.create", payload("账号 A"), ACCOUNT_ID, "parallel-key");
+      expect(duplicate.status).toBe(200);
+      expect((await duplicate.json()) as unknown).toMatchObject({ data: { id: firstJson.data.id } });
+
+      const conflict = await cliDispatch("projects.create", payload("不同输入"), ACCOUNT_ID, "parallel-key");
+      expect(conflict.status).toBe(409);
+      expect(await conflict.json()).toMatchObject({
+        error: { code: "CLI_IDEMPOTENCY_CONFLICT" },
+      });
+
+      const parallel = await Promise.all([
+        cliDispatch("projects.create", payload("账号 B"), secondId, "parallel-key"),
+        cliDispatch("projects.create", payload("账号 C"), thirdId, "parallel-key"),
+      ]);
+      expect(parallel.map((response) => response.status)).toEqual([200, 200]);
+    } finally {
+      if (previous === undefined) delete process.env.CREATOROS_CLI_ACCESS_TOKEN;
+      else process.env.CREATOROS_CLI_ACCESS_TOKEN = previous;
+    }
+  });
+
+  it("[T-843] 高影响确认必须精确命中真实 ID，错目标零写入", async () => {
+    const previous = process.env.CREATOROS_CLI_ACCESS_TOKEN;
+    process.env.CREATOROS_CLI_ACCESS_TOKEN = "cli-integration-grant";
+    try {
+      const created = await dispatch("projects.create", {
+        params: undefined,
+        query: undefined,
+        body: { title: "不能误删", brief: "CLI impact gate" },
+      });
+      const project = (await created.json()) as { data: { id: string } };
+      const rejected = await cliDispatch(
+        "projects.delete",
+        { params: { projectId: project.data.id } },
+        ACCOUNT_ID,
+        "delete-wrong-target",
+        `${project.data.id}-other`,
+      );
+      expect(rejected.status).toBe(409);
+      expect(await rejected.json()).toMatchObject({
+        error: { code: "CLI_IMPACT_TARGET_MISMATCH" },
+      });
+      expect(await listProjectIds()).toContain(project.data.id);
+    } finally {
+      if (previous === undefined) delete process.env.CREATOROS_CLI_ACCESS_TOKEN;
+      else process.env.CREATOROS_CLI_ACCESS_TOKEN = previous;
+    }
   });
 
   it("serves a project read from the persistence store", async () => {

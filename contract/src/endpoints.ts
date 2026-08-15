@@ -44,8 +44,9 @@ export interface Endpoint<
   Query extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
   Body extends z.ZodTypeAny | undefined = z.ZodTypeAny | undefined,
   Response extends z.ZodTypeAny = z.ZodTypeAny,
+  Id extends string = string,
 > {
-  readonly id: string;
+  readonly id: Id;
   readonly method: HttpMethod;
   readonly path: string; // e.g. "/projects/:projectId"
   readonly params: Params;
@@ -61,8 +62,9 @@ export function defineEndpoint<
   Query extends z.ZodTypeAny | undefined,
   Body extends z.ZodTypeAny | undefined,
   Response extends z.ZodTypeAny,
+  const Id extends string,
 >(e: {
-  id: string;
+  id: Id;
   method: HttpMethod;
   path: string;
   params?: Params;
@@ -71,7 +73,7 @@ export function defineEndpoint<
   response: Response;
   isList?: boolean;
   fr?: readonly string[];
-}): Endpoint<Params, Query, Body, Response> {
+}): Endpoint<Params, Query, Body, Response, Id> {
   return {
     id: e.id,
     method: e.method,

@@ -6,7 +6,12 @@
 // 契约每加一个 op,这里自动多一个 tool,零手工维护。
 
 import { z } from "zod";
-import { ENDPOINTS, type Endpoint, type HttpMethod } from "@creatoros/contract";
+import {
+  ENDPOINTS,
+  getCliOperationPolicy,
+  type CliOperationPolicy,
+  type Endpoint,
+} from "@creatoros/contract";
 
 /** MCP tool 定义(与 MCP spec 的 Tool 结构对齐,低层 Server API 直接返回)。 */
 export interface McpToolDef {
@@ -29,7 +34,7 @@ export function toToolName(opId: string): string {
 }
 
 /** 单个 zod schema → JSON Schema。转不动的类型(transform 等)降级 any,不炸。 */
-function schemaToJson(schema: z.ZodTypeAny): Record<string, unknown> {
+export function schemaToJson(schema: z.ZodTypeAny): Record<string, unknown> {
   const json = z.toJSONSchema(schema, {
     // io "input":入参视角 —— 带 default 的字段按可省略处理,与 dispatch 校验一致。
     io: "input",
@@ -60,6 +65,26 @@ export function endpointInputSchema(endpoint: Endpoint): Record<string, unknown>
   if (endpoint.body) {
     properties.body = schemaToJson(endpoint.body);
   }
+  const policy = getCliOperationPolicy(endpoint.id);
+  if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
+  const contextRequired = policy.effect === "read"
+    ? []
+    : policy.confirmation === "confirm_impact"
+      ? ["idempotencyKey", "apply", "confirmImpact"]
+      : ["idempotencyKey", "apply"];
+  properties._creatoros = {
+    type: "object",
+    description: "CreatorOS CLI/MCP 调用上下文。并行多账号时每次显式传 accountId。",
+    properties: {
+      accountId: { type: "string", minLength: 1 },
+      idempotencyKey: { type: "string", minLength: 1 },
+      apply: { type: "boolean" },
+      confirmImpact: { type: "string", minLength: 1 },
+    },
+    ...(contextRequired.length > 0 ? { required: contextRequired } : {}),
+    additionalProperties: false,
+  };
+  if (contextRequired.length > 0) required.push("_creatoros");
   const schema: Record<string, unknown> = {
     type: "object",
     properties,
@@ -77,36 +102,41 @@ const CANDIDATE_SEMANTICS_OPS = new Set([
   "ai.tasks.results.patch",
 ]);
 
-function methodAnnotations(method: HttpMethod): McpToolDef["annotations"] {
+function policyAnnotations(policy: CliOperationPolicy): McpToolDef["annotations"] {
   return {
-    readOnlyHint: method === "GET",
-    // 只有物理删除类算 destructive;POST/PATCH/PUT 是可审计的业务写。
-    destructiveHint: method === "DELETE",
-    // GET/PUT/DELETE 幂等;POST/PATCH 不保证。
-    idempotentHint: method === "GET" || method === "PUT" || method === "DELETE",
-    // 全部打到本机 CreatorOS,不触外网。
-    openWorldHint: false,
+    readOnlyHint: policy.effect === "read",
+    destructiveHint: policy.effect === "destructive",
+    idempotentHint: policy.idempotency !== "not_applicable" || policy.effect === "read",
+    openWorldHint: policy.effect === "external",
   };
 }
 
 /** 生成单个 endpoint 的 description(中文,写明方法/路径/确认门/高危警告)。 */
 export function endpointDescription(endpoint: Endpoint): string {
+  const policy = getCliOperationPolicy(endpoint.id);
+  if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
   const parts: string[] = [
     `CreatorOS contract op「${endpoint.id}」(${endpoint.method} ${endpoint.path})。`,
   ];
   if (endpoint.isList) {
     parts.push("返回列表 envelope({ data: [...], meta })。");
   }
-  if (endpoint.method === "GET") {
+  if (policy.effect === "read") {
     parts.push("只读操作,无副作用。");
-  } else if (CANDIDATE_SEMANTICS_OPS.has(endpoint.id)) {
-    // 确认门语义:AI 任务只产候选,用户/调用方显式 confirm 才物化落账。
+  } else if (policy.effect === "destructive") {
     parts.push(
-      "【确认门】AI 任务类操作:create 只产生候选结果(不落账),必须由用户审阅后调 ai_tasks_confirm 才物化;cancel/patch 只作用于候选。",
+      "【高危/高影响】包含物理删除、归档、取消或清空语义；必须传 apply、幂等键和包含真实目标 ID 的 confirmImpact。",
     );
-  } else if (endpoint.method === "DELETE") {
+  } else if (policy.effect === "external") {
     parts.push(
-      "【高危】物理删除操作,不可恢复 —— 调用前必须得到用户明确确认。",
+      "【外部动作】会触发模型、浏览器、抖音采集或外部读取；必须传 apply、幂等键和明确的 confirmImpact。",
+    );
+    if (CANDIDATE_SEMANTICS_OPS.has(endpoint.id)) {
+      parts.push("【确认门】该操作只产生候选；采纳仍调用现有 confirm operation。");
+    }
+  } else if (CANDIDATE_SEMANTICS_OPS.has(endpoint.id)) {
+    parts.push(
+      "【确认门】AI 候选只有在调用 confirm 后才物化；cancel/patch 只作用于候选。",
     );
   } else {
     parts.push(
@@ -124,7 +154,18 @@ export const OVERVIEW_TOOL: McpToolDef = {
   name: "creatoros_overview",
   description:
     "CreatorOS 总览:一次调用拿到 dashboard 页面摘要(项目/发布/数据看板等聚合信息),等价于 pages_dashboard_get。外部 AI 建议以此为起步了解当前工作台状态。",
-  inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  inputSchema: {
+    type: "object",
+    properties: {
+      _creatoros: {
+        type: "object",
+        description: "并行多账号时显式传 accountId。",
+        properties: { accountId: { type: "string", minLength: 1 } },
+        additionalProperties: false,
+      },
+    },
+    additionalProperties: false,
+  },
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
@@ -139,6 +180,8 @@ export function buildTools(): McpToolDef[] {
   const tools: McpToolDef[] = [];
   const seen = new Set<string>();
   for (const endpoint of Object.values(ENDPOINTS) as Endpoint[]) {
+    const policy = getCliOperationPolicy(endpoint.id);
+    if (!policy) throw new Error(`operation 缺 CLI policy: ${endpoint.id}`);
     const name = toToolName(endpoint.id);
     if (seen.has(name)) {
       // op id 全局唯一,点换下划线后不应撞名;真撞了是契约层 bug,当场暴露。
@@ -149,10 +192,10 @@ export function buildTools(): McpToolDef[] {
       name,
       description: endpointDescription(endpoint),
       inputSchema: endpointInputSchema(endpoint),
-      annotations: methodAnnotations(endpoint.method),
+      annotations: policyAnnotations(policy),
       opId: endpoint.id,
     });
   }
   tools.push(OVERVIEW_TOOL);
-  return tools;
+  return tools.sort((left, right) => left.name.localeCompare(right.name));
 }

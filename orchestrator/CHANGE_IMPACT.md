@@ -684,3 +684,33 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   无数据库迁移、公开 API 或页面变化。
 - **当前 Gate**：本地算法和工作流契约通过只算 BUILD 证据；新 Windows 包还必须在真实安装环境通过
   GUI、sidecar health、主页面与卸载验证，并由原故障机器复验后才能完成 T-826。
+
+## CI-CLI-843 — 新增 CreatorOS 全能力 CLI 与 Codex 操作入口（2026-08-15，用户已确认）
+
+- **变更源**：用户明确要求把定位、选题、全部作品数据和现有 Tool 的所有读写能力通过 CLI 暴露，
+  并拒绝“CLI 只读、每次写操作回 CreatorOS 审批”的旧方案；还要求账号切换、抖音导入与 Codex
+  并行操控 3 个账号。详见 T-843 与 DEC-CLI-001。
+- **现有功能影响**：现有桌面 UI、业务 operation、数据与用户旅程不删除、不替换；CLI 不使用时应
+  零行为变化。新增入口 1:1 投影全部正式 contract operation，复用同一 backend service、任务、
+  候选和领域真值；用户可在设置中开启/撤销当前启动的完整读写访问，不增加逐动作确认卡。
+- **需重新派生**：contract Endpoint 增加穷尽 CLI effect/confirmation/async/idempotency metadata；
+  新增共享 Gateway client、最小 invocation 幂等审计、安装版随机端口连接描述协议、设置中的启动级
+  CLI 完整访问开关、CLI 随包产物；`mcp-server` 改为消费同一 registry/Gateway，不再维护独立逻辑。
+- **多账号影响**：CLI 用户级启动授权覆盖其已验证账号，但每次账号级请求必须显式选择一个 accountId，
+  复用既有 `verifyAccountSelection`；不得用共享 current-account 状态协调并发。幂等、task、候选、导入
+  publication/metric 和审计全部带同一账号上下文，至少完成三账号并行隔离验收。
+- **抖音导入影响**：复用 `ingestion.douyin.login/status/refresh` 与
+  `intelligence.items.importDouyinShare`；若 UI 的既有导入子能力仍是内部 route，先提升为正式
+  contract 再自动暴露，禁止 CLI 复制抓取器或绕过账号专属登录态。
+- **安全影响**：正式 CLI 入口不得继承 T-046 浏览器免登录裸调；必须同时验证 loopback、启动级授权、
+  激活、当前 user/account ownership、真实 operation policy、schema 与影响目标。全部 contract 可调用
+  不等于暴露数据库、内部 route、密钥、Cookie、handshake、私有文件或客户端可伪造的 RequestContext。
+- **数据影响**：新增 user/account 归属的 CLI Invocation 幂等审计 metadata，以及与审计分离、用应用
+  主密钥加密、24 小时自动删除的 schema-valid response 幂等缓存；不再引入 Agent Action 或待确认
+  payload，不复制领域实体，不改变既有项目、稿件、素材、任务或候选属主。缓存过期/丢失只返回稳定
+  duplicate receipt，绝不借重试重放写入。
+- **发布影响**：macOS/Windows 桌面包新增 CLI 产物与安装/卸载/PATH 契约；两个安装版必须完成同一
+  `status → 全域 read/write → candidate task → wait → CLI confirm/adopt → 双向 read-back → isolated
+  destructive` 真路径，dev server 证据不可替代。
+- **当前 Gate**：用户方向已确认；因授权模型和范围改变，旧 PASS[REV:805cc308700e] 已失效，重写后的
+  SPEC 必须独立复审 PASS，才能启动 T-843 BUILD。

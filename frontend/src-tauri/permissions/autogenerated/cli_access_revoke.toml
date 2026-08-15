@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cli-access-revoke"
+description = "Enables the cli_access_revoke command without any pre-configured scope."
+commands.allow = ["cli_access_revoke"]
+
+[[permission]]
+identifier = "deny-cli-access-revoke"
+description = "Denies the cli_access_revoke command without any pre-configured scope."
+commands.deny = ["cli_access_revoke"]

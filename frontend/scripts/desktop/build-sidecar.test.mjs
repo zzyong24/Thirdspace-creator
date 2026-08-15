@@ -24,6 +24,7 @@ import {
   pruneStandaloneLeaks,
   resolveEntryPackage,
   assertNoPackagedBuildArtifacts,
+  assertCreatorOsCliRuntime,
   assertNoPortableMetadataFiles,
   portableTarEnv,
   prunePortableMetadataFiles,
@@ -32,6 +33,28 @@ import {
   findPnpmEntryForPackage,
   materializeRuntimePackageClosure,
 } from "./build-sidecar.mjs";
+
+describe("T-843 CreatorOS CLI 随包运行时", () => {
+  it("双平台都要求 CLI bundle 与随包 Node 同时存在", () => {
+    const root = mkdtempSync(join(tmpdir(), "creatoros-cli-runtime-"));
+    try {
+      mkdirSync(join(root, "frontend", "cli"), { recursive: true });
+      writeFileSync(join(root, "frontend", "cli", "creatoros.cjs"), "bundle");
+      expect(() => assertCreatorOsCliRuntime(root, "win32")).toThrow(/cli.node\.exe/);
+      mkdirSync(join(root, "cli"), { recursive: true });
+      writeFileSync(join(root, "cli", "node.exe"), "node");
+      expect(() => assertCreatorOsCliRuntime(root, "win32")).not.toThrow();
+
+      expect(() => assertCreatorOsCliRuntime(root, "darwin")).toThrow(/server\.app/);
+      const macNode = join(root, "server.app", "Contents", "MacOS", "creatoros-server");
+      mkdirSync(dirname(macNode), { recursive: true });
+      writeFileSync(macNode, "node");
+      expect(() => assertCreatorOsCliRuntime(root, "darwin")).not.toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("macOS bundle 可搬运复制", () => {
   it("保留 Framework 的相对 symlink，不改写成构建机绝对路径", () => {

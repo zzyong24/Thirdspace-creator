@@ -414,3 +414,22 @@
   通过，接触表见 `orchestrator/evidence/T-839/contact-sheet.jpg`。
 - **Ref**: T-838；`objkey-62e5771a-1694.mp4`；`ai-task-b269a0a7-699`；
   `ai-task-62e5771a-391`；`docs/research/2026-08-14-video-editing-regression-black-stage-diagnosis.md`。
+
+## LED-030 — 开发态 MCP 能列出全部 operation，不等于安装版全能力 CLI 已可用
+
+- **Date**: 2026-08-15 · **Stage**: DISCOVER/DEFINE · **Severity**: critical · **Status**: candidate
+- **WhatFailed**: 仓库已有 `mcp-server` 会把全部 contract ENDPOINTS 自动转成工具，但只认识固定
+  `localhost:3000`，不会发现桌面随机端口或携带启动级授权；它还只按 HTTP method 推断调用语义，
+  缺少写入幂等、真实影响目标、安装交付和完整读写授权边界。
+- **RootCause**: 把“协议适配器可列工具”误当成“正式安装版可完整授权执行”，没有同时验证连接发现、
+  当前账号归属、操作元数据、持久幂等、安装交付和权限撤销。
+- **GuardRule**: 任何 CLI/MCP 对外入口必须复用同一 contract-first registry 与 backend Gateway；全部
+  正式 contract operation 都可见可调用，同时每个 operation 必须显式声明 effect、确认语义、异步和
+  幂等，漏分类即构建失败。安装版必须使用当前启动随机端口与启动级完整读写授权，写入仍经 schema、
+  ownership 和 service port；内部 route、数据库、密钥和私有文件不因“全能力”被顺带暴露。
+- **GuardCheck**: T-843 实现后接入 248/248 contract policy 穷尽测试、raw dispatch/跨账号绕过负例、
+  随机端口与授权撤销真安装回归、写入幂等/结果不明不重放、CLI/MCP 一致性与 macOS/Windows 全域
+  读写端到端 Gate；实现前只作为 candidate，不冒充已有守卫。
+- **Outcome(T+N)**: 待 T-843 评审、用户确认和实现后回填。
+- **Ref**: T-843；DEC-CLI-001；PAT-001/PAT-003/PAT-004；`mcp-server/`；
+  `docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md`。

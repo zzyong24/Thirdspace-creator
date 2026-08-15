@@ -18,6 +18,7 @@ mod license;
 mod activation_reset;
 // [T-635] 编译期 ProductManifest / projectKey / strict verify 的统一产品身份入口。
 mod product_identity;
+mod cli_access;
 // [T-575] Growth device authorization → OS protected pending-consume → AM signed consume。
 mod entitlement_claim;
 // [T-399b] 蜜罐授权门:纯诱饵,零真实引用(真链一行不碰),仅 #[used] 强制进二进制过 DCE。
@@ -857,6 +858,7 @@ fn verify_direct_sidecar_dir_with_hash(
     let entry = frontend.join("server.js");
     for required in [
         entry.clone(),
+        frontend.join("cli").join("creatoros.cjs"),
         frontend.join(".next"),
         dir.join("backend")
             .join("drizzle")
@@ -869,6 +871,9 @@ fn verify_direct_sidecar_dir_with_hash(
                 required.display()
             ));
         }
+    }
+    if cfg!(windows) && !dir.join("cli").join("node.exe").is_file() {
+        return Err("Windows 安装目录中的 CreatorOS CLI runtime 缺失。请重新安装 CreatorOS。".to_string());
     }
 
     // [T-565/T-487] 分层 runtime 仍在独立 RAT 验证，当前用户安装包继续使用已经过
@@ -1838,7 +1843,8 @@ pub fn run() {
             .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
         let result = install_dir
             .ok_or_else(|| "无法定位 CreatorOS 安装目录".to_string())
-            .and_then(|dir| remove_windows_installed_runtime(&dir));
+            .and_then(|dir| remove_windows_installed_runtime(&dir))
+            .and_then(|_| cli_access::uninstall_launcher());
         match result {
             Ok(()) => std::process::exit(0),
             Err(e) => {
@@ -1930,9 +1936,13 @@ pub fn run() {
             license::license_latest_version,
             // [T-568] 反馈诊断必须来自原生层，禁止 navigator.platform 把 Apple Silicon
             // 兼容性标识 `MacIntel` 当作实体芯片。
-            runtime_system_info
+            runtime_system_info,
+            cli_access::cli_access_status,
+            cli_access::cli_access_enable,
+            cli_access::cli_access_revoke
         ])
         .manage(SidecarHandle::default())
+        .manage(cli_access::CliAccessState::default())
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -1945,6 +1955,8 @@ pub fn run() {
             // [T-562] 启动页使用随包静态 index.html。Windows WebView2 不再靠 about:blank
             // initialization_script 动态造 DOM，避免脚本竞态留下永久白窗。
             let handshake_token = license::gen_handshake_token();
+            let cli_access_token = license::gen_handshake_token();
+            let cli_launch_nonce = license::gen_handshake_token();
             let init_script =
                 format!("window.__CREATOROS_HANDSHAKE_TOKEN__={:?};", handshake_token);
             let main_window_builder = WebviewWindowBuilder::new(
@@ -2051,7 +2063,12 @@ pub fn run() {
             // 2) 空闲端口 + sidecar 环境。
             let port = find_free_port();
             let port_str = port.to_string();
-
+            let cli_connection_dir =
+                cli_access::default_connection_dir(product_identity::product_ref());
+            let cli_access_file_str = cli_connection_dir
+                .join("credential.json")
+                .to_string_lossy()
+                .to_string();
             // 3) 定位 sidecar 组装目录(next standalone 运行目录)。
             //    ⚠️ sidecar 内保留 pnpm 的相对 symlink(frontend/node_modules/next → .pnpm/…,node
             //       靠 walk-up 解析 @swc/helpers 等 peer)。Tauri 的 resource 拷贝器会**丢 symlink**,
@@ -2090,6 +2107,30 @@ pub fn run() {
             // Finder / Windows 快捷方式启动时 cwd/PATH 都不可靠；壳层掌握真实 runtime 位置，
             // 所以它是 bin/ 与 browsers/ 的唯一 canonical 来源。
             let sidecar_frontend_dir = sidecar_dir.join("frontend");
+            #[cfg(target_os = "macos")]
+            let cli_node = sidecar_dir
+                .join("server.app")
+                .join("Contents")
+                .join("MacOS")
+                .join("creatoros-server");
+            #[cfg(target_os = "windows")]
+            let cli_node = sidecar_dir.join("cli").join("node.exe");
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+            let cli_node = sidecar_dir.join("cli").join("node");
+            cli_access::initialize(
+                &app.state::<cli_access::CliAccessState>(),
+                cli_access::CliAccessRuntime {
+                    dir: cli_connection_dir,
+                    product_id: product_identity::product_ref().to_string(),
+                    package_id: env!("CREATOROS_BUILTIN_APP_IDENTIFIER").to_string(),
+                    port,
+                    handshake_token: handshake_token.clone(),
+                    cli_access_token: cli_access_token.clone(),
+                    launch_nonce: cli_launch_nonce.clone(),
+                    cli_node,
+                    cli_script: sidecar_frontend_dir.join("cli").join("creatoros.cjs"),
+                },
+            );
             let runtime_root_str = sidecar_dir
                 .to_string_lossy()
                 .to_string();
@@ -2404,6 +2445,7 @@ pub fn run() {
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(见上方注释)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
@@ -2582,6 +2624,7 @@ pub fn run() {
                     .env("CREATOROS_LOG_DIR", &log_dir_str)
                     // [T-372 L2] 握手 token / .license 路径 / 强验签开关(与 macOS 分支一致)。
                     .env("CREATOROS_SIDECAR_HANDSHAKE_TOKEN", &handshake_token)
+                    .env("CREATOROS_CLI_ACCESS_FILE", &cli_access_file_str)
                     .env("CREATOROS_LICENSE_FILE", &license_file_str)
                     .env("CREATOROS_LICENSE_STRICT_VERIFY", &strict_verify_str)
                     .env("CREATOROS_PRODUCT_MANIFEST_JSON", product_manifest_json)
@@ -2864,6 +2907,7 @@ pub fn run() {
             //   take() 幂等,两处都到也只 kill 一次。崩溃/强退(SIGKILL 壳)两者都不到 —— 由
             //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
+                cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }
@@ -2896,6 +2940,18 @@ mod runtime_cleanup_tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    fn write_creatoros_cli_runtime(sidecar: &std::path::Path) {
+        std::fs::create_dir_all(sidecar.join("frontend").join("cli")).unwrap();
+        std::fs::create_dir_all(sidecar.join("cli")).unwrap();
+        std::fs::write(
+            sidecar.join("frontend").join("cli").join("creatoros.cjs"),
+            "cli",
+        )
+        .unwrap();
+        // macOS 单测不会读取此文件，但 Windows CI 会走同一夹具并要求随包 Node runtime。
+        std::fs::write(sidecar.join("cli").join("node.exe"), "node").unwrap();
     }
 
     fn write_valid_layered_windows_runtime(runtime_root: &std::path::Path, runtime_id: &str) {
@@ -2932,6 +2988,7 @@ mod runtime_cleanup_tests {
             "{}",
         )
         .unwrap();
+        write_creatoros_cli_runtime(&sidecar);
     }
 
     #[test]
@@ -3006,6 +3063,7 @@ mod runtime_cleanup_tests {
     #[test]
     fn windows_安装目录展开资源关键结构与入口哈希都必须通过() {
         let root = temp_runtime_root("direct-runtime");
+        write_creatoros_cli_runtime(&root);
         std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(root.join("layers").join("browser").join("browsers")).unwrap();
@@ -3036,6 +3094,14 @@ mod runtime_cleanup_tests {
         .unwrap();
         let hello_sha = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
         assert!(super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).is_ok());
+        std::fs::remove_file(root.join("frontend").join("cli").join("creatoros.cjs")).unwrap();
+        let cli_error = super::verify_direct_sidecar_dir_with_hash(&root, hello_sha).unwrap_err();
+        assert!(cli_error.contains("creatoros.cjs"));
+        std::fs::write(
+            root.join("frontend").join("cli").join("creatoros.cjs"),
+            "cli",
+        )
+        .unwrap();
         std::fs::remove_file(
             root.join("layers")
                 .join("browser")
@@ -3068,6 +3134,7 @@ mod runtime_cleanup_tests {
     #[test]
     fn windows_传统完整_runtime_与分层_runtime_都可通过但混合残缺拒绝() {
         let root = temp_runtime_root("legacy-direct-runtime");
+        write_creatoros_cli_runtime(&root);
         std::fs::create_dir_all(root.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("node_modules")).unwrap();
         std::fs::create_dir_all(root.join("frontend").join("bin")).unwrap();
@@ -3105,6 +3172,7 @@ mod runtime_cleanup_tests {
             .join("runtime-images")
             .join("0.1.0-abc123")
             .join("sidecar");
+        write_creatoros_cli_runtime(&sidecar);
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();
@@ -3161,6 +3229,7 @@ mod runtime_cleanup_tests {
             .join("runtime-images")
             .join("0.3.0-abc")
             .join("sidecar");
+        write_creatoros_cli_runtime(&sidecar);
         std::fs::create_dir_all(sidecar.join("frontend").join(".next")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("core")).unwrap();
         std::fs::create_dir_all(sidecar.join("layers").join("browser").join("browsers")).unwrap();

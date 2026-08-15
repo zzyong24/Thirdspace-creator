@@ -88,6 +88,7 @@ describe("DispatchClient(登录模式)", () => {
       return jsonResponse({ data: { ok: true }, meta: { requestId: "r2" } });
     });
     const client = new DispatchClient({
+      baseUrl: "http://localhost:3000",
       email: "a@b.c",
       password: "pw",
       fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -107,6 +108,7 @@ describe("DispatchClient(登录模式)", () => {
       ),
     );
     const client = new DispatchClient({
+      baseUrl: "http://localhost:3000",
       email: "a@b.c",
       password: "wrong",
       fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -123,6 +125,7 @@ describe("DispatchClient(T-046 免登录模式)", () => {
       jsonResponse({ data: [], meta: { requestId: "r3" } }),
     );
     const client = new DispatchClient({
+      baseUrl: "http://localhost:3000",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
     expect(client.hasCredentials).toBe(false);
@@ -138,6 +141,7 @@ describe("DispatchClient(T-046 免登录模式)", () => {
       jsonResponse({ error: "unknown operation: nope" }, { status: 404 }),
     );
     const client = new DispatchClient({
+      baseUrl: "http://localhost:3000",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
     const err = (await client.dispatch("nope").catch((e) => e)) as DispatchError;
@@ -145,5 +149,46 @@ describe("DispatchClient(T-046 免登录模式)", () => {
     expect(err.status).toBe(404);
     expect(err.message).toContain("unknown operation: nope");
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("安装版调用携带 handshake、CLI grant、显式账号与执行语义头", async () => {
+    const fetchImpl = vi.fn(async (_url: unknown, _init?: RequestInit) =>
+      jsonResponse({ data: { id: "p1" }, meta: { requestId: "r4" } }),
+    );
+    const client = new DispatchClient({
+      baseUrl: "http://127.0.0.1:43127",
+      handshakeToken: "hs-secret",
+      cliAccessToken: "cli-secret",
+      clientId: "cli-test-client",
+      productId: "creatoros",
+      packageId: "cloud.aitongban.creatoros",
+      launchNonce: "launch-nonce",
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await client.dispatch(
+      "projects.update",
+      { params: { projectId: "p1" }, body: { title: "新标题" } },
+      {
+        accountId: "acct-a",
+        idempotencyKey: "idem-a",
+        apply: true,
+        confirmImpact: "project:p1",
+      },
+    );
+
+    const [, init] = fetchImpl.mock.calls[0]!;
+    expect(init?.headers).toMatchObject({
+      "x-creatoros-handshake": "hs-secret",
+      "x-creatoros-cli-access": "cli-secret",
+      "x-creatoros-cli-client-id": "cli-test-client",
+      "x-creatoros-cli-product-id": "creatoros",
+      "x-creatoros-cli-package-id": "cloud.aitongban.creatoros",
+      "x-creatoros-cli-launch-nonce": "launch-nonce",
+      "x-account-id": "acct-a",
+      "x-idempotency-key": "idem-a",
+      "x-creatoros-cli-apply": "1",
+      "x-creatoros-cli-confirm-impact": "project:p1",
+    });
   });
 });

@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 均已由本轮规格修订销账；合法 changed lines 未引入新的可阻断问题。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "FR-CLI-04",
+        "quote": "创建/修改正式实体、采纳候选、删除、发布/出网等动作先创建 Agent Action，由 CreatorOS 现有界面展示具体影响并等待用户确认。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CLI-04B",
+        "quote": "伪造参数、重复执行或绕过 Gateway 调 dispatch 都不能落正式数据。"
+      },
+      "where": "§5.1 agent.actions confirm/reject 与 §7 Gateway 鉴权边界",
+      "failure_mode": "SPEC 让 CLI 和桌面 WebView 都持有同一启动级凭据并访问同一 loopback Gateway，同时把 actions confirm/reject 放在该 Gateway 中，却没有定义仅可信 CreatorOS UI 能取得且 CLI/Codex 无法伪造的确认凭证或独立执行边界。一个遵循当前文本的实现可以只校验 descriptor 中的启动凭据和客户端自报身份；此时 CLI 可直接调用 confirm endpoint，把自己创建的 awaiting_confirmation action 确认为正式写入，绕过 P-01 和确认卡。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md:122-127,152-155,204-206,273-281",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定确认/拒绝执行必须依赖 CLI、MCP 和 descriptor 均无法取得或伪造的可信 UI 证明或隔离调用面，并增加‘持有合法 CLI 启动凭据仍不能确认 action’的安全验收。",
+      "resolution_evidence": "SPEC 第 65、156-157、212-217、244-247、290-291、335、339 行已明确：confirm/reject 不属于 CLI/MCP 可调用面；只有 Tauri 原生壳可用仅驻 Rust 内存、不会进入 descriptor/环境变量/WebView/数据库/日志的启动级 Ed25519 私钥签发一次性证明；sidecar 在专用内部 route 校验签名、启动、过期与 nonce；合法 CLI 启动凭据不能派生或替代确认权限，并纳入安全与 UI 验证矩阵。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-CLI-04",
+        "quote": "Agent Action 使用持久幂等键和输入 hash；重复请求返回同一 action/result。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CLI-04C",
+        "quote": "确认执行或拒绝后，CLI wait 返回同一 action 的真实终态。"
+      },
+      "where": "§5.2 Agent Invocation / Action 持久化模型与 §9 UI 刷新恢复验证",
+      "failure_mode": "待确认动作只明确持久化 operation、inputHash、target refs 和状态，并明确不保存完整正文、Gateway 不复制业务内容；但确认后执行正式创建或修改必须重获原始输入。应用刷新、重启或 CLI 断开后，合理实现要么已丢失执行载荷而无法完成同一 action，要么只能要求客户端重传并可能接受与确认卡不一致的内容，导致确认对象被替换、幂等结果不可恢复或 action 永久卡住。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md:146-148,210-223,276-277,319",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确待确认期间完整执行载荷或不可变载荷引用的权威归属、加密与生命周期；确认卡、inputHash 和最终执行必须绑定同一不可替换载荷，并覆盖刷新、重启及重传篡改测试。",
+      "resolution_evidence": "SPEC 第 147-151、160-162、223-224、235-238、300-301、335、339 行已明确：Gateway 在 awaiting_confirmation 生命周期内以应用主密钥加密保存经真实 endpoint schema 规范化的执行载荷，并将密文、schema version、inputHash、actionId 绑定；文件输入仅保存不可变对象 ID 与内容 hash；确认前重读当前实体和版本；刷新、应用重启或 CLI 断开后恢复未过期密文且禁止客户端重传替换；终态或 24 小时过期后删除密文；错版本、篡改、过期或换内容均零领域写入，并纳入安全与 UI 恢复验证。",
+      "parent_id": ""
+    }
+  ]
+}

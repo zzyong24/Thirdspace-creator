@@ -125,6 +125,7 @@ import { SkillsSection } from "./skills-section";
 import type { SkillItem } from "./skills-data";
 import { requestOnboardingReopen } from "@/features/onboarding/onboarding-card";
 import { ActivationResetControl } from "./activation-reset-control";
+import { CliAccessCard } from "./cli-access-card";
 
 // ---------------------------------------------------------------------------
 // useSettingsMutation — the shared island mutation seam (plan Step 5)
@@ -404,6 +405,7 @@ export function SettingsDialog({
                   key={viewModel.account.displayName}
                   viewModel={viewModel}
                 />
+                <CliAccessCard />
                 <AccountBindingCard
                   key={`${viewModel.douyinAccount.loggedIn}:${viewModel.douyinAccount.sourceReady ?? false}`}
                   douyinAccount={viewModel.douyinAccount}

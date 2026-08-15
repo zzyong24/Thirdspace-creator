@@ -805,4 +805,33 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-SCHED-UI-002 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-001, FR-SCHED-002, NFR-SCHED-004 |
 | TEST-SCHED-UI-003 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-005, FR-SCHED-006, NFR-SCHED-004 |
 | TEST-SCHED-UI-004 | test | docs/superpowers/specs/2026-07-29-project-publishing-schedule.contract.md | FR-SCHED-007, NFR-SCHED-004 |
+| DEC-CLI-001 | decision | orchestrator/DECISION_LOG.md | FR-CLI-01..08, FLOW-CLI-001..004 |
+| FR-CLI-01 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-001..004, API-CLI-002, TEST-CLI-002, TEST-CLI-006, TEST-CLI-008 |
+| FR-CLI-02 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-001, API-CLI-001, TEST-CLI-001, TEST-CLI-004 |
+| FR-CLI-03 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-001, FLOW-CLI-004, API-CLI-002, API-CLI-005, TEST-CLI-003, TEST-CLI-008 |
+| FR-CLI-04 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-003, ENT-CLI-001, API-CLI-001..003, UI-CLI-001, TEST-CLI-001..003, TEST-CLI-006 |
+| FR-CLI-05 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-002, FLOW-CLI-004, API-CLI-004, TEST-CLI-005, TEST-CLI-008 |
+| FR-CLI-06 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-001..004, API-CLI-005, TEST-CLI-004, TEST-CLI-007, TEST-CLI-008 |
+| FR-CLI-07 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-001, API-CLI-001, TEST-CLI-001 |
+| FR-CLI-08 | requirement | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FLOW-CLI-004, API-CLI-006, TEST-CLI-008 |
+| FLOW-CLI-001 | flow | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01..04, FR-CLI-06, FR-CLI-07 |
+| FLOW-CLI-002 | flow | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-02, FR-CLI-05 |
+| FLOW-CLI-003 | flow | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-04, FR-CLI-06 |
+| FLOW-CLI-004 | flow | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-03, FR-CLI-05, FR-CLI-06, FR-CLI-08 |
+| ENT-CLI-001 | entity | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-04, API-CLI-002, API-CLI-003 |
+| API-CLI-001 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-02, FR-CLI-04, FR-CLI-07 |
+| API-CLI-002 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-03, FR-CLI-04 |
+| API-CLI-003 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-04, UI-CLI-001 |
+| API-CLI-004 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-05 |
+| API-CLI-005 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-03, FR-CLI-06 |
+| API-CLI-006 | api | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-08 |
+| UI-CLI-001 | component | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-04, API-CLI-003 |
+| TEST-CLI-001 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-02, FR-CLI-04, FR-CLI-07 |
+| TEST-CLI-002 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-03, FR-CLI-04 |
+| TEST-CLI-003 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-03, FR-CLI-04 |
+| TEST-CLI-004 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-02, FR-CLI-06 |
+| TEST-CLI-005 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-05 |
+| TEST-CLI-006 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-04 |
+| TEST-CLI-007 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-06 |
+| TEST-CLI-008 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-03, FR-CLI-05, FR-CLI-06, FR-CLI-08 |
 ```

@@ -2725,3 +2725,59 @@ CreatorOS 现有数据库任务链已提供更强的恢复与审计。
 同规模旧模板捕帧约 8.15 帧/秒，新动态模糊模板约 5.58 帧/秒。
 
 **任务**：T-841。
+
+# DEC-CLI-001 (2026-08-15) — CreatorOS 全部正式业务能力 1:1 暴露给 CLI
+
+**Status**：confirmed
+
+**用户方向**：希望有一个 CLI，让 Codex 在保持 CreatorOS 现有功能的情况下操作系统；随后明确纠正
+受限方案：定位、选题、全部作品数据以及现有 Tool 的所有读写能力都要通过 CLI 暴露，只是在现有
+Tool/contract 外再套一层，不接受“CLI 只读、每次写入回桌面 UI 审批”。
+用户随后补充：账号切换、抖音导入也必须支持，后续会由 Codex 并行操控 3 个账号。
+
+**裁决**：
+
+1. `creatoros` 是现有 CreatorOS 的第二入口，不是第二套业务系统；CLI、MCP 和桌面 UI 统一走
+   contract-first Gateway 与现有 backend service port，不直连数据库、不复制业务逻辑。
+2. 当前 `@creatoros/contract` 注册的全部正式 operation 均自动可发现、可调用，包括读、写、确认、
+   采纳、取消、删除和已存在的对外操作；没有 agent 专用隐藏业务子集。新增 operation 缺少 effect、
+   确认语义、异步和幂等元数据时由穷尽测试阻断。
+3. 用户在 CreatorOS 中开启当前启动生命周期的“CLI 完整读写访问”后，Codex 可按用户指令直接调用
+   全部 operation，不为每个写动作创建桌面确认卡。`--apply` 以及破坏性/对外动作的
+   `--confirm-impact <真实目标>` 是 CLI 调用语义和审计信号，不是扣留能力或要求返回 UI 审批。
+4. P-01 的候选边界继续成立：AI 生成仍先产候选；用户在 Codex 对话中明确要求采纳/确认后，Codex
+   可直接调用现有 adopt/confirm operation，真正领域写入仍由 backend service 带 ownership 守卫执行。
+5. 完整能力只指正式 contract，不包含数据库/仓储直连、内部 route、应用私有文件、密钥、Cookie、
+   任意 shell/文件系统、激活绕过或客户端伪造 user/account/effect。
+6. 复用现有 `mcp-server` 的 schema/MCP 适配，但统一到同一连接发现、Gateway client、operation
+   registry 和 JSON/错误协议；正式 CLI 随 macOS/Windows 桌面包交付，不依赖 Node/pnpm/tsx。
+7. 多账号不能依赖桌面 localStorage 或进程共享“当前账号”：CLI 提供账号列表/默认切换，但 Codex
+   自动化的每条命令必须显式携带 accountId，经既有属主咽喉校验。允许 A/B/C 并行调用并独立恢复
+   task；抖音扫码绑定、本人作品/指标刷新和分享链接导入复用现有正式能力，结果严格按号落库。
+8. 无原生幂等的写 operation 由 Gateway 在执行前登记；成功的 contract-valid response 用应用主密钥
+   加密短存 24 小时供同 key/hash 跨重启恢复，之后只返回稳定 duplicate receipt 且绝不重放。缓存与
+   普通审计分离，按 user/account/operation/key/hash 隔离，不缓存 contract 禁止返回的秘密。
+
+**用户确认**：2026-08-15，用户明确表示“希望靠它有所有的读写能力”“定位、选题、所有作品数据，
+通过 CLI 全部暴露出来”“像现在系统里面的 Tool，只是再套一层”，并补充“账号的切换、抖音导入”
+也要支持，后续会由 Codex 并行操控 3 个账号。该确认使此前限制版 SPEC 与
+PASS[REV:805cc308700e] 仅保留历史审计，不再授权实现。
+
+**影响范围**：T-843、CLI/MCP、contract operation metadata、安装版连接描述、backend Gateway、
+设置中的本次启动授权、显式多账号 RequestContext、抖音导入、最小 invocation 幂等审计与
+macOS/Windows 打包验收。
+
+**Explicit Limits**：不重做现有 UI；不建立第二业务系统；不直连数据库；不暴露密钥、内部 route、
+日志或私有文件；不削弱激活、ownership、schema、响应脱敏和既有 AI 候选链。
+
+**Pattern-Ref**：PAT-001 T1（借现有 MCP/JSON Schema 转换，补薄适配和安全边界）；PAT-003（复用
+现有异步任务，不新增队列）；PAT-004 CF-001/002/003/004（CLI/MCP/frontend/backend 多消费者，
+operation metadata 与 Gateway 必须契约优先）。
+
+**Asset-Ref**：仓内现有 `mcp-server`、`@creatoros/contract`、`/api/v1/dispatch`、Tauri 随机端口与
+启动级 handshake、`verifyAccountSelection`、抖音 ingestion、AI/execution task 与候选确认链；
+资产索引无已验证 CLI/本机 IPC 模块，不新增
+第三方 daemon。
+
+**任务**：T-843；详细规格见
+`docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md`。

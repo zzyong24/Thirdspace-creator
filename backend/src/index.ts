@@ -224,6 +224,19 @@ export {
 } from "./schema/browser-sessions";
 // T-147 P5 桌面激活授权(activation_state 一机一码激活态表)。
 export { activationState } from "./schema/activation";
+export {
+  cliInvocations,
+  cliInvocationResults,
+  type CliInvocationRow,
+  type CliInvocationResultRow,
+} from "./schema/cli-invocations";
+export {
+  createCliInvocationService,
+  type CliInvocationService,
+  type CliInvocationReceipt,
+  type BeginCliInvocationInput,
+  type BeginCliInvocationResult,
+} from "./modules/cli-invocations/cli-invocations.service";
 export type { ActivationStateRow } from "./schema/activation";
 export type { RequestContext } from "./request-context";
 // [T-363] 清库/重置保留表单一真值清单 + 「重置工作区」归档后的 user 级资产迁回。

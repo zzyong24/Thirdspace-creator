@@ -1,72 +1,84 @@
-# @creatoros/mcp-server
+# CreatorOS CLI / MCP
 
-CreatorOS 的 MCP 底座(T-063f,吸收 T-059「全功能 CLI 化」战略)。把 `@creatoros/contract` 的全部 ops 自动暴露为 MCP tools,外部 MCP client(Claude Code / Claude Desktop / 任意 MCP 客户端)以 stdio 连接后即可调用 CreatorOS 的能力。
+`creatoros` 是 CreatorOS 正式业务能力的命令行入口。它和桌面界面共用同一后端、账号、真实 ID、任务与数据，不直连数据库，也不读取模型密钥或抖音 Cookie。
 
-## 架构
+## 开始使用
 
-- **stdio 进程形态**:本包是独立进程,不直连 DB、不 import persistence-client(避免双持 Pool 和调度器)。
-- **一切走 dispatch**:每个 tool call 通过 HTTP 打到运行中的 Next dev server 的 `POST /api/v1/dispatch`,复用全部鉴权 / transport / 确认门语义,零重复装配。
-- **工具面自动生成**(`src/tools.ts`):遍历 contract `ENDPOINTS` ——
-  - 工具名 = op id 点换下划线(`projects.list` → `projects_list`);
-  - inputSchema = endpoint 的 `params` / `query` / `body` zod schema 经 `z.toJSONSchema`(zod v4)合成 `{ params?, query?, body? }`,与 dispatch 的 input 形状一一对应;
-  - annotations:GET → `readOnlyHint`;DELETE → `destructiveHint`;
-  - description:写 op 写明确认门语义(AI 任务类 op 只产候选、需 `ai_tasks_confirm` 才物化);物理删除类附高危警告。
-- **辅助工具** `creatoros_overview`:一发拿 dashboard 摘要(等价 `pages_dashboard_get`),外部 AI 起步入口。
+1. 启动 CreatorOS 桌面版。
+2. 在“设置 → Codex 与 CLI 完整访问”点击“本次启动开启”。
+3. 在新终端运行 `creatoros status`。
 
-## 前置条件
+退出 CreatorOS、到期或点击“立即撤销”后，现有命令会立刻失效。Windows 首次安装后需要重新打开终端或 Codex，安装器只把 CreatorOS 自己的命令目录追加到当前用户 PATH；卸载时精准移除该目录和启动器。macOS 命令安装在 `~/.local/bin/creatoros`，设置页会显示真实路径。
 
-CreatorOS dev server 在运行(默认 `http://localhost:3000`):
+## 发现能力
 
-```bash
-pnpm --filter @creatoros/frontend dev
+```sh
+creatoros operations list
+creatoros operations describe projects.create
+creatoros accounts list
 ```
 
-## 在 Claude Code 里接入
+全部正式 contract operation 都可以用统一入口调用：
 
-```bash
-# tsx 直跑(monorepo 各包以 src/*.ts 直发,无需 build)
-claude mcp add creatoros -- node --import tsx /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server/src/index.ts
-
-# 或走 bin 入口(等价,内部经 tsx ESM loader 加载 TS)
-claude mcp add creatoros -- node /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server/bin/creatoros-mcp.mjs
+```sh
+creatoros call projects.list --account acct-a --input '{"query":{"page":1,"pageSize":20}}'
+creatoros call projects.create --account acct-a --input '{"body":{"title":"CLI 项目"}}' \
+  --apply --idempotency-key project-create-001
 ```
 
-Claude Desktop(`claude_desktop_config.json`)同理:
+写操作必须显式带 `--apply --idempotency-key <key>`。删除、对外发送、模型调用、登录与采集等高影响操作还必须带 `--confirm-impact <真实账号或实体ID>`。这不是桌面二次确认卡，而是让命令本身明确执行意图。
 
-```json
-{
-  "mcpServers": {
-    "creatoros": {
-      "command": "node",
-      "args": ["--import", "tsx", "/Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server/src/index.ts"],
-      "env": { "CREATOROS_BASE_URL": "http://localhost:3000" }
-    }
-  }
-}
+## 三账号并行
+
+Codex 自动化必须在每条命令上显式写真实账号 ID，不使用共享的“当前账号”：
+
+```sh
+creatoros call projects.list --account acct-a --input '{"query":{}}'
+creatoros call projects.list --account acct-b --input '{"query":{}}'
+creatoros call projects.list --account acct-c --input '{"query":{}}'
 ```
 
-## 环境变量
+`creatoros accounts use <accountId>` 只保存给人工连续操作使用；后续命令还要明确加 `--use-default-account` 才会采用，不改变桌面端当前账号。
 
-| 变量 | 默认 | 说明 |
-|---|---|---|
-| `CREATOROS_BASE_URL` | `http://localhost:3000` | dev server 根地址 |
-| `CREATOROS_EMAIL` | — | 登录邮箱;与 PASSWORD 同配时启动后自动 login 拿 session cookie,401 自动重登 |
-| `CREATOROS_PASSWORD` | — | 登录密码 |
+## 抖音
 
-两个凭据都缺省 = T-046 本机免登录模式:dispatch 裸调(服务端以本机主用户直通)。
+```sh
+creatoros douyin status --account acct-a
 
-## 确认门语义(写操作)
+creatoros douyin login --account acct-a --force-new \
+  --apply --idempotency-key douyin-login-a --confirm-impact acct-a
 
-- **AI 任务类**(`ai_tasks_create` 等):只产生候选结果,不落账;必须审阅后调 `ai_tasks_confirm` 才物化。`cancel` / `results.patch` 只作用于候选。
-- **物理删除类**(DELETE,如 `contentCalendar` 删除):tool description 带【高危】警告,`destructiveHint: true`,调用前必须得到用户明确确认。
-- 其余 POST/PATCH/PUT:直接落账的业务写,description 中已注明。
+creatoros douyin refresh --account acct-a \
+  --apply --idempotency-key douyin-refresh-a --confirm-impact acct-a
 
-## 开发
-
-```bash
-pnpm --filter @creatoros/mcp-server typecheck   # tsc 0 错
-pnpm --filter @creatoros/mcp-server test        # vitest 单测(schema 转换/工具名/dispatch 封装)
-pnpm --filter @creatoros/mcp-server smoke       # 冒烟:stdio 起 server,initialize + tools/list + tools/call 对着 :3000 真调
+creatoros douyin import --account acct-a --share 'https://v.douyin.com/…/' \
+  --apply --idempotency-key douyin-import-a --confirm-impact acct-a
 ```
 
-冒烟脚本 `scripts/smoke.mjs` 模拟最小 MCP client:子进程 stdio 拉起 server,JSON-RPC 走 initialize → tools/list → `projects_list` → `pages_dashboard_get`,三步都要真实返回才算过。
+`douyin refresh` 复用该账号现有且唯一的“我的作品指标”定时采集任务；找不到或存在多个时会拒绝猜测。分享链接导入复用 `intelligence.items.importDouyinShare`，不会另建一套数据。
+
+## 长任务与 MCP
+
+```sh
+creatoros tasks get <taskId> --account acct-a
+creatoros tasks wait <taskId> --account acct-a
+creatoros mcp serve
+```
+
+`tasks wait` 默认不设置总超时；按 Ctrl-C 只停止本地等待，不取消后台任务。之后可用同一 task ID 继续 `get` 或 `wait`。
+
+## 实现边界与本地开发
+
+- CLI/MCP 都从 `@creatoros/contract` 的 operation registry 自动生成能力面和输入 schema。
+- 所有调用只走运行中的 CreatorOS `/api/v1/dispatch`，复用既有身份、账号属主、业务服务、候选确认和任务状态，不直接持有数据库连接。
+- `creatoros mcp serve` 与 CLI 共用连接发现、启动级授权、策略、幂等和错误协议；正式安装版无需另装 Node。
+
+仓库内开发验证：
+
+```sh
+pnpm --filter @creatoros/mcp-server typecheck
+pnpm --filter @creatoros/mcp-server test
+pnpm --filter @creatoros/mcp-server build:runtime
+```
+
+只有本地开发才使用 `CREATOROS_BASE_URL`、`CREATOROS_EMAIL`、`CREATOROS_PASSWORD` 等显式覆盖；正式安装版从桌面应用本次启动写出的权限受限连接文件发现地址和授权，不从命令参数接收秘密。

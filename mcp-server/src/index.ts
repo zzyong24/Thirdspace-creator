@@ -9,21 +9,37 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { DispatchClient } from "./dispatch";
+import { discoverConnection } from "./connection";
 import { createCreatorOsMcpServer } from "./server";
 
 async function main(): Promise<void> {
-  const dispatchClient = new DispatchClient({
-    baseUrl: process.env.CREATOROS_BASE_URL,
-    email: process.env.CREATOROS_EMAIL,
-    password: process.env.CREATOROS_PASSWORD,
-  });
+  const explicitDevBaseUrl = process.env.CREATOROS_BASE_URL;
+  const connection = explicitDevBaseUrl ? null : await discoverConnection();
+  const dispatchClient = new DispatchClient(
+    explicitDevBaseUrl
+      ? {
+          baseUrl: explicitDevBaseUrl,
+          email: process.env.CREATOROS_EMAIL,
+          password: process.env.CREATOROS_PASSWORD,
+          handshakeToken: process.env.CREATOROS_HANDSHAKE_TOKEN,
+          cliAccessToken: process.env.CREATOROS_CLI_ACCESS_TOKEN,
+        }
+      : {
+          baseUrl: connection!.baseUrl,
+          handshakeToken: connection!.handshakeToken,
+          cliAccessToken: connection!.cliAccessToken,
+          productId: connection!.productId,
+          packageId: connection!.packageId,
+          launchNonce: connection!.launchNonce,
+        },
+  );
 
   const server = createCreatorOsMcpServer({ dispatchClient });
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // stdio server 的一切日志走 stderr(stdout 是 JSON-RPC 通道,不能污染)。
   console.error(
-    `[creatoros-mcp] 已就绪(base=${process.env.CREATOROS_BASE_URL ?? "http://localhost:3000"},鉴权=${dispatchClient.hasCredentials ? "登录模式" : "免登录裸调"})`,
+    `[creatoros-mcp] 已就绪(mode=${explicitDevBaseUrl ? "explicit-dev" : "installed"},product=${connection?.productId ?? "dev"})`,
   );
 }
 

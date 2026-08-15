@@ -1,0 +1,390 @@
+import { ENDPOINTS } from "./endpoints";
+
+export type CliEffect = "read" | "write" | "destructive" | "external";
+export type CliConfirmation = "none" | "apply" | "confirm_impact";
+export type CliIdempotency = "not_applicable" | "native" | "gateway";
+
+export interface CliOperationPolicy {
+  readonly effect: CliEffect;
+  readonly confirmation: CliConfirmation;
+  readonly asyncTask: boolean;
+  readonly idempotency: CliIdempotency;
+}
+
+export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
+
+// T-843: 这是 CLI effect 的契约真值，不在调用期按 HTTP method 或 operation 名猜。
+// 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
+const READ_OPERATIONS = [
+  "accounts.cadence.attainment",
+  "accounts.cadence.get",
+  "accounts.calendar.list",
+  "accounts.get",
+  "accounts.list",
+  "ai.conversations.list",
+  "ai.conversations.messages.list",
+  "ai.tasks.get",
+  "ai.tasks.list",
+  "ai.tasks.results.list",
+  "ai.tasks.steps.list",
+  "analytics.projects.get",
+  "analytics.publications.get",
+  "artifacts.get",
+  "artifacts.list",
+  "artifacts.versions.list",
+  "assets.downloadUrl",
+  "assets.get",
+  "assets.list",
+  "assets.usage.list",
+  "audienceSignals.list",
+  "benchmark.sources.list",
+  "benchmark.works.list",
+  "calibration.overview",
+  "calibration.predictions.get",
+  "calibration.predictions.list",
+  "calibration.rubrics.get",
+  "calibration.suggestions.list",
+  "candidates.get",
+  "candidates.list",
+  "execution.tasks.get",
+  "execution.tasks.list",
+  "favorites.folders.list",
+  "ingestion.douyin.status",
+  "ingestion.douyin.throttleStatus",
+  "ingestion.runs.get",
+  "intelligence.collectors.list",
+  "intelligence.items.get",
+  "intelligence.items.list",
+  "intelligence.migrations.inventory",
+  "intelligence.migrations.report",
+  "intelligence.runs.get",
+  "intelligence.runs.list",
+  "intelligence.sources.list",
+  "intelligence.sources.listFavoriteFolders",
+  "intelligence.workspace.get",
+  "jobRuns.get",
+  "jobRuns.listByJob",
+  "knowledge.folders.list",
+  "knowledge.get",
+  "knowledge.list",
+  "knowledge.relations.list",
+  "knowledge.relations.listAll",
+  "knowledge.revisions.list",
+  "learnings.get",
+  "learnings.list",
+  "materialLinks.list",
+  "notifications.list",
+  "outputs.get",
+  "outputs.production.get",
+  "outputs.publications.list",
+  "pages.dashboard.get",
+  "pages.positioning.get",
+  "pages.projectOverview.get",
+  "pages.search.get",
+  "positioning.profile.get",
+  "positioning.statements.get",
+  "positioning.statements.list",
+  "productions.segments.list",
+  "projects.activity.list",
+  "projects.get",
+  "projects.intelligence.list",
+  "projects.list",
+  "projects.outputs.list",
+  "projects.stages.list",
+  "projects.tasks.list",
+  "publications.comments.list",
+  "publications.get",
+  "publications.revisions.list",
+  "reviewRules.list",
+  "reviews.get",
+  "reviews.insights.list",
+  "reviews.list",
+  "scheduledJobs.get",
+  "scheduledJobs.list",
+  "scriptReviews.getLatest",
+  "search.facets",
+  "settings.channelModelCredentials.list",
+  "settings.get",
+  "settings.models.list",
+  "settings.preferences.get",
+  "settings.prompts.get",
+  "settings.prompts.list",
+  "settings.prompts.versions.list",
+  "settings.storage.get",
+  "taxonomy.entityTags.listEntitiesForTag",
+  "taxonomy.entityTags.listForEntity",
+  "taxonomy.tags.list",
+  "topics.attributions.list",
+  "topics.overview",
+  "trend.sources.list",
+] as const satisfies readonly EndpointId[];
+
+const MUTATION_OPERATIONS = [
+  "accounts.archive",
+  "accounts.cadence.upsert",
+  "accounts.calendar.entries.create",
+  "accounts.create",
+  "accounts.update",
+  "ai.conversations.create",
+  "ai.conversations.messages.create",
+  "ai.tasks.cancel",
+  "ai.tasks.confirm",
+  "ai.tasks.create",
+  "ai.tasks.results.patch",
+  "artifacts.create",
+  "artifacts.relations.create",
+  "artifacts.restore",
+  "artifacts.scriptPatches.apply",
+  "artifacts.versions.create",
+  "assets.commit",
+  "assets.favorite.toggle",
+  "assets.files.create",
+  "assets.restore",
+  "assets.trash",
+  "assets.uploads.complete",
+  "assets.uploads.create",
+  "audienceSignals.linkToCandidate",
+  "benchmark.sources.create",
+  "benchmark.sources.remove",
+  "benchmark.sources.toggle",
+  "benchmark.works.transcribe",
+  "browserSessions.clear",
+  "browserSessions.openLogin",
+  "calendar.entries.delete",
+  "calendar.entries.transition",
+  "calendar.entries.update",
+  "calibration.predictions.create",
+  "calibration.predictions.lock",
+  "calibration.results.create",
+  "calibration.rubrics.bumpVersion",
+  "calibration.rubrics.create",
+  "calibration.suggestions.adopt",
+  "calibration.suggestions.dismiss",
+  "candidates.create",
+  "candidates.patch",
+  "candidates.promote",
+  "execution.tasks.command",
+  "execution.tasks.confirm",
+  "execution.tasks.create",
+  "execution.tasks.discard",
+  "exports.complete",
+  "favorites.folders.create",
+  "favorites.folders.remove",
+  "favorites.folders.toggle",
+  "identity.profile.patch",
+  "identity.register",
+  "ingestion.douyin.login",
+  "ingestion.douyin.refresh",
+  "ingestion.runs.complete",
+  "ingestion.runs.create",
+  "intelligence.collections.create",
+  "intelligence.collections.delete",
+  "intelligence.collections.update",
+  "intelligence.items.importDouyinShare",
+  "intelligence.migrations.rollback",
+  "intelligence.migrations.start",
+  "intelligence.runs.start",
+  "intelligence.sources.create",
+  "intelligence.sources.delete",
+  "intelligence.sources.previewProfile",
+  "intelligence.sources.previewWeb",
+  "intelligence.sources.update",
+  "intelligence.transcripts.enqueue",
+  "intelligence.transcripts.uploadManual",
+  "intelligence.transforms.confirmTopic",
+  "intelligence.transforms.previewTopic",
+  "knowledge.archive",
+  "knowledge.create",
+  "knowledge.folders.create",
+  "knowledge.move",
+  "knowledge.relations.create",
+  "knowledge.relations.delete",
+  "knowledge.revisions.create",
+  "learnings.applications.create",
+  "learnings.calibrationSuggestions.create",
+  "learnings.create",
+  "learnings.evaluate",
+  "learnings.patch",
+  "materialLinks.create",
+  "materialLinks.delete",
+  "notifications.read",
+  "outputs.patch",
+  "outputs.production.editingPlan.confirm",
+  "outputs.production.put",
+  "outputs.publications.create",
+  "outputs.publications.register",
+  "outputs.stage.transition",
+  "positioning.discovery.answer.update",
+  "positioning.discovery.confirm",
+  "positioning.discovery.evidence.set",
+  "positioning.discovery.research",
+  "positioning.discovery.start",
+  "positioning.gate.evaluate",
+  "positioning.master.reset",
+  "positioning.master.restore",
+  "positioning.profile.upsert",
+  "positioning.statements.create",
+  "productions.exports.create",
+  "productions.exports.materials",
+  "productions.segments.create",
+  "projects.archive",
+  "projects.create",
+  "projects.delete",
+  "projects.intelligence.attach",
+  "projects.outputs.create",
+  "projects.patch",
+  "projects.scripts.acceptCandidate",
+  "projects.scripts.generateCandidate",
+  "projects.stage.transition",
+  "projects.tasks.create",
+  "projects.transcribe",
+  "publications.revisions.create",
+  "publications.transition",
+  "reviewRules.create",
+  "reviewRules.delete",
+  "reviewRules.patch",
+  "reviews.complete",
+  "reviews.create",
+  "reviews.insights.create",
+  "scheduledJobs.create",
+  "scheduledJobs.runNow",
+  "scheduledJobs.setEnabled",
+  "scheduledJobs.update",
+  "scriptReviews.trigger",
+  "settings.channelModelCredentials.put",
+  "settings.models.put",
+  "settings.models.test",
+  "settings.preferences.patch",
+  "settings.prompts.put",
+  "settings.prompts.rollback",
+  "settings.storage.put",
+  "tasks.patch",
+  "taxonomy.entityTags.assign",
+  "taxonomy.entityTags.remove",
+  "taxonomy.tags.create",
+  "taxonomy.tags.delete",
+  "taxonomy.tags.patch",
+  "trend.sources.create",
+  "trend.sources.remove",
+  "trend.sources.toggle",
+] as const satisfies readonly EndpointId[];
+
+const DESTRUCTIVE_OPERATIONS = new Set<EndpointId>([
+  "accounts.archive",
+  "ai.tasks.cancel",
+  "assets.trash",
+  "benchmark.sources.remove",
+  "browserSessions.clear",
+  "calendar.entries.delete",
+  "calibration.suggestions.dismiss",
+  "execution.tasks.discard",
+  "favorites.folders.remove",
+  "intelligence.collections.delete",
+  "intelligence.migrations.rollback",
+  "intelligence.sources.delete",
+  "knowledge.archive",
+  "knowledge.relations.delete",
+  "materialLinks.delete",
+  "positioning.master.reset",
+  "projects.archive",
+  "projects.delete",
+  "reviewRules.delete",
+  "settings.prompts.rollback",
+  "taxonomy.entityTags.remove",
+  "taxonomy.tags.delete",
+  "trend.sources.remove",
+]);
+
+const EXTERNAL_OPERATIONS = new Set<EndpointId>([
+  "ai.conversations.messages.create",
+  "ai.tasks.create",
+  "benchmark.works.transcribe",
+  "browserSessions.openLogin",
+  "ingestion.douyin.login",
+  "ingestion.douyin.refresh",
+  "intelligence.items.importDouyinShare",
+  "intelligence.runs.start",
+  "intelligence.sources.listFavoriteFolders",
+  "intelligence.sources.previewProfile",
+  "intelligence.sources.previewWeb",
+  "intelligence.transcripts.enqueue",
+  "intelligence.transforms.previewTopic",
+  "positioning.discovery.research",
+  "positioning.gate.evaluate",
+  "projects.scripts.generateCandidate",
+  "projects.transcribe",
+  "scheduledJobs.runNow",
+  "scriptReviews.trigger",
+  "settings.models.test",
+]);
+
+const ASYNC_TASK_OPERATIONS = new Set<EndpointId>([
+  "ai.tasks.create",
+  "benchmark.works.transcribe",
+  "execution.tasks.create",
+  "ingestion.douyin.login",
+  "ingestion.douyin.refresh",
+  "intelligence.items.importDouyinShare",
+  "intelligence.migrations.start",
+  "intelligence.runs.start",
+  "intelligence.transcripts.enqueue",
+  "projects.scripts.generateCandidate",
+  "projects.transcribe",
+  "scheduledJobs.runNow",
+  "scriptReviews.trigger",
+]);
+
+type ClassifiedOperation =
+  | (typeof READ_OPERATIONS)[number]
+  | (typeof MUTATION_OPERATIONS)[number];
+type MissingOperation = Exclude<EndpointId, ClassifiedOperation>;
+type UnknownOperation = Exclude<ClassifiedOperation, EndpointId>;
+const EXHAUSTIVE_POLICY_CHECK: MissingOperation extends never
+  ? UnknownOperation extends never
+    ? true
+    : never
+  : never = true;
+void EXHAUSTIVE_POLICY_CHECK;
+
+const readSet = new Set<EndpointId>(READ_OPERATIONS);
+const mutationSet = new Set<EndpointId>(MUTATION_OPERATIONS);
+
+function policyFor(operation: EndpointId): CliOperationPolicy {
+  const read = readSet.has(operation);
+  const mutation = mutationSet.has(operation);
+  if (read === mutation) {
+    throw new Error(`CLI policy classification must be exactly once: ${operation}`);
+  }
+  const effect: CliEffect = DESTRUCTIVE_OPERATIONS.has(operation)
+    ? "destructive"
+    : EXTERNAL_OPERATIONS.has(operation)
+      ? "external"
+      : read
+        ? "read"
+        : "write";
+  return {
+    effect,
+    confirmation: effect === "read"
+      ? "none"
+      : effect === "write"
+        ? "apply"
+        : "confirm_impact",
+    asyncTask: ASYNC_TASK_OPERATIONS.has(operation),
+    idempotency: effect === "read" ? "not_applicable" : "gateway",
+  };
+}
+
+export const CLI_OPERATION_POLICIES = Object.freeze(
+  Object.fromEntries(
+    Object.values(ENDPOINTS).map((endpoint) => [
+      endpoint.id,
+      policyFor(endpoint.id as EndpointId),
+    ]),
+  ) as Record<EndpointId, CliOperationPolicy>,
+);
+
+export function getCliOperationPolicy(operation: string): CliOperationPolicy | null {
+  return operation in CLI_OPERATION_POLICIES
+    ? CLI_OPERATION_POLICIES[operation as EndpointId]
+    : null;
+}

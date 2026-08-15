@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-cli-access-status"
+description = "Enables the cli_access_status command without any pre-configured scope."
+commands.allow = ["cli_access_status"]
+
+[[permission]]
+identifier = "deny-cli-access-status"
+description = "Denies the cli_access_status command without any pre-configured scope."
+commands.deny = ["cli_access_status"]

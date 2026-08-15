@@ -130,7 +130,9 @@ required-features = ["logtools"]
 windows-sys = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_System_JobObjects",
+  "Win32_System_Registry",
   "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
   # CreateJobObjectW 的签名引用 SECURITY_ATTRIBUTES → windows-sys 把它门在 Win32_Security 后。
   "Win32_Security",
 ] }

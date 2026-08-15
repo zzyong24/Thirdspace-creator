@@ -18,6 +18,9 @@
     "allow-entitlement-claim-poll",
     "allow-entitlement-claim-resume",
     "allow-license-last-decision",
-    "allow-license-latest-version"
+    "allow-license-latest-version",
+    "allow-cli-access-status",
+    "allow-cli-access-enable",
+    "allow-cli-access-revoke"
   ]
 }

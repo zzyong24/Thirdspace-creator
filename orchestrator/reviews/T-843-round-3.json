@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：旧 REV-001/REV-002 对应的逐动作 UI 审批方案已被用户确认的新范围整体替代，历史 finding 保持 resolved 并更新销账依据；REV-003 指出的跨重启幂等结果缺口已由独立加密短期结果缓存、稳定 duplicate receipt 和永不自动重放规则关闭。全量复核未发现 P-01、ownership、正式安装版连接、秘密、幂等或物理架构矛盾；全部正式 contract 读写、无逐项 UI 审批、账号切换、抖音导入和 Codex 并行操控 3 个账号均有需求、流程、协议、归属与真安装验收覆盖。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "security",
+      "requirement_anchor": {
+        "id": "FR-CLI-04",
+        "quote": "创建/修改正式实体、采纳候选、删除、发布/出网等动作先创建 Agent Action，由 CreatorOS 现有界面展示具体影响并等待用户确认。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CLI-04B",
+        "quote": "伪造参数、重复执行或绕过 Gateway 调 dispatch 都不能落正式数据。"
+      },
+      "where": "§5.1 agent.actions confirm/reject 与 §7 Gateway 鉴权边界",
+      "failure_mode": "SPEC 让 CLI 和桌面 WebView 都持有同一启动级凭据并访问同一 loopback Gateway，同时把 actions confirm/reject 放在该 Gateway 中，却没有定义仅可信 CreatorOS UI 能取得且 CLI/Codex 无法伪造的确认凭证或独立执行边界。一个遵循当前文本的实现可以只校验 descriptor 中的启动凭据和客户端自报身份；此时 CLI 可直接调用 confirm endpoint，把自己创建的 awaiting_confirmation action 确认为正式写入，绕过 P-01 和确认卡。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md:122-127,152-155,204-206,273-281",
+      "risk_class": "security",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "规定确认/拒绝执行必须依赖 CLI、MCP 和 descriptor 均无法取得或伪造的可信 UI 证明或隔离调用面，并增加‘持有合法 CLI 启动凭据仍不能确认 action’的安全验收。",
+      "resolution_evidence": "用户已确认用‘当前启动完整读写授权 + 命令执行标志 + backend ownership’整体替代旧 Agent Action/逐动作 UI 审批；当前 SPEC 第 6-7、124-137 行与 DEC-CLI-001 均明确 confirm/adopt/reject/cancel/delete/publish 属于 CLI 正式调用面且不要求回 UI 点击。旧 Ed25519 UI 确认方案只保留历史审计，不再授权实现，因此该旧前提风险已随范围替代销账。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-CLI-04",
+        "quote": "Agent Action 使用持久幂等键和输入 hash；重复请求返回同一 action/result。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CLI-04C",
+        "quote": "确认执行或拒绝后，CLI wait 返回同一 action 的真实终态。"
+      },
+      "where": "§5.2 Agent Invocation / Action 持久化模型与 §9 UI 刷新恢复验证",
+      "failure_mode": "待确认动作只明确持久化 operation、inputHash、target refs 和状态，并明确不保存完整正文、Gateway 不复制业务内容；但确认后执行正式创建或修改必须重获原始输入。应用刷新、重启或 CLI 断开后，合理实现要么已丢失执行载荷而无法完成同一 action，要么只能要求客户端重传并可能接受与确认卡不一致的内容，导致确认对象被替换、幂等结果不可恢复或 action 永久卡住。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md:146-148,210-223,276-277,319",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确待确认期间完整执行载荷或不可变载荷引用的权威归属、加密与生命周期；确认卡、inputHash 和最终执行必须绑定同一不可替换载荷，并覆盖刷新、重启及重传篡改测试。",
+      "resolution_evidence": "用户确认的新范围已整体删除 awaiting_confirmation Agent Action 与桌面确认卡；当前 SPEC 第 132-137 行明确用户在 Codex 中要求采纳后直接调用现有 adopt/confirm operation，由 backend service 校验并落库，不再存在‘重启后恢复旧 action 执行载荷’的需求。直接调用的通用幂等恢复由 FR-CLI-06 的 invocation/result-cache 模型承担，并由 REV-003 单独销账。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-CLI-06",
+        "quote": "所有写操作必须带幂等键。原 operation 已有原生幂等时透传；没有时由 Gateway 记录 invocation。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-CLI-06",
+        "quote": "同 key+同 hash 在 24 小时内跨进程重启返回原 schema-valid response，过期后返回稳定 result_expired duplicate receipt 且不重复写；同 key+不同 hash 冲突；执行中崩溃造成结果不明时不自动重放。"
+      },
+      "where": "§4 FR-CLI-06 与 §7 ENT-CLI-001",
+      "failure_mode": "对没有原生幂等的 operation，Gateway 若只持久化 operation、hash、targetRefs、requestId/taskId 和状态而不保存结果或可恢复结果引用，进程重启后无法为同步创建、修改、删除等异构 operation 返回原 schema-valid response；实现只能返回残缺回执、错误重放写入或永久 outcome_unknown。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC-LINE:153:b7d839315614e9ce",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:153:b7d839315614e9ce",
+      "suggestion": "以 Gateway invocation 作为永不重放真值，用与审计分离的加密短期 result cache 恢复原响应；缓存到期、权限撤销或结果不明时只返回稳定结构化回执，并覆盖同步、异步、秘密、重启、三账号和崩溃测试。",
+      "resolution_evidence": "SPEC 第 153-166 行已规定：按 user/account/operation/key/hash 在执行前登记且同 key/hash 绝不重放；成功 response 先经真实 contract schema 校验和脱敏，再用应用主密钥加密保存 24 小时；有效授权下跨进程返回原 response，缓存过期/丢失只返回 result_expired，执行结果不明返回 outcome_unknown。第 336-339 行规定缓存与普通审计分离并受当前授权约束；第 423-427 行覆盖同步、异步、合法敏感响应、权限撤销、缓存到期、同 key 异 hash、A/B/C 同 key 隔离与执行中崩溃，并要求所有情况零自动重放。",
+      "parent_id": ""
+    }
+  ]
+}

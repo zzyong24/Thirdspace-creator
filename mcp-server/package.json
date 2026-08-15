@@ -5,6 +5,7 @@
   "type": "module",
   "description": "CreatorOS MCP 底座 —— 把 contract ops 暴露为 MCP tools,外部 MCP client(Claude Code/Desktop 等)通过 stdio 连接,经 HTTP 调运行中的 dev server 的 /api/v1/dispatch。",
   "bin": {
+    "creatoros": "./bin/creatoros.mjs",
     "creatoros-mcp": "./bin/creatoros-mcp.mjs"
   },
   "exports": {
@@ -14,6 +15,8 @@
     }
   },
   "scripts": {
+    "cli": "node bin/creatoros.mjs",
+    "build:runtime": "node scripts/build-runtime.mjs",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "20.19.43",
+    "esbuild": "0.28.1",
     "typescript": "5.9.3",
     "vitest": "4.1.8"
   }

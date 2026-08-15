@@ -477,6 +477,13 @@
       "when": 1785628800000,
       "tag": "0067_channel_model_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786752000000,
+      "tag": "0068_cli_invocations",
+      "breakpoints": true
     }
   ]
 }

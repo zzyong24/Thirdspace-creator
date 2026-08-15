@@ -7,6 +7,8 @@ export * from "./request-context";
 export * from "./transport";
 export * from "./client";
 export * from "./local-platform";
+export * from "./cli-policy";
+export * from "./version";
 
 export {
   knowledgeFolderResource,

@@ -2,12 +2,14 @@ import "server-only";
 import { createHash } from "node:crypto";
 import {
   createConfiguredDb,
+  createCliInvocationService,
   UnsupportedOperationError,
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
   sql,
   type Db,
+  type CliInvocationService,
   // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
   // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
   restorePreservedUserAssets,
@@ -1218,6 +1220,7 @@ function extractArtifactText(
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  cliInvocations: CliInvocationService;
   projects: Transport;
   taxonomy: Transport;
   notifications: Transport;
@@ -1827,6 +1830,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const { key: masterKey, degraded: masterKeyDegraded } = resolveMasterKey(
     process.env,
   );
+  const cliInvocations = createCliInvocationService({
+    db,
+    masterKey,
+    now: deps.now,
+    nextId: deps.nextId,
+  });
   if (masterKeyDegraded) {
     console.warn(
       "[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。" +
@@ -13318,6 +13327,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
 
   return {
+    cliInvocations,
     projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
     taxonomy,
     notifications,
@@ -13566,6 +13576,11 @@ export async function getPublishingScheduleProjection(
  */
 export async function getIdentityService(): Promise<IdentityService> {
   return (await getBundle()).identity;
+}
+
+/** T-843 CLI Gateway 的唯一持久化端口；route 不直连 Drizzle。 */
+export async function getCliInvocationService(): Promise<CliInvocationService> {
+  return (await getBundle()).cliInvocations;
 }
 
 /**

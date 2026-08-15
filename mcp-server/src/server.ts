@@ -8,7 +8,13 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { buildTools, type McpToolDef } from "./tools";
-import { DispatchClient, DispatchError, type DispatchInput } from "./dispatch";
+import {
+  DispatchClient,
+  DispatchError,
+  type DispatchCallOptions,
+  type DispatchInput,
+} from "./dispatch";
+import { getCliOperationPolicy } from "@creatoros/contract";
 
 export interface CreatorOsMcpServerOptions {
   dispatchClient: DispatchClient;
@@ -46,9 +52,23 @@ export function createCreatorOsMcpServer(
         isError: true,
       };
     }
-    const input = (request.params.arguments ?? {}) as DispatchInput;
+    const args = (request.params.arguments ?? {}) as DispatchInput & {
+      _creatoros?: DispatchCallOptions;
+    };
+    const { _creatoros, ...input } = args;
     try {
-      const envelope = await dispatchClient.dispatch(tool.opId, input);
+      const policy = getCliOperationPolicy(tool.opId);
+      if (!policy) throw new Error(`operation 缺 CLI policy: ${tool.opId}`);
+      if (policy.effect !== "read") {
+        if (_creatoros?.apply !== true) throw new Error(`${tool.opId} 必须显式 apply=true。`);
+        if (!_creatoros.idempotencyKey?.trim()) {
+          throw new Error(`${tool.opId} 必须提供 idempotencyKey。`);
+        }
+        if (policy.confirmation === "confirm_impact" && !_creatoros.confirmImpact?.trim()) {
+          throw new Error(`${tool.opId} 必须提供 confirmImpact。`);
+        }
+      }
+      const envelope = await dispatchClient.dispatch(tool.opId, input, _creatoros);
       return {
         content: [
           { type: "text" as const, text: JSON.stringify(envelope, null, 2) },

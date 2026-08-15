@@ -49,11 +49,16 @@ describe("endpointInputSchema(zod v4 → JSON Schema)", () => {
     expect(query.required).toContain("q");
   });
 
-  it("无入参 op(pages.dashboard.get):空 properties", () => {
+  it("无业务入参 op(pages.dashboard.get):只保留通用 CLI/MCP 上下文", () => {
     const schema = endpointInputSchema(ENDPOINTS.getDashboard);
     expect(schema).toEqual({
       type: "object",
-      properties: {},
+      properties: {
+        _creatoros: expect.objectContaining({
+          type: "object",
+          properties: expect.objectContaining({ accountId: expect.any(Object) }),
+        }),
+      },
       additionalProperties: false,
     });
   });
@@ -111,6 +116,7 @@ describe("buildTools", () => {
     expect(overview).toEqual(OVERVIEW_TOOL);
     expect(overview.opId).toBe("pages.dashboard.get");
     expect(overview.annotations.readOnlyHint).toBe(true);
+    expect((overview.inputSchema.properties as Record<string, unknown>)._creatoros).toBeDefined();
   });
 });
 
