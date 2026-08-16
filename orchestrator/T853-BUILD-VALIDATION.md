@@ -69,3 +69,9 @@ CREATOROS_TEST_PORT=3438 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir 
 - 色彩分支只做媒体协议判断，不参与内容或创作语义；`unknown` 明确排除 HDR 后才走无色彩矩阵转换的安全分支。
 - macOS 随包 FFmpeg 6.0 已做真实字节验证；Windows 分层运行时解析测试与同一执行器测试继续通过，代码未引入平台路径分支。
 - 当前两条历史失败任务和已处于 `rendering` 的旧 Production 均未被重跑、回退或覆盖；修复针对后续任务生效，旧状态保留真实历史。
+
+## 收尾门禁
+
+- 严格前端回执 `PASS:0ea3774828e5`；任务收口时重新执行真实 Chrome 旅程并通过 4 个后置条件。
+- `boundary-scan` 无新增物理边界违规；`semantic-boundary-scan` 通过；`orphan-scan` 为 `0 error`；前后端类型检查、Next.js 生产构建与改动行尾检查通过。
+- 全局 `reconcile` 仍返回 103 项既有欠债：看板体积超限、旧 SPEC review receipt 过期、旧 frontend receipt 漂移与旧归档表缺验收列。输出中没有 T-853 错误；这些问题在本任务开始前已存在，也不属于本次渲染与素材预览修复范围。

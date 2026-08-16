@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-853",
+  "commit_sha": "97076f621ba5e7ee0d9c64d2fc0a64c4194f1435",
+  "captures": [
+    {
+      "checkpoint": "desktop-double-click-video-preview",
+      "check_ids": [
+        "AC-AMMO-VIDEO-LIVE-PREVIEW",
+        "AC-AMMO-PREVIEW-LAZY-OFFICIAL-URL",
+        "AC-AMMO-PREVIEW-KEYBOARD",
+        "AC-AMMO-PREVIEW-REFRESH-COMPACT"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "编导智能体实拍.mp4\n\n视频预览\n\n关闭"
+    },
+    {
+      "checkpoint": "compact-refresh-keyboard-video-preview",
+      "check_ids": [
+        "AC-AMMO-VIDEO-LIVE-PREVIEW",
+        "AC-AMMO-PREVIEW-LAZY-OFFICIAL-URL",
+        "AC-AMMO-PREVIEW-KEYBOARD",
+        "AC-AMMO-PREVIEW-REFRESH-COMPACT"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 720
+      },
+      "text": "编导智能体实拍.mp4\n\n视频预览\n\n关闭"
+    }
+  ]
+}
