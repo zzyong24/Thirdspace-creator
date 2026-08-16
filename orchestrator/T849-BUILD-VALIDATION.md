@@ -59,3 +59,9 @@ CREATOROS_TEST_PORT=3437 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir 
 - 没有修改用户真实数据；真实项目只做了读取诊断，浏览器写入全部发生在临时隔离数据库。
 - 空白折叠属于复制格式归一，不参与标题、简介、标签的语义选择。
 - 浏览器运行记录到稿件版本时间的既有服务端/客户端时区 hydration 警告；旅程仍通过，且该警告不由本任务改动引入，也未影响发布物料显示与刷新回读。
+
+## 收尾门禁
+
+- 严格前端回执 `PASS:12e53f1abd11`；验收器在提交 `1743acc1` 上重新执行真实 Chrome 旅程并通过 4 个后置条件。
+- `boundary-scan` 无新增物理边界违规；`semantic-boundary-scan` 通过；`orphan-scan` 为 `0 error`；前后端类型检查通过；改动行尾检查通过。
+- 全局 `reconcile` 仍返回 103 项既有欠债：看板体积超限、旧 SPEC review receipt 过期、旧 frontend receipt 漂移与旧归档表缺验收列。输出中没有 T-849 错误；这些问题在本任务开始前已存在，也不属于本次发布物料回归的验收范围。
