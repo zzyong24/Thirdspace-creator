@@ -9,8 +9,8 @@ const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
 const CHECK_IDS = [
   "AC-MATERIAL-BUTTONS",
-  "AC-IMAGE-SEMANTIC-PREFILL",
-  "AC-VIDEO-SEMANTIC-PREFILL",
+  "AC-IMAGE-MULTI-SEGMENT-PREFILL",
+  "AC-VIDEO-SINGLE-DEFAULT-PREFILL",
   "AC-MATERIAL-NO-AUTO-SEND",
 ];
 
@@ -45,7 +45,7 @@ async function selectAccount(page: Page, accountId: string, baseURL?: string) {
   );
 }
 
-test("当前确认稿可预填图片/视频素材请求，点击不自动发送", async ({
+test("图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送", async ({
   page,
   baseURL,
 }) => {
@@ -90,8 +90,11 @@ test("当前确认稿可预填图片/视频素材请求，点击不自动发送"
       params: { artifactId: artifact.id },
       query: undefined,
       body: {
-        contentText:
+        contentText: [
           "工具变多并不等于流程变清楚。真正的问题是任务没有拆开，换多少模型都只是在传递同一个混乱的纸箱。",
+          "先把输入、判断和交付拆成三个独立环节，每个环节只解决一个问题，团队才知道卡点究竟在哪里。",
+          "最后再让 AI 串起这些环节，它承担的是理解和编排，不是用一张万能海报掩盖所有信息。",
+        ].join("\n\n"),
         changeSummary: "浏览器验收确认稿",
       },
     },
@@ -110,7 +113,10 @@ test("当前确认稿可预填图片/视频素材请求，点击不自动发送"
 
   await imageButton.click();
   await expect(input).toHaveValue(/先读取当前确认稿/);
-  await expect(input).toHaveValue(/图片素材候选/);
+  await expect(input).toHaveValue(/根据稿件篇幅/);
+  await expect(input).toHaveValue(/选择多个/);
+  await expect(input).toHaveValue(/每个段落各生成一张/);
+  await expect(input).not.toHaveValue(/唯一服务段落/);
   expect(await page.locator('[data-slot="copilot-message"]').count()).toBe(messageCount);
   const imagePrefill = await input.inputValue();
   expect(imagePrefill).not.toContain("context.artifact.text");
@@ -119,6 +125,9 @@ test("当前确认稿可预填图片/视频素材请求，点击不自动发送"
   await videoButton.click();
   await expect(input).toHaveValue(/先读取当前确认稿/);
   await expect(input).toHaveValue(/连续短镜头/);
+  await expect(input).toHaveValue(/默认只生成一个/);
+  await expect(input).toHaveValue(/控制生成成本/);
+  await expect(input).toHaveValue(/除非我明确要求/);
   expect(await page.locator('[data-slot="copilot-message"]').count()).toBe(messageCount);
   const videoPrefill = await input.inputValue();
   captures.push({
@@ -157,13 +166,13 @@ test("当前确认稿可预填图片/视频素材请求，点击不自动发送"
   const visibleCopy = `${JSON.stringify(
     {
       schema: "frontend-visible-copy/v1",
-      task_id: "T-836",
+      task_id: "T-854",
       commit_sha: commitSha,
       captures,
     },
     null,
     2,
   )}\n`;
-  writeFileSync(resolve(evidenceDir, "T-836-visible-copy.json"), visibleCopy);
+  writeFileSync(resolve(evidenceDir, "T-854-visible-copy.json"), visibleCopy);
   expect(createHash("sha256").update(visibleCopy).digest("hex")).toHaveLength(64);
 });

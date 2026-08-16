@@ -147,7 +147,11 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-import { buildCopilotViewModel } from "@/fixtures/selectors";
+import {
+  buildCopilotViewModel,
+  IMAGE_MATERIAL_PREFILL,
+  VIDEO_MATERIAL_PREFILL,
+} from "@/fixtures/selectors";
 import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
@@ -572,10 +576,8 @@ const FUNCTION_KEY_PREFILL: Record<string, string> = {
   // 通用 AI 素材生成(配图/B-roll;依赖设置里配好的生图/生视频模型;未配时工具卡自带「去设置」降级)。
   "material.generate":
     "帮我为这条内容生成一张配图/一个画面素材(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",
-  "material.generate.image":
-    "先读取当前确认稿并选择唯一服务段落，再基于该段语义生成一张图片素材候选。",
-  "material.generate.video":
-    "先读取当前确认稿并选择唯一服务段落，再基于该段语义生成一个连续短视频素材候选。",
+  "material.generate.image": IMAGE_MATERIAL_PREFILL,
+  "material.generate.video": VIDEO_MATERIAL_PREFILL,
   // [T-271] 制作封面链 —— 硬锚立项核心信息 + 口播稿产结构化封面文案(过诚实门,不编数字)并生图。
   "cover.generate":
     "帮我为这条内容生成封面:先基于这条的立项核心信息和口播稿产一版封面文案方案(主标题/副标题/信息点 + 主视觉 + 构图),封面文案不许编造数字/成绩,再据此生成封面图(走我在设置里配置的生图模型;如果我还没配生图模型,请直接告诉我并指路去设置配置)。",

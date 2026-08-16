@@ -134,7 +134,7 @@ describe("AI Copilot dialog (Task 24)", () => {
     expect(cover?.prefill).toContain("直接生成");
   });
 
-  it("图片/视频素材入口绑定不同可信类型，并要求先读取当前确认稿", () => {
+  it("图片按稿件需要生成多段候选，视频默认只生成一个候选", () => {
     const viewModel = buildCopilotViewModel();
     const image = viewModel.chips.find((chip) => chip.id === "generate-image-material");
     const video = viewModel.chips.find((chip) => chip.id === "generate-video-material");
@@ -149,6 +149,13 @@ describe("AI Copilot dialog (Task 24)", () => {
     });
     expect(image?.prefill).toContain("先读取当前确认稿");
     expect(video?.prefill).toContain("先读取当前确认稿");
+    expect(image?.prefill).toContain("根据稿件篇幅");
+    expect(image?.prefill).toContain("选择多个");
+    expect(image?.prefill).toContain("每个段落各生成一张");
+    expect(image?.prefill).not.toContain("唯一服务段落");
+    expect(video?.prefill).toContain("默认只生成一个");
+    expect(video?.prefill).toContain("控制生成成本");
+    expect(video?.prefill).toContain("除非我明确要求");
     expect(image?.prefill).not.toContain("context.artifact.text");
     expect(video?.prefill).not.toContain("material.generate");
     expect(video?.prefill).toContain("连续短镜头");

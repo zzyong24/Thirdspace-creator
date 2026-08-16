@@ -47,7 +47,11 @@ export { buildPublishingCenterViewModel } from "./publishing-center";
 export { buildSearchViewModel } from "./search";
 // [T-062a] experience fixture selector 已退役:/experience 全走 learnings.list 真值,
 // 禁 fixture 兜底(SPEC 2026-07-03 §6.2)。
-export { buildCopilotViewModel } from "./copilot";
+export {
+  buildCopilotViewModel,
+  IMAGE_MATERIAL_PREFILL,
+  VIDEO_MATERIAL_PREFILL,
+} from "./copilot";
 
 // ---------------------------------------------------------------------------
 // Helpers

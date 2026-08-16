@@ -14,6 +14,12 @@
 
 import type { CopilotContentViewModel } from "@/features/copilot/ai-copilot-content";
 
+export const IMAGE_MATERIAL_PREFILL =
+  "请先读取当前确认稿并理解整篇语义。根据稿件篇幅、段落结构和实际画面需要，选择多个彼此不重复、确实需要配图的服务段落，并为每个段落各生成一张图片素材候选；只要存在多个不同的表达任务，就不能固定只生成一张，也不要为凑数重复配图。每张画面只承担一个明确的表达任务，并标明它服务的段落，不要脱离稿件自由发挥。";
+
+export const VIDEO_MATERIAL_PREFILL =
+  "请先读取当前确认稿，理解稿件语义并选择一个最适合用视频表达的唯一服务段落。默认只生成一个视频素材候选，以控制生成成本；除非我明确要求，不要生成第二个。把它设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。";
+
 // [T-231⑨] chips 从「填 label 的字条」升级为真预调:每个 chip 绑语义最贴的 functionKey
 // (发送时置顶该工具,服务端 applyFunctionKey/forcedTool)+ 完整预填话术(与
 // ai-copilot-content 的 FUNCTION_KEY_PREFILL 同词条;预填不自动发,T-055b 铁律)。
@@ -45,16 +51,14 @@ const SUGGESTED_ACTIONS: CopilotContentViewModel["chips"] = [
     label: "生成图片素材",
     icon: "image",
     functionKey: "material.generate.image",
-    prefill:
-      "请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一张图片素材候选。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。",
+    prefill: IMAGE_MATERIAL_PREFILL,
   },
   {
     id: "generate-video-material",
     label: "生成视频素材",
     icon: "video",
     functionKey: "material.generate.video",
-    prefill:
-      "请先读取当前确认稿，理解稿件语义并选择唯一服务段落，再为这一段生成一个视频素材候选。设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾，不要脱离稿件自由发挥。",
+    prefill: VIDEO_MATERIAL_PREFILL,
   },
   {
     id: "cover",
