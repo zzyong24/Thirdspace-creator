@@ -837,10 +837,19 @@ jobs:
             if ($cliHelpExit -ne 0) {
               throw "[T-847] CreatorOS CLI --help 失败(exit=$cliHelpExit):$cliHelp"
             }
-            if ($cliHelp -notmatch '用法: creatoros') {
-              throw "[T-847] CreatorOS CLI --help 未返回预期帮助:$cliHelp"
+            try {
+              $cliHelpPayload = $cliHelp | ConvertFrom-Json -ErrorAction Stop
+            } catch {
+              throw "[T-848] CreatorOS CLI --help 未返回合法 JSON:$cliHelp"
             }
-            Write-Host "[T-847] ✓ CreatorOS CLI --help 随包冒烟通过"
+            if (
+              $cliHelpPayload.ok -ne $true -or
+              [string]::IsNullOrWhiteSpace([string]$cliHelpPayload.usage) -or
+              $cliHelpPayload.usage -notmatch '^creatoros '
+            ) {
+              throw "[T-848] CreatorOS CLI --help 返回契约不完整:$cliHelp"
+            }
+            Write-Host "[T-848] ✓ CreatorOS CLI --help 随包冒烟通过"
             Write-Host "[T-826] ✓ 升级机旧 runtime 已被当前安装 runtime 替换"
             $evidencePath = "tools/windows-closure-rat/out/official-package-results.json"
             $evidence = Get-Content $evidencePath -Raw | ConvertFrom-Json

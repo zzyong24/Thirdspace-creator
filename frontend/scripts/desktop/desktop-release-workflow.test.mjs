@@ -409,6 +409,10 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("CreatorOS/bin/creatoros.cmd");
     expect(workflow).toContain("CreatorOS CLI --help 随包冒烟通过");
     expect(workflow).toContain("cliHelpVerified");
+    expect(workflow).toContain("$cliHelpPayload = $cliHelp | ConvertFrom-Json");
+    expect(workflow).toContain("$cliHelpPayload.ok -ne $true");
+    expect(workflow).toContain("$cliHelpPayload.usage -notmatch '^creatoros '");
+    expect(workflow).not.toContain("$cliHelp -notmatch '用法: creatoros'");
     expect(workflow).toContain('Test-Path (Join-Path $installDir "sidecar.tar.gz")');
     expect(workflow).toContain("CreatorOS RAT02 Space");
     expect(workflow).toContain("Windows 主动卸载清理冒烟(T-557)");
