@@ -1,0 +1,35 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-854",
+  "commit_sha": "f059f5cd53937ef24c76a19526a33db3eee43f08",
+  "captures": [
+    {
+      "checkpoint": "desktop-semantic-material-buttons",
+      "check_ids": [
+        "AC-MATERIAL-BUTTONS",
+        "AC-IMAGE-MULTI-SEGMENT-PREFILL",
+        "AC-VIDEO-SINGLE-DEFAULT-PREFILL",
+        "AC-MATERIAL-NO-AUTO-SEND"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "生成图片素材\n生成视频素材\n请先读取当前确认稿并理解整篇语义。根据稿件篇幅、段落结构和实际画面需要，选择多个彼此不重复、确实需要配图的服务段落，并为每个段落各生成一张图片素材候选；只要存在多个不同的表达任务，就不能固定只生成一张，也不要为凑数重复配图。每张画面只承担一个明确的表达任务，并标明它服务的段落，不要脱离稿件自由发挥。\n请先读取当前确认稿，理解稿件语义并选择一个最适合用视频表达的唯一服务段落。默认只生成一个视频素材候选，以控制生成成本；除非我明确要求，不要生成第二个。把它设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。"
+    },
+    {
+      "checkpoint": "minimum-semantic-material-buttons",
+      "check_ids": [
+        "AC-MATERIAL-BUTTONS",
+        "AC-IMAGE-MULTI-SEGMENT-PREFILL",
+        "AC-VIDEO-SINGLE-DEFAULT-PREFILL",
+        "AC-MATERIAL-NO-AUTO-SEND"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "text": "生成图片素材\n生成视频素材\n请先读取当前确认稿，理解稿件语义并选择一个最适合用视频表达的唯一服务段落。默认只生成一个视频素材候选，以控制生成成本；除非我明确要求，不要生成第二个。把它设计成一个连续短镜头，写清主体、动作、环境、构图、运镜、光线与稳定结尾。画面只承担一个明确的表达任务，不要脱离稿件自由发挥。"
+    }
+  ]
+}
