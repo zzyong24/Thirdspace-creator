@@ -16,6 +16,7 @@ import {
   calculateDeliveryBitrate,
   createVideoRenderExecutor,
   formatHyperframesProcessError,
+  formatMediaProcessError,
   locateSystemChromium,
   type VideoRenderEngine,
 } from "./executor";
@@ -182,6 +183,21 @@ afterEach(async () => {
 });
 
 describe("createVideoRenderExecutor", () => {
+  it("[T-853] FFmpeg 诊断同时保留启动首部与真正失败尾部", () => {
+    const stderr = [
+      "ffmpeg version 6.0 Copyright (c) FFmpeg developers",
+      ...Array.from({ length: 30 }, (_, index) => `configuration line ${index}`),
+      "[Parsed_colorspace_0] Unsupported input primaries 2 (unknown)",
+      "Error while processing the decoded data for stream #0:0",
+    ].join("\n");
+
+    const diagnostic = formatMediaProcessError(stderr, "exit code 1");
+
+    expect(diagnostic).toContain("ffmpeg version 6.0");
+    expect(diagnostic).toContain("Unsupported input primaries 2 (unknown)");
+    expect(diagnostic).toContain("Error while processing");
+  });
+
   it("[T-845] Windows 分层 runtime 的正式渲染显式预加载同一模块解析器", async () => {
     const runtimeRoot = path.join(root, "runtime");
     const cli = path.join(
@@ -376,6 +392,43 @@ describe("createVideoRenderExecutor", () => {
       expect.objectContaining({ file: "b1.mp4", strategy: "remux" }),
     ]);
     expect(chromiumChecks).toBe(0);
+  });
+
+  it("[T-853] H.264/yuv420p 缺少全部色彩元数据时只归一标签，不调用要求已知输入的 colorspace", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeVideo(_ffprobe, file) {
+          calls.probed.push(path.basename(file));
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 768,
+            height: 1344,
+            pixFmt: "yuv420p",
+            avgFrameRate: "24/1",
+            rFrameRate: "24/1",
+            colorSpace: "unknown",
+            colorPrimaries: "unknown",
+            colorTransfer: "unknown",
+            bitRate: 5_000_000,
+            durationSec: 6.583,
+          };
+        },
+      }),
+    );
+
+    await executor.run(
+      sandbox,
+      { goal: "渲染", props: { ...props(), broll: [] } },
+      runOpts([]),
+    );
+
+    const preparation = calls.ffmpegArgs[0]!.join(" ");
+    expect(preparation).toContain("-vf format=yuv420p");
+    expect(preparation).not.toContain("colorspace=all=bt709");
+    expect(preparation).not.toContain("zscale=");
+    expect(preparation).toContain("-color_primaries bt709");
   });
 
   it("H.264 未通过 FFmpeg 全流解码时只回退一次高质量 mezzanine", async () => {

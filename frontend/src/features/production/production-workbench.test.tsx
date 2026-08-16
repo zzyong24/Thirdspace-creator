@@ -6,8 +6,8 @@
  *     projectId/srtText/script);
  *   - 决策确认 → createExecutionTask(video.render):params.props 在,inputs
  *     全部 mountAs === assetId(闭环约定),含 talkingHead 与 B-roll 两个资产;
- *   - production 状态机相邻步进:确认渲染后 putOutputProduction 依次
- *     recording→editing→rendering,分场 segments 登记 + exportRecord 建档。
+ *   - production 状态机相邻步进:任务创建后只到 editing，成功收口才进入
+ *     rendering→ready，失败不把项目永久留在“渲染中”；分场/export 正常建档。
  */
 
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
@@ -525,7 +525,7 @@ describe("ProductionWorkbench", () => {
     );
   });
 
-  it("决策确认 → video.render dispatch(mountAs=assetId 闭环)+ 状态机步进 + 分场/export 建档", async () => {
+  it("决策确认 → video.render dispatch(mountAs=assetId 闭环)+ 成功前不推进 rendering + 分场/export 建档", async () => {
     // 恢复路径注入决策候选(等价于四决策任务跑完):预览卡直接渲出。
     mockClient.listAITasks.mockResolvedValueOnce([
       { id: "ai-9", status: "awaiting_confirmation" },
@@ -635,14 +635,15 @@ describe("ProductionWorkbench", () => {
         expect.objectContaining({ params: { taskId: "ai-9" } }),
       ),
     );
-    // 状态机相邻步进到 rendering(上传视频时已 →recording,确认后补 editing→rendering)。
+    // 执行任务当前仍 queued：只补记到 editing，不能提前写 rendering；否则失败后
+    // forward-only 状态机无法回退，项目会永久显示“渲染中”。
     await waitFor(() => {
       const statuses = mockClient.putOutputProduction.mock.calls.map(
         (c) => (c[0] as { body: { status?: string } }).body.status,
       );
       expect(statuses).toContain("recording");
       expect(statuses).toContain("editing");
-      expect(statuses).toContain("rendering");
+      expect(statuses).not.toContain("rendering");
     });
     // 分场登记(复活 segments op)+ exportRecord 建档(queued)。
     await waitFor(() =>
@@ -1365,6 +1366,13 @@ describe("ProductionWorkbench", () => {
         container.querySelector('[data-slot="production-final-video"]'),
       ).not.toBeNull(),
     );
+    await waitFor(() => {
+      const statuses = mockClient.putOutputProduction.mock.calls.map(
+        (call) => (call[0] as { body: { status?: string } }).body.status,
+      );
+      expect(statuses).toContain("rendering");
+      expect(statuses).toContain("ready");
+    });
     expect(
       container.querySelector('[data-slot="render-env-hint"]'),
     ).toBeNull();

@@ -191,6 +191,7 @@
     "ai-reliability-recovery:e2e": "CREATOROS_TEST_PORT=3434 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-reliability-recovery.spec.ts --project=e2e",
     "web-material-read-save:e2e": "CREATOROS_TEST_PORT=3435 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/web-material-read-save.spec.ts --project=e2e",
     "semantic-material-generation:e2e": "CREATOROS_TEST_PORT=3436 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/semantic-material-generation.spec.ts --project=e2e",
-    "publish-package-readback:e2e": "CREATOROS_TEST_PORT=3437 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/publish-package-readback.spec.ts --project=e2e"
+    "publish-package-readback:e2e": "CREATOROS_TEST_PORT=3437 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/publish-package-readback.spec.ts --project=e2e",
+    "draft-ammo-media-preview:e2e": "CREATOROS_TEST_PORT=3438 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/draft-ammo-media-preview.spec.ts --project=e2e"
   }
 }

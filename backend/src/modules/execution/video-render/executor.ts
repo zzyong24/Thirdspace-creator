@@ -117,7 +117,11 @@ function execFileAsync(
       { signal, maxBuffer: 16 * 1024 * 1024, env: buildChildEnv(), windowsHide: true },
       (err, stdout, stderr) => {
         if (err) {
-          reject(new Error(`${path.basename(file)} 失败: ${stderr?.slice(0, 400) || err.message}`));
+          reject(
+            new Error(
+              `${path.basename(file)} 失败: ${formatMediaProcessError(stderr, err.message)}`,
+            ),
+          );
           return;
         }
         resolve({ stdout, stderr });
@@ -481,6 +485,26 @@ export function formatHyperframesProcessError(head: string, tail: string): strin
   return `${safeHead} … ${safeTail}`;
 }
 
+/**
+ * FFmpeg/ffprobe 把版本横幅放在 stderr 首部、真正的滤镜/解码错误放在尾部。
+ * 不能再只截前 400 字；这里复用同一脱敏规则，保留首尾且限制持久化长度。
+ */
+export function formatMediaProcessError(
+  stderr: string,
+  fallback: string,
+): string {
+  const safe = redactHyperframesDiagnostic(stderr);
+  if (!safe) {
+    return (
+      redactHyperframesDiagnostic(fallback) || "媒体进程未返回错误详情"
+    );
+  }
+  const head = safe.slice(0, 500);
+  const tail = safe.slice(-1_000);
+  if (head === tail || head.endsWith(tail)) return head;
+  return `${head} … ${tail}`;
+}
+
 async function renderWithHyperframesCli(opts: {
   projectDir: string;
   outputFile: string;
@@ -777,6 +801,23 @@ function isHdrProbe(probe: VideoProbe): boolean {
   );
 }
 
+function hasUnknownColorMetadata(probe: VideoProbe): boolean {
+  const isUnknown = (value: string | null | undefined): boolean => {
+    const color = normalized(value);
+    return (
+      !color ||
+      color === "unknown" ||
+      color === "unspecified" ||
+      color === "reserved"
+    );
+  };
+  return (
+    isUnknown(probe.colorSpace) ||
+    isUnknown(probe.colorPrimaries) ||
+    isUnknown(probe.colorTransfer)
+  );
+}
+
 function isStaticSafeH264(probe: VideoProbe): boolean {
   return (
     normalized(probe.codec) === "h264" &&
@@ -996,8 +1037,10 @@ export function createVideoRenderExecutor(
         }
         if (strategy !== "remux") {
           const hdr = isHdrProbe(probe);
+          const unknownColorMetadata = !hdr && hasUnknownColorMetadata(probe);
           const needsSdrConversion =
             hdr ||
+            unknownColorMetadata ||
             normalized(probe.colorSpace) !== "bt709" ||
             normalized(probe.colorPrimaries) !== "bt709" ||
             normalized(probe.colorTransfer) !== "bt709";
@@ -1006,7 +1049,11 @@ export function createVideoRenderExecutor(
           );
           const colorFilter = hdr
             ? "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
-            : "colorspace=all=bt709:fast=0,format=yuv420p";
+            : unknownColorMetadata
+              // 缺输入色彩标签时 colorspace 滤镜无法建立转换矩阵；只规范像素格式，
+              // 输出编码参数在下方统一写入 BT.709 标签。此分支明确非 HDR，不做 tone-map。
+              ? "format=yuv420p"
+              : "colorspace=all=bt709:fast=0,format=yuv420p";
           await engine.runFfmpeg(
             ffmpeg,
             [

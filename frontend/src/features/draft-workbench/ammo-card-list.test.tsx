@@ -7,6 +7,15 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const previewMocks = vi.hoisted(() => ({
+  resolveAssetPreviewUrl: vi.fn(async (assetId: string) => {
+    if (assetId === "asset-video") return "/api/v1/blob/video?token=video";
+    if (assetId === "asset-1") return "/api/v1/blob/cover?token=t1&exp=999";
+    return null;
+  }),
+  invalidateAssetPreviewUrl: vi.fn(),
+}));
+
 // [T-146] 稿面内容弹药双击预览测试:弹药区显已上传素材,双击某卡 → 开预览 Modal
 // (图片显图 / 文档显资料要点 + 全文)。移除按钮不误触双击预览。
 
@@ -14,6 +23,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("@/lib/contract-client", () => ({ client: {} }));
+vi.mock("@/components/resources/asset-preview-url", () => previewMocks);
 
 import { AmmoCardList } from "./ammo-card-list";
 import type { DraftWorkbenchVm } from "./draft-workbench-data";
@@ -44,7 +54,24 @@ const DOC_ITEM: DraftWorkbenchVm["ammo"][number] = {
   extractedText: "完整的产品说明全文。",
 };
 
-afterEach(() => cleanup());
+const VIDEO_ITEM: DraftWorkbenchVm["ammo"][number] = {
+  linkId: "link-video",
+  id: "asset-video",
+  kind: "asset",
+  title: "编导智能体实拍.mov",
+  sourceLabel: "素材 · video",
+  previewUrl: null,
+  assetType: "video",
+  extractStatus: null,
+  materialSummary: null,
+  extractedText: null,
+};
+
+afterEach(() => {
+  cleanup();
+  previewMocks.resolveAssetPreviewUrl.mockClear();
+  previewMocks.invalidateAssetPreviewUrl.mockClear();
+});
 
 describe("AmmoCardList — 弹药双击预览", () => {
   it("渲染已上传素材列表(卡片 + 图缩略图)", () => {
@@ -60,16 +87,14 @@ describe("AmmoCardList — 弹药双击预览", () => {
     expect(img!.getAttribute("src")).toContain("token=t1");
   });
 
-  it("双击图片素材卡 → 开预览 Modal 显真图", () => {
+  it("双击图片素材卡 → 开预览 Modal 显真图", async () => {
     render(<AmmoCardList ammo={[IMAGE_ITEM]} />);
     // 未双击前 Modal 不渲染。
     expect(
       document.querySelector('[data-slot="material-summary-modal"]'),
     ).toBeNull();
     fireEvent.doubleClick(screen.getByLabelText("预览 封面图.png"));
-    const modalImg = document.querySelector(
-      '[data-slot="material-modal-image"]',
-    ) as HTMLImageElement | null;
+    const modalImg = await screen.findByRole("img", { name: "封面图.png" });
     expect(modalImg).toBeTruthy();
     expect(modalImg!.getAttribute("src")).toContain("token=t1");
   });
@@ -84,5 +109,41 @@ describe("AmmoCardList — 弹药双击预览", () => {
     expect(screen.getByText("卖点A")).toBeTruthy();
     expect(screen.getByText("30天续航")).toBeTruthy();
     expect(screen.getByText("完整的产品说明全文。")).toBeTruthy();
+  });
+
+  it("[T-853] 视频卡双击后才走素材中心正式链路，并在同款弹层里显示可控播放器", async () => {
+    render(<AmmoCardList ammo={[VIDEO_ITEM]} />);
+
+    expect(previewMocks.resolveAssetPreviewUrl).not.toHaveBeenCalled();
+    fireEvent.doubleClick(screen.getByLabelText("预览 编导智能体实拍.mov"));
+
+    expect(await screen.findByText("视频预览")).toBeTruthy();
+    const video = document.querySelector(
+      '[data-slot="asset-live-preview"][data-preview-type="video"]',
+    ) as HTMLVideoElement | null;
+    expect(video).toBeTruthy();
+    expect(video!.getAttribute("src")).toContain("token=video");
+    expect(video!.hasAttribute("controls")).toBe(true);
+    expect(previewMocks.resolveAssetPreviewUrl).toHaveBeenCalledTimes(1);
+    expect(previewMocks.resolveAssetPreviewUrl).toHaveBeenCalledWith("asset-video");
+  });
+
+  it("[T-853] 键盘确认可打开预览", async () => {
+    render(<AmmoCardList ammo={[VIDEO_ITEM]} />);
+    const card = screen.getByLabelText("预览 编导智能体实拍.mov");
+
+    fireEvent.keyDown(card, { key: "Enter" });
+    expect(await screen.findByText("视频预览")).toBeTruthy();
+  });
+
+  it("[T-853] 删除区域双击不会误开素材预览", () => {
+    render(<AmmoCardList ammo={[VIDEO_ITEM]} />);
+
+    fireEvent.doubleClick(screen.getByLabelText("从项目移除这条素材"));
+
+    expect(
+      document.querySelector('[data-slot="material-summary-modal"]'),
+    ).toBeNull();
+    expect(previewMocks.resolveAssetPreviewUrl).not.toHaveBeenCalled();
   });
 });

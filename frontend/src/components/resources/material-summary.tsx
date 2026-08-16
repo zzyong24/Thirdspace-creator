@@ -24,6 +24,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AssetLivePreview } from "@/components/resources/asset-live-preview";
+import type { ResourceAsset } from "@/components/resources/types";
+import type { AssetType } from "@/types/domain";
+
+const PREVIEW_TYPE_LABEL: Record<AssetType, string> = {
+  image: "图片",
+  video: "视频",
+  audio: "音频",
+  document: "文档",
+  subtitle: "字幕",
+};
+
+function asAssetType(value: string | null | undefined): AssetType | null {
+  return value === "image" ||
+    value === "video" ||
+    value === "audio" ||
+    value === "document" ||
+    value === "subtitle"
+    ? value
+    : null;
+}
 
 // 结构化要点(与 ResourceAsset.materialSummary / ammo 投影同形,结构类型即可复用)。
 export interface MaterialSummaryData {
@@ -147,6 +168,8 @@ export function MaterialSummaryModal({
   previewUrl,
   sourceUrl,
   extractStatus,
+  assetId,
+  assetType,
 }: {
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
@@ -159,9 +182,29 @@ export function MaterialSummaryModal({
   readonly sourceUrl?: string | null;
   /** 当前文件的真实提取状态；项目素材与素材中心共用同一投影。 */
   readonly extractStatus?: string | null;
+  /** 素材实体身份；提供后复用素材中心 AssetLivePreview，弹层打开时才换签名 URL。 */
+  readonly assetId?: string | null;
+  readonly assetType?: string | null;
 }) {
   const hasCard = materialSummaryHasCard(summary);
   const text = fullText ?? "";
+  const normalizedAssetType = asAssetType(assetType);
+  const liveAsset: ResourceAsset | null =
+    assetId && normalizedAssetType
+      ? {
+          id: assetId,
+          name: title,
+          type: normalizedAssetType,
+          mimeType: "application/octet-stream",
+          fileSizeBytes: 0,
+          width: null,
+          height: null,
+          durationMs: null,
+          tags: [],
+          thumbnailToken: assetId,
+          updatedAt: "",
+        }
+      : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,7 +215,9 @@ export function MaterialSummaryModal({
         <DialogHeader>
           <DialogTitle className="truncate pr-6">{title}</DialogTitle>
           <DialogDescription>
-            资料全文与要点(只提炼原文已有,不编造)
+            {normalizedAssetType
+              ? `${PREVIEW_TYPE_LABEL[normalizedAssetType]}预览`
+              : "资料全文与要点(只提炼原文已有,不编造)"}
           </DialogDescription>
         </DialogHeader>
         <div className="flex max-h-[65vh] flex-col gap-3 overflow-auto pr-1">
@@ -192,7 +237,9 @@ export function MaterialSummaryModal({
               来源：{sourceUrl}
             </a>
           ) : null}
-          {previewUrl ? (
+          {liveAsset ? (
+            <AssetLivePreview asset={liveAsset} />
+          ) : previewUrl ? (
             <ModalImage key={previewUrl} src={previewUrl} alt={title} />
           ) : null}
           {hasCard && summary ? (
@@ -206,7 +253,7 @@ export function MaterialSummaryModal({
               </pre>
             </div>
           ) : null}
-          {!previewUrl && !hasCard && !text ? (
+          {!liveAsset && !previewUrl && !hasCard && !text ? (
             <p className="text-[11px] text-muted-foreground">
               这份素材暂无可预览的内容。
             </p>

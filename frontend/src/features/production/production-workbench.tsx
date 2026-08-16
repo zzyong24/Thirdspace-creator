@@ -1685,8 +1685,10 @@ export function ProductionWorkbench({
             })
             .catch(() => undefined);
         }
-        // 状态机 → rendering;分场登记 + exportRecord(queued)。
-        const productionId = await advanceStatus("rendering");
+        // 分场登记 + exportRecord(queued)只要求制作已进入 editing。
+        // rendering 必须等执行任务真正成功后再写；状态机 forward-only，若在任务创建时
+        // 提前推进，任何 FFmpeg 失败都会让项目永久卡在“渲染中”且无法回退。
+        const productionId = await advanceStatus("editing");
         if (productionId) {
           try {
             // segment 是 production 的一次性结构登记；重新生成只新增 render/export
@@ -1887,7 +1889,7 @@ export function ProductionWorkbench({
           }
           // [FE-H01] failed 是终态:必须停止轮询(否则对已失败任务永久查询、转圈不散)。
           // 环境类错误上面已 humanize 成安装引导;通用错误由 ExecutionTaskCard 显「执行失败:…」
-          // + 重试。状态机不推进(诚实停在 rendering 前),失败可见可恢复。
+          // + 重试。状态机仍停在 editing，失败可见可恢复且不会永久显示“渲染中”。
           if (task.status === "failed") return;
           if (task.status === "cancelled") return;
           if (task.status === "awaiting_confirmation") return;
