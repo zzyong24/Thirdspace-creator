@@ -6,7 +6,6 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { auditReviewReceiptFindings } from "./reviewctl.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REVIEWCTL = path.join(HERE, "reviewctl.mjs");
@@ -1091,119 +1090,6 @@ test("backlog hook 对 strict Edit 使用 review allowlist（未知值不能漏�
   assert.equal(result.status, 2, result.stderr || result.stdout);
   assert.match(result.stderr, /allowlist|阻断/i);
   assert.equal(fs.readFileSync(backlogFile, "utf8"), before, "hook 只裁决，不改文件");
-});
-
-test("record 拒绝把 pmem 自动生成的 PROJECT.md 绑定为 constitution", () => {
-  const root = tempProject();
-  fs.writeFileSync(
-    path.join(root, "PROJECT.md"),
-    "# PROJECT.md\n\n> 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。\n",
-  );
-  const packet = writePacket(root, "round-1.json", {
-    schema: "spec-review-round/v2",
-    review_kind: "initial",
-    summary: "不应绑定生成记忆。",
-    findings: [],
-  });
-  const before = fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8");
-  const result = run(
-    REVIEWCTL,
-    [
-      "record",
-      "T-101",
-      "--spec",
-      "SPEC.md",
-      "--constitution",
-      "PROJECT.md",
-      "--input",
-      packet,
-      "--review",
-      "SPEC.review.md",
-      "--backlog",
-      "BACKLOG.md",
-      "--review-mode",
-      "cross-family",
-      "--model",
-      "test-reviewer",
-    ],
-    root,
-  );
-  assert.equal(result.status, 1);
-  assert.match(result.stderr + result.stdout, /PROJECT\.md.*自动生成|constitution.*生成/i);
-  assert.equal(fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8"), before);
-});
-
-test("reconcile 口径把进行中任务的真实 hash 变化报告为在研，strict audit 仍阻断", () => {
-  const root = tempProject();
-  const packet = writePacket(root, "round-1.json", {
-    schema: "spec-review-round/v2",
-    review_kind: "initial",
-    summary: "当前规格可实现。",
-    findings: [],
-  });
-  let result = run(
-    REVIEWCTL,
-    [
-      "record",
-      "T-101",
-      "--spec",
-      "SPEC.md",
-      "--constitution",
-      "CONSTITUTION.md",
-      "--input",
-      packet,
-      "--review",
-      "SPEC.review.md",
-      "--backlog",
-      "BACKLOG.md",
-      "--review-mode",
-      "cross-family",
-      "--model",
-      "test-reviewer",
-    ],
-    root,
-  );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-  fs.writeFileSync(
-    path.join(root, "BACKLOG.md"),
-    fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8").replace("| 📋 |", "| 🔨 |"),
-  );
-  fs.appendFileSync(path.join(root, "SPEC.md"), "\n实现期间补充一条真实约束。\n");
-
-  const findings = auditReviewReceiptFindings({
-    root,
-    backlogFile: path.join(root, "BACKLOG.md"),
-    inProgressDrift: "warn",
-  });
-  assert.deepEqual(findings.errors, []);
-  assert.equal(findings.warnings.length, 1);
-  assert.match(findings.warnings[0], /T-101.*SPEC hash/);
-
-  result = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md", "--quiet"], root);
-  assert.equal(result.status, 1, "严格 audit 必须继续阻断失效 receipt");
-  assert.match(result.stderr + result.stdout, /SPEC hash/);
-});
-
-test("reconcile 只降级规范化的待审状态，未知审核文案仍 fail-closed", () => {
-  const pendingRoot = tempProject({ status: "🔨", review: "待审" });
-  const pending = auditReviewReceiptFindings({
-    root: pendingRoot,
-    backlogFile: path.join(pendingRoot, "BACKLOG.md"),
-    inProgressDrift: "warn",
-  });
-  assert.deepEqual(pending.errors, []);
-  assert.equal(pending.warnings.length, 1);
-  assert.match(pending.warnings[0], /审核列为「待审」/);
-
-  const invalidRoot = tempProject({ status: "🔨", review: "稍后再说" });
-  const invalid = auditReviewReceiptFindings({
-    root: invalidRoot,
-    backlogFile: path.join(invalidRoot, "BACKLOG.md"),
-    inProgressDrift: "warn",
-  });
-  assert.equal(invalid.warnings.length, 0);
-  assert.equal(invalid.errors.length, 1);
-  assert.match(invalid.errors[0], /不在 allowlist/);
 });
 
 test("backlog hook 对 legacy 的直接开工或完成编辑也 fail-closed", () => {

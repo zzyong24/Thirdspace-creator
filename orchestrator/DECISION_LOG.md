@@ -4,6 +4,38 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-RUNTIME-053 (2026-08-16) — HyperFrames 子进程显式消费分层运行时解析契约
+
+**来源**：T-844 用户 Windows 安全日志确认两次正式成片都在 HyperFrames 启动阶段以
+`ERR_MODULE_NOT_FOUND` 退出；Windows RAT 真渲染通过。代码交叉核对发现 RAT 使用
+`--require creatoros-module-resolver.cjs`，生产执行器没有加载，而安全环境按设计不透传
+`NODE_OPTIONS`。
+
+**决策**：
+
+1. Windows 少文件 runtime 中，生产 HyperFrames Node 子进程以绝对 argv 显式预加载随包的
+   `frontend/creatoros-module-resolver.cjs`，并显式传递同一 `CREATOROS_RUNTIME_ROOT`。
+2. 解析器不存在时在拉起子进程前明确失败并引导重装；不得恢复 `NODE_OPTIONS`、不得扩大密钥环境，
+   也不得为绕过模块解析而复制第二套运行时依赖。
+3. 开发态与传统 `node_modules` runtime 保持原启动参数，不把 Windows 分层契约强加给其他布局。
+4. 生产 argv 与 RAT 真渲染 argv 用同一可执行测试锁定；子进程错误保留脱敏首尾、缺失包名和错误码，
+   隐藏本机用户名。
+
+**Rationale**：PAT-004 CF-004 命中：虽不新增业务 API，但打包层与生产执行器共享一个可追溯的跨进程
+运行时契约；用明确 argv 和闭包契约测试守住，不能让打包 smoke 与真实消费路径各自定义。
+`Asset Index` 没有桌面分层 Node runtime 的可复用模块，本轮复用项目已有 resolver 与 RAT，不新增依赖。
+
+**Pattern-Ref**：PAT-004
+
+**影响范围**：T-845、`video-render/executor.ts`、Windows closure RAT 测试。
+
+**Explicit Limits**：不改用户项目/素材/模型配置；不自动重试旧任务；不在 macOS 本机伪造 Windows
+安装包真机 PASS。
+
+**Status**：active。
+
+---
+
 ## DEC-COPY-792 (2026-08-12) — 资料驱动生成独立为 T-791，T-790 只改 Skill
 
 **来源**：用户明确指出常见场景是交付一段杂乱资料、一个文件、一大段话或原有文案，让系统结合上下文和调整方向产出文案；标准结构应由写文案 Skill 决定，当前工具能力不健全。

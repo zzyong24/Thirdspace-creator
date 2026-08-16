@@ -9,13 +9,13 @@
 #   <dir>/orchestrator/process/            (vendored deterministic checks: reconcile/orphan-scan/engines)
 #   <dir>/orchestrator/process/.skill-version  (vendor stamp: skill VERSION + skill dir — drift detection)
 #   <dir>/BACKLOG.md                       (task board, project root — SessionStart hook reads it)
-#   <dir>/.claude/hooks/{session-start.sh, backlog-guard.sh}
+#   <dir>/.claude/hooks/{session-start.sh, backlog-guard.sh, post-tool-observe.sh}
 #   <dir>/.claude/settings.json            (hook registration; existing file → prints a manual-merge block)
 #   <dir>/.github/workflows/verify.yml     (main/PR verify CI; adapt commands per PROJECT_CONTEXT)
 # Then: git init if needed, DEC-000 triage record, first reconcile run (must be green).
 #
 # --update mode (for projects initialized with an older skill version):
-#   overwrites engine files under orchestrator/process/ + both hooks;
+#   overwrites engine files under orchestrator/process/ + all hooks;
 #   PRESERVES project-owned *.config.json / *-baseline.json / control artifacts / BACKLOG / AGENTS.md;
 #   re-stamps .skill-version and reruns reconcile (must stay green).
 set -uo pipefail
@@ -98,12 +98,40 @@ if [ "$UPDATE" = "1" ]; then
   done < <(find "$PROC" -type f)
   # hooks are engine too — refresh; a user-modified original is saved as *.pre-update
   mkdir -p "$TARGET/.claude/hooks"
-  for h in session-start.sh backlog-guard.sh; do
+  for h in session-start.sh backlog-guard.sh post-tool-observe.sh; do
     hsrc="$SKILL/templates/hooks/$h"; hdest="$TARGET/.claude/hooks/$h"
     if [ -e "$hdest" ] && ! cmp -s "$hsrc" "$hdest"; then cp "$hdest" "$hdest.pre-update"; echo "· $h differed — original saved as $h.pre-update"; fi
     cp "$hsrc" "$hdest"; chmod +x "$hdest"
   done
   echo "✓ hooks refreshed"
+  # Add the observer to an existing JSON settings file without clobbering unrelated project hooks.
+  # JSON5/commented settings are left untouched and receive an explicit manual-merge warning.
+  SETTINGS="$TARGET/.claude/settings.json"
+  if [ -e "$SETTINGS" ]; then
+    if node - "$SETTINGS" <<'NODE'
+const fs = require('node:fs');
+const file = process.argv[2];
+const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('settings 顶层必须是 object');
+if (!value.hooks || typeof value.hooks !== 'object' || Array.isArray(value.hooks)) value.hooks = {};
+const command = 'bash "$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-observe.sh"';
+const current = Array.isArray(value.hooks.PostToolUse) ? value.hooks.PostToolUse : [];
+if (!current.some((entry) => JSON.stringify(entry).includes('post-tool-observe.sh'))) {
+  current.push({ matcher: 'Edit|Write|MultiEdit', hooks: [{ type: 'command', command }] });
+  value.hooks.PostToolUse = current;
+  const temporary = `${file}.tmp-${process.pid}`;
+  fs.writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
+  fs.renameSync(temporary, file);
+  console.log('✓ .claude/settings.json → PostToolUse observer');
+} else {
+  console.log('· .claude/settings.json already has PostToolUse observer');
+}
+NODE
+    then :
+    else
+      echo "! .claude/settings.json 不是标准 JSON — 请手动合并 PostToolUse observer" >&2
+    fi
+  fi
   if [ ! -e "$TARGET/orchestrator/SCOPE_LEDGER.md" ]; then
     cp "$SKILL/templates/SCOPE_LEDGER_TEMPLATE.md" "$TARGET/orchestrator/SCOPE_LEDGER.md"
     echo "✓ orchestrator/SCOPE_LEDGER.md (new empty ledger; no legacy history invented)"
@@ -223,6 +251,7 @@ fi
 mkdir -p "$TARGET/.claude/hooks"
 put "$SKILL/templates/hooks/session-start.sh" "$TARGET/.claude/hooks/session-start.sh"
 put "$SKILL/templates/hooks/backlog-guard.sh" "$TARGET/.claude/hooks/backlog-guard.sh"
+put "$SKILL/templates/hooks/post-tool-observe.sh" "$TARGET/.claude/hooks/post-tool-observe.sh"
 chmod +x "$TARGET/.claude/hooks/"*.sh 2>/dev/null || true
 
 # 5) settings.json — create if absent; never clobber an existing one
@@ -232,7 +261,10 @@ HOOKS_JSON='{
       "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"" } ] } ],
     "PreToolUse": [ { "matcher": "Edit|Write",
       "hooks": [ { "type": "command",
-      "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/backlog-guard.sh\"" } ] } ]
+      "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/backlog-guard.sh\"" } ] } ],
+    "PostToolUse": [ { "matcher": "Edit|Write|MultiEdit",
+      "hooks": [ { "type": "command",
+      "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-observe.sh\"" } ] } ]
   }
 }'
 if [ -e "$TARGET/.claude/settings.json" ]; then

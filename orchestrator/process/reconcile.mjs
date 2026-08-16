@@ -16,7 +16,7 @@ import { neverFiredFindings, selfRefFindings, quarantineFindings, computeMetrics
 import { runAllAntiChecks } from './anti-check.mjs';
 import { readNewEvents, archiveConsumed } from './run-events.mjs';
 import { appendJsonlUnique } from './lessonctl.mjs';
-import { auditReviewReceiptFindings } from './reviewctl.mjs';
+import { auditReviewReceipts } from './reviewctl.mjs';
 import { auditFrontendReceipts } from './frontend-validation.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
@@ -376,16 +376,10 @@ if (existsSync(BACKLOG_HEALTH)) {
     warn('BACKLOG.md absent — review/frontend receipt audit skipped.');
   } else {
     try {
-      const reviewFindings = auditReviewReceiptFindings({
-        root: REPO,
-        backlogFile: BACKLOG,
-        inProgressDrift: 'warn',
-      });
-      for (const message of reviewFindings.errors) err(`review receipt: ${message}`);
-      for (const message of reviewFindings.warnings) warn(`review receipt (在研漂移): ${message}`);
-      if (!reviewFindings.errors.length) {
-        ok(`reviewctl: event chain 与有效收据结构一致（${reviewFindings.warnings.length} 个进行中 hash 漂移待复审）。`);
-      }
+      const reviewErrors = auditReviewReceipts({ root: REPO, backlogFile: BACKLOG });
+      if (reviewErrors.length) {
+        for (const message of reviewErrors) err(`review receipt: ${message}`);
+      } else ok('reviewctl: review receipts + current snapshots + event chain reconcile.');
     } catch (e) {
       err(`review receipt audit could not run: ${e.message}`);
     }

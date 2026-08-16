@@ -106,6 +106,30 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   );
 });
 
+test("T-845 production HyperFrames spawn and Windows RAT preload the same layered resolver", () => {
+  const executor = readFileSync(
+    resolve(
+      REPO_ROOT,
+      "backend/src/modules/execution/video-render/executor.ts",
+    ),
+    "utf8",
+  );
+  const smoke = readFileSync(resolve(HERE, "runtime-smoke.mjs"), "utf8");
+
+  for (const source of [executor, smoke]) {
+    assert.match(source, /creatoros-module-resolver\.cjs/);
+    assert.match(source, /["']--require["']/);
+  }
+  assert.match(executor, /buildHyperframesProcessArgs/);
+  assert.match(executor, /CREATOROS_RUNTIME_ROOT/);
+  assert.doesNotMatch(
+    executor,
+    /NODE_OPTIONS\s*:/,
+    "正式渲染必须用 argv 预加载解析器，不能恢复可注入任意代码的 NODE_OPTIONS",
+  );
+  assert.match(smoke, /\["--require", moduleResolver, hyperframesCli/);
+});
+
 test("official Windows release and RAT are wired to the same guarded closure", () => {
   const workflow = readFileSync(
     resolve(REPO_ROOT, ".github/workflows/desktop-release.yml"),

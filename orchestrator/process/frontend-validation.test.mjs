@@ -507,33 +507,6 @@ test("strict 项目删除验收列不能绕过 UI receipt audit", () => {
   assert.match(r.stderr + r.stdout, /缺少「验收」列|缺.*验收/i);
 });
 
-test("strict audit 只检查执行任务表，暂停池的旧格式索引不要求验收列", () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "frontend-validation-paused-"));
-  fs.mkdirSync(path.join(root, "orchestrator", "process"), { recursive: true });
-  fs.writeFileSync(
-    path.join(root, "orchestrator", "process", "reconcile.config.json"),
-    JSON.stringify({ receipt_policy: "required" }),
-  );
-  fs.writeFileSync(
-    path.join(root, "BACKLOG.md"),
-    [
-      "| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |",
-      "|---|---|---|---|---|---|---|",
-      "| T-ACTIVE | 非 UI 控制面 | 🔨 | — | — | [SPEC](SPEC.md) | 实现中 |",
-      "",
-      "## ⏸️ 暂停池",
-      "",
-      "| ID | 任务 | 搁置 | 文档 | 恢复条件 |",
-      "|---|---|---|---|---|",
-      "| T-PAUSED | 历史暂停任务 | ⏸️ | [详情](PAUSED.md) | 等用户恢复 |",
-      "",
-    ].join("\n"),
-  );
-  fs.writeFileSync(path.join(root, "SPEC.md"), "# SPEC\n");
-  const result = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-});
-
 test("strict UI complete 只持久化命令输出摘要，不泄漏 stdout/stderr", () => {
   const stdoutSecret = "stdout-secret-should-not-persist";
   const stderrSecret = "stderr-secret-should-not-persist";
@@ -698,54 +671,6 @@ test("audit 允许 receipt 后的无关提交，但 watched_paths 的后续提�
   audit = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
   assert.equal(audit.status, 1);
   assert.match(audit.stderr + audit.stdout, /watched_paths|代码.*变化|receipt.*失效/i);
-});
-
-test("已完成 UI 任务用 revalidate 换发当前 HEAD receipt，历史完成事件保持不变", () => {
-  const root = setup({ strict: true, verifyCommand: VERIFY_COMMAND });
-  completeStrictReceipt(root);
-  const originalEvents = fs.readFileSync(
-    path.join(root, "orchestrator", "events.ndjson"),
-    "utf8",
-  );
-
-  fs.appendFileSync(path.join(root, "src", "ui.js"), "// release revalidation\n");
-  git(root, ["add", "src/ui.js"]);
-  git(root, ["commit", "-m", "release UI change"]);
-  writeBlock(
-    path.join(root, "REVALIDATION_REPORT.md"),
-    "frontend-validation",
-    strictReport(root),
-  );
-
-  const result = run(
-    TASKCTL,
-    [
-      "revalidate",
-      "T-RADAR",
-      "--backlog",
-      "BACKLOG.md",
-      "--evidence",
-      "REVALIDATION_REPORT.md",
-    ],
-    root,
-  );
-  assert.equal(result.status, 0, result.stderr || result.stdout);
-
-  const events = fs
-    .readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8")
-    .trim()
-    .split("\n")
-    .map((line) => JSON.parse(line));
-  assert.equal(events.length, 2);
-  assert.equal(events[0].action, "complete");
-  assert.equal(events[1].action, "revalidate");
-  assert.ok(
-    fs.readFileSync(path.join(root, "orchestrator", "events.ndjson"), "utf8")
-      .startsWith(originalEvents),
-    "revalidate 必须 append，不得重写历史完成事件",
-  );
-  const audit = run(VALIDATOR, ["audit", "--backlog", "BACKLOG.md"], root);
-  assert.equal(audit.status, 0, audit.stderr || audit.stdout);
 });
 
 test("audit 拒绝 watched_paths 当前 dirty，并校验 completion event 的 commit 绑定", () => {

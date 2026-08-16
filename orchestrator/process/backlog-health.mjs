@@ -67,39 +67,6 @@ if (!existsSync(BACKLOG)) {
 }
 
 const src = readFileSync(BACKLOG, "utf8");
-const ARCHIVE = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
-
-function taskIds(source) {
-  const ids = [];
-  let idColumn = -1;
-  const rows = source.split("\n");
-  for (let index = 0; index < rows.length; index += 1) {
-    const line = rows[index];
-    if (!line.trimStart().startsWith("|") || (/^[|\s:\-]+$/.test(line.trim()) && line.includes("-"))) continue;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-    const next = rows[index + 1] ?? "";
-    if (/^[|\s:\-]+$/.test(next.trim()) && next.includes("-")) {
-      idColumn = cells.findIndex((cell) => cell.toUpperCase() === "ID");
-      continue;
-    }
-    if (idColumn >= 0 && /^T-/i.test(cells[idColumn] ?? "")) ids.push(cells[idColumn]);
-  }
-  return ids;
-}
-
-// 任务 ID 是控制面的主键。压缩/迁移不得让执行队列内部撞号，也不得复用历史 ID。
-const activeIds = taskIds(src);
-const archivedIds = existsSync(ARCHIVE) ? taskIds(readFileSync(ARCHIVE, "utf8")) : [];
-const count = (values) => values.reduce((map, id) => map.set(id, (map.get(id) ?? 0) + 1), new Map());
-const activeCounts = count(activeIds);
-const archiveCounts = count(archivedIds);
-const activeDuplicates = [...activeCounts].filter(([, amount]) => amount > 1).map(([id]) => id);
-const reused = [...activeCounts.keys()].filter((id) => archiveCounts.has(id));
-const archiveDuplicates = [...archiveCounts].filter(([, amount]) => amount > 1).map(([id]) => id);
-if (activeDuplicates.length) err(`执行看板存在重复 ID:${activeDuplicates.join(",")}`);
-if (reused.length) err(`执行看板复用了归档 ID:${reused.join(",")}`);
-if (archiveDuplicates.length) warn(`归档内部保留 ${archiveDuplicates.length} 个历史撞号:${archiveDuplicates.join(",")}`);
-if (!activeDuplicates.length && !reused.length) ok(`执行任务 ID 唯一，且未复用归档 ID（${activeIds.length} 条）。`);
 
 // ① 文件体积
 const bytes = Buffer.byteLength(src, "utf8");

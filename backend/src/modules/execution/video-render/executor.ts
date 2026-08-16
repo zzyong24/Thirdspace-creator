@@ -412,6 +412,75 @@ async function resolveGsapMinJs(): Promise<string> {
   return p;
 }
 
+function isPathInside(parent: string, candidate: string): boolean {
+  const relative = path.relative(path.resolve(parent), path.resolve(candidate));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+/**
+ * [T-845] Windows 少文件 runtime 把 HyperFrames 与其 external 依赖放在并列 vendor
+ * 层，Node 原生 walk-up 无法解析。主 server 的 module hook 不会继承到新 Node 进程，
+ * 所以正式渲染必须像 closure RAT 一样显式 `--require` 同一 resolver。
+ *
+ * 传统 node_modules / 开发态不使用分层 vendor，保持原 argv，避免把 Windows 专属
+ * runtime 契约强加给 macOS 与源码运行。NODE_OPTIONS 仍不透传，安全边界不变。
+ */
+export async function buildHyperframesProcessArgs(
+  cliJs: string,
+  cliArgs: readonly string[],
+  runtimeRoot: string | undefined = process.env.CREATOROS_RUNTIME_ROOT,
+): Promise<string[]> {
+  if (!runtimeRoot) return [cliJs, ...cliArgs];
+
+  const renderVendorRoot = path.join(
+    runtimeRoot,
+    "layers",
+    "core",
+    "render",
+    "vendor",
+  );
+  if (!isPathInside(renderVendorRoot, cliJs)) {
+    return [cliJs, ...cliArgs];
+  }
+
+  const resolver = path.join(
+    runtimeRoot,
+    "frontend",
+    "creatoros-module-resolver.cjs",
+  );
+  const resolverStat = await fs.stat(resolver).catch(() => null);
+  if (!resolverStat?.isFile()) {
+    throw new Error(
+      "Windows 分层渲染运行时缺少模块解析器，请重新安装最新版应用后再制作视频。",
+    );
+  }
+  return ["--require", resolver, cliJs, ...cliArgs];
+}
+
+function redactHyperframesDiagnostic(value: string): string {
+  return value
+    .replace(/\bBearer\s+[^\s,;]+/gi, "Bearer [REDACTED]")
+    .replace(/\bsk-[A-Za-z0-9_-]{6,}\b/g, "[REDACTED]")
+    .replace(
+      /((?:api[-_ ]?key|token|secret|password)\s*[:=]\s*)[^\s,;]+/gi,
+      "$1[REDACTED]",
+    )
+    .replace(/([A-Za-z]:\\Users\\)[^\\\s]+/gi, "$1[USER]")
+    .replace(/\/Users\/[^/\s]+/g, "/Users/[USER]")
+    .replace(/\/home\/[^/\s]+/g, "/home/[USER]")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** 保留 Node 错误首部的缺失包名和尾部错误码，同时限制长度并隐藏本机用户名。 */
+export function formatHyperframesProcessError(head: string, tail: string): string {
+  const safeHead = redactHyperframesDiagnostic(head).slice(0, 500);
+  const safeTail = redactHyperframesDiagnostic(tail).slice(-500);
+  if (!safeHead) return safeTail || "渲染子进程未返回错误详情";
+  if (!safeTail || safeHead === safeTail || safeHead.endsWith(safeTail)) return safeHead;
+  return `${safeHead} … ${safeTail}`;
+}
+
 async function renderWithHyperframesCli(opts: {
   projectDir: string;
   outputFile: string;
@@ -426,24 +495,27 @@ async function renderWithHyperframesCli(opts: {
   onProgress: (line: string) => void;
 }): Promise<void> {
   const cliJs = await resolveHyperframesCli();
+  const cliArgs = await buildHyperframesProcessArgs(
+    cliJs,
+    [
+      "render",
+      opts.projectDir,
+      "--output",
+      opts.outputFile,
+      "--fps",
+      String(opts.fps),
+      "--quality",
+      opts.quality,
+      "--video-bitrate",
+      opts.videoBitrate,
+      "--video-frame-format",
+      opts.videoFrameFormat,
+    ],
+  );
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
       process.execPath,
-      [
-        cliJs,
-        "render",
-        opts.projectDir,
-        "--output",
-        opts.outputFile,
-        "--fps",
-        String(opts.fps),
-        "--quality",
-        opts.quality,
-        "--video-bitrate",
-        opts.videoBitrate,
-        "--video-frame-format",
-        opts.videoFrameFormat,
-      ],
+      cliArgs,
       {
         // [RT-H06] env 收窄(修「子进程继承全量 process.env」):hyperframes CLI 及其
         // 再起的 Chromium 只拿运行必需变量 + 两个任务级显式变量;模型 key/DB/S3/
@@ -456,6 +528,11 @@ async function renderWithHyperframesCli(opts: {
           HYPERFRAMES_FFMPEG_PATH: opts.ffmpegPath,
           HYPERFRAMES_FFPROBE_PATH: opts.ffprobePath,
           HYPERFRAMES_TELEMETRY: "0",
+          // resolver 虽能从自身 __dirname 推导根目录，仍显式传递同一绝对 root，
+          // 避免安装目录重排时 resolver 与 executor 对分层根产生不同理解。
+          ...(process.env.CREATOROS_RUNTIME_ROOT
+            ? { CREATOROS_RUNTIME_ROOT: process.env.CREATOROS_RUNTIME_ROOT }
+            : {}),
           // CLI 交互态探测走 TTY;子进程无 TTY 天然非交互。
         }),
         stdio: ["ignore", "pipe", "pipe"],
@@ -464,10 +541,14 @@ async function renderWithHyperframesCli(opts: {
         windowsHide: true,
       },
     );
-    let lastErr = "";
+    let errorHead = "";
+    let errorTail = "";
     const onData = (buf: Buffer): void => {
       const text = buf.toString("utf8");
-      lastErr = text.slice(-800);
+      if (errorHead.length < 2_000) {
+        errorHead = `${errorHead}${text}`.slice(0, 2_000);
+      }
+      errorTail = `${errorTail}${text}`.slice(-2_000);
       // 进度行形如 "Capturing frame 120/300" —— 抽给步骤流
       const m = /Capturing frame (\d+)\/(\d+)/.exec(text);
       if (m) opts.onProgress(`捕帧 ${m[1]}/${m[2]}`);
@@ -491,7 +572,7 @@ async function renderWithHyperframesCli(opts: {
       else
         reject(
           new Error(
-            `hyperframes render 退出码 ${code ?? sig}: ${lastErr.replace(/\s+/g, " ").trim().slice(-300)}`,
+            `hyperframes render 退出码 ${code ?? sig}: ${formatHyperframesProcessError(errorHead, errorTail)}`,
           ),
         );
     });

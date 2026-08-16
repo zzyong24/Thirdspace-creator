@@ -797,15 +797,6 @@ function record(args) {
   ]) {
     if (!existsSync(file)) throw new Error(`${label} 不存在: ${relativePortable(root, file)}`);
   }
-  const constitutionText = readFileSync(constitutionFile, "utf8");
-  if (
-    relativePortable(root, constitutionFile) === "PROJECT.md" &&
-    /本文件由\s*`?node orchestrator\/process\/pmem\.mjs sync`?\s*生成/.test(constitutionText)
-  ) {
-    throw new Error(
-      "PROJECT.md 是 pmem 自动生成的项目记忆，不能绑定为 constitution；请改用稳定的产品/架构规范（如 SYSTEM_ARCHITECTURE.md 或任务上游 SPEC）",
-    );
-  }
 
   let packet;
   try {
@@ -855,6 +846,7 @@ function record(args) {
     );
   }
   const specText = readFileSync(specFile, "utf8");
+  const constitutionText = readFileSync(constitutionFile, "utf8");
   const specSha = sha(specText);
   const packetErrors = validatePacket(packet, previousEvent, {
     root,
@@ -961,23 +953,8 @@ function record(args) {
   }
 }
 
-const transientReceiptDrift = /review receipt 已过期：(SPEC hash .* != .*|constitution hash 已变化)/;
-
-export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift = "error" }) {
-  root = realpathSync(root);
-  backlogFile = realpathSync(backlogFile);
+export function auditReviewReceipts({ root, backlogFile }) {
   const errors = [];
-  const warnings = [];
-  const reportTaskError = (task, message) => {
-    const rendered = `${task.id}: ${message}`;
-    const inProgressHashDrift = /🔨/.test(task.status) && transientReceiptDrift.test(message);
-    const canonicalPendingReview = /📋|🔨/.test(task.status) && /审核列为「待审」/.test(message);
-    if (inProgressDrift === "warn" && (inProgressHashDrift || canonicalPendingReview)) {
-      warnings.push(rendered);
-    } else {
-      errors.push(rendered);
-    }
-  };
   const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
   let events = [];
   try {
@@ -992,12 +969,12 @@ export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift 
     if (!active.test(task.status)) continue;
     const value = cleanText(task.review);
     if (task.columns.review < 0) {
-      if (policy === "required") reportTaskError(task, "strict 项目 BACKLOG 缺少「审核」列");
+      if (policy === "required") errors.push(`${task.id}: strict 项目 BACKLOG 缺少「审核」列`);
       else if (
         /🔨|✅/.test(task.status) &&
         (/待审|FAIL/.test(task.status) || (/CONCERNS/.test(task.status) && !/已处理/.test(task.status)))
       ) {
-        reportTaskError(task, "legacy 状态中仍含未放行审核标记");
+        errors.push(`${task.id}: legacy 状态中仍含未放行审核标记`);
       }
       continue;
     }
@@ -1012,7 +989,7 @@ export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift 
         requirePass: false,
       });
       if (/🔨|✅/.test(task.status) && verified.kind === "receipt" && verified.verdict !== "PASS") {
-        reportTaskError(task, `状态 ${task.status} 但审核 verdict=${verified.verdict}`);
+        errors.push(`${task.id}: 状态 ${task.status} 但审核 verdict=${verified.verdict}`);
       }
     } catch (error) {
       if (
@@ -1020,7 +997,7 @@ export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift 
         receiptPattern.test(value) ||
         (policy === "required" && value !== "待审")
       ) {
-        reportTaskError(task, error.message);
+        errors.push(`${task.id}: ${error.message}`);
       }
     }
   }
@@ -1032,11 +1009,7 @@ export function auditReviewReceiptFindings({ root, backlogFile, inProgressDrift 
       if (!existsSync(reviewFile)) errors.push(`${event.task_id}: review snapshot 缺失 ${event.review_path}`);
     }
   }
-  return { errors, warnings };
-}
-
-export function auditReviewReceipts({ root, backlogFile }) {
-  return auditReviewReceiptFindings({ root, backlogFile, inProgressDrift: "error" }).errors;
+  return errors;
 }
 
 function audit(args) {

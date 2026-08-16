@@ -162,6 +162,12 @@
       "what": "基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts",
       "onFail": "成片视觉承接门回归：可溯真值必须同时覆盖冻结稿与权威 SRT；纯基础补位必须明确标注未生成 Scene Graph；large_stage 结束后恢复信息卡，横屏短空窗由同源低亮度人像承接。"
+    },
+    {
+      "led": "LED-031",
+      "what": "Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs",
+      "onFail": "分层运行时消费门回归：正式 HyperFrames argv 必须显式 --require 随包 creatoros-module-resolver.cjs，并保持 NODE_OPTIONS 禁用；生产 argv 与 RAT 真渲染必须使用同一解析契约。"
     }
   ],
   "program_completion_required": false,

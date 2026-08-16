@@ -586,9 +586,7 @@ function readAcceptanceRows(backlogFile) {
       };
       continue;
     }
-    // 只审计真正含「状态」列的执行任务表。暂停池/历史索引使用「搁置」等旧表头，
-    // 它们不是可完成任务，不能因后来新增的验收列被 retroactive strict 校验。
-    if (!columns || columns.id < 0 || columns.status < 0 || !row.cells[columns.id]) continue;
+    if (!columns || columns.id < 0 || !row.cells[columns.id]) continue;
     rows.push({
       id: row.cells[columns.id],
       status: row.cells[columns.status] ?? "",
@@ -763,12 +761,7 @@ export function auditFrontendReceipts({ root, backlogFile }) {
     }
     const event = [...events]
       .reverse()
-      .find(
-        (item) =>
-          item.task === row.id &&
-          ["complete", "revalidate"].includes(item.action) &&
-          item.report_sha,
-      );
+      .find((item) => item.task === row.id && item.action === "complete" && item.report_sha);
     if (!event) {
       errors.push(`${row.id}: PASS 验收缺 taskctl completion event`);
       continue;

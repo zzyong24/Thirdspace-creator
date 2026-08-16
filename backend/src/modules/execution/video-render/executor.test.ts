@@ -12,8 +12,10 @@ import {
 } from "@creatoros/contract";
 import type { ExecutorSandboxView } from "../executor-registry";
 import {
+  buildHyperframesProcessArgs,
   calculateDeliveryBitrate,
   createVideoRenderExecutor,
+  formatHyperframesProcessError,
   locateSystemChromium,
   type VideoRenderEngine,
 } from "./executor";
@@ -180,6 +182,80 @@ afterEach(async () => {
 });
 
 describe("createVideoRenderExecutor", () => {
+  it("[T-845] Windows 分层 runtime 的正式渲染显式预加载同一模块解析器", async () => {
+    const runtimeRoot = path.join(root, "runtime");
+    const cli = path.join(
+      runtimeRoot,
+      "layers",
+      "core",
+      "render",
+      "vendor",
+      "hyperframes",
+      "dist",
+      "cli.js",
+    );
+    const resolver = path.join(
+      runtimeRoot,
+      "frontend",
+      "creatoros-module-resolver.cjs",
+    );
+    await fs.mkdir(path.dirname(cli), { recursive: true });
+    await fs.mkdir(path.dirname(resolver), { recursive: true });
+    await fs.writeFile(cli, "// hyperframes");
+    await fs.writeFile(resolver, "// resolver");
+
+    await expect(
+      buildHyperframesProcessArgs(cli, ["render", "project"], runtimeRoot),
+    ).resolves.toEqual([
+      "--require",
+      resolver,
+      cli,
+      "render",
+      "project",
+    ]);
+  });
+
+  it("[T-845] 分层 runtime 缺解析器时在拉起子进程前明确失败", async () => {
+    const runtimeRoot = path.join(root, "runtime");
+    const cli = path.join(
+      runtimeRoot,
+      "layers",
+      "core",
+      "render",
+      "vendor",
+      "hyperframes",
+      "dist",
+      "cli.js",
+    );
+    await fs.mkdir(path.dirname(cli), { recursive: true });
+    await fs.writeFile(cli, "// hyperframes");
+
+    await expect(
+      buildHyperframesProcessArgs(cli, ["render"], runtimeRoot),
+    ).rejects.toThrow(/Windows 分层渲染运行时缺少模块解析器.*重新安装最新版应用/);
+  });
+
+  it("[T-845] 开发态与传统 node_modules runtime 不强制依赖分层解析器", async () => {
+    const cli = path.join(root, "node_modules", "hyperframes", "dist", "cli.js");
+    await fs.mkdir(path.dirname(cli), { recursive: true });
+    await fs.writeFile(cli, "// hyperframes");
+
+    await expect(
+      buildHyperframesProcessArgs(cli, ["--help"], undefined),
+    ).resolves.toEqual([cli, "--help"]);
+  });
+
+  it("[T-845] 模块加载错误同时保留缺失包名与尾部错误码并隐藏本机用户名", () => {
+    const message = formatHyperframesProcessError(
+      "Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp' imported from C:\\Users\\real-user\\AppData\\Local\\CreatorOS\\runtime\\cli.js",
+      "    at moduleResolve (...) { code: 'ERR_MODULE_NOT_FOUND' } Node.js v25.9.0",
+    );
+
+    expect(message).toContain("Cannot find package 'sharp'");
+    expect(message).toContain("ERR_MODULE_NOT_FOUND");
+    expect(message).not.toContain("real-user");
+  });
+
   it("源码回归可通过显式路径复用系统 Chrome，不依赖 @playwright/test", async () => {
     const chrome = path.join(root, "chrome-for-regression");
     await fs.writeFile(chrome, "fake chrome");

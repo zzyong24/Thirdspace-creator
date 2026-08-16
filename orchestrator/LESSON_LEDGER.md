@@ -433,3 +433,21 @@
 - **Outcome(T+N)**: 待 T-843 评审、用户确认和实现后回填。
 - **Ref**: T-843；DEC-CLI-001；PAT-001/PAT-003/PAT-004；`mcp-server/`；
   `docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md`。
+
+## LED-031 — 打包 RAT 预加载了解析器，不等于生产子进程会继承模块 hook
+
+- **Date**: 2026-08-16 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: Windows 少文件 runtime 的 HyperFrames CLI 和真渲染 RAT 全部通过，但用户正式成片
+  连续两次在捕帧前以 `ERR_MODULE_NOT_FOUND` 退出；上游分镜、素材、字幕与导演决策均成功。
+- **RootCause**: RAT 直接使用 `node --require creatoros-module-resolver.cjs`，生产执行器只使用
+  `node <hyperframes-cli>`。主 server 内注册的 Node module hook 不会继承到新进程，安全环境又正确
+  排除了 `NODE_OPTIONS`，分层 vendor 依赖因此在生产子进程不可见。
+- **GuardRule**: 任何分层 runtime 的独立 Node consumer 必须在生产 argv 显式加载随包解析器，并与
+  RAT 使用同一绝对路径契约；禁止用继承主进程 hook、`NODE_OPTIONS` 或开发机 `node_modules` 假定
+  用户机可解析。验收必须同时约束生产 argv 和真 consumer smoke。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts
+  src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs`。
+- **Outcome(T+N)**: 先红后绿已证明生产 argv 加入同一 resolver、缺 resolver 前置失败、传统布局兼容、
+  缺失包名与错误码可诊断；Windows 安装包真渲染待下一次正式候选回填。
+- **Ref**: T-844、T-845；DEC-RUNTIME-053；
+  `docs/research/2026-08-16-windows-video-render-module-resolution-diagnosis.md`。
