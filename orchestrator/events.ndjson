@@ -818,3 +818,4 @@
 {"ts":"2026-08-16T09:41:35.072Z","actor":"taskctl","action":"start","task":"T-845","sha_before":"adf90bc4973c","sha_after":"f288577b906d"}
 {"ts":"2026-08-16T10:50:24.237Z","actor":"taskctl","action":"start","task":"T-846","sha_before":"cc86c0aaa3d1","sha_after":"a82da74b3629"}
 {"ts":"2026-08-16T11:19:01.656Z","actor":"taskctl","action":"block","task":"T-846","reason":"GitHub Actions run 31942889066：macOS 构建、Developer ID、公证/staple/Gatekeeper、DMG 真启动与主页面加载通过；Windows 在 release.mjs→tauri beforeBuildCommand 被 CLI runtime 完整性门禁阻断，缺 frontend/cli/creatoros.cjs 与 cli/node.exe，未生成 setup.exe，需退出本轮冻结后另开修复候选。","sha_before":"a82da74b3629","sha_after":"98a6f152a7ed"}
+{"ts":"2026-08-16T11:28:00.918Z","actor":"taskctl","action":"start","task":"T-847","sha_before":"ad9670a58c37","sha_after":"8efbdf4b9d2c"}

@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
 import { bakeVerdictPublicKey } from "./bake-verdict-public-key.mjs";
+import { stageCreatorOsCliRuntime } from "../../frontend/scripts/desktop/creatoros-cli-runtime.mjs";
 
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
@@ -59,6 +60,17 @@ for (const required of [
 // 精简闭包不经过旧 build-sidecar；公共构建入口已在 runtime smoke 前烘焙公钥，
 // 这里再次执行同一个幂等 helper，防止脚本被单独调用时生成安装后必白屏的包。
 bakeVerdictPublicKey(closureRoot);
+
+// [T-847] 少文件 production closure 不经过 full build-sidecar，因此必须在复制给 Tauri 前
+// 显式生成 contract 同源 CLI bundle，并复用本包的 creatoros-server.exe 作为 CLI Node。
+// 这样 Tauri beforeBuildCommand 的二次幂等打包不会再因 CLI runtime 缺失而中止，也不会
+// 把 CI runner 上可能不同版本的 process.execPath 混进用户安装包。
+stageCreatorOsCliRuntime({
+  repoRoot,
+  runtimeRoot: closureRoot,
+  nodeExecutablePath: runtimeNode,
+  targetPlatform: "win32",
+});
 
 rmSync(sidecarRoot, { recursive: true, force: true });
 rmSync(binariesRoot, { recursive: true, force: true });
@@ -132,6 +144,18 @@ const summary = {
   nodeModulesDirectories,
   linksOrReparsePoints,
   externalBinBytes: statSync(externalBin).size,
+  cliBundle: relative(
+    sidecarRoot,
+    resolve(sidecarRoot, "frontend", "cli", "creatoros.cjs"),
+  ).split(sep).join("/"),
+  cliBundleBytes: statSync(
+    resolve(sidecarRoot, "frontend", "cli", "creatoros.cjs"),
+  ).size,
+  cliNode: relative(
+    sidecarRoot,
+    resolve(sidecarRoot, "cli", "node.exe"),
+  ).split(sep).join("/"),
+  cliNodeBytes: statSync(resolve(sidecarRoot, "cli", "node.exe")).size,
   serverEntry: relative(sidecarRoot, resolve(sidecarRoot, "frontend", "server.js"))
     .split(sep)
     .join("/"),

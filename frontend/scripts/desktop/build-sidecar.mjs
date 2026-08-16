@@ -41,6 +41,12 @@ import { playwrightBrowsersCacheRoot } from "./platform-paths.mjs";
 import { assertVerdictPublicKey } from "./verdict-key-material.mjs";
 import { assertMacosRuntimeCompatibility } from "./macos-runtime-compat.mjs";
 import { signMacRuntimePayloadForNotarization } from "./macos-runtime-signing.mjs";
+import {
+  assertCreatorOsCliRuntime,
+  stageCreatorOsCliRuntime,
+} from "./creatoros-cli-runtime.mjs";
+
+export { assertCreatorOsCliRuntime };
 
 // 统计目录树里的 symlink 数(诊断/日志用)。
 function countSymlinks(root) {
@@ -261,35 +267,13 @@ function run(cmd, args, opts = {}) {
 // [T-843] CLI 与 MCP 从同一 contract bundle 产出。用户机不需要 Node：CLI 启动器只调用
 // 随 CreatorOS 一起交付的 runtime（macOS 复用 server.app；Windows/Linux 在 cli/ 带一份）。
 function bundleCreatorOsCli() {
-  const cliScript = join(SIDECAR_RUNTIME, "frontend", "cli", "creatoros.cjs");
-  run(process.execPath, [join(REPO, "mcp-server", "scripts", "build-runtime.mjs"), cliScript], {
-    cwd: REPO,
+  const { bundle: cliScript } = stageCreatorOsCliRuntime({
+    repoRoot: REPO,
+    runtimeRoot: SIDECAR_RUNTIME,
+    nodeExecutablePath: process.execPath,
+    targetPlatform: platform,
   });
-  if (!existsSync(cliScript)) {
-    throw new Error("[build-sidecar] CreatorOS CLI runtime 未产出");
-  }
-  if (platform !== "darwin") {
-    const cliNode = join(SIDECAR_RUNTIME, "cli", platform === "win32" ? "node.exe" : "node");
-    mkdirSync(dirname(cliNode), { recursive: true });
-    copyFileSync(process.execPath, cliNode);
-    if (platform !== "win32") chmodSync(cliNode, 0o755);
-  }
   console.log(`[build-sidecar]   ✓ CreatorOS CLI 已进入 runtime: ${relative(SIDECAR_RUNTIME, cliScript)}`);
-}
-
-export function assertCreatorOsCliRuntime(root, targetPlatform = platform) {
-  const required = [join(root, "frontend", "cli", "creatoros.cjs")];
-  if (targetPlatform === "darwin") {
-    required.push(join(root, "server.app", "Contents", "MacOS", "creatoros-server"));
-  } else {
-    required.push(join(root, "cli", targetPlatform === "win32" ? "node.exe" : "node"));
-  }
-  const missing = required.filter((file) => !existsSync(file));
-  if (missing.length > 0) {
-    throw new Error(
-      `[build-sidecar] CreatorOS CLI 随包 runtime 不完整:${missing.map((file) => relative(root, file)).join("、")}`,
-    );
-  }
 }
 
 // [T-426 W4] Windows 上上次中断留下的断裂 junction 可能让 fs.rm 报 ENOTEMPTY/EPERM。

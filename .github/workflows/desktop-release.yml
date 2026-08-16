@@ -539,6 +539,16 @@ jobs:
           if (-not (Test-Path $server -PathType Leaf)) {
             throw "[T-487] 安装期 runtime 缺 frontend/server.js"
           }
+          $cliScript = Join-Path $installDir `
+            "runtime-images/$runtimeId/sidecar/frontend/cli/creatoros.cjs"
+          $cliNode = Join-Path $installDir `
+            "runtime-images/$runtimeId/sidecar/cli/node.exe"
+          if (-not (Test-Path $cliScript -PathType Leaf)) {
+            throw "[T-847] 安装期 runtime 缺 frontend/cli/creatoros.cjs"
+          }
+          if (-not (Test-Path $cliNode -PathType Leaf)) {
+            throw "[T-847] 安装期 runtime 缺 cli/node.exe"
+          }
           if (Test-Path (Join-Path $installDir "sidecar.tar.gz")) {
             throw "[T-487] 安装成功后仍残留 sidecar.tar.gz"
           }
@@ -811,12 +821,34 @@ jobs:
             if (-not (Test-Path $migratedServer -PathType Leaf)) {
               throw "[T-826] 升级机迁移后的当前 runtime 缺 frontend/server.js"
             }
+            $migratedCliScript = Join-Path `
+              $appDataRuntime "$migratedRuntimeId/sidecar/frontend/cli/creatoros.cjs"
+            $migratedCliNode = Join-Path `
+              $appDataRuntime "$migratedRuntimeId/sidecar/cli/node.exe"
+            $cliLauncher = Join-Path $env:LOCALAPPDATA "CreatorOS/bin/creatoros.cmd"
+            foreach ($requiredCliFile in @($migratedCliScript, $migratedCliNode, $cliLauncher)) {
+              if (-not (Test-Path $requiredCliFile -PathType Leaf)) {
+                throw "[T-847] CreatorOS CLI 随包文件未在首启后落地:$requiredCliFile"
+              }
+            }
+            $cliHelpLines = @(& $cliLauncher --help 2>&1)
+            $cliHelpExit = $LASTEXITCODE
+            $cliHelp = $cliHelpLines -join "`n"
+            if ($cliHelpExit -ne 0) {
+              throw "[T-847] CreatorOS CLI --help 失败(exit=$cliHelpExit):$cliHelp"
+            }
+            if ($cliHelp -notmatch '用法: creatoros') {
+              throw "[T-847] CreatorOS CLI --help 未返回预期帮助:$cliHelp"
+            }
+            Write-Host "[T-847] ✓ CreatorOS CLI --help 随包冒烟通过"
             Write-Host "[T-826] ✓ 升级机旧 runtime 已被当前安装 runtime 替换"
             $evidencePath = "tools/windows-closure-rat/out/official-package-results.json"
             $evidence = Get-Content $evidencePath -Raw | ConvertFrom-Json
             $evidence | Add-Member -NotePropertyName firstLaunchMilliseconds `
               -NotePropertyValue $launchWatch.ElapsedMilliseconds -Force
             $evidence | Add-Member -NotePropertyName mainPageLoadFinished `
+              -NotePropertyValue $true -Force
+            $evidence | Add-Member -NotePropertyName cliHelpVerified `
               -NotePropertyValue $true -Force
             $evidence | ConvertTo-Json | Out-File $evidencePath -Encoding utf8
             Write-Host "[T-675] ✓ 已安装 CreatorOS 真启动并完成主页面加载:$($launchWatch.Elapsed)"

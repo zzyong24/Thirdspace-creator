@@ -34,6 +34,21 @@ test("official and RAT closure use one deterministic build plan", () => {
   );
 });
 
+test("packaged runtime stages CreatorOS CLI before copying the closure into Tauri", () => {
+  const source = readFileSync(
+    resolve(HERE, "prepare-packaged-runtime.mjs"),
+    "utf8",
+  );
+  const stageIndex = source.indexOf("stageCreatorOsCliRuntime({");
+  const copyIndex = source.indexOf("cpSync(closureRoot, sidecarRoot");
+
+  assert.notEqual(stageIndex, -1, "Windows 精简闭包必须显式生成随包 CLI runtime");
+  assert.ok(stageIndex < copyIndex, "CLI runtime 必须先进入 closure，再整体复制给 Tauri");
+  assert.match(source, /runtimeRoot:\s*closureRoot/);
+  assert.match(source, /nodeExecutablePath:\s*runtimeNode/);
+  assert.match(source, /targetPlatform:\s*["']win32["']/);
+});
+
 test("production closure pins target and adapter evidence", () => {
   const plan = productionClosurePlan({ preparePackage: true });
   const next = plan.find(
@@ -171,6 +186,8 @@ test("closure and packaged runtime share one verdict-key baker", () => {
   assert.match(baker, /assertVerdictPublicKey/);
   assert.match(baker, /verdict-verify-key\.json/);
   assert.match(packagedRuntime, /bakeVerdictPublicKey/);
+  assert.match(packagedRuntime, /cliBundleBytes/);
+  assert.match(packagedRuntime, /cliNodeBytes/);
   assert.doesNotMatch(packagedRuntime, /writeFileSync\([\s\S]*publicKeyB64/);
 });
 
