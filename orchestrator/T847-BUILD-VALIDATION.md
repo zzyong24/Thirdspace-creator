@@ -39,3 +39,24 @@ Windows 少文件 production closure 绕过 full `build-sidecar.mjs`，但
 
 修复提交并冻结后重新运行 `desktop-release.yml only=all`。只有 macOS 与 Windows job 均成功、
 两个安装包均下载并完成 SHA-256，T-847/T-846 才可完成；不创建 tag、Release 或公开分发。
+
+## 冻结候选正式流水线结果（阻断）
+
+- 正式流水线：`31944755771`
+- 冻结候选：`893db761b156c38387159c76daf3194bdc93bcf5`
+- macOS：全链成功，包括 Developer ID、公证/staple、Gatekeeper、可搬运 sidecar、DMG 内应用
+  和真启动/主页面加载。已下载
+  `/Users/zyongzhu/Downloads/CreatorOS-v1.1.0-build-31944755771/desktop-darwin-aarch64/CreatorOS_1.1.0_aarch64.dmg`，
+  SHA-256 为 `ad3ff2342c5fc5065262d92a36c1c3029b929b60d47ef93b9b3342009ee8387c`。
+- Windows：production closure、release 全链、tarball 门、Chromium 门、安装期 runtime、updater、
+  setup 收集与 NSIS 真安装均通过；随包闭包证据显示 CLI bundle `645036` 字节、CLI Node
+  `95618048` 字节。安装后 CreatorOS 已完成主页面加载，CLI 文件与 launcher 均存在，
+  `creatoros.cmd --help` 退出码为 `0` 并返回结构化 JSON usage。
+- 阻断发生在 Windows 首启门的输出断言：workflow 要求帮助文本包含中文
+  `用法: creatoros`，实际正式 CLI 合法返回 JSON 字段
+  `"usage": "creatoros status | ..."`，于是错误抛出
+  `[T-847] CreatorOS CLI --help 未返回预期帮助`。这不是 CLI 启动失败，但它使随后 Windows
+  主动卸载门和安装包上传被跳过，因此本轮不能视为双端发布验收成功。
+- GitHub 仅留下 Windows closure/身份非发布证据，没有可下载的 Windows setup；未创建 tag、
+  Release、公开下载或 Activity/Growth 变更。按冻结规则，本轮结束后只记录阻断，不在同一候选
+  中临时修改或静默重跑。
