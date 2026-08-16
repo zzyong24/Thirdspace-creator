@@ -12,6 +12,10 @@ function makeClient(options?: {
   outputs?: Array<Record<string, unknown>>;
   publications?: Array<Record<string, unknown>>;
   publicationRevisions?: Array<Record<string, unknown>>;
+  publicationRevisionsByPublication?: Record<
+    string,
+    Array<Record<string, unknown>>
+  >;
 }): DraftWorkbenchClient {
   const assets = options?.assets ?? {};
   return {
@@ -39,8 +43,10 @@ function makeClient(options?: {
     listArtifactVersions: vi.fn(async () => []),
     listOutputs: vi.fn(async () => options?.outputs ?? []),
     listPublications: vi.fn(async () => options?.publications ?? []),
-    listPublicationRevisions: vi.fn(
-      async () => options?.publicationRevisions ?? [],
+    listPublicationRevisions: vi.fn(async ({ params }) =>
+      options?.publicationRevisionsByPublication
+        ? (options.publicationRevisionsByPublication[params.publicationId] ?? [])
+        : (options?.publicationRevisions ?? []),
     ),
     listMaterialLinks: vi.fn(async () => options?.materialLinks ?? []),
     getKnowledge: vi.fn(async () => ({})),
@@ -159,6 +165,60 @@ describe("draft workbench project state", () => {
       title: "九点还没起床，我让智能体先拍",
       description: "这是已经采纳并持久化的发布正文。",
       tags: ["AI提效", "编导智能体"],
+    });
+  });
+
+  it("同一作品已有空内容发布事实时，查看入口仍回读生成物料的简介与标签", async () => {
+    const vm = await buildDraftWorkbenchVm(
+      "p-1",
+      makeClient({
+        outputs: [{ id: "out-1" }],
+        publications: [
+          {
+            id: "pub-published",
+            platform: "douyin",
+            status: "published",
+            currentRevisionId: "rev-published",
+            publishedAt: "2026-08-12T05:16:48.494Z",
+          },
+          {
+            id: "pub-package",
+            platform: "douyin",
+            status: "draft",
+            currentRevisionId: "rev-package",
+            publishedAt: null,
+          },
+        ],
+        publicationRevisionsByPublication: {
+          "pub-published": [
+            {
+              id: "rev-published",
+              title: "同时运营3个账号素材全混?我用AI把旧作品变成可复用的数据资产",
+              description: "",
+              platformTags: [],
+              coverAssetId: null,
+            },
+          ],
+          "pub-package": [
+            {
+              id: "rev-package",
+              title: "三个号素材全混？我用AI 20秒拆成可复用资产",
+              description: "第一段简介。\n\n第二段简介。",
+              platformTags: ["AI提效", "素材库搭建"],
+              coverAssetId: null,
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(vm.publishPack).toMatchObject({
+      publicationId: "pub-package",
+      title: "三个号素材全混？我用AI 20秒拆成可复用资产",
+      description: "第一段简介。 第二段简介。",
+      tags: ["AI提效", "素材库搭建"],
+      outputPublished: true,
+      latestPublishedAt: "2026-08-12T05:16:48.494Z",
     });
   });
 

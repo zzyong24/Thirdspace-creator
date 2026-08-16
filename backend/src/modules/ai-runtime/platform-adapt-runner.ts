@@ -90,7 +90,9 @@ function normalizePlatformDrafts(
       const platform = (o.platform ?? "").trim();
       const title = (o.title ?? "").trim();
       if (!platform || !title) return null;
-      const body = (o.body ?? "").trim();
+      // 发布平台简介用于直接复制粘贴；模型常按段落输出空行，这里只折叠空白，
+      // 不改写任何文字、标点或创作取舍。
+      const body = (o.body ?? "").replace(/\s+/gu, " ").trim();
       if (!body) {
         throw new Error(
           `发布物料缺少简介(body)：${platform || "未知平台"}`,

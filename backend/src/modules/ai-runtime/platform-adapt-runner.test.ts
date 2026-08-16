@@ -69,7 +69,7 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
         {
           platform: "douyin",
           title: "抖音标题",
-          body: "正文",
+          body: "第一段正文。\n\n第二段正文。\t收尾。",
           tags: ["a", "b"],
           coverIdea: "封面",
           auditFlags: ["  标签去掉品牌词→泛称  ", "", "营销词『变现』→『跑通』"],
@@ -98,10 +98,12 @@ describe("runPlatformAdapt (runStructuredNode + 外置模板)", () => {
     expect(input.resultData.outputId).toBe("o1");
     const drafts = input.resultData.drafts as Array<{
       platform: string;
+      body: string;
       auditFlags: string[];
     }>;
     expect(Array.isArray(drafts)).toBe(true);
     expect(drafts.length).toBe(2);
+    expect(drafts[0]!.body).toBe("第一段正文。 第二段正文。 收尾。");
     // L6:auditFlags 透传到 recordCandidate 的 resultData.drafts(既有字段不动,只加这一项)。
     // 脏项被 trim + 滤空:第一条剩 2 条,第二条是 ✅ 类。
     expect(drafts[0]!.auditFlags).toEqual([

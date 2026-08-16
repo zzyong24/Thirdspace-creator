@@ -260,6 +260,10 @@ export interface DraftWorkbenchVm {
     readonly hasCover: boolean;
     /** [T-078] 真封面 asset id(采集回填/手选);null → 「封面待生成」占位。 */
     readonly coverAssetId: string | null;
+    /** 同一 output 下是否另有已发布事实；与当前展示哪条物料 revision 正交。 */
+    readonly outputPublished?: boolean;
+    /** 同一 output 下已发布事实的时间；仅用于稿面状态回显。 */
+    readonly latestPublishedAt?: string | null;
   } | null;
   /** 当前项目有效封面:发布 revision 优先，否则取项目已采纳的封面素材。 */
   readonly projectCoverAssetId: string | null;
@@ -337,20 +341,36 @@ async function readPublishPack(
       body: undefined,
     });
     const pubs = (Array.isArray(pubsRaw) ? pubsRaw : []) as PublicationDto[];
-    const pub = pubs[0];
-    if (!pub) return { outputId, publishPack: null };
-    let revision: RevisionDto | null = null;
-    try {
-      const revsRaw = await client.listPublicationRevisions({
-        params: { publicationId: pub.id },
-        query: { page: 1, pageSize: 20 },
-        body: undefined,
-      });
-      const revs = (Array.isArray(revsRaw) ? revsRaw : []) as RevisionDto[];
-      revision = revs.find((r) => r.id === pub.currentRevisionId) ?? revs[0] ?? null;
-    } catch {
-      revision = null;
-    }
+    if (pubs.length === 0) return { outputId, publishPack: null };
+    const packages = await Promise.all(
+      pubs.map(async (pub) => {
+        let revision: RevisionDto | null = null;
+        try {
+          const revsRaw = await client.listPublicationRevisions({
+            params: { publicationId: pub.id },
+            query: { page: 1, pageSize: 20 },
+            body: undefined,
+          });
+          const revs = (Array.isArray(revsRaw) ? revsRaw : []) as RevisionDto[];
+          revision =
+            revs.find((r) => r.id === pub.currentRevisionId) ?? revs[0] ?? null;
+        } catch {
+          revision = null;
+        }
+        return { pub, revision };
+      }),
+    );
+    // 一个 output 可能同时有「平台采集/登记的发布事实」与「AI 生成的发布物料」。
+    // 前者常只有标题，后者才有简介与标签；查看发布物料应优先选真实含内容的 revision，
+    // 而发布状态仍由同 output 下的 published 行独立回显。
+    const selected =
+      packages.find(({ revision }) => {
+        const description = revision?.description?.trim() ?? "";
+        const tags = revision?.platformTags ?? [];
+        return description.length > 0 || tags.length > 0;
+      }) ?? packages[0]!;
+    const { pub, revision } = selected;
+    const published = pubs.find((candidate) => candidate.status === "published");
     return {
       outputId,
       publishPack: {
@@ -359,10 +379,12 @@ async function readPublishPack(
         status: pub.status,
         publishedAt: pub.publishedAt,
         title: revision?.title?.trim() || "",
-        description: revision?.description?.trim() || "",
+        description: revision?.description?.replace(/\s+/gu, " ").trim() || "",
         tags: revision?.platformTags ?? [],
         hasCover: Boolean(revision?.coverAssetId),
         coverAssetId: revision?.coverAssetId ?? null,
+        outputPublished: Boolean(published),
+        latestPublishedAt: published?.publishedAt ?? null,
       },
     };
   } catch {

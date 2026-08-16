@@ -41,7 +41,12 @@ vi.mock("./ammo-card-list", () => ({
   ),
 }));
 vi.mock("./draft-primary-action", () => ({
-  DraftPrimaryAction: () => <div data-slot="mock-primary-action" />,
+  DraftPrimaryAction: ({ published }: { published: boolean }) => (
+    <div
+      data-slot="mock-primary-action"
+      data-published={String(published)}
+    />
+  ),
 }));
 // [T-374] 顶条「立即抓取逐字稿」:mock 成可探测占位(真组件拉 contract-client)。
 vi.mock("./transcribe-now-button", () => ({
@@ -298,6 +303,37 @@ describe("DraftWorkbenchPage — T-738 发布物料查看闭环", () => {
     expect(screen.getByRole("dialog").textContent).toContain("正式发布正文");
     expect(screen.queryByText("生成发布物料")).toBeNull();
     expect(screen.getByRole("dialog").textContent).not.toContain("发布中心");
+  });
+
+  it("查看生成物料时保留同作品已发布状态，不重复出现登记入口", () => {
+    render(
+      <DraftWorkbenchPage
+        vm={baseVm({
+          publishUnlocked: true,
+          publishPack: {
+            publicationId: "publication-package",
+            platform: "douyin",
+            status: "draft",
+            publishedAt: null,
+            title: "生成物料标题",
+            description: "生成物料简介",
+            tags: ["AI提效"],
+            hasCover: false,
+            coverAssetId: null,
+            outputPublished: true,
+            latestPublishedAt: "2026-08-12T05:16:48.494Z",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/已发布 · 2026-08-12/)).toBeTruthy();
+    expect(screen.queryByText("登记已发布")).toBeNull();
+    expect(
+      document
+        .querySelector('[data-slot="mock-primary-action"]')
+        ?.getAttribute("data-published"),
+    ).toBe("true");
   });
 });
 

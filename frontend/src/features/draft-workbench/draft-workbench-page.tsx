@@ -96,7 +96,10 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           {/* [T-076 gate-F1] 未发布 → null(顶条只剩 Finder);已发布 → 「看复盘 →」。 */}
           <DraftPrimaryAction
             projectId={project.id}
-            published={publishPack?.status === "published"}
+            published={
+              publishPack?.outputPublished ??
+              publishPack?.status === "published"
+            }
           />
         </div>
       </header>
@@ -253,9 +256,13 @@ function PublishPackSection({
   scriptReview: DraftWorkbenchVm["scriptReview"];
   scriptVersion: number;
 }) {
+  const outputPublished =
+    publishPack?.outputPublished ?? publishPack?.status === "published";
+  const publishedAt =
+    publishPack?.latestPublishedAt ?? publishPack?.publishedAt ?? null;
   // [T-055h③] 登记入口:解锁后、还没有已发布行时展示(已发布的不重复登记 ——
   //   幂等虽兜底,但界面不做多余承诺)。
-  const showRegister = unlocked && publishPack?.status !== "published";
+  const showRegister = unlocked && !outputPublished;
   return (
     <section
       id="publish"
@@ -310,13 +317,13 @@ function PublishPackSection({
               data-slot="publish-pack-status"
               className={cn(
                 "rounded-full px-2.5 py-1 text-[11px] font-medium",
-                publishPack.status === "published"
+                outputPublished
                   ? "bg-success-soft text-success"
                   : "bg-surface-subtle text-muted-foreground",
               )}
             >
-              {publishPack.status === "published"
-                ? `已发布${publishPack.publishedAt ? ` · ${publishPack.publishedAt.slice(0, 10)}` : ""}`
+              {outputPublished
+                ? `已发布${publishedAt ? ` · ${publishedAt.slice(0, 10)}` : ""}`
                 : publishPack.status}
             </span>
           ) : unlocked ? (
