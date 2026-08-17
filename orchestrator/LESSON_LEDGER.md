@@ -522,3 +522,23 @@
   计划；首响应其余结构完整时 1 次模型调用即可恢复，不再追加第二次请求。待新开发包由用户真机复测。
 - **Ref**: T-865；`ai-task-32c67e5c-1139`；
   `docs/research/2026-08-17-video-cards-schema-fallback-diagnosis-and-fix.md`。
+
+## LED-036 — AI 素材匹配返回空数组，不等于自动分镜已经成功
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: 当前确认稿已经生成并采纳了 8 个项目素材，但 `material.match` 的空 `matches`
+  仍通过动态 schema；素材链接的 `addedByType=ai` 又被投影成 `manual`，前端遂把全部素材列为“可选
+  补充素材”，要求用户逐条选择场景。
+- **RootCause**: 自动匹配链路只校验了“返回项是否真实”，没有校验本稿专属生成素材整批落空；素材
+  库投影丢失 AI 来源，生成器保存描述时还裁掉了口播原文绑定，导致模型与界面都失去可靠上下文。
+- **GuardRule**: AI 加入当前项目的素材必须保留来源；本稿专属生成素材必须保存服务原文和画面职责，
+  `material.match` 必须逐项做语义匹配。存在本稿绑定素材时，整批空匹配不得落成可确认候选，更不能
+  退化成逐条人工选场景；人工控件只用于纠正少量误配。代码只识别系统绑定协议并校验真实 ID/场景
+  边界，不按文件名、关键词或字符串相似度替模型做创作选择。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm
+  --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts
+  src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run
+  src/features/production/video-decision-preview.test.tsx`（已登记进 `reconcile.config.json`）。
+- **Outcome(T+N)**: 真实失败形状先红后绿；AI 来源不再伪装成人工上传，生成素材保留服务原文，空
+  匹配被拒绝且不落候选，未匹配的 AI 项目素材也不再生成逐条手选控件。待新开发包真机重跑分场验证。
+- **Ref**: T-867；用户 2026-08-17 “AI 分场决策”真机截图；`orchestrator/T867-BUILD-VALIDATION.md`。

@@ -192,6 +192,12 @@
       "what": "video.cards 再次因单张 kind 或可选 visualPlan 枚举越界拖垮整批分镜",
       "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
       "onFail": "信息卡局部恢复门回归：关键枚举非法只丢该张卡，可选 motion/visualPlan 非法只降级可选字段；未知值不得猜映射，恢复后仍须经过原 schema、动态 refine、可溯校验和导演审核，不得增加模型重试。"
+    },
+    {
+      "led": "LED-036",
+      "what": "本稿专属 AI 素材再次被标成人工素材，或 material.match 空数组冒充自动分镜成功并生成逐条手选控件",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx",
+      "onFail": "AI 自动素材匹配门回归：addedByType=ai 必须保留 AI 来源；本稿生成素材必须保留服务原文/画面职责并由 material.match 自动匹配；存在本稿绑定时空匹配不得落候选，人工选场景只用于纠错。"
     }
   ],
   "program_completion_required": false,

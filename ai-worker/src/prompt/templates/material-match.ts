@@ -44,7 +44,7 @@ export type MaterialMatchOutput = z.infer<typeof materialMatchSchema>;
 
 export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
   id: "material.match",
-  version: "v11",
+  version: "v12",
   outputSchema: materialMatchSchema,
   tools: [],
   system:
@@ -79,6 +79,7 @@ export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
 【硬约束】assetId **必须**是上面素材库列表里出现过的真实 id,绝对不要编造不存在的 id。素材库为空时返回 {"matches": []}。
 【视频制作模式】如果上面提供了“视频场景”和“画面需求”，你就是本次视频唯一的素材语义匹配器：
 - 逐一理解用户手动上传/项目素材的真实内容、名称和描述，再与口播锚点、场景目的、画面需求匹配。
+- 素材清单里标为“当前项目 AI 已选入或生成并采纳”的项目素材，不是待用户重新分镜的普通库存；其中带“当前确认稿绑定”或“服务原文”的素材是本稿专属生成素材。必须逐项结合它的描述、口播原文、场景和画面需求自动判断并优先编入合适场景；不得因为名称相似或重复就跳过。只要其中存在与当前稿件相符的素材，就不能返回整批空匹配；人工操作只用于纠正 AI 的少量误配，不能成为首轮分镜作业。
 - 用户专门为本项目上传或挂载的图片/视频优先于通用素材，但语义不匹配时不要硬塞；无法确定就不选，由制作系统在当前方案内用真人主画面或信息卡自动补位，绝不能把分镜作业退给用户。
 - “用户人工指定的素材”不得遗漏或替换；它会改变叙事节奏，必须让对应场景边界、插点和 durationSec 适配素材，而不是沿用旧时间线或机械截成固定 4 秒。
 - 每条被选素材必须额外返回 sceneIdx、at、durationSec；sceneIdx 必须来自场景列表，at 必须落在该场景时间内。

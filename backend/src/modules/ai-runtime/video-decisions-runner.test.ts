@@ -1470,6 +1470,27 @@ describe("decideBroll(清单硬门)", () => {
     ).toBe(false);
   });
 
+  it("[T-867 RED] 当前项目 AI 生成素材存在时，整批空匹配不能冒充自动匹配成功", () => {
+    const schema = buildVideoMaterialMatchSchema(["generated-1"], 2, {
+      requireAtLeastOneFrom: ["generated-1"],
+    });
+    expect(schema.safeParse({ matches: [] }).success).toBe(false);
+    expect(
+      schema.safeParse({
+        matches: [
+          {
+            assetId: "generated-1",
+            role: "broll",
+            reason: "为当前确认稿第二段生成",
+            sceneIdx: 1,
+            visualRole: "still_image",
+            presentation: "large_stage",
+          },
+        ],
+      }).success,
+    ).toBe(true);
+  });
+
   it("[T-859 RED] material.match 的人物模式随真实素材候选穿过动态安全门", () => {
     const schema = buildVideoMaterialMatchSchema(["real"], 1);
     const parsed = schema.parse({
@@ -1812,6 +1833,35 @@ describe("enforceManualMaterialAssignments(人工选料不丢失)", () => {
 });
 
 describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", () => {
+  it("[T-867 RED] AI 为当前项目选入或生成并采纳的素材保留 ai 来源，不伪装成手动上传", async () => {
+    const result = await collectProjectBrollInventory(ctx, "proj-generated", {
+      assertProjectAccess: vi.fn(async () => undefined),
+      listProjectMaterialLinks: vi.fn(async () => [
+        {
+          entityType: "asset",
+          entityId: "generated-image",
+          role: "broll",
+          addedByType: "ai",
+        },
+      ]),
+      getAsset: vi.fn(async () => ({
+        id: "generated-image",
+        name: "【当前确认稿绑定】版本:artifactver · 生成图",
+        assetType: "image",
+        description: "展示两条流程从混乱到统一的对比关系",
+      })),
+      readArtifactContentData: vi.fn(async () => null),
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        assetId: "generated-image",
+        source: "ai",
+      }),
+    ]);
+    expect(libraryFacet(result)).toContain("当前项目 AI 已选入或生成并采纳");
+  });
+
   it("先校验当前账号的项目所有权，只读取该项目 links，并过滤越权/非视觉素材", async () => {
     const order: string[] = [];
     const assertProjectAccess = vi.fn(async (_ctx, projectId: string) => {
@@ -2649,6 +2699,36 @@ describe("runVideoDecisions(编排)", () => {
           output: expect.objectContaining({ warning: "匹配模型暂不可用" }),
         }),
       ]),
+    );
+  });
+
+  it("[T-867 RED] 本稿专属 AI 素材匹配失败时不落空候选，更不能退成逐条手选", async () => {
+    const boundInventory: BrollAssetRef[] = [
+      ...INVENTORY,
+      {
+        assetId: "generated-current-script",
+        label: "【当前确认稿绑定】流程对比 · 生成图",
+        kind: "image",
+        description: "展示两条流程从混乱到统一",
+        source: "ai",
+      },
+    ];
+    const { deps, calls } = makeDeps(
+      {
+        ...HAPPY_OUTPUTS,
+        "material.match": new Error("匹配模型返回空结果"),
+      },
+      boundInventory,
+    );
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await runVideoDecisions(ctx, TASK, deps);
+    spy.mockRestore();
+
+    expect(calls.recordCandidate).not.toHaveBeenCalled();
+    expect(calls.cancelTask).toHaveBeenCalledWith(
+      ctx,
+      TASK.id,
+      expect.stringContaining("本稿专属素材尚未完成 AI 自动匹配"),
     );
   });
 

@@ -267,7 +267,13 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
     expect(assetArg.assetType).toBe("video");
     expect(assetArg.mimeType).toBe("video/mp4");
     expect(Array.from(assetArg.bytes)).toEqual([7, 7, 7, 7]);
-    expect(assetArg.description).toBe("同一个纸箱任务在两台机器间传递，单一平滑运镜");
+    expect(assetArg.name).toBe(
+      "同一个纸箱任务在两台机器间传递，单一平滑运镜 · 生成视频",
+    );
+    expect(assetArg.description).toContain("服务原文:工具变了，模糊流程没有变");
+    expect(assetArg.description).toContain(
+      "视觉方案:同一个纸箱任务在两台机器间传递，单一平滑运镜",
+    );
     // 候选 generated_asset。
     const cand = recordCandidate.mock.calls[0]![2];
     expect(cand.resultType).toBe("generated_asset");

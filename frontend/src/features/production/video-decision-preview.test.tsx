@@ -213,6 +213,31 @@ describe("VideoDecisionPreview", () => {
     ]);
   });
 
+  it("[T-867 RED] 未匹配的当前项目 AI 生成素材不伪装成人工逐场分配项", () => {
+    const inventory: BrollAssetRef[] = [
+      ...INVENTORY,
+      {
+        assetId: "generated-image",
+        label: "流程对比图",
+        kind: "image",
+        description: "为当前确认稿生成",
+        source: "ai",
+      },
+    ];
+    const { queryByLabelText, queryByText } = render(
+      <VideoDecisionPreview
+        decisions={DECISIONS}
+        inventory={inventory}
+        onConfirm={vi.fn()}
+        onRestoryboard={vi.fn()}
+        talkingHeadAssetId="asset-video-raw"
+      />,
+    );
+
+    expect(queryByText("可选补充素材 · 1 个")).toBeNull();
+    expect(queryByLabelText("将 流程对比图 放入场景")).toBeNull();
+  });
+
   it("确认产物 = 组装好的渲染 props(contract 真值形状:meta/talkingHead/captions/delivery)", () => {
     const onConfirm = vi.fn();
     const { getByText, queryByText } = render(

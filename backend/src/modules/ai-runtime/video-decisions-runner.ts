@@ -143,7 +143,7 @@ export interface BilingualSubtitleLine {
 }
 
 /** [T-387c] B-roll 候选来源(自动聚合徽标):脚本画面点名 / 论点树挂载 / 项目弹药 / 手动上传。 */
-export type BrollSource = "script" | "ammo" | "manual";
+export type BrollSource = "script" | "ammo" | "manual" | "ai";
 
 /** 素材清单投影(项目 material-links/assets 的 label+描述,B-roll 决策的唯一可选集)。
  *  [T-387c] additive source 字段:自动聚合来源徽标(缺省 = 旧投影/回退整库,UI 不渲徽标)。 */
@@ -689,8 +689,10 @@ export function buildBrollDecisionSchema(
 export function buildVideoMaterialMatchSchema(
   assetIds: readonly string[],
   sceneCount: number,
+  options: { requireAtLeastOneFrom?: readonly string[] } = {},
 ) {
   const idSet = new Set(assetIds);
+  const requiredIds = new Set(options.requireAtLeastOneFrom ?? []);
   return materialMatchSchema.transform((output, ctx) => {
     const validMatches = output.matches.filter(
       (match) =>
@@ -713,6 +715,16 @@ export function buildVideoMaterialMatchSchema(
         code: "custom",
         message:
           "视频素材匹配必须使用清单内真实 assetId，并由 AI 返回 visualRole 与有效 sceneIdx；封面不能进入 B-roll，只有录屏可全屏",
+      });
+    }
+    if (
+      requiredIds.size > 0 &&
+      !validMatches.some((match) => requiredIds.has(match.assetId))
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "当前项目已有由 AI 生成或选入并采纳的素材；必须至少自动匹配一项，不能用空结果把逐条选场景退给用户",
       });
     }
 
@@ -930,6 +942,7 @@ export function libraryFacet(inventory: readonly BrollAssetRef[]): string {
     script: "脚本分镜点名",
     ammo: "项目弹药",
     manual: "用户手动上传",
+    ai: "当前项目 AI 已选入或生成并采纳",
   };
   return inventory
     .map(
@@ -1078,7 +1091,12 @@ export interface ProjectBrollInventoryDeps {
     ctx: RequestContext,
     projectId: string,
   ): Promise<
-    Array<{ entityType: string; entityId: string; role: string | null }>
+    Array<{
+      entityType: string;
+      entityId: string;
+      role: string | null;
+      addedByType?: string | null;
+    }>
   >;
   getAsset(
     ctx: RequestContext,
@@ -1190,11 +1208,15 @@ export async function collectProjectBrollInventory(
   for (const link of links) {
     if (link.entityType !== "asset") continue;
     if (link.role === "cover" || link.role === "final") continue;
-    await tryPush(
-      link.entityId,
-      link.role === "broll" ? "manual" : "ammo",
-      { excludeVideoClip: link.role === "clip" },
-    );
+    const source: BrollSource =
+      link.addedByType === "ai"
+        ? "ai"
+        : link.role === "broll"
+          ? "manual"
+          : "ammo";
+    await tryPush(link.entityId, source, {
+      excludeVideoClip: link.role === "clip",
+    });
   }
   return dedupeBrollRefs(rows);
 }
@@ -2092,6 +2114,18 @@ export async function decideMaterialBroll(
     outputSchema: buildVideoMaterialMatchSchema(
       assetIds,
       input.scenes.length,
+      {
+        requireAtLeastOneFrom: input.inventory
+          // SEMANTIC_BOUNDARY_ALLOW:这里只认系统写入的绑定协议标记，确认素材确属本稿；
+          // 是否适配哪个场景仍完全交给 material.match Skill，不用名称/描述做语义判断。
+          .filter(
+            (asset) =>
+              asset.source === "ai" &&
+              (asset.label.includes("【当前确认稿绑定】") ||
+                asset.description.includes("服务原文:")),
+          )
+          .map((asset) => asset.assetId),
+      },
     ),
   });
 
@@ -2157,6 +2191,19 @@ export async function decideMaterialBroll(
     used.add(match.assetId);
   }
   return picks.sort((a, b) => a.at - b.at);
+}
+
+function hasCurrentScriptBoundAiAssets(
+  inventory: readonly BrollAssetRef[],
+): boolean {
+  // SEMANTIC_BOUNDARY_ALLOW:这里只识别 CreatorOS 自己写入的精确绑定协议标记；
+  // 它不判断素材是否适配场景，真正的语义选择仍由 material.match Skill 完成。
+  return inventory.some(
+    (asset) =>
+      asset.source === "ai" &&
+      (asset.label.includes("【当前确认稿绑定】") ||
+        asset.description.includes("服务原文:")),
+  );
 }
 
 /**
@@ -3047,6 +3094,11 @@ export async function runVideoDecisions(
       // 信息卡补位，禁止拖垮成片或把作业退给用户。
       materialMatchWarning =
         error instanceof Error ? error.message : String(error);
+      if (hasCurrentScriptBoundAiAssets(inventory)) {
+        throw new Error(
+          `本稿专属素材尚未完成 AI 自动匹配，请重试本次分场：${materialMatchWarning}`,
+        );
+      }
       console.warn(
         `[video.decisions] material.match degraded task=${task.id} project=${task.projectId}: ${materialMatchWarning}`,
       );
