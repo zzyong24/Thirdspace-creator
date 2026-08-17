@@ -508,6 +508,7 @@ export {
   videoCardSchema,
   videoCardVisualPlanSchema,
   videoCardSceneGraphSchema,
+  normalizeVideoCardsOutput,
   videoBrollSchema,
   videoBrollPickSchema,
   videoBrollSlotSchema,

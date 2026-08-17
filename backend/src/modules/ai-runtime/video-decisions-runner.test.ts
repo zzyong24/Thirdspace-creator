@@ -960,6 +960,50 @@ const SCENES: VideoScene[] = [
 ];
 
 describe("decideCards(吸附 + 可溯剔除)", () => {
+  it("[T-865 RED] 单张枚举越界只丢坏卡，可选视觉计划越界只降级计划", async () => {
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      expect(input.skillId).toBe("video.cards");
+      expect(input.normalizeObject).toBeTypeOf("function");
+      const raw = {
+        cards: [
+          {
+            sceneIdx: 0,
+            kind: "quote",
+            content: "效率提升 47%",
+            at: 0,
+          },
+          {
+            sceneIdx: 1,
+            kind: "diagram",
+            content: "给模型一个角色",
+            at: 3.5,
+          },
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "flowchart",
+              parts: [{ text: "给模型一个角色", role: "step" }],
+            },
+          },
+        ],
+      };
+      return input.outputSchema.parse(input.normalizeObject!(raw));
+    }) as unknown as StructuredCall;
+
+    const cards = await decideCards(
+      { scenes: SCENES, srtLines, script: SCRIPT },
+      call,
+    );
+
+    expect(cards).toHaveLength(2);
+    expect(cards.map((card) => card.kind)).toEqual(["quote", "list"]);
+    expect(cards[1]).toMatchObject({ content: "给模型一个角色" });
+    expect(cards[1]?.visualPlan).toBeUndefined();
+  });
+
   it("分场与信息卡属于长结构任务，显式使用有上界的 120 秒节点时限", async () => {
     const seen: Array<{ skillId: string; timeoutMs?: number }> = [];
     const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {

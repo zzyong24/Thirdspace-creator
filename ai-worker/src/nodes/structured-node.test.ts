@@ -11,6 +11,11 @@ import {
 } from "./structured-node";
 import type { PromptTemplate } from "../prompt/template";
 import { modelFor } from "../runtime/provider-factory";
+import {
+  VIDEO_CARDS_TEMPLATE,
+  normalizeVideoCardsOutput,
+  videoCardsSchema,
+} from "../prompt/templates/video-decisions";
 
 // 一个最小四类 schema(模仿 research.gather 形状)+ 模板,验结构化节点的跨模型健壮性。
 const schema = z.object({
@@ -157,6 +162,33 @@ describe("runStructuredNode 跨模型健壮性", () => {
     } finally {
       log.mockRestore();
     }
+  });
+
+  it("[T-865] 首次结构化响应仅一张卡枚举越界时局部恢复，不再追加第二次计费请求", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult(JSON.stringify({
+          cards: [
+            { sceneIdx: 0, kind: "quote", content: "保留一", at: 0 },
+            { sceneIdx: 0, kind: "diagram", content: "协议外坏卡", at: 1 },
+            { sceneIdx: 0, kind: "list", content: "保留二", at: 2 },
+          ],
+        }));
+      },
+    });
+
+    const { object } = await runStructuredNode({
+      model,
+      template: VIDEO_CARDS_TEMPLATE,
+      facets: { scenes: "场景", srt: "字幕", script: "口播" },
+      outputSchema: videoCardsSchema,
+      normalizeObject: normalizeVideoCardsOutput,
+    });
+
+    expect(object.cards.map((card) => card.kind)).toEqual(["quote", "list"]);
+    expect(calls).toBe(1);
   });
 
   it("generateObject 落空 + 文本也无合 schema 的 JSON → 抛错(不假成功)", async () => {

@@ -22,6 +22,7 @@ import type {
 import {
   videoScenesSchema,
   videoCardsSchema,
+  normalizeVideoCardsOutput,
   videoBrollSchema,
   normalizeVideoBrollOutput,
   videoSubtitlesSchema,
@@ -1962,6 +1963,7 @@ export async function decideCards(
       manualAssignments: input.manualAssignments ?? "",
     },
     outputSchema: buildCardsDecisionSchema(input.scenes.length, starts),
+    normalizeObject: normalizeVideoCardsOutput,
     timeoutMs: VIDEO_LONG_STRUCTURED_TIMEOUT_MS,
   });
   const kept: VideoInfoCard[] = [];

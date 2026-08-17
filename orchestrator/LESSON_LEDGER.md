@@ -501,3 +501,24 @@
   Node 实际 multipart wire body 已不含 `name="n"`，纯文生图 JSON 仍为数字 `n: 1`。未调用真实计费
   生图，待包含本修复的开发包真机复测后回填上游结果。
 - **Ref**: T-864；DEC-MODEL-054；`orchestrator/T864-BUILD-VALIDATION.md`；用户 2026-08-17 日志。
+
+## LED-035 — 创作数组里一张坏候选，不应拖垮同批全部合法结果
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: `video.cards` 的结构化首路落空后，文本兜底返回了可解析 JSON，但第 12 张卡的
+  `kind` 越过六值枚举，整批信息卡和整条 `video.decisions` 因一张坏卡失败；前一天还出现过
+  `visualPlan.relation` 枚举越界后靠人工重试才成功。
+- **RootCause**: `video.cards` 是可编辑创作候选，却未接入已有 `creative-partial` 恢复；协议随着
+  Scene Graph 增加枚举面后，弱模型的局部漂移被错误升级成整批失败。文本兜底还是第二次请求，
+  既增加等待/计费，也可能再次产出局部坏值。
+- **GuardRule**: 创作候选数组必须让原 schema 指认坏字段/坏项后局部恢复：关键枚举非法只丢该项，
+  可选动效/视觉计划非法只降级可选字段；未知值禁止猜映射，恢复后必须回到原静态 schema、动态
+  refine、可溯门与导演审核。判断/控制型输出继续 fail-closed，不得套用创作恢复。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts
+  src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend
+  exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts`（已登记进
+  `reconcile.config.json`）。
+- **Outcome(T+N)**: 真实失败形状先红后绿；单张 `kind` 越界只丢坏卡，可选 `visualPlan` 越界只降级
+  计划；首响应其余结构完整时 1 次模型调用即可恢复，不再追加第二次请求。待新开发包由用户真机复测。
+- **Ref**: T-865；`ai-task-32c67e5c-1139`；
+  `docs/research/2026-08-17-video-cards-schema-fallback-diagnosis-and-fix.md`。

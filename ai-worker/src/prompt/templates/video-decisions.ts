@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { PromptTemplate } from "../template";
+import { recoverCreativeZodOutput } from "../creative-output-recovery";
 
 /**
  * [T-254b/T-712] 制作视频四个候选节点 + 总导演审片模板(video.scenes / video.cards /
@@ -258,8 +259,47 @@ export const videoCardsSchema = z.object({
 });
 export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
 
+/**
+ * [T-865] 信息卡是可编辑的创作候选：单张卡的关键协议坏掉时只丢该卡；可选的
+ * motion / visualPlan 坏掉时只降级可选能力，不能让一张坏卡拖垮整批。
+ *
+ * SEMANTIC_BOUNDARY_ALLOW:这里只依据 Zod 协议删除明确非法的可选字段/数组项，不把
+ * `diagram` 等未知枚举猜成任何合法 kind，也不补写模型未表达的卡片或视觉关系。
+ */
+export function normalizeVideoCardsOutput(value: unknown): unknown {
+  let candidate: unknown;
+  try {
+    candidate = structuredClone(value);
+  } catch {
+    candidate = value;
+  }
+  if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
+    const cards = (candidate as { cards?: unknown }).cards;
+    if (Array.isArray(cards)) {
+      for (const item of cards) {
+        if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+        const card = item as Record<string, unknown>;
+        if (
+          card.motion !== undefined &&
+          !z.enum(VIDEO_CARD_MOTIONS).safeParse(card.motion).success
+        ) {
+          delete card.motion;
+        }
+        if (
+          card.visualPlan !== undefined &&
+          !videoCardVisualPlanSchema.safeParse(card.visualPlan).success
+        ) {
+          delete card.visualPlan;
+        }
+      }
+    }
+  }
+  return recoverCreativeZodOutput(videoCardsSchema, candidate);
+}
+
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   id: "video.cards",
+  outputRecovery: "creative-partial",
   version: "v6",
   outputSchema: videoCardsSchema,
   tools: [],

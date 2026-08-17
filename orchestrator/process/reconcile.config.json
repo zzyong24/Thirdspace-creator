@@ -186,6 +186,12 @@
       "what": "图片编辑 multipart 再次发送字符串 n，导致严格上游按整数 schema 返回 400",
       "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-openai-images.test.ts",
       "onFail": "图片编辑协议门回归：FormData 普通字段没有数字类型；单图编辑须省略可选 n，真实 wire body 不得含 name=\"n\"；纯文生图 JSON 仍须发送数字 n:1，禁止多 POST 盲试。"
+    },
+    {
+      "led": "LED-035",
+      "what": "video.cards 再次因单张 kind 或可选 visualPlan 枚举越界拖垮整批分镜",
+      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "信息卡局部恢复门回归：关键枚举非法只丢该张卡，可选 motion/visualPlan 非法只降级可选字段；未知值不得猜映射，恢复后仍须经过原 schema、动态 refine、可溯校验和导演审核，不得增加模型重试。"
     }
   ],
   "program_completion_required": false,
