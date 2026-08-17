@@ -1110,6 +1110,24 @@ export function createVideoRenderExecutor(
       const rename = (f: string): string => nameMap.get(f) ?? f;
       const renamedProps: VideoRenderProps = {
         ...props,
+        ...(props.direction
+          ? {
+              direction: {
+                ...props.direction,
+                beatGraph: props.direction.beatGraph.map((beat) =>
+                  beat.subject.kind === "broll"
+                    ? {
+                        ...beat,
+                        subject: {
+                          ...beat.subject,
+                          ref: `broll:${rename(beat.subject.ref.replace(/^broll:/, ""))}`,
+                        },
+                      }
+                    : beat,
+                ),
+              },
+            }
+          : {}),
         talkingHead: { ...props.talkingHead, file: rename(props.talkingHead.file) },
         broll: props.broll.map((b) => ({ ...b, file: rename(b.file) })),
         scenes: props.scenes.map((s) => ({

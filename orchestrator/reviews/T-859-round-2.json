@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "本轮合同变更只将 `speakerMode` 放宽到已确认的非 overlay 主素材，并继续拒绝 overlay 驱动人物状态；与 T-859 的竖屏主素材 PiP 范围、T-858 的主视觉/辅助叠层边界和现有架构一致。相关 contract 聚焦测试 17/17 通过，未发现新增 blocker 或 major。",
+  "findings": []
+}

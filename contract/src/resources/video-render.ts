@@ -202,15 +202,124 @@ export type VideoRenderTalkingHead = z.infer<typeof videoRenderTalkingHead>;
 
 // 双语字幕行(SRT 主时钟铁律:start/end 来自用户上传的 SRT,决策 runner 只做
 // 错字校正与英文行补全,不改时间)。
-export const videoRenderCaption = z.object({
-  start: z.number().nonnegative(),
-  end: z.number().positive(),
-  /** 中文行(主)。 */
-  cn: z.string().min(1),
-  /** 英文行(副,可缺)。 */
-  en: z.string().optional(),
+export const videoSubtitleEmphasis = z.object({
+  text: z.string().min(1),
+  /** Unicode code point 下标，endChar 不含。 */
+  startChar: z.number().int().nonnegative(),
+  endChar: z.number().int().positive(),
+  startSec: z.number().nonnegative(),
+  endSec: z.number().positive(),
 });
+export type VideoSubtitleEmphasis = z.infer<typeof videoSubtitleEmphasis>;
+
+export const videoRenderCaption = z
+  .object({
+    start: z.number().nonnegative(),
+    end: z.number().positive(),
+    /** 中文行(主)。 */
+    cn: z.string().min(1),
+    /** 英文行(副,可缺)。 */
+    en: z.string().optional(),
+    /** [T-858] AI 在真实字幕中选出的重点；renderer 只按精确范围落实。 */
+    emphasis: z.array(videoSubtitleEmphasis).max(2).optional(),
+  })
+  .superRefine((caption, ctx) => {
+    const chars = Array.from(caption.cn);
+    caption.emphasis?.forEach((item, index) => {
+      const slice = chars.slice(item.startChar, item.endChar).join("");
+      if (
+        item.endChar <= item.startChar ||
+        item.endChar > chars.length ||
+        slice !== item.text
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis", index],
+          message: "字幕重点词必须逐字对应中文行的 Unicode 字符范围",
+        });
+      }
+      if (
+        item.startSec < caption.start - 1e-6 ||
+        item.endSec > caption.end + 1e-6 ||
+        item.endSec <= item.startSec
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis", index, "startSec"],
+          message: "字幕重点词时间必须落在该字幕行区间内",
+        });
+      }
+    });
+  });
 export type VideoRenderCaption = z.infer<typeof videoRenderCaption>;
+
+export const videoDirectionSubject = z.object({
+  kind: z.enum(["talking_head", "card", "broll"]),
+  ref: z.string().min(1),
+});
+export const videoDirectionState = z.enum([
+  "base",
+  "off_canvas",
+  "takeover",
+]);
+export const videoDirectionMotionVerb = z.enum([
+  "hold",
+  "cut",
+  "enter",
+  "exit",
+  "move",
+  "grow",
+  "shrink",
+  "replace",
+  "reveal",
+  "focus",
+]);
+export const videoDirectionTransition = z.enum([
+  "cut",
+  "fade",
+  "slide",
+  "scale",
+]);
+export const videoDirectionBeat = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_-]{0,47}$/),
+  sceneIdx: z.number().int().nonnegative(),
+  startSec: z.number().nonnegative(),
+  endSec: z.number().positive(),
+  subject: videoDirectionSubject,
+  startState: videoDirectionState,
+  endState: videoDirectionState,
+  motionVerb: videoDirectionMotionVerb,
+  stageMode: z.enum(["base", "takeover"]),
+  transitionIn: videoDirectionTransition,
+  transitionOut: videoDirectionTransition,
+  returnGeometry: z.enum(["same_base", "not_applicable"]),
+});
+export const videoRenderDirection = z
+  .object({
+    motionThesis: z.string().min(1).max(160),
+    beatGraph: z.array(videoDirectionBeat).min(1).max(80),
+  })
+  .superRefine((direction, ctx) => {
+    let previousEnd = -Infinity;
+    direction.beatGraph.forEach((beat, index) => {
+      if (beat.endSec <= beat.startSec) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "endSec"],
+          message: "beat endSec 必须大于 startSec",
+        });
+      }
+      if (beat.startSec < previousEnd - 1e-6) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "startSec"],
+          message: "beatGraph 每项都是唯一主视觉，时间窗不得重叠",
+        });
+      }
+      previousEnd = beat.endSec;
+    });
+  });
+export type VideoRenderDirection = z.infer<typeof videoRenderDirection>;
 
 // ── 信息卡六 kind(e03 打法泛化:kpi/proof→stat,stmt→quote,node 组→list,
 //    对照→compare,代码证据→code,截图证据→image)──────────────────────────────
@@ -408,7 +517,7 @@ export const videoRenderBroll = z.object({
     .optional(),
   /** AI 识别出的视觉角色；旧成片计划可缺省，新计划必须由 material.match 产出。 */
   visualRole: videoBrollVisualRole.optional(),
-  /** full_frame 录屏期间人物的确定性承接方式。 */
+  /** 主素材窗的人物处理；竖屏可按用户确认保留左下角 PiP。 */
   speakerMode: z.enum(["hidden", "pip_bottom_left"]).optional(),
   /** AI 编导给出的轻量镜头运动；界面截图/录屏应优先 static，避免破坏可读性。 */
   motion: videoBrollMotion.optional(),
@@ -423,6 +532,8 @@ export const videoRenderProps = z
   .object({
     meta: videoRenderMeta,
     talkingHead: videoRenderTalkingHead,
+    /** [T-858] AI 总导演产出的整片运动方向；旧候选可缺省。 */
+    direction: videoRenderDirection.optional(),
     captions: z.array(videoRenderCaption).default([]),
     scenes: z.array(videoRenderScene).min(1),
     broll: z.array(videoRenderBroll).default([]),
@@ -502,23 +613,64 @@ export const videoRenderProps = z
         ctx.addIssue({
           code: "custom",
           path: ["broll", i, "speakerMode"],
-          message: "全屏录屏必须明确隐藏人物或保留左下角人物画中画",
+          message: "全屏录屏必须明确人物处理方式",
         });
       }
       if (
         (b.speakerMode === "pip_bottom_left" || b.speakerMode === "hidden") &&
-        !(
-          presentation === "full_frame" &&
-          b.visualRole === "screen_recording"
-        )
+        presentation === "overlay"
       ) {
         ctx.addIssue({
           code: "custom",
           path: ["broll", i, "speakerMode"],
-          message: "人物隐藏或画中画模式只用于全屏录屏",
+          message: "人物隐藏或画中画模式只用于非 overlay 主素材",
         });
       }
     });
+    // 新候选一旦声明 direction，它就是唯一主视觉生产时间线：每张卡片/每段非 overlay
+    // 素材都必须恰好被编排一次。明确辅助 overlay 不进入主视觉图，也不得驱动人物几何。
+    if (props.direction) {
+      const expectedRefs = new Map<string, { kind: "card" | "broll"; path: (string | number)[] }>();
+      props.scenes.forEach((scene, sceneIdx) => {
+        scene.cards.forEach((_card, ordinal) => {
+          expectedRefs.set(`card:${sceneIdx}:${ordinal}`, {
+            kind: "card",
+            path: ["scenes", sceneIdx, "cards", ordinal],
+          });
+        });
+      });
+      props.broll.forEach((broll, index) => {
+        if (broll.presentation === "overlay") return;
+        expectedRefs.set(`broll:${broll.file}`, {
+          kind: "broll",
+          path: ["broll", index],
+        });
+      });
+      const counts = new Map<string, number>();
+      props.direction.beatGraph.forEach((beat, index) => {
+        if (beat.subject.kind === "talking_head") return;
+        const expected = expectedRefs.get(beat.subject.ref);
+        if (!expected || expected.kind !== beat.subject.kind) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["direction", "beatGraph", index, "subject", "ref"],
+            message: `direction 引用了不存在或类型不符的主视觉:${beat.subject.ref}`,
+          });
+          return;
+        }
+        counts.set(beat.subject.ref, (counts.get(beat.subject.ref) ?? 0) + 1);
+      });
+      expectedRefs.forEach((expected, ref) => {
+        const count = counts.get(ref) ?? 0;
+        if (count !== 1) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["direction", "beatGraph"],
+            message: `direction 中 ${ref} 必须恰好一次，实际 ${count} 次；源位置 ${expected.path.join(".")}`,
+          });
+        }
+      });
+    }
     // 字幕:end>start、不越片长(容忍 SRT 最后一行的毫秒级溢出取整)。
     props.captions.forEach((cap, i) => {
       if (cap.end <= cap.start) {

@@ -451,3 +451,36 @@
   缺失包名与错误码可诊断；Windows 安装包真渲染待下一次正式候选回填。
 - **Ref**: T-844、T-845；DEC-RUNTIME-053；
   `docs/research/2026-08-16-windows-video-render-module-resolution-diagnosis.md`。
+
+## LED-032 — 方向 JSON 生成成功，不等于正式成片真的执行了方向
+
+- **Date**: 2026-08-16 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 竖屏模板按场景是否存在 `large_stage` 提前把人物缩成角落，造成“上方横卡、右下
+  小人、中间黑洞”；修正模板后又发现正式 executor 会把资产 ID 改成沙箱媒体文件名，却没有同步
+  改写 `direction.beatGraph.subject.ref`，AI 给出的真实起止拍点因此在正式渲染中静默失效。
+- **RootCause**: 把场景级静态布局当成时间窗级运动状态；并且只重命名媒体节点，没有把引用同一节点
+  的编导图当成一个不可分割的引用闭包。旧字幕契约也只有整行文字，没有重点词字符与时间范围。
+- **GuardRule**: 竖屏人物默认始终是同一全画布基底；素材物化改名必须原子改写 B-roll 与全部方向
+  ref。字幕重点词只能来自
+  `video.subtitles` AI 的 Unicode 字符范围与行内时间窗，代码只校验和渲染，不做关键词猜测。
+- **GuardCheck**: 已登记进 `reconcile.config.json`：contract、AI prompt、runner、template、executor、
+  props 组装与前端生产旅程必须共同通过；真实视觉另显式运行
+  `node orchestrator/process/verify-t858-unified-stage-preview.mjs <task-record> <db> <media-root> <talking-head> <output-dir>`。
+- **Outcome(T+N)**: 第一版 14 秒短样片虽完成方向执行与字幕强调，但其“主视觉窗自动缩人到 PiP”
+  策略随后被用户明确否定，不能继续作为视觉通过证据；由 LED-033 和 DEC-VIDEO-043 接管修复。
+- **Ref**: T-858；DEC-VIDEO-042；`orchestrator/evidence/T-858/contact-sheet.jpg`。
+
+## LED-033 — 精确回位不能挽救错误的自动 PiP 镜头语法
+
+- **Date**: 2026-08-16 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 第一版 T-858 样片把人物默认铺满竖屏；横版素材或动态卡出现时，人物仅在对应时间窗
+  居中缩小，结束后精确恢复原几何。实现满足原测试，用户仍判定整个策略“错误、很奇怪”。
+- **RootCause**: 把人物持续可见和几何回位误当成剪辑连续性，造成两个视觉主体同时竞争；缩小/放大
+  运动让观众注意布局机关，画面更像视频会议或直播连麦。
+- **GuardRule**: 竖屏人物、横版素材、动态内容按 beat 轮流成为唯一主体。素材/内容接管时人物完全
+  不可见；结束后直接切回未变形的全画布人物。正式组装不得自动产出 PiP，模板不得因主视觉窗生成
+  人物缩放/位移 tween；PiP 只有用户明确选择或另立可解释契约才允许。
+- **GuardCheck**: T-858 聚焦测试共同断言 props 不产 `pip_bottom_left`、主视觉/动态卡层覆盖人物、最终
+  HTML 不含素材窗驱动的 `tl.to("#th",{left/width...})`，真实短样片抽取接管前/中/后三态确认。
+- **Outcome(T+N)**: 待修订短样片与用户验收回填。
+- **Ref**: T-858；DEC-VIDEO-043；用户 2026-08-16 预览反馈。

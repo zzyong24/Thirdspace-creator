@@ -568,6 +568,18 @@ export const videoSubtitleLineSchema = z.object({
   index: z.number().int(),
   zh: z.string().default(""),
   en: z.string().default(""),
+  emphasis: z
+    .array(
+      z.object({
+        text: z.string().min(1),
+        startChar: z.number().int().nonnegative(),
+        endChar: z.number().int().positive(),
+        startSec: z.number().nonnegative(),
+        endSec: z.number().positive(),
+      }),
+    )
+    .max(2)
+    .default([]),
 });
 export const videoSubtitlesSchema = z.object({
   lines: z.array(videoSubtitleLineSchema).default([]),
@@ -576,7 +588,7 @@ export type VideoSubtitlesOutput = z.infer<typeof videoSubtitlesSchema>;
 
 export const VIDEO_SUBTITLES_TEMPLATE: PromptTemplate = {
   id: "video.subtitles",
-  version: "v1",
+  version: "v2",
   outputSchema: videoSubtitlesSchema,
   tools: [],
   system:
@@ -588,6 +600,7 @@ export const VIDEO_SUBTITLES_TEMPLATE: PromptTemplate = {
 
 【SRT 逐行】(每行: 序号 | 起秒-止秒 | 文本)
 {{srt}}
+{{emphasisRequirement}}
 
 【校正方法】
 - SRT 每行文本与口播稿逐段比对:ASR 把某字/专名**听成同音或近音的错字**时(如「定位」听成「定为」、产品名/人名/术语听错),**按口播稿的正确写法改回**。
@@ -597,8 +610,13 @@ export const VIDEO_SUBTITLES_TEMPLATE: PromptTemplate = {
 - **行数、序号、时间轴一律不变**:输入几行就输出几行,index 与输入一一对应。禁止合并、拆分、增删行。
 - zh 在原行文本上**改动最小**:只改能对上口播稿的认错字/专名,不重写、不润色、不改语气词、不按口播稿补全 SRT 没说的内容。没有错字就原样返回。
 - en 是该行的自然英文翻译(简洁,适合字幕)。
+- emphasis 为本行 0–2 个真正需要观众记住的中文重点词/短语。重点必须逐字来自最终 zh，不得改字；
+  startChar/endChar 按最终 zh 的 Unicode code point 从 0 起计数，endChar 不含；startSec/endSec 必须落在
+  本行真实 SRT 起止时间内，并尽量贴近该词被说出的时刻。不要整句高亮，也不能用关键词词表、数字
+  正则或固定业务词代替语义选择。整条视频至少选择一个真实重点；若系统明确要求本批必须选择重点，
+  本批至少一行的 emphasis 不得为空。
 【输出】只输出一个 JSON 对象 {"lines": [...]}(不要多余文字、不要代码块),每行:
-{"index"(整数,与输入序号一致),"zh"(校正后中文),"en"(英文翻译)}。`,
+{"index"(整数,与输入序号一致),"zh"(校正后中文),"en"(英文翻译),"emphasis"(0–2 个 {"text","startChar","endChar","startSec","endSec"})}。`,
   requiredFacets: ["srt", "script"],
 };
 
@@ -620,9 +638,47 @@ export const videoDirectorIssueSchema = z.object({
   code: z.enum(VIDEO_DIRECTOR_ISSUE_CODES),
   message: z.string().min(1),
 });
+export const videoDirectionBeatSchema = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_-]{0,47}$/),
+  sceneIdx: z.number().int().nonnegative(),
+  startSec: z.number().nonnegative(),
+  endSec: z.number().positive(),
+  subject: z.object({
+    kind: z.enum(["talking_head", "card", "broll"]),
+    ref: z.string().min(1),
+  }),
+  startState: z.enum([
+    "base",
+    "off_canvas",
+    "takeover",
+  ]),
+  endState: z.enum([
+    "base",
+    "off_canvas",
+    "takeover",
+  ]),
+  motionVerb: z.enum([
+    "hold",
+    "cut",
+    "enter",
+    "exit",
+    "move",
+    "grow",
+    "shrink",
+    "replace",
+    "reveal",
+    "focus",
+  ]),
+  stageMode: z.enum(["base", "takeover"]),
+  transitionIn: z.enum(["cut", "fade", "slide", "scale"]),
+  transitionOut: z.enum(["cut", "fade", "slide", "scale"]),
+  returnGeometry: z.enum(["same_base", "not_applicable"]),
+});
 export const videoDirectorReviewSchema = z.object({
   verdict: z.enum(["ready", "revise"]),
   summary: z.string().default(""),
+  motionThesis: z.string().min(1).max(160),
+  beatGraph: z.array(videoDirectionBeatSchema).min(1).max(80),
   issues: z.array(videoDirectorIssueSchema).default([]),
 });
 export type VideoDirectorReviewOutput = z.infer<
@@ -631,7 +687,7 @@ export type VideoDirectorReviewOutput = z.infer<
 
 export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
   id: "video.director",
-  version: "v2",
+  version: "v4",
   outputSchema: videoDirectorReviewSchema,
   tools: [],
   system:
@@ -651,7 +707,7 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 {{inventory}}
 
 【审核维度】
-1. 开场留人：从第一句起连续检查前三秒。优先用与开场语义直接相关的真实操作、结果、案例或证据素材承接；产品/教程类开场让素材成为主画面，真人不出现或只保留小窗。若没有合适真实素材，必须从第一句起使用可溯内容动效或信息卡。真人、字幕、品牌角标和纯背景都不算开场实质视觉，首个素材/卡片不能等到三秒以后才进入。
+1. 开场留人：从第一句起连续检查前三秒。优先用与开场语义直接相关的真实操作、结果、案例或证据素材承接；产品/教程类开场让素材成为主画面，人物是否保留只执行该素材已选定的 speakerMode。若没有合适真实素材，必须从第一句起使用可溯内容动效或信息卡。真人、字幕、品牌角标和纯背景都不算开场实质视觉，首个素材/卡片不能等到三秒以后才进入。
 2. 叙事连续：每个场景都承接口播，顺序和转折不跳跃；不能出现“素材很好但放错段”。
 3. 画面齐全：长场景不能只有黑底、角落小人物或大段无有效视觉；真人、用户素材、信息卡之间要轮换承接。
 4. 素材使用：用户上传素材若已进入本次时间线，就必须保留；语义或时长不完全匹配时，提出“缩短该镜头 + 由信息卡/同场素材接力”的内部修片建议，不得要求用户重选。
@@ -661,6 +717,20 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 6. 构图与时间：素材不得拉伸；竖图/竖视频在横屏里应完整展示并留出合理陪衬，不强行横裁；插点、时长和字幕不能越过所属场景。
 7. 整体可看：同一时刻只能有一个非 overlay 主视觉，不能让多个图片、录屏、真人主画面或旧标题互相重叠；所有视觉都应服务当前口播，而不是随机抽卡。
 
+【整片运动方向】
+- 先写一句 motionThesis：说明整条片用什么视觉运动帮助观众理解，不能写“多加动效”“增强节奏感”。
+- 再输出按时间排序的 beatGraph。每拍只有一个主视觉；ref 必须逐字使用候选时间线提供的
+  talking_head、card:<sceneIdx>:<ordinal> 或非 overlay 的 broll:<assetId>，不能编造引用。AI 已明确
+  选择为辅助的 overlay 不进入 beatGraph，也不得驱动人物退出、缩放或回位。
+- 每拍必须写起止时间、起止状态、唯一主运动动词、舞台形态、进出转场和回位方式。相邻 beat 时间窗
+  不得重叠；新的主语必须先结束上一拍。没有 beat 的空隙由人物基底承接。
+- stageMode 只选 base/takeover。人物口播选 base；卡片、动态内容和非 overlay B-roll 成为主视觉时选 takeover。
+  卡片与动态内容 takeover 时人物完全退出；B-roll takeover 时只执行候选已选定的 speakerMode：hidden
+  表示退出，pip_bottom_left 表示人物仅作为左下角辅助层，不新增第二个 beat。不得自动居中缩小、发明
+  任意 PiP 几何或让连续素材间人物反复弹跳。素材自身仍按候选里的 presentation 完整 contain。
+- 卡内已有 Scene Graph 时，beatGraph 只负责整片主语交接，不重复发明卡内对象运动。转场必须沿当前
+  主语的运动结果交给下一拍；不能让每拍像换一张海报。
+
 【输出规则】
 - verdict=ready：没有 blocking 问题，并且 issues 必须为空；不能一边写“通过”一边继续列建议删除、挪动或补画面的事项。
 - verdict=revise：至少列出 1 条 blocking 内部修片项；系统会在当前方案内自动修正并复审，不得把作业退给用户。
@@ -668,6 +738,6 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 - 只报告当前方案里需要自动修正的问题；不要要求用户补素材、重新绑定或从零重做。
 
 【输出】只输出 JSON：
-{"verdict":"ready|revise","summary":"一句总评","issues":[{"sceneIdx":0,"severity":"blocking|warning","code":"visual_gap|material_conflict|timing_conflict|narrative_gap|subtitle_conflict","message":"明确且可执行的修改意见"}]}`,
+{"verdict":"ready|revise","summary":"一句总评","motionThesis":"整片运动命题","beatGraph":[{"id":"beat-1","sceneIdx":0,"startSec":0,"endSec":3,"subject":{"kind":"talking_head|card|broll","ref":"真实 ref"},"startState":"base|off_canvas|takeover","endState":"base|off_canvas|takeover","motionVerb":"hold|cut|enter|exit|move|grow|shrink|replace|reveal|focus","stageMode":"base|takeover","transitionIn":"cut|fade|slide|scale","transitionOut":"cut|fade|slide|scale","returnGeometry":"same_base|not_applicable"}],"issues":[{"sceneIdx":0,"severity":"blocking|warning","code":"visual_gap|material_conflict|timing_conflict|narrative_gap|subtitle_conflict","message":"明确且可执行的修改意见"}]}`,
   requiredFacets: ["script", "plan", "inventory"],
 };

@@ -7576,10 +7576,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               externalId: p.externalId ?? null,
               contentOutputId: p.contentOutputId ?? null,
             })),
-          // [gate-F7] iesdouyin channel 限流:注真网关单例(与逐字稿取直链同一 channel)。
+          // [T-862/gate-F7] 封面复用组合入口：匿名 iesdouyin 解析失败时才按当前账号
+          //   登录态回落 detail；网络/HTTP/冷却错误不双路重试。两条路继续走真网关单例。
           fetchVideoUrl: async (awemeId) =>
-            (await loadDouyinCdp()).fetchDouyinVideoUrl(awemeId, {
-              fetch: (...args) => fetch(...args),
+            (await loadDouyinCdp()).fetchDouyinCoverUrl({
+              awemeId,
+              authDir: douyinAuthDirFor(ctx.accountId),
               gateway: douyinGateway,
             }),
           downloadImage: (url) => downloadDouyinImage(url),

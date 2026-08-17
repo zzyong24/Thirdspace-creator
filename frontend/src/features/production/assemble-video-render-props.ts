@@ -229,10 +229,8 @@ export function assembleVideoRenderProps(
           : requestedPresentation === "full_frame"
             ? "large_stage"
             : requestedPresentation;
-      // 用户确认的开场版式：AI 已选择的录屏若从第一句起连续覆盖前三秒，素材就是
-      // 唯一主视觉，人物暂时隐藏；之后的全屏录屏仍保留左下小窗。这里只执行时间、
-      // visualRole 与 presentation，不按文件名或口播关键词判断视频类型。
-      // SEMANTIC_BOUNDARY_ALLOW:创作语义仍来自 material.match，代码仅落实首屏版式。
+      // SEMANTIC_BOUNDARY_ALLOW:明确值来自 material.match；旧候选缺字段时只落实用户
+      // 已确认的画幅偏好（竖屏主素材左下 PiP、横屏隐藏），不按文件名或口播猜语义。
       const isOpeningScreenRecording =
         presentation === "full_frame" &&
         b.visualRole === "screen_recording" &&
@@ -250,12 +248,13 @@ export function assembleVideoRenderProps(
         label: labelOf(b.assetId),
         presentation,
         ...(b.visualRole ? { visualRole: b.visualRole } : {}),
-        ...(presentation === "full_frame" &&
-        b.visualRole === "screen_recording"
+        ...(presentation !== "overlay"
           ? {
-              speakerMode: isOpeningScreenRecording
-                ? ("hidden" as const)
-                : ("pip_bottom_left" as const),
+              speakerMode:
+                b.speakerMode ??
+                (opts.orientation === "portrait"
+                  ? ("pip_bottom_left" as const)
+                  : ("hidden" as const)),
             }
           : {}),
         motion: b.motion ?? "static",
@@ -263,9 +262,13 @@ export function assembleVideoRenderProps(
         ...(asset?.height ? { sourceHeight: asset.height } : {}),
       };
     });
+  // direction 是 AI 编导的权威时间线。组装器只映射真实素材，不得擅自把 beat
+  // 提前到素材吸附后的 at，否则“一个时间窗一个主语”会在交接帧被破坏。
+  const renderDirection = decisions.direction;
 
   return videoRenderProps.parse({
     meta: { title: opts.title?.trim() || "未命名成片" },
+    ...(renderDirection ? { direction: renderDirection } : {}),
     talkingHead: {
       file: opts.talkingHeadAssetId ?? "",
       durationSec,
@@ -275,6 +278,7 @@ export function assembleVideoRenderProps(
       end: l.endSec,
       cn: l.zh,
       ...(l.en ? { en: l.en } : {}),
+      ...(l.emphasis?.length ? { emphasis: l.emphasis } : {}),
     })),
     scenes: decisions.scenes.map((s, i) => ({
       id: `scene-${i + 1}`,

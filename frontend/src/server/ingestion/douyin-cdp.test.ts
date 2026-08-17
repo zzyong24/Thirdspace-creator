@@ -2754,6 +2754,81 @@ describe("[T-243] fetchDouyinVideoSource(iesdouyin → detail 回落编排)", ()
   });
 });
 
+describe("[T-862 RED] fetchDouyinCoverUrl(封面匿名页 → 当前账号 detail 回落)", () => {
+  it("匿名页 item_list 为空时使用当前账号 authDir 回落，并返回 detail 的 coverUrl", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { fetchDouyinCoverUrl } = await import("./douyin-cdp");
+    const out = await fetchDouyinCoverUrl(
+      {
+        awemeId: "cover-1",
+        authDir: "/accounts/acct-A/.auth/douyin",
+      },
+      {
+        fetchIesdouyin: async () => {
+          throw new DouyinAudioFetchError(
+            "parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)",
+          );
+        },
+        fetchViaDetail: async (opts) => {
+          expect(opts.authDir).toBe("/accounts/acct-A/.auth/douyin");
+          expect(opts.awemeId).toBe("cover-1");
+          return {
+            kind: "video",
+            playUrl: "https://v/detail/cover-1",
+            coverUrl: "https://img/detail/cover-1.jpg",
+          };
+        },
+      },
+    );
+
+    expect(out).toEqual({ coverUrl: "https://img/detail/cover-1.jpg" });
+    expect(log).toHaveBeenCalledWith(
+      expect.stringContaining("[douyin-cover-backfill]"),
+    );
+  });
+
+  it("网络或 HTTP 失败不盲目切登录态，保留原错误交给网关退避", async () => {
+    const { fetchDouyinCoverUrl } = await import("./douyin-cdp");
+    let detailCalls = 0;
+
+    await expect(
+      fetchDouyinCoverUrl(
+        { awemeId: "cover-2", authDir: "/accounts/acct-A/.auth/douyin" },
+        {
+          fetchIesdouyin: async () => {
+            throw new DouyinAudioFetchError(
+              "fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme cover-2)",
+            );
+          },
+          fetchViaDetail: async () => {
+            detailCalls += 1;
+            return { kind: "image-album" };
+          },
+        },
+      ),
+    ).rejects.toThrow(/HTTP 503/);
+    expect(detailCalls).toBe(0);
+  });
+
+  it("登录态识别为图集时诚实返回无 coverUrl，由回填层跳过", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const { fetchDouyinCoverUrl } = await import("./douyin-cdp");
+    const out = await fetchDouyinCoverUrl(
+      { awemeId: "cover-3", authDir: "/accounts/acct-A/.auth/douyin" },
+      {
+        fetchIesdouyin: async () => {
+          throw new DouyinAudioFetchError(
+            "parseDouyinVideoUrl: 未在页面中找到 window._ROUTER_DATA",
+          );
+        },
+        fetchViaDetail: async () => ({ kind: "image-album" }),
+      },
+    );
+
+    expect(out).toEqual({});
+  });
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // [T-235c] 指定收藏夹采集:parseCollectsList / parseCollectsVideoList 纯函数 +
 //   fetchDouyinCollectsFolders / fetchDouyinCollectsVideos(fake context:

@@ -18,6 +18,7 @@ describe("material.match 视频呈现契约", () => {
             durationSec: 8,
             presentation: "full_frame",
             visualRole: "screen_recording",
+            speakerMode: "pip_bottom_left",
             motion: "static",
           },
         ],
@@ -33,10 +34,15 @@ describe("material.match 视频呈现契约", () => {
         matches: [{ assetId: "screen-1", motion: "spin_around" }],
       }).success,
     ).toBe(false);
+    expect(
+      materialMatchSchema.safeParse({
+        matches: [{ assetId: "screen-1", speakerMode: "floating_center" }],
+      }).success,
+    ).toBe(false);
   });
 
   it("把项目画幅、界面可读性和展示时长交给 Skill 判断", () => {
-    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v10");
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v11");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{orientation}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "still_image 与 live_footage 绝不能 full_frame",
@@ -51,6 +57,9 @@ describe("material.match 视频呈现契约", () => {
     );
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "人物会保留为左下角画中画",
+    );
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
+      'speakerMode"(视频模式必填:hidden/pip_bottom_left)',
     );
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "still_image 与 live_footage 绝不能 full_frame",

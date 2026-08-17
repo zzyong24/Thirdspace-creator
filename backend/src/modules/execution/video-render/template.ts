@@ -91,8 +91,9 @@ export function resolveSceneMode(
   options: { hasLargeStage?: boolean; portrait?: boolean } = {},
 ): SceneMode {
   // large_stage 必须给人物留出独立安全区。横屏采用左主舞台 + 右人物；竖屏采用
-  // 上主舞台 + 下方人物 PiP。不能再把大卡居中压在人物上，只露出半张脸。
-  if (options.hasLargeStage) return options.portrait ? "pip" : "right";
+  // 同一画布内的临时 PiP，但只能在素材真实时间窗内发生；场景级人物仍保持统一
+  // 全画布基底，不能因为本场稍后有一张横图就整场缩到右下角。
+  if (options.hasLargeStage) return "right";
   // 普通信息卡/图片段都必须拥有稳定的「主舞台 + 人物安全区」。模型历史上给出的
   // scene.mode=pip 只是一条创作建议，不能让整场在没有全屏录屏时退成左下角小人，
   // 留下大块黑底。真正的全屏录屏会在自己的有效时间窗里临时把人物切到左下 PiP，
@@ -145,7 +146,7 @@ export function fitMediaRect(
   };
 }
 
-/** 主视觉几何单一真值：full_frame 真切走；large_stage 与人物安全分区。 */
+/** 主视觉几何单一真值：竖屏主视觉独占切走；横屏 large_stage 与人物安全分区。 */
 export function resolveMainBrollGeometry(
   width: number,
   height: number,
@@ -155,9 +156,9 @@ export function resolveMainBrollGeometry(
   if (height > width) {
     return {
       x: Math.round((54 / 1080) * width),
-      y: Math.round((80 / 1920) * height),
+      y: Math.round((260 / 1920) * height),
       width: Math.round((972 / 1080) * width),
-      height: Math.round((750 / 1920) * height),
+      height: Math.round((1050 / 1920) * height),
     };
   }
   return {
@@ -175,6 +176,38 @@ function overlaps(a: MainBrollGeometry, b: LayoutBox): boolean {
     a.y + a.height <= b.top ||
     b.top + b.height <= a.y
   );
+}
+
+/**
+ * 竖屏素材 PiP 的双向间距门：上边不能压住 contain 后的素材可见底边，下边不能
+ * 进入双语字幕预留区。阈值按 1080×1920 的实际字幕 CSS 等比换算，不做内容语义判断。
+ */
+export function assertPortraitPipSpacing(input: {
+  canvasHeight: number;
+  media: MainBrollGeometry;
+  pip: LayoutBox;
+}): void {
+  const minimumGap = Math.max(
+    1,
+    Math.round((20 / 1920) * input.canvasHeight),
+  );
+  const horizontalOverlap = !(
+    input.media.x + input.media.width <= input.pip.left ||
+    input.pip.left + input.pip.width <= input.media.x
+  );
+  if (
+    horizontalOverlap &&
+    input.pip.top < input.media.y + input.media.height + minimumGap
+  ) {
+    throw new Error("人物框与素材可见边界重叠");
+  }
+  const captionSafeTop =
+    input.canvasHeight -
+    Math.round((92 / 1920) * input.canvasHeight) -
+    Math.round((150 / 1920) * input.canvasHeight);
+  if (input.pip.top + input.pip.height > captionSafeTop) {
+    throw new Error("人物框进入字幕安全区");
+  }
 }
 
 /**
@@ -216,6 +249,30 @@ export function assertVideoLayoutSafety(props: VideoRenderProps): void {
       props.delivery.height,
       presentation,
     );
+    if (portrait && broll.speakerMode === "pip_bottom_left") {
+      const padding = presentation === "full_frame" ? 0 : 10;
+      const mediaBounds = resolveBrollMediaBounds(
+        props.delivery.width,
+        props.delivery.height,
+        presentation,
+        broll.visualRole,
+        {
+          x: geometry.x + padding,
+          y: geometry.y + padding,
+          width: Math.max(1, geometry.width - padding * 2),
+          height: Math.max(1, geometry.height - padding * 2),
+        },
+      );
+      assertPortraitPipSpacing({
+        canvasHeight: props.delivery.height,
+        media: fitMediaRect(
+          mediaBounds,
+          broll.sourceWidth,
+          broll.sourceHeight,
+        ),
+        pip: layout.thPip,
+      });
+    }
     const areaRatio =
       (geometry.width * geometry.height) /
       (props.delivery.width * props.delivery.height);
@@ -224,6 +281,7 @@ export function assertVideoLayoutSafety(props: VideoRenderProps): void {
     }
     if (
       presentation === "large_stage" &&
+      !portrait &&
       overlaps(geometry, resolveHeadBox(layout, mode))
     ) {
       throw new Error(`B-roll 主画面与人物安全区重叠:${broll.label}`);
@@ -262,12 +320,11 @@ interface Layout {
 
 function resolveLayout(width: number, height: number): Layout {
   if (height > width) {
-    // 竖版 1080x1920(及等比):无大舞台时人物就是完整手机画布；只有 large_stage
-    // 活跃时才切到底部 9:16 PiP。旧 600×1066 / 300×533 布局让真人和录屏都
-    // 缩成小条，是当前竖屏成片“看不清”的直接原因。
+    // 竖版 1080x1920(及等比):人物基底占完整手机画布；用户确认的素材窗可把同一
+    // 人物节点收进左下角。264×469 保持 9:16，并与横版素材底边、字幕安全区都留缝。
     return {
       thRight: { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0 },
-      thPip: { left: 500, top: 850, width: 530, height: 942, borderRadius: 24 },
+      thPip: { left: 54, top: 1188, width: 264, height: 469, borderRadius: 24 },
       thFocus: { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0 },
       contentX: 60,
       headTop: 96,
@@ -294,38 +351,8 @@ function resolveLayout(width: number, height: number): Layout {
 }
 
 /**
- * 全屏录屏专用人物画中画。它和普通 scene pip 分开：必须保持竖版人物原比例、位于左下角，
- * 并始终浮在录屏之上。坐标只做画幅边界，不承担任何素材语义判断。
- */
-function resolveFullFrameSpeakerPip(width: number, height: number): LayoutBox {
-  if (height > width) {
-    const pipWidth = Math.round(width * 0.38);
-    const pipHeight = Math.round((pipWidth * 16) / 9);
-    return {
-      left: Math.round(width * 0.05),
-      // 横录屏完整显示在竖屏上半区，人物放到其下方；旧版把 302px 小窗沉到底部，
-      // 既看不清人脸，也在中间留下超过 600px 的空黑区。
-      top: Math.round(height * 0.47),
-      width: pipWidth,
-      height: pipHeight,
-      borderRadius: Math.max(18, Math.round(width * 0.022)),
-    };
-  }
-  const pipWidth = Math.round(width * 0.16);
-  const pipHeight = Math.round((pipWidth * 16) / 9);
-  return {
-    left: Math.round(width * 0.035),
-    top: Math.max(0, height - pipHeight - Math.round(height * 0.075)),
-    width: pipWidth,
-    height: pipHeight,
-    borderRadius: Math.max(16, Math.round(width * 0.012)),
-  };
-}
-
-/**
- * 竖屏不能把 16:9 录屏机械居中到 9:16 画布，否则上、下各留下六百多像素的
- * 无信息区域。录屏仍保持完整比例和整屏宽度，只把可读前景放到上半段；下半段交给
- * 真人画中画与字幕。横屏、竖屏录屏素材本身都不裁切。
+ * 竖屏里的 16:9 录屏保持完整比例和整屏宽度，并在字幕安全区上方居中成为唯一主画面。
+ * 不再为人物画中画预留下半屏；比例差由全画布静态舞台承接，素材本身不裁切。
  */
 function resolveBrollMediaBounds(
   width: number,
@@ -341,9 +368,9 @@ function resolveBrollMediaBounds(
   ) {
     return {
       x: 0,
-      y: Math.round((90 / 1920) * height),
+      y: Math.round((360 / 1920) * height),
       width,
-      height: Math.round((780 / 1920) * height),
+      height: Math.round((1000 / 1920) * height),
     };
   }
   return fallback;
@@ -406,6 +433,102 @@ function showSolid(ctx: Ctx, id: string, at: number, endAt: number): void {
     `tl.set("#${id}",{autoAlpha:1,y:0,scale:1},${fmt(at)});`,
     `tl.set("#${id}",{autoAlpha:0},${fmt(endAt)});`,
   );
+}
+
+/**
+ * 竖屏主视觉以短交叠淡化进出，避免浅色素材单帧硬开形成“白屏一下”。releaseAt
+ * 可比语义 endAt 多保留 0.18 秒，只用于转场混合，不改变 beat 归属。
+ */
+function showSmooth(
+  ctx: Ctx,
+  id: string,
+  at: number,
+  endAt: number,
+  releaseAt = endAt,
+): void {
+  ctx.tweens.push(
+    `tl.fromTo("#${id}",{autoAlpha:0,y:0,scale:1},{autoAlpha:1,y:0,scale:1,duration:.2,ease:"power1.out"},${fmt(at)});`,
+    `tl.to("#${id}",{autoAlpha:0,duration:.18,ease:"power1.inOut"},${fmt(endAt)});`,
+    `tl.set("#${id}",{autoAlpha:0},${fmt(releaseAt)});`,
+  );
+}
+
+type PortraitSpeakerState = "full" | "pip" | "hidden";
+
+/**
+ * T-859 人物显示状态只消费已校验 direction 与 B-roll speakerMode。同一 #th 连续播放，
+ * 这里只改变几何、透明度和层级；连续两个 pip beat 不重复生成 tween。
+ */
+function schedulePortraitSpeakerDirection(
+  ctx: Ctx,
+  props: VideoRenderProps,
+  layout: Layout,
+): void {
+  if (!props.direction) return;
+  const full = layout.thRight;
+  const pip = layout.thPip;
+  const beats = [...props.direction.beatGraph].sort(
+    (a, b) => a.startSec - b.startSec,
+  );
+  const stateFor = (beat: (typeof beats)[number]): PortraitSpeakerState => {
+    if (beat.subject.kind === "talking_head") return "full";
+    if (beat.subject.kind === "card") return "hidden";
+    const file = beat.subject.ref.startsWith("broll:")
+      ? beat.subject.ref.slice("broll:".length)
+      : "";
+    return props.broll.find((item) => item.file === file)?.speakerMode ===
+      "pip_bottom_left"
+      ? "pip"
+      : "hidden";
+  };
+  const change = (
+    from: PortraitSpeakerState,
+    to: PortraitSpeakerState,
+    at: number,
+  ): void => {
+    if (from === to) return;
+    if (to === "hidden") {
+      ctx.tweens.push(
+        `tl.to("#th",{autoAlpha:0,duration:.18,ease:"power1.inOut"},${fmt(at)});`,
+      );
+      return;
+    }
+    const box = to === "pip" ? pip : full;
+    const layer = to === "pip" ? 945 : 900;
+    if (from === "hidden") {
+      const revealAt = to === "full" ? Math.max(0, at - 0.18) : at;
+      ctx.tweens.push(
+        `tl.set("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},zIndex:${layer},autoAlpha:0},${fmt(revealAt)});`,
+        `tl.to("#th",{autoAlpha:1,duration:${to === "full" ? ".18" : ".24"},ease:"power1.out"},${fmt(revealAt)});`,
+      );
+      return;
+    }
+    if (to === "pip") {
+      ctx.tweens.push(
+        `tl.set("#th",{zIndex:945},${fmt(at)});`,
+        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
+      );
+      return;
+    }
+    ctx.tweens.push(
+      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
+      `tl.set("#th",{zIndex:900},${fmt(Math.min(props.talkingHead.durationSec, at + 0.34))});`,
+    );
+  };
+
+  let state: PortraitSpeakerState = "full";
+  let previousEnd = 0;
+  for (const beat of beats) {
+    if (beat.startSec > previousEnd + 0.001) {
+      change(state, "full", previousEnd);
+      state = "full";
+    }
+    const next = stateFor(beat);
+    change(state, next, beat.startSec);
+    state = next;
+    previousEnd = Math.max(previousEnd, beat.endSec);
+  }
+  change(state, "full", previousEnd);
 }
 
 /** AI 决定的轻量素材运镜。布局、遮挡和可读性仍由渲染器硬约束。 */
@@ -1069,7 +1192,7 @@ function renderVisualSentence(card: VideoRenderCard, portrait: boolean): CardBox
     `<div class="relation-line ${extraClass}" data-relation-line style="height:6px;border-radius:999px;background:linear-gradient(90deg,${TK.accent},${TK.accentH});"></div>`;
   const shell = (relationClass: string, inner: string, background = "transparent") => ({
     width: 1000,
-    height: 460,
+    height: portrait ? 720 : 460,
     style: `background:${background};border:none;border-radius:0;box-shadow:none;padding:28px 18px;overflow:visible;display:flex;align-items:center;`,
     inner: `<div class="${relationClass} visual-sentence" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center">${inner}</div>`,
   });
@@ -1099,24 +1222,33 @@ function renderVisualSentence(card: VideoRenderCard, portrait: boolean): CardBox
       );
     }
     case "sequence": {
-      const gateGap = Math.min(205, Math.floor(760 / Math.max(1, parts.length - 1)));
-      const gateLabelWidth = Math.min(176, gateGap + 24);
-      const gateLabelSize = parts.length > 4 ? 19 : 23;
+      const sparse = parts.length <= 2;
+      const gateGap = Math.floor(704 / Math.max(1, parts.length - 1));
+      const gateLabelWidth = sparse ? 240 : Math.min(176, gateGap + 24);
+      const gateVisualSize = sparse ? 154 : 112;
+      const gateLabelSize = sparse ? 30 : parts.length > 4 ? 19 : 23;
+      const sequenceHeight = portrait ? 664 : 404;
+      const mainPath = portrait
+        ? "M80 300 C210 70 385 90 470 320 S720 570 875 290 C930 170 910 70 790 62"
+        : "M80 180 C210 30 385 55 470 190 S720 330 875 170 C930 110 910 40 790 36";
+      const returnPath = portrait
+        ? "M790 62 C630 -5 350 30 130 196"
+        : "M790 36 C630 -25 350 10 130 116";
       const gates = parts
         .map(
           (part, index) =>
-            `<div class="scene-calibration-gate" style="position:absolute;left:${92 + index * gateGap - Math.round((gateLabelWidth - 112) / 2)}px;top:${index % 2 === 0 ? 110 : 215}px;width:${gateLabelWidth}px;height:180px;display:flex;flex-direction:column;align-items:center;z-index:9"><div style="width:112px;height:112px;flex:0 0 auto;border:3px solid ${index === parts.length - 1 ? TK.green : TK.accent}cc;clip-path:polygon(14% 0,86% 0,100% 50%,86% 100%,14% 100%,0 50%);background:radial-gradient(circle,${index === parts.length - 1 ? TK.green : TK.accent}30 0 42%,${TK.bg} 44%);box-shadow:0 0 26px ${index === parts.length - 1 ? TK.green : TK.accent}33"></div><div class="scene-safe-label" data-text-safe style="position:relative;z-index:10;width:${gateLabelWidth}px;min-height:46px;margin-top:8px;padding:5px 7px;border-radius:8px;background:${TK.bg}ee;text-align:center">${node(part, `font-size:${gateLabelSize}px;text-align:center`, "sequence-node")}</div></div>`,
+            `<div class="scene-calibration-gate" style="position:absolute;left:${130 + index * gateGap - Math.round(gateLabelWidth / 2)}px;top:${portrait ? (index % 2 === 0 ? 180 : 360) : index % 2 === 0 ? 110 : 215}px;width:${gateLabelWidth}px;height:${sparse ? 238 : 180}px;display:flex;flex-direction:column;align-items:center;z-index:9"><div style="width:${gateVisualSize}px;height:${gateVisualSize}px;flex:0 0 auto;border:3px solid ${index === parts.length - 1 ? TK.green : TK.accent}cc;clip-path:polygon(14% 0,86% 0,100% 50%,86% 100%,14% 100%,0 50%);background:radial-gradient(circle,${index === parts.length - 1 ? TK.green : TK.accent}30 0 42%,${TK.bg} 44%);box-shadow:0 0 26px ${index === parts.length - 1 ? TK.green : TK.accent}33"></div><div class="scene-safe-label" data-text-safe style="position:relative;z-index:10;width:${gateLabelWidth}px;min-height:46px;margin-top:8px;padding:5px 7px;border-radius:8px;background:${TK.bg}ee;text-align:center">${node(part, `font-size:${gateLabelSize}px;text-align:center`, "sequence-node")}</div></div>`,
         )
         .join("");
       return shell(
         "visual-sequence",
         `<div style="position:relative;width:100%;height:100%">` +
-          `<svg viewBox="0 0 964 404" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><path class="scene-loop-path" d="M80 180 C210 30 385 55 470 190 S720 330 875 170 C930 110 910 40 790 36" fill="none" stroke="${TK.accentH}" stroke-width="8" stroke-linecap="round" stroke-dasharray="16 18" stroke-dashoffset="820"/><path d="M790 36 C630 -25 350 10 130 116" fill="none" stroke="${TK.green}" stroke-width="3" stroke-dasharray="8 14" opacity=".62"/></svg>` +
+          `<svg viewBox="0 0 964 ${sequenceHeight}" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><path class="scene-loop-path" d="${mainPath}" fill="none" stroke="${TK.accentH}" stroke-width="8" stroke-linecap="round" stroke-dasharray="16 18" stroke-dashoffset="820"/><path d="${returnPath}" fill="none" stroke="${TK.green}" stroke-width="3" stroke-dasharray="8 14" opacity=".62"/></svg>` +
           gates +
-          `<div class="scene-runner" data-text-avoid style="position:absolute;left:0;top:0;width:74px;height:92px;border-radius:8px;background:${TK.fg};box-shadow:0 16px 32px #0008, inset 0 -12px 0 #d6d2c8;offset-path:path('M80 180 C210 30 385 55 470 190 S720 330 875 170 C930 110 910 40 790 36 C630 -25 350 10 130 116');offset-distance:0%;z-index:8" data-layout-allow-occlusion><span style="position:absolute;left:13px;right:13px;top:22px;height:5px;background:${TK.accent};box-shadow:0 16px 0 ${TK.muted},0 32px 0 ${TK.muted}"></span></div>` +
-          `<div class="scene-winner-pulse" style="position:absolute;right:78px;top:34px;width:92px;height:92px;border:4px solid ${TK.green};border-radius:50%;z-index:2"></div>` +
-          `<div class="scene-reject" style="position:absolute;left:372px;top:294px;width:42px;height:54px;background:${TK.muted};opacity:.7;transform:rotate(-10deg)"></div>` +
-          `<div class="scene-reject" style="position:absolute;left:602px;top:308px;width:42px;height:54px;background:${TK.muted};opacity:.55;transform:rotate(12deg)"></div>` +
+          `<div class="scene-runner" data-text-avoid style="position:absolute;left:0;top:0;width:${portrait ? 90 : 74}px;height:${portrait ? 112 : 92}px;border-radius:8px;background:${TK.fg};box-shadow:0 16px 32px #0008, inset 0 -12px 0 #d6d2c8;offset-path:path('${mainPath} ${returnPath.replace(/^M/, "L")}');offset-distance:0%;z-index:8" data-layout-allow-occlusion><span style="position:absolute;left:13px;right:13px;top:22px;height:5px;background:${TK.accent};box-shadow:0 16px 0 ${TK.muted},0 32px 0 ${TK.muted}"></span></div>` +
+          `<div class="scene-winner-pulse" style="position:absolute;right:78px;top:${portrait ? 72 : 34}px;width:${sparse ? 126 : 92}px;height:${sparse ? 126 : 92}px;border:4px solid ${TK.green};border-radius:50%;z-index:2"></div>` +
+          `<div class="scene-reject" style="position:absolute;left:372px;top:${portrait ? 520 : 294}px;width:42px;height:54px;background:${TK.muted};opacity:.7;transform:rotate(-10deg)"></div>` +
+          `<div class="scene-reject" style="position:absolute;left:602px;top:${portrait ? 536 : 308}px;width:42px;height:54px;background:${TK.muted};opacity:.55;transform:rotate(12deg)"></div>` +
           `</div>`,
       );
     }
@@ -1529,7 +1661,7 @@ export function generateVideoRenderHtml(
     brollByScene.set(scene.id, list);
   }
 
-  // 口播头(整片连续 = master 音频;右侧竖卡 ↔ 左下 PiP 由 GSAP 切换)
+  // 口播头(整片连续 = master 音频；竖屏主视觉以高层 cutaway 覆盖，不缩放人物)
   const isPortraitDelivery = props.delivery.height > props.delivery.width;
   const modes = props.scenes.map((s) => {
     const sceneBroll = brollByScene.get(s.id) ?? [];
@@ -1552,23 +1684,35 @@ export function generateVideoRenderHtml(
     );
   }
   if (!visualOnly) {
+    const headChrome = isPortraitDelivery
+      ? "border:0;box-shadow:none;"
+      : `border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;`;
     ctx.clips.push(
-      `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
+      `<video id="th" class="clip" src="${esc(mediaPrefix + props.talkingHead.file)}" preload="auto"${props.talkingHead.hasAudio ? ' data-has-audio="true"' : ""} data-start="0" data-duration="${fmt(DUR)}" data-track-index="900" ` +
       // [T-291] 口播头改 object-fit:contain(完整不裁,治「脸没在框」)+ 深色底补边。
       // 原 cover+object-position:center 20% 会裁掉竖屏源上下大半、位置写死猜测无人脸检测 → 脸出框。
       // 合 video-editing skill 铁律「不随意裁切口播画面」。深色 letterbox 是「保完整」的可接受代价。
       `style="position:absolute;left:${initPos.left}px;top:${initPos.top}px;width:${initPos.width}px;height:${initPos.height}px;border-radius:${initPos.borderRadius}px;object-fit:contain;background:#08090a;` +
-        `z-index:900;border:2px solid ${TK.accent};box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px ${TK.accent}1f;"></video>`,
+        `z-index:900;${headChrome}"></video>`,
     );
   }
   // 形态切换 tween:在模式变化的场景边界前 0.7s 开始(首场景不切)
   for (let i = 1; i < props.scenes.length; i++) {
-    if (visualOnly || modes[i] === modes[i - 1]) continue;
+    if (
+      visualOnly ||
+      (isPortraitDelivery && props.direction) ||
+      modes[i] === modes[i - 1]
+    ) {
+      continue;
+    }
     const to = resolveHeadBox(L, modes[i]!);
     const at = Math.max(0, props.scenes[i]!.startSec - 0.7);
     ctx.tweens.push(
       `tl.to("#th",{left:${to.left},top:${to.top},width:${to.width},height:${to.height},borderRadius:${to.borderRadius},duration:.7,ease:"power2.inOut"},${fmt(at)});`,
     );
+  }
+  if (isPortraitDelivery && !visualOnly) {
+    schedulePortraitSpeakerDirection(ctx, props, L);
   }
 
   // 场景 title/summary 只服务编辑器回顾，绝不烧进成片。成片只渲染 AI 明确选中的
@@ -1634,7 +1778,16 @@ export function generateVideoRenderHtml(
         .find((candidate) => isOccludingVisual(candidate))?.at;
       const endAt = scene.endSec;
       if (item.type === "card") {
-        let cardStart = item.at;
+        const cardOrdinal = scene.cards.indexOf(item.card);
+        const cardDirectionBeat = props.direction?.beatGraph.find(
+          (beat) =>
+            beat.subject.kind === "card" &&
+            beat.subject.ref === `card:${si}:${cardOrdinal}`,
+        );
+        if (props.direction && !cardDirectionBeat) {
+          throw new Error(`direction 缺少 card:${si}:${cardOrdinal}，拒绝退回旧卡片时间线`);
+        }
+        let cardStart = cardDirectionBeat?.startSec ?? item.at;
         const activeLargeStage = (brollByScene.get(scene.id) ?? []).find((broll) => {
           if (resolvePresentation(broll) !== "large_stage") return false;
           const brollEnd = Math.min(
@@ -1676,7 +1829,7 @@ export function generateVideoRenderHtml(
               nextTrack(ctx),
               item.at,
               f2(annotationEnd - item.at),
-              `left:${geometry.x}px;top:${annotationY}px;z-index:760;width:${annotationWidth}px;height:${annotationHeight}px;border-radius:12px;background:${TK.surface}f2;border:1px solid ${TK.accent}66;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;`,
+              `left:${geometry.x}px;top:${annotationY}px;z-index:${props.delivery.height > props.delivery.width ? 944 : 760};width:${annotationWidth}px;height:${annotationHeight}px;border-radius:12px;background:${TK.surface}f2;border:1px solid ${TK.accent}66;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;`,
               `<span data-text-safe style="display:block;width:100%;color:${TK.fg};font-size:${props.delivery.height > props.delivery.width ? 25 : 28}px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mainVisualAnnotationText(item.card))}</span>`,
               "clip main-visual-annotation",
             );
@@ -1709,14 +1862,19 @@ export function generateVideoRenderHtml(
               ? 650
               : 520
             : 640;
+        const portraitCardStage =
+          !visualOnly && props.delivery.height > props.delivery.width;
         const stageTop = visualOnly
           ? props.delivery.height > props.delivery.width
             ? 248
             : 120
+          : portraitCardStage
+            ? 430
           : L.contentY[mode];
+        const effectiveStageHeight = portraitCardStage ? 720 : stageHeight;
         const pos = {
           x: L.contentX + Math.max(0, Math.round((stageWidth - box.width) / 2)),
-          y: stageTop + Math.max(0, Math.round((stageHeight - box.height) / 2)),
+          y: stageTop + Math.max(0, Math.round((effectiveStageHeight - box.height) / 2)),
         };
         // 信息卡承担两段真实素材之间的视觉接力，必须一直保持到下一个主视觉/信息卡
         // 进场或本场结束。旧的 5.8 秒硬上限会在长口播中制造 4~10 秒纯黑空档，
@@ -1725,16 +1883,31 @@ export function generateVideoRenderHtml(
         const nextAfterCardStart = flowItems
           .slice(itemIndex + 1)
           .find((candidate) => candidate.at > cardStart + 0.05)?.at;
-        const cardEnd = Math.min(
-          scene.endSec,
-          activeLargeStage
-            ? nextAfterCardStart ?? scene.endSec
-            : nextOccludingAt ?? scene.endSec,
-        );
+        const cardEnd = cardDirectionBeat
+          ? Math.min(scene.endSec, cardDirectionBeat.endSec)
+          : Math.min(
+              scene.endSec,
+              activeLargeStage
+                ? nextAfterCardStart ?? scene.endSec
+                : nextOccludingAt ?? scene.endSec,
+            );
         // 下一段真实主画面马上进场时，不闪一张不到 1.2 秒、来不及阅读的信息卡。
         // 该时间段会由后续真实素材承接；信息卡只服务真正的空镜与语义节拍。
         if (cardEnd - cardStart < 1.2) continue;
         const id = `c${nextTrack(ctx)}`;
+        if (portraitCardStage) {
+          const clearId = `${id}stage`;
+          clip(
+            ctx,
+            clearId,
+            nextTrack(ctx),
+            cardStart,
+            f2(cardEnd - cardStart),
+            `left:0;top:0;z-index:940;width:${props.delivery.width}px;height:${props.delivery.height}px;background:radial-gradient(ellipse at 50% 36%,rgba(94,106,210,.30) 0%,rgba(23,27,48,.88) 48%,#11131f 100%),#11131f;`,
+            "",
+            "clip portrait-card-stage-ambient-static",
+          );
+        }
         const visualOnlyScale =
           visualOnly && width > height && item.card.visualPlan && !item.card.visualPlan.scene
             ? 1.34
@@ -1745,7 +1918,7 @@ export function generateVideoRenderHtml(
           nextTrack(ctx),
           cardStart,
           f2(cardEnd - cardStart),
-          `left:${pos.x}px;top:${pos.y}px;width:${box.width}px;height:${box.height}px;z-index:420;transform:scale(${visualOnlyScale});transform-origin:center center;${box.style}`,
+          `left:${pos.x}px;top:${pos.y}px;width:${box.width}px;height:${box.height}px;z-index:${portraitCardStage ? 942 : 420};transform:scale(${visualOnlyScale});transform-origin:center center;${box.style}`,
           box.inner,
         );
         // [T-295] 富动画:按 card.motion(缺省按 kind 派生)落配方,替换整块 appear。
@@ -1758,6 +1931,15 @@ export function generateVideoRenderHtml(
         const isImage = imageFiles.has(b.file);
         const presentation = resolvePresentation(b);
         const isPortrait = props.delivery.height > props.delivery.width;
+        const directionBeat = props.direction?.beatGraph.find(
+          (beat) =>
+            beat.subject.kind === "broll" &&
+            beat.subject.ref === `broll:${b.file}`,
+        );
+        if (props.direction && presentation !== "overlay" && !directionBeat) {
+          throw new Error(`direction 缺少 broll:${b.file}，拒绝退回旧素材时间线`);
+        }
+        const brollStart = directionBeat?.startSec ?? b.at;
         const geometry =
           presentation === "full_frame"
             ? resolveMainBrollGeometry(
@@ -1794,14 +1976,22 @@ export function generateVideoRenderHtml(
                     candidate.type === "broll" &&
                     resolvePresentation(candidate.broll) !== "overlay",
                 )?.at;
-        const requestedBrollEnd = b.durationSec
-          ? Math.min(endAt, b.at + b.durationSec)
-          : endAt;
+        const requestedBrollEnd = directionBeat
+          ? Math.min(endAt, directionBeat.endSec)
+          : b.durationSec
+            ? Math.min(endAt, b.at + b.durationSec)
+            : endAt;
         const brollEnd = Math.min(
           requestedBrollEnd,
           nextMainBrollAt ?? requestedBrollEnd,
         );
-        const brollDur = f2(brollEnd - b.at);
+        const transitionTail =
+          isPortrait && presentation !== "overlay" ? 0.18 : 0;
+        const visualBrollEnd = Math.min(
+          props.talkingHead.durationSec,
+          brollEnd + transitionTail,
+        );
+        const brollDur = f2(visualBrollEnd - brollStart);
         if (brollDur <= 0.05) continue;
         // full_frame / large_stage 是本拍的视觉主层，必须盖过此前仍在存续的信息卡；
         // overlay 才允许与卡片并列。字幕和角标在下方以更高 z-index 保持可读。
@@ -1809,13 +1999,13 @@ export function generateVideoRenderHtml(
           presentation === "full_frame"
             ? "z-index:940;"
             : presentation === "large_stage"
-              ? "z-index:700;"
+              ? `z-index:${isPortrait ? 941 : 700};`
               : "";
         const mediaLayer =
           presentation === "full_frame"
             ? `z-index:${isPortrait ? 942 : 941};`
             : presentation === "large_stage"
-              ? `z-index:${isPortrait ? 702 : 701};`
+              ? `z-index:${isPortrait ? 942 : 701};`
               : "";
         const padding = presentation === "full_frame" ? 0 : 10;
         const paddedMediaBounds = {
@@ -1850,104 +2040,103 @@ export function generateVideoRenderHtml(
         const frameStyle =
           presentation === "full_frame"
             ? `left:${visibleFrame.x}px;top:${visibleFrame.y}px;${frameLayer}width:${visibleFrame.width}px;height:${visibleFrame.height}px;background:${TK.bg};`
+            : isPortrait && presentation === "large_stage"
+              ? `left:${visibleFrame.x}px;top:${visibleFrame.y}px;${frameLayer}padding:${padding}px;width:${visibleFrame.width}px;height:${visibleFrame.height}px;background:transparent;`
             : `left:${visibleFrame.x}px;top:${visibleFrame.y}px;${frameLayer}${CARD_BASE}padding:${padding}px;width:${visibleFrame.width}px;height:${visibleFrame.height}px;`;
-        // large_stage 只清理它负责的舞台，不侵入人物与字幕安全区。该层在素材下、
-        // 在旧卡片/special 上，确保静态图出现时不会继续透出上一张标题或动画。
+          // 竖屏 large_stage 是独占 cutaway，承接层覆盖人物；横屏仍只清理左侧舞台。
         if (presentation === "large_stage") {
           const clearId = `${frameId}clear`;
           const clearWidth = isPortrait
             ? props.delivery.width
             : Math.round((1330 / 1920) * props.delivery.width);
-          const clearHeight = isPortrait
-            ? Math.round((850 / 1920) * props.delivery.height)
-            : props.delivery.height;
+          const clearHeight = props.delivery.height;
+          const clearBackground = isPortrait
+            ? "radial-gradient(ellipse at 50% 28%,rgba(94,106,210,.34) 0%,rgba(23,27,48,.86) 42%,#11131f 100%),#11131f"
+            : TK.bg;
           clip(
             ctx,
             clearId,
             nextTrack(ctx),
-            b.at,
+            brollStart,
             brollDur,
-            `left:0px;top:0px;z-index:699;width:${clearWidth}px;height:${clearHeight}px;background:${TK.bg};`,
+            `left:0px;top:0px;z-index:${isPortrait ? 940 : 699};width:${clearWidth}px;height:${clearHeight}px;background:${clearBackground};`,
             "",
             "clip main-visual-clear",
           );
+          if (isPortrait) {
+            showSmooth(ctx, clearId, brollStart, brollEnd, visualBrollEnd);
+          }
         }
         clip(
           ctx,
           frameId,
           nextTrack(ctx),
-          b.at,
+          brollStart,
           brollDur,
           frameStyle,
           `<div style="height:${Math.max(0, visibleFrame.height - padding * 2)}px"></div>`,
         );
-        if (presentation === "full_frame") showSolid(ctx, frameId, b.at, brollEnd);
-        else appear(ctx, frameId, b.at, brollEnd);
+        if (isPortrait && presentation !== "overlay") {
+          showSmooth(ctx, frameId, brollStart, brollEnd, visualBrollEnd);
+        } else if (presentation === "full_frame") {
+          showSolid(ctx, frameId, brollStart, brollEnd);
+        } else {
+          appear(ctx, frameId, brollStart, brollEnd);
+        }
 
-        // 横图/方图进入竖屏时，完整前景必须 contain 才可读，但只放完整前景会形成
-        // “中央窄条 + 巨幅黑边”。同源氛围层只负责填满该舞台，真正可读内容仍由
-        // 上层 contain 前景承担；横屏链路保持既有单层输出不变。
+        // 横图/方图进入竖屏时，完整前景必须 contain 才可读。承接层只使用 CSS 静态
+        // 色场，不再复制同一图片/视频做动态 blur，避免“两路视频 + 黑洞拼贴”。
         if (isPortrait && presentation !== "overlay") {
           const ambientId = `${frameId}a`;
-          const ambientLayer = presentation === "full_frame" ? 941 : 701;
-          const ambientStyle =
-            `position:absolute;left:${pos.x}px;top:${pos.y}px;width:${w}px;height:${h}px;z-index:${ambientLayer};` +
-            `object-fit:cover;filter:blur(28px) brightness(.34) saturate(.82);transform:scale(1.06);`;
-          if (isImage) {
-            ctx.clips.push(
-              `<img id="${ambientId}" class="clip portrait-ambient-fill" src="${esc(mediaPrefix + b.file)}" alt="" aria-hidden="true" ` +
-                `data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${ambientStyle}">`,
-            );
+          const ambientLayer = presentation === "full_frame" ? 941 : 940;
+          clip(
+            ctx,
+            ambientId,
+            nextTrack(ctx),
+            brollStart,
+            brollDur,
+            `left:0px;top:0px;width:${props.delivery.width}px;height:${props.delivery.height}px;z-index:${ambientLayer};background:radial-gradient(ellipse at 50% 30%,rgba(94,106,210,.30),rgba(20,24,43,.92) 48%,#10121c 100%),#10121c;`,
+            "",
+            "clip portrait-stage-ambient-static",
+          );
+          if (isPortrait) {
+            showSmooth(ctx, ambientId, brollStart, brollEnd, visualBrollEnd);
+          } else if (presentation === "full_frame") {
+            showSolid(ctx, ambientId, brollStart, brollEnd);
           } else {
-            ctx.clips.push(
-              `<video id="${ambientId}" class="clip portrait-ambient-fill" src="${esc(mediaPrefix + b.file)}" aria-hidden="true" muted ` +
-                `data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${ambientStyle}"></video>`,
-            );
-          }
-          if (presentation === "full_frame") {
-            showSolid(ctx, ambientId, b.at, brollEnd);
-          } else {
-            appear(ctx, ambientId, b.at, brollEnd);
+            appear(ctx, ambientId, brollStart, brollEnd);
           }
         }
         const mediaId = `${frameId}${isImage ? "i" : "v"}`;
         const mediaStyle =
           `position:absolute;left:${mediaRect.x}px;top:${mediaRect.y}px;width:${mediaRect.width}px;height:${mediaRect.height}px;${mediaLayer}` +
-          `border-radius:${presentation === "full_frame" ? 0 : 8}px;object-fit:contain;background:${TK.bg};` +
-          (presentation === "full_frame" ? "" : `border:1px solid ${TK.border};`);
+          `border-radius:${presentation === "full_frame" || (isPortrait && presentation === "large_stage") ? 0 : 8}px;object-fit:contain;` +
+          (isPortrait && presentation === "large_stage"
+            ? "background:transparent;"
+            : `background:${TK.bg};`) +
+          (presentation === "full_frame" || (isPortrait && presentation === "large_stage")
+            ? ""
+            : `border:1px solid ${TK.border};`);
         if (isImage) {
           ctx.clips.push(
             `<img id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" alt="${esc(b.label)}" ` +
-              `data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${mediaStyle}">`,
+              `data-start="${fmt(brollStart)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" style="${mediaStyle}">`,
           );
         } else {
           // 保持既有 video 标记形状与属性顺序，避免无意义改动历史快照/HyperFrames 协议。
           ctx.clips.push(
-            `<video id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" aria-label="${esc(b.label)}" muted data-start="${fmt(b.at)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
+            `<video id="${mediaId}" class="clip" src="${esc(mediaPrefix + b.file)}" aria-label="${esc(b.label)}" muted preload="auto" data-start="${fmt(brollStart)}" data-duration="${fmt(brollDur)}" data-track-index="${nextTrack(ctx)}" ` +
               `style="${mediaStyle}"></video>`,
           );
         }
-        if (presentation === "full_frame") showSolid(ctx, mediaId, b.at, brollEnd);
-        else appear(ctx, mediaId, b.at, brollEnd);
-        animateBrollMedia(ctx, mediaId, b.motion ?? "static", b.at, brollEnd);
-        if (
-          presentation === "full_frame" &&
-          b.visualRole === "screen_recording" &&
-          b.speakerMode === "pip_bottom_left"
-        ) {
-          const pip = resolveFullFrameSpeakerPip(
-            props.delivery.width,
-            props.delivery.height,
-          );
-          const restore = resolveHeadBox(L, mode);
-          const transition = Math.min(0.32, Math.max(0.12, brollDur / 4));
-          ctx.tweens.push(
-            `tl.set("#th",{zIndex:945},${fmt(b.at)});`,
-            `tl.to("#th",{left:${pip.left},top:${pip.top},width:${pip.width},height:${pip.height},borderRadius:${pip.borderRadius},duration:${fmt(transition)},ease:"power2.out"},${fmt(b.at)});`,
-            `tl.to("#th",{left:${restore.left},top:${restore.top},width:${restore.width},height:${restore.height},borderRadius:${restore.borderRadius},duration:${fmt(transition)},ease:"power2.inOut"},${fmt(Math.max(b.at, brollEnd - transition))});`,
-            `tl.set("#th",{zIndex:900},${fmt(brollEnd)});`,
-          );
+        if (isPortrait && presentation !== "overlay") {
+          showSmooth(ctx, mediaId, brollStart, brollEnd, visualBrollEnd);
+        } else if (presentation === "full_frame") {
+          showSolid(ctx, mediaId, brollStart, brollEnd);
+        } else {
+          appear(ctx, mediaId, brollStart, brollEnd);
         }
+        animateBrollMedia(ctx, mediaId, b.motion ?? "static", brollStart, brollEnd);
       }
     }
   });
@@ -1958,8 +2147,30 @@ export function generateVideoRenderHtml(
     const end = Math.min(cap.end, nextStart - 0.02, DUR);
     const du = f2(end - cap.start);
     if (du <= 0.05) return;
+    const portraitCaption = props.delivery.height > props.delivery.width;
+    const cnSize = portraitCaption ? 48 : 38;
+    const enSize = portraitCaption ? 28 : 24;
+    const emphasis = [...(cap.emphasis ?? [])].sort(
+      (a, b) => a.startChar - b.startChar,
+    );
+    const chars = Array.from(cap.cn);
+    let cursor = 0;
+    const cnParts: string[] = [];
+    emphasis.forEach((item, emphasisIndex) => {
+      if (item.startChar < cursor) return;
+      cnParts.push(esc(chars.slice(cursor, item.startChar).join("")));
+      cnParts.push(
+        `<span id="cap${i}e${emphasisIndex}" class="caption-emphasis" style="display:inline-block;color:inherit;background:transparent;border-radius:8px;padding:0 4px;margin:0 -4px;transform-origin:center center">${esc(item.text)}</span>`,
+      );
+      cursor = item.endChar;
+      ctx.tweens.push(
+        `tl.set("#cap${i}e${emphasisIndex}",{color:${JSON.stringify(TK.amber)},backgroundColor:"rgba(234,179,8,.18)",fontWeight:900,scale:1.12},${fmt(item.startSec)});`,
+        `tl.set("#cap${i}e${emphasisIndex}",{color:"inherit",backgroundColor:"transparent",fontWeight:800,scale:1},${fmt(item.endSec)});`,
+      );
+    });
+    cnParts.push(esc(chars.slice(cursor).join("")));
     const en = cap.en
-      ? `<div style="color:${TK.muted};font-size:19px;font-weight:500;margin-top:6px">${esc(cap.en)}</div>`
+      ? `<div class="caption-en" style="color:${TK.fg2};font-size:${enSize}px;line-height:1.3;font-weight:600;margin-top:8px;letter-spacing:.005em;text-wrap:balance">${esc(cap.en)}</div>`
       : "";
     clip(
       ctx,
@@ -1967,8 +2178,8 @@ export function generateVideoRenderHtml(
       950,
       cap.start,
       du,
-      "left:0;right:0;bottom:56px;text-align:center;z-index:950;",
-      `<div style="background:rgba(8,9,10,.74);border:1px solid ${TK.border};border-radius:10px;padding:11px 26px;color:${TK.fg};font-size:33px;font-weight:600;display:inline-block">${esc(cap.cn)}</div>${en}`,
+      `left:0;right:0;bottom:${portraitCaption ? 92 : 56}px;text-align:center;z-index:950;padding:0 ${portraitCaption ? 70 : 120}px;`,
+      `<div class="caption-shell" style="display:inline-flex;max-width:${portraitCaption ? 900 : 1500}px;flex-direction:column;align-items:center;background:rgba(8,9,10,.68);border:1px solid ${TK.border};border-radius:16px;padding:${portraitCaption ? "16px 28px 15px" : "12px 28px"};box-shadow:0 10px 36px rgba(0,0,0,.42);backdrop-filter:blur(8px)"><div class="caption-cn" style="color:${TK.fg};font-size:${cnSize}px;line-height:1.22;font-weight:800;letter-spacing:.01em;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.72);text-wrap:balance">${cnParts.join("")}</div>${en}</div>`,
     );
   });
 

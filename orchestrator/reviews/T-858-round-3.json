@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001、REV-002 与 REV-003 均已销账。本轮只复核辅助 overlay 的新约束：它不进入主视觉 beatGraph、不能伪装为 takeover，非 overlay 主视觉仍保持 fail-closed；对应 contract 与 backend 聚焦测试均通过，未发现新增 blocker 或 major。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "FR-858-2",
+        "quote": "可为每行中文字幕选择 0–2 个重点片段"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-3",
+        "quote": "真实字幕至少一行含合法 AI emphasis"
+      },
+      "where": "§3.1 的 `emphasis` 默认空数组/最多两项，与 §3.2 对单项 emphasis 的校验。",
+      "failure_mode": "模型为每一行返回空 `emphasis` 数组时，输出满足 schema，runner 也没有任何项可判无效而会原样通过；renderer 因而产出没有重点词的短样片，直接不满足 AC-858-3。由于 runner 被禁止重写或猜测重点词，当前失败与恢复规则也没有让该次正式决策链获得可验收强调的路径。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC §3.1、§3.2、§5、AC-858-3",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "限定验收用真实候选：在所有字幕均非空时，至少保留一个经现有逐字与时间校验的 emphasis；若模型给出的有效集合为空，明确该样例不得进入验收并按既有模型重试/降级记录处理，不能由代码补猜重点词。",
+      "resolution_evidence": "SPEC-LINE:49:0c9e17ada910478c",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-858-1",
+        "quote": "按时间排序的 beatGraph，每拍只有一个主视觉主体"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-4",
+        "quote": "主视觉交接时同一时刻只有一个主语"
+      },
+      "where": "§3.1 的 `VideoDirection.beatGraph` 与 §3.2“同一时刻最多一个非辅助主视觉”的 runner 校验。",
+      "failure_mode": "两个 beat 可以分别携带完整 `subject`，其时间窗重叠，但 schema 没有辅助/主视觉角色字段，§3.2 也未定义如何由已有字段判定“辅助”。一个合理实现会把两个对象同时渲染，另一个会按数组顺序覆盖其中一个；两者都可能将重叠项解释为辅助，却产生不同用户可见交接，且前者违反 AC-858-4。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC §3.1 `VideoDirection`、§3.2 runner 校验、AC-858-4",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确现有 beat schema 中每项均为主视觉，并要求主视觉时间窗采用唯一的非重叠边界规则；若确有辅助叠层，必须以已定义、可被 runner 判定的契约语义表达其角色与允许组合。为该规则补一条重叠拒绝/交接测试。",
+      "resolution_evidence": "SPEC-LINE:107:85b747d30b4d27c9",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-858-3",
+        "quote": "overlay 只用于 AI 明确选择的辅助叠层"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-4",
+        "quote": "主视觉交接时同一时刻只有一个主语"
+      },
+      "where": "direction 存在时，contract/runner 要求每段 B-roll 恰好一个 beat 且非人物 beat 必须是 `takeover`；但模板仍保留 `presentation=overlay` 的小尺寸、无全画布承接层渲染。",
+      "failure_mode": "AI 明确选择辅助 overlay 时，正式候选被迫把它声明为 takeover；模板却不会以不透明全画布层盖住人物，overlay 可与人物或既有视觉同时出现。若把该 beat 当主视觉，违反“takeover 期间人物不可见”；若按现有模板当辅助显示，则 direction 的唯一主视觉合同没有被执行。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "contract/src/resources/video-render.ts 的 direction 精确引用校验；backend/src/modules/ai-runtime/video-decisions-runner.ts 的非人物 beat 计数；backend/src/modules/execution/video-render/template.ts:1810-1942 对 overlay 跳过全画布承接；template.test.ts:1329-1350 保留 overlay 辅助素材路径。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:135:5bcca8de74942e4e",
+      "suggestion": "明确辅助 overlay 不进入主视觉 beatGraph 的精确引用计数，或规定任何进入 `takeover` 的 overlay 必须按主视觉覆盖人物；并补一条“人物基底 + 合法辅助 overlay”与一条“takeover 期间人物不可见”的回归测试。",
+      "resolution_evidence": "SPEC-LINE:135:5bcca8de74942e4e",
+      "parent_id": ""
+    }
+  ]
+}

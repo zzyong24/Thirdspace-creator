@@ -3,10 +3,12 @@ import {
   VIDEO_BROLL_TEMPLATE,
   VIDEO_CARDS_TEMPLATE,
   VIDEO_DIRECTOR_TEMPLATE,
+  VIDEO_SUBTITLES_TEMPLATE,
   normalizeVideoBrollOutput,
   videoCardsSchema,
   videoBrollSchema,
   videoDirectorReviewSchema,
+  videoSubtitlesSchema,
 } from "./video-decisions";
 import { _resetRegistry, getOfficialSkillBase } from "../registry";
 
@@ -244,7 +246,7 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
 
 describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
   it("必须同时审整体叙事、用户素材、人物安全区和编辑内部标签", () => {
-    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v2");
+    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v4");
     expect(VIDEO_DIRECTOR_TEMPLATE.system).toContain("总导演");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("用户上传素材");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("角落小人物");
@@ -257,8 +259,14 @@ describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("同一时刻只能有一个非 overlay 主视觉");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("issues 必须为空");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("从第一句起连续检查前三秒");
-    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("真人不出现或只保留小窗");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("人物完全退出");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("只执行候选已选定的 speakerMode");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("不得自动居中缩小");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("连续素材间人物反复弹跳");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("纯背景都不算开场实质视觉");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("motionThesis");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("beatGraph");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("每拍只有一个主视觉");
   });
 
   it("结构化结论只接受 ready/revise 与固定问题类型", () => {
@@ -266,6 +274,23 @@ describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
       videoDirectorReviewSchema.parse({
         verdict: "revise",
         summary: "长段画面没有承接。",
+        motionThesis: "证据接管画布后把结论交回人物",
+        beatGraph: [
+          {
+            id: "beat-1",
+            sceneIdx: 1,
+            startSec: 3.5,
+            endSec: 7,
+            subject: { kind: "broll", ref: "broll:asset-1" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "enter",
+            stageMode: "takeover",
+            transitionIn: "cut",
+            transitionOut: "fade",
+            returnGeometry: "same_base",
+          },
+        ],
         issues: [
           {
             sceneIdx: 1,
@@ -289,5 +314,32 @@ describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
         ],
       }),
     ).toThrow();
+  });
+});
+
+describe("VIDEO_SUBTITLES_TEMPLATE 真实重点词", () => {
+  it("字幕 schema 接受精确字符范围与真实时间窗，提示词禁止代码猜重点", () => {
+    const parsed = videoSubtitlesSchema.parse({
+      lines: [
+        {
+          index: 1,
+          zh: "效率提升 47%",
+          en: "47% more efficient",
+          emphasis: [
+            {
+              text: "47%",
+              startChar: 5,
+              endChar: 8,
+              startSec: 1.2,
+              endSec: 1.9,
+            },
+          ],
+        },
+      ],
+    });
+    expect(parsed.lines[0]?.emphasis).toHaveLength(1);
+    expect(VIDEO_SUBTITLES_TEMPLATE.template).toContain("Unicode");
+    expect(VIDEO_SUBTITLES_TEMPLATE.template).toContain("重点词");
+    expect(VIDEO_SUBTITLES_TEMPLATE.template).toContain("不能用关键词词表");
   });
 });

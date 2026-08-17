@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import type { RequestContext } from "@creatoros/contract";
+import {
+  videoRenderDirection,
+  videoSubtitleEmphasis,
+  type RequestContext,
+  type VideoRenderDirection,
+  type VideoSubtitleEmphasis,
+} from "@creatoros/contract";
 import type {
   ModelSpec,
   VideoScenesOutput,
@@ -119,6 +125,8 @@ export interface VideoBrollPick {
   presentation?: "full_frame" | "large_stage" | "overlay";
   /** material.match 对素材内容的语义分类；渲染层据此守横竖版式边界。 */
   visualRole?: "screen_recording" | "still_image" | "live_footage";
+  /** material.match 决定主素材窗是否保留左下角讲解人。 */
+  speakerMode?: "hidden" | "pip_bottom_left";
   /** 素材的轻量镜头运动，由 material.match 统一决定。 */
   motion?: "static" | "push_in" | "pan_left" | "pan_right";
 }
@@ -129,6 +137,8 @@ export interface BilingualSubtitleLine {
   endSec: number;
   zh: string;
   en: string;
+  /** [T-858] AI 选定且经 Unicode/时间校验的真实重点词。 */
+  emphasis?: VideoSubtitleEmphasis[];
 }
 
 /** [T-387c] B-roll 候选来源(自动聚合徽标):脚本画面点名 / 论点树挂载 / 项目弹药 / 手动上传。 */
@@ -225,6 +235,8 @@ export function normalizeBrollTimeline(input: {
 
 /** 四决策完整产物(预览卡渲染 + 确认后组装 props 的单一输入)。 */
 export interface VideoDecisions {
+  /** [T-858] 整片主视觉交接；旧候选或确定性降级可缺省。 */
+  direction?: VideoRenderDirection;
   scenes: VideoScene[];
   cards: VideoInfoCard[];
   /** v2 起提供；旧候选没有该字段时按空数组兼容。 */
@@ -241,6 +253,138 @@ export interface VideoDecisions {
   }>;
   /** 五个候选节点汇总后的总导演审片结论；旧候选缺省时保持可确认兼容。 */
   directorReview?: VideoDirectorReview;
+}
+
+/**
+ * [T-858] 总导演 direction 的动态安全门。AI 决定主语/运动/舞台；代码只验证
+ * 已存在的稳定 ref、真实对象时间窗、场景边界与“每拍都是唯一主视觉”的不重叠协议。
+ */
+export function buildVideoDirectionSchema(input: {
+  scenes: readonly VideoScene[];
+  cards: readonly VideoInfoCard[];
+  broll: readonly VideoBrollPick[];
+}) {
+  type RefWindow = {
+    kind: "talking_head" | "card" | "broll";
+    sceneIdx: number;
+    startSec: number;
+    endSec: number;
+    presentation?: VideoBrollPick["presentation"];
+  };
+  const refs = new Map<string, RefWindow>();
+  input.scenes.forEach((scene, sceneIdx) => {
+    refs.set(`talking_head:${sceneIdx}`, {
+      kind: "talking_head",
+      sceneIdx,
+      startSec: scene.startSec,
+      endSec: scene.endSec,
+    });
+    input.cards
+      .filter((card) => card.sceneIdx === sceneIdx)
+      .forEach((card, ordinal) => {
+        refs.set(`card:${sceneIdx}:${ordinal}`, {
+          kind: "card",
+          sceneIdx,
+          startSec: card.at,
+          endSec: scene.endSec,
+        });
+      });
+  });
+  input.broll.forEach((pick) => {
+    const scene = input.scenes[pick.sceneIdx];
+    if (!scene) return;
+    refs.set(`broll:${pick.assetId}`, {
+      kind: "broll",
+      sceneIdx: pick.sceneIdx,
+      startSec: pick.at,
+      endSec: Math.min(scene.endSec, pick.at + pick.durationSec),
+      presentation: pick.presentation,
+    });
+  });
+
+  return videoRenderDirection.superRefine((direction, ctx) => {
+    const counts = new Map<string, number>();
+    direction.beatGraph.forEach((beat, index) => {
+      if (
+        beat.subject.kind === "talking_head" &&
+        beat.subject.ref !== "talking_head"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "subject", "ref"],
+          message: "人物基底必须使用稳定 ref=talking_head",
+        });
+        return;
+      }
+      const refKey =
+        beat.subject.kind === "talking_head"
+          ? `talking_head:${beat.sceneIdx}`
+          : beat.subject.ref;
+      const target = refs.get(refKey);
+      if (!target || target.kind !== beat.subject.kind) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "subject", "ref"],
+          message: "direction beat 必须引用候选时间线提供的真实 ref",
+        });
+        return;
+      }
+      if (target.kind === "broll" && target.presentation === "overlay") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "subject", "ref"],
+          message: "明确辅助 overlay 不进入主视觉 beatGraph",
+        });
+        return;
+      }
+      if (target.kind !== "talking_head") {
+        counts.set(refKey, (counts.get(refKey) ?? 0) + 1);
+      }
+      if (
+        target.sceneIdx !== beat.sceneIdx ||
+        beat.startSec < target.startSec - 1e-6 ||
+        beat.endSec > target.endSec + 1e-6
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "startSec"],
+          message: "direction beat 时间必须落在被引用对象与所属场景的真实有效窗内",
+        });
+      }
+      const expectedStage = target.kind === "talking_head" ? "base" : "takeover";
+      if (beat.stageMode !== expectedStage) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "stageMode"],
+          message: `direction beat 舞台必须与真实对象层级一致:${expectedStage}`,
+        });
+      }
+      if (
+        beat.returnGeometry === "same_base" &&
+        beat.stageMode === "base"
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "returnGeometry"],
+          message: "人物基底拍不需要重复声明回位",
+        });
+      }
+    });
+    refs.forEach((target, ref) => {
+      if (
+        target.kind === "talking_head" ||
+        (target.kind === "broll" && target.presentation === "overlay")
+      ) return;
+      const count = counts.get(ref) ?? 0;
+      if (count !== 1) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph"],
+          message: `direction 中 ${ref} 必须恰好一次，实际 ${count} 次`,
+        });
+      }
+    });
+  });
 }
 
 /**
@@ -358,13 +502,27 @@ function parseMaterialAdjustmentBase(
         endSec: source.endSec,
         zh: line.zh,
         en: line.en,
+        ...(() => {
+          const emphasis = validSubtitleEmphasis({
+            raw: line.emphasis,
+            zh: line.zh,
+            source,
+          });
+          return emphasis.length > 0 ? { emphasis } : {};
+        })(),
       }];
     },
   );
   if (parsedSubtitles.length !== subtitles.length) {
     throw new Error("当前字幕内容无效，未重新运行完整分镜");
   }
+  const parsedDirection = buildVideoDirectionSchema({
+    scenes,
+    cards: parsedCards.data.cards,
+    broll,
+  }).safeParse(value.direction);
   return {
+    ...(parsedDirection.success ? { direction: parsedDirection.data } : {}),
     scenes,
     cards: parsedCards.data.cards,
     visualSlots: parsedSlots.data.slots,
@@ -375,6 +533,7 @@ function parseMaterialAdjustmentBase(
       status: "ready",
       summary: "当前稳定分镜已保留，仅更新补充素材与时间线。",
       issues: [],
+      ...(parsedDirection.success ? { direction: parsedDirection.data } : {}),
       source: "auto_repaired",
     },
   };
@@ -396,6 +555,8 @@ export interface VideoDirectorReview {
   status: "ready" | "needs_attention";
   summary: string;
   issues: VideoDirectorIssue[];
+  /** 合法时进入正式候选；无效/模型降级时诚实缺省。 */
+  direction?: VideoRenderDirection;
   /** 仅供运行时追踪，前端不展示实现术语。 */
   source: "ai" | "auto_repaired" | "deterministic_fallback";
 }
@@ -1091,8 +1252,8 @@ export function directorPlanFacet(input: {
       const cards = input.cards
         .filter((card) => card.sceneIdx === sceneIdx)
         .map(
-          (card) =>
-            `信息卡@${sec(card.at)}s:${card.kind}/${card.content}`,
+          (card, ordinal) =>
+            `信息卡 ref=card:${sceneIdx}:${ordinal} @${sec(card.at)}s:${card.kind}/${card.content}`,
         );
       const slots = input.visualSlots
         .filter((slot) => slot.sceneIdx === sceneIdx)
@@ -1104,9 +1265,9 @@ export function directorPlanFacet(input: {
         .filter((pick) => pick.sceneIdx === sceneIdx)
         .map((pick) => {
           const asset = assetById.get(pick.assetId);
-          return `真实素材@${sec(pick.at)}s×${sec(pick.durationSec)}s:${
+          return `真实素材 ref=broll:${pick.assetId} @${sec(pick.at)}s×${sec(pick.durationSec)}s:${
             asset?.label ?? pick.assetId
-          }/${pick.presentation ?? "large_stage"}`;
+          }/${pick.presentation ?? "large_stage"}/speakerMode=${pick.speakerMode ?? "未声明"}`;
         });
       const subtitleSample = input.subtitles
         .filter(
@@ -1116,7 +1277,7 @@ export function directorPlanFacet(input: {
         .slice(0, 4)
         .map((line) => line.zh)
         .join(" / ");
-      const visuals = [...cards, ...slots, ...broll];
+      const visuals = ["人物基底 ref=talking_head", ...cards, ...slots, ...broll];
       return [
         `场景 ${sceneIdx} | ${sec(scene.startSec)}s-${sec(scene.endSec)}s | ${scene.title} | ${scene.summary}`,
         `  视觉:${visuals.length > 0 ? visuals.join("；") : "（无信息卡或素材）"}`,
@@ -1988,6 +2149,7 @@ export async function decideMaterialBroll(
         match.visualRole === "live_footage"
           ? match.visualRole
           : undefined,
+      ...(match.speakerMode ? { speakerMode: match.speakerMode } : {}),
       motion: match.motion ?? "static",
     });
     used.add(match.assetId);
@@ -2057,6 +2219,31 @@ export const SUBTITLE_REWRITE_GUARD = 0.6;
 /** [T-429] 单次结构化字幕输出上限：控制在约 30~40 行。 */
 export const SUBTITLE_CHUNK_LINES = 36;
 
+function validSubtitleEmphasis(input: {
+  raw: unknown;
+  zh: string;
+  source: SrtLine;
+}): VideoSubtitleEmphasis[] {
+  if (!Array.isArray(input.raw)) return [];
+  const chars = Array.from(input.zh);
+  return input.raw.flatMap((candidate) => {
+    const parsed = videoSubtitleEmphasis.safeParse(candidate);
+    if (!parsed.success) return [];
+    const item = parsed.data;
+    if (
+      item.endChar <= item.startChar ||
+      item.endChar > chars.length ||
+      chars.slice(item.startChar, item.endChar).join("") !== item.text ||
+      item.startSec < input.source.startSec - 1e-6 ||
+      item.endSec > input.source.endSec + 1e-6 ||
+      item.endSec <= item.startSec
+    ) {
+      return [];
+    }
+    return [item];
+  });
+}
+
 // 两段文本的 token 集 Dice 相似度(与 srt.ts 相似度同款 token 化)。
 function lineSimilarity(a: string, b: string): number {
   const sa = new Set(tokenizeForOverlap(a));
@@ -2096,6 +2283,8 @@ export async function decideSubtitles(
     srtLines: readonly SrtLine[];
     script: string;
     onChunkProgress?: ChunkProgressListener;
+    /** 新 video.decisions 候选必须至少包含一个 AI 重点词；旧调用保持兼容。 */
+    requireEmphasis?: boolean;
   },
   call: StructuredCall,
 ): Promise<BilingualSubtitleLine[]> {
@@ -2107,7 +2296,11 @@ export async function decideSubtitles(
       const batch = chunk.items;
       const out = await call<VideoSubtitlesOutput>({
         skillId: "video.subtitles",
-        facets: { srt: srtFacet(batch), script: input.script },
+        facets: {
+          srt: srtFacet(batch),
+          script: input.script,
+          emphasisRequirement: "",
+        },
         outputSchema: buildSubtitlesDecisionSchema(batch),
       });
       return out.lines;
@@ -2118,12 +2311,13 @@ export async function decideSubtitles(
         index: line.index,
         zh: line.text,
         en: "",
+        emphasis: [],
       })),
   });
   const byIndex = new Map(
     translatedChunks.flat().map((line) => [line.index, line]),
   );
-  return input.srtLines.map((orig) => {
+  let result = input.srtLines.map((orig) => {
     const got = byIndex.get(orig.index);
     let zh = (got?.zh ?? "").trim() || orig.text;
     // 双守门：改动必须足够小，且校正后的文字必须在已确认口播稿中有依据。
@@ -2133,14 +2327,54 @@ export async function decideSubtitles(
     ) {
       zh = orig.text;
     }
+    const emphasis = validSubtitleEmphasis({
+      raw: got?.emphasis,
+      zh,
+      source: orig,
+    });
     return {
       index: orig.index,
       startSec: orig.startSec, // 时间轴永远回填原值 —— 模型无权改时钟
       endSec: orig.endSec,
       zh,
       en: (got?.en ?? "").trim(),
+      ...(emphasis.length > 0 ? { emphasis } : {}),
     };
   });
+
+  if (
+    input.requireEmphasis &&
+    input.srtLines.length > 0 &&
+    result.every((line) => !line.emphasis?.length)
+  ) {
+    const retryBatch = input.srtLines.slice(0, SUBTITLE_CHUNK_LINES);
+    const retry = await call<VideoSubtitlesOutput>({
+      skillId: "video.subtitles",
+      facets: {
+        srt: srtFacet(retryBatch),
+        script: input.script,
+        emphasisRequirement:
+          "本轮是唯一一次重点词定向重试：至少一行必须选择 1 个逐字来自 zh、时间落在本行内的真实重点词。",
+      },
+      outputSchema: buildSubtitlesDecisionSchema(retryBatch),
+    });
+    const retryByIndex = new Map(retry.lines.map((line) => [line.index, line]));
+    result = result.map((line) => {
+      const source = input.srtLines.find((item) => item.index === line.index);
+      const retried = retryByIndex.get(line.index);
+      if (!source || !retried) return line;
+      const emphasis = validSubtitleEmphasis({
+        raw: retried.emphasis,
+        zh: line.zh,
+        source,
+      });
+      return emphasis.length > 0 ? { ...line, emphasis } : line;
+    });
+    if (result.every((line) => !line.emphasis?.length)) {
+      throw new Error("重点词未产出：字幕模型定向重试后仍无合法 emphasis");
+    }
+  }
+  return result;
 }
 
 /**
@@ -2199,6 +2433,24 @@ export async function decideDirectorReview(
     };
   }
 
+  const directionResult = buildVideoDirectionSchema({
+    scenes: input.scenes,
+    cards: input.cards,
+    broll: input.broll,
+  }).safeParse({
+    motionThesis: output.motionThesis,
+    beatGraph: output.beatGraph,
+  });
+  if (!directionResult.success) {
+    deterministicIssues.push({
+      sceneIdx: 0,
+      severity: "blocking",
+      code: "timing_conflict",
+      message:
+        "整片 beat graph 含无效引用、对象时间窗或重叠主视觉，系统需让总导演按当前真实时间线重做方向。",
+    });
+  }
+
   const aiIssues: VideoDirectorIssue[] = output.issues.flatMap((issue) => {
     if (
       issue.sceneIdx < 0 ||
@@ -2237,6 +2489,7 @@ export async function decideDirectorReview(
       output.summary.trim() ||
       (hasBlocking ? "总导演已进入自动修片与复审。" : "总导演审片通过。"),
     issues,
+    ...(directionResult.success ? { direction: directionResult.data } : {}),
     source: "ai",
   };
 }
@@ -2336,6 +2589,7 @@ export async function closeDirectorReview(
 
   const repairs = [...new Set(allRepairs)];
   const fallbackCardsOnly = input.cards.length === 0 && current.cards.length > 0;
+  const hasDirection = Boolean(lastReview.direction);
   return {
     cards: current.cards,
     broll: current.broll,
@@ -2347,13 +2601,16 @@ export async function closeDirectorReview(
       summary:
         fallbackCardsOnly
           ? "信息卡模型未留下可溯候选；本次仅使用基础信息卡补位，未生成 Scene Graph 内容动效，建议重新生成分镜。"
+          : !hasDirection
+          ? "时间线安全可预览，但整片运动方向未生成；本次没有把确定性排版冒充 AI 编导结论。"
           : repairs.length > 0
           ? `总导演已在当前分镜内自动完成 ${repairs.length} 类修正并复审，可进入渲染。`
           : lastReview.summary || "总导演审片通过。",
       // 通过态不再夹带“建议删除/请手动选择”等未执行意见；审片工作记录只留日志。
       issues: [],
+      ...(lastReview.direction ? { direction: lastReview.direction } : {}),
       source:
-        fallbackCardsOnly
+        fallbackCardsOnly || !hasDirection
           ? "deterministic_fallback"
           : repairs.length > 0 ||
         firstReview.status === "needs_attention" ||
@@ -2846,6 +3103,7 @@ export async function runVideoDecisions(
       {
         srtLines,
         script,
+        requireEmphasis: true,
         onChunkProgress: (progress) => {
           subtitleBatchCount = progress.total;
           if (progress.status === "fallback") subtitleFallbackBatches += 1;
@@ -2881,7 +3139,7 @@ export async function runVideoDecisions(
     const basicFallbackCards = Math.max(0, directorClosure.cards.length - cards.length);
     await step(
       4,
-      `${VIDEO_DECISION_STEPS[4]}:通过` +
+      `${VIDEO_DECISION_STEPS[4]}:${directorReview.direction ? "通过" : "安全降级（运动方向未生成）"}` +
         `（内容动效 ${contentMotionCards} 张 / 基础补位 ${basicFallbackCards} 张）` +
         (directorClosure.repairs.length > 0
           ? `；自动修片 ${directorClosure.repairs.length} 类 / 复审 ${directorClosure.reviewPasses} 次`
@@ -2907,6 +3165,9 @@ export async function runVideoDecisions(
     );
 
     const decisions: VideoDecisions = {
+      ...(directorReview.direction
+        ? { direction: directorReview.direction }
+        : {}),
       scenes,
       cards: directorClosure.cards,
       visualSlots,

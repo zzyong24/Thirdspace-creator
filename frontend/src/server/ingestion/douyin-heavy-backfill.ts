@@ -50,7 +50,7 @@ export interface DouyinHeavyBackfillHost {
     ctx: RequestContext,
     limit: number,
   ): Promise<HeavyBackfillPubRow[]>;
-  /** iesdouyin 分享页解析(host 绑 fetchDouyinVideoUrl + 真限流网关)。 */
+  /** 封面组合解析(host 绑 fetchDouyinCoverUrl + 当前账号登录态 + 真限流网关)。 */
   fetchVideoUrl(awemeId: string): Promise<{ coverUrl?: string }>;
   /** 封面图下载(host 绑 downloadDouyinImage + 真 fetch)。 */
   downloadImage(url: string): Promise<{ bytes: Uint8Array; mimeType: string }>;

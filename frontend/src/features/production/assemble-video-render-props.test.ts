@@ -13,6 +13,53 @@ import type { VideoDecisions } from "@creatoros/backend/modules/ai-runtime";
 import { assembleVideoRenderProps } from "./assemble-video-render-props";
 
 const DECISIONS: VideoDecisions = {
+  direction: {
+    motionThesis: "观点建立后由真实录屏接管，再回到人物",
+    beatGraph: [
+      {
+        id: "beat-card",
+        sceneIdx: 0,
+        startSec: 0,
+        endSec: 3.5,
+        subject: { kind: "card", ref: "card:0:0" },
+        startState: "off_canvas",
+        endState: "takeover",
+        motionVerb: "reveal",
+        stageMode: "takeover",
+        transitionIn: "fade",
+        transitionOut: "cut",
+        returnGeometry: "not_applicable",
+      },
+      {
+        id: "beat-broll",
+        sceneIdx: 1,
+        startSec: 3.5,
+        endSec: 6.5,
+        subject: { kind: "broll", ref: "broll:asset-1" },
+        startState: "off_canvas",
+        endState: "takeover",
+        motionVerb: "enter",
+        stageMode: "takeover",
+        transitionIn: "cut",
+        transitionOut: "fade",
+        returnGeometry: "same_base",
+      },
+      {
+        id: "beat-card-return",
+        sceneIdx: 1,
+        startSec: 6.5,
+        endSec: 12,
+        subject: { kind: "card", ref: "card:1:0" },
+        startState: "off_canvas",
+        endState: "takeover",
+        motionVerb: "replace",
+        stageMode: "takeover",
+        transitionIn: "cut",
+        transitionOut: "fade",
+        returnGeometry: "same_base",
+      },
+    ],
+  },
   scenes: [
     { title: "开场钩子", startSec: 0, endSec: 3.5, summary: "抛出 47% 数字" },
     { title: "角色技巧", startSec: 3.5, endSec: 12, summary: "给模型一个角色" },
@@ -32,7 +79,22 @@ const DECISIONS: VideoDecisions = {
     },
   ],
   subtitles: [
-    { index: 1, startSec: 0, endSec: 3.5, zh: "大家好,效率提升 47%", en: "Hi, +47%" },
+    {
+      index: 1,
+      startSec: 0,
+      endSec: 3.5,
+      zh: "大家好,效率提升 47%",
+      en: "Hi, +47%",
+      emphasis: [
+        {
+          text: "47%",
+          startChar: 9,
+          endChar: 12,
+          startSec: 1.9,
+          endSec: 2.7,
+        },
+      ],
+    },
     { index: 2, startSec: 3.5, endSec: 12, zh: "给模型一个角色", en: "" },
   ],
   srtLines: [
@@ -58,7 +120,32 @@ const OPTS = {
 };
 
 describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () => {
-  it("开场录屏从第一句连续覆盖前三秒时隐藏人物，后续录屏仍使用左下小窗", () => {
+  it("[T-859 RED] 竖屏主素材默认保留左下角人物，横屏仍隐藏，AI 明确值优先", () => {
+    const portrait = assembleVideoRenderProps(DECISIONS, {
+      ...OPTS,
+      orientation: "portrait",
+    });
+    const landscape = assembleVideoRenderProps(DECISIONS, {
+      ...OPTS,
+      orientation: "landscape",
+    });
+    const explicitHidden = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        broll: DECISIONS.broll.map((item) => ({
+          ...item,
+          speakerMode: "hidden" as const,
+        })),
+      },
+      { ...OPTS, orientation: "portrait" },
+    );
+
+    expect(portrait.broll[0]?.speakerMode).toBe("pip_bottom_left");
+    expect(landscape.broll[0]?.speakerMode).toBe("hidden");
+    expect(explicitHidden.broll[0]?.speakerMode).toBe("hidden");
+  });
+
+  it("开场与后续录屏都独占画布，不再自动生成左下人物小窗", () => {
     const props = assembleVideoRenderProps(
       {
         ...DECISIONS,
@@ -66,10 +153,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
           { ...DECISIONS.scenes[0]!, startSec: 0.05 },
           DECISIONS.scenes[1]!,
         ],
-        cards: [
-          { ...DECISIONS.cards[0]!, at: 0.05 },
-          DECISIONS.cards[1]!,
-        ],
+        cards: [DECISIONS.cards[1]!],
         subtitles: [
           { ...DECISIONS.subtitles[0]!, startSec: 0.05 },
           DECISIONS.subtitles[1]!,
@@ -78,6 +162,53 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
           { ...DECISIONS.srtLines[0]!, startSec: 0.05 },
           DECISIONS.srtLines[1]!,
         ],
+        direction: {
+          motionThesis: "开场真实操作直接接管，再交回人物",
+          beatGraph: [
+            {
+              id: "opening-screen",
+              sceneIdx: 0,
+              startSec: 0.05,
+              endSec: 3.5,
+              subject: { kind: "broll", ref: "broll:opening-screen" },
+              startState: "off_canvas",
+              endState: "takeover",
+              motionVerb: "cut",
+              stageMode: "takeover",
+              transitionIn: "cut",
+              transitionOut: "fade",
+              returnGeometry: "same_base",
+            },
+            {
+              id: "second-screen",
+              sceneIdx: 1,
+              startSec: 3.5,
+              endSec: 6.5,
+              subject: { kind: "broll", ref: "broll:asset-1" },
+              startState: "off_canvas",
+              endState: "takeover",
+              motionVerb: "replace",
+              stageMode: "takeover",
+              transitionIn: "cut",
+              transitionOut: "cut",
+              returnGeometry: "same_base",
+            },
+            {
+              id: "closing-card",
+              sceneIdx: 1,
+              startSec: 6.5,
+              endSec: 12,
+              subject: { kind: "card", ref: "card:1:0" },
+              startState: "off_canvas",
+              endState: "takeover",
+              motionVerb: "replace",
+              stageMode: "takeover",
+              transitionIn: "cut",
+              transitionOut: "fade",
+              returnGeometry: "same_base",
+            },
+          ],
+        },
         broll: [
           {
             sceneIdx: 0,
@@ -116,14 +247,16 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     });
     expect(props.broll[1]).toMatchObject({
       at: 3.5,
-      speakerMode: "pip_bottom_left",
+      speakerMode: "hidden",
     });
+    expect(props.direction?.beatGraph[0]?.startSec).toBe(0.05);
   });
 
   it("界面视频即使 AI 误给 large_stage 也提升为 full_frame，静态图仍保留安全舞台", () => {
     const props = assembleVideoRenderProps(
       {
         ...DECISIONS,
+        direction: undefined,
         broll: [
           {
             sceneIdx: 1,
@@ -168,10 +301,10 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     );
 
     expect(props.broll[0]!.presentation).toBe("full_frame");
-    expect(props.broll[0]!.speakerMode).toBe("pip_bottom_left");
+    expect(props.broll[0]!.speakerMode).toBe("hidden");
     expect(props.broll[0]!.visualRole).toBe("screen_recording");
     expect(props.broll[1]!.presentation).toBe("large_stage");
-    expect(props.broll[1]!.speakerMode).toBeUndefined();
+    expect(props.broll[1]!.speakerMode).toBe("hidden");
     expect(props.broll[1]!.visualRole).toBe("still_image");
   });
 
@@ -214,6 +347,15 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
       end: 3.5,
       cn: "大家好,效率提升 47%",
       en: "Hi, +47%",
+      emphasis: [
+        {
+          text: "47%",
+          startChar: 9,
+          endChar: 12,
+          startSec: 1.9,
+          endSec: 2.7,
+        },
+      ],
     });
     expect(props.captions[1]!.en).toBeUndefined(); // 空串省略
     expect(props.scenes[0]).toMatchObject({
@@ -232,7 +374,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
         label: "提示词录屏",
         presentation: "full_frame",
         visualRole: "screen_recording",
-        speakerMode: "pip_bottom_left",
+        speakerMode: "hidden",
         motion: "static",
         sourceWidth: 1170,
         sourceHeight: 2532,
@@ -240,12 +382,14 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
       },
     ]);
     expect(props.delivery).toEqual({ width: 1920, height: 1080, fps: 30 });
+    expect(props.direction).toEqual(DECISIONS.direction);
   });
 
   it("内部结构标签不上屏，场景标题从真实口播提炼，长卡片收敛为视觉摘要", () => {
     const props = assembleVideoRenderProps(
       {
         ...DECISIONS,
+        direction: undefined,
         scenes: [
           {
             title: "新闻钩子",
@@ -302,6 +446,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     const props = assembleVideoRenderProps(
       {
         ...DECISIONS,
+        direction: undefined,
         cards: [
           { sceneIdx: 0, kind: "list", content: "角色、示例、约束", at: 0 },
           { sceneIdx: 0, kind: "compare", content: "泛泛提问 vs 给角色", at: 0 },
@@ -347,6 +492,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     const props = assembleVideoRenderProps(
       {
         ...DECISIONS,
+        direction: undefined,
         cards: [
           {
             sceneIdx: 1,

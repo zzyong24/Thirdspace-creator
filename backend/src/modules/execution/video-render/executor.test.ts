@@ -695,6 +695,25 @@ describe("createVideoRenderExecutor", () => {
       ...props(),
       broll: [{ at: 4, file: screenshotAssetId, label: "官网截图" }],
       scenes: props().scenes.map((scene) => ({ ...scene, cards: [] })),
+      direction: {
+        motionThesis: "真实截图在声明拍点接管主视觉。",
+        beatGraph: [
+          {
+            id: "screenshot_takeover",
+            sceneIdx: 0,
+            startSec: 5,
+            endSec: 8,
+            subject: { kind: "broll", ref: `broll:${screenshotAssetId}` },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "enter",
+            stageMode: "takeover",
+            transitionIn: "fade",
+            transitionOut: "fade",
+            returnGeometry: "same_base",
+          },
+        ],
+      },
     });
 
     await executor.run(
@@ -710,6 +729,9 @@ describe("createVideoRenderExecutor", () => {
     );
     expect(html).toContain(
       `src="media/${screenshotAssetId}.png"`,
+    );
+    expect(html).toMatch(
+      new RegExp(`src="media/${screenshotAssetId}\\.png"[^>]+data-start="5\\.00"`),
     );
     expect(html).toMatch(
       new RegExp(`<img[^>]+src="media/${screenshotAssetId}\\.png"`),

@@ -168,6 +168,18 @@
       "what": "Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook",
       "check": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs",
       "onFail": "分层运行时消费门回归：正式 HyperFrames argv 必须显式 --require 随包 creatoros-module-resolver.cjs，并保持 NODE_OPTIONS 禁用；生产 argv 与 RAT 真渲染必须使用同一解析契约。"
+    },
+    {
+      "led": "LED-032",
+      "what": "竖屏统一舞台再次把人物整场缩角落，或素材物化改名后悄悄丢失 AI 方向与字幕重点词",
+      "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/production-workbench.test.tsx",
+      "onFail": "竖屏编导落地门回归：人物 beat 保持全画布，素材/动态内容 takeover 时人物完全退出并直接切回，不得自动缩成 PiP；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。"
+    },
+    {
+      "led": "LED-033",
+      "what": "主视觉出现时再次自动把人物缩成 PiP，或用人物缩小/放大回位动画冒充剪辑连续性",
+      "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
+      "onFail": "单主语镜头门回归：新导演合同只能 base/takeover，正式组装不产 pip_bottom_left，takeover 用不透明主视觉层盖住人物，模板不得按素材或动态卡时间窗生成 #th 缩放、位移和回位 tween。"
     }
   ],
   "program_completion_required": false,

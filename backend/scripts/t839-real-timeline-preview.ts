@@ -118,6 +118,24 @@ if (talkingHeadPreview) {
 
 const mappedProps: VideoRenderProps = {
   ...props,
+  ...(props.direction
+    ? {
+        direction: {
+          ...props.direction,
+          beatGraph: props.direction.beatGraph.map((beat) =>
+            beat.subject.kind === "broll"
+              ? {
+                  ...beat,
+                  subject: {
+                    ...beat.subject,
+                    ref: `broll:${files.get(beat.subject.ref.replace(/^broll:/, ""))?.url ?? beat.subject.ref.replace(/^broll:/, "")}`,
+                  },
+                }
+              : beat,
+          ),
+        },
+      }
+    : {}),
   talkingHead: {
     ...props.talkingHead,
     file: talkingHeadFile,

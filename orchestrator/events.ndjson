@@ -835,3 +835,12 @@
 {"ts":"2026-08-16T15:08:32.465Z","actor":"taskctl","action":"start","task":"T-856","sha_before":"e0ed5937c29f","sha_after":"32ffdf2573a0"}
 {"ts":"2026-08-16T15:14:28.605Z","actor":"taskctl","action":"block","task":"T-856","reason":"用户于 2026-08-16 明确要求本次先不修，暂停竖屏舞台、字幕可读性与重点词强调改造；未修改任何产品代码，后续由用户恢复。","sha_before":"32ffdf2573a0","sha_after":"d087ff5ceb23"}
 {"ts":"2026-08-16T15:15:00.120Z","actor":"taskctl","action":"start","task":"T-857","sha_before":"327b85d1034c","sha_after":"cbe5d831faf9"}
+{"ts":"2026-08-16T16:02:44.041Z","actor":"taskctl","action":"block","task":"T-857","reason":"用户明确改为优先解决 CreatorOS 剪辑效果；Windows 云端候选构建外部动作未获授权，保留当前已提交候选不变","sha_before":"eeedd0f25e40","sha_after":"2f5c4b41595b"}
+{"ts":"2026-08-16T16:03:05.240Z","actor":"taskctl","action":"start","task":"T-858","sha_before":"34288e8b2879","sha_after":"dac27c15ef24"}
+{"ts":"2026-08-17T02:13:08.402Z","actor":"taskctl","action":"start","task":"T-859","sha_before":"b2afd4377daf","sha_after":"4d811a3f685c"}
+{"ts":"2026-08-17T02:49:14.099Z","actor":"taskctl","action":"start","task":"T-860","sha_before":"8a173428da95","sha_after":"ccbd585351f9"}
+{"ts":"2026-08-17T03:30:47.420Z","actor":"taskctl","action":"start","task":"T-861","sha_before":"837a101cbdc5","sha_after":"e8229c712ee9"}
+{"ts":"2026-08-17T03:35:59.401Z","actor":"taskctl","action":"complete","task":"T-861","evidence":"docs/research/2026-08-16-douyin-cover-backfill-router-data-diagnosis.md；加密日志同次运行显示 60 条明细成功落库，10 条封面均在 parseDouyinVideoUrl 的 _ROUTER_DATA/item_list 解析阶段失败，汇总回填 0/10；代码交叉确认封面链未复用逐字稿链已有的登录态 detail 兜底。git diff --check 通过；全局 reconcile 仍被既有 BACKLOG runaway 与历史 receipt 漂移等 104 项范围外债务阻断。","sha_before":"e8229c712ee9","sha_after":"8d9e62717e8a"}
+{"ts":"2026-08-17T03:40:06.886Z","actor":"taskctl","action":"start","task":"T-862","sha_before":"cc17d5c1fa36","sha_after":"a30141ff0f68"}
+{"ts":"2026-08-17T03:46:21.523Z","actor":"taskctl","action":"complete","task":"T-862","evidence":"orchestrator/T862-BUILD-VALIDATION.md；TDD RED 为新增 3 条测试因 fetchDouyinCoverUrl 缺失失败，GREEN 为抓取/封面/重活 3 文件 143/143，通过 frontend typecheck、git diff --check、boundary 无新增、semantic boundary；未重抓或修改用户数据。全局 reconcile 仍被既有 BACKLOG runaway 与历史 receipt 漂移等 104 项范围外债务阻断。","sha_before":"56823307143a","sha_after":"13675bf3fee8"}
+{"ts":"2026-08-17T03:57:42.448Z","actor":"taskctl","action":"start","task":"T-863","sha_before":"2b3b9756eb94","sha_after":"551328868e5a"}

@@ -15,6 +15,7 @@ import {
   buildCardsDecisionSchema,
   buildBrollDecisionSchema,
   buildSubtitlesDecisionSchema,
+  buildVideoDirectionSchema,
   isCardContentTraceable,
   VIDEO_DECISIONS_RESULT_TYPE,
   VIDEO_DECISION_STEPS,
@@ -796,6 +797,129 @@ describe("closeDirectorReview(修完再通过)", () => {
   });
 });
 
+describe("buildVideoDirectionSchema(整片唯一主视觉)", () => {
+  const directionContext = {
+    scenes: [{ title: "开场", startSec: 0, endSec: 8, summary: "证据演示" }],
+    cards: [
+      { sceneIdx: 0, kind: "quote" as const, content: "先看结论", at: 0 },
+    ],
+    broll: [
+      {
+        sceneIdx: 0,
+        assetId: "asset-1",
+        at: 3,
+        durationSec: 3,
+        presentation: "full_frame" as const,
+        visualRole: "screen_recording" as const,
+      },
+    ],
+  };
+
+  const cardBeat = {
+    id: "beat-card",
+    sceneIdx: 0,
+    startSec: 0,
+    endSec: 3,
+    subject: { kind: "card" as const, ref: "card:0:0" },
+    startState: "off_canvas" as const,
+    endState: "takeover" as const,
+    motionVerb: "reveal" as const,
+    stageMode: "takeover" as const,
+    transitionIn: "fade" as const,
+    transitionOut: "cut" as const,
+    returnGeometry: "not_applicable" as const,
+  };
+  const brollBeat = {
+    id: "beat-broll",
+    sceneIdx: 0,
+    startSec: 3,
+    endSec: 6,
+    subject: { kind: "broll" as const, ref: "broll:asset-1" },
+    startState: "off_canvas" as const,
+    endState: "takeover" as const,
+    motionVerb: "enter" as const,
+    stageMode: "takeover" as const,
+    transitionIn: "cut" as const,
+    transitionOut: "fade" as const,
+    returnGeometry: "same_base" as const,
+  };
+
+  it("真实 ref、对象时间窗和首尾相接的 beat 可通过", () => {
+    expect(
+      buildVideoDirectionSchema(directionContext).parse({
+        motionThesis: "观点建立后由真实录屏接管，再回到人物",
+        beatGraph: [cardBeat, brollBeat],
+      }).beatGraph,
+    ).toHaveLength(2);
+  });
+
+  it("拒绝两个主视觉时间窗重叠，也拒绝不存在的 ref", () => {
+    const schema = buildVideoDirectionSchema(directionContext);
+    expect(
+      schema.safeParse({
+        motionThesis: "错误重叠",
+        beatGraph: [cardBeat, { ...brollBeat, startSec: 2.5 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        motionThesis: "错误引用",
+        beatGraph: [
+          {
+            ...cardBeat,
+            subject: { kind: "card", ref: "card:0:99" },
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("[T-858 RED] 拒绝漏编排或重复编排任何卡片/B-roll", () => {
+    const schema = buildVideoDirectionSchema(directionContext);
+    const missing = schema.safeParse({
+      motionThesis: "漏掉录屏",
+      beatGraph: [cardBeat],
+    });
+    expect(missing.success).toBe(false);
+    expect(JSON.stringify(missing.error?.issues)).toContain("broll:asset-1");
+    expect(JSON.stringify(missing.error?.issues)).toContain("恰好一次");
+
+    const duplicate = schema.safeParse({
+      motionThesis: "重复同一录屏",
+      beatGraph: [
+        cardBeat,
+        { ...brollBeat, endSec: 4.5 },
+        { ...brollBeat, id: "beat-broll-again", startSec: 4.5 },
+      ],
+    });
+    expect(duplicate.success).toBe(false);
+    expect(JSON.stringify(duplicate.error?.issues)).toContain("broll:asset-1");
+    expect(JSON.stringify(duplicate.error?.issues)).toContain("恰好一次");
+  });
+
+  it("[T-858 RED] 明确辅助 overlay 不进入主视觉 beatGraph", () => {
+    const overlayContext = {
+      ...directionContext,
+      broll: [
+        {
+          ...directionContext.broll[0]!,
+          presentation: "overlay" as const,
+        },
+      ],
+    };
+    const schema = buildVideoDirectionSchema(overlayContext);
+    expect(
+      schema.safeParse({ motionThesis: "辅助不抢主语", beatGraph: [cardBeat] }).success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        motionThesis: "错误地把辅助当接管",
+        beatGraph: [cardBeat, brollBeat],
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe("decideScenes(吸附与推导)", () => {
   it("边界吸附最近 SRT 行 start;endSec 一律推导;首场对齐首行", async () => {
     const call = fakeCall({
@@ -1223,6 +1347,7 @@ describe("decideBroll(清单硬门)", () => {
             durationSec: 5,
             presentation: "full_frame",
             visualRole: "screen_recording",
+            speakerMode: "pip_bottom_left",
           },
         ],
       } as T;
@@ -1262,6 +1387,7 @@ describe("decideBroll(清单硬门)", () => {
         durationSec: 3.5,
         presentation: "full_frame",
         visualRole: "screen_recording",
+        speakerMode: "pip_bottom_left",
         motion: "static",
       },
     ]);
@@ -1298,6 +1424,24 @@ describe("decideBroll(清单硬门)", () => {
         ],
       }).success,
     ).toBe(false);
+  });
+
+  it("[T-859 RED] material.match 的人物模式随真实素材候选穿过动态安全门", () => {
+    const schema = buildVideoMaterialMatchSchema(["real"], 1);
+    const parsed = schema.parse({
+      matches: [
+        {
+          assetId: "real",
+          role: "clip",
+          reason: "竖屏素材段保留左下角讲解人",
+          sceneIdx: 0,
+          visualRole: "screen_recording",
+          presentation: "full_frame",
+          speakerMode: "pip_bottom_left",
+        },
+      ],
+    });
+    expect(parsed.matches[0]?.speakerMode).toBe("pip_bottom_left");
   });
 
   it("material.match 一条违约映射不会拖垮同批合法素材", () => {
@@ -1807,6 +1951,84 @@ describe("collectProjectBrollInventory(项目/账号边界 + 上传链投影)", 
 });
 
 describe("decideSubtitles(时间轴不变 + 重写守门)", () => {
+  it("保留逐字匹配且时间落在真实 SRT 行内的 AI 重点词，非法范围只丢强调", async () => {
+    const call = fakeCall({
+      "video.subtitles": {
+        lines: [
+          {
+            index: 1,
+            zh: srtLines[0]!.text,
+            en: "Three prompt tips, 47% more efficient",
+            emphasis: [
+              {
+                text: "47%",
+                startChar: 20,
+                endChar: 23,
+                startSec: 2.1,
+                endSec: 2.9,
+              },
+              {
+                text: "不存在",
+                startChar: 0,
+                endChar: 3,
+                startSec: 0.2,
+                endSec: 0.8,
+              },
+            ],
+          },
+          ...srtLines.slice(1).map((line) => ({
+            index: line.index,
+            zh: line.text,
+            en: "",
+            emphasis: [],
+          })),
+        ],
+      },
+    });
+    const lines = await decideSubtitles({ srtLines, script: SCRIPT }, call);
+    expect(lines[0]?.emphasis).toEqual([
+      {
+        text: "47%",
+        startChar: 20,
+        endChar: 23,
+        startSec: 2.1,
+        endSec: 2.9,
+      },
+    ]);
+  });
+
+  it("新候选全片无合法重点时只定向重试一次，不用代码猜词", async () => {
+    let calls = 0;
+    const call: StructuredCall = async <T>() => {
+      calls += 1;
+      return {
+        lines: srtLines.map((line, index) => ({
+          index: line.index,
+          zh: line.text,
+          en: "",
+          emphasis:
+            calls === 2 && index === 0
+              ? [
+                  {
+                    text: "47%",
+                    startChar: 20,
+                    endChar: 23,
+                    startSec: 2.1,
+                    endSec: 2.9,
+                  },
+                ]
+              : [],
+        })),
+      } as T;
+    };
+    const lines = await decideSubtitles(
+      { srtLines, script: SCRIPT, requireEmphasis: true },
+      call,
+    );
+    expect(calls).toBe(2);
+    expect(lines.flatMap((line) => line.emphasis ?? [])).toHaveLength(1);
+  });
+
   it("时间轴一律回填原值;小改字保留;重写(相似度<阈值)退回原文;en 透传", async () => {
     const call = fakeCall({
       "video.subtitles": {
@@ -2003,11 +2225,58 @@ const HAPPY_OUTPUTS: Record<string, unknown> = {
     ],
   },
   "video.subtitles": {
-    lines: srtLines.map((l) => ({ index: l.index, zh: l.text, en: "en" })),
+    lines: srtLines.map((l, index) => ({
+      index: l.index,
+      zh: l.text,
+      en: "en",
+      emphasis:
+        index === 0
+          ? [
+              {
+                text: "47%",
+                startChar: 20,
+                endChar: 23,
+                startSec: 2.1,
+                endSec: 2.9,
+              },
+            ]
+          : [],
+    })),
   },
   "video.director": {
     verdict: "ready",
     summary: "叙事、素材和时间线完整。",
+    motionThesis: "信息卡建立观点，真实操作接管画布，再回到人物",
+    beatGraph: [
+      {
+        id: "beat-card",
+        sceneIdx: 0,
+        startSec: 0,
+        endSec: 3.5,
+        subject: { kind: "card", ref: "card:0:0" },
+        startState: "off_canvas",
+        endState: "takeover",
+        motionVerb: "reveal",
+        stageMode: "takeover",
+        transitionIn: "fade",
+        transitionOut: "cut",
+        returnGeometry: "not_applicable",
+      },
+      {
+        id: "beat-broll",
+        sceneIdx: 1,
+        startSec: 3.5,
+        endSec: 6.5,
+        subject: { kind: "broll", ref: "broll:asset-1" },
+        startState: "off_canvas",
+        endState: "takeover",
+        motionVerb: "enter",
+        stageMode: "takeover",
+        transitionIn: "cut",
+        transitionOut: "fade",
+        returnGeometry: "same_base",
+      },
+    ],
     issues: [],
   },
 };
@@ -2190,14 +2459,22 @@ describe("runVideoDecisions(编排)", () => {
       { resultData: Record<string, unknown> },
     ];
     const decisions = result.resultData.decisions as {
+      direction?: unknown;
       cards: unknown[];
       broll: Array<{ assetId: string; sceneIdx: number }>;
-      directorReview: { status: string; source: string; issues: unknown[] };
+      directorReview: {
+        status: string;
+        source: string;
+        summary: string;
+        issues: unknown[];
+      };
     };
     expect(decisions.directorReview).toMatchObject({
       status: "ready",
-      source: "auto_repaired",
+      source: "deterministic_fallback",
     });
+    expect(decisions.directorReview.summary).toContain("运动方向未生成");
+    expect(decisions.direction).toBeUndefined();
     expect(decisions.directorReview.issues).toHaveLength(0);
     expect(decisions.broll).toEqual([
       expect.objectContaining({ assetId: "asset-1", sceneIdx: 1 }),

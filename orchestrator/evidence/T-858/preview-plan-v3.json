@@ -1,0 +1,268 @@
+{
+  "sourceTaskRecord": "/private/tmp/t838-task-record.json",
+  "previewWindow": [
+    0,
+    14
+  ],
+  "delivery": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "motionThesis": "人物、横版证据与动态内容逐拍独占画布；主视觉结束后直接切回未变形的全画布人物。",
+  "beatGraph": [
+    {
+      "id": "person_base_open",
+      "sceneIdx": 0,
+      "startSec": 0,
+      "endSec": 3.366,
+      "subject": {
+        "kind": "talking_head",
+        "ref": "talking_head"
+      },
+      "startState": "base",
+      "endState": "base",
+      "motionVerb": "hold",
+      "stageMode": "base",
+      "transitionIn": "cut",
+      "transitionOut": "slide",
+      "returnGeometry": "not_applicable"
+    },
+    {
+      "id": "evidence_1",
+      "sceneIdx": 0,
+      "startSec": 3.366,
+      "endSec": 5.65,
+      "subject": {
+        "kind": "broll",
+        "ref": "broll:asset-016270fc-2948"
+      },
+      "startState": "off_canvas",
+      "endState": "takeover",
+      "motionVerb": "enter",
+      "stageMode": "takeover",
+      "transitionIn": "slide",
+      "transitionOut": "fade",
+      "returnGeometry": "same_base"
+    },
+    {
+      "id": "evidence_2",
+      "sceneIdx": 0,
+      "startSec": 5.65,
+      "endSec": 7.083,
+      "subject": {
+        "kind": "broll",
+        "ref": "broll:asset-b269a0a7-510"
+      },
+      "startState": "off_canvas",
+      "endState": "takeover",
+      "motionVerb": "replace",
+      "stageMode": "takeover",
+      "transitionIn": "cut",
+      "transitionOut": "fade",
+      "returnGeometry": "same_base"
+    },
+    {
+      "id": "dynamic_ppt_sequence",
+      "sceneIdx": 1,
+      "startSec": 7.083,
+      "endSec": 11.4,
+      "subject": {
+        "kind": "card",
+        "ref": "card:1:0"
+      },
+      "startState": "off_canvas",
+      "endState": "takeover",
+      "motionVerb": "reveal",
+      "stageMode": "takeover",
+      "transitionIn": "slide",
+      "transitionOut": "fade",
+      "returnGeometry": "same_base"
+    },
+    {
+      "id": "person_base_return",
+      "sceneIdx": 1,
+      "startSec": 11.4,
+      "endSec": 14,
+      "subject": {
+        "kind": "talking_head",
+        "ref": "talking_head"
+      },
+      "startState": "base",
+      "endState": "base",
+      "motionVerb": "hold",
+      "stageMode": "base",
+      "transitionIn": "fade",
+      "transitionOut": "cut",
+      "returnGeometry": "not_applicable"
+    }
+  ],
+  "captions": [
+    {
+      "cn": "这套选题写稿",
+      "end": 1.183,
+      "start": 0.05,
+      "en": "This topic-to-script workflow",
+      "emphasis": [
+        {
+          "text": "选题写稿",
+          "startChar": 2,
+          "endChar": 6,
+          "startSec": 0.22999999999999998,
+          "endSec": 1.103
+        }
+      ]
+    },
+    {
+      "cn": "审稿的循环",
+      "end": 2.05,
+      "start": 1.2,
+      "en": "and its review loop",
+      "emphasis": [
+        {
+          "text": "循环",
+          "startChar": 3,
+          "endChar": 5,
+          "startSec": 1.38,
+          "endSec": 1.9699999999999998
+        }
+      ]
+    },
+    {
+      "cn": "在我自己项目里面",
+      "end": 3.283,
+      "start": 2.05,
+      "en": "inside my own project",
+      "emphasis": [
+        {
+          "text": "自己项目",
+          "startChar": 2,
+          "endChar": 6,
+          "startSec": 2.23,
+          "endSec": 3.203
+        }
+      ]
+    },
+    {
+      "cn": "整整串了三周的位",
+      "end": 4.65,
+      "start": 3.366,
+      "en": "kept mixing context for three weeks",
+      "emphasis": [
+        {
+          "text": "三周",
+          "startChar": 4,
+          "endChar": 6,
+          "startSec": 3.5460000000000003,
+          "endSec": 4.57
+        }
+      ]
+    },
+    {
+      "cn": "最后是Deepseekalys的",
+      "end": 5.25,
+      "start": 4.65,
+      "en": "Then a DeepSeek analysis",
+      "emphasis": [
+        {
+          "text": "最后",
+          "startChar": 0,
+          "endChar": 2,
+          "startSec": 4.83,
+          "endSec": 5.17
+        }
+      ]
+    },
+    {
+      "cn": "一份文档把我点醒了",
+      "end": 7.05,
+      "start": 5.65,
+      "en": "finally made the problem click",
+      "emphasis": [
+        {
+          "text": "点醒",
+          "startChar": 6,
+          "endChar": 8,
+          "startSec": 5.83,
+          "endSec": 6.97
+        }
+      ]
+    },
+    {
+      "cn": "我们做内容操盘的应该都懂",
+      "end": 8.7,
+      "start": 7.083,
+      "en": "Content operators know this feeling",
+      "emphasis": [
+        {
+          "text": "内容操盘",
+          "startChar": 3,
+          "endChar": 7,
+          "startSec": 7.263,
+          "endSec": 8.62
+        }
+      ]
+    },
+    {
+      "cn": "选题是让AI在跑",
+      "end": 9.966,
+      "start": 8.833,
+      "en": "AI is running topic selection",
+      "emphasis": [
+        {
+          "text": "AI",
+          "startChar": 4,
+          "endChar": 6,
+          "startSec": 9.013,
+          "endSec": 9.886
+        }
+      ]
+    },
+    {
+      "cn": "写稿也是在让AI在跑",
+      "end": 11.483,
+      "start": 9.966,
+      "en": "AI is also drafting the script",
+      "emphasis": [
+        {
+          "text": "AI",
+          "startChar": 6,
+          "endChar": 8,
+          "startSec": 10.145999999999999,
+          "endSec": 11.403
+        }
+      ]
+    },
+    {
+      "cn": "甚至最后的审稿也是AI在跑",
+      "end": 13.4,
+      "start": 11.533,
+      "en": "and AI is reviewing it too",
+      "emphasis": [
+        {
+          "text": "AI",
+          "startChar": 9,
+          "endChar": 11,
+          "startSec": 11.713,
+          "endSec": 13.32
+        }
+      ]
+    },
+    {
+      "cn": "那听起来很爽",
+      "end": 14,
+      "start": 13.566,
+      "en": "That sounds effortless",
+      "emphasis": [
+        {
+          "text": "很爽",
+          "startChar": 4,
+          "endChar": 6,
+          "startSec": 13.746,
+          "endSec": 13.92
+        }
+      ]
+    }
+  ],
+  "note": "重点词为显式验收候选夹具；生产候选由 video.subtitles AI 生成，同一契约校验与渲染链落实。"
+}

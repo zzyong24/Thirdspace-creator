@@ -4,8 +4,9 @@ import { DouyinCooldownActiveError } from "./douyin-request-gateway";
 
 // 作品封面回填(T-078)。
 //
-// 背景:iesdouyin 分享页解析(douyin-cdp parseDouyinVideoUrl)一直能抽到
-// `video.cover.url_list[0]`,但此前无人消费 —— 作品列表全是渐变占位假封面。
+// 背景:匿名 iesdouyin 分享页可抽 `video.cover.url_list[0]`，但页面结构/风控会让
+// `_ROUTER_DATA` 或 item_list 为空；host 通过 douyin-cdp 的组合入口在解析类失败时
+// 按当前账号登录态回落 detail，网络/HTTP/冷却类错误仍不双路重试。
 // 本模块把封面挂进 self.metrics 采集链:每轮指标采集后,对**尚无 coverAssetId**
 // 的已发布抖音 publication 逐条:
 //   iesdouyin 分享页(aweme_id)→ coverUrl → 下载字节(带 Referer,抖音 CDN 校验
@@ -46,7 +47,7 @@ export interface CoverBackfillResult {
 export interface CoverBackfillPorts {
   /** 缺封面候选集(host 绑 publishingService.listPublicationsMissingCover)。 */
   listMissingCover(limit: number): Promise<MissingCoverPublication[]>;
-  /** iesdouyin 分享页解析(host 绑 fetchDouyinVideoUrl + 真限流网关)。 */
+  /** 封面组合解析(host 绑 fetchDouyinCoverUrl + 当前账号登录态 + 真限流网关)。 */
   fetchVideoUrl(awemeId: string): Promise<{ coverUrl?: string }>;
   /** 封面图下载(host 绑 downloadDouyinImage + 真 fetch)。 */
   downloadImage(url: string): Promise<{ bytes: Uint8Array; mimeType: string }>;

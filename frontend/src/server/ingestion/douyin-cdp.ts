@@ -2520,6 +2520,8 @@ export interface FetchVideoSourceOptions {
   authDir: string;
   /** iesdouyin 匿名 channel 的限流网关(首选路径)。 */
   gateway?: DouyinChannelGate;
+  /** 固定日志域：共享兜底能力被逐字稿与封面回填复用，但日志必须说清真实调用方。 */
+  purpose?: "transcribe" | "cover";
 }
 
 /**
@@ -2551,8 +2553,9 @@ export async function fetchDouyinVideoSource(
     const parseFailed =
       err instanceof DouyinAudioFetchError && msg.includes("parseDouyinVideoUrl");
     if (!parseFailed) throw err;
+    const logScope = opts.purpose === "cover" ? "douyin-cover-backfill" : "transcribe";
     console.log(
-      `[transcribe] aweme ${opts.awemeId} iesdouyin 解析失败,回落登录态 detail 路径:${msg}`,
+      `[${logScope}] aweme ${opts.awemeId} iesdouyin 解析失败,回落登录态 detail 路径:${msg}`,
     );
     return fetchViaDetail({
       awemeId: opts.awemeId,
@@ -2560,6 +2563,25 @@ export async function fetchDouyinVideoSource(
       gateway: opts.gateway,
     });
   }
+}
+
+/**
+ * [T-862] 封面回填专用组合入口。复用 fetchDouyinVideoSource 的解析失败分类与账号隔离
+ * 登录态兜底，只把真实 coverUrl 暴露给回填层：
+ * - video + coverUrl → 继续下载/落库；
+ * - video 无 cover 或 image-album → 返回空对象，由回填层诚实 skipped；
+ * - 网络/HTTP/冷却错误 → 原样抛出，不盲目切第二通道。
+ */
+export async function fetchDouyinCoverUrl(
+  opts: Omit<FetchVideoSourceOptions, "purpose">,
+  deps: FetchVideoSourceDeps = {},
+): Promise<{ coverUrl?: string }> {
+  const source = await fetchDouyinVideoSource(
+    { ...opts, purpose: "cover" },
+    deps,
+  );
+  if (source.kind === "image-album" || !source.coverUrl) return {};
+  return { coverUrl: source.coverUrl };
 }
 
 export interface FetchCommentsTarget {
