@@ -8,9 +8,11 @@ import {
   harvestArtifacts,
   materializeInputs,
   readArtifactBytes,
+  pruneSandboxIntermediates,
   resolveInsideDir,
   resolveWorkspacesRoot,
   sandboxDirFor,
+  sweepInterruptedRenderFrames,
   sweepOrphanSandboxes,
   mimeForFileName,
   SandboxPathViolation,
@@ -182,6 +184,47 @@ describe("readArtifactBytes / cleanupSandbox / sweepOrphanSandboxes", () => {
     expect(removed).toBe(1);
     expect(await fs.stat(path.join(root, "old-task")).catch(() => null)).toBeNull();
     expect(await fs.stat(path.join(root, "new-task")).catch(() => null)).not.toBeNull();
+  });
+
+  it("[T-869 RED] keeps only confirmable outputs after a successful execution", async () => {
+    const sandbox = await createSandbox(root, "render-success");
+    await fs.writeFile(path.join(sandbox.inputDir, "source.mov"), "source");
+    await fs.mkdir(path.join(sandbox.dir, "work", "work-render", "captured-frames"), {
+      recursive: true,
+    });
+    await fs.writeFile(
+      path.join(sandbox.dir, "work", "work-render", "captured-frames", "frame_000001.jpg"),
+      "frame",
+    );
+    await fs.writeFile(path.join(sandbox.dir, "work", "render_raw.mp4"), "raw");
+    await fs.writeFile(path.join(sandbox.outDir, "final.mp4"), "final");
+
+    await pruneSandboxIntermediates(root, "render-success");
+
+    expect(await fs.stat(sandbox.inputDir).catch(() => null)).toBeNull();
+    expect(await fs.stat(path.join(sandbox.dir, "work")).catch(() => null)).toBeNull();
+    expect(await fs.readFile(path.join(sandbox.outDir, "final.mp4"), "utf8")).toBe("final");
+  });
+
+  it("[T-869 RED] removes interrupted HyperFrames frame directories on startup without touching outputs", async () => {
+    const interrupted = await createSandbox(root, "render-interrupted");
+    const framesDir = path.join(
+      interrupted.dir,
+      "work",
+      "work-render-abcd",
+      "captured-frames",
+    );
+    await fs.mkdir(framesDir, { recursive: true });
+    await fs.writeFile(path.join(framesDir, "frame_000001.jpg"), "frame");
+    await fs.writeFile(path.join(interrupted.outDir, "partial-diagnostic.txt"), "keep");
+
+    const result = await sweepInterruptedRenderFrames(root);
+
+    expect(result).toEqual({ directoriesRemoved: 1, filesRemoved: 1, bytesRemoved: 5 });
+    expect(await fs.stat(framesDir).catch(() => null)).toBeNull();
+    expect(
+      await fs.readFile(path.join(interrupted.outDir, "partial-diagnostic.txt"), "utf8"),
+    ).toBe("keep");
   });
 });
 

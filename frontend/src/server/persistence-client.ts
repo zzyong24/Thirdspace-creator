@@ -224,6 +224,7 @@ import {
   runExecutionTask,
   abortExecutionTask,
   resolveWorkspacesRoot,
+  sweepInterruptedRenderFrames,
   sweepOrphanSandboxes,
   EXECUTION_OP_IDS,
   // [T-256b/c/T-313] 自主任务运行时:agentic executor + Pi 引擎(带确定性兜底)+ 三领域适配器 + token 估算。
@@ -8624,6 +8625,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-255a] 启动清扫孤儿沙箱(T-207 sweep 兜底同族):采纳/丢弃/失败本会清沙箱,
   // 残留 = 进程中途被杀的孤儿;超 7 天(mtime)一律清除。fire-and-forget,不阻断启动。
+  // [T-869] HyperFrames 若随应用一起被杀，自己的 finally 无法执行，会遗留数千张
+  // captured-frames。启动时先定向删帧，不等待 7 天，也不碰 out/ 候选成片。
+  await sweepInterruptedRenderFrames(executionWorkspacesRoot)
+    .then((result) => {
+      if (result.directoriesRemoved > 0) {
+        console.info("[execution] 已清理中断渲染逐帧缓存", result);
+      }
+    })
+    .catch((e) => console.error("[execution] 启动清理逐帧缓存失败:", e));
   void sweepOrphanSandboxes(executionWorkspacesRoot).catch((e) =>
     console.error("[execution] 启动清扫孤儿沙箱失败:", e),
   );

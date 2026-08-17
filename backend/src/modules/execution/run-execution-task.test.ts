@@ -199,6 +199,14 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
       taskType: "video.render",
       async run(sandbox) {
         await new Promise((resolve) => setTimeout(resolve, 30));
+        await fs.mkdir(path.join(sandbox.dir, "work", "work-render", "captured-frames"), {
+          recursive: true,
+        });
+        await fs.writeFile(
+          path.join(sandbox.dir, "work", "work-render", "captured-frames", "frame.jpg"),
+          "temporary-frame",
+        );
+        await fs.writeFile(path.join(sandbox.dir, "work", "render_raw.mp4"), "raw-video");
         await fs.writeFile(path.join(sandbox.outDir, "final.mp4"), "video-bytes");
         return { summary: "长渲染完成" };
       },
@@ -225,6 +233,15 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     expect(ai.steps).toContainEqual(
       expect.objectContaining({ text: expect.stringContaining("无固定总超时") }),
     );
+    expect(
+      await fs.readFile(path.join(root, "t-render-no-deadline", "out", "final.mp4"), "utf8"),
+    ).toBe("video-bytes");
+    expect(
+      await fs.stat(path.join(root, "t-render-no-deadline", "input")).catch(() => null),
+    ).toBeNull();
+    expect(
+      await fs.stat(path.join(root, "t-render-no-deadline", "work")).catch(() => null),
+    ).toBeNull();
   });
 
   // [RT-H06] network 约束的诚实执行门。
@@ -320,6 +337,7 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     expect(abortExecutionTask("t-abort")).toBe(true);
     await run;
     expect(ai.failures[0]).toContain("已中止");
+    expect(await fs.stat(path.join(root, "t-abort")).catch(() => null)).toBeNull();
     // in-flight 表已清:重复 abort 不再命中。
     expect(abortExecutionTask("t-abort")).toBe(false);
   });

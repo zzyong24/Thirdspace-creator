@@ -12,6 +12,7 @@ import {
   createSandbox,
   harvestArtifacts,
   materializeInputs,
+  pruneSandboxIntermediates,
 } from "./sandbox";
 import type { ExecutorRegistry } from "./executor-registry";
 
@@ -233,6 +234,11 @@ export async function runExecutionTask(
     await deps.ai.recordCandidate(ctx, taskId, {
       resultType: "execution_manifest",
       resultData: { manifest },
+    });
+    // 候选的唯一可确认实体都在 out/。输入副本、逐帧图、转码文件与 render_raw
+    // 不再参与确认，立即删除；最终成片继续留在 out/，采纳/丢弃后再清整个沙箱。
+    await pruneSandboxIntermediates(deps.workspacesRoot, taskId).catch((error) => {
+      console.warn(`[run-execution-task] task ${taskId} 中间文件清理失败，将在启动时重试:`, error);
     });
     await step(`完成:${artifacts.length} 个产物待确认`, "final");
   } catch (err) {

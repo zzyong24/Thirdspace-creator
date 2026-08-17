@@ -60,12 +60,15 @@ export {
   harvestArtifacts,
   readArtifactBytes,
   cleanupSandbox,
+  pruneSandboxIntermediates,
+  sweepInterruptedRenderFrames,
   sweepOrphanSandboxes,
   mimeForFileName,
   SandboxPathViolation,
   SandboxOutputLimitError,
   type SandboxPaths,
   type MaterializedInput,
+  type InterruptedRenderFrameSweepResult,
 } from "./sandbox";
 
 export { isSensitiveFileName } from "./sensitive-files";

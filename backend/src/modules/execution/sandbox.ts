@@ -258,6 +258,83 @@ export async function cleanupSandbox(
 }
 
 /**
+ * 执行成功并已收割 out/ 后，输入副本与 work/ 中间产物已失去用途。
+ * 只删除两个固定目录，保留 out/ 供用户确认，也保留未来可能新增的诊断目录。
+ */
+export async function pruneSandboxIntermediates(
+  root: string,
+  taskId: string,
+): Promise<void> {
+  const dir = sandboxDirFor(root, taskId);
+  await Promise.all([
+    fs.rm(path.join(dir, "input"), { recursive: true, force: true }),
+    fs.rm(path.join(dir, "work"), { recursive: true, force: true }),
+  ]);
+}
+
+export interface InterruptedRenderFrameSweepResult {
+  directoriesRemoved: number;
+  filesRemoved: number;
+  bytesRemoved: number;
+}
+
+/**
+ * 应用重启意味着上一进程的 HyperFrames 已经不再运行。定向删除其来不及回收的
+ * `captured-frames/`，不碰 out/、正式素材或其他诊断文件。
+ */
+export async function sweepInterruptedRenderFrames(
+  root: string,
+): Promise<InterruptedRenderFrameSweepResult> {
+  const result: InterruptedRenderFrameSweepResult = {
+    directoriesRemoved: 0,
+    filesRemoved: 0,
+    bytesRemoved: 0,
+  };
+  const resolvedRoot = path.resolve(root);
+  const taskEntries = await fs
+    .readdir(resolvedRoot, { withFileTypes: true })
+    .catch(() => []);
+
+  async function measureDirectory(dir: string): Promise<void> {
+    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await measureDirectory(abs);
+      } else if (entry.isFile()) {
+        const stat = await fs.stat(abs).catch(() => null);
+        if (!stat?.isFile()) continue;
+        result.filesRemoved += 1;
+        result.bytesRemoved += stat.size;
+      }
+    }
+  }
+
+  async function walkForCapturedFrames(dir: string): Promise<void> {
+    const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      const abs = path.join(dir, entry.name);
+      if (entry.name === "captured-frames") {
+        await measureDirectory(abs);
+        await fs.rm(abs, { recursive: true, force: true });
+        result.directoriesRemoved += 1;
+        continue;
+      }
+      await walkForCapturedFrames(abs);
+    }
+  }
+
+  for (const entry of taskEntries) {
+    if (!entry.isDirectory() || !SAFE_TASK_ID.test(entry.name)) continue;
+    const workDir = path.join(resolvedRoot, entry.name, "work");
+    await walkForCapturedFrames(workDir);
+  }
+  return result;
+}
+
+/**
  * 孤儿沙箱启动清扫(T-207 sweep 兜底同族):workspaces 根下 mtime 超过 maxAgeMs
  * (默认 7 天)的任务目录一律清除(采纳/丢弃本会清,残留=进程中途被杀的孤儿)。
  * best-effort:单目录失败吞掉继续。返回清除数。
