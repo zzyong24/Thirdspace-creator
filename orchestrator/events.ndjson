@@ -835,3 +835,5 @@
 {"ts":"2026-08-16T15:08:32.465Z","actor":"taskctl","action":"start","task":"T-856","sha_before":"e0ed5937c29f","sha_after":"32ffdf2573a0"}
 {"ts":"2026-08-16T15:14:28.605Z","actor":"taskctl","action":"block","task":"T-856","reason":"用户于 2026-08-16 明确要求本次先不修，暂停竖屏舞台、字幕可读性与重点词强调改造；未修改任何产品代码，后续由用户恢复。","sha_before":"32ffdf2573a0","sha_after":"d087ff5ceb23"}
 {"ts":"2026-08-16T15:15:00.120Z","actor":"taskctl","action":"start","task":"T-857","sha_before":"327b85d1034c","sha_after":"cbe5d831faf9"}
+{"ts":"2026-08-17T01:04:30.105Z","actor":"taskctl","action":"start","task":"T-859","sha_before":"3f8126508dc7","sha_after":"81125704ec43"}
+{"ts":"2026-08-17T01:36:16.670Z","actor":"taskctl","action":"complete","task":"T-859","evidence":"官方 image.generate 真测 4/4（普通图 1/1、530 字封面 3/3，均单次 HTTP 200，无 502）；backend 聚焦 113/113、ai-worker 聚焦 22/22、两端 typecheck PASS、boundary 无新增；全局 reconcile 被 105 条既有 BACKLOG/review/frontend receipt 治理欠债阻断，T-859 未新增物理边界违规","sha_before":"4e5fde821cca","sha_after":"623eaec85101"}

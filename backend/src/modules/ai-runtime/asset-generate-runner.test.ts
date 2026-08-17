@@ -27,6 +27,7 @@ function makeDeps(opts: {
   registry: MultimodalProviderRegistry;
   provider?: string;
   kind?: "image" | "video";
+  channelManaged?: boolean;
   resolveThrows?: boolean;
   createdAssetId?: string;
   runtimeByTask?: Map<string, Record<string, unknown>>;
@@ -82,6 +83,9 @@ function makeDeps(opts: {
         kind: (capability === "image.generate" ? "image" : "video") as
           | "image"
           | "video",
+        ...(opts.channelManaged
+          ? { displayModelKey: "channel-managed" as const }
+          : {}),
       };
     },
   );
@@ -171,6 +175,85 @@ describe("runAssetGenerate — image(同步)装配", () => {
     expect((cand.resultData as { assetId: string }).assetId).toBe("asset-img-42");
     expect((cand.resultData as { aspectRatio?: string }).aspectRatio).toBe("9:16");
   });
+
+  it("相同提示词的两次独立生成使用不同幂等号，不会误复用上一张图", async () => {
+    const keys: string[] = [];
+    const registry = {
+      fake: {
+        generateImage: async (
+          _spec: unknown,
+          options: { idempotencyKey?: string },
+        ) => {
+          keys.push(options.idempotencyKey ?? "");
+          return { assetBytes: new Uint8Array([1, 2, 3]) };
+        },
+      },
+    } as unknown as MultimodalProviderRegistry;
+    const made = makeDeps({ registry });
+
+    await runAssetGenerate(
+      ctx,
+      { id: "image-run-a", projectId: "p1", inputData: { prompt: "同一提示词" } },
+      made.deps,
+    );
+    await runAssetGenerate(
+      ctx,
+      { id: "image-run-b", projectId: "p1", inputData: { prompt: "同一提示词" } },
+      made.deps,
+    );
+
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).not.toBe(keys[1]);
+  });
+
+  it.each(["image", "video"] as const)(
+    "官方渠道 %s 提交连续 502 时沿用同一幂等号退避恢复",
+    async (kind) => {
+      const keys: string[] = [];
+      let attempts = 0;
+      const generate = async (
+        _spec: unknown,
+        options: { idempotencyKey?: string },
+      ) => {
+        keys.push(options.idempotencyKey ?? "");
+        attempts += 1;
+        if (attempts < 3) {
+          throw new MultimodalGenerationError("official gateway 502", {
+            reason: "upstream",
+            stage: "submit",
+            status: 502,
+            retryable: true,
+          });
+        }
+        return { assetBytes: new Uint8Array([4, 5, 6]) };
+      };
+      const registry = {
+        fake:
+          kind === "image"
+            ? { generateImage: generate }
+            : { generateVideo: generate },
+      } as unknown as MultimodalProviderRegistry;
+      const made = makeDeps({ registry, kind, channelManaged: true });
+      const sleep = vi.fn(async (_ms: number) => undefined);
+      (made.deps as Record<string, unknown>).sleep = sleep;
+
+      await runAssetGenerate(
+        ctx,
+        {
+          id: `managed-${kind}-502`,
+          projectId: "p1",
+          inputData: { prompt: "生成一份素材", kind },
+        },
+        made.deps,
+      );
+
+      expect(attempts).toBe(3);
+      expect(new Set(keys).size).toBe(1);
+      expect(sleep.mock.calls.map(([ms]) => ms)).toEqual([1_000, 3_000]);
+      expect(made.recordCandidate).toHaveBeenCalledOnce();
+      expect(made.cancelTask).not.toHaveBeenCalled();
+    },
+  );
 
   it("[T-735] 生图响应已收到但本地落盘失败时，重试不再发第二次计费请求", async () => {
     const runtimeByTask = new Map<string, Record<string, unknown>>();

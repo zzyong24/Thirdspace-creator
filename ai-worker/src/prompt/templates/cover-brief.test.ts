@@ -11,4 +11,10 @@ describe("cover.brief 用户画面要求", () => {
       "userVisualRequirements",
     );
   });
+
+  it("要求封面方案保持简洁，不让文本模型把画面提示词膨胀成策划案", () => {
+    expect(COVER_BRIEF_TEMPLATE.template).toContain("不超过 220 字");
+    expect(COVER_BRIEF_TEMPLATE.template).toContain("不超过 100 字");
+    expect(COVER_BRIEF_TEMPLATE.template).toContain("不超过 40 字");
+  });
 });

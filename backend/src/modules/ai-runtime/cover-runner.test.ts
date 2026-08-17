@@ -30,6 +30,10 @@ import {
   composeCoverImagePrompt,
   clampCoverPlan,
   COVER_KEYPOINTS_MAX,
+  COVER_IMAGE_PROMPT_MAX,
+  COVER_VISUAL_CONCEPT_MAX,
+  COVER_COMPOSITION_MAX,
+  COVER_PALETTE_MAX,
 } from "./cover-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
@@ -348,7 +352,7 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     generateImage
       .mockRejectedValueOnce(explicit503)
       .mockResolvedValueOnce({ assetBytes: new Uint8Array([1, 2, 3]) } as never);
-    const sleep = vi.fn(async () => undefined);
+    const sleep = vi.fn(async (_ms: number) => undefined);
     (made.deps as Record<string, unknown>).sleep = sleep;
 
     await runCoverGenerate(
@@ -384,6 +388,36 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(firstOptions.idempotencyKey).toBeTruthy();
     expect(secondOptions.idempotencyKey).toBe(firstOptions.idempotencyKey);
     expect(made.recordCandidate).toHaveBeenCalledTimes(1);
+    expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("Windows 日志同形的连续 502 会退避恢复，第三次成功仍只产一份封面候选", async () => {
+    const made = makeDeps(FULL_PLAN);
+    const explicit502 = Object.assign(new Error("HTTP 502"), {
+      status: 502,
+      stage: "submit",
+      retryable: true,
+    });
+    generateImage
+      .mockRejectedValueOnce(explicit502)
+      .mockRejectedValueOnce(explicit502)
+      .mockResolvedValueOnce({ assetBytes: new Uint8Array([7, 8, 9]) } as never);
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runCoverGenerate(
+      ctx,
+      { id: "t-win-502", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+
+    expect(generateImage).toHaveBeenCalledTimes(3);
+    expect(sleep.mock.calls.map(([ms]) => ms)).toEqual([1_000, 3_000]);
+    const keys = generateImage.mock.calls.map(
+      (call) => (call as unknown as [unknown, { idempotencyKey: string }])[1].idempotencyKey,
+    );
+    expect(new Set(keys).size).toBe(1);
+    expect(made.recordCandidate).toHaveBeenCalledOnce();
     expect(made.cancelTask).not.toHaveBeenCalled();
   });
 
@@ -524,5 +558,24 @@ describe("[T-271] clampCoverPlan —— 封面文案裁到封面可用长度", (
     expect(clamped.headline.length).toBeLessThanOrEqual(20);
     expect(clamped.keyPoints).not.toContain("  ");
     expect(clamped.keyPoints.length).toBeLessThanOrEqual(COVER_KEYPOINTS_MAX);
+  });
+
+  it("官方渠道收到的封面画面提示词有硬上限，超长方案不会再原样打到生图接口", () => {
+    const clamped = clampCoverPlan({
+      headline: "封面标题",
+      visualConcept: "主".repeat(8_000),
+      composition: "构".repeat(8_000),
+      palette: "色".repeat(8_000),
+    });
+    expect(clamped.visualConcept).toHaveLength(COVER_VISUAL_CONCEPT_MAX);
+    expect(clamped.composition).toHaveLength(COVER_COMPOSITION_MAX);
+    expect(clamped.palette).toHaveLength(COVER_PALETTE_MAX);
+
+    const prompt = composeCoverImagePrompt(clamped, {
+      userVisualRequirements: "用户要求".repeat(2_000),
+    });
+    expect(prompt.length).toBeLessThanOrEqual(COVER_IMAGE_PROMPT_MAX);
+    expect(prompt).toContain("封面标题");
+    expect(prompt).toContain("输出约束");
   });
 });

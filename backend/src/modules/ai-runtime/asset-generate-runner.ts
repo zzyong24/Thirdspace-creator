@@ -17,6 +17,10 @@ import {
   formatErrorDiagnostic,
   safeModelFailureMessage,
 } from "./error-diagnostics";
+import {
+  isExplicitRetryableSubmitRejection,
+  retryExplicitRejectedSubmit,
+} from "./multimodal/retry-submit";
 
 // asset.generate runner (L5 录制 · SPEC 2026-07-01 §3 + §8 M2) —— AI 生成素材 → 落对象存储 →
 // 建 asset → 记候选(非直接物化)。仿 research-runner 的生命周期(markRunning → 跑节点 →
@@ -83,6 +87,8 @@ export interface AssetGenerateDeps {
   /** 多模态 provider 适配器注册表(keyed by provider;host 注册真 minimax,单测注册 fake)。 */
   registry: MultimodalProviderRegistry;
   assets: AssetGenerateAssetsPort;
+  /** 测试注入；生产使用短退避。 */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export interface AssetGenerateTask {
@@ -106,6 +112,7 @@ interface ProviderCheckpoint {
 }
 
 function generationFingerprint(input: {
+  intentId: string;
   capability: string;
   prompt: string;
   aspectRatio?: string;
@@ -116,6 +123,7 @@ function generationFingerprint(input: {
   return `sha256:${createHash("sha256")
     .update(
       JSON.stringify({
+        intentId: input.intentId,
         capability: input.capability,
         prompt: input.prompt,
         aspectRatio: input.aspectRatio ?? null,
@@ -220,6 +228,7 @@ export async function runAssetGenerate(
     const spec = await deps.resolveMultimodalSpec(ctx, capability);
     resolvedSpec = spec;
     inputFingerprint = generationFingerprint({
+      intentId: task.retryOfTaskId ?? task.id,
       capability,
       prompt,
       aspectRatio,
@@ -301,14 +310,23 @@ export async function runAssetGenerate(
         });
       },
     };
-    const { assetBytes } =
+    const generate = () =>
       kind === "image"
-        ? await generateImage(
+        ? generateImage(
             spec,
             { prompt, aspectRatio, idempotencyKey },
             deps.registry,
           )
-        : await generateVideo(spec, videoOptions, deps.registry);
+        : generateVideo(spec, videoOptions, deps.registry);
+    // 官方网关承诺识别 Idempotency-Key，因此只对“已收到明确瞬时 HTTP 拒绝”做有限退避；
+    // 网络断开/超时/无法解析响应仍然一次即停，不能拿可用性换重复计费风险。
+    const { assetBytes } =
+      spec.displayModelKey === "channel-managed"
+        ? await retryExplicitRejectedSubmit({
+            operation: generate,
+            sleep: deps.sleep,
+          })
+        : await generate();
     if (!assetBytes || assetBytes.byteLength === 0) {
       throw new Error("asset-generate-runner: provider returned no bytes");
     }
@@ -370,11 +388,16 @@ export async function runAssetGenerate(
         failure.reason === "response_contract" ||
         (failure.reason === "upstream" &&
           typeof status === "number" &&
-          status >= 500));
+          status >= 500 &&
+          resolvedSpec.displayModelKey !== "channel-managed"));
+    const managedExplicitRejected =
+      resolvedSpec?.displayModelKey === "channel-managed" &&
+      isExplicitRetryableSubmitRejection(err);
     const submitKnownRejected =
       resolvedSpec &&
       inputFingerprint &&
       (err instanceof MultimodalConfigError ||
+        managedExplicitRejected ||
         (failure?.stage === "submit" &&
           typeof status === "number" &&
           status >= 400 &&

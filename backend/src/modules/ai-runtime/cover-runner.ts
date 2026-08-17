@@ -21,6 +21,7 @@ import {
   redactedRawErrorMessage,
   safeModelFailureMessage,
 } from "./error-diagnostics";
+import { retryExplicitRejectedSubmit } from "./multimodal/retry-submit";
 
 // 封面 runner (cover.generate node) —— [T-271] 制作封面链 0→1。
 //
@@ -98,7 +99,12 @@ export const COVER_HEADLINE_MAX = 20; // 主标题(模板要 ≤14,留余量后�
 export const COVER_SUBHEADLINE_MAX = 28; // 副标题(模板 ≤20)
 export const COVER_KEYPOINT_MAX = 14; // 单条信息点(模板 ≤10)
 export const COVER_KEYPOINTS_MAX = 3; // 信息点条数
-export const COVER_VISUAL_REQUIREMENTS_MAX = 1200;
+export const COVER_VISUAL_REQUIREMENTS_MAX = 240;
+/** 封面只需要一个可见主张；收口字段是为了稳定出图，不追逐上游理论最大输入。 */
+export const COVER_VISUAL_CONCEPT_MAX = 220;
+export const COVER_COMPOSITION_MAX = 100;
+export const COVER_PALETTE_MAX = 40;
+export const COVER_IMAGE_PROMPT_MAX = 1000;
 
 /** 已裁剪的封面方案(runner 内部形态;导出供单测)。 */
 export interface ClampedCoverPlan {
@@ -125,9 +131,9 @@ export function clampCoverPlan(obj: Partial<CoverBriefOutput>): ClampedCoverPlan
       .map((kp) => clip(kp, COVER_KEYPOINT_MAX))
       .filter((kp) => kp.length > 0)
       .slice(0, COVER_KEYPOINTS_MAX),
-    visualConcept: (obj.visualConcept ?? "").trim(),
-    composition: (obj.composition ?? "").trim(),
-    palette: (obj.palette ?? "").trim(),
+    visualConcept: clip(obj.visualConcept, COVER_VISUAL_CONCEPT_MAX),
+    composition: clip(obj.composition, COVER_COMPOSITION_MAX),
+    palette: clip(obj.palette, COVER_PALETTE_MAX),
   };
 }
 
@@ -191,7 +197,10 @@ export function composeCoverImagePrompt(
   if (plan.composition) parts.push(`构图：${plan.composition}`);
   if (opts.userVisualRequirements) {
     parts.push(
-      `用户明确画面要求（硬约束，优先于自动主视觉与构图建议）：${opts.userVisualRequirements}`,
+      `用户明确画面要求（硬约束，优先于自动主视觉与构图建议）：${clip(
+        opts.userVisualRequirements,
+        COVER_VISUAL_REQUIREMENTS_MAX,
+      )}`,
     );
   }
   const overlay = [
@@ -214,27 +223,21 @@ export function composeCoverImagePrompt(
         ? "横版封面（16:9）"
         : "短视频封面",
   );
-  parts.push(
-    "输出约束：除指定封面文案外，不生成任何额外文字、数字、界面、新闻截图或数据图；无水印、无无关 logo。画面必须以主视觉关系为中心，风格和质感只服务理解，不抢主张。",
-  );
-  return parts.join("\n");
+  const outputConstraint =
+    "输出约束：除指定封面文案外，不生成任何额外文字、数字、界面、新闻截图或数据图；无水印、无无关 logo。画面必须以主视觉关系为中心，风格和质感只服务理解，不抢主张。";
+  parts.push(outputConstraint);
+  const prompt = parts.join("\n");
+  if (prompt.length <= COVER_IMAGE_PROMPT_MAX) return prompt;
+  // 上面所有动态字段都已分别限长；这里是协议最后一道保险。保留末尾输出约束，避免
+  // 极端输入裁断“不要额外文字/水印”等安全要求。
+  const suffix = `\n${outputConstraint}`;
+  return `${prompt.slice(0, COVER_IMAGE_PROMPT_MAX - suffix.length)}${suffix}`;
 }
 
 // 封面 asset 名(素材库列表可读;非唯一,asset id 才是主键）。
 function deriveCoverName(headline: string): string {
   const head = headline.trim().replace(/\s+/g, " ").slice(0, 16);
   return head ? `${head} · 封面` : "AI 封面";
-}
-
-function isExplicitRetryableSubmitRejection(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const value = error as Record<string, unknown>;
-  const status = typeof value.status === "number" ? value.status : 0;
-  return (
-    value.stage === "submit" &&
-    value.retryable === true &&
-    [408, 425, 429, 500, 502, 503, 504].includes(status)
-  );
 }
 
 /**
@@ -390,26 +393,25 @@ export async function runCoverGenerate(
       ...(referenceImage ? { referenceImage } : {}),
       idempotencyKey,
     };
-    let generated: Awaited<ReturnType<typeof generateImage>>;
-    try {
-      generated = await generateImage(imgSpec, generateOptions, deps.registry);
-    } catch (error) {
-      // 只重试 provider 已明确拒绝受理的瞬时 HTTP 响应；断网/超时等“可能已受理但响应
-      // 丢失”的未知提交绝不重放。重试沿用同一幂等键，避免渠道侧重复创建。
-      if (!isExplicitRetryableSubmitRejection(error)) throw error;
-      try {
-        await deps.ai.recordStep(ctx, task.id, {
-          stepNo: 4,
-          kind: "step",
-          text: "生图服务暂时繁忙，正在自动恢复；封面方案已保留，不会重新策划。",
-          toolCalls: [],
-        });
-      } catch {
-        /* 恢复提示失败不阻断安全重试 */
-      }
-      await (deps.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms))))(250);
-      generated = await generateImage(imgSpec, generateOptions, deps.registry);
-    }
+    let retryNoticeRecorded = false;
+    const generated = await retryExplicitRejectedSubmit({
+      operation: () => generateImage(imgSpec, generateOptions, deps.registry),
+      sleep: deps.sleep,
+      onRetry: async () => {
+        if (retryNoticeRecorded) return;
+        retryNoticeRecorded = true;
+        try {
+          await deps.ai.recordStep(ctx, task.id, {
+            stepNo: 4,
+            kind: "step",
+            text: "生图服务暂时繁忙，正在自动恢复；封面方案已保留，不会重新策划。",
+            toolCalls: [],
+          });
+        } catch {
+          /* 恢复提示失败不阻断安全重试 */
+        }
+      },
+    });
     const { assetBytes } = generated;
     if (!assetBytes || assetBytes.byteLength === 0) {
       throw new Error("cover-runner: provider returned no bytes");

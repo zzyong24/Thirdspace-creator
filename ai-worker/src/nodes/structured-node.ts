@@ -257,7 +257,10 @@ export function isStructuredResponseCompatibilityError(
 // 默认 90s；少数长结构节点可在调用处显式放宽，但不允许无界挂起。
 const DEFAULT_MODEL_CALL_TIMEOUT_MS = 90_000;
 const MIN_MODEL_CALL_TIMEOUT_MS = 15_000;
-const MAX_MODEL_CALL_TIMEOUT_MS = 180_000;
+// 普通节点仍默认 90 秒。制作视频的 scenes/cards 会显式请求 10 分钟，因为官方渠道
+// 在真实 Windows 日志中仅 scenes 就需要 101 秒；这里给这些少数长任务留出空间，同时
+// 仍保留 15 分钟硬上界，防止断开的端点让后台任务永久 running。
+const MAX_MODEL_CALL_TIMEOUT_MS = 900_000;
 
 export function resolveStructuredNodeTimeoutMs(
   requestedMs: number | undefined,

@@ -393,8 +393,9 @@ describe("resolveStructuredNodeTimeoutMs", () => {
   it("默认 90 秒，允许节点级放宽，但始终有上下界", () => {
     expect(resolveStructuredNodeTimeoutMs(undefined)).toBe(90_000);
     expect(resolveStructuredNodeTimeoutMs(120_000)).toBe(120_000);
+    expect(resolveStructuredNodeTimeoutMs(600_000)).toBe(600_000);
     expect(resolveStructuredNodeTimeoutMs(1)).toBe(15_000);
-    expect(resolveStructuredNodeTimeoutMs(999_999)).toBe(180_000);
+    expect(resolveStructuredNodeTimeoutMs(999_999)).toBe(900_000);
     expect(resolveStructuredNodeTimeoutMs(Number.NaN)).toBe(90_000);
   });
 });

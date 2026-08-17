@@ -16,6 +16,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "probe:t859-cover-reliability": "tsx scripts/t859-cover-reliability-probe.ts",
     "backfill:transcripts": "tsx scripts/backfill-transcripts.ts",
     "backfill:pub-titles": "tsx scripts/backfill-publication-titles.ts"
   },
