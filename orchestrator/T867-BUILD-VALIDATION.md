@@ -68,4 +68,21 @@ pnpm --dir frontend exec vitest run src/features/production/video-decision-previ
 - 未调用真实模型或产生计费；
 - 未自动重跑用户当前分场任务；
 - 未确认候选或修改用户项目数据；
-- 真机效果需安装包含本修复的新开发包后，由用户主动重新生成“AI 分场决策”验证。
+
+## 本机开发包验证
+
+- 冻结候选：`85cadbb2649f59d62856cc5ab8220edf492aa22d`；
+- 四处版本一致：`1.1.0`；打包门禁：`4 files / 42 tests passed`；
+- 唯一验收包：`/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`；
+- SHA-256：`bd047214c5064e29282ab6049122b561003c5e21064f474079f20c53cac31b86`；
+- `hdiutil verify`：VALID；`codesign --verify --deep --strict`：通过；
+- 已替换并启动 `/Applications/CreatorOS.app`，版本 `1.1.0`，PID `91323`，窗口数 `1`；
+- 本地服务 `127.0.0.1:62592` 首页 HTTP `200` 且包含 `CreatorOS`；
+- 随包 `sidecar.tar.gz` SHA-256 与已展开 runtime `.tarball-stamp` 一致：
+  `4a42c1c3c2ca0d4a0ec0464c54aff4509652fe0039cf81aa249bb2eb33abe05e`。
+
+该包为本地 ad-hoc 测试包，未做 Apple Developer ID 签名与公证。用户需主动重新生成一次“AI 分场
+决策”，才能让现有项目基于新匹配规则得到新候选；系统没有自动改写当前候选或项目数据。
+
+- 未生成 tag、GitHub Release 或公开分发；
+- 未改生产 1.1 发布记录、下载地址或真实用户放量。
