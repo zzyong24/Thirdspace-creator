@@ -140,6 +140,9 @@ export interface CandidateRepository {
   enrichCard(id: string, card: Record<string, unknown>): Promise<CandidateRow>;
 
   // Promotion.
+  findPromotionByCandidateId(
+    candidateId: string,
+  ): Promise<TopicPromotionRow | undefined>;
   createPromotion(input: {
     candidateId: string;
     projectId: string;
@@ -406,6 +409,21 @@ export function createCandidateRepository(
         })
         .returning();
       return inserted[0]!;
+    },
+
+    async findPromotionByCandidateId(candidateId) {
+      const rows = await db
+        .select()
+        .from(topicPromotions)
+        .where(
+          and(
+            eq(topicPromotions.userId, deps.userId),
+            promoAccountGate,
+            eq(topicPromotions.candidateId, candidateId),
+          ),
+        )
+        .limit(1);
+      return rows[0];
     },
 
     async createSignal(input) {

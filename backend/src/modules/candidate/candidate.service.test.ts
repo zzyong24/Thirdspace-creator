@@ -9,7 +9,6 @@ import {
   type CandidateIngestionPort,
 } from "./candidate.service";
 import {
-  PromoteStateError,
   DanglingRunError,
   OwnershipError,
   AccountRequiredError,
@@ -438,12 +437,11 @@ describe("candidate service", () => {
     });
   });
 
-  it("promote on an already-promoted Candidate throws PromoteStateError (no double-promote)", async () => {
+  it("[T-870] promote replay returns the existing Project without creating a duplicate", async () => {
     const cand = await svc.createCandidate(ctx, { title: "选题", angle: "" });
-    await svc.promote(ctx, cand.id);
-    await expect(svc.promote(ctx, cand.id)).rejects.toBeInstanceOf(
-      PromoteStateError,
-    );
+    const first = await svc.promote(ctx, cand.id);
+    const replay = await svc.promote(ctx, cand.id);
+    expect(replay).toEqual(first);
     // exactly one project created (no duplicate).
     expect(ports.projects.createProject).toHaveBeenCalledOnce();
   });

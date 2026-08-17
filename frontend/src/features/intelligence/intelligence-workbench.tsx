@@ -441,7 +441,10 @@ export interface RadarApi {
       };
     };
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<{ topicId: string }>;
+  promoteCandidate(input: {
+    candidateId: string;
+  }): Promise<{ projectId: string }>;
 }
 
 type RadarSort = Parameters<RadarApi["listItems"]>[0]["sort"];
@@ -610,6 +613,12 @@ function defaultApi(): RadarApi {
           editedCandidate: input.editedCandidate,
           idempotencyKey: input.idempotencyKey,
         },
+      }),
+    promoteCandidate: (input) =>
+      client.promoteCandidate({
+        params: { candidateId: input.candidateId },
+        query: undefined,
+        body: {},
       }),
   };
 }
@@ -1830,6 +1839,7 @@ export function IntelligenceWorkbench({
       >,
     ) => {
       if (!detail) return;
+      const itemId = detail.item.id;
       setBusy(true);
       setNotice(null);
       try {
@@ -1853,13 +1863,79 @@ export function IntelligenceWorkbench({
           },
           idempotencyKey: operationKey("topic-confirm"),
         });
-        setDetail(await api.getItem(detail.item.id));
+        const refreshed = await api.getItem(itemId);
+        setDetail((current) =>
+          current?.item.id === itemId ? refreshed : current,
+        );
         setNotice(
           "已写入选题池。立项后，对标原稿、改写规则和我的初稿会一起带入项目。",
         );
         router.refresh();
       } catch {
         setNotice("写入选题池失败，候选仍保留，可以稍后重试。");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [api, detail, router],
+  );
+
+  const upgradeTopicToProject = React.useCallback(
+    async (
+      transformId: string,
+      candidate: NonNullable<
+        RadarItemDetail["transforms"][number]["outputSnapshot"]
+      >,
+      existingTopicId: string | null,
+    ) => {
+      if (!detail) return;
+      const itemId = detail.item.id;
+      setBusy(true);
+      setNotice(null);
+      let topicId = existingTopicId;
+      try {
+        if (!topicId) {
+          const confirmed = await api.confirmTopic({
+            transformId,
+            editedCandidate: {
+              title: candidate.title ?? "",
+              angle: candidate.angle ?? "",
+              differentiation: candidate.differentiation ?? "",
+              sourceSummary: candidate.sourceSummary ?? "",
+              targetAudience: candidate.targetAudience ?? "",
+              audiencePain: candidate.audiencePain ?? "",
+              coreConflict: candidate.coreConflict ?? "",
+              format: candidate.format ?? "",
+              adaptationStrategy: candidate.adaptationStrategy ?? {
+                keep: [],
+                replace: [],
+                add: [],
+                avoid: [],
+              },
+            },
+            idempotencyKey: operationKey("topic-confirm"),
+          });
+          topicId = confirmed.topicId;
+        }
+        const promotion = await api.promoteCandidate({ candidateId: topicId });
+        setNotice("项目已创建，正在进入项目…");
+        router.push(`/projects/${promotion.projectId}`);
+      } catch {
+        if (topicId) {
+          try {
+            const refreshed = await api.getItem(itemId);
+            setDetail((current) =>
+              current?.item.id === itemId ? refreshed : current,
+            );
+          } catch {
+            // 保留当前候选；刷新失败不覆盖真正的立项错误。
+          }
+          setNotice(
+            "选题已保留，但项目创建未完成。请重试「一键升级项目」，不会重复创建。",
+          );
+        } else {
+          setNotice("升级项目失败，候选仍保留，可以稍后重试。");
+        }
       } finally {
         setBusy(false);
       }
@@ -2399,6 +2475,7 @@ export function IntelligenceWorkbench({
                 onUploadTranscript={uploadTranscript}
                 onPreviewTopic={previewTopic}
                 onConfirmTopic={confirmTopic}
+                onUpgradeProject={upgradeTopicToProject}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center">
@@ -2736,6 +2813,7 @@ function ItemDetail({
   onUploadTranscript,
   onPreviewTopic,
   onConfirmTopic,
+  onUpgradeProject,
 }: {
   detail: RadarItemDetail;
   busy: boolean;
@@ -2758,6 +2836,13 @@ function ItemDetail({
     candidate: NonNullable<
       RadarItemDetail["transforms"][number]["outputSnapshot"]
     >,
+  ) => void;
+  onUpgradeProject: (
+    transformId: string,
+    candidate: NonNullable<
+      RadarItemDetail["transforms"][number]["outputSnapshot"]
+    >,
+    existingTopicId: string | null,
   ) => void;
 }) {
   const [transcriptEditorOpen, setTranscriptEditorOpen] =
@@ -2921,6 +3006,7 @@ function ItemDetail({
               }
               onRetry={onPreviewTopic}
               onConfirm={onConfirmTopic}
+              onUpgradeProject={onUpgradeProject}
             />
           ) : topicTaskTerminalFailure || topicTaskUnavailable ? (
             <div
@@ -3323,6 +3409,7 @@ function TopicCandidateEditor({
   retryDisabled,
   onRetry,
   onConfirm,
+  onUpgradeProject,
 }: {
   transform: RadarItemDetail["transforms"][number] & {
     outputSnapshot: NonNullable<
@@ -3338,6 +3425,13 @@ function TopicCandidateEditor({
     candidate: NonNullable<
       RadarItemDetail["transforms"][number]["outputSnapshot"]
     >,
+  ) => void;
+  onUpgradeProject: (
+    transformId: string,
+    candidate: NonNullable<
+      RadarItemDetail["transforms"][number]["outputSnapshot"]
+    >,
+    existingTopicId: string | null,
   ) => void;
 }) {
   const [candidate, setCandidate] = React.useState(() => ({
@@ -3361,6 +3455,18 @@ function TopicCandidateEditor({
     transform.outputSnapshot.adaptedDraft?.contentText ?? "",
   );
   const confirmed = transform.status === "confirmed";
+  const incomplete =
+    !draftText.trim() ||
+    [
+      candidate.title,
+      candidate.angle,
+      candidate.differentiation,
+      candidate.sourceSummary,
+      candidate.targetAudience,
+      candidate.audiencePain,
+      candidate.coreConflict,
+      candidate.format,
+    ].some((value) => !value.trim());
   const progress = transform.outputSnapshot.generationProgress;
   const retrying = ["queued", "running", "pause_requested"].includes(
     transform.taskStatus ?? "",
@@ -3577,33 +3683,38 @@ function TopicCandidateEditor({
           重新生成改写稿
         </Button>
       ) : null}
-      {!confirmed ? (
+      <div className="grid gap-2 sm:grid-cols-2">
+        {!confirmed ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy || retrying || incomplete}
+            onClick={() => onConfirm(transform.id, candidate)}
+            className="w-full"
+          >
+            确认写入选题池
+          </Button>
+        ) : null}
         <Button
           type="button"
           size="sm"
-          disabled={
-            busy ||
-            retrying ||
-            !draftText.trim() ||
-            [
-              candidate.title,
-              candidate.angle,
-              candidate.differentiation,
-              candidate.sourceSummary,
-              candidate.targetAudience,
-              candidate.audiencePain,
-              candidate.coreConflict,
-              candidate.format,
-            ].some((value) => !value.trim())
+          disabled={busy || retrying || incomplete}
+          onClick={() =>
+            onUpgradeProject(
+              transform.id,
+              candidate,
+              transform.targetTopicId,
+            )
           }
-          onClick={() => onConfirm(transform.id, candidate)}
-          className="w-full"
+          className={cn("w-full gap-1.5", confirmed && "sm:col-span-2")}
         >
-          确认写入选题池
+          <FolderPlus className="size-3.5" />
+          一键升级项目
         </Button>
-      ) : null}
+      </div>
       <p className="text-[10px] leading-4 text-muted-foreground">
-        采纳后会把对标原稿、改写规则和当前初稿一起带入项目。进入项目后，可继续编辑「我的稿子」。
+        一键升级会把来源证据、改写规则和当前初稿一起带入项目；也可只存入选题池稍后再立项。
       </p>
     </div>
   );

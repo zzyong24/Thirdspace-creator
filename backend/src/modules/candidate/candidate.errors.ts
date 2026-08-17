@@ -9,9 +9,9 @@
 // set `status:'promoted'` (only the promote op) nor `demand_count` (a maintained
 // denormalization). → ValidationError.
 //
-// `PromoteStateError` is the promote guard: an already-promoted Candidate cannot be
-// promoted again (no double-promote → no duplicate Project / topic_promotions row).
-// → ValidationError.
+// `PromoteStateError` is the promote consistency guard: a normal replay returns the
+// existing promotion; only a promoted Candidate whose Project link is missing fails
+// closed instead of guessing or creating a duplicate Project. → ValidationError.
 //
 // `DanglingRunError` is the C-4 / RISK-005 guard: ingestAudienceSignal rejects a
 // signal whose `ingestionRunId` does not reference a REAL IngestionRun. →

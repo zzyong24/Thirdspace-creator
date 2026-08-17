@@ -195,6 +195,7 @@ function api(): RadarApi {
     uploadTranscript: vi.fn().mockResolvedValue(detail.transcript),
     previewTopic: vi.fn().mockResolvedValue({}),
     confirmTopic: vi.fn().mockResolvedValue({}),
+    promoteCandidate: vi.fn().mockResolvedValue({ projectId: "project-1" }),
   };
 }
 
@@ -2210,6 +2211,240 @@ describe("T-482 内容雷达工作区", () => {
     expect(
       screen.getByDisplayValue("无需切换选题即可看到的新卡片"),
     ).toBeInTheDocument();
+  });
+
+  it("[T-870] 生成完成的雷达选题可一次确认并升级为项目", async () => {
+    const stub = api();
+    vi.mocked(stub.confirmTopic).mockResolvedValue({
+      topicId: "candidate-radar-1",
+    });
+    vi.mocked(stub.promoteCandidate).mockResolvedValue({
+      projectId: "project-radar-1",
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        positioningVersionId="positioning-v1"
+        initialDetail={{
+          ...detail,
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "来源完整逐字稿",
+          },
+          snapshots: [
+            {
+              id: "snapshot-upgrade",
+              title: "真实作品",
+              capturedAt: "2026-07-23T12:00:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+          ],
+          transforms: [
+            {
+              id: "transform-upgrade",
+              status: "candidate",
+              taskStatus: "succeeded",
+              taskErrorCode: null,
+              taskErrorMessage: null,
+              targetTopicId: null,
+              outputSnapshot: {
+                hook: "反常识开场",
+                structureSteps: ["提出误区", "给出方法"],
+                coreClaims: ["流程决定交付"],
+                reusablePattern: "误区—方法",
+                factRisks: [],
+                title: "先稳定流程，再选择模型",
+                angle: "从真实交付切入",
+                differentiation: "使用本账号案例",
+                sourceSummary: "来源讨论模型和流程",
+                targetAudience: "AI 业务负责人",
+                audiencePain: "交付结果不稳定",
+                coreConflict: "模型参数与流程责任的冲突",
+                format: "案例复盘口播",
+                adaptationStrategy: {
+                  keep: ["反常识结构"],
+                  replace: ["来源案例"],
+                  add: ["本账号经验"],
+                  avoid: ["照搬原句"],
+                },
+                adaptedDraft: {
+                  contentText: "这是一版基于逐字稿生成的完整改写初稿。",
+                  generatedFromTranscriptHash: "sha256:transcript",
+                  strategyHash: "sha256:strategy",
+                  templateVersion: "intelligence-topic-draft-v1",
+                },
+                generationProgress: {
+                  decomposition: { status: "completed" },
+                  topic: { status: "completed" },
+                  draft: { status: "completed" },
+                },
+              },
+            },
+          ],
+        }}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    );
+
+    await waitFor(() =>
+      expect(stub.confirmTopic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transformId: "transform-upgrade",
+          idempotencyKey: expect.stringMatching(/^topic-confirm:/),
+        }),
+      ),
+    );
+    expect(stub.promoteCandidate).toHaveBeenCalledWith({
+      candidateId: "candidate-radar-1",
+    });
+    expect(push).toHaveBeenCalledWith("/projects/project-radar-1");
+  });
+
+  it("[T-870] 已写入选题池的雷达候选直接升级，不重复确认", async () => {
+    const stub = api();
+    vi.mocked(stub.promoteCandidate).mockResolvedValue({
+      projectId: "project-existing-topic",
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        positioningVersionId="positioning-v1"
+        initialDetail={{
+          ...detail,
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "来源完整逐字稿",
+          },
+          transforms: [
+            {
+              id: "transform-confirmed",
+              status: "confirmed",
+              taskStatus: "succeeded",
+              taskErrorCode: null,
+              taskErrorMessage: null,
+              targetTopicId: "candidate-existing",
+              outputSnapshot: {
+                title: "已经保存的选题",
+                angle: "真实角度",
+                differentiation: "真实差异化",
+                sourceSummary: "真实来源",
+                targetAudience: "目标观众",
+                audiencePain: "真实痛点",
+                coreConflict: "真实冲突",
+                format: "口播",
+                adaptationStrategy: {
+                  keep: ["结构"],
+                  replace: ["案例"],
+                  add: ["经验"],
+                  avoid: ["照搬"],
+                },
+                adaptedDraft: {
+                  contentText: "已经确认的改写稿。",
+                  generatedFromTranscriptHash: "sha256:transcript",
+                  strategyHash: "sha256:strategy",
+                  templateVersion: "intelligence-topic-draft-v1",
+                },
+              },
+            },
+          ],
+        }}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    );
+
+    await waitFor(() =>
+      expect(stub.promoteCandidate).toHaveBeenCalledWith({
+        candidateId: "candidate-existing",
+      }),
+    );
+    expect(stub.confirmTopic).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith("/projects/project-existing-topic");
+  });
+
+  it("[T-870] 项目创建失败时保留已确认选题并允许幂等重试", async () => {
+    const stub = api();
+    const confirmedDetail: RadarItemDetail = {
+      ...detail,
+      transcript: {
+        ...detail.transcript,
+        status: "done",
+        text: "来源完整逐字稿",
+      },
+      transforms: [
+        {
+          id: "transform-retry-project",
+          status: "confirmed",
+          taskStatus: "succeeded",
+          targetTopicId: "candidate-retry-project",
+          outputSnapshot: {
+            title: "保留的选题",
+            angle: "真实角度",
+            differentiation: "真实差异化",
+            sourceSummary: "真实来源",
+            targetAudience: "目标观众",
+            audiencePain: "真实痛点",
+            coreConflict: "真实冲突",
+            format: "口播",
+            adaptationStrategy: {
+              keep: ["结构"],
+              replace: ["案例"],
+              add: ["经验"],
+              avoid: ["照搬"],
+            },
+            adaptedDraft: {
+              contentText: "已经确认且不会因立项失败丢失的改写稿。",
+              generatedFromTranscriptHash: "sha256:transcript",
+              strategyHash: "sha256:strategy",
+              templateVersion: "intelligence-topic-draft-v1",
+            },
+          },
+        },
+      ],
+    };
+    vi.mocked(stub.getItem).mockResolvedValue(confirmedDetail);
+    vi.mocked(stub.promoteCandidate).mockRejectedValueOnce(
+      new Error("temporary project failure"),
+    );
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={confirmedDetail}
+        api={stub}
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    );
+
+    expect(
+      await screen.findByText(
+        "选题已保留，但项目创建未完成。请重试「一键升级项目」，不会重复创建。",
+      ),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    ).toBeEnabled();
   });
 
   it("[T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成", async () => {

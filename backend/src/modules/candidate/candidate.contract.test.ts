@@ -139,6 +139,14 @@ describe("candidate contract", () => {
     });
     const parsed = ENDPOINTS.promoteCandidate.response.parse(res.data);
     expect(parsed.candidateId).toBe(created.id);
+
+    const replay = await call(transport, "candidates.promote", {
+      params: { candidateId: created.id },
+      body: {},
+    });
+    expect(ENDPOINTS.promoteCandidate.response.parse(replay.data)).toEqual(
+      parsed,
+    );
   });
 
   it("audienceSignals.list → audienceSignalResource[] (per item)", async () => {

@@ -545,3 +545,17 @@
 - **Outcome(T+N)**: 真实失败形状先红后绿；AI 来源不再伪装成人工上传，生成素材保留服务原文，空
   匹配被拒绝且不落候选，未匹配的 AI 项目素材也不再生成逐条手选控件。待新开发包真机重跑分场验证。
 - **Ref**: T-867；用户 2026-08-17 “AI 分场决策”真机截图；`orchestrator/T867-BUILD-VALIDATION.md`。
+
+## LED-037 — 成功写操作的重放不能用“已经完成”作为错误回应
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **WhatFailed**: Candidate promotion 第一次成功后，完全相同的第二次调用抛出“已经立项”；弱网下若
+  第一次响应丢失，用户重试会看到失败，虽然项目其实已经存在，也无法从响应进入原项目。
+- **RootCause**: 只把幂等理解为“不创建重复记录”，没有把“重放返回同一业务结果”纳入成功契约。
+- **GuardRule**: 会创建唯一业务实体的用户动作必须让成功重放返回原结果；已有状态与关联行一致时读回，
+  状态与关联缺失时明确报一致性错误，禁止再创建或猜测关联。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/candidate/candidate.service.test.ts
+  src/modules/candidate/candidate.contract.test.ts`。
+- **Outcome(T+N)**: T-870 红测证明第二次 promotion 原先抛错；修复后 service 与 contract 重放均返回
+  同一 promotion，Project 创建调用仍恰好一次。
+- **Ref**: T-870；DEC-RADAR-047。

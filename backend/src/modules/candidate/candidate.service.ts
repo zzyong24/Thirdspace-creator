@@ -292,7 +292,7 @@ export interface CandidateService {
     candidateId: string,
     patch: PatchCandidateInput,
   ): Promise<CandidateResource>;
-  // Candidate → Project (类比 promoteReviewInsight). No double-promote.
+  // Candidate → Project (类比 promoteReviewInsight). Replays return the same promotion.
   promote(
     ctx: RequestContext,
     candidateId: string,
@@ -559,8 +559,10 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       const repo = repoFor(ctx, "candidate.promote");
       const cand = await repo.getCandidate(candidateId); // ownership gate (404)
       if (cand.status === "promoted") {
+        const existing = await repo.findPromotionByCandidateId(candidateId);
+        if (existing) return toTopicPromotionDto(existing);
         throw new PromoteStateError(
-          `PromoteStateError: candidate ${candidateId} is already promoted`,
+          `PromoteStateError: candidate ${candidateId} is promoted but its project link is missing`,
         );
       }
       // 选题 → Brief 映射(§6.1):用候选(标题 + 选题卡)填一份结构化 Brief 草稿,随

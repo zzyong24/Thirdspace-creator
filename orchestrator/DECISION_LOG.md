@@ -2966,3 +2966,33 @@ AI 理解真实语义。
 `multimodal-openai-images`，不引入新依赖或第二调用链。
 
 **任务**：T-864；证据见 `orchestrator/T864-BUILD-VALIDATION.md`。
+
+# DEC-RADAR-047 (2026-08-17) — 内容雷达的一次点击同时确认选题并创建项目
+
+**Status**：confirmed
+
+**用户决定**：内容雷达已经基于完整逐字稿生成了可检查的选题与改写初稿，用户希望直接点击
+“一键升级项目”，不再先进入选题池做第二次确认；原“确认写入选题池”能力仍需保留。
+
+**决策**：
+
+1. “一键升级项目”这次主动点击同时构成候选确认与立项确认；系统不会自动批量立项，也不会在没有
+   用户动作时把 AI 候选写成项目。
+2. 前端只编排既有 `intelligence.transforms.confirmTopic` 与 `candidates.promote` 两个正式 operation，
+   不新增平行写库接口；已确认候选跳过第一步，直接 promotion。
+3. 两条入口共享同一 Candidate、Project Brief、`contentRadarEvidence` 与 Project intelligence
+   reference 装配，来源作品、逐字稿哈希、拆解、改编策略和初稿种子口径不分叉。
+4. `candidates.promote` 的成功重放返回既有 promotion/Project，避免弱网响应丢失后重复建项目；若
+   candidate 状态与 promotion 关系已经不一致，则明确失败而不是猜测或再建一份。
+5. 创建失败不清空候选；若候选确认已成功，页面回读该状态并允许直接重试立项。成功后直接进入项目。
+
+**Pattern-Ref**：PAT-001 T0（复用仓内既有确认、promotion 与来源引用装配）；PAT-004
+CF-001/003/004（跨前后端仍由现有共享 contract operation 承载，无新增直写协议）。
+
+**Asset-Ref**：仓内现有 `intelligence.transforms.confirmTopic`、`candidates.promote`、
+`ProjectIntelligenceReferenceService.attachFromPromotion`；资产索引无本业务更匹配的通用模块。
+
+**用户确认**：2026-08-17，用户明确要求“内容雷达里面转写的选题，一键升级为项目，不需要经过
+选题再确认”。
+
+**任务**：T-870。
