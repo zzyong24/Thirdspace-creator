@@ -1,0 +1,46 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-870",
+  "commit_sha": "6792cfcf619fa031d2f673ef1d8c1f5cdfbb642d",
+  "captures": [
+    {
+      "checkpoint": "radar-topic-ready",
+      "check_ids": [
+        "AC-RADAR-UPGRADE-ACTION",
+        "AC-RADAR-UPGRADE-NO-SECOND-CONFIRM",
+        "AC-RADAR-UPGRADE-READBACK"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "Proposed Advancement of Pointer Events Level 3 to W3C Recommendation\n\nwww.w3.org · 5月27日 12:02\n\n原链接\n未知\n点赞\n未知\n评论\n未知\n收藏\n未知\n分享\n转为我的选题\n改写初稿已生成\n逐字稿结构拆解\n查看原视频\n\n钩子：先指出重复确认正在消耗创作者的注意力\n\n提出工作流问题\n解释一键立项的价值\n给出可执行路径\n\n可迁移结构：真实问题开场，再用流程变化给出解决方案\n\n对标原稿（只读）\n我的改写初稿\n采纳选题后会随选题进入 Project；在项目稿面编辑和保存版本。\n角度\n差异化\n来源摘要\n目标观众\n观众痛点\n核心冲突\n内容形式\n\n改写规则\n\n系统根据对标原稿和当前定位生成，随本次选题锁定。文案不满意时，可重新生成改写稿。\n\n保留什么\n\n· 问题驱动的开头\n\n替换什么\n\n· 替换来源案例\n\n新增什么\n\n· 加入真实创作流程\n\n避开什么\n\n· 避免复制原句\n重新生成改写稿\n确认写入选题池\n一键升级项目\n\n一键升级会把来源证据、改写规则和当前初稿一起带入项目；也可只存入选题池稍后再立项。\n\n逐字稿\n已锁定\n\n很多创作者收集到一个好选题以后，还要先保存到选题池，再打开选题中心确认，最后才能创建项目。每多一次搬运，注意力就会被打断。更合理的做法，是在来源、逐字稿、拆解和初稿都准备好以后，让用户的一次明确点击直接完成确认和立项，同时保留来源证据，失败时也能安全重试。\n\n已用于生成选题，逐字稿永久锁定。\n\n来源证据\nProposed Advancement of Pointer Events Level 3 to W3C Recommendation\n最近采集时间已记录"
+    },
+    {
+      "checkpoint": "radar-topic-ready-minimum-window",
+      "check_ids": [
+        "AC-RADAR-UPGRADE-ACTION",
+        "AC-RADAR-UPGRADE-NO-SECOND-CONFIRM",
+        "AC-RADAR-UPGRADE-READBACK"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 720
+      },
+      "text": "Proposed Advancement of Pointer Events Level 3 to W3C Recommendation\n\nwww.w3.org · 5月27日 12:02\n\n原链接\n未知\n点赞\n未知\n评论\n未知\n收藏\n未知\n分享\n转为我的选题\n改写初稿已生成\n逐字稿结构拆解\n查看原视频\n\n钩子：先指出重复确认正在消耗创作者的注意力\n\n提出工作流问题\n解释一键立项的价值\n给出可执行路径\n\n可迁移结构：真实问题开场，再用流程变化给出解决方案\n\n对标原稿（只读）\n我的改写初稿\n采纳选题后会随选题进入 Project；在项目稿面编辑和保存版本。\n角度\n差异化\n来源摘要\n目标观众\n观众痛点\n核心冲突\n内容形式\n\n改写规则\n\n系统根据对标原稿和当前定位生成，随本次选题锁定。文案不满意时，可重新生成改写稿。\n\n保留什么\n\n· 问题驱动的开头\n\n替换什么\n\n· 替换来源案例\n\n新增什么\n\n· 加入真实创作流程\n\n避开什么\n\n· 避免复制原句\n重新生成改写稿\n确认写入选题池\n一键升级项目\n\n一键升级会把来源证据、改写规则和当前初稿一起带入项目；也可只存入选题池稍后再立项。\n\n逐字稿\n已锁定\n\n很多创作者收集到一个好选题以后，还要先保存到选题池，再打开选题中心确认，最后才能创建项目。每多一次搬运，注意力就会被打断。更合理的做法，是在来源、逐字稿、拆解和初稿都准备好以后，让用户的一次明确点击直接完成确认和立项，同时保留来源证据，失败时也能安全重试。\n\n已用于生成选题，逐字稿永久锁定。\n\n来源证据\nProposed Advancement of Pointer Events Level 3 to W3C Recommendation\n最近采集时间已记录"
+    },
+    {
+      "checkpoint": "project-created-and-replayed",
+      "check_ids": [
+        "AC-RADAR-UPGRADE-ACTION",
+        "AC-RADAR-UPGRADE-NO-SECOND-CONFIRM",
+        "AC-RADAR-UPGRADE-READBACK"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 720
+      },
+      "text": "项目已创建：为什么好选题应该直接进入生产；重复立项返回同一项目。"
+    }
+  ]
+}
