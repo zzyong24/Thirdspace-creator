@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ 7788d4b5
+LAST_SYNCED: codex/t793-local-package @ fdd6d7ab
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-862 根治抖音封面回填因匿名分享页解析失效而全量落空【T-861 根因修复·用户 2026-08-16】
 - [wip] T-860 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】
 - [wip] T-859 竖屏素材段人物收进左下角，并消除切换白闪【用户预览纠偏·2026-08-16】
 - [wip] T-858 把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT【用户明确要求·2026-08-16】
