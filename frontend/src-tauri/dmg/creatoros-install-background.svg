@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfbff"/>
+      <stop offset="0.52" stop-color="#f7f5ff"/>
+      <stop offset="1" stop-color="#eef5ff"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#925cff"/>
+      <stop offset="1" stop-color="#5a31d8"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9f7cff" stop-opacity="0.25"/>
+      <stop offset="0.5" stop-color="#7c4dff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#4f7cff" stop-opacity="0.45"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#7c4dff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#7c4dff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#47249a" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" rx="30" fill="url(#page)"/>
+  <circle cx="800" cy="430" r="530" fill="url(#glow)"/>
+  <path d="M0 800 C320 710 460 1010 820 900 C1110 810 1260 690 1600 800 L1600 1000 L0 1000 Z" fill="#ffffff" opacity="0.55"/>
+
+  <g transform="translate(72 56)">
+    <rect width="72" height="72" rx="20" fill="url(#brand)"/>
+    <path d="M23 24 C28 24 32 20 32 15 C32 20 36 24 41 24 C36 24 32 28 32 33 C32 28 28 24 23 24 Z" fill="#fff"/>
+    <path d="M35 48 C41 48 46 43 46 37 C46 43 51 48 57 48 C51 48 46 53 46 59 C46 53 41 48 35 48 Z" fill="#fff" opacity="0.9"/>
+    <path d="M17 47 C21 47 24 44 24 40 C24 44 27 47 31 47 C27 47 24 50 24 54 C24 50 21 47 17 47 Z" fill="#fff" opacity="0.72"/>
+    <text x="94" y="50" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif" font-size="48" font-weight="750" fill="#171421">CreatorOS</text>
+  </g>
+  <text x="1528" y="100" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif" font-size="27" font-weight="550" fill="#747080">CreatorOS · macOS 安装</text>
+  <line x1="72" y1="164" x2="1528" y2="164" stroke="#dcd7eb" stroke-width="2"/>
+
+  <text x="800" y="226" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif" font-size="38" font-weight="700" fill="#282333">拖动 CreatorOS 到“应用程序”</text>
+  <text x="800" y="272" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif" font-size="25" fill="#777184">安装只需要一步，拖过去即可</text>
+
+  <g opacity="0.92">
+    <circle cx="450" cy="490" r="150" fill="#ffffff" opacity="0.52" stroke="#d9ceff" stroke-width="3"/>
+    <circle cx="1150" cy="490" r="150" fill="#ffffff" opacity="0.52" stroke="#cbdcff" stroke-width="3"/>
+  </g>
+  <g transform="translate(650 486)">
+    <path d="M0 10 C55 -25 93 -25 142 10 C171 31 201 33 244 10" fill="none" stroke="url(#arrow)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M224 -14 L266 10 L224 34" fill="none" stroke="#6382ff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g filter="url(#shadow)" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif">
+    <g transform="translate(72 780)">
+      <rect width="432" height="148" rx="28" fill="#ffffff" stroke="#ddd7ee" stroke-width="2"/>
+      <text x="34" y="59" font-size="40" font-weight="750" fill="#7448ed">01</text>
+      <text x="118" y="58" font-size="31" font-weight="700" fill="#25212d">拿起</text>
+      <text x="34" y="110" font-size="25" fill="#777184">拖动 CreatorOS 图标</text>
+    </g>
+    <g transform="translate(584 780)">
+      <rect width="432" height="148" rx="28" fill="#ffffff" stroke="#ddd7ee" stroke-width="2"/>
+      <text x="34" y="59" font-size="40" font-weight="750" fill="#7448ed">02</text>
+      <text x="118" y="58" font-size="31" font-weight="700" fill="#25212d">安放</text>
+      <text x="34" y="110" font-size="25" fill="#777184">移入“应用程序”</text>
+    </g>
+    <g transform="translate(1096 780)">
+      <rect width="432" height="148" rx="28" fill="#ffffff" stroke="#ddd7ee" stroke-width="2"/>
+      <text x="34" y="59" font-size="40" font-weight="750" fill="#7448ed">03</text>
+      <text x="118" y="58" font-size="31" font-weight="700" fill="#25212d">开始</text>
+      <text x="34" y="110" font-size="25" fill="#777184">从“应用程序”打开</text>
+    </g>
+  </g>
+</svg>

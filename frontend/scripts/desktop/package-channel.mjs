@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { assertIdentityLock, compilePackageBrandBuildInput, compilePackagePlan, readPackageBrandBuildEnv, validateManifestFiles, validatePackageManifest } from "./package-flavor.mjs";
+import { buildChannelTauriOverride } from "./tauri-package-config.mjs";
 import {
   buildLocalPackageEnv,
   installAndLaunchLocalMacApp,
@@ -36,13 +37,11 @@ const packageBrandBuildInput = compilePackageBrandBuildInput({
   iconMimeType: "image/x-icon",
 });
 const packageBrandInputPath = resolve(staging, "package-brand-build-input.json");
-const tauriOverride = {
-  productName: manifest.displayName,
-  mainBinaryName: manifest.binaryName,
-  identifier: manifest.appIdentifier,
-  bundle: { icon: [icon] },
-  plugins: { updater: { endpoints: [plan.latestUrl] } },
-};
+const tauriOverride = buildChannelTauriOverride({
+  manifest,
+  icon,
+  latestUrl: plan.latestUrl,
+});
 writeFileSync(resolve(staging, "package-identity.json"), `${JSON.stringify(plan.packageIdentity, null, 2)}\n`);
 writeFileSync(resolve(staging, "tauri.override.json"), `${JSON.stringify(tauriOverride, null, 2)}\n`);
 writeFileSync(packageBrandInputPath, `${JSON.stringify(packageBrandBuildInput, null, 2)}\n`);

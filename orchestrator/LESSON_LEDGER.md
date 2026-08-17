@@ -549,15 +549,17 @@
 - **RootCause**: 自动匹配链路只校验了“返回项是否真实”，没有校验本稿专属生成素材整批落空；素材
   库投影丢失 AI 来源，生成器保存描述时还裁掉了口播原文绑定，导致模型与界面都失去可靠上下文。
 - **GuardRule**: AI 加入当前项目的素材必须保留来源；本稿专属生成素材必须保存服务原文和画面职责，
-  `material.match` 必须逐项做语义匹配。存在本稿绑定素材时，整批空匹配不得落成可确认候选，更不能
-  退化成逐条人工选场景；人工控件只用于纠正少量误配。代码只识别系统绑定协议并校验真实 ID/场景
+  `material.match` 必须逐项做语义匹配。存在本稿绑定素材时，整批空匹配须携带真实素材 ID 定向修复
+  一次；仍失败时只能按生成时保存的“服务原文”精确恢复 SRT 来源时间，不能取消整条分场，更不能
+  退化成逐条人工选场景。人工控件只用于纠正少量误配。代码只识别系统绑定协议并校验真实 ID/场景
   边界，不按文件名、关键词或字符串相似度替模型做创作选择。
 - **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm
   --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts
   src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run
   src/features/production/video-decision-preview.test.tsx`（已登记进 `reconcile.config.json`）。
-- **Outcome(T+N)**: 真实失败形状先红后绿；AI 来源不再伪装成人工上传，生成素材保留服务原文，空
-  匹配被拒绝且不落候选，未匹配的 AI 项目素材也不再生成逐条手选控件。待新开发包真机重跑分场验证。
+- **Outcome(T+N)**: 真实失败形状先红后绿；AI 来源不再伪装成人工上传，生成素材保留服务原文；
+  首轮协议失败会定向修复，两次失败会按服务原文恢复而不是取消任务，未匹配的 AI 项目素材也不再
+  生成逐条手选控件。待新开发包真机重跑分场验证。
 - **Ref**: T-867；用户 2026-08-17 “AI 分场决策”真机截图；`orchestrator/T867-BUILD-VALIDATION.md`。
 
 ## LED-037 — 成功写操作的重放不能用“已经完成”作为错误回应

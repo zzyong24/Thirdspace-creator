@@ -38,7 +38,26 @@
       "minimumSystemVersion": "13.5",
       "signingIdentity": null,
       "hardenedRuntime": true,
-      "entitlements": "entitlements.plist"
+      "entitlements": "entitlements.plist",
+      "dmg": {
+        "background": "dmg/creatoros-install-background@2x.png",
+        "windowPosition": {
+          "x": 200,
+          "y": 120
+        },
+        "windowSize": {
+          "width": 800,
+          "height": 500
+        },
+        "appPosition": {
+          "x": 225,
+          "y": 245
+        },
+        "applicationFolderPosition": {
+          "x": 575,
+          "y": 245
+        }
+      }
     },
     "windows": {
       "certificateThumbprint": null,

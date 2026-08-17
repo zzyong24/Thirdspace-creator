@@ -2107,35 +2107,51 @@ export async function decideMaterialBroll(
 ): Promise<VideoBrollPick[]> {
   if (input.inventory.length === 0) return [];
   const assetIds = input.inventory.map((asset) => asset.assetId);
-  const output = await call<MaterialMatchOutput>({
-    skillId: "material.match",
-    facets: {
-      positioning: "以本条口播、视频场景和视觉编导需求为准",
-      topic: input.script,
-      script: input.script,
-      scenes: scenesFacet(input.scenes),
-      visualSlots: visualSlotsFacet(input.visualSlots),
-      library: libraryFacet(input.inventory),
-      orientation: orientationFacet(input.orientation),
-      manualAssignments: input.manualAssignments ?? "",
-    },
-    outputSchema: buildVideoMaterialMatchSchema(
-      assetIds,
-      input.scenes.length,
-      {
-        requireAtLeastOneFrom: input.inventory
-          // SEMANTIC_BOUNDARY_ALLOW:这里只认系统写入的绑定协议标记，确认素材确属本稿；
-          // 是否适配哪个场景仍完全交给 material.match Skill，不用名称/描述做语义判断。
-          .filter(
-            (asset) =>
-              asset.source === "ai" &&
-              (asset.label.includes("【当前确认稿绑定】") ||
-                asset.description.includes("服务原文:")),
-          )
-          .map((asset) => asset.assetId),
+  const requiredAssetIds = currentScriptBoundAiAssets(input.inventory).map(
+    (asset) => asset.assetId,
+  );
+  const invokeMatch = (recovery = "") =>
+    call<MaterialMatchOutput>({
+      skillId: "material.match",
+      facets: {
+        positioning: "以本条口播、视频场景和视觉编导需求为准",
+        topic: input.script,
+        script: input.script,
+        scenes: scenesFacet(input.scenes),
+        visualSlots: visualSlotsFacet(input.visualSlots),
+        library: libraryFacet(input.inventory),
+        orientation: orientationFacet(input.orientation),
+        manualAssignments: input.manualAssignments ?? "",
+        recovery,
       },
-    ),
-  });
+      outputSchema: buildVideoMaterialMatchSchema(
+        assetIds,
+        input.scenes.length,
+        { requireAtLeastOneFrom: requiredAssetIds },
+      ),
+    });
+
+  let output: MaterialMatchOutput;
+  try {
+    output = await invokeMatch();
+  } catch (error) {
+    if (
+      requiredAssetIds.length === 0 ||
+      !isMaterialMatchProtocolFailure(error)
+    ) {
+      throw error;
+    }
+    // 首轮结构化 + 文本兜底都违约时，只对同一次素材匹配做一次定向协议修复。
+    // 真实素材、场景和语义任务完全不变；鉴权、网络、额度等错误不会盲目重试。
+    output = await invokeMatch(
+      [
+        "上次输出未通过当前 material.match 协议校验。",
+        `本稿专属素材真实 assetId：${requiredAssetIds.join("、")}。`,
+        "必须逐项核对这些素材与口播/场景；至少返回其中一项合法匹配。",
+        "只能使用素材清单内真实 ID，并补齐 sceneIdx、at、durationSec、visualRole、presentation、speakerMode、motion；不要输出解释。",
+      ].join("\n"),
+    );
+  }
 
   const idSet = new Set(assetIds);
   const used = new Set<string>();
@@ -2201,17 +2217,102 @@ export async function decideMaterialBroll(
   return picks.sort((a, b) => a.at - b.at);
 }
 
-function hasCurrentScriptBoundAiAssets(
+function currentScriptBoundAiAssets(
   inventory: readonly BrollAssetRef[],
-): boolean {
-  // SEMANTIC_BOUNDARY_ALLOW:这里只识别 CreatorOS 自己写入的精确绑定协议标记；
-  // 它不判断素材是否适配场景，真正的语义选择仍由 material.match Skill 完成。
-  return inventory.some(
+): BrollAssetRef[] {
+  // SEMANTIC_BOUNDARY_ALLOW:这里只识别 CreatorOS 自己写入的精确绑定协议标记，
+  // 不判断素材画面是否适合某个场景。
+  return inventory.filter(
     (asset) =>
       asset.source === "ai" &&
       (asset.label.includes("【当前确认稿绑定】") ||
         asset.description.includes("服务原文:")),
   );
+}
+
+function hasCurrentScriptBoundAiAssets(
+  inventory: readonly BrollAssetRef[],
+): boolean {
+  return currentScriptBoundAiAssets(inventory).length > 0;
+}
+
+/** 仅结构化输出协议失败才允许同请求做一次定向修复；网络/鉴权/额度错误直接上抛。 */
+function isMaterialMatchProtocolFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /schema|结构化节点|合\s*schema|json|解析|parseable|空结果|空匹配|generateObject/i.test(
+    message,
+  );
+}
+
+function generatedAssetSourceText(description: string): string {
+  const matched = description.match(
+    /(?:^|\n)服务原文:\s*([\s\S]*?)(?=\n(?:画面职责|视觉方案):|$)/,
+  );
+  return matched?.[1]?.trim() ?? "";
+}
+
+function canonicalProvenanceText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase("zh-CN")
+    .replace(/[\s，。！？；：、,.!?;:'"“”‘’（）()【】\[\]《》<>—\-_]+/g, "");
+}
+
+/**
+ * 两次 AI 协议输出都失败时，按生成时保存的“服务原文”恢复本稿专属素材的时间锚点。
+ * SEMANTIC_BOUNDARY_ALLOW: 服务原文是生成素材时从确认稿精确复制并持久化的来源关系；
+ * 这里只做标点/空白归一后的精确包含与 SRT 时间回放，不用关键词、相似度或文件名做创作判断。
+ */
+function recoverCurrentScriptBoundAiBroll(input: {
+  scenes: readonly VideoScene[];
+  srtLines: readonly SrtLine[];
+  inventory: readonly BrollAssetRef[];
+}): VideoBrollPick[] {
+  const picks: VideoBrollPick[] = [];
+  for (const asset of currentScriptBoundAiAssets(input.inventory)) {
+    const sourceText = canonicalProvenanceText(
+      generatedAssetSourceText(asset.description),
+    );
+    if (!sourceText) continue;
+
+    const exactLines = input.srtLines.filter((line) => {
+      const text = canonicalProvenanceText(line.text);
+      return Boolean(text) && (sourceText.includes(text) || text.includes(sourceText));
+    });
+    if (exactLines.length === 0) continue;
+    const first = exactLines[0];
+    const last = exactLines[exactLines.length - 1];
+    if (!first || !last) continue;
+    const sceneIdx = input.scenes.findIndex(
+      (scene) => first.startSec >= scene.startSec && first.startSec < scene.endSec,
+    );
+    const scene = input.scenes[sceneIdx];
+    if (!scene) continue;
+    const at = first.startSec;
+    const sourceDuration = Math.max(1, last.endSec - at);
+    const assetDuration = (asset.durationMs ?? 0) / 1000;
+    const durationSec = Math.max(
+      1,
+      Math.min(
+        sourceDuration,
+        assetDuration > 0 ? assetDuration : sourceDuration,
+        Math.max(1, scene.endSec - at),
+      ),
+    );
+    picks.push({
+      sceneIdx,
+      assetId: asset.assetId,
+      at,
+      durationSec,
+      presentation: "large_stage",
+      visualRole: asset.kind.toLowerCase().includes("video")
+        ? "live_footage"
+        : "still_image",
+      speakerMode: "hidden",
+      motion: "static",
+    });
+  }
+  return picks.sort((a, b) => a.at - b.at);
 }
 
 /**
@@ -3084,6 +3185,7 @@ export async function runVideoDecisions(
     );
     let materialMatchedBroll: VideoBrollPick[] = [];
     let materialMatchWarning = "";
+    let materialMatchRecoveredCount = 0;
     try {
       materialMatchedBroll = await decideMaterialBroll(
         {
@@ -3103,9 +3205,12 @@ export async function runVideoDecisions(
       materialMatchWarning =
         error instanceof Error ? error.message : String(error);
       if (hasCurrentScriptBoundAiAssets(inventory)) {
-        throw new Error(
-          `本稿专属素材尚未完成 AI 自动匹配，请重试本次分场：${materialMatchWarning}`,
-        );
+        materialMatchedBroll = recoverCurrentScriptBoundAiBroll({
+          scenes,
+          srtLines,
+          inventory,
+        });
+        materialMatchRecoveredCount = materialMatchedBroll.length;
       }
       console.warn(
         `[video.decisions] material.match degraded task=${task.id} project=${task.projectId}: ${materialMatchWarning}`,
@@ -3131,7 +3236,9 @@ export async function runVideoDecisions(
       2,
       `${VIDEO_DECISION_STEPS[2]}:${visualSlots.length} 个画面需求 / ${broll.length} 条已匹配(清单 ${inventory.length} 项)` +
         (materialMatchWarning
-          ? `；素材匹配暂不可用，系统已在当前方案内自动补位`
+          ? materialMatchRecoveredCount > 0
+            ? `；AI 匹配异常，已按本稿生成来源恢复 ${materialMatchRecoveredCount} 项`
+            : `；素材匹配暂不可用，系统已在当前方案内自动补位`
           : ""),
       [
         {

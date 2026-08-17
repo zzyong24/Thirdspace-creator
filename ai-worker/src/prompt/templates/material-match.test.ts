@@ -42,7 +42,7 @@ describe("material.match 视频呈现契约", () => {
   });
 
   it("把项目画幅、界面可读性和展示时长交给 Skill 判断", () => {
-    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v12");
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v13");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{orientation}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "still_image 与 live_footage 绝不能 full_frame",
@@ -89,6 +89,8 @@ describe("material.match 视频呈现契约", () => {
   });
 
   it("[T-867 RED] 当前项目生成素材必须由 AI 自动逐项评估，空结果不能把选场景作业退给用户", () => {
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v13");
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{recovery}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("当前项目 AI 已选入或生成并采纳");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不得因为名称相似或重复就跳过");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不能返回整批空匹配");

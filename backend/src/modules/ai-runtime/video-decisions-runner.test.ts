@@ -1504,6 +1504,62 @@ describe("decideBroll(清单硬门)", () => {
     ]);
   });
 
+  it("[T-867 RED] 本稿素材首轮协议失败后携带真实 ID 定向修复一次", async () => {
+    const calls: StructuredCallInput<unknown>[] = [];
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      calls.push(input as StructuredCallInput<unknown>);
+      if (calls.length === 1) {
+        throw new Error("结构化节点:文本兜底仍未得到合 schema 的对象");
+      }
+      return {
+        matches: [
+          {
+            assetId: "generated-current-script",
+            role: "broll",
+            reason: "按本稿服务原文匹配正文场景",
+            sceneIdx: 1,
+            at: 3.5,
+            durationSec: 4.5,
+            presentation: "large_stage",
+            visualRole: "still_image",
+            speakerMode: "hidden",
+            motion: "static",
+          },
+        ],
+      } as T;
+    }) as unknown as StructuredCall;
+
+    const result = await decideMaterialBroll(
+      {
+        scenes: SCENES,
+        srtLines,
+        script: SCRIPT,
+        inventory: [
+          {
+            assetId: "generated-current-script",
+            label: "【当前确认稿绑定】角色技巧 · 生成图",
+            kind: "image",
+            description: "服务原文:第一个技巧是给模型一个角色",
+            source: "ai",
+          },
+        ],
+        visualSlots: [],
+      },
+      call,
+    );
+
+    expect(calls).toHaveLength(2);
+    expect(calls[1]?.facets.recovery).toContain("generated-current-script");
+    expect(calls[1]?.facets.recovery).toContain("上次输出未通过");
+    expect(result).toEqual([
+      expect.objectContaining({
+        assetId: "generated-current-script",
+        sceneIdx: 1,
+        at: 3.5,
+      }),
+    ]);
+  });
+
   it("material.match 编造 id、封面或越界场景会被动态 schema 拒绝", () => {
     const schema = buildVideoMaterialMatchSchema(["real"], 2);
     expect(
@@ -2769,14 +2825,15 @@ describe("runVideoDecisions(编排)", () => {
     );
   });
 
-  it("[T-867 RED] 本稿专属 AI 素材匹配失败时不落空候选，更不能退成逐条手选", async () => {
+  it("[T-867 RED] 本稿专属 AI 素材两次匹配失败时按生成来源恢复，不取消整条分场", async () => {
     const boundInventory: BrollAssetRef[] = [
       ...INVENTORY,
       {
         assetId: "generated-current-script",
         label: "【当前确认稿绑定】流程对比 · 生成图",
         kind: "image",
-        description: "展示两条流程从混乱到统一",
+        description:
+          "服务原文:第一个技巧是给模型一个角色\n视觉方案:展示两条流程从混乱到统一",
         source: "ai",
       },
     ];
@@ -2791,12 +2848,32 @@ describe("runVideoDecisions(编排)", () => {
     await runVideoDecisions(ctx, TASK, deps);
     spy.mockRestore();
 
-    expect(calls.recordCandidate).not.toHaveBeenCalled();
-    expect(calls.cancelTask).toHaveBeenCalledWith(
-      ctx,
-      TASK.id,
-      expect.stringContaining("本稿专属素材尚未完成 AI 自动匹配"),
+    expect(calls.cancelTask).not.toHaveBeenCalled();
+    expect(calls.recordCandidate).toHaveBeenCalledTimes(1);
+    const [, , candidate] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: { decisions: { broll: unknown[] } } },
+    ];
+    expect(candidate.resultData.decisions.broll).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          assetId: "generated-current-script",
+          sceneIdx: 1,
+          at: 3.5,
+          presentation: "large_stage",
+          visualRole: "still_image",
+          speakerMode: "hidden",
+          motion: "static",
+        }),
+      ]),
     );
+    const brollStep = (calls.recordStep.mock.calls as unknown as Array<
+      [unknown, string, { stepNo: number; text: string }]
+    >)
+      .map((entry) => entry[2])
+      .find((entry) => entry.stepNo === 3);
+    expect(brollStep?.text).toContain("已按本稿生成来源恢复 1 项");
   });
 
   it("缺项目范围 → 备料失败，不读取账号整库 B-roll", async () => {

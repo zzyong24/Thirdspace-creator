@@ -44,7 +44,7 @@ export type MaterialMatchOutput = z.infer<typeof materialMatchSchema>;
 
 export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
   id: "material.match",
-  version: "v12",
+  version: "v13",
   outputSchema: materialMatchSchema,
   tools: [],
   system:
@@ -72,6 +72,9 @@ export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
 【用户人工指定的素材】(可选；这是硬约束，必须保留并据此重算分场、插点与时长)
 {{manualAssignments}}
 
+【上次输出修复要求】(可选；存在时必须逐条修复，不要重复上一轮的空结果或非法字段)
+{{recovery}}
+
 【可用素材库】(每行包含 id、原始文件名、类型、尺寸、时长、描述与来源)
 {{library}}
 
@@ -92,6 +95,7 @@ export const MATERIAL_MATCH_TEMPLATE: PromptTemplate = {
 - 新生成素材必须直接按本次交付画幅构图：竖屏 9:16 使用竖向主体和手机安全区，横屏 16:9 使用宽屏构图；不得先生成相反画幅再靠强行裁切、拉伸或缩成小图补救。
 - 开场前三秒优先使用与第一句语义直接相关的真实素材留人：若清单中存在合适的真实操作、结果、案例或证据，必须把它安排在第一场第一句的 SRT 起秒，durationSec 连续覆盖前三秒（受素材真实时长和场景边界限制）。产品界面/操作录屏需要看清时使用 full_frame，让素材成为开场主画面，真人不作为主视觉；不要把合适素材拖到三秒以后才进入。若清单中没有语义匹配的真实素材，宁可不选，由可溯信息卡补位，禁止用随机库存或通用氛围画面填满前三秒。
 - 同一素材不要重复选择；不要用 cover 角色的封面进入 B-roll 时间线。
+【协议修复】如果“上次输出修复要求”非空，必须优先核对其中列出的真实 assetId、场景范围和缺失字段，返回修复后的完整 JSON；不要解释失败原因，不要输出空对象、Markdown 或额外文字。
 【输出】只输出一个 JSON 对象 {"matches": [...]}(不要多余文字、不要代码块包裹),matches 是数组,每条:
 {"assetId"(必须来自上面列表的真实 id),"role"(broll空镜/clip片段/cover封面 三选一),"reason"(为什么用它、用在哪里,一句中文),"sceneIdx"(视频模式必填),"at"(视频模式必填),"durationSec"(视频模式必填),"visualRole"(视频模式必填:screen_recording/still_image/live_footage/cover),"presentation"(视频模式必填:full_frame/large_stage/overlay),"speakerMode"(视频模式必填:hidden/pip_bottom_left),"motion"(视频模式必填:static/push_in/pan_left/pan_right)}。`,
   requiredFacets: ["positioning", "library"],
