@@ -62,3 +62,17 @@ pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner
 - 未自动重跑用户当前失败任务；
 - 未修改用户项目、候选或模型配置；
 - 安装版需包含本修复的新本地开发包后，再由用户主动重试分场。
+
+## 本地开发包交付
+
+- 冻结候选：`e618632334e1b23e590025cae92e793aeb763d35`；版本四处一致为 `1.1.0`。
+- 固定入口：`pnpm -C frontend desktop:package-local`，构建、替换安装与启动均成功。
+- 安装包：`/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`。
+- DMG SHA-256：`11a28c002f4f81b5aeb569a1f1badf83c8eeb9e162ff5eeefef9944d462e9194`；
+  `hdiutil verify` 为 VALID，`codesign --verify --deep --strict` 通过。
+- 已安装 `/Applications/CreatorOS.app` 并真实启动；窗口数为 1，sidecar 监听本机动态端口，首页
+  HTTP 返回 `302` 正常跳转，未出现连接拒绝或白屏。
+- sidecar tar SHA-256 为
+  `8a8c663ffc7470a311b7f9102b69064d6c82cd844a14f4597654c80a8fde413e`，安装运行时 stamp 与之完全一致。
+- 这是开发环境本地包，仅做 ad-hoc 签名；没有 Developer ID 签名、公证、推送、tag、GitHub Release
+  或生产发布。
