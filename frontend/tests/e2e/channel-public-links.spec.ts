@@ -18,15 +18,14 @@ const packagePublicLinks = resolvePackagePublicLinks({
     process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL,
 });
 
-if (!packagePublicLinks.websiteUrl || !packagePublicLinks.humanFeedbackUrl) {
-  throw new Error(`包 ${PACKAGE_REF} 缺少官网或人工反馈链接，无法执行公开入口验收`);
+if (!packagePublicLinks.humanFeedbackUrl) {
+  throw new Error(`包 ${PACKAGE_REF} 缺少人工反馈链接，无法执行公开入口验收`);
 }
 
-const PACKAGE_WEBSITE_URL = packagePublicLinks.websiteUrl;
 const PACKAGE_HUMAN_FEEDBACK_URL = packagePublicLinks.humanFeedbackUrl;
 
-test.describe("T-729 当前桌面包公开入口", () => {
-  test("当前桌面包官网与人工反馈只使用包级链接", async ({ page }) => {
+test.describe("T-729/T-871 当前桌面包公开入口", () => {
+  test("设置页不展示常驻官网入口，人工反馈仍只使用包级链接", async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(window, "isTauri", {
         configurable: true,
@@ -41,17 +40,10 @@ test.describe("T-729 当前桌面包公开入口", () => {
       await page.setViewportSize(viewport);
       await page.goto("/settings");
 
-      const website = page.locator(
-        '[data-slot="check-update-official-link"]',
-      );
-      await expect(website).toBeVisible();
-      await expect(website).toHaveAttribute("href", PACKAGE_WEBSITE_URL);
-      if (IS_CHANNEL_PACKAGE) {
-        await expect(website).not.toHaveAttribute(
-          "href",
-          /creatoros\.aitongban\.cloud/,
-        );
-      }
+      await expect(
+        page.locator('[data-slot="check-update-official-link"]'),
+      ).toHaveCount(0);
+      await expect(page.getByText(/访问产品官网/)).toHaveCount(0);
     }
 
     // 设置页是 modal；回到真实 AppShell 后验证侧栏反馈入口。

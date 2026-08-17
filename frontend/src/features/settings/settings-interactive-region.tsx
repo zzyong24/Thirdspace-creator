@@ -89,7 +89,6 @@ import {
   ChevronRightIcon,
   Download,
   RefreshCw,
-  ExternalLink,
   FileText,
   FolderOpen,
   type LucideIcon,
@@ -100,7 +99,6 @@ import {
   getAppVersion,
   isDesktopRuntimeClient,
   PACKAGE_DOWNLOAD_URL,
-  PACKAGE_WEBSITE_URL,
   type LatestVersionInfo,
 } from "@/lib/desktop-updater";
 // [T-372 L3] Rust 壳授权判定薄封装:内测离线宽限倒计时的实时数据源(零网络,读缓存+订阅事件)。
@@ -1454,9 +1452,9 @@ function ActivationStatusCard({
 // CheckUpdateCard — 软件更新 (T-180 → T-396c → T-459 官网公开源)
 // ---------------------------------------------------------------------------
 //
-// [T-459] 更新流 = 「GET 官网静态 latest.json + 跳产品官网」:
+// [T-459/T-871] 更新流 = 「GET 包级 latest.json + 发现新版后提供包级下载入口」:
 //   - 不调用授权域名,不发送激活码/机器/项目/nonce,不受授权状态影响;
-//   - 有新版 → 显版本/说明 + 固定官网「去下载」;远端 JSON 的 URL 一律不采纳;
+//   - 有新版 → 显版本/说明 + 固定包级下载页「去下载」;远端 JSON 的 URL 一律不采纳;
 //   - 无新版 → 「已是最新版」;失败 → 人话文案(技术报错不出 UI)。
 //
 // **只桌面态有意义**:挂载后经 `isDesktopRuntimeClient()` 探测;web/SSR → 显「桌面端专属」诚实
@@ -1558,7 +1556,7 @@ function CheckUpdateCard() {
   return (
     <SectionCard
       title="软件更新"
-      description="检查新版，前往产品官网获取"
+      description="在应用内检查是否有新版"
       action={
         <Badge
           data-slot="check-update-badge"
@@ -1610,20 +1608,7 @@ function CheckUpdateCard() {
           </Button>
         </div>
 
-        {PACKAGE_WEBSITE_URL ? (
-          <a
-            href={PACKAGE_WEBSITE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-slot="check-update-official-link"
-            className="inline-flex items-center gap-1.5 self-start text-xs text-brand underline-offset-4 hover:underline"
-          >
-            <ExternalLink aria-hidden="true" className="size-3.5 shrink-0" />
-            访问产品官网（查看最新版本与更新说明）
-          </a>
-        ) : null}
-
-        {/* [T-459] 有新版:显版本号 + releaseNotes；下载入口永远固定产品官网。 */}
+        {/* [T-459/T-871] 有新版才显版本、说明与包级下载入口；不再常驻展示产品官网。 */}
         {phase === "available" && available ? (
           <div
             data-slot="check-update-available"

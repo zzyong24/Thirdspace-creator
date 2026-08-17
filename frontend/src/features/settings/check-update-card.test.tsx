@@ -1,7 +1,7 @@
 /**
  * [T-180 → T-396c → T-459] CheckUpdateCard(软件更新卡)组件测试 —— 经 SettingsDialog 渲染。
  *
- * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮;②有新版 → 固定官网「去下载」;
+ * 覆盖:①桌面态 → 显当前版本 + 「检查更新」按钮且无常驻官网入口;②有新版 → 固定下载页「去下载」;
  * ③远端结果里的任意 downloadUrl 不进入 DOM;④已最新;⑤失败 → 人话错误态不崩;
  * ⑥授权撤销不再影响公开更新入口;⑦web 态 → 桌面端专属空态。
  */
@@ -179,19 +179,16 @@ describe("CheckUpdateCard — 桌面态", () => {
     expect(dl.getAttribute("href")).not.toContain("evil.example.com");
   });
 
-  it("[T-729] 常驻官网入口只指向当前包官网，不渗漏 CreatorOS 官方域名", async () => {
+  it("[T-871] 不再渲染常驻产品官网入口或官网引导文案", async () => {
     mockIsDesktop.mockReturnValue(true);
     const doc = renderDialog();
     await waitFor(() =>
-      expect(doc.querySelector('[data-slot="check-update-official-link"]')).not.toBeNull(),
+      expect(doc.querySelector('[data-slot="check-update-card"]')?.getAttribute("data-desktop"))
+        .toBe("true"),
     );
-    const website = doc.querySelector(
-      '[data-slot="check-update-official-link"]',
-    ) as HTMLAnchorElement;
-    expect(website.getAttribute("href")).toBe("https://brand.example.com/");
-    expect(website.getAttribute("href")).not.toContain(
-      "creatoros.aitongban.cloud",
-    );
+    expect(doc.querySelector('[data-slot="check-update-official-link"]')).toBeNull();
+    expect(doc.body.textContent).not.toContain("访问产品官网");
+    expect(doc.body.textContent).not.toContain("前往产品官网获取");
   });
 
   it("点检查 → 已最新 → 「已是最新版」", async () => {
