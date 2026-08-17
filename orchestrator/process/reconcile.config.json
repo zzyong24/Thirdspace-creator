@@ -180,6 +180,12 @@
       "what": "主视觉出现时再次自动把人物缩成 PiP，或用人物缩小/放大回位动画冒充剪辑连续性",
       "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
       "onFail": "单主语镜头门回归：新导演合同只能 base/takeover，正式组装不产 pip_bottom_left，takeover 用不透明主视觉层盖住人物，模板不得按素材或动态卡时间窗生成 #th 缩放、位移和回位 tween。"
+    },
+    {
+      "led": "LED-034",
+      "what": "图片编辑 multipart 再次发送字符串 n，导致严格上游按整数 schema 返回 400",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-openai-images.test.ts",
+      "onFail": "图片编辑协议门回归：FormData 普通字段没有数字类型；单图编辑须省略可选 n，真实 wire body 不得含 name=\"n\"；纯文生图 JSON 仍须发送数字 n:1，禁止多 POST 盲试。"
     }
   ],
   "program_completion_required": false,

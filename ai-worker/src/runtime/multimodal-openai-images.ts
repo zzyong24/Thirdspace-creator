@@ -196,7 +196,10 @@ async function generateImage(
     );
     form.append("prompt", opts.prompt);
     form.append("model", spec.model);
-    form.append("n", "1");
+    // [T-864] FormData 的普通字段只能编码为字符串；即使传入数字 1，线上请求仍会变成
+    // `"n":"1"`，部分严格 OpenAI-compatible 中转站会按 integer schema 返回 400。
+    // 本链只消费一张图，而 images/edits 的 n 可选且默认 1，因此编辑请求直接省略它。
+    // 纯文生图走下方 JSON，仍显式发送真正的数字 `n: 1`。
     if (size) form.append("size", size);
     try {
       res = await deps.fetch(editsUrl(spec), {

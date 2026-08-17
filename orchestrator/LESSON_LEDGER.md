@@ -484,3 +484,20 @@
   HTML 不含素材窗驱动的 `tl.to("#th",{left/width...})`，真实短样片抽取接管前/中/后三态确认。
 - **Outcome(T+N)**: 待修订短样片与用户验收回填。
 - **Ref**: T-858；DEC-VIDEO-043；用户 2026-08-16 预览反馈。
+
+## LED-034 — 配置里的数字正确，不等于 multipart 出站仍有数字类型
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: `image2-edit` 的 `n` 取值为合法的 1，但 OpenAI-compatible 图片编辑适配器执行
+  `form.append("n", "1")`，真实出站被记录为字符串并被严格上游以 HTTP 400 拒绝。
+- **RootCause**: 把配置/TypeScript 中的数字语义误当成 wire 类型；标准 `FormData` 的普通字段只能
+  编码成文本，即使传入数字也会字符串化。旧测试还把 `form.get("n") === "1"` 当成正确契约。
+- **GuardRule**: multipart 中具有数值语义的可选字段，在系统使用协议默认值时应省略；确实必填时
+  必须按具体上游的 multipart 解析契约做真实 wire 兼容验证，不能靠类型断言伪造数字。计费 POST
+  不得用多编码盲试。JSON 路径必须单独断言数字类型，未知设置保持白名单不透传。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/runtime/multimodal-openai-images.test.ts`
+  （已登记进 `reconcile.config.json`）。
+- **Outcome(T+N)**: RED 为 `1 failed | 11 passed`，证明编辑请求仍含字符串 `n`；GREEN 为 12/12，
+  Node 实际 multipart wire body 已不含 `name="n"`，纯文生图 JSON 仍为数字 `n: 1`。未调用真实计费
+  生图，待包含本修复的开发包真机复测后回填上游结果。
+- **Ref**: T-864；DEC-MODEL-054；`orchestrator/T864-BUILD-VALIDATION.md`；用户 2026-08-17 日志。

@@ -146,7 +146,7 @@ describe("OpenAI 兼容生图适配器 —— generateImage(同步一次请求)"
 
   // [T-380] 以图生图:带 referenceImage → 走 /v1/images/edits multipart(image+prompt+
   // model+size),与 generations 的 JSON 是两种编码;无参考图路径完全不变(上面各测已覆盖)。
-  it("referenceImage → POST /v1/images/edits,multipart form(image/prompt/model/size),不发 JSON", async () => {
+  it("[T-864] referenceImage → multipart 不发送会被字符串化的可选 n，JSON generations 仍为数字 1", async () => {
     const calls: Array<{ url: string; init?: RequestInit }> = [];
     const fakeFetch = (async (url: string, init?: RequestInit) => {
       calls.push({ url: String(url), init });
@@ -174,7 +174,14 @@ describe("OpenAI 兼容生图适配器 —— generateImage(同步一次请求)"
     const form = init.body as FormData;
     expect(form.get("prompt")).toBe("延续参考封面风格");
     expect(form.get("model")).toBe("gpt-image-2-4K");
-    expect(form.get("n")).toBe("1");
+    // FormData 的普通字段没有数字类型，append(1) 也会编码成字符串 "1"。
+    // 编辑链只消费一张图，省略可选 n 并使用上游默认 1，避免严格中转站以 400 拒绝。
+    expect(form.has("n")).toBe(false);
+    const wireRequest = new Request(calls[0]!.url, init);
+    expect(wireRequest.headers.get("content-type")).toMatch(
+      /^multipart\/form-data; boundary=/,
+    );
+    expect(await wireRequest.text()).not.toContain('name="n"');
     expect(form.get("size")).toBe("1024x1536");
     const image = form.get("image") as Blob;
     expect(image).toBeInstanceOf(Blob);

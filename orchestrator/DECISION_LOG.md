@@ -2940,3 +2940,29 @@ AI 理解真实语义。
 数字人制作卡仍为明确禁用的规划项，尚无正式口型同步或声音复刻业务链，不能把 UI 规划态冒充已实现。
 
 **任务**：T-851；实现前补独立 SPEC、供应商能力探针、服务契约、安全/授权设计与独立评审。
+
+# DEC-MODEL-054 (2026-08-17) — 图片编辑 multipart 省略可选数量参数，纯文生图 JSON 保留数字
+
+**Status**：confirmed
+
+**用户证据**：用户从真实 `image2-edit` 日志确认 `n=1` 的取值合法，但上游收到字符串
+`"n":"1"` 后按整数 schema 返回 HTTP 400，并要求优化。
+
+**决策**：
+
+1. OpenAI-compatible 图片编辑继续使用现有 multipart 适配器上传参考图，不新增第二套 provider
+   路由，也不把文件请求伪装成 JSON。
+2. `FormData` 普通字段没有原生数字类型，传入数字仍会序列化成文本；CreatorOS 只消费一张编辑结果，
+   因此从 `/images/edits` 请求省略可选 `n`，使用上游单图默认行为。
+3. 无参考图的 `/images/generations` 继续使用 JSON，并显式发送真正的数字 `n: 1`；未知渠道设置不得
+   透传，不能用 400 后盲试或重复计费 POST 做兼容。
+4. 测试必须检查 Node 实际序列化后的 multipart wire body 不含 `name="n"`，不能只断言 TypeScript
+   对象或配置中的表面类型。
+
+**Pattern-Ref**：PAT-004 DG-001/002/003（修复既有适配器内部私有编码，不新增跨模块契约）；外部协议
+仍由适配器边界集中落实。
+
+**Asset-Ref**：MOD-002 的 provider 薄适配与白名单配置原则；本次复用现有
+`multimodal-openai-images`，不引入新依赖或第二调用链。
+
+**任务**：T-864；证据见 `orchestrator/T864-BUILD-VALIDATION.md`。
