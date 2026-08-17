@@ -1,0 +1,4 @@
+interface:
+  display_name: "CreatorOS CLI 编排"
+  short_description: "安全操作 CreatorOS，并组合你的写稿 Skill"
+  default_prompt: "使用 $creatoros-cli 读取我的 CreatorOS 当前项目，并结合我指定的写稿 Skill 先生成候选。"

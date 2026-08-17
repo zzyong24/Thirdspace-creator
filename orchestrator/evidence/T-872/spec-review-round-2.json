@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 与 REV-002 均已由新增状态约束和验收条款销账；修订行未引入合法的新问题。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-872",
+        "quote": "完成安装版状态检查、显式账号/项目上下文、异步任务等待、候选采纳、写后回读和错误恢复"
+      },
+      "acceptance_anchor": {
+        "id": "T-872-验收范围",
+        "quote": "覆盖 macOS/Windows 安装、CLI 未发现/未授权、单项目改稿和多账号隔离"
+      },
+      "where": "第 3、5、6 节的授权、异步任务与错误恢复契约",
+      "failure_mode": "SPEC 只定义了 CLI 未发现时的引导，并仅在交付结构中概括写入“异步任务与恢复”，没有规定未授权响应后的停止与恢复条件、异步任务如何按同一 task ID 等待和续接、失败或待确认状态如何处理，也没有相应验收。实现可以只完成命令发现和同步改稿样例并通过现有九项验收，却无法保证未授权、断线、超时、任务失败或待确认场景下不误报完成、不重复提交任务。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-17-creatoros-public-cli-skill.md#3-跨平台-cli-发现；#5-交付结构；#6-验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "补齐公开 Skill 对未授权、异步终态、等待中断和可恢复错误的最小状态约束，并增加夹具或文档验收，证明始终复用同一 task/request ID、不会自动重提或把提交冒充完成。",
+      "resolution_evidence": "SPEC-LINE:121:b6f5d8dd34c249c5 明确未授权、授权过期或桌面未运行时停止业务调用及恢复条件；SPEC-LINE:123:961e1eaaf722f1fd 约束断线恢复复用 requestId/taskId/idempotencyKey 并禁止第二次写入；SPEC-LINE:127:86b93d8670fda287 至 SPEC-LINE:134:7ed6ab0b2737ee06 明确同一 taskId 的等待、续接、终态和候选确认规则；SPEC-LINE:175:b0c2ccd2562ad866 增加覆盖未授权、中断、超时、失败、取消和待确认的夹具验收。",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "scope",
+      "requirement_anchor": {
+        "id": "T-872",
+        "quote": "CreatorOS Skill 负责读取当前稿、生成/保存候选、版本与素材/制作链"
+      },
+      "acceptance_anchor": {
+        "id": "T-872-交付结果",
+        "quote": "定义写稿 Skill 的最小组合接口，使用户自己的写稿 Skill 负责文风与正文，CreatorOS Skill 负责读取当前稿、生成/保存候选、版本与素材/制作链"
+      },
+      "where": "第 4 节写稿 Skill 组合协议及第 6 节验收",
+      "failure_mode": "组合协议只把 relevantSources 作为写稿输入，并在保存后要求回读稿件版本；没有定义 CreatorOS Skill 对素材或后续制作链承担的最小读取、交接或回读结果，也没有验收。实现因此可以在稿件保存后终止且全部 AC 通过，使已确认的素材/制作链职责被静默缩减。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "docs/superpowers/specs/2026-08-17-creatoros-public-cli-skill.md#4-写稿-skill-组合协议；#6-验收",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "明确“素材/制作链”在本 Skill 中的最小闭环边界，并增加对应验收；若本任务只要求安全保留和传递现有素材、制作关联，也应明确禁止丢失或错绑并验证写后归属。",
+      "resolution_evidence": "SPEC-LINE:138:b21358de0fc46fc3 将最小制作链职责限定为保留关联、交代现状和显式交接；SPEC-LINE:140:c765c67846039d6a 至 SPEC-LINE:144:a976e0e2a92dc81c 明确写前冻结、禁止解除或错绑、写后回读、后续显式触发及不可核验字段显示未知；SPEC-LINE:176:7522dd3926718d93 增加整稿与局改的关联、制作状态及后续触发验收。",
+      "parent_id": ""
+    }
+  ]
+}
