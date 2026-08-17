@@ -29,6 +29,13 @@ export interface IntelligenceTranscriptRunnerDeps {
   workerId?: () => string;
 }
 
+export interface IntelligenceTranscriptDrainOptions {
+  /** 仅供测试或人工诊断限量；启动恢复默认持续处理到队列为空。 */
+  maxTasks?: number;
+  /** 小并发保护抖音取流、ASR 配额与本机资源，禁止按积压数量同时发起。 */
+  concurrency?: number;
+}
+
 function classify(error: unknown): {
   taskStatus: "failed" | "blocked";
   transcriptStatus: "failed" | "blocked";
@@ -128,30 +135,60 @@ export async function runIntelligenceTranscriptTask(
 
 export async function drainIntelligenceTranscriptQueue(
   deps: IntelligenceTranscriptRunnerDeps,
-  maxTasks = 20,
+  options: number | IntelligenceTranscriptDrainOptions = {},
 ): Promise<number> {
+  const maxTasks =
+    typeof options === "number"
+      ? options
+      : (options.maxTasks ?? Number.POSITIVE_INFINITY);
+  const concurrency =
+    typeof options === "number" ? 1 : (options.concurrency ?? 2);
+  if (
+    (!Number.isInteger(maxTasks) && maxTasks !== Number.POSITIVE_INFINITY) ||
+    maxTasks <= 0
+  ) {
+    throw new RangeError("maxTasks 必须是正整数或 Infinity");
+  }
+  if (!Number.isInteger(concurrency) || concurrency <= 0) {
+    throw new RangeError("concurrency 必须是正整数");
+  }
+
   let processed = 0;
-  for (; processed < maxTasks; processed += 1) {
-    const claim = await deps.tasks.claimNext({
-      workerId:
-        deps.workerId?.() ??
-        `intelligence-transcript-drain:${Date.now().toString(36)}:${processed}`,
-      kinds: ["transcribe"],
-      leaseSeconds: 300,
-    });
-    if (!claim) break;
-    const ctx: RequestContext = {
-      userId: claim.task.userId,
-      accountId: claim.task.accountId,
-      requestId: `execution:${claim.task.id}`,
-      source: "ingestion",
-      ingestionRunId: claim.task.id,
-    };
-    await runIntelligenceTranscriptTask(
-      ctx,
-      { taskId: claim.task.id, existingClaim: claim },
-      deps,
+  while (processed < maxTasks) {
+    const slots = Math.min(concurrency, maxTasks - processed);
+    const claims: PersistentTaskClaim[] = [];
+    // PGlite 是单写者；先顺序领取并锁定任务，再并发执行，避免并发 claim 的事务快照
+    // 互相看见同一候选而让第二个 worker 空转。
+    for (let offset = 0; offset < slots; offset += 1) {
+      const claim = await deps.tasks.claimNext({
+        workerId:
+          deps.workerId?.() ??
+          `intelligence-transcript-drain:${Date.now().toString(36)}:${processed + offset}`,
+        kinds: ["transcribe"],
+        leaseSeconds: 300,
+      });
+      if (!claim) break;
+      claims.push(claim);
+    }
+    if (claims.length === 0) break;
+
+    await Promise.all(
+      claims.map(async (claim) => {
+        const ctx: RequestContext = {
+          userId: claim.task.userId,
+          accountId: claim.task.accountId,
+          requestId: `execution:${claim.task.id}`,
+          source: "ingestion",
+          ingestionRunId: claim.task.id,
+        };
+        await runIntelligenceTranscriptTask(
+          ctx,
+          { taskId: claim.task.id, existingClaim: claim },
+          deps,
+        );
+      }),
     );
+    processed += claims.length;
   }
   return processed;
 }

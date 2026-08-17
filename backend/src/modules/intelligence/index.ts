@@ -19,6 +19,7 @@ export {
   runIntelligenceTranscriptTask,
   drainIntelligenceTranscriptQueue,
   type IntelligenceTranscriptPort,
+  type IntelligenceTranscriptDrainOptions,
   type IntelligenceTranscriptRunnerDeps,
 } from "./transcript-runner";
 export {

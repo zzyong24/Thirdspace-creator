@@ -198,6 +198,12 @@
       "what": "本稿专属 AI 素材再次被标成人工素材，或 material.match 空数组冒充自动分镜成功并生成逐条手选控件",
       "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx",
       "onFail": "AI 自动素材匹配门回归：addedByType=ai 必须保留 AI 来源；本稿生成素材必须保留服务原文/画面职责并由 material.match 自动匹配；存在本稿绑定时空匹配不得落候选，人工选场景只用于纠错。"
+    },
+    {
+      "led": "LED-038",
+      "what": "逐字稿持久队列再次只在启动领取固定小批，历史 queued 没有持续消费者",
+      "check": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts",
+      "onFail": "逐字稿消费门回归：启动恢复必须持续处理到队列为空，并以固定小并发保护取流、ASR 与本地数据库；不得恢复 20 条等总量上限，也不得按积压数量同时调用外部服务。"
     }
   ],
   "program_completion_required": false,

@@ -4,7 +4,10 @@ import { createDb } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
-import { runIntelligenceTranscriptTask } from "./transcript-runner";
+import {
+  drainIntelligenceTranscriptQueue,
+  runIntelligenceTranscriptTask,
+} from "./transcript-runner";
 
 const ctx: RequestContext = {
   userId: "user-1",
@@ -22,6 +25,63 @@ function deps() {
 }
 
 describe("T-482 手动逐字稿持久队列", () => {
+  it("[T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止", async () => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const total = 25;
+      for (let index = 0; index < total; index += 1) {
+        const itemId = await intelligence.seedItemForTest(ctx, {
+          canonicalUrl: `https://www.douyin.com/video/backlog-${index}`,
+          externalId: `backlog-${index}`,
+          title: `历史积压 ${index}`,
+        });
+        await intelligence.enqueueTranscripts(ctx, {
+          itemIds: [itemId],
+          idempotencyKey: `backlog-${index}`,
+        });
+      }
+
+      let active = 0;
+      let maxActive = 0;
+      const processed = await drainIntelligenceTranscriptQueue({
+        tasks,
+        intelligence,
+        transcript: {
+          transcribe: async (_ctx, input) => {
+            active += 1;
+            maxActive = Math.max(maxActive, active);
+            await new Promise((resolve) => setTimeout(resolve, 25));
+            active -= 1;
+            return {
+              text: `逐字稿 ${input.externalId}`,
+              provider: "test-asr",
+              model: "test-model",
+              language: "zh",
+            };
+          },
+        },
+      });
+
+      expect(processed).toBe(total);
+      expect(maxActive).toBe(2);
+      await expect(
+        tasks.list(ctx, { kind: "transcribe", status: "queued", limit: 100 }),
+      ).resolves.toMatchObject({ total: 0 });
+      await expect(
+        tasks.list(ctx, {
+          kind: "transcribe",
+          status: "succeeded",
+          limit: 100,
+        }),
+      ).resolves.toMatchObject({ total });
+    } finally {
+      await client.close();
+    }
+  });
+
   it("只有用户排队的 item 会调用 ASR，并把正文写回 item transcript", async () => {
     const { db, client } = await createDb();
     const d = deps();

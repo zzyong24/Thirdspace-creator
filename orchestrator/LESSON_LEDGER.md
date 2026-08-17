@@ -13,6 +13,20 @@
 
 ---
 
+## LED-038 — 持久队列有任务不等于有持续消费者，启动限量会让历史积压永久留下
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
+- **WhatFailed**: 内容雷达已经把历史作品逐字稿写成持久 `queued` 任务，但启动恢复最多只领取 20 条；
+  真实运行态累计 645 条排队任务，应用正常运行也不会继续领取剩余积压。
+- **RootCause**: 把“启动补捞一小批”误当成完整消费者；测试只覆盖单条执行，没有覆盖队列数量超过
+  启动上限后的最终清空，也没有固定安全并发边界。
+- **GuardRule**: 持久后台队列必须有可证明的持续消费路径；启动恢复应处理到队列为空，同时用固定小
+  并发控制资源，不得把“全部恢复”实现成按积压数量同时调用外部服务。失败进入真实终态后继续下一条。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts`
+  （登记进 `reconcile.config.json`；回归固定超过 20 条全部完成且最高并发为 2）。
+- **Outcome(T+N)**: 源码回归已覆盖 25 条积压；待安装版启动后复核真实 queued 数持续下降并归零。
+- **Ref**: T-632；DEC-RADAR-047；PAT-003；MOD-006。
+
 ## LED-018 — 浏览器回落写在注释里，旧下载前置门让随包能力永远到不了
 - **Date**: 2026-08-09 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active
 - **WhatFailed**: Windows 少文件 production closure 已携带 Chromium，也已有“本机 Chrome → 随包

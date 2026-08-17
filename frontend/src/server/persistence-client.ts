@@ -10376,14 +10376,25 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
   if (transcriptStartupDeps) {
-    void drainIntelligenceTranscriptQueue(transcriptStartupDeps).catch(
-      (error) => {
+    // [T-632] 启动恢复覆盖全部 queued 积压；固定两路执行，避免把历史任务一次性
+    // 并发打向抖音取流、ASR 与本机数据库。新请求仍可走上方即时 dispatch，claim
+    // 的条件更新保证两条路径不会重复消费同一任务。
+    void drainIntelligenceTranscriptQueue(transcriptStartupDeps, {
+      concurrency: 2,
+    })
+      .then((processed) => {
+        if (processed > 0) {
+          console.info(
+            `[intelligence] 逐字稿启动恢复完成: processed=${processed}`,
+          );
+        }
+      })
+      .catch((error) => {
         console.error(
           "[intelligence] 逐字稿启动恢复失败:",
           error instanceof Error ? error.name : "UnknownError",
         );
-      },
-    );
+      });
   }
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
