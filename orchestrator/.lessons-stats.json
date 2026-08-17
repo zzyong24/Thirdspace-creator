@@ -194,5 +194,12 @@
     "firstRedAt": null,
     "registeredAt": "2026-08-17T07:13:24.563Z",
     "deterrence": false
+  },
+  "LED-035": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-08-17T07:40:30.708Z",
+    "deterrence": false
   }
 }
