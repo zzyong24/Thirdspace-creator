@@ -191,6 +191,97 @@ describe("runStructuredNode 跨模型健壮性", () => {
     expect(calls).toBe(1);
   });
 
+  it("[T-868] generateObject 的根级 custom 动态错误逐卡恢复，不追加文本模型请求", async () => {
+    const dynamicSchema = videoCardsSchema.refine(
+      (output) =>
+        output.cards.every(
+          (card) =>
+            card.sceneIdx >= 0 &&
+            card.sceneIdx < 3 &&
+            (!card.visualPlan ||
+              !card.visualPlan.scene?.beats.some(
+                (beat) =>
+                  beat.action === "grow" &&
+                  (!("scale" in beat.from) ||
+                    !("scale" in beat.to) ||
+                    Number(beat.to.scale) <= Number(beat.from.scale)),
+              )),
+        ),
+      {
+        message:
+          "卡片 sceneIdx/at 必须合法；visualPlan 必须满足 role、引用与动作属性协议",
+      },
+    );
+    const raw = {
+      cards: [
+        { sceneIdx: 0, kind: "quote", content: "保留一", at: 0 },
+        {
+          sceneIdx: 1,
+          kind: "list",
+          content: "保留卡片，降级计划",
+          at: 1,
+          visualPlan: {
+            relation: "sequence",
+            parts: [
+              { text: "第一步", role: "step" },
+              { text: "第二步", role: "step" },
+            ],
+            scene: {
+              cognitiveGoal: "看见步骤推进",
+              layout: "flow",
+              aspectStrategy: "reflow",
+              entities: [
+                {
+                  id: "step_one",
+                  kind: "node",
+                  glyph: "feature",
+                  semantic: "步骤",
+                },
+              ],
+              beats: [
+                {
+                  action: "grow",
+                  target: "step_one",
+                  start: 0,
+                  duration: 0.5,
+                  from: { opacity: 0 },
+                  to: { opacity: 1 },
+                },
+              ],
+            },
+          },
+        },
+        { sceneIdx: 9, kind: "quote", content: "坏场景", at: 2 },
+      ],
+    };
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return textResult(JSON.stringify(raw));
+      },
+    });
+
+    const { object } = await runStructuredNode({
+      model,
+      template: VIDEO_CARDS_TEMPLATE,
+      facets: { scenes: "场景", srt: "字幕", script: "口播" },
+      outputSchema: dynamicSchema,
+      normalizeObject: (value) =>
+        normalizeVideoCardsOutput(value, {
+          validateCard: (card) =>
+            dynamicSchema.safeParse({ cards: [card] }).success,
+        }),
+    });
+
+    expect(object.cards.map((card) => card.content)).toEqual([
+      "保留一",
+      "保留卡片，降级计划",
+    ]);
+    expect(object.cards[1]?.visualPlan).toBeUndefined();
+    expect(calls).toBe(1);
+  });
+
   it("generateObject 落空 + 文本也无合 schema 的 JSON → 抛错(不假成功)", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: async () => textResult("抱歉,我没法完成。"),

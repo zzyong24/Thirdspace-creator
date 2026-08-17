@@ -1974,6 +1974,7 @@ export async function decideCards(
     input.script,
     ...input.srtLines.map((line) => line.text),
   ].join("\n");
+  const outputSchema = buildCardsDecisionSchema(input.scenes.length, starts);
   const out = await call<VideoCardsOutput>({
     skillId: "video.cards",
     facets: {
@@ -1984,8 +1985,15 @@ export async function decideCards(
       orientation: orientationFacet(input.orientation),
       manualAssignments: input.manualAssignments ?? "",
     },
-    outputSchema: buildCardsDecisionSchema(input.scenes.length, starts),
-    normalizeObject: normalizeVideoCardsOutput,
+    outputSchema,
+    // [T-868] 根级 custom issue 没有具体 path，通用恢复器无法定位。逐卡仍交回
+    // 同一个动态 schema：可选 visualPlan 删除后能过就保留卡，仍不能过才丢该卡。
+    // SEMANTIC_BOUNDARY_ALLOW: 只删协议已判坏的可选计划/卡，不修动作、不猜 role。
+    normalizeObject: (value) =>
+      normalizeVideoCardsOutput(value, {
+        validateCard: (card) =>
+          outputSchema.safeParse({ cards: [card] }).success,
+      }),
     timeoutMs: VIDEO_LONG_STRUCTURED_TIMEOUT_MS,
   });
   const kept: VideoInfoCard[] = [];

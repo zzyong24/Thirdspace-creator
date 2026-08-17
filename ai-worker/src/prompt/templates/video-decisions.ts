@@ -266,7 +266,13 @@ export type VideoCardsOutput = z.infer<typeof videoCardsSchema>;
  * SEMANTIC_BOUNDARY_ALLOW:这里只依据 Zod 协议删除明确非法的可选字段/数组项，不把
  * `diagram` 等未知枚举猜成任何合法 kind，也不补写模型未表达的卡片或视觉关系。
  */
-export function normalizeVideoCardsOutput(value: unknown): unknown {
+export function normalizeVideoCardsOutput(
+  value: unknown,
+  options: {
+    /** 动态业务 schema 的逐卡判定；缺省时只做本文件的静态协议恢复。 */
+    validateCard?: (card: z.infer<typeof videoCardSchema>) => boolean;
+  } = {},
+): unknown {
   let candidate: unknown;
   try {
     candidate = structuredClone(value);
@@ -294,7 +300,22 @@ export function normalizeVideoCardsOutput(value: unknown): unknown {
       }
     }
   }
-  return recoverCreativeZodOutput(videoCardsSchema, candidate);
+  const recovered = recoverCreativeZodOutput(videoCardsSchema, candidate);
+  if (!options.validateCard) return recovered;
+  const parsed = videoCardsSchema.safeParse(recovered);
+  if (!parsed.success) return recovered;
+
+  const cards: VideoCardsOutput["cards"] = [];
+  for (const card of parsed.data.cards) {
+    if (options.validateCard(card)) {
+      cards.push(card);
+      continue;
+    }
+    if (!card.visualPlan) continue;
+    const { visualPlan: _invalidVisualPlan, ...withoutVisualPlan } = card;
+    if (options.validateCard(withoutVisualPlan)) cards.push(withoutVisualPlan);
+  }
+  return { cards };
 }
 
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {

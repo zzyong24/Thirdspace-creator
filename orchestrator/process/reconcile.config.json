@@ -189,9 +189,9 @@
     },
     {
       "led": "LED-035",
-      "what": "video.cards 再次因单张 kind 或可选 visualPlan 枚举越界拖垮整批分镜",
+      "what": "video.cards 再次因单张 kind、sceneIdx/at 或可选 visualPlan 的静态/根级动态协议错误拖垮整批分镜",
       "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/prompt/creative-output-recovery.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
-      "onFail": "信息卡局部恢复门回归：关键枚举非法只丢该张卡，可选 motion/visualPlan 非法只降级可选字段；未知值不得猜映射，恢复后仍须经过原 schema、动态 refine、可溯校验和导演审核，不得增加模型重试。"
+      "onFail": "信息卡局部恢复门回归：关键枚举或 sceneIdx/at 非法只丢该张卡，可选 motion/visualPlan 的静态或根级动态协议非法只降级可选字段；根级 custom issue 逐卡交回同一动态 schema，不猜错误消息路径，恢复后仍须经过原 schema、可溯校验和导演审核，不得增加模型重试。"
     },
     {
       "led": "LED-036",

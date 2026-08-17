@@ -1004,6 +1004,73 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     expect(cards[1]?.visualPlan).toBeUndefined();
   });
 
+  it("[T-868 RED] 根级 custom 动态协议错误逐卡恢复：坏 visualPlan 降级，坏 sceneIdx 只丢该卡", async () => {
+    const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
+      expect(input.skillId).toBe("video.cards");
+      const raw = {
+        cards: [
+          { sceneIdx: 0, kind: "quote", content: "效率提升 47%", at: 0 },
+          {
+            sceneIdx: 1,
+            kind: "list",
+            content: "给模型一个角色",
+            at: 3.5,
+            visualPlan: {
+              relation: "sequence",
+              parts: [
+                { text: "给模型", role: "step" },
+                { text: "一个角色", role: "step" },
+              ],
+              scene: {
+                cognitiveGoal: "看见角色设定逐步进入模型",
+                layout: "flow",
+                aspectStrategy: "reflow",
+                entities: [
+                  {
+                    id: "role_prompt",
+                    kind: "document",
+                    glyph: "document",
+                    semantic: "角色提示词",
+                  },
+                ],
+                beats: [
+                  {
+                    action: "grow",
+                    target: "role_prompt",
+                    start: 0,
+                    duration: 0.5,
+                    from: { opacity: 0 },
+                    to: { opacity: 1 },
+                  },
+                ],
+              },
+            },
+          },
+          { sceneIdx: 9, kind: "quote", content: "协议外场景", at: 3.5 },
+          { sceneIdx: 1, kind: "quote", content: "协议外插点", at: 99 },
+          { sceneIdx: 2, kind: "quote", content: "点赞关注", at: 12 },
+        ],
+      };
+      const normalized = input.normalizeObject!(raw);
+      const parsed = input.outputSchema.safeParse(normalized);
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) throw parsed.error;
+      return parsed.data;
+    }) as unknown as StructuredCall;
+
+    const cards = await decideCards(
+      { scenes: SCENES, srtLines, script: SCRIPT },
+      call,
+    );
+
+    expect(cards.map((card) => card.content)).toEqual([
+      "效率提升 47%",
+      "给模型一个角色",
+      "点赞关注",
+    ]);
+    expect(cards[1]?.visualPlan).toBeUndefined();
+  });
+
   it("分场与信息卡属于长结构任务，显式使用有上界的 120 秒节点时限", async () => {
     const seen: Array<{ skillId: string; timeoutMs?: number }> = [];
     const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
