@@ -1,11 +1,27 @@
 {
+  "schema": "frontend-visible-copy/v1",
   "task_id": "T-881",
-  "checks": [
-    "已确认分镜显示真实 B-roll",
-    "剔除后页面显示已保存",
-    "服务端 revision 递增且四处引用清空",
-    "1024×720 刷新后仍保持剔除"
-  ],
-  "project_id": "project-2605a4c1-6",
-  "asset_id": "asset-2605a4c1-31"
+  "commit_sha": "a21552378d4bf1725381e498bd6363d04ae9c196",
+  "captures": [
+    {
+      "checkpoint": "confirmed-broll-before-remove",
+      "check_ids": [
+        "AC-BROLL-REMOVE-PERSIST",
+        "AC-BROLL-REMOVE-READBACK",
+        "AC-BROLL-REMOVE-REFRESH"
+      ],
+      "viewport": {"width": 1536, "height": 1024},
+      "text": "制作视频\n分镜方案已保存，可随时回顾\n以下素材已自动列入 B-roll 候选，不想用的点“剔除”\n待剔除真实素材.mp4\n剔除"
+    },
+    {
+      "checkpoint": "removed-after-refresh-minimum-window",
+      "check_ids": [
+        "AC-BROLL-REMOVE-PERSIST",
+        "AC-BROLL-REMOVE-READBACK",
+        "AC-BROLL-REMOVE-REFRESH"
+      ],
+      "viewport": {"width": 1024, "height": 720},
+      "text": "制作视频\n已从当前分镜移除并保存；下次分场不会再使用它。旧成片仅保留为历史。\n待剔除真实素材.mp4\n恢复\n分镜预览"
+    }
+  ]
 }
