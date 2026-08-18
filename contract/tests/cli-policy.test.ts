@@ -7,7 +7,7 @@ describe("T-843 CLI operation policy", () => {
     expect(Object.keys(CLI_OPERATION_POLICIES).sort()).toEqual(
       Object.values(ENDPOINTS).map((endpoint) => endpoint.id).sort(),
     );
-    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(248);
+    expect(Object.keys(CLI_OPERATION_POLICIES)).toHaveLength(249);
   });
 
   it("每项都有服务端可信的执行元数据", () => {
@@ -22,5 +22,14 @@ describe("T-843 CLI operation policy", () => {
         expect(policy.confirmation).toBe("confirm_impact");
       }
     }
+  });
+
+  it("[T-881] CLI 删除当前分镜 B-roll 必须提示影响确认", () => {
+    expect(
+      CLI_OPERATION_POLICIES["outputs.production.editingPlan.broll.remove"],
+    ).toMatchObject({
+      effect: "destructive",
+      confirmation: "confirm_impact",
+    });
   });
 });

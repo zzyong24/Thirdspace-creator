@@ -13,6 +13,26 @@
 
 ---
 
+## LED-040 — 候选列表里的“剔除”不等于当前分镜已删除，旧渲染会继续复活素材
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 用户在已确认分镜上剔除一个 B-roll，候选列表即时隐藏，但重新成片仍出现该素材；
+  旧 render props、base decisions 和在途 render task 都仍把它当作当前真值。
+- **RootCause**: 前端“剔除”只更新组件内 `excludedAuto`，没有写入 production editing-plan revision；
+  调整 runner 在 `material.match` 失败时无条件复用旧 `base.broll`，渲染收口也未核对任务是否仍属于当前 plan。
+- **GuardRule**: 用户删除/替换素材必须先原子生成新的 editing-plan revision，并同步清除 decisions、render
+  props、inventory 与失效导演方向；局部调整只能保留当前 inventory 中的真实 ID。旧 render task 与新 plan
+  解绑并尽力取消，晚到成功时若 `sourceRenderTaskId` 不匹配只能留历史，禁止覆盖当前成片。
+- **GuardCheck**: `pnpm --dir contract exec vitest run tests/modules/production.test.ts && pnpm --dir backend
+  exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts
+  src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run
+  src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts`
+  （已登记进 `orchestrator/process/reconcile.config.json`）。
+- **Outcome(T+N)**: 四层红测先分别证明 operation 缺失、service 无原子删除、runner 复活旧素材、页面未发写请求；
+  修复后 contract 9/9、backend 119/119、frontend 47/47，且 backend/frontend typecheck 通过。待本地包真机
+  对原项目执行一次“剔除 → 刷新 → 重新成片”回填视觉证据。
+- **Ref**: T-881；用户 2026-08-17 制作页截图。
+
 ## LED-039 — 自动补位请求不等于视觉对象真实落下，计划游标会掩盖时间洞
 
 - **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: critical · **Status**: rule

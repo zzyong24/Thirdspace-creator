@@ -210,11 +210,18 @@
       "what": "总导演自动补位再次按计划游标前进，插点被吸附或去重后仍留下真实时间洞并取消整套分镜",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
       "onFail": "时间线闭合门回归：每次补位后必须重算实际 card/B-roll intervals，未真实新增不得推进；确定性 gap 卡落真实空洞起点并使用当前活动原句，overlay 不计主舞台覆盖，修后 audit 必须零 blocking。"
+    },
+    {
+      "led": "LED-040",
+      "what": "用户剔除 B-roll 再次只改页面候选，旧 editing plan、失败回退或旧渲染任务继续复活素材",
+      "check": "pnpm --dir contract exec vitest run tests/modules/production.test.ts && pnpm --dir backend exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts",
+      "onFail": "B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。"
     }
   ],
   "program_completion_required": false,
   "receipt_policy": "required",
   "frontend_verify_commands": {
+    "production-broll-remove:e2e": "CREATOROS_TEST_PORT=3440 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/production-broll-remove.spec.ts --project=e2e",
     "channel-public-links:e2e": "CREATOROS_TEST_PORT=3433 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome NEXT_PUBLIC_CREATOROS_PACKAGE_REF=zhisu-ai NEXT_PUBLIC_CREATOROS_PACKAGE_WEBSITE_URL=https://zhisunet.com/ NEXT_PUBLIC_CREATOROS_PACKAGE_DOWNLOAD_URL=https://zhisunet.com/download/ NEXT_PUBLIC_CREATOROS_PACKAGE_HUMAN_FEEDBACK_URL=https://zhisunet.com/feedback/ NEXT_PUBLIC_CREATOROS_PACKAGE_UPDATE_MANIFEST_URL=https://creatoros.aitongban.cloud/updates/v2/packages/zhisu-ai/stable/latest.json pnpm --dir frontend exec playwright test tests/e2e/channel-public-links.spec.ts --project=e2e",
     "review-history:e2e": "CREATOROS_TEST_PORT=3427 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/review-history.spec.ts --project=e2e",
     "asr-configuration:e2e": "CREATOROS_TEST_PORT=3428 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/asr-configuration.spec.ts --project=e2e",

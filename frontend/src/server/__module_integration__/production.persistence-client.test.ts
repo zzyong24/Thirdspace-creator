@@ -56,7 +56,7 @@ async function createRealOutput(owner: RequestContext): Promise<string> {
 }
 
 describe("production ops registered in the composite transport", () => {
-  it("the 7 production op ids are persistence-backed (not the mock)", async () => {
+  it("all production op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op
     // would resolve. Use that to assert each id is routed to the real transport.
     for (const id of PRODUCTION_OP_IDS) {
@@ -64,8 +64,8 @@ describe("production ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    // 素材包导出与剪辑方案确认均已进入 production 持久化注册表。
-    expect(PRODUCTION_OP_IDS).toHaveLength(8);
+    // 素材包导出、剪辑方案确认与 B-roll 原子删除均已进入 production 持久化注册表。
+    expect(PRODUCTION_OP_IDS).toHaveLength(9);
   });
 
   it("get → put → segment → export → complete round-trips over the shared store", async () => {

@@ -2820,6 +2820,72 @@ describe("runVideoDecisions(编排)", () => {
     expect(result.resultData.decisions.subtitles).toEqual(baseDecisions.subtitles);
   });
 
+  it("[T-881] 补充选材失败时也不会把用户已排除的旧 B-roll 从 baseDecisions 捞回", async () => {
+    const baseDecisions = {
+      scenes: SCENES_OK.scenes,
+      cards: (HAPPY_OUTPUTS["video.cards"] as { cards: unknown[] }).cards,
+      visualSlots: [],
+      broll: [
+        { sceneIdx: 0, assetId: "asset-2", at: 0.1, durationSec: 1.2 },
+      ],
+      subtitles: srtLines.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "en",
+      })),
+      srtLines,
+      direction: {
+        motionThesis: "旧素材接管开场",
+        beatGraph: [
+          {
+            id: "old-broll",
+            sceneIdx: 0,
+            startSec: 0.1,
+            endSec: 1.3,
+            subject: { kind: "broll", ref: "broll:asset-2" },
+          },
+        ],
+      },
+      directorReview: {
+        status: "ready",
+        summary: "旧方案已通过",
+        issues: [],
+        source: "ai",
+      },
+    };
+    const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
+    deps.callStructured = async <T>(input: StructuredCallInput<T>) => {
+      if (input.skillId === "material.match") {
+        throw new Error("模型暂不可用");
+      }
+      return fakeCall(HAPPY_OUTPUTS)(input);
+    };
+
+    await runVideoDecisions(
+      ctx,
+      {
+        ...TASK,
+        inputData: {
+          ...TASK.inputData,
+          adjustmentMode: "materials",
+          baseDecisions,
+          excludedAssetIds: ["asset-2"],
+        },
+      },
+      deps,
+    );
+
+    const [, , result] = calls.recordCandidate.mock.calls[0]! as unknown as [
+      unknown,
+      string,
+      { resultData: { decisions: typeof baseDecisions } },
+    ];
+    expect(result.resultData.decisions.broll).toEqual([]);
+    expect(result.resultData.decisions.direction).toBeUndefined();
+  });
+
   it("五步顺序跑完 → recordCandidate(video_decisions,含总导演结论 + 清单快照)", async () => {
     const { deps, calls } = makeDeps(HAPPY_OUTPUTS);
     await runVideoDecisions(ctx, TASK, deps);

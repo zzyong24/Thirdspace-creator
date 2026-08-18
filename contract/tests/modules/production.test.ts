@@ -111,4 +111,19 @@ describe("production contract", () => {
       expect.objectContaining({ assetId: "asset-1", label: "项目录屏" }),
     ]);
   });
+
+  it("[T-881] 当前分镜移除 B-roll 使用 revision + 真实 assetId 的窄写契约", () => {
+    expect(
+      productionOperations.removeProductionEditingPlanBroll.body.parse({
+        expectedRevision: 4,
+        assetId: "asset-generated-1",
+      }),
+    ).toEqual({ expectedRevision: 4, assetId: "asset-generated-1" });
+    expect(() =>
+      productionOperations.removeProductionEditingPlanBroll.body.parse({
+        expectedRevision: -1,
+        assetId: "",
+      }),
+    ).toThrow();
+  });
 });

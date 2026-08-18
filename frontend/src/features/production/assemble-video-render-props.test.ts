@@ -508,6 +508,15 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     expect(props.scenes[1]?.cards[0]).toMatchObject({ visualPlan });
   });
 
+  it("[T-881] 当前 inventory 已删除的 B-roll 与引用它的旧 direction 不进入渲染参数", () => {
+    const props = assembleVideoRenderProps(DECISIONS, {
+      ...OPTS,
+      inventory: [],
+    });
+    expect(props.broll).toEqual([]);
+    expect(props.direction).toBeUndefined();
+  });
+
   it("`.parse()` 硬校验不合即抛:缺 talkingHead assetId(file min 1)/场景重叠", () => {
     expect(() =>
       assembleVideoRenderProps(DECISIONS, { ...OPTS, talkingHeadAssetId: null }),

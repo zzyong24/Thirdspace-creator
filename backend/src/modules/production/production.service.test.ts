@@ -192,6 +192,71 @@ describe("production.service — status machine (Step 3)", () => {
       }),
     ).rejects.toBeInstanceOf(ConflictError);
   });
+
+  it("[T-881] 原子移除当前分镜 B-roll，同时清掉渲染引用和失效导演方向并保留其他配置", async () => {
+    await service.getProduction(ctx, "output-1");
+    await service.updateProduction(ctx, "output-1", {
+      recordingConfig: { overlay: true, unrelated: { keep: 1 } },
+    });
+    await service.confirmEditingPlan(ctx, "output-1", {
+      expectedRevision: 0,
+      plan: {
+        sourceTaskId: "ai-task-1",
+        sourceRenderTaskId: "exec-old",
+        confirmedAt: NOW,
+        excludedAssetIds: [],
+        decisions: {
+          scenes: [{ title: "开场" }],
+          broll: [
+            { assetId: "asset-remove", sceneIdx: 0, at: 0, durationSec: 2 },
+            { assetId: "asset-keep", sceneIdx: 0, at: 2, durationSec: 2 },
+          ],
+          direction: { motionThesis: "旧方向", beatGraph: [{ subject: { kind: "broll", ref: "broll:asset-remove" } }] },
+        },
+        renderProps: {
+          broll: [
+            { file: "asset-remove", at: 0, durationSec: 2, label: "删" },
+            { file: "asset-keep", at: 2, durationSec: 2, label: "留" },
+          ],
+          direction: { motionThesis: "旧方向", beatGraph: [{ subject: { kind: "broll", ref: "broll:asset-remove" } }] },
+        },
+        inventory: [
+          { assetId: "asset-remove", label: "删" },
+          { assetId: "asset-keep", label: "留" },
+        ],
+      },
+    });
+
+    const updated = await service.removeEditingPlanBroll(ctx, "output-1", {
+      expectedRevision: 1,
+      assetId: "asset-remove",
+    });
+
+    expect(updated.recordingConfig).toMatchObject({
+      overlay: true,
+      unrelated: { keep: 1 },
+      videoEditingPlan: {
+        revision: 2,
+        sourceTaskId: "ai-task-1",
+        sourceRenderTaskId: null,
+        excludedAssetIds: ["asset-remove"],
+        decisions: { broll: [{ assetId: "asset-keep" }] },
+        renderProps: { broll: [{ file: "asset-keep" }] },
+        inventory: [{ assetId: "asset-keep" }],
+      },
+    });
+    const plan = (updated.recordingConfig as Record<string, unknown>)
+      .videoEditingPlan as Record<string, unknown>;
+    expect((plan.decisions as Record<string, unknown>).direction).toBeUndefined();
+    expect((plan.renderProps as Record<string, unknown>).direction).toBeUndefined();
+
+    await expect(
+      service.removeEditingPlanBroll(ctx, "output-1", {
+        expectedRevision: 1,
+        assetId: "asset-keep",
+      }),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
 });
 
 describe("production.service — export lifecycle (Step 3)", () => {

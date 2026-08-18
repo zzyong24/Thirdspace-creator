@@ -4,6 +4,27 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-VIDEO-045 (2026-08-17) — B-roll 删除以当前分镜 revision 为真，旧成片只保留历史
+
+**来源**：用户真机指出“这里删除了一个 B-roll，但实际成片还是使用了”，并要求根治反复出现的
+分镜/成片不一致；既有 T-703 已确认人工删除或替换素材属于新的编导约束。
+
+**决策**：
+
+1. 新增窄写契约 `outputs.production.editingPlan.broll.remove`，参数只含 `outputId`、真实 `assetId`
+   与 `expectedRevision`；服务端用 revision 比较并原子生成新的当前 plan，禁止前端只改组件状态。
+2. 新 plan 同时清除 `decisions.broll`、`renderProps.broll`、`inventory` 与可能引用旧素材的 direction/
+   director review，并持久化 `excludedAssetIds`；刷新、重试与局部调整都从这份真值恢复。
+3. 被取代的 `sourceRenderTaskId` 与新 plan 解绑并尽力取消；旧任务即使晚到成功，只能留下历史文件，
+   不得成为当前项目主成片。最终采纳前再核对任务 ID 仍属于当前 plan。
+4. `material.match` 仍负责素材语义和重新统筹；确定性代码只落实用户明确排除的真实 ID、revision、
+   引用完整性与并发安全。模型失败时不得从旧 base decisions 复活已删素材。
+
+**影响范围**：T-881、production contract/service/transport、CLI destructive policy、video decisions
+局部调整 runner、制作页恢复/删除/渲染收口与 render props 组装。
+
+**状态**：Confirmed（用户 2026-08-17 明确要求删除后成片不能再使用该 B-roll）。
+
 ## DEC-RADAR-047 (2026-08-17) — 启动后受控并发清空全部逐字稿积压
 
 **来源**：运行态只读核对确认逐字稿执行任务存在 645 条 `queued`，而当前启动恢复固定最多领取

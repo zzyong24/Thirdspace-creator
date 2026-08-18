@@ -667,6 +667,7 @@ export function ProductionWorkbench({
               decisions?: unknown;
               renderProps?: unknown;
               inventory?: unknown;
+              excludedAssetIds?: unknown;
               sourceRenderTaskId?: unknown;
             }
           | undefined;
@@ -679,6 +680,15 @@ export function ProductionWorkbench({
         }
         if (Array.isArray(plan.inventory)) {
           setInventory(plan.inventory as BrollAssetRef[]);
+        }
+        if (Array.isArray(plan.excludedAssetIds)) {
+          setExcludedAuto(
+            new Set(
+              plan.excludedAssetIds.filter(
+                (assetId): assetId is string => typeof assetId === "string",
+              ),
+            ),
+          );
         }
         const delivery = (plan.renderProps as { delivery?: unknown } | null)
           ?.delivery as { width?: unknown; height?: unknown } | undefined;
@@ -1026,13 +1036,16 @@ export function ProductionWorkbench({
   // 已恢复方案的 inventory 是“当时快照”，不能继续冒充“当前仍可用”。当前项目清单加载
   // 成功后，以当前清单作为唯一可选集；旧快照只负责给失效绑定提供可读名称。
   const selectableInventory = React.useMemo(
-    () =>
-      recoveredDecisions && brollInventoryStatus === "ready"
+    () => {
+      const current = recoveredDecisions && brollInventoryStatus === "ready"
         ? currentProjectInventory
-        : inventory,
+        : inventory;
+      return current.filter((item) => !excludedAuto.has(item.assetId));
+    },
     [
       brollInventoryStatus,
       currentProjectInventory,
+      excludedAuto,
       inventory,
       recoveredDecisions,
     ],
@@ -1473,12 +1486,21 @@ export function ProductionWorkbench({
   );
 
   const adjustMaterials = React.useCallback(
-    async (assignments: readonly ManualMaterialAssignment[]) => {
+    async (
+      assignments: readonly ManualMaterialAssignment[],
+      override?: {
+        baseDecisions: VideoDecisions;
+        excludedAssetIds: readonly string[];
+      },
+    ) => {
+      const activeDecisions = override?.baseDecisions ?? decisions;
+      const activeExcludedAssetIds =
+        override?.excludedAssetIds ?? Array.from(excludedAuto);
       if (
         materialAdjustmentInFlight.current ||
         !srt ||
         !voiceoverText ||
-        !decisions
+        !activeDecisions
       ) {
         return;
       }
@@ -1489,8 +1511,9 @@ export function ProductionWorkbench({
       try {
         const attemptId = materialAdjustmentAttemptId({
           projectId,
-          baseDecisions: decisions,
+          baseDecisions: activeDecisions,
           assignments,
+          excludedAssetIds: activeExcludedAssetIds,
         });
         const task = (await client.createAITask({
           params: undefined,
@@ -1504,9 +1527,9 @@ export function ProductionWorkbench({
               srtText: srt.text,
               script: voiceoverText,
               orientation: renderOrientation,
-              excludedAssetIds: Array.from(excludedAuto),
+              excludedAssetIds: activeExcludedAssetIds,
               adjustmentMode: "materials",
-              baseDecisions: decisions,
+              baseDecisions: activeDecisions,
               manualMaterialAssignments: assignments,
             },
           },
@@ -1528,6 +1551,108 @@ export function ProductionWorkbench({
       excludedAuto,
       projectId,
       renderOrientation,
+      srt,
+      voiceoverText,
+    ],
+  );
+
+  const toggleAutoBroll = React.useCallback(
+    async (assetId: string) => {
+      const restoring = excludedAuto.has(assetId);
+      const nextExcluded = new Set(excludedAuto);
+      if (restoring) {
+        // 恢复只重新加入下一轮候选，不悄悄改回已经确认的分镜。
+        nextExcluded.delete(assetId);
+        setExcludedAuto(nextExcluded);
+        return;
+      }
+      nextExcluded.add(assetId);
+      const isBoundInConfirmedPlan = Boolean(
+        decisionsConfirmed &&
+          decisions?.broll.some((pick) => pick.assetId === assetId),
+      );
+      if (!isBoundInConfirmedPlan) {
+        setExcludedAuto(nextExcluded);
+        return;
+      }
+
+      setDecisionsBusy(true);
+      setDecisionsError(null);
+      try {
+        const oid = await ensureOutputId();
+        // 删除必须先成为服务端当前分镜的新 revision；写失败时页面也不伪装已删除。
+        const persisted = (await client.removeProductionEditingPlanBroll({
+          params: { outputId: oid },
+          query: undefined,
+          body: { expectedRevision: editingPlanRevision, assetId },
+        })) as unknown as WireProduction;
+        const plan = persisted.recordingConfig?.videoEditingPlan as
+          | {
+              revision?: unknown;
+              decisions?: unknown;
+              inventory?: unknown;
+              excludedAssetIds?: unknown;
+            }
+          | undefined;
+        if (
+          typeof plan?.revision !== "number" ||
+          !plan.decisions ||
+          typeof plan.decisions !== "object"
+        ) {
+          throw new Error("素材删除后未能回读新的分镜版本，请刷新后重试");
+        }
+        const savedDecisions = plan.decisions as VideoDecisions;
+        const savedExcluded = Array.isArray(plan.excludedAssetIds)
+          ? plan.excludedAssetIds.filter(
+              (value): value is string => typeof value === "string",
+            )
+          : [...nextExcluded];
+        setEditingPlanRevision(plan.revision);
+        setDecisions(savedDecisions);
+        setInventory(
+          Array.isArray(plan.inventory)
+            ? (plan.inventory as BrollAssetRef[])
+            : [],
+        );
+        setExcludedAuto(new Set(savedExcluded));
+        const supersededRenderTaskId = renderTaskId;
+        setRenderTaskId(null);
+        setRenderTaskStatus(null);
+        setExportId(null);
+        if (supersededRenderTaskId) {
+          await client
+            .discardExecutionTask({
+              params: { taskId: supersededRenderTaskId },
+              query: undefined,
+              body: undefined,
+            })
+            .catch(() => undefined);
+        }
+        if (srt && voiceoverText) {
+          setBrollRevisionNotice("已从当前分镜移除，正在按剩余素材重新统筹。旧成片仅保留为历史。");
+          await adjustMaterials([], {
+            baseDecisions: savedDecisions,
+            excludedAssetIds: savedExcluded,
+          });
+        } else {
+          setBrollRevisionNotice("已从当前分镜移除并保存；下次分场不会再使用它。旧成片仅保留为历史。");
+        }
+      } catch (err) {
+        setDecisionsError(
+          err instanceof Error ? err.message : "素材删除失败，请刷新后重试",
+        );
+      } finally {
+        setDecisionsBusy(false);
+      }
+    },
+    [
+      adjustMaterials,
+      decisions,
+      decisionsConfirmed,
+      editingPlanRevision,
+      ensureOutputId,
+      excludedAuto,
+      renderTaskId,
       srt,
       voiceoverText,
     ],
@@ -1613,6 +1738,7 @@ export function ProductionWorkbench({
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
               inventory: selectableInventory as unknown as Record<string, unknown>[],
+              excludedAssetIds: Array.from(excludedAuto),
             },
           },
         })) as unknown as WireProduction;
@@ -1662,6 +1788,7 @@ export function ProductionWorkbench({
               decisions: payload.decisions as unknown as Record<string, unknown>,
               renderProps: payload.renderProps as unknown as Record<string, unknown>,
               inventory: selectableInventory as unknown as Record<string, unknown>[],
+              excludedAssetIds: Array.from(excludedAuto),
             },
           },
         })) as unknown as WireProduction;
@@ -1739,6 +1866,7 @@ export function ProductionWorkbench({
       advanceStatus,
       ensureOutputId,
       editingPlanRevision,
+      excludedAuto,
       renderDispatchBusy,
       segmentCount,
       selectableInventory,
@@ -1822,6 +1950,22 @@ export function ProductionWorkbench({
             }
             try {
               const finalOutputId = outputId ?? (await ensureOutputId());
+              const latestProduction = (await client.getOutputProduction({
+                params: { outputId: finalOutputId },
+                query: undefined,
+                body: undefined,
+              })) as unknown as WireProduction;
+              const latestPlan = latestProduction.recordingConfig?.videoEditingPlan as
+                | { revision?: unknown; sourceRenderTaskId?: unknown }
+                | undefined;
+              if (
+                typeof latestPlan?.revision === "number" &&
+                latestPlan.sourceRenderTaskId !== renderTaskId &&
+                task.spec?.params?.retryOf !== latestPlan.sourceRenderTaskId
+              ) {
+                // 该任务属于已被删除/替换的旧分镜版本，只保留历史文件，不得覆盖当前成片。
+                return;
+              }
               // [T-548] execution.confirm 只把文件收进素材库，不会自动产生项目用料边。
               // 先反查同一资产的真实 usage，缺边才创建；后续任一步失败再点“重试关联”
               // 都会复用已有边，避免同一成片重复出现在项目使用记录里。
@@ -1943,9 +2087,39 @@ export function ProductionWorkbench({
             // 全局补读失败仍保留项目直查结果，不让增强恢复挡住主链。
           }
         }
+        let currentPlanRenderTaskId: string | null | undefined;
+        if (outputId) {
+          try {
+            const production = (await client.getOutputProduction({
+              params: { outputId },
+              query: undefined,
+              body: undefined,
+            })) as unknown as WireProduction;
+            const plan = production.recordingConfig?.videoEditingPlan as
+              | { revision?: unknown; sourceRenderTaskId?: unknown }
+              | undefined;
+            if (typeof plan?.revision === "number") {
+              currentPlanRenderTaskId =
+                typeof plan.sourceRenderTaskId === "string"
+                  ? plan.sourceRenderTaskId
+                  : null;
+            }
+          } catch {
+            // 旧项目或暂时读不到 plan 时维持既有恢复兼容；最终采纳前仍会再次核对。
+          }
+        }
+        const renderBelongsToCurrentPlan = (task: WireExecTask) =>
+          currentPlanRenderTaskId === undefined ||
+          task.id === currentPlanRenderTaskId ||
+          task.spec?.params?.retryOf === currentPlanRenderTaskId ||
+          (currentPlanRenderTaskId !== null &&
+            (task.status === "queued" ||
+              task.status === "running" ||
+              task.status === "awaiting_confirmation"));
         const live = execs.find(
           (t) =>
             t.execType === "video.render" &&
+            renderBelongsToCurrentPlan(t) &&
             (t.status === "queued" ||
               t.status === "running" ||
               t.status === "awaiting_confirmation"),
@@ -1997,7 +2171,10 @@ export function ProductionWorkbench({
         }
 
         const doneRender = execs.find(
-          (t) => t.execType === "video.render" && t.status === "succeeded",
+          (t) =>
+            t.execType === "video.render" &&
+            renderBelongsToCurrentPlan(t) &&
+            t.status === "succeeded",
         );
         // 没有活跃任务时恢复最新失败任务。只有它确实晚于已完成成片（或还没有成片）才
         // 抢占主状态，避免一条很老的失败任务遮住用户更新的成片。
@@ -2046,7 +2223,10 @@ export function ProductionWorkbench({
         }
         // [FE-H01] 渲染失败 → 接回跟踪(失败可见可恢复):放在决策恢复之后,让「重新决策」优先。
         const failedRender = execs.find(
-          (t) => t.execType === "video.render" && t.status === "failed",
+          (t) =>
+            t.execType === "video.render" &&
+            renderBelongsToCurrentPlan(t) &&
+            t.status === "failed",
         );
         if (failedRender && !abandoned) {
           setRenderTaskId((prev) => prev ?? failedRender.id);
@@ -2613,14 +2793,8 @@ export function ProductionWorkbench({
                     <button
                       type="button"
                       data-slot="broll-auto-toggle"
-                      onClick={() =>
-                        setExcludedAuto((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(it.assetId)) next.delete(it.assetId);
-                          else next.add(it.assetId);
-                          return next;
-                        })
-                      }
+                      disabled={decisionsBusy}
+                      onClick={() => void toggleAutoBroll(it.assetId)}
                       className="ml-auto shrink-0 rounded-control border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/50"
                     >
                       {excluded ? "恢复" : "剔除"}

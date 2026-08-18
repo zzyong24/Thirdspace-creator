@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ a573549d
+LAST_SYNCED: codex/t793-local-package @ cb48daf6
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-881 根治用户从当前分镜删除 B-roll 后重新成片仍复用旧素材【用户真机截图·2026-08-17】
 - [open] T-878 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】
 - [wip] T-873 TC流量中心渠道专属本地包候选（绿色左侧主题、产品名与图标已确认）【渠道打包·用户确认 2026-08-17】
 - [wip] T-867 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】

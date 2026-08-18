@@ -58,10 +58,24 @@ export const productionOperations = {
         renderProps: z.record(z.string(), z.unknown()),
         // 与本次分镜同源的项目素材快照；刷新后 B-roll 下拉不得只剩 assetId。
         inventory: z.array(z.record(z.string(), z.unknown())).optional(),
+        // 用户明确剔除的素材是当前分镜版本的一部分；刷新、重试和局部调整都必须继承。
+        excludedAssetIds: z.array(id).optional(),
       }),
     }),
     response: productionResource,
     fr: ["FR-703-EDITING-PLAN-CONFIRM"],
+  }),
+  removeProductionEditingPlanBroll: defineEndpoint({
+    id: "outputs.production.editingPlan.broll.remove",
+    method: "PUT",
+    path: "/outputs/:outputId/production/editing-plan/broll/remove",
+    params: outputParams,
+    body: z.object({
+      expectedRevision: z.number().int().nonnegative(),
+      assetId: id,
+    }),
+    response: productionResource,
+    fr: ["FR-703-13", "FR-881-BROLL-REMOVE"],
   }),
   createProductionSegment: defineEndpoint({
     id: "productions.segments.create",

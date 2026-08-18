@@ -3139,7 +3139,12 @@ export async function runVideoDecisions(
         task.inputData.baseDecisions,
         srtLines,
       );
-      let matchedBroll = base.broll;
+      const inventoryIds = new Set(inventory.map((asset) => asset.assetId));
+      // SEMANTIC_BOUNDARY_ALLOW:这里只落实用户明确排除的真实 assetId，不做素材创作判断。
+      // 即使本轮 material.match 失败，也不能用旧 baseDecisions 把已删除素材复活。
+      let matchedBroll = base.broll.filter((pick) =>
+        inventoryIds.has(pick.assetId),
+      );
       let materialMatchWarning = "";
       try {
         matchedBroll = await decideMaterialBroll(
@@ -3202,6 +3207,10 @@ export async function runVideoDecisions(
         ...base,
         broll,
       };
+      if (base.broll.some((pick) => !inventoryIds.has(pick.assetId))) {
+        delete decisions.direction;
+        delete decisions.directorReview;
+      }
       await deps.ai.recordCandidate(ctx, task.id, {
         resultType: VIDEO_DECISIONS_RESULT_TYPE,
         resultData: {

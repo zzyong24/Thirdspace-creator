@@ -1,0 +1,11 @@
+{
+  "task_id": "T-881",
+  "checks": [
+    "已确认分镜显示真实 B-roll",
+    "剔除后页面显示已保存",
+    "服务端 revision 递增且四处引用清空",
+    "1024×720 刷新后仍保持剔除"
+  ],
+  "project_id": "project-2605a4c1-6",
+  "asset_id": "asset-2605a4c1-31"
+}

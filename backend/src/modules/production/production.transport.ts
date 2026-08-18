@@ -27,6 +27,7 @@ export const PRODUCTION_OP_IDS = [
   "outputs.production.get",
   "outputs.production.put",
   "outputs.production.editingPlan.confirm",
+  "outputs.production.editingPlan.broll.remove",
   "productions.segments.create",
   "productions.segments.list",
   "productions.exports.create",
@@ -126,6 +127,18 @@ export function createProductionTransport(
             plan: Record<string, unknown>;
           };
           const row = await service.confirmEditingPlan(
+            ctx,
+            p.outputId ?? "",
+            b,
+          );
+          return { data: toProductionResource(row), meta: { requestId } };
+        }
+        case "outputs.production.editingPlan.broll.remove": {
+          const b = (body ?? {}) as {
+            expectedRevision: number;
+            assetId: string;
+          };
+          const row = await service.removeEditingPlanBroll(
             ctx,
             p.outputId ?? "",
             b,

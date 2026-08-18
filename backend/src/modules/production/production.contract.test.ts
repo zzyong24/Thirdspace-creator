@@ -162,6 +162,51 @@ describe("production.transport — contract conformance", () => {
     });
   });
 
+  it("[T-881] outputs.production.editingPlan.broll.remove → 写后读不再含被删素材", async () => {
+    await productionId();
+    await call("outputs.production.editingPlan.confirm", {
+      params: { outputId: "output-1" },
+      body: {
+        expectedRevision: 0,
+        plan: {
+          sourceTaskId: "ai-task-1",
+          confirmedAt: NOW,
+          excludedAssetIds: [],
+          decisions: {
+            scenes: [],
+            broll: [{ assetId: "asset-remove", sceneIdx: 0, at: 0, durationSec: 2 }],
+            direction: { motionThesis: "旧方向" },
+          },
+          renderProps: {
+            broll: [{ file: "asset-remove", at: 0, durationSec: 2 }],
+            direction: { motionThesis: "旧方向" },
+          },
+          inventory: [{ assetId: "asset-remove", label: "待删除" }],
+        },
+      },
+    });
+    const removed = await call("outputs.production.editingPlan.broll.remove", {
+      params: { outputId: "output-1" },
+      body: { expectedRevision: 1, assetId: "asset-remove" },
+    });
+    const parsed = successEnvelope(productionResource).parse(removed);
+    expect(parsed.data.recordingConfig).toMatchObject({
+      videoEditingPlan: {
+        revision: 2,
+        excludedAssetIds: ["asset-remove"],
+        decisions: { broll: [] },
+        renderProps: { broll: [] },
+        inventory: [],
+      },
+    });
+
+    const reread = await call("outputs.production.get", {
+      params: { outputId: "output-1" },
+    });
+    expect(successEnvelope(productionResource).parse(reread).data.recordingConfig)
+      .toEqual(parsed.data.recordingConfig);
+  });
+
   it("productions.segments.create → productionSegmentResource", async () => {
     const pid = await productionId();
     const res = await call("productions.segments.create", {

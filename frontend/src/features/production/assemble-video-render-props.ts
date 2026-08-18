@@ -214,6 +214,12 @@ export function assembleVideoRenderProps(
 
   const broll = decisions.broll
     .filter((b: VideoBrollPick) => inScene(b.sceneIdx))
+    // SEMANTIC_BOUNDARY_ALLOW:inventory 是当前分镜真实可用 ID 集；这里只做引用完整性，
+    // 不判断素材语义。旧 decisions 中已删除/失效的 ID 绝不能再次进入 render props。
+    .filter(
+      (b: VideoBrollPick) =>
+        !opts.inventory || opts.inventory.some((asset) => asset.assetId === b.assetId),
+    )
     .slice()
     .sort((a, b) => a.at - b.at)
     .map((b) => {
@@ -264,7 +270,15 @@ export function assembleVideoRenderProps(
     });
   // direction 是 AI 编导的权威时间线。组装器只映射真实素材，不得擅自把 beat
   // 提前到素材吸附后的 at，否则“一个时间窗一个主语”会在交接帧被破坏。
-  const renderDirection = decisions.direction;
+  const renderedBrollRefs = new Set(broll.map((item) => `broll:${item.file}`));
+  const renderDirection =
+    decisions.direction?.beatGraph.every(
+      (beat) =>
+        beat.subject.kind !== "broll" ||
+        renderedBrollRefs.has(beat.subject.ref),
+    )
+      ? decisions.direction
+      : undefined;
 
   return videoRenderProps.parse({
     meta: { title: opts.title?.trim() || "未命名成片" },

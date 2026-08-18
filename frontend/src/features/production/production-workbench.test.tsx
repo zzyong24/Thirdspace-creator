@@ -55,6 +55,17 @@ const mockClient = vi.hoisted(() => ({
       videoEditingPlan: { revision: input.body.expectedRevision + 1 },
     },
   })),
+  removeProductionEditingPlanBroll: vi.fn(async (): Promise<{
+    id: string;
+    status: string;
+    recordingConfig: { videoEditingPlan: Record<string, unknown> };
+  }> => ({
+    id: "prod-1",
+    status: state.prodStatus,
+    recordingConfig: {
+      videoEditingPlan: { revision: 1 },
+    },
+  })),
   createProductionSegment: vi.fn(async () => ({ id: "seg-1" })),
   createProductionExport: vi.fn(async () => ({ id: "exp-1" })),
   completeExport: vi.fn(async () => ({ id: "exp-1", status: "ready" })),
@@ -127,7 +138,11 @@ const mockClient = vi.hoisted(() => ({
   getDownloadUrl: vi.fn(async () => ({
     url: "http://localhost/blob/final.mp4?token=test",
   })),
-  getAsset: vi.fn(async (input?: unknown) => {
+  getAsset: vi.fn(async (input?: unknown): Promise<{
+    fileSize: number | null;
+    assetType?: string;
+    name?: string;
+  }> => {
     void input;
     return { fileSize: null as number | null };
   }),
@@ -262,6 +277,11 @@ beforeEach(() => {
       },
     }),
   );
+  mockClient.removeProductionEditingPlanBroll.mockResolvedValue({
+    id: "prod-1",
+    status: state.prodStatus,
+    recordingConfig: { videoEditingPlan: { revision: 1 } },
+  });
   mockClient.createExecutionTask.mockResolvedValue({
     id: "exec-1",
     execType: "video.render",
@@ -1157,6 +1177,51 @@ describe("ProductionWorkbench", () => {
     ).toBeNull();
   });
 
+  it("[T-881] 旧分镜渲染晚到成功但已与当前 plan 解绑时不得恢复或覆盖成片", async () => {
+    const staleRender = {
+      id: "exec-stale",
+      execType: "video.render",
+      status: "succeeded",
+      spec: { params: {} },
+      adoptedAssetIds: ["asset-stale-final"],
+      errorMessage: null,
+    };
+    mockClient.getOutputProduction.mockResolvedValue({
+      id: "prod-1",
+      status: "editing",
+      recordingConfig: {
+        videoEditingPlan: {
+          revision: 8,
+          sourceRenderTaskId: null,
+          decisions: undefined,
+          renderProps: {},
+          inventory: [],
+          excludedAssetIds: ["asset-generated"],
+        },
+      },
+    });
+    mockClient.listExecutionTasks.mockResolvedValue([staleRender]);
+
+    const { container } = render(
+      <ProductionWorkbench {...makeProps({ initialStatus: "editing" })} />,
+    );
+
+    await waitFor(() =>
+      expect(mockClient.listExecutionTasks).toHaveBeenCalled(),
+    );
+    await waitFor(() =>
+      expect(mockClient.getOutputProduction).toHaveBeenCalled(),
+    );
+    expect(
+      container.querySelector('[data-slot="production-final-video"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-slot="execution-task-card"]'),
+    ).toBeNull();
+    expect(mockClient.getExecutionTask).not.toHaveBeenCalled();
+    expect(mockClient.patchOutput).not.toHaveBeenCalled();
+  });
+
   it("[T-548] 失败任务卡内重试后跟踪新 taskId，成片幂等关联项目、完成 export 并恢复内联预览", async () => {
     let retryAdopted = false;
     mockClient.listAITasks.mockResolvedValueOnce([
@@ -1672,6 +1737,152 @@ describe("ProductionWorkbench", () => {
 // ── [T-387c] 备料③ B-roll 自动聚合(来源徽标 + 人可剔 → excludedAssetIds)────────
 
 describe("ProductionWorkbench — T-387c B-roll 自动聚合", () => {
+  it("[T-881] 已确认分镜剔除自动 B-roll 后先原子移除旧渲染引用，再按排除约束重新统筹", async () => {
+    const decisions = {
+      scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "" }],
+      cards: [{ sceneIdx: 0, kind: "quote", content: "开场", at: 0 }],
+      visualSlots: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-generated",
+          at: 0.1,
+          durationSec: 1.2,
+          visualRole: "live_footage",
+          presentation: "large_stage",
+        },
+      ],
+      subtitles: [{ index: 1, startSec: 0, endSec: 12, zh: "大家好", en: "Hi" }],
+      srtLines: [{ index: 1, startSec: 0, endSec: 12, text: "大家好" }],
+      direction: {
+        motionThesis: "素材接管开场",
+        beatGraph: [
+          {
+            id: "broll_open",
+            sceneIdx: 0,
+            startSec: 0.1,
+            endSec: 1.3,
+            subject: { kind: "broll", ref: "broll:asset-generated" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "enter",
+            stageMode: "takeover",
+            transitionIn: "cut",
+            transitionOut: "cut",
+            returnGeometry: "not_applicable",
+          },
+        ],
+      },
+      directorReview: {
+        status: "ready",
+        summary: "当前方案可渲染",
+        issues: [],
+        source: "ai",
+      },
+    };
+    mockClient.getOutputProduction.mockResolvedValue({
+      id: "prod-1",
+      status: "editing",
+      recordingConfig: {
+        videoEditingPlan: {
+          revision: 7,
+          sourceTaskId: "ai-source",
+          sourceRenderTaskId: "exec-old",
+          decisions,
+          inventory: [
+            {
+              assetId: "asset-generated",
+              label: "【当前确认稿绑定】生成视频",
+              kind: "video",
+              description: "",
+              source: "script",
+            },
+          ],
+          renderProps: {
+            meta: { title: "成片" },
+            talkingHead: { file: "asset-video-1", durationSec: 12 },
+            captions: [],
+            scenes: [],
+            broll: [{ file: "asset-generated", at: 0.1, durationSec: 1.2, label: "生成视频" }],
+            delivery: { width: 1920, height: 1080, fps: 30 },
+          },
+        },
+      },
+    });
+    mockClient.listMaterialLinks.mockResolvedValue([
+      {
+        id: "link-generated",
+        entityType: "asset",
+        entityId: "asset-generated",
+        role: "reference",
+      },
+    ]);
+    mockClient.getAsset.mockResolvedValue({
+      assetType: "video",
+      name: "【当前确认稿绑定】生成视频",
+      fileSize: 10,
+    });
+    mockClient.removeProductionEditingPlanBroll.mockResolvedValue({
+      id: "prod-1",
+      status: "editing",
+      recordingConfig: {
+        videoEditingPlan: {
+          revision: 8,
+          sourceTaskId: "ai-source",
+          sourceRenderTaskId: null,
+          excludedAssetIds: ["asset-generated"],
+          decisions: { ...decisions, broll: [], direction: undefined },
+          inventory: [],
+          renderProps: {
+            meta: { title: "成片" },
+            talkingHead: { file: "asset-video-1", durationSec: 12 },
+            captions: [],
+            scenes: [],
+            broll: [],
+            delivery: { width: 1920, height: 1080, fps: 30 },
+          },
+        },
+      },
+    });
+
+    const { container } = render(<ProductionWorkbench {...makeProps()} />);
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="broll-auto-item"]')).not.toBeNull(),
+    );
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="confirmed-decisions-notice"]')).not.toBeNull(),
+    );
+    await uploadVideo(container);
+    await uploadSrt(container, GOOD_SRT);
+
+    fireEvent.click(
+      container.querySelector('[data-slot="broll-auto-toggle"]')!,
+    );
+
+    await waitFor(() =>
+      expect(mockClient.removeProductionEditingPlanBroll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { outputId: "out-1" },
+          body: { expectedRevision: 7, assetId: "asset-generated" },
+        }),
+      ),
+    );
+    await waitFor(() => expect(mockClient.createAITask).toHaveBeenCalled());
+    const create = (mockClient.createAITask.mock.calls as unknown as Array<[
+      { body: { inputData: Record<string, unknown> } },
+    ]>).at(-1)?.[0];
+    expect(create).toBeDefined();
+    expect(create!.body.inputData).toMatchObject({
+      adjustmentMode: "materials",
+      excludedAssetIds: ["asset-generated"],
+      baseDecisions: { broll: [] },
+    });
+    expect(mockClient.discardExecutionTask).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { taskId: "exec-old" } }),
+    );
+    expect(mockClient.createExecutionTask).not.toHaveBeenCalled();
+  });
+
   it("[T-739] 空项目不采信旧脚本 assetRefs，也不读取历史 thesis_tree", async () => {
     mockClient.listArtifacts.mockResolvedValue([
       { id: "art-script", artifactType: "output_script" },

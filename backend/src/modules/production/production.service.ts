@@ -120,6 +120,11 @@ export interface ProductionService {
       plan: Record<string, unknown>;
     },
   ): Promise<ProductionRow>;
+  removeEditingPlanBroll(
+    ctx: RequestContext,
+    outputId: string,
+    body: { expectedRevision: number; assetId: string },
+  ): Promise<ProductionRow>;
   createSegment(
     ctx: RequestContext,
     productionId: string,
@@ -232,6 +237,87 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       if (!updated) {
         throw new ConflictError(
           "分镜已被其他操作更新，请刷新后再确认，避免覆盖较新的剪辑方案",
+        );
+      }
+      return updated;
+    },
+
+    async removeEditingPlanBroll(ctx, outputId, body) {
+      const repo = repoFor(ctx);
+      const production = await repo.getProductionByOutput(outputId);
+      const recordingConfig = (production.recordingConfig ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const rawPlan = recordingConfig.videoEditingPlan;
+      if (!rawPlan || typeof rawPlan !== "object" || Array.isArray(rawPlan)) {
+        throw new ConflictError("当前没有可编辑的已确认分镜，请刷新后重新分场");
+      }
+      const plan = rawPlan as Record<string, unknown>;
+      if (plan.revision !== body.expectedRevision) {
+        throw new ConflictError(
+          "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
+        );
+      }
+      const decisions =
+        plan.decisions &&
+        typeof plan.decisions === "object" &&
+        !Array.isArray(plan.decisions)
+          ? (plan.decisions as Record<string, unknown>)
+          : {};
+      const renderProps =
+        plan.renderProps &&
+        typeof plan.renderProps === "object" &&
+        !Array.isArray(plan.renderProps)
+          ? (plan.renderProps as Record<string, unknown>)
+          : {};
+      const filterByAssetId = (value: unknown, key: "assetId" | "file") =>
+        Array.isArray(value)
+          ? value.filter((entry) => {
+              if (
+                !entry ||
+                typeof entry !== "object" ||
+                Array.isArray(entry)
+              ) {
+                return true;
+              }
+              return (entry as Record<string, unknown>)[key] !== body.assetId;
+            })
+          : [];
+      const excluded = new Set(
+        Array.isArray(plan.excludedAssetIds)
+          ? plan.excludedAssetIds.filter(
+              (value): value is string => typeof value === "string",
+            )
+          : [],
+      );
+      excluded.add(body.assetId);
+      const nextDecisions = { ...decisions };
+      nextDecisions.broll = filterByAssetId(decisions.broll, "assetId");
+      // 旧总导演方向可能仍引用被删除的素材；局部重统筹完成前宁可安全降级，也不能复活旧引用。
+      delete nextDecisions.direction;
+      delete nextDecisions.directorReview;
+      const nextRenderProps = { ...renderProps };
+      nextRenderProps.broll = filterByAssetId(renderProps.broll, "file");
+      delete nextRenderProps.direction;
+      const nextPlan: Record<string, unknown> = {
+        ...plan,
+        // 旧成片任务只属于上一 revision；删除后不得再作为当前分镜的恢复/采纳线索。
+        sourceRenderTaskId: null,
+        excludedAssetIds: [...excluded].sort(),
+        decisions: nextDecisions,
+        renderProps: nextRenderProps,
+        inventory: filterByAssetId(plan.inventory, "assetId"),
+      };
+      delete nextPlan.revision;
+      const updated = await repo.confirmEditingPlan(
+        production.id,
+        body.expectedRevision,
+        nextPlan,
+      );
+      if (!updated) {
+        throw new ConflictError(
+          "分镜已被其他操作更新，请刷新后再删除，避免覆盖较新的剪辑方案",
         );
       }
       return updated;
