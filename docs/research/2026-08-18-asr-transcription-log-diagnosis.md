@@ -100,3 +100,14 @@ aweme：`7658330268477951286`、`7673818573218925860`、`7668326270039543091`。
 3. Windows 安装包使用随包 Node、真实 worker 入口和短音频 fixture 完成一次本地 ASR smoke，拿到非空
    文本；不能以主进程 `import("@xenova/transformers")` 代替。
 4. 部分成功批任务在页面/任务卡上展示成功数与失败数，避免顶层 `succeeded` 掩盖逐条失败。
+
+### T-886 修复回填
+
+2026-08-18 已完成代码侧根治：Whisper worker 会从 sidecar 受控 cwd 推导并在自身线程内加载随包
+`creatoros-module-resolver.cjs`，同时绑定同一 runtime root；没有 resolver 的传统 runtime 与开发态
+继续使用原生 `requireBase`。Windows closure smoke 已从“主进程 import Xenova”提升为“随包 Node 启动
+真实 worker 并从 `local-ai/vendor` 加载 Xenova”。本地错误新增脱敏 `LOCAL_WHISPER_*` 分类码，用户面
+仍不暴露路径、stderr 或凭据。
+
+本机已用隔离分层 runtime fixture 验证真实 worker 成功加载模型模块；完整 Windows 安装包的实际模型
+转写仍须在下一次目标平台流水线/真机执行，不以 macOS 本机测试冒充。

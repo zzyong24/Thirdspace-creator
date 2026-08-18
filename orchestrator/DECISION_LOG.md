@@ -4,6 +4,38 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-RUNTIME-054 (2026-08-18) — Whisper worker 显式消费分层 local-ai 解析契约
+
+**来源**：T-885 用户 Windows 轮转日志确认 4 个不同作品均成功取流、抽出 2.86～3.62 MB 音频并
+选择 `whisper-local`，随后在 140～167 ms 内稳定失败；代码复核发现主 server 加载了
+`creatoros-module-resolver.cjs`，独立 `worker_threads` consumer 没有加载。
+
+**决策**：
+
+1. Whisper worker 从 sidecar 的受控 cwd 推导 `frontend/package.json`、随包 resolver 与 runtime root；
+   只有 resolver 实际存在时才在 worker 内显式加载，传统 `node_modules` runtime 和开发态保持原行为。
+2. 不通过 `NODE_OPTIONS` 继承任意代码，不复制第二套 Xenova/ONNX 依赖，也不把模型推理重新搬回
+   sidecar 主线程；worker 继续单实例串行，避免本地 ASR 阻塞应用页面。
+3. 本地失败仅跨边界传递稳定 `LOCAL_WHISPER_*` 分类码；用户文案继续隐藏用户名、绝对路径、stderr、
+   token 与模型内部信息。
+4. Windows closure 必须用随包 Node 启动真实 `worker_threads` consumer，并从 `local-ai/vendor` 加载
+   `@xenova/transformers`；主进程直接 import 不再构成本地 Whisper 发布证据。
+
+**Rationale**：PAT-004 CF-004 命中：打包层、主 server 与 worker 是独立运行时边界，必须共享一份
+明确的模块解析契约。复用 DEC-RUNTIME-053 已验证的随包 resolver，不新增模块系统或依赖副本；
+`Asset Index` 没有可直接替代 CreatorOS 分层 Node consumer 的 verified asset。
+
+**Pattern-Ref**：PAT-004
+
+**影响范围**：T-886、`multimodal-whisper-local.ts`、managed ASR 错误分类、Windows closure smoke。
+
+**Explicit Limits**：本轮不自动重跑用户旧任务、不改用户模型配置、不下载数百 MB 模型做本机伪验；
+Windows 安装包完整转写仍由目标平台流水线/真机验收。
+
+**Status**：Confirmed（用户 2026-08-18 明确要求解决本地 Whisper 问题）。
+
+---
+
 ## DEC-VIDEO-045 (2026-08-17) — B-roll 删除以当前分镜 revision 为真，旧成片只保留历史
 
 **来源**：用户真机指出“这里删除了一个 B-roll，但实际成片还是使用了”，并要求根治反复出现的

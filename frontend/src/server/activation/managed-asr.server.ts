@@ -106,11 +106,49 @@ export type TranscribeWithFallbackResult = {
   readonly mode: TranscribeExecutionMode;
 };
 
+export type LocalWhisperFailureCode =
+  | "LOCAL_WHISPER_AUDIO_DECODE"
+  | "LOCAL_WHISPER_AUDIO_EMPTY"
+  | "LOCAL_WHISPER_RUNTIME_LOAD"
+  | "LOCAL_WHISPER_MODEL_LOAD"
+  | "LOCAL_WHISPER_INFERENCE"
+  | "LOCAL_WHISPER_TRANSCRIPT_EMPTY"
+  | "LOCAL_WHISPER_WORKER_CRASH"
+  | "LOCAL_WHISPER_WORKER_EXIT"
+  | "LOCAL_WHISPER_WORKER_UNKNOWN"
+  | "LOCAL_WHISPER_UNKNOWN";
+
+const LOCAL_WHISPER_FAILURE_CODES = new Set<LocalWhisperFailureCode>([
+  "LOCAL_WHISPER_AUDIO_DECODE",
+  "LOCAL_WHISPER_AUDIO_EMPTY",
+  "LOCAL_WHISPER_RUNTIME_LOAD",
+  "LOCAL_WHISPER_MODEL_LOAD",
+  "LOCAL_WHISPER_INFERENCE",
+  "LOCAL_WHISPER_TRANSCRIPT_EMPTY",
+  "LOCAL_WHISPER_WORKER_CRASH",
+  "LOCAL_WHISPER_WORKER_EXIT",
+  "LOCAL_WHISPER_WORKER_UNKNOWN",
+  "LOCAL_WHISPER_UNKNOWN",
+]);
+
+function localWhisperFailureCode(error: unknown): LocalWhisperFailureCode {
+  const reference =
+    error && typeof error === "object" && "reference" in error
+      ? String(error.reference)
+      : "";
+  return LOCAL_WHISPER_FAILURE_CODES.has(reference as LocalWhisperFailureCode)
+    ? (reference as LocalWhisperFailureCode)
+    : "LOCAL_WHISPER_UNKNOWN";
+}
+
 /** 本地推理失败的稳定用户面错误。底层 ffmpeg/ONNX/worker 信息不得进入 message。 */
 export class LocalWhisperTranscribeError extends Error {
-  constructor() {
+  readonly code: LocalWhisperFailureCode;
+
+  constructor(code: LocalWhisperFailureCode = "LOCAL_WHISPER_UNKNOWN") {
     super("本地转写失败，请重试。");
     this.name = "LocalWhisperTranscribeError";
+    this.code = code;
   }
 }
 
@@ -131,11 +169,15 @@ async function invokeLocalWhisper(
   const effectiveSpec = localWhisperSpec();
   try {
     const transcript = await invoke(effectiveSpec);
-    if (!hasTranscriptText(transcript)) throw new Error("empty local transcript");
+    if (!hasTranscriptText(transcript)) {
+      throw Object.assign(new Error("empty local transcript"), {
+        reference: "LOCAL_WHISPER_TRANSCRIPT_EMPTY",
+      });
+    }
     return { transcript, effectiveSpec, mode: "whisper-local" };
-  } catch {
+  } catch (error) {
     // 不附带 cause，避免调用方把绝对路径、stderr、token 或 worker 细节序列化到用户面。
-    throw new LocalWhisperTranscribeError();
+    throw new LocalWhisperTranscribeError(localWhisperFailureCode(error));
   }
 }
 

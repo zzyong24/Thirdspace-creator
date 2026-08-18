@@ -1,9 +1,14 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
 import { describe, it, expect, vi } from "vitest";
 import {
   createWhisperLocalAdapter,
   whisperLevelFromSpec,
   whisperModelId,
   createDefaultPipelineProvider,
+  createWhisperWorker,
+  resolveWhisperWorkerRuntime,
   type AsrPipeline,
   type WhisperLocalAdapterDeps,
 } from "./multimodal-whisper-local";
@@ -198,6 +203,86 @@ describe("createDefaultPipelineProvider —— 模型缓存幂等(不真下模�
     // 只断言构造不抛、返回可调用;**不 await 它**(await 会真 import transformers + 下模型)。
     const provider = createDefaultPipelineProvider();
     expect(typeof provider).toBe("function");
+  });
+});
+
+describe("Whisper worker —— Windows 分层 runtime 模块解析", () => {
+  it("在真实 worker 内先加载随包 resolver，再解析 local-ai 层的 transformers", async () => {
+    const runtimeRoot = mkdtempSync(resolve(tmpdir(), "creatoros-whisper-worker-"));
+    const frontendRoot = resolve(runtimeRoot, "frontend");
+    const localAiRoot = resolve(runtimeRoot, "layers", "local-ai", "vendor");
+    const fakeTransformers = resolve(localAiRoot, "fake-transformers.cjs");
+    const resolverPath = resolve(frontendRoot, "creatoros-module-resolver.cjs");
+    mkdirSync(frontendRoot, { recursive: true });
+    mkdirSync(localAiRoot, { recursive: true });
+    writeFileSync(resolve(frontendRoot, "package.json"), '{"type":"commonjs"}\n');
+    writeFileSync(
+      fakeTransformers,
+      'module.exports={env:{},pipeline:async()=>async()=>({text:"分层 worker 已加载"})};\n',
+    );
+    writeFileSync(
+      resolverPath,
+      `const { registerHooks } = require("node:module");
+const { pathToFileURL } = require("node:url");
+registerHooks({ resolve(specifier, context, nextResolve) {
+  if (specifier === "@xenova/transformers") {
+    return { shortCircuit: true, url: pathToFileURL(${JSON.stringify(fakeTransformers)}).href };
+  }
+  return nextResolve(specifier, context);
+}});\n`,
+    );
+
+    const runtime = resolveWhisperWorkerRuntime({ cwd: frontendRoot });
+    expect(runtime).toEqual({
+      requireBase: resolve(frontendRoot, "package.json"),
+      moduleResolverPath: resolverPath,
+      runtimeRoot,
+    });
+
+    const worker = createWhisperWorker(runtime);
+    try {
+      const response = await new Promise<{
+        id: number;
+        ok: boolean;
+        text?: string;
+        error?: string;
+        errorCode?: string;
+      }>((resolveMessage, rejectMessage) => {
+        worker.on("message", resolveMessage);
+        worker.on("error", rejectMessage);
+        const pcm = new Float32Array([0.1, -0.1]).buffer;
+        worker.postMessage(
+          {
+            id: 1,
+            modelId: "Xenova/whisper-small",
+            cacheDir: resolve(runtimeRoot, "cache"),
+            pcm,
+            options: { language: "zh" },
+          },
+          [pcm],
+        );
+      });
+      expect(response).toMatchObject({
+        id: 1,
+        ok: true,
+        text: "分层 worker 已加载",
+      });
+    } finally {
+      await worker.terminate();
+      rmSync(runtimeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("传统 runtime 没有 resolver 时保持原生 requireBase 兼容", () => {
+    const frontendRoot = mkdtempSync(resolve(tmpdir(), "creatoros-whisper-legacy-"));
+    try {
+      writeFileSync(resolve(frontendRoot, "package.json"), '{}\n');
+      expect(resolveWhisperWorkerRuntime({ cwd: frontendRoot })).toEqual({
+        requireBase: resolve(frontendRoot, "package.json"),
+      });
+    } finally {
+      rmSync(frontendRoot, { recursive: true, force: true });
+    }
   });
 });
 

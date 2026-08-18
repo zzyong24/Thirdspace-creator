@@ -145,6 +145,27 @@ test("T-845 production HyperFrames spawn and Windows RAT preload the same layere
   assert.match(smoke, /\["--require", moduleResolver, hyperframesCli/);
 });
 
+test("T-886 Windows closure smoke loads Xenova from a real worker consumer", () => {
+  const workerSource = readFileSync(
+    resolve(
+      REPO_ROOT,
+      "ai-worker/src/runtime/multimodal-whisper-local.ts",
+    ),
+    "utf8",
+  );
+  const smoke = readFileSync(resolve(HERE, "runtime-smoke.mjs"), "utf8");
+
+  assert.match(workerSource, /workerData\.moduleResolverPath/);
+  assert.match(workerSource, /CREATOROS_RUNTIME_ROOT/);
+  assert.match(workerSource, /req\(workerData\.moduleResolverPath\)/);
+  assert.match(smoke, /new Worker\(/);
+  assert.match(
+    smoke,
+    /moduleResolverPath:\s*\$\{JSON\.stringify\(moduleResolver\)\}/,
+  );
+  assert.match(smoke, /whisper-worker-module-load/);
+});
+
 test("official Windows release and RAT are wired to the same guarded closure", () => {
   const workflow = readFileSync(
     resolve(REPO_ROOT, ".github/workflows/desktop-release.yml"),

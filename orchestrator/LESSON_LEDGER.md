@@ -13,6 +13,27 @@
 
 ---
 
+## LED-041 — 主线程加载了分层 resolver，不等于 worker_threads 能解析 local-ai
+
+- **Date**: 2026-08-18 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: Windows 1.1.0 包中多条视频均成功取流和抽音，`whisper-local` 却在 140～167 ms 内
+  稳定失败；构建时 Xenova 主进程 import 自检仍为绿色。
+- **RootCause**: `worker_threads` 有独立模块加载上下文，主 server 注册的
+  `creatoros-module-resolver` 不会成为 worker 的消费契约；closure smoke 又只在仓库主进程 import
+  `@xenova/transformers`，没有使用随包 Node 启动生产形态 worker。
+- **GuardRule**: 分层 runtime 的每个独立 Node 进程或 worker consumer 都必须显式加载同一受校验
+  resolver/runtime root；发布 smoke 必须启动真实 consumer，禁止用父线程 import、开发机
+  `node_modules` 或 `NODE_OPTIONS` 代替。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts &&
+  pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts && node --test
+  tools/windows-closure-rat/build-production-closure.test.mjs`（已登记进 `reconcile.config.json`）。
+- **Outcome(T+N)**: 红测分别证明生产 worker 无 resolver、错误码丢失、closure smoke 未启动 worker；
+  修复后本机真实 worker fixture 从分层 `local-ai` 成功加载 fake transformers，Windows closure 增加
+  随包 Node worker 模块加载 Gate。目标 Windows 安装包完整 ASR 待流水线/真机回填。
+- **Ref**: T-885、T-886、DEC-RUNTIME-054、PAT-004。
+
+---
+
 ## LED-040 — 候选列表里的“剔除”不等于当前分镜已删除，旧渲染会继续复活素材
 
 - **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: critical · **Status**: rule

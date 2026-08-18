@@ -185,8 +185,11 @@ describe("transcribeWithLocalFallback", () => {
 
   it("本地 Whisper 自身失败不递归，且不泄露底层路径和 stderr", async () => {
     const invoke = vi.fn(async () => {
-      throw new Error(
-        "ffmpeg /Users/private/bin/ffmpeg stderr=token-secret; ONNX worker crashed",
+      throw Object.assign(
+        new Error(
+          "ffmpeg /Users/private/bin/ffmpeg stderr=token-secret; ONNX worker crashed",
+        ),
+        { reference: "LOCAL_WHISPER_MODEL_LOAD" },
       );
     });
     await expect(
@@ -203,6 +206,7 @@ describe("transcribeWithLocalFallback", () => {
     ).rejects.toEqual(expect.objectContaining({
       name: "LocalWhisperTranscribeError",
       message: "本地转写失败，请重试。",
+      code: "LOCAL_WHISPER_MODEL_LOAD",
     } satisfies Partial<LocalWhisperTranscribeError>));
     expect(invoke).toHaveBeenCalledTimes(1);
   });

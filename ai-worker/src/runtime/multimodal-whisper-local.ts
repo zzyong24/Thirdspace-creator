@@ -94,11 +94,13 @@ async function transcribeAudio(
       `whisper-local 音频解码失败(${modelId}): ${
         err instanceof Error ? err.message : String(err)
       }`,
+      { reference: "LOCAL_WHISPER_AUDIO_DECODE", retryable: true },
     );
   }
   if (!pcm || pcm.length === 0) {
     throw new MultimodalGenerationError(
       "whisper-local 解码得到空音频 PCM(直链失效/抽音无效?)",
+      { reference: "LOCAL_WHISPER_AUDIO_EMPTY", retryable: false },
     );
   }
 
@@ -111,6 +113,7 @@ async function transcribeAudio(
       `whisper-local 模型加载失败(${modelId}): ${
         err instanceof Error ? err.message : String(err)
       }`,
+      { reference: "LOCAL_WHISPER_MODEL_LOAD", retryable: true },
     );
   }
 
@@ -129,10 +132,12 @@ async function transcribeAudio(
     };
     result = await pipeline(pcm, pipelineOptions);
   } catch (err) {
+    if (err instanceof MultimodalGenerationError) throw err;
     throw new MultimodalGenerationError(
       `whisper-local 推理失败(${modelId}): ${
         err instanceof Error ? err.message : String(err)
       }`,
+      { reference: "LOCAL_WHISPER_INFERENCE", retryable: true },
     );
   }
 
@@ -142,6 +147,7 @@ async function transcribeAudio(
   if (typeof text !== "string" || !text.trim()) {
     throw new MultimodalGenerationError(
       "whisper-local 推理返回空逐字稿(音频无语音内容?)",
+      { reference: "LOCAL_WHISPER_TRANSCRIPT_EMPTY", retryable: false },
     );
   }
   return { text };
@@ -363,7 +369,8 @@ export function createFfmpegPcmDecoder(
 //   · 主线程只 postMessage/await,事件循环永不被推理阻塞;
 //   · worker 代码用 **eval 内联字符串**(不落独立文件)——绕开 Next standalone tracing 会漏
 //     worker 文件的打包坑(desktop-sidecar 打包三连坑先例);worker 内 createRequire(requireBase)
-//     解析 @xenova/transformers(sidecar 运行时 cwd=sidecar/frontend,node_modules 就位);
+//     解析 @xenova/transformers(sidecar 运行时 cwd=sidecar/frontend；传统包走 node_modules，
+//     Windows 分层包先加载 creatoros-module-resolver 再走 local-ai/vendor);
 //   · worker 崩溃/退出 → reject 所有在途任务 + 置空句柄,下次调用重建(不永久钉死);
 //   · pipeline memo 活在 worker 内(同级别模型只加载一次,与旧 provider 同语义)。
 
@@ -374,6 +381,15 @@ const WHISPER_WORKER_SOURCE = `
 const { parentPort, workerData } = require("node:worker_threads");
 const { createRequire } = require("node:module");
 const req = createRequire(workerData.requireBase);
+let bootstrapFailed = false;
+if (workerData.moduleResolverPath) {
+  try {
+    process.env.CREATOROS_RUNTIME_ROOT = workerData.runtimeRoot;
+    req(workerData.moduleResolverPath);
+  } catch (err) {
+    bootstrapFailed = true;
+  }
+}
 const memo = new Map();
 function getPipeline(modelId, cacheDir) {
   let p = memo.get(modelId);
@@ -389,25 +405,100 @@ function getPipeline(modelId, cacheDir) {
   return p;
 }
 parentPort.on("message", async (msg) => {
+  if (bootstrapFailed) {
+    parentPort.postMessage({
+      id: msg.id,
+      ok: false,
+      errorCode: "LOCAL_WHISPER_RUNTIME_LOAD",
+      error: "runtime resolver load failed",
+    });
+    return;
+  }
+  let pipe;
   try {
-    const pipe = await getPipeline(msg.modelId, msg.cacheDir);
+    pipe = await getPipeline(msg.modelId, msg.cacheDir);
+  } catch (err) {
+    parentPort.postMessage({
+      id: msg.id,
+      ok: false,
+      errorCode: "LOCAL_WHISPER_MODEL_LOAD",
+      error: "model load failed",
+    });
+    return;
+  }
+  try {
     const pcm = new Float32Array(msg.pcm);
     const result = await pipe(pcm, msg.options);
     const text = Array.isArray(result) ? result.map((r) => r.text).join("") : result.text;
     parentPort.postMessage({ id: msg.id, ok: true, text });
   } catch (err) {
-    parentPort.postMessage({ id: msg.id, ok: false, error: String((err && err.message) || err) });
+    parentPort.postMessage({
+      id: msg.id,
+      ok: false,
+      errorCode: "LOCAL_WHISPER_INFERENCE",
+      error: "inference failed",
+    });
   }
 });
 `;
 
+export interface WhisperWorkerRuntime {
+  requireBase: string;
+  moduleResolverPath?: string;
+  runtimeRoot?: string;
+}
+
+export function resolveWhisperWorkerRuntime(
+  options: {
+    cwd?: string;
+    fileExists?: (path: string) => boolean;
+  } = {},
+): WhisperWorkerRuntime {
+  // worker 的模块根必须与 sidecar 的真实 cwd 一致。Windows 分层包的 cwd 固定为
+  // <runtime>/frontend；传统 runtime/dev 没有 resolver 时继续走原生 requireBase。
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require("node:path") as typeof import("node:path");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require("node:fs") as typeof import("node:fs");
+  const cwd = path.resolve(options.cwd ?? process.cwd());
+  const requireBase = path.join(cwd, "package.json");
+  const moduleResolverPath = path.join(cwd, "creatoros-module-resolver.cjs");
+  const exists = options.fileExists ?? fs.existsSync;
+  if (!exists(moduleResolverPath)) return { requireBase };
+  return {
+    requireBase,
+    moduleResolverPath,
+    runtimeRoot: path.resolve(cwd, ".."),
+  };
+}
+
 /** worker 句柄可注入面(单测注 fake worker,不真加载 transformers)。 */
 export interface WhisperWorkerLike {
   postMessage(msg: unknown, transfer?: ArrayBuffer[]): void;
-  on(event: "message", cb: (msg: { id: number; ok: boolean; text?: string; error?: string }) => void): void;
+  on(
+    event: "message",
+    cb: (msg: {
+      id: number;
+      ok: boolean;
+      text?: string;
+      error?: string;
+      errorCode?: string;
+    }) => void,
+  ): void;
   on(event: "error", cb: (err: Error) => void): void;
   on(event: "exit", cb: (code: number) => void): void;
   terminate(): Promise<number>;
+}
+
+export function createWhisperWorker(
+  runtime: WhisperWorkerRuntime = resolveWhisperWorkerRuntime(),
+): WhisperWorkerLike {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Worker } = require("node:worker_threads") as typeof import("node:worker_threads");
+  return new Worker(WHISPER_WORKER_SOURCE, {
+    eval: true,
+    workerData: runtime,
+  }) as unknown as WhisperWorkerLike;
 }
 
 /**
@@ -421,22 +512,14 @@ export function createWorkerPipelineProvider(
 ): (modelId: string) => Promise<AsrPipeline> {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
-  const pending = new Map<number, { resolve: (text: string) => void; reject: (err: Error) => void }>();
+  const pending = new Map<
+    number,
+    { resolve: (text: string) => void; reject: (err: Error) => void }
+  >();
   // 串行队列(用户拍板「一个个跑」):promise 链,前一条推理(成败皆可)结束才发下一条。
   let queue: Promise<unknown> = Promise.resolve();
 
-  const spawn = spawnWorker ?? ((): WhisperWorkerLike => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Worker } = require("node:worker_threads") as typeof import("node:worker_threads");
-    // requireBase:worker 内解析 @xenova/transformers 的锚 —— sidecar 运行时 cwd =
-    // sidecar/frontend(node_modules 就位);dev 下 cwd = frontend(同样可解析)。
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const path = require("node:path") as typeof import("node:path");
-    return new Worker(WHISPER_WORKER_SOURCE, {
-      eval: true,
-      workerData: { requireBase: path.join(process.cwd(), "package.json") },
-    }) as unknown as WhisperWorkerLike;
-  });
+  const spawn = spawnWorker ?? (() => createWhisperWorker());
 
   function failAllPending(err: Error): void {
     for (const [, p] of pending) p.reject(err);
@@ -452,11 +535,33 @@ export function createWorkerPipelineProvider(
       if (!p) return;
       pending.delete(msg.id);
       if (msg.ok && typeof msg.text === "string") p.resolve(msg.text);
-      else p.reject(new MultimodalGenerationError(`whisper-local(worker)推理失败: ${msg.error ?? "未知错误"}`));
+      else
+        p.reject(
+          new MultimodalGenerationError(
+            `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
+            {
+              reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN",
+              retryable: true,
+            },
+          ),
+        );
     });
-    w.on("error", (err) => failAllPending(new MultimodalGenerationError(`whisper-local worker 崩溃: ${err.message}`)));
+    w.on("error", (err) =>
+      failAllPending(
+        new MultimodalGenerationError(
+          `whisper-local worker 崩溃: ${err.message}`,
+          { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
+        ),
+      ),
+    );
     w.on("exit", (code) => {
-      if (code !== 0) failAllPending(new MultimodalGenerationError(`whisper-local worker 非 0 退出 (code=${code})`));
+      if (code !== 0)
+        failAllPending(
+          new MultimodalGenerationError(
+            `whisper-local worker 非 0 退出 (code=${code})`,
+            { reference: "LOCAL_WHISPER_WORKER_EXIT", retryable: true },
+          ),
+        );
       else worker = null;
     });
     worker = w;
@@ -475,7 +580,13 @@ export function createWorkerPipelineProvider(
           // 注意 subarray 场景:确保传整段 —— decode 产的是独立 buffer,直接转移安全。
           const buf = audio.buffer as ArrayBuffer;
           w.postMessage(
-            { id, modelId, cacheDir: defaultCacheDir(), pcm: buf, options: options ?? {} },
+            {
+              id,
+              modelId,
+              cacheDir: defaultCacheDir(),
+              pcm: buf,
+              options: options ?? {},
+            },
             [buf],
           );
         });

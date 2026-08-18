@@ -67,7 +67,13 @@ const moduleResolver = resolve(
   "frontend",
   "creatoros-module-resolver.cjs",
 );
-for (const required of [runtimeNode, browsersDir, piBundle, hyperframesCli]) {
+for (const required of [
+  runtimeNode,
+  browsersDir,
+  piBundle,
+  hyperframesCli,
+  moduleResolver,
+]) {
   if (!existsSync(required)) {
     throw new Error(`[closure-rat] smoke 输入缺失:${required}`);
   }
@@ -136,6 +142,55 @@ if (png.length < 16) {
   throw new Error("[closure-rat] sharp native smoke 失败");
 }
 record("local-ai-native");
+
+// T-886：主进程能 import 不代表 worker_threads 能消费主线程注册的 resolver。
+// 使用随包 Node 拉起真实 worker，只做模块加载（不下载模型、不跑推理），锁定生产消费边界。
+const whisperWorkerSource = `
+const { parentPort, workerData } = require("node:worker_threads");
+const { createRequire } = require("node:module");
+const req = createRequire(workerData.requireBase);
+process.env.CREATOROS_RUNTIME_ROOT = workerData.runtimeRoot;
+req(workerData.moduleResolverPath);
+const loaded = req("@xenova/transformers");
+parentPort.postMessage(typeof loaded.pipeline === "function" ? "ok" : "missing-pipeline");
+`;
+const whisperWorkerProbe = `
+const { Worker } = require("node:worker_threads");
+const worker = new Worker(${JSON.stringify(whisperWorkerSource)}, {
+  eval: true,
+  workerData: {
+    requireBase: ${JSON.stringify(resolve(runtimeRoot, "frontend", "package.json"))},
+    moduleResolverPath: ${JSON.stringify(moduleResolver)},
+    runtimeRoot: ${JSON.stringify(runtimeRoot)},
+  },
+});
+const timer = setTimeout(() => { console.error("worker-timeout"); process.exit(2); }, 30000);
+worker.once("message", async (message) => {
+  clearTimeout(timer);
+  await worker.terminate();
+  if (message !== "ok") process.exit(3);
+  console.log("whisper-worker-module-load");
+});
+worker.once("error", (error) => { clearTimeout(timer); console.error(error); process.exit(4); });
+`;
+const whisperWorkerResult = spawnSync(smokeNode, ["-e", whisperWorkerProbe], {
+  encoding: "utf8",
+  env: {
+    PATH: process.env.PATH,
+    SystemRoot: process.env.SystemRoot,
+    CREATOROS_RUNTIME_ROOT: runtimeRoot,
+  },
+  timeout: 35_000,
+});
+if (
+  whisperWorkerResult.status !== 0 ||
+  !`${whisperWorkerResult.stdout}`.includes("whisper-worker-module-load")
+) {
+  throw new Error(
+    `[closure-rat] Whisper worker 模块加载 smoke 失败(status=${whisperWorkerResult.status})\n${whisperWorkerResult.stdout}${whisperWorkerResult.stderr}`,
+  );
+}
+record("whisper-worker-module-load");
 
 const pi = await import(pathToFileURL(piBundle).href);
 for (const name of [

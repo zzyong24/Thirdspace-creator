@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-886 | 根治 Windows 分层安装包本地 Whisper worker 无法加载模型【T-885 根因修复·用户明确要求·2026-08-18】 | ✅ 待办 | — | — | [T-885 诊断](docs/research/2026-08-18-asr-transcription-log-diagnosis.md)；[构建验收](orchestrator/T886-BUILD-VALIDATION.md)；复用 T-768 与 DEC-RUNTIME-053 | 让真实 Whisper worker 显式、安全地消费随包 `creatoros-module-resolver` 与同一 runtime root，保留传统开发态兼容；补脱敏阶段错误、真实 worker 回归和 Windows closure 安装包 smoke，禁止继续用主进程 import 假装本地 ASR 可用。 |
 | T-885 | 基于补充轮转日志继续定位 T-884 ASR 转写失败【用户补充证据·2026-08-18】 | ✅ 待办 | — | — | [T-884 初诊](docs/research/2026-08-18-asr-transcription-log-diagnosis.md)；复用 T-768/T-639/T-676 | 只读解密 `sidecar-2026-08-18-1.log.enc` 与重复的基础日志，合并同一次会话时间线，提取转写任务、阶段、provider/回退模式和首个错误；区分调用失败、任务未领取及回读映射问题，不重跑、不改配置、不写用户数据。 |
 | T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 解析用户提供的 `sidecar-2026-08-18.log.enc`，对齐同一次转写任务、输入媒体、ASR provider/模型、配置与错误链，区分密钥/权限、上游连接、媒体格式、运行时依赖、队列状态和回读映射；先只读，不重跑、不改配置、不改用户数据，给出可复现根因和是否属于代码缺陷。 |
 | T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) | 只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.yml` 的双平台矩阵并跟踪同一 run。不得夹带主工作区未提交渠道配置或 CLI 导出目录，不创建 tag/Release、不修改下载地址或放量配置。 |

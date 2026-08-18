@@ -216,6 +216,12 @@
       "what": "用户剔除 B-roll 再次只改页面候选，旧 editing plan、失败回退或旧渲染任务继续复活素材",
       "check": "pnpm --dir contract exec vitest run tests/modules/production.test.ts && pnpm --dir backend exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts",
       "onFail": "B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。"
+    },
+    {
+      "led": "LED-041",
+      "what": "Windows 分层包再次只验证主线程可加载 Xenova，而真实 Whisper worker 没有消费 resolver/runtime root",
+      "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts && pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts && node --test tools/windows-closure-rat/build-production-closure.test.mjs",
+      "onFail": "Whisper 分层消费门回归：生产 worker 必须显式加载随包 creatoros-module-resolver 并绑定同一 runtime root；传统 runtime 兼容；Windows closure 必须用随包 Node 启动真实 worker consumer，主进程 import 不能替代。"
     }
   ],
   "program_completion_required": false,

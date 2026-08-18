@@ -6962,6 +6962,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           logStage("error", {
             errorName:
               error instanceof Error ? error.name : "UnknownError",
+            errorCode:
+              error && typeof error === "object" && "code" in error
+                ? String(error.code)
+                : "unknown",
             totalDurationMs: Date.now() - totalStartedAt,
           });
           throw error;
