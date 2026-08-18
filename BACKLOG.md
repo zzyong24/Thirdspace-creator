@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | 🔨 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) | 只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.yml` 的双平台矩阵并跟踪同一 run。不得夹带主工作区未提交渠道配置或 CLI 导出目录，不创建 tag/Release、不修改下载地址或放量配置。 |
+| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) | 只提交并发布已通过验收的 B-roll 删除修复候选；冻结检查后将候选安全同步到 `main`，触发 `desktop-release.yml` 的双平台矩阵并跟踪同一 run。不得夹带主工作区未提交渠道配置或 CLI 导出目录，不创建 tag/Release、不修改下载地址或放量配置。 |
 | T-882 | 重新构建、安装并启动包含 T-881 B-roll 删除持久化修复的 CreatorOS 1.1.0 macOS 本地包【用户明确要求·2026-08-17】 | ✅ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md) | 只从已提交候选构建官方 macOS 本地验收包，完成版本一致性、打包测试、DMG 校验、安装替换与真实启动；不得夹带当前工作区两份渠道配置和未跟踪 CLI 导出目录，也不得在打包阶段修改产品代码或构建脚本。 |
 | T-881 | 根治用户从当前分镜删除 B-roll 后重新成片仍复用旧素材【用户真机截图·2026-08-17】 | ✅ 待办 | — | PASS:3ca89d336df7 | 复用 [T-703 SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md)；[前端旅程](orchestrator/T881-FRONTEND-JOURNEY.md) | 用户在已确认分镜中移除或替换 B-roll 后，这次编辑必须形成新的当前分镜真相并持久化；“按当前分镜重新生成”及后续渲染只能消费该版本，禁止从旧 render props、旧 editing plan revision、素材库存或恢复缓存把已删除素材重新带回。刷新页面仍应显示已删除状态，旧分镜与旧成片只作历史保留；用真实写入→回读→渲染任务输入测试覆盖删除、替换和并发旧任务不得覆盖新版本。 |
 | T-880 | 重新构建、安装并启动包含 T-879 时间线闭合修复的 CreatorOS 1.1.0 macOS 本地包【用户明确要求·2026-08-17】 | ✅ 待办 | — | — | 复用 [T-879 代码验收](orchestrator/T879-BUILD-VALIDATION.md) | 以已提交候选为唯一源码，按官方本地打包入口完成冻结检查、DMG 构建与校验，安装到 `/Applications/CreatorOS.app` 并真实启动；不得夹带当前工作区的渠道包元数据或其他未提交文件。 |
