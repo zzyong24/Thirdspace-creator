@@ -53,8 +53,8 @@
   ],
   "localTestBuild": {
     "artifactPath": "/Users/zyongzhu/Downloads/TC流量中心-1.1.0.dmg",
-    "artifactSizeBytes": 434634281,
-    "artifactSha256": "98b0d3dac6cd10db212fd39dc303832782b746f263e087631a296689326aeb26",
+    "artifactSizeBytes": 434641678,
+    "artifactSha256": "281bb05f316cf6175658a5c0d7863c818e6bf07d64684cdfe7ca34cc214db91b",
     "installedAppPath": "/Applications/TC流量中心.app",
     "bundleIdentifier": "com.creatoros.tcflowcenter",
     "codesign": "adhoc",
