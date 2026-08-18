@@ -13,6 +13,24 @@
 
 ---
 
+## LED-042 — 首屏固定取 100 条，不等于库里总共只有 100 条
+
+- **Date**: 2026-08-18 · **Stage**: BUILD · **Severity**: high · **Status**: rule
+- **WhatFailed**: 内容雷达真实账号已有超过 100 条对标内容，但左侧“全部内容”和列表头始终显示 100；
+  后续条目也没有入口读取。
+- **RootCause**: `intelligence.items.list` transport 已返回精确 `meta.total`，通用 typed client 只返回
+  `data` 并丢弃分页 meta；页面再用首屏 `items.length` 作为总数，而首屏 `pageSize` 恰好是 100。
+- **GuardRule**: 分页列表的“总数/共 N 条”必须消费服务端同一筛选查询的 `total`；当前页长度只能
+  表示“已显示”。有更多数据时必须暴露可继续读取的真实路径，禁止把 `limit`/`pageSize` 伪装成总量。
+- **GuardCheck**: `pnpm --dir contract exec vitest run tests/client.test.ts && pnpm --dir backend exec vitest
+  run src/modules/intelligence/intelligence.contract.test.ts && pnpm --dir frontend exec vitest run
+  src/features/intelligence/intelligence-workbench.test.tsx`（已登记进 `reconcile.config.json`）。
+- **Outcome(T+N)**: RED 分别得到 `requestListWithMeta is not a function` 与页面找不到“101 条真实内容”；
+  GREEN 为 contract 3/3、真实 persistence/transport 3/3、页面 48/48，且可读取第 101 条。
+- **Ref**: T-887、DEC-RADAR-048、PAT-002、PAT-004。
+
+---
+
 ## LED-041 — 主线程加载了分层 resolver，不等于 worker_threads 能解析 local-ai
 
 - **Date**: 2026-08-18 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule

@@ -222,6 +222,12 @@
       "what": "Windows 分层包再次只验证主线程可加载 Xenova，而真实 Whisper worker 没有消费 resolver/runtime root",
       "check": "pnpm --dir ai-worker exec vitest run src/runtime/multimodal-whisper-local.test.ts && pnpm --dir frontend exec vitest run src/server/activation/managed-asr.server.test.ts && node --test tools/windows-closure-rat/build-production-closure.test.mjs",
       "onFail": "Whisper 分层消费门回归：生产 worker 必须显式加载随包 creatoros-module-resolver 并绑定同一 runtime root；传统 runtime 兼容；Windows closure 必须用随包 Node 启动真实 worker consumer，主进程 import 不能替代。"
+    },
+    {
+      "led": "LED-042",
+      "what": "内容雷达再次把首屏 pageSize/items.length 当成全部内容总量，100 条后的真实作品不可见",
+      "check": "pnpm --dir contract exec vitest run tests/client.test.ts && pnpm --dir backend exec vitest run src/modules/intelligence/intelligence.contract.test.ts && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx",
+      "onFail": "分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。"
     }
   ],
   "program_completion_required": false,

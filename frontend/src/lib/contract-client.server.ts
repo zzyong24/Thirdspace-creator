@@ -1,6 +1,12 @@
 import "server-only";
-import { ENDPOINTS, createClient } from "@creatoros/contract";
-import type { RequestContext } from "@creatoros/contract";
+import {
+  ENDPOINTS,
+  createClient,
+  requestListWithMeta,
+  type Endpoint,
+  type EndpointInput,
+  type RequestContext,
+} from "@creatoros/contract";
 import { compositeTransport } from "@/server/persistence-client";
 import { canonicalDataset } from "@/fixtures/canonical";
 
@@ -16,6 +22,14 @@ import { canonicalDataset } from "@/fixtures/canonical";
 // calls `createServerClient(ctx)`.
 export function createServerClient(ctx: RequestContext) {
   return createClient(ENDPOINTS, compositeTransport, ctx);
+}
+
+export function requestServerListWithMeta<E extends Endpoint>(
+  ctx: RequestContext,
+  endpoint: E,
+  input: EndpointInput<E>,
+) {
+  return requestListWithMeta(compositeTransport, endpoint, input, ctx);
 }
 
 // The canonical seeded ctx — every fixture-backed page and the Projects seed are

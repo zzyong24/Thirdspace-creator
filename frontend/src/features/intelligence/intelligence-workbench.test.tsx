@@ -189,7 +189,13 @@ function api(): RadarApi {
       },
       events: [],
     }),
-    listItems: vi.fn().mockResolvedValue([]),
+    listItems: vi.fn().mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 100,
+      total: 0,
+      hasMore: false,
+    }),
     getItem: vi.fn().mockResolvedValue(detail),
     enqueueTranscript: vi.fn().mockResolvedValue({}),
     uploadTranscript: vi.fn().mockResolvedValue(detail.transcript),
@@ -207,6 +213,63 @@ afterEach(() => {
 });
 
 describe("T-482 内容雷达工作区", () => {
+  it("显示服务端真实总量，并允许继续读取 100 条之后的内容", async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) => ({
+      item: {
+        ...detail.item,
+        id: `item-${index + 1}`,
+        title: `真实作品 ${index + 1}`,
+      },
+      latestMetric: detail.metrics[0]!,
+      sourceCount: 1,
+    }));
+    const secondPageRow = {
+      item: {
+        ...detail.item,
+        id: "item-101",
+        title: "第 101 条真实作品",
+      },
+      latestMetric: detail.metrics[0]!,
+      sourceCount: 1,
+    };
+    const stub = api();
+    vi.mocked(stub.listItems).mockResolvedValue({
+      items: [secondPageRow],
+      page: 2,
+      pageSize: 100,
+      total: 101,
+      hasMore: false,
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={firstPage}
+        initialTotal={101}
+        initialDetail={{ ...detail, item: firstPage[0]!.item }}
+        api={stub}
+      />,
+    );
+
+    expect(screen.getByText("101 条真实内容")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: /继续加载.*已显示 100.*共 101/ }),
+    );
+    await waitFor(() =>
+      expect(stub.listItems).toHaveBeenCalledWith({
+        accountId: "account-1",
+        page: 2,
+        pageSize: 100,
+        sort: "published_desc",
+      }),
+    );
+    expect(await screen.findAllByText("第 101 条真实作品")).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", { name: /继续加载/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("[T-537] 登录型来源默认 owner，切换 collector 清空旧验证并只提交 collectorAccountId", async () => {
     const stub = api();
     render(
@@ -570,9 +633,18 @@ describe("T-482 内容雷达工作区", () => {
     };
     const stub = api();
     vi.mocked(stub.listItems).mockImplementation(async (input) => {
-      if (input.sourceId === "source-darkhorse") return [darkhorseRow];
-      if (input.collectionId === "collection-darkhorse") return [darkhorseRow];
-      return [favoritesRow, darkhorseRow];
+      const items =
+        input.sourceId === "source-darkhorse" ||
+        input.collectionId === "collection-darkhorse"
+          ? [darkhorseRow]
+          : [favoritesRow, darkhorseRow];
+      return {
+        items,
+        page: input.page ?? 1,
+        pageSize: input.pageSize ?? 100,
+        total: items.length,
+        hasMore: false,
+      };
     });
     vi.mocked(stub.getItem).mockImplementation(async (itemId) => ({
       ...detail,
@@ -599,6 +671,8 @@ describe("T-482 内容雷达工作区", () => {
       expect(stub.listItems).toHaveBeenCalledWith({
         accountId: "account-1",
         collectionId: "collection-darkhorse",
+        page: 1,
+        pageSize: 100,
         sort: "published_desc",
       }),
     );
@@ -615,6 +689,8 @@ describe("T-482 内容雷达工作区", () => {
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
         collectionId: "collection-darkhorse",
+        page: 1,
+        pageSize: 100,
         sourceId: "source-darkhorse",
         sort: "published_desc",
       }),
@@ -624,6 +700,8 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
+        page: 1,
+        pageSize: 100,
         sort: "published_desc",
       }),
     );
@@ -1794,7 +1872,13 @@ describe("T-482 内容雷达工作区", () => {
       topicState: "not_generated" as const,
       progressState: "pending_transcript" as const,
     };
-    stub.listItems = vi.fn().mockResolvedValue([row]);
+    stub.listItems = vi.fn().mockImplementation(async (input) => ({
+      items: [row],
+      page: input.page ?? 1,
+      pageSize: input.pageSize ?? 100,
+      total: 1,
+      hasMore: false,
+    }));
     stub.getItem = vi.fn().mockResolvedValue(detail);
 
     render(
@@ -1814,6 +1898,8 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
+        page: 1,
+        pageSize: 100,
         sort: "published_desc",
         transcriptState: "extracted",
       }),
@@ -1826,6 +1912,8 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
+        page: 1,
+        pageSize: 100,
         sort: "published_desc",
         transcriptState: "extracted",
         topicState: "not_generated",
@@ -1839,6 +1927,8 @@ describe("T-482 内容雷达工作区", () => {
     await waitFor(() =>
       expect(stub.listItems).toHaveBeenLastCalledWith({
         accountId: "account-1",
+        page: 1,
+        pageSize: 100,
         sort: "collect_desc",
         transcriptState: "extracted",
         topicState: "not_generated",

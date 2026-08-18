@@ -21,7 +21,11 @@ import {
   Upload,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ErrorCode } from "@creatoros/contract";
+import {
+  ENDPOINTS,
+  ErrorCode,
+  requestListWithMeta,
+} from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
 import { Button } from "@/components/ui/button";
@@ -38,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { prepareTranscriptUpload } from "./intelligence-transcript-upload";
+import { createHttpTransport } from "@/lib/http-transport";
 
 export interface RadarCollection {
   id: string;
@@ -159,6 +164,14 @@ export interface RadarItemRow {
     | "awaiting_confirmation"
     | "converted"
     | "attention";
+}
+
+export interface RadarItemPage {
+  items: RadarItemRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+  hasMore: boolean;
 }
 
 export interface RadarItemDetail {
@@ -380,6 +393,8 @@ export interface RadarApi {
   }>;
   listItems(input: {
     accountId: string;
+    page?: number;
+    pageSize?: number;
     collectionId?: string;
     sourceId?: string;
     query?: string;
@@ -395,7 +410,7 @@ export interface RadarApi {
       | "awaiting_confirmation"
       | "converted"
       | "attention";
-  }): Promise<RadarItemRow[]>;
+  }): Promise<RadarItemPage>;
   getItem(itemId: string): Promise<RadarItemDetail>;
   enqueueTranscript(input: {
     itemId: string;
@@ -454,6 +469,8 @@ type RadarTranscriptState = NonNullable<
 type RadarTopicState = NonNullable<
   Parameters<RadarApi["listItems"]>[0]["topicState"]
 >;
+
+const radarTransport = createHttpTransport();
 
 function defaultApi(): RadarApi {
   return {
@@ -556,26 +573,41 @@ function defaultApi(): RadarApi {
         query: undefined,
         body: undefined,
       }) as Promise<{ run: RadarRun; events: RadarRunEvent[] }>,
-    listItems: (input) =>
-      client.listIntelligenceItems({
-        params: undefined,
-        query: {
-          accountId: input.accountId,
-          page: 1,
-          pageSize: 100,
-          sort: input.sort,
-          ...(input.collectionId
-            ? { collectionId: input.collectionId }
-            : {}),
-          ...(input.sourceId ? { sourceId: input.sourceId } : {}),
-          ...(input.query ? { query: input.query } : {}),
-          ...(input.transcriptState
-            ? { transcriptState: input.transcriptState }
-            : {}),
-          ...(input.topicState ? { topicState: input.topicState } : {}),
+    listItems: async (input) => {
+      const page = input.page ?? 1;
+      const pageSize = input.pageSize ?? 100;
+      const result = await requestListWithMeta(
+        radarTransport,
+        ENDPOINTS.listIntelligenceItems,
+        {
+          params: undefined,
+          query: {
+            accountId: input.accountId,
+            page,
+            pageSize,
+            sort: input.sort,
+            ...(input.collectionId
+              ? { collectionId: input.collectionId }
+              : {}),
+            ...(input.sourceId ? { sourceId: input.sourceId } : {}),
+            ...(input.query ? { query: input.query } : {}),
+            ...(input.transcriptState
+              ? { transcriptState: input.transcriptState }
+              : {}),
+            ...(input.topicState ? { topicState: input.topicState } : {}),
+          },
+          body: undefined,
         },
-        body: undefined,
-      }) as unknown as Promise<RadarItemRow[]>,
+      );
+      return {
+        items: result.data as RadarItemRow[],
+        page: result.meta.page,
+        pageSize: result.meta.pageSize,
+        total: result.meta.total,
+        hasMore:
+          result.meta.page * result.meta.pageSize < result.meta.total,
+      };
+    },
     getItem: (itemId) =>
       client.getIntelligenceItem({
         params: { itemId },
@@ -789,6 +821,7 @@ function transcriptSaveErrorMessage(error: unknown): string {
 }
 
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
+const ITEM_PAGE_SIZE = 100;
 const MIN_DETAIL_WIDTH = 320;
 // 结构化主请求 + 文本兜底各自最多 90 秒，再给队列/网络回显留出余量。
 const TOPIC_PREVIEW_POLL_TIMEOUT_MS = 240_000;
@@ -948,6 +981,7 @@ export function IntelligenceWorkbench({
   accountId,
   workspace,
   items,
+  initialTotal = items.length,
   initialDetail,
   positioningVersionId = null,
   api: injectedApi,
@@ -955,6 +989,7 @@ export function IntelligenceWorkbench({
   accountId: string;
   workspace: RadarWorkspace;
   items: RadarItemRow[];
+  initialTotal?: number;
   initialDetail: RadarItemDetail | null;
   positioningVersionId?: string | null;
   api?: RadarApi;
@@ -976,6 +1011,9 @@ export function IntelligenceWorkbench({
     React.useState<RadarTopicState | null>(null);
   const [scopedItems, setScopedItems] =
     React.useState<RadarItemRow[]>(items);
+  const [scopedPage, setScopedPage] = React.useState(1);
+  const [scopedTotal, setScopedTotal] = React.useState(initialTotal);
+  const [allItemsTotal, setAllItemsTotal] = React.useState(initialTotal);
   const [itemsLoading, setItemsLoading] = React.useState(false);
   const [detail, setDetail] = React.useState<RadarItemDetail | null>(
     initialDetail,
@@ -1223,9 +1261,12 @@ export function IntelligenceWorkbench({
   }, [query, visibleItems]);
 
   const settleItemRows = React.useCallback(
-    async (rows: RadarItemRow[], requestId: number) => {
+    async (pageResult: RadarItemPage, requestId: number) => {
       if (itemScopeRequestId.current !== requestId) return;
+      const rows = pageResult.items;
       setScopedItems(rows);
+      setScopedPage(pageResult.page);
+      setScopedTotal(pageResult.total);
       const selectedId = activeDetailItemId.current;
       if (selectedId && rows.some((row) => row.item.id === selectedId)) {
         return;
@@ -1258,6 +1299,8 @@ export function IntelligenceWorkbench({
         collectionId: selectedCollectionId,
         sourceId: selectedSourceId,
         items: visibleItems,
+        page: scopedPage,
+        total: scopedTotal,
         detail,
       };
 
@@ -1268,8 +1311,10 @@ export function IntelligenceWorkbench({
       setNotice(null);
 
       try {
-        const nextItems = await api.listItems({
+        const nextPage = await api.listItems({
           accountId,
+          page: 1,
+          pageSize: ITEM_PAGE_SIZE,
           ...(collectionId ? { collectionId } : {}),
           ...(sourceId ? { sourceId } : {}),
           ...(query.trim() ? { query: query.trim() } : {}),
@@ -1278,12 +1323,23 @@ export function IntelligenceWorkbench({
           ...(topicState ? { topicState } : {}),
         });
         if (itemScopeRequestId.current !== requestId) return;
-        await settleItemRows(nextItems, requestId);
+        await settleItemRows(nextPage, requestId);
+        if (
+          !collectionId &&
+          !sourceId &&
+          !query.trim() &&
+          !transcriptState &&
+          !topicState
+        ) {
+          setAllItemsTotal(nextPage.total);
+        }
       } catch {
         if (itemScopeRequestId.current !== requestId) return;
         setSelectedCollectionId(previous.collectionId);
         setSelectedSourceId(previous.sourceId);
         setScopedItems(previous.items);
+        setScopedPage(previous.page);
+        setScopedTotal(previous.total);
         setDetail(previous.detail);
         setNotice("内容筛选失败，已保留切换前的结果，请稍后重试。");
       } finally {
@@ -1299,6 +1355,8 @@ export function IntelligenceWorkbench({
       selectedCollectionId,
       selectedSourceId,
       query,
+      scopedPage,
+      scopedTotal,
       settleItemRows,
       sort,
       topicState,
@@ -1319,6 +1377,8 @@ export function IntelligenceWorkbench({
         transcriptState,
         topicState,
         items: visibleItems,
+        page: scopedPage,
+        total: scopedTotal,
         detail,
       };
       const requestId = itemScopeRequestId.current + 1;
@@ -1329,8 +1389,10 @@ export function IntelligenceWorkbench({
       setItemsLoading(true);
       setNotice(null);
       try {
-        const nextItems = await api.listItems({
+        const nextPage = await api.listItems({
           accountId,
+          page: 1,
+          pageSize: ITEM_PAGE_SIZE,
           ...(selectedCollectionId
             ? { collectionId: selectedCollectionId }
             : {}),
@@ -1342,7 +1404,16 @@ export function IntelligenceWorkbench({
             : {}),
           ...(next.topicState ? { topicState: next.topicState } : {}),
         });
-        await settleItemRows(nextItems, requestId);
+        await settleItemRows(nextPage, requestId);
+        if (
+          !selectedCollectionId &&
+          !selectedSourceId &&
+          !next.query.trim() &&
+          !next.transcriptState &&
+          !next.topicState
+        ) {
+          setAllItemsTotal(nextPage.total);
+        }
         return true;
       } catch {
         if (itemScopeRequestId.current === requestId) {
@@ -1350,6 +1421,8 @@ export function IntelligenceWorkbench({
           setTranscriptState(previous.transcriptState);
           setTopicState(previous.topicState);
           setScopedItems(previous.items);
+          setScopedPage(previous.page);
+          setScopedTotal(previous.total);
           setDetail(previous.detail);
           setNotice("筛选失败，已保留原结果，请稍后重试。");
         }
@@ -1366,6 +1439,8 @@ export function IntelligenceWorkbench({
       detail,
       selectedCollectionId,
       selectedSourceId,
+      scopedPage,
+      scopedTotal,
       settleItemRows,
       sort,
       topicState,
@@ -1373,6 +1448,68 @@ export function IntelligenceWorkbench({
       visibleItems,
     ],
   );
+
+  const loadMoreItems = React.useCallback(async () => {
+    if (itemsLoading || scopedItems.length >= scopedTotal) return;
+    const requestId = itemScopeRequestId.current;
+    setItemsLoading(true);
+    setNotice(null);
+    try {
+      const nextPage = await api.listItems({
+        accountId,
+        page: scopedPage + 1,
+        pageSize: ITEM_PAGE_SIZE,
+        ...(selectedCollectionId
+          ? { collectionId: selectedCollectionId }
+          : {}),
+        ...(selectedSourceId ? { sourceId: selectedSourceId } : {}),
+        ...(query.trim() ? { query: query.trim() } : {}),
+        sort,
+        ...(transcriptState ? { transcriptState } : {}),
+        ...(topicState ? { topicState } : {}),
+      });
+      if (itemScopeRequestId.current !== requestId) return;
+      setScopedItems((current) => {
+        const seen = new Set(current.map((row) => row.item.id));
+        return [
+          ...current,
+          ...nextPage.items.filter((row) => !seen.has(row.item.id)),
+        ];
+      });
+      setScopedPage(nextPage.page);
+      setScopedTotal(nextPage.total);
+      if (
+        !selectedCollectionId &&
+        !selectedSourceId &&
+        !query.trim() &&
+        !transcriptState &&
+        !topicState
+      ) {
+        setAllItemsTotal(nextPage.total);
+      }
+    } catch {
+      if (itemScopeRequestId.current === requestId) {
+        setNotice("后续内容读取失败，已保留当前结果，请稍后继续加载。");
+      }
+    } finally {
+      if (itemScopeRequestId.current === requestId) {
+        setItemsLoading(false);
+      }
+    }
+  }, [
+    accountId,
+    api,
+    itemsLoading,
+    query,
+    scopedItems.length,
+    scopedPage,
+    scopedTotal,
+    selectedCollectionId,
+    selectedSourceId,
+    sort,
+    topicState,
+    transcriptState,
+  ]);
 
   const updateSearch = React.useCallback(
     (nextQuery: string) => {
@@ -2165,7 +2302,7 @@ export function IntelligenceWorkbench({
             >
               <span>全部内容</span>
               <span className="text-xs text-muted-foreground">
-                {items.length}
+                {allItemsTotal}
               </span>
             </button>
             {workspace.collections.map((collection) => {
@@ -2389,7 +2526,7 @@ export function IntelligenceWorkbench({
             <span className="shrink-0 text-xs text-muted-foreground">
               {itemsLoading
                 ? "正在切换…"
-                : `${filteredItems.length} 条真实内容`}
+                : `${scopedTotal} 条真实内容`}
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
@@ -2433,6 +2570,21 @@ export function IntelligenceWorkbench({
                 ))}
               </div>
             )}
+            {filteredItems.length > 0 && scopedItems.length < scopedTotal ? (
+              <div className="flex justify-center py-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={itemsLoading}
+                  onClick={() => void loadMoreItems()}
+                  className="rounded-full px-5 text-xs"
+                >
+                  {itemsLoading
+                    ? "正在读取后续内容…"
+                    : `继续加载（已显示 ${scopedItems.length} / 共 ${scopedTotal}）`}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </main>
 

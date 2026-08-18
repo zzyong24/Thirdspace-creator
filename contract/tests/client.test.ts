@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
 import { defineEndpoint } from "../src/endpoints";
-import { createClient } from "../src/client";
+import { createClient, requestListWithMeta } from "../src/client";
 import type { Transport } from "../src/transport";
 
 const getThing = defineEndpoint({
@@ -38,5 +38,31 @@ describe("createClient", () => {
     await expect(
       client.getThing({ params: { thingId: "t1" }, query: undefined, body: undefined }),
     ).rejects.toThrow();
+  });
+
+  it("保留列表响应中的真实总量，而不是只返回当前页长度", async () => {
+    const listThings = defineEndpoint({
+      id: "things.list",
+      method: "GET",
+      path: "/things",
+      query: z.object({ page: z.number(), pageSize: z.number() }),
+      response: z.object({ id: z.string(), name: z.string() }),
+      isList: true,
+    });
+    const transport: Transport = {
+      request: vi.fn(async () => ({
+        data: [{ id: "t1", name: "当前页" }],
+        meta: { requestId: "r-list", page: 1, pageSize: 100, total: 675 },
+      })),
+    };
+
+    const result = await requestListWithMeta(transport, listThings, {
+      params: undefined,
+      query: { page: 1, pageSize: 100 },
+      body: undefined,
+    });
+
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(675);
   });
 });

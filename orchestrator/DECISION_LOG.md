@@ -4,6 +4,33 @@ Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages
 
 ---
 
+## DEC-RADAR-048 (2026-08-18) — 分页只控制传输批次，内容雷达总数必须消费 contract meta
+
+**来源**：用户真机内容雷达明显存在超过 100 条对标内容，但“全部内容”和列表头均固定显示 100。
+代码确认后端 `intelligence.items.list` 已返回过滤后的真实 `meta.total`，页面却通过会丢弃 meta 的
+普通 client 只拿首批 100 行，并用 `items.length` 冒充总量。
+
+**决策**：
+
+1. 保留既有 `intelligence.items.list` 契约、账号归属守卫与服务端精确计数，不新增第二套 count 接口；
+   contract client 增加通用 `requestListWithMeta`，供需要分页真相的页面显式消费同一 envelope。
+2. 内容雷达首批继续按 100 条传输，左侧“全部内容”和当前筛选结果显示服务端真实 `total`；超过首批
+   时提供“继续加载”，明确显示“已显示 X / 共 Y”，逐页追加并按真实 item ID 去重。
+3. 来源、分类、搜索、逐字稿状态、选题状态与排序切换都回到第 1 页，并使用该次服务端查询返回的
+   `total`；分页限制不得再成为任何可见总量。
+4. 测试使用与运行时相同的持久服务/transport 建 101 条记录，断言第一页 100、第二页 1、两页总量
+   均为 101；组件同时验证真实总数与第 101 条可继续读取。
+
+**Rationale**：PAT-004 CF-001/003/004 命中：分页元数据跨前后端，继续复用共享 contract envelope，
+不在页面私造 count；PAT-002 RF-002 命中：用户留存内容的计数必须由真实持久读模型证明，组件桩不能
+代替服务层回归。`Asset-Ref: PAT-002`。
+
+**影响范围**：T-887、contract list client、内容雷达首屏/筛选/加载更多、intelligence contract 回归。
+
+**Status**：Confirmed（用户 2026-08-18 明确要求显示实际内容数量）。
+
+---
+
 ## DEC-RUNTIME-054 (2026-08-18) — Whisper worker 显式消费分层 local-ai 解析契约
 
 **来源**：T-885 用户 Windows 轮转日志确认 4 个不同作品均成功取流、抽出 2.86～3.62 MB 音频并

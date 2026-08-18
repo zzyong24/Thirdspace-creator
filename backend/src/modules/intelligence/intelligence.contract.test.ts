@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { createDb } from "@creatoros/backend";
-import { ENDPOINTS, type RequestContext } from "@creatoros/contract";
+import {
+  ENDPOINTS,
+  listEnvelope,
+  type RequestContext,
+} from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
 import {
@@ -156,6 +160,71 @@ describe("T-482 内容雷达 transport 契约", () => {
       expect(parsed.source.type).toBe("rss");
       expect(parsed.run?.status).toBe("queued");
       expect(parsed.task?.kind).toBe("source_sync");
+    } finally {
+      await client.close();
+    }
+  });
+
+  it("items.list 的 total 不受 100 条分页上限截断", async () => {
+    const { db, client } = await createDb();
+    let serial = 0;
+    const deps = {
+      now: () => "2026-08-18T12:00:00.000Z",
+      nextId: (prefix: string) => `${prefix}-${++serial}`,
+    };
+    const tasks = createPersistentTaskService(db, deps);
+    const service = createIntelligenceService(db, { ...deps, tasks });
+    const transport = createIntelligenceTransport(() => service);
+    try {
+      for (let index = 0; index < 101; index += 1) {
+        await service.seedItemForTest(ctx, {
+          canonicalUrl: `https://www.douyin.com/video/page-${index}`,
+          externalId: `page-${index}`,
+          title: `真实作品 ${index + 1}`,
+        });
+      }
+
+      const first = listEnvelope(
+        ENDPOINTS.listIntelligenceItems.response,
+      ).parse(
+        await transport.request(
+          ENDPOINTS.listIntelligenceItems,
+          {
+            params: undefined,
+            query: {
+              accountId: ctx.accountId!,
+              page: 1,
+              pageSize: 100,
+              sort: "published_desc",
+            },
+            body: undefined,
+          },
+          ctx,
+        ),
+      );
+      const second = listEnvelope(
+        ENDPOINTS.listIntelligenceItems.response,
+      ).parse(
+        await transport.request(
+          ENDPOINTS.listIntelligenceItems,
+          {
+            params: undefined,
+            query: {
+              accountId: ctx.accountId!,
+              page: 2,
+              pageSize: 100,
+              sort: "published_desc",
+            },
+            body: undefined,
+          },
+          ctx,
+        ),
+      );
+
+      expect(first.data).toHaveLength(100);
+      expect(first.meta.total).toBe(101);
+      expect(second.data).toHaveLength(1);
+      expect(second.meta.total).toBe(101);
     } finally {
       await client.close();
     }
