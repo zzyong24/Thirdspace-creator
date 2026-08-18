@@ -44,6 +44,44 @@ describe("渠道包清单", () => {
     expect(() => validatePackageManifest({ ...fixture, surprise: true })).toThrow();
   });
 
+  it("允许新渠道只提供品牌名，不再要求渠道专属业务链接", () => {
+    expect(() =>
+      validatePackageManifest({
+        ...fixture,
+        growthExpectations: { brandName: "TC流量中心" },
+      }),
+    ).not.toThrow();
+  });
+
+  it("允许渠道在清单中自定义侧栏配色，并拒绝未知字段或 CSS 注入", () => {
+    const sidebar = {
+      background: "#062f35",
+      surfaceSubtle: "#0a4248",
+      foreground: "#e4f2f2",
+      mutedForeground: "#a9c2c4",
+      border: "#174c52",
+      brand: "#20b7a5",
+      brandHover: "#1aa493",
+      brandSoft: "#0d5b56",
+      brandForeground: "#ffffff",
+    };
+    expect(() =>
+      validatePackageManifest({ ...fixture, theme: { sidebar } }),
+    ).not.toThrow();
+    expect(() =>
+      validatePackageManifest({
+        ...fixture,
+        theme: { sidebar: { ...sidebar, surprise: "#ffffff" } },
+      }),
+    ).toThrow(/未知字段/);
+    expect(() =>
+      validatePackageManifest({
+        ...fixture,
+        theme: { sidebar: { ...sidebar, background: "red;display:none" } },
+      }),
+    ).toThrow(/颜色/);
+  });
+
   it("生成隔离的包身份和更新命名空间", () => {
     const plan = compilePackagePlan(fixture, { target: "macos-aarch64" });
     expect(plan.packageIdentity.appIdentifier).toBe("com.example.testbrand");
@@ -84,5 +122,32 @@ describe("渠道包清单", () => {
     expect(() =>
       readPackageBrandBuildEnv({ ...input, iconSha256: "0".repeat(64) }),
     ).toThrow(/图标摘要/);
+  });
+
+  it("只在渠道显式配置时把侧栏主题编译进 WebView", () => {
+    const themed = {
+      ...fixture,
+      theme: {
+        sidebar: {
+          background: "#062f35",
+          surfaceSubtle: "#0a4248",
+          foreground: "#e4f2f2",
+          mutedForeground: "#a9c2c4",
+          border: "#174c52",
+          brand: "#20b7a5",
+          brandHover: "#1aa493",
+          brandSoft: "#0d5b56",
+          brandForeground: "#ffffff",
+        },
+      },
+    };
+    const env = compilePackageBrandBuildEnv({
+      manifest: themed,
+      iconBytes: Buffer.from([0, 1, 2, 3]),
+      iconMimeType: "image/x-icon",
+    });
+    expect(JSON.parse(env.NEXT_PUBLIC_CREATOROS_PACKAGE_SIDEBAR_THEME)).toEqual(
+      themed.theme.sidebar,
+    );
   });
 });

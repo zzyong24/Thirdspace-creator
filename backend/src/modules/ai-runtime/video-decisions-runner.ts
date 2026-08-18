@@ -385,6 +385,34 @@ export function buildVideoDirectionSchema(input: {
         });
       }
     });
+
+    // 主视觉图必须覆盖完整口播时间线。此前只禁止重叠，却允许 card 结束后到下一段
+    // 素材开始前留下数秒空洞；模板只能看到“本场稍后有素材”，于是人物提前缩到侧栏。
+    // 这里仅检查物理覆盖，不替模型选择内容：无真实素材时由模型使用已有信息卡，或
+    // 明确给出 talking_head beat，渲染器再落实人物轻推镜兜底。
+    const orderedBeats = [...direction.beatGraph].sort(
+      (a, b) => a.startSec - b.startSec,
+    );
+    const firstSceneStart = input.scenes[0]?.startSec ?? 0;
+    const lastSceneEnd = input.scenes.at(-1)?.endSec ?? firstSceneStart;
+    let cursor = firstSceneStart;
+    orderedBeats.forEach((beat, index) => {
+      if (beat.startSec > cursor + DIRECTOR_OPENING_GAP_TOLERANCE_SEC) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["beatGraph", index, "startSec"],
+          message: `direction 必须完整覆盖口播时间线，${cursor.toFixed(2)}s-${beat.startSec.toFixed(2)}s 存在无主视觉空洞`,
+        });
+      }
+      cursor = Math.max(cursor, beat.endSec);
+    });
+    if (cursor < lastSceneEnd - DIRECTOR_OPENING_GAP_TOLERANCE_SEC) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["beatGraph"],
+        message: `direction 必须完整覆盖口播时间线，尾部 ${cursor.toFixed(2)}s-${lastSceneEnd.toFixed(2)}s 没有主视觉`,
+      });
+    }
   });
 }
 
@@ -1314,10 +1342,12 @@ function issueKey(issue: VideoDirectorIssue): string {
   return `${issue.sceneIdx}:${issue.severity}:${issue.code}:${issue.message}`;
 }
 
-const DIRECTOR_MAX_VISUAL_GAP_SEC = 7;
 const DIRECTOR_CARD_VISIBLE_SEC = 5;
 const DIRECTOR_OPENING_WINDOW_SEC = 3;
 const DIRECTOR_OPENING_GAP_TOLERANCE_SEC = 0.12;
+// 与已验证的开场帧边界容差共用同一物理门：任何场内空洞都不能比一次正常
+// 切镜误差更长。没有真实素材时由口播原文信息卡/Scene Graph 连续补位。
+const DIRECTOR_MAX_VISUAL_GAP_SEC = DIRECTOR_OPENING_GAP_TOLERANCE_SEC;
 
 function requiredInformationBeatCount(durationSec: number): number {
   if (durationSec > 24) return 4;
@@ -1485,8 +1515,8 @@ export function auditVideoDecisions(input: {
     const lacksInformationBeats =
       sceneBroll.length === 0 && sceneCards.length < requiredBeats;
     if (
-      scene.endSec - scene.startSec > 8 &&
-      (uncoveredSec > DIRECTOR_MAX_VISUAL_GAP_SEC || lacksInformationBeats)
+      uncoveredSec > DIRECTOR_MAX_VISUAL_GAP_SEC ||
+      lacksInformationBeats
     ) {
       issues.push({
         sceneIdx,
@@ -1600,11 +1630,35 @@ function compactDirectorCardText(text: string): string {
     : `${chars.slice(0, 27).join("")}…`;
 }
 
+/**
+ * 模型可以决定更具体的 motion / Scene Graph；当它遗漏或高级计划因协议、可溯门被剔除时，
+ * 这里仅按已由模型选定的卡片 kind 落现有渲染配方，保证不会从“高级动效失败”退成静止画面。
+ * SEMANTIC_BOUNDARY_ALLOW: 映射只选择既有排版动画，不判断文案语义、不创造视觉关系。
+ */
+function defaultContentMotion(
+  kind: VideoInfoCard["kind"],
+): NonNullable<VideoInfoCard["motion"]> {
+  switch (kind) {
+    case "stat":
+      return "counter";
+    case "compare":
+      return "bar";
+    case "list":
+    case "code":
+      return "reveal";
+    case "quote":
+    case "image":
+      return "plain";
+  }
+}
+
 function groundedCard(input: {
   scene: VideoScene;
   at: number;
   srtLines: readonly SrtLine[];
-}): Pick<VideoInfoCard, "kind" | "content" | "motion"> {
+}): Pick<VideoInfoCard, "kind" | "content"> & {
+  motion: NonNullable<VideoInfoCard["motion"]>;
+} {
   const sceneLines = input.srtLines.filter(
     (item) =>
       item.startSec >= input.scene.startSec - 0.05 &&
@@ -1672,7 +1726,11 @@ export function autoRepairVideoDecisions(input: {
       Math.max(scene.startSec, scene.endSec - 0.01),
     );
     if (Math.abs(at - card.at) > 0.01) repairs.push("信息卡插点已收口到所属场景");
-    return [{ ...card, at }];
+    const motion = card.motion ?? defaultContentMotion(card.kind);
+    if (!card.motion && !card.visualPlan) {
+      repairs.push("未声明高级动效的卡片已落实基础内容动效");
+    }
+    return [{ ...card, at, motion }];
   });
 
   let broll = input.broll.flatMap((pick) => {
@@ -2046,7 +2104,9 @@ export async function decideCards(
       content,
       at,
       ...(anchoredLine ? { srtLineIndex: anchoredLine.index } : {}),
-      ...(c.motion ? { motion: c.motion } : {}),
+      // 新候选必须持久化一个真实可执行的动画意图。高级 Scene Graph 失败只影响
+      // 丰富度，不允许把卡片退成静止画面；历史弱模型仍由卡片 kind 落既有配方。
+      motion: c.motion ?? defaultContentMotion(c.kind),
       ...(traceableVisualPlan ? { visualPlan: traceableVisualPlan } : {}),
     });
   }
@@ -2725,6 +2785,9 @@ export async function closeDirectorReview(
     // 落到界面。让任务明确失败，下一次运行重新产完整候选。
     throw new Error("总导演自动修片后时间线仍未闭合，已停止生成半套候选");
   }
+  if (current.cards.some((card) => !card.motion && !card.visualPlan)) {
+    throw new Error("内容动效计划缺失，已停止把静止信息卡晋级为可渲染候选");
+  }
   const repeatedSubjectiveIssues =
     lastReview.status === "needs_attention"
       ? lastReview.issues.filter((issue) => issue.severity === "blocking")
@@ -2758,7 +2821,7 @@ export async function closeDirectorReview(
       status: "ready",
       summary:
         fallbackCardsOnly
-          ? "信息卡模型未留下可溯候选；本次仅使用基础信息卡补位，未生成 Scene Graph 内容动效，建议重新生成分镜。"
+          ? "信息卡模型未留下可溯候选；系统已按口播原文补齐基础内容动效，高级 Scene Graph 未通过时也不会退成静止画面。"
           : !hasDirection
           ? "时间线安全可预览，但整片运动方向未生成；本次没有把确定性排版冒充 AI 编导结论。"
           : repairs.length > 0
@@ -3304,12 +3367,17 @@ export async function runVideoDecisions(
       call,
     );
     const directorReview = directorClosure.directorReview;
-    const contentMotionCards = cards.filter((card) => card.visualPlan?.scene).length;
-    const basicFallbackCards = Math.max(0, directorClosure.cards.length - cards.length);
+    const sceneGraphCards = directorClosure.cards.filter(
+      (card) => card.visualPlan?.scene,
+    ).length;
+    const basicMotionCards = Math.max(
+      0,
+      directorClosure.cards.length - sceneGraphCards,
+    );
     await step(
       4,
       `${VIDEO_DECISION_STEPS[4]}:${directorReview.direction ? "通过" : "安全降级（运动方向未生成）"}` +
-        `（内容动效 ${contentMotionCards} 张 / 基础补位 ${basicFallbackCards} 张）` +
+        `（内容动效 ${directorClosure.cards.length} 张：Scene Graph ${sceneGraphCards} / 基础动效 ${basicMotionCards}）` +
         (directorClosure.repairs.length > 0
           ? `；自动修片 ${directorClosure.repairs.length} 类 / 复审 ${directorClosure.reviewPasses} 次`
           : ""),

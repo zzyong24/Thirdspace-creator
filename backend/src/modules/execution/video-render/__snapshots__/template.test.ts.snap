@@ -149,30 +149,33 @@ html,body{width:1920px;height:1080px;background:#08090a;overflow:hidden;font-fam
 <div id="glow" class="clip" data-start="0.00" data-duration="60.00" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
 <div id="thAmbient" class="clip talking-head-ambient-static" aria-hidden="true" data-start="0" data-duration="60.00" data-track-index="899" style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:radial-gradient(ellipse at 50% 42%,rgba(94,106,210,.24) 0%,rgba(24,27,48,.18) 38%,transparent 68%),linear-gradient(135deg,#151827 0%,#0d0f18 48%,#171324 100%);"></div>
 <video id="th" class="clip" src="media/th.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="60.00" data-track-index="900" style="position:absolute;left:1330px;top:138px;width:500px;height:804px;border-radius:18px;object-fit:contain;background:#08090a;z-index:900;border:2px solid #5e6ad2;box-shadow:0 18px 60px rgba(0,0,0,.5),0 0 0 6px #5e6ad21f;"></video>
-<div id="c10" class="clip" data-start="2.00" data-duration="6.00" data-track-index="11" style="position:absolute;left:150px;top:290px;width:1000px;height:420px;z-index:420;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#eab30824,#191a1b 62%);border:1px solid #eab30877;border-radius:24px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;padding:38px 44px;min-width:920px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><div style="position:absolute;right:-50px;top:-90px;width:300px;height:300px;border-radius:50%;background:#eab30816"></div><div style="position:relative;color:#d0d6e0;font-size:30px;font-weight:700;letter-spacing:.02em">从想法到能用</div><div style="position:relative;display:flex;align-items:baseline;gap:16px;margin-top:16px"><span style="position:relative;color:#eab308;font-size:132px;font-weight:850;letter-spacing:-.055em;line-height:.9"><span class="stat-val">2–3</span></span><span style="color:#d0d6e0;font-size:44px;font-weight:650">小时</span></div></div>
-<div id="br12clear" class="clip main-visual-clear" data-start="9.00" data-duration="21.00" data-track-index="13" style="position:absolute;left:0px;top:0px;z-index:699;width:1330px;height:1080px;background:#08090a;"></div>
-<div id="br12" class="clip" data-start="9.00" data-duration="21.00" data-track-index="14" style="position:absolute;left:50px;top:190px;z-index:700;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;padding:10px;width:1250px;height:760px;"><div style="height:740px"></div></div>
-<video id="br12v" class="clip" src="media/rec_site_click.mp4" aria-label="真实录屏 · 能点的网站" muted preload="auto" data-start="9.00" data-duration="21.00" data-track-index="15" style="position:absolute;left:60px;top:200px;width:1230px;height:740px;z-index:701;border-radius:8px;object-fit:contain;background:#08090a;border:1px solid rgba(255,255,255,0.08);"></video>
-<div id="ann16" class="clip main-visual-annotation" data-start="10.00" data-duration="2.00" data-track-index="17" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">最值钱的是想法本身</span></div>
-<div id="ann18" class="clip main-visual-annotation" data-start="12.00" data-duration="3.00" data-track-index="19" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">验证清单 · 能打开 · 能点击 · 能使用</span></div>
-<div id="ann20" class="clip main-visual-annotation" data-start="15.00" data-duration="3.00" data-track-index="21" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">原来 / 现在</span></div>
-<div id="ann22" class="clip main-visual-annotation" data-start="18.00" data-duration="3.00" data-track-index="23" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">两条命令</span></div>
-<div id="ann24" class="clip main-visual-annotation" data-start="21.00" data-duration="9.00" data-track-index="25" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">发现页</span></div>
-<div id="sp26" class="clip" data-start="30.00" data-duration="8.00" data-track-index="27" style="position:absolute;left:120px;top:470px;width:504px;text-align:center;background:#5e6ad214;border:1px solid #5e6ad299;border-radius:12px;padding:24px 0;"><div style="color:#5e6ad2;font-size:30px;font-weight:800">想法</div><div style="color:#62666d;font-size:16px;margin-top:6px">起点</div></div>
-<div id="spl28" class="clip" data-start="30.00" data-duration="8.00" data-track-index="29" style="position:absolute;left:636px;top:520px;width:60px;height:3px;background:#27a644;transform-origin:left center;"></div>
-<div id="sp30" class="clip" data-start="30.00" data-duration="8.00" data-track-index="31" style="position:absolute;left:708px;top:470px;width:504px;text-align:center;background:#27a64414;border:1px solid #27a64499;border-radius:12px;padding:24px 0;"><div style="color:#27a644;font-size:30px;font-weight:800">Codex</div><div style="color:#62666d;font-size:16px;margin-top:6px">出 UI 稿</div></div>
-<div id="spl32" class="clip" data-start="30.00" data-duration="8.00" data-track-index="33" style="position:absolute;left:1224px;top:520px;width:60px;height:3px;background:#27a644;transform-origin:left center;"></div>
-<div id="sp34" class="clip" data-start="30.00" data-duration="8.00" data-track-index="35" style="position:absolute;left:1296px;top:470px;width:504px;text-align:center;background:#eab30814;border:1px solid #eab30899;border-radius:12px;padding:24px 0;"><div style="color:#eab308;font-size:30px;font-weight:800">能用的网站</div><div style="color:#62666d;font-size:16px;margin-top:6px">成品</div></div>
-<div id="br36clear" class="clip main-visual-clear" data-start="31.00" data-duration="5.00" data-track-index="37" style="position:absolute;left:0px;top:0px;z-index:699;width:1330px;height:1080px;background:#08090a;"></div>
-<div id="br36" class="clip" data-start="31.00" data-duration="5.00" data-track-index="38" style="position:absolute;left:50px;top:190px;z-index:700;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;padding:10px;width:1250px;height:760px;"><div style="height:740px"></div></div>
-<video id="br36v" class="clip" src="media/rec_codex_ui.mp4" aria-label="Codex 出 UI" muted preload="auto" data-start="31.00" data-duration="5.00" data-track-index="39" style="position:absolute;left:60px;top:200px;width:1230px;height:740px;z-index:701;border-radius:8px;object-fit:contain;background:#08090a;border:1px solid rgba(255,255,255,0.08);"></video>
-<div id="cmp40" class="clip" data-start="38.00" data-duration="8.00" data-track-index="41" style="position:absolute;top:430px;left:180px;width:640px;background:#191a1b;border:1px solid #8a8f9866;border-radius:12px;padding:22px 26px;"><div style="color:#8a8f98;font-size:26px;font-weight:800">传统链路</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 设计稿</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 前端</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 对需求</div></div>
-<div id="cmp42" class="clip" data-start="38.00" data-duration="8.00" data-track-index="43" style="position:absolute;top:430px;right:180px;width:640px;background:#191a1b;border:1px solid #27a64466;border-radius:12px;padding:22px 26px;"><div style="color:#27a644;font-size:26px;font-weight:800">Agent 链路</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 说清楚想法</div></div>
-<div id="cmpv44" class="clip" data-start="38.00" data-duration="8.00" data-track-index="45" style="position:absolute;top:470px;left:0;right:0;text-align:center;color:#8a8f98;font-size:34px;font-weight:800;">VS</div>
-<div id="st46" class="clip" data-start="46.00" data-duration="6.00" data-track-index="47" style="position:absolute;left:440px;top:400px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">1</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">把想法说清楚</span><span style="color:#62666d;font-size:18px;font-weight:500;margin-left:14px">一段话</span></div>
-<div id="st48" class="clip" data-start="46.00" data-duration="6.00" data-track-index="49" style="position:absolute;left:440px;top:508px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">2</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">丢给 Agent</span></div>
-<div id="st50" class="clip" data-start="46.00" data-duration="6.00" data-track-index="51" style="position:absolute;left:440px;top:616px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">3</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">当晚验收</span><span style="color:#62666d;font-size:18px;font-weight:500;margin-left:14px">能点能用</span></div>
-<div id="c52" class="clip" data-start="53.00" data-duration="7.00" data-track-index="53" style="position:absolute;left:150px;top:290px;width:1000px;height:420px;z-index:420;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#5e6ad214);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#5e6ad228;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">一步步把想法落地</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#5e6ad2;margin-top:24px"></span></div>
+<div id="gap10" class="clip landscape-gap-content" data-start="0.00" data-duration="2.00" data-track-index="11" style="position:absolute;left:120px;top:168px;width:1060px;height:650px;z-index:720;overflow:hidden;display:flex;align-items:center;"><div style="position:relative;width:100%;padding:54px 62px;border-left:5px solid #828fff;background:linear-gradient(90deg,#5e6ad218,transparent 78%)"><i class="gap-orbit" aria-hidden="true" style="position:absolute;right:76px;top:42px;width:150px;height:150px;border:2px solid #828fff;border-radius:50%;opacity:.22"></i><i class="gap-rail" aria-hidden="true" style="position:absolute;left:62px;right:90px;bottom:32px;height:5px;border-radius:999px;background:linear-gradient(90deg,#828fff,#27a644);transform-origin:left center"></i><span class="gap-copy" data-text-safe style="position:relative;z-index:2;display:block;max-width:850px;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:820;letter-spacing:-.03em;text-shadow:0 8px 28px #000b">一个下班路上的想法</span></div></div>
+<div id="gap12" class="clip landscape-gap-content" data-start="8.00" data-duration="0.50" data-track-index="13" style="position:absolute;left:120px;top:168px;width:1060px;height:650px;z-index:720;overflow:hidden;display:flex;align-items:center;"><div style="position:relative;width:100%;padding:54px 62px;border-left:5px solid #828fff;background:linear-gradient(90deg,#5e6ad218,transparent 78%)"><i class="gap-orbit" aria-hidden="true" style="position:absolute;right:76px;top:42px;width:150px;height:150px;border:2px solid #828fff;border-radius:50%;opacity:.22"></i><i class="gap-rail" aria-hidden="true" style="position:absolute;left:62px;right:90px;bottom:32px;height:5px;border-radius:999px;background:linear-gradient(90deg,#828fff,#27a644);transform-origin:left center"></i><span class="gap-copy" data-text-safe style="position:relative;z-index:2;display:block;max-width:850px;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:820;letter-spacing:-.03em;text-shadow:0 8px 28px #000b">我没写代码也没画图</span></div></div>
+<div id="gap14" class="clip landscape-gap-content" data-start="52.00" data-duration="1.00" data-track-index="15" style="position:absolute;left:120px;top:168px;width:1060px;height:650px;z-index:720;overflow:hidden;display:flex;align-items:center;"><div style="position:relative;width:100%;padding:54px 62px;border-left:5px solid #828fff;background:linear-gradient(90deg,#5e6ad218,transparent 78%)"><i class="gap-orbit" aria-hidden="true" style="position:absolute;right:76px;top:42px;width:150px;height:150px;border:2px solid #828fff;border-radius:50%;opacity:.22"></i><i class="gap-rail" aria-hidden="true" style="position:absolute;left:62px;right:90px;bottom:32px;height:5px;border-radius:999px;background:linear-gradient(90deg,#828fff,#27a644);transform-origin:left center"></i><span class="gap-copy" data-text-safe style="position:relative;z-index:2;display:block;max-width:850px;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:820;letter-spacing:-.03em;text-shadow:0 8px 28px #000b">我没写代码也没画图</span></div></div>
+<div id="c16" class="clip" data-start="2.00" data-duration="6.00" data-track-index="17" style="position:absolute;left:150px;top:290px;width:1000px;height:420px;z-index:420;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#eab30824,#191a1b 62%);border:1px solid #eab30877;border-radius:24px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;padding:38px 44px;min-width:920px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><div style="position:absolute;right:-50px;top:-90px;width:300px;height:300px;border-radius:50%;background:#eab30816"></div><div style="position:relative;color:#d0d6e0;font-size:30px;font-weight:700;letter-spacing:.02em">从想法到能用</div><div style="position:relative;display:flex;align-items:baseline;gap:16px;margin-top:16px"><span style="position:relative;color:#eab308;font-size:132px;font-weight:850;letter-spacing:-.055em;line-height:.9"><span class="stat-val">2–3</span></span><span style="color:#d0d6e0;font-size:44px;font-weight:650">小时</span></div></div>
+<div id="br18clear" class="clip main-visual-clear" data-start="9.00" data-duration="21.00" data-track-index="19" style="position:absolute;left:0px;top:0px;z-index:699;width:1330px;height:1080px;background:#08090a;"></div>
+<div id="br18" class="clip" data-start="9.00" data-duration="21.00" data-track-index="20" style="position:absolute;left:50px;top:190px;z-index:700;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;padding:10px;width:1250px;height:760px;"><div style="height:740px"></div></div>
+<video id="br18v" class="clip" src="media/rec_site_click.mp4" aria-label="真实录屏 · 能点的网站" muted preload="auto" data-start="9.00" data-duration="21.00" data-track-index="21" style="position:absolute;left:60px;top:200px;width:1230px;height:740px;z-index:701;border-radius:8px;object-fit:contain;background:#08090a;border:1px solid rgba(255,255,255,0.08);"></video>
+<div id="ann22" class="clip main-visual-annotation" data-start="10.00" data-duration="2.00" data-track-index="23" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">最值钱的是想法本身</span></div>
+<div id="ann24" class="clip main-visual-annotation" data-start="12.00" data-duration="3.00" data-track-index="25" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">验证清单 · 能打开 · 能点击 · 能使用</span></div>
+<div id="ann26" class="clip main-visual-annotation" data-start="15.00" data-duration="3.00" data-track-index="27" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">原来 / 现在</span></div>
+<div id="ann28" class="clip main-visual-annotation" data-start="18.00" data-duration="3.00" data-track-index="29" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">两条命令</span></div>
+<div id="ann30" class="clip main-visual-annotation" data-start="21.00" data-duration="9.00" data-track-index="31" style="position:absolute;left:50px;top:112px;z-index:760;width:820px;height:58px;border-radius:12px;background:#191a1bf2;border:1px solid #5e6ad266;box-shadow:0 8px 24px #0008;padding:0 20px;display:flex;align-items:center;overflow:hidden;"><span data-text-safe style="display:block;width:100%;color:#f7f8f8;font-size:28px;line-height:1;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">发现页</span></div>
+<div id="sp32" class="clip" data-start="30.00" data-duration="8.00" data-track-index="33" style="position:absolute;left:120px;top:470px;width:504px;text-align:center;background:#5e6ad214;border:1px solid #5e6ad299;border-radius:12px;padding:24px 0;"><div style="color:#5e6ad2;font-size:30px;font-weight:800">想法</div><div style="color:#62666d;font-size:16px;margin-top:6px">起点</div></div>
+<div id="spl34" class="clip" data-start="30.00" data-duration="8.00" data-track-index="35" style="position:absolute;left:636px;top:520px;width:60px;height:3px;background:#27a644;transform-origin:left center;"></div>
+<div id="sp36" class="clip" data-start="30.00" data-duration="8.00" data-track-index="37" style="position:absolute;left:708px;top:470px;width:504px;text-align:center;background:#27a64414;border:1px solid #27a64499;border-radius:12px;padding:24px 0;"><div style="color:#27a644;font-size:30px;font-weight:800">Codex</div><div style="color:#62666d;font-size:16px;margin-top:6px">出 UI 稿</div></div>
+<div id="spl38" class="clip" data-start="30.00" data-duration="8.00" data-track-index="39" style="position:absolute;left:1224px;top:520px;width:60px;height:3px;background:#27a644;transform-origin:left center;"></div>
+<div id="sp40" class="clip" data-start="30.00" data-duration="8.00" data-track-index="41" style="position:absolute;left:1296px;top:470px;width:504px;text-align:center;background:#eab30814;border:1px solid #eab30899;border-radius:12px;padding:24px 0;"><div style="color:#eab308;font-size:30px;font-weight:800">能用的网站</div><div style="color:#62666d;font-size:16px;margin-top:6px">成品</div></div>
+<div id="br42clear" class="clip main-visual-clear" data-start="31.00" data-duration="5.00" data-track-index="43" style="position:absolute;left:0px;top:0px;z-index:699;width:1330px;height:1080px;background:#08090a;"></div>
+<div id="br42" class="clip" data-start="31.00" data-duration="5.00" data-track-index="44" style="position:absolute;left:50px;top:190px;z-index:700;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:rgba(0,0,0,.4) 0 2px 4px;padding:10px;width:1250px;height:760px;"><div style="height:740px"></div></div>
+<video id="br42v" class="clip" src="media/rec_codex_ui.mp4" aria-label="Codex 出 UI" muted preload="auto" data-start="31.00" data-duration="5.00" data-track-index="45" style="position:absolute;left:60px;top:200px;width:1230px;height:740px;z-index:701;border-radius:8px;object-fit:contain;background:#08090a;border:1px solid rgba(255,255,255,0.08);"></video>
+<div id="cmp46" class="clip" data-start="38.00" data-duration="8.00" data-track-index="47" style="position:absolute;top:430px;left:180px;width:640px;background:#191a1b;border:1px solid #8a8f9866;border-radius:12px;padding:22px 26px;"><div style="color:#8a8f98;font-size:26px;font-weight:800">传统链路</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 设计稿</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 前端</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 对需求</div></div>
+<div id="cmp48" class="clip" data-start="38.00" data-duration="8.00" data-track-index="49" style="position:absolute;top:430px;right:180px;width:640px;background:#191a1b;border:1px solid #27a64466;border-radius:12px;padding:22px 26px;"><div style="color:#27a644;font-size:26px;font-weight:800">Agent 链路</div><div style="color:#d0d6e0;font-size:22px;font-weight:600;margin-top:10px">· 说清楚想法</div></div>
+<div id="cmpv50" class="clip" data-start="38.00" data-duration="8.00" data-track-index="51" style="position:absolute;top:470px;left:0;right:0;text-align:center;color:#8a8f98;font-size:34px;font-weight:800;">VS</div>
+<div id="st52" class="clip" data-start="46.00" data-duration="6.00" data-track-index="53" style="position:absolute;left:440px;top:400px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">1</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">把想法说清楚</span><span style="color:#62666d;font-size:18px;font-weight:500;margin-left:14px">一段话</span></div>
+<div id="st54" class="clip" data-start="46.00" data-duration="6.00" data-track-index="55" style="position:absolute;left:440px;top:508px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">2</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">丢给 Agent</span></div>
+<div id="st56" class="clip" data-start="46.00" data-duration="6.00" data-track-index="57" style="position:absolute;left:440px;top:616px;width:1100px;background:#191a1b;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 24px;display:flex;align-items:center;"><span style="width:44px;height:44px;border-radius:22px;background:#5e6ad222;color:#828fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex:none;margin-right:18px">3</span><span style="color:#f7f8f8;font-size:28px;font-weight:700">当晚验收</span><span style="color:#62666d;font-size:18px;font-weight:500;margin-left:14px">能点能用</span></div>
+<div id="c58" class="clip" data-start="53.00" data-duration="7.00" data-track-index="59" style="position:absolute;left:150px;top:290px;width:1000px;height:420px;z-index:420;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#5e6ad214);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#5e6ad228;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">一步步把想法落地</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#5e6ad2;margin-top:24px"></span></div>
 <div id="cap0" class="clip" data-start="0.00" data-duration="2.48" data-track-index="950" style="position:absolute;left:0;right:0;bottom:56px;text-align:center;z-index:950;padding:0 120px;"><div class="caption-shell" style="display:inline-flex;max-width:1500px;flex-direction:column;align-items:center;background:rgba(8,9,10,.68);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:12px 28px;box-shadow:0 10px 36px rgba(0,0,0,.42);backdrop-filter:blur(8px)"><div class="caption-cn" style="color:#f7f8f8;font-size:38px;line-height:1.22;font-weight:800;letter-spacing:.01em;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.72);text-wrap:balance">一个下班路上的想法</div><div class="caption-en" style="color:#d0d6e0;font-size:24px;line-height:1.3;font-weight:600;margin-top:8px;letter-spacing:.005em;text-wrap:balance">An idea on the way home</div></div></div>
 <div id="cap1" class="clip" data-start="2.50" data-duration="2.70" data-track-index="950" style="position:absolute;left:0;right:0;bottom:56px;text-align:center;z-index:950;padding:0 120px;"><div class="caption-shell" style="display:inline-flex;max-width:1500px;flex-direction:column;align-items:center;background:rgba(8,9,10,.68);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:12px 28px;box-shadow:0 10px 36px rgba(0,0,0,.42);backdrop-filter:blur(8px)"><div class="caption-cn" style="color:#f7f8f8;font-size:38px;line-height:1.22;font-weight:800;letter-spacing:.01em;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.72);text-wrap:balance">两三个小时它就能用了</div></div></div>
 <div id="cap2" class="clip" data-start="5.30" data-duration="2.70" data-track-index="950" style="position:absolute;left:0;right:0;bottom:56px;text-align:center;z-index:950;padding:0 120px;"><div class="caption-shell" style="display:inline-flex;max-width:1500px;flex-direction:column;align-items:center;background:rgba(8,9,10,.68);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:12px 28px;box-shadow:0 10px 36px rgba(0,0,0,.42);backdrop-filter:blur(8px)"><div class="caption-cn" style="color:#f7f8f8;font-size:38px;line-height:1.22;font-weight:800;letter-spacing:.01em;text-shadow:0 2px 4px #000,0 0 14px rgba(0,0,0,.72);text-wrap:balance">我没写代码也没画图</div><div class="caption-en" style="color:#d0d6e0;font-size:24px;line-height:1.3;font-weight:600;margin-top:8px;letter-spacing:.005em;text-wrap:balance">No code, no design</div></div></div>
@@ -181,74 +184,94 @@ html,body{width:1920px;height:1080px;background:#08090a;overflow:hidden;font-fam
 </div>
 <script>
 const tl = gsap.timeline({paused:true});
-tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},2.00);
-tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},2.00);
-tl.to("#c10",{autoAlpha:0,duration:.3},7.70);
-tl.set("#c10",{autoAlpha:0},8.00);
-tl.fromTo("#br12",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},9.00);
-tl.to("#br12",{autoAlpha:0,duration:.3},29.70);
-tl.set("#br12",{autoAlpha:0},30.00);
-tl.fromTo("#br12v",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},9.00);
-tl.to("#br12v",{autoAlpha:0,duration:.3},29.70);
-tl.set("#br12v",{autoAlpha:0},30.00);
-tl.fromTo("#ann16",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},10.00);
-tl.to("#ann16",{autoAlpha:0,duration:.3},11.70);
-tl.set("#ann16",{autoAlpha:0},12.00);
-tl.fromTo("#ann18",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},12.00);
-tl.to("#ann18",{autoAlpha:0,duration:.3},14.70);
-tl.set("#ann18",{autoAlpha:0},15.00);
-tl.fromTo("#ann20",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},15.00);
-tl.to("#ann20",{autoAlpha:0,duration:.3},17.70);
-tl.set("#ann20",{autoAlpha:0},18.00);
-tl.fromTo("#ann22",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},18.00);
-tl.to("#ann22",{autoAlpha:0,duration:.3},20.70);
-tl.set("#ann22",{autoAlpha:0},21.00);
-tl.fromTo("#ann24",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},21.00);
-tl.to("#ann24",{autoAlpha:0,duration:.3},29.70);
-tl.set("#ann24",{autoAlpha:0},30.00);
-tl.fromTo("#sp26",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},30.20);
-tl.to("#sp26",{autoAlpha:0,duration:.3},37.70);
-tl.set("#sp26",{autoAlpha:0},38.00);
-tl.fromTo("#spl28",{scaleX:0,autoAlpha:0},{scaleX:1,autoAlpha:1,duration:.5,ease:"power2.out"},30.50);
-tl.set("#spl28",{autoAlpha:0},38.00);
-tl.fromTo("#sp30",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.30);
-tl.to("#sp30",{autoAlpha:0,duration:.3},37.70);
-tl.set("#sp30",{autoAlpha:0},38.00);
-tl.fromTo("#spl32",{scaleX:0,autoAlpha:0},{scaleX:1,autoAlpha:1,duration:.5,ease:"power2.out"},31.60);
-tl.set("#spl32",{autoAlpha:0},38.00);
-tl.fromTo("#sp34",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},32.40);
-tl.to("#sp34",{autoAlpha:0,duration:.3},37.70);
-tl.set("#sp34",{autoAlpha:0},38.00);
-tl.fromTo("#br36",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.00);
-tl.to("#br36",{autoAlpha:0,duration:.3},35.70);
-tl.set("#br36",{autoAlpha:0},36.00);
-tl.fromTo("#br36v",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.00);
-tl.to("#br36v",{autoAlpha:0,duration:.3},35.70);
-tl.set("#br36v",{autoAlpha:0},36.00);
-tl.fromTo("#cmp40",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},38.29);
-tl.to("#cmp40",{autoAlpha:0,duration:.3},45.70);
-tl.set("#cmp40",{autoAlpha:0},46.00);
-tl.from("#cmp40",{x:-40,duration:.5},38.29);
-tl.fromTo("#cmp42",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},38.90);
-tl.to("#cmp42",{autoAlpha:0,duration:.3},45.70);
-tl.set("#cmp42",{autoAlpha:0},46.00);
-tl.from("#cmp42",{x:40,duration:.5},38.90);
-tl.fromTo("#cmpv44",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},39.40);
-tl.to("#cmpv44",{autoAlpha:0,duration:.3},45.70);
-tl.set("#cmpv44",{autoAlpha:0},46.00);
-tl.fromTo("#st46",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},46.30);
-tl.to("#st46",{autoAlpha:0,duration:.3},51.70);
-tl.set("#st46",{autoAlpha:0},52.00);
-tl.fromTo("#st48",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},47.50);
-tl.to("#st48",{autoAlpha:0,duration:.3},51.70);
-tl.set("#st48",{autoAlpha:0},52.00);
-tl.fromTo("#st50",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},48.70);
-tl.to("#st50",{autoAlpha:0,duration:.3},51.70);
-tl.set("#st50",{autoAlpha:0},52.00);
-tl.fromTo("#c52",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},53.00);
-tl.fromTo("#c52 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},53.00);
-tl.to("#c52",{autoAlpha:0,duration:.3},59.70);
-tl.set("#c52",{autoAlpha:0},60.00);
+tl.set("#th",{left:1330,top:138,width:500,height:804,borderRadius:18,zIndex:900,autoAlpha:1},0.00);
+tl.set("#th",{scale:1},0.00);
+tl.fromTo("#gap10",{autoAlpha:0},{autoAlpha:1,duration:.18,ease:"power1.out"},0.00);
+tl.fromTo("#gap10 .gap-copy",{autoAlpha:0,x:-28},{autoAlpha:1,x:0,duration:.52,ease:"power3.out"},0.00);
+tl.fromTo("#gap10 .gap-rail",{scaleX:0},{scaleX:1,duration:1.10,ease:"power2.out"},0.12);
+tl.to("#gap10 .gap-orbit",{rotation:110,scale:1.12,duration:2.00,ease:"none"},0.00);
+tl.to("#gap10",{autoAlpha:0,duration:.18},1.82);
+tl.set("#gap10",{autoAlpha:0},2.00);
+tl.fromTo("#gap12",{autoAlpha:0},{autoAlpha:1,duration:.18,ease:"power1.out"},8.00);
+tl.fromTo("#gap12 .gap-copy",{autoAlpha:0,x:-28},{autoAlpha:1,x:0,duration:.52,ease:"power3.out"},8.00);
+tl.fromTo("#gap12 .gap-rail",{scaleX:0},{scaleX:1,duration:0.35,ease:"power2.out"},8.11);
+tl.to("#gap12 .gap-orbit",{rotation:110,scale:1.12,duration:0.50,ease:"none"},8.00);
+tl.to("#gap12",{autoAlpha:0,duration:.18},8.32);
+tl.set("#gap12",{autoAlpha:0},8.50);
+tl.fromTo("#gap14",{autoAlpha:0},{autoAlpha:1,duration:.18,ease:"power1.out"},52.00);
+tl.fromTo("#gap14 .gap-copy",{autoAlpha:0,x:-28},{autoAlpha:1,x:0,duration:.52,ease:"power3.out"},52.00);
+tl.fromTo("#gap14 .gap-rail",{scaleX:0},{scaleX:1,duration:0.55,ease:"power2.out"},52.12);
+tl.to("#gap14 .gap-orbit",{rotation:110,scale:1.12,duration:1.00,ease:"none"},52.00);
+tl.to("#gap14",{autoAlpha:0,duration:.18},52.82);
+tl.set("#gap14",{autoAlpha:0},53.00);
+tl.fromTo("#c16",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},2.00);
+tl.fromTo("#c16 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},2.00);
+tl.to("#c16",{autoAlpha:0,duration:.3},7.70);
+tl.set("#c16",{autoAlpha:0},8.00);
+tl.fromTo("#br18",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},9.00);
+tl.to("#br18",{autoAlpha:0,duration:.3},29.70);
+tl.set("#br18",{autoAlpha:0},30.00);
+tl.fromTo("#br18v",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},9.00);
+tl.to("#br18v",{autoAlpha:0,duration:.3},29.70);
+tl.set("#br18v",{autoAlpha:0},30.00);
+tl.fromTo("#ann22",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},10.00);
+tl.to("#ann22",{autoAlpha:0,duration:.3},11.70);
+tl.set("#ann22",{autoAlpha:0},12.00);
+tl.fromTo("#ann24",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},12.00);
+tl.to("#ann24",{autoAlpha:0,duration:.3},14.70);
+tl.set("#ann24",{autoAlpha:0},15.00);
+tl.fromTo("#ann26",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},15.00);
+tl.to("#ann26",{autoAlpha:0,duration:.3},17.70);
+tl.set("#ann26",{autoAlpha:0},18.00);
+tl.fromTo("#ann28",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},18.00);
+tl.to("#ann28",{autoAlpha:0,duration:.3},20.70);
+tl.set("#ann28",{autoAlpha:0},21.00);
+tl.fromTo("#ann30",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},21.00);
+tl.to("#ann30",{autoAlpha:0,duration:.3},29.70);
+tl.set("#ann30",{autoAlpha:0},30.00);
+tl.fromTo("#sp32",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},30.20);
+tl.to("#sp32",{autoAlpha:0,duration:.3},37.70);
+tl.set("#sp32",{autoAlpha:0},38.00);
+tl.fromTo("#spl34",{scaleX:0,autoAlpha:0},{scaleX:1,autoAlpha:1,duration:.5,ease:"power2.out"},30.50);
+tl.set("#spl34",{autoAlpha:0},38.00);
+tl.fromTo("#sp36",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.30);
+tl.to("#sp36",{autoAlpha:0,duration:.3},37.70);
+tl.set("#sp36",{autoAlpha:0},38.00);
+tl.fromTo("#spl38",{scaleX:0,autoAlpha:0},{scaleX:1,autoAlpha:1,duration:.5,ease:"power2.out"},31.60);
+tl.set("#spl38",{autoAlpha:0},38.00);
+tl.fromTo("#sp40",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},32.40);
+tl.to("#sp40",{autoAlpha:0,duration:.3},37.70);
+tl.set("#sp40",{autoAlpha:0},38.00);
+tl.fromTo("#br42",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.00);
+tl.to("#br42",{autoAlpha:0,duration:.3},35.70);
+tl.set("#br42",{autoAlpha:0},36.00);
+tl.fromTo("#br42v",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},31.00);
+tl.to("#br42v",{autoAlpha:0,duration:.3},35.70);
+tl.set("#br42v",{autoAlpha:0},36.00);
+tl.fromTo("#cmp46",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},38.29);
+tl.to("#cmp46",{autoAlpha:0,duration:.3},45.70);
+tl.set("#cmp46",{autoAlpha:0},46.00);
+tl.from("#cmp46",{x:-40,duration:.5},38.29);
+tl.fromTo("#cmp48",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},38.90);
+tl.to("#cmp48",{autoAlpha:0,duration:.3},45.70);
+tl.set("#cmp48",{autoAlpha:0},46.00);
+tl.from("#cmp48",{x:40,duration:.5},38.90);
+tl.fromTo("#cmpv50",{autoAlpha:0,y:0,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},39.40);
+tl.to("#cmpv50",{autoAlpha:0,duration:.3},45.70);
+tl.set("#cmpv50",{autoAlpha:0},46.00);
+tl.fromTo("#st52",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},46.30);
+tl.to("#st52",{autoAlpha:0,duration:.3},51.70);
+tl.set("#st52",{autoAlpha:0},52.00);
+tl.fromTo("#st54",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},47.50);
+tl.to("#st54",{autoAlpha:0,duration:.3},51.70);
+tl.set("#st54",{autoAlpha:0},52.00);
+tl.fromTo("#st56",{autoAlpha:0,y:16,scale:1.04},{autoAlpha:1,y:0,scale:1,duration:.45,ease:"power3.out"},48.70);
+tl.to("#st56",{autoAlpha:0,duration:.3},51.70);
+tl.set("#st56",{autoAlpha:0},52.00);
+tl.fromTo("#c58",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},53.00);
+tl.fromTo("#c58 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},53.00);
+tl.to("#c58",{autoAlpha:0,duration:.3},59.70);
+tl.set("#c58",{autoAlpha:0},60.00);
 tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:60.00},0);
 window.__timelines = window.__timelines || {};
 window.__timelines["main"] = tl;

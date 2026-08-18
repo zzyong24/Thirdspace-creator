@@ -321,7 +321,7 @@ export function normalizeVideoCardsOutput(
 export const VIDEO_CARDS_TEMPLATE: PromptTemplate = {
   id: "video.cards",
   outputRecovery: "creative-partial",
-  version: "v6",
+  version: "v7",
   outputSchema: videoCardsSchema,
   tools: [],
   system:
@@ -363,14 +363,14 @@ visualPlan.parts 只放 1–6 个**口播原文片段**，不改写、不概括�
 - at(卡片出现时刻,秒)**必须等于某一 SRT 行的起秒**,且落在所属场景的时间范围内。
 - srtLineIndex 必须填写这张卡所服务的**第一句口播**对应的 SRT 行序号。不要按稿件计划时间、场景尾部或上一张卡结束时间估算；系统会以该行真实起秒为准。口播进入下一层、下一步骤或下一结论时，必须切到对应的新卡，不能让上一段卡片继续占画面。
 - sceneIdx 是上面场景列表的场景序号(从 0 起)。
-【动画意图 motion(每张卡按「5 问」选一个,让画面"长出来"而非"整块淡入弹出")】
+【动画意图 motion(每张卡必须按「5 问」选一个,让画面"长出来"而非"整块淡入弹出")】
   1. 有前后/多少/快慢**对比**? → bar(对比条从 0 生长)
   2. 有**数字/规模/速度**? → counter(数字从 0 递增到目标)
   3. **抽象概念可具象**(能画出来)? → metaphor(视觉隐喻/强揭示)
   4. 先**建立再否定/推翻**(说"别以为…其实不是")? → strike(元素先亮起像要用,再被划掉)
   5. **列举/步骤/接力**? → reveal(逐条依次揭示)
   6. 其它纯陈述 → plain(精炼进场)
-  motion 是**可选**产出:拿不准就不填,系统会按卡类型派生兜底(stat→counter / compare→bar / list·code→reveal / quote·image→plain)。别硬凑。
+  motion 是**必填**产出：即使高级 Scene Graph 拿不准，也必须先选择一个与卡片类型匹配的基础内容动效；高级计划失败只能降低丰富度，不能退成静止卡片。stat→counter / compare→bar / list·code→reveal / quote·image→plain。
 【信息密度与节拍(这是成片主视觉，不是角落提示)】
 - 先按 SRT 划分语义 beat，再决定卡片：8–14 秒且没有真实素材的场景安排 2 个不同信息节拍；14–24 秒安排 3 个；超过 24 秒最多 4 个。相邻节拍分别落在对应原句的 SRT 起秒，不能把 3 张卡堆在同一时刻。
 - 当场景明确出现可见对象及其状态变化（例如数量增减、路径受阻、时间被挤压、旧物退出、新物接管），至少一个信息节拍必须填写合法 scene；不能因为 Scene Graph 字段多就退回纯文字卡。只有内容本身确实没有可观察变化时才省略 scene。
@@ -748,7 +748,7 @@ export type VideoDirectorReviewOutput = z.infer<
 
 export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
   id: "video.director",
-  version: "v4",
+  version: "v5",
   outputSchema: videoDirectorReviewSchema,
   tools: [],
   system:
@@ -770,7 +770,7 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 【审核维度】
 1. 开场留人：从第一句起连续检查前三秒。优先用与开场语义直接相关的真实操作、结果、案例或证据素材承接；产品/教程类开场让素材成为主画面，人物是否保留只执行该素材已选定的 speakerMode。若没有合适真实素材，必须从第一句起使用可溯内容动效或信息卡。真人、字幕、品牌角标和纯背景都不算开场实质视觉，首个素材/卡片不能等到三秒以后才进入。
 2. 叙事连续：每个场景都承接口播，顺序和转折不跳跃；不能出现“素材很好但放错段”。
-3. 画面齐全：长场景不能只有黑底、角落小人物或大段无有效视觉；真人、用户素材、信息卡之间要轮换承接。
+3. 画面齐全：任何场景都不能只有黑底、角落小人物或无有效视觉；真人、用户素材、内容动效之间要连续轮换承接。没有真实素材时，必须根据本段口播语义使用可溯信息卡/Scene Graph 内容动效；人物主体轻推镜只是最后一层转场兜底，不能代替语义画面。
 4. 素材使用：用户上传素材若已进入本次时间线，就必须保留；语义或时长不完全匹配时，提出“缩短该镜头 + 由信息卡/同场素材接力”的内部修片建议，不得要求用户重选。
    - 同一真实素材全片只能出现一次；不能因为它同时被脚本点名、项目挂载或模型选中就跨场景重复使用。
    - 项目封面和既有成片不是 B-roll，绝不能进入时间线；封面只服务发布物料，不能拿来填充正文画面。
@@ -784,7 +784,8 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
   talking_head、card:<sceneIdx>:<ordinal> 或非 overlay 的 broll:<assetId>，不能编造引用。AI 已明确
   选择为辅助的 overlay 不进入 beatGraph，也不得驱动人物退出、缩放或回位。
 - 每拍必须写起止时间、起止状态、唯一主运动动词、舞台形态、进出转场和回位方式。相邻 beat 时间窗
-  不得重叠；新的主语必须先结束上一拍。没有 beat 的空隙由人物基底承接。
+  不得重叠且必须首尾连续覆盖完整口播，禁止留下没有 beat 的时间洞。没有真实素材时优先安排当前口播原文可溯的
+  card/Scene Graph 内容动效；确实没有可用内容卡时才使用 talking_head，并选择 focus/move 等轻推镜运动，不能用静止人物加空舞台冒充承接。
 - stageMode 只选 base/takeover。人物口播选 base；卡片、动态内容和非 overlay B-roll 成为主视觉时选 takeover。
   卡片与动态内容 takeover 时人物完全退出；B-roll takeover 时只执行候选已选定的 speakerMode：hidden
   表示退出，pip_bottom_left 表示人物仅作为左下角辅助层，不新增第二个 beat。不得自动居中缩小、发明

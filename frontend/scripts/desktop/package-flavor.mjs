@@ -4,7 +4,7 @@ import { dirname, relative, resolve } from "node:path";
 
 const TOP_LEVEL = new Set([
   "schema", "packageRef", "productRef", "projectKey", "expectedChannelRef",
-  "displayName", "binaryName", "appIdentifier", "keychainService",
+  "displayName", "theme", "binaryName", "appIdentifier", "keychainService",
   "windowsUpgradeCode", "icons", "growthExpectations", "updates",
 ]);
 const SECRET = /(secret|private.?key|password|token|api.?key|activation.?code)/i;
@@ -13,6 +13,11 @@ const LOCATOR = /^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$/;
 const IDENTIFIER = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9-]+){2,}$/;
 const HASH = /^[a-f0-9]{64}$/;
 const GUID = /^[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}$/;
+const COLOR = /^#[0-9a-fA-F]{6}$/;
+const SIDEBAR_THEME_KEYS = new Set([
+  "background", "surfaceSubtle", "foreground", "mutedForeground", "border",
+  "brand", "brandHover", "brandSoft", "brandForeground",
+]);
 
 function fail(message) { throw new Error(`[package-manifest] ${message}`); }
 function exactKeys(value, allowed, label) {
@@ -25,6 +30,16 @@ function exactKeys(value, allowed, label) {
 function text(value, label) {
   if (typeof value !== "string" || !value.trim() || value !== value.trim()) fail(`${label} 必须是非空且无首尾空白的字符串`);
   if (SECRET.test(value)) fail(`${label} 的值疑似包含秘密`);
+  return value;
+}
+function packageTheme(value, label = "theme") {
+  if (value === undefined) return undefined;
+  exactKeys(value, new Set(["sidebar"]), label);
+  exactKeys(value.sidebar, SIDEBAR_THEME_KEYS, `${label}.sidebar`);
+  for (const key of SIDEBAR_THEME_KEYS) {
+    const color = text(value.sidebar[key], `${label}.sidebar.${key}`);
+    if (!COLOR.test(color)) fail(`${label}.sidebar.${key} 必须是 6 位十六进制颜色`);
+  }
   return value;
 }
 function httpsOrigin(value, label) {
@@ -44,6 +59,7 @@ export function validatePackageManifest(input) {
   if (!REF.test(text(input.packageRef, "packageRef"))) fail("packageRef 格式非法");
   if (!LOCATOR.test(text(input.expectedChannelRef, "expectedChannelRef"))) fail("expectedChannelRef 必须是精确渠道 locator");
   text(input.displayName, "displayName");
+  packageTheme(input.theme);
   if (!/^[A-Za-z][A-Za-z0-9_-]{1,63}$/.test(text(input.binaryName, "binaryName"))) fail("binaryName 格式非法");
   if (!IDENTIFIER.test(text(input.appIdentifier, "appIdentifier"))) fail("appIdentifier 格式非法");
   if (!IDENTIFIER.test(text(input.keychainService, "keychainService"))) fail("keychainService 格式非法");
@@ -56,9 +72,17 @@ export function validatePackageManifest(input) {
     text(icon.path, `icons.${platform}.path`);
     if (!HASH.test(text(icon.sha256, `icons.${platform}.sha256`))) fail(`icons.${platform}.sha256 格式非法`);
   }
+  // 渠道包只固化离线品牌名；购买、续费、下载、反馈和客服链接统一由官方
+  // runtime 决定。旧渠道清单中仍可能保留这些字段，因此只做兼容性校验，
+  // 新渠道不得再把渠道专属外链写进包清单。
   const growthKeys = new Set(["brandName", "purchaseUrl", "renewalUrl", "downloadUrl", "bugFeedbackUrl", "channelSupportUrl"]);
+  const requiredGrowthKeys = new Set(["brandName"]);
   exactKeys(input.growthExpectations, growthKeys, "growthExpectations");
-  for (const key of growthKeys) {
+  for (const key of requiredGrowthKeys) {
+    text(input.growthExpectations[key], `growthExpectations.${key}`);
+  }
+  for (const key of [...growthKeys].filter((candidate) => !requiredGrowthKeys.has(candidate))) {
+    if (input.growthExpectations[key] === undefined) continue;
     const value = text(input.growthExpectations[key], `growthExpectations.${key}`);
     if (key !== "brandName") {
       const url = new URL(value);
@@ -93,6 +117,7 @@ export function compilePackageBrandBuildInput({ manifest, iconBytes, iconMimeTyp
   return {
     schema: "creatoros-package-brand-build-input/v1",
     packageRef: manifest.packageRef,
+    ...(manifest.theme ? { theme: manifest.theme } : {}),
     brandName: manifest.displayName,
     iconMimeType,
     iconBase64: iconBytes.toString("base64"),
@@ -107,6 +132,7 @@ export function readPackageBrandBuildEnv(input) {
   if (!REF.test(text(input.packageRef, "packageRef"))) {
     fail("WebView 品牌编译输入 packageRef 格式非法");
   }
+  const theme = packageTheme(input.theme, "WebView 品牌编译输入 theme");
   const brandName = text(input.brandName, "brandName");
   if (!["image/x-icon", "image/vnd.microsoft.icon"].includes(input.iconMimeType)) {
     fail("WebView 品牌编译输入只接受已校验的 ICO");
@@ -124,6 +150,11 @@ export function readPackageBrandBuildEnv(input) {
   }
   return {
     NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME: brandName,
+    ...(theme
+      ? {
+        NEXT_PUBLIC_CREATOROS_PACKAGE_SIDEBAR_THEME: JSON.stringify(theme.sidebar),
+      }
+      : {}),
     NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL:
       `data:${input.iconMimeType};base64,${input.iconBase64}`,
   };

@@ -87,6 +87,113 @@ export const PACKAGE_BRAND_NAME = cleanBrandName(
   process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_NAME,
 );
 
+const SIDEBAR_THEME_KEYS = [
+  "background",
+  "surfaceSubtle",
+  "foreground",
+  "mutedForeground",
+  "border",
+  "brand",
+  "brandHover",
+  "brandSoft",
+  "brandForeground",
+] as const;
+type PackageSidebarTheme = Readonly<Record<(typeof SIDEBAR_THEME_KEYS)[number], string>>;
+
+/**
+ * 包级离线主题只影响渠道壳侧栏，不参与 Growth、授权或业务链接。
+ * 公共代码不认识具体渠道；未声明或非法输入返回空对象，完整保留官方默认 CSS。
+ */
+export function resolvePackageSidebarThemeStyle(
+  raw: string | undefined,
+): Readonly<Record<string, string>> {
+  if (!raw?.trim()) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const record = parsed as Record<string, unknown>;
+    if (
+      Object.keys(record).length !== SIDEBAR_THEME_KEYS.length ||
+      SIDEBAR_THEME_KEYS.some(
+        (key) =>
+          typeof record[key] !== "string" ||
+          !/^#[0-9a-fA-F]{6}$/.test(record[key] as string),
+      )
+    ) {
+      return {};
+    }
+    const theme = record as PackageSidebarTheme;
+    return {
+      backgroundColor: theme.background,
+      color: theme.foreground,
+      "--creatoros-surface": theme.background,
+      "--creatoros-surface-subtle": theme.surfaceSubtle,
+      "--creatoros-brand": theme.brand,
+      "--creatoros-brand-hover": theme.brandHover,
+      "--creatoros-brand-soft": theme.brandSoft,
+      "--creatoros-brand-foreground": theme.brandForeground,
+      "--creatoros-text": theme.foreground,
+      "--creatoros-text-muted": theme.mutedForeground,
+      "--creatoros-border": theme.border,
+      "--background": theme.background,
+      "--foreground": theme.foreground,
+      "--card": theme.background,
+      "--card-foreground": theme.foreground,
+      "--popover": theme.background,
+      "--popover-foreground": theme.foreground,
+      "--muted": theme.surfaceSubtle,
+      "--muted-foreground": theme.mutedForeground,
+      "--border": theme.border,
+      "--color-surface": theme.background,
+      "--color-surface-subtle": theme.surfaceSubtle,
+      "--color-card": theme.background,
+      "--color-card-foreground": theme.foreground,
+      "--color-muted": theme.surfaceSubtle,
+      "--color-brand": theme.brand,
+      "--color-brand-hover": theme.brandHover,
+      "--color-brand-soft": theme.brandSoft,
+      "--color-brand-foreground": theme.brandForeground,
+      "--color-foreground": theme.foreground,
+      "--color-text": theme.foreground,
+      "--color-text-muted": theme.mutedForeground,
+      "--color-border": theme.border,
+      "--color-primary": theme.brand,
+      "--primary": theme.brand,
+      "--primary-foreground": theme.brandForeground,
+      "--color-secondary": theme.brandSoft,
+      "--secondary": theme.brandSoft,
+      "--secondary-foreground": theme.foreground,
+      "--color-accent": theme.brandSoft,
+      "--accent": theme.brandSoft,
+      "--accent-foreground": theme.foreground,
+      "--color-ring": theme.brand,
+      "--ring": theme.brand,
+      "--color-sidebar": theme.background,
+      "--sidebar": theme.background,
+      "--color-sidebar-foreground": theme.foreground,
+      "--sidebar-foreground": theme.foreground,
+      "--color-sidebar-primary": theme.brand,
+      "--sidebar-primary": theme.brand,
+      "--color-sidebar-primary-foreground": theme.brandForeground,
+      "--sidebar-primary-foreground": theme.brandForeground,
+      "--color-sidebar-accent": theme.brandSoft,
+      "--sidebar-accent": theme.brandSoft,
+      "--color-sidebar-accent-foreground": theme.foreground,
+      "--sidebar-accent-foreground": theme.foreground,
+      "--color-sidebar-border": theme.border,
+      "--sidebar-border": theme.border,
+      "--color-sidebar-ring": theme.brand,
+      "--sidebar-ring": theme.brand,
+    };
+  } catch {
+    return {};
+  }
+}
+
+export const PACKAGE_BRAND_SIDEBAR_STYLE = resolvePackageSidebarThemeStyle(
+  process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_SIDEBAR_THEME,
+);
+
 export const PACKAGE_BRAND_ICON_DATA_URL = cleanBrandIconDataUrl(
   process.env.NEXT_PUBLIC_CREATOROS_PACKAGE_BRAND_ICON_DATA_URL,
 );

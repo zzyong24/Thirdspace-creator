@@ -42,6 +42,7 @@ import { creatorIcons } from "@/lib/icons";
 import {
   PACKAGE_BRAND_ICON_DATA_URL,
   PACKAGE_BRAND_NAME,
+  PACKAGE_BRAND_SIDEBAR_STYLE,
   resolveVisibleBrandName,
 } from "@/lib/package-brand";
 import { cn } from "@/lib/utils";
@@ -244,6 +245,7 @@ export function Sidebar({
         data-testid="app-sidebar"
         data-collapsed={collapsed ? "true" : "false"}
         aria-label="主侧栏"
+        style={PACKAGE_BRAND_SIDEBAR_STYLE as React.CSSProperties}
         className={cn(
           "flex h-dvh min-h-0 shrink-0 flex-col gap-4 overflow-hidden border-r border-border bg-surface pb-8 pt-6 transition-[width] duration-200 [@media(max-height:760px)]:gap-2 [@media(max-height:760px)]:py-3",
           collapsed ? "w-16 px-2" : "w-sidebar px-4",

@@ -31,6 +31,7 @@ const argv = process.argv.slice(2);
 const QUIET = argv.includes("--quiet");
 const explicit = argv.find((a) => !a.startsWith("-"));
 const BACKLOG = explicit ? path.resolve(process.cwd(), explicit) : path.resolve(REPO, "BACKLOG.md");
+const ARCHIVE = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
 
 // 阈值(task-ledger-rules 的可执行化)
 const SIZE_WARN = 15 * 1024;
@@ -119,5 +120,29 @@ for (let i = 0; i < lines.length; i++) {
 }
 if (statusWarns > 10) warn(`…还有 ${statusWarns - 10} 条状态列超长行(共 ${statusWarns})。`);
 if (!statusWarns) ok(`状态列干净(无塞叙事,上限 ${STATUS_CELL_MAX} 字)。`);
+
+// ⑤ ID 生命周期:执行看板必须唯一,且完成归档后的 ID 不得再次进入执行队列。
+const taskIdsOf = (text) => text.split("\n").flatMap((line) => {
+  if (!line.startsWith("|")) return [];
+  const id = (line.split("|")[1] || "").trim();
+  return /^T-[A-Z0-9]+(?:\s+[A-Z0-9-]+)?$/i.test(id) ? [id.toUpperCase()] : [];
+});
+const duplicateIds = (ids) => {
+  const counts = new Map();
+  for (const id of ids) counts.set(id, (counts.get(id) || 0) + 1);
+  return [...counts].filter(([, count]) => count > 1).map(([id]) => id).sort();
+};
+
+const activeIds = taskIdsOf(src);
+const archivedIds = existsSync(ARCHIVE) ? taskIdsOf(readFileSync(ARCHIVE, "utf8")) : [];
+const activeDuplicates = duplicateIds(activeIds);
+const archivedSet = new Set(archivedIds);
+const reusedIds = [...new Set(activeIds.filter((id) => archivedSet.has(id)))].sort();
+const archivedDuplicates = duplicateIds(archivedIds);
+
+if (activeDuplicates.length) err(`执行看板存在重复 ID:${activeDuplicates.join(",")}`);
+if (reusedIds.length) err(`执行看板复用了归档 ID:${reusedIds.join(",")}`);
+if (!activeDuplicates.length && !reusedIds.length) ok("执行任务 ID 唯一且未复用归档 ID。");
+if (archivedDuplicates.length) warn(`归档内部保留 ${archivedDuplicates.length} 个历史撞号:${archivedDuplicates.join(",")}`);
 
 die();

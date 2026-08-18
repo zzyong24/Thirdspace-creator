@@ -1,0 +1,17 @@
+{
+  "status": "local-test-built",
+  "packageRef": "tc-traffic-center",
+  "displayName": "TC流量中心",
+  "target": "macos-aarch64",
+  "channelRef": "partner-p501444c-tc-flow-center",
+  "artifactPath": "/Users/zyongzhu/Downloads/TC流量中心-1.1.0.dmg",
+  "artifactSizeBytes": 434634281,
+  "artifactSha256": "98b0d3dac6cd10db212fd39dc303832782b746f263e087631a296689326aeb26",
+  "installedAppPath": "/Applications/TC流量中心.app",
+  "bundleIdentifier": "com.creatoros.tcflowcenter",
+  "codesign": "adhoc",
+  "developerIdSigned": false,
+  "notarized": false,
+  "realProcessVerified": true,
+  "builtAt": "2026-08-17"
+}

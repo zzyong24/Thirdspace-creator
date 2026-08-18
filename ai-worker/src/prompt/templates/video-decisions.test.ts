@@ -154,10 +154,10 @@ describe("[T-792] VIDEO_BROLL_TEMPLATE 内容辅助型生图提示词", () => {
 });
 
 describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
-  it("设置页 official Skill 与运行时共用 v6 单一真值，可恢复到同一版本", () => {
+  it("设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本", () => {
     _resetRegistry();
     const official = getOfficialSkillBase("video.cards");
-    expect(official?.baseVersion).toBe("v6");
+    expect(official?.baseVersion).toBe("v7");
     expect(official?.template).toContain("可组合 Scene Graph");
     expect(official?.outputSchema).toMatchObject({ type: "object" });
   });
@@ -180,8 +180,8 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     );
   });
 
-  it("v6 先声明内容关系和原文部件，并把卡片绑定真实 SRT 行", () => {
-    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v6");
+  it("v7 先声明内容关系和原文部件，并保证基础内容动效不缺失", () => {
+    expect(VIDEO_CARDS_TEMPLATE.version).toBe("v7");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("观众需要看见什么关系");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("cause_effect");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("srtLineIndex");
@@ -207,6 +207,8 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("sequence 常有多个 step，因此这类实体默认不写 textRole");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("开场前三秒不能只有真人");
     expect(VIDEO_CARDS_TEMPLATE.template).toContain("第一句 SRT 起秒");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("motion 是**必填**产出");
+    expect(VIDEO_CARDS_TEMPLATE.template).toContain("不能退成静止卡片");
 
     expect(
       videoCardsSchema.parse({
@@ -246,7 +248,7 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
 
 describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
   it("必须同时审整体叙事、用户素材、人物安全区和编辑内部标签", () => {
-    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v4");
+    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v5");
     expect(VIDEO_DIRECTOR_TEMPLATE.system).toContain("总导演");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("用户上传素材");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("角落小人物");
@@ -267,6 +269,9 @@ describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("motionThesis");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("beatGraph");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("每拍只有一个主视觉");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("首尾连续覆盖完整口播");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("Scene Graph 内容动效");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("不能用静止人物加空舞台");
   });
 
   it("结构化结论只接受 ready/revise 与固定问题类型", () => {

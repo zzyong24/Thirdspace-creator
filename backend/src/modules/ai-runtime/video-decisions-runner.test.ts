@@ -281,6 +281,53 @@ describe("auditVideoDecisions(总导演确定性安全检查)", () => {
     expect(issues[0]?.message).toContain("开场前三秒");
   });
 
+  it("[T-876 RED] 非开场的短场景也不能整段没有素材或内容动效", () => {
+    const shortSrt = parseSrt(`1
+00:00:00,000 --> 00:00:03,000
+开场先给出真实证据
+
+2
+00:00:03,000 --> 00:00:08,000
+接着解释为什么这个判断成立
+`);
+    const issues = auditVideoDecisions({
+      scenes: [
+        { title: "开场", startSec: 0, endSec: 3, summary: "证据" },
+        { title: "解释", startSec: 3, endSec: 8, summary: "原因" },
+      ],
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-1",
+          at: 0,
+          durationSec: 3,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+        },
+      ],
+      subtitles: shortSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: shortSrt,
+      inventory: INVENTORY,
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "blocking",
+          code: "visual_gap",
+          sceneIdx: 1,
+        }),
+      ]),
+    );
+  });
+
   it("真实主素材从第一句开始连续承接前三秒时通过开场检查", () => {
     const issues = auditVideoDecisions({
       scenes: [
@@ -788,11 +835,16 @@ describe("closeDirectorReview(修完再通过)", () => {
         issues: [],
       }),
     );
-    expect(result.directorReview.summary).toMatch(/基础信息卡补位.*未生成 Scene Graph 内容动效/);
+    expect(result.directorReview.summary).toMatch(
+      /补齐基础内容动效.*不会退成静止画面/,
+    );
     expect(result.broll).toEqual([
       expect.objectContaining({ assetId: "asset-1", sceneIdx: 0 }),
     ]);
     expect(result.cards.length).toBeGreaterThan(0);
+    expect(
+      result.cards.every((card) => Boolean(card.motion || card.visualPlan)),
+    ).toBe(true);
     expect(result.repairs.join("；")).toMatch(/终止重复审片建议循环/);
   });
 });
@@ -843,14 +895,37 @@ describe("buildVideoDirectionSchema(整片唯一主视觉)", () => {
     transitionOut: "fade" as const,
     returnGeometry: "same_base" as const,
   };
+  const closingTalkingHeadBeat = {
+    id: "beat-person-close",
+    sceneIdx: 0,
+    startSec: 6,
+    endSec: 8,
+    subject: { kind: "talking_head" as const, ref: "talking_head" },
+    startState: "base" as const,
+    endState: "base" as const,
+    motionVerb: "focus" as const,
+    stageMode: "base" as const,
+    transitionIn: "scale" as const,
+    transitionOut: "cut" as const,
+    returnGeometry: "not_applicable" as const,
+  };
 
-  it("真实 ref、对象时间窗和首尾相接的 beat 可通过", () => {
+  it("真实 ref、对象时间窗和覆盖整场的 beat 可通过", () => {
     expect(
       buildVideoDirectionSchema(directionContext).parse({
         motionThesis: "观点建立后由真实录屏接管，再回到人物",
-        beatGraph: [cardBeat, brollBeat],
+        beatGraph: [cardBeat, brollBeat, closingTalkingHeadBeat],
       }).beatGraph,
-    ).toHaveLength(2);
+    ).toHaveLength(3);
+  });
+
+  it("[T-876 RED] 拒绝把无 beat 的时间洞交给静止人物和空舞台", () => {
+    const result = buildVideoDirectionSchema(directionContext).safeParse({
+      motionThesis: "错误地把最后两秒留空",
+      beatGraph: [cardBeat, brollBeat],
+    });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).toContain("完整覆盖");
   });
 
   it("拒绝两个主视觉时间窗重叠，也拒绝不存在的 ref", () => {
@@ -908,13 +983,20 @@ describe("buildVideoDirectionSchema(整片唯一主视觉)", () => {
       ],
     };
     const schema = buildVideoDirectionSchema(overlayContext);
+    const overlayTalkingHeadBeat = {
+      ...closingTalkingHeadBeat,
+      startSec: 3,
+    };
     expect(
-      schema.safeParse({ motionThesis: "辅助不抢主语", beatGraph: [cardBeat] }).success,
+      schema.safeParse({
+        motionThesis: "辅助不抢主语",
+        beatGraph: [cardBeat, overlayTalkingHeadBeat],
+      }).success,
     ).toBe(true);
     expect(
       schema.safeParse({
         motionThesis: "错误地把辅助当接管",
-        beatGraph: [cardBeat, brollBeat],
+        beatGraph: [cardBeat, brollBeat, closingTalkingHeadBeat],
       }).success,
     ).toBe(false);
   });
@@ -1000,7 +1082,8 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
 
     expect(cards).toHaveLength(2);
     expect(cards.map((card) => card.kind)).toEqual(["quote", "list"]);
-    expect(cards[1]).toMatchObject({ content: "给模型一个角色" });
+    expect(cards[0]).toMatchObject({ motion: "plain" });
+    expect(cards[1]).toMatchObject({ content: "给模型一个角色", motion: "reveal" });
     expect(cards[1]?.visualPlan).toBeUndefined();
   });
 
@@ -1104,8 +1187,8 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     });
     const cards = await decideCards({ scenes: SCENES, srtLines, script: SCRIPT }, call);
     expect(cards).toHaveLength(2);
-    expect(cards[0]).toMatchObject({ kind: "stat", at: 0 });
-    expect(cards[1]).toMatchObject({ kind: "quote", at: 3.5 });
+    expect(cards[0]).toMatchObject({ kind: "stat", at: 0, motion: "counter" });
+    expect(cards[1]).toMatchObject({ kind: "quote", at: 3.5, motion: "plain" });
   });
 
   it("[T-839 RED] 口播实录与冻结稿措辞不同时，权威 SRT 原句及其 Scene Graph 仍可溯", async () => {
@@ -2600,14 +2683,16 @@ describe("runVideoDecisions(编排)", () => {
       directorReview: { status: string; summary: string };
     };
     expect(decisions.scenes).toHaveLength(3);
-    expect(decisions.cards).toHaveLength(1);
+    // 总导演候选若仍留下时间洞，确定性修片会补齐语义信息卡；这里不再把
+    // 模型首轮只返回 1 张卡当作成功条件。
+    expect(decisions.cards.length).toBeGreaterThan(1);
     expect(decisions.broll).toHaveLength(1);
     expect(decisions.subtitles).toHaveLength(4);
     expect(decisions.srtLines).toHaveLength(4);
     expect(decisions.directorReview).toMatchObject({
       status: "ready",
-      summary: "叙事、素材和时间线完整。",
     });
+    expect(decisions.directorReview.summary).toContain("时间线安全可预览");
     expect(result.resultData.inventory).toEqual(INVENTORY);
     const brollStep = (calls.recordStep.mock.calls as unknown as Array<
       [unknown, string, { stepNo: number; toolCalls: unknown[] }]
@@ -2632,7 +2717,9 @@ describe("runVideoDecisions(编排)", () => {
     >)
       .map((call) => call[2])
       .find((step) => step.stepNo === 5);
-    expect(directorStep?.text).toContain("总导演统筹审核:通过");
+    expect(directorStep?.text).toContain("总导演统筹审核:安全降级");
+    expect(directorStep?.text).toContain("内容动效 5 张");
+    expect(directorStep?.text).toContain("基础动效 5");
     expect(directorStep?.toolCalls).toEqual([
       expect.objectContaining({ toolName: "video.director" }),
     ]);

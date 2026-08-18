@@ -1,0 +1,12 @@
+{
+  "status": "confirmed",
+  "packageRef": "tc-traffic-center",
+  "displayName": "TC流量中心",
+  "binaryName": "TCFlowCenter",
+  "appIdentifier": "com.creatoros.tcflowcenter",
+  "keychainService": "com.creatoros.tcflowcenter.desktop",
+  "windowsUpgradeCode": "09A1D164-0DD3-4EA6-8232-A64D38C1529D",
+  "target": "macos-aarch64",
+  "expectedChannelRef": "partner-p501444c-tc-flow-center",
+  "confirmedAt": "2026-08-17"
+}

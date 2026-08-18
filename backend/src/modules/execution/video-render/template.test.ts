@@ -678,8 +678,8 @@ describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素�
   it("模型历史 mode=pip 不得覆盖确定性安全布局", () => {
     expect(resolveSceneMode({ ...props.scenes[1]!, mode: "pip" }, 5)).toBe("right");
   });
-  it("body 无视觉节点进入居中主讲模式，禁止人物靠边后留下大片空黑底", () => {
-    expect(resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 0)).toBe("focus");
+  it("body 无视觉节点仍保持右侧人物，左舞台交给可溯内容动效兜底", () => {
+    expect(resolveSceneMode({ ...props.scenes[1]!, cards: [] }, 0)).toBe("right");
   });
   it("横屏 large_stage 强制人物留在右侧安全框，禁止素材盖脸后只露半张脸", () => {
     expect(
@@ -714,7 +714,7 @@ describe("resolveSceneMode(普通视觉固定主舞台；仅全屏录屏在素�
 });
 
 describe("横屏无视觉节点的确定性画面兜底", () => {
-  it("[T-841 RED] 用低成本静态氛围底承接空窗，并把竖版主讲画面置中放大", () => {
+  it("[T-841/T-876] 用原句动效承接空窗，竖版人物保持稳定右栏而不居中放大", () => {
     const props = fullProps();
     const scene = {
       ...props.scenes[1]!,
@@ -736,7 +736,10 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
     expect(html).not.toContain('<video id="thAmbient"');
     expect(html).not.toContain('filter:blur(42px)');
     expect(html).toContain('id="th"');
-    expect(html).toContain("left:688px;top:56px;width:544px;height:968px");
+    expect(html).toContain("left:1330px;top:138px;width:500px;height:804px");
+    expect(html).toContain("landscape-gap-content");
+    expect(html).toContain("一个下班路上的想法");
+    expect(html).not.toContain("left:688px;top:56px;width:544px;height:968px");
   });
 
   it("[T-839/T-841] 横屏即使本场稍后有素材，也预铺低成本静态氛围底承接素材前后的短空窗", () => {
@@ -772,6 +775,90 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
     expect(html).toContain('<div id="thAmbient"');
     expect(html).not.toContain('<video id="thAmbient"');
     expect(html).toContain('data-duration="8.00" data-track-index="899"');
+    expect(html).toContain(
+      'tl.set("#th",{left:1330,top:138,width:500,height:804,borderRadius:18,zIndex:900,autoAlpha:1},0.00);',
+    );
+    expect(html).toContain("landscape-gap-content");
+    expect(html).not.toContain("left:688,top:56,width:544,height:968");
+  });
+
+  it("[T-876] 横屏场景内部时间洞必须补原句动效，人物禁止切到居中主体位", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      talkingHead: { ...props.talkingHead, durationSec: 12 },
+      scenes: [
+        {
+          id: "timeline-hole",
+          label: "L",
+          title: "场景内部空洞",
+          startSec: 0,
+          endSec: 12,
+          role: "body",
+          cards: [
+            {
+              kind: "quote",
+              at: 0,
+              text: "先给出一个判断",
+              tone: "muted",
+            },
+          ],
+        },
+      ],
+      direction: {
+        motionThesis: "信息卡结束后回到人物，再由真实素材接管。",
+        beatGraph: [
+          {
+            id: "opening-card",
+            sceneIdx: 0,
+            startSec: 0,
+            endSec: 3,
+            subject: { kind: "card", ref: "card:0:0" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "reveal",
+            stageMode: "takeover",
+            transitionIn: "cut",
+            transitionOut: "cut",
+            returnGeometry: "same_base",
+          },
+          {
+            id: "later-material",
+            sceneIdx: 0,
+            startSec: 8,
+            endSec: 12,
+            subject: { kind: "broll", ref: "broll:later.png" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "replace",
+            stageMode: "takeover",
+            transitionIn: "cut",
+            transitionOut: "cut",
+            returnGeometry: "same_base",
+          },
+        ],
+      },
+      broll: [
+        {
+          at: 8,
+          file: "later.png",
+          label: "后半段真实素材",
+          big: false,
+          durationSec: 4,
+          presentation: "large_stage",
+          visualRole: "still_image",
+          motion: "static",
+        },
+      ],
+    }, { imageFiles: new Set(["later.png"]) });
+
+    expect(html).toContain(
+      'tl.set("#th",{left:1330,top:138,width:500,height:804,borderRadius:18,zIndex:900,autoAlpha:1},0.00);',
+    );
+    expect(html).toContain("landscape-gap-content");
+    expect(html).toContain("两三个小时它就能用了");
+    expect(html).not.toContain("left:688,top:56,width:544,height:968");
+    expect(html).not.toContain('tl.to("#th",{scale:1.025');
   });
 });
 
@@ -1168,7 +1255,7 @@ describe("B-roll 主视觉安全区", () => {
     expect(html).toContain("bottom:56px;text-align:center;z-index:950");
   });
 
-  it("旧候选 pip_bottom_left 仅可读兼容，不再生成任何人物缩放或位移动画", () => {
+  it("旧候选 pip_bottom_left 仅可读兼容，不再生成侧栏位移或缩窄动画", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({
       ...props,
@@ -1186,7 +1273,7 @@ describe("B-roll 主视觉安全区", () => {
       ],
     });
     expect(html).not.toContain('tl.set("#th",{zIndex:945}');
-    expect(html).not.toMatch(/tl\.to\("#th",\{(?:left|top|width|height|scale):/);
+    expect(html).not.toMatch(/tl\.to\("#th",\{(?:left|top|width|height):/);
   });
 
   it("[T-858 RED] direction 存在时缺少素材 beat 必须失败，不能退回旧时间线偷偷叠画面", () => {

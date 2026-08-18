@@ -1,0 +1,43 @@
+{
+  "schema": "creatoros-desktop-package/v1",
+  "packageRef": "tc-traffic-center",
+  "productRef": "creatoros",
+  "projectKey": "creatoros",
+  "expectedChannelRef": "partner-p501444c-tc-flow-center",
+  "displayName": "TC流量中心",
+  "theme": {
+    "sidebar": {
+      "background": "#062f35",
+      "surfaceSubtle": "#0a4248",
+      "foreground": "#e4f2f2",
+      "mutedForeground": "#a9c2c4",
+      "border": "#174c52",
+      "brand": "#20b7a5",
+      "brandHover": "#1aa493",
+      "brandSoft": "#0d5b56",
+      "brandForeground": "#ffffff"
+    }
+  },
+  "binaryName": "TCFlowCenter",
+  "appIdentifier": "com.creatoros.tcflowcenter",
+  "keychainService": "com.creatoros.tcflowcenter.desktop",
+  "windowsUpgradeCode": "09A1D164-0DD3-4EA6-8232-A64D38C1529D",
+  "icons": {
+    "macos": {
+      "path": "assets/icon.icns",
+      "sha256": "f566dcaeb8c290cc51167d4fc36ed385991d93e080aafb78222882d04d167b5a"
+    },
+    "windows": {
+      "path": "assets/icon.ico",
+      "sha256": "319933f531cbb27a7a676836951b3809f6713f34efeab8c6c3ac517a120fe6da"
+    }
+  },
+  "growthExpectations": {
+    "brandName": "TC流量中心"
+  },
+  "updates": {
+    "channel": "stable",
+    "packageUpdateOrigin": "https://creatoros.aitongban.cloud",
+    "sharedRuntimeOrigin": "https://creatoros.aitongban.cloud"
+  }
+}

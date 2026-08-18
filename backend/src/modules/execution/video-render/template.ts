@@ -85,6 +85,16 @@ export interface TemplateOptions {
 /** 场景口播头形态(规则 + 显式覆盖;快照测试锚定)。 */
 type SceneMode = "right" | "pip" | "focus";
 
+type LandscapeSpeakerState = "right" | "hidden";
+
+interface LandscapeSpeakerSegment {
+  startSec: number;
+  endSec: number;
+  state: LandscapeSpeakerState;
+  /** 当前时间窗是否已有卡片、special 或真实素材接管左侧主舞台。 */
+  hasMainVisual: boolean;
+}
+
 export function resolveSceneMode(
   scene: VideoRenderScene,
   brollCount: number,
@@ -100,9 +110,9 @@ export function resolveSceneMode(
   // 不需要靠场景级 mode 提前缩小人物。
   if (options.portrait) return "right";
   const visualNodes = scene.cards.length + brollCount + (scene.special ? 3 : 0);
-  // 没有任何视觉承接时，不能服从模型遗留的 right/pip 提示把人物塞到角落；
-  // 用居中主讲 + 同源氛围背景作为确定性兜底，避免整段大片空黑。
-  if (visualNodes === 0) return "focus";
+  // 横屏人物构图保持稳定右栏；没有视觉节点时由左侧可溯文字动效安全门补齐，
+  // 禁止把竖版人物突然放到 16:9 正中央冒充主视觉。
+  if (visualNodes === 0) return "right";
   // 所有已有视觉节点都走左侧主舞台 + 右侧人物。B-roll 活跃时由单条素材自己的
   // presentation 决定 large_stage 或 full_frame；full_frame 期间再瞬时切 PiP。
   return "right";
@@ -112,6 +122,120 @@ function resolveHeadBox(layout: Layout, mode: SceneMode): LayoutBox {
   if (mode === "right") return layout.thRight;
   if (mode === "focus") return layout.thFocus;
   return layout.thPip;
+}
+
+/**
+ * 横屏人物布局必须跟随真实的主视觉时间窗，而不是看“本场某处是否有素材”后把整场
+ * 人物都固定到右栏。横屏人物始终保持稳定右栏；全屏素材活跃时才隐藏人物。
+ * 没有活动主视觉的时间窗由可溯文字动效补左侧舞台，绝不把竖版人物突然移到正中。
+ */
+function resolveLandscapeSpeakerTimeline(
+  props: VideoRenderProps,
+): LandscapeSpeakerSegment[] {
+  const durationSec = props.talkingHead.durationSec;
+  const boundaries = new Set<number>([0, durationSec]);
+  const visualSpans: LandscapeSpeakerSegment[] = [];
+  const addSpan = (
+    startSec: number,
+    endSec: number,
+    state: LandscapeSpeakerState,
+  ) => {
+    const start = Math.max(0, Math.min(durationSec, startSec));
+    const end = Math.max(start, Math.min(durationSec, endSec));
+    if (end - start <= 0.001) return;
+    boundaries.add(start);
+    boundaries.add(end);
+    visualSpans.push({ startSec: start, endSec: end, state, hasMainVisual: true });
+  };
+
+  for (const scene of props.scenes) {
+    boundaries.add(Math.max(0, Math.min(durationSec, scene.startSec)));
+    boundaries.add(Math.max(0, Math.min(durationSec, scene.endSec)));
+    if (scene.special) addSpan(scene.startSec, scene.endSec, "right");
+  }
+
+  if (props.direction) {
+    for (const beat of props.direction.beatGraph) {
+      boundaries.add(Math.max(0, Math.min(durationSec, beat.startSec)));
+      boundaries.add(Math.max(0, Math.min(durationSec, beat.endSec)));
+      if (beat.subject.kind === "card") {
+        addSpan(beat.startSec, beat.endSec, "right");
+        continue;
+      }
+      if (beat.subject.kind !== "broll") continue;
+      const file = beat.subject.ref.startsWith("broll:")
+        ? beat.subject.ref.slice("broll:".length)
+        : "";
+      const broll = props.broll.find((item) => item.file === file);
+      addSpan(
+        beat.startSec,
+        beat.endSec,
+        broll && resolveBrollPresentation(broll) === "full_frame"
+          ? "hidden"
+          : "right",
+      );
+    }
+  } else {
+    // 旧候选没有 direction：按模板真正会渲染的卡片/素材窗口恢复同一条安全时间线。
+    for (const scene of props.scenes) {
+      const flow = [
+        ...scene.cards.map((card) => ({ at: card.at, kind: "card" as const })),
+        ...props.broll
+          .filter(
+            (broll) =>
+              broll.at >= scene.startSec &&
+              broll.at < scene.endSec &&
+              resolveBrollPresentation(broll) !== "overlay",
+          )
+          .map((broll) => ({ at: broll.at, kind: "broll" as const, broll })),
+      ].sort((a, b) => a.at - b.at);
+      flow.forEach((item, index) => {
+        if (item.kind === "card") {
+          addSpan(item.at, flow[index + 1]?.at ?? scene.endSec, "right");
+          return;
+        }
+        const requestedEnd = item.broll.durationSec
+          ? item.broll.at + item.broll.durationSec
+          : scene.endSec;
+        addSpan(
+          item.broll.at,
+          Math.min(scene.endSec, requestedEnd),
+          resolveBrollPresentation(item.broll) === "full_frame"
+            ? "hidden"
+            : "right",
+        );
+      });
+    }
+  }
+
+  const ordered = [...boundaries].sort((a, b) => a - b);
+  const timeline: LandscapeSpeakerSegment[] = [];
+  for (let index = 0; index < ordered.length - 1; index += 1) {
+    const startSec = ordered[index]!;
+    const endSec = ordered[index + 1]!;
+    if (endSec - startSec <= 0.001) continue;
+    const probe = startSec + (endSec - startSec) / 2;
+    const active = visualSpans.filter(
+      (span) => span.startSec <= probe && span.endSec > probe,
+    );
+    const state: LandscapeSpeakerState = active.some(
+      (span) => span.state === "hidden",
+    )
+      ? "hidden"
+      : "right";
+    const hasMainVisual = active.length > 0;
+    const previous = timeline[timeline.length - 1];
+    if (
+      previous?.state === state &&
+      previous.hasMainVisual === hasMainVisual &&
+      Math.abs(previous.endSec - startSec) <= 0.001
+    ) {
+      previous.endSec = endSec;
+    } else {
+      timeline.push({ startSec, endSec, state, hasMainVisual });
+    }
+  }
+  return timeline;
 }
 
 export interface MainBrollGeometry {
@@ -217,6 +341,28 @@ export function assertPortraitPipSpacing(input: {
 export function assertVideoLayoutSafety(props: VideoRenderProps): void {
   const layout = resolveLayout(props.delivery.width, props.delivery.height);
   const portrait = props.delivery.height > props.delivery.width;
+  if (!portrait) {
+    const timeline = resolveLandscapeSpeakerTimeline(props);
+    const coversWholeVideo =
+      timeline.length > 0 &&
+      Math.abs(timeline[0]!.startSec) <= 0.001 &&
+      Math.abs(timeline[timeline.length - 1]!.endSec - props.talkingHead.durationSec) <=
+        0.001 &&
+      timeline.every(
+        (segment, index) =>
+          index === 0 ||
+          Math.abs(timeline[index - 1]!.endSec - segment.startSec) <= 0.001,
+      );
+    if (!coversWholeVideo) {
+      throw new Error("横屏人物安全时间线存在未承接空洞");
+    }
+    if (
+      timeline.some((segment) => !segment.hasMainVisual) &&
+      !props.captions.some((caption) => caption.cn.trim())
+    ) {
+      throw new Error("横屏无主视觉时间窗缺少可溯字幕，不能生成居中人物或空舞台");
+    }
+  }
   for (const broll of props.broll) {
     const presentation = resolveBrollPresentation(broll);
     if (
@@ -529,6 +675,117 @@ function schedulePortraitSpeakerDirection(
     previousEnd = Math.max(previousEnd, beat.endSec);
   }
   change(state, "full", previousEnd);
+}
+
+/** 横屏人物只在稳定右栏与全屏素材隐藏态之间切换，绝不突然居中放大。 */
+function scheduleLandscapeSpeakerTimeline(
+  ctx: Ctx,
+  props: VideoRenderProps,
+  layout: Layout,
+): void {
+  const timeline = resolveLandscapeSpeakerTimeline(props);
+  timeline.forEach((segment, index) => {
+    if (index > 0 && timeline[index - 1]!.state === segment.state) return;
+    if (segment.state === "hidden") {
+      ctx.tweens.push(
+        `tl.set("#th",{autoAlpha:0},${fmt(segment.startSec)});`,
+      );
+      return;
+    }
+    const box = layout.thRight;
+    ctx.tweens.push(
+      `tl.set("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},zIndex:900,autoAlpha:1},${fmt(segment.startSec)});`,
+    );
+    ctx.tweens.push(`tl.set("#th",{scale:1},${fmt(segment.startSec)});`);
+  });
+}
+
+interface LandscapeGapContentSegment {
+  startSec: number;
+  endSec: number;
+  text: string;
+}
+
+/**
+ * 上游正常候选不会留下主视觉空窗；这里仅保护历史候选或跨版本 props。使用当前字幕
+ * 原句做动态文字舞台，不猜新的语义，也不把竖版人物移到横屏中央。
+ */
+function resolveLandscapeGapContent(
+  props: VideoRenderProps,
+): LandscapeGapContentSegment[] {
+  const captions = props.captions.filter((caption) => caption.cn.trim());
+  if (captions.length === 0) return [];
+  const result: LandscapeGapContentSegment[] = [];
+  for (const gap of resolveLandscapeSpeakerTimeline(props).filter(
+    (segment) => !segment.hasMainVisual,
+  )) {
+    const boundaries = new Set<number>([gap.startSec, gap.endSec]);
+    for (const caption of captions) {
+      if (caption.start > gap.startSec && caption.start < gap.endSec) {
+        boundaries.add(caption.start);
+      }
+    }
+    const ordered = [...boundaries].sort((a, b) => a - b);
+    for (let index = 0; index < ordered.length - 1; index += 1) {
+      const startSec = ordered[index]!;
+      const endSec = ordered[index + 1]!;
+      if (endSec - startSec <= 0.001) continue;
+      const probe = startSec + (endSec - startSec) / 2;
+      const active = captions.find(
+        (caption) => caption.start <= probe && caption.end > probe,
+      );
+      const nearest = active ?? [...captions].sort((a, b) => {
+        const aMid = (a.start + a.end) / 2;
+        const bMid = (b.start + b.end) / 2;
+        return Math.abs(aMid - probe) - Math.abs(bMid - probe);
+      })[0]!;
+      const previous = result[result.length - 1];
+      if (
+        previous?.text === nearest.cn.trim() &&
+        Math.abs(previous.endSec - startSec) <= 0.001
+      ) {
+        previous.endSec = endSec;
+      } else {
+        result.push({ startSec, endSec, text: nearest.cn.trim() });
+      }
+    }
+  }
+  return result;
+}
+
+/** 历史/异常时间洞的最终视觉保险：左侧原句动效 + 右侧稳定人物，不出现居中人像。 */
+function scheduleLandscapeGapContent(
+  ctx: Ctx,
+  props: VideoRenderProps,
+  layout: Layout,
+): void {
+  const stageWidth = Math.max(1, layout.rightEdge.right - layout.contentX);
+  resolveLandscapeGapContent(props).forEach((segment) => {
+    const id = `gap${nextTrack(ctx)}`;
+    const duration = segment.endSec - segment.startSec;
+    clip(
+      ctx,
+      id,
+      nextTrack(ctx),
+      segment.startSec,
+      duration,
+      `left:${layout.contentX}px;top:168px;width:${stageWidth}px;height:650px;z-index:720;overflow:hidden;display:flex;align-items:center;`,
+      `<div style="position:relative;width:100%;padding:54px 62px;border-left:5px solid ${TK.accentH};background:linear-gradient(90deg,${TK.accent}18,transparent 78%)">` +
+        `<i class="gap-orbit" aria-hidden="true" style="position:absolute;right:76px;top:42px;width:150px;height:150px;border:2px solid ${TK.accentH};border-radius:50%;opacity:.22"></i>` +
+        `<i class="gap-rail" aria-hidden="true" style="position:absolute;left:62px;right:90px;bottom:32px;height:5px;border-radius:999px;background:linear-gradient(90deg,${TK.accentH},${TK.green});transform-origin:left center"></i>` +
+        `<span class="gap-copy" data-text-safe style="position:relative;z-index:2;display:block;max-width:850px;color:${TK.fg};font-size:52px;line-height:1.22;font-weight:820;letter-spacing:-.03em;text-shadow:0 8px 28px #000b">${esc(segment.text)}</span>` +
+        `</div>`,
+      "clip landscape-gap-content",
+    );
+    ctx.tweens.push(
+      `tl.fromTo("#${id}",{autoAlpha:0},{autoAlpha:1,duration:.18,ease:"power1.out"},${fmt(segment.startSec)});`,
+      `tl.fromTo("#${id} .gap-copy",{autoAlpha:0,x:-28},{autoAlpha:1,x:0,duration:.52,ease:"power3.out"},${fmt(segment.startSec)});`,
+      `tl.fromTo("#${id} .gap-rail",{scaleX:0},{scaleX:1,duration:${fmt(Math.max(0.35, Math.min(1.4, duration * 0.55)))},ease:"power2.out"},${fmt(segment.startSec + 0.12)});`,
+      `tl.to("#${id} .gap-orbit",{rotation:110,scale:1.12,duration:${fmt(Math.max(0.4, duration))},ease:"none"},${fmt(segment.startSec)});`,
+      `tl.to("#${id}",{autoAlpha:0,duration:.18},${fmt(Math.max(segment.startSec, segment.endSec - 0.18))});`,
+      `tl.set("#${id}",{autoAlpha:0},${fmt(segment.endSec)});`,
+    );
+  });
 }
 
 /** AI 决定的轻量素材运镜。布局、遮挡和可读性仍由渲染器硬约束。 */
@@ -1700,6 +1957,7 @@ export function generateVideoRenderHtml(
   for (let i = 1; i < props.scenes.length; i++) {
     if (
       visualOnly ||
+      !isPortraitDelivery ||
       (isPortraitDelivery && props.direction) ||
       modes[i] === modes[i - 1]
     ) {
@@ -1713,6 +1971,9 @@ export function generateVideoRenderHtml(
   }
   if (isPortraitDelivery && !visualOnly) {
     schedulePortraitSpeakerDirection(ctx, props, L);
+  } else if (!visualOnly) {
+    scheduleLandscapeSpeakerTimeline(ctx, props, L);
+    scheduleLandscapeGapContent(ctx, props, L);
   }
 
   // 场景 title/summary 只服务编辑器回顾，绝不烧进成片。成片只渲染 AI 明确选中的

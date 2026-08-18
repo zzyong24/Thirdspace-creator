@@ -12,7 +12,7 @@ description: Use when CreatorOS 需要新建或复用渠道专属桌面包，或
 ## 固定流程
 
 1. 先读 `BACKLOG.md`、任务 SPEC、`PROJECT.md`、`PROJECT_CONTEXT.md` 与 `orchestrator/SYSTEM_ARCHITECTURE.md`。
-2. 收集合作伙伴公司名、品牌名、精确 `channelRef`、五个 HTTPS 业务链接、图标目录、目标平台、两个更新 origin，以及当前可交付的 Growth `productConfig` 权威来源。缺 `channelRef` 或更新 origin 时，只能归档素材和报告阻断，不得猜值；缺 `productConfig` 时可以继续做包，但不得声称已交付“完整 Growth 配置”。
+2. 收集合作伙伴公司名、品牌名、精确 `channelRef`、图标目录、目标平台、两个更新 origin，以及当前可交付的 Growth `productConfig` 权威来源。渠道要改侧栏配色时，只能在 PackageManifest 的可选 `theme.sidebar` 中填写受校验颜色；未填写必须保持 CreatorOS 原配色，共享组件不得识别渠道名或写死渠道色值。购买、续费、下载、反馈、客服等渠道专属业务链接不再作为新包输入，反馈统一走官方入口；旧 manifest 中的链接字段只为兼容历史包而保留，禁止为新渠道新增或复用渠道外链。缺 `channelRef` 或更新 origin 时，只能归档素材和报告阻断，不得猜值；缺 `productConfig` 时可以继续做包，但不得声称已交付“完整 Growth 配置”。
 3. 新渠道提出一次不可变身份建议：`packageRef`、`appIdentifier`、`keychainService`、Windows UpgradeCode；用户确认后写 `identity.lock.json`。已有渠道必须复用 lock。
 4. 图标复制到 `frontend/branding/packages/<packageRef>/assets/`，记录 SHA-256；禁止长期引用微信、下载或临时目录。包构建还必须把经清单校验的品牌名与品牌图标编译进 WebView，作为未激活或 Growth 暂不可用时的离线品牌兜底。
 5. 在项目根目录建立 `channel-partners/<合作伙伴公司名>/`，至少交付：精简六字段输入、合并 `channelService + productConfig` 的 `growth-product-config.json`、包身份/构建结果和说明。完整配置必须从已确认的当前 `productConfig` 合并生成，不得只把六个链接文件冒充完整配置。

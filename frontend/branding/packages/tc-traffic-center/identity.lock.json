@@ -1,0 +1,11 @@
+{
+  "schema": "creatoros-package-identity-lock/v1",
+  "packageRef": "tc-traffic-center",
+  "appIdentifier": "com.creatoros.tcflowcenter",
+  "keychainService": "com.creatoros.tcflowcenter.desktop",
+  "windowsUpgradeCode": "09A1D164-0DD3-4EA6-8232-A64D38C1529D",
+  "releaseTrustRootKeyId": "creatoros-update-root-20260805-01",
+  "releaseTrustRootSha256": "54f51d62d88b4bf429acef9a21d869a9a0957e1695d79938c00bff7e869f8a4c",
+  "confirmedAt": "2026-08-17",
+  "confirmationSource": "user: ok 没问题；TC流量中心挂到饶文贤名下"
+}

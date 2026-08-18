@@ -1,0 +1,66 @@
+{
+  "status": "local-test-built",
+  "packageRef": "tc-traffic-center",
+  "displayName": "TC流量中心",
+  "theme": {
+    "sidebar": {
+      "background": "#062f35",
+      "surfaceSubtle": "#0a4248",
+      "foreground": "#e4f2f2",
+      "mutedForeground": "#a9c2c4",
+      "border": "#174c52",
+      "brand": "#20b7a5",
+      "brandHover": "#1aa493",
+      "brandSoft": "#0d5b56",
+      "brandForeground": "#ffffff"
+    }
+  },
+  "proposedBinaryName": "TCFlowCenter",
+  "proposedAppIdentifier": "com.creatoros.tcflowcenter",
+  "proposedKeychainService": "com.creatoros.tcflowcenter.desktop",
+  "partner": {
+    "publicRef": "P501444C",
+    "displayName": "饶文贤"
+  },
+  "expectedChannelRef": "partner-p501444c-tc-flow-center",
+  "providedLinks": {},
+  "feedbackRouting": "official",
+  "importedAssets": {
+    "sourcePng": {
+      "path": "assets/icon-source.png",
+      "sha256": "5cf0787992d43bd64363d21cb5b07df273b2ba79c51b752c3325814f80cb5ce3",
+      "dimensions": "1254x1254",
+      "receivedAt": "2026-08-17"
+    },
+    "macos": {
+      "path": "assets/icon.icns",
+      "sha256": "f566dcaeb8c290cc51167d4fc36ed385991d93e080aafb78222882d04d167b5a"
+    },
+    "windows": {
+      "path": "assets/icon.ico",
+      "sha256": "319933f531cbb27a7a676836951b3809f6713f34efeab8c6c3ac517a120fe6da"
+    }
+  },
+  "proposedWindowsUpgradeCode": "09A1D164-0DD3-4EA6-8232-A64D38C1529D",
+  "target": "macos-aarch64",
+  "resolved": {
+    "packageUpdateOrigin": "https://creatoros.aitongban.cloud",
+    "sharedRuntimeOrigin": "https://creatoros.aitongban.cloud",
+    "immutableIdentityConfirmedAt": "2026-08-17"
+  },
+  "requiredToFinalize": [
+    "none for this local preview; signing, notarization and publication remain intentionally out of scope"
+  ],
+  "localTestBuild": {
+    "artifactPath": "/Users/zyongzhu/Downloads/TC流量中心-1.1.0.dmg",
+    "artifactSizeBytes": 434634281,
+    "artifactSha256": "98b0d3dac6cd10db212fd39dc303832782b746f263e087631a296689326aeb26",
+    "installedAppPath": "/Applications/TC流量中心.app",
+    "bundleIdentifier": "com.creatoros.tcflowcenter",
+    "codesign": "adhoc",
+    "developerIdSigned": false,
+    "notarized": false,
+    "realProcessVerified": true,
+    "builtAt": "2026-08-17"
+  }
+}
