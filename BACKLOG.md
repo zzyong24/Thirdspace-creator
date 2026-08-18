@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-888 | 重新构建、安装并启动包含本地 Whisper 与内容雷达真实总量修复的 CreatorOS 1.1.0 macOS 本地包【用户明确要求·2026-08-18】 | ✅ 待办 | — | — | 复用 [T-886 验收](orchestrator/T886-BUILD-VALIDATION.md)、[T-887 验收](orchestrator/T887-FRONTEND-VALIDATION.md) | 从已提交候选 `67ceb3b9` 的隔离干净工作树运行官方 `desktop:package-local`，核对版本、打包测试、DMG、SHA-256、安装替换与真实启动；不得夹带主工作区未跟踪 CLI 导出目录，不在冻结期修改产品代码或构建脚本。 |
 | T-887 | 根治内容雷达“全部内容”被 100 条分页上限截断并显示真实总量【用户真机截图·2026-08-18】 | ✅ 待办 | — | — | 复用内容雷达 intelligence workspace/items 正式契约与 T-632/T-676 真实数据口径 | “全部内容”、筛选计数和列表必须基于同一账号的真实数据读模型；分页只控制单次传输，不能把首屏 `items.length` 或 `limit=100` 冒充总量。支持继续加载超过 100 条，并以真实非 fixture 数据验证总数、筛选、选中详情与刷新一致。 |
 | T-886 | 根治 Windows 分层安装包本地 Whisper worker 无法加载模型【T-885 根因修复·用户明确要求·2026-08-18】 | ✅ 待办 | — | — | [T-885 诊断](docs/research/2026-08-18-asr-transcription-log-diagnosis.md)；[构建验收](orchestrator/T886-BUILD-VALIDATION.md)；复用 T-768 与 DEC-RUNTIME-053 | 让真实 Whisper worker 显式、安全地消费随包 `creatoros-module-resolver` 与同一 runtime root，保留传统开发态兼容；补脱敏阶段错误、真实 worker 回归和 Windows closure 安装包 smoke，禁止继续用主进程 import 假装本地 ASR 可用。 |
 | T-885 | 基于补充轮转日志继续定位 T-884 ASR 转写失败【用户补充证据·2026-08-18】 | ✅ 待办 | — | — | [T-884 初诊](docs/research/2026-08-18-asr-transcription-log-diagnosis.md)；复用 T-768/T-639/T-676 | 只读解密 `sidecar-2026-08-18-1.log.enc` 与重复的基础日志，合并同一次会话时间线，提取转写任务、阶段、provider/回退模式和首个错误；区分调用失败、任务未领取及回读映射问题，不重跑、不改配置、不写用户数据。 |
