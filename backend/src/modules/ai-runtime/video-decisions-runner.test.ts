@@ -328,6 +328,60 @@ describe("auditVideoDecisions(总导演确定性安全检查)", () => {
     );
   });
 
+  it("角标 overlay 不得冒充非开场主舞台覆盖", () => {
+    const shortSrt = parseSrt(`1
+00:00:00,000 --> 00:00:03,000
+开场先展示真实主画面
+
+2
+00:00:03,000 --> 00:00:08,000
+后面只有角标时仍要补内容动效
+`);
+    const scenes: VideoScene[] = [
+      { title: "开场", startSec: 0, endSec: 3, summary: "主画面" },
+      { title: "解释", startSec: 3, endSec: 8, summary: "角标不算主画面" },
+    ];
+    const issues = auditVideoDecisions({
+      scenes,
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-1",
+          at: 0,
+          durationSec: 3,
+          presentation: "full_frame",
+        },
+        {
+          sceneIdx: 1,
+          assetId: "asset-2",
+          at: 3,
+          durationSec: 5,
+          presentation: "overlay",
+        },
+      ],
+      subtitles: shortSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: shortSrt,
+      inventory: INVENTORY,
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          severity: "blocking",
+          code: "visual_gap",
+          sceneIdx: 1,
+        }),
+      ]),
+    );
+  });
+
   it("真实主素材从第一句开始连续承接前三秒时通过开场检查", () => {
     const issues = auditVideoDecisions({
       scenes: [
@@ -686,6 +740,111 @@ describe("autoRepairVideoDecisions(总导演内部修片)", () => {
         broll: [],
         subtitles: repaired.subtitles,
         srtLines: longSrt,
+        inventory: INVENTORY,
+      }),
+    ).toEqual([]);
+  });
+
+  it("[T-879 RED] 稀疏长句 SRT 的补位按实际覆盖闭合，不因吸附去重留下五秒空洞", () => {
+    const sparseSrt = parseSrt(`1
+00:00:00,000 --> 00:00:10,000
+第一句很长，但整个十秒都必须有连续内容动效承接
+
+2
+00:00:10,000 --> 00:00:20,000
+第二句同样很长，不能因为插点都吸到句首而取消整套分镜
+`);
+    const scene: VideoScene = {
+      title: "长句连续表达",
+      startSec: 0,
+      endSec: 20,
+      summary: "长句也要连续承接",
+    };
+
+    const repaired = autoRepairVideoDecisions({
+      scenes: [scene],
+      cards: [],
+      broll: [],
+      subtitles: sparseSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: sparseSrt,
+      inventory: INVENTORY,
+      issues: [
+        {
+          sceneIdx: 0,
+          severity: "blocking",
+          code: "visual_gap",
+          message: "整场缺少连续视觉承接",
+        },
+      ],
+    });
+
+    expect(repaired.cards.map((card) => card.at)).toEqual([0, 5, 10, 15]);
+    expect(repaired.cards[1]?.content).toContain("第一句很长");
+    expect(repaired.cards[3]?.content).toContain("第二句同样很长");
+    expect(
+      auditVideoDecisions({
+        scenes: [scene],
+        cards: repaired.cards,
+        broll: repaired.broll,
+        subtitles: repaired.subtitles,
+        srtLines: sparseSrt,
+        inventory: INVENTORY,
+      }),
+    ).toEqual([]);
+  });
+
+  it("素材提前退出且后续仍是长句时，从真实退出点连续补到场景结尾", () => {
+    const sparseSrt = parseSrt(`1
+00:00:00,000 --> 00:00:09,000
+先看两秒真实结果，后面继续解释结果为什么成立
+
+2
+00:00:09,000 --> 00:00:18,000
+最后把完整方法和执行结论讲清楚
+`);
+    const scene: VideoScene = {
+      title: "素材后继续解释",
+      startSec: 0,
+      endSec: 18,
+      summary: "素材退出后继续承接",
+    };
+    const repaired = autoRepairVideoDecisions({
+      scenes: [scene],
+      cards: [],
+      broll: [
+        {
+          sceneIdx: 0,
+          assetId: "asset-1",
+          at: 0,
+          durationSec: 2,
+          presentation: "full_frame",
+        },
+      ],
+      subtitles: sparseSrt.map((line) => ({
+        index: line.index,
+        startSec: line.startSec,
+        endSec: line.endSec,
+        zh: line.text,
+        en: "",
+      })),
+      srtLines: sparseSrt,
+      inventory: INVENTORY,
+    });
+
+    expect(repaired.cards.map((card) => card.at)).toEqual([2, 7, 12, 17]);
+    expect(
+      auditVideoDecisions({
+        scenes: [scene],
+        cards: repaired.cards,
+        broll: repaired.broll,
+        subtitles: repaired.subtitles,
+        srtLines: sparseSrt,
         inventory: INVENTORY,
       }),
     ).toEqual([]);

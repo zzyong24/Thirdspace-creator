@@ -1395,7 +1395,10 @@ function sceneVisualIntervals(input: {
         Math.min(input.scene.endSec, card.at + DIRECTOR_CARD_VISIBLE_SEC),
       ] as const),
     ...input.broll
-      .filter((pick) => pick.sceneIdx === input.sceneIdx)
+      .filter(
+        (pick) =>
+          pick.sceneIdx === input.sceneIdx && pick.presentation !== "overlay",
+      )
       .map((pick) => [
         pick.at,
         Math.min(input.scene.endSec, pick.at + pick.durationSec),
@@ -1664,11 +1667,18 @@ function groundedCard(input: {
       item.startSec >= input.scene.startSec - 0.05 &&
       item.startSec < input.scene.endSec + 0.05,
   );
-  const line = sceneLines.find(
-    (item) =>
-      item.startSec >= input.at - 0.05 &&
-      item.startSec < input.scene.endSec + 0.05,
-  ) ?? sceneLines.at(-1);
+  // 补位插点可以落在一条长字幕的中间。优先使用当下正在说的原句，不能因为
+  // “下一条 start 更接近”而提前展示未来口播；没有活动行时再取最近的上一句/下一句。
+  const line =
+    sceneLines.find(
+      (item) =>
+        item.startSec <= input.at + 0.05 && item.endSec > input.at + 0.05,
+    ) ??
+    [...sceneLines]
+      .reverse()
+      .find((item) => item.startSec <= input.at + 0.05) ??
+    sceneLines.find((item) => item.startSec >= input.at - 0.05) ??
+    sceneLines.at(-1);
   const lineIndex = line ? sceneLines.indexOf(line) : -1;
   const exact = compactDirectorCardText(
     line?.text || input.scene.summary || input.scene.title,
@@ -1834,11 +1844,14 @@ export function autoRepairVideoDecisions(input: {
     sceneIdx: number,
     requestedAt: number,
     options?: { nearToleranceSec?: number; repairMessage?: string },
-  ) => {
+  ): boolean => {
     const scene = input.scenes[sceneIdx];
-    if (!scene) return;
+    if (!scene) return false;
+    // AI 候选仍在上面的规范化阶段吸附到 SRT start；确定性补位必须落在“真实空洞
+    // 的起点”。否则一条 10 秒长字幕会把 5 秒补位重新吸回 0 秒，修片器却误以为
+    // 已经前进。卡片内容仍由 groundedCard 严格取当前正在说的原句。
     const at = Math.min(
-      Math.max(nearestSrtStart(requestedAt, starts), scene.startSec),
+      Math.max(requestedAt, scene.startSec),
       Math.max(scene.startSec, scene.endSec - 0.01),
     );
     if (
@@ -1847,7 +1860,7 @@ export function autoRepairVideoDecisions(input: {
           card.sceneIdx === sceneIdx &&
           Math.abs(card.at - at) < (options?.nearToleranceSec ?? 1.5),
       )
-    ) return;
+    ) return false;
     const fallback = groundedCard({ scene, at, srtLines: input.srtLines });
     cards.push({
       sceneIdx,
@@ -1857,50 +1870,59 @@ export function autoRepairVideoDecisions(input: {
     repairs.push(
       options?.repairMessage ?? "视觉空档已用口播原文信息节拍补齐",
     );
+    return true;
   };
 
-  // 开场真实素材的选择与插点必须由 video.broll + material.match 完成；若两次 AI
-  // 编导仍没把合法主素材放到首屏，确定性层只引用第一句原文做诚实降级，不擅自移动
-  // 晚到素材（那会改变素材与口播的语义对应）。
-  if (
+  // 只记录开场是否原本存在空档；实际补位统一交给下面按真实 intervals 迭代的
+  // 闭合器。旧实现一发现开场 2s-3s 有洞就强行在 0s 插卡，会与 0s-2s 的真实素材
+  // 重叠，且仍没有从真实素材退出点开始接力。
+  const hadOpeningGap =
     openingVisualGap({ scenes: input.scenes, cards, broll }) >
-    DIRECTOR_OPENING_GAP_TOLERANCE_SEC
-  ) {
-    ensureCardAt(0, input.scenes[0]?.startSec ?? 0, {
-      nearToleranceSec: DIRECTOR_OPENING_GAP_TOLERANCE_SEC,
-      repairMessage: "开场前三秒已用第一句原文信息卡连续承接",
-    });
-  }
+    DIRECTOR_OPENING_GAP_TOLERANCE_SEC;
 
   for (const [sceneIdx, scene] of input.scenes.entries()) {
-    const sceneBroll = broll.filter((pick) => pick.sceneIdx === sceneIdx);
-    const requiredBeats = requiredInformationBeatCount(
-      scene.endSec - scene.startSec,
-    );
-    // 没有真实素材承接时，先按时长建立最低信息节拍。这里只决定“什么时候需要
-    // 一个视觉 beat”，卡片语义仍由 groundedCard 从当前口播逐句提取，绝不写死业务词。
-    if (sceneBroll.length === 0 && requiredBeats > 0) {
-      for (let index = 0; index < requiredBeats; index += 1) {
-        ensureCardAt(
-          sceneIdx,
-          scene.startSec +
-            ((scene.endSec - scene.startSec) * index) / requiredBeats,
-        );
+    // 每次补位后重新计算真实 intervals。旧实现按固定 5 秒推进局部 cursor，即使
+    // ensureCardAt 因 SRT 吸附/近邻去重没有插入，也会假装已覆盖并继续，最终在复审
+    // 才发现空洞、取消整套分镜。这里让“实际落下的卡片/素材”成为唯一真值。
+    const maxAdditions =
+      Math.ceil((scene.endSec - scene.startSec) / DIRECTOR_CARD_VISIBLE_SEC) +
+      cards.filter((card) => card.sceneIdx === sceneIdx).length +
+      2;
+    for (let addition = 0; addition < maxAdditions; addition += 1) {
+      const intervals = sceneVisualIntervals({ scene, sceneIdx, cards, broll });
+      let cursor = scene.startSec;
+      let gapStart: number | undefined;
+      for (const [start, end] of intervals) {
+        if (start - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC) {
+          gapStart = cursor;
+          break;
+        }
+        cursor = Math.max(cursor, end);
+      }
+      if (
+        gapStart === undefined &&
+        scene.endSec - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC
+      ) {
+        gapStart = cursor;
+      }
+      if (gapStart === undefined) break;
+      if (
+        !ensureCardAt(sceneIdx, gapStart, {
+          nearToleranceSec: 0.01,
+        })
+      ) {
+        // 真实 gap 起点仍无法落卡才停止；外层最终审计会以结构诊断报出，而不是
+        // 在这里继续推进一个并不存在的游标。
+        break;
       }
     }
-    const intervals = sceneVisualIntervals({ scene, sceneIdx, cards, broll });
-    let cursor = scene.startSec;
-    for (const [start, end] of intervals) {
-      while (start - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC) {
-        ensureCardAt(sceneIdx, cursor);
-        cursor += DIRECTOR_CARD_VISIBLE_SEC;
-      }
-      cursor = Math.max(cursor, end);
-    }
-    while (scene.endSec - cursor > DIRECTOR_MAX_VISUAL_GAP_SEC) {
-      ensureCardAt(sceneIdx, cursor);
-      cursor += DIRECTOR_CARD_VISIBLE_SEC;
-    }
+  }
+  if (
+    hadOpeningGap &&
+    openingVisualGap({ scenes: input.scenes, cards, broll }) <=
+      DIRECTOR_OPENING_GAP_TOLERANCE_SEC
+  ) {
+    repairs.push("开场前三秒空档已用当前口播原文信息卡连续承接");
   }
 
   // 每个 AI 阻断项都必须在本轮自动修片中得到一个视觉承接，不留给用户处理。
@@ -2780,7 +2802,18 @@ export async function closeDirectorReview(
     srtLines: input.srtLines,
     inventory: input.inventory,
   });
-  if (remainingStructuralIssues.some((issue) => issue.severity === "blocking")) {
+  const remainingBlockingIssues = remainingStructuralIssues.filter(
+    (issue) => issue.severity === "blocking",
+  );
+  if (remainingBlockingIssues.length > 0) {
+    console.error(
+      "[video.director] deterministic closure failed",
+      remainingBlockingIssues.map(({ sceneIdx, code, message }) => ({
+        sceneIdx,
+        code,
+        message,
+      })),
+    );
     // 这里代表代码层无法安全修复的结构损坏，不允许把半套候选或“请用户补素材”
     // 落到界面。让任务明确失败，下一次运行重新产完整候选。
     throw new Error("总导演自动修片后时间线仍未闭合，已停止生成半套候选");

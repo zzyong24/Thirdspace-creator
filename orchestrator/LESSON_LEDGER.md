@@ -13,6 +13,24 @@
 
 ---
 
+## LED-039 — 自动补位请求不等于视觉对象真实落下，计划游标会掩盖时间洞
+
+- **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 正式任务的分场、信息卡、素材、字幕与两轮总导演模型均成功，但确定性修片仍留下
+  时间洞并取消整套分镜。20 秒、两条各 10 秒的正常长字幕可稳定复现：计划补在 5 秒和 15 秒的
+  卡片被句首吸附/近邻去重后未新增，局部游标却固定前进，最终实际只有 0 秒和 10 秒两张卡。
+- **RootCause**: 修片循环把“调用 ensureCardAt”当成“新增成功”，没有在每次变更后重新合并真实
+  card/B-roll intervals；确定性空洞兜底还误复用了 AI 语义插点的 SRT 句首吸附规则。
+- **GuardRule**: 每次补位、截短、吸附或去重后必须以实际对象重算 intervals 并继续寻找首个 gap；
+  补位函数明确返回是否新增，未新增不得推进游标。AI 候选仍吸附 SRT start，确定性 gap 兜底可落
+  长句内部，但只能使用该时刻活动的口播原句。overlay/角标不计主舞台覆盖。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts`
+  （已登记进 `orchestrator/process/reconcile.config.json`；覆盖稀疏长句、素材退出尾洞、短场景、
+  overlay 与重复插点）。
+- **Outcome(T+N)**: 红测先得到 `[0,10]` 而非 `[0,5,10,15]`；修复后 97/97，通过修后确定性
+  `audit` 零 blocking。待新桌面包对原项目重新发起一次分镜，回填真实候选证据。
+- **Ref**: T-879；`ai-task-23b30dc3-160`；`orchestrator/T879-BUILD-VALIDATION.md`。
+
 ## LED-038 — 持久队列有任务不等于有持续消费者，启动限量会让历史积压永久留下
 
 - **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: candidate

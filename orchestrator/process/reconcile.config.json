@@ -204,6 +204,12 @@
       "what": "逐字稿持久队列再次只在启动领取固定小批，历史 queued 没有持续消费者",
       "check": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts",
       "onFail": "逐字稿消费门回归：启动恢复必须持续处理到队列为空，并以固定小并发保护取流、ASR 与本地数据库；不得恢复 20 条等总量上限，也不得按积压数量同时调用外部服务。"
+    },
+    {
+      "led": "LED-039",
+      "what": "总导演自动补位再次按计划游标前进，插点被吸附或去重后仍留下真实时间洞并取消整套分镜",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "onFail": "时间线闭合门回归：每次补位后必须重算实际 card/B-roll intervals，未真实新增不得推进；确定性 gap 卡落真实空洞起点并使用当前活动原句，overlay 不计主舞台覆盖，修后 audit 必须零 blocking。"
     }
   ],
   "program_completion_required": false,
