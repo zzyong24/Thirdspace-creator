@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-898 | 提交已验证的 T-896 修复并重新触发 Windows 官方安装包流水线【用户明确要求·2026-08-19】 | 🔨 待办 | — | — | 复用 [官方发布 Skill](.agents/skills/packaging-creatoros-release/SKILL.md)、T-896、LED-043 | 收口并提交当前已验证代码，冻结后核对版本、敏感信息和官方打包测试，非强推同步到 `main`，再从 `main` 仅触发 Windows 正式矩阵并跟踪同一 run；不创建 tag/Release、不改生产下载地址或放量配置。 |
+| T-898 | 提交已验证的 T-896 修复并重新触发 Windows 官方安装包流水线【用户明确要求·2026-08-19】 | ✅ 待办 | — | — | 复用 [官方发布 Skill](.agents/skills/packaging-creatoros-release/SKILL.md)、T-896、LED-043 | 收口并提交当前已验证代码，冻结后核对版本、敏感信息和官方打包测试，非强推同步到 `main`，再从 `main` 仅触发 Windows 正式矩阵并跟踪同一 run；不创建 tag/Release、不改生产下载地址或放量配置。 |
 | T-897 | 固化关键链路安全门不得破坏既有可用性的工程与剪辑规则【用户明确要求·2026-08-19】 | ✅ 待办 | — | — | [T-895 诊断](docs/research/2026-08-19-video-render-layout-guard-regression.md)；LED-043；`video-editing` Skill | 把“审美/布局/质量规则必须先安全降级，不能把上一版能完成的合法任务改成整单失败”写入项目教训账本、reconcile 可执行门卫与全局视频剪辑 Skill；门卫阻止规则被静默删除，业务发布还必须由 T-896 补旧版成功样例、完整调用链和横图/方图/竖图输入族回归，禁止只凭孤立几何单测上线 fail-closed 门。 |
 | T-896 | 根治竖屏方图/竖图与左下人物框冲突时整单渲染失败【T-895 根因承接·2026-08-19】 | ✅ 待办 | — | — | [T-895 诊断](docs/research/2026-08-19-video-render-layout-guard-regression.md)；复用 T-858/T-860 视频布局契约 | 保留人物不遮素材与字幕的安全边界，但合法 `pip_bottom_left` 在当前素材可见范围内无安全落点时必须确定性降级为 `hidden` 或使用可证明安全的布局，不能在 HyperFrames 启动前取消整单；补“分镜组装→正式安全门→HTML/渲染输入”的竖屏横图、方图、竖图贯通回归，并让诊断明确指出素材与几何。 |
 | T-895 | 诊断用户从上一版本升级后视频渲染不可用的版本回归【用户加密日志·2026-08-19】 | ✅ 待办 | — | — | [诊断报告](docs/research/2026-08-19-video-render-layout-guard-regression.md)；复用 T-703/T-845/T-879/T-891、视频制作正式 contract 与 `video-editing` Skill | 只读解密用户压缩包中的两份轮转日志，对齐同一 render task 的提交、领取、HyperFrames/ffmpeg 子进程、进度、退出码和 UI 终态，并与上一可用安装版本比较 runtime closure、路径解析、超时及渲染输入差异；先给真实根因，不重跑、不改用户项目或素材。 |
