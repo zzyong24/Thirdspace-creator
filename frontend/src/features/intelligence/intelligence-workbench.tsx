@@ -823,8 +823,8 @@ function transcriptSaveErrorMessage(error: unknown): string {
 const DETAIL_WIDTH_KEY = "creatoros:intelligence:detail-width";
 const ITEM_PAGE_SIZE = 100;
 const MIN_DETAIL_WIDTH = 320;
-// 结构化主请求 + 文本兜底各自最多 90 秒，再给队列/网络回显留出余量。
-const TOPIC_PREVIEW_POLL_TIMEOUT_MS = 240_000;
+// 两个结构化节点各自最多 90 秒，长稿纯文本节点最多 180 秒；轮询覆盖完整硬上界并留出回读余量。
+const TOPIC_PREVIEW_POLL_TIMEOUT_MS = 480_000;
 
 function topicPreviewPollDelayMs(attempt: number): number {
   return Math.min(400 + attempt * 100, 2_500);
@@ -1156,7 +1156,7 @@ export function IntelligenceWorkbench({
             activeDetailItemId.current === itemId
           ) {
             setNotice(
-              "生成任务仍在后台执行，当前选题会继续自动更新，无需切换页面或重复生成。",
+              "生成任务处理时间较长，可稍后刷新查看结果；请勿重复生成。",
             );
           }
         } finally {
@@ -3434,7 +3434,7 @@ function TranscriptEditorDialog({
         if (!next && !saving) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {replacing ? "替换逐字稿" : "添加逐字稿"}
@@ -3443,7 +3443,10 @@ function TranscriptEditorDialog({
             直接粘贴正文，或从 TXT、Markdown、SRT、VTT 文件导入后检查再保存。
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div
+          data-slot="transcript-editor-body"
+          className="min-h-0 space-y-3 overflow-y-auto pr-1"
+        >
           <label
             className={cn(
               "inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
@@ -3495,7 +3498,7 @@ function TranscriptEditorDialog({
               setError(null);
             }}
             placeholder="在这里粘贴或编辑逐字稿正文…"
-            className="min-h-64 resize-y text-sm leading-6"
+            className="field-sizing-fixed min-h-64 max-h-[min(50dvh,28rem)] resize-y overflow-y-auto text-sm leading-6"
           />
           <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
             <span>

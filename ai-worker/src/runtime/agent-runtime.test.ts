@@ -36,4 +36,22 @@ describe("runAgentNode", () => {
     expect(res.steps[0]?.stepNo).toBe(1);
     expect(seen).toContain(1); // onStep 回调真被调了(步骤日志的命脉)
   });
+
+  it("[T-893] 纯文本模型长期不返回时按节点上界中止，不能让持久任务永久 running", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => new Promise<LanguageModelV4GenerateResult>(() => {}),
+    });
+
+    await expect(
+      runAgentNode({
+        model,
+        system: "你是选题会 agent。",
+        prompt: "生成改写初稿。",
+        timeoutMs: 10,
+      }),
+    ).rejects.toMatchObject({
+      name: "AgentNodeTimeoutError",
+      timeoutMs: 10,
+    });
+  });
 });

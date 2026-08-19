@@ -23,7 +23,9 @@ export {
   type IntelligenceTranscriptRunnerDeps,
 } from "./transcript-runner";
 export {
+  drainIntelligenceTopicPreviewQueue,
   runIntelligenceTopicPreviewTask,
+  type TopicPreviewDrainOptions,
   type TopicPreviewGeneratorPort,
   type TopicPreviewRunnerDeps,
 } from "./topic-preview-runner";

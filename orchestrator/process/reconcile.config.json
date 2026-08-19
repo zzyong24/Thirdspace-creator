@@ -129,9 +129,9 @@
     },
     {
       "led": "LED-023",
-      "what": "结构化 AI 任务再次被统一超时误杀，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙",
-      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
-      "onFail": "外部能力稳定性门回归：长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。"
+      "what": "结构化 AI 任务再次被统一超时误杀、纯文本 AI 节点再次无界挂起，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙",
+      "check": "pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/runtime/agent-runtime.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts",
+      "onFail": "外部能力稳定性门回归：结构化与纯文本节点都必须有调用方按真实耗时设置的有限上界并中止 provider；长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。"
     },
     {
       "led": "LED-024",
@@ -201,9 +201,9 @@
     },
     {
       "led": "LED-038",
-      "what": "逐字稿持久队列再次只在启动领取固定小批，历史 queued 没有持续消费者",
-      "check": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts",
-      "onFail": "逐字稿消费门回归：启动恢复必须持续处理到队列为空，并以固定小并发保护取流、ASR 与本地数据库；不得恢复 20 条等总量上限，也不得按积压数量同时调用外部服务。"
+      "what": "逐字稿或选题改写持久队列再次只改回 queued、只领取固定小批，或没有对应消费者接走历史任务",
+      "check": "pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts src/modules/intelligence/topic-preview-runner.test.ts",
+      "onFail": "内容雷达持久任务消费门回归：启动恢复必须让每种持久 kind 都有对应消费者，持续处理到队列为空，并以固定小并发或顺序消费保护外部模型、取流、ASR 与本地数据库；不得只 recover lease 不 drain，也不得按积压数量同时调用外部服务。"
     },
     {
       "led": "LED-039",

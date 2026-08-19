@@ -200,6 +200,7 @@ function startLocalOpenAiServer() {
 }
 
 function writeVisibleCopy(
+  taskId: string,
   captures: ReadonlyArray<{
     checkpoint: string;
     check_ids: ReadonlyArray<string>;
@@ -215,11 +216,11 @@ function writeVisibleCopy(
     encoding: "utf8",
   }).trim();
   writeFileSync(
-    resolve(evidenceDir, "T-870-visible-copy.json"),
+    resolve(evidenceDir, `${taskId}-visible-copy.json`),
     `${JSON.stringify(
       {
         schema: "frontend-visible-copy/v1",
-        task_id: "T-870",
+        task_id: taskId,
         commit_sha: commitSha,
         captures,
       },
@@ -355,21 +356,79 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
       account.id,
     );
     expect(detail.snapshots.length).toBeGreaterThan(0);
-    await dispatch(
-      page,
-      "intelligence.transcripts.uploadManual",
-      {
-        params: undefined,
-        query: undefined,
-        body: {
-          itemId,
-          inputMode: "paste",
-          text:
-            "很多创作者收集到一个好选题以后，还要先保存到选题池，再打开选题中心确认，最后才能创建项目。每多一次搬运，注意力就会被打断。更合理的做法，是在来源、逐字稿、拆解和初稿都准备好以后，让用户的一次明确点击直接完成确认和立项，同时保留来源证据，失败时也能安全重试。",
-        },
-      },
-      account.id,
-    );
+    const targetTitle = items[0]!.item.title;
+    const transcriptDialogCaptures: Array<{
+      checkpoint: string;
+      check_ids: ReadonlyArray<string>;
+      viewport: { width: number; height: number };
+      text: string;
+    }> = [];
+    const transcriptDialogCheckIds = ["AC-TRANSCRIPT-DIALOG-SAVE"];
+    await selectAccount(page, account.id, baseURL);
+    await page.setViewportSize({ width: 1536, height: 1024 });
+    await page.goto("/intelligence");
+    await page.waitForLoadState("networkidle");
+    const manualDetailLoaded = page.waitForResponse((response) => {
+      if (!response.url().endsWith("/api/v1/dispatch")) return false;
+      try {
+        return (
+          (response.request().postDataJSON() as { id?: string }).id ===
+          "intelligence.items.get"
+        );
+      } catch {
+        return false;
+      }
+    });
+    await page.locator("main button").filter({ hasText: targetTitle }).click();
+    await manualDetailLoaded;
+    await page.getByRole("button", { name: "添加逐字稿" }).click();
+    const longTranscript = Array.from(
+      { length: 120 },
+      () =>
+        "很多创作者收集到一个好选题以后，还要先保存到选题池，再打开选题中心确认，最后才能创建项目。每多一次搬运，注意力就会被打断。更合理的做法，是在来源、逐字稿、拆解和初稿都准备好以后，让用户的一次明确点击直接完成确认和立项，同时保留来源证据，失败时也能安全重试。",
+    ).join("\n");
+    const transcriptTextarea = page.getByLabel("逐字稿正文");
+    await transcriptTextarea.fill(longTranscript);
+    const saveTranscript = page.getByRole("button", { name: "保存逐字稿" });
+    await expect(saveTranscript).toBeVisible();
+    const transcriptDialog = page.getByRole("dialog");
+    transcriptDialogCaptures.push({
+      checkpoint: "long-transcript-regular-window",
+      check_ids: transcriptDialogCheckIds,
+      viewport: { width: 1536, height: 1024 },
+      text: await transcriptDialog.innerText(),
+    });
+    await page.setViewportSize({ width: 1024, height: 720 });
+    await expect(saveTranscript).toBeVisible();
+    const saveBox = await saveTranscript.boundingBox();
+    expect(saveBox).not.toBeNull();
+    expect(saveBox!.y + saveBox!.height).toBeLessThanOrEqual(720);
+    expect(
+      await transcriptTextarea.evaluate(
+        (element) => element.scrollHeight > element.clientHeight,
+      ),
+    ).toBe(true);
+    transcriptDialogCaptures.push({
+      checkpoint: "long-transcript-minimum-window",
+      check_ids: transcriptDialogCheckIds,
+      viewport: { width: 1024, height: 720 },
+      text: await transcriptDialog.innerText(),
+    });
+    const manualTranscriptSaved = page.waitForResponse((response) => {
+      if (!response.url().endsWith("/api/v1/dispatch")) return false;
+      try {
+        return (
+          (response.request().postDataJSON() as { id?: string }).id ===
+          "intelligence.transcripts.uploadManual"
+        );
+      } catch {
+        return false;
+      }
+    });
+    await saveTranscript.click();
+    await manualTranscriptSaved;
+    await expect(page.getByRole("dialog")).toBeHidden();
+    writeVisibleCopy("T-893", transcriptDialogCaptures);
     const preview = await dispatch<{ transform: { id: string } }>(
       page,
       "intelligence.transforms.previewTopic",
@@ -410,7 +469,6 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
     await page.setViewportSize({ width: 1536, height: 1024 });
     await page.goto("/intelligence");
     await page.waitForLoadState("networkidle");
-    const targetTitle = items[0]!.item.title;
     const detailLoaded = page.waitForResponse((response) => {
       if (!response.url().endsWith("/api/v1/dispatch")) return false;
       try {
@@ -481,7 +539,7 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
       viewport: { width: 1024, height: 720 },
       text: `项目已创建：${project.title}；重复立项返回同一项目。`,
     });
-    writeVisibleCopy(captures);
+    writeVisibleCopy("T-870", captures);
   } finally {
     await localModel.close();
   }

@@ -90,7 +90,7 @@
   `audit` 零 blocking。待新桌面包对原项目重新发起一次分镜，回填真实候选证据。
 - **Ref**: T-879；`ai-task-23b30dc3-160`；`orchestrator/T879-BUILD-VALIDATION.md`。
 
-## LED-038 — 持久队列有任务不等于有持续消费者，启动限量会让历史积压永久留下
+## LED-038 — 持久队列有任务不等于每个任务类型都有持续消费者
 
 - **Date**: 2026-08-17 · **Stage**: BUILD · **Severity**: high · **Status**: candidate
 - **WhatFailed**: 内容雷达已经把历史作品逐字稿写成持久 `queued` 任务，但启动恢复最多只领取 20 条；
@@ -102,7 +102,9 @@
 - **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts`
   （登记进 `reconcile.config.json`；回归固定超过 20 条全部完成且最高并发为 2）。
 - **Outcome(T+N)**: 源码回归已覆盖 25 条积压；待安装版启动后复核真实 queued 数持续下降并归零。
-- **Ref**: T-632；DEC-RADAR-047；PAT-003；MOD-006。
+  T-893 进一步补齐 `topic_preview`：改写任务每个检查点续租，启动恢复顺序消费全部既有 queued，
+  新请求即时执行与恢复消费者通过条件领取避免重复。
+- **Ref**: T-632；T-893；DEC-RADAR-047；PAT-003；MOD-006。
 
 ## LED-018 — 浏览器回落写在注释里，旧下载前置门让随包能力永远到不了
 - **Date**: 2026-08-09 · **Stage**: BUILD→SHIP · **Severity**: high · **Status**: active
@@ -393,15 +395,17 @@
   搜索页则因广告/统计长连接等不到 `networkidle`，并且已确认的百度登录墙在后续请求里重复浪费时间。
 - **RootCause**: 把“防永久挂起”简化成所有结构节点同一 90 秒，没有区分已知协议不兼容与
   鉴权/网络等致命错误；浏览器把“整页网络完全静默”误当成“搜索结果可读”，双引擎回退又无运行期失败记忆。
-- **GuardRule**: 结构化模型调用必须保留有界默认超时；只有经真实耗时证据确认的长节点才可在调用处
-  显式放宽，且统一限幅。只对明确的结构化响应协议不支持改走“文本 JSON + 同 schema 验收”，
+- **GuardRule**: 结构化模型调用必须保留有界默认超时；纯文本 Agent 节点也必须允许调用方按真实耗时
+  设置有限上界，并在到期时同时中止 provider 请求、让持久任务进入可重试终态。只有经真实耗时证据
+  确认的长节点才可在调用处显式放宽，且统一限幅。只对明确的结构化响应协议不支持改走“文本 JSON + 同 schema 验收”，
   鉴权、网络、限流和超时不降级。SERP 导航用可读的 DOM 就绪条件；已确认登录墙只做有上界冷却，
   到期真实重试，普通网络错误不误封。任何回退都不得用模型记忆冒充联网证据。
-- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts`
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/nodes/structured-node.test.ts src/runtime/agent-runtime.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts`
   （已登记进 `reconcile.config.json` lessons[]）。
 - **Outcome(T+N)**: 分场/信息卡显式放宽至 120 秒，shared runner 仍限制在 15–180 秒；
   协议不兼容使用同 schema 的受控 JSON 修复；Bing 不再被长连接拖到 `networkidle`，百度登录墙默认冷却 5 分钟后重试。
-- **Ref**: DEC-AI-044；T-784；T-789。
+  T-893 为纯文本改写节点增加 provider 中止与 Promise 硬终止，补上结构化节点之外的永久挂起缺口。
+- **Ref**: DEC-AI-044；T-784；T-789；T-893。
 
 ## LED-024 — 动画枚举不等于内容可视化，单字符串会把不同关系压成同一张卡
 - **Date**: 2026-08-12 · **Stage**: BUILD · **Severity**: high · **Status**: rule

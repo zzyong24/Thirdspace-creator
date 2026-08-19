@@ -25,6 +25,8 @@ export interface RunTemplatedNodeInput {
   maxSteps?: number;
   /** 步骤回调 —— 喂窗口步骤日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
+  /** 单次纯文本生成硬上界；省略时保持调用方既有行为。 */
+  timeoutMs?: number;
 }
 
 export interface RunTemplatedNodeResult {
@@ -51,6 +53,7 @@ export async function runTemplatedNode(
     prompt,
     maxSteps: input.maxSteps ?? 4,
     onStep: input.onStep,
+    timeoutMs: input.timeoutMs,
   });
   return { text: res.text, steps: res.steps };
 }

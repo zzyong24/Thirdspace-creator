@@ -1,5 +1,8 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { PersistentTaskService } from "../execution";
+import type {
+  PersistentTaskClaim,
+  PersistentTaskService,
+} from "../execution";
 import type { IntelligenceService } from "./intelligence.service";
 
 export interface TopicPreviewGeneratorPort {
@@ -69,6 +72,13 @@ export interface TopicPreviewRunnerDeps {
   generator: TopicPreviewGeneratorPort;
   workerId?: () => string;
 }
+
+export interface TopicPreviewDrainOptions {
+  /** 仅供测试与诊断限量；启动恢复默认顺序处理到队列为空。 */
+  maxTasks?: number;
+}
+
+const TOPIC_PREVIEW_LEASE_SECONDS = 300;
 
 export type TopicPreviewFailureCategory =
   | "credential"
@@ -150,17 +160,24 @@ export function classifyTopicPreviewFailure(error: unknown): {
 
 export async function runIntelligenceTopicPreviewTask(
   ctx: RequestContext,
-  input: { taskId: string },
+  input: { taskId: string; existingClaim?: PersistentTaskClaim },
   deps: TopicPreviewRunnerDeps,
 ): Promise<void> {
-  const claim = await deps.tasks.claimTask({
-    taskId: input.taskId,
-    workerId:
-      deps.workerId?.() ??
-      `intelligence-topic:${input.taskId}:${Date.now().toString(36)}`,
-    leaseSeconds: 120,
-  });
+  const claim =
+    input.existingClaim ??
+    (await deps.tasks.claimTask({
+      taskId: input.taskId,
+      workerId:
+        deps.workerId?.() ??
+        `intelligence-topic:${input.taskId}:${Date.now().toString(36)}`,
+      leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
+    }));
   if (!claim) return;
+  const lease = {
+    taskId: input.taskId,
+    workerId: claim.lease.workerId,
+    attempt: claim.lease.attempt,
+  };
   let pendingStage: TopicPreviewCheckpoint["stage"] = "decomposition";
   let targetTransformId: string | null = null;
   try {
@@ -182,6 +199,10 @@ export async function runIntelligenceTopicPreviewTask(
             transcriptHash: target.transcript.hash,
           },
         );
+        await deps.tasks.heartbeat({
+          ...lease,
+          leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
+        });
         pendingStage =
           checkpoint.stage === "decomposition"
             ? "topic"
@@ -200,9 +221,7 @@ export async function runIntelligenceTopicPreviewTask(
       },
     );
     await deps.tasks.finish({
-      taskId: input.taskId,
-      workerId: claim.lease.workerId,
-      attempt: claim.lease.attempt,
+      ...lease,
       status: "succeeded",
     });
   } catch (error) {
@@ -229,9 +248,7 @@ export async function runIntelligenceTopicPreviewTask(
       }
     }
     await deps.tasks.finish({
-      taskId: input.taskId,
-      workerId: claim.lease.workerId,
-      attempt: claim.lease.attempt,
+      ...lease,
       status: blocked ? "blocked" : "failed",
       errorCode:
         failure.category === "positioning"
@@ -242,4 +259,47 @@ export async function runIntelligenceTopicPreviewTask(
       errorMessage: failure.message,
     });
   }
+}
+
+/**
+ * 启动恢复消费者：`recoverExpiredLeases` 只负责把中断任务收敛回 queued，本函数负责真正接走
+ * 既有 `topic_preview`。顺序消费避免应用重启时把历史改写同时打向模型；新请求的即时 dispatch
+ * 与这里共用条件领取，因此不会重复执行同一任务。
+ */
+export async function drainIntelligenceTopicPreviewQueue(
+  deps: TopicPreviewRunnerDeps,
+  options: TopicPreviewDrainOptions = {},
+): Promise<number> {
+  const maxTasks = options.maxTasks ?? Number.POSITIVE_INFINITY;
+  if (
+    (!Number.isInteger(maxTasks) && maxTasks !== Number.POSITIVE_INFINITY) ||
+    maxTasks <= 0
+  ) {
+    throw new RangeError("maxTasks 必须是正整数或 Infinity");
+  }
+
+  let processed = 0;
+  while (processed < maxTasks) {
+    const claim = await deps.tasks.claimNext({
+      workerId:
+        deps.workerId?.() ??
+        `intelligence-topic-drain:${Date.now().toString(36)}:${processed}`,
+      kinds: ["topic_preview"],
+      leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
+    });
+    if (!claim) break;
+    const ctx: RequestContext = {
+      userId: claim.task.userId,
+      accountId: claim.task.accountId,
+      requestId: `execution:${claim.task.id}`,
+      source: "user",
+    };
+    await runIntelligenceTopicPreviewTask(
+      ctx,
+      { taskId: claim.task.id, existingClaim: claim },
+      deps,
+    );
+    processed += 1;
+  }
+  return processed;
 }

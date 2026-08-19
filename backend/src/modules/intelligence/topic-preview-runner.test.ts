@@ -6,6 +6,7 @@ import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
 import {
   classifyTopicPreviewFailure,
+  drainIntelligenceTopicPreviewQueue,
   runIntelligenceTopicPreviewTask,
 } from "./topic-preview-runner";
 
@@ -68,6 +69,7 @@ describe("[T-646] 内容雷达分段生成", () => {
           claimTask: vi.fn().mockResolvedValue({
             lease: { workerId: "worker-1", attempt: 1 },
           }),
+          heartbeat: vi.fn().mockResolvedValue(undefined),
           finish: finishTask,
         } as never,
         intelligence: {
@@ -114,6 +116,115 @@ describe("[T-646] 内容雷达分段生成", () => {
       expect.objectContaining({
         status: "failed",
         errorCode: "TOPIC_PREVIEW_FAILED",
+      }),
+    );
+  });
+
+  it("[T-893] 启动恢复会消费既有排队任务，并在每个检查点续租后进入成功终态", async () => {
+    const claimTask = vi.fn();
+    const heartbeat = vi.fn().mockResolvedValue(undefined);
+    const finish = vi.fn().mockResolvedValue(undefined);
+    const claim = {
+      task: {
+        id: "task-recovered",
+        userId: "user-recovered",
+        accountId: "account-recovered",
+      },
+      payload: {},
+      lease: { workerId: "worker-recovered", attempt: 2 },
+    };
+    const claimNext = vi
+      .fn()
+      .mockResolvedValueOnce(claim)
+      .mockResolvedValueOnce(null);
+    const saveTopicPreviewCheckpoint = vi.fn().mockResolvedValue(undefined);
+    const finishTopicPreview = vi.fn().mockResolvedValue(undefined);
+    const generated = {
+      hook: "先讲反常识",
+      structureSteps: ["问题", "判断"],
+      coreClaims: ["流程先于模型"],
+      reusablePattern: "反常识—判断",
+      factRisks: [],
+      title: "先把流程跑通",
+      angle: "从交付失败切入",
+      differentiation: "不做模型盘点",
+      sourceSummary: "来源讨论工作流",
+      targetAudience: "AI 项目负责人",
+      audiencePain: "交付不稳定",
+      coreConflict: "模型能力与流程能力",
+      format: "口播",
+      adaptationStrategy: {
+        keep: ["反常识"],
+        replace: ["来源案例"],
+        add: ["真实经验"],
+        avoid: ["照搬"],
+      },
+      adaptedDraft: "模型很强，不等于业务流程已经跑通。",
+    };
+
+    const processed = await drainIntelligenceTopicPreviewQueue({
+      tasks: {
+        claimNext,
+        claimTask,
+        heartbeat,
+        finish,
+      } as never,
+      intelligence: {
+        getTopicPreviewForExecution: vi.fn().mockResolvedValue({
+          transformId: "transform-recovered",
+          item: { canonicalUrl: "https://example.com/recovered" },
+          transcript: { hash: "sha256:recovered" },
+        }),
+        saveTopicPreviewCheckpoint,
+        finishTopicPreview,
+      } as never,
+      generator: {
+        generate: async (_ctx, _input, onCheckpoint) => {
+          await onCheckpoint({
+            stage: "decomposition",
+            value: {
+              hook: generated.hook,
+              structureSteps: generated.structureSteps,
+              coreClaims: generated.coreClaims,
+              reusablePattern: generated.reusablePattern,
+              factRisks: generated.factRisks,
+            },
+          });
+          await onCheckpoint({
+            stage: "topic",
+            value: {
+              title: generated.title,
+              angle: generated.angle,
+              differentiation: generated.differentiation,
+              sourceSummary: generated.sourceSummary,
+              targetAudience: generated.targetAudience,
+              audiencePain: generated.audiencePain,
+              coreConflict: generated.coreConflict,
+              format: generated.format,
+              adaptationStrategy: generated.adaptationStrategy,
+            },
+          });
+          await onCheckpoint({
+            stage: "draft",
+            value: { contentText: generated.adaptedDraft },
+          });
+          return generated;
+        },
+      },
+    });
+
+    expect(processed).toBe(1);
+    expect(claimNext).toHaveBeenCalledWith(
+      expect.objectContaining({ kinds: ["topic_preview"] }),
+    );
+    expect(claimTask).not.toHaveBeenCalled();
+    expect(heartbeat).toHaveBeenCalledTimes(3);
+    expect(finish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskId: "task-recovered",
+        workerId: "worker-recovered",
+        attempt: 2,
+        status: "succeeded",
       }),
     );
   });

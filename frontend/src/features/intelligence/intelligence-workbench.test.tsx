@@ -1994,6 +1994,40 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeEnabled();
   });
 
+  it("[T-893] 超长逐字稿使用受限正文滚动区，常见小窗口仍保留保存操作区", async () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={detail}
+        api={api()}
+        positioningVersionId="positioning-1"
+      />,
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "添加逐字稿" }),
+    );
+
+    const dialog = screen.getByRole("dialog");
+    const body = dialog.querySelector(
+      '[data-slot="transcript-editor-body"]',
+    );
+    expect(dialog).toHaveClass("max-h-[calc(100dvh-2rem)]", "overflow-hidden");
+    expect(body).toHaveClass("min-h-0", "overflow-y-auto");
+    expect(screen.getByLabelText("逐字稿正文")).toHaveClass(
+      "field-sizing-fixed",
+      "max-h-[min(50dvh,28rem)]",
+      "overflow-y-auto",
+    );
+    expect(
+      screen.getByRole("button", { name: "保存逐字稿" }).closest(
+        '[data-slot="dialog-footer"]',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("[T-622] 任一选题候选生成成功后永久锁定逐字稿", () => {
     render(
       <IntelligenceWorkbench

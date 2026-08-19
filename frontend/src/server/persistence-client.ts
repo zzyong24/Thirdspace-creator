@@ -253,7 +253,9 @@ import {
   runIntelligenceTranscriptTask,
   drainIntelligenceTranscriptQueue,
   type IntelligenceTranscriptRunnerDeps,
+  drainIntelligenceTopicPreviewQueue,
   runIntelligenceTopicPreviewTask,
+  type TopicPreviewGeneratorPort,
   INTELLIGENCE_OP_IDS,
 } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
@@ -529,7 +531,10 @@ import {
   resolveLlmConfig,
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
-import { topicPreviewGenerationOptions } from "@/server/intelligence-topic-preview-config";
+import {
+  TOPIC_ADAPTED_DRAFT_TIMEOUT_MS,
+  topicPreviewGenerationOptions,
+} from "@/server/intelligence-topic-preview-config";
 import {
   matchesPinnedModelAuthority,
   pinModelAuthority,
@@ -5752,6 +5757,132 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     references: projectIntelligenceReferences,
     generator: projectScriptGenerator,
   };
+  const topicPreviewGenerator: TopicPreviewGeneratorPort = {
+    generate: async (c, target, onCheckpoint) => {
+      const {
+        INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
+        INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+        INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+        intelligenceTopicDecomposeSchema,
+        normalizeIntelligenceTopicDecomposeOutput,
+        intelligenceTopicFromDecompositionSchema,
+        modelFor,
+        runStructuredNode,
+        runTemplatedNode,
+      } = await import("@creatoros/ai-worker");
+      const spec = await resolveModelSpec(c, "topic.generate");
+      const positioning = [
+        target.positioning.oneLiner,
+        target.positioning.keywords.length > 0
+          ? `关键词：${target.positioning.keywords.join("、")}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+      const sourceAuthor = target.item.authorName ?? target.item.platform;
+      const decomposition = target.reusableDecomposition
+        ? target.reusableDecomposition
+        : intelligenceTopicDecomposeSchema.parse(
+            (
+              await runWithResolvedEffectiveSkills(
+                c,
+                ["intelligence.topic-decompose"],
+                () =>
+                  runStructuredNode({
+                    model: modelFor(spec),
+                    template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
+                    normalizeObject: normalizeIntelligenceTopicDecomposeOutput,
+                    facets: {
+                      positioning,
+                      sourceTitle: target.item.title,
+                      sourceAuthor,
+                      sourceUrl: target.item.canonicalUrl,
+                      transcript: target.transcript.text,
+                    },
+                    ...topicPreviewGenerationOptions({
+                      hasReusableDecomposition: false,
+                    }),
+                  }),
+              )
+            ).object,
+          );
+      await onCheckpoint({ stage: "decomposition", value: decomposition });
+
+      const topicCandidate = target.reusableCandidate
+        ? target.reusableCandidate
+        : intelligenceTopicFromDecompositionSchema.parse(
+            (
+              await runWithResolvedEffectiveSkills(
+                c,
+                ["intelligence.topic-from-decomposition"],
+                () =>
+                  runStructuredNode({
+                    model: modelFor(spec),
+                    template: INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
+                    facets: {
+                      positioning,
+                      sourceTitle: target.item.title,
+                      sourceAuthor,
+                      sourceUrl: target.item.canonicalUrl,
+                      decomposition: JSON.stringify(decomposition),
+                    },
+                    ...topicPreviewGenerationOptions({
+                      hasReusableDecomposition: true,
+                    }),
+                  }),
+              )
+            ).object,
+          );
+      await onCheckpoint({ stage: "topic", value: topicCandidate });
+
+      const draftResult = await runWithResolvedEffectiveSkills(
+        c,
+        ["intelligence.topic-adapted-draft"],
+        () =>
+          runTemplatedNode({
+            model: modelFor(spec),
+            template: INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
+            maxSteps: 1,
+            timeoutMs: TOPIC_ADAPTED_DRAFT_TIMEOUT_MS,
+            facets: {
+              positioning,
+              sourceTitle: target.item.title,
+              sourceAuthor,
+              sourceUrl: target.item.canonicalUrl,
+              transcript: target.transcript.text,
+              decomposition: JSON.stringify(decomposition),
+              topicCandidate: JSON.stringify({
+                title: topicCandidate.title,
+                angle: topicCandidate.angle,
+                differentiation: topicCandidate.differentiation,
+                sourceSummary: topicCandidate.sourceSummary,
+                targetAudience: topicCandidate.targetAudience,
+                audiencePain: topicCandidate.audiencePain,
+                coreConflict: topicCandidate.coreConflict,
+                format: topicCandidate.format,
+              }),
+              adaptationStrategy: JSON.stringify(
+                topicCandidate.adaptationStrategy,
+              ),
+            },
+          }),
+      );
+      const adaptedDraft = draftResult.text.trim();
+      if (!adaptedDraft) {
+        throw new Error("output invalid: adapted draft is empty");
+      }
+      await onCheckpoint({
+        stage: "draft",
+        value: { contentText: adaptedDraft },
+      });
+      return { ...decomposition, ...topicCandidate, adaptedDraft };
+    },
+  };
+  const topicPreviewRunnerDeps = {
+    tasks: persistentTaskService,
+    intelligence: intelligenceService,
+    generator: topicPreviewGenerator,
+  };
   const intelligenceBase = createIntelligenceTransport(
     () => intelligenceService,
     () => projectIntelligenceReferences,
@@ -6254,140 +6385,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           void runIntelligenceTopicPreviewTask(
             ctx,
             { taskId: task.id },
-            {
-              tasks: persistentTaskService,
-              intelligence: intelligenceService,
-              generator: {
-                generate: async (c, target, onCheckpoint) => {
-                  const {
-                    INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
-                    INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
-                    INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
-                    intelligenceTopicDecomposeSchema,
-                    normalizeIntelligenceTopicDecomposeOutput,
-                    intelligenceTopicFromDecompositionSchema,
-                    modelFor,
-                    runStructuredNode,
-                    runTemplatedNode,
-                  } = await import("@creatoros/ai-worker");
-                  const spec = await resolveModelSpec(c, "topic.generate");
-                  const positioning = [
-                    target.positioning.oneLiner,
-                    target.positioning.keywords.length > 0
-                      ? `关键词：${target.positioning.keywords.join("、")}`
-                      : "",
-                  ]
-                    .filter(Boolean)
-                    .join("\n");
-                  const sourceAuthor =
-                    target.item.authorName ?? target.item.platform;
-                  const decomposition = target.reusableDecomposition
-                    ? target.reusableDecomposition
-                    : intelligenceTopicDecomposeSchema.parse(
-                        (
-                          await runWithResolvedEffectiveSkills(
-                            c,
-                            ["intelligence.topic-decompose"],
-                            () =>
-                              runStructuredNode({
-                                model: modelFor(spec),
-                                template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
-                                normalizeObject:
-                                  normalizeIntelligenceTopicDecomposeOutput,
-                                facets: {
-                                  positioning,
-                                  sourceTitle: target.item.title,
-                                  sourceAuthor,
-                                  sourceUrl: target.item.canonicalUrl,
-                                  transcript: target.transcript.text,
-                                },
-                                ...topicPreviewGenerationOptions({
-                                  hasReusableDecomposition: false,
-                                }),
-                              }),
-                          )
-                        ).object,
-                      );
-                  await onCheckpoint({
-                    stage: "decomposition",
-                    value: decomposition,
-                  });
-
-                  const topicCandidate = target.reusableCandidate
-                    ? target.reusableCandidate
-                    : intelligenceTopicFromDecompositionSchema.parse(
-                        (
-                          await runWithResolvedEffectiveSkills(
-                            c,
-                            ["intelligence.topic-from-decomposition"],
-                            () =>
-                              runStructuredNode({
-                                model: modelFor(spec),
-                                template:
-                                  INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
-                                facets: {
-                                  positioning,
-                                  sourceTitle: target.item.title,
-                                  sourceAuthor,
-                                  sourceUrl: target.item.canonicalUrl,
-                                  decomposition: JSON.stringify(decomposition),
-                                },
-                                ...topicPreviewGenerationOptions({
-                                  hasReusableDecomposition: true,
-                                }),
-                              }),
-                          )
-                        ).object,
-                      );
-                  await onCheckpoint({ stage: "topic", value: topicCandidate });
-
-                  const draftResult = await runWithResolvedEffectiveSkills(
-                    c,
-                    ["intelligence.topic-adapted-draft"],
-                    () =>
-                      runTemplatedNode({
-                        model: modelFor(spec),
-                        template: INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
-                        maxSteps: 1,
-                        facets: {
-                          positioning,
-                          sourceTitle: target.item.title,
-                          sourceAuthor,
-                          sourceUrl: target.item.canonicalUrl,
-                          transcript: target.transcript.text,
-                          decomposition: JSON.stringify(decomposition),
-                          topicCandidate: JSON.stringify({
-                            title: topicCandidate.title,
-                            angle: topicCandidate.angle,
-                            differentiation: topicCandidate.differentiation,
-                            sourceSummary: topicCandidate.sourceSummary,
-                            targetAudience: topicCandidate.targetAudience,
-                            audiencePain: topicCandidate.audiencePain,
-                            coreConflict: topicCandidate.coreConflict,
-                            format: topicCandidate.format,
-                          }),
-                          adaptationStrategy: JSON.stringify(
-                            topicCandidate.adaptationStrategy,
-                          ),
-                        },
-                      }),
-                  );
-                  const adaptedDraft = draftResult.text.trim();
-                  if (!adaptedDraft) {
-                    throw new Error("output invalid: adapted draft is empty");
-                  }
-                  await onCheckpoint({
-                    stage: "draft",
-                    value: { contentText: adaptedDraft },
-                  });
-                  return {
-                    ...decomposition,
-                    ...topicCandidate,
-                    adaptedDraft,
-                  };
-                },
-              },
-            },
+            topicPreviewRunnerDeps,
           ).catch((error) => {
             console.error(
               "[intelligence] 选题候选任务启动失败:",
@@ -6428,6 +6426,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       );
     },
   );
+  void drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps)
+    .then((processed) => {
+      if (processed > 0) {
+        console.info(
+          `[intelligence] 选题候选启动恢复完成: processed=${processed}`,
+        );
+      }
+    })
+    .catch((error) => {
+      console.error(
+        "[intelligence] 选题候选启动恢复失败:",
+        error instanceof Error ? error.name : "UnknownError",
+      );
+    });
   void drainDouyinShareImportQueue(shareImportRunnerDeps).catch((error) => {
     console.error(
       "[intelligence] 单条分享导入启动恢复失败:",

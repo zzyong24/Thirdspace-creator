@@ -46,6 +46,11 @@ export interface RunAgentNodeOptions {
   maxSteps?: number;
   /** 每步回调 —— 落 ai_task_steps + 推前端实时日志。 */
   onStep?: (event: AgentStepEvent) => void | Promise<void>;
+  /**
+   * 单节点硬上界。仅由调用方按真实节点耗时设置；到期会同时中止 provider 请求并让外层任务
+   * 进入可重试失败终态，避免第三方连接永不返回时永久占用持久任务租约。
+   */
+  timeoutMs?: number;
 }
 
 export interface RunAgentNodeResult {
@@ -55,6 +60,16 @@ export interface RunAgentNodeResult {
   steps: AgentStepEvent[];
 }
 
+export class AgentNodeTimeoutError extends Error {
+  readonly timeoutMs: number;
+
+  constructor(timeoutMs: number) {
+    super(`agent node timed out after ${timeoutMs}ms`);
+    this.name = "AgentNodeTimeoutError";
+    this.timeoutMs = timeoutMs;
+  }
+}
+
 /**
  * 跑一次 agent 节点。厂商中立:换模型只换 `model`,加工具只加 `tools`,加节点只换
  * `system`/output schema —— 不动这层。
@@ -62,12 +77,20 @@ export interface RunAgentNodeResult {
 export async function runAgentNode(
   opts: RunAgentNodeOptions,
 ): Promise<RunAgentNodeResult> {
+  if (
+    opts.timeoutMs !== undefined &&
+    (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0)
+  ) {
+    throw new RangeError("timeoutMs 必须是正数");
+  }
   const steps: AgentStepEvent[] = [];
-  const result = await generateText({
+  const abortController = opts.timeoutMs ? new AbortController() : null;
+  const generation = generateText({
     model: opts.model,
     system: opts.system,
     prompt: opts.prompt,
     tools: opts.tools,
+    abortSignal: abortController?.signal,
     stopWhen: stepCountIs(opts.maxSteps ?? 8),
     onStepFinish: async (step) => {
       const event: AgentStepEvent = {
@@ -83,5 +106,19 @@ export async function runAgentNode(
       await opts.onStep?.(event);
     },
   });
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  const result = opts.timeoutMs
+    ? await Promise.race([
+        generation,
+        new Promise<never>((_resolve, reject) => {
+          timeout = setTimeout(() => {
+            abortController?.abort();
+            reject(new AgentNodeTimeoutError(opts.timeoutMs!));
+          }, opts.timeoutMs);
+        }),
+      ]).finally(() => {
+        if (timeout) clearTimeout(timeout);
+      })
+    : await generation;
   return { text: result.text, steps };
 }
