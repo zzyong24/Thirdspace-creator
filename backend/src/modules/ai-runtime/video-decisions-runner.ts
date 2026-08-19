@@ -1264,7 +1264,11 @@ export interface StructuredCallInput<T> {
 }
 export type StructuredCall = <T>(input: StructuredCallInput<T>) => Promise<T>;
 
-const VIDEO_LONG_STRUCTURED_TIMEOUT_MS = 120_000;
+/**
+ * 视频分场/信息卡会同时消费整份 SRT 与确认稿，官方渠道真实调用可能超过两分钟。
+ * 只在这两个长节点显式放宽到十分钟；普通结构节点仍使用 shared runner 的 90 秒默认值。
+ */
+const VIDEO_LONG_STRUCTURED_TIMEOUT_MS = 600_000;
 
 export type VideoOrientation = "portrait" | "landscape";
 

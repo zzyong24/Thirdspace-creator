@@ -1313,7 +1313,7 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     expect(cards[1]?.visualPlan).toBeUndefined();
   });
 
-  it("分场与信息卡属于长结构任务，显式使用有上界的 120 秒节点时限", async () => {
+  it("分场与信息卡属于长结构任务，不复用普通文本节点的短时限", async () => {
     const seen: Array<{ skillId: string; timeoutMs?: number }> = [];
     const call = vi.fn(async <T>(input: StructuredCallInput<T>) => {
       seen.push({ skillId: input.skillId, timeoutMs: input.timeoutMs });
@@ -1329,8 +1329,8 @@ describe("decideCards(吸附 + 可溯剔除)", () => {
     await decideCards({ scenes, srtLines, script: SCRIPT }, call);
 
     expect(seen).toEqual([
-      { skillId: "video.scenes", timeoutMs: 120_000 },
-      { skillId: "video.cards", timeoutMs: 120_000 },
+      { skillId: "video.scenes", timeoutMs: 600_000 },
+      { skillId: "video.cards", timeoutMs: 600_000 },
     ]);
   });
 
