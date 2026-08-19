@@ -1,0 +1,29 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-893",
+  "commit_sha": "7c83551501c6b29d8929b25ebcd809d7242ca4a3",
+  "captures": [
+    {
+      "checkpoint": "long-transcript-regular-window",
+      "check_ids": [
+        "AC-TRANSCRIPT-DIALOG-SAVE"
+      ],
+      "viewport": {
+        "width": 1536,
+        "height": 1024
+      },
+      "text": "添加逐字稿\n\n直接粘贴正文，或从 TXT、Markdown、SRT、VTT 文件导入后检查再保存。\n\n从文件导入\n15,479 字 · 46,199 字节\n取消\n保存逐字稿\n关闭"
+    },
+    {
+      "checkpoint": "long-transcript-minimum-window",
+      "check_ids": [
+        "AC-TRANSCRIPT-DIALOG-SAVE"
+      ],
+      "viewport": {
+        "width": 1024,
+        "height": 720
+      },
+      "text": "添加逐字稿\n\n直接粘贴正文，或从 TXT、Markdown、SRT、VTT 文件导入后检查再保存。\n\n从文件导入\n15,479 字 · 46,199 字节\n取消\n保存逐字稿\n关闭"
+    }
+  ]
+}

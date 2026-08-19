@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-870",
-  "commit_sha": "f330473f2b9624a4ec61a41da78d30099eb88fc5",
+  "commit_sha": "7c83551501c6b29d8929b25ebcd809d7242ca4a3",
   "captures": [
     {
       "checkpoint": "radar-topic-ready",

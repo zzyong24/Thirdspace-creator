@@ -73,3 +73,11 @@ node orchestrator/process/orphan-scan.mjs
   超过 5 秒；同一文件隔离复跑 39/39 通过。
 - 本轮没有修改飞书 Base 记录、用户 CreatorOS 账号、模型配置或真实项目数据；也未把尚未打入安装包
   冒充用户真机已修复。
+
+## 项目级 reconcile
+
+`pmem sync` 已完成，边界、孤儿、知识漂移、语义边界以及本轮新增的 LED-023/LED-038 防回退门卫均通过。
+整仓 `reconcile` 最终仍报 97 项历史台账错误：主要是旧任务缺验收列、旧 review receipt 未在 BACKLOG
+链接 SPEC，以及 T-881 的既有前端 receipt 因其他视频代码变化而失效；这些错误在 T-893 开工前已经存在，
+没有一项指向本轮 watched paths。依据项目收尾规则，本任务保留这组全局欠债，不将整仓 reconcile 冒充全绿，
+但不阻断已经独立通过的 T-893 聚焦测试、真实页面旅程与新增门卫。
