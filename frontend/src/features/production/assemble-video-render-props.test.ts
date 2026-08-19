@@ -10,6 +10,10 @@
 import { describe, expect, it } from "vitest";
 
 import type { VideoDecisions } from "@creatoros/backend/modules/ai-runtime";
+import {
+  assertVideoLayoutSafety,
+  stabilizeVideoLayoutSafety,
+} from "@creatoros/backend/modules/execution";
 import { assembleVideoRenderProps } from "./assemble-video-render-props";
 
 const DECISIONS: VideoDecisions = {
@@ -120,6 +124,87 @@ const OPTS = {
 };
 
 describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () => {
+  it("[T-896] 正式组装输出贯穿安全降级：横图保留 PiP，方图和竖图隐藏人物后仍可渲染", () => {
+    const assembled = assembleVideoRenderProps(
+      {
+        ...DECISIONS,
+        direction: undefined,
+        broll: [
+          {
+            sceneIdx: 0,
+            assetId: "landscape-screen",
+            at: 0.5,
+            durationSec: 2,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+            speakerMode: "pip_bottom_left",
+          },
+          {
+            sceneIdx: 1,
+            assetId: "square-screen",
+            at: 4,
+            durationSec: 2,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+            speakerMode: "pip_bottom_left",
+          },
+          {
+            sceneIdx: 1,
+            assetId: "portrait-screen",
+            at: 8,
+            durationSec: 2,
+            presentation: "full_frame",
+            visualRole: "screen_recording",
+            speakerMode: "pip_bottom_left",
+          },
+        ],
+      },
+      {
+        ...OPTS,
+        orientation: "portrait",
+        inventory: [
+          {
+            assetId: "landscape-screen",
+            label: "横版录屏",
+            kind: "video",
+            description: "横版",
+            width: 1920,
+            height: 1080,
+          },
+          {
+            assetId: "square-screen",
+            label: "方形录屏",
+            kind: "video",
+            description: "方形",
+            width: 1024,
+            height: 1024,
+          },
+          {
+            assetId: "portrait-screen",
+            label: "竖版录屏",
+            kind: "video",
+            description: "竖版",
+            width: 1080,
+            height: 1920,
+          },
+        ],
+      },
+    );
+
+    expect(assembled.broll.map((item) => [item.sourceWidth, item.sourceHeight])).toEqual([
+      [1920, 1080],
+      [1024, 1024],
+      [1080, 1920],
+    ]);
+    const stabilized = stabilizeVideoLayoutSafety(assembled);
+    expect(stabilized.props.broll.map((item) => item.speakerMode)).toEqual([
+      "pip_bottom_left",
+      "hidden",
+      "hidden",
+    ]);
+    expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
+  });
+
   it("[T-859 RED] 竖屏主素材默认保留左下角人物，横屏仍隐藏，AI 明确值优先", () => {
     const portrait = assembleVideoRenderProps(DECISIONS, {
       ...OPTS,

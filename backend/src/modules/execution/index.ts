@@ -88,6 +88,8 @@ export {
   resolveSceneMode,
   resolveMainBrollGeometry,
   assertVideoLayoutSafety,
+  stabilizeVideoLayoutSafety,
+  type VideoLayoutSafetyFallback,
   type TemplateOptions,
 } from "./video-render/template";
 

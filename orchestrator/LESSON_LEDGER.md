@@ -13,6 +13,30 @@
 
 ---
 
+## LED-043 — 质量安全门不能把上一版可完成的合法任务变成整单失败
+
+- **Date**: 2026-08-19 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 为避免竖屏素材与左下人物框边界重合，渲染链新增 fail-closed 几何门；上一版本能成片的
+  合法项目升级后，在 HTML、HyperFrames 和 ffmpeg 启动前被整单取消，连续三个真实任务稳定失败。
+- **RootCause**: 把审美/布局偏好误当成不可恢复的数据安全错误；只用 16:9 素材验证孤立几何 helper，
+  没有从正式分镜组装走到安全门和渲染输入，也没有覆盖方图、竖图或拿旧版成功任务做兼容回归。
+- **GuardRule**: 启动、保存、生成、渲染、导出、发布等关键链路中，新增审美、布局或质量门不得把上一版
+  可完成的合法输入改成整单失败。能隐藏可选图层、切换安全布局、跳过单个问题素材或回退基础动效时必须
+  确定性降级；只有输入损坏、权限/归属错误或不存在任何安全输出路径时才允许 hard-fail。上线前必须用
+  旧版成功样例贯穿正式公共调用链，并覆盖该门判断的全部输入族；孤立 helper/几何单测不能作为发布证据。
+- **GuardCheck**: `node --test orchestrator/process/critical-path-availability-rule.test.mjs && pnpm --dir
+  frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec
+  vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts`
+  （规则防删除；横图、方图、竖图从正式分镜组装贯穿安全降级与安全门；执行器验证继续生成 HTML 并进入
+  HyperFrames。真实 1080×1920 渲染 smoke 另由 `verify-t896-video-layout-fallback.mts` 覆盖）。
+- **Outcome(T+N)**: T-895 已用真实日志确认三个任务都在同一布局门失败，且旧孤立单测为绿；T-896 已让
+  安全横图保留 PiP，方图/竖图冲突时确定性隐藏人物并继续出片。组装贯通、执行器和 1080×1920 真实
+  HyperFrames smoke 均通过；规则同步写入项目工程约束与全局 `video-editing` Skill。
+- **Ref**: T-895、T-896、T-897、`fdd6d7ab123413a1954085e5a51e25e89671277b`、
+  `docs/research/2026-08-19-video-render-layout-guard-regression.md`。
+
+---
+
 ## LED-042 — 首屏固定取 100 条，不等于库里总共只有 100 条
 
 - **Date**: 2026-08-18 · **Stage**: BUILD · **Severity**: high · **Status**: rule

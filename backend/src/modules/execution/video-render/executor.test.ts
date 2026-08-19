@@ -345,6 +345,95 @@ describe("createVideoRenderExecutor", () => {
     });
   });
 
+  it("[T-896 RED] 方形主素材与左下人物冲突时降级隐藏人物，仍生成 HTML 并进入 HyperFrames", async () => {
+    const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const steps: string[] = [];
+    const executor = createVideoRenderExecutor(
+      fakeEngine(calls, {
+        async probeDelivery() {
+          return {
+            codec: "h264",
+            profile: "High",
+            width: 1080,
+            height: 1920,
+            pixFmt: "yuv420p",
+            avgFrameRate: "30/1",
+            rFrameRate: "30/1",
+            colorSpace: "bt709",
+            colorPrimaries: "bt709",
+            colorTransfer: "bt709",
+            bitRate: 8_000_000,
+            durationSec: 12,
+          };
+        },
+      }),
+    );
+    const base = props();
+    const squareProps = videoRenderProps.parse({
+      ...base,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      scenes: base.scenes.map((scene) => ({ ...scene, cards: [] })),
+      broll: [
+        {
+          at: 4,
+          file: "b1.mp4",
+          durationSec: 4,
+          label: "方形操作素材",
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+          sourceWidth: 1024,
+          sourceHeight: 1024,
+        },
+      ],
+      direction: {
+        motionThesis: "方形操作素材接管主舞台",
+        beatGraph: [
+          {
+            id: "square-takeover",
+            sceneIdx: 0,
+            startSec: 4,
+            endSec: 8,
+            subject: { kind: "broll", ref: "broll:b1.mp4" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "enter",
+            stageMode: "takeover",
+            transitionIn: "fade",
+            transitionOut: "fade",
+            returnGeometry: "same_base",
+          },
+        ],
+      },
+    });
+
+    await expect(
+      executor.run(
+        sandbox,
+        { goal: "渲染方形素材", props: squareProps },
+        runOpts(steps),
+      ),
+    ).resolves.toMatchObject({ summary: expect.stringContaining("final.mp4") });
+
+    expect(calls.rendered).toHaveLength(1);
+    expect(steps).toContainEqual(
+      expect.stringMatching(
+        /布局安全降级.*b1\.mp4.*1024x1024.*人物框与素材可见边界重叠.*人物已隐藏/,
+      ),
+    );
+    const html = await fs.readFile(
+      path.join(sandbox.dir, "work", "index.html"),
+      "utf8",
+    );
+    expect(html).toContain('src="media/b1.mp4"');
+    expect(html).not.toContain(
+      'left:54,top:1188,width:264,height:469,borderRadius:24',
+    );
+    expect(html).toContain(
+      'tl.to("#th",{autoAlpha:0,duration:.18,ease:"power1.inOut"},4.00);',
+    );
+  });
+
   it("安全 H.264 通过 FFmpeg 全流解码后只 remux，不再调用重复的 Chromium 首帧预检", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     let chromiumChecks = 0;

@@ -10,6 +10,7 @@ import {
   fitMediaRect,
   generateVideoRenderHtml,
   resolveSceneMode,
+  stabilizeVideoLayoutSafety,
 } from "./template";
 
 /** 覆盖六 kind + 三 special + PiP/right 切换 + B-roll + 双语字幕的全量 fixture。 */
@@ -863,6 +864,99 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
 });
 
 describe("竖屏界面素材可读性", () => {
+  it("[T-896 RED] 横图保留安全 PiP，方图和竖图冲突时自动隐藏人物并通过正式安全门", () => {
+    const base = fullProps();
+    const input = videoRenderProps.parse({
+      ...base,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      broll: [
+        {
+          at: 9,
+          file: "landscape.mp4",
+          durationSec: 4,
+          label: "横版录屏",
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+          sourceWidth: 1920,
+          sourceHeight: 1080,
+        },
+        {
+          at: 18,
+          file: "square.mp4",
+          durationSec: 4,
+          label: "方形录屏",
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+          sourceWidth: 1024,
+          sourceHeight: 1024,
+        },
+        {
+          at: 31,
+          file: "portrait.mp4",
+          durationSec: 4,
+          label: "竖版录屏",
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "pip_bottom_left",
+          sourceWidth: 1080,
+          sourceHeight: 1920,
+        },
+      ],
+    });
+
+    const stabilized = stabilizeVideoLayoutSafety(input);
+
+    expect(stabilized.props.broll.map((item) => item.speakerMode)).toEqual([
+      "pip_bottom_left",
+      "hidden",
+      "hidden",
+    ]);
+    expect(stabilized.fallbacks).toHaveLength(2);
+    expect(stabilized.fallbacks[0]).toMatchObject({
+      file: "square.mp4",
+      sourceWidth: 1024,
+      sourceHeight: 1024,
+      from: "pip_bottom_left",
+      to: "hidden",
+      reason: "人物框与素材可见边界重叠",
+    });
+    expect(stabilized.fallbacks[0]?.media).toEqual({
+      x: 40,
+      y: 360,
+      width: 1000,
+      height: 1000,
+    });
+    expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
+  });
+
+  it("[T-896 RED] 已明确隐藏的人物不产生重复降级", () => {
+    const base = fullProps();
+    const input = videoRenderProps.parse({
+      ...base,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      broll: [
+        {
+          at: 9,
+          file: "square.png",
+          durationSec: 4,
+          label: "方图",
+          presentation: "large_stage",
+          visualRole: "still_image",
+          speakerMode: "hidden",
+          sourceWidth: 1024,
+          sourceHeight: 1024,
+        },
+      ],
+    });
+
+    const stabilized = stabilizeVideoLayoutSafety(input);
+    expect(stabilized.props).toBe(input);
+    expect(stabilized.fallbacks).toEqual([]);
+    expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
+  });
+
   it("[T-860 RED] 人物框必须同时离开素材可见底边和双语字幕安全区", () => {
     const media = { x: 0, y: 556, width: 1080, height: 608 };
     expect(() =>

@@ -32,6 +32,7 @@ import {
   assertVideoLayoutSafety,
   collectMediaFiles,
   generateVideoRenderHtml,
+  stabilizeVideoLayoutSafety,
 } from "./template";
 
 // ── 可注入的引擎面(测试 fake 掉,不碰真 ffmpeg/真浏览器/真渲染)────────────────────
@@ -1107,14 +1108,25 @@ export function createVideoRenderExecutor(
 
       // 4) 模板生成 index.html(props 内文件引用替换为 media/ 落名)+ gsap 落盘
       await reportStep("生成合成模板 index.html");
+      const stabilized = stabilizeVideoLayoutSafety(props);
+      for (const fallback of stabilized.fallbacks) {
+        await reportStep(
+          `布局安全降级:${fallback.file}` +
+            `(${fallback.sourceWidth ?? "?"}x${fallback.sourceHeight ?? "?"})` +
+            ` ${fallback.reason};人物已隐藏` +
+            ` [media=${fallback.media.x},${fallback.media.y},${fallback.media.width},${fallback.media.height}` +
+            ` pip=${fallback.pip.left},${fallback.pip.top},${fallback.pip.width},${fallback.pip.height}]`,
+        );
+      }
+      const renderProps = stabilized.props;
       const rename = (f: string): string => nameMap.get(f) ?? f;
       const renamedProps: VideoRenderProps = {
-        ...props,
-        ...(props.direction
+        ...renderProps,
+        ...(renderProps.direction
           ? {
               direction: {
-                ...props.direction,
-                beatGraph: props.direction.beatGraph.map((beat) =>
+                ...renderProps.direction,
+                beatGraph: renderProps.direction.beatGraph.map((beat) =>
                   beat.subject.kind === "broll"
                     ? {
                         ...beat,
@@ -1128,9 +1140,9 @@ export function createVideoRenderExecutor(
               },
             }
           : {}),
-        talkingHead: { ...props.talkingHead, file: rename(props.talkingHead.file) },
-        broll: props.broll.map((b) => ({ ...b, file: rename(b.file) })),
-        scenes: props.scenes.map((s) => ({
+        talkingHead: { ...renderProps.talkingHead, file: rename(renderProps.talkingHead.file) },
+        broll: renderProps.broll.map((b) => ({ ...b, file: rename(b.file) })),
+        scenes: renderProps.scenes.map((s) => ({
           ...s,
           cards: s.cards.map((c) => (c.kind === "image" ? { ...c, file: rename(c.file) } : c)),
         })),

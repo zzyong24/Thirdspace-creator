@@ -310,7 +310,37 @@ export function assertPortraitPipSpacing(input: {
   canvasHeight: number;
   media: MainBrollGeometry;
   pip: LayoutBox;
+  file?: string;
+  sourceWidth?: number;
+  sourceHeight?: number;
 }): void {
+  const detail = input.file
+    ? ` [asset=${input.file.split(/[\\/]/).at(-1) ?? "unknown"}` +
+      ` source=${input.sourceWidth ?? "?"}x${input.sourceHeight ?? "?"}` +
+      ` media=${input.media.x},${input.media.y},${input.media.width},${input.media.height}` +
+      ` pip=${input.pip.left},${input.pip.top},${input.pip.width},${input.pip.height}]`
+    : "";
+  const issue = portraitPipSpacingIssue(input);
+  if (issue) throw new Error(`${issue}${detail}`);
+}
+
+export interface VideoLayoutSafetyFallback {
+  file: string;
+  label: string;
+  sourceWidth?: number;
+  sourceHeight?: number;
+  from: "pip_bottom_left";
+  to: "hidden";
+  reason: "人物框与素材可见边界重叠" | "人物框进入字幕安全区";
+  media: MainBrollGeometry;
+  pip: LayoutBox;
+}
+
+function portraitPipSpacingIssue(input: {
+  canvasHeight: number;
+  media: MainBrollGeometry;
+  pip: LayoutBox;
+}): VideoLayoutSafetyFallback["reason"] | null {
   const minimumGap = Math.max(
     1,
     Math.round((20 / 1920) * input.canvasHeight),
@@ -323,15 +353,95 @@ export function assertPortraitPipSpacing(input: {
     horizontalOverlap &&
     input.pip.top < input.media.y + input.media.height + minimumGap
   ) {
-    throw new Error("人物框与素材可见边界重叠");
+    return "人物框与素材可见边界重叠";
   }
   const captionSafeTop =
     input.canvasHeight -
     Math.round((92 / 1920) * input.canvasHeight) -
     Math.round((150 / 1920) * input.canvasHeight);
-  if (input.pip.top + input.pip.height > captionSafeTop) {
-    throw new Error("人物框进入字幕安全区");
+  return input.pip.top + input.pip.height > captionSafeTop
+    ? "人物框进入字幕安全区"
+    : null;
+}
+
+function resolvePortraitPipMedia(
+  props: VideoRenderProps,
+  broll: VideoRenderBroll,
+  presentation: "full_frame" | "large_stage",
+): { media: MainBrollGeometry; pip: LayoutBox } {
+  const geometry = resolveMainBrollGeometry(
+    props.delivery.width,
+    props.delivery.height,
+    presentation,
+  );
+  const padding = presentation === "full_frame" ? 0 : 10;
+  const mediaBounds = resolveBrollMediaBounds(
+    props.delivery.width,
+    props.delivery.height,
+    presentation,
+    broll.visualRole,
+    {
+      x: geometry.x + padding,
+      y: geometry.y + padding,
+      width: Math.max(1, geometry.width - padding * 2),
+      height: Math.max(1, geometry.height - padding * 2),
+    },
+  );
+  return {
+    media: fitMediaRect(
+      mediaBounds,
+      broll.sourceWidth,
+      broll.sourceHeight,
+    ),
+    pip: resolveLayout(props.delivery.width, props.delivery.height).thPip,
+  };
+}
+
+/**
+ * 可恢复的布局冲突先收敛为安全渲染输入。人物/PiP 是可选辅助层；当素材完整
+ * contain 后没有安全位置时隐藏人物，不把合法素材升级成整单渲染失败。
+ */
+export function stabilizeVideoLayoutSafety(props: VideoRenderProps): {
+  props: VideoRenderProps;
+  fallbacks: VideoLayoutSafetyFallback[];
+} {
+  if (props.delivery.height <= props.delivery.width) {
+    return { props, fallbacks: [] };
   }
+  const fallbacks: VideoLayoutSafetyFallback[] = [];
+  let changed = false;
+  const broll = props.broll.map((item) => {
+    if (item.speakerMode !== "pip_bottom_left") return item;
+    const presentation = resolveBrollPresentation(item);
+    if (presentation === "overlay") return item;
+    const scene = props.scenes.find(
+      (candidate) => item.at >= candidate.startSec && item.at < candidate.endSec,
+    );
+    if (!scene) return item;
+    const layout = resolvePortraitPipMedia(props, item, presentation);
+    const reason = portraitPipSpacingIssue({
+      canvasHeight: props.delivery.height,
+      ...layout,
+    });
+    if (!reason) return item;
+    changed = true;
+    fallbacks.push({
+      file: item.file,
+      label: item.label,
+      ...(item.sourceWidth ? { sourceWidth: item.sourceWidth } : {}),
+      ...(item.sourceHeight ? { sourceHeight: item.sourceHeight } : {}),
+      from: "pip_bottom_left",
+      to: "hidden",
+      reason,
+      media: layout.media,
+      pip: layout.pip,
+    });
+    return { ...item, speakerMode: "hidden" as const };
+  });
+  return {
+    props: changed ? { ...props, broll } : props,
+    fallbacks,
+  };
 }
 
 /**
@@ -396,27 +506,17 @@ export function assertVideoLayoutSafety(props: VideoRenderProps): void {
       presentation,
     );
     if (portrait && broll.speakerMode === "pip_bottom_left") {
-      const padding = presentation === "full_frame" ? 0 : 10;
-      const mediaBounds = resolveBrollMediaBounds(
-        props.delivery.width,
-        props.delivery.height,
+      const pipLayout = resolvePortraitPipMedia(
+        props,
+        broll,
         presentation,
-        broll.visualRole,
-        {
-          x: geometry.x + padding,
-          y: geometry.y + padding,
-          width: Math.max(1, geometry.width - padding * 2),
-          height: Math.max(1, geometry.height - padding * 2),
-        },
       );
       assertPortraitPipSpacing({
         canvasHeight: props.delivery.height,
-        media: fitMediaRect(
-          mediaBounds,
-          broll.sourceWidth,
-          broll.sourceHeight,
-        ),
-        pip: layout.thPip,
+        ...pipLayout,
+        file: broll.file,
+        sourceWidth: broll.sourceWidth,
+        sourceHeight: broll.sourceHeight,
       });
     }
     const areaRatio =

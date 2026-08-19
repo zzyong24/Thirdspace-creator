@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-043",
+      "what": "新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败",
+      "check": "node --test orchestrator/process/critical-path-availability-rule.test.mjs && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "onFail": "关键链路可用性审查失败：有安全输出路径时必须先确定性降级；只有输入损坏、权限/归属错误或无任何安全输出路径时才允许 hard-fail。发布证据必须包含旧版成功样例、正式公共调用链和该门覆盖的全部输入族，孤立 helper/几何单测无效。"
+    },
+    {
       "led": "LED-001",
       "what": ".env.local(含真实密钥)被提交进 git",
       "check": "! git ls-files | grep -qF .env.local",
