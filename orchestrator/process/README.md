@@ -59,8 +59,9 @@ For a journey spanning independently deployed projects, update the coordinator e
 `orchestrator/program/` owns only execution topology and evidence; existing `docs/journeys/FLOW-*` remains the
 business authority.
 
-The editor hooks are phase adapters, not a security boundary: `PreToolUse` is the immediate guard for registered
-editor calls, `PostToolUse` observes control-plane drift after the call, and `Stop`/`reconcile` settles the run.
+The editor hooks are phase adapters, not a security boundary: Claude Code uses `.claude/settings.json`, while Codex
+uses project-local `.codex/hooks.json`; both register `PreToolUse` as the immediate guard, `PostToolUse` as the
+control-plane observer, and `Stop`/`reconcile` as the final settlement.
 This mirrors Harness's pre-execute → execute → post-execute → result separation without coupling policy to a
 specific tool. Direct shell/IDE writes can bypass hooks; `taskctl` is the normal write path and reconcile/CI is the
 detection backstop. A post observer cannot undo a completed tool call and must never be advertised as doing so.

@@ -9,6 +9,15 @@
             "command": "bash '/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/spec-decompose-gate.sh'"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/post-tool-observe.sh\""
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -17,6 +26,27 @@
           {
             "type": "command",
             "command": "bash '/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/session-start.sh'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/backlog-guard.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/Users/zyongzhu/Workbase/Thirdspace-creator/.codex/hooks/stop-reconcile.sh\""
           }
         ]
       }

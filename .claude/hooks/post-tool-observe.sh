@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # PostToolUse observer —— Harness tools/post-execute + tools/result 的轻量落地。
+# Claude Code 与 Codex 共用；Codex 通过 .codex/hooks.json 挂载同一脚本。
 #
 # 它只观察已注册的 Edit/Write/MultiEdit，不假装能撤销工具调用：
 # - 普通业务文件：不打扰；

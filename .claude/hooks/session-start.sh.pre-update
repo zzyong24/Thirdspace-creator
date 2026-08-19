@@ -94,7 +94,7 @@ if [ -f "$VF" ]; then
     sv="$(cat "$sd/VERSION")"
     if [ "$pv" != "$sv" ]; then
       echo "⚠ 脚手架引擎过时:项目 vendored ${pv},skill 已是 ${sv}。建议先升级再开工:"
-      echo "  bash \"$sd/tools/init-project.sh\" \"$ROOT\" --update  (刷新引擎与 hooks,保留项目 config/baseline,升级后自动 reconcile)"
+      echo "  bash \"$sd/tools/init-project.sh\" \"$ROOT\" --update [--topology single|multi] [--program-id <multi-id>]  (缺显式 topology 的旧项目必须补分类；保留项目 config/baseline)"
     fi
   fi
 fi
