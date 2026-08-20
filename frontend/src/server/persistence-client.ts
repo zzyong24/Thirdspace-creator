@@ -5580,7 +5580,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       title: string;
       angle: string;
       card?: {
-        oneLiner: string;
+        oneLiner?: string;
         hook?: string;
         contentStructure?: string[];
         materialBasis?: string;

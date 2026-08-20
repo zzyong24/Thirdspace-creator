@@ -133,20 +133,7 @@ function startLocalOpenAiServer() {
           "很多人以为内容升级只是多走一步确认，但真正影响创作效率的，是灵感能不能直接进入生产。今天用一条真实来源，把拆解、改写策略和初稿一起带进项目，让创作者从发现到开工只做一次明确选择。";
       } else if (bodyText.includes("只生成属于本账号的新选题")) {
         content = JSON.stringify({
-          title: "为什么好选题应该直接进入生产",
           angle: "从创作者减少重复确认的实际工作流切入",
-          differentiation: "不复述来源结论，只讨论内容生产链路的效率",
-          sourceSummary: "这条来源适合研究如何把复杂流程讲清楚",
-          targetAudience: "需要稳定产出短视频的内容创作者",
-          audiencePain: "灵感收集后仍需多次搬运和确认",
-          coreConflict: "流程完整性与创作效率之间的冲突",
-          format: "不露脸口播配真实工作台画面",
-          adaptationStrategy: {
-            keep: ["问题驱动的开头"],
-            replace: ["替换来源案例"],
-            add: ["加入真实创作流程"],
-            avoid: ["避免复制原句"],
-          },
         });
       } else {
         content = JSON.stringify({
@@ -234,7 +221,7 @@ function stableVisibleText(text: string) {
   return text.replace(/最近采集[^\n]*/g, "最近采集时间已记录");
 }
 
-test("内容雷达转写选题一键升级项目，并可幂等回读同一项目", async ({
+test("内容雷达只有改写初稿和局部选题字段时仍可一键升级项目", async ({
   page,
   baseURL,
 }) => {
@@ -487,6 +474,11 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
       detailPanel.getByRole("heading", { name: targetTitle, exact: true }),
     ).toBeVisible();
     const upgrade = detailPanel.getByRole("button", { name: "一键升级项目" });
+    const confirmOnly = detailPanel.getByRole("button", {
+      name: "确认写入选题池",
+    });
+    await expect(confirmOnly).toBeVisible();
+    await expect(confirmOnly).toBeEnabled();
     await expect(upgrade).toBeVisible();
     await expect(upgrade).toBeEnabled();
     captures.push({
@@ -497,6 +489,8 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
     });
 
     await page.setViewportSize({ width: 1024, height: 720 });
+    await expect(confirmOnly).toBeVisible();
+    await expect(confirmOnly).toBeEnabled();
     await expect(upgrade).toBeVisible();
     await expect(upgrade).toBeEnabled();
     captures.push({
@@ -516,7 +510,7 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
       account.id,
     );
     expect(project.id).toBe(projectId);
-    expect(project.title).toBe("为什么好选题应该直接进入生产");
+    expect(project.title).toBe(targetTitle);
 
     detail = await dispatch(
       page,
@@ -540,6 +534,17 @@ test("内容雷达转写选题一键升级项目，并可幂等回读同一项�
       text: `项目已创建：${project.title}；重复立项返回同一项目。`,
     });
     writeVisibleCopy("T-870", captures);
+    writeVisibleCopy(
+      "T-900",
+      captures.map((capture) => ({
+        ...capture,
+        check_ids: [
+          "AC-RADAR-PARTIAL-ACTION",
+          "AC-RADAR-PARTIAL-SOURCE-TITLE",
+          "AC-RADAR-PARTIAL-READBACK",
+        ],
+      })),
+    );
   } finally {
     await localModel.close();
   }

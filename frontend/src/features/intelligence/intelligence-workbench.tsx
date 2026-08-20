@@ -3610,18 +3610,9 @@ function TopicCandidateEditor({
     transform.outputSnapshot.adaptedDraft?.contentText ?? "",
   );
   const confirmed = transform.status === "confirmed";
-  const incomplete =
-    !draftText.trim() ||
-    [
-      candidate.title,
-      candidate.angle,
-      candidate.differentiation,
-      candidate.sourceSummary,
-      candidate.targetAudience,
-      candidate.audiencePain,
-      candidate.coreConflict,
-      candidate.format,
-    ].some((value) => !value.trim());
+  // [T-900] 改写初稿是进入后续创作的最小内容真相；选题辅助字段允许后补。
+  // 归属、来源与 provenance 等安全门仍由 confirmTopic 在执行当下重新校验。
+  const incomplete = !draftText.trim();
   const progress = transform.outputSnapshot.generationProgress;
   const retrying = ["queued", "running", "pause_requested"].includes(
     transform.taskStatus ?? "",
@@ -3869,7 +3860,7 @@ function TopicCandidateEditor({
         </Button>
       </div>
       <p className="text-[10px] leading-4 text-muted-foreground">
-        一键升级会把来源证据、改写规则和当前初稿一起带入项目；也可只存入选题池稍后再立项。
+        有改写初稿即可继续；未生成的观众痛点、核心冲突等字段可进入选题或项目后补充。一键升级会把真实来源证据和当前初稿一起带入项目。
       </p>
     </div>
   );

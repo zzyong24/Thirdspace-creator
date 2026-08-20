@@ -24,7 +24,7 @@ describe("[T-646] 内容雷达分段输出契约", () => {
     });
   });
 
-  it("选题候选缺少非关键字段时先保留已有内容，由采纳门再要求补齐", () => {
+  it("选题候选缺少非关键字段时先保留已有内容，采纳后仍可继续补齐", () => {
     expect(
       intelligenceTopicFromDecompositionSchema.parse({
         title: "先稳定流程，再选择模型",

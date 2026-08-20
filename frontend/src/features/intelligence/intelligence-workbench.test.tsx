@@ -2432,6 +2432,100 @@ describe("T-482 内容雷达工作区", () => {
     expect(push).toHaveBeenCalledWith("/projects/project-radar-1");
   });
 
+  it("[T-900] 只有改写初稿时也可写入选题池或一键升级项目", async () => {
+    const stub = api();
+    vi.mocked(stub.confirmTopic).mockResolvedValue({
+      topicId: "candidate-partial-radar",
+    });
+    vi.mocked(stub.promoteCandidate).mockResolvedValue({
+      projectId: "project-partial-radar",
+    });
+
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        positioningVersionId="positioning-v1"
+        initialDetail={{
+          ...detail,
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "来源完整逐字稿",
+          },
+          transforms: [
+            {
+              id: "transform-partial-upgrade",
+              status: "candidate",
+              taskStatus: "succeeded",
+              taskErrorCode: null,
+              taskErrorMessage: null,
+              targetTopicId: null,
+              outputSnapshot: {
+                title: "",
+                angle: "",
+                differentiation: "",
+                sourceSummary: "",
+                targetAudience: "",
+                audiencePain: "",
+                coreConflict: "",
+                format: "",
+                adaptationStrategy: {
+                  keep: [],
+                  replace: [],
+                  add: [],
+                  avoid: [],
+                },
+                adaptedDraft: {
+                  contentText: "这是已经可用的本账号改写逐字稿。",
+                  generatedFromTranscriptHash: "sha256:transcript",
+                  strategyHash: "sha256:strategy",
+                  templateVersion: "intelligence-topic-draft-v1",
+                },
+                generationProgress: {
+                  decomposition: { status: "completed" },
+                  topic: { status: "completed" },
+                  draft: { status: "completed" },
+                },
+              },
+            },
+          ],
+        }}
+        api={stub}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "确认写入选题池" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    ).toBeEnabled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "一键升级项目" }),
+    );
+
+    await waitFor(() =>
+      expect(stub.confirmTopic).toHaveBeenCalledWith(
+        expect.objectContaining({
+          transformId: "transform-partial-upgrade",
+          editedCandidate: expect.objectContaining({
+            title: "",
+            audiencePain: "",
+            coreConflict: "",
+            format: "",
+          }),
+        }),
+      ),
+    );
+    expect(stub.promoteCandidate).toHaveBeenCalledWith({
+      candidateId: "candidate-partial-radar",
+    });
+    expect(push).toHaveBeenCalledWith("/projects/project-partial-radar");
+  });
+
   it("[T-870] 已写入选题池的雷达候选直接升级，不重复确认", async () => {
     const stub = api();
     vi.mocked(stub.promoteCandidate).mockResolvedValue({

@@ -99,12 +99,14 @@ function hasTopicCandidate(snapshot: unknown): boolean {
   // 旧快照没有阶段元数据，沿用“非空即候选”的既有投影；新分段快照只有真正形成
   // 最小选题卡后才进入待确认，纯拆解/待补卡片显示 attention。
   if (!("generationProgress" in value)) return true;
-  return [
-    value.title,
-    value.angle,
-    value.differentiation,
-    value.sourceSummary,
-  ].every((field) => typeof field === "string" && field.trim().length > 0);
+  const draft = value.adaptedDraft;
+  return Boolean(
+    draft &&
+      typeof draft === "object" &&
+      !Array.isArray(draft) &&
+      typeof (draft as Record<string, unknown>).contentText === "string" &&
+      ((draft as Record<string, unknown>).contentText as string).trim(),
+  );
 }
 
 function itemWorkflowProjection(
@@ -446,7 +448,7 @@ export interface IntelligenceServiceDeps {
         title: string;
         angle: string;
         card?: {
-          oneLiner: string;
+          oneLiner?: string;
           targetAudience?: string;
           audiencePain?: string;
           coreConflict?: string;
@@ -4716,34 +4718,28 @@ export function createIntelligenceService(
       if (!deps.topics) {
         throw new IntelligenceValidationError("选题服务尚未接入");
       }
-      // transport 的 strict schema 只允许这四个字段；service 也显式投影一次，避免
+      // transport 的 strict schema 只允许可编辑候选字段；service 也显式投影一次，避免
       // 内部调用误把拆解数组等 provenance 一并当字符串校验/写入。
+      const sourceItem = await requireItem(ctx, transform.itemId);
+      const sourceTitle = sourceItem.title.trim();
+      const candidateTitle = input.editedCandidate.title.trim();
+      const resolvedTitle = candidateTitle || sourceTitle;
+      if (!resolvedTitle) {
+        throw new IntelligenceValidationError(
+          "选题标题和来源作品标题均为空，请补充标题后再继续",
+        );
+      }
       const candidate = {
-        title: input.editedCandidate.title,
-        angle: input.editedCandidate.angle,
-        differentiation: input.editedCandidate.differentiation,
-        sourceSummary: input.editedCandidate.sourceSummary,
-        targetAudience: input.editedCandidate.targetAudience,
-        audiencePain: input.editedCandidate.audiencePain,
-        coreConflict: input.editedCandidate.coreConflict,
-        format: input.editedCandidate.format,
+        title: resolvedTitle,
+        angle: input.editedCandidate.angle.trim(),
+        differentiation: input.editedCandidate.differentiation.trim(),
+        sourceSummary: input.editedCandidate.sourceSummary.trim(),
+        targetAudience: input.editedCandidate.targetAudience.trim(),
+        audiencePain: input.editedCandidate.audiencePain.trim(),
+        coreConflict: input.editedCandidate.coreConflict.trim(),
+        format: input.editedCandidate.format.trim(),
         adaptationStrategy: input.editedCandidate.adaptationStrategy,
       };
-      for (const [key, value] of Object.entries({
-        title: candidate.title,
-        angle: candidate.angle,
-        differentiation: candidate.differentiation,
-        sourceSummary: candidate.sourceSummary,
-        targetAudience: candidate.targetAudience,
-        audiencePain: candidate.audiencePain,
-        coreConflict: candidate.coreConflict,
-        format: candidate.format,
-      })) {
-        if (!value.trim()) {
-          throw new IntelligenceValidationError(`${key} 不能为空`);
-        }
-      }
-      const sourceItem = await requireItem(ctx, transform.itemId);
       const preview = transform.outputSnapshot as {
         hook?: unknown;
         structureSteps?: unknown;
@@ -4795,24 +4791,42 @@ export function createIntelligenceService(
       }
       const topic = await deps.topics.create(ctx, {
         title: candidate.title,
-        angle: `${candidate.angle}\n差异化：${candidate.differentiation}\n来源：${candidate.sourceSummary}`,
+        angle: [
+          candidate.angle,
+          candidate.differentiation
+            ? `差异化：${candidate.differentiation}`
+            : "",
+          candidate.sourceSummary ? `来源：${candidate.sourceSummary}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
         card: {
-          oneLiner: candidate.title,
-          targetAudience: candidate.targetAudience,
-          audiencePain: candidate.audiencePain,
-          coreConflict: candidate.coreConflict,
+          ...(candidateTitle ? { oneLiner: candidate.title } : {}),
+          ...(candidate.targetAudience
+            ? { targetAudience: candidate.targetAudience }
+            : {}),
+          ...(candidate.audiencePain
+            ? { audiencePain: candidate.audiencePain }
+            : {}),
+          ...(candidate.coreConflict
+            ? { coreConflict: candidate.coreConflict }
+            : {}),
           ...(typeof preview.hook === "string" && preview.hook.trim()
             ? { hook: preview.hook }
             : {}),
           ...(structureSteps.length > 0
             ? { contentStructure: structureSteps }
             : {}),
-          format: candidate.format,
-          materialBasis: candidate.sourceSummary,
+          ...(candidate.format ? { format: candidate.format } : {}),
+          ...(candidate.sourceSummary
+            ? { materialBasis: candidate.sourceSummary }
+            : {}),
           ...(factRisks.length > 0
             ? { riskNote: factRisks.join("；") }
             : {}),
-          proposal: `差异化切法：${candidate.differentiation}`,
+          ...(candidate.differentiation
+            ? { proposal: `差异化切法：${candidate.differentiation}` }
+            : {}),
           ...(typeof preview.hook === "string" &&
           preview.hook.trim() &&
           structureSteps.length >= 2 &&

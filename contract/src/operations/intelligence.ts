@@ -61,14 +61,16 @@ const sourceHealth = z
 
 const topicCandidate = z
   .object({
-    title: z.string().min(1),
-    angle: z.string().min(1),
-    differentiation: z.string().min(1),
-    sourceSummary: z.string().min(1),
-    targetAudience: z.string().min(1),
-    audiencePain: z.string().min(1),
-    coreConflict: z.string().min(1),
-    format: z.string().min(1),
+    // [T-900] 这些是可后补的创作辅助字段。真正的确认硬门在 service：非空
+    // adaptedDraft + 来源/provenance/归属；标题为空时只允许回退真实来源标题。
+    title: z.string().max(80),
+    angle: z.string().max(300),
+    differentiation: z.string().max(300),
+    sourceSummary: z.string().max(300),
+    targetAudience: z.string().max(200),
+    audiencePain: z.string().max(300),
+    coreConflict: z.string().max(300),
+    format: z.string().max(100),
     adaptationStrategy: z
       .object({
         keep: z.array(z.string().min(1)).max(8),

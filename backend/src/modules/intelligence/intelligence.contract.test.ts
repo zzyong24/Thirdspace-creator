@@ -58,6 +58,32 @@ describe("T-482 内容雷达 transport 契约", () => {
     );
   });
 
+  it("[T-900] confirmTopic 契约允许改写初稿之外的创作辅助字段为空", () => {
+    expect(
+      ENDPOINTS.confirmIntelligenceTopic.body.parse({
+        editedCandidate: {
+          title: "",
+          angle: "",
+          differentiation: "",
+          sourceSummary: "",
+          targetAudience: "",
+          audiencePain: "",
+          coreConflict: "",
+          format: "",
+          adaptationStrategy: {
+            keep: [],
+            replace: [],
+            add: [],
+            avoid: [],
+          },
+        },
+        idempotencyKey: "confirm-partial-topic",
+      }),
+    ).toMatchObject({
+      editedCandidate: { audiencePain: "", coreConflict: "", format: "" },
+    });
+  });
+
   it("workspace/source/run 响应通过共享 Zod 契约", async () => {
     const { db, client } = await createDb();
     let serial = 0;

@@ -6,7 +6,7 @@ import type { PromptTemplate } from "../template";
  * 这条短路径不重新发送整篇逐字稿，也不改写既有拆解证据。
  */
 export const intelligenceTopicFromDecompositionSchema = z.object({
-  // 创作候选先展示、后补齐：缺字段由 UI 标记待补，只有采纳时才执行完整性门槛。
+  // 创作候选先展示、后补齐：改写初稿非空即可进入后续创作，结构化辅助字段可继续补充。
   title: z.string().max(80).default(""),
   angle: z.string().max(300).default(""),
   differentiation: z.string().max(300).default(""),

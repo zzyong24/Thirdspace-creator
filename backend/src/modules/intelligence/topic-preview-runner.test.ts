@@ -626,18 +626,46 @@ describe("T-482 内容雷达转为我的选题", () => {
         (entry) => entry.id === regenerated.transform.id,
       )?.outputSnapshot;
       if (!regeneratedSnapshot) throw new Error("expected regenerated snapshot");
+      const regeneratedCandidate = regeneratedSnapshot as Parameters<
+        typeof intelligence.confirmTopic
+      >[2]["editedCandidate"];
       const reconfirmed = await intelligence.confirmTopic(
         ctx,
         regenerated.transform.id,
         {
-          editedCandidate: regeneratedSnapshot as Parameters<
-            typeof intelligence.confirmTopic
-          >[2]["editedCandidate"],
+          editedCandidate: {
+            title: "",
+            angle: "",
+            differentiation: "",
+            sourceSummary: "",
+            targetAudience: "",
+            audiencePain: "",
+            coreConflict: "",
+            format: "",
+            adaptationStrategy: regeneratedCandidate.adaptationStrategy,
+          },
           idempotencyKey: "confirm-2",
         },
       );
       expect(reconfirmed.topicId).toBe("topic-2");
       expect(createTopic).toHaveBeenCalledTimes(2);
+      expect(createTopic).toHaveBeenLastCalledWith(
+        ctx,
+        expect.objectContaining({
+          title: "一篇行业文章",
+          angle: "",
+          card: expect.objectContaining({
+            adaptedDraft: expect.objectContaining({
+              contentText: expect.stringContaining("交付失败"),
+            }),
+          }),
+          sourceReferences: expect.arrayContaining([
+            expect.objectContaining({
+              url: "https://example.com/article",
+            }),
+          ]),
+        }),
+      );
       const afterReconfirm = await intelligence.getItem(ctx, detail.item.id);
       expect(
         afterReconfirm.transforms.find(

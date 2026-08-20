@@ -3104,3 +3104,32 @@ CF-001/003/004（跨前后端仍由现有共享 contract operation 承载，无�
 选题再确认”。
 
 **任务**：T-870。
+
+# DEC-RADAR-048 (2026-08-19) — 改写初稿是内容雷达进入选题与项目的最小创作门槛
+
+**Status**：confirmed
+
+**用户决定**：内容雷达的模型可能已经产出可用改写逐字稿，但观众痛点、核心冲突、内容形式等
+结构化辅助字段并不总能一次齐全。用户确认“改写的逐字稿有了就可以升级”，不应让这些缺项阻断
+“转为我的选题”或“一键升级项目”。
+
+**决策**：
+
+1. 两个主动作统一以带真实来源与生成 provenance 的非空 `adaptedDraft.contentText` 为最小创作门槛；
+   辅助字段缺失以真实空值保存，进入选题/项目后继续补全，不写“待补充”等伪字段。
+2. 候选标题存在时使用候选标题；候选标题为空时使用当前账号可读的真实来源作品标题。两者都没有时
+   才明确阻止，禁止用默认标题、截取稿件或关键词规则替代创作判断。
+3. 账号归属、来源 URL、当前 transform、逐字稿哈希、`adaptedDraft` 的 strategy/hash/template
+   provenance、幂等与既有 promotion 一致性继续 fail-closed；本决策不放宽安全与证据门。
+4. 前端只依据改写初稿决定按钮的创作完整度禁用态；后端 contract 与 service 同时接受缺失辅助字段，
+   并以真实来源标题做确定性协议补位，防止绕过前端后仍被旧完整度门拒绝。
+
+**用户确认**：2026-08-19，用户明确提出模型输出不全时“改写的逐字稿有了就可以升级”。
+
+**Pattern-Ref**：PAT-001 T0（复用现有 confirm + promotion 主链）；PAT-004 CF-001/003/004（前后端
+共享 contract 同步调整，不增加旁路写库）。
+
+**Asset-Ref**：现有 `intelligence.transforms.confirmTopic`、`candidates.promote`、
+`adaptedDraftSeed` 与 `ProjectIntelligenceReferenceService`。
+
+**任务**：T-900。
