@@ -248,7 +248,7 @@ describe("VIDEO_CARDS_TEMPLATE 视觉覆盖底线", () => {
 
 describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
   it("必须同时审整体叙事、用户素材、人物安全区和编辑内部标签", () => {
-    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v5");
+    expect(VIDEO_DIRECTOR_TEMPLATE.version).toBe("v6");
     expect(VIDEO_DIRECTOR_TEMPLATE.system).toContain("总导演");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("用户上传素材");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("角落小人物");
@@ -261,8 +261,9 @@ describe("VIDEO_DIRECTOR_TEMPLATE 总导演审片", () => {
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("同一时刻只能有一个非 overlay 主视觉");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("issues 必须为空");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("从第一句起连续检查前三秒");
-    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("人物完全退出");
-    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("只执行候选已选定的 speakerMode");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("竖屏真人是默认主画面");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("人脸必须持续可见");
+    expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("不能连续覆盖整片");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("不得自动居中缩小");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("连续素材间人物反复弹跳");
     expect(VIDEO_DIRECTOR_TEMPLATE.template).toContain("纯背景都不算开场实质视觉");

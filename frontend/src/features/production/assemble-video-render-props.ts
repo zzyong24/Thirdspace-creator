@@ -235,8 +235,9 @@ export function assembleVideoRenderProps(
           : requestedPresentation === "full_frame"
             ? "large_stage"
             : requestedPresentation;
-      // SEMANTIC_BOUNDARY_ALLOW:明确值来自 material.match；旧候选缺字段时只落实用户
-      // 已确认的画幅偏好（竖屏主素材左下 PiP、横屏隐藏），不按文件名或口播猜语义。
+      // SEMANTIC_BOUNDARY_ALLOW:T-902 只落实用户明确确认的画幅偏好。竖屏存在真人
+      // 口播源时人物必须常驻，历史候选里的 hidden 也收敛为左下 PiP；横屏继续尊重
+      // material.match 的明确选择。这里不按文件名、素材内容或口播关键词做创作判断。
       const isOpeningScreenRecording =
         presentation === "full_frame" &&
         b.visualRole === "screen_recording" &&
@@ -257,10 +258,9 @@ export function assembleVideoRenderProps(
         ...(presentation !== "overlay"
           ? {
               speakerMode:
-                b.speakerMode ??
-                (opts.orientation === "portrait"
+                opts.orientation === "portrait"
                   ? ("pip_bottom_left" as const)
-                  : ("hidden" as const)),
+                  : (b.speakerMode ?? ("hidden" as const)),
             }
           : {}),
         motion: b.motion ?? "static",

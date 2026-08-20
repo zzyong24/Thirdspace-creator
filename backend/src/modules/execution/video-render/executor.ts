@@ -1119,9 +1119,9 @@ export function createVideoRenderExecutor(
       const stabilized = stabilizeVideoLayoutSafety(props);
       for (const fallback of stabilized.fallbacks) {
         await reportStep(
-          `布局安全降级:${fallback.file}` +
+          `竖屏人物兼容修复:${fallback.file}` +
             `(${fallback.sourceWidth ?? "?"}x${fallback.sourceHeight ?? "?"})` +
-            ` ${fallback.reason};人物已隐藏` +
+            ` ${fallback.reason};人物已恢复为左下角常驻` +
             ` [media=${fallback.media.x},${fallback.media.y},${fallback.media.width},${fallback.media.height}` +
             ` pip=${fallback.pip.left},${fallback.pip.top},${fallback.pip.width},${fallback.pip.height}]`,
         );

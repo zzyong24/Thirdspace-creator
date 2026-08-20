@@ -864,7 +864,7 @@ describe("横屏无视觉节点的确定性画面兜底", () => {
 });
 
 describe("竖屏界面素材可读性", () => {
-  it("[T-896 RED] 横图保留安全 PiP，方图和竖图冲突时自动隐藏人物并通过正式安全门", () => {
+  it("[T-902 RED] 横图、方图和竖图都保留安全 PiP，不再用隐藏人物化解冲突", () => {
     const base = fullProps();
     const input = videoRenderProps.parse({
       ...base,
@@ -910,28 +910,14 @@ describe("竖屏界面素材可读性", () => {
 
     expect(stabilized.props.broll.map((item) => item.speakerMode)).toEqual([
       "pip_bottom_left",
-      "hidden",
-      "hidden",
+      "pip_bottom_left",
+      "pip_bottom_left",
     ]);
-    expect(stabilized.fallbacks).toHaveLength(2);
-    expect(stabilized.fallbacks[0]).toMatchObject({
-      file: "square.mp4",
-      sourceWidth: 1024,
-      sourceHeight: 1024,
-      from: "pip_bottom_left",
-      to: "hidden",
-      reason: "人物框与素材可见边界重叠",
-    });
-    expect(stabilized.fallbacks[0]?.media).toEqual({
-      x: 40,
-      y: 360,
-      width: 1000,
-      height: 1000,
-    });
+    expect(stabilized.fallbacks).toEqual([]);
     expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
   });
 
-  it("[T-896 RED] 已明确隐藏的人物不产生重复降级", () => {
+  it("[T-902 RED] 竖屏旧候选明确 hidden 也收敛为人物常驻", () => {
     const base = fullProps();
     const input = videoRenderProps.parse({
       ...base,
@@ -952,8 +938,16 @@ describe("竖屏界面素材可读性", () => {
     });
 
     const stabilized = stabilizeVideoLayoutSafety(input);
-    expect(stabilized.props).toBe(input);
-    expect(stabilized.fallbacks).toEqual([]);
+    expect(stabilized.props).not.toBe(input);
+    expect(stabilized.props.broll[0]?.speakerMode).toBe("pip_bottom_left");
+    expect(stabilized.fallbacks).toEqual([
+      expect.objectContaining({
+        file: "square.png",
+        from: "hidden",
+        to: "pip_bottom_left",
+        reason: "竖屏人脸常驻",
+      }),
+    ]);
     expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
   });
 
@@ -1073,6 +1067,78 @@ describe("竖屏界面素材可读性", () => {
     );
   });
 
+  it("[T-902 RED] 竖屏卡片和历史 hidden 素材连续覆盖整段时真人仍全程可见", () => {
+    const props = fullProps();
+    const html = generateVideoRenderHtml({
+      ...props,
+      delivery: { width: 1080, height: 1920, fps: 30 },
+      talkingHead: { ...props.talkingHead, durationSec: 8 },
+      scenes: [
+        {
+          ...props.scenes[0]!,
+          id: "presenter-first",
+          startSec: 0,
+          endSec: 8,
+          cards: [
+            { kind: "quote", at: 0, text: "卡片只能辅助真人", tone: "accent" },
+          ],
+          special: undefined,
+        },
+      ],
+      direction: {
+        motionThesis: "竖屏真人持续讲解，卡片与素材只做辅助。",
+        beatGraph: [
+          {
+            id: "supporting-card",
+            sceneIdx: 0,
+            startSec: 0,
+            endSec: 3,
+            subject: { kind: "card", ref: "card:0:0" },
+            startState: "base",
+            endState: "takeover",
+            motionVerb: "reveal",
+            stageMode: "takeover",
+            transitionIn: "fade",
+            transitionOut: "fade",
+            returnGeometry: "same_base",
+          },
+          {
+            id: "legacy-hidden-material",
+            sceneIdx: 0,
+            startSec: 3,
+            endSec: 8,
+            subject: { kind: "broll", ref: "broll:screen.mp4" },
+            startState: "off_canvas",
+            endState: "takeover",
+            motionVerb: "replace",
+            stageMode: "takeover",
+            transitionIn: "fade",
+            transitionOut: "fade",
+            returnGeometry: "same_base",
+          },
+        ],
+      },
+      broll: [
+        {
+          at: 3,
+          file: "screen.mp4",
+          durationSec: 5,
+          label: "历史候选录屏",
+          big: false,
+          presentation: "full_frame",
+          visualRole: "screen_recording",
+          speakerMode: "hidden",
+          sourceWidth: 1080,
+          sourceHeight: 1920,
+        },
+      ],
+    });
+
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html.match(/left:54,top:1188,width:264,height:469,borderRadius:24/g)).toHaveLength(1);
+  });
+
   it("[T-858 RED] full_frame 横录屏保留完整前景，并用静态统一舞台承接而非第二路动态视频", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({
@@ -1098,17 +1164,15 @@ describe("竖屏界面素材可读性", () => {
     expect(html).toContain('class="clip portrait-stage-ambient-static"');
     expect(html).not.toContain('class="clip portrait-ambient-fill"');
     expect(html).not.toMatch(/<video[^>]+aria-hidden="true"[^>]+screen\.mp4/);
-    // 1920×1080 完整前景按 contain 居中成为唯一主画面，不能被 cover 裁切，也不再
-    // 为人物画中画预留下半屏。
-    expect(html).toContain("left:0px;top:556px;width:1080px;height:608px");
+    // 1920×1080 完整前景按 contain 居中，并为左下常驻人物与字幕保留安全区。
+    expect(html).toContain("left:54px;top:357px;width:972px;height:547px");
     expect(html).toContain("object-fit:contain");
     expect(html).toContain("z-index:942");
-    expect(html).not.toContain('tl.set("#th",{zIndex:945}');
-    expect(html).not.toMatch(/tl\.to\("#th",\{left:/);
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
     expect(html).toContain("bottom:92px;text-align:center;z-index:950");
   });
 
-  it("[T-858 RED] 竖屏主视觉独占接管，人物不发生缩小或放大回位动画", () => {
+  it("[T-902] 竖屏素材作为辅助画面时人物收进左下角并持续可见", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({
       ...props,
@@ -1136,12 +1200,14 @@ describe("竖屏界面素材可读性", () => {
         },
       ],
     });
-    expect(html).not.toMatch(/tl\.to\("#th",\{left:/);
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html).toContain("left:54,top:1188,width:264,height:469,borderRadius:24");
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
     expect(html).toContain("z-index:942");
     expect(html).toContain('class="clip portrait-stage-ambient-static"');
   });
 
-  it("[T-858 RED] 竖屏动态内容独占接管，不把人物缩成第二主体", () => {
+  it("[T-902] 竖屏动态内容出现时仍保留左下角人物陪伴", () => {
     const props = fullProps();
     const html = generateVideoRenderHtml({
       ...props,
@@ -1160,7 +1226,9 @@ describe("竖屏界面素材可读性", () => {
     expect(html).toMatch(/id="c\d+"[^>]+top:\d+px[^>]+z-index:942/);
     expect(html).toContain('class="clip portrait-card-stage-ambient-static"');
     expect(html).toContain("#11131f 100%),#11131f");
-    expect(html).not.toMatch(/tl\.to\("#th",\{left:/);
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html).toContain("left:54,top:1188,width:264,height:469,borderRadius:24");
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
   });
 
   it("[T-858 RED] 正式渲染安全门按竖屏素材窗内 PiP 检查，不把全画布人物基底误判成遮挡", () => {
@@ -1214,9 +1282,9 @@ describe("竖屏界面素材可读性", () => {
     expect(html).toContain("#10121c 100%),#10121c");
     expect(html).not.toContain('class="clip portrait-ambient-fill"');
     expect(html).toContain(
-      "left:54px;top:260px;z-index:941;padding:10px;width:972px;height:1050px",
+      "left:54px;top:92px;z-index:941;padding:10px;width:972px;height:1076px",
     );
-    expect(html).toContain("left:64px;top:517px;width:952px;height:536px");
+    expect(html).toContain("left:54px;top:357px;width:972px;height:547px");
     expect(html).toContain("object-fit:contain");
     expect(html).toContain("left:0px;top:0px;z-index:940;width:1080px;height:1920px;background:radial-gradient");
     expect(html).toMatch(
@@ -1615,7 +1683,9 @@ describe("信息卡主舞台与高密度排版([T-712])", () => {
     expect(cards).toHaveLength(3);
     expect(cards.every((card) => card.top >= 520 && card.top <= 700)).toBe(true);
     expect(html).toContain("portrait-card-stage-ambient-static");
-    expect(html).not.toMatch(/tl\.to\("#th",\{left:/);
+    expect(html).toContain('tl.set("#th",{zIndex:945}');
+    expect(html.match(/left:54,top:1188,width:264,height:469,borderRadius:24/g)).toHaveLength(1);
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
     expect(cards[0]).toMatchObject({ start: 1, duration: 5 });
     expect(cards[1]).toMatchObject({ start: 6, duration: 6 });
     expect(cards[2]).toMatchObject({ start: 12, duration: 18 });

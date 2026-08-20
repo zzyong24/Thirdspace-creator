@@ -79,7 +79,7 @@ try {
   }
 
   const input = videoRenderProps.parse({
-    meta: { title: "T-896 布局安全降级真实渲染" },
+    meta: { title: "T-896/T-902 竖屏人物安全布局真实渲染" },
     talkingHead: {
       file: "talking-head.mp4",
       durationSec: 3,
@@ -122,7 +122,7 @@ try {
       },
     ],
     direction: {
-      motionThesis: "问题素材接管时隐藏辅助人物，保持主素材完整可见。",
+      motionThesis: "素材仅作辅助，竖屏人物始终在场并为字幕留出安全边界。",
       beatGraph: [
         {
           id: "base-open",
@@ -202,26 +202,27 @@ try {
   const stabilized = stabilizeVideoLayoutSafety(input);
   assert.deepEqual(
     stabilized.props.broll.map((item) => item.speakerMode),
-    ["hidden", "hidden"],
+    ["pip_bottom_left", "pip_bottom_left"],
   );
-  assert.equal(stabilized.fallbacks.length, 2);
+  assert.equal(stabilized.fallbacks.length, 0);
   assert.doesNotThrow(() => assertVideoLayoutSafety(stabilized.props));
 
   const html = generateVideoRenderHtml(stabilized.props, {
     mediaPrefix: "media/",
     imageFiles: new Set(["square.png", "portrait.png"]),
   });
-  assert.doesNotMatch(
+  assert.match(
     html,
     /left:54,top:1188,width:264,height:469,borderRadius:24/,
   );
+  assert.doesNotMatch(html, /(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
   writeFileSync(path.join(temp, "index.html"), html, "utf8");
   copyFileSync(
     path.join(ROOT, "backend/node_modules/gsap/dist/gsap.min.js"),
     path.join(temp, "gsap.min.js"),
   );
 
-  const output = path.join(temp, "fallback-smoke.mp4");
+  const output = path.join(temp, "presenter-safe-smoke.mp4");
   execFileSync(
     hyperframes,
     ["render", temp, "-o", output, "-q", "draft", "-f", "30", "-w", "1", "--quiet"],

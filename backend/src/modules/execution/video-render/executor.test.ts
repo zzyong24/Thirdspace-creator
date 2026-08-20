@@ -347,7 +347,7 @@ describe("createVideoRenderExecutor", () => {
     });
   });
 
-  it("[T-896 RED] 方形主素材与左下人物冲突时降级隐藏人物，仍生成 HTML 并进入 HyperFrames", async () => {
+  it("[T-902] 方形主素材使用安全舞台并保留左下人物，仍生成 HTML 并进入 HyperFrames", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const steps: string[] = [];
     const executor = createVideoRenderExecutor(
@@ -418,22 +418,16 @@ describe("createVideoRenderExecutor", () => {
     ).resolves.toMatchObject({ summary: expect.stringContaining("final.mp4") });
 
     expect(calls.rendered).toHaveLength(1);
-    expect(steps).toContainEqual(
-      expect.stringMatching(
-        /布局安全降级.*b1\.mp4.*1024x1024.*人物框与素材可见边界重叠.*人物已隐藏/,
-      ),
-    );
+    expect(steps).not.toContainEqual(expect.stringMatching(/人物已隐藏/));
     const html = await fs.readFile(
       path.join(sandbox.dir, "work", "index.html"),
       "utf8",
     );
     expect(html).toContain('src="media/b1.mp4"');
-    expect(html).not.toContain(
+    expect(html).toContain(
       'left:54,top:1188,width:264,height:469,borderRadius:24',
     );
-    expect(html).toContain(
-      'tl.to("#th",{autoAlpha:0,duration:.18,ease:"power1.inOut"},4.00);',
-    );
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
   });
 
   it("安全 H.264 通过 FFmpeg 全流解码后只 remux，不再调用重复的 Chromium 首帧预检", async () => {

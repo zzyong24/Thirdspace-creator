@@ -199,13 +199,13 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
     const stabilized = stabilizeVideoLayoutSafety(assembled);
     expect(stabilized.props.broll.map((item) => item.speakerMode)).toEqual([
       "pip_bottom_left",
-      "hidden",
-      "hidden",
+      "pip_bottom_left",
+      "pip_bottom_left",
     ]);
     expect(() => assertVideoLayoutSafety(stabilized.props)).not.toThrow();
   });
 
-  it("[T-859 RED] 竖屏主素材默认保留左下角人物，横屏仍隐藏，AI 明确值优先", () => {
+  it("[T-902 RED] 竖屏主素材强制保留左下角人物，横屏仍尊重 hidden", () => {
     const portrait = assembleVideoRenderProps(DECISIONS, {
       ...OPTS,
       orientation: "portrait",
@@ -227,7 +227,7 @@ describe("assembleVideoRenderProps(contract videoRenderProps 单一真值)", () 
 
     expect(portrait.broll[0]?.speakerMode).toBe("pip_bottom_left");
     expect(landscape.broll[0]?.speakerMode).toBe("hidden");
-    expect(explicitHidden.broll[0]?.speakerMode).toBe("hidden");
+    expect(explicitHidden.broll[0]?.speakerMode).toBe("pip_bottom_left");
   });
 
   it("开场与后续录屏都独占画布，不再自动生成左下人物小窗", () => {

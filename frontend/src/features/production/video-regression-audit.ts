@@ -234,6 +234,18 @@ export function auditVideoRenderProps(
       });
     }
     if (
+      props.delivery.height > props.delivery.width &&
+      item.presentation !== "overlay" &&
+      item.speakerMode === "hidden"
+    ) {
+      issues.push({
+        severity: "warning",
+        code: "portrait_presenter_hidden_compat",
+        message: "竖屏旧候选要求隐藏人物，渲染前将安全兼容为左下角人脸常驻",
+        assetId: item.file,
+      });
+    }
+    if (
       item.presentation === "full_frame" &&
       item.visualRole === "screen_recording"
     ) {

@@ -748,7 +748,7 @@ export type VideoDirectorReviewOutput = z.infer<
 
 export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
   id: "video.director",
-  version: "v5",
+  version: "v6",
   outputSchema: videoDirectorReviewSchema,
   tools: [],
   system:
@@ -768,7 +768,7 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 {{inventory}}
 
 【审核维度】
-1. 开场留人：从第一句起连续检查前三秒。优先用与开场语义直接相关的真实操作、结果、案例或证据素材承接；产品/教程类开场让素材成为主画面，人物是否保留只执行该素材已选定的 speakerMode。若没有合适真实素材，必须从第一句起使用可溯内容动效或信息卡。真人、字幕、品牌角标和纯背景都不算开场实质视觉，首个素材/卡片不能等到三秒以后才进入。
+1. 开场留人：从第一句起连续检查前三秒。优先用与开场语义直接相关的真实操作、结果、案例或证据素材承接；竖屏有真人口播时人脸仍须以左下角陪伴层持续可见。若没有合适真实素材，必须从第一句起使用可溯内容动效或信息卡。真人、字幕、品牌角标和纯背景都不算开场实质视觉，首个素材/卡片不能等到三秒以后才进入。
 2. 叙事连续：每个场景都承接口播，顺序和转折不跳跃；不能出现“素材很好但放错段”。
 3. 画面齐全：任何场景都不能只有黑底、角落小人物或无有效视觉；真人、用户素材、内容动效之间要连续轮换承接。没有真实素材时，必须根据本段口播语义使用可溯信息卡/Scene Graph 内容动效；人物主体轻推镜只是最后一层转场兜底，不能代替语义画面。
 4. 素材使用：用户上传素材若已进入本次时间线，就必须保留；语义或时长不完全匹配时，提出“缩短该镜头 + 由信息卡/同场素材接力”的内部修片建议，不得要求用户重选。
@@ -786,10 +786,11 @@ export const VIDEO_DIRECTOR_TEMPLATE: PromptTemplate = {
 - 每拍必须写起止时间、起止状态、唯一主运动动词、舞台形态、进出转场和回位方式。相邻 beat 时间窗
   不得重叠且必须首尾连续覆盖完整口播，禁止留下没有 beat 的时间洞。没有真实素材时优先安排当前口播原文可溯的
   card/Scene Graph 内容动效；确实没有可用内容卡时才使用 talking_head，并选择 focus/move 等轻推镜运动，不能用静止人物加空舞台冒充承接。
-- stageMode 只选 base/takeover。人物口播选 base；卡片、动态内容和非 overlay B-roll 成为主视觉时选 takeover。
-  卡片与动态内容 takeover 时人物完全退出；B-roll takeover 时只执行候选已选定的 speakerMode：hidden
-  表示退出，pip_bottom_left 表示人物仅作为左下角辅助层，不新增第二个 beat。不得自动居中缩小、发明
-  任意 PiP 几何或让连续素材间人物反复弹跳。素材自身仍按候选里的 presentation 完整 contain。
+- stageMode 只选 base/takeover。竖屏真人是默认主画面，优先安排 talking_head base；卡片、动态内容和
+  非 overlay B-roll 只在当前信息确有解释价值时短时 takeover，不能连续覆盖整片。竖屏 takeover 期间
+  人脸必须持续可见并固定为左下角陪伴层，即使旧候选写了 hidden 也不得要求人物退出；横屏继续执行
+  候选 speakerMode。不得自动居中缩小、发明任意 PiP 几何或让连续素材间人物反复弹跳。素材自身仍按
+  候选里的 presentation 完整 contain。
 - 卡内已有 Scene Graph 时，beatGraph 只负责整片主语交接，不重复发明卡内对象运动。转场必须沿当前
   主语的运动结果交给下一拍；不能让每拍像换一张海报。
 

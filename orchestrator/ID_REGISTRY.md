@@ -837,4 +837,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | DEC-VIDEO-055 | decision | orchestrator/DECISION_LOG.md | API-VIDEO-901, TEST-VIDEO-901 |
 | API-VIDEO-901 | api | backend/src/modules/execution/video-render/executor.ts | DEC-VIDEO-055, TEST-VIDEO-901 |
 | TEST-VIDEO-901 | test | backend/src/modules/execution/video-render/executor.test.ts | DEC-VIDEO-055, API-VIDEO-901 |
+| DEC-VIDEO-056 | decision | orchestrator/DECISION_LOG.md | API-VIDEO-902, TEST-VIDEO-902 |
+| API-VIDEO-902 | api | backend/src/modules/execution/video-render/template.ts | DEC-VIDEO-056, TEST-VIDEO-902 |
+| TEST-VIDEO-902 | test | backend/src/modules/execution/video-render/template.test.ts | DEC-VIDEO-056, API-VIDEO-902 |
 ```

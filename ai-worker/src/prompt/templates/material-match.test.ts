@@ -42,7 +42,7 @@ describe("material.match 视频呈现契约", () => {
   });
 
   it("把项目画幅、界面可读性和展示时长交给 Skill 判断", () => {
-    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v13");
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v14");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{orientation}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain(
       "still_image 与 live_footage 绝不能 full_frame",
@@ -76,6 +76,8 @@ describe("material.match 视频呈现契约", () => {
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("开场前三秒优先使用");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("第一场第一句的 SRT 起秒");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不要把合适素材拖到三秒以后");
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("竖屏有真人口播时必须选择 pip_bottom_left");
+    expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不能选择 hidden");
   });
 
   it("把原文件名和人工选材当高价值上下文，但禁止机械字符串匹配", () => {
@@ -89,7 +91,7 @@ describe("material.match 视频呈现契约", () => {
   });
 
   it("[T-867 RED] 当前项目生成素材必须由 AI 自动逐项评估，空结果不能把选场景作业退给用户", () => {
-    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v13");
+    expect(MATERIAL_MATCH_TEMPLATE.version).toBe("v14");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("{{recovery}}");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("当前项目 AI 已选入或生成并采纳");
     expect(MATERIAL_MATCH_TEMPLATE.template).toContain("不得因为名称相似或重复就跳过");

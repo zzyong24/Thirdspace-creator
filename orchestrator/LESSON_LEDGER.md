@@ -13,6 +13,27 @@
 
 ---
 
+## LED-044 — 每个时间窗都有画面，不等于竖屏真人仍然存在
+
+- **Date**: 2026-08-19 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 竖屏分镜用 card/B-roll takeover 连续覆盖全片，模板把 card 和历史 hidden 都执行为
+  `#th autoAlpha:0`；116.6 秒成片结构、编码和码率均合法，8 个均匀抽样帧却没有一帧真人。
+- **RootCause**: 质量门只验证“有主视觉”和素材/PiP 不重叠，没有验证用户确认的竖屏主体是否持续可见；
+  T-896 又把布局冲突降级为隐藏人物，使可用性恢复但产品目标被静默反杀。
+- **GuardRule**: 竖屏存在真实 talking-head 时，人脸必须在全部时间窗可见；talking-head beat 全幅，卡片
+  和非 overlay 素材期间使用同一节点固定左下 PiP。历史 hidden 兼容为 PiP；素材舞台避让人物与字幕。
+  横屏和 visual-only 不套用此偏好。
+- **GuardCheck**: `pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts
+  src/prompt/templates/video-decisions.test.ts && pnpm --dir frontend exec vitest run
+  src/features/production/assemble-video-render-props.test.ts src/features/production/video-regression-audit.test.ts &&
+  pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts
+  src/modules/execution/video-render/executor.test.ts`。
+- **Outcome(T+N)**: 已用全卡片 + hidden B-roll 连续覆盖 fixture 先红后绿；renderer 不再生成任何竖屏
+  `#th autoAlpha:0`，横/方/竖素材均使用人物上方安全舞台。真实完整重渲待本地包验收。
+- **Ref**: T-902；DEC-VIDEO-056；用户成片 `objkey-2c69a0f3-756.mp4`。
+
+---
+
 ## LED-043 — 质量安全门不能把上一版可完成的合法任务变成整单失败
 
 - **Date**: 2026-08-19 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
@@ -594,7 +615,7 @@
 
 ## LED-033 — 精确回位不能挽救错误的自动 PiP 镜头语法
 
-- **Date**: 2026-08-16 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **Date**: 2026-08-16 · **Stage**: BUILD · **Severity**: critical · **Status**: deprecated
 - **WhatFailed**: 第一版 T-858 样片把人物默认铺满竖屏；横版素材或动态卡出现时，人物仅在对应时间窗
   居中缩小，结束后精确恢复原几何。实现满足原测试，用户仍判定整个策略“错误、很奇怪”。
 - **RootCause**: 把人物持续可见和几何回位误当成剪辑连续性，造成两个视觉主体同时竞争；缩小/放大
@@ -605,6 +626,8 @@
 - **GuardCheck**: T-858 聚焦测试共同断言 props 不产 `pip_bottom_left`、主视觉/动态卡层覆盖人物、最终
   HTML 不含素材窗驱动的 `tl.to("#th",{left/width...})`，真实短样片抽取接管前/中/后三态确认。
 - **Outcome(T+N)**: 待修订短样片与用户验收回填。
+- **Outcome(T+N, T-902)**: 2026-08-19 用户以真实成片明确改变竖屏默认：真人主导、人脸常驻；本条
+  “自动 PiP 禁令”由 LED-044/DEC-VIDEO-056 取代，仅作为历史教训保留。
 - **Ref**: T-858；DEC-VIDEO-043；用户 2026-08-16 预览反馈。
 
 ## LED-034 — 配置里的数字正确，不等于 multipart 出站仍有数字类型

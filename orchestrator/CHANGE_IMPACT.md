@@ -11,6 +11,20 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
 
 ---
 
+## CI-VIDEO-902 — 竖屏从主视觉独占切走改为真人主导、人脸常驻（2026-08-19）
+
+- **变更源**：DEC-VIDEO-056；真实竖屏成片 8 个均匀抽样帧均没有真人，用户明确要求恢复真人主导。
+- **失效工件**：DEC-VIDEO-043、DEC-VIDEO-044 的 card hidden 默认，T-859 动态卡独占规则，T-896
+  “PiP 冲突改 hidden”降级，LED-033 的自动 PiP 禁令，以及对应 prompt/模板快照失效。
+- **重新派生**：竖屏 talking-head 全幅；card/B-roll 期间固定左下人物常驻；素材可读区移到人物和字幕
+  上方；旧 hidden 候选渲染前兼容为 PiP。横屏和 visual-only 不变。
+- **验证影响**：必须覆盖全卡片时间线、旧 hidden direction、无 direction 历史候选、横/方/竖素材、
+  executor 公共调用链、横屏回归与真实 1080×1920 视觉证据。
+- **数据/接口影响**：不改数据库和公开 contract；`speakerMode` 枚举保持可读兼容，仅改变竖屏最终执行
+  策略与新候选默认。
+
+---
+
 ## CI-VIDEO-901 — 最低平均码率从失败门改为可诊断提醒（2026-08-19）
 
 - **变更源**：DEC-VIDEO-055；真实渲染已产出结构合格 MP4，却因 `2890kbps < 5000kbps` 被整单取消。

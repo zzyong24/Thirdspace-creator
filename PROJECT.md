@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ 06edc48d
+LAST_SYNCED: codex/t793-local-package @ 838fa347
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-901 根治视频已完成却被最低平均码率质量门误杀并恢复本地出片可用性【用户日志与明确授权·2026-08-19】
 - [open] T-878 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】
 - [wip] T-867 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】
 - [wip] T-860 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】

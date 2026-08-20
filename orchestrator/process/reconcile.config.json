@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-044",
+      "what": "竖屏有真实口播源时再次被卡片、素材或历史 hidden 连续覆盖，导致整片无人",
+      "check": "pnpm --dir ai-worker exec vitest run src/prompt/templates/material-match.test.ts src/prompt/templates/video-decisions.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/video-regression-audit.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
+      "onFail": "竖屏真人常驻门回归：有真实 talking-head 时人物 beat 全幅，card/B-roll 时间窗固定左下 PiP；旧 hidden 必须安全兼容，素材可读区避开人物与字幕；横屏和 visual-only 不受影响。"
+    },
+    {
       "led": "LED-043",
       "what": "新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败",
       "check": "node --test orchestrator/process/critical-path-availability-rule.test.mjs && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts",
@@ -179,13 +185,7 @@
       "led": "LED-032",
       "what": "竖屏统一舞台再次把人物整场缩角落，或素材物化改名后悄悄丢失 AI 方向与字幕重点词",
       "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/production-workbench.test.tsx",
-      "onFail": "竖屏编导落地门回归：人物 beat 保持全画布，素材/动态内容 takeover 时人物完全退出并直接切回，不得自动缩成 PiP；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。"
-    },
-    {
-      "led": "LED-033",
-      "what": "主视觉出现时再次自动把人物缩成 PiP，或用人物缩小/放大回位动画冒充剪辑连续性",
-      "check": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts && pnpm --dir backend exec vitest run src/modules/execution/video-render/template.test.ts",
-      "onFail": "单主语镜头门回归：新导演合同只能 base/takeover，正式组装不产 pip_bottom_left，takeover 用不透明主视觉层盖住人物，模板不得按素材或动态卡时间窗生成 #th 缩放、位移和回位 tween。"
+      "onFail": "竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。"
     },
     {
       "led": "LED-034",

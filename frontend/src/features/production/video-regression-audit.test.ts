@@ -102,6 +102,20 @@ describe("T-712 视频真实回归审计", () => {
     expect(auditVideoRenderProps(opening).passed).toBe(true);
   });
 
+  it("[T-902] 竖屏旧 hidden 候选给出兼容提醒但不阻断安全渲染", () => {
+    const portrait = props();
+    portrait.delivery = { width: 1080, height: 1920, fps: 30 };
+    portrait.broll[0] = { ...portrait.broll[0]!, speakerMode: "hidden" };
+
+    const audit = auditVideoRenderProps(portrait, {
+      expectedOrientation: "portrait",
+    });
+    expect(audit.passed).toBe(true);
+    expect(audit.warnings.map((item) => item.code)).toContain(
+      "portrait_presenter_hidden_compat",
+    );
+  });
+
   it("横屏与竖屏使用各自交付尺寸，不能拿横屏结果冒充竖屏验收", () => {
     const portrait = props();
     portrait.delivery = { width: 1080, height: 1920, fps: 30 };

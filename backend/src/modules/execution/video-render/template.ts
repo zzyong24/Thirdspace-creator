@@ -270,7 +270,7 @@ export function fitMediaRect(
   };
 }
 
-/** 主视觉几何单一真值：竖屏主视觉独占切走；横屏 large_stage 与人物安全分区。 */
+/** 主视觉几何单一真值：竖屏为常驻人物留下左下与字幕安全区；横屏维持原分区。 */
 export function resolveMainBrollGeometry(
   width: number,
   height: number,
@@ -280,9 +280,9 @@ export function resolveMainBrollGeometry(
   if (height > width) {
     return {
       x: Math.round((54 / 1080) * width),
-      y: Math.round((260 / 1920) * height),
+      y: Math.round((92 / 1920) * height),
       width: Math.round((972 / 1080) * width),
-      height: Math.round((1050 / 1920) * height),
+      height: Math.round((1076 / 1920) * height),
     };
   }
   return {
@@ -329,18 +329,22 @@ export interface VideoLayoutSafetyFallback {
   label: string;
   sourceWidth?: number;
   sourceHeight?: number;
-  from: "pip_bottom_left";
-  to: "hidden";
-  reason: "人物框与素材可见边界重叠" | "人物框进入字幕安全区";
+  from: "hidden";
+  to: "pip_bottom_left";
+  reason: "竖屏人脸常驻";
   media: MainBrollGeometry;
   pip: LayoutBox;
 }
+
+type PortraitPipSpacingIssue =
+  | "人物框与素材可见边界重叠"
+  | "人物框进入字幕安全区";
 
 function portraitPipSpacingIssue(input: {
   canvasHeight: number;
   media: MainBrollGeometry;
   pip: LayoutBox;
-}): VideoLayoutSafetyFallback["reason"] | null {
+}): PortraitPipSpacingIssue | null {
   const minimumGap = Math.max(
     1,
     Math.round((20 / 1920) * input.canvasHeight),
@@ -398,8 +402,8 @@ function resolvePortraitPipMedia(
 }
 
 /**
- * 可恢复的布局冲突先收敛为安全渲染输入。人物/PiP 是可选辅助层；当素材完整
- * contain 后没有安全位置时隐藏人物，不把合法素材升级成整单渲染失败。
+ * T-902 竖屏历史候选先收敛为人物常驻输入。素材完整 contain 的真实可读区固定在
+ * 人物与字幕安全区上方，不能再通过隐藏人物让布局门通过。
  */
 export function stabilizeVideoLayoutSafety(props: VideoRenderProps): {
   props: VideoRenderProps;
@@ -411,32 +415,39 @@ export function stabilizeVideoLayoutSafety(props: VideoRenderProps): {
   const fallbacks: VideoLayoutSafetyFallback[] = [];
   let changed = false;
   const broll = props.broll.map((item) => {
-    if (item.speakerMode !== "pip_bottom_left") return item;
     const presentation = resolveBrollPresentation(item);
     if (presentation === "overlay") return item;
+    const normalized =
+      item.speakerMode === "pip_bottom_left"
+        ? item
+        : { ...item, speakerMode: "pip_bottom_left" as const };
+    if (normalized !== item) changed = true;
     const scene = props.scenes.find(
       (candidate) => item.at >= candidate.startSec && item.at < candidate.endSec,
     );
-    if (!scene) return item;
-    const layout = resolvePortraitPipMedia(props, item, presentation);
+    if (!scene) return normalized;
+    const layout = resolvePortraitPipMedia(props, normalized, presentation);
+    if (normalized !== item) {
+      fallbacks.push({
+        file: item.file,
+        label: item.label,
+        ...(item.sourceWidth ? { sourceWidth: item.sourceWidth } : {}),
+        ...(item.sourceHeight ? { sourceHeight: item.sourceHeight } : {}),
+        from: "hidden",
+        to: "pip_bottom_left",
+        reason: "竖屏人脸常驻",
+        media: layout.media,
+        pip: layout.pip,
+      });
+    }
     const reason = portraitPipSpacingIssue({
       canvasHeight: props.delivery.height,
       ...layout,
     });
-    if (!reason) return item;
-    changed = true;
-    fallbacks.push({
-      file: item.file,
-      label: item.label,
-      ...(item.sourceWidth ? { sourceWidth: item.sourceWidth } : {}),
-      ...(item.sourceHeight ? { sourceHeight: item.sourceHeight } : {}),
-      from: "pip_bottom_left",
-      to: "hidden",
-      reason,
-      media: layout.media,
-      pip: layout.pip,
-    });
-    return { ...item, speakerMode: "hidden" as const };
+    // 固定安全舞台应覆盖全部合法宽高比；若未来几何再次漂移，让正式安全门报告真实
+    // 冲突，而不是恢复“隐藏人物即可通过”的错误降级。
+    void reason;
+    return normalized;
   });
   return {
     props: changed ? { ...props, broll } : props,
@@ -597,8 +608,8 @@ function resolveLayout(width: number, height: number): Layout {
 }
 
 /**
- * 竖屏里的 16:9 录屏保持完整比例和整屏宽度，并在字幕安全区上方居中成为唯一主画面。
- * 不再为人物画中画预留下半屏；比例差由全画布静态舞台承接，素材本身不裁切。
+ * 竖屏主素材保持完整比例，并在常驻人物与字幕安全区上方居中。背景舞台仍可铺满画布，
+ * 但真实素材可读区域不能侵入左下人物框；素材本身不裁切。
  */
 function resolveBrollMediaBounds(
   width: number,
@@ -607,18 +618,15 @@ function resolveBrollMediaBounds(
   visualRole: VideoRenderBroll["visualRole"],
   fallback: MainBrollGeometry,
 ): MainBrollGeometry {
-  if (
-    height > width &&
-    presentation === "full_frame" &&
-    visualRole === "screen_recording"
-  ) {
+  if (height > width && presentation !== "overlay") {
     return {
-      x: 0,
-      y: Math.round((360 / 1920) * height),
-      width,
-      height: Math.round((1000 / 1920) * height),
+      x: Math.round((54 / 1080) * width),
+      y: Math.round((92 / 1920) * height),
+      width: Math.round((972 / 1080) * width),
+      height: Math.round((1076 / 1920) * height),
     };
   }
+  void visualRole;
   return fallback;
 }
 
@@ -699,33 +707,48 @@ function showSmooth(
   );
 }
 
-type PortraitSpeakerState = "full" | "pip" | "hidden";
+type PortraitSpeakerState = "full" | "pip";
 
 /**
- * T-859 人物显示状态只消费已校验 direction 与 B-roll speakerMode。同一 #th 连续播放，
- * 这里只改变几何、透明度和层级；连续两个 pip beat 不重复生成 tween。
+ * T-902 竖屏有真人输入时人物始终可见。talking-head beat 使用全幅基底，卡片和
+ * 非 overlay 素材只把同一 #th 收进左下角；历史 hidden 值不再获得隐藏人物的执行权。
  */
 function schedulePortraitSpeakerDirection(
   ctx: Ctx,
   props: VideoRenderProps,
   layout: Layout,
 ): void {
-  if (!props.direction) return;
   const full = layout.thRight;
   const pip = layout.thPip;
-  const beats = [...props.direction.beatGraph].sort(
+  const beats = props.direction
+    ? props.direction.beatGraph.map((beat) => ({
+        startSec: beat.startSec,
+        endSec: beat.endSec,
+        subjectKind: beat.subject.kind,
+      }))
+    : props.scenes.flatMap((scene) => {
+        const items = [
+          ...scene.cards.map((card) => ({ startSec: card.at, subjectKind: "card" as const })),
+          ...props.broll
+            .filter(
+              (item) =>
+                item.at >= scene.startSec &&
+                item.at < scene.endSec &&
+                resolveBrollPresentation(item) !== "overlay",
+            )
+            .map((item) => ({ startSec: item.at, subjectKind: "broll" as const })),
+        ].sort((a, b) => a.startSec - b.startSec);
+        return items.map((item, index) => ({
+          ...item,
+          endSec: items[index + 1]?.startSec ?? scene.endSec,
+        }));
+      });
+  beats.sort(
     (a, b) => a.startSec - b.startSec,
   );
   const stateFor = (beat: (typeof beats)[number]): PortraitSpeakerState => {
-    if (beat.subject.kind === "talking_head") return "full";
-    if (beat.subject.kind === "card") return "hidden";
-    const file = beat.subject.ref.startsWith("broll:")
-      ? beat.subject.ref.slice("broll:".length)
-      : "";
-    return props.broll.find((item) => item.file === file)?.speakerMode ===
-      "pip_bottom_left"
-      ? "pip"
-      : "hidden";
+    if (beat.subjectKind === "talking_head") return "full";
+    return "pip";
   };
   const change = (
     from: PortraitSpeakerState,
@@ -733,22 +756,8 @@ function schedulePortraitSpeakerDirection(
     at: number,
   ): void => {
     if (from === to) return;
-    if (to === "hidden") {
-      ctx.tweens.push(
-        `tl.to("#th",{autoAlpha:0,duration:.18,ease:"power1.inOut"},${fmt(at)});`,
-      );
-      return;
-    }
     const box = to === "pip" ? pip : full;
     const layer = to === "pip" ? 945 : 900;
-    if (from === "hidden") {
-      const revealAt = to === "full" ? Math.max(0, at - 0.18) : at;
-      ctx.tweens.push(
-        `tl.set("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},zIndex:${layer},autoAlpha:0},${fmt(revealAt)});`,
-        `tl.to("#th",{autoAlpha:1,duration:${to === "full" ? ".18" : ".24"},ease:"power1.out"},${fmt(revealAt)});`,
-      );
-      return;
-    }
     if (to === "pip") {
       ctx.tweens.push(
         `tl.set("#th",{zIndex:945},${fmt(at)});`,
