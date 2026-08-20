@@ -840,4 +840,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | DEC-VIDEO-056 | decision | orchestrator/DECISION_LOG.md | API-VIDEO-902, TEST-VIDEO-902 |
 | API-VIDEO-902 | api | backend/src/modules/execution/video-render/template.ts | DEC-VIDEO-056, TEST-VIDEO-902 |
 | TEST-VIDEO-902 | test | backend/src/modules/execution/video-render/template.test.ts | DEC-VIDEO-056, API-VIDEO-902 |
+| DEC-MODEL-057 | decision | orchestrator/DECISION_LOG.md | API-MODEL-904, TEST-MODEL-904 |
+| API-MODEL-904 | api | backend/src/modules/ai-runtime/multimodal/retry-submit.ts | DEC-MODEL-057, TEST-MODEL-904 |
+| TEST-MODEL-904 | test | backend/src/modules/ai-runtime/cover-runner.test.ts | DEC-MODEL-057, API-MODEL-904 |
 ```

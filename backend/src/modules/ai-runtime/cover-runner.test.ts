@@ -54,10 +54,11 @@ function makeDeps(
     brief?: Record<string, unknown>;
     resolveImageThrows?: boolean;
     noBytes?: boolean;
+    channelManaged?: boolean;
   } = {},
 ) {
   runStructuredNode.mockResolvedValue({ object: planObject } as never);
-  generateImage.mockClear();
+  generateImage.mockReset();
   generateImage.mockResolvedValue({
     assetBytes: opts.noBytes ? new Uint8Array() : new Uint8Array([1, 2, 3]),
   } as never);
@@ -101,6 +102,9 @@ function makeDeps(
       model: "image-01",
       token: "k",
       kind: "image" as const,
+      ...(opts.channelManaged
+        ? { displayModelKey: "channel-managed" as const }
+        : {}),
     };
   });
   const deps: Record<string, unknown> = {
@@ -419,6 +423,61 @@ describe("[T-271] runCoverGenerate —— 结构化封面方案 + 文案诚实�
     expect(new Set(keys).size).toBe(1);
     expect(made.recordCandidate).toHaveBeenCalledOnce();
     expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("官方受管封面提交瞬时断连时沿用同一幂等号恢复，不重新生成封面方案", async () => {
+    const made = makeDeps(FULL_PLAN, { channelManaged: true });
+    const structuredCallsBefore = runStructuredNode.mock.calls.length;
+    const submitUnknown = Object.assign(new Error("submit response lost"), {
+      reason: "network",
+      stage: "submit",
+      retryable: false,
+    });
+    generateImage
+      .mockRejectedValueOnce(submitUnknown)
+      .mockResolvedValueOnce({ assetBytes: new Uint8Array([9, 8, 7]) } as never);
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runCoverGenerate(
+      ctx,
+      { id: "t-managed-network", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+
+    expect(runStructuredNode.mock.calls.length - structuredCallsBefore).toBe(1);
+    expect(generateImage).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledWith(1_000);
+    const keys = generateImage.mock.calls.map(
+      (call) => (call as unknown as [unknown, { idempotencyKey: string }])[1].idempotencyKey,
+    );
+    expect(new Set(keys).size).toBe(1);
+    expect(made.recordCandidate).toHaveBeenCalledOnce();
+    expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("用户自配封面提交结果未知时不盲目重放", async () => {
+    const made = makeDeps(FULL_PLAN);
+    generateImage.mockRejectedValueOnce(
+      Object.assign(new Error("submit response lost"), {
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      }),
+    );
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runCoverGenerate(
+      ctx,
+      { id: "t-custom-network", projectId: "p1", inputData: {} },
+      made.deps,
+    );
+
+    expect(generateImage).toHaveBeenCalledOnce();
+    expect(sleep).not.toHaveBeenCalled();
+    expect(made.recordCandidate).not.toHaveBeenCalled();
+    expect(made.cancelTask).toHaveBeenCalledOnce();
   });
 
   // ── [T-380] 以图生图风格参考 ────────────────────────────────────────────

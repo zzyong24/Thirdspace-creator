@@ -255,6 +255,80 @@ describe("runAssetGenerate — image(同步)装配", () => {
     },
   );
 
+  it("官方受管图片提交瞬时断连时沿用同一幂等号恢复", async () => {
+    const keys: string[] = [];
+    let attempts = 0;
+    const registry = {
+      fake: {
+        generateImage: async (
+          _spec: unknown,
+          options: { idempotencyKey?: string },
+        ) => {
+          keys.push(options.idempotencyKey ?? "");
+          attempts += 1;
+          if (attempts === 1) {
+            throw new MultimodalGenerationError("submit response lost", {
+              reason: "network",
+              stage: "submit",
+              retryable: false,
+            });
+          }
+          return { assetBytes: new Uint8Array([8, 9, 10]) };
+        },
+      },
+    } as unknown as MultimodalProviderRegistry;
+    const made = makeDeps({ registry, kind: "image", channelManaged: true });
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "managed-image-network",
+        projectId: "p1",
+        inputData: { prompt: "生成一张封面素材", kind: "image" },
+      },
+      made.deps,
+    );
+
+    expect(attempts).toBe(2);
+    expect(new Set(keys).size).toBe(1);
+    expect(sleep).toHaveBeenCalledWith(1_000);
+    expect(made.recordCandidate).toHaveBeenCalledOnce();
+    expect(made.cancelTask).not.toHaveBeenCalled();
+  });
+
+  it("用户自配图片提交结果未知时只调用一次并诚实取消", async () => {
+    const generateImage = vi.fn(async () => {
+      throw new MultimodalGenerationError("submit response lost", {
+        reason: "network",
+        stage: "submit",
+        retryable: false,
+      });
+    });
+    const registry = {
+      fake: { generateImage },
+    } as unknown as MultimodalProviderRegistry;
+    const made = makeDeps({ registry, kind: "image" });
+    const sleep = vi.fn(async (_ms: number) => undefined);
+    (made.deps as Record<string, unknown>).sleep = sleep;
+
+    await runAssetGenerate(
+      ctx,
+      {
+        id: "custom-image-network",
+        projectId: "p1",
+        inputData: { prompt: "生成一张封面素材", kind: "image" },
+      },
+      made.deps,
+    );
+
+    expect(generateImage).toHaveBeenCalledOnce();
+    expect(sleep).not.toHaveBeenCalled();
+    expect(made.recordCandidate).not.toHaveBeenCalled();
+    expect(made.cancelTask).toHaveBeenCalledOnce();
+  });
+
   it("[T-735] 生图响应已收到但本地落盘失败时，重试不再发第二次计费请求", async () => {
     const runtimeByTask = new Map<string, Record<string, unknown>>();
     const firstGenerateImage = vi.fn(async () => ({
@@ -441,7 +515,7 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
     expect(retry.recordCandidate).toHaveBeenCalledOnce();
   });
 
-  it("[T-735] 提交响应丢失标记 unknown，重试不会盲目再发一次计费请求", async () => {
+  it("[T-735/T-904] 官方受管视频提交响应丢失仍标记 unknown，不盲目新建付费任务", async () => {
     const runtimeByTask = new Map<string, Record<string, unknown>>();
     const generateVideo = vi.fn(async () => {
       throw new MultimodalGenerationError("submit response lost", {
@@ -455,6 +529,7 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
         fake: { generateVideo } as unknown as MultimodalProviderRegistry[string],
       },
       kind: "video",
+      channelManaged: true,
       runtimeByTask,
     });
     await runAssetGenerate(
@@ -476,6 +551,7 @@ describe("runAssetGenerate — video(异步:submit→轮询→拿 bytes)装配 [
         fake: { generateVideo } as unknown as MultimodalProviderRegistry[string],
       },
       kind: "video",
+      channelManaged: true,
       runtimeByTask,
     });
     await runAssetGenerate(

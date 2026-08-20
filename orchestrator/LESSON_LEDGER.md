@@ -13,6 +13,23 @@
 
 ---
 
+## LED-045 — 提交结果未知不等于所有渠道都必须停机，也不等于都能盲重放
+
+- **Date**: 2026-08-20 · **Stage**: BUILD · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 官方受管网关已识别 `Idempotency-Key`，但网络提交异常被统一标成不可重试；三次封面
+  和四次图片素材因同形瞬时断连直接取消，稍后的同链请求却正常成功。
+- **RootCause**: 旧策略只区分“有明确 HTTP 拒绝”和“提交结果未知”，没有把已验签且提供幂等保证的
+  官方网关与未知幂等能力的用户中转站分开，保守计费门反杀了官方链可用性。
+- **GuardRule**: 提交未知的自动恢复必须同时满足：官方受管身份、同步生图、同一业务意图、同一真实
+  幂等号和有界次数。用户自配请求与异步视频不得继承该例外；成功只能落一份候选。
+- **GuardCheck**: `pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts
+  src/modules/ai-runtime/asset-generate-runner.test.ts`。
+- **Outcome(T+N)**: 红测证明两条受管生图公开链均只调用一次即取消；绿测 38/38，受管链断连后同幂等
+  恢复，自配链一次即停，受管视频仍不新建第二条付费任务。真实付费 smoke 未自动执行。
+- **Ref**: T-904；DEC-MODEL-057；本机 `sidecar-2026-08-20-1.log.enc`。
+
+---
+
 ## LED-044 — 每个时间窗都有画面，不等于竖屏真人仍然存在
 
 - **Date**: 2026-08-19 · **Stage**: BUILD · **Severity**: critical · **Status**: rule

@@ -165,6 +165,7 @@ async function runProbe(label: string, prompt: string): Promise<ProbeResult> {
           },
           registry,
         ),
+      allowIdempotentUnknownSubmitRetry: true,
     });
     const result: ProbeResult = {
       label,
@@ -202,7 +203,7 @@ emit({
   requestTimeoutMs,
   dryRun,
   policy:
-    "one baseline plus repeated real cover generations; unique intent key per run, same key only for explicit rejected-submit retry; no asset persistence",
+    "one baseline plus repeated real cover generations; unique intent key per run, same key for bounded managed submit recovery; no asset persistence",
 });
 
 const results: ProbeResult[] = [];

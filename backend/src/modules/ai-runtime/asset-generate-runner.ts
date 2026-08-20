@@ -342,13 +342,16 @@ export async function runAssetGenerate(
             deps.registry,
           )
         : generateVideo(spec, videoOptions, deps.registry);
-    // 官方网关承诺识别 Idempotency-Key，因此只对“已收到明确瞬时 HTTP 拒绝”做有限退避；
-    // 网络断开/超时/无法解析响应仍然一次即停，不能拿可用性换重复计费风险。
+    // 官方网关承诺识别 Idempotency-Key，因此对明确瞬时 HTTP 拒绝，以及没有 HTTP 响应的
+    // 提交断连，沿用同一幂等号做有限恢复；用户自配中转站仍一次即停，避免重复计费。
     const { assetBytes } =
       spec.displayModelKey === "channel-managed"
         ? await retryExplicitRejectedSubmit({
             operation: generate,
             sleep: deps.sleep,
+            // 本任务只放开同步生图。异步视频仍以 provider job checkpoint 续跑，不能把
+            // “提交结果未知”误当成可重新创建一条付费视频任务。
+            allowIdempotentUnknownSubmitRetry: kind === "image",
           })
         : await generate();
     if (!assetBytes || assetBytes.byteLength === 0) {

@@ -397,6 +397,10 @@ export async function runCoverGenerate(
     const generated = await retryExplicitRejectedSubmit({
       operation: () => generateImage(imgSpec, generateOptions, deps.registry),
       sleep: deps.sleep,
+      // 官方受管网关识别同一 Idempotency-Key；提交断连时可安全沿用原任务有限恢复。
+      // 用户自配中转站不开放，避免未知幂等实现导致重复计费。
+      allowIdempotentUnknownSubmitRetry:
+        imgSpec.displayModelKey === "channel-managed",
       onRetry: async () => {
         if (retryNoticeRecorded) return;
         retryNoticeRecorded = true;
