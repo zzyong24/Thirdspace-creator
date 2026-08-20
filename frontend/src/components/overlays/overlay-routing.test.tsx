@@ -19,7 +19,14 @@
 
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -167,6 +174,91 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("OverlayController", () => {
+  function setViewport(width: number, height: number) {
+    Object.defineProperties(window, {
+      innerWidth: { configurable: true, value: width },
+      innerHeight: { configurable: true, value: height },
+    });
+  }
+
+  function renderOpenOverlay(
+    OverlayController: React.ComponentType<{ children: React.ReactNode }>,
+  ) {
+    resetNext({
+      pathname: "/projects",
+      searchParams: new URLSearchParams("copilot=open"),
+    });
+    return render(
+      <RoutedOverlayController>
+        <OverlayController>
+          <div data-testid="copilot-panel">copilot body</div>
+        </OverlayController>
+      </RoutedOverlayController>,
+    );
+  }
+
+  it("[T-906] 默认使用更大的 1080 × 800 助手窗口", async () => {
+    setViewport(1440, 1000);
+    const { OverlayController } = await importOverlayController();
+    renderOpenOverlay(OverlayController);
+
+    const dialog = screen.getByRole("dialog", { name: "AI 助手" });
+    expect(dialog).toHaveStyle({ width: "1080px", height: "800px" });
+  });
+
+  it("[T-906] 启动时恢复上次保存的窗口尺寸", async () => {
+    setViewport(1440, 1000);
+    window.localStorage.setItem(
+      "creatoros_ai_copilot_size_v1",
+      JSON.stringify({ width: 940, height: 690 }),
+    );
+    const { OverlayController } = await importOverlayController();
+    renderOpenOverlay(OverlayController);
+
+    const dialog = screen.getByRole("dialog", { name: "AI 助手" });
+    await waitFor(() => {
+      expect(dialog).toHaveStyle({ width: "940px", height: "690px" });
+    });
+  });
+
+  it("[T-906] 保存尺寸超过当前屏幕时仍保持窗口完整可见", async () => {
+    setViewport(900, 700);
+    window.localStorage.setItem(
+      "creatoros_ai_copilot_size_v1",
+      JSON.stringify({ width: 1400, height: 960 }),
+    );
+    const { OverlayController } = await importOverlayController();
+    renderOpenOverlay(OverlayController);
+
+    const dialog = screen.getByRole("dialog", { name: "AI 助手" });
+    await waitFor(() => {
+      expect(dialog).toHaveStyle({ width: "852px", height: "652px" });
+    });
+  });
+
+  it("[T-906] 拖拽右下角会调整尺寸并持久化", async () => {
+    setViewport(1600, 1100);
+    const { OverlayController } = await importOverlayController();
+    renderOpenOverlay(OverlayController);
+
+    const handle = screen.getByRole("separator", {
+      name: "调整 AI 助手大小",
+    });
+    fireEvent.pointerDown(handle, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 150, clientY: 140 });
+    fireEvent.pointerUp(window);
+
+    const dialog = screen.getByRole("dialog", { name: "AI 助手" });
+    await waitFor(() => {
+      expect(dialog).toHaveStyle({ width: "1180px", height: "880px" });
+    });
+    expect(
+      JSON.parse(
+        window.localStorage.getItem("creatoros_ai_copilot_size_v1") ?? "{}",
+      ),
+    ).toEqual({ width: 1180, height: 880 });
+  });
+
   it("renders nothing when ?copilot=open is absent", async () => {
     resetNext({ pathname: "/projects", searchParams: new URLSearchParams() });
     const { OverlayController } = await importOverlayController();
@@ -330,7 +422,9 @@ describe("OverlayController", () => {
     const buttons = Array.from(
       panel.querySelectorAll<HTMLElement>("button"),
     );
-    const last = buttons[buttons.length - 1]!;
+    const last = screen.getByRole("separator", {
+      name: "调整 AI 助手大小",
+    });
     const first = buttons[0]!;
     last.focus();
 

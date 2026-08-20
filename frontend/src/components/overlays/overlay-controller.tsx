@@ -37,6 +37,21 @@ import {
 // 不然 Next.js RSC 会把 client reference proxy 注入 URL,渲染出「点了没反应」的破 href。
 
 const COPILOT_DIALOG_TITLE = "AI 助手";
+const COPILOT_SIZE_STORAGE_KEY = "creatoros_ai_copilot_size_v1";
+const COPILOT_DEFAULT_SIZE = { width: 1080, height: 800 } as const;
+const COPILOT_MIN_SIZE = { width: 680, height: 560 } as const;
+const COPILOT_VIEWPORT_GUTTER = 48;
+
+interface DialogSize {
+  width: number;
+  height: number;
+}
+
+interface ResizeSession {
+  startX: number;
+  startY: number;
+  startSize: DialogSize;
+}
 
 // ---------------------------------------------------------------------------
 // Context — allows descendants to close the overlay.
@@ -87,6 +102,62 @@ function isCopilotOpen(params: URLSearchParams): boolean {
   return params.get(OVERLAY_QUERY_KEY) === OVERLAY_OPEN_VALUE;
 }
 
+function getViewportLimit(): DialogSize {
+  if (typeof window === "undefined") {
+    return COPILOT_DEFAULT_SIZE;
+  }
+  return {
+    width: Math.max(320, window.innerWidth - COPILOT_VIEWPORT_GUTTER),
+    height: Math.max(320, window.innerHeight - COPILOT_VIEWPORT_GUTTER),
+  };
+}
+
+function clampDialogSize(size: DialogSize, viewport: DialogSize): DialogSize {
+  const minWidth = Math.min(COPILOT_MIN_SIZE.width, viewport.width);
+  const minHeight = Math.min(COPILOT_MIN_SIZE.height, viewport.height);
+  return {
+    width: Math.round(Math.min(viewport.width, Math.max(minWidth, size.width))),
+    height: Math.round(
+      Math.min(viewport.height, Math.max(minHeight, size.height)),
+    ),
+  };
+}
+
+function readSavedDialogSize(): DialogSize | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(COPILOT_SIZE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<DialogSize>;
+    if (
+      typeof parsed.width !== "number" ||
+      !Number.isFinite(parsed.width) ||
+      typeof parsed.height !== "number" ||
+      !Number.isFinite(parsed.height) ||
+      parsed.width <= 0 ||
+      parsed.height <= 0
+    ) {
+      return null;
+    }
+    return { width: parsed.width, height: parsed.height };
+  } catch {
+    // 隐私模式或损坏的旧值不应阻断 AI 助手打开，安全回落到新默认尺寸。
+    return null;
+  }
+}
+
+function saveDialogSize(size: DialogSize): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      COPILOT_SIZE_STORAGE_KEY,
+      JSON.stringify(size),
+    );
+  } catch {
+    // 本机存储不可用时，缩放仍在当前会话生效；只是不跨启动恢复。
+  }
+}
+
 function getFocusableElements(root: HTMLElement): HTMLElement[] {
   const selector = [
     "a[href]",
@@ -131,7 +202,132 @@ export function OverlayController({
   const triggerRef = React.useRef<HTMLElement | null>(null);
 
   const dialogRef = React.useRef<HTMLDivElement | null>(null);
+  const resizeSessionRef = React.useRef<ResizeSession | null>(null);
+  const stopResizeRef = React.useRef<(() => void) | null>(null);
+  const restoreSizeTimeoutRef = React.useRef<number | null>(null);
+  const [preferredSize, setPreferredSize] = React.useState<DialogSize>(
+    COPILOT_DEFAULT_SIZE,
+  );
+  const [viewportLimit, setViewportLimit] = React.useState<DialogSize>(
+    COPILOT_DEFAULT_SIZE,
+  );
+  const visibleSize = React.useMemo(
+    () => clampDialogSize(preferredSize, viewportLimit),
+    [preferredSize, viewportLimit],
+  );
+  const visibleSizeRef = React.useRef(visibleSize);
   const open = isCopilotOpen(searchParams ?? new URLSearchParams());
+
+  React.useLayoutEffect(() => {
+    visibleSizeRef.current = visibleSize;
+  }, [visibleSize]);
+
+  React.useEffect(() => {
+    function onWindowResize() {
+      setViewportLimit(getViewportLimit());
+    }
+    window.addEventListener("resize", onWindowResize);
+    return () => window.removeEventListener("resize", onWindowResize);
+  }, []);
+
+  React.useEffect(
+    () => () => {
+      stopResizeRef.current?.();
+    },
+    [],
+  );
+
+  const beginResize = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (restoreSizeTimeoutRef.current !== null) {
+        window.clearTimeout(restoreSizeTimeoutRef.current);
+        restoreSizeTimeoutRef.current = null;
+        setViewportLimit(getViewportLimit());
+      }
+      stopResizeRef.current?.();
+      resizeSessionRef.current = {
+        startX: event.clientX,
+        startY: event.clientY,
+        startSize: visibleSizeRef.current,
+      };
+
+      const previousUserSelect = document.body.style.userSelect;
+      document.body.style.userSelect = "none";
+
+      function stopResize() {
+        window.removeEventListener("pointermove", onPointerMove);
+        window.removeEventListener("pointerup", onPointerUp);
+        window.removeEventListener("pointercancel", onPointerUp);
+        document.body.style.userSelect = previousUserSelect;
+        resizeSessionRef.current = null;
+        stopResizeRef.current = null;
+      }
+
+      function onPointerMove(pointerEvent: PointerEvent) {
+        const session = resizeSessionRef.current;
+        if (!session) return;
+        pointerEvent.preventDefault();
+        // 面板始终居中，因此尺寸按指针位移的两倍变化，让右下角手柄持续跟手。
+        const nextSize = clampDialogSize(
+          {
+            width:
+              session.startSize.width +
+              (pointerEvent.clientX - session.startX) * 2,
+            height:
+              session.startSize.height +
+              (pointerEvent.clientY - session.startY) * 2,
+          },
+          getViewportLimit(),
+        );
+        visibleSizeRef.current = nextSize;
+        setPreferredSize(nextSize);
+      }
+
+      function onPointerUp() {
+        saveDialogSize(visibleSizeRef.current);
+        stopResize();
+      }
+
+      stopResizeRef.current = stopResize;
+      window.addEventListener("pointermove", onPointerMove, { passive: false });
+      window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerUp);
+    },
+    [],
+  );
+
+  const resizeWithKeyboard = React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      const step = event.shiftKey ? 64 : 32;
+      const delta =
+        event.key === "ArrowRight"
+          ? { width: step, height: 0 }
+          : event.key === "ArrowLeft"
+            ? { width: -step, height: 0 }
+            : event.key === "ArrowDown"
+              ? { width: 0, height: step }
+              : event.key === "ArrowUp"
+                ? { width: 0, height: -step }
+                : null;
+      if (!delta) return;
+      event.preventDefault();
+      const nextSize = clampDialogSize(
+        {
+          width: visibleSizeRef.current.width + delta.width,
+          height: visibleSizeRef.current.height + delta.height,
+        },
+        getViewportLimit(),
+      );
+      visibleSizeRef.current = nextSize;
+      setPreferredSize(nextSize);
+      saveDialogSize(nextSize);
+    },
+    [],
+  );
 
   const close = React.useCallback(() => {
     if (!open) return;
@@ -153,12 +349,32 @@ export function OverlayController({
   // the post-commit DOM.
   React.useLayoutEffect(() => {
     if (!open) return;
+    // 尺寸恢复会在首次布局时触发一次同步重渲染；只记录真正的外部唤起入口，
+    // 不能让后续布局把它覆盖成对话框内部焦点或 body。
+    if (triggerRef.current && document.contains(triggerRef.current)) return;
     const active = document.activeElement;
     triggerRef.current =
-      active instanceof HTMLElement && active !== document.body
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      !dialogRef.current?.contains(active)
         ? active
         : null;
   }, [open]);
+
+  React.useEffect(() => {
+    restoreSizeTimeoutRef.current = window.setTimeout(() => {
+      restoreSizeTimeoutRef.current = null;
+      setViewportLimit(getViewportLimit());
+      const savedSize = readSavedDialogSize();
+      if (savedSize) setPreferredSize(savedSize);
+    }, 0);
+    return () => {
+      if (restoreSizeTimeoutRef.current !== null) {
+        window.clearTimeout(restoreSizeTimeoutRef.current);
+        restoreSizeTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Focus trap + Escape handler + body scroll lock while the overlay is
   // open. Restoration of focus is performed by a separate effect after the
@@ -229,7 +445,11 @@ export function OverlayController({
       // Restore focus to the trigger that opened the overlay.
       const trigger = triggerRef.current;
       if (trigger && typeof trigger.focus === "function") {
-        trigger.focus();
+        // 路由切换可能在 effect cleanup 之后才真正移除仍持焦的 dialog；下一帧再
+        // 恢复到入口，避免浏览器的卸载聚焦把它覆盖成 body。
+        window.setTimeout(() => {
+          if (document.contains(trigger)) trigger.focus();
+        }, 16);
       }
       triggerRef.current = null;
     };
@@ -258,14 +478,35 @@ export function OverlayController({
           tabIndex={-1}
           data-slot="overlay-panel"
           data-overlay-panel="copilot"
+          style={{ width: visibleSize.width, height: visibleSize.height }}
           className={cn(
             // bug #5:面板不再整体 overflow-y-auto(否则对话区无法 flex-1 占满 + 自身滚动)。
             // 改为 overflow-hidden + flex 列,把滚动职责交给内部各区(对话流 / 次区)。
-            "relative z-10 flex h-[716px] max-h-[calc(100vh-72px)] w-full max-w-[860px] flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
+            "relative z-10 flex max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] flex-none flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none",
             className,
           )}
         >
           {children}
+          <div
+            role="separator"
+            tabIndex={0}
+            aria-label="调整 AI 助手大小"
+            aria-valuetext={`${visibleSize.width} × ${visibleSize.height}`}
+            data-slot="ai-copilot-resize-handle"
+            title="拖拽调整窗口大小"
+            onPointerDown={beginResize}
+            onKeyDown={resizeWithKeyboard}
+            className="group absolute bottom-0 right-0 z-20 size-8 cursor-nwse-resize touch-none select-none rounded-tl-lg outline-none focus-visible:bg-muted/70"
+          >
+            <span
+              aria-hidden="true"
+              className="absolute bottom-2 right-2 block size-3 opacity-55 transition-opacity group-hover:opacity-100"
+            >
+              <span className="absolute bottom-0 right-0 h-px w-3 -rotate-45 bg-muted-foreground" />
+              <span className="absolute bottom-1 right-0 h-px w-2 -rotate-45 bg-muted-foreground" />
+              <span className="absolute bottom-2 right-0 h-px w-1 -rotate-45 bg-muted-foreground" />
+            </span>
+          </div>
         </div>
       </div>
     </OverlayContext.Provider>
