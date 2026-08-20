@@ -3133,3 +3133,25 @@ CF-001/003/004（跨前后端仍由现有共享 contract operation 承载，无�
 `adaptedDraftSeed` 与 `ProjectIntelligenceReferenceService`。
 
 **任务**：T-900。
+
+# DEC-VIDEO-055 (2026-08-19) — 平均码率不足只提醒，不删除结构合格的可播放成片
+
+**Status**：confirmed
+
+**用户证据**：真实 `video.render` 已完成 HyperFrames 编码、faststart 整理与 ffprobe 结构校验，最终
+平均视频码率为 `2890kbps`，低于固定建议值 `5000kbps`，旧质量门因此取消任务并删除候选。用户明确
+要求立即修复，并确认“系统的可用性永远是第一优先级”。
+
+**决策**：
+
+1. codec、尺寸、fps、像素格式、BT.709、时长和探针可读性继续失败关闭；这些字段不合格代表交付结构
+   损坏或不符合项目明确输出契约。
+2. 平均码率低于 `minimumKbps` 只产生 `BITRATE_BELOW_RECOMMENDED` 诊断提醒，写入成功任务 manifest
+   和步骤日志，不再抛错、不触发失败沙箱清理，用户仍可预览与采纳 `final.mp4`。
+3. 继续把目标码率传给 HyperFrames，但不把 FFmpeg `-b:v` 的目标值误当成恒定最低值；是否需要二次
+   编码由后续真实画质证据决定，本次不为追数字重复压缩已合格画面。
+
+**Pattern-Ref**：PAT-001 T0（复用现有渲染与探针链，只调整错误分类）；LED-043（质量门不得反杀
+上一版可完成的关键链路）。
+
+**任务**：T-901。

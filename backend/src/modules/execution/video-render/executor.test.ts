@@ -342,6 +342,8 @@ describe("createVideoRenderExecutor", () => {
       targetKbps: 10000,
       minimumKbps: 5000,
       actualKbps: 8000,
+      status: "pass",
+      warningCode: null,
     });
   });
 
@@ -577,8 +579,9 @@ describe("createVideoRenderExecutor", () => {
     expect(calls.rendered).toHaveLength(1);
   });
 
-  it("交付码率低于硬门时失败关闭，不能把低清成片冒充可发布", async () => {
+  it("[T-901] 结构校验通过但平均码率低于建议值时保留成片并写入告警", async () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
+    const steps: string[] = [];
     const executor = createVideoRenderExecutor(
       fakeEngine(calls, {
         async probeDelivery() {
@@ -600,9 +603,23 @@ describe("createVideoRenderExecutor", () => {
       }),
     );
 
-    await expect(
-      executor.run(sandbox, { goal: "渲染", props: props() }, runOpts([])),
-    ).rejects.toThrow(/BITRATE_BELOW_MIN.*3250.*5000/);
+    const result = await executor.run(
+      sandbox,
+      { goal: "渲染", props: props() },
+      runOpts(steps),
+    );
+
+    await fs.access(path.join(sandbox.outDir, "final.mp4"));
+    expect(result.meta?.deliveryQuality).toMatchObject({
+      targetKbps: 10000,
+      minimumKbps: 5000,
+      actualKbps: 3250,
+      status: "warning",
+      warningCode: "BITRATE_BELOW_RECOMMENDED",
+    });
+    expect(steps).toContain(
+      "成片可用，平均码率 3250kbps 低于建议值 5000kbps；已保留成片并记录质量提醒",
+    );
   });
 
   it("stream.bit_rate 缺失时只用 v:0 packet bytes 计算视频平均码率", async () => {

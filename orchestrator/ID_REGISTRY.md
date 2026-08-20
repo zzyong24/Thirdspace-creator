@@ -834,4 +834,7 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 | TEST-CLI-006 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-01, FR-CLI-04 |
 | TEST-CLI-007 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-06 |
 | TEST-CLI-008 | test | docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md | FR-CLI-03, FR-CLI-05, FR-CLI-06, FR-CLI-08 |
+| DEC-VIDEO-055 | decision | orchestrator/DECISION_LOG.md | API-VIDEO-901, TEST-VIDEO-901 |
+| API-VIDEO-901 | api | backend/src/modules/execution/video-render/executor.ts | DEC-VIDEO-055, TEST-VIDEO-901 |
+| TEST-VIDEO-901 | test | backend/src/modules/execution/video-render/executor.test.ts | DEC-VIDEO-055, API-VIDEO-901 |
 ```

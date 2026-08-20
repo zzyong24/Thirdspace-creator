@@ -32,6 +32,9 @@
 - **Outcome(T+N)**: T-895 已用真实日志确认三个任务都在同一布局门失败，且旧孤立单测为绿；T-896 已让
   安全横图保留 PiP，方图/竖图冲突时确定性隐藏人物并继续出片。组装贯通、执行器和 1080×1920 真实
   HyperFrames smoke 均通过；规则同步写入项目工程约束与全局 `video-editing` Skill。
+- **Outcome(T+N, T-901)**: 同日再次命中该形态：结构合格的成片因平均码率低于固定阈值被整单取消。
+  已把平均码率降为 manifest/步骤告警，同时保留 codec、尺寸、fps、色彩、时长和可解码结构硬门；
+  `executor.test.ts` 把该行为纳入 LED-043 既有 GuardCheck。
 - **Ref**: T-895、T-896、T-897、`fdd6d7ab123413a1954085e5a51e25e89671277b`、
   `docs/research/2026-08-19-video-render-layout-guard-regression.md`。
 

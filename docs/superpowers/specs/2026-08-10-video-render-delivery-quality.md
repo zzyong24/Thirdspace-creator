@@ -20,9 +20,11 @@ flowchart LR
   R --> H["HyperFrames high + 目标码率"]
   M --> H
   H --> F["final.mp4 无损 remux"]
-  F --> G{"ffprobe 交付硬门"}
-  G -->|"通过"| O["候选成片"]
-  G -->|"失败"| D["写入安全诊断字段并拒绝冒充可发布"]
+  F --> G{"ffprobe 结构硬门"}
+  G -->|"结构通过"| B{"平均码率低于建议值?"}
+  B -->|"否"| O["候选成片"]
+  B -->|"是"| W["保留候选并记录质量提醒"]
+  G -->|"结构失败"| D["写入安全诊断字段并拒绝损坏成片"]
 ```
 
 ## 2. 已确认范围
@@ -49,13 +51,14 @@ flowchart LR
    avg_frame_rate/r_frame_rate/color_space/color_primaries/color_transfer/bit_rate/duration`，以及 format 的
    `duration/size`。fps 以有理数解析并按 `max(0.01, expectedFps/1000)` 误差比较；视频/容器时长与
    `talkingHead.durationSec` 误差不得超过 `max(0.25 秒, 2/fps)`。
-7. 最低视频码率为 `minimumKbps=Math.floor(targetKbps×0.5)`。优先使用正数 `stream.bit_rate`；
+7. 建议最低视频码率为 `minimumKbps=Math.floor(targetKbps×0.5)`。优先使用正数 `stream.bit_rate`；
    缺失时由 ffprobe 只枚举 `v:0` packet 的 `size`，以
    `Math.floor(sum(videoPacketBytes)×8/videoDuration/1000)` 计算真实视频平均码率；packet size 或
-   video duration 无效则 `PROBE_INVALID`，禁止从容器总码率猜测或固定扣除音频。低于门槛报
-   `BITRATE_BELOW_MIN`；codec、
-   尺寸、fps、像素格式、色彩或时长不符报 `DELIVERY_MISMATCH`。错误只写失败任务现有安全错误字段，
-   包含计算输入与真实探针数值，不含绝对路径；现有 runner 仍清理失败沙箱，不承诺保留失败视频。
+   video duration 无效则 `PROBE_INVALID`，禁止从容器总码率猜测或固定扣除音频。低于门槛记录
+   `BITRATE_BELOW_RECOMMENDED` 质量提醒并保留候选；平均码率会受画面复杂度与编码器码率控制影响，
+   不能单独证明成片损坏。codec、尺寸、fps、像素格式、色彩或时长不符报 `DELIVERY_MISMATCH`。
+   结构错误只写失败任务现有安全错误字段且不含绝对路径；码率提醒写入成功任务 manifest 与步骤日志，
+   不能触发 runner 清理已经可播放的 `final.mp4`。
 8. 本次保持现有用户明确选择的横屏/竖屏和 contract 的 24/30/60fps；不新加平台 preset、
    不静默改变画幅或帧率、不改任何视觉。
 
@@ -66,8 +69,8 @@ flowchart LR
   remux 的 Chromium smoke 失败时必须自动切换一次 mezzanine，mezzanine smoke 仍失败才终止。
 - 非 H.264 输入只出现一次高质量中间转码，禁止沿用 `veryfast / CRF 18 proxy`。
 - HyperFrames 命令同时包含 `--quality high`、`--video-frame-format png` 和确定性目标码率。
-- 最终 MP4 命令只允许 stream copy；ffprobe 不满足 codec、尺寸、fps、像素格式、SDR BT.709、
-  时长或最低码率时 `video.render` 必须以三个稳定错误码之一失败。
+- 最终 MP4 命令只允许 stream copy；ffprobe 不满足 codec、尺寸、fps、像素格式、SDR BT.709 或时长时
+  `video.render` 必须失败；只有平均码率低于建议值时必须成功保留候选，并记录稳定质量提醒。
 - 成功 manifest 记录输入准备策略、目标码率和最终真实探针值；失败只进入现有安全错误字段并随
   runner 清理沙箱，禁止记录本地绝对路径或密钥、禁止把失败产物转为可确认资产。
 - 后端聚焦测试、backend typecheck、boundary、orphan、semantic 与 test-integrity 按真实结果记账。
@@ -88,3 +91,10 @@ flowchart LR
 - 不把运行时 VMAF 作为硬门：合成成片没有逐像素等价参考源，直接比较会把正常字幕、卡片和裁切
   误判为质量损失；固定样片的感知质量基准可在有明确 reference 后另建任务。
 - 不上传抖音、不替换已发布作品、不创建 GitHub 包、tag 或 Release。
+
+## 6. 2026-08-19 可用性修订
+
+真实安装版已出现 HyperFrames 成功输出且编码、尺寸、帧率、色彩、时长均通过后，仅因平均码率
+`2890kbps < 5000kbps` 被取消整单并删除成片。用户明确确认“系统可用性永远是第一优先级”。因此
+DEC-VIDEO-038 中“最低平均码率失败关闭”由 DEC-VIDEO-055 替换为非阻断质量提醒；输入损坏与结构
+交付契约仍保持失败关闭。

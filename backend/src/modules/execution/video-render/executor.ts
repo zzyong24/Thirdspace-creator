@@ -3,7 +3,7 @@
 //
 // 步骤流:素材预处理(ffprobe 探针 → 安全 H.264 无损 remux /其他格式一次高质量 mezzanine)
 // → 模板生成 index.html 落沙箱 work/ → HyperFrames CLI 进行唯一一次正式视频编码
-// → 最终文件只做 stream-copy faststart remux → ffprobe 交付硬门
+// → 最终文件只做 stream-copy faststart remux → ffprobe 结构硬门 + 码率质量提醒
 // → out/final.mp4(经确认卡采纳才入库)。
 //
 // 依赖策略(与 SPEC §3.2 一致):
@@ -852,7 +852,13 @@ function assertDeliveryQuality(
   delivery: { width: number; height: number; fps: number },
   expectedDurationSec: number,
   bitrate: { targetKbps: number; minimumKbps: number },
-): { actualKbps: number; fps: number; durationSec: number } {
+): {
+  actualKbps: number;
+  fps: number;
+  durationSec: number;
+  status: "pass" | "warning";
+  warningCode: "BITRATE_BELOW_RECOMMENDED" | null;
+} {
   const fps = parseFrameRate(probe.avgFrameRate ?? probe.rFrameRate);
   const durationSec = probe.streamDurationSec ?? probe.durationSec;
   const formatDurationSec = probe.formatDurationSec ?? probe.durationSec;
@@ -903,12 +909,14 @@ function assertDeliveryQuality(
   if (mismatches.length > 0) {
     throw new Error(`DELIVERY_MISMATCH: ${mismatches.join(", ")}`);
   }
-  if (actualKbps < bitrate.minimumKbps) {
-    throw new Error(
-      `BITRATE_BELOW_MIN: actualKbps=${actualKbps}, minimumKbps=${bitrate.minimumKbps}, targetKbps=${bitrate.targetKbps}`,
-    );
-  }
-  return { actualKbps, fps, durationSec };
+  const belowRecommended = actualKbps < bitrate.minimumKbps;
+  return {
+    actualKbps,
+    fps,
+    durationSec,
+    status: belowRecommended ? "warning" : "pass",
+    warningCode: belowRecommended ? "BITRATE_BELOW_RECOMMENDED" : null,
+  };
 }
 
 /** 视频文件名 → work/media/ 下的安全正式渲染输入名(统一 .mp4)。 */
@@ -1213,6 +1221,11 @@ export function createVideoRenderExecutor(
         props.talkingHead.durationSec,
         deliveryBitrate,
       );
+      if (deliveryQuality.status === "warning") {
+        await reportStep(
+          `成片可用，平均码率 ${deliveryQuality.actualKbps}kbps 低于建议值 ${deliveryBitrate.minimumKbps}kbps；已保留成片并记录质量提醒`,
+        );
+      }
 
       let visualReview: VideoVisualReview = {
         status: "skipped",
@@ -1272,6 +1285,8 @@ export function createVideoRenderExecutor(
             targetKbps: deliveryBitrate.targetKbps,
             minimumKbps: deliveryBitrate.minimumKbps,
             actualKbps: deliveryQuality.actualKbps,
+            status: deliveryQuality.status,
+            warningCode: deliveryQuality.warningCode,
             codec: deliveryProbe.codec,
             profile: deliveryProbe.profile,
             width: deliveryProbe.width,
