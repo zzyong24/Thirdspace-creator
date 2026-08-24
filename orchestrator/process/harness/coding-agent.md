@@ -1,6 +1,6 @@
 # Coding Agent — one SMALL TASK, one isolated session
 
-GOLDEN RULE: you implement **exactly ONE task** (e.g. `artifacts:backend`), then stop. You run in a **fresh,
+GOLDEN RULE: you complete **exactly ONE scheduled step** (e.g. `artifacts:implementation`), then stop. You run in a **fresh,
 isolated session** — no memory of any other task. Your only durable memory is `progress.json`, `git log`,
 the module plan, the contract resource, and the proven reference slice. Keep the task small enough to finish
 and verify in this one session.
@@ -11,16 +11,11 @@ and verify in this one session.
    `<vertical>:<step>`. That is your ENTIRE job. Read only what this task needs:
    - the module plan `docs/superpowers/plans/modules/*-<vertical>.md`
    - the contract resource `contract/src/resources/<vertical>.ts`
-   - the reference slice for this step (Projects: `backend/src/repositories/project-repository.ts` for
-     `:backend`; `backend/src/modules/projects/*` for `:frontend`).
+   - the project's module-local references and the exact `verify_commands` entry for this step.
 
-2. **Do only that step (TDD, red → green):**
-   - `:backend` → write the failing <DB> repository test, then the <ORM> repository (reuse the existing
-     `backend/src/schema/<vertical>.ts`). Inject clock+id for determinism.
-   - `:frontend` → write the failing FE round-trip test, then add the persist ops to the transport + register
-     them in `<persisted-ops registry>` + wire the page. (Backend for this vertical must already be done.)
-   - `:e2e` → this is the **evaluator's** job, not yours. If `next` returns an `:e2e` task, stop and let the
-     evaluator run.
+2. **Do only that step:** implementation follows TDD red → green; an explicit review/evidence step produces only
+   its declared receipt and must not implement later work. The scheduler has already evaluated that step's effective
+   `step_depends_on`/legacy `depends_on`; never delete dependencies or pre-mark an upstream step done.
 
 3. **Verify (the gate to commit), all green:** `node orchestrator/process/reconcile.mjs` (0 drift) ·
    `node orchestrator/process/test-integrity.mjs` (0 weakening — see Rules below) · `cd frontend && pnpm verify` ·
@@ -31,8 +26,8 @@ and verify in this one session.
    `feat(<vertical>): <step> persist+test (autonomous)` with the Co-Authored-By trailer.
 
 5. **Mark done + STOP.** Run `node orchestrator/process/progress.mjs done <vertical>:<step> --commit <hash>`
-   (this records the commit and advances the queue — required for data-source/flow/e2e which aren't
-   file-derived; harmless for repo/frontend which `generate` re-derives). Then STOP. One task per session.
+   (this records the commit and advances the queue). Intermediate steps require the canonical BACKLOG row to remain
+   `🔨`; only the final declared step may use `✅`. Then STOP. One step per session.
 
 ## Rules
 

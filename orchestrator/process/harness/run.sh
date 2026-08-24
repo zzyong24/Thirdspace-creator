@@ -183,29 +183,28 @@ run_review(){ # $1=reason ("cadence" | "final")
   return 0
 }
 
-# ── source guard: semantics-test.sh sources this file to exercise the functions above; the executable
-#    loop below only runs when the script is invoked directly. ──
-if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then return 0; fi
-
-FAILED=0   # set to 1 on any HALT so the script exits nonzero (CI can tell a clean DONE from a stopped gate)
-STOPPED=0  # set to 1 on an intentional, non-failure stop (only-step checkpoint / max-iters cap) → exit 2
 # Preflight (conductor-style validate): fail at second 0, not at iter 30.
 preflight(){
   local bad=0
   for f in coding-agent.md evaluator.md evaluator-rebuttal.md verify-task.sh init.sh; do
     [ -f "$H/$f" ] || { say "✗ preflight: missing $H/$f"; bad=1; }
   done
-  for j in orchestrator/progress.json orchestrator/process/modules.config.json; do
-    [ -f "$j" ] && ! node -e "JSON.parse(require('fs').readFileSync('$j','utf8'))" 2>/dev/null \
-      && { say "✗ preflight: unparseable $j"; bad=1; }
-  done
+  node orchestrator/process/autonomy-guard.mjs audit --root "$PWD" >>"$LOG" 2>&1 \
+    || { say "✗ preflight: autonomous state/watchdog invalid (see $LOG)"; bad=1; }
   if [ -n "$EVALUATOR_MODEL" ] && [ "$EVALUATOR_MODEL" = "$CODER_MODEL" ]; then
     say "! preflight: EVALUATOR_MODEL == CODER_MODEL (homogeneous review = weak gate)"
   fi
-  [ "$bad" -eq 0 ] || { say "✗ preflight failed — fix before looping"; exit 1; }
+  [ "$bad" -eq 0 ] || { say "✗ preflight failed — fix before looping"; return 1; }
   say "✓ preflight clean"
 }
-preflight
+
+# ── source guard: semantics-test.sh sources this file to exercise the functions above; the executable
+#    loop below only runs when the script is invoked directly. ──
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then return 0; fi
+
+FAILED=0   # set to 1 on any HALT so the script exits nonzero (CI can tell a clean DONE from a stopped gate)
+STOPPED=0  # set to 1 on an intentional, non-failure stop (only-step checkpoint / max-iters cap) → exit 2
+preflight || exit 1
 
 say "▶ harness run start (max_iters=$MAX_ITERS only_step='${ONLY:-any}' every_n=$EVERY_N coder='${CODER_MODEL:-default}' eval='${EVALUATOR_MODEL:-default}' rebuttal='${REBUTTAL_MODEL:-default}')"
 bash "$H/init.sh" 2>&1 | tee -a "$LOG" || { say "✗ init failed — HALT"; exit 1; }
@@ -213,13 +212,17 @@ bash "$H/init.sh" 2>&1 | tee -a "$LOG" || { say "✗ init failed — HALT"; exit
 i=0; since_review=0
 while :; do
   i=$((i+1)); [ "$i" -gt "$MAX_ITERS" ] && { say "■ reached max_iters $MAX_ITERS — STOP (not done)"; STOPPED=1; break; }
-  next=$(node orchestrator/process/progress.mjs next)
-  echo "$next" | grep -q '^NEXT' || { say "✓ no ready tasks — running FINAL review before DONE"; run_review final || { say "✗ final review HELD work — NOT a clean DONE"; FAILED=1; }; break; }
-  task=$(echo "$next" | sed -n 's/^NEXT: //p' | awk '{print $1}')
+  schedule=$(node orchestrator/process/progress.mjs schedule)
+  schedule_status=$(printf '%s' "$schedule" | node -e 'let x="";process.stdin.on("data",d=>x+=d).on("end",()=>console.log(JSON.parse(x).status))')
+  if [ "$schedule_status" = "done" ]; then say "✓ queue complete — running FINAL review before DONE"; run_review final || { say "✗ final review HELD work — NOT a clean DONE"; FAILED=1; }; break; fi
+  if [ "$schedule_status" = "hold" ]; then say "✗ all remaining tasks depend on blockers — HOLD"; FAILED=1; break; fi
+  task=$(printf '%s' "$schedule" | node -e 'let x="";process.stdin.on("data",d=>x+=d).on("end",()=>console.log(JSON.parse(x).task))')
   step="${task##*:}"
   if [ -n "$ONLY" ] && [ "$step" != "$ONLY" ]; then say "■ next task $task is '$step', not '$ONLY' — STOP for human/evaluator"; STOPPED=1; break; fi
 
   say "── iter $i: $task (coder model='${CODER_MODEL:-default}') ──"
+  node orchestrator/process/autonomy-guard.mjs begin --root "$PWD" --task "$task" >>"$LOG" 2>&1 \
+    || { say "✗ could not record iteration baseline"; FAILED=1; break; }
   claude_role "$CODER_MODEL" coding-agent.md \
     --settings "$SETTINGS" --permission-mode acceptEdits --max-turns "$MAX_TURNS" 2>&1 | tee -a "$LOG"
 
@@ -238,18 +241,33 @@ while :; do
       $( [ -n "$CODER_MODEL" ] && printf -- '--model %s' "$CODER_MODEL" ) \
       --settings "$SETTINGS" --permission-mode acceptEdits --max-turns "$MAX_TURNS" 2>&1 | tee -a "$LOG"
   done
-  [ "$verified" = 1 ] || { FAILED=1; break; }
+  if [ "$verified" != 1 ]; then
+    node orchestrator/process/autonomy-guard.mjs finish --root "$PWD" --task "$task" >>"$LOG" 2>&1 || true
+    node orchestrator/process/progress.mjs block "$task" --reason "verify/repair budget exhausted" >>"$LOG" 2>&1 || true
+    reroute=$(node orchestrator/process/progress.mjs schedule)
+    printf '%s' "$reroute" | grep -q '"status":"ready"' && { say "! $task blocked; routing another dependency-ready, write-set-isolated task"; continue; }
+    FAILED=1; break
+  fi
   node orchestrator/process/progress.mjs generate >>"$LOG" 2>&1
-
-  again=$(node orchestrator/process/progress.mjs next | sed -n 's/^NEXT: //p' | awk '{print $1}')
-  [ "$again" = "$task" ] && { say "✗ $task did not advance (agent didn't mark done?) — HALT for review"; capture halt "$task" "no-advance"; FAILED=1; break; }
+  if ! node orchestrator/process/autonomy-guard.mjs finish --root "$PWD" --task "$task" >>"$LOG" 2>&1; then
+    say "✗ $task produced no commit + board/progress transition — HALT/REPLAN"
+    node orchestrator/process/progress.mjs block "$task" --reason "no delivery transition" >>"$LOG" 2>&1 || true
+    reroute=$(node orchestrator/process/progress.mjs schedule)
+    printf '%s' "$reroute" | grep -q '"status":"ready"' && { say "! routing another ready isolated task"; continue; }
+    FAILED=1; break
+  fi
   say "✓ iter $i committed; queue: $(node orchestrator/process/progress.mjs status | head -1)"
 
   # Heterogeneous review every N committed iters (a held vertical halts the loop for routing).
   since_review=$((since_review+1))
   if [ "$since_review" -ge "$EVERY_N" ]; then
     since_review=0
-    run_review cadence || { say "✗ cadence review HELD work — HALT for review"; FAILED=1; break; }
+    if ! run_review cadence; then
+      node orchestrator/process/progress.mjs block "$task" --reason "cadence review held" >>"$LOG" 2>&1 || true
+      reroute=$(node orchestrator/process/progress.mjs schedule)
+      printf '%s' "$reroute" | grep -q '"status":"ready"' && { say "! review held $task; routing another ready isolated task"; continue; }
+      say "✗ cadence review HELD and no independent ready task remains"; FAILED=1; break
+    fi
   fi
 done
 say "▶ harness run end — $(node orchestrator/process/progress.mjs status | head -1)"

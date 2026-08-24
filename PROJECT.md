@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t793-local-package @ d827f775
+LAST_SYNCED: codex/t793-local-package @ ea34344b
 
 ## 这是什么(定位)
 
@@ -23,6 +23,9 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-909 根治 Tab、页面与账号切换卡顿，让 CreatorOS 导航和上下文切换及时响应【用户反馈·2026-08-23】
+- [open] T-908 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】
+- [open] T-905 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】
 - [open] T-878 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】
 - [wip] T-867 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】
 - [wip] T-860 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】

@@ -141,6 +141,27 @@ describe("AccountSwitcher", () => {
     }
   });
 
+  it("[T-909] 切号广播不让切换器重复拉账号列表", async () => {
+    const user = userEvent.setup();
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    render(<AccountSwitcher collapsed={false} />);
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("a"),
+    );
+    listAccounts.mockClear();
+
+    await user.click(screen.getByTestId("account-switcher-trigger"));
+    const items = await screen.findAllByTestId("account-switcher-item");
+    await user.click(
+      items.find((el) => el.getAttribute("data-account-id") === "b")!,
+    );
+
+    await waitFor(() =>
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b"),
+    );
+    expect(listAccounts).not.toHaveBeenCalled();
+  });
+
   it("stored 失效自愈(回落自动选号)→ 补 router.refresh(RSC 首屏按归一号重渲)", async () => {
     window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "ghost");
     listAccounts.mockResolvedValue([row("a")]);

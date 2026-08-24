@@ -28,6 +28,7 @@ function tempProject({ strict = true, review = "待审", status = "📋", accept
   );
   fs.writeFileSync(path.join(root, "SPEC.md"), "# SPEC\n\nFR-101：切换分类后只显示该分类选题。\n");
   fs.writeFileSync(path.join(root, "CONSTITUTION.md"), "# Constitution\n\nFR-101 属于确认范围。\n");
+  fs.writeFileSync(path.join(root, "orchestrator", "THREAT_MODEL.json"), JSON.stringify({ schema: "threat-model/v1", threats: [{ id: "THREAT-001", status: "approved", owner: "user", actor: "外部攻击者", assets: ["用户数据"], capabilities: ["读取导出文件"], acceptance_ids: ["AC-101"] }] }));
   fs.writeFileSync(
     path.join(root, "orchestrator", "process", "reconcile.config.json"),
     JSON.stringify({ receipt_policy: strict ? "required" : "legacy" }),
@@ -73,6 +74,7 @@ function finding(overrides = {}) {
     suggestion: "明确分类变化后的唯一选择与详情策略。",
     resolution_evidence: "",
     parent_id: "",
+    threat_model_id: "THREAT-001",
     ...overrides,
   };
 }
@@ -1038,6 +1040,102 @@ test("legacy 无论旧状态如何都禁止开工；strict 缺列或损坏 confi
   r = run(TASKCTL, ["start", "T-OLD", "--backlog", "BACKLOG.md"], root);
   assert.equal(r.status, 1);
   assert.match(r.stderr + r.stdout, /config|JSON|读取/i);
+});
+
+test("review cycle capability 绑定 task/hash/change IDs、旧 constitution、一次消费；通用 DEC-022 不可回放", () => {
+  const root = tempProject();
+  const args = (input, extra = []) => [
+    "record", "T-101", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md",
+    "--input", input, "--review", "SPEC.review.md", "--backlog", "BACKLOG.md",
+    "--review-mode", "cross-family", "--model", "test-reviewer", ...extra,
+  ];
+  let packet = writePacket(root, "r1.json", {
+    schema: "spec-review-round/v2", review_kind: "initial", summary: "首轮。", findings: [],
+  });
+  let r = run(REVIEWCTL, args(packet), root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  const first = JSON.parse(fs.readFileSync(path.join(root, "orchestrator", "review-events.ndjson"), "utf8").trim());
+  fs.writeFileSync(path.join(root, "SPEC.md"), "# SPEC\n\nFR-101：切换分类。\n[REV-ADD] FR-102：导出。\n");
+  fs.writeFileSync(path.join(root, "CONSTITUTION.md"), "# Constitution\n\n已确认 FR-102 的产品边界。\n");
+  fs.writeFileSync(path.join(root, "orchestrator", "DECISION_LOG.md"), [
+    "```text", "ID: DEC-022", "Owner: user", "Status: active",
+    "Decision: L2 非阻断式持续推进并继续独立 review。", "```", "",
+    "```text", "ID: DEC-100", "Owner: user", "Status: active",
+    "Authorization-Kind: process-review-cycle", "Task-ID: T-101",
+    `Previous-Spec-SHA256: ${first.spec_sha256}`,
+    `Previous-Constitution-SHA256: ${first.constitution_sha256}`,
+    "Allowed-Change-IDs: FR-102", "Max-Cycles: 1", "Nonce: nonce-t101-cycle2",
+    "Decision: 只允许 T-101 的 FR-102 变更开启一次新审核周期。", "```", "",
+  ].join("\n"));
+  packet = writePacket(root, "cycle2.json", {
+    schema: "spec-review-round/v2", review_kind: "initial", summary: "绑定变更的新周期。", findings: [],
+  });
+  const ordinary = writePacket(root, "ordinary-recheck.json", {
+    schema: "spec-review-round/v2", review_kind: "recheck", summary: "尝试不带 capability 复审。", findings: [],
+  });
+  r = run(REVIEWCTL, args(ordinary), root);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /constitution hash 已变化/i);
+  r = run(REVIEWCTL, args(packet, ["--new-cycle", "DEC-022", "--change-ids", "FR-102"]), root);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /capability|绑定|Task-ID|Previous-Spec|通用|scope-envelope/i);
+  r = run(REVIEWCTL, args(packet, ["--new-cycle", "DEC-100", "--change-ids", "FR-102"]), root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  assert.match(r.stdout, /cycle 2|周期 2/i);
+  const eventsAfter = fs.readFileSync(path.join(root, "orchestrator", "review-events.ndjson"), "utf8");
+  assert.match(eventsAfter, /nonce-t101-cycle2/);
+  fs.writeFileSync(path.join(root, "SPEC.md"), `${fs.readFileSync(path.join(root, "SPEC.md"), "utf8")}\nFR-103：打印。\n`);
+  const replay = writePacket(root, "cycle3.json", {
+    schema: "spec-review-round/v2", review_kind: "initial", summary: "尝试复用。", findings: [],
+  });
+  r = run(REVIEWCTL, args(replay, ["--new-cycle", "DEC-100", "--change-ids", "FR-102"]), root);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /已消费|consum|nonce|一次/i);
+});
+
+test("旧项目未绑定的 review-cycle DEC 历史保留但 fail-closed，不可迁移成新授权", () => {
+  const root = tempProject();
+  const body = { task_id: "T-029", cycle: 2, round: 1, review_kind: "initial", review_cycle_decision: "DEC-022", previous_event_hash: "" };
+  const event = { ...body, event_hash: createHash("sha256").update(JSON.stringify(body)).digest("hex") };
+  fs.writeFileSync(path.join(root, "orchestrator", "review-events.ndjson"), `${JSON.stringify(event)}\n`);
+  const r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /T-029.*DEC-022.*legacy|未绑定.*fail-closed|旧.*授权/i);
+  assert.match(fs.readFileSync(path.join(root, "orchestrator", "review-events.ndjson"), "utf8"), /DEC-022/, "历史不得被迁移器改写");
+});
+
+test("security blocker 必须绑定用户批准的 threat model；same-UID 不能由标签自动升级", () => {
+  const root = tempProject();
+  fs.writeFileSync(path.join(root, "orchestrator", "THREAT_MODEL.json"), JSON.stringify({
+    schema: "threat-model/v1",
+    threats: [{ id: "THREAT-001", status: "approved", owner: "user", actor: "本地非同 UID 进程", assets: ["客户数据"], capabilities: ["读取导出文件"], acceptance_ids: ["AC-101"] }],
+  }));
+  const call = (threatId, summary) => {
+    const input = writePacket(root, `${summary}.json`, {
+      schema: "spec-review-round/v2", review_kind: "initial", summary,
+      findings: [finding({ severity: "blocker", category: "security", risk_class: "security", threat_model_id: threatId })],
+    });
+    return run(REVIEWCTL, ["record", "T-101", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md", "--input", input, "--review", "SPEC.review.md", "--backlog", "BACKLOG.md", "--review-mode", "cross-family", "--model", "test-reviewer"], root);
+  };
+  let r = call("THREAT-SAME-UID", "same-uid-unapproved");
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /threat|攻击者|批准|same-UID/i);
+  r = call("THREAT-001", "approved-threat");
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+});
+
+test("existing-project audit 重新验证历史 security blocker 的 threat approval", () => {
+  const root = tempProject();
+  const input = writePacket(root, "security.json", {
+    schema: "spec-review-round/v2", review_kind: "initial", summary: "approved first",
+    findings: [finding({ severity: "blocker", category: "security", risk_class: "security" })],
+  });
+  let r = run(REVIEWCTL, ["record", "T-101", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md", "--input", input, "--review", "SPEC.review.md", "--backlog", "BACKLOG.md", "--review-mode", "cross-family", "--model", "test"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+  fs.writeFileSync(path.join(root, "orchestrator", "THREAT_MODEL.json"), JSON.stringify({ schema: "threat-model/v1", threats: [] }));
+  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr + r.stdout, /THREAT-001|threat.*未经用户批准|same-UID/i);
 });
 
 test("taskctl 的列映射绑定目标所属表，不会被后一个不同表头污染", () => {

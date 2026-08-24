@@ -23,10 +23,10 @@ command).
                               │
         ┌─────────────────────▼───────────────────────────────────── loop ──┐
         │  Coding agent — ONE SMALL TASK per FRESH ISOLATED session           │
-        │   (each vertical = 3 small tasks: <v>:backend → <v>:frontend → e2e) │
+        │   (each vertical = ordered project-defined steps with per-step gates) │
         │   1. node progress.mjs next        → exactly ONE task <v>:<step>    │
-        │   2. TDD that step only (red→green): backend repo+test, OR FE       │
-        │      transport+<persisted-ops registry>+round-trip test                        │
+        │   2. Execute that step's declared contract only; TDD red→green for │
+        │      implementation, evidence/receipt work for an explicit review step │
         │   3. node reconcile.mjs && pnpm verify  (+ the new test)            │
         │   4. git commit -m "feat(<v>): <step> persist+test"                 │
         │   5. record commit hash in progress.json → STOP (one task/session)  │

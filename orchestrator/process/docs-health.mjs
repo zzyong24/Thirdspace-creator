@@ -7,6 +7,7 @@
 //      INDEX.md 同目录的 .md 文件必须在 INDEX 里有链接条目(只查同目录一层,不查子树——
 //      收据/子目录文档不要求逐条列,防噪音)
 //   5. INDEX 活计数禁令:INDEX.md 里手写「N 份/N 篇」计数必过期——要么脚本生成要么不写数
+//   6. 根目录卫生:模块/切片/专题 SPEC 与执行计划不得堆在项目根,必须进入 docs/ 对应分区
 //
 // **不做** Diataxis 分类强制、不做 C4 图强制、不做 ADR 格式强制——那些是文档学理想,
 // 不是这个知识层要解的病;检查面越宽误报越多,门就会被人绕过。窄而准 > 宽而吵。
@@ -55,6 +56,7 @@ if (!CFG_PATH || !fs.existsSync(CFG_PATH)) {
 const cfg = JSON.parse(fs.readFileSync(CFG_PATH, "utf8"));
 const ROOT = path.dirname(CFG_PATH);
 const docsDir = path.resolve(ROOT, cfg.docs_dir ?? "docs");
+const projectRoot = path.resolve(ROOT, cfg.project_root ?? ".");
 
 if (!fs.existsSync(docsDir)) {
   console.log(`⚠ docs-health:docs_dir 不存在(${path.relative(ROOT, docsDir)})。`);
@@ -86,6 +88,40 @@ const LINK_RE = /!?\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
 const files = walkMd(docsDir, []).sort();
 const issues = []; // { file, kind, detail }
+
+// 6) 根目录只留总纲/全局控制面。模块、切片、平台专题和执行计划进入 docs/；
+// review sidecar 跟随被审文档相邻，因此也自然留在对应模块目录。
+const configuredRootAllowlist = new Set(cfg.root_markdown_allowlist ?? [
+  "PRODUCT_SPEC.md",
+  "PRODUCT_VOCABULARY.md",
+  "BACKLOG.md",
+  "AGENTS.md",
+  "PROJECT_CONTEXT.md",
+  "PAGE_SPEC.md",
+]);
+// SPEC 例外不可由项目配置自行扩张，否则把 CRM_DOMAIN_SPEC 加进 allowlist 就能洗绿。
+const rootSpecAllowlist = new Set(["PRODUCT_SPEC.md", "PAGE_SPEC.md"]);
+for (const configuredName of configuredRootAllowlist) {
+  const base = configuredName.replace(/\.review\.md$/i, ".md");
+  if ((/_SPEC\.md$/i.test(base) && !rootSpecAllowlist.has(base)) || /^IMPLEMENTATION_PLAN(?:[._-].*)?\.md$/i.test(base)) {
+    issues.push({ file: path.relative(ROOT, CFG_PATH).split(path.sep).join("/"), kind: "非法豁免", detail: `${configuredName} 不能通过 root_markdown_allowlist 留在根目录` });
+  }
+}
+let rootEntries = [];
+try { rootEntries = fs.readdirSync(projectRoot, { withFileTypes: true }); } catch { rootEntries = []; }
+for (const entry of rootEntries) {
+  if (!entry.isFile() || !/\.md$/i.test(entry.name)) continue;
+  const base = entry.name.replace(/\.review\.md$/i, ".md");
+  const looksLikeSplitSpec = /_SPEC\.md$/i.test(base) && !rootSpecAllowlist.has(base);
+  const looksLikeExecutionPlan = /^IMPLEMENTATION_PLAN(?:[._-].*)?\.md$/i.test(base);
+  if (looksLikeSplitSpec || looksLikeExecutionPlan) {
+    issues.push({
+      file: path.relative(ROOT, path.join(projectRoot, entry.name)).split(path.sep).join("/"),
+      kind: "根目录拥挤",
+      detail: "模块/专题文档应放 docs/features/<module>/；跨模块流程放 docs/journeys/，平台能力放 docs/platform/",
+    });
+  }
+}
 
 for (const abs of files) {
   const rel = path.relative(ROOT, abs).split(path.sep).join("/");
@@ -155,11 +191,11 @@ for (const abs of files) {
 }
 
 if (issues.length === 0) {
-  if (!QUIET) console.log(`✓ docs-health:${files.length} 个文档,无坏链、无 archive 泄漏、标记齐全、INDEX 账实相符。`);
+  if (!QUIET) console.log(`✓ docs-health:${files.length} 个文档,链接、真值标记、INDEX 与根目录布局均健康。`);
   process.exit(0);
 }
 
 console.log(`docs-health — ${files.length} 个文档,发现 ${issues.length} 处问题:`);
 for (const it of issues) console.log(`  ✗ [${it.kind}] ${it.file} — ${it.detail}`);
-console.log(`\n⚠ ${STRICT ? "--strict,exit 1" : "WARN-biased,不阻塞;SHIP/CI 用 --strict"}(检查范围故意窄:坏链/archive 泄漏/truth 标记/INDEX 账实/活计数,仅此五项)。`);
+console.log(`\n⚠ ${STRICT ? "--strict,exit 1" : "WARN-biased,不阻塞;SHIP/CI 用 --strict"}(检查范围:坏链/archive 泄漏/truth 标记/INDEX 账实/活计数/根目录布局)。`);
 process.exit(STRICT ? 1 : 0);

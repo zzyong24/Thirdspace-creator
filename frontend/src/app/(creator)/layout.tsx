@@ -134,44 +134,38 @@ export default async function CreatorLayout({
   //   自己 catch(AccountRequiredError → 诚实空 dashboard)。白名单判定见 isZeroAccountAllowedPath。
   // 判定读 accounts.list(user 级读,不需要当前号);读失败 fail-open 照常渲染 children ——
   // 守卫是引导,不是安全门(安全边界在 backend strict 门),绝不能因一次读失败把整个 app 锁死。
-  let hasActiveAccount = true;
-  try {
-    const accounts = (await createServerClient(session.ctx).listAccounts({
-      params: undefined,
-      query: { page: 1, pageSize: 100, platform: "douyin" },
-      body: undefined,
-    })) as unknown as ReadonlyArray<{ status: "active" | "archived" }>;
-    hasActiveAccount = (accounts ?? []).some((a) => a.status === "active");
-  } catch {
-    hasActiveAccount = true; // fail-open:读失败不误锁
-  }
-  const pathname = await currentPathname();
+  // [T-909] 激活门通过后，路径、账号守卫、通知和渠道品牌互不依赖，必须并行读取。
+  // 原实现四段串行 await，会把每一段延迟相加并阻塞所有页面/账号切换。
+  const [pathname, hasActiveAccount, notifications, channelRuntime] =
+    await Promise.all([
+      currentPathname(),
+      (async () => {
+        try {
+          const accounts = (await createServerClient(session.ctx).listAccounts({
+            params: undefined,
+            query: { page: 1, pageSize: 100, platform: "douyin" },
+            body: undefined,
+          })) as unknown as ReadonlyArray<{
+            status: "active" | "archived";
+          }>;
+          return (accounts ?? []).some((a) => a.status === "active");
+        } catch {
+          return true; // fail-open:读失败不误锁
+        }
+      })(),
+      loadNotifications(session.ctx).catch(
+        (): NotificationsViewModel => ({ items: [], unreadCount: 0 }),
+      ),
+      readChannelRuntime().catch(() => null),
+    ]);
   const zeroAccountGuarded =
     !hasActiveAccount && !isZeroAccountAllowedPath(pathname);
-
-  // G1: real notifications for the Shell bell, read under the session ctx.
-  // [FE-H03] 通知是次要功能(铃铛)——读取失败绝不能拖垮整个登录后布局(首页/项目/素材/
-  // 发布/设置全靠这个 layout 渲染)。优雅降级:读失败 → 空通知(0 未读),铃铛为空,其余页面照常。
-  let notifications: NotificationsViewModel;
-  try {
-    notifications = await loadNotifications(session.ctx);
-  } catch {
-    notifications = { items: [], unreadCount: 0 };
-  }
 
   // [T-530/T-534] 渠道品牌名只从已验证加密 runtime 读取。
   // 读失败/未激活/未配置 → runtime 为 null，Sidebar 使用构建期包品牌；Growth 已验签
   // brandName 到位后优先覆盖名称。业务链接仍保持 null 不回退，不能把包级品牌兜底误扩成链接兜底。
-  let brandName: string | null = null;
-  let bugFeedbackUrl: string | null = null;
-  try {
-    const channelRuntime = await readChannelRuntime();
-    brandName = channelRuntime.brandName;
-    bugFeedbackUrl = channelRuntime.bugFeedbackUrl;
-  } catch {
-    brandName = null;
-    bugFeedbackUrl = null;
-  }
+  const brandName = channelRuntime?.brandName ?? null;
+  const bugFeedbackUrl = channelRuntime?.bugFeedbackUrl ?? null;
 
   return (
     <>

@@ -11,22 +11,39 @@
 
 declare global {
   interface WindowEventMap {
-    "creatoros:accounts-changed": CustomEvent<undefined>;
+    "creatoros:accounts-changed": CustomEvent<AccountChangeDetail>;
   }
 }
 
+export interface AccountChangeDetail {
+  /** 发起本次失效的组件；订阅者可避免把自己的广播再消费一遍。 */
+  readonly source: "account-switcher" | "account-management" | "external";
+  /** 已有调用方负责 router.refresh 时，其他订阅者不得再发起第二轮整页刷新。 */
+  readonly routeRefreshScheduled: boolean;
+}
+
 /** 「账号/登录态变了」广播 — loginDouyin / mergeDouyinPlaceholders 等成功后调用。 */
-export function notifyAccountsChanged(): void {
+export function notifyAccountsChanged(
+  detail: AccountChangeDetail = {
+    source: "external",
+    routeRefreshScheduled: false,
+  },
+): void {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("creatoros:accounts-changed"));
+  window.dispatchEvent(
+    new CustomEvent("creatoros:accounts-changed", { detail }),
+  );
 }
 
 /** React hook:订阅账号态变化,触发回调。组件卸载自动解绑。 */
 import * as React from "react";
-export function useAccountsChanged(handler: () => void): void {
+export function useAccountsChanged(
+  handler: (detail: AccountChangeDetail) => void,
+): void {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const ev = () => handler();
+    const ev = (event: WindowEventMap["creatoros:accounts-changed"]) =>
+      handler(event.detail);
     window.addEventListener("creatoros:accounts-changed", ev);
     return () => window.removeEventListener("creatoros:accounts-changed", ev);
   }, [handler]);

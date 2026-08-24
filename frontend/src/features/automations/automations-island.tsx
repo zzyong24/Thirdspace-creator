@@ -1621,7 +1621,11 @@ export function AutomationsIsland({
   // [Bug-7 T-020] 跨页失效广播:settings / account-manager / automations 本岛 loginDouyin
   // 成功后 dispatch 'creatoros:accounts-changed' → 这里 router.refresh() 立刻拉 server 数据,
   // 让每行 latestRuns 翻篇(needs_reconnect 红标消失)、job 列表反映新绑定的号。
-  useAccountsChanged(() => router.refresh());
+  useAccountsChanged((detail) => {
+    // [T-909] 侧栏切号已经安排了同一轮 router.refresh；这里重复 refresh 会让
+    // 自动化页连续重跑两次整棵 RSC。账号管理等未安排刷新者仍由本页兜底刷新。
+    if (!detail.routeRefreshScheduled) router.refresh();
+  });
   const [createOpen, setCreateOpen] = React.useState(false);
   // 模板卡预填(点模板 → 装配 → 打开弹窗带值);null = 空白新建。
   const [prefill, setPrefill] = React.useState<CreateJobPrefill | null>(null);

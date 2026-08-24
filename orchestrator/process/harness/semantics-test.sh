@@ -10,6 +10,7 @@
 #   ③ PASS+PASS → the HARNESS records e2e_verified=true via `progress.mjs verify` (sole writer), rc=0
 #   ④ `progress.mjs generate` preserves e2e_verified across regenerations
 #   ⑤ verify-task.sh with NO configured command for the step → explicit error, exit 1 (no guessed default)
+#   ⑥ L2 preflight with missing progress/modules → fail-closed before iteration zero
 set -uo pipefail
 HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROC_DIR="$(dirname "$HARNESS_DIR")"
@@ -23,6 +24,8 @@ new_fixture(){ # builds an orchestrator-shaped throwaway repo root; echoes its p
   local fix; fix=$(mktemp -d "${TMPDIR:-/tmp}/harness-semantics.XXXXXX")
   mkdir -p "$fix/orchestrator/process/harness"
   cp "$PROC_DIR/progress.mjs" "$fix/orchestrator/process/"
+  cp "$PROC_DIR/autonomy-guard.mjs" "$fix/orchestrator/process/"
+  cp "$PROC_DIR/governance-guard.mjs" "$fix/orchestrator/process/"
   cp "$HARNESS_DIR/run.sh" "$HARNESS_DIR/verify-task.sh" "$fix/orchestrator/process/harness/"
   cat >"$fix/orchestrator/process/modules.config.json" <<'JSON'
 { "modules": { "alpha": { "tasks": ["repo", "frontend"] } } }
@@ -102,6 +105,20 @@ if [ "$rc" = "1" ] && echo "$out" | grep -q "no verify command"; then
   ok "rc=1 and the error names the missing verify_commands.repo"
 else
   ko "expected rc=1 + 'no verify command' (got rc=$rc)"; echo "$out" | sed 's/^/    | /'
+fi
+
+echo "▶ ⑥ L2 claim without progress/modules → preflight FAIL-CLOSED"
+F6=$(new_fixture); FIXTURES+=("$F6")
+cp "$PROC_DIR/autonomy-guard.mjs" "$F6/orchestrator/process/"
+rm -f "$F6/orchestrator/process/modules.config.json"
+printf '%s\n' '{"execution_mode":"autonomous","autonomy_level":"L2"}' > "$F6/orchestrator/process/reconcile.config.json"
+for f in coding-agent.md evaluator.md evaluator-rebuttal.md init.sh; do : > "$F6/orchestrator/process/harness/$f"; done
+( cd "$F6" && git init -q && git config user.email semantics@example.test && git config user.name Semantics && git add . && git commit --no-verify -qm baseline )
+out=$( ( cd "$F6" && source orchestrator/process/harness/run.sh && preflight ) 2>&1 ); rc=$?
+if [ "$rc" = "1" ] && grep -Eq 'autonomous state|preflight failed' <<<"$out" && grep -Eq 'missing orchestrator/(progress.json|process/modules.config.json)' "$F6/orchestrator/process/harness/run.log"; then
+  ok "rc=1 and L2 missing queue/config is named before iteration zero"
+else
+  ko "expected fail-closed L2 preflight (got rc=$rc)"; echo "$out" | sed 's/^/    | /'
 fi
 
 echo

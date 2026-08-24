@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import type { RequestContext } from "@creatoros/contract";
 import { getIdentityService } from "@/server/persistence-client";
@@ -54,7 +55,7 @@ async function withAccountFromCookie(
  * 登录页已下线)。返回 null 的路径仅剩「库里一个用户都没有」的异常态(启动 seed 兜底,
  * 正常不发生);既有调用方的 null→redirect 分支保留为该异常态的兜底。
  */
-export async function resolveSession(): Promise<ResolvedSession | null> {
+async function resolveSessionUncached(): Promise<ResolvedSession | null> {
   const cookieStore = await cookies();
   const rawToken = cookieStore.get(SESSION_COOKIE)?.value;
   const identity = await getIdentityService();
@@ -79,6 +80,11 @@ export async function resolveSession(): Promise<ResolvedSession | null> {
     throw err;
   }
 }
+
+// [T-909] 同一个 App Router 请求里，父 layout 与具体 page 都会读取 session。
+// React cache 只在当前服务端渲染请求内复用 Promise，不跨用户、请求或账号 cookie 缓存，
+// 避免每次导航把 identity/current-account 校验完整做两遍。
+export const resolveSession = cache(resolveSessionUncached);
 
 /**
  * The current request's pathname (forwarded by middleware as `x-pathname`), used

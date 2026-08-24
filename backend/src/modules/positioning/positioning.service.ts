@@ -824,8 +824,11 @@ export function createPositioningService(
       // 动态计数。清理是 CAS + 幂等；非动态说明不改写，也不会用新静态计数覆盖旧值。
       await cleanupLegacyDynamicStatusNote(ctx);
       const repo = repoFor(ctx, "positioning.getPositioningCenter");
-      const profileRow = await repo.getProfile();
-      const activeDiscoveryRow = await repo.getActiveDiscoverySession();
+      // [T-909] 两个独立首屏读并行，避免定位中心切入时间相加。
+      const [profileRow, activeDiscoveryRow] = await Promise.all([
+        repo.getProfile(),
+        repo.getActiveDiscoverySession(),
+      ]);
       if (!profileRow) {
         // Empty-state (brand-new user) — render the page, never an error.
         return {
@@ -840,12 +843,15 @@ export function createPositioningService(
         };
       }
       const profile = toCreatorProfileDto(profileRow);
-      const { rows } = await repo.listStatements({ limit: 200, offset: 0 });
+      const [statementPage, currentRow] = await Promise.all([
+        repo.listStatements({ limit: 200, offset: 0 }),
+        repo.getCurrentStatement(
+          profileRow.id,
+          profileRow.statementVersionFloor,
+        ),
+      ]);
+      const { rows } = statementPage;
       const history = rows.map(toPositioningStatementDto);
-      const currentRow = await repo.getCurrentStatement(
-        profileRow.id,
-        profileRow.statementVersionFloor,
-      );
       const currentStatement = currentRow
         ? toPositioningStatementDto(currentRow)
         : null;

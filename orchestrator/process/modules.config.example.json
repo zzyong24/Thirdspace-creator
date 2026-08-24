@@ -4,7 +4,11 @@
     "LESSON": "Define each task's done_signals against the layer the APP ACTUALLY USES. Verify where real persistence/UI/data live BEFORE writing signals — a wrong path makes the queue lie and agents build dead code (happened 2026-06-22). Steps with NO done_signals are human/evaluator-set via `progress.mjs done`.",
     "task_types": "repo (persist+invariants) · data-source (ingest/AI/derive/upload) · flow (cross-module wiring) · frontend (wire UI) · e2e (round-trip+visual). A module instantiates only the applicable subset, in dependency order.",
     "blast_radius": "OPTIONAL per-module knob, \"high\" | \"normal\" (default normal). \"high\" = a defect here is expensive/hard to undo (auth, payments, data-ownership, schema/migrations, cross-module wiring). The harness requires a MAJORITY of >=2 independent heterogeneous reviewers to pass a high-blast module — the two-pass agreement alone is not enough. Run-level override: HARNESS_HIGH_BLAST=\"id1,id2\".",
-    "done_signals": "Per step, an array of repo-relative paths checked on work_branch (git). If ANY exists → that step is `done`. Point these at files the app truly imports/uses, not a parallel/unused layer.",
+    "done_signals": "Interactive-only convenience: repo-relative paths checked on work_branch. Autonomous queues never mark a step done from file presence; each step must pass progress.mjs done with order, commit, and BACKLOG checks.",
+    "task_id": "REQUIRED when the module/vertical id differs from its canonical BACKLOG/review task ID. Task-scoped watchdog and quarantine use this binding.",
+    "depends_on": "LEGACY/default dependency set. It applies to every step that has no explicit step_depends_on entry.",
+    "step_depends_on": "OPTIONAL exact per-step dependency map. A present key replaces depends_on for that step; [] explicitly makes that step dependency-free. References must name a module or module:step declared in this same file.",
+    "board_transition": "In autonomous mode every done step binds a real commit. Intermediate steps require the canonical BACKLOG row to remain 🔨; only the final declared step requires ✅.",
     "verify_commands": "REQUIRED for the harness: per-step shell commands verify-task.sh runs (fail-closed — a step with no command configured is an explicit ERROR, never a guessed default). Top-level = global; modules.<id>.verify_commands.<step> overrides per module. Example below."
   },
   "verify_commands": {
@@ -14,9 +18,13 @@
   },
   "modules": {
     "example-entity": {
+      "task_id": "T-001",
       "archetype": ["user-authored", "orchestration"],
       "blast_radius": "normal",
       "tasks": ["repo", "frontend", "e2e"],
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": ["src/server/modules/example/**", "frontend/src/features/example/**"],
       "data_source": "how real data enters this module (forms / ingest / AI / derived)",
       "flows": "what triggers it and what it triggers across modules",
       "oss": ["owner/repo — what pattern to borrow"],

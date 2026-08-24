@@ -4,6 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."   # -> repo root
 
+echo "▶ fail-closed autonomous preflight"
+node orchestrator/process/autonomy-guard.mjs audit --root "$PWD"
+
 echo "▶ reconcile control artifacts (must be 0 drift to start)"
 node orchestrator/process/reconcile.mjs
 

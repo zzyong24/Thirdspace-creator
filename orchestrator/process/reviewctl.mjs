@@ -89,6 +89,7 @@ const FINDING_FIELDS = new Set([
   "suggestion",
   "resolution_evidence",
   "parent_id",
+  "threat_model_id",
   "probe",
 ]);
 const MUTABLE_RECHECK_FIELDS = new Set(["status", "severity", "resolution_evidence"]);
@@ -342,6 +343,12 @@ function validateFinding(finding) {
   ) {
     errors.push(`${finding.id}: blocker 必须锚定已确认需求、安全、数据丢失或不可逆风险`);
   }
+  if (finding.risk_class === "security" && ["blocker", "major"].includes(finding.severity) && !cleanText(finding.threat_model_id)) {
+    errors.push(`${finding.id}: security blocker/major 必须绑定已批准 threat_model_id；安全标签本身不是扩张授权`);
+  }
+  if (finding.status === "resolved" && /^DEC-\d+$/i.test(cleanText(finding.resolution_evidence))) {
+    errors.push(`${finding.id}: 裸 DEC 不能作为 product/scope/risk authorization；必须使用绑定 task/hash/IDs 的 typed capability`);
+  }
   if (
     finding.severity === "major" &&
     ["preference", "low-risk"].includes(finding.risk_class)
@@ -519,7 +526,19 @@ function validateNewFindingOrigin(
   return errors;
 }
 
-function validatePacket(packet, previousEvent, validationContext) {
+function validateThreatBinding(root, finding) {
+  if (!(finding.risk_class === "security" && ["blocker", "major"].includes(finding.severity))) return [];
+  const file = path.join(root, "orchestrator", "THREAT_MODEL.json");
+  if (!existsSync(file)) return [`${finding.id}: threat model file missing`];
+  let doc; try { doc = JSON.parse(readFileSync(file, "utf8")); } catch (e) { return [`${finding.id}: THREAT_MODEL invalid: ${e.message}`]; }
+  const t = (doc.threats ?? []).find((x) => x.id === finding.threat_model_id);
+  if (!t || t.status !== "approved" || t.owner !== "user") return [`${finding.id}: threat ${finding.threat_model_id} 未经用户批准；same-UID 等未确认攻击者只能 minor/future/decision queue`];
+  if (!cleanText(t.actor) || !Array.isArray(t.assets) || !t.assets.length || !Array.isArray(t.capabilities) || !t.capabilities.length) return [`${finding.id}: threat model 必须绑定 actor + protected asset + attack capability`];
+  if (!Array.isArray(t.acceptance_ids) || !t.acceptance_ids.includes(finding.acceptance_anchor?.id)) return [`${finding.id}: threat model 未绑定 acceptance ${finding.acceptance_anchor?.id}`];
+  return [];
+}
+
+function validatePacket(packet, previousEvent, validationContext, { newCycle = false } = {}) {
   const { specSha } = validationContext;
   const errors = [];
   if (!packet || packet.schema !== "spec-review-round/v2") {
@@ -540,11 +559,12 @@ function validatePacket(packet, previousEvent, validationContext) {
   const seen = new Set();
   for (const finding of packet.findings) {
     errors.push(...validateFinding(finding));
+    errors.push(...validateThreatBinding(validationContext.root, finding));
     if (seen.has(finding.id)) errors.push(`${finding.id}: 同一轮重复`);
     seen.add(finding.id);
   }
 
-  if (!previousEvent) {
+  if (!previousEvent || newCycle) {
     if (packet.review_kind !== "initial") errors.push("首轮必须是 initial 完整审核");
     for (const finding of packet.findings) {
       if (finding.origin !== "baseline") {
@@ -555,7 +575,7 @@ function validatePacket(packet, previousEvent, validationContext) {
   }
 
   if (packet.review_kind !== "recheck") errors.push("已有审核历史后只能 record recheck");
-  if (previousEvent.round >= 3) {
+  if (previousEvent.round >= 3 && !newCycle) {
     errors.push("已达到 3 轮上限；不得重置轮次或继续移动门柱，必须由用户做风险/范围决定");
     return errors;
   }
@@ -634,6 +654,40 @@ function verifyEventChain(events) {
   return errors;
 }
 
+function decisionBlock(root, decisionId) {
+  if (!/^DEC-\d{3,}$/.test(decisionId)) throw new Error("--new-cycle 必须引用 DEC-xxx typed capability");
+  const file = path.join(root, "orchestrator", "DECISION_LOG.md");
+  if (!existsSync(file)) throw new Error("review cycle capability 缺 DECISION_LOG.md");
+  const text = readFileSync(file, "utf8");
+  const fenced = text.split(/```text\s*/).slice(1).map((part) => part.split("```")[0] ?? "");
+  const block = fenced.find((part) => new RegExp(`^ID:\\s*${decisionId}$`, "m").test(part));
+  if (!block) throw new Error(`review cycle capability 不存在: ${decisionId}`);
+  const field = (name) => cleanText(block.match(new RegExp(`^${name}:\\s*(.+)$`, "mi"))?.[1]);
+  return { block, field };
+}
+
+function validateCycleCapability({ root, decisionId, taskId, previousEvent, changeIds, events }) {
+  const { field } = decisionBlock(root, decisionId);
+  const required = ["Authorization-Kind", "Task-ID", "Previous-Spec-SHA256", "Previous-Constitution-SHA256", "Allowed-Change-IDs", "Max-Cycles", "Nonce", "Owner", "Status"];
+  const missing = required.filter((name) => !field(name));
+  if (missing.length) throw new Error(`${decisionId} 不是可消费的 review-cycle capability；缺绑定字段 ${missing.join(", ")}（通用 scope-envelope/继续推进 DEC 禁用）`);
+  if (field("Authorization-Kind") !== "process-review-cycle") throw new Error(`${decisionId} authorization kind 不是 process-review-cycle；process/product scope 权限不可互换`);
+  if (field("Owner") !== "user" || field("Status") !== "active") throw new Error(`${decisionId} capability 必须 Owner=user 且 Status=active`);
+  const nonce = field("Nonce");
+  if (events.some((e) => e.cycle_authorization?.decision_id === decisionId || e.cycle_authorization?.nonce === nonce)) throw new Error(`${decisionId} / nonce ${nonce} 已消费，不能再次使用`);
+  if (field("Task-ID") !== taskId) throw new Error(`${decisionId} Task-ID 绑定 ${field("Task-ID")}，不是 ${taskId}`);
+  if (field("Previous-Spec-SHA256") !== previousEvent.spec_sha256 || field("Previous-Constitution-SHA256") !== previousEvent.constitution_sha256) throw new Error(`${decisionId} previous spec/constitution hash 与当前 lineage terminal event 不匹配`);
+  if (field("Max-Cycles") !== "1") throw new Error(`${decisionId} Max-Cycles 必须为 1（不可回放）`);
+  const allowed = field("Allowed-Change-IDs").split(/[,\s]+/).filter(Boolean).sort();
+  const requested = [...new Set(changeIds)].sort();
+  if (!requested.length || stable(allowed) !== stable(requested)) throw new Error(`${decisionId} Allowed-Change-IDs 与 --change-ids 不完全一致`);
+  if (previousEvent.round >= 3) {
+    const disputes = previousEvent.packet.findings.filter((f) => f.status === "open").map((f) => f.id);
+    for (const id of disputes) if (!allowed.includes(id)) throw new Error(`${decisionId} 达到三轮后必须逐项绑定争议 finding ${id}`);
+  }
+  return { schema: "review-cycle-capability-consumption/v1", decision_id: decisionId, nonce, task_id: taskId, previous_event_hash: previousEvent.event_hash, allowed_change_ids: requested, max_uses: 1 };
+}
+
 function renderSnapshot(state) {
   const open = state.open_findings;
   const rows = open.length
@@ -691,6 +745,7 @@ export function verifyReviewReceipt({
   documentCell = "",
   requirePass = true,
   allowSpecChange = false,
+  allowConstitutionChange = false,
 }) {
   const value = cleanText(reviewCell);
   const policy = readReviewConfig(root).receipt_policy;
@@ -721,6 +776,7 @@ export function verifyReviewReceipt({
   validateStateReceipt(state, match[2]);
   if (state.task_id !== taskId) throw new Error(`review receipt 属于 ${state.task_id}，不是 ${taskId}`);
   const linkedFields = [
+    ["cycle", "cycle"],
     ["round", "round"],
     ["verdict", "verdict"],
     ["spec_path", "spec_path"],
@@ -728,6 +784,7 @@ export function verifyReviewReceipt({
     ["constitution_path", "constitution_path"],
     ["constitution_sha256", "constitution_sha256"],
     ["review_path", "review_path"],
+    ["cycle_authorization", "cycle_authorization"],
   ];
   for (const [stateKey, eventKey] of linkedFields) {
     if (stable(state[stateKey]) !== stable(event[eventKey])) {
@@ -763,7 +820,7 @@ export function verifyReviewReceipt({
   const constitutionFile = resolveInside(root, state.constitution_path, "constitution");
   if (!existsSync(constitutionFile)) throw new Error(`constitution 不存在: ${state.constitution_path}`);
   const currentConstitutionSha = sha(readFileSync(constitutionFile, "utf8"));
-  if (state.constitution_sha256 !== currentConstitutionSha) {
+  if (!allowConstitutionChange && state.constitution_sha256 !== currentConstitutionSha) {
     throw new Error("review receipt 已过期：constitution hash 已变化");
   }
   if (requirePass && match[1] !== "PASS") {
@@ -826,15 +883,25 @@ function record(args) {
   if (!linkedSpecs.includes(specFile)) {
     throw new Error(`任务 ${taskId} 文档列必须显式链接被审 SPEC: ${relativePortable(root, specFile)}`);
   }
+  const requestedCycleDecision = cleanText(args.flags["new-cycle"]);
+  const startsNewCycle = previousEvent !== null && !!requestedCycleDecision;
+  const changeIds = cleanText(args.flags["change-ids"]).split(/[,\s]+/).filter(Boolean);
+  let cycleAuthorization = null;
   if (previousEvent) {
-    verifyReviewReceipt({
-      root,
-      taskId,
-      reviewCell: backlogTask[0].review,
-      documentCell: backlogTask[0].document,
-      requirePass: false,
-      allowSpecChange: true,
-    });
+    if (startsNewCycle) {
+      cycleAuthorization = validateCycleCapability({ root, decisionId: requestedCycleDecision, taskId, previousEvent, changeIds, events });
+      verifyReviewReceipt({
+        root,
+        taskId,
+        reviewCell: backlogTask[0].review,
+        documentCell: backlogTask[0].document,
+        requirePass: false,
+        allowSpecChange: true,
+        allowConstitutionChange: true,
+      });
+    } else {
+      verifyReviewReceipt({ root, taskId, reviewCell: backlogTask[0].review, documentCell: backlogTask[0].document, requirePass: false, allowSpecChange: true });
+    }
     if (previousEvent.spec_path !== relativePortable(root, specFile)) {
       throw new Error(
         `复审不得通过更换 SPEC 文件重置 lineage（上一份 ${previousEvent.spec_path}，当前 ${relativePortable(root, specFile)}）`,
@@ -853,14 +920,16 @@ function record(args) {
     specSha,
     specText,
     constitutionText,
-  });
+  }, { newCycle: startsNewCycle });
   if (packetErrors.length) throw new Error(packetErrors.join("\n"));
 
-  const round = (previousEvent?.round ?? 0) + 1;
+  const cycle = startsNewCycle ? (previousEvent?.cycle ?? 1) + 1 : (previousEvent?.cycle ?? 1);
+  const round = startsNewCycle ? 1 : (previousEvent?.round ?? 0) + 1;
   const verdict = verdictFor(packet.findings);
   const eventBody = {
     schema: "spec-review-event/v2",
     task_id: taskId,
+    cycle,
     round,
     review_kind: packet.review_kind,
     verdict,
@@ -874,6 +943,7 @@ function record(args) {
     review_mode: args.flags["review-mode"],
     model: args.flags.model,
     policy: "convergent-review/v2",
+    cycle_authorization: cycleAuthorization,
     reviewctl_sha256: sha(readFileSync(SELF, "utf8")),
     recorded_at: new Date().toISOString(),
     previous_event_hash: events.at(-1)?.event_hash ?? "",
@@ -890,6 +960,7 @@ function record(args) {
   const stateBody = {
     schema: "spec-review-state/v2",
     task_id: taskId,
+    cycle,
     round,
     max_rounds: 3,
     review_kind: packet.review_kind,
@@ -903,6 +974,7 @@ function record(args) {
     review_mode: event.review_mode,
     model: event.model,
     policy: event.policy,
+    cycle_authorization: event.cycle_authorization,
     latest_event_hash: event.event_hash,
     open_findings: openFindings,
     resolved_findings: resolvedFindings,
@@ -946,7 +1018,7 @@ function record(args) {
   releaseStateLock();
 
   console.log(
-    `✓ ${taskId} review round ${round}/3 → ${verdict}[REV:${state.receipt}] (${openFindings.length} open)`,
+    `✓ ${taskId} review cycle ${cycle} round ${round}/3 → ${verdict}[REV:${state.receipt}] (${openFindings.length} open)`,
   );
   if (round === 3 && openFindings.length) {
     console.log("! 已到复审上限：不得自动开始第 4 轮；请由用户做风险接受、范围缩减或停止决定。");
@@ -959,6 +1031,16 @@ export function auditReviewReceipts({ root, backlogFile }) {
   let events = [];
   try {
     events = readEvents(eventsFile);
+    for (const event of events) {
+      if (cleanText(event.review_cycle_decision) && !event.cycle_authorization) {
+        errors.push(`${event.task_id}: ${event.review_cycle_decision} is a legacy unbound review-cycle authorization — fail-closed; history is preserved, issue a new task/hash/change-bound capability for any future cycle`);
+      }
+      for (const finding of event.packet?.findings ?? []) {
+        for (const message of validateThreatBinding(root, finding)) {
+          errors.push(`${event.task_id}: historical review ${message}`);
+        }
+      }
+    }
     errors.push(...verifyEventChain(events));
   } catch (error) {
     errors.push(error.message);

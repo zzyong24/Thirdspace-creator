@@ -8,13 +8,15 @@ describe("account-events — 跨页失效广播", () => {
     // (test 完 window 上挂的 listener 不会泄到下个测)
   });
 
-  it("notifyAccountsChanged → 自定义事件触发 + detail 无 payload", () => {
+  it("[T-909] notifyAccountsChanged 可声明调用方已安排整页刷新", () => {
     const seen = vi.fn();
     window.addEventListener("creatoros:accounts-changed", seen);
-    notifyAccountsChanged();
+    notifyAccountsChanged({ source: "account-switcher", routeRefreshScheduled: true });
     expect(seen).toHaveBeenCalledTimes(1);
-    // payload 是 undefined(事件不带数据,监听者自行 router.refresh)。
-    expect(seen.mock.calls[0]![0].detail).toBeNull(); // CustomEvent 默认 detail=null
+    expect(seen.mock.calls[0]![0].detail).toEqual({
+      source: "account-switcher",
+      routeRefreshScheduled: true,
+    });
   });
 
   it("多个订阅者都收到(广播语义)", () => {

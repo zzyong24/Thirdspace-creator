@@ -171,7 +171,11 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
 
   // [Bug-7 T-020] 跨页失效广播(loginDouyin/mergeDouyinPlaceholders 等成功后 notifyAccountsChanged)
   // → 立即重拉账号列表 + 归一当前号,避免 sidebar 显陈旧 handle。
-  useAccountsChanged(load);
+  useAccountsChanged((detail) => {
+    // [T-909] 切换器自己发出的切号广播只用于通知其它 island；本地列表和当前号
+    // 已经是最新值，不能再反向触发一次 listAccounts。
+    if (detail.source !== "account-switcher") load();
+  });
 
   // [T-332 S4] 确认弹窗状态:仅当切号时存在进行中的前台操作才弹(§6.1)。
   // pendingSwitch = 待确认的目标号 id + 弹窗展示用的操作名单快照。
@@ -188,7 +192,10 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
     setCurrentId(id);
     // 全面失效重取(SPEC §6.1):router.refresh() 覆盖 RSC/props 链;accountsChanged
     // 覆盖 refresh 刷不到的 island 内部缓存态(mount 时拉一次的 client state)。
-    notifyAccountsChanged();
+    notifyAccountsChanged({
+      source: "account-switcher",
+      routeRefreshScheduled: true,
+    });
     routerRef.current.refresh();
   }, []);
 

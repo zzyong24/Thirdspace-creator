@@ -178,6 +178,17 @@ describe("AppShell", () => {
     ]);
   });
 
+  it("[T-909] 点击页面入口立即标记正在切换，不等待服务端页面返回", async () => {
+    await renderShell({ pathname: "/" });
+    const nav = screen.getByRole("navigation", { name: "主要导航" });
+    const positioning = within(nav).getByRole("link", { name: "定位中心" });
+
+    expect(positioning).toHaveAttribute("data-pending", "false");
+    fireEvent.click(positioning);
+    expect(positioning).toHaveAttribute("data-pending", "true");
+    expect(nav).toHaveAttribute("aria-busy", "true");
+  });
+
   it("derives the active nav item from the pathname", async () => {
     await renderShell({ pathname: "/knowledge" });
     const nav = screen.getByRole("navigation", { name: "主要导航" });

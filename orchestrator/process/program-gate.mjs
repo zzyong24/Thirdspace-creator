@@ -223,7 +223,7 @@ function resolveCommandCwd(candidate, participantRepos, label) {
 }
 
 function runGit(cwd, args, label) {
-  const result = spawnSync("git", args, {
+  const result = spawnSync("git", ["--no-replace-objects", ...args], {
     cwd,
     encoding: "utf8",
     maxBuffer: MAX_OUTPUT,
@@ -278,8 +278,28 @@ function validateProgram(programRoot, document) {
         }
       }
     }
+    let releaseIdentity = null;
+    if (component.release_identity != null) {
+      if (!isRecord(component.release_identity)) {
+        errors.push(`${label}.release_identity 必须是 object`);
+      } else {
+        const allowed = new Set(["required_commit", "only_parent"]);
+        for (const key of Object.keys(component.release_identity)) {
+          if (!allowed.has(key)) errors.push(`${label}.release_identity 不接受字段 ${key}`);
+        }
+        const requiredCommit = clean(component.release_identity.required_commit).toLowerCase();
+        const onlyParent = clean(component.release_identity.only_parent).toLowerCase();
+        push(errors, SHA_PATTERN.test(requiredCommit), `${label}.release_identity.required_commit 必须是完整 Git commit SHA`);
+        if (component.release_identity.only_parent != null) {
+          push(errors, SHA_PATTERN.test(onlyParent), `${label}.release_identity.only_parent 必须是完整 Git commit SHA`);
+        }
+        if (SHA_PATTERN.test(requiredCommit) && (!onlyParent || SHA_PATTERN.test(onlyParent))) {
+          releaseIdentity = { requiredCommit, onlyParent: onlyParent || null };
+        }
+      }
+    }
     if (id) {
-      components.set(id, { id, repoPath });
+      components.set(id, { id, repoPath, releaseIdentity });
       if (repoPath) repoPaths.set(repoPath, id);
     }
   });
@@ -673,6 +693,9 @@ function validateRelease(context, document) {
     }
     const commitSha = clean(value.commit_sha).toLowerCase();
     push(errors, SHA_PATTERN.test(commitSha), `${label}.commit_sha 必须是完整 Git commit SHA`);
+    if (component.releaseIdentity && commitSha !== component.releaseIdentity.requiredCommit) {
+      errors.push(`${label}.commit_sha 未命中批准的 release_identity.required_commit`);
+    }
     const deployUrl = clean(value.deploy_url);
     try {
       const url = new URL(deployUrl);
@@ -706,6 +729,16 @@ function validateRelease(context, document) {
             errors.push(
               `${label}.commit_sha 必须是完整 commit，当前 ${commitSha} 解析为 ${resolved}`,
             );
+          }
+          if (component.releaseIdentity?.onlyParent) {
+            const parents = runGit(
+              component.repoPath,
+              ["rev-list", "--parents", "-n", "1", commitSha],
+              `${componentId} release identity parent 校验失败`,
+            ).toLowerCase().split(/\s+/);
+            if (parents.length !== 2 || parents[1] !== component.releaseIdentity.onlyParent) {
+              errors.push(`${label}.commit_sha 必须是 only_parent 的唯一直接子提交`);
+            }
           }
         }
       } catch (error) {
@@ -969,7 +1002,7 @@ function openReleaseCheckouts(context, journey) {
   const created = [];
   const cleanup = () => {
     for (const item of [...created].reverse()) {
-      spawnSync("git", ["worktree", "remove", "--force", item.checkout], {
+      spawnSync("git", ["--no-replace-objects", "worktree", "remove", "--force", item.checkout], {
         cwd: item.repo,
         encoding: "utf8",
         maxBuffer: MAX_OUTPUT,
@@ -996,13 +1029,33 @@ function openReleaseCheckouts(context, journey) {
         `${componentId} deployed commit 临时检出失败`,
       );
       created.push({ repo: component.repoPath, checkout });
-      checkouts.set(componentId, realpathSync(checkout));
+      const realCheckout = realpathSync(checkout);
+      const checkoutCommit = runGit(realCheckout, ["rev-parse", "HEAD"], `${componentId} checkout commit 校验失败`).toLowerCase();
+      const checkoutBranch = runGit(realCheckout, ["rev-parse", "--abbrev-ref", "HEAD"], `${componentId} detached checkout 校验失败`);
+      if (checkoutCommit !== release.commitSha || checkoutBranch !== "HEAD") {
+        throw new GateError(`${componentId} 必须以 detached checkout 运行批准的 release commit`);
+      }
+      checkouts.set(componentId, realCheckout);
     }
   } catch (error) {
     cleanup();
     throw error;
   }
 
+  const environment = { PROGRAM_GATE_RELEASE_ROOT: realpathSync(temporaryRoot) };
+  for (const [componentId, checkout] of checkouts) {
+    const key = componentId.toUpperCase().replace(/[^A-Z0-9]/g, "_");
+    const component = context.components.get(componentId);
+    const release = context.releaseComponents.get(componentId);
+    environment[`PROGRAM_GATE_COMPONENT_${key}_ROOT`] = checkout;
+    environment[`PROGRAM_GATE_COMPONENT_${key}_COMMIT`] = release.commitSha;
+    if (component.releaseIdentity) {
+      environment[`PROGRAM_GATE_COMPONENT_${key}_REQUIRED_COMMIT`] = component.releaseIdentity.requiredCommit;
+      if (component.releaseIdentity.onlyParent) {
+        environment[`PROGRAM_GATE_COMPONENT_${key}_ONLY_PARENT`] = component.releaseIdentity.onlyParent;
+      }
+    }
+  }
   return {
     cwdFor(command) {
       const checkout = checkouts.get(command.componentId);
@@ -1019,14 +1072,16 @@ function openReleaseCheckouts(context, journey) {
       }
       return real;
     },
+    environment,
     cleanup,
   };
 }
 
-function runCommand(command, runtimeCwd) {
+function runCommand(command, runtimeCwd, environment = {}) {
   const startedAt = now();
   const result = spawnSync(command.command, {
     cwd: runtimeCwd,
+    env: { ...process.env, ...environment },
     shell: true,
     maxBuffer: MAX_OUTPUT,
     windowsHide: true,
@@ -1079,7 +1134,7 @@ function runJourneyCommands(context, journey) {
         errors.push(...(error.messages ?? [error.message]));
         break;
       }
-      const result = runCommand(command, runtimeCwd);
+      const result = runCommand(command, runtimeCwd, checkouts.environment);
       commandResults.push(result.snapshot);
       if (result.error) {
         errors.push(result.error);

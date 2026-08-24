@@ -18,6 +18,16 @@ project-specific files per project** — never commit one project's config into 
 - `taskctl.mjs` — supported state-transition entry. `start` uses the review allowlist/receipt; a UI
   `complete` with `验收=待验` accepts only a valid frontend report. BACKLOG + event updates are transactional
   on ordinary filesystem failures.
+- `research-gate.mjs` — BUILD-time uncertainty circuit breaker. `observe` records a project-defined failure family
+  plus a framework-defined trigger shape and opens the gate on repeated/no-progress observations or an immediate
+  high-cost/churn/external-unknown/high-impact trigger, pausing the implementation task. `resume` validates a bounded
+  v2 card with project-defined acceptance criteria plus any required user DEC and returns the task to `📋`.
+  `audit` is wired into reconcile so an open gate cannot be bypassed by hand-editing BACKLOG.
+- `governance-guard.mjs` — task/write-set scoped scope-expansion and complexity guard. `baseline-marker` emits
+  a read-only marker bound to exact task, file SHA-256, complexity categories, REV-ADD IDs, and structured threat
+  tuples; `baseline-apply` explicitly installs it under `COMPLEXITY_LEDGER.json.historical_baselines`. This is a
+  quarantine record, never scope/threat authorization: the bound task stays red, while unrelated ready tasks run;
+  file drift, marker drift, or a new marker is red again.
 - `strict-receipts-migrate.mjs` — explicit old-project migration. `check` reports missing policy/columns;
   `apply` adds receipt columns and sets `receipt_policy=required` as one crash-recoverable transaction. Active
   tasks default to `待验`; only IDs explicitly passed through `--non-ui` receive `—`.
@@ -30,13 +40,29 @@ project-specific files per project** — never commit one project's config into 
   Concurrent agents fail explicitly before committing stale BACKLOG/event snapshots; a killed owner's
   stale lock is never auto-stolen.
 - `orphan-scan.mjs` — EXECUTABLE bidirectional orphan scan. Parses the canonical ` ```id-registry ` / ` ```traceability ` blocks in `ID_REGISTRY.md` + `TRACEABILITY_MATRIX.md` and COMPUTES both directions (downstream→upstream orphans; upstream→downstream broken chains). Exit 0 clean · 1 broken/non-canonical · 2 missing. Stack-agnostic — reads optional `orphan-scan.config.json` (prefixes/statuses/paths). The verdict is computed by code, not trusted from a paragraph.
-- `progress.mjs` — per-module task queue driver (generate/status/next/show/batch/claim/release/done). Reads `modules.config.json`.
+- `progress.mjs` — per-module task queue driver (generate/status/next/schedule/show/batch/claim/release/done).
+  `schedule` runs task-scoped delivery watchdog checks: a polluted task is quarantined from that ready set while
+  an independent dependency-ready task remains runnable; historical debt is not a repository-wide stop. Ordered
+  multi-step tasks may declare `step_depends_on`: a present step key replaces the legacy module `depends_on`, while
+  an absent key preserves old behavior. Intermediate `done` binds a commit while BACKLOG stays `🔨`; only the final
+  step may require and consume the task-level `✅` transition. In autonomous mode `done_signals` never auto-advance
+  from file presence, because that would bypass step order, commit binding, and the board-state gate. `schedule`,
+  `claim`, and `done` share the same dependency/block/quarantine eligibility; a claimed step can complete only with
+  `done ... --agent <matching-owner>`.
+- `autonomy-guard.mjs` — L2+ fail-closed preflight and delivery watchdog. An explicit
+  `baseline-marker --task T-xxx --reason "..."` prints (but never installs) a canonical task-event-prefix marker
+  for `DELIVERY_GUARD.json.review_cycle_baselines`. `isolated` freezes a legacy prefix while allowing current work;
+  `quarantined` also blocks that task. Neither is authorization: a changed old event or any new same-task event is red.
 - `manifest.schema.json` — structural/enum contract for ARTIFACT_MANIFEST.yaml.
 - `harness/` — long-running autonomous harness methodology (3-agent init/coding/evaluator, isolation, PARALLEL.md, settings.autonomous, run.sh/verify-task.sh). Treat the shell scripts' `pnpm`/`frontend`/`backend` commands as **examples to adapt** to the project's stack.
 - `rules/orchestrator-state-machine.md` — pinned state machine (incl. Executable Enforcement + Autonomous Mode).
 
 ## Initialize per project (from the examples)
 - `cp modules.config.example.json modules.config.json` → fill in this project's modules, tasks, and **done_signals**.
+  When a vertical name differs from its canonical BACKLOG/review task, bind `task_id` explicitly; quarantine is
+  keyed to that task ID, never inferred from a similar module name. Use `step_depends_on` only when successive steps
+  have different prerequisites; do not split one product task into fake board IDs or toggle `✅` to complete an
+  intermediate step.
 - Do not hand-copy `reconcile.config.example.json`. Run `tools/init-project.sh` with an explicit
   `--topology single|multi`; it creates the required strict config and the current `1-plan` probe. Add later
   probes only from this project's current manifest and real artifact paths.

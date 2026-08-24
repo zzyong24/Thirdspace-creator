@@ -8,11 +8,13 @@
 //
 // 用法(vendored 到 <project>/orchestrator/process/ 后,../.. = 项目根):
 //   node orchestrator/process/taskctl.mjs start    <task-id> [--backlog <path>] [--expect-sha <hex前缀>]
+//   node orchestrator/process/taskctl.mjs resume   <task-id> --reason "<阻断已解除的证据>"
 //   node orchestrator/process/taskctl.mjs complete <task-id> --evidence "<普通证据或 UI report path>"
 //   node orchestrator/process/taskctl.mjs block    <task-id> --reason "<原因>"
 //
 // 转换规则(fail-closed,拒绝即 exit 1):
 //   start    📋→🔨   审核值走 allowlist；strict 项目还校验 PASS review receipt + SPEC hash。
+//   resume   ⏸️→🔨  拒绝:--reason 缺失、审核 receipt 失效或 Research Gate 尚未关闭。
 //   complete 🔨→✅   拒绝:--evidence 缺失；「验收=待验」还必须通过 UI journey report 校验。
 //   block    任意→⏸️  拒绝:--reason 缺失或空。
 //   --expect-sha:执行前算 BACKLOG.md 内容 sha256,前缀不匹配 → 拒绝(并发守卫)。
@@ -22,7 +24,7 @@
 // 只替换该行状态 cell；UI complete 同时把同一行「验收」改为 PASS:<report hash>。
 //
 // 事件行(NDJSON,无关字段省略):
-//   {"ts":"<ISO>","actor":"taskctl","action":"start|complete|block","task":"<id>",
+//   {"ts":"<ISO>","actor":"taskctl","action":"start|resume|complete|block","task":"<id>",
 //    "evidence":"...","reason":"...","sha_before":"<12位>","sha_after":"<12位>"}
 //
 // --backlog 指定显式路径时(测试/其他布局),以该文件所在目录为项目根写 events.ndjson。
@@ -38,6 +40,7 @@ import {
   executeFrontendVerification,
   validateFrontendReport,
 } from "./frontend-validation.mjs";
+import { auditResearchGates } from "./research-gate.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", ".."); // orchestrator/process/ → 项目根
@@ -67,8 +70,8 @@ const flag = (name) => {
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 };
 
-if (!["start", "complete", "block"].includes(action ?? ""))
-  die(`用法:taskctl.mjs <start|complete|block> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
+if (!["start", "resume", "complete", "block"].includes(action ?? ""))
+  die(`用法:taskctl.mjs <start|resume|complete|block> <task-id> [选项] —— 收到 action「${action ?? ""}」不认识。`);
 if (!taskId || taskId.startsWith("--")) die(`缺 <task-id>(第二个位置参数)。`);
 
 const evidence = flag("--evidence");
@@ -80,6 +83,8 @@ if (action === "complete" && (!evidence || !evidence.trim()))
   die(`complete 必须带 --evidence "<commit-id 或证据文本>"(无证据不得完成)。`);
 if (action === "block" && (!reason || !reason.trim()))
   die(`block 必须带 --reason "<原因>"。`);
+if (action === "resume" && (!reason || !reason.trim()))
+  die(`resume 必须带 --reason "<阻断已解除的证据>"。`);
 
 const explicitBacklog = flag("--backlog");
 const unresolvedBacklog = explicitBacklog
@@ -201,8 +206,17 @@ if (
 let to;
 let frontendEvidence = null;
 let frontendExecution = null;
-if (action === "start") {
-  if (from !== "📋") die(`start 只接受 📋→🔨:任务 ${taskId} 当前状态是 ${from}。`);
+if (action === "start" || action === "resume") {
+  const expectedFrom = action === "start" ? "📋" : "⏸️";
+  if (from !== expectedFrom) die(`${action} 只接受 ${expectedFrom}→🔨:任务 ${taskId} 当前状态是 ${from}。`);
+  try {
+    const research = auditResearchGates(PROJ_ROOT);
+    if (research.open.includes(taskId)) {
+      die(`任务 ${taskId} 有未关闭的 Research-First Gate；不得靠手改状态恢复。先完成研究卡、必要用户决策，再运行 research-gate.mjs resume。`);
+    }
+  } catch (error) {
+    die(`Research-First Gate 无法验证: ${error.message}`);
+  }
   if (taskColumns?.review >= 0) {
     try {
       verifyReviewReceipt({
@@ -269,6 +283,18 @@ if (frontendEvidence) {
   const right = original.match(/\s*$/)?.[0] ?? " ";
   row.segs[acceptanceSegment] = `${left}PASS:${frontendEvidence.reportSha}${right}`;
 }
+let invalidatedAcceptance = null;
+if (action === "block" && taskColumns?.acceptance >= 0) {
+  const acceptanceSegment = row.idx[taskColumns.acceptance];
+  const original = row.segs[acceptanceSegment];
+  const value = original.trim();
+  if (/^PASS:[a-f0-9]{12,64}$/i.test(value)) {
+    invalidatedAcceptance = value;
+    const left = original.match(/^\s*/)?.[0] ?? " ";
+    const right = original.match(/\s*$/)?.[0] ?? " ";
+    row.segs[acceptanceSegment] = `${left}待验${right}`;
+  }
+}
 lines[lineNo] = row.segs.join("|");
 const out = lines.join("\n");
 const shaAfter = sha256(out);
@@ -294,6 +320,7 @@ if (latestBacklog !== src) {
 const ev = { ts: new Date().toISOString(), actor: "taskctl", action, task: taskId };
 if (evidence) ev.evidence = evidence;
 if (reason) ev.reason = reason;
+if (invalidatedAcceptance) ev.invalidated_acceptance = invalidatedAcceptance;
 if (frontendEvidence) {
   ev.report = path.relative(PROJ_ROOT, frontendEvidence.reportFile).split(path.sep).join("/");
   ev.report_sha = frontendEvidence.reportSha;

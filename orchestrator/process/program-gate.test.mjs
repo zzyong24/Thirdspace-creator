@@ -338,6 +338,46 @@ test("验证命令绑定 deployed commit，不能用本地未部署修复给旧�
   assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
+test("release_identity 绑定 required commit/only parent，并向 detached checkout 命令暴露只读身份", () => {
+  const fixture = setup();
+  const growth = fixture.repos.growth;
+  fs.writeFileSync(path.join(growth.root, "RELEASE.md"), "approved release\n");
+  git(growth.root, ["add", "RELEASE.md"]);
+  git(growth.root, ["commit", "-q", "-m", "approved release"]);
+  const requiredCommit = git(growth.root, ["rev-parse", "HEAD"]);
+  const onlyParent = growth.commit;
+  fixture.config.components.find((item) => item.id === "growth").release_identity = {
+    required_commit: requiredCommit,
+    only_parent: onlyParent,
+  };
+  fixture.releaseSet.components.growth.commit_sha = requiredCommit;
+  const releaseFile = path.join(fixture.control, "release-set.json");
+  writeJson(releaseFile, fixture.releaseSet);
+  fixture.receipt.release_set_sha256 = sha256(releaseFile);
+  writeJson(path.join(fixture.control, "receipts", "J-001.json"), fixture.receipt);
+  fixture.config.journeys[0].verify_commands[0].command =
+    `${JSON.stringify(process.execPath)} -e ${JSON.stringify([
+      "const {spawnSync}=require('node:child_process')",
+      `if(process.env.PROGRAM_GATE_COMPONENT_GROWTH_REQUIRED_COMMIT!==${JSON.stringify(requiredCommit)})process.exit(41)`,
+      `if(process.env.PROGRAM_GATE_COMPONENT_GROWTH_ONLY_PARENT!==${JSON.stringify(onlyParent)})process.exit(42)`,
+      `if(process.env.PROGRAM_GATE_COMPONENT_GROWTH_COMMIT!==${JSON.stringify(requiredCommit)})process.exit(43)`,
+      "if(!process.env.PROGRAM_GATE_COMPONENT_GROWTH_ROOT)process.exit(44)",
+      "if(spawnSync('git',['rev-parse','--abbrev-ref','HEAD'],{encoding:'utf8'}).stdout.trim()!=='HEAD')process.exit(45)",
+    ].join(';'))}`;
+  writeJson(path.join(fixture.control, "program.config.json"), fixture.config);
+
+  let result = run(["--execute", "J-001"], fixture.root);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  fixture.releaseSet.components.growth.commit_sha = onlyParent;
+  writeJson(releaseFile, fixture.releaseSet);
+  fixture.receipt.release_set_sha256 = sha256(releaseFile);
+  writeJson(path.join(fixture.control, "receipts", "J-001.json"), fixture.receipt);
+  result = run(["--execute", "J-001"], fixture.root);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr + result.stdout, /required_commit|release identity|批准.*commit/i);
+});
+
 test("execution 目录 symlink 不得把回执写出 program 根目录", () => {
   const fixture = setup();
   const outside = fs.mkdtempSync(path.join(os.tmpdir(), "program-gate-outside-"));
@@ -425,6 +465,10 @@ test("5-ship 声称 passed/accepted-risk 都必须复核 program GO，且删除 
       path.join(orchestrator, `${name}.md`),
     );
   }
+  writeJson(path.join(orchestrator, "SCOPE_AUTHORIZATIONS.json"), { schema: "scope-authorizations/v1", authorizations: [] });
+  writeJson(path.join(orchestrator, "COMPLEXITY_LEDGER.json"), { schema: "complexity-ledger/v1", entries: [] });
+  writeJson(path.join(orchestrator, "THREAT_MODEL.json"), { schema: "threat-model/v1", threats: [] });
+  writeJson(path.join(orchestrator, "DELIVERY_GUARD.json"), { schema: "delivery-guard/v1" });
   let manifest = fs.readFileSync(
     path.join(TEMPLATES, "ARTIFACT_MANIFEST_TEMPLATE.yaml"),
     "utf8",

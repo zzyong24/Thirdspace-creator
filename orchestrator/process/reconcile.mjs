@@ -18,6 +18,9 @@ import { readNewEvents, archiveConsumed } from './run-events.mjs';
 import { appendJsonlUnique } from './lessonctl.mjs';
 import { auditReviewReceipts } from './reviewctl.mjs';
 import { auditFrontendReceipts } from './frontend-validation.mjs';
+import { auditGovernance, governanceDebtReport } from './governance-guard.mjs';
+import { auditAutonomy, auditWatchdog } from './autonomy-guard.mjs';
+import { auditResearchGates } from './research-gate.mjs';
 import { execSync, spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -248,6 +251,20 @@ function splitInlineMap(body, stageId) {
     }
   }
 }
+
+// Product authorization is distinct from process authorization. These hard guards reject
+// REV-ADD laundering, unledgered runtime/trust-boundary growth, fake L2 claims, and no-progress churn.
+let governanceErrors = [], autonomyErrors = [], watchdogErrors = [];
+try { governanceErrors = auditGovernance(REPO, { scope: 'active' }); } catch (error) { governanceErrors = [`audit crashed: ${error.message}`]; }
+try { autonomyErrors = auditAutonomy(REPO); } catch (error) { autonomyErrors = [`audit crashed: ${error.message}`]; }
+try { watchdogErrors = auditWatchdog(REPO, { scope: 'active' }); } catch (error) { watchdogErrors = [`audit crashed: ${error.message}`]; }
+for (const message of governanceErrors) err(`governance: ${message}`);
+for (const message of autonomyErrors) err(`autonomy preflight: ${message}`);
+for (const message of watchdogErrors) err(`delivery watchdog: ${message}`);
+if (!governanceErrors.length) ok('governance-guard: scope authorization + complexity budget clean.');
+try { for (const debt of governanceDebtReport(REPO)) warn(`governance debt: ${debt}`); }
+catch (error) { warn(`governance debt report unavailable: ${error.message}`); }
+if (!autonomyErrors.length && !watchdogErrors.length) ok('autonomy-guard: execution claim + delivery progress clean.');
 const stageIds = Object.keys(stages);
 if (stageIds.length) ok(`parsed ${stageIds.length} stages`);
 else if (/^stages:\s*$/m.test(text) && /^\s*-\s+id:\s*/m.test(text))
@@ -391,6 +408,22 @@ if (existsSync(BACKLOG_HEALTH)) {
     } catch (e) {
       err(`frontend receipt audit could not run: ${e.message}`);
     }
+  }
+}
+
+// Research-First Gate: an implementation task with an open technical-blocker circuit breaker must
+// stay paused. Research evidence may still be in progress, but manually unblocking the task or losing
+// its linked research task/card is deterministic drift.
+{
+  try {
+    const research = auditResearchGates(REPO);
+    if (!research.ok) {
+      for (const message of research.errors) err(`research gate: ${message}`);
+    } else if (research.open.length) {
+      ok(`research-gate: implementation paused for ${research.open.join(', ')}; bounded research may continue.`);
+    } else ok('research-gate: no open technical blocker.');
+  } catch (e) {
+    err(`research gate audit could not run: ${e.message}`);
   }
 }
 
