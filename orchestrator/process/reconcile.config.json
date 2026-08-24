@@ -266,6 +266,7 @@
     "semantic-material-generation:e2e": "CREATOROS_TEST_PORT=3436 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/semantic-material-generation.spec.ts --project=e2e",
     "publish-package-readback:e2e": "CREATOROS_TEST_PORT=3437 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/publish-package-readback.spec.ts --project=e2e",
     "draft-ammo-media-preview:e2e": "CREATOROS_TEST_PORT=3438 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/draft-ammo-media-preview.spec.ts --project=e2e",
-    "content-radar-one-click-project:e2e": "CREATOROS_TEST_PORT=3439 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/content-radar-one-click-project.spec.ts --project=e2e"
+    "content-radar-one-click-project:e2e": "CREATOROS_TEST_PORT=3439 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/content-radar-one-click-project.spec.ts --project=e2e",
+    "navigation-account-performance:test": "pnpm --dir frontend exec vitest run src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/shell.test.tsx src/lib/session.server.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/positioning/positioning.service.test.ts --retry=0"
   }
 }
