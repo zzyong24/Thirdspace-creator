@@ -37,6 +37,114 @@ test("域表 API 不变但新增 Swift/native app/Keychain/IPC 仍触发 complex
   for (const term of ["language_toolchain", "native_executable", "credential_store", "ipc", "os_signing", "evidence_protocol"]) assert.match(r.stdout + r.stderr, new RegExp(term));
 });
 
+test("兼容规格复用并委派既有 attestation 合同，不算新增 evidence protocol", () => {
+  const root = fixture();
+  const rel = "docs/features/profile/PROFILE_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "# Compatibility contract",
+    "This facade reuses the existing stable operation API-004 and delegates attestation validation to its current owner.",
+    "It inherits the existing receipt and state machine; it must not create a new evidence protocol, approval owner, repository, store, scheduler, or runtime state.",
+    "",
+  ].join("\n"));
+
+  const before = fs.readFileSync(path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json"), "utf8");
+  const result = run(root, ["task-preflight", "--root", root, "--task", "TASK-REVIEW", "--write-set", rel]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(fs.readFileSync(path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json"), "utf8"), before,
+    "a reuse-only task must not need an out-of-write-set ledger mutation");
+});
+
+test("非产品特例：薪资导出复用既有签名 attestation verifier 不触发新机制", () => {
+  const root = fixture();
+  const rel = "docs/features/payroll/EXPORT_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "Payroll export compatibility note: retain the established SEC-API-009 attestation term.",
+    "The adapter delegates verification to the existing signing service and owns no approval workflow, persistence, runtime state, or verification operation.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "PAYROLL-EXPORT", "--write-set", rel]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test("产品领域里的 challenge/self-attestation 裸词不自动升级为证据协议", () => {
+  const root = fixture();
+  const rel = "docs/features/wellness/HABIT_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "Users join a 30-day wellness challenge and submit a daily self-attestation through the current form.",
+    "This is a product-domain check-in; no verifier, proof exchange, protocol owner, persistence, or runtime workflow is introduced.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "WELLNESS-CHECKIN", "--write-set", rel]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test("复用既有 verifier 时，同段新增普通 UI 文案不等于新增协议", () => {
+  const root = fixture();
+  const rel = "docs/features/settings/SETTINGS_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "The settings screen reuses the existing attestation verifier and stable verification operation.",
+    "This task adds a new user-facing label and confirmation copy; it creates no protocol owner, store, scheduler, or runtime state.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "SETTINGS-COPY", "--write-set", rel]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test("新 EvidenceProtocol owner、持久化、状态和操作即使未使用旧关键词也必须 fail-closed", () => {
+  const root = fixture();
+  const rel = "docs/features/approvals/APPROVAL_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "This task introduces EvidenceProtocolV2 as a separate approval system.",
+    "ApprovalService is the new owner and persists proof records in EvidenceProtocolStore.",
+    "The runtime states are pending, verified, and revoked; operations issueProof, verifyProof, and revokeApproval mutate that state.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "APPROVALS-NEW", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /evidence_protocol/);
+});
+
+test("声称复用格式但同时新增 owner 与持久化，不能借 reuse 文案洗掉 complexity", () => {
+  const root = fixture();
+  const rel = "docs/features/approvals/COMPAT_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "The new approval system reuses the legacy attestation payload format.",
+    "However, ApprovalService becomes a new owner, creates its own challenge store, and exposes issue/verify/revoke operations with mutable pending state.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "APPROVALS-COMPAT", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /evidence_protocol/);
+});
+
+test("其他 task 的 ledger entry 不能替当前 task 授权新协议", () => {
+  const root = fixture();
+  const rel = "docs/features/approvals/SECOND_PROTOCOL_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), "Create an independent attestation protocol owned by a new approval service.\n");
+  fs.writeFileSync(path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json"), JSON.stringify({
+    schema: "complexity-ledger/v1",
+    entries: [{
+      task_id: "OTHER-TASK", files: [rel], categories: ["evidence_protocol"], disposition: "in-budget",
+    }],
+  }));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "CURRENT-TASK", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /evidence_protocol/);
+});
+
 test("T-029 历史 governance 污染不阻断只写 T-024 write-set 的 task preflight", () => {
   const root = fixture();
   fs.mkdirSync(path.join(root, "docs", "tasks"), { recursive: true });

@@ -141,11 +141,17 @@ function envelopeData(value: unknown): unknown {
 }
 
 function envelopeRequestId(value: unknown): string | null {
+  const meta = envelopeMeta(value);
+  if (!meta) return null;
+  const requestId = meta.requestId;
+  return typeof requestId === "string" ? requestId : null;
+}
+
+function envelopeMeta(value: unknown): JsonObject | null {
   if (!value || typeof value !== "object") return null;
   const meta = (value as { meta?: unknown }).meta;
   if (!meta || typeof meta !== "object") return null;
-  const requestId = (meta as { requestId?: unknown }).requestId;
-  return typeof requestId === "string" ? requestId : null;
+  return meta as JsonObject;
 }
 
 async function selectedAccountId(args: string[]): Promise<string | undefined> {
@@ -334,6 +340,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId: null,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }
@@ -363,6 +370,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }
@@ -388,6 +396,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId: accountId ?? null,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }
@@ -424,6 +433,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }
@@ -466,6 +476,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }
@@ -490,6 +501,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       requestId: envelopeRequestId(envelope),
       accountId: accountId ?? null,
       data: envelopeData(envelope),
+      meta: envelopeMeta(envelope),
       error: null,
     };
   }

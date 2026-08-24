@@ -27,7 +27,10 @@ project-specific files per project** — never commit one project's config into 
   a read-only marker bound to exact task, file SHA-256, complexity categories, REV-ADD IDs, and structured threat
   tuples; `baseline-apply` explicitly installs it under `COMPLEXITY_LEDGER.json.historical_baselines`. This is a
   quarantine record, never scope/threat authorization: the bound task stays red, while unrelated ready tasks run;
-  file drift, marker drift, or a new marker is red again.
+  file drift, marker drift, or a new marker is red again. Complexity detection treats reuse, compatibility,
+  delegation, and negative declarations as non-expanding; an evidence protocol blocks only on an explicit new
+  mechanism declaration or local owner/persistence/state/operation signals. Bare domain words are not mechanisms,
+  and a ledger entry for another task cannot authorize the selected task.
 - `strict-receipts-migrate.mjs` — explicit old-project migration. `check` reports missing policy/columns;
   `apply` adds receipt columns and sets `receipt_policy=required` as one crash-recoverable transaction. Active
   tasks default to `待验`; only IDs explicitly passed through `--non-ui` receive `—`.

@@ -1,6 +1,6 @@
 ---
 name: creatoros-cli
-description: Use when a CreatorOS user wants an Agent to inspect accounts or projects, read the latest script, combine CreatorOS with the user's own writing Skill, revise a full draft or one segment, manage assets or production tasks, wait for asynchronous work, or save an approved candidate through the installed creatoros CLI. Also use for CreatorOS CLI discovery, authorization, account isolation, version conflicts, and recovery on macOS or Windows.
+description: Use when a CreatorOS user wants an Agent to inspect accounts, projects, content-radar creators or videos, extract or retry transcripts, read the latest script, combine CreatorOS with a writing Skill, manage assets or production tasks, wait for asynchronous work, or save an approved candidate through the installed creatoros CLI. Also use for CLI discovery, authorization, account isolation, version conflicts, and recovery on macOS or Windows.
 ---
 
 # CreatorOS CLI
@@ -10,6 +10,7 @@ Operate the user's installed CreatorOS through its public CLI. Treat CreatorOS a
 ## Required references
 
 - Read [references/cli.md](references/cli.md) before invoking `creatoros` or advising installation, authorization, recovery, or platform paths.
+- Also read [references/content-radar.md](references/content-radar.md) before adding or syncing a content-radar creator, reading creator/video titles or full transcripts, retrying transcription, or finding videos without a complete transcript.
 - Also read [references/writing-skill-bridge.md](references/writing-skill-bridge.md) before combining this Skill with any writing, copywriting, research, or rewriting Skill.
 
 ## Non-negotiable boundaries

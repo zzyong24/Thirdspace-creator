@@ -65,14 +65,16 @@ const expectedFiles = [
   "SKILL.md",
   "agents/openai.yaml",
   "references/cli.md",
+  "references/content-radar.md",
   "references/writing-skill-bridge.md",
 ];
 assert.deepEqual(filesUnder(skillDir).sort(), expectedFiles.sort());
 
 const skillText = readFileSync(join(skillDir, "SKILL.md"), "utf8");
 const cliText = readFileSync(join(skillDir, "references", "cli.md"), "utf8");
+const radarText = readFileSync(join(skillDir, "references", "content-radar.md"), "utf8");
 const bridgeText = readFileSync(join(skillDir, "references", "writing-skill-bridge.md"), "utf8");
-const publicText = [skillText, cliText, bridgeText].join("\n");
+const publicText = [skillText, cliText, radarText, bridgeText].join("\n");
 
 assert.match(skillText, /^---\nname: creatoros-cli\ndescription: [^\n]+\n---\n/);
 assert.ok(skillText.split("\n").length < 500, "SKILL.md must stay below 500 lines");
@@ -105,6 +107,24 @@ for (const required of [
   "不能覆盖最终文案",
 ]) {
   assert.ok(bridgeText.includes(required) || skillText.includes(required), `missing bridge rule: ${required}`);
+}
+
+for (const required of [
+  "intelligence.sources.previewProfile",
+  "intelligence.sources.create",
+  "intelligence.runs.start",
+  "intelligence.items.list",
+  "intelligence.items.get",
+  "intelligence.transcripts.enqueue",
+  "meta.total",
+  "transcript.status=done",
+  "not_extracted",
+  "processing",
+  "attention",
+  "逐个跑",
+  "同一 ID",
+]) {
+  assert.ok(radarText.includes(required), `missing content-radar guidance: ${required}`);
 }
 
 assert.equal(

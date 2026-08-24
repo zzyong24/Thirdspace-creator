@@ -37,8 +37,61 @@ const MARKERS = {
   ipc: /\b(IPC|XPC|Unix (?:domain )?socket|named pipe|message port)\b/i,
   trust_boundary: /\b(trust boundary|same[- ]UID|malicious process|privilege boundary)\b/i,
   installer_deploy: /\b(installer|pkgbuild|notarization|deployment step|install script)\b/i,
-  evidence_protocol: /\b(attestation|challenge|nonce|independent evidence protocol|不可伪造输入|五类.{0,8}证据)\b/i,
 };
+// Complexity is about a newly owned mechanism, not vocabulary. Bare `attestation`, `challenge`, or `nonce`
+// may be a product-domain word or a compatibility reference to an existing contract. Evidence protocols are
+// therefore detected from a mechanism name plus positive change intent, or from multiple local mechanism
+// signals (owner/persistence/state/operations). Reuse/delegation/negative declarations remain non-expanding.
+const REUSE_CONTEXT = /\b(?:existing|established|stable|current|legacy|reuse[sd]?|retain(?:s|ed)?|inherit(?:s|ed)?|delegat(?:e[sd]?|ing)|compatib(?:le|ility)|facade|same (?:operation|owner|service|contract|invariant))\b|(?:既有|现有|稳定|沿用|复用|继承|委派|兼容|透传|同一(?:操作|所有者|服务|合同|不变量))/i;
+const CHANGE_INTENT = /\b(?:(?:this (?:task|change|spec)|the (?:task|change)|we) (?:introduced|created|added|established)|new|introduc(?:e|es|ing)|creat(?:e|es|ing)|add(?:s|ing)|establish(?:es|ing)|becomes? a new|its own)\b|(?:新增|新建|引入|创建|建立|自有|成为新)/i;
+const NEGATION = /\b(?:no|not|without|never|must not|does not|do not|cannot|can't)\b|(?:不新增|不新建|不引入|不创建|不建立|不得|禁止|没有|无须|不会|不能)/i;
+const EVIDENCE_TERMS = /\b(?:attestation(?:s)?|challenge(?:s)?|nonce(?:s)?)\b|(?:不可伪造输入|挑战应答)/i;
+const EVIDENCE_MECHANISM = /\b(?:(?:Attestation|Evidence|Proof|Verification|Approval)(?:Protocol|Service|Verifier|Registry|Store|Scheduler)\w*|(?:attestation|challenge[- ]response|evidence|proof|verification|approval)\s+(?:protocol|service|system|verifier|exchange|registry|store|scheduler))\b|(?:独立证据协议|证明协议|验证协议|认证服务|审批系统|证据验证器|挑战应答协议|不可伪造输入|五类.{0,8}证据)/i;
+const EXPLICIT_INDEPENDENT_MECHANISM = /\b(?:new|separate|independent)\s+(?:(?:attestation|challenge[- ]response|evidence|proof|verification|approval)\s+)?(?:protocol|service|system|verifier|exchange|registry|store|scheduler)\b|(?:新增|新建|独立).{0,12}(?:证据协议|证明协议|验证协议|认证服务|审批系统|证据验证器|挑战应答协议)/i;
+const MECHANISM_SIGNALS = [
+  /\b(?:new owner|owned by|owner service|becomes? (?:the |a )?owner|owns? the protocol)\b|(?:新所有者|新的?所有者|归属.{0,12}(?:服务|系统)|负责该协议)/i,
+  /\b(?:persist(?:s|ed|ence|ent)?|repository|database|table|store|stored|append[- ]only)\b|(?:持久化|存储|仓库|数据库|数据表|追加写)/i,
+  /\b(?:runtime state|state machine|states? (?:are|include)|pending|verified|revoked|active)\b|(?:运行状态|状态机|待验证|已验证|已撤销)/i,
+  /\b(?:operations?|commands?|endpoints?|issue\w*|verify\w*|approve\w*|revoke\w*|rotate\w*)\b|(?:操作|签发|验证|批准|撤销|轮换)/i,
+];
+
+function semanticWindows(text) {
+  return String(text).split(/\n\s*\n+/).map((window) => window.trim()).filter(Boolean);
+}
+function clauses(text) {
+  return String(text).split(/[.!?。！？;；\n]+/).map((clause) => clause.trim()).filter(Boolean);
+}
+function hasPositiveChange(text) {
+  return clauses(text).some((clause) => CHANGE_INTENT.test(clause) && !NEGATION.test(clause));
+}
+function hasNegativeChange(text) {
+  return clauses(text).some((clause) => NEGATION.test(clause) && (CHANGE_INTENT.test(clause) || EVIDENCE_MECHANISM.test(clause)));
+}
+function hasPositiveMechanismSignal(text, pattern) {
+  return clauses(text).some((clause) => pattern.test(clause) && !NEGATION.test(clause)
+    && (!REUSE_CONTEXT.test(clause) || hasPositiveChange(clause)));
+}
+function detectsMarker(text, pattern) {
+  return semanticWindows(text).some((window) => {
+    if (!pattern.test(window)) return false;
+    const nonExpanding = REUSE_CONTEXT.test(window) || hasNegativeChange(window);
+    return !nonExpanding || hasPositiveChange(window);
+  });
+}
+function detectsEvidenceProtocol(text) {
+  return semanticWindows(text).some((window) => {
+    const namedMechanism = EVIDENCE_MECHANISM.test(window);
+    const evidenceTerms = EVIDENCE_TERMS.test(window);
+    if (!namedMechanism && !evidenceTerms) return false;
+    const explicitIndependentChange = clauses(window).some((clause) => EXPLICIT_INDEPENDENT_MECHANISM.test(clause) && !NEGATION.test(clause));
+    const positiveChange = hasPositiveChange(window) || explicitIndependentChange;
+    const nonExpanding = REUSE_CONTEXT.test(window) || hasNegativeChange(window);
+    if (nonExpanding && !positiveChange) return false;
+    const structuralSignals = MECHANISM_SIGNALS.filter((pattern) => hasPositiveMechanismSignal(window, pattern)).length;
+    if (explicitIndependentChange) return true;
+    return (namedMechanism || evidenceTerms) && positiveChange && structuralSignals >= 2;
+  });
+}
 const sorted = (values) => [...new Set(values ?? [])].map(String).sort();
 const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 
@@ -60,8 +113,9 @@ function signalsFor(root, file, taskId, threatModel) {
   const relative = relPath(root, file);
   const revAddIds = sorted([...text.matchAll(/\[REV-ADD\][^\n]*?\b((?:FR|NFR|AC|ENT|FLOW|API|TEST|REL|SEC)-\d+)\b/g)].map((match) => match[1]));
   const categories = Object.entries(MARKERS)
-    .filter(([category, pattern]) => pattern.test(text) || (category === "language_toolchain" && /\.swift$/i.test(file)))
+    .filter(([category, pattern]) => detectsMarker(text, pattern) || (category === "language_toolchain" && /\.swift$/i.test(file)))
     .map(([category]) => category)
+    .concat(detectsEvidenceProtocol(text) ? ["evidence_protocol"] : [])
     .sort();
   return {
     text, file: relative, file_sha256: sha(text), categories, rev_add_ids: revAddIds,
@@ -134,7 +188,10 @@ function errorsForFile(root, file, taskId, state) {
     if (!authorized) errors.push(`${signals.file}: [REV-ADD] ${id} lacks itemized user scope authorization bound to this spec hash; continue/L2/scope-envelope DEC cannot approve it`);
   }
   for (const category of signals.categories) {
-    const covered = (state.ledger.entries ?? []).some((entry) => Array.isArray(entry.categories) && entry.categories.includes(category) && Array.isArray(entry.files) && entry.files.includes(signals.file) && ["baseline-migrated", "in-budget", "defer-hardening", "approved-threat-model"].includes(entry.disposition) && entry.task_id);
+    const covered = (state.ledger.entries ?? []).some((entry) => (!taskId ? Boolean(entry.task_id) : entry.task_id === taskId)
+      && Array.isArray(entry.categories) && entry.categories.includes(category)
+      && Array.isArray(entry.files) && entry.files.includes(signals.file)
+      && ["baseline-migrated", "in-budget", "defer-hardening", "approved-threat-model"].includes(entry.disposition));
     if (!covered) errors.push(`${signals.file}: unledgered complexity marker ${category}; record structured budget entry and default non-essential hardening to a later task`);
   }
   return errors;

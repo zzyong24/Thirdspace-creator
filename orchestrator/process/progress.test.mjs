@@ -61,6 +61,43 @@ test("multi-step task 的中间 step 绑定 commit 但保持 BACKLOG 进行中�
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });
 
+test("formal-review 引用既有 attestation 合同时可完成中间 step，且不越界修改 complexity ledger", () => {
+  const rel = "docs/features/profile/PROFILE_SPEC.md";
+  const f = initAutonomousFixture("progress-reused-attestation-", {
+    delivery: {
+      task_id: "TASK-REVIEW",
+      tasks: ["formal-review", "implementation", "acceptance"],
+      step_depends_on: { "formal-review": [], "implementation": [], "acceptance": [] },
+      write_set: [rel],
+    },
+  }, ["| TASK-REVIEW | 🔨 |"]);
+  fs.mkdirSync(path.dirname(path.join(f.root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(f.root, rel), [
+    "# Compatibility-only review",
+    "The facade reuses stable API-004 and delegates attestation verification to the existing owner.",
+    "It creates no evidence protocol, approval system, store, scheduler, runtime state, or operation.",
+    "",
+  ].join("\n"));
+  fs.writeFileSync(path.join(f.root, "orchestrator", "SCOPE_AUTHORIZATIONS.json"), JSON.stringify({ schema: "scope-authorizations/v1", authorizations: [] }));
+  fs.writeFileSync(path.join(f.root, "orchestrator", "COMPLEXITY_LEDGER.json"), JSON.stringify({ schema: "complexity-ledger/v1", entries: [] }));
+  fs.writeFileSync(path.join(f.root, "orchestrator", "THREAT_MODEL.json"), JSON.stringify({ schema: "threat-model/v1", threats: [] }));
+  spawnSync("git", ["add", "."], { cwd: f.root });
+  spawnSync("git", ["commit", "-m", "review compatibility spec"], { cwd: f.root });
+  const commit = spawnSync("git", ["rev-parse", "HEAD"], { cwd: f.root, encoding: "utf8" }).stdout.trim();
+  const ledgerBefore = fs.readFileSync(path.join(f.root, "orchestrator", "COMPLEXITY_LEDGER.json"), "utf8");
+
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  result = f.run("done", "delivery:formal-review", "--commit", commit);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  const progress = JSON.parse(fs.readFileSync(path.join(f.root, "orchestrator", "progress.json"), "utf8"));
+  assert.equal(progress.verticals[0].tasks[0].status, "done");
+  assert.equal(progress.verticals[0].tasks[1].status, "pending");
+  assert.match(fs.readFileSync(path.join(f.root, "BACKLOG.md"), "utf8"), /TASK-REVIEW \| 🔨/);
+  assert.equal(fs.readFileSync(path.join(f.root, "orchestrator", "COMPLEXITY_LEDGER.json"), "utf8"), ledgerBefore);
+});
+
 test("step-level dependency 允许 review 先行，并在上游完成前 gate implementation", () => {
   const f = initAutonomousFixture("progress-step-dependency-", {
     foundation: { tasks: ["cutover"], write_set: ["foundation/**"] },

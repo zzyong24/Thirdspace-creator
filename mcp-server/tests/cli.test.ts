@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ENDPOINTS } from "@creatoros/contract";
 
 import { runCliCommand } from "../src/cli";
 
@@ -20,12 +21,12 @@ describe("T-843 creatoros CLI", () => {
     globalThis.fetch = originalFetch;
   });
 
-  it("稳定列出 248/248 并展示 contract policy", async () => {
+  it("稳定列出当前全部 contract operations 并展示 contract policy", async () => {
     const result = await runCliCommand(["operations", "list", "--json"]) as {
       count: number;
       operations: Array<{ operation: string; effect: string }>;
     };
-    expect(result.count).toBe(248);
+    expect(result.count).toBe(Object.keys(ENDPOINTS).length);
     expect(result.operations.map((item) => item.operation)).toEqual(
       [...result.operations.map((item) => item.operation)].sort(),
     );
@@ -67,6 +68,32 @@ describe("T-843 creatoros CLI", () => {
     expect(body.properties.contentOutputId).toBeDefined();
   });
 
+  it("内容雷达的博主、作品、完整逐字稿和补跑 operation 都可由 CLI 动态发现", async () => {
+    const listed = await runCliCommand(["operations", "list", "--json"]) as {
+      operations: Array<{
+        operation: string;
+        effect: string;
+        asyncTask: boolean;
+      }>;
+    };
+    const byId = new Map(listed.operations.map((item) => [item.operation, item]));
+
+    expect([
+      "intelligence.sources.previewProfile",
+      "intelligence.sources.create",
+      "intelligence.sources.list",
+      "intelligence.runs.start",
+      "intelligence.runs.list",
+      "intelligence.runs.get",
+      "intelligence.items.list",
+      "intelligence.items.get",
+      "intelligence.transcripts.enqueue",
+    ].every((operation) => byId.has(operation))).toBe(true);
+    expect(byId.get("intelligence.items.list")).toMatchObject({ effect: "read", asyncTask: false });
+    expect(byId.get("intelligence.items.get")).toMatchObject({ effect: "read", asyncTask: false });
+    expect(byId.get("intelligence.transcripts.enqueue")).toMatchObject({ effect: "external", asyncTask: true });
+  });
+
   it("自动调用不静默套用默认账号，显式 --account 才发送账号头", async () => {
     const fetchMock = vi.fn(async (_url: unknown, _init?: RequestInit) => new Response(
       JSON.stringify({ data: { id: "project-1" }, meta: { requestId: "request-1" } }),
@@ -84,6 +111,33 @@ describe("T-843 creatoros CLI", () => {
     await runCliCommand([...common, "--account", "acct-a"]);
     const secondHeaders = (fetchMock.mock.calls[1]?.[1] as RequestInit).headers as Record<string, string>;
     expect(secondHeaders["x-account-id"]).toBe("acct-a");
+  });
+
+  it("列表调用保留 contract 分页元数据，让自动化能够证明已经取全", async () => {
+    globalThis.fetch = vi.fn(async () => new Response(
+      JSON.stringify({
+        data: [{ item: { id: "item-1", title: "一条真实标题" } }],
+        meta: { requestId: "request-items", page: 1, pageSize: 1, total: 3 },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    )) as unknown as typeof fetch;
+
+    const result = await runCliCommand([
+      "call", "intelligence.items.list",
+      "--input", JSON.stringify({
+        query: { accountId: "acct-a", sort: "published_desc", page: 1, pageSize: 1 },
+      }),
+      "--account", "acct-a",
+    ]);
+
+    expect(result).toMatchObject({
+      ok: true,
+      operation: "intelligence.items.list",
+      requestId: "request-items",
+      accountId: "acct-a",
+      data: [{ item: { id: "item-1", title: "一条真实标题" } }],
+      meta: { requestId: "request-items", page: 1, pageSize: 1, total: 3 },
+    });
   });
 
   it("tasks get 复用现有 task operations，不创建第二套状态 API", async () => {
