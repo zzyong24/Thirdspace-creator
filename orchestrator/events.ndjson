@@ -933,3 +933,4 @@
 {"ts":"2026-08-24T07:36:56.225Z","actor":"taskctl","action":"start","task":"T-910","sha_before":"3867775d09f7","sha_after":"ef78337f3b8a"}
 {"ts":"2026-08-24T07:53:11.422Z","actor":"taskctl","action":"complete","task":"T-910","evidence":"orchestrator/T910-BUILD-VALIDATION.md：CLI/contract/backend/Skill/engine 目标验证全通过；reconcile 的 238 个历史错误不属于 T-910 写集，已在报告中如实保留","sha_before":"b101bf17a202","sha_after":"399e8fecf8e9"}
 {"ts":"2026-08-24T08:03:39.533Z","actor":"taskctl","action":"start","task":"T-911","sha_before":"c20f3b9c18dd","sha_after":"34a0005a3f9e"}
+{"ts":"2026-08-24T08:15:33.604Z","actor":"taskctl","action":"complete","task":"T-911","evidence":"orchestrator/T911-BUILD-VALIDATION.md：Skill 一致性、42/42 打包测试、DMG VALID、安装和真启动通过；238 个历史 reconcile 错误范围外保留","sha_before":"34a0005a3f9e","sha_after":"6c8c9657bca9"}

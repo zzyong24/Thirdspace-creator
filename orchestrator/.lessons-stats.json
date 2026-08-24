@@ -133,8 +133,8 @@
     "deterrence": false
   },
   "LED-024": {
-    "fireCount": 12,
-    "lastFiredAt": "2026-08-24T07:52:57.919Z",
+    "fireCount": 13,
+    "lastFiredAt": "2026-08-24T08:15:24.137Z",
     "firstRedAt": "2026-08-13T04:45:58.831Z",
     "registeredAt": "2026-08-13T02:34:11.202Z",
     "deterrence": false
