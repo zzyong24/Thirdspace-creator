@@ -19,6 +19,54 @@ flowchart LR
   H --> I[页面显示新账号内容]
 ```
 
+```frontend-journey-contract
+{
+  "schema": "frontend-journey-contract/v2",
+  "task_id": "T-912",
+  "journey": "页面入口保持稳定，账号先显示新选择再刷新数据",
+  "entry": "CreatorOS 首页侧栏",
+  "watched_paths": [
+    "frontend/src/components/shell/account-switcher.tsx",
+    "frontend/src/components/shell/account-switcher.test.tsx",
+    "frontend/src/components/shell/sidebar.tsx",
+    "frontend/src/components/shell/shell.test.tsx"
+  ],
+  "required_checks": [
+    {"id": "AC-NAV-NO-STARTING", "test_id": "E2E-T912-01"},
+    {"id": "AC-NAV-SETTLES", "test_id": "E2E-T912-01"},
+    {"id": "AC-ACCOUNT-PAINT-FIRST", "test_id": "E2E-T912-02"},
+    {"id": "AC-ACCOUNT-NO-STALE-REFRESH", "test_id": "E2E-T912-03"}
+  ],
+  "required_conditions": [
+    "regular-window",
+    "minimum-window",
+    "adverse-slow-rsc",
+    "account-change-broadcast"
+  ],
+  "viewports": [
+    {"width": 1280, "height": 720},
+    {"width": 900, "height": 600}
+  ],
+  "coherence_groups": [],
+  "copy_guard": {"forbid_internal_ids": true},
+  "states": [
+    {"id": "home-ready", "visible": "首页"},
+    {"id": "positioning-ready", "visible": "定位中心"},
+    {"id": "account-a", "visible": "当前抖音号 A"},
+    {"id": "account-b", "visible": "当前抖音号 B"}
+  ],
+  "actions": [
+    {"from": "home-ready", "action": "点击定位中心并等待真实数据", "to": "positioning-ready"},
+    {"from": "account-a", "action": "选择账号 B，先绘制再刷新", "to": "account-b"}
+  ],
+  "honesty": [
+    "不使用‘打开中’或脉冲动画冒充速度改善",
+    "账号数据仍由服务端按新 cookie 和归属校验重读，不复用旧账号页面",
+    "macOS 辅助功能误操作导致会话关闭，不计入真人双账号通过证据"
+  ]
+}
+```
+
 ## 验收旅程
 
 | ID | 操作 | 通过条件 |
@@ -30,4 +78,3 @@ flowchart LR
 ## 性能判读
 
 本机安装包服务端热态全页请求实测：常用页面大多约 14–30ms，首轮较重页面约 45–117ms；独立 Chromium 的侧栏点击到新地址与主内容可见约 42–101ms。因此本次根因不是数据库持续慢，而是 T-909 新增的人工等待态和账号切换同帧强制刷新放大了等待感。
-
