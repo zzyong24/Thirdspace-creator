@@ -402,34 +402,21 @@ function PrimaryNav({
   activeId: string | null;
   collapsed: boolean;
 }) {
-  // [T-909] 服务端页面回来前先在点击项上给出确定反馈。pathname/activeId 更新后
-  // 自动收口；当前页重复点击不制造假 loading。
-  const [pendingId, setPendingId] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    setPendingId(null);
-  }, [activeId]);
-
   return (
     <nav
       data-slot="sidebar-primary-nav"
       aria-label="主要导航"
-      aria-busy={pendingId !== null}
       className="flex flex-col gap-1"
     >
       {PRIMARY_NAV.map((entry) => {
         const Icon = entry.icon;
         const isActive = entry.id === activeId;
-        const isPending = entry.id === pendingId;
         const link = (
           <Link
             href={entry.href}
             data-slot="sidebar-nav-item"
             data-active={isActive ? "true" : "false"}
-            data-pending={isPending ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}
-            onClick={() => {
-              if (!isActive) setPendingId(entry.id);
-            }}
             // 收拢态无可见文字 → aria-label + title 兜底可及性(tooltip 另作视觉提示)。
             aria-label={collapsed ? entry.label : undefined}
             title={collapsed ? entry.label : undefined}
@@ -439,16 +426,10 @@ function PrimaryNav({
               "text-muted-foreground hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isActive && "bg-brand-soft font-medium text-brand",
-              isPending && "bg-brand-soft font-medium text-brand",
             )}
           >
-            <Icon
-              className={cn("size-4 shrink-0", isPending && "animate-pulse")}
-              aria-hidden="true"
-            />
-            {!collapsed ? (
-              <span>{isPending ? `${entry.label} · 打开中` : entry.label}</span>
-            ) : null}
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            {!collapsed ? <span>{entry.label}</span> : null}
           </Link>
         );
         if (!collapsed) {

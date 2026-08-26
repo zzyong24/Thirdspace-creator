@@ -110,6 +110,15 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
   const routerRef = React.useRef(router);
   // eslint-disable-next-line react-hooks/refs -- 同步 latest-value ref，保证稳定 load 回调读取当前 router；不参与渲染
   routerRef.current = router;
+  const refreshFrameRef = React.useRef<number | null>(null);
+  React.useEffect(
+    () => () => {
+      if (refreshFrameRef.current !== null) {
+        window.cancelAnimationFrame(refreshFrameRef.current);
+      }
+    },
+    [],
+  );
   const [state, setState] = React.useState<LoadState>({ kind: "loading" });
   const [currentId, setCurrentId] = React.useState<string | null>(null);
 
@@ -184,9 +193,11 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
     readonly activities: readonly string[];
   } | null>(null);
 
-  // 真正执行切号:写 localStorage(+ 镜像 cookie)→ 广播失效 → refresh。
-  // 顺序有讲究:cookie 先落,refresh 的首个 RSC 才是新号;事件先于 refresh 广播,
-  // 让 island 的重拉与 RSC 刷新并行,不留旧号残影。
+  // 真正执行切号:这一帧先写本地真值并提交可见选中态，下一帧再刷新 RSC。
+  // [T-912] 旧实现把 setCurrentId 与 router.refresh 塞进同一个离散事件，React 会把
+  // 本地反馈和整棵服务端树刷新一起批处理；用户看到下拉已关闭，但账号名仍像“卡住”。
+  // 延后一帧不改变数据正确性：cookie 在调度前已经同步写好，首个 RSC 仍读取新账号；
+  // accountsChanged 也已广播给岛内缓存，只是让浏览器先画出用户刚刚作出的选择。
   const performSwitch = React.useCallback((id: string) => {
     writeStoredAccountId(id);
     setCurrentId(id);
@@ -196,7 +207,13 @@ export function AccountSwitcher({ collapsed }: { collapsed: boolean }) {
       source: "account-switcher",
       routeRefreshScheduled: true,
     });
-    routerRef.current.refresh();
+    if (refreshFrameRef.current !== null) {
+      window.cancelAnimationFrame(refreshFrameRef.current);
+    }
+    refreshFrameRef.current = window.requestAnimationFrame(() => {
+      refreshFrameRef.current = null;
+      routerRef.current.refresh();
+    });
   }, []);
 
   const handleSelect = React.useCallback(

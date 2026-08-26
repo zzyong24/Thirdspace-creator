@@ -162,6 +162,47 @@ describe("AccountSwitcher", () => {
     expect(listAccounts).not.toHaveBeenCalled();
   });
 
+  it("[T-912] 切号先提交可见选中态，整页数据刷新延后一帧", async () => {
+    const user = userEvent.setup();
+    window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "a");
+    listAccounts.mockResolvedValue([row("a"), row("b")]);
+    const afterPaint: FrameRequestCallback[] = [];
+    const raf = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback) => {
+        afterPaint.push(callback);
+        return 1;
+      });
+    try {
+      render(<AccountSwitcher collapsed={false} />);
+      await waitFor(() =>
+        expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute(
+          "aria-label",
+          "当前抖音号：@a",
+        ),
+      );
+
+      await user.click(screen.getByTestId("account-switcher-trigger"));
+      const items = await screen.findAllByTestId("account-switcher-item");
+      await user.click(
+        items.find((el) => el.getAttribute("data-account-id") === "b")!,
+      );
+
+      expect(window.localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe("b");
+      expect(screen.getByTestId("account-switcher-trigger")).toHaveAttribute(
+        "aria-label",
+        "当前抖音号：@b",
+      );
+      expect(mockRouter.refresh).not.toHaveBeenCalled();
+      expect(afterPaint).toHaveLength(1);
+
+      afterPaint[0]!(0);
+      expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    } finally {
+      raf.mockRestore();
+    }
+  });
+
   it("stored 失效自愈(回落自动选号)→ 补 router.refresh(RSC 首屏按归一号重渲)", async () => {
     window.localStorage.setItem(CURRENT_ACCOUNT_KEY, "ghost");
     listAccounts.mockResolvedValue([row("a")]);

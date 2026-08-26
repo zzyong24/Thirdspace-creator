@@ -178,15 +178,15 @@ describe("AppShell", () => {
     ]);
   });
 
-  it("[T-909] 点击页面入口立即标记正在切换，不等待服务端页面返回", async () => {
+  it("[T-912] 点击页面入口保持稳定文案，不制造“打开中”假等待态", async () => {
     await renderShell({ pathname: "/" });
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const positioning = within(nav).getByRole("link", { name: "定位中心" });
 
-    expect(positioning).toHaveAttribute("data-pending", "false");
     fireEvent.click(positioning);
-    expect(positioning).toHaveAttribute("data-pending", "true");
-    expect(nav).toHaveAttribute("aria-busy", "true");
+    expect(positioning).toHaveTextContent(/^定位中心$/);
+    expect(positioning).not.toHaveAttribute("data-pending");
+    expect(nav).not.toHaveAttribute("aria-busy");
   });
 
   it("derives the active nav item from the pathname", async () => {
