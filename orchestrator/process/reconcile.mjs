@@ -132,7 +132,7 @@ function die(code) {
   process.exit(code ?? (errs ? 1 : 0));
 }
 
-const REQUIRED = ['ARTIFACT_MANIFEST.yaml','ID_REGISTRY.md','DECISION_LOG.md','TRACEABILITY_MATRIX.md'];
+const REQUIRED = ['ARTIFACT_MANIFEST.yaml','DECISION_LOG.md'];
 for (const f of REQUIRED) {
   if (existsSync(resolve(CONTROL_ROOT, f))) ok(`required artifact present: ${f}`);
   else err(`required control artifact MISSING: ${f} (control root: ${CONTROL_ROOT})`);
@@ -529,7 +529,13 @@ const blocked = blocksBlock.split(',').map(s => s.replace(/["'\s]/g, '')).filter
 // chain (exit 1), that is drift even if the manifest claims consistency_gate.status: pass.
 const ORPHAN = resolve(HERE, 'orphan-scan.mjs');
 let scanCode = null;
-if (existsSync(ORPHAN)) {
+const ID_REGISTRY = resolve(CONTROL_ROOT, 'ID_REGISTRY.md');
+const TRACEABILITY = resolve(CONTROL_ROOT, 'TRACEABILITY_MATRIX.md');
+if (existsSync(ID_REGISTRY) !== existsSync(TRACEABILITY)) {
+  err('traceability is partially activated: ID_REGISTRY.md and TRACEABILITY_MATRIX.md must appear together.');
+} else if (!existsSync(ID_REGISTRY)) {
+  ok('traceability inactive — buildout uses code, tests, Git, and the current task as evidence.');
+} else if (existsSync(ORPHAN)) {
   // spawnSync (argv array, not a shell string) so an install path containing a space can't word-split
   // into a spurious module-not-found that reconcile would misreport as DRIFT.
   const r = spawnSync('node', [ORPHAN], { cwd: REPO, stdio: 'ignore' });

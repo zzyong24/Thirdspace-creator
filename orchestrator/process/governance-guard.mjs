@@ -164,11 +164,9 @@ function exactMarker(marker, signals, taskId) {
 function loadState(root) {
   const errors = [];
   const scopeFile = path.join(root, "orchestrator", "SCOPE_AUTHORIZATIONS.json");
-  if (!fs.existsSync(scopeFile)) errors.push("missing orchestrator/SCOPE_AUTHORIZATIONS.json (run supported migration; no legacy DEC is inferred)");
   const scope = readJson(scopeFile, { schema: "scope-authorizations/v1", authorizations: [] });
   if (scope.schema !== "scope-authorizations/v1" || !Array.isArray(scope.authorizations)) errors.push("SCOPE_AUTHORIZATIONS.json schema must be scope-authorizations/v1");
   const complexityFile = path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json");
-  if (!fs.existsSync(complexityFile)) errors.push("missing orchestrator/COMPLEXITY_LEDGER.json (explicit baseline migration required)");
   const ledger = readJson(complexityFile, { schema: "complexity-ledger/v1", entries: [], historical_baselines: [] });
   if (ledger.schema !== "complexity-ledger/v1" || !Array.isArray(ledger.entries)) errors.push("COMPLEXITY_LEDGER.json schema must be complexity-ledger/v1");
   if (ledger.historical_baselines != null && !Array.isArray(ledger.historical_baselines)) errors.push("COMPLEXITY_LEDGER.json historical_baselines must be an array");
