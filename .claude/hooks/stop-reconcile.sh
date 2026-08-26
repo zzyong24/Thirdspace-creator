@@ -10,4 +10,4 @@ command -v node >/dev/null 2>&1 || {
 }
 
 cd "$ROOT" || exit 2
-node orchestrator/process/reconcile.mjs
+node orchestrator/process/reconcile.mjs --concise

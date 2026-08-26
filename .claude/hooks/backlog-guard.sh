@@ -63,9 +63,12 @@ else:  # MultiEdit: 依次套用
 
 config_path = os.path.join(os.path.dirname(path), "orchestrator", "process", "reconcile.config.json")
 policy = "legacy"
+phase = "maintenance"
 if os.path.exists(config_path):
     try:
-        policy = json.load(open(config_path, encoding="utf-8")).get("receipt_policy", "legacy")
+        config = json.load(open(config_path, encoding="utf-8"))
+        policy = config.get("receipt_policy", "legacy")
+        phase = config.get("delivery_phase", "maintenance")
     except Exception:
         policy = "invalid"
 
@@ -132,12 +135,17 @@ if policy != "required":
         + "\n先运行 strict-receipts-migrate.mjs check，确认 --non-ui 清单后 apply 迁移为 required。\n"
     )
 else:
-    sys.stderr.write(
-        "BACKLOG guard(阻断):任务被标 🔨 开工,但审核列不在 allowlist:\n"
-        + "\n".join("  " + l.strip() for l in fresh[:3])
-        + "\n改方向/架构/数据归属的 SPEC 必须先过 spec-review(prompts/spec-reviewer.md「执行契约」),"
-        "评审后用 reviewctl 写入 PASS[REV:<receipt>] 再标 🔨;FAIL/CONCERNS 表示仍有未销账问题。\n"
-        "若该任务确属免审琐碎项,请把审核列改为 —(并对得起这个判断)。\n"
-    )
+    if phase == "buildout":
+        sys.stderr.write(
+            "BACKLOG guard(阻断):buildout 不等待正式审核，活动任务审核列应为 —:\n"
+            + "\n".join("  " + l.strip() for l in fresh[:3])
+            + "\n高影响变化走用户确认；项目稳定后用 delivery-phase.mjs promote 进入 maintenance。\n"
+        )
+    else:
+        sys.stderr.write(
+            "BACKLOG guard(阻断):maintenance 任务被标 🔨,但审核列不在 allowlist:\n"
+            + "\n".join("  " + l.strip() for l in fresh[:3])
+            + "\n稳定产品面/架构/数据归属变更先过 spec-review,再由 reviewctl 写入 PASS[REV:<receipt>]。\n"
+        )
 sys.exit(2)
 PY

@@ -25,6 +25,48 @@ function run(args) {
   });
 }
 
+function assertParallelBoundaryTemplate(projectRoot, scale) {
+  const file = path.join(
+    projectRoot,
+    "orchestrator",
+    "process",
+    "modules.config.example.json",
+  );
+  const template = JSON.parse(fs.readFileSync(file, "utf8"));
+  assert.match(template._meta?.parallel_sets ?? "", /write_set\/read_set.*exclusive_resources/i);
+  assert.match(template._meta?.parallel_sets ?? "", /runtime.*branch.*worktree/i);
+
+  const modules = Object.entries(template.modules ?? {});
+  assert.ok(modules.length > 0, `${scale} fresh template must include an example module`);
+  for (const [moduleId, module] of modules) {
+    assert.ok(Object.hasOwn(module, "read_set"), `${scale} ${moduleId} missing read_set`);
+    assert.ok(
+      Object.hasOwn(module, "exclusive_resources"),
+      `${scale} ${moduleId} missing exclusive_resources`,
+    );
+    assert.ok(Object.hasOwn(module, "step_depends_on"), `${scale} ${moduleId} missing step_depends_on`);
+    assert.ok(Array.isArray(module.read_set), `${scale} ${moduleId}.read_set must be an array`);
+    assert.ok(
+      Array.isArray(module.exclusive_resources),
+      `${scale} ${moduleId}.exclusive_resources must be an array`,
+    );
+    assert.equal(
+      typeof module.step_depends_on,
+      "object",
+      `${scale} ${moduleId}.step_depends_on must be an object`,
+    );
+
+    for (const field of ["step_write_set", "step_read_set", "step_exclusive_resources"]) {
+      assert.ok(Object.hasOwn(module, field), `${scale} ${moduleId} missing ${field}`);
+      assert.equal(
+        typeof module[field],
+        "object",
+        `${scale} ${moduleId}.${field} must remain an object when present`,
+      );
+    }
+  }
+}
+
 test("新项目未明确 single 或 multi 拓扑时拒绝生成默认可跳门配置", () => {
   const parent = fs.mkdtempSync(path.join(os.tmpdir(), "init-project-topology-"));
   const target = path.join(parent, "product");
@@ -50,6 +92,12 @@ test("single 明确落 false；multi 同步落 true 并建立 program 控制面"
     "single",
   ]);
   assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.doesNotMatch(
+    result.stdout,
+    /reviewctl: review receipts/i,
+    "fresh buildout must not run the formal-review receipt audit",
+  );
+  assert.match(result.stdout, /buildout: formal review inactive/i);
   let config = JSON.parse(
     fs.readFileSync(
       path.join(single, "orchestrator", "process", "reconcile.config.json"),
@@ -57,6 +105,8 @@ test("single 明确落 false；multi 同步落 true 并建立 program 控制面"
     ),
   );
   assert.equal(config.program_completion_required, false);
+  assert.equal(config.delivery_phase, "buildout");
+  assert.deepEqual(config.context_policy, { mode: "adaptive", project_packs: [] });
   assert.deepEqual(config.research_verify_commands, {});
   const settings = JSON.parse(fs.readFileSync(path.join(single, ".claude", "settings.json"), "utf8"));
   assert.equal(settings.hooks.PostToolUse[0].matcher, "Edit|Write|MultiEdit");
@@ -72,18 +122,17 @@ test("single 明确落 false；multi 同步落 true 并建立 program 控制面"
     true,
     "fresh init must record the exact vendored engine baseline",
   );
+  assert.equal(fs.existsSync(path.join(single, "orchestrator", "process", "context-plan.mjs")), true);
+  assert.equal(fs.existsSync(path.join(single, "orchestrator", "process", "delivery-phase.mjs")), true);
   assert.equal(fs.existsSync(path.join(single, "docs", "research")), true);
-  assert.match(
-    fs.readFileSync(path.join(single, "orchestrator", "process", "modules.config.example.json"), "utf8"),
-    /step_depends_on/,
-  );
+  assertParallelBoundaryTemplate(single, "S");
   assert.equal(
     fs.existsSync(
       path.join(single, "orchestrator", "templates", "TECHNICAL_RESEARCH_CARD_TEMPLATE.md"),
     ),
     true,
   );
-  const projectModules = `${JSON.stringify({ modules: { local: { tasks: ["review", "ship"], depends_on: [], step_depends_on: { review: [] }, write_set: ["local/**"] } } }, null, 2)}\n`;
+  const projectModules = `${JSON.stringify({ modules: { local: { tasks: ["implementation", "acceptance"], depends_on: [], step_depends_on: { implementation: [] }, write_set: ["local/**"] } } }, null, 2)}\n`;
   fs.writeFileSync(path.join(single, "orchestrator", "process", "modules.config.json"), projectModules);
   delete config.program_completion_required;
   fs.writeFileSync(
@@ -136,6 +185,27 @@ test("single 明确落 false；multi 同步落 true 并建立 program 控制面"
     true,
   );
 
+  // Older project configs must not be silently narrowed during update. The new
+  // planner handles a missing policy as explicit compat-full until a reviewed migration.
+  delete config.context_policy;
+  fs.writeFileSync(
+    path.join(single, "orchestrator", "process", "reconcile.config.json"),
+    `${JSON.stringify(config, null, 2)}\n`,
+  );
+  result = run([single, "--update", "--topology", "single"]);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const updatedLegacyConfig = JSON.parse(
+    fs.readFileSync(path.join(single, "orchestrator", "process", "reconcile.config.json"), "utf8"),
+  );
+  assert.equal(Object.hasOwn(updatedLegacyConfig, "context_policy"), false);
+  const legacyPlan = spawnSync(
+    process.execPath,
+    [path.join(single, "orchestrator", "process", "context-plan.mjs"), "--root", single, "--json"],
+    { cwd: single, encoding: "utf8" },
+  );
+  assert.equal(legacyPlan.status, 0, legacyPlan.stderr || legacyPlan.stdout);
+  assert.equal(JSON.parse(legacyPlan.stdout).compatibility_mode, true);
+
   const multi = path.join(parent, "multi");
   result = run([
     multi,
@@ -160,6 +230,7 @@ test("single 明确落 false；multi 同步落 true 并建立 program 控制面"
     fs.existsSync(path.join(multi, "orchestrator", "program", "program.config.json")),
     true,
   );
+  assertParallelBoundaryTemplate(multi, "M");
   assert.equal(fs.existsSync(path.join(single, "docs", "INDEX.md")), false);
   assert.equal(fs.existsSync(path.join(single, "orchestrator", "process", "knowledge.config.json")), false);
   for (const relative of [

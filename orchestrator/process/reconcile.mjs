@@ -10,7 +10,7 @@
 // Missing/legacy receipt policy or a missing topology classification fails closed. `init-project.sh`
 // creates the config; projects add probes whose stage IDs and paths come from their current manifest.
 
-import { readFileSync, existsSync, writeFileSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, appendFileSync, statSync } from 'node:fs';
 import { tallyLessonStats } from './lessons-stats.mjs';
 import { neverFiredFindings, selfRefFindings, quarantineFindings, computeMetrics, parseLedgerRules, buildReuseCandidate, buildLessonObservation, lessonLifecycleFindings, partitionEvolutionEvents, emitDeadLetterWarn } from './evolution-guards.mjs';
 import { runAllAntiChecks } from './anti-check.mjs';
@@ -21,8 +21,9 @@ import { auditFrontendReceipts } from './frontend-validation.mjs';
 import { auditGovernance, governanceDebtReport } from './governance-guard.mjs';
 import { auditAutonomy, auditWatchdog } from './autonomy-guard.mjs';
 import { auditResearchGates } from './research-gate.mjs';
+import { auditDeliveryPhase } from './delivery-phase.mjs';
 import { execSync, spawnSync } from 'node:child_process';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -30,8 +31,10 @@ const ORCH = resolve(HERE, '..');
 const REPO = resolve(ORCH, '..');
 const CONFIG = resolve(HERE, 'reconcile.config.json');
 
-const VALID_STATUS = ['not-started','draft','needs-user-confirmation','blocked','passed','accepted-risk','invalidated'];
+const VALID_STATUS = ['not-started','draft','needs-user-confirmation','blocked','passed','compact','accepted-risk','invalidated'];
 const VALID_GATE_STATUS = ['not-run', 'pass', 'fail', 'accepted-risk'];
+const CONCISE = process.argv.includes('--concise');
+const COMPACT_DESIGN_NOTES = 'skipped-by-DEC-000 (class S); compact DESIGN stays inside PRODUCT_SPEC.md';
 
 // control_root (optional, repo-relative): directory holding the control artifacts (manifest, logs,
 // registry). Defaults to the orchestrator/ folder (the standard layout) so existing projects keep working.
@@ -73,9 +76,51 @@ const warn = (m) => findings.push({ level: 'WARN',  m });
 const ok   = (m) => findings.push({ level: 'OK',    m });
 if (configReadError) err(`reconcile.config.json invalid — refusing legacy fallback: ${configReadError}`);
 
+const deliveryState = auditDeliveryPhase(REPO);
+{
+  if (!deliveryState.ok) {
+    for (const message of deliveryState.errors) err(`delivery phase: ${message}`);
+  } else {
+    ok(`delivery phase: ${deliveryState.phase} (${deliveryState.source})`);
+  }
+}
+
 function die(code) {
   const order = { ERROR: 0, WARN: 1, OK: 2 };
   findings.sort((a, b) => order[a.level] - order[b.level]);
+  if (CONCISE) {
+    const errs = findings.filter(f => f.level === 'ERROR').length;
+    const warns = findings.filter(f => f.level === 'WARN').length;
+    const oks = findings.filter(f => f.level === 'OK').length;
+    if (!errs && !warns) {
+      console.log(`✓ reconcile clean — ${oks} check(s).`);
+      process.exit(code ?? 0);
+    }
+    if (!errs) {
+      const warnings = findings.filter(f => f.level === 'WARN');
+      const limit = 3;
+      console.log(`! reconcile completed with warnings — ${warns} warning(s), ${oks} check(s).`);
+      for (const finding of warnings.slice(0, limit)) {
+        const oneLine = String(finding.m).replace(/\s+/g, ' ').trim();
+        const clipped = oneLine.length > 360 ? `${oneLine.slice(0, 359)}…` : oneLine;
+        console.log(`  ! ${clipped}`);
+      }
+      if (warnings.length > limit) console.log(`  … ${warnings.length - limit} more warning(s) omitted.`);
+      console.log('Run `node orchestrator/process/reconcile.mjs` for the full report.');
+      process.exit(code ?? 0);
+    }
+    const errors = findings.filter(f => f.level === 'ERROR');
+    const limit = 5;
+    console.log(`✗ reconcile failed — ${errs} error(s), ${warns} warning(s).`);
+    for (const finding of errors.slice(0, limit)) {
+      const oneLine = String(finding.m).replace(/\s+/g, ' ').trim();
+      const clipped = oneLine.length > 360 ? `${oneLine.slice(0, 359)}…` : oneLine;
+      console.log(`  ✗ ${clipped}`);
+    }
+    if (errors.length > limit) console.log(`  … ${errors.length - limit} more error(s) omitted.`);
+    console.log('Run `node orchestrator/process/reconcile.mjs` for the full report.');
+    process.exit(code ?? 1);
+  }
   const icon = { ERROR: '✗', WARN: '!', OK: '✓' };
   console.log('\n── orchestrator reconcile ─────────────────────────────');
   for (const f of findings) console.log(`${icon[f.level]} [${f.level}] ${f.m}`);
@@ -177,6 +222,14 @@ function splitInlineMap(body, stageId) {
           );
           return match ? (match[1] || match[2] || match[3]) : null;
         });
+      const scalarFor = (key) => {
+        const matches = fields.filter((field) => field.key === key);
+        if (matches.length !== 1) return null;
+        const raw = matches[0].rawValue;
+        const quoted = raw.match(/^(?:"([^"]*)"|'([^']*)')$/);
+        if (quoted) return quoted[1] ?? quoted[2];
+        return /^[^,#\s]+$/.test(raw) ? raw : null;
+      };
       const statuses = valuesFor('status');
       const gateStatuses = valuesFor('gate_status');
       const statusKeyCount = statuses.length;
@@ -192,6 +245,8 @@ function splitInlineMap(body, stageId) {
       stages[inline[1]] = {
         status: st,
         gate_status: gs,
+        gate: scalarFor('gate'),
+        notes: scalarFor('notes'),
         _status_seen: statusKeyCount > 0,
         _gate_status_seen: gateStatusKeyCount > 0,
       };
@@ -210,6 +265,8 @@ function splitInlineMap(body, stageId) {
       stages[cur] = {
         status: null,
         gate_status: null,
+        gate: null,
+        notes: null,
         _status_seen: false,
         _gate_status_seen: false,
       };
@@ -223,6 +280,8 @@ function splitInlineMap(body, stageId) {
         stages[unsupportedStage[1]] = {
           status: null,
           gate_status: null,
+          gate: null,
+          notes: null,
           _status_seen: false,
           _gate_status_seen: false,
         };
@@ -248,6 +307,16 @@ function splitInlineMap(body, stageId) {
       );
       if (gs) stages[cur].gate_status = gs[1] || gs[2];
       else err(`stage ${cur}: block gate_status has an empty or unsupported value`);
+      continue;
+    }
+    if (/^    gate\s*:/.test(line)) {
+      const gate = line.match(/^    gate\s*:\s*(?:"([^"]+)"|'([^']+)'|([^#\s]+))\s*(?:#.*)?$/);
+      if (gate) stages[cur].gate = gate[1] || gate[2] || gate[3];
+      continue;
+    }
+    if (/^    notes\s*:/.test(line)) {
+      const notes = line.match(/^    notes\s*:\s*(?:"([^"]*)"|'([^']*)'|([^#]*?))\s*(?:#.*)?$/);
+      if (notes) stages[cur].notes = (notes[1] ?? notes[2] ?? notes[3] ?? '').trim();
     }
   }
 }
@@ -287,8 +356,141 @@ for (const [id, s] of Object.entries(stages)) {
 
 // A stage marked passed whose gate never ran is exactly the laundering this tool exists to catch.
 for (const [id, s] of Object.entries(stages))
-  if (s.status === 'passed' && !['pass', 'accepted-risk'].includes(s.gate_status ?? ''))
+  if (s.status === 'passed' && s.gate_status !== 'pass')
     err(`stage ${id} is "passed" but gate_status is "${s.gate_status ?? 'unset'}" — a stage cannot pass a gate that never ran (run the gate, record the result).`);
+
+// `compact` is a physical S-class representation, not a softer spelling of risk acceptance.
+// Keep the capability narrow and exact so a model cannot use it to skip arbitrary stages/gates.
+const compactDesignBlock = (
+  text.match(/\n  "3-design":\n([\s\S]*?)(?=\n  "4-build":)/)?.[1] ?? ''
+);
+const compactDesignNotes = compactDesignBlock.match(/^    notes:\s*"([^"]*)"\s*$/m)?.[1] ?? null;
+const scaleClass = text.match(/^scale_class:\s*"?([SML])"?\s*$/m)?.[1] ?? null;
+const decisionLogText = existsSync(DECLOG) ? readFileSync(DECLOG, 'utf8') : '';
+const decisionBlocks = new Map();
+for (const match of decisionLogText.matchAll(/(?:^|\n)ID:\s*(DEC-[A-Za-z0-9_-]+)\s*\n([\s\S]*?)(?=\n(?:ID:\s*DEC-|```)|$)/g)) {
+  const entries = decisionBlocks.get(match[1]) ?? [];
+  entries.push(match[2]);
+  decisionBlocks.set(match[1], entries);
+}
+const compactDecisionBlock = (
+  decisionLogText.match(/(?:^|\n)ID:\s*DEC-000\s*\n([\s\S]*?)(?=\n(?:ID:\s*DEC-|```)|$)/)?.[1] ?? ''
+);
+const compactDecisionIsLegal = (
+  /^Owner:\s*user\s*$/m.test(compactDecisionBlock) &&
+  /^Status:\s*active\s*$/m.test(compactDecisionBlock) &&
+  /^Decision:.*Scale triage class = S(?:;|\.|\s|$)/m.test(compactDecisionBlock)
+);
+const compactDesignIsLegal = (
+  stages['3-design']?.status === 'compact' &&
+  stages['3-design']?.gate_status === 'not-run' &&
+  scaleClass === 'S' &&
+  compactDesignNotes === COMPACT_DESIGN_NOTES &&
+  compactDecisionIsLegal
+);
+for (const [id, stage] of Object.entries(stages)) {
+  if (stage.status !== 'compact') continue;
+  if (id !== '3-design') {
+    err(`stage ${id}: compact is only valid for 3-design in a scale_class S project under DEC-000`);
+    continue;
+  }
+  if (scaleClass !== 'S') err(`stage 3-design: compact requires exact scale_class S (found ${scaleClass ?? 'unset'})`);
+  if (stage.gate_status !== 'not-run') err(`stage 3-design: compact requires gate_status not-run (found ${stage.gate_status ?? 'unset'})`);
+  if (compactDesignNotes !== COMPACT_DESIGN_NOTES)
+    err(`stage 3-design: compact notes must be exactly "${COMPACT_DESIGN_NOTES}"`);
+  if (!compactDecisionIsLegal)
+    err('stage 3-design: compact requires active user-owned DEC-000 with exact Scale triage class = S');
+}
+
+// accepted-risk is evidence of a failed, actually attempted gate plus an explicit user decision.
+// It is never a synonym for `passed`, and a prose note cannot manufacture the authority.
+const decisionField = (block, label) => {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return block.match(new RegExp(`^${escaped}:\\s*(.+?)\\s*$`, 'm'))?.[1]?.trim() ?? null;
+};
+const meaningfulDecisionField = (block, label) => {
+  const value = decisionField(block, label);
+  return Boolean(value && !/^(?:none|n\/?a|tbd|todo|待定|<[^>]+>)$/i.test(value));
+};
+for (const [id, stage] of Object.entries(stages)) {
+  const hasAcceptedRisk = stage.status === 'accepted-risk' || stage.gate_status === 'accepted-risk';
+  if (!hasAcceptedRisk) continue;
+  if (stage.status !== 'accepted-risk' || stage.gate_status !== 'accepted-risk') {
+    err(`stage ${id}: accepted-risk requires both status and gate_status to be "accepted-risk" after an attempted gate`);
+  }
+  const decisionId = stage.notes?.match(/(?:^|;\s*)accepted-risk:\s*(DEC-[A-Za-z0-9_-]+)(?:\s*;|$)/i)?.[1] ?? null;
+  if (!decisionId) {
+    err(`stage ${id}: accepted-risk notes must bind exactly one decision as "accepted-risk: DEC-NNN"`);
+    continue;
+  }
+  const blocks = decisionBlocks.get(decisionId) ?? [];
+  if (blocks.length !== 1) {
+    err(`stage ${id}: accepted-risk ${decisionId} must resolve to exactly one Decision Log entry`);
+    continue;
+  }
+  const block = blocks[0];
+  if (!new RegExp(`^Stage:\\s*${id}(?:\\s|$)`, 'm').test(block))
+    err(`stage ${id}: accepted-risk ${decisionId} must be bound to this exact stage`);
+  if (!/^Type:\s*accepted-risk\s*$/m.test(block))
+    err(`stage ${id}: accepted-risk ${decisionId} requires Type: accepted-risk`);
+  if (!/^Owner:\s*user\s*$/m.test(block))
+    err(`stage ${id}: accepted-risk ${decisionId} requires Owner: user (agent-owned decisions cannot accept product risk)`);
+  if (!/^Status:\s*active\s*$/m.test(block))
+    err(`stage ${id}: accepted-risk ${decisionId} requires Status: active`);
+  for (const label of ['Violation', 'Why needed', 'Simpler alternative rejected because']) {
+    if (!meaningfulDecisionField(block, label))
+      err(`stage ${id}: accepted-risk ${decisionId} requires explicit "${label}:" evidence`);
+  }
+  const attemptedGate = decisionField(block, 'Gate-Attempt');
+  if (!stage.gate || attemptedGate !== stage.gate)
+    err(`stage ${id}: accepted-risk ${decisionId} Gate-Attempt must exactly match manifest gate "${stage.gate ?? 'unset'}"`);
+  const evidenceRef = decisionField(block, 'Gate-Evidence');
+  let evidenceIsReal = false;
+  if (evidenceRef && !/^(?:none|n\/?a|tbd|todo|待定|<[^>]+>)$/i.test(evidenceRef)) {
+    const evidencePath = resolve(REPO, evidenceRef);
+    const fromRoot = relative(REPO, evidencePath);
+    if (!fromRoot.startsWith('..') && existsSync(evidencePath)) {
+      try {
+        const evidenceStat = statSync(evidencePath);
+        evidenceIsReal = evidenceStat.isFile() && evidenceStat.size > 0;
+      }
+      catch { evidenceIsReal = false; }
+    }
+  }
+  if (!evidenceIsReal)
+    err(`stage ${id}: accepted-risk ${decisionId} requires an existing non-empty repo-relative Gate-Evidence file proving the gate was attempted`);
+}
+
+// S may declare the compact DESIGN representation during PLAN, so a fresh init remains valid.
+// Once CONTRACT is approved, BUILD is dependency-eligible and compact DESIGN must be real, not
+// a placeholder: one filled IA row plus an implementation-usable interaction sketch are required.
+const contractApproved = (
+  ['passed', 'accepted-risk'].includes(stages['2-contract']?.status ?? '') &&
+  ['pass', 'accepted-risk'].includes(stages['2-contract']?.gate_status ?? '')
+);
+if (compactDesignIsLegal && contractApproved) {
+  const productSpecPath = resolve(REPO, 'PRODUCT_SPEC.md');
+  let iaSection = '';
+  if (existsSync(productSpecPath)) {
+    const productSpec = readFileSync(productSpecPath, 'utf8');
+    iaSection = productSpec.match(/^##\s+7\.\s+[^\n]*\bIA\b[^\n]*\n([\s\S]*?)(?=^##\s+|(?![\s\S]))/mi)?.[1] ?? '';
+  }
+  const placeholder = (value) => {
+    const normalized = value?.trim().replace(/^`|`$/g, '') ?? '';
+    return !normalized || /^(?:-|—|none|n\/?a|tbd|todo|待定|<[^>]+>)$/i.test(normalized);
+  };
+  const hasFilledIa = iaSection.split('\n').some((line) => {
+    if (!/^\s*\|/.test(line) || !/IA-[A-Za-z0-9_-]+/.test(line)) return false;
+    const cells = line.split('|').slice(1, -1).map((cell) => cell.replace(/`/g, '').trim());
+    return cells.length >= 5 && /^IA-[A-Za-z0-9_-]+$/.test(cells[0]) && cells.slice(1, 5).every((cell) => !placeholder(cell));
+  });
+  const sketches = [...iaSection.matchAll(/^\s*-?\s*(?:Compact sketch|页面草图|交互草图)\s*[:：]\s*(.+?)\s*$/gim)]
+    .map((match) => match[1].trim());
+  if (!hasFilledIa)
+    err('stage 3-design: compact DESIGN became downstream-eligible but PRODUCT_SPEC.md lacks a filled IA row (entry, user action, FLOW, and empty/error next step)');
+  if (!sketches.some((sketch) => !placeholder(sketch)))
+    err('stage 3-design: compact DESIGN became downstream-eligible but PRODUCT_SPEC.md lacks a concrete Compact sketch / 页面草图 / 交互草图');
+}
 
 // v3 sequence guard: no DESIGN/BUILD work before the contract stage actually passed its gate
 // (machine form of stage-router's precondition — prose alone was bypassable).
@@ -296,7 +498,8 @@ for (const [id, s] of Object.entries(stages))
   const contract = stages['2-contract'];
   if (contract) for (const dn of ['3-design', '4-build', '5-ship']) {
     const st = stages[dn]?.status;
-    if (st && st !== 'not-started' && !['passed', 'accepted-risk'].includes(contract.status ?? ''))
+    const compactScaleSkip = dn === '3-design' && compactDesignIsLegal;
+    if (st && st !== 'not-started' && !compactScaleSkip && !['passed', 'accepted-risk'].includes(contract.status ?? ''))
       err(`stage ${dn} has started (status "${st}") but 2-contract is "${contract.status ?? 'unset'}" — no UI/build against an unapproved contract (v3 Contract-First).`);
   }
 }
@@ -392,13 +595,17 @@ if (existsSync(BACKLOG_HEALTH)) {
   if (!existsSync(BACKLOG)) {
     warn('BACKLOG.md absent — review/frontend receipt audit skipped.');
   } else {
-    try {
-      const reviewErrors = auditReviewReceipts({ root: REPO, backlogFile: BACKLOG });
-      if (reviewErrors.length) {
-        for (const message of reviewErrors) err(`review receipt: ${message}`);
-      } else ok('reviewctl: review receipts + current snapshots + event chain reconcile.');
-    } catch (e) {
-      err(`review receipt audit could not run: ${e.message}`);
+    if (deliveryState.phase === 'buildout') {
+      ok('buildout: formal review inactive; delivery-phase audit keeps the active queue review-free.');
+    } else {
+      try {
+        const reviewErrors = auditReviewReceipts({ root: REPO, backlogFile: BACKLOG });
+        if (reviewErrors.length) {
+          for (const message of reviewErrors) err(`review receipt: ${message}`);
+        } else ok('reviewctl: review receipts + current snapshots + event chain reconcile.');
+      } catch (e) {
+        err(`review receipt audit could not run: ${e.message}`);
+      }
     }
     try {
       const frontendErrors = auditFrontendReceipts({ root: REPO, backlogFile: BACKLOG });

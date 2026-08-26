@@ -5,23 +5,19 @@
 #
 #   bash orchestrator/process/harness/run.sh   ;   echo "exit=$?"   # 0 = clean DONE, 1 = a gate HALTED it
 #
-# HETEROGENEOUS + REBUTTAL VERIFICATION (anti "Lonely Verifier"):
-#   The coding agent and the verifiers run on DIFFERENT models — same-family reviewers are "two optimists
-#   nodding," and most defects are caught by exactly one heterogeneous checker. Two independent read-only
-#   passes review the work: a primary evaluator (confirm-with-evidence) and a rebuttal reviewer (assume-broken,
-#   default REJECT). A vertical only advances on AGREEMENT (both PASS). Verticals flagged high blast-radius are
-#   NEVER auto-completed: they additionally escalate to a human to own the merge (a genuine 3rd independent
-#   reviewer is planned; until it exists, "high-blast" = standard agreement + mandatory human merge ownership,
-#   not a stronger automated gate — we do not overclaim a reviewer that isn't there).
+# DELIVERY LIFECYCLE:
+#   buildout = coding + verify-task + real acceptance, with no formal reviewer cadence or final review.
+#   maintenance = heterogeneous primary/rebuttal review every N iterations and before DONE. High-impact
+#   decisions still stop for the user in either phase; maintenance high-blast work also keeps human merge ownership.
 #
-# EXIT CODE: 0 only on a CLEAN DONE (queue empty AND the final heterogeneous review passed). Any HALT — a
+# EXIT CODE: 0 only on a CLEAN DONE (buildout: queue + verification; maintenance: plus final review). Any HALT — a
 #   failed verify, a task that didn't advance, or a review that HELD/REJECTED a vertical — exits 1, so a
 #   CI/cron/Action caller can tell "shipped clean" from "the adversarial gate stopped it". An intentional
 #   HARNESS_ONLY_STEP checkpoint or the HARNESS_MAX_ITERS cap exits 2 (stopped, not failed, not done).
 #
 # Env (loop):       HARNESS_MAX_ITERS (default 60) · HARNESS_MAX_TURNS (default 50) · HARNESS_ONLY_STEP
 #                    · HARNESS_MAX_REPAIR (default 2, G2 critic self-repair rounds) · HARNESS_RUN_ID (RUN_EVENT tag)
-# Env (review):     EVALUATOR_EVERY_N (default 4) — run the verifiers every N committed iters + before DONE
+# Env (review):     EVALUATOR_EVERY_N (default 4) — maintenance only; ignored by buildout
 # Env (models):     CODER_MODEL · EVALUATOR_MODEL · REBUTTAL_MODEL — MUST differ for heterogeneity.
 #                   Unset → `claude` default for that role (a WARNING is logged: homogeneous = weak gate).
 # Env (blast):      HARNESS_HIGH_BLAST="vid1,vid2" — run-level high-blast list (in addition to per-vertical
@@ -39,6 +35,9 @@ CODER_MODEL="${CODER_MODEL:-}"
 EVALUATOR_MODEL="${EVALUATOR_MODEL:-}"
 REBUTTAL_MODEL="${REBUTTAL_MODEL:-}"
 HIGH_BLAST="${HARNESS_HIGH_BLAST:-}"
+DELIVERY_PHASE=$(node orchestrator/process/delivery-phase.mjs status --root "$PWD" --json 2>/dev/null \
+  | node -e 'let x="";process.stdin.on("data",d=>x+=d).on("end",()=>{try{console.log(JSON.parse(x).phase)}catch{process.exit(1)}})' 2>/dev/null)
+DELIVERY_PHASE="${DELIVERY_PHASE:-maintenance}"
 say(){ echo "$(date '+%H:%M:%S') $*" | tee -a "$LOG"; }
 
 # capture (evolution ④): observation-level RUN_EVENT on real failure. control_root resolved to an
@@ -183,6 +182,15 @@ run_review(){ # $1=reason ("cadence" | "final")
   return 0
 }
 
+phase_review(){ # $1=reason; buildout uses executable verification, not formal reviewers
+  local why="$1"
+  if [ "$DELIVERY_PHASE" = "buildout" ]; then
+    say "── buildout: skip formal review ($why); keep verify-task + real acceptance journey ──"
+    return 0
+  fi
+  run_review "$why"
+}
+
 # Preflight (conductor-style validate): fail at second 0, not at iter 30.
 preflight(){
   local bad=0
@@ -191,6 +199,8 @@ preflight(){
   done
   node orchestrator/process/autonomy-guard.mjs audit --root "$PWD" >>"$LOG" 2>&1 \
     || { say "✗ preflight: autonomous state/watchdog invalid (see $LOG)"; bad=1; }
+  node orchestrator/process/delivery-phase.mjs audit --root "$PWD" >>"$LOG" 2>&1 \
+    || { say "✗ preflight: delivery phase invalid (see $LOG)"; bad=1; }
   if [ -n "$EVALUATOR_MODEL" ] && [ "$EVALUATOR_MODEL" = "$CODER_MODEL" ]; then
     say "! preflight: EVALUATOR_MODEL == CODER_MODEL (homogeneous review = weak gate)"
   fi
@@ -214,7 +224,7 @@ while :; do
   i=$((i+1)); [ "$i" -gt "$MAX_ITERS" ] && { say "■ reached max_iters $MAX_ITERS — STOP (not done)"; STOPPED=1; break; }
   schedule=$(node orchestrator/process/progress.mjs schedule)
   schedule_status=$(printf '%s' "$schedule" | node -e 'let x="";process.stdin.on("data",d=>x+=d).on("end",()=>console.log(JSON.parse(x).status))')
-  if [ "$schedule_status" = "done" ]; then say "✓ queue complete — running FINAL review before DONE"; run_review final || { say "✗ final review HELD work — NOT a clean DONE"; FAILED=1; }; break; fi
+  if [ "$schedule_status" = "done" ]; then say "✓ queue complete — applying phase completion policy"; phase_review final || { say "✗ final review HELD work — NOT a clean DONE"; FAILED=1; }; break; fi
   if [ "$schedule_status" = "hold" ]; then say "✗ all remaining tasks depend on blockers — HOLD"; FAILED=1; break; fi
   task=$(printf '%s' "$schedule" | node -e 'let x="";process.stdin.on("data",d=>x+=d).on("end",()=>console.log(JSON.parse(x).task))')
   step="${task##*:}"
@@ -258,11 +268,11 @@ while :; do
   fi
   say "✓ iter $i committed; queue: $(node orchestrator/process/progress.mjs status | head -1)"
 
-  # Heterogeneous review every N committed iters (a held vertical halts the loop for routing).
+  # Maintenance review every N committed iters; buildout phase_review is a deterministic no-op.
   since_review=$((since_review+1))
   if [ "$since_review" -ge "$EVERY_N" ]; then
     since_review=0
-    if ! run_review cadence; then
+    if ! phase_review cadence; then
       node orchestrator/process/progress.mjs block "$task" --reason "cadence review held" >>"$LOG" 2>&1 || true
       reroute=$(node orchestrator/process/progress.mjs schedule)
       printf '%s' "$reroute" | grep -q '"status":"ready"' && { say "! review held $task; routing another ready isolated task"; continue; }

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# PreToolUse hook 模板 —— 与 session-start.sh 一起在 orchestrator init 时拷到项目 .claude/hooks/,
-# 在 .claude/settings.json 注册(两个 hook 的完整注册示例):
+# PreToolUse hook 模板 —— 与 session-start.sh 一起在 orchestrator init 时拷到项目 .claude/hooks/ 与 .codex/hooks/。
+# Claude Code 在 .claude/settings.json 注册，Codex 在 .codex/hooks.json 注册；两者都使用同一份裁决逻辑。
+# Claude Code 的注册示例:
 #   { "hooks": {
 #       "SessionStart": [ { "hooks": [ { "type":"command",
 #           "command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"" } ] } ],

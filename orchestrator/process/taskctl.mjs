@@ -203,6 +203,18 @@ if (
   die(`strict 项目任务表必须同时含「审核」和「验收」列`);
 }
 
+if (
+  (action === "start" || action === "resume") &&
+  config.delivery_phase === "buildout" &&
+  taskColumns?.review >= 0 &&
+  /待审|FAIL|CONCERNS/.test(row.cells[taskColumns.review] ?? "")
+) {
+  die(
+    `任务 ${taskId}: buildout 是快速铺开期，不等待正式审核；审核列改为 —。` +
+      `产品方向、数据归属、公共接口或安全姿态变化改走用户确认，稳定后再 promote maintenance`,
+  );
+}
+
 let to;
 let frontendEvidence = null;
 let frontendExecution = null;
@@ -229,7 +241,7 @@ if (action === "start" || action === "resume") {
       die(`任务 ${taskId}: ${error.message}`);
     }
   } else {
-    // 旧项目没有独立审核列。保留兼容性，但仍识别 Thirdspace 一类嵌在状态 cell
+    // 旧项目没有独立审核列。保留兼容性，但仍识别嵌在状态 cell
     // 中的显式 FAIL/待审/未处理 CONCERNS，不能把 legacy 变成绕过入口。
     const legacyText = row.cells.join(" ");
     const blocked =

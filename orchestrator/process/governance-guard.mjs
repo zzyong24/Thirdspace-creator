@@ -10,6 +10,18 @@ import { fileURLToPath } from "node:url";
 const SELF = fileURLToPath(import.meta.url);
 const sha = (text) => createHash("sha256").update(text).digest("hex");
 const relPath = (root, file) => path.relative(root, file).split(path.sep).join("/");
+function projectContainedFile(root, requested, label) {
+  const rootPath = path.resolve(root);
+  const rootReal = fs.realpathSync(root);
+  const absolute = path.resolve(rootPath, String(requested));
+  if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) throw new Error(`${label} missing: ${requested}`);
+  const real = fs.realpathSync(absolute);
+  const relative = path.relative(rootReal, real);
+  if (!relative || relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`${label} must stay inside project root; path escape rejected: ${requested}`);
+  }
+  return absolute;
+}
 const readJson = (file, fallback) => {
   if (!fs.existsSync(file)) return fallback;
   try { return JSON.parse(fs.readFileSync(file, "utf8")); }
@@ -43,7 +55,7 @@ const MARKERS = {
 // therefore detected from a mechanism name plus positive change intent, or from multiple local mechanism
 // signals (owner/persistence/state/operations). Reuse/delegation/negative declarations remain non-expanding.
 const REUSE_CONTEXT = /\b(?:existing|established|stable|current|legacy|reuse[sd]?|retain(?:s|ed)?|inherit(?:s|ed)?|delegat(?:e[sd]?|ing)|compatib(?:le|ility)|facade|same (?:operation|owner|service|contract|invariant))\b|(?:既有|现有|稳定|沿用|复用|继承|委派|兼容|透传|同一(?:操作|所有者|服务|合同|不变量))/i;
-const CHANGE_INTENT = /\b(?:(?:this (?:task|change|spec)|the (?:task|change)|we) (?:introduced|created|added|established)|new|introduc(?:e|es|ing)|creat(?:e|es|ing)|add(?:s|ing)|establish(?:es|ing)|becomes? a new|its own)\b|(?:新增|新建|引入|创建|建立|自有|成为新)/i;
+const CHANGE_INTENT = /\b(?:(?:this (?:task|change|spec)|the (?:task|change)|we) (?:introduced|created|added|established)|new|introduc(?:e|es|ing)|creat(?:e|es|ing)|add(?:s|ing)|establish(?:es|ing)|replac(?:e|es|ed|ing)|migrat(?:e|es|ed|ing)|mov(?:e|es|ed|ing)|split(?:s|ting)?|implement(?:s|ed|ing)?|provision(?:s|ed|ing)?|becomes? a new|its own)\b|(?:新增|新建|引入|创建|建立|替换|迁移|移入|移出|拆分|实现|落地|另建|改由|自有|成为新)/i;
 const NEGATION = /\b(?:no|not|without|never|must not|does not|do not|cannot|can't)\b|(?:不新增|不新建|不引入|不创建|不建立|不得|禁止|没有|无须|不会|不能)/i;
 const EVIDENCE_TERMS = /\b(?:attestation(?:s)?|challenge(?:s)?|nonce(?:s)?)\b|(?:不可伪造输入|挑战应答)/i;
 const EVIDENCE_MECHANISM = /\b(?:(?:Attestation|Evidence|Proof|Verification|Approval)(?:Protocol|Service|Verifier|Registry|Store|Scheduler)\w*|(?:attestation|challenge[- ]response|evidence|proof|verification|approval)\s+(?:protocol|service|system|verifier|exchange|registry|store|scheduler))\b|(?:独立证据协议|证明协议|验证协议|认证服务|审批系统|证据验证器|挑战应答协议|不可伪造输入|五类.{0,8}证据)/i;
@@ -64,32 +76,29 @@ function clauses(text) {
 function hasPositiveChange(text) {
   return clauses(text).some((clause) => CHANGE_INTENT.test(clause) && !NEGATION.test(clause));
 }
-function hasNegativeChange(text) {
-  return clauses(text).some((clause) => NEGATION.test(clause) && (CHANGE_INTENT.test(clause) || EVIDENCE_MECHANISM.test(clause)));
-}
 function hasPositiveMechanismSignal(text, pattern) {
   return clauses(text).some((clause) => pattern.test(clause) && !NEGATION.test(clause)
     && (!REUSE_CONTEXT.test(clause) || hasPositiveChange(clause)));
 }
 function detectsMarker(text, pattern) {
-  return semanticWindows(text).some((window) => {
-    if (!pattern.test(window)) return false;
-    const nonExpanding = REUSE_CONTEXT.test(window) || hasNegativeChange(window);
-    return !nonExpanding || hasPositiveChange(window);
+  return clauses(text).some((clause) => {
+    if (!pattern.test(clause) || NEGATION.test(clause)) return false;
+    return !REUSE_CONTEXT.test(clause) || hasPositiveChange(clause);
   });
 }
 function detectsEvidenceProtocol(text) {
   return semanticWindows(text).some((window) => {
-    const namedMechanism = EVIDENCE_MECHANISM.test(window);
-    const evidenceTerms = EVIDENCE_TERMS.test(window);
-    if (!namedMechanism && !evidenceTerms) return false;
-    const explicitIndependentChange = clauses(window).some((clause) => EXPLICIT_INDEPENDENT_MECHANISM.test(clause) && !NEGATION.test(clause));
-    const positiveChange = hasPositiveChange(window) || explicitIndependentChange;
-    const nonExpanding = REUSE_CONTEXT.test(window) || hasNegativeChange(window);
-    if (nonExpanding && !positiveChange) return false;
+    const windowClauses = clauses(window);
+    const explicitIndependentChange = windowClauses.some((clause) => EXPLICIT_INDEPENDENT_MECHANISM.test(clause) && !NEGATION.test(clause));
+    const explicitNamedChange = windowClauses.some((clause) => EVIDENCE_MECHANISM.test(clause)
+      && CHANGE_INTENT.test(clause) && !NEGATION.test(clause));
+    if (explicitIndependentChange || explicitNamedChange) return true;
+    const namedDeclaration = windowClauses.some((clause) => EVIDENCE_MECHANISM.test(clause)
+      && !NEGATION.test(clause) && !REUSE_CONTEXT.test(clause));
+    const bareChange = windowClauses.some((clause) => EVIDENCE_TERMS.test(clause)
+      && CHANGE_INTENT.test(clause) && !NEGATION.test(clause));
     const structuralSignals = MECHANISM_SIGNALS.filter((pattern) => hasPositiveMechanismSignal(window, pattern)).length;
-    if (explicitIndependentChange) return true;
-    return (namedMechanism || evidenceTerms) && positiveChange && structuralSignals >= 2;
+    return (namedDeclaration || bareChange) && structuralSignals >= 2;
   });
 }
 const sorted = (values) => [...new Set(values ?? [])].map(String).sort();
@@ -188,11 +197,13 @@ function errorsForFile(root, file, taskId, state) {
     if (!authorized) errors.push(`${signals.file}: [REV-ADD] ${id} lacks itemized user scope authorization bound to this spec hash; continue/L2/scope-envelope DEC cannot approve it`);
   }
   for (const category of signals.categories) {
-    const covered = (state.ledger.entries ?? []).some((entry) => (!taskId ? Boolean(entry.task_id) : entry.task_id === taskId)
+    const candidates = (state.ledger.entries ?? []).filter((entry) => (!taskId ? Boolean(entry.task_id) : entry.task_id === taskId)
       && Array.isArray(entry.categories) && entry.categories.includes(category)
-      && Array.isArray(entry.files) && entry.files.includes(signals.file)
+      && Array.isArray(entry.files) && entry.files.includes(signals.file));
+    const covered = candidates.some((entry) => entry.file_sha256 === signals.file_sha256
       && ["baseline-migrated", "in-budget", "defer-hardening", "approved-threat-model"].includes(entry.disposition));
-    if (!covered) errors.push(`${signals.file}: unledgered complexity marker ${category}; record structured budget entry and default non-essential hardening to a later task`);
+    if (!covered && candidates.length) errors.push(`${signals.file}: complexity ledger entry for ${category} has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash`);
+    else if (!covered) errors.push(`${signals.file}: unledgered complexity marker ${category}; record structured budget entry and default non-essential hardening to a later task`);
   }
   return errors;
 }
@@ -226,7 +237,7 @@ export function governanceDebtReport(root) {
   return findings;
 }
 function baselineMarker(root, taskId, file, reason, state) {
-  const absolute = path.resolve(root, file);
+  const absolute = projectContainedFile(root, file, "baseline source");
   if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) throw new Error(`${file}: baseline source file missing`);
   const signals = signalsFor(root, absolute, taskId, state.threatModel);
   if (signals.categories.includes("trust_boundary") && !signals.threat_tuples.length) throw new Error(`${file}: trust-boundary debt requires an exact structured threat tuple bound to task_id + file`);
@@ -248,7 +259,7 @@ function main() {
     }
     if (command === "baseline-apply") {
       const markerFile = at("--marker"); if (!markerFile) throw new Error("baseline-apply requires --marker <json>");
-      const marker = readJson(path.resolve(root, markerFile), null); const invalid = markerShapeErrors(marker);
+      const marker = readJson(projectContainedFile(root, markerFile, "baseline marker JSON"), null); const invalid = markerShapeErrors(marker);
       if (invalid.length) throw new Error(`baseline marker invalid: ${invalid.join(", ")}`);
       const expected = baselineMarker(root, marker.task_id, marker.file, marker.reason, state);
       if (!sameJson(marker, expected)) throw new Error("baseline marker no longer matches exact task/file/hash/categories/REV-ADD/threat tuple");
@@ -260,6 +271,8 @@ function main() {
       console.log(`✓ historical governance baseline installed for ${marker.task_id} ${marker.file} (quarantine only; no authorization)`); return;
     }
     const taskId = at("--task"); const writeSet = args.flatMap((value, index) => value === "--write-set" && args[index + 1] ? [args[index + 1]] : []);
+    if (command === "task-preflight" && !taskId) throw new Error("task-preflight requires --task <id>");
+    if (command === "task-preflight" && !writeSet.length) throw new Error("task-preflight requires at least one --write-set <path>");
     const errors = command === "task-preflight" ? taskGovernanceErrors(root, taskId, writeSet) : auditGovernance(root);
     if (errors.length) { console.error(`governance-guard HALT (${errors.length})\n${errors.map((error) => `  ✗ ${error}`).join("\n")}`); process.exit(1); }
     console.log("✓ governance guard: review-added scope and complexity budget clean");

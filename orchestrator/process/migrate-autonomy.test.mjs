@@ -40,12 +40,12 @@ test("自治迁移对 step_depends_on 的 step 与依赖引用 fail-closed", () 
   fs.rmSync(path.join(root, "orchestrator/progress.json"), { force: true });
   const input = path.join(root, "migration-input.json");
   const base = {
-    verify_commands: { review: "true", implementation: "true", cutover: "true" },
+    verify_commands: { preparation: "true", implementation: "true", cutover: "true" },
     modules: {
       "T-100": { tasks: ["cutover"], depends_on: [], write_set: ["foundation/**"] },
       "T-200": {
-        tasks: ["review", "implementation"], depends_on: ["T-100:cutover"], write_set: ["delivery/**"],
-        step_depends_on: { review: [], unknown: ["T-999:missing"] },
+        tasks: ["preparation", "implementation"], depends_on: ["T-100:cutover"], write_set: ["delivery/**"],
+        step_depends_on: { preparation: [], unknown: ["T-999:missing"] },
       },
     },
   };
@@ -55,7 +55,7 @@ test("自治迁移对 step_depends_on 的 step 与依赖引用 fail-closed", () 
   assert.match(r.stderr + r.stdout, /step_depends_on|unknown|dependency/i);
   assert.equal(fs.existsSync(path.join(root, "orchestrator/process/modules.config.json")), false);
 
-  base.modules["T-200"].step_depends_on = { review: [], implementation: ["T-100:cutover"] };
+  base.modules["T-200"].step_depends_on = { preparation: [], implementation: ["T-100:cutover"] };
   fs.writeFileSync(input, JSON.stringify(base));
   r = run("bash", [path.join(SKILL, "tools/migrate-autonomy.sh"), root, "--level", "L2", "--modules", input], SKILL);
   assert.equal(r.status, 0, r.stderr || r.stdout);

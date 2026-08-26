@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const TASKCTL = path.join(HERE, "taskctl.mjs");
 
-function rootWith(status, acceptance) {
+function rootWith(status, acceptance, review = "PASS[REV:abc123]") {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "taskctl-extension-"));
   fs.mkdirSync(path.join(root, "orchestrator", "process"), { recursive: true });
   fs.writeFileSync(
@@ -17,12 +17,34 @@ function rootWith(status, acceptance) {
     [
       "| ID | 任务 | 状态 | 文档 | 审核 | 验收 |",
       "|---|---|---|---|---|---|",
-      `| T-101 | 通用任务 | ${status} | — | PASS[REV:abc123] | ${acceptance} |`,
+      `| T-101 | 通用任务 | ${status} | — | ${review} | ${acceptance} |`,
       "",
     ].join("\n"),
   );
   return root;
 }
+
+test("buildout 开工不要求 review sidecar，但拒绝把待审 formal review 带回快速铺开期", () => {
+  const fast = rootWith("📋", "—", "—");
+  fs.writeFileSync(
+    path.join(fast, "orchestrator", "process", "reconcile.config.json"),
+    `${JSON.stringify({ receipt_policy: "required", delivery_phase: "buildout", research_verify_commands: {} })}\n`,
+  );
+  let result = run(fast, "start", "T-101");
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(fs.readFileSync(path.join(fast, "BACKLOG.md"), "utf8"), /🔨/);
+  assert.equal(fs.existsSync(path.join(fast, "orchestrator", "review-events.ndjson")), false);
+
+  const ceremonial = rootWith("📋", "—", "待审");
+  fs.writeFileSync(
+    path.join(ceremonial, "orchestrator", "process", "reconcile.config.json"),
+    `${JSON.stringify({ receipt_policy: "required", delivery_phase: "buildout", research_verify_commands: {} })}\n`,
+  );
+  result = run(ceremonial, "start", "T-101");
+  assert.equal(result.status, 1);
+  assert.match(result.stderr + result.stdout, /buildout|快速铺开|正式审核/i);
+  assert.match(fs.readFileSync(path.join(ceremonial, "BACKLOG.md"), "utf8"), /📋/);
+});
 
 function run(root, ...args) {
   return spawnSync(process.execPath, [TASKCTL, ...args, "--backlog", path.join(root, "BACKLOG.md")], {

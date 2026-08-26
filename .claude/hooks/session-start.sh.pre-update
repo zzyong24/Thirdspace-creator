@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# SessionStart hook 模板 —— orchestrator init 时与 backlog-guard.sh 一起拷到项目 .claude/hooks/。
-# 两个 hook 的合并注册示例见 backlog-guard.sh 头部(SessionStart 注入看板;PreToolUse 拦未过审开工)。
-# stdout 会被 Claude Code 作为 additionalContext 注入。
+# SessionStart hook 模板 —— orchestrator init 时同时拷到 .claude/hooks/ 与 .codex/hooks/。
+# stdout 会被 Claude Code/Codex 作为会话上下文注入。
 #
 # 为什么只注入 top-N 而不是全量:看板膨胀后(实测 200KB+)全量注入会被宿主转存成文件引用,
 # 等于没注入 —— 铁律「开工从看板顶取」反而失效。故只注入队列头部可执行行(🔨 优先、再 📋,

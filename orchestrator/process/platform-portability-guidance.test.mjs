@@ -46,7 +46,7 @@ test("BUILD and SHIP gates require platform tests plus target-host evidence", ()
   assert.match(prelaunch, /shell-free argv/);
 });
 
-test("field lessons retain reusable CreatorOS evidence without project-only branding", () => {
+test("field lessons retain reusable portability evidence without project-only branding", () => {
   const lessons = read("rules/field-lessons.md");
   assert.match(lessons, /Cross-platform desktop and release closure/);
   assert.match(lessons, /immutable build manifest/);

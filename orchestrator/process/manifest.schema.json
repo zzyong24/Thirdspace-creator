@@ -8,7 +8,7 @@
   "definitions": {
     "status": {
       "type": "string",
-      "enum": ["not-started", "draft", "needs-user-confirmation", "blocked", "passed", "accepted-risk", "invalidated"]
+      "enum": ["not-started", "draft", "needs-user-confirmation", "blocked", "passed", "compact", "accepted-risk", "invalidated"]
     },
     "gateStatus": {
       "type": "string",

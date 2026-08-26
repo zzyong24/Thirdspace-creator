@@ -44,6 +44,18 @@ function sha256(text) {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
 
+function stable(value) {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function objectHash(value) {
+  return sha256(stable(value));
+}
+
 function specLineRef(root, lineNumber) {
   const lines = fs.readFileSync(path.join(root, "SPEC.md"), "utf8").split(/\r?\n/);
   return `SPEC-LINE:${lineNumber}:${sha256(lines[lineNumber - 1]).slice(0, 16)}`;
@@ -1136,6 +1148,38 @@ test("existing-project audit 重新验证历史 security blocker 的 threat appr
   r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
   assert.equal(r.status, 1);
   assert.match(r.stderr + r.stdout, /THREAT-001|threat.*未经用户批准|same-UID/i);
+});
+
+test("规则升级前没有 threat_model_id 的只读历史不会被追溯改写", () => {
+  const root = tempProject();
+  const input = writePacket(root, "legacy-security.json", {
+    schema: "spec-review-round/v2", review_kind: "initial", summary: "legacy approved first",
+    findings: [finding({ severity: "blocker", category: "security", risk_class: "security" })],
+  });
+  let r = run(REVIEWCTL, ["record", "T-101", "--spec", "SPEC.md", "--constitution", "CONSTITUTION.md", "--input", input, "--review", "SPEC.review.md", "--backlog", "BACKLOG.md", "--review-mode", "cross-family", "--model", "test"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
+
+  const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
+  const event = JSON.parse(fs.readFileSync(eventsFile, "utf8").trim());
+  delete event.packet.findings[0].threat_model_id;
+  const { event_hash: ignored, ...body } = event;
+  event.event_hash = objectHash(body);
+  fs.writeFileSync(eventsFile, `${JSON.stringify(event)}\n`);
+  const reviewFile = path.join(root, "SPEC.review.md");
+  const reviewText = fs.readFileSync(reviewFile, "utf8");
+  const stateMatch = reviewText.match(/```spec-review-state\s*([\s\S]*?)```/);
+  const state = JSON.parse(stateMatch[1]);
+  state.latest_event_hash = event.event_hash;
+  state.open_findings = event.packet.findings;
+  const { receipt: oldReceipt, ...stateBody } = state;
+  state.receipt = objectHash(stateBody).slice(0, 12);
+  fs.writeFileSync(reviewFile, reviewText.replace(/```spec-review-state[\s\S]*?```/, `\`\`\`spec-review-state\n${JSON.stringify(state, null, 2)}\n\`\`\``));
+  const backlog = fs.readFileSync(path.join(root, "BACKLOG.md"), "utf8").replace(/(PASS|CONCERNS|FAIL)\[REV:[0-9a-f]{12}\]/, `${state.verdict}[REV:${state.receipt}]`);
+  fs.writeFileSync(path.join(root, "BACKLOG.md"), backlog);
+  fs.writeFileSync(path.join(root, "orchestrator", "THREAT_MODEL.json"), JSON.stringify({ schema: "threat-model/v1", threats: [] }));
+
+  r = run(REVIEWCTL, ["audit", "--backlog", "BACKLOG.md"], root);
+  assert.equal(r.status, 0, r.stderr || r.stdout);
 });
 
 test("taskctl 的列映射绑定目标所属表，不会被后一个不同表头污染", () => {

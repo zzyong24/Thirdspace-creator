@@ -1,33 +1,31 @@
-# Running multiple agents without conflicts (and how they chain)
+# Parallel runtime（宿主派发 · 主会话串行整合）
 
-Generic methodology — adapt every concrete path/command to YOUR project's structure and stack.
+完整判据见 `rules/parallel-collab-rules.md`。`run.sh` 默认保持串行；只有具备原生 sub-agent 并行能力的主会话才能开启波次，脚手架不绑定供应商进程协议。
 
-## Principle: parallelize ACROSS independent units, serialize WITHIN a unit
+## 波次
 
-> Lane planning (HOW to compute the partition — write_set derivation from boundaries.config/codegraph,
-> connected-components grouping, shared-task hoisting to wave-0, merge order): see
-> `rules/parallel-collab-rules.md` §0. This file covers the runtime mechanics of executing a planned wave.
-Partition work into units (modules/features) whose files are disjoint. Different units run in parallel; steps
-within a unit that share files or have dependencies run serially. `progress.mjs batch N` returns N ready tasks
-from distinct units = a conflict-free parallel set.
-
-## Identify the shared files (the real conflict surface)
-Most projects have a few aggregator/barrel/registry files touched by every unit (a composite/root wiring file,
-an RPC dispatch/router, a package index, a DI registry). Find yours; do NOT let parallel agents edit them.
-Either (preferred) codegen them from per-unit files, or serialize their edits into one integration task per wave.
-
-## Isolation: one worktree per agent
-Each parallel agent works in its own git worktree on a short-lived branch (zero live contention; conflicts only
-at merge): `git worktree add .auto/wt-<unit> -b auto/<unit>-<step> <work-branch>`.
-
-## Chaining: lead + barrier + serial merge
+```text
+业务 DAG ready set
+→ progress.mjs batch --json N（当前 step 的 W/W + W/R + exclusive resource）
+→ 准备独立 workspace
+→ parallel-isolation.mjs select
+→ 主会话 claim + context-compile
+→ 宿主原生 fan-out
+→ barrier
+→ barrier 后、首次合并前验证全部 candidate
+→ 按 merge_index 串行合并；每次 verify + reconcile
+→ 主会话推进 progress/board
 ```
-batch N → claim each (lease, no double-pick) → fan out one worktree-isolated agent per task (PARALLEL)
-→ BARRIER → merge each branch one-at-a-time (serial) → reconcile && verify → generate → repeat
-```
-Lease prevents double-pick; barrier+serial-merge chains the parallel work (orchestrator-worker; the Agent SDK
-Workflow tool can drive it). Re-derive the queue between waves; a crashed agent loses its lease and the task reappears.
 
-## Rules of thumb
-Parallel across units; serial within a unit and for shared barrels. One worktree per live agent. Always claim
-before working, release on failure, generate after each merge. Keep tasks small.
+## 隔离
+
+- 只读辅助审计共享目录，但不领取/推进自治队列。
+- 宿主已提供每 agent 独立 checkout：短分支即可。
+- 本地写代理共享目录：每个任务一个 worktree。
+- 分支/worktree 都不能覆盖读写依赖或共享资源冲突；冲突任务串行。
+
+worker 不写 BACKLOG、progress、Manifest、Decision、review event、ledger 或其他控制面，只交付一个 task-local 候选 commit，禁止 push。主会话是唯一 lease writer 和 integrator。
+
+## 合并
+
+所有候选绑定同一 `base_sha`，`merge_index` 唯一。主会话在 integration HEAD 仍等于 base 时先验证整批，再按固定顺序一次合一个；每次合入后 verify、reconcile、`progress done` 都必须绿。

@@ -5,7 +5,7 @@
 // opportunistic 增量(periodic 全扫默认关,防 candidate 池变坟场)。calibration-mode ON 时阈值
 // 动作只 print 不落盘。--dry-run 只报不落盘。B 源是辅助:CodeGraph 不可达只 WARN 跳过,不硬失败。
 //
-//   node process/asset-mine-local.mjs --dry-run --root ~/Workbase
+//   node process/asset-mine-local.mjs --dry-run --root /path/to/repositories
 //
 // Exit 0 = 正常(含 CG 不可达的优雅降级)。
 
@@ -19,11 +19,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const CONFIG = resolve(HERE, 'asset-mine-local.config.json');
 
 const DEFAULTS = {
-  own_owners: ['zzyong24', 'moonlitclear'],
-  junk_ignore: ['Foreign-trade', 'SZYMR', '*_base', 'claude-code-*', 'github'],
+  // Identity and repository locations are project/operator facts. The generic
+  // engine never guesses them; copy the example config or pass --root.
+  own_owners: [],
+  junk_ignore: ['*_base', 'claude-code-*', 'github'],
   codegraph_endpoint: 'http://localhost:0/mcp',
   reuse_freq_threshold: 2,
-  scan_roots: ['~/Workbase'],
+  scan_roots: [],
   candidates_dir: 'decisions/assets/_candidates',
   mode: 'opportunistic',
 };

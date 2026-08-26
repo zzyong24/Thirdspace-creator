@@ -7,7 +7,7 @@
 # 保队列可见性),每 cell 截断,✅/归档一概不进上下文;深上下文交给 Task Packet
 # (orchestrator/process/context-compile.mjs 产物,存在即在此打指针)。
 #
-# 可调:env BACKLOG_INJECT_ROWS(默认 10)。纯 bash 零依赖;缺 BACKLOG.md 的项目安全退出。
+# 可调:env BACKLOG_INJECT_ROWS(默认 1)。纯 bash 零依赖;缺 BACKLOG.md 的项目安全退出。
 
 ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 BL="$ROOT/BACKLOG.md"
@@ -17,8 +17,10 @@ BL="$ROOT/BACKLOG.md"
 # locale 不存在时 bash 静默沿用旧值,降级为字节截断,不致命。
 export LC_ALL="${LC_ALL:-en_US.UTF-8}"
 
-N="${BACKLOG_INJECT_ROWS:-10}"
-MAXLEN=200
+N="${BACKLOG_INJECT_ROWS:-1}"
+# 默认会话注入目标 <4KiB。同时限制 cell 宽度和数量，异常宽表也不能绕过预算。
+MAXLEN=100
+MAXCELLS=8
 
 echo "【必读·任务看板 BACKLOG.md】"
 echo "读取顺序:本看板 → 任务引用的 SPEC → 代码。铁律:需求即建任务进看板;开工从看板顶取并改 🔨;完成改 ✅+提交;禁止 P0/P1 分级与多阶段执行,任务清楚即起 Workflow/并行 subagent;改方向/架构/数据归属的 SPEC 过审才准开工。"
@@ -42,7 +44,7 @@ total=$(( ${#doing_rows[@]} + ${#todo_rows[@]} ))
 
 # ---------- 单 cell 截断(>MAXLEN 字符 → 截断 + …) ----------
 truncate_row() {
-  local row="$1" out="|" cell cells
+  local row="$1" out="|" cell cells cell_count=0 omitted=0
   # 掐掉首尾的 "|" 再按 "|" 切 cell(cell 内不会有裸 "|",看板约定)。
   # 用 read -ra 而非无引号 for-in:后者会做 glob 扩展(cell 含 * 就炸)且丢空 cell。
   row="${row#|}"
@@ -50,6 +52,7 @@ truncate_row() {
   local IFS='|'
   read -ra cells <<< "$row"
   for cell in ${cells[@]+"${cells[@]}"}; do
+    if [ "$cell_count" -ge "$MAXCELLS" ]; then omitted=$((omitted + 1)); continue; fi
     # 去 cell 首尾空格
     while [ "${cell# }" != "$cell" ]; do cell="${cell# }"; done
     while [ "${cell% }" != "$cell" ]; do cell="${cell% }"; done
@@ -57,27 +60,30 @@ truncate_row() {
       cell="${cell:0:$MAXLEN}…"
     fi
     out="$out $cell |"
+    cell_count=$((cell_count + 1))
   done
+  [ "$omitted" -eq 0 ] || out="$out …+$omitted cells |"
   printf '%s\n' "$out"
 }
 
 # ---------- 注入 top-N ----------
 shown=0
+shown_ids=()
 for row in ${doing_rows[@]+"${doing_rows[@]}"} ${todo_rows[@]+"${todo_rows[@]}"}; do
   [ "$shown" -ge "$N" ] && break
   truncate_row "$row"
+  id="${row#|}"
+  id="${id%%|*}"
+  while [ "${id# }" != "$id" ]; do id="${id# }"; done
+  while [ "${id% }" != "$id" ]; do id="${id% }"; done
+  shown_ids+=("$id")
   shown=$(( shown + 1 ))
 done
 
 echo "(看板共 ${total} 行可执行,已注入前 ${shown};完整看板:BACKLOG.md)"
 
-# ---------- 🔨 任务若已有 Task Packet → 打指针(深上下文不进注入,按需读) ----------
-for row in ${doing_rows[@]+"${doing_rows[@]}"}; do
-  id="${row#|}"
-  id="${id%%|*}"
-  # 去首尾空格
-  while [ "${id# }" != "$id" ]; do id="${id# }"; done
-  while [ "${id% }" != "$id" ]; do id="${id% }"; done
+# ---------- 已注入任务若有 Task Packet → 打指针(深上下文不进注入,按需读) ----------
+for id in ${shown_ids[@]+"${shown_ids[@]}"}; do
   [ -n "$id" ] || continue
   if [ -f "$ROOT/orchestrator/context/$id.md" ]; then
     echo "任务包:orchestrator/context/$id.md"

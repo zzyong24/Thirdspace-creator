@@ -11,6 +11,9 @@ const copyScheduler = (proc) => {
   fs.copyFileSync(path.join(HERE, "progress.mjs"), path.join(proc, "progress.mjs"));
   fs.copyFileSync(path.join(HERE, "autonomy-guard.mjs"), path.join(proc, "autonomy-guard.mjs"));
   fs.copyFileSync(path.join(HERE, "governance-guard.mjs"), path.join(proc, "governance-guard.mjs"));
+  fs.copyFileSync(path.join(HERE, "state-lock.mjs"), path.join(proc, "state-lock.mjs"));
+  fs.copyFileSync(path.join(HERE, "parallel-isolation.mjs"), path.join(proc, "parallel-isolation.mjs"));
+  fs.copyFileSync(path.join(HERE, "delivery-phase.mjs"), path.join(proc, "delivery-phase.mjs"));
 };
 
 function initAutonomousFixture(prefix, modules, backlogRows) {
@@ -313,4 +316,486 @@ test("T-029 历史 complexity/REV-ADD governance debt 被隔离，scheduler 仍�
   const schedule = JSON.parse(result.stdout);
   assert.equal(schedule.task, "reports:ship");
   assert.deepEqual(schedule.quarantined_governance, ["migration:cutover"]);
+});
+
+test("batch --json 只返回 write/read/resource 互不冲突的可并行集", () => {
+  const f = initAutonomousFixture("progress-batch-conflicts-", {
+    "write-root": {
+      task_id: "TASK-WRITE-ROOT",
+      tasks: ["work"],
+      write_set: ["src/accounts/**"],
+      read_set: [],
+      exclusive_resources: [],
+    },
+    "write-exact": {
+      task_id: "TASK-WRITE-EXACT",
+      tasks: ["work"],
+      write_set: ["src/accounts/**"],
+      read_set: [],
+      exclusive_resources: [],
+    },
+    "write-child": {
+      task_id: "TASK-WRITE-CHILD",
+      tasks: ["work"],
+      write_set: ["src/accounts/profile.ts"],
+      read_set: [],
+      exclusive_resources: [],
+    },
+    "contract-reader": {
+      task_id: "TASK-CONTRACT-READER",
+      tasks: ["work"],
+      write_set: [],
+      read_set: ["src/contracts/**"],
+      exclusive_resources: [],
+    },
+    "contract-writer": {
+      task_id: "TASK-CONTRACT-WRITER",
+      tasks: ["work"],
+      write_set: ["src/contracts/api.ts"],
+      read_set: [],
+      exclusive_resources: [],
+    },
+    "database-a": {
+      task_id: "TASK-DATABASE-A",
+      tasks: ["work"],
+      write_set: ["src/jobs/a.ts"],
+      read_set: [],
+      exclusive_resources: ["integration-database"],
+    },
+    "database-b": {
+      task_id: "TASK-DATABASE-B",
+      tasks: ["work"],
+      write_set: ["src/jobs/b.ts"],
+      read_set: [],
+      exclusive_resources: ["integration-database"],
+    },
+    independent: {
+      task_id: "TASK-INDEPENDENT",
+      tasks: ["work"],
+      write_set: ["src/reports/**"],
+      read_set: ["src/public/**"],
+      exclusive_resources: ["report-fixture"],
+    },
+  }, [
+    "| TASK-WRITE-ROOT | 📋 |",
+    "| TASK-WRITE-EXACT | 📋 |",
+    "| TASK-WRITE-CHILD | 📋 |",
+    "| TASK-CONTRACT-READER | 📋 |",
+    "| TASK-CONTRACT-WRITER | 📋 |",
+    "| TASK-DATABASE-A | 📋 |",
+    "| TASK-DATABASE-B | 📋 |",
+    "| TASK-INDEPENDENT | 📋 |",
+  ]);
+
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  result = f.run("batch", "--json", "10");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const batch = JSON.parse(result.stdout);
+  assert.equal(batch.status, "ready");
+  assert.deepEqual(batch.tasks.map((item) => item.task), [
+    "write-root:work",
+    "contract-reader:work",
+    "database-a:work",
+    "independent:work",
+  ]);
+  for (const item of batch.tasks) {
+    assert.match(item.task_id, /^TASK-/);
+    assert.ok(Array.isArray(item.write_set), `${item.task} must report write_set`);
+    assert.ok(Array.isArray(item.read_set), `${item.task} must report read_set`);
+    assert.ok(Array.isArray(item.exclusive_resources), `${item.task} must report exclusive_resources`);
+  }
+});
+
+test("batch reads current modules config instead of stale generated boundaries", () => {
+  const f = initAutonomousFixture("progress-batch-current-config-", {
+    alpha: {
+      task_id: "TASK-ALPHA",
+      tasks: ["work"],
+      write_set: ["src/alpha/**"],
+    },
+    beta: {
+      task_id: "TASK-BETA",
+      tasks: ["work"],
+      write_set: ["src/beta/**"],
+    },
+  }, ["| TASK-ALPHA | 📋 |", "| TASK-BETA | 📋 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  fs.writeFileSync(path.join(f.proc, "modules.config.json"), JSON.stringify({ modules: {
+    alpha: { task_id: "TASK-ALPHA", tasks: ["work"], write_set: ["src/alpha/**"] },
+    beta: { task_id: "TASK-BETA", tasks: ["work"], write_set: ["src/alpha/overlap.ts"] },
+  } }));
+  result = f.run("batch", "--json", "2");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).tasks.map((item) => item.task_id), ["TASK-ALPHA"]);
+});
+
+test("current step may override module boundaries without changing legacy module defaults", () => {
+  const f = initAutonomousFixture("progress-step-boundaries-", {
+    delivery: {
+      task_id: "TASK-DELIVERY",
+      tasks: ["formal-review", "implementation"],
+      write_set: ["src/delivery/**"],
+      read_set: ["contracts/api.json"],
+      step_write_set: {
+        "formal-review": [],
+        implementation: ["src/delivery/**"],
+      },
+      step_read_set: {
+        "formal-review": ["docs/spec.md"],
+        implementation: ["contracts/api.json"],
+      },
+      step_exclusive_resources: {
+        "formal-review": [],
+        implementation: ["integration-database"],
+      },
+    },
+  }, ["| TASK-DELIVERY | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  result = f.run("batch", "--json", "1");
+  let [task] = JSON.parse(result.stdout).tasks;
+  assert.equal(task.task_id, "TASK-DELIVERY");
+  assert.equal(task.step, "formal-review");
+  assert.equal(task.isolation, "shared");
+  assert.deepEqual(task.write_set, []);
+  assert.deepEqual(task.read_set, ["docs/spec.md"]);
+
+  const progressFile = path.join(f.root, "orchestrator", "progress.json");
+  const progress = JSON.parse(fs.readFileSync(progressFile, "utf8"));
+  progress.verticals[0].tasks[0].status = "done";
+  fs.writeFileSync(progressFile, JSON.stringify(progress));
+  result = f.run("batch", "--json", "1");
+  [task] = JSON.parse(result.stdout).tasks;
+  assert.equal(task.step, "implementation");
+  assert.equal(task.isolation, "auto");
+  assert.deepEqual(task.write_set, ["src/delivery/**"]);
+  assert.deepEqual(task.read_set, ["contracts/api.json"]);
+  assert.deepEqual(task.exclusive_resources, ["integration-database"]);
+});
+
+test("task with neither read_set nor write_set is not silently classified read-only", () => {
+  const f = initAutonomousFixture("progress-empty-boundaries-", {
+    empty: {
+      task_id: "TASK-EMPTY",
+      tasks: ["work"],
+      write_set: [],
+      read_set: [],
+    },
+  }, ["| TASK-EMPTY | 📋 |"]);
+  const result = f.run("generate");
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stderr + result.stdout, /read_set|write_set|boundary|边界/i);
+});
+
+test("batch leaves writer isolation to runtime proof and only marks read-only work shared", () => {
+  const f = initAutonomousFixture("progress-batch-isolation-", {
+    "branch-writer": {
+      task_id: "TASK-BRANCH-WRITER",
+      tasks: ["work"],
+      write_set: ["src/branch/**"],
+      read_set: [],
+      exclusive_resources: [],
+      isolated_workspace: true,
+    },
+    "default-writer": {
+      task_id: "TASK-DEFAULT-WRITER",
+      tasks: ["work"],
+      write_set: ["src/default/**"],
+      read_set: [],
+      exclusive_resources: [],
+    },
+    "read-only": {
+      task_id: "TASK-READ-ONLY",
+      tasks: ["inspect"],
+      write_set: [],
+      read_set: ["docs/reference/**"],
+      exclusive_resources: [],
+    },
+  }, [
+    "| TASK-BRANCH-WRITER | 📋 |",
+    "| TASK-DEFAULT-WRITER | 📋 |",
+    "| TASK-READ-ONLY | 📋 |",
+  ]);
+
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  result = f.run("batch", "--json", "3");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const byTask = new Map(JSON.parse(result.stdout).tasks.map((item) => [item.task, item]));
+  assert.equal(byTask.get("branch-writer:work")?.isolation, "auto");
+  assert.equal(byTask.get("default-writer:work")?.isolation, "auto");
+  assert.equal(byTask.get("read-only:inspect")?.isolation, "shared");
+});
+
+test("parallel claim records the coordinator-owned execution lease and rejects partial metadata", () => {
+  const f = initAutonomousFixture("progress-parallel-claim-", {
+    delivery: {
+      task_id: "TASK-PARALLEL",
+      tasks: ["implementation"],
+      write_set: ["src/delivery/**"],
+      read_set: ["contracts/api.json"],
+      exclusive_resources: [],
+    },
+  }, ["| TASK-PARALLEL | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-delivery",
+    "--isolation", "worktree",
+  );
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+
+  fs.writeFileSync(path.join(f.root, "integration-advance.txt"), "advance\n");
+  spawnSync("git", ["add", "integration-advance.txt"], { cwd: f.root });
+  spawnSync("git", ["commit", "-m", "advance integration"], { cwd: f.root });
+  const base = spawnSync("git", ["rev-parse", "HEAD"], {
+    cwd: f.root,
+    encoding: "utf8",
+  }).stdout.trim();
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-delivery",
+    "--isolation", "worktree",
+    "--workspace-root", path.join(f.root, ".worktrees", "wave-a", "delivery"),
+    "--branch", "codex/wave-a/delivery",
+    "--base-sha", f.head,
+    "--wave-id", "wave-a",
+    "--merge-index", "0",
+  );
+  assert.equal(result.status, 2, "parallel claim must reject a stale base_sha");
+
+  const workspaceRoot = path.join(f.root, ".worktrees", "wave-a", "delivery");
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-delivery",
+    "--isolation", "worktree",
+    "--workspace-root", workspaceRoot,
+    "--branch", "codex/wave-a/delivery",
+    "--base-sha", base,
+    "--wave-id", "wave-a",
+    "--merge-index", "0",
+  );
+  assert.equal(result.status, 2, "parallel claim must reject a missing/fake workspace");
+
+  fs.mkdirSync(path.dirname(workspaceRoot), { recursive: true });
+  const worktree = spawnSync(
+    "git",
+    ["worktree", "add", "-b", "codex/wave-a/delivery", workspaceRoot, base],
+    { cwd: f.root, encoding: "utf8" },
+  );
+  assert.equal(worktree.status, 0, worktree.stderr || worktree.stdout);
+
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-delivery",
+    "--isolation", "worktree",
+    "--workspace-root", workspaceRoot,
+    "--branch", "codex/wave-a/delivery",
+    "--base-sha", base,
+    "--wave-id", "wave-a",
+    "--merge-index", "0",
+  );
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  const progress = JSON.parse(
+    fs.readFileSync(path.join(f.root, "orchestrator", "progress.json"), "utf8"),
+  );
+  assert.deepEqual(progress.leases["delivery:implementation"], {
+    agent: "agent-delivery",
+    since: progress.leases["delivery:implementation"].since,
+    isolation_kind: "worktree",
+    workspace_root: fs.realpathSync(workspaceRoot),
+    branch: "codex/wave-a/delivery",
+    base_sha: base,
+    wave_id: "wave-a",
+    merge_index: 0,
+  });
+});
+
+test("progress mutations respect the project state lock", () => {
+  const f = initAutonomousFixture("progress-state-lock-", {
+    delivery: {
+      task_id: "TASK-LOCKED",
+      tasks: ["implementation"],
+      write_set: ["src/delivery/**"],
+    },
+  }, ["| TASK-LOCKED | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  const lockDir = path.join(f.root, "orchestrator", ".state-write.lock");
+  fs.mkdirSync(lockDir);
+  fs.writeFileSync(path.join(lockDir, "owner.json"), `${JSON.stringify({
+    schema: "orchestrator-state-lock/v1",
+    token: "held-by-test",
+    pid: process.pid,
+    operation: "test-held-lock",
+    started_at: "2026-08-24T00:00:00.000Z",
+  })}\n`);
+
+  result = f.run("claim", "delivery:implementation", "--agent", "agent-delivery");
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  const progress = JSON.parse(
+    fs.readFileSync(path.join(f.root, "orchestrator", "progress.json"), "utf8"),
+  );
+  assert.equal(progress.leases["delivery:implementation"], undefined);
+});
+
+test("parallel done rejects the wave base when no candidate was integrated", () => {
+  const f = initAutonomousFixture("progress-parallel-done-", {
+    delivery: {
+      task_id: "TASK-PARALLEL-DONE",
+      tasks: ["implementation", "acceptance"],
+      write_set: ["src/delivery/**"],
+      read_set: ["contracts/api.json"],
+      exclusive_resources: [],
+    },
+  }, ["| TASK-PARALLEL-DONE | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  const workspace = path.join(f.root, ".worktrees", "wave-done", "delivery");
+  fs.mkdirSync(path.dirname(workspace), { recursive: true });
+  const added = spawnSync(
+    "git",
+    ["worktree", "add", "-b", "codex/wave-done/delivery", workspace, f.head],
+    { cwd: f.root, encoding: "utf8" },
+  );
+  assert.equal(added.status, 0, added.stderr || added.stdout);
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-delivery",
+    "--isolation", "worktree",
+    "--workspace-root", workspace,
+    "--branch", "codex/wave-done/delivery",
+    "--base-sha", f.head,
+    "--wave-id", "wave-done",
+    "--merge-index", "0",
+  );
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  result = f.run(
+    "done", "delivery:implementation", "--commit", f.head, "--agent", "agent-delivery",
+  );
+  assert.equal(result.status, 1, "parallel done must reject base_sha without an integrated candidate");
+  const progress = JSON.parse(
+    fs.readFileSync(path.join(f.root, "orchestrator", "progress.json"), "utf8"),
+  );
+  assert.equal(progress.verticals[0].tasks[0].status, "pending");
+  assert.ok(progress.leases["delivery:implementation"]);
+
+  fs.mkdirSync(path.join(workspace, "src", "delivery"), { recursive: true });
+  fs.writeFileSync(path.join(workspace, "src", "delivery", "feature.js"), "export const feature = true;\n");
+  spawnSync("git", ["add", "src/delivery/feature.js"], { cwd: workspace });
+  const committed = spawnSync("git", ["commit", "-m", "deliver scoped candidate"], {
+    cwd: workspace,
+    encoding: "utf8",
+  });
+  assert.equal(committed.status, 0, committed.stderr || committed.stdout);
+  const candidate = spawnSync("git", ["rev-parse", "HEAD"], { cwd: workspace, encoding: "utf8" }).stdout.trim();
+  const landed = spawnSync("git", ["cherry-pick", candidate], { cwd: f.root, encoding: "utf8" });
+  assert.equal(landed.status, 0, landed.stderr || landed.stdout);
+  const integrated = spawnSync("git", ["rev-parse", "HEAD"], { cwd: f.root, encoding: "utf8" }).stdout.trim();
+  result = f.run(
+    "done", "delivery:implementation", "--commit", integrated, "--agent", "agent-delivery",
+  );
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const completed = JSON.parse(
+    fs.readFileSync(path.join(f.root, "orchestrator", "progress.json"), "utf8"),
+  );
+  assert.equal(completed.verticals[0].tasks[0].status, "done");
+  assert.equal(completed.verticals[0].commits.implementation, integrated);
+  assert.equal(completed.leases["delivery:implementation"], undefined);
+});
+
+test("parallel wave claims require one base and a unique merge index", () => {
+  const f = initAutonomousFixture("progress-parallel-wave-", {
+    alpha: { task_id: "TASK-WAVE-A", tasks: ["implementation"], write_set: ["src/a/**"] },
+    beta: { task_id: "TASK-WAVE-B", tasks: ["implementation"], write_set: ["src/b/**"] },
+  }, ["| TASK-WAVE-A | 🔨 |", "| TASK-WAVE-B | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+
+  const alpha = path.join(f.root, ".worktrees", "wave-order", "alpha");
+  const beta = path.join(f.root, ".worktrees", "wave-order", "beta");
+  fs.mkdirSync(path.dirname(alpha), { recursive: true });
+  for (const [target, branch] of [[alpha, "codex/wave-order/alpha"], [beta, "codex/wave-order/beta"]]) {
+    const added = spawnSync("git", ["worktree", "add", "-b", branch, target, f.head], {
+      cwd: f.root,
+      encoding: "utf8",
+    });
+    assert.equal(added.status, 0, added.stderr || added.stdout);
+  }
+
+  result = f.run(
+    "claim", "alpha:implementation", "--agent", "agent-a",
+    "--isolation", "worktree", "--workspace-root", alpha,
+    "--branch", "codex/wave-order/alpha", "--base-sha", f.head,
+    "--wave-id", "wave-order", "--merge-index", "0",
+  );
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  result = f.run(
+    "claim", "beta:implementation", "--agent", "agent-b",
+    "--isolation", "worktree", "--workspace-root", beta,
+    "--branch", "codex/wave-order/beta", "--base-sha", f.head,
+    "--wave-id", "wave-order", "--merge-index", "0",
+  );
+  assert.equal(result.status, 2, "a wave must reject duplicate merge_index values");
+  assert.match(result.stderr + result.stdout, /merge.index|wave|duplicate|合并顺序/i);
+});
+
+test("scheduler fails closed when progress topology no longer matches modules config", () => {
+  const f = initAutonomousFixture("progress-topology-drift-", {
+    alpha: { task_id: "TASK-ALPHA", tasks: ["work"], write_set: ["src/a/**"] },
+    beta: { task_id: "TASK-BETA", tasks: ["work"], write_set: ["src/b/**"] },
+  }, ["| TASK-ALPHA | 🔨 |", "| TASK-BETA | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  fs.writeFileSync(path.join(f.proc, "modules.config.json"), JSON.stringify({ modules: {
+    alpha: { task_id: "TASK-ALPHA", tasks: ["review"], write_set: ["docs/a.md"] },
+  } }));
+
+  result = f.run("batch", "--json", "2");
+  assert.equal(result.status, 2, "stale progress topology must not schedule obsolete work");
+  assert.match(result.stderr + result.stdout, /generate|topology|modules\.config|drift|队列.*漂移/i);
+});
+
+test("batch conflict detection follows core.ignorecase", () => {
+  const f = initAutonomousFixture("progress-ignorecase-", {
+    alpha: { task_id: "TASK-CASE-A", tasks: ["work"], write_set: ["src/Feature.ts"] },
+    beta: { task_id: "TASK-CASE-B", tasks: ["work"], write_set: ["src/feature.ts"] },
+  }, ["| TASK-CASE-A | 🔨 |", "| TASK-CASE-B | 🔨 |"]);
+  spawnSync("git", ["config", "core.ignorecase", "true"], { cwd: f.root });
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  result = f.run("batch", "--json", "2");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.equal(JSON.parse(result.stdout).tasks.length, 1);
+});
+
+test("parallel claim binds permissions to the committed modules config", () => {
+  const f = initAutonomousFixture("progress-config-base-", {
+    delivery: { task_id: "TASK-CONFIG-BASE", tasks: ["implementation"], write_set: ["src/safe/**"] },
+  }, ["| TASK-CONFIG-BASE | 🔨 |"]);
+  let result = f.run("generate");
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const workspace = path.join(f.root, ".worktrees", "config-base", "delivery");
+  fs.mkdirSync(path.dirname(workspace), { recursive: true });
+  const added = spawnSync("git", ["worktree", "add", "-b", "codex/config-base", workspace, f.head], {
+    cwd: f.root,
+    encoding: "utf8",
+  });
+  assert.equal(added.status, 0, added.stderr || added.stdout);
+  fs.writeFileSync(path.join(f.proc, "modules.config.json"), JSON.stringify({ modules: {
+    delivery: { task_id: "TASK-CONFIG-BASE", tasks: ["implementation"], write_set: ["src/**"] },
+  } }));
+  result = f.run(
+    "claim", "delivery:implementation", "--agent", "agent-config",
+    "--isolation", "worktree", "--workspace-root", workspace,
+    "--branch", "codex/config-base", "--base-sha", f.head,
+    "--wave-id", "wave-config", "--merge-index", "0",
+  );
+  assert.equal(result.status, 2, "an uncommitted boundary expansion must not enlarge a lease");
+  assert.match(result.stderr + result.stdout, /modules\.config|base.sha|commit|replan/i);
 });

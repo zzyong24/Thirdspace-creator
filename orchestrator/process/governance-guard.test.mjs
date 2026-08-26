@@ -136,13 +136,109 @@ test("其他 task 的 ledger entry 不能替当前 task 授权新协议", () => 
   fs.writeFileSync(path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json"), JSON.stringify({
     schema: "complexity-ledger/v1",
     entries: [{
-      task_id: "OTHER-TASK", files: [rel], categories: ["evidence_protocol"], disposition: "in-budget",
+      task_id: "OTHER-TASK", files: [rel], file_sha256: createHash("sha256").update(fs.readFileSync(path.join(root, rel))).digest("hex"),
+      categories: ["evidence_protocol"], disposition: "in-budget",
     }],
   }));
 
   const result = run(root, ["task-preflight", "--root", root, "--task", "CURRENT-TASK", "--write-set", rel]);
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout + result.stderr, /evidence_protocol/);
+});
+
+test("物理 marker 只看所在 clause：既有 Keychain + 新 UI 或明确否定都不触发", () => {
+  const root = fixture();
+  const rel = "docs/features/settings/KEYCHAIN_COMPAT_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "The adapter reuses the existing Keychain integration.",
+    "This task adds a new user-facing label.",
+    "It does not introduce a Keychain, credential store, or key store.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "SETTINGS-KEYCHAIN", "--write-set", rel]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test("replace/migrate 既有能力为新 XPC broker 仍是新增物理机制", () => {
+  const root = fixture();
+  const rel = "docs/features/credentials/CREDENTIAL_MIGRATION_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), "Replace the existing Keychain integration with an XPC credential broker and migrate writes into that process.\n");
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "CREDENTIAL-MIGRATION", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /credential_store/);
+  assert.match(result.stdout + result.stderr, /ipc/);
+});
+
+test("EvidenceProtocol 的 owner/store/state/operations 声明无需写 new 也必须触发", () => {
+  const root = fixture();
+  const rel = "docs/features/approvals/DECLARATIVE_PROTOCOL_SPEC.md";
+  fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+  fs.writeFileSync(path.join(root, rel), [
+    "EvidenceProtocolV2 is owned by ApprovalService.",
+    "It persists proof records in EvidenceProtocolStore.",
+    "Runtime states are pending, verified, and revoked.",
+    "Operations issueProof, verifyProof, and revokeApproval mutate the protocol.",
+    "",
+  ].join("\n"));
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "APPROVALS-DECLARATIVE", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /evidence_protocol/);
+});
+
+test("task-preflight 缺 task 或 write-set 时 fail-closed", () => {
+  const root = fixture();
+  let result = run(root, ["task-preflight", "--root", root, "--write-set", "PRODUCT_SPEC.md"]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /--task/i);
+
+  result = run(root, ["task-preflight", "--root", root, "--task", "TASK-BOUND"]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /--write-set/i);
+});
+
+test("同 task ledger entry 必须绑定当前文件 hash，不能覆盖后续新增协议", () => {
+  const root = fixture();
+  const rel = "docs/features/approvals/HASH_BOUND_SPEC.md";
+  const file = path.join(root, rel);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, "Create an independent attestation protocol owned by ApprovalService.\n");
+  const oldHash = createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+  fs.writeFileSync(path.join(root, "orchestrator", "COMPLEXITY_LEDGER.json"), JSON.stringify({
+    schema: "complexity-ledger/v1",
+    entries: [{ task_id: "APPROVALS-HASH", files: [rel], file_sha256: oldHash, categories: ["evidence_protocol"], disposition: "in-budget" }],
+  }));
+  fs.appendFileSync(file, "Implement EvidenceProtocolV2 with a separate owner, store, states, and issueProof/verifyProof operations.\n");
+
+  const result = run(root, ["task-preflight", "--root", root, "--task", "APPROVALS-HASH", "--write-set", rel]);
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /hash|evidence_protocol|ledger/i);
+});
+
+test("historical baseline source 与 marker JSON 都不能逃逸项目根目录", () => {
+  const root = fixture();
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "governance-outside-"));
+  const source = path.join(outside, "OUTSIDE_SPEC.md");
+  fs.writeFileSync(source, "independent attestation protocol\n");
+  const escapedSource = path.relative(root, source);
+
+  let result = run(root, ["baseline-marker", "--root", root, "--task", "ESCAPE", "--file", escapedSource, "--reason", "must stay inside"]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /outside|project root|escape/i);
+
+  const markerFile = path.join(outside, "marker.json");
+  fs.writeFileSync(markerFile, JSON.stringify({
+    schema: "governance-historical-baseline/v1", status: "quarantined", task_id: "ESCAPE",
+    file: escapedSource, file_sha256: createHash("sha256").update(fs.readFileSync(source)).digest("hex"),
+    categories: ["evidence_protocol"], rev_add_ids: [], threat_tuples: [], reason: "must stay inside",
+  }));
+  result = run(root, ["baseline-apply", "--root", root, "--marker", path.relative(root, markerFile)]);
+  assert.equal(result.status, 2, result.stdout + result.stderr);
+  assert.match(result.stdout + result.stderr, /outside|project root|escape/i);
 });
 
 test("T-029 历史 governance 污染不阻断只写 T-024 write-set 的 task preflight", () => {

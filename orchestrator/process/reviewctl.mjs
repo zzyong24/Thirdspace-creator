@@ -1036,6 +1036,13 @@ export function auditReviewReceipts({ root, backlogFile }) {
         errors.push(`${event.task_id}: ${event.review_cycle_decision} is a legacy unbound review-cycle authorization — fail-closed; history is preserved, issue a new task/hash/change-bound capability for any future cycle`);
       }
       for (const finding of event.packet?.findings ?? []) {
+        // threat_model_id became mandatory after legacy review events had already
+        // been sealed into the append-only chain.  Re-validate approvals that
+        // were actually recorded (so revocation still fails closed), but do not
+        // retroactively invent a threat binding for an immutable legacy event.
+        // Any new review cycle still passes validatePacket(), where a current
+        // security blocker/major without threat_model_id is rejected.
+        if (!Object.prototype.hasOwnProperty.call(finding, "threat_model_id")) continue;
         for (const message of validateThreatBinding(root, finding)) {
           errors.push(`${event.task_id}: historical review ${message}`);
         }

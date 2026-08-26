@@ -4,6 +4,7 @@ Project-agnostic mechanisms for making the orchestrator's control artifacts mach
 project-specific files per project** — never commit one project's config into this skill.
 
 ## Generic (shipped by the skill — reusable as-is)
+- `delivery-phase.mjs` — lifecycle switch. Fresh projects are `buildout`: no formal-review queue, sidecar, or heterogeneous cadence; executable verification and real acceptance remain. `promote --decision DEC-xxx` is a one-way move to `maintenance`, bound to a clean Git baseline and user-owned decision. Missing legacy field resolves to maintenance compatibility, never silent weakening.
 - `reconcile.mjs` — drift detector / executable gate (manifest ↔ git/fs reality, blocking-consistency, staleness). Reads `reconcile.config.json`. Invokes `orphan-scan.mjs` and folds its verdict in.
 - `reviewctl.mjs` — convergent SPEC-review ledger. Validates stable findings and legal recheck deltas,
   computes verdicts, keeps one compact current snapshot, appends a hash-chained round history, and binds
@@ -15,7 +16,7 @@ project-specific files per project** — never commit one project's config into 
   allowlisted `frontend_verify_commands[verify_key]` at the report's exact HEAD, requires clean declared
   `watched_paths`, records command/output hashes, and writes a report receipt; reconcile invalidates it
   after watched-code, contract, report, event, or config drift.
-- `taskctl.mjs` — supported state-transition entry. `start` uses the review allowlist/receipt; a UI
+- `taskctl.mjs` — supported state-transition entry. `buildout` starts with review `—`; maintenance `start` uses the review allowlist/receipt. A UI
   `complete` with `验收=待验` accepts only a valid frontend report. BACKLOG + event updates are transactional
   on ordinary filesystem failures.
 - `research-gate.mjs` — BUILD-time uncertainty circuit breaker. `observe` records a project-defined failure family
@@ -30,7 +31,8 @@ project-specific files per project** — never commit one project's config into 
   file drift, marker drift, or a new marker is red again. Complexity detection treats reuse, compatibility,
   delegation, and negative declarations as non-expanding; an evidence protocol blocks only on an explicit new
   mechanism declaration or local owner/persistence/state/operation signals. Bare domain words are not mechanisms,
-  and a ledger entry for another task cannot authorize the selected task.
+  and ledger coverage binds the selected task plus the exact current file SHA-256. Missing task/write-set CLI
+  bindings, stale category grants, and historical-baseline paths outside the project fail closed.
 - `strict-receipts-migrate.mjs` — explicit old-project migration. `check` reports missing policy/columns;
   `apply` adds receipt columns and sets `receipt_policy=required` as one crash-recoverable transaction. Active
   tasks default to `待验`; only IDs explicitly passed through `--non-ui` receive `—`.
@@ -43,7 +45,8 @@ project-specific files per project** — never commit one project's config into 
   Concurrent agents fail explicitly before committing stale BACKLOG/event snapshots; a killed owner's
   stale lock is never auto-stolen.
 - `orphan-scan.mjs` — EXECUTABLE bidirectional orphan scan. Parses the canonical ` ```id-registry ` / ` ```traceability ` blocks in `ID_REGISTRY.md` + `TRACEABILITY_MATRIX.md` and COMPUTES both directions (downstream→upstream orphans; upstream→downstream broken chains). Exit 0 clean · 1 broken/non-canonical · 2 missing. Stack-agnostic — reads optional `orphan-scan.config.json` (prefixes/statuses/paths). The verdict is computed by code, not trusted from a paragraph.
-- `progress.mjs` — per-module task queue driver (generate/status/next/schedule/show/batch/claim/release/done).
+- `progress.mjs` — per-module task queue; `batch` computes a deterministic W/W + W/R + exclusive-resource-safe set, while main-session claims bind the execution lease.
+- `parallel-isolation.mjs` — proves shared/branch/worktree selection and rejects stale, wrong-branch, multi-commit, control-plane, or out-of-write-set candidates before serial integration.
   `schedule` runs task-scoped delivery watchdog checks: a polluted task is quarantined from that ready set while
   an independent dependency-ready task remains runnable; historical debt is not a repository-wide stop. Ordered
   multi-step tasks may declare `step_depends_on`: a present step key replaces the legacy module `depends_on`, while
@@ -71,7 +74,7 @@ project-specific files per project** — never commit one project's config into 
   probes only from this project's current manifest and real artifact paths.
 - `cp orphan-scan.config.example.json orphan-scan.config.json` → set `control_dir` (where `ID_REGISTRY.md`/`TRACEABILITY_MATRIX.md` live) and, only if your stack differs, the id-prefix/status sets. Defaults work as-is for the JS/TS reference stack; the file is optional.
 
-Fresh init sets `"receipt_policy": "required"` and scaffolds both BACKLOG receipt columns. Missing or explicit
+Fresh init sets `"delivery_phase": "buildout"` plus `"receipt_policy": "required"`; the latter protects machine receipts but does not mean formal review is mandatory. Missing or explicit
 `legacy` policy remains readable for inspection/blocking but cannot `start` or `complete`, and reconcile returns
 non-zero. Upgrade never invents receipts: run
 `node orchestrator/process/strict-receipts-migrate.mjs check`, then `apply --non-ui <explicit-ids>`.
@@ -95,8 +98,8 @@ This mirrors Harness's pre-execute → execute → post-execute → result separ
 specific tool. Direct shell/IDE writes can bypass hooks; `taskctl` is the normal write path and reconcile/CI is the
 detection backstop. A post observer cannot undo a completed tool call and must never be advertised as doing so.
 
-## ⚠️ The done-signal lesson (2026-06-22)
+## ⚠️ The done-signal invariant
 Define each task's `done_signals` against the layer the **app actually uses**. Verify where real
 persistence/UI/data live BEFORE writing signals. A wrong path makes the queue report "missing" work that
 already exists elsewhere → an agent builds it in the wrong layer → dead code. A green queue must mean the
-real thing is done. (This exact mistake happened once; that's why `progress.mjs` and the example carry the warning.)
+real thing is done.

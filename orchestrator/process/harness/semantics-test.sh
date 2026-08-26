@@ -11,6 +11,7 @@
 #   ④ `progress.mjs generate` preserves e2e_verified across regenerations
 #   ⑤ verify-task.sh with NO configured command for the step → explicit error, exit 1 (no guessed default)
 #   ⑥ L2 preflight with missing progress/modules → fail-closed before iteration zero
+#   ⑦ buildout skips formal multi-review; maintenance keeps the fail-closed review gate
 set -uo pipefail
 HARNESS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROC_DIR="$(dirname "$HARNESS_DIR")"
@@ -26,9 +27,11 @@ new_fixture(){ # builds an orchestrator-shaped throwaway repo root; echoes its p
   cp "$PROC_DIR/progress.mjs" "$fix/orchestrator/process/"
   cp "$PROC_DIR/autonomy-guard.mjs" "$fix/orchestrator/process/"
   cp "$PROC_DIR/governance-guard.mjs" "$fix/orchestrator/process/"
+  cp "$PROC_DIR/state-lock.mjs" "$fix/orchestrator/process/"
+  cp "$PROC_DIR/delivery-phase.mjs" "$fix/orchestrator/process/"
   cp "$HARNESS_DIR/run.sh" "$HARNESS_DIR/verify-task.sh" "$fix/orchestrator/process/harness/"
   cat >"$fix/orchestrator/process/modules.config.json" <<'JSON'
-{ "modules": { "alpha": { "tasks": ["repo", "frontend"] } } }
+{ "modules": { "alpha": { "tasks": ["repo", "frontend"], "write_set": ["src/alpha/**"], "read_set": [] } } }
 JSON
   echo "$fix"
 }
@@ -119,6 +122,24 @@ if [ "$rc" = "1" ] && grep -Eq 'autonomous state|preflight failed' <<<"$out" && 
   ok "rc=1 and L2 missing queue/config is named before iteration zero"
 else
   ko "expected fail-closed L2 preflight (got rc=$rc)"; echo "$out" | sed 's/^/    | /'
+fi
+
+echo "▶ ⑦ buildout skips formal review; maintenance keeps it"
+F7=$(new_fixture); FIXTURES+=("$F7"); write_progress "$F7"
+printf '%s\n' '{"delivery_phase":"buildout"}' > "$F7/orchestrator/process/reconcile.config.json"
+rc=$( ( cd "$F7" && source orchestrator/process/harness/run.sh && claude_role(){ return 99; } && phase_review cadence ) >"$F7/phase-review.out" 2>&1; echo $? )
+if [ "$rc" = "0" ] && grep -q "buildout.*skip" "$F7/phase-review.out"; then
+  ok "buildout returns clean without invoking formal reviewers"
+else
+  ko "expected buildout formal-review skip (got rc=$rc)"; sed 's/^/    | /' "$F7/phase-review.out" 2>/dev/null
+fi
+
+printf '%s\n' '{"delivery_phase":"maintenance"}' > "$F7/orchestrator/process/reconcile.config.json"
+rc=$( ( cd "$F7" && source orchestrator/process/harness/run.sh && claude_role(){ :; } && phase_review cadence ) >"$F7/phase-review.out" 2>&1; echo $? )
+if [ "$rc" = "1" ] && grep -q "silent reviewers" "$F7/phase-review.out"; then
+  ok "maintenance still fails closed on silent reviewers"
+else
+  ko "expected maintenance review HOLD (got rc=$rc)"; sed 's/^/    | /' "$F7/phase-review.out" 2>/dev/null
 fi
 
 echo
