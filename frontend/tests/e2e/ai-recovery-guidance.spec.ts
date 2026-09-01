@@ -1,9 +1,58 @@
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
 import { expect, test } from "../helpers/test-environment";
 
 const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
+const visibleCopyPath = resolve(
+  process.cwd(),
+  "../orchestrator/evidence/T-913-visible-copy.json",
+);
+const visibleCopyCaptures: Array<{
+  checkpoint: string;
+  check_ids: string[];
+  viewport: { width: number; height: number };
+  text: string;
+}> = [];
+
+test.describe.configure({ mode: "serial" });
+
+test.afterAll(() => {
+  const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
+    cwd: resolve(process.cwd(), ".."),
+    encoding: "utf8",
+  }).trim();
+  mkdirSync(resolve(visibleCopyPath, ".."), { recursive: true });
+  writeFileSync(
+    visibleCopyPath,
+    `${JSON.stringify(
+      {
+        schema: "frontend-visible-copy/v1",
+        task_id: "T-913",
+        commit_sha: commitSha,
+        captures: visibleCopyCaptures,
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+});
+
+async function captureVisibleCopy(
+  page: Page,
+  checkpoint: string,
+  checkIds: string[],
+) {
+  visibleCopyCaptures.push({
+    checkpoint,
+    check_ids: checkIds,
+    viewport: page.viewportSize()!,
+    text: await page.locator("body").innerText(),
+  });
+}
 
 async function selectFreshAccount(
   page: Page,
@@ -83,6 +132,10 @@ test("E2E-T913-01 模型未配置时直接打开模型配置", async ({ page, ba
   const settings = card.locator('[data-slot="copilot-error-settings-link"]');
   await expect(settings).toHaveAttribute("href", "/settings?highlight=text-model");
   await page.waitForTimeout(300);
+  await captureVisibleCopy(page, "model-setup-regular", [
+    "AC-AI-MODEL-SETTINGS",
+    "AC-AI-COPY-SAFE",
+  ]);
   await card.screenshot({
     path: resolve(process.cwd(), "../.codex-tmp/t913-model-recovery.png"),
   });
@@ -124,6 +177,10 @@ test("E2E-T913-02 定位缺失时直达定位中心", async ({ page, baseURL }) 
     await scroll.evaluate((element) => element.scrollWidth <= element.clientWidth),
   ).toBe(true);
   await page.waitForTimeout(300);
+  await captureVisibleCopy(page, "positioning-missing-minimum", [
+    "AC-AI-POSITIONING",
+    "AC-AI-COPY-SAFE",
+  ]);
   await card.screenshot({
     path: resolve(process.cwd(), "../.codex-tmp/t913-positioning-recovery-compact.png"),
   });
@@ -150,6 +207,10 @@ test("E2E-T913-03 自带 AI 额度不足时只显示真实额度入口", async (
   await expect(card.getByRole("button", { name: "查看额度并充值" })).toBeVisible();
   await expect(card.locator('[data-slot="copilot-error-settings-link"]')).toHaveCount(0);
   await expect(card.locator('[data-slot="copilot-error-retry"]')).toHaveCount(0);
+  await captureVisibleCopy(page, "managed-ai-credits-regular", [
+    "AC-AI-CREDITS",
+    "AC-AI-COPY-SAFE",
+  ]);
 });
 
 test("E2E-T913-04 / E2E-T913-05 未知故障可重试且不泄露内部状态", async ({
@@ -173,6 +234,10 @@ test("E2E-T913-04 / E2E-T913-05 未知故障可重试且不泄露内部状态", 
   await expect(card).toContainText("这次没有生成成功");
   await expect(card).toContainText("刚才输入的内容还在");
   await expect(card).not.toContainText(/activation|Growth|authority|API Key|opaque/i);
+  await captureVisibleCopy(page, "unknown-error-regular", [
+    "AC-AI-UNKNOWN-RETRY",
+    "AC-AI-COPY-SAFE",
+  ]);
   await card.locator('[data-slot="copilot-error-retry"]').click();
   await expect.poll(() => attempts).toBe(2);
 });
