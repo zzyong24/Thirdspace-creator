@@ -63,7 +63,7 @@ describe("ChatDistillCard", () => {
     expect(card.textContent).toContain("内容安全审核");
     const link = q<HTMLAnchorElement>(container, "chat-distill-settings-link");
     expect(link).not.toBeNull();
-    expect(link!.getAttribute("href")).toBe("/settings");
+    expect(link!.getAttribute("href")).toBe("/settings?highlight=text-model");
     expect(q(container, "knowledge-distill-batch")).toBeNull();
   });
 

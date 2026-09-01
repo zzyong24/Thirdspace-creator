@@ -12,13 +12,42 @@ import type { ArtifactType } from "@/types/domain";
 // 命中 → 人话 + suggestSwitchModel;不命中 → null(调用方回落原串,不装懂)。
 
 describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
+  it("模型尚未配置 → 归入可恢复的 AI 设置状态，不透出凭据术语", () => {
+    for (const raw of [
+      "LlmCredentialError: 无可用 LLM 凭据",
+      "MODEL_NOT_CONFIGURED",
+      "尚未配置 API Key",
+    ]) {
+      expect(humanizeAiErrorMessage(raw)).toMatchObject({
+        code: "model_not_configured",
+        message: "还没有可用的 AI 模型。完成设置后，回到这里即可继续。",
+        suggestSwitchModel: true,
+      });
+    }
+  });
+
+  it("定位缺失 → 归入定位恢复状态，不误导用户修改模型", () => {
+    for (const raw of [
+      "POSITIONING_MISSING",
+      "当前账号缺少可用定位，请先完成定位后重试",
+      "当前账号还没有可用定位。先生成并保存一版定位，再回来继续。",
+    ]) {
+      expect(humanizeAiErrorMessage(raw)).toMatchObject({
+        code: "positioning_required",
+        message: "当前账号还没有可用定位。先生成并保存一版定位，再回来继续。",
+        suggestSwitchModel: false,
+        suggestOpenPositioning: true,
+      });
+    }
+  });
+
   it("DeepSeek model not found → 稳定模型分类 + 设置指引", () => {
     const human = humanizeAiErrorMessage(
       "AI_APICallError: 404 model not found: deepseek-v4-flash",
     );
     expect(human).not.toBeNull();
     expect(human!.code).toBe("model_not_found");
-    expect(human!.message).toContain("模型名");
+    expect(human!.message).toContain("模型配置");
     expect(human!.message).toContain("设置");
     expect(human!.suggestSwitchModel).toBe(true);
   });
@@ -53,7 +82,7 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
       "unsupported_provider: provider 'deepseek-v5' not found",
     );
     expect(human?.code).toBe("provider_invalid");
-    expect(human?.message).toContain("模型服务商");
+    expect(human?.message).toContain("AI 设置");
     expect(human?.suggestSwitchModel).toBe(true);
   });
 
@@ -64,7 +93,8 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
     ]) {
       const human = humanizeAiErrorMessage(raw);
       expect(human?.code).toBe("provider_auth");
-      expect(human?.message).toContain("API Key");
+      expect(human?.message).toContain("AI 设置");
+      expect(human?.message).not.toContain("API Key");
       expect(human?.suggestSwitchModel).toBe(true);
     }
   });
@@ -74,8 +104,8 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
       "Failed after 3 attempts. AI_APICallError: input new_sensitive (1026)";
     const human = humanizeAiErrorMessage(raw);
     expect(human).not.toBeNull();
-    expect(human!.message).toContain("内容安全审核");
-    expect(human!.message).toContain("换一个模型");
+    expect(human!.message).toContain("暂时无法生成");
+    expect(human!.message).toContain("更换模型");
     expect(human!.suggestSwitchModel).toBe(true);
   });
 
@@ -89,7 +119,7 @@ describe("humanizeAiErrorMessage — 错误码 → 人话", () => {
     const human = humanizeAiErrorMessage("Request failed: rate limit exceeded (1002)");
     expect(human).not.toBeNull();
     expect(human!.code).toBe("rate_limited");
-    expect(human!.message).toContain("限流");
+    expect(human!.message).toContain("频繁");
     expect(human!.suggestSwitchModel).toBe(false);
   });
 
@@ -156,7 +186,7 @@ describe("describeUserError — 通用面向用户错误收口", () => {
 
   it("AI 类错(命中 humanize)→ 返人话,不返裸串", () => {
     const err = new Error("AI_APICallError: input new_sensitive (1026)");
-    expect(describeUserError(err)).toContain("内容安全审核");
+    expect(describeUserError(err)).toContain("暂时无法生成");
   });
 
   it("普通未知错(识别不出)→ 返 fallback,绝不泄露裸 err.message", () => {
@@ -236,9 +266,9 @@ describe("describeUserError — 通用面向用户错误收口", () => {
   });
 
   it("后端刻意抛的中文人话短句 → 透传(策展文案,非裸机器码)", () => {
-    // 后端为特定流程精心写的面向用户中文短句应保留(否则丢掉「去配凭据」等指引)。
+    // 模型未配置属于已知可恢复状态，应先翻译，不把 LLM/凭据等内部术语透出。
     expect(describeUserError(new Error("无可用 LLM 凭据"))).toBe(
-      "无可用 LLM 凭据",
+      "还没有可用的 AI 模型。完成设置后，回到这里即可继续。",
     );
     expect(describeUserError(new Error("阶段核心交付物缺失"))).toBe(
       "阶段核心交付物缺失",

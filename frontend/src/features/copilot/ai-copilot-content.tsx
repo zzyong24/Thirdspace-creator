@@ -1163,9 +1163,11 @@ export function AICopilotContent({
     if (!error && !composerLifecycleError) return null;
     if (!error && composerLifecycleError) {
       return {
+        title: "这次没有生成成功",
         message: composerLifecycleError,
         suggestSwitchModel: false,
         suggestOpenCredits: false,
+        suggestOpenPositioning: false,
         canRetry: true,
       };
     }
@@ -1178,22 +1180,51 @@ export function AICopilotContent({
         retryableScriptPatchRequest?.functionKey === "script.patch") &&
       !human?.suggestOpenCredits &&
       !chatApiPublicError;
+    const publicMessage =
+      (terminalScriptSelectionError
+        ? "稿面版本已经变化，本次局部改写已结束。你可以继续普通对话；如需改这一段，请在当前稿面重新点一次“AI 改写本段”。"
+        : null) ??
+      human?.message ??
+      chatApiPublicError ??
+      (localPatchWasPreserved
+        ? "本次局部改写中断，稿面未被修改，目标段落已保留。请直接重试。"
+        : null) ??
+      describeUserError(error, "出错了，请重试。");
+    const suggestSwitchModel =
+      human?.suggestSwitchModel ?? /在设置里换一个模型/.test(raw);
+    const suggestOpenCredits = human?.suggestOpenCredits ?? false;
+    const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
+    const isMissingModel = human?.code === "model_not_configured";
     return {
-      // [T-133] 命中 AI 人话优先;否则走通用收口(结构化码人话 / fallback),
-      // 绝不把裸 raw 机器码渲进错误气泡。
-      message:
-        (terminalScriptSelectionError
-          ? "稿面版本已经变化，本次局部改写已结束。你可以继续普通对话；如需改这一段，请在当前稿面重新点一次“AI 改写本段”。"
-          : null) ??
-        human?.message ??
-        chatApiPublicError ??
-        (localPatchWasPreserved
-          ? "本次局部改写中断，稿面未被修改，目标段落已保留。请直接重试。"
-          : null) ??
-        describeUserError(error, "出错了，请重试。"),
-      suggestSwitchModel: human?.suggestSwitchModel ?? /在设置里换一个模型/.test(raw),
-      suggestOpenCredits: human?.suggestOpenCredits ?? false,
-      canRetry: !terminalScriptSelectionError,
+      title: suggestOpenCredits
+        ? "AI 额度需要补充"
+        : suggestOpenPositioning
+          ? "先完成账号定位"
+          : isMissingModel
+            ? "完成 AI 设置后继续"
+            : suggestSwitchModel
+              ? "检查 AI 设置后继续"
+              : terminalScriptSelectionError
+                ? "这次局部改写已结束"
+                : "这次没有生成成功",
+      // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
+      message: suggestOpenCredits
+        ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
+        : suggestOpenPositioning
+          ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
+          : suggestSwitchModel
+            ? "刚才输入的内容已经保留。完成设置后，回来即可继续。"
+            : terminalScriptSelectionError || localPatchWasPreserved
+              ? publicMessage
+              : "刚才输入的内容还在，可以直接再试一次。",
+      suggestSwitchModel,
+      suggestOpenCredits,
+      suggestOpenPositioning,
+      canRetry:
+        !terminalScriptSelectionError &&
+        !suggestOpenCredits &&
+        !suggestOpenPositioning &&
+        !suggestSwitchModel,
     };
   }, [
     composerLifecycleError,
@@ -2903,54 +2934,68 @@ export function AICopilotContent({
                 <li
                   data-slot="copilot-error"
                   role="alert"
-                  className="flex max-w-[420px] flex-col gap-1 self-start rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2"
+                  className="flex w-full max-w-[440px] flex-col gap-2 self-start rounded-xl border border-border bg-surface px-3.5 py-3 shadow-sm"
                 >
-                  <span className="text-[12px] leading-relaxed text-destructive">
+                  <strong className="text-[13px] font-semibold text-foreground">
+                    {chatError.title}
+                  </strong>
+                  <span className="text-[12px] leading-relaxed text-muted-foreground">
                     {chatError.message}
                   </span>
-                  {chatError.suggestSwitchModel ? (
-                    <Link
-                      href="/settings"
-                      data-slot="copilot-error-settings-link"
-                      className="self-start text-[11px] font-medium text-brand underline underline-offset-2"
-                    >
-                      去设置换一个模型 →
-                    </Link>
-                  ) : null}
-                  {chatError.suggestOpenCredits ? (
-                    <button
-                      type="button"
-                      data-slot="copilot-error-credits-button"
-                      disabled={openingCredits}
-                      onClick={() => void handleOpenCredits()}
-                      className="self-start rounded-md bg-brand px-2 py-1 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                    >
-                      {openingCredits ? "正在打开…" : "去充值 AI 额度"}
-                    </button>
-                  ) : null}
-                  {creditOpenError && chatError.suggestOpenCredits ? (
-                    <span
-                      data-slot="copilot-error-credits-open-error"
-                      className="text-[11px] text-destructive"
-                    >
-                      {creditOpenError}
-                    </span>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    {chatError.suggestSwitchModel ? (
+                      <Link
+                        href="/settings?highlight=text-model"
+                        data-slot="copilot-error-settings-link"
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        去设置 AI 模型
+                      </Link>
+                    ) : null}
+                    {chatError.suggestOpenPositioning ? (
+                      <Link
+                        href="/positioning"
+                        data-slot="copilot-error-positioning-link"
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        去完成账号定位
+                      </Link>
+                    ) : null}
+                    {chatError.suggestOpenCredits ? (
+                      <button
+                        type="button"
+                        data-slot="copilot-error-credits-button"
+                        disabled={openingCredits}
+                        onClick={() => void handleOpenCredits()}
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        {openingCredits ? "正在打开…" : "查看额度并充值"}
+                      </button>
+                    ) : null}
+                    {creditOpenError && chatError.suggestOpenCredits ? (
+                      <span
+                        data-slot="copilot-error-credits-open-error"
+                        className="text-[11px] text-destructive"
+                      >
+                        {creditOpenError}
+                      </span>
+                    ) : null}
                   {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
                       最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
-                  {chatError.canRetry &&
-                  !chatError.suggestOpenCredits &&
-                  !streaming &&
-                  messages.length > 0 ? (
-                    <button
-                      type="button"
-                      data-slot="copilot-error-retry"
-                      onClick={() => void retryLastTurn()}
-                      className="self-start rounded-md border border-destructive/40 px-2 py-0.5 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                    >
-                      重试
-                    </button>
-                  ) : null}
+                    {chatError.canRetry &&
+                    !chatError.suggestOpenCredits &&
+                    !streaming &&
+                    messages.length > 0 ? (
+                      <button
+                        type="button"
+                        data-slot="copilot-error-retry"
+                        onClick={() => void retryLastTurn()}
+                        className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        重试
+                      </button>
+                    ) : null}
+                  </div>
                 </li>
               ) : null}
               {streaming ? (

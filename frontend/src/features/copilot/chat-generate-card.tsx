@@ -441,7 +441,11 @@ export function ChatGenerateCard({
           </p>
           {showModelSettingsLink ? (
             <a
-              href="/settings?tab=models"
+              href={
+                kindOf === "video"
+                  ? "/settings?highlight=video-model"
+                  : "/settings?highlight=image-model"
+              }
               data-slot="chat-generate-settings-link"
               className="text-[11px] font-medium text-brand underline underline-offset-2"
             >

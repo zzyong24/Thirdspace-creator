@@ -109,7 +109,7 @@ function recoveryMessage(code: string | null | undefined): {
     case "MODEL_NOT_CONFIGURED":
       return {
         text: "还没有可用的转写模型。配置 ASR/转写模型后，再发起转写。",
-        href: "/settings?tab=models",
+        href: "/settings?highlight=asr-model",
         link: "去设置转写模型",
       };
     case "UNSAFE_URL":
@@ -121,7 +121,7 @@ function recoveryMessage(code: string | null | undefined): {
     case "TRANSCRIBE_FAILED":
       return {
         text: "内容已建档，但本次语音转写失败。检查模型或网络后重试。",
-        href: "/settings?tab=models",
+        href: "/settings?highlight=asr-model",
         link: "去设置检查模型",
       };
     default:

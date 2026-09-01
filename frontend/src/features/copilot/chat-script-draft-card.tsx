@@ -400,7 +400,7 @@ export function ChatScriptDraftCard({
             terminalError ?? "",
           ) ? null : (
             <a
-              href="/settings?tab=models"
+              href="/settings?highlight=text-model"
               data-slot="chat-script-settings-link"
               className="text-[11px] font-medium text-brand underline underline-offset-2"
             >

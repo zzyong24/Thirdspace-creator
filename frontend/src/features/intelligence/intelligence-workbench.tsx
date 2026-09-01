@@ -3249,9 +3249,18 @@ function ItemDetail({
                 生成选题候选
               </Button>
               {!positioningReady ? (
-                <p className="mt-2 text-[11px] text-warning">
-                  请先在定位中心保存一版定位。
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p className="text-[11px] text-warning">
+                    当前账号还没有可用定位。
+                  </p>
+                  <a
+                    href="/positioning"
+                    data-slot="radar-positioning-recovery-link"
+                    className="text-[11px] font-medium text-primary underline underline-offset-2"
+                  >
+                    去完成账号定位 →
+                  </a>
+                </div>
               ) : detail.snapshots.length === 0 ? (
                 <p className="mt-2 text-[11px] text-warning">
                   需要先完成一次真实同步，取得来源快照。

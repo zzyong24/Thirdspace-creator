@@ -883,6 +883,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"),
     );
     expect(res.status).toBe(400);
+    expect(res.headers.get("x-conversation-id")).toBe("conv-1");
     const body = await res.json();
     expect(body.error).toBe("模型调用失败，请稍后重试或检查模型配置。");
     expect(JSON.stringify(body)).not.toContain("SECRET_CHANNEL_KEY");

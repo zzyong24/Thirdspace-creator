@@ -187,7 +187,7 @@ describe("ChatDouyinShareCard — T-523 持久父子状态真值", () => {
     const link = container.querySelector(
       '[data-slot="chat-douyin-recovery"] a',
     );
-    expect(link?.getAttribute("href")).toBe("/settings?tab=models");
+    expect(link?.getAttribute("href")).toBe("/settings?highlight=asr-model");
     expect(
       container.querySelector('[data-slot="chat-douyin-child-status"]')
         ?.textContent,

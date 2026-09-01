@@ -17,6 +17,8 @@ import type { ArtifactType } from "@/types/domain";
 
 /** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
 export type AiErrorCode =
+  | "model_not_configured"
+  | "positioning_required"
   | "model_not_found"
   | "image_input_unsupported"
   | "provider_invalid"
@@ -36,6 +38,8 @@ export interface HumanAiError {
   suggestSwitchModel: boolean;
   /** true = 受管平台额度不足，渲染层应打开安全的 Growth 用户额度入口。 */
   suggestOpenCredits?: boolean;
+  /** true = 当前账号定位未完成，渲染层应直达定位中心。 */
+  suggestOpenPositioning?: boolean;
 }
 
 interface AiErrorRule {
@@ -61,6 +65,28 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     },
   },
   {
+    // 本地/用户自配版本尚未完成文本模型设置。规则放在 provider 鉴权前，确保
+    // “尚未配置 API Key”被理解成缺设置，而不是把内部凭据名直接扔给用户。
+    pattern:
+      /\bMODEL_(?:NOT_)?CONFIGURED\b|LlmCredentialError|无可用\s*(?:LLM|AI)?\s*凭据|还没有可用的\s*AI\s*模型|尚未配置[\s\S]{0,24}(?:API\s*Key|模型|密钥)|(?:模型|AI)[\s\S]{0,16}(?:未配置|没有配置)/i,
+    human: {
+      code: "model_not_configured",
+      message: "还没有可用的 AI 模型。完成设置后，回到这里即可继续。",
+      suggestSwitchModel: true,
+    },
+  },
+  {
+    // 目前内容雷达选题任务会稳定落 POSITIONING_MISSING；对话若收到同一人话也走这里。
+    pattern:
+      /\bPOSITIONING_MISSING\b|当前账号(?:缺少|还没有)可用定位|(?:请先|需要先|先)[\s\S]{0,16}(?:完成|保存|生成)[\s\S]{0,10}定位/i,
+    human: {
+      code: "positioning_required",
+      message: "当前账号还没有可用定位。先生成并保存一版定位，再回来继续。",
+      suggestSwitchModel: false,
+      suggestOpenPositioning: true,
+    },
+  },
+  {
     // 不同代理/SDK 对视觉能力不足的错误措辞并不统一；只有同时出现 image/vision
     // 与 unsupported/not support 才命中，避免把普通图片内容错误误报成模型能力问题。
     pattern:
@@ -77,7 +103,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
       /\bmodel_not_found\b|\binvalid_model\b|\bunknown_model\b|\b(?:invalid|unknown)[\s_-]+model\b|\bmodel(?:[\s_-]*name)?\b[\s\S]{0,100}?\b(?:not[\s_-]*(?:found|exist(?:s)?)|does[\s_-]+not[\s_-]+exist|invalid|unknown)\b/i,
     human: {
       code: "model_not_found",
-      message: "模型名无效或不存在,请在设置里检查模型名称。",
+      message: "当前 AI 设置不可用，请检查模型配置后再试。",
       suggestSwitchModel: true,
     },
   },
@@ -87,7 +113,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
       /\b(?:invalid|unknown|unsupported)[\s_-]+provider\b|\b(?:invalid|unknown|unsupported)_provider\b|\bprovider(?:[\s_-]*name)?\b[\s\S]{0,80}?\b(?:not[\s_-]*found|does[\s_-]+not[\s_-]+exist|unknown|unsupported|unavailable)\b/i,
     human: {
       code: "provider_invalid",
-      message: "模型服务商配置无效或不可用,请在设置里检查服务商和接口地址。",
+      message: "当前 AI 设置不可用，请检查模型配置后再试。",
       suggestSwitchModel: true,
     },
   },
@@ -97,7 +123,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
       /\binvalid_api_key\b|\bauthentication_error\b|\bincorrect[\s_-]+api[\s_-]+key\b|\bapi[\s_-]+key\b[\s\S]{0,60}?\b(?:invalid|incorrect|expired|revoked)\b|\b(?:invalid|expired|revoked)\b[\s\S]{0,40}?\bapi[\s_-]+key\b/i,
     human: {
       code: "provider_auth",
-      message: "模型服务商的 API Key 无效、已过期或无权限,请在设置里检查密钥。",
+      message: "当前 AI 设置需要检查。完成设置后再试即可。",
       suggestSwitchModel: true,
     },
   },
@@ -107,7 +133,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     human: {
       code: "content_safety_input",
       message:
-        "内容触发了模型方(MiniMax)的内容安全审核,已重试仍被拦。建议:在设置里换一个模型再试,或删去疑似敏感段落后重试。",
+        "这段内容暂时无法生成。可以调整措辞后重试，或在设置中更换模型。",
       suggestSwitchModel: true,
     },
   },
@@ -117,7 +143,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     human: {
       code: "content_safety_output",
       message:
-        "模型生成的内容触发了模型方(MiniMax)的内容安全审核,结果被拦截。建议:在设置里换一个模型再试,或调整措辞后重试。",
+        "这次生成的内容未能返回。可以调整要求后重试，或在设置中更换模型。",
       suggestSwitchModel: true,
     },
   },
@@ -126,7 +152,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     pattern: /rate[\s_-]*limit|\(1002\)|\(1039\)/i,
     human: {
       code: "rate_limited",
-      message: "模型方限流了(请求太频繁)。稍等几十秒再试;频繁出现可在设置里换一个模型。",
+      message: "请求有些频繁，请稍等片刻再试。",
       suggestSwitchModel: false,
     },
   },
@@ -135,7 +161,7 @@ export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
     pattern: /insufficient[\s_-]*(balance|quota)|\(1008\)|\b1008\b/i,
     human: {
       code: "quota_exhausted",
-      message: "模型方账户余额/配额不足,请求被拒。去模型方平台充值,或在设置里换一个模型。",
+      message: "当前 AI 服务余额不足。请检查模型设置或补充余额后再试。",
       suggestSwitchModel: true,
     },
   },

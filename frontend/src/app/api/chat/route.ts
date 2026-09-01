@@ -1001,6 +1001,14 @@ export async function POST(req: Request): Promise<Response> {
         omitMessage: true,
       })}`,
     );
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(
+      { error: message },
+      {
+        status: 400,
+        // 用户消息在装配模型前已经落库；即使本轮因配置/额度失败，也把会话指针交回客户端。
+        // 用户离开去设置或定位中心后，再打开 AI 助手仍能恢复刚才的输入。
+        headers: conversationId ? { "x-conversation-id": conversationId } : undefined,
+      },
+    );
   }
 }

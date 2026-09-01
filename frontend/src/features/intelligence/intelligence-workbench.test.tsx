@@ -1862,6 +1862,42 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeEnabled();
   });
 
+  it("[T-913] 当前账号没有定位时给出可点击的定位中心恢复入口", () => {
+    render(
+      <IntelligenceWorkbench
+        accountId="account-1"
+        workspace={workspace}
+        items={[]}
+        initialDetail={{
+          ...detail,
+          snapshots: [
+            {
+              id: "snapshot-1",
+              title: "真实作品",
+              capturedAt: "2026-07-23T12:00:00.000Z",
+              finalUrl: detail.item.canonicalUrl,
+            },
+          ],
+          transcript: {
+            ...detail.transcript,
+            status: "done",
+            text: "一段真实逐字稿",
+          },
+        }}
+        positioningVersionId={null}
+        api={api()}
+      />,
+    );
+
+    expect(screen.getByText("当前账号还没有可用定位。")).toBeInTheDocument();
+    const recovery = document.querySelector(
+      '[data-slot="radar-positioning-recovery-link"]',
+    ) as HTMLAnchorElement;
+    expect(recovery).not.toBeNull();
+    expect(recovery.getAttribute("href")).toBe("/positioning");
+    expect(screen.getByRole("button", { name: "生成选题候选" })).toBeDisabled();
+  });
+
   it("[T-622] 逐字稿和选题状态筛选、收藏排序统一交给服务端查询", async () => {
     const stub = api();
     const row = {

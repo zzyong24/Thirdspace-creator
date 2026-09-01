@@ -44,11 +44,11 @@ export function ChatDistillCard({ result }: { result: ChatDistillResult }) {
         </p>
         {result.suggestSwitchModel ? (
           <Link
-            href="/settings"
+            href="/settings?highlight=text-model"
             data-slot="chat-distill-settings-link"
             className="self-start text-[11px] font-medium text-brand underline underline-offset-2"
           >
-            去设置换一个模型 →
+            去设置 AI 模型 →
           </Link>
         ) : null}
         <p className="text-[11px] text-text-subtle">

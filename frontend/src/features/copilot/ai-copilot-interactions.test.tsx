@@ -1138,12 +1138,50 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       { id: "u1", role: "user", parts: [{ type: "text", text: "你好" }] },
     ];
     render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("这次没有生成成功")).toBeInTheDocument();
+    expect(screen.getByText("刚才输入的内容还在，可以直接再试一次。")).toBeInTheDocument();
     const retry = document.querySelector(
       '[data-slot="copilot-error-retry"]',
     ) as HTMLButtonElement;
     expect(retry).not.toBeNull();
     await user.click(retry);
     expect(regenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it("[T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试", () => {
+    mockError = new Error("LlmCredentialError: 无可用 LLM 凭据");
+    mockMessages = [
+      { id: "u1", role: "user", parts: [{ type: "text", text: "帮我生成一版" }] },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+
+    expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
+    expect(screen.getByText("刚才输入的内容已经保留。完成设置后，回来即可继续。")).toBeInTheDocument();
+    const settings = document.querySelector(
+      '[data-slot="copilot-error-settings-link"]',
+    ) as HTMLAnchorElement;
+    expect(settings).not.toBeNull();
+    expect(settings.getAttribute("href")).toBe("/settings?highlight=text-model");
+    expect(settings.textContent).toContain("去设置 AI 模型");
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+  });
+
+  it("[T-913] 定位未完成 → 直达定位中心，不误导去模型设置", () => {
+    mockError = new Error("POSITIONING_MISSING");
+    mockMessages = [
+      { id: "u1", role: "user", parts: [{ type: "text", text: "基于我的定位出题" }] },
+    ];
+    render(<AICopilotContent viewModel={VM} />);
+
+    expect(screen.getByText("先完成账号定位")).toBeInTheDocument();
+    expect(screen.getByText("刚才输入的内容已经保留。保存一版定位后，回来即可继续。")).toBeInTheDocument();
+    const positioning = document.querySelector(
+      '[data-slot="copilot-error-positioning-link"]',
+    ) as HTMLAnchorElement;
+    expect(positioning).not.toBeNull();
+    expect(positioning.getAttribute("href")).toBe("/positioning");
+    expect(document.querySelector('[data-slot="copilot-error-settings-link"]')).toBeNull();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
   });
 
   it("[T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试", async () => {
@@ -1162,10 +1200,11 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     ];
     render(<AICopilotContent viewModel={VM} />);
 
-    expect(screen.getByText("AI 额度不足，请充值后再试。")).toBeInTheDocument();
+    expect(screen.getByText("AI 额度需要补充")).toBeInTheDocument();
+    expect(screen.getByText("刚才输入的内容已经保留。补充额度后，回来即可继续。")).toBeInTheDocument();
     expect(document.querySelector('[data-slot="copilot-error-settings-link"]')).toBeNull();
     expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
-    const recharge = screen.getByRole("button", { name: "去充值 AI 额度" });
+    const recharge = screen.getByRole("button", { name: "查看额度并充值" });
     await user.click(recharge);
 
     await waitFor(() =>
