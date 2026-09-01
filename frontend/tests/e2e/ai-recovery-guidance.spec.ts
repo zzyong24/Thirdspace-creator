@@ -6,6 +6,7 @@ import { expect, test } from "../helpers/test-environment";
 
 const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
+let accountSequence = 0;
 const visibleCopyPath = resolve(
   process.cwd(),
   "../orchestrator/evidence/T-913-visible-copy.json",
@@ -67,7 +68,7 @@ async function selectFreshAccount(
         query: undefined,
         body: {
           platform: "douyin",
-          accountHandle: `@t913-${Date.now()}`,
+          accountHandle: `@t913-${++accountSequence}`,
         },
       },
     },
