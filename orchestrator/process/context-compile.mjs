@@ -461,6 +461,20 @@ function executionEnvironmentSection(controls) {
     .join("\n");
 }
 
+function placementSection(controls) {
+  const forbidden = controls.writeSet.length
+    ? `不得触碰 write_set 之外的路径；当前允许范围仅为 ${controls.writeSet.map((item) => `\`${item}\``).join("、")}`
+    : "read-only：不应触碰任何写路径";
+  return [
+    `1. **谁拥有**：任务绑定 \`${controls.moduleIds.join(", ")}\`；当前步骤 \`${controls.currentStep}\`。`,
+    "2. **前端 / 后端 / 数据 / 宿主边界**：从当前代码树与项目权威确认实际落点；Packet 不替项目发明架构。",
+    "3. **Create / Modify / Test**：首次编辑前，把本次创建、修改、测试文件解析到下方 write_set 内；这是会话内清单，不持久化。",
+    `4. **不应触碰**：${forbidden}；主控制面仅按既有协议由主会话更新。`,
+    `5. **最小验证**：\n${verifySection(controls)}`,
+    "本检查复用现有 task binding、边界与 verify，不新增状态或工件。",
+  ].join("\n");
+}
+
 // ---------- 上下文读取计划 ----------
 // 调用同目录的确定性 planner，Packet 只记路径指针，不展开规则正文。
 function contextReadPlan(currentStep) {
@@ -571,6 +585,10 @@ ${projectContextReads.length ? projectContextReads.map((p) => `- \`${p}\``).join
 ${knowledgeSection()}
 
 ## 6. 任务边界
+
+### 五问落位（无状态）
+
+${placementSection(controls)}
 
 read_set（并行依赖）：
 
