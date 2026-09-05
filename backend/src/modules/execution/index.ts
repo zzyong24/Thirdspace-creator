@@ -162,3 +162,5 @@ export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.
 export { createModelWorkerDispatcher, type ModelWorkerDispatcherDeps } from "./model-worker-dispatcher";
 
 export { createResearchPorts } from "./agentic/adapters/research-ports";
+
+export { createExecutionCheckpointService } from "./execution-checkpoint.service";

@@ -5,6 +5,22 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { createWorkerSupervisor } from "./worker-supervisor";
 const execution = {executionTaskId: "exec-local", attempt: 1, fenceToken: "fence-current"};
 
+// 此文件验证进程/SDK协议，数据库检查点的真实原子性由call-ports集成测试覆盖。
+function checkpointFixture() {
+  let sequence=0;let settled=false;let revision=0;
+  let messages:Array<{role:"assistant";callId:string}>=[];
+  return (port:string,data?:unknown):unknown=>{
+    if(port==="reserveCall")sequence=1;
+    if(port==="settleCall")settled=(data as {status:string}).status==="settled";
+    if(port==="readCheckpoint")return {revision,ledgerSequence:sequence,messages,uncheckpointedReceipts:settled&&!messages.length?[{callId:"call-local",kind:"model",sequence:1,resultText:"真实子进程结果"}]:[],recovery:settled&&!messages.length?"requires_replay":"ready"};
+    if(port==="saveCheckpoint"){
+      expect(data).toEqual({expectedRevision:revision,expectedLedgerSequence:sequence,messages:[{role:"assistant",callId:"call-local"}]});
+      revision++;messages=[{role:"assistant",callId:"call-local"}];return {revision};
+    }
+    return undefined;
+  };
+}
+
 describe("真实独立 Worker 进程", () => {
   beforeAll(() => {
     execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], {stdio: "pipe"});
@@ -23,10 +39,12 @@ describe("真实独立 Worker 进程", () => {
     });
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
     const address = server.address() as {port: number};
+    const checkpoint=checkpointFixture();
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
       async validate(ref) {expect(ref).toEqual(execution);},
       async invoke(_ref, port, data) {
         calls.push(port);
+        const checkpointReply=checkpoint(port,data);if(checkpointReply!==undefined)return checkpointReply;
         if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
         if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "写一段正文", capability: "script", maxOutputTokens: 128, operationKey: "op-local"};
@@ -40,7 +58,7 @@ describe("真实独立 Worker 进程", () => {
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
-      expect(calls).toEqual(["readTaskContext", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "commitResult"]);
+      expect(calls).toEqual(["readTaskContext", "readCheckpoint", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "readCheckpoint", "saveCheckpoint", "commitResult"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
     } finally {await supervisor.stop(); await new Promise<void>(resolve => server.close(() => resolve()));}
@@ -48,9 +66,11 @@ describe("真实独立 Worker 进程", () => {
 
   it.each(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"])("凭据端口 %s 进入等待用户，且不启动供应商调用",async code=>{
     const calls:string[]=[];
+    const checkpoint=checkpointFixture();
     const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
-      async validate(){},async invoke(_ref,port){
+      async validate(){},async invoke(_ref,port,data){
         calls.push(port);
+        const checkpointReply=checkpoint(port,data);if(checkpointReply!==undefined)return checkpointReply;
         if(port==="readTaskContext")return {kind:"model.generate",prompt:"测试",capability:"script",maxOutputTokens:128,operationKey:"credential-error"};
         if(port==="reserveCall")return {callId:"credential-call",status:"reserved"};
         if(port==="resolveModelCredential")throw Object.assign(new Error("private credential detail"),{code});
@@ -63,6 +83,7 @@ describe("真实独立 Worker 进程", () => {
 
   it("旧租约在获取凭据之前被拒绝", async () => {
     const invoke = vi.fn(async () => ({}));
+    const checkpoint=checkpointFixture();
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
       async validate() {throw new Error("STALE_LEASE");}, invoke,
     }});
@@ -93,9 +114,11 @@ describe("真实独立 Worker 进程", () => {
     });
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
     const address = server.address() as {port: number};
+    const checkpoint=checkpointFixture();
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
       async validate() {},
       async invoke(_ref, port, data) {
+        const checkpointReply=checkpoint(port,data);if(checkpointReply!==undefined)return checkpointReply;
         if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
         if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 128, operationKey: "error-op"};
@@ -127,10 +150,12 @@ describe("真实独立 Worker 进程", () => {
     });
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
     const address = server.address() as {port: number};
+    const checkpoint=checkpointFixture();
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
       async validate() {},
       async invoke(_ref, port, data) {
         calls.push({port, data});
+        const checkpointReply=checkpoint(port,data);if(checkpointReply!==undefined)return checkpointReply;
         if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
         if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 128, operationKey: "cancel-op"};

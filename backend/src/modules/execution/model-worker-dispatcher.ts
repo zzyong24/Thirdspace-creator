@@ -1,3 +1,4 @@
+import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
 import { eq,executionTasks,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -28,6 +29,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   const leases=createExecutionLeaseService(db,{now});
   const tasks=createPersistentTaskService(db,{now});
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
+  const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=createExecutionCandidateService(db,deps);
@@ -38,6 +40,8 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="readCheckpoint")return checkpoints.read(ref);
+      if(port==="saveCheckpoint")return checkpoints.save(ref,raw);
       if(port==="reserveGenerationCall")return generation.reserveGenerationCall(ref,raw);
       if(port==="settleGenerationCall")return generation.settleGenerationCall(ref,raw);
       if(port==="saveGenerationResult")return generation.saveGenerationResult(ref,raw);

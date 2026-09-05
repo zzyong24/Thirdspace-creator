@@ -1,3 +1,4 @@
+import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -31,22 +32,33 @@ describe("真实 Worker 与后端持久调用端口", () => {
     const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     return {ref,tasks,ports:createExecutionWorkerCallPorts(db,deps),ledger:createExecutionCallLedgerService(db,deps)};
   }
-  it("真实供应商调用前已持久启动；重启进程不会重放已结算调用",async()=>{
-    const f=await fixture("real-child");
+  it.each([false,true])("真实进程检查点恢复不重放供应商（缺少usage=%s）",async(unknownUsage)=>{
+    const id=`real-child-${unknownUsage}`;
+    const f=await fixture(id);
     let requests=0;let startedBeforeRequest=false;const committedTexts:string[]=[];let failCommit=true;
     const server=createServer(async(req,res)=>{
       requests++;req.resume();
       const state=await f.ledger.inspect(f.ref);startedBeforeRequest=state.calls[0]?.status==="started";
       res.writeHead(200,{"content-type":"text/event-stream"});
-      res.end('data: {"id":"c1","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{"content":"正文"},"finish_reason":null}]}\n\ndata: {"id":"c1","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');
+      const response='data: {"id":"c1","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{"content":"正文"},"finish_reason":null}]}\n\ndata: {"id":"c1","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n';
+      res.end(unknownUsage ? response.replace(',"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}', '') : response);
     });
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
     const address=server.address() as {port:number};
     const leases=createExecutionLeaseService(db);
+    const checkpoints=createExecutionCheckpointService(db);
+    const checkpointReads:Array<{attempt:number;revision:number;messageIds:string[]}>=[];
+    let saves=0;
     const candidates=createExecutionCandidateService(db,{projectCandidate(_ctx,input){return {resultType:"artifact_version",artifactId:"fixture-artifact",resultData:{body:input.text}};}});
     const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
       async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
       async invoke(ref,port,data){
+        if(port==="readCheckpoint") {
+          const result=await checkpoints.read(ref);
+          checkpointReads.push({attempt:ref.attempt,revision:result.revision,messageIds:result.messages.map(m=>m.callId)});
+          return result;
+        }
+        if(port==="saveCheckpoint"){saves++;return checkpoints.save(ref,data);}
         if(port==="readTaskContext")return f.ports.readTaskContext(ref);
         if(port==="reserveCall")return f.ports.reserveCall(ref,data);
         if(port==="startCall")return f.ports.startCall(ref,data);
@@ -63,7 +75,11 @@ describe("真实 Worker 与后端持久调用端口", () => {
     try{
       expect(await supervisor.run(f.ref,Date.now()+30000)).toBe("unknown_result");
       expect(startedBeforeRequest).toBe(true);expect(requests).toBe(1);
-      expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(5);
+      expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(unknownUsage ? null : 5);
+      const saved=await checkpoints.read(f.ref);
+      expect(saved.revision).toBe(1);expect(saved.messages).toHaveLength(1);
+      expect(saved.messages[0]).toMatchObject({role:"assistant",resultText:"正文"});
+      expect(saved.recovery).toBe(unknownUsage ? "requires_reconciliation" : "ready");
       await supervisor.stop();
       await f.tasks.command(ctx,{taskIds:[f.ref.executionTaskId],command:"pause",idempotencyKey:"pause-after-crash"});
       await f.tasks.acknowledgeControl({taskId:f.ref.executionTaskId,workerId:"worker",attempt:f.ref.attempt});
@@ -73,9 +89,11 @@ describe("真实 Worker 与后端持久调用端口", () => {
       f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
       expect(await supervisor.run(f.ref,Date.now()+30000)).toBe("completed");
       expect(committedTexts).toEqual(["正文"]);
-      const results=await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"real-child"));
+      expect(requests).toBe(1);expect(saves).toBe(1);
+      expect(checkpointReads.find(read=>read.attempt===f.ref.attempt)).toEqual({attempt:f.ref.attempt,revision:1,messageIds:[saved.messages[0]!.callId]});
+      const results=await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,id));
       expect(results).toHaveLength(1);expect(results[0]?.resultData).toEqual({body:"正文"});
-      expect((await db.select().from(aiTasks).where(eq(aiTasks.id,"real-child")))[0]?.status).toBe("awaiting_confirmation");
+      expect((await db.select().from(aiTasks).where(eq(aiTasks.id,id)))[0]?.status).toBe("awaiting_confirmation");
       expect(requests).toBe(1);expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);
     }finally{await supervisor.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);

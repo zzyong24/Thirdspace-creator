@@ -3,11 +3,26 @@ import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
 
-function fixture(generate = vi.fn(async () => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number, reservationStatus = "reserved") {
+function fixture(generate = vi.fn(async (): Promise<{text:string;usage:unknown}> => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number, reservationStatus = "reserved", recovery?: "requires_reconciliation") {
   const messages: WorkerMessage[] = [];
+  let settled = false;
+  let unknownUsage = false;
+  let revision = 0;
+  let savedMessages: Array<{role:"assistant";callId:string}> = [];
   const worker = createExecutionWorker({send(message) {
     messages.push(message);
+    if(message.type === "call" && message.port === "settleCall") {
+      const data=message.data as {status:string;usage?:Record<string,unknown>};
+      settled=data.status==="settled";unknownUsage=settled && Object.keys(data.usage ?? {}).length===0;
+    }
+    if(message.type === "call" && message.port === "saveCheckpoint" && rejectPort!=="saveCheckpoint") {
+      const input=message.data as {expectedRevision:number;expectedLedgerSequence:number;messages:typeof savedMessages};
+      expect(input.expectedRevision).toBe(revision);expect(input.expectedLedgerSequence).toBe(1);
+      savedMessages=input.messages;revision++;
+    }
     if (message.type === "call") queueMicrotask(() => worker.receive({version: 1, type: "reply", requestId: message.requestId, ok: message.port !== rejectPort, data:
+      message.port === "readCheckpoint" ? {revision,ledgerSequence:settled?1:0,messages:savedMessages,uncheckpointedReceipts:settled && !savedMessages.length?[{callId:"call-1",kind:"model",sequence:1,resultText:"正文"}]:[],recovery:recovery ?? (unknownUsage ? "requires_reconciliation" : settled && !savedMessages.length?"requires_replay":"ready")} :
+      message.port === "saveCheckpoint" ? {revision} :
       message.port === "readTaskContext" ? {kind: "model.generate", prompt: "写正文", capability: "script", maxOutputTokens: 100, operationKey: "op-1"} :
       message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "private"} : message.port === "reserveCall" ? {callId:"call-1",status:reservationStatus} : message.port === "startCall" ? {callId:"call-1",status:"started"} : {}}));
   }, generate, heartbeatMs});
@@ -20,7 +35,7 @@ describe("独立 Worker 端口生命周期", () => {
     worker.receive(run);
     await vi.waitFor(() => expect(messages.some(x => x.type === "stopped")).toBe(true));
     expect(generate).toHaveBeenCalledTimes(1);
-    expect(messages.filter(x => x.type === "call").map(x => x.port)).toEqual(["readTaskContext", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "commitResult"]);
+    expect(messages.filter(x => x.type === "call").map(x => x.port)).toEqual(["readTaskContext", "readCheckpoint", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "readCheckpoint", "saveCheckpoint", "commitResult"]);
     expect(JSON.stringify(messages)).not.toContain("private");
     worker.close();
   });
@@ -63,7 +78,7 @@ describe("独立 Worker 端口生命周期", () => {
       send(message) {
         messages.push(message);
         if (message.type === "call") queueMicrotask(() => worker.receive({version: 1, type: "reply", requestId: message.requestId,
-          ok: message.port !== "heartbeat", data: message.port === "readTaskContext"
+          ok: message.port !== "heartbeat", data: message.port === "readCheckpoint" ? {revision:0,ledgerSequence:0,messages:[],uncheckpointedReceipts:[],recovery:"ready"} : message.port === "readTaskContext"
             ? {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 100, operationKey: "op"}
             : message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "test"} : message.port === "reserveCall" ? {callId:"call-1",status:"reserved"} : message.port === "startCall" ? {callId:"call-1",status:"started"} : {}}));
       },
@@ -96,6 +111,38 @@ describe("独立 Worker 端口生命周期", () => {
     expect(generate).not.toHaveBeenCalled();
     expect(messages.filter(x=>x.type==="call" && (x.port==="startCall" || x.port==="settleCall"))).toHaveLength(0);
     expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"unknown_result"});
+    worker.close();
+  });
+
+  it("检查点保存失败禁止提交候选或覆盖已结算结果",async()=>{
+    const {worker,messages,generate}=fixture(undefined,"saveCheckpoint");
+    worker.receive(run);
+    await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).toBe(true));
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(messages.filter(x=>x.type==="call" && x.port==="commitResult")).toHaveLength(0);
+    expect(messages.filter(x=>x.type==="call" && x.port==="settleCall")).toHaveLength(1);
+    expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"unknown_result"});
+    worker.close();
+  });
+  it("检查点要求对账时不开始新的供应商调用",async()=>{
+    const {worker,messages,generate}=fixture(undefined,undefined,undefined,"reserved","requires_reconciliation");
+    worker.receive(run);
+    await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).toBe(true));
+    expect(generate).not.toHaveBeenCalled();
+    expect(messages.filter(x=>x.type==="call" && ["reserveCall","startCall","saveCheckpoint"].includes(x.port))).toHaveLength(0);
+    expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"unknown_result"});
+    worker.close();
+  });
+
+  it("有效正文缺少usage仍保存回执并提交，未知预算不触发新调用",async()=>{
+    const generate=vi.fn(async()=>({text:"正文",usage:{}}));
+    const {worker,messages}=fixture(generate);
+    worker.receive(run);
+    await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).toBe(true));
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(messages.filter(x=>x.type==="call" && x.port==="saveCheckpoint")).toHaveLength(1);
+    expect(messages.find(x=>x.type==="call" && x.port==="commitResult")).toMatchObject({data:{outcome:"succeeded",text:"正文"}});
+    expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"completed"});
     worker.close();
   });
 

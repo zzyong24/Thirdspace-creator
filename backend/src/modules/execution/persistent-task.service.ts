@@ -624,6 +624,7 @@ export function createPersistentTaskService(
 
     async saveCheckpoint(input) {
       const current = await getWorkerRow(input);
+      if (current.kind === "ai_task") throw new ConflictError("AI 执行检查点必须使用带 fence 和 revision 的命名端口");
       if (
         !["running", "pause_requested", "cancel_requested"].includes(
           current.status,

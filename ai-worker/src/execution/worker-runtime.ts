@@ -3,8 +3,15 @@ import {
   hostMessageSchema, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
-import type { z } from "zod";
+import { z } from "zod";
 import { GenerationFailure } from "./generation-error";
+
+const modelCheckpointSchema = z.object({
+  revision:z.number().int().nonnegative(), ledgerSequence:z.number().int().nonnegative(),
+  messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string().min(1),resultText:z.string().nullable().optional()})),
+  uncheckpointedReceipts:z.array(z.object({callId:z.string().min(1),kind:z.enum(["model","tool"]),sequence:z.number().int().positive(),resultText:z.string().nullable().optional()})),
+  recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"]),
+});
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
@@ -71,15 +78,41 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason="completed";
         return;
       }
+      const readCheckpoint = async () => {
+        const checkpoint = modelCheckpointSchema.parse(await call(execution,"readCheckpoint",{},signal));
+        if(checkpoint.messages.some(message=>message.role!=="assistant") || checkpoint.uncheckpointedReceipts.some(receipt=>receipt.kind!=="model")) {
+          throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
+        }
+        return checkpoint;
+      };
+      const initialCheckpoint = await readCheckpoint();
+      if(initialCheckpoint.recovery === "requires_reconciliation" && ![...initialCheckpoint.messages,...initialCheckpoint.uncheckpointedReceipts].some(receipt=>receipt.resultText?.trim())) {
+        throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
+      }
+      const checkpointReceipt = async (id:string, checkpoint=initialCheckpoint) => {
+        const messages=checkpoint.messages.map(message=>({role:"assistant" as const,callId:message.callId}));
+        const seen=new Set(messages.map(message=>message.callId));
+        for(const receipt of [...checkpoint.uncheckpointedReceipts].sort((a,b)=>a.sequence-b.sequence)) {
+          if(!seen.has(receipt.callId)){messages.push({role:"assistant",callId:receipt.callId});seen.add(receipt.callId);}
+        }
+        if(!seen.has(id))throw new GenerationFailure("unknown_result","CHECKPOINT_RECEIPT_MISSING");
+        if(messages.length===checkpoint.messages.length)return;
+        const saved=z.object({revision:z.number().int().positive()}).parse(await call(execution,"saveCheckpoint",{
+          expectedRevision:checkpoint.revision,expectedLedgerSequence:checkpoint.ledgerSequence,messages,
+        },signal));
+        if(saved.revision!==checkpoint.revision+1)throw new Error("CHECKPOINT_REVISION_MISMATCH");
+      };
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;
       if (reservation.status === "settled" && reservation.resultText) {
         committing = true;
+        await checkpointReceipt(callId);
         await call(execution, "commitResult", {outcome:"succeeded",callId,text:reservation.resultText}, signal);
         reason = "completed";
         return;
       }
+      if (initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
       if (reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
       const model = workerModelSpecSchema.parse(await call(execution, "resolveModelCredential", {capability: input.capability}, signal));
       signal.throwIfAborted();
@@ -96,6 +129,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       settled = true;
       signal.throwIfAborted();
       committing = true;
+      await checkpointReceipt(callId, await readCheckpoint());
       await call(execution, "commitResult", {outcome: "succeeded", callId, text: result.text}, signal);
       reason = "completed";
     } catch (error) {

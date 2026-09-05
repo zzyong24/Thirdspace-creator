@@ -1,0 +1,59 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T11:26:19.735295+00:00",
+  "status": "durable_checkpoint_service_and_single_generation_consumer_connected",
+  "implemented": [
+    "新增严格检查点命名端口；保存规范消息回执引用、CAS revision和调用序列，不接受Worker自报身份/预算/SDK对象/浏览器句柄",
+    "检查点与租约同父任务事务行锁；同请求重投幂等，旧revision和旧fence拒绝；旧通用checkpoint入口不能覆写ai_task",
+    "消息为真实已结算调用的有序前缀，禁止越过较早未确定调用；工具回执关联模型toolCallId/name，多工具未闭合保持pending",
+    "每次读取重新恢复真实账本预算、已确认消息、未入检查点回执、未完成调用；未知结果/计量或协议不完整须对账",
+    "生产modeldispatcher绑定真实read/save端口；model.generate Worker保存后再提交，重启复用已有结果；有效正文缺usage仍可采纳且预算保持未知"
+  ],
+  "verification": {
+    "backend": {
+      "files": 7,
+      "tests": 50,
+      "status": "PASS",
+      "command": "pnpm --dir backend exec vitest run --maxWorkers=2 src/modules/execution/execution-checkpoint.service.test.ts src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/execution-worker-call-ports.integration.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/model-worker-dispatcher.test.ts src/modules/execution/structured-worker.integration.test.ts"
+    },
+    "worker": {
+      "files": 1,
+      "tests": 14,
+      "status": "PASS"
+    },
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "red_green": {
+      "initial": "缺少service文件导致suite失败，不作为业务红测证据",
+      "review_regressions": "较早在途回执被跳过、缺工具协议误判恢复，两条真实红测失败后修复通过"
+    },
+    "execution_note": "初次7文件并行有1项既有5000ms测试超时，其余49通过；限制测试文件并发为2后同50项全通过，未修改超时阈值或断言",
+    "postgres": {
+      "status": "passed",
+      "independentPools": 2,
+      "concurrentRepeatedSaves": 30,
+      "revisionAfterRepeatedSaves": 1,
+      "competingWrites": 2,
+      "acceptedCompetingWrites": 1,
+      "rejectedCompetingWrites": 1,
+      "recoveredRevision": 2,
+      "recoveredSpentTokens": 30,
+      "oldFenceRejected": true,
+      "postgresVersion": "16.13 (Homebrew)"
+    },
+    "real_process": "真实Worker/SDK与本地HTTP：有usage和无usage两组，save后commit中断，stop与新attempt进程恢复revision1/消息，模型请求均1次、save均1次",
+    "review": "spec_review独立只读检查点/旧入口及Worker消费者均通过；发现的两项回执缺口有真实红绿测试。评审未运行测试"
+  },
+  "limits": [
+    "本次生产消费者仅model.generate；structured维持既有持久生成回执路径，尚未消费此检查点",
+    "Pi Agent完整规范消息适配、工具执行账本/副作用回执、browser Worker寿命和父子任务恢复仍未接完",
+    "真实进程测试使用本地HTTP供应商与隔离数据库，非三类真实供应商和双平台安装包验收",
+    "全文目标/冻结系统配置仍从不可变任务上下文读取；浏览器引用必须重新观察，尚未实现完整Agent恢复消费者",
+    "完整性能基线、全部生产入口迁移、旧路径退役与T915全量Gate仍待完成"
+  ]
+}

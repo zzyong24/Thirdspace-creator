@@ -170,5 +170,11 @@
     "backend_tests": 126,
     "frontend_tests": 17,
     "scope": "七端口真实服务、候选预览采纳和预演结果已接；自主循环Worker/持久恢复及全量验收未完成"
+  },
+  "checkpoint_recovery_increment": {
+    "evidence": "checkpoint-recovery-evidence.json",
+    "backend_tests": 50,
+    "worker_tests": 14,
+    "scope": "持久检查点与单次生成Worker恢复通过；完整Pi工具恢复、浏览器迁移与全量验收未完成"
   }
 }

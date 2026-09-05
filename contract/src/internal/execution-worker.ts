@@ -1,3 +1,5 @@
+import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
+export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
 
 /** 私有父子进程协议；用户身份由后端任务记录恢复，不在 Worker 消息中指定。 */
@@ -9,7 +11,7 @@ export const executionRefSchema = z.object({
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
-  "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -50,7 +52,8 @@ export const workerPortInputSchemas = {
     z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),
     z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected"])}).strict(),
   ]),
-  saveCheckpoint: z.object({expectedRevision: z.number().int().nonnegative(), checkpoint: z.record(z.string(), z.unknown())}).strict(),
+  readCheckpoint: emptyPortInput,
+  saveCheckpoint: saveExecutionCheckpointSchema,
   commitResult: z.discriminatedUnion("outcome", [
     z.object({outcome: z.literal("succeeded"), callId: operationKeySchema, text: z.string().min(1).max(2_000_000)}).strict(),
     z.object({outcome: z.enum(["failed", "unknown_result", "retry_wait", "waiting_user"]), errorCode: z.string().min(1).max(128), retryAfterMs: z.number().finite().nonnegative().optional()}).strict(),
