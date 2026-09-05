@@ -1,0 +1,37 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/browser-worker-session.test.ts (15 tests | 4 failed | 10 skipped) 4938ms
+   × 未观察过的targetRef尾缀不可定位元素0 158ms
+   × 未观察过的targetRef尾缀00不可定位元素0 147ms
+   × 未观察过的targetRef尾缀+0不可定位元素0 148ms
+   × 未观察过的targetRef尾缀0x0不可定位元素0 169ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/browser-worker-session.test.ts > 未观察过的targetRef尾缀不可定位元素0
+ FAIL  src/execution/browser-worker-session.test.ts > 未观察过的targetRef尾缀00不可定位元素0
+ FAIL  src/execution/browser-worker-session.test.ts > 未观察过的targetRef尾缀+0不可定位元素0
+ FAIL  src/execution/browser-worker-session.test.ts > 未观察过的targetRef尾缀0x0不可定位元素0
+AssertionError: expected undefined to be 'invalid_input' // Object.is equality
+
+- Expected:
+"invalid_input"
+
++ Received:
+undefined
+
+ ❯ src/execution/browser-worker-session.test.ts:21:493
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed | 10 skipped (15)
+   Start at  10:45:21
+   Duration  5.39s (transform 58ms, setup 0ms, import 325ms, tests 4.94s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/browser-worker-session.test.ts -t guard完成时取消|未观察过 --retry=0

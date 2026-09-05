@@ -1,3 +1,4 @@
+import { prepareBrowserAuthorization } from "./browser-authorization";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, asc, inArray, aiTasks, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import { executionTaskSpec, type ExecutionTaskInput, type RequestContext } from "@creatoros/contract";
@@ -47,7 +48,8 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
         // 新配置不能重写历史快照。版本变化由实际工具 admission 诊断。
         return authority.bindAiTask(ctx, task.id);
       }
-      const modelInput = agenticWorkerInputSchema.parse({ ...definition, kind: "agentic.run", operationKey, goal: spec.goal,
+      const browserAuthorization = spec.taskType === "agentic.research" ? prepareBrowserAuthorization(spec.params) : null;
+      const modelInput = agenticWorkerInputSchema.parse({ ...definition, ...(browserAuthorization ? {browserAuthorization:{...browserAuthorization,source:"user_task"}} : {}), kind: "agentic.run", operationKey, goal: spec.goal,
         maxOutputTokens: deps.maxOutputTokens, dryRun });
       const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCalls, deps.budget.maxCalls),
         maxTokens: Math.min(tokens ?? deps.budget.maxTokens, deps.budget.maxTokens),

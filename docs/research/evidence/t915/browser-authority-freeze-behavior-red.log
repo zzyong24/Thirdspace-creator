@@ -1,0 +1,84 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests | 2 failed) 987ms
+   × 网页操作授权只从用户任务冻结，重放不能由新配置放大 8ms
+   × 无显式网页授权不产生默认授权，非法授权在转交前拒绝 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/agentic-business-execution.service.test.ts > 网页操作授权只从用户任务冻结，重放不能由新配置放大
+AssertionError: expected { aiTaskId: 'browser-scope', …(1) } to match object { modelInput: { …(1) } }
+(10 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "modelInput": {
+-     "browserAuthorization": {
+-       "allowInteraction": true,
+-       "allowedDomains": [
+-         "example.com",
+-       ],
+-       "source": "user_task",
++     "capability": "material",
++     "dryRun": false,
++     "goal": "整理真实素材",
++     "kind": "agentic.run",
++     "maxOutputTokens": 200,
++     "operationKey": "agentic:c06e6c8903766536ad102e03db4812b1ec0370911092968f182d3a7fde60fe54",
++     "systemPrompt": "依据真实素材",
++     "taskType": "agentic.research",
++     "tools": [
++       {
++         "description": "素材搜索",
++         "effect": "none",
++         "label": "搜索",
++         "name": "material.search",
++         "parameters": {
++           "type": "object",
+          },
++         "version": "1",
++       },
++     ],
+    },
+  }
+
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts:86:27
+     84|   const first=await f.service.prepare(ctx,"browser-scope");
+     85|   const [before]=await db.select().from(executionTasks).where(eq(execu…
+     86|   expect(before?.payload).toMatchObject({modelInput:{browserAuthorizat…
+       |                           ^
+     87|   expect(await f.service.prepare(ctx,"browser-scope")).toEqual(first);
+     88|   const [after]=await db.select().from(executionTasks).where(eq(execut…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai-runtime/agentic-business-execution.service.test.ts > 无显式网页授权不产生默认授权，非法授权在转交前拒绝
+AssertionError: promise resolved "{ aiTaskId: 'browser-invalid', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "browser-invalid",
++   "executionTaskId": "exec_2d0f7211-f379-4a97-8909-6bbfd6f370d8",
+  }
+
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts:100:56
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  10:39:37
+   Duration  1.78s (transform 308ms, setup 0ms, import 653ms, tests 987ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/agentic-business-execution.service.test.ts

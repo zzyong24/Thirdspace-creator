@@ -75,3 +75,28 @@ it.each([
   expect(execution?.executionBudget).toEqual({ maxCalls: calls, maxTokens: tokens, deadlineMs: 600000 });
   expect(execution?.payload).toMatchObject({ modelInput: { dryRun: expectedDryRun } });
 });
+
+it("网页操作授权只从用户任务冻结，重放不能由新配置放大", async()=>{
+  const research={...spec,taskType:"agentic.research",params:{browserAuthorization:{allowedDomains:["EXAMPLE.COM"],allowInteraction:true}}};
+  const researchDefinition={...definition,taskType:"agentic.research" as const};
+  const f=fixture({definitions:{"exec.agentic.research":researchDefinition}});
+  await add("browser-scope",{taskType:"exec.agentic.research",inputData:{spec:research}});
+  const first=await f.service.prepare(ctx,"browser-scope");
+  const [before]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId));
+  expect(before?.payload).toMatchObject({modelInput:{browserAuthorization:{source:"user_task",allowedDomains:["example.com"],allowInteraction:true}}});
+  expect(await f.service.prepare(ctx,"browser-scope")).toEqual(first);
+  const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId));
+  expect(after).toEqual(before);
+  await db.update(aiTasks).set({inputData:{spec:{...research,params:{browserAuthorization:{allowedDomains:["evil.example"],allowInteraction:true}}}}}).where(eq(aiTasks.id,"browser-scope"));
+  await expect(f.service.prepare(ctx,"browser-scope")).rejects.toThrow("MISMATCH");
+});
+it("无显式网页授权不产生默认授权，非法授权在转交前拒绝",async()=>{
+  const f=fixture({definitions:{"exec.agentic.research":{...definition,taskType:"agentic.research"}}});
+  await add("browser-none",{taskType:"exec.agentic.research",inputData:{spec:{...spec,taskType:"agentic.research"}}});
+  const mapped=await f.service.prepare(ctx,"browser-none");
+  const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));
+  expect((row?.payload as {modelInput:Record<string,unknown>}).modelInput.browserAuthorization).toBeUndefined();
+  await add("browser-invalid",{taskType:"exec.agentic.research",inputData:{spec:{...spec,taskType:"agentic.research",params:{browserAuthorization:{allowedDomains:["127.0.0.1"],allowInteraction:true}}}}});
+  await expect(f.service.prepare(ctx,"browser-invalid")).rejects.toThrow();
+  expect((await db.select().from(aiTasks).where(eq(aiTasks.id,"browser-invalid")))[0]!.executionTaskId).toBeNull();
+});

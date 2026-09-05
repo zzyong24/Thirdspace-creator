@@ -1,0 +1,66 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts (9 tests | 2 failed) 969ms
+   × 网页操作授权只从用户任务冻结，重放不能由新配置放大 4ms
+   × 无显式网页授权不产生默认授权，非法授权在转交前拒绝 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/agentic-business-execution.service.test.ts > 网页操作授权只从用户任务冻结，重放不能由新配置放大
+ZodError: [
+  {
+    "origin": "array",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "tools"
+    ],
+    "message": "Too small: expected array to have >=1 items"
+  }
+]
+ ❯ Object.prepare src/modules/ai-runtime/agentic-business-execution.service.ts:50:51
+     48|         return authority.bindAiTask(ctx, task.id);
+     49|       }
+     50|       const modelInput = agenticWorkerInputSchema.parse({ ...definitio…
+       |                                                   ^
+     51|         maxOutputTokens: deps.maxOutputTokens, dryRun });
+     52|       const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCall…
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts:84:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai-runtime/agentic-business-execution.service.test.ts > 无显式网页授权不产生默认授权，非法授权在转交前拒绝
+ZodError: [
+  {
+    "origin": "array",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "tools"
+    ],
+    "message": "Too small: expected array to have >=1 items"
+  }
+]
+ ❯ Object.prepare src/modules/ai-runtime/agentic-business-execution.service.ts:50:51
+     48|         return authority.bindAiTask(ctx, task.id);
+     49|       }
+     50|       const modelInput = agenticWorkerInputSchema.parse({ ...definitio…
+       |                                                   ^
+     51|         maxOutputTokens: deps.maxOutputTokens, dryRun });
+     52|       const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCall…
+ ❯ src/modules/ai-runtime/agentic-business-execution.service.test.ts:96:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  10:38:57
+   Duration  1.77s (transform 307ms, setup 0ms, import 665ms, tests 969ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/agentic-business-execution.service.test.ts

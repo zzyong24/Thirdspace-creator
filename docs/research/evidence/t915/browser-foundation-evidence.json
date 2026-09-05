@@ -1,0 +1,73 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T17:49:47.084471+00:00",
+  "status": "浏览器闭环依赖实现，尚未接入生产工具链，完整任务仍进行中",
+  "implemented": [
+    "新增严格observe/act/observation窄协议，拒任意selector/script/owner字段；元素引用与正文窗口有界",
+    "用户spec.params.browserAuthorization经后端公共域/精确网站/交互许可校验后冻结，来源由host填写user_task；缺省无授权，恢复保持原快照且修改请求拒绝",
+    "独立Worker页面执行器使用真实DOM节点、观察版本和串行队列；DOM变化或非精确引用不执行，动作后提供新观察",
+    "固定DOM程序原子校验并派发click/native-value事件；只报告eventDispatched和trusted:false，不声称业务完成",
+    "取消/超时清空旧观察并等待page.close；unknown_commit后旧观察不可重发；password/file输入转登录/权限阻断"
+  ],
+  "flow": "用户任务授权快照 →【待接宿主运行租约】→ 页面观察 → 精确引用与版本校验 → 动作 → 新观察 →【待接Pi与证据保存】",
+  "verification": {
+    "protocol": {
+      "tests": 29,
+      "log": "browser-contract-green.log",
+      "types": "browser-contract-types.log"
+    },
+    "authorization": {
+      "tests": 36,
+      "log": "browser-authorization-green.log"
+    },
+    "freeze": {
+      "tests": 9,
+      "log": "browser-authority-freeze-green.log",
+      "red": "browser-authority-freeze-behavior-red.log",
+      "scope": "真实隔离PGlite冻结、无默认授权、非法域拒绝、同请求重放和改请求拒绝"
+    },
+    "browser": {
+      "tests": 16,
+      "log": "browser-worker-session-green.log",
+      "types": "browser-worker-session-types.log",
+      "scope": "真实Chromium与隔离本地HTTP，无公网或用户登录态；TOCTOU、精确ref、extract、导航/等待/填写、取消、unknown"
+    },
+    "reviews": {
+      "reviewer": "spec_review",
+      "result": "取消派发与非精确引用两个具体问题复核PASS，范围仅本模块"
+    },
+    "types": {
+      "backendExitCode": 0,
+      "log": "browser-foundation-backend-types.log"
+    },
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "browser-foundation-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "browser-foundation-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "log": "browser-foundation-reconcile.log",
+      "status": "既有T-916全局欠债，未标全绿"
+    }
+  },
+  "evidenceLimits": [
+    "browser-worker-session-red为未实现模块；fence-red实际四个非法引用失败，guard取消样例当时通过，不能称其历史红；unknown-red实际旧观察重复失败",
+    "browser-authority-freeze-red为fixture工具数组为空不合法；修正后behavior-red才是真实未冻结授权与非法授权未拒绝的行为红",
+    "synthetic DOM事件不是trusted用户手势；网站可能拒绝，模型必须根据新观察判断；浏览器context和子树仍须宿主清理",
+    "本次没有生产browser.observe/act工具注册，没有宿主profile租约，没有把partial工具基础当作完整浏览器循环上线"
+  ],
+  "remaining": [
+    "宿主持久session绑定与同user+domain运行租约，旧执行确认停止后才能移交，不靠时间过期猜测",
+    "研究Worker保留任务页面，接入命名授权/session端口、真实登录态和Pi冻结工具目录",
+    "动作事实进入持久证据与知识候选；真实Pi stale→新观察→改目标→执行→采纳公共链及未知提交不重复",
+    "用户可见网页操作授权入口与已有明确任务范围连续操作，不能仅凭模型自报授权",
+    "R05剩余入口、旧路径退役、性能30次与真实三供应商/双平台安装生命周期"
+  ]
+}

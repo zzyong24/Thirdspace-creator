@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/browser-worker-session.test.ts (7 tests | 1 failed | 6 skipped) 1725ms
+   × 未知提交即使DOM未变也销毁旧observation，不能再次派发旧点击 262ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/browser-worker-session.test.ts > 未知提交即使DOM未变也销毁旧observation，不能再次派发旧点击
+AssertionError: expected undefined to be 'stale_observation' // Object.is equality
+
+- Expected:
+"stale_observation"
+
++ Received:
+undefined
+
+ ❯ src/execution/browser-worker-session.test.ts:16:876
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  10:40:40
+   Duration  2.11s (transform 33ms, setup 0ms, import 257ms, tests 1.72s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/browser-worker-session.test.ts -t 未知提交即使 --retry=0
