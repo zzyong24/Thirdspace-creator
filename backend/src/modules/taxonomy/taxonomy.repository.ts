@@ -1,4 +1,6 @@
-import { and, eq, asc, type Db } from "@creatoros/backend";
+import { lockTagAssets, mutateTagWithAssetLocks } from "./asset-tag-proposal.service";
+import { TagNotFoundError } from "./taxonomy.errors";
+import { and, eq, asc, inArray, sql, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { tags, entityTags } from "./taxonomy.db-schema";
 
@@ -22,6 +24,8 @@ export type TagRow = typeof tags.$inferSelect;
 export type EntityTagRow = typeof entityTags.$inferSelect;
 
 export interface TaxonomyRepository {
+  assignAssetTags(ctx: RequestContext, assetId: string, tagIds: string[]): Promise<EntityTagRow[]>;
+  removeAssetTag(ctx: RequestContext, assetId: string, tagId: string): Promise<void>;
   insertTag(
     ctx: RequestContext,
     input: { name: string; color?: string; kind?: string },
@@ -63,6 +67,32 @@ export function createTaxonomyRepository(
   deps: RepoDeps,
 ): TaxonomyRepository {
   return {
+    async assignAssetTags(ctx,assetId,tagIds) {
+      return db.transaction(async tx => {
+        await lockTagAssets(tx,ctx,[assetId]);
+        const ids = [...new Set(tagIds)].sort();
+        if (!ids.length) return [];
+        const owned = await tx.select().from(tags).where(and(eq(tags.userId,ctx.userId),inArray(tags.id,ids))).orderBy(asc(tags.id)).for("update");
+        if (owned.length !== ids.length) throw new TagNotFoundError();
+        const out: EntityTagRow[] = [];
+        for (const tagId of ids) {
+          const inserted = await tx.insert(entityTags).values({id:deps.nextId("entitytag"),userId:ctx.userId,tagId,entityType:"asset",entityId:assetId,createdAt:deps.now()}).onConflictDoNothing().returning();
+          if (inserted.length) await tx.update(tags).set({usageCount:sql`${tags.usageCount} + 1`,updatedAt:deps.now()}).where(eq(tags.id,tagId));
+          const [row] = await tx.select().from(entityTags).where(and(eq(entityTags.userId,ctx.userId),eq(entityTags.tagId,tagId),eq(entityTags.entityType,"asset"),eq(entityTags.entityId,assetId)));
+          out.push(row!);
+        }
+        return out;
+      });
+    },
+    async removeAssetTag(ctx,assetId,tagId) {
+      await db.transaction(async tx => {
+        await lockTagAssets(tx,ctx,[assetId]);
+        const [owned] = await tx.select().from(tags).where(and(eq(tags.userId,ctx.userId),eq(tags.id,tagId))).for("update");
+        if (!owned) return;
+        const removed = await tx.delete(entityTags).where(and(eq(entityTags.userId,ctx.userId),eq(entityTags.tagId,tagId),eq(entityTags.entityType,"asset"),eq(entityTags.entityId,assetId))).returning();
+        if (removed.length) await tx.update(tags).set({usageCount:sql`greatest(0, ${tags.usageCount} - ${removed.length})`,updatedAt:deps.now()}).where(eq(tags.id,tagId));
+      });
+    },
     async insertTag(ctx, { name, color, kind }) {
       const ts = deps.now();
       const inserted = await db
@@ -101,24 +131,18 @@ export function createTaxonomyRepository(
     },
 
     async updateTag(ctx, tagId, patch) {
-      const set: Partial<TagRow> = { updatedAt: deps.now() };
-      if (patch.name !== undefined) set.name = patch.name;
-      if (patch.color !== undefined) set.color = patch.color;
-      if (patch.kind !== undefined) set.kind = patch.kind;
-      const updated = await db
-        .update(tags)
-        .set(set)
-        .where(and(eq(tags.id, tagId), eq(tags.userId, ctx.userId)))
-        .returning();
-      return updated[0];
+      return mutateTagWithAssetLocks(db,ctx,tagId,async tx => {
+        const [row] = await tx.update(tags).set({...patch,updatedAt:deps.now()}).where(and(eq(tags.id,tagId),eq(tags.userId,ctx.userId))).returning();
+        return row;
+      });
     },
 
     async deleteTag(ctx, tagId) {
-      const deleted = await db
-        .delete(tags)
-        .where(and(eq(tags.id, tagId), eq(tags.userId, ctx.userId)))
-        .returning();
-      return deleted[0];
+      return mutateTagWithAssetLocks(db,ctx,tagId,async tx => {
+        await tx.delete(entityTags).where(and(eq(entityTags.userId,ctx.userId),eq(entityTags.tagId,tagId)));
+        const [row] = await tx.delete(tags).where(and(eq(tags.id,tagId),eq(tags.userId,ctx.userId))).returning();
+        return row;
+      });
     },
 
     async bumpUsage(ctx, tagId, delta) {

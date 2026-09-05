@@ -1,3 +1,6 @@
+import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
+import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
+import { createAgenticProposalAdoptionService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath } from "./execution-worker-path";
 import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
@@ -3128,7 +3131,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 因而可以先声明端口，再于 settingsRepo 可用后绑定真实 account-scoped resolver。
   let resolveEffectiveSkillSnapshotForRuntime: EffectiveSkillSnapshotResolver | null =
     null;
+  const knowledgeProposalAdoption = createKnowledgeProposalAdoptionService(db, deps.now);
+  const assetTagProposalAdoption = createAssetTagProposalService(db, deps);
+  const agenticProposalAdoption = createAgenticProposalAdoptionService(db, {
+    knowledge: (c, proposal, tx) => knowledgeProposalAdoption.adopt(c, proposal, tx),
+    assetTagsBatch: (c, proposals, tx) => assetTagProposalAdoption.adoptBatch(c, proposals, tx),
+  }, deps.now);
   const aiService = createAiService({
+    agenticProposals: agenticProposalAdoption,
     db,
     now: deps.now,
     nextId: deps.nextId,

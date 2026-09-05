@@ -274,3 +274,6 @@ export {
 // ai-copilot-content(client)+ ai-error-humanize 共用单一真值,故从前端 lib 提到 contract
 // 共享包(纯常量/纯函数,零依赖,前后端安全 import)。
 export * from "./chat-tool-labels";
+
+export { agenticProposal, knowledgeProposal, assetTagProposal, agenticProposalSource,
+  type AgenticProposal, type KnowledgeProposal, type AssetTagProposal } from "./resources/agentic-proposal";

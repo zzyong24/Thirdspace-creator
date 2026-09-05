@@ -268,3 +268,5 @@ export type { ResolvedMasterKey, MasterKeySource } from "./secret-crypto";
 // db factory + ORM live in @creatoros/backend). Identity's repository is the
 // first such in-app module.
 export { eq, and, or, asc, desc, sql, isNull, count, like, ilike, inArray, gte, lte, lt } from "drizzle-orm";
+
+export { assetTagAdoptions, knowledgeAdoptions } from "./schema/proposal-adoptions";

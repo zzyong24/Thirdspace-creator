@@ -149,8 +149,7 @@ export function createTaxonomyService(
     async deleteTag(ctx, tagId) {
       const existing = await repo.findTag(ctx, tagId);
       if (!existing) throw new TagNotFoundError();
-      // UoW: cascade entity_tags first, then the tag (no FK; service owns it).
-      await repo.deleteEntityTagsForTag(ctx, tagId);
+      // Repository atomically locks affected assets and cascades relationships with the tag.
       const deleted = await repo.deleteTag(ctx, tagId);
       if (!deleted) throw new TagNotFoundError();
       return toTagDTO(deleted);
@@ -158,6 +157,7 @@ export function createTaxonomyService(
 
     async assignTags(ctx, { entityType, entityId, tagIds }) {
       assertEntityType(entityType);
+      if (entityType === "asset") return (await repo.assignAssetTags(ctx,entityId,tagIds)).map(toEntityTagDTO);
       // Verify ownership of every tag up front (unknown/foreign → 404) so a
       // partial assign never lands.
       for (const tagId of tagIds) {
@@ -185,6 +185,7 @@ export function createTaxonomyService(
 
     async removeTag(ctx, { entityType, entityId, tagId }) {
       assertEntityType(entityType);
+      if (entityType === "asset") return repo.removeAssetTag(ctx,entityId,tagId);
       const removed = await repo.deleteEntityTag(ctx, {
         tagId,
         entityType,

@@ -1,0 +1,40 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T10:49:23.377881+00:00",
+  "status": "proposal_adoption_foundation_connected_tool_staging_open",
+  "implemented": [
+    "新增知识/素材标签候选契约，携带来源、目标和预期版本",
+    "知识条目、首版、持久回执同事务创建；重放不覆盖人工编辑/归档",
+    "素材标签候选统一验证整批初始快照；人工打标、移除、改名、删除遵守素材行锁；关系变化重试最多3次",
+    "现有ai.confirmTask装配真实候选采纳服务，同事务完成领域写入、回执和AI终态；整批异常回滚",
+    "已映射任务取消采用归属/执行映射/旧状态CAS，迟到取消不覆盖采纳成功"
+  ],
+  "verification": {
+    "backend_tests": 87,
+    "frontend_runtime_tests": 2,
+    "types": [
+      "contract PASS",
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，保留既有5条",
+    "postgres": {
+      "status": "passed",
+      "independentPools": 2,
+      "concurrentKnowledgeAdoptions": 30,
+      "knowledgeItems": 1,
+      "knowledgeRevisions": 1,
+      "concurrentBatchAdoptions": 30,
+      "proposalsPerBatch": 2,
+      "tagRelations": 2,
+      "staleVersionRejected": true,
+      "postgresVersion": "16.13 (Homebrew)"
+    },
+    "review": "spec_review独立只读审查发现mapped cancel覆盖成功缺口，CAS及公开入口交错回归已修复并复核通过；评审未重跑测试"
+  },
+  "limits": [
+    "knowledge.write与material.organize工具候选生成、稳定调用绑定、前端候选预览尚未接线；仍保留真实未接入错误",
+    "本次公共确认入口测试使用真实DB及领域服务，直接经recordCandidate准备候选，未执行真实模型或工具到UI端到端",
+    "跨进程父子恢复、Pi/browser Worker迁移、全量入口迁移、性能/供应商/双平台验收仍未完成"
+  ]
+}

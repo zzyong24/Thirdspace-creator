@@ -209,6 +209,7 @@ export interface AiRepository {
   addReferences(taskId: string, refs: ReferenceInput[]): Promise<void>;
   listReferences(taskId: string): Promise<ReferenceRow[]>;
   updateTaskStatus(taskId: string, patch: TaskStatusPatch): Promise<TaskRow>;
+  updateMappedTaskStatus(taskId: string, executionTaskId: string, expectedStatus: TaskRow["status"], patch: TaskStatusPatch): Promise<TaskRow | null>;
   updateUnboundTaskStatus(taskId: string, expectedStatus: TaskRow["status"], patch: TaskStatusPatch): Promise<TaskRow | null>;
   /** server-only 运行态补丁；不得投影到 task DTO/transport。 */
   updateTaskRuntimeData(
@@ -779,6 +780,14 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
       const [updated] = await db.update(aiTasks).set(patch).where(and(
         eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),eq(aiTasks.accountId,deps.accountId),
         eq(aiTasks.status,expectedStatus),isNull(aiTasks.executionTaskId),
+      )).returning();
+      return updated ?? null;
+    },
+
+    async updateMappedTaskStatus(taskId, executionTaskId, expectedStatus, patch) {
+      const [updated] = await db.update(aiTasks).set(patch).where(and(
+        eq(aiTasks.id, taskId), eq(aiTasks.userId, deps.userId), eq(aiTasks.accountId, deps.accountId),
+        eq(aiTasks.executionTaskId, executionTaskId), eq(aiTasks.status, expectedStatus),
       )).returning();
       return updated ?? null;
     },

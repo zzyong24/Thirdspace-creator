@@ -97,14 +97,14 @@
       "files": [
         "backend/src/index.ts"
       ],
-      "file_sha256": "05dc8c6a3082e50d6df36c60328e967d4472acba871373422552f09c0b058196",
+      "file_sha256": "dbe6982de0142505fb3e59497061bfc64b2ea6cf52b61ce90d6aafcb3a586f7f",
       "categories": [
         "credential_store"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用DEC-RUNTIME-055批准范围；本次仅导出现有后端权威数据库的调用账本表或更新对应证据，无新增凭据存储/通信机制；生产接线及完整验收未完成。",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -112,14 +112,14 @@
       "files": [
         "backend/src/modules/ai/ai.repository.ts"
       ],
-      "file_sha256": "e86b7be31b7e43692cc3955bdba1427a66c725c08540e2e9121cf91a49a016f9",
+      "file_sha256": "dc6c41fe3c3553e13cc857acd62b221ca1902f6e070c155880945f8f7005f85a",
       "categories": [
         "native_executable"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的生产Worker接线与生命周期、状态投影及条件更新；独立只读复核未发现新阻断，完整T915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "c5fb71547a85c96c2f418b3ac5ea306147a9490fccc3880bcf62ddf736fd18b9"
     },
@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "2559704b74c0531f587282da82f521c8657a22f3648d348b5d27fa2c73fb53ff",
+      "file_sha256": "c09f9b045338fc2c9e3c4d6f33ac423be410aba6655ad11a1c04149235d5ff38",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内文稿候选稳定采纳来源及回执恢复；独立只读复核与真实PG并发验证通过，历史对账和完整T915验收保留。",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "9788690b0a692923bc45210ff0ce4251b00cdef72f148c5a678fd0a82911f593",
+      "file_sha256": "1d7a432aac35e4747161fa833a7ea8b839bb7a20f7e061c95994d0067a7d5ddc",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已确认的真实采集工具装配与取消透传；独立评审缺口已修复，完整T915验收仍未完成。",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "98e49d35f1904787622c99f92ff9f66fa76cf8687020934220c8121cb45e228e",
+      "file_sha256": "5a635da8d92feface885b3076ec40f7086ef3ea8a15590571b31f42c031980d5",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已确认的真实采集工具装配与取消透传；独立评审缺口已修复，完整T915验收仍未完成。",
+      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

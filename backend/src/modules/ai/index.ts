@@ -77,3 +77,5 @@ export {
 
 export { buildAiModelConfigs, buildAiAgentConfigs } from "./ai.seed";
 export { createExecutionCandidateService, type ExecutionCandidateDeps } from "./execution-candidate.service";
+
+export { createAgenticProposalAdoptionService, type AgenticProposalAdoptionPorts } from "./agentic-proposal-adoption.service";

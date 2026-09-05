@@ -159,5 +159,10 @@
     "evidence": "collection-ports-evidence.json",
     "tests": 223,
     "scope": "采集真实服务与取消/原子终态通过；剩余两端口及跨进程自主控制、完整验收未完成"
+  },
+  "proposal_adoption_increment": {
+    "evidence": "proposal-adoption-evidence.json",
+    "tests": 89,
+    "scope": "候选公共采纳原子基础已接，知识/素材工具生成和前端预览仍待接线"
   }
 }

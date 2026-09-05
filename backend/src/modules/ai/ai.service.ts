@@ -239,6 +239,7 @@ export interface ServiceDeps {
   calibration: AiCalibrationPort;
   // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
   assetLibrary?: AiAssetLibraryPort;
+  agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   // T-513 composition seam: skill resolver injects immutable, server-only task state.
   // The public create body never accepts runtimeData.
   resolveTaskRuntimeData?: (
@@ -594,6 +595,7 @@ function stableHash(parts: string[]): string {
 // table also carries adoption/audit rows written through recordAuxResult; counting every
 // row makes terminal telemetry lie as soon as an execution task emits its audit journal.
 const CANDIDATE_RESULT_TYPES = new Set([
+  "agentic_proposals",
   "artifact_version",
   "calibration_diagnosis",
   "calibration_score",
@@ -1104,6 +1106,11 @@ export function createAiService(deps: ServiceDeps): AiService {
       const accountId = requireAccountId(ctx.accountId, "ai.confirmTask");
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
+      if ((await repo.listResults(taskId)).some(result => result.resultType === "agentic_proposals")) {
+        if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
+        await deps.agenticProposals.confirmTask(ctx, taskId);
+        return toTaskDto(await repo.requireTask(taskId));
+      }
       // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。
       if (task.status === "succeeded" && (["planning.thesis","publish.platform_adapt"].includes(task.taskType) || (await repo.listResults(taskId)).at(-1)?.resultType === "artifact_version")) {
         return toTaskDto(task);
@@ -1768,7 +1775,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         errorMessage: errorMessage ?? null,
       } as const;
       const updated = task.executionTaskId
-        ? await repo.updateTaskStatus(taskId,patch)
+        ? await repo.updateMappedTaskStatus(taskId,task.executionTaskId,task.status,patch)
         : await repo.updateUnboundTaskStatus(taskId,task.status,patch);
       if(!updated){
         const current=await repo.requireTask(taskId);

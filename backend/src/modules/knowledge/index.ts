@@ -45,3 +45,5 @@ export {
   type KnowledgeRelationResource,
   type KnowledgeFolderResource,
 } from "./knowledge.schema";
+
+export { prepareKnowledgeProposal, createKnowledgeProposalAdoptionService } from "./knowledge-proposal-adoption.service";
