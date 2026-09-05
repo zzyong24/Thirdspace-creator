@@ -113,3 +113,6 @@ export * from "./agentic-business-execution.service";
 export * from "./agentic-material-tools";
 
 export {createAgenticResearchTools} from "./agentic-research-tools";
+export { projectScriptDraftCandidate } from "./script-candidate-projection";
+
+export { createScriptBusinessAdapter } from "./script-business-adapter";

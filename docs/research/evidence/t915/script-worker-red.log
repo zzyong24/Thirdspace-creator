@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/script-worker-pipeline.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/script-worker-pipeline.test.ts [ src/execution/script-worker-pipeline.test.ts ]
+Error: Cannot find module './script-worker-pipeline' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/script-worker-pipeline.test.ts
+ ❯ src/execution/script-worker-pipeline.test.ts:4:1
+      2| import {createHash} from "node:crypto";
+      3| import {MockLanguageModelV4} from "ai/test";
+      4| import {runScriptWorkerPipeline} from "./script-worker-pipeline";
+       | ^
+      5| import {getOfficialSkillBase,runWithEffectiveSkillSnapshot,type Effect…
+      6| import {GenerationFailure} from "./generation-error";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:31:22
+   Duration  186ms (transform 16ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/script-worker-pipeline.test.ts --retry=0

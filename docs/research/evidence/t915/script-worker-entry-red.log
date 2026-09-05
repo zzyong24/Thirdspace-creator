@@ -1,0 +1,102 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:31618) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+[script-runner] task=ai-task-0ac5c1ec-14 capability=script.draft apiFormat=openai_chat model=script-fixture endpoint=custom
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+[structured-node] template=script.voiceover.compose status=ok durationMs=43 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+[structured-node] template=script.storyboard.segment status=ok durationMs=10 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+[ai-task-runner] taskId=ai-task-0ac5c1ec-14 taskType=script.draft status=awaiting_confirmation finishReason=stop usage={"inputTokens":4,"outputTokens":6,"cachedTokens":0,"totalTokens":10} candidateCount=1
+
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：verbatim
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：verbatim
+[ai-task-runner] taskId=ai-task-7bb4fcd2-14 taskType=script.draft status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[script-runner] task=ai-task-cd2c1190-14 capability=script.draft apiFormat=openai_chat model=script-fixture endpoint=custom
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[structured-node] template=script.voiceover.compose status=ok durationMs=13 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[structured-node] template=script.storyboard.segment status=ok durationMs=9 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[structured-node] template=script.storyboard.segment status=ok durationMs=7 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+[ai-task-runner] taskId=ai-task-cd2c1190-14 taskType=script.draft status=awaiting_confirmation finishReason=deterministic_fallback usage={"inputTokens":2,"outputTokens":3,"cachedTokens":0,"totalTokens":5} candidateCount=1
+
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+[script-runner] task=ai-task-dcab8b07-14 capability=script.draft apiFormat=openai_chat model=script-fixture endpoint=custom
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+[structured-node] template=script.voiceover.compose status=ok durationMs=12 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+[structured-node] template=script.storyboard.segment status=error durationMs=14 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+[ai-task-runner] taskId=ai-task-dcab8b07-14 taskType=script.draft status=awaiting_confirmation finishReason=deterministic_fallback usage={"inputTokens":2,"outputTokens":3,"cachedTokens":0,"totalTokens":5} candidateCount=1
+
+ ❯ src/server/script-worker-entry.integration.test.ts (4 tests | 4 failed) 11497ms
+   × script.draft真实Worker入口：normal 2968ms
+   × script.draft真实Worker入口：verbatim 3200ms
+   × script.draft真实Worker入口：mismatch 2674ms
+   × script.draft真实Worker入口：malformed 2654ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：normal
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：verbatim
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：mismatch
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：malformed
+AssertionError: expected undefined to be truthy
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/server/script-worker-entry.integration.test.ts:37:87
+     35|   const task=await call("ai.tasks.create",undefined,{taskType:"script.…
+     36|   await vi.waitFor(async()=>{const read=await call("ai.tasks.get",{tas…
+     37|   const read=await call("ai.tasks.get",{taskId:task.id});expect(read.e…
+       |                                                                                       ^
+     38|   expect(await call("artifacts.versions.list",{artifactId:artifact.id}…
+     39|   const results=await call("ai.tasks.results.list",{taskId:task.id});e…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  09:35:08
+   Duration  14.91s (transform 1.93s, setup 126ms, import 2.66s, tests 11.50s, environment 445ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/script-worker-entry.integration.test.ts --retry=0

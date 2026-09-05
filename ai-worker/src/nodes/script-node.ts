@@ -42,6 +42,8 @@ export interface ScriptShot {
 export interface RunScriptNodeInput {
   /** 已解析好的模型(provider-factory.modelFor)。 */
   model: LanguageModel;
+  signal?: AbortSignal;
+  maxOutputTokens?: number;
   /** 装配好的定位简报(creative-context)。 */
   positioningBrief: string;
   /** 过往复盘爆款要素(选填)。 */
@@ -248,6 +250,8 @@ export async function runScriptNode(
       },
       maxRetries: input.maxRetries,
       timeoutMs: SCRIPT_DRAFT_MODEL_TIMEOUT_MS,
+      signal: input.signal,
+      maxOutputTokens: input.maxOutputTokens,
     });
   } catch (err) {
     if (

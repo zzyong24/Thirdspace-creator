@@ -1,14 +1,15 @@
 import { and,eq,isNull,asc,inArray,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { structuredGenerationInputSchema,workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import { structuredGenerationInputSchema,workerSkillSnapshotSchema,type WorkerStructuredResult } from "@creatoros/contract/execution-worker";
+import type { z } from "zod";
 import { createExecutionAuthorityService,type PreparedModelExecution } from "../execution/execution-authority.service";
 import type { RecordCandidateInput } from "../ai/ai.service";
 type TaskType=typeof aiTasks.$inferSelect.taskType;
 export interface StructuredBusinessAdapter {
   skillId:string;
   capability:string;
-  prepare(ctx:RequestContext,task:{projectId:string|null;inputData:Record<string,unknown>}):Promise<Record<string,string|undefined>>;
-  project(inputData:Record<string,unknown>,object:unknown):RecordCandidateInput;
+  prepare(ctx:RequestContext,task:{id:string;retryOfTaskId:string|null;projectId:string|null;inputData:Record<string,unknown>;skillSnapshot:z.infer<typeof workerSkillSnapshotSchema>}):Promise<Record<string,string|undefined>>;
+  project(inputData:Record<string,unknown>,object:unknown,execution?:{structuredResult?:WorkerStructuredResult;frozenInput?:unknown}):RecordCandidateInput;
 }
 export type StructuredBusinessAdapters=Partial<Record<TaskType,StructuredBusinessAdapter>>;
 
@@ -19,10 +20,10 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
   const authority=createExecutionAuthorityService(db);
   const service = {
     supports(type:string){return Boolean(adapterFor(type));},
-    projectCandidate(input:{taskType:string;inputData:unknown;text:string}){
+    projectCandidate(input:{taskType:string;inputData:unknown;text:string;structuredResult?:WorkerStructuredResult;frozenInput?:unknown}){
       const adapter=adapterFor(input.taskType);
       if(!adapter)throw new Error("MODEL_CANDIDATE_ADAPTER_UNAVAILABLE");
-      return adapter.project(input.inputData as Record<string,unknown>,JSON.parse(input.text));
+      return adapter.project(input.inputData as Record<string,unknown>,JSON.parse(input.text),input);
     },
     async prepare(ctx:RequestContext,taskId:string){
       const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId ?? "")));
@@ -38,7 +39,7 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       const runtime=task.runtimeData as Record<string,unknown>;
       const skillSnapshot=workerSkillSnapshotSchema.parse(runtime.skillSnapshot);
       if(skillSnapshot.userId!==ctx.userId || skillSnapshot.accountId!==ctx.accountId)throw new OwnershipError("Skill snapshot owner mismatch");
-      const facets=await adapter.prepare(ctx,{projectId:task.projectId,inputData:task.inputData as Record<string,unknown>});
+      const facets=await adapter.prepare(ctx,{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot});
       return authority.bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,budget:deps.budget,modelInput:{kind:"model.structured",operationKey:adapter.skillId,capability:adapter.capability,maxOutputTokens:deps.maxOutputTokens,skillId:adapter.skillId,skillSnapshot,facets:Object.fromEntries(Object.entries(facets).filter((entry):entry is [string,string]=>typeof entry[1]==="string"))}});
     },
     async recoverQueued(onFailure:(ctx:RequestContext,taskId:string)=>Promise<void>,shouldStop=()=>false){

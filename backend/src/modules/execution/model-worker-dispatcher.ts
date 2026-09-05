@@ -1,4 +1,6 @@
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
+import {createExecutionScriptLocalService} from "./execution-script-local.service";
+import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
 import {createExecutionReviewReportService} from "../review/execution-review-report.service";
 import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
@@ -44,6 +46,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
   const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
+  const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
+  const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
@@ -61,6 +65,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="prepareScriptImport" && deps.executionMode==="model")return scriptLocal.prepareImport(ref,raw);
+      if(port==="saveScriptVoiceover" && deps.executionMode==="model")return scriptCheckpoints.save(ref,raw);
+      if(port==="saveScriptFallback" && deps.executionMode==="model")return scriptLocal.saveFallback(ref,raw);
       if(port==="readBrowserSession" && browserSessions)return browserSessions.read(ref,raw);
       if(port==="saveBrowserSession" && browserSessions)return browserSessions.save(ref,raw);
       if(port==="settleResearchRead" && researchEvidence)return researchEvidence.settleRead(ref,raw);

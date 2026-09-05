@@ -1,0 +1,34 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-script-checkpoint.service.test.ts (8 tests | 1 failed) 1056ms
+   × 首次保存也必须匹配真实模型正文，不能拿任意已结算call伪造口播 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-script-checkpoint.service.test.ts > 首次保存也必须匹配真实模型正文，不能拿任意已结算call伪造口播
+AssertionError: promise resolved "{ callId: 'call_c35fc5ee-c67d-40c0-b…' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_c35fc5ee-c67d-40c0-b95c-cec10cd578ca",
+  }
+
+ ❯ src/modules/execution/execution-script-checkpoint.service.test.ts:25:156
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  09:46:47
+   Duration  1.87s (transform 312ms, setup 0ms, import 675ms, tests 1.06s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-script-checkpoint.service.test.ts --retry=0

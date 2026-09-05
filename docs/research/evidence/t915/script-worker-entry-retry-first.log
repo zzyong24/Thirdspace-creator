@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:33755) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：retry
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/script-worker-entry.integration.test.ts (5 tests | 1 failed) 15171ms
+   × script.draft真实Worker入口：retry 2883ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：retry
+RetrySourceNotTerminalError: retryOfTaskId must refer to a terminal task of the same taskType
+ ❯ Object.createTask ../backend/src/modules/ai/ai.service.ts:877:17
+    875|           !TERMINAL_TASK_STATUSES.has(source.status)
+    876|         ) {
+    877|           throw new RetrySourceNotTerminalError(source.id);
+       |                 ^
+    878|         }
+    879|       }
+ ❯ Object.request ../backend/src/modules/ai/ai.transport.ts:106:24
+ ❯ Object.request src/server/persistence-client.ts:3991:19
+ ❯ call src/server/script-worker-entry.integration.test.ts:13:60
+ ❯ src/server/script-worker-entry.integration.test.ts:43:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  09:44:16
+   Duration  18.54s (transform 1.91s, setup 126ms, import 2.65s, tests 15.17s, environment 457ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/script-worker-entry.integration.test.ts --retry=0

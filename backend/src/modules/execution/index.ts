@@ -168,3 +168,4 @@ export { createExecutionCheckpointService } from "./execution-checkpoint.service
 export { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
 
 export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/agentic-executor";
+export { createExecutionScriptCheckpointService } from "./execution-script-checkpoint.service";

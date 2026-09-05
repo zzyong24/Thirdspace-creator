@@ -436,6 +436,7 @@ export {
 // B2 编导自动评分(calibration.score)用它产「维度真实分」候选。
 export {
   runStructuredNode,
+  extractJsonObject,
   type RunStructuredNodeInput,
   type RunStructuredNodeResult,
 } from "./nodes/structured-node";

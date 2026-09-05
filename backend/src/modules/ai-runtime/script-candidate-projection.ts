@@ -4,6 +4,7 @@ import type {
   EffectiveSkill,
 } from "@creatoros/ai-worker";
 import type { RecordCandidateInput } from "../ai/ai.service";
+import type { WorkerStructuredResult } from "@creatoros/contract/execution-worker";
 import type {
   FrozenScriptSource,
   prepareScriptDraftContext,
@@ -16,7 +17,7 @@ export interface ScriptDraftProjectionInput {
   generation: Omit<RunScriptNodeResult["generation"], "attempts"> & {
     attempts: Array<Record<string, unknown>>;
   };
-  validation: RunScriptNodeResult["validation"];
+  validation: WorkerStructuredResult["validation"];
   accountId: string;
   effectiveSkill: Pick<
     EffectiveSkill,

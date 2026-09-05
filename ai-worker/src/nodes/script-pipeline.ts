@@ -13,6 +13,8 @@ export const SCRIPT_PIPELINE_MODEL_TIMEOUT_MS = 150_000;
 
 export interface RunVoiceoverComposeNodeInput {
   model: LanguageModel;
+  signal?: AbortSignal;
+  maxOutputTokens?: number;
   positioningBrief: string;
   learningsBrief?: string;
   knowledgeBrief?: string;
@@ -98,6 +100,8 @@ export async function runVoiceoverComposeNode(
         : "",
     },
     timeoutMs: SCRIPT_PIPELINE_MODEL_TIMEOUT_MS,
+    signal: input.signal,
+    maxOutputTokens: input.maxOutputTokens,
   });
   return {
     centralClaim: result.object.centralClaim.trim(),
@@ -109,6 +113,8 @@ export async function runVoiceoverComposeNode(
 
 export interface RunStoryboardSegmentNodeInput {
   model: LanguageModel;
+  signal?: AbortSignal;
+  maxOutputTokens?: number;
   voiceover: string;
   voiceoverSha256: string;
   storyboardAttempt: number;
@@ -143,6 +149,8 @@ export async function runStoryboardSegmentNode(
         : "",
     },
     timeoutMs: SCRIPT_PIPELINE_MODEL_TIMEOUT_MS,
+    signal: input.signal,
+    maxOutputTokens: input.maxOutputTokens,
   });
   const shots = result.object.shots.map((shot) => {
     const visual = normalizeShotVisual(shot.visual);

@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/script-partial-adoption.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/script-partial-adoption.service.test.ts [ src/modules/ai/script-partial-adoption.service.test.ts ]
+Error: Cannot find module './script-partial-adoption.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/script-partial-adoption.service.test.ts
+ ❯ src/modules/ai/script-partial-adoption.service.test.ts:5:1
+      3| import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,e…
+      4| import {projectScriptDraftCandidate} from "../ai-runtime/script-candid…
+      5| import {assertScriptPartialAdoptable} from "./script-partial-adoption.…
+       | ^
+      6| const ctx={userId:"partial-user",accountId:"partial-account",requestId…
+      7| const stamp="2026-09-05T00:00:00.000Z";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:35:54
+   Duration  782ms (transform 309ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/script-partial-adoption.service.test.ts --retry=0

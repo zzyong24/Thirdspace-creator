@@ -88,6 +88,14 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return;
       }
       if(input.kind==="model.structured"){
+        if(input.skillId==="script.draft" && input.facets.__scriptVerbatim){
+          const result=z.object({callId:z.string().min(1),text:z.string().min(1)}).strict().parse(await call(execution,"prepareScriptImport",{},signal));
+          signal.throwIfAborted();
+          committing=true;
+          await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+          reason="completed";
+          return;
+        }
         if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
         const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
         const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));

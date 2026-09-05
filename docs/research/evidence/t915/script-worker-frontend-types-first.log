@@ -1,0 +1,10 @@
+../backend/src/modules/ai-runtime/script-business-adapter.ts(55,118): error TS2322: Type '{ status: "partial" | "valid"; errors: { code: string; path: string; message: string; }[]; policySnapshot: { policy: { schemaVersion: 1; minSegments: number; maxSegments: number | null; requiredSequence: string[]; repairAttempts: number; }; adapter: { ...; }; }; originalSegmentCount: number; finalSegmentCount: numbe...' is not assignable to type '{ status: "partial" | "valid"; errors: CompletionPolicyViolation[]; policySnapshot: { policy: CompletionPolicyV1; adapter: { id: string; version: string; }; }; originalSegmentCount: number; finalSegmentCount: number; repairAttemptsUsed: number; repairReasons: CompletionPolicyViolation[]; } | undefined'.
+  Type '{ status: "partial" | "valid"; errors: { code: string; path: string; message: string; }[]; policySnapshot: { policy: { schemaVersion: 1; minSegments: number; maxSegments: number | null; requiredSequence: string[]; repairAttempts: number; }; adapter: { ...; }; }; originalSegmentCount: number; finalSegmentCount: numbe...' is not assignable to type '{ status: "partial" | "valid"; errors: CompletionPolicyViolation[]; policySnapshot: { policy: CompletionPolicyV1; adapter: { id: string; version: string; }; }; originalSegmentCount: number; finalSegmentCount: number; repairAttemptsUsed: number; repairReasons: CompletionPolicyViolation[]; }'.
+    Types of property 'errors' are incompatible.
+      Type '{ code: string; path: string; message: string; }[]' is not assignable to type 'CompletionPolicyViolation[]'.
+        Type '{ code: string; path: string; message: string; }' is not assignable to type 'CompletionPolicyViolation'.
+          Types of property 'code' are incompatible.
+            Type 'string' is not assignable to type '"OUTPUT_INCOMPLETE" | "POLICY_INVALID" | "MIN_SEGMENTS" | "MAX_SEGMENTS" | "ROLE_INVALID" | "REQUIRED_SEQUENCE_MISMATCH"'.
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

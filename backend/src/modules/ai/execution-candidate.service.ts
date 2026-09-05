@@ -8,7 +8,7 @@ import type { RecordCandidateInput } from "./ai.service";
 /** 只由后端现有任务适配器提供格式投影；不可调用模型、写库或信任 Worker 自报实体归属。 */
 export interface ExecutionCandidateDeps {
   now?:()=>string;
-  projectCandidate(context:RequestContext, input:{taskType:string; inputData:unknown; text:string; structuredResult?:WorkerStructuredResult}):RecordCandidateInput;
+  projectCandidate(context:RequestContext, input:{taskType:string; inputData:unknown; text:string; structuredResult?:WorkerStructuredResult;frozenInput?:unknown}):RecordCandidateInput;
 }
 export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDeps){
   const now=deps.now ?? (()=>new Date().toISOString());
@@ -36,7 +36,7 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
         }
         const structured=(task.payload as {modelInput?:{kind?:string}}).modelInput?.kind === "model.structured" ? workerStructuredResultSchema.parse(JSON.parse(call.resultText!)) : undefined;
         const partial=structured?.validation?.status === "partial";
-        const projected=deps.projectCandidate(context,{taskType:business.taskType,inputData:business.inputData,text:structured ? JSON.stringify(structured.object) : call.resultText!,...(structured ? {structuredResult:structured} : {})});
+        const projected=deps.projectCandidate(context,{taskType:business.taskType,inputData:business.inputData,text:structured ? JSON.stringify(structured.object) : call.resultText!,...(structured ? {structuredResult:structured} : {}),frozenInput:(task.payload as {modelInput?:unknown}).modelInput});
         const resultId=`ai-result:${call.id}`;
         await tx.insert(aiTaskResults).values({id:resultId,executionCallId:call.id,aiTaskId:business.id,resultType:projected.resultType,
           artifactId:projected.artifactId ?? null,knowledgeItemId:projected.knowledgeItemId ?? null,assetId:projected.assetId ?? null,resultData:{...projected.resultData,...(structured ? {executionGeneration:structured.generation,executionValidation:structured.validation ?? null} : {})}});

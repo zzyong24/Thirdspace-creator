@@ -1,0 +1,142 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stdout | src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=false时禁止继续或降级
+[structured-node] template=script.voiceover.compose status=ok durationMs=6 path=structured modelCalls=1 inputTokens=1 outputTokens=1
+
+stdout | src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=false时禁止继续或降级
+[structured-node] template=script.storyboard.segment status=ok durationMs=7 path=structured modelCalls=1 inputTokens=1 outputTokens=1
+
+stdout | src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=true时禁止继续或降级
+[structured-node] template=script.voiceover.compose status=ok durationMs=5 path=structured modelCalls=1 inputTokens=1 outputTokens=1
+
+stdout | src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=true时禁止继续或降级
+[structured-node] template=script.storyboard.segment status=ok durationMs=7 path=structured modelCalls=1 inputTokens=1 outputTokens=1
+
+ ❯ src/execution/script-worker-pipeline.test.ts (9 tests | 2 failed) 158ms
+   × 口播保存先于分镜，回执失败=false时禁止继续或降级 18ms
+   × 口播保存先于分镜，回执失败=true时禁止继续或降级 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=false时禁止继续或降级
+AssertionError: expected [ 'compose', 'storyboard' ] to deeply equal [ 'compose', 'save', 'storyboard' ]
+
+- Expected
++ Received
+
+  [
+    "compose",
+-   "save",
+    "storyboard",
+  ]
+
+ ❯ src/execution/script-worker-pipeline.test.ts:31:157
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/execution/script-worker-pipeline.test.ts > 口播保存先于分镜，回执失败=true时禁止继续或降级
+AssertionError: promise resolved "{ object: { …(2) }, …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "generation": {
++     "attempts": [
++       {
++         "finishReason": "stop",
++         "kind": "initial",
++         "usage": {
++           "cachedTokens": null,
++           "inputTokens": 1,
++           "outputTokens": 1,
++           "totalTokens": 2,
++         },
++       },
++       {
++         "finishReason": "stop",
++         "kind": "initial",
++         "usage": {
++           "cachedTokens": null,
++           "inputTokens": 1,
++           "outputTokens": 1,
++           "totalTokens": 2,
++         },
++       },
++     ],
++     "finishReason": "stop",
++     "usage": {
++       "cachedTokens": null,
++       "inputTokens": 2,
++       "outputTokens": 2,
++       "totalTokens": 4,
++     },
++   },
++   "object": {
++     "pipelineMetadata": {
++       "generationPipeline": "voiceover_storyboard_v1",
++       "generationSkills": [
++         {
++           "baseVersion": "v1",
++           "overlayVersion": null,
++           "skillId": "script.voiceover.compose",
++         },
++         {
++           "baseVersion": "v1",
++           "overlayVersion": null,
++           "skillId": "script.storyboard.segment",
++         },
++       ],
++       "voiceoverSha256": "620adcc1107208596adfb85a92a648d9f1cbd6abda9d99be5b70f0574a457301",
++     },
++     "shots": [
++       {
++         "role": "body",
++         "口播": "这是一段完整的冻结口播。任何分镜都不能改变这里的真实文字。",
++         "字幕": "字幕",
++         "时长": "0-3s",
++         "画面": "画面",
++       },
++     ],
++   },
++   "validation": {
++     "errors": [],
++     "finalSegmentCount": 1,
++     "originalSegmentCount": 1,
++     "policySnapshot": {
++       "adapter": {
++         "id": "script.draft.shots",
++         "version": "1",
++       },
++       "policy": {
++         "maxSegments": null,
++         "minSegments": 1,
++         "repairAttempts": 0,
++         "requiredSequence": [],
++         "schemaVersion": 1,
++       },
++     },
++     "repairAttemptsUsed": 0,
++     "repairReasons": [],
++     "status": "valid",
++   },
+  }
+
+ ❯ src/execution/script-worker-pipeline.test.ts:31:29
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  09:42:31
+   Duration  696ms (transform 259ms, setup 0ms, import 407ms, tests 158ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/script-worker-pipeline.test.ts --retry=0

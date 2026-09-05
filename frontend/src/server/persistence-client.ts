@@ -4,7 +4,7 @@ import { createAssetTagProposalService } from "@creatoros/backend/modules/taxono
 import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
-import { createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
@@ -486,7 +486,7 @@ import {
 import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
-import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
+import { createScriptBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { preparePlanningContractContext,projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { prepareReviewContext,projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
@@ -3821,28 +3821,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
 
-  // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
-  // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
-  // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
-  // the real-agent runner in the BACKGROUND (Option A: in-process, non-blocking). The
-  // runner assembles CreativeContext (positioning + topic), runs the Vercel AI SDK research
-  // node (@creatoros/ai-worker + 外置 research.gather 模板 + anthropic 内置 web search), and
-  // records a `material_list` candidate via aiService.recordCandidate → awaiting_confirmation.
-  const ai: Transport = {
-    async request(endpoint, input, ctx) {
-      const res = await aiBase.request(endpoint, input, ctx);
-      if (endpoint.id === "ai.tasks.create" && ctx) {
-        const task = (res as { data?: Record<string, unknown> }).data;
-        if (
-          !task ||
-          (typeof task.id !== "string" && typeof task.id !== "number")
-        ) {
-          return res;
-        }
-        // [T-513] createTask 已把 official base + 当前账号增量覆盖冻结进 server-only
-        // runtimeData。执行端只消费该快照，绝不重新读“当前配置”，因此排队期间改配置、
-        // 多账号并发、重试都不会串 prompt。缺失/属主不符一律 fail closed。
-        const dispatchCreatedTask = async () => {
+  const makeGenerationReaders = () => {
         const positioningReader = {
           getPositioningCenter: (c: RequestContext) =>
             positioningService.getPositioningCenter(c),
@@ -3997,6 +3976,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           // 与复盘同一读法)—— assembleCreativeContext 据此填 context.reviewScript,封面文案硬锚正片主张。
           reviewSubject: makeReviewSubjectReader(),
         };
+    return { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry };
+  };
+
+  // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
+  // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
+  // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
+  // the real-agent runner in the BACKGROUND (Option A: in-process, non-blocking). The
+  // runner assembles CreativeContext (positioning + topic), runs the Vercel AI SDK research
+  // node (@creatoros/ai-worker + 外置 research.gather 模板 + anthropic 内置 web search), and
+  // records a `material_list` candidate via aiService.recordCandidate → awaiting_confirmation.
+  const ai: Transport = {
+    async request(endpoint, input, ctx) {
+      const res = await aiBase.request(endpoint, input, ctx);
+      if (endpoint.id === "ai.tasks.create" && ctx) {
+        const task = (res as { data?: Record<string, unknown> }).data;
+        if (
+          !task ||
+          (typeof task.id !== "string" && typeof task.id !== "number")
+        ) {
+          return res;
+        }
+        // [T-513] createTask 已把 official base + 当前账号增量覆盖冻结进 server-only
+        // runtimeData。执行端只消费该快照，绝不重新读“当前配置”，因此排队期间改配置、
+        // 多账号并发、重试都不会串 prompt。缺失/属主不符一律 fail closed。
+        const dispatchCreatedTask = async () => {
+        const { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry } = makeGenerationReaders();
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
@@ -4362,45 +4367,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 contextReaderRegistry,
               ),
               positioning: positioningReader,
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "script.draft" &&
-          task.status === "queued"
-        ) {
-          // 分镜脚本 node — drafts a storyboard from the full creative context, records an
-          // `artifact_version` candidate; 采纳 appends a new ArtifactVersion (reuses the
-          // existing artifact_version confirm path).
-          // [T-184] 声明式 context 注入(script-first 范式):facet-reader deps 不再手列,改由
-          // resolveContextDeps 按 SCRIPT_DRAFT_TEMPLATE.contextRequirements 从中央 registry 自动取
-          // (positioning/learnings/knowledge/thesis/contract/outline/artifactOrigin/projectMaterials/
-          // brief —— 与旧手列逐项一致,零行为变化)。根治「手列漏一个 reader = 该 facet 恒空」
-          // (T-182 CLAIM-1 script.draft 漏 knowledge 的根因):现在漏接只可能来自漏声明,声明即真值。
-          // ai / resolveModelSpec 是非 facet 基础设施,组合根 always-注入(不进声明/registry)。
-          await runScriptDraft(
-            ctx,
-            {
-              id: String(task.id),
-              retryOfTaskId:
-                typeof task.retryOfTaskId === "string"
-                  ? task.retryOfTaskId
-                  : undefined,
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              ...resolveContextDeps(
-                SCRIPT_DRAFT_TEMPLATE.contextRequirements,
-                contextReaderRegistry,
-              ),
-              // positioning 已在 contextRequirements 声明(resolver 已注入同一 positioningReader);
-              // 此处显式 pin 仅为满足 ScriptDeps 把 positioning 类型标为必需(值同,零行为变化)。
-              positioning: positioningReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):写文案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
           );
@@ -9840,6 +9806,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
       };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "script.draft":createScriptBusinessAdapter({
+      ...resolveContextDeps(SCRIPT_DRAFT_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
+      positioning:generationContext.positioning,
+      readRuntime:(c,id)=>createExecutionScriptCheckpointService(db).readRuntime(c,id),
+      async assertArtifact(c,artifactId,projectId){
+        const artifact=await artifactsService.getArtifact(c,artifactId);
+        if((projectId!==null && artifact.projectId!==projectId) || artifact.artifactType!=="master_script")throw new Error("文稿目标与当前项目或工件类型不一致");
+      },
+    }),
     "review.analyze":{
       skillId:"review.insights",capability:"review.insights",
       prepare:(c,task)=>prepareReviewContext(c,task,{...generationContext,reviewSubject:makeReviewSubjectReader()}),

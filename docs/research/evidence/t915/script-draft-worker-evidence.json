@@ -1,0 +1,125 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T16:53:43.452475+00:00",
+  "status": "文稿生产Worker迁移与显式重试恢复增量；完整任务仍进行中",
+  "implemented": [
+    "正式script.draft由既有model scheduler/独立Worker领取；删除production旧runScriptDraft分支，原完整reader registry共享复用",
+    "原文导入保持零模型/零凭证，确定性工具账本与原候选事务提交；领域工件仅用户确认后写入",
+    "无覆盖走连续口播→分镜，旧覆盖/旧快照保留原单阶段；正常生成没有规划调用，所有供应商调用沿同一持久model/N序列",
+    "节点统一signal和冻结输出上限；完成口播先按实际供应商正文/用量/尝试计量保存不可变断点，Worker重放只重复幂等保存",
+    "公开重试来源改读真实execution投影；新业务retry可复用已确认口播，任何started/unknown来源拒绝另开模型调用",
+    "partial文稿经实际候选/调用/执行双向绑定、冻结SHA、目标工件及候选内容重算后允许采纳，其他任务保持原完整度门",
+    "后端投影保持原分镜编辑与预览格式、原文逐字、来源、旧Skill、模型计量与质量提醒"
+  ],
+  "flow": "公开任务 → 后端冻结原上下文/Skill → 持久Worker（模型回执重放）→ 验真口播断点 → 分镜或保真降级 → 候选 → 用户采纳",
+  "verification": {
+    "publicEntry": {
+      "tests": 5,
+      "log": "script-worker-entry-retry-green.log",
+      "scope": "真实built child + 隔离PGlite + 本地HTTP + 正式compositeTransport；正常compose/storyboard恰好2请求，原文零HTTP/零resolveLlmConfig，两种partial实际采纳回读；401→waiting_user→公开cancel→新业务retry累计compose1/storyboard2；版本/重复确认回读",
+      "not": "不是公网供应商或安装包验收"
+    },
+    "worker": {
+      "tests": 56,
+      "log": "script-worker-voiceover-green.log",
+      "typesExitCode": 0,
+      "typesLog": "script-worker-voiceover-types.log",
+      "scope": "节点/structured/Durable模型替身，完整两阶段重放无第二批供应商请求、回执保存先于分镜、未知/取消不吞为成功"
+    },
+    "checkpointService": {
+      "tests": 10,
+      "log": "script-checkpoint-service-green.log",
+      "scope": "真实PGlite，正文/用量/尝试/finishReason/调用键拒绝、幂等与来源未知停止"
+    },
+    "partialAdoption": {
+      "tests": 13,
+      "log": "script-partial-green.log",
+      "scope": "真实PGlite，绑定与内容重算、SHA/目标工件防篡改、历史冻结工具fallback受限采纳"
+    },
+    "backendRegression": {
+      "tests": 87,
+      "files": 6,
+      "log": "script-worker-backend-regression.log"
+    },
+    "types": {
+      "backend": {
+        "exitCode": 0,
+        "log": "script-worker-backend-types-final.log"
+      },
+      "frontend": {
+        "exitCode": 0,
+        "log": "script-worker-frontend-types-final.log"
+      },
+      "contract": {
+        "exitCode": 0,
+        "log": "script-worker-contract-types-final.log"
+      }
+    },
+    "boundary": {
+      "newViolations": 0,
+      "baselineRemaining": 5,
+      "log": "script-worker-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "script-worker-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "exitCode": 1,
+      "log": "script-worker-reconcile.log",
+      "status": "与211/1既有基线一致；T-916跟踪，不宣称全绿"
+    },
+    "scope": {
+      "errors": [],
+      "log": "script-worker-scope.log"
+    }
+  },
+  "redEvidence": [
+    {
+      "log": "script-worker-entry-red.log",
+      "fact": "4/4真实公共路径仍无executionTaskId，旧宿主执行"
+    },
+    {
+      "log": "script-worker-entry-retry-first.log",
+      "fact": "4通过1失败，公开cancel后newretry仍按旧业务行误报非终态"
+    },
+    {
+      "log": "script-worker-voiceover-red.log",
+      "fact": "2失败7通过，未保存口播且保存失败仍继续分镜"
+    },
+    {
+      "log": "script-checkpoint-service-red.log",
+      "fact": "真实PGlite7通过1失败，伪正文首次保存未被真实回执约束"
+    },
+    {
+      "log": "script-worker-entry-fixture-first.log",
+      "fact": "最初部分attemptId过短属测试夹具错误，非功能红测"
+    },
+    {
+      "log": "script-worker-entry-retry-red.log",
+      "fact": "在制端口接线期间尚未进入storyboard，不是重复口播行为证据"
+    },
+    {
+      "log": "script-partial-red.log",
+      "fact": "新模块缺失，不是行为红测"
+    }
+  ],
+  "independentReview": {
+    "reviewer": "spec_review",
+    "status": "PASS",
+    "resolved": [
+      "保存口播必须实际供应商正文和账本计量一致",
+      "partial目标必须等于真实任务工件",
+      "上下文registry整体提取而非少字段重接"
+    ]
+  },
+  "remaining": [
+    "历史count>0纯fallback当前仍解析凭证，预算/deadline耗尽后有用口播转partial尚需补完；不把本增量等同完整R05完成",
+    "其他R-05所有入口、完整迁移/删除旧出口、浏览器observe/act、自主恢复边界继续推进",
+    "同条件至少30性能样本、真实三供应商及macOS/Windows实际安装包生命周期验收仍缺失",
+    "全局历史reconcile欠债仍T-916跟踪，不宣称全绿"
+  ]
+}

@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:33398) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：retry
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：retry
+[execution-worker] MODEL_WORKER_RUN_INTERRUPTED
+
+ ❯ src/server/script-worker-entry.integration.test.ts (5 tests | 1 failed | 4 skipped) 17045ms
+   × script.draft真实Worker入口：retry 16870ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/script-worker-entry.integration.test.ts > script.draft真实Worker入口：retry
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ vi.waitFor.timeout src/server/script-worker-entry.integration.test.ts:38:48
+     36|   let task=await call("ai.tasks.create",undefined,{taskType:"script.dr…
+     37|   if(mode==="retry"){
+     38|    await vi.waitFor(()=>expect(heldStoryboard).toBe(true),{timeout:150…
+       |                                                ^
+     39|    const sourceTask=task;
+     40|    await call("ai.tasks.cancel",{taskId:sourceTask.id});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  09:43:07
+   Duration  20.32s (transform 1.85s, setup 126ms, import 2.57s, tests 17.04s, environment 445ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/script-worker-entry.integration.test.ts -t 入口：retry --retry=0
