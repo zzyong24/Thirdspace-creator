@@ -154,3 +154,4 @@ export {
   type CollectionPorts,
   type MaterialPorts,
 } from "./agentic";
+export { createExecutionAuthorityService } from "./execution-authority.service";

@@ -96,6 +96,7 @@ export const executionTaskStatusV2 = z.enum([
   "blocked",
 ]);
 export const executionTaskKindV2 = z.enum([
+  "ai_task",
   "source_sync",
   "share_import",
   "transcribe",
@@ -387,6 +388,7 @@ export const executionTaskResourceV2 = z
     accountId: id,
     kind: executionTaskKindV2,
     ownerType: z.enum([
+      "ai_task",
       "source",
       "item_import",
       "item",

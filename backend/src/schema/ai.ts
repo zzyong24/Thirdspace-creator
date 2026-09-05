@@ -1,5 +1,6 @@
 import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { executionTasks } from "./intelligence";
 
 // AI tables (Module 15; data-model §7 ER "AI、搜索和系统"; contract/src/resources/ai.ts;
 // SPEC §12 AI Task state machine / §18 candidate-confirm). The canonical defs live in
@@ -69,6 +70,7 @@ export const aiMessages = pgTable("ai_messages", {
 
 export const aiTasks = pgTable("ai_tasks", {
   id: text("id").primaryKey(),
+  executionTaskId: text("execution_task_id").references(() => executionTasks.id).unique("ai_tasks_execution_task_id_unique"),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
   // [T-136 多账号 · OQ2 裁决=按号切] AI 任务按号隔离。nullable 稳定终态。子表
   // ai_task_references/results/steps 经 requireTask 门透传属主,不加 account_id。

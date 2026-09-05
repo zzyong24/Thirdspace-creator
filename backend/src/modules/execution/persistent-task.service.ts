@@ -22,6 +22,7 @@ import type {
 import { ConflictError, ExecutionValidationError } from "./execution.errors";
 
 export type PersistentTaskKind =
+  | "ai_task"
   | "source_sync"
   | "share_import"
   | "transcribe"
@@ -30,6 +31,7 @@ export type PersistentTaskKind =
   | "automation_sync"
   | "migration";
 export type PersistentTaskOwnerType =
+  | "ai_task"
   | "source"
   | "item_import"
   | "item"

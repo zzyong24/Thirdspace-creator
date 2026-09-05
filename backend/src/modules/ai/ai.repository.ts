@@ -427,7 +427,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         })
         .from(aiTasks)
         .where(
-          and(eq(aiTasks.userId, deps.userId), eq(aiTasks.status, "running")),
+          and(eq(aiTasks.userId, deps.userId), eq(aiTasks.status, "running"), sql`${aiTasks.executionTaskId} IS NULL`),
         );
       return rows;
     },
@@ -563,6 +563,7 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
             eq(aiTasks.accountId, deps.accountId),
             eq(aiTasks.id, taskId),
             eq(aiTasks.status, "queued"),
+            sql`${aiTasks.executionTaskId} IS NULL`,
           ),
         )
         .returning();

@@ -1,5 +1,1170 @@
 {
   "schema": "complexity-ledger/v1",
-  "entries": [],
+  "entries": [
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/worker-entry.ts"
+      ],
+      "file_sha256": "c624a36ace1bc1341a388a647d7e871ab0a6cfa731393996d1f5c0b0f161c84a",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立 Node Worker 的私有父子通信，属于 R-02 必需机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
+      "file_sha256": "950514e8e6d0e7d16f571d1455caccfce6bc01a431be1c1a9629404aa0ab5731",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立 Node Worker 的私有父子通信，属于 R-02 必需机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.test.ts"
+      ],
+      "file_sha256": "9e5db8af74cc762c4faaf977170f4a9dae38e8e396ef325384d8a644570a55e1",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/ffmpeg-path.ts"
+      ],
+      "file_sha256": "0886643930e7f4f172e1062d7eda93926f7a763fa779d4de2573c7aba1c2d8c1",
+      "categories": [
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/scripts/migrate-model-secrets.ts"
+      ],
+      "file_sha256": "d9a90674f4a39f22c9d0a40f58057a541f3655d36e4e8de5d8af6b4e0f612761",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/errors.ts"
+      ],
+      "file_sha256": "f5e3c0e280e5f5fcce732753fd105abb8b18c3c25acb8daa980b51be01f1f325",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/index.ts"
+      ],
+      "file_sha256": "d072ad5c9c87a75a61e600178156365dd55aa510c6e5f17b2c0246a4465d8d1f",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.repository.ts"
+      ],
+      "file_sha256": "88118c78553f6ab8a6fe4bc5443e297138636e18ec7797d9147c270ab47f970e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "T-915 R-01 已确认范围：已映射任务退出旧claim/sweep；独立只读审查通过，沿用既有复杂度，不增加工具链或凭据机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
+      "prior_file_sha256": "c5fb71547a85c96c2f418b3ac5ea306147a9490fccc3880bcf62ddf736fd18b9"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.service.test.ts"
+      ],
+      "file_sha256": "f7236b57f3c787a9d75965d007c3af52cd394813689abbf1bda46d38572915d7",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai/ai.service.ts"
+      ],
+      "file_sha256": "eab7c68053fbf901450ece55ecab447feb5ca5119029ae6c8e1c91a4c9af88f8",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-env-probe.ts"
+      ],
+      "file_sha256": "c591788a502e1c0bce9ac30acaf8504950fb41b90f41c83f1ae7c8a238e67089",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.test.ts"
+      ],
+      "file_sha256": "8462165cf602acaf00ad04aba540ec712c3cd1223d8e9c419be9df4a3f794ebb",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/local-read-security.ts"
+      ],
+      "file_sha256": "336c2e3c6a37fd6bfc8fff367db93a2197282581dc29e828f671206529064b48",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/remote-prompt-bundle.ts"
+      ],
+      "file_sha256": "6d4889471063f11d6b629f0c194cd35f9c1c3d33974f34484932351dbafb45c7",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/browser-sessions/browser-sessions.service.ts"
+      ],
+      "file_sha256": "424b023987b5be80b3b8d4f20207488a6891f0bf21da059f9dc3ffff6b95154f",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/worker-supervisor.ts"
+      ],
+      "file_sha256": "14c09d77630edc3390049ca71e586fad6a0488ab3f4b23a3f4162268687cf3b3",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立 Node Worker 的私有父子通信，属于 R-02 必需机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.repository.ts"
+      ],
+      "file_sha256": "5935f5f42f72fd6860e71b66389d76c51fa1ea0bf262c63a33c78638b4c08d2e",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/scheduling.service.ts"
+      ],
+      "file_sha256": "21a96174990d660bb216be74ef2f4a8c267fb1908df00abf86ce2d4a07aaaaee",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/settings/model-config-transfer.test.ts"
+      ],
+      "file_sha256": "f53ff2f95ef725be4d62ffb4b954e7d1a2a75ef279592f4307ecf4a6b158b2e6",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/settings/settings.repository.ts"
+      ],
+      "file_sha256": "d60cc4e32f186ad2a95f885dfb78743ac68f49339cc6cb82dd6f910495744d4b",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/reset-preserve.ts"
+      ],
+      "file_sha256": "d9d0c90fe6c650aabfdd6e913f386aea3c4f53eb5bc37a615088c9b443952ad1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/schema/activation.ts"
+      ],
+      "file_sha256": "f2b4169caa879ae007609dc83d618fe917ff14fcd05ab1593f02943281533d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/secret-crypto.test.ts"
+      ],
+      "file_sha256": "baa23b109eb173323ff00695ba1a56f11a1640719627f37c84ad15137c5aa1e8",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/secret-crypto.ts"
+      ],
+      "file_sha256": "7cab12086a0a061a284612752fbc1a11a2d411fb69d58e0cc71bf5fdf82689a0",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/workspace-restore.ts"
+      ],
+      "file_sha256": "64f2f7588aeb858375d446b5e876634859a70d2e81bd4ffe55bfba04864b82a9",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/implementation-progress.json"
+      ],
+      "file_sha256": "8e712186d1029f5a30c581bf9d9e411a9749029c674df29d9ff9b612baebbf81",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "更新本任务实施事实与治理修复状态；记录已有Worker通信，未新增运行机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
+      "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/package.json"
+      ],
+      "file_sha256": "34ef0cbbeb06603bf27f96103df4f67fb3ec4a323b2089846d018d49046dd7a3",
+      "categories": [
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/license-sync/route.ts"
+      ],
+      "file_sha256": "373114fb58ce34f8dc4566eb3f30d8ddf75984919567b006867c52c8b463c359",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.test.ts"
+      ],
+      "file_sha256": "9b92835079368ba581eebd9da1f0104d2e86fd860f4a1bc3d5157917c7046959",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/plan.ts"
+      ],
+      "file_sha256": "3bc6f395c2d9e6bcbd3ad246bcc1ab44e3dae35ca6f9e93c07807ed4a1277ef4",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reset-workspace/route.ts"
+      ],
+      "file_sha256": "97a05464f6ce9ce29ea4f850cb903e65ad154a8b914c9116f5713b4553cf4e06",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/plan.ts"
+      ],
+      "file_sha256": "db9a24764d9a3b56a8be910228f503161aab42282dc21fb7f1f8960f1949ad2e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/local/reveal-logs/route.ts"
+      ],
+      "file_sha256": "c504f58832a8b094a6b9bb3029f963d4418a9ec64e4ec82b05b8f782c84f099e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/app/api/v1/settings-transfer/models/route.ts"
+      ],
+      "file_sha256": "468a85143283b05b97f077e12d1ac9ea50ef9f4d37e3c22cc304b63abc513775",
+      "categories": [
+        "credential_store"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/instrumentation.ts"
+      ],
+      "file_sha256": "d49a12ce777eaf23cee649a4960538fe51a6b9bb5bcaf791c8dc66392ce0b86e",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/activation-gate.server.ts"
+      ],
+      "file_sha256": "9a23af34433ef9aa8f0158e52dffb14785a35d4e94c93621e933b0f7e1da1b44",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/desktop-updater.test.ts"
+      ],
+      "file_sha256": "7c077e710459d2af980a90f8cec996cbecdc1b933a28f4753373a68779389e1e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/desktop-updater.ts"
+      ],
+      "file_sha256": "ac9fcb4a2a97920a7472d76fbd3bf7b66a9dd8f94bfcbf6e60bebfb847c459c4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/loopback-core.ts"
+      ],
+      "file_sha256": "68d535672ec92aaedede590c0ea01fc0be1b025ffa36dc97fb28fd3bbf38dd42",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/loopback-guard.server.test.ts"
+      ],
+      "file_sha256": "93a82455326962c45cc08e2e09c44905dd4be512b0ef3d919299b36c2f712d05",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/lib/shell-license.ts"
+      ],
+      "file_sha256": "1a159799b8f80ba3362cd0369e879cc273e89353c9eb91bfcd7705aac55915fd",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/proxy.test.ts"
+      ],
+      "file_sha256": "981ac2aee8db38e4c827810774811cf2d70ec18483b0c8c477ac3bb333328115",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/proxy.ts"
+      ],
+      "file_sha256": "9e4ec3a6b87c04fb31941a4f2258bf3113dc9f8e14286a216d0c7bb1f30f0fad",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-config.test.ts"
+      ],
+      "file_sha256": "ab3549daff3455a4635f79eec2c6cd28732d8fa5f741c98bf576d8fa43d04b9f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-config.ts"
+      ],
+      "file_sha256": "85c4c0220dbbf8dbd755910d73d42da89b5a4754fb0573fce22161e9bedbd92d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-repository.test.ts"
+      ],
+      "file_sha256": "d42d38b5dbe717f2a0c4097ba2da11392fd7d1c92109d2f4495bebe11be146c3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-repository.ts"
+      ],
+      "file_sha256": "224c27d49a0b554ee1f555e1773da2ca2fe1774a0682b2c61cc5cbe3ed40ed2e",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-service.test.ts"
+      ],
+      "file_sha256": "2a10441d9f30739f4ca23506315c8de5755488e3198ce010bfa5a22f437e5f4d",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/activation-service.ts"
+      ],
+      "file_sha256": "64bd7965a04e6aee3b93f451e8d907530b6cc7b063557ff1d6da14ecf73bcda1",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/channel-runtime.server.ts"
+      ],
+      "file_sha256": "7a8c3ebfc9ccd71bfc9ceecb239319506a7237221a9358b1b8257f057a267600",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/index.ts"
+      ],
+      "file_sha256": "71477b861b102c07e5cc20b2f37725a57f33811889fc8773d02c76805864ec8b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/is-desktop.ts"
+      ],
+      "file_sha256": "9a6bcb8fbc0affc8437ee53be923b2462bb9ad40dc0a908cb9c34098b9745afa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/license-file.server.test.ts"
+      ],
+      "file_sha256": "562321c00cfb9481b4274d2890478b53b1f99c6fd2c40e5bbeb80c6f12a2a108",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/license-file.server.ts"
+      ],
+      "file_sha256": "a437fbe1aa64330db0c313a3006e2dace4319865e9ecc69e7ea73f3b58e126ba",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/machine-id.test.ts"
+      ],
+      "file_sha256": "b44ec678b3af98d67f3c635d6d1bb833c0d114c2dacb62959f991ad29c2ac1af",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/machine-id.ts"
+      ],
+      "file_sha256": "4e34497ce317deccb82e514e7b85e89fdd99f64ecfdd7f7301f7f00c2514e25c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.test.ts"
+      ],
+      "file_sha256": "b65d754ad6268587f2c0acc11a30fd90fa9342ecc753ca7f80ab58ecf2e3f282",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/activation/product-identity.server.ts"
+      ],
+      "file_sha256": "5b69ae165ede867eebe3b5027d100cf2ea983d840d7c112ef4b31b0e6d22bcec",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "56846710cbef9626d4aaae34ff1d8cfdc5cccb7bc184d69d2ffcafbd7ded4576",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.test.ts"
+      ],
+      "file_sha256": "6a23269f225b80f8c594d3bf00370ff994e1034cdef990d045ff9a46c6c30aaf",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/sidecar-lifecycle.ts"
+      ],
+      "file_sha256": "ff0c16362699a75b3bddf80cd32d4002bca95a50510a961178ee8b9c5de0fef3",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src/server/verdict-token-gate.ts"
+      ],
+      "file_sha256": "b067c9ccd1bac905a029d75d64f51a9c7438ae62bd60ea6d178c818c3f1e7d1c",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/Cargo.toml"
+      ],
+      "file_sha256": "439c4469fb8a16c37d553e255aa318809724053661a2841e37ca829f35043578",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/build.rs"
+      ],
+      "file_sha256": "22075a4a51cdd5f4e34f2737d8aa552a301c298412e75bcf773a0759030f52aa",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/capabilities/remote-sidecar.json"
+      ],
+      "file_sha256": "aeb6cc74cae9283b07519402ee792a41c5aabea764602fabca0badc21344e8c4",
+      "categories": [
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/decoy_gate.rs"
+      ],
+      "file_sha256": "e8554c9e60d9846b4b35981508c7c9eb3e2139da1c56e5fcf38c99c72bc24d74",
+      "categories": [
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/entitlement_claim.rs"
+      ],
+      "file_sha256": "475a7a96e0ab77a78602c4d71624ae54776ceab8b9080ec8845bab2f5a1e3f37",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "ce5f9bc2cf2f65807a95893c50b64a943dc52a3ab66eca489211d8ee23cb6ab8",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/license.rs"
+      ],
+      "file_sha256": "0f8dc18f5e9af64aac167e276e1c4a7a225b0272ea6b48b4190f84897b31a3f9",
+      "categories": [
+        "credential_store",
+        "ipc",
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/logging.rs"
+      ],
+      "file_sha256": "2f31f93557c3177d50bb79e8caa9ae3f3bdf9b1d91a34e5862ad5b0687160196",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/product_identity.rs"
+      ],
+      "file_sha256": "3582ae89168f94e2534c7b53212cb1fc7c58432f78aafd15102d54a269a02f2b",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/win_job.rs"
+      ],
+      "file_sha256": "1d6ee2c67dc4bcade11a21080fec714d7e1d18da2f031ffd7a1d1acdd1354f00",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/src/workspace_reset.rs"
+      ],
+      "file_sha256": "feadd8108cd7aa34d09c13b03f679362310be54f8ba23416084c08ce53c77056",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/tauri.windows.conf.json"
+      ],
+      "file_sha256": "20f79690aa693cfa7251c0807d1b2a77a8375d907f0ddc354c9a2bc43dc61679",
+      "categories": [
+        "installer_deploy"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "frontend/src-tauri/tests/logdec_cli.rs"
+      ],
+      "file_sha256": "5e2cc77ab5719ee1d31266475e3d25c684ab78bd42ee2bfde94d73c904acf6d8",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "file_sha256": "b8b01a039b9520c079db22f24b9c09aa46823b03ada6222e4c3047f69630a52e",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    }
+  ],
   "historical_baselines": []
 }

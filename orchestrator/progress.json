@@ -1,23 +1,94 @@
 {
   "meta": {
-    "purpose": "Refined task queue (per-module archetype). One task = ONE isolated `claude -p` session. Run `progress.mjs show <vertical>` for data-source/flow/OSS. DERIVED — regenerate, do not hand-edit repo/frontend signals.",
-    "work_branch": "feat/service-contract",
-    "task_order": "repo → [data-source] → [flow] → frontend → e2e (applicable subset per module)"
+    "purpose": "Per-module task queue (generic; signals from modules.config.json). One task = one isolated session.",
+    "work_branch": "main"
   },
   "summary": {
     "verticals": 22,
-    "tasks_done": 28,
-    "tasks_total": 88,
-    "tasks_pending": 60,
+    "tasks_done": 29,
+    "tasks_total": 90,
+    "tasks_pending": 61,
     "verticals_complete": 0
   },
   "verticals": [
+    {
+      "id": "T-915",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-915",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "frontend/scripts/**",
+        "frontend/package.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/research/evidence/t915/**",
+        "frontend/src-tauri/src/**",
+        "frontend/src-tauri/tests/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json",
+        "frontend/src-tauri/capabilities/**"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/**",
+        "frontend/scripts/desktop/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": [],
+        "acceptance": [
+          "docs/research/evidence/t915/**"
+        ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {
+        "design-review": "51ed266e"
+      }
+    },
     {
       "id": "projects",
       "archetype": [
         "user-authored",
         "orchestration"
       ],
+      "task_id": "projects",
       "tasks": [
         {
           "step": "repo",
@@ -36,7 +107,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/projects/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -45,6 +126,7 @@
         "user-authored",
         "externally-ingested"
       ],
+      "task_id": "knowledge",
       "tasks": [
         {
           "step": "repo",
@@ -63,7 +145,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/knowledge/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -72,6 +164,7 @@
         "user-authored",
         "externally-ingested"
       ],
+      "task_id": "assets",
       "tasks": [
         {
           "step": "repo",
@@ -90,7 +183,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/assets/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -100,6 +203,7 @@
         "ai-generated",
         "orchestration"
       ],
+      "task_id": "artifacts",
       "tasks": [
         {
           "step": "repo",
@@ -122,7 +226,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/artifacts/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -131,6 +245,7 @@
         "user-authored",
         "orchestration"
       ],
+      "task_id": "production",
       "tasks": [
         {
           "step": "repo",
@@ -149,7 +264,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/production/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -158,6 +283,7 @@
         "externally-ingested",
         "orchestration"
       ],
+      "task_id": "publishing",
       "tasks": [
         {
           "step": "repo",
@@ -176,7 +302,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/publishing/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -185,6 +321,7 @@
         "externally-ingested",
         "derived-computed"
       ],
+      "task_id": "analytics",
       "tasks": [
         {
           "step": "repo",
@@ -203,7 +340,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/analytics/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -212,6 +359,7 @@
         "user-authored",
         "orchestration"
       ],
+      "task_id": "reviews",
       "tasks": [
         {
           "step": "repo",
@@ -230,7 +378,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/reviews/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -239,6 +397,7 @@
         "user-authored",
         "derived-computed"
       ],
+      "task_id": "learnings",
       "tasks": [
         {
           "step": "repo",
@@ -257,7 +416,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/learnings/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -265,6 +434,7 @@
       "archetype": [
         "derived-computed"
       ],
+      "task_id": "notifications",
       "tasks": [
         {
           "step": "repo",
@@ -283,7 +453,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/notifications/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -291,6 +471,7 @@
       "archetype": [
         "derived-computed"
       ],
+      "task_id": "search",
       "tasks": [
         {
           "step": "repo",
@@ -309,7 +490,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/search/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -318,6 +509,7 @@
         "user-authored",
         "reference-config"
       ],
+      "task_id": "settings",
       "tasks": [
         {
           "step": "repo",
@@ -332,7 +524,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/settings/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -341,6 +543,7 @@
         "user-authored",
         "reference-config"
       ],
+      "task_id": "taxonomy",
       "tasks": [
         {
           "step": "repo",
@@ -355,7 +558,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/taxonomy/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -364,6 +577,7 @@
         "externally-ingested",
         "orchestration"
       ],
+      "task_id": "ingestion",
       "tasks": [
         {
           "step": "repo",
@@ -386,7 +600,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/ingestion/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -395,6 +619,7 @@
         "ai-generated",
         "orchestration"
       ],
+      "task_id": "ai",
       "tasks": [
         {
           "step": "repo",
@@ -417,7 +642,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/ai/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -428,6 +663,7 @@
         "externally-ingested",
         "orchestration"
       ],
+      "task_id": "candidate",
       "tasks": [
         {
           "step": "repo",
@@ -450,7 +686,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/candidate/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -461,6 +707,7 @@
         "derived-computed",
         "orchestration"
       ],
+      "task_id": "calibration",
       "tasks": [
         {
           "step": "repo",
@@ -483,7 +730,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/calibration/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -494,6 +751,7 @@
         "derived-computed",
         "orchestration"
       ],
+      "task_id": "monetization",
       "tasks": [
         {
           "step": "repo",
@@ -516,7 +774,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "orchestrator/process/modules.config.json"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -526,6 +794,7 @@
         "ai-generated",
         "orchestration"
       ],
+      "task_id": "positioning",
       "tasks": [
         {
           "step": "repo",
@@ -544,7 +813,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/positioning/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -553,6 +832,7 @@
         "user-authored",
         "reference-config"
       ],
+      "task_id": "platform-account",
       "tasks": [
         {
           "step": "repo",
@@ -567,7 +847,17 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/platform-account/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
       "commits": {}
     },
     {
@@ -577,6 +867,7 @@
         "derived-computed",
         "orchestration"
       ],
+      "task_id": "content-calendar",
       "tasks": [
         {
           "step": "repo",
@@ -595,21 +886,18 @@
           "status": "pending"
         }
       ],
-      "blocked_reason": null,
-      "commits": {}
-    },
-    {
-      "id": "T-915",
-      "task_id": "T-915",
-      "archetype": [
-        "orchestration"
+      "blocked_reason": "T-916：历史任务缺有效绑定及验收证据，禁止执行，待独立恢复",
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [],
+      "read_set": [
+        "backend/src/modules/content-calendar/**"
       ],
-      "tasks": [
-        {
-          "step": "design-review",
-          "status": "pending"
-        }
-      ]
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {}

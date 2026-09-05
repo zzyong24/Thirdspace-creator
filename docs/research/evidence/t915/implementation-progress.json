@@ -12,7 +12,8 @@
     "对话检索取消贯通、失败缓存释放、搜索响应正文取消与超时",
     "新增可构建的独立 Node Worker 入口、私有命名 IPC 与监督器；尚未接生产调度",
     "Worker 调用前预算许可、定期续租、取消断流、同租约重投回执、提交未知不覆盖",
-    "共享 retry-policy 归 ai-worker/runtime；明确 HTTP/受管拒绝与未知提交分类，保留完整 Retry-After，SDK 重试设为 0"
+    "共享 retry-policy 归 ai-worker/runtime；明确 HTTP/受管拒绝与未知提交分类，保留完整 Retry-After，SDK 重试设为 0",
+    "新增 ai_tasks→execution_tasks 唯一映射与事务转交；映射任务排除旧领取/清理，尚未接生产调度"
   ],
   "verification": {
     "backend_tests": {
@@ -41,6 +42,16 @@
       "worker_runtime_tests": 6,
       "provider_factory_tests": 20,
       "scope": "真实子进程、真实 SDK、仅本地 HTTP fixtures；无生产供应商/用户数据/桌面分发验收"
+    },
+    "authority_mapping_increment": {
+      "evidence": "authority-mapping-evidence.json",
+      "passed": 30,
+      "typecheck": [
+        "backend PASS",
+        "contract PASS",
+        "frontend tsc PASS"
+      ],
+      "boundary": "无新增违规，既有5条"
     }
   },
   "not_yet_delivered": [
@@ -50,5 +61,5 @@
     "全部生产入口迁移与旧实现退役",
     "完整性能基线、真实供应商及 macOS/Windows 包验收"
   ],
-  "governance": "progress.mjs 因旧 projects:repo 缺边界配置拒绝转换，仍属于 T-916；未绕过或写假完成；本次由主会话编码，子代理只读评审"
+  "governance": "T-916必要配置已修复：T915设计步骤按真实评审commit完成，BUILD任务包/写集合已恢复；21个历史模块只读隔离，历史状态未改。全局历史欠债保留，T915 BUILD和验收未完成。"
 }

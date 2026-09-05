@@ -8,30 +8,576 @@
       "frontend": "wire the UI to the persisted+sourced ops via transport + PERSISTED_OPS + round-trip test. [needs repo/data-source/flow as applicable]",
       "e2e": "end-to-end create->persist(SQL)->render + visual; evaluator/human sets e2e_verified. [last]"
     },
-    "archetypes": ["user-authored", "ai-generated", "externally-ingested", "derived-computed", "reference-config", "orchestration"]
+    "archetypes": [
+      "user-authored",
+      "ai-generated",
+      "externally-ingested",
+      "derived-computed",
+      "reference-config",
+      "orchestration"
+    ]
   },
   "modules": {
-    "T-915": {"task_id": "T-915", "archetype": ["orchestration"], "tasks": ["design-review"], "read_set": ["docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "backend/**", "ai-worker/**", "contract/**", "frontend/src/server/**", "frontend/src/app/api/**", "frontend/scripts/desktop/**"], "write_set": [], "verify_commands": {"design-review": "node orchestrator/process/research-gate.mjs audit"}, "data_source": "真实任务、工具和模型结果；设计审查阶段只读", "flows": "任务恢复与自主搜索浏览器循环"},
-    "projects":         { "archetype": ["user-authored","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "create form mints Project + seeds 6 ProjectStages + 4 OutputStages (atomic UoW); progress/current_stage are recomputed caches", "flows": "HEAD of pipeline; receives setPrimaryOutputAsset/markOutputPublished callbacks from Production/Publishing; emits activity -> search+notifications", "oss": ["kanboard/kanboard — stage columns + move-emits-activity", "twentyhq/twenty — stage-on-entity drives both table & kanban"] },
-    "knowledge":        { "archetype": ["user-authored","externally-ingested"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "UI-authored OR AI-distilled OR ingested-as-candidate; append-only KnowledgeRevision (never UPDATE old)", "flows": "evidence links to artifacts; feeds search index + AI context-tools; survives project archive", "oss": ["TriliumNext/Notes — typed note relations graph", "outline/outline — revisions + backlink-on-save"] },
-    "assets":           { "archetype": ["user-authored","externally-ingested"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "two-phase upload (presign -> S3 -> complete) with metadata harvested via headObject; also minted by Production export + Ingestion", "flows": "export -> registerGeneratedAsset -> ContentOutput.primary_asset_id; cover validated by Publishing", "oss": ["resourcespace/resourcespace — asset+metadata+renditions schema", "atrocore/atrodam — typed metadata per asset"] },
-    "artifacts":        { "archetype": ["user-authored","ai-generated","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "user saves + AI candidates (createdByType:ai) ONLY via AiService.confirmResult->createVersion; immutable ArtifactVersion; structured children replaced per version", "flows": "master_script -> output_script (derived_from); EvidenceLink to knowledge/assets; review report is an Artifact", "oss": ["TypeCellOS/BlockNote — jsonb block document model (AI-rewritable per block)", "ueberdosis/tiptap"] },
-    "production":       { "archetype": ["user-authored","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "production settings + timeline segments; exports.complete (mock render in dev) registers result Asset", "flows": "FLOW-export UoW: exports.complete -> registerGeneratedAsset -> setPrimaryOutputAsset -> markOutputPublished -> post-commit search+activity+notif", "oss": ["remotion-dev/remotion — template+props -> deterministic render job", "OpenShot/openshot-qt — timeline -> render-spec"] },
-    "publishing":       { "archetype": ["externally-ingested","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "publisher.publish returns external_id/url recorded as fact-of-record; status follows external truth", "flows": "publish -> markOutputPublished; anchor for all metrics; content-calendar reconciles against it; (platform,external_id) UNIQUE idempotency", "oss": ["gitroomhq/postiz-app — per-platform adapter + scheduled-post queue (CLOSEST stack match)", "inovector/mixpost"] },
-    "analytics":        { "archetype": ["externally-ingested","derived-computed"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "appendSnapshot called BY Ingestion (FLOW-019): raw_metrics -> normalized MetricValue -> retention/audience curves; idempotent (publication,source,captured_at) UNIQUE", "flows": "feeds Review evidence, Dashboard 数据概览, Publishing Center, Calibration actuals; 七步 adds conversion/revenue metric keys", "oss": ["PostHog/posthog — event + retention/funnel query patterns", "umami-software/umami — Postgres rollup tables"] },
-    "reviews":          { "archetype": ["user-authored","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "form; period derived from Publishing min/max published_at; ReviewInsight.evidence derived from Analytics snapshots", "flows": "Analytics -> Review -> confirmed insights promoteReviewInsight -> Learning; can trigger positioning revision; feeds Calibration", "oss": ["ParabolInc/parabol — retro -> action-items(owner,due) linking to next project"] },
-    "learnings":        { "archetype": ["user-authored","derived-computed"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "quick-record OR promoted from ReviewInsight (review_id backref); confidenceScore = min(100, appCount*20 + (validated?40:0))", "flows": "LearningApplication = 二次验证 in new projects; Calibration adjusts confidence; Dashboard suggestions read top validated", "oss": ["ParabolInc/parabol — action-items / learning loop"] },
-    "notifications":    { "archetype": ["derived-computed"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "NOT self-authored: owning modules call insert() post-commit (task/publish/import/system/ai + cadence_gap); event-emitted ledger", "flows": "shell bell countUnread (Dashboard query service); mark-read idempotent; cadence_gap fired once-on-edge by content-calendar", "oss": ["novuhq/novu — workflow + subscriber + in-app feed schema"] },
-    "search":           { "archetype": ["derived-computed"], "tasks": ["repo","data-source","frontend","e2e"], "data_source": "SearchDocument is a DERIVED, rebuildable index (not truth): owning modules upsertDocument post-commit; FTS + (deferred) pgvector", "flows": "shell search -> pages.search.get composes results; index failure non-throwing (never rolls back business truth); rebuildUserIndex", "oss": ["pgvector/pgvector — hybrid tsvector+embedding in Postgres", "meilisearch/meilisearch — if outgrown"] },
-    "settings":         { "archetype": ["user-authored","reference-config"], "tasks": ["repo","frontend","e2e"], "data_source": "UserPreference/ModelConfiguration/AgentConfiguration upsert; seeded canonical model configs; secret_reference indirection (never raw key)", "flows": "AI worker consumes resolveModelForCapability with fallback chain (capability -> default -> claude-opus-4-8)", "oss": ["BerriAI/litellm — per-tenant model-config + virtual-key + spend ledger", "open-webui/open-webui — model presets UX"] },
-    "taxonomy":         { "archetype": ["user-authored","reference-config"], "tasks": ["repo","frontend","e2e"], "data_source": "Tag CRUD + EntityTag polymorphic join (entity_type/entity_id soft refs); seeded from fixtures", "flows": "Research/Knowledge read tags via listForEntity/listEntitiesForTag -> /search?tag=; the one retained polymorphic association", "oss": ["mbleigh/acts-as-taggable-on — context-scoped polymorphic tagging schema"] },
-    "ingestion":        { "archetype": ["externally-ingested","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "THE single external write path: ExternalSource adapters (douyin scrape, Feishu survey) -> IngestionRun -> per-record; raw payload kept verbatim; double idempotency (source,idempotency_key)+(run,record_key)", "flows": "FLOW-019 ingest metrics->Analytics.appendSnapshot; FLOW-020 ingest knowledge/assets as candidates (never overwrite current); feeds AudienceSignal/Lead/Calibration actuals", "oss": ["miniflux/v2 — idempotent ingest: entry-hash dedup + conditional GET + per-source scheduling", "FreshRSS/FreshRSS — XPath scrape fallback"] },
-    "ai":               { "archetype": ["ai-generated","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "@creatoros/ai-worker subprocess: ai.tasks.create -> claim(queued->running) -> ClaudeAgentRunner (or FakeAgentRunner w/o key) -> submit_candidate once -> AITaskResult", "flows": "SOLE AI write seam: confirmResult (AI-free) -> ArtifactsService.createVersion / Candidate / Knowledge / ReviewInsight; task FSM queued->running->awaiting_confirmation->succeeded|failed|cancelled", "oss": ["langchain-ai/langgraph — checkpoint + human-in-the-loop interrupt/resume (=candidate-confirm)", "langfuse/langfuse — run/trace/observation schema"] },
-    "candidate":        { "archetype": ["user-authored","ai-generated","externally-ingested","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "manual(source:idea) + AI(trend/benchmark/demand) via createFromAIResult on confirm + AudienceSignal ingested (douyin comments/DM); demand_count derived from signals", "flows": "ranked by predictedScore(Calibration)/positioningFit(Positioning gate)/demandCount; candidates.promote -> createProject (atomic, writes TopicPromotion)", "oss": ["MaartenGr/BERTopic — embed->cluster->label topic mining", "rte-france/BERTrend — weak/emerging-signal temporal scoring"] },
-    "calibration":      { "archetype": ["user-authored","externally-ingested","derived-computed","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "Rubric/RubricVersion (immutable, 变现加权 dims not play-count) + blind Prediction lock + CalibrationResult.actualMetrics recycled from verified IngestionRun->Analytics", "flows": "FLOW-校准闭环: Score->Blind-Predict(lock)->Publish->Retro(T+N ingest)->Result->RubricVersion bump + Learning.confidence adjust->re-rank Candidates; data-refresh TodoCard auto N days post-publish", "oss": ["confident-ai/deepeval — rubric-as-judge score+reason", "promptfoo/promptfoo — expected-vs-actual eval cases"] },
-    "monetization":     { "archetype": ["user-authored","externally-ingested","derived-computed","orchestration"], "tasks": ["repo","data-source","flow","frontend","e2e"], "data_source": "柔性 Product + append-only Offer price snapshot + Lead (manual OR Feishu survey via Ingestion) + ConversionEvent; funnel + unattributed bucket computed at read", "flows": "FLOW-变现归因: intent(content_role + ContentOutputProduct) vs actual(Lead.attributed_content_id, lossy); conversion.purchase -> Analytics conversion/revenue -> Dashboard first-class columns; NEVER force-100%-allocate (honest unattributed)", "oss": ["twentyhq/twenty — opportunity/pipeline CRM schema (BEST fit)", "espocrm/espocrm — leads->opportunities->conversion"] },
-    "positioning":      { "archetype": ["user-authored","ai-generated","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "CreatorProfile upsert + PositioningStatement immutable version chain + AI-revise via confirm seam", "flows": "PositioningGate (deterministic service, NO table/NO AI) scores candidate/project positioning_fit 0-100, advisory/non-blocking; ReviewInsight -> positioning revision (loop)", "oss": ["twentyhq/twenty — metadata profile attributes", "TriliumNext/Notes — typed key/value attributes"] },
-    "platform-account": { "archetype": ["user-authored","reference-config"], "tasks": ["repo","frontend","e2e"], "data_source": "accounts.create(platform,handle,secretReference?,followerBaseline?); UNIQUE(user,platform,handle); secret_reference is a pointer never raw token", "flows": "Publication.account_id/ProjectTargetPlatform.account_id validated via assertOwnedAccount; per-account metrics are READ-TIME rollup (no new ingest path)", "oss": ["gitroomhq/postiz-app — OAuth account model + per-platform constraints"] },
-    "content-calendar": { "archetype": ["user-authored","derived-computed","orchestration"], "tasks": ["repo","flow","frontend","e2e"], "data_source": "ContentCalendarEntry(planned_at, output|candidate) + PublishingCadence per account; status reconciled by READING published reality (no new write path)", "flows": "FLOW-发布节奏达成: cadence -> planned slots -> publish -> reconcile(planned->published | past-grace->missed 断更) -> cadence_gap notification once; attainment -> Dashboard lagging accounts", "oss": ["gitroomhq/postiz-app — calendar + scheduled-post queue", "inovector/mixpost"] }
+    "T-915": {
+      "task_id": "T-915",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build",
+        "acceptance"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/**",
+        "frontend/scripts/desktop/**",
+        "frontend/src/**",
+        "frontend/src-tauri/**",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "frontend/scripts/**",
+        "frontend/package.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "docs/research/evidence/t915/**",
+        "frontend/src-tauri/src/**",
+        "frontend/src-tauri/tests/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json",
+        "frontend/src-tauri/capabilities/**"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm --filter @creatoros/contract --filter @creatoros/ai-worker --filter @creatoros/backend typecheck",
+          "pnpm --filter creatoros-frontend exec tsc --noEmit",
+          "pnpm --filter @creatoros/contract --filter @creatoros/ai-worker --filter @creatoros/backend test",
+          "pnpm --filter creatoros-frontend test",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ],
+        "acceptance": [
+          "pnpm --filter creatoros-frontend test:e2e",
+          "pnpm --filter @creatoros/ai-worker build",
+          "pnpm --filter creatoros-frontend build",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs"
+        ]
+      },
+      "data_source": "真实业务与模型结果；BUILD 和验收必须覆盖 SPEC 全部 R/AC，当前 Worker 局部证据不代表全部通过。",
+      "flows": "任务恢复与自主搜索浏览器循环",
+      "step_write_set": {
+        "design-review": [],
+        "acceptance": [
+          "docs/research/evidence/t915/**"
+        ]
+      },
+      "acceptance_note": "上述命令不替代 SPEC 的完整公开旅程、30次性能基线、双平台分发包与真实供应商证据；缺任何一项均不可完成 acceptance。"
+    },
+    "projects": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "create form mints Project + seeds 6 ProjectStages + 4 OutputStages (atomic UoW); progress/current_stage are recomputed caches",
+      "flows": "HEAD of pipeline; receives setPrimaryOutputAsset/markOutputPublished callbacks from Production/Publishing; emits activity -> search+notifications",
+      "oss": [
+        "kanboard/kanboard — stage columns + move-emits-activity",
+        "twentyhq/twenty — stage-on-entity drives both table & kanban"
+      ],
+      "read_set": [
+        "backend/src/modules/projects/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "knowledge": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "UI-authored OR AI-distilled OR ingested-as-candidate; append-only KnowledgeRevision (never UPDATE old)",
+      "flows": "evidence links to artifacts; feeds search index + AI context-tools; survives project archive",
+      "oss": [
+        "TriliumNext/Notes — typed note relations graph",
+        "outline/outline — revisions + backlink-on-save"
+      ],
+      "read_set": [
+        "backend/src/modules/knowledge/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "assets": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "two-phase upload (presign -> S3 -> complete) with metadata harvested via headObject; also minted by Production export + Ingestion",
+      "flows": "export -> registerGeneratedAsset -> ContentOutput.primary_asset_id; cover validated by Publishing",
+      "oss": [
+        "resourcespace/resourcespace — asset+metadata+renditions schema",
+        "atrocore/atrodam — typed metadata per asset"
+      ],
+      "read_set": [
+        "backend/src/modules/assets/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "artifacts": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "user saves + AI candidates (createdByType:ai) ONLY via AiService.confirmResult->createVersion; immutable ArtifactVersion; structured children replaced per version",
+      "flows": "master_script -> output_script (derived_from); EvidenceLink to knowledge/assets; review report is an Artifact",
+      "oss": [
+        "TypeCellOS/BlockNote — jsonb block document model (AI-rewritable per block)",
+        "ueberdosis/tiptap"
+      ],
+      "read_set": [
+        "backend/src/modules/artifacts/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "production": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "production settings + timeline segments; exports.complete (mock render in dev) registers result Asset",
+      "flows": "FLOW-export UoW: exports.complete -> registerGeneratedAsset -> setPrimaryOutputAsset -> markOutputPublished -> post-commit search+activity+notif",
+      "oss": [
+        "remotion-dev/remotion — template+props -> deterministic render job",
+        "OpenShot/openshot-qt — timeline -> render-spec"
+      ],
+      "read_set": [
+        "backend/src/modules/production/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "publishing": {
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "publisher.publish returns external_id/url recorded as fact-of-record; status follows external truth",
+      "flows": "publish -> markOutputPublished; anchor for all metrics; content-calendar reconciles against it; (platform,external_id) UNIQUE idempotency",
+      "oss": [
+        "gitroomhq/postiz-app — per-platform adapter + scheduled-post queue (CLOSEST stack match)",
+        "inovector/mixpost"
+      ],
+      "read_set": [
+        "backend/src/modules/publishing/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "analytics": {
+      "archetype": [
+        "externally-ingested",
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "appendSnapshot called BY Ingestion (FLOW-019): raw_metrics -> normalized MetricValue -> retention/audience curves; idempotent (publication,source,captured_at) UNIQUE",
+      "flows": "feeds Review evidence, Dashboard 数据概览, Publishing Center, Calibration actuals; 七步 adds conversion/revenue metric keys",
+      "oss": [
+        "PostHog/posthog — event + retention/funnel query patterns",
+        "umami-software/umami — Postgres rollup tables"
+      ],
+      "read_set": [
+        "backend/src/modules/analytics/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "reviews": {
+      "archetype": [
+        "user-authored",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "form; period derived from Publishing min/max published_at; ReviewInsight.evidence derived from Analytics snapshots",
+      "flows": "Analytics -> Review -> confirmed insights promoteReviewInsight -> Learning; can trigger positioning revision; feeds Calibration",
+      "oss": [
+        "ParabolInc/parabol — retro -> action-items(owner,due) linking to next project"
+      ],
+      "read_set": [
+        "backend/src/modules/reviews/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "learnings": {
+      "archetype": [
+        "user-authored",
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "quick-record OR promoted from ReviewInsight (review_id backref); confidenceScore = min(100, appCount*20 + (validated?40:0))",
+      "flows": "LearningApplication = 二次验证 in new projects; Calibration adjusts confidence; Dashboard suggestions read top validated",
+      "oss": [
+        "ParabolInc/parabol — action-items / learning loop"
+      ],
+      "read_set": [
+        "backend/src/modules/learnings/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "notifications": {
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "NOT self-authored: owning modules call insert() post-commit (task/publish/import/system/ai + cadence_gap); event-emitted ledger",
+      "flows": "shell bell countUnread (Dashboard query service); mark-read idempotent; cadence_gap fired once-on-edge by content-calendar",
+      "oss": [
+        "novuhq/novu — workflow + subscriber + in-app feed schema"
+      ],
+      "read_set": [
+        "backend/src/modules/notifications/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "search": {
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "SearchDocument is a DERIVED, rebuildable index (not truth): owning modules upsertDocument post-commit; FTS + (deferred) pgvector",
+      "flows": "shell search -> pages.search.get composes results; index failure non-throwing (never rolls back business truth); rebuildUserIndex",
+      "oss": [
+        "pgvector/pgvector — hybrid tsvector+embedding in Postgres",
+        "meilisearch/meilisearch — if outgrown"
+      ],
+      "read_set": [
+        "backend/src/modules/search/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "settings": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "UserPreference/ModelConfiguration/AgentConfiguration upsert; seeded canonical model configs; secret_reference indirection (never raw key)",
+      "flows": "AI worker consumes resolveModelForCapability with fallback chain (capability -> default -> claude-opus-4-8)",
+      "oss": [
+        "BerriAI/litellm — per-tenant model-config + virtual-key + spend ledger",
+        "open-webui/open-webui — model presets UX"
+      ],
+      "read_set": [
+        "backend/src/modules/settings/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "taxonomy": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "Tag CRUD + EntityTag polymorphic join (entity_type/entity_id soft refs); seeded from fixtures",
+      "flows": "Research/Knowledge read tags via listForEntity/listEntitiesForTag -> /search?tag=; the one retained polymorphic association",
+      "oss": [
+        "mbleigh/acts-as-taggable-on — context-scoped polymorphic tagging schema"
+      ],
+      "read_set": [
+        "backend/src/modules/taxonomy/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "ingestion": {
+      "archetype": [
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "THE single external write path: ExternalSource adapters (douyin scrape, Feishu survey) -> IngestionRun -> per-record; raw payload kept verbatim; double idempotency (source,idempotency_key)+(run,record_key)",
+      "flows": "FLOW-019 ingest metrics->Analytics.appendSnapshot; FLOW-020 ingest knowledge/assets as candidates (never overwrite current); feeds AudienceSignal/Lead/Calibration actuals",
+      "oss": [
+        "miniflux/v2 — idempotent ingest: entry-hash dedup + conditional GET + per-source scheduling",
+        "FreshRSS/FreshRSS — XPath scrape fallback"
+      ],
+      "read_set": [
+        "backend/src/modules/ingestion/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "ai": {
+      "archetype": [
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "@creatoros/ai-worker subprocess: ai.tasks.create -> claim(queued->running) -> ClaudeAgentRunner (or FakeAgentRunner w/o key) -> submit_candidate once -> AITaskResult",
+      "flows": "SOLE AI write seam: confirmResult (AI-free) -> ArtifactsService.createVersion / Candidate / Knowledge / ReviewInsight; task FSM queued->running->awaiting_confirmation->succeeded|failed|cancelled",
+      "oss": [
+        "langchain-ai/langgraph — checkpoint + human-in-the-loop interrupt/resume (=candidate-confirm)",
+        "langfuse/langfuse — run/trace/observation schema"
+      ],
+      "read_set": [
+        "backend/src/modules/ai/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "candidate": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "externally-ingested",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "manual(source:idea) + AI(trend/benchmark/demand) via createFromAIResult on confirm + AudienceSignal ingested (douyin comments/DM); demand_count derived from signals",
+      "flows": "ranked by predictedScore(Calibration)/positioningFit(Positioning gate)/demandCount; candidates.promote -> createProject (atomic, writes TopicPromotion)",
+      "oss": [
+        "MaartenGr/BERTopic — embed->cluster->label topic mining",
+        "rte-france/BERTrend — weak/emerging-signal temporal scoring"
+      ],
+      "read_set": [
+        "backend/src/modules/candidate/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "calibration": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "Rubric/RubricVersion (immutable, 变现加权 dims not play-count) + blind Prediction lock + CalibrationResult.actualMetrics recycled from verified IngestionRun->Analytics",
+      "flows": "FLOW-校准闭环: Score->Blind-Predict(lock)->Publish->Retro(T+N ingest)->Result->RubricVersion bump + Learning.confidence adjust->re-rank Candidates; data-refresh TodoCard auto N days post-publish",
+      "oss": [
+        "confident-ai/deepeval — rubric-as-judge score+reason",
+        "promptfoo/promptfoo — expected-vs-actual eval cases"
+      ],
+      "read_set": [
+        "backend/src/modules/calibration/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "monetization": {
+      "archetype": [
+        "user-authored",
+        "externally-ingested",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "data-source",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "柔性 Product + append-only Offer price snapshot + Lead (manual OR Feishu survey via Ingestion) + ConversionEvent; funnel + unattributed bucket computed at read",
+      "flows": "FLOW-变现归因: intent(content_role + ContentOutputProduct) vs actual(Lead.attributed_content_id, lossy); conversion.purchase -> Analytics conversion/revenue -> Dashboard first-class columns; NEVER force-100%-allocate (honest unattributed)",
+      "oss": [
+        "twentyhq/twenty — opportunity/pipeline CRM schema (BEST fit)",
+        "espocrm/espocrm — leads->opportunities->conversion"
+      ],
+      "read_set": [
+        "orchestrator/process/modules.config.json"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。 原模块目录不存在，只读历史配置待核查。"
+    },
+    "positioning": {
+      "archetype": [
+        "user-authored",
+        "ai-generated",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "CreatorProfile upsert + PositioningStatement immutable version chain + AI-revise via confirm seam",
+      "flows": "PositioningGate (deterministic service, NO table/NO AI) scores candidate/project positioning_fit 0-100, advisory/non-blocking; ReviewInsight -> positioning revision (loop)",
+      "oss": [
+        "twentyhq/twenty — metadata profile attributes",
+        "TriliumNext/Notes — typed key/value attributes"
+      ],
+      "read_set": [
+        "backend/src/modules/positioning/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "platform-account": {
+      "archetype": [
+        "user-authored",
+        "reference-config"
+      ],
+      "tasks": [
+        "repo",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "accounts.create(platform,handle,secretReference?,followerBaseline?); UNIQUE(user,platform,handle); secret_reference is a pointer never raw token",
+      "flows": "Publication.account_id/ProjectTargetPlatform.account_id validated via assertOwnedAccount; per-account metrics are READ-TIME rollup (no new ingest path)",
+      "oss": [
+        "gitroomhq/postiz-app — OAuth account model + per-platform constraints"
+      ],
+      "read_set": [
+        "backend/src/modules/platform-account/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "content-calendar": {
+      "archetype": [
+        "user-authored",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "repo",
+        "flow",
+        "frontend",
+        "e2e"
+      ],
+      "data_source": "ContentCalendarEntry(planned_at, output|candidate) + PublishingCadence per account; status reconciled by READING published reality (no new write path)",
+      "flows": "FLOW-发布节奏达成: cadence -> planned slots -> publish -> reconcile(planned->published | past-grace->missed 断更) -> cadence_gap notification once; attainment -> Dashboard lagging accounts",
+      "oss": [
+        "gitroomhq/postiz-app — calendar + scheduled-post queue",
+        "inovector/mixpost"
+      ],
+      "read_set": [
+        "backend/src/modules/content-calendar/**"
+      ],
+      "write_set": [],
+      "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    }
   }
 }

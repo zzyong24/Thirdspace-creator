@@ -1,0 +1,27 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T07:04:20.221103+00:00",
+  "status": "mapping_foundation_verified_full_scope_open",
+  "scope": "安全绑定AI业务任务到唯一执行记录，尚未生产接线",
+  "tests": {
+    "mapping_and_migration": 7,
+    "legacy_AI_execution_and_persistent_tasks": 23,
+    "total": 30
+  },
+  "red_evidence": "新增服务前导入缺失，测试suite失败；未声称完成行为断言的前置红测",
+  "review": "独立只读 /root/worker_review 未发现阻断漏洞；建议的残留提交与映射归属回归已补测通过",
+  "limits": [
+    "测试使用PGlite临时库，不涉及用户数据库",
+    "未完成多PostgreSQL连接锁竞争实测",
+    "生产scheduler尚未调用bindAiTask；当前不声称已迁移全部入口",
+    "持久fence/预算/检查点/暂停重启及全部候选投影仍待实现"
+  ],
+  "outputs": {
+    "t915-authority-red.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n ❯ src/modules/execution/execution-authority.service.test.ts (0 test)\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/execution/execution-authority.service.test.ts [ src/modules/execution/execution-authority.service.test.ts ]\nError: Cannot find module './execution-authority.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-authority.service.test.ts\n ❯ src/modules/execution/execution-authority.service.test.ts:4:1\n      2| import { aiTasks, createDb, eq, executionTasks, type Db } from \"@creat…\n      3| import { createAiRepository } from \"../ai/ai.repository\";\n      4| import { createExecutionAuthorityService } from \"./execution-authority…\n       | ^\n      5|\n      6| const ctx = {userId: \"authority-user\", accountId: \"authority-account\",…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:56:44\n   Duration  1.17s (transform 479ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nundefined\n/Users/zyongzhu/Workbase/Thirdspace-creator/backend:\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-authority.service.test.ts\n",
+    "t915-authority-final.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  30 passed (30)\n   Start at  00:02:13\n   Duration  14.68s (transform 1.36s, setup 0ms, import 2.69s, tests 23.29s, environment 0ms)\n\n",
+    "t915-authority-types-final.log": "Scope: 2 of 6 workspace projects\ncontract typecheck$ tsc --noEmit\ncontract typecheck: Done\nbackend typecheck$ tsc --noEmit\nbackend typecheck: Done\n",
+    "t915-authority-frontend-types.log": "",
+    "t915-authority-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  },
+  "frontend_typecheck_exit_code": 0
+}

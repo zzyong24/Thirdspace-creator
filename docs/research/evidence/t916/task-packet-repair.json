@@ -1,0 +1,31 @@
+{
+  "task": "T-916",
+  "status": "necessary_subset_verified_full_task_open",
+  "recordedAt": "2026-09-05T07:01:10.617374+00:00",
+  "scope": "恢复 T-915 真实 BUILD 任务包，不清除所有历史债务",
+  "verified": {
+    "historical_modules_preserved_and_blocked": 21,
+    "T915_design_review_commit": "51ed266e",
+    "T915_build": "pending/claimed，未完成",
+    "T915_acceptance": "pending，未完成",
+    "task_packet": "orchestrator/context/T-915.md",
+    "complexity_baseline": "76个已提交文件按task/file/hash/category绑定，既有机制沿用与已批准Worker通信；文件改动须重新评估"
+  },
+  "review": "独立只读 reviewer /root/worker_review 已核对历史snapshot、21模块状态、76文件hash及schedule；未发现实质绕过/状态丢失。",
+  "global_reconcile": "修复前实测211 errors/1 warning；全局历史证据与自治配置、LED024环境问题保留，未称全绿。",
+  "commands": [
+    "taskctl start T-916",
+    "progress generate",
+    "progress block <21个历史模块> --reason T-916历史证据缺失",
+    "research-gate audit PASS",
+    "progress done T-915:design-review --commit 51ed266e",
+    "context-compile --task T-915",
+    "progress schedule ready T-915:build",
+    "progress claim T-915:build --agent codex-main"
+  ],
+  "scope_limits": [
+    "不修改门卫实现",
+    "旧任务不新增写权限或假PASS",
+    "BUILD/acceptance需完整SPEC全部R/AC，局部测试不能作为完成依据"
+  ]
+}
