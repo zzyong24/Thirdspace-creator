@@ -160,3 +160,5 @@ export { createExecutionCallLedgerService } from "./execution-call-ledger.servic
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";
 export { createModelWorkerDispatcher, type ModelWorkerDispatcherDeps } from "./model-worker-dispatcher";
+
+export { createResearchPorts } from "./agentic/adapters/research-ports";

@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "d1a3b1ed5107c62779b9b6039671fdfb7b5c546aaceabb9a5e575f19bf94e152",
+      "file_sha256": "b855b478a5aedcec6f9e8f710045fd02e6cc10c5e7e7dfaf52ae61ec3d8a5e08",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内文稿候选稳定采纳来源及回执恢复；独立只读复核与真实PG并发验证通过，历史对账和完整T915验收保留。",
+      "reason": "DEC-RUNTIME-055既有范围内接通真实调研只读端口与分页，剩余五端口及Pi/browser迁移未完成；不新增通用代码执行权限。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "589cc583cdb91ed727c974458bb1bb97244bc5d18c1bbd6c2a70930cf59a9a13",
+      "file_sha256": "797626a0d2b6132657bddb5d0cbba08a28dee4a498f2dca8113a03b9d7aa3983",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内迁移结构方案生成至既有Worker，策划只读端口抽至backend；只读独立复核通过，采纳幂等债务及完整验收保留。",
+      "reason": "DEC-RUNTIME-055既有范围内接通真实调研只读端口与分页，剩余五端口及Pi/browser迁移未完成；不新增通用代码执行权限。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

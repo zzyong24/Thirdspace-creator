@@ -1,0 +1,29 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:52:59.545842+00:00",
+  "status": "research_read_ports_connected_full_agent_runtime_open",
+  "implemented": [
+    "调研web.search与web.read替换原未接线错误，按任务ctx调用既有搜索和带登录态网页读取服务",
+    "取消signal传入搜索、网页读取及浏览器池checkout，登录异常保留可观察提示",
+    "web.read支持offset/nextOffset/totalLength，成功全文按任务缓存最多8个URL，失败/登录提示不缓存",
+    "续读绑定正文snapshotId，缓存淘汰后内容变化拒绝跨版本拼接"
+  ],
+  "verification": {
+    "backend_tests": 32,
+    "frontend_tests": 31,
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "scope": "工具和服务夹具覆盖28000字完整分页、一次读取、跨账号独立缓存、取消后不读缓存、登录/失败后重新读；既有Pi与web-reader回归通过",
+    "snapshot": "完整分页逐页携带同一snapshotId；错误snapshot续读被拒绝",
+    "review": "worker_review只读复核未发现新增阻断；建议的9URL淘汰后正文变化测试已补并通过，审查未重跑测试"
+  },
+  "limits": [
+    "本次未做真实网站或付费模型端到端验收，不能等同生产搜索成功率证明",
+    "knowledge.write、collect.plan/run、material.search/organize仍未接线并真实报错",
+    "Pi及浏览器仍由旧宿主运行，独立Worker迁移、持久检查点与未知结果对账未完成",
+    "完整T915所有入口、性能基线、供应商及桌面包验收仍未完成"
+  ]
+}

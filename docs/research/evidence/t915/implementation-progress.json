@@ -144,5 +144,10 @@
     "postgresConcurrentAdoptions": 30,
     "postgresConcurrentEdits": 10,
     "scope": "通用文稿候选采纳幂等与重放保护通过，历史无来源回执仍待对账"
+  },
+  "research_read_ports_increment": {
+    "evidence": "research-read-ports-evidence.json",
+    "tests": 63,
+    "scope": "七个缺口中搜索/读网页已接真实服务，仍有五个端口及Pi/browser Worker迁移待完成"
   }
 }

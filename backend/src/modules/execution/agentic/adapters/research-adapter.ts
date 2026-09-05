@@ -5,6 +5,7 @@
 // 复用锚:web.search / web.read / knowledge.write 端口形状照 chat-tools ChatToolDeps 同名端口(T-217c/
 // T-251/T-094),不重造端口逻辑;本适配器只把它们包成引擎认的 AgenticTool(白名单 agentic.research)。
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import type { AgenticTool } from "../engine";
 
 /** web.read 分窗上限(T-251:web.read 窗口 12000 chars,与 chat 侧 WEB_READ_WINDOW_MAX_CHARS 同口径)。 */
@@ -39,7 +40,7 @@ export interface ResearchPorts {
 }
 
 const webSearchParams = z.object({ query: z.string().min(1) });
-const webReadParams = z.object({ url: z.string().min(1) });
+const webReadParams = z.object({ url: z.string().min(1),offset:z.number().int().nonnegative().default(0),snapshotId:z.string().optional() });
 const knowledgeWriteParams = z.object({
   title: z.string().min(1),
   note: z.string().min(1),
@@ -75,7 +76,7 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
       name: "web.read",
       label: "读网页正文",
       description:
-        "带登录态读一个 URL 的正文全文(比截图准),用于调研的『读』步;需登录的站点会返回登录引导。",
+        "读取URL正文，每次最多12000字。返回nextOffset时用同一URL、snapshotId和该offset继续读，直到nextOffset为null；登录提示不是正文。",
       effect: "none",
       parameters: webReadParams,
       // 确定性引擎:读上一步搜到的第一个 URL(串起 搜→读 链路)。
@@ -87,7 +88,8 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
         return url ? { url } : { url: "" };
       },
       async execute(input, { signal }) {
-        const { url } = webReadParams.parse(input);
+        signal.throwIfAborted();
+        const { url,offset,snapshotId:expectedSnapshot } = webReadParams.parse(input);
         if (!url) return { summary: "无可读 URL(上一步无检索结果)" };
         const res = await ports.webRead({ url }, signal);
         if (res.needLogin) {
@@ -96,9 +98,13 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
             data: { needLogin: true, domain: res.domain },
           };
         }
+        // SEMANTIC_BOUNDARY_ALLOW: 摘要只校验分页正文是否同一快照，不作语义选择。
+        const snapshotId=createHash("sha256").update(JSON.stringify([res.sourceUrl,res.fullText])).digest("hex");
+        if(offset>0 && expectedSnapshot!==snapshotId)throw new Error("网页正文快照已变化或缺少snapshotId，请从offset=0重新读取");
         // T-251 分窗:端口回全文,适配器截到窗口上限(引擎上下文预算,诚实标截断)。
-        const windowed = res.fullText.slice(0, RESEARCH_WEB_READ_WINDOW_CHARS);
-        const truncated = res.fullText.length > RESEARCH_WEB_READ_WINDOW_CHARS;
+        const windowed = res.fullText.slice(offset, offset+RESEARCH_WEB_READ_WINDOW_CHARS);
+        const nextOffset=offset+windowed.length<res.fullText.length ? offset+windowed.length : null;
+        const truncated = nextOffset!==null;
         return {
           hasEvidence: Boolean(res.sourceUrl.trim() && windowed.trim()),
           summary: `读到《${res.title}》正文 ${windowed.length} 字${truncated ? "(已分窗截断)" : ""}`,
@@ -107,6 +113,10 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
             sourceUrl: res.sourceUrl,
             text: windowed,
             truncated,
+            offset,
+            nextOffset,
+            totalLength:res.fullText.length,
+            snapshotId,
           },
         };
       },

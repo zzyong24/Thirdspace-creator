@@ -235,6 +235,7 @@ import {
   createDeterministicAgenticEngine,
   createPiAgenticEngine,
   createResearchTools,
+  createResearchPorts,
   createCollectionTools,
   createMaterialTools,
   estimateTokens as estimateAgenticTokens,
@@ -9733,15 +9734,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }),
   );
 
-  // ── [T-256b/c] 自主任务运行时装配(独立区域,additive:三 agentic executor 追加进上方
-  //    executorRegistry;dispatch/沙箱/确认门/步骤流零改动,复用 T-255a 编排)──────────────
-  //  引擎:确定性引擎(Pi 就绪前默认;真 Pi = createPiAgenticEngine + streamFn,见 pi-engine.ts + 报告)。
-  //  §6.1 硬门:引擎每步推理回接 model-config —— buildAgenticLlm 闭包走上面同一 llmCompleter
-  //    (resolveLlmConfig 解析用户 provider),token 由 estimateAgenticTokens 兜(喂预算硬顶)。
-  //  领域端口:本轮为**诚实 bundle seam**(读诚实降级 / 写只 staged 不碰 live 数据,守铁律②/封号纪律);
-  //    真联网检索端口(resolveSearchSpec,在 chat route)、真 ingestion 采集端口、真 pending 知识写入
-  //    的接线为 follow-up(见交付报告「差最后一步」)。框架校验(循环/白名单/预算硬顶/干跑/manifest/
-  //    确认门)不依赖端口真伪。
+  // 自主任务：搜索和网页读取复用真实服务，其他领域写入/采集端口仍待接通。
+  // 此处仍是旧宿主装配；Pi/浏览器迁入独立Worker及持久检查点属于T-915剩余范围。
   const buildAgenticLlm = (
     ctx: RequestContext,
     capability: string,
@@ -9758,13 +9752,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       };
     };
   };
-  // [RT-H07] 自主循环领域端口:真实端口(联网检索 / ingestion 采集 / 素材库读写 / 知识 pending 写入)
-  //   的接线为**后续任务**(见交付报告 follow-up)。在真端口接上前,这些 seam **绝不伪装成功**——
-  //   此前它们返回「假 pendingId(`staged-…`)/ 固定 ok:true 结果 0 / 空成功」,违反「严禁假按钮 ·
-  //   诚实置 0」:模型会把「什么都没做」当成「搜到 0 条 / 已采集 / 已写入」,据此继续推理产出幻觉。
-  //   改为一律抛「未实现」错误(501 语义)。deterministic-engine 不吞 tool 异常(tool.execute 直接
-  //   冒泡),故任一工具被调用即让自主任务**诚实失败**,模型/UI 明确知道「暂无此能力」。真端口落地
-  //   即用真实现替换这些 throw(端口形状不变,executor 注册与框架校验零改动)。
+  // 未接通的领域操作明确失败，不能把空结果或虚构pendingId当作执行成功。
   class AgenticPortNotImplementedError extends Error {
     readonly code = "NotImplemented";
     constructor(port: string) {
@@ -9772,17 +9760,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       this.name = "AgenticPortNotImplementedError";
     }
   }
-  const agenticResearchPorts: ResearchPorts = {
-    async webSearch() {
-      throw new AgenticPortNotImplementedError("web.search");
+  const agenticResearchPorts=(ctx:RequestContext):ResearchPorts=>createResearchPorts(ctx,{
+    search:(c,query,options)=>searchWebPort(c,query,options),
+    async read(c,url,signal){
+      const domain=webDomainFromUrl(url);
+      try{
+        const read=await readWebUrlSidecar(url,{authDir:webAuthDirFor(domain),signal},{openContext:()=>openPooledReaderContext(c,domain,{signal}) as never});
+        return {needLogin:false,title:read.title,fullText:read.text,sourceUrl:read.finalUrl};
+      }catch(error){
+        if(error instanceof WebReaderLoginRequiredError)return {needLogin:true,domain:error.domain};
+        throw error;
+      }
     },
-    async webRead() {
-      throw new AgenticPortNotImplementedError("web.read");
-    },
-    async knowledgeWrite() {
-      throw new AgenticPortNotImplementedError("knowledge.write");
-    },
-  };
+    async stageKnowledge(){throw new AgenticPortNotImplementedError("knowledge.write");},
+  });
   const agenticCollectionPorts: CollectionPorts = {
     async listTargets() {
       throw new AgenticPortNotImplementedError("collect.plan");
@@ -9822,7 +9813,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.research"),
       resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.research"),
-      resolveTools: () => createResearchTools(agenticResearchPorts),
+      resolveTools: ctx => createResearchTools(agenticResearchPorts(ctx)),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );
