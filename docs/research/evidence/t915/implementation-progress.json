@@ -9,7 +9,10 @@
     "有效工具证据按调用保留，部分结果保留，登录/空结果/诊断不冒充可采纳产物",
     "真实 fallback 引擎标记",
     "浏览器排队取消、到期队首唤醒与迟到 context 清理",
-    "对话检索取消贯通、失败缓存释放、搜索响应正文取消与超时"
+    "对话检索取消贯通、失败缓存释放、搜索响应正文取消与超时",
+    "新增可构建的独立 Node Worker 入口、私有命名 IPC 与监督器；尚未接生产调度",
+    "Worker 调用前预算许可、定期续租、取消断流、同租约重投回执、提交未知不覆盖",
+    "共享 retry-policy 归 ai-worker/runtime；明确 HTTP/受管拒绝与未知提交分类，保留完整 Retry-After，SDK 重试设为 0"
   ],
   "verification": {
     "backend_tests": {
@@ -30,10 +33,18 @@
       "frontend tsc PASS"
     ],
     "boundary": "PASS，无新增违规；原有 5 条保留",
-    "code_review": "独立只读复查通过；发现的正文取消、到期队首、诊断候选与证据覆盖问题均修复并有回归"
+    "code_review": "独立只读复查通过；发现的正文取消、到期队首、诊断候选与证据覆盖问题均修复并有回归",
+    "worker_increment": {
+      "evidence": "worker-foundation-evidence.json",
+      "real_child_process_fixture_tests": 9,
+      "retry_policy_tests": 40,
+      "worker_runtime_tests": 6,
+      "provider_factory_tests": 20,
+      "scope": "真实子进程、真实 SDK、仅本地 HTTP fixtures；无生产供应商/用户数据/桌面分发验收"
+    }
   },
   "not_yet_delivered": [
-    "独立 Worker 生产入口与 IPC",
+    "Worker 与生产持久调度及原子服务端口接线；当前只有经过本地故障测试的进程基础设施",
     "唯一执行权迁移、持久检查点与恢复",
     "七端口真实接线与浏览器自适应完整循环",
     "全部生产入口迁移与旧实现退役",

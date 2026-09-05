@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { getRetryAfterMs } from "./retry-policy";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { EmbeddingModelV3, EmbeddingModelV4 } from "@ai-sdk/provider";
@@ -79,6 +80,7 @@ export class ChannelManagedProviderError extends Error {
   readonly status?: number;
   readonly reference?: string;
   readonly retryable: boolean;
+  readonly retryAfterMs?: number;
 
   constructor(details: ChannelManagedFailureDetails = {}) {
     const reason = details.reason ?? "unknown";
@@ -90,6 +92,7 @@ export class ChannelManagedProviderError extends Error {
     this.status = details.status;
     this.reference = details.reference;
     this.retryable = details.retryable ?? false;
+    this.retryAfterMs = details.retryAfterMs;
   }
 }
 
@@ -116,6 +119,7 @@ interface ChannelManagedFailureDetails {
   status?: number;
   reference?: string;
   retryable?: boolean;
+  retryAfterMs?: number;
 }
 
 const CHANNEL_FAILURE_CODES: Record<ChannelManagedFailureReason, string> = {
@@ -294,6 +298,7 @@ export function toChannelManagedError(error: unknown): Error {
     stage,
     ...(status === undefined ? {} : { status }),
     ...(reference ? { reference } : {}),
+    retryAfterMs: getRetryAfterMs(error, Date.now, Infinity) ?? undefined,
     retryable:
       row.retryable === true || reason === "upstream" || reason === "rate_limited",
   });

@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./execution-worker": {
+      "types": "./src/internal/execution-worker.ts",
+      "default": "./src/internal/execution-worker.ts"
     }
   },
   "scripts": {

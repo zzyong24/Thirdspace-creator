@@ -1,0 +1,28 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T06:44:45.751304+00:00",
+  "status": "partial_implementation_verified",
+  "scope": "独立 Worker 基础设施；尚未接生产持久任务与全部公共入口",
+  "actual_tests": {
+    "real_child_sdk_local_http": 9,
+    "shared_retry_policy": 40,
+    "worker_runtime": 6,
+    "provider_factory": 20
+  },
+  "red_evidence": "本地 HTTP429/401 两个测试先失败（unknown_result），实现分类后通过；其他测试未声称有前置红测",
+  "review": "独立只读复核 /root/worker_review：三项初审问题与两项复核问题均修复；最终未发现本增量新的实质漏洞；审查者未重新运行测试",
+  "limits": [
+    "持久租约、预算账本、候选原子投影尚未绑定这些命名端口",
+    "唯一执行权迁移与全部生产入口尚未交付",
+    "Worker 当前仅声明 model.generate，不宣称已有 Pi/浏览器能力",
+    "只验证本地子进程与HTTP fixtures，非真实供应商或macOS/Windows分发验收",
+    "无推送、部署或用户数据操作"
+  ],
+  "outputs": {
+    "t915-worker-errors-red.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n ❯ src/modules/execution/worker-supervisor.test.ts (6 tests | 2 failed) 1210ms\n     × 供应商 429 故障按 'retry_wait' 返回且不自动重提 173ms\n     × 供应商 401 故障按 'waiting_user' 返回且不自动重提 162ms\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 供应商 429 故障按 'retry_wait' 返回且不自动重提\nAssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality\n\nExpected: \"retry_wait\"\nReceived: \"unknown_result\"\n\n ❯ src/modules/execution/worker-supervisor.test.ts:85:65\n     83|     }});\n     84|     try {\n     85|       expect(await supervisor.run(execution, Date.now()+10000)).toBe(e…\n       |                                                                 ^\n     86|       expect(requestCount).toBe(1);\n     87|       expect(results).toContainEqual(expect.objectContaining({port: \"c…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 供应商 401 故障按 'waiting_user' 返回且不自动重提\nAssertionError: expected 'unknown_result' to be 'waiting_user' // Object.is equality\n\nExpected: \"waiting_user\"\nReceived: \"unknown_result\"\n\n ❯ src/modules/execution/worker-supervisor.test.ts:85:65\n     83|     }});\n     84|     try {\n     85|       expect(await supervisor.run(execution, Date.now()+10000)).toBe(e…\n       |                                                                 ^\n     86|       expect(requestCount).toBe(1);\n     87|       expect(results).toContainEqual(expect.objectContaining({port: \"c…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n\n Test Files  1 failed (1)\n      Tests  2 failed | 4 passed (6)\n   Start at  23:37:56\n   Duration  1.43s (transform 32ms, setup 0ms, import 89ms, tests 1.21s, environment 0ms)\n\nundefined\n/Users/zyongzhu/Workbase/Thirdspace-creator/backend:\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/worker-supervisor.test.ts\n",
+    "t915-worker-final.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  2 passed (2)\n      Tests  49 passed (49)\n   Start at  23:43:20\n   Duration  2.21s (transform 71ms, setup 0ms, import 151ms, tests 1.98s, environment 0ms)\n\n",
+    "t915-worker-provider-final.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker\n\n\n Test Files  2 passed (2)\n      Tests  26 passed (26)\n   Start at  23:43:21\n   Duration  549ms (transform 113ms, setup 0ms, import 251ms, tests 301ms, environment 0ms)\n\n",
+    "t915-worker-types-final.log": "Scope: 3 of 6 workspace projects\ncontract typecheck$ tsc --noEmit\ncontract typecheck: Done\nai-worker typecheck$ tsc --noEmit\nai-worker typecheck: Done\nbackend typecheck$ tsc --noEmit\nbackend typecheck: Done\n",
+    "t915-worker-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  }
+}
