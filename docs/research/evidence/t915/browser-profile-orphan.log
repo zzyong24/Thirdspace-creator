@@ -1,0 +1,135 @@
+
+── orchestrator orphan-scan (bidirectional) ───────────
+! [WARN] chain pending: FLOW-001 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-002,FLOW-003,FLOW-004 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-005 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-002,FLOW-005 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-006 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-007 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-008,FLOW-009,FLOW-010 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-011,FLOW-012 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-013,FLOW-014 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-015,FLOW-016 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-006 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-021 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-013,FLOW-020 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-015,FLOW-016 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-017 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-018 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FLOW-021 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: DEC-CR-001,DEC-CR-011,FR-CR-001,FR-CR-002,NFR-CR-010,FLOW-CR-001 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: DEC-CR-007,DEC-CR-012,FR-CR-007,FR-CR-020,NFR-CR-002,NFR-CR-012,FLOW-CR-001,FLOW-CR-006,FLOW-CR-007 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: DEC-CR-002,DEC-CR-006,FR-CR-012,FR-CR-013,NFR-CR-008,NFR-CR-013,FLOW-CR-005,FLOW-CR-006 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FR-CR-016,NFR-CR-009,FLOW-CR-008 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: FR-CR-017,FR-CR-018,FR-CR-019,FLOW-CR-001,FLOW-CR-002,FLOW-CR-003,FLOW-CR-004,FLOW-CR-005,FLOW-CR-006,FLOW-CR-007,FLOW-CR-008 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] chain pending: DEC-CR-003,DEC-CR-007,DEC-CR-012,DEC-CR-013,DEC-CR-015,FR-CR-021,NFR-CR-002,NFR-CR-007,NFR-CR-012,FLOW-CR-009 is PLANNED (confirmed, not yet built) — fine during PLAN..BUILD; must resolve to OK/DEFERRED/RISK before SHIP (gate 14).
+! [WARN] FR FR-001 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-002 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-003 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-004 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-005 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-006 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-007 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-008 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-009 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-010 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-011 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-012 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-013 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-014 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-015 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-016 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-017 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-018 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-019 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-020 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-021 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-022 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-023 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-024 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-025 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-026 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-027 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-028 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-029 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-030 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-031 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-032 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-033 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-034 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-035 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-036 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-037 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-038 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-039 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-040 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-041 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-042 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-043 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-044 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-045 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-046 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-047 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-048 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-049 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-050 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-051 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-052 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-053 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-054 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-055 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-056 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-057 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-058 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-059 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-060 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-061 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-062 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-063 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-064 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-065 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-066 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-067 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-068 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-01 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-02 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-03 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-04 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-05 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-06 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-07 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-08 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+! [WARN] FR FR-537-09 is in ID_REGISTRY but has NO row in the traceability matrix — untraced requirement.
+✓ [OK] control artifact present: ID_REGISTRY.md
+✓ [OK] control artifact present: TRACEABILITY_MATRIX.md
+✓ [OK] parsed 612 canonical IDs from ID_REGISTRY.
+✓ [OK] parsed 48 canonical traceability rows.
+✓ [OK] downstream→upstream: all 167 downstream ids exist and trace to upstream intent.
+✓ [OK] chain OK: FR-069,DEC-019,FLOW-023 → realizing + test (status RISK).
+✓ [OK] chain OK: DEC-CR-003,DEC-CR-005,DEC-CR-008,DEC-CR-012,FR-CR-003,FR-CR-004,FR-CR-005,FR-CR-006,FR-CR-015,NFR-CR-003,NFR-CR-004,NFR-CR-005,NFR-CR-007,FLOW-CR-001 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CR-013,FR-CR-008,FLOW-CR-004 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CR-009,DEC-CR-013,FR-CR-009,NFR-CR-011,FLOW-CR-002 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CR-010,DEC-CR-013,FR-CR-010,FLOW-CR-003 → realizing + test (status PLANNED).
+✓ [OK] chain OK: FR-CR-011,FR-CR-014,DEC-CR-004,NFR-CR-001,NFR-CR-006,FLOW-CR-007 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CR-007,DEC-CR-014,DEC-CR-017,FR-CR-022,NFR-CR-008,FLOW-CR-010 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-CR-018,FR-CR-023,NFR-CR-003,NFR-CR-005,FLOW-CR-001 → realizing + test (status OK).
+✓ [OK] chain OK: FR-FDBR-01,FR-FDBR-02,FR-FDBR-03,FR-FDBR-04,FR-FDBR-05,FR-FDBR-06 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-TSB-001,FR-TSB-001,FR-TSB-002,FR-TSB-003,NFR-TSB-001,FLOW-TSB-001 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-TSL-001,FR-575-01,FR-575-02,FLOW-575-01 → realizing + test (status RISK).
+✓ [OK] chain OK: FR-575-03,FR-575-04,FLOW-575-01 → realizing + test (status RISK).
+✓ [OK] chain OK: DEC-TSL-001,FR-575-05,FR-575-06,FR-575-07,FLOW-575-02 → realizing + test (status RISK).
+✓ [OK] chain OK: DEC-TSL-003,FR-575-08,FLOW-575-03 → realizing + test (status RISK).
+✓ [OK] chain OK: DEC-SCHED-001,DEC-SCHED-002,FR-SCHED-001,FR-SCHED-002,FR-SCHED-003,FR-SCHED-004,FR-SCHED-005,FR-SCHED-006,FR-SCHED-007,NFR-SCHED-001,NFR-SCHED-002,NFR-SCHED-003,NFR-SCHED-004,FLOW-SCHED-001,FLOW-SCHED-002,FLOW-SCHED-003,FLOW-SCHED-004 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-MAUTH-001,FR-MAUTH-001,FR-MAUTH-002,FR-MAUTH-003,FR-MAUTH-004,FR-MAUTH-005,FR-MAUTH-006,NFR-MAUTH-001,NFR-MAUTH-002,FLOW-MAUTH-001,FLOW-MAUTH-002 → realizing + test (status RISK).
+✓ [OK] chain OK: DEC-POS-623,FR-POS-623-001,FR-POS-623-002,FR-POS-623-003,FLOW-POS-623-001 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-POS-632,FR-POS-632-001,FLOW-POS-632-001 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-02,FR-CLI-03,FR-CLI-06,FR-CLI-07,FLOW-CLI-001 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-02,FR-CLI-05,FLOW-CLI-002 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-04,FR-CLI-06,FLOW-CLI-003 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-CLI-001,FR-CLI-03,FR-CLI-05,FR-CLI-06,FR-CLI-08,FLOW-CLI-004 → realizing + test (status PLANNED).
+✓ [OK] chain OK: DEC-VIDEO-055 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-VIDEO-056 → realizing + test (status OK).
+✓ [OK] chain OK: DEC-MODEL-057 → realizing + test (status OK).
+───────────────────────────────────────────────────────
+0 error(s), 100 warning(s).
+✓ Orphan scan clean: every chain traces both directions.

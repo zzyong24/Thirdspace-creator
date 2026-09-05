@@ -169,3 +169,5 @@ export { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./exec
 
 export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/agentic-executor";
 export { createExecutionScriptCheckpointService } from "./execution-script-checkpoint.service";
+
+export { createExecutionBrowserProfileLeaseService, BrowserProfileBusyError } from "./execution-browser-profile-lease.service";

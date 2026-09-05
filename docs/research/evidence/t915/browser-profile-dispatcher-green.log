@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/browser-profile-dispatcher.integration.test.ts (2 tests | 1 failed) 4705ms
+   × 实际Worker stopped 后只在子树停止被证明时释放profile 3998ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/browser-profile-dispatcher.integration.test.ts > 实际Worker stopped 后只在子树停止被证明时释放profile
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ vi.waitFor.timeout src/modules/execution/browser-profile-dispatcher.integration.test.ts:49:51
+     47|   const [lock]=await f.db.select().from(executionBrowserProfileLeases)…
+     48|   if(mode==="stopped"){
+     49|    await vi.waitFor(()=>expect(alive(grandchild)).toBe(false),{timeout…
+       |                                                   ^
+     50|   }else{
+     51|    expect(alive(grandchild)).toBe(true);expect(lock!.releasedAt).toBeN…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  11:05:43
+   Duration  5.98s (transform 665ms, setup 0ms, import 1.15s, tests 4.70s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/browser-profile-dispatcher.integration.test.ts --retry=0

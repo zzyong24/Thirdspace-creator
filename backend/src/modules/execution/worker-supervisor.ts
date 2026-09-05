@@ -27,10 +27,15 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   const replies = new Map<string, Promise<HostMessage>>();
   const cleanups = new Map<ChildProcess, Promise<void>>();
   let cleanupFailure: Error | undefined;
+  const stoppedTrees = new WeakSet<ChildProcess>();
+  const executionHandles = new Map<string, ChildProcess>();
+  const latestExecution = new WeakMap<ChildProcess, string>();
+  const executionKey = (ref: ExecutionRef) => JSON.stringify([ref.executionTaskId, ref.attempt, ref.fenceToken]);
   const forceStop = (handle: ChildProcess) => {
+    if (stoppedTrees.has(handle)) return Promise.resolve();
     let pending = cleanups.get(handle);
     if (!pending) {
-      pending = killWorkerProcessTree(handle);
+      pending = killWorkerProcessTree(handle).then(() => { stoppedTrees.add(handle); });
       cleanups.set(handle, pending);
       void pending.catch(error => {
         cleanupFailure = error instanceof Error ? error : new Error("WORKER_TREE_CLEANUP_FAILED");
@@ -132,13 +137,40 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
       if (current) throw new Error("WORKER_BUSY");
       if (Date.now() >= deadlineAt) throw new Error("EXECUTION_DEADLINE");
       return new Promise((resolve, reject) => {
-        current = {execution, resolve, reject, lastSeq: -1};
-        current.deadlineTimer = setTimeout(() => cancel(execution), Math.max(0, deadlineAt-Date.now()));
-        try {send({version: 1, type: "run", requestId: randomUUID(), execution, deadlineAt});}
+        const boundExecution = {...execution};
+        const handle = child;
+        if (!handle) { reject(new Error("WORKER_DISCONNECTED")); return; }
+        const bindingKey = executionKey(boundExecution);
+        executionHandles.delete(bindingKey);
+        executionHandles.set(bindingKey, handle);
+        latestExecution.set(handle, bindingKey);
+        while (executionHandles.size > 256) executionHandles.delete(executionHandles.keys().next().value!);
+        current = {execution:boundExecution, resolve, reject, lastSeq: -1};
+        current.deadlineTimer = setTimeout(() => cancel(boundExecution), Math.max(0, deadlineAt-Date.now()));
+        try {send({version: 1, type: "run", requestId: randomUUID(), execution: boundExecution, deadlineAt});}
         catch {clearRun(); reject(new Error("WORKER_DISCONNECTED"));}
       });
     },
     cancel,
+    /** 证明仅来自宿主ChildProcess整树清理；Worker的stopped/自然exit均不是资源释放证据。 */
+    async stopExecutionTree(execution: ExecutionRef): Promise<boolean> {
+      const bindingKey = executionKey(execution);
+      const handle = executionHandles.get(bindingKey);
+      if (!handle) return false;
+      if (stoppedTrees.has(handle)) return true;
+      if (latestExecution.get(handle) !== bindingKey) return false;
+      const pending = cleanups.get(handle);
+      if (pending) {
+        try { await pending; return stoppedTrees.has(handle); }
+        catch { return false; }
+      }
+      if (handle.exitCode !== null || handle.signalCode !== null || !handle.pid) return false;
+      if (child !== handle) return false;
+      // 同步阻止 startup/validate 窗口继续复用此 handle，然后直接冻结并清理后代。
+      stopping = true;
+      try { await forceStop(handle); return stoppedTrees.has(handle); }
+      catch { return false; }
+    },
     async stop() {
       stopping = true;
       const handle = child;

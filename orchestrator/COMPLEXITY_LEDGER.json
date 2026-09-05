@@ -97,14 +97,14 @@
       "files": [
         "backend/src/index.ts"
       ],
-      "file_sha256": "48fd20616952142924441c4ae9febeb61171024c0d0d0727a8e89147ace700f4",
+      "file_sha256": "b1567f1079d18f0bb3288519cf9170fc9f1e209f16391f5c06fcbad756e08c57",
       "categories": [
         "credential_store"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
+      "reason": "DEC-RUNTIME-055 范围内补充浏览器持久租约导出与宿主实际 ChildProcess 清理证明；本批代码已逐项复核，独立真实进程故障测试留证，不代表浏览器完整循环或双平台验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "839377ba88c604866d6b23f5776cc24dc98d674b6814bff56d020448477e7b2e",
+      "file_sha256": "930380e43523f659c48713a358a6599fb7512d355eff02d0f065c030ae2bc9d0",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
+      "reason": "DEC-RUNTIME-055 范围内补充浏览器持久租约导出与宿主实际 ChildProcess 清理证明；本批代码已逐项复核，独立真实进程故障测试留证，不代表浏览器完整循环或双平台验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

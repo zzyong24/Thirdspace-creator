@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-browser-profile-lease.service.test.ts src/modules/execution/worker-supervisor.stop-execution-tree.test.ts src/modules/execution/worker-supervisor.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  11:05:42
+   Duration  2.69s (transform 505ms, setup 0ms, import 1.00s, tests 4.26s, environment 0ms)
+

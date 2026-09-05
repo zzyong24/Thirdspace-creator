@@ -1,0 +1,64 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T18:08:45.597936+00:00",
+  "status": "浏览器持久租约和进程清理已实现；完整任务仍进行中",
+  "implemented": [
+    "后端新增user+canonical domain持久租约；同执行重放幂等，多域原子领取，禁止仅因超时或任务终态抢占",
+    "宿主绑定实际ChildProcess与execution/attempt/fence，整树停止证明后才释放；旧执行不能杀复用句柄的新任务",
+    "dispatcher finally清理持有profile的执行；关闭时即使查询失败仍停止所有Worker并等待draining，最后聚合原始错误"
+  ],
+  "flow": "领取所有所需profile → Worker操作 → 宿主核实整树停止 → 释放profile；无法核实则继续保留",
+  "verification": {
+    "profileAndSupervisor": {
+      "tests": 23,
+      "log": "browser-profile-supervisor-regression.log"
+    },
+    "dispatcher": {
+      "tests": 2,
+      "log": "browser-profile-dispatcher-final.log",
+      "baselineComparison": "browser-profile-dispatcher-baseline-red.log"
+    },
+    "shutdownFailure": {
+      "tests": 1,
+      "red": "browser-dispatcher-stop-failure-red.log",
+      "green": "browser-dispatcher-stop-failure-green.log"
+    },
+    "types": {
+      "exitCode": 0,
+      "log": "browser-profile-types-final.log"
+    },
+    "scope": {
+      "errors": 0,
+      "log": "browser-profile-scope.json"
+    },
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "browser-profile-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "browser-profile-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "log": "browser-profile-reconcile.log",
+      "status": "保留T-916既有全局欠债，未标全绿"
+    }
+  },
+  "evidenceLimits": [
+    "测试使用隔离PGlite和实际fork/孙进程，不涉及真实用户库或登录态，也不是安装包/Windows验收",
+    "dispatcher first和green日志的早期失败来自fixture缺必需baseUrl，导致提前exit9，不算stopped行为红；baseline-red是修复后对HEAD的受控对照，不追溯称前置TDD",
+    "stop-failure-red真实发生在root修复关闭流程之前；supervisor-stop red主要是新增API未实现",
+    "自然或意外根进程退出且无整树证明时持锁；当前尚无完整启动遗留浏览器恢复，不会以TTL清锁冒充",
+    "browser.observe/act仍未注册生产工具链；持久租约acquireMany目前为服务基础，实际浏览器首次调用领取仍待接入"
+  ],
+  "remaining": [
+    "持久逻辑session与授权动作端口、研究Worker保留页面、Pi observe/act正式工具",
+    "浏览器证据进入知识候选和公共采纳链、未知动作不重放、用户可见授权入口",
+    "父进程异常退出后遗留浏览器的可验证恢复",
+    "完整R05入口迁移及旧路径退役、30次性能样本、真实三供应商和双平台安装包生命周期"
+  ]
+}

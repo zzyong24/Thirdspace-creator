@@ -1,3 +1,4 @@
+import {createExecutionBrowserProfileLeaseService} from "./execution-browser-profile-lease.service";
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
 import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
@@ -44,6 +45,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
   const tasks=createPersistentTaskService(db,{now});
+  const browserProfiles=createExecutionBrowserProfileLeaseService(db,{now});
+  const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
   const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
@@ -65,7 +68,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   let draining:Promise<number>|undefined;
   const report=(code:string)=>{try{deps.onError?.(code);}catch{/* 诊断订阅故障不改变执行。 */}};
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
-    async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
+    async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
       if(port==="prepareScriptImport" && deps.executionMode==="model")return scriptLocal.prepareImport(ref,raw);
       if(port==="saveScriptVoiceover" && deps.executionMode==="model")return scriptCheckpoints.save(ref,raw);
@@ -154,6 +157,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
         const toolScope={controller:new AbortController(),pending:new Set<Promise<unknown>>()};
         activeTools.set(executionKey(ref),toolScope);
+        activeWorkers.set(executionKey(ref),{ref,supervisor});
         let watching=true;
         let controlTimer:ReturnType<typeof setTimeout>|undefined;
         const watch=async()=>{
@@ -191,6 +195,15 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         }finally{
           watching=false;if(controlTimer)clearTimeout(controlTimer);
           toolScope.controller.abort();await Promise.allSettled([...toolScope.pending]);activeTools.delete(executionKey(ref));
+          try{
+            const held=await browserProfiles.listOwned(ref);
+            if(held.length){
+              if(await supervisor.stopExecutionTree(ref)){
+                for(const profile of held)await browserProfiles.releaseAfterWorkerStopped(ref,profile.leaseId);
+              }else report("BROWSER_PROFILE_CLEANUP_UNVERIFIED");
+            }
+          }catch{report("BROWSER_PROFILE_CLEANUP_UNVERIFIED");}
+          activeWorkers.delete(executionKey(ref));
           if(scriptFinalizer && !stopping)await scriptFinalizer.finalize(ref).catch(()=>{report("SCRIPT_RESULT_FINALIZATION_FAILED");});
           await acknowledge(ref).catch(()=>{});
           activeCount--;
@@ -212,6 +225,17 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   return {
     drainOnce,
     start(){if(timer || draining || stopping)return;void tick();},
-    async stop(){stopping=true;for(const scope of activeTools.values())scope.controller.abort();if(timer)clearTimeout(timer);await Promise.all(supervisors.map(supervisor=>supervisor.stop()));await draining;},
+    async stop(){stopping=true;for(const scope of activeTools.values())scope.controller.abort();if(timer)clearTimeout(timer);
+      // 有浏览器资源的执行先核实整棵子树停止，不能先让根进程退出丢失后代身份。
+      const profileStops=await Promise.allSettled([...activeWorkers.values()].map(async({ref,supervisor})=>{
+        if((await browserProfiles.listOwned(ref)).length)await supervisor.stopExecutionTree(ref);
+      }));
+      // 租约查询失败也必须继续停止全部 Worker 并等待任务收尾，最后保留原始错误。
+      const workerStops=await Promise.allSettled(supervisors.map(supervisor=>supervisor.stop()));
+      const drained=await Promise.allSettled([draining]);
+      const failures=[...profileStops,...workerStops,...drained]
+        .filter((result):result is PromiseRejectedResult=>result.status==="rejected")
+        .map(result=>result.reason);
+      if(failures.length)throw new AggregateError(failures,"MODEL_WORKER_SHUTDOWN_FAILED");},
   };
 }

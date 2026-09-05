@@ -271,3 +271,5 @@ export type { ResolvedMasterKey, MasterKeySource } from "./secret-crypto";
 export { eq, and, or, asc, desc, sql, isNull, count, like, ilike, inArray, gte, lte, lt } from "drizzle-orm";
 
 export { assetTagAdoptions, knowledgeAdoptions } from "./schema/proposal-adoptions";
+
+export { executionBrowserProfileLeases } from "./schema/execution-browser-profile-leases";

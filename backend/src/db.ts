@@ -41,6 +41,7 @@ import * as activationSchema from "./schema/activation";
 import * as browserSessionsSchema from "./schema/browser-sessions";
 // T-482 内容情报唯一真值 + 通用持久任务租约。
 import * as intelligenceSchema from "./schema/intelligence";
+import * as executionBrowserProfileLeasesSchema from "./schema/execution-browser-profile-leases";
 import * as proposalAdoptionsSchema from "./schema/proposal-adoptions";
 import * as cliInvocationsSchema from "./schema/cli-invocations";
 import { Pool } from "pg";
@@ -96,6 +97,7 @@ const schema = {
   ...intelligenceSchema,
   ...cliInvocationsSchema,
   ...proposalAdoptionsSchema,
+  ...executionBrowserProfileLeasesSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;
