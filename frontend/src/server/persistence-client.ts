@@ -1,6 +1,6 @@
 import { resolveExecutionWorkerPath } from "./execution-worker-path";
 import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
-import { createPlatformAdaptExecutionService,projectPlatformAdaptCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -487,7 +487,6 @@ import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
 import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
-import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
 import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
@@ -3950,140 +3949,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return rows;
           },
         };
-        const readArtifactContentData = async (
-          c: RequestContext,
-          projectId: string,
-          artifactType: string,
-        ): Promise<Record<string, unknown> | null> => {
-          const artifacts = await artifactsService.listProjectArtifacts(
-            c,
-            projectId,
-          );
-          const target = artifacts.find((a) => a.artifactType === artifactType);
-          if (!target) return null;
-          const versions = await artifactsService.listVersions(c, target.id);
-          if (versions.length === 0) return null;
-          const current =
-            versions.find((version) => version.id === target.currentVersionId) ??
-            versions.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
-          const data = current?.contentData;
-          return data && typeof data === "object" && !Array.isArray(data)
-            ? (data as Record<string, unknown>)
-            : null;
-        };
-        // T-730：生成式写稿只读取当前项目当前 thesis_tree 版本上明确 adopted 的节点。
-        // 历史无标记、inactive 或非法状态一律返回空；UI 读侧仍可展示这些历史内容。
-        const thesisReader = {
-          getThesisNodes: async (c: RequestContext, projectId: string) => {
-            const data = await readArtifactContentData(c, projectId, "thesis_tree");
-            const basis =
-              data?.scriptBasis &&
-              typeof data.scriptBasis === "object" &&
-              !Array.isArray(data.scriptBasis)
-                ? (data.scriptBasis as { status?: unknown })
-                : null;
-            if (basis?.status !== "adopted") return [];
-            const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
-            return rawNodes
-              .map((raw) => {
-                const node = (raw ?? {}) as Record<string, unknown>;
-                return {
-                  column: typeof node.column === "string" ? node.column : "",
-                  title: typeof node.title === "string" ? node.title : "",
-                  summary: typeof node.summary === "string" ? node.summary : "",
-                };
-              })
-              .filter((node) => node.column && (node.title || node.summary));
-          },
-        };
-        // 内容合同 reader (planning.outline) — read the project's `content_contract`
-        // artifact's current version's `contentData.cards` back as the constraint the
-        // structure must honor.
-        const contractReader = {
-          getContractCards: async (c: RequestContext, projectId: string) => {
-            const data = await readArtifactContentData(
-              c,
-              projectId,
-              "content_contract",
-            );
-            const rawCards = Array.isArray(data?.cards) ? data!.cards : [];
-            return rawCards
-              .map((raw) => {
-                const o = (raw ?? {}) as Record<string, unknown>;
-                return {
-                  title: typeof o.title === "string" ? o.title : "",
-                  body: typeof o.body === "string" ? o.body : "",
-                };
-              })
-              .filter((c2) => c2.title || c2.body);
-          },
-        };
-        // 结构方案 reader (SEAM-01, script.draft) — read the project's `content_outline`
-        // artifact's current version `contentData` ({structureType, opening, sections,
-        // ending, cta}) back as the blueprint the script.draft node fleshes out. Same
-        // public-service read path as contract (no cross-module repo import).
-        const outlineReader = {
-          getOutline: async (c: RequestContext, projectId: string) => {
-            const data = await readArtifactContentData(
-              c,
-              projectId,
-              "content_outline",
-            );
-            if (!data) return null;
-            const rawSections = Array.isArray(data.sections)
-              ? data.sections
-              : [];
-            const sections = rawSections
-              .map((raw) => {
-                const o = (raw ?? {}) as Record<string, unknown>;
-                return {
-                  label: typeof o.label === "string" ? o.label : "",
-                  intent: typeof o.intent === "string" ? o.intent : "",
-                };
-              })
-              .filter((s) => s.label || s.intent);
-            const structureType =
-              typeof data.structureType === "string" ? data.structureType : "";
-            const opening = typeof data.opening === "string" ? data.opening : "";
-            const ending = typeof data.ending === "string" ? data.ending : "";
-            const cta = typeof data.cta === "string" ? data.cta : "";
-            // No adopted outline content at all → null (script.draft degrades to no blueprint).
-            if (
-              sections.length === 0 &&
-              !structureType &&
-              !opening &&
-              !ending &&
-              !cta
-            ) {
-              return null;
-            }
-            return { structureType, opening, sections, ending, cta };
-          },
-        };
-        // F2 消费侧隔离 reader (T-030-D4, SPEC §7 边界②) — reports the origin of the
-        // project's current artifact of a given type so assembleCreativeContext can mark a
-        // reconstructed contract/outline brief "未经确认" before it rides downstream
-        // as a 已确认前提. Reuses the SAME public-service read (listProjectArtifacts →
-        // ArtifactRow.origin) the content readers use — no extra content fetch, no repo import.
-        const artifactOriginReader = {
-          getArtifactOrigin: async (
-            c: RequestContext,
-            projectId: string,
-            artifactType: string,
-          ): Promise<"user" | "reconstructed" | null> => {
-            const artifacts = await artifactsService.listProjectArtifacts(
-              c,
-              projectId,
-            );
-            const target = artifacts.find(
-              (a) => a.artifactType === artifactType,
-            );
-            const origin = target?.origin ?? null;
-            return origin === "reconstructed" || origin === "user"
-              ? origin
-              : null;
-          },
-        };
         // 立项 Brief reader(立项画幅 横/竖屏 → script.draft 据此调钩子与时长)。best-effort:读不到
         // 画幅返回 null,绝不阻塞写文案。[T-184] 从 script.draft dispatch 内联提到这里命名,供中央
         // registry 登记(逻辑与原内联逐字一致,零行为变化)。
@@ -4557,38 +4422,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               learnings: learningsReader,
               artifactOrigin: artifactOriginReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):内容合同节点跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "planning.outline" &&
-          task.status === "queued"
-        ) {
-          // 结构方案 node (策划 stage, 脚本阶段入口票) — drafts ONE structure plan
-          // (结构类型/开头策略/段落安排/结尾/CTA) from 内容合同, records an
-          // `artifact_version` candidate; 采纳 appends a new ArtifactVersion onto the
-          // project's `content_outline` artifact (reuses the existing artifact_version
-          // confirm path).
-          await runPlanningOutline(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              contract: contractReader,
-              // F2:反推合同注入结构方案上下文时标「未经确认」。
-              artifactOrigin: artifactOriginReader,
-              // [T-284a] 复刻补链 G1:装配 brief reader,让 creative-context 带出 benchmarkRef →
-              //   结构方案参照原爆款结构编排(段头诚实门,非复刻项目为空,不污染)。
-              brief: briefReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):结构方案节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
           );
@@ -5406,8 +5239,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        const execution = task.taskType === "publish.platform_adapt" && task.status === "queued"
-          ? (modelWorker ? platformExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
+        const execution = businessExecution.supports(String(task.taskType)) && task.status === "queued"
+          ? (modelWorker ? businessExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
           : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
         void execution.catch(async (error) => {
           const message =
@@ -10042,10 +9875,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
 
   const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
-  const platformExecution=createPlatformAdaptExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,
-    positioning:{getPositioningCenter:c=>positioningService.getPositioningCenter(c)},
-    learnings:{getSuggestions:(c,options)=>learningsService.getSuggestions(c,options)},
-  });
+  const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
+  const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.getPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
+  const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "publish.platform_adapt":{
+      skillId:"platform.adapt",capability:"script.rewrite",
+      prepare:(c,task)=>preparePlatformAdaptContext(c,task,{...generationContext}),
+      project:(input,object)=>projectPlatformAdaptCandidate(input,object as Parameters<typeof projectPlatformAdaptCandidate>[1]),
+    },
+    "planning.outline":{
+      skillId:"planning.outline",capability:"planning.outline",
+      prepare:(c,task)=>preparePlanningOutlineContext(c,task,{...generationContext,contract:contractReader,artifactOrigin:artifactOriginReader,brief:makeBriefReader()}),
+      project:(input,object)=>projectPlanningOutlineCandidate(input,object as Parameters<typeof projectPlanningOutlineCandidate>[1]),
+    },
+  }});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{return null;}})();
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
@@ -10056,10 +9899,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     },
-    projectCandidate(_c,input){
-      if(input.taskType!=="publish.platform_adapt")throw new Error("MODEL_CANDIDATE_ADAPTER_UNAVAILABLE");
-      return projectPlatformAdaptCandidate(input.inputData as Record<string,unknown>,JSON.parse(input.text));
-    },
+    projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),
   }) : null;
   let preparationRecovery:Promise<void>|undefined;
@@ -13517,7 +13357,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  if(modelWorker)preparationRecovery=platformExecution.recoverQueued(async(c,id)=>{
+  if(modelWorker)preparationRecovery=businessExecution.recoverQueued(async(c,id)=>{
     await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});
   },()=>stoppingPreparation).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
   modelWorker?.start();

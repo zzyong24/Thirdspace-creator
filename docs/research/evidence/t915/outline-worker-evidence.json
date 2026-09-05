@@ -1,0 +1,27 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:41:05.038580+00:00",
+  "status": "outline_worker_entry_verified_adoption_idempotency_open",
+  "implemented": [
+    "结构方案公共创建入口转持久结构化执行，移除旧planning-outline-runner及其生产调用",
+    "业务adapter注册集中冻结上下文、校验任务Skill和capability、恢复排队任务与投影候选；发布文案复用同一服务",
+    "策划产物读取从frontend组合根移至backend只读服务端口工厂，保留当前版本优先和未采纳论点隔离",
+    "结构方案结果保持正文、摘要和可编辑contentData，正式公共采纳后回读当前版本验证"
+  ],
+  "verification": {
+    "backend_tests": 18,
+    "frontend_tests": 10,
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review只读对照确认上下文和候选一致、旧生产调用移除；指出既有artifact_version采纳幂等缺口，未重跑测试",
+    "test_correction": "context-deps-resolver冻结数组漏了T-730已恢复thesis，与同文件专门断言冲突；补齐现有声明，不改模板/运行时"
+  },
+  "limits": [
+    "公共路径使用真实Worker和SDK，但供应商为本地HTTP夹具",
+    "单次采纳和回读通过；artifact_version并发确认及回执丢失幂等尚待实现，不能宣称恰好一次",
+    "完整入口迁移、Pi浏览器循环、真实供应商/性能/安装包验收仍未完成"
+  ]
+}

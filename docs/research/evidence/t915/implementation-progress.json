@@ -98,7 +98,8 @@
     "七端口真实接线与浏览器自适应完整循环",
     "全部生产入口迁移与旧实现退役",
     "完整性能基线、真实供应商及 macOS/Windows 包验收",
-    "旧版本已创建但未记录采纳的孤立发布稿需独立对账，新来源键不能补造历史归属"
+    "旧版本已创建但未记录采纳的孤立发布稿需独立对账，新来源键不能补造历史归属",
+    "artifact_version采纳需稳定来源键与并发/回执丢失验证，当前结构方案单次公共采纳通过不能代表恰好一次"
   ],
   "governance": "T-916必要配置已修复：T915设计步骤按真实评审commit完成，BUILD任务包/写集合已恢复；21个历史模块只读隔离，历史状态未改。全局历史欠债保留，T915 BUILD和验收未完成。",
   "structured_durable_increment": {
@@ -131,5 +132,10 @@
     "evidence": "model-worker-pool-evidence.json",
     "tests": 13,
     "scope": "已实现有限进程并发与取消隔离；未替代完整性能基线和所有入口迁移"
+  },
+  "outline_worker_increment": {
+    "evidence": "outline-worker-evidence.json",
+    "tests": 28,
+    "scope": "结构方案与发布文案公共入口使用共享持久执行；文稿版本采纳幂等仍待完成"
   }
 }

@@ -1,37 +1,7 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec, OutlineOutput } from "@creatoros/ai-worker";
-import {
-  assembleCreativeContext,
-  type ContextDeps,
-  type CreativeContext,
-} from "./creative-context";
-
-// 结构方案 runner (planning.outline node, 策划 stage — 脚本阶段的入口票). It reads the
-// creative context (内容合同 + 定位 + 选题) and DRAFTS ONE 结构方案: a structure
-// type, an opening strategy, the ordered paragraph/段落 arrangement, an ending, and a CTA.
-// It records an `artifact_version` CANDIDATE; on 采纳, the AI service's EXISTING
-// artifact_version confirm branch appends a new ArtifactVersion (createdByType:"ai") onto
-// the project's `content_outline` artifact — we REUSE that path. No web tools.
-//
-// The contentData shape (writer ↔ reader contract):
-//   `{ structureType, opening, sections: [{ label, intent }], ending, cta }`
-// — what the 脚本 stage reads back as the structure the script fleshes out.
-
-export interface PlanningOutlineDeps extends ContextDeps {
-  ai: AiService;
-  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
-}
-
-export interface PlanningOutlineTask {
-  id: string;
-  projectId: string | null;
-  inputData: Record<string, unknown>;
-}
+import type { OutlineOutput } from "@creatoros/ai-worker";
+import type { RecordCandidateInput } from "../ai/ai.service";
+import { assembleCreativeContext,type ContextDeps,type CreativeContext } from "./creative-context";
 
 interface OutlineSection {
   label: string; // the段落/beat label, e.g. "钩子" / "痛点" / "价值"
@@ -121,54 +91,21 @@ function renderSummary(outline: Outline): string {
   return `AI 结构方案 · ${type}${outline.sections.length} 段`;
 }
 
-export async function runPlanningOutline(
-  ctx: RequestContext,
-  task: PlanningOutlineTask,
-  deps: PlanningOutlineDeps,
-): Promise<void> {
-  try {
-    await deps.ai.markRunning(ctx, task.id);
-    const artifactId =
-      typeof task.inputData.artifactId === "string"
-        ? task.inputData.artifactId
-        : "";
-    if (!artifactId) {
-      throw new Error("planning-outline-runner: inputData.artifactId is required");
-    }
-    const topic =
-      typeof task.inputData.topic === "string" ? task.inputData.topic : "";
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: task.projectId, topic },
-      deps,
-    );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 planning.outline 模板
-    // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让 MiniMax
-    // 也稳定吐可解析结构方案(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败→cancelled)。
-    const spec = await deps.resolveModelSpec(ctx, "planning.outline");
-    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
-    // 让 planning.outline 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
-    const { modelFor, runStructuredNode, getTemplate } =
-      await import("@creatoros/ai-worker");
-    const { object } = await runStructuredNode<OutlineOutput>({
-      model: modelFor(spec),
-      template: getTemplate("planning.outline"),
-      facets: outlineFacets(context),
-    });
-    const outline = normalizeOutline(object);
-    if (outline.sections.length === 0 && !outline.structureType) {
-      throw new Error(
-        "planning-outline-runner: agent returned no parseable outline",
-      );
-    }
-    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
-    await deps.ai.recordStep(ctx, task.id, {
-      stepNo: 1,
-      kind: "step",
-      text: `已生成结构方案（${outline.sections.length} 段）`,
-      toolCalls: [],
-    });
-    await deps.ai.recordCandidate(ctx, task.id, {
+function requireArtifactId(inputData:Record<string,unknown>){
+  const artifactId=typeof inputData.artifactId==="string" ? inputData.artifactId : "";
+  if(!artifactId)throw new Error("结构方案缺少目标文稿");
+  return artifactId;
+}
+export async function preparePlanningOutlineContext(ctx:RequestContext,task:{projectId:string|null;inputData:Record<string,unknown>},deps:ContextDeps){
+  requireArtifactId(task.inputData);
+  const topic=typeof task.inputData.topic==="string" ? task.inputData.topic : "";
+  return outlineFacets(await assembleCreativeContext(ctx,{projectId:task.projectId,topic},deps));
+}
+export function projectPlanningOutlineCandidate(inputData:Record<string,unknown>,object:OutlineOutput):RecordCandidateInput{
+  const artifactId=requireArtifactId(inputData);
+  const outline=normalizeOutline(object);
+  if(outline.sections.length===0 && !outline.structureType)throw new Error("模型没有返回有效结构方案");
+  return {
       resultType: "artifact_version",
       artifactId,
       resultData: {
@@ -191,16 +128,5 @@ export async function runPlanningOutline(
           cta: outline.cta,
         },
       },
-    });
-  } catch (err) {
-    try {
-      await deps.ai.cancelTask(ctx, task.id);
-    } catch {
-      /* already terminal */
-    }
-    console.error(
-      `[planning-outline-runner] draft failed for task ${task.id}:`,
-      err,
-    );
-  }
+  };
 }

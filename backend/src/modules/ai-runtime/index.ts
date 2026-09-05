@@ -70,7 +70,7 @@ export * from "./material-summary";
 export * from "./remote-prompt-bundle";
 export * from "./multimodal/resolve";
 export * from "./planning-contract-runner";
-export * from "./planning-outline-runner";
+export * from "./planning-outline-context";
 export * from "./planning-runner";
 export * from "./platform-adapt-runner";
 export * from "./positioning-runner";
@@ -99,5 +99,9 @@ export * from "./srt";
 export * from "./video-decisions-runner";
 
 export { createPlatformAdaptExecutionService } from "./platform-adapt-execution.service";
-export { projectPlatformAdaptCandidate } from "./platform-adapt-context";
+export { preparePlatformAdaptContext,projectPlatformAdaptCandidate } from "./platform-adapt-context";
 export { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
+
+export * from "./structured-business-execution.service";
+
+export * from "./artifact-context-readers";

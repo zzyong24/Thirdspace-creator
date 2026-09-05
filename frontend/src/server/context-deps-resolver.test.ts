@@ -16,6 +16,8 @@ const EXPECTED_SCRIPT_DRAFT_KEYS = [
   "positioning",
   "learnings",
   "knowledge",
+  // T-730 已恢复可选论点依据；与下方专门回归保持同一声明契约。
+  "thesis",
   "contract",
   "outline",
   "artifactOrigin",
