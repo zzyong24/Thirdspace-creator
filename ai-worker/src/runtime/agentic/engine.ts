@@ -62,6 +62,8 @@ export interface AgenticTool {
   effect: ToolEffect;
   /** 入参 zod schema(我方;真 Pi 用 typebox,pi-engine 适配层转换)。 */
   parameters: z.ZodTypeAny;
+  /** 冻结的模型可见JSON Schema；实际执行仍由parameters及后端权限校验。 */
+  jsonParameters?: Record<string, unknown>;
   /** 执行工具(引擎决策后调)。真 Pi:execute(toolCallId, params, signal, onUpdate) 的裁剪映射。 */
   execute(
     input: unknown,

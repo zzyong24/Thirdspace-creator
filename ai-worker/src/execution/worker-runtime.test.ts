@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
@@ -146,4 +147,59 @@ describe("独立 Worker 端口生命周期", () => {
     worker.close();
   });
 
+});
+
+
+describe("可注入 Agent Worker 生命周期",()=>{
+  const agentInput={kind:"agentic.run",operationKey:"agent",taskType:"agentic.research",goal:"研究",systemPrompt:"冻结",capability:"research",maxOutputTokens:100,dryRun:false,tools:[{name:"web.read",version:"1",label:"读取",description:"读取",parameters:{type:"object"},effect:"none"}]};
+  const result={actualEngine:"pi" as const,summary:"真实候选",stopReason:"completed" as const,lastModelCallId:"m1",toolCallIds:["t1"]};
+  function agentFixture(mode:"success"|"missing"|"failure"|"commitLost"|"cancel"="success"){
+    const messages:WorkerMessage[]=[];const generate=vi.fn();
+    const runAgentic=vi.fn(async(_input,_model,signal,_call,onText)=>{
+      onText?.("研究进度");
+      if(mode==="failure")throw new GenerationFailure("retry_wait","RATE_LIMIT",120000);
+      if(mode==="cancel")await new Promise<void>(resolve=>signal.addEventListener("abort",()=>resolve(),{once:true}));
+      return result;
+    });
+    const worker=createExecutionWorker({generate,runAgentic:mode==="missing"?undefined:runAgentic,send(message){
+      messages.push(message);
+      if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:!(mode==="commitLost" && message.port==="commitAgenticResult"),data:message.port==="readTaskContext"?agentInput:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private",authStyle:"bearer"}:{}}));
+    }});
+    return {worker,messages,generate,runAgentic};
+  }
+  it("仅装配真实运行器时声明能力，结果走专用候选端口",async()=>{
+    const f=agentFixture();f.worker.ready();f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.find(m=>m.type==="ready")).toMatchObject({capabilities:["model.generate","agentic.run"]});
+    expect(f.messages.filter(m=>m.type==="call").map(m=>m.port)).toEqual(["readTaskContext","resolveModelCredential","commitAgenticResult"]);
+    expect(f.messages.find(m=>m.type==="call" && m.port==="commitAgenticResult")).toMatchObject({data:result});
+    expect(f.generate).not.toHaveBeenCalled();expect(f.runAgentic).toHaveBeenCalledOnce();
+    f.worker.receive(run);expect(f.runAgentic).toHaveBeenCalledOnce();f.worker.close();
+  });
+  it("未装配时不声明能力且等待配置，不请求模型",async()=>{
+    const f=agentFixture("missing");f.worker.ready();f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.find(m=>m.type==="ready")).toMatchObject({capabilities:["model.generate"]});
+    expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reason:"waiting_user"});expect(f.runAgentic).not.toHaveBeenCalled();f.worker.close();
+  });
+  it("运行器确定拒绝保留退避分类",async()=>{
+    const f=agentFixture("failure");f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.find(m=>m.type==="call" && m.port==="commitResult")).toMatchObject({data:{outcome:"retry_wait",errorCode:"RATE_LIMIT",retryAfterMs:120000}});f.worker.close();
+  });
+  it("候选提交回执丢失不二次覆盖，报告unknown",async()=>{
+    const f=agentFixture("commitLost");f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.filter(m=>m.type==="call" && m.port==="commitAgenticResult")).toHaveLength(1);
+    expect(f.messages.some(m=>m.type==="call" && m.port==="commitResult")).toBe(false);
+    expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reason:"unknown_result"});f.worker.close();
+  });
+  it("取消传入运行器，晚返回也不提交候选",async()=>{
+    const f=agentFixture("cancel");f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.runAgentic).toHaveBeenCalledOnce());
+    f.worker.receive({version:1,type:"cancel",requestId:"cancel",execution,reason:"cancel"});
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.some(m=>m.type==="call" && m.port==="commitAgenticResult")).toBe(false);
+    expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reason:"cancelled"});f.worker.close();
+  });
 });

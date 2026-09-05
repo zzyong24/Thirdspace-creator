@@ -9865,6 +9865,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     });
     return {
       apiFormat: cfg.apiFormat,
+      authStyle: cfg.authStyle,
       baseUrl: cfg.baseUrl,
       model: cfg.model,
       token: cfg.token,

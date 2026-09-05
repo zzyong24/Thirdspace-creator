@@ -16,3 +16,5 @@ onlyBuiltDependencies:
   # onnxruntime-node@1.2x(hyperframes 依赖)的原生 DLL/dylib 靠 install 脚本下载,
   # 被跳过 → 源 .pnpm 无二进制 → win sidecar T-225 自检崩(1.14 是包自带二进制,不受影响)。
   - onnxruntime-node
+patchedDependencies:
+  '@earendil-works/pi-ai@0.80.7': patches/@earendil-works__pi-ai@0.80.7.patch

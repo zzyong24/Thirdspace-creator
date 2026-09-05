@@ -1,0 +1,146 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-pi-http.integration.test.ts (19 tests | 1 failed) 146ms
+   × 真实Chat省略usage时不把Pi初始全零当计量事实，unknown重投不再联网 12ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Chat省略usage时不把Pi初始全零当计量事实，unknown重投不再联网
+AssertionError: promise resolved "{ role: 'assistant', …(8) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "api": "openai-completions",
++   "content": [
++     {
++       "text": "明确正文但未返回用量",
++       "type": "text",
++     },
++   ],
++   "model": "fixture-model",
++   "provider": "fixture",
++   "responseId": "no-usage",
++   "role": "assistant",
++   "stopReason": "stop",
++   "timestamp": 1788610560820,
++   "usage": {
++     "cacheRead": 0,
++     "cacheWrite": 0,
++     "cost": {
++       "cacheRead": 0,
++       "cacheWrite": 0,
++       "input": 0,
++       "output": 0,
++       "total": 0,
++     },
++     "input": 0,
++     "output": 0,
++     "totalTokens": 0,
++   },
+  }
+
+ ❯ src/execution/durable-pi-http.integration.test.ts:96:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Chat省略usage时不把Pi初始全零当计量事实，unknown重投不再联网
+AssertionError: promise resolved "{ role: 'assistant', …(8) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "api": "openai-completions",
++   "content": [
++     {
++       "text": "明确正文但未返回用量",
++       "type": "text",
++     },
++   ],
++   "model": "fixture-model",
++   "provider": "fixture",
++   "responseId": "no-usage",
++   "role": "assistant",
++   "stopReason": "stop",
++   "timestamp": 1788610560827,
++   "usage": {
++     "cacheRead": 0,
++     "cacheWrite": 0,
++     "cost": {
++       "cacheRead": 0,
++       "cacheWrite": 0,
++       "input": 0,
++       "output": 0,
++       "total": 0,
++     },
++     "input": 0,
++     "output": 0,
++     "totalTokens": 0,
++   },
+  }
+
+ ❯ src/execution/durable-pi-http.integration.test.ts:96:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Chat省略usage时不把Pi初始全零当计量事实，unknown重投不再联网
+AssertionError: promise resolved "{ role: 'assistant', …(8) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "api": "openai-completions",
++   "content": [
++     {
++       "text": "明确正文但未返回用量",
++       "type": "text",
++     },
++   ],
++   "model": "fixture-model",
++   "provider": "fixture",
++   "responseId": "no-usage",
++   "role": "assistant",
++   "stopReason": "stop",
++   "timestamp": 1788610560829,
++   "usage": {
++     "cacheRead": 0,
++     "cacheWrite": 0,
++     "cost": {
++       "cacheRead": 0,
++       "cacheWrite": 0,
++       "input": 0,
++       "output": 0,
++       "total": 0,
++     },
++     "input": 0,
++     "output": 0,
++     "totalTokens": 0,
++   },
+  }
+
+ ❯ src/execution/durable-pi-http.integration.test.ts:96:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  05:16:00
+   Duration  437ms (transform 52ms, setup 0ms, import 161ms, tests 146ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/durable-pi-http.integration.test.ts

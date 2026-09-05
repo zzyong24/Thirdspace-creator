@@ -42,7 +42,9 @@
         "PROJECT.md",
         "PROJECT_CONTEXT.md",
         "package.json",
-        "pnpm-lock.yaml"
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
       ],
       "write_set": [
         "backend/**",
@@ -61,7 +63,9 @@
         "frontend/src-tauri/build.rs",
         "frontend/src-tauri/tauri.conf.json",
         "frontend/src-tauri/tauri.windows.conf.json",
-        "frontend/src-tauri/capabilities/**"
+        "frontend/src-tauri/capabilities/**",
+        "pnpm-workspace.yaml",
+        "patches/@earendil-works__pi-ai@0.80.7.patch"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",

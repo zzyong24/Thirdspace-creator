@@ -8,7 +8,7 @@ import { ConflictError } from "./execution.errors";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 type Tool={version:string;parameters:z.ZodType;effect:"none"|"proposal"|"committed"};
-const frozenTools=z.object({kind:z.literal("agentic.run"),tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1)})).max(100)});
+const frozenTools=z.object({kind:z.literal("agentic.run"),dryRun:z.boolean().optional(),tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1)})).max(100)});
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const operationKey=(modelCallId:string,toolCallId:string)=>`tool:${hash([modelCallId,toolCallId])}`;
 
@@ -28,7 +28,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
   if(definitions.length!==1 || !definition || definitions[0]!.version!==definition.version)throw new ConflictError("工具不在当前冻结白名单或定义版本已改变");
   let raw:unknown;try{raw=JSON.parse(proposed.input);}catch{throw new ConflictError("模型工具参数不是有效JSON");}
   const input=z.json().parse(definition.parameters.parse(raw));
-  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,input,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash([model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input])}`};
+  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,input,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash([model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input])}`};
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");
@@ -67,6 +67,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    const state=await ledger.inspect(ref);const original=state.calls.find(call=>call.id===request.callId);if(!original)throw new ConflictError("工具调用不存在");
    const bound=await leases.withLease(ref,"settlement",async({task})=>bindingForCall(task,state.calls,original));
    const unknown=request.status==="unknown" || request.output.sideEffect==="unknown" || request.output.error?.code==="unknown_commit";
+   if(request.status==="settled" && !unknown && bound.dryRun && request.output.sideEffect!=="none")throw new ConflictError("预演任务不能结算真实副作用");
    if(request.status==="settled" && !unknown && request.output.sideEffect!=="none" && request.output.sideEffect!==bound.effect)throw new ConflictError("工具回执副作用超出已授权定义");
    const settled=await ledger.settle(ref,request.callId,unknown?{status:"unknown"}:{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:bound.toolCallId,toolName:bound.toolName,output:request.status==="settled"?request.output:null}))},call=>{
     if(call.kind!=="tool" || (!unknown && call.status==="unknown"))throw new ConflictError("未知工具提交须经独立对账，不能当正常重试结算");

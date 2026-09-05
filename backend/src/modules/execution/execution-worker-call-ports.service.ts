@@ -9,12 +9,16 @@ import { ConflictError } from "./execution.errors";
 export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof createExecutionCallLedgerService>[1]) {
   const leases = createExecutionLeaseService(db, deps);
   const ledger = createExecutionCallLedgerService(db, deps);
-  const readTaskContext = (ref: ExecutionRef) => leases.withLease(ref, "admission", async ({task}) => {
+  const readTaskContext = async (ref: ExecutionRef) => {
+    const input=await leases.withLease(ref, "admission", async ({task}) => {
     if (task.kind !== "ai_task") throw new ConflictError("当前任务不是模型任务");
     // execution_tasks.payload 在入队后保持不变；检查点独立存储。
     const payload = task.payload as Record<string, unknown>;
     return workerTaskInputSchema.parse(payload.modelInput);
-  });
+    });
+    if(input.kind==="agentic.run")await ledger.initializeBudget(ref);
+    return input;
+  };
   return {
     readTaskContext,
     async reserveCall(ref: ExecutionRef, raw: unknown) {

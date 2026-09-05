@@ -1,0 +1,66 @@
+diff --git a/dist/api/anthropic-messages.js b/dist/api/anthropic-messages.js
+index c8c0268392e72c3a9480f86704586702921ad0d2..f39534ae8744caa31e612fd2027c422deafe17fc 100644
+--- a/dist/api/anthropic-messages.js
++++ b/dist/api/anthropic-messages.js
+@@ -570,6 +570,17 @@ export const stream = (model, context, options) => {
+                 // partialJson is only a streaming scratch buffer; never persist it.
+                 delete block.partialJson;
+             }
++            // CreatorOS: preserve only authenticated SDK HTTP rejection facts for durable retry policy.
++            if (error instanceof Anthropic.APIError && Number.isInteger(error.status) && error.status >= 400 && error.status <= 599) {
++                const headers = {};
++                for (const name of ["retry-after", "retry-after-ms"]) {
++                    const value = error.headers?.get(name);
++                    if (typeof value === "string") headers[name] = value;
++                }
++                try {
++                    await options?.onResponse?.({ status: error.status, headers }, model);
++                } catch { /* Observers must not replace the original provider failure. */ }
++            }
+             output.stopReason = options?.signal?.aborted ? "aborted" : "error";
+             output.errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
+             stream.push({ type: "error", reason: output.stopReason, error: output });
+diff --git a/dist/api/openai-completions.js b/dist/api/openai-completions.js
+index fd227376744839d69aa5f9be4a3828ea2fcd001b..921b31bdf4ff558718ca9c9ba9be6aa129ad6151 100644
+--- a/dist/api/openai-completions.js
++++ b/dist/api/openai-completions.js
+@@ -366,6 +366,17 @@ export const stream = (model, context, options) => {
+                 delete block.partialArgs;
+                 delete block.streamIndex;
+             }
++            // CreatorOS: preserve only authenticated SDK HTTP rejection facts for durable retry policy.
++            if (error instanceof OpenAI.APIError && Number.isInteger(error.status) && error.status >= 400 && error.status <= 599) {
++                const headers = {};
++                for (const name of ["retry-after", "retry-after-ms"]) {
++                    const value = error.headers?.get(name);
++                    if (typeof value === "string") headers[name] = value;
++                }
++                try {
++                    await options?.onResponse?.({ status: error.status, headers }, model);
++                } catch { /* Observers must not replace the original provider failure. */ }
++            }
+             output.stopReason = options?.signal?.aborted ? "aborted" : "error";
+             output.errorMessage = formatProviderError(normalizeProviderError(error));
+             // Some providers via OpenRouter give additional information in this field.
+diff --git a/dist/api/openai-responses.js b/dist/api/openai-responses.js
+index 09c8aee763c1474581900127b215f3c2f645de8e..97980626e14ba3ca3f9102488e1e2fe6469aa60e 100644
+--- a/dist/api/openai-responses.js
++++ b/dist/api/openai-responses.js
+@@ -121,6 +121,17 @@ export const stream = (model, context, options) => {
+                 // partialJson is only a streaming scratch buffer; never persist it.
+                 delete block.partialJson;
+             }
++            // CreatorOS: preserve only authenticated SDK HTTP rejection facts for durable retry policy.
++            if (error instanceof OpenAI.APIError && Number.isInteger(error.status) && error.status >= 400 && error.status <= 599) {
++                const headers = {};
++                for (const name of ["retry-after", "retry-after-ms"]) {
++                    const value = error.headers?.get(name);
++                    if (typeof value === "string") headers[name] = value;
++                }
++                try {
++                    await options?.onResponse?.({ status: error.status, headers }, model);
++                } catch { /* Observers must not replace the original provider failure. */ }
++            }
+             output.stopReason = options?.signal?.aborted ? "aborted" : "error";
+             output.errorMessage = formatOpenAIResponsesError(error);
+             stream.push({ type: "error", reason: output.stopReason, error: output });

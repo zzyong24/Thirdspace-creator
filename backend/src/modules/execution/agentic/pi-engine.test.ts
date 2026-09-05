@@ -610,7 +610,7 @@ describe("pi-engine RT-H02/H03 受控 ResourceLoader 隔离(真 SDK)", () => {
 // ── [RT-M01] 副作用感知回退(fake SDK,不打网络,确定性)———————————————————————————————
 // 造一个「模型真调了工具 → 随后会话抛错」的 fake SDK,验:有真实副作用则**不**整体重放(否则重复
 // 付费/落库);零副作用才回退确定性兜底(保命路径)。
-function makeFakeSdkThatErrors(cfg: { commitSideEffect: boolean }): PiSdkHandle {
+function makeFakeSdkThatErrors(cfg: { commitSideEffect: boolean; autoCompaction?: (enabled:boolean)=>void; beforeIdleError?:()=>void }): PiSdkHandle {
   return {
     AuthStorage: { inMemory: () => ({}) },
     ModelRegistry: {
@@ -643,6 +643,7 @@ function makeFakeSdkThatErrors(cfg: { commitSideEffect: boolean }): PiSdkHandle 
       return {
         session: {
           setAutoRetryEnabled() {},
+          setAutoCompactionEnabled(enabled:boolean) {cfg.autoCompaction?.(enabled);},
           subscribe() {
             return () => {};
           },
@@ -655,6 +656,7 @@ function makeFakeSdkThatErrors(cfg: { commitSideEffect: boolean }): PiSdkHandle 
           },
           async waitForIdle() {
             if (cfg.commitSideEffect) {
+              cfg.beforeIdleError?.();
               throw new Error("boom after side effect"); // 副作用已提交后才抛
             }
           },
@@ -723,4 +725,19 @@ describe("pi-engine RT-M01 副作用感知回退(fake SDK)", () => {
     expect((final.output as { checkpoint?: unknown }).checkpoint).toBeTruthy();
     __setPiSdkForTest(undefined);
   });
+});
+
+
+it("预算终止catch仍保留Pi来源与已执行工具，且关闭自动压缩",async()=>{
+  const controller=createLoopController({maxSteps:1,maxTokens:10000});
+  const compaction:boolean[]=[];let fallbackCalled=false;
+  __setPiSdkForTest(makeFakeSdkThatErrors({commitSideEffect:true,autoCompaction:enabled=>compaction.push(enabled),beforeIdleError:()=>{expect(controller.canContinue()).toBe(false);}}));
+  try{
+    const search=makeTool("web.search","none");
+    const engine=createPiAgenticEngine({fallback:{name:"deterministic",async run(){fallbackCalled=true;throw new Error("不得重放");}}});
+    const result=await engine.run(runInput({tools:[search.tool],controller,llmConfig:ANTHROPIC_BEARER}));
+    expect(compaction).toEqual([false]);expect(fallbackCalled).toBe(false);expect(search.calls).toHaveLength(1);
+    expect(result).toMatchObject({actualEngine:"pi",stopReason:"max_steps"});
+    expect((result.output as {toolLog:unknown[]}).toolLog).toHaveLength(1);
+  }finally{__setPiSdkForTest(undefined);}
 });

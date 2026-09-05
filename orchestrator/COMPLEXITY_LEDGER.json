@@ -6,7 +6,7 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "0d59b0e33fbb0e9e4fec2956a5b3ff1676673a18a02203f96a92789dc832115f",
+      "file_sha256": "83d0a3835c3c5e5d64e624de7192c08c900fb0097bc250efa2b63f284c4f0ae4",
       "categories": [
         "ipc"
       ],
@@ -21,7 +21,7 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "432df3b5b8ef7d25695d4d27b0d44af3cfbacf646a44ece310488739ff9a341d",
+      "file_sha256": "c61ab94d5115c65eeaef1269e02bad9c754b22f8f5dbb97e02c26ce1647aca8d",
       "categories": [
         "ipc"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "ca3170052529a32bda9a30babd85f28e54c976a432c515bb3a6edf5d9d831a9b",
+      "file_sha256": "dec41cafccbaafee5d3b7dc372afaaf08922ba409f6af6afa816913aefa15b72",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "49af58e8f497729e4050c2f2a3bf4a9c9320be2a21405dd24a1f9eddd73cc7db",
+      "file_sha256": "d993b821493f919143f8fdb32ce076d5a5656dde8180a2b1daada57e3f4fb9dc",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1155,7 +1155,7 @@
       "files": [
         "pnpm-lock.yaml"
       ],
-      "file_sha256": "196fc068b3d6142ee937beec8ef95e647b363c5fdebaeab261c5680dc8296792",
+      "file_sha256": "40f9fdf1cc6fcda876948bbbee758facdea5daea56f511a3c211afd034aadaca",
       "categories": [
         "runtime"
       ],
@@ -1238,6 +1238,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录临时PostgreSQL Unix socket与真实Worker业务回归证据，没有新增产品通信面。",
       "acceptance": "只登记验证复杂度，不代表完整T915或历史数据验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/agentic-worker-entry.test.ts"
+      ],
+      "file_sha256": "2d686f3599b740813ba6aabb1723b65348b16264e19dd0c392959a8d0de601b6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "验证已批准独立Agent Worker真实子进程、能力探测和停止边界；仅隔离测试IPC，不新增对外接口。",
+      "acceptance": "该记录只绑定实现复杂度，不代表完整T-915或分发包验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/durable-pi-worker-evidence.json"
+      ],
+      "file_sha256": "a66e1a0beec0f34dfa2bbb8e6a936b69f7bfc3893a3fa3d98dd62c8eaa77480d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准R-02私有进程边界的真实测试证据，记录仅测试IPC和生产未接线的明确限制。",
+      "acceptance": "局部证据，不宣称完整验收。"
     }
   ],
   "historical_baselines": []

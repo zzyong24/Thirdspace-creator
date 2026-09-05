@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import {
-  hostMessageSchema, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
+  hostMessageSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
+import type { runAgenticInWorker } from "./agentic-worker-run";
 import { GenerationFailure } from "./generation-error";
 
 const modelCheckpointSchema = z.object({
@@ -15,6 +16,8 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
+  capabilities?: Array<"model.generate"|"model.structured"|"agentic.run">;
+  runAgentic?: typeof runAgenticInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
@@ -23,6 +26,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
+  const capabilities=["model.generate", ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
@@ -68,6 +72,21 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       if (deadlineAt <= Date.now()) controller.abort();
       signal.throwIfAborted();
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
+      if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      if(input.kind==="agentic.run"){
+        if(!deps.runAgentic)throw new GenerationFailure("waiting_user","AGENTIC_WORKER_NOT_READY");
+        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        signal.throwIfAborted();
+        const result=await deps.runAgentic(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),text=>{
+          if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
+        });
+        signal.throwIfAborted();
+        const candidate=workerPortInputSchemas.commitAgenticResult.parse(result);
+        committing=true;
+        await call(execution,"commitAgenticResult",candidate,signal);
+        reason="completed";
+        return;
+      }
       if(input.kind==="model.structured"){
         if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
         const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
@@ -153,7 +172,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     }
   };
   return {
-    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities: ["model.generate", ...(deps.generateStructured ? ["model.structured"] : [])]});},
+    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities});},
     receive(raw: unknown) {
       const parsed = hostMessageSchema.safeParse(raw);
       if (!parsed.success || closed) return;

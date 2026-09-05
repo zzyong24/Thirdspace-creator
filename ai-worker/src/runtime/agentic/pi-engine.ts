@@ -68,6 +68,7 @@ export interface PiAgenticEngineDeps {
    * openai-responses,真烧用户 provider)。
    */
   buildStreamSimple?: (llmConfig: RawLlmConfig) => unknown;
+  wrapStream?: (stream: unknown, input: AgenticEngineRunInput) => unknown;
 }
 
 // ── §6.1 provider 装配(纯函数,导出供单测)────────────────────────────────────────────────
@@ -209,7 +210,7 @@ export function toPiCustomTool(
     name: tool.name,
     label: tool.label,
     description: tool.description,
-    parameters: zodToPiParameters(tool.parameters),
+    parameters: tool.jsonParameters ?? zodToPiParameters(tool.parameters),
     // 配合限流/防封端口:turn 内工具顺序执行(不并行,SPEC §12 未决④拍板 sequential)。
     executionMode: "sequential",
     async execute(
@@ -333,6 +334,7 @@ interface PiSession {
   getLastAssistantText?: () => string | undefined;
   getSessionStats?: () => { tokens?: Record<string, number> } | undefined;
   setAutoRetryEnabled?: (enabled: boolean) => void;
+  setAutoCompactionEnabled?: (enabled: boolean) => void;
   readonly messages?: ReadonlyArray<{
     role?: string;
     stopReason?: string;
@@ -343,6 +345,11 @@ interface PiSession {
 interface PiEvent {
   type: string;
   message?: { role?: string; usage?: { input?: number; output?: number; cacheRead?: number; cacheWrite?: number } };
+}
+
+/** 实际加载同一深层 SDK 依赖；不因包名存在就宣称执行能力。 */
+export async function isPiAgenticRuntimeAvailable(): Promise<boolean> {
+  return (await loadPiSdk()) !== null;
 }
 
 let cachedSdk: PiSdk | null = null;
@@ -551,6 +558,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         const sess = session; // 收窄:闭包内用非空引用
         // 在真正发 provider 请求之前 admission；turn_end 已晚于模型与工具执行。
         if (sess.agent) {
+          if (deps.wrapStream) sess.agent.streamFn = deps.wrapStream(sess.agent.streamFn, input) as typeof sess.agent.streamFn;
           const stream = sess.agent.streamFn;
           sess.agent.streamFn = (...args: unknown[]) => {
             signal.throwIfAborted();
@@ -566,6 +574,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         // 关 pi 自带 auto-retry:retry/backoff 由我方层(端口 + LoopController 预算)掌控;
         // 放任 pi 自动重试会不受预算约束地绕圈 + 报错不及时浮现(诚实原则:fail fast)。
         sess.setAutoRetryEnabled?.(false);
+        sess.setAutoCompactionEnabled?.(false);
 
         // abort 贯通(input.signal → session.abort)。
         onAbort = (): void => {
@@ -644,7 +653,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
       } catch {
         if (signal.aborted) controller.markAborted();
         if (controller.terminationReason()) {
-          return { hasUsableOutput, summary: "任务已停止", output: { outputs, evidence, toolLog }, steps: controller.stepsUsed(), stopReason: controller.terminationReason()! };
+          return { actualEngine: "pi", hasUsableOutput, summary: "任务已停止", output: { outputs, evidence, toolLog }, steps: controller.stepsUsed(), stopReason: controller.terminationReason()! };
         }
         // [RT-M01] 仅当**本轮零真实副作用**时,整体回退确定性兜底才安全(保命路径,SPEC §3.1)。
         if (sideEffectsCommitted === 0 && modelCallsStarted === 0) {

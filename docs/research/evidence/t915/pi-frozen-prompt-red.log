@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-pi-stream.test.ts (14 tests | 1 failed) 126ms
+     × 冻结systemPrompt同时用于账本请求和实际供应商，不保留SDK宿主追加信息 7ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-pi-stream.test.ts > Pi 持久模型流 > 冻结systemPrompt同时用于账本请求和实际供应商，不保留SDK宿主追加信息
+ FAIL  src/execution/durable-pi-stream.test.ts > Pi 持久模型流 > 冻结systemPrompt同时用于账本请求和实际供应商，不保留SDK宿主追加信息
+ FAIL  src/execution/durable-pi-stream.test.ts > Pi 持久模型流 > 冻结systemPrompt同时用于账本请求和实际供应商，不保留SDK宿主追加信息
+AssertionError: expected { request: { …(3) }, …(1) } to match object { request: { systemPrompt: '冻结原文' } }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "request": {
+-     "systemPrompt": "冻结原文",
++     "systemPrompt": "SDK system prompt + private working directory",
+    },
+  }
+
+ ❯ src/execution/durable-pi-stream.test.ts:101:39
+     99|     const stream=wrapDurablePiStream(f.native,{signal:f.controller.sig…
+    100|     await expect(stream.result()).resolves.toEqual(message);
+    101|     expect(f.call.mock.calls[0]?.[1]).toMatchObject({request:{systemPr…
+       |                                       ^
+    102|     expect(f.native.mock.calls[0]?.[1]).toMatchObject({systemPrompt:"冻…
+    103|     expect(sourceContext.systemPrompt).toBe("SDK system prompt + priva…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 passed (14)
+   Start at  05:14:23
+   Duration  347ms (transform 47ms, setup 0ms, import 86ms, tests 126ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/durable-pi-stream.test.ts

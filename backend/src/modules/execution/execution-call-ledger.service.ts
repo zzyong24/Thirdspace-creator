@@ -46,6 +46,15 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
     }
   }
   return {
+    async initializeBudget(ref: ExecutionRef) {
+      return leases.withLease(ref,"admission",async({tx,task})=>{
+        const budget=task.executionBudget===null?configuredBudget:budgetSchema.parse(task.executionBudget);
+        const deadlineAt=task.deadlineAt ?? new Date(Date.parse(task.createdAt)+budget.deadlineMs).toISOString();
+        if(!(Date.parse(deadlineAt)>Date.parse(now())))throw new ConflictError("执行截止时间已到");
+        if(task.executionBudget===null || task.deadlineAt===null)await tx.update(executionTasks).set({executionBudget:budget,deadlineAt}).where(eq(executionTasks.id,task.id));
+        return {budget,deadlineAt};
+      });
+    },
     async inspect(ref: ExecutionRef) {
       return leases.withLease(ref, "settlement", async ({tx, task}) => {
         const calls = await readCalls(tx, task.id);

@@ -11,13 +11,13 @@ const budget={maxCalls:5,maxTokens:1000,deadlineMs:60000};
 const output={status:"ok" as const,summary:"查询完成",evidence:[{entityId:"real-id"}],error:null,continuation:null,sideEffect:"none" as const};
 let db:Db;let close:()=>Promise<void>;
 beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(async()=>close?.());
-async function fixture(id:string){
+async function fixture(id:string,dryRun=false,effect:"none"|"proposal"="none"){
  const now=()=>"2026-09-05T00:00:00.000Z";const tasks=createPersistentTaskService(db,{now});
- const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput:{kind:"agentic.run",tools:[{name:"web.search",version:"1"}]}}});
+ const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput:{kind:"agentic.run",dryRun,tools:[{name:"web.search",version:"1"}]}}});
  const claim=await tasks.claimTask({taskId:task.id,workerId:"worker"});if(!claim)throw new Error("claim missing");
  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const ledger=createExecutionCallLedgerService(db,{now,budget});
- const tools={"web.search":{version:"1",parameters:z.object({query:z.string().min(1)}).strict(),effect:"none" as const}};
+ const tools={"web.search":{version:"1",parameters:z.object({query:z.string().min(1)}).strict(),effect}};
  const ports=createExecutionAgenticToolPorts(db,{now,budget,tools});
  async function model(key:string,input='{"query":"资料"}',name="web.search"){
   const c=await ledger.reserve(ref,{operationKey:key,kind:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});await ledger.start(ref,c.id);
@@ -89,4 +89,11 @@ it("真实结算已落库但回执丢失，新执行器复用原结果，不重�
  await expect(runDurableAgenticTool(input,deps)).rejects.toThrow();
  expect(await runDurableAgenticTool(input,{...deps,signal:new AbortController().signal})).toEqual(output);
  expect(executions).toBe(1);expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
+});
+
+it("冻结预演不能将真实副作用结算成成功",async()=>{
+ const f=await fixture("dry-run-side-effect",true,"proposal");const a=await f.ports.reserve(f.ref,await f.model("m"));await f.ports.start(f.ref,{callId:a.callId});
+ await expect(f.ports.settle(f.ref,{callId:a.callId,status:"settled",output:{...output,sideEffect:"proposal"}})).rejects.toMatchObject({name:"ConflictError"});
+ await f.ports.settle(f.ref,{callId:a.callId,status:"settled",output:{...output,evidence:[],data:{plan:{toolName:"web.search"}}}});
+ expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
 });

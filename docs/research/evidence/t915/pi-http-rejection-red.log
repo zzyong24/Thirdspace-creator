@@ -1,0 +1,88 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-pi-http.integration.test.ts (15 tests | 9 failed) 163ms
+     × HTTP 429保留可信拒绝，不由SDK重试 42ms (retry x2)
+     × HTTP 401保留可信拒绝，不由SDK重试 7ms (retry x2)
+     × HTTP 503保留可信拒绝，不由SDK重试 6ms (retry x2)
+     × HTTP 429保留可信拒绝，不由SDK重试 9ms (retry x2)
+     × HTTP 401保留可信拒绝，不由SDK重试 4ms (retry x2)
+     × HTTP 503保留可信拒绝，不由SDK重试 4ms (retry x2)
+     × HTTP 429保留可信拒绝，不由SDK重试 7ms (retry x2)
+     × HTTP 401保留可信拒绝，不由SDK重试 5ms (retry x2)
+     × HTTP 503保留可信拒绝，不由SDK重试 4ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 429保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 503保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 503保留可信拒绝，不由SDK重试
+AssertionError: expected Error: MODEL_STREAM_ERROR { …(3) } to match object { outcome: 'retry_wait', …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "retry_wait",
+-   "retryAfterMs": 2000,
++ GenerationFailure {
++   "outcome": "unknown_result",
++   "retryAfterMs": undefined,
+  }
+
+ ❯ src/execution/durable-pi-http.integration.test.ts:43:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/27]⎯
+
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-completions' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'openai-responses' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 401保留可信拒绝，不由SDK重试
+ FAIL  src/execution/durable-pi-http.integration.test.ts > 真实Pi HTTP兼容：'anthropic-messages' > HTTP 401保留可信拒绝，不由SDK重试
+AssertionError: expected Error: MODEL_STREAM_ERROR { …(3) } to match object { outcome: 'waiting_user' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "outcome": "waiting_user",
++ GenerationFailure {
++   "outcome": "unknown_result",
+  }
+
+ ❯ src/execution/durable-pi-http.integration.test.ts:43:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/27]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 6 passed (15)
+   Start at  05:11:22
+   Duration  475ms (transform 47ms, setup 0ms, import 170ms, tests 163ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/durable-pi-http.integration.test.ts

@@ -1,3 +1,5 @@
+import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
+export { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
 import { reserveAgenticToolSchema, settleAgenticToolSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
@@ -13,7 +15,7 @@ export const executionRefSchema = z.object({
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
-  "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -40,6 +42,9 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   readTaskContext: emptyPortInput,
+  reserveAgenticModel: reserveAgenticModelSchema,
+  executeAgenticTool:z.object({callId:operationKeySchema}).strict(),
+  commitAgenticResult:z.object({actualEngine:z.literal("pi"),summary:z.string().max(10000),stopReason:z.enum(["completed","max_steps","budget_exhausted","aborted","llm_error"]),lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000)}).strict(),
   reserveAgenticTool: reserveAgenticToolSchema,
   settleAgenticTool: settleAgenticToolSchema,
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
@@ -100,6 +105,7 @@ export const modelGenerationInputSchema = z.object({
 });
 export const workerModelSpecSchema = z.object({
   apiFormat: z.enum(["anthropic", "openai_chat", "openai_responses"]),
+  authStyle: z.enum(["bearer", "x-api-key"]).optional(),
   baseUrl: z.string().nullable(), model: z.string().min(1), token: z.string().min(1),
   displayModelKey: z.literal("channel-managed").optional(),
   structuredOutputs: z.boolean().optional(),
@@ -119,7 +125,7 @@ export const structuredGenerationInputSchema=z.object({
   kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
-export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema]);
+export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({

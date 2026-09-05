@@ -23,6 +23,14 @@
     "./durable-agentic-tool": {
       "types": "./src/execution/durable-agentic-tool.ts",
       "default": "./src/execution/durable-agentic-tool.ts"
+    },
+    "./durable-pi-stream": {
+      "types": "./src/execution/durable-pi-stream.ts",
+      "default": "./src/execution/durable-pi-stream.ts"
+    },
+    "./agentic-run": {
+      "types": "./src/execution/agentic-worker-run.ts",
+      "default": "./src/execution/agentic-worker-run.ts"
     }
   },
   "scripts": {

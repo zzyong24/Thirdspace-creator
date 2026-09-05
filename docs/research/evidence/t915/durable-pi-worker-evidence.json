@@ -1,0 +1,60 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T12:21:42.759179+00:00",
+  "status": "durable_pi_worker_integrated_in_isolated_tests_production_routing_pending",
+  "implemented": [
+    "单一Pi引擎复用到独立Agent Worker，真实依赖加载后只声明agentic.run；普通生成Worker保持短路径",
+    "Pi规范消息/工具签名/缓存用量回执，重放冻结初始目标和已结算模型工具结果；新模型上下文必须与后端真实账本完全一致",
+    "后端在首次读取Agent任务上下文时冻结预算与deadline，不虚增调用，不因新配置或恢复重置额度",
+    "冻结systemPrompt同时用于账本和实际供应商请求，排除SDK默认工作目录附加造成的恢复漂移",
+    "固定Pi 0.80.7受管理补丁保留三个provider真实SDK APIError的状态码和Retry-After；禁SDK自动重试与自动压缩",
+    "全零模型计量保守记unknown，不将缺usage算0；未知结果不重投供应商",
+    "Worker预演不调用副作用工具执行端口；后端结算不能将预演记录为已确认真实副作用",
+    "Worker候选提交回执丢失不反向写失败覆盖；正常预算停止保留工具回执和实际引擎"
+  ],
+  "verification": {
+    "status": "局部验证通过，完整T-915验收未完成",
+    "real_integration": "真实Pi+本地HTTP+PGlite：两次模型请求、一次工具动作替身；第二请求包含真实fixture正文URL；首次checkpoint提交回执丢失后恢复，重放HTTP/工具/ledger/revision不增加，累计14tokens",
+    "subprocess": "真实fork独立Agent Worker：两轮模型/一工具、IPC取消关闭HTTP、SIGTERM停止、缺Pi退出78且无ready；宿主IPC为测试替身",
+    "providers": "anthropic/openai_chat/openai_responses使用已安装实际SDK与本地HTTP，429/401/503各一次HTTP，出流后断开和无HTTP断开记unknown；不冒充真实上游服务验证",
+    "review": "独立评审发现并修dryRun、真实HTTP拒绝丢分类、预算初始化、冻结prompt漂移及预算终止actualEngine缺失；完整生产端口未声称完成",
+    "red_evidence": [
+      "pi-http-rejection-red.log",
+      "pi-frozen-prompt-red.log",
+      "pi-missing-usage-red.log"
+    ],
+    "tdd_note": "真实预算停止新增用例在修复前已通过，缺actualEngine通过可控session异常覆盖；未伪造红测。预算初始化及冻结prompt缺口由真实数据库集成失败揭示。",
+    "write_set_note": "在已批准R-03供应商重试范围内，将固定版本patch文件与pnpm-workspace.yaml纳入T-915读写集，不升级SDK或扩大产品范围。",
+    "worker": {
+      "files": 6,
+      "tests": 79,
+      "status": "PASS"
+    },
+    "backend": {
+      "files": 8,
+      "tests": 66,
+      "status": "PASS",
+      "command_parallelism": "--maxWorkers=2",
+      "earlier_attempt": "与Worker/build/tsc同时并发时5个PGlite beforeAll超10秒、33测跳过；降低测试并发后66测通过，未修改断言或超时阈值"
+    },
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "build": "独立生成和Agent Worker两个产物构建PASS",
+    "boundary": "无新增，既有5条",
+    "orphan": "0 errors，100既有warnings",
+    "task_governance": "scope guard []，最终提交前复核"
+  },
+  "limits": [
+    "生产Agent任务仍未改由独立Worker领取；executeAgenticTool可信生产执行端口、领域上下文/预演执行前守卫和commitAgenticResult原子候选提交仍待接线",
+    "当前真实数据库与真实fork分别验证；业务工具执行用隔离fixture，不能合并宣称完整生产端到端",
+    "参数校验失败转模型可读invalid_input回执、正常预算拒绝映射、未知调用对账和部分usage字段真实性仍需补齐",
+    "SDK默认工具schema校验可能在代理前生成错误回执，完整自修复链还未完成",
+    "浏览器observe-act-verify/任务隔离、父子任务持久恢复、全入口迁移与旧实现退役未完成",
+    "30次同条件性能基线、三真实上游以及macOS/Windows分发包与真实公共旅程待验",
+    "全局reconcile既有历史失败归T-916，本次不标记T-915完成"
+  ]
+}

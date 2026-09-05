@@ -182,5 +182,11 @@
     "backend_tests": 83,
     "worker_tests": 30,
     "scope": "工具账本/Worker包装器及Pi运行时代码归属通过；实际生产Agent进程分支和完整恢复尚未接完"
+  },
+  "durable_pi_worker_increment": {
+    "evidence": "durable-pi-worker-evidence.json",
+    "backend_tests": 66,
+    "worker_tests": 79,
+    "scope": "真实Pi/HTTP/数据库恢复与独立Agent进程通过隔离验证，生产调度、真实工具执行/候选提交、浏览器迁移及完整验收未完成"
   }
 }
