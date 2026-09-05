@@ -1164,6 +1164,20 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/execution-lease-evidence.json"
+      ],
+      "file_sha256": "bbc99949cf132682ddd44e5ad017a92147fcc30b10799ff5ade6b18dd5121ba9",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅记录已批准父子通信与执行租约的测试证据；没有新增运行机制，不代表生产通信已接线。"
     }
   ],
   "historical_baselines": []
