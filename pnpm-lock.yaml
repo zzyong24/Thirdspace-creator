@@ -39,6 +39,12 @@ importers:
       '@earendil-works/pi-coding-agent':
         specifier: 0.80.7
         version: 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+      '@mozilla/readability':
+        specifier: 0.6.0
+        version: 0.6.0
+      '@playwright/test':
+        specifier: 1.60.0
+        version: 1.60.0
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
@@ -48,6 +54,9 @@ importers:
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
+      jsdom:
+        specifier: 29.1.1
+        version: 29.1.1(@noble/hashes@1.8.0)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -55,6 +64,9 @@ importers:
       '@ai-sdk/provider':
         specifier: ^4.0.0
         version: 4.0.0
+      '@types/jsdom':
+        specifier: 28.0.3
+        version: 28.0.3
       '@types/node':
         specifier: 20.19.43
         version: 20.19.43

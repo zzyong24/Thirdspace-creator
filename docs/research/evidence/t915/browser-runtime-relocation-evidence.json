@@ -1,0 +1,59 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T13:27:00.927093+00:00",
+  "status": "浏览器执行代码与依赖已迁入Worker运行库，生产自主调研路由与持久证据尚未接通",
+  "changes": [
+    "搜索、网页正文提取、浏览器池、登录态注入、URL guard、Chromium启动保护迁入ai-worker/src/runtime/browser",
+    "frontend旧入口保留薄导出；抖音模块仅抽出共用启动helper，不迁移抖音业务",
+    "web-domain保持零依赖直接子路径，前端与Worker共用错误类身份",
+    "Worker新增browser-runtime.cjs可加载产物，明确external浏览器/正文依赖；同版Playwright/Readability/JSDOM及类型依赖归属纳入Worker，前端保留仍在使用的依赖"
+  ],
+  "verification": {
+    "review": "独立只读PASS：逐文件核对原行为、无反向依赖、纯客户端域名模块、原错误类、URL保护与取消；审查者独立加载构建产物通过",
+    "reported_by_implementation_agent": {
+      "frontend_initial_regression": {
+        "files": 9,
+        "tests": 202
+      },
+      "launch_selection_subset": {
+        "tests": 3,
+        "skipped": 119,
+        "note": "只验证注入launch回调的选中子集，不声称整文件122测试全绿"
+      },
+      "frontend_followup": {
+        "tests": 63,
+        "note": "URL/reader修改后的复跑，和前述主回归有重叠，不累加总数"
+      },
+      "worker_runtime_load_tests": 1,
+      "types": [
+        "ai-worker PASS",
+        "frontend PASS"
+      ],
+      "worker_build": "PASS",
+      "dependencies": "offline frozen install，未下载或升级"
+    },
+    "root_real_browser_probe": {
+      "status": "passed",
+      "browserPid": 72785,
+      "browserVersion": "152.0.7977.77",
+      "chars": 966,
+      "realBrowserActionVerified": true,
+      "childExited": true,
+      "browserMainProcessExited": true,
+      "scope": "隔离临时profile/内存页面，未验证生产Agent调度、真实网站、强杀或安装包"
+    },
+    "real_probe_log": "browser-runtime-real-probe.log",
+    "real_probe_scope": "独立子进程与Playwright临时profile，Chromium真实内存DOM动作回读+Readability提取，正常关闭后主进程退出；无用户登录态、外部网页或应用数据库",
+    "boundary": "无新增违规，既有5条基线保留",
+    "orphan": "0 errors / 100 warnings",
+    "tdd_note": "物理移动与兼容回归，未声称发生历史红测"
+  },
+  "remaining": [
+    "生产Agent调度研究工具仍须接到Worker内长动作，不可用host execute端口包装长浏览器任务",
+    "execution_evidence不可变全文快照与实际已读窗口账本需实现；内存pages/observedSources无法跨进程恢复",
+    "知识候选必须验证当前任务、已结算且早于候选模型回合的阅读来源；仅快照存在不算读过",
+    "站点会话短端口需要账号/域名/版本与浏览器资源租约校验",
+    "强杀Worker/父进程后的浏览器子树/profile清理、登录等待与新观察策略仍待验",
+    "实际网站、性能基线、全量入口与macOS/Windows安装包验收未完成"
+  ]
+}

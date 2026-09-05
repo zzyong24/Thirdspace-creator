@@ -598,3 +598,11 @@ describe("[T-326·RT-H04] readUrl — SSRF 守卫", () => {
     ).rejects.toThrow(/SSRF/);
   });
 });
+
+
+it("迁移后的兼容入口与Worker保持同一函数及错误类引用",async()=>{
+  const worker=await import("@creatoros/ai-worker/browser/web-reader");
+  const capture=await import("@creatoros/ai-worker/browser/web-capture");
+  expect(readUrl).toBe(worker.readUrl);expect(WebReaderLoginRequiredError).toBe(worker.WebReaderLoginRequiredError);expect(WebCaptureError).toBe(capture.WebCaptureError);
+  expect(new worker.WebReaderLoginRequiredError("example.com")).toBeInstanceOf(WebCaptureError);
+});

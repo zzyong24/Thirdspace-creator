@@ -31,6 +31,14 @@
     "./agentic-run": {
       "types": "./src/execution/agentic-worker-run.ts",
       "default": "./src/execution/agentic-worker-run.ts"
+    },
+    "./browser": {
+      "types": "./src/runtime/browser/index.ts",
+      "default": "./src/runtime/browser/index.ts"
+    },
+    "./browser/*": {
+      "types": "./src/runtime/browser/*.ts",
+      "default": "./src/runtime/browser/*.ts"
     }
   },
   "scripts": {
@@ -50,13 +58,17 @@
     "zod": "^4.4.3",
     "@creatoros/contract": "workspace:*",
     "@earendil-works/pi-ai": "0.80.7",
-    "@earendil-works/pi-coding-agent": "0.80.7"
+    "@earendil-works/pi-coding-agent": "0.80.7",
+    "@playwright/test": "1.60.0",
+    "@mozilla/readability": "0.6.0",
+    "jsdom": "29.1.1"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.0",
     "@types/node": "20.19.43",
     "typescript": "5.9.3",
     "vitest": "4.1.8",
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "@types/jsdom": "28.0.3"
   }
 }

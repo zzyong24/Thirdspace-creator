@@ -201,5 +201,9 @@
     "backend_tests": 32,
     "worker_tests": 84,
     "scope": "已授权工具参数错误零执行、持久反馈、修正重调通过实际素材链路；浏览器迁移及全量验收仍未完成"
+  },
+  "browser_runtime_relocation_increment": {
+    "evidence": "browser-runtime-relocation-evidence.json",
+    "scope": "运行代码物理迁移及真实隔离Chromium正常操作/退出通过；生产Agent调研路由、持久证据、强杀恢复和全量验收未完成"
   }
 }

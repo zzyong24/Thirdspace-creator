@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "6c057d0082267855acd603e822e71ca8c36f8f3bca4cc45920f711a925752648",
+      "file_sha256": "0fd3fbc7819e1faba1de253177d619aea83ae5a3ec84c021652a1b2fdf3b497d",
       "categories": [
         "ipc"
       ],
@@ -1155,14 +1155,14 @@
       "files": [
         "pnpm-lock.yaml"
       ],
-      "file_sha256": "40f9fdf1cc6fcda876948bbbee758facdea5daea56f511a3c211afd034aadaca",
+      "file_sha256": "b09eb99bc139389e8cf7ad40e9eb4298d5a691094b622b8e10ca91044e6b4079",
       "categories": [
         "runtime"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "reason": "DEC-RUNTIME-055浏览器运行迁移只调整四个已锁定依赖的包归属，无版本升级；独立复核与离线安装通过。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1268,6 +1268,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "已批准R-02私有进程边界的真实测试证据，记录仅测试IPC和生产未接线的明确限制。",
       "acceptance": "局部证据，不宣称完整验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/runtime/browser/runtime-load.test.ts"
+      ],
+      "file_sha256": "85be81346084d9adef3aa222710379ecde75465e1f9ca48115554c88a5ff5200",
+      "categories": [
+        "runtime"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "独立浏览器运行依赖闭包的真实子进程加载测试，属于已批准Worker迁移的必要验收；不代表实际浏览器生产调度或安装包通过。",
+      "acceptance": "仅登记本文件复杂度，不替代完整T-915验收。"
     }
   ],
   "historical_baselines": []
