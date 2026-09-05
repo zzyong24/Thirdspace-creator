@@ -17,7 +17,7 @@ describe("真实模型调度宿主",()=>{
     await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"script.draft",idempotencyKey:id,requestedAt:new Date().toISOString()});
     return createExecutionAuthorityService(db).bindAiTask(ctx,id,prepared ? {requestFingerprint:"sha256:"+"0".repeat(64),modelInput,budget} : undefined);
   }
-  function dispatcher(port:number,store:Db=db){return createModelWorkerDispatcher(store,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"host",budget,pollMs:100,
+  function dispatcher(port:number,store:Db=db,modelConcurrency=2){return createModelWorkerDispatcher(store,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"host",budget,pollMs:100,modelConcurrency,
     async resolveModelCredential(context,capability){expect(context.userId).toBe(ctx.userId);expect(context.accountId).toBe(ctx.accountId);expect(capability).toBe("script");return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${port}/v1`,model:"test",token:"fixture"};},
     projectCandidate(_context,input){return {resultType:"artifact_version",artifactId:"fixture-artifact",resultData:{body:input.text}};},
   });}
@@ -48,6 +48,52 @@ describe("真实模型调度宿主",()=>{
       expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"cancel-active"))).toHaveLength(0);
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
+  it("两个独立进程并行且第三项排队，取消其中一个不打断另一个",async()=>{
+    const first=await prepare("pool-first");const second=await prepare("pool-second");const third=await prepare("pool-third");
+    const responses:import("node:http").ServerResponse[]=[];let live=0;let peak=0;
+    const server=createServer((req,res)=>{req.resume();live++;peak=Math.max(peak,live);responses.push(res);res.on("close",()=>{live--;});res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port);
+    const persistent=createPersistentTaskService(db);
+    const finish=(res:import("node:http").ServerResponse)=>res.end('data: {"id":"pool","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{"content":"完成正文"},"finish_reason":null}]}\n\ndata: {"id":"pool","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');
+    try{
+      const draining=host.drainOnce();expect(host.drainOnce()).toBe(draining);
+      await vi.waitFor(()=>expect(responses).toHaveLength(2));
+      expect((await persistent.get(ctx,third.executionTaskId)).status).toBe("queued");
+      await persistent.command(ctx,{taskIds:[first.executionTaskId],command:"cancel",idempotencyKey:"pool-cancel-first"});
+      await vi.waitFor(()=>expect(responses).toHaveLength(3));
+      expect((await persistent.get(ctx,first.executionTaskId)).status).toBe("cancelled");
+      expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("running");
+      for(const response of responses)if(!response.destroyed)finish(response);
+      expect(await draining).toBe(3);expect(peak).toBe(2);
+      expect((await persistent.get(ctx,second.executionTaskId)).status).toBe("succeeded");
+      expect((await persistent.get(ctx,third.executionTaskId)).status).toBe("succeeded");
+    }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },15000);
+
+  it("已有长请求执行时，新任务能使用空闲进程；停止同时断开所有在途请求",async()=>{
+    const long=await prepare("pool-late-long");let opened=0;let closed=0;
+    let release!:()=>void;let sawEmpty!:()=>void;let delayed=false;
+    const held=new Promise<void>(r=>{release=r;});const empty=new Promise<void>(r=>{sawEmpty=r;});
+    const reorderedDb=new Proxy(db,{get(target,property){
+      if(property==="transaction")return async (...args:Parameters<Db["transaction"]>)=>{
+        const result=await target.transaction(...args);
+        if((result as {task?:{id?:string}}|null)?.task?.id===long.executionTaskId && !delayed){delayed=true;await held;}
+        else if(result===null && delayed)sawEmpty();
+        return result;
+      };
+      return Reflect.get(target,property,target);
+    }});
+    const server=createServer((req,res)=>{req.resume();opened++;res.on("close",()=>{closed++;});res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port,reorderedDb);
+    try{
+      const draining=host.drainOnce();await empty;release();await vi.waitFor(()=>expect(opened).toBe(1));
+      await prepare("pool-late-short");
+      await vi.waitFor(()=>expect(opened).toBe(2));
+      await host.stop();await draining;await vi.waitFor(()=>expect(closed).toBe(2));
+      for(const id of ["pool-late-long","pool-late-short"])expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,id))).toHaveLength(0);
+    }finally{release();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },15000);
+
   it("停止发生在截止时间读取期间，也不会再启动模型请求",async()=>{
     const mapped=await prepare("stop-before-start");
     const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));

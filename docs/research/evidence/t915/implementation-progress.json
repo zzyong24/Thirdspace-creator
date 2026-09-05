@@ -126,5 +126,10 @@
     "evidence": "production-platform-worker-evidence.json",
     "tests": 103,
     "scope": "公共生产入口、本地HTTP供应商与隔离持久库通过；全量迁移及验收未完成"
+  },
+  "model_worker_pool_increment": {
+    "evidence": "model-worker-pool-evidence.json",
+    "tests": 13,
+    "scope": "已实现有限进程并发与取消隔离；未替代完整性能基线和所有入口迁移"
   }
 }

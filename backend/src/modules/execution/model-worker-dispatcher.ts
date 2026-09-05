@@ -16,10 +16,14 @@ export interface ModelWorkerDispatcherDeps extends ExecutionCandidateDeps {
   /** 生产适配器须按业务任务读取已冻结模型权威；不能只按当前账号设置猜测。 */
   resolveModelCredential(context:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string}):Promise<unknown>;
   pollMs?:number;
+  /** 每个后端宿主的模型进程上限；每个进程同时执行一个任务。 */
+  modelConcurrency?:number;
   onError?(code:string):void;
 }
 /** 后端调度宿主：只领取已冻结输入的模型任务；模型与SDK生命周期在独立Worker。 */
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){
+  const concurrency=deps.modelConcurrency ?? 2;
+  if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
   const tasks=createPersistentTaskService(db,{now});
@@ -31,7 +35,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
   const report=(code:string)=>{try{deps.onError?.(code);}catch{/* 诊断订阅故障不改变执行。 */}};
-  const supervisor=createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
+  const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
       if(port==="reserveGenerationCall")return generation.reserveGenerationCall(ref,raw);
@@ -62,6 +66,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
       throw new Error("UNSUPPORTED_MODEL_WORKER_PORT");
     },
   }});
+  const supervisors=Array.from({length:concurrency},createSupervisor);
   async function acknowledge(ref:ExecutionRef){
     await leases.withLease(ref,"settlement",async({tx,task})=>{
       const status=task.status==="pause_requested" ? "paused" : task.status==="cancel_requested" ? "cancelled" : null;
@@ -73,10 +78,23 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
     if(stopping)return Promise.resolve(0);
     draining=(async()=>{
       await tasks.recoverExpiredLeases();
+      let activeCount=0;
+      let pendingClaims=0;
+      const counts=await Promise.allSettled(supervisors.map(async supervisor=>{
       let count=0;
       while(!stopping){
-        const claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:"model"});
-        if(!claim || stopping)break;
+        pendingClaims++;
+        let claim:Awaited<ReturnType<typeof tasks.claimNext>>;
+        try{claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:"model"});}
+        finally{pendingClaims--;}
+        if(stopping)break;
+        if(!claim){
+          // 空闲进程继续查看队列，避免新短任务被另一个长请求挡住。
+          if(activeCount===0 && pendingClaims===0)break;
+          await new Promise(resolve=>setTimeout(resolve,Math.max(100,deps.pollMs ?? 1000)));
+          continue;
+        }
+        activeCount++;
         const ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
         let watching=true;
         let controlTimer:ReturnType<typeof setTimeout>|undefined;
@@ -99,10 +117,15 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
         }finally{
           watching=false;if(controlTimer)clearTimeout(controlTimer);
           await acknowledge(ref).catch(()=>{});
+          activeCount--;
         }
         count++;
       }
       return count;
+      }));
+      const failure=counts.find(result=>result.status==="rejected");
+      if(failure?.status==="rejected")throw failure.reason;
+      return counts.reduce((total,result)=>total+(result.status==="fulfilled" ? result.value : 0),0);
     })().finally(()=>{draining=undefined;});
     return draining;
   };
@@ -113,6 +136,6 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   return {
     drainOnce,
     start(){if(timer || draining || stopping)return;void tick();},
-    async stop(){stopping=true;if(timer)clearTimeout(timer);await supervisor.stop();await draining;},
+    async stop(){stopping=true;if(timer)clearTimeout(timer);await Promise.all(supervisors.map(supervisor=>supervisor.stop()));await draining;},
   };
 }

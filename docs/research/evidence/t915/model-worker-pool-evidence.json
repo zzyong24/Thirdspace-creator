@@ -1,0 +1,24 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:33:22.426315+00:00",
+  "status": "bounded_model_process_pool_verified_full_scope_open",
+  "implemented": [
+    "每个后端宿主默认两个独立模型Worker进程，可配置1至8个，每进程同时执行一个任务",
+    "并发领取保留原持久租约与预算；第三项排队，取消仅影响指定执行",
+    "空闲进程等待其他在途领取和执行，接收长请求运行期间新到达任务",
+    "单lane失败等待其他lane收尾，宿主停止清理全部进程并等待调度结束"
+  ],
+  "verification": {
+    "backend_tests": 12,
+    "public_production_entry_tests": 1,
+    "backend_types": "PASS",
+    "boundary": "无新增违规，既有5条",
+    "race_fixture": "真实数据库代理延迟成功领取返回、让空结果先返回；验证迟到任务仍使用空闲进程",
+    "review": "worker_review独立只读复核确认领取竞态收口，未发现新阻断；未重跑测试"
+  },
+  "limits": [
+    "并发上限是单个宿主模型进程池，不代表跨宿主或浏览器配额已完成",
+    "供应商为本地HTTP夹具，不代表性能基线或真实供应商验收",
+    "全部生产入口、Pi浏览器循环和整体验收仍待完成"
+  ]
+}
