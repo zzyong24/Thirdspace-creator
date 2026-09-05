@@ -1,6 +1,8 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type { ModelSpec, ScriptReviewOutput } from "@creatoros/ai-worker";
+import { isCompleteRawScriptReview } from "@creatoros/ai-worker";
+export { isCompleteRawScriptReview } from "@creatoros/ai-worker";
 
 // 文案审核 runner(script.review node,T-086 SPEC §2)。
 // [gate-F2] 独立于 review-runner.ts 的理由(SPEC 要求注明):本 runner 与复盘 runner 差异根本 ——
@@ -122,18 +124,6 @@ function positioningBriefOf(pc: unknown): string {
     .filter((x): x is string => typeof x === "string" && x.trim().length > 0)
     .join(" · ");
   return parts || "（未设置定位——按通用合规标准审核）";
-}
-
-/** reasoning 恢复前的原始完整性门；不能依靠 schema 默认值把空对象补成通过。 */
-export function isCompleteRawScriptReview(raw: unknown): boolean {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
-  const value = raw as Record<string, unknown>;
-  return (
-    ["pass", "risk", "block"].includes(String(value.verdict)) &&
-    typeof value.summary === "string" &&
-    value.summary.trim().length > 0 &&
-    Array.isArray(value.findings)
-  );
 }
 
 export async function runScriptReview(

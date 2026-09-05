@@ -1,0 +1,99 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:6940) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=25 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-9269dc54-16 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=6 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-142f99d4-16 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=5 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-59a5989e-16 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=5 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-92064089-17 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=5 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-341823fd-17 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+stderr | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[structured-node] template=script.review status=ok durationMs=5 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+[ai-task-runner] taskId=ai-task-e383b38b-17 taskType=script.review status=succeeded finishReason=null usage=null candidateCount=0
+
+ ❯ src/server/script-review-worker-entry.integration.test.ts (2 tests | 2 failed) 20545ms
+     × ai.tasks.create 经真实子进程保存版本报告，无采纳候选 10652ms (retry x2)
+     × scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选 9891ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > ai.tasks.create 经真实子进程保存版本报告，无采纳候选
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+ FAIL  src/server/script-review-worker-entry.integration.test.ts > 生产文稿审核 Worker 入口 > scriptReviews.trigger 经真实子进程保存版本报告，无采纳候选
+AssertionError: expected undefined to be truthy
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/server/script-review-worker-entry.integration.test.ts:27:91
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  08:13:10
+   Duration  26.14s (transform 3.09s, setup 216ms, import 4.36s, tests 20.54s, environment 688ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/script-review-worker-entry.integration.test.ts

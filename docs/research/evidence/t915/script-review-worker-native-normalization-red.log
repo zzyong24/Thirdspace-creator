@@ -1,0 +1,49 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true}
+[structured-node] template=script.review status=ok durationMs=6 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+ ❯ src/execution/structured-worker-generation.test.ts (10 tests | 1 failed) 120ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true} 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":true}
+AssertionError: expected { verdict: 'risk', …(2) } to match object { verdict: 'risk', …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,9 @@
+  {
+    "findings": [
+      {
+-       "category": "公约33",
++       "category": "",
+        "quote": "原文片段",
+        "severity": "warn",
+      },
+    ],
+    "summary": "有风险",
+
+ ❯ src/execution/structured-worker-generation.test.ts:49:27
+     47|   try{
+     48|     const result=await f.run();const parsed=JSON.parse(result.text);
+     49|     expect(parsed.object).toMatchObject({verdict:"risk",summary:"有风险",…
+       |                           ^
+     50|     expect(parsed.modelLabel).toBe("review-fixture-model");expect(f.sa…
+     51|     if(test.native)expect(f.requests[0]?.response_format?.json_schema?…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  08:13:26
+   Duration  843ms (transform 274ms, setup 0ms, import 501ms, tests 120ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/structured-worker-generation.test.ts --retry=0

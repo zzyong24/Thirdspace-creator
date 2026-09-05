@@ -34,6 +34,15 @@ export const scriptReviewSchema = z.object({
 });
 export type ScriptReviewOutput = z.infer<typeof scriptReviewSchema>;
 
+/** 与旧审核runner一致的原始完整性门：不让schema默认值补造审核结论。 */
+export function isCompleteRawScriptReview(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  const value = raw as Record<string, unknown>;
+  return ["pass", "risk", "block"].includes(String(value.verdict))
+    && typeof value.summary === "string" && value.summary.trim().length > 0
+    && Array.isArray(value.findings);
+}
+
 /**
  * 跨 provider 的有界协议修复：只补结构化响应里缺失的描述字段，不改变 verdict、
  * severity 或 finding 数量，也不新增审核事实。部分只支持文本 JSON 的模型会漏掉

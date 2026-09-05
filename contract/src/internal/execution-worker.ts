@@ -134,6 +134,7 @@ const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nulla
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
   object:z.json(),
+  modelLabel:z.string().min(1).optional(),
   generation:z.object({finishReason:z.string(),usage:structuredUsageSchema,attempts:z.array(z.object({finishReason:z.string(),usage:structuredUsageSchema,kind:z.enum(["initial","repair"])}))}),
   validation:z.object({status:z.enum(["valid","partial"]),errors:z.array(completionViolationSchema),policySnapshot:z.object({policy:completionPolicySchema,adapter:z.object({id:z.string(),version:z.string()})}),originalSegmentCount:z.number().int().nonnegative(),finalSegmentCount:z.number().int().nonnegative(),repairAttemptsUsed:z.number().int().nonnegative(),repairReasons:z.array(completionViolationSchema)}).optional(),
 }).strict();

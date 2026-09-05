@@ -1,0 +1,66 @@
+import { createServer } from "node:http";
+import { expect, it, vi } from "vitest";
+import * as structuredNode from "../nodes/structured-node";
+import type { WorkerPort } from "@creatoros/contract/execution-worker";
+import { generateStructuredInWorker } from "./structured-worker-generation";
+
+const input={kind:"model.structured" as const,operationKey:"review",capability:"default",maxOutputTokens:500,skillId:"script.review",facets:{script:"原文片段"},skillSnapshot:{
+  snapshotVersion:1 as const,userId:"fixture-user",accountId:"fixture-account",resolvedAt:"2026-09-05T00:00:00.000Z",platformPolicyVersion:"1",platformPolicy:"冻结平台规则",
+  skills:[{skillId:"script.review",baseVersion:"old",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"冻结审核方法",template:"审核 {{script}}",tools:[],requiredFacets:["script"],contextRequirements:[],outputSchema:{type:"object",additionalProperties:true},completionPolicy:null,completionPolicyAdapter:null}}],
+}};
+const report={verdict:"risk",summary:"有风险",findings:[{quote:"原文片段",severity:"warn",reason:"测试理由",ruleRef:"公约33"}]};
+async function fixture(content:string,reasoning:string|undefined,native=false,protocolFallback=false){
+  const requests:Array<Record<string,any>>=[];
+  const server=createServer(async(req,res)=>{
+    const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));requests.push(JSON.parse(Buffer.concat(chunks).toString()));
+    res.writeHead(protocolFallback && requests.length===1?400:200,{"content-type":"application/json"});
+    if(protocolFallback && requests.length===1){res.end(JSON.stringify({error:{message:"response_format unsupported",type:"invalid_request_error"}}));return;}
+    res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"review-fixture-model",choices:[{index:0,message:{role:"assistant",content,...(reasoning===undefined?{}:{reasoning_content:reasoning})},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));
+  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));
+  const rows=new Map<string,Record<string,any>>(),saved:string[]=[];
+  const call=async(port:WorkerPort,raw:unknown):Promise<unknown>=>{
+    const data=raw as Record<string,any>;
+    if(port==="reserveGenerationCall"){
+      let row=rows.get(data.operationKey);if(!row){row={callId:`call-${rows.size+1}`,status:"reserved"};rows.set(data.operationKey,row);}return {callId:row.callId,status:row.status,...(row.providerResult?{providerResult:row.providerResult}:{}),...(row.rejectionCode?{rejectionCode:row.rejectionCode}:{})};
+    }
+    const row=[...rows.values()].find(row=>row.callId===data.callId)!;
+    if(port==="startCall"){row.status="started";return {callId:row.callId,status:"started"};}
+    if(port==="settleGenerationCall"){Object.assign(row,data);return {callId:row.callId,status:row.status};}
+    if(port==="saveGenerationResult"){saved.push(data.text);return {};}
+    throw new Error(`unexpected ${port}`);
+  };
+  const run=()=>generateStructuredInWorker(input,{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
+  return {run,requests,saved,rows,close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
+}
+it.each([
+  {content:"{}",native:false},
+  {content:"{}",native:true},
+  {content:JSON.stringify({verdict:"pass",summary:"   ",findings:[]}),native:false},
+  {content:JSON.stringify({verdict:"pass",summary:"结论"}),native:false},
+  {content:"",reasoning:"{}",native:false},
+  {content:"不是最终JSON",reasoning:JSON.stringify(report),native:false},
+])("script.review固定完整性门拒绝空/残缺输出，不借宽松旧snapshot造pass：%j",async test=>{
+  const f=await fixture(test.content,"reasoning" in test?test.reasoning:undefined,test.native);
+  try{await expect(f.run()).rejects.toMatchObject({outcome:"failed"});expect(f.saved).toEqual([]);expect([...f.rows.values()].every(row=>row.status==="settled")).toBe(true);}finally{await f.close();}
+});
+it("审核partial不能保存结果或冒充提交未知（局部模拟节点完成策略结果）",async()=>{
+  const original=structuredNode.runStructuredNode;
+  const spy=vi.spyOn(structuredNode,"runStructuredNode").mockImplementation(async options=>{
+    const result=await original(options);
+    return {...result,validation:{status:"partial",errors:[{code:"MIN_SEGMENTS",path:"findings",message:"完成策略尚未满足"}],policySnapshot:{policy:{schemaVersion:1,minSegments:2,maxSegments:null,requiredSequence:[],repairAttempts:0},adapter:{id:"fixture-review",version:"1"}},originalSegmentCount:1,finalSegmentCount:1,repairAttemptsUsed:0,repairReasons:[]}};
+  });
+  const f=await fixture(JSON.stringify(report),undefined);
+  try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",errorCode:"STRUCTURED_OUTPUT_INVALID"});expect(f.requests).toHaveLength(1);expect(f.saved).toEqual([]);}
+  finally{spy.mockRestore();await f.close();}
+});
+it.each([{reasoning:false,native:false},{reasoning:false,native:true},{reasoning:true,native:false},{reasoning:true,native:true}])("script.review保留同次完整reasoning恢复和协议归一化：%j",async test=>{
+  const f=await fixture(test.reasoning?"":JSON.stringify(report),test.reasoning?JSON.stringify(report):undefined,test.native,test.native && test.reasoning);
+  try{
+    const result=await f.run();const parsed=JSON.parse(result.text);
+    expect(parsed.object).toMatchObject({verdict:"risk",summary:"有风险",findings:[{quote:"原文片段",severity:"warn",category:"公约33"}]});
+    expect(parsed.modelLabel).toBe("review-fixture-model");expect(f.saved).toEqual([result.text]);
+    if(test.native)expect(f.requests[0]?.response_format?.json_schema?.schema?.required).toEqual(expect.arrayContaining(["verdict","summary","findings"]));
+    expect(f.requests[0]?.messages).toEqual(expect.arrayContaining([expect.objectContaining({role:"system",content:expect.stringContaining("冻结审核方法")})]));
+    const count=f.requests.length;expect((await f.run()).text).toBe(result.text);expect(f.requests).toHaveLength(count);
+  }finally{await f.close();}
+});

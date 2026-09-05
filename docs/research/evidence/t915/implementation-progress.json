@@ -223,5 +223,9 @@
   "production_owner_truth_increment": {
     "evidence": "production-owner-truth-evidence.json",
     "scope": "生产模拟发布与transport兜底退役、真实本机身份与请求身份接线通过；全入口迁移及完整性能/真机验收仍未完成"
+  },
+  "script_review_worker_increment": {
+    "evidence": "script-review-worker-evidence.json",
+    "scope": "审核生产入口、版本冻结、结构化Worker、503自动恢复及报告原子幂等提交通过；完整迁移/性能/真供应商/双平台仍未验收"
   }
 }

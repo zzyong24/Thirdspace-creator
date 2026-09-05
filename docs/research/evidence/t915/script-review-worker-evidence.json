@@ -1,0 +1,125 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T15:26:13.950810+00:00",
+  "status": "script.review 与审核门生产入口迁移增量完成；完整 T-915 仍进行中",
+  "implemented": [
+    "审核准备冻结真实项目、脚本 ID/版本/正文、L1 规则命中和定位，已映射任务恢复时不重读当前稿件",
+    "ai.tasks.create 与 scriptReviews.trigger 共用结构化 Worker 与持久调度；移除生产旧审核 runner 调用和不可达分支",
+    "Worker 使用固定审核输出协议、共享原始完整性门与归一化，支持同次完整 reasoning 恢复；空白/残缺/partial 明确失败",
+    "后端校验任务归属、冻结输入、settled 调用正文与租约，在同一事务保存真实审核报告、调用回执及业务/执行成功；无采纳候选",
+    "模型名来自实际 Worker spec；持久调用摘要含 modelId/provider，恢复不能将不同模型请求重放为原调用",
+    "以 srreport:callId 保证并发及迟到重放幂等，后续改稿不改变历史报告版本"
+  ],
+  "flow": "公开审核入口 → 冻结版本与规则 → execution_tasks → 独立 model.structured Worker → 已结算调用证据 → 后端事务保存审核报告与成功状态",
+  "verification": {
+    "worker": {
+      "tests": 41,
+      "files": 4,
+      "log": "script-review-worker-green-final.log",
+      "scope": "真实本地 HTTP + 持久端口 fixture；partial 一项局部模拟节点完成策略结果，不是供应商真实 partial 实测"
+    },
+    "backendRegression": {
+      "tests": 26,
+      "files": 6,
+      "log": "script-review-backend-regression.log",
+      "scope": "上下文、隔离 PGlite 冻结/重建恢复、旧 runner、候选与调度器回归"
+    },
+    "reportTransaction": {
+      "tests": 12,
+      "log": "script-review-report-green.log",
+      "scope": "实际 PGlite，覆盖并发回放、跨归属、过期、取消、正文篡改、事务末尾注入失败后完整回滚、空白/partial 拒绝"
+    },
+    "publicEntry": {
+      "tests": 3,
+      "log": "script-review-entry-green.log",
+      "scope": "隔离临时 PGlite + 构建后的真实 Node Worker 子进程 + 本地 HTTP；两个生产公开入口，503 首次明确拒绝后自动恢复只调用两次，历史版本报告和无候选回读"
+    },
+    "existingStructuredEntry": {
+      "tests": 2,
+      "log": "script-review-platform-regression.log",
+      "scope": "多平台适配及大纲生产 Worker/采纳回归"
+    },
+    "typecheck": {
+      "contractAiWorkerBackend": "script-review-types.log",
+      "frontend": "script-review-frontend-types.log",
+      "status": "PASS"
+    },
+    "boundary": {
+      "log": "script-review-boundary.log",
+      "newViolations": 0,
+      "baselineRemaining": 5
+    },
+    "orphan": {
+      "log": "script-review-orphan.log",
+      "errors": 0,
+      "warnings": 100
+    },
+    "scope": {
+      "log": "script-review-scope.log",
+      "errors": []
+    },
+    "desktopContracts": {
+      "tests": 164,
+      "log": "script-review-desktop-led-green.log",
+      "scope": "4 个现有桌面/采集契约测试；修复函数提取误依赖后续中文注释的测试定位，不改变安全断言"
+    },
+    "windowsContracts": {
+      "tests": 13,
+      "log": "script-review-windows-contract.log",
+      "scope": "当前 macOS 宿主 Rust windows_ 逻辑测试；不是 Windows GUI/安装器实测"
+    },
+    "reconcile": {
+      "log": "script-review-reconcile-final.log",
+      "exitCode": 1,
+      "errors": 211,
+      "warnings": 1,
+      "status": "FAIL，历史工程对账欠债继续由 T-916 跟踪；本轮首跑 213 errors 中两项桌面测试定位误报已修复",
+      "taskScopedErrors": 0
+    }
+  },
+  "redEvidence": [
+    {
+      "log": "script-review-entry-red.log",
+      "fact": "两个旧生产入口可成功审核但 executionTaskId 缺失，未进入统一持久 Worker"
+    },
+    {
+      "log": "script-review-worker-red.log",
+      "fact": "固定协议/完整性/normalizer/reasoning 恢复缺口，7 fail / 2 pass"
+    },
+    {
+      "log": "script-review-worker-native-normalization-red.log",
+      "fact": "原生结构化成功不走文本 normalizer，1 fail / 9 pass"
+    },
+    {
+      "log": "script-review-worker-partial-red.log",
+      "fact": "局部模拟节点 partial 结果仍保存，1 fail / 10 pass；非真实供应商 partial"
+    },
+    {
+      "log": "script-review-context-red.log",
+      "fact": "缺失新上下文模块，非行为红测"
+    },
+    {
+      "log": "script-review-report-red.log",
+      "fact": "缺失新事务模块，非行为红测"
+    },
+    {
+      "log": "script-review-desktop-led-audit.log",
+      "fact": "164 项中 1 项因函数提取依赖已变更的注释而失败，导致 LED-006/018 同时误报；修复定位后 164 项通过"
+    }
+  ],
+  "independentReview": {
+    "reviewer": "runtime_code_review",
+    "result": "PASS",
+    "resolved": [
+      "宿主空白 summary 验真",
+      "宿主 partial 提交拒绝",
+      "Worker 在保存前将 partial 标为明确失败，避免误报提交未知"
+    ]
+  },
+  "limitations": [
+    "测试供应商为本地 HTTP fixture；未消费真实外部供应商凭据",
+    "完整 R05 其它 AI/采集/浏览器入口仍待迁移",
+    "尚未完成真实浏览器 observe/act 全链、至少30样本性能基线、三个实际供应商、macOS/Windows安装包与真实启停验收",
+    "全局历史工程对账欠债由 T-916 跟踪，不将本增量测试通过宣称完整项目全绿"
+  ]
+}

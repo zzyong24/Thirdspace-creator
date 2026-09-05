@@ -5,6 +5,7 @@ import { runStructuredNode } from "../nodes/structured-node";
 import { getEffectiveTemplate,runWithEffectiveSkillSnapshot } from "../prompt/effective-skill-runtime";
 import { createDurableGenerationModel } from "./durable-generation-model";
 import { GenerationFailure,generationFailure } from "./generation-error";
+import { scriptReviewSchema, normalizeScriptReviewOutput, isCompleteRawScriptReview } from "../prompt/templates/script-review";
 
 export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
   let lastCallId:string|undefined;
@@ -19,10 +20,22 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
     async settle(callId,settlement){await call("settleGenerationCall",{callId,...settlement});},
   }});
   try{
-    const result=await runWithEffectiveSkillSnapshot(input.skillSnapshot,()=>runStructuredNode({model,template:getEffectiveTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,signal}));
+    // 审核是固定业务协议，Skill快照仍控制提示词，但不能用旧/宽松schema把空对象当报告。
+    const reviewOptions=input.skillId==="script.review"?{
+      outputSchema:scriptReviewSchema.refine(isCompleteRawScriptReview,"审核原始报告不完整"),
+      normalizeObject:(raw:unknown)=>{
+        if(!isCompleteRawScriptReview(raw))throw new Error("审核原始报告不完整");
+        return normalizeScriptReviewOutput(raw);
+      },
+      reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
+    }:{};
+    const result=await runWithEffectiveSkillSnapshot(input.skillSnapshot,()=>runStructuredNode({model,template:getEffectiveTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,signal,...reviewOptions}));
     signal.throwIfAborted();
+    if(input.skillId==="script.review" && result.validation?.status==="partial")throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
     if(!lastCallId)throw new Error("STRUCTURED_CALL_MISSING");
-    const text=JSON.stringify(workerStructuredResultSchema.parse(result));
+    // 原生结构化成功不走节点的文本normalizer；在已通过固定协议的报告上统一补描述字段。
+    const object=input.skillId==="script.review"?scriptReviewSchema.parse(normalizeScriptReviewOutput(result.object)):result.object;
+    const text=JSON.stringify(workerStructuredResultSchema.parse({...result,object,modelLabel:spec.model}));
     try{await call("saveGenerationResult",{callId:lastCallId,text},signal);}
     catch{throw new GenerationFailure("unknown_result","STRUCTURED_RESULT_RECEIPT_UNKNOWN");}
     return {callId:lastCallId,text};

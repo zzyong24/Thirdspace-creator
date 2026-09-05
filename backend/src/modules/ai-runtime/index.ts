@@ -103,6 +103,7 @@ export { preparePlatformAdaptContext,projectPlatformAdaptCandidate } from "./pla
 export { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
 
 export * from "./structured-business-execution.service";
+export {prepareScriptReviewContext} from "./script-review-context";
 
 export * from "./artifact-context-readers";
 

@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+[structured-node] template=script.review status=ok durationMs=2 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+[structured-node] template=script.review status=error durationMs=5 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+[structured-node] template=script.review status=ok durationMs=4 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+[structured-node] template=script.review status=error durationMs=1 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[structured-node] template=script.review status=ok durationMs=7 path=text_fallback modelCalls=2 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+[structured-node] template=script.review status=error durationMs=1 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+ ❯ src/execution/structured-worker-generation.test.ts (9 tests | 3 failed) 106ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false} 13ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false} 7ms
+   × script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true} 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":false,"native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":false}
+ FAIL  src/execution/structured-worker-generation.test.ts > script.review保留同次完整reasoning恢复和协议归一化：{"reasoning":true,"native":true}
+Error: STRUCTURED_OUTPUT_INVALID
+ ❯ generateStructuredInWorker src/execution/structured-worker-generation.ts:43:49
+     41|     const failure=generationFailure(error,false);
+     42|     // 结构化节点校验失败不代表供应商提交未知；账本已持久化真实调用事实。
+     43|     if(failure.outcome==="unknown_result")throw new GenerationFailure(…
+       |                                                 ^
+     44|     throw failure;
+     45|   }
+ ❯ src/execution/structured-worker-generation.test.ts:52:43
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  08:11:31
+   Duration  875ms (transform 298ms, setup 0ms, import 574ms, tests 106ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/structured-worker-generation.test.ts --retry=0

@@ -117,7 +117,7 @@ describe("T-535 desktop startup safety contract", () => {
     expect(openContext).not.toContain("ensureChromiumInstalled()");
 
     const ensureChromium = douyinCdp.match(
-      /export async function ensureChromiumInstalled\([\s\S]*?\n}\n\n\/\/ 自起 Chromium/,
+      /export async function ensureChromiumInstalled\([\s\S]*?\n}\n/,
     )?.[0];
     expect(ensureChromium).toContain('process.env.CREATOROS_DESKTOP === "1"');
     expect(ensureChromium?.indexOf("BrowserRuntimeUnavailableError")).toBeLessThan(

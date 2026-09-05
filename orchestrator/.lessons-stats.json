@@ -21,8 +21,8 @@
     "deterrence": false
   },
   "LED-006": {
-    "fireCount": 2,
-    "lastFiredAt": "2026-08-14T01:22:21.967Z",
+    "fireCount": 3,
+    "lastFiredAt": "2026-09-05T15:26:39.881Z",
     "firstRedAt": "2026-08-09T04:49:41.879Z",
     "registeredAt": "2026-07-27T10:00:39.028Z",
     "deterrence": false
@@ -105,8 +105,8 @@
     "deterrence": false
   },
   "LED-018": {
-    "fireCount": 14,
-    "lastFiredAt": "2026-08-17T01:36:03.051Z",
+    "fireCount": 15,
+    "lastFiredAt": "2026-09-05T15:26:39.881Z",
     "firstRedAt": "2026-08-12T06:10:15.204Z",
     "registeredAt": "2026-08-09T15:10:13.259Z",
     "deterrence": false
@@ -133,8 +133,8 @@
     "deterrence": false
   },
   "LED-024": {
-    "fireCount": 18,
-    "lastFiredAt": "2026-09-05T06:50:17.909Z",
+    "fireCount": 20,
+    "lastFiredAt": "2026-09-05T15:31:56.225Z",
     "firstRedAt": "2026-08-13T04:45:58.831Z",
     "registeredAt": "2026-08-13T02:34:11.202Z",
     "deterrence": false

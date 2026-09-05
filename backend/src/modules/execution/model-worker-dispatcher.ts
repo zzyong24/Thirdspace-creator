@@ -1,4 +1,5 @@
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
+import {createExecutionReviewReportService} from "../review/execution-review-report.service";
 import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
 import { createExecutionAgenticModelPorts } from "./execution-agentic-model-ports.service";
@@ -45,6 +46,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
+  const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
@@ -96,6 +98,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const input=workerPortInputSchemas.commitResult.parse(raw);
         if(input.outcome!=="succeeded")return outcomes.recordFailure(ref,input);
         if(!candidates)throw new Error("UNSUPPORTED_AGENT_CANDIDATE_PORT");
+        const skillId=await leases.withLease(ref,"settlement",async({task})=>(task.payload as {modelInput?:{skillId?:string}}).modelInput?.skillId);
+        if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
         return candidates.commitResult(ref,input);
       }
       if(port==="heartbeat")return leases.withLease(ref,"admission",async({tx,task})=>{

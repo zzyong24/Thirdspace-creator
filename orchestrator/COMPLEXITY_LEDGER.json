@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "8509417b90548eec4128e63109a7c364ad0ee17b2579dd8906d501728fb40066",
+      "file_sha256": "22d1295955a20abb272121482e12fb08a5d125f7a98e451708eee7cc6c57c6e4",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "067fadd1d846f398b10ea0e2dda2260922a0e279e6612e92eebc450d35166c14",
+      "file_sha256": "9747ce307cf42d9cb65a80898e1b5733b125aef79d2af83de25a35c66423dd35",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1199,7 +1199,7 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "28f87ba71b0ebda76583ca5b561492dfda6175fc222a7507c5a7b878aeca7459",
+      "file_sha256": "c93f004b9ede355cd010bbffb5e8a617473c91ef2c92d9f9f1220cad135c5089",
       "categories": [
         "ipc"
       ],
@@ -1328,6 +1328,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "R-02/R-04研究Worker私有端口、登录恢复及浏览器生命周期的实际增量证据说明；只是证据文本包含IPC，不新增执行机制。",
       "acceptance": "完整任务与分发包验收仍待完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/script-review-worker-evidence.json"
+      ],
+      "file_sha256": "2e075814dd0db4839e7d4f92e46b76917e05f2fd3e75c8adf2faf126d34bf156",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "证据仅记录已批准双平台范围内现有 Rust windows_ 逻辑测试的真实结果；不引入新语言或工具链，不声称完成 Windows 真机验收。",
+      "acceptance": "仅绑定已审读证据文件的复杂度标记，完整 T-915 验收尚未完成。"
     }
   ],
   "historical_baselines": []
