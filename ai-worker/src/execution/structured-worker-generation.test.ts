@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import { createServer } from "node:http";
 import { expect, it, vi } from "vitest";
 import * as structuredNode from "../nodes/structured-node";
@@ -88,3 +89,77 @@ for(const native of [false,true]){
   finally{await f.close();}
  });
 }
+
+it.each([false,true])("structured旧fallback回执兼容且拒绝原文篡改=%s",async tamper=>{
+const voiceover = " 第一段原文。\n".repeat(20),
+  hash = createHash("sha256").update(voiceover).digest("hex");
+const generation = {
+  finishReason: "stop",
+  usage: { inputTokens: 2, outputTokens: 3, cachedTokens: 0, totalTokens: 5 },
+  attempts: [
+    {
+      kind: "initial" as const,
+      finishReason: "stop",
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        cachedTokens: 0,
+        totalTokens: 5,
+      },
+    },
+  ],
+};
+const snapshot = {
+  snapshotVersion: 1 as const,
+  userId: "u",
+  accountId: "a",
+  resolvedAt: "2026-09-05",
+  platformPolicyVersion: "1",
+  platformPolicy: "候选",
+  skills: [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ].map((skillId) => ({
+    skillId,
+    baseVersion: "v1",
+    overlayRevision: null,
+    overlayVersion: null,
+    effective: {
+      methodSystem: "",
+      template: "",
+      tools: [],
+      requiredFacets: [],
+      contextRequirements: [],
+      outputSchema: { type: "object" },
+      completionPolicy: null,
+      completionPolicyAdapter: null,
+    },
+  })),
+};
+function input() {
+  return {
+    kind: "model.structured",
+    operationKey: "script",
+    capability: "script.draft",
+    maxOutputTokens: 1000,
+    skillId: "script.draft",
+    skillSnapshot: structuredClone(snapshot),
+    facets: {
+      __scriptDraft: JSON.stringify({
+        nodeInput: { positioningBrief: "", targetDurationSeconds: 1 },
+        initialVoiceover: {
+          voiceover,
+          sha256: hash,
+          charCount: voiceover.length,
+          voiceoverGeneration: generation,
+          storyboardAttemptCount: 1,
+        },
+      }),
+    },
+  };
+}
+ const {structuredGenerationInputSchema}=await import("@creatoros/contract/execution-worker");const ports:string[]=[];let oldText="";
+ const run=()=>generateStructuredInWorker(structuredGenerationInputSchema.parse(input()),{apiFormat:"openai_chat",baseUrl:null,model:"configured-model",token:"unused"},new AbortController().signal,async(port,raw)=>{ports.push(port);if(port!=="saveScriptFallback")throw new Error("不得调用模型端口");const old=JSON.parse((raw as {text:string}).text);old.modelLabel="old-model";old.validation.errors[0].message="旧文案";if(tamper)old.object.shots[0].口播="伪造";oldText=JSON.stringify(old);return {callId:"old-fallback",text:oldText};});
+ if(tamper)await expect(run()).rejects.toMatchObject({outcome:"unknown_result"});else expect(await run()).toEqual({callId:"old-fallback",text:oldText});expect(ports).toEqual(["saveScriptFallback"]);
+});

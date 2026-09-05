@@ -4,7 +4,7 @@ import { z } from "zod";
 import { and, asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import { workerProviderReceiptSchema, workerUsageSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
-import { ConflictError } from "./execution.errors";
+import { ConflictError,ExecutionBudgetError } from "./execution.errors";
 
 const count = z.number().int().nonnegative().max(2_000_000_000);
 const budgetSchema = z.object({maxCalls: count.min(1).max(10000), maxTokens: count.min(1), deadlineMs: count.min(1)}).strict();
@@ -82,7 +82,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         assertResolved(calls, ref.attempt);
         const used = totals(calls);
         if (calls.length >= budget.maxCalls || used.knownSpentTokens + used.reservedTokens + input.reservedTokens > budget.maxTokens) {
-          throw new ConflictError("执行调用次数或用量预算不足");
+          throw new ExecutionBudgetError("执行调用次数或用量预算不足");
         }
         if (task.executionBudget === null || task.deadlineAt === null) {
           await tx.update(executionTasks).set({executionBudget: budget, deadlineAt}).where(eq(executionTasks.id, task.id));

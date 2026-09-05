@@ -1,6 +1,7 @@
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
 import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
+import {createScriptPartialFinalizationService} from "../ai/script-partial-finalization.service";
 import {createExecutionReviewReportService} from "../review/execution-review-report.service";
 import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
@@ -50,6 +51,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
+  const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
@@ -103,7 +105,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       }
       if(port==="commitResult"){
         const input=workerPortInputSchemas.commitResult.parse(raw);
-        if(input.outcome!=="succeeded")return outcomes.recordFailure(ref,input);
+        if(input.outcome!=="succeeded"){
+          if(scriptFinalizer && await scriptFinalizer.finalize(ref))return {status:"partial"};
+          return outcomes.recordFailure(ref,input);
+        }
         if(!candidates)throw new Error("UNSUPPORTED_AGENT_CANDIDATE_PORT");
         const skillId=await leases.withLease(ref,"settlement",async({task})=>(task.payload as {modelInput?:{skillId?:string}}).modelInput?.skillId);
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
@@ -127,6 +132,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
     if(draining)return draining;
     if(stopping)return Promise.resolve(0);
     draining=(async()=>{
+      if(scriptFinalizer)await scriptFinalizer.recoverDue();
       await tasks.recoverExpiredLeases();
       let activeCount=0;
       let pendingClaims=0;
@@ -185,6 +191,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         }finally{
           watching=false;if(controlTimer)clearTimeout(controlTimer);
           toolScope.controller.abort();await Promise.allSettled([...toolScope.pending]);activeTools.delete(executionKey(ref));
+          if(scriptFinalizer && !stopping)await scriptFinalizer.finalize(ref).catch(()=>{report("SCRIPT_RESULT_FINALIZATION_FAILED");});
           await acknowledge(ref).catch(()=>{});
           activeCount--;
         }

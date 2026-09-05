@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "da0b1021681b9092610f1e4eaef2d2039c1efcb312c45986292059fe7016c3cd",
+      "file_sha256": "c7cc5aca70b0b3ef849bcecc3e1242bba73cc1e89710ee24fb169b98991e9946",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055范围内历史保真降级在凭证解析前执行，并只重放后端验真的原文回执；本次独立审查与升级兼容红绿验证。完整T-915尚未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "f7d759e8edf4778d82f372be8473b7a7b8a952859c7a81d687b9a497f58ad857",
+      "file_sha256": "9edebf01e859ac0d4673f2d7d0577de9f9551170d83ee6a613c6a965abe4c7d2",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "已确认独立Worker命名通信范围，结构化节点与账本桥接及真实验证证据。",
+      "reason": "DEC-RUNTIME-055范围内历史保真降级在凭证解析前执行，并只重放后端验真的原文回执；本次独立审查与升级兼容红绿验证。完整T-915尚未完成。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {

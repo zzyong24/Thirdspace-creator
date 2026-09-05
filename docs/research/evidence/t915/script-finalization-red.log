@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts (12 tests | 1 failed) 1104ms
+   × untriggered不执行partial收尾，不改任何事实 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/script-partial-finalization.service.test.ts > untriggered不执行partial收尾，不改任何事实
+Error: No values to set
+ ❯ mapUpdateSet ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/utils.ts:125:8
+ ❯ PgUpdateBuilder.set ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/update.ts:79:4
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts:51:34
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  10:07:06
+   Duration  2.17s (transform 496ms, setup 0ms, import 934ms, tests 1.10s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/script-partial-finalization.service.test.ts --retry=0

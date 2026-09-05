@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts (19 tests | 1 failed) 1323ms
+   × 预算partial汇总口播与已结算坏分镜真实计量，同执行口播不双算 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/script-partial-finalization.service.test.ts > 预算partial汇总口播与已结算坏分镜真实计量，同执行口播不双算
+AssertionError: expected { inputTokens: 2, …(3) } to deeply equal { inputTokens: 22, …(3) }
+
+- Expected
++ Received
+
+  {
+-   "cachedTokens": 4,
+-   "inputTokens": 22,
+-   "outputTokens": 33,
+-   "totalTokens": 55,
++   "cachedTokens": 0,
++   "inputTokens": 2,
++   "outputTokens": 3,
++   "totalTokens": 5,
+  }
+
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts:152:37
+    150|     expect(state.calls).toHaveLength(2);
+    151|     const output = JSON.parse(state.calls.find(call => call.id === f.c…
+    152|     expect(output.generation.usage).toEqual({ inputTokens: 22, outputT…
+       |                                     ^
+    153|     expect(output.generation.attempts).toHaveLength(2);
+    154|     expect(output.generation.attempts.map((attempt: { finishReason: st…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  10:16:47
+   Duration  2.41s (transform 504ms, setup 0ms, import 953ms, tests 1.32s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/script-partial-finalization.service.test.ts --retry=0

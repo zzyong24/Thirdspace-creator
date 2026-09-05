@@ -1,0 +1,11 @@
+src/modules/ai/script-partial-finalization.service.test.ts(17,87): error TS2322: Type 'Promise<null>' is not assignable to type 'Promise<{ profile: { persona: string; field: string; audience: string; differentiation: string; capabilities: string[]; facets?: PositioningFacets | undefined; downstreamRules?: PositioningDownstreamRules | undefined; } | null; currentStatement: { ...; } | null; }>'.
+  Type 'null' is not assignable to type '{ profile: { persona: string; field: string; audience: string; differentiation: string; capabilities: string[]; facets?: PositioningFacets | undefined; downstreamRules?: PositioningDownstreamRules | undefined; } | null; currentStatement: { ...; } | null; }'.
+src/modules/ai/script-partial-finalization.service.ts(2,33): error TS2305: Module '"@creatoros/backend"' has no exported member 'gt'.
+src/modules/ai/script-partial-finalization.service.ts(49,120): error TS2322: Type '{ object: JSONType; generation: { finishReason: string; usage: { inputTokens: number | null; outputTokens: number | null; cachedTokens: number | null; totalTokens: number | null; }; attempts: { ...; }[]; }; modelLabel?: string | undefined; validation?: { ...; } | undefined; }' is not assignable to type 'ScriptFallbackResult'.
+  Type '{ object: JSONType; generation: { finishReason: string; usage: { inputTokens: number | null; outputTokens: number | null; cachedTokens: number | null; totalTokens: number | null; }; attempts: { ...; }[]; }; modelLabel?: string | undefined; validation?: { ...; } | undefined; }' is not assignable to type '{ object: { shots: ScriptShot[]; pipelineMetadata: Record<string, unknown>; }; }'.
+    Types of property 'object' are incompatible.
+      Type 'JSONType' is not assignable to type '{ shots: ScriptShot[]; pipelineMetadata: Record<string, unknown>; }'.
+        Type 'null' is not assignable to type '{ shots: ScriptShot[]; pipelineMetadata: Record<string, unknown>; }'.
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

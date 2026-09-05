@@ -1,6 +1,6 @@
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
-import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
-import type { z } from "zod";
+import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
+import { z } from "zod";
 import { modelFor } from "../runtime/provider-factory";
 import { runStructuredNode } from "../nodes/structured-node";
 import { getEffectiveTemplate,runWithEffectiveSkillSnapshot } from "../prompt/effective-skill-runtime";
@@ -42,7 +42,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
     const businessSchema=input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
-    const result=await runWithEffectiveSkillSnapshot(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
+    const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}
       catch{throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_RECEIPT_UNKNOWN");}
@@ -57,7 +57,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
     const text=JSON.stringify(workerStructuredResultSchema.parse({...result,object,modelLabel:spec.model}));
     if(!lastCallId){
       if(input.skillId!=="script.draft")throw new Error("STRUCTURED_CALL_MISSING");
-      try{const receipt=await call("saveScriptFallback",{text},signal) as {callId?:unknown;text?:unknown};if(typeof receipt.callId!=="string" || !receipt.callId || receipt.text!==text)throw new Error("CALL_RECEIPT_MISMATCH");return {callId:receipt.callId,text};}
+      try{const receipt=await call("saveScriptFallback",{text},signal) as {callId?:unknown;text?:unknown};if(typeof receipt.callId!=="string" || !receipt.callId || typeof receipt.text!=="string")throw new Error("CALL_RECEIPT_MISMATCH");const saved=workerStructuredResultSchema.parse(JSON.parse(receipt.text));const shotsSchema=z.object({shots:z.array(z.object({口播:z.string()})).min(1)});if(saved.generation.finishReason!=="deterministic_fallback" || saved.validation?.status!=="partial" || shotsSchema.parse(saved.object).shots.map(s=>s.口播).join("")!==shotsSchema.parse(object).shots.map(s=>s.口播).join(""))throw new Error("CALL_RECEIPT_MISMATCH");return {callId:receipt.callId,text:receipt.text};}
       catch{throw new GenerationFailure("unknown_result","SCRIPT_FALLBACK_RECEIPT_UNKNOWN");}
     }
     try{await call("saveGenerationResult",{callId:lastCallId,text},signal);}

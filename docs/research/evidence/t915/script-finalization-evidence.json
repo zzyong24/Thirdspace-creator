@@ -1,0 +1,75 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T17:21:47.964907+00:00",
+  "status": "文稿已完成结果恢复增量，完整任务仍进行中",
+  "implemented": [
+    "历史基础分镜在凭证解析前纯计算，零模型请求；升级前已保存回执严格验真后原样重放，不改旧摘要、不新增调用",
+    "后端记录真实预算拒绝；仅凭已结算模型正文和验真口播断点原子保存可采纳候选，预算/到期后不启动新调用",
+    "启动先恢复到期可用结果，再扫过期租约；取消/暂停/未知调用/旧fence不推进，坏记录隔离报告",
+    "保留已保存完整分镜；纯降级汇总全部已结算模型回执用量，缺失保持null，不重复累加口播"
+  ],
+  "flow": "已结算口播 → 预算耗尽或重启到期 → 后端验真断点与调用 → 保留完整结果或基础分镜候选 → 用户确认采纳",
+  "verification": {
+    "public": {
+      "tests": 2,
+      "log": "script-finalization-entry-final.log",
+      "scope": "真实built child、隔离PGlite、本地HTTP；预算1call和真实stop/close/reopen同目录，重启前候选0；采纳后版本原文回读，无新HTTP/凭证"
+    },
+    "service": {
+      "tests": 19,
+      "log": "script-finalization-usage-green.log",
+      "scope": "真实PGlite，事务/取消/未知/fence/完整结果优先/坏记录隔离/用量"
+    },
+    "compat": {
+      "tests": 2,
+      "log": "script-fallback-compat-green.log"
+    },
+    "workerCompat": {
+      "tests": 58,
+      "log": "script-fallback-compat-worker-green.log"
+    },
+    "workerFallback": {
+      "tests": 63,
+      "log": "script-fallback-green.log"
+    },
+    "ledgerDispatcher": {
+      "tests": 15,
+      "log": "script-finalization-regression-green.log"
+    },
+    "redEvidence": [
+      "script-fallback-red.log",
+      "script-budget-entry-red.log",
+      "script-recovery-isolation-red.log",
+      "script-finalization-usage-red.log",
+      "script-fallback-compat-red.log"
+    ],
+    "types": [
+      "script-finalization-types-final.log",
+      "script-fallback-compat-types.log",
+      "script-fallback-compat-worker-types.log",
+      "script-finalization-frontend-types.log"
+    ],
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "script-finalization-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "script-finalization-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "log": "script-finalization-reconcile.log",
+      "status": "既有T-916全局欠债未解决，不记全绿"
+    }
+  },
+  "limitations": [
+    "重启公共场景首次即绿，没有历史红测，不补拍",
+    "不是公网供应商、真实用户数据库或桌面安装包验收",
+    "R05其他旧入口、浏览器observe/act闭环、30次同条件性能、真实三供应商及macOS/Windows生命周期仍待完成"
+  ],
+  "next": "迁移planning.thesis，保留冻结完整上下文/grounding和现有采纳事务；后续继续完整SPEC范围"
+}

@@ -1,6 +1,7 @@
+import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
-  hostMessageSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
+  hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
@@ -93,6 +94,18 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           signal.throwIfAborted();
           committing=true;
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+          reason="completed";
+          return;
+        }
+        const fallback=getHistoricalScriptFallback(input);
+        if(fallback){
+          const text=JSON.stringify(fallback);
+          let receipt:{callId:string;text:string};
+          try{receipt=z.object({callId:z.string().min(1),text:z.string().min(1)}).strict().parse(await call(execution,"saveScriptFallback",{text},signal));const saved=workerStructuredResultSchema.parse(JSON.parse(receipt.text));const savedShots=z.object({shots:z.array(z.object({口播:z.string()})).min(1)}).parse(saved.object).shots;if(saved.generation.finishReason!=="deterministic_fallback" || saved.validation?.status!=="partial" || savedShots.map(shot=>shot.口播).join("")!==fallback.object.shots.map(shot=>shot.口播).join(""))throw new Error("FALLBACK_RECEIPT_MISMATCH");}
+          catch{throw new GenerationFailure("unknown_result","SCRIPT_FALLBACK_RECEIPT_UNKNOWN");}
+          signal.throwIfAborted();
+          committing=true;
+          await call(execution,"commitResult",{outcome:"succeeded",...receipt},signal);
           reason="completed";
           return;
         }

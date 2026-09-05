@@ -1,7 +1,6 @@
+import {scriptWorkerPayloadSchema,buildDeterministicStoryboard,reanchorWhitespaceOnly,firstMismatchIndex,buildScriptFallbackResult} from "./script-fallback";
 import { createHash } from "node:crypto";
-import { z } from "zod";
 import type { LanguageModel } from "ai";
-import { workerStructuredResultSchema } from "@creatoros/contract/execution-worker";
 import {
   getActiveEffectiveSkillSnapshot,
   getEffectiveSkill,
@@ -12,179 +11,6 @@ import {
   runStoryboardSegmentNode,
 } from "../nodes/script-pipeline";
 import { GenerationFailure, generationFailure } from "./generation-error";
-const optionalText = z.string().optional();
-const payloadSchema = z
-  .object({
-    nodeInput: z
-      .object({
-        positioningBrief: z.string(),
-        learningsBrief: optionalText,
-        knowledgeBrief: optionalText,
-        projectBriefHardBrief: optionalText,
-        benchmarkRefBrief: optionalText,
-        projectIntelligenceBrief: optionalText,
-        topicTitle: optionalText,
-        topicAngle: optionalText,
-        extraBrief: optionalText,
-        sourceInstruction: optionalText,
-        sourceMaterialsBrief: optionalText,
-        targetDurationSeconds: z.number().positive().optional(),
-        orientation: optionalText,
-        thesisBrief: optionalText,
-        contractBrief: optionalText,
-        outlineBrief: optionalText,
-        userMaterialHardBrief: optionalText,
-        userMaterialRefBrief: optionalText,
-        assetsBrief: optionalText,
-      })
-      .strict(),
-    initialVoiceover: z
-      .object({
-        voiceover: z.string().min(1),
-        centralClaim: optionalText,
-        audienceOldBelief: optionalText,
-        sha256: z.string(),
-        charCount: z.number().int().nonnegative(),
-        voiceoverGeneration: workerStructuredResultSchema.shape.generation,
-        storyboardAttemptCount: z.number().int().min(0).max(2),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict();
-function compactWhitespace(value: string): string {
-  return value.replace(/\s/gu, "");
-}
-
-/**
- * 仅修复模型把原文段间换行/空格吞掉或挪位的协议漂移。
- * SEMANTIC_BOUNDARY_ALLOW: 逐个非空白字符必须完全相同；这里只把冻结原文的空白
- * 重新分配回原分镜边界，不做相似度、纠错、改写或内容判断。
- */
-function reanchorWhitespaceOnly(
-  voiceover: string,
-  shots: readonly ScriptShot[],
-): ScriptShot[] | null {
-  if (
-    shots.length === 0 ||
-    compactWhitespace(shots.map((shot) => shot.口播).join("")) !==
-      compactWhitespace(voiceover)
-  ) {
-    return null;
-  }
-  let cursor = 0;
-  const reanchored: ScriptShot[] = [];
-  for (const [index, shot] of shots.entries()) {
-    if (index === shots.length - 1) {
-      reanchored.push({ ...shot, 口播: voiceover.slice(cursor) });
-      cursor = voiceover.length;
-      continue;
-    }
-    const targetNonWhitespace = compactWhitespace(shot.口播).length;
-    let consumed = 0;
-    const start = cursor;
-    while (cursor < voiceover.length && consumed < targetNonWhitespace) {
-      if (!/\s/u.test(voiceover[cursor]!)) consumed += 1;
-      cursor += 1;
-    }
-    while (cursor < voiceover.length && /\s/u.test(voiceover[cursor]!)) {
-      cursor += 1;
-    }
-    reanchored.push({ ...shot, 口播: voiceover.slice(start, cursor) });
-  }
-  return cursor === voiceover.length ? reanchored : null;
-}
-
-function splitFrozenVoiceover(voiceover: string): string[] {
-  const chunks: string[] = [];
-  let start = 0;
-  for (let index = 0; index < voiceover.length; index += 1) {
-    const length = index - start + 1;
-    const preferredBoundary = /[。！？!?；;\n]/u.test(voiceover[index]!);
-    if ((preferredBoundary && length >= 24) || length >= 110) {
-      let end = index + 1;
-      while (end < voiceover.length && /\s/u.test(voiceover[end]!)) end += 1;
-      chunks.push(voiceover.slice(start, end));
-      start = end;
-      index = end - 1;
-    }
-  }
-  if (start < voiceover.length) chunks.push(voiceover.slice(start));
-  return chunks.length > 0 ? chunks : [voiceover];
-}
-
-/**
- * 分镜模型不可用或真实改写了冻结口播时的最终安全底座。
- * SEMANTIC_BOUNDARY_ALLOW: 代码只按字符与标点确定性切片，并填入不含新事实的通用制作字段；
- * 不判断内容优劣、不匹配素材、不创作新口播，所有口播字符均直接来自冻结原文。
- */
-function buildDeterministicStoryboard(
-  voiceover: string,
-  targetDurationSeconds?: number,
-): ScriptShot[] {
-  const chunks = splitFrozenVoiceover(voiceover);
-  const totalWeight = Math.max(
-    1,
-    chunks.reduce((sum, chunk) => sum + compactWhitespace(chunk).length, 0),
-  );
-  const requestedTotalSeconds =
-    typeof targetDurationSeconds === "number" &&
-    Number.isFinite(targetDurationSeconds) &&
-    targetDurationSeconds > 0
-      ? targetDurationSeconds
-      : Math.max(3, Math.ceil(totalWeight / 4));
-  // T-835：基础分镜不能为了强塞进过短目标时长而生成重叠或 0 秒镜头。
-  // 每镜至少 1 秒；目标时长不足时诚实延长到镜头数，剩余秒数再按口播字数分配。
-  const totalSeconds = Math.max(
-    chunks.length,
-    Math.ceil(requestedTotalSeconds),
-  );
-  const extraSeconds = totalSeconds - chunks.length;
-  let elapsedWeight = 0;
-  let allocatedExtraSeconds = 0;
-  let elapsedSeconds = 0;
-  return chunks.map((chunk, index) => {
-    const startSeconds = elapsedSeconds;
-    elapsedWeight += compactWhitespace(chunk).length;
-    const cumulativeExtraSeconds =
-      index === chunks.length - 1
-        ? extraSeconds
-        : Math.round((elapsedWeight / totalWeight) * extraSeconds);
-    const endSeconds =
-      startSeconds + 1 + cumulativeExtraSeconds - allocatedExtraSeconds;
-    allocatedExtraSeconds = cumulativeExtraSeconds;
-    elapsedSeconds = endSeconds;
-    const subtitle = chunk.trim();
-    return {
-      role:
-        chunks.length === 1
-          ? "body"
-          : index === 0
-            ? "hook"
-            : index === chunks.length - 1
-              ? "cta"
-              : "body",
-      口播: chunk,
-      画面: "主播口播，辅以与本段原文一致的画面",
-      字幕: subtitle.length > 32 ? `${subtitle.slice(0, 31)}…` : subtitle,
-      时长: `${startSeconds}-${endSeconds}s`,
-      visual: {
-        description: "基础分镜：画面只承接本段冻结口播，不引入新事实",
-        assetRefs: [],
-        missing: [],
-      },
-    };
-  });
-}
-
-function firstMismatchIndex(left: string, right: string): number | null {
-  const length = Math.min(left.length, right.length);
-  for (let index = 0; index < length; index += 1) {
-    if (left[index] !== right[index]) return index;
-  }
-  return left.length === right.length ? null : length;
-}
-
 export async function runScriptWorkerPipeline(
   raw: unknown,
   deps: {
@@ -196,7 +22,7 @@ export async function runScriptWorkerPipeline(
     ) => Promise<void>;
   },
 ) {
-  const input = payloadSchema.parse(raw);
+  const input = scriptWorkerPayloadSchema.parse(raw);
   const { model, signal, maxOutputTokens } = deps;
   signal.throwIfAborted();
   const initial = input.initialVoiceover;
@@ -260,6 +86,7 @@ export async function runScriptWorkerPipeline(
   let retryGuidance: string | undefined;
   // 历史尝试没有逐调用证据，不能靠新分镜请求猜测是否重做。
   const historicalAttempts = attempts > 0;
+  if(historicalAttempts)return buildScriptFallbackResult({voiceover,voiceoverGeneration:composed.generation,skillSnapshot:active,nodeInput:input.nodeInput,reason:"historical_attempts",storyboardAttempts:attempts});
   while (!historicalAttempts && attempts < 2) {
     attempts++;
     try {

@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker } from "./worker-runtime";
@@ -211,4 +212,81 @@ describe("可注入 Agent Worker 生命周期",()=>{
     f.worker.receive(run);expect(f.runAgentic).toHaveBeenCalledOnce();f.worker.close();
   });
 
+});
+
+describe("旧版本分镜回执兼容",()=>{
+const voiceover = " 第一段原文。\n".repeat(20),
+  hash = createHash("sha256").update(voiceover).digest("hex");
+const generation = {
+  finishReason: "stop",
+  usage: { inputTokens: 2, outputTokens: 3, cachedTokens: 0, totalTokens: 5 },
+  attempts: [
+    {
+      kind: "initial" as const,
+      finishReason: "stop",
+      usage: {
+        inputTokens: 2,
+        outputTokens: 3,
+        cachedTokens: 0,
+        totalTokens: 5,
+      },
+    },
+  ],
+};
+const snapshot = {
+  snapshotVersion: 1 as const,
+  userId: "u",
+  accountId: "a",
+  resolvedAt: "2026-09-05",
+  platformPolicyVersion: "1",
+  platformPolicy: "候选",
+  skills: [
+    "script.draft",
+    "script.storyboard.segment",
+    "script.voiceover.compose",
+  ].map((skillId) => ({
+    skillId,
+    baseVersion: "v1",
+    overlayRevision: null,
+    overlayVersion: null,
+    effective: {
+      methodSystem: "",
+      template: "",
+      tools: [],
+      requiredFacets: [],
+      contextRequirements: [],
+      outputSchema: { type: "object" },
+      completionPolicy: null,
+      completionPolicyAdapter: null,
+    },
+  })),
+};
+function input() {
+  return {
+    kind: "model.structured",
+    operationKey: "script",
+    capability: "script.draft",
+    maxOutputTokens: 1000,
+    skillId: "script.draft",
+    skillSnapshot: structuredClone(snapshot),
+    facets: {
+      __scriptDraft: JSON.stringify({
+        nodeInput: { positioningBrief: "", targetDurationSeconds: 1 },
+        initialVoiceover: {
+          voiceover,
+          sha256: hash,
+          charCount: voiceover.length,
+          voiceoverGeneration: generation,
+          storyboardAttemptCount: 1,
+        },
+      }),
+    },
+  };
+}
+it.each([false,true])("旧回执metadata变化可重放，原文篡改=%s则拒绝",async tamper=>{
+ const messages:WorkerMessage[]=[];let oldText="";
+ const worker=createExecutionWorker({generate:async()=>{throw new Error("不得生成");},generateStructured:async()=>{throw new Error("不得生成");},send(message){messages.push(message);if(message.type==="call"){let data:unknown={};if(message.port==="readTaskContext")data=input();if(message.port==="saveScriptFallback"){const old=JSON.parse((message.data as {text:string}).text);old.modelLabel="旧模型";old.object.pipelineMetadata.storyboardRecovery.reason="voiceover_mismatch";old.validation.errors[0].message="旧提示";if(tamper)old.object.shots[0].口播="伪造";oldText=JSON.stringify(old);data={callId:"old-fallback",text:oldText};}queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data}));}}});
+ worker.receive({version:1,type:"run",requestId:"run-old",execution:{executionTaskId:"e-old",attempt:1,fenceToken:"f"},deadlineAt:Date.now()+60000});
+ try{await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).toBe(true));expect(messages.some(m=>m.type==="call" && m.port==="resolveModelCredential")).toBe(false);const commits=messages.filter(m=>m.type==="call" && m.port==="commitResult");if(tamper){expect(messages.find(m=>m.type==="stopped")).toMatchObject({reason:"unknown_result"});expect(commits.some(m=>(m as {data:{outcome:string}}).data.outcome==="succeeded")).toBe(false);}else{expect(commits).toHaveLength(1);expect(commits[0]).toMatchObject({data:{outcome:"succeeded",callId:"old-fallback",text:oldText}});}}finally{worker.close();}
+});
 });

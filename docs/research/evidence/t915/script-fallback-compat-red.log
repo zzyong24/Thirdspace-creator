@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-script-local.service.test.ts (2 tests | 1 failed) 943ms
+   × 升级后回放旧frozen-fallback原正文与digest，不创建第二笔调用 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-script-local.service.test.ts > 升级后回放旧frozen-fallback原正文与digest，不创建第二笔调用
+ConflictError: 同一操作键不能改换调用内容
+ ❯ src/modules/execution/execution-call-ledger.service.ts:75:19
+     73|         if (previous) {
+     74|           if (previous.inputDigest !== input.inputDigest || previous.k…
+     75|             throw new ConflictError("同一操作键不能改换调用内容");
+       |                   ^
+     76|           }
+     77|           if (!input.retryOfCallId || previous.retryOfCallId === input…
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  10:16:50
+   Duration  1.99s (transform 474ms, setup 0ms, import 909ms, tests 943ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-script-local.service.test.ts --retry=0

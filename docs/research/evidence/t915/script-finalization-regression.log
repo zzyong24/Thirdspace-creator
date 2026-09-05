@@ -1,0 +1,64 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts (9 tests | 2 failed) 1107ms
+     × 重新创建服务或暂停恢复不能重置预算，旧执行不能启动或结算 19ms
+     × 明确拒绝的重试保留操作键并消耗新的调用次数，并发重试去重 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 重新创建服务或暂停恢复不能重置预算，旧执行不能启动或结算
+AssertionError: expected ExecutionBudgetError: 执行调用次数或用量预算不足 { code: '…' } to match object { name: 'ConflictError' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "ConflictError",
++ ExecutionBudgetError {
++   "name": "ExecutionBudgetError",
+  }
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:41:78
+     39|     const fresh = {...f.ref,attempt:claim.lease.attempt,fenceToken:cla…
+     40|     const replacement = createExecutionCallLedgerService(db,{now:f.now…
+     41|     await expect(replacement.reserve(fresh,{...input,operationKey:"ano…
+       |                                                                              ^
+     42|     expect((await replacement.inspect(fresh)).budget?.maxTokens).toBe(…
+     43|     await expect(f.ledger.settle(f.ref,call.id,{status:"settled",usage…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 明确拒绝的重试保留操作键并消耗新的调用次数，并发重试去重
+AssertionError: expected ExecutionBudgetError: 执行调用次数或用量预算不足 { code: '…' } to match object { name: 'ConflictError' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "ConflictError",
++ ExecutionBudgetError {
++   "name": "ExecutionBudgetError",
+  }
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:89:71
+     87|     expect(a.id).toBe(b.id); expect(a.id).not.toBe(call.id); expect(a.…
+     88|     await f.ledger.start(f.ref,a.id); await f.ledger.settle(f.ref,a.id…
+     89|     await expect(f.ledger.reserve(f.ref,{...input,retryOfCallId:a.id})…
+       |                                                                       ^
+     90|   });
+     91|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 13 passed (15)
+   Start at  10:16:52
+   Duration  5.93s (transform 945ms, setup 0ms, import 1.79s, tests 5.81s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-generation-ports.service.test.ts src/modules/execution/model-worker-dispatcher.test.ts

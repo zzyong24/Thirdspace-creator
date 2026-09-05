@@ -579,3 +579,5 @@ export {
   chatboxDistillSchema,
   type ChatboxDistillOutput,
 } from "./prompt/templates/chatbox-surfaces";
+
+export {buildScriptFallbackResult,type ScriptFallbackInput,type ScriptFallbackResult} from "./execution/script-fallback";

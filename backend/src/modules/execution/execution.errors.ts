@@ -18,6 +18,11 @@ export class ConflictError extends Error {
   }
 }
 
+/** 内部模型端口预算拒绝；不包含输入或凭据。 */
+export class ExecutionBudgetError extends ConflictError {
+  readonly budgetCode = "EXECUTION_BUDGET_EXHAUSTED";
+}
+
 export class ExecutionValidationError extends Error {
   readonly code = ErrorCode.ValidationError;
   constructor(message: string) {

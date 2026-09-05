@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import type { Db } from "@creatoros/backend";
+import { eq,executionTasks,type Db } from "@creatoros/backend";
 import { workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
-import { ConflictError } from "./execution.errors";
+import { ConflictError,ExecutionBudgetError } from "./execution.errors";
 
 /** 结构化节点的逐次供应商调用端口；后端拥有总预算和不可变请求摘要。 */
 export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]){
@@ -26,7 +26,12 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
       const encoded=JSON.stringify(request.request);
       const previous=(await ledger.inspect(ref)).calls.filter(call=>call.operationKey===request.operationKey).at(-1);
       const retryOfCallId=scope.retryOfCallId && (previous?.id===scope.retryOfCallId || previous?.retryOfCallId===scope.retryOfCallId) ? scope.retryOfCallId : undefined;
-      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:Buffer.byteLength(encoded)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})});
+      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:Buffer.byteLength(encoded)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})}).catch(async error=>{
+        if(error instanceof ExecutionBudgetError)await leases.withLease(ref,"admission",async({tx,task})=>{
+          await tx.update(executionTasks).set({lastErrorCode:error.budgetCode,lastErrorMessage:"模型调用前预算已耗尽，正在保存已完成结果"}).where(eq(executionTasks.id,task.id));
+        });
+        throw error;
+      });
       return {callId:call.id,status:call.status,...(call.providerResult ? {providerResult:call.providerResult} : {}),...(call.rejectionCode ? {rejectionCode:call.rejectionCode} : {})};
     },
     async settleGenerationCall(ref:ExecutionRef,raw:unknown){

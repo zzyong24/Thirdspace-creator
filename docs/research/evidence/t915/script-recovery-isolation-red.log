@@ -1,0 +1,62 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts (18 tests | 1 failed) 1294ms
+   × 恢复逐任务隔离：坏断点和投影失败报告后继续恢复合法任务 41ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/script-partial-finalization.service.test.ts > 恢复逐任务隔离：坏断点和投影失败报告后继续恢复合法任务
+AssertionError: promise rejected "ZodError: [
+  {
+    "expected": "string",… { …(8) }" instead of resolving
+ ❯ src/modules/ai/script-partial-finalization.service.test.ts:136:38
+    134|     });
+    135|     const invalidBefore = await invalid.read(), brokenBefore = await b…
+    136|     await expect(service.recoverDue()).resolves.toBeUndefined();
+       |                                      ^
+    137|     expect((await good.read()).task.status).toBe("partial");
+    138|     expect(await invalid.read()).toEqual(invalidBefore);
+
+Caused by: ZodError: [
+  {
+    "expected": "string",
+    "code": "invalid_type",
+    "path": [
+      "finishReason"
+    ],
+    "message": "Invalid input: expected string, received undefined"
+  },
+  {
+    "expected": "object",
+    "code": "invalid_type",
+    "path": [
+      "usage"
+    ],
+    "message": "Invalid input: expected object, received undefined"
+  },
+  {
+    "expected": "array",
+    "code": "invalid_type",
+    "path": [
+      "attempts"
+    ],
+    "message": "Invalid input: expected array, received undefined"
+  }
+]
+ ❯ src/modules/ai/script-partial-finalization.service.ts:32:77
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { _zod: { def: [ { expected: 'string', code: 'invalid_type', path: [ 'finishReason' ], message: 'Invalid input: expected string, received undefined' }, { expected: 'object', code: 'invalid_type', path: [ 'usage' ], message: 'Invalid input: expected object, received undefined' }, { expected: 'array', code: 'invalid_type', path: [ 'attempts' ], message: 'Invalid input: expected array, received undefined' } ], constr: 'Function<ZodError>', traits: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', difference: 'Function<difference>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', intersection: 'Function<intersection>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>', size: 2, symmetricDifference: 'Function<symmetricDifference>', union: 'Function<union>', values: 'Function<values>', keys: 'Function<values>' }, deferred: [] }, issues: [ { expected: 'string', code: 'invalid_type', path: [ 'finishReason' ], message: 'Invalid input: expected string, received undefined' }, { expected: 'object', code: 'invalid_type', path: [ 'usage' ], message: 'Invalid input: expected object, received undefined' }, { expected: 'array', code: 'invalid_type', path: [ 'attempts' ], message: 'Invalid input: expected array, received undefined' } ], format: 'Function<value>', flatten: 'Function<value>', addIssue: 'Function<value>', addIssues: 'Function<value>', isEmpty: false }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  10:15:50
+   Duration  2.38s (transform 505ms, setup 0ms, import 951ms, tests 1.29s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/script-partial-finalization.service.test.ts --retry=0
