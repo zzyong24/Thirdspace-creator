@@ -13,6 +13,7 @@ import {
 import {
   requireAccountId,
   executionTasks,
+  executionCalls,
   OwnershipError,
 } from "@creatoros/backend";
 import type {
@@ -135,6 +136,7 @@ export interface PersistentTaskService {
   }): Promise<ExecutionTaskResourceV2>;
   recoverExpiredLeases(): Promise<{
     requeued: number;
+    unknownResult: number;
     failed: number;
     paused: number;
     cancelled: number;
@@ -160,7 +162,9 @@ function toResource(row: TaskRow): ExecutionTaskResourceV2 {
     kind: row.kind as PersistentTaskKind,
     ownerType: row.ownerType as PersistentTaskOwnerType,
     ownerId: row.ownerId,
-    status: row.status as PersistentTaskStatus,
+    status: ({retry_wait:"queued",waiting_user:"blocked",unknown_result:"blocked",partial:"succeeded"}[row.status] ?? row.status) as PersistentTaskStatus,
+    ...(["retry_wait","waiting_user","unknown_result","partial"].includes(row.status) ? {runtimeStatus: row.status as "retry_wait" | "waiting_user" | "unknown_result" | "partial"} : {}),
+    retryAt: row.retryAt,
     priority: row.priority,
     idempotencyKey: row.idempotencyKey,
     checkpoint: row.checkpoint ?? null,
@@ -205,16 +209,30 @@ function leaseExpiry(now: string, seconds: number): string {
   return new Date(Date.parse(now) + seconds * 1_000).toISOString();
 }
 
+// 重试等待不能被直接领取或 pause/resume 绕过；旧任务未设置这两个字段时保持原行为。
+function claimableAt(stamp: string) {
+  return sql`(${executionTasks.status} = 'queued' OR ${executionTasks.status} = 'retry_wait')
+    AND (${executionTasks.retryAt} IS NULL OR ${executionTasks.retryAt} <= ${stamp})
+    AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
+}
+
+function recoveryDueAt(stamp: string) {
+  return sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
+    OR (${executionTasks.status} IN ('queued','retry_wait') AND ${executionTasks.deadlineAt} <= ${stamp}))`;
+}
+
 function commandTarget(
-  status: PersistentTaskStatus,
+  status: string,
   command: PersistentTaskCommand,
   attempt: number,
   maxAttempts: number,
 ): PersistentTaskStatus {
+  if (command === "pause" && status === "retry_wait") return "paused";
+  if (command === "resume" && status === "waiting_user") return "queued";
   if (command === "pause" && status === "running") return "pause_requested";
   if (command === "resume" && status === "paused") return "queued";
   if (command === "cancel") {
-    if (status === "queued" || status === "paused") return "cancelled";
+    if (status === "queued" || status === "paused" || status === "retry_wait" || status === "waiting_user" || status === "unknown_result") return "cancelled";
     if (status === "running" || status === "pause_requested") {
       return "cancel_requested";
     }
@@ -490,7 +508,7 @@ export function createPersistentTaskService(
       }
       if (input.kinds && input.kinds.length === 0) return null;
       return db.transaction(async (tx) => {
-        const filters = [eq(executionTasks.status, "queued")];
+        const filters = [claimableAt(stamp)];
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));
         }
@@ -516,7 +534,7 @@ export function createPersistentTaskService(
             .where(
               and(
                 eq(executionTasks.id, candidate.id),
-                eq(executionTasks.status, "queued"),
+                claimableAt(stamp),
               ),
             )
             .returning();
@@ -558,7 +576,7 @@ export function createPersistentTaskService(
         .where(
           and(
             eq(executionTasks.id, input.taskId),
-            eq(executionTasks.status, "queued"),
+            claimableAt(stamp),
           ),
         )
         .returning();
@@ -705,6 +723,7 @@ export function createPersistentTaskService(
       const stamp = now();
       const report = {
         requeued: 0,
+        unknownResult: 0,
         failed: 0,
         paused: 0,
         cancelled: 0,
@@ -714,21 +733,21 @@ export function createPersistentTaskService(
           .select()
           .from(executionTasks)
           .where(
-            and(
-              inArray(executionTasks.status, [
-                "running",
-                "pause_requested",
-                "cancel_requested",
-              ]),
-              lt(executionTasks.leaseExpiresAt, stamp),
-            ),
+            recoveryDueAt(stamp),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
-          let target: PersistentTaskStatus;
+          let target: PersistentTaskStatus | "unknown_result";
+          const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
+          } else if (calls.some(call => call.status === "started" || call.status === "unknown")) {
+            target = "unknown_result";
+          } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {
+            target = "failed";
+          } else if (calls.some(call => call.status === "settled" && call.resultText)) {
+            target = "queued";
           } else if (row.attempt < row.maxAttempts) {
             target = "queued";
           } else {
@@ -741,10 +760,11 @@ export function createPersistentTaskService(
               leaseOwner: null,
               leaseExpiresAt: null,
               heartbeatAt: null,
+              ...(target === "unknown_result" ? {lastErrorCode:"CALL_RESULT_UNKNOWN",lastErrorMessage:"已有调用提交结果未知，须同键对账"} : {}),
               ...(target === "failed"
                 ? {
-                    lastErrorCode: "LEASE_EXPIRED",
-                    lastErrorMessage: "worker 租约过期且重试预算已耗尽",
+                    lastErrorCode: row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp) ? "EXECUTION_DEADLINE" : "LEASE_EXPIRED",
+                    lastErrorMessage: row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp) ? "原任务截止时间已到" : "worker 租约过期且重试预算已耗尽",
                   }
                 : {}),
               updatedAt: stamp,
@@ -754,13 +774,14 @@ export function createPersistentTaskService(
                 eq(executionTasks.id, row.id),
                 eq(executionTasks.status, row.status),
                 eq(executionTasks.attempt, row.attempt),
-                lt(executionTasks.leaseExpiresAt, stamp),
+                recoveryDueAt(stamp),
               ),
             ).returning({id: executionTasks.id});
           if (updated.length) {
             if (target === "queued") report.requeued++;
             else if (target === "paused") report.paused++;
             else if (target === "cancelled") report.cancelled++;
+            else if (target === "unknown_result") report.unknownResult++;
             else report.failed++;
           }
         }

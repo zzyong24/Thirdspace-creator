@@ -142,6 +142,8 @@ export const executionTasks = pgTable("execution_tasks", {
   fenceToken: text("fence_token"),
   deadlineAt: text("deadline_at"),
   executionBudget: jsonb("execution_budget"),
+  retryAt: text("retry_at"),
+  retryOfCallId: text("retry_of_call_id"),
   leaseExpiresAt: text("lease_expires_at"),
   heartbeatAt: text("heartbeat_at"),
   attempt: integer("attempt").notNull().default(0),

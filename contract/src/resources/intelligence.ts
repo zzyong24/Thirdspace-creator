@@ -399,6 +399,8 @@ export const executionTaskResourceV2 = z
     ]),
     ownerId: id,
     status: executionTaskStatusV2,
+    runtimeStatus: z.enum(["retry_wait", "waiting_user", "unknown_result", "partial"]).optional(),
+    retryAt: iso8601.nullable().optional(),
     priority: z.number().int(),
     idempotencyKey: z.string().min(1),
     checkpoint: z.unknown().nullable(),

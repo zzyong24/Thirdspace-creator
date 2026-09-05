@@ -512,6 +512,13 @@
       "when": 1788652800002,
       "tag": "0072_execution_call_result",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1788652800003,
+      "tag": "0073_execution_retry_schedule",
+      "breakpoints": true
     }
   ]
 }

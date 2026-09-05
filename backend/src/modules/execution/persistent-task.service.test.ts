@@ -317,7 +317,7 @@ describe("T-482 持久执行任务状态机", () => {
 
       f.clock.value = "2026-07-23T12:00:11.000Z";
       const report = await service.recoverExpiredLeases();
-      expect(report).toEqual({ requeued: 1, failed: 1, paused: 0, cancelled: 0 });
+      expect(report).toEqual({ requeued: 1, failed: 1, paused: 0, cancelled: 0, unknownResult: 0 });
       expect((await service.get(ctxA, requeue.id)).status).toBe("queued");
       expect((await service.get(ctxA, exhausted.id)).status).toBe("failed");
 

@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "9a7d9e72f692c80e0ba0c3ca6e0121b5f849e7eec37771f560e06b61af52ed00",
+      "file_sha256": "27a9e6be13c6eb626548271865f7bfc1daacb7ff855fa62bf28eb7e70a94375d",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用DEC-RUNTIME-055已批准私有父子通信；新增持久启动确认及已结算正文恢复，不新增传输机制；独立审查通过，生产调度与完整候选端口仍待接线。",
+      "reason": "沿用DEC-RUNTIME-055，仅更新持久重试与恢复增量证据；未新增通信机制，不代表完整生产闭环通过。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },

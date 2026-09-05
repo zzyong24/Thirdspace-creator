@@ -26,7 +26,8 @@ export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof c
       // 仅作为短文本请求的保守预算预留：UTF-8 字节数加协议余量；结算始终记录供应商真实用量。
       const reservedTokens = Buffer.byteLength(input.prompt) + Buffer.byteLength(input.system ?? "") + 1024 + input.maxOutputTokens;
       const inputDigest = `sha256:${createHash("sha256").update(JSON.stringify(input)).digest("hex")}`;
-      const call = await ledger.reserve(ref, {operationKey: input.operationKey, kind: "model", inputDigest, reservedTokens});
+      const retryOfCallId = await leases.withLease(ref, "admission", async ({task}) => task.retryOfCallId);
+      const call = await ledger.reserve(ref, {operationKey: input.operationKey, kind: "model", inputDigest, reservedTokens, ...(retryOfCallId ? {retryOfCallId} : {})});
       return {callId: call.id, status: call.status, ...(call.resultText ? {resultText: call.resultText} : {})};
     },
     async startCall(ref: ExecutionRef, raw: unknown) {

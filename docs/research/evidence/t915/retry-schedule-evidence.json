@@ -1,0 +1,34 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T07:51:00.419326+00:00",
+  "status": "retry_schedule_verified_full_scope_open",
+  "implemented": [
+    "明确拒绝后持久retryAt/retryOfCallId，完整RetryAfter与共享退避；按累计调用额度和原deadline限制重试",
+    "claimTask/claimNext共同检查等待与截止时间，暂停恢复不绕过等待",
+    "waiting_user明确拒绝保留原调用来源，显式恢复后可创建新调用",
+    "租约过期且有未知提交转入unknown_result；等待队列越过deadline终结",
+    "新内部状态经runtimeStatus和旧公共status投影兼容返回"
+  ],
+  "verification": {
+    "tests": 14,
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，原5条保留",
+    "review": "worker_review独立只读复核，凭据恢复与过期待排队漏洞已修复，未发现其他实质问题；未运行测试"
+  },
+  "limits": [
+    "端口与领取逻辑已实现，但生产调度器和完整候选幂等提交尚未接线",
+    "拒绝回执结算与故障状态保存之间崩溃仍需恢复分类对账，不能声称全部故障已自动恢复",
+    "全部生产入口、工具循环、性能基线、真实供应商与双平台验收仍未完成"
+  ],
+  "outputs": {
+    "t915-retry-schedule-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  00:50:00\n   Duration  14.78s (transform 3.30s, setup 0ms, import 5.67s, tests 22.03s, environment 0ms)\n\n",
+    "t915-retry-schedule-types-final.log": "\n> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n> tsc --noEmit\n\n",
+    "t915-retry-schedule-frontend-types.log": "",
+    "t915-retry-schedule-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  }
+}
