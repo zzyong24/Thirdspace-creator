@@ -32,7 +32,7 @@ export const workerPortInputSchemas = {
   ]),
   saveCheckpoint: z.object({expectedRevision: z.number().int().nonnegative(), checkpoint: z.record(z.string(), z.unknown())}).strict(),
   commitResult: z.discriminatedUnion("outcome", [
-    z.object({outcome: z.literal("succeeded"), text: z.string().min(1).max(2_000_000)}).strict(),
+    z.object({outcome: z.literal("succeeded"), callId: operationKeySchema, text: z.string().min(1).max(2_000_000)}).strict(),
     z.object({outcome: z.enum(["failed", "unknown_result", "retry_wait", "waiting_user"]), errorCode: z.string().min(1).max(128), retryAfterMs: z.number().finite().nonnegative().optional()}).strict(),
   ]),
   heartbeat: emptyPortInput,

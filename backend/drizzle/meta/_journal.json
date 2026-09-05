@@ -519,6 +519,13 @@
       "when": 1788652800003,
       "tag": "0073_execution_retry_schedule",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1788652800004,
+      "tag": "0074_execution_candidate_receipt",
+      "breakpoints": true
     }
   ]
 }

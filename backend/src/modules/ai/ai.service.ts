@@ -1984,34 +1984,15 @@ export function createAiService(deps: ServiceDeps): AiService {
         await logRunnerState(repo, taskId);
         return toTaskDto(updated);
       }
-      const task = await repo.requireTask(taskId);
-      // The worker claims the queued task (queued→running, stamping startedAt) then
-      // records the candidate (running→awaiting_confirmation). Mirror that here so a
-      // candidate can only land on a task that is legally claimable / running.
-      let status = task.status;
-      if (status === "queued") {
-        await repo.updateTaskStatus(taskId, {
-          status: "running",
-          startedAt: deps.now(),
-        });
-        status = "running";
-      }
-      if (!canTransition(status, "awaiting_confirmation")) {
-        throw new ConflictError(
-          `AI task ${taskId} cannot accept a candidate from ${task.status}`,
-        );
-      }
-      await repo.insertResult({
-        aiTaskId: taskId,
+      // 与执行权转交共用业务任务行锁，避免快照检查后新旧入口同时写候选。
+      const updated = await repo.recordCandidateUnmapped(taskId, {
         resultType: input.resultType,
         artifactId: input.artifactId ?? null,
         knowledgeItemId: input.knowledgeItemId ?? null,
         assetId: input.assetId ?? null,
         resultData: input.resultData,
       });
-      const updated = await repo.updateTaskStatus(taskId, {
-        status: "awaiting_confirmation",
-      });
+      if (!updated) throw new ConflictError("当前任务不可由旧入口写候选，或已转交持久执行权");
       await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },

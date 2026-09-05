@@ -1,6 +1,6 @@
 import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { executionTasks } from "./intelligence";
+import { executionTasks, executionCalls } from "./intelligence";
 
 // AI tables (Module 15; data-model §7 ER "AI、搜索和系统"; contract/src/resources/ai.ts;
 // SPEC §12 AI Task state machine / §18 candidate-confirm). The canonical defs live in
@@ -115,6 +115,7 @@ export const aiTaskReferences = pgTable("ai_task_references", {
 
 export const aiTaskResults = pgTable("ai_task_results", {
   id: text("id").primaryKey(),
+  executionCallId: text("execution_call_id").references(() => executionCalls.id).unique("ai_task_results_execution_call_unique"),
   aiTaskId: text("ai_task_id").notNull(), // owned via requireTask
   resultType: text("result_type").notNull(),
   artifactId: text("artifact_id"), // nullable

@@ -83,4 +83,24 @@ describe("T-915 唯一执行权映射", () => {
     expect((await repo().requireTask("historical-migration")).status).toBe("succeeded");
     expect((await repo().requireTask("duplicate-map")).executionTaskId).toBeNull();
   });
+  it("旧入口的未映射快照失效后不能写候选，绑定与旧候选写入只能一方获胜", async () => {
+    await seed("candidate-stale");
+    expect((await repo().requireTask("candidate-stale")).executionTaskId).toBeNull();
+    await createExecutionAuthorityService(db,{now:()=>stamp}).bindAiTask(ctx,"candidate-stale");
+    const candidate={resultType:"artifact_version",artifactId:null,knowledgeItemId:null,assetId:null,resultData:{body:"正文"}};
+    expect(await repo().recordCandidateUnmapped("candidate-stale",candidate)).toBeNull();
+    expect(await repo().listResults("candidate-stale")).toHaveLength(0);
+    for(let i=0;i<10;i++){
+      const id=`candidate-race-${i}`;await seed(id);
+      const [binding,writing]=await Promise.allSettled([
+        createExecutionAuthorityService(db,{now:()=>stamp}).bindAiTask(ctx,id),repo().recordCandidateUnmapped(id,candidate),
+      ]);
+      if(binding.status === "fulfilled"){
+        expect(writing).toMatchObject({status:"fulfilled",value:null});expect(await repo().listResults(id)).toHaveLength(0);
+      }else{
+        expect(writing).toMatchObject({status:"fulfilled",value:{status:"awaiting_confirmation"}});expect(await repo().listResults(id)).toHaveLength(1);
+      }
+    }
+  });
+
 });

@@ -196,6 +196,7 @@ export interface AiRepository {
     leaseToken: string,
     input: CompleteTaskExecutionInput,
   ): Promise<boolean>;
+  recordCandidateUnmapped(taskId: string, input: Omit<InsertResultInput, "aiTaskId">): Promise<TaskRow | null>;
   recordCandidateWithLease(
     taskId: string,
     leaseToken: string,
@@ -655,6 +656,17 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         )
         .returning({ id: aiTasks.id });
       return Boolean(rows[0]);
+    },
+
+    async recordCandidateUnmapped(taskId, input) {
+      return db.transaction(async tx => {
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),eq(aiTasks.accountId,deps.accountId))).for("update");
+        if (!task) throw new OwnershipError(`OwnershipError: task not found: ${taskId}`);
+        if (task.executionTaskId || task.leaseToken || !["queued","running"].includes(task.status)) return null;
+        await tx.insert(aiTaskResults).values({id:deps.nextId("ai-result"),aiTaskId:taskId,...input});
+        const [updated] = await tx.update(aiTasks).set({status:"awaiting_confirmation",startedAt:task.startedAt ?? deps.now(),completedAt:null,errorMessage:null}).where(eq(aiTasks.id,taskId)).returning();
+        return updated ?? null;
+      });
     },
 
     async recordCandidateWithLease(taskId, leaseToken, input) {

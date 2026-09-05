@@ -65,7 +65,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       callId = reservation.callId;
       if (reservation.status === "settled" && reservation.resultText) {
         committing = true;
-        await call(execution, "commitResult", {outcome:"succeeded",text:reservation.resultText}, signal);
+        await call(execution, "commitResult", {outcome:"succeeded",callId,text:reservation.resultText}, signal);
         reason = "completed";
         return;
       }
@@ -85,7 +85,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       settled = true;
       signal.throwIfAborted();
       committing = true;
-      await call(execution, "commitResult", {outcome: "succeeded", text: result.text}, signal);
+      await call(execution, "commitResult", {outcome: "succeeded", callId, text: result.text}, signal);
       reason = "completed";
     } catch (error) {
       const failure = error instanceof GenerationFailure ? error : undefined;

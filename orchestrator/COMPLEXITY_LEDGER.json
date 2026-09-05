@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "8e5eef5a8b51f5a1efd19ab4527a7353f882bad01d6feb396f1a134261e999c2",
+      "file_sha256": "627038781fe0f9da4352b935a68a2bd431209e67fe27ebdfea83cab9b52a556c",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用DEC-RUNTIME-055已批准私有父子通信；新增持久启动确认及已结算正文恢复，不新增传输机制；独立审查通过，生产调度与完整候选端口仍待接线。",
+      "reason": "沿用DEC-RUNTIME-055已批准范围；仅候选提交绑定callId、旧入口事务互斥及证据更新，不新增可执行程序/通信机制；独立审查已通过，完整生产入口未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -112,14 +112,14 @@
       "files": [
         "backend/src/modules/ai/ai.repository.ts"
       ],
-      "file_sha256": "88118c78553f6ab8a6fe4bc5443e297138636e18ec7797d9147c270ab47f970e",
+      "file_sha256": "13dea6822f5af43771a1113633222786cc9e0029f02ff249411e55408f6fa3b2",
       "categories": [
         "native_executable"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "T-915 R-01 已确认范围：已映射任务退出旧claim/sweep；独立只读审查通过，沿用既有复杂度，不增加工具链或凭据机制。",
+      "reason": "沿用DEC-RUNTIME-055已批准范围；仅候选提交绑定callId、旧入口事务互斥及证据更新，不新增可执行程序/通信机制；独立审查已通过，完整生产入口未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "c5fb71547a85c96c2f418b3ac5ea306147a9490fccc3880bcf62ddf736fd18b9"
     },
@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "eab7c68053fbf901450ece55ecab447feb5ca5119029ae6c8e1c91a4c9af88f8",
+      "file_sha256": "c6b709cff31a835bd065a16b88de7744ce773c25cbcb51ffeb77974d1e0e9d2f",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "reason": "沿用DEC-RUNTIME-055已批准范围；仅候选提交绑定callId、旧入口事务互斥及证据更新，不新增可执行程序/通信机制；独立审查已通过，完整生产入口未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "27a9e6be13c6eb626548271865f7bfc1daacb7ff855fa62bf28eb7e70a94375d",
+      "file_sha256": "7c8a5c93cd986f51f3f29cee15060c058fa1cbaabd70b9c0497acd5676cc4011",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用DEC-RUNTIME-055，仅更新持久重试与恢复增量证据；未新增通信机制，不代表完整生产闭环通过。",
+      "reason": "沿用DEC-RUNTIME-055已批准范围；仅候选提交绑定callId、旧入口事务互斥及证据更新，不新增可执行程序/通信机制；独立审查已通过，完整生产入口未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },

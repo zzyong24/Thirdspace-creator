@@ -76,3 +76,4 @@ export {
 } from "./ai.schema";
 
 export { buildAiModelConfigs, buildAiAgentConfigs } from "./ai.seed";
+export { createExecutionCandidateService, type ExecutionCandidateDeps } from "./execution-candidate.service";

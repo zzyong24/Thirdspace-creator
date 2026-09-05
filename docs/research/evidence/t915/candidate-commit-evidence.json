@@ -1,0 +1,37 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T08:00:45.740363+00:00",
+  "status": "candidate_transaction_verified_full_scope_open",
+  "implemented": [
+    "复用ai_task_results，execution_call_id唯一约束；验证callId/持久正文/AI归属映射",
+    "候选、待采纳业务状态、执行成功与结果回执同一事务，重复提交不回退已采纳状态",
+    "旧候选入口在同一AI任务行锁事务内复查未映射及租约，与转交执行权互斥",
+    "真实Worker中断提交、重启换租约后写入一个真实候选表记录，供应商请求保持一次"
+  ],
+  "verification": {
+    "business_regression": 64,
+    "latest_worker_and_mapping_integration": 10,
+    "worker_runtime": 11,
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review只读独立复核，legacy快照竞态已修复，未发现其他实质问题；未运行测试"
+  },
+  "limits": [
+    "真实进程测试使用本地供应商、隔离数据库和固定输入/fixture artifact，不证明真实产物采纳流程完成",
+    "生产输入快照、具体任务候选格式投影与调度宿主仍待绑定",
+    "完整工具循环、所有入口迁移、性能与真实供应商/双平台验收仍未完成"
+  ],
+  "outputs": {
+    "t915-candidate-atomic-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  64 passed (64)\n   Start at  00:57:41\n   Duration  35.26s (transform 1.21s, setup 0ms, import 2.49s, tests 37.14s, environment 0ms)\n\n",
+    "t915-candidate-real-worker-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  2 passed (2)\n      Tests  10 passed (10)\n   Start at  00:59:39\n   Duration  3.16s (transform 1.09s, setup 0ms, import 2.09s, tests 3.37s, environment 0ms)\n\n",
+    "t915-candidate-worker-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker\n\n\n Test Files  1 passed (1)\n      Tests  11 passed (11)\n   Start at  00:55:11\n   Duration  1.18s (transform 103ms, setup 0ms, import 320ms, tests 563ms, environment 0ms)\n\n",
+    "t915-candidate-types-final.log": "\n> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n> tsc --noEmit\n\n",
+    "t915-candidate-frontend-types-final.log": "",
+    "t915-candidate-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  }
+}

@@ -2,12 +2,14 @@ import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, aiTasks, aiTaskResults, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createWorkerSupervisor } from "./worker-supervisor";
+import { createExecutionAuthorityService } from "./execution-authority.service";
+import { createExecutionCandidateService } from "../ai/execution-candidate.service";
 const ctx = {userId:"worker-ledger",accountId:"worker-ledger",requestId:"test",source:"user" as const};
 const modelInput = {kind:"model.generate",prompt:"写正文",capability:"script",maxOutputTokens:128,operationKey:"generate"};
 const deps = {budget:{maxCalls:3,maxTokens:10000,deadlineMs:60000}};
@@ -20,7 +22,11 @@ describe("真实 Worker 与后端持久调用端口", () => {
   afterAll(async()=>close?.());
   async function fixture(id:string){
     const tasks=createPersistentTaskService(db);
-    const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput}});
+    await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"script.draft",idempotencyKey:id,requestedAt:new Date().toISOString()});
+    const mapped=await createExecutionAuthorityService(db).bindAiTask(ctx,id);
+    // 测试固定输入；生产输入快照由业务适配器准备，本测试不声称已覆盖该入口。
+    await db.update(executionTasks).set({payload:{modelInput}}).where(eq(executionTasks.id,mapped.executionTaskId));
+    const task={id:mapped.executionTaskId};
     const claim=await tasks.claimTask({taskId:task.id,workerId:"worker"});if(!claim)throw new Error("missing claim");
     const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     return {ref,tasks,ports:createExecutionWorkerCallPorts(db,deps),ledger:createExecutionCallLedgerService(db,deps)};
@@ -37,6 +43,7 @@ describe("真实 Worker 与后端持久调用端口", () => {
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
     const address=server.address() as {port:number};
     const leases=createExecutionLeaseService(db);
+    const candidates=createExecutionCandidateService(db,{projectCandidate(_ctx,input){return {resultType:"artifact_version",artifactId:"fixture-artifact",resultData:{body:input.text}};}});
     const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
       async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
       async invoke(ref,port,data){
@@ -45,10 +52,10 @@ describe("真实 Worker 与后端持久调用端口", () => {
         if(port==="startCall")return f.ports.startCall(ref,data);
         if(port==="settleCall")return f.ports.settleCall(ref,data);
         if(port==="resolveModelCredential")return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${address.port}/v1`,model:"test",token:"fixture"};
-        // 这里只验证调用端口；业务候选提交仍属于后续生产接线验收。
+        // 第一次模拟候选提交前中断，第二次走真实业务候选事务。
         if(port==="commitResult") {
           if(failCommit){failCommit=false;throw new Error("SIMULATED_COMMIT_FAILURE");}
-          committedTexts.push((data as {text:string}).text);return {};
+          committedTexts.push((data as {text:string}).text);return candidates.commitResult(ref,data);
         }
         throw new Error("UNEXPECTED_PORT");
       },
@@ -66,6 +73,9 @@ describe("真实 Worker 与后端持久调用端口", () => {
       f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
       expect(await supervisor.run(f.ref,Date.now()+30000)).toBe("completed");
       expect(committedTexts).toEqual(["正文"]);
+      const results=await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"real-child"));
+      expect(results).toHaveLength(1);expect(results[0]?.resultData).toEqual({body:"正文"});
+      expect((await db.select().from(aiTasks).where(eq(aiTasks.id,"real-child")))[0]?.status).toBe("awaiting_confirmation");
       expect(requests).toBe(1);expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(1);
     }finally{await supervisor.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
