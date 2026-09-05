@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "36239db4cd9e3d28dceaa1934edb9b58fdd43b45c4c71772ddf96285b5594270",
+      "file_sha256": "f8ae4dc22991fd32f5dd896d1d395455848f218aba3bb9dd94b37fbcd3329582",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认范围：素材生成迁入既有 Worker，纯上下文准备保留来源标记；同事务完成知识、项目关联和采纳回执，旧逐项采纳记录兼容。未增加模型规划层或数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "3167c2892d1b795d75540327dcc49d8a0726ec78a7014c002bf1bf21a5c442fc",
+      "file_sha256": "825d534d29e7eeace92a437f80c4809f50440bb9dad45f8d81677ad595888da7",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认范围：素材生成迁入既有 Worker，纯上下文准备保留来源标记；同事务完成知识、项目关联和采纳回执，旧逐项采纳记录兼容。未增加模型规划层或数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

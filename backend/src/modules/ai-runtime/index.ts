@@ -124,3 +124,4 @@ export * from "./browser-task-authorization.service";
 export * from "./target-business-adapters";
 
 export * from "./calibration-positioning-business-adapters";
+export * from './research-business-adapter';

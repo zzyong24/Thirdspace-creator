@@ -1,0 +1,90 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/research-material-adoption.test.ts > 并发采纳与成功回执重放仅创建一份知识和链接
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 链接失败回滚已创建知识和首版
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/research-material-adoption.test.ts > 空候选不可假成功
+[ai-task-runner] taskId=ai-task-2 taskType=research.gather_material status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ❯ src/integration/research-material-adoption.test.ts (3 tests | 3 failed) 2287ms
+   × 并发采纳与成功回执重放仅创建一份知识和链接 946ms
+   × 链接失败回滚已创建知识和首版 676ms
+   × 空候选不可假成功 664ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/research-material-adoption.test.ts > 并发采纳与成功回执重放仅创建一份知识和链接
+ConflictError: AI task ai-task-2 is not awaiting confirmation (status: succeeded)
+ ❯ Object.confirmTask src/modules/ai/ai.service.ts:1161:15
+    1159|         !canTransition(task.status, "succeeded")
+    1160|       ) {
+    1161|         throw new ConflictError(
+       |               ^
+    1162|           `AI task ${taskId} is not awaiting confirmation (status: ${t…
+    1163|         );
+ ❯ src/integration/research-material-adoption.test.ts:17:138
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/integration/research-material-adoption.test.ts > 链接失败回滚已创建知识和首版
+AssertionError: expected [ { id: 'knowledge-4', …(15) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/integration/research-material-adoption.test.ts:18:185
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/integration/research-material-adoption.test.ts > 空候选不可假成功
+AssertionError: promise resolved "{ id: 'ai-task-2', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "research-material-attempt-1",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-2",
++   "idempotencyKey": "a:research.gather_material:research-material-attempt-1",
++   "inputData": {
++     "projectId": "project",
++     "topic": "主题",
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": "project",
++   "requestFingerprint": "sha256:44e80f7f8ba9104c1f4a45a18e47762dd8d3bf68d0280b56e78c894ed03e2265",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "research.gather_material",
++   "userId": "u",
+  }
+
+ ❯ src/integration/research-material-adoption.test.ts:19:85
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  13:08:20
+   Duration  3.89s (transform 888ms, setup 0ms, import 1.47s, tests 2.29s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/research-material-adoption.test.ts --retry=0

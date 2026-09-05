@@ -401,6 +401,9 @@ export {
 // schema 强约束让任何模型(MiniMax/Claude)都产可解析输出,根治旧版自由文本解析的卡死。
 export {
   runResearchNode,
+  researchFacets,
+  normalizeResearchResult,
+  type MaterialGrounding,
   flattenCategories,
   anthropicWebSearchTools,
   // [T-146d] 用户第一手资料要点 facet 组装 —— chat-runner/research-runner 装配后注入 research 综合。

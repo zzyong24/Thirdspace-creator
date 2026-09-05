@@ -1,3 +1,5 @@
+import { researchMaterialSchema } from "../prompt/templates/research-gather";
+import { normalizeResearchResult } from "../nodes/research-node";
 import { z } from "zod";
 import type { structuredGenerationInputSchema } from "@creatoros/contract/execution-worker";
 import {
@@ -21,6 +23,23 @@ export function resolveStructuredBusinessSchema(
 ): z.ZodType | undefined {
   // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
   switch (input.skillId) {
+    case "research.gather":
+      z.object({
+        topic: z.string(),
+        projectId: z.string().min(1).nullable(),
+        grounding: z.literal("model_memory"),
+      })
+        .strict()
+        .parse(JSON.parse(input.facets.__researchGather ?? "null"));
+      return researchMaterialSchema.refine((value) => {
+        try {
+          return (
+            normalizeResearchResult(value, "model_memory").items.length > 0
+          );
+        } catch {
+          return false;
+        }
+      }, "至少需要一项清洗后有效的创作素材");
     case "planning.thesis":
       planningThesisGroundingSchema.parse(
         JSON.parse(input.facets.__planningThesisGrounding ?? "null"),

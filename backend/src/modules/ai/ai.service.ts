@@ -239,6 +239,7 @@ export interface ServiceDeps {
   calibration: AiCalibrationPort;
   // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
   assetLibrary?: AiAssetLibraryPort;
+  researchMaterials?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   calibrationPositioning?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   structuredTargets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
@@ -1126,6 +1127,10 @@ export function createAiService(deps: ServiceDeps): AiService {
         if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
         await deps.agenticProposals.confirmTask(ctx, taskId);
         return toTaskDto(await repo.requireTask(taskId));
+      }
+      if(task.taskType==="research.gather_material") {
+        if(deps.researchMaterials){await deps.researchMaterials.confirmTask(ctx,taskId);return toTaskDto(await repo.requireTask(taskId));}
+        if(task.executionTaskId)throw new ConflictError("素材生成采纳事务尚未接入");
       }
       if (["calibration.diagnose", "positioning.generate"].includes(task.taskType)) {
         if (deps.calibrationPositioning) {

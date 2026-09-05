@@ -1,0 +1,10 @@
+Scope: 3 of 6 workspace projects
+contract typecheck$ tsc --noEmit
+contract typecheck: Done
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: src/execution/research-business-schema.test.ts(4,47): error TS2352: Conversion of type '{ skillId: string; facets: { __researchGather: string; }; }' to type '{ kind: "model.structured"; operationKey: string; capability: string; maxOutputTokens: number; skillId: string; skillSnapshot: { snapshotVersion: 1; userId: string; accountId: string; resolvedAt: string; platformPolicyVersion: string; platformPolicy: string; skills: { ...; }[]; }; facets: Record<...>; timeoutMs?: nu...' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+ai-worker typecheck:   Type '{ skillId: string; facets: { __researchGather: string; }; }' is missing the following properties from type '{ kind: "model.structured"; operationKey: string; capability: string; maxOutputTokens: number; skillId: string; skillSnapshot: { snapshotVersion: 1; userId: string; accountId: string; resolvedAt: string; platformPolicyVersion: string; platformPolicy: string; skills: { ...; }[]; }; facets: Record<...>; timeoutMs?: nu...': kind, operationKey, capability, maxOutputTokens, skillSnapshot
+ai-worker typecheck: Failed
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

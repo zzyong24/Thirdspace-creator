@@ -260,18 +260,10 @@ export function flattenCategories(cats: ResearchCategories): MaterialItem[] {
  * outputSchema,每轮 schema 约束、校验失败自动重试)。产四类创作向候选 → 摊平成 MaterialItem[]。
  * 四类全空(模型啥也没产)→ 抛错(不假成功,调用方接住转终态)。
  */
-export async function runResearchNode(
-  input: RunResearchNodeInput,
-): Promise<RunResearchNodeResult> {
-  const searchResults = input.searchResults ?? [];
-  const grounding: MaterialGrounding =
-    searchResults.length > 0 ? "web" : "model_memory";
-  let object: ResearchCategories;
-  try {
-    ({ object } = await runStructuredNode<ResearchCategories>({
-      model: input.model,
-      template: RESEARCH_GATHER_TEMPLATE,
-      facets: {
+export function researchFacets(input: Omit<RunResearchNodeInput, "model" | "maxRetries">): Record<string, string> {
+ const searchResults = input.searchResults ?? [];
+ const grounding = searchResults.length ? "web" : "model_memory";
+ return {
       positioning:
         input.positioningBrief ||
         "（创作者尚未设置定位——按选题本身的价值判断相关性即可）",
@@ -284,7 +276,21 @@ export async function runResearchNode(
       // [T-228] 降级模式硬约束块(只在无检索结果时注入;有检索 → 整段省略)。
       groundingNote:
         grounding === "model_memory" ? MODEL_MEMORY_GROUNDING_NOTE : "",
-      },
+ };
+}
+
+export async function runResearchNode(
+  input: RunResearchNodeInput,
+): Promise<RunResearchNodeResult> {
+  const searchResults = input.searchResults ?? [];
+  const grounding: MaterialGrounding =
+    searchResults.length > 0 ? "web" : "model_memory";
+  let object: ResearchCategories;
+  try {
+    ({ object } = await runStructuredNode<ResearchCategories>({
+      model: input.model,
+      template: RESEARCH_GATHER_TEMPLATE,
+      facets: researchFacets(input),
       maxRetries: input.maxRetries,
     }));
   } catch (err) {
@@ -299,19 +305,27 @@ export async function runResearchNode(
     }
     throw err;
   }
-  // [T-228] model_memory 后处理清洗:剔伪引用条目 + 强制清 sourceUrl / 归一 source。
-  // prompt 硬约束是第一道,这里兜住不听话的模型(实录:MiniMax 记忆编 arXiv/85.9% 标需核实)。
-  let categories = object;
   if (grounding === "model_memory") {
-    const { categories: cleaned, dropped } =
-      sanitizeModelMemoryCategories(object);
-    categories = cleaned;
+    const { dropped } = sanitizeModelMemoryCategories(object);
     if (dropped > 0) {
       // eslint-disable-next-line no-console
       console.warn(
         `[research-node] model_memory 降级:剔除 ${dropped} 条带伪引用(论文编号/精确百分比/榜单成绩)的编造素材`,
       );
     }
+  }
+  return normalizeResearchResult(object, grounding);
+}
+
+export function normalizeResearchResult(object: ResearchCategories, grounding: MaterialGrounding): RunResearchNodeResult {
+  // [T-228] model_memory 后处理清洗:剔伪引用条目 + 强制清 sourceUrl / 归一 source。
+  // prompt 硬约束是第一道,这里兜住不听话的模型(实录:MiniMax 记忆编 arXiv/85.9% 标需核实)。
+  let categories = object;
+  if (grounding === "model_memory") {
+    const { categories: cleaned } =
+      sanitizeModelMemoryCategories(object);
+    categories = cleaned;
+
   }
   const items = flattenCategories(categories);
   if (items.length === 0) {

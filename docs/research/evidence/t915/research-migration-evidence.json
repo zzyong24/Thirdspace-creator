@@ -1,0 +1,53 @@
+{
+  "task": "T-915",
+  "status": "素材生成入口迁移已验证，完整任务仍未验收",
+  "baseCommit": "3cf2b881",
+  "entry": "research.gather_material",
+  "tests": {
+    "backendRegression": 21,
+    "workerRegression": 65,
+    "realFork": 4,
+    "totalDistinct": 90
+  },
+  "redEvidence": [
+    "research-schema-red.log",
+    "research-material-adoption-red.log",
+    "research-business-adapter-red.log"
+  ],
+  "greenEvidence": [
+    "research-regression.log",
+    "research-worker-regression.log",
+    "research-worker-integration-first.log"
+  ],
+  "types": [
+    "research-types-final.log",
+    "research-frontend-types.log",
+    "research-worker-integration-types.log"
+  ],
+  "files": {
+    "ai-worker/src/execution/research-business-schema.test.ts": "f2459397092c66edcaa1cc9d289f349b2eeecf84fbe5f9bdea2891e67fe8c808",
+    "ai-worker/src/execution/structured-business-schema.ts": "eac7ccaf6fef886e89ecc0c180306d42915422079f5eb2ffa71437181d152e5c",
+    "ai-worker/src/nodes/research-node.ts": "5aa5e2486b29e20f840db9007fa7b403f437c29810353bc60350ba162ea2ebe3",
+    "backend/src/modules/ai-runtime/research-business-adapter.ts": "e3c3819820c50f4b5d916ec0c7a7b6c997c209c97be0b90c6449b5e2b59f6653",
+    "backend/src/modules/ai-runtime/research-runner.ts": "a4b5f2688546dca1fc1cf9dd63e8cd822ab69346358a313efd78c6ae7338b7ee",
+    "backend/src/modules/ai/research-material-adoption.service.ts": "9fd9d030e90f9082f3907b26408b66055c1fa11d63f2186c9bb44cdea62a11ce",
+    "backend/src/modules/ai/ai.service.ts": "f8ae4dc22991fd32f5dd896d1d395455848f218aba3bb9dd94b37fbcd3329582",
+    "frontend/src/server/persistence-client.ts": "825d534d29e7eeace92a437f80c4809f50440bb9dad45f8d81677ad595888da7",
+    "backend/src/modules/execution/research-worker.integration.test.ts": "757be52d0f6884b6e4d31ab59caab2cb4061f130cbccf82e4f517556cb7b5e0f",
+    "backend/src/integration/research-material-adoption.test.ts": "d50b2ffa20462ad29b16fd2f5742ae09e2a278cf570efb556bb2fc983f8e52c1"
+  },
+  "limitations": [
+    "无真实供应商调用",
+    "无UI真机E2E",
+    "无安装包验证",
+    "不代表热点pipeline已迁移",
+    "不代表全任务30样本延迟指标达标"
+  ],
+  "independentReview": "PASS（research-independent-review.md，只读审查未重跑测试）",
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "status": "既有T-916全局漂移，未销账",
+    "log": "research-reconcile.log"
+  }
+}

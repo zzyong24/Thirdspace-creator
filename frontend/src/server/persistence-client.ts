@@ -287,7 +287,8 @@ import type {
   ProjectLifecycleRaw,
 } from "@creatoros/backend/modules/ai-runtime";
 import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
-import { runGatherMaterial } from "@creatoros/backend/modules/ai-runtime";
+import { createResearchGatherBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+import { createResearchMaterialAdoptionService } from "@creatoros/backend/modules/ai";
 import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";
 import { existsSync, renameSync } from "node:fs";
@@ -3180,7 +3181,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }}}).createStatementVersion(c,input);
     },
   },deps.now);
+  const researchMaterialAdoption=createResearchMaterialAdoptionService(db,{
+    assertProject(c,id,tx){return createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(c,id);},
+    createKnowledge(c,input,tx){return createKnowledgeService(createKnowledgeRepository(tx as unknown as Db,deps)).createKnowledge(c,input);},
+    linkKnowledge(c,input,tx){
+      const txDb=tx as unknown as Db;
+      const txProjects=createProjectsService(createProjectRepository(txDb),deps);
+      const txKnowledge=createKnowledgeService(createKnowledgeRepository(txDb,deps));
+      return createMaterialLinksService({db:txDb,...deps,
+        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertKnowledgeOwned:(context,id)=>txKnowledge.getKnowledge(context,id),
+      }).create(c,input);
+    },
+  },deps.now);
   const aiService = createAiService({
+    researchMaterials:researchMaterialAdoption,
     calibrationPositioning:calibrationPositioningAdoption,
     structuredTargets: structuredTargetAdoption,
     agenticProposals: agenticProposalAdoption,
@@ -4056,30 +4071,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
         if (
-          task &&
-          task.taskType === "research.gather_material" &&
-          task.status === "queued"
-        ) {
-          await runGatherMaterial(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              // [T-146d] 搜索深度结合用户素材:本项目高优先素材要点作 facet 注入 research 综合,让
-              // 「贴着 PR/第一手资料产素材」而非泛搜。creative-context 按 material_link.priority 分流。
-              projectMaterials: makeProjectMaterialsReader(),
-              // Vercel AI SDK 路径:素材搜集节点跑在 ai-worker + 外置模板 + generateObject
-              // 绑四类 outputSchema(钩子/案例/数据点/金句),schema 强约束根治不可解析卡死。
-              resolveModelSpec,
-            },
-          );
-        } else if (
           task &&
           task.taskType === "topic.generate" &&
           task.status === "queued"
@@ -9688,6 +9679,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               },
   };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
     "calibration.score":createCalibrationScoreBusinessAdapter({...generationContext,...calibrationScoreReaders}),
     "positioning.generate":createPositioningGenerateBusinessAdapter({positioning:generationContext.positioning,accounts:makeGenerationReaders().accountsReader,positioningWorks:positioningWorksReader}),
