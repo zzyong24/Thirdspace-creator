@@ -1,0 +1,186 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}}
+[structured-node] template=review.insights status=ok durationMs=27 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}}
+[structured-node] template=review.insights status=ok durationMs=11 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[structured-node] template=review.insights status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}}
+[structured-node] template=planning.contract status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[structured-node] template=planning.contract status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[structured-node] template=planning.contract status=ok durationMs=7 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}}
+[structured-node] template=review.insights status=ok durationMs=6 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}}
+[structured-node] template=review.insights status=ok durationMs=6 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+[structured-node] template=review.insights status=ok durationMs=7 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}}
+[structured-node] template=planning.contract status=ok durationMs=7 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+[structured-node] template=planning.contract status=ok durationMs=5 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+stdout | src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}}
+[structured-node] template=planning.contract status=ok durationMs=6 path=structured modelCalls=1 inputTokens=2 outputTokens=3
+
+ ❯ src/execution/structured-worker-generation.test.ts (29 tests | 12 failed) 227ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}} 32ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}} 12ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}} 8ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}} 8ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}} 7ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}} 6ms
+   × 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}} 7ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{}}
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:78:27
+     76|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     77|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     78|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     79|   finally{await f.close();}
+     80|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[]}}
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{\"learnings\":[]},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:78:27
+     76|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     77|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     78|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     79|   finally{await f.close();}
+     80|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"review.insights","object":{"learnings":[{"title":"  ","insight":"只有解释"}]}}
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{\"learnings\":[{\"title\":\"  \",\"insight\":\"只有解释\"}]},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:78:27
+     76|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     77|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     78|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     79|   finally{await f.close();}
+     80|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"受众定位":"  ","unknown":"有文字"}}
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{\"受众定位\":\"  \",\"unknown\":\"有文字\"},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:78:27
+     76|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     77|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     78|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     79|   finally{await f.close();}
+     80|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=false：{"skillId":"planning.contract","object":{"contract-audience":3}}
+ FAIL  src/execution/structured-worker-generation.test.ts > 业务输出必须在保存前拒绝，宽snapshot/native=true：{"skillId":"planning.contract","object":{"contract-audience":3}}
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{\"contract-audience\":3},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:78:27
+     76|  ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+     77|   const f=await fixture(JSON.stringify(test.object),undefined,native,f…
+     78|   try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",er…
+       |                           ^
+     79|   finally{await f.close();}
+     80|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 17 passed (29)
+   Start at  09:01:33
+   Duration  642ms (transform 149ms, setup 0ms, import 286ms, tests 227ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/structured-worker-generation.test.ts --retry=0

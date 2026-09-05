@@ -154,6 +154,8 @@ export interface LearningsService {
     // 手录/无上下文来源省略 → null(旧行为)。
     body: {
       title: string;
+      /** 内部AI采纳项的稳定键，公开learnings.create契约不开放。 */
+      adoptionKey?: string;
       insight?: string;
       learningType?: string;
       projectId?: string | null;
@@ -371,6 +373,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
       // 宪法②「AI 产候选走确认门」的第二道闸唯一放开口 —— 只放行「客观真实数据背书」,不放 AI 空想。
       const grounded = body.evidenceStrength === "grounded";
       const row = await repoFor(ctx, "learnings.createLearning").createLearning({
+        ...(body.adoptionKey === undefined ? {} : {adoptionKey: body.adoptionKey}),
         title: body.title,
         insight: body.insight ?? "",
         learningType: body.learningType ?? "strategy",

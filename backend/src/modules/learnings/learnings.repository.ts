@@ -1,3 +1,4 @@
+import {createHash} from "node:crypto";
 import {
   and,
   desc,
@@ -31,6 +32,8 @@ export interface RepoDeps {
 }
 
 export interface CreateLearningInput {
+  /** 仅可信采纳端口传入，必须绑定候选与内容项；不作为公开创建参数。 */
+  adoptionKey?: string;
   title: string;
   insight: string;
   learningType: string;
@@ -172,10 +175,13 @@ export function createLearningsRepository(
     },
 
     async createLearning(input) {
-      const inserted = await db
+      // SEMANTIC_BOUNDARY_ALLOW: 哈希仅编码采纳归属与幂等身份，不判断内容含义或相似度。
+      const id = input.adoptionKey === undefined ? deps.nextId("learning")
+        : `learning-adoption:${createHash("sha256").update(JSON.stringify([deps.userId,deps.accountId,input.adoptionKey])).digest("hex")}`;
+      const insert = db
         .insert(learnings)
         .values({
-          id: deps.nextId("learning"),
+          id,
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
           accountId: deps.accountId,
@@ -194,9 +200,12 @@ export function createLearningsRepository(
           contentFingerprint: input.contentFingerprint ?? null,
           createdAt: deps.now(),
           updatedAt: deps.now(),
-        })
-        .returning();
-      return inserted[0]!;
+        });
+      const inserted = input.adoptionKey === undefined ? await insert.returning()
+        : await insert.onConflictDoNothing().returning();
+      if (inserted[0]) return inserted[0];
+      // 已有领域事实就是回执；不覆盖用户之后编辑或discard的状态。
+      return getRow(id);
     },
 
     async adoptLearning(input) {

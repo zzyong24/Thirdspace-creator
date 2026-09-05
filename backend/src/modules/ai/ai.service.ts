@@ -124,7 +124,7 @@ export interface AiLearningsPort {
     ctx: RequestContext,
     // [T-118a gate-F3] additive projectId:review.analyze 采纳时带上任务的来源作品,让复盘页能
     // 读「本作品的 candidate learnings」。手录/无项目上下文来源省略 → null(旧行为)。
-    body: { title: string; insight?: string; projectId?: string | null },
+    body: { title: string; insight?: string; projectId?: string | null; adoptionKey?: string },
   ): Promise<unknown>;
 }
 
@@ -537,11 +537,10 @@ function readAdoptedKeys(resultData: unknown): Set<string> {
   return new Set(raw.filter((k): k is string => typeof k === "string"));
 }
 
-// Allowed AI Task transitions — IDENTICAL to @creatoros/ai-worker state-machine.ts
-// (SPEC §12). The frontend package does not depend on the worker package, so the ONE
-// transition table is mirrored here; the worker owns its copy. Terminals are empty.
+// 旧业务任务的确定性转换；已绑定的执行状态由持久执行服务拥有。
+// 准备输入失败可以直接结束排队任务，不伪造 running / 模型已启动。
 const ALLOWED: Record<string, ReadonlySet<string>> = {
-  queued: new Set(["running", "cancelled"]),
+  queued: new Set(["running", "failed", "cancelled"]),
   running: new Set(["awaiting_confirmation", "succeeded", "failed", "cancelled"]),
   awaiting_confirmation: new Set(["succeeded", "cancelled"]),
   succeeded: new Set(),
@@ -1114,7 +1113,7 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(await repo.requireTask(taskId));
       }
       // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。
-      if (task.status === "succeeded" && (["planning.thesis","publish.platform_adapt"].includes(task.taskType) || (await repo.listResults(taskId)).at(-1)?.resultType === "artifact_version")) {
+      if (task.status === "succeeded" && (["planning.thesis","publish.platform_adapt"].includes(task.taskType) || ["artifact_version","learning_list"].includes((await repo.listResults(taskId)).at(-1)?.resultType ?? ""))) {
         return toTaskDto(task);
       }
       // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
@@ -1553,6 +1552,7 @@ export function createAiService(deps: ServiceDeps): AiService {
             title,
             insight,
             projectId,
+            adoptionKey: `ai-result:${candidate.id}:${key}`,
           });
           await markAdopted(key);
         }

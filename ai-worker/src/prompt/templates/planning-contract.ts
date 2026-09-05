@@ -12,6 +12,13 @@ import type { PromptTemplate } from "../template";
  * 让 MiniMax 也稳定吐可解析合同。输出是"标题/ id 为键、承诺为值"的对象,故 schema 用
  * `z.record(string→string)`(宽容任意键);runner 侧 pickBody 按四个固定角度的 title/id 取值,保留原容错。
  */
+// SEMANTIC_BOUNDARY_ALLOW: 固定展示槽只定义协议字段，不评价或选择创作内容。
+export const PLANNING_CONTRACT_SLOTS = [
+  { id: "contract-audience", title: "受众定位" },
+  { id: "contract-value", title: "价值主张" },
+  { id: "contract-pacing", title: "核心节奏" },
+  { id: "contract-cta", title: "行动召唤" },
+] as const;
 export const contractSchema = z.record(z.string(), z.string());
 export type ContractOutput = z.infer<typeof contractSchema>;
 

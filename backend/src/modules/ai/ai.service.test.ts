@@ -273,6 +273,16 @@ describe("ai service", () => {
     expect((await service.getTask(ctx, task.id)).status).toBe("running");
   });
 
+  it("准备失败的未绑定排队任务诚实结束，不伪造模型已开始，也不覆盖取消", async () => {
+    const {service}=makeService(db);
+    const task=await service.createTask(ctx,{taskType:"review.analyze",inputData:{projectId:"p-1"}});
+    await service.markFailed(ctx,task.id,"缺少真实发布指标");
+    expect(await service.getTask(ctx,task.id)).toMatchObject({status:"failed",startedAt:null,completedAt:NOW,errorMessage:"缺少真实发布指标"});
+    const cancelled=await service.createTask(ctx,{taskType:"review.analyze",attemptId:"cancel-preparation",inputData:{projectId:"p-1"}});
+    await service.cancelTask(ctx,cancelled.id);await service.markFailed(ctx,cancelled.id,"迟到的准备失败");
+    expect((await service.getTask(ctx,cancelled.id)).status).toBe("cancelled");
+  });
+
   it("[T-522] runner 失败只在 failed 真正落库后记录终态日志", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     const { service } = makeService(db);

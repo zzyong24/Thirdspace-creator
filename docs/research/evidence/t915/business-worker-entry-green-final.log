@@ -1,0 +1,89 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:20413) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20412) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/platform-worker-entry.integration.test.ts (3 tests | 1 failed) 35104ms
+     × planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳 28016ms (retry x2)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts (2 tests | 2 failed) 55814ms
+     × 有真实项目指标生成候选；lostReceipt=false 采纳不重复 28168ms (retry x2)
+     × 有真实项目指标生成候选；lostReceipt=true 采纳不重复 27646ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+ FAIL  src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+ FAIL  src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+AssertionError: expected 'queued' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "queued"
+
+ ❯ vi.waitFor.timeout src/server/platform-worker-entry.integration.test.ts:55:103
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: expected 'queued' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "queued"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:36:96
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 2 passed (5)
+   Start at  08:49:12
+   Duration  59.53s (transform 3.88s, setup 317ms, import 5.66s, tests 90.92s, environment 1.06s)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/review-insights-worker-entry.integration.test.ts src/server/platform-worker-entry.integration.test.ts

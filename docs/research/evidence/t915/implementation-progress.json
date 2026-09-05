@@ -227,5 +227,9 @@
   "script_review_worker_increment": {
     "evidence": "script-review-worker-evidence.json",
     "scope": "审核生产入口、版本冻结、结构化Worker、503自动恢复及报告原子幂等提交通过；完整迁移/性能/真供应商/双平台仍未验收"
+  },
+  "business_generation_worker_increment": {
+    "evidence": "business-generation-worker-evidence.json",
+    "scope": "复盘与内容合同正式生成入口接统一Worker，经验采纳丢回执幂等、准备失败永久排队修复；完整范围仍未完成"
   }
 }

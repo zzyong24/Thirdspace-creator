@@ -128,7 +128,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.test.ts"
       ],
-      "file_sha256": "f7236b57f3c787a9d75965d007c3af52cd394813689abbf1bda46d38572915d7",
+      "file_sha256": "0432d5be896b39a77d9532dc508099551a36945de9a845573aa1b97375eb4fb6",
       "categories": [
         "native_executable"
       ],
@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "0bb9308323567d8e37fa7e97c493a7d3e38b8b125db34a2ee3a0fe99121416b2",
+      "file_sha256": "13e0d4a75ae34ae9b1397e101bf8a17efbe0e74dc49450496369b615ccaafa72",
       "categories": [
         "native_executable"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "22d1295955a20abb272121482e12fb08a5d125f7a98e451708eee7cc6c57c6e4",
+      "file_sha256": "5fa744404d07a4f55b10bb9e0b811709db8108fb4317e461225b63ab05e40e64",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "9747ce307cf42d9cb65a80898e1b5733b125aef79d2af83de25a35c66423dd35",
+      "file_sha256": "521031b3838b42c6722b01fa202f36bd362df7489007bac9f72d4f825e29a9a3",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1199,7 +1199,7 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "c93f004b9ede355cd010bbffb5e8a617473c91ef2c92d9f9f1220cad135c5089",
+      "file_sha256": "13a53045438fab3597d292de7390d3f11c58ec56b4e39c8303d09d5b597e6582",
       "categories": [
         "ipc"
       ],

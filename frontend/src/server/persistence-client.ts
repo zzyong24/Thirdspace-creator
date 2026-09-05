@@ -487,8 +487,8 @@ import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
 import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
-import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
-import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
+import { preparePlanningContractContext,projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { prepareReviewContext,projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
@@ -4401,58 +4401,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               // 此处显式 pin 仅为满足 ScriptDeps 把 positioning 类型标为必需(值同,零行为变化)。
               positioning: positioningReader,
               // Vercel AI SDK 路径(弃 LlmCompleter):写文案节点跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "planning.contract" &&
-          task.status === "queued"
-        ) {
-          // 内容合同 node (策划 stage) — drafts the audience contract (受众定位/价值主张/
-          // 核心节奏/行动召唤) from 定位 + 选题, records an `artifact_version`
-          // candidate; 采纳 appends a new ArtifactVersion onto the project's
-          // `content_contract` artifact (reuses the existing artifact_version confirm path).
-          // The 策划 workspace reads that version's contentData.cards back into the 内容合同
-          // surface.
-          await runPlanningContract(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              artifactOrigin: artifactOriginReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):内容合同节点跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "review.analyze" &&
-          task.status === "queued"
-        ) {
-          await runReviewAnalyze(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              // T-039a:复盘对象 reader —— 让后端复盘 task 也吃到「这一条作品」的真文案/标题/数据/评论
-              // (原来只有 positioning + learnings + topic.title → subject 空即账号级泛论)。
-              reviewSubject: makeReviewSubjectReader(),
-              // Vercel AI SDK 路径(弃 LlmCompleter):复盘节点跑在 ai-worker + 外置模板。
               resolveModelSpec,
             },
           );
@@ -9892,6 +9840,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
       };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "review.analyze":{
+      skillId:"review.insights",capability:"review.insights",
+      prepare:(c,task)=>prepareReviewContext(c,task,{...generationContext,reviewSubject:makeReviewSubjectReader()}),
+      project:projectReviewCandidate,
+    },
+    "planning.contract":{
+      skillId:"planning.contract",capability:"planning.contract",
+      prepare:(c,task)=>preparePlanningContractContext(c,task,{...generationContext,artifactOrigin:artifactOriginReader,
+        async assertTargetArtifact(context,target){
+          const artifact=await artifactsService.getArtifact(context,target.artifactId);
+          if((target.projectId!==null && artifact.projectId!==target.projectId) || artifact.artifactType!=="content_contract")throw new Error("内容合同目标与当前项目或工件类型不一致");
+        },
+      }),
+      project:projectPlanningContractCandidate,
+    },
     "script.review":{
       skillId:"script.review",capability:"default",
       prepare:(c,task)=>prepareScriptReviewContext(c,task,{scriptSource:reviewScriptSource,lintRules:reviewGateService,positioning:generationContext.positioning}),

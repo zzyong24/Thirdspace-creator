@@ -1,0 +1,226 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:19655) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19656) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts (2 tests | 2 failed) 20333ms
+     × 有真实项目指标生成候选；lostReceipt=false 采纳不重复 10860ms (retry x2)
+     × 有真实项目指标生成候选；lostReceipt=true 采纳不重复 9472ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:00.877Z",
++     "id": "learning-adoption:70473fb8b214e0be7ba20ffff036d992e70f9f4afa29edca32a957b2ef74bc28",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-ef5b5045-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:00.877Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:04.258Z",
++     "id": "learning-adoption:517af77e183f98523e7e9f41dcb72524650d376343a03dd5527f3844af9b0430",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-24b2ab73-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:04.259Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:07.673Z",
++     "id": "learning-adoption:eb07733a930891b35f40b0160da196629365927e8629396de6ff5a357435818a",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-ced63daa-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:07.673Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:10.907Z",
++     "id": "learning-adoption:812880728cce20cb42fd85ab8b04cc0b6ad884300fb66760250863cd9a348bdd",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-4fe071c3-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:10.907Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:14.053Z",
++     "id": "learning-adoption:c6ebe4ee44eacafd2a06bdf83f3e1febbbccf00c92cccd311758e413a39f88b8",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-9a2edd8b-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:14.053Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: expected [ { …(13) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "evidenceStrength": "grounded",
++     "confidenceScore": 0,
++     "createdAt": "2026-09-05T15:47:17.188Z",
++     "id": "learning-adoption:6ab0990b1c9c6e2feb56c8e4311be0048b572fbde7a87ee8d07efaf05734d9cd",
++     "insight": "观众更容易理解示范步骤。",
++     "learningType": "strategy",
++     "projectId": "project-9f8db3ec-2",
++     "recommendation": "",
++     "reuseCount": 0,
++     "reviewId": null,
+      "title": "原文先给操作结果",
++     "updatedAt": "2026-09-05T15:47:17.188Z",
++     "userId": "insights-entry-test",
+      "validationStatus": "validated",
+    },
+  ]
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:33:115
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 3 passed (5)
+   Start at  08:46:53
+   Duration  23.99s (transform 3.91s, setup 303ms, import 5.70s, tests 31.04s, environment 1.03s)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/review-insights-worker-entry.integration.test.ts src/server/platform-worker-entry.integration.test.ts

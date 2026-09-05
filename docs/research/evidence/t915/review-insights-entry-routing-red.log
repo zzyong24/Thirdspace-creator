@@ -1,0 +1,188 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:18876) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[ai-task-runner] taskId=ai-task-080167c4-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[review-runner] analyze failed for task ai-task-080167c4-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[ai-task-runner] taskId=ai-task-07fb65b9-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[review-runner] analyze failed for task ai-task-07fb65b9-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[ai-task-runner] taskId=ai-task-eb021778-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[review-runner] analyze failed for task ai-task-eb021778-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[ai-task-runner] taskId=ai-task-5723416e-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[review-runner] analyze failed for task ai-task-5723416e-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[ai-task-runner] taskId=ai-task-930fb7a0-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[review-runner] analyze failed for task ai-task-930fb7a0-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[ai-task-runner] taskId=ai-task-ab06b3fe-24 taskType=review.analyze status=cancelled finishReason=null usage=null candidateCount=0
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[review-runner] analyze failed for task ai-task-ab06b3fe-24: Error: review-runner: missing current-project post-publish metrics/comments
+    at prepareReviewContext (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-context.ts:75:78)
+    at runReviewAnalyze (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/review-runner.ts:39:20)
+    at dispatchCreatedTask (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:4440:11)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3398:11
+    at Object.runClaimedTaskExecution (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/ai.service.ts:1018:23)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3394:25
+    at runTaskWithEffectiveSkillSnapshot (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/server/persistence-client.ts:3392:5)
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts (2 tests | 2 failed) 102453ms
+     × 有真实项目指标生成候选；lostReceipt=false 采纳不重复 51345ms (retry x2)
+     × 有真实项目指标生成候选；lostReceipt=true 采纳不重复 51106ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: {"id":"ai-task-080167c4-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:43:48.399Z","startedAt":"2026-09-05T15:43:48.407Z","completedAt":"2026-09-05T15:43:48.417Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: {"id":"ai-task-07fb65b9-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:44:05.400Z","startedAt":"2026-09-05T15:44:05.406Z","completedAt":"2026-09-05T15:44:05.415Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+AssertionError: {"id":"ai-task-eb021778-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:44:22.359Z","startedAt":"2026-09-05T15:44:22.364Z","completedAt":"2026-09-05T15:44:22.374Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: {"id":"ai-task-5723416e-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:44:39.507Z","startedAt":"2026-09-05T15:44:39.512Z","completedAt":"2026-09-05T15:44:39.521Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: {"id":"ai-task-930fb7a0-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:44:56.667Z","startedAt":"2026-09-05T15:44:56.673Z","completedAt":"2026-09-05T15:44:56.683Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+AssertionError: {"id":"ai-task-ab06b3fe-24","userId":"insights-entry-test","projectId":null,"contentOutputId":null,"taskType":"review.analyze","status":"cancelled","inputData":{"topic":"实操复盘"},"modelKey":"claude-opus-4-8","idempotencyKey":"insights-entry-test:review.analyze:review-insights-worker","attemptId":"review-insights-worker","requestFingerprint":"sha256:edbd46975d2ff20771e233f25e77897a15c594c713734e4d9846eed289c5c47f","retryOfTaskId":null,"requestedAt":"2026-09-05T15:45:13.500Z","startedAt":"2026-09-05T15:45:13.505Z","completedAt":"2026-09-05T15:45:13.514Z","errorMessage":null}: expected 'cancelled' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "cancelled"
+
+ ❯ vi.waitFor.timeout src/server/review-insights-worker-entry.integration.test.ts:28:127
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  08:43:42
+   Duration  106.35s (transform 2.21s, setup 153ms, import 3.11s, tests 102.45s, environment 501ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/review-insights-worker-entry.integration.test.ts

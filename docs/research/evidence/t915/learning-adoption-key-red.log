@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/learnings/learning-adoption-key.integration.test.ts (2 tests | 1 failed) 1688ms
+   × 领域提交回执丢失和并发重投只创建同一经验，保留真实来源与状态 1043ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/learnings/learning-adoption-key.integration.test.ts > 领域提交回执丢失和并发重投只创建同一经验，保留真实来源与状态
+AssertionError: expected 5 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 5
+
+ ❯ src/modules/learnings/learning-adoption-key.integration.test.ts:13:48
+     11|    await service.createLearning(ctx,input); // 已提交，但调用者没有保存该回执。
+     12|    const rows=await Promise.all(Array.from({length:5},()=>service.crea…
+     13|    expect(new Set(rows.map(row=>row.id)).size).toBe(1);
+       |                                                ^
+     14|    const [stored]=await f.db.select().from(learnings).where(eq(learnin…
+     15|    expect(stored).toMatchObject({projectId:"source-project",evidenceSt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  08:41:10
+   Duration  2.61s (transform 378ms, setup 0ms, import 786ms, tests 1.69s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/learnings/learning-adoption-key.integration.test.ts --retry=0

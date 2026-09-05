@@ -287,6 +287,7 @@ export {
 export {
   PLANNING_CONTRACT_TEMPLATE,
   contractSchema,
+  PLANNING_CONTRACT_SLOTS,
   type ContractOutput,
 } from "./prompt/templates/planning-contract";
 export {

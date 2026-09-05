@@ -9,7 +9,7 @@ const input={kind:"model.structured" as const,operationKey:"review",capability:"
   skills:[{skillId:"script.review",baseVersion:"old",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"冻结审核方法",template:"审核 {{script}}",tools:[],requiredFacets:["script"],contextRequirements:[],outputSchema:{type:"object",additionalProperties:true},completionPolicy:null,completionPolicyAdapter:null}}],
 }};
 const report={verdict:"risk",summary:"有风险",findings:[{quote:"原文片段",severity:"warn",reason:"测试理由",ruleRef:"公约33"}]};
-async function fixture(content:string,reasoning:string|undefined,native=false,protocolFallback=false){
+async function fixture(content:string,reasoning:string|undefined,native=false,protocolFallback=false,skillId="script.review"){
   const requests:Array<Record<string,any>>=[];
   const server=createServer(async(req,res)=>{
     const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));requests.push(JSON.parse(Buffer.concat(chunks).toString()));
@@ -29,7 +29,7 @@ async function fixture(content:string,reasoning:string|undefined,native=false,pr
     if(port==="saveGenerationResult"){saved.push(data.text);return {};}
     throw new Error(`unexpected ${port}`);
   };
-  const run=()=>generateStructuredInWorker(input,{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
+  const run=()=>generateStructuredInWorker({...input,skillId,skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId}))}},{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
   return {run,requests,saved,rows,close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
 }
 it.each([
@@ -64,3 +64,27 @@ it.each([{reasoning:false,native:false},{reasoning:false,native:true},{reasoning
     const count=f.requests.length;expect((await f.run()).text).toBe(result.text);expect(f.requests).toHaveLength(count);
   }finally{await f.close();}
 });
+
+for(const native of [false,true]){
+ it.each([
+  {skillId:"review.insights",object:{}},
+  {skillId:"review.insights",object:{learnings:[]}},
+  {skillId:"review.insights",object:{learnings:[{title:"  ",insight:"只有解释"}]}},
+  {skillId:"planning.contract",object:{}},
+  {skillId:"planning.contract",object:{"受众定位":"  ",unknown:"有文字"}},
+  {skillId:"planning.contract",object:{"contract-audience":3}},
+ ])(`业务输出必须在保存前拒绝，宽snapshot/native=${native}：%j`,async test=>{
+  const f=await fixture(JSON.stringify(test.object),undefined,native,false,test.skillId);
+  try{await expect(f.run()).rejects.toMatchObject({outcome:"failed",errorCode:"STRUCTURED_OUTPUT_INVALID"});expect(f.saved).toEqual([]);expect(f.requests.length).toBeGreaterThan(0);}
+  finally{await f.close();}
+ });
+ it.each([
+  {skillId:"review.insights",object:{learnings:[{title:" 一条可用经验 ",insight:""}]}},
+  {skillId:"planning.contract",object:{"contract-audience":"旧ID格式的单槽合同"}},
+  {skillId:"planning.contract",object:{"价值主张":"标题格式单槽合同"}},
+ ])(`业务旧合法子集可成功保存，native=${native}：%j`,async test=>{
+  const f=await fixture(JSON.stringify(test.object),undefined,native,false,test.skillId);
+  try{const result=await f.run();expect(JSON.parse(result.text).object).toEqual(test.object);expect(f.saved).toEqual([result.text]);}
+  finally{await f.close();}
+ });
+}

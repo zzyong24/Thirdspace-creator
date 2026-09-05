@@ -1,0 +1,56 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:18034) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts (2 tests | 2 failed) 23386ms
+     × 有真实项目指标生成候选；lostReceipt=false 采纳不重复 13019ms (retry x2)
+     × 有真实项目指标生成候选；lostReceipt=true 采纳不重复 10365ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=false 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 有真实项目指标生成候选；lostReceipt=true 采纳不重复
+TypeError: Cannot read properties of null (reading 'insert')
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:25:59
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  08:41:34
+   Duration  27.38s (transform 2.22s, setup 159ms, import 3.08s, tests 23.39s, environment 556ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/review-insights-worker-entry.integration.test.ts

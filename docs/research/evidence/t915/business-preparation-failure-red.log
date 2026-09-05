@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/ai.service.test.ts (53 tests | 1 failed | 52 skipped) 932ms
+     × 准备失败的未绑定排队任务诚实结束，不伪造模型已开始，也不覆盖取消 932ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/ai.service.test.ts > ai service > 准备失败的未绑定排队任务诚实结束，不伪造模型已开始，也不覆盖取消
+AssertionError: expected { id: 'ai-task-1', …(15) } to match object { status: 'failed', …(3) }
+(13 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "completedAt": "2026-06-21T00:00:00.000Z",
+-   "errorMessage": "缺少真实发布指标",
++   "completedAt": null,
++   "errorMessage": null,
+    "startedAt": null,
+-   "status": "failed",
++   "status": "queued",
+  }
+
+ ❯ src/modules/ai/ai.service.test.ts:280:48
+    278|     const task=await service.createTask(ctx,{taskType:"review.analyze"…
+    279|     await service.markFailed(ctx,task.id,"缺少真实发布指标");
+    280|     expect(await service.getTask(ctx,task.id)).toMatchObject({status:"…
+       |                                                ^
+    281|     const cancelled=await service.createTask(ctx,{taskType:"review.ana…
+    282|     await service.cancelTask(ctx,cancelled.id);await service.markFaile…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 52 skipped (53)
+   Start at  08:51:30
+   Duration  1.94s (transform 452ms, setup 0ms, import 853ms, tests 932ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/ai.service.test.ts -t 准备失败

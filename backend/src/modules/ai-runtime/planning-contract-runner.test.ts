@@ -4,8 +4,9 @@ import type { RequestContext } from "@creatoros/contract";
 // 内容合同 runner 迁 runStructuredNode(T-025 跨模型健壮)后:mock ai-worker 的 runStructuredNode
 // (动态 import 目标),它返回 { object }(已被 outputSchema 校验的键值对象)。验证 capability 解析、
 // 候选记录、归一(四个固定合同槽 pickBody 按 title/id 取值)仍按约定产出。
-const runStructuredNode = vi.fn(async () => ({ object: {} }));
-vi.mock("@creatoros/ai-worker", () => ({
+const {runStructuredNode} = vi.hoisted(()=>({runStructuredNode:vi.fn(async () => ({ object: {} }))}));
+vi.mock("@creatoros/ai-worker", async importOriginal => ({
+  ...await importOriginal<typeof import("@creatoros/ai-worker")>(),
   modelFor: vi.fn(() => ({}) as never),
   runStructuredNode,
   // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。

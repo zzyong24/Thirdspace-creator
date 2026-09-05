@@ -6,8 +6,9 @@ import type { RequestContext } from "@creatoros/contract";
 // runner 解析 model(resolveModelSpec)→ runStructuredNode 拿 object → normalizeLearnings +
 // recordCandidate。这里把 runStructuredNode 打桩成返回固定 object,验证:capability 被正确解析、
 // 候选被记录、归一逻辑(经验列表)仍按约定产出。
-const runStructuredNode = vi.fn(async () => ({ object: { learnings: [] } }));
-vi.mock("@creatoros/ai-worker", () => ({
+const { runStructuredNode } = vi.hoisted(() => ({ runStructuredNode: vi.fn(async () => ({ object: { learnings: [] } })) }));
+vi.mock("@creatoros/ai-worker", async (importActual) => ({
+  ...await importActual<typeof import("@creatoros/ai-worker")>(),
   modelFor: vi.fn(() => ({}) as never),
   runStructuredNode,
   // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。

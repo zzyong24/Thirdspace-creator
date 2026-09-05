@@ -1,11 +1,7 @@
 import type { RequestContext } from "@creatoros/contract";
 import type { AiService } from "@creatoros/backend/modules/ai";
 import type { ModelSpec, ContractOutput } from "@creatoros/ai-worker";
-import {
-  assembleCreativeContext,
-  type ContextDeps,
-  type CreativeContext,
-} from "./creative-context";
+import { preparePlanningContractContext, projectPlanningContractCandidate, type PlanningContractContextDeps } from "./planning-contract-context";
 
 // 内容合同 runner (planning.contract node, 策划 stage). It reads the creative context
 // (定位 + 选题 + 过往复盘) and DRAFTS a 内容合同 — the creator's contract with the
@@ -21,7 +17,7 @@ import {
 // where id ∈ "contract-audience"|"contract-value"|"contract-pacing"|"contract-cta" —
 // exactly the ContractCard ids the 策划 workspace reads back (planning-workspace-data.ts).
 
-export interface PlanningContractDeps extends ContextDeps {
+export interface PlanningContractDeps extends PlanningContractContextDeps {
   ai: AiService;
   /** 按 capability 解析用户配的 model(Vercel SDK)。 */
   resolveModelSpec: (
@@ -36,76 +32,6 @@ export interface PlanningContractTask {
   inputData: Record<string, unknown>;
 }
 
-// The four locked contract angles (id ↔ title), in the page's locked order. The agent
-// fills each angle's `body`; the id/title are fixed so the read side renders the same four
-// ContractCard slots (受众定位 / 价值主张 / 核心节奏 / 行动召唤).
-const CONTRACT_ANGLES: ReadonlyArray<{ id: string; title: string }> = [
-  { id: "contract-audience", title: "受众定位" },
-  { id: "contract-value", title: "价值主张" },
-  { id: "contract-pacing", title: "核心节奏" },
-  { id: "contract-cta", title: "行动召唤" },
-];
-
-interface ContractCardDraft {
-  id: string;
-  title: string;
-  body: string;
-}
-
-// 把 CreativeContext 映射成 planning.contract 模板的 facets(占位化原 buildContractPrompt 的上下文块）。
-function contractFacets(
-  context: CreativeContext,
-): Record<string, string | undefined> {
-  return {
-    positioning: context.positioningBrief
-      ? context.positioningBrief
-      : "（创作者尚未设置定位——按通用爆款逻辑产内容合同）",
-    learnings: context.learningsBrief
-      ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-      : "",
-    topic: context.topic.title
-      ? `\n【本期选题】${context.topic.title}${
-          context.topic.angle ? `（切入：${context.topic.angle}）` : ""
-        }`
-      : "",
-  };
-}
-
-// Map the agent's title-keyed object onto the four locked ContractCard slots. The agent may
-// key by Chinese title (受众定位…) or by id (contract-audience…) — accept either; drop a
-// card only when its body is empty.
-function pickBody(
-  obj: Record<string, unknown>,
-  id: string,
-  title: string,
-): string {
-  const byTitle = obj[title];
-  if (typeof byTitle === "string" && byTitle.trim()) return byTitle.trim();
-  const byId = obj[id];
-  if (typeof byId === "string" && byId.trim()) return byId.trim();
-  return "";
-}
-
-// Map the schema-validated object onto the four locked ContractCard slots (T-025:结构化后
-// 拿的是已解析对象,pickBody 按 title/id 取值的容错原样保留)。
-function normalizeContract(obj: ContractOutput): ContractCardDraft[] {
-  return CONTRACT_ANGLES.map((angle): ContractCardDraft => ({
-    id: angle.id,
-    title: angle.title,
-    body: pickBody(obj, angle.id, angle.title),
-  })).filter((card) => card.body.length > 0);
-}
-
-// A readable Markdown rendering (the ArtifactVersion's contentText) — used for search and
-// as the flat blob the confirm branch requires (`resultData.body`).
-function renderBody(cards: ContractCardDraft[]): string {
-  const lines: string[] = ["# 内容合同", ""];
-  for (const card of cards) {
-    lines.push(`## ${card.title}`, card.body, "");
-  }
-  return lines.join("\n").trimEnd();
-}
-
 export async function runPlanningContract(
   ctx: RequestContext,
   task: PlanningContractTask,
@@ -113,22 +39,7 @@ export async function runPlanningContract(
 ): Promise<void> {
   try {
     await deps.ai.markRunning(ctx, task.id);
-    const artifactId =
-      typeof task.inputData.artifactId === "string"
-        ? task.inputData.artifactId
-        : "";
-    if (!artifactId) {
-      // The confirm path appends a NEW ArtifactVersion onto this artifact; without it the
-      // candidate cannot be materialized. Fail loud (caught below → cancelTask).
-      throw new Error("planning-contract-runner: inputData.artifactId is required");
-    }
-    const topic =
-      typeof task.inputData.topic === "string" ? task.inputData.topic : "";
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: task.projectId, topic },
-      deps,
-    );
+    const facets = await preparePlanningContractContext(ctx, task, deps);
     // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 planning.contract 模板
     // + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),让 MiniMax
     // 也稳定吐可解析合同(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败→cancelled)。
@@ -140,35 +51,18 @@ export async function runPlanningContract(
     const { object } = await runStructuredNode<ContractOutput>({
       model: modelFor(spec),
       template: getTemplate("planning.contract"),
-      facets: contractFacets(context),
+      facets,
     });
-    const cards = normalizeContract(object);
-    if (cards.length === 0) {
-      throw new Error(
-        "planning-contract-runner: agent returned no parseable contract cards",
-      );
-    }
+    const candidate = projectPlanningContractCandidate(task.inputData, object);
+    const cardCount = (candidate.resultData.cards as unknown[]).length;
     // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
     await deps.ai.recordStep(ctx, task.id, {
       stepNo: 1,
       kind: "step",
-      text: `已生成内容合同（${cards.length} 条承诺）`,
+      text: `已生成内容合同（${cardCount} 条承诺）`,
       toolCalls: [],
     });
-    await deps.ai.recordCandidate(ctx, task.id, {
-      resultType: "artifact_version",
-      artifactId,
-      resultData: {
-        body: renderBody(cards),
-        summary: "AI 内容合同草稿",
-        // Raw cards — kept so the 采纳 card preview (PlanningContractIsland.parseCards)
-        // renders the four contract angles.
-        cards,
-        // Structured editable payload forwarded by the AI confirm branch to createVersion
-        // as `contentData` (round-trips into the 策划 内容合同 read side).
-        contentData: { cards },
-      },
-    });
+    await deps.ai.recordCandidate(ctx, task.id, candidate);
   } catch (err) {
     try {
       await deps.ai.cancelTask(ctx, task.id);

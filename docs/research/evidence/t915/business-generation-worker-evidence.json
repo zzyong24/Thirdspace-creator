@@ -1,0 +1,142 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T15:56:58.660878+00:00",
+  "status": "复盘与内容合同生产生成迁移增量；完整任务仍进行中",
+  "implemented": [
+    "review.analyze 与 planning.contract 经同一持久结构化 Worker 执行，删除生产旧宿主分支",
+    "复盘冻结当前项目真实文稿/指标/评论；输入自报指标不能替代真实数据，缺数据在调用模型前明确失败",
+    "合同准备校验真实工件归属、显式项目及类型；保留只传真实工件 ID 的旧请求、原四槽和非空子集协议",
+    "学习经验采纳使用候选/内容项稳定键，按用户和账号派生稳定 ID；丢回执/并发重投回读既有事实，不覆盖用户编辑或 discard",
+    "复盘有真实指标才保留 grounded→validated，未确认前不写经验；没有指标的内部创建仍 candidate",
+    "修复未绑定 queued 准备失败不能进入 failed 导致永久排队；不伪造 startedAt，旧宿主不能覆盖持久执行/取消状态",
+    "Worker 在保存前固定验真复盘/合同协议，无效业务输出明确failed而非提交未知；Worker与后端共享合同槽常量，保留合法单槽"
+  ],
+  "flow": "真实项目资料 → 后端冻结 → 持久结构化 Worker → 业务候选 → 用户确认 → 幂等领域写入",
+  "verification": {
+    "reviewContext": {
+      "tests": 21,
+      "files": 4,
+      "log": "review-insights-green.log"
+    },
+    "planningContext": {
+      "tests": 14,
+      "files": 2,
+      "log": "planning-contract-context-green.log"
+    },
+    "learnings": {
+      "tests": 57,
+      "files": 7,
+      "log": "learning-adoption-key-green.log"
+    },
+    "backendRegression": {
+      "tests": 72,
+      "files": 4,
+      "log": "business-worker-backend-regression.log"
+    },
+    "aiFinalRegression": {
+      "tests": 58,
+      "files": 3,
+      "log": "business-worker-ai-regression.log"
+    },
+    "publicEntry": {
+      "tests": 6,
+      "files": 2,
+      "log": "business-worker-entry-complete.log",
+      "scope": "隔离实际 PGlite + 构建后的真实子进程 + 本地 HTTP；真实指标记录通过实际服务读取后进入供应商请求；确认前无经验，写后丢回执及首次并发确认只存一次；无真实指标/跨项目合同在模型前失败；实际子进程空经验结果明确failed并无候选/领域写入；旧仅工件ID合同请求兼容"
+    },
+    "types": {
+      "backend": "business-worker-types.log",
+      "frontend": "business-worker-frontend-types.log"
+    },
+    "boundary": {
+      "newViolations": 0,
+      "baselineRemaining": 5,
+      "log": "business-worker-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "business-worker-orphan.log"
+    },
+    "workerOutput": {
+      "tests": 29,
+      "log": "business-worker-output-green.log",
+      "scope": "真实本地HTTP/内存端口，文本与原生协议下固定业务输出门，不是公网供应商实测"
+    },
+    "reconcile": {
+      "log": "business-worker-reconcile.log",
+      "errors": 211,
+      "warnings": 1,
+      "exitCode": 1,
+      "status": "全局历史欠债仍由T-916跟踪，不宣称全绿"
+    },
+    "scope": {
+      "log": "business-worker-scope.log",
+      "errors": []
+    },
+    "contextFinal": {
+      "tests": 29,
+      "files": 4,
+      "log": "business-worker-context-final.log",
+      "scope": "共享合同槽常量后旧runner与新准备/投影共同回归"
+    }
+  },
+  "redEvidence": [
+    {
+      "log": "learning-adoption-key-red.log",
+      "fact": "领域创建后丢回执/重放重复写入，真实 PGlite 红测 1 fail/1 pass"
+    },
+    {
+      "log": "planning-contract-entry-red.log",
+      "fact": "旧合同正常生成但 executionTaskId 缺失，未使用统一持久 Worker"
+    },
+    {
+      "log": "business-preparation-failure-red.log",
+      "fact": "未绑定 queued 任务 markFailed 不落状态，实际服务测试失败"
+    },
+    {
+      "log": "business-worker-entry-green-final.log",
+      "fact": "负例模型前准备失败后任务永久 queued；此文件名含green但实际为3失败2通过，不作为通过证据"
+    },
+    {
+      "log": "review-insights-entry-red.log",
+      "fact": "首次测试捕获 createDb 而生产使用 createConfiguredDb，属于夹具错误"
+    },
+    {
+      "log": "review-insights-entry-routing-red.log",
+      "fact": "测试错把 projectId 放顶层导致未关联项目，属于夹具错误"
+    },
+    {
+      "log": "business-worker-entry-green.log",
+      "fact": "公开 DTO 不含 evidenceStrength；后续改按公开状态与实际领域行各自验证，不是业务行为红测"
+    },
+    {
+      "log": "review-insights-red.log",
+      "fact": "新模块缺失导致collection失败；不是行为红测"
+    },
+    {
+      "log": "planning-contract-context-red.log",
+      "fact": "新模块缺失导致collection失败；不是行为红测"
+    },
+    {
+      "log": "business-worker-output-red.log",
+      "fact": "宽Skill schema下无效业务对象被保存，真实本地HTTP红测12失败17通过；修复后29通过"
+    }
+  ],
+  "independentReview": {
+    "reviewer": "runtime_code_review",
+    "status": "PASS",
+    "resolved": [
+      "准备参数不应要求未消费的任务 ID",
+      "首次并发公开确认补测",
+      "queued→failed 的 CAS/执行权与取消保护复核"
+    ]
+  },
+  "limitations": [
+    "本地 HTTP 为供应商 fixture，未冒充三个真实供应商实测",
+    "稳定采纳以领域行保留事实；人工物理删除行且 AI 未记采纳回执的极短窗口未覆盖，公开模块没有物理删除接口，正常 discard/编辑保持幂等",
+    "各测试集存在交叉回归，不将数量简单相加",
+    "完整 R05 其余入口、浏览器 observe/act、至少30样本性能与双平台/真实供应商验收仍待完成",
+    "T-916 的全局历史对账欠债继续保留，不宣称项目全绿"
+  ]
+}
