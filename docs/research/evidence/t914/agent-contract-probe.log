@@ -1,0 +1,2 @@
+{"probe":"工具内容桥接（注入静态端口，未访问网页）","modelContent":[{"type":"text","text":"联网检索到 1 条"}],"detailsHasUrl":true,"modelContentHasUrl":false}
+{"probe":"失败终态（注入假引擎，不调模型）","returnedNormally":true,"meta":{"engine":"pi","stopReason":"llm_error","steps":0,"maxSteps":8,"tokensUsed":0,"maxTokens":20000,"toolCount":3,"dryRun":false},"artifact":{"taskType":"agentic.research","engine":"pi","goal":"受控审计","budget":{"maxSteps":8,"maxTokens":20000},"stopReason":"llm_error","steps":0,"tokensUsed":0,"summary":"模拟模型失败","output":{}}}

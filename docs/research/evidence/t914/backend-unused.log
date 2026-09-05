@@ -1,0 +1,16 @@
+src/modules/ai-runtime/chat-runner.ts(103,1): error TS6192: All imports in import declaration are unused.
+src/modules/ai-runtime/creative-context.ts(1320,10): error TS6133: 'formatThesisNodes' is declared but its value is never read.
+src/modules/ai-runtime/scheduled-collection-scheduler.ts(352,65): error TS6133: 'hi' is declared but its value is never read.
+src/modules/artifacts/artifacts.repository.ts(158,18): error TS6133: 'nextVersionNumber' is declared but its value is never read.
+src/modules/assets/assets.service.test.ts(16,3): error TS6133: 'ConflictError' is declared but its value is never read.
+src/modules/calibration/calibration.service.ts(25,3): error TS6133: 'ImmutableError' is declared but its value is never read.
+src/modules/execution/video-render/template.ts(760,11): error TS6133: 'layer' is declared but its value is never read.
+src/modules/projects/projects.service.ts(14,3): error TS6133: 'OutputStateError' is declared but its value is never read.
+src/modules/projects/projects.service.ts(775,5): error TS6133: 'missingLabel' is declared but its value is never read.
+src/modules/projects/projects.transport.ts(198,23): error TS6133: 'query' is declared but its value is never read.
+src/modules/settings/settings.service.test.ts(6,3): error TS6133: 'PromptValidationError' is declared but its value is never read.
+src/modules/settings/settings.service.ts(10,3): error TS6196: 'AccountSkillOverlayVersionRow' is declared but never used.
+../contract/src/operations/topic-attribution.ts(1,1): error TS6133: 'z' is declared but its value is never read.
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit --noUnusedLocals --noUnusedParameters
