@@ -65,6 +65,7 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
             ? `联网检索到 ${res.results.length} 条`
             : `未配联网检索,降级模型记忆(需核实),${res.results.length} 条`;
         return {
+          hasEvidence: res.grounding === "web" && res.results.some(row => Boolean(row.url.trim())),
           summary: note,
           data: { grounding: res.grounding, results: res.results },
         };
@@ -99,6 +100,7 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
         const windowed = res.fullText.slice(0, RESEARCH_WEB_READ_WINDOW_CHARS);
         const truncated = res.fullText.length > RESEARCH_WEB_READ_WINDOW_CHARS;
         return {
+          hasEvidence: Boolean(res.sourceUrl.trim() && windowed.trim()),
           summary: `读到《${res.title}》正文 ${windowed.length} 字${truncated ? "(已分窗截断)" : ""}`,
           data: {
             title: res.title,
@@ -137,6 +139,7 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
         }
         const { pendingId } = await ports.knowledgeWrite(p, signal);
         return {
+          hasEvidence: Boolean(pendingId.trim()),
           summary: `已写入 pending 知识原子「${p.title}」(待确认门采纳)`,
           data: { pendingId, title: p.title },
         };

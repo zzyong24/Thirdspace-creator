@@ -4528,3 +4528,14 @@ describe("[T-390] web.read 被拒多路回退 — blocked → error + alternates
     expect(result.serpNote).toBe(WEB_READ_SERP_NOTE);
   });
 });
+
+it("T-915 同查询失败后可重新执行，不缓存拒绝结果", async () => {
+  const gatherMaterials = vi.fn()
+    .mockRejectedValueOnce(new Error("瞬时断连"))
+    .mockResolvedValueOnce({grounding: "web", items: []});
+  const {deps} = makeDeps({gatherMaterials});
+  const gather = buildChatTools(["material.gather"], deps)["material.gather"]!;
+  await runExecute(gather, {query: "真实来源"});
+  await runExecute(gather, {query: "真实来源"});
+  expect(gatherMaterials).toHaveBeenCalledTimes(2);
+});

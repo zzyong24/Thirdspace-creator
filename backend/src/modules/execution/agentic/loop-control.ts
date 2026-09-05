@@ -10,7 +10,7 @@
 
 /** 步数 + token 预算硬顶(SPEC §4.2)。 */
 export interface LoopBudget {
-  /** 最大循环步数(每步 = 一次「想 + 可能一次工具调用」)。 */
+  /** 最大循环步数(每步 = 一次模型请求或一次工具调用；确定性适配器按工具计步)。 */
   maxSteps: number;
   /** 最大累计 token(引擎每步推理烧的 token 之和)。 */
   maxTokens: number;
@@ -40,6 +40,8 @@ export interface LoopController {
    * 到顶时终止原因置 max_steps。
    */
   beginStep(): boolean;
+  /** 调用前检查停止状态与剩余预算，不消耗一步。 */
+  canContinue(): boolean;
   /**
    * 记账本步推理烧的 token;未超预算 → 返回 true;超了 → 返回 false + 终止原因置 budget_exhausted
    * (引擎须诚实停)。
@@ -65,23 +67,27 @@ export function createLoopController(
   let tokens = Math.max(0, checkpoint?.tokensUsed ?? 0);
   let reason: StopReason | null = null;
 
+  const canContinue = (): boolean => {
+    if (reason) return false;
+    if (tokens >= budget.maxTokens) { reason = "budget_exhausted"; return false; }
+    if (steps >= budget.maxSteps) { reason = "max_steps"; return false; }
+    return true;
+  };
+
   return {
     budget,
+    canContinue,
     stepsUsed: () => steps,
     tokensUsed: () => tokens,
     beginStep() {
-      if (reason) return false; // 已终止,不再开步
-      if (steps >= budget.maxSteps) {
-        reason = "max_steps";
-        return false;
-      }
+      if (!canContinue()) return false;
       steps += 1;
       return true;
     },
     chargeTokens(n) {
       tokens += Math.max(0, Math.floor(n));
-      if (tokens > budget.maxTokens) {
-        reason = "budget_exhausted";
+      if (tokens >= budget.maxTokens) {
+        if (!reason) reason = "budget_exhausted";
         return false;
       }
       return true;

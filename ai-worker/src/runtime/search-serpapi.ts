@@ -52,7 +52,7 @@ export function createSerpapiAdapter(
     async search(
       spec: SearchSpec,
       query: string,
-      opts: Required<SearchWebOptions>,
+      opts: Required<Pick<SearchWebOptions, "count" | "timeoutMs">> & Pick<SearchWebOptions, "signal">,
     ): Promise<SearchResult[]> {
       // engine 走 spec.model(用户可配,默认 google);api_key 走 query(SerpApi 官方约定)。
       const engine = spec.model.trim() || "google";
@@ -68,6 +68,7 @@ export function createSerpapiAdapter(
         { method: "GET" },
         opts.timeoutMs,
         "serpapi",
+        opts.signal,
       );
       if (!res.ok) {
         throw new SearchExecutionError(

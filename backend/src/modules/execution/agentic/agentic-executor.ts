@@ -169,11 +169,20 @@ export function createAgenticExecutor(
         signal,
       });
 
+      // 只认端口确认的事实，不将登录提示、空搜索或模型“完成”宣称当业务产物。
+      signal.throwIfAborted();
+      if (final.hasUsableOutput !== true) {
+        throw new Error(`自主任务未产生可用结果（${final.stopReason}）`);
+      }
+      const completeness = final.stopReason === "completed" ? "completed" : "partial";
+      const actualEngine = final.actualEngine ?? deps.engine.name;
+
       // ⑤ 确认门:最终产物写 out/(**不算落库**);经既有 harvest→manifest→confirm 采纳才入库(铁律②)。
       await reportStep("写自主循环产物 out/agentic-result.json(待确认门采纳)");
       const payload = {
         taskType: deps.taskType,
-        engine: deps.engine.name,
+        engine: actualEngine,
+        completeness,
         goal,
         budget,
         stopReason: final.stopReason,
@@ -191,7 +200,8 @@ export function createAgenticExecutor(
       return {
         summary: final.summary,
         meta: {
-          engine: deps.engine.name,
+          engine: actualEngine,
+          completeness,
           stopReason: final.stopReason,
           steps: final.steps,
           maxSteps: budget.maxSteps,

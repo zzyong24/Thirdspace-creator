@@ -60,9 +60,14 @@ export interface BrowserPoolDeps<C extends PoolCapableContext = PoolCapableConte
   wipeMemberStorage?: (memberDir: string) => Promise<void>;
 }
 
+export interface PoolAcquireOptions {
+  signal?: AbortSignal;
+  deadlineAt?: number;
+}
+
 export interface BrowserPool<C extends PoolCapableContext = PoolCapableContext> {
   /** 取一个注入好该域登录态的成员 context。全 busy → FIFO 排队等归还。 */
-  checkout(domain: string, session: PoolSessionPorts): Promise<PoolHandle<C>>;
+  checkout(domain: string, session: PoolSessionPorts, options?: PoolAcquireOptions): Promise<PoolHandle<C>>;
   /** 可观测:池大小/忙碌数/排队数(诊断用)。 */
   stats(): { size: number; busy: number; queued: number };
 }
@@ -124,6 +129,8 @@ interface Member {
 }
 
 interface Waiter {
+  options: PoolAcquireOptions;
+  cleanup: () => void;
   domain: string;
   session: PoolSessionPorts;
   resolve: (h: PoolHandle) => void;
@@ -157,7 +164,12 @@ export function createBrowserPool<C extends PoolCapableContext>(
   const wakeNext = (): void => {
     const w = waiters.shift(); // 严格 FIFO
     if (!w) return;
-    acquire(w.domain, w.session).then(w.resolve, w.reject);
+    w.cleanup();
+    acquire(w.domain, w.session, w.options).then(w.resolve, (error) => {
+      w.reject(error);
+      // 队首可能在 timer 执行前已过期，尚未取得成员便失败；不能让后续队列失去唤醒。
+      if (members.some((member) => !member.busy)) wakeNext();
+    });
   };
 
   const makeHandle = (
@@ -205,20 +217,38 @@ export function createBrowserPool<C extends PoolCapableContext>(
   const acquire = async (
     domain: string,
     session: PoolSessionPorts,
+    options: PoolAcquireOptions = {},
   ): Promise<PoolHandle<C>> => {
+    const check = () => {
+      options.signal?.throwIfAborted();
+      if (options.deadlineAt !== undefined && Date.now() >= options.deadlineAt) throw new Error("浏览器等待已超时");
+    };
+    check();
     const excluded = new Set<string>(); // 本次 acquire 内擦除失败被拒用的成员
     for (;;) {
+      check();
       const member = pickIdle(domain, excluded);
       if (!member) {
         if (members.some((m) => m.busy)) {
           // 全 busy(或余下的都被拒用)→ FIFO 排队,等归还唤醒。
           return new Promise<PoolHandle<C>>((resolve, reject) => {
-            waiters.push({
-              domain,
-              session,
-              resolve: resolve as (h: PoolHandle) => void,
-              reject,
-            });
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const waiter: Waiter = {
+              domain, session, options,
+              resolve: resolve as (h: PoolHandle) => void, reject,
+              cleanup: () => { options.signal?.removeEventListener("abort", cancel); if (timer) clearTimeout(timer); },
+            };
+            const cancel = () => {
+              const index = waiters.indexOf(waiter);
+              if (index < 0) return;
+              waiters.splice(index, 1);
+              waiter.cleanup();
+              reject(options.signal?.reason ?? new Error("浏览器等待已超时"));
+            };
+            waiters.push(waiter);
+            options.signal?.addEventListener("abort", cancel, {once: true});
+            if (options.deadlineAt !== undefined) timer = setTimeout(cancel, Math.max(0, options.deadlineAt - Date.now()));
+            if (options.signal?.aborted) cancel();
           });
         }
         // 无 busy 成员却无可用成员 = 所有 idle 成员擦除都失败 → 诚实报错(不带脏注入)。
@@ -242,14 +272,20 @@ export function createBrowserPool<C extends PoolCapableContext>(
         }
         member.lastDomain = null; // 擦干净 = 如新
       }
+      let ctx: C | undefined;
       try {
-        const ctx = await deps.launch(member.dir);
+        check();
+        ctx = await deps.launch(member.dir);
+        check();
         // 注入(§2.5):DB 有该域 state → addCookies + localStorage init script 回灌;
         // 无/解密失败(getState 已 logged 返 null)→ 干净 context(读取会诚实撞登录墙)。
         const stateJson = await session.getState(domain).catch(() => null);
+        check();
         if (stateJson) await injectStorageState(ctx, stateJson);
+        check();
         return makeHandle(member, ctx, domain, session);
       } catch (err) {
+        await ctx?.close().catch(() => {});
         // launch/注入失败 → 释放预留 + 唤醒队列(别把成员卡成永久 busy),错误原样上抛。
         member.busy = false;
         wakeNext();
@@ -259,7 +295,7 @@ export function createBrowserPool<C extends PoolCapableContext>(
   };
 
   return {
-    checkout: (domain, session) => acquire(domain, session),
+    checkout: (domain, session, options) => acquire(domain, session, options),
     stats: () => ({
       size,
       busy: members.filter((m) => m.busy).length,

@@ -251,6 +251,7 @@ export async function captureUrl(
   };
   signal?.addEventListener("abort", onAbort, { once: true });
   try {
+    if (signal?.aborted) throw makeAbortError("截图");
     const page = await ctx.newPage();
     // 导航:networkidle + 20s 超时。导航失败(超时/DNS/net error)→ 「页面打不开」。
     let resp: CaptureNavResponse | null;

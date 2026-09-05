@@ -528,6 +528,7 @@ export async function readUrl(
   };
   signal?.addEventListener("abort", onAbort, { once: true });
   try {
+    if (signal?.aborted) throw makeAbortError("网页读取");
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     let resp: ReaderNavResponse | null;
     try {

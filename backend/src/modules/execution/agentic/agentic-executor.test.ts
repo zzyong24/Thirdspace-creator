@@ -293,3 +293,43 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
     expect(ai.failures[0]).toContain("无可用领域工具");
   });
 });
+
+describe("T-915 失败与部分结果的公开编排", () => {
+  for (const partial of [false, true]) {
+    it(partial ? "中途失败仍保留已取得的来源并标记 partial" : "只有故障诊断时不产生完成候选", async () => {
+      const registry = createExecutorRegistry();
+      const { ports } = makeResearchPorts();
+      registry.register(createAgenticExecutor({
+        taskType: "agentic.research",
+        engine: {name: "pi", run: async () => ({hasUsableOutput: partial, summary: "模型连接失败", steps: 1, stopReason: "llm_error", output: {outputs: partial ? {"web.read": {sourceUrl: "https://example.com", fullText: "已取得正文"}} : {}, error: "provider_error"}})},
+        resolveLlm: () => fakeLlm(), resolveTools: () => createResearchTools(ports), defaultBudget: {maxSteps: 8, maxTokens: 10000},
+      }));
+      const ai = makeFakeAi();
+      await runExecutionTask(ctx, {id: "failed-run", inputData: agenticSpec()}, {ai, assets, registry, workspacesRoot: root});
+      if (partial) {
+        expect(ai.candidates).toHaveLength(1);
+        const manifest = ai.candidates[0]!.resultData.manifest as {meta: {completeness: string}};
+        expect(manifest.meta.completeness).toBe("partial");
+      } else {
+        expect(ai.candidates).toHaveLength(0);
+        expect(ai.statuses).toContain("failed");
+      }
+    });
+  }
+});
+
+for (const mode of ["login", "empty"] as const) {
+  it(`T-915 ${mode} 诊断经真实工具与引擎也不产生候选`, async () => {
+    const {ports} = makeResearchPorts();
+    ports.webSearch = async () => ({grounding: "web", results: []});
+    ports.webRead = async () => ({needLogin: true, domain: "example.com"});
+    const tools = createResearchTools(ports).filter(tool => tool.name === (mode === "login" ? "web.read" : "web.search"));
+    if (mode === "login") tools[0]!.planInput = () => ({url: "https://example.com"});
+    const registry = createExecutorRegistry();
+    registry.register(makeExecutor(() => tools));
+    const ai = makeFakeAi();
+    await runExecutionTask(ctx, {id: `no-evidence-${mode}`, inputData: agenticSpec()}, {ai, assets, registry, workspacesRoot: root});
+    expect(ai.candidates).toHaveLength(0);
+    expect(ai.statuses).toContain("failed");
+  });
+}

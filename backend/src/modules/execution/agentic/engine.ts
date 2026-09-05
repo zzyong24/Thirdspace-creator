@@ -36,6 +36,8 @@ export interface AgenticToolExecOpts {
 
 /** 领域工具一次执行的产出(回给引擎读,并累积进最终产物)。 */
 export interface AgenticToolResult {
+  /** 端口确认返回真实来源、实体、候选或执行回执；登录提示与空检索不算。 */
+  hasEvidence?: boolean;
   /** 人话一句(喂步骤流 + 产物 summary)。 */
   summary: string;
   /** 结构化数据(引擎下一步决策读它;落最终产物)。 */
@@ -140,6 +142,10 @@ export interface AgenticEngineRunInput {
 
 /** 一次自主循环的最终产物(执行器写 out/ → manifest → 确认门)。 */
 export interface AgenticEngineFinal {
+  /** 由工具回执累计，不依据模型的“已完成”文本。 */
+  hasUsableOutput?: boolean;
+  /** 实际完成本次执行的引擎，包含 fallback 后的真实来源。 */
+  actualEngine?: string;
   /** 人话一句(整轮结论)。 */
   summary: string;
   /** 结构化产物(含 goal/各工具产出/工具调用日志/停因)。 */

@@ -231,7 +231,7 @@ export interface ChatToolDeps {
    *   - grounding: "web"=经浏览器检索、"unavailable"=浏览器失败且无伪造兜底。
    *   - items[].sourceUrl: 该条素材引用的检索真实 URL(有则前端渲可点域名链接;无则渲需核实徽标)。
    */
-  gatherMaterials: (input: { query?: string }) => Promise<{
+  gatherMaterials: (input: { query?: string; signal?: AbortSignal }) => Promise<{
     grounding: "web" | "unavailable";
     items: Array<{
       title: string;
@@ -3548,18 +3548,24 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         ? "围绕主题用随包浏览器真实搜索创作资料，只返回带真实 URL 的结果。创作者可逐条挑选并保存到当前项目的「创作素材」。不要要求用户配置搜索模型；不要用模型记忆补齐不存在的案例、数据或金句。要拉实时热榜信号则用 topic.generate(basis=trend)，它读取『内容雷达』的真实信号。"
         : "当前宿主没有装配浏览器搜索端口，调用会诚实失败；不要用模型记忆伪造搜索结果，也不要引导用户配置已经下线的搜索模型。",
       inputSchema: MATERIAL_GATHER_PARAMS,
-      execute: async ({ query }): Promise<MaterialGatherToolResult> => {
+      execute: async ({ query }, options): Promise<MaterialGatherToolResult> => {
+        const signal = (options as {abortSignal?: AbortSignal} | undefined)?.abortSignal;
+        signal?.throwIfAborted();
         const normalizedQuery = (query ?? "").trim().replace(/\s+/g, " ");
         const existing = materialGatherRuns.get(normalizedQuery);
         if (existing) return existing;
         const run = (async (): Promise<MaterialGatherToolResult> => {
           const { items, grounding } = await deps.gatherMaterials({
             query: normalizedQuery,
+            ...(signal ? {signal} : {}),
           });
           return { kind: "material.gather", grounding, items };
         })();
         materialGatherRuns.set(normalizedQuery, run);
-        return run;
+        try { return await run; } catch (error) {
+          materialGatherRuns.delete(normalizedQuery);
+          throw error;
+        }
       },
     }, deps.humanizeError),
     // [T-084b] 自动化截图:给公开 URL,服务端真开无头浏览器截图 → 落素材中心(带 sourceUrl

@@ -156,7 +156,7 @@ export interface AssembleChatDeps extends ContextDeps {
   searchWeb?: (
     ctx: RequestContext,
     query: string,
-    opts?: { count?: number },
+    opts?: { count?: number; signal?: AbortSignal },
   ) => Promise<
     Array<{
       title: string;
@@ -1924,7 +1924,7 @@ export async function buildChatAssembly(
         };
       }
     },
-    gatherMaterials: async ({ query }) => {
+    gatherMaterials: async ({ query, signal }) => {
       // [T-684] 素材搜索直接复用随包浏览器结果。搜索模型已经下线，不再调用
       // research.gather 用模型记忆“补齐”钩子/案例/数据/金句，避免无 URL 假素材。
       const baseQuery = query?.trim() || selectionTitle || "";
@@ -1943,7 +1943,7 @@ export async function buildChatAssembly(
         publishedAt?: string;
         siteName?: string;
       }> = effQuery
-        ? await deps.searchWeb(ctx, effQuery, { count: 10 })
+        ? await deps.searchWeb(ctx, effQuery, { count: 10, ...(signal ? {signal} : {}) })
         : [];
       return {
         grounding: "web" as const,

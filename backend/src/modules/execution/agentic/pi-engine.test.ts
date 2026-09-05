@@ -417,6 +417,64 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     __setPiSdkForTest(undefined);
   });
 
+  it("T-915 真实 SDK 下一轮 provider 请求包含工具来源正文", async () => {
+    expect(sdk).not.toBeNull(); expect(faux).not.toBeNull();
+    const core = faux!.createFauxCore({api: "creatoros-faux", provider: "creatoros-user", models: [{id: "MiniMax-M2"}]});
+    let nextContext = "";
+    core.setResponses([
+      faux!.fauxAssistantMessage(faux!.fauxToolCall("web.search", {query: "来源"}), {stopReason: "tool_use"}),
+      (context: unknown) => { nextContext = JSON.stringify(context); return faux!.fauxAssistantMessage("已有来源", {stopReason: "end_turn"}); },
+    ]);
+    __setPiSdkForTest(sdk);
+    const search = makeTool("web.search");
+    search.tool.execute = async () => ({summary: "找到来源", data: {url: "https://example.com/evidence", body: "模型应看到的正文证据"}});
+    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    expect(final.stopReason).toBe("completed");
+    expect(nextContext).toContain("https://example.com/evidence");
+    expect(nextContext).toContain("模型应看到的正文证据");
+  });
+
+  it("T-915 同轮多个工具逐次扣步，达到预算后不发下一次模型请求", async () => {
+    expect(sdk).not.toBeNull(); expect(faux).not.toBeNull();
+    const core = faux!.createFauxCore({api: "creatoros-faux", provider: "creatoros-user", models: [{id: "MiniMax-M2"}]});
+    let modelCalls = 0;
+    core.setResponses(Array.from({length: 5}, () => () => {
+      modelCalls++;
+      return faux!.fauxAssistantMessage([
+        faux!.fauxToolCall("web.search", {query: "一"}, {id: "one"}),
+        faux!.fauxToolCall("web.search", {query: "二"}, {id: "two"}),
+      ], {stopReason: "tool_use"});
+    }));
+    __setPiSdkForTest(sdk);
+    const search = makeTool("web.search");
+    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 2, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    expect(modelCalls).toBe(1);
+    expect(search.calls).toHaveLength(1);
+    expect(final.stopReason).toBe("max_steps");
+    expect(final.steps).toBe(2);
+  });
+
+  it("T-915 同名工具后续空结果不能覆盖先前已取得的证据", async () => {
+    expect(sdk).not.toBeNull(); expect(faux).not.toBeNull();
+    const core = faux!.createFauxCore({api: "creatoros-faux", provider: "creatoros-user", models: [{id: "MiniMax-M2"}]});
+    core.setResponses([
+      faux!.fauxAssistantMessage(faux!.fauxToolCall("web.search", {query: "一"}), {stopReason: "tool_use"}),
+      faux!.fauxAssistantMessage(faux!.fauxToolCall("web.search", {query: "二"}), {stopReason: "tool_use"}),
+      faux!.fauxAssistantMessage("provider failed", {stopReason: "error"}),
+    ]);
+    __setPiSdkForTest(sdk);
+    let calls = 0;
+    const search = makeTool("web.search");
+    search.tool.execute = async () => ++calls === 1
+      ? {summary: "找到来源", hasEvidence: true, data: {url: "https://example.com/kept", body: "需要保留的证据"}}
+      : {summary: "无结果", hasEvidence: false, data: {results: []}};
+    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    expect(final.stopReason).toBe("llm_error");
+    expect(final.hasUsableOutput).toBe(true);
+    expect(JSON.stringify(final.output.evidence)).toContain("https://example.com/kept");
+    expect(JSON.stringify(final.output.evidence)).toContain("需要保留的证据");
+  });
+
   it("§6.1 生产 api 路径 + 诚实:custom anthropic-messages provider(dead baseUrl,无 faux)→ 真连网络失败 → stopReason llm_error(不假成功)", async () => {
     if (!sdk) return;
     __setPiSdkForTest(sdk);

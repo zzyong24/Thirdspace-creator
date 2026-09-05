@@ -1,0 +1,43 @@
+{
+  "task": "T-915",
+  "status": "in_progress",
+  "scope": "已确认完整重构范围中的运行时可靠性修复，非完整交付",
+  "implemented": [
+    "Pi 工具证据进入真实 SDK 后续 provider 请求",
+    "模型/工具调用前检查停止与步数预算，token 耗尽续跑拒绝新调用",
+    "迟到用量结算不覆盖取消状态，已有模型调用不整体 fallback 重放",
+    "有效工具证据按调用保留，部分结果保留，登录/空结果/诊断不冒充可采纳产物",
+    "真实 fallback 引擎标记",
+    "浏览器排队取消、到期队首唤醒与迟到 context 清理",
+    "对话检索取消贯通、失败缓存释放、搜索响应正文取消与超时"
+  ],
+  "verification": {
+    "backend_tests": {
+      "files": 11,
+      "passed": 416
+    },
+    "frontend_tests": {
+      "files": 5,
+      "passed": 84
+    },
+    "search_adapter_tests": {
+      "files": 2,
+      "passed": 18
+    },
+    "typecheck": [
+      "backend PASS",
+      "ai-worker PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "PASS，无新增违规；原有 5 条保留",
+    "code_review": "独立只读复查通过；发现的正文取消、到期队首、诊断候选与证据覆盖问题均修复并有回归"
+  },
+  "not_yet_delivered": [
+    "独立 Worker 生产入口与 IPC",
+    "唯一执行权迁移、持久检查点与恢复",
+    "七端口真实接线与浏览器自适应完整循环",
+    "全部生产入口迁移与旧实现退役",
+    "完整性能基线、真实供应商及 macOS/Windows 包验收"
+  ],
+  "governance": "progress.mjs 因旧 projects:repo 缺边界配置拒绝转换，仍属于 T-916；未绕过或写假完成；本次由主会话编码，子代理只读评审"
+}

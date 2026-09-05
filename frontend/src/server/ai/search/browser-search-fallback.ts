@@ -59,11 +59,11 @@ const ENGINES = [
  */
 export async function searchBundledBrowserWithFallback(
   query: string,
-  options: { count?: number } | undefined,
+  options: { count?: number; signal?: AbortSignal } | undefined,
   runEngine: (
     baseUrl: string | null,
     query: string,
-    options?: { count?: number },
+    options?: { count?: number; signal?: AbortSignal },
   ) => Promise<readonly BundledBrowserSearchHit[]>,
   onAttempt?: (attempt: BrowserSearchAttempt) => void,
   runtime?: BrowserSearchFallbackRuntime,
@@ -72,6 +72,7 @@ export async function searchBundledBrowserWithFallback(
   let completedEngine = false;
   const now = runtime?.now ?? Date.now;
   for (const engine of ENGINES) {
+    options?.signal?.throwIfAborted();
     if (
       engine.name === "baidu" &&
       runtime &&
@@ -89,6 +90,7 @@ export async function searchBundledBrowserWithFallback(
     const startedAt = Date.now();
     try {
       const rows = [...(await runEngine(engine.baseUrl, query, options))];
+      options?.signal?.throwIfAborted();
       completedEngine = true;
       onAttempt?.({
         engine: engine.name,
@@ -98,6 +100,7 @@ export async function searchBundledBrowserWithFallback(
       });
       if (rows.length > 0) return rows;
     } catch (error) {
+      options?.signal?.throwIfAborted();
       const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
       if (engine.name === "baidu" && runtime && isConfirmedLoginWall(error)) {
         runtime.state.baiduLoginWallBlockedUntil =

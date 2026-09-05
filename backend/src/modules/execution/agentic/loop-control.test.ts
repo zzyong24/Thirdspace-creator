@@ -73,3 +73,10 @@ describe("estimateTokens", () => {
     expect(estimateTokens("a".repeat(400))).toBe(100);
   });
 });
+
+ it("T-915 取消后迟到的用量结算不覆盖取消状态", () => {
+  const c = createLoopController({maxSteps: 10, maxTokens: 100});
+  c.markAborted(); c.chargeTokens(200);
+  expect(c.tokensUsed()).toBe(200);
+  expect(c.terminationReason()).toBe("aborted");
+});

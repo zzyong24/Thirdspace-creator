@@ -255,3 +255,22 @@ describe("searchWeb 工厂 —— registry 分派", () => {
     ).rejects.toThrow(SearchExecutionError);
   });
 });
+
+it("T-915 响应头已到、正文未结束时取消仍终止读取", async () => {
+  const controller = new AbortController();
+  let bodyStarted!: () => void;
+  const started = new Promise<void>(resolve => { bodyStarted = resolve; });
+  const fetchImpl = (async (_url: unknown, init?: RequestInit) => {
+    const body = new ReadableStream({start(stream) {
+      init?.signal?.addEventListener("abort", () => stream.error(init.signal?.reason), {once: true});
+      bodyStarted();
+    }});
+    return new Response(body);
+  }) as typeof fetch;
+  const pending = searchWeb(bochaSpec, "查来源", {bocha: createBochaAdapter(fetchImpl)}, {signal: controller.signal});
+  await started;
+  // 让 fetch 的响应头到达调用方。
+  await Promise.resolve(); await Promise.resolve();
+  controller.abort();
+  await expect(pending).rejects.toBe(controller.signal.reason);
+});

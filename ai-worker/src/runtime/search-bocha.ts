@@ -59,7 +59,7 @@ export function createBochaAdapter(
     async search(
       spec: SearchSpec,
       query: string,
-      opts: Required<SearchWebOptions>,
+      opts: Required<Pick<SearchWebOptions, "count" | "timeoutMs">> & Pick<SearchWebOptions, "signal">,
     ): Promise<SearchResult[]> {
       const res = await fetchWithTimeout(
         fetchImpl,
@@ -79,6 +79,7 @@ export function createBochaAdapter(
         },
         opts.timeoutMs,
         "bocha",
+        opts.signal,
       );
       if (!res.ok) {
         throw new SearchExecutionError(

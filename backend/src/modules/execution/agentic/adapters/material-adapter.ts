@@ -46,6 +46,7 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
         const { query } = searchParams.parse(input);
         const res = await ports.searchMaterials({ query }, signal);
         return {
+          hasEvidence: res.items.some(item => Boolean(item.id.trim())),
           summary: `搜到 ${res.items.length} 个素材`,
           data: { items: res.items },
         };
@@ -81,6 +82,7 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
           signal,
         );
         return {
+          hasEvidence: true,
           summary: `已给 ${affected} 个素材打标签「${tag}」`,
           data: { affected, tag },
         };

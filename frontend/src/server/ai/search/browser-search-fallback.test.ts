@@ -93,3 +93,10 @@ describe("内置浏览器检索双引擎降级", () => {
     expect(baiduCalls).toBe(2);
   });
 });
+
+it("T-915 取消后不再启动 Bing，也不把取消改写成搜索失败", async () => {
+  const controller = new AbortController();
+  const run = vi.fn(async () => {controller.abort(); throw controller.signal.reason;});
+  await expect(searchBundledBrowserWithFallback("查来源", {signal: controller.signal}, run)).rejects.toBe(controller.signal.reason);
+  expect(run).toHaveBeenCalledTimes(1);
+});

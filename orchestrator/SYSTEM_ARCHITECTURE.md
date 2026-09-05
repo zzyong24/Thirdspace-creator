@@ -22,7 +22,7 @@
 - **backend**(`backend/`):24 个业务模块(每个 = service / repository / schema / transport)。模块间只经 service port 协作。
 - **worker**(`worker/` 或 backend 的 `ai-runtime` 子包):Agent Runtime(ReAct + 工具 + 步骤日志)、抖音抓取、文件转写等后台活。
 
-> 部署说明:第一阶段 backend 仍可由 Next.js 进程内承载——这次改的是**代码归属**(模块搬出 frontend),不是马上拆进程。worker 作为独立执行体引入。持久队列(Redis+BullMQ)是后续阶段(Phase 6),不在第一波。
+> 部署目标（T-915 / DEC-RUNTIME-055）：backend 可由 Node/Next 进程承载，并单独打开数据库；独立执行 Worker 承载模型、Agent 与浏览器运行寿命，经私有受控 IPC 调用 backend service。复用 execution_tasks 作为唯一执行权，ai_tasks 保留业务结果与采纳投影，不引入 Redis 或第二数据库。当前迁移尚未验收，具体状态以 T-915 证据为准。
 
 ---
 

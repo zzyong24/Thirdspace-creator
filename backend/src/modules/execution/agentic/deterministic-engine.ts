@@ -47,6 +47,7 @@ export function createDeterministicAgenticEngine(): AgenticEngine {
 
       let stopReason: StopReason = "completed";
       let idx = 0;
+      let hasUsableOutput = false;
       while (idx < plan.length) {
         // abort 贯通:任一点被中止 → 诚实停(SPEC §4.7)。
         if (signal.aborted) {
@@ -107,6 +108,7 @@ export function createDeterministicAgenticEngine(): AgenticEngine {
         // 干跑决策(SPEC §4.4):发布/删除恒干跑,余按任务级。端口内做真副作用/限流/pending(铁律②/防封)。
         const dryRun = decideDryRun(tool);
         const result = await tool.execute(parsed.data, { signal, dryRun });
+        hasUsableOutput ||= result.hasEvidence === true;
         toolLog.push({ tool: tool.name, dryRun, summary: result.summary });
         outputs[tool.name] = result.data ?? result.summary;
         await onStep(
@@ -126,6 +128,7 @@ export function createDeterministicAgenticEngine(): AgenticEngine {
         `token ~${controller.tokensUsed()}/${controller.budget.maxTokens}`;
 
       return {
+        hasUsableOutput,
         summary,
         output: { goal, outputs, toolLog, stopReason },
         steps: controller.stepsUsed(),

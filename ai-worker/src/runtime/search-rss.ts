@@ -114,7 +114,7 @@ export function createRssAdapter(
     async search(
       spec: SearchSpec,
       query: string,
-      opts: Required<SearchWebOptions>,
+      opts: Required<Pick<SearchWebOptions, "count" | "timeoutMs">> & Pick<SearchWebOptions, "signal">,
     ): Promise<SearchResult[]> {
       const urls = feedUrls(spec);
       if (urls.length === 0) {
@@ -135,6 +135,7 @@ export function createRssAdapter(
               { method: "GET", headers: { Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*" } },
               opts.timeoutMs,
               "rss",
+              opts.signal,
             );
             if (!res.ok) {
               errors.push(`${url} HTTP ${res.status}: ${await safeText(res)}`);
@@ -149,6 +150,7 @@ export function createRssAdapter(
             }
             merged.push(...parseFeed(xml, siteName));
           } catch (err) {
+            opts.signal?.throwIfAborted();
             errors.push(
               `${url}: ${err instanceof Error ? err.message : String(err)}`,
             );

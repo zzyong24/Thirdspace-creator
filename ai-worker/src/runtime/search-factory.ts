@@ -48,6 +48,7 @@ export interface SearchResult {
 }
 
 export interface SearchWebOptions {
+  signal?: AbortSignal;
   /** 取回结果条数上限(top N,SPEC §1.2 建议 8~10)。默认 10。 */
   count?: number;
   /** 单次检索超时(ms)。SPEC §1.2:10s 失败降级。默认 10000。 */
@@ -60,7 +61,7 @@ export interface SearchProviderAdapter {
   search(
     spec: SearchSpec,
     query: string,
-    opts: Required<SearchWebOptions>,
+    opts: Required<Pick<SearchWebOptions, "count" | "timeoutMs">> & Pick<SearchWebOptions, "signal">,
   ): Promise<SearchResult[]>;
 }
 
@@ -98,6 +99,7 @@ export async function searchWeb(
   registry: SearchProviderRegistry,
   opts?: SearchWebOptions,
 ): Promise<SearchResult[]> {
+  opts?.signal?.throwIfAborted();
   const adapter = registry[spec.provider];
   if (!adapter) {
     throw new SearchConfigError(
@@ -107,6 +109,7 @@ export async function searchWeb(
   const trimmed = query.trim();
   if (!trimmed) return [];
   return adapter.search(spec, trimmed, {
+    ...(opts?.signal ? {signal: opts.signal} : {}),
     count: opts?.count ?? DEFAULT_COUNT,
     timeoutMs: opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   });

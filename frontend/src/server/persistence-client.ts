@@ -2467,6 +2467,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const openPooledReaderContext = async (
     ctx: RequestContext,
     domain: string,
+    control: { signal?: AbortSignal; deadlineAt?: number } = {},
   ): Promise<{
     pages: () => never[];
     newPage: () => Promise<never>;
@@ -2477,7 +2478,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       saveState: (d: string, stateJson: string) =>
         browserSessionsService.saveState(ctx, d, stateJson),
     };
+    control.signal?.throwIfAborted();
     const existing = await session.getState(domain).catch(() => null);
+    control.signal?.throwIfAborted();
     if (!existing) {
       try {
         await importLegacyProfileState(
@@ -2492,7 +2495,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         );
       }
     }
-    const handle = await browserPool.checkout(domain, session);
+    const handle = await browserPool.checkout(domain, session, control);
     const poolCtx = handle.context as unknown as {
       pages(): never[];
       newPage(): Promise<never>;
@@ -10446,7 +10449,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const searchWebPort = async (
     _ctx: RequestContext,
     query: string,
-    opts?: { count?: number },
+    opts?: { count?: number; signal?: AbortSignal },
   ) => {
     return searchBundledBrowserWithFallback(
       query,
@@ -12549,7 +12552,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           { fullPage: input.fullPage, signal: input.signal },
           {
             openContext: () =>
-              openPooledReaderContext(ctx, domain) as never,
+              openPooledReaderContext(ctx, domain, {signal: input.signal}) as never,
           },
         );
       }
@@ -12652,7 +12655,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           authDir: webAuthDirFor(domain),
           signal: input.signal,
         }, {
-          openContext: () => openPooledReaderContext(ctx, domain) as never,
+          openContext: () => openPooledReaderContext(ctx, domain, {signal: input.signal}) as never,
         });
       } catch (err) {
         if (err instanceof WebReaderLoginRequiredError) {

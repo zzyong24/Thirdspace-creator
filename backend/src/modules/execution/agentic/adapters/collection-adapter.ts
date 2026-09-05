@@ -48,6 +48,7 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
         const { query } = listTargetsParams.parse(input);
         const res = await ports.listTargets({ query }, signal);
         return {
+          hasEvidence: res.targets.some(target => Boolean(target.id.trim())),
           summary: `发现 ${res.targets.length} 个可采集目标`,
           data: { targets: res.targets },
         };
@@ -92,6 +93,7 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
           };
         }
         return {
+          hasEvidence: true,
           summary: `采集 ${targetId}:新增 ${res.itemsNew}、更新 ${res.itemsUpdated}`,
           data: {
             targetId,

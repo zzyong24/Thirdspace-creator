@@ -295,3 +295,44 @@ describe("checkout 注入 + return 回写(§2.5)", () => {
     }
   });
 });
+
+describe("T-915 排队取消与启动清理", () => {
+  it("池满排队时取消，立即移出队列且归还后不启动", async () => {
+    const {pool, launched} = makePool({size: 1});
+    const first = await pool.checkout("a.com", emptySession);
+    const controller = new AbortController();
+    const pending = pool.checkout("b.com", emptySession, {signal: controller.signal});
+    const rejection = expect(pending).rejects.toThrow();
+    controller.abort();
+    await rejection;
+    expect(pool.stats().queued).toBe(0);
+    await first.release();
+    expect(launched).toHaveLength(1);
+  });
+
+  it("启动途中取消，关闭迟到 context 并释放成员", async () => {
+    const controller = new AbortController();
+    const ctx = makeFakeCtx();
+    const pool = createBrowserPool({poolDir: "/tmp/pool", size: 1, launch: async () => {controller.abort(); return ctx;}});
+    await expect(pool.checkout("a.com", emptySession, {signal: controller.signal})).rejects.toThrow();
+    expect(ctx.closed).toBe(true);
+    expect(pool.stats().busy).toBe(0);
+  });
+});
+
+it("T-915 到期队首被归还操作先唤醒，不能阻塞后续有效等待者", async () => {
+  vi.useFakeTimers();
+  try {
+    const {pool} = makePool({size: 1});
+    const first = await pool.checkout("a.com", emptySession);
+    const expired = pool.checkout("b.com", emptySession, {deadlineAt: Date.now() + 100});
+    const rejected = expect(expired).rejects.toThrow();
+    const next = pool.checkout("a.com", emptySession);
+    vi.setSystemTime(Date.now() + 101);
+    await first.release();
+    await rejected;
+    const handle = await next;
+    await handle.release();
+    expect(pool.stats()).toMatchObject({busy: 0, queued: 0});
+  } finally {vi.useRealTimers();}
+});

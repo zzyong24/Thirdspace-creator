@@ -17,8 +17,8 @@
 //   · §6.1 回接:走 pi 自己的 custom-provider 机制 `ModelRegistry.registerProvider(name,{api,
 //     baseUrl,apiKey,authHeader,models})` + `find()` → `createAgentSession({model,modelRegistry})`。
 //     authHeader:true=Authorization Bearer(anthropic relay/MiniMax);falsy=api 默认(anthropic x-api-key)。
-//   · LoopController 桥接:`session.subscribe` 的 `turn_end` 事件带 `message.usage{input,output}`
-//     → 每 turn `beginStep()`+`chargeTokens()`;超顶 `session.abort()`(abort 异步,≤1 turn 余量)。
+//   · LoopController 在 streamFn/工具执行前分别 admission，message_end 结算 usage；
+//     已提交的模型请求不整体回退重放，取消与耗尽在下一次调用前拦截。
 //   · customTools 参数:zod → `z.toJSONSchema(schema,{io:"input"})`(去 $schema)= 纯 JSON Schema;
 //     pi 的 validateToolArguments 走非-TypeBox 分支校验+coerce;**权威校验仍在 execute 内我方 zod safeParse**。
 //   · 依赖缺席/打包实拷缺失/无 llmConfig/运行异常 → 退 deterministic 兜底(保留现有全绿默认路径)。
@@ -34,7 +34,7 @@ import type {
   AgenticTool,
   RawLlmConfig,
 } from "./engine";
-import type { StopReason } from "./loop-control";
+import type { LoopController, StopReason } from "./loop-control";
 
 /**
  * [legacy] Pi 未就绪错误 —— 现已改为「退确定性兜底」而非抛错(见 run());保留导出仅为 barrel 兼容。
@@ -186,6 +186,8 @@ export function zodToPiParameters(
 }
 
 interface PiToolBridgeCtx {
+  controller?: LoopController;
+  onEvidence?: (entry: {callId: string; tool: string; summary: string; data: unknown}) => void;
   decideDryRun: (tool: AgenticTool) => boolean;
   signal: AbortSignal;
   onStep: (text: string, kind?: string) => Promise<void>;
@@ -217,6 +219,10 @@ export function toPiCustomTool(
       content: Array<{ type: "text"; text: string }>;
       details: Record<string, unknown>;
     }> {
+      ctx.signal.throwIfAborted();
+      if (ctx.controller && !ctx.controller.beginStep()) {
+        throw new Error(`执行已停止：${ctx.controller.terminationReason()}`);
+      }
       // 我方 zod 是校验权威(应用 default / transform / strip);不合法 → 回错给模型(可重试)。
       const parsed = tool.parameters.safeParse(params);
       if (!parsed.success) {
@@ -235,16 +241,19 @@ export function toPiCustomTool(
         signal: ctx.signal,
         dryRun,
       });
+      if (result.hasEvidence === true) ctx.onEvidence?.({callId: _toolCallId, tool: tool.name, summary: result.summary, data: result.data});
       ctx.toolLog.push({ tool: tool.name, dryRun, summary: result.summary });
       ctx.outputs[tool.name] = result.data ?? result.summary;
       await ctx.onStep(
         `${dryRun ? "[干跑] " : ""}${tool.label}:${result.summary}`,
         dryRun ? "dryrun" : "tool",
       );
-      const text =
-        dryRun && result.plan
-          ? `${result.summary}\n${result.plan}`
-          : result.summary;
+      // content 才会进入供应商请求；details 仅是宿主诊断信息。
+      const text = JSON.stringify({
+        summary: result.summary,
+        ...(result.data !== undefined ? { evidence: result.data } : {}),
+        ...(dryRun && result.plan ? { plan: result.plan } : {}),
+      });
       return {
         content: [{ type: "text", text }],
         details: (result.data ?? {}) as Record<string, unknown>,
@@ -315,6 +324,7 @@ interface PiModelRegistry {
   find: (provider: string, id: string) => unknown;
 }
 interface PiSession {
+  agent?: { streamFn: (...args: unknown[]) => unknown };
   subscribe: (listener: (ev: PiEvent) => void) => (() => void) | void;
   prompt: (text: string) => Promise<void>;
   waitForIdle: () => Promise<void>;
@@ -331,7 +341,7 @@ interface PiSession {
 }
 interface PiEvent {
   type: string;
-  message?: { usage?: { input?: number; output?: number } };
+  message?: { role?: string; usage?: { input?: number; output?: number; cacheRead?: number; cacheWrite?: number } };
 }
 
 let cachedSdk: PiSdk | null = null;
@@ -443,12 +453,16 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
     name: "pi",
     async run(input: AgenticEngineRunInput): Promise<AgenticEngineFinal> {
       // §6.1:无 raw config(deterministic-only 装配 / 未接 resolveLlmConfig)→ 诚实退兜底。
+      if (input.signal.aborted) input.controller.markAborted();
+      if (!input.controller.canContinue()) {
+        return { summary: "任务已停止", output: {}, steps: input.controller.stepsUsed(), stopReason: input.controller.terminationReason() ?? "aborted" };
+      }
       if (!input.llmConfig) {
         await input.onStep(
           "Pi 引擎未拿到 model-config(§6.1)—— 退确定性兜底",
           "warn",
         );
-        return deps.fallback.run(input);
+        return { ...await deps.fallback.run(input), actualEngine: deps.fallback.name };
       }
       // 配置错误不是“依赖缺席”，不得进入确定性 fallback，也不得加载 SDK/发网络。
       piApiForFormat(input.llmConfig.apiFormat);
@@ -458,7 +472,7 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           "Pi SDK 未就绪(依赖缺席 / 打包实拷缺失)—— 退确定性兜底",
           "warn",
         );
-        return deps.fallback.run(input);
+        return { ...await deps.fallback.run(input), actualEngine: deps.fallback.name };
       }
 
       const { controller, signal, llmConfig } = input;
@@ -469,6 +483,9 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
 
       // [RT-M01] 本轮已提交的真实(非干跑)工具副作用计数 —— 异常时>0 则**禁止**整体重放。
       let sideEffectsCommitted = 0;
+      let modelCallsStarted = 0;
+      let hasUsableOutput = false;
+      const evidence: Array<{callId: string; tool: string; summary: string; data: unknown}> = [];
       // [RT-M02] 会话 / 订阅 / abort 监听句柄提到 try 外,单一最外层 finally 统一清理(不泄漏)。
       let session: PiSession | undefined;
       let unsub: (() => void) | void = undefined;
@@ -490,12 +507,14 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
             "Pi provider 装配失败(model 未解析)—— 退确定性兜底",
             "warn",
           );
-          return deps.fallback.run(input); // 未创建会话/未动工具 → 零副作用,回退安全
+          return { ...await deps.fallback.run(input), actualEngine: deps.fallback.name }; // 未创建会话/未动工具 → 零副作用,回退安全
         }
 
         // L3 物理排除 + customTools(白名单已上游 filterToolsToScope 过;此处只映射在册工具)。
         const customTools = input.tools.map((t) =>
           toPiCustomTool(t, {
+            controller,
+            onEvidence: (entry) => {hasUsableOutput = true; evidence.push(entry);},
             decideDryRun: input.decideDryRun,
             signal,
             onStep: input.onStep,
@@ -529,6 +548,19 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         });
         session = created.session;
         const sess = session; // 收窄:闭包内用非空引用
+        // 在真正发 provider 请求之前 admission；turn_end 已晚于模型与工具执行。
+        if (sess.agent) {
+          const stream = sess.agent.streamFn;
+          sess.agent.streamFn = (...args: unknown[]) => {
+            signal.throwIfAborted();
+            if (!controller.beginStep()) {
+              stopReason = controller.terminationReason() ?? "max_steps";
+              throw new Error(`执行已停止：${stopReason}`);
+            }
+            modelCallsStarted += 1;
+            return stream(...args);
+          };
+        }
 
         // 关 pi 自带 auto-retry:retry/backoff 由我方层(端口 + LoopController 预算)掌控;
         // 放任 pi 自动重试会不受预算约束地绕圈 + 报错不及时浮现(诚实原则:fail fast)。
@@ -543,18 +575,13 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         if (signal.aborted) onAbort();
         else signal.addEventListener("abort", onAbort, { once: true });
 
-        // 事件流 → LoopController 桥接(每 turn 记步 + 记真 token;超顶 abort 诚实停)。
+        // 模型完成后、工具开始前结算真实 usage；调用次数在 admission 时记录。
         unsub = sess.subscribe((ev: PiEvent) => {
           try {
-            if (ev.type !== "turn_end") return;
-            if (!controller.beginStep()) {
-              stopReason = controller.terminationReason() ?? "max_steps";
-              void sess.abort();
-              return;
-            }
+            if (ev.type !== "message_end" || ev.message?.role !== "assistant") return;
             const usage = ev.message?.usage;
             const charged = usage
-              ? (usage.input ?? 0) + (usage.output ?? 0)
+              ? (usage.input ?? 0) + (usage.output ?? 0) + (usage.cacheRead ?? 0) + (usage.cacheWrite ?? 0)
               : 0;
             if (charged > 0 && !controller.chargeTokens(charged)) {
               stopReason = "budget_exhausted";
@@ -565,8 +592,10 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           }
         });
 
+        if (signal.aborted) signal.throwIfAborted();
         await sess.prompt(input.goal);
         await sess.waitForIdle();
+        stopReason = controller.terminationReason() ?? stopReason;
 
         // 诚实:LLM 调用报错(未配/凭据错/网络)→ 末条助手消息 stopReason "error" → 记 llm_error,
         // 不假成功(与确定性引擎 llm_error 同口径,SPEC honesty)。
@@ -594,12 +623,15 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           `步 ${controller.stepsUsed()}/${controller.budget.maxSteps},` +
           `token ~${controller.tokensUsed()}/${controller.budget.maxTokens}`;
         return {
+          hasUsableOutput,
+          actualEngine: "pi",
           summary: finalText ? finalText.slice(0, 800) : detail,
           output: {
             goal: input.goal,
             engineDetail: detail,
             finalText,
             outputs,
+            evidence,
             toolLog,
             stopReason,
             ...(llmErrorCategory ? { llmError: llmErrorCategory } : {}),
@@ -609,13 +641,17 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           stopReason,
         };
       } catch {
+        if (signal.aborted) controller.markAborted();
+        if (controller.terminationReason()) {
+          return { hasUsableOutput, summary: "任务已停止", output: { outputs, evidence, toolLog }, steps: controller.stepsUsed(), stopReason: controller.terminationReason()! };
+        }
         // [RT-M01] 仅当**本轮零真实副作用**时,整体回退确定性兜底才安全(保命路径,SPEC §3.1)。
-        if (sideEffectsCommitted === 0) {
+        if (sideEffectsCommitted === 0 && modelCallsStarted === 0) {
           await input.onStep(
             "Pi 引擎运行异常（provider_runtime_error）—— 本轮零副作用，退确定性兜底",
             "warn",
           );
-          return deps.fallback.run(input);
+          return { ...await deps.fallback.run(input), actualEngine: deps.fallback.name };
         }
         // 已提交真实副作用 → **绝不**整体重放(否则重复付费/重复落库);诚实返回已完成部分做检查点。
         stopReason = "llm_error";
@@ -628,12 +664,15 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           `步 ${controller.stepsUsed()}/${controller.budget.maxSteps},` +
           `token ~${controller.tokensUsed()}/${controller.budget.maxTokens}`;
         return {
+          hasUsableOutput,
+          actualEngine: "pi",
           summary: detail,
           output: {
             goal: input.goal,
             engineDetail: detail,
             finalText: "",
             outputs,
+            evidence,
             toolLog,
             stopReason,
             error: "provider_runtime_error",

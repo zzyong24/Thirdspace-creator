@@ -28,12 +28,23 @@ export async function fetchWithTimeout(
   init: RequestInit,
   timeoutMs: number,
   provider: string,
+  signal?: AbortSignal,
 ): Promise<Response> {
+  signal?.throwIfAborted();
   const controller = new AbortController();
+  const onAbort = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", onAbort, {once: true});
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetchImpl(url, { ...init, signal: controller.signal });
+    const response = await fetchImpl(url, { ...init, signal: controller.signal });
+    // 搜索本就需要完整 JSON/XML；在同一超时/取消生命周期内读完正文。
+    const body = await response.text();
+    signal?.throwIfAborted();
+    return new Response([204, 205, 304].includes(response.status) ? null : body, {
+      status: response.status, statusText: response.statusText, headers: response.headers,
+    });
   } catch (err) {
+    signal?.throwIfAborted();
     if (err instanceof Error && err.name === "AbortError") {
       throw new SearchExecutionError(
         `${provider} 检索超时(>${timeoutMs}ms)`,
@@ -43,6 +54,7 @@ export async function fetchWithTimeout(
       `${provider} 检索请求失败: ${err instanceof Error ? err.message : String(err)}`,
     );
   } finally {
+    signal?.removeEventListener("abort", onAbort);
     clearTimeout(timer);
   }
 }

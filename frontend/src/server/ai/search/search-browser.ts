@@ -185,11 +185,15 @@ export function createBrowserScrapeAdapter(
     async search(
       spec: SearchSpec,
       query: string,
-      opts: Required<SearchWebOptions>,
+      opts: Required<Pick<SearchWebOptions, "count" | "timeoutMs">> & Pick<SearchWebOptions, "signal">,
     ): Promise<SearchResult[]> {
+      opts.signal?.throwIfAborted();
       const url = buildSearchUrl(spec, query);
       const ctx = await openContext();
+      const onAbort = () => { void ctx.close().catch(() => {}); };
+      opts.signal?.addEventListener("abort", onAbort, {once: true});
       try {
+        opts.signal?.throwIfAborted();
         const page = await ctx.newPage();
         let resp;
         try {
@@ -199,6 +203,7 @@ export function createBrowserScrapeAdapter(
             timeout: Math.max(opts.timeoutMs, NAV_TIMEOUT_MS),
           });
         } catch (err) {
+          opts.signal?.throwIfAborted();
           throw new SearchExecutionError(
             `browser 检索导航失败:${err instanceof Error ? err.message : String(err)}`,
           );
@@ -226,8 +231,10 @@ export function createBrowserScrapeAdapter(
           /* 截图失败不阻断检索 */
         }
         // [T-390] 引擎感知解析:baseUrl 可指到百度(/s?wd={q})—— 按最终 host 选解析器。
+        opts.signal?.throwIfAborted();
         return parseSerpResults(finalUrl, html).slice(0, opts.count);
       } finally {
+        opts.signal?.removeEventListener("abort", onAbort);
         await ctx.close().catch(() => {}); // 关我们自起的无头 Chromium(非用户浏览器)
       }
     },
