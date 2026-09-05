@@ -1,0 +1,34 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/calibration-positioning-adoption.test.ts > 两个定位任务并发首次采纳只有一个母版且版本连续
+[ai-task-runner] taskId=ai-task-4 taskType=positioning.generate status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ❯ src/integration/calibration-positioning-adoption.test.ts (12 tests | 1 failed) 8504ms
+   × 两个定位任务并发首次采纳只有一个母版且版本连续 673ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 两个定位任务并发首次采纳只有一个母版且版本连续
+ConflictError: 当前任务不可由旧入口写候选，或已转交持久执行权
+ ❯ Object.recordCandidate src/modules/ai/ai.service.ts:2083:27
+    2081|         resultData: input.resultData,
+    2082|       });
+    2083|       if (!updated) throw new ConflictError("当前任务不可由旧入口写候选，或已转交持久执行权");
+       |                           ^
+    2084|       await logRunnerState(repo, taskId);
+    2085|       return toTaskDto(updated);
+ ❯ task src/integration/calibration-positioning-adoption.test.ts:31:290
+ ❯ src/integration/calibration-positioning-adoption.test.ts:38:85
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 16 passed (17)
+   Start at  12:58:54
+   Duration  10.24s (transform 1.35s, setup 0ms, import 2.31s, tests 9.42s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/calibration-positioning-adoption.test.ts src/modules/ai/execution-candidate.service.test.ts --retry=0

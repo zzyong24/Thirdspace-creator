@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/calibration-positioning-adoption.test.ts (3 tests | 3 failed) 2243ms
+   × 诊断并发采纳与回执丢失重放只生成一个真实预测 919ms
+   × 定位成功重放不覆盖人工修改且不追加版本 655ms
+   × 诊断不存在的真实对象不可采纳 668ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 诊断并发采纳与回执丢失重放只生成一个真实预测
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 定位成功重放不覆盖人工修改且不追加版本
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 诊断不存在的真实对象不可采纳
+ValidationError: rubric must include at least one 变现加权 dimension (人群匹配 / CTA清晰度 / 为产品铺路程度 / 利他性), not 播放量预估 only
+ ❯ validateDimensions src/modules/calibration/calibration.service.ts:304:11
+    302|   );
+    303|   if (!hasMonetizationDimension) {
+    304|     throw new ValidationError(
+       |           ^
+    305|       "rubric must include at least one 变现加权 dimension (人群匹配 / CTA清晰度 …
+    306|     );
+ ❯ Object.createRubric src/modules/calibration/calibration.service.ts:409:7
+ ❯ src/integration/calibration-positioning-adoption.test.ts:14:114
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  12:53:51
+   Duration  3.85s (transform 914ms, setup 0ms, import 1.49s, tests 2.24s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/calibration-positioning-adoption.test.ts --retry=0

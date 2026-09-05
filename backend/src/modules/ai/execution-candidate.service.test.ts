@@ -1,5 +1,5 @@
 import { afterAll,beforeAll,describe,expect,it } from "vitest";
-import { aiTasks,aiTaskResults,executionTasks,createDb,eq,type Db } from "@creatoros/backend";
+import { aiTasks,aiTaskResults,aiTaskSteps,executionTasks,createDb,eq,type Db } from "@creatoros/backend";
 import { createExecutionAuthorityService } from "../execution/execution-authority.service";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../execution/execution-call-ledger.service";
@@ -11,8 +11,8 @@ const projectCandidate=()=>({resultType:"artifact_version",artifactId:"fixture-a
 describe("持久执行候选提交",()=>{
   let db:Db;let close:()=>Promise<void>;
   beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(async()=>close?.());
-  async function fixture(id:string){
-    await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"script.draft",idempotencyKey:id,requestedAt:stamp});
+  async function fixture(id:string,taskType="script.draft"){
+    await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType,idempotencyKey:id,requestedAt:stamp});
     const mapped=await createExecutionAuthorityService(db,{now}).bindAiTask(ctx,id);
     const tasks=createPersistentTaskService(db,{now});
     const claim=await tasks.claimTask({taskId:mapped.executionTaskId,workerId:"worker"});if(!claim)throw new Error("missing claim");
@@ -49,4 +49,12 @@ describe("持久执行候选提交",()=>{
     await db.update(executionTasks).set({accountId:"other"}).where(eq(executionTasks.id,f.ref.executionTaskId));
     await expect(f.service.commitResult(f.ref,f.commit)).rejects.toMatchObject({name:"ConflictError"});
   });
+  it("诊断完成步骤与候选同事务写入，并发回执不重复",async()=>{
+    const f=await fixture("diagnosis-step","calibration.diagnose");
+    const service=createExecutionCandidateService(db,{now,projectCandidate:()=>({resultType:"calibration_diagnosis",resultData:{diagnosis:{dimensions:[{key:"persona",score:3}]}}})});
+    await Promise.all([service.commitResult(f.ref,f.commit),service.commitResult(f.ref,f.commit)]);
+    const steps=await db.select().from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,"diagnosis-step"));
+    expect(steps).toHaveLength(1);expect(steps[0]).toMatchObject({stepNo:1,kind:"step",text:"已生成编导诊断（1 维度评分）",toolCalls:[]});
+  });
+
 });

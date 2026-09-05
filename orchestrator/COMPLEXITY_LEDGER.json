@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "d8f02bd4c4f7f08abf0c6665b90687018e6598362db24727f721d808c165db6f",
+      "file_sha256": "36239db4cd9e3d28dceaa1934edb9b58fdd43b45c4c71772ddf96285b5594270",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：topic.enrich/material.match 接入统一结构化 Worker，真实冻结上下文与同事务候选采纳；保持现有凭证和运行时边界，未增加新执行引擎。",
+      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "db62607df32031d6884ae746a65630a89093c8c7443b5b6c87ed867a18e02413",
+      "file_sha256": "3167c2892d1b795d75540327dcc49d8a0726ec78a7014c002bf1bf21a5c442fc",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：topic.enrich/material.match 接入统一结构化 Worker，真实冻结上下文与同事务候选采纳；保持现有凭证和运行时边界，未增加新执行引擎。",
+      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "936f5d7e0492c177525fa26abc95fd9ca0f9be0e309cb4ccc15fcc1cdd6d1e4d",
+      "file_sha256": "83397a2cb0fd10a51460d94ebf76a10737288f4da366c76a118376cdfd88ee66",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055：Worker对topic.enrich/material.match固定候选契约和冻结真实ID先验证再保存，使无效输出进入现有有界修复；不改变模型/凭证/领域写入归属。",
+      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {

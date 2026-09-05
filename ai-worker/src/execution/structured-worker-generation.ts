@@ -1,6 +1,4 @@
-import { topicCardSchema } from "../prompt/templates/topic-enrich";
-import { materialMatchSchema } from "../prompt/templates/material-match";
-import {planningThesisOutputSchema,planningThesisGroundingSchema} from "./planning-thesis-output";
+import { resolveStructuredBusinessSchema } from "./structured-business-schema";
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
 import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
@@ -11,12 +9,6 @@ import { createDurableGenerationModel } from "./durable-generation-model";
 import { GenerationFailure,generationFailure } from "./generation-error";
 import { scriptReviewSchema, normalizeScriptReviewOutput, isCompleteRawScriptReview } from "../prompt/templates/script-review";
 
-import { reviewInsightsSchema } from "../prompt/templates/review-insights";
-import { contractSchema, PLANNING_CONTRACT_SLOTS } from "../prompt/templates/planning-contract";
-
-// SEMANTIC_BOUNDARY_ALLOW: 仅保证后端投影至少能取出一项，不判断经验或合同内容质量。
-const reviewCandidateSchema=reviewInsightsSchema.refine(value=>value.learnings.some(item=>item.title.trim()),"至少需要一条非空标题经验");
-const contractCandidateSchema=contractSchema.refine(value=>PLANNING_CONTRACT_SLOTS.some(slot=>value[slot.title]?.trim() || value[slot.id]?.trim()),"至少需要一个已知合同槽正文");
 
 export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
   let lastCallId:string|undefined;
@@ -44,12 +36,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       },
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
-    if(input.skillId==="planning.thesis")planningThesisGroundingSchema.parse(JSON.parse(input.facets.__planningThesisGrounding ?? "null"));
-    const topicCandidateSchema=topicCardSchema.refine(value=>Boolean(value.oneLiner?.trim() || value.audiencePain?.trim()),"至少需要一句话选题或观众痛点");
-    const materialIds=input.skillId==="material.match" ? new Set(z.object({assetIds:z.array(z.string())}).parse(JSON.parse(input.facets.__materialMatchGrounding ?? "null")).assetIds) : new Set<string>();
-    // SEMANTIC_BOUNDARY_ALLOW: 仅要求至少一个冻结范围内真实ID，不判断素材相关性。
-    const materialCandidateSchema=materialMatchSchema.refine(value=>value.matches.some(item=>materialIds.has(item.assetId.trim())),"至少需要一项真实素材");
-    const businessSchema=input.skillId==="topic.enrich" ? topicCandidateSchema : input.skillId==="material.match" ? materialCandidateSchema : input.skillId==="planning.thesis" ? planningThesisOutputSchema : input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
+    const businessSchema=resolveStructuredBusinessSchema(input);
     const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}

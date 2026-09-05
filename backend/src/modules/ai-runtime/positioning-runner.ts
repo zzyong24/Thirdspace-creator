@@ -1,10 +1,5 @@
-import type { RequestContext } from "@creatoros/contract";
-import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec, PositioningSuggestionOutput } from "@creatoros/ai-worker";
+import type { PositioningSuggestionOutput } from "@creatoros/ai-worker";
 import {
-  assembleCreativeContext,
-  loadPositioningWorksBrief,
-  type ContextDeps,
   type CreativeContext,
   type PositioningWorksReader,
 } from "./creative-context";
@@ -22,13 +17,7 @@ import { parseJsonLoose } from "./llm/parse";
 // is an *evolution*, not a from-scratch guess) + their 抖音账号画像 (platform/handle/
 // follower count) as material for who they already are on-platform. No web tools.
 //
-// 跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的
-// model,提示词走外置模板 positioning.generate(脊柱-1 模板化解耦)。T-025b:改 runStructuredNode
-// (generateObject 绑 positioning.generate 的 outputSchema,落空→文本兜底抽 JSON 再同 schema 校验),
-// 让用户默认的 MiniMax-M3 也稳定吐可解析定位提案(旧路径:单发 messages.create + parseSuggestion,
-// MiniMax 下常吐不出规整 JSON → parseSuggestion 返回 null → 任务 cancelled,和刚修的 8 个节点同类
-// bug)。normalizeSuggestion 复用 clampKeywords/asStrings 保留原容错(keywords 恰好 3 个等)。
-//
+// 账号定位的上下文准备/候选投影由calibration-positioning-business-adapters承接；此处保留Chat共享接口。
 // 注:buildPositioningPrompt + parseSuggestion 仍导出且行为不变 —— chat-runner 的 generatePositioning
 // 工具(对话面产定位提案候选,走 runAgentNode 拿自由文本)复用它们,不能改签名/语义。
 
@@ -68,14 +57,6 @@ export interface PositioningSuggestion {
 // 组合根按 ctx.userId/accountId 收窄；未装配/读失败 → 该 facet 空(诚实降级)。
 export type WorksReader = PositioningWorksReader;
 
-export interface PositioningDeps extends ContextDeps {
-  ai: AiService;
-  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
-}
 
 export interface PositioningTask {
   id: string;
@@ -238,67 +219,4 @@ export function parseSuggestion(text: string): PositioningSuggestion | null {
   const parsed = parseJsonLoose(text);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
   return normalizeSuggestion(parsed as PositioningSuggestionOutput);
-}
-
-// Orchestrate one positioning.generate task end to end. Owns its lifecycle: on any
-// failure (LlmCredentialError when no key is configured, unparseable output, etc.) it
-// cancels the task (→ a terminal the UI renders as 失败) so it never lingers in `running`.
-// Swallows so a background failure never crashes the server.
-export async function runPositioningGenerate(
-  ctx: RequestContext,
-  task: PositioningTask,
-  deps: PositioningDeps,
-): Promise<void> {
-  try {
-    await deps.ai.markRunning(ctx, task.id); // honest status while the LLM works
-    // positioning.generate is account-wide (not project-scoped): no topic.
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: null, topic: "" },
-      deps,
-    );
-    // [T-081②/T-578] 真实作品画像 —— 与对话工具路径同一 reader + brief 装配器
-    // (当前账号可见、publishedAt 新→旧、截 40 字/上限 100 条),注入模板 {{works}} facet。
-    // best-effort:读端口未装配/读失败 → 空串(facet 整段省略),绝不阻断定位生成。
-    const worksBrief = await loadPositioningWorksBrief(
-      ctx,
-      deps.positioningWorks,
-    );
-    // Vercel AI SDK 路径:按 "positioning.generate" capability 解析 model + 跑 ai-worker 结构化节点
-    // (外置 positioning.generate 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,
-    // 落空→文本兜底,让用户默认的 MiniMax 也稳定吐可解析定位提案。顶层是对象,取 object 再 normalize。
-    const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
-    // 让 positioning.generate 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
-    const { modelFor, runStructuredNode, getTemplate } =
-      await import("@creatoros/ai-worker");
-    const { object } = await runStructuredNode<PositioningSuggestionOutput>({
-      model: modelFor(spec),
-      template: getTemplate("positioning.generate"),
-      facets: positioningFacets(context, worksBrief),
-    });
-    const suggestion = normalizeSuggestion(object);
-    if (!suggestion) {
-      throw new Error(
-        "positioning-runner: LLM returned no parseable positioning suggestion",
-      );
-    }
-    await deps.ai.recordCandidate(ctx, task.id, {
-      resultType: "positioning_profile",
-      resultData: { suggestion },
-    });
-  } catch (err) {
-    // Best-effort cancel; swallow so a background failure (incl. LlmCredentialError when
-    // no LLM key is configured) never crashes the server.
-    try {
-      await deps.ai.cancelTask(ctx, task.id);
-    } catch {
-      /* task may already be terminal */
-    }
-    // eslint-disable-next-line no-console
-    console.error(
-      `[positioning-runner] generate failed for task ${task.id}:`,
-      err,
-    );
-  }
 }

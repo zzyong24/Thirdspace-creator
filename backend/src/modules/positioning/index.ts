@@ -76,3 +76,5 @@ export {
   type PositioningStatementRow,
   type PositioningDiscoverySessionRow,
 } from "./positioning.repository";
+
+export {lockPositioningAdoptionAccount} from "./positioning-write-lock";

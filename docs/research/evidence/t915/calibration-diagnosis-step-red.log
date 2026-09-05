@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/execution-candidate.service.test.ts (5 tests | 1 failed) 987ms
+     × 诊断完成步骤与候选同事务写入，并发回执不重复 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/execution-candidate.service.test.ts > 持久执行候选提交 > 诊断完成步骤与候选同事务写入，并发回执不重复
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/ai/execution-candidate.service.test.ts:57:19
+     55|     await Promise.all([service.commitResult(f.ref,f.commit),service.co…
+     56|     const steps=await db.select().from(aiTaskSteps).where(eq(aiTaskSte…
+     57|     expect(steps).toHaveLength(1);expect(steps[0]).toMatchObject({step…
+       |                   ^
+     58|   });
+     59|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  12:58:12
+   Duration  1.83s (transform 331ms, setup 0ms, import 703ms, tests 987ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/execution-candidate.service.test.ts --retry=0

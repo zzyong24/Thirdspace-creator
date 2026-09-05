@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/calibration-positioning-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts src/modules/execution/structured-worker.integration.test.ts src/modules/ai/ai.service.test.ts src/modules/ai-runtime/calibration-positioning-business-adapters.test.ts src/modules/ai-runtime/calibration-diagnose-runner.test.ts src/modules/ai-runtime/calibration-score-runner.test.ts src/modules/ai-runtime/positioning-runner.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  8 passed (8)
+      Tests  101 passed (101)
+   Start at  12:59:37
+   Duration  37.19s (transform 4.11s, setup 0ms, import 7.52s, tests 59.55s, environment 0ms)
+

@@ -1,34 +1,14 @@
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
-// 定位生成 runner 迁 runStructuredNode(T-025b 跨模型健壮)后:mock ai-worker 的 runStructuredNode
-// (动态 import 的目标),它返回 { object }(已被 outputSchema 校验的结构化对象,9 字段定位提案)。
-// runner 解析 model(resolveModelSpec)→ runStructuredNode 拿 object → normalizeSuggestion +
-// recordCandidate。这里把 runStructuredNode 打桩成返回固定 object,验证:capability 被正确解析、
-// 候选被记录、归一逻辑(keywords 夹 3 / capabilities 清洗)仍按约定产出;退化对象 → 不记录 + cancel。
-const runStructuredNode = vi.fn(
-  async (_input: {
-    model: unknown;
-    template: { id: string };
-    facets: Record<string, string | undefined>;
-  }) => ({ object: {} as Record<string, unknown> }),
-);
-vi.mock("@creatoros/ai-worker", () => ({
-  modelFor: vi.fn(() => ({}) as never),
-  runStructuredNode,
-  // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
-  getTemplate: (id: string) => ({ id }),
-}));
-
 import {
-  runPositioningGenerate,
   parseSuggestion,
   buildPositioningPrompt,
   normalizeSuggestion,
   positioningFacets,
-  type PositioningSuggestion,
   type WorksReader,
 } from "./positioning-runner";
+import {createPositioningGenerateBusinessAdapter} from "./calibration-positioning-business-adapters";
 import type { CreativeContext } from "./creative-context";
 
 const ctx: RequestContext = {
@@ -51,29 +31,8 @@ const VALID_OBJECT = {
 };
 const VALID_JSON = JSON.stringify(VALID_OBJECT);
 
-function makeDeps(object: Record<string, unknown>, works?: WorksReader) {
-  runStructuredNode.mockResolvedValue({ object } as never);
-  const markRunning = vi.fn(async () => undefined);
-  const recordCandidate = vi.fn(
-    async (
-      _ctx: RequestContext,
-      _taskId: string,
-      _input: {
-        resultType: string;
-        resultData: { suggestion: PositioningSuggestion };
-      },
-    ) => undefined,
-  );
-  const cancelTask = vi.fn(async () => undefined);
-  const resolveModelSpec = vi.fn(async () => ({
-    apiFormat: "anthropic" as const,
-    baseUrl: null,
-    model: "claude-opus-4-8",
-    token: "k",
-  }));
-  return {
-    deps: {
-      ai: { markRunning, recordCandidate, cancelTask } as never,
+function makeDeps(_object: Record<string, unknown>, works?: WorksReader) {
+ return {deps:{
       // assembleCreativeContext reads getPositioningCenter (PositioningReader) and
       // list (AccountsReader); both degrade to "" on throw. These stubs feed the real
       // shapes so the brief assembles with positioning + 抖音账号 context.
@@ -103,13 +62,7 @@ function makeDeps(object: Record<string, unknown>, works?: WorksReader) {
       } as never,
       // [T-081②] 真实作品读端口(选填)—— 传入才注入 {{works}} facet。
       positioningWorks: works,
-      resolveModelSpec,
-    },
-    markRunning,
-    recordCandidate,
-    cancelTask,
-    resolveModelSpec,
-  };
+ }};
 }
 
 describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路径)", () => {
@@ -189,66 +142,17 @@ describe("parseSuggestion (tolerant JSON object parse — chat 文本兜底路�
   });
 });
 
-describe("runPositioningGenerate (runStructuredNode + 外置模板)", () => {
-  it("resolves positioning.generate and records a positioning_profile candidate", async () => {
-    const { deps, recordCandidate, markRunning, resolveModelSpec } =
-      makeDeps(VALID_OBJECT);
-    await runPositioningGenerate(ctx, { id: "t1", inputData: {} }, deps);
-
-    expect(markRunning).toHaveBeenCalledWith(ctx, "t1");
-    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "positioning.generate");
-    expect(runStructuredNode).toHaveBeenCalledTimes(1);
-    // runStructuredNode 被喂进 positioning.generate 模板 + 装配好的 facets(current 兜底非空)。
-    const call = runStructuredNode.mock.calls[0]![0];
-    expect(call.template.id).toBe("positioning.generate");
-    // 定位现状 + 抖音账号画像都进了 facets(current / accounts)。
-    expect(call.facets.current).toContain("现有一句话定位");
-    expect(call.facets.accounts).toContain("douyin");
-    expect(call.facets.accounts).toContain("@老黄说AI");
-
-    expect(recordCandidate).toHaveBeenCalledTimes(1);
-    const [, taskId, payload] = recordCandidate.mock.calls[0]!;
-    expect(taskId).toBe("t1");
-    expect(payload.resultType).toBe("positioning_profile");
-    expect(payload.resultData.suggestion.persona).toBe("硬核 AI 科普人");
-    expect(payload.resultData.suggestion.keywords).toEqual(["论文", "代码", "工程化"]);
-  });
-
-  it("degrades gracefully when the creator has NO positioning yet (current facet 兜底)", async () => {
-    const { deps, recordCandidate } = makeDeps(VALID_OBJECT);
-    // 覆盖 positioning reader 成空 → assembleCreativeContext 产空 brief → current 走兜底文案。
-    (deps as { positioning: unknown }).positioning = {
-      getPositioningCenter: async () => ({ profile: null, currentStatement: null }),
-    } as never;
-
-    await runPositioningGenerate(ctx, { id: "t3", inputData: {} }, deps);
-    const call = runStructuredNode.mock.calls.at(-1)![0];
-    expect(call.facets.current).toContain("尚未设置定位");
-    expect(recordCandidate).toHaveBeenCalledTimes(1);
-  });
-
-  it("cancels the task (no candidate) when the object normalizes to no usable suggestion", async () => {
-    // 合法但退化的结构化对象(persona + oneLiner 均空)→ normalizeSuggestion 返回 null → guard → cancel。
-    const { deps, recordCandidate, cancelTask } = makeDeps({
-      persona: "",
-      oneLiner: "",
-      keywords: [],
-    });
-    await runPositioningGenerate(ctx, { id: "t4", inputData: {} }, deps);
-    expect(recordCandidate).not.toHaveBeenCalled();
-    expect(cancelTask).toHaveBeenCalledWith(ctx, "t4");
-  });
-
-  it("cancels the task gracefully (no throw) when runStructuredNode throws", async () => {
-    const { deps, recordCandidate, cancelTask } = makeDeps(VALID_OBJECT);
-    runStructuredNode.mockRejectedValueOnce(new Error("结构化节点:未得到合 schema 的对象"));
-    // Must not throw out of the background runner — it swallows + cancels.
-    await expect(
-      runPositioningGenerate(ctx, { id: "t5", inputData: {} }, deps),
-    ).resolves.toBeUndefined();
-    expect(recordCandidate).not.toHaveBeenCalled();
-    expect(cancelTask).toHaveBeenCalledWith(ctx, "t5");
-  });
+describe("定位准备与候选投影",()=>{
+ it("保持当前定位与抖音账号画像，不执行模型或写库",async()=>{
+  const {deps}=makeDeps(VALID_OBJECT);const adapter=createPositioningGenerateBusinessAdapter(deps);
+  const facets=await adapter.prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});
+  expect(adapter.capability).toBe("positioning.generate");expect(facets.current).toContain("现有一句话定位");expect(facets.accounts).toContain("douyin");expect(facets.accounts).toContain("@老黄说AI");
+  const suggestion=normalizeSuggestion(VALID_OBJECT as never);expect(suggestion?.persona).toBe("硬核 AI 科普人");expect(suggestion?.keywords).toEqual(["论文","代码","工程化"]);
+ });
+ it("没有定位仍可准备，current保留原兜底",async()=>{
+  const {deps}=makeDeps(VALID_OBJECT);deps.positioning={getPositioningCenter:async()=>({profile:null,currentStatement:null})} as never;
+  const facets=await createPositioningGenerateBusinessAdapter(deps).prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});expect(facets.current).toContain("尚未设置定位");
+ });
 });
 
 // [T-081①②] buildPositioningPrompt 可选第二参:extraBrief(对话洞察,优先遵循)+ worksBrief
@@ -316,18 +220,7 @@ describe("buildPositioningPrompt — extraBrief / worksBrief 注入 (T-081)", ()
   });
 });
 
-// [T-081②/T-578] 后台 task 路径的真实作品画像注入 —— runPositioningGenerate 经两条路径
-// 共用的 deps.positioningWorks 读作品,
-// formatWorksBrief 压缩后进模板 {{works}} facet(与对话链路同一口径);未装配/读失败 → 空 facet
-// (诚实降级,不阻断生成)。runStructuredNode 已 mock,直接断言它收到的 facets。
-describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
-  const lastFacets = () =>
-    (
-      runStructuredNode.mock.calls.at(-1)![0] as {
-        facets: Record<string, string | undefined>;
-      }
-    ).facets;
-
+describe("定位准备 — works facet 注入 (T-081②)", () => {
   it("[T-578] positioningWorks 按当前 account 读取已排序可见作品并原序注入", async () => {
     const longTitle =
       "这条标题其实是整篇口播文案,长到远超四十个字的展示上限,必须被截断后才能进定位提示词不然会爆";
@@ -357,9 +250,8 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
     const works: WorksReader = {
       listProjects,
     };
-    const { deps, recordCandidate } = makeDeps(VALID_OBJECT, works);
-    await runPositioningGenerate(ctx, { id: "tw1", inputData: {} }, deps);
-    const facets = lastFacets();
+    const { deps } = makeDeps(VALID_OBJECT, works);
+    const facets = await createPositioningGenerateBusinessAdapter(deps).prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});
     const rendered = facets.works ?? "";
     expect(facets.works).toContain("【历史作品证据（只说明过去发生了什么，不能替用户决定未来）】");
     expect(facets.works).toContain(`${longTitle.slice(0, 40)}…`);
@@ -367,13 +259,12 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
     expect(rendered.indexOf("最新可见作品")).toBeLessThan(
       rendered.indexOf(longTitle.slice(0, 40)),
     );
-    expect(recordCandidate).toHaveBeenCalled();
   });
 
   it("positioningWorks 未装配 → facets.works 空串(facet 整段省略,老路径行为不变)", async () => {
     const { deps } = makeDeps(VALID_OBJECT);
-    await runPositioningGenerate(ctx, { id: "tw2", inputData: {} }, deps);
-    expect(lastFacets().works).toBe("");
+    const facets = await createPositioningGenerateBusinessAdapter(deps).prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});
+    expect(facets.works).toBe("");
   });
 
   it("works 读端口抛错 → facets.works 空串且生成不受阻(best-effort,候选照记)", async () => {
@@ -382,11 +273,9 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
         throw new Error("projects repo down");
       },
     };
-    const { deps, recordCandidate, cancelTask } = makeDeps(VALID_OBJECT, works);
-    await runPositioningGenerate(ctx, { id: "tw3", inputData: {} }, deps);
-    expect(lastFacets().works).toBe("");
-    expect(recordCandidate).toHaveBeenCalled();
-    expect(cancelTask).not.toHaveBeenCalled();
+    const { deps } = makeDeps(VALID_OBJECT, works);
+    const facets = await createPositioningGenerateBusinessAdapter(deps).prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});
+    expect(facets.works).toBe("");
   });
 
   it("works 端口返回空数据 → facets.works 诚实空串", async () => {
@@ -394,8 +283,8 @@ describe("runPositioningGenerate — works facet 注入 (T-081②)", () => {
       listProjects: async () => ({ rows: [], total: 0 }),
     };
     const { deps } = makeDeps(VALID_OBJECT, works);
-    await runPositioningGenerate(ctx, { id: "tw4", inputData: {} }, deps);
-    expect(lastFacets().works).toBe("");
+    const facets = await createPositioningGenerateBusinessAdapter(deps).prepare(ctx,{id:"t",projectId:null,retryOfTaskId:null,inputData:{},skillSnapshot:{} as never});
+    expect(facets.works).toBe("");
   });
 });
 

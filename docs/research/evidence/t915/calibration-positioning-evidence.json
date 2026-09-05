@@ -1,0 +1,39 @@
+{
+  "task": "T-915",
+  "sourceBase": "e749dd02",
+  "recordedAt": "2026-09-05T20:03:32.817154+00:00",
+  "status": "本轮三入口迁移和定向验收完成，完整T915仍在实施",
+  "scope": [
+    "calibration.diagnose",
+    "calibration.score",
+    "positioning.generate"
+  ],
+  "verification": {
+    "runtime": "101 PASS；calibration-positioning-runtime-final.log",
+    "adoption": "17 PASS；calibration-positioning-adoption-green.log",
+    "domain": "41 PASS；calibration-positioning-domain-regression.log",
+    "types": "backend/ai-worker/frontend exit0；*-types-final.log和frontend-types-verified.log",
+    "boundary": "0新增/历史5",
+    "orphan": "0 errors/100 warnings",
+    "governance": "taskGovernanceErrors T915 []",
+    "review": "独立只读审查通过，包含诊断完成事件事务",
+    "reconcile": "exit1：211 errors/1 warning，与既有T916基线一致；不宣称全局通过。"
+  },
+  "sha256": {
+    "ai-worker/src/execution/structured-business-schema.ts": "0c1396ea2db20b0a8639cc94398f9c9d0bdc9678a1d9eb9ccccf81e80942fa9c",
+    "ai-worker/src/execution/structured-worker-generation.ts": "83397a2cb0fd10a51460d94ebf76a10737288f4da366c76a118376cdfd88ee66",
+    "backend/src/modules/ai-runtime/calibration-positioning-business-adapters.ts": "b2c34aa60c2655a77c704c095cdf8572667a6f473885d1aecc9411beef6d0c93",
+    "backend/src/modules/ai/calibration-positioning-adoption.service.ts": "33856457539121ea42fcc9e05b8909c87232f7f2a73c7b81df91830f4f32c8fe",
+    "backend/src/modules/ai/execution-candidate.service.ts": "51b0bc6310c3296c1a34c645676431c358c4815c8e8c5ad224a128491c402124",
+    "backend/src/modules/calibration/calibration.service.ts": "3ab29e999cf5a40abea5047ac3a2daf730bb2815bd08e81aad4bcc557b4c22bd",
+    "backend/src/modules/positioning/positioning-write-lock.ts": "ba1ba9e245e9b8b5e7bd658ef75c01543bb1fc347a5121d14f99c44e85bbad90",
+    "backend/src/modules/positioning/positioning.service.ts": "c50a65c027f38887f235d08502b9629b32f551bad165798250deddbc9a857442",
+    "frontend/src/server/persistence-client.ts": "3167c2892d1b795d75540327dcc49d8a0726ec78a7014c002bf1bf21a5c442fc"
+  },
+  "limitations": [
+    "本地HTTP模型夹具不等于真实供应商证据",
+    "未运行UI旅程、安装包或30次性能矩阵",
+    "其余生产入口迁移与浏览器生产资源恢复仍待完成"
+  ],
+  "details": "calibration-positioning-migration.md"
+}

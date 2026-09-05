@@ -239,6 +239,7 @@ export interface ServiceDeps {
   calibration: AiCalibrationPort;
   // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
   assetLibrary?: AiAssetLibraryPort;
+  calibrationPositioning?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   structuredTargets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   // T-513 composition seam: skill resolver injects immutable, server-only task state.
@@ -1125,6 +1126,13 @@ export function createAiService(deps: ServiceDeps): AiService {
         if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
         await deps.agenticProposals.confirmTask(ctx, taskId);
         return toTaskDto(await repo.requireTask(taskId));
+      }
+      if (["calibration.diagnose", "positioning.generate"].includes(task.taskType)) {
+        if (deps.calibrationPositioning) {
+          await deps.calibrationPositioning.confirmTask(ctx,taskId);
+          return toTaskDto(await repo.requireTask(taskId));
+        }
+        if(task.executionTaskId)throw new ConflictError("诊断定位采纳事务尚未接入");
       }
       if (["topic.enrich", "material.match"].includes(task.taskType) && task.executionTaskId && !deps.structuredTargets) {
         throw new ConflictError("执行候选采纳事务尚未接入");

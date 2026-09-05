@@ -82,3 +82,5 @@ export { createAgenticProposalAdoptionService, type AgenticProposalAdoptionPorts
 export { createAgenticProposalStagingService } from "./agentic-proposal-staging.service";
 
 export { createStructuredTargetAdoptionService, type StructuredTargetAdoptionPorts } from "./structured-target-adoption.service";
+
+export {createCalibrationPositioningAdoptionService,type CalibrationPositioningAdoptionPorts} from "./calibration-positioning-adoption.service";

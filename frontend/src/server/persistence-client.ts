@@ -1,3 +1,6 @@
+import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
+import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
+import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusinessAdapter, createPositioningGenerateBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createBrowserTaskAuthorizationService, createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
@@ -484,8 +487,6 @@ import {
   ensureCollectionJobs,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createTopicEnrichBusinessAdapter, createMaterialMatchBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
-import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
 import { createScriptBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { preparePlanningContractContext,projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { prepareReviewContext,projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
@@ -499,7 +500,6 @@ import {
   runVideoDecisions,
   storyboardFromContentData,
 } from "@creatoros/backend/modules/ai-runtime";
-import { runPositioningGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
@@ -3154,7 +3154,34 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }).create(c,input);
     },
   },deps.now);
+  const calibrationPositioningAdoption=createCalibrationPositioningAdoptionService(db,{
+    async assertSubject(c,type,id,tx){
+      const txDb=tx as unknown as Db;
+      if(type==="publication")return createPublishingService({db:txDb,...deps,publisher:createUnavailablePublisher()}).getPublication(c,id);
+      const owner=await createProjectsService(createProjectRepository(txDb),deps).getOutputOwnerSummary(c,id);
+      if(!owner)throw new OwnershipError("诊断作品不存在");
+      return owner;
+    },
+    createDraftPrediction(c,input,tx){
+      return createCalibrationService({db:tx as unknown as Db,...deps,
+        ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);},ensureManualRun:(context,key)=>ingestionService.ensureManualRun(context,key)},
+        learnings:{adjustConfidence:async()=>{}},
+      }).createDraftPrediction(c,input);
+    },
+    lockPositioning:lockPositioningAdoptionAccount,
+    upsertProfile(c,input,tx){
+      return createPositioningService({db:tx as unknown as Db,...deps,projects:{getProjectSubject:async(context,id)=>{
+        const row=await createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};
+      }}}).upsertProfile(c,input);
+    },
+    createStatementVersion(c,input,tx){
+      return createPositioningService({db:tx as unknown as Db,...deps,projects:{getProjectSubject:async(context,id)=>{
+        const row=await createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};
+      }}}).createStatementVersion(c,input);
+    },
+  },deps.now);
   const aiService = createAiService({
+    calibrationPositioning:calibrationPositioningAdoption,
     structuredTargets: structuredTargetAdoption,
     agenticProposals: agenticProposalAdoption,
     db,
@@ -4083,258 +4110,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "calibration.diagnose" &&
-          task.status === "queued"
-        ) {
-          // AI 编导诊断 node (calibration.diagnose, 校准中心大改 Slice 1) — scores ONE content
-          // subject (content_output / publication) against the creator's current 变现加权
-          // rubric + records a `calibration_diagnosis` candidate; 采纳 mints a draft Prediction
-          // via the calibration_diagnosis confirm branch (wired on the AiCalibrationPort
-          // above). The subject reader is bound to the projects/publishing services
-          // (ownership-gated, no cross-module repo import); the rubric reader resolves the
-          // creator's default rubric's current version.
-          await runCalibrationDiagnose(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):AI 编导诊断跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-              subject: {
-                get: async (
-                  c: RequestContext,
-                  subjectType: string,
-                  subjectId: string,
-                ) => {
-                  if (subjectType === "publication") {
-                    // publication → its title + current revision body (the 文稿 the agent
-                    // scores). A publication with no revision keeps "" (尽力诊断).
-                    const pub = await publishingService.getPublication(
-                      c,
-                      subjectId,
-                    );
-                    const revisions = await publishingService.listRevisions(
-                      c,
-                      subjectId,
-                      { limit: 1, offset: 0 },
-                    );
-                    const rev = revisions[0];
-                    return {
-                      title: rev?.title || `${pub.platform} 发布`,
-                      scriptText: rev?.description ?? "",
-                    };
-                  }
-                  // content_output → its title (the storyboard/文稿 plumbing lands later; the
-                  // agent grounds on title + positioning + rubric for Slice 1).
-                  const output = await projectsRepo.getOutput(c, subjectId);
-                  return { title: output.title, scriptText: "" };
-                },
-              },
-              rubric: {
-                current: async (c: RequestContext) => {
-                  // The creator's default 变现加权 rubric (canonical seed id) — its current
-                  // version's dimensions are exactly what the agent scores. inputData may
-                  // override the rubricVersionId; otherwise resolve the default rubric's
-                  // current version.
-                  // [T-332 S2] per-account 默认 rubric(当前号的 canonical id)。
-                  const v = await calibrationService.getCurrentRubricVersion(
-                    c,
-                    canonicalRubricIdFor(c),
-                  );
-                  return {
-                    rubricVersionId: v.id,
-                    dimensions: v.dimensions.map((d) => ({
-                      key: d.key,
-                      label: d.label,
-                      description: d.description,
-                    })),
-                  };
-                },
-              },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "calibration.score" &&
-          task.status === "queued"
-        ) {
-          // B2 编导自动评分 node (calibration.score, 数据底座 SPEC §5 / §2 回看·校准) — reads ONE
-          // **locked prediction**'s dimensions + that work's **REAL metrics** (from analytics,
-          // resolved via publishing — no cross-module repo import, SPEC §22) and records a
-          // NON-formalizing `calibration_score` candidate (resultData.dimensions = 维度真实分候选).
-          // The frontend reads that candidate to **prefill** the 录入真实表现 form; the human
-          // edits/confirms and the EXISTING createResult path (采纳门) lands the calibration_result.
-          // The runner NEVER writes calibration_result directly (铁律②). 每轮 schema 约束:
-          // generateObject 绑 Zod(calibrationScoreSchema),校验失败 Vercel SDK 自动重试。
-          await runCalibrationScore(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):编导自动评分跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-              prediction: {
-                get: async (c: RequestContext, predictionId: string) => {
-                  // The locked prediction's 维度评分约定 (predictedConversion.dimensions =
-                  // [{key,score,...}]) + subject. Ownership-gated via the calibration public
-                  // service (cross-user / unknown → 404). The rubric version resolves each
-                  // dimension's 中文 label (取不到回退 key).
-                  const pred = await calibrationService.getPrediction(
-                    c,
-                    predictionId,
-                  );
-                  const conv = (pred.predictedConversion ?? {}) as {
-                    dimensions?: Array<{ key?: unknown; score?: unknown }>;
-                  };
-                  const rawDims = Array.isArray(conv.dimensions)
-                    ? conv.dimensions
-                    : [];
-                  // Resolve dimension labels from the prediction's rubric version (best-effort).
-                  const labelByKey = new Map<string, string>();
-                  try {
-                    const version =
-                      await calibrationService.getCurrentRubricVersion(
-                        c,
-                        canonicalRubricIdFor(c), // [T-332 S2] per-account 默认 rubric
-                      );
-                    for (const d of version.dimensions) {
-                      labelByKey.set(d.key, d.label);
-                    }
-                  } catch {
-                    /* label is decoration — fall back to key */
-                  }
-                  const dimensions = rawDims
-                    .map((d) => {
-                      const key = typeof d.key === "string" ? d.key : "";
-                      const predicted =
-                        typeof d.score === "number" && Number.isFinite(d.score)
-                          ? d.score
-                          : null;
-                      return {
-                        key,
-                        label: labelByKey.get(key) ?? key,
-                        predicted,
-                      };
-                    })
-                    .filter((d) => d.key !== "");
-                  // The subject's 标题 (the work being scored). For a publication, the latest
-                  // revision title; for a content_output, its title. Best-effort — 取不到给空串。
-                  let title = "";
-                  try {
-                    if (pred.subjectType === "publication") {
-                      const revisions = await publishingService.listRevisions(
-                        c,
-                        pred.subjectId,
-                        { limit: 1, offset: 0 },
-                      );
-                      title = revisions[0]?.title ?? "";
-                    } else {
-                      const output = await projectsRepo.getOutput(
-                        c,
-                        pred.subjectId,
-                      );
-                      title = output.title;
-                    }
-                  } catch {
-                    /* title is decoration — 尽力评分 */
-                  }
-                  return {
-                    subjectType: pred.subjectType,
-                    subjectId: pred.subjectId,
-                    title,
-                    dimensions,
-                  };
-                },
-              },
-              metrics: {
-                forSubject: async (
-                  c: RequestContext,
-                  subjectType: string,
-                  subjectId: string,
-                ) => {
-                  // Real metrics live in analytics' metric_snapshots (rawMetrics jsonb with the
-                  // platform payload: views/likes/comments/shares/favorites/finish_rate/...).
-                  // For a publication, subjectId IS the publicationId; for a content_output,
-                  // resolve its publication(s) via publishing first. Read the LATEST snapshot
-                  // per publication (captured-at desc), merge numeric rawMetrics. No snapshot →
-                  // [](honest: the runner then scores from title+定位 and says so).
-                  const numericMetrics = (
-                    raw: Record<string, unknown>,
-                  ): Array<{ key: string; value: number }> =>
-                    Object.entries(raw)
-                      .filter(
-                        ([, v]) =>
-                          typeof v === "number" && Number.isFinite(v),
-                      )
-                      .map(([key, v]) => ({ key, value: v as number }));
-                  const latestFor = async (
-                    publicationId: string,
-                  ): Promise<Array<{ key: string; value: number }>> => {
-                    try {
-                      const page =
-                        await analyticsService.getPublicationAnalytics(
-                          c,
-                          publicationId,
-                          1,
-                          10,
-                        );
-                      const latest = page.rows
-                        .slice()
-                        .sort((a, b) =>
-                          b.capturedAt.localeCompare(a.capturedAt),
-                        )[0];
-                      const raw = (latest?.rawMetrics ?? {}) as Record<
-                        string,
-                        unknown
-                      >;
-                      return numericMetrics(raw);
-                    } catch {
-                      return []; // a single publication's read failing → no metrics, never crash
-                    }
-                  };
-                  let publicationIds: string[] = [];
-                  if (subjectType === "publication") {
-                    publicationIds = [subjectId];
-                  } else {
-                    try {
-                      const pubs = await publishingService.listPublications(
-                        c,
-                        subjectId,
-                        { limit: 20, offset: 0 },
-                      );
-                      publicationIds = pubs.map((p) => p.id);
-                    } catch {
-                      publicationIds = [];
-                    }
-                  }
-                  // Merge metrics across the subject's publications (last写入 wins per key —
-                  // a single-publication subject is the common case).
-                  const merged = new Map<string, number>();
-                  for (const pid of publicationIds) {
-                    for (const m of await latestFor(pid)) {
-                      merged.set(m.key, m.value);
-                    }
-                  }
-                  return Array.from(merged.entries()).map(([key, value]) => ({
-                    key,
-                    value,
-                  }));
-                },
-              },
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "video.decisions" &&
           task.status === "queued"
         ) {
@@ -4411,36 +4186,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   return [];
                 }
               },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "positioning.generate" &&
-          task.status === "queued"
-        ) {
-          // 定位生成 node (positioning.generate, Plan Phase A — the audit's level-1 gap:
-          // 定位中心 could only *use* positioning, never *generate* one). Reads the
-          // creator's CURRENT positioning + 抖音账号画像, runs the configurable LLM
-          // (item A) to draft a structured 定位提案, records a `positioning_profile`
-          // candidate; 采纳 formalizes it into a CreatorProfile (upsertProfile) + a NEW
-          // statement version (createdByType:"ai", aiTaskId) via the positioning port —
-          // the OQ2 演进回流 source.
-          await runPositioningGenerate(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              accounts: accountsReader,
-              // [T-578] 与 ChatBox positioning.generate 共用同一定位作品 reader：
-              // 当前账号 canonical 可见 + 真实 publishedAt 新→旧。
-              positioningWorks: positioningWorksReader,
-              // Vercel AI SDK 路径:定位生成跑在 ai-worker 结构化节点(外置 positioning.generate
-              // 模板 + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
-              resolveModelSpec,
             },
           );
         } else if (
@@ -9740,7 +9485,212 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             : null;
         },
       };
+  const calibrationDiagnoseReaders = {
+              subject: {
+                get: async (
+                  c: RequestContext,
+                  subjectType: string,
+                  subjectId: string,
+                ) => {
+                  if (subjectType === "publication") {
+                    // publication → its title + current revision body (the 文稿 the agent
+                    // scores). A publication with no revision keeps "" (尽力诊断).
+                    const pub = await publishingService.getPublication(
+                      c,
+                      subjectId,
+                    );
+                    const revisions = await publishingService.listRevisions(
+                      c,
+                      subjectId,
+                      { limit: 1, offset: 0 },
+                    );
+                    const rev = revisions[0];
+                    return {
+                      title: rev?.title || `${pub.platform} 发布`,
+                      scriptText: rev?.description ?? "",
+                    };
+                  }
+                  // content_output → its title (the storyboard/文稿 plumbing lands later; the
+                  // agent grounds on title + positioning + rubric for Slice 1).
+                  const output = await projectsRepo.getOutput(c, subjectId);
+                  return { title: output.title, scriptText: "" };
+                },
+              },
+              rubric: {
+                current: async (c: RequestContext) => {
+                  // The creator's default 变现加权 rubric (canonical seed id) — its current
+                  // version's dimensions are exactly what the agent scores. 这里固定读取当前默认版本，不接受模型或客户端覆盖评分标准。
+                  // [T-332 S2] per-account 默认 rubric(当前号的 canonical id)。
+                  const v = await calibrationService.getCurrentRubricVersion(
+                    c,
+                    canonicalRubricIdFor(c),
+                  );
+                  return {
+                    rubricVersionId: v.id,
+                    dimensions: v.dimensions.map((d) => ({
+                      key: d.key,
+                      label: d.label,
+                      description: d.description,
+                    })),
+                  };
+                },
+              },
+  };
+  const calibrationScoreReaders = {
+              prediction: {
+                get: async (c: RequestContext, predictionId: string) => {
+                  // The locked prediction's 维度评分约定 (predictedConversion.dimensions =
+                  // [{key,score,...}]) + subject. Ownership-gated via the calibration public
+                  // service (cross-user / unknown → 404). The rubric version resolves each
+                  // dimension's 中文 label (取不到回退 key).
+                  const pred = await calibrationService.getPrediction(
+                    c,
+                    predictionId,
+                  );
+                  if(pred.status!=="locked")throw new Error("请先锁定盲预测，再生成真实表现评分");
+                  if(pred.subjectType==="publication")await publishingService.getPublication(c,pred.subjectId);
+                  else if(!await projectsService.getOutputOwnerSummary(c,pred.subjectId))throw new OwnershipError("评分作品不存在");
+                  const conv = (pred.predictedConversion ?? {}) as {
+                    dimensions?: Array<{ key?: unknown; score?: unknown }>;
+                  };
+                  const rawDims = Array.isArray(conv.dimensions)
+                    ? conv.dimensions
+                    : [];
+                  // Resolve dimension labels from the prediction's rubric version (best-effort).
+                  const labelByKey = new Map<string, string>();
+                  try {
+                    const version =
+                      await calibrationService.getRubricVersion(c,pred.rubricVersionId);
+                    for (const d of version.dimensions) {
+                      labelByKey.set(d.key, d.label);
+                    }
+                  } catch {
+                    /* label is decoration — fall back to key */
+                  }
+                  const dimensions = rawDims
+                    .map((d) => {
+                      const key = typeof d.key === "string" ? d.key : "";
+                      const predicted =
+                        typeof d.score === "number" && Number.isFinite(d.score)
+                          ? d.score
+                          : null;
+                      return {
+                        key,
+                        label: labelByKey.get(key) ?? key,
+                        predicted,
+                      };
+                    })
+                    .filter((d) => d.key !== "");
+                  // The subject's 标题 (the work being scored). For a publication, the latest
+                  // revision title; for a content_output, its title. Best-effort — 取不到给空串。
+                  let title = "";
+                  try {
+                    if (pred.subjectType === "publication") {
+                      const revisions = await publishingService.listRevisions(
+                        c,
+                        pred.subjectId,
+                        { limit: 1, offset: 0 },
+                      );
+                      title = revisions[0]?.title ?? "";
+                    } else {
+                      const output = await projectsRepo.getOutput(
+                        c,
+                        pred.subjectId,
+                      );
+                      title = output.title;
+                    }
+                  } catch {
+                    /* title is decoration — 尽力评分 */
+                  }
+                  return {
+                    status: pred.status,
+                    subjectType: pred.subjectType,
+                    subjectId: pred.subjectId,
+                    title,
+                    dimensions,
+                  };
+                },
+              },
+              metrics: {
+                forSubject: async (
+                  c: RequestContext,
+                  subjectType: string,
+                  subjectId: string,
+                ) => {
+                  // Real metrics live in analytics' metric_snapshots (rawMetrics jsonb with the
+                  // platform payload: views/likes/comments/shares/favorites/finish_rate/...).
+                  // For a publication, subjectId IS the publicationId; for a content_output,
+                  // resolve its publication(s) via publishing first. Read the LATEST snapshot
+                  // per publication (captured-at desc), merge numeric rawMetrics. No snapshot →
+                  // [](honest: the runner then scores from title+定位 and says so).
+                  const numericMetrics = (
+                    raw: Record<string, unknown>,
+                  ): Array<{ key: string; value: number }> =>
+                    Object.entries(raw)
+                      .filter(
+                        ([, v]) =>
+                          typeof v === "number" && Number.isFinite(v),
+                      )
+                      .map(([key, v]) => ({ key, value: v as number }));
+                  const latestFor = async (
+                    publicationId: string,
+                  ): Promise<Array<{ key: string; value: number }>> => {
+                    try {
+                      const page =
+                        await analyticsService.getPublicationAnalytics(
+                          c,
+                          publicationId,
+                          1,
+                          10,
+                        );
+                      const latest = page.rows
+                        .slice()
+                        .sort((a, b) =>
+                          b.capturedAt.localeCompare(a.capturedAt),
+                        )[0];
+                      const raw = (latest?.rawMetrics ?? {}) as Record<
+                        string,
+                        unknown
+                      >;
+                      return numericMetrics(raw);
+                    } catch {
+                      return []; // a single publication's read failing → no metrics, never crash
+                    }
+                  };
+                  let publicationIds: string[] = [];
+                  if (subjectType === "publication") {
+                    publicationIds = [subjectId];
+                  } else {
+                    try {
+                      const pubs = await publishingService.listPublications(
+                        c,
+                        subjectId,
+                        { limit: 20, offset: 0 },
+                      );
+                      publicationIds = pubs.map((p) => p.id);
+                    } catch {
+                      publicationIds = [];
+                    }
+                  }
+                  // Merge metrics across the subject's publications (last写入 wins per key —
+                  // a single-publication subject is the common case).
+                  const merged = new Map<string, number>();
+                  for (const pid of publicationIds) {
+                    for (const m of await latestFor(pid)) {
+                      merged.set(m.key, m.value);
+                    }
+                  }
+                  return Array.from(merged.entries()).map(([key, value]) => ({
+                    key,
+                    value,
+                  }));
+                },
+              },
+  };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
+    "calibration.score":createCalibrationScoreBusinessAdapter({...generationContext,...calibrationScoreReaders}),
+    "positioning.generate":createPositioningGenerateBusinessAdapter({positioning:generationContext.positioning,accounts:makeGenerationReaders().accountsReader,positioningWorks:positioningWorksReader}),
     "topic.enrich":createTopicEnrichBusinessAdapter({
       ...generationContext,
       signals:makeGenerationReaders().signalsReader,

@@ -1,26 +1,11 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec, DiagnosisOutput } from "@creatoros/ai-worker";
+import type { DiagnosisOutput } from "@creatoros/ai-worker";
 import {
-  assembleCreativeContext,
-  type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonLoose } from "./llm/parse";
 
-// AI 编导诊断 runner (calibration.diagnose node, 校准中心大改 Slice 1). Reads ONE content
-// subject (script / content_output) + the creator's current 变现加权 rubric + creative
-// context, then asks Claude to score every rubric dimension 1–5 (with 打分理由 + 修改建议),
-// estimate 发布前表现 chips, and write a 综合判断/主要问题/优先修改 诊断. Records a
-// `calibration_diagnosis` CANDIDATE; on 采纳, the AI service's calibration_diagnosis confirm
-// branch mints ONE draft prediction (predictedConversion/predictedMetrics filled by the
-// 维度评分约定) via the AiCalibrationPort.
-//
-// 跑在 Vercel AI SDK 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的 model,
-// 提示词走外置模板 calibration.diagnose(脊柱-1 模板化解耦)。narrow injected readers; owns its
-// lifecycle — markRunning → recordCandidate, cancel on any failure. The subject's content is
-// read through a narrow injected reader (no cross-module repo import); the rubric dimensions
-// come from a narrow rubric reader bound to the calibration service.
+// 编导诊断共享提示与归一；prepare/project由calibration-positioning-business-adapters承接，执行生命周期归Worker。
 
 // One dimension score the agent returns (the 中栏 评分表 row): rubric key + 1–5 + 理由 + 建议.
 export interface DiagnosisDimensionScore {
@@ -70,16 +55,6 @@ export interface DiagnosisRubricReader {
   }>;
 }
 
-export interface CalibrationDiagnoseDeps extends ContextDeps {
-  ai: AiService;
-  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
-  subject: DiagnosisSubjectReader;
-  rubric: DiagnosisRubricReader;
-}
 
 export interface CalibrationDiagnoseTask {
   id: string;
@@ -89,7 +64,7 @@ export interface CalibrationDiagnoseTask {
 // 把 CreativeContext + 待诊断主体 + rubric 维度映射成 calibration.diagnose 模板的 facets
 // (占位化原 buildDiagnosePrompt 的上下文块）。rubricBlock(逐维度评分清单)是必需 facet,
 // 调用方按 dimensions 计算;title/script 来自 subject(文稿沿用原兜底文案)。
-function diagnoseFacets(
+export function diagnoseFacets(
   context: CreativeContext,
   subject: { title: string; scriptText: string },
   dimensions: Array<{ key: string; label: string; description?: string }>,
@@ -195,97 +170,4 @@ export function parseDiagnosis(
   const parsed = parseJsonLoose(text);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
   return normalizeDiagnosis(parsed as DiagnosisOutput, rubricKeys);
-}
-
-// Orchestrate one calibration.diagnose task end to end. Owns its lifecycle: on any failure
-// (missing subject ids, no current rubric, unparseable output, LlmCredentialError when no
-// key is configured) it cancels the task (→ a terminal the UI renders as 失败) so it never
-// lingers in `running`. Swallows so a background failure never crashes the server.
-export async function runCalibrationDiagnose(
-  ctx: RequestContext,
-  task: CalibrationDiagnoseTask,
-  deps: CalibrationDiagnoseDeps,
-): Promise<void> {
-  try {
-    await deps.ai.markRunning(ctx, task.id); // honest status while the LLM works
-    const subjectType =
-      typeof task.inputData.subjectType === "string"
-        ? task.inputData.subjectType
-        : "";
-    const subjectId =
-      typeof task.inputData.subjectId === "string"
-        ? task.inputData.subjectId
-        : "";
-    if (!subjectType || !subjectId) {
-      throw new Error(
-        "calibration-diagnose-runner: inputData.subjectType + subjectId are required",
-      );
-    }
-    // Read the subject's content (ownership-gated) + the creator's current rubric. The
-    // rubric reader resolves the rubricVersionId the draft prediction will reference, so a
-    // caller need not pass it (but inputData.rubricVersionId, if present, is the override).
-    const subject = await deps.subject.get(ctx, subjectType, subjectId);
-    const rubric = await deps.rubric.current(ctx);
-    if (rubric.dimensions.length === 0) {
-      throw new Error("calibration-diagnose-runner: rubric has no dimensions");
-    }
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: null, topic: subject.title, angle: "" },
-      deps,
-    );
-    // Vercel AI SDK 路径:按 capability 解析 model + 跑 ai-worker 结构化节点(外置 calibration.diagnose
-    // 模板 + outputSchema)。T-025:改 runStructuredNode(generateObject 绑 schema,落空→文本兜底),
-    // 让用户默认的 MiniMax 也稳定吐可解析诊断(旧 runTemplatedNode 自由文本路径 MiniMax 下常失败)。
-    // normalizeDiagnosis 原样保留 rubricKeys 交集/夹取容错(只换"拿对象"的来源)。
-    const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
-    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
-    // 让 calibration.diagnose 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
-    const { modelFor, runStructuredNode, getTemplate } =
-      await import("@creatoros/ai-worker");
-    const { object } = await runStructuredNode<DiagnosisOutput>({
-      model: modelFor(spec),
-      template: getTemplate("calibration.diagnose"),
-      facets: diagnoseFacets(context, subject, rubric.dimensions),
-    });
-    const diagnosis = normalizeDiagnosis(
-      object,
-      new Set(rubric.dimensions.map((d) => d.key)),
-    );
-    if (!diagnosis) {
-      throw new Error(
-        "calibration-diagnose-runner: LLM returned no parseable 诊断",
-      );
-    }
-    // 结构化路径单发,补一条完成步事件喂窗口步骤日志(诚实:就一步)。
-    await deps.ai.recordStep(ctx, task.id, {
-      stepNo: 1,
-      kind: "step",
-      text: `已生成编导诊断（${diagnosis.dimensions.length} 维度评分）`,
-      toolCalls: [],
-    });
-    // Record the diagnosis candidate; 采纳 → createDraftPrediction via the
-    // calibration_diagnosis confirm branch. Carry the subject + resolved rubricVersionId so
-    // confirm can mint the prediction against the right rubric version.
-    await deps.ai.recordCandidate(ctx, task.id, {
-      resultType: "calibration_diagnosis",
-      resultData: {
-        subjectType,
-        subjectId,
-        rubricVersionId: rubric.rubricVersionId,
-        diagnosis,
-      },
-    });
-  } catch (err) {
-    try {
-      await deps.ai.cancelTask(ctx, task.id);
-    } catch {
-      /* task may already be terminal */
-    }
-    // eslint-disable-next-line no-console
-    console.error(
-      `[calibration-diagnose-runner] diagnose failed for task ${task.id}:`,
-      err,
-    );
-  }
 }

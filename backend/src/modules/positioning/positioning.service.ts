@@ -1,3 +1,4 @@
+import {lockPositioningAdoptionAccount} from "./positioning-write-lock";
 import { createHash } from "node:crypto";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -370,14 +371,14 @@ export function createPositioningService(
   // upsertProfile / createStatementVersion / evaluateGate 全经此,故定位全消费面(positioning
   // 页 / creative-context positioning facet / script-review-runner / positioning-runner)
   // 随 ctx.accountId 自动按号。op 标注抛点便于前端归因。
-  function repoFor(ctx: RequestContext, op: string): PositioningRepository {
+  function repoFor(ctx: RequestContext, op: string, connection: Db = db): PositioningRepository {
     const repoDeps: RepoDeps = {
       now,
       nextId,
       userId: ctx.userId,
       accountId: requireAccountId(ctx.accountId, op),
     };
-    return createPositioningRepository(db, repoDeps);
+    return createPositioningRepository(connection, repoDeps);
   }
 
   // Deterministic PositioningGate scorer (C-5: NO Date.now / Math.random / fetch).
@@ -634,7 +635,10 @@ export function createPositioningService(
     },
 
     async upsertProfile(ctx, input) {
-      const repo = repoFor(ctx, "positioning.upsertProfile");
+      return db.transaction(async tx => {
+      // 正式账号均持有同一行锁；历史无账号行的数据保持旧读写语义。
+      await lockPositioningAdoptionAccount(ctx,tx,false);
+      const repo = repoFor(ctx, "positioning.upsertProfile", tx as unknown as Db);
       const existing = await repo.getProfile();
       // [T-049 B3] 缺省 = **保留现值**(partial merge),不再清空。旧语义「缺省=空串」
       // 是真事故根因:采纳 AI 定位建议(ai.service confirm / Copilot 聊天卡都只传 5 个
@@ -680,6 +684,7 @@ export function createPositioningService(
         ? await repo.updateProfileRow(normalized)
         : await repo.insertProfile(normalized);
       return toCreatorProfileDto(row);
+      });
     },
 
     async resetMaster(ctx) {
@@ -714,7 +719,10 @@ export function createPositioningService(
     },
 
     async createStatementVersion(ctx, input) {
-      const repo = repoFor(ctx, "positioning.createStatementVersion");
+      return db.transaction(async tx => {
+      // 正式账号均持有同一行锁；历史无账号行的数据保持旧读写语义。
+      await lockPositioningAdoptionAccount(ctx,tx,false);
+      const repo = repoFor(ctx, "positioning.createStatementVersion", tx as unknown as Db);
       const { profileId } = await requireProfileId(repo);
       const profileRow = await repo.getProfile();
       if (!profileRow) {
@@ -745,6 +753,7 @@ export function createPositioningService(
         masterSnapshot: snapshotFromProfile(toCreatorProfileDto(profileRow)),
       });
       return toPositioningStatementDto(row);
+      });
     },
 
     async listStatements(ctx, page) {

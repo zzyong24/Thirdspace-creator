@@ -1,0 +1,112 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/calibration-positioning-adoption.test.ts > 诊断不存在的真实对象不可采纳
+[ai-task-runner] taskId=ai-task-3 taskType=calibration.diagnose status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/calibration-positioning-adoption.test.ts > 真实跨账号subject拒绝，预测不落库
+[ai-task-runner] taskId=ai-task-3 taskType=calibration.diagnose status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/integration/calibration-positioning-adoption.test.ts > 两个定位任务并发首次采纳只有一个母版且版本连续
+[ai-task-runner] taskId=ai-task-3 taskType=positioning.generate status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ❯ src/integration/calibration-positioning-adoption.test.ts (9 tests | 3 failed) 5813ms
+   × 诊断不存在的真实对象不可采纳 583ms
+   × 真实跨账号subject拒绝，预测不落库 560ms
+   × 两个定位任务并发首次采纳只有一个母版且版本连续 681ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 诊断不存在的真实对象不可采纳
+AssertionError: promise resolved "{ id: 'ai-task-3', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "legacy-attempt-8ccb01d1-8ccb01d1",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-3",
++   "idempotencyKey": "a:calibration.diagnose:legacy-attempt-8ccb01d1-8ccb01d1",
++   "inputData": {
++     "subjectId": "missing",
++     "subjectType": "content_output",
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": null,
++   "requestFingerprint": "sha256:3e75089ef10fae5bc5242e890ee085177a616093be0cf48b74e9c1a88990935c",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "calibration.diagnose",
++   "userId": "u",
+  }
+
+ ❯ src/integration/calibration-positioning-adoption.test.ts:34:121
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 真实跨账号subject拒绝，预测不落库
+AssertionError: promise resolved "{ id: 'ai-task-3', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "legacy-attempt-5f58fe45-5f58fe45",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-3",
++   "idempotencyKey": "a:calibration.diagnose:legacy-attempt-5f58fe45-5f58fe45",
++   "inputData": {
++     "subjectId": "foreign-output",
++     "subjectType": "content_output",
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": null,
++   "requestFingerprint": "sha256:1b946df5ce1964f09b9c023ec9cfd97b3377211bd26a16f9a8960f09c2c6d9c7",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "calibration.diagnose",
++   "userId": "u",
+  }
+
+ ❯ src/integration/calibration-positioning-adoption.test.ts:37:134
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/integration/calibration-positioning-adoption.test.ts > 两个定位任务并发首次采纳只有一个母版且版本连续
+ConflictError: 当前任务不可由旧入口写候选，或已转交持久执行权
+ ❯ Object.recordCandidate src/modules/ai/ai.service.ts:2083:27
+    2081|         resultData: input.resultData,
+    2082|       });
+    2083|       if (!updated) throw new ConflictError("当前任务不可由旧入口写候选，或已转交持久执行权");
+       |                           ^
+    2084|       await logRunnerState(repo, taskId);
+    2085|       return toTaskDto(updated);
+ ❯ task src/integration/calibration-positioning-adoption.test.ts:31:257
+ ❯ src/integration/calibration-positioning-adoption.test.ts:38:85
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  12:57:07
+   Duration  7.62s (transform 1.00s, setup 0ms, import 1.63s, tests 5.81s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/calibration-positioning-adoption.test.ts --retry=0

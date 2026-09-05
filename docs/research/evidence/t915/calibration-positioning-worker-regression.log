@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/calibration-positioning-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts src/modules/execution/structured-worker.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  15 passed (15)
+   Start at  12:58:31
+   Duration  11.89s (transform 2.51s, setup 0ms, import 4.28s, tests 24.43s, environment 0ms)
+

@@ -1,4 +1,4 @@
-import { and, eq, aiTasks, aiTaskResults, executionCalls, executionTasks, type Db } from "@creatoros/backend";
+import { and, eq, aiTasks, aiTaskResults, aiTaskSteps, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import { workerStructuredResultSchema, workerPortInputSchemas, type WorkerStructuredResult, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { RequestContext } from "@creatoros/contract";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
@@ -40,6 +40,11 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
         const resultId=`ai-result:${call.id}`;
         await tx.insert(aiTaskResults).values({id:resultId,executionCallId:call.id,aiTaskId:business.id,resultType:projected.resultType,
           artifactId:projected.artifactId ?? null,knowledgeItemId:projected.knowledgeItemId ?? null,assetId:projected.assetId ?? null,resultData:{...projected.resultData,...(structured ? {executionGeneration:structured.generation,executionValidation:structured.validation ?? null} : {})}});
+        if(business.taskType==="calibration.diagnose" && projected.resultType==="calibration_diagnosis") {
+          const diagnosis=(projected.resultData as {diagnosis?:{dimensions?:unknown}}).diagnosis;
+          if(!Array.isArray(diagnosis?.dimensions))throw new ConflictError("诊断维度格式无效");
+          await tx.insert(aiTaskSteps).values({id:`ai-diagnosis-step:${call.id}`,aiTaskId:business.id,stepNo:1,kind:"step",text:`已生成编导诊断（${diagnosis.dimensions.length} 维度评分）`,toolCalls:[],createdAt:stamp});
+        }
         await tx.update(aiTasks).set({status:"awaiting_confirmation",completedAt:null,errorMessage:null,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,business.id));
         await tx.update(executionCalls).set({resultRef:resultId,updatedAt:stamp}).where(eq(executionCalls.id,call.id));
         await tx.update(executionTasks).set({status:partial ? "partial" : "succeeded",leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:null,lastErrorMessage:null,updatedAt:stamp}).where(eq(executionTasks.id,task.id));

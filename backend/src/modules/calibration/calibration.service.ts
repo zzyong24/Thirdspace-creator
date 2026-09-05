@@ -237,6 +237,7 @@ export interface CalibrationService {
   ): Promise<CalibrationResultResource>;
   // Read surface consumed by the Candidate module's 变现加权 ranking (§5.3 → §6.2) and
   // the FE drill — public, no contract op.
+  getRubricVersion(ctx: RequestContext, id: string): Promise<RubricVersionResource>;
   getCurrentRubricVersion(
     ctx: RequestContext,
     rubricId: string,
@@ -445,6 +446,9 @@ export function createCalibrationService(
       return toRubricDto(rubric, current);
     },
 
+    async getRubricVersion(ctx, id) {
+      return toRubricVersionDto(await repoFor(ctx,"calibration.getRubricVersion").getRubricVersion(id));
+    },
     async getCurrentRubricVersion(ctx, rubricId) {
       const repo = repoFor(ctx, "calibration.getCurrentRubricVersion");
       const rubric = await repo.getRubric(rubricId); // ownership gate
