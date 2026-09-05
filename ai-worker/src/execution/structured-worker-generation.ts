@@ -1,3 +1,5 @@
+import { topicCardSchema } from "../prompt/templates/topic-enrich";
+import { materialMatchSchema } from "../prompt/templates/material-match";
 import {planningThesisOutputSchema,planningThesisGroundingSchema} from "./planning-thesis-output";
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
 import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
@@ -43,7 +45,11 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
     if(input.skillId==="planning.thesis")planningThesisGroundingSchema.parse(JSON.parse(input.facets.__planningThesisGrounding ?? "null"));
-    const businessSchema=input.skillId==="planning.thesis" ? planningThesisOutputSchema : input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
+    const topicCandidateSchema=topicCardSchema.refine(value=>Boolean(value.oneLiner?.trim() || value.audiencePain?.trim()),"至少需要一句话选题或观众痛点");
+    const materialIds=input.skillId==="material.match" ? new Set(z.object({assetIds:z.array(z.string())}).parse(JSON.parse(input.facets.__materialMatchGrounding ?? "null")).assetIds) : new Set<string>();
+    // SEMANTIC_BOUNDARY_ALLOW: 仅要求至少一个冻结范围内真实ID，不判断素材相关性。
+    const materialCandidateSchema=materialMatchSchema.refine(value=>value.matches.some(item=>materialIds.has(item.assetId.trim())),"至少需要一项真实素材");
+    const businessSchema=input.skillId==="topic.enrich" ? topicCandidateSchema : input.skillId==="material.match" ? materialCandidateSchema : input.skillId==="planning.thesis" ? planningThesisOutputSchema : input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
     const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}

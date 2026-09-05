@@ -44,12 +44,13 @@ describe("独立Worker冻结Skill结构化执行",()=>{
     }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
   it("完成策略不足保留partial与校验原因，公共采纳入口拒绝物化",async()=>{
-    const input={...modelInput,skillId:"script.draft",skillSnapshot:{...modelInput.skillSnapshot,skills:[{...modelInput.skillSnapshot.skills[0]!,skillId:"script.draft",effective:{...modelInput.skillSnapshot.skills[0]!.effective,
+    // 使用允许创作partial的正式分镜Skill；script.draft专用双节点管线另有贯通测试。
+    const input={...modelInput,skillId:"script.storyboard.segment",skillSnapshot:{...modelInput.skillSnapshot,skills:[{...modelInput.skillSnapshot.skills[0]!,skillId:"script.storyboard.segment",effective:{...modelInput.skillSnapshot.skills[0]!.effective,
       outputSchema:{type:"object",properties:{shots:{type:"array",items:{type:"object",properties:{role:{type:"string"}},required:["role"]}}},required:["shots"]},
       completionPolicy:{schemaVersion:1 as const,minSegments:3,maxSegments:null,requiredSequence:[],repairAttempts:0},completionPolicyAdapter:{id:"script.draft.shots",version:"1"},
     }}]}};
     const mapped=await prepare("partial",input);let requests=0;
-    const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"test",object:"chat.completion",created:1,model:"test",choices:[{index:0,message:{role:"assistant",content:'{"shots":[{"role":"hook"}]}'},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});
+    const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"test",object:"chat.completion",created:1,model:"test",choices:[{index:0,message:{role:"assistant",content:'{"shots":[{"role":"hook","口播":"真实但不足三段的正文"}]}'},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const worker=host((server.address() as {port:number}).port);
     try{
       await worker.drainOnce();
@@ -57,7 +58,7 @@ describe("独立Worker冻结Skill结构化执行",()=>{
       const candidates=await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"partial"));expect(candidates).toHaveLength(1);expect(candidates[0]?.resultData).toMatchObject({executionValidation:{status:"partial",errors:[{code:"MIN_SEGMENTS"}]}});
       const unexpectedWrite=vi.fn(async()=>{throw new Error("PARTIAL_MUST_NOT_WRITE");});
       const ai=createAiService({db,now:()=>new Date().toISOString(),nextId:prefix=>prefix+"fixture",artifacts:{createVersion:unexpectedWrite},knowledge:{createKnowledge:unexpectedWrite},candidate:{createFromAIResult:unexpectedWrite,enrichCard:unexpectedWrite},learnings:{createLearning:unexpectedWrite},publishing:{createPublicationFromDraft:unexpectedWrite},materialLinks:{link:unexpectedWrite},positioning:{upsertProfile:unexpectedWrite,createStatementVersion:unexpectedWrite},calibration:{createDraftPrediction:unexpectedWrite}});
-      await expect(ai.confirmTask(ctx,"partial")).rejects.toThrow("尚未满足生成完整性要求");expect(unexpectedWrite).not.toHaveBeenCalled();
+      await expect(ai.confirmTask(ctx,"partial")).rejects.toThrow("该部分脚本缺少完整、可核验的执行结果，不能采纳");expect(unexpectedWrite).not.toHaveBeenCalled();
     }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
   it("独立Worker总调用预算为一时阻止文本回退请求",async()=>{

@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/target-business-adapters.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:36:57
+   Duration  513ms (transform 240ms, setup 0ms, import 380ms, tests 8ms, environment 0ms)
+

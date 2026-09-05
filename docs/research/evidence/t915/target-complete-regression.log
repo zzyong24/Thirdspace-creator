@@ -1,0 +1,39 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/structured-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts src/modules/ai-runtime/target-business-adapters.test.ts src/modules/ai/structured-target-adoption.integration.test.ts src/modules/ai/ai.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/target-worker.integration.test.ts (4 tests | 2 failed) 7522ms
+   × topic.enrich 无效输出=true：真实Worker有界生成，合法候选不重复 1021ms
+   × material.match 无效输出=true：真实Worker有界生成，合法候选不重复 1019ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/target-worker.integration.test.ts > topic.enrich 无效输出=true：真实Worker有界生成，合法候选不重复
+ FAIL  src/modules/execution/target-worker.integration.test.ts > material.match 无效输出=true：真实Worker有界生成，合法候选不重复
+AssertionError: expected 'queued' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "queued"
+
+ ❯ src/modules/execution/target-worker.integration.test.ts:181:11
+    179|           (await db.select().from(aiTasks).where(eq(aiTasks.id, taskId…
+    180|             ?.status,
+    181|         ).toBe("failed");
+       |           ^
+    182|         expect(
+    183|           await db
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  2 failed | 75 passed (77)
+   Start at  12:44:39
+   Duration  37.73s (transform 3.50s, setup 0ms, import 6.33s, tests 58.34s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/structured-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts src/modules/ai-runtime/target-business-adapters.test.ts src/modules/ai/structured-target-adoption.integration.test.ts src/modules/ai/ai.service.test.ts`
+Exit status 1

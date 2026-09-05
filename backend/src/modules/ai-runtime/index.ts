@@ -120,3 +120,5 @@ export { preparePlanningThesisContext } from "./planning-thesis-context";
 export { createPlanningThesisBusinessAdapter } from "./planning-thesis-business-adapter";
 
 export * from "./browser-task-authorization.service";
+
+export * from "./target-business-adapters";

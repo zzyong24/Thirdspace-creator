@@ -1,0 +1,35 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/structured-worker.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/structured-worker.integration.test.ts (5 tests | 1 failed) 6192ms
+     × 完成策略不足保留partial与校验原因，公共采纳入口拒绝物化 1026ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/structured-worker.integration.test.ts > 独立Worker冻结Skill结构化执行 > 完成策略不足保留partial与校验原因，公共采纳入口拒绝物化
+AssertionError: expected undefined to be 'partial' // Object.is equality
+
+- Expected:
+"partial"
+
++ Received:
+undefined
+
+ ❯ src/modules/execution/structured-worker.integration.test.ts:56:101
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  12:40:53
+   Duration  8.03s (transform 1.12s, setup 0ms, import 1.71s, tests 6.19s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/structured-worker.integration.test.ts`
+Exit status 1

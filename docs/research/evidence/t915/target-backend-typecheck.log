@@ -1,0 +1,17 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/ai-runtime/target-business-adapters.test.ts(9,49): error TS2345: Argument of type '{ candidate: { get: Mock<() => Promise<{ title: string; angle: string; }>>; }; }' is not assignable to parameter of type 'ContextDeps & { candidate: CandidateReader; }'.
+  Property 'positioning' is missing in type '{ candidate: { get: Mock<() => Promise<{ title: string; angle: string; }>>; }; }' but required in type 'ContextDeps'.
+src/modules/ai-runtime/target-business-adapters.test.ts(18,51): error TS2345: Argument of type '{ assertProject: Mock<() => Promise<void>>; assets: { list: Mock<() => Promise<{ id: string; name: string; type: string; }[]>>; }; }' is not assignable to parameter of type 'ContextDeps & { assets: AssetsReader; assertProject(ctx: RequestContext, projectId: string): Promise<void>; }'.
+  Property 'positioning' is missing in type '{ assertProject: Mock<() => Promise<void>>; assets: { list: Mock<() => Promise<{ id: string; name: string; type: string; }[]>>; }; }' but required in type 'ContextDeps'.
+src/modules/ai-runtime/target-business-adapters.test.ts(26,51): error TS2345: Argument of type '{ assertProject: () => Promise<void>; assets: { list: () => Promise<never>; }; }' is not assignable to parameter of type 'ContextDeps & { assets: AssetsReader; assertProject(ctx: RequestContext, projectId: string): Promise<void>; }'.
+  Property 'positioning' is missing in type '{ assertProject: () => Promise<void>; assets: { list: () => Promise<never>; }; }' but required in type 'ContextDeps'.
+src/modules/execution/target-worker.integration.test.ts(18,51): error TS2345: Argument of type '{ candidate: { get: Mock<() => Promise<{ title: string; angle: string; }>>; }; }' is not assignable to parameter of type 'ContextDeps & { candidate: CandidateReader; }'.
+  Property 'positioning' is missing in type '{ candidate: { get: Mock<() => Promise<{ title: string; angle: string; }>>; }; }' but required in type 'ContextDeps'.
+src/modules/execution/target-worker.integration.test.ts(19,55): error TS2345: Argument of type '{ assertProject: () => Promise<void>; assets: { list: Mock<() => Promise<{ id: string; name: string; }[]>>; }; }' is not assignable to parameter of type 'ContextDeps & { assets: AssetsReader; assertProject(ctx: RequestContext, projectId: string): Promise<void>; }'.
+  Property 'positioning' is missing in type '{ assertProject: () => Promise<void>; assets: { list: Mock<() => Promise<{ id: string; name: string; }[]>>; }; }' but required in type 'ContextDeps'.
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

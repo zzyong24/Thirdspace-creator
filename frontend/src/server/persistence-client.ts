@@ -1,7 +1,7 @@
 import { createBrowserTaskAuthorizationService, createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
-import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
+import { createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
 import { createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
@@ -483,14 +483,13 @@ import {
   bootstrapDouyinCollectionJobs,
   ensureCollectionJobs,
 } from "@creatoros/backend/modules/ai-runtime";
-import { runTopicEnrich } from "@creatoros/backend/modules/ai-runtime";
+import { createTopicEnrichBusinessAdapter, createMaterialMatchBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationDiagnose } from "@creatoros/backend/modules/ai-runtime";
 import { runCalibrationScore } from "@creatoros/backend/modules/ai-runtime";
 import { createScriptBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { preparePlanningContractContext,projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { prepareReviewContext,projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
-import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
 // [T-309] collectProjectBrollInventory 把项目/账号边界收进唯一 B-roll 素材入口；
@@ -3133,7 +3132,30 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     knowledge: (c, proposal, tx) => knowledgeProposalAdoption.adopt(c, proposal, tx),
     assetTagsBatch: (c, proposals, tx) => assetTagProposalAdoption.adoptBatch(c, proposals, tx),
   }, deps.now);
+  const structuredTargetAdoption = createStructuredTargetAdoptionService(db, {
+    enrichCard(c,id,card,tx){
+      const txProjects=createProjectsService(createProjectRepository(tx as unknown as Db),deps);
+      return createCandidateService({db:tx as unknown as Db,...deps,
+        projects:{createProject:(context,input)=>txProjects.createProject(context,input)},
+        ingestion:{assertRunExists:async(context,runId)=>{await ingestionService.getRun(context,runId);}},
+      }).enrichCard(c,id,card);
+    },
+    link(c,input,tx){
+      const txDb=tx as unknown as Db;
+      const txProjects=createProjectsService(createProjectRepository(txDb),deps);
+      const txAssets=createAssetsService(createAssetRepository(txDb,deps),objectStorageForCtx,deps);
+      return createMaterialLinksService({db:txDb,...deps,
+        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertAssetOwned:async(context,id)=>{
+          const asset=await txAssets.getAsset(context,id);
+          if(asset.status!=="active")throw new Error("素材已不可用，请重新选择素材");
+          return asset;
+        },
+      }).create(c,input);
+    },
+  },deps.now);
   const aiService = createAiService({
+    structuredTargets: structuredTargetAdoption,
     agenticProposals: agenticProposalAdoption,
     db,
     now: deps.now,
@@ -4061,43 +4083,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "topic.enrich" &&
-          task.status === "queued"
-        ) {
-          // 选题补全 node (topic.enrich, 选题中心大改) — fills the 选题卡 (10 详情字段 + 3
-          // 指标) for ONE existing 选题候选 (inputData.candidateId), records a `topic_card`
-          // candidate; 采纳 upserts the card onto that candidate via the candidate module's
-          // enrichCard seam (wired on the AiCandidatePort above). The candidate reader is
-          // bound to candidateService.getCandidate (ownership-gated, no cross-module repo
-          // import).
-          await runTopicEnrich(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              signals: signalsReader,
-              knowledge: knowledgeReader,
-              candidate: {
-                get: async (c: RequestContext, candidateId: string) => {
-                  const cand = await candidateService.getCandidate(
-                    c,
-                    candidateId,
-                  );
-                  return { title: cand.title, angle: cand.angle };
-                },
-              },
-              // Vercel AI SDK 路径:选题补全跑在 ai-worker 结构化节点(外置 topic.enrich 模板
-              // + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "calibration.diagnose" &&
           task.status === "queued"
         ) {
@@ -4346,34 +4331,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   }));
                 },
               },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "material.match" &&
-          task.status === "queued"
-        ) {
-          // 素材匹配 node (制作 stage, Plan D2) — scans the creator's asset library and
-          // proposes which real assets fit this content (role + reason), records a
-          // `material_link_list` candidate; 采纳 ties each match to the project as a
-          // material-link (entityType:"asset", stage:"production") via the materialLinks
-          // port wired above (素材库⇄制作 live edge).
-          await runMaterialMatch(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              assets: assetsReader,
-              // Vercel AI SDK 路径:素材匹配跑在 ai-worker 结构化节点(外置 material.match 模板
-              // + generateObject 绑 outputSchema,落空→文本兜底),跨模型健壮(MiniMax 也稳出)。
-              resolveModelSpec,
             },
           );
         } else if (
@@ -9784,6 +9741,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         },
       };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "topic.enrich":createTopicEnrichBusinessAdapter({
+      ...generationContext,
+      signals:makeGenerationReaders().signalsReader,
+      knowledge:makeGenerationReaders().knowledgeReader,
+      candidate:{async get(c,id){const candidate=await candidateService.getCandidate(c,id);return {title:candidate.title,angle:candidate.angle};}},
+    }),
+    "material.match":createMaterialMatchBusinessAdapter({
+      ...generationContext,
+      assets:makeGenerationReaders().assetsReader,
+      async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
+    }),
     "script.draft":createScriptBusinessAdapter({
       ...resolveContextDeps(SCRIPT_DRAFT_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
       positioning:generationContext.positioning,

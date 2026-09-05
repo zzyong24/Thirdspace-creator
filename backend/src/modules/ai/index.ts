@@ -80,3 +80,5 @@ export { createExecutionCandidateService, type ExecutionCandidateDeps } from "./
 
 export { createAgenticProposalAdoptionService, type AgenticProposalAdoptionPorts } from "./agentic-proposal-adoption.service";
 export { createAgenticProposalStagingService } from "./agentic-proposal-staging.service";
+
+export { createStructuredTargetAdoptionService, type StructuredTargetAdoptionPorts } from "./structured-target-adoption.service";

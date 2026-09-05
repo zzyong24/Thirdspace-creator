@@ -1,9 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { AiService } from "@creatoros/backend/modules/ai";
-import type { ModelSpec, TopicCardOutput } from "@creatoros/ai-worker";
+import type { TopicCardOutput } from "@creatoros/ai-worker";
 import {
-  assembleCreativeContext,
-  type ContextDeps,
   type CreativeContext,
 } from "./creative-context";
 import { parseJsonLoose } from "./llm/parse";
@@ -18,12 +15,7 @@ import { parseJsonLoose } from "./llm/parse";
 // The context it reasons against is the full CreativeContext (定位 + 飞轮 + 受众信号 + 知识库)
 // so the card's 素材依据/观众痛点 are grounded in the creator's real situation.
 //
-// 跑在 **Vercel AI SDK** 上(弃旧 LlmCompleter):resolveModelSpec 按 capability 解析用户配的
-// model,提示词走外置模板 topic.enrich(脊柱-1 模板化解耦)。T-025b:改 runStructuredNode
-// (generateObject 绑 topic.enrich 的 outputSchema,落空→文本兜底抽 JSON 再同 schema 校验),
-// 让用户默认的 MiniMax-M3 也稳定吐可解析选题卡(旧路径:单发 messages.create + parseCard,
-// MiniMax 下常吐不出规整 JSON → parseCard 返回 null → 任务 cancelled,和刚修的 8 个节点同类
-// bug)。normalizeCard 复用 str/strArr/score/difficulty 保留原容错。
+// 后台执行由统一 Worker 承接；本文件只保留选题卡共享提示和归一函数。
 //
 // 注:buildEnrichPrompt + parseCard 仍导出且行为不变 —— chat-runner 的 enrichTopic 工具(对话面
 // 产选题卡候选,走 runAgentNode 拿自由文本)复用它们,不能改签名/语义。
@@ -54,21 +46,6 @@ export interface CandidateReader {
     ctx: RequestContext,
     candidateId: string,
   ): Promise<{ title: string; angle: string }>;
-}
-
-export interface TopicEnrichDeps extends ContextDeps {
-  ai: AiService;
-  /** 按 capability 解析用户配的 model(Vercel SDK)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
-  candidate: CandidateReader;
-}
-
-export interface TopicEnrichTask {
-  id: string;
-  inputData: Record<string, unknown>;
 }
 
 // Exported so the in-chat `topic.enrich` tool (T-004 ChatBox) reuses the EXACT enrich
@@ -208,63 +185,4 @@ export function parseCard(text: string): TopicCard | null {
   const parsed = parseJsonLoose(text);
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
   return normalizeCard(parsed as TopicCardOutput);
-}
-
-// Orchestrate one topic.enrich task end to end. Owns its lifecycle: on any failure
-// (missing candidateId, unparseable output, LlmCredentialError when no key is configured)
-// it cancels the task (→ a terminal the UI renders as 失败) so it never lingers in
-// `running`. Swallows so a background failure never crashes the server.
-export async function runTopicEnrich(
-  ctx: RequestContext,
-  task: TopicEnrichTask,
-  deps: TopicEnrichDeps,
-): Promise<void> {
-  try {
-    await deps.ai.markRunning(ctx, task.id); // honest status while the LLM works
-    const candidateId =
-      typeof task.inputData.candidateId === "string"
-        ? task.inputData.candidateId
-        : "";
-    if (!candidateId) {
-      throw new Error("topic-enrich-runner: inputData.candidateId is required");
-    }
-    // Read the candidate's title/angle (ownership-gated through the candidate service).
-    const subject = await deps.candidate.get(ctx, candidateId);
-    const context = await assembleCreativeContext(
-      ctx,
-      { projectId: null, topic: subject.title, angle: subject.angle },
-      deps,
-    );
-    // Vercel AI SDK 路径:按 "topic.enrich" capability 解析 model + 跑 ai-worker 结构化节点(外置
-    // topic.enrich 模板 + outputSchema)。T-025b:runStructuredNode 绑 generateObject,落空→文本
-    // 兜底,让用户默认的 MiniMax 也稳定吐可解析选题卡。顶层是对象,取 object 再 normalize。
-    const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
-    // T-040b:运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(而非编译期 import 快照),
-    // 让 topic.enrich 的 system/template/tools 也能吃到 skill_config_overrides 覆盖。
-    const { modelFor, runStructuredNode, getTemplate } =
-      await import("@creatoros/ai-worker");
-    const { object } = await runStructuredNode<TopicCardOutput>({
-      model: modelFor(spec),
-      template: getTemplate("topic.enrich"),
-      facets: enrichFacets(context, subject),
-    });
-    const card = normalizeCard(object);
-    if (!card) {
-      throw new Error("topic-enrich-runner: LLM returned no parseable 选题卡");
-    }
-    // Record the card candidate; 采纳 → enrichCard(candidateId, card) via the
-    // topic_card confirm branch. Carry candidateId so confirm knows the target.
-    await deps.ai.recordCandidate(ctx, task.id, {
-      resultType: "topic_card",
-      resultData: { candidateId, card },
-    });
-  } catch (err) {
-    try {
-      await deps.ai.cancelTask(ctx, task.id);
-    } catch {
-      /* task may already be terminal */
-    }
-    // eslint-disable-next-line no-console
-    console.error(`[topic-enrich-runner] enrich failed for task ${task.id}:`, err);
-  }
 }

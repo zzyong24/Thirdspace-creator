@@ -1,0 +1,32 @@
+{
+  "task": "T-915",
+  "sourceBase": "9acba73e",
+  "recordedAt": "2026-09-05T19:48:09.978753+00:00",
+  "scope": [
+    "topic.enrich",
+    "material.match"
+  ],
+  "status": "本轮迁移与定向验收通过；完整任务仍在实施",
+  "verification": {
+    "regression": "77 PASS; target-verified-regression.log",
+    "types": "backend/ai-worker/frontend exit0",
+    "boundary": "无新增违规，历史基线5",
+    "orphan": "见 target-orphan-final.log",
+    "review": "worker_review 独立只读审查通过；发现的两项阻断已修复",
+    "reconcile": "exit1；211 errors/1 warning，与既有T-916基线一致；不是全绿。初次213含组合测试两项边界问题，移至组合测试层后消除。",
+    "retiredConsumers": "rg runTopicEnrich|runMaterialMatch backend/src frontend/src --glob *.ts：exit1，无匹配；target-retired-consumers.log"
+  },
+  "files": {
+    "ai-worker/src/execution/structured-worker-generation.ts": "936f5d7e0492c177525fa26abc95fd9ca0f9be0e309cb4ccc15fcc1cdd6d1e4d",
+    "backend/src/modules/ai-runtime/target-business-adapters.ts": "1ccc3167d40ee9a6c776d0a20eb4383b69393adfa8fd4184014e13ac639252ed",
+    "backend/src/modules/ai/structured-target-adoption.service.ts": "c8ec819d7b35582448e76bd66a7874b8c36a7625e3c921871a96d0d26eb96591",
+    "frontend/src/server/persistence-client.ts": "db62607df32031d6884ae746a65630a89093c8c7443b5b6c87ed867a18e02413",
+    "backend/src/integration/structured-target-adoption.test.ts": "3073b9ba8e447a315434d22e0e430caa4e201154883aac0fae7129d9f5bd9afd",
+    "backend/src/modules/execution/target-worker.integration.test.ts": "35465692304b5bdaa8532cd6c3d9da0c391800dbc72dd376a2bffd77a7602ad1"
+  },
+  "limitations": [
+    "未做真实供应商与UI端到端验收",
+    "不是T-915完成证据；R05其他入口和资源恢复、延迟、安装包仍未全验"
+  ],
+  "details": "target-migration.md"
+}

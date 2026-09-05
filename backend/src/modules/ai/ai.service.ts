@@ -239,6 +239,7 @@ export interface ServiceDeps {
   calibration: AiCalibrationPort;
   // [T-387b] 分镜凝固 pass 的素材库只读端口(optional,未绑则凝固跳过)。
   assetLibrary?: AiAssetLibraryPort;
+  structuredTargets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   // T-513 composition seam: skill resolver injects immutable, server-only task state.
   // The public create body never accepts runtimeData.
@@ -1123,6 +1124,13 @@ export function createAiService(deps: ServiceDeps): AiService {
       if ((await repo.listResults(taskId)).some(result => result.resultType === "agentic_proposals")) {
         if (!deps.agenticProposals) throw new ConflictError("自主候选采纳服务尚未接入");
         await deps.agenticProposals.confirmTask(ctx, taskId);
+        return toTaskDto(await repo.requireTask(taskId));
+      }
+      if (["topic.enrich", "material.match"].includes(task.taskType) && task.executionTaskId && !deps.structuredTargets) {
+        throw new ConflictError("执行候选采纳事务尚未接入");
+      }
+      if (["topic.enrich", "material.match"].includes(task.taskType) && deps.structuredTargets) {
+        await deps.structuredTargets.confirmTask(ctx, taskId);
         return toTaskDto(await repo.requireTask(taskId));
       }
       // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。

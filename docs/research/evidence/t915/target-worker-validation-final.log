@@ -1,0 +1,63 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/structured-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/target-worker.integration.test.ts (4 tests | 4 failed) 1204ms
+   × topic.enrich 无效输出=false：真实Worker有界生成，合法候选不重复 8ms
+   × material.match 无效输出=false：真实Worker有界生成，合法候选不重复 2ms
+   × topic.enrich 无效输出=true：真实Worker有界生成，合法候选不重复 2ms
+   × material.match 无效输出=true：真实Worker有界生成，合法候选不重复 1ms
+ ❯ src/modules/execution/structured-worker.integration.test.ts (5 tests | 1 failed) 6220ms
+     × 完成策略不足保留partial与校验原因，公共采纳入口拒绝物化 1029ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/structured-worker.integration.test.ts > 独立Worker冻结Skill结构化执行 > 完成策略不足保留partial与校验原因，公共采纳入口拒绝物化
+AssertionError: expected [Function] to throw error including '尚未满足生成完整性要求' but got '该部分脚本缺少完整、可核验的执行结果，不能采纳'
+
+Expected: "尚未满足生成完整性要求"
+Received: "该部分脚本缺少完整、可核验的执行结果，不能采纳"
+
+ ❯ src/modules/execution/structured-worker.integration.test.ts:61:49
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/execution/target-worker.integration.test.ts > topic.enrich 无效输出=false：真实Worker有界生成，合法候选不重复
+ FAIL  src/modules/execution/target-worker.integration.test.ts > material.match 无效输出=false：真实Worker有界生成，合法候选不重复
+OwnershipError: 生成任务不存在
+ ❯ Object.prepare src/modules/ai-runtime/structured-business-execution.service.ts:30:22
+     28|     async prepare(ctx:RequestContext,taskId:string){
+     29|       const [task]=await db.select().from(aiTasks).where(and(eq(aiTask…
+     30|       if(!task)throw new OwnershipError("生成任务不存在");
+       |                      ^
+     31|       const adapter=adapterFor(task.taskType);
+     32|       if(!adapter)throw new Error("STRUCTURED_TASK_ADAPTER_UNAVAILABLE…
+ ❯ src/modules/execution/target-worker.integration.test.ts:120:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/execution/target-worker.integration.test.ts > topic.enrich 无效输出=true：真实Worker有界生成，合法候选不重复
+ FAIL  src/modules/execution/target-worker.integration.test.ts > material.match 无效输出=true：真实Worker有界生成，合法候选不重复
+error: duplicate key value violates unique constraint "ai_tasks_pkey"
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:267:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 4 passed (9)
+   Start at  12:43:58
+   Duration  8.05s (transform 1.79s, setup 0ms, import 3.00s, tests 7.42s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/structured-worker.integration.test.ts src/modules/execution/target-worker.integration.test.ts`
+Exit status 1

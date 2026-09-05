@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "16d83e3c40b1d8445bc84dd2b917a8062ba34f97870de6a184f470c5b2c5ab06",
+      "file_sha256": "d8f02bd4c4f7f08abf0c6665b90687018e6598362db24727f721d808c165db6f",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 原执行恢复约束：拒绝显式引用已映射任务的新建重试；沿用既有原生工具边界，本轮不新增可执行程序调用。",
+      "reason": "DEC-RUNTIME-055 已确认范围：topic.enrich/material.match 接入统一结构化 Worker，真实冻结上下文与同事务候选采纳；保持现有凭证和运行时边界，未增加新执行引擎。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "5ce25663212b2391def2584a76ea8fa5a6a880dff3dcf3e2d01bb6d4220687c2",
+      "file_sha256": "db62607df32031d6884ae746a65630a89093c8c7443b5b6c87ed867a18e02413",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055：组合根接入后端任务浏览器授权及已授权准备重试端口；沿用既有凭据、Worker与工具链，不新增原生程序或凭据存储。独立授权复核无新增阻断。",
+      "reason": "DEC-RUNTIME-055 已确认范围：topic.enrich/material.match 接入统一结构化 Worker，真实冻结上下文与同事务候选采纳；保持现有凭证和运行时边界，未增加新执行引擎。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "292fe14e884f6e75452db795c4723639018d3961430d091c262252e34ff0670b",
+      "file_sha256": "936f5d7e0492c177525fa26abc95fd9ca0f9be0e309cb4ccc15fcc1cdd6d1e4d",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内论点树沿既有持久Worker生成，冻结完整上下文、固定输出协议并保留原领域采纳事务；本批公共测试及独立复核，未扩展凭据/安装机制。完整T-915尚未完成。",
+      "reason": "DEC-RUNTIME-055：Worker对topic.enrich/material.match固定候选契约和冻结真实ID先验证再保存，使无效输出进入现有有界修复；不改变模型/凭证/领域写入归属。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {

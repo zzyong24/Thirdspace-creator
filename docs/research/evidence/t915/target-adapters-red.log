@@ -1,0 +1,31 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/target-business-adapters.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/target-business-adapters.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/target-business-adapters.test.ts [ src/modules/ai-runtime/target-business-adapters.test.ts ]
+Error: Cannot find module './target-business-adapters' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/target-business-adapters.test.ts
+ ❯ src/modules/ai-runtime/target-business-adapters.test.ts:2:1
+      1| import { expect, it, vi } from "vitest";
+      2| import { createTopicEnrichBusinessAdapter, createMaterialMatchBusiness…
+       | ^
+      3| const ctx={userId:"u",accountId:"a",requestId:"test",source:"user" as …
+      4| const skillSnapshot={snapshotVersion:1 as const,userId:"u",accountId:"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:34:30
+   Duration  158ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai-runtime/target-business-adapters.test.ts`
+Exit status 1

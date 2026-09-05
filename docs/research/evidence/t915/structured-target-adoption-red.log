@@ -1,0 +1,107 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai/structured-target-adoption.integration.test.ts > 并发确认选题卡且成功重放不覆盖人工改卡
+[ai-task-runner] taskId=ai-task-2 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/structured-target-adoption.integration.test.ts > 拒绝候选替换原任务目标
+[ai-task-runner] taskId=ai-task-3 taskType=topic.enrich status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+stdout | src/modules/ai/structured-target-adoption.integration.test.ts > 素材无项目不能假成功
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts (3 tests | 3 failed) 2638ms
+   × 并发确认选题卡且成功重放不覆盖人工改卡 1073ms
+   × 拒绝候选替换原任务目标 786ms
+   × 素材无项目不能假成功 779ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/structured-target-adoption.integration.test.ts > 并发确认选题卡且成功重放不覆盖人工改卡
+ConflictError: AI task ai-task-2 is not awaiting confirmation (status: succeeded)
+ ❯ Object.confirmTask src/modules/ai/ai.service.ts:1145:15
+    1143|         !canTransition(task.status, "succeeded")
+    1144|       ) {
+    1145|         throw new ConflictError(
+       |               ^
+    1146|           `AI task ${taskId} is not awaiting confirmation (status: ${t…
+    1147|         );
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts:15:372
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/ai/structured-target-adoption.integration.test.ts > 拒绝候选替换原任务目标
+AssertionError: promise resolved "{ id: 'ai-task-3', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "legacy-attempt-d984f897-d984f897",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-3",
++   "idempotencyKey": "a:topic.enrich:legacy-attempt-d984f897-d984f897",
++   "inputData": {
++     "candidateId": "cand-1",
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": null,
++   "requestFingerprint": "sha256:13326531676e4708613d5e3eda4714fc1d2819db6ae6248992fbe77ca43b98c1",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "topic.enrich",
++   "userId": "u",
+  }
+
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts:16:297
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/ai/structured-target-adoption.integration.test.ts > 素材无项目不能假成功
+AssertionError: promise resolved "{ id: 'ai-task-1', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "legacy-attempt-43bff705-43bff705",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-1",
++   "idempotencyKey": "a:material.match:legacy-attempt-43bff705-43bff705",
++   "inputData": {},
++   "modelKey": "claude-opus-4-8",
++   "projectId": null,
++   "requestFingerprint": "sha256:c38b06a7df246887e4c7b96da605d87be13869daaa3d06f6e70956a6160d1475",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "material.match",
++   "userId": "u",
+  }
+
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts:17:175
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  12:34:46
+   Duration  4.28s (transform 907ms, setup 0ms, import 1.51s, tests 2.64s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/structured-target-adoption.integration.test.ts --retry=0

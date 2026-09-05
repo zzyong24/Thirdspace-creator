@@ -1,0 +1,59 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai/structured-target-adoption.integration.test.ts > 候选冻结后素材已删除，第二条不可采纳且整批回滚
+[ai-task-runner] taskId=ai-task-1 taskType=material.match status=awaiting_confirmation finishReason=null usage=null candidateCount=1
+
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts (11 tests | 1 failed) 7499ms
+   × 候选冻结后素材已删除，第二条不可采纳且整批回滚 653ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/structured-target-adoption.integration.test.ts > 候选冻结后素材已删除，第二条不可采纳且整批回滚
+AssertionError: promise resolved "{ id: 'ai-task-1', userId: 'u', …(14) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "legacy-attempt-24b9a0f2-24b9a0f2",
++   "completedAt": "2026-09-06T00:00:00.000Z",
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-1",
++   "idempotencyKey": "a:material.match:legacy-attempt-24b9a0f2-24b9a0f2",
++   "inputData": {
++     "projectId": "project",
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": "project",
++   "requestFingerprint": "sha256:b928dbd5b827ec25b7d517609f4347e9e2c9c3ad86ca251c9f7a3dad782713b3",
++   "requestedAt": "2026-09-06T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": "2026-09-06T00:00:00.000Z",
++   "status": "succeeded",
++   "taskType": "material.match",
++   "userId": "u",
+  }
+
+ ❯ src/modules/ai/structured-target-adoption.integration.test.ts:55:41
+     53| const task=await record('material.match',{},'material_link_list',{matc…
+     54| await fixture.db.update(assets).set({status:'deleted'}).where(eq(asset…
+     55| await expect(ai.confirmTask(ctx,task.id)).rejects.toThrow();expect(wri…
+       |                                         ^
+     56| expect(await fixture.db.select().from(materialLinks)).toHaveLength(0);
+     57| expect((await ai.getTask(ctx,task.id)).status).toBe('awaiting_confirma…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  12:40:22
+   Duration  9.28s (transform 1.01s, setup 0ms, import 1.64s, tests 7.50s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/structured-target-adoption.integration.test.ts --retry=0
