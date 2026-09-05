@@ -1,3 +1,4 @@
+import { searchAssetLibrary,type AssetSearchInput,type AssetSearchResult } from "./asset-search";
 import type { RequestContext } from "@creatoros/contract";
 import * as fs from "node:fs/promises";
 import type {
@@ -65,6 +66,7 @@ export interface AssetsService {
   //   孤儿,采集/AI 生成的 asset 出生即带号。所有经 ctx 的入口(读+写)统一断言
   //   requireAccountId(§4.2 未选号=引导态禁读写);唯一例外是 createUpload(asset_uploads
   //   临时会话 user 级,C-08 裁决),账号断言在确认落 assets 的 completeUpload。
+  searchAssets(ctx:RequestContext,input:AssetSearchInput):Promise<AssetSearchResult>;
   listAssets(ctx: RequestContext, query: ListAssetsQuery): Promise<AssetRow[]>;
   /** [T-061] Batch-read current files for the list/get 投影(ids 来自 user-scoped rows)。 */
   listFilesByIds(ctx: RequestContext, fileIds: string[]): Promise<AssetFileRow[]>;
@@ -372,6 +374,8 @@ export function createAssetsService(
       if (!row) throw new OwnershipError("Asset not found"); // 非 pending / 越权 / 跨号 / 不存在
       return row;
     },
+
+    searchAssets:(ctx,input)=>searchAssetLibrary(repo,ctx,input),
 
     async listAssets(ctx, query) {
       const accountId = requireAccountId(ctx.accountId, "assets.listAssets");

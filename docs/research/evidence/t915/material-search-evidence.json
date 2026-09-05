@@ -1,0 +1,29 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T10:04:07.270140+00:00",
+  "status": "material_search_connected_full_agent_runtime_open",
+  "implemented": [
+    "素材领域新增数据库字面检索，按user/account/active收窄后分页，不再先取前100条再筛选",
+    "使用createdAt降序/id升序的稳定游标，游标绑定归属和查询",
+    "自主material.search接真实领域服务并返回nextCursor，聊天context.materials复用同一搜索",
+    "SQL通配符转义，检索仅落实显式字面查询，不作语义分类"
+  ],
+  "verification": {
+    "backend_tests": 40,
+    "frontend_boot_tests": 3,
+    "runtime_binding_tests": 1,
+    "pagination": "135同时间素材，目标位于第100条之后；全部同词结果分页无丢失/重复，跨账号/非active不可见",
+    "runtime": "真实聊天runtime及生产注册的material工具均调用真实服务命中较早目标；仅用透明工厂包装取得绑定，未运行完整模型循环",
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review独立只读复核未发现阻断；建议的运行时绑定回归已补并通过，审查未重跑测试"
+  },
+  "limits": [
+    "knowledge.write、collect.plan/run、material.organize仍未接线并真实报错",
+    "本次没有真实模型/浏览器端到端或性能基线验收",
+    "Pi/browser迁入Worker、全部入口迁移及完整T915验收仍未完成"
+  ]
+}

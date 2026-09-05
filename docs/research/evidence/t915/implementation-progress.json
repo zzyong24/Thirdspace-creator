@@ -149,5 +149,10 @@
     "evidence": "research-read-ports-evidence.json",
     "tests": 63,
     "scope": "七个缺口中搜索/读网页已接真实服务，仍有五个端口及Pi/browser Worker迁移待完成"
+  },
+  "material_search_increment": {
+    "evidence": "material-search-evidence.json",
+    "tests": 44,
+    "scope": "自主/聊天素材搜索接真实完整查询；剩余四端口和独立Agent执行仍未完成"
   }
 }

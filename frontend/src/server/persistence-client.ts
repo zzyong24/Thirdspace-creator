@@ -9782,14 +9782,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       throw new AgenticPortNotImplementedError("collect.run");
     },
   };
-  const agenticMaterialPorts: MaterialPorts = {
-    async searchMaterials() {
-      throw new AgenticPortNotImplementedError("material.search");
+  const agenticMaterialPorts=(ctx:RequestContext):MaterialPorts=>({
+    async searchMaterials(input,signal){
+      signal.throwIfAborted();const result=await assetsService.searchAssets(ctx,{query:input.query,limit:input.limit ?? 20,cursor:input.cursor});signal.throwIfAborted();
+      return {items:result.rows.map(row=>({id:row.id,title:row.name,kind:row.assetType})),nextCursor:result.nextCursor};
     },
     async organizeMaterials() {
       throw new AgenticPortNotImplementedError("material.organize");
     },
-  };
+  });
   // [T-313] 引擎切 Pi:createPiAgenticEngine 真接 pi-coding-agent SDK 自主循环;**保留确定性兜底**
   //   (依赖缺席 / 打包实拷缺失 / 无 §6.1 raw config / 运行异常 → 退 deterministicEngine,现有全绿路径)。
   //   §6.1 raw config 经 resolveLlmConfig(同 llmCompleter 一套 getModelConfig+env)注入引擎自建 provider;
@@ -9833,7 +9834,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.material"),
       resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.material"),
-      resolveTools: () => createMaterialTools(agenticMaterialPorts),
+      resolveTools: ctx => createMaterialTools(agenticMaterialPorts(ctx)),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );
@@ -11016,7 +11017,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // 只读 context 工具的真数据读端口 —— 全部 user-scoped(经各自 service/repo 用 ctx.userId 收窄),
     // 只读、不写实体。找不到现成的「带 query 搜」读方法时,在此对现成 list 端口做内存过滤(优先复用
-    // 现成读端口,不新造 repo 方法)。诚实说明:knowledge/materials 的 query 是内存 contains 过滤
+    // 现成读端口,不新造 repo 方法)。诚实说明:knowledge 的 query 仍是内存 contains 过滤；materials 已走领域分页检索
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
       // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
@@ -11120,26 +11121,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           snippet: snippetOf(k),
         }));
       },
-      // context.materials —— 复用 assetsService.listAssets(user-scoped: repo.listAssets(ctx.userId))。
-      // ListAssetsQuery 只有 { limit, cursor }(无 query 文本)→ 取一批后做名称内存 contains 过滤。
-      // 拉多一点(query 时最多 100)再截断,避免过滤后不足 limit;title=name,kind=assetType。
+      // context.materials 与自主素材工具复用领域字面搜索；先全库过滤再按调用方limit返回。
       searchMaterials: async (
         c: RequestContext,
         opts: { query: string; limit: number },
       ) => {
-        const q = opts.query.trim().toLowerCase();
-        const rows = await assetsService.listAssets(c, {
-          limit: q ? 100 : opts.limit,
-          cursor: null,
-        });
-        const filtered = q
-          ? rows.filter((a) => a.name.toLowerCase().includes(q))
-          : rows;
-        return filtered.slice(0, opts.limit).map((a) => ({
-          id: a.id,
-          title: a.name,
-          kind: a.assetType,
-        }));
+        const result=await assetsService.searchAssets(c,{query:opts.query,limit:Math.max(1,Math.min(100,opts.limit))});
+        return result.rows.map(a=>({id:a.id,title:a.name,kind:a.assetType}));
       },
       // 参考封面自动选择必须建立在“全库图片精确只有 1 张”上，不能把首 100 条误当全库。
       // assets service 是内部端口，repo 本身已取完账号内 active 行再 slice，因此用无限上限

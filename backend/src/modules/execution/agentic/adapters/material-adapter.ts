@@ -12,10 +12,11 @@ import type { AgenticTool } from "../engine";
 export interface MaterialPorts {
   /** 按 query 搜素材库(纯读)。 */
   searchMaterials(
-    input: { query: string },
+    input: { query: string;limit?:number;cursor?:string|null },
     signal: AbortSignal,
   ): Promise<{
     items: Array<{ id: string; title: string; kind: string }>;
+    nextCursor?:string|null;
   }>;
   /**
    * 归类整理:给一批素材打标签/归组(端口内保证可逆 / 落 pending;铁律②)。返回受影响条数。
@@ -26,7 +27,7 @@ export interface MaterialPorts {
   ): Promise<{ affected: number }>;
 }
 
-const searchParams = z.object({ query: z.string().min(1) });
+const searchParams = z.object({ query: z.string().min(1),limit:z.number().int().min(1).max(100).default(20),cursor:z.string().nullable().optional() });
 const organizeParams = z.object({
   assetIds: z.array(z.string().min(1)).min(1),
   tag: z.string().min(1),
@@ -38,17 +39,19 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
     {
       name: "material.search",
       label: "搜素材库",
-      description: "按 query 搜用户素材库,返回命中素材(id/标题/类型)。纯读。",
+      description: "按字面名称搜索素材库，返回id/标题/类型和nextCursor；存在nextCursor时保持query并带cursor继续读取。纯读。",
       effect: "none",
       parameters: searchParams,
       planInput: (goal) => ({ query: goal }),
       async execute(input, { signal }) {
-        const { query } = searchParams.parse(input);
-        const res = await ports.searchMaterials({ query }, signal);
+        signal.throwIfAborted();
+        const params = searchParams.parse(input);
+        const res = await ports.searchMaterials(params, signal);
+        signal.throwIfAborted();
         return {
           hasEvidence: res.items.some(item => Boolean(item.id.trim())),
           summary: `搜到 ${res.items.length} 个素材`,
-          data: { items: res.items },
+          data: { items: res.items,nextCursor:res.nextCursor ?? null },
         };
       },
     },

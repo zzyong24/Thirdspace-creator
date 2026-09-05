@@ -1,4 +1,4 @@
-import { and, asc, eq, desc, inArray, type Db } from "@creatoros/backend";
+import { and, asc, eq, desc, inArray, sql, type Db } from "@creatoros/backend";
 import { materialLinks } from "@creatoros/backend";
 import { assets, assetFiles, assetUploads } from "./assets.db-schema";
 import { OwnershipError } from "./assets.errors";
@@ -84,6 +84,7 @@ export interface AssetRepository {
   // [T-332 S2] owned-root(assets)方法的 accountId 收紧为**必填 string**(strict 门,
   // SPEC §4.1):service 层断言 requireAccountId 后传入,repo 不再有 undefined 退化全量
   // 的分支。repo 是单例、userId 随调用传,故 accountId 也随调用传(不能 baked 进 deps)。
+  searchAssets(userId:string,accountId:string,input:{query:string;limit:number;after?:{createdAt:string;id:string}}):Promise<AssetRow[]>;
   listAssets(
     userId: string,
     query: ListAssetsQuery,
@@ -296,6 +297,16 @@ export function createAssetRepository(
     async seedAssetFiles(rows) {
       if (rows.length === 0) return;
       await db.insert(assetFiles).values(rows).onConflictDoNothing();
+    },
+
+    async searchAssets(userId,accountId,input){
+      // SEMANTIC_BOUNDARY_ALLOW: 用户明确的字面名称检索，不做语义分类或素材选择。
+      const pattern="%"+input.query.replace(/[\\%_]/g,"\\$&")+"%";
+      return db.select().from(assets).where(and(
+        eq(assets.userId,userId),accountGate(accountId),eq(assets.status,"active"),
+        sql`${assets.name} ILIKE ${pattern}`,
+        input.after ? sql`(${assets.createdAt} < ${input.after.createdAt} OR (${assets.createdAt} = ${input.after.createdAt} AND ${assets.id} > ${input.after.id}))` : undefined,
+      )).orderBy(desc(assets.createdAt),asc(assets.id)).limit(input.limit);
     },
 
     async listAssets(userId, query, accountId) {
