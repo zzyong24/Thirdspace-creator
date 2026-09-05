@@ -868,6 +868,18 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(existing);
       }
 
+      // T-915：两种公开重试入口都必须沿用原持久执行，不能复制任务重置账本。
+      const retrySpec = inputData.spec;
+      const retryParams = retrySpec && typeof retrySpec === "object" && !Array.isArray(retrySpec)
+        ? (retrySpec as Record<string, unknown>).params : undefined;
+      const legacyRetryOf = body.taskType.startsWith("exec.") && retryParams && typeof retryParams === "object" && !Array.isArray(retryParams)
+        ? (retryParams as Record<string, unknown>).retryOf : undefined;
+      const retrySources = new Set([body.retryOfTaskId, typeof legacyRetryOf === "string" ? legacyRetryOf : undefined].filter((id): id is string => Boolean(id)));
+      for (const sourceId of retrySources) {
+        const source = await repo.requireTask(sourceId);
+        if (source.executionTaskId) throw new ConflictError("请通过原执行恢复任务，不能复制任务重置预算");
+      }
+
       if (body.retryOfTaskId) {
         const source = await repo.requireTask(body.retryOfTaskId);
         const retrySource = source.executionTaskId ? (await projectExecutionTasks(deps.db,ctx,[source]))[0]! : source;

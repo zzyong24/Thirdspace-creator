@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "247931e1663c3766c506ef410fb9d1374e14e0a6e10f0aa2a4142443c6ba9ada",
+      "file_sha256": "16d83e3c40b1d8445bc84dd2b917a8062ba34f97870de6a184f470c5b2c5ab06",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
+      "reason": "DEC-RUNTIME-055 原执行恢复约束：拒绝显式引用已映射任务的新建重试；沿用既有原生工具边界，本轮不新增可执行程序调用。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

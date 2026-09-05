@@ -22,6 +22,11 @@ import type { AgenticProposal } from "@creatoros/contract";
 import { client } from "@/lib/contract-client";
 
 const POLL_INTERVAL_MS = 4000;
+function isPollingTask(task: WireExecutionTask) {
+  return task.executionTaskId && task.runtimeStatus
+    ? ["queued", "running", "retry_wait", "pause_requested", "cancel_requested"].includes(task.runtimeStatus)
+    : task.status === "queued" || task.status === "running";
+}
 const MAX_POLLS = 450; // ~30 分钟 —— 渲染类 executor 可达分钟级(3 分钟成片≈3-10 分钟)
 
 interface WireArtifact {
@@ -33,6 +38,8 @@ interface WireArtifact {
 
 interface WireExecutionTask {
   id: string;
+  executionTaskId?: string;
+  runtimeStatus?: string;
   status:
     | "queued"
     | "running"
@@ -103,7 +110,7 @@ function ExecutionTaskCardBody({
   onTaskIdChange,
   onTaskUpdate,
 }: ExecutionTaskCardProps) {
-  // 重试会重建任务 —— 卡内部切换跟踪新 taskId。
+  // 仅历史未映射任务重建后切换 taskId；持久任务沿用原执行。
   const [taskId, setTaskId] = React.useState(initialTaskId);
   const [task, setTask] = React.useState<WireExecutionTask | null>(null);
   const [lastStep, setLastStep] = React.useState<string | null>(null);
@@ -111,6 +118,8 @@ function ExecutionTaskCardBody({
     "",
   );
   const [actionError, setActionError] = React.useState<string | null>(null);
+  const [pollEpoch, setPollEpoch] = React.useState(0);
+  const commandKey = React.useRef<{command:string;key:string} | null>(null);
   const [retryOpen, setRetryOpen] = React.useState(false);
   const [retryFeedback, setRetryFeedback] = React.useState("");
 
@@ -136,9 +145,7 @@ function ExecutionTaskCardBody({
       const first = await refresh();
       if (
         abandoned ||
-        (first &&
-          first.status !== "queued" &&
-          first.status !== "running")
+        (first && !isPollingTask(first))
       ) {
         return;
       }
@@ -146,7 +153,7 @@ function ExecutionTaskCardBody({
         await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
         if (abandoned) return;
         const t = await refresh();
-        if (t && t.status !== "queued" && t.status !== "running") return;
+        if (t && !isPollingTask(t)) return;
         // 最新步骤文案(共 taskId 读 ai_task_steps),best-effort。
         try {
           const steps = (await client.listTaskSteps({
@@ -165,7 +172,7 @@ function ExecutionTaskCardBody({
     return () => {
       abandoned = true;
     };
-  }, [taskId, refresh]);
+  }, [taskId, refresh, pollEpoch]);
 
   const adopt = React.useCallback(async () => {
     setBusy("confirm");
@@ -207,9 +214,26 @@ function ExecutionTaskCardBody({
     }
   }, [taskId, onTaskUpdate]);
 
+  const command = React.useCallback(async (action: "resume" | "retry" | "cancel") => {
+    if (!task?.executionTaskId) return;
+    setBusy(action === "cancel" ? "discard" : "retry");
+    setActionError(null);
+    if (commandKey.current?.command !== action) commandKey.current = {command:action,key:crypto.randomUUID()};
+    try {
+      await client.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[task.executionTaskId],command:action,idempotencyKey:commandKey.current.key}});
+      commandKey.current = null;
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "操作未完成，请重试");
+    } finally {
+      await refresh();
+      setPollEpoch(value => value + 1);
+      setBusy("");
+    }
+  }, [task?.executionTaskId, refresh]);
+
   // 重试 = 带修改意见重建任务(同 spec + retryFeedback/retryOf 进 params),卡切换跟踪新任务。
   const retry = React.useCallback(async () => {
-    if (!task) return;
+    if (!task || task.executionTaskId) return;
     setBusy("retry");
     setActionError(null);
     try {
@@ -247,7 +271,8 @@ function ExecutionTaskCardBody({
     }
   }, [task, taskId, retryFeedback, projectId, onTaskIdChange]);
 
-  const status = task?.status ?? "queued";
+  const runtimeStatus = task?.executionTaskId ? task.runtimeStatus : undefined;
+  const status = runtimeStatus && ["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested"].includes(runtimeStatus) ? runtimeStatus : task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];
   const proposals = task?.manifest?.proposals ?? [];
   const videoArtifacts = artifacts.filter((artifact) =>
@@ -417,7 +442,7 @@ function ExecutionTaskCardBody({
             >
               {busy === "confirm" ? "采纳中…" : proposals.length > 0 ? "采纳建议" : "采纳进素材库"}
             </button>
-            <button
+            {!task?.executionTaskId ? <button
               type="button"
               data-slot="execution-task-retry"
               disabled={busy !== ""}
@@ -425,7 +450,7 @@ function ExecutionTaskCardBody({
               className="inline-flex h-7 items-center rounded-control border border-border px-3 text-[11px] font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
             >
               重试
-            </button>
+            </button> : null}
             <button
               type="button"
               data-slot="execution-task-discard"
@@ -439,7 +464,7 @@ function ExecutionTaskCardBody({
         </div>
       ) : null}
 
-      {retryOpen &&
+      {!task?.executionTaskId && retryOpen &&
       (status === "awaiting_confirmation" ||
         status === "failed" ||
         status === "cancelled") ? (
@@ -477,17 +502,28 @@ function ExecutionTaskCardBody({
           <p className="text-[12px] leading-relaxed text-destructive">
             {status === "cancelled"
               ? "任务已取消。"
-              : "这一步没跑成,请点下方「重试」;若多次失败,换个模型或稍后再试。"}
+              : "这一步没跑成，可以重试。"}
           </p>
-          <button
+          {(!task?.executionTaskId || status === "failed") ? <button
             type="button"
             data-slot="execution-task-retry"
             disabled={busy !== ""}
-            onClick={() => setRetryOpen((v) => !v)}
+            onClick={() => task?.executionTaskId ? void command("retry") : setRetryOpen((v) => !v)}
             className="inline-flex h-6 w-fit items-center rounded-control border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
           >
             重试
-          </button>
+          </button> : null}
+        </div>
+      ) : null}
+
+      {["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested"].includes(status) ? (
+        <div data-slot="execution-task-recovery" className="flex flex-col gap-2 text-[12px]">
+          <p>{status === "unknown_result" ? "上一步可能已经执行，结果待核对。为避免重复操作，当前不能重跑。" : status === "paused" ? "任务已暂停，继续后沿用原进度和剩余预算。" : status === "waiting_user" ? "任务需要你处理登录、模型配置或权限问题后才能继续。" : status === "pause_requested" ? "正在暂停，等待当前操作结束。" : status === "cancel_requested" ? "正在结束任务。" : "任务被阻断，暂时无法继续。"}</p>
+          {status === "waiting_user" ? <a href="/settings?highlight=web-session-vault" className="underline">管理网站登录</a> : null}
+          <div className="flex gap-2">
+            {["paused", "waiting_user"].includes(status) ? <button disabled={busy !== ""} onClick={() => void command("resume")} className="rounded-control border border-border px-3 py-1">继续任务</button> : null}
+            {["paused", "waiting_user", "unknown_result"].includes(status) ? <button disabled={busy !== ""} onClick={() => void command("cancel")} className="rounded-control border border-border px-3 py-1">结束任务</button> : null}
+          </div>
         </div>
       ) : null}
 

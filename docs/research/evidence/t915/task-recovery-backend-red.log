@@ -1,0 +1,91 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/ai.task-execution.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/ai.task-execution.integration.test.ts (18 tests | 2 failed) 12331ms
+     × 映射任务不得通过 retryOfTaskId 重建并重置执行预算 944ms
+     × 映射任务不得通过 spec.params.retryOf 重建并重置执行预算 666ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/ai.task-execution.integration.test.ts > T-513 AI task idempotency and atomic execution ownership > 映射任务不得通过 retryOfTaskId 重建并重置执行预算
+AssertionError: expected RetrySourceNotTerminalError: retryOfTaskI… { …(2) } to match object { name: 'ConflictError', …(1) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "message": StringContaining "原执行",
+-   "name": "ConflictError",
++ RetrySourceNotTerminalError {
++   "name": "RetrySourceNotTerminalError",
+  }
+
+ ❯ src/modules/ai/ai.task-execution.integration.test.ts:83:7
+     81|       ...(field==="retryOfTaskId" ? {retryOfTaskId:source.id} : {}),
+     82|       inputData:{spec:{taskType:"agentic.research",goal:"研究",params:fi…
+     83|     })).rejects.toMatchObject({name:"ConflictError",message:expect.str…
+       |       ^
+     84|     expect((await service.listTasks(ctx,{limit:100,offset:0})).rows).t…
+     85|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/ai.task-execution.integration.test.ts > T-513 AI task idempotency and atomic execution ownership > 映射任务不得通过 spec.params.retryOf 重建并重置执行预算
+AssertionError: promise resolved "{ id: 'ai-task-2', …(15) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "t915-retry-new-attempt",
++   "completedAt": null,
++   "contentOutputId": null,
++   "errorMessage": null,
++   "id": "ai-task-2",
++   "idempotencyKey": "acct-a:exec.agentic.research:t915-retry-new-attempt",
++   "inputData": {
++     "spec": {
++       "goal": "研究",
++       "params": {
++         "retryOf": "ai-task-1",
++       },
++       "taskType": "agentic.research",
++     },
++   },
++   "modelKey": "claude-opus-4-8",
++   "projectId": null,
++   "requestFingerprint": "sha256:22fb54fede4b49c448f57bb054ee76ef57b970098dac10dc6d7e072fffd4322a",
++   "requestedAt": "2026-07-24T00:00:00.000Z",
++   "retryOfTaskId": null,
++   "startedAt": null,
++   "status": "queued",
++   "taskType": "exec.agentic.research",
++   "userId": "user-a",
+  }
+
+ ❯ src/modules/ai/ai.task-execution.integration.test.ts:83:7
+     81|       ...(field==="retryOfTaskId" ? {retryOfTaskId:source.id} : {}),
+     82|       inputData:{spec:{taskType:"agentic.research",goal:"研究",params:fi…
+     83|     })).rejects.toMatchObject({name:"ConflictError",message:expect.str…
+       |       ^
+     84|     expect((await service.listTasks(ctx,{limit:100,offset:0})).rows).t…
+     85|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 16 passed (18)
+   Start at  11:49:06
+   Duration  14.03s (transform 902ms, setup 0ms, import 1.57s, tests 12.33s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai/ai.task-execution.integration.test.ts`
+Exit status 1

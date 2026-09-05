@@ -177,6 +177,13 @@ describe("create", () => {
 });
 
 describe("get / namespace gate", () => {
+  it("保留原执行 ID 和真实等待状态供恢复命令使用", async () => {
+    const state=baseState();
+    state.task=makeTask({executionTaskId:"execution-1",runtimeStatus:"unknown_result",status:"running"});
+    const {service}=makeService(state);
+    expect(await service.get(ctx,"task-1")).toMatchObject({id:"task-1",executionTaskId:"execution-1",runtimeStatus:"unknown_result"});
+    expect((await service.list(ctx,{limit:20,offset:0})).rows[0]).toMatchObject({executionTaskId:"execution-1",runtimeStatus:"unknown_result"});
+  });
   it("404s a non-exec task (no existence leak)", async () => {
     const state = baseState();
     state.task = makeTask({ taskType: "topic.generate" });

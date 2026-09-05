@@ -11,10 +11,12 @@ const confirmExecutionTask = vi.fn();
 const discardExecutionTask = vi.fn();
 const createExecutionTask = vi.fn();
 const listTaskSteps = vi.fn();
+const commandExecutionTasks = vi.fn();
 
 vi.mock("@/lib/contract-client", () => ({
   client: {
     getExecutionTask: (...a: unknown[]) => getExecutionTask(...a),
+    commandExecutionTasks: (...a: unknown[]) => commandExecutionTasks(...a),
     confirmExecutionTask: (...a: unknown[]) => confirmExecutionTask(...a),
     discardExecutionTask: (...a: unknown[]) => discardExecutionTask(...a),
     createExecutionTask: (...a: unknown[]) => createExecutionTask(...a),
@@ -300,4 +302,53 @@ it("预演成功显示未写入与完整计划摘要，不称作已采纳文件"
   expect(screen.queryByText(/0 个成果/)).not.toBeInTheDocument();
   expect(screen.queryByText(/已采纳/)).not.toBeInTheDocument();
   expect(confirmExecutionTask).not.toHaveBeenCalled();
+});
+
+
+describe("T-915 原执行恢复", () => {
+  it.each(["paused", "waiting_user"])("%s 继续原执行，不创建新任务", async runtimeStatus => {
+    const task = makeTask({status:"running", executionTaskId:"execution-1", runtimeStatus});
+    getExecutionTask.mockResolvedValue(task);
+    commandExecutionTasks.mockResolvedValue({tasks:[]});
+    const onTaskIdChange = vi.fn();
+    render(<ExecutionTaskCard taskId="task-1" onTaskIdChange={onTaskIdChange}/>);
+    await userEvent.click(await screen.findByRole("button", {name:"继续任务"}));
+    expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({taskIds:["execution-1"],command:"resume",idempotencyKey:expect.any(String)})}));
+    expect(createExecutionTask).not.toHaveBeenCalled();
+    expect(onTaskIdChange).not.toHaveBeenCalled();
+  });
+  it.each([false,true])("恢复回执丢失=%s 时仍回读并重新轮询", async lostReceipt => {
+    vi.useFakeTimers();
+    const task=makeTask({status:"running",executionTaskId:"execution-1",runtimeStatus:"paused"});
+    getExecutionTask.mockResolvedValue(task);
+    if(lostReceipt) commandExecutionTasks.mockRejectedValueOnce(new Error("响应中断"));
+    else commandExecutionTasks.mockResolvedValue({tasks:[]});
+    render(<ExecutionTaskCard taskId="task-1"/>);
+    await act(async()=>{await Promise.resolve();});
+    getExecutionTask.mockResolvedValue(makeTask({status:"running",executionTaskId:"execution-1",runtimeStatus:"running"}));
+    await act(async()=>{screen.getByRole("button",{name:"继续任务"}).click();});
+    getExecutionTask.mockResolvedValue(makeTask({executionTaskId:"execution-1",runtimeStatus:"succeeded"}));
+    await act(async()=>{await vi.advanceTimersByTimeAsync(4000);});
+    expect(screen.getByRole("button",{name:"采纳进素材库"})).toBeInTheDocument();
+    expect(createExecutionTask).not.toHaveBeenCalled();
+  });
+  it("结果未知时不显示重跑或运行中，可结束原任务", async () => {
+    getExecutionTask.mockResolvedValue(makeTask({status:"running",executionTaskId:"execution-1",runtimeStatus:"unknown_result"}));
+    commandExecutionTasks.mockResolvedValue({tasks:[]});
+    const {container}=render(<ExecutionTaskCard taskId="task-1"/>);
+    await userEvent.click(await screen.findByRole("button",{name:"结束任务"}));
+    expect(screen.queryByRole("button",{name:"重试"})).toBeNull();
+    expect(container.querySelector('[data-slot="execution-task-running"]')).toBeNull();
+    expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({command:"cancel",taskIds:["execution-1"]})}));
+    expect(createExecutionTask).not.toHaveBeenCalled();
+  });
+  it("映射任务失败通过持久命令重试，不复制参数", async () => {
+    getExecutionTask.mockResolvedValue(makeTask({status:"failed",executionTaskId:"execution-1",runtimeStatus:"failed"}));
+    commandExecutionTasks.mockResolvedValue({tasks:[]});
+    render(<ExecutionTaskCard taskId="task-1"/>);
+    await userEvent.click(await screen.findByRole("button",{name:"重试"}));
+    expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({command:"retry",taskIds:["execution-1"]})}));
+    expect(createExecutionTask).not.toHaveBeenCalled();
+    expect(screen.queryByPlaceholderText(/修改意见/)).toBeNull();
+  });
 });

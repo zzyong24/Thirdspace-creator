@@ -102,6 +102,8 @@ export const executionTaskResource = z.object({
   taskType: z.string(),
   execType: executionTaskType,
   status: aiTaskStatus,
+  executionTaskId: id.optional(),
+  runtimeStatus: z.string().optional(),
   spec: executionTaskSpec,
   manifest: executionManifest.nullable(),
   adoptedAssetIds: z.array(id).default([]),

@@ -1,0 +1,206 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/features/copilot/execution-task-card.test.tsx
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:73386) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/execution-task-card.test.tsx (16 tests | 4 failed) 9319ms
+     × paused 继续原执行，不创建新任务 3023ms (retry x2)
+     × waiting_user 继续原执行，不创建新任务 3017ms (retry x2)
+     × 结果未知时不显示重跑或运行中，可结束原任务 3023ms (retry x2)
+     × 映射任务失败通过持久命令重试，不复制参数 39ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > paused 继续原执行，不创建新任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > paused 继续原执行，不创建新任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > paused 继续原执行，不创建新任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > waiting_user 继续原执行，不创建新任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > waiting_user 继续原执行，不创建新任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > waiting_user 继续原执行，不创建新任务
+TestingLibraryElementError: Unable to find role="button" and name "继续任务"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"execution-task-card"[39m
+      [33mdata-status[39m=[32m"running"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m执行任务 · [0m
+        [0mecho.manifest[0m
+      [36m</span>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[12px] leading-snug text-foreground"[39m
+      [36m>[39m
+        [0m框架自检[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center gap-2 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"execution-task-running"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent"[39m
+        [36m/>[39m
+        [0m执行中…[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"execution-task-card"[39m
+      [33mdata-status[39m=[32m"running"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m执行任务 · [0m
+        [0mecho.manifest[0m
+      [36m</span>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[12px] leading-snug text-foreground"[39m
+      [36m>[39m
+        [0m框架自检[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center gap-2 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"execution-task-running"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent"[39m
+        [36m/>[39m
+        [0m执行中…[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/copilot/execution-task-card.test.tsx:315:40
+    313|     const onTaskIdChange = vi.fn();
+    314|     render(<ExecutionTaskCard taskId="task-1" onTaskIdChange={onTaskId…
+    315|     await userEvent.click(await screen.findByRole("button", {name:"继续任…
+       |                                        ^
+    316|     expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectCo…
+    317|     expect(createExecutionTask).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 结果未知时不显示重跑或运行中，可结束原任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 结果未知时不显示重跑或运行中，可结束原任务
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 结果未知时不显示重跑或运行中，可结束原任务
+TestingLibraryElementError: Unable to find role="button" and name "结束任务"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"execution-task-card"[39m
+      [33mdata-status[39m=[32m"running"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m执行任务 · [0m
+        [0mecho.manifest[0m
+      [36m</span>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[12px] leading-snug text-foreground"[39m
+      [36m>[39m
+        [0m框架自检[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center gap-2 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"execution-task-running"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent"[39m
+        [36m/>[39m
+        [0m执行中…[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1 flex w-full flex-col gap-1.5 rounded-[10px] border border-border bg-surface p-2.5"[39m
+      [33mdata-slot[39m=[32m"execution-task-card"[39m
+      [33mdata-status[39m=[32m"running"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0m执行任务 · [0m
+        [0mecho.manifest[0m
+      [36m</span>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[12px] leading-snug text-foreground"[39m
+      [36m>[39m
+        [0m框架自检[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex items-center gap-2 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"execution-task-running"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent"[39m
+        [36m/>[39m
+        [0m执行中…[0m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/copilot/execution-task-card.test.tsx:324:40
+    322|     commandExecutionTasks.mockResolvedValue({tasks:[]});
+    323|     const {container}=render(<ExecutionTaskCard taskId="task-1"/>);
+    324|     await userEvent.click(await screen.findByRole("button",{name:"结束任务…
+       |                                        ^
+    325|     expect(screen.queryByRole("button",{name:"重试"})).toBeNull();
+    326|     expect(container.querySelector('[data-slot="execution-task-running…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 映射任务失败通过持久命令重试，不复制参数
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 映射任务失败通过持久命令重试，不复制参数
+ FAIL  src/features/copilot/execution-task-card.test.tsx > T-915 原执行恢复 > 映射任务失败通过持久命令重试，不复制参数
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/features/copilot/execution-task-card.test.tsx:335:35
+    333|     render(<ExecutionTaskCard taskId="task-1"/>);
+    334|     await userEvent.click(await screen.findByRole("button",{name:"重试"}…
+    335|     expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectCo…
+       |                                   ^
+    336|     expect(createExecutionTask).not.toHaveBeenCalled();
+    337|     expect(screen.queryByPlaceholderText(/修改意见/)).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 12 passed (16)
+   Start at  11:47:42
+   Duration  10.17s (transform 56ms, setup 146ms, import 66ms, tests 9.32s, environment 495ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  creatoros-frontend@1.1.0 test: `vitest run src/features/copilot/execution-task-card.test.tsx`
+Exit status 1

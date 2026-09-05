@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
+import { createExecutionAuthorityService } from "../execution/execution-authority.service";
 import { OwnershipError } from "./ai.errors";
 import { createAiRepository } from "./ai.repository";
 import {
@@ -68,6 +69,19 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
   beforeEach(async () => {
     ({ db } = await createDb());
     clock = { now: "2026-07-24T00:00:00.000Z" };
+  });
+
+  it.each(["retryOfTaskId", "spec.params.retryOf"])("映射任务不得通过 %s 重建并重置执行预算", async field => {
+    const service=makeService(db,clock);
+    const source=await service.createTask(ctx,{taskType:"exec.agentic.research",inputData:{spec:{taskType:"agentic.research",goal:"研究"}}});
+    await createExecutionAuthorityService(db,{now:()=>clock.now}).bindAiTask(ctx,source.id);
+    await expect(service.createTask(ctx,{
+      taskType:"exec.agentic.research",
+      attemptId:"t915-retry-new-attempt",
+      ...(field==="retryOfTaskId" ? {retryOfTaskId:source.id} : {}),
+      inputData:{spec:{taskType:"agentic.research",goal:"研究",params:field==="spec.params.retryOf" ? {retryOf:source.id} : {}}},
+    })).rejects.toMatchObject({name:"ConflictError",message:expect.stringContaining("原执行")});
+    expect((await service.listTasks(ctx,{limit:100,offset:0})).rows).toHaveLength(1);
   });
 
   it("same attempt and payload returns one task, changed payload fails, runtimeData stays server-only", async () => {
