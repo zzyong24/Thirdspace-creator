@@ -1,0 +1,131 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=false）不得标成模型失败或重复生成
+[script-runner] task=receipt-source capability=script.draft apiFormat=anthropic model=MiniMax-M2.5 endpoint=custom
+
+stderr | src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=false）不得标成模型失败或重复生成
+[script-runner] draft failed task=receipt-source class=Error reason=unknown message="完成断点保存回执丢失"
+
+stdout | src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=true）不得标成模型失败或重复生成
+[script-runner] task=receipt-source capability=script.draft apiFormat=anthropic model=MiniMax-M2.5 endpoint=custom
+
+stderr | src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=true）不得标成模型失败或重复生成
+[script-runner] draft failed task=receipt-source class=Error reason=unknown message="完成断点保存回执丢失"
+
+ ❯ src/modules/ai-runtime/script-runner.test.ts (17 tests | 2 failed) 21ms
+     × 口播成功后完成断点保存失败（实际写入=false）不得标成模型失败或重复生成 10ms
+     × 口播成功后完成断点保存失败（实际写入=true）不得标成模型失败或重复生成 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=false）不得标成模型失败或重复生成
+ FAIL  src/modules/ai-runtime/script-runner.test.ts > T-824 两阶段写稿 > 口播成功后完成断点保存失败（实际写入=true）不得标成模型失败或重复生成
+AssertionError: expected "vi.fn()" to not be called with arguments: [ { userId: 'u1', …(3) }, …(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -4,9 +4,13 @@
+      "requestId": "r1",
+      "source": "user",
+      "userId": "u1",
+    },
+    "receipt-source",
+-   ObjectContaining {
+-     "stage": "voiceover_failed",
++   {
++     "inputFingerprint": "sha256:1f00c1b78c79885ab68aa7b2e2169062250fb2a0daf0a371d2883323d1f7586e",
++     "schemaVersion": 1,
++     "stage": "voiceover_started",
++     "storyboardAttemptCount": 0,
++     "voiceoverSkillVersion": "v1",
+    },
+  ]
+
+  2nd vi.fn() call:
+
+@@ -4,9 +4,39 @@
+      "requestId": "r1",
+      "source": "user",
+      "userId": "u1",
+    },
+    "receipt-source",
+-   ObjectContaining {
+-     "stage": "voiceover_failed",
++   {
++     "audienceOldBelief": "写入失败等于生成失败",
++     "centralClaim": "保存真实结果",
++     "charCount": 13,
++     "inputFingerprint": "sha256:1f00c1b78c79885ab68aa7b2e2169062250fb2a0daf0a371d2883323d1f7586e",
++     "schemaVersion": 1,
++     "sha256": "023697e87cda1ab7aa25ff89e088bfd0ef669523f1f2c4cf98bef02787874f26",
++     "stage": "voiceover_complete",
++     "storyboardAttemptCount": 0,
++     "voiceover": "已完成的口播不能重复生成。",
++     "voiceoverGeneration": {
++       "attempts": [
++         {
++           "finishReason": "stop",
++           "kind": "initial",
++           "usage": {
++             "cachedTokens": 20,
++             "inputTokens": 120,
++             "outputTokens": 80,
++             "totalTokens": 200,
++           },
++         },
++       ],
++       "finishReason": "stop",
++       "usage": {
++         "cachedTokens": 20,
++         "inputTokens": 120,
++         "outputTokens": 80,
++         "totalTokens": 200,
++       },
++     },
++     "voiceoverSkillVersion": "v1",
+    },
+  ]
+
+  3rd vi.fn() call:
+
+@@ -4,9 +4,13 @@
+      "requestId": "r1",
+      "source": "user",
+      "userId": "u1",
+    },
+    "receipt-source",
+-   ObjectContaining {
++   {
++     "inputFingerprint": "sha256:1f00c1b78c79885ab68aa7b2e2169062250fb2a0daf0a371d2883323d1f7586e",
++     "schemaVersion": 1,
+      "stage": "voiceover_failed",
++     "storyboardAttemptCount": 0,
++     "voiceoverSkillVersion": "v1",
+    },
+  ]
+
+
+Number of calls: 3
+
+ ❯ src/modules/ai-runtime/script-runner.test.ts:187:57
+    185|     await runScriptDraft(ctx, task, runtimeDeps);
+    186|     expect(runtimeDeps.ai.recordCandidate).not.toHaveBeenCalled();
+    187|     expect(runtimeDeps.ai.putScriptDraftCheckpoint).not.toHaveBeenCall…
+       |                                                         ^
+    188|     await runScriptDraft(ctx, { ...task, id: "receipt-retry", retryOfT…
+    189|     expect(worker.runVoiceoverComposeNode).toHaveBeenCalledOnce();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 passed (17)
+   Start at  09:18:55
+   Duration  255ms (transform 72ms, setup 0ms, import 92ms, tests 21ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/script-runner.test.ts

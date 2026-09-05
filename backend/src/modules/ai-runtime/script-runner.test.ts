@@ -161,6 +161,36 @@ beforeEach(() => {
 });
 
 describe("T-824 两阶段写稿", () => {
+  it.each([false, true])("口播成功后完成断点保存失败（实际写入=%s）不得标成模型失败或重复生成", async (persisted) => {
+    worker.legacyOverlayVersion = null;
+    const voiceover = "已完成的口播不能重复生成。";
+    const runtimeDeps = deps();
+    const runtimeByTask = new Map<string, Record<string, unknown>>();
+    vi.mocked(runtimeDeps.ai.getTaskRuntimeData).mockImplementation(async (_ctx, taskId) => runtimeByTask.get(taskId) ?? {});
+    vi.mocked(runtimeDeps.ai.putScriptDraftCheckpoint).mockImplementation(async (_ctx, taskId, checkpoint) => {
+      if (taskId === "receipt-source" && checkpoint.stage === "voiceover_complete") {
+        if (persisted) runtimeByTask.set(taskId, { scriptDraftCheckpoint: { ...checkpoint } });
+        throw new Error("完成断点保存回执丢失");
+      }
+      runtimeByTask.set(taskId, { scriptDraftCheckpoint: { ...checkpoint } });
+    });
+    worker.runVoiceoverComposeNode.mockResolvedValueOnce({
+      voiceover, centralClaim: "保存真实结果", audienceOldBelief: "写入失败等于生成失败",
+      generation: successResult().generation,
+    });
+    if (persisted) worker.runStoryboardSegmentNode.mockResolvedValueOnce({
+      ...successResult(), shots: [{ role: "hook", 口播: voiceover, 画面: "口播", 字幕: "", 时长: "0-3s" }],
+    });
+    const task = { id: "receipt-source", projectId: null, inputData: { artifactId: "artifact-script" } };
+    await runScriptDraft(ctx, task, runtimeDeps);
+    expect(runtimeDeps.ai.recordCandidate).not.toHaveBeenCalled();
+    expect(runtimeDeps.ai.putScriptDraftCheckpoint).not.toHaveBeenCalledWith(ctx, task.id, expect.objectContaining({ stage: "voiceover_failed" }));
+    await runScriptDraft(ctx, { ...task, id: "receipt-retry", retryOfTaskId: task.id }, runtimeDeps);
+    expect(worker.runVoiceoverComposeNode).toHaveBeenCalledOnce();
+    expect(worker.runStoryboardSegmentNode).toHaveBeenCalledTimes(persisted ? 1 : 0);
+    expect(runtimeDeps.ai.recordCandidate).toHaveBeenCalledTimes(persisted ? 1 : 0);
+  });
+
   it("升级前已排队且只冻结旧 script.draft 的任务继续走兼容单阶段", async () => {
     worker.legacyOverlayVersion = null;
     worker.snapshotSkillIds = ["script.draft"];

@@ -1,0 +1,71 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T16:24:45.427870+00:00",
+  "status": "文稿生成迁移前置与旧检查点回执窗口修复；完整任务仍进行中",
+  "implemented": [
+    "提取后端prepareScriptDraftContext，原文校验先于上下文且零模型，生成冻结原参数与原14字段指纹上下文",
+    "提取并接回纯候选投影，保留原文、分镜编辑/预览、来源、模型遥测、partial可采纳与质量提醒",
+    "口播成功后的完成检查点保存移出模型失败处理，写入成功丢回执时复用原口播，未写入完成时保留started并停止重复生成"
+  ],
+  "verification": {
+    "regression": {
+      "files": 4,
+      "tests": 30,
+      "log": "script-extraction-integrated.log",
+      "scope": "旧宿主runner和纯准备/投影，模型/存储端口替身；不是独立Worker持久账本公共旅程"
+    },
+    "types": {
+      "exitCode": 0,
+      "log": "script-extraction-types-final.log"
+    },
+    "boundary": {
+      "baselineRemaining": 5,
+      "newViolations": 0,
+      "log": "script-extraction-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "script-extraction-orphan.log"
+    },
+    "scope": {
+      "errors": [],
+      "log": "script-extraction-scope.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "exitCode": 1,
+      "log": "script-extraction-reconcile.log",
+      "status": "与既有211/1基线一致；T-916跟踪全局历史欠债，不宣称全绿"
+    }
+  },
+  "redEvidence": [
+    {
+      "log": "script-checkpoint-receipt-red.log",
+      "fact": "2失败15通过；已成功口播在完成检查点回执丢失后被覆写voiceover_failed"
+    },
+    {
+      "log": "script-preparation-red.log",
+      "fact": "新模块缺失，不是行为红测"
+    },
+    {
+      "log": "script-projection-red.log",
+      "fact": "新模块缺失，不是行为红测"
+    },
+    {
+      "log": "script-extraction-types.log",
+      "fact": "首次集成类型不兼容：旧检查点attempts是不透明记录；投影按原行为透传，最终类型通过"
+    }
+  ],
+  "independentReview": {
+    "reviewer": "runtime_code_review",
+    "status": "PASS",
+    "scope": "准备提取、完成检查点窗口和候选投影集成只读复查；非完整T-915验收"
+  },
+  "remaining": [
+    "script.draft尚在旧宿主执行；独立Worker管线、稳定阶段调用键、取消/未知回执传播、历史恢复与候选提交仍需完整接通",
+    "其余R-05入口、浏览器观察动作循环、性能30样本、实际供应商与双平台安装包验收仍待完成"
+  ],
+  "flow": "后端真实上下文与原文校验 → 既有生成管线 → 纯候选投影 → 原保存/用户采纳服务"
+}

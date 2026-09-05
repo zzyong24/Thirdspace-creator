@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/script-preparation.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/script-preparation.test.ts [ src/modules/ai-runtime/script-preparation.test.ts ]
+Error: Cannot find module './script-preparation' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/script-preparation.test.ts
+ ❯ src/modules/ai-runtime/script-preparation.test.ts:3:1
+      1| import {createHash} from "node:crypto";
+      2| import {expect,it,vi} from "vitest";
+      3| import {prepareScriptDraftContext} from "./script-preparation";
+       | ^
+      4| import type {ContextDeps} from "./creative-context";
+      5| const ctx={userId:"u",accountId:"a",requestId:"r",source:"user" as con…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:14:36
+   Duration  161ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/script-preparation.test.ts --retry=0
