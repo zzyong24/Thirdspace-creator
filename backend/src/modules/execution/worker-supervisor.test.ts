@@ -27,6 +27,8 @@ describe("真实独立 Worker 进程", () => {
       async validate(ref) {expect(ref).toEqual(execution);},
       async invoke(_ref, port, data) {
         calls.push(port);
+        if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
+        if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "写一段正文", capability: "script", maxOutputTokens: 128, operationKey: "op-local"};
         if (port === "resolveModelCredential") return {apiFormat: "openai_chat", baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "test", token: "test-only"};
         if (port === "commitResult") submitted = data;
@@ -38,7 +40,7 @@ describe("真实独立 Worker 进程", () => {
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
-      expect(calls).toEqual(["readTaskContext", "resolveModelCredential", "reserveCall", "settleCall", "commitResult"]);
+      expect(calls).toEqual(["readTaskContext", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "commitResult"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
     } finally {await supervisor.stop(); await new Promise<void>(resolve => server.close(() => resolve()));}
@@ -79,6 +81,8 @@ describe("真实独立 Worker 进程", () => {
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
       async validate() {},
       async invoke(_ref, port, data) {
+        if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
+        if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 128, operationKey: "error-op"};
         if (port === "resolveModelCredential") return {apiFormat: "openai_chat", baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "test", token: "test-only", ...(managed ? {displayModelKey: "channel-managed"} : {})};
         results.push({port, data}); return {};
@@ -112,6 +116,8 @@ describe("真实独立 Worker 进程", () => {
       async validate() {},
       async invoke(_ref, port, data) {
         calls.push({port, data});
+        if (port === "reserveCall") return {callId:"call-local",status:"reserved"};
+        if (port === "startCall") return {callId:"call-local",status:"started"};
         if (port === "readTaskContext") return {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 128, operationKey: "cancel-op"};
         if (port === "resolveModelCredential") return {apiFormat: "openai_chat", baseUrl: `http://127.0.0.1:${address.port}/v1`, model: "test", token: "test-only"};
         return {};

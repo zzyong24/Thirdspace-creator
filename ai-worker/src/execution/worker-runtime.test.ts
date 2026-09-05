@@ -3,13 +3,13 @@ import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
 
-function fixture(generate = vi.fn(async () => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number) {
+function fixture(generate = vi.fn(async () => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number, reservationStatus = "reserved") {
   const messages: WorkerMessage[] = [];
   const worker = createExecutionWorker({send(message) {
     messages.push(message);
     if (message.type === "call") queueMicrotask(() => worker.receive({version: 1, type: "reply", requestId: message.requestId, ok: message.port !== rejectPort, data:
       message.port === "readTaskContext" ? {kind: "model.generate", prompt: "写正文", capability: "script", maxOutputTokens: 100, operationKey: "op-1"} :
-      message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "private"} : {}}));
+      message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "private"} : message.port === "reserveCall" ? {callId:"call-1",status:reservationStatus} : message.port === "startCall" ? {callId:"call-1",status:"started"} : {}}));
   }, generate, heartbeatMs});
   return {worker, messages, generate};
 }
@@ -20,7 +20,7 @@ describe("独立 Worker 端口生命周期", () => {
     worker.receive(run);
     await vi.waitFor(() => expect(messages.some(x => x.type === "stopped")).toBe(true));
     expect(generate).toHaveBeenCalledTimes(1);
-    expect(messages.filter(x => x.type === "call").map(x => x.port)).toEqual(["readTaskContext", "resolveModelCredential", "reserveCall", "settleCall", "commitResult"]);
+    expect(messages.filter(x => x.type === "call").map(x => x.port)).toEqual(["readTaskContext", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "commitResult"]);
     expect(JSON.stringify(messages)).not.toContain("private");
     worker.close();
   });
@@ -65,7 +65,7 @@ describe("独立 Worker 端口生命周期", () => {
         if (message.type === "call") queueMicrotask(() => worker.receive({version: 1, type: "reply", requestId: message.requestId,
           ok: message.port !== "heartbeat", data: message.port === "readTaskContext"
             ? {kind: "model.generate", prompt: "正文", capability: "script", maxOutputTokens: 100, operationKey: "op"}
-            : message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "test"} : {}}));
+            : message.port === "resolveModelCredential" ? {apiFormat: "openai_chat", baseUrl: null, model: "test", token: "test"} : message.port === "reserveCall" ? {callId:"call-1",status:"reserved"} : message.port === "startCall" ? {callId:"call-1",status:"started"} : {}}));
       },
       async generate(_input, _model, signal) {
         observedSignal = signal;
@@ -81,4 +81,22 @@ describe("独立 Worker 端口生命周期", () => {
     expect(messages).toHaveLength(count);
     worker.close();
   });
+  it("启动许可拒绝时供应商调用保持为零", async () => {
+    const {worker,messages,generate}=fixture(undefined,"startCall");
+    worker.receive(run);
+    await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).toBe(true));
+    expect(generate).not.toHaveBeenCalled();
+    expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"unknown_result"});
+    worker.close();
+  });
+  it.each(["started","settled","unknown","rejected"])("恢复遇到%s调用不重放供应商", async status => {
+    const {worker,messages,generate}=fixture(undefined,undefined,undefined,status);
+    worker.receive(run);
+    await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).toBe(true));
+    expect(generate).not.toHaveBeenCalled();
+    expect(messages.filter(x=>x.type==="call" && (x.port==="startCall" || x.port==="settleCall"))).toHaveLength(0);
+    expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason:"unknown_result"});
+    worker.close();
+  });
+
 });

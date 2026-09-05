@@ -15,7 +15,8 @@
     "共享 retry-policy 归 ai-worker/runtime；明确 HTTP/受管拒绝与未知提交分类，保留完整 Retry-After，SDK 重试设为 0",
     "新增 ai_tasks→execution_tasks 唯一映射与事务转交；映射任务排除旧领取/清理，尚未接生产调度",
     "持久随机fence和后端同行事务校验；控制与回收统一锁序，过期旧心跳拒绝续租；已有调用结算边界供后续账本服务使用",
-    "持久调用账本：预留/启动/结算共享父任务行锁，明确拒绝重试保留操作键与调用历史，预算和截止时间跨恢复保持，结果与计量事实单调，未知用量不记零；尚未接生产端口"
+    "持久调用账本：预留/启动/结算共享父任务行锁，明确拒绝重试保留操作键与调用历史，预算和截止时间跨恢复保持，结果与计量事实单调，未知用量不记零；尚未接生产端口",
+    "Worker消费持久startCall许可和具体callId结算；正文与用量原子保存，真实子进程重启及换租约后恢复正文不重新调用模型；生产调度和候选端口待接"
   ],
   "verification": {
     "backend_tests": {
@@ -65,6 +66,11 @@
       "evidence": "execution-call-ledger-evidence.json",
       "tests": 26,
       "scope": "隔离数据库服务回归，生产端口接线未完成"
+    },
+    "worker_call_ports_increment": {
+      "evidence": "worker-call-ports-evidence.json",
+      "tests": 30,
+      "scope": "真实子进程/SDK+本地供应商+隔离数据库，非完整生产验收"
     }
   },
   "not_yet_delivered": [

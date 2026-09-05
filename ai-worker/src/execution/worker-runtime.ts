@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
-  hostMessageSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
+  hostMessageSchema, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import type { z } from "zod";
@@ -45,7 +45,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     let started = false;
     let settled = false;
     let committing = false;
-    let operationKey: string | undefined;
+    let callId: string | undefined;
     let seq = 0;
     let heartbeatTimer: ReturnType<typeof setTimeout> | undefined;
     let finished = false;
@@ -60,16 +60,28 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       if (deadlineAt <= Date.now()) controller.abort();
       signal.throwIfAborted();
       const input = modelGenerationInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
-      operationKey = input.operationKey;
+      const operationKey = input.operationKey;
+      const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
+      callId = reservation.callId;
+      if (reservation.status === "settled" && reservation.resultText) {
+        committing = true;
+        await call(execution, "commitResult", {outcome:"succeeded",text:reservation.resultText}, signal);
+        reason = "completed";
+        return;
+      }
+      if (reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
       const model = workerModelSpecSchema.parse(await call(execution, "resolveModelCredential", {capability: input.capability}, signal));
-      await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal);
       signal.throwIfAborted();
+      // 启动回执丢失也视为未知；没有明确许可绝不调用供应商。
       started = true;
+      const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
+      if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");
+      signal.throwIfAborted();
       const result = await deps.generate(input, model, signal, (text) => {
         if (!signal.aborted) send({version: 1, type: "progress", requestId, execution, seq: seq++, text});
       });
       // 已执行调用允许在取消后结算，提交候选仍由父端口检查控制状态。
-      await call(execution, "settleCall", {operationKey, status: "settled", usage: result.usage});
+      await call(execution, "settleCall", {callId, status: "settled", usage: result.usage, text:result.text});
       settled = true;
       signal.throwIfAborted();
       committing = true;
@@ -77,9 +89,9 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       reason = "completed";
     } catch (error) {
       const failure = error instanceof GenerationFailure ? error : undefined;
-      reason = signal.aborted ? "cancelled" : failure?.outcome ?? (started ? "unknown_result" : "failed");
+      reason = signal.aborted ? "cancelled" : failure?.outcome ?? (started || committing ? "unknown_result" : "failed");
       if (started && !settled) {
-        await call(execution, "settleCall", {operationKey, status: failure && failure.outcome !== "unknown_result" ? "rejected" : "unknown"}).catch(() => {});
+        await call(execution, "settleCall", {callId, status: failure && failure.outcome !== "unknown_result" ? "rejected" : "unknown"}).catch(() => {});
       }
       // 不返回 provider 原始错误，避免密钥/请求正文进入 IPC 错误日志。
       // 提交可能已落库但回执丢失，禁止用第二次失败提交覆盖它；交给后端同键对账。

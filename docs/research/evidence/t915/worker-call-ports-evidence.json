@@ -1,0 +1,36 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T07:43:01.159964+00:00",
+  "status": "worker_call_ports_verified_full_scope_open",
+  "implemented": [
+    "Worker先持久预留再取得凭据并确认startCall，最后才调用供应商；按callId结算",
+    "后端从固化模型输入生成摘要与保守预算，不接受Worker修改操作键或输出额度",
+    "正文与真实用量原子持久结算；迟到回执不能清空或篡改正文",
+    "候选提交故障后进程重启并更换租约，可恢复已保存正文而不重复调用供应商"
+  ],
+  "verification": {
+    "backend_tests": 19,
+    "worker_tests": 11,
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review独立只读复核未发现新增实质问题，未运行测试"
+  },
+  "limits": [
+    "生产调度和完整候选幂等提交尚未接线，真实子进程测试使用本地供应商和隔离数据库",
+    "明确拒绝的rejected调用尚未从调度器取得retryOfCallId，因此自动重试尚未闭环",
+    "正文在结算送达前进程死亡仍须同键对账，不能重放未知提交",
+    "完整持久消息/工具检查点、全部入口迁移、真实性能基线、供应商和双平台验收仍未完成"
+  ],
+  "outputs": {
+    "t915-worker-ledger-regression.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  19 passed (19)\n   Start at  00:42:05\n   Duration  10.31s (transform 3.20s, setup 0ms, import 5.70s, tests 22.00s, environment 0ms)\n\n",
+    "t915-worker-start-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker\n\n\n Test Files  1 passed (1)\n      Tests  11 passed (11)\n   Start at  00:41:10\n   Duration  1.16s (transform 116ms, setup 0ms, import 228ms, tests 600ms, environment 0ms)\n\n",
+    "t915-worker-ledger-types.log": "Scope: 3 of 6 workspace projects\ncontract typecheck$ tsc --noEmit\ncontract typecheck: Done\nai-worker typecheck$ tsc --noEmit\nai-worker typecheck: Done\nbackend typecheck$ tsc --noEmit\nbackend typecheck: Done\n",
+    "t915-worker-ledger-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n",
+    "t915-worker-ledger-frontend-types.log": ""
+  }
+}

@@ -165,6 +165,7 @@ export const executionCalls = pgTable("execution_calls", {
   reservedTokens: integer("reserved_tokens").notNull(),
   startedAttempt: integer("started_attempt"),
   usage: jsonb("usage"),
+  resultText: text("result_text"),
   totalTokens: integer("total_tokens"),
   resultRef: text("result_ref"),
   createdAt: text("created_at").notNull(),

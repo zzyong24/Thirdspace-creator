@@ -505,6 +505,13 @@
       "when": 1788652800001,
       "tag": "0071_execution_call_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1788652800002,
+      "tag": "0072_execution_call_result",
+      "breakpoints": true
     }
   ]
 }

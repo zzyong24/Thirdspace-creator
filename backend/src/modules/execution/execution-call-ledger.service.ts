@@ -13,7 +13,7 @@ const reservationSchema = z.object({
   retryOfCallId: z.string().min(1).optional(),
 }).strict();
 const settlementSchema = z.discriminatedUnion("status", [
-  z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional()}).strict(),
+  z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional()}).strict(),
   z.object({status: z.enum(["unknown", "rejected"])}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
@@ -147,6 +147,9 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
             }
           }
         }
+        if (input.status === "settled" && call.resultText && input.resultText && call.resultText !== input.resultText) {
+          throw new ConflictError("已确认正文不能改写");
+        }
         if (input.status === "settled" && call.resultRef && input.resultRef && call.resultRef !== input.resultRef) {
           throw new ConflictError("已确认结果不能改写");
         }
@@ -154,7 +157,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const totalTokens = usage ? usage.totalTokens ?? (usage.inputTokens != null && usage.outputTokens != null ? usage.inputTokens + usage.outputTokens : null) : null;
         if (totalTokens !== null) count.parse(totalTokens);
         const [settled] = await tx.update(executionCalls).set({
-          status: input.status, usage, totalTokens, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
+          status: input.status, usage, totalTokens, resultText: input.status === "settled" ? input.resultText ?? call.resultText : null, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
         }).where(eq(executionCalls.id, callId)).returning();
         return settled!;
       });

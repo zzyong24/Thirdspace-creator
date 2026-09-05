@@ -8,7 +8,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
-  "readTaskContext", "resolveModelCredential", "reserveCall", "settleCall",
+  "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
   "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
@@ -25,9 +25,10 @@ export const workerPortInputSchemas = {
   readTaskContext: emptyPortInput,
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
+  startCall: z.object({callId: operationKeySchema}).strict(),
   settleCall: z.discriminatedUnion("status", [
-    z.object({operationKey: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema}).strict(),
-    z.object({operationKey: operationKeySchema, status: z.enum(["unknown", "rejected"])}).strict(),
+    z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),
+    z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected"])}).strict(),
   ]),
   saveCheckpoint: z.object({expectedRevision: z.number().int().nonnegative(), checkpoint: z.record(z.string(), z.unknown())}).strict(),
   commitResult: z.discriminatedUnion("outcome", [
@@ -37,6 +38,12 @@ export const workerPortInputSchemas = {
   heartbeat: emptyPortInput,
   acknowledgeControl: emptyPortInput,
 } satisfies Record<WorkerPort, z.ZodType>;
+export const workerReservationSchema = z.object({
+  callId: operationKeySchema,
+  status: z.enum(["reserved", "started", "settled", "unknown", "rejected"]),
+  resultText: z.string().min(1).max(2_000_000).optional(),
+}).strict();
+export const workerStartReceiptSchema = z.object({callId: operationKeySchema, status: z.literal("started")}).strict();
 const envelope = { version: z.literal(1), requestId: z.string().min(1) };
 export const workerStopReasonSchema = z.enum(["completed", "cancelled", "failed", "unknown_result", "retry_wait", "waiting_user"]);
 export type WorkerStopReason = z.infer<typeof workerStopReasonSchema>;

@@ -157,3 +157,4 @@ export {
 export { createExecutionAuthorityService } from "./execution-authority.service";
 export { createExecutionLeaseService } from "./execution-lease.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
+export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";

@@ -56,8 +56,10 @@ describe("T-915 持久调用账本", () => {
   it("已确认结果与用量不能被迟到回执降级或矛盾计量覆盖", async () => {
     const f = await fixture("monotonic"); const call = await f.ledger.reserve(f.ref,input);
     await f.ledger.start(f.ref,call.id);
-    await f.ledger.settle(f.ref,call.id,{status:"settled",usage:{},resultRef:"candidate:1"});
+    await f.ledger.settle(f.ref,call.id,{status:"settled",usage:{},resultRef:"candidate:1",resultText:"已生成正文"});
     expect((await f.ledger.settle(f.ref,call.id,{status:"unknown"})).resultRef).toBe("candidate:1");
+    expect((await f.ledger.inspect(f.ref)).calls[0].resultText).toBe("已生成正文");
+    await expect(f.ledger.settle(f.ref,call.id,{status:"settled",usage:{},resultText:"篡改正文"})).rejects.toMatchObject({name:"ConflictError"});
     expect((await f.ledger.inspect(f.ref)).spentTokens).toBeNull();
     expect((await f.ledger.inspect(f.ref)).reservedTokens).toBe(20);
     await expect(f.ledger.settle(f.ref,call.id,{status:"settled",usage:{totalTokens:0,inputTokens:40}})).rejects.toMatchObject({name:"ConflictError"});

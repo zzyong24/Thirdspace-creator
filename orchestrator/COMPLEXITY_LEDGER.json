@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "950514e8e6d0e7d16f571d1455caccfce6bc01a431be1c1a9629404aa0ab5731",
+      "file_sha256": "8e5eef5a8b51f5a1efd19ab4527a7353f882bad01d6feb396f1a134261e999c2",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "已确认独立 Node Worker 的私有父子通信，属于 R-02 必需机制。",
+      "reason": "沿用DEC-RUNTIME-055已批准私有父子通信；新增持久启动确认及已结算正文恢复，不新增传输机制；独立审查通过，生产调度与完整候选端口仍待接线。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "17d805f31366827c039b97a233475c490333530fdff5581f82ffc02fa61562e8",
+      "file_sha256": "9a7d9e72f692c80e0ba0c3ca6e0121b5f849e7eec37771f560e06b61af52ed00",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用DEC-RUNTIME-055批准范围；本次仅导出现有后端权威数据库的调用账本表或更新对应证据，无新增凭据存储/通信机制；生产接线及完整验收未完成。",
+      "reason": "沿用DEC-RUNTIME-055已批准私有父子通信；新增持久启动确认及已结算正文恢复，不新增传输机制；独立审查通过，生产调度与完整候选端口仍待接线。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },
