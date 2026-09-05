@@ -1,0 +1,23 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/planning-thesis-output.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/planning-thesis-output.test.ts [ src/execution/planning-thesis-output.test.ts ]
+Error: Cannot find module './planning-thesis-output' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/planning-thesis-output.test.ts
+ ❯ src/execution/planning-thesis-output.test.ts:2:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:24:54
+   Duration  151ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/planning-thesis-output.test.ts --retry=0

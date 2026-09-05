@@ -1,3 +1,4 @@
+import {planningThesisOutputSchema,planningThesisGroundingSchema} from "./planning-thesis-output";
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
 import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
@@ -41,7 +42,8 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       },
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
-    const businessSchema=input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
+    if(input.skillId==="planning.thesis")planningThesisGroundingSchema.parse(JSON.parse(input.facets.__planningThesisGrounding ?? "null"));
+    const businessSchema=input.skillId==="planning.thesis" ? planningThesisOutputSchema : input.skillId==="review.insights" ? reviewCandidateSchema : input.skillId==="planning.contract" ? contractCandidateSchema : undefined;
     const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}

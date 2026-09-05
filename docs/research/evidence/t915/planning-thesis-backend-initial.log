@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/planning-thesis-context.test.ts (2 tests | 1 failed) 7ms
+   × 真实creativeContext保留旧全部facets与7个按原顺序grounding来源 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/planning-thesis-context.test.ts > 真实creativeContext保留旧全部facets与7个按原顺序grounding来源
+AssertionError: expected '【我的观点】\n（暂无）\n【证据】\n（暂无）\n【金句】\n（暂无）' to contain '知识佐证'
+
+- Expected
++ Received
+
+- 知识佐证
++ 【我的观点】
++ （暂无）
++ 【证据】
++ （暂无）
++ 【金句】
++ （暂无）
+
+ ❯ src/modules/ai-runtime/planning-thesis-context.test.ts:9:243
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 7 passed (8)
+   Start at  10:26:03
+   Duration  489ms (transform 455ms, setup 0ms, import 462ms, tests 322ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/planning-thesis-context.test.ts src/modules/ai-runtime/planning-thesis-business-adapter.test.ts src/modules/ai-runtime/planning-runner.test.ts --retry=0

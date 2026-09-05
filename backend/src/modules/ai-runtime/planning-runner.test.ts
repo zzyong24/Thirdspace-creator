@@ -19,6 +19,7 @@ vi.mock("@creatoros/ai-worker", async () => {
     runStructuredNode,
     // T-040b:runner 改运行时 getTemplate(id) 取被覆盖后的 REGISTRY 对象;mock 回传带该 id 的对象。
     getTemplate: (id: string) => ({ id }),
+    projectPlanningThesis: actual.projectPlanningThesis,
     buildGroundingHaystack: actual.buildGroundingHaystack,
     annotateUngroundedClaims: actual.annotateUngroundedClaims,
   };

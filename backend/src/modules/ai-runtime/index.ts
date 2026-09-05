@@ -116,3 +116,5 @@ export {createAgenticResearchTools} from "./agentic-research-tools";
 export { projectScriptDraftCandidate } from "./script-candidate-projection";
 
 export { createScriptBusinessAdapter } from "./script-business-adapter";
+export { preparePlanningThesisContext } from "./planning-thesis-context";
+export { createPlanningThesisBusinessAdapter } from "./planning-thesis-business-adapter";

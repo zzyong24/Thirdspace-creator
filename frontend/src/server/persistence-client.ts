@@ -198,7 +198,7 @@ import {
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
-import { runPlanningThesis } from "@creatoros/backend/modules/ai-runtime";
+import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialSummary } from "@creatoros/backend/modules/ai-runtime";
 import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
 import {
@@ -4345,29 +4345,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   }));
                 },
               },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "planning.thesis" &&
-          task.status === "queued"
-        ) {
-          await runPlanningThesis(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              ...resolveContextDeps(
-                PLANNING_THESIS_TEMPLATE.contextRequirements,
-                contextReaderRegistry,
-              ),
-              positioning: positioningReader,
-              resolveModelSpec,
             },
           );
         } else if (
@@ -9814,6 +9791,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const artifact=await artifactsService.getArtifact(c,artifactId);
         if((projectId!==null && artifact.projectId!==projectId) || artifact.artifactType!=="master_script")throw new Error("文稿目标与当前项目或工件类型不一致");
       },
+    }),
+    "planning.thesis":createPlanningThesisBusinessAdapter({
+      ...resolveContextDeps(PLANNING_THESIS_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
+      positioning:generationContext.positioning,
+      async assertProject(c,projectId){await projectsService.getProjectOverviewCore(c,projectId);},
     }),
     "review.analyze":{
       skillId:"review.insights",capability:"review.insights",

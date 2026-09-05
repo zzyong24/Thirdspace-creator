@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:44580) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/planning-thesis-worker-replay.integration.test.ts > 论点模型已结算但回执丢失后真实重启，重放原调用且仅一次HTTP
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/planning-thesis-worker-replay.integration.test.ts > 论点模型已结算但回执丢失后真实重启，重放原调用且仅一次HTTP
+[execution-worker] MODEL_WORKER_RUN_INTERRUPTED
+
+stderr | src/server/planning-thesis-worker-replay.integration.test.ts > 论点模型已结算但回执丢失后真实重启，重放原调用且仅一次HTTP
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/planning-thesis-worker-replay.integration.test.ts (1 test | 1 failed) 18566ms
+   × 论点模型已结算但回执丢失后真实重启，重放原调用且仅一次HTTP 18417ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/planning-thesis-worker-replay.integration.test.ts > 论点模型已结算但回执丢失后真实重启，重放原调用且仅一次HTTP
+AssertionError: {"id":"ai-task-4a4171e4-14","userId":"script-budget-user","projectId":"project-4a4171e4-2","contentOutputId":null,"taskType":"planning.thesis","status":"running","inputData":{"topic":"保留已生成结果","projectId":"project-4a4171e4-2","artifactId":"artifact-4a4171e4-12"},"modelKey":"claude-opus-4-8","idempotencyKey":"script-budget-account:planning.thesis:planning-thesis-replay-entry","attemptId":"planning-thesis-replay-entry","requestFingerprint":"sha256:23cb685480dc47431683138e2b8ff5bb67a9c8ce58bbea27a384fddc183b8b5b","retryOfTaskId":null,"requestedAt":"2026-09-05T17:27:37.401Z","startedAt":null,"completedAt":null,"errorMessage":null,"executionTaskId":"exec_62cbb1c3-367f-4814-825f-64f9675308f4","runtimeStatus":"running"}: expected 'running' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "running"
+
+ ❯ vi.waitFor.timeout src/server/planning-thesis-worker-replay.integration.test.ts:46:174
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  10:27:32
+   Duration  21.79s (transform 1.88s, setup 106ms, import 2.58s, tests 18.57s, environment 354ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/planning-thesis-worker-replay.integration.test.ts --retry=0

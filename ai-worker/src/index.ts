@@ -581,3 +581,5 @@ export {
 } from "./prompt/templates/chatbox-surfaces";
 
 export {buildScriptFallbackResult,type ScriptFallbackInput,type ScriptFallbackResult} from "./execution/script-fallback";
+
+export {projectPlanningThesis,planningThesisOutputSchema,planningThesisGroundingSchema} from "./execution/planning-thesis-output";

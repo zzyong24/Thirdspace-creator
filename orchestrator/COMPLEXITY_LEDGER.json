@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "2213b806f5880442f114ff86ca6bcbf48a8458d1861cd83f13153d2fcb2452ec",
+      "file_sha256": "1c88fefc730af443c553ad57836bbcba00bf3b8cedee4bcf0f789acaf782cde6",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055范围内论点树沿既有持久Worker生成，冻结完整上下文、固定输出协议并保留原领域采纳事务；本批公共测试及独立复核，未扩展凭据/安装机制。完整T-915尚未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "9edebf01e859ac0d4673f2d7d0577de9f9551170d83ee6a613c6a965abe4c7d2",
+      "file_sha256": "292fe14e884f6e75452db795c4723639018d3961430d091c262252e34ff0670b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内历史保真降级在凭证解析前执行，并只重放后端验真的原文回执；本次独立审查与升级兼容红绿验证。完整T-915尚未完成。",
+      "reason": "DEC-RUNTIME-055范围内论点树沿既有持久Worker生成，冻结完整上下文、固定输出协议并保留原领域采纳事务；本批公共测试及独立复核，未扩展凭据/安装机制。完整T-915尚未完成。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {

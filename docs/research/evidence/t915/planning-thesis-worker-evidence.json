@@ -1,0 +1,72 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T17:30:50.093578+00:00",
+  "status": "论点树迁移增量，完整任务仍进行中",
+  "implemented": [
+    "正式planning.thesis由structured adapter进入唯一持久Worker，删除旧宿主dispatch与import，普通生成无额外规划模型",
+    "冻结原完整reader注册表解析出的上下文、原七facets及七项grounding；归属验证先于读取，投影不重读活库",
+    "共用纯输出归一与呈现：兼容中文列名、过滤未知列、trim、非破坏溯源提醒；Worker固定schema要求归一后至少一个节点",
+    "生成仅候选，不预建thesis_tree；采纳沿用原project/task锁事务，用户确认后写adopted版本，幂等重放不回滚后续编辑"
+  ],
+  "flow": "用户提交 → 冻结资料 → 持久Worker生成或回执重放 → 论点候选 → 用户采纳 → 原事务创建adopted版本",
+  "verification": {
+    "public": {
+      "tests": 2,
+      "log": "planning-thesis-entry-first-green.log",
+      "scope": "真实child+隔离PGlite+本地HTTP；正常1请求、明确429拒绝2请求；跨账号拒绝、并发采纳单工件、后续编辑后重复确认不回滚"
+    },
+    "restart": {
+      "tests": 1,
+      "log": "planning-thesis-replay-green.log",
+      "scope": "真实settle事务后挂丢回执，实际stop/close+同目录重开；重启前候选0，仅隔离库旧leaseExpiresAt设过期，由真实dispatcher恢复；HTTP1、ledger1、采纳版本回读"
+    },
+    "worker": {
+      "tests": 42,
+      "log": "planning-thesis-output-green.log",
+      "typesExitCode": 0,
+      "typesLog": "planning-thesis-output-types.log"
+    },
+    "backend": {
+      "tests": 8,
+      "log": "planning-thesis-backend-final.log",
+      "typesExitCode": 0,
+      "typesLog": "planning-thesis-backend-types.log"
+    },
+    "frontendTypes": {
+      "exitCode": 0,
+      "log": "planning-thesis-frontend-types.log"
+    },
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "planning-thesis-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "planning-thesis-orphan.log"
+    },
+    "scope": {
+      "errors": [],
+      "log": "planning-thesis-scope.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "log": "planning-thesis-reconcile.log",
+      "status": "既有T-916全局欠债仍在，未标全绿"
+    }
+  },
+  "evidenceLimits": [
+    "公共入口首次即可运行即绿，没有历史业务红测；Worker初红为新模块未实现，backend初失败为fixture类型不匹配",
+    "重放首次等待失败是租约仍有效的预期行为，不标成产品缺陷；测试加速旧租约到期不等于已证明真实立即恢复",
+    "不代表公网三供应商或桌面安装包验收；不读取用户真实数据库",
+    "旧runner目前仅兼容导出与旧回归，生产已无引用；全量旧路径清理仍需R05审计"
+  ],
+  "remaining": [
+    "完整R05入口迁移、旧路径退役",
+    "浏览器observe/act过期定位与动作后回读闭环",
+    "同条件30次性能与故障基线",
+    "三供应商与macOS/Windows分发包生命周期"
+  ]
+}
