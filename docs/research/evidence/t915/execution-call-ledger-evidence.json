@@ -1,0 +1,26 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T07:34:30.417173+00:00",
+  "status": "ledger_foundation_verified_full_scope_open",
+  "scope": "持久调用账本、不可重置预算、截止时间与单调结算",
+  "verification": {
+    "backend_tests": 26,
+    "backend_types": "PASS",
+    "frontend_types": "PASS",
+    "boundary": "无新增违规，既有5条保留",
+    "independent_review": "worker_review只读复核：截止时间、结果单调与计量下界漏洞均已修复，未发现其他实质问题；审查未运行测试"
+  },
+  "limits": [
+    "尚未接入生产Worker命名端口；需要显式startCall确认及同键对账接线",
+    "尚未实现完整持久检查点、全部入口迁移与真实供应商/双平台验收",
+    "本次数据库测试采用隔离测试数据库；没有在用户数据库运行迁移"
+  ],
+  "red_evidence": "实际新增模块前导入失败；未将补充回归伪称为先红后绿。",
+  "outputs": {
+    "t915-ledger-red.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n ❯ src/modules/execution/execution-call-ledger.service.test.ts (0 test)\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/execution/execution-call-ledger.service.test.ts [ src/modules/execution/execution-call-ledger.service.test.ts ]\nError: Cannot find module './execution-call-ledger.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service.test.ts\n ❯ src/modules/execution/execution-call-ledger.service.test.ts:4:1\n      2| import { createDb, type Db } from \"@creatoros/backend\";\n      3| import { createPersistentTaskService } from \"./persistent-task.service…\n      4| import { createExecutionCallLedgerService } from \"./execution-call-led…\n       | ^\n      5| const ctx = {userId: \"ledger-user\", accountId: \"ledger-account\", reque…\n      6| const input = {operationKey: \"generate\", kind: \"model\" as const, input…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  00:24:00\n   Duration  1.00s (transform 414ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nundefined\n/Users/zyongzhu/Workbase/Thirdspace-creator/backend:\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-call-ledger.service.test.ts\n",
+    "t915-ledger-green.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  4 passed (4)\n      Tests  26 passed (26)\n   Start at  00:33:52\n   Duration  8.23s (transform 1.78s, setup 0ms, import 3.71s, tests 16.15s, environment 0ms)\n\n",
+    "t915-ledger-types.log": "",
+    "t915-ledger-frontend-types.log": "",
+    "t915-ledger-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  }
+}

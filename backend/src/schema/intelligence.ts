@@ -140,6 +140,8 @@ export const executionTasks = pgTable("execution_tasks", {
   checkpoint: jsonb("checkpoint"),
   leaseOwner: text("lease_owner"),
   fenceToken: text("fence_token"),
+  deadlineAt: text("deadline_at"),
+  executionBudget: jsonb("execution_budget"),
   leaseExpiresAt: text("lease_expires_at"),
   heartbeatAt: text("heartbeat_at"),
   attempt: integer("attempt").notNull().default(0),
@@ -150,6 +152,24 @@ export const executionTasks = pgTable("execution_tasks", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const executionCalls = pgTable("execution_calls", {
+  id: text("id").primaryKey(),
+  executionTaskId: text("execution_task_id").notNull().references(() => executionTasks.id),
+  sequence: integer("sequence").notNull(),
+  operationKey: text("operation_key").notNull(),
+  retryOfCallId: text("retry_of_call_id"),
+  kind: text("kind").notNull(),
+  inputDigest: text("input_digest").notNull(),
+  status: text("status").notNull(),
+  reservedTokens: integer("reserved_tokens").notNull(),
+  startedAttempt: integer("started_attempt"),
+  usage: jsonb("usage"),
+  totalTokens: integer("total_tokens"),
+  resultRef: text("result_ref"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, table => ({sequenceUnique: uniqueIndex("execution_calls_sequence_unique").on(table.executionTaskId, table.sequence)}));
 
 export const intelligenceSyncRuns = pgTable("intelligence_sync_runs", {
   id: text("id").primaryKey(),

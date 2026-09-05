@@ -1,0 +1,163 @@
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { and, asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
+import { workerUsageSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { createExecutionLeaseService } from "./execution-lease.service";
+import { ConflictError } from "./execution.errors";
+
+const count = z.number().int().nonnegative().max(2_000_000_000);
+const budgetSchema = z.object({maxCalls: count.min(1).max(10000), maxTokens: count.min(1), deadlineMs: count.min(1)}).strict();
+const reservationSchema = z.object({
+  operationKey: z.string().min(1).max(256), kind: z.enum(["model", "tool"]),
+  inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/), reservedTokens: count,
+  retryOfCallId: z.string().min(1).optional(),
+}).strict();
+const settlementSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional()}).strict(),
+  z.object({status: z.enum(["unknown", "rejected"])}).strict(),
+]);
+type Call = typeof executionCalls.$inferSelect;
+type Budget = z.infer<typeof budgetSchema>;
+type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+function totals(calls: Call[]) {
+  const knownSpentTokens = calls.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0);
+  const unknownUsage = calls.some(call => call.status === "unknown" || (call.status === "settled" && call.totalTokens === null));
+  return {
+    knownSpentTokens,
+    spentTokens: unknownUsage ? null : knownSpentTokens,
+    reservedTokens: calls.reduce((sum, call) => sum + (call.status === "rejected" || call.totalTokens !== null ? 0 : call.reservedTokens), 0),
+    unknownUsage,
+  };
+}
+
+/** 后端单一账本；所有变化与租约校验共享父任务行锁。模型配置、原始提示和凭据不写此表。 */
+export function createExecutionCallLedgerService(db: Db, deps: {now?: () => string; budget: Budget}) {
+  const now = deps.now ?? (() => new Date().toISOString());
+  const configuredBudget = budgetSchema.parse(deps.budget);
+  const leases = createExecutionLeaseService(db, {now});
+  const readCalls = (tx: Transaction, taskId: string) => tx.select().from(executionCalls)
+    .where(eq(executionCalls.executionTaskId, taskId)).orderBy(asc(executionCalls.sequence));
+  function assertResolved(calls: Call[], attempt: number) {
+    if (totals(calls).unknownUsage || calls.some(c => c.status === "started" && c.startedAttempt !== attempt)) {
+      throw new ConflictError("已有调用结果或用量未知，须先按原调用对账");
+    }
+  }
+  return {
+    async inspect(ref: ExecutionRef) {
+      return leases.withLease(ref, "settlement", async ({tx, task}) => {
+        const calls = await readCalls(tx, task.id);
+        return {budget: task.executionBudget === null ? null : budgetSchema.parse(task.executionBudget), deadlineAt: task.deadlineAt, calls, ...totals(calls)};
+      });
+    },
+    async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSchema>) {
+      const input = reservationSchema.parse(raw);
+      return leases.withLease(ref, "admission", async ({tx, task}) => {
+        const budget = task.executionBudget === null ? configuredBudget : budgetSchema.parse(task.executionBudget);
+        const deadlineAt = task.deadlineAt ?? new Date(Date.parse(task.createdAt) + budget.deadlineMs).toISOString();
+        if (!(Date.parse(deadlineAt) > Date.parse(now()))) throw new ConflictError("执行截止时间已到");
+        const calls = await readCalls(tx, task.id);
+        const previous = calls.filter(c => c.operationKey === input.operationKey).at(-1);
+        if (previous) {
+          if (previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens) {
+            throw new ConflictError("同一操作键不能改换调用内容");
+          }
+          if (!input.retryOfCallId || previous.retryOfCallId === input.retryOfCallId) return previous;
+          if (previous.id !== input.retryOfCallId || previous.status !== "rejected") {
+            throw new ConflictError("只有明确拒绝的调用可按原操作键重试");
+          }
+        } else if (input.retryOfCallId) throw new ConflictError("重试来源不存在");
+        assertResolved(calls, ref.attempt);
+        const used = totals(calls);
+        if (calls.length >= budget.maxCalls || used.knownSpentTokens + used.reservedTokens + input.reservedTokens > budget.maxTokens) {
+          throw new ConflictError("执行调用次数或用量预算不足");
+        }
+        if (task.executionBudget === null || task.deadlineAt === null) {
+          await tx.update(executionTasks).set({executionBudget: budget, deadlineAt}).where(eq(executionTasks.id, task.id));
+        }
+        const [created] = await tx.insert(executionCalls).values({
+          id: `call_${randomUUID()}`, executionTaskId: task.id, sequence: calls.length + 1,
+          operationKey: input.operationKey, retryOfCallId: input.retryOfCallId ?? null, kind: input.kind,
+          inputDigest: input.inputDigest, reservedTokens: input.reservedTokens, status: "reserved",
+          createdAt: now(), updatedAt: now(),
+        }).returning();
+        if (!created) throw new ConflictError("调用预留失败");
+        return created;
+      });
+    },
+    async start(ref: ExecutionRef, callId: string) {
+      return leases.withLease(ref, "admission", async ({tx, task}) => {
+        const calls = await readCalls(tx, task.id);
+        const call = calls.find(c => c.id === callId);
+        if (!call || call.status !== "reserved") throw new ConflictError("调用不可重复启动");
+        assertResolved(calls, ref.attempt);
+        const budget = budgetSchema.parse(task.executionBudget);
+        const used = totals(calls);
+        if (used.knownSpentTokens + used.reservedTokens > budget.maxTokens) throw new ConflictError("实际用量已超预算");
+        const [started] = await tx.update(executionCalls).set({status: "started", startedAttempt: ref.attempt, updatedAt: now()})
+          .where(eq(executionCalls.id, callId)).returning();
+        return started!;
+      });
+    },
+    async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>) {
+      const input = settlementSchema.parse(raw);
+      return leases.withLease(ref, "settlement", async ({tx, task}) => {
+        const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
+        if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
+        if (call.status === "settled" && input.status === "unknown") return call;
+        if (call.status === "settled" && input.status === "rejected") throw new ConflictError("已确认结果不能变成拒绝");
+        if (call.status === "rejected") {
+          if (input.status !== "rejected") throw new ConflictError("已确认拒绝不能改写");
+          return call;
+        }
+        if (input.status === "rejected" && call.status !== "started") throw new ConflictError("未知提交不能变成可重试拒绝");
+        const previousUsage = call.usage === null ? null : workerUsageSchema.parse(call.usage);
+        const usage = input.status === "settled" ? {...(previousUsage ?? {})} : null;
+        if (usage && input.status === "settled") {
+          for (const field of ["totalTokens", "inputTokens", "outputTokens"] as const) {
+            if (input.usage[field] !== undefined) usage[field] = input.usage[field];
+          }
+          for (const field of ["inputTokenDetails", "outputTokenDetails"] as const) {
+            if (input.usage[field]) {
+              const merged = {...previousUsage?.[field]};
+              for (const [key, value] of Object.entries(input.usage[field])) {
+                if (value === undefined) continue;
+                const previous = (merged as Record<string, number>)[key];
+                if (previous !== undefined && previous !== value) throw new ConflictError("已确认缓存或输出分项不能改写");
+                (merged as Record<string, number>)[key] = value;
+              }
+              usage[field] = merged;
+            }
+          }
+        }
+        if (usage) {
+          const inputParts = Object.values(usage.inputTokenDetails ?? {}).reduce((sum, value) => sum + (value ?? 0), 0);
+          const outputParts = Object.values(usage.outputTokenDetails ?? {}).reduce((sum, value) => sum + (value ?? 0), 0);
+          if ((usage.inputTokens != null && inputParts > usage.inputTokens) ||
+            (usage.outputTokens != null && outputParts > usage.outputTokens) ||
+            (usage.totalTokens != null && Math.max(usage.inputTokens ?? 0, inputParts) + Math.max(usage.outputTokens ?? 0, outputParts) > usage.totalTokens) ||
+            (usage.totalTokens != null && usage.inputTokens != null && usage.outputTokens != null && usage.totalTokens !== usage.inputTokens + usage.outputTokens)) {
+            throw new ConflictError("调用用量相互矛盾");
+          }
+        }
+        if (input.status === "settled" && previousUsage) {
+          for (const field of ["totalTokens", "inputTokens", "outputTokens"] as const) {
+            if (previousUsage[field] != null && input.usage[field] != null && previousUsage[field] !== input.usage[field]) {
+              throw new ConflictError("已确认用量不能改写");
+            }
+          }
+        }
+        if (input.status === "settled" && call.resultRef && input.resultRef && call.resultRef !== input.resultRef) {
+          throw new ConflictError("已确认结果不能改写");
+        }
+        // SDK total/input 已包含缓存分项，不能再次相加；缺计量保持未知，不记作零。
+        const totalTokens = usage ? usage.totalTokens ?? (usage.inputTokens != null && usage.outputTokens != null ? usage.inputTokens + usage.outputTokens : null) : null;
+        if (totalTokens !== null) count.parse(totalTokens);
+        const [settled] = await tx.update(executionCalls).set({
+          status: input.status, usage, totalTokens, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
+        }).where(eq(executionCalls.id, callId)).returning();
+        return settled!;
+      });
+    },
+  };
+}

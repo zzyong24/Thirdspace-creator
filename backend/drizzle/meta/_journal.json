@@ -498,6 +498,13 @@
       "when": 1788652800000,
       "tag": "0070_execution_fence",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1788652800001,
+      "tag": "0071_execution_call_ledger",
+      "breakpoints": true
     }
   ]
 }

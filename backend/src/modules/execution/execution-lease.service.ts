@@ -24,6 +24,7 @@ export function createExecutionLeaseService(db: Db, deps: {now?: () => string} =
         }
         if (mode === "admission" && (
           task.status !== "running" || !task.leaseOwner || !task.leaseExpiresAt ||
+          (task.deadlineAt !== null && !(Date.parse(task.deadlineAt) > Date.parse(now()))) ||
           !(Date.parse(task.leaseExpiresAt) > Date.parse(now()))
         )) throw new ConflictError("当前执行已停止或租约到期，不能启动新动作");
         // settlement 的调用方必须只结算账本中已存在的同键调用；不能启动动作或改终态。

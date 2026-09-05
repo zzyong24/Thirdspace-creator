@@ -17,6 +17,7 @@ export {
 export {
   executionTasks,
   intelligenceCollections,
+  executionCalls,
   intelligenceItems,
   intelligenceMigrationLedgers,
   intelligenceSources,
