@@ -1,4 +1,4 @@
-import { pgTable, text, integer, real, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, real, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Artifacts tables (data-model §9 + contract/src/resources/artifacts.ts; SPEC §13
 // "Artifacts" group). Canonical defs live in shared infra (@creatoros/backend)
@@ -58,7 +58,9 @@ export const artifactVersions = pgTable("artifact_versions", {
   createdAt: text("created_at").notNull(),
   // No updated_at — versions are immutable (data-model §9 rule 6; matches
   // artifactVersionResource which has createdAt only).
-});
+  adoptionKey: text("adoption_key"),
+  adoptionSourceDigest: text("adoption_source_digest"),
+}, table => [uniqueIndex("artifact_versions_adoption_ux").on(table.artifactId,table.adoptionKey)]);
 
 export const artifactRelations = pgTable("artifact_relations", {
   id: text("id").primaryKey(),

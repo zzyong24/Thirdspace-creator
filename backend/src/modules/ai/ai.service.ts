@@ -55,6 +55,9 @@ export interface AiArtifactsPort {
       contentData?: Record<string, unknown>;
       createdByType?: string;
       aiTaskId?: string | null;
+      /** 后端候选的稳定来源；公开编辑接口不接收这些字段。 */
+      adoptionKey?: string;
+      adoptionSourceDigest?: string;
     },
   ): Promise<unknown>;
   /**
@@ -1102,7 +1105,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
       // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。
-      if (["planning.thesis","publish.platform_adapt"].includes(task.taskType) && task.status === "succeeded") {
+      if (task.status === "succeeded" && (["planning.thesis","publish.platform_adapt"].includes(task.taskType) || (await repo.listResults(taskId)).at(-1)?.resultType === "artifact_version")) {
         return toTaskDto(task);
       }
       // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
@@ -1703,6 +1706,9 @@ export function createAiService(deps: ServiceDeps): AiService {
         ...(contentData ? { contentData } : {}),
         createdByType: "ai",
         aiTaskId: taskId,
+        adoptionKey: `candidate:${candidate.id}`,
+        // 候选不可变，摘要取原候选；素材凝固随现实变化时重试仍回读首次采纳。
+        adoptionSourceDigest: "sha256:"+createHash("sha256").update(JSON.stringify([artifactId,candidate.id,candidate.resultData])).digest("hex"),
       });
       const updated = await repo.updateTaskStatus(taskId, {
         status: "succeeded",

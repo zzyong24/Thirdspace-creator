@@ -87,6 +87,9 @@ export interface ArtifactRepository {
       contentData?: Record<string, unknown>;
       createdByType?: string;
       aiTaskId?: string | null;
+      /** 后端候选的稳定来源；公开编辑接口不接收这些字段。 */
+      adoptionKey?: string;
+      adoptionSourceDigest?: string;
       origin?: "user" | "reconstructed";
     },
   ): Promise<ArtifactVersionRow>;
@@ -269,6 +272,8 @@ export function createArtifactRepository(
     },
 
     async createVersion(artifactId, input) {
+      if((input.adoptionKey===undefined)!==(input.adoptionSourceDigest===undefined) ||
+        (input.adoptionKey!==undefined && (!input.adoptionKey || input.adoptionKey.length>200 || !/^sha256:[a-f0-9]{64}$/.test(input.adoptionSourceDigest!))))throw new ConflictError("采纳来源无效");
       return db.transaction(async (tx) => {
         const artifactRows = await tx
           .select()
@@ -279,9 +284,16 @@ export function createArtifactRepository(
               eq(artifacts.userId, userId),
               accountGate,
             ),
-          );
+          ).for("update");
         const artifact = artifactRows[0];
         if (!artifact) throw new OwnershipError("Artifact not found");
+        if(input.adoptionKey){
+          const [receipt]=await tx.select().from(artifactVersions).where(and(eq(artifactVersions.artifactId,artifactId),eq(artifactVersions.adoptionKey,input.adoptionKey)));
+          if(receipt){
+            if(receipt.adoptionSourceDigest!==input.adoptionSourceDigest || receipt.aiTaskId!==(input.aiTaskId ?? null))throw new ConflictError("采纳来源与原候选不一致");
+            return receipt;
+          }
+        }
         if (
           input.expectedCurrentVersionId &&
           artifact.currentVersionId !== input.expectedCurrentVersionId
@@ -310,6 +322,8 @@ export function createArtifactRepository(
             changeSummary: input.changeSummary ?? "",
             createdByType: input.createdByType ?? "user",
             aiTaskId: input.aiTaskId ?? null,
+            adoptionKey: input.adoptionKey ?? null,
+            adoptionSourceDigest: input.adoptionSourceDigest ?? null,
             createdAt: now,
           })
           .returning();

@@ -111,6 +111,9 @@ export interface ArtifactsService {
       contentData?: Record<string, unknown>;
       createdByType?: string;
       aiTaskId?: string | null;
+      /** 后端候选的稳定来源；公开编辑接口不接收这些字段。 */
+      adoptionKey?: string;
+      adoptionSourceDigest?: string;
       // F1 (T-030-D4): explicit provenance for this version's content. When
       // omitted, createVersion applies the origin lifecycle (§4.5): a
       // user-authored version (createdByType !== 'ai') flips a 'reconstructed'
@@ -251,7 +254,8 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
             entityType: "artifact",
             entityId: artifact.id,
             title: artifact.title,
-            body: version.contentText,
+            body: artifact.currentVersionId && artifact.currentVersionId!==version.id
+              ? (await repo.getVersion(artifact.currentVersionId)).contentText : version.contentText,
           });
         } catch {
           // swallow — derived-index failure is retryable, never fatal.

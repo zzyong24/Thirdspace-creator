@@ -1,0 +1,37 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:46:41.215564+00:00",
+  "status": "artifact_adoption_idempotency_verified_full_scope_open",
+  "implemented": [
+    "文稿版本持久化候选来源键与原候选摘要，按文稿和来源键唯一",
+    "同文稿版本追加经父行锁串行，版本行和当前指针同事务；重放只回读已有版本",
+    "所有通用artifact_version候选经稳定来源键采纳，已成功任务重复确认回读成功",
+    "重放的搜索索引使用当前版本内容，保留用户后续编辑"
+  ],
+  "verification": {
+    "backend_tests": 75,
+    "public_entry_tests": 2,
+    "public_failure": "真实版本提交后抛ARTIFACT_RECEIPT_LOST，随后并发公共确认仍只创建一个采纳版本；后续编辑及重复确认指针保持",
+    "postgres": {
+      "status": "passed",
+      "independentPools": 2,
+      "concurrentAdoptions": 30,
+      "adoptedVersions": 1,
+      "concurrentEdits": 10,
+      "uniqueEditVersionNumbers": 10,
+      "replayPreservesCurrent": true,
+      "postgresVersion": "16.13 (Homebrew)"
+    },
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review独立只读复核未发现新重要问题；未重跑测试"
+  },
+  "limits": [
+    "迁移不补造历史来源键，旧未关联回执/孤立版本仍需凭真实证据对账",
+    "测试供应商为本地HTTP，不代表真实供应商、性能基线或完整安装包验收",
+    "其他入口迁移、七端口与Pi浏览器循环及完整T915验收仍未完成"
+  ]
+}

@@ -540,6 +540,13 @@
       "when": 1788652800006,
       "tag": "0076_publication_draft_adoption",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1788652800007,
+      "tag": "0077_artifact_version_adoption",
+      "breakpoints": true
     }
   ]
 }

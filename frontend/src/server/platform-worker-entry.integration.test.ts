@@ -5,8 +5,15 @@ import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { describe,it,expect,vi } from "vitest";
 import type { Endpoint } from "@creatoros/contract";
-const fixture=vi.hoisted(()=>({url:""}));
+const fixture=vi.hoisted(()=>({url:"",loseArtifactReceipt:false}));
 vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}})}));
+vi.mock("@creatoros/backend/modules/artifacts",async original=>{
+  const actual=await original<typeof import("@creatoros/backend/modules/artifacts")>();
+  return {...actual,createArtifactsService:(...args:Parameters<typeof actual.createArtifactsService>)=>{
+    const service=actual.createArtifactsService(...args);const create=service.createVersion.bind(service);
+    service.createVersion=async(...input)=>{const result=await create(...input);if(input[2].adoptionKey && fixture.loseArtifactReceipt){fixture.loseArtifactReceipt=false;throw new Error("ARTIFACT_RECEIPT_LOST");}return result;};return service;
+  }};
+});
 import { compositeTransport,__resetPersistenceForTests } from "./persistence-client";
 const ctx={userId:"worker-entry-test",accountId:"worker-entry-test",requestId:"test",source:"user" as const};
 const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,query:undefined,body} as never,ctx) as {data:any}).data;
@@ -28,11 +35,20 @@ describe("生产多平台创建入口",()=>{
       const read=await call("ai.tasks.get",{taskId:task.id});expect(read.executionTaskId).toBeTruthy();expect(read.runtimeStatus).toBe("succeeded");expect(requests).toBe(1);
       const results=await call("ai.tasks.results.list",{taskId:task.id});
       if(artifact)expect(results).toEqual(expect.arrayContaining([expect.objectContaining({artifactId:artifact.id,resultData:expect.objectContaining({contentData:outline})})]));
-      expect((await call("ai.tasks.confirm",{taskId:task.id})).status).toBe("succeeded");
+      if(artifact){
+        fixture.loseArtifactReceipt=true;
+        await expect(call("ai.tasks.confirm",{taskId:task.id})).rejects.toThrow("ARTIFACT_RECEIPT_LOST");
+        const confirms=await Promise.all([call("ai.tasks.confirm",{taskId:task.id}),call("ai.tasks.confirm",{taskId:task.id})]);
+        expect(confirms.every(result=>result.status==="succeeded")).toBe(true);
+      }else expect((await call("ai.tasks.confirm",{taskId:task.id})).status).toBe("succeeded");
       if(artifact){
         const saved=await call("artifacts.get",{artifactId:artifact.id});
         const versions=await call("artifacts.versions.list",{artifactId:artifact.id});
+        expect(versions).toHaveLength(2);
         expect(versions.find((version:{id:string})=>version.id===saved.currentVersionId)?.contentData).toMatchObject(outline);
+        const edit=await call("artifacts.versions.create",{artifactId:artifact.id},{contentText:"后续用户编辑"});
+        expect((await call("ai.tasks.confirm",{taskId:task.id})).status).toBe("succeeded");
+        expect((await call("artifacts.get",{artifactId:artifact.id})).currentVersionId).toBe(edit.id);
       }
     }finally{
       await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();
