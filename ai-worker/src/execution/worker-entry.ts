@@ -1,3 +1,4 @@
+import { generateStructuredInWorker } from "./structured-worker-generation";
 import { streamText } from "ai";
 import { modelFor } from "../runtime/provider-factory";
 import { createExecutionWorker } from "./worker-runtime";
@@ -5,6 +6,7 @@ import { generationFailure } from "./generation-error";
 
 if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启动");
 const worker = createExecutionWorker({
+  generateStructured:generateStructuredInWorker,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
     let streamFailed = false;

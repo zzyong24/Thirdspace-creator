@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Db } from "@creatoros/backend";
-import { modelGenerationInputSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { workerTaskInputSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { ConflictError } from "./execution.errors";
@@ -13,14 +13,14 @@ export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof c
     if (task.kind !== "ai_task") throw new ConflictError("当前任务不是模型任务");
     // execution_tasks.payload 在入队后保持不变；检查点独立存储。
     const payload = task.payload as Record<string, unknown>;
-    return modelGenerationInputSchema.parse(payload.modelInput);
+    return workerTaskInputSchema.parse(payload.modelInput);
   });
   return {
     readTaskContext,
     async reserveCall(ref: ExecutionRef, raw: unknown) {
       const request = workerPortInputSchemas.reserveCall.parse(raw);
       const input = await readTaskContext(ref);
-      if (request.operationKey !== input.operationKey || request.maxOutputTokens !== input.maxOutputTokens) {
+      if (input.kind !== "model.generate" || request.operationKey !== input.operationKey || request.maxOutputTokens !== input.maxOutputTokens) {
         throw new ConflictError("调用请求与后端固化输入不符");
       }
       // 仅作为短文本请求的保守预算预留：UTF-8 字节数加协议余量；结算始终记录供应商真实用量。

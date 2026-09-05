@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
-import { modelGenerationInputSchema } from "@creatoros/contract/execution-worker";
+import { workerTaskInputSchema } from "@creatoros/contract/execution-worker";
 import { randomUUID } from "node:crypto";
 import { and, eq, aiTasks, executionTasks, OwnershipError, requireAccountId, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -8,7 +8,7 @@ import { ConflictError } from "./execution.errors";
 
 const preparedExecutionSchema = z.object({
   requestFingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-  modelInput: modelGenerationInputSchema,
+  modelInput: workerTaskInputSchema,
   budget: z.object({maxCalls:z.number().int().min(1).max(10000),maxTokens:z.number().int().min(1).max(2_000_000_000),deadlineMs:z.number().int().min(1).max(2_000_000_000)}).strict(),
 }).strict();
 export type PreparedModelExecution = z.infer<typeof preparedExecutionSchema>;
@@ -25,6 +25,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
           eq(aiTasks.id, aiTaskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, accountId),
         )).for("update");
         if (!task) throw new OwnershipError("AI task not found");
+        if (prepared?.modelInput.kind === "model.structured" && (prepared.modelInput.skillSnapshot.userId !== task.userId || prepared.modelInput.skillSnapshot.accountId !== task.accountId)) throw new OwnershipError("Skill snapshot owner mismatch");
         if (prepared && prepared.requestFingerprint !== task.requestFingerprint) throw new ConflictError("准备输入与原任务指纹不符");
         if (task.executionTaskId) {
           const [execution] = await tx.select().from(executionTasks).where(and(

@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
 import {
   hostMessageSchema, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
-  type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
+  workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import type { z } from "zod";
 import { GenerationFailure } from "./generation-error";
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
+  generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
     onText: (text: string) => void): Promise<{text: string; usage: unknown}>;
@@ -59,7 +60,17 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     try {
       if (deadlineAt <= Date.now()) controller.abort();
       signal.throwIfAborted();
-      const input = modelGenerationInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
+      const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
+      if(input.kind==="model.structured"){
+        if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
+        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+        signal.throwIfAborted();
+        committing=true;
+        await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+        reason="completed";
+        return;
+      }
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;
@@ -108,7 +119,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     }
   };
   return {
-    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities: ["model.generate"]});},
+    ready() {send({version: 1, type: "ready", requestId: randomUUID(), capabilities: ["model.generate", ...(deps.generateStructured ? ["model.structured"] : [])]});},
     receive(raw: unknown) {
       const parsed = hostMessageSchema.safeParse(raw);
       if (!parsed.success || closed) return;

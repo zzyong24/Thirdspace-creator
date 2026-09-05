@@ -1,3 +1,4 @@
+import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
 import { eq,executionTasks,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { workerPortInputSchemas,workerModelSpecSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
@@ -23,6 +24,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   const leases=createExecutionLeaseService(db,{now});
   const tasks=createPersistentTaskService(db,{now});
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
+  const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=createExecutionCandidateService(db,deps);
   let stopping=false;
@@ -32,6 +34,9 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   const supervisor=createWorkerSupervisor({entryPath:deps.entryPath,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="reserveGenerationCall")return generation.reserveGenerationCall(ref,raw);
+      if(port==="settleGenerationCall")return generation.settleGenerationCall(ref,raw);
+      if(port==="saveGenerationResult")return generation.saveGenerationResult(ref,raw);
       if(port==="readTaskContext")return calls.readTaskContext(ref);
       if(port==="reserveCall")return calls.reserveCall(ref,raw);
       if(port==="startCall")return calls.startCall(ref,raw);
@@ -70,7 +75,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
       await tasks.recoverExpiredLeases();
       let count=0;
       while(!stopping){
-        const claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:"model.generate"});
+        const claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:"model"});
         if(!claim || stopping)break;
         const ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
         let watching=true;

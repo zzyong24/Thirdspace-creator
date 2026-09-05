@@ -1,0 +1,36 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T08:48:16.854037+00:00",
+  "status": "structured_worker_verified_production_migration_open",
+  "implemented": [
+    "冻结Skill快照/输出契约/上下文的model.structured输入；绑定时校验快照归属",
+    "独立Worker运行既有结构化节点，通过命名端口逐次预留/启动/结算并保存完整节点结果",
+    "宿主统一领取普通和结构化模型任务；协议拒绝和成功回执支持跨进程重放",
+    "generation与validation进入候选投影及持久结果；partial保留并由公共采纳入口限制物化"
+  ],
+  "verification": {
+    "backend_regression_tests": 90,
+    "worker_and_structured_regression_tests": 38,
+    "final_real_child_tests": 5,
+    "types": [
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review独立只读复审发现partial丢失，修复后未发现新实质问题；审查未运行测试"
+  },
+  "real_child_evidence": [
+    "本地HTTP400拒绝→文本成功→候选投影中断→停止并新建Worker→同账本恢复，总请求仍2次，候选1条",
+    "完成策略不足保留partial/错误/策略快照，公共confirmTask拒绝且领域写入spy调用0次",
+    "总调用预算1时无额外文本回退请求",
+    "取消断开真实在途请求，持久unknown调用，无回退/候选",
+    "跨账号Skill快照绑定被拒绝"
+  ],
+  "limits": [
+    "使用本地HTTP供应商与隔离PGlite，非真实供应商/桌面包验收",
+    "现有生产runner/入口和多步脚本检查点尚未迁移",
+    "结构化自定义归一化钩子、reasoningFallback等需按具体生产runner保留后迁移，当前协议尚未覆盖这些入口",
+    "T-915完整范围和性能/双平台验收未完成"
+  ]
+}

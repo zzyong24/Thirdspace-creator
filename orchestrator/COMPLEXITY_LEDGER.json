@@ -6,7 +6,7 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "c624a36ace1bc1341a388a647d7e871ab0a6cfa731393996d1f5c0b0f161c84a",
+      "file_sha256": "0d59b0e33fbb0e9e4fec2956a5b3ff1676673a18a02203f96a92789dc832115f",
       "categories": [
         "ipc"
       ],
@@ -21,7 +21,7 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "627038781fe0f9da4352b935a68a2bd431209e67fe27ebdfea83cab9b52a556c",
+      "file_sha256": "3f3305202b7bda941ec6b772a35971c8f52f8311812421b7307f36b747da5887",
       "categories": [
         "ipc"
       ],
@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "c6b709cff31a835bd065a16b88de7744ce773c25cbcb51ffeb77974d1e0e9d2f",
+      "file_sha256": "63495bb732305be609c9ccd7446d5b0060a216954b89b0a4df71fa5cb1844f93",
       "categories": [
         "native_executable"
       ],
@@ -233,7 +233,7 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "7626e3ea6c7b0c57ff4767a33a35586a43ac0de6387155d7f1532ec5c73fd0ff",
+      "file_sha256": "1a940753c49838724ef01c72e1097240facc7073e327065cd0d2a5de9d28be57",
       "categories": [
         "ipc"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "43f50b0dce6a380215d8fd38bb25fe8b5c7826003506289604210b0dd967cca5",
+      "file_sha256": "e47892a0b3b1c1f28903dd6b60a95eedd81d646874a60d1a3212f3308ee2e81b",
       "categories": [
         "ipc"
       ],
@@ -1193,6 +1193,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已批准独立Worker范围中的结构化调用恢复证据与尚未接通的私有通信边界。",
       "acceptance": "只登记范围与验证限制，不代表完整验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/structured-worker-generation.ts"
+      ],
+      "file_sha256": "28f87ba71b0ebda76583ca5b561492dfda6175fc222a7507c5a7b878aeca7459",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立Worker命名通信范围，结构化节点与账本桥接及真实验证证据。",
+      "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/structured-worker-evidence.json"
+      ],
+      "file_sha256": "caaafda24fbda0a801b5e8f2fbc1ea3697080f23215c1c65b077f9e8d5380064",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已确认独立Worker命名通信范围，结构化节点与账本桥接及真实验证证据。",
+      "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     }
   ],
   "historical_baselines": []

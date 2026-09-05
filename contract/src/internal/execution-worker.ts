@@ -9,7 +9,7 @@ export const executionRefSchema = z.object({
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
-  "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -38,6 +38,13 @@ export const workerPortInputSchemas = {
   readTaskContext: emptyPortInput,
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
+  reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
+  settleGenerationCall: z.discriminatedUnion("status", [
+    z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
+    z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
+    z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
+  ]),
+  saveGenerationResult:z.object({callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   startCall: z.object({callId: operationKeySchema}).strict(),
   settleCall: z.discriminatedUnion("status", [
     z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),
@@ -54,6 +61,8 @@ export const workerPortInputSchemas = {
 export const workerReservationSchema = z.object({
   callId: operationKeySchema,
   status: z.enum(["reserved", "started", "settled", "unknown", "rejected"]),
+  providerResult:workerProviderReceiptSchema.optional(),
+  rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional(),
   resultText: z.string().min(1).max(2_000_000).optional(),
 }).strict();
 export const workerStartReceiptSchema = z.object({callId: operationKeySchema, status: z.literal("started")}).strict();
@@ -90,3 +99,24 @@ export const workerModelSpecSchema = z.object({
 export function sameExecution(a: ExecutionRef, b: ExecutionRef): boolean {
   return a.executionTaskId === b.executionTaskId && a.attempt === b.attempt && a.fenceToken === b.fenceToken;
 }
+
+const completionPolicySchema=z.object({schemaVersion:z.literal(1),minSegments:z.number().int().nonnegative(),maxSegments:z.number().int().positive().nullable(),requiredSequence:z.array(z.string()),repairAttempts:z.number().int().nonnegative()}).strict();
+export const workerSkillSnapshotSchema=z.object({
+  snapshotVersion:z.literal(1),userId:z.string().min(1),accountId:z.string().min(1),resolvedAt:z.string().min(1),platformPolicyVersion:z.string().min(1),platformPolicy:z.string().min(1),
+  skills:z.array(z.object({skillId:z.string().min(1),baseVersion:z.string().min(1),overlayRevision:z.number().int().nonnegative().nullable(),overlayVersion:z.string().nullable(),effective:z.object({
+    methodSystem:z.string(),template:z.string(),tools:z.array(z.string()),requiredFacets:z.array(z.string()),contextRequirements:z.array(z.string()),outputSchema:z.record(z.string(),z.json()).nullable(),completionPolicy:completionPolicySchema.nullable(),completionPolicyAdapter:z.object({id:z.string().min(1),version:z.string().min(1)}).strict().nullable(),
+  }).strict()}).strict()).min(1),
+}).strict();
+export const structuredGenerationInputSchema=z.object({
+  kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
+  skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
+}).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
+export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema]);
+const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
+const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
+export const workerStructuredResultSchema=z.object({
+  object:z.json(),
+  generation:z.object({finishReason:z.string(),usage:structuredUsageSchema,attempts:z.array(z.object({finishReason:z.string(),usage:structuredUsageSchema,kind:z.enum(["initial","repair"])}))}),
+  validation:z.object({status:z.enum(["valid","partial"]),errors:z.array(completionViolationSchema),policySnapshot:z.object({policy:completionPolicySchema,adapter:z.object({id:z.string(),version:z.string()})}),originalSegmentCount:z.number().int().nonnegative(),finalSegmentCount:z.number().int().nonnegative(),repairAttemptsUsed:z.number().int().nonnegative(),repairReasons:z.array(completionViolationSchema)}).optional(),
+}).strict();
+export type WorkerStructuredResult=z.infer<typeof workerStructuredResultSchema>;

@@ -1124,6 +1124,9 @@ export function createAiService(deps: ServiceDeps): AiService {
       // owning services ship the confirm path.
       const results = await repo.listResults(taskId);
       const candidate = results[results.length - 1];
+      if ((candidate?.resultData as {executionValidation?:{status?:string}} | undefined)?.executionValidation?.status === "partial") {
+        throw new ConflictError("当前候选尚未满足生成完整性要求，请先补全后再采纳");
+      }
       if (!candidate) {
         throw new ConflictError(`AI task ${taskId} has no candidate result`);
       }

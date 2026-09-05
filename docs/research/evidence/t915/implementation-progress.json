@@ -104,5 +104,10 @@
     "evidence": "structured-durable-evidence.json",
     "tests": 61,
     "scope": "真实SDK、本地HTTP与隔离数据库；生产入口迁移未完成"
+  },
+  "structured_worker_increment": {
+    "evidence": "structured-worker-evidence.json",
+    "tests": 128,
+    "scope": "真实子进程、SDK、本地HTTP与隔离数据库；生产runner迁移仍未完成"
   }
 }
