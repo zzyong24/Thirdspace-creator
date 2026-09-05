@@ -20,6 +20,19 @@ export const workerUsageSchema = z.object({
   inputTokenDetails: z.object({noCacheTokens: tokenCountSchema, cacheReadTokens: tokenCountSchema, cacheWriteTokens: tokenCountSchema}).optional(),
   outputTokenDetails: z.object({textTokens: tokenCountSchema, reasoningTokens: tokenCountSchema}).optional(),
 });
+/** 仅保存可恢复的模型结果，不保留请求正文、HTTP头或原始响应日志。 */
+export const workerProviderReceiptSchema = z.object({
+  content: z.array(z.json()),
+  finishReason: z.object({unified:z.string(),raw:z.string().optional()}).strict(),
+  usage: z.object({
+    inputTokens:z.object({total:tokenCountSchema,noCache:tokenCountSchema,cacheRead:tokenCountSchema,cacheWrite:tokenCountSchema}),
+    outputTokens:z.object({total:tokenCountSchema,text:tokenCountSchema,reasoning:tokenCountSchema}),
+  }),
+  warnings:z.array(z.json()),
+  providerMetadata:z.record(z.string(),z.json()).optional(),
+}).strict().refine(value=>JSON.stringify(value).length<=4_000_000,"模型回执超过持久化上限");
+export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
+
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   readTaskContext: emptyPortInput,

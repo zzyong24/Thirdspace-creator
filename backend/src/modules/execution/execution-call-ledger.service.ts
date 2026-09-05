@@ -1,7 +1,8 @@
+import { isDeepStrictEqual } from "node:util";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { workerUsageSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { workerProviderReceiptSchema, workerUsageSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
@@ -13,8 +14,9 @@ const reservationSchema = z.object({
   retryOfCallId: z.string().min(1).optional(),
 }).strict();
 const settlementSchema = z.discriminatedUnion("status", [
-  z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional()}).strict(),
-  z.object({status: z.enum(["unknown", "rejected"])}).strict(),
+  z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
+  z.object({status: z.literal("unknown")}).strict(),
+  z.object({status: z.literal("rejected"), rejectionCode: z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
 type Budget = z.infer<typeof budgetSchema>;
@@ -101,13 +103,34 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
     },
     async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>) {
       const input = settlementSchema.parse(raw);
+      if (input.status === "settled" && input.providerResult) {
+        const receipt = input.providerResult.usage;
+        const canonical = workerUsageSchema.parse({inputTokens:receipt.inputTokens.total,outputTokens:receipt.outputTokens.total,
+          inputTokenDetails:{noCacheTokens:receipt.inputTokens.noCache,cacheReadTokens:receipt.inputTokens.cacheRead,cacheWriteTokens:receipt.inputTokens.cacheWrite},
+          outputTokenDetails:{textTokens:receipt.outputTokens.text,reasoningTokens:receipt.outputTokens.reasoning},
+        });
+        for (const field of ["inputTokens","outputTokens","totalTokens"] as const) {
+          const value=input.usage[field];if(value===undefined)continue;
+          if(canonical[field]!==undefined && canonical[field]!==value)throw new ConflictError("模型回执与结算用量不符");
+          canonical[field]=value;
+        }
+        for(const field of ["inputTokenDetails","outputTokenDetails"] as const){
+          const target=canonical[field] as Record<string,number|undefined>;
+          for(const [key,value] of Object.entries(input.usage[field] ?? {})){
+            if(value===undefined)continue;
+            if(target[key]!==undefined && target[key]!==value)throw new ConflictError("模型回执与结算分项不符");
+            target[key]=value;
+          }
+        }
+        input.usage=canonical;
+      }
       return leases.withLease(ref, "settlement", async ({tx, task}) => {
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
         if (call.status === "settled" && input.status === "unknown") return call;
         if (call.status === "settled" && input.status === "rejected") throw new ConflictError("已确认结果不能变成拒绝");
         if (call.status === "rejected") {
-          if (input.status !== "rejected") throw new ConflictError("已确认拒绝不能改写");
+          if (input.status !== "rejected" || (input.rejectionCode && input.rejectionCode !== call.rejectionCode)) throw new ConflictError("已确认拒绝不能改写");
           return call;
         }
         if (input.status === "rejected" && call.status !== "started") throw new ConflictError("未知提交不能变成可重试拒绝");
@@ -147,6 +170,9 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
             }
           }
         }
+        if (input.status === "settled" && call.providerResult && input.providerResult && !isDeepStrictEqual(call.providerResult,input.providerResult)) {
+          throw new ConflictError("已确认模型回执不能改写");
+        }
         if (input.status === "settled" && call.resultText && input.resultText && call.resultText !== input.resultText) {
           throw new ConflictError("已确认正文不能改写");
         }
@@ -157,7 +183,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const totalTokens = usage ? usage.totalTokens ?? (usage.inputTokens != null && usage.outputTokens != null ? usage.inputTokens + usage.outputTokens : null) : null;
         if (totalTokens !== null) count.parse(totalTokens);
         const [settled] = await tx.update(executionCalls).set({
-          status: input.status, usage, totalTokens, resultText: input.status === "settled" ? input.resultText ?? call.resultText : null, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
+          status: input.status, usage, totalTokens, rejectionCode: input.status === "rejected" ? input.rejectionCode ?? null : null, providerResult: input.status === "settled" ? input.providerResult ?? call.providerResult : null, resultText: input.status === "settled" ? input.resultText ?? call.resultText : null, resultRef: input.status === "settled" ? input.resultRef ?? call.resultRef : null, updatedAt: now(),
         }).where(eq(executionCalls.id, callId)).returning();
         return settled!;
       });

@@ -1,0 +1,27 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T08:35:26.896085+00:00",
+  "status": "structured_boundary_verified_full_scope_open",
+  "implemented": [
+    "结构化节点每次真实供应商调用独立预留、启动、结算；禁用隐藏 SDK 重试",
+    "持久化规范化回执及白名单协议拒绝码，恢复原生失败与文本成功路径不重复请求",
+    "取消贯通，未知提交与结算回执丢失不触发回退，累计预算限制每次补充请求"
+  ],
+  "verification": {
+    "durable_and_ledger_tests": 14,
+    "structured_and_provider_regression": 47,
+    "types": [
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review只读独立复审：HTTP400拒绝恢复缺口已修复，未发现新的实质问题；未运行测试"
+  },
+  "observed_failure_fixed": "迁移新增第二条SQL缺少statement-breakpoint导致PGlite拒绝，修复后14项测试通过",
+  "limits": [
+    "本地HTTP真实SDK与隔离数据库测试，非真实供应商验收",
+    "尚未接入结构化私有IPC、生产runner与桌面生命周期",
+    "T-915完整范围及全部验收仍未完成"
+  ]
+}

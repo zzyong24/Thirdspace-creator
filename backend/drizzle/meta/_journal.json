@@ -526,6 +526,13 @@
       "when": 1788652800004,
       "tag": "0074_execution_candidate_receipt",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1788652800005,
+      "tag": "0075_execution_provider_receipt",
+      "breakpoints": true
     }
   ]
 }

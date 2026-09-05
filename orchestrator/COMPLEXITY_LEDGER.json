@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "d81aebdf83f4483b1467965840186a372d58f8ef6208d0f6c06c653d2dd41f64",
+      "file_sha256": "43f50b0dce6a380215d8fd38bb25fe8b5c7826003506289604210b0dd967cca5",
       "categories": [
         "ipc"
       ],
@@ -1178,6 +1178,21 @@
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "仅记录已批准父子通信与执行租约的测试证据；没有新增运行机制，不代表生产通信已接线。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/structured-durable-evidence.json"
+      ],
+      "file_sha256": "43d7bc2c67c5126be7ed6f12a431c2021c1476c22842c7c1c856644b9e5d2629",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已批准独立Worker范围中的结构化调用恢复证据与尚未接通的私有通信边界。",
+      "acceptance": "只登记范围与验证限制，不代表完整验收通过。"
     }
   ],
   "historical_baselines": []

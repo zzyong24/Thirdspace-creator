@@ -45,7 +45,7 @@ export type StructuredOutputMode = "native" | "text";
 
 const structuredOutputModes = new WeakMap<object, StructuredOutputMode>();
 
-function markStructuredOutputMode(
+export function markStructuredOutputMode(
   model: LanguageModel,
   mode: StructuredOutputMode,
 ): LanguageModel {

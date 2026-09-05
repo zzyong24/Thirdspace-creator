@@ -99,5 +99,10 @@
     "全部生产入口迁移与旧实现退役",
     "完整性能基线、真实供应商及 macOS/Windows 包验收"
   ],
-  "governance": "T-916必要配置已修复：T915设计步骤按真实评审commit完成，BUILD任务包/写集合已恢复；21个历史模块只读隔离，历史状态未改。全局历史欠债保留，T915 BUILD和验收未完成。"
+  "governance": "T-916必要配置已修复：T915设计步骤按真实评审commit完成，BUILD任务包/写集合已恢复；21个历史模块只读隔离，历史状态未改。全局历史欠债保留，T915 BUILD和验收未完成。",
+  "structured_durable_increment": {
+    "evidence": "structured-durable-evidence.json",
+    "tests": 61,
+    "scope": "真实SDK、本地HTTP与隔离数据库；生产入口迁移未完成"
+  }
 }

@@ -11,6 +11,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./durable-generation": {
+      "types": "./src/execution/durable-generation-model.ts",
+      "default": "./src/execution/durable-generation-model.ts"
     }
   },
   "scripts": {

@@ -1,3 +1,6 @@
+import { isStructuredResponseCompatibilityError } from "./structured-response-errors";
+export { isStructuredResponseCompatibilityError } from "./structured-response-errors";
+import { isDurableGenerationModel } from "../execution/durable-generation-model";
 import {
   generateObject,
   generateText,
@@ -75,6 +78,8 @@ export interface RunStructuredNodeInput<T> {
    * 15–180 秒，防止端点挂起让任务永久 running。
    */
   timeoutMs?: number;
+  /** 整个持久任务的取消信号，与单次超时共同生效。 */
+  signal?: AbortSignal;
   /**
    * 原生结构化响应或文本 JSON 兼容模式。缺省读取 modelFor 记录的端点能力；
    * `text` 会在第一次请求前直接选择 generateText，仍由同一 outputSchema 验收。
@@ -216,31 +221,6 @@ export function isStructuredResponseParseError(error: unknown): boolean {
  * 的协议兼容错误。这类错误可安全改走“纯文本 JSON + 同 schema 校验”；
  * 鉴权、网络、限流和超时仍原样失败，不掩盖真实故障。
  */
-export function isStructuredResponseCompatibilityError(
-  error: unknown,
-): boolean {
-  const seen = new Set<unknown>();
-  let current: unknown = error;
-  for (let depth = 0; depth < 6 && current != null; depth += 1) {
-    if (seen.has(current)) break;
-    seen.add(current);
-    if (typeof current !== "object") break;
-    const record = current as Record<string, unknown>;
-    const message =
-      typeof record.message === "string" ? record.message : "";
-    const namesStructuredProtocol =
-      /response[_\s-]?format|json[_\s-]?schema|structured\s+outputs?/i.test(
-        message,
-      );
-    const declaresUnsupported =
-      /not\s+support(?:ed)?|unsupported|does\s+not\s+support|不支持/i.test(
-        message,
-      );
-    if (namesStructuredProtocol && declaresUnsupported) return true;
-    current = record.cause;
-  }
-  return false;
-}
 
 /**
  * 跑一次结构化模板节点 —— 解析 outputSchema(registry 收口,或显式覆盖)→ bindPrompt(模板,facets)
@@ -365,7 +345,7 @@ export async function runStructuredNode<T>(
   const { system, prompt } = bindPrompt(template, input.facets);
   // DEC-AI-025:默认一次结构化尝试 + 一次文本协议降级。继续自动重试会让所有
   // 交互工具在同一坏输出上成倍等待；离线任务如确有需要必须由调用方显式声明。
-  const maxRetries = input.maxRetries ?? 0;
+  const maxRetries = isDurableGenerationModel(input.model) ? 0 : input.maxRetries ?? 0;
   const modelCallTimeoutMs = resolveStructuredNodeTimeoutMs(input.timeoutMs);
   const structuredOutputMode =
     input.structuredOutputMode ?? structuredOutputModeFor(input.model);
@@ -453,7 +433,7 @@ export async function runStructuredNode<T>(
           prompt: currentPrompt,
           maxRetries: 0,
           maxOutputTokens: input.maxOutputTokens,
-          abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
+          abortSignal: input.signal ? AbortSignal.any([input.signal,AbortSignal.timeout(modelCallTimeoutMs)]) : AbortSignal.timeout(modelCallTimeoutMs),
         });
         fallbackUsage = addUsage(fallbackUsage, normalizeUsage(result.usage));
         let raw = extractJsonObject(result.text);
@@ -511,7 +491,7 @@ export async function runStructuredNode<T>(
         maxRetries,
         maxOutputTokens: input.maxOutputTokens,
         // [T-122/T-789] 防端点挂起；长节点可显式放宽，但仍有硬上界。
-        abortSignal: AbortSignal.timeout(modelCallTimeoutMs),
+        abortSignal: input.signal ? AbortSignal.any([input.signal,AbortSignal.timeout(modelCallTimeoutMs)]) : AbortSignal.timeout(modelCallTimeoutMs),
       });
       return {
         object: result.object as T,

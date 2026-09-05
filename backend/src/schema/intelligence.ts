@@ -168,6 +168,8 @@ export const executionCalls = pgTable("execution_calls", {
   startedAttempt: integer("started_attempt"),
   usage: jsonb("usage"),
   resultText: text("result_text"),
+  providerResult: jsonb("provider_result"),
+  rejectionCode: text("rejection_code"),
   totalTokens: integer("total_tokens"),
   resultRef: text("result_ref"),
   createdAt: text("created_at").notNull(),

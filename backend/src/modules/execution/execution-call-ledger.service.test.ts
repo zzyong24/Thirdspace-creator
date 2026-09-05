@@ -105,4 +105,15 @@ describe("T-915 持久调用账本", () => {
     await expect(a.ledger.reserve(a.ref,{...input,inputDigest:"sha256:"+"b".repeat(64)})).rejects.toMatchObject({name:"ConflictError"});
   });
 
+  it("模型原回执约束计量，undefined不能抹掉已知用量，回执不能改写",async()=>{
+    const f=await fixture("provider-receipt");const call=await f.ledger.reserve(f.ref,input);await f.ledger.start(f.ref,call.id);
+    const providerResult={content:[{type:"text",text:"正文"}],finishReason:{unified:"stop",raw:"stop"},usage:{inputTokens:{total:10,noCache:10},outputTokens:{total:5,text:5}},warnings:[]};
+    await expect(f.ledger.settle(f.ref,call.id,{status:"settled",providerResult,usage:{inputTokens:undefined,outputTokens:undefined,totalTokens:0}})).rejects.toMatchObject({name:"ConflictError"});
+    await f.ledger.settle(f.ref,call.id,{status:"settled",providerResult,usage:{}});
+    expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(15);
+    await f.ledger.settle(f.ref,call.id,{status:"unknown"});
+    expect((await f.ledger.inspect(f.ref)).calls[0]?.providerResult).toEqual(providerResult);
+    await expect(f.ledger.settle(f.ref,call.id,{status:"settled",providerResult:{...providerResult,content:[{type:"text",text:"篡改"}]},usage:{}})).rejects.toMatchObject({name:"ConflictError"});
+  });
+
 });
