@@ -25,9 +25,11 @@ const getTask = vi.fn();
 const listTaskResults = vi.fn();
 const listTaskSteps = vi.fn();
 const confirmTask = vi.fn();
+const commandExecutionTasks=vi.fn();
 
 vi.mock("@/lib/contract-client", () => ({
   client: {
+    commandExecutionTasks:(...a:unknown[])=>commandExecutionTasks(...a),
     getTask: (...a: unknown[]) => getTask(...a),
     listTaskResults: (...a: unknown[]) => listTaskResults(...a),
     listTaskSteps: (...a: unknown[]) => listTaskSteps(...a),
@@ -205,4 +207,21 @@ describe("ChatPublishPackageCard(对话内发布物料卡,T-350b 异步)", () =>
       ).toBeTruthy();
     });
   });
+});
+
+it("持久任务等待配置时停止运行展示，继续按钮恢复原执行",async()=>{
+  getTask.mockResolvedValue({status:"running",runtimeStatus:"waiting_user",executionTaskId:"exec-original"});
+  commandExecutionTasks.mockResolvedValue({tasks:[]});
+  render(<ChatPublishPackageCard taskId="task" projectId="project" error={null} pollIntervalMs={0}/>);
+  await screen.findByText("生成已暂停，请先检查模型配置，再继续执行。");
+  expect(screen.queryByText("正在准备发布物料生成任务")).toBeNull();
+  getTask.mockResolvedValue({status:"awaiting_confirmation"});
+  fireEvent.click(screen.getByRole("button",{name:"继续执行"}));
+  await waitFor(()=>expect(commandExecutionTasks).toHaveBeenCalledWith(expect.objectContaining({body:expect.objectContaining({taskIds:["exec-original"],command:"resume"})})));
+});
+it("结果未知时显示核对状态，不提供盲目重试",async()=>{
+  getTask.mockResolvedValue({status:"running",runtimeStatus:"unknown_result",executionTaskId:"exec-original"});
+  render(<ChatPublishPackageCard taskId="task" projectId="project" error={null} pollIntervalMs={0}/>);
+  await screen.findByText("提交结果尚待核对，请勿重复生成。");
+  expect(screen.queryByRole("button",{name:"继续执行"})).toBeNull();
 });

@@ -93,7 +93,7 @@
     }
   },
   "not_yet_delivered": [
-    "Worker 与生产持久调度及原子服务端口接线；当前只有经过本地故障测试的进程基础设施",
+    "其余业务入口与生产持久调度、原子端口接线；多平台改写公共入口已切换Worker并通过隔离集成验证",
     "唯一执行权迁移、持久检查点与恢复",
     "七端口真实接线与浏览器自适应完整循环",
     "全部生产入口迁移与旧实现退役",
@@ -121,5 +121,10 @@
     "tests": 96,
     "postgresConcurrentAdoptions": 30,
     "scope": "现有生产采纳桥已接原子服务；完整T915仍未完成"
+  },
+  "production_platform_worker_increment": {
+    "evidence": "production-platform-worker-evidence.json",
+    "tests": 103,
+    "scope": "公共生产入口、本地HTTP供应商与隔离持久库通过；全量迁移及验收未完成"
   }
 }

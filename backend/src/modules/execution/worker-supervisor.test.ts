@@ -46,6 +46,21 @@ describe("真实独立 Worker 进程", () => {
     } finally {await supervisor.stop(); await new Promise<void>(resolve => server.close(() => resolve()));}
   }, 15000);
 
+  it.each(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"])("凭据端口 %s 进入等待用户，且不启动供应商调用",async code=>{
+    const calls:string[]=[];
+    const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
+      async validate(){},async invoke(_ref,port){
+        calls.push(port);
+        if(port==="readTaskContext")return {kind:"model.generate",prompt:"测试",capability:"script",maxOutputTokens:128,operationKey:"credential-error"};
+        if(port==="reserveCall")return {callId:"credential-call",status:"reserved"};
+        if(port==="resolveModelCredential")throw Object.assign(new Error("private credential detail"),{code});
+        return {};
+      },
+    }});
+    try{expect(await supervisor.run(execution,Date.now()+10000)).toBe("waiting_user");expect(calls).not.toContain("startCall");}
+    finally{await supervisor.stop();}
+  });
+
   it("旧租约在获取凭据之前被拒绝", async () => {
     const invoke = vi.fn(async () => ({}));
     const supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {

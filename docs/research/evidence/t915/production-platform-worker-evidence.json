@@ -1,0 +1,29 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:26:22.512855+00:00",
+  "status": "platform_production_entry_verified_full_scope_open",
+  "implemented": [
+    "生产公共多平台任务入口转交持久执行及独立Worker，移除该入口旧runner分支",
+    "启动分页恢复未绑定排队任务；退出先停止Worker与准备恢复再释放数据库",
+    "桌面runtime构建拷贝并检查Worker包；缺包只隔离生成服务",
+    "公共get/list投影执行状态；取消走执行命令，未绑定旧取消/失败以条件更新防止绑定竞态",
+    "配置异常进入waiting_user，发布卡片支持同任务恢复及未知结果提示"
+  ],
+  "verification": {
+    "backend_runtime_and_business_tests": 21,
+    "frontend_public_entry_ui_packaging_tests": 30,
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "independent_review": "worker_review只读复核CAS与平台接线，未发现新阻断；审查未重跑测试",
+    "boundary": "无新增违规，剩余既有5条；含仓库级测试移至AI模块，避免跨模块repository依赖",
+    "ai_service_regression_tests": 52,
+    "total_distinct_tests": 103
+  },
+  "limits": [
+    "供应商为本地HTTP故障/成功夹具，不代表真实供应商验收",
+    "安装资源拷贝及子进程启动测试，不代表macOS/Windows真实安装包验收",
+    "其他入口迁移、七端口真实业务、Pi浏览器完整循环、全量基线与旧代码退役仍未完成"
+  ]
+}

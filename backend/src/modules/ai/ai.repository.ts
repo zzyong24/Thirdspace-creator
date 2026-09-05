@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, like, sql, type Db } from "@creatoros/backend";
+import { and, asc, desc, eq, isNull, like, sql, type Db } from "@creatoros/backend";
 // [DATA-H07] 跨模块表(assets)—— canonical 定义在共享基座 @creatoros/backend(与 T-102
 // projects.repository 级联删除同一先例):AI 生成资产的「采纳翻 active / 拒绝清理」是 AI 采纳门
 // 的生命周期职责,但组合根(persistence-client)本波冻结、无法新增 assets 端口 —— 故按 T-102
@@ -209,6 +209,7 @@ export interface AiRepository {
   addReferences(taskId: string, refs: ReferenceInput[]): Promise<void>;
   listReferences(taskId: string): Promise<ReferenceRow[]>;
   updateTaskStatus(taskId: string, patch: TaskStatusPatch): Promise<TaskRow>;
+  updateUnboundTaskStatus(taskId: string, expectedStatus: TaskRow["status"], patch: TaskStatusPatch): Promise<TaskRow | null>;
   /** server-only 运行态补丁；不得投影到 task DTO/transport。 */
   updateTaskRuntimeData(
     taskId: string,
@@ -772,6 +773,14 @@ export function createAiRepository(db: Db, deps: RepoDeps): AiRepository {
         .select()
         .from(aiTaskReferences)
         .where(eq(aiTaskReferences.aiTaskId, taskId));
+    },
+
+    async updateUnboundTaskStatus(taskId, expectedStatus, patch) {
+      const [updated] = await db.update(aiTasks).set(patch).where(and(
+        eq(aiTasks.id,taskId),eq(aiTasks.userId,deps.userId),eq(aiTasks.accountId,deps.accountId),
+        eq(aiTasks.status,expectedStatus),isNull(aiTasks.executionTaskId),
+      )).returning();
+      return updated ?? null;
     },
 
     async updateTaskStatus(taskId, patch) {

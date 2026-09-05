@@ -1,3 +1,6 @@
+import { resolveExecutionWorkerPath } from "./execution-worker-path";
+import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
+import { createPlatformAdaptExecutionService,projectPlatformAdaptCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -486,7 +489,7 @@ import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
 import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
-import { runPlatformAdapt, createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
+import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
@@ -1671,6 +1674,7 @@ export interface ChatRuntime {
 
 const globalForPersistence = globalThis as unknown as {
   __creatorosPersistence?: Promise<PersistenceBundle>;
+  __creatorosStopExecutionWorker?:()=>Promise<void>;
 };
 
 const taskModelAuthorityScope = new TaskModelAuthorityScope();
@@ -1744,12 +1748,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 三条都套同一份 drizzle 迁移(0000…),test/runtime schema 一致。dispose 当前进程不
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
   const { db, driver, dispose } = await createConfiguredDb();
+  let stopExecutionWorker: (()=>Promise<void>) | undefined;
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
-    async () => { await dispose(); };
+    async () => { await stopExecutionWorker?.(); await dispose(); };
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
   // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
@@ -4627,31 +4632,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           });
         } else if (
           task &&
-          task.taskType === "publish.platform_adapt" &&
-          task.status === "queued"
-        ) {
-          // 一稿多平台 node — adapts one finished script into a per-platform draft
-          // (抖音/B站/小红书/公众号), records a `publication_drafts` candidate; 采纳
-          // materializes each draft into a real Publication (+ revision) via the
-          // publishing port wired above.
-          await runPlatformAdapt(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              // Vercel AI SDK 路径(弃 LlmCompleter):一稿多平台节点跑在 ai-worker + 外置模板。
-              resolveModelSpec,
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "material.match" &&
           task.status === "queued"
         ) {
@@ -5426,11 +5406,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        void runTaskWithEffectiveSkillSnapshot(
-          ctx,
-          String(task.id),
-          dispatchCreatedTask,
-        ).catch(async (error) => {
+        const execution = task.taskType === "publish.platform_adapt" && task.status === "queued"
+          ? (modelWorker ? platformExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
+          : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
+        void execution.catch(async (error) => {
           const message =
             error instanceof Error ? error.message : String(error);
           await aiService
@@ -10062,6 +10041,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
+  const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
+  const platformExecution=createPlatformAdaptExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,
+    positioning:{getPositioningCenter:c=>positioningService.getPositioningCenter(c)},
+    learnings:{getSuggestions:(c,options)=>learningsService.getSuggestions(c,options)},
+  });
+  const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{return null;}})();
+  const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
+    entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
+    async resolveModelCredential(c,capability,owner){
+      const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
+      const authority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
+      try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
+      catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
+    },
+    projectCandidate(_c,input){
+      if(input.taskType!=="publish.platform_adapt")throw new Error("MODEL_CANDIDATE_ADAPTER_UNAVAILABLE");
+      return projectPlatformAdaptCandidate(input.inputData as Record<string,unknown>,JSON.parse(input.text));
+    },
+    onError:code=>console.error(`[execution-worker] ${code}`),
+  }) : null;
+  let preparationRecovery:Promise<void>|undefined;
+  let stoppingPreparation=false;
+  stopExecutionWorker=async()=>{stoppingPreparation=true;await modelWorker?.stop();await preparationRecovery;};
+  globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
+
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
   // 「备用」解析成主模型自己,fallback 失去意义)。未配/无 key → null(chat-runner 按现状报错)。
   const resolveFallbackModelSpec = async (ctx: RequestContext) => {
@@ -13512,6 +13517,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
+  if(modelWorker)preparationRecovery=platformExecution.recoverQueued(async(c,id)=>{
+    await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});
+  },()=>stoppingPreparation).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
+  modelWorker?.start();
+
   return {
     cliInvocations,
     projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
@@ -14134,5 +14144,7 @@ export const compositeTransport: Transport = {
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {
+  void globalForPersistence.__creatorosStopExecutionWorker?.().catch(()=>{});
+  globalForPersistence.__creatorosStopExecutionWorker=undefined;
   globalForPersistence.__creatorosPersistence = undefined;
 }

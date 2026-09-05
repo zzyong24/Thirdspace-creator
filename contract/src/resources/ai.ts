@@ -55,6 +55,8 @@ export const aiTaskResource = z.object({
   contentOutputId: id.nullable(),
   taskType: z.string(),
   status: aiTaskStatus,
+  executionTaskId: id.optional(),
+  runtimeStatus: z.string().optional(),
   inputData: z.record(z.string(), z.unknown()),
   modelKey: z.string(),
   idempotencyKey: z.string(),

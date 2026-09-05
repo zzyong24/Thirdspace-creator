@@ -1,3 +1,5 @@
+import { createPersistentTaskService } from "../execution/persistent-task.service";
+import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
@@ -1729,6 +1731,10 @@ export function createAiService(deps: ServiceDeps): AiService {
         return toTaskDto(await repo.requireTask(taskId));
       }
       const task = await repo.requireTask(taskId);
+      if(task.executionTaskId && ["queued","running"].includes(task.status)){
+        await createPersistentTaskService(deps.db,{now:deps.now}).command(ctx,{taskIds:[task.executionTaskId],command:"cancel",idempotencyKey:`ai-cancel:${task.id}`});
+        return (await projectExecutionTasks(deps.db,ctx,[task]))[0]!;
+      }
       if (!canTransition(task.status, "cancelled")) {
         throw new ConflictError(
           `AI task ${taskId} cannot be cancelled from ${task.status}`,
@@ -1750,11 +1756,23 @@ export function createAiService(deps: ServiceDeps): AiService {
               : "";
         if (assetId) await repo.discardGeneratedAsset(assetId);
       }
-      const updated = await repo.updateTaskStatus(taskId, {
+      const patch = {
         status: "cancelled",
         completedAt: deps.now(),
         errorMessage: errorMessage ?? null,
-      });
+      } as const;
+      const updated = task.executionTaskId
+        ? await repo.updateTaskStatus(taskId,patch)
+        : await repo.updateUnboundTaskStatus(taskId,task.status,patch);
+      if(!updated){
+        const current=await repo.requireTask(taskId);
+        if(current.executionTaskId && ["queued","running"].includes(current.status)){
+          await createPersistentTaskService(deps.db,{now:deps.now}).command(ctx,{taskIds:[current.executionTaskId],command:"cancel",idempotencyKey:`ai-cancel:${current.id}`});
+          return (await projectExecutionTasks(deps.db,ctx,[current]))[0]!;
+        }
+        if(current.status === "cancelled")return toTaskDto(current);
+        throw new ConflictError("任务状态已变化，请刷新后重试");
+      }
       await logRunnerState(repo, taskId);
       return toTaskDto(updated);
     },
@@ -1767,7 +1785,7 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async listTasks(ctx, page) {
       const { rows, total } = await repoFor(ctx, "ai.listTasks").listTasks(page);
-      return { rows: rows.map(toTaskDto), total };
+      return { rows: await projectExecutionTasks(deps.db,ctx,rows), total };
     },
 
     async listRunningTasksSystem(ctx) {
@@ -1790,7 +1808,7 @@ export function createAiService(deps: ServiceDeps): AiService {
 
     async getTask(ctx, taskId) {
       const task = await repoFor(ctx, "ai.getTask").requireTask(taskId);
-      return toTaskDto(task);
+      return (await projectExecutionTasks(deps.db,ctx,[task]))[0]!;
     },
 
     async getTaskRuntimeData(ctx, taskId) {
@@ -1900,13 +1918,14 @@ export function createAiService(deps: ServiceDeps): AiService {
       // errorMessage. best-effort: swallow if already terminal。
       const repo = repoFor(ctx, "ai.markFailed");
       const task = await repo.requireTask(taskId);
+      if(task.executionTaskId)return; // 已转交的执行终态只由持久执行服务决定。
       if (!canTransition(task.status, "failed")) return;
-      await repo.updateTaskStatus(taskId, {
+      const updated=await repo.updateUnboundTaskStatus(taskId,task.status, {
         status: "failed",
         completedAt: deps.now(),
         errorMessage: errorMessage ?? null,
       });
-      await logRunnerState(repo, taskId);
+      if(updated)await logRunnerState(repo, taskId);
     },
 
     async listResults(ctx, taskId) {

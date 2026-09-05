@@ -78,7 +78,11 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
               if (!current || !sameExecution(current.execution, message.execution) || (!settlement && current.cancelTimer)) throw new Error("STALE_EXECUTION");
               const data = await options.ports.invoke(message.execution, message.port, input);
               return {version: 1, type: "reply", requestId: message.requestId, ok: true, data};
-            } catch {return {version: 1, type: "reply", requestId: message.requestId, ok: false, errorCode: "HOST_PORT_REJECTED"};}
+            } catch(error) {
+              const code=error && typeof error === "object" ? (error as {code?:unknown}).code : undefined;
+              const errorCode=message.port==="resolveModelCredential" && typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "HOST_PORT_REJECTED";
+              return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode};
+            }
           })();
           replies.set(message.requestId, reply);
         }

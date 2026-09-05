@@ -128,7 +128,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         const item = pending.get(message.requestId);
         if (!item) return;
         item.cleanup();
-        if (message.ok) item.resolve(message.data); else item.reject(new Error(message.errorCode ?? "HOST_PORT_REJECTED"));
+        if (message.ok) item.resolve(message.data); else item.reject(["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(message.errorCode ?? "") ? new GenerationFailure("waiting_user",message.errorCode!) : new Error(message.errorCode ?? "HOST_PORT_REJECTED"));
       } else if (message.type === "cancel") {
         if (active && sameExecution(active.execution, message.execution)) active.controller.abort();
       } else {

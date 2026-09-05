@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/verify-built-in-course.mjs",
+    "prebuild": "node ../ai-worker/scripts/build.mjs && node scripts/verify-built-in-course.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -43,7 +43,8 @@
     "desktop:updater-keygen": "node scripts/desktop/updater-keygen.mjs",
     "desktop:master-key": "node scripts/desktop/master-key.mjs",
     "desktop:activation": "node scripts/desktop/activation.mjs",
-    "desktop:prompt-bundle": "node scripts/desktop/prompt-bundle.mjs"
+    "desktop:prompt-bundle": "node scripts/desktop/prompt-bundle.mjs",
+    "predev": "node ../ai-worker/scripts/build.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.6",

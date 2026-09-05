@@ -21,9 +21,9 @@ import { useRouter } from "next/navigation";
 import { client } from "@/lib/contract-client";
 
 const POLL_INTERVAL_MS = 4000;
-const MAX_POLLS = 60; // ~4 分钟 —— 多平台物料生成较整稿轻,单平台更快
+const MAX_POLLS = 180; // 覆盖后台执行的十分钟期限与状态回读余量
 
-type Phase = "running" | "review" | "done" | "error";
+type Phase = "blocked" | "running" | "review" | "done" | "error";
 
 export interface PublishPackageDraft {
   platform: string;
@@ -83,6 +83,8 @@ export function ChatPublishPackageCard({
   const [phase, setPhase] = React.useState<Phase>(
     error || !taskId ? "error" : "running",
   );
+  const [blocked,setBlocked]=React.useState<{status:string;executionTaskId:string}|null>(null);
+  const [pollEpoch,setPollEpoch]=React.useState(0);
   const [draft, setDraft] = React.useState<PublishPackageDraft | null>(null);
   const [confirming, setConfirming] = React.useState(false);
   const [progressText, setProgressText] = React.useState(
@@ -111,16 +113,22 @@ export function ChatPublishPackageCard({
         } catch {
           /* 步骤是辅助信息，拉取失败不影响任务主轮询 */
         }
-        let task: { status: string; errorMessage?: string | null };
+        let task: { status: string; runtimeStatus?:string; executionTaskId?:string; errorMessage?: string | null };
         try {
           task = (await client.getTask({
             params: { taskId },
             query: undefined,
             body: undefined,
-          })) as { status: string; errorMessage?: string | null };
+          })) as { status: string; runtimeStatus?:string; executionTaskId?:string; errorMessage?: string | null };
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if(task.executionTaskId && ["waiting_user","unknown_result","paused"].includes(task.runtimeStatus ?? "")){
+          if(!abandoned){setBlocked({status:task.runtimeStatus!,executionTaskId:task.executionTaskId});setPhase("blocked");}
+          return;
+        }
+        if(!abandoned && task.runtimeStatus==="retry_wait")setProgressText("暂时繁忙，正在等待自动重试");
+        if(!abandoned && task.runtimeStatus==="cancel_requested")setProgressText("正在取消生成");
         const status = task.status;
         if (status === "awaiting_confirmation") {
           try {
@@ -153,14 +161,20 @@ export function ChatPublishPackageCard({
         }
       }
       if (!abandoned) {
-        setFailureDetail("生成等待超时，请重试；任务已停止继续等待。");
+        setFailureDetail("页面等待超时，后台任务可能仍在执行，请先查看任务状态。");
         setPhase("error");
       }
     })();
     return () => {
       abandoned = true;
     };
-  }, [taskId, error, pollIntervalMs]);
+  }, [taskId, error, pollIntervalMs,pollEpoch]);
+
+  const resume=async()=>{
+    if(!blocked)return;
+    try{await client.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[blocked.executionTaskId],command:"resume",idempotencyKey:crypto.randomUUID()}});setBlocked(null);setPhase("running");setPollEpoch(value=>value+1);}
+    catch{setFailureDetail("暂时无法继续，请稍后重试");}
+  };
 
   const adopt = React.useCallback(async () => {
     if (!taskId || !draft) return;
@@ -192,6 +206,14 @@ export function ChatPublishPackageCard({
         抖音发布物料 · 已过合规审核 · 采纳后建发布行
       </span>
 
+      {phase === "blocked" && blocked ? (
+        <div className="flex flex-col gap-2 text-sm" role="status">
+          <p>{blocked.status==="waiting_user" ? "生成已暂停，请先检查模型配置，再继续执行。" : blocked.status==="paused" ? "生成已暂停，进度已保留。" : "提交结果尚待核对，请勿重复生成。"}</p>
+          {blocked.status==="waiting_user" ? <a href="/settings?highlight=text-model">检查模型设置</a> : null}
+          {blocked.status!=="unknown_result" ? <button type="button" onClick={()=>void resume()}>继续执行</button> : null}
+          {failureDetail ? <p>{failureDetail}</p> : null}
+        </div>
+      ) : null}
       {phase === "running" ? (
         <div
           data-slot="chat-publish-running"

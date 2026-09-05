@@ -4,12 +4,13 @@ import { execFileSync } from "node:child_process";
 import { beforeAll,afterAll,describe,it,expect,vi } from "vitest";
 import { createDb,type Db } from "@creatoros/backend";
 import { getOfficialSkillBase,type PlatformAdaptOutput } from "@creatoros/ai-worker";
-import { createAiService } from "../ai/ai.service";
+import { createAiRepository } from "./ai.repository";
+import { createAiService } from "./ai.service";
 import { createPublishingService } from "../publishing/publishing.service";
 import { createModelWorkerDispatcher } from "../execution/model-worker-dispatcher";
-import { createPlatformAdaptExecutionService } from "./platform-adapt-execution.service";
-import { projectPlatformAdaptCandidate } from "./platform-adapt-context";
-import { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
+import { createPlatformAdaptExecutionService } from "../ai-runtime/platform-adapt-execution.service";
+import { projectPlatformAdaptCandidate } from "../ai-runtime/platform-adapt-context";
+import { createPlatformDraftAdoptionPort } from "../ai-runtime/platform-draft-adoption";
 const ctx={userId:"platform-worker",accountId:"platform-worker",requestId:"test",source:"user" as const};
 const budget={maxCalls:4,maxTokens:100000,deadlineMs:60000};
 describe("多平台改写正式Skill到发布草稿",()=>{
@@ -46,6 +47,21 @@ describe("多平台改写正式Skill到发布草稿",()=>{
       const read=await publishing.getPublication(ctx,publications[0]!.id);expect(read.platform).toBe("douyin");
       const revisions=await publishing.listRevisions(ctx,read.id,{limit:20,offset:0});expect(revisions).toHaveLength(1);expect(revisions[0]).toMatchObject({title:"测试标题",description:"第一段。 第二段。",platformTags:["测试"]});
       expect(notUsed).not.toHaveBeenCalled();
+      const queued=await ai.createTask(ctx,{taskType:"publish.platform_adapt",attemptId:"recover-before-bind",inputData:{outputId:"fixture-output",scriptText:"恢复任务",platforms:["douyin"]}});
+      const repo=createAiRepository(db,{now,nextId,userId:ctx.userId,accountId:ctx.accountId});
+      const stale=await repo.requireTask(queued.id);
+      const onFailure=vi.fn(async()=>{});
+      await prepare.recoverQueued(onFailure);
+      expect(onFailure).not.toHaveBeenCalled();
+      expect((await ai.getTask(ctx,queued.id)).executionTaskId).toBeTruthy();
+      // 模拟旧取消/失败在读取未绑定快照后暂停，此间启动恢复已成功绑定。
+      for(const status of ["cancelled","failed"] as const){
+        expect(await repo.updateUnboundTaskStatus(queued.id,stale.status,{status})).toBeNull();
+      }
+      await ai.markFailed(ctx,queued.id,"过期的准备错误");
+      expect((await ai.getTask(ctx,queued.id)).status).toBe("queued");
+      expect((await ai.cancelTask(ctx,queued.id)).runtimeStatus).toBe("cancelled");
+      expect((await ai.listTasks(ctx,{limit:20,offset:0} )).rows.find(item=>item.id===queued.id)?.status).toBe("cancelled");
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
 });

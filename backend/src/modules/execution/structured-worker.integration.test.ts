@@ -71,8 +71,10 @@ describe("独立Worker冻结Skill结构化执行",()=>{
     const mapped=await prepare("cancel-structured");let requests=0;let closed=false;
     const server=createServer((req,res)=>{req.resume();requests++;res.on("close",()=>{closed=true;});});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const worker=host((server.address() as {port:number}).port);
-    try{const draining=worker.drainOnce();await vi.waitFor(()=>expect(requests).toBe(1));await createPersistentTaskService(db).command(ctx,{taskIds:[mapped.executionTaskId],command:"cancel",idempotencyKey:"cancel-structured"});await draining;
-      expect(closed).toBe(true);expect(requests).toBe(1);expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("cancelled");
+    try{const draining=worker.drainOnce();await vi.waitFor(()=>expect(requests).toBe(1));const unused=async()=>{throw new Error("UNEXPECTED_DOMAIN_WRITE");};
+      const ai=createAiService({db,now:()=>new Date().toISOString(),nextId:p=>p+"unused",artifacts:{createVersion:unused},knowledge:{createKnowledge:unused},candidate:{createFromAIResult:unused,enrichCard:unused},learnings:{createLearning:unused},publishing:{createPublicationFromDraft:unused},materialLinks:{link:unused},positioning:{upsertProfile:unused,createStatementVersion:unused},calibration:{createDraftPrediction:unused}});
+      await ai.cancelTask(ctx,"cancel-structured");await draining;
+      expect((await ai.getTask(ctx,"cancel-structured")).status).toBe("cancelled");expect(closed).toBe(true);expect(requests).toBe(1);expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("cancelled");
       const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,mapped.executionTaskId));expect(calls).toHaveLength(1);expect(calls[0]?.status).toBe("unknown");expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"cancel-structured"))).toHaveLength(0);
     }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);

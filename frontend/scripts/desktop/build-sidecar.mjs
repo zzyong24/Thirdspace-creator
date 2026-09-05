@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime } from "./execution-worker-runtime.mjs";
 // [T-147 P1] sidecar 二进制化 —— 桌面化「唯一中风险」(RFC §8.1)。
 //
 // 目标:产出 Tauri externalBin 需要的、按 target-triple 命名的可执行体
@@ -452,6 +453,7 @@ export function shouldPackSidecarTarball(_targetPlatform = platform) {
 function packSidecarTarball() {
   assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   assertCreatorOsCliRuntime(SIDECAR_RUNTIME);
+  assertExecutionWorkerRuntime(SIDECAR_RUNTIME);
   const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
   if (prunedPortableMetadata.length > 0) {
     console.log(
@@ -2362,6 +2364,7 @@ function main() {
   }
 
   bundleCreatorOsCli();
+  stageExecutionWorkerRuntime({repoRoot:REPO,runtimeRoot:SIDECAR_RUNTIME});
 
   // [T-170] 实拷 Playwright 包进 sidecar(修 Next tracing 漏 @playwright/test → 打包扫码崩)。
   //   放在打 tarball 之前,让 playwright 包进 tarball。

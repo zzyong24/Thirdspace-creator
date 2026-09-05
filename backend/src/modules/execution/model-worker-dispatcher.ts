@@ -31,7 +31,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
   const report=(code:string)=>{try{deps.onError?.(code);}catch{/* 诊断订阅故障不改变执行。 */}};
-  const supervisor=createWorkerSupervisor({entryPath:deps.entryPath,ports:{
+  const supervisor=createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
       if(port==="reserveGenerationCall")return generation.reserveGenerationCall(ref,raw);
@@ -108,7 +108,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   };
   const tick=async()=>{
     try{await drainOnce();}catch{report("MODEL_WORKER_POLL_FAILED");}
-    if(!stopping)timer=setTimeout(()=>{void tick();},Math.max(100,deps.pollMs ?? 1000));
+    if(!stopping){timer=setTimeout(()=>{void tick();},Math.max(100,deps.pollMs ?? 1000));timer.unref?.();}
   };
   return {
     drainOnce,
