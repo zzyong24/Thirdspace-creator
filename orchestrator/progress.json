@@ -5,10 +5,10 @@
     "task_order": "repo → [data-source] → [flow] → frontend → e2e (applicable subset per module)"
   },
   "summary": {
-    "verticals": 21,
+    "verticals": 22,
     "tasks_done": 28,
-    "tasks_total": 87,
-    "tasks_pending": 59,
+    "tasks_total": 88,
+    "tasks_pending": 60,
     "verticals_complete": 0
   },
   "verticals": [
@@ -597,6 +597,19 @@
       ],
       "blocked_reason": null,
       "commits": {}
+    },
+    {
+      "id": "T-915",
+      "task_id": "T-915",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        }
+      ]
     }
   ],
   "leases": {}

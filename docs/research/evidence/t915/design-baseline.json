@@ -1,0 +1,18 @@
+{
+  "task": "T-915",
+  "stage": "contract-design",
+  "product_code_changed": false,
+  "review_receipt": "692283b8bace",
+  "baseline": {
+    "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/agentic",
+    "exit_code": 0,
+    "files_passed": 8,
+    "tests_passed": 60,
+    "duration_seconds": 1.21,
+    "scope": "既有实现基线，不代表 T-915 新行为验收"
+  },
+  "research_gate": "无未关闭 Research-First Gate",
+  "global_review_audit": "FAIL：历史 SPEC 直链/receipt 漂移，已登记 T-916；本次不销账",
+  "worker_integration": "待实现与验证",
+  "live_provider_and_desktop_acceptance": "待验"
+}
