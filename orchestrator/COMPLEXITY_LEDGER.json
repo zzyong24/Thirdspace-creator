@@ -1373,6 +1373,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "本文件仅如实记录已批准私有进程协议的验证证据与缺口，不新增运行时机制。",
       "acceptance": "证据范围以记录为准，不替代完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.fixture.ts"
+      ],
+      "file_sha256": "0e3793bc40e3b12df35b24495def6dfb34f25fa829a9f4018adee4df6db0de6f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R02/R04宿主崩溃资源回收的限定隔离实验；只启动夹具及临时Chromium，不是生产guardian、不读用户数据或数据库。",
+      "acceptance": "仅登记研究复杂度，不代表持久回执、profile解锁或平台发布通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/browser-resource-guardian.probe.test.ts"
+      ],
+      "file_sha256": "4af51f2fe49d2cfbe7abf4fa776539b58b94cfb9b3b7ed0960feea9369a13f52",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R02/R04宿主崩溃资源回收的限定隔离实验；只启动夹具及临时Chromium，不是生产guardian、不读用户数据或数据库。",
+      "acceptance": "仅登记研究复杂度，不代表持久回执、profile解锁或平台发布通过。"
     }
   ],
   "historical_baselines": []

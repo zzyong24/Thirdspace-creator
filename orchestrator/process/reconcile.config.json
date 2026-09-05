@@ -270,5 +270,8 @@
     "navigation-account-performance:test": "pnpm --dir frontend exec vitest run src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/shell.test.tsx src/lib/session.server.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/positioning/positioning.service.test.ts --retry=0",
     "navigation-account-smoothness:test": "pnpm --dir frontend exec vitest run src/components/shell/shell.test.tsx src/components/shell/account-switcher.test.tsx src/lib/account-events.test.ts src/components/shell/account-switcher-logic.test.ts --retry=0",
     "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e"
+  },
+  "research_verify_commands": {
+    "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts"
   }
 }

@@ -1,0 +1,93 @@
+{
+  "task": "T-915",
+  "sourceRevision": "39110614",
+  "recordedAt": "2026-09-05T19:24:00.704868+00:00",
+  "method": "独立只读核查真实生产装配；下列是仍需迁移/核验项，不是新计划或范围裁剪",
+  "remaining": [
+    {
+      "entry": "ai.tasks.create 单节点候选",
+      "source": "frontend/src/server/persistence-client.ts",
+      "symbols": [
+        "research.gather_material",
+        "topic.generate",
+        "topic.enrich",
+        "calibration.diagnose",
+        "calibration.score",
+        "material.match",
+        "positioning.generate"
+      ],
+      "existingOwner": "runTaskWithEffectiveSkillSnapshot → aiService.runClaimedTaskExecution",
+      "candidateReuse": "createStructuredBusinessExecutionService/model.structured；须保留真实上下文和候选投影"
+    },
+    {
+      "entry": "制作与多模态",
+      "source": "frontend/src/server/persistence-client.ts",
+      "symbols": [
+        "asset.generate",
+        "cover.generate",
+        "asset.classify",
+        "material.extract",
+        "transcribe.douyin",
+        "reconstruct.project",
+        "video.decisions"
+      ],
+      "missing": "对应provider/多阶段恢复协议，不可仅改函数名"
+    },
+    {
+      "entry": "新旧聊天与内联工具",
+      "source": "backend/src/modules/ai-runtime/chat-runner.ts + frontend/src/server/persistence-client.ts",
+      "symbols": [
+        "runChatStream",
+        "runCopilotAssist",
+        "ai.conversations.messages.create"
+      ],
+      "missing": "Worker流式事件适配及工具子调用统一执行权"
+    },
+    {
+      "entry": "预览与稿件候选",
+      "source": "frontend/src/server/persistence-client.ts",
+      "symbols": [
+        "intelligence.transforms.previewTopic",
+        "projects.scripts.generateCandidate"
+      ],
+      "missing": "真实上下文、阶段检查点与相似度评估仍在宿主"
+    },
+    {
+      "entry": "采集后处理与知识HTTP",
+      "source": "frontend/src/server/persistence-client.ts + frontend/src/app/api/knowledge",
+      "symbols": [
+        "偏好蒸馏",
+        "归因",
+        "爆款拆解",
+        "同模板出题",
+        "收藏筛选/蒸馏",
+        "热点抽取",
+        "classify",
+        "relate",
+        "distill",
+        "comment-sift"
+      ],
+      "missing": "大部分结构化生成可接统一Worker；原服务保留归属与幂等写入"
+    },
+    {
+      "entry": "embedding、连接测试和非模型任务链",
+      "source": "frontend/src/server/persistence-client.ts",
+      "symbols": [
+        "runEmbedTexts",
+        "streamText连接测试",
+        "source/share-import/scheduled_collection"
+      ],
+      "missing": "执行所有者及非模型恢复仍需逐项核验"
+    }
+  ],
+  "alreadyMapped": [
+    "script.draft",
+    "planning.thesis",
+    "review.analyze",
+    "planning.contract",
+    "script.review",
+    "publish.platform_adapt",
+    "planning.outline"
+  ],
+  "retirementRule": "旧文件存在不能证明仍被生产调用；删除前核对调用消费者。"
+}

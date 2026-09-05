@@ -1,0 +1,33 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T19:26:49.400255+00:00",
+  "status": "限定研究完成，恢复实施；生产资源监管尚未实现",
+  "question": "独立纯资源监管者能否在主宿主强杀后仍持真实浏览器句柄清理，同时监管丢失不假报停止？",
+  "facts": [
+    "真实Mac Chromium的PGID等于自身PID且不同于监管者组，sidecar killpg不是全浏览器停止证明",
+    "真实host SIGKILL后，guardian通过既有树冻结核验函数清理，初始观察7个浏览器进程全部不再执行后写研究标记",
+    "真实guardian SIGKILL后仍有4个浏览器进程存活且无停止标记；测试最终仅清理本次新建组并等待观察到的进程停止"
+  ],
+  "verification": {
+    "probe": "2 PASS；首次实验、研究恢复验证以及最终限定回归均成功。不是生产故障回归红测",
+    "types": "backend typecheck exit0",
+    "boundary": "0新增，5历史基线",
+    "orphan": "0 errors/100 warnings",
+    "researchGate": "observe/resume及taskctl start有审计事件；已恢复T-915实施",
+    "reconcile": "exit1：211 errors/1 warning，与既有T-916基线相同，不宣称全绿"
+  },
+  "recording": "首次 pnpm 测试在夹具默认记录模式下生成两份JSON；后续改为 T915_RECORD_RESOURCE_PROBE=1 才输出新记录，避免验证重写已绑定SHA的证据。研究卡command给出当前可复现记录命令。",
+  "limitations": [
+    "没有数据库、profile解锁、签名回执或资源session持久绑定",
+    "未覆盖浏览器根先死遗留后代、全部启动中断窗口和持久回执落盘窗口",
+    "Windows JobObject仅源码盘点，未运行Windows实验/安装包",
+    "Linux/Mac以外平台在研究验收命令中拒绝冒充本次Mac验证",
+    "未新增生产guardian、任务调度或模型执行层；R05全入口清单另见r05-current-inventory.json"
+  ],
+  "nextRequired": [
+    "持久资源身份与签名回执协议",
+    "动态profile租约与资源session绑定及精确旧fence校验",
+    "启动握手与停止/回执崩溃窗口测试",
+    "Windows Job全部活动进程核验与安装包实际测试"
+  ]
+}

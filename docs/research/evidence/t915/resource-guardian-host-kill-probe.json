@@ -1,0 +1,21 @@
+{
+  "mode": "host-kill",
+  "platform": "darwin",
+  "hostPid": 82963,
+  "guardianPid": 82964,
+  "browserPid": 82965,
+  "browserPgid": 82965,
+  "guardianPgid": 82926,
+  "trackedPids": [
+    82965,
+    82976,
+    82977,
+    82978,
+    82982,
+    82983,
+    82984
+  ],
+  "liveTracked": [],
+  "stoppedReceipt": true,
+  "scope": "隔离夹具；无数据库、profile解锁或签名回执；不代表生产实现"
+}

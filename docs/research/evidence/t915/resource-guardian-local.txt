@@ -1,0 +1,5 @@
+T-915 当前资源恢复证据：
+backend/src/modules/execution/worker-process-tree.ts 要求真实 ChildProcess 且仍存活；host 崩溃后新进程无法重建原句柄。
+frontend/src-tauri/src/lib.rs 使用 sidecar 进程组退出；现装 Playwright Chromium detached 独立组，待实际实验核验。
+frontend/src-tauri/src/win_job.rs 有 KILL_ON_JOB_CLOSE，但当前仅等待 sidecar 根句柄，未核验 Job 全部活动进程，且 spawn 后 assign 存在窗口。
+本轮限定问题：额外的纯资源监管进程，在 host 被 SIGKILL 后能否仍持真实浏览器句柄并核验清理；监管者自身丢失时不得伪造停止证明。
