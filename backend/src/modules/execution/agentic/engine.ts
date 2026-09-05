@@ -32,6 +32,7 @@ export interface AgenticToolExecOpts {
    * 搜索/抓取类默认 false(过程可续可停,产物过采纳门即可)。
    */
   dryRun: boolean;
+  toolCallId?: string;
 }
 
 /** 领域工具一次执行的产出(回给引擎读,并累积进最终产物)。 */

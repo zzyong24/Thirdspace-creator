@@ -32,6 +32,7 @@ interface FakeAi extends ExecutionAiPort {
   steps: { kind: string; text: string }[];
   candidates: { resultType: string; resultData: Record<string, unknown> }[];
   failures: string[];
+  plans: unknown[];
 }
 function makeFakeAi(): FakeAi {
   const fake: FakeAi = {
@@ -39,6 +40,11 @@ function makeFakeAi(): FakeAi {
     steps: [],
     candidates: [],
     failures: [],
+    plans: [],
+    async recordExecutionPlan(_ctx, _taskId, plan) {
+      fake.plans.push(plan);
+      fake.statuses.push("succeeded");
+    },
     async markRunning() {
       fake.statuses.push("running");
     },
@@ -75,7 +81,7 @@ function fakeLlm(): EngineLlm & { calls: number } {
 }
 
 // fake 调研端口(带写入 spy;grounding=web)。
-function makeResearchPorts(): {
+function makeResearchPorts(taskId = "unused"): {
   ports: ResearchPorts;
   writes: Array<{ title: string }>;
 } {
@@ -97,12 +103,23 @@ function makeResearchPorts(): {
         sourceUrl: url,
       };
     },
-    async knowledgeWrite({ title }) {
+    async knowledgeWrite({ title, note, sourceNote, toolCallId }) {
       writes.push({ title });
-      return { pendingId: "pk-1" };
+      return { pendingId: "pk-1", proposal: {
+        schemaVersion: 1, kind: "knowledge.create", proposalId: "pk-1",
+        source: {taskId, toolCallId: toolCallId ?? "call-1", evidenceRefs:["https://ex.com/a"]},
+        target: {knowledgeId:"knowledge-1",expectedVersion:null}, content:{title,note,sourceNote},
+      } };
     },
   };
   return { ports, writes };
+}
+
+// 测试明确提供候选决策，仅验证执行/预算边界；生产工具不承担语义默认。
+function researchToolsWithTestDecision(ports: ResearchPorts): AgenticTool[] {
+  return createResearchTools(ports).map(tool => tool.name === "knowledge.write"
+    ? {...tool, planInput: () => ({title:"测试已选择的知识标题",note:"测试明确提供的知识正文",sourceNote:"https://ex.com/a"})}
+    : tool);
 }
 
 function makeExecutor(
@@ -131,11 +148,11 @@ function agenticSpec(params: Record<string, unknown> = {}) {
 }
 
 describe("agentic executor 端到端(agentic.research via runExecutionTask)", () => {
-  it("跑通框架:running→awaiting_confirmation,产物写 out/ 过确认门,llm 回接被调,写入端口非干跑落 pending", async () => {
+  it("真实工具候选经公开编排进入确认门，不产生诊断文件", async () => {
     const registry = createExecutorRegistry();
-    const { ports, writes } = makeResearchPorts();
+    const { ports, writes } = makeResearchPorts("t1");
     const llm = fakeLlm();
-    registry.register(makeExecutor(() => createResearchTools(ports), undefined, llm));
+    registry.register(makeExecutor(() => researchToolsWithTestDecision(ports), undefined, llm));
     const ai = makeFakeAi();
 
     await runExecutionTask(ctx, { id: "t1", inputData: agenticSpec() }, {
@@ -147,34 +164,19 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
 
     expect(ai.statuses).toEqual(["running", "awaiting_confirmation"]);
     expect(ai.failures).toEqual([]);
-    // manifest 收割到 agentic-result.json(经既有 harvest→manifest→确认门)。
-    const manifest = ai.candidates[0]!.resultData.manifest as {
-      taskType: string;
-      artifacts: { path: string }[];
-      summary: string;
-    };
-    expect(ai.candidates[0]!.resultType).toBe("execution_manifest");
-    expect(manifest.artifacts.map((a) => a.path)).toEqual(["agentic-result.json"]);
-    // 产物真落沙箱 out/,含三工具产出 + 停因。
-    const written = JSON.parse(
-      await fs.readFile(path.join(root, "t1", "out", "agentic-result.json"), "utf8"),
-    ) as { engine: string; stopReason: string; output: { outputs: Record<string, unknown> } };
-    expect(written.engine).toBe("deterministic");
-    expect(written.stopReason).toBe("completed");
-    expect(Object.keys(written.output.outputs).sort()).toEqual([
-      "knowledge.write",
-      "web.read",
-      "web.search",
-    ]);
+    expect(ai.candidates[0]!.resultType).toBe("agentic_proposals");
+    expect(ai.candidates[0]!.resultData.proposals).toMatchObject([{kind:"knowledge.create",proposalId:"pk-1",source:{taskId:"t1"}}]);
+    expect(ai.candidates[0]!.resultData.meta).toMatchObject({engine:"deterministic",completeness:"completed",stopReason:"completed",steps:3});
+    expect(ai.candidates[0]!.resultData).not.toHaveProperty("manifest");
     // §6.1 回接被真触发(每步一次)。
     expect(llm.calls).toBeGreaterThanOrEqual(3);
-    // 非干跑 → 知识写入端口真落 pending(铁律②:pending,不是 active)。
+    // 非干跑只取得端口返回的类型化候选，尚未采纳业务数据。
     expect(writes.length).toBe(1);
   });
 
   it("工具白名单物理隔离:册外工具被 filterToolsToScope 挡,永不执行", async () => {
     const registry = createExecutorRegistry();
-    const { ports } = makeResearchPorts();
+    const { ports } = makeResearchPorts("t2");
     let evilRan = false;
     const evil: AgenticTool = {
       name: "evil.exec",
@@ -189,7 +191,7 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
       },
     };
     registry.register(
-      makeExecutor(() => [...createResearchTools(ports), evil]),
+      makeExecutor(() => [...researchToolsWithTestDecision(ports), evil]),
     );
     const ai = makeFakeAi();
     await runExecutionTask(ctx, { id: "t2", inputData: agenticSpec() }, {
@@ -200,16 +202,15 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
     });
     expect(ai.failures).toEqual([]);
     expect(evilRan).toBe(false);
-    const written = JSON.parse(
-      await fs.readFile(path.join(root, "t2", "out", "agentic-result.json"), "utf8"),
-    ) as { output: { outputs: Record<string, unknown> } };
-    expect(Object.keys(written.output.outputs)).not.toContain("evil.exec");
+    expect(ai.candidates[0]!.resultType).toBe("agentic_proposals");
+    expect(ai.steps.some(step=>step.text.includes("evil.exec"))).toBe(false);
   });
 
   it("步数硬顶:maxSteps=1 → stopReason max_steps(meta 诚实)", async () => {
     const registry = createExecutorRegistry();
-    const { ports } = makeResearchPorts();
-    registry.register(makeExecutor(() => createResearchTools(ports), { maxSteps: 1, maxTokens: 100000 }));
+    const { ports, writes } = makeResearchPorts("t3");
+    const llm = fakeLlm();
+    registry.register(makeExecutor(() => researchToolsWithTestDecision(ports), { maxSteps: 1, maxTokens: 100000 }, llm));
     const ai = makeFakeAi();
     await runExecutionTask(ctx, { id: "t3", inputData: agenticSpec() }, {
       ai,
@@ -217,17 +218,17 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
       registry,
       workspacesRoot: root,
     });
-    const written = JSON.parse(
-      await fs.readFile(path.join(root, "t3", "out", "agentic-result.json"), "utf8"),
-    ) as { stopReason: string; steps: number };
-    expect(written.stopReason).toBe("max_steps");
-    expect(written.steps).toBe(1);
+    expect(llm.calls).toBe(1);
+    expect(writes).toHaveLength(0);
+    expect(ai.candidates).toHaveLength(0);
+    expect(ai.statuses).toContain("failed");
+    expect(ai.failures[0]).toContain("可采纳的业务候选");
   });
 
   it("任务级干跑 dryRun=true:writeback 工具干跑,知识写入端口不落 pending(SPEC §4.4)", async () => {
     const registry = createExecutorRegistry();
     const { ports, writes } = makeResearchPorts();
-    registry.register(makeExecutor(() => createResearchTools(ports)));
+    registry.register(makeExecutor(() => researchToolsWithTestDecision(ports)));
     const ai = makeFakeAi();
     await runExecutionTask(
       ctx,
@@ -236,30 +237,37 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
     );
     expect(ai.failures).toEqual([]);
     expect(writes.length).toBe(0); // 干跑不落 pending
+    expect(ai.candidates).toHaveLength(0);
+    expect(ai.plans).toHaveLength(1);
+    expect(ai.statuses).toEqual(["running","succeeded"]);
+    const files=await fs.readdir(root,{recursive:true});
+    expect(files.some(file=>file.endsWith(".json"))).toBe(false);
   });
 
   it("参数预算只能调低不能调高缺省上限", async () => {
     const registry = createExecutorRegistry();
-    const { ports } = makeResearchPorts();
+    const { ports, writes } = makeResearchPorts("t5");
+    const llm = fakeLlm();
     // 缺省 maxSteps=2;任务请求 maxSteps=999 应被夹到 2。
-    registry.register(makeExecutor(() => createResearchTools(ports), { maxSteps: 2, maxTokens: 100000 }));
+    registry.register(makeExecutor(() => researchToolsWithTestDecision(ports), { maxSteps: 2, maxTokens: 100000 }, llm));
     const ai = makeFakeAi();
     await runExecutionTask(
       ctx,
       { id: "t5", inputData: agenticSpec({ maxSteps: 999 }) },
       { ai, assets, registry, workspacesRoot: root },
     );
-    const written = JSON.parse(
-      await fs.readFile(path.join(root, "t5", "out", "agentic-result.json"), "utf8"),
-    ) as { budget: { maxSteps: number }; steps: number };
-    expect(written.budget.maxSteps).toBe(2);
-    expect(written.steps).toBeLessThanOrEqual(2);
+    expect(llm.calls).toBe(2);
+    expect(writes).toHaveLength(0);
+    expect(ai.candidates).toHaveLength(0);
+    expect(ai.statuses).toContain("failed");
+    expect(ai.failures[0]).toContain("可采纳的业务候选");
   });
 
   it("检查点续跑不重置预算:checkpoint 已近顶 → 续跑步数受限", async () => {
     const registry = createExecutorRegistry();
-    const { ports } = makeResearchPorts();
-    registry.register(makeExecutor(() => createResearchTools(ports), { maxSteps: 3, maxTokens: 100000 }));
+    const { ports, writes } = makeResearchPorts("t6");
+    const llm = fakeLlm();
+    registry.register(makeExecutor(() => researchToolsWithTestDecision(ports), { maxSteps: 3, maxTokens: 100000 }, llm));
     const ai = makeFakeAi();
     await runExecutionTask(
       ctx,
@@ -269,12 +277,11 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
       },
       { ai, assets, registry, workspacesRoot: root },
     );
-    const written = JSON.parse(
-      await fs.readFile(path.join(root, "t6", "out", "agentic-result.json"), "utf8"),
-    ) as { stopReason: string; steps: number };
-    // 已用 2 步,预算 3 步 → 续跑只剩 1 步就到顶。
-    expect(written.steps).toBe(3);
-    expect(written.stopReason).toBe("max_steps");
+    expect(llm.calls).toBe(1);
+    expect(writes).toHaveLength(0);
+    expect(ai.candidates).toHaveLength(0);
+    expect(ai.statuses).toContain("failed");
+    expect(ai.failures[0]).toContain("可采纳的业务候选");
   });
 
   it("缺 ctx / 无可用工具 → 诚实失败(不静默降级)", async () => {
@@ -296,20 +303,24 @@ describe("agentic executor 端到端(agentic.research via runExecutionTask)", ()
 
 describe("T-915 失败与部分结果的公开编排", () => {
   for (const partial of [false, true]) {
-    it(partial ? "中途失败仍保留已取得的来源并标记 partial" : "只有故障诊断时不产生完成候选", async () => {
+    it(partial ? "中途失败仅保留工具实际产生的业务候选并标记 partial" : "只有故障诊断时不产生完成候选", async () => {
       const registry = createExecutorRegistry();
-      const { ports } = makeResearchPorts();
+      const { ports } = makeResearchPorts("failed-run");
       registry.register(createAgenticExecutor({
         taskType: "agentic.research",
-        engine: {name: "pi", run: async () => ({hasUsableOutput: partial, summary: "模型连接失败", steps: 1, stopReason: "llm_error", output: {outputs: partial ? {"web.read": {sourceUrl: "https://example.com", fullText: "已取得正文"}} : {}, error: "provider_error"}})},
-        resolveLlm: () => fakeLlm(), resolveTools: () => createResearchTools(ports), defaultBudget: {maxSteps: 8, maxTokens: 10000},
+        engine: {name: "pi", run: async ({tools,signal}) => {
+          if(partial) await tools.find(t=>t.name==="knowledge.write")!.execute({title:"可审阅知识",note:"已取得的知识正文",sourceNote:"https://ex.com/a"},{signal,dryRun:false,toolCallId:"call-partial"});
+          return {hasUsableOutput:partial,summary:"模型连接失败",steps:1,stopReason:"llm_error",output:{error:"provider_error"}};
+        }},
+        resolveLlm: () => fakeLlm(), resolveTools: () => researchToolsWithTestDecision(ports), defaultBudget: {maxSteps: 8, maxTokens: 10000},
       }));
       const ai = makeFakeAi();
       await runExecutionTask(ctx, {id: "failed-run", inputData: agenticSpec()}, {ai, assets, registry, workspacesRoot: root});
       if (partial) {
         expect(ai.candidates).toHaveLength(1);
-        const manifest = ai.candidates[0]!.resultData.manifest as {meta: {completeness: string}};
-        expect(manifest.meta.completeness).toBe("partial");
+        expect(ai.candidates[0]!.resultType).toBe("agentic_proposals");
+        expect(ai.candidates[0]!.resultData.meta).toMatchObject({completeness:"partial",stopReason:"llm_error"});
+        expect(ai.candidates[0]!.resultData.proposals).toMatchObject([{kind:"knowledge.create",source:{taskId:"failed-run"}}]);
       } else {
         expect(ai.candidates).toHaveLength(0);
         expect(ai.statuses).toContain("failed");
@@ -323,7 +334,7 @@ for (const mode of ["login", "empty"] as const) {
     const {ports} = makeResearchPorts();
     ports.webSearch = async () => ({grounding: "web", results: []});
     ports.webRead = async () => ({needLogin: true, domain: "example.com"});
-    const tools = createResearchTools(ports).filter(tool => tool.name === (mode === "login" ? "web.read" : "web.search"));
+    const tools = researchToolsWithTestDecision(ports).filter(tool => tool.name === (mode === "login" ? "web.read" : "web.search"));
     if (mode === "login") tools[0]!.planInput = () => ({url: "https://example.com"});
     const registry = createExecutorRegistry();
     registry.register(makeExecutor(() => tools));
@@ -333,3 +344,58 @@ for (const mode of ["login", "empty"] as const) {
     expect(ai.statuses).toContain("failed");
   });
 }
+
+it("只有真实搜读来源仍不冒充可采纳候选",async()=>{
+  const {ports,writes}=makeResearchPorts("read-only");
+  const registry=createExecutorRegistry();
+  registry.register(makeExecutor(()=>researchToolsWithTestDecision(ports).filter(t=>t.effect==="none")));
+  const ai=makeFakeAi();
+  await runExecutionTask(ctx,{id:"read-only",inputData:agenticSpec()},{ai,assets,registry,workspacesRoot:root});
+  expect(ai.candidates).toHaveLength(0);
+  expect(writes).toHaveLength(0);
+  expect(ai.failures[0]).toContain("可采纳的业务候选");
+});
+
+it("真实工具返回其他父任务候选时拒绝采纳",async()=>{
+  const {ports}=makeResearchPorts("foreign-parent");
+  const registry=createExecutorRegistry();registry.register(makeExecutor(()=>researchToolsWithTestDecision(ports)));
+  const ai=makeFakeAi();
+  await runExecutionTask(ctx,{id:"actual-parent",inputData:agenticSpec()},{ai,assets,registry,workspacesRoot:root});
+  expect(ai.candidates).toHaveLength(0);
+  expect(ai.failures[0]).toContain("候选来源不属于当前任务");
+});
+
+it("恢复到预算顶后不再调用模型或候选工具",async()=>{
+  const {ports,writes}=makeResearchPorts("exhausted");const llm=fakeLlm();
+  const registry=createExecutorRegistry();registry.register(makeExecutor(()=>researchToolsWithTestDecision(ports),{maxSteps:3,maxTokens:100000},llm));
+  const ai=makeFakeAi();
+  await runExecutionTask(ctx,{id:"exhausted",inputData:agenticSpec({checkpoint:{stepsUsed:3,tokensUsed:0}})},{ai,assets,registry,workspacesRoot:root});
+  expect(llm.calls).toBe(0);
+  expect(writes).toHaveLength(0);
+  expect(ai.candidates).toHaveLength(0);
+  expect(ai.statuses).toContain("failed");
+});
+
+it("模型输出自称有proposal不等于工具真实候选回执",async()=>{
+  const {ports,writes}=makeResearchPorts("model-claim");
+  const registry=createExecutorRegistry();
+  registry.register(createAgenticExecutor({taskType:"agentic.research",engine:{name:"pi",run:async()=>({hasUsableOutput:true,summary:"模型声称完成",steps:1,stopReason:"completed",output:{proposal:{proposalId:"invented"}}})},resolveLlm:()=>fakeLlm(),resolveTools:()=>researchToolsWithTestDecision(ports),defaultBudget:{maxSteps:8,maxTokens:10000}}));
+  const ai=makeFakeAi();
+  await runExecutionTask(ctx,{id:"model-claim",inputData:agenticSpec()},{ai,assets,registry,workspacesRoot:root});
+  expect(writes).toHaveLength(0);
+  expect(ai.candidates).toHaveLength(0);
+  expect(ai.failures[0]).toContain("可采纳的业务候选");
+});
+
+
+it("生产知识工具无默认创作决策时，确定性回退不编造候选",async()=>{
+  const {ports,writes}=makeResearchPorts("no-default");
+  const tools=createResearchTools(ports);
+  expect(tools.find(tool=>tool.name==="knowledge.write")!.planInput).toBeUndefined();
+  const registry=createExecutorRegistry();registry.register(makeExecutor(()=>tools));
+  const ai=makeFakeAi();
+  await runExecutionTask(ctx,{id:"no-default",inputData:agenticSpec()},{ai,assets,registry,workspacesRoot:root});
+  expect(writes).toHaveLength(0);
+  expect(ai.candidates).toHaveLength(0);
+  expect(ai.failures[0]).toContain("可采纳的业务候选");
+});

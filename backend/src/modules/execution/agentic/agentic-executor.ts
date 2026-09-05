@@ -1,3 +1,4 @@
+import { agenticProposal, type AgenticProposal } from "@creatoros/contract";
 // [T-256b] Agentic executor —— 自主任务运行时的「壳」:把 T-255a executor 形状 + 引擎循环 +
 // 领域工具适配器注入 缝合起来(SPEC §6:agentic executor = 执行层 executor 一种,dispatch/沙箱/
 // 确认卡/步骤流零改动)。
@@ -108,7 +109,20 @@ export function createAgenticExecutor(
       if (!goal) throw new Error("agentic 任务缺 goal");
 
       // ① 工具白名单(SPEC §4.1):只喂在册工具;scope 未知或无可用工具 → 诚实拒跑。
-      const allTools = deps.resolveTools(ctx,{taskId:sandbox.taskId});
+      const proposals = new Map<string, AgenticProposal>();
+      const allTools = deps.resolveTools(ctx,{taskId:sandbox.taskId}).map(tool => ({ ...tool,
+        async execute(input: unknown, options: Parameters<typeof tool.execute>[1]) {
+          const result = await tool.execute(input, options);
+          signal.throwIfAborted();
+          const raw = (result.data as { proposal?: unknown } | undefined)?.proposal;
+          if (raw && !options.dryRun) {
+            const proposal = agenticProposal.parse(raw);
+            if (proposal.source.taskId !== sandbox.taskId) throw new Error("候选来源不属于当前任务");
+            proposals.set(proposal.proposalId, proposal);
+          }
+          return result;
+        },
+      }));
       const tools = filterToolsToScope(allTools, deps.taskType);
       if (tools.length === 0) {
         throw new Error(
@@ -176,6 +190,16 @@ export function createAgenticExecutor(
       }
       const completeness = final.stopReason === "completed" ? "completed" : "partial";
       const actualEngine = final.actualEngine ?? deps.engine.name;
+
+      if (taskDryRun) return {summary:final.summary,meta:{engine:actualEngine,completeness,stopReason:final.stopReason,
+        dryRunPlan:{summary:final.summary,output:final.output,steps:final.steps,stopReason:final.stopReason,engine:actualEngine}}};
+
+      if (deps.taskType === "agentic.research" || deps.taskType === "agentic.material") {
+        if (!proposals.size) throw new Error("自主任务未产生可采纳的业务候选");
+        return { summary: final.summary, meta: { engine: actualEngine, completeness,
+          stopReason: final.stopReason, steps: final.steps, tokensUsed: controller.tokensUsed(),
+          proposals: [...proposals.values()] } };
+      }
 
       // ⑤ 确认门:最终产物写 out/(**不算落库**);经既有 harvest→manifest→confirm 采纳才入库(铁律②)。
       await reportStep("写自主循环产物 out/agentic-result.json(待确认门采纳)");

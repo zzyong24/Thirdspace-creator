@@ -1,0 +1,37 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T11:10:29.032435+00:00",
+  "status": "proposal_tool_staging_preview_adoption_connected",
+  "implemented": [
+    "knowledge.write 与 material.organize 接入真实候选暂存服务，模型明确参数生成建议，移除确定性语义编造",
+    "稳定任务/工具调用键及内容指纹；当前执行租约和事务内执行权校验；取消与过期写入拒绝",
+    "真实阅读证据独立于网页全文缓存登记，缓存淘汰后仍可引用已读来源",
+    "executor 只汇总可信工具返回的类型化候选，模型最终输出不能伪造候选；用户经原有公开确认入口原子采纳",
+    "前端完整预览知识正文/来源、素材真实 ID 和标签；预演持久化 execution_plan，成功但无领域写入"
+  ],
+  "verification": {
+    "backend": {
+      "files": 10,
+      "tests": 126,
+      "status": "PASS"
+    },
+    "frontend": {
+      "files": 4,
+      "tests": 17,
+      "status": "PASS"
+    },
+    "types": [
+      "contract PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "spec_review 独立只读复核通过，过时注释已删除；评审未运行测试"
+  },
+  "limits": [
+    "生产装配集成验证使用真实任务租约、真实工具及公开 GET/confirm，网页读取由替身提供；候选汇总在该集成测试中直接调用 recordCandidate，完整模型循环另由执行器隔离测试覆盖，不能声称真实模型到浏览器 UI 端到端通过",
+    "前端为组件测试，未进行真人浏览器验收",
+    "七个缺口端口现已接真实服务，但 Pi/browser 仍未迁入独立 Worker；持久工具循环、跨进程父子任务恢复、全部入口迁移、性能及供应商/双平台验收未完成",
+    "确定性引擎调用模型后忽略决策的历史设计仍待退役，不能作为自主恢复机制验收"
+  ]
+}

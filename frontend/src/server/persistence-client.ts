@@ -1,6 +1,6 @@
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
-import { createAgenticProposalAdoptionService } from "@creatoros/backend/modules/ai";
+import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath } from "./execution-worker-path";
 import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
@@ -3133,6 +3133,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     null;
   const knowledgeProposalAdoption = createKnowledgeProposalAdoptionService(db, deps.now);
   const assetTagProposalAdoption = createAssetTagProposalService(db, deps);
+  const agenticProposalStaging = createAgenticProposalStagingService(db, { resolveLease: (c,id) => aiService.getExecutionLeaseReference(c,id), now:deps.now, prepareAssets: (c, ids) => assetTagProposalAdoption.prepare(c, ids) });
   const agenticProposalAdoption = createAgenticProposalAdoptionService(db, {
     knowledge: (c, proposal, tx) => knowledgeProposalAdoption.adopt(c, proposal, tx),
     assetTagsBatch: (c, proposals, tx) => assetTagProposalAdoption.adoptBatch(c, proposals, tx),
@@ -5354,6 +5355,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       listResults: (c, taskId) => aiService.listResults(c, taskId),
       recordAuxResult: (c, taskId, input) =>
         aiService.recordAuxResult(c, taskId, input),
+      confirmTask: (c, taskId) => aiService.confirmTask(c, taskId),
       markSucceeded: (c, taskId) => aiService.markSucceeded(c, taskId),
       cancelTask: (c, taskId) => aiService.cancelTask(c, taskId),
     },
@@ -9769,15 +9771,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       };
     };
   };
-  // 未接通的领域操作明确失败，不能把空结果或虚构pendingId当作执行成功。
-  class AgenticPortNotImplementedError extends Error {
-    readonly code = "NotImplemented";
-    constructor(port: string) {
-      super(`自主循环端口「${port}」尚未接线(未实现),暂不可用。`);
-      this.name = "AgenticPortNotImplementedError";
-    }
-  }
-  const agenticResearchPorts=(ctx:RequestContext):ResearchPorts=>createResearchPorts(ctx,{
+  const agenticResearchPorts=(ctx:RequestContext,taskId:string):ResearchPorts=>createResearchPorts(ctx,{
+    requireReadEvidence: true,
     search:(c,query,options)=>searchWebPort(c,query,options),
     async read(c,url,signal){
       const domain=webDomainFromUrl(url);
@@ -9789,18 +9784,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         throw error;
       }
     },
-    async stageKnowledge(){throw new AgenticPortNotImplementedError("knowledge.write");},
+    async stageKnowledge(c,input,signal){
+      const proposal=await agenticProposalStaging.stage(c,taskId,{kind:"knowledge.create",title:input.title,note:input.note,sourceNote:input.sourceNote,toolCallId:input.toolCallId ?? "",evidenceRefs:input.evidenceRefs ?? []},signal);
+      return {pendingId:proposal.proposalId,proposal};
+    },
   });
   const agenticCollectionPorts = (ctx: RequestContext, taskId: string): CollectionPorts =>
     createCollectionToolPorts(ctx, taskId, intelligenceService, persistentTaskService,
       (c, input) => runIntelligenceSourceTask(c, input, sourceRunnerDeps));
-  const agenticMaterialPorts=(ctx:RequestContext):MaterialPorts=>({
+  const agenticMaterialPorts=(ctx:RequestContext,taskId:string):MaterialPorts=>({
     async searchMaterials(input,signal){
       signal.throwIfAborted();const result=await assetsService.searchAssets(ctx,{query:input.query,limit:input.limit ?? 20,cursor:input.cursor});signal.throwIfAborted();
       return {items:result.rows.map(row=>({id:row.id,title:row.name,kind:row.assetType})),nextCursor:result.nextCursor};
     },
-    async organizeMaterials() {
-      throw new AgenticPortNotImplementedError("material.organize");
+    async organizeMaterials(input,signal) {
+      const proposal=await agenticProposalStaging.stage(ctx,taskId,{kind:"asset.tags",assetIds:input.assetIds,tag:input.tag,toolCallId:input.toolCallId ?? "",evidenceRefs:input.assetIds},signal);
+      return {affected:input.assetIds.length,proposal};
     },
   });
   // [T-313] 引擎切 Pi:createPiAgenticEngine 真接 pi-coding-agent SDK 自主循环;**保留确定性兜底**
@@ -9826,7 +9825,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.research"),
       resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.research"),
-      resolveTools: ctx => createResearchTools(agenticResearchPorts(ctx)),
+      resolveTools: (ctx,execution) => createResearchTools(agenticResearchPorts(ctx,execution?.taskId ?? "")),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );
@@ -9846,7 +9845,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.material"),
       resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.material"),
-      resolveTools: ctx => createMaterialTools(agenticMaterialPorts(ctx)),
+      resolveTools: (ctx,execution) => createMaterialTools(agenticMaterialPorts(ctx,execution?.taskId ?? "")),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );

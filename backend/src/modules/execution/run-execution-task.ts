@@ -6,7 +6,7 @@
 // (resultType `execution_manifest` → awaiting_confirmation,过确认门)。
 // 任一失败 → markFailed + 清沙箱(诚实终态,绝不卡 running;T-207 sweep 兜底已在)。
 import type { RequestContext } from "@creatoros/contract";
-import { executionTaskSpec, type ExecutionManifest } from "@creatoros/contract";
+import { agenticProposal, executionTaskSpec, type ExecutionManifest } from "@creatoros/contract";
 import {
   cleanupSandbox,
   createSandbox,
@@ -17,6 +17,7 @@ import {
 import type { ExecutorRegistry } from "./executor-registry";
 
 export interface ExecutionAiPort {
+  recordExecutionPlan?(ctx: RequestContext, taskId: string, plan: Record<string, unknown>): Promise<void>;
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
   recordStep(
     ctx: RequestContext,
@@ -219,6 +220,24 @@ export async function runExecutionTask(
       spec.constraints.timeoutSec,
       controller,
     );
+
+    if (result.meta?.dryRunPlan && typeof result.meta.dryRunPlan === "object") {
+      if (!deps.ai.recordExecutionPlan) throw new Error("预演结果服务尚未接入");
+      await deps.ai.recordExecutionPlan(ctx, taskId, {taskType:spec.taskType,...result.meta.dryRunPlan as object});
+      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      await step("预演完成，未产生领域写入", "final");
+      return;
+    }
+
+    if (Array.isArray(result.meta?.proposals) && result.meta.proposals.length) {
+      const proposals = result.meta.proposals.map(value => agenticProposal.parse(value));
+      if (proposals.some(proposal => proposal.source.taskId !== taskId)) throw new Error("候选来源与执行任务不一致");
+      await deps.ai.recordCandidate(ctx, taskId, { resultType: "agentic_proposals",
+        resultData: { taskType: spec.taskType, proposals, summary: result.summary ?? "", meta: result.meta } });
+      await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+      await step(`完成:${proposals.length} 条建议待确认`, "final");
+      return;
+    }
 
     // 5) 收割 out/ 清单(executor 不自报清单,防谎报)→ manifest 候选落库。
     await step("收割产物清单");

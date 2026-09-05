@@ -1,3 +1,4 @@
+import { agenticProposal } from "./agentic-proposal";
 import { z } from "zod";
 import { id, iso8601, aiTaskStatus } from "../primitives";
 
@@ -85,6 +86,7 @@ export type ExecutionArtifact = z.infer<typeof executionArtifact>;
 export const executionManifest = z.object({
   taskType: executionTaskType,
   artifacts: z.array(executionArtifact),
+  proposals: z.array(agenticProposal).optional(),
   summary: z.string().default(""),
   meta: z.record(z.string(), z.unknown()).default({}),
 });

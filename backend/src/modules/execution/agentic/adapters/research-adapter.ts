@@ -4,6 +4,7 @@
 //
 // 复用锚:web.search / web.read / knowledge.write 端口形状照 chat-tools ChatToolDeps 同名端口(T-217c/
 // T-251/T-094),不重造端口逻辑;本适配器只把它们包成引擎认的 AgenticTool(白名单 agentic.research)。
+import type { AgenticProposal } from "@creatoros/contract";
 import { z } from "zod";
 import { createHash } from "node:crypto";
 import type { AgenticTool } from "../engine";
@@ -34,9 +35,9 @@ export interface ResearchPorts {
    * 人在知识库确认卡采纳才 active)。返回 pending 条目 id。
    */
   knowledgeWrite(
-    input: { title: string; note: string; sourceNote: string },
+    input: { title: string; note: string; sourceNote: string; toolCallId?: string; evidenceRefs?: string[] },
     signal: AbortSignal,
-  ): Promise<{ pendingId: string }>;
+  ): Promise<{ pendingId: string; proposal?: AgenticProposal }>;
 }
 
 const webSearchParams = z.object({ query: z.string().min(1) });
@@ -125,20 +126,12 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
       name: "knowledge.write",
       label: "写入知识库(待确认)",
       description:
-        "把调研综合出的一条知识原子写入知识库。落 pending,需用户在知识库确认卡采纳才生效(铁律②)。",
+        "生成调研知识候选，sourceNote填写本轮已读取的来源URL。用户在任务卡采纳后才进入知识库。",
       effect: "writeback",
       parameters: knowledgeWriteParams,
-      planInput: (goal, outputs) => {
-        const read = outputs["web.read"] as
-          | { title?: string; sourceUrl?: string }
-          | undefined;
-        return {
-          title: read?.title ? `调研:${read.title}` : `调研:${goal}`,
-          note: `围绕「${goal}」的调研综合(自主循环产出,采纳前请核对)。`,
-          sourceNote: read?.sourceUrl ?? "",
-        };
-      },
-      async execute(input, { signal, dryRun }) {
+      // 语义内容/分类由模型显式给出，确定性回退不得编造写入建议。
+      async execute(input, { signal, dryRun, toolCallId }) {
+        signal.throwIfAborted();
         const p = knowledgeWriteParams.parse(input);
         if (dryRun) {
           // 干跑:只出计划预告,不落 pending(SPEC §4.4)。
@@ -147,11 +140,12 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
             plan: `将写入 pending 知识原子「${p.title}」,来源:${p.sourceNote || "(无)"}`,
           };
         }
-        const { pendingId } = await ports.knowledgeWrite(p, signal);
+        const { pendingId, proposal } = await ports.knowledgeWrite({ ...p, toolCallId }, signal);
+        signal.throwIfAborted();
         return {
           hasEvidence: Boolean(pendingId.trim()),
-          summary: `已写入 pending 知识原子「${p.title}」(待确认门采纳)`,
-          data: { pendingId, title: p.title },
+          summary: `已生成知识候选「${p.title}」(待确认门采纳)`,
+          data: { pendingId, title: p.title, ...(proposal ? { proposal } : {}) },
         };
       },
     },

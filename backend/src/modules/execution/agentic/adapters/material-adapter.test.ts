@@ -44,12 +44,11 @@ describe("createMaterialTools", () => {
     expect((r.data as { items: unknown[] }).items.length).toBe(2);
   });
 
-  it("material.organize:planInput 把搜到的素材聚合打标(决策→执行)", async () => {
+  it("material.organize:只执行明确的模型决策，确定性回退不编造标签", async () => {
     const { byName, organized } = toolsOf();
     const org = byName["material.organize"]!;
-    const input = org.planInput!("夏日主题", {
-      "material.search": { items: [{ id: "a1" }, { id: "a2" }] },
-    });
+    expect(org.planInput).toBeUndefined();
+    const input = { assetIds: ["a1", "a2"], tag: "夏日主题" };
     const r = await org.execute(input, { signal: noSig, dryRun: false });
     expect(r.summary).toContain("2 个素材");
     expect(organized).toEqual([{ ids: ["a1", "a2"], tag: "夏日主题" }]);

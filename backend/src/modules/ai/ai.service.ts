@@ -3,7 +3,7 @@ import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
-import { requireAccountId, type Db } from "@creatoros/backend";
+import { and, eq, aiTasks, aiTaskResults, requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
   type AiRepository,
@@ -277,6 +277,8 @@ export type ClaimedTaskExecutionResult<T> =
   | { claimed: true; value: T };
 
 export interface AiService {
+  getExecutionLeaseReference(ctx: RequestContext, taskId: string): { leaseToken: string };
+  recordExecutionPlan(ctx: RequestContext, taskId: string, plan: Record<string, unknown>): Promise<void>;
   // T-096:page.scope 传了只列该作用域(入口级历史隔离);不传全量(旧调用不破)。
   listConversations(
     ctx: RequestContext,
@@ -1952,6 +1954,25 @@ export function createAiService(deps: ServiceDeps): AiService {
       const repo = repoFor(ctx, "ai.patchResultItems");
       const row = await repo.patchLatestResultItems(taskId, items);
       return toResultDto(row);
+    },
+
+    getExecutionLeaseReference(ctx, taskId) {
+      const scope = leaseScopeFor(ctx, taskId);
+      if (!scope) throw new ConflictError("缺少当前任务执行租约");
+      assertLease(scope);
+      return { leaseToken: scope.leaseToken };
+    },
+    async recordExecutionPlan(ctx, taskId, plan) {
+      const scope = leaseScopeFor(ctx, taskId);
+      if (!scope) throw new ConflictError("缺少当前任务执行租约");
+      assertLease(scope);
+      await deps.db.transaction(async tx => {
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,requireAccountId(ctx.accountId,"ai.executionPlan")))).for("update");
+        if (!task || task.executionTaskId || task.status !== "running" || task.leaseToken !== scope.leaseToken || !task.leaseExpiresAt || task.leaseExpiresAt <= deps.now()) throw loseLease(scope);
+        await tx.insert(aiTaskResults).values({id:deps.nextId("ai-result"),aiTaskId:taskId,resultType:"execution_plan",resultData:plan});
+        await tx.update(aiTasks).set({status:"succeeded",completedAt:deps.now(),leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,taskId));
+      });
+      scope.finished = true;
     },
 
     async recordAuxResult(ctx, taskId, input) {

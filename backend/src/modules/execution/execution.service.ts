@@ -69,6 +69,7 @@ export interface ExecutionAiServicePort {
     taskId: string,
     input: { resultType: string; resultData: Record<string, unknown> },
   ): Promise<void>;
+  confirmTask?(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
   markSucceeded(ctx: RequestContext, taskId: string): Promise<void>;
   cancelTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
 }
@@ -227,6 +228,13 @@ export function createExecutionService(
 
     async confirm(ctx, taskId) {
       const task = await requireExecTask(ctx, taskId);
+      const proposals = latestManifest(await deps.ai.listResults(ctx, taskId))?.proposals;
+      if (proposals?.length) {
+        if (!deps.ai.confirmTask) throw new ConflictError("候选采纳服务尚未接入");
+        await deps.ai.confirmTask(ctx, taskId);
+        await cleanupSandbox(deps.workspacesRoot, taskId).catch(() => {});
+        return toDto(ctx, await deps.ai.getTask(ctx, taskId));
+      }
       if (task.status !== "awaiting_confirmation") {
         throw new ConflictError(
           `Execution task ${taskId} is not awaiting confirmation (status: ${task.status})`,

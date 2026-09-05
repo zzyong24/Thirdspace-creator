@@ -239,6 +239,7 @@ export function toPiCustomTool(
       if (!dryRun) ctx.onRealExecute?.();
       const result = await tool.execute(parsed.data, {
         signal: ctx.signal,
+        toolCallId: _toolCallId,
         dryRun,
       });
       if (result.hasEvidence === true) ctx.onEvidence?.({callId: _toolCallId, tool: tool.name, summary: result.summary, data: result.data});

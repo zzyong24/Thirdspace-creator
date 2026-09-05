@@ -57,6 +57,16 @@ export function latestManifest(
 ): ExecutionManifest | null {
   for (let i = results.length - 1; i >= 0; i--) {
     const r = results[i]!;
+    if (r.resultType === "execution_plan") {
+      const plan = r.resultData as {taskType?: unknown; summary?: unknown};
+      const parsed = executionManifest.safeParse({taskType:plan.taskType,artifacts:[],summary:plan.summary ?? "",meta:{dryRun:true,plan:r.resultData}});
+      return parsed.success ? parsed.data : null;
+    }
+    if (r.resultType === "agentic_proposals") {
+      const data = r.resultData as {proposals?: unknown; summary?: unknown; meta?: unknown};
+      const parsed = executionManifest.safeParse({taskType:(r.resultData as {taskType?:unknown}).taskType,artifacts:[],proposals:data.proposals,summary:data.summary ?? "",meta:data.meta ?? {}});
+      return parsed.success ? parsed.data : null;
+    }
     if (r.resultType !== EXECUTION_MANIFEST_RESULT_TYPE) continue;
     const parsed = executionManifest.safeParse(
       (r.resultData as { manifest?: unknown }).manifest,

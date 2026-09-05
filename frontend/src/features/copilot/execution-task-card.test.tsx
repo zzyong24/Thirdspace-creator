@@ -252,3 +252,52 @@ describe("formatSize", () => {
     expect(formatSize(3 * 1024 * 1024)).toBe("3.0 MB");
   });
 });
+
+describe("自主业务建议确认卡", () => {
+  const note = "完整知识内容。".repeat(2000) + "正文末尾也必须可审阅";
+  const proposals = [
+    {schemaVersion:1,kind:"knowledge.create",proposalId:"knowledge-1",source:{taskId:"task-1",toolCallId:"call-1",evidenceRefs:["https://example.com/source","evidence:page-1"]},target:{knowledgeId:"knowledge-1",expectedVersion:null},content:{title:"知识标题",note,sourceNote:"来源说明全文\n第二行来源说明"}},
+    {schemaVersion:1,kind:"asset.tags",proposalId:"tags-1",source:{taskId:"task-1",toolCallId:"call-2",evidenceRefs:["asset:asset-a"]},targets:[{assetId:"asset-a",expectedVersion:"version-a"},{assetId:"asset-b",expectedVersion:"version-b"}],tag:"旅行记录"},
+  ];
+  const manifest = {taskType:"agentic.research",artifacts:[],summary:"生成了业务建议",proposals};
+  it("展示完整知识和真实素材ID，无文件仍通过原接口采纳", async () => {
+    getExecutionTask.mockResolvedValue(makeTask({manifest}));
+    confirmExecutionTask.mockResolvedValue(makeTask({status:"succeeded",manifest}));
+    render(<ExecutionTaskCard taskId="task-1" />);
+    expect(await screen.findByText("知识建议 · 知识标题")).toBeInTheDocument();
+    expect(screen.getByText(note)).toBeInTheDocument();
+    expect(screen.getByText(/第二行来源说明/)).toBeInTheDocument();
+    expect(screen.getByText("https://example.com/source")).toBeInTheDocument();
+    expect(screen.getByText("evidence:page-1")).toBeInTheDocument();
+    expect(screen.getByText("素材标签建议 · 旅行记录")).toBeInTheDocument();
+    expect(screen.getByText("asset-a")).toBeInTheDocument();
+    expect(screen.getByText("asset-b")).toBeInTheDocument();
+    expect(screen.getByText(/尚未生效/)).toBeInTheDocument();
+    expect(screen.queryByText(/没有产出文件/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button",{name:"采纳建议"})).toBeEnabled();
+    await userEvent.click(screen.getByRole("button",{name:"采纳建议"}));
+    expect(confirmExecutionTask).toHaveBeenCalledWith({params:{taskId:"task-1"},query:undefined,body:undefined});
+    expect(await screen.findByText("✓ 已采纳 2 条建议。")).toBeInTheDocument();
+    expect(screen.queryByText(/0 个成果/)).not.toBeInTheDocument();
+  });
+  it("版本冲突保留建议供审阅并显示真实采纳错误", async () => {
+    getExecutionTask.mockResolvedValue(makeTask({manifest}));
+    confirmExecutionTask.mockRejectedValue(new Error("素材或标签已变化，请重新生成建议"));
+    render(<ExecutionTaskCard taskId="task-1" />);
+    await userEvent.click(await screen.findByRole("button",{name:"采纳建议"}));
+    expect(await screen.findByText("素材或标签已变化，请重新生成建议")).toBeInTheDocument();
+    expect(screen.getByText(note)).toBeInTheDocument();
+    expect(screen.queryByText(/已采纳 2 条建议/)).not.toBeInTheDocument();
+  });
+});
+
+
+it("预演成功显示未写入与完整计划摘要，不称作已采纳文件",async()=>{
+  getExecutionTask.mockResolvedValue(makeTask({status:"succeeded",manifest:{taskType:"agentic.research",artifacts:[],summary:"计划先检索，再建议一条知识。",meta:{dryRun:true,plan:{}}}}));
+  render(<ExecutionTaskCard taskId="task-1"/>);
+  expect(await screen.findByText("✓ 预演完成，未写入知识或素材标签。")).toBeInTheDocument();
+  expect(screen.getByText("计划先检索，再建议一条知识。")).toBeInTheDocument();
+  expect(screen.queryByText(/0 个成果/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/已采纳/)).not.toBeInTheDocument();
+  expect(confirmExecutionTask).not.toHaveBeenCalled();
+});

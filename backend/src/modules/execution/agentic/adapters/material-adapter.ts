@@ -5,6 +5,7 @@
 // 复用锚:material.search 端口 = 现有 context.materials 只读端口(assets 搜索,chat-tools ChatToolDeps
 // searchMaterials 同口径);organize 端口 = assets 打标/归类的既有写路径。本适配器只包成引擎工具
 // (白名单 agentic.material),不重造素材库逻辑。
+import type { AgenticProposal } from "@creatoros/contract";
 import { z } from "zod";
 import type { AgenticTool } from "../engine";
 
@@ -22,9 +23,9 @@ export interface MaterialPorts {
    * 归类整理:给一批素材打标签/归组(端口内保证可逆 / 落 pending;铁律②)。返回受影响条数。
    */
   organizeMaterials(
-    input: { assetIds: string[]; tag: string },
+    input: { assetIds: string[]; tag: string; toolCallId?: string },
     signal: AbortSignal,
-  ): Promise<{ affected: number }>;
+  ): Promise<{ affected: number; proposal?: AgenticProposal }>;
 }
 
 const searchParams = z.object({ query: z.string().min(1),limit:z.number().int().min(1).max(100).default(20),cursor:z.string().nullable().optional() });
@@ -59,18 +60,12 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
       name: "material.organize",
       label: "归类素材",
       description:
-        "给一批素材打标签/归组(可逆整理动作)。用于把搜到的素材按主题聚合。",
+        "为一批素材生成标签建议，用户采纳后才生效。",
       effect: "writeback",
       parameters: organizeParams,
-      // 确定性引擎:把上一步搜到的素材全部打上「目标」标签,串起 搜→整理。
-      planInput: (goal, outputs) => {
-        const search = outputs["material.search"] as
-          | { items?: Array<{ id: string }> }
-          | undefined;
-        const assetIds = (search?.items ?? []).map((i) => i.id);
-        return { assetIds, tag: goal.slice(0, 24) };
-      },
-      async execute(input, { signal, dryRun }) {
+      // 语义内容/分类由模型显式给出，确定性回退不得编造写入建议。
+      async execute(input, { signal, dryRun, toolCallId }) {
+        signal.throwIfAborted();
         const parsed = organizeParams.safeParse(input);
         if (!parsed.success) return { summary: "无素材可整理(上一步搜索为空)" };
         const { assetIds, tag } = parsed.data;
@@ -80,14 +75,15 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
             plan: `将给素材 ${assetIds.join(", ")} 打标签「${tag}」`,
           };
         }
-        const { affected } = await ports.organizeMaterials(
-          { assetIds, tag },
+        const { affected, proposal } = await ports.organizeMaterials(
+          { assetIds, tag, toolCallId },
           signal,
         );
+        signal.throwIfAborted();
         return {
           hasEvidence: true,
-          summary: `已给 ${affected} 个素材打标签「${tag}」`,
-          data: { affected, tag },
+          summary: proposal ? `已生成 ${affected} 个素材的标签建议「${tag}」，待用户采纳` : `已给 ${affected} 个素材打标签「${tag}」`,
+          data: { affected, tag, ...(proposal ? { proposal } : {}) },
         };
       },
     },

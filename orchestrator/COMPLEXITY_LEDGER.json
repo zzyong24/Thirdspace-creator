@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "c09f9b045338fc2c9e3c4d6f33ac423be410aba6655ad11a1c04149235d5ff38",
+      "file_sha256": "0bb9308323567d8e37fa7e97c493a7d3e38b8b125db34a2ee3a0fe99121416b2",
       "categories": [
         "native_executable"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "1d7a432aac35e4747161fa833a7ea8b839bb7a20f7e061c95994d0067a7d5ddc",
+      "file_sha256": "a54ef30117c81009f5c6ea9fda8c83a28155431dc2237ac4d240a19ad05c7637",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "5a635da8d92feface885b3076ec40f7086ef3ea8a15590571b31f42c031980d5",
+      "file_sha256": "49af58e8f497729e4050c2f2a3bf4a9c9320be2a21405dd24a1f9eddd73cc7db",
       "categories": [
         "credential_store",
         "language_toolchain",

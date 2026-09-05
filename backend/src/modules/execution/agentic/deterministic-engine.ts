@@ -107,7 +107,7 @@ export function createDeterministicAgenticEngine(): AgenticEngine {
 
         // 干跑决策(SPEC §4.4):发布/删除恒干跑,余按任务级。端口内做真副作用/限流/pending(铁律②/防封)。
         const dryRun = decideDryRun(tool);
-        const result = await tool.execute(parsed.data, { signal, dryRun });
+        const result = await tool.execute(parsed.data, { signal, dryRun, toolCallId: `deterministic:${tool.name}` });
         hasUsableOutput ||= result.hasEvidence === true;
         toolLog.push({ tool: tool.name, dryRun, summary: result.summary });
         outputs[tool.name] = result.data ?? result.summary;

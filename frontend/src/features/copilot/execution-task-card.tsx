@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import type { AgenticProposal } from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
 
@@ -50,6 +51,7 @@ interface WireExecutionTask {
   manifest: {
     taskType: string;
     artifacts: WireArtifact[];
+    proposals?: AgenticProposal[];
     summary: string;
     meta?: Record<string, unknown>;
   } | null;
@@ -247,6 +249,7 @@ function ExecutionTaskCardBody({
 
   const status = task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];
+  const proposals = task?.manifest?.proposals ?? [];
   const videoArtifacts = artifacts.filter((artifact) =>
     (artifact.mimeType ?? "").toLowerCase().startsWith("video/"),
   );
@@ -305,6 +308,34 @@ function ExecutionTaskCardBody({
               {task.manifest.summary}
             </p>
           ) : null}
+          {proposals.length > 0 ? (
+            <div data-slot="execution-task-proposals" className="flex flex-col gap-2">
+              <p className="text-[11px] text-muted-foreground">以下 {proposals.length} 条建议尚未生效，采纳后才会写入知识库或修改素材标签。</p>
+              {proposals.map((proposal) => (
+                <article key={proposal.proposalId} className="min-w-0 rounded-md border border-border bg-surface-subtle p-2 text-[11px]">
+                  {proposal.kind === "knowledge.create" ? (
+                    <>
+                      <p className="font-medium text-foreground">知识建议 · {proposal.content.title}</p>
+                      <div className="mt-1 whitespace-pre-wrap break-words text-foreground">{proposal.content.note}</div>
+                      <p className="mt-2 whitespace-pre-wrap break-words text-muted-foreground">来源说明：{proposal.content.sourceNote || "未提供"}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium text-foreground">素材标签建议 · {proposal.tag}</p>
+                      <p className="mt-1 text-muted-foreground">目标素材 ID：</p>
+                      <ul className="list-disc pl-4 text-foreground">
+                        {proposal.targets.map(target => <li key={target.assetId} className="break-all">{target.assetId}</li>)}
+                      </ul>
+                    </>
+                  )}
+                  <p className="mt-2 text-muted-foreground">来源证据：</p>
+                  <ul className="list-disc pl-4 text-muted-foreground">
+                    {proposal.source.evidenceRefs.map((ref, index) => <li key={`${index}:${ref}`} className="whitespace-pre-wrap break-all">{ref}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          ) : null}
           {visualReview ? (
             <div
               data-slot="execution-task-visual-review"
@@ -343,11 +374,11 @@ function ExecutionTaskCardBody({
               </p>
             </div>
           ))}
-          {artifacts.length === 0 ? (
+          {artifacts.length === 0 ? (proposals.length > 0 ? null : (
             <p className="text-[11px] text-muted-foreground">
               (本次执行没有产出文件)
             </p>
-          ) : (
+          )) : (
             <ul
               data-slot="execution-task-artifacts"
               className="flex flex-col gap-1 rounded-md border border-border bg-surface-subtle p-1.5"
@@ -371,18 +402,20 @@ function ExecutionTaskCardBody({
               ))}
             </ul>
           )}
-          <p className="text-[10px] text-muted-foreground">
-            产物暂存沙箱,未入素材库 —— 采纳才落库(可重试/丢弃)。
-          </p>
+          {artifacts.length > 0 || proposals.length === 0 ? (
+            <p className="text-[10px] text-muted-foreground">
+              产物暂存沙箱,未入素材库 —— 采纳才落库(可重试/丢弃)。
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               data-slot="execution-task-adopt"
-              disabled={busy !== "" || artifacts.length === 0}
+              disabled={busy !== "" || (artifacts.length === 0 && proposals.length === 0)}
               onClick={() => void adopt()}
               className="inline-flex h-7 items-center rounded-control bg-brand px-3 text-[11px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
             >
-              {busy === "confirm" ? "采纳中…" : "采纳进素材库"}
+              {busy === "confirm" ? "采纳中…" : proposals.length > 0 ? "采纳建议" : "采纳进素材库"}
             </button>
             <button
               type="button"
@@ -433,7 +466,9 @@ function ExecutionTaskCardBody({
 
       {status === "succeeded" ? (
         <p data-slot="execution-task-done" className="text-[12px] text-success">
-          ✓ 已把 {task?.adoptedAssetIds.length ?? 0} 个成果收进素材库。
+          {task?.manifest?.meta?.dryRun === true ? "✓ 预演完成，未写入知识或素材标签。" : proposals.length > 0 ? `✓ 已采纳 ${proposals.length} 条建议。` : `✓ 已把 ${task?.adoptedAssetIds.length ?? 0} 个成果收进素材库。`}
+          {task?.manifest?.meta?.dryRun === true && task.manifest.summary ? <span className="mt-1 block whitespace-pre-wrap text-muted-foreground">{task.manifest.summary}</span> : null}
+          {task?.manifest?.meta?.dryRun !== true && proposals.length > 0 && (task?.adoptedAssetIds.length ?? 0) > 0 ? `另有 ${task!.adoptedAssetIds.length} 个成果已收进素材库。` : null}
         </p>
       ) : null}
 

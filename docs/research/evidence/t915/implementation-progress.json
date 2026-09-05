@@ -95,7 +95,7 @@
   "not_yet_delivered": [
     "其余业务入口与生产持久调度、原子端口接线；多平台改写公共入口已切换Worker并通过隔离集成验证",
     "唯一执行权迁移、持久检查点与恢复",
-    "七端口真实接线与浏览器自适应完整循环",
+    "浏览器自适应完整循环与七端口跨进程持久执行",
     "全部生产入口迁移与旧实现退役",
     "完整性能基线、真实供应商及 macOS/Windows 包验收",
     "旧版本已创建但未记录采纳的孤立发布稿需独立对账，新来源键不能补造历史归属",
@@ -164,5 +164,11 @@
     "evidence": "proposal-adoption-evidence.json",
     "tests": 89,
     "scope": "候选公共采纳原子基础已接，知识/素材工具生成和前端预览仍待接线"
+  },
+  "proposal_staging_increment": {
+    "evidence": "proposal-staging-evidence.json",
+    "backend_tests": 126,
+    "frontend_tests": 17,
+    "scope": "七端口真实服务、候选预览采纳和预演结果已接；自主循环Worker/持久恢复及全量验收未完成"
   }
 }
