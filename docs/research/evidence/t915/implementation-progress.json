@@ -188,5 +188,12 @@
     "backend_tests": 66,
     "worker_tests": 79,
     "scope": "真实Pi/HTTP/数据库恢复与独立Agent进程通过隔离验证，生产调度、真实工具执行/候选提交、浏览器迁移及完整验收未完成"
+  },
+  "agentic_material_production_increment": {
+    "evidence": "agentic-material-production-evidence.json",
+    "backend_tests": 79,
+    "worker_tests": 80,
+    "desktop_resource_tests": 5,
+    "scope": "素材自主任务源码接独立Worker，真实工具/候选采纳与跨PG连接池去重通过；浏览器/全部入口迁移、性能和真机完整验收未完成"
   }
 }

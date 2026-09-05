@@ -1,5 +1,5 @@
 import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
-export { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
+export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitReceiptSchema } from "./agentic-worker";
 import { reserveAgenticToolSchema, settleAgenticToolSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";

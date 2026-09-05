@@ -1,0 +1,62 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T13:05:29.582308+00:00",
+  "status": "素材自主任务生产源码已接独立Worker，局部验证通过，全量迁移与产品验收未完成",
+  "implemented": [
+    "素材自主任务两个生产创建入口接同一冻结任务准备和独立Pi Worker调度；缺Worker文件明确失败，避免绕开新账本回旧宿主",
+    "真实素材搜索与分页、显式execution/fence归属下暂存标签提案，用户确认后经backend原子采纳",
+    "migration 0079持久工具执行领取；跨宿主实例只执行一次，回执持久化后返回，等待者不能覆盖执行者状态，未知结果不重执行",
+    "候选提交只接受完整真实模型/工具/检查点账本与后端已暂存提案；完整账本无提案原子保存非候选诊断并结束失败",
+    "普通生成与Agent共享调度生命周期，实现取消及停止等待实际短后端工具结束；缺Pi和能力不匹配明确等待配置",
+    "桌面资源复制同时包含普通生成与Agent Worker，保持不同执行入口"
+  ],
+  "verification": {
+    "backend": {
+      "files": 11,
+      "tests": 79,
+      "logs": [
+        "material-backend-regression.log",
+        "material-compat-regression.log"
+      ]
+    },
+    "worker": {
+      "files": 6,
+      "tests": 80,
+      "log": "material-worker-regression.log"
+    },
+    "desktop_resource_tests": 5,
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "worker_build": "PASS",
+    "real_material_integration": "真实fork/Pi、本地HTTP三轮、PGlite与真实素材搜索/标签服务；采纳前零标签关系，公共confirmTask采纳后可回读，重复采纳单关系单回执",
+    "postgres": {
+      "version": "16.13 (Homebrew)",
+      "independentPools": 2,
+      "concurrentExecuteRequests": 20,
+      "actualHandlerExecutions": 1,
+      "log": "material-postgres-tool-host.log",
+      "fixture": "独立/tmp测试实例，已关闭，未连接应用数据库"
+    },
+    "review": "独立复核工具host、身份/冻结/候选/生产接线；缺bundle回旧宿主问题修复后再次只读复核通过，无新增阻断。",
+    "red_evidence": [
+      "material-no-candidate-red.log",
+      "material-worker-commit-red.log"
+    ],
+    "tdd_note": "仅上述现场红测为红测证据；暂存服务新增测试是在实现后补充，不补造TDD。Worker整组首次因测试host返回空回执失败，修为真实成功回执后80项通过。桌面复制测试首次误用node:test未执行，改用仓库Vitest后3项通过。",
+    "boundary": "无新增违规，保留5条既有基线",
+    "orphan": "0 errors / 100 warnings",
+    "global_reconcile": "未在此局部增量重跑；T-916既有全局失败仍保留，不能宣称全绿"
+  },
+  "remaining": [
+    "搜索/网页/浏览器长操作进入Worker及observe-act-verify真实循环",
+    "采集父子任务持久恢复、全部AI和聊天/转写/自动化入口迁移",
+    "未知结果对账、非法工具参数可恢复反馈、预算停止与部分usage族补验",
+    "缺Worker产物时历史映射任务的可见恢复、符合SPEC的已验证安全降级",
+    "旧执行路径/重复定义退役、性能样本与P95对照",
+    "真实上游三provider兼容、macOS/Windows实际应用和安装包验收；本地HTTP和资源复制测试不等于真机验收"
+  ]
+}

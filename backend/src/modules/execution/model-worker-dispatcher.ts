@@ -1,6 +1,9 @@
+import { createExecutionAgenticModelPorts } from "./execution-agentic-model-ports.service";
+import { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
+import { createExecutionAgenticCandidateService } from "../ai/execution-agentic-candidate.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
-import { eq,executionTasks,type Db } from "@creatoros/backend";
+import { eq,executionTasks,executionCalls,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { workerPortInputSchemas,workerModelSpecSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionCandidateService,type ExecutionCandidateDeps } from "../ai/execution-candidate.service";
@@ -10,7 +13,8 @@ import { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createWorkerSupervisor } from "./worker-supervisor";
 
-export interface ModelWorkerDispatcherDeps extends ExecutionCandidateDeps {
+interface WorkerDispatcherDeps {
+  now?:()=>string;
   entryPath:string;
   workerId:string;
   budget:{maxCalls:number;maxTokens:number;deadlineMs:number};
@@ -21,8 +25,13 @@ export interface ModelWorkerDispatcherDeps extends ExecutionCandidateDeps {
   modelConcurrency?:number;
   onError?(code:string):void;
 }
-/** 后端调度宿主：只领取已冻结输入的模型任务；模型与SDK生命周期在独立Worker。 */
-export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {}
+export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>}
+export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
+export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
+/** 同一领取/进程池/取消/停止实现，命名端口按执行模式分别装配。 */
+function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"model"})|(AgenticWorkerDispatcherDeps&{executionMode:"agentic.run"})){
+
   const concurrency=deps.modelConcurrency ?? 2;
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
@@ -32,7 +41,12 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
-  const candidates=createExecutionCandidateService(db,deps);
+  const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
+  const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
+  const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
+  const activeTools=new Map<string,{controller:AbortController;pending:Set<Promise<unknown>>}>();
+  const executionKey=(ref:ExecutionRef)=>JSON.stringify(ref);
   let stopping=false;
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
@@ -42,13 +56,23 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
     async invoke(ref,port,raw){
       if(port==="readCheckpoint")return checkpoints.read(ref);
       if(port==="saveCheckpoint")return checkpoints.save(ref,raw);
-      if(port==="reserveGenerationCall")return generation.reserveGenerationCall(ref,raw);
+      if(port==="reserveAgenticModel" && agentModels)return agentModels.reserve(ref,raw);
+      if(port==="reserveAgenticTool" && agentTools)return agentTools.reserve(ref,raw);
+      if(port==="startAgenticTool" && agentTools)return agentTools.start(ref,raw);
+      if(port==="settleAgenticTool" && agentTools)return agentTools.settle(ref,raw);
+      if(port==="commitAgenticResult" && agentCandidates)return agentCandidates.commitAgenticResult(ref,raw);
+      if(port==="executeAgenticTool" && agentTools){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const execution=agentTools.execute(ref,raw,scope.controller.signal);scope.pending.add(execution);
+        try{return await execution;}finally{scope.pending.delete(execution);}
+      }
+      if(port==="reserveGenerationCall" && deps.executionMode==="model")return generation.reserveGenerationCall(ref,raw);
       if(port==="settleGenerationCall")return generation.settleGenerationCall(ref,raw);
-      if(port==="saveGenerationResult")return generation.saveGenerationResult(ref,raw);
+      if(port==="saveGenerationResult" && deps.executionMode==="model")return generation.saveGenerationResult(ref,raw);
       if(port==="readTaskContext")return calls.readTaskContext(ref);
-      if(port==="reserveCall")return calls.reserveCall(ref,raw);
+      if(port==="reserveCall" && deps.executionMode==="model")return calls.reserveCall(ref,raw);
       if(port==="startCall")return calls.startCall(ref,raw);
-      if(port==="settleCall")return calls.settleCall(ref,raw);
+      if(port==="settleCall" && deps.executionMode==="model")return calls.settleCall(ref,raw);
       if(port==="resolveModelCredential"){
         const input=workerPortInputSchemas.resolveModelCredential.parse(raw);
         const modelInput=await calls.readTaskContext(ref);
@@ -61,7 +85,9 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
       }
       if(port==="commitResult"){
         const input=workerPortInputSchemas.commitResult.parse(raw);
-        return input.outcome==="succeeded" ? candidates.commitResult(ref,input) : outcomes.recordFailure(ref,input);
+        if(input.outcome!=="succeeded")return outcomes.recordFailure(ref,input);
+        if(!candidates)throw new Error("UNSUPPORTED_AGENT_CANDIDATE_PORT");
+        return candidates.commitResult(ref,input);
       }
       if(port==="heartbeat")return leases.withLease(ref,"admission",async({tx,task})=>{
         await tx.update(executionTasks).set({heartbeatAt:now(),leaseExpiresAt:new Date(Date.parse(now())+60000).toISOString()}).where(eq(executionTasks.id,task.id));
@@ -89,7 +115,7 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
       while(!stopping){
         pendingClaims++;
         let claim:Awaited<ReturnType<typeof tasks.claimNext>>;
-        try{claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:"model"});}
+        try{claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:deps.executionMode});}
         finally{pendingClaims--;}
         if(stopping)break;
         if(!claim){
@@ -100,13 +126,15 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
         }
         activeCount++;
         const ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+        const toolScope={controller:new AbortController(),pending:new Set<Promise<unknown>>()};
+        activeTools.set(executionKey(ref),toolScope);
         let watching=true;
         let controlTimer:ReturnType<typeof setTimeout>|undefined;
         const watch=async()=>{
           try{
             const status=await leases.withLease(ref,"settlement",async({task})=>task.status);
-            if(watching && (status==="pause_requested" || status==="cancel_requested"))supervisor.cancel(ref);
-          }catch{if(watching){try{supervisor.cancel(ref);}catch{/* 进程可能已经退出。 */}}}
+            if(watching && (status==="pause_requested" || status==="cancel_requested")){toolScope.controller.abort();supervisor.cancel(ref);}
+          }catch{if(watching){toolScope.controller.abort();try{supervisor.cancel(ref);}catch{/* 进程可能已经退出。 */}}}
           if(watching)controlTimer=setTimeout(()=>{void watch();},250);
         };
         controlTimer=setTimeout(()=>{void watch();},250);
@@ -114,12 +142,29 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
           const deadline=await leases.withLease(ref,"admission",async({task})=>task.deadlineAt);
           if(stopping)break;
           if(!deadline)throw new Error("PREPARED_DEADLINE_MISSING");
+          if(deps.executionMode==="agentic.run"){
+            try{
+              const capabilities=await supervisor.start();
+              if(!capabilities.includes("agentic.run"))throw new Error("AGENT_RUNTIME_UNAVAILABLE");
+            }catch{
+              if(!stopping){
+                const unknown=await leases.withLease(ref,"settlement",async({tx,task})=>{
+                  const calls=await tx.select({status:executionCalls.status}).from(executionCalls).where(eq(executionCalls.executionTaskId,task.id));
+                  return calls.some(call=>call.status==="started" || call.status==="unknown");
+                });
+                if(!stopping)await outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":"waiting_user",errorCode:unknown?"AGENT_CALL_REQUIRES_RECONCILIATION":"AGENT_RUNTIME_UNAVAILABLE"});
+              }
+              throw new Error("AGENT_RUNTIME_UNAVAILABLE");
+            }
+            if(stopping)break;
+          }
           await supervisor.run(ref,Date.parse(deadline));
         }catch{
           // 不推测外部提交结果；持久恢复按调用账本决定恢复/待对账，禁止换键重放。
           report("MODEL_WORKER_RUN_INTERRUPTED");
         }finally{
           watching=false;if(controlTimer)clearTimeout(controlTimer);
+          toolScope.controller.abort();await Promise.allSettled([...toolScope.pending]);activeTools.delete(executionKey(ref));
           await acknowledge(ref).catch(()=>{});
           activeCount--;
         }
@@ -140,6 +185,6 @@ export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps
   return {
     drainOnce,
     start(){if(timer || draining || stopping)return;void tick();},
-    async stop(){stopping=true;if(timer)clearTimeout(timer);await Promise.all(supervisors.map(supervisor=>supervisor.stop()));await draining;},
+    async stop(){stopping=true;for(const scope of activeTools.values())scope.controller.abort();if(timer)clearTimeout(timer);await Promise.all(supervisors.map(supervisor=>supervisor.stop()));await draining;},
   };
 }

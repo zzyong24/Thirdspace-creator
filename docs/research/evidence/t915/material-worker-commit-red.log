@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/worker-runtime.test.ts (20 tests | 1 failed) 1225ms
+     × 明确无候选失败回执收敛failed，不当未知也不二次提交 163ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 可注入 Agent Worker 生命周期 > 明确无候选失败回执收敛failed，不当未知也不二次提交
+ FAIL  src/execution/worker-runtime.test.ts > 可注入 Agent Worker 生命周期 > 明确无候选失败回执收敛failed，不当未知也不二次提交
+ FAIL  src/execution/worker-runtime.test.ts > 可注入 Agent Worker 生命周期 > 明确无候选失败回执收敛failed，不当未知也不二次提交
+AssertionError: expected { version: 1, type: 'stopped', …(3) } to match object { reason: 'failed' }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "reason": "failed",
++   "reason": "completed",
+  }
+
+ ❯ src/execution/worker-runtime.test.ts:208:52
+    206|     const f=agentFixture("commitFailed");f.worker.receive(run);
+    207|     await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")…
+    208|     expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reas…
+       |                                                    ^
+    209|     expect(f.messages.filter(m=>m.type==="call" && m.port==="commitAge…
+    210|     expect(f.messages.some(m=>m.type==="call" && m.port==="commitResul…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed (20)
+   Start at  05:54:05
+   Duration  1.63s (transform 93ms, setup 0ms, import 190ms, tests 1.23s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/worker-runtime.test.ts

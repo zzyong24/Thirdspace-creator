@@ -1,0 +1,67 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/execution-agentic-candidate.service.test.ts (7 tests | 2 failed) 2193ms
+     × 并发提交只聚合DB提案，采纳后重投不回退状态 115ms
+     × 纯诊断无提案不能伪成功，预演只生成计划 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/execution-agentic-candidate.service.test.ts > Agent持久候选提交 > 并发提交只聚合DB提案，采纳后重投不回退状态
+AssertionError: expected { summary: '账本中的总结', …(4) } to match object { taskType: 'agentic.research', …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,13 +1,6 @@
+  {
+-   "meta": {
+-     "actualEngine": "pi",
+-     "checkpointRef": Any<String>,
+-     "completeness": "completed",
+-     "engine": "pi",
+-     "usageRef": Any<String>,
+-   },
+    "proposals": [
+      {
+        "content": {
+          "note": "真实完整正文",
+          "sourceNote": "来源",
+@@ -28,7 +21,7 @@
+          "knowledgeId": "knowledge-proposal:7bfe9d62267d414cdabf700ea060307af40d88cc34cac515323e2c0bebf50dd6",
+        },
+      },
+    ],
+    "summary": "账本中的总结",
+-   "taskType": "agentic.research",
++   "taskType": "exec.agentic.research",
+  }
+
+ ❯ src/modules/ai/execution-agentic-candidate.service.test.ts:38:93
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/execution-agentic-candidate.service.test.ts > Agent持久候选提交 > 纯诊断无提案不能伪成功，预演只生成计划
+ConflictError: 缺少唯一可采纳的已保存业务提案
+ ❯ src/modules/ai/execution-agentic-candidate.service.ts:77:146
+     75|           proposals.push(proposal);confirmedProposals.delete(proposal.…
+     76|         }
+     77|         if(confirmedProposals.size || (!frozen.dryRun && !proposals.le…
+       |                                                                                                                                                  ^
+     78|         const lastReceipt=workerProviderReceiptSchema.parse(lastModel.…
+     79|         const summary=lastReceipt.content.filter(part=>object(part).ty…
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  05:54:04
+   Duration  3.62s (transform 663ms, setup 0ms, import 1.26s, tests 2.19s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/execution-agentic-candidate.service.test.ts

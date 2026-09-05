@@ -159,10 +159,12 @@ export { createExecutionLeaseService } from "./execution-lease.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";
-export { createModelWorkerDispatcher, type ModelWorkerDispatcherDeps } from "./model-worker-dispatcher";
+export { createModelWorkerDispatcher, createAgenticWorkerDispatcher, type ModelWorkerDispatcherDeps, type AgenticWorkerDispatcherDeps } from "./model-worker-dispatcher";
 
 export { createResearchPorts } from "./agentic/adapters/research-ports";
 
 export { createExecutionCheckpointService } from "./execution-checkpoint.service";
 
-export { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
+export { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
+
+export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/agentic-executor";

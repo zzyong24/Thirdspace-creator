@@ -34,15 +34,16 @@ const organizeParams = z.object({
   tag: z.string().min(1),
 });
 
+export const MATERIAL_TOOL_DEFINITIONS = [
+  {name:"material.search",version:"1",label:"搜素材库",description:"按字面名称搜索素材库，返回id/标题/类型和nextCursor；存在nextCursor时保持query并带cursor继续读取。纯读。",effect:"none",parameters:searchParams},
+  {name:"material.organize",version:"1",label:"归类素材",description:"为一批素材生成标签建议，用户采纳后才生效。",effect:"proposal",parameters:organizeParams},
+] as const;
+
 /** 把素材整理端口包成两个引擎工具(agentic.material 白名单)。 */
 export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
   return [
     {
-      name: "material.search",
-      label: "搜素材库",
-      description: "按字面名称搜索素材库，返回id/标题/类型和nextCursor；存在nextCursor时保持query并带cursor继续读取。纯读。",
-      effect: "none",
-      parameters: searchParams,
+      ...MATERIAL_TOOL_DEFINITIONS[0],
       planInput: (goal) => ({ query: goal }),
       async execute(input, { signal }) {
         signal.throwIfAborted();
@@ -57,12 +58,8 @@ export function createMaterialTools(ports: MaterialPorts): AgenticTool[] {
       },
     },
     {
-      name: "material.organize",
-      label: "归类素材",
-      description:
-        "为一批素材生成标签建议，用户采纳后才生效。",
-      effect: "writeback",
-      parameters: organizeParams,
+      ...MATERIAL_TOOL_DEFINITIONS[1],
+      effect:"writeback",
       // 语义内容/分类由模型显式给出，确定性回退不得编造写入建议。
       async execute(input, { signal, dryRun, toolCallId }) {
         signal.throwIfAborted();

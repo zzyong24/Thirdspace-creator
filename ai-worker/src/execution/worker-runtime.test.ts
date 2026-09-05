@@ -153,7 +153,7 @@ describe("独立 Worker 端口生命周期", () => {
 describe("可注入 Agent Worker 生命周期",()=>{
   const agentInput={kind:"agentic.run",operationKey:"agent",taskType:"agentic.research",goal:"研究",systemPrompt:"冻结",capability:"research",maxOutputTokens:100,dryRun:false,tools:[{name:"web.read",version:"1",label:"读取",description:"读取",parameters:{type:"object"},effect:"none"}]};
   const result={actualEngine:"pi" as const,summary:"真实候选",stopReason:"completed" as const,lastModelCallId:"m1",toolCallIds:["t1"]};
-  function agentFixture(mode:"success"|"missing"|"failure"|"commitLost"|"cancel"="success"){
+  function agentFixture(mode:"success"|"missing"|"failure"|"commitLost"|"commitFailed"|"cancel"="success"){
     const messages:WorkerMessage[]=[];const generate=vi.fn();
     const runAgentic=vi.fn(async(_input,_model,signal,_call,onText)=>{
       onText?.("研究进度");
@@ -163,7 +163,7 @@ describe("可注入 Agent Worker 生命周期",()=>{
     });
     const worker=createExecutionWorker({generate,runAgentic:mode==="missing"?undefined:runAgentic,send(message){
       messages.push(message);
-      if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:!(mode==="commitLost" && message.port==="commitAgenticResult"),data:message.port==="readTaskContext"?agentInput:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private",authStyle:"bearer"}:{}}));
+      if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:!(mode==="commitLost" && message.port==="commitAgenticResult"),data:message.port==="readTaskContext"?agentInput:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private",authStyle:"bearer"}:message.port==="commitAgenticResult"?{resultId:"result-1",aiTaskId:"task-1",...(mode==="commitFailed"?{outcome:"failed",errorCode:"AGENT_NO_PROPOSALS"}:{})}:{}}));
     }});
     return {worker,messages,generate,runAgentic};
   }
@@ -202,4 +202,13 @@ describe("可注入 Agent Worker 生命周期",()=>{
     expect(f.messages.some(m=>m.type==="call" && m.port==="commitAgenticResult")).toBe(false);
     expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reason:"cancelled"});f.worker.close();
   });
+  it("明确无候选失败回执收敛failed，不当未知也不二次提交",async()=>{
+    const f=agentFixture("commitFailed");f.worker.receive(run);
+    await vi.waitFor(()=>expect(f.messages.some(m=>m.type==="stopped")).toBe(true));
+    expect(f.messages.find(m=>m.type==="stopped")).toMatchObject({reason:"failed"});
+    expect(f.messages.filter(m=>m.type==="call" && m.port==="commitAgenticResult")).toHaveLength(1);
+    expect(f.messages.some(m=>m.type==="call" && m.port==="commitResult")).toBe(false);
+    f.worker.receive(run);expect(f.runAgentic).toHaveBeenCalledOnce();f.worker.close();
+  });
+
 });

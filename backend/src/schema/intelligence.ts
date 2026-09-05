@@ -166,6 +166,7 @@ export const executionCalls = pgTable("execution_calls", {
   status: text("status").notNull(),
   reservedTokens: integer("reserved_tokens").notNull(),
   startedAttempt: integer("started_attempt"),
+  toolExecutionClaimId: text("tool_execution_claim_id"),
   usage: jsonb("usage"),
   resultText: text("result_text"),
   providerResult: jsonb("provider_result"),

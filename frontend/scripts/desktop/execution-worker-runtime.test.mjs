@@ -1,18 +1,24 @@
-import { mkdtempSync,rmSync } from "node:fs";
+import { mkdtempSync,rmSync,mkdirSync,writeFileSync,readFileSync } from "node:fs";
 import { join,resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fork } from "node:child_process";
 import { describe,it,expect } from "vitest";
 import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime } from "./execution-worker-runtime.mjs";
-describe("随包Worker独立闭包",()=>{
-  it("复制到隔离运行目录后可启动并报告结构化能力",async()=>{
+describe("随包Worker入口资源",()=>{
+  it("复制两个入口并保留旧返回路径，普通Worker仍可独立启动",async()=>{
     const root=mkdtempSync(join(tmpdir(),"worker-runtime-"));let child;
     try{
       expect(()=>assertExecutionWorkerRuntime(root)).toThrow();
       const entry=stageExecutionWorkerRuntime({repoRoot:resolve(".."),runtimeRoot:root});
+      expect(entry).toBe(join(root,"frontend/runtime/execution-worker.cjs"));
+      for(const filename of ["execution-worker.cjs","agentic-worker.cjs"])expect(readFileSync(join(root,"frontend/runtime",filename))).toEqual(readFileSync(resolve("../ai-worker/dist",filename)));
       child=fork(entry,[],{cwd:root,execArgv:[],stdio:["ignore","ignore","ignore","ipc"],env:{PATH:process.env.PATH}});
       const message=await new Promise((ok,bad)=>{const timer=setTimeout(()=>bad(new Error("WORKER_START_TIMEOUT")),10000);child.once("message",value=>{clearTimeout(timer);ok(value);});child.once("error",bad);child.once("exit",()=>{clearTimeout(timer);bad(new Error("WORKER_EARLY_EXIT"));});});
       expect(message).toMatchObject({type:"ready",capabilities:["model.generate","model.structured"]});
     }finally{if(child && child.exitCode===null){const exit=new Promise(r=>child.once("exit",r));child.kill("SIGTERM");await exit;}rmSync(root,{recursive:true,force:true});}
   },15000);
+  it.each(["execution-worker.cjs","agentic-worker.cjs"])("缺少 %s 时不能通过资源完整性检查",filename=>{
+    const root=mkdtempSync(join(tmpdir(),"worker-incomplete-"));
+    try{mkdirSync(join(root,"frontend/runtime"),{recursive:true});const other=filename==="execution-worker.cjs"?"agentic-worker.cjs":"execution-worker.cjs";writeFileSync(join(root,"frontend/runtime",other),"fixture");expect(()=>assertExecutionWorkerRuntime(root)).toThrow(filename);}finally{rmSync(root,{recursive:true,force:true});}
+  });
 });

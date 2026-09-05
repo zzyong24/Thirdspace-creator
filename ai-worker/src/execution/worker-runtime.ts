@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
-  hostMessageSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
+  hostMessageSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
@@ -83,8 +83,8 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         signal.throwIfAborted();
         const candidate=workerPortInputSchemas.commitAgenticResult.parse(result);
         committing=true;
-        await call(execution,"commitAgenticResult",candidate,signal);
-        reason="completed";
+        const receipt=agenticCommitReceiptSchema.parse(await call(execution,"commitAgenticResult",candidate,signal));
+        reason=receipt.outcome==="failed"?"failed":"completed";
         return;
       }
       if(input.kind==="model.structured"){

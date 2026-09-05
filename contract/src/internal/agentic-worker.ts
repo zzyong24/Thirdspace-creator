@@ -10,3 +10,9 @@ export const reserveAgenticModelSchema=z.object({
  request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000,"模型请求过大"),
  maxOutputTokens:z.number().int().positive().max(65536),
 }).strict();
+
+/** 已提交的明确失败与响应未知分开；旧成功回执仍可解析。 */
+export const agenticCommitReceiptSchema=z.union([
+ z.object({outcome:z.literal("failed"),resultId:z.string().min(1),aiTaskId:z.string().min(1),errorCode:z.literal("AGENT_NO_PROPOSALS")}).strict(),
+ z.object({outcome:z.literal("succeeded").default("succeeded"),resultId:z.string().min(1),aiTaskId:z.string().min(1)}).strict(),
+]);

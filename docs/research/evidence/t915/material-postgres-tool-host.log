@@ -1,0 +1,1 @@
+{"status":"passed","independentPools":2,"concurrentExecuteRequests":20,"actualHandlerExecutions":1,"persistedBeforeReply":true,"replayWithoutExecution":true,"changedReceiptRejected":true,"postgresVersion":"16.13 (Homebrew)"}

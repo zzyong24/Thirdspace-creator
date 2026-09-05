@@ -1,9 +1,10 @@
+import { createAgenticBusinessExecutionService, createAgenticMaterialTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath } from "./execution-worker-path";
-import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
+import { createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
@@ -5252,7 +5253,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        const execution = businessExecution.supports(String(task.taskType)) && task.status === "queued"
+        const execution = agenticBusiness.supports(String(task.taskType)) && task.status === "queued"
+          ? (agenticWorker ? agenticBusiness.prepare(ctx,String(task.id)).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
+          : businessExecution.supports(String(task.taskType)) && task.status === "queued"
           ? (modelWorker ? businessExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
           : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
         void execution.catch(async (error) => {
@@ -6274,7 +6277,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ).data;
         if (task && typeof task.id === "string" && task.status === "queued") {
           const executionTaskId = task.id;
-          void runTaskWithEffectiveSkillSnapshot(ctx, executionTaskId, () =>
+          const pending=agenticBusiness.supports(`exec.${(task.spec as {taskType?:string}|undefined)?.taskType}`)
+            ? (agenticWorker ? agenticBusiness.prepare(ctx,executionTaskId).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
+            : runTaskWithEffectiveSkillSnapshot(ctx, executionTaskId, () =>
             runExecutionTask(
               ctx,
               { id: executionTaskId, inputData: { spec: task.spec } },
@@ -6288,7 +6293,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 workspacesRoot: executionWorkspacesRoot,
               },
             ),
-          ).catch(async (error) => {
+          );
+          void pending.catch(async (error) => {
             const message =
               error instanceof Error ? error.message : String(error);
             await aiService
@@ -9894,21 +9900,42 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   }});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{return null;}})();
-  const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
-    entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
-    async resolveModelCredential(c,capability,owner){
+  const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
       const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
-    },
+    };
+  const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
+    entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
+    resolveModelCredential:resolveWorkerCredential,
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),
   }) : null;
+  const materialWorkerTools=createAgenticMaterialTools({
+    async search(c,input,signal){
+      signal.throwIfAborted();const result=await assetsService.searchAssets(c,input);signal.throwIfAborted();
+      return {items:result.rows.map(row=>({id:row.id,title:row.name,kind:row.assetType})),nextCursor:result.nextCursor};
+    },
+    stage:(ref,input,signal)=>agenticProposalStaging.stageForExecution(ref,input,signal),
+  });
+  const agenticBudget={maxCalls:AGENTIC_DEFAULT_BUDGET.maxSteps,maxTokens:AGENTIC_DEFAULT_BUDGET.maxTokens,deadlineMs:600_000};
+  const agenticBusiness=createAgenticBusinessExecutionService(db,{
+    definitions:{"exec.agentic.material":{taskType:"agentic.material",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.material",tools:materialWorkerTools.definitions}},
+    budget:agenticBudget,maxOutputTokens:4096,now:deps.now,
+    async validateInputs(c,inputs){for(const input of inputs)await assetsService.getAsset(c,input.assetId);},
+  });
+  const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{return null;}})();
+  const agenticWorker=agenticEntry ? createAgenticWorkerDispatcher(db,{
+    entryPath:agenticEntry,workerId:`agentic-worker-${process.pid}`,budget:agenticBudget,modelConcurrency:1,
+    tools:materialWorkerTools.tools,resolveModelCredential:resolveWorkerCredential,
+    onError:code=>console.error(`[agentic-worker] ${code}`),
+  }) : null;
+  let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;await modelWorker?.stop();await preparationRecovery;};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;await Promise.all([modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
@@ -13351,6 +13378,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   if(modelWorker)preparationRecovery=businessExecution.recoverQueued(async(c,id)=>{
     await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});
   },()=>stoppingPreparation).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
+  if(agenticWorker)agenticPreparationRecovery=agenticBusiness.recoverQueued(async(c,id)=>{
+    await aiService.markFailed(c,id,"自主任务准备未完成，请重新发起").catch(()=>{});
+  },()=>stoppingPreparation).catch(()=>console.error("[agentic-worker] PREPARATION_RECOVERY_FAILED"));
+  agenticWorker?.start();
   modelWorker?.start();
 
   return {

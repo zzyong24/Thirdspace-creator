@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "c61ab94d5115c65eeaef1269e02bad9c754b22f8f5dbb97e02c26ce1647aca8d",
+      "file_sha256": "81bf80a0645b00cd8e4b46beab4f0351f03b683a60a31c311d9ad541f4d6cbb0",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的生产Worker接线与生命周期、状态投影及条件更新；独立只读复核未发现新阻断，完整T915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "d4227240f5c842fe33d56b3ac164f3deb77f06e372ffc5c42d8a5dd790a25973",
+      "file_sha256": "259909950e86bdffeaf52413fafe978bdb81dac88f4c1b8ffaebe6dcd03aff8b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的生产Worker接线与生命周期、状态投影及条件更新；独立只读复核未发现新阻断，完整T915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "dec41cafccbaafee5d3b7dc372afaaf08922ba409f6af6afa816913aefa15b72",
+      "file_sha256": "bd597a3873a9318803fd82d8421881f9360462c0b88909236a3809a8a4e80cd6",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "d993b821493f919143f8fdb32ce076d5a5656dde8180a2b1daada57e3f4fb9dc",
+      "file_sha256": "4a97c77f5caa5a72d8b6042d58599ec3d28abf209ec4a3e13ba6e3aac99da0e9",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
+      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1244,14 +1244,14 @@
       "files": [
         "ai-worker/src/execution/agentic-worker-entry.test.ts"
       ],
-      "file_sha256": "2d686f3599b740813ba6aabb1723b65348b16264e19dd0c392959a8d0de601b6",
+      "file_sha256": "68f5bf76b042692f12b696562798a30a6ebc20636374243f4d5bf9e716d55946",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "验证已批准独立Agent Worker真实子进程、能力探测和停止边界；仅隔离测试IPC，不新增对外接口。",
+      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
       "acceptance": "该记录只绑定实现复杂度，不代表完整T-915或分发包验收通过。"
     },
     {

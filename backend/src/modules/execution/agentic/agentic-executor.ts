@@ -31,6 +31,8 @@ import type {
 import { createLoopController, type LoopBudget } from "./loop-control";
 import { filterToolsToScope } from "./tool-scopes";
 
+export const DEFAULT_AGENTIC_SYSTEM_PROMPT = "你是编导的自主任务助手。多步搜集/判断/整理,到步数或预算上限就诚实停止,别无限绕圈。";
+
 export interface AgenticExecutorDeps {
   /** 自主任务类型(agentic.research | agentic.collect | agentic.material)。 */
   taskType: ExecutionTaskType;
@@ -172,8 +174,7 @@ export function createAgenticExecutor(
       const final = await deps.engine.run({
         goal,
         systemPrompt:
-          deps.systemPrompt ??
-          "你是编导的自主任务助手。多步搜集/判断/整理,到步数或预算上限就诚实停止,别无限绕圈。",
+          deps.systemPrompt ?? DEFAULT_AGENTIC_SYSTEM_PROMPT,
         tools,
         llm,
         llmConfig,

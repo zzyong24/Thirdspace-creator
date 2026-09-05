@@ -30,6 +30,7 @@ function host(baseUrl:string,cwd=resolve('.')){
     else if(message.port==="saveCheckpoint"){expect(data.expectedRevision).toBe(revision);checkpoint=data.messages;reply={revision:++revision};}
     else if(message.port==="reserveAgenticModel"){const row={callId:`c${rows.length+1}`,kind:"model" as const,status:"reserved"};rows.push(row);reply={callId:row.callId,status:row.status};}
     else if(message.port==="reserveAgenticTool"){const row={callId:`c${rows.length+1}`,kind:"tool" as const,status:"reserved"};rows.push(row);reply={callId:row.callId,status:row.status,toolName:"web.read",input:{url:"https://example.com"}};}
+    else if(message.port==="commitAgenticResult")reply={resultId:"agent-result",aiTaskId:"agent-task"};
     else if(message.port==="executeAgenticTool"){tools++;reply={status:"ok",summary:"读取完成",evidence:[{sourceUrl:"https://example.com",text:"正文"}],data:{text:"正文"},error:null,continuation:null,sideEffect:"none"};}
     else if(["startCall","startAgenticTool","settleGenerationCall","settleAgenticTool"].includes(message.port)){
       const row=rows.find(r=>r.callId===data.callId)!;row.status=message.port.startsWith("start")?"started":data.status;row.providerResult=data.providerResult;row.receipt=data.output;reply={callId:row.callId,status:row.status};

@@ -105,3 +105,6 @@ export { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
 export * from "./structured-business-execution.service";
 
 export * from "./artifact-context-readers";
+
+export * from "./agentic-business-execution.service";
+export * from "./agentic-material-tools";
