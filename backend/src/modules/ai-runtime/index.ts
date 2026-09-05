@@ -97,3 +97,7 @@ export * from "./transcript-postprocess";
 // + 可溯校验)与 SRT 纯函数(解析/时长匹配/口播稿相似度/吸附;T-254c 上传校验共用)。
 export * from "./srt";
 export * from "./video-decisions-runner";
+
+export { createPlatformAdaptExecutionService } from "./platform-adapt-execution.service";
+export { projectPlatformAdaptCandidate } from "./platform-adapt-context";
+export { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";

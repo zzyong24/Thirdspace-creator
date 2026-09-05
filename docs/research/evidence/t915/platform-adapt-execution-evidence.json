@@ -1,0 +1,26 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T08:55:39.072053+00:00",
+  "status": "platform_business_adapter_verified_entry_switch_open",
+  "implemented": [
+    "多平台改写上下文装配和候选格式整理提取为共用代码，旧runner已复用",
+    "后端准备服务从原业务任务读取冻结Skill与指纹，绑定持久执行；已有映射不重复读上下文",
+    "发布草稿采纳端口从frontend提取到backend，原生产采纳入口已复用"
+  ],
+  "verification": {
+    "runner_regression_tests": 4,
+    "real_child_business_integration_tests": 1,
+    "types": [
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review只读核对：抽取保持旧行为，未发现明确新增回归；发现并保留既有采纳幂等债务"
+  },
+  "integration_scope": "隔离PGlite、本地HTTP、真实子进程、正式platform.adapt Skill、公共ai.createTask/confirmTask与真实publishing服务回读；测试outputId为fixture，未进行外部发布",
+  "remaining_required": [
+    "生产ai.tasks.create尚未切到prepare与Worker调度，现有runner仍执行旧生成路径",
+    "createPublication/createRevision/markAdopted分步执行仍存在重复建稿窗口；必须补故障及并发确认并修复原子幂等，不能据当前单次采纳测试声称恰好一次",
+    "T-915完整入口迁移、搜索浏览器循环、性能基线和双平台验收仍未完成"
+  ]
+}

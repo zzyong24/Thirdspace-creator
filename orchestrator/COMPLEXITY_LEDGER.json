@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "e47892a0b3b1c1f28903dd6b60a95eedd81d646874a60d1a3212f3308ee2e81b",
+      "file_sha256": "39b716880f6aca1a20b553a216213c804cf51f6f4451bf10583563c6b12f3020",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "56846710cbef9626d4aaae34ff1d8cfdc5cccb7bc184d69d2ffcafbd7ded4576",
+      "file_sha256": "90f61b1f3564034a6f4c8d831c281185789e1b2f2bb2c696577fc76345942dff",
       "categories": [
         "credential_store",
         "language_toolchain",

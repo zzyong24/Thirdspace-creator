@@ -1,0 +1,47 @@
+import { createServer } from "node:http";
+import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { beforeAll,afterAll,describe,it,expect,vi } from "vitest";
+import { createDb,type Db } from "@creatoros/backend";
+import { getOfficialSkillBase,type PlatformAdaptOutput } from "@creatoros/ai-worker";
+import { createAiService } from "../ai/ai.service";
+import { createPublishingService } from "../publishing/publishing.service";
+import { createModelWorkerDispatcher } from "../execution/model-worker-dispatcher";
+import { createPlatformAdaptExecutionService } from "./platform-adapt-execution.service";
+import { projectPlatformAdaptCandidate } from "./platform-adapt-context";
+import { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
+const ctx={userId:"platform-worker",accountId:"platform-worker",requestId:"test",source:"user" as const};
+const budget={maxCalls:4,maxTokens:100000,deadlineMs:60000};
+describe("多平台改写正式Skill到发布草稿",()=>{
+  let db:Db;let close:()=>Promise<void>;
+  beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
+  afterAll(async()=>close?.());
+  it("公共创建→冻结业务上下文→真实Worker→公共采纳→发布服务回读",async()=>{
+    let seq=0;const nextId=(prefix:string)=>`${prefix}-${++seq}`;const now=()=>new Date().toISOString();
+    const notUsed=vi.fn(async()=>{throw new Error("UNEXPECTED_EXTERNAL_ACTION");});
+    const publishing=createPublishingService({db,now,nextId,publisher:{publish:notUsed,remove:notUsed}});
+    const base=getOfficialSkillBase("platform.adapt")!;
+    const {skillId,baseVersion,methodSystem,template,tools,requiredFacets,contextRequirements,outputSchema,completionPolicy,completionPolicyAdapter}=base;
+    const ai=createAiService({db,now,nextId,artifacts:{createVersion:notUsed},knowledge:{createKnowledge:notUsed},candidate:{createFromAIResult:notUsed,enrichCard:notUsed},learnings:{createLearning:notUsed},publishing:createPlatformDraftAdoptionPort(publishing),materialLinks:{link:notUsed},positioning:{upsertProfile:notUsed,createStatementVersion:notUsed},calibration:{createDraftPrediction:notUsed},
+      async resolveTaskRuntimeData(){return {skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:now(),platformPolicyVersion:"test",platformPolicy:"遵守当前用户输入。",skills:[{skillId,baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem,template,tools,requiredFacets,contextRequirements,outputSchema,completionPolicy,completionPolicyAdapter}}]}};},
+    });
+    const task=await ai.createTask(ctx,{taskType:"publish.platform_adapt",attemptId:"platform-test-attempt-001",inputData:{outputId:"fixture-output",scriptText:"这是一份真实测试正文。",platforms:["douyin"]}});
+    const reader=vi.fn(async()=>({profile:null,currentStatement:null}));
+    const prepare=createPlatformAdaptExecutionService(db,{budget,maxOutputTokens:2048,positioning:{getPositioningCenter:reader},learnings:{getSuggestions:async()=>[]}});
+    const mapped=await prepare.prepare(ctx,task.id);const reads=reader.mock.calls.length;
+    expect(await prepare.prepare(ctx,task.id)).toEqual(mapped);expect(reader).toHaveBeenCalledTimes(reads);
+    await expect(prepare.prepare({...ctx,accountId:"other"},task.id)).rejects.toThrow();
+    let requests=0;const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"test",object:"chat.completion",created:1,model:"test",choices:[{index:0,message:{role:"assistant",content:JSON.stringify({drafts:[{platform:"douyin",title:"测试标题",body:"第一段。\n\n第二段。",tags:[" 测试 "],coverIdea:"原稿截图",auditFlags:["保留真实事实"]}]})},finish_reason:"stop"}],usage:{prompt_tokens:3,completion_tokens:5,total_tokens:8}}));});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
+    const host=createModelWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"platform-host",budget,async resolveModelCredential(_ctx,capability){expect(capability).toBe("script.rewrite");return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"test",token:"fixture",structuredOutputs:true};},projectCandidate(_ctx,input){return projectPlatformAdaptCandidate(input.inputData as Record<string,unknown>,JSON.parse(input.text) as PlatformAdaptOutput);}});
+    try{
+      await host.drainOnce();expect(requests).toBe(1);
+      const result=await ai.confirmTask(ctx,task.id);expect(result.status).toBe("succeeded");
+      const publications=await publishing.listPublications(ctx,"fixture-output",{limit:20,offset:0});
+      expect(publications).toHaveLength(1);
+      const read=await publishing.getPublication(ctx,publications[0]!.id);expect(read.platform).toBe("douyin");
+      const revisions=await publishing.listRevisions(ctx,read.id,{limit:20,offset:0});expect(revisions[0]).toMatchObject({title:"测试标题",description:"第一段。 第二段。",platformTags:["测试"]});
+      expect(notUsed).not.toHaveBeenCalled();
+    }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },15000);
+});

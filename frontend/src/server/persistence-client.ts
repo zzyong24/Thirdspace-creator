@@ -486,7 +486,7 @@ import { runScriptDraft } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningContract } from "@creatoros/backend/modules/ai-runtime";
 import { runPlanningOutline } from "@creatoros/backend/modules/ai-runtime";
 import { runReviewAnalyze } from "@creatoros/backend/modules/ai-runtime";
-import { runPlatformAdapt } from "@creatoros/backend/modules/ai-runtime";
+import { runPlatformAdapt, createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 import { runMaterialMatch } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
@@ -3289,25 +3289,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // Publishing public service. The agent's per-platform label is normalized to the
     // Publishing platform enum (wechat → wechatVideo); accountReference is empty (the user
     // binds an account at 发布 time). publishingService is constructed above.
-    publishing: {
-      createPublicationFromDraft: async (ctx, outputId, draft) => {
-        const PLATFORM_ALIAS: Record<string, string> = {
-          wechat: "wechatVideo",
-          weixin: "wechatVideo",
-        };
-        const platform = PLATFORM_ALIAS[draft.platform] ?? draft.platform;
-        const pub = await publishingService.createPublication(ctx, outputId, {
-          platform,
-          accountReference: "",
-        });
-        await publishingService.createRevision(ctx, pub.id, {
-          title: draft.title,
-          description: draft.body,
-          platformTags: draft.tags ?? [],
-        });
-        return pub;
-      },
-    },
+    publishing: createPlatformDraftAdoptionPort(publishingService),
     // Plan A5 用料链 — when a material_list candidate is 采纳ed, each new KnowledgeItem is
     // also tied to the task's project via a material-link (料库⇄创作 live edge). Lazy:
     // materialLinksService is constructed below; this thunk only runs at confirm time.
