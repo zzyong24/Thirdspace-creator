@@ -1,3 +1,4 @@
+import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath } from "./execution-worker-path";
 import { createModelWorkerDispatcher } from "@creatoros/backend/modules/execution";
 import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
@@ -5686,7 +5687,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     () => projectIntelligenceReferences,
     () => projectScriptCandidates,
   );
-  const fetchIntelligenceFeed = async (url: string) => {
+  const fetchIntelligenceFeed = async (url: string, signal?: AbortSignal) => {
+    signal?.throwIfAborted();
     let current = url;
     let discoveredFeed = false;
     const controller = new AbortController();
@@ -5695,7 +5697,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       for (let hop = 0; hop <= 6; hop += 1) {
         await assertUrlAllowed(current);
         const response = await fetch(current, {
-          signal: controller.signal,
+          signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal,
           redirect: "manual",
           headers: {
             accept:
@@ -5751,17 +5753,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     fetchProfileWorks: async ({
       collectorAccountId,
       externalAccountId,
+      signal,
     }) => {
       const rows = await (await loadDouyinCdp()).fetchDouyinUserPosts({
         authDir: douyinAuthDirFor(collectorAccountId),
         secUid: externalAccountId,
+        signal,
         maxPages: 100,
         strictEvidence: true,
         gateway: douyinGateway,
       });
       return rows;
     },
-    fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId }) => {
+    fetchFavoriteWorks: async ({ ctx, collectorAccountId, folderId, signal }) => {
       const cdp = await loadDouyinCdp();
       const authDir = douyinAuthDirFor(collectorAccountId);
       const diagnostics = {
@@ -5775,6 +5779,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!/^\d{8,}$/.test(folderId)) {
         const folders = await cdp.fetchDouyinCollectsFolders({
           authDir,
+          signal,
           strictEvidence: true,
           gateway: douyinGateway,
           diagnostics,
@@ -5799,30 +5804,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return cdp.fetchDouyinCollectsVideos({
         authDir,
         collectsId,
+        signal,
         maxItems: 1_000,
         strictEvidence: true,
         gateway: douyinGateway,
         diagnostics,
       });
     },
-    readWeb: async ({ ctx, url }) => {
+    readWeb: async ({ ctx, url, signal }) => {
       const domain = webDomainFromUrl(url);
       return readWebUrlSidecar(
         url,
-        { authDir: webAuthDirFor(domain) },
+        { authDir: webAuthDirFor(domain), signal },
         {
           openContext: () =>
-            openPooledReaderContext(ctx, domain) as never,
+            openPooledReaderContext(ctx, domain, { signal }) as never,
         },
       );
     },
-    fetchFeed: ({ url }) => fetchIntelligenceFeed(url),
+    fetchFeed: ({ url, signal }) => fetchIntelligenceFeed(url, signal),
     parseFeed,
-    fetchDouhot: async ({ collectorAccountId, keyword, board }) =>
+    fetchDouhot: async ({ collectorAccountId, keyword, board, signal }) =>
       (await loadDouhotCdp()).fetchDouhotLowFollowerBreakout({
         authDir: douyinAuthDirFor(collectorAccountId),
         keyword,
         board,
+        signal,
       }),
   });
   const sourceRunnerDeps = {
@@ -9774,14 +9781,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     async stageKnowledge(){throw new AgenticPortNotImplementedError("knowledge.write");},
   });
-  const agenticCollectionPorts: CollectionPorts = {
-    async listTargets() {
-      throw new AgenticPortNotImplementedError("collect.plan");
-    },
-    async runCollection() {
-      throw new AgenticPortNotImplementedError("collect.run");
-    },
-  };
+  const agenticCollectionPorts = (ctx: RequestContext, taskId: string): CollectionPorts =>
+    createCollectionToolPorts(ctx, taskId, intelligenceService, persistentTaskService,
+      (c, input) => runIntelligenceSourceTask(c, input, sourceRunnerDeps));
   const agenticMaterialPorts=(ctx:RequestContext):MaterialPorts=>({
     async searchMaterials(input,signal){
       signal.throwIfAborted();const result=await assetsService.searchAssets(ctx,{query:input.query,limit:input.limit ?? 20,cursor:input.cursor});signal.throwIfAborted();
@@ -9824,7 +9826,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       engine: agenticEngine,
       resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.collect"),
       resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.collect"),
-      resolveTools: () => createCollectionTools(agenticCollectionPorts),
+      resolveTools: (ctx,execution) => createCollectionTools(agenticCollectionPorts(ctx,execution?.taskId ?? "")),
       defaultBudget: AGENTIC_DEFAULT_BUDGET,
     }),
   );

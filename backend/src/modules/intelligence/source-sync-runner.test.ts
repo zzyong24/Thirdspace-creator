@@ -232,6 +232,7 @@ describe("T-482 来源同步 worker", () => {
       await vi.advanceTimersByTimeAsync(95_000);
       await expect(tasks.recoverExpiredLeases()).resolves.toEqual({
         requeued: 0,
+        unknownResult: 0,
         failed: 0,
         paused: 0,
         cancelled: 0,
@@ -457,4 +458,57 @@ describe("T-482 来源同步 worker", () => {
       }
     },
   );
+});
+
+
+describe("来源任务真实取消控制", () => {
+  it.each(["claim", "parent", "pause", "cancel", "leaseLost"] as const)("%s 窗口停止适配器并禁止迟到写入", async (mode) => {
+    const {db, client} = await createDb();
+    const d = deps();
+    const realTasks = createPersistentTaskService(db, d);
+    const intelligence = createIntelligenceService(db, {...d, tasks: realTasks});
+    const controller = new AbortController();
+    const created = await intelligence.createSource(ctx, {
+      collectionId: null, type: "rss", config: {type: "rss", url: "https://example.com/control.xml"},
+      monitorEnabled: true, runInitial: true, idempotencyKey: "control-source",
+    });
+    if (!created.task || !created.run) throw new Error("missing task");
+    let unblock!: () => void;
+    const blocked = new Promise<void>(resolve => {unblock = resolve;});
+    let reached!: () => void;
+    const ready = new Promise<void>(resolve => {reached = resolve;});
+    let adapterSignal: AbortSignal | undefined;
+    const adapter = vi.fn(async (_ctx, input) => {
+      adapterSignal = input.signal;
+      reached();
+      await blocked;
+      return succeededEnvelope(d.now());
+    });
+    const ack = vi.spyOn(realTasks, "acknowledgeControl");
+    const tasks = {...realTasks, claimTask: async (input: Parameters<typeof realTasks.claimTask>[0]) => {
+      const claim = await realTasks.claimTask(input);
+      if (mode === "claim") {reached(); await blocked;}
+      return claim;
+    }, heartbeat: mode === "leaseLost" ? async () => {throw new Error("lease lost");} : realTasks.heartbeat};
+    vi.useFakeTimers();
+    try {
+      const work = runIntelligenceSourceTask(ctx, {sourceId: created.source.id, runId: created.run.id, taskId: created.task.id, signal: controller.signal}, {tasks, intelligence, adapter: {run: adapter}, now: d.now});
+      await ready;
+      if (mode === "claim" || mode === "parent") controller.abort();
+      else if (mode !== "leaseLost") await realTasks.command(ctx, {taskIds: [created.task.id], command: mode, idempotencyKey: `control-${mode}`});
+      if (mode === "claim") unblock();
+      if (mode === "pause" || mode === "cancel" || mode === "leaseLost") await vi.advanceTimersByTimeAsync(25_000);
+      await work;
+      if (mode === "claim") expect(adapter).not.toHaveBeenCalled();
+      else expect(adapterSignal?.aborted).toBe(true);
+      const task = await realTasks.get(ctx, created.task.id);
+      expect(task.status).toBe(mode === "leaseLost" ? "running" : mode === "pause" ? "paused" : "cancelled");
+      if (mode !== "leaseLost") expect(task.leaseExpiresAt).toBeNull();
+      expect(ack).toHaveBeenCalledTimes(mode === "leaseLost" ? 0 : 1);
+      unblock();
+      await Promise.resolve();
+      expect((await intelligence.listItems(ctx)).rows).toHaveLength(0);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {unblock(); vi.useRealTimers(); await client.close();}
+  });
 });

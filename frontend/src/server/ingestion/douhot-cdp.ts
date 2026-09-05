@@ -1,3 +1,4 @@
+import { bindAbortContext } from "./abort-context";
 import "server-only";
 
 import type { BrowserContext, Page, Response } from "@playwright/test";
@@ -205,6 +206,7 @@ async function openDouhotPage(
 }
 
 export interface FetchDouhotOptions {
+  signal?: AbortSignal;
   authDir: string;
   keyword: string;
   board: "low_follower_breakout";
@@ -379,9 +381,12 @@ export async function fetchDouhotLowFollowerBreakout(
   options: FetchDouhotOptions,
   deps: FetchDouhotDeps = {},
 ): Promise<DouhotBatch> {
+  options.signal?.throwIfAborted();
   const opened = await (deps.openPage ?? openDouhotPage)(options.authDir);
   const { page } = opened;
+  const lifetime = bindAbortContext(options.signal, () => opened.close());
   try {
+    options.signal?.throwIfAborted();
     const contexts = page.context() as BrowserContext;
     const cookies = await contexts.cookies([
       "https://www.douyin.com",
@@ -482,6 +487,6 @@ export async function fetchDouhotLowFollowerBreakout(
       name: "DouhotNoValidResponseError",
     });
   } finally {
-    await opened.close().catch(() => {});
+    await lifetime.close().catch(() => {});
   }
 }

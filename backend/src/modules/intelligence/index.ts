@@ -52,3 +52,5 @@ export {
   IntelligenceConflictError,
   IntelligenceValidationError,
 } from "./intelligence.errors";
+
+export { createCollectionToolPorts } from "./collection-tool-ports";

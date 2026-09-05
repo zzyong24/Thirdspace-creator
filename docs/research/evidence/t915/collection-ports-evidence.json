@@ -1,0 +1,28 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T10:26:22.101137+00:00",
+  "status": "collection_ports_connected_full_agent_runtime_open",
+  "implemented": [
+    "collect.plan/run 接真实来源和持久采集服务，分页可读全部来源，pending 不伪装完成",
+    "父任务和目标绑定稳定幂等键，历史回执优先回读，拒绝 queued 及 enqueue 冲突路径复用其他父任务",
+    "父取消传递持久取消和 adapter signal，暂停/租约丢失丢弃迟到结果；网页池申请、RSS请求及四个采集浏览器上下文接取消",
+    "作品、run、checkpoint、execution终态同一持锁事务提交，取消和成功只允许一个先提交的结果"
+  ],
+  "verification": {
+    "backend_tests": 68,
+    "frontend_tests": 155,
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "runtime": "真实生产工具装配→真实runner/adapter/领域事务；RSS上游替身，同父任务重复调用只抓取一次，未执行完整Pi模型循环",
+    "review": "worker_review独立审查发现并复核修复幂等、取消、事务终态和池等待缺口，最终无新增阻断；评审未重跑测试"
+  },
+  "limits": [
+    "跨进程父子取消关系和自主采集恢复仍需纳入统一execution_calls/Worker控制，当前进程内signal与持久子任务取消不是完整替代",
+    "knowledge.write、material.organize仍未接线并真实报错",
+    "未进行真实网站、供应商、完整Pi自主循环和性能基线验收",
+    "Pi/browser及全部入口迁移、双平台安装包与完整T915验收仍未完成"
+  ]
+}

@@ -1937,6 +1937,8 @@ export function createIntelligenceService(
     input: {
       trigger: "manual" | "schedule" | "initial" | "retry";
       idempotencyKey: string;
+      /** 自主任务必须只复用自己的回执。 */
+      reuseActiveRun?: boolean;
     },
   ): Promise<{ run: ReturnType<typeof toRun>; task: ExecutionTaskResourceV2 }> {
     const source = await requireSource(ctx, sourceId);
@@ -1956,6 +1958,15 @@ export function createIntelligenceService(
     // APP 退出时来源任务可能停在 running；租约过期后若不先恢复，run 表仍会
     // 永久保持 active，页面只能一直转圈且所有后续点击都被冲突闸拦住。
     await deps.tasks.recoverExpiredLeases();
+    if (input.reuseActiveRun === false) {
+      const [existing] = await db.select({ run: intelligenceSyncRuns })
+        .from(intelligenceSyncRuns)
+        .innerJoin(executionTasks, eq(executionTasks.id, intelligenceSyncRuns.executionTaskId))
+        .where(and(eq(intelligenceSyncRuns.sourceId, sourceId),
+          eq(executionTasks.userId, ctx.userId), eq(executionTasks.accountId, source.accountId),
+          eq(executionTasks.idempotencyKey, input.idempotencyKey))).limit(1);
+      if (existing) return { run: toRun(existing.run), task: await deps.tasks.get(ctx, existing.run.executionTaskId) };
+    }
     let active = await db
       .select()
       .from(intelligenceSyncRuns)
@@ -1973,6 +1984,9 @@ export function createIntelligenceService(
     }
     if (active[0]) {
       const task = await deps.tasks.get(ctx, active[0].executionTaskId);
+      if (input.reuseActiveRun === false && task.idempotencyKey !== input.idempotencyKey) {
+        throw new IntelligenceConflictError("该来源已有其他任务的同步，请稍后重试");
+      }
       // queued 既可能是首次同步，也可能是本次刚恢复的过期租约。复用同一
       // run/task 交给装配层立即重新驱动，避免制造第二条任务或返回永久 409。
       if (task.status === "queued") {
@@ -1981,7 +1995,7 @@ export function createIntelligenceService(
           task,
         };
       }
-      if (input.trigger === "initial" && task.status === "running") {
+      if ((input.trigger === "initial" || task.idempotencyKey === input.idempotencyKey) && task.status === "running") {
         return { run: toRun(active[0]), task };
       }
       throw new IntelligenceConflictError("该来源已有排队或运行中的同步");
@@ -1998,6 +2012,9 @@ export function createIntelligenceService(
       },
       priority: input.trigger === "manual" ? 20 : 10,
     });
+    if (input.reuseActiveRun === false && task.idempotencyKey !== input.idempotencyKey) {
+      throw new IntelligenceConflictError("该来源已有其他任务的同步，请稍后重试");
+    }
     const [existing] = await db
       .select()
       .from(intelligenceSyncRuns)
@@ -4942,6 +4959,15 @@ export function createIntelligenceService(
       let updated = 0;
       const itemIds: string[] = [];
       await db.transaction(async (tx) => {
+        // 与取消/恢复抢同一任务行锁；取消先提交时，采集结果不能随后写入。
+        const [execution] = await tx.select().from(executionTasks)
+          .where(eq(executionTasks.id, run.executionTaskId)).for("update");
+        if (!execution || execution.userId !== ctx.userId || execution.accountId !== accountId ||
+            execution.status !== "running" || execution.leaseOwner !== input.lease.workerId ||
+            execution.attempt !== input.lease.attempt || !execution.leaseExpiresAt || execution.leaseExpiresAt <= now()) {
+          throw new IntelligenceConflictError("采集任务已停止或执行租约已失效");
+        }
+
         for (const candidate of input.envelope.items) {
           const url = canonicalUrl(candidate.canonicalUrl);
           const urlHash = hash(url);
@@ -5182,28 +5208,19 @@ export function createIntelligenceService(
             updatedAt: now(),
           })
           .where(eq(intelligenceSources.id, run.sourceId));
+        // 作品、回执、checkpoint 与执行终态一次提交，消除成功后取消/崩溃的双真相窗口。
+        const executionStatus = input.envelope.adapterStatus === "failed" ? "failed"
+          : input.envelope.adapterStatus === "blocked" ? "blocked" : "succeeded";
+        await tx.update(executionTasks).set({
+          checkpoint: input.envelope.checkpoint,
+          ...(input.terminal ? {
+            status: executionStatus, leaseOwner: null, leaseExpiresAt: null, heartbeatAt: null,
+            lastErrorCode: executionStatus === "succeeded" ? null : input.envelope.errorCode,
+            lastErrorMessage: executionStatus === "succeeded" ? null : input.envelope.errorCode,
+          } : {}),
+          updatedAt: now(),
+        }).where(eq(executionTasks.id, run.executionTaskId));
       });
-      await deps.tasks.saveCheckpoint({
-        taskId: run.executionTaskId,
-        workerId: input.lease.workerId,
-        attempt: input.lease.attempt,
-        checkpoint: input.envelope.checkpoint,
-      });
-      if (input.terminal) {
-        await deps.tasks.finish({
-          taskId: run.executionTaskId,
-          workerId: input.lease.workerId,
-          attempt: input.lease.attempt,
-          status:
-            input.envelope.adapterStatus === "failed"
-              ? "failed"
-              : input.envelope.adapterStatus === "blocked"
-                ? "blocked"
-                : "succeeded",
-          errorCode: input.envelope.errorCode,
-          errorMessage: input.envelope.errorCode,
-        });
-      }
       const latest = await requireRun(ctx, run.id);
       return {
         run: toRun(latest),

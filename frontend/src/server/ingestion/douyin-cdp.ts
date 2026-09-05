@@ -1,3 +1,4 @@
+import { bindAbortContext } from "./abort-context";
 import "server-only";
 import { createHash } from "node:crypto";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
@@ -1542,6 +1543,7 @@ export interface DouyinBenchmarkWork {
 }
 
 export interface FetchUserPostsOptions {
+  signal?: AbortSignal;
   authDir: string;
   /** 对标博主稳定身份 sec_uid。 */
   secUid: string;
@@ -1561,11 +1563,14 @@ export async function fetchDouyinUserPosts(
   opts: FetchUserPostsOptions,
   deps: FetchDouyinMetricsDeps = {},
 ): Promise<DouyinBenchmarkWork[]> {
+  opts.signal?.throwIfAborted();
   const maxPages = opts.maxPages ?? 5;
   const gateway = opts.gateway ?? instantNoopGateway;
   const openCtx = deps.openContext ?? realMetricsOpenContext;
   const ctx = await openCtx(opts.authDir, true);
+  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   try {
+    opts.signal?.throwIfAborted();
     // 登录态校验(蹭 douyin.com 会话;未登录 → 提示扫码,同 self.metrics)。
     const cookies = await ctx.cookies("https://www.douyin.com");
     const loggedIn = cookies.some(
@@ -1785,7 +1790,7 @@ export async function fetchDouyinUserPosts(
     );
     return works;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await lifetime?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
 
@@ -3742,6 +3747,7 @@ export function parseCollectsVideoList(json: unknown): DouyinFavoriteVideo[] {
 }
 
 export interface FetchCollectsFoldersOptions {
+  signal?: AbortSignal;
   authDir: string;
   strictEvidence?: boolean;
   gateway?: DouyinChannelGate;
@@ -3749,6 +3755,7 @@ export interface FetchCollectsFoldersOptions {
 }
 
 export interface FetchCollectsVideosOptions {
+  signal?: AbortSignal;
   authDir: string;
   /** 目标收藏夹 id(collects_id_str)。 */
   collectsId: string;
@@ -3956,14 +3963,19 @@ export async function fetchDouyinCollectsFolders(
   opts: FetchCollectsFoldersOptions,
   deps: FetchCollectsDeps = {},
 ): Promise<DouyinCollectsFolder[]> {
+  opts.signal?.throwIfAborted();
   const gateway = opts.gateway ?? instantNoopGateway;
   const openCtx =
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
   let ctx: SearchCapableContext | null = null;
+  let lifetime: ReturnType<typeof bindAbortContext> | undefined;
   try {
     ctx = await openCtx(opts.authDir, true);
+    const owned = ctx;
+    lifetime = bindAbortContext(opts.signal, () => owned.close());
+    opts.signal?.throwIfAborted();
     const page = await openCollectsPage(ctx, "收藏夹列表");
     if (!page) {
       if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
@@ -4001,7 +4013,7 @@ export async function fetchDouyinCollectsFolders(
     logFavoritesFailure(opts.diagnostics, normalized);
     throw normalized;
   } finally {
-    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
+    await lifetime?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
 
@@ -4015,6 +4027,7 @@ export async function fetchDouyinCollectsVideos(
   opts: FetchCollectsVideosOptions,
   deps: FetchCollectsDeps = {},
 ): Promise<DouyinFavoriteVideo[]> {
+  opts.signal?.throwIfAborted();
   const gateway = opts.gateway ?? instantNoopGateway;
   const maxItems = opts.maxItems ?? 50;
   const openCtx =
@@ -4022,8 +4035,12 @@ export async function fetchDouyinCollectsVideos(
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
   let ctx: SearchCapableContext | null = null;
+  let lifetime: ReturnType<typeof bindAbortContext> | undefined;
   try {
     ctx = await openCtx(opts.authDir, true);
+    const owned = ctx;
+    lifetime = bindAbortContext(opts.signal, () => owned.close());
+    opts.signal?.throwIfAborted();
     const page = await openCollectsPage(ctx, `收藏夹视频(${opts.collectsId})`);
     if (!page) {
       if (opts.strictEvidence) throw new DouyinFavoritesCaptchaError();
@@ -4069,6 +4086,6 @@ export async function fetchDouyinCollectsVideos(
     logFavoritesFailure(opts.diagnostics, normalized);
     throw normalized;
   } finally {
-    await ctx?.close().catch(() => {}); // 关我们自起的 Chromium
+    await lifetime?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }

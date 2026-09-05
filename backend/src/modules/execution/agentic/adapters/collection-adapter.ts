@@ -12,26 +12,29 @@ import type { AgenticTool } from "../engine";
 export interface CollectionPorts {
   /** 列可采集目标(供引擎决策刷哪些)。纯读,不抓。 */
   listTargets(
-    input: { query?: string },
+    input: { query?: string;limit?:number;offset?:number },
     signal: AbortSignal,
   ): Promise<{
     targets: Array<{ id: string; label: string; lastCollectedAt: string | null }>;
+    nextOffset?:number|null;
+    total?:number;
   }>;
   /**
    * 对一个目标跑一次确定性采集(**限流/防封/登录态在端口内**;agent 只给 targetId,绕不过速率限制)。
    * 未登录 → needsLogin(引导重连,非普通失败)。返回新鲜度统计。
    */
   runCollection(
-    input: { targetId: string },
+    input: { targetId: string;runId?:string },
     signal: AbortSignal,
   ): Promise<
     | { ok: true; itemsNew: number; itemsUpdated: number }
-    | { ok: false; needsLogin: true }
+    | { ok: false; needsLogin: true;runId?:string;taskId?:string }
+    | { ok:false;pending:true;runId:string;taskId:string;status:string }
   >;
 }
 
-const listTargetsParams = z.object({ query: z.string().optional() });
-const runCollectionParams = z.object({ targetId: z.string().min(1) });
+const listTargetsParams = z.object({ query: z.string().optional(),limit:z.number().int().min(1).max(100).default(20),offset:z.number().int().nonnegative().default(0) });
+const runCollectionParams = z.object({ targetId: z.string().min(1),runId:z.string().optional() });
 
 /** 把抓取决策端口包成两个引擎工具(agentic.collect 白名单)。 */
 export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
@@ -40,17 +43,19 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
       name: "collect.plan",
       label: "列采集目标",
       description:
-        "列出可采集的目标(作品/账号/收藏夹)及上次采集时间,供决策刷哪些、跳过哪些。纯读不抓。",
+        "列出可采集来源及上次采集时间；用limit/offset分页，nextOffset非空时还有下一页。纯读不抓。",
       effect: "none",
       parameters: listTargetsParams,
       planInput: () => ({}),
       async execute(input, { signal }) {
-        const { query } = listTargetsParams.parse(input);
-        const res = await ports.listTargets({ query }, signal);
+        signal.throwIfAborted();
+        const params = listTargetsParams.parse(input);
+        const res = await ports.listTargets(params, signal);
+        signal.throwIfAborted();
         return {
           hasEvidence: res.targets.some(target => Boolean(target.id.trim())),
           summary: `发现 ${res.targets.length} 个可采集目标`,
-          data: { targets: res.targets },
+          data: { targets: res.targets,nextOffset:res.nextOffset ?? null,...(res.total!==undefined ? {total:res.total} : {}) },
         };
       },
     },
@@ -58,7 +63,7 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
       name: "collect.run",
       label: "采集一个目标",
       description:
-        "对一个目标跑一次采集(速率限制/防封/登录态由端口保证,不可绕过)。抓真数据落库,返回新鲜度统计。",
+        "提交目标的持久采集任务；有runId时用相同targetId和runId查询。pending只表示排队或运行，完成后才返回真实新增/更新数；不得将提交当作完成。",
       // 采集=数据摄取(确定性重放,非对外发布)—— writeback;限流/防封在端口。
       effect: "writeback",
       parameters: runCollectionParams,
@@ -77,7 +82,8 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
         return { targetId: pick.id };
       },
       async execute(input, { signal, dryRun }) {
-        const { targetId } = runCollectionParams.parse(input);
+        signal.throwIfAborted();
+        const { targetId,runId } = runCollectionParams.parse(input);
         if (!targetId) return { summary: "无可采目标(上一步 plan 为空)" };
         if (dryRun) {
           return {
@@ -85,11 +91,15 @@ export function createCollectionTools(ports: CollectionPorts): AgenticTool[] {
             plan: `将对目标 ${targetId} 跑一次限流采集(端口内防封)`,
           };
         }
-        const res = await ports.runCollection({ targetId }, signal);
+        const res = await ports.runCollection({ targetId,runId }, signal);
+        signal.throwIfAborted();
+        if(!res.ok && "pending" in res){
+          return {hasEvidence:false,summary:`采集任务${res.status}，尚未完成；请使用runId查询`,data:{targetId,runId:res.runId,taskId:res.taskId,pending:true,status:res.status}};
+        }
         if (!res.ok) {
           return {
             summary: `目标 ${targetId} 需重新登录,已跳过(端口报 needs_reconnect)`,
-            data: { targetId, needsLogin: true },
+            data: { targetId, needsLogin: true,...(res.runId ? {runId:res.runId,taskId:res.taskId} : {}) },
           };
         }
         return {

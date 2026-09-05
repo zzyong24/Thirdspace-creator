@@ -13,7 +13,7 @@ export interface IntelligenceSourceAdapterPort {
     ctx: RequestContext,
     input: Awaited<
       ReturnType<IntelligenceService["getSourceExecutionInput"]>
-    > & { checkpoint: unknown | null },
+    > & { checkpoint: unknown | null; signal?: AbortSignal },
   ): Promise<IntelligenceAdapterEnvelope>;
 }
 
@@ -136,9 +136,11 @@ export async function runIntelligenceSourceTask(
     runId: string;
     taskId: string;
     existingClaim?: PersistentTaskClaim;
+    signal?: AbortSignal;
   },
   deps: RunIntelligenceSourceTaskDeps,
 ): Promise<void> {
+  if (input.signal?.aborted && !input.existingClaim) return;
   const workerId =
     deps.workerId?.() ??
     `intelligence-source:${input.taskId}:${Date.now().toString(36)}`;
@@ -151,57 +153,84 @@ export async function runIntelligenceSourceTask(
     }));
   if (!claim) return;
 
-  const sourceInput = await deps.intelligence.getSourceExecutionInput(
-    ctx,
-    input.sourceId,
-  );
-  let envelope: IntelligenceAdapterEnvelope;
+  const control = new AbortController();
   let leaseLost = false;
   let heartbeatStopped = false;
   let heartbeatInFlight: Promise<void> = Promise.resolve();
+  let parentCancellation: Promise<void> | undefined;
+  const leaseInput = {taskId: input.taskId, workerId: claim.lease.workerId, attempt: claim.lease.attempt};
+  const onParentAbort = () => {
+    control.abort(input.signal?.reason);
+    parentCancellation ??= (async () => {
+      // Persist cancellation even when abort raced the claim response.
+      try {
+        await deps.tasks.command(ctx, {
+          taskIds: [input.taskId], command: "cancel",
+          idempotencyKey: `source-parent-cancel:${input.taskId}:${claim.lease.attempt}`,
+        });
+      } catch (error) {
+        const current = await deps.tasks.get(ctx, input.taskId);
+        if (!["cancelled", "succeeded", "failed", "blocked"].includes(current.status)) throw error;
+      }
+    })();
+    // The final cleanup awaits and surfaces failures; avoid an unhandled rejection meanwhile.
+    void parentCancellation.catch(() => {});
+  };
+  input.signal?.addEventListener("abort", onParentAbort, {once: true});
+  if (input.signal?.aborted) onParentAbort();
   const heartbeatTimer = setInterval(() => {
     if (heartbeatStopped) return;
     heartbeatInFlight = heartbeatInFlight.then(async () => {
-      if (heartbeatStopped || leaseLost) return;
+      if (heartbeatStopped || control.signal.aborted) return;
       try {
-        await deps.tasks.heartbeat({
-          taskId: input.taskId,
-          workerId: claim.lease.workerId,
-          attempt: claim.lease.attempt,
-          leaseSeconds: SOURCE_SYNC_LEASE_SECONDS,
-        });
+        const task = await deps.tasks.heartbeat({...leaseInput, leaseSeconds: SOURCE_SYNC_LEASE_SECONDS});
+        if (task.status === "pause_requested" || task.status === "cancel_requested") control.abort();
       } catch {
-        // 租约可能已过期、被恢复或被下一次 attempt 接管。旧 worker 只能丢弃
-        // 尚未提交的 adapter 结果，绝不能继续写入新 worker 所属的 run。
         leaseLost = true;
+        control.abort();
       }
     });
   }, SOURCE_SYNC_HEARTBEAT_MS);
+  let abortListener: (() => void) | undefined;
   try {
+    control.signal.throwIfAborted();
+    const sourceInput = await deps.intelligence.getSourceExecutionInput(ctx, input.sourceId);
+    control.signal.throwIfAborted();
+    // A non-cooperative adapter may finish late; it cannot hold a cancelled lease or write results.
+    const aborted = new Promise<never>((_resolve, reject) => {
+      abortListener = () => reject(control.signal.reason);
+      control.signal.addEventListener("abort", abortListener, {once: true});
+    });
+    let envelope: IntelligenceAdapterEnvelope;
     try {
-      envelope = await deps.adapter.run(ctx, {
-        ...sourceInput,
-        checkpoint: claim.task.checkpoint,
-      });
+      envelope = await Promise.race([deps.adapter.run(ctx, {
+        ...sourceInput, checkpoint: claim.task.checkpoint, signal: control.signal,
+      }), aborted]);
     } catch (error) {
-      envelope = failureEnvelope(
-        sourceInput.source,
-        deps.now?.() ?? new Date().toISOString(),
-        error,
-      );
+      if (control.signal.aborted) return;
+      envelope = failureEnvelope(sourceInput.source, deps.now?.() ?? new Date().toISOString(), error);
     }
+    await heartbeatInFlight;
+    if (control.signal.aborted || leaseLost) return;
+    await deps.intelligence.applyAdapterBatch(ctx, {
+      runId: input.runId, lease: claim.lease, envelope, terminal: true,
+    });
+  } catch (error) {
+    if (!control.signal.aborted) throw error;
   } finally {
     heartbeatStopped = true;
     clearInterval(heartbeatTimer);
+    input.signal?.removeEventListener("abort", onParentAbort);
+    if (abortListener) control.signal.removeEventListener("abort", abortListener);
     await heartbeatInFlight;
+    if (parentCancellation) await parentCancellation;
+    if (control.signal.aborted && !leaseLost) {
+      const current = await deps.tasks.get(ctx, input.taskId);
+      if (current.status === "pause_requested" || current.status === "cancel_requested") {
+        await deps.tasks.acknowledgeControl(leaseInput);
+      }
+    }
   }
-  if (leaseLost) return;
-  await deps.intelligence.applyAdapterBatch(ctx, {
-    runId: input.runId,
-    lease: claim.lease,
-    envelope,
-    terminal: true,
-  });
 }
 
 /** Startup/idle drain: recovers queued source tasks from the real DB after restart. */

@@ -154,5 +154,10 @@
     "evidence": "material-search-evidence.json",
     "tests": 44,
     "scope": "自主/聊天素材搜索接真实完整查询；剩余四端口和独立Agent执行仍未完成"
+  },
+  "collection_ports_increment": {
+    "evidence": "collection-ports-evidence.json",
+    "tests": 223,
+    "scope": "采集真实服务与取消/原子终态通过；剩余两端口及跨进程自主控制、完整验收未完成"
   }
 }

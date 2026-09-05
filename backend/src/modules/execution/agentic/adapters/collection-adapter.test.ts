@@ -78,4 +78,25 @@ describe("createCollectionTools", () => {
     expect(r.summary).toContain("需重新登录");
     expect((r.data as { needsLogin: boolean }).needsLogin).toBe(true);
   });
+  it("提交回执不伪装完成或新增作品，下一次透传 runId 轮询", async () => {
+    let seen: unknown;
+    const { byName } = toolsOf({ async runCollection(input) {
+      seen = input;
+      return { ok: false, pending: true, runId: "run-1", taskId: "task-1", status: "running" };
+    } });
+    const result = await byName["collect.run"]!.execute({ targetId: "target", runId: "run-1" }, { signal: noSig, dryRun: false });
+    expect(seen).toEqual({ targetId: "target", runId: "run-1" });
+    expect(result).toMatchObject({ hasEvidence: false, data: { pending: true, runId: "run-1", taskId: "task-1" } });
+    expect(result.data).not.toHaveProperty("itemsNew");
+  });
+
+  it("分页目标保留下一页位置，不把当前页当作全部来源", async () => {
+    const { byName } = toolsOf({ async listTargets(input) {
+      expect(input).toEqual({ limit: 20, offset: 20 });
+      return { targets: [], nextOffset: 40, total: 100 };
+    } });
+    const result = await byName["collect.plan"]!.execute({ offset: 20 }, { signal: noSig, dryRun: false });
+    expect(result.data).toEqual({ targets: [], nextOffset: 40, total: 100 });
+  });
+
 });

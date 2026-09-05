@@ -52,7 +52,7 @@ export interface AgenticExecutorDeps {
    * 每请求解析领域工具集(用户域端口已 ctx-bound;封号限流/登录态/pending 烤在端口里,SPEC §3)。
    * 执行器再经 filterToolsToScope 二次白名单(纵深防御)。
    */
-  resolveTools: (ctx: RequestContext) => readonly AgenticTool[];
+  resolveTools: (ctx: RequestContext,execution?:{taskId:string}) => readonly AgenticTool[];
   /** 步数/预算硬顶缺省(任务参数只能调低)。 */
   defaultBudget: LoopBudget;
   /** 系统提示(角色/护栏)。 */
@@ -108,7 +108,7 @@ export function createAgenticExecutor(
       if (!goal) throw new Error("agentic 任务缺 goal");
 
       // ① 工具白名单(SPEC §4.1):只喂在册工具;scope 未知或无可用工具 → 诚实拒跑。
-      const allTools = deps.resolveTools(ctx);
+      const allTools = deps.resolveTools(ctx,{taskId:sandbox.taskId});
       const tools = filterToolsToScope(allTools, deps.taskType);
       if (tools.length === 0) {
         throw new Error(

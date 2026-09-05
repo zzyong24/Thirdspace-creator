@@ -84,25 +84,30 @@ export interface IntelligenceSourceAdapterDeps {
   now?: () => string;
   fetchProfileWorks(input: {
     ctx: RequestContext;
+    signal?: AbortSignal;
     collectorAccountId: string;
     externalAccountId: string;
   }): Promise<ProfileWork[]>;
   fetchFavoriteWorks(input: {
     ctx: RequestContext;
+    signal?: AbortSignal;
     collectorAccountId: string;
     folderId: string;
   }): Promise<FavoriteWork[]>;
   readWeb(input: {
     ctx: RequestContext;
+    signal?: AbortSignal;
     url: string;
   }): Promise<ReadWebResult>;
   fetchFeed(input: {
     ctx: RequestContext;
+    signal?: AbortSignal;
     url: string;
   }): Promise<{ xml: string; finalUrl: string }>;
   parseFeed(xml: string, siteName: string): FeedItem[];
   fetchDouhot?(input: {
     ctx: RequestContext;
+    signal?: AbortSignal;
     collectorAccountId: string;
     keyword: string;
     board: "low_follower_breakout";
@@ -364,11 +369,13 @@ export function createIntelligenceSourceAdapter(
   const now = deps.now ?? (() => new Date().toISOString());
   return {
     async run(ctx, input) {
+      input.signal?.throwIfAborted();
       const capturedAt = now();
       switch (input.config.type) {
         case "creator_profile": {
           const rows = await deps.fetchProfileWorks({
             ctx,
+            signal: input.signal,
             collectorAccountId: input.config.collectorAccountId,
             externalAccountId: input.config.externalAccountId,
           });
@@ -384,6 +391,7 @@ export function createIntelligenceSourceAdapter(
         case "favorites_folder": {
           const rows = await deps.fetchFavoriteWorks({
             ctx,
+            signal: input.signal,
             collectorAccountId: input.config.collectorAccountId,
             folderId: input.config.folderId,
           });
@@ -398,7 +406,7 @@ export function createIntelligenceSourceAdapter(
         case "web": {
           let read: ReadWebResult;
           try {
-            read = await deps.readWeb({ ctx, url: input.config.url });
+            read = await deps.readWeb({ ctx, url: input.config.url, signal: input.signal });
           } catch (error) {
             const code = webFailureCode(error);
             if (code) {
@@ -440,7 +448,7 @@ export function createIntelligenceSourceAdapter(
           );
         }
         case "rss": {
-          const fetched = await deps.fetchFeed({ ctx, url: input.config.url });
+          const fetched = await deps.fetchFeed({ ctx, url: input.config.url, signal: input.signal });
           if (!/<(?:rss|feed)\b/i.test(fetched.xml)) {
             return failure("rss", capturedAt, "INVALID_FEED", "xml-not-feed");
           }
@@ -502,6 +510,7 @@ export function createIntelligenceSourceAdapter(
           }
           const batch = await deps.fetchDouhot({
             ctx,
+            signal: input.signal,
             collectorAccountId: input.config.collectorAccountId,
             keyword: input.config.keyword,
             board: input.config.board,
