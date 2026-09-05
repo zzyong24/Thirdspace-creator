@@ -18,6 +18,7 @@ export {
   executionTasks,
   intelligenceCollections,
   executionCalls,
+  executionEvidence,
   intelligenceItems,
   intelligenceMigrationLedgers,
   intelligenceSources,

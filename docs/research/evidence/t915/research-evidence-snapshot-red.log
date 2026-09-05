@@ -1,0 +1,63 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-research-evidence.service.test.ts (11 tests | 1 failed) 1620ms
+   × 指定旧快照的offset0只回读原文，不能用新观察替换 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-research-evidence.service.test.ts > 指定旧快照的offset0只回读原文，不能用新观察替换
+AssertionError: promise resolved "{ status: 'ok', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "continuation": null,
++   "data": {
++     "evidenceRef": "evidence_3baabaf2-562d-4af2-8014-465c997a5326",
++     "nextOffset": null,
++     "offset": 0,
++     "snapshotId": "c4215b3c4f2b33770ac5e423c8fce912d61925ab39def64c0749242b26ac6057",
++     "sourceUrl": "https://example.com/final",
++     "text": "另一篇正文",
++     "title": "真实网页",
++     "totalLength": 5,
++     "truncated": false,
++   },
++   "error": null,
++   "evidence": [
++     {
++       "entityId": "evidence_3baabaf2-562d-4af2-8014-465c997a5326",
++       "sourceUrl": "https://example.com/final",
++       "text": "另一篇正文",
++       "title": "真实网页",
++       "version": "c4215b3c4f2b33770ac5e423c8fce912d61925ab39def64c0749242b26ac6057",
++     },
++   ],
++   "sideEffect": "none",
++   "status": "ok",
++   "summary": "读到《真实网页》正文 5 字",
+  }
+
+ ❯ src/modules/execution/execution-research-evidence.service.test.ts:108:111
+    106|  const f=await fixture("evidence-zero"),first=await f.read(),out=await…
+    107|  const replay=await f.read({url:"https://example.com/request",offset:0…
+    108|  await expect(f.service.settleRead(f.ref,{callId:replay.callId,observa…
+       |                                                                                                               ^
+    109|  expect(await f.service.readWindow(f.ref,{callId:replay.callId})).toEq…
+    110| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  06:40:06
+   Duration  2.53s (transform 405ms, setup 0ms, import 777ms, tests 1.62s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-research-evidence.service.test.ts --retry=0

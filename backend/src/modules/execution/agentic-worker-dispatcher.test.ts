@@ -13,33 +13,33 @@ import {createAgenticWorkerDispatcher} from "./model-worker-dispatcher";
 import type {AgenticBackendTool} from "./execution-agentic-tool-ports.service";
 const ctx={userId:"agent-dispatch",accountId:"agent-dispatch",requestId:"test",source:"user" as const};
 const budget={maxCalls:6,maxTokens:100000,deadlineMs:30000};
-const parameters=z.object({title:z.string(),note:z.string(),sourceNote:z.string(),evidenceRefs:z.array(z.string())});
-const args={title:"真实候选",note:"模型生成的完整正文",sourceNote:"来源",evidenceRefs:["https://example.com"]};
+const parameters=z.object({assetIds:z.array(z.string()),tag:z.string()});
+const args={assetIds:["actual-fixture-asset"],tag:"真实候选"};
 const { $schema:_,...jsonParameters}=z.toJSONSchema(parameters);
-const modelInput={kind:"agentic.run" as const,operationKey:"agent",taskType:"agentic.research" as const,goal:"产生知识候选",systemPrompt:"调用knowledge.write生成候选，然后总结",capability:"research",maxOutputTokens:200,dryRun:false,tools:[{name:"knowledge.write",version:"1",label:"候选",description:"生成知识候选",parameters:z.record(z.string(),z.json()).parse(jsonParameters),effect:"proposal" as const}]};
+const modelInput={kind:"agentic.run" as const,operationKey:"agent",taskType:"agentic.material" as const,goal:"产生标签候选",systemPrompt:"调用material.organize生成候选，然后总结",capability:"material",maxOutputTokens:200,dryRun:false,tools:[{name:"material.organize",version:"1",label:"候选",description:"生成标签候选",parameters:z.record(z.string(),z.json()).parse(jsonParameters),effect:"proposal" as const}]};
 describe("复用进程池的真实Agent调度宿主",()=>{
  let db:Db;let close:()=>Promise<void>;
  beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);afterAll(async()=>close?.());
  async function prepare(id:string,mode:"agent"|"model"|"unprepared"="agent"){
-  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:mode==="model"?"script.draft":"exec.agentic.research",idempotencyKey:id,requestedAt:new Date().toISOString()});
+  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:mode==="model"?"script.draft":"exec.agentic.material",idempotencyKey:id,requestedAt:new Date().toISOString()});
   return createExecutionAuthorityService(db).bindAiTask(ctx,id,mode==="unprepared"?undefined:{requestFingerprint:"sha256:"+"0".repeat(64),modelInput:mode==="model"?{kind:"model.generate",operationKey:"model",prompt:"正文",capability:"script",maxOutputTokens:100}:modelInput,budget});
  }
  async function server(){
   let requests=0;const http=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"text/event-stream"});
-   const delta=requests===1?{role:"assistant",tool_calls:[{index:0,id:"t1",type:"function",function:{name:"knowledge.write",arguments:JSON.stringify(args)}}]}:{role:"assistant",content:"候选已生成，请确认"};
+   const delta=requests===1?{role:"assistant",tool_calls:[{index:0,id:"t1",type:"function",function:{name:"material.organize",arguments:JSON.stringify(args)}}]}:{role:"assistant",content:"候选已生成，请确认"};
    const base={id:`m${requests}`,object:"chat.completion.chunk",created:1,model:"test"};
    res.end(`data: ${JSON.stringify({...base,choices:[{index:0,delta,finish_reason:null}]})}\n\ndata: ${JSON.stringify({...base,choices:[{index:0,delta:{},finish_reason:requests===1?"tool_calls":"stop"}],usage:{prompt_tokens:3,completion_tokens:4,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
   });await new Promise<void>(r=>http.listen(0,"127.0.0.1",r));
   return {port:(http.address() as {port:number}).port,get requests(){return requests;},async close(){http.closeAllConnections();await new Promise<void>(r=>http.close(()=>r()));}};
  }
  function host(port:number,execute:NonNullable<AgenticBackendTool["execute"]>){return createAgenticWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/agentic-worker.cjs"),workerId:"agent-host",budget,pollMs:100,modelConcurrency:1,
-  tools:{"knowledge.write":{version:"1",parameters,effect:"proposal",execute}},
-  async resolveModelCredential(context,capability,owner){expect(context.userId).toBe(ctx.userId);expect(context.accountId).toBe(ctx.accountId);expect(capability).toBe("research");expect(owner.aiTaskId).toBeTruthy();return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${port}/v1`,model:"test",token:"fixture",authStyle:"bearer"};},
+  tools:{"material.organize":{version:"1",parameters,effect:"proposal",execute}},
+  async resolveModelCredential(context,capability,owner){expect(context.userId).toBe(ctx.userId);expect(context.accountId).toBe(ctx.accountId);expect(capability).toBe("material");expect(owner.aiTaskId).toBeTruthy();return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${port}/v1`,model:"test",token:"fixture",authStyle:"bearer"};},
  });}
  it("真实Worker经持久工具端口保存候选，完整checkpoint与同事务待采纳",async()=>{
   const mapped=await prepare("complete");const http=await server();let executed=0;
-  const staging=createAgenticProposalStagingService(db,{resolveLease(){throw new Error("旧入口不可用");},async prepareAssets(){throw new Error("未调用素材");}});
-  const dispatcher=host(http.port,async(context,input,scope)=>{executed++;expect(context.accountId).toBe(ctx.accountId);const data=parameters.parse(input);const proposal=await staging.stageForExecution(scope.execution,{kind:"knowledge.create",...data,toolCallId:scope.toolCallId},scope.signal);return {status:"ok",summary:"保存真实候选",evidence:[],data:{proposal},error:null,continuation:null,sideEffect:"proposal"};});
+  const staging=createAgenticProposalStagingService(db,{resolveLease(){throw new Error("旧入口不可用");},async prepareAssets(_context,ids){return ids.map(assetId=>({assetId,expectedVersion:"fixture-version"}));}});
+  const dispatcher=host(http.port,async(context,input,scope)=>{executed++;expect(context.accountId).toBe(ctx.accountId);const data=parameters.parse(input);const proposal=await staging.stageForExecution(scope.execution,{kind:"asset.tags",...data,evidenceRefs:data.assetIds,toolCallId:scope.toolCallId},scope.signal);return {status:"ok",summary:"保存真实候选",evidence:[],data:{proposal},error:null,continuation:null,sideEffect:"proposal"};});
   try{expect(await dispatcher.drainOnce()).toBe(1);expect(http.requests).toBe(2);expect(executed).toBe(1);
    const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));expect(task!.status).toBe("succeeded");expect(task!.checkpoint).toMatchObject({revision:3,messages:[{role:"assistant"},{role:"tool"},{role:"assistant"}]});
    const [business]=await db.select().from(aiTasks).where(eq(aiTasks.id,"complete"));expect(business!.status).toBe("awaiting_confirmation");

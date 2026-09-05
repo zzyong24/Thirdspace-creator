@@ -177,6 +177,20 @@ export const executionCalls = pgTable("execution_calls", {
   updatedAt: text("updated_at").notNull(),
 }, table => ({sequenceUnique: uniqueIndex("execution_calls_sequence_unique").on(table.executionTaskId, table.sequence)}));
 
+/** 已确认网页全文；服务只插入或回读，禁止同源调用改写。 */
+export const executionEvidence = pgTable("execution_evidence", {
+  id: text("id").primaryKey(),
+  executionTaskId: text("execution_task_id").notNull().references(() => executionTasks.id),
+  originCallId: text("origin_call_id").notNull().references(() => executionCalls.id),
+  requestedUrl: text("requested_url").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  title: text("title").notNull(),
+  fullText: text("full_text").notNull(),
+  contentHash: text("content_hash").notNull(),
+  byteLength: integer("byte_length").notNull(),
+  createdAt: text("created_at").notNull(),
+}, table => ({originCallUnique: uniqueIndex("execution_evidence_origin_call_unique").on(table.originCallId)}));
+
 export const intelligenceSyncRuns = pgTable("intelligence_sync_runs", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),

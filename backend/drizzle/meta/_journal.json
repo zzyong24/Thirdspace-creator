@@ -561,6 +561,13 @@
       "when": 1788652800009,
       "tag": "0079_agentic_tool_execution_claim",
       "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1788652800010,
+      "tag": "0080_execution_evidence",
+      "breakpoints": true
     }
   ]
 }

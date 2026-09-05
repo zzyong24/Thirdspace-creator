@@ -1,0 +1,64 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T13:46:55.287302+00:00",
+  "status": "持久网页证据及候选来源核验通过，生产Worker浏览器接线仍待实现",
+  "implemented": [
+    "迁移0080新增execution_evidence不可变快照，按唯一originCall绑定执行任务；正文和首窗工具结算同一事务",
+    "冻结工具来源/参数共用agentic-tool-binding；新私有settleResearchRead/executeEvidenceRead接Agent宿主调度分支，普通模型模式不接这些端口",
+    "首窗迟到结果允许按既有启动事实结算；本地续读自身执行admission，取消或旧fence不新增读取",
+    "指定旧snapshot时不能重新上传正文；按同一证据引用/hash续读和offset0回读，已结算工具回执重放仍核验快照",
+    "页面2MB/任务8MB，登录/空文/超限不制造正文证据；限制不因服务重建重置",
+    "knowledge.create暂存与汇总提交均核验真实knowledge.write模型参数及严格更早的已结算阅读，sourceNote精确匹配来源；孤立快照与伪引用不能作为来源"
+  ],
+  "verification": {
+    "backend_primary": {
+      "files": 5,
+      "tests": 48,
+      "log": "research-evidence-regression.log"
+    },
+    "worker": {
+      "files": 6,
+      "tests": 84,
+      "log": "research-evidence-worker-regression.log"
+    },
+    "additional_binding_dispatcher_regression": {
+      "tests": 23,
+      "note": "与主回归含7项调度重叠，不累计为唯一总数"
+    },
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "real_postgres": {
+      "status": "passed",
+      "independentPools": 2,
+      "concurrentSettlements": 20,
+      "initialSnapshots": 1,
+      "persistentWindowByteIdentical": true,
+      "changedBodyRejected": true,
+      "atomicRollbackOnLedgerFailure": true,
+      "resumeSameWindow": true,
+      "oldFenceRejected": true,
+      "postgresVersion": "16.13 (Homebrew)"
+    },
+    "postgres_scope": "隔离/tmp PostgreSQL16，两个独立Pool，20并发同call保存；trigger故障证明外层快照和嵌套ledger一并回滚；暂停恢复后窗口一致，旧fence拒绝；实例已关闭，未接应用数据库",
+    "red_evidence": [
+      "research-evidence-snapshot-red.log",
+      "knowledge-evidence-red.log"
+    ],
+    "tdd_note": "证据service第一次红测只因尚无模块而失败，不当行为红测；已有快照仍能上传新文曾现场1失败10通过，修后通过；候选真实性有2失败17通过红测。未补拍历史证据。",
+    "review": "两实现者冻结后独立只读PASS，覆盖原子性、归属、取消、未知结果、窗口及模型前序来源",
+    "boundary": "无新增违规，保留5条既有基线",
+    "orphan": "0 errors / 100 warnings",
+    "global_reconcile": "未在局部增量重跑，T-916既有全局问题仍保留，未宣称全绿"
+  },
+  "remaining": [
+    "将Worker内浏览器读网页结果接至新端口，接入生产agentic.research冻结工具与知识候选",
+    "账号/域名会话短端口及浏览器进程/profile资源生命周期",
+    "真实搜索→读网页→分页→知识候选→公开采纳回读完整跨进程旅程",
+    "浏览器自主动作/新观察/登录等待、强杀与父进程重启恢复",
+    "全量AI入口收敛、未知提交对账、旧路径退役、性能/三provider/双平台真实验收"
+  ]
+}

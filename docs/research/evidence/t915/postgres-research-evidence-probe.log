@@ -1,0 +1,1 @@
+{"status":"passed","independentPools":2,"concurrentSettlements":20,"initialSnapshots":1,"persistentWindowByteIdentical":true,"changedBodyRejected":true,"atomicRollbackOnLedgerFailure":true,"resumeSameWindow":true,"oldFenceRejected":true,"postgresVersion":"16.13 (Homebrew)"}

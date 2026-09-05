@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
-import { and, eq, aiTasks, aiTaskResults, requireAccountId, type Db } from "@creatoros/backend";
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+import { and, asc, eq, aiTasks, aiTaskResults, executionCalls, executionTasks, requireAccountId, type Db } from "@creatoros/backend";
 import { agenticProposal, type AgenticProposal, type RequestContext } from "@creatoros/contract";
-import type { ExecutionRef } from "@creatoros/contract/execution-worker";
+import { checkpointToolCallSchema, workerProviderReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { verifyReadEvidence } from "../execution/execution-research-evidence.service";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { prepareKnowledgeProposal } from "../knowledge";
 import { ConflictError, OwnershipError } from "./ai.errors";
@@ -11,6 +14,34 @@ type Input = { toolCallId: string; evidenceRefs: string[] } & (
   | { kind: "asset.tags"; assetIds: string[]; tag: string }
 );
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+type KnowledgeInput = Extract<Input, { kind: "knowledge.create" }>;
+const knowledgeParameters = z.object({ title: z.string().trim().min(1), note: z.string().trim().min(1), sourceNote: z.string(), evidenceRefs: z.array(z.string().min(1)).min(1) });
+
+/** 只读核验：候选必须对应真实模型参数及此前已经结算的阅读，不是新写入端口。 */
+export async function verifyExecutionKnowledgeSource(tx: Tx, executionTaskId: string, input: KnowledgeInput, requireCurrentModel = false) {
+  const [task] = await tx.select().from(executionTasks).where(eq(executionTasks.id, executionTaskId));
+  const frozen = z.object({ kind: z.literal("agentic.run"), tools: z.array(z.object({ name: z.string() })) }).parse((task?.payload as { modelInput?: unknown } | undefined)?.modelInput);
+  if (frozen.tools.filter(tool => tool.name === "knowledge.write").length !== 1) throw new ConflictError("知识工具不在冻结执行范围");
+  const models = await tx.select().from(executionCalls).where(and(eq(executionCalls.executionTaskId, executionTaskId), eq(executionCalls.kind, "model"))).orderBy(asc(executionCalls.sequence));
+  const matching: Array<{ model: typeof executionCalls.$inferSelect; params: z.infer<typeof knowledgeParameters> }> = [];
+  for (const model of models) {
+    if (model.status !== "settled" || !model.providerResult) continue;
+    const receipt = workerProviderReceiptSchema.parse(model.providerResult);
+    for (const raw of receipt.content) {
+      const part = checkpointToolCallSchema.safeParse(raw);
+      if (!part.success || part.data.toolCallId !== input.toolCallId) continue;
+      if (part.data.toolName !== "knowledge.write" || receipt.finishReason.unified !== "tool-calls") throw new ConflictError("知识候选缺少正确的模型工具调用");
+      matching.push({ model, params: knowledgeParameters.parse(JSON.parse(part.data.input)) });
+    }
+  }
+  if (matching.length !== 1 || (requireCurrentModel && matching[0]!.model.id !== models.at(-1)?.id)) throw new ConflictError("知识候选缺少当前唯一的模型工具调用");
+  const bound = matching[0]!;
+  if (!isDeepStrictEqual(bound.params, knowledgeParameters.parse(input))) throw new ConflictError("知识候选内容与模型工具参数不一致");
+  const evidence = await verifyReadEvidence(tx, executionTaskId, input.evidenceRefs, bound.model.sequence);
+  if (!evidence.some(row => row.sourceUrl === input.sourceNote)) throw new ConflictError("知识来源与已阅读快照不一致");
+  return evidence;
+}
 export function createAgenticProposalStagingService(db: Db, ports: {
   resolveLease(ctx: RequestContext, taskId: string): { leaseToken: string };
   now?: () => string;
@@ -33,6 +64,7 @@ export function createAgenticProposalStagingService(db: Db, ports: {
           eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, accountId),
         )).for("update");
         if (!business || !["queued", "running"].includes(business.status)) throw new ConflictError("AI任务已停止或执行映射、归属不一致");
+        if (input.kind === "knowledge.create") await verifyExecutionKnowledgeSource(tx, task.id, input, true);
         const proposalId = `proposal:${hash([business.id, input.toolCallId])}`;
         const [existing] = await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id, proposalId));
         if (existing) {

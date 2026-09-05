@@ -4,6 +4,7 @@ import {agenticProposal,type AgenticProposal} from "@creatoros/contract";
 import {agenticCommitReceiptSchema,agenticWorkerInputSchema,agenticToolOutcomeSchema,workerProviderReceiptSchema,workerToolResultReceiptSchema,checkpointToolCallSchema,executionCheckpointSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
 import {ConflictError} from "../execution/execution.errors";
+import {verifyExecutionKnowledgeSource} from "./agentic-proposal-staging.service";
 
 const canonical=(value:unknown):unknown=>Array.isArray(value)?value.map(canonical):value && typeof value==="object"?Object.fromEntries(Object.entries(value).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,canonical(item)])):value;
 const digest=(value:unknown)=>createHash("sha256").update(JSON.stringify(canonical(value))).digest("hex");
@@ -77,6 +78,7 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
         for(const row of staged){
           const proposal=agenticProposal.parse(object(row.resultData).proposal);const confirmed=confirmedProposals.get(proposal.proposalId);
           if(row.id!==proposal.proposalId || !confirmed || digest(confirmed)!==digest(proposal))throw new ConflictError("已保存提案与真实工具回执不符");
+          if(proposal.kind==="knowledge.create")await verifyExecutionKnowledgeSource(tx,task.id,{kind:"knowledge.create",toolCallId:proposal.source.toolCallId,evidenceRefs:proposal.source.evidenceRefs,...proposal.content});
           proposals.push(proposal);confirmedProposals.delete(proposal.proposalId);
         }
         if(confirmedProposals.size || proposals.length>100 || (frozen.dryRun && proposals.length))throw new ConflictError("缺少唯一可采纳的已保存业务提案");

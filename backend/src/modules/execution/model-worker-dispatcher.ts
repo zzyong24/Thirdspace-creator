@@ -1,3 +1,4 @@
+import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
 import { createExecutionAgenticModelPorts } from "./execution-agentic-model-ports.service";
 import { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
 import { createExecutionAgenticCandidateService } from "../ai/execution-agentic-candidate.service";
@@ -44,6 +45,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
   const activeTools=new Map<string,{controller:AbortController;pending:Set<Promise<unknown>>}>();
   const executionKey=(ref:ExecutionRef)=>JSON.stringify(ref);
@@ -54,6 +56,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="settleResearchRead" && researchEvidence)return researchEvidence.settleRead(ref,raw);
+      if(port==="executeEvidenceRead" && researchEvidence)return researchEvidence.readWindow(ref,raw);
       if(port==="readCheckpoint")return checkpoints.read(ref);
       if(port==="saveCheckpoint")return checkpoints.save(ref,raw);
       if(port==="reserveAgenticModel" && agentModels)return agentModels.reserve(ref,raw);

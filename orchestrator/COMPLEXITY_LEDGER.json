@@ -97,14 +97,14 @@
       "files": [
         "backend/src/index.ts"
       ],
-      "file_sha256": "dbe6982de0142505fb3e59497061bfc64b2ea6cf52b61ce90d6aafcb3a586f7f",
+      "file_sha256": "48fd20616952142924441c4ae9febeb61171024c0d0d0727a8e89147ace700f4",
       "categories": [
         "credential_store"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
+      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "259909950e86bdffeaf52413fafe978bdb81dac88f4c1b8ffaebe6dcd03aff8b",
+      "file_sha256": "d8013b363a3d8f9319ee7bd365548866701b5017e52cabead00b8eff4e4e57d4",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055已批准的独立Worker生命周期、冻结权限、真实工具和素材候选接线；本批独立复核并修正缺产物回旧宿主路径。仅登记当前文件复杂度，完整T-915验收尚未完成。",
+      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -386,14 +386,14 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "0fd3fbc7819e1faba1de253177d619aea83ae5a3ec84c021652a1b2fdf3b497d",
+      "file_sha256": "5aae9677f90fd2f181175788e0fbfa4b4638bb0b56c21ac9605c649de85e9f1e",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055确认的知识/素材标签候选原子采纳与映射任务取消CAS；独立复核已通过，工具stage与完整T915仍未验收。",
+      "reason": "DEC-RUNTIME-055已批准的持久证据、私有Worker端口和后端模型来源核验；独立复核通过，仅登记本批文件复杂度，不代表全量验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。",
       "prior_file_sha256": "61ccfcd1b7bf7fd1cb0dac0161870af42f2cfc45bbb09ca8424c6d64adb8eadd"
     },

@@ -205,5 +205,11 @@
   "browser_runtime_relocation_increment": {
     "evidence": "browser-runtime-relocation-evidence.json",
     "scope": "运行代码物理迁移及真实隔离Chromium正常操作/退出通过；生产Agent调研路由、持久证据、强杀恢复和全量验收未完成"
+  },
+  "research_evidence_persistence_increment": {
+    "evidence": "research-evidence-persistence-evidence.json",
+    "backend_primary_tests": 48,
+    "worker_tests": 84,
+    "scope": "不可变网页快照/原子窗口结算/知识来源真实性与真实PG恢复通过；生产Worker调研旅程和全量验收未完成"
   }
 }

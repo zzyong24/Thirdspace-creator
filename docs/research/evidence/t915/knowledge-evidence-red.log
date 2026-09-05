@@ -1,0 +1,82 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/execution-agentic-candidate.service.test.ts (8 tests | 1 failed) 1826ms
+     × 暂存和工具回执一致仍不足以证明阅读，缺失真实阅读证据不能提交知识候选 73ms
+ ❯ src/modules/ai/agentic-proposal-staging.service.test.ts (11 tests | 1 failed) 7989ms
+     × 知识候选不能凭空指定模型工具调用和URL来源 651ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/agentic-proposal-staging.service.test.ts > 映射执行凭证的候选staging > 知识候选不能凭空指定模型工具调用和URL来源
+AssertionError: promise resolved "{ schemaVersion: 1, …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "content": {
++     "note": "正文",
++     "sourceNote": "https://example.com",
++     "title": "标题",
++   },
++   "kind": "knowledge.create",
++   "proposalId": "proposal:27b475436efd437cbdf56c827a97e61868ee5afe38e02d8f1d6c2ee4a959572b",
++   "schemaVersion": 1,
++   "source": {
++     "evidenceRefs": [
++       "https://example.com",
++     ],
++     "taskId": "mapped",
++     "toolCallId": "call",
++   },
++   "target": {
++     "expectedVersion": null,
++     "knowledgeId": "knowledge-proposal:9aab6563692395cc3f0fa6843bda191e406cb0a33182671d2d69f676171fd296",
++   },
+  }
+
+ ❯ src/modules/ai/agentic-proposal-staging.service.test.ts:60:89
+     58|     try {
+     59|       const service = createAgenticProposalStagingService(f.db, { reso…
+     60|       await expect(service.stageForExecution(f.ref, input, new AbortCo…
+       |                                                                                         ^
+     61|       expect(await f.db.select().from(aiTaskResults)).toHaveLength(0);
+     62|     } finally { await f.client.close(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/execution-agentic-candidate.service.test.ts > Agent持久候选提交 > 暂存和工具回执一致仍不足以证明阅读，缺失真实阅读证据不能提交知识候选
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "unread",
++   "resultId": "ai-agentic-result:call_81f09309-8b5c-4d3c-988d-c7337c24342d",
+  }
+
+ ❯ src/modules/ai/execution-agentic-candidate.service.test.ts:37:93
+     35|  const results=(id:string)=>db.select().from(aiTaskResults).where(and(…
+     36|  it("暂存和工具回执一致仍不足以证明阅读，缺失真实阅读证据不能提交知识候选",async()=>{
+     37|   const f=await fixture("unread");await expect(f.service.commitAgentic…
+       |                                                                                             ^
+     38|  });
+     39|  it("并发提交只聚合DB提案，采纳后重投不回退状态",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 17 passed (19)
+   Start at  06:33:25
+   Duration  9.09s (transform 908ms, setup 0ms, import 1.89s, tests 9.81s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/agentic-proposal-staging.service.test.ts src/modules/ai/execution-agentic-candidate.service.test.ts
