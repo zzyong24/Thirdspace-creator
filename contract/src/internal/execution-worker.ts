@@ -1,3 +1,5 @@
+import { reserveAgenticToolSchema, settleAgenticToolSchema } from "./agentic-tool-call";
+export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
@@ -11,7 +13,7 @@ export const executionRefSchema = z.object({
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
-  "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -38,6 +40,8 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   readTaskContext: emptyPortInput,
+  reserveAgenticTool: reserveAgenticToolSchema,
+  settleAgenticTool: settleAgenticToolSchema,
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
   reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
@@ -47,6 +51,7 @@ export const workerPortInputSchemas = {
     z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
   ]),
   saveGenerationResult:z.object({callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
+  startAgenticTool: z.object({callId: operationKeySchema}).strict(),
   startCall: z.object({callId: operationKeySchema}).strict(),
   settleCall: z.discriminatedUnion("status", [
     z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),

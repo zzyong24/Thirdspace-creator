@@ -52,13 +52,14 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         return {budget: task.executionBudget === null ? null : budgetSchema.parse(task.executionBudget), deadlineAt: task.deadlineAt, calls, ...totals(calls)};
       });
     },
-    async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSchema>) {
+    async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSchema>, validate?: (calls: Call[], task: typeof executionTasks.$inferSelect) => void) {
       const input = reservationSchema.parse(raw);
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         const budget = task.executionBudget === null ? configuredBudget : budgetSchema.parse(task.executionBudget);
         const deadlineAt = task.deadlineAt ?? new Date(Date.parse(task.createdAt) + budget.deadlineMs).toISOString();
         if (!(Date.parse(deadlineAt) > Date.parse(now()))) throw new ConflictError("执行截止时间已到");
         const calls = await readCalls(tx, task.id);
+        validate?.(calls, task);
         const previous = calls.filter(c => c.operationKey === input.operationKey).at(-1);
         if (previous) {
           if (previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens) {
@@ -87,11 +88,12 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         return created;
       });
     },
-    async start(ref: ExecutionRef, callId: string) {
+    async start(ref: ExecutionRef, callId: string, validate?: (call: Call, calls: Call[], task: typeof executionTasks.$inferSelect) => void) {
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         const calls = await readCalls(tx, task.id);
         const call = calls.find(c => c.id === callId);
         if (!call || call.status !== "reserved") throw new ConflictError("调用不可重复启动");
+        validate?.(call, calls, task);
         assertResolved(calls, ref.attempt);
         const budget = budgetSchema.parse(task.executionBudget);
         const used = totals(calls);
@@ -101,7 +103,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         return started!;
       });
     },
-    async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>) {
+    async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>, validate?: (call: Call) => void) {
       const input = settlementSchema.parse(raw);
       if (input.status === "settled" && input.providerResult) {
         const receipt = input.providerResult.usage;
@@ -127,6 +129,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
       return leases.withLease(ref, "settlement", async ({tx, task}) => {
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
+        validate?.(call);
         if (call.status === "settled" && input.status === "unknown") return call;
         if (call.status === "settled" && input.status === "rejected") throw new ConflictError("已确认结果不能变成拒绝");
         if (call.status === "rejected") {

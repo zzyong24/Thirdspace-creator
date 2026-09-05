@@ -1,0 +1,42 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T11:43:27.232850+00:00",
+  "status": "tool_ledger_and_worker_wrapper_ready_pi_runtime_relocated",
+  "implemented": [
+    "Pi引擎、引擎契约和循环控制物理迁入ai-worker，backend旧路径仅薄导出，同一实现保持既有调用兼容",
+    "Pi两个依赖保持0.80.7，lockfile只增加ai-worker引用，不带入无关依赖版本变化",
+    "工具预留仅接受模型调用ID与工具调用ID；工具名/参数从同任务已确认模型回执提取，对照后端可信定义、schema和冻结版本",
+    "稳定工具操作键由后端生成，reserve/start在同行事务检查模型回合与预算；模型通用端口拒绝启动或结算工具行",
+    "规范ToolOutcome和工具回执；unknown_commit/未知副作用进入unknown，普通结算不能把unknown变成已确认；工具内模型须另记model调用",
+    "Worker工具包装器只在start许可后执行，结算回执丢失后重放已落库结果；启动失败者不能污染并发成功执行者"
+  ],
+  "verification": {
+    "backend": {
+      "files": 9,
+      "tests": 83,
+      "status": "PASS"
+    },
+    "worker": {
+      "files": 2,
+      "tests": 30,
+      "status": "PASS"
+    },
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "dependency_install": "pnpm install --frozen-lockfile --ignore-scripts PASS",
+    "integration": "真实PGlite+真实toolports+两个Worker包装器并发屏障验证仅执行一次且最终settled；真实settle后丢回执，新包装器重放原结果且执行一次。execute的业务返回为测试fixture，无生产工具/浏览器端到端声明",
+    "review": "spec_review独立只读发现并发启动失败者污染账本，修复并补真实DB并发测试后复核PASS；评审未运行测试",
+    "tdd_note": "初始service缺文件为suite失败，不算业务红测；并发缺口来自独立代码评审，回归已通过，不补造历史红测"
+  },
+  "limits": [
+    "生产Worker尚未支持agentic.run输入分支；新工具端口与包装器尚未绑定Pi实际模型/工具循环，不宣称已在生产自主任务启用",
+    "新ToolOutcome尚未统一替换全部旧适配器返回；无效入参拒绝后的Pi错误回馈仍需接线",
+    "本次移动的是运行时代码归属，原Agent业务调用尚未迁出Next寿命；Pi进程启动、完整规范消息恢复/持久模型streamFn与最终候选提交仍待接线",
+    "浏览器observe-act-verify、任务会话隔离/子任务恢复、全部生产入口迁移、旧路径退役、性能和真实供应商/双平台验收仍未完成"
+  ]
+}

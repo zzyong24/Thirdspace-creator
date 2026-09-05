@@ -28,6 +28,12 @@ importers:
       '@creatoros/contract':
         specifier: workspace:*
         version: link:../contract
+      '@earendil-works/pi-ai':
+        specifier: 0.80.7
+        version: 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
+      '@earendil-works/pi-coding-agent':
+        specifier: 0.80.7
+        version: 0.80.7(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(ws@8.21.0)(zod@4.4.3)
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2

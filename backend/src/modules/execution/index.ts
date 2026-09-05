@@ -164,3 +164,5 @@ export { createModelWorkerDispatcher, type ModelWorkerDispatcherDeps } from "./m
 export { createResearchPorts } from "./agentic/adapters/research-ports";
 
 export { createExecutionCheckpointService } from "./execution-checkpoint.service";
+
+export { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";

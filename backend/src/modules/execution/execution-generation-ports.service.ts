@@ -31,7 +31,7 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
     },
     async settleGenerationCall(ref:ExecutionRef,raw:unknown){
       const {callId,...input}=workerPortInputSchemas.settleGenerationCall.parse(raw);
-      const call=await ledger.settle(ref,callId,input);
+      const call=await ledger.settle(ref,callId,input, call=>{if(call.kind!=="model")throw new ConflictError("模型端口不能结算工具调用");});
       return {callId:call.id,status:call.status};
     },
     async saveGenerationResult(ref:ExecutionRef,raw:unknown){

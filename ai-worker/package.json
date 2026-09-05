@@ -15,6 +15,14 @@
     "./durable-generation": {
       "types": "./src/execution/durable-generation-model.ts",
       "default": "./src/execution/durable-generation-model.ts"
+    },
+    "./agentic-runtime": {
+      "types": "./src/runtime/agentic/index.ts",
+      "default": "./src/runtime/agentic/index.ts"
+    },
+    "./durable-agentic-tool": {
+      "types": "./src/execution/durable-agentic-tool.ts",
+      "default": "./src/execution/durable-agentic-tool.ts"
     }
   },
   "scripts": {
@@ -32,7 +40,9 @@
     "ai": "^7.0.4",
     "ajv": "^8.20.0",
     "zod": "^4.4.3",
-    "@creatoros/contract": "workspace:*"
+    "@creatoros/contract": "workspace:*",
+    "@earendil-works/pi-ai": "0.80.7",
+    "@earendil-works/pi-coding-agent": "0.80.7"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.0",

@@ -176,5 +176,11 @@
     "backend_tests": 50,
     "worker_tests": 14,
     "scope": "持久检查点与单次生成Worker恢复通过；完整Pi工具恢复、浏览器迁移与全量验收未完成"
+  },
+  "agentic_tool_ledger_increment": {
+    "evidence": "agentic-tool-ledger-evidence.json",
+    "backend_tests": 83,
+    "worker_tests": 30,
+    "scope": "工具账本/Worker包装器及Pi运行时代码归属通过；实际生产Agent进程分支和完整恢复尚未接完"
   }
 }
