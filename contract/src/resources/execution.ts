@@ -104,6 +104,7 @@ export const executionTaskResource = z.object({
   status: aiTaskStatus,
   executionTaskId: id.optional(),
   runtimeStatus: z.string().optional(),
+  authorizationStatus: z.enum(["awaiting_authorization", "authorized_pending"]).optional(),
   spec: executionTaskSpec,
   manifest: executionManifest.nullable(),
   adoptedAssetIds: z.array(id).default([]),

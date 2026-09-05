@@ -118,3 +118,5 @@ export { projectScriptDraftCandidate } from "./script-candidate-projection";
 export { createScriptBusinessAdapter } from "./script-business-adapter";
 export { preparePlanningThesisContext } from "./planning-thesis-context";
 export { createPlanningThesisBusinessAdapter } from "./planning-thesis-business-adapter";
+
+export * from "./browser-task-authorization.service";

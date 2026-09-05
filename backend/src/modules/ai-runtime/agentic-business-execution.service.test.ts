@@ -1,3 +1,4 @@
+import {createBrowserTaskAuthorizationService} from "./browser-task-authorization.service";
 import { afterAll, beforeAll, expect, it, vi } from "vitest";
 import { createDb, aiTasks, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createAgenticBusinessExecutionService, type AgenticBusinessExecutionDeps } from "./agentic-business-execution.service";
@@ -20,7 +21,7 @@ it("只支持注入类型，验证真实inputs并冻结公共goal、调低预算
   const f = fixture(); expect(f.service.supports("exec.agentic.material")).toBe(true); expect(f.service.supports("exec.agentic.research")).toBe(false);
   const mapped = await f.service.prepare(ctx, "bounded");
   expect(f.validateInputs).toHaveBeenCalledWith(ctx, spec.inputs);
-  const [row] = await db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId));
+  const [row] = await db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId!));
   expect(row?.executionBudget).toEqual({ maxCalls: 4, maxTokens: 3000, deadlineMs: 30000 });
   expect(row?.deadlineAt).toBe("2026-09-05T00:00:30.000Z");
   expect(row?.payload).toMatchObject({ modelInput: { kind: "agentic.run", goal: spec.goal, dryRun: true, systemPrompt: definition.systemPrompt, tools: definition.tools } });
@@ -31,11 +32,11 @@ it("放大参数仍被上限裁定，映射重放保留历史定义及预算，�
   const initialSpec = { ...spec, params: { maxSteps: 1000, maxTokens: 1000000 } };
   await add("replay", { inputData: { spec: initialSpec } });
   const first = await fixture().service.prepare(ctx, "replay");
-  const [before] = await db.select().from(executionTasks).where(eq(executionTasks.id, first.executionTaskId));
+  const [before] = await db.select().from(executionTasks).where(eq(executionTasks.id, first.executionTaskId!));
   expect(before?.executionBudget).toEqual({ maxCalls: 12, maxTokens: 10000, deadlineMs: 600000 });
   const changed = fixture({ definitions: { "exec.agentic.material": { ...definition, systemPrompt: "新配置", tools: definition.tools.map(tool => ({ ...tool, version: "2" })) } }, budget: { maxCalls: 20, maxTokens: 90000, deadlineMs: 900000 } });
   expect(await changed.service.prepare(ctx, "replay")).toEqual(first); expect(changed.validateInputs).not.toHaveBeenCalled();
-  const [after] = await db.select().from(executionTasks).where(eq(executionTasks.id, first.executionTaskId)); expect(after).toEqual(before);
+  const [after] = await db.select().from(executionTasks).where(eq(executionTasks.id, first.executionTaskId!)); expect(after).toEqual(before);
   await db.update(aiTasks).set({ inputData: { spec: { ...initialSpec, params: { ...initialSpec.params, checkpoint: { tokensUsed: 0 } } } } }).where(eq(aiTasks.id, "replay"));
   await expect(changed.service.prepare(ctx, "replay")).rejects.toThrow("MISMATCH");
 });
@@ -71,7 +72,7 @@ it.each([
 ])("兼容旧参数规范化：$name，不因generic params变化阻断合法任务", async ({ name, maxSteps, maxTokens, dryRun, calls, tokens, expectedDryRun }) => {
   await add(`compat-${name}`, { inputData: { spec: { ...spec, params: { maxSteps, maxTokens, dryRun } } } });
   const mapped = await fixture().service.prepare(ctx, `compat-${name}`);
-  const [execution] = await db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId));
+  const [execution] = await db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId!));
   expect(execution?.executionBudget).toEqual({ maxCalls: calls, maxTokens: tokens, deadlineMs: 600000 });
   expect(execution?.payload).toMatchObject({ modelInput: { dryRun: expectedDryRun } });
 });
@@ -81,11 +82,12 @@ it("网页操作授权只从用户任务冻结，重放不能由新配置放大"
   const researchDefinition={...definition,taskType:"agentic.research" as const};
   const f=fixture({definitions:{"exec.agentic.research":researchDefinition}});
   await add("browser-scope",{taskType:"exec.agentic.research",inputData:{spec:research}});
+  await createBrowserTaskAuthorizationService(db,{now:()=>stamp}).grant(ctx,"browser-scope",{authorization:{allowedDomains:["example.com"],allowInteraction:true},idempotencyKey:"scope-grant"});
   const first=await f.service.prepare(ctx,"browser-scope");
-  const [before]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId));
+  const [before]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId!));
   expect(before?.payload).toMatchObject({modelInput:{browserAuthorization:{source:"user_task",allowedDomains:["example.com"],allowInteraction:true}}});
   expect(await f.service.prepare(ctx,"browser-scope")).toEqual(first);
-  const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId));
+  const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,first.executionTaskId!));
   expect(after).toEqual(before);
   await db.update(aiTasks).set({inputData:{spec:{...research,params:{browserAuthorization:{allowedDomains:["evil.example"],allowInteraction:true}}}}}).where(eq(aiTasks.id,"browser-scope"));
   await expect(f.service.prepare(ctx,"browser-scope")).rejects.toThrow("MISMATCH");
@@ -94,9 +96,9 @@ it("无显式网页授权不产生默认授权，非法授权在转交前拒绝"
   const f=fixture({definitions:{"exec.agentic.research":{...definition,taskType:"agentic.research"}}});
   await add("browser-none",{taskType:"exec.agentic.research",inputData:{spec:{...spec,taskType:"agentic.research"}}});
   const mapped=await f.service.prepare(ctx,"browser-none");
-  const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));
+  const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId!));
   expect((row?.payload as {modelInput:Record<string,unknown>}).modelInput.browserAuthorization).toBeUndefined();
   await add("browser-invalid",{taskType:"exec.agentic.research",inputData:{spec:{...spec,taskType:"agentic.research",params:{browserAuthorization:{allowedDomains:["127.0.0.1"],allowInteraction:true}}}}});
-  await expect(f.service.prepare(ctx,"browser-invalid")).rejects.toThrow();
+  await expect(f.service.prepare(ctx,"browser-invalid")).resolves.toMatchObject({status:"awaiting_authorization"});
   expect((await db.select().from(aiTasks).where(eq(aiTasks.id,"browser-invalid")))[0]!.executionTaskId).toBeNull();
 });

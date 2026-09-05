@@ -1,4 +1,4 @@
-import { createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
+import { createBrowserTaskAuthorizationService, createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
@@ -1252,6 +1252,7 @@ interface PersistenceBundle {
   ai: Transport;
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
+  browserTaskAuthorizationRuntime: { grant(ctx:RequestContext,taskId:string,input:unknown):Promise<{status:"granted"|"denied"}>; prepare(ctx:RequestContext,taskId:string):Promise<void> };
   executionPreviewRuntime: {
     readVideo(
       ctx: RequestContext,
@@ -13282,6 +13283,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     learnings,
     ai,
     execution,
+    browserTaskAuthorizationRuntime: {
+      async prepare(ctx,taskId) {
+        if(!agenticWorker)throw new Error("AGENTIC_WORKER_UNAVAILABLE");
+        await createBrowserTaskAuthorizationService(db).requireGrant(ctx,taskId);
+        const prepared=await agenticBusiness.prepare(ctx,taskId);
+        if(prepared.executionTaskId)agenticWorker.start();
+      },
+      async grant(ctx,taskId,input) {
+        if(!agenticWorker)throw new Error("AGENTIC_WORKER_UNAVAILABLE");
+        const result=await createBrowserTaskAuthorizationService(db).grant(ctx,taskId,input);
+        const prepared=await agenticBusiness.prepare(ctx,taskId);
+        if(prepared.executionTaskId) agenticWorker?.start();
+        return result;
+      },
+    },
     executionPreviewRuntime: {
       readVideo: (ctx, taskId, artifactPath) =>
         executionService.previewArtifact(ctx, taskId, artifactPath),
@@ -13879,4 +13895,8 @@ export function __resetPersistenceForTests(): void {
   void globalForPersistence.__creatorosStopExecutionWorker?.().catch(()=>{});
   globalForPersistence.__creatorosStopExecutionWorker=undefined;
   globalForPersistence.__creatorosPersistence = undefined;
+}
+
+export async function getBrowserTaskAuthorizationRuntime(): Promise<PersistenceBundle["browserTaskAuthorizationRuntime"]> {
+  return (await getBundle()).browserTaskAuthorizationRuntime;
 }

@@ -114,6 +114,7 @@ export function toExecutionTaskDto(
     status: task.status,
     executionTaskId: task.executionTaskId,
     runtimeStatus: task.runtimeStatus,
+    authorizationStatus: task.authorizationStatus,
     // 防御回退:spec 损坏时给最小合法形状(goal 占位),读侧绝不 500。
     spec:
       spec ??

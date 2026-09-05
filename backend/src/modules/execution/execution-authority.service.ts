@@ -1,3 +1,4 @@
+import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { workerTaskInputSchema } from "@creatoros/contract/execution-worker";
@@ -27,6 +28,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
         if (!task) throw new OwnershipError("AI task not found");
         if (prepared?.modelInput.kind === "model.structured" && (prepared.modelInput.skillSnapshot.userId !== task.userId || prepared.modelInput.skillSnapshot.accountId !== task.accountId)) throw new OwnershipError("Skill snapshot owner mismatch");
         if (prepared && prepared.requestFingerprint !== task.requestFingerprint) throw new ConflictError("准备输入与原任务指纹不符");
+        const browserGrant = prepared?.modelInput.kind === "agentic.run" ? assertFrozenBrowserTaskGrant(task, prepared.modelInput.browserAuthorization) : null;
         if (task.executionTaskId) {
           const [execution] = await tx.select().from(executionTasks).where(and(
             eq(executionTasks.id, task.executionTaskId), eq(executionTasks.userId, task.userId),
@@ -49,7 +51,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
           id: executionTaskId, userId: task.userId, accountId: task.accountId,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
           idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id, ...(prepared ? {modelInput:prepared.modelInput} : {})},
-          ...(prepared ? {executionBudget:prepared.budget,deadlineAt:new Date(Date.parse(task.requestedAt)+prepared.budget.deadlineMs).toISOString()} : {}),
+          ...(prepared ? {executionBudget:prepared.budget,deadlineAt:new Date(Date.parse(browserGrant?.grantedAt ?? task.requestedAt)+prepared.budget.deadlineMs).toISOString()} : {}),
           createdAt: stamp, updatedAt: stamp,
         });
         await tx.update(aiTasks).set({executionTaskId}).where(eq(aiTasks.id, task.id));

@@ -73,6 +73,7 @@ async function fixture(id: string, allowInteraction = true) {
       taskType: "research.gather_material",
       executionTaskId: task.id,
       status: "running",
+      runtimeData:{browserAuthorizationGrant:{grantId:id,aiTaskId:id,userId:ctx.userId,accountId:ctx.accountId,requestFingerprint:"sha256:"+"0".repeat(64),grantedAt:now(),idempotencyKey:id,authorization:{allowedDomains:["example.com"],allowInteraction}}},
       idempotencyKey: id,
       requestedAt: stamp,
     });
@@ -343,4 +344,10 @@ it("最新browser.act回执的data.observation替代旧observe，prepare不写�
       .from(executionCalls)
       .where(eq(executionCalls.executionTaskId, f.task.id)),
   ).toEqual(rows);
+});
+it("旧冻结source不能代替真实grant，缺记录不执行动作",async()=>{
+ const f=await fixture("legacy-no-grant");
+ await db.update(aiTasks).set({runtimeData:{}}).where(eq(aiTasks.id,f.id));
+ const callId=await f.start("browser.observe",{sessionId:"session",url:"https://example.com"});
+ expect(await f.service.prepare(f.ref,{callId})).toMatchObject({status:"blocked",outcome:{error:{code:"permission"},sideEffect:"none"}});
 });

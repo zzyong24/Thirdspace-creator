@@ -91,7 +91,7 @@ it.each([false,true])("真实素材搜索与公开采纳完整链：参数自修
     }
     expect(requests[1+offset]).toContain("material-1"); expect(requests[1+offset]).toContain(searchCursor!);
     expect(requests[2+offset]).toContain("expectedVersion"); expect(requests[2+offset]).toContain("实测标签");
-    const [execution] = await f.db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId));
+    const [execution] = await f.db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId!));
     expect(execution?.status).toBe("succeeded");
     expect(execution?.checkpoint).toMatchObject({revision:repairInvalidInput?7:5});
     expect((execution?.checkpoint as {messages:unknown[]}).messages).toHaveLength(repairInvalidInput?7:5);

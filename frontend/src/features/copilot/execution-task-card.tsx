@@ -17,12 +17,14 @@
  */
 
 import * as React from "react";
+import { BrowserTaskAuthorizationCard } from "./browser-task-authorization-card";
 import type { AgenticProposal } from "@creatoros/contract";
 
 import { client } from "@/lib/contract-client";
 
 const POLL_INTERVAL_MS = 4000;
 function isPollingTask(task: WireExecutionTask) {
+  if(task.authorizationStatus) return false;
   return task.executionTaskId && task.runtimeStatus
     ? ["queued", "running", "retry_wait", "pause_requested", "cancel_requested"].includes(task.runtimeStatus)
     : task.status === "queued" || task.status === "running";
@@ -40,6 +42,7 @@ interface WireExecutionTask {
   id: string;
   executionTaskId?: string;
   runtimeStatus?: string;
+  authorizationStatus?: "awaiting_authorization" | "authorized_pending";
   status:
     | "queued"
     | "running"
@@ -272,7 +275,7 @@ function ExecutionTaskCardBody({
   }, [task, taskId, retryFeedback, projectId, onTaskIdChange]);
 
   const runtimeStatus = task?.executionTaskId ? task.runtimeStatus : undefined;
-  const status = runtimeStatus && ["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested"].includes(runtimeStatus) ? runtimeStatus : task?.status ?? "queued";
+  const status = task?.authorizationStatus ? task.authorizationStatus : runtimeStatus && ["paused", "waiting_user", "unknown_result", "blocked", "pause_requested", "cancel_requested"].includes(runtimeStatus) ? runtimeStatus : task?.status ?? "queued";
   const artifacts = task?.manifest?.artifacts ?? [];
   const proposals = task?.manifest?.proposals ?? [];
   const videoArtifacts = artifacts.filter((artifact) =>
@@ -527,6 +530,7 @@ function ExecutionTaskCardBody({
         </div>
       ) : null}
 
+      {["awaiting_authorization","authorized_pending"].includes(status) ? <BrowserTaskAuthorizationCard authorized={status === "authorized_pending"} taskId={taskId} suggestion={task?.spec.params.browserAuthorization} onSettled={async()=>{await refresh();setPollEpoch(value=>value+1);}}/> : null}
       {actionError ? (
         <p
           data-slot="execution-task-action-error"

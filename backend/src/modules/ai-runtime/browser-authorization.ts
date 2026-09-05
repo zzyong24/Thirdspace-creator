@@ -11,8 +11,8 @@ export class BrowserAuthorizationError extends Error {
     constructor() { super("浏览器操作不在用户已授权的网站或交互范围内"); this.name = "BrowserAuthorizationError"; }
 }
 const inputSchema = z.object({ allowedDomains: z.array(z.string().max(253)).min(1).max(30), allowInteraction: z.boolean() }).strict();
-/** 用户任务创建参数的JSON契约；公共域名与精确范围还由下方运行时验证。 */
-export const browserAuthorizationJsonSchema = { type: "object", additionalProperties: false, required: ["allowedDomains", "allowInteraction"], properties: { allowedDomains: { type: "array", minItems: 1, maxItems: 30, items: { type: "string", format: "hostname", maxLength: 253 }, description: "用户允许访问的公共网站主机名，逐个精确授权，不含URL、端口或通配符" }, allowInteraction: { type: "boolean", description: "用户是否授权在上述网站执行点击和填写" } } } as const;
+/** 网站范围建议的JSON契约；参数本身不授予权限；公共域名与精确范围还由下方运行时验证。 */
+export const browserAuthorizationJsonSchema = { type: "object", additionalProperties: false, required: ["allowedDomains", "allowInteraction"], properties: { allowedDomains: { type: "array", minItems: 1, maxItems: 30, items: { type: "string", format: "hostname", maxLength: 253 }, description: "建议访问的公共网站主机名，实际权限须用户确认，不含URL、端口或通配符" }, allowInteraction: { type: "boolean", description: "是否建议点击和填写；该参数不授予权限，用户确认默认只读" } } } as const;
 function publicHost(raw: string): string {
     const host = assertSafeWebDomain(raw);
     if (host.split(".").some(label => !label || label.length > 63 || !/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(label)))
@@ -31,7 +31,7 @@ function normalize(raw: unknown): BrowserAuthorization {
         throw new BrowserAuthorizationError();
     }
 }
-/** 只用于用户创建任务的inputData；不得把模型工具参数传到该入口以提升权限。 */
+/** 仅做域名与动作范围归一化，不证明授权来源；实际授权必须有后端用户确认记录。 */
 export function prepareBrowserAuthorization(inputData: Record<string, unknown>): BrowserAuthorization | null {
     if (inputData.browserAuthorization === undefined)
         return null;

@@ -1,3 +1,4 @@
+import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { z } from "zod";
 import {
   and,
@@ -106,6 +107,8 @@ export function createExecutionBrowserActionService(
             .for("update");
           if (!business || !["queued", "running"].includes(business.status))
             throw new ConflictError("浏览器AI任务归属或状态不符");
+          const frozenAuth = (task.payload as {modelInput?:{browserAuthorization?:unknown}}).modelInput?.browserAuthorization;
+          try { assertFrozenBrowserTaskGrant(business, frozenAuth); } catch { return blocked("permission"); }
           const calls = await tx
             .select()
             .from(executionCalls)

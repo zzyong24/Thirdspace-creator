@@ -1,3 +1,4 @@
+import { readBrowserTaskGrant } from "../execution/browser-task-grant";
 // AI module schema surface — the contract Zod DTOs this module produces (foundation
 // §5: "<module>.schema.ts — re-export/usage of the contract Zod DTOs for this module").
 // The transport's mappers and the contract test validate their outputs against these;
@@ -85,6 +86,7 @@ export function toTaskDto(row: TaskRow): AITaskResource {
     contentOutputId: row.contentOutputId ?? null,
     taskType: row.taskType,
     status: row.status as AITaskResource["status"],
+    ...(!row.executionTaskId && row.status === "queued" && row.taskType === "exec.agentic.research" && (row.inputData as {spec?:{params?:Record<string,unknown>}})?.spec?.params?.browserAuthorization !== undefined ? {authorizationStatus:readBrowserTaskGrant(row) ? "authorized_pending" as const : "awaiting_authorization" as const} : {}),
     inputData: (row.inputData ?? {}) as Record<string, unknown>,
     modelKey: row.modelKey,
     idempotencyKey: row.idempotencyKey,

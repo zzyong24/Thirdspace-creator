@@ -1,3 +1,4 @@
+import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { and, eq, aiTasks, type Db } from "@creatoros/backend";
 import {
   browserAuthorizationSnapshotSchema,
@@ -63,6 +64,7 @@ export function createExecutionBrowserLoginSnapshotService(
           const authorization = browserAuthorizationSnapshotSchema.parse(
             modelInput.browserAuthorization,
           );
+          assertFrozenBrowserTaskGrant(business, authorization);
           const domains = [
             ...new Set(
               authorization.allowedDomains.map((domain) =>

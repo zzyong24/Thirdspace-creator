@@ -57,6 +57,7 @@ async function fixture(
       taskType: "exec.agentic.research",
       status: "running",
       executionTaskId: task.id,
+      runtimeData:{browserAuthorizationGrant:{grantId:id,aiTaskId:id,userId:ctx.userId,accountId:ctx.accountId,requestFingerprint:"sha256:"+"0".repeat(64),grantedAt:now(),idempotencyKey:id,authorization:{allowedDomains:domains,allowInteraction:true}}},
       idempotencyKey: id,
       requestedAt: now(),
     });
@@ -184,4 +185,10 @@ it("缺冻结授权拒绝且不从任意输入推测域", async () => {
     }).read(f.ref),
   ).rejects.toThrow();
   expect(getStateVersioned).not.toHaveBeenCalled();
+});
+it("旧冻结授权没有grant时不读取任何登录凭据",async()=>{
+ const f=await fixture("legacy-login");await db.update(aiTasks).set({runtimeData:{}}).where(eq(aiTasks.id,"legacy-login"));
+ const getStateVersioned=vi.fn(async()=>({revision:null,stateJson:null}));
+ await expect(createExecutionBrowserLoginSnapshotService(db,{now,sessions:{getStateVersioned}}).read(f.ref)).rejects.toThrow("用户确认记录");
+ expect(getStateVersioned).not.toHaveBeenCalled();
 });

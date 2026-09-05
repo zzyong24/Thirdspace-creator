@@ -57,6 +57,7 @@ export const aiTaskResource = z.object({
   status: aiTaskStatus,
   executionTaskId: id.optional(),
   runtimeStatus: z.string().optional(),
+  authorizationStatus: z.enum(["awaiting_authorization", "authorized_pending"]).optional(),
   inputData: z.record(z.string(), z.unknown()),
   modelKey: z.string(),
   idempotencyKey: z.string(),

@@ -1,4 +1,4 @@
-import { prepareBrowserAuthorization } from "./browser-authorization";
+import { readBrowserTaskGrant, assertFrozenBrowserTaskGrant } from "../execution/browser-task-grant";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, asc, inArray, aiTasks, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import { executionTaskSpec, type ExecutionTaskInput, type RequestContext } from "@creatoros/contract";
@@ -45,10 +45,13 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
         const [execution] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, task.executionTaskId), eq(executionTasks.ownerId, task.id), eq(executionTasks.userId, task.userId), eq(executionTasks.accountId, task.accountId)));
         const frozen = agenticWorkerInputSchema.parse((execution?.payload as { modelInput?: unknown } | undefined)?.modelInput);
         if (frozen.taskType !== spec.taskType || frozen.operationKey !== operationKey || frozen.goal !== spec.goal) throw new Error("AGENTIC_EXECUTION_MISMATCH");
+        assertFrozenBrowserTaskGrant(task, frozen.browserAuthorization);
         // 新配置不能重写历史快照。版本变化由实际工具 admission 诊断。
         return authority.bindAiTask(ctx, task.id);
       }
-      const browserAuthorization = spec.taskType === "agentic.research" ? prepareBrowserAuthorization(spec.params) : null;
+      const grant = spec.taskType === "agentic.research" ? readBrowserTaskGrant(task) : null;
+      if (spec.taskType === "agentic.research" && spec.params.browserAuthorization !== undefined && !grant) return {aiTaskId:task.id,status:"awaiting_authorization" as const,executionTaskId:undefined};
+      const browserAuthorization = grant?.authorization;
       const modelInput = agenticWorkerInputSchema.parse({ ...definition, ...(browserAuthorization ? {browserAuthorization:{...browserAuthorization,source:"user_task"}} : {}), kind: "agentic.run", operationKey, goal: spec.goal,
         maxOutputTokens: deps.maxOutputTokens, dryRun });
       const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCalls, deps.budget.maxCalls),
@@ -68,7 +71,7 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
         for (const task of rows) {
           if (shouldStop()) return;
           const context: RequestContext = { userId: task.userId, accountId: task.accountId, requestId: `recover:${task.id}`, source: "user" };
-          try { await service.prepare(context, task.id); }
+          try { const prepared=await service.prepare(context, task.id); if (!prepared.executionTaskId) unresolved++; }
           catch {
             await onFailure(context, task.id);
             const [current] = await db.select().from(aiTasks).where(eq(aiTasks.id, task.id));

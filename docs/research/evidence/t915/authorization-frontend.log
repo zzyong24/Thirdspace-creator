@@ -1,0 +1,19 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/features/copilot/browser-task-authorization-card.test.tsx src/features/copilot/execution-task-card.test.tsx src/app/api/v1/local/browser-task-authorization/route.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:78807) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:78806) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:78805) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  27 passed (27)
+   Start at  12:05:50
+   Duration  2.24s (transform 304ms, setup 625ms, import 362ms, tests 554ms, environment 3.79s)
+

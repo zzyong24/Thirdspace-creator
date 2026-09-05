@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "1c88fefc730af443c553ad57836bbcba00bf3b8cedee4bcf0f789acaf782cde6",
+      "file_sha256": "5ce25663212b2391def2584a76ea8fa5a6a880dff3dcf3e2d01bb6d4220687c2",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内论点树沿既有持久Worker生成，冻结完整上下文、固定输出协议并保留原领域采纳事务；本批公共测试及独立复核，未扩展凭据/安装机制。完整T-915尚未完成。",
+      "reason": "DEC-RUNTIME-055：组合根接入后端任务浏览器授权及已授权准备重试端口；沿用既有凭据、Worker与工具链，不新增原生程序或凭据存储。独立授权复核无新增阻断。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

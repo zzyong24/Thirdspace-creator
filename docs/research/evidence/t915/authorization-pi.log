@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/agentic-browser-worker.integration.test.ts src/modules/ai-runtime/agentic-material-worker.integration.test.ts src/modules/ai-runtime/agentic-research-worker.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  7 passed (7)
+   Start at  12:07:06
+   Duration  10.20s (transform 2.79s, setup 0ms, import 4.92s, tests 21.56s, environment 0ms)
+

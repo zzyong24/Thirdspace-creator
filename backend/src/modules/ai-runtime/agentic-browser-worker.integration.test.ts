@@ -1,3 +1,4 @@
+import {createBrowserTaskAuthorizationService} from "./browser-task-authorization.service";
 import { createServer } from "node:http";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
@@ -335,6 +336,7 @@ it.each(["normal", "unknown"] as const)(
             },
           },
         });
+      await createBrowserTaskAuthorizationService(f.db,{now}).grant(ctx,"browser-task",{authorization:{allowedDomains:["browser.example.com"],allowInteraction:true},idempotencyKey:"browser-grant"});
       const mapped = await preparation.prepare(ctx, "browser-task");
       expect(await dispatcher.drainOnce()).toBe(1);
       if (serverError) throw serverError;
@@ -353,7 +355,7 @@ it.each(["normal", "unknown"] as const)(
       const [execution] = await f.db
         .select()
         .from(executionTasks)
-        .where(eq(executionTasks.id, mapped.executionTaskId));
+        .where(eq(executionTasks.id, mapped.executionTaskId!));
       if (mode === "unknown") {
         expect(
           execution?.status,
@@ -364,7 +366,7 @@ it.each(["normal", "unknown"] as const)(
         const calls = await f.db
           .select()
           .from(executionCalls)
-          .where(eq(executionCalls.executionTaskId, mapped.executionTaskId));
+          .where(eq(executionCalls.executionTaskId, mapped.executionTaskId!));
         expect(calls).toHaveLength(8);
         expect(calls.filter((call) => call.status === "unknown")).toHaveLength(
           1,
@@ -436,7 +438,7 @@ it.each(["normal", "unknown"] as const)(
       const snapshots = await f.db
         .select()
         .from(executionEvidence)
-        .where(eq(executionEvidence.executionTaskId, mapped.executionTaskId));
+        .where(eq(executionEvidence.executionTaskId, mapped.executionTaskId!));
       expect(
         snapshots.find((row) => row.id === extracted.evidenceRef)?.fullText,
       ).toContain("来自真实浏览器的知识事实");
@@ -447,7 +449,7 @@ it.each(["normal", "unknown"] as const)(
       const calls = await f.db
         .select()
         .from(executionCalls)
-        .where(eq(executionCalls.executionTaskId, mapped.executionTaskId));
+        .where(eq(executionCalls.executionTaskId, mapped.executionTaskId!));
       expect(calls).toHaveLength(13);
       expect(calls.every((call) => call.status === "settled")).toBe(true);
       expect((await ai.confirmTask(ctx, "browser-task")).status).toBe(

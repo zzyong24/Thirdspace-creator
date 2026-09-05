@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/browser-task-authorization.service.test.ts src/modules/ai-runtime/agentic-business-execution.service.test.ts src/modules/execution/execution-browser-action.service.test.ts src/modules/execution/execution-browser-login-snapshot.service.test.ts src/modules/ai/ai.execution-authority.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  5 passed (5)
+      Tests  35 passed (35)
+   Start at  12:05:49
+   Duration  3.36s (transform 1.77s, setup 0ms, import 3.78s, tests 11.08s, environment 0ms)
+
