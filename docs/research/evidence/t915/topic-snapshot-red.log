@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/effective-skill-snapshot.test.ts (10 tests | 1 failed) 26ms
+     × 热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/effective-skill-snapshot.test.ts > [T-513] requiredSkillIdsForTask 确定性注册表 > 热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill
+AssertionError: expected [ 'topic.generate' ] to deeply equal [ 'topic.generate', 'trend.extract' ]
+
+- Expected
++ Received
+
+  [
+    "topic.generate",
+-   "trend.extract",
+  ]
+
+ ❯ src/modules/ai-runtime/effective-skill-snapshot.test.ts:103:71
+    101| describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
+    102|   it("热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill",()=>{
+    103|     expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).…
+       |                                                                       ^
+    104|     expect(requiredSkillIdsForTask("topic.generate",{basis:"positionin…
+    105|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  13:23:22
+   Duration  541ms (transform 245ms, setup 0ms, import 389ms, tests 26ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/effective-skill-snapshot.test.ts

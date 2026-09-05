@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts (11 tests | 1 failed) 1146ms
+   × 旧信源hostname含www或抖音alias仍能按真实登录域读取 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-topic-read.service.test.ts > 旧信源hostname含www或抖音alias仍能按真实登录域读取
+ConflictError: 冻结来源URL与域名不符
+ ❯ canonical src/modules/execution/execution-topic-read.service.ts:40:57
+     38|    const sources=frozen.trendSources.filter(s=>s.id===target.sourceId)…
+     39|    const source=sources[0]!;const domain=assertSafeWebDomain(webDomain…
+     40|    if(domain!==assertSafeWebDomain(source.domain))throw new ConflictEr…
+       |                                                         ^
+     41|    request={kind:source.sourceType,sourceId:source.id,name:source.name…
+     42|   }
+ ❯ Object.reserveTopicRead src/modules/execution/execution-topic-read.service.ts:102:111
+ ❯ src/modules/execution/execution-topic-read.service.test.ts:92:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  13:35:21
+   Duration  2.26s (transform 533ms, setup 0ms, import 977ms, tests 1.15s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-topic-read.service.test.ts

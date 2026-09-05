@@ -105,7 +105,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
           reply = (async (): Promise<HostMessage> => {
             try {
               const input = workerPortInputSchemas[message.port].parse(message.data);
-              const settlement = message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
+              const settlement = message.port === "settleTopicRead" || message.port === "settleCall" || message.port === "settleGenerationCall" || message.port === "settleAgenticTool" || message.port === "settleResearchRead" || message.port === "settleBrowserObservation" || message.port === "acknowledgeControl";
               await options.ports.validate(message.execution, settlement ? "settlement" : "admission");
               // 校验期间可能取消/换租约；本地控制也必须再次检查。
               if (!current || !sameExecution(current.execution, message.execution) || (!settlement && current.cancelTimer)) throw new Error("STALE_EXECUTION");
@@ -113,7 +113,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
               return {version: 1, type: "reply", requestId: message.requestId, ok: true, data};
             } catch(error) {
               const code=error && typeof error === "object" ? (error as {code?:unknown}).code : undefined;
-              const errorCode=message.port==="resolveModelCredential" && typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "HOST_PORT_REJECTED";
+              const errorCode=message.port==="reserveTopicRead" && error && typeof error==="object" && (error as {budgetCode?:unknown}).budgetCode==="EXECUTION_BUDGET_EXHAUSTED" ? "EXECUTION_BUDGET_EXHAUSTED" : message.port==="resolveModelCredential" && typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "HOST_PORT_REJECTED";
               return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode};
             }
           })();

@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/topic-candidate-adoption.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/topic-candidate-adoption.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/topic-candidate-adoption.test.ts [ src/integration/topic-candidate-adoption.test.ts ]
+Error: Cannot find module '../modules/ai/topic-candidate-adoption.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/integration/topic-candidate-adoption.test.ts
+ ❯ src/integration/topic-candidate-adoption.test.ts:4:1
+      2| import {createDb,aiTasks,aiTaskResults,executionTasks,candidates,eq,ty…
+      3| import {createCandidateService} from '../modules/candidate/candidate.s…
+      4| import {createTopicCandidateAdoptionService} from '../modules/ai/topic…
+       | ^
+      5| const ctx={userId:'u',accountId:'a',requestId:'r',source:'user' as con…
+      6| const now=()=> '2026-09-06T00:00:00.000Z';let n=0;const nextId=(p:stri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:21:18
+   Duration  781ms (transform 303ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -1,3 +1,5 @@
+import {createExecutionTopicReadService} from "./execution-topic-read.service";
+import {buildTrendQuery} from "@creatoros/ai-worker";
 import {createExecutionBrowserProfileLeaseService,BrowserProfileBusyError} from "./execution-browser-profile-lease.service";
 import {createExecutionBrowserActionService} from "./execution-browser-action.service";
 import {createExecutionBrowserEvidenceService} from "./execution-browser-evidence.service";
@@ -36,7 +38,7 @@ interface WorkerDispatcherDeps {
   modelConcurrency?:number;
   onError?(code:string):void;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>;browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
 export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
@@ -53,6 +55,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
   const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
+  const topicReads=deps.executionMode==="model" ? createExecutionTopicReadService(db,{now,budget:deps.budget,buildTrendQuery,sessions:deps.browserSessions}) : null;
   const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
@@ -76,6 +79,22 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(topicReads){
+        if(port==="reserveTopicRead")return topicReads.reserveTopicRead(ref,raw);
+        if(port==="startTopicRead")return topicReads.startTopicRead(ref,raw);
+        if(port==="settleTopicRead")return topicReads.settleTopicRead(ref,raw);
+        if(port==="readTopicRead")return topicReads.readTopicRead(ref,raw);
+        if(port==="saveTopicBrowserSession")return topicReads.saveTopicBrowserSession(ref,raw);
+        if(port==="readTopicBrowserSession"){
+          const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+          const reading=(async()=>{
+            scope.controller.signal.throwIfAborted();const session=await topicReads.readTopicBrowserSession(ref,raw);
+            if(!("domain" in session))throw new Error("TOPIC_BROWSER_SESSION_INVALID");
+            try{await browserProfiles.acquire(ref,session.domain);}catch(error){if(!(error instanceof BrowserProfileBusyError))throw error;return {status:"blocked",outcome:{status:"error",summary:"网站正在被另一个任务使用",evidence:[],error:{code:"transient",retryable:true,recovery:"等待网站任务结束后重试"},continuation:null,sideEffect:"none"}};}
+            scope.controller.signal.throwIfAborted();return topicReads.readTopicBrowserSession(ref,raw);
+          })();scope.pending.add(reading);try{return await reading;}finally{scope.pending.delete(reading);}
+        }
+      }
       if(port==="settleBrowserObservation" && browserEvidence)return browserEvidence.settle(ref,raw);
       if(port==="prepareBrowserAction" && browserActions){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");

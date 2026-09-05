@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/topic-business-adapter.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/topic-business-adapter.test.ts [ src/modules/ai-runtime/topic-business-adapter.test.ts ]
+Error: Cannot find module './topic-business-adapter' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/topic-business-adapter.test.ts
+ ❯ src/modules/ai-runtime/topic-business-adapter.test.ts:2:1
+      1| import {describe,it,expect,vi} from 'vitest';
+      2| import {createTopicGenerateBusinessAdapter,prepareTopicGenerateContext…
+       | ^
+      3| const ctx={userId:'u',accountId:'a',requestId:'r',source:'user' as con…
+      4| const now=()=> '2026-09-05T00:00:00.000Z';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:20:43
+   Duration  162ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/topic-business-adapter.test.ts --retry=0

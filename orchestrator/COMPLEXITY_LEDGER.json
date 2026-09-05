@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "83d0a3835c3c5e5d64e624de7192c08c900fb0097bc250efa2b63f284c4f0ae4",
+      "file_sha256": "e5a3fde2954c3c25ddc5919c3aa42014a7de52b67ae8f15372ab9c3e1f7a262c",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "已确认独立 Node Worker 的私有父子通信，属于 R-02 必需机制。",
+      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "f8ae4dc22991fd32f5dd896d1d395455848f218aba3bb9dd94b37fbcd3329582",
+      "file_sha256": "dc8272343e67e23b4c5881d4594a17f60c014e23e703d563157172f7e12519f0",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：素材生成迁入既有 Worker，纯上下文准备保留来源标记；同事务完成知识、项目关联和采纳回执，旧逐项采纳记录兼容。未增加模型规划层或数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "895b2e0b602275e93dccc3335bccb9d2ca946b8bca5d6c9a7338130973ebe736",
+      "file_sha256": "20ce16e974c8528044d49604a44c6f46672e1a898be3ef62c69cae893d2fbe3b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 范围内新增浏览器观察私有结算端口的settlement分类，允许取消后保留已执行事实；不增加动作权限。",
+      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "825d534d29e7eeace92a437f80c4809f50440bb9dad45f8d81677ad595888da7",
+      "file_sha256": "f98a587d2719498f1a9895e1579e42e386f3ae62b02488f718e743946b824c8e",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：素材生成迁入既有 Worker，纯上下文准备保留来源标记；同事务完成知识、项目关联和采纳回执，旧逐项采纳记录兼容。未增加模型规划层或数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "83397a2cb0fd10a51460d94ebf76a10737288f4da366c76a118376cdfd88ee66",
+      "file_sha256": "1f06c3b22ecc6cb27b28c77dedbef6bdd3bba2e1b12e69c475b5f2edc80b025f",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认范围：校准诊断、自动评分与定位迁入既有Worker；冻结真实维度/指标，领域服务事务采纳并保留完成事件。未增加模型规划层或数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {
@@ -1403,6 +1403,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "R02/R04宿主崩溃资源回收的限定隔离实验；只启动夹具及临时Chromium，不是生产guardian、不读用户数据或数据库。",
       "acceptance": "仅登记研究复杂度，不代表持久回执、profile解锁或平台发布通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/topic-worker-reads.test.ts"
+      ],
+      "file_sha256": "764c8ea0165c48862b45f32ad0e0dda97a57c3cdb2ecccb7564078289fe48272",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准私有Worker端口的错误与回执验证，属于执行恢复必要证据。",
+      "acceptance": "只登记当前证据的复杂度，不代表完整任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/topic-independent-review.md"
+      ],
+      "file_sha256": "175f3b9b5a8d6c4ef5e8b34d5e99fd5a489d82a0e456a8ed562d04b8b3d30d20",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "已批准私有Worker端口的错误与回执验证，属于执行恢复必要证据。",
+      "acceptance": "只登记当前证据的复杂度，不代表完整任务通过。"
     }
   ],
   "historical_baselines": []

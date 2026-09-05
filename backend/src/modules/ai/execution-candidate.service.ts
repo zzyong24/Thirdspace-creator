@@ -45,6 +45,11 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
           if(!Array.isArray(diagnosis?.dimensions))throw new ConflictError("诊断维度格式无效");
           await tx.insert(aiTaskSteps).values({id:`ai-diagnosis-step:${call.id}`,aiTaskId:business.id,stepNo:1,kind:"step",text:`已生成编导诊断（${diagnosis.dimensions.length} 维度评分）`,toolCalls:[],createdAt:stamp});
         }
+        if(business.taskType==="topic.generate" && projected.resultType==="candidate_list"){
+          const items=(projected.resultData as {items?:unknown}).items;
+          if(!Array.isArray(items))throw new ConflictError("选题候选格式无效");
+          await tx.insert(aiTaskSteps).values({id:`ai-topic-step:${call.id}`,aiTaskId:business.id,stepNo:1,kind:"step",text:`已生成 ${items.length} 条选题`,toolCalls:[],createdAt:stamp});
+        }
         await tx.update(aiTasks).set({status:"awaiting_confirmation",completedAt:null,errorMessage:null,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,business.id));
         await tx.update(executionCalls).set({resultRef:resultId,updatedAt:stamp}).where(eq(executionCalls.id,call.id));
         await tx.update(executionTasks).set({status:partial ? "partial" : "succeeded",leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:null,lastErrorMessage:null,updatedAt:stamp}).where(eq(executionTasks.id,task.id));

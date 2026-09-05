@@ -180,6 +180,7 @@ export function requiredSkillIdsForTask(
   taskType: string,
   inputData: Readonly<Record<string, unknown>>,
 ): readonly string[] {
+  if (taskType === "topic.generate" && inputData.basis === "trend") return ["topic.generate", "trend.extract"];
   if (taskType === "script.draft") {
     return [
       "script.draft",

@@ -57,7 +57,7 @@ const BASIS_HINT: Record<TopicBasis, string> = {
 
 // 装配 topic.generate 模板的 facets(定位兜底 + 依据提示 + 依据上下文)。runStructuredNode 内部
 // bindPrompt(模板, facets)。换写作方法论 = 换 TOPIC_GENERATE_TEMPLATE,不动本 runner。
-function topicFacets(
+export function topicFacets(
   positioningBrief: string,
   basis: TopicBasis,
   basisBrief?: string,
@@ -126,7 +126,7 @@ export function parseTopics(text: string): TopicItem[] {
 }
 
 /** 把 schema 校验后的对象归一成 TopicItem[](T-025:结构化后拿的是已解析对象,滤空/兜底原样保留)。 */
-function normalizeTopics(items: TopicArrayOutput["topics"]): TopicItem[] {
+export function normalizeTopics(items: TopicArrayOutput["topics"]): TopicItem[] {
   return (items ?? [])
     .map((o): TopicItem | null => {
       const title = (o.title ?? "").trim();

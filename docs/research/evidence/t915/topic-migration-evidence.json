@@ -1,0 +1,82 @@
+{
+  "task": "T-915",
+  "baseCommit": "3130b209",
+  "entry": "ai.tasks.create → topic.generate",
+  "status": "本入口完整pipeline已迁移，T-915整体进行中",
+  "tests": {
+    "backend": 156,
+    "worker": 81,
+    "realBrowser": 2,
+    "contract": 2,
+    "workerStaging": 3,
+    "totalDistinct": 244
+  },
+  "testLogs": [
+    "topic-backend-final-regression.log",
+    "topic-worker-regression.log",
+    "topic-browser-read-callback-green.log",
+    "topic-read-contract-green.log",
+    "topic-worker-staging.log"
+  ],
+  "types": [
+    "topic-types-final.log",
+    "topic-frontend-types-final.log",
+    "topic-read-final-types.log"
+  ],
+  "review": "topic-independent-review.md",
+  "files": {
+    "ai-worker/scripts/build.mjs": "16028fd3aaf1312cdfd91e1c954e9ebda9dad8144cea8bd4fe9346fb82613bfe",
+    "ai-worker/src/execution/research-worker-tools.ts": "a93b8f1a25e504a7e2d452157755c3ef219da95a7813def7e965438e0decaac4",
+    "ai-worker/src/execution/structured-business-schema.ts": "de017ee62c82aa805bf04d47960ef48e18ed943d7b178959e1f996128d39d5e7",
+    "ai-worker/src/execution/structured-worker-generation.ts": "1f06c3b22ecc6cb27b28c77dedbef6bdd3bba2e1b12e69c475b5f2edc80b025f",
+    "ai-worker/src/execution/topic-browser-read.integration.test.ts": "3ca3faf2fed013ae7c684e54bda35b85614380005ea733f42ca7505dd8b0306d",
+    "ai-worker/src/execution/topic-worker-input.ts": "77b11697b1f83a34febe6f02332f634efd995ca2e6ff95e9a6736ba6b818518e",
+    "ai-worker/src/execution/topic-worker-pipeline.test.ts": "0004345a2e9eb005fb70f7e9619ffb9837d4c10e30c0a894aa74f8792c1da644",
+    "ai-worker/src/execution/topic-worker-pipeline.ts": "b5dea643c4c651c2837afab133ce1a567d90ba661388eeb56a30b98fc0ca10ec",
+    "ai-worker/src/execution/topic-worker-reads.test.ts": "764c8ea0165c48862b45f32ad0e0dda97a57c3cdb2ecccb7564078289fe48272",
+    "ai-worker/src/execution/topic-worker-reads.ts": "04c0d05b9ac7c03e92429c1b03780101fbb98c219c438d9ac8b51264465b2b4b",
+    "ai-worker/src/execution/worker-entry.ts": "e5a3fde2954c3c25ddc5919c3aa42014a7de52b67ae8f15372ab9c3e1f7a262c",
+    "ai-worker/src/index.ts": "937ed6ad7155a996a49c245d480ca6441809a87fa6aeffcd59ff9ebbd1559e6e",
+    "ai-worker/src/nodes/topic-node.ts": "2c9f725123c12777ab89f98957943e2f0bcb5d4333c27ee83d0d9b46bb7b70dc",
+    "ai-worker/src/nodes/topic-signal-quality.ts": "bcad87d6bd06c70a9afd391ad1c6676a05f587a423f3d19225af5b065e4ac440",
+    "ai-worker/src/nodes/topic-trend-context.ts": "1402154f00be443cbe368433a56b93076db261921b974a054331f17b8f43f9e5",
+    "backend/src/integration/topic-candidate-adoption.test.ts": "5be92d16cbbeed98f3099e89109829a825b2cb46672b4fc701710393e7299cce",
+    "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts": "01550d9ab615656c086110bcc51dd262fbe29da21220b29c5636982dfde6c83c",
+    "backend/src/modules/ai-runtime/effective-skill-snapshot.ts": "c273997003b68c4cb861e9d16c492b850515e82d04b7bacad90ad78d8d3aba02",
+    "backend/src/modules/ai-runtime/index.ts": "b202068d496096ca78e944c02ebef072df762d55f25d2bc1798238ed8829ab6f",
+    "backend/src/modules/ai-runtime/signal-quality.ts": "09af6195a2552e654785a866220e338b03f477a19fddfab655379de656da6af1",
+    "backend/src/modules/ai-runtime/topic-business-adapter.test.ts": "6621489571232e23648a3086f5d78ffec52b4b467b236ee432aff6cacb191ab1",
+    "backend/src/modules/ai-runtime/topic-business-adapter.ts": "8143446e4000375480e0bca640b147d73ca198d792c722ecc645e3cf4f6c69fe",
+    "backend/src/modules/ai-runtime/topic-runner.ts": "a353906247c851bc1002afb800b3a79afcca39458d21036f6887cd819111b4cc",
+    "backend/src/modules/ai-runtime/topic-task-adapter.test.ts": "d18abd87ce74d39b2dc211b05a8facfbd25597cab18199a649dbe91aff6fe8d0",
+    "backend/src/modules/ai-runtime/topic-task-adapter.ts": "6dd639f4a7678606179ed7abd716d82e22bf101ddcaeaa681f5c14c1fd75bbf2",
+    "backend/src/modules/ai-runtime/trend-source-signals.ts": "6e64e08bccdaf3708663731255ca4576aea8b64673c2b365905b2fdd667dccd1",
+    "backend/src/modules/ai/ai.service.ts": "dc8272343e67e23b4c5881d4594a17f60c014e23e703d563157172f7e12519f0",
+    "backend/src/modules/ai/execution-candidate.service.ts": "8b1241307d911580e2d4caf90da5e2e3ca5e14bd988d33d6af8329a02a98a370",
+    "backend/src/modules/ai/index.ts": "02c63d48edc641c9137988dfaf395a2408c7fe2203993840b9cd1297d50fd99a",
+    "backend/src/modules/ai/topic-candidate-adoption.service.ts": "6873547d91c81af2ba968af3e82a1bc0da855e7d61b2d829d67cf01281fa96e5",
+    "backend/src/modules/execution/execution-research-blocked.ts": "718288645e24ebb3cdf57caf83cc969e4e7d47841cf173e84fa82eef8a541285",
+    "backend/src/modules/execution/execution-topic-read.service.test.ts": "4d25f3799cc5180f89236c0f75be76c79a20578bdec079ff7b750dd40aa2f7c1",
+    "backend/src/modules/execution/execution-topic-read.service.ts": "aabc98c8e2f0a59bce0a30a30affe2480bf2c2c15a23fe5c2529e697e087a2c7",
+    "backend/src/modules/execution/model-worker-dispatcher.ts": "219677fe02b5c49f2ca2ddd2728d0d2a391247b205f312adff1a779fa6766c5f",
+    "backend/src/modules/execution/topic-worker.integration.test.ts": "ca050b7f2621d88df3e4f4d192b70ff4d41e9b92c1e9a2627cb3820779471a19",
+    "backend/src/modules/execution/worker-supervisor.ts": "20ce16e974c8528044d49604a44c6f46672e1a898be3ef62c69cae893d2fbe3b",
+    "contract/src/internal/execution-topic-read.ts": "a7be6f2b45624489454338db00397cc73c827053bb21b590729bde42e39cdb46",
+    "contract/src/internal/execution-worker.ts": "979ea2a5b09b0e980bbcc129a994de3a22ebd093f4b0a3744a2fd32a8f041871",
+    "contract/tests/execution-topic-read.test.ts": "de7551040f76d7b001ab7edd8fb59ab5ba9e590c237812ae1d722f7fe7f293fb",
+    "frontend/src/server/persistence-client.ts": "f98a587d2719498f1a9895e1579e42e386f3ae62b02488f718e743946b824c8e"
+  },
+  "limitations": [
+    "fork外部读取为真实host服务预置fixture；实际浏览器另测",
+    "没有真实供应商请求或用户站点登录态",
+    "没有安装替换或双端安装包验证",
+    "没有完整UI与30样本延迟指标",
+    "聊天与定时选题等其余R05入口仍未迁移"
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "status": "与此前全局基线一致，历史T-916欠债仍未销账",
+    "log": "topic-reconcile.log"
+  }
+}

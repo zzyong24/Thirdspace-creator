@@ -1,3 +1,6 @@
+import {TOPIC_GENERATE_TEMPLATE} from "@creatoros/ai-worker";
+import {createTopicCandidateAdoptionService} from "@creatoros/backend/modules/ai";
+import {createTopicGenerateBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
 import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
 import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
 import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusinessAdapter, createPositioningGenerateBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
@@ -289,7 +292,6 @@ import type {
 import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
 import { createResearchGatherBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createResearchMaterialAdoptionService } from "@creatoros/backend/modules/ai";
-import { runTopicGenerateV2 } from "@creatoros/backend/modules/ai-runtime";
 import * as nodePath from "node:path";
 import { existsSync, renameSync } from "node:fs";
 // [T-326 B-04] douyin-cdp(抖音浏览器采集,拉 Playwright/Chromium 链)改**真正的懒加载**:
@@ -3194,7 +3196,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }).create(c,input);
     },
   },deps.now);
+  const topicCandidateAdoption=createTopicCandidateAdoptionService(db,{
+    assertProject(c,id,tx){return createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(c,id);},
+    createFromAIResult(c,input,tx){
+      const txDb=tx as unknown as Db;
+      const txProjects=createProjectsService(createProjectRepository(txDb),deps);
+      const txPositioning=createPositioningService({db:txDb,...deps,projects:{getProjectSubject:async(context,id)=>{const row=await txProjects.getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};}}});
+      return createCandidateService({db:txDb,...deps,
+        projects:{createProject:(context,value)=>txProjects.createProject(context,value)},
+        ingestion:{assertRunExists:async(context,id)=>{await ingestionService.getRun(context,id);}},
+        positioning:{evaluateFit:async(context,subject)=>{
+          try{return (await txPositioning.evaluateGate(context,{subjectType:"candidate",subjectId:"candidate-inline",candidate:{title:subject.title,angle:subject.angle,contentRole:subject.contentRole??undefined,productAnchorId:subject.productAnchorId??undefined}})).positioningFit;}catch{return null;}
+        }},
+      }).createFromAIResult(c,input);
+    },
+  },deps.now);
   const aiService = createAiService({
+    topicCandidates:topicCandidateAdoption,
     researchMaterials:researchMaterialAdoption,
     calibrationPositioning:calibrationPositioningAdoption,
     structuredTargets: structuredTargetAdoption,
@@ -4071,35 +4089,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
         if (
-          task &&
-          task.taskType === "topic.generate" &&
-          task.status === "queued"
-        ) {
-          // Phase 3 A 路径:跑在新 Agent Runtime 上(按 capability 配的 model + 步骤日志),
-          // 替掉旧的 runClaudeAgent 订阅路径。没配 model key → 适配器 cancelTask(不假成功)。
-          await runTopicGenerateV2(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              signals: signalsReader,
-              knowledge: knowledgeReader,
-              // [T-182c] trend 出题依据接 T-126 联网检索:组合根把 searchWebPort(rss 免key/browser
-              // 无头采集,同一 search registry)绑进来抓当前热点。未配 web.search → searchWebPort 抛
-              // SearchConfigError,adapter 内 catch 成空 brief 降级,不重造采集器、不崩。
-              trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
-              // [T-235b] 已登记信源信号(主路):web 型 readUrl+AI 抽取 / rss 型 feed 解析,
-              // 与 web 搜索并行拼 trend brief(assembleTrendBrief,单路失败只丢该段)。
-              trendSourceSignals: (c) => trendSourceSignalsPort(c),
-              resolveModelSpec,
-            },
-          );
-        } else if (
           task &&
           task.taskType === "video.decisions" &&
           task.status === "queued"
@@ -9679,6 +9668,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               },
   };
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
     "calibration.score":createCalibrationScoreBusinessAdapter({...generationContext,...calibrationScoreReaders}),
@@ -9748,6 +9738,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
+    browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},

@@ -1,0 +1,112 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/topic-worker.integration.test.ts (4 tests | 4 skipped) 1214ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/topic-worker.integration.test.ts [ src/modules/execution/topic-worker.integration.test.ts ]
+Error: Command failed: /opt/homebrew/Cellar/node/25.9.0_2/bin/node /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/scripts/build.mjs
+▲ [WARNING] "playwright-core/package.json" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    ../node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/common/index.js:325:72:
+      325 │ ...default.dirname(require.resolve("playwright-core/package.json"));
+          ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] "playwright-core/package.json" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    ../node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/util.js:75:73:
+      75 │ ....default.dirname(require.resolve("playwright-core/package.json"));
+         ╵                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] "../transform/esmLoader.js" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    ../node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/common/index.js:1188:61:
+      1188 │ ...t.pathToFileURL(require.resolve("../transform/esmLoader.js")), {
+           ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] "playwright" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    ../node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/common/index.js:1316:71:
+      1316 │ ...e = import_path7.default.dirname(require.resolve("playwright"));
+           ╵                                                     ~~~~~~~~~~~~
+
+✘ [ERROR] Could not resolve "chromium-bidi/lib/cjs/bidiMapper/BidiMapper"
+
+    ../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41745:33:
+      41745 │ ..._toESM(require("chromium-bidi/lib/cjs/bidiMapper/BidiMapper"));
+            ╵                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "chromium-bidi/lib/cjs/bidiMapper/BidiMapper" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle. You can also surround this "require" call with a try/catch block to handle this failure at run-time instead of bundle-time.
+
+✘ [ERROR] Could not resolve "chromium-bidi/lib/cjs/cdp/CdpConnection"
+
+    ../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41746:40:
+      41746 │ ... = __toESM(require("chromium-bidi/lib/cjs/cdp/CdpConnection"));
+            ╵                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "chromium-bidi/lib/cjs/cdp/CdpConnection" as external to exclude it from the bundle, which will remove this error and leave the unresolved path in the bundle. You can also surround this "require" call with a try/catch block to handle this failure at run-time instead of bundle-time.
+
+✘ [ERROR] No loader is configured for ".node" files: ../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.node
+
+    ../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.js:13:23:
+      13 │ const Native = require("./fsevents.node");
+         ╵                        ~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] "./xhr-sync-worker.js" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    ../node_modules/.pnpm/jsdom@29.1.1_@noble+hashes@1.8.0/node_modules/jsdom/lib/jsdom/living/xhr/XMLHttpRequest-impl.js:31:39:
+      31 │ const syncWorkerFile = require.resolve("./xhr-sync-worker.js");
+         ╵                                        ~~~~~~~~~~~~~~~~~~~~~~
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 3 errors:
+../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.js:13:23: ERROR: No loader is configured for ".node" files: ../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.node
+../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41745:33: ERROR: Could not resolve "chromium-bidi/lib/cjs/bidiMapper/BidiMapper"
+../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41746:40: ERROR: Could not resolve "chromium-bidi/lib/cjs/cdp/CdpConnection"
+    at failureErrorWithLog (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1207:25
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1159:52
+    at buildResponseToResult (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1205:7)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1232:16
+    at responseCallbacks.<computed> (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:509:20)
+    at addChunk (node:internal/streams/readable:564:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v25.9.0
+
+ ❯ failureErrorWithLog ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1207:25
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1159:52
+ ❯ buildResponseToResult ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1205:7
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1232:16
+ ❯ responseCallbacks.<computed> ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9
+ ❯ handleIncomingPacket ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12
+ ❯ Socket.readFromStdout ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7
+ ❯ src/modules/execution/topic-worker.integration.test.ts:15:81
+     13| const budget={maxCalls:15,maxTokens:2000000,deadlineMs:120000};
+     14| let db:Db,close:()=>Promise<void>;
+     15| beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.clien…
+       |                                                                                 ^
+     16| afterAll(async()=>close?.());
+     17| it.each(['positioning','comments','knowledge','trend'] as const)('%s:真…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 skipped (4)
+   Start at  13:31:10
+   Duration  2.45s (transform 624ms, setup 0ms, import 1.10s, tests 1.21s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/topic-worker.integration.test.ts

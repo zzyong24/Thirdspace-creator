@@ -1,3 +1,4 @@
+import {topicArraySchema} from "../prompt/templates/topic-generate";
 import { researchMaterialSchema } from "../prompt/templates/research-gather";
 import { normalizeResearchResult } from "../nodes/research-node";
 import { z } from "zod";
@@ -23,6 +24,7 @@ export function resolveStructuredBusinessSchema(
 ): z.ZodType | undefined {
   // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
   switch (input.skillId) {
+    case "topic.generate": return topicArraySchema;
     case "research.gather":
       z.object({
         topic: z.string(),

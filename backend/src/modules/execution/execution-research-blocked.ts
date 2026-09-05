@@ -1,3 +1,4 @@
+import {topicReadStoredReceiptSchema} from "@creatoros/contract/execution-worker";
 import { agenticToolOutcomeSchema, workerToolResultReceiptSchema } from "@creatoros/contract/execution-worker";
 
 /** 只识别可由用户恢复的已确定、无写入副作用的研究阻断回执。 */
@@ -5,6 +6,8 @@ export function isAcknowledgableResearchBlock(call: {kind: string; status: strin
   if (call.kind !== "tool" || call.status !== "settled") return false;
   let raw: unknown;
   try { raw = JSON.parse(call.resultText ?? ""); } catch { return false; }
+  const topic=topicReadStoredReceiptSchema.safeParse(raw);
+  if(topic.success)return topic.data.receipt.status==="error" && ["NEEDS_LOGIN","CAPTCHA","BROWSER_RUNTIME_UNAVAILABLE"].includes(topic.data.receipt.error.code);
   const receipt = workerToolResultReceiptSchema.safeParse(raw);
   if (!receipt.success) return false;
   const parsed = agenticToolOutcomeSchema.safeParse(receipt.data.output);

@@ -1,3 +1,4 @@
+import {closeTopicWorkerResources} from "./topic-worker-reads";
 import { generateStructuredInWorker } from "./structured-worker-generation";
 import { streamText } from "ai";
 import { modelFor } from "../runtime/provider-factory";
@@ -28,6 +29,8 @@ const worker = createExecutionWorker({
   },
 });
 process.on("message", message => worker.receive(message));
-process.on("disconnect", () => {worker.close(); process.exit(0);});
-process.on("SIGTERM", () => {worker.close(); process.exit(0);});
+let shuttingDown=false;
+const shutdown=async()=>{if(shuttingDown)return;shuttingDown=true;worker.close();await closeTopicWorkerResources();process.exit(0);};
+process.on("disconnect", () => {void shutdown();});
+process.on("SIGTERM", () => {void shutdown();});
 worker.ready();

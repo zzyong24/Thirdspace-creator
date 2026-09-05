@@ -125,3 +125,5 @@ export * from "./target-business-adapters";
 
 export * from "./calibration-positioning-business-adapters";
 export * from './research-business-adapter';
+
+export * from './topic-business-adapter';

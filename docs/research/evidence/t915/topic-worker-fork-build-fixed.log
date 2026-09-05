@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/topic-worker.integration.test.ts (4 tests | 1 failed) 8218ms
+   × trend:真实fork生成；热点429恢复复用已结算来源与抽取 1049ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/topic-worker.integration.test.ts > trend:真实fork生成；热点429恢复复用已结算来源与抽取
+AssertionError: expected 'queued' to be 'retry_wait' // Object.is equality
+
+Expected: "retry_wait"
+Received: "queued"
+
+ ❯ src/modules/execution/topic-worker.integration.test.ts:43:24
+     41|   await worker.drainOnce();let task=await createPersistentTaskService(…
+     42|   if(basis==='trend'){
+     43|    expect(task.status).toBe('retry_wait');const [row]=await db.select(…
+       |                        ^
+     44|    await worker.drainOnce();task=await createPersistentTaskService(db,…
+     45|    expect(extracts).toBe(1);expect(finals).toBe(2);expect(requests).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  13:31:59
+   Duration  9.47s (transform 617ms, setup 0ms, import 1.12s, tests 8.22s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/topic-worker.integration.test.ts

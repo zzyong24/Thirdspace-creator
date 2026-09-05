@@ -1,52 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { RequestContext } from "@creatoros/contract";
-
-// [T-182c] topic.generate 的 trend 出题依据接线测试:验证 basis="trend" 时组合根注入的
-// trendSearch 端口(复用 T-126 联网检索)被调用,其命中被拼进 basisBrief 真喂给 runTopicTask;
-// 端口未绑 / 检索抛错时诚实降级为空 brief 但不崩(仍走节点,靠 basis 参数当降级 hint)。
-// mock ai-worker(动态 import 目标)的 modelFor + runTopicTask,只观察装配后的入参。
-const runTopicTask = vi.fn(async (_input: { basisBrief?: string }) => undefined);
-vi.mock("@creatoros/ai-worker", () => ({
-  modelFor: vi.fn(() => ({}) as never),
-  runTopicTask,
-}));
-
-import {
-  runTopicGenerateV2,
-  buildTrendQuery,
-  formatTrendBrief,
-  type TopicTaskAdapterDeps,
-  type TrendHit,
-} from "./topic-task-adapter";
-
-const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
-
-function makeDeps(
-  trendSearch?: TopicTaskAdapterDeps["trendSearch"],
-): TopicTaskAdapterDeps {
-  return {
-    ai: {
-      markRunning: vi.fn(async () => undefined),
-      recordStep: vi.fn(async () => undefined),
-      recordCandidate: vi.fn(async () => undefined),
-      cancelTask: vi.fn(async () => undefined),
-    } as never,
-    positioning: {
-      getPositioningCenter: async () => ({
-        profile: null,
-        currentStatement: null,
-      }),
-    } as never,
-    resolveModelSpec: vi.fn(async () => ({
-      apiFormat: "anthropic" as const,
-      baseUrl: null,
-      model: "claude-opus-4-8",
-      token: "k",
-    })),
-    trendSearch,
-  };
-}
-
+import {describe,it,expect,vi} from 'vitest';
+import type {RequestContext} from '@creatoros/contract';
+import {buildTrendQuery,formatTrendBrief,assembleTrendBriefDetailed,trendQualityFromDetail,type TrendHit} from './topic-task-adapter';
+const ctx:RequestContext={userId:'u1',requestId:'r1',source:'user'};
 describe("buildTrendQuery", () => {
   it("贴定位领域,空白归一 + 截断", () => {
     expect(buildTrendQuery("  硬核 AI  创作者  ")).toBe(
@@ -78,46 +33,16 @@ describe("formatTrendBrief", () => {
   });
 });
 
-describe("runTopicGenerateV2 (trend basis 联网检索接线)", () => {
-  beforeEach(() => {
-    runTopicTask.mockClear();
-  });
-  it("basis=trend + trendSearch 有命中 → basisBrief 非空,真喂给 runTopicTask", async () => {
-    const trendSearch = vi.fn(
-      async (_c: RequestContext, _query: string, _opts?: { count?: number }) => [
-        { title: "AI Agent 爆发", snippet: "多个框架发布" },
-      ],
-    );
-    const deps = makeDeps(trendSearch);
-    await runTopicGenerateV2(ctx, { id: "t1", inputData: { basis: "trend" } }, deps);
 
-    expect(trendSearch).toHaveBeenCalledTimes(1);
-    // query 由定位派生(本测试 positioning 空 → 通用 query)。
-    expect(trendSearch.mock.calls[0]![1]).toBe("内容创作 最新热点 趋势");
-    expect(runTopicTask).toHaveBeenCalledTimes(1);
-    const arg = runTopicTask.mock.calls[0]![0] as { basisBrief?: string; basis?: string };
-    expect(arg.basis).toBe("trend");
-    expect(arg.basisBrief).toContain("AI Agent 爆发");
-  });
-
-  it("basis=trend + trendSearch 抛错 → basisBrief 空,但仍跑节点(不崩、不 cancel)", async () => {
-    const trendSearch = vi.fn(async () => {
-      throw new Error("web.search 未配");
-    });
-    const deps = makeDeps(trendSearch);
-    await runTopicGenerateV2(ctx, { id: "t2", inputData: { basis: "trend" } }, deps);
-
-    expect(runTopicTask).toHaveBeenCalled();
-    const arg = runTopicTask.mock.calls.at(-1)![0] as { basisBrief?: string };
-    expect(arg.basisBrief).toBe("");
-    expect((deps.ai as unknown as { cancelTask: ReturnType<typeof vi.fn> }).cancelTask).not.toHaveBeenCalled();
-  });
-
-  it("basis=trend + 未绑 trendSearch 端口 → basisBrief 空降级,不崩", async () => {
-    const deps = makeDeps(undefined);
-    await runTopicGenerateV2(ctx, { id: "t3", inputData: { basis: "trend" } }, deps);
-    expect(runTopicTask).toHaveBeenCalled();
-    const arg = runTopicTask.mock.calls.at(-1)![0] as { basisBrief?: string };
-    expect(arg.basisBrief).toBe("");
-  });
+describe('聊天/每日选题共享趋势装配',()=>{
+ it('保留定位派生query和真实搜索摘要',async()=>{
+ const trendSearch=vi.fn(async(_ctx:RequestContext,_query:string,_opts?:{count?:number})=>[{title:'AI Agent 爆发',snippet:'多个框架发布'}]);
+ const result=await assembleTrendBriefDetailed(ctx,'',{trendSearch});expect(trendSearch).toHaveBeenCalledTimes(1);expect(trendSearch).toHaveBeenCalledWith(ctx,'内容创作 最新热点 趋势',{count:8});expect(result.brief).toContain('AI Agent 爆发');expect(result.brief).toContain('多个框架发布');expect(result.searchHitCount).toBe(1);
+ });
+ it('搜索失败/未装配保持诚实空降级',async()=>{
+ const result=await assembleTrendBriefDetailed(ctx,'',{trendSearch:async()=>{throw Error('web.search未配')}});expect(result.brief).toBe('');expect(result.searchHitCount).toBe(0);expect((await assembleTrendBriefDetailed(ctx,'',{})).brief).toBe('');
+ });
+ it('单路失败保留另一真实来源及质量计数',async()=>{
+ const result=await assembleTrendBriefDetailed(ctx,'领域',{trendSearch:async()=>{throw Error('offline')},trendSourceSignals:async()=>[{title:'真实信号',url:'https://example.com',heat:null,publishedAt:null,sourceName:'真实源'}]});expect(result.brief).toContain('真实信号');expect(trendQualityFromDetail(result)).toEqual({sourceCount:1,signalCount:1});
+ });
 });

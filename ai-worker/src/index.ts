@@ -586,3 +586,11 @@ export {
 export {buildScriptFallbackResult,type ScriptFallbackInput,type ScriptFallbackResult} from "./execution/script-fallback";
 
 export {projectPlanningThesis,planningThesisOutputSchema,planningThesisGroundingSchema} from "./execution/planning-thesis-output";
+
+export { topicFacets, normalizeTopics } from "./nodes/topic-node";
+export { topicArraySchema } from "./prompt/templates/topic-generate";
+export { renderSignalQualityBrief, type SignalQualityProfile } from "./nodes/topic-signal-quality";
+
+export {buildTrendQuery,formatTrendBrief,formatTrendSourceBrief} from "./nodes/topic-trend-context";
+
+export {topicGenerateFrozenSchema,type TopicGenerateFrozen} from "./execution/topic-worker-input";

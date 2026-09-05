@@ -1,3 +1,4 @@
+import {topicReadPortInputSchemas} from "./execution-topic-read";
 import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
 export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitReceiptSchema } from "./agentic-worker";
 import { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolOutcomeSchema } from "./agentic-tool-call";
@@ -14,6 +15,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
   "prepareScriptImport", "saveScriptFallback", "saveScriptVoiceover",
   "settleBrowserObservation", "prepareBrowserAction", "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
@@ -42,6 +44,7 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  ...topicReadPortInputSchemas,
   readTaskContext: emptyPortInput,
   prepareScriptImport: emptyPortInput,
   saveScriptFallback: z.object({text:z.string().min(1).max(2_000_000)}).strict(),
@@ -147,3 +150,5 @@ export const workerStructuredResultSchema=z.object({
 export type WorkerStructuredResult=z.infer<typeof workerStructuredResultSchema>;
 
 export {browserActionPreparationSchema,browserAuthorizationSnapshotSchema,type BrowserAuthorizationSnapshot,browserObserveInputSchema,browserActInputSchema,browserObservationSchema,type BrowserObserveInput,type BrowserActInput,type BrowserObservation} from "./execution-browser";
+
+export {topicReadTargetSchema,topicReadRequestSchema,topicReadReceiptSchema,topicReadStoredReceiptSchema,topicReadReservationSchema,topicReadErrorCodeSchema,type TopicReadTarget,type TopicReadRequest,type TopicReadReceipt} from "./execution-topic-read";

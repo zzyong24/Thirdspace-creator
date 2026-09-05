@@ -130,25 +130,7 @@ export async function collectTrendSourceSignals(
 }
 
 /** 信号 → brief 段(空数组 → 空串,诚实降级;与 formatTrendBrief 并列的另一段)。 */
-export function formatTrendSourceBrief(
-  signals: ReadonlyArray<TrendSourceSignal>,
-): string {
-  const lines = signals
-    .map((s) => {
-      const title = (s.title ?? "").trim();
-      if (!title) return "";
-      const parts = [title];
-      if (s.heat != null) parts.push(`热度 ${s.heat}`);
-      if (s.publishedAt) parts.push(`发布 ${s.publishedAt}`);
-      if (s.url) parts.push(s.url);
-      return `${parts.join(" —— ")}(来源:${s.sourceName})`;
-    })
-    .filter((s) => s !== "")
-    .map((s, i) => `${i + 1}. ${s}`);
-  return lines.length > 0
-    ? ["【已登记信源信号】", ...lines].join("\n")
-    : "";
-}
+export {formatTrendSourceBrief} from "@creatoros/ai-worker";
 
 // ── AI 抽取端口真件工厂(host 用;测试注 fake extractSignals 不走这条)──────────────
 /** 用 runStructuredNode 跑 trend.extract 结构化节点。capability 复用 topic.generate(信号抽取

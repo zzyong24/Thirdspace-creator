@@ -1,0 +1,12 @@
+Scope: 3 of 6 workspace projects
+contract typecheck$ tsc --noEmit
+contract typecheck: Done
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: Done
+backend typecheck$ tsc --noEmit
+backend typecheck: src/modules/execution/model-worker-dispatcher.ts(92,59): error TS2339: Property 'domain' does not exist on type '{ domain: string; stateJson: string | null; revision: string | null; } | { saved: boolean; revision: string | null; }'.
+backend typecheck:   Property 'domain' does not exist on type '{ saved: boolean; revision: string | null; }'.
+backend typecheck: Failed
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

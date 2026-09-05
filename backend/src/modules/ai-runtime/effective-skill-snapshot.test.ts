@@ -99,6 +99,10 @@ function deps(
 }
 
 describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
+  it("热点选题冻结出题与信源抽取两个Skill，普通出题保持单Skill",()=>{
+    expect(requiredSkillIdsForTask("topic.generate",{basis:"trend"})).toEqual(["topic.generate","trend.extract"]);
+    expect(requiredSkillIdsForTask("topic.generate",{basis:"positioning"})).toEqual(["topic.generate"]);
+  });
   it("同名、别名、video/chat 受控输入与非 Skill task 映射固定", () => {
     // T-730 恢复的可选论点骨架是真实 official Skill task；若遗漏这个
     // 同名映射，用户点“先梳理观点”会在创建任务前被 fail-closed 拦截。

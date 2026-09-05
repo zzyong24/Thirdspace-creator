@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/topic-candidate-adoption.test.ts src/modules/ai/ai.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  59 passed (59)
+   Start at  13:23:37
+   Duration  37.14s (transform 1.86s, setup 0ms, import 3.04s, tests 39.75s, environment 0ms)
+

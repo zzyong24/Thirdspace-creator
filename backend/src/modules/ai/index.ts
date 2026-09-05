@@ -86,3 +86,5 @@ export { createStructuredTargetAdoptionService, type StructuredTargetAdoptionPor
 export {createCalibrationPositioningAdoptionService,type CalibrationPositioningAdoptionPorts} from "./calibration-positioning-adoption.service";
 
 export {createResearchMaterialAdoptionService,type ResearchMaterialAdoptionPorts} from "./research-material-adoption.service";
+
+export { createTopicCandidateAdoptionService, type TopicCandidateAdoptionPorts } from "./topic-candidate-adoption.service";

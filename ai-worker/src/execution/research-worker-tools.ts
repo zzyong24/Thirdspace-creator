@@ -21,6 +21,11 @@ interface Dependencies {
   connect?: (endpoint: string) => Promise<Browser>;
   guardUrl?: (url: string) => Promise<void>;
   read?: typeof readUrl;
+  sessionAccess?: {
+    read(callId:string,signal:AbortSignal):Promise<unknown>;
+    save(input:{callId:string;revision:string|null;stateJson:string},signal:AbortSignal):Promise<unknown>;
+  };
+  onRead?: (callId:string,observation:{sourceUrl:string;title:string;fullText:string},signal:AbortSignal)=>Promise<AgenticToolOutcome>;
 }
 const sessionSchema = z.object({ domain: z.string().min(1), stateJson: z.string().nullable(), revision: z.string().nullable() });
 const readParams = z.object({ url: z.string().url(), snapshotId: z.string().optional() }).passthrough();
@@ -93,7 +98,7 @@ export function createResearchWorkerTools(deps: Dependencies) {
           const stateJson = JSON.stringify(await ctx.storageState());
           if (Buffer.byteLength(stateJson) <= 2 * 1024 * 1024) {
             // CAS冲突/取消拒绝保存不影响已取得正文，也绝不换revision覆盖。
-            await deps.call("saveBrowserSession", { callId, revision: session.revision, stateJson }, combined).catch(() => {});
+            await (deps.sessionAccess ? deps.sessionAccess.save({callId,revision:session.revision,stateJson},combined) : deps.call("saveBrowserSession", { callId, revision: session.revision, stateJson }, combined)).catch(() => {});
           }
         }
       } catch { /* 会话保存失败仍须释放浏览器 */ }
@@ -199,13 +204,14 @@ export function createResearchWorkerTools(deps: Dependencies) {
         await guard(params.url); combined.throwIfAborted();
         const domain = webDomainFromUrl(params.url);
         if (blockedDomains.has(domain)) return { status: "blocked", summary: "该来源尚需登录或验证，本轮不重复访问", evidence: [], error: { code: "needs_login", retryable: false, recovery: "换公开来源或完成登录后恢复" }, continuation: null, sideEffect: "none" };
-        const response=await host("readBrowserSession", { callId: scope.callId }, combined);
+        const response=await (deps.sessionAccess ? deps.sessionAccess.read(scope.callId,combined) : host("readBrowserSession", { callId: scope.callId }, combined));
         const blocked=z.object({status:z.literal("blocked"),outcome:agenticToolOutcomeSchema}).strict().safeParse(response);
         if(blocked.success)return blocked.data.outcome;
         const session = sessionSchema.parse(response);
         if(session.domain!==domain)throw new GenerationFailure("unknown_result","BROWSER_SESSION_OWNER_MISMATCH");
         const read = await (deps.read ?? readUrl)(params.url, { authDir: "", signal: combined }, { openContext: () => openContext(scope.callId, combined, session), guardUrl: guard });
-        return agenticToolOutcomeSchema.parse(await host("settleResearchRead", { callId: scope.callId, observation: { sourceUrl: read.finalUrl, title: read.title, fullText: read.text } }, combined));
+        const observation={sourceUrl:read.finalUrl,title:read.title,fullText:read.text};
+        return agenticToolOutcomeSchema.parse(await (deps.onRead ? deps.onRead(scope.callId,observation,combined) : host("settleResearchRead", { callId: scope.callId, observation }, combined)));
       } catch (error) {
         combined.throwIfAborted();
         if (error instanceof GenerationFailure) throw error;

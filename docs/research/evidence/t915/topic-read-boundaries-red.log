@@ -1,0 +1,79 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts (10 tests | 2 failed) 1213ms
+   × 已标unknown的外部读取不能由普通settle改成成功并恢复执行 23ms
+   × 非临时失败不能仅凭Worker自报retryable扩大第二次读取权限 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-topic-read.service.test.ts > 已标unknown的外部读取不能由普通settle改成成功并恢复执行
+AssertionError: promise resolved "{ …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_6ffb4c4b-1407-4138-9766-e1e4be4a89df",
++   "receipt": {
++     "data": {
++       "sourceUrl": "https://example.com/news",
++       "text": "真实正文",
++       "title": "来源标题",
++     },
++     "kind": "web",
++     "status": "ok",
++   },
++   "request": {
++     "domain": "example.com",
++     "kind": "web",
++     "name": "真实来源",
++     "sourceId": "source-1",
++     "url": "https://example.com/news",
++   },
++   "requestDigest": "sha256:1e966e85fdc23020b333920bb1dac2c9883771675768f99602269211028e70d9",
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts:83:78
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-topic-read.service.test.ts > 非临时失败不能仅凭Worker自报retryable扩大第二次读取权限
+AssertionError: promise resolved "{ …(4) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_19269cb4-f782-4663-85bf-4e21cfafd7d7",
++   "request": {
++     "domain": "example.com",
++     "kind": "web",
++     "name": "真实来源",
++     "sourceId": "source-1",
++     "url": "https://example.com/news",
++   },
++   "requestDigest": "sha256:1e966e85fdc23020b333920bb1dac2c9883771675768f99602269211028e70d9",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts:86:163
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  13:34:10
+   Duration  2.56s (transform 672ms, setup 0ms, import 1.20s, tests 1.21s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-topic-read.service.test.ts

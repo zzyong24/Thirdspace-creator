@@ -1,3 +1,5 @@
+import {runTopicWorkerPipeline} from "./topic-worker-pipeline";
+import {createTopicWorkerReads} from "./topic-worker-reads";
 import { resolveStructuredBusinessSchema } from "./structured-business-schema";
 import {runScriptWorkerPipeline} from "./script-worker-pipeline";
 import { workerStructuredResultSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerStructuredResult,type WorkerPort, type structuredGenerationInputSchema,type workerModelSpecSchema } from "@creatoros/contract/execution-worker";
@@ -37,7 +39,8 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
     const businessSchema=resolveStructuredBusinessSchema(input);
-    const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
+    const runTopic=async()=>{const reads=createTopicWorkerReads({signal,call});try{return await runTopicWorkerPipeline(JSON.parse(input.facets.__topicGenerate??"null"),{model,signal,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,read:reads.read});}finally{await reads.close();}};
+    const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="topic.generate" ? runTopic() : input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}
       catch{throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_RECEIPT_UNKNOWN");}
