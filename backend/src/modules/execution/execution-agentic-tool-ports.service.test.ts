@@ -32,11 +32,11 @@ it("同一真实模型工具调用并发预留幂等，重复只返回原回执�
  const repeated=await f.ports.reserve(f.ref,request);expect(repeated.status).toBe("settled");expect(repeated.receipt?.output).toEqual(output);
  const state=await f.ledger.inspect(f.ref);expect(state.calls).toHaveLength(2);expect(state.spentTokens).toBe(15);
 });
-it("跨任务、未授权工具、非法参数和被新回合替代的调用不能预留",async()=>{
+it("跨任务、未授权工具和旧回合不能预留，已授权工具参数错误返回可恢复回执",async()=>{
  const f=await fixture("authority");const other=await fixture("other");const first=await f.model("first");
  await expect(other.ports.reserve(other.ref,first)).rejects.toMatchObject({name:"ConflictError"});
  await f.model("new");await expect(f.ports.reserve(f.ref,first)).rejects.toMatchObject({name:"ConflictError"});
- const invalid=await f.model("invalid",'{"query":null}');await expect(f.ports.reserve(f.ref,invalid)).rejects.toThrow();
+ const invalid=await f.model("invalid",'{"query":null}');expect(await f.ports.reserve(f.ref,invalid)).toMatchObject({validationOutcome:{status:"error",sideEffect:"none",error:{code:"invalid_input"}}});
  const denied=await f.model("denied",'{}',"bash");await expect(f.ports.reserve(f.ref,denied)).rejects.toMatchObject({name:"ConflictError"});
 });
 it("未知副作用强制进入unknown并禁止同键重新启动",async()=>{

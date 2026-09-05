@@ -17,5 +17,6 @@ export const settleAgenticToolSchema=z.discriminatedUnion("status",[
 ]);
 export const agenticToolReservationSchema=z.object({
   callId:id,status:z.enum(["reserved","started","settled","unknown","rejected"]),toolName:id,input:z.json(),
+  validationOutcome:agenticToolOutcomeSchema.optional(),
   receipt:z.object({schemaVersion:z.literal(1),kind:z.literal("tool"),toolCallId:id,toolName:id,output:agenticToolOutcomeSchema}).strict().optional(),
 }).strict();

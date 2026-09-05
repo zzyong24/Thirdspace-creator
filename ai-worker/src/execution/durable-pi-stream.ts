@@ -47,7 +47,8 @@ export function canonicalToPiAssistant(raw:WorkerProviderReceipt):AssistantMessa
     const part=partSchema.parse(rawPart);
     if(part.type==="text")return {type:"text",text:part.text,...(part.textSignature===undefined?{}:{textSignature:part.textSignature})};
     if(part.type==="reasoning")return {type:"thinking",thinking:part.text,...(part.thinkingSignature===undefined?{}:{thinkingSignature:part.thinkingSignature}),...(part.redacted===undefined?{}:{redacted:part.redacted})};
-    const args=z.record(z.string(),z.json()).parse(JSON.parse(part.input));
+    // 保留模型原始JSON参数（包括非法形状）；只有后端工具admission可决定是否执行。
+    const args=z.json().parse(JSON.parse(part.input)) as Record<string,unknown>;
     return {type:"toolCall",id:part.toolCallId,name:part.toolName,arguments:args,...(part.thoughtSignature===undefined?{}:{thoughtSignature:part.thoughtSignature})};
   });
   const u=receipt.usage;const input=count.parse(u.inputTokens.noCache),cacheRead=count.parse(u.inputTokens.cacheRead),cacheWrite=count.parse(u.inputTokens.cacheWrite),output=count.parse(u.outputTokens.total);
@@ -60,6 +61,7 @@ export interface DurablePiStreamDeps {
   signal:AbortSignal;
   maxOutputTokens:number;
   frozenSystemPrompt?:string;
+  frozenTools?:Context["tools"];
   onSettled(callId:string,receipt:WorkerProviderReceipt):void|Promise<void>;
   onFailure?(error:GenerationFailure):void;
 }
@@ -78,7 +80,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
         signal.throwIfAborted();
         const ceiling=count.positive().parse(deps.maxOutputTokens);
         const maxTokens=Math.min(ceiling,options?.maxTokens===undefined?ceiling:count.positive().parse(options.maxTokens));
-        const effectiveContext={...context,systemPrompt:deps.frozenSystemPrompt ?? context.systemPrompt};
+        const effectiveContext={...context,systemPrompt:deps.frozenSystemPrompt ?? context.systemPrompt,tools:deps.frozenTools ?? context.tools};
         const request=normalizePiContext(effectiveContext);
         const reserved=workerReservationSchema.parse(await deps.call("reserveAgenticModel",{request,maxOutputTokens:maxTokens},signal));callId=reserved.callId;
         signal.throwIfAborted();

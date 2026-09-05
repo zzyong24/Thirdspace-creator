@@ -13,7 +13,7 @@ import { createAgenticWorkerDispatcher } from "../execution/model-worker-dispatc
 import { createAgenticMaterialTools } from "./agentic-material-tools";
 import { createAgenticBusinessExecutionService } from "./agentic-business-execution.service";
 
-it("真实素材搜索、Worker标签候选与公开采纳完整链：分页证据可见，采纳前不写标签，重复采纳幂等", async () => {
+it.each([false,true])("真实素材搜索与公开采纳完整链：参数自修复=%s，采纳前不写标签，重复采纳幂等", async (repairInvalidInput) => {
   execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], { stdio: "pipe" });
   const f = await createDb();
   const ctx = { userId: "material-worker", accountId: "material-account", requestId: "test", source: "user" as const };
@@ -35,9 +35,11 @@ it("真实素材搜索、Worker标签候选与公开采纳完整链：分页证�
   });
   const staging = createAgenticProposalStagingService(f.db, { resolveLease: () => { throw new Error("不能进入旧ALS执行"); }, prepareAssets: (context, ids) => assetTags.prepare(context, ids) });
   let searchCursor: string | null = null;
+  let actualSearches=0;
   const material = createAgenticMaterialTools({
     search: async (context, input, signal) => {
       signal.throwIfAborted();
+      actualSearches++;
       const result = await assetService.searchAssets(context, input);
       searchCursor = result.nextCursor;
       return { items: result.rows.map(row => ({ id: row.id, title: row.name, kind: row.assetType })), nextCursor: result.nextCursor };
@@ -55,13 +57,14 @@ it("真实素材搜索、Worker标签候选与公开采纳完整链：分页证�
     const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(Buffer.from(chunk));
     requests.push(Buffer.concat(chunks).toString("utf8"));
     const index = requests.length;
-    const args = index === 1 ? { query: "素材", limit: 1 } : { assetIds: ["material-1"], tag: "实测标签" };
-    const delta = index <= 2
-      ? { role: "assistant", tool_calls: [{ index: 0, id: `tool-${index}`, type: "function", function: { name: index === 1 ? "material.search" : "material.organize", arguments: JSON.stringify(args) } }] }
+    const step=index-(repairInvalidInput?1:0);
+    const args = step === 0 ? {query:null} : step === 1 ? { query: "素材", limit: 1 } : { assetIds: ["material-1"], tag: "实测标签" };
+    const delta = step <= 2
+      ? { role: "assistant", tool_calls: [{ index: 0, id: `tool-${index}`, type: "function", function: { name: step <= 1 ? "material.search" : "material.organize", arguments: JSON.stringify(args) } }] }
       : { role: "assistant", content: "已生成标签建议，请采纳" };
     const base = { id: `response-${index}`, object: "chat.completion.chunk", created: 1, model: "test" };
     res.writeHead(200, { "content-type": "text/event-stream" });
-    res.end(`data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason: null }] })}\n\ndata: ${JSON.stringify({ ...base, choices: [{ index: 0, delta: {}, finish_reason: index <= 2 ? "tool_calls" : "stop" }], usage: { prompt_tokens: 3, completion_tokens: 4, total_tokens: 7 } })}\n\ndata: [DONE]\n\n`);
+    res.end(`data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason: null }] })}\n\ndata: ${JSON.stringify({ ...base, choices: [{ index: 0, delta: {}, finish_reason: step <= 2 ? "tool_calls" : "stop" }], usage: { prompt_tokens: 3, completion_tokens: 4, total_tokens: 7 } })}\n\ndata: [DONE]\n\n`);
   });
   await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
   const dispatcher = createAgenticWorkerDispatcher(f.db, {
@@ -77,13 +80,21 @@ it("真实素材搜索、Worker标签候选与公开采纳完整链：分页证�
     await f.db.insert(aiTasks).values({ id: "material-task", userId: ctx.userId, accountId: ctx.accountId, taskType: "exec.agentic.material", status: "queued", idempotencyKey: "material-task", requestedAt: now(), inputData: { spec: { taskType: "agentic.material", goal: "为素材生成标签建议", inputs: [], params: {}, constraints: { timeoutSec: 60, network: "deny", maxOutputMB: 512 } } } });
     const mapped = await preparation.prepare(ctx, "material-task");
     expect(await dispatcher.drainOnce()).toBe(1);
-    expect(requests).toHaveLength(3);
-    expect(searchCursor).toBeTruthy();
-    expect(requests[1]).toContain("material-1"); expect(requests[1]).toContain(searchCursor!);
-    expect(requests[2]).toContain("expectedVersion"); expect(requests[2]).toContain("实测标签");
+    expect(requests).toHaveLength(repairInvalidInput?4:3);
+    expect(searchCursor).toBeTruthy();expect(actualSearches).toBe(1);
+    const offset=repairInvalidInput?1:0;
+    if(repairInvalidInput){
+      expect(requests[1]).toContain("invalid_input");
+      expect(requests[1]).toContain("query");
+      const advertised=JSON.parse(requests[0]!).tools.find((tool:{function:{name:string}})=>tool.function.name==="material.search");
+      expect(advertised.function.parameters.properties.query.type).toBe("string");
+    }
+    expect(requests[1+offset]).toContain("material-1"); expect(requests[1+offset]).toContain(searchCursor!);
+    expect(requests[2+offset]).toContain("expectedVersion"); expect(requests[2+offset]).toContain("实测标签");
     const [execution] = await f.db.select().from(executionTasks).where(eq(executionTasks.id, mapped.executionTaskId));
     expect(execution?.status).toBe("succeeded");
-    expect(execution?.checkpoint).toMatchObject({ revision: 5, messages: [{ role: "assistant" }, { role: "tool" }, { role: "assistant" }, { role: "tool" }, { role: "assistant" }] });
+    expect(execution?.checkpoint).toMatchObject({revision:repairInvalidInput?7:5});
+    expect((execution?.checkpoint as {messages:unknown[]}).messages).toHaveLength(repairInvalidInput?7:5);
     expect((await ai.getTask(ctx, "material-task")).status).toBe("awaiting_confirmation");
     const candidates = await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, "material-task"));
     expect(candidates.map(row => row.resultType).sort()).toEqual(["agentic_proposal_staged", "agentic_proposals"]);
@@ -94,7 +105,7 @@ it("真实素材搜索、Worker标签候选与公开采纳完整链：分页证�
     expect(relations).toEqual([{ assetId: "material-1", name: "实测标签" }]);
     expect((await ai.confirmTask(ctx, "material-task")).status).toBe("succeeded");
     expect(await f.db.select().from(entityTags)).toHaveLength(1); expect(await f.db.select().from(assetTagAdoptions)).toHaveLength(1);
-    expect(await dispatcher.drainOnce()).toBe(0); expect(requests).toHaveLength(3);
+    expect(await dispatcher.drainOnce()).toBe(0); expect(requests).toHaveLength(repairInvalidInput?4:3);
   } finally {
     await dispatcher.stop(); server.closeAllConnections();
     await new Promise<void>(done => server.close(() => done())); await f.client.close();

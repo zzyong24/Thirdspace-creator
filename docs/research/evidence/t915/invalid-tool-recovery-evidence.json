@@ -1,0 +1,33 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T13:16:42.563113+00:00",
+  "status": "已授权工具schema错误可持久反馈并继续模型循环；全任务验收未完成",
+  "changes": [
+    "后端冻结工具绑定将参数schema不匹配生成invalid_input回执，不执行handler；权限/来源/版本/过期回合仍拒绝",
+    "非法参数只能结算后端确定的错误，不接受伪造成功；原回执可重放，修正参数必须生成新调用",
+    "Worker先处理validationOutcome再考虑执行和dryRun；错误经过start/settle/checkpoint，保留预算及租约约束",
+    "Pi本地工具proxy允许参数到达后端；实际供应商与账本请求仍使用冻结严格schema，支持非object JSON形状反馈"
+  ],
+  "verification": {
+    "backend_tests": 32,
+    "worker_tests": 84,
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS"
+    ],
+    "real_integration": "实际fork/Pi+本地HTTP+PGlite/真实素材服务：query:null错误回执进入下一轮，模型改正后仅一次实际搜索，生成真实标签候选，公共confirmTask重复采纳幂等；HTTP检查严格query:string schema",
+    "review": "独立只读PASS：零handler、禁止伪报成功、provider/账本schema一致、恢复/dryRun/预算/取消边界",
+    "red_evidence": "invalid-tool-red.log：原实现3失败13通过，修改后16通过；集成扩展用例在实现后运行，不伪称TDD红测",
+    "logs": [
+      "invalid-tool-backend-regression.log",
+      "invalid-tool-worker-regression.log"
+    ],
+    "boundary": "无新增违规，既有基线5保留"
+  },
+  "limitations": [
+    "本增量处理已授权工具schema不匹配，不代表任意损坏供应商流或非JSON协议均可自修复",
+    "未授权工具名仍按冻结白名单拒绝",
+    "浏览器迁移、未知结果对账、全量入口与性能/真机验收仍未完成"
+  ]
+}

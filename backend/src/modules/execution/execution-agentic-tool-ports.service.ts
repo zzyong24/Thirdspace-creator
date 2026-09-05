@@ -29,9 +29,19 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
   const proposed=checkpointToolCallSchema.parse(matching[0]);
   const definitions=frozen.tools.filter(tool=>tool.name===proposed.toolName);const definition=deps.tools[proposed.toolName];
   if(definitions.length!==1 || !definition || definitions[0]!.version!==definition.version)throw new ConflictError("工具不在当前冻结白名单或定义版本已改变");
-  let raw:unknown;try{raw=JSON.parse(proposed.input);}catch{throw new ConflictError("模型工具参数不是有效JSON");}
-  const input=z.json().parse(definition.parameters.parse(raw));
-  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,input,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash([model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input])}`};
+  let raw:unknown;let jsonError=false;try{raw=JSON.parse(proposed.input);}catch{raw=proposed.input;jsonError=true;}
+  const jsonInput=z.json().safeParse(raw);
+  if(!jsonInput.success)jsonError=true;
+  const checked=jsonError?null:definition.parameters.safeParse(raw);
+  const validationOutcome:ToolOutcome|undefined=jsonError || !checked?.success ? agenticToolOutcomeSchema.parse({
+   status:"error",summary:"工具参数不符合定义，本次没有执行操作",evidence:[],
+   error:{code:"invalid_input",retryable:false,recovery:jsonError?"请生成合法JSON参数，修正后发起新的工具调用。":`请按工具schema修正参数后发起新调用：${checked && !checked.success?checked.error.issues.slice(0,20).map(issue=>`${issue.path.map(String).join(".").slice(0,160) || "根参数"} (${issue.code})`).join("；"):"参数格式错误"}`},
+   continuation:null,sideEffect:"none",
+  }):undefined;
+  const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);
+  const identity=[model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input];
+  if(validationOutcome)identity.push({validationOutcome});
+  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");
@@ -50,6 +60,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    if(original.toolExecutionClaimId && !claimId && original.status!=="settled")throw new ConflictError("Host执行回执只能由实际执行者结算");
    if(claimId && original.toolExecutionClaimId!==claimId)throw new ConflictError("工具执行领取凭证不符");
    const bound=await leases.withLease(ref,"settlement",async({task})=>bindingForCall(task,state.calls,original));
+   if(bound.validationOutcome && request.status==="settled" && hash(request.output)!==hash(bound.validationOutcome))throw new ConflictError("非法参数只能结算后端确定的校验回执");
    const unknown=request.status==="unknown" || request.output.sideEffect==="unknown" || request.output.error?.code==="unknown_commit";
    if(request.status==="settled" && !unknown && bound.dryRun && request.output.sideEffect!=="none")throw new ConflictError("预演任务不能结算真实副作用");
    if(request.status==="settled" && !unknown && request.output.sideEffect!=="none" && request.output.sideEffect!==bound.effect)throw new ConflictError("工具回执副作用超出已授权定义");
@@ -77,7 +88,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(call.toolExecutionClaimId)return {kind:"waiting" as const,call};
     if(calls.filter(row=>row.kind==="model").at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
     const handler=deps.tools[bound.toolName]?.execute;
-    if(!handler && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
+    if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
     const claimId=randomUUID();
     await tx.update(executionCalls).set({toolExecutionClaimId:claimId}).where(eq(executionCalls.id,callId));
     return {kind:"owner" as const,claimId,bound,handler,context,aiTaskId:task.ownerId};
@@ -105,9 +116,9 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    },250);
    try{
     signal.throwIfAborted();
-    const output=agenticToolOutcomeSchema.parse(claimed.bound.dryRun && claimed.bound.effect!=="none"
+    const output=agenticToolOutcomeSchema.parse(claimed.bound.validationOutcome ?? (claimed.bound.dryRun && claimed.bound.effect!=="none"
      ? {status:"ok",summary:"已生成操作预演",evidence:[],data:{plan:{toolName:claimed.bound.toolName,input:claimed.bound.input}},error:null,continuation:null,sideEffect:"none"}
-     : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal}));
+     : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal})));
     const receipt=await settle(ref,{callId,status:"settled",output},claimed.claimId);
     if(receipt.status!=="settled")throw new ConflictError("工具提交结果未知，须对账");
     return output;
@@ -127,7 +138,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(current.inputDigest!==bound.inputDigest)throw new ConflictError("工具定义在预留期间改变");
     if(!calls.some(call=>call.operationKey===bound.operationKey) && calls.filter(call=>call.kind==="model").at(-1)?.id!==bound.modelCallId)throw new ConflictError("模型回合在预留期间改变");
    });
-   return agenticToolReservationSchema.parse({callId:call.id,status:call.status,toolName:bound.toolName,input:bound.input,...(call.status==="settled" && call.resultText?{receipt:JSON.parse(call.resultText)}:{})});
+   return agenticToolReservationSchema.parse({callId:call.id,status:call.status,toolName:bound.toolName,input:bound.input,...(bound.validationOutcome?{validationOutcome:bound.validationOutcome}:{}),...(call.status==="settled" && call.resultText?{receipt:JSON.parse(call.resultText)}:{})});
   },
   async start(ref:ExecutionRef,raw:unknown){
    const {callId}=workerPortInputSchemas.startAgenticTool.parse(raw);

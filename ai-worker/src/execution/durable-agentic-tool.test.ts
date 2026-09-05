@@ -15,6 +15,17 @@ function fixture(status="reserved") {
   return {controller,execute,call,run:()=>runDurableAgenticTool(input,{signal:controller.signal,execute,call})};
 }
 describe("Worker 持久工具执行边界",()=>{
+  it("后端非法参数回执经start与settle持久返回，绝不调用执行handler",async()=>{
+    const f=fixture();const original=f.call.getMockImplementation()!;
+    const validationOutcome:AgenticToolOutcome={status:"error",summary:"参数无效",evidence:[],error:{code:"invalid_input",retryable:true,recovery:"请提供url"},continuation:null,sideEffect:"none"};
+    f.call.mockImplementation(async(port,data,signal)=>{
+      const result=await original(port,data,signal);
+      return port==="reserveAgenticTool"?{...(result as object),input:{},validationOutcome}:result;
+    });
+    expect(await f.run()).toEqual(validationOutcome);expect(f.execute).not.toHaveBeenCalled();
+    expect(f.call.mock.calls.map(c=>c[0])).toEqual(["reserveAgenticTool","startAgenticTool","settleAgenticTool"]);
+    expect(f.call.mock.calls[2]![1]).toEqual({callId:"call-1",status:"settled",output:validationOutcome});
+  });
   it("先启动确认再执行，结算确认后返回真实结果",async()=>{
     const f=fixture();expect(await f.run()).toEqual(output);
     expect(f.call.mock.calls.map(c=>c[0])).toEqual(["reserveAgenticTool","startAgenticTool","settleAgenticTool"]);

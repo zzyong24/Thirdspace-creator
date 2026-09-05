@@ -10,13 +10,13 @@ const budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
 const output={status:"ok" as const,summary:"已读取",evidence:[{entityId:"actual-id"}],error:null,continuation:null,sideEffect:"none" as const};
 let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close?.());
-async function fixture(id:string,execute:AgenticBackendTool["execute"],dryRun=false){
+async function fixture(id:string,execute:AgenticBackendTool["execute"],dryRun=false,modelInput='{"query":"素材"}'){
  const tasks=createPersistentTaskService(db,{now});const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput:{kind:"agentic.run",dryRun,tools:[{name:"material.search",version:"1"}]}}});
  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"exec.agentic.material",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:now()});
  const claim=(await tasks.claimTask({taskId:task.id,workerId:"worker"}))!;const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const deps={now,budget,tools:{"material.search":{version:"1",parameters:z.object({query:z.string()}),effect:dryRun?"proposal" as const:"none" as const,execute}}};
  const ledger=createExecutionCallLedgerService(db,deps),ports=createExecutionAgenticToolPorts(db,deps);
- const m=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});await ledger.start(ref,m.id);await ledger.settle(ref,m.id,{status:"settled",usage:{totalTokens:15},providerResult:{content:[{type:"tool-call",toolCallId:"pi-tool",toolName:"material.search",input:'{"query":"素材"}'}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:10},outputTokens:{total:5}},warnings:[]}});
+ const m=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});await ledger.start(ref,m.id);await ledger.settle(ref,m.id,{status:"settled",usage:{totalTokens:15},providerResult:{content:[{type:"tool-call",toolCallId:"pi-tool",toolName:"material.search",input:modelInput}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:10},outputTokens:{total:5}},warnings:[]}});
  const tool=await ports.reserve(ref,{modelCallId:m.id,toolCallId:"pi-tool"});await ports.start(ref,{callId:tool.callId});
  return {ref,ports,deps,tasks,ledger,callId:tool.callId};
 }
@@ -49,4 +49,12 @@ it("已发生的handler异常保持unknown，任何新实例都不能重执行",
 it("旧领取执行者不能在换fence后覆盖结果",async()=>{
  const f=await fixture("host-fence",async()=>{await db.update(executionTasks).set({fenceToken:"new-fence"}).where(eq(executionTasks.id,f.ref.executionTaskId));return output;});await expect(f.ports.execute(f.ref,{callId:f.callId})).rejects.toThrow();
  const [row]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.callId));expect(row?.status).toBe("started");expect(row?.resultText).toBeNull();
+});
+
+it.each(['{"query":null}','{invalid-json'])("参数错误%s持久化为可恢复错误，零handler调用且不能伪报成功",async(raw)=>{
+ let count=0;const f=await fixture("invalid-"+raw,async()=>{count++;return output;},false,raw);
+ await expect(f.ports.settle(f.ref,{callId:f.callId,status:"settled",output})).rejects.toThrow();
+ const result=await f.ports.execute(f.ref,{callId:f.callId});expect(result).toMatchObject({status:"error",sideEffect:"none",error:{code:"invalid_input",retryable:false}});expect(count).toBe(0);
+ expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
+ expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);expect(count).toBe(0);
 });

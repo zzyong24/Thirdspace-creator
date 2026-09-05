@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type {StreamFunction} from "@earendil-works/pi-ai";
+import type {Context,StreamFunction} from "@earendil-works/pi-ai";
 import {agenticWorkerInputSchema,workerModelSpecSchema,agenticToolReservationSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {createPiAgenticEngine,createLoopController,type AgenticTool} from "../runtime/agentic";
 import {wrapDurablePiStream} from "./durable-pi-stream";
@@ -44,7 +44,8 @@ export async function runAgenticInWorker(
     return checkpointTail;
   };
   const tools:AgenticTool[]=input.tools.map(tool=>({name:tool.name,label:tool.label,description:tool.description,
-    effect:tool.effect==="none"?"none":"writeback",parameters:z.json(),jsonParameters:tool.parameters,
+    // SDK本地验证不能吞掉非法调用；严格schema在durable stream交给provider，宿主验证与记账。
+    effect:tool.effect==="none"?"none":"writeback",parameters:z.json(),jsonParameters:{},
     async execute(_params,options){
       try{
         const toolCallId=options.toolCallId;const modelCallId=toolCallId?modelForTool.get(toolCallId):undefined;
@@ -74,6 +75,7 @@ export async function runAgenticInWorker(
   }));
   const engine=createPiAgenticEngine({fallback:{name:"unavailable",run:async()=>{throw new GenerationFailure("failed","PI_RUNTIME_UNAVAILABLE");}},
     wrapStream:stream=>wrapDurablePiStream(stream as StreamFunction,{call,signal,maxOutputTokens:input.maxOutputTokens,frozenSystemPrompt:input.systemPrompt,
+      frozenTools:input.tools.map(tool=>({name:tool.name,description:tool.description,parameters:tool.parameters})) as Context["tools"],
       onFailure:error=>{failure=error;stop.abort();},
       onSettled:async(callId,receipt)=>{
         lastModelCallId=callId;

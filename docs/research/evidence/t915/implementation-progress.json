@@ -195,5 +195,11 @@
     "worker_tests": 80,
     "desktop_resource_tests": 5,
     "scope": "素材自主任务源码接独立Worker，真实工具/候选采纳与跨PG连接池去重通过；浏览器/全部入口迁移、性能和真机完整验收未完成"
+  },
+  "invalid_tool_recovery_increment": {
+    "evidence": "invalid-tool-recovery-evidence.json",
+    "backend_tests": 32,
+    "worker_tests": 84,
+    "scope": "已授权工具参数错误零执行、持久反馈、修正重调通过实际素材链路；浏览器迁移及全量验收仍未完成"
   }
 }

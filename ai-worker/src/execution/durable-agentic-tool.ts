@@ -41,7 +41,7 @@ export async function runDurableAgenticTool(
     if(started.callId!==reservation.callId)throw unknownResult();
     deps.signal.throwIfAborted();
     executionBegan=true;
-    const output=agenticToolOutcomeSchema.parse(await deps.execute(reservation.toolName,reservation.input,deps.signal));
+    const output=reservation.validationOutcome ?? agenticToolOutcomeSchema.parse(await deps.execute(reservation.toolName,reservation.input,deps.signal));
     // 取消后仍可结算：已执行工具必须保留真实回执。
     const settled=settlementSchema.parse(await deps.call("settleAgenticTool",{callId:reservation.callId,status:"settled",output}));
     if(settled.callId!==reservation.callId)throw unknownResult();
