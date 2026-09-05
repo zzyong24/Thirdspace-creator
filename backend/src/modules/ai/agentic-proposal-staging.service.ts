@@ -5,6 +5,7 @@ import { and, asc, eq, aiTasks, aiTaskResults, executionCalls, executionTasks, r
 import { agenticProposal, type AgenticProposal, type RequestContext } from "@creatoros/contract";
 import { checkpointToolCallSchema, workerProviderReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { verifyReadEvidence } from "../execution/execution-research-evidence.service";
+import {ConflictError as ExecutionConflictError} from "../execution/execution.errors";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { prepareKnowledgeProposal } from "../knowledge";
 import { ConflictError, OwnershipError } from "./ai.errors";
@@ -17,6 +18,8 @@ const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(valu
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 type KnowledgeInput = Extract<Input, { kind: "knowledge.create" }>;
 const knowledgeParameters = z.object({ title: z.string().trim().min(1), note: z.string().trim().min(1), sourceNote: z.string(), evidenceRefs: z.array(z.string().min(1)).min(1) });
+
+export class KnowledgeSourceError extends ConflictError {}
 
 /** 只读核验：候选必须对应真实模型参数及此前已经结算的阅读，不是新写入端口。 */
 export async function verifyExecutionKnowledgeSource(tx: Tx, executionTaskId: string, input: KnowledgeInput, requireCurrentModel = false) {
@@ -37,9 +40,12 @@ export async function verifyExecutionKnowledgeSource(tx: Tx, executionTaskId: st
   }
   if (matching.length !== 1 || (requireCurrentModel && matching[0]!.model.id !== models.at(-1)?.id)) throw new ConflictError("知识候选缺少当前唯一的模型工具调用");
   const bound = matching[0]!;
-  if (!isDeepStrictEqual(bound.params, knowledgeParameters.parse(input))) throw new ConflictError("知识候选内容与模型工具参数不一致");
-  const evidence = await verifyReadEvidence(tx, executionTaskId, input.evidenceRefs, bound.model.sequence);
-  if (!evidence.some(row => row.sourceUrl === input.sourceNote)) throw new ConflictError("知识来源与已阅读快照不一致");
+  if (!isDeepStrictEqual(bound.params, knowledgeParameters.parse(input))) throw new KnowledgeSourceError("知识候选内容与模型工具参数不一致");
+  const evidence = await verifyReadEvidence(tx, executionTaskId, input.evidenceRefs, bound.model.sequence).catch(error=>{
+    if(error instanceof ExecutionConflictError)throw new KnowledgeSourceError("evidenceRefs必须引用本任务已完成阅读的证据ID");
+    throw error;
+  });
+  if (!evidence.some(row => row.sourceUrl === input.sourceNote)) throw new KnowledgeSourceError("sourceNote必须是已阅读证据的来源URL");
   return evidence;
 }
 export function createAgenticProposalStagingService(db: Db, ports: {

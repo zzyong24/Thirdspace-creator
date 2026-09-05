@@ -1,9 +1,11 @@
+import { createHash } from "node:crypto";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
 import {
   createBrowserSessionsRepository,
   type BrowserSessionsRepository,
+  type BrowserSessionRow,
 } from "./browser-sessions.repository";
 
 // [T-370a] Browser Sessions service —— web 域登录态(playwright storageState JSON)的加密
@@ -41,7 +43,10 @@ export interface ServiceDeps {
   masterKey?: Buffer;
 }
 
+type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 export interface BrowserSessionsService {
+  getStateVersioned(ctx:RequestContext,domain:string,transaction?:Transaction):Promise<{stateJson:string|null;revision:string|null}>;
+  saveStateVersioned(ctx:RequestContext,domain:string,stateJson:string,expectedRevision:string|null,transaction?:Transaction):Promise<{saved:boolean;revision:string|null}>;
   /** 加密保存某域 storageState JSON(upsert)。master-key 缺失/加密失败 → 抛人话错拒存。 */
   saveState(ctx: RequestContext, domain: string, stateJson: string): Promise<void>;
   /** 读某域 storageState JSON(解密)。无记录 / 非密文 / 解密失败 → null(视为未登录)。 */
@@ -57,62 +62,73 @@ export interface BrowserSessionsService {
 export function createBrowserSessionsService(
   deps: ServiceDeps,
 ): BrowserSessionsService {
-  const repoFor = (ctx: RequestContext): BrowserSessionsRepository =>
-    createBrowserSessionsRepository(deps.db, {
+  const repoFor = (ctx: RequestContext,transaction?:Transaction): BrowserSessionsRepository =>
+    createBrowserSessionsRepository(transaction as unknown as Db ?? deps.db, {
       now: deps.now,
       nextId: deps.nextId,
       userId: ctx.userId,
     });
 
+  const revision = (row:BrowserSessionRow|null) => row ? createHash("sha256").update(JSON.stringify([row.id,row.stateEncrypted])).digest("hex") : null;
+  function encrypt(stateJson:string):string {
+    const key = deps.masterKey;
+    if (!key) {
+      // gate F-3:绝不明文落库 —— 没 key 就拒存,人话引导先解决 keychain。
+      throw new BrowserSessionCryptoError(
+        "登录态没有保存:本机加密密钥(master key)不可用,拒绝明文保存网站登录态。" +
+        "请先解决系统钥匙串/CREATOROS_MASTER_KEY 配置后重新登录一次。",
+      );
+    }
+    let encrypted: string;
+    try {
+      encrypted = encryptSecret(stateJson, key);
+    } catch (err) {
+      throw new BrowserSessionCryptoError(
+        `登录态没有保存:加密失败(${err instanceof Error ? err.message : String(err)})。` +
+        "拒绝明文保存网站登录态,请解决加密配置后重新登录一次。",
+      );
+    }
+    return encrypted;
+  }
+  function decrypt(row:BrowserSessionRow|null,domain:string):string|null {
+    if(!row)return null;
+    // 异常态:非密文(本 service 从不写明文;手改/迁移残留)→ 不信任,视为未登录。
+    if (!isEncrypted(row.stateEncrypted)) {
+      console.warn(
+        `[browser-sessions] ${domain} 的登录态记录不是密文(异常),视为未登录。`,
+      );
+      return null;
+    }
+    const key = deps.masterKey;
+    if (!key) {
+      console.warn(
+        `[browser-sessions] master key 不可用,无法解密 ${domain} 登录态,视为未登录。`,
+      );
+      return null;
+    }
+    try {
+      return decryptSecret(row.stateEncrypted, key);
+    } catch (err) {
+      // 换机器/换 key/数据损坏 → auth tag 校验失败。视为未登录(用户重登一次即自愈),logged。
+      console.warn(
+        `[browser-sessions] 解密 ${domain} 登录态失败(视为未登录,需重新登录):`,
+        err instanceof Error ? err.message : String(err),
+      );
+      return null;
+    }
+  }
   return {
-    saveState: async (ctx, domain, stateJson) => {
-      const key = deps.masterKey;
-      if (!key) {
-        // gate F-3:绝不明文落库 —— 没 key 就拒存,人话引导先解决 keychain。
-        throw new BrowserSessionCryptoError(
-          "登录态没有保存:本机加密密钥(master key)不可用,拒绝明文保存网站登录态。" +
-            "请先解决系统钥匙串/CREATOROS_MASTER_KEY 配置后重新登录一次。",
-        );
-      }
-      let encrypted: string;
-      try {
-        encrypted = encryptSecret(stateJson, key);
-      } catch (err) {
-        throw new BrowserSessionCryptoError(
-          `登录态没有保存:加密失败(${err instanceof Error ? err.message : String(err)})。` +
-            "拒绝明文保存网站登录态,请解决加密配置后重新登录一次。",
-        );
-      }
-      await repoFor(ctx).upsertState(WEB_DOMAIN_SCOPE, domain, encrypted);
+    saveState: async (ctx,domain,stateJson) => {await repoFor(ctx).upsertState(WEB_DOMAIN_SCOPE,domain,encrypt(stateJson));},
+    getState: async (ctx,domain) => decrypt(await repoFor(ctx).getState(WEB_DOMAIN_SCOPE,domain),domain),
+    getStateVersioned: async (ctx,domain,transaction) => {
+      const row=await repoFor(ctx,transaction).getState(WEB_DOMAIN_SCOPE,domain);
+      return {stateJson:decrypt(row,domain),revision:revision(row)};
     },
-
-    getState: async (ctx, domain) => {
-      const row = await repoFor(ctx).getState(WEB_DOMAIN_SCOPE, domain);
-      if (!row) return null;
-      // 异常态:非密文(本 service 从不写明文;手改/迁移残留)→ 不信任,视为未登录。
-      if (!isEncrypted(row.stateEncrypted)) {
-        console.warn(
-          `[browser-sessions] ${domain} 的登录态记录不是密文(异常),视为未登录。`,
-        );
-        return null;
-      }
-      const key = deps.masterKey;
-      if (!key) {
-        console.warn(
-          `[browser-sessions] master key 不可用,无法解密 ${domain} 登录态,视为未登录。`,
-        );
-        return null;
-      }
-      try {
-        return decryptSecret(row.stateEncrypted, key);
-      } catch (err) {
-        // 换机器/换 key/数据损坏 → auth tag 校验失败。视为未登录(用户重登一次即自愈),logged。
-        console.warn(
-          `[browser-sessions] 解密 ${domain} 登录态失败(视为未登录,需重新登录):`,
-          err instanceof Error ? err.message : String(err),
-        );
-        return null;
-      }
+    saveStateVersioned: async (ctx,domain,stateJson,expectedRevision,transaction) => {
+      const repo=repoFor(ctx,transaction), row=await repo.getState(WEB_DOMAIN_SCOPE,domain);
+      if(revision(row)!==expectedRevision)return {saved:false,revision:revision(row)};
+      const result=await repo.compareAndSetState(WEB_DOMAIN_SCOPE,domain,encrypt(stateJson),row);
+      return {saved:result.saved,revision:revision(result.row)};
     },
 
     removeState: async (ctx, domain) =>

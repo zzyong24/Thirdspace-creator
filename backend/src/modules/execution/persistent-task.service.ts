@@ -21,6 +21,7 @@ import type {
   RequestContext,
 } from "@creatoros/contract";
 import { ConflictError, ExecutionValidationError } from "./execution.errors";
+import { isAcknowledgableResearchBlock } from "./execution-research-blocked";
 
 export type PersistentTaskKind =
   | "ai_task"
@@ -300,6 +301,9 @@ export function createPersistentTaskService(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
+      if (Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
+        throw new ExecutionValidationError("研究阻断认可水位只能由用户恢复命令写入");
+      }
       const maxAttempts = input.maxAttempts ?? 3;
       if (!Number.isInteger(maxAttempts) || maxAttempts <= 0) {
         throw new ExecutionValidationError("maxAttempts 必须是正整数");
@@ -373,11 +377,15 @@ export function createPersistentTaskService(
           .limit(1);
         if (activeOwnerTask) return toResource(activeOwnerTask);
       }
+      // 恢复认可属于宿主执行状态，不改变最初入队请求的幂等身份。
+      const existingRequestPayload = {...asPayload(existing?.payload)};
+      delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
+      delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
       if (
         !existing ||
         existing.ownerType !== input.ownerType ||
         existing.ownerId !== input.ownerId ||
-        stableJson(existing.payload) !== stableJson(input.payload) ||
+        stableJson(existingRequestPayload) !== stableJson(input.payload) ||
         existing.priority !== (input.priority ?? 0) ||
         existing.maxAttempts !== maxAttempts ||
         stableJson(existing.costEstimate) !==
@@ -469,6 +477,15 @@ export function createPersistentTaskService(
         for (const taskId of taskIds) {
           const target = targetById.get(taskId);
           if (!target) throw new OwnershipError("Execution task not found");
+          const previous = rows.find(row => row.id === taskId)!;
+          let acknowledgedPayload: Record<string, unknown> | undefined;
+          if (input.command === "resume" && previous.status === "waiting_user") {
+            // 与状态变更持有同一execution行锁；仅用户此次明确恢复认可已经发生的阻断。
+            const calls = await tx.select().from(executionCalls)
+              .where(eq(executionCalls.executionTaskId, taskId)).orderBy(asc(executionCalls.sequence));
+            acknowledgedPayload = {...asPayload(previous.payload), researchBlockedAcknowledgedThroughSequence: calls.at(-1)?.sequence ?? 0,
+              researchBlockedAcknowledgedCallIds: calls.filter(isAcknowledgableResearchBlock).map(call => call.id)};
+          }
           const clearLease =
             target === "queued" ||
             target === "cancelled" ||
@@ -477,6 +494,7 @@ export function createPersistentTaskService(
             .update(executionTasks)
             .set({
               status: target,
+              ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
                     leaseOwner: null,

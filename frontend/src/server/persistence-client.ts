@@ -1,4 +1,4 @@
-import { createAgenticBusinessExecutionService, createAgenticMaterialTools } from "@creatoros/backend/modules/ai-runtime";
+import { createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
@@ -9920,16 +9920,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     stage:(ref,input,signal)=>agenticProposalStaging.stageForExecution(ref,input,signal),
   });
+  const researchWorkerTools=createAgenticResearchTools({stage:(ref,input,signal)=>agenticProposalStaging.stageForExecution(ref,input,signal)});
   const agenticBudget={maxCalls:AGENTIC_DEFAULT_BUDGET.maxSteps,maxTokens:AGENTIC_DEFAULT_BUDGET.maxTokens,deadlineMs:600_000};
   const agenticBusiness=createAgenticBusinessExecutionService(db,{
-    definitions:{"exec.agentic.material":{taskType:"agentic.material",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.material",tools:materialWorkerTools.definitions}},
+    definitions:{
+      "exec.agentic.material":{taskType:"agentic.material",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.material",tools:materialWorkerTools.definitions},
+      "exec.agentic.research":{taskType:"agentic.research",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.research",tools:researchWorkerTools.definitions},
+    },
     budget:agenticBudget,maxOutputTokens:4096,now:deps.now,
     async validateInputs(c,inputs){for(const input of inputs)await assetsService.getAsset(c,input.assetId);},
   });
   const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{return null;}})();
   const agenticWorker=agenticEntry ? createAgenticWorkerDispatcher(db,{
     entryPath:agenticEntry,workerId:`agentic-worker-${process.pid}`,budget:agenticBudget,modelConcurrency:1,
-    tools:materialWorkerTools.tools,resolveModelCredential:resolveWorkerCredential,
+    tools:{...materialWorkerTools.tools,...researchWorkerTools.tools},browserSessions:browserSessionsService,resolveModelCredential:resolveWorkerCredential,
     onError:code=>console.error(`[agentic-worker] ${code}`),
   }) : null;
   let agenticPreparationRecovery:Promise<void>|undefined;

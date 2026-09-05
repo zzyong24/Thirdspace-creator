@@ -1,5 +1,5 @@
 
-import { isSafeWebDomain } from "./web-domain";
+import { isSafeWebDomain,webDomainFromUrl } from "./web-domain";
 
 // [T-217a] Web Session Vault(登录态保管库)—— 把抖音采集已有的「launchPersistentContext +
 // .auth/ 持久 profile + 被动探针」(douyin-cdp.ts)**泛化成任意域名**的登录态保管库。
@@ -17,55 +17,7 @@ import { isSafeWebDomain } from "./web-domain";
 // 隐私红线(与抖音登录态同规格):cookie/session **只活在本机持久 profile**,绝不外传任何后端/
 // 云端;登录全程由用户在有头浏览器里自己做,系统只持久化登录**结果**(profile),绝不代填账密。
 
-// ── 域名归一 ────────────────────────────────────────────────────────────────
-/**
- * 从 URL 解析出稳定的域名 key(保管库目录名 + 会话归属键)。小写、去掉前导 `www.`,
- * 让 `https://www.chatgpt.com/share/x` 与 `https://chatgpt.com/share/y` 归到同一保管库目录。
- * 非法/非 http(s) URL → 抛错(调用方接住转人话)。
- */
-export function webDomainFromUrl(url: string): string {
-  const trimmed = (url ?? "").trim();
-  let host: string;
-  try {
-    const u = new URL(trimmed);
-    if (u.protocol !== "http:" && u.protocol !== "https:") {
-      throw new Error("only http/https");
-    }
-    host = u.hostname;
-  } catch {
-    throw new Error(
-      `无法从链接解析域名(只支持 http/https):「${trimmed.slice(0, 80)}」`,
-    );
-  }
-  const normalized = host.toLowerCase().replace(/^www\./, "");
-  // T-488：抖音分享短链会从 v.douyin.com / iesdouyin.com 跳到主站。如果按输入
-  // hostname 分库存储，用户在短链登录后，长链读取会查不到同一份 state。这里只合并
-  // 已知属于同一抖音产品身份边界的域；其他站点仍严格按域隔离。
-  if (
-    normalized === "douyin.com" ||
-    normalized.endsWith(".douyin.com") ||
-    normalized === "iesdouyin.com" ||
-    normalized.endsWith(".iesdouyin.com")
-  ) {
-    return "douyin.com";
-  }
-  return normalized;
-}
-
-/**
- * 查登录态时允许读取的历史域键。第一项永远是当前 canonical key；后续项只用于把
- * T-488 修复前可能写入的抖音短链 state 惰性搬到主键，不扩大其他站点的会话边界。
- */
-export function webSessionLookupDomains(domain: string): string[] {
-  const canonical = webDomainFromUrl(`https://${domain}`);
-  if (canonical !== "douyin.com") return [canonical];
-  return [
-    canonical,
-    "v.douyin.com",
-    "iesdouyin.com",
-    "www.iesdouyin.com",
-  ];
-}
+export {webDomainFromUrl,webSessionLookupDomains} from "./web-domain";
 
 // ── 会话 cookie 启发式 ──────────────────────────────────────────────────────
 // 不硬编码单一 cookie 名(不同站会话 cookie 名不同):匹配一组常见「会话/登录态」cookie 名。

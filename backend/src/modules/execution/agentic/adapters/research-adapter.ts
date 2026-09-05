@@ -48,16 +48,17 @@ const knowledgeWriteParams = z.object({
   sourceNote: z.string().default(""),
 });
 
+export const RESEARCH_TOOL_DEFINITIONS = [
+  {name:"web.search",version:"1",label:"联网检索",description:"按query真实联网检索，返回带来源URL的结果条目。",effect:"none",parameters:webSearchParams},
+  {name:"web.read",version:"1",label:"读网页正文",description:"读取URL正文，每次最多12000字。返回nextOffset时用同一URL、snapshotId和该offset继续读，直到nextOffset为null；登录提示不是正文。",effect:"none",parameters:webReadParams},
+  {name:"knowledge.write",version:"1",label:"生成知识候选",description:"生成调研知识候选，sourceNote填写本轮已读取的来源URL。用户在任务卡采纳后才进入知识库。",effect:"proposal",parameters:knowledgeWriteParams},
+] as const;
+
 /** 把调研端口包成三个引擎工具(agentic.research 白名单)。 */
 export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
   return [
     {
-      name: "web.search",
-      label: "联网检索",
-      description:
-        "按 query 真实联网检索,返回带来源 URL 的结果条目(用于选题调研的『搜』步)。",
-      effect: "none",
-      parameters: webSearchParams,
+      ...RESEARCH_TOOL_DEFINITIONS[0],
       planInput: (goal) => ({ query: goal }),
       async execute(input, { signal }) {
         const { query } = webSearchParams.parse(input);
@@ -74,12 +75,7 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
       },
     },
     {
-      name: "web.read",
-      label: "读网页正文",
-      description:
-        "读取URL正文，每次最多12000字。返回nextOffset时用同一URL、snapshotId和该offset继续读，直到nextOffset为null；登录提示不是正文。",
-      effect: "none",
-      parameters: webReadParams,
+      ...RESEARCH_TOOL_DEFINITIONS[1],
       // 确定性引擎:读上一步搜到的第一个 URL(串起 搜→读 链路)。
       planInput: (_goal, outputs) => {
         const search = outputs["web.search"] as
@@ -123,12 +119,8 @@ export function createResearchTools(ports: ResearchPorts): AgenticTool[] {
       },
     },
     {
-      name: "knowledge.write",
-      label: "写入知识库(待确认)",
-      description:
-        "生成调研知识候选，sourceNote填写本轮已读取的来源URL。用户在任务卡采纳后才进入知识库。",
+      ...RESEARCH_TOOL_DEFINITIONS[2],
       effect: "writeback",
-      parameters: knowledgeWriteParams,
       // 语义内容/分类由模型显式给出，确定性回退不得编造写入建议。
       async execute(input, { signal, dryRun, toolCallId }) {
         signal.throwIfAborted();

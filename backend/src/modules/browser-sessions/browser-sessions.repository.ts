@@ -24,6 +24,8 @@ export interface BrowserSessionsRepository {
     scopeKey: string,
     stateEncrypted: string,
   ): Promise<BrowserSessionRow>;
+  /** 条件写入，expected=null只允许创建，现有记录同时比较身份和原密文。 */
+  compareAndSetState(scopeKind:string,scopeKey:string,stateEncrypted:string,expected:BrowserSessionRow|null):Promise<{saved:boolean;row:BrowserSessionRow|null}>;
   /** 删一条(登出/移除保管库会话);不存在 → 幂等 false。 */
   deleteState(scopeKind: string, scopeKey: string): Promise<boolean>;
   /** 列该 user 某 scope_kind 的全部 scope_key(保管库列表用;不解密、不返密文)。 */
@@ -93,6 +95,15 @@ export function createBrowserSessionsRepository(
         if (rows[0]) return rows[0];
         throw err;
       }
+    },
+
+    compareAndSetState: async (scopeKind,scopeKey,stateEncrypted,expected) => {
+      const stamp=deps.now();
+      const rows=expected ? await db.update(browserSessions).set({stateEncrypted,updatedAt:stamp})
+        .where(and(scopeFilter(scopeKind,scopeKey),eq(browserSessions.id,expected.id),eq(browserSessions.stateEncrypted,expected.stateEncrypted))).returning()
+        : await db.insert(browserSessions).values({id:deps.nextId("bsess"),userId:deps.userId,scopeKind,scopeKey,stateEncrypted,createdAt:stamp,updatedAt:stamp})
+          .onConflictDoNothing({target:[browserSessions.userId,browserSessions.scopeKind,browserSessions.scopeKey]}).returning();
+      return rows[0]?{saved:true,row:rows[0]}:{saved:false,row:await getState(scopeKind,scopeKey)};
     },
 
     deleteState: async (scopeKind, scopeKey) => {

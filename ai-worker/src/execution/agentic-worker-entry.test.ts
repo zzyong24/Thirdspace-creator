@@ -9,12 +9,12 @@ import {beforeAll,afterAll,describe,it,expect,vi} from "vitest";
 import type {WorkerMessage,WorkerProviderReceipt} from "@creatoros/contract/execution-worker";
 let directory:string;let entry:string;
 beforeAll(async()=>{
-  directory=await mkdtemp(join(tmpdir(),"agentic-worker-fork-"));entry=join(directory,"worker.cjs");
-  await build({entryPoints:[fileURLToPath(new URL("./agentic-worker-entry.ts",import.meta.url))],outfile:entry,bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"silent"});
+  directory=await mkdtemp(resolve("node_modules/.agentic-worker-fork-"));entry=join(directory,"worker.cjs");
+  await build({entryPoints:[fileURLToPath(new URL("./agentic-worker-entry.ts",import.meta.url))],outfile:entry,bundle:true,platform:"node",target:"node24",format:"cjs",external:["@playwright/test","jsdom","@mozilla/readability"],logLevel:"silent"});
 });
 afterAll(async()=>{await rm(directory,{recursive:true,force:true});});
 const execution={executionTaskId:"agent-task",attempt:1,fenceToken:"fence"};
-const task={kind:"agentic.run",operationKey:"agent",taskType:"agentic.research",goal:"读网页并总结",systemPrompt:"使用web.read后总结",capability:"research",maxOutputTokens:200,dryRun:false,tools:[{name:"web.read",version:"1",label:"读取",description:"读取网页",effect:"none",parameters:{type:"object",properties:{url:{type:"string"}},required:["url"],additionalProperties:false}}]};
+const task={kind:"agentic.run",operationKey:"agent",taskType:"agentic.material",goal:"查素材并总结",systemPrompt:"使用material.search后总结",capability:"research",maxOutputTokens:200,dryRun:false,tools:[{name:"material.search",version:"1",label:"搜索素材",description:"查询素材",effect:"none",parameters:{type:"object",properties:{query:{type:"string"}},required:["query"],additionalProperties:false}}]};
 function host(baseUrl:string,cwd=resolve('.')){
   const child=fork(entry,[],{cwd,stdio:["ignore","pipe","pipe","ipc"],execArgv:[]});
   const messages:WorkerMessage[]=[];let stderr="";child.stderr!.on("data",chunk=>{stderr+=chunk;});
@@ -29,9 +29,9 @@ function host(baseUrl:string,cwd=resolve('.')){
     else if(message.port==="readCheckpoint")reply={revision,ledgerSequence:rows.length,messages:checkpoint,uncheckpointedReceipts:rows.filter(r=>r.status==="settled" && !checkpoint.some(m=>m.callId===r.callId)).map(r=>({callId:r.callId,kind:r.kind,sequence:rows.indexOf(r)+1})),recovery:"ready",budget:{maxCalls:10,maxTokens:5000}};
     else if(message.port==="saveCheckpoint"){expect(data.expectedRevision).toBe(revision);checkpoint=data.messages;reply={revision:++revision};}
     else if(message.port==="reserveAgenticModel"){const row={callId:`c${rows.length+1}`,kind:"model" as const,status:"reserved"};rows.push(row);reply={callId:row.callId,status:row.status};}
-    else if(message.port==="reserveAgenticTool"){const row={callId:`c${rows.length+1}`,kind:"tool" as const,status:"reserved"};rows.push(row);reply={callId:row.callId,status:row.status,toolName:"web.read",input:{url:"https://example.com"}};}
+    else if(message.port==="reserveAgenticTool"){const row={callId:`c${rows.length+1}`,kind:"tool" as const,status:"reserved"};rows.push(row);reply={callId:row.callId,status:row.status,toolName:"material.search",input:{query:"素材"}};}
     else if(message.port==="commitAgenticResult")reply={resultId:"agent-result",aiTaskId:"agent-task"};
-    else if(message.port==="executeAgenticTool"){tools++;reply={status:"ok",summary:"读取完成",evidence:[{sourceUrl:"https://example.com",text:"正文"}],data:{text:"正文"},error:null,continuation:null,sideEffect:"none"};}
+    else if(message.port==="executeAgenticTool"){tools++;reply={status:"ok",summary:"素材查询完成",evidence:[{entityId:"fixture-asset",text:"素材说明"}],data:{text:"素材说明"},error:null,continuation:null,sideEffect:"none"};}
     else if(["startCall","startAgenticTool","settleGenerationCall","settleAgenticTool"].includes(message.port)){
       const row=rows.find(r=>r.callId===data.callId)!;row.status=message.port.startsWith("start")?"started":data.status;row.providerResult=data.providerResult;row.receipt=data.output;reply={callId:row.callId,status:row.status};
     }
@@ -45,7 +45,7 @@ describe("独立Agent Worker实际能力与子进程循环",()=>{
   it("真实fork仅声明Agent能力，子进程完成两轮模型与一个工具",async()=>{
     let requests=0;
     const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"text/event-stream"});
-      const delta=requests===1?{role:"assistant",tool_calls:[{index:0,id:"t1",type:"function",function:{name:"web.read",arguments:'{"url":"https://example.com"}'}}]}:{role:"assistant",content:"研究完成"};
+      const delta=requests===1?{role:"assistant",tool_calls:[{index:0,id:"t1",type:"function",function:{name:"material.search",arguments:'{"query":"素材"}'}}]}:{role:"assistant",content:"研究完成"};
       const base={id:`m${requests}`,object:"chat.completion.chunk",created:1,model:"test"};
       res.end(`data: ${JSON.stringify({...base,choices:[{index:0,delta,finish_reason:null}]})}\n\ndata: ${JSON.stringify({...base,choices:[{index:0,delta:{},finish_reason:requests===1?"tool_calls":"stop"}],usage:{prompt_tokens:3,completion_tokens:4,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
     });

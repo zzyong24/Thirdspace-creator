@@ -5,23 +5,26 @@ import {createPiAgenticEngine,createLoopController,type AgenticTool} from "../ru
 import {wrapDurablePiStream} from "./durable-pi-stream";
 import {runDurableAgenticTool} from "./durable-agentic-tool";
 import {GenerationFailure} from "./generation-error";
+import type {ResearchToolExecutor} from "./research-worker-tools";
 
 type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
 const checkpointSchema=z.object({revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"]),
+  acknowledgedBlockedCallIds:z.array(z.string().min(1)).default([]),
   budget:z.object({maxCalls:z.number().int().positive(),maxTokens:z.number().int().positive()})});
 /** Rebuild the Pi transcript by replaying durable calls from the initial frozen context. */
 export async function runAgenticInWorker(
   rawInput:z.infer<typeof agenticWorkerInputSchema>,rawModel:z.infer<typeof workerModelSpecSchema>,
-  parentSignal:AbortSignal,call:Call,onText?:(text:string)=>void,
+  parentSignal:AbortSignal,call:Call,onText?:(text:string)=>void,researchTools?:ResearchToolExecutor,
 ){
   const input=agenticWorkerInputSchema.parse(rawInput);const model=workerModelSpecSchema.parse(rawModel);
   const stop=new AbortController();const signal=AbortSignal.any([parentSignal,stop.signal]);
   signal.throwIfAborted();
   if(!model.authStyle)throw new GenerationFailure("waiting_user","AGENT_AUTH_STYLE_REQUIRED");
   const initial=checkpointSchema.parse(await call("readCheckpoint",{},signal));
+  const acknowledgedBlockedCallIds=new Set(initial.acknowledgedBlockedCallIds);
   if(initial.recovery==="requires_reconciliation")throw new GenerationFailure("unknown_result","AGENT_CHECKPOINT_REQUIRES_RECONCILIATION");
   const modelForTool=new Map<string,string>();const toolCallIds=new Set<string>();let lastModelCallId:string|undefined;
   let failure:GenerationFailure|undefined;
@@ -65,10 +68,15 @@ export async function runAgenticInWorker(
             status:"ok",summary:`预演：${toolName}，未执行写入`,evidence:[],
             data:{plan:{toolName,input:toolInput}},error:null,continuation:null,sideEffect:"none",
           });
+          if(researchTools && (toolName==="web.search" || toolName==="web.read"))return researchTools.execute(toolName,toolInput,{callId:reservedCallId,signal:executionSignal});
           return agenticToolOutcomeSchema.parse(await call("executeAgenticTool",{callId:reservedCallId},executionSignal));
         }});
         if(!reservedCallId)throw new GenerationFailure("unknown_result","TOOL_RECEIPT_MISSING");
         toolCallIds.add(reservedCallId);await checkpoint();
+        if(!acknowledgedBlockedCallIds.has(reservedCallId)){
+          if(output.error?.code==="needs_login" || output.error?.code==="captcha")throw new GenerationFailure("waiting_user",output.error.code==="captcha"?"RESEARCH_CAPTCHA_REQUIRED":"RESEARCH_LOGIN_REQUIRED");
+          if(output.status==="blocked" && output.data && typeof output.data==="object" && !Array.isArray(output.data) && output.data.recoveryState==="browser_runtime_unavailable")throw new GenerationFailure("waiting_user","RESEARCH_BROWSER_UNAVAILABLE");
+        }
         return {summary:output.summary,data:output,hasEvidence:output.evidence.length>0 || output.sideEffect==="proposal"};
       }catch(error){failure=error instanceof GenerationFailure?error:new GenerationFailure("unknown_result","AGENT_TOOL_RESULT_UNKNOWN");stop.abort();throw failure;}
     },

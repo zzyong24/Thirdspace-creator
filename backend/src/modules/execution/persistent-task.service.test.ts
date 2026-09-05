@@ -51,6 +51,21 @@ async function enqueue(
 }
 
 describe("T-482 持久执行任务状态机", () => {
+  it("研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等",async()=>{
+    const {db,client}=await createDb();const service=createPersistentTaskService(db);
+    const input={kind:"ai_task" as const,ownerType:"ai_task" as const,ownerId:"research-resume",idempotencyKey:"research-resume",payload:{modelInput:{kind:"agentic.run",goal:"冻结目标"}}};
+    try{
+      await expect(service.enqueue(ctxA,{...input,payload:{...input.payload,researchBlockedAcknowledgedThroughSequence:999}})).rejects.toMatchObject({name:"ExecutionValidationError"});
+      await expect(service.enqueue(ctxA,{...input,payload:{...input.payload,researchBlockedAcknowledgedCallIds:["forged"]}})).rejects.toMatchObject({name:"ExecutionValidationError"});
+      const task=await service.enqueue(ctxA,input);
+      await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,task.id));
+      await service.command(ctxA,{taskIds:[task.id],command:"resume",idempotencyKey:"explicit-resume"});
+      const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
+      expect(stored?.payload).toEqual({...input.payload,researchBlockedAcknowledgedThroughSequence:0,researchBlockedAcknowledgedCallIds:[]});
+      expect((await service.enqueue(ctxA,input)).id).toBe(task.id);
+      await expect(service.enqueue(ctxA,{...input,payload:{modelInput:{kind:"agentic.run",goal:"篡改目标"}}})).rejects.toMatchObject({name:"ConflictError"});
+    }finally{await client.close();}
+  });
   it("T-517:同一个 scheduled_job 同时至多一个活跃 automation_sync", async () => {
     const { db, client } = await createDb();
     const f = fixture();
@@ -217,6 +232,8 @@ describe("T-482 持久执行任务状态机", () => {
         idempotencyKey: "resume-1",
       });
       expect(resumed?.status).toBe("queued");
+      const [afterResume] = await db.select().from(executionTasks).where(eq(executionTasks.id, task.id));
+      expect(afterResume?.payload).not.toHaveProperty("researchBlockedAcknowledgedThroughSequence");
 
       const [cancelled] = await service.command(ctxA, {
         taskIds: [task.id],

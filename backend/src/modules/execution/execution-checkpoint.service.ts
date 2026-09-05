@@ -6,6 +6,7 @@ import {
 } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
+import { isAcknowledgableResearchBlock } from "./execution-research-blocked";
 
 type Call = typeof executionCalls.$inferSelect;
 type MessageRef = {role:"assistant"|"tool";callId:string};
@@ -100,6 +101,9 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         const checkpoint=parseCheckpoint(task.checkpoint);
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const reconstructed=reconstruct(checkpoint?.messages ?? [],calls);
+        const acknowledged=(task.payload as {researchBlockedAcknowledgedCallIds?:unknown} | null)?.researchBlockedAcknowledgedCallIds;
+        const acknowledgedIds=new Set(Array.isArray(acknowledged)?acknowledged.filter((id):id is string=>typeof id==="string"):[]);
+        const acknowledgedBlockedCallIds=calls.filter(call=>acknowledgedIds.has(call.id) && isAcknowledgableResearchBlock(call)).map(call=>call.id);
         const confirmedIds=new Set(reconstructed.messages.map(message=>message.callId));
         const pendingCalls=calls.filter(call=>["reserved","started","unknown"].includes(call.status)).map(call=>({callId:call.id,operationKey:call.operationKey,status:call.status,startedAttempt:call.startedAttempt,kind:call.kind}));
         const uncheckpointedReceipts=calls.filter(call=>hasReceipt(call) && !confirmedIds.has(call.id)).map(call=>({callId:call.id,kind:call.kind,sequence:call.sequence,resultText:call.resultText,providerResult:call.providerResult}));
@@ -115,7 +119,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";
         return {schemaVersion:1 as const,revision:checkpoint?.revision ?? 0,ledgerSequence:calls.at(-1)?.sequence ?? 0,
-          ...reconstructed,pendingCalls,uncheckpointedReceipts,recovery,budget:task.executionBudget,deadlineAt:task.deadlineAt,
+          ...reconstructed,pendingCalls,uncheckpointedReceipts,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
           knownSpentTokens,spentTokens:unknownUsage?null:knownSpentTokens,
           reservedTokens:calls.reduce((sum,call)=>sum+(call.status==="rejected" || call.totalTokens!==null?0:call.reservedTokens),0)};
       });

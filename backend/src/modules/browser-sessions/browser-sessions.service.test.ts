@@ -168,3 +168,33 @@ describe("browser-sessions service(加密存取,迁移 0047 建表)", () => {
     expect(rows.map((r) => r.scopeKey)).toEqual(["bing.com"]);
   });
 });
+
+describe("版本化会话CAS",()=>{
+ it("空记录并发只有一个成功；密文revision不会泄露明文",async()=>{
+  const {db,client}=await createDb();try{
+   const svc=makeService(db,KEY_A);expect(await svc.getStateVersioned(ctxA,"chatgpt.com")).toEqual({stateJson:null,revision:null});
+   const results=await Promise.all([svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,null),svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,null)]);
+   expect(results.filter(r=>r.saved)).toHaveLength(1);const got=await svc.getStateVersioned(ctxA,"chatgpt.com");expect(got.stateJson).toBe(STATE);expect(got.revision).toMatch(/^[a-f0-9]{64}$/);
+   const rows=await db.select().from(browserSessions);expect(rows).toHaveLength(1);expect(rows[0]!.stateEncrypted).not.toContain("s3cr3t");
+  }finally{await client.close();}
+ });
+ it("用户重新登录或删除后旧Worker版本不能覆盖，同账号切换仍为用户级",async()=>{
+  const {db,client}=await createDb();try{
+   const svc=makeService(db,KEY_A);await svc.saveState(ctxA,"chatgpt.com",STATE);const old=await svc.getStateVersioned(ctxA,"chatgpt.com");
+   const updated=STATE.replace("s3cr3t","human-new");await svc.saveState(ctxA,"chatgpt.com",updated);
+   expect(await svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,old.revision)).toMatchObject({saved:false});expect(await svc.getState(ctxA,"chatgpt.com")).toBe(updated);
+   const current=await svc.getStateVersioned({...ctxA,accountId:"other"},"chatgpt.com");expect(current.stateJson).toBe(updated);
+   expect(await svc.getStateVersioned(ctxB,"chatgpt.com")).toEqual({stateJson:null,revision:null});
+   await svc.removeState(ctxA,"chatgpt.com");expect(await svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,current.revision)).toEqual({saved:false,revision:null});
+  }finally{await client.close();}
+ });
+ it("相同旧revision并发仅一次更新；没有key绝不保存；支持现有外层事务",async()=>{
+  const {db,client}=await createDb();try{
+   const svc=makeService(db,KEY_A);await svc.saveState(ctxA,"chatgpt.com",STATE);const old=await svc.getStateVersioned(ctxA,"chatgpt.com");
+   const outcomes=await Promise.all([svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,old.revision),svc.saveStateVersioned(ctxA,"chatgpt.com",STATE,old.revision)]);expect(outcomes.filter(o=>o.saved)).toHaveLength(1);
+   await expect(makeService(db).saveStateVersioned(ctxB,"chatgpt.com",STATE,null)).rejects.toThrow(BrowserSessionCryptoError);
+   await expect(db.transaction(async tx=>{const snap=await svc.getStateVersioned(ctxA,"chatgpt.com",tx);expect((await svc.saveStateVersioned(ctxA,"chatgpt.com","transaction-state",snap.revision,tx)).saved).toBe(true);throw new Error("rollback");})).rejects.toThrow("rollback");
+   expect(await svc.getState(ctxA,"chatgpt.com")).toBe(STATE);
+  }finally{await client.close();}
+ });
+});

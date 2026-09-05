@@ -211,5 +211,13 @@
     "backend_primary_tests": 48,
     "worker_tests": 84,
     "scope": "不可变网页快照/原子窗口结算/知识来源真实性与真实PG恢复通过；生产Worker调研旅程和全量验收未完成"
+  },
+  "research_worker_production_increment": {
+    "evidence": "research-worker-production-evidence.json",
+    "worker_execution_tests": 95,
+    "research_cross_process_tests": 3,
+    "login_resume_backend_tests": 25,
+    "process_tree_tests": 19,
+    "scope": "研究生产源码接独立Worker，实际Pi/IPC/DB fixture、登录显式恢复和主动强杀通过；实际公网/异常进程退出/全入口迁移/性能/三供应商/双平台完整验收仍待完成"
   }
 }

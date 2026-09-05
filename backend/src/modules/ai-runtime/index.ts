@@ -108,3 +108,5 @@ export * from "./artifact-context-readers";
 
 export * from "./agentic-business-execution.service";
 export * from "./agentic-material-tools";
+
+export {createAgenticResearchTools} from "./agentic-research-tools";

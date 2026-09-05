@@ -1,0 +1,109 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T14:40:00.130864+00:00",
+  "status": "研究生产源码接独立Worker；跨进程fixture、预算partial、显式登录恢复及宿主主动强杀增量通过，完整T-915仍进行中",
+  "implemented": [
+    "冻结版本2研究工具；生产ai.tasks.create及execution.tasks.create使用统一Agent Worker调度",
+    "真实搜索/网页读取在Worker内执行，backend只处理冻结授权、加密会话CAS、持久证据和候选",
+    "来源ID错误返回明确invalid_input交回模型修正；数据库/未知提交不误判为可重试",
+    "会话短端口核验执行任务的用户/账号，沿用既有用户级域名登录保管库；CAS避免旧会话覆盖，cookie与revision不进入模型上下文",
+    "搜索、首窗、续窗、错误引用修正、知识候选与公共采纳使用实际Pi/IPC/PGlite服务贯通",
+    "宿主主动强杀前冻结并核验自身Worker后代，逐PID清理；清理失败明确报错，迟到计时器不影响新Worker",
+    "显式resume同事务冻结当时已确认的具体blocked callId集合；Worker保留原错误上下文，允许新调用重新观察；迟到阻断、普通重启和caller注入都不能扩大认可范围"
+  ],
+  "verification": {
+    "backendRegression": {
+      "tests": 58,
+      "log": "research-worker-backend-regression.log"
+    },
+    "toolsRegression": {
+      "tests": 10,
+      "log": "research-tools-regression.log"
+    },
+    "workerRegression": {
+      "tests": 21,
+      "log": "research-worker-tools-regression.log"
+    },
+    "crossProcessResearch": {
+      "tests": 3,
+      "log": "research-worker-integration.log",
+      "scope": "实际Pi、本地HTTP模型、真实子进程及数据库服务；浏览器context与网页为内存fixture，不冒充公网网站",
+      "complete": {
+        "maxCalls": 20,
+        "modelRequests": 6,
+        "settledCalls": 11
+      },
+      "partialAfterSourceRepair": {
+        "maxCalls": 10,
+        "modelRequests": 5,
+        "settledCalls": 10
+      },
+      "partialAtDefaultBudget": {
+        "maxCalls": 8,
+        "modelRequests": 4,
+        "settledCalls": 8
+      },
+      "assertions": [
+        "模型请求包含实际URL、首窗、尾窗、证据ID",
+        "cookie/stateJson/版本摘要未进入模型请求",
+        "续读不再次导航原网页",
+        "采纳前领域知识条目与版本均为0",
+        "连续两次公共confirm后知识条目/版本/采纳记录各1",
+        "预算到顶不额外调用模型，真实候选仍可采纳"
+      ]
+    },
+    "types": [
+      "contract PASS",
+      "ai-worker PASS",
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "build": "Agent/model/browser runtime bundle构建PASS",
+    "boundary": "5条既有基线，无新增",
+    "orphan": "0 errors / 100 warnings",
+    "tdd": "Worker新模块首个红测为缺模块，非行为红测；完整链路测试为实现后验收。未补拍历史证据。",
+    "processTree": {
+      "tests": 19,
+      "log": "worker-process-tree-regression.log",
+      "scope": "宿主主动取消/启动超时/停止触发的实际Node子孙及临时Chromium强杀，包含辅助进程退出竞态、冻结失败恢复及旧计时器隔离；不代表Windows真机或root先被外部強杀后的清理",
+      "redEvidence": "真实Chromium曾触发辅助进程退出竞态1失败18通过，修后19通过；/tmp原始红日志随后不再存在，原因未确认。工具会话保留当时读取结果，未补拍。"
+    },
+    "frontendAndResources": {
+      "tests": 7,
+      "log": "research-worker-frontend-regression.log",
+      "scope": "前端入口、资源复制及普通Worker启动；非完整安装包验收。初次误用node --test，按文件实际Vitest运行器重新执行。"
+    },
+    "dispatcherRegression": {
+      "tests": 15,
+      "log": "research-worker-dispatcher-regression.log"
+    },
+    "loginResume": {
+      "tests": 25,
+      "log": "login-resume-green-final.log",
+      "scope": "真实Pi/本地HTTP/PGlite服务，执行函数与注入网页观察；该恢复测试不是child或真实公网登录验收",
+      "assertions": [
+        "needs_login/captcha/browser_runtime_unavailable三种阻断显式恢复后可新观察",
+        "新阻断再次等待，不被先前认可集合覆盖",
+        "resume后才结算的旧started调用不被自动认可",
+        "unknown/通用permission/非blocked/未settled不认可",
+        "调用者不能注入host认可字段；原enqueue请求仍幂等",
+        "累计预算、deadline和冻结modelInput保持一致"
+      ],
+      "redEvidence": "07:27真实1失败9通过，断言缺acknowledgedBlockedCallIds；原/tmp日志随后不再存在，原因未确认，工具会话保留当时读取结果，未补拍。并发精确ID增量未宣称行为红测。"
+    },
+    "workerExecution": {
+      "tests": 95,
+      "files": 7,
+      "log": "research-worker-execution-regression.log",
+      "note": "包含前述21项工具/运行器及独立入口，不把重叠回归累加为唯一总数；旧入口测试缺external引发suite构建失败，修正测试装配后95项全通过",
+      "priorFailureLog": "research-worker-entry-build-red.log"
+    },
+    "review": "研究接线/会话/跨进程与预算partial、进程树、登录恢复精确ID及测试装配分别经过独立只读复核；未宣称完整任务验收通过",
+    "globalReconcile": "未在本局部增量重跑；T-916既有全局失败仍保留，完整任务不得写全绿"
+  },
+  "remaining": [
+    "实际公网搜索/网站、父进程退出恢复、macOS与Windows安装包验收",
+    "全部AI入口迁移、旧路径退役、完整性能基线、真实三供应商兼容",
+    "T-916既有全局reconcile问题保持开放"
+  ]
+}

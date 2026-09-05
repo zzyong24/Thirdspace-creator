@@ -218,7 +218,7 @@
       "files": [
         "backend/src/modules/browser-sessions/browser-sessions.service.ts"
       ],
-      "file_sha256": "424b023987b5be80b3b8d4f20207488a6891f0bf21da059f9dc3ffff6b95154f",
+      "file_sha256": "b0128b44cca699ef7c1337a036832a19d484aa8e480583adaa72e0a74e709298",
       "categories": [
         "credential_store"
       ],
@@ -233,7 +233,7 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "d8013b363a3d8f9319ee7bd365548866701b5017e52cabead00b8eff4e4e57d4",
+      "file_sha256": "839377ba88c604866d6b23f5776cc24dc98d674b6814bff56d020448477e7b2e",
       "categories": [
         "ipc"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "5aae9677f90fd2f181175788e0fbfa4b4638bb0b56c21ac9605c649de85e9f1e",
+      "file_sha256": "90cb44aeae91c279f43c4318c33b64696bffbadd43ca1a14f405a2f9725cd791",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "4a97c77f5caa5a72d8b6042d58599ec3d28abf209ec4a3e13ba6e3aac99da0e9",
+      "file_sha256": "406f8150cee1fc0e5b9785cadbd80debcab766803f664af39e9fc1702dbfdd09",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1155,7 +1155,7 @@
       "files": [
         "pnpm-lock.yaml"
       ],
-      "file_sha256": "b09eb99bc139389e8cf7ad40e9eb4298d5a691094b622b8e10ca91044e6b4079",
+      "file_sha256": "4d40679f732449d08224ff2c373c2116b1a66889f53c5b16222be0407e943fde",
       "categories": [
         "runtime"
       ],
@@ -1244,7 +1244,7 @@
       "files": [
         "ai-worker/src/execution/agentic-worker-entry.test.ts"
       ],
-      "file_sha256": "68f5bf76b042692f12b696562798a30a6ebc20636374243f4d5bf9e716d55946",
+      "file_sha256": "bcdc1b8629b284735bd28aacde184646839d7b70e238a5736d1c718784ae5902",
       "categories": [
         "ipc"
       ],
@@ -1283,6 +1283,51 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "独立浏览器运行依赖闭包的真实子进程加载测试，属于已批准Worker迁移的必要验收；不代表实际浏览器生产调度或安装包通过。",
       "acceptance": "仅登记本文件复杂度，不替代完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-research-worker.fixture.ts"
+      ],
+      "file_sha256": "43da10f1016a367a44b56a8e47e263d563918d101a07c4ff080e2d5962caa79b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04已确认的独立Worker研究端口与所属浏览器生命周期测试；独立审查通过，仅登记本文件测试复杂度。",
+      "acceptance": "不代表实际公网、Windows或完整T-915验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/worker-process-tree.test.ts"
+      ],
+      "file_sha256": "e0ad96bb4dfbc94ed4770514d7661410275d55b186dfebc53b6e197a60e2a453",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04已确认的独立Worker研究端口与所属浏览器生命周期测试；独立审查通过，仅登记本文件测试复杂度。",
+      "acceptance": "不代表实际公网、Windows或完整T-915验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/research-worker-production-evidence.json"
+      ],
+      "file_sha256": "927922c5893136d59bfd42cf213b0009be4eccc194fb5f804184323eb25a7d94",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-02/R-04研究Worker私有端口、登录恢复及浏览器生命周期的实际增量证据说明；只是证据文本包含IPC，不新增执行机制。",
+      "acceptance": "完整任务与分发包验收仍待完成。"
     }
   ],
   "historical_baselines": []

@@ -34,6 +34,24 @@ function ledger(maxCalls=12,maxTokens=5000){
   return {call,rows,get revision(){return revision;},get messages(){return messages;},get executions(){return executions;}};
 }
 describe("Worker内真实Pi循环与持久代理",()=>{
+  it("研究登录受阻先结算和checkpoint，再暂停等待用户，重放不再执行网页",async()=>{
+    let requests=0,reads=0;
+    const server=createServer((req,res)=>{
+      req.resume();requests++;res.writeHead(200,{"content-type":"text/event-stream"});
+      const chunk={id:"m1",object:"chat.completion.chunk",created:1,model:"test"};
+      const delta={role:"assistant",tool_calls:[{index:0,id:"t1",type:"function",function:{name:"web.read",arguments:JSON.stringify({url:"https://example.com"})}}]};
+      res.end(`data: ${JSON.stringify({...chunk,choices:[{index:0,delta,finish_reason:null}]})}\n\ndata: ${JSON.stringify({...chunk,choices:[{index:0,delta:{},finish_reason:"tool_calls"}],usage:{prompt_tokens:3,completion_tokens:4,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
+    });
+    await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));
+    try{
+      const f=ledger();const model={apiFormat:"openai_chat" as const,authStyle:"bearer" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"test",token:"fixture"};
+      const adapter={execute:async()=>{reads++;return {status:"blocked" as const,summary:"登录后恢复",evidence:[],error:{code:"needs_login" as const,retryable:false,recovery:"请登录"},continuation:null,sideEffect:"none" as const};}};
+      for(let i=0;i<2;i++)await expect(runAgenticInWorker(input,model,new AbortController().signal,f.call,undefined,adapter)).rejects.toMatchObject({outcome:"waiting_user"});
+      expect(requests).toBe(1);expect(reads).toBe(1);expect(f.executions).toBe(0);
+      expect(f.rows.find(row=>row.kind==="tool")).toMatchObject({status:"settled",receipt:{output:{error:{code:"needs_login"}}}});
+      expect(f.messages.map(message=>message.role)).toEqual(["assistant","tool"]);
+    }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+  },30000);
   it.each([{dryRun:false,invalid:{}},{dryRun:true,invalid:{}},{dryRun:false,invalid:[]}])("非法参数经持久回执自修复，provider仍有严格schema：%j",async({dryRun,invalid})=>{
     const taskInput={...input,dryRun,tools:input.tools.map(tool=>({...tool,effect:dryRun?"proposal" as const:tool.effect}))};
     const requests:string[]=[];

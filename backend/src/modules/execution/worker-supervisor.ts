@@ -2,6 +2,7 @@ import { fork, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { workerMessageSchema, workerPortInputSchemas, sameExecution, type ExecutionRef, type HostMessage, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { buildChildEnv } from "./child-env";
+import { killWorkerProcessTree } from "./worker-process-tree";
 
 export interface WorkerSupervisorPorts {
   /** 必须重读持久执行租约和控制状态；settlement 仅允许结算已发生的调用。 */
@@ -14,6 +15,7 @@ export interface WorkerSupervisorOptions {
   ports: WorkerSupervisorPorts;
   onText?: (execution: ExecutionRef, text: string) => void;
   shutdownGraceMs?: number;
+  startupTimeoutMs?: number;
 }
 
 /** 监督单执行进程。重排队/恢复由后端持久调度器决定，本层不重放任务。 */
@@ -23,6 +25,20 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   let stopping = false;
   let current: {execution: ExecutionRef; resolve(reason: string): void; reject(error: Error): void; lastSeq: number; cancelTimer?: ReturnType<typeof setTimeout>; deadlineTimer?: ReturnType<typeof setTimeout>} | undefined;
   const replies = new Map<string, Promise<HostMessage>>();
+  const cleanups = new Map<ChildProcess, Promise<void>>();
+  let cleanupFailure: Error | undefined;
+  const forceStop = (handle: ChildProcess) => {
+    let pending = cleanups.get(handle);
+    if (!pending) {
+      pending = killWorkerProcessTree(handle);
+      cleanups.set(handle, pending);
+      void pending.catch(error => {
+        cleanupFailure = error instanceof Error ? error : new Error("WORKER_TREE_CLEANUP_FAILED");
+        if (child === handle) current?.reject(cleanupFailure);
+      }).finally(() => cleanups.delete(handle));
+    }
+    return pending;
+  };
   const clearRun = () => {
     if (current?.cancelTimer) clearTimeout(current.cancelTimer);
     if (current?.deadlineTimer) clearTimeout(current.deadlineTimer);
@@ -32,32 +48,44 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   const send = (message: HostMessage) => {
     if (!child?.connected) throw new Error("WORKER_DISCONNECTED");
     const handle = child;
-    handle.send(message, error => {if (error) handle.kill();});
+    handle.send(message, error => {if (error && child === handle) void forceStop(handle).catch(() => {});});
   };
   const cancel = (execution: ExecutionRef) => {
     if (!current || !sameExecution(current.execution, execution)) return;
     send({version: 1, requestId: randomUUID(), type: "cancel", execution});
-    if (!current.cancelTimer) current.cancelTimer = setTimeout(() => child?.kill("SIGKILL"), options.shutdownGraceMs ?? 5000);
+    const handle = child!;
+    const run = current;
+    if (!current.cancelTimer) current.cancelTimer = setTimeout(() => {
+      if (child === handle && current === run) void forceStop(handle).catch(() => {});
+    }, options.shutdownGraceMs ?? 5000);
   };
   const start = (): Promise<string[]> => {
+    if (cleanupFailure) return Promise.reject(cleanupFailure);
+    if (cleanups.size) return Promise.all([...cleanups.values()]).then(() => start());
     if (ready) return ready;
     stopping = false;
     const processHandle = fork(options.entryPath, [], {env: buildChildEnv(), execArgv: [], stdio: ["ignore", "ignore", "ignore", "ipc"]});
     child = processHandle;
     ready = new Promise((resolve, reject) => {
-      const startupTimer = setTimeout(() => {reject(new Error("WORKER_START_TIMEOUT")); processHandle.kill("SIGKILL");}, 15000);
+      let startupTimedOut = false;
+      const startupTimer = setTimeout(() => {
+        startupTimedOut = true;
+        void forceStop(processHandle).then(() => reject(new Error("WORKER_START_TIMEOUT")), reject);
+      }, options.startupTimeoutMs ?? 15000);
       processHandle.on("error", () => {clearTimeout(startupTimer); reject(new Error("WORKER_START_FAILED"));});
       processHandle.on("exit", () => {
         clearTimeout(startupTimer);
-        reject(new Error("WORKER_EXITED"));
+        if (!startupTimedOut) reject(new Error("WORKER_EXITED"));
+        if (child !== processHandle) return;
         current?.reject(new Error(stopping ? "WORKER_STOPPED" : "WORKER_EXITED"));
         clearRun(); ready = undefined; child = undefined;
       });
       processHandle.on("message", raw => {
+        if (child !== processHandle) return;
         const parsed = workerMessageSchema.safeParse(raw);
         if (!parsed.success) return;
         const message = parsed.data;
-        if (message.type === "ready") {clearTimeout(startupTimer); resolve(message.capabilities); return;}
+        if (message.type === "ready") {if (startupTimedOut) return; clearTimeout(startupTimer); resolve(message.capabilities); return;}
         if (!current || !sameExecution(current.execution, message.execution)) return;
         if (message.type === "progress") {
           if (message.seq > current.lastSeq && !current.cancelTimer) {
@@ -87,7 +115,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
           replies.set(message.requestId, reply);
         }
         void reply.then(response => {
-          if (processHandle.connected) processHandle.send(response, error => {if (error) processHandle.kill();});
+          if (processHandle.connected) processHandle.send(response, error => {if (error && child === processHandle) void forceStop(processHandle).catch(() => {});});
         });
       });
     });
@@ -114,12 +142,15 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     async stop() {
       stopping = true;
       const handle = child;
-      if (!handle) return;
+      if (!handle) { await Promise.all([...cleanups.values()]); if (cleanupFailure) throw cleanupFailure; return; }
       const exited = new Promise<void>(resolve => handle.once("exit", () => resolve()));
       handle.kill("SIGTERM");
-      const killTimer = setTimeout(() => handle.kill("SIGKILL"), options.shutdownGraceMs ?? 5000);
-      await exited;
-      clearTimeout(killTimer);
+      let rejectCleanup!: (error: Error) => void;
+      const failed = new Promise<never>((_resolve, reject) => { rejectCleanup = reject; });
+      let cleanup: Promise<void> | undefined;
+      const killTimer = setTimeout(() => { cleanup = forceStop(handle); void cleanup.catch(rejectCleanup); }, options.shutdownGraceMs ?? 5000);
+      try { await Promise.race([exited, failed]); await cleanup; await Promise.all([...cleanups.values()]); if (cleanupFailure) throw cleanupFailure; }
+      finally { clearTimeout(killTimer); }
     },
   };
 }

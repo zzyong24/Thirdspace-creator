@@ -36,6 +36,38 @@ describe("持久检查点与权威调用事实", () => {
     expect(state.recovery).toBe("ready");
     await expect(f.checkpoints.save(f.ref,{...request,messages:[]})).rejects.toMatchObject({name:"ConflictError"});
   });
+  it.each([
+    {status:"blocked",sideEffect:"unknown",code:"needs_login"},
+    {status:"blocked",sideEffect:"committed",code:"captcha"},
+    {status:"blocked",sideEffect:"none",code:"unknown_commit"},
+    {status:"error",sideEffect:"none",code:"needs_login"},
+  ])("显式恢复不能认可含写入风险或非blocked回执：%j",async variant=>{
+    const f=await fixture(`unsafe-ack-${variant.sideEffect}-${variant.code}`);
+    const result={schemaVersion:1,kind:"tool",toolCallId:"read",toolName:"web.read",output:{status:variant.status,summary:"受阻",evidence:[],data:{recoveryState:"browser_runtime_unavailable"},error:{code:variant.code,retryable:false,recovery:"请确认"},continuation:null,sideEffect:variant.sideEffect}};
+    const call=await f.call("blocked-read","tool",false);
+    await f.ledger.settle(f.ref,call.id,{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify(result)});
+    await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,f.task.id));
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"explicit-resume"});
+    const claim=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resumed"}))!;
+    const state=await f.checkpoints.read({...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken});
+    expect(state.acknowledgedBlockedCallIds).toEqual([]);
+  });
+  it("用户恢复时在途的调用之后才结算blocked，不能被旧水位自动认可",async()=>{
+    const f=await fixture("late-blocked-after-resume");
+    const result=(toolCallId:string)=>JSON.stringify({schemaVersion:1,kind:"tool",toolCallId,toolName:"web.read",output:{status:"blocked",summary:"需要登录",evidence:[],error:{code:"needs_login",retryable:false,recovery:"登录后恢复"},continuation:null,sideEffect:"none"}});
+    const known=await f.call("known-read","tool",false);
+    await f.ledger.settle(f.ref,known.id,{status:"settled",usage:{totalTokens:0},resultText:result("known")});
+    const late=await f.call("late-read","tool",false);
+    await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,f.task.id));
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"explicit-resume"});
+    // 真实settlement允许旧attempt在新claim之前结算既有调用。
+    await f.ledger.settle(f.ref,late.id,{status:"settled",usage:{totalTokens:0},resultText:result("late")});
+    const claim=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resumed"}))!;
+    const fresh={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+    expect((await f.checkpoints.read(fresh)).acknowledgedBlockedCallIds).toEqual([known.id]);
+    const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.task.id));
+    expect(stored?.payload).toMatchObject({researchBlockedAcknowledgedThroughSequence:late.sequence,researchBlockedAcknowledgedCallIds:[known.id]});
+  });
   it("旧版覆盖、遗漏新调用、跨任务或角色伪造、未结算结果均拒绝",async()=>{
     const f=await fixture("truth");const other=await fixture("foreign");const c=await f.call("one");const foreign=await other.call("foreign");
     await expect(f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerSequence:1,messages:[{role:"assistant",callId:foreign.id}]})).rejects.toMatchObject({name:"ConflictError"});
@@ -121,3 +153,59 @@ describe("持久检查点与权威调用事实", () => {
     await expect(f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerSequence:0,messages:[]})).rejects.toMatchObject({name:"ConflictError"});
   });
 });
+
+it.each(["needs_login","captcha","browser_runtime_unavailable"] as const)("真实Pi与PGlite：只有显式resume认可旧%s阻断，新阅读仍须新模型新调用",async(blockedReason)=>{
+  const {createServer}=await import("node:http");const {z}=await import("zod");
+  const {runAgenticInWorker}=await import("@creatoros/ai-worker/agentic-run");
+  const {createExecutionAgenticModelPorts}=await import("./execution-agentic-model-ports.service");
+  const {createExecutionAgenticToolPorts}=await import("./execution-agentic-tool-ports.service");
+  const {createExecutionGenerationPorts}=await import("./execution-generation-ports.service");
+  const {createExecutionWorkerCallPorts}=await import("./execution-worker-call-ports.service");
+  const {createExecutionWorkerOutcomeService}=await import("./execution-worker-outcome.service");
+  const connection=await createDb(),db=connection.db,now=()=>new Date().toISOString();
+  const deps={now,budget:{maxCalls:20,maxTokens:100000,deadlineMs:60000}};
+  const input={kind:"agentic.run" as const,operationKey:"login-resume",taskType:"agentic.research" as const,goal:"读取网页后总结",systemPrompt:"读取目标，登录恢复后重新观察。",capability:"research",maxOutputTokens:200,dryRun:false,tools:[{name:"web.read",version:"1",label:"读网页",description:"读取目标网页",effect:"none" as const,parameters:{type:"object",properties:{url:{type:"string"}},required:["url"],additionalProperties:false}}]};
+  const tasks=createPersistentTaskService(db,{now});const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:"login-resume",idempotencyKey:"login-resume",payload:{modelInput:input}});
+  const claim=(await tasks.claimTask({taskId:task.id,workerId:"worker"}))!;let ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const ledger=createExecutionCallLedgerService(db,deps),models=createExecutionAgenticModelPorts(db,deps),generation=createExecutionGenerationPorts(db,deps),workerCalls=createExecutionWorkerCallPorts(db,deps),checkpoints=createExecutionCheckpointService(db,{now}),outcomes=createExecutionWorkerOutcomeService(db,{now});
+  const tools=createExecutionAgenticToolPorts(db,{...deps,tools:{"web.read":{version:"1",effect:"none",parameters:z.object({url:z.string().url()}).strict()}}});
+  const frozen=await workerCalls.readTaskContext(ref);if(frozen.kind!=="agentic.run")throw new Error("wrong input");
+  const call=async(port:import("@creatoros/contract/execution-worker").WorkerPort,data:unknown):Promise<unknown>=>{
+    if(port==="readCheckpoint")return checkpoints.read(ref);if(port==="saveCheckpoint")return checkpoints.save(ref,data);
+    if(port==="reserveAgenticModel")return models.reserve(ref,data);if(port==="reserveAgenticTool")return tools.reserve(ref,data);
+    if(port==="startAgenticTool")return tools.start(ref,data);if(port==="settleAgenticTool")return tools.settle(ref,data);
+    if(port==="settleGenerationCall")return generation.settleGenerationCall(ref,data);if(port==="startCall")return workerCalls.startCall(ref,data);
+    throw new Error(`unexpected ${port}`);
+  };
+  let reads=0;const readIds:string[]=[];
+  const adapter={execute:async(_name:string,_input:unknown,scope:{callId:string})=>{
+    reads++;readIds.push(scope.callId);
+    return reads<3 ? {status:"blocked" as const,summary:"来源需要登录",evidence:[],...(blockedReason==="browser_runtime_unavailable"?{data:{recoveryState:blockedReason}}:{}),error:{code:blockedReason==="browser_runtime_unavailable"?"permission" as const:blockedReason,retryable:false,recovery:"用户完成登录后恢复"},continuation:null,sideEffect:"none" as const}
+    : {status:"ok" as const,summary:"已重新读取正文",evidence:[{sourceUrl:"https://example.com",text:"本次真实观察"}],error:null,continuation:null,sideEffect:"none" as const};
+  }};
+  const requests:string[]=[];const server=createServer(async(req,res)=>{
+    const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));requests.push(Buffer.concat(chunks).toString());const n=requests.length;
+    const delta=n<=3?{role:"assistant",tool_calls:[{index:0,id:`read-${n}`,type:"function",function:{name:"web.read",arguments:JSON.stringify({url:"https://example.com"})}}]}:{role:"assistant",content:"已重新观察并完成总结"};
+    const base={id:`m-${n}`,object:"chat.completion.chunk",created:1,model:"test"};res.writeHead(200,{"content-type":"text/event-stream"});res.end(`data: ${JSON.stringify({...base,choices:[{index:0,delta,finish_reason:null}]})}\n\ndata: ${JSON.stringify({...base,choices:[{index:0,delta:{},finish_reason:n<=3?"tool_calls":"stop"}],usage:{prompt_tokens:3,completion_tokens:4,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
+  });await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));
+  const model={apiFormat:"openai_chat" as const,authStyle:"bearer" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"test",token:"local-fixture"};
+  const run=()=>runAgenticInWorker(frozen,model,new AbortController().signal,call,undefined,adapter);
+  async function resume(){
+    await outcomes.recordFailure(ref,{outcome:"waiting_user",errorCode:"RESEARCH_LOGIN_REQUIRED"});
+    await tasks.command(ctx,{taskIds:[task.id],command:"resume",idempotencyKey:`resume-${ref.attempt}`});
+    const claim=(await tasks.claimTask({taskId:task.id,workerId:"worker"}))!;ref={...ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  }
+  try{
+    for(let n=0;n<2;n++)await expect(run()).rejects.toMatchObject({outcome:"waiting_user"});
+    expect(reads).toBe(1);expect(requests).toHaveLength(1);
+    const [before]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
+    await resume();expect((await checkpoints.read(ref)).acknowledgedBlockedCallIds).toEqual([readIds[0]]);
+    await expect(run()).rejects.toMatchObject({outcome:"waiting_user"});expect(reads).toBe(2);expect(requests).toHaveLength(2);
+    // 第一次用户恢复不能自动认可之后新发生的阻断；进程重跑也不能盲目再发第三次阅读。
+    await expect(run()).rejects.toMatchObject({outcome:"waiting_user"});expect(reads).toBe(2);
+    await resume();expect((await run()).summary).toContain("完成总结");expect(reads).toBe(3);expect(new Set(readIds).size).toBe(3);expect(requests).toHaveLength(4);
+    expect(requests[1]).toContain(blockedReason);expect(requests[2]).toContain(blockedReason);
+    const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(7);expect(state.calls.filter(row=>row.kind==="tool").slice(0,2).every(row=>row.resultText?.includes(blockedReason))).toBe(true);
+    const [after]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));expect(after?.executionBudget).toEqual(before?.executionBudget);expect(after?.deadlineAt).toBe(before?.deadlineAt);expect((after?.payload as {modelInput:unknown}).modelInput).toEqual(input);
+  }finally{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));await connection.client.close();}
+},30000);

@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/agentic-worker-entry.test.ts (4 tests | 4 skipped) 324ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/agentic-worker-entry.test.ts [ src/execution/agentic-worker-entry.test.ts ]
+Error: Build failed with 3 errors:
+../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.js:13:23: ERROR: No loader is configured for ".node" files: ../node_modules/.pnpm/fsevents@2.3.3/node_modules/fsevents/fsevents.node
+../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41745:33: ERROR: Could not resolve "chromium-bidi/lib/cjs/bidiMapper/BidiMapper"
+../node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:41746:40: ERROR: Could not resolve "chromium-bidi/lib/cjs/cdp/CdpConnection"
+ ❯ failureErrorWithLog ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1207:25
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1159:52
+ ❯ buildResponseToResult ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1205:7
+ ❯ ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1232:16
+ ❯ responseCallbacks.<computed> ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9
+ ❯ handleIncomingPacket ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12
+ ❯ Socket.readFromStdout ../node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  91 passed | 4 skipped (95)
+   Start at  07:34:19
+   Duration  7.80s (transform 293ms, setup 0ms, import 1.27s, tests 9.94s, environment 1ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution --maxWorkers=2

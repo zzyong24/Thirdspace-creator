@@ -1,3 +1,5 @@
+import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
+import type {BrowserSessionsService} from "../browser-sessions";
 import {createExecutionResearchEvidenceService} from "./execution-research-evidence.service";
 import { createExecutionAgenticModelPorts } from "./execution-agentic-model-ports.service";
 import { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
@@ -27,7 +29,7 @@ interface WorkerDispatcherDeps {
   onError?(code:string):void;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {}
-export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>}
+export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>;browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
 export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
 /** 同一领取/进程池/取消/停止实现，命名端口按执行模式分别装配。 */
@@ -45,6 +47,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
   const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
   const activeTools=new Map<string,{controller:AbortController;pending:Set<Promise<unknown>>}>();
@@ -56,6 +59,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="readBrowserSession" && browserSessions)return browserSessions.read(ref,raw);
+      if(port==="saveBrowserSession" && browserSessions)return browserSessions.save(ref,raw);
       if(port==="settleResearchRead" && researchEvidence)return researchEvidence.settleRead(ref,raw);
       if(port==="executeEvidenceRead" && researchEvidence)return researchEvidence.readWindow(ref,raw);
       if(port==="readCheckpoint")return checkpoints.read(ref);
