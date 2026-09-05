@@ -1,0 +1,35 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T09:02:20.338099+00:00",
+  "status": "publication_adoption_atomic_verified_full_scope_open",
+  "implemented": [
+    "发布草稿来源键及输入摘要持久化，按user/account/key唯一",
+    "草稿、首版、当前版本指针单事务提交，失败回滚",
+    "AI候选稳定来源键经现有生产采纳桥进入发布服务；回执丢失和并发确认复用已有草稿",
+    "已成功的多平台任务重复确认回读成功；后续用户编辑不被重放覆盖"
+  ],
+  "verification": {
+    "ai_service_and_real_worker_business_tests": 53,
+    "atomic_adoption_tests": 3,
+    "publishing_regression_tests": 40,
+    "postgres_probe": {
+      "status": "passed",
+      "independentPools": 2,
+      "concurrentAdoptions": 30,
+      "publications": 1,
+      "revisions": 1,
+      "postgresVersion": "16.13 (Homebrew)"
+    },
+    "types": [
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review独立只读复核未发现新实质问题，审查未运行测试"
+  },
+  "limits": [
+    "仅修复采用新来源键的采纳路径，旧版本已产生而未记采纳的孤立草稿仍须单独对账，不猜测归并历史产物",
+    "PostgreSQL使用已核实的临时Unix socket fixture，测试完成后已停止；未触碰应用数据库或外部发布",
+    "T-915生产生成入口迁移、全量工具循环与性能/双平台验收仍未完成"
+  ]
+}

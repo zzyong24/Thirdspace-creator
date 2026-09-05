@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "63495bb732305be609c9ccd7446d5b0060a216954b89b0a4df71fa5cb1844f93",
+      "file_sha256": "b18bf528b5cb4298aa891803f8db8bb84a1af285aceea5a91b21c72959851059",
       "categories": [
         "native_executable"
       ],
@@ -386,7 +386,7 @@
       "files": [
         "docs/research/evidence/t915/implementation-progress.json"
       ],
-      "file_sha256": "39b716880f6aca1a20b553a216213c804cf51f6f4451bf10583563c6b12f3020",
+      "file_sha256": "854c3eaaab0520752719c3a59cda6b493f5ec85d41254f0acd8048db91d87990",
       "categories": [
         "ipc"
       ],
@@ -1223,6 +1223,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "已确认独立Worker命名通信范围，结构化节点与账本桥接及真实验证证据。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/publication-adoption-evidence.json"
+      ],
+      "file_sha256": "ee55bbf2936c40100e8e200a018b96e3d1f527f96576c41ee1850d8b22aa46ad",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录临时PostgreSQL Unix socket与真实Worker业务回归证据，没有新增产品通信面。",
+      "acceptance": "只登记验证复杂度，不代表完整T915或历史数据验收。"
     }
   ],
   "historical_baselines": []

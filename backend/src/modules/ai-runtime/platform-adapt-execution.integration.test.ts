@@ -22,7 +22,9 @@ describe("多平台改写正式Skill到发布草稿",()=>{
     const publishing=createPublishingService({db,now,nextId,publisher:{publish:notUsed,remove:notUsed}});
     const base=getOfficialSkillBase("platform.adapt")!;
     const {skillId,baseVersion,methodSystem,template,tools,requiredFacets,contextRequirements,outputSchema,completionPolicy,completionPolicyAdapter}=base;
-    const ai=createAiService({db,now,nextId,artifacts:{createVersion:notUsed},knowledge:{createKnowledge:notUsed},candidate:{createFromAIResult:notUsed,enrichCard:notUsed},learnings:{createLearning:notUsed},publishing:createPlatformDraftAdoptionPort(publishing),materialLinks:{link:notUsed},positioning:{upsertProfile:notUsed,createStatementVersion:notUsed},calibration:{createDraftPrediction:notUsed},
+    let loseReceipt=true;
+    const adoption=createPlatformDraftAdoptionPort(publishing);
+    const ai=createAiService({db,now,nextId,artifacts:{createVersion:notUsed},knowledge:{createKnowledge:notUsed},candidate:{createFromAIResult:notUsed,enrichCard:notUsed},learnings:{createLearning:notUsed},publishing:{async createPublicationFromDraft(...args){const result=await adoption.createPublicationFromDraft(...args);if(loseReceipt){loseReceipt=false;throw new Error("ADOPTION_RECEIPT_LOST");}return result;}},materialLinks:{link:notUsed},positioning:{upsertProfile:notUsed,createStatementVersion:notUsed},calibration:{createDraftPrediction:notUsed},
       async resolveTaskRuntimeData(){return {skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:now(),platformPolicyVersion:"test",platformPolicy:"遵守当前用户输入。",skills:[{skillId,baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem,template,tools,requiredFacets,contextRequirements,outputSchema,completionPolicy,completionPolicyAdapter}}]}};},
     });
     const task=await ai.createTask(ctx,{taskType:"publish.platform_adapt",attemptId:"platform-test-attempt-001",inputData:{outputId:"fixture-output",scriptText:"这是一份真实测试正文。",platforms:["douyin"]}});
@@ -36,11 +38,13 @@ describe("多平台改写正式Skill到发布草稿",()=>{
     const host=createModelWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"platform-host",budget,async resolveModelCredential(_ctx,capability){expect(capability).toBe("script.rewrite");return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"test",token:"fixture",structuredOutputs:true};},projectCandidate(_ctx,input){return projectPlatformAdaptCandidate(input.inputData as Record<string,unknown>,JSON.parse(input.text) as PlatformAdaptOutput);}});
     try{
       await host.drainOnce();expect(requests).toBe(1);
-      const result=await ai.confirmTask(ctx,task.id);expect(result.status).toBe("succeeded");
+      await expect(ai.confirmTask(ctx,task.id)).rejects.toThrow("ADOPTION_RECEIPT_LOST");
+      const results=await Promise.all([ai.confirmTask(ctx,task.id),ai.confirmTask(ctx,task.id)]);expect(results.every(result=>result.status==="succeeded")).toBe(true);
+      expect((await ai.confirmTask(ctx,task.id)).status).toBe("succeeded");
       const publications=await publishing.listPublications(ctx,"fixture-output",{limit:20,offset:0});
       expect(publications).toHaveLength(1);
       const read=await publishing.getPublication(ctx,publications[0]!.id);expect(read.platform).toBe("douyin");
-      const revisions=await publishing.listRevisions(ctx,read.id,{limit:20,offset:0});expect(revisions[0]).toMatchObject({title:"测试标题",description:"第一段。 第二段。",platformTags:["测试"]});
+      const revisions=await publishing.listRevisions(ctx,read.id,{limit:20,offset:0});expect(revisions).toHaveLength(1);expect(revisions[0]).toMatchObject({title:"测试标题",description:"第一段。 第二段。",platformTags:["测试"]});
       expect(notUsed).not.toHaveBeenCalled();
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);

@@ -1,4 +1,4 @@
-import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Publishing tables (data-model §9 lines 509-537 + contract/src/resources/
 // publishing.ts; SPEC §13.3 "发布" group). Canonical defs live in shared infra
@@ -40,6 +40,8 @@ export const publications = pgTable("publications", {
   accountReference: text("account_reference").notNull(),
   status: text("status").notNull().default("draft"),
   currentRevisionId: text("current_revision_id"), // nullable until first revision
+  draftAdoptionKey: text("draft_adoption_key"),
+  draftAdoptionDigest: text("draft_adoption_digest"),
   externalId: text("external_id"), // nullable until published (idempotency anchor)
   externalUrl: text("external_url"), // nullable until published
   scheduledAt: text("scheduled_at"), // nullable → contract iso8601|null
@@ -54,7 +56,7 @@ export const publications = pgTable("publications", {
   platformStatus: text("platform_status"), // nullable → contract string|null
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-});
+},table=>[uniqueIndex("publications_draft_adoption_ux").on(table.userId,table.accountId,table.draftAdoptionKey)]);
 
 // PublicationRevision is append-only/immutable (contract resource extends
 // BaseEntity only — NO updatedAt; data-model line 524-537). New edits = new

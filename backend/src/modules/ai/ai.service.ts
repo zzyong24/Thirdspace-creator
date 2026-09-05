@@ -137,6 +137,7 @@ export interface AiPublishingPort {
       body: string;
       tags?: string[];
       coverIdea?: string;
+      adoptionKey?: string;
     },
   ): Promise<unknown>;
 }
@@ -1099,7 +1100,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const repo = repoFor(ctx, "ai.confirmTask");
       const task = await repo.requireTask(taskId);
       // T-730：响应在事务提交后丢失时，用户重试同一确认应得到已成功真值，不再重复追加版本。
-      if (task.taskType === "planning.thesis" && task.status === "succeeded") {
+      if (["planning.thesis","publish.platform_adapt"].includes(task.taskType) && task.status === "succeeded") {
         return toTaskDto(task);
       }
       // [T-332 S2 · §4.6 AI 采纳/确认门] 二次校验:候选产物只能沿发起任务时的
@@ -1575,6 +1576,7 @@ export function createAiService(deps: ServiceDeps): AiService {
           const key = adoptKey("publication", platform, title);
           if (adopted.has(key)) continue;
           await deps.publishing.createPublicationFromDraft(ctx, outputId, {
+            adoptionKey: "draft:" + createHash("sha256").update(JSON.stringify([candidate.id,key])).digest("hex"),
             platform,
             title,
             body: typeof m.body === "string" ? m.body : "",

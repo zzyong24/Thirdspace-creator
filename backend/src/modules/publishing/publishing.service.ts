@@ -1,3 +1,4 @@
+import { adoptPublicationDraft,type AdoptPublicationDraftInput } from "./publication-draft-adoption.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -124,6 +125,7 @@ export interface ServiceDeps {
 }
 
 export interface PublishingService {
+  adoptDraft(ctx:RequestContext,input:AdoptPublicationDraftInput):Promise<PublicationRow>;
   listPublications(
     ctx: RequestContext,
     outputId: string,
@@ -461,6 +463,12 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listCurrentRevisionSummariesByPublicationIds(
         publicationIds,
       );
+    },
+
+    async adoptDraft(ctx,input){
+      if(!PLATFORMS.has(input.platform))throw new ValidationError(`ValidationError: unknown platform: ${input.platform}`);
+      await assertOutputOwned(ctx,input.outputId);
+      return adoptPublicationDraft(deps.db,ctx,input,deps);
     },
 
     async createPublication(ctx, outputId, body) {
