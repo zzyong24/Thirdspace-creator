@@ -1,0 +1,13 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run tests/execution-browser-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  11:28:32
+   Duration  211ms (transform 36ms, setup 0ms, import 76ms, tests 6ms, environment 0ms)
+

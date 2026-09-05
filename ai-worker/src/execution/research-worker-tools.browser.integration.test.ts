@@ -39,6 +39,17 @@ async function fixture(
   const inputs = new Map<string, unknown>();
   let deny = false;
   const call = vi.fn(async (port: string, raw: unknown) => {
+    if (port === "settleBrowserObservation") {
+      const { callId, output } = raw as { callId: string; output: any };
+      return {
+        ...output,
+        data: {
+          ...output.data,
+          evidenceRef: `fixture-evidence-${callId}`,
+          snapshotId: "fixture-hash",
+        },
+      };
+    }
     if (port !== "prepareBrowserAction") throw new Error(`意外端口 ${port}`);
     const { callId } = raw as { callId: string };
     if (!inputs.has(callId)) throw new Error("缺少真实fixture调用");
@@ -134,6 +145,7 @@ it("正式工厂逐次prepare后observe→fill→click→extract保留页面且�
       action: "extract",
     });
     expect(out.status).toBe("ok");
+    expect((out.data as any).evidenceRef).toBe("fixture-evidence-extract");
     expect(observation(out).text).toContain("正式链路正文");
     await vi.waitFor(() => expect(clicks).toBe(1));
     expect(
@@ -142,9 +154,9 @@ it("正式工厂逐次prepare后observe→fill→click→extract保留页面且�
         (raw as { callId: string }).callId,
       ]),
     ).toEqual(
-      ["observe", "fill", "click", "extract"].map((id) => [
-        "prepareBrowserAction",
-        id,
+      ["observe", "fill", "click", "extract"].flatMap((id) => [
+        ["prepareBrowserAction", id],
+        ["settleBrowserObservation", id],
       ]),
     );
     expect(f.launchServer).toHaveBeenCalledTimes(1);
@@ -181,7 +193,7 @@ it("prepare拒绝已有页面动作，真实点击计数保持零", async () => 
     });
     expect(out).toEqual(denied);
     expect(clicks).toBe(0);
-    expect(f.call).toHaveBeenCalledTimes(2);
+    expect(f.call).toHaveBeenCalledTimes(3);
     expect(
       await f.browser!.contexts()[0]!.pages()[0]!.locator("p").textContent(),
     ).toBe("未提交");

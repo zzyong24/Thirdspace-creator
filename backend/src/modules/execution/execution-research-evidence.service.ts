@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, aiTasks, executionCalls, type Db } from "@creatoros/backend";
-import { agenticToolOutcomeSchema, workerToolResultReceiptSchema, workerPortInputSchemas, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { browserObserveInputSchema, browserActInputSchema, checkpointToolCallSchema, browserObservationSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, workerPortInputSchemas, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -32,10 +32,39 @@ function page(row:Evidence,offset:number):AgenticToolOutcome {
     data:{evidenceRef:row.id,snapshotId:row.contentHash,sourceUrl:row.sourceUrl,title:row.title,text,offset,nextOffset,totalLength:row.fullText.length,truncated:nextOffset!==null},
     error:null,continuation:nextOffset===null?null:{evidenceRef:row.id,nextOffset,totalChars:row.fullText.length},sideEffect:"none"});
 }
-function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number){
+export function browserObservationEvidence(output:AgenticToolOutcome,action?:{action?:string;targetRef?:string}){
+ const data=z.object({observation:browserObservationSchema,extraction:z.unknown().optional()}).parse(output.data);
+ if(action?.action==="extract" && data.extraction!==undefined){
+  const extraction=z.object({targetRef:z.string(),text:z.string().max(12000),totalChars:z.number().int().nonnegative(),truncated:z.boolean(),sourceUrl:z.string()}).parse(data.extraction);
+  if(extraction.targetRef!==action.targetRef || extraction.sourceUrl!==data.observation.url || extraction.totalChars<extraction.text.length)throw new ConflictError("提取窗口与已执行目标或来源不符");
+  if(extraction.text.trim())return {...data.observation,text:extraction.text};
+ }
+ return data.observation;
+}
+function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number,calls:Call[]=[]){
   if(!call || call.kind!=="tool" || call.status!=="settled" || call.executionTaskId!==row.executionTaskId || call.sequence>=beforeSequence ||
     !row.fullText.trim() || row.byteLength!==Buffer.byteLength(row.fullText,"utf8") || row.contentHash!==contentHash(row.sourceUrl,row.fullText)) {
     throw new ConflictError("阅读证据缺少当前任务已确认的先前来源");
+  }
+  const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText ?? ""));
+  if(receipt.toolName==="browser.observe" || receipt.toolName==="browser.act"){
+    const output=agenticToolOutcomeSchema.parse(receipt.output);
+    const data=z.object({observation:browserObservationSchema,evidenceRef:z.string(),snapshotId:z.string()}).parse(output.data);
+    const matching:Array<{sessionId:string;action?:string;targetRef?:string}>=[];
+    for(const model of calls.filter(item=>item.kind==="model" && item.status==="settled" && item.sequence<call.sequence && item.providerResult)){
+     const provider=model.providerResult as {content?:unknown[];finishReason?:{unified?:string}};
+     if(provider.finishReason?.unified!=="tool-calls")continue;
+     for(const part of provider.content ?? []){const tool=checkpointToolCallSchema.safeParse(part);if(!tool.success || tool.data.toolName!==receipt.toolName || tool.data.toolCallId!==receipt.toolCallId)continue;
+      const key=`tool:${createHash("sha256").update(JSON.stringify([model.id,tool.data.toolCallId])).digest("hex")}`;
+      if(key!==call.operationKey)continue;
+      matching.push(receipt.toolName==="browser.act"?browserActInputSchema.parse(JSON.parse(tool.data.input)):browserObserveInputSchema.parse(JSON.parse(tool.data.input)));
+     }
+    }
+    if(matching.length!==1 || matching[0]!.sessionId!==data.observation.sessionId)throw new ConflictError("浏览器观察证据缺少唯一真实模型调用或会话不符");
+    const action=matching[0]!;
+    const selected=browserObservationEvidence(output,action);
+    if(!["ok","partial"].includes(output.status) || output.error!==null || (receipt.toolName==="browser.observe"?output.sideEffect!=="none":!["none","committed"].includes(output.sideEffect)) || data.evidenceRef!==row.id || data.snapshotId!==row.contentHash || selected.url!==row.sourceUrl || selected.title!==row.title || selected.text!==row.fullText || !output.evidence.some(item=>item.entityId===row.id && item.version===row.contentHash && item.sourceUrl===row.sourceUrl && item.title===row.title && item.text===row.fullText))throw new ConflictError("浏览器观察回执与持久证据不符");
+    return;
   }
   const output=readReceipt(call), expected=page(row,0);
   // 不接受仅伪填引用ID的回执；首窗可见正文、来源、摘要和分页须与持久快照一致。
@@ -49,7 +78,7 @@ export async function verifyReadEvidence(tx:Transaction,taskId:string,refs:strin
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,taskId));
   return [...new Set(refs)].map(ref=>{
     const row=rows.find(item=>item.id===ref);if(!row)throw new ConflictError("阅读证据不存在或不属于当前任务");
-    assertOrigin(row,calls.find(call=>call.id===row.originCallId),beforeSequence);return row;
+    assertOrigin(row,calls.find(call=>call.id===row.originCallId),beforeSequence,calls);return row;
   });
 }
 
@@ -75,14 +104,14 @@ export function createExecutionResearchEvidenceService(db:Db,deps:{tools:Record<
         const input=bound.validationOutcome?null:readInput.parse(bound.input);
         if(observation && input && (input.offset!==0 || input.snapshotId || input.evidenceRef))throw new ConflictError("指定快照只能回读原证据，不能重新提交网页观察");
         if(existing){
-          assertOrigin(existing,call,Number.MAX_SAFE_INTEGER);
+          assertOrigin(existing,call,Number.MAX_SAFE_INTEGER,calls);
           if(observation && (observation.needLogin || observation.sourceUrl!==existing.sourceUrl || observation.title!==existing.title || observation.fullText!==existing.fullText))throw new ConflictError("同源阅读调用不能改写正文");
         }
         if(output.evidence.length){
           const row=existing ?? rows.find(row=>row.id===(output.data as {evidenceRef?:string})?.evidenceRef);
           if(!row || !input || row.requestedUrl!==input.url || (!existing && row.contentHash!==input.snapshotId))throw new ConflictError("已结算阅读缺少真实快照");
           const before=existing?Number.MAX_SAFE_INTEGER:calls.find(row=>row.id===bound.modelCallId)!.sequence;
-          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),before);
+          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),before,calls);
           if(JSON.stringify(output)!==JSON.stringify(page(row,input.offset)))throw new ConflictError("已结算阅读窗口与快照不符");
         }
         return output;
@@ -108,7 +137,7 @@ export function createExecutionResearchEvidenceService(db:Db,deps:{tools:Record<
           const matches=rows.filter(row=>row.contentHash===input.snapshotId && row.requestedUrl===input.url && (!input.evidenceRef || input.evidenceRef===row.id));
           if(matches.length!==1)throw new ConflictError("阅读快照缺失、来源或hash不符");
           const row=matches[0]!, model=calls.find(candidate=>candidate.id===bound.modelCallId)!;
-          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),model.sequence);
+          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),model.sequence,calls);
           const prior=calls.some(candidate=>{
             if(candidate.status!=="settled" || candidate.kind!=="tool" || candidate.sequence>=model.sequence)return false;
             try{const receipt=readReceipt(candidate);return receipt.continuation?.evidenceRef===row.id && receipt.continuation.nextOffset===input.offset && JSON.stringify(receipt)===JSON.stringify(page(row,(receipt.data as {offset:number}).offset));}catch{return false;}

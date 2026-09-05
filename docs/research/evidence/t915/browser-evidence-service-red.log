@@ -1,0 +1,69 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts (9 tests | 9 failed) 1047ms
+   × browser.observe观察证据与回执原子结算、幂等且零知识领域写入 34ms
+   × browser.act观察证据与回执原子结算、幂等且零知识领域写入 17ms
+   × 同call改正文/动作事实重放拒绝，不改原快照 17ms
+   × 取消后保留已执行观察，旧fence/跨task/unknown不能翻结算 15ms
+   × url不构成可结算证据且账本保持started 14ms
+   × session不构成可结算证据且账本保持started 21ms
+   × fake_ref不构成可结算证据且账本保持started 15ms
+   × unknown不构成可结算证据且账本保持started 16ms
+   × 验证器拒绝只伪填ID、正文/title/hash不符、跨task来源 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > browser.observe观察证据与回执原子结算、幂等且零知识领域写入
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > browser.act观察证据与回执原子结算、幂等且零知识领域写入
+Error: Cannot find module '/src/modules/execution/execution-browser-evidence.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-evidence.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-evidence.service.test.ts:20:48
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:24:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > 同call改正文/动作事实重放拒绝，不改原快照
+Error: Cannot find module '/src/modules/execution/execution-browser-evidence.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-evidence.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-evidence.service.test.ts:20:48
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:30:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > 取消后保留已执行观察，旧fence/跨task/unknown不能翻结算
+Error: Cannot find module '/src/modules/execution/execution-browser-evidence.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-evidence.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-evidence.service.test.ts:20:48
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:35:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > url不构成可结算证据且账本保持started
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > session不构成可结算证据且账本保持started
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > fake_ref不构成可结算证据且账本保持started
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > unknown不构成可结算证据且账本保持started
+Error: Cannot find module '/src/modules/execution/execution-browser-evidence.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-evidence.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-evidence.service.test.ts:20:48
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:39:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > 验证器拒绝只伪填ID、正文/title/hash不符、跨task来源
+Error: Cannot find module '/src/modules/execution/execution-browser-evidence.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-evidence.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-evidence.service.test.ts:20:48
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:43:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed (9)
+   Start at  11:28:29
+   Duration  1.87s (transform 329ms, setup 0ms, import 683ms, tests 1.05s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-browser-evidence.service.test.ts --retry=0

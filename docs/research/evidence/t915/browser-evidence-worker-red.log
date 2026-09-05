@@ -1,0 +1,69 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/research-worker-tools.browser.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts (5 tests | 2 failed) 26738ms
+   × 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server 21889ms (retry x2)
+   × prepare拒绝已有页面动作，真实点击计数保持零 2689ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:110:1
+    108| }
+    109| const observation = (result: any) => result.data.observation;
+    110| it("正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server", async ()…
+       | ^
+    111|   clicks = 0;
+    112|   const f = await fixture();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server
+AssertionError: expected undefined to be 'fixture-evidence-extract' // Object.is equality
+
+- Expected:
+"fixture-evidence-extract"
+
++ Received:
+undefined
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:141:43
+    139|     });
+    140|     expect(out.status).toBe("ok");
+    141|     expect((out.data as any).evidenceRef).toBe("fixture-evidence-extra…
+       |                                           ^
+    142|     expect(observation(out).text).toContain("正式链路正文");
+    143|     await vi.waitFor(() => expect(clicks).toBe(1));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > prepare拒绝已有页面动作，真实点击计数保持零
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > prepare拒绝已有页面动作，真实点击计数保持零
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > prepare拒绝已有页面动作，真实点击计数保持零
+AssertionError: expected "vi.fn()" to be called 3 times, but got 2 times
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:186:20
+    184|     expect(out).toEqual(denied);
+    185|     expect(clicks).toBe(0);
+    186|     expect(f.call).toHaveBeenCalledTimes(3);
+       |                    ^
+    187|     expect(
+    188|       await f.browser!.contexts()[0]!.pages()[0]!.locator("p").textCon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  11:29:19
+   Duration  27.24s (transform 97ms, setup 0ms, import 366ms, tests 26.74s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 test: `vitest run src/execution/research-worker-tools.browser.integration.test.ts`
+Exit status 1

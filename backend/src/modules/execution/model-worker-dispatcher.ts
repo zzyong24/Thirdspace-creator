@@ -1,5 +1,6 @@
 import {createExecutionBrowserProfileLeaseService,BrowserProfileBusyError} from "./execution-browser-profile-lease.service";
 import {createExecutionBrowserActionService} from "./execution-browser-action.service";
+import {createExecutionBrowserEvidenceService} from "./execution-browser-evidence.service";
 import {createExecutionBrowserLoginSnapshotService,BrowserLoginSnapshotInvalidError} from "./execution-browser-login-snapshot.service";
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
@@ -62,6 +63,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
   const browserActions=deps.executionMode==="agentic.run"?createExecutionBrowserActionService(db,{now,tools:deps.tools}):null;
+  const browserEvidence=deps.executionMode==="agentic.run"?createExecutionBrowserEvidenceService(db,{now,tools:deps.tools,budget:deps.budget}):null;
   const browserLogin=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserLoginSnapshotService(db,{now,sessions:deps.browserSessions}):null;
   const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
@@ -74,6 +76,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="settleBrowserObservation" && browserEvidence)return browserEvidence.settle(ref,raw);
       if(port==="prepareBrowserAction" && browserActions){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
         const preparation=(async()=>{

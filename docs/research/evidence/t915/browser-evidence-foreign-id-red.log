@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts (13 tests | 1 failed) 1409ms
+   × 非匹配附加证据不保留Worker自报的跨来源ID，原动作仍结算且重投一致 25ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-browser-evidence.service.test.ts > 非匹配附加证据不保留Worker自报的跨来源ID，原动作仍结算且重投一致
+AssertionError: expected { …(5) } to deeply equal { …(3) }
+
+- Expected
++ Received
+
+  {
++   "entityId": "another-task-secret-evidence",
+    "sourceUrl": "https://other.example.com/",
+    "text": "原始描述",
+    "title": "非核心参考",
++   "version": "forged",
+  }
+
+ ❯ src/modules/execution/execution-browser-evidence.service.test.ts:70:138
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  11:34:07
+   Duration  2.24s (transform 350ms, setup 0ms, import 696ms, tests 1.41s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-browser-evidence.service.test.ts --retry=0

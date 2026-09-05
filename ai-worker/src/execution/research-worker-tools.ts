@@ -178,7 +178,14 @@ export function createResearchWorkerTools(deps: Dependencies) {
           if(prepared.status==="blocked")return prepared.outcome;
           browserAuthorization=prepared.authorization;preparedPages.set(prepared.input.sessionId,prepared);
           combined.throwIfAborted();
-          return await browserPages.execute(name,prepared.input,{signal:combined,initialUrl:prepared.url});
+          const output=await browserPages.execute(name,prepared.input,{signal:combined,initialUrl:prepared.url});
+          const observation=(output.data as {observation?:{text?:unknown}}|undefined)?.observation;
+          if((output.status==="ok" || output.status==="partial") && output.error===null && output.sideEffect!=="unknown" && typeof observation?.text==="string" && observation.text.trim()){
+            // 动作已发生，取消后也允许记录真实观察；该私有结算不携带admission signal。
+            try{return agenticToolOutcomeSchema.parse(await deps.call("settleBrowserObservation",{callId:scope.callId,output}));}
+            catch{throw new GenerationFailure("unknown_result","BROWSER_EVIDENCE_RECEIPT_UNKNOWN");}
+          }
+          return output;
         }
         if (name === "web.search") {
           const params = searchParams.parse(input);

@@ -1,0 +1,100 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T18:39:01.147988+00:00",
+  "status": "浏览器证据与候选采纳闭环局部完成；完整T-915仍进行中",
+  "implemented": [
+    "新增settleBrowserObservation私有结算；浏览器成功观察与账本同事务保存，取消后已发生事实可结算，旧fence仍拒绝",
+    "证据绑定真实模型调用、任务/session、动作、URL、正文窗口与hash；extract目标窗口在首观察之外时仍保存实际提取文本",
+    "Worker成功观察先取宿主证据回执再沿原durable工具结算；unknown/blocked/stale不制造可采纳证据",
+    "verifyReadEvidence严格区分web.read与browser来源，知识stage/commit/采纳原验证链保持；浏览器snapshot也可web.read只读回取",
+    "不匹配的Worker自报证据身份被去掉；8MB证据容量满时保留动作真实回执、不分配假ID、不把已完成动作改为unknown"
+  ],
+  "flow": "实际浏览器观察/提取 → 宿主核验来源 → 同事务保存证据和调用回执 → Pi下一轮引用evidenceRef → 知识候选 → 用户采纳 → 领域服务保存",
+  "verification": {
+    "normalPi": {
+      "log": "browser-evidence-pi-final.log",
+      "trace": "browser-pi-full-normal-trace-1788633427419.ndjson",
+      "facts": [
+        "实际Pi/独立fork Worker/Chromium/PGlite/本地模型HTTP SSE",
+        "7次模型+6次工具，全部settled",
+        "页面外部变化→旧click stale且零点击→新ref填写/点击→extract带持久证据",
+        "候选前知识0；公共重复confirm后知识/版本/采纳回执各1",
+        "页面/context/server实际close，浏览器进程停止"
+      ]
+    },
+    "unknownPi": {
+      "log": "browser-evidence-pi-final.log",
+      "trace": "browser-pi-full-unknown-trace-1788633430790.ndjson",
+      "facts": [
+        "真实点击1次后仅让后续guard观察拒绝，正式执行器生成unknown_commit",
+        "4次模型+4次工具，1条unknown；0知识/候选",
+        "再次drain不再调用模型、不重复点击"
+      ]
+    },
+    "service": {
+      "tests": 28,
+      "log": "browser-evidence-service-green.log",
+      "types": "browser-evidence-service-types.log",
+      "facts": [
+        "真实PG触发器拒ledger更新时，先插入的证据也回滚；call仍started/resultText null",
+        "取消后结算、旧fence/跨任务拒绝、同call幂等与改正文拒绝",
+        "extract窗口、证据上限和browser snapshot web.read回读"
+      ]
+    },
+    "backendRegression": {
+      "tests": 60,
+      "log": "browser-evidence-backend-regression.log",
+      "types": "browser-evidence-backend-types.log"
+    },
+    "worker": {
+      "tests": 5,
+      "log": "browser-evidence-worker-green.log",
+      "types": "browser-evidence-worker-types.log"
+    },
+    "contract": {
+      "tests": 33,
+      "log": "browser-evidence-contract-final.log",
+      "types": "browser-evidence-contract-types.log"
+    },
+    "build": {
+      "exitCode": 0,
+      "log": "browser-evidence-worker-build.log",
+      "smoke": "browser-evidence-built-worker-smoke.log",
+      "facts": "实际dist/agentic-worker.cjs返回agentic.run ready，SIGTERM后exit0"
+    },
+    "scope": {
+      "errors": 0,
+      "log": "browser-evidence-scope.json"
+    },
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "browser-evidence-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "browser-evidence-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "status": "保留T-916既有全局欠债，不标全绿",
+      "log": "browser-evidence-reconcile.log"
+    }
+  },
+  "evidenceLimits": [
+    "模型HTTP响应和网页/DNS映射为明确本地fixture；Pi、浏览器、Worker、数据库、业务prepare/confirm为实际代码，不称真实公网供应商验收",
+    "unknown注入为实际点击后的观察guard拒绝，不声称真实断网/超时或丢失IPC回执测试",
+    "完整正常链初红确为extract evidenceRef undefined；原固定红trace被首绿覆盖，保留红日志但不补造红trace，后续trace已时间戳分开",
+    "新增service初红为缺模块；foreign-id-red是真实13项中1失败12通过，修复未匹配证据身份污染",
+    "浏览器证据是实际观察/提取窗口，不宣称整站完整正文；容量满不伪造新证据",
+    "Built Worker smoke不是macOS/Windows安装包验收，未访问用户库/实际登录态，未发布"
+  ],
+  "remaining": [
+    "用户可见网站与交互授权入口、登录/暂停恢复公共旅程",
+    "已提交回执丢失后的浏览器恢复、新Worker真实重新观察、父进程意外退出遗留资源验证",
+    "跨任务多域等待/调度恢复、完整R05入口迁移及旧路径退役",
+    "同条件30次性能P50/P95、三真实供应商和双平台安装生命周期"
+  ]
+}

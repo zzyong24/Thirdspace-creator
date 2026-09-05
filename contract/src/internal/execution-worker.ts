@@ -1,6 +1,6 @@
 import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-worker";
 export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitReceiptSchema } from "./agentic-worker";
-import { reserveAgenticToolSchema, settleAgenticToolSchema } from "./agentic-tool-call";
+import { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolOutcomeSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
@@ -16,7 +16,7 @@ export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
   "prepareScriptImport", "saveScriptFallback", "saveScriptVoiceover",
-  "prepareBrowserAction", "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "settleBrowserObservation", "prepareBrowserAction", "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -48,6 +48,7 @@ export const workerPortInputSchemas = {
   saveScriptVoiceover: z.object({callId:operationKeySchema,voiceover:z.string().min(1).max(200000),centralClaim:z.string(),audienceOldBelief:z.string(),generation:z.json()}).strict(),
   readBrowserSession:z.object({callId:operationKeySchema}).strict(),
   prepareBrowserAction:z.object({callId:operationKeySchema}).strict(),
+  settleBrowserObservation:z.object({callId:operationKeySchema,output:agenticToolOutcomeSchema}).strict(),
   saveBrowserSession:z.object({callId:operationKeySchema,revision:z.string().min(1).nullable(),stateJson:z.string().max(2_100_000)}).strict(),
   settleResearchRead:z.object({callId:operationKeySchema,observation:z.object({sourceUrl:z.string().url().max(8192),title:z.string().max(10000),fullText:z.string().max(8_000_000),needLogin:z.boolean().optional()}).strict()}).strict(),
   executeEvidenceRead:z.object({callId:operationKeySchema}).strict(),

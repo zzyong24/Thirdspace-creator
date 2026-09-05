@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "930380e43523f659c48713a358a6599fb7512d355eff02d0f065c030ae2bc9d0",
+      "file_sha256": "895b2e0b602275e93dccc3335bccb9d2ca946b8bca5d6c9a7338130973ebe736",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 范围内补充浏览器持久租约导出与宿主实际 ChildProcess 清理证明；本批代码已逐项复核，独立真实进程故障测试留证，不代表浏览器完整循环或双平台验收。",
+      "reason": "DEC-RUNTIME-055 范围内新增浏览器观察私有结算端口的settlement分类，允许取消后保留已执行事实；不增加动作权限。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1343,6 +1343,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "证据仅记录已批准双平台范围内现有 Rust windows_ 逻辑测试的真实结果；不引入新语言或工具链，不声称完成 Windows 真机验收。",
       "acceptance": "仅绑定已审读证据文件的复杂度标记，完整 T-915 验收尚未完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/ai-runtime/agentic-browser-worker.fixture.ts"
+      ],
+      "file_sha256": "464ae605b1036492a56927815703361f2e5864ea2d234e5591f0f6db0034fd85",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "隔离真实Pi/独立Worker/Chromium浏览器证据与采纳集成夹具，仅DNS与故障注入替身，不新增生产执行权；已审阅实际IPC与生命周期。",
+      "acceptance": "不代表真实公网供应商、Windows或完整T-915验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/browser-evidence-evidence.json"
+      ],
+      "file_sha256": "8d6de8d5e7618cc2acb55e9c0339faad2d04efa1097aa895bb50c73b344f15a8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件仅如实记录已批准私有进程协议的验证证据与缺口，不新增运行时机制。",
+      "acceptance": "证据范围以记录为准，不替代完整T-915验收。"
     }
   ],
   "historical_baselines": []

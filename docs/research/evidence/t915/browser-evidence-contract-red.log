@@ -1,0 +1,33 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run tests/execution-browser-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+ ❯ tests/execution-browser-host.test.ts (4 tests | 1 failed) 7ms
+   × 浏览器证据结算只接callId和规范回执，不接自报归属 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/execution-browser-host.test.ts > 浏览器证据结算只接callId和规范回执，不接自报归属
+TypeError: Cannot read properties of undefined (reading 'parse')
+ ❯ tests/execution-browser-host.test.ts:65:57
+     63| it('浏览器证据结算只接callId和规范回执，不接自报归属',()=>{
+     64|  const output={status:'ok',summary:'已观察',evidence:[],error:null,contin…
+     65|  expect(workerPortInputSchemas.settleBrowserObservation.parse({callId:…
+       |                                                         ^
+     66|  expect(()=>workerPortInputSchemas.settleBrowserObservation.parse({cal…
+     67|  expect(()=>workerPortInputSchemas.settleBrowserObservation.parse({cal…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  11:28:12
+   Duration  214ms (transform 35ms, setup 0ms, import 73ms, tests 7ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 test: `vitest run tests/execution-browser-host.test.ts`
+Exit status 1

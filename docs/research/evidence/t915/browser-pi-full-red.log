@@ -1,0 +1,24 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/agentic-browser-worker.integration.test.ts (1 test | 1 failed) 3611ms
+   × 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳 3610ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/agentic-browser-worker.integration.test.ts > 真实Pi跨进程浏览器：旧观察自修复、填写点击、证据与公共采纳
+TypeError: .toMatch() expects to receive a string, but got undefined
+ ❯ Server.<anonymous> src/modules/ai-runtime/agentic-browser-worker.integration.test.ts:61:123
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  11:29:42
+   Duration  5.53s (transform 1.14s, setup 0ms, import 1.78s, tests 3.61s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/agentic-browser-worker.integration.test.ts --retry=0

@@ -60,3 +60,32 @@ describe("浏览器动作私有端口", () => {
     ).toThrow();
   });
 });
+it("浏览器证据结算只接callId和规范回执，不接自报归属", () => {
+  const output = {
+    status: "ok",
+    summary: "已观察",
+    evidence: [],
+    error: null,
+    continuation: null,
+    sideEffect: "none",
+  };
+  expect(
+    workerPortInputSchemas.settleBrowserObservation.parse({
+      callId: "call",
+      output,
+    }),
+  ).toEqual({ callId: "call", output });
+  expect(() =>
+    workerPortInputSchemas.settleBrowserObservation.parse({
+      callId: "call",
+      output,
+      userId: "other",
+    }),
+  ).toThrow();
+  expect(() =>
+    workerPortInputSchemas.settleBrowserObservation.parse({
+      callId: "call",
+      output: { ...output, sideEffect: "fake" },
+    }),
+  ).toThrow();
+});
