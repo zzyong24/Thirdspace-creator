@@ -1,0 +1,31 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/browser-login-state.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/browser-login-state.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/browser-login-state.test.ts [ src/execution/browser-login-state.test.ts ]
+Error: Cannot find module './browser-login-state' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/browser-login-state.test.ts
+ ❯ src/execution/browser-login-state.test.ts:2:1
+      1| import {it,expect} from 'vitest';
+      2| import {mergeBrowserLoginStates} from './browser-login-state';
+       | ^
+      3| const cookie=(domain:string,value:string)=>({name:'session',value,doma…
+      4| it('合并授权网站快照并按cookie完整身份去重',()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  11:13:02
+   Duration  163ms (transform 14ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 test: `vitest run src/execution/browser-login-state.test.ts`
+Exit status 1

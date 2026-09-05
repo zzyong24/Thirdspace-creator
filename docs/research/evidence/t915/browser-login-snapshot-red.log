@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-browser-login-snapshot.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-browser-login-snapshot.service.test.ts [ src/modules/execution/execution-browser-login-snapshot.service.test.ts ]
+Error: Cannot find module './execution-browser-login-snapshot.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-login-snapshot.service.test.ts
+ ❯ src/modules/execution/execution-browser-login-snapshot.service.test.ts:4:1
+      2| import {createDb,aiTasks,executionTasks,eq,type Db} from "@creatoros/b…
+      3| import {createPersistentTaskService} from "./persistent-task.service";
+      4| import {createExecutionBrowserLoginSnapshotService} from "./execution-…
+       | ^
+      5| const ctx={userId:"login-user",accountId:"login-account",requestId:"te…
+      6| let db:Db,close:()=>Promise<void>;beforeAll(async()=>{const f=await cr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  11:13:20
+   Duration  817ms (transform 326ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-browser-login-snapshot.service.test.ts --retry=0

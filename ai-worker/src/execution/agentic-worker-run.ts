@@ -68,7 +68,7 @@ export async function runAgenticInWorker(
             status:"ok",summary:`预演：${toolName}，未执行写入`,evidence:[],
             data:{plan:{toolName,input:toolInput}},error:null,continuation:null,sideEffect:"none",
           });
-          if(researchTools && (toolName==="web.search" || toolName==="web.read"))return researchTools.execute(toolName,toolInput,{callId:reservedCallId,signal:executionSignal});
+          if(researchTools && ["web.search","web.read","browser.observe","browser.act"].includes(toolName))return researchTools.execute(toolName,toolInput,{callId:reservedCallId,signal:executionSignal});
           return agenticToolOutcomeSchema.parse(await call("executeAgenticTool",{callId:reservedCallId},executionSignal));
         }});
         if(!reservedCallId)throw new GenerationFailure("unknown_result","TOOL_RECEIPT_MISSING");

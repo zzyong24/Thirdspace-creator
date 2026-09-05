@@ -16,7 +16,7 @@ const cookieSchema=z.object({name:z.string(),value:z.string(),domain:z.string().
 const stateSchema=z.object({cookies:z.array(cookieSchema).max(10000),origins:z.array(z.object({origin:z.string(),localStorage:z.array(z.object({name:z.string(),value:z.string()}).strict()).max(10000)}).strict()).max(1000)}).strict();
 
 /** 验证浏览器状态形状及域边界；只验证权限和结构，不推断登录状态。 */
-function validateState(stateJson:string,targetUrl:URL,canonical:string):void {
+export function validateBrowserStorageState(stateJson:string,targetUrl:URL,canonical:string):void {
   if(Buffer.byteLength(stateJson,"utf8")>2*1024*1024)throw new ConflictError("网站登录态超过2MB上限");
   let state:z.infer<typeof stateSchema>;
   try{state=stateSchema.parse(JSON.parse(stateJson));}catch{throw new ConflictError("网站登录态不是合法的cookies/origins结构");}
@@ -70,11 +70,11 @@ export function createExecutionBrowserSessionService(db:Db,deps:{tools:Record<st
   return {
     async read(ref:ExecutionRef,raw:unknown){const {callId}=readSchema.parse(raw);return scoped(ref,callId,async({tx,context,domain,url})=>{
       const record=await findState(context,domain,tx);
-      if(record.stateJson!==null)validateState(record.stateJson,url,domain);
+      if(record.stateJson!==null)validateBrowserStorageState(record.stateJson,url,domain);
       return {domain,stateJson:record.stateJson,revision:record.revision};
     });},
     async save(ref:ExecutionRef,raw:unknown){const request=saveSchema.parse(raw);return scoped(ref,request.callId,async({tx,context,domain,url})=>{
-      validateState(request.stateJson,url,domain);
+      validateBrowserStorageState(request.stateJson,url,domain);
       const record=await findState(context,domain,tx);
       if(record.revision!==request.revision || (record.revision!==null && record.stateJson===null))return {saved:false,revision:record.revision};
       return deps.sessions.saveStateVersioned(context,record.key,request.stateJson,request.revision,tx);

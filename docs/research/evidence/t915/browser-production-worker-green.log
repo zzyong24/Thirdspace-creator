@@ -1,0 +1,35 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/research-worker-tools.test.ts src/execution/research-worker-tools.browser.integration.test.ts src/execution/research-browser-sessions.test.ts src/execution/browser-login-state.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.test.ts (10 tests | 1 failed) 5559ms
+   × launch期间取消会关闭迟到server且不connect 3ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > launch期间取消会关闭迟到server且不connect
+ FAIL  src/execution/research-worker-tools.test.ts > launch期间取消会关闭迟到server且不connect
+ FAIL  src/execution/research-worker-tools.test.ts > launch期间取消会关闭迟到server且不connect
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/execution/research-worker-tools.test.ts:64:52
+     62|   const run=tools.execute("web.search",{query:"查询"},{callId:"search",s…
+     63|   controller.abort();resolve({process:()=>({pid:2}),wsEndpoint:()=>"ws…
+     64|   await rejected;await tools.close();expect(close).toHaveBeenCalled();…
+       |                                                    ^
+     65| });
+     66| it("登录墙返回可持久blocked，同域不重复访问",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 23 passed (24)
+   Start at  11:18:37
+   Duration  23.94s (transform 223ms, setup 0ms, import 1.00s, tests 31.90s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 test: `vitest run src/execution/research-worker-tools.test.ts src/execution/research-worker-tools.browser.integration.test.ts src/execution/research-browser-sessions.test.ts src/execution/browser-login-state.test.ts`
+Exit status 1

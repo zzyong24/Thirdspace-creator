@@ -1,0 +1,9 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/ai-runtime/agentic-research-tools.test.ts(26,31): error TS2367: This comparison appears to be unintentional because the types '"web.read" | "web.search" | "knowledge.write"' and '"browser.act"' have no overlap.
+src/modules/ai-runtime/agentic-research-tools.test.ts(26,58): error TS2339: Property 'parameters' does not exist on type 'never'.
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

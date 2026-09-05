@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { agenticToolOutcomeSchema } from "./agentic-tool-call";
 
 const browserId = z.string().min(1).max(128);
 const browserUrl = z
@@ -105,3 +106,15 @@ export const browserAuthorizationSnapshotSchema = z
 export type BrowserAuthorizationSnapshot = z.infer<
   typeof browserAuthorizationSnapshotSchema
 >;
+
+/** 私有宿主授权回执；不接受Worker自报身份或网站范围。 */
+export const browserActionPreparationSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("ready"),
+    input: z.union([browserObserveInputSchema, browserActInputSchema]),
+    url: browserUrl,
+    authorization: browserAuthorizationSnapshotSchema,
+    loginStates: z.array(z.object({domain:z.string().min(1).max(253),stateJson:z.string().max(2_100_000).nullable()}).strict()).max(30).optional(),
+  }).strict(),
+  z.object({status:z.literal("blocked"),outcome:agenticToolOutcomeSchema}).strict(),
+]);

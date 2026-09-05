@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-browser-action.service.test.ts (4 tests | 4 failed) 939ms
+   × 首观察必须URL，后续无URL由本session真实已结算观察恢复 16ms
+   × act必须最新session观察且元素属于该观察；导航不跨授权域 4ms
+   × 只读授权禁止click/fill但允许提取，跨session没有观察 3ms
+   × 旧fence、错account、hostclaim与旧模型回合均不可执行 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-browser-action.service.test.ts > 首观察必须URL，后续无URL由本session真实已结算观察恢复
+Error: Cannot find module '/src/modules/execution/execution-browser-action.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-action.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-action.service.test.ts:19:46
+
+ ❯ src/modules/execution/execution-browser-action.service.test.ts:23:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/execution/execution-browser-action.service.test.ts > act必须最新session观察且元素属于该观察；导航不跨授权域
+Error: Cannot find module '/src/modules/execution/execution-browser-action.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-action.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-action.service.test.ts:19:46
+
+ ❯ src/modules/execution/execution-browser-action.service.test.ts:27:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/execution/execution-browser-action.service.test.ts > 只读授权禁止click/fill但允许提取，跨session没有观察
+Error: Cannot find module '/src/modules/execution/execution-browser-action.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-action.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-action.service.test.ts:19:46
+
+ ❯ src/modules/execution/execution-browser-action.service.test.ts:32:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/execution/execution-browser-action.service.test.ts > 旧fence、错account、hostclaim与旧模型回合均不可执行
+Error: Cannot find module '/src/modules/execution/execution-browser-action.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-browser-action.service.test.ts
+ ❯ fixture src/modules/execution/execution-browser-action.service.test.ts:19:46
+
+ ❯ src/modules/execution/execution-browser-action.service.test.ts:37:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  11:11:39
+   Duration  1.76s (transform 347ms, setup 0ms, import 691ms, tests 939ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-browser-action.service.test.ts --retry=0

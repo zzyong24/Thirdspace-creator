@@ -1,0 +1,16 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run src/internal/execution-browser-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+No test files found, exiting with code 1
+
+filter: src/internal/execution-browser-host.test.ts
+include: tests/**/*.test.ts
+exclude:  **/node_modules/**, **/.git/**
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 test: `vitest run src/internal/execution-browser-host.test.ts`
+Exit status 1

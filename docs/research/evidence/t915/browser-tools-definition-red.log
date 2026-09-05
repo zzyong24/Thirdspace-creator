@@ -1,0 +1,40 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/agentic-research-tools.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/agentic-research-tools.test.ts (3 tests | 1 failed) 11ms
+   × 浏览器工具声明使用严格协议且操作预演不提交 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/agentic-research-tools.test.ts > 浏览器工具声明使用严格协议且操作预演不提交
+AssertionError: expected undefined to be 'none' // Object.is equality
+
+- Expected:
+"none"
+
++ Received:
+undefined
+
+ ❯ src/modules/ai-runtime/agentic-research-tools.test.ts:23:43
+     21| it('浏览器工具声明使用严格协议且操作预演不提交',()=>{
+     22|  const {tools,definitions}=createAgenticResearchTools({stage:async()=>…
+     23|  expect(tools['browser.observe']?.effect).toBe('none');expect(tools['b…
+       |                                           ^
+     24|  expect(tools['browser.observe']?.parameters.safeParse({sessionId:'s',…
+     25|  expect(tools['browser.act']?.parameters.safeParse({sessionId:'s',obse…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  11:13:43
+   Duration  832ms (transform 338ms, setup 0ms, import 688ms, tests 11ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai-runtime/agentic-research-tools.test.ts`
+Exit status 1

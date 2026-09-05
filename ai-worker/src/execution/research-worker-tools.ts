@@ -1,6 +1,8 @@
 import { chromium, type Browser, type BrowserServer } from "@playwright/test";
 import { z } from "zod";
-import { agenticToolOutcomeSchema, type AgenticToolOutcome, type WorkerPort } from "@creatoros/contract/execution-worker";
+import { browserActionPreparationSchema,agenticToolOutcomeSchema, type AgenticToolOutcome, type WorkerPort } from "@creatoros/contract/execution-worker";
+import {createResearchBrowserSessions} from "./research-browser-sessions";
+import {mergeBrowserLoginStates} from "./browser-login-state";
 import { createBrowserScrapeAdapter } from "../runtime/browser/search-browser";
 import { searchBundledBrowserWithFallback, createBrowserSearchFallbackState } from "../runtime/browser/browser-search-fallback";
 import { readUrl, WebReaderLoginRequiredError } from "../runtime/browser/web-reader";
@@ -39,6 +41,14 @@ export function createResearchWorkerTools(deps: Dependencies) {
   const pendingContexts = new Set<Promise<unknown>>();
   const blockedDomains = new Set<string>();
   const searchState = { state: createBrowserSearchFallbackState() };
+  type Prepared=Extract<z.infer<typeof browserActionPreparationSchema>,{status:"ready"}>;
+  const preparedPages=new Map<string,Prepared>();
+  let browserAuthorization:Prepared["authorization"]|undefined;
+  const guardBrowserUrl=async(url:string)=>{
+    await guard(url);
+    const parsed=new URL(url);
+    if(!browserAuthorization?.allowedDomains.includes(parsed.hostname) || parsed.username || parsed.password || !["http:","https:"].includes(parsed.protocol))throw new UrlBlockedError("浏览器地址超出用户授权范围");
+  };
   const host = async (port: WorkerPort, input: unknown, requestSignal: AbortSignal) => {
     try { return await deps.call(port, input, requestSignal); }
     catch { requestSignal.throwIfAborted(); throw new GenerationFailure("unknown_result", "RESEARCH_HOST_RECEIPT_UNKNOWN"); }
@@ -121,25 +131,55 @@ export function createResearchWorkerTools(deps: Dependencies) {
     const pending = createContext(callId, toolSignal, session); pendingContexts.add(pending);
     void pending.then(() => pendingContexts.delete(pending), () => pendingContexts.delete(pending)); return pending;
   };
+  const browserPages=createResearchBrowserSessions({guardUrl:guardBrowserUrl,openPage:async(sessionId,pageSignal)=>{
+    const prepared=preparedPages.get(sessionId);if(!prepared)throw new Error("BROWSER_PREPARATION_MISSING");
+    const combined=AbortSignal.any([signal,pageSignal]);combined.throwIfAborted();
+    const connected=await getBrowser();combined.throwIfAborted();
+    const storageState=mergeBrowserLoginStates((prepared.loginStates??[]).map(row=>row.stateJson));
+    const ctx=await connected.newContext({serviceWorkers:"block",storageState});
+    const handle={close:()=>ctx.close()};contexts.add(handle);
+    const onAbort=()=>{void ctx.close().catch(()=>{});};combined.addEventListener("abort",onAbort,{once:true});
+    ctx.once("close",()=>{contexts.delete(handle);combined.removeEventListener("abort",onAbort);});
+    try{
+      combined.throwIfAborted();
+      await ctx.route("**/*",async route=>{
+        try{
+          combined.throwIfAborted();await guard(route.request().url());
+          if(route.request().isNavigationRequest() && !route.request().frame().parentFrame())await guardBrowserUrl(route.request().url());
+          combined.throwIfAborted();await route.continue();
+        }catch{await route.abort("blockedbyclient").catch(()=>{});}
+      });
+      await ctx.routeWebSocket("**/*",ws=>ws.close());
+      const page=await ctx.newPage();
+      page.once("close",()=>{void ctx.close().catch(()=>{});});
+      ctx.on("page",popup=>{void popup.close().catch(()=>{});});
+      combined.throwIfAborted();return page;
+    }catch(error){await ctx.close().catch(()=>{});throw error;}
+  }});
   const close = () => closing ??= (async () => {
     abort.abort();
     // 先关已知server以打断connect/newContext；不能先等它们结束才释放底层连接。
     await server?.close().catch(() => {});
     await starting?.catch(() => {});
     await Promise.all([browser?.close().catch(() => {}), server?.close().catch(() => {})]);
+    await browserPages.close();preparedPages.clear();
     await Promise.allSettled([...pendingContexts]);
     await Promise.all([...contexts].map(context => context.close()));
     deps.signal.removeEventListener("abort", onRunAbort);
   })();
   const onRunAbort = () => { void close(); };
   deps.signal.addEventListener("abort", onRunAbort, { once: true });
-  return {
-    close,
-    browserProcessIds: () => [...pids],
-    async execute(name: string, input: unknown, scope: { callId: string; signal: AbortSignal }): Promise<AgenticToolOutcome> {
+  const execute=async(name: string, input: unknown, scope: { callId: string; signal: AbortSignal }): Promise<AgenticToolOutcome> => {
       const combined = AbortSignal.any([signal, scope.signal]); combined.throwIfAborted();
-      if (name !== "web.search" && name !== "web.read") throw new Error("RESEARCH_TOOL_NOT_SUPPORTED");
+      if (!["web.search","web.read","browser.observe","browser.act"].includes(name)) throw new Error("RESEARCH_TOOL_NOT_SUPPORTED");
       try {
+        if(name==="browser.observe" || name==="browser.act"){
+          const prepared=browserActionPreparationSchema.parse(await host("prepareBrowserAction",{callId:scope.callId},combined));
+          if(prepared.status==="blocked")return prepared.outcome;
+          browserAuthorization=prepared.authorization;preparedPages.set(prepared.input.sessionId,prepared);
+          combined.throwIfAborted();
+          return await browserPages.execute(name,prepared.input,{signal:combined,initialUrl:prepared.url});
+        }
         if (name === "web.search") {
           const params = searchParams.parse(input);
           const adapter = createBrowserScrapeAdapter({ openContext: () => openContext(scope.callId, combined), saveScreenshot: async () => {} });
@@ -152,13 +192,17 @@ export function createResearchWorkerTools(deps: Dependencies) {
         await guard(params.url); combined.throwIfAborted();
         const domain = webDomainFromUrl(params.url);
         if (blockedDomains.has(domain)) return { status: "blocked", summary: "该来源尚需登录或验证，本轮不重复访问", evidence: [], error: { code: "needs_login", retryable: false, recovery: "换公开来源或完成登录后恢复" }, continuation: null, sideEffect: "none" };
-        const session = sessionSchema.parse(await host("readBrowserSession", { callId: scope.callId }, combined));
+        const response=await host("readBrowserSession", { callId: scope.callId }, combined);
+        const blocked=z.object({status:z.literal("blocked"),outcome:agenticToolOutcomeSchema}).strict().safeParse(response);
+        if(blocked.success)return blocked.data.outcome;
+        const session = sessionSchema.parse(response);
         if(session.domain!==domain)throw new GenerationFailure("unknown_result","BROWSER_SESSION_OWNER_MISMATCH");
         const read = await (deps.read ?? readUrl)(params.url, { authDir: "", signal: combined }, { openContext: () => openContext(scope.callId, combined, session), guardUrl: guard });
         return agenticToolOutcomeSchema.parse(await host("settleResearchRead", { callId: scope.callId, observation: { sourceUrl: read.finalUrl, title: read.title, fullText: read.text } }, combined));
       } catch (error) {
         combined.throwIfAborted();
         if (error instanceof GenerationFailure) throw error;
+        if(error instanceof Error && ["BROWSER_LOGIN_STATE_CONFLICT","BROWSER_LOGIN_STATE_INVALID"].includes(error.message))return {status:"blocked",summary:"网站登录状态需要恢复",evidence:[],error:{code:"needs_login",retryable:false,recovery:"通过网站登录入口重新登录后恢复"},continuation:null,sideEffect:"none"};
         if (error instanceof BrowserRuntimeUnavailableError) return { status: "blocked", summary: "浏览器运行环境不可用", evidence: [], data: { recoveryState: "browser_runtime_unavailable" }, error: { code: "permission", retryable: false, recovery: "修复系统或随包浏览器后恢复" }, continuation: null, sideEffect: "none" };
         if (error instanceof WebReaderLoginRequiredError) {
           blockedDomains.add(error.domain);
@@ -167,6 +211,11 @@ export function createResearchWorkerTools(deps: Dependencies) {
         if (error instanceof UrlBlockedError || (error instanceof Error && "code" in error && error.code === "UNSAFE_URL")) return { status: "blocked", summary: "来源地址不允许访问", evidence: [], error: { code: "permission", retryable: false, recovery: "使用公开网页来源" }, continuation: null, sideEffect: "none" };
         return transient();
       }
-    },
-  };
+    };
+  let executionTail:Promise<unknown>=Promise.resolve();
+  return {close,browserProcessIds:()=>[...pids],execute(name:string,input:unknown,scope:{callId:string;signal:AbortSignal}){
+    // 同一任务的网站动作串行，web.read与交互页面不能同时使用底层登录profile。
+    const pending=executionTail.then(()=>execute(name,input,scope));
+    executionTail=pending.catch(()=>{});return pending;
+  }};
 }

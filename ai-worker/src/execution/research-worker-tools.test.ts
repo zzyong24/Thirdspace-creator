@@ -58,8 +58,10 @@ it("浏览器断线后只在下一已授权工具调用重新启动",async()=>{
 it("launch期间取消会关闭迟到server且不connect",async()=>{
   const controller=new AbortController();let resolve!:(server:BrowserServer)=>void;
   const launched=new Promise<BrowserServer>(done=>{resolve=done;});const connect=vi.fn();const close=vi.fn(async()=>{});
-  const tools=createResearchWorkerTools({call:vi.fn(),signal:controller.signal,launchServer:()=>launched,connect});
+  const launchServer=vi.fn(()=>launched);
+  const tools=createResearchWorkerTools({call:vi.fn(),signal:controller.signal,launchServer,connect});
   const run=tools.execute("web.search",{query:"查询"},{callId:"search",signal:controller.signal});const rejected=expect(run).rejects.toThrow();
+  await vi.waitFor(()=>expect(launchServer).toHaveBeenCalledTimes(1));
   controller.abort();resolve({process:()=>({pid:2}),wsEndpoint:()=>"ws://fixture",close} as unknown as BrowserServer);
   await rejected;await tools.close();expect(close).toHaveBeenCalled();expect(connect).not.toHaveBeenCalled();
 });

@@ -18,3 +18,10 @@ it("续读引用必须成对提供，知识候选必须明确真实证据ID",()=
  expect(tools.tools["knowledge.write"]!.parameters.safeParse({...input,evidenceRefs:[]}).success).toBe(false);
  expect(tools.tools["web.search"]!.execute).toBeUndefined();expect(tools.tools["web.read"]!.execute).toBeUndefined();
 });
+it('浏览器工具声明使用严格协议且操作预演不提交',()=>{
+ const {tools,definitions}=createAgenticResearchTools({stage:async()=>{throw new Error('不执行');}});
+ expect(tools['browser.observe']?.effect).toBe('none');expect(tools['browser.act']?.effect).toBe('committed');
+ expect(tools['browser.observe']?.parameters.safeParse({sessionId:'s',url:'https://example.com/'}).success).toBe(true);
+ expect(tools['browser.act']?.parameters.safeParse({sessionId:'s',observationId:'o',action:'click',selector:'button'}).success).toBe(false);
+ expect(definitions.find(row=>row.name==='browser.act')?.parameters).toMatchObject({type:'object',additionalProperties:false});
+});

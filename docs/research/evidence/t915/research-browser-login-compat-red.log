@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts (5 tests | 3 failed) 4893ms
+   × 宿主合法旧最小cookie能进入真实Playwright页面，秘密不进入结果 716ms
+   × 损坏登录态返回需登录而非transient: {bad-json 402ms
+   × 损坏登录态返回需登录而非transient: {"cookies":[{"name":"bad","value":"secret","domain":"127.0.0.1"}],"origins":[]} 698ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 宿主合法旧最小cookie能进入真实Playwright页面，秘密不进入结果
+AssertionError: expected 'error' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "error"
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:56:92
+     54|  const f=await fixture([{domain:"127.0.0.1",stateJson:JSON.stringify({…
+     55|  try{
+     56|   const out=await f.run("browser.observe","legacy",{sessionId:"s",url}…
+       |                                                                                            ^
+     57|   expect(await f.browser!.contexts()[0]!.pages()[0]!.evaluate(()=>docu…
+     58|   expect(JSON.stringify(out)).not.toContain("private-legacy-token");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 损坏登录态返回需登录而非transient: {bad-json
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 损坏登录态返回需登录而非transient: {"cookies":[{"name":"bad","value":"secret","domain":"127.0.0.1"}],"origins":[]}
+AssertionError: expected 'error' to be 'blocked' // Object.is equality
+
+Expected: "blocked"
+Received: "error"
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:63:92
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)
+   Start at  11:20:04
+   Duration  5.39s (transform 99ms, setup 0ms, import 365ms, tests 4.89s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/research-worker-tools.browser.integration.test.ts --retry=0

@@ -1,4 +1,6 @@
-import {createExecutionBrowserProfileLeaseService} from "./execution-browser-profile-lease.service";
+import {createExecutionBrowserProfileLeaseService,BrowserProfileBusyError} from "./execution-browser-profile-lease.service";
+import {createExecutionBrowserActionService} from "./execution-browser-action.service";
+import {createExecutionBrowserLoginSnapshotService,BrowserLoginSnapshotInvalidError} from "./execution-browser-login-snapshot.service";
 import {createExecutionBrowserSessionService} from "./execution-browser-session.service";
 import {createExecutionScriptLocalService} from "./execution-script-local.service";
 import {createExecutionScriptCheckpointService} from "./execution-script-checkpoint.service";
@@ -59,6 +61,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
+  const browserActions=deps.executionMode==="agentic.run"?createExecutionBrowserActionService(db,{now,tools:deps.tools}):null;
+  const browserLogin=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserLoginSnapshotService(db,{now,sessions:deps.browserSessions}):null;
   const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
   const activeTools=new Map<string,{controller:AbortController;pending:Set<Promise<unknown>>}>();
@@ -70,10 +74,45 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="prepareBrowserAction" && browserActions){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const preparation=(async()=>{
+          scope.controller.signal.throwIfAborted();
+          const prepared=await browserActions.prepare(ref,raw);
+          if(prepared.status!=="ready")return prepared;
+          try{
+            await browserProfiles.acquireMany(ref,prepared.authorization.allowedDomains);
+            scope.controller.signal.throwIfAborted();
+            const loginStates=browserLogin?await browserLogin.read(ref):[];
+            const checked=await browserActions.prepare(ref,raw);
+            scope.controller.signal.throwIfAborted();
+            return checked.status==="ready"?{...checked,loginStates}:checked;
+          }catch(error){
+            if(!(error instanceof BrowserProfileBusyError) && !(error instanceof BrowserLoginSnapshotInvalidError))throw error;
+            const login=error instanceof BrowserLoginSnapshotInvalidError;
+            return {status:"blocked",outcome:{status:login?"blocked":"error",summary:login?"网站登录状态需要恢复":"网站正在被另一个任务使用",evidence:[],error:{code:login?"needs_login":"transient",retryable:!login,recovery:login?"在网站登录入口重新登录后恢复":"等待当前网站任务结束后重试"},continuation:null,sideEffect:"none"}};
+          }
+        })();scope.pending.add(preparation);
+        try{return await preparation;}finally{scope.pending.delete(preparation);}
+      }
       if(port==="prepareScriptImport" && deps.executionMode==="model")return scriptLocal.prepareImport(ref,raw);
       if(port==="saveScriptVoiceover" && deps.executionMode==="model")return scriptCheckpoints.save(ref,raw);
       if(port==="saveScriptFallback" && deps.executionMode==="model")return scriptLocal.saveFallback(ref,raw);
-      if(port==="readBrowserSession" && browserSessions)return browserSessions.read(ref,raw);
+      if(port==="readBrowserSession" && browserSessions){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const reading=(async()=>{
+          scope.controller.signal.throwIfAborted();
+          const session=await browserSessions.read(ref,raw);
+          try{await browserProfiles.acquire(ref,session.domain);}
+          catch(error){
+            if(!(error instanceof BrowserProfileBusyError))throw error;
+            return {status:"blocked",outcome:{status:"error",summary:"网站正在被另一个任务使用",evidence:[],error:{code:"transient",retryable:true,recovery:"等待当前网站任务结束后重试"},continuation:null,sideEffect:"none"}};
+          }
+          scope.controller.signal.throwIfAborted();
+          return browserSessions.read(ref,raw);
+        })();scope.pending.add(reading);
+        try{return await reading;}finally{scope.pending.delete(reading);}
+      }
       if(port==="saveBrowserSession" && browserSessions)return browserSessions.save(ref,raw);
       if(port==="settleResearchRead" && researchEvidence)return researchEvidence.settleRead(ref,raw);
       if(port==="executeEvidenceRead" && researchEvidence)return researchEvidence.readWindow(ref,raw);

@@ -1,0 +1,77 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T18:24:19.229368+00:00",
+  "status": "正式浏览器工具接线与局部真实浏览器验证完成，完整任务仍进行中",
+  "implemented": [
+    "正式研究工具目录新增browser.observe/browser.act；Worker沿既有durable工具账本执行，dryRun对committed动作预演",
+    "prepareBrowserAction私有端口只接callId；后端从冻结模型工具输入、用户授权和最新同会话已结算观察恢复权限，拒旧引用/越权/跨任务",
+    "准备动作时原子领取全部授权profile，网页阅读亦领取对应profile；取消期间在途准备纳入清理等待；结束依实际树证明释放",
+    "Worker跨轮保留页面，只执行宿主核准输入，主页面导航检查授权精确域，所有HTTP资源继续公共URL守卫，WS及额外popup关闭",
+    "登录态仅作为任务内私有快照，不写回；多域按协议身份合并且冲突不猜，兼容合法旧cookie缺省属性；损坏状态引导重新登录",
+    "同任务研究工具串行；恢复无页面时observe重新建页，旧act不重放；已有页无URL观察不reload；页面关闭后回收context"
+  ],
+  "flow": "模型工具请求 → 既有reserve/start账本 → 宿主校验授权与最新观察 → 领取profile与私有登录快照 → Worker页面操作 → 新观察 → 既有settle/checkpoint → 模型下一轮",
+  "verification": {
+    "contract": {
+      "tests": 32,
+      "log": "browser-production-contract-green.log",
+      "types": "browser-production-contract-types.log"
+    },
+    "backend": {
+      "tests": 25,
+      "log": "browser-production-backend-green.log",
+      "types": "browser-production-backend-types.log",
+      "scope": "真实PGlite服务/授权/登录快照与既有Pi搜读候选公共链回归；不是Pi浏览器动作全链"
+    },
+    "worker": {
+      "tests": 27,
+      "log": "browser-production-worker-final.log",
+      "types": "browser-production-worker-types.log",
+      "scope": "真实Chromium工厂、页面复用、旧Cookie与损坏状态，以及既有Worker工具生命周期"
+    },
+    "contextClose": {
+      "tests": 5,
+      "log": "browser-production-context-close-green.log"
+    },
+    "review": {
+      "reviewer": "runtime_code_review",
+      "finding": "合法旧cookie缺省字段被Worker误拒且转transient",
+      "red": "research-browser-login-compat-red.log",
+      "green": "research-browser-login-compat-green.log",
+      "status": "已修并用真实Chromium确认"
+    },
+    "scope": {
+      "errors": 0,
+      "log": "browser-production-scope.json"
+    },
+    "boundary": {
+      "remaining": 5,
+      "new": 0,
+      "log": "browser-production-boundary.log"
+    },
+    "orphan": {
+      "errors": 0,
+      "warnings": 100,
+      "log": "browser-production-orphan.log"
+    },
+    "reconcile": {
+      "errors": 211,
+      "warnings": 1,
+      "status": "既有T-916全局欠债，未标全绿",
+      "log": "browser-production-reconcile.log"
+    }
+  },
+  "evidenceLimits": [
+    "本轮未调用真实公网模型或用户库，浏览器工厂测试的prepare端口为明确fixture，真实宿主授权用PGlite另测，不冒充完整跨进程Pi浏览器链",
+    "host/action/snapshot/merge初红主要为新增模块不存在；contract首次命令未发现测试，修正路径后的api-red才运行schema断言",
+    "browser-production-worker-green内失败是串行排队令测试在launch之前取消，修改测试等待真实launch进入后再abort；final日志通过",
+    "research-browser-sessions-abort-red确实复现已存在页在guard等待时取消未关闭；login-compat-red确实复现合法旧cookie误拒与损坏状态错误分类",
+    "协议/类型/局部浏览器PASS不是完整AC或上线证据；任务没有完成或发布"
+  ],
+  "remaining": [
+    "浏览器观察写入executionEvidence并由knowledge候选核验，真实Pi stale→observe→新target→act→候选→采纳贯通测试",
+    "用户可见浏览器网站/交互授权入口，登录恢复与暂停重启公共旅程",
+    "跨任务多域动态扩展的等待/调度恢复与父进程意外退出后遗留浏览器验证",
+    "完整R05入口迁移、旧路径退役、同条件30次性能样本、三真实供应商与双平台安装生命周期"
+  ]
+}

@@ -1,0 +1,13 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/browser-login-state.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  11:13:22
+   Duration  192ms (transform 19ms, setup 0ms, import 49ms, tests 5ms, environment 0ms)
+

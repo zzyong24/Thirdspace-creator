@@ -1,0 +1,54 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run tests/execution-browser-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+ ❯ tests/execution-browser-host.test.ts (3 tests | 3 failed) 3ms
+     × 只接受真实账本callId，拒绝自报身份和权限 2ms
+     × ready必须包含宿主冻结的完整授权与输入 0ms
+     × 拒绝状态只返回规范工具结果，不能夹带凭据 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/execution-browser-host.test.ts > 浏览器动作私有端口 > 只接受真实账本callId，拒绝自报身份和权限
+TypeError: Cannot read properties of undefined (reading 'parse')
+ ❯ tests/execution-browser-host.test.ts:6:54
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/execution-browser-host.test.ts > 浏览器动作私有端口 > ready必须包含宿主冻结的完整授权与输入
+TypeError: Cannot read properties of undefined (reading 'parse')
+ ❯ tests/execution-browser-host.test.ts:11:41
+      9|  it('ready必须包含宿主冻结的完整授权与输入',()=>{
+     10|   const ready={status:'ready',input:{sessionId:'s',url:'https://exampl…
+     11|   expect(browserActionPreparationSchema.parse(ready)).toEqual(ready);
+       |                                         ^
+     12|   expect(()=>browserActionPreparationSchema.parse({...ready,authorizat…
+     13|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/execution-browser-host.test.ts > 浏览器动作私有端口 > 拒绝状态只返回规范工具结果，不能夹带凭据
+TypeError: Cannot read properties of undefined (reading 'parse')
+ ❯ tests/execution-browser-host.test.ts:16:41
+     14|  it('拒绝状态只返回规范工具结果，不能夹带凭据',()=>{
+     15|   const blocked={status:'blocked',outcome:{status:'blocked',summary:'未…
+     16|   expect(browserActionPreparationSchema.parse(blocked)).toEqual(blocke…
+       |                                         ^
+     17|   expect(()=>browserActionPreparationSchema.parse({...blocked,cookies:…
+     18|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  11:11:16
+   Duration  217ms (transform 36ms, setup 0ms, import 74ms, tests 3ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 test: `vitest run tests/execution-browser-host.test.ts`
+Exit status 1

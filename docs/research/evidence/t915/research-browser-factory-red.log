@@ -1,0 +1,46 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts (2 tests | 2 failed) 9ms
+   × 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server 3ms
+   × prepare拒绝已有页面动作，真实点击计数保持零 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > 正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server
+Error: RESEARCH_TOOL_NOT_SUPPORTED
+ ❯ Object.execute src/execution/research-worker-tools.ts:141:63
+    139|     async execute(name: string, input: unknown, scope: { callId: strin…
+    140|       const combined = AbortSignal.any([signal, scope.signal]); combin…
+    141|       if (name !== "web.search" && name !== "web.read") throw new Erro…
+       |                                                               ^
+    142|       try {
+    143|         if (name === "web.search") {
+ ❯ Object.run src/execution/research-worker-tools.browser.integration.test.ts:28:206
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:34:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/execution/research-worker-tools.browser.integration.test.ts > prepare拒绝已有页面动作，真实点击计数保持零
+Error: RESEARCH_TOOL_NOT_SUPPORTED
+ ❯ Object.execute src/execution/research-worker-tools.ts:141:63
+    139|     async execute(name: string, input: unknown, scope: { callId: strin…
+    140|       const combined = AbortSignal.any([signal, scope.signal]); combin…
+    141|       if (name !== "web.search" && name !== "web.read") throw new Erro…
+       |                                                               ^
+    142|       try {
+    143|         if (name === "web.search") {
+ ❯ Object.run src/execution/research-worker-tools.browser.integration.test.ts:28:206
+ ❯ src/execution/research-worker-tools.browser.integration.test.ts:47:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  11:16:00
+   Duration  502ms (transform 91ms, setup 0ms, import 358ms, tests 9ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/research-worker-tools.browser.integration.test.ts --retry=0

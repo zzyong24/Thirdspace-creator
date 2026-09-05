@@ -16,7 +16,7 @@ export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
   "prepareScriptImport", "saveScriptFallback", "saveScriptVoiceover",
-  "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
+  "prepareBrowserAction", "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
@@ -47,6 +47,7 @@ export const workerPortInputSchemas = {
   saveScriptFallback: z.object({text:z.string().min(1).max(2_000_000)}).strict(),
   saveScriptVoiceover: z.object({callId:operationKeySchema,voiceover:z.string().min(1).max(200000),centralClaim:z.string(),audienceOldBelief:z.string(),generation:z.json()}).strict(),
   readBrowserSession:z.object({callId:operationKeySchema}).strict(),
+  prepareBrowserAction:z.object({callId:operationKeySchema}).strict(),
   saveBrowserSession:z.object({callId:operationKeySchema,revision:z.string().min(1).nullable(),stateJson:z.string().max(2_100_000)}).strict(),
   settleResearchRead:z.object({callId:operationKeySchema,observation:z.object({sourceUrl:z.string().url().max(8192),title:z.string().max(10000),fullText:z.string().max(8_000_000),needLogin:z.boolean().optional()}).strict()}).strict(),
   executeEvidenceRead:z.object({callId:operationKeySchema}).strict(),
@@ -144,4 +145,4 @@ export const workerStructuredResultSchema=z.object({
 }).strict();
 export type WorkerStructuredResult=z.infer<typeof workerStructuredResultSchema>;
 
-export {browserAuthorizationSnapshotSchema,type BrowserAuthorizationSnapshot,browserObserveInputSchema,browserActInputSchema,browserObservationSchema,type BrowserObserveInput,type BrowserActInput,type BrowserObservation} from "./execution-browser";
+export {browserActionPreparationSchema,browserAuthorizationSnapshotSchema,type BrowserAuthorizationSnapshot,browserObserveInputSchema,browserActInputSchema,browserObservationSchema,type BrowserObserveInput,type BrowserActInput,type BrowserObservation} from "./execution-browser";
