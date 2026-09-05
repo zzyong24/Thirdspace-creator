@@ -42,3 +42,16 @@ export class ValidationError extends Error {
     this.name = "ValidationError";
   }
 }
+
+/** 平台动作未接通，与transport不拥有该操作不同，不能触发mock兜底。 */
+export class PublishingUnavailableError extends Error {
+  readonly code = ErrorCode.ConflictError;
+  readonly details: {reason: "automatic_publishing_unavailable"; operation: "publish" | "remove"};
+  constructor(operation: "publish" | "remove") {
+    super(operation === "publish"
+      ? "自动发布暂未接通。请在平台完成发布后，使用手工登记记录作品链接。"
+      : "自动下架暂未接通。请前往平台管理已发布作品。");
+    this.name = "PublishingUnavailableError";
+    this.details = {reason: "automatic_publishing_unavailable", operation};
+  }
+}

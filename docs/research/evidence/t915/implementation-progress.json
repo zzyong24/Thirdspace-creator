@@ -219,5 +219,9 @@
     "login_resume_backend_tests": 25,
     "process_tree_tests": 19,
     "scope": "研究生产源码接独立Worker，实际Pi/IPC/DB fixture、登录显式恢复和主动强杀通过；实际公网/异常进程退出/全入口迁移/性能/三供应商/双平台完整验收仍待完成"
+  },
+  "production_owner_truth_increment": {
+    "evidence": "production-owner-truth-evidence.json",
+    "scope": "生产模拟发布与transport兜底退役、真实本机身份与请求身份接线通过；全入口迁移及完整性能/真机验收仍未完成"
   }
 }

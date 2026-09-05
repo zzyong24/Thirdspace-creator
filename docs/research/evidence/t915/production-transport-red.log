@@ -1,0 +1,48 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:95419) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/persistence-transport-ownership.test.ts (1 test | 1 failed) 15ms
+   × 未登记实际属主的操作明确拒绝，不调用模拟transport返回假成功 14ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/persistence-transport-ownership.test.ts > 未登记实际属主的操作明确拒绝，不调用模拟transport返回假成功
+ FAIL  src/server/persistence-transport-ownership.test.ts > 未登记实际属主的操作明确拒绝，不调用模拟transport返回假成功
+ FAIL  src/server/persistence-transport-ownership.test.ts > 未登记实际属主的操作明确拒绝，不调用模拟transport返回假成功
+AssertionError: promise resolved "{ data: { id: 'invented' }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "data": {
++     "id": "invented",
++   },
++   "meta": {
++     "requestId": "mock",
++   },
+  }
+
+ ❯ src/server/persistence-transport-ownership.test.ts:9:109
+      7| it("未登记实际属主的操作明确拒绝，不调用模拟transport返回假成功",async()=>{
+      8|  const endpoint={id:"t915.unregistered",isList:false} as Endpoint;
+      9|  await expect(compositeTransport.request(endpoint,{}, {userId:"actual-…
+       |                                                                                                             ^
+     10|  expect(mock.request).not.toHaveBeenCalled();
+     11| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  07:46:10
+   Duration  4.41s (transform 2.45s, setup 170ms, import 3.42s, tests 15ms, environment 573ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/persistence-transport-ownership.test.ts --maxWorkers=1

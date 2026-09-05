@@ -10,6 +10,7 @@
 export {
   createIdentityService,
   seedCanonicalUser,
+  ensureLocalUser,
   CANONICAL_USER_ID,
   DEV_PASSWORD,
   type IdentityService,

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { RequestContext } from "@creatoros/backend";
 import type { IdentityRepository, UserRow } from "./identity.repository";
 
@@ -291,4 +292,28 @@ export async function seedCanonicalUser(
     ...CANONICAL_USER,
     passwordHash: hashPassword(DEV_PASSWORD),
   });
+}
+
+/** 复用本机已有主用户；空库只创建身份，不配置任何可猜测的登录密码。 */
+export async function ensureLocalUser(
+  repo: IdentityRepository,
+  deps: ServiceDeps,
+): Promise<UserRow> {
+  const existing = await repo.findLocalUser();
+  if (existing) return existing;
+  const stamp = deps.now();
+  await repo.seedUser({
+    id: deps.nextId("user"),
+    email: "",
+    displayName: "",
+    timezone: "Asia/Shanghai",
+    locale: "zh-CN",
+    passwordHash: hashPassword(randomBytes(32).toString("hex")),
+    createdAt: stamp,
+    updatedAt: stamp,
+  });
+  // 空email唯一约束让并发初始化收敛；返回真实获胜记录，不能返回本次尝试的ID。
+  const persisted = await repo.findLocalUser();
+  if (!persisted) throw new Error("本地用户初始化未取得持久记录");
+  return persisted;
 }

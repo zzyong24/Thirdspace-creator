@@ -34,6 +34,7 @@ export {
 
 export {
   createMockPublisher,
+  createUnavailablePublisher,
   type PlatformPublisherPort,
   type MockPublisher,
   type PublishInput,
@@ -42,7 +43,7 @@ export {
 
 export { PUBLISHING_DDL } from "./publishing.db-schema";
 
-export { OwnershipError, ConflictError, ValidationError } from "./publishing.errors";
+export { OwnershipError, ConflictError, ValidationError, PublishingUnavailableError } from "./publishing.errors";
 
 export {
   publicationResource,

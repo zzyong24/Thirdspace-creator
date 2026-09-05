@@ -1,0 +1,59 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts (4 tests | 4 failed) 3021ms
+   × 已有非canonical最早用户全部属性原样复用，不新增身份或改变归属 1061ms
+   × 空库创建真实随机身份，属性留空、实际时间、已知默认密码不能登录 634ms
+   × 多实例并发启动只创建一个本地用户，所有调用返回持久同一行 640ms
+   × 历史canonical身份存在时也保留真实属性和密码，不做隐式迁移 685ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/identity/ensure-local-user.integration.test.ts > 已有非canonical最早用户全部属性原样复用，不新增身份或改变归属
+TypeError: ensureLocalUser is not a function
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts:12:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/identity/ensure-local-user.integration.test.ts > 空库创建真实随机身份，属性留空、实际时间、已知默认密码不能登录
+TypeError: ensureLocalUser is not a function
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts:20:61
+     18|  for(let i=0;i<2;i++){
+     19|   const f=await createDb();try{
+     20|    const repo=createIdentityRepository(f.db,deps),row=await ensureLoca…
+       |                                                             ^
+     21|    expect(row.id).not.toBe(CANONICAL_USER_ID);expect(row).toMatchObjec…
+     22|    expect(await repo.findLocalUser()).toEqual(row);expect(await ensure…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/identity/ensure-local-user.integration.test.ts > 多实例并发启动只创建一个本地用户，所有调用返回持久同一行
+TypeError: ensureLocalUser is not a function
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts:32:62
+     30| it("多实例并发启动只创建一个本地用户，所有调用返回持久同一行",async()=>{
+     31|  const f=await createDb();try{
+     32|   const results=await Promise.all(Array.from({length:12},()=>ensureLoc…
+       |                                                              ^
+     33|   expect(new Set(results.map(row=>row.id)).size).toBe(1);const rows=aw…
+     34|   for(const result of results)expect(result).toEqual(rows[0]);
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts:32:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/identity/ensure-local-user.integration.test.ts > 历史canonical身份存在时也保留真实属性和密码，不做隐式迁移
+TypeError: ensureLocalUser is not a function
+ ❯ src/modules/identity/ensure-local-user.integration.test.ts:40:43
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  07:50:07
+   Duration  3.87s (transform 358ms, setup 0ms, import 713ms, tests 3.02s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/identity/ensure-local-user.integration.test.ts --retry=0

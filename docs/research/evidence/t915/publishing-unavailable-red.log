@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/publishing/publishing-unavailable.test.ts (1 test | 1 failed) 1005ms
+   × 真实PGlite公共transport：手工登记保留，未装配自动发布器返回明确不可用且不伪造发布事实 1005ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/publishing/publishing-unavailable.test.ts > 真实PGlite公共transport：手工登记保留，未装配自动发布器返回明确不可用且不伪造发布事实
+AssertionError: expected TypeError: Cannot read properties of unde… to match object { …(3) }
+
+- Expected
++ Received
+
+- {
+-   "code": "ConflictError",
+-   "details": {
+-     "operation": "publish",
+-     "reason": "automatic_publishing_unavailable",
+-   },
+-   "name": "PublishingUnavailableError",
++ TypeError {
++   "message": "Cannot read properties of undefined (reading 'publish')",
+  }
+
+ ❯ src/modules/publishing/publishing-unavailable.test.ts:21:147
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  07:45:25
+   Duration  2.00s (transform 395ms, setup 0ms, import 835ms, tests 1.01s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/publishing/publishing-unavailable.test.ts

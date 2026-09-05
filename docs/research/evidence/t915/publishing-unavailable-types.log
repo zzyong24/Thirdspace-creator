@@ -1,0 +1,9 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/identity/ensure-local-user.integration.test.ts(4,56): error TS2305: Module '"./index"' has no exported member 'ensureLocalUser'.
+src/modules/identity/ensure-local-user.integration.test.ts(33,30): error TS7006: Parameter 'row' implicitly has an 'any' type.
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

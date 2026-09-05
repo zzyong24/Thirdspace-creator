@@ -13,7 +13,7 @@ import {
   ValidationError,
   requireAccountId,
 } from "./publishing.errors";
-import type { PlatformPublisherPort } from "./platform-publisher";
+import { createUnavailablePublisher, type PlatformPublisherPort } from "./platform-publisher";
 
 // Publishing service (foundation §5.3) — RequestContext-taking methods that thread
 // `ctx.userId` into a user-scoped repository built per-call via `repoFor(ctx)`
@@ -76,7 +76,7 @@ export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
-  publisher: PlatformPublisherPort;
+  publisher?: PlatformPublisherPort;
   /** ContentOutput active→published rollup (ProjectsService — ≥1 published). */
   markOutputPublished?: MarkOutputPublished;
   /** Post-commit search index upsert (SearchService.upsertDocument). */
@@ -303,6 +303,7 @@ export interface PublishingService {
 }
 
 export function createPublishingService(deps: ServiceDeps): PublishingService {
+  const publisher = deps.publisher ?? createUnavailablePublisher();
   function repoFor(ctx: RequestContext): PublishingRepository {
     return createPublishingRepository(deps.db, {
       now: deps.now,
@@ -565,7 +566,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
         });
       } else if (next === "published") {
         const revision = await repo.getCurrentRevision(publicationId);
-        const result = await deps.publisher.publish(ctx, {
+        const result = await publisher.publish(ctx, {
           publicationId,
           platform: pub.platform,
           accountReference: pub.accountReference,
@@ -587,7 +588,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           publishedAt: deps.now(),
         });
       } else if (next === "removed") {
-        await deps.publisher.remove(ctx, { externalId: pub.externalId });
+        await publisher.remove(ctx, { externalId: pub.externalId });
         // Retain externalId / metrics history (SPEC §13.3) — only stamp removedAt.
         updated = await repo.updatePublicationStatus(publicationId, {
           status: "removed",

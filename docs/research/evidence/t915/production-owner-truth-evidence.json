@@ -1,0 +1,53 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T15:00:06.295592+00:00",
+  "status": "AC10生产模拟发布/transport/默认身份清理增量完成，完整T915仍进行中",
+  "implemented": [
+    "生产发布器显式Unavailable，默认服务也无模拟成功兜底；publish/remove返回类型化真实不可用，手工登记保留",
+    "复合transport删掉3处mock回退；未知操作不打开DB或返回fixture，project服务不支持的操作不被模拟接管",
+    "本机已有用户整行复用；空库真实生成ID、随机不可预测秘密的密码hash、空身份属性，唯一约束与回读保证并发初始化幂等",
+    "后台scheduler、启动job/配置/规则种子和搜索重建使用真实本机主用户ID；搜索父实体按归属筛选、版本仅按真实父ID关联",
+    "旧服务端client接口保留，但每请求解析实际session/user/account，不再绑定canonical用户；生产根移除canonical/douyin fixture空import及mock时钟import"
+  ],
+  "verification": {
+    "publishing": {
+      "tests": 71,
+      "log": "publishing-unavailable-green-final.log",
+      "scope": "真实PGlite与模块公开transport，默认/显式装配均不能造published/URL；用户明确手工登记可保存回读；非真实平台发帖"
+    },
+    "identity": {
+      "tests": 37,
+      "log": "production-identity-regression.log",
+      "scope": "包含新空库、历史canonical/非canonical整行保留、12并发同一实际用户、已知默认密码拒绝；未访问用户实际DB"
+    },
+    "frontend": {
+      "tests": 37,
+      "log": "production-owner-regression.log",
+      "scope": "真实复合transport未知操作拒绝、默认client按两次请求身份隔离、session/requestContext既有行为和两种实际Worker创建回读"
+    },
+    "compositionBoot": {
+      "tests": 1,
+      "log": "production-local-owner.log",
+      "scope": "隔离临时持久PGlite，新本机用户非canonical、修改profile后生产组合根重建保持同一ID和属性"
+    },
+    "types": [
+      "backend PASS",
+      "frontend PASS"
+    ],
+    "boundary": "无新增，仍5条既有基线",
+    "orphan": "0 errors / 100 warnings",
+    "review": "publisher由独立代理只读复核；identity/组合根/client由非实现代理只读复核，发现教程标题rename缺userId已修复。",
+    "tdd": [
+      "发布缺省装配真实红测原为TypeError，修后返回类型不可用",
+      "身份helper缺失为模块缺失红测，不冒充业务红测",
+      "transport mock返回假成功的行为红测已保存",
+      "client首个测试错误使用projects.list而非listProjects，属于测试夹具错误；修正后作为实现后验收，不宣称行为红测"
+    ],
+    "globalReconcile": "未在本局部增量重跑，T916全局既有失败仍保留"
+  },
+  "remaining": [
+    "R05其他AI入口唯一执行权迁移，已盘点script.review/reviewGate、source/transcript/share/topic-preview/script-candidate、automation与归因蒸馏",
+    "旧执行路径彻底退役、性能同条件基线、异常退出/真实公网/三供应商/双平台安装包验收",
+    "本批未推送、发布或替换安装包，也未改历史用户数据归属"
+  ]
+}

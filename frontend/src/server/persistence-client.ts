@@ -16,6 +16,7 @@ import {
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
   sql,
+  eq,
   type Db,
   type CliInvocationService,
   // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
@@ -45,7 +46,6 @@ import {
   contentRadarDraftSeedOf,
   selectReadableProjectScriptArtifact,
 } from "@/server/project-script-truth";
-import { mockTransport } from "@/server/mock-backend/mock-transport";
 import {
   buildPublishingScheduleProjection,
   type PublishingScheduleProjection,
@@ -59,21 +59,16 @@ import {
   searchProjectsWithPublicationFacts,
 } from "./recent-projects-context";
 import { composeDashboardTodos } from "@creatoros/backend/modules/query-services";
-import { FIXED_NOW_ISO } from "@/server/mock-backend/store";
-import { canonicalDataset } from "@/fixtures/canonical";
 import { listAllProjectMaterialAssets } from "@/server/material-export-pagination";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
 // [T-135] DOUYIN_FAN_TOTAL 已随 canonical platform account seed(唯一使用点)退役移除。
-import {
-} from "@/fixtures/douyin-real";
 import type { MetricCard } from "@/types/view-models";
 import type { ProjectStageName, TaskStatus } from "@/types/domain";
 import {
-  CANONICAL_USER_ID,
   createIdentityRepository,
   createIdentityService,
   OwnershipError,
-  seedCanonicalUser,
+  ensureLocalUser,
   type IdentityService,
 } from "@creatoros/backend/modules/identity";
 import {
@@ -173,7 +168,7 @@ import {
 import {
   createPublishingService,
   createPublishingTransport,
-  createMockPublisher,
+  createUnavailablePublisher,
   PUBLISHING_OP_IDS,
 } from "@creatoros/backend/modules/publishing";
 import {
@@ -707,10 +702,7 @@ import {
 // [T-163 Batch 4] 文档 AI 摘要节点(模板 + JSON schema + runStructuredNode)已提到 backend
 // ai-runtime 的 runMaterialSummary —— 组合根只解析 spec + 映射错误,AI 逻辑不住前端包。
 
-// Project-entity operations now served by REAL SQL persistence (@creatoros/backend
-// over pglite). Everything else falls back to the in-memory mock. Listed
-// explicitly so non-persisted ops (e.g. the static Dashboard page DTO) never
-// trigger a pglite init — keeps pglite out of the static build.
+// 显式登记真实服务属主；未知操作在打开数据库前拒绝，静态构建不得初始化持久层。
 const PERSISTED_OPS = new Set<string>([
   // Projects (module 05) — all 15 "项目与流程" ops served by the module's own
   // user-scoped transport (outputs/tasks/stages/activity included).
@@ -1838,13 +1830,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const idBase = persistent ? globalThis.crypto.randomUUID().slice(0, 8) : "p";
   let createSeq = 0;
   const deps = {
-    now: persistent ? () => new Date().toISOString() : () => FIXED_NOW_ISO,
+    now: persistent ? () => new Date().toISOString() : () => "2026-06-13T02:00:00.000Z",
     nextId: (prefix: string) => `${prefix}-${idBase}-${++createSeq}`,
   };
   // Identity 是排期三个表面的唯一时区来源；组合根提前构造同一个 service，
   // 后续 calendar/dashboard/settings 全部复用，避免各自猜浏览器或本机时区。
   const identityRepo = createIdentityRepository(db, deps);
   const identity = createIdentityService(identityRepo, deps);
+  const localUser = await ensureLocalUser(identityRepo, deps);
 
   // T-147 P2 本地加密 —— 解析 master key(桌面 keychain via env `CREATOROS_MASTER_KEY`
   // 由 Rust keyring 注入 / web-dev 降级)。[T-370a] 前移到此(原在 settings 装配处):
@@ -2665,7 +2658,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     db,
     now: deps.now,
     nextId: deps.nextId,
-    publisher: createMockPublisher(),
+    publisher: createUnavailablePublisher(),
     // [全局搜索修复③] video/publication tab 对齐:publishing.service 发布时投影
     // entity_type='publication',但读侧 search.transport 的 video tab 查的是
     // entity_type='video'(启动 seed 亦投影成 video)→ 已发布作品在 video tab 恒搜不到。
@@ -8208,11 +8201,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     );
   };
 
-  // 调度器系统 ctx:自发触发(无 HTTP 请求),用 canonical user 身份(本机单用户起步)。
+  // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
   // RequestContext.source 枚举无 "system",ingestion 是诚实 provenance)。
   const schedulerCtx: RequestContext = {
-    userId: canonicalDataset.user.id,
+    userId: localUser.id,
     requestId: "scheduler",
     source: "ingestion",
   };
@@ -9413,14 +9406,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-135] canonical external sources 种子已退役(用户裁决 2026-07-05:新库/新用户开箱空)。
   // 外部源全部来自用户运行时真实创建/绑定(抖音扫码走 CDP 连已登录 Chrome,不预置任何来源行)。
 
-  // Seed the Projects exemplar dataset (owned by the canonical user) AND the
-  // canonical identity row, so real login resolves to `user-zyongzhu` and every
-  // fixture-backed page + the Projects seed keep resolving under a real ctx
-  // (foundation §2). seedCanonicalUser is idempotent (onConflictDoNothing), so a
-  // re-built singleton never double-seeds. IDENTITY_DDL was applied in createDb().
-  // [T-050] canonical demo 项目图种子已退役(用户裁决 2026-07-02:4 个演示项目彻底
-  // 删除,不再重种)。项目/产出/任务全部来自真实导入(T-030 管线)与用户运行时创建。
-  await seedCanonicalUser(identityRepo, deps);
+  // 本机用户已在装配入口经identity初始化；此处不再种固定身份或演示项目。
 
   // [User] win-video-tutor 22 节课程 → canonical user 知识库(knowledge_items reference 类型,
   // 整篇 markdown 入 content)。**替代 T-135 退役的金句假内容**,让知识库开箱就有真东西。
@@ -9436,7 +9422,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // **逐号**种入(每号一套知识库,一套预设;seed 幂等判据 origin 是 per-account ctx 读的,
     // 每号各判各的)。0 账号 → 跳过(引导态无处落号;绑号后下次启动自动补种)。
     const wvtSeedCtx: RequestContext = {
-      userId: CANONICAL_USER_ID,
+      userId: localUser.id,
       requestId: "seed-win-video-tutor",
       source: "ingestion",
     };
@@ -9445,7 +9431,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       { limit: 100, offset: 0 },
     );
     for (const wvtAcct of wvtAccounts.filter((a) => a.status === "active")) {
-      const acctCtx = { userId: CANONICAL_USER_ID, accountId: wvtAcct.id };
+      const acctCtx = { userId: localUser.id, accountId: wvtAcct.id };
       const seeded = await seedWinVideoTutor(knowledgeService, acctCtx, {
         taxonomyService: canonTaxonomyService,
       });
@@ -9478,7 +9464,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 种子维护语义),不是隐式全量读退化。
     const legacyPrefix = WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX;
     const canonKnowledgeRows =
-      await knowledgeRepo.listAllAccountsSystem(CANONICAL_USER_ID);
+      await knowledgeRepo.listAllAccountsSystem(localUser.id);
     let renamed = 0;
     for (const row of canonKnowledgeRows) {
       const meta = row.sourceMetadata as { origin?: unknown } | null;
@@ -9489,7 +9475,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if (!isSeed) continue;
       if (!row.title.startsWith(legacyPrefix)) continue;
       await knowledgeRepo.renameTitleSystem(
-        CANONICAL_USER_ID,
+        localUser.id,
         row.id,
         row.title.slice(legacyPrefix.length),
       );
@@ -9521,7 +9507,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   best-effort:失败只告警,不阻断启动。
   try {
     const ensureJobsCtx: RequestContext = {
-      userId: canonicalDataset.user.id,
+      userId: localUser.id,
       requestId: "startup-collection-ensure",
       source: "ingestion",
     };
@@ -9613,16 +9599,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   {
     const [dbProjects, dbKnowledge, dbKRevisions, dbAssets, dbPubs, dbPubRevs] =
       await Promise.all([
-        db.select().from(projectsTable),
-        db.select().from(knowledgeItemsTable),
+        db.select().from(projectsTable).where(eq(projectsTable.userId, localUser.id)),
+        db.select().from(knowledgeItemsTable).where(eq(knowledgeItemsTable.userId, localUser.id)),
         db.select().from(knowledgeRevisionsTable),
-        db.select().from(assetsTable),
-        db.select().from(publicationsTable),
+        db.select().from(assetsTable).where(eq(assetsTable.userId, localUser.id)),
+        db.select().from(publicationsTable).where(eq(publicationsTable.userId, localUser.id)),
         db.select().from(publicationRevisionsTable),
       ]);
+    const ownedKnowledgeIds = new Set(dbKnowledge.map((row) => row.id));
+    const ownedPublicationIds = new Set(dbPubs.map((row) => row.id));
     const rebuildRows = buildCanonicalSearchDocuments(
       {
-        user: { id: canonicalDataset.user.id },
+        user: { id: localUser.id },
         projects: dbProjects.map((p) => ({
           id: p.id,
           title: p.title,
@@ -9637,7 +9625,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           currentRevisionId: k.currentRevisionId ?? "",
           accountId: k.accountId, // [T-332 S2] 源行派生号
         })),
-        knowledgeRevisions: dbKRevisions.map((r) => ({
+        knowledgeRevisions: dbKRevisions.filter((r) => ownedKnowledgeIds.has(r.knowledgeItemId)).map((r) => ({
           id: r.id,
           knowledgeItemId: r.knowledgeItemId,
           content: r.content ?? "",
@@ -9654,22 +9642,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           currentRevisionId: pub.currentRevisionId ?? null,
           accountId: pub.accountId, // [T-332 S2] 源行派生号
         })),
-        publicationRevisions: dbPubRevs.map((r) => ({
+        publicationRevisions: dbPubRevs.filter((r) => ownedPublicationIds.has(r.publicationId)).map((r) => ({
           id: r.id,
           title: r.title ?? "",
         })),
       },
-      FIXED_NOW_ISO,
+      deps.now(),
     );
-    await rebuildSearchIndexSystem(db, canonicalDataset.user.id, rebuildRows);
+    await rebuildSearchIndexSystem(db, localUser.id, rebuildRows);
   }
 
   // [T-050] canonical analytics 种子已退役(快照/留存/观众全挂在已删除的 demo 发布上)。
   // 真实指标由采集管线写入(self.metrics/self.detail,T-030/T-036)。
 
-  // The identity service shares the SAME db (and the same seeded canonical user)
-  // as the persistence transport, so a ctx resolved from the session cookie owns
-  // the rows the transport serves under it.
+  // Identity与服务使用同一数据库；请求身份来自session，本机后台任务使用真实主用户。
   // Settings (module 03): one repository over the shared db; the service's
   // account read (`settings.get`) delegates to the Identity service's
   // getCurrentUser (injected as the accountReader — NO cross-module repo import,
@@ -10543,7 +10529,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // onConflictDoNothing → a re-built singleton never double-seeds.
   const aiSeedRepo = createAiRepository(db, {
     ...deps,
-    userId: canonicalDataset.user.id,
+    userId: localUser.id,
     // [T-332 S2] 本 repo 实例只跑 seedModelConfigs/seedAgentConfigs —— 这两张是 **user 级**
     //   表(model_configurations/agent_configurations,SPEC §3.2「模型配置共享」用户拍板),
     //   行上无 account 维。RepoDeps.accountId 已收紧为必填 string(为 conversations/tasks
@@ -10552,10 +10538,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     accountId: "__seed-user-level-only__",
   });
   await aiSeedRepo.seedModelConfigs(
-    buildAiModelConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
+    buildAiModelConfigs(localUser.id, deps.now()),
   );
   await aiSeedRepo.seedAgentConfigs(
-    buildAiAgentConfigs(canonicalDataset.user.id, FIXED_NOW_ISO),
+    buildAiAgentConfigs(localUser.id, deps.now()),
   );
 
   // T-086 审核规则种子(SPEC §1)—— 从用户知识库移植的抖音违禁词表(Tier1 官方硬规则确定性
@@ -10563,10 +10549,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // onConflictDoNothing → 重建单例不双写。规则种子本体在 backend review 模块(review-rules.seed.ts)。
   const reviewGateSeedRepo = createReviewGateRepository(db, {
     ...deps,
-    userId: canonicalDataset.user.id,
+    userId: localUser.id,
   });
   await reviewGateSeedRepo.seedRules(
-    buildReviewRuleSeedRows(canonicalDataset.user.id, FIXED_NOW_ISO),
+    buildReviewRuleSeedRows(localUser.id, deps.now()),
   );
 
   // [T-135] canonical positioning 种子已退役(CreatorProfile + statements = Zyong Zhu 人设,
@@ -10586,7 +10572,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // [T-332 S2] rubrics 是 per-account 域(SPEC §3.2:每号一套打分口径,NOT NULL):默认
   // rubric 改为**逐 active 号**种入(id = rubric-canonical:<accountId>,运行时经
   // canonicalRubricIdFor(ctx) 解析);0 号 → 跳过(绑号时 bootstrapDouyinOnBind 即时补种,
-  // 兜底下次启动再补)。Deterministic ids/clock (FIXED_NOW_ISO);seed* onConflictDoNothing
+  // 兜底下次启动再补)。Deterministic ids/clock (deps.now());seed* onConflictDoNothing
   // → 重建单例/重复绑定不双写。version 先种,currentVersionId 才解析得到。
   const canonicalRubricDimensions = [
       {
@@ -10639,27 +10625,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   ): Promise<void> => {
     const calibrationSeedRepo = createCalibrationRepository(db, {
       ...deps,
-      userId: canonicalDataset.user.id,
+      userId: localUser.id,
       accountId,
     });
     const versionRow: CalibrationRubricVersionRow = {
       id: `rubricver-canonical-1:${accountId}`,
-      userId: canonicalDataset.user.id,
+      userId: localUser.id,
       accountId, // per-account stamp(NOT NULL 终态)
       rubricId: `rubric-canonical:${accountId}`,
       versionNumber: 1,
       dimensions: canonicalRubricDimensions,
       changeSummary:
         "v2 借鉴 cheat-on-content 的已校准 rubric：合并传播驱动（钩子/情感/社会/金句）与变现维度（为产品铺路/CTA），每维带 0/3/5 锚点",
-      createdAt: FIXED_NOW_ISO,
+      createdAt: deps.now(),
     };
     const rubricRow: CalibrationRubricRow = {
       id: `rubric-canonical:${accountId}`,
-      userId: canonicalDataset.user.id,
+      userId: localUser.id,
       accountId, // per-account stamp(NOT NULL 终态)
       name: "变现加权评分标准",
       currentVersionId: versionRow.id,
-      createdAt: FIXED_NOW_ISO,
+      createdAt: deps.now(),
     };
     await calibrationSeedRepo.seedRubricVersions([versionRow]);
     await calibrationSeedRepo.seedRubrics([rubricRow]);
@@ -10667,7 +10653,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 启动:逐 active 号补种(存量号/重启幂等);0 号 → 静默跳过(引导态)。best-effort。
   try {
     const rubricSeedCtx: RequestContext = {
-      userId: canonicalDataset.user.id,
+      userId: localUser.id,
       requestId: "seed-canonical-rubric",
       source: "ingestion",
     };
@@ -13739,16 +13725,15 @@ export async function getWebSessionRuntime(): Promise<
   return (await getBundle()).webSessionRuntime;
 }
 
-// Composite server transport: persistence for project ops, mock for the rest.
+// 生产复合transport只分发给已登记的真实服务；未实现操作明确拒绝。
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
 export const compositeTransport: Transport = {
   async request(endpoint: Endpoint, input, ctx) {
-    // Non-persisted (mock) ops ignore ctx — the deterministic mock store is not
-    // user-scoped, and the browser typed client / static pages carry no ctx.
+    // 未登记属主的操作不进入数据库，也不以无归属fixture冒充成功。
     if (!PERSISTED_OPS.has(endpoint.id)) {
-      return mockTransport.request(endpoint, input, ctx);
+      throw new UnsupportedOperationError(endpoint.id);
     }
     // Taxonomy ops (module 04) are served by the module's own transport over
     // the SAME pglite store. Routed before the projects persistence transport so
@@ -13994,17 +13979,10 @@ export const compositeTransport: Transport = {
     // registry). No ctx ⇒ the transport throws AuthenticationError (→401).
     if (PROJECT_OPS.has(endpoint.id)) {
       const projects = await getProjects();
-      try {
-        return await projects.request(endpoint, input, ctx);
-      } catch (err) {
-        if (err instanceof UnsupportedOperationError) {
-          return mockTransport.request(endpoint, input, ctx);
-        }
-        throw err;
-      }
+      return projects.request(endpoint, input, ctx);
     }
-    // Any other persisted op id with no owning module falls back to the mock.
-    return mockTransport.request(endpoint, input, ctx);
+    // 声明已持久化却缺少实际handler同样拒绝，不隐藏装配缺口。
+    throw new UnsupportedOperationError(endpoint.id);
   },
 };
 

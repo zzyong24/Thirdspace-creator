@@ -1,12 +1,11 @@
 import type { RequestContext } from "@creatoros/contract";
+import { PublishingUnavailableError } from "./publishing.errors";
 
 // Platform-publisher swap-seam (foundation §4). PublishingService is the ONLY
 // module allowed to drive a platform publish/remove side-effect — it depends on
 // this port, never a concrete platform SDK (SPEC §15: "禁止 … Publishing … 直接
-// 调用平台 SDK / S3"). This wave binds `MockPublisher` (records the fact in an
-// in-memory map; mints a DETERMINISTIC fake external id; no network). The real
-// platform adapters (抖音/B站/小红书/…) are a stage-N swap with NO domain change:
-// they implement the same port.
+// 调用平台 SDK / S3"). 正式装配在真实平台适配器未实现时使用Unavailable；
+// MockPublisher仅供显式隔离测试，不得作为正式发布结果来源。
 //
 // Determinism + idempotency (plan Open Question 5): the mock's external id is
 // `mock:{platform}:{publicationId}` — stable across re-publishes, so a second
@@ -46,6 +45,14 @@ export interface PlatformPublisherPort {
     ctx: RequestContext,
     input: { externalId: string | null },
   ): Promise<void>;
+}
+
+/** 无真实平台发布能力时的生产适配器；不制造外部ID、URL或发布/下架事实。 */
+export function createUnavailablePublisher(): PlatformPublisherPort {
+  return {
+    async publish() { throw new PublishingUnavailableError("publish"); },
+    async remove() { throw new PublishingUnavailableError("remove"); },
+  };
 }
 
 export interface PublishRecord {
