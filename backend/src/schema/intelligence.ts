@@ -139,6 +139,7 @@ export const executionTasks = pgTable("execution_tasks", {
   payload: jsonb("payload").notNull().default({}),
   checkpoint: jsonb("checkpoint"),
   leaseOwner: text("lease_owner"),
+  fenceToken: text("fence_token"),
   leaseExpiresAt: text("lease_expires_at"),
   heartbeatAt: text("heartbeat_at"),
   attempt: integer("attempt").notNull().default(0),

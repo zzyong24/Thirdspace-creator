@@ -155,3 +155,4 @@ export {
   type MaterialPorts,
 } from "./agentic";
 export { createExecutionAuthorityService } from "./execution-authority.service";
+export { createExecutionLeaseService } from "./execution-lease.service";

@@ -1,0 +1,34 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T07:20:33.986844+00:00",
+  "status": "lease_foundation_verified_full_scope_open",
+  "scope": "持久随机执行凭证、同行事务校验、控制/回收锁序与过期续租拦截",
+  "verification": {
+    "backend_tests": 16,
+    "frontend_tests": 5,
+    "real_postgres": "16.13，两独立pool，30次新旧领取竞争及实际观察取消等待行锁，最终succeeded未被覆盖",
+    "temporary_postgres": "仅Unix socket，独立测试cluster，已通过pg_ctl停止，不触及用户数据库",
+    "types": [
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，原5条保留",
+    "review": "独立只读 worker_review 复核确认锁序与heartbeat问题修复，无新增实质漏洞；未重跑测试"
+  },
+  "red_evidence": "新增租约服务之前导入失败；旧heartbeat过期仍续租行为测试在修复前真实失败，日志保留。",
+  "limits": [
+    "尚未建立具体调用账本与持久预算；settlement基础入口必须由后端具体端口限制为已执行同键调用结算",
+    "生产Worker/全部入口尚未消费新事务租约服务",
+    "暂停重启、检查点、完整供应商与双平台验收未完成"
+  ],
+  "outputs": {
+    "t915-lease-red.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n ❯ src/modules/execution/execution-lease.service.test.ts (0 test)\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/execution/execution-lease.service.test.ts [ src/modules/execution/execution-lease.service.test.ts ]\nError: Cannot find module './execution-lease.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.test.ts\n ❯ src/modules/execution/execution-lease.service.test.ts:4:1\n      2| import { createDb, eq, executionTasks, type Db } from \"@creatoros/back…\n      3| import { createPersistentTaskService } from \"./persistent-task.service…\n      4| import { createExecutionLeaseService } from \"./execution-lease.service…\n       | ^\n      5|\n      6| const ctx = {userId: \"lease-user\", accountId: \"lease-account\", request…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  00:07:24\n   Duration  963ms (transform 394ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nundefined\n/Users/zyongzhu/Workbase/Thirdspace-creator/backend:\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-lease.service.test.ts\n",
+    "t915-expired-heartbeat-red.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n ❯ src/modules/execution/execution-lease.service.test.ts (4 tests | 1 failed) 948ms\n     × 旧心跳不能复活已经到期的租约 7ms\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  src/modules/execution/execution-lease.service.test.ts > T-915 持久执行租约 > 旧心跳不能复活已经到期的租约\nAssertionError: promise resolved \"{ …(20) }\" instead of rejecting\n\n- Expected\n+ Received\n\n- Error {\n-   \"message\": \"rejected promise\",\n+ {\n+   \"accountId\": \"lease-account\",\n+   \"attempt\": 1,\n+   \"checkpoint\": null,\n+   \"costEstimate\": null,\n+   \"createdAt\": \"2026-09-05T00:00:00.000Z\",\n+   \"errorCode\": null,\n+   \"errorMessage\": null,\n+   \"heartbeatAt\": \"2026-09-05T00:00:11.000Z\",\n+   \"id\": \"execution-task_ee6bfc5d-d9fa-4e75-a8cb-31121f62076d\",\n+   \"idempotencyKey\": \"expired-heartbeat\",\n+   \"kind\": \"source_sync\",\n+   \"leaseExpiresAt\": \"2026-09-05T00:01:11.000Z\",\n+   \"leaseOwner\": \"worker\",\n+   \"maxAttempts\": 3,\n+   \"ownerId\": \"expired-heartbeat\",\n+   \"ownerType\": \"source\",\n+   \"priority\": 0,\n+   \"status\": \"running\",\n+   \"updatedAt\": \"2026-09-05T00:00:11.000Z\",\n+   \"userId\": \"lease-user\",\n  }\n\n ❯ src/modules/execution/execution-lease.service.test.ts:51:100\n     49|   it(\"旧心跳不能复活已经到期的租约\", async () => {\n     50|     const f = await fixture(\"expired-heartbeat\"); f.clock.stamp = \"202…\n     51|     await expect(f.tasks.heartbeat({taskId: f.task.id, workerId: \"work…\n       |                                                                                                    ^\n     52|   });\n     53| });\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  00:13:37\n   Duration  1.82s (transform 346ms, setup 0ms, import 732ms, tests 948ms, environment 0ms)\n\nundefined\n/Users/zyongzhu/Workbase/Thirdspace-creator/backend:\n ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-lease.service.test.ts\n",
+    "t915-lease-regression.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  16 passed (16)\n   Start at  00:15:19\n   Duration  5.62s (transform 765ms, setup 0ms, import 1.59s, tests 5.76s, environment 0ms)\n\n",
+    "t915-lease-share-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend\n\n(node:12790) Warning: `--localstorage-file` was provided without a valid path\n(Use `node --trace-warnings ...` to show where the warning was created)\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  00:14:16\n   Duration  1.18s (transform 42ms, setup 186ms, import 19ms, tests 13ms, environment 704ms)\n\n",
+    "t915-lease-types-final.log": "\n> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n> tsc --noEmit\n\n",
+    "t915-lease-frontend-types-final.log": "",
+    "t915-lease-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n",
+    "t915-postgres-lease.log": "{\n  \"status\": \"passed\",\n  \"results\": {\n    \"mapping_races\": 30,\n    \"cancel_waited_for_commit_and_rejected\": true,\n    \"postgres_version\": \"16.13 (Homebrew)\",\n    \"independent_pools\": 2\n  }\n}\n"
+  }
+}

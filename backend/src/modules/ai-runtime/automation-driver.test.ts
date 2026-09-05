@@ -57,7 +57,7 @@ function taskFixture() {
       job: dueJob,
       scheduledFor: "2026-07-26T09:00:00.000Z",
     },
-    lease: { workerId: "automation-worker", attempt: 1 },
+    lease: { workerId: "automation-worker", attempt: 1, fenceToken: "automation-fence" },
   };
   return { task, claim };
 }

@@ -46,7 +46,7 @@ function claim(
       requestedBy: "user",
       ...payload,
     },
-    lease: { workerId: "worker-1", attempt: 1 },
+    lease: { workerId: "worker-1", attempt: 1, fenceToken: "share-fence" },
   };
 }
 

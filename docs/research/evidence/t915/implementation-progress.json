@@ -13,7 +13,8 @@
     "新增可构建的独立 Node Worker 入口、私有命名 IPC 与监督器；尚未接生产调度",
     "Worker 调用前预算许可、定期续租、取消断流、同租约重投回执、提交未知不覆盖",
     "共享 retry-policy 归 ai-worker/runtime；明确 HTTP/受管拒绝与未知提交分类，保留完整 Retry-After，SDK 重试设为 0",
-    "新增 ai_tasks→execution_tasks 唯一映射与事务转交；映射任务排除旧领取/清理，尚未接生产调度"
+    "新增 ai_tasks→execution_tasks 唯一映射与事务转交；映射任务排除旧领取/清理，尚未接生产调度",
+    "持久随机fence和后端同行事务校验；控制与回收统一锁序，过期旧心跳拒绝续租；已有调用结算边界供后续账本服务使用"
   ],
   "verification": {
     "backend_tests": {
@@ -52,6 +53,12 @@
         "frontend tsc PASS"
       ],
       "boundary": "无新增违规，既有5条"
+    },
+    "execution_lease_increment": {
+      "evidence": "execution-lease-evidence.json",
+      "tests": 21,
+      "postgres_mapping_races": 30,
+      "real_lock_wait_verified": true
     }
   },
   "not_yet_delivered": [

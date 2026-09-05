@@ -66,6 +66,7 @@ export interface PersistentTaskClaim {
   lease: {
     workerId: string;
     attempt: number;
+    fenceToken: string;
   };
 }
 
@@ -428,7 +429,7 @@ export function createPersistentTaskService(
               eq(executionTasks.userId, ctx.userId),
               eq(executionTasks.accountId, accountId),
             ),
-          );
+          ).orderBy(asc(executionTasks.id)).for("update");
         if (rows.length !== taskIds.length) {
           throw new OwnershipError("Execution task not found");
         }
@@ -498,13 +499,15 @@ export function createPersistentTaskService(
           .from(executionTasks)
           .where(and(...filters))
           .orderBy(desc(executionTasks.priority), asc(executionTasks.createdAt))
-          .limit(8);
+          .limit(1)
+          .for("update", {skipLocked: true});
         for (const candidate of candidates) {
           const [claimed] = await tx
             .update(executionTasks)
             .set({
               status: "running",
               leaseOwner: input.workerId,
+              fenceToken: randomUUID(),
               leaseExpiresAt,
               heartbeatAt: stamp,
               attempt: sql`${executionTasks.attempt} + 1`,
@@ -524,6 +527,7 @@ export function createPersistentTaskService(
               lease: {
                 workerId: input.workerId,
                 attempt: claimed.attempt,
+                fenceToken: claimed.fenceToken!,
               },
             };
           }
@@ -545,6 +549,7 @@ export function createPersistentTaskService(
         .set({
           status: "running",
           leaseOwner: input.workerId,
+          fenceToken: randomUUID(),
           leaseExpiresAt,
           heartbeatAt: stamp,
           attempt: sql`${executionTasks.attempt} + 1`,
@@ -564,6 +569,7 @@ export function createPersistentTaskService(
         lease: {
           workerId: input.workerId,
           attempt: claimed.attempt,
+          fenceToken: claimed.fenceToken!,
         },
       };
     },
@@ -583,6 +589,7 @@ export function createPersistentTaskService(
             eq(executionTasks.id, input.taskId),
             eq(executionTasks.leaseOwner, input.workerId),
             eq(executionTasks.attempt, input.attempt),
+            sql`${executionTasks.leaseExpiresAt} > ${stamp}`,
             inArray(executionTasks.status, [
               "running",
               "pause_requested",
@@ -715,23 +722,19 @@ export function createPersistentTaskService(
               ]),
               lt(executionTasks.leaseExpiresAt, stamp),
             ),
-          );
+          ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
           let target: PersistentTaskStatus;
           if (row.status === "pause_requested") {
             target = "paused";
-            report.paused += 1;
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
-            report.cancelled += 1;
           } else if (row.attempt < row.maxAttempts) {
             target = "queued";
-            report.requeued += 1;
           } else {
             target = "failed";
-            report.failed += 1;
           }
-          await tx
+          const updated = await tx
             .update(executionTasks)
             .set({
               status: target,
@@ -751,8 +754,15 @@ export function createPersistentTaskService(
                 eq(executionTasks.id, row.id),
                 eq(executionTasks.status, row.status),
                 eq(executionTasks.attempt, row.attempt),
+                lt(executionTasks.leaseExpiresAt, stamp),
               ),
-            );
+            ).returning({id: executionTasks.id});
+          if (updated.length) {
+            if (target === "queued") report.requeued++;
+            else if (target === "paused") report.paused++;
+            else if (target === "cancelled") report.cancelled++;
+            else report.failed++;
+          }
         }
       });
       return report;
