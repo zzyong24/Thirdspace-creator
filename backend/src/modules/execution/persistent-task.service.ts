@@ -102,6 +102,7 @@ export interface PersistentTaskService {
   claimNext(input: {
     workerId: string;
     kinds?: PersistentTaskKind[];
+    executionMode?: "model.generate";
     leaseSeconds?: number;
   }): Promise<PersistentTaskClaim | null>;
   claimTask(input: {
@@ -509,6 +510,7 @@ export function createPersistentTaskService(
       if (input.kinds && input.kinds.length === 0) return null;
       return db.transaction(async (tx) => {
         const filters = [claimableAt(stamp)];
+        if (input.executionMode === "model.generate") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'model.generate'`);
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));
         }

@@ -103,4 +103,15 @@ describe("T-915 唯一执行权映射", () => {
     }
   });
 
+  it("冻结准备输入与原指纹绑定，重复绑定不改预算或原截止时间",async()=>{
+    await seed("prepared");const service=createExecutionAuthorityService(db,{now:()=>"2026-09-05T00:00:10.000Z"});
+    const prepared={requestFingerprint:"sha256:"+"0".repeat(64),modelInput:{kind:"model.generate" as const,operationKey:"generate",prompt:"正文",capability:"script",maxOutputTokens:128},budget:{maxCalls:3,maxTokens:10000,deadlineMs:60000}};
+    await expect(service.bindAiTask(ctx,"prepared",{...prepared,requestFingerprint:"sha256:"+"1".repeat(64)})).rejects.toMatchObject({name:"ConflictError"});
+    const mapped=await service.bindAiTask(ctx,"prepared",prepared);
+    expect(await service.bindAiTask(ctx,"prepared",prepared)).toEqual(mapped);
+    expect((await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId)))[0]?.deadlineAt).toBe("2026-09-05T00:01:00.000Z");
+    await expect(service.bindAiTask(ctx,"prepared",{...prepared,modelInput:{...prepared.modelInput,prompt:"改写输入"}})).rejects.toMatchObject({name:"ConflictError"});
+    await expect(service.bindAiTask(ctx,"prepared",{...prepared,budget:{...prepared.budget,maxCalls:99}})).rejects.toMatchObject({name:"ConflictError"});
+  });
+
 });

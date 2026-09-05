@@ -154,8 +154,9 @@ export {
   type CollectionPorts,
   type MaterialPorts,
 } from "./agentic";
-export { createExecutionAuthorityService } from "./execution-authority.service";
+export { createExecutionAuthorityService, type PreparedModelExecution } from "./execution-authority.service";
 export { createExecutionLeaseService } from "./execution-lease.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";
+export { createModelWorkerDispatcher, type ModelWorkerDispatcherDeps } from "./model-worker-dispatcher";

@@ -1,0 +1,33 @@
+{
+  "task": "T-915",
+  "recordedAt": "2026-09-05T08:15:46.470536+00:00",
+  "status": "model_dispatcher_verified_full_scope_open",
+  "implemented": [
+    "准备接口校验原请求指纹，原子冻结模型输入/预算/原截止时间；已映射执行不能改写输入或扩预算",
+    "调度宿主仅领取准备好的model.generate任务，组合真实账本/重试/候选服务及私有Worker",
+    "单flight轮询、续租、250ms暂停取消监听与停止清理",
+    "启动读取及supervisor异步验证后停止门，SIGTERM后不能继续投递run"
+  ],
+  "verification": {
+    "preparation_and_queue_tests": 16,
+    "supervisor_and_dispatcher_tests": 14,
+    "types": [
+      "backend PASS",
+      "frontend tsc PASS"
+    ],
+    "boundary": "无新增违规，既有5条",
+    "review": "worker_review只读独立审查发现并复核修复两处停止竞态，未发现其他实质问题；审查未运行测试"
+  },
+  "limits": [
+    "已存在可运行宿主，但现有生产结构化/多步runner尚未接入；不能用普通文本路径替换其完整行为",
+    "凭据端口提供归属来自DB的业务任务ID，具体生产适配器还须验证原冻结模型权威；本轮使用本地供应商/固定输入/fixture候选投影",
+    "生产生命周期装配、业务状态投影、全部入口迁移、工具循环、真实性能和供应商/双平台验收未完成"
+  ],
+  "outputs": {
+    "t915-dispatcher-preparation-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  2 passed (2)\n      Tests  16 passed (16)\n   Start at  01:11:57\n   Duration  5.74s (transform 703ms, setup 0ms, import 1.45s, tests 6.03s, environment 0ms)\n\n",
+    "t915-dispatcher-final-tests.log": "\n RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n\n\n Test Files  3 passed (3)\n      Tests  14 passed (14)\n   Start at  01:13:00\n   Duration  3.64s (transform 478ms, setup 0ms, import 970ms, tests 4.62s, environment 0ms)\n\n",
+    "t915-dispatcher-types-final.log": "\n> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend\n> tsc --noEmit\n\n",
+    "t915-dispatcher-frontend-types.log": "",
+    "t915-dispatcher-boundary.log": "\n门卫 boundary-scan — 剩余违规 5 条(基线 5):\n  0\tR1-no-backend-in-frontend  后端业务模块不准放在 frontend(前后端必须分离)。目标:全部搬进 backend/src/modules。\n  4\tR2-no-agent-sdk-in-frontend-pages  Agent SDK / Vercel AI SDK 只准在 worker / ai-runtime,不准在 frontend 的页面或 server 杂处。\n  1\tR3-no-cross-module-repository-import  模块之间不准直接 import 对方的 repository(只能走 service port)。\n  0\tR4-no-web-direct-license-commerce  Web frontend 不准直连 activity/growth 授权与交易端点，只能经 typed RPC。\n\n✓ 无新增违规(剩余 5 条在基线内,随重构消减)。\n"
+  }
+}

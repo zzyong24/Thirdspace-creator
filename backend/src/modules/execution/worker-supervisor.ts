@@ -93,8 +93,10 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
     start,
     async run(execution: ExecutionRef, deadlineAt: number): Promise<string> {
       await start();
+      if (stopping) throw new Error("WORKER_STOPPED");
       if (current) throw new Error("WORKER_BUSY");
       await options.ports.validate(execution, "admission");
+      if (stopping) throw new Error("WORKER_STOPPED");
       if (current) throw new Error("WORKER_BUSY");
       if (Date.now() >= deadlineAt) throw new Error("EXECUTION_DEADLINE");
       return new Promise((resolve, reject) => {
