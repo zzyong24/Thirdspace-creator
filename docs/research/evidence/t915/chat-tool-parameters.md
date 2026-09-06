@@ -32,3 +32,5 @@ material.screenshot/web.read 可能保存 pending 资产；script.draft、publis
 最终全局 reconcile：211 errors / 1 warning，exit 1，与前批一致；既有欠债由 T-916 跟踪，未记全绿。
 
 首轮红测日志因 Vitest 展开完整 Zod 对象达到 9874 行，已无损压缩为 chat-tool-parameters-red.log.gz；解压往返字节校验通过，原始 SHA-256 见同名 JSON 证据。
+
+后续更正：独立复核发现 context.positioning.detail 原有历史清理写入、video.edit.render 原有缺记录 ensure 写入，所以上述盘点不能作为当时全部纯读的证明。本次已通过真正只读服务消除两处写入，具体证据见 [chat-read-effects.md](chat-read-effects.md)。

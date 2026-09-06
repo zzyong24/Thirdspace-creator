@@ -1,0 +1,56 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/production/production.service.test.ts (16 tests | 2 failed) 11671ms
+     × 缺制作记录时返回空且不创建；原页面初始化仍创建 695ms
+     × 先校验输出归属，不把跨账号和删除输出伪装为空 662ms
+ ❯ src/modules/positioning/positioning.service.test.ts (26 tests | 1 failed) 18056ms
+     × T-915 定位只读投影屏蔽旧错误计数，但不清理数据库 1315ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/positioning/positioning.service.test.ts > positioning service > T-915 定位只读投影屏蔽旧错误计数，但不清理数据库
+TypeError: service.readPositioningCenter is not a function
+ ❯ src/modules/positioning/positioning.service.test.ts:74:27
+     72|     await service.upsertProfile(ctx, { ...PROFILE_INPUT, facets: { sta…
+     73|     const before = await service.getProfile(ctx);
+     74|     expect((await service.readPositioningCenter(ctx)).profile!.facets.…
+       |                           ^
+     75|     expect(await service.getProfile(ctx)).toEqual(before);
+     76|     expect((await service.readPositioningCenter({ ...ctx, accountId: "…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/production/production.service.test.ts > T-915 制作候选只读入口 > 缺制作记录时返回空且不创建；原页面初始化仍创建
+TypeError: service.readProduction is not a function
+ ❯ src/modules/production/production.service.test.ts:421:26
+    419| describe("T-915 制作候选只读入口", () => {
+    420|   it("缺制作记录时返回空且不创建；原页面初始化仍创建", async () => {
+    421|     expect(await service.readProduction(ctx, "output-1")).toBeNull();
+       |                          ^
+    422|     expect(await db.select().from(productions)).toHaveLength(0);
+    423|     const created = await service.getProduction(ctx, "output-1");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/production/production.service.test.ts > T-915 制作候选只读入口 > 先校验输出归属，不把跨账号和删除输出伪装为空
+TypeError: service.readProduction is not a function
+ ❯ src/modules/production/production.service.test.ts:428:26
+    426|   });
+    427|   it("先校验输出归属，不把跨账号和删除输出伪装为空", async () => {
+    428|     await expect(service.readProduction({ ...ctx, accountId: "other" }…
+       |                          ^
+    429|     await expect(service.readProduction(ctx, "missing")).rejects.toThr…
+    430|     expect(await db.select().from(productions)).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 39 passed (42)
+   Start at  22:50:41
+   Duration  19.06s (transform 825ms, setup 0ms, import 1.72s, tests 29.73s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/production/production.service.test.ts src/modules/positioning/positioning.service.test.ts

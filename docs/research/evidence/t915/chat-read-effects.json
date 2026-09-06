@@ -1,0 +1,95 @@
+{
+  "task": "T-915",
+  "scope": "移除真实定位读取与剪辑候选准备的隐藏写入",
+  "red": {
+    "failed": 3,
+    "passed": 39
+  },
+  "green": {
+    "service": 42,
+    "runtimeIntegration": 1,
+    "productionPublicTransport": 3
+  },
+  "types": {
+    "backend": "PASS",
+    "frontend": "PASS after test nullability fix"
+  },
+  "review": "runtime_code_review 只读评审未发现具体阻断，未独立重跑测试",
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-red.log",
+      "sha256": "d73d01ac99f30a87c12a68bd8778bbe12ea37944976ff78946d456566bc7e0ea",
+      "bytes": 3283
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-green.log",
+      "sha256": "1baf354f3ddec21dc60b495937b1e676cf26b6ce3e530dea765eefe5e9566ebc",
+      "bytes": 239
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-backend-types.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-frontend-types.log",
+      "sha256": "fc2b587b3fa154ad2455ada30ce9fb2626629bb137414d081da77cab6c38ef98",
+      "bytes": 116
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-frontend-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-integration-final.log",
+      "sha256": "3abb722ff40c1f5ac070e7a4a03b1ac023260e70b61d47babb5ef74f914f7334",
+      "bytes": 390
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-public-regression.log",
+      "sha256": "f9ac77c668bdbde79475164c6f72602d70f736fefb14895645e2a721148726e2",
+      "bytes": 390
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-scope.log",
+      "sha256": "b60eb611c2c0f36a236eee6fd58510d2e16607b5da94d81e9217cbce3ef556c0",
+      "bytes": 662
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-scope-green.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-callers.log",
+      "sha256": "3d5fe501602812529858e2444215fd86a51560fef0317fd1d5811769af1ef394",
+      "bytes": 175
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-effects-reconcile.log",
+      "sha256": "83090d536137491112336701302190f4cdb109807f335abf0200a9b96a6ad2bc",
+      "bytes": 25449
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "result": "与上一批一致，T-916 既有欠债保留"
+  }
+}

@@ -1,0 +1,6 @@
+[1m
+Callers of "readPositioningCenter" (1):
+[0m
+[36mfunction    [0m[37mcreatePositioningService[0m
+[2m  backend/src/modules/positioning/positioning.service.ts:281[0m
+

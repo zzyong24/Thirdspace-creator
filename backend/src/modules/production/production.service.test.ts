@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, type Db, projects, contentOutputs } from "@creatoros/backend";
+import { createDb, type Db, projects, contentOutputs, productions } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createProductionService,
@@ -412,5 +412,21 @@ describe("production.service — exportMaterials (T-366b)", () => {
       svc.exportMaterials(ctx, "production-of-someone-else"),
     ).rejects.toMatchObject({ name: "OwnershipError" });
     expect(wiring.ports.listMaterialAssets).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("T-915 制作候选只读入口", () => {
+  it("缺制作记录时返回空且不创建；原页面初始化仍创建", async () => {
+    expect(await service.readProduction(ctx, "output-1")).toBeNull();
+    expect(await db.select().from(productions)).toHaveLength(0);
+    const created = await service.getProduction(ctx, "output-1");
+    expect(await service.readProduction(ctx, "output-1")).toEqual(created);
+    expect(await db.select().from(productions)).toHaveLength(1);
+  });
+  it("先校验输出归属，不把跨账号和删除输出伪装为空", async () => {
+    await expect(service.readProduction({ ...ctx, accountId: "other" }, "output-1")).rejects.toThrow();
+    await expect(service.readProduction(ctx, "missing")).rejects.toThrow();
+    expect(await db.select().from(productions)).toHaveLength(0);
   });
 });

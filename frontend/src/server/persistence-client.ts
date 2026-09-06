@@ -3910,7 +3910,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const makeGenerationReaders = () => {
         const positioningReader = {
           getPositioningCenter: (c: RequestContext) =>
-            positioningService.getPositioningCenter(c),
+            positioningService.readPositioningCenter(c),
         };
         // 飞轮回流 — top validated Learnings feed the agent's context (topic/script nodes).
         const learningsReader = {
@@ -4543,7 +4543,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 let title: string | undefined;
                 try {
                   const center =
-                    await positioningService.getPositioningCenter(c);
+                    await positioningService.readPositioningCenter(c);
                   accountPositioning =
                     center.currentStatement?.oneLiner || undefined;
                 } catch {
@@ -5898,7 +5898,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     overview: {
       // 定位领域一句 — the creator's positioning field (or one-liner) for the 出题依据 label.
       positioningLabel: async (ctx) => {
-        const center = await positioningService.getPositioningCenter(ctx);
+        const center = await positioningService.readPositioningCenter(ctx);
         return (
           center.profile?.field ||
           center.currentStatement?.oneLiner ||
@@ -7155,7 +7155,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               {
                 positioning: {
                   getPositioningCenter: (c2) =>
-                    positioningService.getPositioningCenter(c2),
+                    positioningService.readPositioningCenter(c2),
                 },
               },
             );
@@ -7298,7 +7298,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               .filter((k) => k.length > 0);
             let positioningKeywords: string[] = [];
             try {
-              const center = await positioningService.getPositioningCenter(c);
+              const center = await positioningService.readPositioningCenter(c);
               positioningKeywords = center.keywords ?? [];
             } catch {
               positioningKeywords = []; // 定位读失败 → 只用 env(诚实降级)
@@ -7358,7 +7358,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               {
                 positioning: {
                   getPositioningCenter: (c2) =>
-                    positioningService.getPositioningCenter(c2),
+                    positioningService.readPositioningCenter(c2),
                 },
               },
             );
@@ -9336,7 +9336,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
   const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
-  const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.getPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
+  const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
   const reviewScriptSource: Parameters<typeof prepareScriptReviewContext>[2]["scriptSource"] = {
         getLatestScript: async (c, projectId) => {
           const artifacts = await artifactsService.listProjectArtifacts(
@@ -9576,7 +9576,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const dailyTopicAdapter=createDailyTopicBusinessAdapter({
         positioning: {
           getPositioningCenter: (c) =>
-            positioningService.getPositioningCenter(c),
+            positioningService.readPositioningCenter(c),
         },
         learnings: {
           getSuggestions: (c, opts) => learningsService.getSuggestions(c, opts),
@@ -10720,7 +10720,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     context: {
       positioning: {
         getPositioningCenter: (c: RequestContext) =>
-          positioningService.getPositioningCenter(c),
+          positioningService.readPositioningCenter(c),
       },
       learnings: {
         getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
@@ -11492,11 +11492,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
       },
       // [T-099b] context.positioning.detail —— 定位母版全档 + 账号画像并入(不单开账号工具)。
-      // 复用 positioningService.getPositioningCenter(profile 全 facets + downstreamRules + 陈述 +
+      // 复用 positioningService.readPositioningCenter(profile 全 facets + downstreamRules + 陈述 +
       // history 版本数)+ platformAccountService.listAccounts(账号画像)。母版未建 → profile:null
       // (诚实空态)。best-effort:账号读失败 → 空数组(不阻断定位档案)。
       getPositioningDetail: async (c: RequestContext) => {
-        const center = await positioningService.getPositioningCenter(c);
+        const center = await positioningService.readPositioningCenter(c);
         const p = center.profile;
         const facets = (p?.facets ?? {}) as Record<string, string>;
         const rules = (p?.downstreamRules ?? {}) as Record<string, string>;
@@ -12942,7 +12942,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepareVideoEdit: async (ctx, input) => {
       const outputId = (await projectsService.listOutputIdsByProject(ctx, input.projectId))[0];
       if (!outputId) throw new Error("当前项目还没有可调整的制作记录。");
-      const production = await productionService.getProduction(ctx, outputId);
+      const production = await productionService.readProduction(ctx, outputId);
+      if (!production) throw new Error("当前项目还没有可调整的制作记录。");
       const plan = (production.recordingConfig as Record<string, unknown> | null)?.videoEditingPlan as
         | Record<string, unknown>
         | undefined;

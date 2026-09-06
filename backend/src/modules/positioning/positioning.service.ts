@@ -270,6 +270,8 @@ export interface PositioningService {
     ctx: RequestContext,
     input: EvaluateGateInput,
   ): Promise<PositioningGateResultResource>;
+  /** AI 上下文只读投影，屏蔽历史错误计数，不触发存量清理写入。 */
+  readPositioningCenter(ctx: RequestContext): Promise<PositioningCenterResource>;
   // 定位中心 page-composition DTO (pages.positioning.get). Empty-state safe.
   getPositioningCenter(
     ctx: RequestContext,
@@ -280,6 +282,55 @@ export function createPositioningService(
   deps: ServiceDeps,
 ): PositioningService {
   const { db, now, nextId, projects } = deps;
+
+  async function readPositioningCenter(ctx: RequestContext): Promise<PositioningCenterResource> {
+    const repo = repoFor(ctx, "positioning.getPositioningCenter");
+    // [T-909] 两个独立首屏读并行，避免定位中心切入时间相加。
+    const [profileRow, activeDiscoveryRow] = await Promise.all([
+      repo.getProfile(),
+      repo.getActiveDiscoverySession(),
+    ]);
+    if (!profileRow) {
+      // Empty-state (brand-new user) — render the page, never an error.
+      return {
+        profile: null,
+        currentStatement: null,
+        keywords: [],
+        productAnchors: [],
+        history: [],
+        activeDiscovery: activeDiscoveryRow
+          ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
+          : null,
+      };
+    }
+    const profile = toCreatorProfileDto(profileRow);
+    // SEMANTIC_BOUNDARY_ALLOW: 复用已有存量错误计数判据，仅屏蔽被证伪字段，不作创作判断。
+    if (typeof profile.facets.statusNote === "string" && isLegacyDynamicStatusNote(profile.facets.statusNote)) {
+      profile.facets = { ...profile.facets, statusNote: "" };
+    }
+    const [statementPage, currentRow] = await Promise.all([
+      repo.listStatements({ limit: 200, offset: 0 }),
+      repo.getCurrentStatement(
+        profileRow.id,
+        profileRow.statementVersionFloor,
+      ),
+    ]);
+    const { rows } = statementPage;
+    const history = rows.map(toPositioningStatementDto);
+    const currentStatement = currentRow
+      ? toPositioningStatementDto(currentRow)
+      : null;
+    return {
+      profile,
+      currentStatement,
+      keywords: currentStatement?.keywords ?? [],
+      productAnchors: currentStatement?.productAnchorIds ?? [],
+      history,
+      activeDiscovery: activeDiscoveryRow
+        ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
+        : null,
+    };
+  }
 
   function requireDiscoveryUpdate<T>(row: T | undefined): T {
     if (!row) throw new DiscoveryConflictError();
@@ -828,52 +879,10 @@ export function createPositioningService(
       };
     },
 
+    readPositioningCenter,
     async getPositioningCenter(ctx) {
-      // T-521：任何会进入 AI 上下文的定位中心读取前，先经账号隔离服务清理已证伪的
-      // 动态计数。清理是 CAS + 幂等；非动态说明不改写，也不会用新静态计数覆盖旧值。
       await cleanupLegacyDynamicStatusNote(ctx);
-      const repo = repoFor(ctx, "positioning.getPositioningCenter");
-      // [T-909] 两个独立首屏读并行，避免定位中心切入时间相加。
-      const [profileRow, activeDiscoveryRow] = await Promise.all([
-        repo.getProfile(),
-        repo.getActiveDiscoverySession(),
-      ]);
-      if (!profileRow) {
-        // Empty-state (brand-new user) — render the page, never an error.
-        return {
-          profile: null,
-          currentStatement: null,
-          keywords: [],
-          productAnchors: [],
-          history: [],
-          activeDiscovery: activeDiscoveryRow
-            ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
-            : null,
-        };
-      }
-      const profile = toCreatorProfileDto(profileRow);
-      const [statementPage, currentRow] = await Promise.all([
-        repo.listStatements({ limit: 200, offset: 0 }),
-        repo.getCurrentStatement(
-          profileRow.id,
-          profileRow.statementVersionFloor,
-        ),
-      ]);
-      const { rows } = statementPage;
-      const history = rows.map(toPositioningStatementDto);
-      const currentStatement = currentRow
-        ? toPositioningStatementDto(currentRow)
-        : null;
-      return {
-        profile,
-        currentStatement,
-        keywords: currentStatement?.keywords ?? [],
-        productAnchors: currentStatement?.productAnchorIds ?? [],
-        history,
-        activeDiscovery: activeDiscoveryRow
-          ? toPositioningDiscoverySessionDto(activeDiscoveryRow)
-          : null,
-      };
+      return readPositioningCenter(ctx);
     },
   };
 }

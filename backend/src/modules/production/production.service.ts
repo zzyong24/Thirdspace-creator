@@ -102,6 +102,8 @@ export interface ServiceDeps {
 
 export interface ProductionService {
   getProduction(ctx: RequestContext, outputId: string): Promise<ProductionRow>;
+  /** 候选准备只读；输出归属错误仍抛出，缺制作记录返回 null。 */
+  readProduction(ctx: RequestContext, outputId: string): Promise<ProductionRow | null>;
   updateProduction(
     ctx: RequestContext,
     outputId: string,
@@ -192,6 +194,10 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
   }
 
   return {
+    async readProduction(ctx, outputId) {
+      return repoFor(ctx).findProductionByOutput(outputId);
+    },
+
     async getProduction(ctx, outputId) {
       // Backs outputs.production.get — get-or-create so the initial page load
       // resolves a real row even before the creator enters production.

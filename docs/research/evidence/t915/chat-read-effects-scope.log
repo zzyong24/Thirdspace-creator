@@ -1,0 +1,4 @@
+governance-guard HALT (3)
+  ✗ frontend/src/server/persistence-client.ts: complexity ledger entry for credential_store has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash
+  ✗ frontend/src/server/persistence-client.ts: complexity ledger entry for language_toolchain has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash
+  ✗ frontend/src/server/persistence-client.ts: complexity ledger entry for native_executable has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash

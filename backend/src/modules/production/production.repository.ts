@@ -41,6 +41,7 @@ export interface RepoDeps {
 export interface ProductionRepository {
   seedProductions(rows: ProductionRow[]): Promise<void>;
   getProductionByOutput(outputId: string): Promise<ProductionRow>;
+  findProductionByOutput(outputId: string): Promise<ProductionRow | null>;
   ensureProductionForOutput(outputId: string): Promise<ProductionRow>;
   getProductionById(productionId: string): Promise<ProductionRow>;
   updateProduction(
@@ -137,9 +138,9 @@ export function createProductionRepository(
     return row;
   }
 
-  async function getProductionByOutput(
+  async function findProductionByOutput(
     outputId: string,
-  ): Promise<ProductionRow> {
+  ): Promise<ProductionRow | null> {
     await requireOwnedOutput(outputId); // [T-332 S2] 父锚门先行
     const rows = await db
       .select()
@@ -150,10 +151,12 @@ export function createProductionRepository(
           eq(productions.contentOutputId, outputId),
         ),
       );
-    const row = rows[0];
-    if (!row) {
-      throw new OwnershipError(`OwnershipError: production not found: ${outputId}`);
-    }
+    return rows[0] ?? null;
+  }
+
+  async function getProductionByOutput(outputId: string): Promise<ProductionRow> {
+    const row = await findProductionByOutput(outputId);
+    if (!row) throw new OwnershipError(`OwnershipError: production not found: ${outputId}`);
     return row;
   }
 
@@ -164,6 +167,7 @@ export function createProductionRepository(
     },
 
     getProductionByOutput,
+    findProductionByOutput,
 
     getProductionById: getProductionRowById,
 

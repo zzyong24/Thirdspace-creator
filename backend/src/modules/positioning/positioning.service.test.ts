@@ -67,6 +67,17 @@ describe("positioning service", () => {
     ({ db } = await createDb());
   });
 
+  it("T-915 定位只读投影屏蔽旧错误计数，但不清理数据库", async () => {
+    const service = makeService(db, makeProjectsPort());
+    await service.upsertProfile(ctx, { ...PROFILE_INPUT, facets: { statusNote: "49 条稿子压在 review，一直未发布" } });
+    const before = await service.getProfile(ctx);
+    expect((await service.readPositioningCenter(ctx)).profile!.facets.statusNote).toBe("");
+    expect(await service.getProfile(ctx)).toEqual(before);
+    expect((await service.readPositioningCenter({ ...ctx, accountId: "other" })).profile).toBeNull();
+    await service.getPositioningCenter(ctx);
+    expect((await service.getProfile(ctx))!.facets.statusNote).toBe("");
+  });
+
   it("upsertProfile inserts then updates the same row (one profile per user)", async () => {
     const service = makeService(db, makeProjectsPort());
     const first = await service.upsertProfile(ctx, PROFILE_INPUT);

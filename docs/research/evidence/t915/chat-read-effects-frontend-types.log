@@ -1,0 +1,1 @@
+src/server/chat-read-effects.integration.test.ts(44,15): error TS18047: 'candidate.renderProps' is possibly 'null'.

@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "403a2652535d1ac69a07b52c045c3918d11a03266ddfcaf2ca25e4bb2a459934",
+      "file_sha256": "2a40ea798f0118f56a2a9c945cf8b65fd98e305cdb317e3f16160d518cea2544",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已批准的真实工具副作用收敛：定位上下文改用无写入投影，剪辑候选只读已有制作记录。保留原页面初始化与显式清理，不新增运行时、凭据或原生工具链机制。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
