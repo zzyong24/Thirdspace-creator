@@ -1,0 +1,98 @@
+import {beforeAll,afterAll,it,expect,vi} from "vitest";
+import {mkdtemp,rm} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {createDb,aiTasks,executionTasks,executionCalls,assets,eq,sql,type Db} from "@creatoros/backend";
+import {createExecutionAuthorityService} from "./execution-authority.service";
+import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
+import {createPersistentTaskService} from "./persistent-task.service";
+import {createExecutionProviderJobService} from "./execution-provider-job.service";
+import {createExecutionAssetResultService} from "./execution-asset-result.service";
+import {createLocalFsObjectStorage} from "../assets/localfs-object-storage";
+let db:Db,connection:Awaited<ReturnType<typeof createDb>>,root:string,sequence=0;
+beforeAll(async()=>{connection=await createDb();db=connection.db;root=await mkdtemp(join(tmpdir(),"t915-asset-result-"));});
+afterAll(async()=>{await connection.client.close();await rm(root,{recursive:true,force:true});});
+const budget={maxCalls:3,maxTokens:10000,deadlineMs:60000};
+const bytes=new Uint8Array([1,2,3]);
+async function fixture(mediaKind:"image"|"video"="video"){
+ const id=`asset-result-${++sequence}`,ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
+ const now=()=>"2026-09-06T00:00:00.000Z";
+ const input={kind:"asset.generate",mediaKind,capability:`${mediaKind}.generate`,operationKey:"asset/original",prompt:"画面",provider:"minimax",model:"MiniMax-H3",baseUrl:null};
+ await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"asset.generate",idempotencyKey:id,inputData:{kind:mediaKind,prompt:input.prompt},requestedAt:now()});
+ const mapped=await createExecutionAuthorityService(db,{now}).bindAiTask(ctx,id);
+ await db.update(executionTasks).set({payload:{aiTaskId:id,modelInput:input}}).where(eq(executionTasks.id,mapped.executionTaskId));
+ const tasks=createPersistentTaskService(db,{now}),claim=(await tasks.claimTask({taskId:mapped.executionTaskId,workerId:"worker"}))!;
+ const ref={executionTaskId:mapped.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const storage=createLocalFsObjectStorage({rootPath:join(root,id),publicBaseUrl:"/blob"},{nextKey:()=>"unused"});
+ const deps={db,now,budget,objectStorageForCtx:async()=>storage};
+ const service=createExecutionAssetResultService(deps),call=await service.reserve(ref,128);
+ const ledger=createExecutionCallLedgerService(db,{now,budget});
+ const stop=async()=>{await tasks.command(ctx,{taskIds:[ref.executionTaskId],command:"cancel",idempotencyKey:"cancel"});await tasks.acknowledgeControl({taskId:ref.executionTaskId,workerId:"worker",attempt:ref.attempt});};
+ const resume=async()=>{await tasks.command(ctx,{taskIds:[ref.executionTaskId],command:"pause",idempotencyKey:"pause"});await tasks.acknowledgeControl({taskId:ref.executionTaskId,workerId:"worker",attempt:ref.attempt});await tasks.command(ctx,{taskIds:[ref.executionTaskId],command:"resume",idempotencyKey:"resume"});const next=(await tasks.claimTask({taskId:ref.executionTaskId,workerId:"new"}))!;return {...ref,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken};};
+ return {id,ctx,now,input,tasks,ref,storage,deps,service,call,ledger,stop,resume};
+}
+it.each(["image","video"] as const)("%s 原调用只创建一个 pending 素材，费用未知不记零",async kind=>{
+ const f=await fixture(kind);await f.service.start(f.ref,f.call.id);
+ const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ expect(await createExecutionAssetResultService(f.deps).recover(f.ref,f.call.id)).toEqual({status:"committed",receipt});
+ expect(await f.service.save(f.ref,f.call.id,bytes)).toEqual(receipt);
+ expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toMatchObject([{id:receipt.assetId,status:"pending",assetType:kind}]);
+ const state=await f.ledger.inspect(f.ref);expect(state.calls).toHaveLength(1);expect(state.calls[0]).toMatchObject({status:"settled",totalTokens:null,reservedTokens:128,resultRef:null});expect(JSON.parse(state.calls[0]!.resultText!)).toEqual(receipt);expect(state.spentTokens).toBeNull();
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("running");
+});
+it.each([false,true])("素材已提交但账本结算失败，取消=%s 后只补原账本",async cancelled=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ await db.execute(sql.raw("CREATE OR REPLACE FUNCTION fail_asset_settle() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status = 'settled' THEN RAISE EXCEPTION 'settlement lost'; END IF; RETURN NEW; END; $$;"));
+ await db.execute(sql.raw("CREATE TRIGGER fail_asset_settle BEFORE UPDATE ON execution_calls FOR EACH ROW EXECUTE FUNCTION fail_asset_settle();"));
+ try{await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();}finally{await db.execute(sql.raw("DROP TRIGGER fail_asset_settle ON execution_calls;"));}
+ expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(1);
+ if(cancelled)await f.stop();
+ f.storage.putObject=vi.fn(async()=>{throw new Error("不重写");});
+ expect(await createExecutionAssetResultService(f.deps).recover(f.ref,f.call.id)).toMatchObject({status:"committed"});
+ expect(f.storage.putObject).not.toHaveBeenCalled();expect((await f.ledger.inspect(f.ref)).calls[0]!.status).toBe("settled");
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(cancelled?"cancelled":"running");
+});
+it("取消后只回读已提交结果，不改终态",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);await f.stop();
+ expect(await f.service.recover(f.ref,f.call.id)).toEqual({status:"committed",receipt});
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("cancelled");
+});
+it("准备后字节写入中断，取消不允许恢复创建素材",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const put=f.storage.putObject.bind(f.storage);
+ f.storage.putObject=async value=>{await put(value);throw new Error("断开");};await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow("断开");await f.stop();
+ await expect(f.service.recover(f.ref,f.call.id)).rejects.toThrow();expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(0);
+});
+it("新 attempt 有原 job 才能保存续查字节，旧 fence 拒绝",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,{callId:f.call.id,job:{schemaVersion:1,provider:f.input.provider,model:f.input.model,baseUrl:null,jobId:"original"}});
+ const next=await f.resume();await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();
+ const receipt=await f.service.save(next,f.call.id,bytes);expect(await f.service.recover(next,f.call.id)).toEqual({status:"committed",receipt});
+ await expect(f.service.start(next,f.call.id)).rejects.toThrow();expect((await f.ledger.inspect(next)).calls).toHaveLength(1);
+});
+it("无 job 的旧启动不能借新 attempt 提交新字节",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const next=await f.resume();
+ expect(await f.service.recover(next,f.call.id)).toEqual({status:"missing"});await expect(f.service.save(next,f.call.id,bytes)).rejects.toThrow();
+});
+it("未启动不能提交，损坏业务映射不能开始或保存",async()=>{
+ const f=await fixture();await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();
+ await db.update(aiTasks).set({accountId:"foreign"}).where(eq(aiTasks.id,f.id));await expect(f.service.start(f.ref,f.call.id)).rejects.toThrow();await expect(f.service.reserve(f.ref,128)).rejects.toThrow();
+});
+it("不同字节不可覆盖原结果",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ await expect(f.service.save(f.ref,f.call.id,new Uint8Array([9]))).rejects.toThrow();expect(await f.service.recover(f.ref,f.call.id)).toEqual({status:"committed",receipt});
+});
+
+it("无供应商任务号也能在新执行恢复已保存原字节，不能重写对象",async()=>{
+ const f=await fixture("image");await f.service.start(f.ref,f.call.id);const put=f.storage.putObject.bind(f.storage);
+ f.storage.putObject=async value=>{await put(value);throw new Error("已写断开");};await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow("已写断开");
+ const next=await f.resume();f.storage.putObject=vi.fn(async()=>{throw new Error("不能重写");});
+ expect(await f.service.recover(next,f.call.id)).toMatchObject({status:"committed"});expect(f.storage.putObject).not.toHaveBeenCalled();expect((await f.ledger.inspect(next)).calls).toHaveLength(1);
+});
+it("有准备记录但没有字节时明确返回不足，不能结算伪结果",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);f.storage.putObject=async()=>{throw new Error("未写");};
+ await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow("未写");expect(await f.service.recover(f.ref,f.call.id)).toEqual({status:"bytes_missing"});expect((await f.ledger.inspect(f.ref)).calls[0]!.status).toBe("started");
+});
+it("未知调用已有真实字节时可恢复结算，预算仍未知",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);await f.ledger.settle(f.ref,f.call.id,{status:"unknown"});
+ await f.service.save(f.ref,f.call.id,bytes);expect(await f.ledger.inspect(f.ref)).toMatchObject({unknownUsage:true,spentTokens:null,reservedTokens:128});
+});

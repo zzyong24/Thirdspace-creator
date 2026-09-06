@@ -1658,6 +1658,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "证据文档记录生成素材持久回执及此前复杂度登记修复；沿用已授权 Worker 与后端单写者边界，没有新增进程拓扑。",
       "acceptance": "仅登记文档复杂度，不代表 Worker 接线或完整验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-execution-result.md"
+      ],
+      "file_sha256": "f698f1a504c88a8e2377927608d0e92760820c06ef0e658825bb20384c4e9a1a",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "文档登记已授权素材执行服务与尚待接通的命名端口，不新增架构范围。",
+      "acceptance": "只登记说明文档复杂度，不代表完整迁移或正式验收。"
     }
   ],
   "historical_baselines": []
