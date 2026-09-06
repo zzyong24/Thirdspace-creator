@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/assets/web-document-cache.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/assets/web-document-cache.test.ts [ src/modules/assets/web-document-cache.test.ts ]
+Error: Cannot find module './web-document-cache.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/assets/web-document-cache.test.ts
+ ❯ src/modules/assets/web-document-cache.test.ts:5:1
+      3| import {createAssetRepository} from "./assets.repository";
+      4| import {createMockObjectStorage} from "./object-storage";
+      5| import {createWebDocumentCacheService} from "./web-document-cache.serv…
+       | ^
+      6| const ctx={userId:"reader",accountId:"account",requestId:"cache",sourc…
+      7| let opened:Awaited<ReturnType<typeof createDb>>,seq=0;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:30:34
+   Duration  946ms (transform 399ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

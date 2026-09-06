@@ -79,3 +79,5 @@ export {
   type AssetFileResource,
   type AssetUpload,
 } from "./assets.schema";
+
+export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";

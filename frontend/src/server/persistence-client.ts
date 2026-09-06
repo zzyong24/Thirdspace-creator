@@ -155,6 +155,7 @@ import {
 import {
   createAssetRepository,
   createAssetsService,
+  createWebDocumentCacheService,
   createAssetsTransport,
   createMockObjectStorage,
   createS3ObjectStorage,
@@ -2196,6 +2197,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return null;
     }
   };
+  const webDocumentCache = createWebDocumentCacheService(db, {objectStorageForCtx});
   const assetsService = createAssetsService(assetsRepo, objectStorageForCtx, {
     ...deps,
     resolveProjectFolder,
@@ -12194,27 +12196,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const ctx = { ...context };
       return readWebDocument(input, {
         async readCached(url, signal) {
-          signal?.throwIfAborted();
-          let cached: Awaited<ReturnType<typeof assetsService.findAssetBySourceUrl>> = null;
-          try { cached = await assetsService.findAssetBySourceUrl(ctx, url); }
-          catch (error) { console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", error); }
-          if (!cached) return null;
-          let fullText: string | null = null;
-          try {
-            const blob = await assetsService.getAssetBytes(ctx, cached.id);
-            if (blob && blob.mimeType.startsWith("text/")) {
-              const decoded = new TextDecoder().decode(blob.bytes);
-              if (!decoded.trim()) throw new Error("缓存正文为空");
-              fullText = decoded;
-            }
-          } catch (error) { console.warn("[chat-runtime] web.read 缓存字节不可用,回落真抓:", error); }
-          if (fullText === null) return null;
-          signal?.throwIfAborted();
-          // 来源/全文修复写失败必须上抛，不得再抓取并创建重复素材。
-          await assetsService.mergeAiAnnotation(ctx, cached.id, { sourceUrl: url });
-          await assetsService.updateFileExtraction(ctx, cached.id, { extractedText: fullText, extractStatus: "done" });
-          const previewUrl = await assetsService.getDownloadUrl(ctx, cached.id).then((r) => r.url ?? null).catch(() => null);
-          return { assetId: cached.id, name: cached.name, previewUrl, fullText };
+          const prepared = await webDocumentCache.prepare(ctx, url, signal);
+          if (!prepared) return null;
+          // 确认具体文件仍为当前版本；冲突或修复失败不得转成重新抓取。
+          const {assetId, name, previewUrl, fullText} = await webDocumentCache.confirm(ctx, prepared, undefined, signal);
+          return {assetId, name, previewUrl, fullText};
         },
         async read(url, signal) {
           const domain = webDomainFromUrl(url);

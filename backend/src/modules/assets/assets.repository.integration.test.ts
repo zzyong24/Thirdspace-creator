@@ -542,7 +542,7 @@ describe("assets.repository — findAssetBySourceUrl ([T-251])", () => {
       },
       accountId,
     );
-    await repo.insertAssetFile(
+    const file = await repo.insertAssetFile(
       userId,
       {
         assetId: asset.id,
@@ -557,7 +557,8 @@ describe("assets.repository — findAssetBySourceUrl ([T-251])", () => {
       },
       accountId,
     );
-    return asset;
+    await repo.updateAssetStatus(userId, asset.id, {currentFileId:file.id}, accountId);
+    return {...asset,currentFileId:file.id};
   }
 
   it("pending 的 document asset 也命中(已抓到全文、未点存入素材库)", async () => {
