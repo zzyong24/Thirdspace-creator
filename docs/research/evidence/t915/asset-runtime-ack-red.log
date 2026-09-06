@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-runtime.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts (2 tests | 1 failed) 2870ms
+   × 真实生图适配器运行与丢失保存回执恢复=true 1221ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 真实生图适配器运行与丢失保存回执恢复=true
+AssertionError: expected 'unknown_result' to be 'completed' // Object.is equality
+
+Expected: "completed"
+Received: "unknown_result"
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts:40:54
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  12:52:38
+   Duration  4.14s (transform 613ms, setup 0ms, import 1.13s, tests 2.87s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

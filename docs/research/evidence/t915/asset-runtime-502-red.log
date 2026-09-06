@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-runtime.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts (3 tests | 1 failed) 4018ms
+   × 真实生图适配器与恢复 {"loseAck":false,"status":502} 1140ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 真实生图适配器与恢复 {"loseAck":false,"status":502}
+AssertionError: expected 'retry_wait' to be 'unknown_result' // Object.is equality
+
+Expected: "unknown_result"
+Received: "retry_wait"
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts:40:54
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  12:54:44
+   Duration  5.31s (transform 628ms, setup 0ms, import 1.16s, tests 4.02s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -36,11 +36,13 @@ export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof c
     },
     async startCall(ref: ExecutionRef, raw: unknown) {
       const {callId} = workerPortInputSchemas.startCall.parse(raw);
+      await leases.withLease(ref,"admission",async({task})=>{if((task.payload as {modelInput?:{kind?:string}}).modelInput?.kind==="asset.generate")throw new ConflictError("素材必须使用专用启动端口");});
       const call = await ledger.start(ref, callId, call => {if(call.kind!=="model" || call.parentCallId)throw new ConflictError("通用模型端口只能启动根模型调用");});
       return {callId: call.id, status: call.status};
     },
     async settleCall(ref: ExecutionRef, raw: unknown) {
       const {callId, ...settlement} = workerPortInputSchemas.settleCall.parse(raw);
+      await leases.withLease(ref,"settlement",async({task})=>{if((task.payload as {modelInput?:{kind?:string}}).modelInput?.kind==="asset.generate")throw new ConflictError("素材必须使用专用结算端口");});
       const call = await ledger.settle(ref, callId, settlement.status === "settled" ? {status:"settled", usage:settlement.usage, resultText:settlement.text} : settlement, call => {if(call.kind!=="model" || call.parentCallId)throw new ConflictError("通用模型端口只能结算根模型调用");});
       return {callId: call.id, status: call.status};
     },

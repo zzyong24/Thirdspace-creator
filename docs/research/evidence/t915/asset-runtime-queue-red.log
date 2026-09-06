@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-runtime.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts (4 tests | 1 failed) 15234ms
+   × 真实调度器对429有限重试，两次原调用只产一个素材候选 10690ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 真实调度器对429有限重试，两次原调用只产一个素材候选
+AssertionError: expected 'queued' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "queued"
+
+ ❯ vi.waitFor.timeout src/modules/execution/asset-worker-runtime.integration.test.ts:57:132
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  12:55:39
+   Duration  16.79s (transform 865ms, setup 0ms, import 1.42s, tests 15.23s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

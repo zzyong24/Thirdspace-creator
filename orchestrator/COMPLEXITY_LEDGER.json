@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "d9bb207a2f65fccc53e9cf92690e76c4404ba150dd676c915101044cbe392156",
+      "file_sha256": "a7b406a58106f9fa4f40bee3d8a4f562ddadd223b5eb61407d37d7c60316560c",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权独立 Worker 与命名 IPC。本批为已接通的对话网页运行器声明 chat.web-read，缺能力时在凭据读取前拒绝任务；保持原进程拓扑与数据库属主。实际构建/fork 的缓存与权限拒绝路径、独立复核见 chat-web-read-entry.md，完整公共入口迁移尚未验收。",
+      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "7ff5c7edb5d6101a0cf6d573cd4d62b41240be31279ac8f3d518ea9e1d3c0213",
+      "file_sha256": "bdaf523d952cb7bd04e09dd5e8f646f44ebfab0e59fd96828cf353e0d73394c7",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权独立 Worker 与命名 IPC。本批为已接通的对话网页运行器声明 chat.web-read，缺能力时在凭据读取前拒绝任务；保持原进程拓扑与数据库属主。实际构建/fork 的缓存与权限拒绝路径、独立复核见 chat-web-read-entry.md，完整公共入口迁移尚未验收。",
+      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "f3115cad10d4f5df81329b73f55d89f22bdbc50042740955d88ec6fab08c9b2d",
+      "file_sha256": "5a6199d2cf5467e4a06f71d36467671a7a2de4ded6e563492bbbffcd9f3720b0",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用 DEC-RUNTIME-055 的现有 Worker 进程，启用原字节序列化并开放严格素材命名端口；素材新写仍经事务 admission，历史回执可 settlement。未扩大模型能力声明或部署范围。",
+      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1688,6 +1688,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录现有独立Worker的二进制素材端口与真实子进程证据，不增加进程拓扑或发布范围。",
       "acceptance": "只登记本批复杂度，不代表生产素材执行或完整验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-worker-runtime.md"
+      ],
+      "file_sha256": "57e9e7ee14fc4dc6b477d0b7133072f78a7a5ea24a81e3ebdaa99204f9dad32c",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权素材Worker和私有端口的实现验证，不增加进程拓扑或发布范围。",
+      "acceptance": "不代表公共入口迁移、商业供应商或完整任务验收。"
     }
   ],
   "historical_baselines": []

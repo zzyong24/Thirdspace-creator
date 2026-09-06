@@ -1,4 +1,4 @@
-import {providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
+import {assetGenerationInputSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
 export {chatSubmittedTaskType} from "./chat-task-submission";
 import {chatWebReadCallSchema,chatWebReadRecordSchema,chatWebReadSessionSaveSchema,chatWebReadFailureSchema} from "./chat-web-read";
 export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
@@ -27,7 +27,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
-  "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
+  "resolveAssetCredential", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
   "prepareChatResearch", "settleChatResearch",
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
@@ -76,6 +76,8 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  resolveAssetCredential:providerJobReadSchema,
+  settleAssetCall:providerJobReadSchema.extend({status:z.enum(["unknown","rejected"])}).strict(),
   reserveAssetCall:emptyPortInput,
   startAssetCall:providerJobReadSchema,
   recoverAssetResult:providerJobReadSchema,
@@ -208,7 +210,7 @@ export const structuredGenerationInputSchema=z.object({
   kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
-export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
@@ -229,3 +231,5 @@ export const chatToolApprovalReceiptSchema=z.discriminatedUnion("status",[
 ]);
 export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTaskId:z.string().min(1),messageId:z.string().min(1),outcome:z.enum(["succeeded","partial"])}).strict();
 export {assetGenerationInputSchema,providerJobSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
+
+export {assetCredentialSchema,assetRuntimeOptionsSchema,assetResultReceiptSchema} from "./asset-generation";

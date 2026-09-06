@@ -46,7 +46,7 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
    const ref=executionRefSchema.parse(execution);
    return leases.withLease(ref,"admission",async scope=>{
     const {input,digest}=await bindAssetExecution(scope);
-    return ledger(scope.tx as unknown as Db).reserve(ref,{operationKey:input.operationKey,kind:"model",inputDigest:digest,reservedTokens});
+    return ledger(scope.tx as unknown as Db).reserve(ref,{operationKey:input.operationKey,kind:"model",inputDigest:digest,reservedTokens,...(scope.task.retryOfCallId?{retryOfCallId:scope.task.retryOfCallId}:{})});
    });
   },
   async start(execution:ExecutionRef,callId:string){

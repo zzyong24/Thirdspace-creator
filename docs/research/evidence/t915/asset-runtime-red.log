@@ -1,0 +1,29 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/asset-worker-run.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/asset-worker-run.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/asset-worker-run.test.ts [ src/execution/asset-worker-run.test.ts ]
+Error: Cannot find module './asset-worker-run' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/asset-worker-run.test.ts
+ ❯ src/execution/asset-worker-run.test.ts:2:1
+      1| import {it,expect,vi} from "vitest";
+      2| import {runAssetInWorker} from "./asset-worker-run";
+       | ^
+      3| const input={kind:"asset.generate" as const,mediaKind:"image" as const…
+      4| const receipt={assetId:"asset",fileId:"file",assetType:"image",name:"原…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:47:53
+   Duration  160ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

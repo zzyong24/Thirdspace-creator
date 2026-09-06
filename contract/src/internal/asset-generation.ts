@@ -10,6 +10,7 @@ const identity={provider:id,model:id,baseUrl:endpoint,serviceId:id.optional()};
 export const assetGenerationInputSchema=z.object({
  kind:z.literal("asset.generate"),operationKey:z.string().min(1).max(200),
  mediaKind:z.enum(["image","video"]),capability:z.enum(["image.generate","video.generate"]),
+ runtimeOptionsDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),
  prompt:z.string().min(1).max(100000),...identity,
  aspectRatio:z.string().min(1).max(32).optional(),durationSec:z.number().int().positive().max(3600).optional(),resolution:z.enum(["768P","2K"]).optional(),
 }).strict().superRefine((value,ctx)=>{
@@ -20,3 +21,7 @@ export const assetGenerationInputSchema=z.object({
 export const providerJobSchema=z.object({schemaVersion:z.literal(1),...identity,jobId:id}).strict();
 export const providerJobReadSchema=z.object({callId:id}).strict();
 export const providerJobRecordSchema=providerJobReadSchema.extend({job:providerJobSchema}).strict();
+
+export const assetRuntimeOptionsSchema=z.object({settings:z.record(z.string(),z.json()).optional(),apiFormat:z.string().optional(),displayModelKey:z.literal("channel-managed").optional(),credentialLifecycle:z.enum(["persistent","per_request"]).optional()}).strict();
+export const assetCredentialSchema=assetRuntimeOptionsSchema.extend({...identity,kind:z.enum(["image","video"]),token:z.string().min(1)}).strict();
+export const assetResultReceiptSchema=z.object({assetId:id,fileId:id,assetType:z.enum(["image","video"]),name:z.string().min(1),checksum:z.string().min(1),byteLength:z.number().int().positive(),committedAt:z.string().min(1)}).strict();

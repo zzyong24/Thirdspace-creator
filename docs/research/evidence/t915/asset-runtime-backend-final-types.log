@@ -1,0 +1,8 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/execution/asset-worker-runtime.integration.test.ts(55,122): error TS2322: Type '{ kind: string; mediaKind: string; capability: string; operationKey: string; prompt: string; provider: string; model: string; baseUrl: string; }' is not assignable to type '{ provider: string; model: string; baseUrl: string | null; kind: "asset.generate"; operationKey: string; mediaKind: "video" | "image"; capability: "image.generate" | "video.generate"; ... 5 more ...; runtimeOptionsDigest?: string | undefined; } | { ...; } | { ...; } | { ...; } | { ...; }'.
+  Type '{ kind: string; mediaKind: string; capability: string; operationKey: string; prompt: string; provider: string; model: string; baseUrl: string; }' is not assignable to type '{ kind: "chat.run"; operationKey: string; capability: string; userId: string; accountId: string; conversationId: string; sourceMessageId: string; system: string; messages: { [x: string]: JSONType; role: "user" | ... 2 more ... | "tool"; content: JSONType; }[]; ... 4 more ...; forcedToolSequence?: string[] | undefine...'.
+    Property 'maxOutputTokens' is missing in type '{ kind: string; mediaKind: string; capability: string; operationKey: string; prompt: string; provider: string; model: string; baseUrl: string; }' but required in type '{ kind: "model.generate"; operationKey: string; prompt: string; capability: string; maxOutputTokens: number; system?: string | undefined; }'.
+ ELIFECYCLE  Command failed with exit code 2.

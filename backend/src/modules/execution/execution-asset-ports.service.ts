@@ -1,3 +1,9 @@
+import {createHash} from "node:crypto";
+import type {RequestContext} from "@creatoros/contract";
+import {assetCredentialSchema,assetRuntimeOptionsSchema} from "@creatoros/contract/execution-worker";
+import {canonicalJson} from "../ai/canonical-json";
+import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
+import {ConflictError} from "./execution.errors";
 import {executionRefSchema,workerPortInputSchemas,type ExecutionRef,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {createExecutionAssetResultService} from "./execution-asset-result.service";
 import {createExecutionProviderJobService} from "./execution-provider-job.service";
@@ -5,12 +11,33 @@ import {createExecutionLeaseService} from "./execution-lease.service";
 import {bindAssetExecution} from "./asset-execution-binding";
 import type {Db} from "@creatoros/backend";
 /** 仅命名素材端口，身份、存储路径、格式及预留预算都由后端原任务决定。 */
-export function createExecutionAssetPorts(deps:Parameters<typeof createExecutionAssetResultService>[0]){
+export function createExecutionAssetPorts(deps:Parameters<typeof createExecutionAssetResultService>[0]&{resolveCredential?:(context:RequestContext,owner:{aiTaskId:string;executionTaskId:string})=>Promise<unknown>}){
  const results=createExecutionAssetResultService(deps),jobs=createExecutionProviderJobService(deps.db,{now:deps.now});
  const leases=createExecutionLeaseService(deps.db,{now:deps.now});
  return {
   async invoke(execution:ExecutionRef,port:WorkerPort,raw:unknown,signal?:AbortSignal):Promise<unknown>{
    const ref=executionRefSchema.parse(execution);
+   if(port==="resolveAssetCredential"){
+    const {callId}=workerPortInputSchemas.resolveAssetCredential.parse(raw);
+    const owner=await leases.withLease(ref,"admission",async scope=>{await bindAssetExecution(scope,callId);return {context:scope.context,aiTaskId:scope.task.ownerId};});
+    if(!deps.resolveCredential)throw new Error("ASSET_CREDENTIAL_UNAVAILABLE");
+    const credential=assetCredentialSchema.parse(await deps.resolveCredential(owner.context,{aiTaskId:owner.aiTaskId,executionTaskId:ref.executionTaskId}));
+    await leases.withLease(ref,"admission",async scope=>{
+     const {input}=await bindAssetExecution(scope,callId);
+     const {token:_token,provider,model,baseUrl,serviceId,kind,...rawOptions}=credential;
+     const options=assetRuntimeOptionsSchema.parse(rawOptions),digest=(value:unknown)=>`sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
+     if(provider!==input.provider || model!==input.model || baseUrl!==input.baseUrl || serviceId!==input.serviceId || kind!==input.mediaKind || digest(options)!==(input.runtimeOptionsDigest??digest({})))throw new ConflictError("素材模型配置与冻结输入不符");
+    });
+    signal?.throwIfAborted();return credential;
+   }
+   if(port==="settleAssetCall"){
+    const {callId,status}=workerPortInputSchemas.settleAssetCall.parse(raw);
+    return leases.withLease(ref,"settlement",async scope=>{
+     await bindAssetExecution(scope,callId);
+     const call=await createExecutionCallLedgerService(scope.tx as unknown as Db,{now:deps.now,budget:deps.budget}).settle(ref,callId,{status});
+     return {callId:call.id,status:call.status};
+    });
+   }
    if(port==="reserveAssetCall"){
     workerPortInputSchemas.reserveAssetCall.parse(raw);
     return leases.withLease(ref,"admission",async scope=>{
