@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-tool-authority.test.ts (13 tests | 1 failed | 12 skipped) 1157ms
+   × 两个工具逆序完成，流卡片仍按模型声明顺序恢复 139ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-tool-authority.test.ts > 两个工具逆序完成，流卡片仍按模型声明顺序恢复
+AssertionError: expected [ 'read2', 'read' ] to deeply equal [ 'read', 'read2' ]
+
+- Expected
++ Received
+
+  [
+-   "read",
+    "read2",
++   "read",
+  ]
+
+ ❯ src/integration/chat-tool-authority.test.ts:110:112
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  21:29:16
+   Duration  2.55s (transform 721ms, setup 0ms, import 1.25s, tests 1.16s, environment 0ms)
+

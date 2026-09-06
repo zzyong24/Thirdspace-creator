@@ -1,3 +1,4 @@
+import { createChatToolStreamProjection } from "./chat-tool-stream-projection.service";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { and, asc, eq, aiTasks, executionCalls, type Db } from "@creatoros/backend";
@@ -61,6 +62,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   if(decision.status!=="not-applicable")return agenticToolOutcomeSchema.parse({status:"blocked",summary:decision.status==="denied"?"本次操作已被拒绝":"本次操作需要恢复授权",evidence:[],data:decision.status==="denied"?{denied:true}:{recoveryState:"chat_authorization_required"},error:{code:"permission",retryable:false,recovery:"恢复工具权限后继续原任务"},continuation:null,sideEffect:"none"});
   executionScope.signal.throwIfAborted();return tool.execute!(context,input,executionScope);
  }} satisfies AgenticBackendTool]));
+ const project=createChatToolStreamProjection(db,deps);
  const tools=createExecutionAgenticToolPorts(db,{...deps,tools:guardedTools});
  async function settle(ref:ExecutionRef,raw:unknown){
   const request=workerPortInputSchemas.settleAgenticTool.parse(raw);
@@ -76,5 +78,9 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   if(decision.status!=="denied")throw new ConflictError("宿主未确认用户拒绝");
   return tools.settle(ref,request);
  }
- return {...tools,settle,validateTask,check};
+ return {...tools,validateTask,check,
+  async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
+  async execute(...args:Parameters<typeof tools.execute>){const result=await tools.execute(...args);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
+  async settle(ref:ExecutionRef,raw:unknown){const result=await settle(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
+ };
 }

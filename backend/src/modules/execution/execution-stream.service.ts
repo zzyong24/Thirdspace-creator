@@ -14,7 +14,7 @@ import {
 } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
-  appendExecutionStreamSchema,
+  chatWorkerInputSchema, appendExecutionStreamSchema,
   readExecutionStreamSchema,
   type ExecutionRef,
 } from "@creatoros/contract/execution-worker";
@@ -43,6 +43,9 @@ export function createExecutionStreamService(
           );
         if (!call || !["model", "tool"].includes(call.kind))
           throw new ConflictError("流内容没有所属调用");
+        if(chatWorkerInputSchema.safeParse((task.payload as Record<string,unknown>).modelInput).success &&
+          (call.kind!=="model" || input.chunks.some(chunk=>!["text-start","text-delta","text-end","reasoning-start","reasoning-delta","reasoning-end","source-url","source-document","file","reasoning-file"].includes(chunk.type))))
+          throw new ConflictError("聊天Worker只能追加模型展示内容，工具卡由后端回执生成");
         const existing = await tx
           .select()
           .from(executionStreamEvents)

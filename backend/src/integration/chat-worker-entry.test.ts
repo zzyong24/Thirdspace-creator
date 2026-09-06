@@ -88,6 +88,11 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
    const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
    expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
    expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
+   if(usesTool){
+    const results=streamEvents.filter(event=>["tool-output-available","tool-output-denied","tool-input-error"].includes(String(event.chunk.type)));
+    expect(results).toHaveLength(["revoked","login"].includes(mode)?2:1);
+    if(["denied","late-denied"].includes(mode))expect(results[0]!.chunk.type).toBe("tool-output-denied");
+   }
    const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:"最终回复"});
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
    expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);

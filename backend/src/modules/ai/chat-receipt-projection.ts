@@ -73,23 +73,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
             const part = pending.get(receipt.toolCallId);
             if (!part || part.type !== `tool-${receipt.toolName}`)
                 throw new ConflictError("工具回执未关联模型调用");
-            const output = agenticToolOutcomeSchema.parse(receipt.output);
-            if (output.sideEffect === "unknown" || output.error?.code === "unknown_commit")
-                throw new ConflictError("未知工具结果不能完成聊天");
-            if (invalidInputs.has(receipt.toolCallId)) {
-                if(output.status!=="error" || output.sideEffect!=="none" || output.error?.code!=="invalid_input")throw new ConflictError("坏参数缺少已确认的参数错误回执");
-                // SEMANTIC_BOUNDARY_ALLOW: 只投影已确认未执行的协议错误，不执行工具或选择创作内容。
-                part.state="output-error";part.rawInput=part.input!;delete part.input;part.errorText=output.summary;
-                pending.delete(receipt.toolCallId);continue;
-            }
-            const denied = output.sideEffect === "none" && output.error?.code === "permission" && object(output.data).denied === true;
-            part.state = denied ? "output-denied" : "output-available";
-            if (denied)
-                part.approval = { id: `receipt:${call.id}`, approved: false, reason: output.error!.recovery };
-            else {
-                part.output = z.json().parse(output.data ?? output);
-                hasOutput = true;
-            }
+            hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId)) || hasOutput;
             pending.delete(receipt.toolCallId);
         }
         else
@@ -100,4 +84,26 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
     if (!hasOutput)
         throw new ConflictError("聊天没有可保存产物");
     return { parts, content: parts.filter(part => part.type === "text").map(part => part.text).join(""), finishReason, outcome: finishReason === "stop" ? "succeeded" as const : "partial" as const };
+}
+
+/** 已确认工具结果到UI part的唯一规则；流事件和最终消息共用。 */
+export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:unknown,invalidInput:boolean){
+    const output = agenticToolOutcomeSchema.parse(raw);
+    if (output.sideEffect === "unknown" || output.error?.code === "unknown_commit")
+        throw new ConflictError("未知工具结果不能完成聊天");
+    if (invalidInput) {
+        if(output.status!=="error" || output.sideEffect!=="none" || output.error?.code!=="invalid_input")throw new ConflictError("坏参数缺少已确认的参数错误回执");
+        // SEMANTIC_BOUNDARY_ALLOW: 只投影已确认未执行的协议错误，不执行工具或选择创作内容。
+        part.state="output-error";part.rawInput=part.input!;delete part.input;part.errorText=output.summary;
+        return false;
+    }
+    const denied = output.sideEffect === "none" && output.error?.code === "permission" && object(output.data).denied === true;
+    part.state = denied ? "output-denied" : "output-available";
+    if (denied)
+        part.approval = { id: `receipt:${callId}`, approved: false, reason: output.error!.recovery };
+    else {
+        part.output = z.json().parse(output.data ?? output);
+        return true;
+    }
+    return false;
 }

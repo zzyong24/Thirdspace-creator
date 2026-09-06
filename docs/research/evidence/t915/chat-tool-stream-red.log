@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-worker-entry.test.ts (14 tests | 1 failed | 13 skipped) 1657ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：tool 518ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：tool
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/integration/chat-worker-entry.test.ts:93:21
+     91|    if(usesTool){
+     92|     const results=streamEvents.filter(event=>["tool-output-available",…
+     93|     expect(results).toHaveLength(["revoked","login"].includes(mode)?2:…
+       |                     ^
+     94|     if(["denied","late-denied"].includes(mode))expect(results[0]!.chun…
+     95|    }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  21:22:46
+   Duration  3.18s (transform 854ms, setup 0ms, import 1.40s, tests 1.66s, environment 0ms)
+
