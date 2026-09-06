@@ -13,7 +13,7 @@
 // No `server-only` import (so the adapter + its integration test load under
 // vitest). Path-traversal + token signing live in ./blob-security (pure, unit-
 // tested separately).
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
@@ -27,6 +27,17 @@ import { accountKeyPrefix } from "./object-storage";
 import { safeJoin, signBlobToken } from "./blob-security";
 import { extForMime } from "../../lib/mime-ext";
 import { copyFileCopyOnWrite } from "../../lib/copy-file-copy-on-write";
+
+// 同目录临时文件完整写入并 sync 后才发布，避免同键重试/中断截断已有完整对象。
+async function publishFile(filePath: string, value: Uint8Array | string) {
+  const temporary = `${filePath}.${randomUUID()}.tmp`;
+  try {
+    await fs.writeFile(temporary, value, { flag: "wx" });
+    const handle = await fs.open(temporary, "r+");
+    try { await handle.sync(); } finally { await handle.close(); }
+    await fs.rename(temporary, filePath);
+  } finally { await fs.rm(temporary, { force: true }); }
+}
 
 export interface LocalFsObjectStorageConfig {
   // The resolved absolute media root (the service resolves `~`/default first).
@@ -188,7 +199,7 @@ export function createLocalFsObjectStorage(
       // leave them, plus a refreshed sidecar so headObject echoes the real MIME/dims.
       const absKey = safeJoin(cfg.rootPath, storageKey);
       await fs.mkdir(path.dirname(absKey), { recursive: true });
-      await fs.writeFile(absKey, bytes);
+      await publishFile(absKey, bytes);
       // [T-296] 字节已落盘 → 对 media 跑 ffprobe 探真尺寸/时长(缺 ffprobe/非媒体 → null,不填假占位)。
       let probed: ProbedMedia = EMPTY_PROBE;
       if (
@@ -206,7 +217,7 @@ export function createLocalFsObjectStorage(
         height: probed.height,
         durationMs: probed.durationMs,
       };
-      await fs.writeFile(sidecarPath(absKey), JSON.stringify(meta), "utf8");
+      await publishFile(sidecarPath(absKey), JSON.stringify(meta));
     },
 
     async getObject(storageKey) {

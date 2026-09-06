@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/assets/pending-document.test.ts src/modules/assets/localfs-atomic-write.test.ts src/modules/assets/localfs-object-storage.integration.test.ts src/modules/assets/assets.service.test.ts src/modules/assets/assets-current-source.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  5 passed (5)
+      Tests  66 passed (66)
+   Start at  07:43:23
+   Duration  33.95s (transform 4.35s, setup 0ms, import 7.97s, tests 74.05s, environment 0ms)
+

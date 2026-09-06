@@ -1,4 +1,5 @@
 import * as executionStreamSchema from "./schema/execution-stream";
+import * as pendingDocumentCommitsSchema from "./schema/pending-document-commits";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle, type PgliteDatabase } from "drizzle-orm/pglite";
 import * as projectsSchema from "./schema/projects";
@@ -65,6 +66,7 @@ const MIGRATIONS_FOLDER = resolve(
 // Shared DDL/schema union applied at every createDb(). Each module's tables join
 // here as they land (foundation §1: one pglite store, shared db factory).
 const schema = {
+  ...pendingDocumentCommitsSchema,
   ...executionStreamSchema,
   ...projectsSchema,
   ...identitySchema,

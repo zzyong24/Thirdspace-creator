@@ -11,6 +11,7 @@ export {
   type AssetUploadDto,
   type ObjectStorageForCtx,
 } from "./assets.service";
+export { createPendingDocumentService, type PendingDocumentInput, type PendingDocumentReceipt } from "./pending-document.service";
 
 export {
   createAssetRepository,
