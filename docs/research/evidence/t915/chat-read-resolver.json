@@ -1,0 +1,68 @@
+{
+  "task": "T-915",
+  "scope": "冻结短读取解析器与真实服务集成；未接正式聊天路由",
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-red.log",
+      "sha256": "210bd108290832233d650c5970d24ebadd6a7c8439a1705de998332efcd13a96",
+      "bytes": 1317
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-final.log",
+      "sha256": "12773ca27f1b4f589c327b16af626b7f4c1109fdd5b1fba3064edb72c2026bce",
+      "bytes": 64254
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-types-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-frontend-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-integration-final.log",
+      "sha256": "4056cf8a89e426fb0aa0c29445002606e888a6c4e93e478e828cdb7a49bb559a",
+      "bytes": 1696
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-governance.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-resolver-types-freeze.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    }
+  ],
+  "testsPassed": 381,
+  "globalReconcile": {
+    "status": "FAIL",
+    "errors": 211,
+    "warnings": 1,
+    "existingDebtTask": "T-916"
+  }
+}

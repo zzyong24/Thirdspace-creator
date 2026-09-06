@@ -1,3 +1,5 @@
+import {createChatReadToolBindings} from "./chat-read-tool-bindings";
+import {resolveChatGuideSnapshot} from "./chat-guide-snapshot";
 import { createChatModelStream, resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import {
   type UIMessage,
@@ -1016,8 +1018,6 @@ async function assembleChat(
   // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
   const {
     getEffectiveTemplate,
-    getEffectiveSkill,
-    CREATOROS_GUIDE_VERIFIED_AT,
     getEffectiveTools,
     getTemplate,
     getTools,
@@ -1035,33 +1035,7 @@ async function assembleChat(
   // [T-770] 在当前 ALS scope 内一次性校验并冻结代码随版的产品说明。正文只留在服务端闭包，
   // 不拼进 system；模型真正调用 creatoros.guide 时才进入 tool result。批准 surface 缺失/
   // 错版本/账号 overlay 一律让本轮显式失败，不等工具调用后再用模型记忆兜底。
-  const creatorOsGuideSnapshot =
-    hasEffectiveScope &&
-    (chatContext.surface === "topics" || chatContext.surface === "project")
-      ? (() => {
-          const guide = getEffectiveSkill("creatoros.guide");
-          if (
-            guide.baseVersion !== "v1" ||
-            guide.overlayRevision !== null ||
-            guide.overlayVersion !== null ||
-            guide.effective.methodSystem.trim().length === 0
-          ) {
-            throw new Error(
-              "[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide@v1 不可用",
-            );
-          }
-          return {
-            skillId: "creatoros.guide" as const,
-            version: "v1" as const,
-            verifiedAt: CREATOROS_GUIDE_VERIFIED_AT,
-            guide: guide.effective.methodSystem,
-            limitations: [
-              "资料未确认、可能变化或尚未交付的能力不得当成当前事实",
-              "不得编造指标、用户规模、发布时间、平台支持或商业成绩",
-            ],
-          };
-        })()
-      : null;
+  const creatorOsGuideSnapshot = await resolveChatGuideSnapshot(chatContext.surface);
 
   // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
   // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、
@@ -2460,111 +2434,7 @@ async function assembleChat(
         projectId: chatContext.projectId,
       });
     },
-    // 只读 context 工具 —— execute 直接调注入的 user-scoped 读端口(不跑模型、不产候选、不写实体)。
-    // 端口未装配(contextReaders 缺省)→ 回空数组(诚实降级,绝不塞假数据),模型据此如实作答。
-    listProjects: async ({ limit, offset }) => {
-      if (!deps.contextReaders) return { rows: [], total: 0 };
-      return deps.contextReaders.listProjects(ctx, { limit, offset });
-    },
-    searchProjects: async (opts) => {
-      if (!deps.contextReaders?.searchProjects) return { rows: [], total: 0 };
-      return deps.contextReaders.searchProjects(ctx, opts);
-    },
-    listComments: async ({ limit, offset }) => {
-      if (!deps.contextReaders) return { rows: [], total: 0 };
-      return deps.contextReaders.listComments(ctx, { limit, offset });
-    },
-    searchKnowledge: async ({ query, limit }) => {
-      if (!deps.contextReaders) return [];
-      return deps.contextReaders.searchKnowledge(ctx, { query, limit });
-    },
-    searchMaterials: async ({ query, limit }) => {
-      if (!deps.contextReaders) return [];
-      return deps.contextReaders.searchMaterials(ctx, { query, limit });
-    },
-    // [T-099b] 详情类 context 工具(切片二)—— execute 直接调注入的 user-scoped 详情读端口。
-    // 端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(found:false / null),
-    // 绝不塞假数据。全部按 ctx.userId 收窄(读端口内部据 ctx 收窄,读不到 → null/空)。
-    getProjectDetail: async ({ projectId }) => {
-      if (!deps.contextReaders?.getProjectDetail) return null;
-      return deps.contextReaders.getProjectDetail(ctx, { projectId });
-    },
-    getProjectLifecycle: async ({ projectId }) => {
-      if (!deps.contextReaders?.getProjectLifecycle) return null;
-      return deps.contextReaders.getProjectLifecycle(ctx, { projectId });
-    },
-    getReviewReport: async ({ projectId, reportId }) => {
-      if (!deps.contextReaders?.getReviewReport) return null;
-      return deps.contextReaders.getReviewReport(ctx, { projectId, reportId });
-    },
-    getPositioningDetail: async () => {
-      if (!deps.contextReaders?.getPositioningDetail) {
-        return {
-          profile: null,
-          currentStatement: null,
-          statementCount: null,
-          accounts: [],
-        };
-      }
-      return deps.contextReaders.getPositioningDetail(ctx);
-    },
-    getKnowledgeDetail: async ({ id }) => {
-      if (!deps.contextReaders?.getKnowledgeDetail) return null;
-      return deps.contextReaders.getKnowledgeDetail(ctx, { id });
-    },
-    // [T-099c] 全文类 context 工具(切片三)—— execute 调注入的 user-scoped 全文读端口。
-    // 端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(found:false),
-    // 绝不塞假数据。窗口截断(§3 全文档预算)由工具 execute 侧强制,读端口只回原始全文。
-    listProjectArtifacts: async ({ projectId }) => {
-      if (!deps.contextReaders?.listProjectArtifacts) return null;
-      return deps.contextReaders.listProjectArtifacts(ctx, { projectId });
-    },
-    getArtifactText: async ({ projectId, artifactType }) => {
-      if (!deps.contextReaders?.getArtifactText) return null;
-      return deps.contextReaders.getArtifactText(ctx, { projectId, artifactType });
-    },
-    getKnowledgeText: async ({ id }) => {
-      if (!deps.contextReaders?.getKnowledgeText) return null;
-      return deps.contextReaders.getKnowledgeText(ctx, { id });
-    },
-    // [T-099 切片四/五] 指标/发布/经验/候选/校准类 context 工具 —— execute 调注入的 user-scoped
-    // 清单读端口。端口未装配(contextReaders 缺省 / 具体方法缺省)→ 工具侧诚实空态(空数组 /
-    // rows 空 / rubric:null),绝不塞假数据。全部按 ctx.userId 收窄(读端口内部据 ctx 收窄)。
-    listPublications: async ({ limit, offset, view }) => {
-      if (!deps.contextReaders?.listPublications) {
-        return { rows: [], total: 0 };
-      }
-      return deps.contextReaders.listPublications(ctx, { limit, offset, view });
-    },
-    getMetrics: async ({ projectId, limit }) => {
-      if (!deps.contextReaders?.getMetrics) {
-        return { subject: null, rows: [], retention: [] };
-      }
-      return deps.contextReaders.getMetrics(ctx, { projectId, limit });
-    },
-    listLearnings: async ({ query, learningType, status, limit }) => {
-      if (!deps.contextReaders?.listLearnings) {
-        return { rows: [], total: 0 };
-      }
-      return deps.contextReaders.listLearnings(ctx, {
-        query,
-        learningType,
-        status,
-        limit,
-      });
-    },
-    listCandidates: async ({ limit, offset }) => {
-      if (!deps.contextReaders?.listCandidates) {
-        return { rows: [], total: 0 };
-      }
-      return deps.contextReaders.listCandidates(ctx, { limit, offset });
-    },
-    getPredictions: async ({ limit }) => {
-      if (!deps.contextReaders?.getPredictions) {
-        return { rubric: null, rows: [], total: 0 };
-      }
-      return deps.contextReaders.getPredictions(ctx, { limit });
-    },
+    ...createChatReadToolBindings(ctx,deps.contextReaders),
   };
   // [T-439] 装配层一律用**原名**(内部真值:错误信封登记 / 白名单 / 深链 functionKey / 审计日志
   //   都按原名)。合规化只在发给模型那一刻做,见下方 streamText 入参。

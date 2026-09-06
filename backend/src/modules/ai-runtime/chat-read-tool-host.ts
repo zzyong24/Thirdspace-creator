@@ -1,3 +1,4 @@
+import {isChatReadToolName} from "./chat-read-tool-names";
 import { z } from "zod";
 import type { ToolSet } from "ai";
 import type { RequestContext } from "@creatoros/contract";
@@ -8,13 +9,7 @@ import { CHAT_TOOL_ERROR_ENVELOPES, getChatToolApprovalDecider, getChatToolNativ
 import { classifyLlmError } from "./llm/retry-policy";
 
 // 经实际调用链审计的领域只读端口；none 不能推导为可留在宿主的短操作。
-const READ_TOOLS = new Set([
-  "creatoros.guide", "context.projects", "context.projects.search", "context.comments",
-  "context.knowledge", "context.materials", "context.project.detail", "context.project.lifecycle",
-  "context.review.report", "context.positioning.detail", "context.knowledge.detail", "context.artifacts",
-  "context.artifact.text", "context.knowledge.text", "context.publications", "context.metrics",
-  "context.learnings", "context.candidates", "context.predictions",
-]);
+
 type Resolve = (context: RequestContext, execution: ExecutionRef, signal?: AbortSignal) => Promise<ToolSet>;
 const outcome = (status: "error" | "blocked", code: "transient" | "no_evidence" | "permission" | "cancelled", retryable: boolean, summary: string) => agenticToolOutcomeSchema.parse({status, summary, evidence: [], error: {code, retryable, recovery: summary}, continuation: null, sideEffect: "none"});
 
@@ -25,7 +20,7 @@ const outcome = (status: "error" | "blocked", code: "transient" | "no_evidence" 
  */
 export async function createChatReadToolHost(prototypes: ToolSet, resolve: Resolve): Promise<Record<string, ChatBackendTool>> {
   const prepared = await prepareChatToolDefinitions(prototypes);
-  for (const definition of prepared.definitions) if (!READ_TOOLS.has(definition.name) || definition.effect !== "none") throw new Error(`工具不是已审计的宿主只读操作：${definition.name}`);
+  for (const definition of prepared.definitions) if (!isChatReadToolName(definition.name) || definition.effect !== "none") throw new Error(`工具不是已审计的宿主只读操作：${definition.name}`);
   return Object.fromEntries(prepared.definitions.map(definition => {
     const parameters = prepared.parameters[definition.name]!.parameters;
     const failure = (...args: Parameters<typeof outcome>) => {

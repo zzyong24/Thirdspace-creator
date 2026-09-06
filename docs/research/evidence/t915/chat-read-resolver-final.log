@@ -1,0 +1,748 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-read-tool-host.test.ts > 每次使用真实ctx重建，不执行原型闭包，保留原始卡片与内容
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-read-tool-host.test.ts > 读取瞬断是明确无副作用失败，不抛成结果未知，也不自动执行第二次
+[chat-tool] name=context.projects error durationMs=1 class=Error reason=http_503 status=503 message="network unavailable"
+
+stdout | src/modules/ai-runtime/chat-read-tool-host.test.ts > 取消和非法参数不执行，业务错误信封不当成功空结果
+[chat-tool] name=context.projects ok durationMs=0
+
+·····stdout | src/modules/ai-runtime/chat-tools.test.ts > buildChatTools — 白名单过滤(tools 挂载) > [T-770] creatoros.guide 只读返回当前 snapshot 中的版本化产品说明
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > buildChatTools — 白名单过滤(tools 挂载) > [T-770] creatoros.guide 缺失或错版本时显式失败，不用模型记忆兜底
+[chat-tool] name=creatoros.guide error durationMs=0 class=Error reason=unknown message="[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide@v1 不可用"
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > topic.generate.execute 调注入的 generateTopics,返回候选列表(kind=topic.candidates)
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > topic.generate.execute basis 缺省 positioning
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > topic.enrich.execute 调注入的 enrichTopic,返回选题卡候选(kind=topic.card)
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-473] 同一回合内相同选题补全调用幂等，只执行一次 runner
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-473] 同一回合内相同选题补全调用幂等，只执行一次 runner
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-266] topic.enrich 锚定某候选(selection)→ result.candidateId 透传回(前端刷新后仍能 patch)
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > topic.enrich 返回 null(模型没产可解析卡)→ result.card 为 null(诚实,不假候选)
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-055c] script.hooks execute → deps.generateHooks,返回 kind=script.hooks 候选组
+[chat-tool] name=script.hooks ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-716] 稿面已绑定锚点时模型只需给 replacementText，技术 ID 强制取可信上下文
+[chat-tool] name=script.patch ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-819] 普通项目对话先读当前稿，再用稳定 sectionRef 产同一种局部候选
+[chat-tool] name=script.patch ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-812/T-819] 相同建议稿返回明确 no-op，不能冒充已改
+[chat-tool] name=script.patch ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > calibration.diagnose.execute 调注入的 diagnoseContent,返回诊断候选(kind=calibration.diagnosis)
+[chat-tool] name=calibration.diagnose ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > calibration.diagnose 返回 null(没产可解析诊断)→ diagnosis 为 null(诚实)
+[chat-tool] name=calibration.diagnose ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > review.analyze.execute 调注入的 analyzeReview,返回经验候选(kind=review.learnings)
+[chat-tool] name=review.analyze ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-224 诚实门] review.analyze:analyzeReview 无真逐字稿 → 空 items + 非空 error(不产经验卡)
+[chat-tool] name=review.analyze ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-062a] learning.capture 可挂 + execute 纯回显候选(kind=learning.capture,模型填参、不跑二次 LLM)
+[chat-tool] name=learning.capture ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-077b] brief.fill 可挂 + execute 回显建议(清洗空字段)+ 读现状 current(不写库)
+[chat-tool] name=brief.fill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-077b] brief.fill:现状读端口回 null(无项目上下文)→ current=null(诚实,不编现状)
+[chat-tool] name=brief.fill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > positioning.generate.execute 调注入的 generatePositioning,返回定位候选(kind=positioning.suggestion)
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-652] positioning.generate 回传前采候选来源，供原子确认门校验
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-652] 前采生成以服务端最新会话为准，不把对话里的旧版本做成必然冲突的候选
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 工具 execute — 复用 runner 产候选(非实体) > [T-707] 未答完六问且未选择方向时也能直接生成可采纳候选
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084b] material.screenshot 工具 — 自动化截图 > execute 调注入的 captureScreenshot,返回落库 asset + sourceUrl(kind=material.screenshot)
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084b] material.screenshot 工具 — 自动化截图 > 截图抛错(登录墙/打不开)→ 不抛,asset=null + error 人话(诚实,不假截到图)
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084b] material.screenshot 工具 — 自动化截图 > 空 URL → 诚实报错,不调截图端口
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-217c] web.read 工具 — 带登录态读网页正文 > execute 调注入的 readWeb,读到正文 → asset + excerpt(kind=web.read,needLogin/error 为 null)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-217c] web.read 工具 — 带登录态读网页正文 > 无会话/过期(needLogin)→ 不落库,返回 needLogin.domain(编导引导去保管库登录)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-217c] web.read 工具 — 带登录态读网页正文 > 读取抛错(打不开/HTTP/抽不出正文)→ 不抛,asset=null + error 人话
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-217c] web.read 工具 — 带登录态读网页正文 > 空 URL → 诚实报错,不调读取端口
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > execute 调注入的 dispatchGenerateAsset,返回 taskId + queued(kind=material.generate)
+[chat-tool] name=material.generate ok durationMs=0 taskId=task-gen-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > [T-816] 项目配图重读当前段并把版本、hash、原文冻结进 prompt
+[chat-tool] name=material.generate ok durationMs=0 taskId=task-gen-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > [T-816] 精确文字数字信息卡拒绝自由文生图
+[chat-tool] name=material.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > kind=video 透传(视频异步不阻塞);无 style 时不传该键
+[chat-tool] name=material.generate ok durationMs=0 taskId=task-gen-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > 可信快捷按钮固定素材类型，模型入参不能把图片改成视频
+[chat-tool] name=material.generate ok durationMs=0 taskId=task-gen-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > 空 prompt → 诚实报错,不 dispatch
+[chat-tool] name=material.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-084c] material.generate 工具 — AI 生成素材对话化 > dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级)
+[chat-tool] name=material.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) > execute 调注入的 dispatchPublishPackage,topic trim 透传,返回 taskId + projectId(kind=publish.package)
+[chat-tool] name=publish.package ok durationMs=0 taskId=task-pkg-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) > 空 topic → 缺省不传(由端口从定位/项目兜底)
+[chat-tool] name=publish.package ok durationMs=0 taskId=task-pkg-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-350a] publish.package 工具 — 发布物料生成(单平台抖音,异步 dispatch) > 端口抛错 → execute 接住转 error 非 null(卡渲诚实错误态,不裸抛)
+[chat-tool] name=publish.package ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-703] video.edit.render 工具 — 只产可确认剪辑候选 > 把有界修改参数透传给预演端口，不在工具执行阶段写库或启动渲染
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-703] video.edit.render 工具 — 只产可确认剪辑候选 > 端口未接入时返回可见错误候选，不伪装修改成功
+[chat-tool] name=video.edit.render ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-385] project.transcribe 工具 — 对话内一键抓逐字稿 > execute 调注入的 dispatchProjectTranscribe,projectId trim 透传,返回 taskId(kind=project.transcribe)
+[chat-tool] name=project.transcribe ok durationMs=0 taskId=task-trans-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-385] project.transcribe 工具 — 对话内一键抓逐字稿 > 空 projectId → 缺省不传(由 chat-runner 端口从 chatContext 兜底)
+[chat-tool] name=project.transcribe ok durationMs=0 taskId=task-trans-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-385] project.transcribe 工具 — 对话内一键抓逐字稿 > 端口抛错(如无抖音锚 ValidationError)→ execute 接住转 error 非 null(诚实错误态,不裸抛)
+[chat-tool] name=project.transcribe ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-730] planning.thesis 可选论点骨架 > execute 只分派候选任务，并规范化 projectId/topic
+[chat-tool] name=planning.thesis ok durationMs=0 taskId=task-thesis-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-271] cover.generate 工具 — 制作封面链对话内真生成 > execute 调注入的 dispatchGenerateCover,返回 taskId + projectId(kind=cover.generate,异步 dispatch)
+[chat-tool] name=cover.generate ok durationMs=0 taskId=task-cover-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-271] cover.generate 工具 — 制作封面链对话内真生成 > 无参(稿面右栏对话)→ projectId/topic 缺省不传,由 chat-runner 端口从 chatContext 兜底
+[chat-tool] name=cover.generate ok durationMs=0 taskId=task-cover-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-271] cover.generate 工具 — 制作封面链对话内真生成 > referenceAssetId trim 后透传给 dispatchGenerateCover(以图生图风格参考)
+[chat-tool] name=cover.generate ok durationMs=0 taskId=task-cover-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-271] cover.generate 工具 — 制作封面链对话内真生成 > 端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装已生成封面)
+[chat-tool] name=cover.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-271] cover.generate 工具 — 制作封面链对话内真生成 > dispatch 抛错(端口未接入)→ 不抛,taskId=null + error(诚实降级,不裸机器码)
+[chat-tool] name=cover.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-523] intelligence.douyin.share 工具 — 持久建档与显式转写 > archive_and_transcribe 只转成显式 transcribe=true，并返回父任务定位字段
+[chat-tool] name=intelligence.douyin.share ok durationMs=0 taskId=share-task-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-523] intelligence.douyin.share 工具 — 持久建档与显式转写 > 普通 archive 恒传 transcribe=false；空分享不创建任务
+[chat-tool] name=intelligence.douyin.share ok durationMs=0 taskId=share-task-2
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-523] intelligence.douyin.share 工具 — 持久建档与显式转写 > 普通 archive 恒传 transcribe=false；空分享不创建任务
+[chat-tool] name=intelligence.douyin.share ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > execute 调注入的 dispatchScriptDraft,返回 taskId + projectId(kind=script.draft,异步 dispatch 非 sections)
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-draft-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-791] generate 把本轮指令和多份受信资料按选择顺序完整冻结后 dispatch
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-draft-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-791] 多来源任一引用失效或截断时整次拒绝，不用剩余资料继续生成
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > 端口回 error(无项目上下文)→ 工具透传 error(诚实,不假装写好)
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > dispatch 抛错 → 不抛,taskId=null + error(诚实降级,不裸机器码)
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] verbatim 只传 sourceRef，由服务端恢复完整原文/hash 后 dispatch，绝不塞 extraBrief 摘要
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-draft-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-verbatim
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 精确锚点按包含边界切片；未知引用、重复锚点和截断附件都 fail-closed
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 专用 AI 语义门决定是否授权及正文边界，工具只按返回锚点恢复原字符
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-semantic-verbatim
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline 同步跑) > [T-727] 专用 AI 语义门决定是否授权及正文边界，工具只按返回锚点恢复原字符
+[chat-tool] name=script.draft ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.projects.execute 调 listProjects,返回真数据(kind=context.projects)
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > [T-058②] context.projects limit 缺省 20、封顶 50,offset 兜 0
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > [T-058②] context.projects limit 缺省 20、封顶 50,offset 兜 0
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > [T-058②] context.projects limit 缺省 20、封顶 50,offset 兜 0
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > [T-058③] context.comments.execute 调 listComments,带 total/hasMore
+[chat-tool] name=context.comments ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.knowledge.execute 调 searchKnowledge(query 缺省空串)
+[chat-tool] name=context.knowledge ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.knowledge.execute 调 searchKnowledge(query 缺省空串)
+[chat-tool] name=context.knowledge ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.materials.execute 调 searchMaterials(query 缺省空串)
+[chat-tool] name=context.materials ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.materials 带 query 空命中 → note 注记「仅按标题匹配,没搜到≠库空」
+[chat-tool] name=context.materials ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context.materials 带 query 空命中 → note 注记「仅按标题匹配,没搜到≠库空」
+[chat-tool] name=context.materials ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > 只读 context 工具 execute — 拉真数据(纯读、非候选) > context 工具返回空(端口无数据)→ items 为空数组(诚实,不塞假数据)
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 > 绑定当前项目后 lifecycle 忽略模型伪造的 projectId，并返回分区错误真相
+[chat-tool] name=context.project.lifecycle ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 > 历史项目检索透传真实排序条件，并默认排除绑定项目
+[chat-tool] name=context.projects.search ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-691] 项目生命周期 / 历史项目 / 审核报告只读工具 > 审核报告按可信绑定项目读取，指定 reportId 不被吞掉
+[chat-tool] name=context.review.report ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > context.project.detail.execute 调 getProjectDetail 拼全档(found + project 直渲字段)
+[chat-tool] name=context.project.detail ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > context.project.detail.execute 空 projectId → found:false(不调端口,诚实空态)
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > [T-642] context.project.detail 有可信绑定 → 可省略 id，模型伪造 id 也不能改绑
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > [T-642] context.project.detail 有可信绑定 → 可省略 id，模型伪造 id 也不能改绑
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > context.positioning.detail.execute 调 getPositioningDetail(无入参,全 facets/rules/账号画像)
+[chat-tool] name=context.positioning.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > context.knowledge.detail.execute 调 getKnowledgeDetail,长正文走详情档预算(≤200+totalChars+指针)
+[chat-tool] name=context.knowledge.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > context.knowledge.detail.execute 读不到 → found:false + item:null(诚实空态)
+[chat-tool] name=context.knowledge.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > 详情端口未装配(deps 缺省)→ 工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > 详情端口未装配(deps 缺省)→ 工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.positioning.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099b] 详情类 context 工具 execute — 单实体全档 + 长文本截断 + 空态 > 详情端口未装配(deps 缺省)→ 工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.knowledge.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifacts.execute 调 listProjectArtifacts,返回产物清单(kind + found + items)
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > [T-642] 全文类工具复用可信绑定 projectId，无需先查项目库
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > [T-642] 全文类工具复用可信绑定 projectId，无需先查项目库
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifacts.execute 空 projectId → found:false(不调端口,诚实空态)
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifact.text.execute 调 getArtifactText,返回窗口(text/offset/totalChars/hasMore)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > [T-816] context.artifact.text 透出 currentVersion 身份、hash 与稳定段落引用
+[chat-tool] name=context.artifact.text ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > [T-405] context.artifact.text:读不到该 type → found:false 且带 availableTypes 自纠清单
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifact.text.execute:超长正文 maxChars 强制封顶 8000(execute 侧,非君子协定)
+[chat-tool] name=context.artifact.text ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifact.text.execute:offset 翻窗读到末尾 → hasMore:false
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifact.text.execute:缺 artifactType / 读不到 → found:false + 空窗口(诚实空态)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.artifact.text.execute:缺 artifactType / 读不到 → found:false + 空窗口(诚实空态)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.knowledge.text.execute 调 getKnowledgeText,返回窗口 + 元数据(title/knowledgeType)
+[chat-tool] name=context.knowledge.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > context.knowledge.text.execute:读不到 → found:false + 空窗口(诚实空态)
+[chat-tool] name=context.knowledge.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > 全文端口未装配(deps 缺省)→ 三工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > 全文端口未装配(deps 缺省)→ 三工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099c] 全文类 context 工具 execute — 产物清单 + 正文窗口 + 8000 封顶 + 空态 > 全文端口未装配(deps 缺省)→ 三工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.knowledge.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片四] context.publications.execute 调 listPublications,带 total/offset/hasMore
+[chat-tool] name=context.publications ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [T-400] 最新发布作品的 coverAssetId 可原样作为 cover.generate.referenceAssetId
+[chat-tool] name=context.publications ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [T-400] 最新发布作品的 coverAssetId 可原样作为 cover.generate.referenceAssetId
+[chat-tool] name=cover.generate ok durationMs=0 taskId=task-cover-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [T-779] 封面参考候选只保留真实已发布、有发布时间且有封面的作品，并按发布时间倒序
+[chat-tool] name=context.publications ok durationMs=8
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片四] context.publications limit 封顶 50、offset 兜 0
+[chat-tool] name=context.publications ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片四] context.metrics.execute 给 projectId → 单作品快照(subject + rows + 留存点)
+[chat-tool] name=context.metrics ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片四] context.metrics.execute 不给 projectId → 账号级(projectId=undefined)
+[chat-tool] name=context.metrics ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [T-642] context.metrics 已绑定项目 → 省略或伪造 id 都只读绑定作品
+[chat-tool] name=context.metrics ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [T-642] context.metrics 已绑定项目 → 省略或伪造 id 都只读绑定作品
+[chat-tool] name=context.metrics ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片五] context.learnings.execute 调 listLearnings(透传 query/type/status)
+[chat-tool] name=context.learnings ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片五] context.candidates.execute 调 listCandidates,带 total/offset/hasMore
+[chat-tool] name=context.candidates ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > [切片五] context.predictions.execute 调 getPredictions,拼 rubric 摘要 + 对照行
+[chat-tool] name=context.predictions ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.publications ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.metrics ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.learnings ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.candidates ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-099 切片四/五] 清单类 context 工具 execute — 读端口 + 分页真相 + 空态 > 清单端口未装配(deps 缺省)→ 五工具诚实空态(不抛、不塞假)
+[chat-tool] name=context.predictions ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > positioning.generate:extraBrief 透传到 deps.generatePositioning(原零入参 → 洞察永远进不去)
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > topic.generate:extraBrief 透传到 deps.generateTopics(原 schema 未暴露该参)
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > script.hooks / script.draft:extraBrief 透传到 generateHooks / dispatchScriptDraft
+[chat-tool] name=script.hooks ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > script.hooks / script.draft:extraBrief 透传到 generateHooks / dispatchScriptDraft
+[chat-tool] name=script.draft ok durationMs=0 taskId=task-draft-1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > calibration.diagnose / review.analyze:extraBrief 透传到 diagnoseContent / analyzeReview
+[chat-tool] name=calibration.diagnose ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > calibration.diagnose / review.analyze:extraBrief 透传到 diagnoseContent / analyzeReview
+[chat-tool] name=review.analyze ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081①] extraBrief 透传 — 产内容工具的对话洞察通道 > extraBrief 缺省 → 透传 undefined(行为与旧零入参一致,不注空噪声)
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081③] context.projects compact 模式 > compact=true:limit 缺省与封顶放宽到 200
+[chat-tool] name=context.projects ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081③] context.projects compact 模式 > compact=true:limit 缺省与封顶放宽到 200
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081③] context.projects compact 模式 > compact=true:limit 缺省与封顶放宽到 200
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081③] context.projects compact 模式 > compact=true:超 40 字标题截断加 …(title 可能是整篇文案)
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-081③] context.projects compact 模式 > 默认(不带 compact)行为不变:limit 20/封顶 50、标题不截
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-094] knowledge.distill 工具 — 对话蒸馏 > execute 调注入的 distillKnowledge,返回原子候选 + 原文(kind=knowledge.distill)
+[chat-tool] name=knowledge.distill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-094] knowledge.distill 工具 — 对话蒸馏 > 蒸馏失败(MiniMax new_sensitive/1026)→ 不抛,error 转人话 + suggestSwitchModel
+[chat-tool] name=knowledge.distill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-094] knowledge.distill 工具 — 对话蒸馏 > 未知错误 → error 回落原始 message(诚实,不装懂),不建议换模型
+[chat-tool] name=knowledge.distill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-094] knowledge.distill 工具 — 对话蒸馏 > 空原文 → 诚实报错引导粘贴,不调蒸馏引擎
+[chat-tool] name=knowledge.distill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-094] knowledge.distill 工具 — 对话蒸馏 > 超硬上限时工具结果如实报告截断字符数，不让 Copilot 假装处理全文
+[chat-tool] name=knowledge.distill ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-245] 热点能力认知 — 描述话术 + trendNote 透传 > generateTopics 返回新形状 { items, trendNote } → 工具结果带 trendNote(编导可如实转述)
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-245] 热点能力认知 — 描述话术 + trendNote 透传 > 旧裸数组形状仍兼容:结果无 trendNote 字段(不渲空噪声)
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-522] 同回合昂贵只读工具同参去重 > material.gather 同一工具实例、规范化后同参复用一次 Promise；异参仍执行
+[chat-tool] name=material.gather ok durationMs=0
+[chat-tool] name=material.gather ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-522] 同回合昂贵只读工具同参去重 > material.gather 同一工具实例、规范化后同参复用一次 Promise；异参仍执行
+[chat-tool] name=material.gather ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-522] 同回合昂贵只读工具同参去重 > 新的 allChatTools 实例不复用上一回合缓存
+[chat-tool] name=material.gather ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-522] 同回合昂贵只读工具同参去重 > 新的 allChatTools 实例不复用上一回合缓存
+[chat-tool] name=material.gather ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > 端口回 fullText → 首窗 12000 字 + window 真相字段 + hasMore=true(16k 预算内安全值)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > offset 翻窗:offset=12000 读第二窗;末窗 hasMore=false(窗口边界)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > offset 翻窗:offset=12000 读第二窗;末窗 hasMore=false(窗口边界)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > maxChars 超封顶被夹到 12000(execute 侧强制,非君子协定)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > fromCache 透传:命中已存 asset(不重抓)时结果带 fromCache=true
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-251] web.read 分窗读取(offset/maxChars + 窗口真相字段) > 旧端口无 fullText → text 退回 excerpt、window=null(诚实无窗口真相,不假装看全)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-326·RT-H05] web.read — 不可信网页内容定界包裹 > tool result 的 text 带开始/结束哨栏,nonce 前后一致
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-326·RT-H05] web.read — 不可信网页内容定界包裹 > 正文里的伪指令**原样保留在定界区内**(不被剥掉——诚实保数据,靠定界防执行)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 未授权 → needApproval 透传(path/size/type),file/listing/error 为空
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > denied(敏感 denylist 硬拒)→ error 带人话原因,不产 file
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 已授权文本文件 → 窗口截断在 execute 侧(默认 4000/封顶 8000,同 §3 协议)+ 翻窗
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 已授权文本文件 → 窗口截断在 execute 侧(默认 4000/封顶 8000,同 §3 协议)+ 翻窗
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 目录 → listing 透传(entries + total)
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 空路径 → 诚实报错,不调端口
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > 端口抛错(不存在/无权限)→ 不抛,error 人话
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > nameMatch(按名唯一命中)→ needApproval 指向真实路径 + foundByName 带原始名
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-253] local.read 工具 — 本机文件读取(运行时授权 + 安全硬门) > nameCandidates(按名多命中)→ candidates 态列全路径,不误落 error
+[chat-tool] name=local.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.tools 工具 — 环境工具探测 > 透传探测结果:已装报 version、缺失带 installHint,rejected 原样回
+[chat-tool] name=local.tools ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.tools 工具 — 环境工具探测 > 请求 tools 数组透传到端口(白名单/防注入在端口纯函数,execute 只转发)
+[chat-tool] name=local.tools ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.tools 工具 — 环境工具探测 > 端口抛错(未装配)→ 不抛,error 人话 + tools 空(诚实降级)
+[chat-tool] name=local.tools ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) > 透传已授权目录清单(dirs 根路径),error 空
+[chat-tool] name=local.workspace ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) > 不重造目录列举:结果只含 dirs 目录根,不含文件 entries(内容列举归 local.read)
+[chat-tool] name=local.workspace ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) > 空授权(还没「总是允许」过目录)→ dirs 空,不臆造
+[chat-tool] name=local.workspace ok durationMs=0
+
+··························································································································································································stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-256a] local.workspace 工具 — 工作区目录感知(复用授权表 + 不重造 listing) > 端口抛错(未装配)→ 不抛,error 人话 + dirs 空
+[chat-tool] name=local.workspace ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选 > verifiedBrief 透传到 deps.enrichTopic(照 extraBrief 清洗范式:trim)
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-371/T-708] topic.enrich 事实增强 — verifiedBrief 透传但不阻断候选 > verifiedBrief 缺省 → 透传 undefined(不注空噪声,行为与旧入参一致)
+[chat-tool] name=topic.enrich ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 > SERP URL → 窗口压到 1500 字 + serpNote 诚实注记 + hasMore 真相
+[chat-tool] name=web.read ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 > SERP 上模型请求 maxChars=12000 也被封顶 1500(cap 同压,绕不过)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-371] web.read SERP 限制 — 窗口压缩 + 诚实注记 > 普通文章 URL → 默认 12000 窗口不变、无 serpNote(T-251 协议零变)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-390] material.screenshot — 结果列表页硬拒 + 首屏默认 > 搜索结果列表页 URL → 不调截图端口,error 引导点进单篇(确定性门)
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-390] material.screenshot — 结果列表页硬拒 + 首屏默认 > 引擎 SERP 同样硬拒(bing 结果页)
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-390] web.read 被拒多路回退 — blocked → error + alternates > 端口回 blocked+alternates → error=message+行动指引,alternates 透传给模型
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-390] web.read 被拒多路回退 — blocked → error + alternates > blocked 但替代来源为空 → error 带诚实到底指引,不带 alternates 字段
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > [T-390] web.read 被拒多路回退 — blocked → error + alternates > 站内搜索列表页正文同样窗口压缩 + serpNote(T-371 扩展到站内搜索)
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > T-915 同查询失败后可重新执行，不缓存拒绝结果
+[chat-tool] name=material.gather error durationMs=0 class=Error reason=unknown message="瞬时断连"
+
+stdout | src/modules/ai-runtime/chat-tools.test.ts > T-915 同查询失败后可重新执行，不缓存拒绝结果
+[chat-tool] name=material.gather ok durationMs=0
+
+························stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 抖音专路由强制持久建档工具，并从本轮工具集中物理移除 web.read
+[chat-tool] name=intelligence.douyin.share ok durationMs=0 taskId=share-task-1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 没有最新轮媒体路由授权时，即使模型调用专工具也不能升级成转写
+[chat-tool] name=intelligence.douyin.share ok durationMs=0 taskId=share-task-deep-link
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 参考图路由从全库精确计数中选唯一图片并把 asset id 传给真实封面任务
+[chat-tool] name=cover.generate ok durationMs=1 taskId=cover-task-1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 素材读端口只回一条候选但精确 total=2 时拒绝自动引用，并按 total 提示
+[chat-tool] name=cover.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 素材快捷键 material.generate.image 先强制读当前稿，再强制生成固定类型
+[chat-tool] name=material.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 素材快捷键 material.generate.video 先强制读当前稿，再强制生成固定类型
+[chat-tool] name=material.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-523] Copilot 媒体意图确定性路由 > 发布作品参考链第二步没拿到真实 coverAssetId 时不降级纯文封面
+[chat-tool] name=cover.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-727] 原文来源清单与当前指令优先级 > 模型只能选择 ref；工具用当前项目绑定把服务端恢复的原文传给真实 dispatch 端口
+[chat-tool] name=script.draft ok durationMs=1 taskId=task-verbatim
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-770] 批准 surface 从同一 effective snapshot 按需读取 guide，未调用前正文不进 system
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-716] AI 改写本段从 ChatContext 绑定可信锚点，模型无需技术 ID 也只能改目标段
+[chat-tool] name=script.patch ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-730] functionKey=planning.thesis 挂可选工具并真实分派当前项目候选
+[chat-tool] name=planning.thesis ok durationMs=0 taskId=task-thesis-1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-578] 对话 positioning.generate 只读专用可见作品端口，并保留 publishedAt 新→旧顺序
+[chat-tool] name=positioning.generate ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-652] scratch 生成物理排除旧定位、账号画像和旧作品
+[chat-tool] name=positioning.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-739] review.analyze 没有本项目发布后指标/评论时返回诚实错误，不产候选
+[chat-tool] name=review.analyze ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > 只读 context 工具 execute → 经 ctx 调注入的 user-scoped 读端口(拉真数据)
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-077b] brief.fill execute:项目对话(projectId)→ 经读端口取现状 current;建议字段纯回显
+[chat-tool] name=brief.fill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-077b] brief.fill execute:无项目上下文(无 projectId)→ current=null(诚实降级,不编现状)
+[chat-tool] name=brief.fill ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > contextReaders 未装配 → context 工具读到空(诚实降级,不报错、不塞假数据)
+[chat-tool] name=context.knowledge ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.project.detail execute → 经读端口拼项目全档(brief/阶段/发布/产物索引/指标)
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.project.detail execute:读不到(端口回 null)→ found:false + project:null(诚实空态)
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.positioning.detail execute → 全 facets + downstreamRules + 陈述版本数 + 账号画像
+[chat-tool] name=context.positioning.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.positioning.detail execute:端口未装配 → found:false + 空档(诚实降级)
+[chat-tool] name=context.positioning.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.knowledge.detail execute → 单条全字段 + 长文本截断(≤200 字 + totalChars + 指针)
+[chat-tool] name=context.knowledge.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099b] context.knowledge.detail execute:读不到 → found:false + item:null(诚实空态)
+[chat-tool] name=context.knowledge.detail ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] context.artifacts execute → 经读端口拼产物清单(found + items)
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] context.artifact.text execute → 经读端口取正文 + §3 窗口截断(maxChars/offset/hasMore)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] context.artifact.text execute:读不到(端口回 null)→ found:false + 空窗口(诚实空态)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] context.knowledge.text execute → 经读端口取长文 + 窗口截断 + 元数据(title/type)
+[chat-tool] name=context.knowledge.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] 全文类端口未装配 → 三工具 found:false(诚实降级,不报错、不塞假)
+[chat-tool] name=context.artifacts ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] 全文类端口未装配 → 三工具 found:false(诚实降级,不报错、不塞假)
+[chat-tool] name=context.artifact.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > buildChatAssembly — 三层注入装配 > [T-099c] 全文类端口未装配 → 三工具 found:false(诚实降级,不报错、不塞假)
+[chat-tool] name=context.knowledge.text ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-684] 随包浏览器检索 + 禁止模型记忆兜底 > gatherMaterials 有 searchWeb 端口 → 真检索 + grounding=web + sourceUrl 透传
+[chat-tool] name=material.gather ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-684] 随包浏览器检索 + 禁止模型记忆兜底 > searchWeb 抛错 → 工具返回 unavailable 错误信封，不产模型记忆素材
+[chat-tool] name=material.gather error durationMs=0 class=Error reason=unknown message="SearchConfigError: web.search 未配置"
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-239c] 长工具 signal 透传(material.screenshot / web.read) > material.screenshot:SDK callOptions.abortSignal 经工具 execute 透传到 captureScreenshotPort
+[chat-tool] name=material.screenshot ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-239c] 长工具 signal 透传(material.screenshot / web.read) > web.read:同款透传到 readWebUrlPort;端口抛 AbortError → 工具信封人话(不裸抛给 SDK)
+[chat-tool] name=web.read ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-813] 搜索卡选择的网页地址在浏览器调用前硬绑定 > 模型提交另一地址时，端口仍只读取用户点击的来源
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-813] 搜索卡选择的网页地址在浏览器调用前硬绑定 > 端口返回的来源与绑定地址不一致时拒绝结果
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > basis=trend:并行拉信源信号 + web 搜索进 basisBrief;有信号 → 无降级注记
+[chat-tool] name=topic.generate ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > [T-513] trend 子调用与 topic.generate 分别进入当前账号独立快照
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > basis=trend 信源信号为空 → trendNote 诚实注明「已登记 N 个」并指路信号源登记
+[chat-tool] name=topic.generate ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > basis=trend 未登记任何来源(count=0)→ trendNote 引导去『内容雷达』登记
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > 端口全缺省(未绑 trendSourceSignals/searchWeb)→ trend 出题不崩,带诚实注记
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 实际聊天装配经 Worker 模型循环调用本地供应商，保持流与用量回调
+[chat-context] est=2635→2635 tokens cleared=0 truncated=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 实际聊天装配经 Worker 模型循环调用本地供应商，保持流与用量回调
+[chat-turn] outcome=completed durationMs=29
+
+·········································································································································stdout | src/modules/ai-runtime/chat-runner.test.ts > Worker聊天准备清理遗弃授权并转换附件，不修改持久消息副本
+[chat-context] est=2694→2694 tokens cleared=0 truncated=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > prepare装配的旧工具主模型按需解析且并发复用
+[chat-tool] name=topic.generate ok durationMs=0
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > legacy装配的旧工具主模型按需解析且并发复用
+[chat-tool] name=topic.generate ok durationMs=1
+[chat-tool] name=topic.generate ok durationMs=1
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 准备路径首次凭据失败后恢复配置，同一工具可以重试
+[chat-tool] name=topic.generate error durationMs=0 class=Error reason=unknown message="凭据暂时不可用"
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 准备路径首次凭据失败后恢复配置，同一工具可以重试
+[chat-tool] name=topic.generate ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久聊天准备将实际组装绑定到显式快照，调用后修改原输入不改变结果
+[chat-context] est=2699→2699 tokens cleared=0 truncated=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久聊天准备将实际组装绑定到显式快照，调用后修改原输入不改变结果
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久聊天准备并发账号使用各自快照，跨账号快照在读取上下文前拒绝
+[chat-context] est=2461→2461 tokens cleared=0 truncated=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久聊天准备并发账号使用各自快照，跨账号快照在读取上下文前拒绝
+[chat-context] est=2461→2461 tokens cleared=0 truncated=0
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久聊天准备不借外层快照补齐缺失的产品说明
+[chat-context] est=2438→2438 tokens cleared=0 truncated=0
+
+······················stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.projects.search ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.publications ok durationMs=0
+
+······
+
+ Test Files  4 passed (4)
+      Tests  380 passed (380)
+   Start at  23:51:42
+   Duration  2.68s (transform 1.61s, setup 0ms, import 3.04s, tests 1.67s, environment 0ms)
+

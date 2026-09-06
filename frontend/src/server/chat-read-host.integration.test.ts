@@ -7,11 +7,14 @@ vi.mock("@creatoros/backend", async original => {
     const result = await actual.createConfiguredDb(...args); fixture.db = result.db; return result;
   } };
 });
-import { aiTasks } from "@creatoros/backend";
+import {workerSkillSnapshotSchema} from "@creatoros/contract/execution-worker";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService, createExecutionCallLedgerService } from "@creatoros/backend/modules/execution";
 import { createExecutionChatToolPorts } from "../../../backend/src/modules/execution/execution-chat-tool-ports.service";
-import { chatInputDigest } from "../../../backend/src/modules/ai/chat-turn-submission.service";
+import { createChatTurnSubmissionService } from "../../../backend/src/modules/ai/chat-turn-submission.service";
+import {createAiRepository} from "../../../backend/src/modules/ai/ai.repository";
+import {createChatHostContextReader} from "../../../backend/src/modules/ai/chat-host-context.service";
+import {createChatReadToolResolver} from "../../../backend/src/modules/ai-runtime/chat-read-tool-resolver";
 import { createChatReadToolHost } from "../../../backend/src/modules/ai-runtime/chat-read-tool-host";
 import { prepareChatToolDefinitions } from "../../../backend/src/modules/ai-runtime/chat-tool-definitions";
 import { buildChatTools, type ChatToolDeps } from "../../../backend/src/modules/ai-runtime/chat-tools";
@@ -27,22 +30,29 @@ it("真实聊天读取经租约/授权/账本结算：账号隔离、回放不�
     let reads = 0, fail = false;
     // 只装配这一真实领域读取；其余不在白名单的工具不会被执行。
     const toolsFor = (ctx: RequestContext) => buildChatTools(["context.projects"], { listProjects: async (options: { limit: number; offset: number }) => {
-      reads++; if (fail) throw Object.assign(new Error("fixture unavailable"), { statusCode: 503 });
       return runtime.contextReaders.listProjects(ctx, options);
     } } as ChatToolDeps);
     const prototypes = toolsFor(a), definitions = (await prepareChatToolDefinitions(prototypes)).definitions;
-    const host = await createChatReadToolHost(prototypes, async ctx => toolsFor(ctx));
+    const host = await createChatReadToolHost(prototypes, createChatReadToolResolver(createChatHostContextReader(db), {
+      ...runtime.contextReaders, listProjects: async (ctx, options) => {
+        reads++; if (fail) throw Object.assign(new Error("fixture unavailable"), {statusCode:503});
+        return runtime.contextReaders.listProjects(ctx, options);
+      },
+    }));
     const now = () => new Date().toISOString(), budget = { maxCalls: 10, maxTokens: 10000, deadlineMs: 60000 };
     const tasks = createPersistentTaskService(db, { now }), ledger = createExecutionCallLedgerService(db, { now, budget });
     const ports = createExecutionChatToolPorts(db, { now, budget, tools: host });
     let seq = 0;
     async function execute(ctx: RequestContext) {
       const id = `read-host-${++seq}`;
-      const input = { kind: "chat.run" as const, operationKey: id, capability: "copilot.assist", userId: ctx.userId, accountId: ctx.accountId!, conversationId: "conv", sourceMessageId: "source", system: "读取", messages: [{ role: "user" as const, content: "读取项目" }], maxSteps: 6, maxOutputTokens: 128, tools: definitions };
-      const task = await tasks.enqueue(ctx, { kind: "ai_task", ownerType: "ai_task", ownerId: id, idempotencyKey: id, payload: { aiTaskId: id, modelInput: input } });
-      await db.insert(aiTasks).values({ id, userId: ctx.userId, accountId: ctx.accountId!, taskType: "copilot.assist", status: "running", executionTaskId: task.id, idempotencyKey: id, requestedAt: now(), inputData: { modelInputDigest: chatInputDigest(input) } });
-      const claim = (await tasks.claimTask({ taskId: task.id, workerId: "fixture" }))!;
-      const ref = { executionTaskId: task.id, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken };
+      const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId!,now,nextId:prefix=>`${prefix}-${id}`});
+      const conversation=await repo.createConversation({title:"真实读取任务",projectId:null,scope:"global"});
+      const source=await repo.createMessage(conversation.id,{role:"user",content:"读取项目",attachments:[],modelMetadata:{}});
+      const skillSnapshot=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]));
+      const submission=createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"读取",messages:[{role:"user",content:source.content}],maxSteps:6,maxOutputTokens:128,tools:definitions,hostContext:{schemaVersion:1,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot}})});
+      const submitted=await submission.submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+      const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"fixture"}))!;
+      const ref = { executionTaskId: submitted.executionTaskId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken };
       const model = await ledger.reserve(ref, { kind: "model", operationKey: id, inputDigest: "sha256:" + "a".repeat(64), reservedTokens: 20 });
       await ledger.start(ref, model.id);
       await ledger.settle(ref, model.id, { status: "settled", usage: { totalTokens: 5 }, providerResult: { content: [{ type: "tool-call", toolCallId: "t", toolName: "context_projects", input: "{}" }], finishReason: { unified: "tool-calls" }, usage: { inputTokens: { total: 2 }, outputTokens: { total: 3 } }, warnings: [] } });

@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+···················x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+Error: Cannot find module '/src/modules/ai-runtime/chat-read-tool-resolver' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.test.ts
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:151:37
+    149|
+    150| it("真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化",async()=>{
+    151|  const {createChatReadToolResolver}=await import("../ai-runtime/chat-r…
+       |                                     ^
+    152|  const {buildChatTools,type:unused}=await import("../ai-runtime/chat-t…
+    153|  const {prepareChatToolDefinitions}=await import("../ai-runtime/chat-t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed (20)
+   Start at  23:48:59
+   Duration  2.40s (transform 624ms, setup 0ms, import 1.09s, tests 1.18s, environment 0ms)
+
