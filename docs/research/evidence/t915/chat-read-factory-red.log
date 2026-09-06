@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:56131) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+-stderr | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+ FAIL  src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+ FAIL  src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+TypeError: createChatReadTaskToolHost is not a function
+ ❯ src/server/chat-read-host.integration.test.ts:108:17
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  00:15:24
+   Duration  10.57s (transform 2.59s, setup 145ms, import 3.53s, tests 6.17s, environment 514ms)
+

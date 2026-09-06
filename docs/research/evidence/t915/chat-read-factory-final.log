@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:56260) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-read-host.integration.test.ts > 真实聊天读取经租约/授权/账本结算：账号隔离、回放不重复读取、瞬断不记未知
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-read-host.integration.test.ts > 真实聊天读取经租约/授权/账本结算：账号隔离、回放不重复读取、瞬断不记未知
+[chat-tool] name=context.projects ok durationMs=3
+
+stdout | src/server/chat-read-host.integration.test.ts > 真实聊天读取经租约/授权/账本结算：账号隔离、回放不重复读取、瞬断不记未知
+[chat-tool] name=context.projects ok durationMs=1
+
+stdout | src/server/chat-read-host.integration.test.ts > 真实聊天读取经租约/授权/账本结算：账号隔离、回放不重复读取、瞬断不记未知
+[chat-tool] name=context.projects error durationMs=0 class=Error reason=http_503 status=503 message="fixture unavailable"
+
+·stderr | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[chat-tool] name=context.projects ok durationMs=2
+
+stdout | src/server/chat-read-host.integration.test.ts > 正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果
+[chat-tool] name=context.projects ok durationMs=1
+
+·
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  00:15:57
+   Duration  9.99s (transform 3.23s, setup 146ms, import 4.39s, tests 4.76s, environment 493ms)
+

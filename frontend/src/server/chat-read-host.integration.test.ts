@@ -75,3 +75,51 @@ it("真实聊天读取经租约/授权/账本结算：账号隔离、回放不�
     __resetPersistenceForTests(); vi.unstubAllEnvs();
   }
 }, 30000);
+
+it("正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果",async()=>{
+ const {createChatReadTaskToolHost}=await import("../../../backend/src/modules/ai-runtime/chat-read-tool-resolver");
+ const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
+ const {executionTasks,aiMessages,executionCalls,eq}=await import("@creatoros/backend");
+ const {createServer}=await import("node:http"),{resolve}=await import("node:path"),{execFileSync}=await import("node:child_process");
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR","");__resetPersistenceForTests();
+ const bodies:string[]=[];
+ const server=createServer((req,res)=>{let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{
+  bodies.push(body);const done=JSON.parse(body).messages.some((message:{role:string})=>message.role==="tool");
+  const delta=done?{content:"读取完成"}:{tool_calls:[{index:0,id:"read-projects",type:"function",function:{name:"context_projects",arguments:"{}"}}]};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:done?"stop":"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });});
+ let host:ReturnType<typeof createChatWorkerDispatcher>|undefined;
+ try{
+  await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
+  const runtime=await getChatRuntime(),db=fixture.db!,now=()=>new Date().toISOString();let seq=0,reads=0;
+  const definitions=(await prepareChatToolDefinitions(buildChatTools(["context.projects"],{} as ChatToolDeps))).definitions;
+  const submissions=[];
+  for(const accountId of ["a","b"]){
+   const ctx:RequestContext={userId:"worker-read-host",accountId,source:"user",requestId:"test"};
+   await compositeTransport.request({id:"projects.create"} as Endpoint,{body:{title:`真实${accountId}项目`,brief:""}} as never,ctx);
+   const repo=createAiRepository(db,{userId:ctx.userId,accountId,now,nextId:prefix=>`${prefix}-worker-read-${++seq}`});
+   const conversation=await repo.createConversation({title:"Worker读项目",projectId:null,scope:"global"}),source=await repo.createMessage(conversation.id,{role:"user",content:`读取账号${accountId}项目`,attachments:[],modelMetadata:{}});
+   const skillSnapshot=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]));
+   const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"读取项目",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:6,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot}})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+   submissions.push({...submitted,ctx,conversationId:conversation.id});
+  }
+  const factory=createChatReadTaskToolHost(createChatHostContextReader(db),{...runtime.contextReaders,listProjects:async(ctx,options)=>{reads++;return runtime.contextReaders.listProjects(ctx,options);}});
+  const resolveTools=vi.fn(factory);
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"real-read",budget:{maxCalls:8,maxTokens:100000,deadlineMs:60000},modelConcurrency:2,pollMs:100,resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+  host.start();
+  for(const submitted of submissions){
+   await vi.waitFor(async()=>expect((await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!.status).toBe("succeeded"),{timeout:15000});
+   const final=bodies.find(body=>body.includes(`读取账号${submitted.ctx.accountId}项目`)&&JSON.parse(body).messages.some((message:{role:string})=>message.role==="tool"))!;
+   expect(final).toContain(`真实${submitted.ctx.accountId}项目`);expect(final).not.toContain(`真实${submitted.ctx.accountId==="a"?"b":"a"}项目`);
+   const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,submitted.conversationId));
+   expect(messages).toHaveLength(2);expect(messages.find(message=>message.role==="assistant")!.content).toBe("读取完成");
+   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));expect(calls).toHaveLength(3);expect(calls.every(call=>call.status==="settled")).toBe(true);
+  }
+  expect(bodies).toHaveLength(4);expect(reads).toBe(2);expect(resolveTools).toHaveBeenCalledTimes(2);
+ }finally{
+  await host?.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));
+  await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();
+ }
+},30000);

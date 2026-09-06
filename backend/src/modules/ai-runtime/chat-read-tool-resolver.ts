@@ -1,3 +1,5 @@
+import {createChatReadToolHost} from "./chat-read-tool-host";
+import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
 import type { RequestContext } from "@creatoros/contract";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { createChatHostContextReader } from "../ai/chat-host-context.service";
@@ -35,5 +37,20 @@ export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createC
    signal?.throwIfAborted();
    return tools;
   });
+ };
+}
+
+/** 提供动态调度器的短读取部分；其它工具必须另外装配，调度器仍验证完整名单。 */
+export function createChatReadTaskToolHost(
+ reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
+ readers:ContextReaders,
+):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
+ const resolve=createChatReadToolResolver(reader,readers);
+ return async(ctx,_input,execution,signal)=>{
+  const prototypes=await resolve(ctx,execution,signal);
+  signal.throwIfAborted();
+  const tools=await createChatReadToolHost(prototypes,resolve);
+  signal.throwIfAborted();
+  return tools;
  };
 }

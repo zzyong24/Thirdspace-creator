@@ -1,0 +1,58 @@
+{
+  "task": "T-915",
+  "scope": "真实Worker和业务读取的动态工厂集成，正式route未切换",
+  "testsPassed": 2,
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-red.log",
+      "sha256": "79c0df3fa91ad77864e6d32a92888e26f11dd22f12e45b36c16d922b1fb2fe2b",
+      "bytes": 2909
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-final.log",
+      "sha256": "8d9f8a2f3f6bc9d70967e27f74853ccbe6e5bfcc93419a5a62cb05a29ffc349c",
+      "bytes": 2716
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-backend-types.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-governance.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-factory-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    }
+  ],
+  "globalReconcile": {
+    "status": "FAIL",
+    "errors": 211,
+    "warnings": 1,
+    "existingDebtTask": "T-916"
+  }
+}
