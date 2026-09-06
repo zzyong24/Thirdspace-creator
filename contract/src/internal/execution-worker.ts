@@ -1,3 +1,4 @@
+export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
 export { chatProviderNonTextSchema } from "./chat-provider-content";
 import { chatWorkerInputSchema } from "./chat-worker";
 export { chatWorkerInputSchema, chatToolProviderName } from "./chat-worker";

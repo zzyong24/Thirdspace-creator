@@ -23,3 +23,21 @@ describe("Worker 开场文案兼容性", () => {
     expect(result[0]!.text).not.toBe("增长了 97.3%");
   });
 });
+
+it("固定上下文准备保留旧主题兜底和已规范化补充指令，生成与标注使用同一资料",async()=>{
+ const {prepareScriptHooks}=await import("./script-hooks");
+ const context={selectionTitle:"选中主题",positioningBrief:"定位",projectBriefHard:"约束",userMaterialHardBrief:"事实",userMaterialRefBrief:"参考",knowledgeBrief:"知识"};
+ const prepared=prepareScriptHooks(context,{topic:" ",direction:"要求",extraBrief:"字".repeat(2000)});
+ expect(prepared.prompt).toContain("内容主题:《选中主题》");
+ expect(prepared.prompt).toContain("字".repeat(2000));expect(prepared.prompt).not.toContain("字".repeat(2001));
+ expect(prepared.grounding).toEqual(["定位","约束","事实","参考","知识","选中主题"]);
+ expect(prepared.system).toContain("可溯与反编造");
+ expect(prepareScriptHooks(context,{topic:" 明确主题 "}).prompt).toContain("内容主题:《明确主题》");
+});
+
+it("工具层截断后留下的尾空格必须原样进入提示词",async()=>{
+ const {prepareScriptHooks}=await import("./script-hooks");
+ const raw="😀".repeat(998)+"abc "+"尾",normalized=raw.trim().slice(0,2000);
+ const result=prepareScriptHooks({selectionTitle:"主题",positioningBrief:"定位",projectBriefHard:"",userMaterialHardBrief:"",userMaterialRefBrief:"",knowledgeBrief:""},{extraBrief:normalized});
+ expect(result.prompt).toContain(normalized+"\n");
+});

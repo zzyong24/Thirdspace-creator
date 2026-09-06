@@ -3361,3 +3361,16 @@ it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{
  const prepared=await runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,durableChatSnapshot("a","显式方法")));
  expect(prepared.assembly.system).toContain("显式方法");expect(prepared.assembly.system).not.toContain("外层方法");
 });
+
+it("持久开场文案输入来自真实装配且与返回对象隔离",async()=>{
+ const {deps,resolveModelSpec}=makeDeps();
+ const owner={...(ctx as RequestContext),accountId:"hooks-snapshot"};
+ const snapshot=durableChatSnapshot(owner.accountId,"开场策略");snapshot.skills[0]!.effective.tools=["script.hooks"];
+ const prepared=await prepareDurableChatTurn(owner,{messages:[{id:"source",role:"user",parts:[{type:"text",text:"生成开场"}]}],chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:" 已选主题 "}}},deps,snapshot);
+ expect(prepared.assembly.tools["script.hooks"]).toBeDefined();
+ expect(prepared.hostContext.scriptHooksContext).toMatchObject({selectionTitle:"已选主题",positioningBrief:expect.stringContaining("硬核创作者")});
+ expect(prepared.hostContext.scriptHooksContext).toEqual(prepared.assembly.scriptHooksContext);
+ prepared.hostContext.scriptHooksContext!.positioningBrief="后来的资料";
+ expect(prepared.assembly.scriptHooksContext!.positioningBrief).not.toBe("后来的资料");
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});

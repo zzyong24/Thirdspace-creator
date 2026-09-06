@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import { workerSkillSnapshotSchema, scriptHooksContextSchema } from "@creatoros/contract/execution-worker";
 import { resolveSkillForSurface } from "../ai-runtime/chat-surface";
 import { canonicalJson } from "./canonical-json";
 import { ConflictError } from "../execution/execution.errors";
@@ -16,6 +16,7 @@ export const chatHostContextSchema = z.object({
   positioningScratch: z.boolean(),
   trustedScriptSources: z.array(z.object({ref:id,label:z.string(),text:z.string(),truncated:z.boolean(),sourceType:z.enum(["message","attachment","project_text"]).optional(),sourceId:id.optional()}).strict()),
   skillSnapshot: workerSkillSnapshotSchema,
+  scriptHooksContext: scriptHooksContextSchema.optional(),
 }).strict().superRefine((value, ctx) => {
   if (JSON.stringify(value).length > 4_000_000) ctx.addIssue({code:"custom",message:"宿主上下文过大"});
   const refs=value.trustedScriptSources.map(source=>source.ref),skills=value.skillSnapshot.skills.map(skill=>skill.skillId);

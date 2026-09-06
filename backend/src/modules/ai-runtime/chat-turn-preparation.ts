@@ -35,5 +35,8 @@ export async function prepareDurableChatTurn(
   abortSignal,
  },deps));
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
- return {...prepared,hostContext:structuredClone(hostContext)};
+ const completeHostContext=validateChatHostContext({
+  ...hostContext,...(prepared.assembly.scriptHooksContext ? {scriptHooksContext:prepared.assembly.scriptHooksContext} : {}),
+ },{userId:context.userId,accountId:context.accountId,projectId:hostContext.chatContext.projectId??null});
+ return {...prepared,hostContext:structuredClone(completeHostContext)};
 }

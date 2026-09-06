@@ -1,4 +1,5 @@
-import { EXTRA_BRIEF_HEADING, buildHooksPrompt, finalizeHookItems } from "@creatoros/ai-worker/chat";
+import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
+import { EXTRA_BRIEF_HEADING, prepareScriptHooks, finalizeHookItems } from "@creatoros/ai-worker/chat";
 import {createChatReadToolBindings} from "./chat-read-tool-bindings";
 import {resolveChatGuideSnapshot} from "./chat-guide-snapshot";
 import { createChatModelStream, resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
@@ -928,7 +929,7 @@ export function resolveUniqueCoverReference(
  * 工具 execute 复用现有 runner 核心(runTopicNode / 选题卡补全),都在请求期用解析好的 model
  * 跑;故这里先解析 model(没配 key 抛 LlmCredentialError,由路由接住返 4xx,不假成功)。
  */
-export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string};
+export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string;scriptHooksContext?:ScriptHooksContext};
 type ChatAssemblyArgs = [ctx:RequestContext,chatContext:ChatContext,deps:AssembleChatDeps,mediaRoute?:CopilotMediaRoute|null,options?:{positioningScratch?:boolean;verbatimSources?:readonly VerbatimSource[];latestUserInstruction?:string}];
 /** 准备上下文与真实工具，不取得主模型凭据；工具执行迁移仍由各真实端口承担。 */
 export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssemblyPreparation>{
@@ -939,7 +940,7 @@ export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<Chat
 export async function buildChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssembly>{
   const assembled=await assembleChat(args[0],args[1],args[2],args[3],args[4],true);
   if(!assembled.modelSpec)throw new Error("聊天主模型未解析");
-  const {capability:_capability,...legacy}=assembled;
+  const {capability:_capability,scriptHooksContext:_hooks,...legacy}=assembled;
   return {...legacy,modelSpec:assembled.modelSpec};
 }
 
@@ -1394,6 +1395,11 @@ async function assembleChat(
         .join("\n\n");
   // 选中态标题 —— 工具入参兜底(模型没显式传 title/subject 时用它,避免拿空标题去诊断)。
   const selectionTitle = chatContext.selection?.label?.trim() || "";
+  const scriptHooksContext:ScriptHooksContext={
+    selectionTitle,positioningBrief:context.positioningBrief,
+    projectBriefHard:context.projectBriefHard ?? "",userMaterialHardBrief:context.userMaterialHardBrief ?? "",
+    userMaterialRefBrief:context.userMaterialRefBrief ?? "",knowledgeBrief:context.knowledgeBrief ?? "",
+  };
 
   // 5) 工具白名单层:按 skill 白名单挂工具,execute 复用现有 runner 核心产**候选**(非实体)。
   const toolDeps: ChatToolDeps = {
@@ -1631,46 +1637,11 @@ async function assembleChat(
           : null;
       return { card: normalizeCard(object), candidateId };
     },
-    generateHooks: async ({ topic, direction, extraBrief }) => {
-      // [T-055c] 复用 runAgentNode 一次调用产 hook 候选组(非实体)。主题兜底:模型没传
-      // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
-      const effTopic = topic?.trim() || selectionTitle || "";
-      // [T-269/T-270] 接地根:antiFabrication 常量 + 可溯后处理纯函数从 ai-worker 取(单一真值)。
-      const { runAgentNode, ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } =
-        await import("@creatoros/ai-worker");
-      const prompt = buildHooksPrompt({
-        topic: effTopic,
-        direction,
-        extraBrief,
-        positioningBrief: context.positioningBrief,
-        // [T-270] 立项硬锚(项目态;账号态对话 projectId=null → 空,整段省略)。
-        projectBriefHard: context.projectBriefHard || undefined,
-        // [T-269] 用户素材=钩子的可溯弹药(此前 hook 生成链完全没传素材)。
-        userMaterialHard: context.userMaterialHardBrief || undefined,
-        userMaterialRef: context.userMaterialRefBrief || undefined,
-        antiFabrication: ANTI_FABRICATION_CLAUSE,
-        // [T-355] 观众心智预设写法纪律(激将式钩子=归因外置铁律的高危区)。
-        audienceMindset: AUDIENCE_MINDSET_CLAUSE,
-      });
-      const res = await runAgentNode({
-        model: await getPrimaryModel(),
-        // [T-269] hooks system 也带同款可溯硬约束段(弱模型 tool-calling 靠重复压住编造冲动)。
-        system:
-          "你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。\n\n" +
-          ANTI_FABRICATION_CLAUSE,
-        prompt,
-        maxSteps: 2,
-      });
-      // [T-269] 可溯后处理(参照 T-224):校验每条 hook 的具体 claim(数字/命名)是否命中已注入的
-      // 素材/定位/立项 brief;不可溯的 → 非破坏式追加「⚠️含未溯源数据」标注(不删,让用户/下游核实)。
-      return finalizeHookItems(res.text, [
-        context.positioningBrief,
-        context.projectBriefHard,
-        context.userMaterialHardBrief,
-        context.userMaterialRefBrief,
-        context.knowledgeBrief,
-        effTopic,
-      ]);
+    generateHooks: async (input) => {
+      const prepared=prepareScriptHooks(scriptHooksContext,input);
+      const {runAgentNode}=await import("@creatoros/ai-worker");
+      const result=await runAgentNode({model:await getPrimaryModel(),system:prepared.system,prompt:prepared.prompt,maxSteps:2});
+      return finalizeHookItems(result.text,prepared.grounding);
     },
     // [T-268] 整稿改异步 dispatch(不再 inline 同步 runScriptNode —— 整稿分钟级,弱模型下同步必超时
     // → 回合被腰斩 → 退回轻量 hooks,「点生成脚本只出 hook」的根因)。整稿恒是「当前项目的」(要落成
@@ -2407,6 +2378,7 @@ async function assembleChat(
     system,
     tools,
     capability: skillCapability,
+    ...(tools["script.hooks"] ? {scriptHooksContext:{...scriptHooksContext}} : {}),
     ...(modelSpec ? {modelSpec} : {}),
     forcedTool,
     ...(forcedToolSequence ? { forcedToolSequence } : {}),

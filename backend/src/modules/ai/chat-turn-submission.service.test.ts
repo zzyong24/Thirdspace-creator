@@ -1,3 +1,4 @@
+import { createChatHostContextReader } from "./chat-host-context.service";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createDb, aiTasks, aiMessages, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createAiRepository } from "./ai.repository";
@@ -193,4 +194,21 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  await getChatToolNativeExecutor(scopedTools["context.publications"]!)!({},{});
  expect(listPublications).toHaveBeenLastCalledWith(expect.objectContaining({accountId:f.ctx.accountId}),expect.objectContaining({view:"published_cover_candidates"}));
 
+});
+
+it("开场生成快照随真实任务持久化并受原摘要保护",async()=>{
+ const {createPersistentTaskService}=await import("../execution/persistent-task.service");
+ const f=await fixture();
+ const original={selectionTitle:"原选题",positioningBrief:"原定位",projectBriefHard:"原约束",userMaterialHardBrief:"原事实",userMaterialRefBrief:"原参考",knowledgeBrief:"原知识"};
+ const frozen={...hostContext(f.ctx),scriptHooksContext:original};
+ const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+ const result=await service.submit(f.ctx,f.request);
+ original.positioningBrief="后来修改";
+ const taskService=createPersistentTaskService(db,{now,nextId}),claim=(await taskService.claimTask({taskId:result.executionTaskId,workerId:"worker"}))!;
+ const ref={executionTaskId:result.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const reader=createChatHostContextReader(db,{now});
+ expect((await reader.read(ref)).hostContext.scriptHooksContext?.positioningBrief).toBe("原定位");
+ const rows=await f.rows();const payload=rows.executions[0]!.payload as Record<string,unknown>;
+ await db.update(executionTasks).set({payload:{...payload,hostContext:{...frozen,scriptHooksContext:{...original,positioningBrief:"被篡改"}}}}).where(eq(executionTasks.id,result.executionTaskId));
+ await expect(reader.read(ref)).rejects.toThrow("摘要不符");
 });

@@ -1,0 +1,37 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久开场文案输入来自真实装配且与返回对象隔离
+[chat-context] est=2520→2520 tokens cleared=0 truncated=0
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts (146 tests | 1 failed | 145 skipped) 24ms
+   × 持久开场文案输入来自真实装配且与返回对象隔离 23ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-runner.test.ts > 持久开场文案输入来自真实装配且与返回对象隔离
+AssertionError: expected undefined to match object { selectionTitle: '已选主题', …(1) }
+
+- Expected:
+{
+  "positioningBrief": StringContaining "硬核创作者",
+  "selectionTitle": "已选主题",
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts:3371:50
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 145 skipped (146)
+   Start at  00:59:40
+   Duration  1.55s (transform 840ms, setup 0ms, import 1.38s, tests 24ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-runner.test.ts -t 持久开场文案输入

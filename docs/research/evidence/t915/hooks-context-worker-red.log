@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/chat/script-hooks.test.ts (5 tests | 1 failed) 6ms
+   × 固定上下文准备保留旧主题兜底和补充指令长度，生成与标注使用同一资料 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/chat/script-hooks.test.ts > 固定上下文准备保留旧主题兜底和补充指令长度，生成与标注使用同一资料
+ FAIL  src/runtime/chat/script-hooks.test.ts > 固定上下文准备保留旧主题兜底和补充指令长度，生成与标注使用同一资料
+ FAIL  src/runtime/chat/script-hooks.test.ts > 固定上下文准备保留旧主题兜底和补充指令长度，生成与标注使用同一资料
+TypeError: prepareScriptHooks is not a function
+ ❯ src/runtime/chat/script-hooks.test.ts:30:17
+     28|  const {prepareScriptHooks}=await import("./script-hooks");
+     29|  const context={selectionTitle:"选中主题",positioningBrief:"定位",projectBri…
+     30|  const prepared=prepareScriptHooks(context,{topic:" ",direction:"要求",e…
+       |                 ^
+     31|  expect(prepared.prompt).toContain("内容主题:《选中主题》");
+     32|  expect(prepared.prompt).toContain("字".repeat(2000));expect(prepared.p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  01:00:42
+   Duration  172ms (transform 26ms, setup 0ms, import 35ms, tests 6ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/chat/script-hooks.test.ts

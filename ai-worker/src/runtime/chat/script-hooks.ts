@@ -1,4 +1,5 @@
-import { buildGroundingHaystack, annotateUngroundedClaims } from "../../prompt/grounding-facets";
+import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
+import { ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE, buildGroundingHaystack, annotateUngroundedClaims } from "../../prompt/grounding-facets";
 
 export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵循)】";
 
@@ -82,4 +83,17 @@ export function parseHookItems(
 export function finalizeHookItems(raw: string, grounding: Array<string | undefined>): Array<{text: string; angle: string}> {
   const haystack = buildGroundingHaystack(...grounding);
   return parseHookItems(raw).map(item => ({...item, text: annotateUngroundedClaims(item.text, haystack).text}));
+}
+
+/** 同一快照同时准备生成提示与可溯标注，主题沿用既有兜底；extraBrief 已由工具层规范化，不能再次 trim。 */
+export function prepareScriptHooks(context:ScriptHooksContext,input:{topic?:string;direction?:string;extraBrief?:string}) {
+  const topic=input.topic?.trim() || context.selectionTitle || "";
+  const prompt=buildHooksPrompt({
+    topic,direction:input.direction,extraBrief:input.extraBrief,
+    positioningBrief:context.positioningBrief,projectBriefHard:context.projectBriefHard || undefined,
+    userMaterialHard:context.userMaterialHardBrief || undefined,userMaterialRef:context.userMaterialRefBrief || undefined,
+    antiFabrication:ANTI_FABRICATION_CLAUSE,audienceMindset:AUDIENCE_MINDSET_CLAUSE,
+  });
+  return {prompt,system:"你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。\n\n"+ANTI_FABRICATION_CLAUSE,
+    grounding:[context.positioningBrief,context.projectBriefHard,context.userMaterialHardBrief,context.userMaterialRefBrief,context.knowledgeBrief,topic]};
 }
