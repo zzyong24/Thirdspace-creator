@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/assets/pending-generated-asset.test.ts (12 tests | 1 failed | 11 skipped) 1051ms
+   × 完整字节已发布但元数据 sidecar 缺失，恢复原字节并补齐元数据 1051ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/assets/pending-generated-asset.test.ts > 完整字节已发布但元数据 sidecar 缺失，恢复原字节并补齐元数据
+ConflictError: 素材对象元数据与原提交不符
+ ❯ finish src/modules/assets/pending-generated-asset.service.ts:36:75
+     34|   if(stored.byteLength!==row.byteLength || hash(stored)!==row.checksum…
+     35|   const head=await storage.headObject(row.storageKey);signal?.throwIfA…
+     36|   if(head.fileSize!==row.byteLength || head.mimeType!==row.mimeType)th…
+       |                                                                           ^
+     37|   return {status:"committed" as const,receipt:receipt(await repo.commi…
+     38|  }
+ ❯ src/modules/assets/pending-generated-asset.test.ts:90:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  12:09:33
+   Duration  2.24s (transform 606ms, setup 0ms, import 1.06s, tests 1.05s, environment 0ms)
+

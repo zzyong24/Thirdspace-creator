@@ -1628,6 +1628,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已确认 R-02 网页 Worker 命名端口与实际父子进程测试；不新增通信机制或执行权。",
       "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-provider-job.md"
+      ],
+      "file_sha256": "02fe5a684b1878b1706d4228950029a2eeb02663626dd6335951d096cfbb08a5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已授权独立 Worker 的供应商任务号证据说明；仅记载尚未完成的命名端口接线，不新增进程或第二任务系统。",
+      "acceptance": "此条只登记实现复杂度，不代表 IPC 已接通或任务验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/pending-generated-asset.md"
+      ],
+      "file_sha256": "6ddba142fd426eee78a285fdb58260dc3b70194396f2fa05a6be40d03f1ad21e",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "证据文档记录生成素材持久回执及此前复杂度登记修复；沿用已授权 Worker 与后端单写者边界，没有新增进程拓扑。",
+      "acceptance": "仅登记文档复杂度，不代表 Worker 接线或完整验收完成。"
     }
   ],
   "historical_baselines": []

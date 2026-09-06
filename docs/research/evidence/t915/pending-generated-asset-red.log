@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/assets/pending-generated-asset.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/assets/pending-generated-asset.test.ts [ src/modules/assets/pending-generated-asset.test.ts ]
+Error: Cannot find module '../../schema/pending-generated-asset-commits' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/assets/pending-generated-asset.test.ts
+ ❯ src/modules/assets/pending-generated-asset.test.ts:6:1
+      4| import {join} from "node:path";
+      5| import {createDb,assets,assetFiles,eq,sql} from "@creatoros/backend";
+      6| import {pendingGeneratedAssetCommits} from "../../schema/pending-gener…
+       | ^
+      7| import {createPendingGeneratedAssetService} from "./pending-generated-…
+      8| import {createLocalFsObjectStorage} from "./localfs-object-storage";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  12:05:54
+   Duration  768ms (transform 300ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

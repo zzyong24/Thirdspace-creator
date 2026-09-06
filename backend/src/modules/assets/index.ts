@@ -12,6 +12,7 @@ export {
   type ObjectStorageForCtx,
 } from "./assets.service";
 export { createPendingDocumentService, type PendingDocumentInput, type PendingDocumentReceipt } from "./pending-document.service";
+export {createPendingGeneratedAssetService,type PendingGeneratedAssetInput,type PendingGeneratedAssetReceipt} from "./pending-generated-asset.service";
 
 export {
   createAssetRepository,
