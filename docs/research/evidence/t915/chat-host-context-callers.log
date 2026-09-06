@@ -1,0 +1,6 @@
+[1m
+Callers of "resolveSkillForSurface" (1):
+[0m
+[36mfunction    [0m[37massembleChat[0m
+[2m  backend/src/modules/ai-runtime/chat-runner.ts:993[0m
+

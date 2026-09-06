@@ -75,3 +75,74 @@ it("已有旧公开入口回复绑定的源消息不能再创建第二份聊天�
   await expect(f.service.submit(f.ctx,f.request)).rejects.toThrow("已有旧回复任务");
   expect(f.assemble).not.toHaveBeenCalled();expect(await f.rows()).toEqual({tasks:[],executions:[]});
 });
+
+function hostContext(ctx:{userId:string;accountId:string}) {
+  return {schemaVersion:1 as const,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1 as const,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"固定策略",template:"模板",tools:["context.projects"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+}
+it("宿主上下文与执行原子保存，重放不换Skill或选区",async()=>{
+  const f=await fixture(),frozen=hostContext(f.ctx);
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+  const result=await service.submit(f.ctx,f.request),rows=await f.rows();
+  expect(rows.executions[0]!.payload).toMatchObject({hostContext:frozen});
+  expect((rows.executions[0]!.payload as Record<string,unknown>).modelInput).not.toHaveProperty("hostContext");
+  expect(rows.tasks[0]!.inputData).toHaveProperty("hostContextDigest");
+  frozen.chatContext.surface="project";
+  expect(await service.submit(f.ctx,f.request)).toMatchObject({...result,replayed:true});
+  expect((await f.rows()).executions[0]!.payload).toMatchObject({hostContext:{chatContext:{surface:"topics"}}});
+});
+it("拒绝其它账号Skill快照，失败不落半套任务",async()=>{
+  const f=await fixture(),frozen=hostContext({...f.ctx,accountId:"other"});
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+  await expect(service.submit(f.ctx,f.request)).rejects.toThrow();
+  expect(await f.rows()).toEqual({tasks:[],executions:[]});
+});
+it("宿主快照被改写后，原源消息不能复用另一套上下文",async()=>{
+  const f=await fixture();
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:hostContext(f.ctx)})});
+  const result=await service.submit(f.ctx,f.request),rows=await f.rows();
+  await db.update(executionTasks).set({payload:{...rows.executions[0]!.payload as object,hostContext:{...hostContext(f.ctx),chatContext:{surface:"project"}}}}).where(eq(executionTasks.id,result.executionTaskId));
+  await expect(service.submit(f.ctx,f.request)).rejects.toThrow("宿主上下文");
+});
+it("宿主读取只接受当前租约和原历史，旧任务缺快照不按当前配置重建",async()=>{
+  const {createChatHostContextReader}=await import("./chat-host-context.service");
+  const {createPersistentTaskService}=await import("../execution/persistent-task.service");
+  const f=await fixture(),service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:hostContext(f.ctx)})});
+  const submitted=await service.submit(f.ctx,f.request);
+  const taskService=createPersistentTaskService(db,{now,nextId}),claim=(await taskService.claimTask({taskId:submitted.executionTaskId,workerId:"worker"}))!;
+  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const reader=createChatHostContextReader(db,{now});
+  const restored=await reader.read(ref);
+  expect(restored.hostContext).toEqual(hostContext(f.ctx));
+  expect(restored.snapshot.sourceMessage.content).toBe("本轮问题");
+  await f.message("user","后来追加的指令");
+  expect((await reader.read(ref)).snapshot.messages.at(-1)!.content).toBe("本轮问题");
+  await expect(reader.read({...ref,fenceToken:"old"})).rejects.toThrow();
+  await db.update(aiTasks).set({status:"failed"}).where(eq(aiTasks.id,submitted.taskId));
+  await expect(reader.read(ref)).rejects.toThrow();
+  await db.update(aiTasks).set({status:"queued"}).where(eq(aiTasks.id,submitted.taskId));
+  await db.update(aiMessages).set({content:"被改过的源消息"}).where(eq(aiMessages.id,f.source.id));
+  await expect(reader.read(ref)).rejects.toThrow();
+  const legacy=await fixture(),old=await legacy.service.submit(legacy.ctx,legacy.request),oldClaim=(await taskService.claimTask({taskId:old.executionTaskId,workerId:"worker"}))!;
+  await expect(reader.read({executionTaskId:old.executionTaskId,attempt:oldClaim.lease.attempt,fenceToken:oldClaim.lease.fenceToken})).rejects.toThrow("缺少宿主上下文");
+});
+it.each(["snapshot","digest"])("宿主%s单边丢失不能降级为旧任务",async field=>{
+  const f=await fixture(),service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:hostContext(f.ctx)})});
+  const result=await service.submit(f.ctx,f.request),rows=await f.rows();
+  if(field==="snapshot") {
+    const {hostContext:_,...payload}=rows.executions[0]!.payload as Record<string,unknown>;
+    await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,result.executionTaskId));
+  } else {
+    const {hostContextDigest:_,...inputData}=rows.tasks[0]!.inputData as Record<string,unknown>;
+    await db.update(aiTasks).set({inputData}).where(eq(aiTasks.id,result.taskId));
+  }
+  await expect(service.submit(f.ctx,f.request)).rejects.toThrow("宿主上下文绑定缺失");
+});
+it.each(["project","skill","refs","size"])("宿主快照拒绝%s错配或越界",async kind=>{
+  const f=await fixture(),frozen=hostContext(f.ctx);
+  const raw={...frozen,chatContext:kind==="project"?{...frozen.chatContext,projectId:"foreign"}:frozen.chatContext,
+    trustedScriptSources:kind==="refs"?[{ref:"same",label:"",text:"1",truncated:false},{ref:"same",label:"",text:"2",truncated:false}]:kind==="size"?[{ref:"large",label:"",text:"文".repeat(4_000_001),truncated:false}]:[],
+    skillSnapshot:kind==="skill"?{...frozen.skillSnapshot,skills:frozen.skillSnapshot.skills.map(skill=>({...skill,skillId:"unrelated"}))}:frozen.skillSnapshot};
+  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:raw})});
+  await expect(service.submit(f.ctx,f.request)).rejects.toThrow();
+  expect(await f.rows()).toEqual({tasks:[],executions:[]});
+});

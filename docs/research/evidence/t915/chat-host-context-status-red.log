@@ -1,0 +1,189 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (19 tests | 1 failed) 1482ms
+   × 宿主读取只接受当前租约和原历史，旧任务缺快照不按当前配置重建 41ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 宿主读取只接受当前租约和原历史，旧任务缺快照不按当前配置重建
+AssertionError: promise resolved "{ context: { …(4) }, …(4) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "ai-task-chat-submit-212",
++   "context": {
++     "accountId": "chat-submit-a-199",
++     "requestId": "execution:execution-task-chat-submit-215:1",
++     "source": "ai",
++     "userId": "chat-submit-u",
++   },
++   "hostContext": {
++     "chatContext": {
++       "surface": "topics",
++     },
++     "mediaRoute": null,
++     "positioningScratch": false,
++     "schemaVersion": 1,
++     "skillSnapshot": {
++       "accountId": "chat-submit-a-199",
++       "platformPolicy": "候选",
++       "platformPolicyVersion": "1",
++       "resolvedAt": "fixed",
++       "skills": [
++         {
++           "baseVersion": "1",
++           "effective": {
++             "completionPolicy": null,
++             "completionPolicyAdapter": null,
++             "contextRequirements": [],
++             "methodSystem": "固定策略",
++             "outputSchema": null,
++             "requiredFacets": [],
++             "template": "模板",
++             "tools": [
++               "context.projects",
++             ],
++           },
++           "overlayRevision": null,
++           "overlayVersion": null,
++           "skillId": "chatbox.topic",
++         },
++       ],
++       "snapshotVersion": 1,
++       "userId": "chat-submit-u",
++     },
++     "trustedScriptSources": [],
++   },
++   "modelInput": {
++     "accountId": "chat-submit-a-199",
++     "capability": "copilot.assist",
++     "conversationId": "ai-conv-chat-submit-200",
++     "kind": "chat.run",
++     "maxOutputTokens": 128,
++     "maxSteps": 6,
++     "messages": [
++       {
++         "content": "历史问题",
++         "role": "user",
++       },
++       {
++         "content": "历史回答",
++         "role": "assistant",
++       },
++       {
++         "content": "本轮问题",
++         "role": "user",
++       },
++     ],
++     "operationKey": "chat:ai-msg-chat-submit-209",
++     "sourceMessageId": "ai-msg-chat-submit-209",
++     "system": "真实策略",
++     "tools": [],
++     "userId": "chat-submit-u",
++   },
++   "snapshot": {
++     "conversation": {
++       "accountId": "chat-submit-a-199",
++       "createdAt": "2026-09-05T09:23:21.000Z",
++       "id": "ai-conv-chat-submit-200",
++       "projectId": null,
++       "scope": "global",
++       "title": "真实会话",
++       "updatedAt": "2026-09-05T09:23:40.000Z",
++       "userId": "chat-submit-u",
++     },
++     "messages": [
++       {
++         "attachments": [],
++         "cachedTokens": null,
++         "content": "历史问题",
++         "conversationId": "ai-conv-chat-submit-200",
++         "createdAt": "2026-09-05T09:23:24.000Z",
++         "id": "ai-msg-chat-submit-203",
++         "inputTokens": null,
++         "modelKey": null,
++         "modelMetadata": {
++           "existing": "保留",
++         },
++         "outputTokens": null,
++         "parts": [],
++         "role": "user",
++       },
++       {
++         "attachments": [],
++         "cachedTokens": null,
++         "content": "历史回答",
++         "conversationId": "ai-conv-chat-submit-200",
++         "createdAt": "2026-09-05T09:23:27.000Z",
++         "id": "ai-msg-chat-submit-206",
++         "inputTokens": null,
++         "modelKey": null,
++         "modelMetadata": {
++           "existing": "保留",
++         },
++         "outputTokens": null,
++         "parts": [],
++         "role": "assistant",
++       },
++       {
++         "attachments": [],
++         "cachedTokens": null,
++         "content": "本轮问题",
++         "conversationId": "ai-conv-chat-submit-200",
++         "createdAt": "2026-09-05T09:23:30.000Z",
++         "id": "ai-msg-chat-submit-209",
++         "inputTokens": null,
++         "modelKey": null,
++         "modelMetadata": {
++           "chatTaskId": "ai-task-chat-submit-212",
++           "existing": "保留",
++         },
++         "outputTokens": null,
++         "parts": [],
++         "role": "user",
++       },
++     ],
++     "sourceMessage": {
++       "attachments": [],
++       "cachedTokens": null,
++       "content": "本轮问题",
++       "conversationId": "ai-conv-chat-submit-200",
++       "createdAt": "2026-09-05T09:23:30.000Z",
++       "id": "ai-msg-chat-submit-209",
++       "inputTokens": null,
++       "modelKey": null,
++       "modelMetadata": {
++         "chatTaskId": "ai-task-chat-submit-212",
++         "existing": "保留",
++       },
++       "outputTokens": null,
++       "parts": [],
++       "role": "user",
++     },
++   },
+  }
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:121:32
+    119|   await expect(reader.read({...ref,fenceToken:"old"})).rejects.toThrow…
+    120|   await db.update(aiTasks).set({status:"failed"}).where(eq(aiTasks.id,…
+    121|   await expect(reader.read(ref)).rejects.toThrow();
+       |                                ^
+    122|   await db.update(aiTasks).set({status:"queued"}).where(eq(aiTasks.id,…
+    123|   await db.update(aiMessages).set({content:"被改过的源消息"}).where(eq(aiMess…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  23:29:11
+   Duration  3.00s (transform 779ms, setup 0ms, import 1.37s, tests 1.48s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/chat-turn-submission.service.test.ts

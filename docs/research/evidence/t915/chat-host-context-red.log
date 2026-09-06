@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (12 tests | 2 failed) 1129ms
+   × 宿主上下文与执行原子保存，重放不换Skill或选区 7ms
+   × 宿主快照被改写后，原源消息不能复用另一套上下文 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 宿主上下文与执行原子保存，重放不换Skill或选区
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "hostContext"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"hostContext\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:62:46
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:85:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 宿主快照被改写后，原源消息不能复用另一套上下文
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "hostContext"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"hostContext\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:62:46
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:101:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  23:23:10
+   Duration  2.50s (transform 685ms, setup 0ms, import 1.23s, tests 1.13s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/chat-turn-submission.service.test.ts

@@ -1508,6 +1508,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "本证据记录 DEC-RUNTIME-055 已批准的现有 Worker IPC 接线与任务截止时间验证，不引入新的进程或通信机制。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-read-host.md"
+      ],
+      "file_sha256": "53b613905861f10f811c4446fb6820377061c1c533ecc25ef4f9f2aac89e5847",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已提交只读工具回执证据中对既有通信与JSON序列化的说明；未新增进程通信协议。",
+      "acceptance": "只绑定本证据文件复杂度，不补记前置TDD或全任务验收。"
     }
   ],
   "historical_baselines": []
