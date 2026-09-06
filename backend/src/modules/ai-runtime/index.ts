@@ -33,7 +33,7 @@ export * from "./topic-preference-distill-runner";
 // (Vercel AI SDK)在此;前端只留 /api/chat 薄代理 + useChat UI。
 export * from "./chat-context";
 export * from "./chat-runner";
-export { prepareChatTurn } from "./chat-turn-preparation";
+export { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
 export * from "./chat-tools";
 export * from "./channel-model-config";
 // [T-429/T-430] 长输入 AI 节点统一的确定性分块、串行执行与进度契约。

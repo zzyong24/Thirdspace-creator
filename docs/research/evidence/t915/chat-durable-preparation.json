@@ -1,0 +1,63 @@
+{
+  "task": "T-915",
+  "scope": "显式快照与聊天准备同源，生产路由和执行时恢复尚未接入",
+  "testsPassed": 164,
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-red.log",
+      "sha256": "fdff5b95fb359a32ce629854403a47d4340b209c39261a98b936a509a3788b46",
+      "bytes": 13961
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-final.log",
+      "sha256": "03705310ff76f29966218277a0142e2b3ee46d5fa12feb2803b31e758ca686e2",
+      "bytes": 13769
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-types-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-scope.log",
+      "sha256": "eb305784cc924a80c517107cab51ebe251e8d54cc3a534354986061eb0d11ba7",
+      "bytes": 795
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-governance.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-durable-preparation-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    }
+  ],
+  "globalReconcile": {
+    "status": "FAIL",
+    "errors": 211,
+    "warnings": 1,
+    "existingDebtTask": "T-916"
+  }
+}

@@ -1,4 +1,4 @@
-import { prepareChatTurn } from "./chat-turn-preparation";
+import { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
 import { createServer } from "node:http";
 import { resolveChatMaxSteps, buildChatPrepareStep, buildForcedToolInstruction, repairScriptPatchToolCall, dedupeChatToolExecutions } from "@creatoros/ai-worker/chat";
 import { describe, it, expect, vi, beforeAll } from "vitest";
@@ -3311,4 +3311,53 @@ it("准备路径首次凭据失败后恢复配置，同一工具可以重试",as
  await expect(resolveModelSpec.mock.results[0]!.value).rejects.toThrow("凭据暂时不可用");
  expect(await runToolExecute(tool,{basis:"trend"})).toMatchObject({kind:"topic.candidates",items:[expect.objectContaining({title:"热点候选"})]});
  expect(resolveModelSpec).toHaveBeenCalledTimes(2);
+});
+
+function durableChatSnapshot(accountId: string, methodSystem: string) {
+ return {snapshotVersion:1 as const,userId:(ctx as RequestContext).userId,accountId,resolvedAt:"fixed",platformPolicyVersion:"v1",platformPolicy:"平台规则",skills:[
+  {skillId:"chatbox.topic",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem,template:"{{positioning}}",tools:["context.projects"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}},
+  {skillId:"creatoros.guide",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"真实产品说明",template:"",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}},
+ ]};
+}
+it("持久聊天准备将实际组装绑定到显式快照，调用后修改原输入不改变结果",async()=>{
+ const {deps,resolveModelSpec}=makeDeps();
+ const owner={...(ctx as RequestContext),accountId:"account-a"};
+ const snapshot=durableChatSnapshot(owner.accountId,"本轮固定方法");
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:"source",role:"user",parts:[{type:"text",text:"本轮问题"}]}],chatContext:{surface:"topics"},trustedScriptSources:[{ref:"s1",label:"原消息",text:"原文",truncated:false}]};
+ const listProjects=vi.spyOn(deps.contextReaders!,"listProjects");
+ const preparing=prepareDurableChatTurn(owner,input,deps,snapshot);
+ owner.accountId="account-mutated";
+ snapshot.skills[0]!.effective.methodSystem="后来的方法";
+ input.chatContext.surface="review";
+ input.messages[0]!.parts=[{type:"text",text:"后来的问题"}];
+ input.trustedScriptSources![0]!.text="后来的原文";
+ const prepared=await preparing;
+ expect(prepared.assembly.system).toContain("本轮固定方法");
+ expect(prepared.assembly.system).not.toContain("后来的方法");
+ expect(prepared.hostContext).toMatchObject({chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[{text:"原文"}],skillSnapshot:{accountId:"account-a"}});
+ expect(JSON.stringify(prepared.modelMessages)).toContain("本轮问题");
+ expect(JSON.stringify(prepared.modelMessages)).not.toContain("后来的问题");
+ prepared.hostContext.chatContext.surface="review";
+ prepared.hostContext.skillSnapshot.accountId="returned-mutated";
+ await runToolExecute(prepared.assembly.tools["context.projects"]!,{});
+ expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining({accountId:"account-a"}),expect.anything());
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});
+it("持久聊天准备并发账号使用各自快照，跨账号快照在读取上下文前拒绝",async()=>{
+ const {deps}=makeDeps();
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:"source",role:"user",parts:[{type:"text",text:"问题"}]}],chatContext:{surface:"topics"}};
+ const values=await Promise.all(["a","b"].map(accountId=>prepareDurableChatTurn({...(ctx as RequestContext),accountId},input,deps,durableChatSnapshot(accountId,`独立方法-${accountId}`))));
+ expect(values[0]!.assembly.system).toContain("独立方法-a");expect(values[0]!.assembly.system).not.toContain("独立方法-b");
+ expect(values[1]!.assembly.system).toContain("独立方法-b");
+ await expect(prepareDurableChatTurn({...(ctx as RequestContext),accountId:"a"},input,deps,durableChatSnapshot("b","错误方法"))).rejects.toThrow("归属不符");
+});
+
+it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{
+ const {deps}=makeDeps(),owner={...(ctx as RequestContext),accountId:"a"};
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[],chatContext:{surface:"topics"}};
+ const outer=durableChatSnapshot("a","外层方法"),inner=durableChatSnapshot("a","本轮方法");
+ inner.skills.pop();
+ await expect(runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,inner))).rejects.toThrow("creatoros.guide");
+ const prepared=await runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,durableChatSnapshot("a","显式方法")));
+ expect(prepared.assembly.system).toContain("显式方法");expect(prepared.assembly.system).not.toContain("外层方法");
 });
