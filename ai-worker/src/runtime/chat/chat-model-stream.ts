@@ -10,7 +10,7 @@ export type ChatModelStreamOptions = Pick<StreamOptions,
   "model" | "abortSignal" | "onAbort" | "onError" | "onStepEnd" | "onFinish" | "maxOutputTokens"
 > & {
   messages: ModelMessage[];
-  toolApproval?: Record<string, (input: unknown) => Promise<ToolApprovalStatus>>;
+  toolApproval?: Record<string, (input: unknown, options: {toolCallId: string}) => Promise<ToolApprovalStatus>>;
   system: string;
   tools: NonNullable<StreamOptions["tools"]>;
   maxSteps: number;

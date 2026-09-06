@@ -1,0 +1,3 @@
+backend/src/integration/durable-chat-tool-ledger.test.ts:6:import { runChatInWorker } from "@creatoros/ai-worker/chat-worker-run";
+backend/src/integration/durable-chat-tool-ledger.test.ts:68:      const result=await runChatInWorker(input,spec,new AbortController().signal,{
+ai-worker/src/execution/chat-worker-run.ts:24:export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof workerModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){

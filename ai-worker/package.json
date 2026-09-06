@@ -47,6 +47,10 @@
     "./chat": {
       "types": "./src/runtime/chat/index.ts",
       "default": "./src/runtime/chat/index.ts"
+    },
+    "./chat-worker-run": {
+      "types": "./src/execution/chat-worker-run.ts",
+      "default": "./src/execution/chat-worker-run.ts"
     }
   },
   "scripts": {

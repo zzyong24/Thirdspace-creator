@@ -1,11 +1,9 @@
 import { createServer } from "node:http";
 import { it, expect, vi } from "vitest";
-import { tool, type ModelMessage } from "ai";
+import { type ModelMessage } from "ai";
 import { z } from "zod";
 import { createDb, executionTasks, eq } from "@creatoros/backend";
-import { modelFor } from "@creatoros/ai-worker";
-import { createDurableStreamModel } from "@creatoros/ai-worker/durable-stream";
-import { createChatModelStream } from "@creatoros/ai-worker/chat";
+import { runChatInWorker } from "@creatoros/ai-worker/chat-worker-run";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "../modules/ai/ai.repository";
 import { createChatTurnSubmissionService } from "../modules/ai/chat-turn-submission.service";
@@ -15,7 +13,7 @@ import { createExecutionGenerationPorts } from "../modules/execution/execution-g
 import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { createExecutionAgenticToolPorts } from "../modules/execution/execution-agentic-tool-ports.service";
 
-it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行", async () => {
+it.each(["completed","unknown","approval","denied","empty","length","http429"])("真实聊天 Worker 回合绑定账本并恢复：%s", async mode => {
   const f=await createDb();
   const ctx={userId:"chat-u",accountId:"chat-a",requestId:"fixture",source:"user" as const};
   const now=()=>new Date().toISOString(),budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
@@ -24,15 +22,16 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
   let input=chatWorkerInputSchema.parse({kind:"chat.run",operationKey:"chat-turn",capability:"copilot.assist",userId:ctx.userId,accountId:ctx.accountId,
     conversationId:"conversation",sourceMessageId:"source-message",system:"查找真实来源",messages,maxSteps:6,maxOutputTokens:128,
     tools:[{name:"web.read",version:"1",description:"读取来源",parameters:z.toJSONSchema(parameters),effect:"none"}]});
-  let requests=0;const bodies:string[]=[];
+  let requests=0,approved=false;const bodies:string[]=[];
   const server=createServer((req,res)=>{
     let body="";req.on("data",chunk=>{body+=chunk;});req.on("end",()=>{
       requests++;
+      if(mode==="http429"){res.writeHead(429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rate limit"}}));return;}
       const parsed=JSON.parse(body);
       const hasResult=parsed.messages.some((message:{role:string})=>message.role==="tool");
       if(hasResult)bodies.push(body);
-      const delta=hasResult ? {content:"有来源的结论"} : {tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
-      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:hasResult?"stop":"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+      const delta=mode==="empty"?{content:""}:hasResult ? {content:mode==="denied"?"未执行读取":"有来源的结论"} : {tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
+      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:mode==="empty"?"stop":hasResult?(mode==="length"?"length":"stop"):"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
       res.writeHead(200,{"content-type":"text/event-stream"});
       res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
     });
@@ -58,35 +57,65 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
     const ledger=createExecutionCallLedgerService(f.db,{now,budget}),generation=createExecutionGenerationPorts(f.db,{now,budget});
     const execute=vi.fn(async(actualCtx:unknown,args:unknown)=>{
       expect(actualCtx).toMatchObject({userId:ctx.userId,accountId:ctx.accountId});expect(args).toEqual({query:"真实查询"});
+      if(mode==="unknown")throw Error("执行提交未知");
       return {status:"ok" as const,summary:"查到来源",data:{kind:"source-card",url:"https://source.test/real",text:"真实正文"},evidence:[{sourceUrl:"https://source.test/real"}],error:null,continuation:null,sideEffect:"none" as const};
     });
     const host=createExecutionAgenticToolPorts(f.db,{now,budget,tools:{"web.read":{version:"1",parameters,effect:"none",execute}}});
-    const provider=modelFor({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"});
+    const spec={apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"};
+    const checkpoints=createExecutionCheckpointService(f.db,{now});
     async function run(){
-      const modelForTool=new Map<string,string>();
-      const bind=(callId:string,receipt:any)=>{for(const part of receipt?.content??[])if(part.type==="tool-call")modelForTool.set(part.toolCallId,callId);};
-      const model=createDurableStreamModel({model:provider,operationKey:input.operationKey,ports:{
-        reserve:async(request)=>{const result=await generation.reserveGenerationCall(ref,request);bind(result.callId,result.providerResult);return result;},
-        start:async(callId)=>{await ledger.start(ref,callId);},
-        settle:async(callId,result)=>{await generation.settleGenerationCall(ref,{callId,...result});if(result.status==="settled")bind(callId,result.providerResult);},
-      }});
-      const result=createChatModelStream({model,messages,system:input.system,maxSteps:input.maxSteps,maxOutputTokens:input.maxOutputTokens,tools:{"web.read":tool({description:"读取来源",inputSchema:parameters,
-        execute:async(_args,options)=>{
-          const reservation=await host.reserve(ref,{modelCallId:modelForTool.get(options.toolCallId),toolCallId:options.toolCallId});
-          expect(reservation.toolName).toBe("web_read");
-          if(reservation.status!=="settled")await host.start(ref,{callId:reservation.callId});
-          return (await host.execute(ref,{callId:reservation.callId})).data;
+      const chunks:unknown[]=[];
+      const result=await runChatInWorker(input,spec,new AbortController().signal,{
+        approve:async()=>mode==="denied"?"denied":mode==="approval"?(approved?"approved":"user-approval"):"not-applicable",
+        onChunk:async(chunk)=>{chunks.push(chunk);},
+        call:async(port,data,signal)=>{
+          switch(port){
+            case "readCheckpoint":return checkpoints.read(ref);
+            case "saveCheckpoint":return checkpoints.save(ref,data);
+            case "reserveGenerationCall":return generation.reserveGenerationCall(ref,data);
+            case "startCall":{const row=await ledger.start(ref,(data as {callId:string}).callId);return {callId:row.id,status:row.status};}
+            case "settleGenerationCall":return generation.settleGenerationCall(ref,data);
+            case "reserveAgenticTool":return host.reserve(ref,data);
+            case "startAgenticTool":return host.start(ref,data);
+            case "executeAgenticTool":return host.execute(ref,data,signal);
+            case "settleAgenticTool":return host.settle(ref,data);
+            default:throw Error(`unbound port ${port}`);
+          }
         },
-      })}});
-      expect(await result.text).toBe("有来源的结论");
+      });
+      expect(result.message.id).toBe(`chat:${source.id}`);
+      if(result.outcome!=="awaiting_confirmation"){
+        expect(result.outcome).toBe(mode==="length"?"partial":"completed");
+        expect(result.text).toBe(mode==="denied"?"未执行读取":"有来源的结论");
+        if(mode!=="denied")expect(chunks).toContainEqual(expect.objectContaining({type:"tool-output-available",output:expect.objectContaining({kind:"source-card"})}));
+      }
+      return result;
+    }
+    if(mode==="http429"){
+      await expect(run()).rejects.toMatchObject({outcome:"retry_wait"});
+      expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();
+      expect((await ledger.inspect(ref)).calls.map(call=>call.status)).toEqual(["rejected"]);return;
+    }
+    if(mode==="empty"){
+      await expect(run()).rejects.toMatchObject({outcome:"failed",errorCode:"CHAT_OUTPUT_EMPTY"});
+      expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();return;
+    }
+    if(mode==="unknown"){
+      await expect(run()).rejects.toMatchObject({outcome:"unknown_result"});
+      await expect(run()).rejects.toMatchObject({outcome:"unknown_result"});
+      expect(requests).toBe(1);expect(execute).toHaveBeenCalledTimes(1);
+      expect((await ledger.inspect(ref)).calls.map(call=>call.status)).toEqual(["settled","unknown"]);
+      return;
+    }
+    if(mode==="approval"){
+      expect((await run()).outcome).toBe("awaiting_confirmation");
+      expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();approved=true;
     }
     await run();await run();
-    expect(bodies[0]).toContain("https://source.test/real");
-    expect(requests).toBe(2);expect(execute).toHaveBeenCalledTimes(1);
+    if(mode!=="denied")expect(bodies[0]).toContain("https://source.test/real");
+    expect(requests).toBe(2);expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
     const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(3);expect(state.spentTokens).toBe(10);
     expect(state.calls.map(call=>[call.kind,call.status])).toEqual([["model","settled"],["tool","settled"],["model","settled"]]);
-    const checkpoints=createExecutionCheckpointService(f.db,{now});
-    await checkpoints.save(ref,{expectedRevision:0,expectedLedgerSequence:state.calls.at(-1)!.sequence,messages:state.calls.map(call=>({role:call.kind==="model"?"assistant":"tool",callId:call.id}))});
     expect((await checkpoints.read(ref)).recovery).toBe("ready");
     const badVersion=createExecutionAgenticToolPorts(f.db,{now,budget,tools:{"web.read":{version:"2",parameters,effect:"none",execute}}});
     await expect(badVersion.reserve(ref,{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();
@@ -94,7 +123,7 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
     await f.db.update(executionTasks).set({payload:{modelInput:{...input,accountId:"foreign"}}}).where(eq(executionTasks.id,task.id));
     await expect(host.reserve(ref,{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();
     await expect(generation.reserveGenerationCall(ref,{operationKey:`${input.operationKey}/model/1`,request:{maxOutputTokens:128}})).rejects.toThrow();
-    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
   } finally {
     server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));await f.client.close();
   }

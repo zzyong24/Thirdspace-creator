@@ -1,0 +1,122 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，官方Worker与聊天路由尚未切换",
+  "distinctTests": 203,
+  "files": [
+    {
+      "path": "ai-worker/src/execution/chat-worker-run.ts",
+      "sha256": "4f948f1b41c33806bd06582e6b9d822e9b5b1cfcf76fcae10d99b76e5840969a"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-model-stream.ts",
+      "sha256": "fab7bb28600a60a7dcf10cb0ebb5082ae5ff1e23bd17ed0316f21d2dcb86e5bf"
+    },
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "1372aad986297000d3ac6707ee87bc6c1f52c81acd31e5b7c5495b11073b0b65"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "973fd7adc381a51fa48f6cf6a05d68efcf1643e33374847e73d2163c615008fc"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-callers-rg.log",
+      "sha256": "5188a07057dcd99369b2a2f2d9400b3ed333cc8240c7ed7e5de7705a685b5768"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-callers.log",
+      "sha256": "bc1c3f5ccab477cbe375ebdc86bdcd58791df3ebda48a8bb85199729c1264d9d"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-context.log",
+      "sha256": "8bb5bec04fc16e1ef3e06c75c049e83cce4ca6df5bd441a5976e94967a75468e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-final-integration.log",
+      "sha256": "1012719efe6b2606e17336eddab53afe2eb85ffc18561484306c707622fb222f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-ledger.log",
+      "sha256": "c6f5d7c4600252dca819058a544f457425cd57742d4ff2a8fce07002ca295f8b"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-legacy.log",
+      "sha256": "8c4c5f48bbff5003fffa7af5ba2c194ce247de57f6e75fea9ecedc20849af55f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-outcomes.log",
+      "sha256": "8e9988cb13966a0be0d54328271340f5980e46f036dddedf8518e70e201b0007"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-output-regression.log",
+      "sha256": "faa68c9751aa6bb35a5152a5e0b479356018cd838a54cfd938cd55e6ebff52ae"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-pmem.log",
+      "sha256": "03621447c6183c1eb8792303bcb1bbb643bfa5c8542575d1da57c435fd820e34"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-regression.log",
+      "sha256": "dcecd9526b1081fab4516f2c4da0bde1aeecf380f615ffaae695259beb93fe39"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-scope-final.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-scope.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-types-expanded.log",
+      "sha256": "e993a55ebaa1b0ddc7bbd6bf0112a7374b2397d67faa23c8ed413a3696d9ee2f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-types-final.log",
+      "sha256": "dd745ca373e422a1557052e58e5c70a9d71fb829471737c06d904b1c9f939ea2"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-types-verified.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-worker-types.log",
+      "sha256": "e3efe8cf73d8431ea682e0e8daf83a7b090b5240bf51e70c6634cf4af1695a92"
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1
+  },
+  "independentReview": "待完成",
+  "limitations": [
+    "集成运行正式模块但不是官方Worker子进程",
+    "授权回调为fixture",
+    "同参复用账本、非文字检查点、补丁修复关联待补齐",
+    "持久流/最终消息事务/正式授权UI待接",
+    "完整性能与双平台未验收"
+  ]
+}

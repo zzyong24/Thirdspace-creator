@@ -1,0 +1,9 @@
+Scope: 2 of 6 workspace projects
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: Done
+backend typecheck$ tsc --noEmit
+backend typecheck: src/integration/durable-chat-tool-ledger.test.ts(95,70): error TS2367: This comparison appears to be unintentional because the types '"unknown"' and '"denied"' have no overlap.
+backend typecheck: Failed
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2
