@@ -126,7 +126,7 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownCh
  }finally{supervisorSpy?.mockRestore();failureSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },15000);
 
-it("Worker 尚未声明结构化聊天能力时，不取凭据、不发主模型请求或准备生成", async()=>{
+it("监督器报告缺少结构化聊天能力时，不取凭据、不发主模型请求或准备生成", async()=>{
  const {z}=await import("zod");
  const ctx={userId:"structured-cap-u",accountId:`structured-cap-${++seq}`,requestId:"test",source:"user" as const}, now=()=>new Date().toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
@@ -137,13 +137,13 @@ it("Worker 尚未声明结构化聊天能力时，不取凭据、不发主模型
  const credential=vi.fn(async()=>({apiFormat:"openai_chat",baseUrl:null,model:"unavailable",token:"unavailable"}));
  const prepareGeneration=vi.fn(async()=>{throw new Error("缺少 Worker 能力时不得准备生成");});
  const advertised:string[][]=[], realSupervisor=supervisorModule.createWorkerSupervisor;
- const supervisorSpy=vi.spyOn(supervisorModule,"createWorkerSupervisor").mockImplementation(options=>{const supervisor=realSupervisor(options);return {...supervisor,async start(){const capabilities=await supervisor.start();advertised.push(capabilities);return capabilities;}};});
+ const supervisorSpy=vi.spyOn(supervisorModule,"createWorkerSupervisor").mockImplementation(options=>{const supervisor=realSupervisor(options);return {...supervisor,async start(){const capabilities=await supervisor.start();advertised.push(capabilities);return capabilities.filter(value=>value!=="chat.structured");}};});
  const host=createChatWorkerDispatcher(db,{now,entryPath,workerId:"structured-cap-host",budget:{maxCalls:10,maxTokens:10000,deadlineMs:60000},modelConcurrency:1,tools:{[name]:{version:definition.version,effect:"proposal",execution:"worker.structured-node",parameters:z.object({}),approve:async()=>({status:"not-applicable"}),prepareGeneration}},resolveModelCredential:credential});
  try {
   await host.drainOnce();
   const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
   expect(task?.status).toBe("failed");expect(task?.lastErrorCode).toBe("CHAT_WORKER_INPUT_UNAVAILABLE");
-  expect(advertised.some(capabilities=>capabilities.includes("chat.run") && !capabilities.includes("chat.structured"))).toBe(true);
+  expect(advertised.some(capabilities=>capabilities.includes("chat.run") && capabilities.includes("chat.structured"))).toBe(true);
   expect(credential).not.toHaveBeenCalled();expect(prepareGeneration).not.toHaveBeenCalled();
   expect(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task!.id))).toHaveLength(0);
  }finally{await host.stop();supervisorSpy.mockRestore();}

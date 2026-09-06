@@ -1,5 +1,5 @@
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
-import {completedChatHooksParents} from "./chat-hooks-recovery";
+import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -784,7 +784,8 @@ export function createPersistentTaskService(
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
           }
-          const completedParents=completedChatHooksParents(row,calls);
+          const recoverable=recoverableChatNodeParents(row,calls);
+          const completedParents=[...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured];
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {

@@ -1,4 +1,4 @@
-import {completedChatHooksParents} from "./chat-hooks-recovery";
+import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createServer } from "node:http";
 import { generateText } from "ai";
@@ -702,7 +702,7 @@ it.each(["未知子","缺用量","预留子","坏回执","宿主执行","跨任�
  await f.hooks.settle(f.ref,{callId:child.callId,...success});
  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
  const calls=(await f.ledger.inspect(f.ref)).calls;
- expect(completedChatHooksParents(task!,calls)).toEqual([f.parent.callId]);
+ expect(recoverableChatNodeParents(task!,calls).completedHooks).toEqual([f.parent.callId]);
  const changed=structuredClone(calls),changedTask=structuredClone(task!);
  const parent=changed.find(call=>call.id===f.parent.callId)!,model=changed.find(call=>call.id===child.callId)!;
  if(kind==="未知子")model.status="unknown";
@@ -717,7 +717,7 @@ it.each(["未知子","缺用量","预留子","坏回执","宿主执行","跨任�
  if(kind==="宿主冻结声明")(changedTask.payload as {modelInput:{tools:Array<{execution?:string}>}}).modelInput.tools[0]!.execution="host";
  if(kind==="其他在途调用")changed.push({...parent,id:"other-parent",sequence:model.sequence+1});
  if(kind==="两个成功子")changed.push({...model,id:"other-child",sequence:model.sequence+1,retryOfCallId:model.id});
- expect(completedChatHooksParents(changedTask,changed)).toEqual([]);
+ expect(recoverableChatNodeParents(changedTask,changed).completedHooks).toEqual([]);
 });
 
 it("开场首次准备持久冻结，重建服务不重新拼接提示词或复用可变返回对象", async () => {

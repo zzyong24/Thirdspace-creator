@@ -125,6 +125,7 @@ it("正式Worker经动态工具工厂读取真实项目，下一轮供应商请�
 },30000);
 
 it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选",async()=>{
+ const {loadPositioningWorksBrief}=await import("../../../backend/src/modules/ai-runtime/creative-context");
  const {prepareDurableChatTurn,createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
  const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
  const {createSettingsRepository}=await import("@creatoros/backend/modules/settings");
@@ -155,12 +156,12 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   const source=await repo.createMessage(conversation.id,{role:"user",content:"读取我的项目，再为选题生成开场",attachments:[],modelMetadata:{}});
   const resolveCredential=vi.fn(runtime.resolveModelSpec);
   const submitted=await createChatTurnSubmissionService(db,{assemble:async(context,snapshot)=>{
-   const skills=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(context,["chatbox.topic","creatoros.guide"]));
+   const skills=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(context,["chatbox.topic","creatoros.guide","topic.enrich","positioning.generate"]));
    expect(skills.skills.find(skill=>skill.skillId==="chatbox.topic")!.overlayRevision).toBe(1);
    const prepared=await prepareDurableChatTurn(context,{
     messages:snapshot.messages.map(message=>({id:message.id,role:message.role as "user"|"assistant",parts:[{type:"text" as const,text:message.content}]})),
     chatContext:{surface:"topics",selection:{kind:"candidate",ids:[],label:"用户选中的主题"}},
-   },{...runtime.context,contextReaders:runtime.contextReaders,resolveModelSpec:resolveCredential,humanizeError:()=>null},skills,{scriptHooksGeneration:{version:1,maxOutputTokens:2048}});
+   },{...runtime.context,contextReaders:runtime.contextReaders,resolveModelSpec:resolveCredential,humanizeError:()=>null},skills,{scriptHooksGeneration:{version:1,maxOutputTokens:2048},structuredGeneration:{version:1,maxOutputTokens:2048}});
    expect(prepared.hostContext.scriptHooksContext!.selectionTitle).toBe("用户选中的主题");
    // Skill 工具是优先顺序；完整场景清单不能为了测试通过而裁掉。
    expect(prepared.toolDefinitions.map(tool=>tool.name)).toEqual(expect.arrayContaining(["context.projects","script.hooks","topic.generate","brief.fill"]));
@@ -168,7 +169,7 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   }}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
   expect(resolveCredential).not.toHaveBeenCalled();expect(requests).toHaveLength(0);
   const missingTools:string[]=[];let factoryFailure="";
-  const resolveTools=createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}});
+  const resolveTools=createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs},structured:{readWorks:(context,limit)=>loadPositioningWorksBrief(context,runtime.context.positioningWorks,limit),getPositioningDiscovery:runtime.getPositioningDiscovery}});
   host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"assembled-chat",budget:{maxCalls:12,maxTokens:300000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await resolveTools(...args);missingTools.push(...args[1].tools.filter(tool=>!Object.hasOwn(tools,tool.name)).map(tool=>tool.name));return tools;}catch(error){factoryFailure=error instanceof Error?error.message:String(error);throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
   host.start();
   await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(["queued","running"]).not.toContain(task!.status);},{timeout:15000});

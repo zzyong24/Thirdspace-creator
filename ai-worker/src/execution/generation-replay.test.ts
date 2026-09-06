@@ -87,3 +87,18 @@ it("修复请求只能由原完成策略和已结算对象推导，篡改的修�
     await expect(replayStructuredGeneration({...identity,receipts:[initial,forged]},repairNode)).rejects.toThrow("REQUEST_MISMATCH");
   });
 });
+
+
+it("仅已确认坏输出可投影为节点失败，未知、篡改和多余回执仍拒绝", async () => {
+  const initial=await replayStructuredGeneration({...identity,structuredOutputMode:"text",receipts:[]},node);
+  if(initial.status!=="next-request")throw new Error("expected text request");
+  const request=initial.request;
+  const bad=settled(request,'{"wrong":true}');
+  expect(await replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[bad]},node)).toEqual({status:"failed",consumed:1});
+  for(const status of ["unknown","rejected"] as const){
+    await expect(replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[{...bad,status}]},node)).rejects.toThrow("REQUIRES_RECONCILIATION");
+  }
+  await expect(replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[{...bad,inputDigest:"forged"}]},node)).rejects.toThrow("REQUEST_MISMATCH");
+  await expect(replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[bad,bad]},node)).rejects.toThrow();
+  await expect(replayStructuredGeneration({...identity,structuredOutputMode:"text",captureNodeFailure:true,receipts:[bad],signal:AbortSignal.abort()},node)).rejects.toThrow();
+});

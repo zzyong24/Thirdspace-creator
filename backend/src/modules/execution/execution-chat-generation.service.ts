@@ -1,9 +1,10 @@
+import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {asc,eq,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {workerPortInputSchemas,workerSkillSnapshotSchema,workerToolResultReceiptSchema,agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {workerPortInputSchemas,workerSkillSnapshotSchema,chatStructuredNodeSchema,workerToolResultReceiptSchema,agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {replayStructuredGeneration,generationRequestDigest,type GenerationReplayReceipt} from "@creatoros/ai-worker/chat";
 import {providerIdentityFor,structuredModeForIdentity} from "@creatoros/ai-worker/model-identity";
 import {getTemplate,runWithEffectiveSkillSnapshot,type TopicCardOutput,type PositioningSuggestionOutput} from "@creatoros/ai-worker";
@@ -17,11 +18,7 @@ import {createExecutionChatModelIdentityService} from "./execution-chat-model-id
 import {createAgenticToolBinding} from "./agentic-tool-binding";
 import type {ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {ConflictError} from "./execution.errors";
-const nodeSchema=z.discriminatedUnion("capability",[
- z.object({capability:z.literal("topic.enrich"),facets:z.record(z.string(),z.string()),candidateId:z.string().min(1).nullable()}).strict(),
- z.object({capability:z.literal("positioning.generate"),facets:z.record(z.string(),z.string())}).strict(),
-]);
-const preparationSchema=z.object({node:nodeSchema,discovery:z.object({sessionId:z.string().min(1),candidateId:z.string().min(1),candidateRevision:z.number().int()}).strict().nullable(),maxOutputTokens:z.number().int().positive().max(65536),skillSnapshot:workerSkillSnapshotSchema}).strict();
+const preparationSchema=z.object({node:chatStructuredNodeSchema,discovery:z.object({sessionId:z.string().min(1),candidateId:z.string().min(1),candidateRevision:z.number().int()}).strict().nullable(),maxOutputTokens:z.number().int().positive().max(65536),skillSnapshot:workerSkillSnapshotSchema}).strict();
 type Call=typeof executionCalls.$inferSelect;
 const parentRequest=workerPortInputSchemas.prepareChatGeneration;
 /** 有限共享生成协议：真实父工具确定输入，原节点回放确定每次模型请求和最终候选。 */
@@ -91,8 +88,8 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    return {inputDigest:call.inputDigest,status:call.status,providerResult:call.providerResult,rejectionCode:call.rejectionCode};
   });
  }
- async function replay(value:Awaited<ReturnType<typeof prepared>>,recorded:GenerationReplayReceipt[],signal?:AbortSignal){
-  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayStructuredGeneration<TopicCardOutput|PositioningSuggestionOutput>({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal},{template:getTemplate(value.node.capability),facets:value.node.facets,maxOutputTokens:value.maxOutputTokens}));
+ async function replay(value:Awaited<ReturnType<typeof prepared>>,recorded:GenerationReplayReceipt[],signal?:AbortSignal,captureNodeFailure=false){
+  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayStructuredGeneration<TopicCardOutput|PositioningSuggestionOutput>({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},{template:getTemplate(value.node.capability),facets:value.node.facets,maxOutputTokens:value.maxOutputTokens}));
  }
  function rejectedTail(calls:Call[],callId:string,key:string){
   const tree=groups(calls,callId,key),last=tree.result.at(-1)?.at(-1);
@@ -126,8 +123,9 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    return leases.withLease(ref,"admission",async({tx,task})=>{
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const found=find(task,calls,callId);current(calls,found);
-    const last=rejectedTail(calls,callId,value.operationKey);
-    if(found.parent.status!=="started" || task.retryOfCallId!==last.id || calls.some(call=>call.status==="unknown" || (call.status==="started" && call.id!==callId)))throw new ConflictError("原任务没有可恢复的生成拒绝记录");
+    const recoverable=recoverableChatNodeParents(task,calls);
+    if(found.parent.status!=="started" || !recoverable.structured.includes(callId))throw new ConflictError("原任务没有可回放的生成记录");
+    groups(calls,callId,value.operationKey);
     signal?.throwIfAborted();await tx.update(executionCalls).set({startedAttempt:ref.attempt,updatedAt:(deps.now??(()=>new Date().toISOString()))()}).where(eq(executionCalls.id,callId));
     return {callId,status:"started" as const};
    });
@@ -176,10 +174,10 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const {callId}=workerPortInputSchemas.completeChatGeneration.parse(raw),value=await prepared(ref,{callId},signal),state=await ledger.inspect(ref),tree=groups(state.calls,callId,value.operationKey);
    if(!tree.result.length)throw new ConflictError("生成尚无模型回执");
-   const result=await replay(value,receipts(tree.result),signal);
-   if(result.status!=="complete" || result.consumed!==tree.result.length)throw new ConflictError("原节点仍需生成，不能伪造完成");
-   const data=value.node.capability==="topic.enrich"?{kind:"topic.card",card:normalizeCard(result.value.object as TopicCardOutput),candidateId:value.node.candidateId}:{kind:"positioning.suggestion",suggestion:normalizeSuggestion(result.value.object as PositioningSuggestionOutput),discovery:value.discovery};
-   const output=agenticToolOutcomeSchema.parse({status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
+   const result=await replay(value,receipts(tree.result),signal,true);
+   if(result.status==="next-request" || result.consumed!==tree.result.length)throw new ConflictError("原节点仍需生成，不能伪造完成");
+   const data=result.status==="failed"?null:value.node.capability==="topic.enrich"?{kind:"topic.card",card:normalizeCard(result.value.object as TopicCardOutput),candidateId:value.node.candidateId}:{kind:"positioning.suggestion",suggestion:normalizeSuggestion(result.value.object as PositioningSuggestionOutput),discovery:value.discovery};
+   const output=agenticToolOutcomeSchema.parse(result.status==="failed"?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
    const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:value.bound.toolCallId,toolName:value.bound.toolName,output}));
    await ledger.settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText},undefined,(calls,task)=>{
     const found=find(task,calls,callId);current(calls,found);

@@ -1,0 +1,48 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=33 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=8 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=8 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=10 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+stdout | src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+[structured-node] template=topic.enrich status=error durationMs=10 path=text_fallback modelCalls=2 inputTokens=0 outputTokens=0
+
+ ❯ src/integration/chat-generation-worker.test.ts (16 tests | 1 failed | 15 skipped) 4171ms
+   × 同一真实 Worker 内部结构化生成：crashTwoNodes 2383ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:112:24
+    110|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    111|   }
+    112|   expect(task?.status).toBe("succeeded");
+       |                        ^
+    113|   if(mode==="badOutput"){
+    114|    const rows=await db.select().from(executionCalls).where(eq(executio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  06:52:13
+   Duration  6.53s (transform 1.37s, setup 0ms, import 2.18s, tests 4.17s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/chat-generation-worker.test.ts -t crashTwoNodes

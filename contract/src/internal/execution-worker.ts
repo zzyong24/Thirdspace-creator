@@ -168,6 +168,11 @@ export const workerSkillSnapshotSchema=z.object({
     methodSystem:z.string(),template:z.string(),tools:z.array(z.string()),requiredFacets:z.array(z.string()),contextRequirements:z.array(z.string()),outputSchema:z.record(z.string(),z.json()).nullable(),completionPolicy:completionPolicySchema.nullable(),completionPolicyAdapter:z.object({id:z.string().min(1),version:z.string().min(1)}).strict().nullable(),
   }).strict()}).strict()).min(1),
 }).strict();
+export const chatStructuredNodeSchema=z.discriminatedUnion("capability",[
+ z.object({capability:z.literal("topic.enrich"),facets:z.record(z.string(),z.string()),candidateId:z.string().min(1).nullable()}).strict(),
+ z.object({capability:z.literal("positioning.generate"),facets:z.record(z.string(),z.string())}).strict(),
+]);
+export const chatGenerationPreparationSchema=z.object({node:chatStructuredNodeSchema,skillSnapshot:workerSkillSnapshotSchema,maxOutputTokens:z.number().int().positive().max(65536),operationKey:z.string().min(1).max(256),retryOfCallId:z.string().min(1).optional(),retryOperationKey:z.string().min(1).optional()}).strict();
 export const structuredGenerationInputSchema=z.object({
   kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),

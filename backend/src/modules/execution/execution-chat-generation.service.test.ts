@@ -227,7 +227,12 @@ it("坏结构回执和 Worker 自报候选均不能伪造成完成",async()=>{
  await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:"不是有效对象"}]}});
  await expect(f.service.complete(f.ref,{callId:f.parent.callId,object:{oneLiner:"伪造"}})).rejects.toThrow();
  await expect(f.service.complete(f.ref,{callId:f.parent.callId})).rejects.toThrow();
- expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)).toMatchObject({status:"started",resultText:null});
+ const row=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===child.callId)!;
+ const second=await next(f,[{inputDigest:row.inputDigest,status:"settled",providerResult:row.providerResult}]);
+ const fallback=await f.service.reserve(f.ref,second);await f.service.start(f.ref,{callId:fallback.callId});
+ await f.service.settle(f.ref,{callId:fallback.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:"仍然不是有效对象"}]}});
+ expect(await f.service.complete(f.ref,{callId:f.parent.callId})).toMatchObject({status:"error",sideEffect:"none",error:{code:"no_evidence"}});
+ expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)).toMatchObject({status:"settled"});
 });
 it("准备后取消不能启动子模型，跨任务父调用不能取凭据",async()=>{
  const f=await fixture(),other=await fixture(),request=await next(f),child=await f.service.reserve(f.ref,request);

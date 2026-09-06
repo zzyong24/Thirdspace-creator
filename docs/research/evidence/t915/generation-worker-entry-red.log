@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-generation-worker.test.ts (13 tests | 1 failed | 12 skipped) 1290ms
+   × 同一真实 Worker 内部结构化生成：success 243ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：success
+AssertionError: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/integration/chat-generation-worker.test.ts:111:24
+    109|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    110|   }
+    111|   expect(task?.status).toBe("succeeded");expect(requests).toHaveLength…
+       |                        ^
+    112|   expect(JSON.stringify(requests[1]?.messages)).toContain("真实主题");
+    113|   expect(JSON.stringify(requests.at(-1)?.messages)).toContain("真实选题卡");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  06:41:02
+   Duration  2.75s (transform 795ms, setup 0ms, import 1.33s, tests 1.29s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/chat-generation-worker.test.ts -t ：success

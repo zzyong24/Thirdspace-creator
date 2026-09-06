@@ -12,6 +12,7 @@ const worker = createExecutionWorker({
   generateStructured:generateStructuredInWorker,
   runChat:runChatInWorker,
   supportsChatHooks:true,
+  supportsChatStructured:true,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
     let streamFailed = false;

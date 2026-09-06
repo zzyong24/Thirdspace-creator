@@ -26,10 +26,13 @@ export interface GenerationReplayInput {
   structuredOutputMode?: StructuredOutputMode;
   receipts: readonly GenerationReplayReceipt[];
   signal?: AbortSignal;
+  /** 仅当全部已确认回执已消费且节点自身失败时，返回失败而非伪造候选。 */
+  captureNodeFailure?: boolean;
 }
 export type GenerationReplayResult<T> =
   | { status: "next-request"; request: Record<string, unknown>; consumed: number }
-  | { status: "complete"; value: T; consumed: number };
+  | { status: "complete"; value: T; consumed: number }
+  | { status: "failed"; consumed: number };
 
 /** 无网络回放：同一节点只消费已确认回执，遇到下一请求立即停下供宿主核验。 */
 export async function replayGenerationNode<T>(input: GenerationReplayInput, execute: (model: LanguageModel) => Promise<T>): Promise<GenerationReplayResult<T>> {
@@ -63,6 +66,7 @@ export async function replayGenerationNode<T>(input: GenerationReplayInput, exec
   } catch (error) {
     input.signal?.throwIfAborted();
     if (error === stop && next) return { status: "next-request", request: next, consumed };
+    if(input.captureNodeFailure && !next && source.receipts.length>0 && consumed===source.receipts.length)return {status:"failed",consumed};
     throw error;
   }
 }

@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "84697bd6e1c3158de2ac336311c7e00269707e495dc3dc7edd1a517ae7fc94b4",
+      "file_sha256": "684a3802a4c4e20b8d8c85927c5f40e10cf63fb155cebc84ce85ec4a063dcd67",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities、命名 IPC 与取消后既有调用结算。本次声明并核对 chat.hooks 能力，将内部模型结算接入既有 settlement 校验，不增加领域写入权。独立只读评审已核对 db847331 的三个 IPC 文件仍在授权范围。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities 和命名 IPC。本次在已有生成端口上接通 chat.structured，并保留注入运行器的能力校验，不增加进程拓扑或领域写入权；独立只读审查已复核恢复顺序与能力声明。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "c917f78e98cf5b428c750e403d134ec59a97375aed18a14a4dacadbb6cff3d27",
+      "file_sha256": "26791d8e4d316221a2374537e04cf09c59d68d297097fd286da99c80d4e27d2a",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities、命名 IPC 与取消后既有调用结算。本次声明并核对 chat.hooks 能力，将内部模型结算接入既有 settlement 校验，不增加领域写入权。独立只读评审已核对 db847331 的三个 IPC 文件仍在授权范围。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities 和命名 IPC。本次在已有生成端口上接通 chat.structured，并保留注入运行器的能力校验，不增加进程拓扑或领域写入权；独立只读审查已复核恢复顺序与能力声明。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1568,6 +1568,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "本证据记录既有命名 IPC 共享生成端口及真实账本恢复测试，仅登记说明文档的通信术语；不新增产品范围、通信拓扑、安装或发布。",
       "acceptance": "只绑定证据文件复杂度，不代表完整 T-915 或 Worker 新生成入口验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/generation-worker.md"
+      ],
+      "file_sha256": "31ba51afba16ad92e63d62b735331fcc60adecaae83aaa6888c206fc8f0642f6",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件仅记录已授权 Worker IPC 接线及真实验证，不扩展架构或授权。",
+      "acceptance": "复杂度登记不代表产品或历史验收通过。"
     }
   ],
   "historical_baselines": []
