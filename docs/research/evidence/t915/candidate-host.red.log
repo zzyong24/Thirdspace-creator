@@ -1,0 +1,65 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-candidate-tool-host.test.ts (5 tests | 5 failed) 267ms
+   × 组合工厂提供原定义的两个纯候选工具，经验只回显模型参数 262ms
+   × 策划候选读取冻结账号和项目的当前值，不接受模型提供另一个项目 1ms
+   × 无项目保留空 current；取消、非法输入和失效租约不会执行领域读取 1ms
+   × 候选执行时账号变化，原工厂不能继续执行 1ms
+   × 候选执行时定义变化，原工厂不能继续执行 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-candidate-tool-host.test.ts > 组合工厂提供原定义的两个纯候选工具，经验只回显模型参数
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-candidate-tool-host.test.ts:23:61
+     21| it("组合工厂提供原定义的两个纯候选工具，经验只回显模型参数",async()=>{
+     22|  const f=await fixture(),tools=await f.resolve(f.context,f.restored.mo…
+     23|  const learning=tools["learning.capture"]!;expect(learning).toBeDefine…
+       |                                                             ^
+     24|  const input={title:"复盘经验",insight:"保留实际原因",learningType:"process"};
+     25|  expect(await learning.approve(f.context,input,{execution:f.execution,…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/ai-runtime/chat-candidate-tool-host.test.ts > 策划候选读取冻结账号和项目的当前值，不接受模型提供另一个项目
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-candidate-tool-host.test.ts:31:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/ai-runtime/chat-candidate-tool-host.test.ts > 无项目保留空 current；取消、非法输入和失效租约不会执行领域读取
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-candidate-tool-host.test.ts:39:16
+     37| it("无项目保留空 current；取消、非法输入和失效租约不会执行领域读取",async()=>{
+     38|  const f=await fixture(),tools=await f.resolve(f.context,f.restored.mo…
+     39|  expect(brief).toBeDefined();
+       |                ^
+     40|  expect(await brief.execute!(f.context,{contentGoal:"解释清楚"},f.scope)).…
+     41|  expect((await brief.execute!(f.context,{contentGoal:3},f.scope)).stat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/ai-runtime/chat-candidate-tool-host.test.ts > 候选执行时账号变化，原工厂不能继续执行
+ FAIL  src/modules/ai-runtime/chat-candidate-tool-host.test.ts > 候选执行时定义变化，原工厂不能继续执行
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-candidate-tool-host.test.ts:49:16
+     47| it.each(["账号","定义"])("候选执行时%s变化，原工厂不能继续执行",async(kind)=>{
+     48|  const f=await fixture("project-a"),tools=await f.resolve(f.context,f.…
+     49|  expect(brief).toBeDefined();
+       |                ^
+     50|  if(kind==="账号")f.restored.context.accountId="b";else f.restored.model…
+     51|  expect((await brief.execute!(f.context,{},f.scope)).status).not.toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  03:11:24
+   Duration  627ms (transform 308ms, setup 0ms, import 219ms, tests 267ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-candidate-tool-host.test.ts

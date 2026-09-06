@@ -189,3 +189,56 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();
  }
 },30000);
+
+it("候选工具经真实 Worker 回传卡片，项目当前值和经验实体保持不变",async()=>{
+ const {createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
+ const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
+ const {executionTasks,executionCalls,aiMessages,learnings,eq,and}=await import("@creatoros/backend");
+ const {createServer}=await import("node:http"),{resolve}=await import("node:path"),{execFileSync}=await import("node:child_process");
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR","");__resetPersistenceForTests();
+ const requests:string[]=[];
+ const server=createServer(async(req,res)=>{
+  let body="";for await(const chunk of req)body+=chunk.toString();requests.push(body);
+  const done=JSON.parse(body).messages.some((message:{role:string})=>message.role==="tool");
+  const delta=done?{content:"两个候选已准备好，请采纳"}:{tool_calls:[
+   {index:0,id:"learning",type:"function",function:{name:"learning_capture",arguments:JSON.stringify({title:"保留证据",insight:"区分事实和推断",learningType:"process"})}},
+   {index:1,id:"brief",type:"function",function:{name:"brief_fill",arguments:JSON.stringify({targetAudience:"新观众"})}},
+  ]};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:done?"stop":"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });
+ let host:ReturnType<typeof createChatWorkerDispatcher>|undefined;
+ try{
+  await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
+  const runtime=await getChatRuntime(),db=fixture.db!,now=()=>new Date().toISOString();let seq=0,briefReads=0;
+  const ctx:RequestContext={userId:"candidate-worker",accountId:"a",source:"user",requestId:"test"};
+  const project=await compositeTransport.request({id:"projects.create"} as Endpoint,{body:{title:"候选项目",briefDetail:{targetAudience:"原观众"}}} as never,ctx) as {data:{id:string}};
+  const before=await runtime.contextReaders.getProjectBrief(ctx,{projectId:project.data.id});
+  const learningRows=()=>db.select().from(learnings).where(and(eq(learnings.userId,ctx.userId),eq(learnings.accountId,ctx.accountId!)));
+  const beforeLearnings=await learningRows();
+  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId!,now,nextId:prefix=>`${prefix}-candidate-${++seq}`});
+  const conversation=await repo.createConversation({title:"候选工具验证",projectId:project.data.id,scope:"project"});
+  const source=await repo.createMessage(conversation.id,{role:"user",content:"整理一条经验并补充目标观众",attachments:[],modelMetadata:{}});
+  const definitions=(await prepareChatToolDefinitions(buildChatTools(["learning.capture","brief.fill"],{} as ChatToolDeps))).definitions;
+  const snapshot=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]));
+  // 单独验证新工具实际 Worker 链路；完整场景装配红测仍在上方保留，不裁剪其白名单。
+  const submitted=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"整理候选",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:6,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.data.id},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:snapshot}})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  const readers={...runtime.contextReaders,getProjectBrief:async(...args:Parameters<typeof runtime.contextReaders.getProjectBrief>)=>{briefReads++;return runtime.contextReaders.getProjectBrief(...args);}};
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"candidate-worker",budget:{maxCalls:8,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:createChatTaskToolHost(createChatHostContextReader(db),readers),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+  host.start();
+  await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(["queued","running"]).not.toContain(task!.status);},{timeout:15000});
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(task!.status,task!.lastErrorCode??"").toBe("succeeded");
+  expect(requests).toHaveLength(2);expect(briefReads).toBe(1);
+  expect(requests[1]).toContain("原观众");expect(requests[1]).toContain("新观众");expect(requests[1]).toContain("保留证据");
+  const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));
+  const assistant=messages.find(message=>message.role==="assistant")!;expect(assistant.content).toBe("两个候选已准备好，请采纳");
+  expect(JSON.stringify(assistant.parts)).toContain("新观众");expect(JSON.stringify(assistant.parts)).toContain("保留证据");
+  expect(await runtime.contextReaders.getProjectBrief(ctx,{projectId:project.data.id})).toEqual(before);expect(await learningRows()).toEqual(beforeLearnings);
+  const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));expect(calls).toHaveLength(4);expect(calls.every(call=>call.status==="settled")).toBe(true);
+  expect(calls.filter(call=>call.kind==="tool").map(call=>JSON.parse(call.resultText!).output.sideEffect)).toEqual(["proposal","proposal"]);
+ }finally{
+  await host?.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));
+  await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();
+ }
+},30000);
