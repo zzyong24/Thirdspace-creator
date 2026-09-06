@@ -24,18 +24,8 @@ import {
 import { ConflictError } from "./execution.errors";
 import { createExecutionModelIdentityService } from "./execution-model-identity.service";
 import { providerIdentityFor } from "@creatoros/ai-worker/model-identity";
-const id = z.string().min(1).max(256),
-  parentRequest = z.object({ callId: id }).strict();
-const reserveRequest = z
-  .object({
-    callId: id,
-    operationKey: id,
-    request: z
-      .record(z.string(), z.json())
-      .refine((value) => JSON.stringify(value).length <= 4_000_000),
-    retryOfCallId: id.optional(),
-  })
-  .strict();
+const parentRequest=workerPortInputSchemas.prepareChatHooks;
+const reserveRequest=workerPortInputSchemas.reserveChatHooksModel;
 const argsSchema = z
   .object({
     topic: z.string().optional(),
@@ -77,7 +67,7 @@ export function createExecutionChatHooksService(
       throw new ConflictError("开场调用缺少独立 Worker 父工具");
     const bound = binding.forCall(task, calls, parent);
     if (
-      bound.executionToolName !== "script.hooks" ||
+      bound.executionToolName !== "script.hooks" || bound.execution!=="worker.script-hooks" ||
       bound.effect !== "proposal" ||
       bound.validationOutcome
     )
@@ -273,7 +263,7 @@ export function createExecutionChatHooksService(
     },
     async settle(ref: ExecutionRef, raw: unknown) {
       const { callId, ...input } =
-        workerPortInputSchemas.settleGenerationCall.parse(raw);
+        workerPortInputSchemas.settleChatHooksModel.parse(raw);
       const settled = await ledger.settle(
         ref,
         callId,

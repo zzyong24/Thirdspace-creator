@@ -39,7 +39,7 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
     },
     async settleGenerationCall(ref:ExecutionRef,raw:unknown){
       const {callId,...input}=workerPortInputSchemas.settleGenerationCall.parse(raw);
-      const call=await ledger.settle(ref,callId,input, call=>{if(call.kind!=="model")throw new ConflictError("模型端口不能结算工具调用");});
+      const call=await ledger.settle(ref,callId,input, call=>{if(call.kind!=="model" || call.parentCallId)throw new ConflictError("通用模型端口只能结算根模型调用");});
       return {callId:call.id,status:call.status};
     },
     async saveGenerationResult(ref:ExecutionRef,raw:unknown){
@@ -48,8 +48,8 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
       // 这里只补充原调用的已验证节点结果，保留原始回执与真实用量；候选仍经业务采纳。
       const state=await ledger.inspect(ref);
       const last=state.calls.at(-1);
-      if(last?.id!==input.callId || last.status!=="settled" || !last.providerResult)throw new ConflictError("结构化结果缺少最后调用证据");
-      const call=await ledger.settle(ref,input.callId,{status:"settled",usage:{},resultText:input.text});
+      if(last?.id!==input.callId || last.status!=="settled" || last.kind!=="model" || last.parentCallId || !last.providerResult)throw new ConflictError("结构化结果缺少最后调用证据");
+      const call=await ledger.settle(ref,input.callId,{status:"settled",usage:{},resultText:input.text},call=>{if(call.kind!=="model" || call.parentCallId)throw new ConflictError("结构化结果只能附加到根模型调用");},calls=>{if(calls.at(-1)?.id!==input.callId)throw new ConflictError("结构化结果已不属于最后调用");});
       return {callId:call.id};
     },
   };

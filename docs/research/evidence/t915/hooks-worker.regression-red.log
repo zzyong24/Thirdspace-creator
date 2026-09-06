@@ -1,0 +1,64 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/worker-supervisor.test.ts (11 tests | 2 failed) 3138ms
+     × 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果 172ms
+     × 活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动 513ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果
+AssertionError: expected [ 'model.generate', …(3) ] to deeply equal [ Array(2) ]
+
+- Expected
++ Received
+
+  [
+    "model.generate",
+    "model.structured",
++   "chat.run",
++   "chat.hooks",
+  ]
+
+ ❯ src/modules/execution/worker-supervisor.test.ts:63:40
+     61|     }});
+     62|     try {
+     63|       expect(await supervisor.start()).toEqual(["model.generate", "mod…
+       |                                        ^
+     64|       expect(await supervisor.run(execution, Date.now()+10000)).toBe("…
+     65|       expect(requestCount).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动
+AssertionError: expected [ 'model.generate', …(3) ] to deeply equal [ Array(2) ]
+
+- Expected
++ Received
+
+  [
+    "model.generate",
+    "model.structured",
++   "chat.run",
++   "chat.hooks",
+  ]
+
+ ❯ src/modules/execution/worker-supervisor.test.ts:183:40
+    181|       expect(calls.find(x => x.port === "settleCall")?.data).toMatchOb…
+    182|       await supervisor.stop();
+    183|       expect(await supervisor.start()).toEqual(["model.generate", "mod…
+       |                                        ^
+    184|     } finally {
+    185|       await supervisor.stop(); server.closeAllConnections();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  2 failed | 35 passed (37)
+   Start at  02:08:18
+   Duration  7.77s (transform 2.81s, setup 0ms, import 5.10s, tests 18.41s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/model-worker-dispatcher.test.ts src/modules/execution/agentic-worker-dispatcher.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/worker-supervisor.stop.test.ts src/modules/execution/worker-supervisor.stop-execution-tree.test.ts src/modules/execution/execution-worker-call-ports.integration.test.ts

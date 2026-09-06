@@ -20,9 +20,11 @@ export const chatWorkerInputSchema = z.object({
     name:z.string().min(1).max(256),version:z.string().min(1).max(128),
     description:z.string(),parameters:z.record(z.string(),z.json()),
     effect:z.enum(["none","proposal","committed"]),
+    execution:z.enum(["host","worker.script-hooks"]).optional(),
   }).strict()).max(100),
 }).strict().superRefine((value, ctx) => {
   const names = value.tools.map(tool => tool.name);
+  for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.script-hooks" && (tool.name!=="script.hooks" || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"内部开场执行声明与工具身份不符",path:["tools",index,"execution"]});
   if (new Set(names.map(chatToolProviderName)).size !== names.length)
     ctx.addIssue({code:"custom",message:"工具名称编码冲突",path:["tools"]});
   for (const name of [value.forcedTool, ...(value.forcedToolSequence ?? [])])

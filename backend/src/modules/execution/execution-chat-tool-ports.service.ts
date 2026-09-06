@@ -1,3 +1,4 @@
+import {createExecutionChatHooksService} from "./execution-chat-hooks.service";
 import { createChatToolStreamProjection } from "./chat-tool-stream-projection.service";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -28,7 +29,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
  const leases=createExecutionLeaseService(db,deps),binding=createAgenticToolBinding(deps.tools);
  async function validateTask(ref:ExecutionRef){
    const {input}=await readExecutionChatTask(db,ref,deps.now);
-   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || typeof tool.execute!=="function")throw new ConflictError("聊天工具执行或授权端口尚未装配");}
+   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || (tool.execution??"host")!==(frozen.execution??"host") || ((frozen.execution??"host")==="host" && typeof tool.execute!=="function"))throw new ConflictError("聊天工具执行或授权端口尚未装配");}
    return input;
  }
  async function scope(ref:ExecutionRef,request:{modelCallId:string;toolCallId:string}){
@@ -72,7 +73,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await project.recordApproval(ref,request,decision);
   return decision;
  }
- const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,{...tool,execute:async(context,input,executionScope)=>{
+ const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.script-hooks"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
   const bound=await leases.withLease(executionScope.execution,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
    const current=calls.find(call=>call.id===executionScope.callId);if(!current)throw new ConflictError("聊天调用不存在");return binding.forCall(task,calls,current);
@@ -97,7 +98,8 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   if(decision.status!=="denied")throw new ConflictError("宿主未确认用户拒绝");
   return tools.settle(ref,request);
  }
- return {...tools,validateTask,check,
+ const hooks=createExecutionChatHooksService(db,{...deps,check});
+ return {...tools,validateTask,check,hooks:{...hooks,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await hooks.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatHooks.parse(raw).callId);return result;}},
   async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
   async execute(...args:Parameters<typeof tools.execute>){const result=await tools.execute(...args);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
   async settle(ref:ExecutionRef,raw:unknown){const result=await settle(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},

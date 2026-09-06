@@ -124,9 +124,16 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
-      const chatTools=deps.executionMode==="chat.run" && ["checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
+      const chatTools=deps.executionMode==="chat.run" && ["prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
       const currentTools=chatTools??agentTools;
       if(port==="checkChatToolApproval" && chatTools)return chatTools.check(ref,raw,activeTools.get(executionKey(ref))?.controller.signal);
+      if(port==="settleChatHooksModel" && chatTools)return chatTools.hooks.settle(ref,raw);
+      if(chatTools && ["prepareChatHooks","reserveChatHooksModel","startChatHooksModel","completeChatHooks"].includes(port)){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const signal=scope.controller.signal;
+        const work=port==="prepareChatHooks"?chatTools.hooks.prepare(ref,raw,signal):port==="reserveChatHooksModel"?chatTools.hooks.reserve(ref,raw,signal):port==="startChatHooksModel"?chatTools.hooks.start(ref,raw,signal):chatTools.hooks.complete(ref,raw,signal);
+        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
@@ -284,7 +291,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         controlTimer=setTimeout(()=>{void watch();},250);
         try{
           if(deps.executionMode==="chat.run"){
-            try{const chatTools=await getChatTools(ref);await chatTools.validateTask(ref);await calls.readTaskContext(ref);toolScope.chatReady=true;}
+            try{const chatTools=await getChatTools(ref);const input=await chatTools.validateTask(ref);await calls.readTaskContext(ref);if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !(await supervisor.start()).includes("chat.hooks"))throw new Error("CHAT_HOOKS_WORKER_UNAVAILABLE");toolScope.chatReady=true;}
             catch{
               if(!stopping)await leases.withLease(ref,"settlement",async({tx,task})=>{
                 const rows=await tx.select({status:executionCalls.status}).from(executionCalls).where(eq(executionCalls.executionTaskId,task.id));

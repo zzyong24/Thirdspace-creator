@@ -1,4 +1,6 @@
 export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
+import {chatHooksParentRequestSchema,chatHooksReserveRequestSchema} from "./execution-chat-hooks";
+export {chatHooksPreparationSchema} from "./execution-chat-hooks";
 export { chatProviderNonTextSchema } from "./chat-provider-content";
 import { chatWorkerInputSchema } from "./chat-worker";
 export { chatWorkerInputSchema, chatToolProviderName } from "./chat-worker";
@@ -21,6 +23,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
   "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
@@ -50,9 +53,19 @@ export const workerProviderReceiptSchema = z.object({
   providerMetadata:z.record(z.string(),z.json()).optional(),
 }).strict().refine(value=>JSON.stringify(value).length<=4_000_000,"模型回执超过持久化上限");
 export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
+const generationSettlementSchema=z.discriminatedUnion("status", [
+ z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
+]);
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  prepareChatHooks:chatHooksParentRequestSchema,
+  reserveChatHooksModel:chatHooksReserveRequestSchema,
+  startChatHooksModel:chatHooksParentRequestSchema,
+  settleChatHooksModel:generationSettlementSchema,
+  completeChatHooks:chatHooksParentRequestSchema,
   appendStreamEvents:appendExecutionStreamSchema,
   checkChatToolApproval:reserveAgenticToolSchema,
   commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复")}).strict(),
@@ -77,11 +90,7 @@ export const workerPortInputSchemas = {
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
   reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
-  settleGenerationCall: z.discriminatedUnion("status", [
-    z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
-    z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
-    z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
-  ]),
+  settleGenerationCall: generationSettlementSchema,
   saveGenerationResult:z.object({callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   startAgenticTool: z.object({callId: operationKeySchema}).strict(),
   startCall: z.object({callId: operationKeySchema}).strict(),

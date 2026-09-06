@@ -1,4 +1,5 @@
 import { createChatModelStreamEvents } from "./chat-model-stream-events";
+import {runChatHooksInWorker} from "./chat-hooks-worker";
 import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import {
@@ -89,6 +90,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           return result;
         },execute:async()=>{
           if(!reservedCallId)throw Error("tool reservation missing");
+          if(definition.execution==="worker.script-hooks")return runChatHooksInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
           return agenticToolOutcomeSchema.parse(await ports.call("executeAgenticTool",{callId:reservedCallId},signal));
         }});
         if(!reservedCallId)throw Error("tool receipt missing");

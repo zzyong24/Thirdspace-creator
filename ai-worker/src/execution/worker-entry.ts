@@ -11,6 +11,7 @@ if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启�
 const worker = createExecutionWorker({
   generateStructured:generateStructuredInWorker,
   runChat:runChatInWorker,
+  supportsChatHooks:true,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
     let streamFailed = false;

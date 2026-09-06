@@ -1,0 +1,105 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-child-model-port-boundary.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-child-model-port-boundary.test.ts (4 tests | 4 failed) 1005ms
+   × 通用模型端口不能启动内部模型，不能绕开父工具授权 29ms
+   × 通用 settleCall 不能结算内部模型 20ms
+   × 通用 settleGenerationCall 不能结算内部模型 20ms
+   × 通用结构化结果端口不能覆盖内部模型回执 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-child-model-port-boundary.test.ts > 通用模型端口不能启动内部模型，不能绕开父工具授权
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_fa1f0b8f-24ae-4b06-bc5d-bccc3b18a62c",
++   "status": "started",
+  }
+
+ ❯ src/modules/execution/execution-child-model-port-boundary.test.ts:23:83
+     21| const receipt={content:[{type:"text",text:"[]"}],finishReason:{unified…
+     22| it("通用模型端口不能启动内部模型，不能绕开父工具授权",async()=>{
+     23|  const f=await fixture();await expect(f.calls.startCall(f.ref,{callId:…
+       |                                                                                   ^
+     24|  expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("re…
+     25| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/execution/execution-child-model-port-boundary.test.ts > 通用 settleCall 不能结算内部模型
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_b6a241bf-ec4a-484d-9a21-d5795ace1f30",
++   "status": "unknown",
+  }
+
+ ❯ src/modules/execution/execution-child-model-port-boundary.test.ts:29:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/execution/execution-child-model-port-boundary.test.ts > 通用 settleGenerationCall 不能结算内部模型
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_85018deb-141b-4170-84c3-64c4be555fde",
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-child-model-port-boundary.test.ts:29:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/execution/execution-child-model-port-boundary.test.ts > 通用结构化结果端口不能覆盖内部模型回执
+AssertionError: promise resolved "{ callId: 'call_cd2ec686-7de8-4f7b-b…' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_cd2ec686-7de8-4f7b-b325-d70c26bb8c2a",
+  }
+
+ ❯ src/modules/execution/execution-child-model-port-boundary.test.ts:34:80
+     32|  const f=await fixture();await f.ledger.start(f.ref,f.child.id);await …
+     33|  const text=JSON.stringify({object:{},generation:{finishReason:"stop",…
+     34|  await expect(f.generation.saveGenerationResult(f.ref,{callId:f.child.…
+       |                                                                                ^
+     35|  expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.resultText).toBe…
+     36| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  01:53:05
+   Duration  2.12s (transform 536ms, setup 0ms, import 979ms, tests 1.01s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-child-model-port-boundary.test.ts`
+Exit status 1

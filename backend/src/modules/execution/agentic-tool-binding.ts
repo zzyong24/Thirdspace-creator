@@ -6,7 +6,7 @@ import {ConflictError} from "./execution.errors";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
-export type AgenticBackendTool={version:string;parameters:z.ZodType;effect:"none"|"proposal"|"committed";
+export type AgenticBackendTool={version:string;parameters:z.ZodType;effect:"none"|"proposal"|"committed";execution?:"host"|"worker.script-hooks";
  execute?(context:import("@creatoros/contract").RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;signal:AbortSignal}):Promise<ToolOutcome>;
 };
 const frozenTools=z.object({kind:z.literal("agentic.run"),dryRun:z.boolean().optional(),tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1)})).max(100)});
@@ -31,6 +31,8 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const toolName=definitions[0]?.name;
   const definition=toolName ? tools[toolName] : undefined;
   if(definitions.length!==1 || !definition || definitions[0]!.version!==definition.version)throw new ConflictError("工具不在当前冻结白名单或定义版本已改变");
+  const execution=chat.success?(chat.data.tools.find(tool=>tool.name===toolName)?.execution??"host"):"host";
+  if((definition.execution??"host")!==execution)throw new ConflictError("工具执行位置与冻结声明不符");
   let raw:unknown;let jsonError=false;try{raw=JSON.parse(proposed.input);}catch{raw=proposed.input;jsonError=true;}
   const jsonInput=z.json().safeParse(raw);
   if(!jsonInput.success)jsonError=true;
@@ -42,8 +44,9 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   }):undefined;
   const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);
   const identity=[model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input];
+  if(execution!=="host")identity.push({execution});
   if(validationOutcome)identity.push({validationOutcome});
-  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,executionToolName:toolName!,reuseWithinRound:chat.success,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
+  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,executionToolName:toolName!,execution,reuseWithinRound:chat.success,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");

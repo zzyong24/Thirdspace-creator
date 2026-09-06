@@ -1,0 +1,65 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> vitest run tests/execution-chat-hooks.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+ ❯ tests/execution-chat-hooks.test.ts (2 tests | 2 failed) 8ms
+   × 开场端口只接受调用引用，不接受账号或候选内容 4ms
+   × 冻结工具显式绑定内部开场执行，旧工具不增默认字段 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/execution-chat-hooks.test.ts > 开场端口只接受调用引用，不接受账号或候选内容
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/execution-chat-hooks.test.ts:4:180
+      2| import {workerPortSchema,workerPortInputSchemas,chatWorkerInputSchema}…
+      3| it("开场端口只接受调用引用，不接受账号或候选内容",()=>{
+      4|  for(const name of ["prepareChatHooks","reserveChatHooksModel","startC…
+       |                                                                                                                                                                                    ^
+      5|  expect(workerPortInputSchemas.prepareChatHooks.parse({callId:"parent"…
+      6|  expect(workerPortInputSchemas.completeChatHooks.safeParse({callId:"pa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/execution-chat-hooks.test.ts > 冻结工具显式绑定内部开场执行，旧工具不增默认字段
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "execution"
+    ],
+    "path": [
+      "tools",
+      0
+    ],
+    "message": "Unrecognized key: \"execution\""
+  }
+]
+ ❯ tests/execution-chat-hooks.test.ts:13:31
+     11|  expect(chatWorkerInputSchema.parse(input).tools[0]).not.toHavePropert…
+     12|  const workerTool={...input.tools[0],execution:"worker.script-hooks"};
+     13|  expect(chatWorkerInputSchema.parse({...input,tools:[workerTool]}).too…
+       |                               ^
+     14|  expect(chatWorkerInputSchema.safeParse({...input,tools:[{...workerToo…
+     15| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  01:55:15
+   Duration  238ms (transform 47ms, setup 0ms, import 91ms, tests 8ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/contract@0.4.0 test: `vitest run tests/execution-chat-hooks.test.ts`
+Exit status 1

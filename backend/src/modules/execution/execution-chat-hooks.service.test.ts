@@ -11,6 +11,7 @@ import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
 import { createExecutionChatHooksService } from "./execution-chat-hooks.service";
+import { createExecutionChatToolPorts } from "./execution-chat-tool-ports.service";
 import { createExecutionModelIdentityService } from "./execution-model-identity.service";
 it.each([{ modelId: "another" }, { provider: "another" }])(
   "内部生成拒绝冒用主模型身份：%j",
@@ -180,8 +181,28 @@ const tools = {
       })
       .strict(),
     effect: "proposal" as const,
+    execution:"worker.script-hooks" as const,
   },
 };
+it("Worker 开场节点不能绕回宿主执行，即使意外装配了旧处理器", async () => {
+  const f = await fixture();
+  const execute = vi.fn();
+  const ports = createExecutionChatToolPorts(db, { now, budget, tools: {
+    "script.hooks": { ...tools["script.hooks"], approve: f.check, execute },
+  }});
+  await ports.validateTask(f.ref);
+  await expect(ports.execute(f.ref, {callId:f.parent.callId})).rejects.toThrow();
+  expect(execute).not.toHaveBeenCalled();
+  const parent = (await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId);
+  expect(parent).toMatchObject({status:"started",toolExecutionClaimId:null});
+});
+it("冻结的 Worker 开场节点拒绝被宿主实现替换", async () => {
+  const f = await fixture();
+  const ports = createExecutionChatToolPorts(db, { now, budget, tools: {
+    "script.hooks": { ...tools["script.hooks"], execution:"host", approve:f.check, execute:vi.fn() },
+  }});
+  await expect(ports.validateTask(f.ref)).rejects.toThrow("尚未装配");
+});
 beforeAll(async () => {
   const c = await createDb();
   db = c.db;
@@ -283,6 +304,7 @@ async function fixture(options: { baseUrl?: string | null } = {}) {
           description: "开场",
           parameters: { type: "object" },
           effect: "proposal",
+          execution:"worker.script-hooks",
         },
       ],
       hostContext,
