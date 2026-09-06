@@ -1,0 +1,102 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts (10 tests | 10 failed) 17ms
+   × 素材原子提交显式启用且保留原 schema 与描述 10ms
+   × 同一次当前稿读取绑定提示词与快照，准备不提交或唤醒 1ms
+   × 素材准备拒绝 account，不进入提交 1ms
+   × 素材准备拒绝 definition，不进入提交 1ms
+   × 素材准备拒绝 cancel，不进入提交 1ms
+   × 素材准备拒绝 missing-reader，不进入提交 1ms
+   × 素材准备拒绝 stale-section，不进入提交 1ms
+   × 素材准备拒绝 fact-capture，不进入提交 1ms
+   × 当前稿读取期间取消，不产生待提交任务 1ms
+   × 无项目的素材生成不读取项目稿，仍使用原始描述 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材原子提交显式启用且保留原 schema 与描述
+AssertionError: expected { name: 'material.generate', …(4) } to match object { execution: 'host.task-submit', …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,8 @@
+  {
+    "description": "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
+    "effect": "committed",
+-   "execution": "host.task-submit",
+    "parameters": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "description": "生成图(image)还是视频(video)。视频异步分钟级,提交后后台跑,不阻塞对话。",
+
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts:25:41
+     23| it("素材原子提交显式启用且保留原 schema 与描述",async()=>{
+     24|  const f=await fixture(),legacy=(await prepareChatToolDefinitions(f.to…
+     25|  expect(f.restored.modelInput.tools[0]).toMatchObject({execution:"host…
+       |                                         ^
+     26|  expect(f.restored.modelInput.tools[0]!.version).not.toBe(legacy.versi…
+     27|  expect(f.bound["material.generate"]?.prepareTask).toBeTypeOf("functio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 同一次当前稿读取绑定提示词与快照，准备不提交或唤醒
+TypeError: Cannot read properties of undefined (reading 'prepareTask')
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts:33:28
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 account，不进入提交
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 definition，不进入提交
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 cancel，不进入提交
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 missing-reader，不进入提交
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 stale-section，不进入提交
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 素材准备拒绝 fact-capture，不进入提交
+TypeError: Cannot read properties of undefined (reading 'prepareTask')
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts:47:20
+     45|  if(reason==="missing-reader")delete (f.readers as Partial<ContextRead…
+     46|  const raw={...input,...(reason==="stale-section"?{sectionRef:"gone"}:…
+     47|  await expect(tool.prepareTask!(f.context,raw,{...f.scope,...(reason==…
+       |                    ^
+     48|  expect(f.prepareTaskCommit).not.toHaveBeenCalled();expect(f.wakeTask)…
+     49| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 当前稿读取期间取消，不产生待提交任务
+TypeError: Cannot read properties of undefined (reading 'prepareTask')
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts:53:45
+     51|  const f=await fixture(),controller=new AbortController();
+     52|  f.getArtifactText.mockImplementationOnce(async()=>{controller.abort()…
+     53|  await expect(f.bound["material.generate"]!.prepareTask!(f.context,inp…
+       |                                             ^
+     54|  expect(f.prepareTaskCommit).not.toHaveBeenCalled();
+     55| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-material-task-host.test.ts > 无项目的素材生成不读取项目稿，仍使用原始描述
+TypeError: Cannot read properties of undefined (reading 'prepareTask')
+ ❯ src/modules/ai-runtime/chat-material-task-host.test.ts:58:38
+     56| it("无项目的素材生成不读取项目稿，仍使用原始描述",async()=>{
+     57|  const f=await fixture();f.restored.hostContext.chatContext.projectId=…
+     58|  await f.bound["material.generate"]!.prepareTask!(f.context,{kind:"ima…
+       |                                      ^
+     59|  expect(f.getArtifactText).not.toHaveBeenCalled();
+     60|  expect(f.prepareTaskCommit).toHaveBeenCalledExactlyOnceWith(f.context…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed (10)
+   Start at  11:37:41
+   Duration  1.02s (transform 444ms, setup 0ms, import 866ms, tests 17ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-material-task-host.test.ts

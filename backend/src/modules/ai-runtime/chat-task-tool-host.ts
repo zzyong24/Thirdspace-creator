@@ -4,6 +4,7 @@ import {createChatResearchTaskToolHost} from "./chat-research-tool-host";
 import {createChatStructuredTaskToolHost,type ChatStructuredToolPorts} from "./chat-structured-tool-host";
 import {createChatLocalTaskToolHost,type ChatLocalToolPorts} from "./chat-local-tool-host";
 import {createChatPlanningTaskHost,type ChatPlanningTaskPorts} from "./chat-planning-task-host";
+import {createChatMaterialTaskHost,type ChatMaterialTaskPorts} from "./chat-material-task-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
 import type {ContextReaders} from "./chat-runner";
@@ -15,7 +16,7 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
- ports:{webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
+ ports:{webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  const webRead=ports.webRead?createChatWebReadTaskToolHost(reader):null;
  const localRead=ports.localRead?createChatLocalReadTaskToolHost(reader,ports.localRead):null;
@@ -23,8 +24,9 @@ export function createChatTaskToolHost(
  const structured=ports.structured?createChatStructuredTaskToolHost(reader,ports.structured):null;
  const read=createChatReadTaskToolHost(reader,readers),hooks=createChatHooksTaskToolHost(reader),candidates=createChatCandidateTaskToolHost(reader,readers);
  const planning=ports.planning?createChatPlanningTaskHost(reader,ports.planning):null,local=ports.local?createChatLocalTaskToolHost(reader,ports.local):null;
+ const material=ports.material?createChatMaterialTaskHost(reader,readers,ports.material):null;
  return async(context,input,execution,signal)=>{
-  const groups=await Promise.all([webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
+  const groups=await Promise.all([webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
   signal.throwIfAborted();
   return Object.assign({},...groups);
  };

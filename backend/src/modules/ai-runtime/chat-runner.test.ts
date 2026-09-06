@@ -3331,6 +3331,17 @@ it.each([false,true])("持久网页准备保持原 URL 并按服务端选项声�
  expect(prepared.hostContext.chatContext.webReadUrl).toBe("https://example.com/original");
  expect(resolveModelSpec).not.toHaveBeenCalled();
 });
+it.each([false,true])("素材提交选项在持久准备首个 await 前冻结：%s",async atomicMaterialGenerate=>{
+ const {deps,resolveModelSpec}=makeDeps(),owner={...(ctx as RequestContext),accountId:"material-preparation"};
+ const snapshot=durableChatSnapshot(owner.accountId,"素材方法");snapshot.skills[0]!.effective.tools=["material.generate"];
+ const options={atomicMaterialGenerate};
+ const pending=prepareDurableChatTurn(owner,{messages:[],chatContext:{surface:"topics"}},deps,snapshot,options);
+ options.atomicMaterialGenerate=!atomicMaterialGenerate;
+ const prepared=await pending,definition=prepared.toolDefinitions.find(tool=>tool.name==="material.generate");
+ expect(definition).toMatchObject({name:"material.generate",effect:"committed"});
+ expect(definition?.execution).toBe(atomicMaterialGenerate?"host.task-submit":undefined);
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});
 it("持久聊天准备将实际组装绑定到显式快照，调用后修改原输入不改变结果",async()=>{
  const {deps,resolveModelSpec}=makeDeps();
  const owner={...(ctx as RequestContext),accountId:"account-a"};
