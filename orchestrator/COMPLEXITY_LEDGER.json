@@ -1613,6 +1613,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "登记已授权网页 Worker 接线的证据文档通信术语，未增加产品范围、通信拓扑或发布授权。",
       "acceptance": "仅登记复杂度，不代表完整迁移或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-web-read-entry.md"
+      ],
+      "file_sha256": "160ebc270a42e949928645459a1567ecf5209075d5a3e584ddbe58b7ba9867b4",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认 R-02 网页 Worker 命名端口与实际父子进程测试；不新增通信机制或执行权。",
+      "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
     }
   ],
   "historical_baselines": []

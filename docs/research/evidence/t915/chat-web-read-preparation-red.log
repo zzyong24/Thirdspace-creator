@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久网页准备保持原 URL 并按服务端选项声明 Worker：true
+[chat-context] est=2462→2462 tokens cleared=0 truncated=0
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts (150 tests | 1 failed | 148 skipped) 34ms
+   × 持久网页准备保持原 URL 并按服务端选项声明 Worker：true 16ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-runner.test.ts > 持久网页准备保持原 URL 并按服务端选项声明 Worker：true
+AssertionError: expected undefined to be 'worker.web-read' // Object.is equality
+
+- Expected:
+"worker.web-read"
+
++ Received:
+undefined
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts:3330:103
+    3328|  options.workerWebRead=!workerWebRead;input.chatContext.webReadUrl="ht…
+    3329|  const prepared=await pending,definition=prepared.toolDefinitions.find…
+    3330|  expect(definition).toMatchObject({name:"web.read",effect:"committed"}…
+       |                                                                                                       ^
+    3331|  expect(prepared.hostContext.chatContext.webReadUrl).toBe("https://exa…
+    3332|  expect(resolveModelSpec).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 148 skipped (150)
+   Start at  10:43:31
+   Duration  1.51s (transform 805ms, setup 0ms, import 1.34s, tests 34ms, environment 0ms)
+

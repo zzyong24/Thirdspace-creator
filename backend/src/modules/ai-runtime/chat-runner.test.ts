@@ -3319,6 +3319,18 @@ function durableChatSnapshot(accountId: string, methodSystem: string) {
   {skillId:"creatoros.guide",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"真实产品说明",template:"",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}},
  ]};
 }
+it.each([false,true])("持久网页准备保持原 URL 并按服务端选项声明 Worker：%s",async workerWebRead=>{
+ const {deps,resolveModelSpec}=makeDeps(),owner={...(ctx as RequestContext),accountId:"web-preparation"};
+ const snapshot=durableChatSnapshot(owner.accountId,"网页阅读方法");snapshot.skills[0]!.effective.tools=["web.read"];
+ const options={workerWebRead};
+ const input:Parameters<typeof prepareChatTurn>[1]={messages:[{id:"source",role:"user",parts:[{type:"text",text:"阅读网页"}]}],chatContext:{surface:"topics",webReadUrl:"https://example.com/original"}};
+ const pending=prepareDurableChatTurn(owner,input,deps,snapshot,options);
+ options.workerWebRead=!workerWebRead;input.chatContext.webReadUrl="https://other.example/changed";
+ const prepared=await pending,definition=prepared.toolDefinitions.find(tool=>tool.name==="web.read");
+ expect(definition).toMatchObject({name:"web.read",effect:"committed"});expect(definition?.execution).toBe(workerWebRead?"worker.web-read":undefined);
+ expect(prepared.hostContext.chatContext.webReadUrl).toBe("https://example.com/original");
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});
 it("持久聊天准备将实际组装绑定到显式快照，调用后修改原输入不改变结果",async()=>{
  const {deps,resolveModelSpec}=makeDeps();
  const owner={...(ctx as RequestContext),accountId:"account-a"};
