@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "684a3802a4c4e20b8d8c85927c5f40e10cf63fb155cebc84ce85ec4a063dcd67",
+      "file_sha256": "692fafde0b03e399da181f5e51a7b1e24889b0f020d244aceb705e174da991fe",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities 和命名 IPC。本次在已有生成端口上接通 chat.structured，并保留注入运行器的能力校验，不增加进程拓扑或领域写入权；独立只读审查已复核恢复顺序与能力声明。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "26791d8e4d316221a2374537e04cf09c59d68d297097fd286da99c80d4e27d2a",
+      "file_sha256": "10641b983e5e2caad4756badbc8d2ed3fc6e0866a03e72eb57ce3f713ff610c3",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities 和命名 IPC。本次在已有生成端口上接通 chat.structured，并保留注入运行器的能力校验，不增加进程拓扑或领域写入权；独立只读审查已复核恢复顺序与能力声明。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "37710b5f005f4ffc94f10658be508fc06f4a4185796fe00e2dc83bbf3065ec4e",
+      "file_sha256": "aef34aecefb6cd00572cc788bdb34aa8081c949241c02b06ad77d900fb8e433b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权命名 IPC 与取消后既有调用结算。本次将共享结构化节点的 settleChatGenerationModel 与 failChatGeneration 纳入 settlement 校验；前者只结算当前子调用，后者首次失败仍验证真实父工具与完整已确认前缀、尾部拒绝，回执丢失只能同键回读。独立只读审查及 108 项宿主/账本/既有 Worker 回归验证，没有新增 IPC 拓扑或任意调用权限。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1582,6 +1582,21 @@
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "本文件仅记录已授权 Worker IPC 接线及真实验证，不扩展架构或授权。",
+      "acceptance": "复杂度登记不代表产品或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-research-worker.md"
+      ],
+      "file_sha256": "dee7b6a8116322f5d9f6fa9080a705cf5b7cb5ebbd7716580d2ce3dbde4b2615",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权 Worker 搜索 IPC 实现与验证，不增加架构或授权范围。",
       "acceptance": "复杂度登记不代表产品或历史验收通过。"
     }
   ],

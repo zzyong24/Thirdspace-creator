@@ -23,6 +23,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "prepareChatResearch", "settleChatResearch",
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatHooks", "restoreChatHooks", "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
   "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
@@ -60,8 +61,17 @@ const generationSettlementSchema=z.discriminatedUnion("status", [
  z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
 ]);
 
+const publicSearchUrl=z.string().url().refine(value=>{const url=new URL(value);return ["http:","https:"].includes(url.protocol) && !url.username && !url.password;},"搜索结果必须为公开网页地址");
+export const chatResearchObservationSchema=z.discriminatedUnion("status",[
+ z.object({status:z.literal("ok"),results:z.array(z.object({title:z.string().max(10000),url:publicSearchUrl,snippet:z.string().max(100000),siteName:z.string().max(1000).optional(),publishedAt:z.string().max(100).optional()}).strict()).max(10)}).strict(),
+ z.object({status:z.enum(["error","blocked"]),recoveryState:z.literal("browser_runtime_unavailable").optional(),summary:z.string().min(1).max(4000),error:z.object({code:z.enum(["transient","permission","needs_login","captcha","cancelled","no_evidence"]),retryable:z.boolean(),recovery:z.string().max(4000)}).strict()}).strict(),
+]);
+export const chatResearchPreparationSchema=z.object({available:z.boolean(),query:z.string().max(100000),count:z.literal(10)}).strict();
+
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  prepareChatResearch:z.object({callId:operationKeySchema}).strict(),
+  settleChatResearch:z.object({callId:operationKeySchema,observation:chatResearchObservationSchema}).strict(),
   failChatGeneration:z.object({callId:operationKeySchema,outcome:z.enum(["retry_wait","waiting_user","failed"]),errorCode:z.string().min(1).max(128),retryAfterMs:z.number().finite().nonnegative().optional()}).strict(),
   restoreChatGeneration:chatHooksParentRequestSchema,
   resolveChatGenerationCredential:chatHooksParentRequestSchema,

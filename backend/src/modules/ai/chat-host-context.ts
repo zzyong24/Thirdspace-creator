@@ -18,6 +18,7 @@ export const chatHostContextSchema = z.object({
   positioningScratch: z.boolean(),
   trustedScriptSources: z.array(z.object({ref:id,label:z.string(),text:z.string(),truncated:z.boolean(),sourceType:z.enum(["message","attachment","project_text"]).optional(),sourceId:id.optional()}).strict()),
   skillSnapshot: workerSkillSnapshotSchema,
+  researchContext:z.object({selectionTitle:z.string(),userMaterialQueryTerms:z.array(z.string()),searchConfigured:z.boolean()}).strict().optional(),
   structuredContext:chatStructuredContextSchema.optional(),
   structuredGeneration:chatStructuredGenerationSchema.optional(),
   scriptHooksContext: scriptHooksContextSchema.optional(),

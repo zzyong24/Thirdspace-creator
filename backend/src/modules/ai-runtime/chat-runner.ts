@@ -1,3 +1,4 @@
+import {prepareChatResearchQuery,projectChatSearchResults,type ChatResearchContext} from "./chat-research-preparation";
 import type {ChatStructuredContext} from "./chat-structured-tool-nodes";
 import { runChatTopicEnrich, runChatPositioning } from "./chat-structured-tool-nodes";
 import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
@@ -920,7 +921,7 @@ export function resolveUniqueCoverReference(
  * 工具 execute 复用现有 runner 核心(runTopicNode / 选题卡补全),都在请求期用解析好的 model
  * 跑;故这里先解析 model(没配 key 抛 LlmCredentialError,由路由接住返 4xx,不假成功)。
  */
-export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string;structuredContext?:ChatStructuredContext;scriptHooksContext?:ScriptHooksContext};
+export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string;researchContext?:ChatResearchContext;structuredContext?:ChatStructuredContext;scriptHooksContext?:ScriptHooksContext};
 type ChatAssemblyArgs = [ctx:RequestContext,chatContext:ChatContext,deps:AssembleChatDeps,mediaRoute?:CopilotMediaRoute|null,options?:{positioningScratch?:boolean;verbatimSources?:readonly VerbatimSource[];latestUserInstruction?:string}];
 /** 准备上下文与真实工具，不取得主模型凭据；工具执行迁移仍由各真实端口承担。 */
 export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssemblyPreparation>{
@@ -931,7 +932,7 @@ export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<Chat
 export async function buildChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssembly>{
   const assembled=await assembleChat(args[0],args[1],args[2],args[3],args[4],true);
   if(!assembled.modelSpec)throw new Error("聊天主模型未解析");
-  const {capability:_capability,scriptHooksContext:_hooks,structuredContext:_structured,...legacy}=assembled;
+  const {capability:_capability,scriptHooksContext:_hooks,structuredContext:_structured,researchContext:_research,...legacy}=assembled;
   return {...legacy,modelSpec:assembled.modelSpec};
 }
 
@@ -1772,12 +1773,7 @@ async function assembleChat(
     gatherMaterials: async ({ query, signal }) => {
       // [T-684] 素材搜索直接复用随包浏览器结果。搜索模型已经下线，不再调用
       // research.gather 用模型记忆“补齐”钩子/案例/数据/金句，避免无 URL 假素材。
-      const baseQuery = query?.trim() || selectionTitle || "";
-      // [T-146d] 搜索深度结合用户素材:构造 query 前读当前项目 high-priority 用户素材要点(关键词/
-      // 实体)→ 扩展 query(标题 + 资料关键词,而非纯标题),让搜索贴着 PR/第一手资料搜。
-      // context.userMaterialQueryTerms 已由 creative-context 从高优先素材要点卡抽好(只 high,去重上限)。
-      const materialTerms = context.userMaterialQueryTerms ?? [];
-      const effQuery = [baseQuery, ...materialTerms].filter(Boolean).join(" ");
+      const effQuery=prepareChatResearchQuery({selectionTitle,userMaterialQueryTerms:context.userMaterialQueryTerms??[]},{query});
       if (!deps.searchWeb) {
         throw new Error("应用的浏览器搜索能力未接入，暂时无法联网找素材。");
       }
@@ -1790,17 +1786,8 @@ async function assembleChat(
       }> = effQuery
         ? await deps.searchWeb(ctx, effQuery, { count: 10, ...(signal ? {signal} : {}) })
         : [];
-      return {
-        grounding: "web" as const,
-        items: searchResults.map((it) => ({
-          title: it.title,
-          url: it.url,
-          source: it.siteName || new URL(it.url).hostname,
-          whyRelevant: it.snippet,
-          category: "联网资料",
-          sourceUrl: it.url,
-        })),
-      };
+      const {grounding,items}=projectChatSearchResults(searchResults);
+      return {grounding,items};
     },
     // [T-084b] material.screenshot:端口未装配 → 诚实抛错(工具 execute 接住转人话渲错误态,
     // 「截图能力未接入」);装配了则真截图 → createGeneratedAsset → 返回 asset + 预览 URL。
@@ -2280,6 +2267,7 @@ async function assembleChat(
     system,
     tools,
     capability: skillCapability,
+    ...(tools["material.gather"] ? {researchContext:{selectionTitle,userMaterialQueryTerms:[...(context.userMaterialQueryTerms??[])],searchConfigured:Boolean(deps.searchWeb)}} : {}),
     ...((tools["topic.enrich"] || tools["positioning.generate"]) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
     ...(tools["script.hooks"] ? {scriptHooksContext:{...scriptHooksContext}} : {}),
     ...(modelSpec ? {modelSpec} : {}),

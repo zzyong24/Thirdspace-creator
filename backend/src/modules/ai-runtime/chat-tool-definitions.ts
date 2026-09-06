@@ -56,7 +56,7 @@ export const CHAT_TOOL_EFFECTS: Readonly<Record<string, Definition["effect"]>> =
 });
 
 /** 只准备当轮实际工具；模型/浏览器闭包仍须迁至 Worker，不能因拥有声明便视为迁移完成。 */
-export async function prepareChatToolDefinitions(tools: ToolSet, options:{workerScriptHooks?:boolean;atomicPlanningThesis?:boolean;workerStructuredNodes?:boolean}={}) {
+export async function prepareChatToolDefinitions(tools: ToolSet, options:{workerResearch?:boolean;workerScriptHooks?:boolean;atomicPlanningThesis?:boolean;workerStructuredNodes?:boolean}={}) {
   const workerScriptHooks=options.workerScriptHooks===true;
   const entries = await Promise.all(Object.entries(tools).map(async ([name, tool]) => {
     if (!Object.hasOwn(CHAT_TOOL_EFFECTS, name)) throw new Error(`工具缺少副作用定义：${name}`);
@@ -65,8 +65,8 @@ export async function prepareChatToolDefinitions(tools: ToolSet, options:{worker
     const prepared = await prepareChatToolParameters(tool.inputSchema);
     const effect = CHAT_TOOL_EFFECTS[name]!;
     // 绑定真实schema变体与描述，避免不同上下文的同名工具共用错误版本。
-    const execution=options.workerStructuredNodes && (name==="topic.enrich" || name==="positioning.generate") ? "worker.structured-node" as const : options.atomicPlanningThesis && name==="planning.thesis" ? "host.task-submit" as const : workerScriptHooks && name==="script.hooks" ? "worker.script-hooks" as const : undefined;
-    const revision=execution==="worker.structured-node"?"chat-tools-worker-structured-v1":execution==="host.task-submit"?"chat-tools-atomic-planning-v1":execution?"chat-tools-worker-hooks-v1":(name==="local.tools"||name==="local.workspace")?"chat-tools-local-host-v2":IMPLEMENTATION_REVISION;
+    const execution=options.workerResearch && name==="material.gather" ? "worker.research" as const : options.workerStructuredNodes && (name==="topic.enrich" || name==="positioning.generate") ? "worker.structured-node" as const : options.atomicPlanningThesis && name==="planning.thesis" ? "host.task-submit" as const : workerScriptHooks && name==="script.hooks" ? "worker.script-hooks" as const : undefined;
+    const revision=execution==="worker.research"?"chat-tools-worker-research-v1":execution==="worker.structured-node"?"chat-tools-worker-structured-v1":execution==="host.task-submit"?"chat-tools-atomic-planning-v1":execution?"chat-tools-worker-hooks-v1":(name==="local.tools"||name==="local.workspace")?"chat-tools-local-host-v2":IMPLEMENTATION_REVISION;
     const version = `${revision}:${createHash("sha256").update(JSON.stringify({ name, effect, description: tool.description, parameters: prepared.schema })).digest("hex")}`;
     const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema),...(execution?{execution}:{}) };
     return { name, prepared, definition };

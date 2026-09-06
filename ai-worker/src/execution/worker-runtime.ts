@@ -20,7 +20,8 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.hooks"|"chat.structured">;
+  capabilities?: Array<"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.hooks"|"chat.structured"|"chat.research">;
+  supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
   supportsChatStructured?:boolean;
   runAgentic?: typeof runAgenticInWorker;
@@ -33,7 +34,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate", ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
@@ -81,6 +82,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
       if(input.kind==="chat.run"){
+        if(input.tools.some(tool=>tool.execution==="worker.research") && !capabilities.includes("chat.research"))throw new GenerationFailure("waiting_user","CHAT_RESEARCH_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !capabilities.includes("chat.structured"))throw new GenerationFailure("waiting_user","CHAT_STRUCTURED_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !capabilities.includes("chat.hooks"))throw new GenerationFailure("waiting_user","CHAT_HOOKS_WORKER_UNAVAILABLE");
         if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");

@@ -1,3 +1,4 @@
+import {runChatResearchInWorker,createChatResearchResources} from "./chat-research-worker";
 import {runChatGenerationInWorker} from "./chat-generation-worker";
 import { createChatModelStreamEvents } from "./chat-model-stream-events";
 import {runChatHooksInWorker} from "./chat-hooks-worker";
@@ -90,6 +91,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       if(result.status==="settled")await bind(callId,result.providerResult);
     },
   }});
+  const research=input.tools.some(tool=>tool.execution==="worker.research")?await createChatResearchResources(signal,ports.call):undefined;
+  try{
   const tools=Object.fromEntries(input.tools.map(definition=>[definition.name,tool({description:definition.description,inputSchema:jsonSchema(definition.parameters),
     execute:async(_input,options)=>{
       try{
@@ -105,6 +108,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           return result;
         },execute:async()=>{
           if(!reservedCallId)throw Error("tool reservation missing");
+          if(definition.execution==="worker.research"){if(!research)throw Error("浏览器搜索尚未装配");return runChatResearchInWorker(reservedCallId,signal,ports.call,research);}
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.script-hooks")return runChatHooksInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
           return agenticToolOutcomeSchema.parse(await ports.call("executeAgenticTool",{callId:reservedCallId},signal));
@@ -159,4 +163,5 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     if(!awaitingApproval && !hasOutput)throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
     return {message,text:await result.text,lastModelCallId,toolCallIds:[...toolCallIds],outcome:awaitingApproval?"awaiting_confirmation" as const:finishReason==="stop"?"completed" as const:"partial" as const,finishReason};
   }catch(error){stop.abort();await reader.cancel().catch(()=>{});throw failure??fail(error,"CHAT_STREAM_RESULT_UNKNOWN");}
+  }finally{await research?.close();}
 }

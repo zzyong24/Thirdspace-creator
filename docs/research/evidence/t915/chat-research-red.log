@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-research-preparation.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-research-preparation.test.ts [ src/modules/ai-runtime/chat-research-preparation.test.ts ]
+Error: Cannot find module './chat-research-preparation' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/chat-research-preparation.test.ts
+ ❯ src/modules/ai-runtime/chat-research-preparation.test.ts:2:1
+      1| import {expect,it} from "vitest";
+      2| import {prepareChatResearchQuery,projectChatSearchResults} from "./cha…
+       | ^
+      3| it("保留原用户查询、选区兜底与高优先素材词，不发明搜索内容",()=>{
+      4|  const context={selectionTitle:"原主题",userMaterialQueryTerms:["原资料实体","…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  07:04:21
+   Duration  163ms (transform 14ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-research-preparation.test.ts
