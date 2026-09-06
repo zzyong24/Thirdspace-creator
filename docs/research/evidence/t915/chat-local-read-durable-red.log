@@ -1,0 +1,93 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts (10 tests | 10 failed) 13ms
+   × 统一宿主装配原本地读取定义，真实正文按原窗口交给模型 7ms
+   × account 失效不会读本机文件 1ms
+   × definition 失效不会读本机文件 1ms
+   × cancel 失效不会读本机文件 1ms
+   × 执行前授权失效返回等待用户，不能将无正文当成功 1ms
+   × needApproval 保留原卡片并等待用户 1ms
+   × nameMatch 保留原卡片并等待用户 0ms
+   × nameCandidates 保留原卡片并等待用户 0ms
+   × denied 保留原卡片并等待用户 0ms
+   × 宿主异常不转换成可重试的无副作用结果，交给账本保留未知 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > 统一宿主装配原本地读取定义，真实正文按原窗口交给模型
+AssertionError: expected undefined to be defined
+ ❯ fixture src/modules/ai-runtime/chat-local-read-tool-host.test.ts:14:30
+     12|  const resolve=createChatTaskToolHost({read} as never,{} as never,{loc…
+     13|  const signal=new AbortController().signal,tools=await resolve(context…
+     14|  expect(tools["local.read"]).toBeDefined();
+       |                              ^
+     15|  return {context,execution,restored,read,readLocalFile,decideLocalRead…
+     16| }
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts:18:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > account 失效不会读本机文件
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > definition 失效不会读本机文件
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > cancel 失效不会读本机文件
+AssertionError: expected undefined to be defined
+ ❯ fixture src/modules/ai-runtime/chat-local-read-tool-host.test.ts:14:30
+     12|  const resolve=createChatTaskToolHost({read} as never,{} as never,{loc…
+     13|  const signal=new AbortController().signal,tools=await resolve(context…
+     14|  expect(tools["local.read"]).toBeDefined();
+       |                              ^
+     15|  return {context,execution,restored,read,readLocalFile,decideLocalRead…
+     16| }
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts:23:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > 执行前授权失效返回等待用户，不能将无正文当成功
+AssertionError: expected undefined to be defined
+ ❯ fixture src/modules/ai-runtime/chat-local-read-tool-host.test.ts:14:30
+     12|  const resolve=createChatTaskToolHost({read} as never,{} as never,{loc…
+     13|  const signal=new AbortController().signal,tools=await resolve(context…
+     14|  expect(tools["local.read"]).toBeDefined();
+       |                              ^
+     15|  return {context,execution,restored,read,readLocalFile,decideLocalRead…
+     16| }
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts:29:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > needApproval 保留原卡片并等待用户
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > nameMatch 保留原卡片并等待用户
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > nameCandidates 保留原卡片并等待用户
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > denied 保留原卡片并等待用户
+AssertionError: expected undefined to be defined
+ ❯ fixture src/modules/ai-runtime/chat-local-read-tool-host.test.ts:14:30
+     12|  const resolve=createChatTaskToolHost({read} as never,{} as never,{loc…
+     13|  const signal=new AbortController().signal,tools=await resolve(context…
+     14|  expect(tools["local.read"]).toBeDefined();
+       |                              ^
+     15|  return {context,execution,restored,read,readLocalFile,decideLocalRead…
+     16| }
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts:35:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-read-tool-host.test.ts > 宿主异常不转换成可重试的无副作用结果，交给账本保留未知
+AssertionError: expected undefined to be defined
+ ❯ fixture src/modules/ai-runtime/chat-local-read-tool-host.test.ts:14:30
+     12|  const resolve=createChatTaskToolHost({read} as never,{} as never,{loc…
+     13|  const signal=new AbortController().signal,tools=await resolve(context…
+     14|  expect(tools["local.read"]).toBeDefined();
+       |                              ^
+     15|  return {context,execution,restored,read,readLocalFile,decideLocalRead…
+     16| }
+ ❯ src/modules/ai-runtime/chat-local-read-tool-host.test.ts:39:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed (10)
+   Start at  11:04:14
+   Duration  1.23s (transform 569ms, setup 0ms, import 1.08s, tests 13ms, environment 0ms)
+

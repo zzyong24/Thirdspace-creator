@@ -1,0 +1,42 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:90815) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-local-read.integration.test.ts > 真实 Worker 本地读取及授权恢复（恢复=true），回放不重读文件
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-local-read.integration.test.ts > 真实 Worker 本地读取及授权恢复（恢复=true），回放不重读文件
+[chat-tool] name=local.read ok durationMs=0
+
+ ❯ src/server/chat-local-read.integration.test.ts (3 tests | 1 failed | 2 skipped) 15310ms
+   × 真实 Worker 本地读取及授权恢复（恢复=true），回放不重读文件 15309ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-local-read.integration.test.ts > 真实 Worker 本地读取及授权恢复（恢复=true），回放不重读文件
+AssertionError: expected [ { model: 'fixture', …(5) } ] to have a length of 3 but got 1
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ vi.waitFor.timeout src/server/chat-local-read.integration.test.ts:79:41
+     77|    await createPersistentTaskService(db).command(ctx,{taskIds:[submitt…
+     78|   }
+     79|   await vi.waitFor(()=>expect(requests).toHaveLength(recover?3:2),{tim…
+       |                                         ^
+     80|   expect(JSON.stringify(requests.at(-1))).toContain("一次授权读取的原始正文");exp…
+     81|   await writeFile(path,"已变化的文件内容，不应被回放读取");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  11:09:00
+   Duration  20.02s (transform 2.82s, setup 143ms, import 3.90s, tests 15.31s, environment 473ms)
+
