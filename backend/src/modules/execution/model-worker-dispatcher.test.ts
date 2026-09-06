@@ -1,3 +1,4 @@
+import {createExecutionStreamService,subscribeExecutionStream} from "./execution-stream.service";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -30,7 +31,11 @@ describe("真实模型调度宿主",()=>{
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port);
     try{host.start();host.start();
       await vi.waitFor(async()=>expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("succeeded"),{timeout:10000});
-      expect(requests).toBe(2);expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"retry-complete"))).toHaveLength(1);
+      expect(requests).toBe(2);
+      const page=await createExecutionStreamService(db).read(ctx,mapped.executionTaskId,{});
+      expect(page.events.map(e=>e.chunk.delta).join("")).toBe("恢复正文");expect(page.status).toBe("succeeded");
+      expect((await createExecutionStreamService(db).read(ctx,mapped.executionTaskId,{afterSequence:page.nextSequence})).events).toEqual([]);
+      expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"retry-complete"))).toHaveLength(1);
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
   it("未准备输入的旧映射任务不会被宿主抢走",async()=>{
@@ -112,6 +117,25 @@ describe("真实模型调度宿主",()=>{
       const running=host.drainOnce();await entered;const stopped=host.stop();release();await stopped;await running;
       expect(requests).toBe(0);
     }finally{release();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },15000);
+
+  it("流片段在供应商结束前可读，订阅断开后真实Worker继续生成并可续读",async()=>{
+    const mapped=await prepare("stream-detach"),stream=createExecutionStreamService(db);
+    let response:import("node:http").ServerResponse|undefined,requests=0;
+    const frame=(content:string)=>`data: ${JSON.stringify({id:"stream",object:"chat.completion.chunk",created:1,model:"test",choices:[{index:0,delta:{content},finish_reason:null}]})}\n\n`;
+    const server=createServer((req,res)=>{requests++;req.resume();response=res;res.writeHead(200,{"content-type":"text/event-stream"});res.write(frame("先返回的片段"));});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port);
+    try{
+      const running=host.drainOnce();
+      await vi.waitFor(async()=>expect((await stream.read(ctx,mapped.executionTaskId,{})).events.map(e=>e.chunk.delta).join("")).toBe("先返回的片段"),{timeout:5000});
+      const controller=new AbortController(),subscription=subscribeExecutionStream(stream,ctx,mapped.executionTaskId,{signal:controller.signal});
+      const first=await subscription.next(),cursor=first.value!.nextSequence;expect(first.value!.status).toBe("running");
+      const waiting=subscription.next();controller.abort();expect((await waiting).done).toBe(true);
+      expect(response?.destroyed).toBe(false);expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("running");
+      response!.end(frame("后半段")+'data: {"id":"stream","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');
+      await running;const resumed=await stream.read(ctx,mapped.executionTaskId,{afterSequence:cursor});
+      expect(resumed.events.map(e=>e.chunk.delta).join("")).toBe("后半段");expect(resumed.status).toBe("succeeded");expect(requests).toBe(1);
+    }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
 
 });

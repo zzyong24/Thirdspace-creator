@@ -1,3 +1,4 @@
+import {createPersistentStreamWriter} from "./persistent-stream-writer";
 import {dailyTopicInputSchema} from "./topic-worker-input";
 import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
@@ -23,7 +24,7 @@ export interface WorkerDependencies {
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
-    onText: (text: string) => void): Promise<{text: string; usage: unknown}>;
+    onText: (text: string) => void | Promise<void>): Promise<{text: string; usage: unknown}>;
 }
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
@@ -170,9 +171,13 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
       if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");
       signal.throwIfAborted();
-      const result = await deps.generate(input, model, signal, (text) => {
-        if (!signal.aborted) send({version: 1, type: "progress", requestId, execution, seq: seq++, text});
-      });
+      const streamWriter=createPersistentStreamWriter(callId,data=>call(execution,"appendStreamEvents",data));
+      const result = await (async()=>{
+        try{return await deps.generate(input,model,signal,async text=>{
+          await streamWriter.push({type:"text-delta",id:callId,delta:text});
+          if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
+        });}finally{await streamWriter.close();}
+      })();
       // 已执行调用允许在取消后结算，提交候选仍由父端口检查控制状态。
       await call(execution, "settleCall", {callId, status: "settled", usage: result.usage, text:result.text});
       settled = true;

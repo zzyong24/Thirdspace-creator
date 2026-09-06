@@ -1,0 +1,23 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/persistent-stream-writer.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/persistent-stream-writer.test.ts [ src/execution/persistent-stream-writer.test.ts ]
+Error: Cannot find module './persistent-stream-writer' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/persistent-stream-writer.test.ts
+ ❯ src/execution/persistent-stream-writer.test.ts:2:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:42:09
+   Duration  154ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/persistent-stream-writer.test.ts

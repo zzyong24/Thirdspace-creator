@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "e5a3fde2954c3c25ddc5919c3aa42014a7de52b67ae8f15372ab9c3e1f7a262c",
+      "file_sha256": "df155752b78130c57b0f2efeccbfa2f2f5c0d9288c56680e9a0dc16785e4968a",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "463ede8d8eec16515479bee958e25e122126c2759b58dc457f2d1c286eca656a",
+      "file_sha256": "e019908dfd6da153a6c63ae69c350388a76dc686ad9e690c57c752018da329b4",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -97,14 +97,14 @@
       "files": [
         "backend/src/index.ts"
       ],
-      "file_sha256": "b1567f1079d18f0bb3288519cf9170fc9f1e209f16391f5c06fcbad756e08c57",
+      "file_sha256": "d1ce92863a4d3ee9884d75e28b7a9c0c7af15143f7fcf281ffe73885b713e0dd",
       "categories": [
         "credential_store"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 范围内补充浏览器持久租约导出与宿主实际 ChildProcess 清理证明；本批代码已逐项复核，独立真实进程故障测试留证，不代表浏览器完整循环或双平台验收。",
+      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "20ce16e974c8528044d49604a44c6f46672e1a898be3ef62c69cae893d2fbe3b",
+      "file_sha256": "b2cfb821518290dd775581168d0a603adc5b121807bdd5c2432b512a6f7d0746",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1448,6 +1448,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "每日运行恢复测试核对已有执行映射和终态；不是新增可执行程序能力。",
       "acceptance": "只登记复杂度，不代表测试或整体任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/persistent-stream-writer.ts"
+      ],
+      "file_sha256": "222864b18ef6d11a058635c2bdbc33eeef7871f6ee922c8ea9352962ff82d90d",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "R-05 已确认流式 HTTP 通过 Worker 事件适配，断开订阅不取消任务。此写入器负责有界合并、串行背压与回执校验，是持久流通道必要实现；不新增执行权或规划模型。",
+      "acceptance": "仅登记实现复杂度，不表示完整流式迁移或产品验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/stream-event-channel.md"
+      ],
+      "file_sha256": "8e9b1aed3d04f30ba4f8857ea5ac56b25104e80a776d1c92e196f76c77f7bf8b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录本批已批准私有流事件通道的实现、测试和未完成范围；文档不新增IPC能力或改变产品契约。",
+      "acceptance": "仅登记证据文档中的技术标记，不代表整体验收。"
     }
   ],
   "historical_baselines": []

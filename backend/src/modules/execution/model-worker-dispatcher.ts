@@ -1,3 +1,4 @@
+import {createExecutionStreamService} from "./execution-stream.service";
 import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
 import {createExecutionTopicReadService} from "./execution-topic-read.service";
 import {createDailyTopicCompletionService,type DailyTopicCompletionPorts} from "../ai/daily-topic-completion.service";
@@ -56,6 +57,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
   const checkpoints=createExecutionCheckpointService(db,{now});
+  const streamEvents=createExecutionStreamService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
   const topicReads=deps.executionMode==="model" ? createExecutionTopicReadService(db,{now,budget:deps.budget,buildTrendQuery,sessions:deps.browserSessions,validateDailyRun:deps.dailyTopicPorts?.validateRun}) : null;
   const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
@@ -83,6 +85,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
       if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));
       if(topicReads){

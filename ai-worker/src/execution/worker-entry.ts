@@ -18,7 +18,7 @@ const worker = createExecutionWorker({
       onError(event) {streamFailed = true; streamError = event.error;}});
     let text = "";
     try {
-      for await (const chunk of result.textStream) {text += chunk; onText(chunk);}
+      for await (const chunk of result.textStream) {text += chunk; await onText(chunk);}
     const usage = await result.totalUsage;
     signal.throwIfAborted();
     if (streamFailed || await result.finishReason === "error" || !text.trim()) {

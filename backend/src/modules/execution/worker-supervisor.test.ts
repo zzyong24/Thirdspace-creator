@@ -10,6 +10,12 @@ function checkpointFixture() {
   let sequence=0;let settled=false;let revision=0;
   let messages:Array<{role:"assistant";callId:string}>=[];
   return (port:string,data?:unknown):unknown=>{
+    if(port==="appendStreamEvents"){
+      const input=data as {callId:string;startIndex:number;chunks:unknown[]};
+      expect(input.callId).toBe("call-local");expect(input.startIndex).toBe(0);
+      expect(input.chunks).toEqual([{type:"text-delta",id:"call-local",delta:"真实子进程结果"}]);
+      return {nextIndex:input.chunks.length,lastSequence:input.chunks.length};
+    }
     if(port==="reserveCall")sequence=1;
     if(port==="settleCall")settled=(data as {status:string}).status==="settled";
     if(port==="readCheckpoint")return {revision,ledgerSequence:sequence,messages,uncheckpointedReceipts:settled&&!messages.length?[{callId:"call-local",kind:"model",sequence:1,resultText:"真实子进程结果"}]:[],recovery:settled&&!messages.length?"requires_replay":"ready"};
@@ -58,7 +64,7 @@ describe("真实独立 Worker 进程", () => {
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
-      expect(calls).toEqual(["readTaskContext", "readCheckpoint", "reserveCall", "resolveModelCredential", "startCall", "settleCall", "readCheckpoint", "saveCheckpoint", "commitResult"]);
+      expect(calls).toEqual(["readTaskContext", "readCheckpoint", "reserveCall", "resolveModelCredential", "startCall", "appendStreamEvents", "settleCall", "readCheckpoint", "saveCheckpoint", "commitResult"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
     } finally {await supervisor.stop(); await new Promise<void>(resolve => server.close(() => resolve()));}

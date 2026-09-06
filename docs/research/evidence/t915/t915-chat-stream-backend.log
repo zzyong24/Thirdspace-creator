@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/worker-supervisor.test.ts (11 tests | 1 failed) 3119ms
+     × 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果 236ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果
+AssertionError: expected 'unknown_result' to be 'completed' // Object.is equality
+
+Expected: "completed"
+Received: "unknown_result"
+
+ ❯ src/modules/execution/worker-supervisor.test.ts:58:65
+     56|     try {
+     57|       expect(await supervisor.start()).toEqual(["model.generate", "mod…
+     58|       expect(await supervisor.run(execution, Date.now()+10000)).toBe("…
+       |                                                                 ^
+     59|       expect(requestCount).toBe(1);
+     60|       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 21 passed (22)
+   Start at  18:43:57
+   Duration  6.86s (transform 1.04s, setup 0ms, import 2.35s, tests 9.83s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-stream.service.test.ts src/modules/execution/model-worker-dispatcher.test.ts src/modules/execution/worker-supervisor.test.ts --maxWorkers=2
