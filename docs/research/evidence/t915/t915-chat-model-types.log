@@ -1,0 +1,9 @@
+src/execution/durable-stream-model.test.ts(13,172): error TS2322: Type '{ readonly type: "finish"; readonly usage: { inputTokens: { total: number; }; outputTokens: { total: number; }; }; readonly finishReason: { readonly unified: "stop"; }; }' is not assignable to type 'LanguageModelV4StreamPart'.
+  Type '{ readonly type: "finish"; readonly usage: { inputTokens: { total: number; }; outputTokens: { total: number; }; }; readonly finishReason: { readonly unified: "stop"; }; }' is not assignable to type '{ type: "finish"; usage: LanguageModelV4Usage; finishReason: LanguageModelV4FinishReason; providerMetadata?: SharedV4ProviderMetadata | undefined; }'.
+    The types of 'usage.inputTokens' are incompatible between these types.
+      Type '{ total: number; }' is missing the following properties from type '{ total: number | undefined; noCache: number | undefined; cacheRead: number | undefined; cacheWrite: number | undefined; }': noCache, cacheRead, cacheWrite
+src/execution/durable-stream-model.test.ts(19,285): error TS2741: Property 'raw' is missing in type '{ unified: "tool-calls"; }' but required in type 'LanguageModelV4FinishReason'.
+src/execution/durable-stream-model.test.ts(24,128): error TS2741: Property 'raw' is missing in type '{ unified: "tool-calls"; }' but required in type 'LanguageModelV4FinishReason'.
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

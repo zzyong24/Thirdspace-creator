@@ -1,0 +1,40 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-stream-model.test.ts (5 tests | 3 failed) 37ms
+   × 模型回执保存失败不能放出工具调用，也不能标为可重试拒绝 7ms (retry x2)
+   × 流中missing-finish记结果未知，不把半段正文当完成回执 3ms (retry x2)
+   × 流中error记结果未知，不把半段正文当完成回执 5ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-stream-model.test.ts > 模型回执保存失败不能放出工具调用，也不能标为可重试拒绝
+ FAIL  src/execution/durable-stream-model.test.ts > 模型回执保存失败不能放出工具调用，也不能标为可重试拒绝
+ FAIL  src/execution/durable-stream-model.test.ts > 模型回执保存失败不能放出工具调用，也不能标为可重试拒绝
+AssertionError: expected 0 to be greater than 0
+ ❯ src/execution/durable-stream-model.test.ts:25:271
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/execution/durable-stream-model.test.ts > 流中missing-finish记结果未知，不把半段正文当完成回执
+ FAIL  src/execution/durable-stream-model.test.ts > 流中missing-finish记结果未知，不把半段正文当完成回执
+ FAIL  src/execution/durable-stream-model.test.ts > 流中missing-finish记结果未知，不把半段正文当完成回执
+ FAIL  src/execution/durable-stream-model.test.ts > 流中error记结果未知，不把半段正文当完成回执
+ FAIL  src/execution/durable-stream-model.test.ts > 流中error记结果未知，不把半段正文当完成回执
+ FAIL  src/execution/durable-stream-model.test.ts > 流中error记结果未知，不把半段正文当完成回执
+AssertionError: expected 0 to be greater than 0
+ ❯ src/execution/durable-stream-model.test.ts:28:324
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)
+   Start at  18:59:00
+   Duration  346ms (transform 73ms, setup 0ms, import 161ms, tests 37ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/durable-stream-model.test.ts

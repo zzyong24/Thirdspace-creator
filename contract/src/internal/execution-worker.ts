@@ -36,6 +36,7 @@ export const workerUsageSchema = z.object({
 /** 仅保存可恢复的模型结果，不保留请求正文、HTTP头或原始响应日志。 */
 export const workerProviderReceiptSchema = z.object({
   content: z.array(z.json()),
+  stream: z.object({schemaVersion:z.literal(1),parts:z.array(z.json())}).strict().optional(),
   finishReason: z.object({unified:z.string(),raw:z.string().optional()}).strict(),
   usage: z.object({
     inputTokens:z.object({total:tokenCountSchema,noCache:tokenCountSchema,cacheRead:tokenCountSchema,cacheWrite:tokenCountSchema}),

@@ -1,0 +1,835 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/integration/durable-chat-model-ledger.test.ts > 真实模型调用端口和数据库保存完整流回执，重建包装器不重发，同键改请求被拒绝
+ZodError: [
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "temperature"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "topP"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "topK"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "presencePenalty"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "frequencyPenalty"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "stopSequences"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "seed"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "reasoning"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "tools"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "responseFormat"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received array"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received array"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received array"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received array"
+        }
+      ],
+      [
+        {
+          "code": "invalid_union",
+          "errors": [
+            [
+              {
+                "expected": "string",
+                "code": "invalid_type",
+                "path": [],
+                "message": "Invalid input: expected string, received object"
+              }
+            ],
+            [
+              {
+                "expected": "number",
+                "code": "invalid_type",
+                "path": [],
+                "message": "Invalid input: expected number, received object"
+              }
+            ],
+            [
+              {
+                "expected": "boolean",
+                "code": "invalid_type",
+                "path": [],
+                "message": "Invalid input: expected boolean, received object"
+              }
+            ],
+            [
+              {
+                "expected": "null",
+                "code": "invalid_type",
+                "path": [],
+                "message": "Invalid input: expected null, received object"
+              }
+            ],
+            [
+              {
+                "expected": "array",
+                "code": "invalid_type",
+                "path": [],
+                "message": "Invalid input: expected array, received object"
+              }
+            ],
+            [
+              {
+                "code": "invalid_union",
+                "errors": [
+                  [
+                    {
+                      "expected": "string",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected string, received undefined"
+                    }
+                  ],
+                  [
+                    {
+                      "expected": "number",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected number, received undefined"
+                    }
+                  ],
+                  [
+                    {
+                      "expected": "boolean",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected boolean, received undefined"
+                    }
+                  ],
+                  [
+                    {
+                      "expected": "null",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected null, received undefined"
+                    }
+                  ],
+                  [
+                    {
+                      "expected": "array",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected array, received undefined"
+                    }
+                  ],
+                  [
+                    {
+                      "expected": "record",
+                      "code": "invalid_type",
+                      "path": [],
+                      "message": "Invalid input: expected record, received undefined"
+                    }
+                  ]
+                ],
+                "path": [
+                  "providerOptions"
+                ],
+                "message": "Invalid input"
+              }
+            ]
+          ],
+          "path": [
+            0
+          ],
+          "message": "Invalid input"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received array"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "prompt"
+    ],
+    "message": "Invalid input"
+  },
+  {
+    "code": "invalid_union",
+    "errors": [
+      [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "number",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected number, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "boolean",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected boolean, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "null",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected null, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "array",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected array, received undefined"
+        }
+      ],
+      [
+        {
+          "expected": "record",
+          "code": "invalid_type",
+          "path": [],
+          "message": "Invalid input: expected record, received undefined"
+        }
+      ]
+    ],
+    "path": [
+      "request",
+      "providerOptions"
+    ],
+    "message": "Invalid input"
+  }
+]
+    at Object.reserveGenerationCall (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-generation-ports.service.ts:14:66)
+    at Object.reserve (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/integration/durable-chat-model-ledger.test.ts:17:168)
+    at wrapStream (/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.ts:30:40)
+    at Object.doStream (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:14101:33)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at execute (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8008:26)
+    at runWithTracingChannelSpan (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4084:12)
+    at executeLanguageModelCall (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:4292:14)
+    at streamLanguageModelCall (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:8006:7)
+    at _retryWithExponentialBackoff (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/dist/index.js:2690:12)
+
+ ❯ src/integration/durable-chat-model-ledger.test.ts (1 test | 1 failed) 1071ms
+   × 真实模型调用端口和数据库保存完整流回执，重建包装器不重发，同键改请求被拒绝 1070ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-model-ledger.test.ts > 真实模型调用端口和数据库保存完整流回执，重建包装器不重发，同键改请求被拒绝
+AI_NoOutputGeneratedError: No output generated. Check the stream for errors.
+ ❯ Object.flush ../node_modules/.pnpm/ai@7.0.4_zod@4.4.3/node_modules/ai/src/generate-text/stream-text.ts:1343:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:03:35
+   Duration  2.54s (transform 676ms, setup 0ms, import 1.29s, tests 1.07s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/durable-chat-model-ledger.test.ts

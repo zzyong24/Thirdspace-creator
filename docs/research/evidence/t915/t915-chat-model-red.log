@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-stream-model.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-stream-model.test.ts [ src/execution/durable-stream-model.test.ts ]
+Error: Cannot find module './durable-stream-model' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/durable-stream-model.test.ts
+ ❯ src/execution/durable-stream-model.test.ts:4:1
+      2| import {streamText,tool,jsonSchema} from 'ai';
+      3| import type {LanguageModelV4,LanguageModelV4StreamPart} from '@ai-sdk/…
+      4| import {createDurableStreamModel} from './durable-stream-model';
+       | ^
+      5| const usage={inputTokens:{total:2},outputTokens:{total:3}},finish={typ…
+      6| function fixture(parts:LanguageModelV4StreamPart[],failSettle=false){
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:57:39
+   Duration  242ms (transform 19ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/durable-stream-model.test.ts

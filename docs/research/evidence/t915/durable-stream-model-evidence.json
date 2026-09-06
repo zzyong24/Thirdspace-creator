@@ -1,0 +1,133 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，非完整任务验收",
+  "files": [
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "886430e2088a1c962cf42c4fdc0a8d21160d2e871bf8f70ee590d719afc6335a"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "sha256": "fa61efb7230504fa45bbc1f90b3cd043aaa02898cb7244b66440d1888c186dce"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-stream-model.ts",
+      "sha256": "4dd4b1bb288d6470331546a1cc004b30257a5f7d617060175d806b11f9bd1e08"
+    },
+    {
+      "path": "ai-worker/src/execution/durable-stream-model.test.ts",
+      "sha256": "58284896418dacd029cdc020d5f6a0894a7b274e135db7453de638d91c946e94"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-model-ledger.test.ts",
+      "sha256": "310f884081e693630e76f036414fcdd8d2ea18666e89ef464adf3b3b4fff3fa4"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-expanded.log",
+      "sha256": "5338b87ed9ff1507dfbebdf58dfc8cce8ad87b4bbaba142408fdcfcc619d931a"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-fixed.log",
+      "sha256": "95938116a32dc838d9d15d36e58d56808e4bf87508c5d4a921cb518e0bdbea8c"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-green.log",
+      "sha256": "88ae0f7808aa18d69700afac13bdd3c87dd36efb5d585ce62b82154726bf565f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-ledger-fixed.log",
+      "sha256": "6ce0c13a8f1b648d42512870e9f51c9f7ad6ad82429b9d00192fbd57df2873de"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-ledger.log",
+      "sha256": "d2390d4dac1db4db0e17b6d5a484e581fcd6d2a400af76153df786de2cc53acd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-red.log",
+      "sha256": "4fa203f90b54d0c6e98de825749fbb173ed73b0bd1a187d40645d6285b37b1a5"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-types-expanded.log",
+      "sha256": "2847e7b20050524ce3939b06e09d08feedae2180d42ad731fc4c3fa9de9b9601"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-model-types.log",
+      "sha256": "dcb646ae885192fb756c6e8844ec73b5f4b0e528bb5f803665a8ba982ca2a187"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-ack-final.log",
+      "sha256": "bc99205346e087adc02104fd002ac69b3c25f2dab05d264a8740e78431f345c5"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-backend-regression.log",
+      "sha256": "ba7b8a970f978e9f53331a2a2cfaf216bb30f9f2b1b0a1ba67999bd50ac92095"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-backend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-cancel-final.log",
+      "sha256": "029892349f25dff7fc536b6f793299a82ba918f9a8db651c0c78475e66983d06"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-format.log",
+      "sha256": "e68dea8ae7bb9cb4d64384d79022b8cdc2ecc0ae679c621a558a618a601177f0"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-pmem.log",
+      "sha256": "473d3b7110a2657108278c9ac9083bf5c24165847c5d85531598ea3612f6b312"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-scope.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-types-verified.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-worker-regression.log",
+      "sha256": "a5d23672a737b2035f0d80525c7ce874c809f774c9ab2c4a621a3b08d5ec39ff"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-stream-model-worker-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "distinctTests": 114,
+  "typecheck": "Backend/Worker/Contract 最新联合检查通过；Frontend 此前检查通过",
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1
+  },
+  "independentReview": "待完成",
+  "limitations": [
+    "未连接正式 Worker 或 /api/chat",
+    "本地 SSE fixture，不是真实商业模型",
+    "未完成 UI/性能/双平台验收"
+  ]
+}

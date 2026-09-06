@@ -39,6 +39,10 @@
     "./browser/*": {
       "types": "./src/runtime/browser/*.ts",
       "default": "./src/runtime/browser/*.ts"
+    },
+    "./durable-stream": {
+      "types": "./src/execution/durable-stream-model.ts",
+      "default": "./src/execution/durable-stream-model.ts"
     }
   },
   "scripts": {
