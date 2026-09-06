@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-commit.test.ts (36 tests | 2 failed | 34 skipped) 1772ms
+   × 搜索配置仅经当前网页父调用返回，不进入任务与工具账本 1050ms
+   × 搜索配置读取期间取消后不能返回密钥，未装配和读取故障不伪装未配置 722ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 搜索配置仅经当前网页父调用返回，不进入任务与工具账本
+TypeError: f.service.resolveSearch is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:387:25
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 搜索配置读取期间取消后不能返回密钥，未装配和读取故障不伪装未配置
+TypeError: f.service.resolveSearch is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:394:25
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 34 skipped (36)
+   Start at  10:03:22
+   Duration  3.54s (transform 962ms, setup 0ms, import 1.63s, tests 1.77s, environment 0ms)
+

@@ -133,3 +133,5 @@ export {createDailyTopicBusinessAdapter,type DailyTopicPrepareDeps} from "./dail
 export {createCopilotBusinessAdapter} from "./copilot-business-adapter";
 
 export {createLocalEnvironmentHost} from "./local-environment-host";
+
+export {resolveSearchSpec,type SearchSpec,type ResolveSearchDeps} from "./search/resolve";

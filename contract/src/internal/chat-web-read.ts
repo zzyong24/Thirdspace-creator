@@ -1,4 +1,7 @@
 import { z } from "zod";
+/** 私有宿主响应中的搜索配置；不得复制到模型输入、事件或证据。 */
+export const chatWebReadSearchSpecSchema=z.object({provider:z.string(),baseUrl:z.string().nullable(),model:z.string(),token:z.string(),displayModelKey:z.literal("channel-managed").optional()}).strict();
+export type ChatWebReadSearchSpec=z.infer<typeof chatWebReadSearchSpecSchema>;
 const webUrl = z.string().url().max(16384).refine((value) => {
   const url = new URL(value);
   return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;

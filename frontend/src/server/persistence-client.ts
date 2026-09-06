@@ -552,7 +552,7 @@ import {
   resolveTranscribeSpec as resolveTranscribeSpecFn,
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
-import { resolveSearchSpec as resolveSearchSpecFn } from "@/server/ai/search/resolve";
+import { resolveSearchSpec as resolveSearchSpecFn } from "@creatoros/backend/modules/ai-runtime";
 // 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
 // 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
 // createOpenaiAsrAdapter(T-030-D2)= OpenAI 兼容 ASR(SiliconFlow/OpenAI/Groq),逐字稿转写用。
@@ -10026,8 +10026,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
   // resolveSearchSpec:与多模态层同一套 getModelConfig(settings 拥有 model_configurations)+ env,
-  // 投影成 SearchSpec(provider/baseUrl/model/token)。web.search 未配 → 抛 SearchConfigError
-  // (gatherMaterials 接住 → grounding=model_memory 降级,不 crash)。search provider 用户可配。
+  // 后端投影成 SearchSpec(provider/baseUrl/model/token)；未配置时使用浏览器默认档。
   const resolveSearchSpec = (ctx: RequestContext) =>
     resolveSearchSpecFn(ctx, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),

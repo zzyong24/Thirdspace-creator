@@ -3,6 +3,8 @@ import {findBrowserSessionState,validateBrowserStorageState} from "./execution-b
 import {assertSafeWebDomain,webDomainFromUrl} from "@creatoros/ai-worker/browser/web-domain";
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import type {RequestContext} from "@creatoros/contract";
+import {chatWebReadSearchSpecSchema,type ChatWebReadSearchSpec} from "@creatoros/contract/execution-worker";
 import { and, asc, eq, executionCalls, type Db } from "@creatoros/backend";
 import { chatWebReadFailureSchema, chatWebReadSessionSaveSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
@@ -27,6 +29,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
   budget: { maxCalls: number; maxTokens: number; deadlineMs: number };
   tools: Record<string, ChatBackendTool>;
   objectStorageForCtx: ObjectStorageForCtx;
+  resolveSearch?: (ctx:RequestContext)=>Promise<ChatWebReadSearchSpec|null>;
   sessions?: Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;
   assets: Pick<AssetsService, "getAsset" | "getDownloadUrl" | "listFilesByIds">;
 }) {
@@ -69,6 +72,21 @@ export function createExecutionChatWebReadService(db: Db, deps: {
     return agenticToolOutcomeSchema.parse({status:"ok",summary,evidence:[{entityId:row.id,version:row.contentHash,sourceUrl:url,title:row.title,text:projected.text}],data,error:null,continuation:projected.hasMore?{evidenceRef:row.id,nextOffset:projected.window.offset+projected.window.length,totalChars:projected.window.total}:null,sideEffect:"committed"});
   }
   return {
+    async resolveSearch(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
+      const {callId}=chatWebReadCallSchema.parse(raw);
+      const before=await access(ref,callId,"admission",async state=>{
+        signal?.throwIfAborted();started(state,ref);
+        if(!deps.resolveSearch)throw new ConflictError("网页搜索配置端口尚未装配");
+        return {context:state.context,inputDigest:state.bound.inputDigest,url:state.url};
+      });
+      const configured=await deps.resolveSearch!(before.context);
+      signal?.throwIfAborted();
+      return access(ref,callId,"admission",async state=>{
+        signal?.throwIfAborted();started(state,ref);
+        if(state.bound.inputDigest!==before.inputDigest || state.url!==before.url)throw new ConflictError("搜索配置读取期间网页调用改变");
+        return {configured:configured===null?null:chatWebReadSearchSpecSchema.parse(configured)};
+      });
+    },
     async cache(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
       const {callId}=chatWebReadCallSchema.parse(raw);
       const replay=()=>access(ref,callId,"settlement",async state=>state.parent.status==="settled"?{status:"hit" as const,output:receipt(state.parent)}:null);

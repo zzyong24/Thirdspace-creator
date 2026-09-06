@@ -131,9 +131,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
-      const chatTools=deps.executionMode==="chat.run" && ["readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession","prepareChatResearch","settleChatResearch","failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","settleChatGenerationModel","completeChatGeneration","failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
+      const chatTools=deps.executionMode==="chat.run" && ["resolveChatWebReadSearch","readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession","prepareChatResearch","settleChatResearch","failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","settleChatGenerationModel","completeChatGeneration","failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
       const currentTools=chatTools??agentTools;
-      if(chatTools?.webRead && ["readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession"].includes(port)) {
+      if(chatTools?.webRead && ["resolveChatWebReadSearch","readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession"].includes(port)) {
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
         const web=chatTools.webRead;
         const work=(async()=>{
@@ -141,6 +141,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
           if(port==="failChatWebRead")return web.fail(ref,raw);
           if(port==="readChatWebReadCache")return web.cache(ref,raw,scope.controller.signal);
           scope.controller.signal.throwIfAborted();
+          if(port==="resolveChatWebReadSearch")return web.resolveSearch(ref,raw,scope.controller.signal);
           if(port==="readChatWebReadSession") {
             const session=await web.readSession(ref,raw,scope.controller.signal);
             try{await browserProfiles.acquire(ref,session.domain);}

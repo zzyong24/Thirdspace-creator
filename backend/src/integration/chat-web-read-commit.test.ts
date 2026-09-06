@@ -24,7 +24,7 @@ const observation = { text: "完整网页证据".repeat(4000), title: "观察标
 beforeEach(async () => { const opened = await createDb(); db = opened.db; client=opened.client; close = () => opened.client.close(); root = await mkdtemp(join(tmpdir(), "t915-chat-read-")); });
 afterEach(async () => { await close(); await rm(root, { recursive: true, force: true }); });
 
-async function fixture(toolCount = 1) {
+async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/contract").RequestContext)=>Promise<import("../modules/ai-runtime/search/resolve").SearchSpec|null>) {
   const ctx = { userId: "read-user", accountId: `account-${++sequence}`, requestId: "test", source: "user" as const };
   const ids = { now, nextId: (prefix: string) => `${prefix}-${++sequence}` };
   const repo = createAiRepository(db, { ...ctx, ...ids });
@@ -40,7 +40,7 @@ async function fixture(toolCount = 1) {
   const storage = createLocalFsObjectStorage({ rootPath: root, publicBaseUrl: "/blob" }, { nextKey: () => `key-${++sequence}` });
   const assetsService = createAssetsService(createAssetRepository(db, ids), async () => storage, ids);
   const sessions=createBrowserSessionsService({db,now,nextId:ids.nextId,masterKey:Buffer.alloc(32,7)});
-  const toolPorts = createExecutionChatToolPorts(db, { now, budget, tools: restoredTools, webRead:{assets:assetsService,objectStorageForCtx:async()=>storage,sessions} });
+  const toolPorts = createExecutionChatToolPorts(db, { now, budget, tools: restoredTools, webRead:{assets:assetsService,objectStorageForCtx:async()=>storage,sessions,resolveSearch} });
   const ledger = createExecutionCallLedgerService(db, { now, budget });
   const model = await ledger.reserve(ref, { operationKey: "root", kind: "model", inputDigest: `sha256:${"a".repeat(64)}`, reservedTokens: 128 });
   await ledger.start(ref, model.id);
@@ -379,4 +379,19 @@ it("缓存父回执写入等待后停止，正文修复与缓存证据一并回�
  try{await expect(f.service.cache(f.ref,{callId:f.parent.callId},controller.signal)).rejects.toThrow();expect(matched).toBe(true);}finally{client.transaction=transaction;}
  expect(await db.select().from(executionEvidence)).toHaveLength(0);expect(await db.select().from(assetFiles)).toMatchObject([{extractedText:null}]);
  const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));expect(parent!.status).toBe("started");
+});
+
+it("搜索配置仅经当前网页父调用返回，不进入任务与工具账本",async()=>{
+ let owner:any;const config={provider:"tavily",baseUrl:null,model:"",token:"fixture-private-search-token"};
+ const f=await fixture(1,async ctx=>{owner=ctx;return config;});
+ expect(await f.service.resolveSearch(f.ref,{callId:f.parent.callId})).toEqual({configured:config});expect(owner).toMatchObject({userId:f.ctx.userId,accountId:f.ctx.accountId});
+ const persisted=JSON.stringify({tasks:await db.select().from(executionTasks),calls:await db.select().from(executionCalls),evidence:await db.select().from(executionEvidence)});expect(persisted).not.toContain(config.token);
+ const other=await fixture();await expect(f.service.resolveSearch(f.ref,{callId:other.parent.callId})).rejects.toThrow();
+ await expect(f.service.resolveSearch(f.ref,{callId:f.parent.callId,provider:"forged",accountId:"other"})).rejects.toThrow();
+});
+it("搜索配置读取期间取消后不能返回密钥，未装配和读取故障不伪装未配置",async()=>{
+ const controller=new AbortController();const f=await fixture(1,async()=>{controller.abort();return {provider:"tavily",baseUrl:null,model:"",token:"fixture-private"};});
+ await expect(f.service.resolveSearch(f.ref,{callId:f.parent.callId},controller.signal)).rejects.toThrow();
+ const missing=await fixture();await expect(missing.service.resolveSearch(missing.ref,{callId:missing.parent.callId})).rejects.toThrow();
+ const failed=await fixture(1,async()=>{throw new Error("config read failed");});await expect(failed.service.resolveSearch(failed.ref,{callId:failed.parent.callId})).rejects.toThrow("config read failed");
 });
