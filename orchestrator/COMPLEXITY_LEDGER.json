@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "cbcadbcd3fc8149ff87d016be21ebd2bb2190398f3accadc0af6fba28ee0acb1",
+      "file_sha256": "37710b5f005f4ffc94f10658be508fc06f4a4185796fe00e2dc83bbf3065ec4e",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权命名 IPC 与取消后既有调用结算。本次把内部模型结算及明确失败的幂等回执查询接入 settlement 校验；实际首次失败仍由宿主复查原任务和拒绝账本，不允许新模型动作。独立只读评审确认仍属现有授权范围。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权命名 IPC 与取消后既有调用结算。本次将共享结构化节点的 settleChatGenerationModel 与 failChatGeneration 纳入 settlement 校验；前者只结算当前子调用，后者首次失败仍验证真实父工具与完整已确认前缀、尾部拒绝，回执丢失只能同键回读。独立只读审查及 108 项宿主/账本/既有 Worker 回归验证，没有新增 IPC 拓扑或任意调用权限。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1553,6 +1553,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "此证据文档引用既有 service 注释以说明复杂度哈希重新绑定原因；不包含新本机进程、安装或部署机制。仅登记精确文件的既有术语引用，未增加实现范围。",
       "acceptance": "记录复杂度标记归属，不代表功能、测试或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/generation-ledger.md"
+      ],
+      "file_sha256": "ebc766c3bdbe6dced9d0a74092159edd383324ffc417e0199da9fc6debbf970b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本证据记录既有命名 IPC 共享生成端口及真实账本恢复测试，仅登记说明文档的通信术语；不新增产品范围、通信拓扑、安装或发布。",
+      "acceptance": "只绑定证据文件复杂度，不代表完整 T-915 或 Worker 新生成入口验收。"
     }
   ],
   "historical_baselines": []

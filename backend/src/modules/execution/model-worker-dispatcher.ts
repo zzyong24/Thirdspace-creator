@@ -82,7 +82,12 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
-  const staticChatTools=deps.executionMode==="chat.run" && deps.tools?createExecutionChatToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const resolveGenerationCredential=async(context:RequestContext,capability:string,ref:ExecutionRef,signal?:AbortSignal)=>{
+    signal?.throwIfAborted();await readExecutionChatTask(db,ref,now);await calls.readTaskContext(ref);
+    const owner=await leases.withLease(ref,"admission",async({task})=>({aiTaskId:task.ownerId,executionTaskId:task.id}));
+    const credential=await deps.resolveModelCredential(context,capability,owner);signal?.throwIfAborted();return credential;
+  };
+  const staticChatTools=deps.executionMode==="chat.run" && deps.tools?createExecutionChatToolPorts(db,{now,budget:deps.budget,tools:deps.tools,resolveGenerationCredential}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
   const browserActions=deps.executionMode==="agentic.run"?createExecutionBrowserActionService(db,{now,tools:deps.tools}):null;
@@ -113,7 +118,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       });
       signal.throwIfAborted();
       const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
-      const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools});
+      const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential});
       await ports.validateTask(ref);signal.throwIfAborted();
       return ports;
     })();
@@ -126,8 +131,15 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
-      const chatTools=deps.executionMode==="chat.run" && ["failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
+      const chatTools=deps.executionMode==="chat.run" && ["failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","settleChatGenerationModel","completeChatGeneration","failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
       const currentTools=chatTools??agentTools;
+      if(port==="settleChatGenerationModel" && chatTools)return chatTools.generation.settle(ref,raw);
+      if(chatTools && ["failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","completeChatGeneration"].includes(port)){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
+        const signal=scope.controller.signal;
+        const work=port==="failChatGeneration"?chatTools.generation.fail(ref,raw,signal):port==="restoreChatGeneration"?chatTools.generation.restore(ref,raw,signal):port==="resolveChatGenerationCredential"?chatTools.generation.resolveCredential(ref,raw,signal):port==="prepareChatGeneration"?chatTools.generation.prepare(ref,raw,signal):port==="reserveChatGenerationModel"?chatTools.generation.reserve(ref,raw,signal):port==="startChatGenerationModel"?chatTools.generation.start(ref,raw,signal):chatTools.generation.complete(ref,raw,signal);
+        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
       if(port==="checkChatToolApproval" && chatTools)return chatTools.check(ref,raw,activeTools.get(executionKey(ref))?.controller.signal);
       if(port==="settleChatHooksModel" && chatTools)return chatTools.hooks.settle(ref,raw);
       if(chatTools && ["failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","completeChatHooks"].includes(port)){

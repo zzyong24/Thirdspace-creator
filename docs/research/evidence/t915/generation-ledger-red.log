@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-generation.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-generation.service.test.ts [ src/modules/execution/execution-chat-generation.service.test.ts ]
+Error: Cannot find module './execution-chat-generation.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-chat-generation.service.test.ts
+ ❯ src/modules/execution/execution-chat-generation.service.test.ts:10:1
+      8| import {createExecutionAgenticToolPorts} from "./execution-agentic-too…
+      9| import {createExecutionModelIdentityService} from "./execution-model-i…
+     10| import {createExecutionChatGenerationService} from "./execution-chat-g…
+       | ^
+     11| import {replayStructuredGeneration} from "@creatoros/ai-worker/chat";
+     12| import {getTemplate,runWithEffectiveSkillSnapshot} from "@creatoros/ai…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  06:19:40
+   Duration  1.74s (transform 991ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-chat-generation.service.test.ts

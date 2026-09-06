@@ -154,7 +154,9 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         if (validateTree) validateTree(await readCalls(tx, task.id), task);
         if(input.status==="unknown" && call.kind==="tool" && !call.toolExecutionClaimId && ["waiting_user","retry_wait","failed"].includes(task.status)){
           const children=(await readCalls(tx,task.id)).filter(child=>child.parentCallId===call.id);
-          if(children.length && children.every(child=>child.status==="rejected") && (children.at(-1)!.id===task.retryOfCallId || task.status==="failed"))throw new ConflictError("明确拒绝已挂起，不能因回执丢失改成未知");
+          // 结构修复可有已结算前缀；挂起事实已经确认尾调用被拒绝，迟到 ACK 不能擦掉它。
+          const confirmed=children.every(child=>child.status==="rejected" || (child.kind==="model" && child.status==="settled" && child.totalTokens!==null && workerProviderReceiptSchema.safeParse(child.providerResult).success));
+          if(children.length && confirmed && children.at(-1)!.status==="rejected" && (children.at(-1)!.id===task.retryOfCallId || task.status==="failed"))throw new ConflictError("明确拒绝已挂起，不能因回执丢失改成未知");
         }
         if (input.status === "rejected" && call.kind === "tool" && (await readCalls(tx, task.id)).some(child => child.parentCallId === call.id)) throw new ConflictError("已有子调用的父工具不能标记为未执行拒绝");
         if (input.status === "settled" && (call.kind === "tool" || call.parentCallId)) {

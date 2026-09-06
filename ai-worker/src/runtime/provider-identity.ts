@@ -13,3 +13,8 @@ export function providerIdentityFor(spec: {
       : `${spec.customEndpoint ? "creatoros-custom" : "openai"}.${spec.apiFormat === "openai_chat" ? "chat" : "responses"}`;
   return { modelId: spec.model, provider };
 }
+
+/** 与 modelFor 共用端点能力选择；只使用非秘密配置。 */
+export function structuredModeForIdentity(spec:{apiFormat:"anthropic"|"openai_chat"|"openai_responses";customEndpoint:boolean;structuredOutputs?:boolean}):"native"|"text" {
+ return spec.apiFormat==="openai_chat" && spec.customEndpoint ? (spec.structuredOutputs===true?"native":"text") : (spec.structuredOutputs===false?"text":"native");
+}

@@ -1,0 +1,70 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/execution/execution-chat-generation.service.test.ts > 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复
+[structured-node] template=topic.enrich status=error durationMs=28 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/execution-chat-generation.service.test.ts > 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复
+[structured-node] template=topic.enrich status=error durationMs=8 path=structured modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/execution/execution-chat-generation.service.test.ts > 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复
+[structured-node] template=topic.enrich status=error durationMs=7 path=structured modelCalls=2 inputTokens=4 outputTokens=3
+
+stdout | src/modules/execution/execution-chat-generation.service.test.ts > 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复
+[structured-node] template=topic.enrich status=error durationMs=6 path=structured modelCalls=2 inputTokens=4 outputTokens=3
+
+ ❯ src/modules/execution/execution-chat-generation.service.test.ts (11 tests | 1 failed | 10 skipped) 1197ms
+   × 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复 288ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-generation.service.test.ts > 成功前缀后的修复拒绝已挂起，丢 ACK 的 unknown 不污染父工具且能恢复
+AssertionError: promise resolved "{ …(20) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "createdAt": "2026-09-06T10:00:00.000Z",
++   "executionTaskId": "execution-task-614f8ebb-71c8-4c42-b9ec-8cbadcdbd416",
++   "id": "call_25315888-8be9-4a28-93cc-ca8f6e0d1267",
++   "inputDigest": "sha256:6369ee6410ea4401039ad2b23571ce0c3efba8101e46ddb5a4b93080574ab214",
++   "kind": "tool",
++   "operationKey": "tool:5b011f09bf45deb5754d15dfd35ce891323cb99e0896cec2a0351ed533acb165",
++   "parentCallId": null,
++   "providerResult": null,
++   "rejectionCode": null,
++   "reservedTokens": 0,
++   "resultRef": null,
++   "resultText": null,
++   "retryOfCallId": null,
++   "sequence": 2,
++   "startedAttempt": 1,
++   "status": "unknown",
++   "toolExecutionClaimId": null,
++   "totalTokens": null,
++   "updatedAt": "2026-09-06T10:00:00.000Z",
++   "usage": null,
+  }
+
+ ❯ src/modules/execution/execution-chat-generation.service.test.ts:271:72
+    269|  const repair=await f.service.reserve(f.ref,second);await f.service.st…
+    270|  await f.service.fail(f.ref,{callId:f.parent.callId,outcome:"waiting_u…
+    271|  await expect(f.ledger.settle(f.ref,f.parent.callId,{status:"unknown"}…
+       |                                                                        ^
+    272|  await f.tasks.command(f.ctx,{taskIds:[f.task.executionTaskId],command…
+    273|  const claim=(await f.tasks.claimTask({taskId:f.task.executionTaskId,w…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  06:28:32
+   Duration  2.98s (transform 1.02s, setup 0ms, import 1.64s, tests 1.20s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-chat-generation.service.test.ts -t 成功前缀

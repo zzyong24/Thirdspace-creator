@@ -1,3 +1,4 @@
+import {structuredModeForIdentity} from "./provider-identity";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { getRetryAfterMs } from "./retry-policy";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -401,8 +402,7 @@ export function normalizeAnthropicBaseUrl(baseUrl: string): string {
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
   let model: LanguageModel;
-  let structuredOutputMode: StructuredOutputMode =
-    spec.structuredOutputs === false ? "text" : "native";
+  const structuredOutputMode = structuredModeForIdentity({...spec,customEndpoint:Boolean(spec.baseUrl)});
   switch (spec.apiFormat) {
     case "anthropic": {
       const provider = createAnthropic({
@@ -429,7 +429,6 @@ export function modelFor(spec: ModelSpec): LanguageModel {
       if (spec.baseUrl) {
         // OpenAI-compatible 只描述 wire shape，不保证端点实现 json_schema。
         // 默认走文本 JSON + 本地 schema 校验；明确 opt-in 后才发送原生结构化响应。
-        structuredOutputMode = spec.structuredOutputs === true ? "native" : "text";
         const provider = createOpenAICompatible({
           name: "creatoros-custom",
           apiKey: spec.token,
