@@ -1,0 +1,52 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/asset-generate-runner.test.ts -t '当前 rejected'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submitted 而新提交
+[asset-generate-runner] generate failed task=legacy-original class=Error reason=unknown message="轮询中断"
+
+stderr | src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submitted 而新提交
+[asset-generate-runner] generate failed task=legacy-current class=Error reason=unknown message="轮询中断"
+
+stderr | src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submit_unknown 而新提交
+[asset-generate-runner] generate failed task=legacy-original class=Error reason=unknown message="轮询中断"
+
+stderr | src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submit_unknown 而新提交
+[asset-generate-runner] generate failed task=legacy-current class=Error reason=unknown message="轮询中断"
+
+ ❯ src/modules/ai-runtime/asset-generate-runner.test.ts (21 tests | 2 failed | 19 skipped) 9ms
+   × 当前 rejected 不能覆盖来源 submitted 而新提交 8ms
+   × 当前 rejected 不能覆盖来源 submit_unknown 而新提交 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submitted 而新提交
+ FAIL  src/modules/ai-runtime/asset-generate-runner.test.ts > 当前 rejected 不能覆盖来源 submit_unknown 而新提交
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/modules/ai-runtime/asset-generate-runner.test.ts:837:22
+    835|  submissions=0;
+    836|  await runAssetGenerate(ctx,{id:"legacy-current",retryOfTaskId:"legacy…
+    837|  expect(submissions).toBe(0);
+       |                      ^
+    838| });
+    839|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 19 skipped (21)
+   Start at  13:40:23
+   Duration  554ms (transform 259ms, setup 0ms, import 411ms, tests 9ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

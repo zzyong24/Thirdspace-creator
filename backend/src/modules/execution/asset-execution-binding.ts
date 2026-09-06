@@ -11,7 +11,7 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || payload.aiTaskId!==business?.id || business?.taskType!=="asset.generate")throw new ConflictError("素材执行缺少真实任务归属");
   const businessInput=business.inputData as Record<string,unknown>;
-  if(businessInput.kind!==input.mediaKind || businessInput.prompt!==input.prompt)throw new ConflictError("素材执行输入与原业务任务不符");
+  if((businessInput.kind==="video"?"video":"image")!==input.mediaKind || businessInput.prompt!==input.prompt)throw new ConflictError("素材执行输入与原业务任务不符");
   const digest=`sha256:${createHash("sha256").update(canonicalJson(input)).digest("hex")}`;
   if(callId===undefined)return {input,digest,call:null,saved:null};
   const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.id,callId),eq(executionCalls.executionTaskId,task.id)));

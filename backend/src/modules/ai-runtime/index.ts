@@ -137,3 +137,5 @@ export {createLocalEnvironmentHost} from "./local-environment-host";
 export {resolveSearchSpec,type SearchSpec,type ResolveSearchDeps} from "./search/resolve";
 
 export {createLocalReadHost,type LocalReadGrantPorts} from "./local-read-host";
+
+export {createAssetBusinessExecutionService} from "./asset-business-execution.service";

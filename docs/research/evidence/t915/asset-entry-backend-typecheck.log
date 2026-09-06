@@ -1,0 +1,10 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/ai-runtime/asset-business-execution.service.test.ts(12,124): error TS2322: Type 'Mock<() => Promise<{ kind: string; provider: string; model: string; baseUrl: null; token: string; settings: { quality: string; }; }>>' is not assignable to type '(ctx: RequestContext, capability: "image.generate" | "video.generate", taskId: string) => Promise<MultimodalSpec>'.
+  Type 'Promise<{ kind: string; provider: string; model: string; baseUrl: null; token: string; settings: { quality: string; }; }>' is not assignable to type 'Promise<MultimodalSpec>'.
+    Type '{ kind: string; provider: string; model: string; baseUrl: null; token: string; settings: { quality: string; }; }' is not assignable to type 'MultimodalSpec'.
+      Types of property 'kind' are incompatible.
+        Type 'string' is not assignable to type '"video" | "image" | "audio" | "vision"'.
+ ELIFECYCLE  Command failed with exit code 2.

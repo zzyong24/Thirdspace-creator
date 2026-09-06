@@ -491,7 +491,7 @@ import {
   storyboardFromContentData,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
+import { createAssetBusinessExecutionService, runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
 import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
@@ -1577,7 +1577,7 @@ export interface ChatRuntime {
   // 授权表 local-read-grants,不新建授权机制)。只读,回目录根数组(空 = 还没授权过)。
   listAuthorizedDirs: (ctx: RequestContext) => Promise<{ dirs: string[] }>;
   // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport 的
-  // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
+  // ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
     ctx: RequestContext,
     input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
@@ -4163,51 +4163,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "asset.generate" &&
-          task.status === "queued"
-        ) {
-          // 生成素材 node (asset.generate, L5 录制, SPEC 2026-07-01 §3 / M2) — AI 生图/生视频
-          // (用户可配 provider,铁律:绝不写死 MiniMax)→ 落对象存储(P3 直写 putObject)→ 建
-          // asset(候选态)→ records a `generated_asset` candidate; 采纳 ties the generated asset
-          // into the 用料链 for the project (entityType:"asset", stage:"production") via the
-          // materialLinks port wired above. video 的异步轮询(submit→poll→retrieve + 超时)封在
-          // M1 minimax 适配器内;超时/失败 → runner catch → cancelTask(UI 失败态,绝不卡 running)。
-          // 未配 image.generate/video.generate model → MultimodalConfigError → cancelTask(诚实禁用)。
-          await runAssetGenerate(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              retryOfTaskId:
-                typeof task.retryOfTaskId === "string"
-                  ? task.retryOfTaskId
-                  : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              // 多模态解析(按 image.generate/video.generate capability 解析用户配的 provider/
-              // model/key),与文本层 resolveModelSpec 并列。
-              resolveMultimodalSpec,
-              // provider 适配器注册表(真 MiniMax;加 provider = 注册一个适配器,不改 runner)。
-              registry: multimodalRegistry,
-              // 建 asset 的窄端口 —— 落字节到对象存储 + 建 asset 行(候选态,未绑项目)。绑到
-              // AssetsService 的服务端直写方法(SOLE object-storage caller,SPEC §15)。
-              assets: {
-                createGeneratedAsset: async (c, input) => {
-                  const row = await assetsService.createGeneratedAsset(c, input);
-                  return {
-                    id: row.id,
-                    name: row.name,
-                    assetType: row.assetType,
-                  };
-                },
-              },
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "cover.generate" &&
           task.status === "queued"
         ) {
@@ -4799,12 +4754,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        const execution = agenticBusiness.supports(String(task.taskType)) && task.status === "queued"
+        const execution = task.taskType==="asset.generate" && task.status==="queued"
+          ? dispatchAssetTask(ctx,String(task.id))
+          : agenticBusiness.supports(String(task.taskType)) && task.status === "queued"
           ? (agenticWorker ? agenticBusiness.prepare(ctx,String(task.id)).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
           : businessExecution.supports(String(task.taskType)) && task.status === "queued"
           ? (modelWorker ? businessExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
           : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
         void execution.catch(async (error) => {
+          if(stoppingPreparation)return;
           const message =
             error instanceof Error ? error.message : String(error);
           await aiService
@@ -9686,6 +9644,28 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
+  const assetBusiness=createAssetBusinessExecutionService(db,{
+    budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
+    async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
+    async resolveSpec(c,capability,taskId){
+      const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const authority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
+      return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
+    },
+  });
+  async function runLegacyAssetTask(c:RequestContext,id:string){
+    if(stoppingPreparation)return;
+    const task=await aiService.getTask(c,id);
+    if(stoppingPreparation || task.status!=="queued")return;
+    await runTaskWithEffectiveSkillSnapshot(c,id,()=>{if(stoppingPreparation)throw new Error("素材准备已停止");return runAssetGenerate(c,{id,projectId:task.projectId??null,retryOfTaskId:task.retryOfTaskId,inputData:task.inputData as Record<string,unknown>},{ai:aiService,resolveMultimodalSpec,registry:multimodalRegistry,assets:{createGeneratedAsset:async(context,input)=>{const asset=await assetsService.createGeneratedAsset(context,input);return {id:asset.id,name:asset.name,assetType:asset.assetType};}}});});
+  }
+  async function dispatchAssetTask(c:RequestContext,id:string){
+    if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
+    const prepared=await assetBusiness.prepare(c,id);
+    if(stoppingPreparation)return;
+    if(prepared.legacy)await runLegacyAssetTask(c,id);else modelWorker.start();
+  }
   const submittedPreparation=createSubmittedTaskPreparationService(db,{deadlineMs:workerBudget.deadlineMs,prepare:(c,id,signal)=>businessExecution.prepare(c,id,signal),fail:(c,id,message)=>aiService.markFailed(c,id,message)});
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
     recoverPendingPreparation:signal=>submittedPreparation.recover(signal),
@@ -9699,6 +9679,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
+    assetStorage:objectStorageForCtx,resolveAssetCredential:(c,owner)=>assetBusiness.resolveCredential(c,owner),
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),
   }) : null;
@@ -9728,7 +9709,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
@@ -12254,7 +12235,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return { dirs: listLocalReadAlwaysDirs(ctx.userId) };
     },
     // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
-    // 的 ai.tasks.create,复用既有分派链 void runAssetGenerate;projectId 走 inputData,service
+    // 的 ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径;projectId 走 inputData,service
     // createTask 据它归属项目)。立即返回 taskId,不阻塞对话回合(视频异步分钟级)。
     dispatchGenerateAsset: async (
       ctx: RequestContext,
@@ -12688,9 +12669,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   };
 
-  if(modelWorker)preparationRecovery=businessExecution.recoverQueued(async(c,id)=>{
-    await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});
-  },()=>stoppingPreparation).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
+  if(modelWorker)preparationRecovery=Promise.all([
+    businessExecution.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});},()=>stoppingPreparation),
+    assetBusiness.recoverQueued(runLegacyAssetTask,async(c,id)=>{await aiService.markFailed(c,id,"素材任务准备未完成，请检查配置与原任务").catch(()=>{});},()=>stoppingPreparation),
+  ]).then(()=>{}).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
   if(agenticWorker)agenticPreparationRecovery=agenticBusiness.recoverQueued(async(c,id)=>{
     await aiService.markFailed(c,id,"自主任务准备未完成，请重新发起").catch(()=>{});
   },()=>stoppingPreparation).catch(()=>console.error("[agentic-worker] PREPARATION_RECOVERY_FAILED"));

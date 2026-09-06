@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/asset-business-execution.service.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  25 passed (25)
+   Start at  13:36:58
+   Duration  1.77s (transform 630ms, setup 0ms, import 1.17s, tests 961ms, environment 0ms)
+

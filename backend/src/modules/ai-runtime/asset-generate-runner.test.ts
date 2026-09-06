@@ -813,3 +813,26 @@ describe("runAssetGenerate — 失败诚实处置(cancelTask,不假成功)", () 
     expect(cancelTask).toHaveBeenCalledTimes(1);
   });
 });
+it("损坏的旧提交记录不能被当成没有提交过",async()=>{
+ const generateImage=vi.fn(async()=>({assetBytes:new Uint8Array([1])}));
+ const f=makeDeps({registry:{fake:{generateImage} as unknown as MultimodalProviderRegistry[string]},runtimeByTask:new Map([["legacy-broken",{multimodalProviderCheckpoint:{state:"submitting",inputFingerprint:"wrong"}}]])});
+ await runAssetGenerate(ctx,{id:"legacy-broken",projectId:null,inputData:{kind:"image",prompt:"原任务"}},f.deps);
+ expect(generateImage).not.toHaveBeenCalled();expect(f.cancelTask).toHaveBeenCalled();
+});
+it.each(["submitted","submit_unknown"])("当前 rejected 不能覆盖来源 %s 而新提交",async state=>{
+ const runtimeByTask=new Map<string,Record<string,unknown>>();
+ let submissions=0;
+ const generateVideo=vi.fn(async(_spec:unknown,options:{resumeJobId?:string;onJobSubmitted?:(id:string)=>Promise<void>})=>{
+  if(options.resumeJobId)return {assetBytes:new Uint8Array([1])};
+  submissions++;await options.onJobSubmitted?.("original-legacy-job");throw new Error("轮询中断");
+ });
+ const f=makeDeps({registry:{fake:{generateVideo} as unknown as MultimodalProviderRegistry[string]},kind:"video",runtimeByTask});
+ const inputData={kind:"video",prompt:"原提交"};
+ await runAssetGenerate(ctx,{id:"legacy-original",projectId:null,inputData},f.deps);
+ const original=runtimeByTask.get("legacy-original")!.multimodalProviderCheckpoint as Record<string,unknown>;
+ runtimeByTask.set("legacy-original",{multimodalProviderCheckpoint:{...original,state,...(state==="submit_unknown"?{jobId:undefined}:{})}});
+ runtimeByTask.set("legacy-current",{multimodalProviderCheckpoint:{...original,state:"rejected",jobId:undefined}});
+ submissions=0;
+ await runAssetGenerate(ctx,{id:"legacy-current",retryOfTaskId:"legacy-original",projectId:null,inputData},f.deps);
+ expect(submissions).toBe(0);
+});

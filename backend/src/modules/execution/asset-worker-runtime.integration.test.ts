@@ -1,3 +1,5 @@
+import {createAssetBusinessExecutionService} from "../ai-runtime/asset-business-execution.service";
+import {createAiService,createGeneratedAssetAdoptionService} from "../ai";
 import {createModelWorkerDispatcher} from "./model-worker-dispatcher";
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
@@ -62,4 +64,26 @@ it("真实调度器对429有限重试，两次原调用只产一个素材候选"
  const host=createModelWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"asset-host",budget,pollMs:100,modelConcurrency:1,assetStorage:async()=>storage,resolveAssetCredential:async()=>({provider:"openai",model:"image",kind:"image",baseUrl,token:"fixture"}),resolveModelCredential:async()=>{throw new Error("不能走文本模型");},projectCandidate:()=>{throw new Error("不可旁路");}});
  try{host.start();await vi.waitFor(async()=>expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("succeeded"),{timeout:10000});expect(requests).toBe(2);expect(await db.select().from(aiTaskResults)).toHaveLength(1);expect(await db.select().from(assets)).toHaveLength(1);}
  finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
+},15000);
+
+it("公开创建素材经业务准备、真实Worker重试后公开采纳",async()=>{
+ const opened=await createDb(),db=opened.db,dir=await mkdtemp(join(tmpdir(),"t915-asset-entry-"));let requests=0,n=0;
+ const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(requests===1?429:200,{"content-type":"application/json"});res.end(JSON.stringify(requests===1?{error:{message:"busy"}}:{data:[{b64_json:Buffer.from([7,8,9]).toString("base64")}]}));});
+ await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const baseUrl=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ const ctx={userId:"entry-owner",accountId:"entry-account",requestId:"test",source:"user" as const},now=()=>new Date().toISOString(),budget={maxCalls:6,maxTokens:100000,deadlineMs:20000};
+ const unused=async():Promise<never>=>{throw new Error("不能进入旧路径");};
+ const ai=createAiService({db,now,nextId:p=>`${p}-${++n}`,generatedAssets:createGeneratedAssetAdoptionService(db,{link:unused},now),artifacts:{createVersion:unused},knowledge:{createKnowledge:unused},candidate:{createFromAIResult:unused,enrichCard:unused},learnings:{createLearning:unused},publishing:{createPublicationFromDraft:unused},materialLinks:{link:unused},positioning:{upsertProfile:unused,createStatementVersion:unused},calibration:{createDraftPrediction:unused}});
+ const business=createAssetBusinessExecutionService(db,{now,budget,assertProject:unused,resolveSpec:async()=>({provider:"openai",model:"image",kind:"image",baseUrl,token:"entry-secret"})});
+ const storage=createLocalFsObjectStorage({rootPath:dir,publicBaseUrl:"/blob"},{nextKey:()=>"unused"});
+ const host=createModelWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"asset-entry-host",budget,pollMs:100,modelConcurrency:1,assetStorage:async()=>storage,resolveAssetCredential:(c,owner)=>business.resolveCredential(c,owner),resolveModelCredential:unused,projectCandidate:()=>{throw new Error("不能走通用候选");}});
+ try{
+  // 旧入口允许省略 kind，保持默认生图；这里不手工植入执行 payload。
+  const task=await ai.createTask(ctx,{taskType:"asset.generate",inputData:{prompt:"公开任务原画面"}});
+  const prepared=await business.prepare(ctx,task.id);expect(prepared.legacy).toBeUndefined();host.start();
+  await vi.waitFor(async()=>expect((await ai.getTask(ctx,task.id)).status).toBe("awaiting_confirmation"),{timeout:10000});
+  expect(requests).toBe(2);expect(await ai.listResults(ctx,task.id)).toHaveLength(1);
+  expect((await ai.confirmTask(ctx,task.id)).status).toBe("succeeded");expect((await ai.confirmTask(ctx,task.id)).status).toBe("succeeded");
+  expect(await db.select().from(assets)).toMatchObject([{status:"active"}]);expect(await db.select().from(assets)).toHaveLength(1);
+  expect(JSON.stringify(await db.select().from(executionTasks))).not.toContain("entry-secret");
+ }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
 },15000);

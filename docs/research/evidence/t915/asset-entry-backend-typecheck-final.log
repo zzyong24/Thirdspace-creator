@@ -1,0 +1,7 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/execution/asset-worker-runtime.integration.test.ts(78,300): error TS2322: Type '() => Promise<never>' is not assignable to type '(context: RequestContext, input: { taskType: string; inputData: unknown; text: string; structuredResult?: { object: JSONType; generation: { finishReason: string; usage: { inputTokens: number | null; outputTokens: number | null; cachedTokens: number | null; totalTokens: number | null; }; attempts: { ...; }[]; }; mode...'.
+  Type 'Promise<never>' is missing the following properties from type 'RecordCandidateInput': resultType, resultData
+ ELIFECYCLE  Command failed with exit code 2.

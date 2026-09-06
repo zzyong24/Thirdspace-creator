@@ -165,6 +165,7 @@ function parseProviderCheckpoint(
   ) {
     return null;
   }
+  if(row.jobId!==undefined && row.state!=="submitted")return null;
   return row as unknown as ProviderCheckpoint;
 }
 
@@ -231,12 +232,21 @@ export async function runAssetGenerate(
 
     let resumeJobId: string | undefined;
     if (typeof deps.ai.getTaskRuntimeData === "function") {
-      const checkpointTaskId = task.retryOfTaskId ?? task.id;
-      const runtimeData = await deps.ai.getTaskRuntimeData(ctx, checkpointTaskId);
-      const checkpoint = parseProviderCheckpoint(
-        runtimeData.multimodalProviderCheckpoint,
-        inputFingerprint,
-      );
+      const checkpointTaskIds = [...new Set([task.id,task.retryOfTaskId].filter((id):id is string=>!!id))];
+      const checkpoints:ProviderCheckpoint[]=[];
+      for(const checkpointTaskId of checkpointTaskIds){
+        const runtimeData=await deps.ai.getTaskRuntimeData(ctx,checkpointTaskId);
+        if(typeof deps.ai.listResults==="function" && (await deps.ai.listResults(ctx,checkpointTaskId)).some(result=>result.resultType==="generated_asset"))throw new Error("原任务已有素材产物，请先核对原结果");
+        if(!Object.prototype.hasOwnProperty.call(runtimeData,"multimodalProviderCheckpoint"))continue;
+        const parsed=parseProviderCheckpoint(runtimeData.multimodalProviderCheckpoint,inputFingerprint);
+        if(!parsed || parsed.capability!==capability)throw new Error("原素材提交记录不完整或输入已变化，须先对账");
+        checkpoints.push(parsed);
+      }
+      const jobs=checkpoints.filter(row=>row.state==="submitted" && row.jobId);
+      if(new Set(jobs.map(row=>row.jobId)).size>1)throw new Error("同一素材意图存在多个提交任务号，须先对账");
+      if(checkpoints.some(row=>row.state==="response_received" || (kind==="image" && row.state==="submitted")))throw new Error("原图片已生成，请先恢复原结果");
+      const checkpoint=jobs[0]??checkpoints.find(row=>row.state!=="rejected")??checkpoints[0]??null;
+      if(checkpoint?.state==="submitted" && !checkpoint.jobId)throw new Error("原视频提交缺少任务号，禁止重新生成");
       if (
         checkpoint?.capability === capability &&
         (checkpoint.state === "submitting" ||
