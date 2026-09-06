@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/chat-web-read-commit.test.ts > 并发完成返回同一持久回执，不因窗口随机标记产生冲突
+[chat-tool] name=web.read ok durationMs=0
+
+stdout | src/integration/chat-web-read-commit.test.ts > 并发完成返回同一持久回执，不因窗口随机标记产生冲突
+[chat-tool] name=web.read ok durationMs=1
+
+ ❯ src/integration/chat-web-read-commit.test.ts (6 tests | 1 failed) 6289ms
+   × 并发完成返回同一持久回执，不因窗口随机标记产生冲突 1064ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 并发完成返回同一持久回执，不因窗口随机标记产生冲突
+ConflictError: 网页结算执行权改变
+ ❯ src/modules/execution/execution-chat-web-read.service.ts:132:180
+
+ ❯ src/modules/execution/execution-call-ledger.service.ts:154:27
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  08:17:54
+   Duration  8.96s (transform 1.30s, setup 0ms, import 2.34s, tests 6.29s, environment 0ms)
+

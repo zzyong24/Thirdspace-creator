@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-commit.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts [ src/integration/chat-web-read-commit.test.ts ]
+Error: Cannot find module '../modules/ai-runtime/chat-web-read-tool-host' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/integration/chat-web-read-commit.test.ts
+ ❯ src/integration/chat-web-read-commit.test.ts:10:1
+      8| import { buildChatTools, type ChatToolDeps } from "../modules/ai-runti…
+      9| import { prepareChatToolDefinitions } from "../modules/ai-runtime/chat…
+     10| import { createChatWebReadTaskToolHost } from "../modules/ai-runtime/c…
+       | ^
+     11| import { createChatHostContextReader } from "../modules/ai/chat-host-c…
+     12| import { createAiRepository } from "../modules/ai/ai.repository";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  08:09:14
+   Duration  2.10s (transform 1.07s, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

@@ -20,9 +20,10 @@ export const chatWorkerInputSchema = z.object({
     name:z.string().min(1).max(256),version:z.string().min(1).max(128),
     description:z.string(),parameters:z.record(z.string(),z.json()),
     effect:z.enum(["none","proposal","committed"]),
-    execution:z.enum(["host","worker.research","worker.script-hooks","worker.structured-node","host.task-submit"]).optional(),
+    execution:z.enum(["host","worker.web-read","worker.research","worker.script-hooks","worker.structured-node","host.task-submit"]).optional(),
   }).strict()).max(100),
 }).strict().superRefine((value, ctx) => {
+  for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.web-read" && (tool.name!=="web.read" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"网页读取声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.research" && (tool.name!=="material.gather" || tool.effect!=="none"))ctx.addIssue({code:"custom",message:"研究执行声明与工具身份不符",path:["tools",index,"execution"]});
   const names = value.tools.map(tool => tool.name);
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.structured-node" && (!["topic.enrich","positioning.generate"].includes(tool.name) || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"结构化子节点声明与工具身份不符",path:["tools",index,"execution"]});

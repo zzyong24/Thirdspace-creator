@@ -129,7 +129,7 @@ export function createExecutionResearchEvidenceService(db:Db,deps:{tools:Record<
             output=agenticToolOutcomeSchema.parse({status:observation.needLogin?"blocked":"error",summary:reason,evidence:[],error:{code:observation.needLogin?"needs_login":"no_evidence",retryable:false,recovery:reason},continuation:null,sideEffect:"none"});
           } else {
             const source=new URL(observation.sourceUrl);if(!["https:","http:"].includes(source.protocol) || source.username || source.password)throw new ConflictError("网页最终来源URL不合法");
-            const row:Evidence={id:`evidence_${randomUUID()}`,executionTaskId:task.id,originCallId:call.id,requestedUrl:input.url,sourceUrl:observation.sourceUrl,title:observation.title,fullText:observation.fullText,contentHash:contentHash(observation.sourceUrl,observation.fullText),byteLength:bytes,createdAt:now()};
+            const row:Evidence={metadata:{},id:`evidence_${randomUUID()}`,executionTaskId:task.id,originCallId:call.id,requestedUrl:input.url,sourceUrl:observation.sourceUrl,title:observation.title,fullText:observation.fullText,contentHash:contentHash(observation.sourceUrl,observation.fullText),byteLength:bytes,createdAt:now()};
             await tx.insert(executionEvidence).values(row);output=page(row,0);
           }
         } else {

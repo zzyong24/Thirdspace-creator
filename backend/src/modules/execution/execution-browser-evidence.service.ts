@@ -91,7 +91,7 @@ export function createExecutionBrowserEvidenceService(db: Db, deps: {
                 }
                 const bytes = Buffer.byteLength(selected.text, "utf8");
                 const capacity = rows.reduce((sum, row) => sum + row.byteLength, 0) + bytes <= 8 * 1024 * 1024;
-                const row: Evidence = { id: `evidence_${randomUUID()}`, executionTaskId: task.id, originCallId: call.id, requestedUrl: request.url ?? observation.url, sourceUrl: observation.url, title: observation.title, fullText: selected.text, contentHash: hash(selected.url, selected.text), byteLength: bytes, createdAt: now() };
+                const row: Evidence = { metadata: {}, id: `evidence_${randomUUID()}`, executionTaskId: task.id, originCallId: call.id, requestedUrl: request.url ?? observation.url, sourceUrl: observation.url, title: observation.title, fullText: selected.text, contentHash: hash(selected.url, selected.text), byteLength: bytes, createdAt: now() };
                 // 保存上限不能把已经发生的动作变成unknown；无空间时只持久原动作回执。
                 const canonical = enrich(output, row);
                 const enriched = capacity ? canonical : stripEvidenceIdentity(output);

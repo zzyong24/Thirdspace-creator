@@ -190,6 +190,7 @@ export const executionEvidence = pgTable("execution_evidence", {
   fullText: text("full_text").notNull(),
   contentHash: text("content_hash").notNull(),
   byteLength: integer("byte_length").notNull(),
+  metadata: jsonb("metadata").notNull().default({}),
   createdAt: text("created_at").notNull(),
 }, table => ({originCallUnique: uniqueIndex("execution_evidence_origin_call_unique").on(table.originCallId)}));
 

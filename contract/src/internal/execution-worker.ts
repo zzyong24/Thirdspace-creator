@@ -1,4 +1,5 @@
 export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
+export { chatWebReadObservationSchema, chatWebReadCallSchema, chatWebReadRecordSchema } from "./chat-web-read";
 import {chatHooksParentRequestSchema,chatHooksReserveRequestSchema} from "./execution-chat-hooks";
 export {chatHooksPreparationSchema} from "./execution-chat-hooks";
 export { chatProviderNonTextSchema } from "./chat-provider-content";
