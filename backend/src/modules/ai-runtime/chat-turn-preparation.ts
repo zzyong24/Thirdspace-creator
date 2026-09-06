@@ -3,7 +3,7 @@ import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {prepareChatAssembly,latestUserText,detectCopilotMediaRoute,isScratchPositioningConversation,type runChatStream} from "./chat-runner";
 import {prepareChatModelMessages} from "./chat-model-messages";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
-export async function prepareChatTurn(ctx:Parameters<typeof runChatStream>[0],input:Parameters<typeof runChatStream>[1],deps:Parameters<typeof runChatStream>[2],options:{workerScriptHooks?:boolean}={}){
+export async function prepareChatTurn(ctx:Parameters<typeof runChatStream>[0],input:Parameters<typeof runChatStream>[1],deps:Parameters<typeof runChatStream>[2],options:{workerScriptHooks?:boolean;atomicPlanningThesis?:boolean}={}){
  const assembly=await prepareChatAssembly(ctx,input.chatContext,deps,detectCopilotMediaRoute(input.messages),{
   positioningScratch:isScratchPositioningConversation(input.messages),
   verbatimSources:input.trustedScriptSources??[],
@@ -35,7 +35,7 @@ export async function prepareDurableChatTurn(
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
   messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,
   abortSignal,
- },deps,{workerScriptHooks:Boolean(scriptHooksGeneration)}));
+ },deps,{workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true}));
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
  const completeHostContext=validateChatHostContext({
   ...hostContext,...(prepared.assembly.scriptHooksContext ? {scriptHooksContext:prepared.assembly.scriptHooksContext,...(scriptHooksGeneration?{scriptHooksGeneration}:{})} : {}),

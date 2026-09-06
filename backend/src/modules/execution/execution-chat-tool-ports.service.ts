@@ -15,6 +15,8 @@ type Approval=z.infer<typeof chatToolApprovalReceiptSchema>;
 export type ChatBackendTool=AgenticBackendTool & {
   /** 只读取配置并准备事务；禁止在此执行模型、浏览器或领域写入。 */
   prepareTask?(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;callId:string;attemptId:string;signal?:AbortSignal}):Promise<ChatTaskPreparation>;
+  /** 提交后只唤醒原子任务；不得新建任务或执行模型。 */
+  wakeTask?(context:RequestContext,taskId:string):Promise<void>;
   approve(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;modelCallId:string;toolCallId:string;signal?:AbortSignal}):Promise<Approval>;
 };
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
@@ -105,8 +107,8 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
  const hooks=createExecutionChatHooksService(db,{...deps,check});
  const submissions=createExecutionChatTaskSubmissionService(db,{...deps,check});
  return {...tools,validateTask,check,hooks:{...hooks,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await hooks.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatHooks.parse(raw).callId);return result;}},
-  async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
-  async execute(...args:Parameters<typeof tools.execute>){const result=await submissions.handles(args[0],args[1])?await submissions.execute(...args):await tools.execute(...args);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
+  async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled"){await submissions.wake(ref,result.callId);await project(ref,result.callId);}return result;},
+  async execute(...args:Parameters<typeof tools.execute>){const result=await submissions.handles(args[0],args[1])?await submissions.execute(...args):await tools.execute(...args);await submissions.wake(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
   async settle(ref:ExecutionRef,raw:unknown){const result=await settle(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
  };
 }

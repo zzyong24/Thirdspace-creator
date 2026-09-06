@@ -1,0 +1,71 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-planning-task-host.test.ts (7 tests | 7 failed) 348ms
+   × 真实工厂生成独立事务声明，保留原生schema和描述 343ms
+   × 准备沿原项目和选区默认值，不派发或写库 {} 1ms
+   × 准备沿原项目和选区默认值，不派发或写库 {"projectId":" explicit ","topic":" topic "} 1ms
+   × 准备前 account 失效不调用提交服务 1ms
+   × 准备前 definition 失效不调用提交服务 1ms
+   × 准备前 cancel 失效不调用提交服务 1ms
+   × 准备前 missing-project 失效不调用提交服务 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 真实工厂生成独立事务声明，保留原生schema和描述
+AssertionError: expected { name: 'planning.thesis', …(4) } to match object { execution: 'host.task-submit', …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,8 @@
+  {
+    "description": "为当前项目生成一份可选论点骨架候选（核心论点、支撑依据、证据、反驳）。适合知识讲解、观点评论、测评对比、较长内容或需要证据/反驳时使用；已有完整逐字稿、简单通知、短口播或只想快速成稿时不要调用，直接写稿。它不是写稿前置，只产候选；用户点击「采纳并用于写稿」后才追加版本并进入生成式写稿。",
+    "effect": "committed",
+-   "execution": "host.task-submit",
+    "parameters": {
+      "additionalProperties": false,
+      "properties": {
+        "projectId": {
+          "description": "目标项目 id；缺省使用当前项目对话。",
+
+ ❯ src/modules/ai-runtime/chat-planning-task-host.test.ts:21:41
+     19| it("真实工厂生成独立事务声明，保留原生schema和描述",async()=>{
+     20|  const f=await fixture(),legacy=(await prepareChatToolDefinitions(f.to…
+     21|  expect(f.restored.modelInput.tools[0]).toMatchObject({execution:"host…
+       |                                         ^
+     22|  expect(f.restored.modelInput.tools[0]!.version).not.toBe(legacy.versi…
+     23|  expect(f.bound["planning.thesis"]?.prepareTask).toBeTypeOf("function"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {}
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {"projectId":" explicit ","topic":" topic "}
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-planning-task-host.test.ts:26:72
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备前 account 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备前 definition 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备前 cancel 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-planning-task-host.test.ts > 准备前 missing-project 失效不调用提交服务
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-planning-task-host.test.ts:33:72
+     31| });
+     32| it.each(["account","definition","cancel","missing-project"])("准备前 %s 失…
+     33|  const f=await fixture(),tool=f.bound["planning.thesis"]!;expect(tool)…
+       |                                                                        ^
+     34|  if(reason==="account")f.restored.context.accountId="other";
+     35|  if(reason==="definition")f.restored.modelInput.tools[0]!.version="cha…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  04:28:25
+   Duration  878ms (transform 418ms, setup 0ms, import 383ms, tests 348ms, environment 0ms)
+

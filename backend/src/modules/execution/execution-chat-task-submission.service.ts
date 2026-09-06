@@ -18,10 +18,10 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
  const now=deps.now??(()=>new Date().toISOString());
  const blocked=(status:string)=>agenticToolOutcomeSchema.parse({status:"blocked",summary:status==="denied"?"本次操作已被拒绝":"本次操作需要恢复授权",evidence:[],data:status==="denied"?{denied:true}:{recoveryState:"chat_authorization_required"},error:{code:"permission",retryable:false,recovery:"恢复工具权限后继续原任务"},continuation:null,sideEffect:"none"});
  const output=(call:typeof executionCalls.$inferSelect)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")).output);
- async function read(scope:Parameters<Parameters<typeof leases.withLease>[2]>[0],callId:string){
+ async function read(scope:Parameters<Parameters<typeof leases.withLease>[2]>[0],callId:string,settlement=false){
   const {tx,task,context}=scope;
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-  if(task.ownerType!=="ai_task" || !business || business.taskType!=="copilot.assist" || !["queued","running"].includes(business.status))throw new ConflictError("提交工具缺少真实聊天归属");
+  if(task.ownerType!=="ai_task" || !business || business.taskType!=="copilot.assist" || (!settlement && !["queued","running"].includes(business.status)))throw new ConflictError("提交工具缺少真实聊天归属");
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const call=calls.find(row=>row.id===callId);if(!call)throw new ConflictError("提交工具调用不存在");
   const bound=binding.forCall(task,calls,call);
@@ -49,6 +49,15 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
   return null;
  }
  return {
+  async wake(ref:ExecutionRef,callId:string){
+   const state=await leases.withLease(ref,"settlement",scope=>read(scope,callId,true));
+   if(state.bound.execution!=="host.task-submit" || state.call.status!=="settled")return;
+   const result=output(state.call),data=result.data as Record<string,unknown>|undefined;
+   if(result.status!=="ok" || result.sideEffect!=="committed" || result.error || typeof data?.taskId!=="string")return;
+   // 已提交事实不因唤醒失败降为未知；启动恢复继续处理原 queued 子任务。
+   try{await deps.tools[state.bound.executionToolName]?.wakeTask?.(structuredClone(state.context),data.taskId);}
+   catch{console.error("[chat-task] TASK_WAKE_FAILED");}
+  },
   async handles(ref:ExecutionRef,raw:unknown){const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);return leases.withLease(ref,"admission",async scope=>(await read(scope,callId)).bound.execution==="host.task-submit");},
   async execute(ref:ExecutionRef,raw:unknown,signal?:AbortSignal):Promise<Outcome>{
    signal?.throwIfAborted();const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);

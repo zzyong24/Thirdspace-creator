@@ -1,3 +1,4 @@
+import {createChatPlanningTaskHost,type ChatPlanningTaskPorts} from "./chat-planning-task-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
 import type {ContextReaders} from "./chat-runner";
@@ -9,11 +10,13 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
+ planningPorts?:ChatPlanningTaskPorts,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  const read=createChatReadTaskToolHost(reader,readers),hooks=createChatHooksTaskToolHost(reader),candidates=createChatCandidateTaskToolHost(reader,readers);
  return async(context,input,execution,signal)=>{
   const [readTools,hookTools,candidateTools]=await Promise.all([read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal)]);
   signal.throwIfAborted();
-  return {...readTools,...hookTools,...candidateTools};
+  const planningTools=planningPorts?await createChatPlanningTaskHost(reader,planningPorts)(context,input,execution,signal):{};
+  return {...readTools,...hookTools,...candidateTools,...planningTools};
  };
 }

@@ -26,11 +26,12 @@ async function fixture(second=false,start=true){
  const model=await generation.reserveGenerationCall(ref,{operationKey:`chat:${source.id}/model/1`,request:{maxOutputTokens:128}});await ledger.start(ref,model.callId);
  await generation.settleGenerationCall(ref,{callId:model.callId,status:"settled",providerResult:{content:[{type:"tool-call",toolCallId:"submit",toolName:"planning_thesis",input:'{"topic":"原主题"}'},...(second?[{type:"tool-call",toolCallId:"submit2",toolName:"planning_thesis",input:'{"topic":"原主题"}'}]:[])],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]},usage:{inputTokens:2,outputTokens:3}});
  const prepare=vi.fn(async(context:typeof ctx,input:any,scope:any)=>({task:await ai.prepareTaskCommit(context,{taskType:"planning.thesis",attemptId:scope.attemptId,inputData:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"已提交论点任务",data:{kind:"planning.thesis",taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
+ const wakeTask=vi.fn(async(_context:typeof ctx,_taskId:string)=>{});
  const approve=vi.fn(async()=>({status:"not-applicable" as const}));
- const host=createExecutionChatToolPorts(db,{now,budget,tools:{"planning.thesis":{...definition,parameters,approve,prepareTask:prepare} as unknown as ChatBackendTool}});
+ const host=createExecutionChatToolPorts(db,{now,budget,tools:{"planning.thesis":{...definition,parameters,approve,prepareTask:prepare,wakeTask} as unknown as ChatBackendTool}});
  const request={modelCallId:model.callId,toolCallId:"submit"};const call=await host.reserve(ref,request);if(start)await host.start(ref,{callId:call.callId});
  const children=()=>ai.listTasks(ctx,{taskType:"planning.thesis",limit:100,offset:0});
- return {ctx,ai,host,ref,call,request,prepare,approve,children,ledger,tasks,advance:()=>{time+=31000;}};
+ return {ctx,ai,wakeTask,host,ref,call,request,prepare,approve,children,ledger,tasks,advance:()=>{time+=31000;}};
 }
 it("实际宿主原子提交子任务与父回执，ACK丢失后回放不再创建",async()=>{
  const f=await fixture();
@@ -114,4 +115,14 @@ it("纯准备阶段的瞬时读取失败返回无副作用错误，不伪装未�
  expect(output).toMatchObject({status:"error",sideEffect:"none",error:{code:"transient",retryable:true}});
  expect(JSON.stringify(output)).not.toContain("private endpoint detail");expect((await f.children()).rows).toHaveLength(0);
  expect((await f.host.reserve(f.ref,f.request)).status).toBe("settled");
+});
+
+it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败且不重提",async()=>{
+ const f=await fixture();f.wakeTask.mockRejectedValueOnce(new Error("wake temporarily unavailable"));
+ const result=await f.host.execute(f.ref,{callId:f.call.callId});
+ expect(result).toMatchObject({status:"ok",sideEffect:"committed"});
+ expect(f.wakeTask).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId,source:"ai"}),(result.data as any).taskId);
+ expect((await f.host.reserve(f.ref,f.request)).status).toBe("settled");
+ expect(f.wakeTask).toHaveBeenLastCalledWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId,source:"ai"}),(result.data as any).taskId);
+ expect(f.wakeTask).toHaveBeenCalledTimes(2);expect(f.prepare).toHaveBeenCalledTimes(1);expect((await f.children()).rows).toHaveLength(1);
 });
