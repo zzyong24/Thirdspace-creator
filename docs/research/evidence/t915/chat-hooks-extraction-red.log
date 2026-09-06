@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/chat/script-hooks.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/chat/script-hooks.test.ts [ src/runtime/chat/script-hooks.test.ts ]
+Error: Cannot find module './script-hooks' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/chat/script-hooks.test.ts
+ ❯ src/runtime/chat/script-hooks.test.ts:2:1
+      1| import { describe, expect, it } from "vitest";
+      2| import { buildHooksPrompt, parseHookItems, finalizeHookItems } from ".…
+       | ^
+      3|
+      4| describe("Worker 开场文案兼容性", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:26:25
+   Duration  182ms (transform 17ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/chat/script-hooks.test.ts

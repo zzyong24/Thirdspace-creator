@@ -1,3 +1,4 @@
+import { EXTRA_BRIEF_HEADING, buildHooksPrompt, finalizeHookItems } from "@creatoros/ai-worker/chat";
 import {createChatReadToolBindings} from "./chat-read-tool-bindings";
 import {resolveChatGuideSnapshot} from "./chat-guide-snapshot";
 import { createChatModelStream, resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
@@ -631,61 +632,11 @@ const GENERIC_RUBRIC_DIMENSIONS: ReadonlyArray<{
 
 // [T-081①] 产内容工具的 extraBrief 统一注入段头 —— 对话中获得的补充指令/洞察进生成 prompt 的
 // 段标题(各工具/facet 同一措辞,单一真值)。导出供各 runner facet 拼装与单测锚定。
-export const EXTRA_BRIEF_HEADING = "【本次生成指令(来自对话,优先遵循)】";
+export { EXTRA_BRIEF_HEADING, buildHooksPrompt, parseHookItems } from "@creatoros/ai-worker/chat";
 
 // [T-081②] positioning.generate 的真实作品画像 —— formatWorksBrief 已移到 creative-context
 // (对话工具 + 后台 task 两条定位生成路径共用,单一真值);此处再导出保持既有 import 面不变。
 export { formatWorksBrief, WORKS_BRIEF_MAX_ROWS } from "./creative-context";
-
-// [T-081①] script.hooks 的 prompt 拼装 —— 从 generateHooks 内联提出为纯函数(可单测):
-// extraBrief 段(空则整段省略)。
-// [T-269/T-270] 接地根修复:hook 是**最悬空**的生成环(审计定位「22 个 AI」假钩子源头)。补三样:
-//   ① projectBriefHard(立项硬锚,项目态):钩子主张锚定钦定核心信息、别硬塞 brief 明禁的角度;
-//   ② userMaterialHard/Ref(用户素材=弹药):钩子有据可溯而非脑补;
-//   ③ antiFabrication(可溯硬约束段,单一真值 grounding-facets.ANTI_FABRICATION_CLAUSE):
-//      「数据冲击」类钩子的具体数字必须可溯,不可溯则不写——治「凭空造数字撑反共识钩子」。
-// 调用方(generateHooks)从 CreativeContext 取素材/brief、从 ai-worker 动态取 antiFabrication 常量传入。
-export function buildHooksPrompt(input: {
-  topic: string;
-  direction?: string;
-  extraBrief?: string;
-  positioningBrief: string;
-  projectBriefHard?: string;
-  userMaterialHard?: string;
-  userMaterialRef?: string;
-  antiFabrication?: string;
-  /** [T-355] 观众心智预设写法纪律段(单一真值 AUDIENCE_MINDSET_CLAUSE,调用方从 ai-worker 取)。 */
-  audienceMindset?: string;
-}): string {
-  return [
-    "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。",
-    input.topic
-      ? `内容主题:《${input.topic}》`
-      : "内容主题:见下方创作者定位,选最有张力的切入。",
-    input.positioningBrief
-      ? `创作者定位:
-${input.positioningBrief}`
-      : "",
-    // [T-270] 立项硬锚(项目态):钩子必须与核心信息一致、遵守内容目标的『避免X』负向约束。
-    input.projectBriefHard ? `\n${input.projectBriefHard}` : "",
-    // [T-269] 用户素材=可溯弹药:钩子里的事实/数字优先从这里取(有出处才敢写)。
-    input.userMaterialHard ? `\n${input.userMaterialHard}` : "",
-    input.userMaterialRef
-      ? `\n【参考素材(AI 搜集,参考级)】\n${input.userMaterialRef}`
-      : "",
-    input.direction ? `方向要求:${input.direction}` : "",
-    input.extraBrief ? `${EXTRA_BRIEF_HEADING}\n${input.extraBrief}` : "",
-    '4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。选「数据冲击」角度时,数字必须能追溯到上方素材/定位/立项资料原文;追溯不到就不用具体数字,改用可溯的反差或场景。',
-    // [T-355] 观众心智预设写法纪律(单一真值 AUDIENCE_MINDSET_CLAUSE):钩子是最贴观众的一句,
-    // 归因外置铁律在此最要紧(激将式钩子=高危区)。
-    input.audienceMindset ? `\n${input.audienceMindset}` : "",
-    // [T-269] 可溯硬约束段(下沉自对话外层 honesty rule #9,单一真值)。
-    input.antiFabrication ? `\n${input.antiFabrication}` : "",
-    '只输出 JSON 数组,形如 [{"text":"hook 文案","angle":"切角名"}],不要多余文字。',
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
 
 // 解析结果:路由把它交给 streamText 的 stream 喂回前端 + 落库。导出供单测断言「选对 skill /
 // 注入了 facets / 挂对了 tools」而不真跑模型(单测注入 fake streamText 不便,故拆出
@@ -1685,7 +1636,7 @@ async function assembleChat(
       // topic 时用选中项目标题(稿面右栏常驻 = 当前项目)。产出走 ChatHookCard 逐条写入稿面。
       const effTopic = topic?.trim() || selectionTitle || "";
       // [T-269/T-270] 接地根:antiFabrication 常量 + 可溯后处理纯函数从 ai-worker 取(单一真值)。
-      const { runAgentNode, ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE, buildGroundingHaystack, annotateUngroundedClaims } =
+      const { runAgentNode, ANTI_FABRICATION_CLAUSE, AUDIENCE_MINDSET_CLAUSE } =
         await import("@creatoros/ai-worker");
       const prompt = buildHooksPrompt({
         topic: effTopic,
@@ -1712,18 +1663,14 @@ async function assembleChat(
       });
       // [T-269] 可溯后处理(参照 T-224):校验每条 hook 的具体 claim(数字/命名)是否命中已注入的
       // 素材/定位/立项 brief;不可溯的 → 非破坏式追加「⚠️含未溯源数据」标注(不删,让用户/下游核实)。
-      const haystack = buildGroundingHaystack(
+      return finalizeHookItems(res.text, [
         context.positioningBrief,
         context.projectBriefHard,
         context.userMaterialHardBrief,
         context.userMaterialRefBrief,
         context.knowledgeBrief,
         effTopic,
-      );
-      return parseHookItems(res.text).map((h) => ({
-        ...h,
-        text: annotateUngroundedClaims(h.text, haystack).text,
-      }));
+      ]);
     },
     // [T-268] 整稿改异步 dispatch(不再 inline 同步 runScriptNode —— 整稿分钟级,弱模型下同步必超时
     // → 回合被腰斩 → 退回轻量 hooks,「点生成脚本只出 hook」的根因)。整稿恒是「当前项目的」(要落成
@@ -2654,29 +2601,4 @@ export async function runChatStream(
     },
   });
   return result;
-}
-
-// [T-055c] script.hooks 的宽容 JSON 解析:剥围栏 → 找首个 [...] → 逐条收窄。
-// 模型输出不合形 → 返回 []（诚实空,前端渲「没生成出来」而非崩)。
-export function parseHookItems(
-  raw: string,
-): Array<{ text: string; angle: string }> {
-  const text = raw.replace(/```(?:json)?/g, "").trim();
-  const m = text.match(/\[[\s\S]*\]/);
-  if (!m) return [];
-  try {
-    const arr = JSON.parse(m[0]) as unknown;
-    if (!Array.isArray(arr)) return [];
-    return arr
-      .map((it) => {
-        const o = it as { text?: unknown; angle?: unknown };
-        const t = typeof o.text === "string" ? o.text.trim() : "";
-        const a = typeof o.angle === "string" ? o.angle.trim() : "";
-        return t ? { text: t, angle: a || "hook" } : null;
-      })
-      .filter((x): x is { text: string; angle: string } => x !== null)
-      .slice(0, 6);
-  } catch {
-    return [];
-  }
 }
