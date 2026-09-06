@@ -1,0 +1,73 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-tool-parameters.test.ts (19 tests | 3 failed) 17ms
+   × 未声明items的数组仍执行数量上下界 4ms
+   × integer沿JSON Schema语义校验，不添加隐含安全整数上限 1ms
+   × 公开schema副本的修改不能改变已建立的校验约束 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-parameters.test.ts > 未声明items的数组仍执行数量上下界
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/modules/ai-runtime/chat-tool-parameters.test.ts:42:50
+     40|  const {schema,parameters}=await prepareChatToolParameters(jsonSchema(…
+     41|  expect(schema).toEqual(raw);
+     42|  expect(parameters.safeParse({rows:[]}).success).toBe(false);
+       |                                                  ^
+     43|  expect(parameters.safeParse({rows:[1,2,3]}).success).toBe(false);
+     44|  expect(parameters.safeParse({rows:[{any:"合法JSON"}]}).success).toBe(tr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-parameters.test.ts > integer沿JSON Schema语义校验，不添加隐含安全整数上限
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/modules/ai-runtime/chat-tool-parameters.test.ts:48:65
+     46| it("integer沿JSON Schema语义校验，不添加隐含安全整数上限",async()=>{
+     47|  const {parameters}=await prepareChatToolParameters(jsonSchema({type:"…
+     48|  expect(parameters.safeParse({index:9007199254740992}).success).toBe(t…
+       |                                                                 ^
+     49|  expect(parameters.safeParse({index:1.5}).success).toBe(false);
+     50| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-parameters.test.ts > 公开schema副本的修改不能改变已建立的校验约束
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/modules/ai-runtime/chat-tool-parameters.test.ts:54:55
+     52|  const p=await prepareChatToolParameters(jsonSchema({type:"object",pro…
+     53|  ((p.schema.properties as Record<string,unknown>).label as Record<stri…
+     54|  expect(p.parameters.safeParse({label:"xx"}).success).toBe(false);
+       |                                                       ^
+     55| });
+     56|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 16 passed (19)
+   Start at  22:31:53
+   Duration  248ms (transform 26ms, setup 0ms, import 94ms, tests 17ms, environment 0ms)
+

@@ -3288,6 +3288,8 @@ it("Worker聊天准备清理遗弃授权并转换附件，不修改持久消息�
  expect(JSON.stringify(prepared.modelMessages)).not.toContain('"tool-call"');
  expect(prepared.modelMessages.at(-1)).toMatchObject({role:"user",content:expect.arrayContaining([{type:"text",text:"看这张图"},expect.objectContaining({type:"file",mediaType:"image/png",data:{type:"url",url:"data:image/png;base64,AQID"}})])});
  expect(prepared.assembly).not.toHaveProperty("modelSpec");
+ expect(Object.keys(prepared.toolParameters)).toEqual(Object.keys(prepared.assembly.tools));
+ expect(prepared.toolParameters["topic.enrich"]!.parameters.safeParse({title:42}).success).toBe(false);
 });
 
 it.each(["prepare","legacy"])("%s装配的旧工具主模型按需解析且并发复用",async mode=>{

@@ -1,0 +1,13 @@
+{
+  "task": "T-915",
+  "tests": 371,
+  "fullTaskComplete": false,
+  "review": "runtime_code_review 独立只读复核通过，未独立重跑全测试。",
+  "sourceSha256": {
+    "backend/src/modules/ai-runtime/chat-tool-parameters.ts": "188d79590352dbc8ec61ada8fa52595ddc98f98f89a2ff47779310b87fd5d652",
+    "backend/src/modules/ai-runtime/chat-tool-parameters.test.ts": "a6db32ddcf24eeecfa8f743ff396e38f859a0aaf0080c0f686f5588c8f8cefff",
+    "backend/src/modules/ai-runtime/chat-turn-preparation.ts": "8add122271698ba9bdcd41b33149c18ce8341ede721f3e1a8c77be096994eff1",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "29314cebf0ac2c7d5eaebe1222356124c3b7fc13b16a9248b9dd160a0bc74f6f",
+    "backend/src/modules/ai-runtime/chat-runner.test.ts": "808c7fb1e6c24447d2271bb47f7728820cd2d90138ca1772f8d8a83ab7e01df1"
+  }
+}

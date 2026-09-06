@@ -1,3 +1,4 @@
+import {prepareChatToolParameters} from "./chat-tool-parameters";
 import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
 import type { Tool } from "ai";
@@ -4538,4 +4539,26 @@ it("T-915 同查询失败后可重新执行，不缓存拒绝结果", async () =
   await runExecute(gather, {query: "真实来源"});
   await runExecute(gather, {query: "真实来源"});
   expect(gatherMaterials).toHaveBeenCalledTimes(2);
+});
+
+it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建立真实宿主校验",async mode=>{
+ const tools=allChatTools(makeDeps(mode==="selected"?{scriptPatchAnchor:{artifactId:"a",versionId:"v",sectionId:"s",originalText:"原文"}}:{boundProjectId:"p"}).deps);
+ expect(Object.keys(tools).sort()).toEqual([...ALL_CHAT_TOOL_NAMES].sort());
+ for(const [name,tool] of Object.entries(tools)){
+  expect(tool.inputSchema,name).toBeDefined();
+  const {schema,parameters}=await prepareChatToolParameters(tool.inputSchema!);
+  const sample=(node:Record<string,unknown>):unknown=>{
+   if(Array.isArray(node.enum))return node.enum[0];
+   if(node.type==="object")return Object.fromEntries(Object.entries((node.properties??{}) as Record<string,Record<string,unknown>>).map(([key,value])=>[key,sample(value)]));
+   if(node.type==="array")return Array.from({length:Number(node.minItems??0)},()=>sample((node.items??{}) as Record<string,unknown>));
+   if(node.type==="string")return "字".repeat(Number(node.minLength??(node.maxLength===0?0:1)));
+   if(node.type==="number" || node.type==="integer")return node.minimum??Math.min(0,Number(node.maximum??0));
+   if(node.type==="boolean")return false;
+   return null;
+  };
+  const legal=sample(schema);expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  expect(parameters.safeParse("非对象").success,name).toBe(false);
+  expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
+  if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);
+ }
 });
