@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { agenticToolOutcomeSchema, checkpointToolCallSchema, workerProviderReceiptSchema, workerToolResultReceiptSchema, chatToolProviderName, type chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
+import { chatProviderNonTextSchema, agenticToolOutcomeSchema, checkpointToolCallSchema, workerProviderReceiptSchema, workerToolResultReceiptSchema, chatToolProviderName, type chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { ConflictError } from "../execution/execution.errors";
 type Json = z.infer<ReturnType<typeof z.json>>;
 type Call = {
@@ -50,8 +50,20 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
                     seen.add(tool.toolCallId);
                     modelTools++;
                 }
-                else
-                    throw new ConflictError("模型回执类型尚未完成聊天投影");
+                else {
+                    const parsed=chatProviderNonTextSchema.safeParse(part);
+                    if(!parsed.success)throw new ConflictError("模型回执类型尚未完成聊天投影");
+                    const value=parsed.data;
+                    const metadata:Record<string,Json>=value.providerMetadata?{providerMetadata:value.providerMetadata}:{};
+                    if(value.type==="source") {
+                        parts.push(value.sourceType==="url"
+                            ? {type:"source-url",sourceId:value.id,url:value.url,...(value.title!==undefined?{title:value.title}:{}),...metadata}
+                            : {type:"source-document",sourceId:value.id,mediaType:value.mediaType,title:value.title,...(value.filename!==undefined?{filename:value.filename}:{}),...metadata});
+                    } else {
+                        parts.push({type:value.type,mediaType:value.mediaType,url:value.data.type==="url"?value.data.url:`data:${value.mediaType};base64,${value.data.data}`,...metadata});
+                        if(value.type==="file")hasOutput=true;
+                    }
+                }
             }
             if ((finishReason === "tool-calls") !== (modelTools > 0))
                 throw new ConflictError("模型结束原因与工具回执不一致");

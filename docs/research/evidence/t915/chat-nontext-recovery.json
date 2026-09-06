@@ -1,0 +1,14 @@
+{
+  "task": "T-915",
+  "scope": "聊天非文本回执检查点和消息投影",
+  "complete": false,
+  "tests": 68,
+  "review": "worker_review 独立只读复核无本批具体阻断",
+  "sourceSha256": {
+    "contract/src/internal/chat-provider-content.ts": "b9301a25d024f9bb689a064482e8c097bdd15540abdc0844210d8c69f4aa6395",
+    "contract/src/internal/execution-worker.ts": "a9eece66a240174f54d25612f98c6398ccdaca4cfa47b1013aad6372a382cdc6",
+    "backend/src/modules/execution/execution-checkpoint.service.ts": "08136fe20b38cb622a641bcd187bae0cb296431d294f012f5867deb1f273ef41",
+    "backend/src/modules/ai/chat-receipt-projection.ts": "355b49826e5f70e79868e510ad74ea3bd7586923f15e2e7859f4eab32e9b43f9",
+    "backend/src/modules/ai/chat-turn-completion.service.test.ts": "2034287aaf9b6701d9a1fb36c39951af57286bf0e0bb4d4f21e56dbb92369ad5"
+  }
+}

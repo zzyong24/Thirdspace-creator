@@ -14,6 +14,7 @@ beforeAll(async () => { const f = await createDb(); db = f.db; close = () => f.c
 afterAll(async () => close());
 async function fixture(options: {
     text?: string;
+    content?: Array<Record<string,unknown>>;
     finishReason?: string;
     checkpoint?: boolean;
     unknownUsage?: boolean;
@@ -32,7 +33,7 @@ async function fixture(options: {
     const ledger = createExecutionCallLedgerService(db, { now, budget }), generation = createExecutionGenerationPorts(db, { now, budget });
     const call = await generation.reserveGenerationCall(ref, { operationKey: `${frozen.operationKey}/model/1`, request: { maxOutputTokens: 128 } });
     await ledger.start(ref, call.callId);
-    await generation.settleGenerationCall(ref, { callId: call.callId, status: "settled", providerResult: { content: [{ type: "text", text: options.text ?? "真实回复" }], finishReason: { unified: options.finishReason ?? "stop" }, usage: { inputTokens: options.unknownUsage ? {} : { total: 2 }, outputTokens: options.unknownUsage ? {} : { total: 3 } }, warnings: [] }, usage: options.unknownUsage ? {} : { inputTokens: 2, outputTokens: 3 } });
+    await generation.settleGenerationCall(ref, { callId: call.callId, status: "settled", providerResult: { content: options.content ?? [{ type: "text", text: options.text ?? "真实回复" }], finishReason: { unified: options.finishReason ?? "stop" }, usage: { inputTokens: options.unknownUsage ? {} : { total: 2 }, outputTokens: options.unknownUsage ? {} : { total: 3 } }, warnings: [] }, usage: options.unknownUsage ? {} : { inputTokens: 2, outputTokens: 3 } });
     if (options.checkpoint !== false)
         await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: 1, messages: [{ role: "assistant", callId: call.callId }] });
     const service = createChatTurnCompletionService(db, { now }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
@@ -123,4 +124,38 @@ it("完成结果引用被篡改后拒绝幂等成功", async () => {
  await db.update(aiTaskResults).set({resultData:{messageId:"foreign"}}).where(eq(aiTaskResults.id,result.resultId));
  await expect(f.service.commitResult(f.ref,f.request)).rejects.toThrow("完成回执不一致");
  expect((await f.rows()).messages).toHaveLength(2);
+});
+
+it.each([
+ {type:"source",sourceType:"url",id:"source-1",url:"https://example.com/article",title:"来源"},
+ {type:"source",sourceType:"document",id:"document-1",mediaType:"application/pdf",title:"文档",filename:"source.pdf"},
+ {type:"file",mediaType:"image/png",data:{type:"data",data:"aGVsbG8="}},
+ {type:"file",mediaType:"audio/mpeg",data:{type:"url",url:"https://example.com/audio.mp3"}},
+ {type:"reasoning-file",mediaType:"image/png",data:{type:"data",data:"aGVsbG8="}},
+])("检查点与提交保留非文本回执 %j",async part=>{
+ const f=await fixture({content:[{type:"text",text:"真实回复"},part]});
+ await f.service.commitResult(f.ref,f.request);
+ const rows=await f.rows();
+ const parts=rows.messages[1]!.parts as Array<Record<string,unknown>>;
+ expect(parts).toEqual(expect.arrayContaining([expect.objectContaining(part.type==="source"?{type:part.sourceType==="url"?"source-url":"source-document",sourceId:part.id}:{type:part.type,mediaType:part.mediaType,url:part.data?.type==="data"?`data:${part.mediaType};base64,${part.data.data}`:part.data?.url})]));
+});
+it("纯文件回复能提交，来源和推理文件不能冒充最终产物",async()=>{
+ const file={type:"file",mediaType:"image/png",data:{type:"data",data:"AQID"}};
+ const f=await fixture({content:[file]});
+ await expect(f.service.commitResult(f.ref,f.request)).resolves.toMatchObject({outcome:"succeeded"});
+ expect((await f.rows()).messages[1]).toMatchObject({content:"",parts:[{type:"step-start"},{type:"file",mediaType:"image/png",url:"data:image/png;base64,AQID"}]});
+ for(const part of [{...file,type:"reasoning-file"},{type:"source",sourceType:"url",id:"s",url:"https://example.com"}]){
+  const empty=await fixture({content:[part]});
+  await expect(empty.service.commitResult(empty.ref,empty.request)).rejects.toThrow("没有可保存产物");
+  expect((await empty.rows()).results).toHaveLength(0);
+ }
+});
+it.each([
+ {type:"source",sourceType:"url",id:"s"},
+ {type:"source",sourceType:"document",id:"s",title:"缺少类型"},
+ {type:"file",mediaType:"image/png",data:{type:"data",data:123}},
+ {type:"file",mediaType:"image/png",data:{type:"reference",id:"不可恢复"}},
+ {type:"custom",kind:"未经支持"},
+])("损坏或不支持的非文本回执不能进入检查点：%j",async part=>{
+ await expect(fixture({content:[part]})).rejects.toThrow("尚不能恢复");
 });

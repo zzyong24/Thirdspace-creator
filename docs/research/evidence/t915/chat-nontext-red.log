@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-completion.service.test.ts (22 tests | 5 failed | 17 skipped) 1243ms
+   × 检查点与提交保留非文本回执 {"type":"source","sourceType":"url","id":"source-1","url":"https://example.com/article","title":"来源"} 55ms
+   × 检查点与提交保留非文本回执 {"type":"source","sourceType":"document","id":"document-1","mediaType":"application/pdf","title":"文档","filename":"source.pdf"} 32ms
+   × 检查点与提交保留非文本回执 {"type":"file","mediaType":"image/png","data":{"type":"data","data":"aGVsbG8="}} 35ms
+   × 检查点与提交保留非文本回执 {"type":"file","mediaType":"audio/mpeg","data":{"type":"url","url":"https://example.com/audio.mp3"}} 29ms
+   × 检查点与提交保留非文本回执 {"type":"reasoning-file","mediaType":"image/png","data":{"type":"data","data":"aGVsbG8="}} 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 检查点与提交保留非文本回执 {"type":"source","sourceType":"url","id":"source-1","url":"https://example.com/article","title":"来源"}
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 检查点与提交保留非文本回执 {"type":"source","sourceType":"document","id":"document-1","mediaType":"application/pdf","title":"文档","filename":"source.pdf"}
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 检查点与提交保留非文本回执 {"type":"file","mediaType":"image/png","data":{"type":"data","data":"aGVsbG8="}}
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 检查点与提交保留非文本回执 {"type":"file","mediaType":"audio/mpeg","data":{"type":"url","url":"https://example.com/audio.mp3"}}
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 检查点与提交保留非文本回执 {"type":"reasoning-file","mediaType":"image/png","data":{"type":"data","data":"aGVsbG8="}}
+ConflictError: 模型回执存在尚不能恢复的内容类型
+ ❯ modelToolCalls src/modules/execution/execution-checkpoint.service.ts:32:13
+     30|       tools.push(parsed.data);
+     31|     } else if ((part.type!=="text" && part.type!=="reasoning") || !("t…
+     32|       throw new ConflictError("模型回执存在尚不能恢复的内容类型");
+       |             ^
+     33|     }
+     34|   }
+ ❯ src/modules/execution/execution-checkpoint.service.ts:53:26
+ ❯ reconstruct src/modules/execution/execution-checkpoint.service.ts:42:25
+ ❯ src/modules/execution/execution-checkpoint.service.ts:92:9
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 17 skipped (22)
+   Start at  21:05:27
+   Duration  2.75s (transform 747ms, setup 0ms, import 1.36s, tests 1.24s, environment 0ms)
+

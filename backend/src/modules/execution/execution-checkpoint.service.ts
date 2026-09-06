@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import {
-  executionCheckpointSchema, saveExecutionCheckpointSchema, checkpointToolCallSchema,
+  chatProviderNonTextSchema, executionCheckpointSchema, saveExecutionCheckpointSchema, checkpointToolCallSchema,
   workerToolResultReceiptSchema, type ExecutionRef,
 } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
@@ -28,7 +28,7 @@ function modelToolCalls(call:Call) {
       const parsed=checkpointToolCallSchema.safeParse(part);
       if (!parsed.success) throw new ConflictError("模型工具调用回执不完整");
       tools.push(parsed.data);
-    } else if ((part.type!=="text" && part.type!=="reasoning") || !("text" in part) || typeof part.text!=="string") {
+    } else if (!chatProviderNonTextSchema.safeParse(part).success && ((part.type!=="text" && part.type!=="reasoning") || !("text" in part) || typeof part.text!=="string")) {
       throw new ConflictError("模型回执存在尚不能恢复的内容类型");
     }
   }

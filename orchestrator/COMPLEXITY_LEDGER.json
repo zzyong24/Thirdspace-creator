@@ -1493,6 +1493,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已确认 R-05 流式回执迁移所需的私有端口与真实测试，不新增执行权。",
       "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-worker-entry.md"
+      ],
+      "file_sha256": "f299702963ac688cda3e3099e8dc675252d2c59ce3402aa04c73c38dde005d18",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本证据记录 DEC-RUNTIME-055 已批准的现有 Worker IPC 接线与任务截止时间验证，不引入新的进程或通信机制。",
+      "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     }
   ],
   "historical_baselines": []
