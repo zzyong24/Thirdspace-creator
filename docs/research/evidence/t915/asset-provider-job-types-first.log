@@ -1,0 +1,7 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/execution/chat-generation-recovery.test.ts(10,68): error TS2719: Type '{ kind: string; id: string; status: string; createdAt: string; updatedAt: string; executionTaskId: string; sequence: number; retryOfCallId: string | null; operationKey: string; parentCallId: string | null; ... 10 more ...; resultRef: string | null; }' is not assignable to type '{ kind: string; id: string; status: string; createdAt: string; updatedAt: string; executionTaskId: string; sequence: number; retryOfCallId: string | null; operationKey: string; parentCallId: string | null; ... 10 more ...; resultRef: string | null; }'. Two different types with this name exist, but they are unrelated.
+  Property 'providerJob' is optional in type '{ kind: string; id: string; status: string; createdAt: string; updatedAt: string; executionTaskId: string; sequence: number; retryOfCallId: string | null; operationKey: string; parentCallId: string | null; ... 10 more ...; resultRef: string | null; }' but required in type '{ kind: string; id: string; status: string; createdAt: string; updatedAt: string; executionTaskId: string; sequence: number; retryOfCallId: string | null; operationKey: string; parentCallId: string | null; ... 10 more ...; resultRef: string | null; }'.
+ ELIFECYCLE  Command failed with exit code 2.

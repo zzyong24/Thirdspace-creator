@@ -1,0 +1,62 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-provider-job.service.test.ts (28 tests | 1 failed | 27 skipped) 1023ms
+   × 已有供应商任务号不能改成提交被拒绝并获得重新付费资格 60ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-provider-job.service.test.ts > 已有供应商任务号不能改成提交被拒绝并获得重新付费资格
+AssertionError: promise resolved "{ …(21) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "createdAt": "2026-09-06T00:00:00.000Z",
++   "executionTaskId": "exec_02505f4c-8ff2-4562-bc89-9fd3f4b2104f",
++   "id": "call_95a324ae-1667-44c2-a10a-49e48f9a6e79",
++   "inputDigest": "sha256:0c6eaa19ac70187b3590e7a43e8e716231034e55c44925ba478ff8107ad8ebd6",
++   "kind": "model",
++   "operationKey": "asset/original",
++   "parentCallId": null,
++   "providerJob": {
++     "baseUrl": null,
++     "jobId": "provider-original",
++     "model": "MiniMax-H3",
++     "provider": "minimax",
++     "schemaVersion": 1,
++   },
++   "providerResult": null,
++   "rejectionCode": null,
++   "reservedTokens": 128,
++   "resultRef": null,
++   "resultText": null,
++   "retryOfCallId": null,
++   "sequence": 1,
++   "startedAttempt": 1,
++   "status": "rejected",
++   "toolExecutionClaimId": null,
++   "totalTokens": null,
++   "updatedAt": "2026-09-06T00:00:00.000Z",
++   "usage": null,
+  }
+
+ ❯ src/modules/execution/execution-provider-job.service.test.ts:90:67
+     88| it("已有供应商任务号不能改成提交被拒绝并获得重新付费资格",async()=>{
+     89|  const f=await fixture();await f.ledger.start(f.ref,f.call.id);await f…
+     90|  await expect(f.ledger.settle(f.ref,f.call.id,{status:"rejected"})).re…
+       |                                                                   ^
+     91|  expect((await f.ledger.inspect(f.ref)).calls[0]).toMatchObject({statu…
+     92| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 27 skipped (28)
+   Start at  11:59:22
+   Duration  2.21s (transform 589ms, setup 0ms, import 1.04s, tests 1.02s, environment 0ms)
+

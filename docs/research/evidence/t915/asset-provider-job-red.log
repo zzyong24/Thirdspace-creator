@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-provider-job.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-provider-job.service.test.ts [ src/modules/execution/execution-provider-job.service.test.ts ]
+Error: Cannot find module './execution-provider-job.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-provider-job.service.test.ts
+ ❯ src/modules/execution/execution-provider-job.service.test.ts:9:1
+      7| import {createExecutionCallLedgerService} from "./execution-call-ledge…
+      8| import {createPersistentTaskService} from "./persistent-task.service";
+      9| import {createExecutionProviderJobService} from "./execution-provider-…
+       | ^
+     10|
+     11| let db:Db,connection:Awaited<ReturnType<typeof createDb>>,sequence=0;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  11:54:16
+   Duration  1.16s (transform 579ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

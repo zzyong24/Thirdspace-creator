@@ -220,3 +220,4 @@ export const chatToolApprovalReceiptSchema=z.discriminatedUnion("status",[
  z.object({status:z.literal("denied"),reason:z.string().max(10000)}).strict(),
 ]);
 export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTaskId:z.string().min(1),messageId:z.string().min(1),outcome:z.enum(["succeeded","partial"])}).strict();
+export {assetGenerationInputSchema,providerJobSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";

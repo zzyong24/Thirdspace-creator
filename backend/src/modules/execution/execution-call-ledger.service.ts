@@ -150,6 +150,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
       return leases.withLease(ref, "settlement", async ({tx, task}) => {
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
+        if (call.providerJob !== null && input.status === "rejected") throw new ConflictError("供应商已经接受任务，不能标记为提交被拒绝");
         validate?.(call);
         if (validateTree) validateTree(await readCalls(tx, task.id), task);
         if(input.status==="unknown" && call.kind==="tool" && !call.toolExecutionClaimId && ["waiting_user","retry_wait","failed"].includes(task.status)){

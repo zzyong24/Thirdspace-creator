@@ -172,6 +172,8 @@ export const executionCalls = pgTable("execution_calls", {
   usage: jsonb("usage"),
   resultText: text("result_text"),
   providerResult: jsonb("provider_result"),
+  /** 已确认供应商任务号；不代表生成完成，旧调用保持 null。 */
+  providerJob: jsonb("provider_job"),
   rejectionCode: text("rejection_code"),
   totalTokens: integer("total_tokens"),
   resultRef: text("result_ref"),
