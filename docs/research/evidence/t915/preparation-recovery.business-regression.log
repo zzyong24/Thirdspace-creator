@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  04:52:16
+   Duration  10.15s (transform 1.93s, setup 0ms, import 3.58s, tests 9.54s, environment 0ms)
+

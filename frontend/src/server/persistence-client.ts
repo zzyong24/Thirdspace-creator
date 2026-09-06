@@ -1,3 +1,4 @@
+import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/execution";
 import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
 import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
 import {countCandidatesForDay,lockCandidateSupply} from "@creatoros/backend/modules/candidate";
@@ -9698,7 +9699,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
+  const submittedPreparation=createSubmittedTaskPreparationService(db,{deadlineMs:workerBudget.deadlineMs,prepare:(c,id,signal)=>businessExecution.prepare(c,id,signal),fail:(c,id,message)=>aiService.markFailed(c,id,message)});
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
+    recoverPendingPreparation:signal=>submittedPreparation.recover(signal),
     dailyTopicPorts:{
       validateRun:(c,input,tx)=>dailyTopicRuns.validateRun(c,input,tx),
       finishRun:(c,input,tx)=>dailyTopicRuns.finishRun(c,input,tx),
@@ -9738,7 +9741,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;await Promise.all([modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
@@ -12754,7 +12757,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(task.taskType!=="planning.thesis")throw new Error("聊天唤醒任务类型不符");
       if(task.status!=="queued")return;
       if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
-      await businessExecution.prepare(ctx,task.id);
+      await submittedPreparation.prepare(ctx,task.id);
       modelWorker.start();
     },
     dispatchPlanningThesis: async (

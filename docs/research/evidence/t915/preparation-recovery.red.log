@@ -1,0 +1,34 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:47630) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-task-submission.integration.test.ts > 真实论点工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实论点工厂首次准备失败 1 次后，不重启也能读回候选
+[chat-task] TASK_WAKE_FAILED
+
+ ❯ src/server/chat-task-submission.integration.test.ts (3 tests | 1 failed) 25312ms
+   × 真实论点工厂首次准备失败 1 次后，不重启也能读回候选 17779ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实论点工厂首次准备失败 1 次后，不重启也能读回候选
+AssertionError: expected 'queued' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "queued"
+
+ ❯ vi.waitFor.timeout src/server/chat-task-submission.integration.test.ts:80:85
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  04:40:40
+   Duration  30.18s (transform 2.95s, setup 149ms, import 4.05s, tests 25.31s, environment 523ms)
+

@@ -1,4 +1,5 @@
-import { and,eq,isNull,asc,inArray,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
+import {awaitPreparation} from "../execution/await-preparation";
+import { and,eq,isNull,asc,inArray,sql,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { structuredGenerationInputSchema,workerSkillSnapshotSchema,type WorkerStructuredResult } from "@creatoros/contract/execution-worker";
 import type { z } from "zod";
@@ -27,7 +28,8 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       if(!adapter)throw new Error("MODEL_CANDIDATE_ADAPTER_UNAVAILABLE");
       return adapter.project(input.inputData as Record<string,unknown>,JSON.parse(input.text),input);
     },
-    async prepare(ctx:RequestContext,taskId:string){
+    async prepare(ctx:RequestContext,taskId:string,signal?:AbortSignal){
+      signal?.throwIfAborted();
       const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId ?? "")));
       if(!task)throw new OwnershipError("生成任务不存在");
       const adapter=adapterFor(task.taskType);
@@ -41,7 +43,8 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       const runtime=task.runtimeData as Record<string,unknown>;
       const skillSnapshot=workerSkillSnapshotSchema.parse(runtime.skillSnapshot);
       if(skillSnapshot.userId!==ctx.userId || skillSnapshot.accountId!==ctx.accountId)throw new OwnershipError("Skill snapshot owner mismatch");
-      const facets=await adapter.prepare(ctx,{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot});
+      const facets=await awaitPreparation(()=>adapter.prepare(ctx,{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot}),signal);
+      signal?.throwIfAborted();
       const additionalCalls=adapter.additionalCalls?.(Object.freeze({...facets}))??0;
       if(!Number.isSafeInteger(additionalCalls)||additionalCalls<0||deps.budget.maxCalls+additionalCalls>10000)throw new Error("STRUCTURED_CALL_BUDGET_INVALID");
       const budget={...deps.budget,maxCalls:deps.budget.maxCalls+additionalCalls};
@@ -52,7 +55,7 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       if(!taskTypes.length)return;
       let offset=0;
       while(!shouldStop()){
-        const rows=await db.select().from(aiTasks).where(and(inArray(aiTasks.taskType,taskTypes),eq(aiTasks.status,"queued"),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner))).orderBy(asc(aiTasks.requestedAt),asc(aiTasks.id)).limit(50).offset(offset);
+        const rows=await db.select().from(aiTasks).where(and(inArray(aiTasks.taskType,taskTypes),eq(aiTasks.status,"queued"),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner),sql`${aiTasks.runtimeData}->'hostTaskSubmission' IS NULL`)).orderBy(asc(aiTasks.requestedAt),asc(aiTasks.id)).limit(50).offset(offset);
         if(!rows.length)return;
         let unresolved=0;
         for(const task of rows){

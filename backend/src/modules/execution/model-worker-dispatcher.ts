@@ -43,6 +43,8 @@ interface WorkerDispatcherDeps {
   /** 每个后端宿主的模型进程上限；每个进程同时执行一个任务。 */
   modelConcurrency?:number;
   onError?(code:string):void;
+  /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
+  recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & (
@@ -251,6 +253,16 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(status)await tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now()}).where(eq(executionTasks.id,task.id));
     });
   }
+  const preparationController=new AbortController();
+  let preparationFlight:Promise<void>|undefined,preparationAt=0;
+  function recoverPreparation(){
+    if(stopping || !deps.recoverPendingPreparation)return;
+    if(preparationFlight)return;
+    if(Date.now()<preparationAt)return;
+    preparationAt=Date.now()+Math.max(100,deps.pollMs??1000);
+    const work=Promise.resolve().then(()=>{if(!stopping)return deps.recoverPendingPreparation!(preparationController.signal);}).catch(()=>{if(!stopping)report("PENDING_PREPARATION_RECOVERY_FAILED");});
+    preparationFlight=work;void work.finally(()=>{if(preparationFlight===work)preparationFlight=undefined;});
+  }
   const drainOnce=():Promise<number>=>{
     if(draining)return draining;
     if(stopping)return Promise.resolve(0);
@@ -262,6 +274,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       const counts=await Promise.allSettled(supervisors.map(async supervisor=>{
       let count=0;
       while(!stopping){
+        recoverPreparation();
+        if(stopping)break;
         pendingClaims++;
         let claim:Awaited<ReturnType<typeof tasks.claimNext>>;
         try{claim=await tasks.claimNext({workerId:deps.workerId,kinds:["ai_task"],executionMode:deps.executionMode});}
@@ -356,14 +370,14 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   return {
     drainOnce,
     start(){if(timer || draining || stopping)return;void tick();},
-    async stop(){stopping=true;for(const scope of activeTools.values())scope.controller.abort();if(timer)clearTimeout(timer);
+    async stop(){stopping=true;preparationController.abort();for(const scope of activeTools.values())scope.controller.abort();if(timer)clearTimeout(timer);
       // 有浏览器资源的执行先核实整棵子树停止，不能先让根进程退出丢失后代身份。
       const profileStops=await Promise.allSettled([...activeWorkers.values()].map(async({ref,supervisor})=>{
         if((await browserProfiles.listOwned(ref)).length)await supervisor.stopExecutionTree(ref);
       }));
       // 租约查询失败也必须继续停止全部 Worker 并等待任务收尾，最后保留原始错误。
       const workerStops=await Promise.allSettled(supervisors.map(supervisor=>supervisor.stop()));
-      const drained=await Promise.allSettled([draining]);
+      const drained=await Promise.allSettled([draining,preparationFlight]);
       const failures=[...profileStops,...workerStops,...drained]
         .filter((result):result is PromiseRejectedResult=>result.status==="rejected")
         .map(result=>result.reason);

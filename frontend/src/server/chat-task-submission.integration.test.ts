@@ -6,9 +6,14 @@ import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {execFileSync} from "node:child_process";
 import type {Db} from "@creatoros/backend";
-const fixture=vi.hoisted(()=>({url:"",db:undefined as Db|undefined}));
+const fixture=vi.hoisted(()=>({url:"",prepareFailures:0,prepares:0,db:undefined as Db|undefined}));
 vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;return result;}};});
-vi.mock("@creatoros/backend/modules/ai-runtime",async original=>({...await original<typeof import("@creatoros/backend/modules/ai-runtime")>(),resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}})}));
+vi.mock("@creatoros/backend/modules/ai-runtime",async original=>{
+ const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();
+ return {...actual,resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}}),
+  createPlanningThesisBusinessAdapter:(...args:Parameters<typeof actual.createPlanningThesisBusinessAdapter>)=>{const adapter=actual.createPlanningThesisBusinessAdapter(...args);return {...adapter,prepare:async(...input:Parameters<typeof adapter.prepare>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture prepare unavailable"),{statusCode:503});}return adapter.prepare(...input);}};},
+ };
+});
 import {getChatRuntime,compositeTransport,__resetPersistenceForTests} from "./persistence-client";
 it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝",async()=>{
  execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
@@ -34,7 +39,8 @@ it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同�
  }
 },30000);
 
-it("真实论点工厂经独立聊天 Worker 提交，唤醒原生成 Worker 并读回候选",async()=>{
+it.each([0,1])("真实论点工厂首次准备失败 %i 次后，不重启也能读回候选",async failures=>{
+ fixture.prepareFailures=failures;fixture.prepares=0;
  const {createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
  const {buildChatTools}=await import("../../../backend/src/modules/ai-runtime/chat-tools");
  const {prepareChatToolDefinitions}=await import("../../../backend/src/modules/ai-runtime/chat-tool-definitions");
@@ -77,5 +83,6 @@ it("真实论点工厂经独立聊天 Worker 提交，唤醒原生成 Worker 并
   expect(JSON.parse(tool.resultText!).output.data).toMatchObject({kind:"planning.thesis",taskId:child.id,projectId:project.id});
   expect(JSON.stringify(requests.filter(item=>item.stream)[1])).toContain(child.id);
   expect(requests.filter(item=>!item.stream)).toHaveLength(1);
- }finally{await host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
+  expect(fixture.prepares).toBe(1+failures);
+ }finally{fixture.prepareFailures=0;await host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
 },45000);

@@ -19,7 +19,7 @@ describe("真实模型调度宿主",()=>{
     await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"script.draft",idempotencyKey:id,requestedAt:new Date().toISOString()});
     return createExecutionAuthorityService(db).bindAiTask(ctx,id,prepared ? {requestFingerprint:"sha256:"+"0".repeat(64),modelInput,budget} : undefined);
   }
-  function dispatcher(port:number,store:Db=db,modelConcurrency=2){return createModelWorkerDispatcher(store,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"host",budget,pollMs:100,modelConcurrency,
+  function dispatcher(port:number,store:Db=db,modelConcurrency=2,recoverPendingPreparation?:(signal:AbortSignal)=>Promise<void>){return createModelWorkerDispatcher(store,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"host",budget,pollMs:100,modelConcurrency,recoverPendingPreparation,
     async resolveModelCredential(context,capability){expect(context.userId).toBe(ctx.userId);expect(context.accountId).toBe(ctx.accountId);expect(capability).toBe("script");return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${port}/v1`,model:"test",token:"fixture"};},
     projectCandidate(_context,input){return {resultType:"artifact_version",artifactId:"fixture-artifact",resultData:{body:input.text}};},
   });}
@@ -42,6 +42,22 @@ describe("真实模型调度宿主",()=>{
       expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"retry-complete"))).toHaveLength(1);
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
   },15000);
+  it("挂起的准备补偿不阻断正常任务领取和执行",async()=>{
+    const mapped=await prepare("recovery-hang-normal");let release!:()=>void;
+    const held=new Promise<void>(r=>{release=r;}),recover=vi.fn(async()=>{await held;});
+    const server=createServer((req,res)=>{req.resume();res.writeHead(200,{"content-type":"text/event-stream"});res.end('data: {"id":"c","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{"content":"正常正文"},"finish_reason":null}]}\n\ndata: {"id":"c","object":"chat.completion.chunk","created":1,"model":"test","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port,db,2,recover);
+    try{host.start();await vi.waitFor(async()=>expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("succeeded"),{timeout:8000});expect(recover).toHaveBeenCalledTimes(1);}
+    finally{release();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },12000);
+  it("另一进程长请求期间空闲进程仍触发补偿，停止等待它收口",async()=>{
+    await prepare("recovery-during-long");let opened=0,recovered=0;const observed:AbortSignal[]=[];
+    const recover=vi.fn(async(signal:AbortSignal)=>{observed.push(signal);if(opened>0)recovered++;});
+    const server=createServer((req,res)=>{req.resume();opened++;res.writeHead(200,{"content-type":"text/event-stream"});res.write(': waiting\n\n');});
+    await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const host=dispatcher((server.address() as {port:number}).port,db,2,recover);
+    try{host.start();await vi.waitFor(()=>expect(recovered).toBeGreaterThan(1),{timeout:8000});await host.stop();const count=recover.mock.calls.length;expect(observed.every(signal=>signal.aborted)).toBe(true);await host.drainOnce();expect(recover).toHaveBeenCalledTimes(count);}
+    finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },12000);
   it("恢复后凭据解析换了模型时，在供应商请求之前拒绝继续",async()=>{
     const mapped=await prepare("model-identity-change");let requests=0;
     const server=createServer((req,res)=>{requests++;req.resume();res.writeHead(500);res.end();});

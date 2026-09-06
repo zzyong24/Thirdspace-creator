@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (24 tests | 1 failed | 23 skipped) 2312ms
+   × 实际纯准备挂起时停止能收口，迟到读取不能再创建执行映射 1174ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 实际纯准备挂起时停止能收口，迟到读取不能再创建执行映射
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ vi.waitFor.timeout src/integration/chat-task-atomic.test.ts:181:173
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  04:47:50
+   Duration  4.77s (transform 1.47s, setup 0ms, import 2.32s, tests 2.31s, environment 0ms)
+

@@ -1,3 +1,4 @@
+import {createSubmittedTaskPreparationService} from "../modules/execution/submitted-task-preparation.service";
 import {runDurableAgenticTool} from "../../../ai-worker/src/execution/durable-agentic-tool";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {z} from "zod";
@@ -125,4 +126,59 @@ it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败�
  expect((await f.host.reserve(f.ref,f.request)).status).toBe("settled");
  expect(f.wakeTask).toHaveBeenLastCalledWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId,source:"ai"}),(result.data as any).taskId);
  expect(f.wakeTask).toHaveBeenCalledTimes(2);expect(f.prepare).toHaveBeenCalledTimes(1);expect((await f.children()).rows).toHaveLength(1);
+});
+
+it("准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async()=>{
+ const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const child=await f.ai.getTask(f.ctx,id);let time=Date.parse(child.requestedAt);
+ const prepare=vi.fn(async()=>{throw Object.assign(new Error("private temporary text"),{statusCode:503,responseHeaders:{"retry-after":"2"}});});
+ const fail=vi.fn(f.ai.markFailed),options={deadlineMs:60000,now:()=>time,random:()=>0,prepare,fail};
+ let recovery=createSubmittedTaskPreparationService(db,options);
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(1);await recovery.stop();
+ recovery=createSubmittedTaskPreparationService(db,options);
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(1);
+ time+=2000;await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(2);
+ time+=2000;await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(3);
+ expect((await f.ai.getTask(f.ctx,id)).status).toBe("failed");
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(3);
+ const [raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ expect((raw!.runtimeData as any).hostTaskPreparation).toMatchObject({attempts:3,errorCode:"http_503",deadlineAt:new Date(Date.parse(child.requestedAt)+60000).toISOString()});
+ expect(JSON.stringify(raw!.runtimeData)).not.toContain("private temporary text");await recovery.stop();
+});
+it.each(["account","origin","receipt","attempt"])("补偿必须核对真实父提交，不能用 %s 冒充可派发任务",async variant=>{
+ const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,prepare,fail:f.ai.markFailed});
+ if(variant==="origin"){const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));await db.update(aiTasks).set({runtimeData:{...(task!.runtimeData as any),hostTaskSubmission:{...(task!.runtimeData as any).hostTaskSubmission,inputDigest:"changed"}}}).where(eq(aiTasks.id,id));}
+ if(variant==="receipt"){const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));const receipt=JSON.parse(call!.resultText!);receipt.output.data.taskId="other";await db.update(executionCalls).set({resultText:JSON.stringify(receipt)}).where(eq(executionCalls.id,f.call.callId));}
+ if(variant==="attempt")await db.update(aiTasks).set({attemptId:"other-attempt-id"}).where(eq(aiTasks.id,id));
+ await expect(recovery.prepare(variant==="account"?{...f.ctx,accountId:"other"}:f.ctx,id)).rejects.toThrow();expect(prepare).not.toHaveBeenCalled();await recovery.stop();
+});
+it("子任务原期限耗尽时不再准备，也不重设 requestedAt",async()=>{
+ const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId,child=await f.ai.getTask(f.ctx,id);
+ const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:1000,now:()=>Date.parse(child.requestedAt)+1001,prepare,fail:f.ai.markFailed});
+ await recovery.prepare(f.ctx,id);expect(prepare).not.toHaveBeenCalled();expect(await f.ai.getTask(f.ctx,id)).toMatchObject({status:"failed",requestedAt:child.requestedAt});await recovery.stop();
+});
+it("停止等待在途准备收口，停止后不再重领；并发回读共用同一准备",async()=>{
+ const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ let release!:()=>void,observed:AbortSignal|undefined;const prepare=vi.fn(async(_ctx:any,_id:string,signal:AbortSignal)=>{observed=signal;await new Promise<void>(r=>{release=r;});signal.throwIfAborted();});
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,prepare,fail:f.ai.markFailed});
+ const pending=recovery.prepare(f.ctx,id);const rejected=expect(pending).rejects.toThrow();await vi.waitFor(()=>expect(release).toBeDefined());
+ expect(recovery.prepare({...f.ctx,requestId:"another"},id)).toBe(pending);
+ let stopped=false;const stop=recovery.stop().then(()=>{stopped=true;});await Promise.resolve();expect(observed!.aborted).toBe(true);expect(stopped).toBe(false);
+ release();await rejected;await stop;expect(stopped).toBe(true);
+ await expect(recovery.prepare(f.ctx,id)).rejects.toThrow();expect(prepare).toHaveBeenCalledTimes(1);
+});
+
+it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读取不能再创建执行映射",async reason=>{
+ const {createStructuredBusinessExecutionService}=await import("../modules/ai-runtime/structured-business-execution.service");
+ const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const [child]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ await db.update(aiTasks).set({runtimeData:{...(child!.runtimeData as any),skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:f.ctx.accountId,resolvedAt:new Date().toISOString(),platformPolicyVersion:"1",platformPolicy:"test",skills:[{skillId:"planning.thesis",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"test",template:"test",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}}}).where(eq(aiTasks.id,id));
+ let release!:()=>void;const prepare=vi.fn(async()=>{await new Promise<void>(r=>{release=r;});return {};});
+ const business=createStructuredBusinessExecutionService(db,{budget,maxOutputTokens:128,adapters:{"planning.thesis":{skillId:"planning.thesis",capability:"planning.thesis",prepare,project:()=>{throw new Error("unused");}}}});
+ await business.recoverQueued(async()=>{});expect(prepare).not.toHaveBeenCalled();
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:reason==="deadline"?1000:60000,prepare:(c,id,signal)=>business.prepare(c,id,signal),fail:f.ai.markFailed});
+ let preparationError:unknown;const work=recovery.prepare(f.ctx,id).catch(error=>{preparationError=error;});let stopped=false;
+ try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():work).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe(reason==="deadline"?"failed":"queued");}
+ finally{release?.();await work;await recovery.stop();}
 });
