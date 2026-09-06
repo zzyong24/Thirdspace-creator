@@ -1,3 +1,4 @@
+import {executionEvidence} from "../../schema/intelligence";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import { partitionExecutionCalls } from "./execution-call-tree";
 import { createHash } from "node:crypto";
@@ -121,13 +122,13 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         });
         const knownSpentTokens=calls.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0);
         // 仅宿主已记录的子模型拒绝可进入专用恢复门；不能据 Worker 自报忽略在途调用。
-        const recoverable=recoverableChatNodeParents(task,calls);
-        const resumableToolCallIds=recoverable.resumableHooks,completableToolCallIds=recoverable.completedHooks,replayableGenerationToolCallIds=recoverable.structured;
-        const recovery=unknownUsage || incompleteReceipt || pendingCalls.some(call=>call.status!=="reserved" && !resumableToolCallIds.includes(call.callId) && !completableToolCallIds.includes(call.callId) && !replayableGenerationToolCallIds.includes(call.callId)) ? "requires_reconciliation"
+        const recoverable=recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id)));
+        const resumableToolCallIds=recoverable.resumableHooks,completableToolCallIds=recoverable.completedHooks,replayableGenerationToolCallIds=recoverable.structured,replayableWebReadToolCallIds=recoverable.webReads;
+        const recovery=unknownUsage || incompleteReceipt || pendingCalls.some(call=>call.status!=="reserved" && !resumableToolCallIds.includes(call.callId) && !completableToolCallIds.includes(call.callId) && !replayableGenerationToolCallIds.includes(call.callId) && !replayableWebReadToolCallIds.includes(call.callId)) ? "requires_reconciliation"
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";
         return {schemaVersion:1 as const,revision:checkpoint?.revision ?? 0,ledgerSequence:calls.at(-1)?.sequence ?? 0,
-          ...reconstructed,replayableGenerationToolCallIds,completableToolCallIds,resumableToolCallIds,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
+          ...reconstructed,replayableWebReadToolCallIds,replayableGenerationToolCallIds,completableToolCallIds,resumableToolCallIds,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
           knownSpentTokens,spentTokens:unknownUsage?null:knownSpentTokens,
           reservedTokens:calls.reduce((sum,call)=>sum+(call.status==="rejected" || call.totalTokens!==null?0:call.reservedTokens),0)};
       });

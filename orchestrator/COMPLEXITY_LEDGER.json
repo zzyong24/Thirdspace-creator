@@ -1598,6 +1598,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已授权 Worker 搜索 IPC 实现与验证，不增加架构或授权范围。",
       "acceptance": "复杂度登记不代表产品或历史验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-web-read-commit.md"
+      ],
+      "file_sha256": "f132007258ff2c0f3cace020a542aa0c2707f86d21e42f35f7b0b484f56081c8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "登记已授权网页 Worker 接线的证据文档通信术语，未增加产品范围、通信拓扑或发布授权。",
+      "acceptance": "仅登记复杂度，不代表完整迁移或历史验收通过。"
     }
   ],
   "historical_baselines": []

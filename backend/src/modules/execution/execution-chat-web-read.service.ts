@@ -1,11 +1,11 @@
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, executionCalls, type Db } from "@creatoros/backend";
-import { chatWebReadObservationSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
 import { createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
-import { canonicalJson } from "../ai/canonical-json";
+import { chatWebReadDigest as digest, readChatWebReadEvidence } from "./chat-web-read-evidence";
 import { normalizeWebReadUrl } from "../ai-runtime/chat-context";
 import { buildChatTools, type ChatToolDeps } from "../ai-runtime/chat-tools";
 import { getChatToolNativeExecutor } from "../ai-runtime/chat-tool-gate";
@@ -15,12 +15,7 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { ConflictError } from "./execution.errors";
 
-type Observation = z.infer<typeof chatWebReadObservationSchema>;
-type Evidence = typeof executionEvidence.$inferSelect;
 type Call = typeof executionCalls.$inferSelect;
-const metadataSchema = z.object({ kind: z.literal("chat.web.read"), inputDigest: z.string(), extractor: chatWebReadObservationSchema.shape.extractor, extractPath: chatWebReadObservationSchema.shape.extractPath, turnCount: chatWebReadObservationSchema.shape.turnCount }).strict();
-// SEMANTIC_BOUNDARY_ALLOW: 摘要只绑定原始观察身份，不判断内容相关性或创作价值。
-const digest = (url: string, observation: Observation) => createHash("sha256").update(canonicalJson({ url, observation })).digest("hex");
 const receipt = (parent: Call) => agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(parent.resultText!)).output);
 
 /** 网页事实、素材提交与父工具回执分开恢复。仅接受真实父调用，不接受 Worker 提交素材 ID。 */
@@ -59,12 +54,19 @@ export function createExecutionChatWebReadService(db: Db, deps: {
   async function stored(state: State) {
     const [row] = await state.tx.select().from(executionEvidence).where(and(eq(executionEvidence.executionTaskId, state.task.id), eq(executionEvidence.originCallId, state.parent.id)));
     if (!row) return null;
-    const metadata = metadataSchema.parse(row.metadata);
-    const observation = chatWebReadObservationSchema.parse({ text: row.fullText, title: row.title, finalUrl: row.sourceUrl, extractor: metadata.extractor, extractPath: metadata.extractPath, turnCount: metadata.turnCount });
-    if (metadata.inputDigest !== state.bound.inputDigest || (state.url !== null && row.requestedUrl !== state.url) || row.contentHash !== digest(row.requestedUrl, observation) || row.byteLength !== Buffer.byteLength(row.fullText, "utf8")) throw new ConflictError("持久网页观察与原调用不符");
+    const observation = readChatWebReadEvidence(row, { taskId: state.task.id, callId: state.parent.id, inputDigest: state.bound.inputDigest, ...(state.url === null ? {} : { url: state.url }) });
     return { row, observation };
   }
   return {
+    async restore(ref: ExecutionRef, raw: unknown) {
+      const { callId } = chatWebReadCallSchema.parse(raw);
+      return access(ref, callId, "admission", async (state) => {
+        if (state.parent.status !== "started" || state.parent.resultText || state.calls.some(call => call.parentCallId === callId)) throw new ConflictError("网页父调用不是可恢复读取");
+        if (!await stored(state)) throw new ConflictError("网页没有已持久观察，不能恢复提交");
+        await state.tx.update(executionCalls).set({ startedAttempt: ref.attempt, updatedAt: now() }).where(eq(executionCalls.id, callId));
+        return { callId, status: "started" as const };
+      });
+    },
     async prepare(ref: ExecutionRef, raw: unknown) {
       const { callId } = chatWebReadCallSchema.parse(raw);
       return access(ref, callId, "admission", async (state) => {

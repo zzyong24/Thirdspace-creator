@@ -1,3 +1,4 @@
+import {executionEvidence} from "../../schema/intelligence";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import {isDeepStrictEqual} from "node:util";
@@ -123,7 +124,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    return leases.withLease(ref,"admission",async({tx,task})=>{
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const found=find(task,calls,callId);current(calls,found);
-    const recoverable=recoverableChatNodeParents(task,calls);
+    const recoverable=recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id)));
     if(found.parent.status!=="started" || !recoverable.structured.includes(callId))throw new ConflictError("原任务没有可回放的生成记录");
     groups(calls,callId,value.operationKey);
     signal?.throwIfAborted();await tx.update(executionCalls).set({startedAttempt:ref.attempt,updatedAt:(deps.now??(()=>new Date().toISOString()))()}).where(eq(executionCalls.id,callId));

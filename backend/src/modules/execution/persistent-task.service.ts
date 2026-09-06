@@ -1,3 +1,4 @@
+import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createDailyTopicRunService} from "../scheduling";
@@ -784,8 +785,8 @@ export function createPersistentTaskService(
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
           }
-          const recoverable=recoverableChatNodeParents(row,calls);
-          const completedParents=[...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured];
+          const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+          const completedParents=[...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads];
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {

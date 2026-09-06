@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-commit.test.ts (10 tests | 1 failed) 9304ms
+   × 保存观察后租约过期，新 Worker 恢复原父调用且旧 Worker 不能继续写 743ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 保存观察后租约过期，新 Worker 恢复原父调用且旧 Worker 不能继续写
+AssertionError: expected { Object (requeued, unknownResult, ...) } to match object { requeued: 1, unknownResult: +0 }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "requeued": 1,
+-   "unknownResult": 0,
++   "requeued": 0,
++   "unknownResult": 1,
+  }
+
+ ❯ src/integration/chat-web-read-commit.test.ts:160:18
+    158|   await db.update(executionTasks).set({ leaseExpiresAt: "2000-01-01T00…
+    159|   const report = await f.tasks.recoverExpiredLeases();
+    160|   expect(report).toMatchObject({ requeued: 1, unknownResult: 0 });
+       |                  ^
+    161|   const claimed = (await f.tasks.claimTask({ taskId: f.ref.executionTa…
+    162|   const ref = { ...f.ref, attempt: claimed.lease.attempt, fenceToken: …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  08:27:24
+   Duration  11.24s (transform 1.02s, setup 0ms, import 1.77s, tests 9.30s, environment 0ms)
+

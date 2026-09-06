@@ -2,7 +2,8 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createDb, assets, assetFiles, executionCalls, eq, sql, type Db } from "@creatoros/backend";
+import { createDb, assets, assetFiles, executionCalls, executionTasks, eq, sql, type Db } from "@creatoros/backend";
+import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { executionEvidence } from "../schema/intelligence";
 import { createAssetRepository, createAssetsService, createLocalFsObjectStorage } from "../modules/assets";
 import { buildChatTools, type ChatToolDeps } from "../modules/ai-runtime/chat-tools";
@@ -148,4 +149,59 @@ it("五个并发网页观察共享 8 MiB 预算，不能分别检查后越界", 
   const rows = await db.select().from(executionEvidence);
   expect(rows.reduce((total, row) => total + row.byteLength, 0)).toBe(8 * 1024 * 1024);
   expect(await db.select().from(assets)).toHaveLength(0);
+});
+
+
+it("保存观察后租约过期，新 Worker 恢复原父调用且旧 Worker 不能继续写", async () => {
+  const f = await fixture();
+  await f.service.observe(f.ref, { callId: f.parent.callId, observation });
+  await db.update(executionTasks).set({ leaseExpiresAt: "2000-01-01T00:00:00.000Z" }).where(eq(executionTasks.id, f.ref.executionTaskId));
+  const report = await f.tasks.recoverExpiredLeases();
+  expect(report).toMatchObject({ requeued: 1, unknownResult: 0 });
+  const claimed = (await f.tasks.claimTask({ taskId: f.ref.executionTaskId, workerId: "replacement" }))!;
+  const ref = { ...f.ref, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken };
+  expect(ref.attempt).toBeGreaterThan(f.ref.attempt);
+  const checkpoint = await createExecutionCheckpointService(db).read(ref);
+  expect(checkpoint.recovery).not.toBe("requires_reconciliation");
+  expect(checkpoint.replayableWebReadToolCallIds).toEqual([f.parent.callId]);
+  await expect(f.service.observe(f.ref, { callId: f.parent.callId, observation })).rejects.toThrow();
+  await expect(f.service.complete(ref, { callId: f.parent.callId })).rejects.toThrow("网页调用未取得当前执行权");
+  expect(await f.service.restore(ref, { callId: f.parent.callId })).toEqual({ callId: f.parent.callId, status: "started" });
+  const result = await f.service.complete(ref, { callId: f.parent.callId });
+  expect(result.status).toBe("ok");
+  expect(await db.select().from(assets)).toHaveLength(1);
+  expect(await db.select().from(executionEvidence)).toHaveLength(1);
+});
+
+it.each(["missing", "tampered", "unknown", "cancelled"])("恢复不能越过无事实或不确定状态：%s", async (mode) => {
+  const f = await fixture();
+  if (mode !== "missing") await f.service.observe(f.ref, { callId: f.parent.callId, observation });
+  if (mode === "tampered") await db.update(executionEvidence).set({ fullText: "损坏" }).where(eq(executionEvidence.originCallId, f.parent.callId));
+  if (mode === "unknown") await db.update(executionCalls).set({ status: "unknown" }).where(eq(executionCalls.id, f.parent.callId));
+  if (mode === "cancelled") await f.tasks.command(f.ctx, { taskIds: [f.ref.executionTaskId], command: "cancel", idempotencyKey: "stop-before-recover" });
+  await expect(f.service.restore(f.ref, { callId: f.parent.callId })).rejects.toThrow();
+  await db.update(executionTasks).set({ leaseExpiresAt: "2000-01-01T00:00:00.000Z" }).where(eq(executionTasks.id, f.ref.executionTaskId));
+  const report = await f.tasks.recoverExpiredLeases();
+  expect(report.requeued).toBe(0);
+  const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, f.ref.executionTaskId));
+  expect(task!.status).toBe(mode === "cancelled" ? "cancelled" : "unknown_result");
+  expect(await db.select().from(assets)).toHaveLength(0);
+});
+
+it("素材已提交但回执未写入，新租约恢复只完成原回执", async () => {
+  const f = await fixture();
+  await f.service.observe(f.ref, { callId: f.parent.callId, observation });
+  await db.execute(sql.raw("CREATE FUNCTION fail_recovered_settle() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.kind = 'tool' AND NEW.status = 'settled' THEN RAISE EXCEPTION 'injected settlement failure'; END IF; RETURN NEW; END; $$;"));
+  await db.execute(sql.raw("CREATE TRIGGER fail_recovered_settle BEFORE UPDATE ON execution_calls FOR EACH ROW EXECUTE FUNCTION fail_recovered_settle();"));
+  await expect(f.service.complete(f.ref, { callId: f.parent.callId })).rejects.toThrow();
+  const [asset] = await db.select().from(assets);
+  await db.execute(sql.raw("DROP TRIGGER fail_recovered_settle ON execution_calls;"));
+  await db.update(executionTasks).set({ leaseExpiresAt: "2000-01-01T00:00:00.000Z" }).where(eq(executionTasks.id, f.ref.executionTaskId));
+  expect((await f.tasks.recoverExpiredLeases()).requeued).toBe(1);
+  const claimed = (await f.tasks.claimTask({ taskId: f.ref.executionTaskId, workerId: "replacement" }))!;
+  const ref = { ...f.ref, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken };
+  f.storage.putObject = async () => { throw new Error("不能重写原素材"); };
+  await f.service.restore(ref, { callId: f.parent.callId });
+  expect(await f.service.complete(ref, { callId: f.parent.callId })).toMatchObject({ status: "ok", data: { asset: { id: asset!.id } } });
+  expect(await db.select().from(assets)).toHaveLength(1);
 });

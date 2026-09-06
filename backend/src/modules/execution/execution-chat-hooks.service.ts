@@ -1,3 +1,4 @@
+import {executionEvidence} from "../../schema/intelligence";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import { createExecutionNodePreparationService } from "./execution-node-preparation.service";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
@@ -216,7 +217,7 @@ export function createExecutionChatHooksService(
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const found=findParent(task,calls,callId);assertCurrentRound(calls,found);
         const children=rejectedChildren(calls,callId,prepared.operationKey);
-        if(found.parent.status!=="started" || task.retryOfCallId!==children.at(-1)!.id || !recoverableChatNodeParents(task,calls).resumableHooks.includes(callId))throw new ConflictError("原任务没有可恢复的开场拒绝记录");
+        if(found.parent.status!=="started" || task.retryOfCallId!==children.at(-1)!.id || !recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id))).resumableHooks.includes(callId))throw new ConflictError("原任务没有可恢复的开场拒绝记录");
         signal?.throwIfAborted();
         await tx.update(executionCalls).set({startedAttempt:ref.attempt,updatedAt:(deps.now??(()=>new Date().toISOString()))()}).where(eq(executionCalls.id,callId));
         return {callId,status:"started" as const};

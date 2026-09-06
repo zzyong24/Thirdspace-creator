@@ -1,11 +1,13 @@
+import type {executionEvidence} from "../../schema/intelligence";
+import {readChatWebReadEvidence} from "./chat-web-read-evidence";
 import type {executionCalls,executionTasks} from "@creatoros/backend";
 import {chatWorkerInputSchema,checkpointToolCallSchema,workerProviderReceiptSchema,chatToolProviderName} from "@creatoros/contract/execution-worker";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 /** 只识别有已确认前缀的父工具；是否完成及下一请求仍由原节点与账本验证。 */
-export function recoverableChatNodeParents(task:Task,calls:Call[]){
- const empty=()=>({completedHooks:[] as string[],resumableHooks:[] as string[],structured:[] as string[]});
+export function recoverableChatNodeParents(task:Task,calls:Call[],evidence:(typeof executionEvidence.$inferSelect)[]=[]){
+ const empty=()=>({completedHooks:[] as string[],resumableHooks:[] as string[],structured:[] as string[],webReads:[] as string[]});
  const input=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown}|null)?.modelInput);
  if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !input.success || input.data.userId!==task.userId || input.data.accountId!==task.accountId)return empty();
  if(calls.some(call=>call.executionTaskId!==task.id || call.status==="unknown" || (call.status==="settled" && (call.totalTokens===null || (call.kind==="model" && !workerProviderReceiptSchema.safeParse(call.providerResult).success)))))return empty();
@@ -20,7 +22,15 @@ export function recoverableChatNodeParents(task:Task,calls:Call[]){
   const matched=proposed.filter(part=>agenticToolOperationKey(model.id,part.toolCallId)===parent.operationKey);
   if(matched.length!==1)continue;
   const definitions=input.data.tools.filter(tool=>chatToolProviderName(tool.name)===matched[0]!.toolName);
-  if(definitions.length!==1 || definitions[0]!.effect!=="proposal")continue;
+  if(definitions.length!==1)continue;
+  if(definitions[0]!.name === "web.read" && definitions[0]!.execution === "worker.web-read" && definitions[0]!.effect === "committed") {
+    const rows = evidence.filter(row => row.originCallId === parent.id);
+    if(rows.length === 1 && !calls.some(call => call.parentCallId === parent.id)) {
+      try { readChatWebReadEvidence(rows[0]!, { taskId: task.id, callId: parent.id, inputDigest: parent.inputDigest }); result.webReads.push(parent.id); } catch { /* 损坏事实保持待对账。 */ }
+    }
+    continue;
+  }
+  if(definitions[0]!.effect!=="proposal")continue;
   const definition=definitions[0]!,hooks=definition.name==="script.hooks" && definition.execution==="worker.script-hooks";
   if(!hooks && definition.execution!=="worker.structured-node")continue;
   const children=calls.filter(call=>call.parentCallId===parent.id).sort((a,b)=>a.sequence-b.sequence);
@@ -50,6 +60,6 @@ export function recoverableChatNodeParents(task:Task,calls:Call[]){
   else result.structured.push(parent.id);
  }
  // 同轮多个合法父工具一起核对，不能互相误判成未知的在途模型。
- const allowed=new Set([...result.completedHooks,...result.resumableHooks,...result.structured]);
+ const allowed=new Set([...result.completedHooks,...result.resumableHooks,...result.structured,...result.webReads]);
  return calls.some(call=>call.status==="started" && !allowed.has(call.id))?empty():result;
 }
