@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts src/modules/ai/execution-candidate.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  12:28:51
+   Duration  3.66s (transform 865ms, setup 0ms, import 1.92s, tests 3.67s, environment 0ms)
+

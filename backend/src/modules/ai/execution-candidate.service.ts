@@ -1,3 +1,5 @@
+import {verifyGeneratedAssetCandidate} from "../assets";
+import {bindAssetExecution} from "../execution/asset-execution-binding";
 import { and, eq, aiTasks, aiTaskResults, aiTaskSteps, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import { workerStructuredResultSchema, workerPortInputSchemas, type WorkerStructuredResult, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { RequestContext } from "@creatoros/contract";
@@ -25,20 +27,30 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
         if(business.taskType==="scheduled.topic.daily")throw new ConflictError("每日选题必须经调度入池完成端口");
         const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.executionTaskId,task.id),eq(executionCalls.id,input.callId),eq(executionCalls.status,"settled")));
         if(!call || call.resultText!==input.text)throw new ConflictError("提交正文与持久调用证据不符");
+        const assetBinding=business.taskType==="asset.generate" ? await bindAssetExecution({tx,task,context},call.id) : null;
         const [existing]=await tx.select().from(aiTaskResults).where(eq(aiTaskResults.executionCallId,call.id));
         if(existing){
           if(existing.aiTaskId!==business.id || call.resultRef!==existing.id || !["succeeded","partial"].includes(task.status))throw new ConflictError("候选提交回执不一致");
           // 已采纳后重投也只返回同一回执，绝不把业务状态改回待采纳。
           return {resultId:existing.id,aiTaskId:business.id};
         }
-        const stamp=now();
+        let stamp=now();
         if(task.status!=="running" || !task.leaseOwner || !task.leaseExpiresAt || Date.parse(task.leaseExpiresAt)<=Date.parse(stamp) ||
           (task.deadlineAt && Date.parse(task.deadlineAt)<=Date.parse(stamp)) || !["queued","running"].includes(business.status)) {
           throw new ConflictError("当前任务不能提交新候选");
         }
         const structured=(task.payload as {modelInput?:{kind?:string}}).modelInput?.kind === "model.structured" ? workerStructuredResultSchema.parse(JSON.parse(call.resultText!)) : undefined;
         const partial=structured?.validation?.status === "partial";
-        const projected=deps.projectCandidate(context,{taskType:business.taskType,inputData:business.inputData,text:structured ? JSON.stringify(structured.object) : call.resultText!,...(structured ? {structuredResult:structured} : {}),frozenInput:(task.payload as {modelInput?:unknown}).modelInput});
+        const projected=business.taskType==="asset.generate" ? await (async():Promise<RecordCandidateInput>=>{
+          const binding=assetBinding!;
+          const receipt=await verifyGeneratedAssetCandidate(tx as unknown as Db,context,call.id,JSON.parse(call.resultText!));
+          if(receipt.assetType!==binding.input.mediaKind)throw new ConflictError("素材类型与冻结调用不符");
+          const frozen=binding.input;
+          return {resultType:"generated_asset",assetId:receipt.assetId,resultData:{assetId:receipt.assetId,assetType:receipt.assetType,name:receipt.name,prompt:frozen.prompt,...(frozen.aspectRatio?{aspectRatio:frozen.aspectRatio}:{}),...(frozen.mediaKind==="video"?{durationSec:frozen.durationSec,resolution:frozen.resolution}:{})}};
+        })() : deps.projectCandidate(context,{taskType:business.taskType,inputData:business.inputData,text:structured ? JSON.stringify(structured.object) : call.resultText!,...(structured ? {structuredResult:structured} : {}),frozenInput:(task.payload as {modelInput?:unknown}).modelInput});
+        // 素材验证可能等待领域行锁；进入写入前重新检查实际截止时间。
+        stamp=now();
+        if(Date.parse(task.leaseExpiresAt!)<=Date.parse(stamp) || (task.deadlineAt && Date.parse(task.deadlineAt)<=Date.parse(stamp)))throw new ConflictError("候选验证期间执行租约或截止时间已到");
         const resultId=`ai-result:${call.id}`;
         await tx.insert(aiTaskResults).values({id:resultId,executionCallId:call.id,aiTaskId:business.id,resultType:projected.resultType,
           artifactId:projected.artifactId ?? null,knowledgeItemId:projected.knowledgeItemId ?? null,assetId:projected.assetId ?? null,resultData:{...projected.resultData,...(structured ? {executionGeneration:structured.generation,executionValidation:structured.validation ?? null} : {})}});

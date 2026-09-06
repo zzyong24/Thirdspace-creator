@@ -1,0 +1,42 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts (22 tests | 1 failed) 2973ms
+   × 等待素材验证后截止时间已到，不得用旧时间提交成功 103ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 等待素材验证后截止时间已到，不得用旧时间提交成功
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "asset-result-23",
++   "resultId": "ai-result:call_9cc8d6c0-15f9-44b5-87c9-e5fd5bb3827f",
+  }
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:151:112
+    149|  const f=await fixture();await f.service.start(f.ref,f.call.id);const …
+    150|  const candidate=createExecutionCandidateService(db,{now:()=>++reads==…
+    151|  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId…
+       |                                                                                                                ^
+    152|  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.a…
+    153| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 passed (22)
+   Start at  12:30:26
+   Duration  4.23s (transform 616ms, setup 0ms, import 1.12s, tests 2.97s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

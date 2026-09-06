@@ -1,0 +1,129 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts (18 tests | 5 failed) 2497ms
+   × 原素材通过同一候选事务完成，重投不恢复已删除素材 96ms
+   × 首次候选拒绝已变化素材 deleted，不部分改变任务 102ms
+   × 首次候选拒绝已变化素材 foreign，不部分改变任务 95ms
+   × 首次候选拒绝已变化素材 file，不部分改变任务 90ms
+   × 首次候选拒绝已变化素材 checksum，不部分改变任务 99ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 原素材通过同一候选事务完成，重投不恢复已删除素材
+Error: 素材不能绕过专用验证
+ ❯ Object.<anonymous> src/modules/execution/execution-asset-result.service.test.ts:103:42
+    101| it("原素材通过同一候选事务完成，重投不恢复已删除素材",async()=>{
+    102|  const f=await fixture();await f.service.start(f.ref,f.call.id);const …
+    103|  const projectCandidate=vi.fn(()=>{throw new Error("素材不能绕过专用验证");});
+       |                                          ^
+    104|  const candidate=createExecutionCandidateService(db,{now:f.now,project…
+    105|  const input={outcome:"succeeded",callId:f.call.id,text:JSON.stringify…
+ ❯ src/modules/ai/execution-candidate.service.ts:41:30
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 首次候选拒绝已变化素材 deleted，不部分改变任务
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "asset-result-15",
++   "resultId": "ai-result:call_47a3c779-22e6-43ba-add4-6b3dd7d06f9c",
+  }
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:120:112
+    118|  else await db.update(assets).set(variant==="deleted"?{status:"deleted…
+    119|  const candidate=createExecutionCandidateService(db,{now:f.now,project…
+    120|  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId…
+       |                                                                                                                ^
+    121|  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.a…
+    122|  expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 首次候选拒绝已变化素材 foreign，不部分改变任务
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "asset-result-16",
++   "resultId": "ai-result:call_1adb98c8-95c6-4788-aca1-3ad08cff8b12",
+  }
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:120:112
+    118|  else await db.update(assets).set(variant==="deleted"?{status:"deleted…
+    119|  const candidate=createExecutionCandidateService(db,{now:f.now,project…
+    120|  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId…
+       |                                                                                                                ^
+    121|  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.a…
+    122|  expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 首次候选拒绝已变化素材 file，不部分改变任务
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "asset-result-17",
++   "resultId": "ai-result:call_567fa1d6-deb1-4ed8-8b18-6a16545876c1",
+  }
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:120:112
+    118|  else await db.update(assets).set(variant==="deleted"?{status:"deleted…
+    119|  const candidate=createExecutionCandidateService(db,{now:f.now,project…
+    120|  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId…
+       |                                                                                                                ^
+    121|  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.a…
+    122|  expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 首次候选拒绝已变化素材 checksum，不部分改变任务
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "asset-result-18",
++   "resultId": "ai-result:call_4be654df-e28c-4403-8561-f63cc75fae57",
+  }
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:120:112
+    118|  else await db.update(assets).set(variant==="deleted"?{status:"deleted…
+    119|  const candidate=createExecutionCandidateService(db,{now:f.now,project…
+    120|  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId…
+       |                                                                                                                ^
+    121|  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.a…
+    122|  expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 13 passed (18)
+   Start at  12:28:09
+   Duration  3.69s (transform 603ms, setup 0ms, import 1.06s, tests 2.50s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

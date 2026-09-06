@@ -1,8 +1,9 @@
+import {createExecutionCandidateService} from "../ai/execution-candidate.service";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {createDb,aiTasks,executionTasks,executionCalls,assets,eq,sql,type Db} from "@creatoros/backend";
+import {createDb,aiTasks,executionTasks,executionCalls,assets,assetFiles,aiTaskResults,eq,sql,type Db} from "@creatoros/backend";
 import {createExecutionAuthorityService} from "./execution-authority.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
 import {createPersistentTaskService} from "./persistent-task.service";
@@ -95,4 +96,58 @@ it("有准备记录但没有字节时明确返回不足，不能结算伪结果"
 it("未知调用已有真实字节时可恢复结算，预算仍未知",async()=>{
  const f=await fixture();await f.service.start(f.ref,f.call.id);await f.ledger.settle(f.ref,f.call.id,{status:"unknown"});
  await f.service.save(f.ref,f.call.id,bytes);expect(await f.ledger.inspect(f.ref)).toMatchObject({unknownUsage:true,spentTokens:null,reservedTokens:128});
+});
+
+it("原素材通过同一候选事务完成，重投不恢复已删除素材",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ const projectCandidate=vi.fn(()=>{throw new Error("素材不能绕过专用验证");});
+ const candidate=createExecutionCandidateService(db,{now:f.now,projectCandidate});
+ const input={outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)};
+ const result=await candidate.commitResult(f.ref,input);
+ expect(projectCandidate).not.toHaveBeenCalled();
+ expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.id,result.resultId))).toMatchObject([{assetId:receipt.assetId,resultType:"generated_asset",resultData:{assetId:receipt.assetId,assetType:"video",prompt:f.input.prompt}}]);
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("succeeded");
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!.status).toBe("awaiting_confirmation");
+ await db.update(assets).set({status:"deleted"}).where(eq(assets.id,receipt.assetId));
+ expect(await candidate.commitResult(f.ref,input)).toEqual(result);
+ expect((await db.select().from(assets).where(eq(assets.id,receipt.assetId)))[0]!.status).toBe("deleted");
+});
+it.each(["deleted","foreign","file","checksum"])("首次候选拒绝已变化素材 %s，不部分改变任务",async variant=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ if(variant==="checksum")await db.update(assetFiles).set({checksum:"changed"}).where(eq(assetFiles.id,receipt.fileId));
+ else await db.update(assets).set(variant==="deleted"?{status:"deleted"}:variant==="foreign"?{accountId:"other"}:{currentFileId:"other"}).where(eq(assets.id,receipt.assetId));
+ const candidate=createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>({resultType:"generated_asset",assetId:receipt.assetId,resultData:{}})});
+ await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)})).rejects.toThrow();
+ expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(0);
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("running");
+});
+
+it("素材验证后候选写入失败，任务状态全回滚且可原键补交",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ const candidate=createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>{throw new Error("不可旁路");}}),input={outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)};
+ await db.execute(sql.raw("CREATE FUNCTION fail_asset_candidate() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'candidate failure'; END; $$;"));
+ await db.execute(sql.raw("CREATE TRIGGER fail_asset_candidate BEFORE INSERT ON ai_task_results FOR EACH ROW EXECUTE FUNCTION fail_asset_candidate();"));
+ try{await expect(candidate.commitResult(f.ref,input)).rejects.toThrow();}finally{await db.execute(sql.raw("DROP TRIGGER fail_asset_candidate ON ai_task_results;"));}
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("running");expect((await f.ledger.inspect(f.ref)).calls[0]!.resultRef).toBeNull();
+ expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(0);
+ const result=await candidate.commitResult(f.ref,input);expect(await candidate.commitResult(f.ref,input)).toEqual(result);
+});
+it("取消后保存回执仍可补账，但不能再创建候选",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);await f.stop();
+ const candidate=createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>{throw new Error("不可旁路");}});
+ await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)})).rejects.toThrow();
+ expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("cancelled");expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(0);
+});
+it("同内容其他调用的素材回执不能代替原产物",async()=>{
+ const f=await fixture(),other=await fixture();await f.service.start(f.ref,f.call.id);await other.service.start(other.ref,other.call.id);
+ const receipt=await other.service.save(other.ref,other.call.id,bytes);await f.ledger.settle(f.ref,f.call.id,{status:"settled",usage:{},resultText:JSON.stringify(receipt)});
+ const candidate=createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>({resultType:"generated_asset",assetId:receipt.assetId,resultData:{}})});
+ await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)})).rejects.toThrow("持久提交事实");
+});
+
+it("等待素材验证后截止时间已到，不得用旧时间提交成功",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);let reads=0;
+ const candidate=createExecutionCandidateService(db,{now:()=>++reads===1?f.now():"2026-09-06T00:02:00.000Z",projectCandidate:()=>{throw new Error("不可旁路");}});
+ await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)})).rejects.toThrow();
+ expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(0);expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("running");
 });
