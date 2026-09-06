@@ -1,0 +1,59 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-completion.service.test.ts (29 tests | 2 failed) 1870ms
+   × 同一完成请求并发或回放只有一条消息，消息/任务/回执一起完成 63ms
+   × 结束事件被篡改后拒绝伪幂等成功 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 同一完成请求并发或回放只有一条消息，消息/任务/回执一起完成
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/ai/chat-turn-completion.service.test.ts:55:20
+     53|     expect(rows.call.resultRef).toBe(results[0]!.resultId);
+     54|     const events=await db.select().from(executionStreamEvents).where(e…
+     55|     expect(events).toHaveLength(1);
+       |                    ^
+     56|     expect(events[0]).toMatchObject({callId:f.call.callId,callIndex:0,…
+     57| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/chat-turn-completion.service.test.ts > 结束事件被篡改后拒绝伪幂等成功
+AssertionError: promise resolved "{ …(4) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "ai-task-a57ceb6c-e5ab-47a8-a4f8-ae0a730b14cf",
++   "messageId": "chat:ai-msg-93",
++   "outcome": "succeeded",
++   "resultId": "chat:ai-task-a57ceb6c-e5ab-47a8-a4f8-ae0a730b14cf",
+  }
+
+ ❯ src/modules/ai/chat-turn-completion.service.test.ts:170:54
+    168|  const f=await fixture();await f.service.commitResult(f.ref,f.request);
+    169|  await db.update(executionStreamEvents).set({chunk:{type:"finish",fini…
+    170|  await expect(f.service.commitResult(f.ref,f.request)).rejects.toThrow…
+       |                                                      ^
+    171| });
+    172|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 27 passed (29)
+   Start at  21:58:28
+   Duration  3.19s (transform 686ms, setup 0ms, import 1.18s, tests 1.87s, environment 0ms)
+

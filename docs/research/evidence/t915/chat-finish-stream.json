@@ -1,0 +1,14 @@
+{
+  "task": "T-915",
+  "tests": 67,
+  "fullTaskComplete": false,
+  "review": "worker_review 独立只读复核历史兼容修复通过，未发现剩余具体阻断；未重复运行测试。",
+  "sourceSha256": {
+    "backend/src/modules/ai/chat-turn-completion.service.ts": "951929f8eaab733da4401e63b8550bf2f8ebd9f5007f4147be80344f3452f260",
+    "backend/src/modules/ai/chat-historical-tool-stream.service.ts": "10994e0664fb3739786df07601715cc7388b4ca7a32ebd6e0b58837675e4d732",
+    "backend/src/modules/execution/chat-tool-stream-projection.service.ts": "c81e97ae10c894c28f7520c76c7eb42534cfd319ed37b9d6ddfc09d6cfc9e18e",
+    "backend/src/modules/ai/chat-turn-completion.service.test.ts": "047b076ddf9556ee860cb3be9d5ea2fcf8343a0d65a4b56bca999e09b40ff743",
+    "backend/src/integration/chat-tool-authority.test.ts": "ccef814ea48cb9fa46f10d2632a31740bc9ad7fade19f7c23c2dff5a211648d4",
+    "backend/src/integration/chat-worker-entry.test.ts": "77a403108dd518e441f8e0cc84685bba5223431e1e4c1e933e0612b6d3794d9d"
+  }
+}

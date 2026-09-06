@@ -1,3 +1,5 @@
+import { createChatTurnCompletionService } from "../modules/ai/chat-turn-completion.service";
+import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { readUIMessageStream,type UIMessage,type UIMessageChunk } from "ai";
 import { createExecutionStreamService } from "../modules/execution/execution-stream.service";
 import { projectChatReceipts } from "../modules/ai/chat-receipt-projection";
@@ -133,4 +135,37 @@ it("同一工具的并发授权检查不能让旧等待覆盖新批准",async()=
  const first=f.host.check(f.ref,f.request);await started;const second=f.host.check(f.ref,f.request);await Promise.all([first,second]);
  const events=(await stream.read(f.ctx,f.ref.executionTaskId)).events;
  expect(events.at(-1)!.chunk).toMatchObject({type:"tool-approval-response",approved:true});expect(invocation).toBe(2);
+});
+
+it("工具结算后缺卡不提前结束，并发补卡完成后finish始终最后",async()=>{
+ const f=await fixture();await f.host.execute(f.ref,{callId:f.reservation.callId});
+ await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:2,messages:[{role:"assistant",callId:f.request.modelCallId},{role:"tool",callId:f.reservation.callId}]});
+ await db.delete(executionStreamEvents).where(eq(executionStreamEvents.callId,f.reservation.callId));
+ const complete=createChatTurnCompletionService(db,{now}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
+ await expect(complete.commitResult(f.ref,request)).rejects.toThrow("工具卡尚未确认");
+ const stream=createExecutionStreamService(db);
+ expect((await stream.read(f.ctx,f.ref.executionTaskId)).status).toBe("running");
+ expect((await stream.read(f.ctx,f.ref.executionTaskId)).events.some(event=>event.chunk.type==="finish")).toBe(false);
+ const raced=await Promise.allSettled([complete.commitResult(f.ref,request),f.host.reserve(f.ref,f.request)]);
+ expect(raced[1]!.status).toBe("fulfilled");
+ await complete.commitResult(f.ref,request);
+ const events=(await stream.read(f.ctx,f.ref.executionTaskId)).events;
+ expect(events.filter(event=>event.chunk.type==="finish")).toHaveLength(1);
+ expect(events.at(-1)!.chunk).toMatchObject({type:"finish",finishReason:"tool-calls"});
+ expect(events.find(event=>event.chunk.type==="tool-output-available")!.sequence).toBeLessThan(events.at(-1)!.sequence);
+ expect(f.execute).toHaveBeenCalledTimes(1);
+});
+
+it("旧已完成工具回复缺全部事件时由原回执恢复工具卡和finish",async()=>{
+ const f=await fixture();await f.host.execute(f.ref,{callId:f.reservation.callId});
+ await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:2,messages:[{role:"assistant",callId:f.request.modelCallId},{role:"tool",callId:f.reservation.callId}]});
+ const complete=createChatTurnCompletionService(db,{now}),request={lastModelCallId:f.request.modelCallId,toolCallIds:[f.reservation.callId]};
+ const result=await complete.commitResult(f.ref,request);
+ await db.delete(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.ref.executionTaskId));
+ expect(await complete.commitResult(f.ref,request)).toEqual(result);
+ const events=(await createExecutionStreamService(db).read(f.ctx,f.ref.executionTaskId)).events;
+ expect(events.map(event=>event.chunk.type)).toEqual(["tool-input-available","tool-output-available","finish"]);
+ await complete.commitResult(f.ref,request);
+ expect((await createExecutionStreamService(db).read(f.ctx,f.ref.executionTaskId)).events).toEqual(events);
+ expect(f.execute).toHaveBeenCalledTimes(1);
 });

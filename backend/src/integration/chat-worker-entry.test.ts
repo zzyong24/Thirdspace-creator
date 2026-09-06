@@ -99,6 +99,8 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
    const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
    expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
    expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
+   expect(streamEvents.filter(event=>event.chunk.type==="finish")).toHaveLength(1);
+   expect(streamEvents.sort((a,b)=>a.sequence-b.sequence).at(-1)!.chunk).toMatchObject({type:"finish",finishReason:mode==="partial"?"length":"stop"});
    if(usesTool){
     const results=streamEvents.filter(event=>["tool-output-available","tool-output-denied","tool-input-error"].includes(String(event.chunk.type)));
     expect(results).toHaveLength(["revoked","login"].includes(mode)?2:1);
@@ -113,8 +115,13 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
     const expected=(rows.find(row=>row.role==="assistant")!.parts as Array<Record<string,unknown>>).find(part=>part.toolCallId==="read-source")!;
     expect(expected.approval).toEqual({id:pendingApprovalId,approved:true});
     let response:UIMessage|undefined;
-    const stream=new ReadableStream<UIMessageChunk>({start(c){c.enqueue({type:"start",messageId:"test"});for(const event of streamEvents.sort((a,b)=>a.sequence-b.sequence))c.enqueue(event.chunk as UIMessageChunk);c.enqueue({type:"finish"});c.close();}});
+    const stream=new ReadableStream<UIMessageChunk>({start(c){c.enqueue({type:"start",messageId:"test"});for(const event of streamEvents.sort((a,b)=>a.sequence-b.sequence))c.enqueue(event.chunk as UIMessageChunk);c.close();}});
     for await(const current of readUIMessageStream({stream}))response=current;
+    expect(response!.metadata).toEqual(rows.find(row=>row.role==="assistant")!.modelMetadata);
+    const paged=[],reader=createExecutionStreamService(db);
+    for await(const page of subscribeExecutionStream({read:(ctx,id,raw)=>reader.read(ctx,id,{...(raw as object),limit:1})},ctx,submission.executionTaskId,{signal:new AbortController().signal}))paged.push(...page.events);
+    expect(paged.map(event=>event.sequence)).toEqual(streamEvents.map(event=>event.sequence));
+    expect(paged.at(-1)!.chunk.type).toBe("finish");
     expect(JSON.parse(JSON.stringify(response!.parts.find(part=>"toolCallId" in part && part.toolCallId==="read-source")))).toMatchObject(expected);
    }
   }

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { createDb, aiConversations, aiMessages, aiTasks, aiTaskResults, executionTasks, executionCalls, eq, sql, type Db } from "@creatoros/backend";
+import { createDb, aiConversations, aiMessages, aiTasks, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, eq, sql, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "./ai.repository";
 import { createChatTurnSubmissionService } from "./chat-turn-submission.service";
@@ -51,6 +51,9 @@ it("同一完成请求并发或回放只有一条消息，消息/任务/回执�
     expect(rows.business.status).toBe("succeeded");
     expect(rows.task.status).toBe("succeeded");
     expect(rows.call.resultRef).toBe(results[0]!.resultId);
+    const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id));
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({callId:f.call.callId,callIndex:0,sequence:1,chunk:{type:"finish",finishReason:"stop",messageMetadata:rows.messages[1]!.modelMetadata}});
 });
 it("长度截断保留真实回复并投影 partial；未知用量保留 null", async () => {
     const f = await fixture({ finishReason: "length", unknownUsage: true });
@@ -103,6 +106,7 @@ it("终态更新失败回滚消息与结果，修复数据库后沿原调用完�
         expect(rows.results).toHaveLength(0);
         expect(rows.task.status).toBe("running");
         expect(rows.call.resultRef).toBeNull();
+        expect(await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id))).toHaveLength(0);
     }
     finally {
         await db.execute(sql.raw("DROP TRIGGER fail_chat_finish ON execution_tasks;"));
@@ -158,4 +162,18 @@ it.each([
  {type:"custom",kind:"未经支持"},
 ])("损坏或不支持的非文本回执不能进入检查点：%j",async part=>{
  await expect(fixture({content:[part]})).rejects.toThrow("尚不能恢复");
+});
+
+it("结束事件被篡改后拒绝伪幂等成功",async()=>{
+ const f=await fixture();await f.service.commitResult(f.ref,f.request);
+ await db.update(executionStreamEvents).set({chunk:{type:"finish",finishReason:"length"}}).where(eq(executionStreamEvents.executionTaskId,f.task.id));
+ await expect(f.service.commitResult(f.ref,f.request)).rejects.toThrow("结束事件不一致");
+});
+
+it("旧已完成任务缺结束事件时仅补事件，不重复消息或结果",async()=>{
+ const f=await fixture();await f.service.commitResult(f.ref,f.request);
+ await db.delete(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id));
+ await Promise.all([f.service.commitResult(f.ref,f.request),f.service.commitResult(f.ref,f.request)]);
+ expect(await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id))).toHaveLength(1);
+ expect((await f.rows()).messages).toHaveLength(2);expect((await f.rows()).results).toHaveLength(1);
 });

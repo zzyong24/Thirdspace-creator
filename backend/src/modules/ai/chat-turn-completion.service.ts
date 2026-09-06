@@ -5,6 +5,8 @@ import { ConflictError } from "../execution/execution.errors";
 import { createAiRepository } from "./ai.repository";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
 import { projectChatReceipts,readChatApprovalFacts } from "./chat-receipt-projection";
+import { restoreHistoricalChatToolCards } from "./chat-historical-tool-stream.service";
+import { isDeepStrictEqual } from "node:util";
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 同一事务提交聊天消息、业务结果、调用结果引用和执行终态。完成请求只含已有账本引用。 */
 export function createChatTurnCompletionService(db: Db, deps: {
@@ -37,15 +39,37 @@ export function createChatTurnCompletionService(db: Db, deps: {
                     throw new ConflictError("聊天检查点尚未确认全部调用");
                 const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
                 const projected = projectChatReceipts(confirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk))), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
+                const assertCards=()=>{
+                // 工具结算与补卡是不同事务；卡片未确认时保持原任务可恢复，不能先发布结束。
+                for(const part of projected.parts.filter(part=>typeof part.toolCallId==="string")){
+                    const input=events.find(event=>event.chunk.toolCallId===part.toolCallId && ["tool-input-start","tool-input-available"].includes(String(event.chunk.type)));
+                    const output=events.filter(event=>event.chunk.toolCallId===part.toolCallId && ["tool-input-error","tool-output-available","tool-output-denied"].includes(String(event.chunk.type)));
+                    const expected=part.state==="output-error"?{type:"tool-input-error",toolCallId:part.toolCallId,toolName:String(part.type).slice(5),input:part.rawInput,errorText:part.errorText,...(part.callProviderMetadata?{providerMetadata:part.callProviderMetadata}:{})}
+                        :part.state==="output-denied"?{type:"tool-output-denied",toolCallId:part.toolCallId}:{type:"tool-output-available",toolCallId:part.toolCallId,output:part.output};
+                    if(!input || output.length!==1 || !isDeepStrictEqual(output[0]!.chunk,expected) || input.sequence>=output[0]!.sequence)throw new ConflictError("聊天工具卡尚未确认");
+                }
+                };
                 const [existing] = await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id, resultId));
                 const metadata = { chatTaskId: business.id, sourceMessageId: source.id, actualEngine: "vercel", stopReason: projected.finishReason, completeness: projected.outcome === "succeeded" ? "completed" : "partial", checkpointRef: checkpoint.revision };
                 const resultData = { conversationId: conversation.id, sourceMessageId: source.id, messageId, actualEngine: "vercel", stopReason: projected.finishReason, completeness: metadata.completeness, checkpointRef: checkpoint.revision };
+                const finish={type:"finish",finishReason:["stop","length","tool-calls","content-filter","error","other","unknown"].includes(projected.finishReason)?projected.finishReason:"other",messageMetadata:metadata};
+                const finishes=events.filter(event=>event.chunk.type==="finish");
+                if(finishes.length && (finishes.length!==1 || finishes[0]!.callId!==lastModel.id || finishes[0]!.sequence!==events.at(-1)!.sequence || !isDeepStrictEqual(finishes[0]!.chunk,finish)))throw new ConflictError("聊天结束事件不一致");
+                const appendFinish=async()=>{
+                    if(finishes.length)return;
+                    await tx.insert(executionStreamEvents).values({executionTaskId:task.id,sequence:(events.at(-1)?.sequence??0)+1,callId:lastModel.id,callIndex:(events.filter(event=>event.callId===lastModel.id).at(-1)?.callIndex??-1)+1,chunk:finish,createdAt:now()});
+                };
                 if (existing) {
                     const saved = messages.find(message => message.id === messageId);
                     if (chatInputDigest(existing.resultData) !== chatInputDigest(resultData) || existing.aiTaskId !== business.id || existing.resultType !== "conversation_reply" || existing.executionCallId !== lastModel.id || lastModel.resultRef !== resultId || task.status !== projected.outcome || business.status !== projected.outcome || !saved || saved.role !== "assistant" || saved.content !== projected.content || chatInputDigest(saved.parts) !== chatInputDigest(projected.parts) || chatInputDigest(saved.modelMetadata) !== chatInputDigest(metadata))
                         throw new ConflictError("聊天完成回执不一致");
+                    if(!finishes.length)await restoreHistoricalChatToolCards(tx,task.id,confirmed,projected.parts,events,now);
+                    assertCards();
+                    await appendFinish();
                     return { resultId, aiTaskId: business.id, messageId, outcome: projected.outcome };
                 }
+                                assertCards();
+                if(finishes.length)throw new ConflictError("聊天完成前已有结束事件");
                 const stamp = now();
                 if (lastModel.resultRef || task.status !== "running" || !task.leaseOwner || !task.leaseExpiresAt || Date.parse(task.leaseExpiresAt) <= Date.parse(stamp) || (task.deadlineAt && Date.parse(task.deadlineAt) <= Date.parse(stamp)) || !["queued", "running"].includes(business.status))
                     throw new ConflictError("聊天当前不可提交");
@@ -56,6 +80,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 await tx.insert(aiTaskResults).values({ id: resultId, aiTaskId: business.id, resultType: "conversation_reply", executionCallId: lastModel.id, resultData });
                 await tx.update(executionCalls).set({ resultRef: resultId, updatedAt: stamp }).where(eq(executionCalls.id, lastModel.id));
                 await tx.update(aiTasks).set({ status: projected.outcome, completedAt: stamp, errorMessage: null, leaseOwner: null, leaseToken: null, leaseExpiresAt: null }).where(eq(aiTasks.id, business.id));
+                await appendFinish();
                 await tx.update(executionTasks).set({ status: projected.outcome, leaseOwner: null, leaseExpiresAt: null, heartbeatAt: null, retryAt: null, retryOfCallId: null, lastErrorCode: null, lastErrorMessage: null, updatedAt: stamp }).where(eq(executionTasks.id, task.id));
                 return { resultId, aiTaskId: business.id, messageId, outcome: projected.outcome };
             });

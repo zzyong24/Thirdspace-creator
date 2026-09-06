@@ -37,6 +37,7 @@ export function createChatToolStreamProjection(db:Db,deps:{now?:()=>string;tools
   await ensureInputs(tx,task,model,now);
   const existing=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.callId,call.id)).orderBy(asc(executionStreamEvents.callIndex));
   if(existing.length){if(existing.length!==chunks.length || existing.some((row,i)=>row.callIndex!==i || !isDeepStrictEqual(row.chunk,chunks[i])))throw new ConflictError("已保存工具卡与回执不符");return;}
+  if(history.some(event=>event.chunk.type==="finish"))throw new ConflictError("聊天结束后不能追加新工具卡");
   const [last]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
   const sequence=last?.sequence??0,stamp=now();
   await tx.insert(executionStreamEvents).values(chunks.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:call.id,callIndex:i,chunk,createdAt:stamp})));
@@ -82,6 +83,7 @@ async function ensureInputs(tx:Transaction,task:typeof import("@creatoros/backen
   if(savedInputs.length){if(savedInputs.length!==initial.length || savedInputs.some((event,i)=>!isDeepStrictEqual(event.chunk,initial[i])))throw new ConflictError("工具输入卡与模型回执不符");}
   else {
     const [tail]=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(desc(executionStreamEvents.sequence)).limit(1);
+    if(tail?.chunk.type==="finish")throw new ConflictError("聊天结束后不能追加工具输入");
     const index=(modelEvents.at(-1)?.callIndex??-1)+1,sequence=tail?.sequence??0;
     await tx.insert(executionStreamEvents).values(initial.map((chunk,i)=>({executionTaskId:task.id,sequence:sequence+i+1,callId:model.id,callIndex:index+i,chunk,createdAt:now()})));
   }
