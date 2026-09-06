@@ -79,7 +79,7 @@ export function createAiTransport(
         }
         case "ai.conversations.messages.create": {
           const b = (body ?? {}) as { content: string; attachments?: string[] };
-          const message = await service.createMessage(
+          const message = await service.createMessageWithReplyTask(
             ctx,
             p.conversationId ?? "",
             b,

@@ -3,7 +3,7 @@ import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
-import { and, eq, aiTasks, aiTaskResults, requireAccountId, type Db } from "@creatoros/backend";
+import { and, eq, aiTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
   type AiRepository,
@@ -298,6 +298,8 @@ export interface AiService {
     ctx: RequestContext,
     conversationId: string,
   ): Promise<AIConversationResource>;
+  /** 旧公开对话入口：用户消息与可恢复回复任务同事务保存。 */
+  createMessageWithReplyTask(ctx:RequestContext,conversationId:string,body:{content:string;attachments?:string[]}):Promise<AIMessageResource>;
   createMessage(
     ctx: RequestContext,
     conversationId: string,
@@ -797,12 +799,31 @@ export function createAiService(deps: ServiceDeps): AiService {
       return toConversationDto(row);
     },
 
+    async createMessageWithReplyTask(ctx,conversationId,body){
+      // 在任何配置读取前先验证会话；事务内再次按真实归属锁定，冻结当轮历史。
+      await repoFor(ctx,"ai.createMessageWithReplyTask").requireConversation(conversationId);
+      const runtimeData=await deps.resolveTaskRuntimeData?.(ctx,"copilot.assist",Object.freeze({conversationId}))??{};
+      return deps.db.transaction(async tx=>{
+        const accountId=requireAccountId(ctx.accountId,"ai.createMessageWithReplyTask");
+        const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),eq(aiConversations.accountId,accountId))).for("update");
+        if(!conversation)throw new ConflictError("会话已不可用");
+        const txDb=tx as unknown as Db;
+        const repo=createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId});
+        const history=await repo.listMessages(conversationId);
+        const message=await repo.createMessage(conversationId,{role:"user",content:body.content,attachments:body.attachments??[],modelMetadata:{}});
+        const task=await createAiService({...deps,db:txDb,resolveTaskRuntimeData:async()=>runtimeData}).createTask(ctx,{
+          taskType:"copilot.assist",attemptId:`conversation-reply:${message.id}`,
+          inputData:{conversationId,sourceMessageId:message.id,historyMessageIds:[...history.map(row=>row.id),message.id],projectId:conversation.projectId??null},
+        });
+        const metadata={replyTaskId:task.id};
+        await tx.update(aiMessages).set({modelMetadata:metadata}).where(eq(aiMessages.id,message.id));
+        return toMessageDto({...message,modelMetadata:metadata});
+      });
+    },
+
     async createMessage(ctx, conversationId, body) {
       const repo = repoFor(ctx, "ai.createMessage");
-      // Write ONLY the user message. The real assistant reply is produced async by the
-      // composition-layer copilot runner (positioning-aware Claude on the user's
-      // subscription token) and appended via appendAssistantMessage; the UI surfaces it
-      // by polling listMessages. The service stays deterministic (no SDK inline).
+      // 流式对话只保存输入；旧公开入口使用原子消息任务方法。
       const userRow = await repo.createMessage(conversationId, {
         role: "user",
         content: body.content,

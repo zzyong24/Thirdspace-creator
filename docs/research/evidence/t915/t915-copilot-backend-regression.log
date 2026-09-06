@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/copilot-message-task.service.test.ts (4 tests | 1 failed) 972ms
+   × 旧公开消息与回复任务同时落库，流式入口的原保存方法不启动第二份回复 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/copilot-message-task.service.test.ts > 旧公开消息与回复任务同时落库，流式入口的原保存方法不启动第二份回复
+ReferenceError: content is not defined
+ ❯ Object.createMessage src/modules/ai/ai.service.ts:829:9
+    827|       // composition-layer copilot runner (positioning-aware Claude on…
+    828|       // subscription token) and appended via appendAssistantMessage; …
+    829|       // by polling listMessages. The service stays deterministic (no …
+       |         ^
+    830|       const userRow = await repo.createMessage(conversationId, {
+    831|         role: "user",
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:11:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 52 passed (53)
+   Start at  18:30:14
+   Duration  12.69s (transform 2.09s, setup 0ms, import 5.48s, tests 18.87s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/copilot-message-task.service.test.ts src/modules/ai/copilot-reply-completion.service.test.ts src/modules/ai-runtime/copilot-business-adapter.test.ts src/modules/ai/ai.contract.test.ts src/modules/ai/ai.acceptance.test.ts src/modules/ai-runtime/effective-skill-snapshot.test.ts src/modules/execution/model-worker-dispatcher.test.ts --maxWorkers=2

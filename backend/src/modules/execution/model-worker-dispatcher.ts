@@ -1,3 +1,4 @@
+import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
 import {createExecutionTopicReadService} from "./execution-topic-read.service";
 import {createDailyTopicCompletionService,type DailyTopicCompletionPorts} from "../ai/daily-topic-completion.service";
 import {buildTrendQuery} from "@creatoros/ai-worker";
@@ -63,6 +64,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
+  const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
   const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
@@ -180,6 +182,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(!candidates)throw new Error("UNSUPPORTED_AGENT_CANDIDATE_PORT");
         const skillId=await leases.withLease(ref,"settlement",async({task})=>(task.payload as {modelInput?:{skillId?:string}}).modelInput?.skillId);
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
+        if(skillId==="copilot.assist" && copilotReplies)return copilotReplies.commitResult(ref,input);
         return candidates.commitResult(ref,input);
       }
       if(port==="heartbeat")return leases.withLease(ref,"admission",async({tx,task})=>{

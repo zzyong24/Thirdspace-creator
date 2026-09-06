@@ -1,3 +1,4 @@
+import {COPILOT_ASSIST_TEMPLATE} from "./templates/copilot-assist";
 /**
  * 提示词模板注册表(脊柱-1 → 三位一体一等入口,SPEC §4)—— 集中持有所有 AI 能力的 skill
  * (提示词模板 ⊕ 工具集 ⊕ 输出 Zod schema),可查、可版本化、可被外部源覆盖。
@@ -107,6 +108,7 @@ const SCHEMA_OVERRIDES = new Map<string, SchemaValidator>();
 
 /** 全部内置 skill(三位一体)。 */
 const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
+  COPILOT_ASSIST_TEMPLATE,
   CREATOROS_GUIDE_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
   SCRIPT_DRAFT_TEMPLATE,

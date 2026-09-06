@@ -505,7 +505,7 @@ import {
   runVideoDecisions,
   storyboardFromContentData,
 } from "@creatoros/backend/modules/ai-runtime";
-import { runCopilotAssist } from "@creatoros/backend/modules/ai-runtime";
+import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
@@ -4822,44 +4822,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             .catch(() => undefined);
         });
       }
-      // 全局 AI 助手 (copilot.assist) — a USER message create fires the positioning-aware
-      // assistant runner in the BACKGROUND (fire-and-forget, mirrors the task triggers).
-      // The runner reads the conversation, assembles the positioning brief (+ 飞轮
-      // learnings), runs real Claude, and appends the assistant reply via the service; the
-      // UI polls listMessages for it. The AI module/service stays deterministic.
+      // 只唤醒已与消息同事务保存的真实回复任务；重启可扫描 queued 任务恢复。
       if (endpoint.id === "ai.conversations.messages.create" && ctx) {
-        const { params, body } = (input ?? {}) as {
-          params?: { conversationId?: string };
-          body?: { projectId?: string };
-        };
-        const conversationId =
-          typeof params?.conversationId === "string"
-            ? params.conversationId
-            : "";
-        if (conversationId) {
-          const positioningReader = {
-            getPositioningCenter: (c: RequestContext) =>
-              positioningService.getPositioningCenter(c),
-          };
-          const learningsReader = {
-            getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
-              learningsService.getSuggestions(c, opts),
-          };
-          void runCopilotAssist(
-            ctx,
-            {
-              conversationId,
-              projectId:
-                typeof body?.projectId === "string" ? body.projectId : null,
-            },
-            {
-              ai: aiService,
-              positioning: positioningReader,
-              learnings: learningsReader,
-              llm: llmCompleter,
-            },
-          );
-        }
+        const message = (res as {data:{modelMetadata?:{replyTaskId?:unknown}}}).data;
+        const replyTaskId = message.modelMetadata?.replyTaskId;
+        if (typeof replyTaskId !== "string" || !replyTaskId) throw new Error("回复任务未保存");
+        const execution = modelWorker
+          ? businessExecution.prepare(ctx,replyTaskId).then(()=>{modelWorker.start();})
+          : Promise.reject(new Error("生成服务未就绪，请修复或更新应用"));
+        void execution.catch(async error=>{
+          await aiService.markFailed(ctx,replyTaskId,error instanceof Error?error.message:String(error)).catch(()=>undefined);
+        });
       }
       return res;
     },
@@ -9652,6 +9625,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "copilot.assist":createCopilotBusinessAdapter({ai:aiService,positioning:generationContext.positioning,learnings:generationContext.learnings,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "scheduled.topic.daily":dailyTopicAdapter,
     "topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),

@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/copilot-reply-completion.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/copilot-reply-completion.service.test.ts [ src/modules/ai/copilot-reply-completion.service.test.ts ]
+Error: Cannot find module './copilot-reply-completion.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/copilot-reply-completion.service.test.ts
+ ❯ src/modules/ai/copilot-reply-completion.service.test.ts:5:1
+      3| import {createPersistentTaskService} from '../execution/persistent-tas…
+      4| import {createExecutionCallLedgerService} from '../execution/execution…
+      5| import {createCopilotReplyCompletionService} from './copilot-reply-com…
+       | ^
+      6| const ctx={userId:'reply-u',accountId:'reply-a',requestId:'test',sourc…
+      7| let db:Db,close:()=>Promise<void>;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:25:08
+   Duration  1.29s (transform 662ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/copilot-reply-completion.service.test.ts

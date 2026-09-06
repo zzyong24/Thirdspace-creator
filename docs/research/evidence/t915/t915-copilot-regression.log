@@ -1,0 +1,46 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/effective-skill-snapshot.test.ts (10 tests | 1 failed) 26ms
+     × 同名映射集合与 ai-worker official registry 完全等价 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/effective-skill-snapshot.test.ts > [T-513] requiredSkillIdsForTask 确定性注册表 > 同名映射集合与 ai-worker official registry 完全等价
+AssertionError: expected [ 'benchmark.teardown', …(40) ] to deeply equal [ 'benchmark.teardown', …(41) ]
+
+- Expected
++ Received
+
+@@ -6,11 +6,10 @@
+    "chatbox.distill",
+    "chatbox.positioning",
+    "chatbox.review",
+    "chatbox.topic",
+    "comment.qa-sift",
+-   "copilot.assist",
+    "cover.brief",
+    "creatoros.guide",
+    "favorites.triage",
+    "intelligence.topic-adapted-draft",
+    "intelligence.topic-decompose",
+
+ ❯ src/modules/ai-runtime/effective-skill-snapshot.test.ts:230:53
+    228|
+    229|   it("同名映射集合与 ai-worker official registry 完全等价", () => {
+    230|     expect([...REGISTERED_SKILL_TASK_TYPES].sort()).toEqual(
+       |                                                     ^
+    231|       listOfficialSkillBases()
+    232|         .map((base) => base.skillId)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 28 passed (29)
+   Start at  18:26:50
+   Duration  3.28s (transform 1.88s, setup 0ms, import 3.51s, tests 2.36s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/copilot-message-task.service.test.ts src/modules/ai/copilot-reply-completion.service.test.ts src/modules/ai-runtime/copilot-business-adapter.test.ts src/modules/ai/ai.transport.test.ts src/modules/ai-runtime/effective-skill-snapshot.test.ts --maxWorkers=2

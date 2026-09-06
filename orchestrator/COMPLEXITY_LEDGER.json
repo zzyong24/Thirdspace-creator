@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "dc8272343e67e23b4c5881d4594a17f60c014e23e703d563157172f7e12519f0",
+      "file_sha256": "8a6c6a9c3719ec6fe739cad8edc70a3c7140ceaab36bf58de206535fad463dfd",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "fef50038d80d4a0771f2be8d056c03db7903ec9c7872101ced8d0344b0f81d0a",
+      "file_sha256": "403a2652535d1ac69a07b52c045c3918d11a03266ddfcaf2ca25e4bb2a459934",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "23335c3527b22c3119266313bcfd416268747281ca9f066d42bd33a0a9230681",
+      "file_sha256": "fef182ca79d4df2fd35a048858e0b496004271c25205ccf62f9a34e816220f79",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {

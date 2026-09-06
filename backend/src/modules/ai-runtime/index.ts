@@ -51,7 +51,6 @@ export * from "./error-diagnostics";
 // [T-513] account-scoped immutable Effective Skill snapshot：task→skill 确定性映射、
 // official+overlay 合并、server platform policy 注入与 256 KiB 序列化门。
 export * from "./effective-skill-snapshot";
-export * from "./copilot-runner";
 export * from "./creative-context";
 export * from "./knowledge-classify-runner";
 export * from "./knowledge-distill-runner";
@@ -128,3 +127,5 @@ export * from './research-business-adapter';
 export * from './topic-business-adapter';
 
 export {createDailyTopicBusinessAdapter,type DailyTopicPrepareDeps} from "./daily-topic-business-adapter";
+
+export {createCopilotBusinessAdapter} from "./copilot-business-adapter";

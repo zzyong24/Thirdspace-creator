@@ -594,3 +594,5 @@ export { renderSignalQualityBrief, type SignalQualityProfile } from "./nodes/top
 export {buildTrendQuery,formatTrendBrief,formatTrendSourceBrief} from "./nodes/topic-trend-context";
 
 export {topicGenerateFrozenSchema,dailyTopicInputSchema,type TopicGenerateFrozen} from "./execution/topic-worker-input";
+
+export {COPILOT_ASSIST_TEMPLATE,copilotReplySchema,copilotReplyInputSchema} from "./prompt/templates/copilot-assist";

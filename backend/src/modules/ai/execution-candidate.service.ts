@@ -21,6 +21,7 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
         if(task.kind!=="ai_task" || task.ownerType!=="ai_task")throw new ConflictError("当前执行没有AI业务任务");
         const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
         if(!business)throw new ConflictError("AI任务映射或归属不一致");
+        if(business.taskType==="copilot.assist")throw new ConflictError("对话回复必须经消息完成端口");
         if(business.taskType==="scheduled.topic.daily")throw new ConflictError("每日选题必须经调度入池完成端口");
         const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.executionTaskId,task.id),eq(executionCalls.id,input.callId),eq(executionCalls.status,"settled")));
         if(!call || call.resultText!==input.text)throw new ConflictError("提交正文与持久调用证据不符");

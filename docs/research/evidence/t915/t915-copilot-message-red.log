@@ -1,0 +1,69 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/copilot-message-task.service.test.ts (4 tests | 4 failed) 991ms
+   × 旧公开消息与回复任务同时落库，流式入口的原保存方法不启动第二份回复 10ms
+   × 回复任务创建失败回滚用户消息，不能留下无恢复入口的孤儿消息 1ms
+   × 跨账号请求在读取模型/Skill配置前拒绝 1ms
+   × 并发消息各有一个任务，后续消息不会进入前一轮已冻结历史 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/copilot-message-task.service.test.ts > 旧公开消息与回复任务同时落库，流式入口的原保存方法不启动第二份回复
+TypeError: service.createMessageWithReplyTask is not a function
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:13:30
+     11|  const first=await service.createMessage(ctx,conv.id,{content:'历史用户输入'…
+     12|  expect(await db.select().from(aiTasks)).toHaveLength(0);
+     13|  const message=await service.createMessageWithReplyTask(ctx,conv.id,{c…
+       |                              ^
+     14|  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,Stri…
+     15|  expect(task).toMatchObject({taskType:'copilot.assist',status:'queued'…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai/copilot-message-task.service.test.ts > 回复任务创建失败回滚用户消息，不能留下无恢复入口的孤儿消息
+TypeError: service.createMessageWithReplyTask is not a function
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:20:23
+     18| it('回复任务创建失败回滚用户消息，不能留下无恢复入口的孤儿消息',async()=>{
+     19|  const {service}=fixture(true),conv=await service.createConversation(c…
+     20|  await expect(service.createMessageWithReplyTask(ctx,conv.id,{content:…
+       |                       ^
+     21|  expect(await db.select().from(aiMessages).where(eq(aiMessages.convers…
+     22| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/ai/copilot-message-task.service.test.ts > 跨账号请求在读取模型/Skill配置前拒绝
+TypeError: service.createMessageWithReplyTask is not a function
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:25:23
+     23| it('跨账号请求在读取模型/Skill配置前拒绝',async()=>{
+     24|  const {service,resolve}=fixture(),conv=await service.createConversati…
+     25|  await expect(service.createMessageWithReplyTask({...ctx,accountId:'ot…
+       |                       ^
+     26| });
+     27| it('并发消息各有一个任务，后续消息不会进入前一轮已冻结历史',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/ai/copilot-message-task.service.test.ts > 并发消息各有一个任务，后续消息不会进入前一轮已冻结历史
+TypeError: service.createMessageWithReplyTask is not a function
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:29:65
+     27| it('并发消息各有一个任务，后续消息不会进入前一轮已冻结历史',async()=>{
+     28|  const {service}=fixture(),conv=await service.createConversation(ctx,{…
+     29|  const replies=await Promise.all(['甲','乙'].map(content=>service.create…
+       |                                                                 ^
+     30|  const tasks=await Promise.all(replies.map(async m=>(await db.select()…
+     31|  expect(new Set(tasks.map(t=>t.id)).size).toBe(2);
+ ❯ src/modules/ai/copilot-message-task.service.test.ts:29:44
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  18:17:42
+   Duration  3.00s (transform 1.14s, setup 0ms, import 1.87s, tests 991ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/copilot-message-task.service.test.ts
