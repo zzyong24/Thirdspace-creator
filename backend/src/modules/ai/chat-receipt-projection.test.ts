@@ -15,3 +15,10 @@ it("已结算参数错误后模型继续完成，保留错误历史而不反杀�
 it("坏参数没有对应无副作用 invalid_input 回执时仍拒绝",()=>{
  for(const output of [{...failed,error:null,status:"ok"},{...failed,sideEffect:"committed"}])expect(()=>projectChatReceipts(calls(output),input)).toThrow();
 });
+
+it("误传内部回执时也不把内部正文或工具请求投影到聊天",()=>{
+ const original:Parameters<typeof projectChatReceipts>[0]=calls(failed);
+ original.splice(2,0,{...model("child",[{type:"text",text:"内部候选"},{type:"tool-call",toolCallId:"forged",toolName:"unknown",input:"{}"}],"tool-calls"),parentCallId:"tool"});
+ const result=projectChatReceipts(original,input);
+ expect(result.content).toBe("已经解释输入问题");expect(JSON.stringify(result.parts)).not.toContain("内部候选");
+});

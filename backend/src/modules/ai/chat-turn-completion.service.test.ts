@@ -1,3 +1,6 @@
+import { z } from "zod";
+import { createExecutionAgenticToolPorts } from "../execution/execution-agentic-tool-ports.service";
+import { createChatToolStreamProjection } from "../execution/chat-tool-stream-projection.service";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { createDb, aiConversations, aiMessages, aiTasks, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, eq, sql, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
@@ -13,6 +16,7 @@ const now = () => "2026-09-05T22:00:00.000Z", budget = { maxCalls: 6, maxTokens:
 beforeAll(async () => { const f = await createDb(); db = f.db; close = () => f.client.close(); });
 afterAll(async () => close());
 async function fixture(options: {
+    tools?: ReturnType<typeof chatWorkerInputSchema.parse>["tools"];
     text?: string;
     content?: Array<Record<string,unknown>>;
     finishReason?: string;
@@ -23,7 +27,7 @@ async function fixture(options: {
     const repo = createAiRepository(db, { userId: ctx.userId, accountId: ctx.accountId, now, nextId: prefix => `${prefix}-${++sequence}` });
     const conversation = await repo.createConversation({ title: "会话", projectId: null, scope: "global" });
     const source = await repo.createMessage(conversation.id, { role: "user", content: "问题", attachments: [], modelMetadata: {} });
-    const submit = await createChatTurnSubmissionService(db, { now, assemble: async () => ({ capability: "copilot.assist", system: "策略", messages: [{ role: "user", content: "问题" }], maxSteps: 6, maxOutputTokens: 128, tools: [] }) }).submit(ctx, { conversationId: conversation.id, sourceMessageId: source.id });
+    const submit = await createChatTurnSubmissionService(db, { now, assemble: async () => ({ capability: "copilot.assist", system: "策略", messages: [{ role: "user", content: "问题" }], maxSteps: 6, maxOutputTokens: 128, tools: options.tools ?? [] }) }).submit(ctx, { conversationId: conversation.id, sourceMessageId: source.id });
     const tasks = createPersistentTaskService(db, { now }), claim = (await tasks.claimTask({ taskId: submit.executionTaskId, workerId: "worker" }))!;
     const ref = { executionTaskId: submit.executionTaskId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken };
     const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId));
@@ -38,7 +42,7 @@ async function fixture(options: {
         await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: 1, messages: [{ role: "assistant", callId: call.callId }] });
     const service = createChatTurnCompletionService(db, { now }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
     const rows = async () => ({ messages: await repo.listMessages(conversation.id), results: await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, submit.taskId)), business: (await db.select().from(aiTasks).where(eq(aiTasks.id, submit.taskId)))[0]!, task: (await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId)))[0]!, call: (await db.select().from(executionCalls).where(eq(executionCalls.id, call.callId)))[0]! });
-    return { ctx, repo, source, conversation, submit, ref, task: task!, call, service, request, rows };
+    return { ctx, repo, source, conversation, submit, ref, task: task!, call, service, request, rows, ledger, generation, frozen };
 }
 it("同一完成请求并发或回放只有一条消息，消息/任务/回执一起完成", async () => {
     const f = await fixture();
@@ -176,4 +180,24 @@ it("旧已完成任务缺结束事件时仅补事件，不重复消息或结果"
  await Promise.all([f.service.commitResult(f.ref,f.request),f.service.commitResult(f.ref,f.request)]);
  expect(await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id))).toHaveLength(1);
  expect((await f.rows()).messages).toHaveLength(2);expect((await f.rows()).results).toHaveLength(1);
+});
+
+it("内部模型不进入最终消息，但真实用量计入整个聊天回合",async()=>{
+ const tools={"web.read":{version:"1",parameters:z.object({}).strict(),effect:"none" as const}};
+ const f=await fixture({checkpoint:false,finishReason:"tool-calls",content:[{type:"tool-call",toolCallId:"read",toolName:"web_read",input:"{}"}],tools:[{name:"web.read",version:"1",description:"测试读取",parameters:{type:"object"},effect:"none"}]});
+ const ports=createExecutionAgenticToolPorts(db,{now,budget,tools});
+ const parent=await ports.reserve(f.ref,{modelCallId:f.call.callId,toolCallId:"read"});await ports.start(f.ref,{callId:parent.callId});
+ const child=await f.ledger.reserve(f.ref,{operationKey:"internal",kind:"model",parentCallId:parent.callId,inputDigest:"sha256:"+"c".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);
+ await f.ledger.settle(f.ref,child.id,{status:"settled",usage:{},providerResult:{content:[{type:"text",text:"内部内容不可显示"}],finishReason:{unified:"stop"},usage:{inputTokens:{total:4},outputTokens:{total:3}},warnings:[]}});
+ await ports.settle(f.ref,{callId:parent.callId,status:"settled",output:{status:"ok",summary:"完成",evidence:[],data:{kind:"read.result"},error:null,continuation:null,sideEffect:"none"}});
+ await createChatToolStreamProjection(db,{now,tools})(f.ref,parent.callId);
+ const last=await f.generation.reserveGenerationCall(f.ref,{operationKey:`${f.frozen.operationKey}/model/2`,request:{maxOutputTokens:128}});await f.ledger.start(f.ref,last.callId);
+ await f.generation.settleGenerationCall(f.ref,{callId:last.callId,status:"settled",usage:{},providerResult:{content:[{type:"text",text:"外层最终回复"}],finishReason:{unified:"stop"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]}});
+ await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:4,messages:[{role:"assistant",callId:f.call.callId},{role:"tool",callId:parent.callId},{role:"assistant",callId:last.callId}]});
+ await expect(f.service.commitResult(f.ref,{lastModelCallId:child.id,toolCallIds:[parent.callId]})).rejects.toThrow();
+ const request={lastModelCallId:last.callId,toolCallIds:[parent.callId]};
+ await f.service.commitResult(f.ref,request);await f.service.commitResult(f.ref,request);
+ const rows=await f.rows();expect(rows.messages).toHaveLength(2);
+ expect(rows.messages[1]).toMatchObject({content:"外层最终回复",inputTokens:8,outputTokens:9});
+ expect(JSON.stringify(rows.messages[1]!.parts)).not.toContain("内部内容不可显示");
 });

@@ -1,0 +1,63 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-checkpoint.service.test.ts (18 tests | 1 failed | 17 skipped) 1045ms
+     × 内部模型回执不进入聊天消息，父未结束仍保留恢复事实与全量用量 54ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-checkpoint.service.test.ts > 持久检查点与权威调用事实 > 内部模型回执不进入聊天消息，父未结束仍保留恢复事实与全量用量
+AssertionError: expected [ { …(5) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "callId": "call_8084cdfb-f368-4f06-b301-bf3c4a1b7a58",
++     "kind": "model",
++     "providerResult": {
++       "content": [
++         {
++           "text": "不能进入聊天的内部候选",
++           "type": "text",
++         },
++       ],
++       "finishReason": {
++         "unified": "stop",
++       },
++       "usage": {
++         "inputTokens": {
++           "total": 4,
++         },
++         "outputTokens": {
++           "total": 3,
++         },
++       },
++       "warnings": [],
++     },
++     "resultText": null,
++     "sequence": 3,
++   },
++ ]
+
+ ❯ src/modules/execution/execution-checkpoint.service.test.ts:166:44
+    164|     await f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerS…
+    165|     const pending=await f.checkpoints.read(f.ref);
+    166|     expect(pending.uncheckpointedReceipts).toEqual([]);
+       |                                            ^
+    167|     expect(pending.childCalls).toMatchObject([{callId:child.id,parentC…
+    168|     expect(pending.recovery).toBe("requires_reconciliation");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 skipped (18)
+   Start at  00:47:00
+   Duration  2.48s (transform 761ms, setup 0ms, import 1.30s, tests 1.04s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-checkpoint.service.test.ts -t 内部模型回执

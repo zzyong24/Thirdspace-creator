@@ -262,3 +262,10 @@ it("磁盘数据库关闭重开后保持原游标和内容，迁移重复启动�
     await rm(dir, { recursive: true, force: true });
   }
 }, 15000);
+
+it("内部模型不能写入对外展示流",async()=>{
+ const f=await fixture("private-child");
+ const parent=await f.ledger.reserve(f.ref,{operationKey:"parent",kind:"tool",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:0});await f.ledger.start(f.ref,parent.id);
+ const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.id,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);
+ await expect(f.stream.append(f.ref,{callId:child.id,startIndex:0,chunks:[chunk("内部秘密")]})).rejects.toThrow();
+});

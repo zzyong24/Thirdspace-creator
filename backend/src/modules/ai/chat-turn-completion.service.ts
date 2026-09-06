@@ -1,3 +1,4 @@
+import { partitionExecutionCalls } from "../execution/execution-call-tree";
 import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema, workerProviderReceiptSchema, executionCheckpointSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
@@ -31,14 +32,15 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 if (!source || source.role !== "user" || object(source.modelMetadata).chatTaskId !== business.id || JSON.stringify(history.map(message => message.id)) !== JSON.stringify(sourceInput.historyMessageIds) || chatHistoryDigest({ conversation, messages: history, sourceMessage: source }) !== sourceInput.historyDigest)
                     throw new ConflictError("会话来源已变化");
                 const calls = await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)).orderBy(asc(executionCalls.sequence));
-                const confirmed = calls.filter(call => call.status !== "rejected"), lastModel = confirmed.filter(call => call.kind === "model").at(-1);
+                const {roots}=partitionExecutionCalls(calls);
+                const confirmed = calls.filter(call => call.status !== "rejected"), rootConfirmed=roots.filter(call=>call.status!=="rejected"), lastModel = rootConfirmed.filter(call => call.kind === "model").at(-1);
                 if (!lastModel || lastModel.id !== request.lastModelCallId || confirmed.some(call => call.status !== "settled") || JSON.stringify(confirmed.filter(call => call.kind === "tool").map(call => call.id).sort()) !== JSON.stringify([...request.toolCallIds].sort()))
                     throw new ConflictError("聊天调用回执不完整");
                 const checkpoint = executionCheckpointSchema.parse(task.checkpoint);
-                if (checkpoint.ledgerSequence !== calls.at(-1)?.sequence || JSON.stringify(checkpoint.messages) !== JSON.stringify(confirmed.map(call => ({ role: call.kind === "model" ? "assistant" : "tool", callId: call.id }))))
+                if (checkpoint.ledgerSequence !== calls.at(-1)?.sequence || JSON.stringify(checkpoint.messages) !== JSON.stringify(rootConfirmed.map(call => ({ role: call.kind === "model" ? "assistant" : "tool", callId: call.id }))))
                     throw new ConflictError("聊天检查点尚未确认全部调用");
                 const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
-                const projected = projectChatReceipts(confirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk))), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
+                const projected = projectChatReceipts(rootConfirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk))), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
                 const assertCards=()=>{
                 // 工具结算与补卡是不同事务；卡片未确认时保持原任务可恢复，不能先发布结束。
                 for(const part of projected.parts.filter(part=>typeof part.toolCallId==="string")){
@@ -63,7 +65,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                     const saved = messages.find(message => message.id === messageId);
                     if (chatInputDigest(existing.resultData) !== chatInputDigest(resultData) || existing.aiTaskId !== business.id || existing.resultType !== "conversation_reply" || existing.executionCallId !== lastModel.id || lastModel.resultRef !== resultId || task.status !== projected.outcome || business.status !== projected.outcome || !saved || saved.role !== "assistant" || saved.content !== projected.content || chatInputDigest(saved.parts) !== chatInputDigest(projected.parts) || chatInputDigest(saved.modelMetadata) !== chatInputDigest(metadata))
                         throw new ConflictError("聊天完成回执不一致");
-                    if(!finishes.length)await restoreHistoricalChatToolCards(tx,task.id,confirmed,projected.parts,events,now);
+                    if(!finishes.length)await restoreHistoricalChatToolCards(tx,task.id,rootConfirmed,projected.parts,events,now);
                     assertCards();
                     await appendFinish();
                     return { resultId, aiTaskId: business.id, messageId, outcome: projected.outcome };

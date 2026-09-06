@@ -4,6 +4,7 @@ import { ConflictError } from "../execution/execution.errors";
 type Json = z.infer<ReturnType<typeof z.json>>;
 type Call = {
     id: string;
+    parentCallId?: string | null;
     kind: string;
     providerResult: unknown;
     resultText: string | null;
@@ -14,6 +15,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
     const parts: Record<string, Json>[] = [], pending = new Map<string, Record<string, Json>>(), seen = new Set<string>(), invalidInputs = new Set<string>();
     let finishReason = "", hasOutput = false;
     for (const call of calls) {
+        if (call.parentCallId) continue;
         if (call.kind === "model") {
             if (pending.size)
                 throw new ConflictError("前一模型回合尚有工具未完成");

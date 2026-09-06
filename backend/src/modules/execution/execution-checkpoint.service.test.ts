@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createDb, eq, executionTasks, type Db } from "@creatoros/backend";
+import { createDb, eq, executionTasks, executionCalls, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
@@ -152,6 +152,56 @@ describe("持久检查点与权威调用事实", () => {
     await expect(f.checkpoints.read(f.ref)).rejects.toMatchObject({name:"ConflictError"});
     await expect(f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerSequence:0,messages:[]})).rejects.toMatchObject({name:"ConflictError"});
   });
+  it("内部模型回执不进入聊天消息，父未结束仍保留恢复事实与全量用量",async()=>{
+    const f=await fixture("nested-projection");
+    const model=await f.call("root","model",false);
+    await f.ledger.settle(f.ref,model.id,{status:"settled",usage:{totalTokens:15},providerResult:{content:[{type:"tool-call",toolCallId:"generate",toolName:"topic.generate",input:"{}"}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:10},outputTokens:{total:5}},warnings:[]}});
+    const parent=await f.call("parent","tool",false);
+    const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.id,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});
+    await f.ledger.start(f.ref,child.id);
+    const providerResult={content:[{type:"text",text:"不能进入聊天的内部候选"}],finishReason:{unified:"stop"},usage:{inputTokens:{total:4},outputTokens:{total:3}},warnings:[]};
+    await f.ledger.settle(f.ref,child.id,{status:"settled",usage:{},providerResult});
+    await f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerSequence:3,messages:[{role:"assistant",callId:model.id}]});
+    const pending=await f.checkpoints.read(f.ref);
+    expect(pending.uncheckpointedReceipts).toEqual([]);
+    expect(pending.childCalls).toMatchObject([{callId:child.id,parentCallId:parent.id,status:"settled",providerResult}]);
+    expect(pending.recovery).toBe("requires_reconciliation");
+    expect(pending.knownSpentTokens).toBe(22);
+    await expect(f.checkpoints.save(f.ref,{expectedRevision:1,expectedLedgerSequence:3,messages:[{role:"assistant",callId:model.id},{role:"assistant",callId:child.id}]})).rejects.toMatchObject({name:"ConflictError"});
+    await f.ledger.settle(f.ref,parent.id,{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify({schemaVersion:1,kind:"tool",toolCallId:"generate",toolName:"topic.generate",output:{}})});
+    await f.checkpoints.save(f.ref,{expectedRevision:1,expectedLedgerSequence:3,messages:[{role:"assistant",callId:model.id},{role:"tool",callId:parent.id}]});
+    const saved=await f.checkpoints.read(f.ref);
+    expect(saved.messages.map(message=>message.callId)).toEqual([model.id,parent.id]);
+    expect(saved.uncheckpointedReceipts).toEqual([]);
+    expect(saved.recovery).toBe("ready");
+    expect(saved.spentTokens).toBe(22);
+    expect(saved.childCalls).toHaveLength(1);
+  });
+
+  it.each(["foreign","self","sequence","closed-unknown","rejected-parent"])("损坏父子账本不能借消息过滤隐藏：%s",async(mode)=>{
+    const f=await fixture(`broken-tree-${mode}`),parent=await f.call("parent","tool",false);
+    const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.id,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);
+    if(mode==="foreign"){
+      const other=await fixture("foreign-parent"),foreign=await other.call("parent","tool",false);
+      await db.update(executionCalls).set({parentCallId:foreign.id}).where(eq(executionCalls.id,child.id));
+    }else if(mode==="self")await db.update(executionCalls).set({parentCallId:child.id}).where(eq(executionCalls.id,child.id));
+    else if(mode==="sequence")await db.update(executionCalls).set({sequence:3}).where(eq(executionCalls.id,parent.id));
+    else if(mode==="closed-unknown"){
+      await f.ledger.settle(f.ref,child.id,{status:"unknown"});
+      await db.update(executionCalls).set({status:"settled"}).where(eq(executionCalls.id,parent.id));
+    }else await db.update(executionCalls).set({status:"rejected"}).where(eq(executionCalls.id,parent.id));
+    await expect(f.checkpoints.read(f.ref)).rejects.toMatchObject({name:"ConflictError"});
+    await expect(f.checkpoints.save(f.ref,{expectedRevision:0,expectedLedgerSequence:mode==="sequence"?3:2,messages:[]})).rejects.toMatchObject({name:"ConflictError"});
+  });
+  it("内部模型未知时保留子调用对账事实，不当成普通消息待重放",async()=>{
+    const f=await fixture("nested-unknown"),parent=await f.call("parent","tool",false);
+    const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.id,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);await f.ledger.settle(f.ref,child.id,{status:"unknown"});
+    const state=await f.checkpoints.read(f.ref);
+    expect(state.childCalls).toMatchObject([{callId:child.id,parentCallId:parent.id,status:"unknown"}]);
+    expect(state.messages).toEqual([]);expect(state.uncheckpointedReceipts).toEqual([]);
+    expect(state.spentTokens).toBeNull();expect(state.recovery).toBe("requires_reconciliation");
+  });
+
 });
 
 it.each(["needs_login","captcha","browser_runtime_unavailable"] as const)("真实Pi与PGlite：只有显式resume认可旧%s阻断，新阅读仍须新模型新调用",async(blockedReason)=>{

@@ -41,7 +41,7 @@ export function createExecutionStreamService(
               eq(executionCalls.executionTaskId, task.id),
             ),
           );
-        if (!call || !["model", "tool"].includes(call.kind))
+        if (!call || call.parentCallId || !["model", "tool"].includes(call.kind))
           throw new ConflictError("流内容没有所属调用");
         if(chatWorkerInputSchema.safeParse((task.payload as Record<string,unknown>).modelInput).success &&
           (call.kind!=="model" || input.chunks.some(chunk=>!["text-start","text-delta","text-end","reasoning-start","reasoning-delta","reasoning-end","source-url","source-document","file","reasoning-file"].includes(chunk.type))))

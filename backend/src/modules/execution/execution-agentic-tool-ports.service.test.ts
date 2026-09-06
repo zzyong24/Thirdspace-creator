@@ -97,3 +97,13 @@ it("冻结预演不能将真实副作用结算成成功",async()=>{
  await f.ports.settle(f.ref,{callId:a.callId,status:"settled",output:{...output,evidence:[],data:{plan:{toolName:"web.search"}}}});
  expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
 });
+
+it("内部模型不能授予工具执行权，也不替代真正的外层模型回合",async()=>{
+ const f=await fixture("nested-authority");const root=await f.model("root");
+ const parent=await f.ports.reserve(f.ref,root);await f.ports.start(f.ref,{callId:parent.callId});
+ const child=await f.ledger.reserve(f.ref,{operationKey:"child",kind:"model",parentCallId:parent.callId,inputDigest:"sha256:"+"c".repeat(64),reservedTokens:20});await f.ledger.start(f.ref,child.id);
+ await f.ledger.settle(f.ref,child.id,{status:"settled",usage:{},providerResult:{content:[{type:"tool-call",toolCallId:"forged",toolName:"web.search",input:'{"query":"越权"}'}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
+ await expect(f.ports.reserve(f.ref,{modelCallId:child.id,toolCallId:"forged"})).rejects.toThrow();
+ await f.ports.settle(f.ref,{callId:parent.callId,status:"settled",output});
+ expect((await f.ports.reserve(f.ref,root)).status).toBe("settled");
+});

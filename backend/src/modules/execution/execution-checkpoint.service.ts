@@ -1,3 +1,4 @@
+import { partitionExecutionCalls } from "./execution-call-tree";
 import { createHash } from "node:crypto";
 import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import {
@@ -36,7 +37,8 @@ function modelToolCalls(call:Call) {
   return tools;
 }
 function reconstruct(refs:MessageRef[], calls:Call[]) {
-  const confirmed = calls.filter(hasReceipt);
+  const {roots} = partitionExecutionCalls(calls);
+  const confirmed = roots.filter(hasReceipt);
   const pendingTools = new Map<string,string>();
   const seenTools = new Set<string>();
   const messages = refs.map((ref,index) => {
@@ -45,7 +47,7 @@ function reconstruct(refs:MessageRef[], calls:Call[]) {
     if (!call || call.id !== ref.callId || (ref.role === "assistant" ? call.kind !== "model" : call.kind !== "tool")) {
       throw new ConflictError("检查点消息不匹配当前任务的已确认调用顺序");
     }
-    if (calls.some(previous=>previous.sequence<call.sequence && previous.status!=="rejected" && !hasReceipt(previous))) {
+    if (roots.some(previous=>previous.sequence<call.sequence && previous.status!=="rejected" && !hasReceipt(previous))) {
       throw new ConflictError("不能越过较早的未确定调用保存消息");
     }
     if (ref.role === "assistant") {
@@ -100,13 +102,15 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         if(task.kind!=="ai_task")throw new ConflictError("当前任务不支持 Agent 检查点");
         const checkpoint=parseCheckpoint(task.checkpoint);
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+        const {roots,children}=partitionExecutionCalls(calls);
         const reconstructed=reconstruct(checkpoint?.messages ?? [],calls);
         const acknowledged=(task.payload as {researchBlockedAcknowledgedCallIds?:unknown} | null)?.researchBlockedAcknowledgedCallIds;
         const acknowledgedIds=new Set(Array.isArray(acknowledged)?acknowledged.filter((id):id is string=>typeof id==="string"):[]);
         const acknowledgedBlockedCallIds=calls.filter(call=>acknowledgedIds.has(call.id) && isAcknowledgableResearchBlock(call)).map(call=>call.id);
         const confirmedIds=new Set(reconstructed.messages.map(message=>message.callId));
         const pendingCalls=calls.filter(call=>["reserved","started","unknown"].includes(call.status)).map(call=>({callId:call.id,operationKey:call.operationKey,status:call.status,startedAttempt:call.startedAttempt,kind:call.kind}));
-        const uncheckpointedReceipts=calls.filter(call=>hasReceipt(call) && !confirmedIds.has(call.id)).map(call=>({callId:call.id,kind:call.kind,sequence:call.sequence,resultText:call.resultText,providerResult:call.providerResult}));
+        const uncheckpointedReceipts=roots.filter(call=>hasReceipt(call) && !confirmedIds.has(call.id)).map(call=>({callId:call.id,kind:call.kind,sequence:call.sequence,resultText:call.resultText,providerResult:call.providerResult}));
+        const childCalls=children.map(call=>({callId:call.id,parentCallId:call.parentCallId!,operationKey:call.operationKey,sequence:call.sequence,status:call.status,startedAttempt:call.startedAttempt,providerResult:call.providerResult,rejectionCode:call.rejectionCode}));
         const unknownUsage=calls.some(call=>call.status==="unknown" || (call.status==="settled" && call.totalTokens===null));
         const incompleteReceipt=calls.some(call=>{
           if(call.status!=="settled")return false;
@@ -119,7 +123,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";
         return {schemaVersion:1 as const,revision:checkpoint?.revision ?? 0,ledgerSequence:calls.at(-1)?.sequence ?? 0,
-          ...reconstructed,pendingCalls,uncheckpointedReceipts,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
+          ...reconstructed,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
           knownSpentTokens,spentTokens:unknownUsage?null:knownSpentTokens,
           reservedTokens:calls.reduce((sum,call)=>sum+(call.status==="rejected" || call.totalTokens!==null?0:call.reservedTokens),0)};
       });

@@ -22,7 +22,7 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const frozen=chat.success ? {...chat.data,dryRun:false} : frozenTools.parse(rawInput);
   if(chat.success && (chat.data.userId!==task.userId || chat.data.accountId!==task.accountId))throw new ConflictError("聊天冻结输入归属不符");
   const model=calls.find(call=>call.id===request.modelCallId);
-  if(!model || model.kind!=="model" || model.status!=="settled" || !model.providerResult)throw new ConflictError("工具缺少已确认模型调用");
+  if(!model || model.parentCallId || model.kind!=="model" || model.status!=="settled" || !model.providerResult)throw new ConflictError("工具缺少已确认模型调用");
   const receipt=model.providerResult as {content:unknown[];finishReason:{unified:string}};
   const matching=receipt.content.filter(part=>part && typeof part==="object" && "toolCallId" in part && part.toolCallId===request.toolCallId);
   if(matching.length!==1 || receipt.finishReason.unified!=="tool-calls")throw new ConflictError("模型工具调用不唯一或不完整");
@@ -47,7 +47,7 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");
-  for(const model of calls.filter(candidate=>candidate.kind==="model" && candidate.status==="settled" && candidate.providerResult)){
+  for(const model of calls.filter(candidate=>candidate.kind==="model" && !candidate.parentCallId && candidate.status==="settled" && candidate.providerResult)){
    for(const part of (model.providerResult as {content:unknown[]}).content){
     const parsed=checkpointToolCallSchema.safeParse(part);if(!parsed.success || operationKey(model.id,parsed.data.toolCallId)!==call.operationKey)continue;
     const bound=binding(task,calls,{modelCallId:model.id,toolCallId:parsed.data.toolCallId});

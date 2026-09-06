@@ -38,7 +38,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
    const bound=binding.bind(task,calls,request);
    // 回放已确认工具允许读取原授权结果；未执行工具只能来自当前模型回合。
    const previous=calls.find(call=>call.operationKey===bound.operationKey);
-   if(previous?.status!=="settled" && calls.filter(call=>call.kind==="model").at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
+   if(previous?.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
    return {bound,context,previous};
   });
  }
