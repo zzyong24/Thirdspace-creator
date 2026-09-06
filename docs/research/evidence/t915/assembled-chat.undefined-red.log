@@ -1,0 +1,42 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts (23 tests | 2 failed | 21 skipped) 960ms
+   × 装配显式返回可选 undefined 时，落库摘要仍可被租约读取及重复提交核对 23ms
+   × 宿主上下文可选 undefined 也按数据库 JSON 形态保存摘要 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 装配显式返回可选 undefined 时，落库摘要仍可被租约读取及重复提交核对
+ConflictError: 聊天执行映射无效
+ ❯ existing src/modules/ai/chat-turn-submission.service.ts:51:452
+
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:58:20
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:220:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai/chat-turn-submission.service.test.ts > 宿主上下文可选 undefined 也按数据库 JSON 形态保存摘要
+ConflictError: 宿主上下文摘要不符
+ ❯ readChatHostContextPair src/modules/ai/chat-host-context.ts:40:50
+     38|   if(raw===undefined || typeof digest!=="string")throw new ConflictErr…
+     39|   const value=validateChatHostContext(raw,owner);
+     40|   if(chatHostContextDigest(value)!==digest)throw new ConflictError("宿主…
+       |                                                  ^
+     41|   return value;
+     42| }
+ ❯ existing src/modules/ai/chat-turn-submission.service.ts:52:5
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:58:20
+ ❯ src/modules/ai/chat-turn-submission.service.test.ts:233:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 21 skipped (23)
+   Start at  03:03:04
+   Duration  2.11s (transform 563ms, setup 0ms, import 1.01s, tests 960ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/chat-turn-submission.service.test.ts -t undefined

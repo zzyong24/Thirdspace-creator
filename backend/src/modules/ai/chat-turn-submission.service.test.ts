@@ -212,3 +212,23 @@ it("开场生成快照随真实任务持久化并受原摘要保护",async()=>{
  await db.update(executionTasks).set({payload:{...payload,hostContext:{...frozen,scriptHooksContext:{...original,positioningBrief:"被篡改"}}}}).where(eq(executionTasks.id,result.executionTaskId));
  await expect(reader.read(ref)).rejects.toThrow("摘要不符");
 });
+
+it("装配显式返回可选 undefined 时，落库摘要仍可被租约读取及重复提交核对",async()=>{
+ const f=await fixture();
+ const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),forcedTool:undefined,forcedToolSequence:undefined})});
+ const submitted=await service.submit(f.ctx,f.request);
+ expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
+ const {createPersistentTaskService}=await import("../execution/persistent-task.service");
+ const {readExecutionChatTask}=await import("../execution/execution-chat-tool-ports.service");
+ const claim=(await createPersistentTaskService(db,{now}).claimTask({taskId:submitted.executionTaskId,workerId:"undefined-test"}))!;
+ const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ expect((await readExecutionChatTask(db,ref,now)).input).not.toHaveProperty("forcedTool");
+});
+
+it("宿主上下文可选 undefined 也按数据库 JSON 形态保存摘要",async()=>{
+ const f=await fixture();
+ const frozen={...hostContext(f.ctx),chatContext:{surface:"topics",projectId:undefined,selection:{kind:"candidate",ids:[],label:undefined}}};
+ const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),hostContext:frozen})});
+ const submitted=await service.submit(f.ctx,f.request);
+ expect(await service.submit(f.ctx,f.request)).toMatchObject({...submitted,replayed:true});
+});

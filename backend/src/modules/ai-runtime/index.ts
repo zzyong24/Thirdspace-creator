@@ -34,6 +34,7 @@ export * from "./topic-preference-distill-runner";
 export * from "./chat-context";
 export * from "./chat-runner";
 export { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
+export { createChatTaskToolHost } from "./chat-task-tool-host";
 export * from "./chat-tools";
 export * from "./channel-model-config";
 // [T-429/T-430] 长输入 AI 节点统一的确定性分块、串行执行与进度契约。

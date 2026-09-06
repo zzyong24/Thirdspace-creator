@@ -1,0 +1,9 @@
+Scope: 3 of 6 workspace projects
+contract typecheck$ tsc --noEmit
+contract typecheck: Done
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: Done
+backend typecheck$ tsc --noEmit
+backend typecheck: Done
+
+frontend tsc --noEmit: exit 0
