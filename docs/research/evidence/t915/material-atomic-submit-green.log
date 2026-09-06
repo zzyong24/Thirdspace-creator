@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (30 tests | 5 failed) 4057ms
+   × 素材生成原子提交：ack 不遗留孤立任务或重复提交 10ms
+   × 素材生成原子提交：rollback 不遗留孤立任务或重复提交 2ms
+   × 素材生成原子提交：recover 不遗留孤立任务或重复提交 2ms
+   × 素材生成原子提交：duplicate 不遗留孤立任务或重复提交 2ms
+   × 素材生成原子提交：cancel 不遗留孤立任务或重复提交 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：ack 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：rollback 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：recover 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：duplicate 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：cancel 不遗留孤立任务或重复提交
+ZodError: [
+  {
+    "code": "custom",
+    "message": "事务任务提交声明与工具身份不符",
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ]
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:25:18
+ ❯ src/integration/chat-task-atomic.test.ts:189:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  5 failed | 29 passed (34)
+   Start at  11:24:47
+   Duration  5.86s (transform 2.02s, setup 0ms, import 3.28s, tests 5.09s, environment 0ms)
+

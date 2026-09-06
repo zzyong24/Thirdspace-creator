@@ -1,3 +1,4 @@
+import {chatSubmittedTaskType} from "@creatoros/contract/execution-worker";
 import {z} from "zod";
 import type {executionCalls,executionTasks} from "@creatoros/backend";
 import {chatWorkerInputSchema,workerProviderReceiptSchema} from "@creatoros/contract/execution-worker";
@@ -10,11 +11,11 @@ export function uncommittedChatTaskCalls(task:typeof executionTasks.$inferSelect
  if(calls.some(call=>call.executionTaskId!==task.id || call.status==="unknown" || (call.status==="settled" && (call.totalTokens===null || (call.kind==="model" && !workerProviderReceiptSchema.safeParse(call.providerResult).success)))))return [];
  const model=calls.filter(call=>call.kind==="model" && !call.parentCallId).sort((a,b)=>a.sequence-b.sequence).at(-1);
  if(!model || model.status!=="settled")return [];
- const definition=input.data.tools.find(tool=>tool.execution==="host.task-submit" && tool.name==="planning.thesis" && tool.effect==="committed");
- if(!definition)return [];
+ const definitions=input.data.tools.filter(tool=>tool.execution==="host.task-submit" && chatSubmittedTaskType(tool.name) && tool.effect==="committed");
+ if(!definitions.length)return [];
  try{
-  const parameters=z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0]);
-  const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:"host.task-submit",parameters}});
+  const tools=Object.fromEntries(definitions.map(definition=>[definition.name,{version:definition.version,effect:definition.effect,execution:"host.task-submit" as const,parameters:z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0])}]));
+  const binding=createAgenticToolBinding(tools);
   return calls.filter(call=>{
    if(call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.toolExecutionClaimId || call.resultText || call.resultRef || call.providerResult || call.usage || call.totalTokens!==null || call.reservedTokens!==0 || calls.some(child=>child.parentCallId===call.id))return false;
    try{const bound=binding.forCall(task,calls,call);return bound.execution==="host.task-submit" && bound.modelCallId===model.id;}catch{return false;}

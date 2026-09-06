@@ -12,26 +12,28 @@ import {createExecutionChatToolPorts,type ChatBackendTool} from "../modules/exec
 let db:Db,close:()=>Promise<void>,seq=0;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close());
 const budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
-async function fixture(second=false,start=true){
+async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"="planning.thesis",mixed=false){
+ const childType=toolName==="material.generate"?"asset.generate":"planning.thesis";
+ const modelToolName=toolName.replaceAll(".","_");
  let time=Date.now();const now=()=>new Date(time).toISOString();
  const ctx={userId:"atomic-host",accountId:`account-${++seq}`,requestId:"test",source:"user" as const};
  const ai=createAiService({db,now,nextId:(prefix:string)=>`${prefix}-${++seq}`} as ServiceDeps);
  const conversation=await ai.createConversation(ctx,{title:"原子提交",scope:"global"});
  const source=await ai.createMessage(ctx,conversation.id,{content:"立论点"});
  const parameters=z.object({topic:z.string()}).strict();
- const definition={name:"planning.thesis",version:"atomic-test-v1",effect:"committed",execution:"host.task-submit",description:"论点",parameters:z.toJSONSchema(parameters)};
- const submitted=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"策略",messages:[{role:"user",content:"立论点"}],maxSteps:6,maxOutputTokens:128,tools:[definition] as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const definition={name:toolName,version:"atomic-test-v1",effect:"committed",execution:"host.task-submit",description:"论点",parameters:z.toJSONSchema(parameters)};
+ const submitted=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"策略",messages:[{role:"user",content:"立论点"}],maxSteps:6,maxOutputTokens:128,tools:[definition,...(mixed?[{...definition,name:"planning.thesis"}]:[])] as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const tasks=createPersistentTaskService(db,{now});const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"worker",leaseSeconds:10}))!;
  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const ledger=createExecutionCallLedgerService(db,{now,budget}),generation=createExecutionGenerationPorts(db,{now,budget});
  const model=await generation.reserveGenerationCall(ref,{operationKey:`chat:${source.id}/model/1`,request:{maxOutputTokens:128}});await ledger.start(ref,model.callId);
- await generation.settleGenerationCall(ref,{callId:model.callId,status:"settled",providerResult:{content:[{type:"tool-call",toolCallId:"submit",toolName:"planning_thesis",input:'{"topic":"原主题"}'},...(second?[{type:"tool-call",toolCallId:"submit2",toolName:"planning_thesis",input:'{"topic":"原主题"}'}]:[])],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]},usage:{inputTokens:2,outputTokens:3}});
- const prepare=vi.fn(async(context:typeof ctx,input:any,scope:any)=>({task:await ai.prepareTaskCommit(context,{taskType:"planning.thesis",attemptId:scope.attemptId,inputData:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"已提交论点任务",data:{kind:"planning.thesis",taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
+ await generation.settleGenerationCall(ref,{callId:model.callId,status:"settled",providerResult:{content:[{type:"tool-call",toolCallId:"submit",toolName:modelToolName,input:'{"topic":"原主题"}'},...(second?[{type:"tool-call",toolCallId:"submit2",toolName:modelToolName,input:'{"topic":"原主题"}'}]:[])],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]},usage:{inputTokens:2,outputTokens:3}});
+ const prepare=vi.fn(async(context:typeof ctx,input:any,scope:any)=>({task:await ai.prepareTaskCommit(context,{taskType:childType,attemptId:scope.attemptId,inputData:toolName==="material.generate"?{kind:"image",prompt:input.topic}:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"已提交论点任务",data:{kind:toolName,taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
  const wakeTask=vi.fn(async(_context:typeof ctx,_taskId:string)=>{});
  const approve=vi.fn(async()=>({status:"not-applicable" as const}));
- const host=createExecutionChatToolPorts(db,{now,budget,tools:{"planning.thesis":{...definition,parameters,approve,prepareTask:prepare,wakeTask} as unknown as ChatBackendTool}});
+ const host=createExecutionChatToolPorts(db,{now,budget,tools:{[toolName]:{...definition,parameters,approve,prepareTask:prepare,wakeTask} as unknown as ChatBackendTool,...(mixed?{"planning.thesis":{...definition,name:"planning.thesis",parameters,approve,prepareTask:async()=>{throw new Error("本用例未调用额外论点工具");},wakeTask} as unknown as ChatBackendTool}:{})}});
  const request={modelCallId:model.callId,toolCallId:"submit"};const call=await host.reserve(ref,request);if(start)await host.start(ref,{callId:call.callId});
- const children=()=>ai.listTasks(ctx,{taskType:"planning.thesis",limit:100,offset:0});
+ const children=()=>ai.listTasks(ctx,{taskType:childType,limit:100,offset:0});
  return {ctx,ai,wakeTask,host,ref,call,request,prepare,approve,children,ledger,tasks,advance:()=>{time+=31000;}};
 }
 it("实际宿主原子提交子任务与父回执，ACK丢失后回放不再创建",async()=>{
@@ -181,4 +183,56 @@ it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读�
  let preparationError:unknown;const work=recovery.prepare(f.ctx,id).catch(error=>{preparationError=error;});let stopped=false;
  try{await vi.waitFor(()=>expect(release,String(preparationError)).toBeDefined());const stop=(reason==="stop"?recovery.stop():work).then(()=>{stopped=true;});await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:2500});release();await stop;await work;await Promise.resolve();const [current]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(current!.executionTaskId).toBeNull();expect(current!.status).toBe(reason==="deadline"?"failed":"queued");}
  finally{release?.();await work;await recovery.stop();}
+});
+
+it.each(["ack","rollback","recover","duplicate","cancel"])("素材生成原子提交：%s 不遗留孤立任务或重复提交",async scenario=>{
+ const f=await fixture(scenario==="duplicate",scenario!=="ack","material.generate",scenario==="recover");
+ if(scenario==="rollback"){
+  const original=f.prepare.getMockImplementation()!;f.prepare.mockImplementation(async(...args)=>({...await original(...args),result:()=>{throw new Error("receipt failure");}}));
+  await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.toThrow();expect((await f.children()).rows).toHaveLength(0);
+  f.prepare.mockImplementation(original);
+ }
+ if(scenario==="ack"){
+  let attempts=0;
+  const output=await runDurableAgenticTool(f.request,{signal:new AbortController().signal,call:async(port,raw)=>{
+   if(port==="reserveAgenticTool")return f.host.reserve(f.ref,raw);
+   if(port==="startAgenticTool")return f.host.start(f.ref,raw);
+   if(port==="settleAgenticTool")return f.host.settle(f.ref,raw);
+   throw new Error("unexpected port");
+  },execute:async()=>{attempts++;await f.host.execute(f.ref,{callId:f.call.callId});throw new Error("ACK lost after material commit");}});
+  expect(output).toMatchObject({status:"ok",sideEffect:"committed",data:{kind:"material.generate"}});expect(attempts).toBe(1);
+ }else if(scenario==="recover"){
+  f.advance();await f.tasks.recoverExpiredLeases();
+  const next=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"});expect(next).toBeTruthy();
+  await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.toThrow();
+  const ref={executionTaskId:f.ref.executionTaskId,attempt:next!.lease.attempt,fenceToken:next!.lease.fenceToken};
+  expect((await f.host.reserve(ref,f.request)).status).toBe("reserved");await f.host.start(ref,{callId:f.call.callId});
+  const output=await f.host.execute(ref,{callId:f.call.callId});expect(output).toMatchObject({data:{kind:"material.generate"},sideEffect:"committed"});
+ }else if(scenario==="cancel"){
+  const original=f.prepare.getMockImplementation()!;let release!:()=>void;
+  f.prepare.mockImplementation(async(...args)=>{await new Promise<void>(r=>{release=r;});return original(...args);});
+  const work=f.host.execute(f.ref,{callId:f.call.callId});const failed=expect(work).rejects.toThrow();await vi.waitFor(()=>expect(release).toBeDefined());
+  await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"stop-material"});release();await failed;
+  expect((await f.children()).rows).toHaveLength(0);return;
+ }else{
+  const first=f.host.execute(f.ref,{callId:f.call.callId});
+  if(scenario==="duplicate"){
+   const second=await f.host.reserve(f.ref,{...f.request,toolCallId:"submit2"});await f.host.start(f.ref,{callId:second.callId});
+   expect(await f.host.execute(f.ref,{callId:second.callId})).toEqual(await first);
+  }else{
+   const committed=await first;
+   expect(await f.host.execute(f.ref,{callId:f.call.callId})).toEqual(committed);
+  }
+ }
+ const children=(await f.children()).rows;expect(children).toHaveLength(1);expect(children[0]).toMatchObject({taskType:"asset.generate",inputData:{kind:"image",prompt:"原主题"}});
+ const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));expect(parent!.status).toBe("settled");
+ expect(JSON.parse(parent!.resultText!).output.data.taskId).toBe(children[0]!.id);
+});
+
+it("素材提交不能偷换子任务类型，错误映射在同一事务中回滚",async()=>{
+ const f=await fixture(false,true,"material.generate");
+ f.prepare.mockImplementation(async(context,input,scope)=>({task:await f.ai.prepareTaskCommit(context,{taskType:"planning.thesis",attemptId:scope.attemptId,inputData:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"错误类型",data:{kind:"material.generate",taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
+ await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.toThrow("子任务与原工具");
+ expect((await f.ai.listTasks(f.ctx,{taskType:"planning.thesis",limit:100,offset:0})).rows).toHaveLength(0);
+ expect((await f.children()).rows).toHaveLength(0);
 });

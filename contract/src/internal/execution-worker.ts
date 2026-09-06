@@ -1,3 +1,4 @@
+export {chatSubmittedTaskType} from "./chat-task-submission";
 import {chatWebReadCallSchema,chatWebReadRecordSchema,chatWebReadSessionSaveSchema,chatWebReadFailureSchema} from "./chat-web-read";
 export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
 export { chatWebReadSearchSpecSchema,type ChatWebReadSearchSpec, chatWebReadObservationSchema, chatWebReadCallSchema, chatWebReadRecordSchema, chatWebReadSessionSaveSchema, chatWebReadFailureSchema } from "./chat-web-read";

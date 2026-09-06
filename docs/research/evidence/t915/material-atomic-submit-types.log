@@ -1,0 +1,18 @@
+
+> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+> tsc --noEmit
+
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+
+> creatoros-frontend@1.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+
+> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> tsc --noEmit
+

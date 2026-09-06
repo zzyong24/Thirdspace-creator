@@ -1,3 +1,4 @@
+import {chatSubmittedTaskType} from "./chat-task-submission";
 import { z } from "zod";
 /** SEMANTIC_BOUNDARY_ALLOW:仅编码供应商工具标识符，不判断意图。 */
 export const chatToolProviderName = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
@@ -28,7 +29,7 @@ export const chatWorkerInputSchema = z.object({
   const names = value.tools.map(tool => tool.name);
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.structured-node" && (!["topic.enrich","positioning.generate"].includes(tool.name) || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"结构化子节点声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.script-hooks" && (tool.name!=="script.hooks" || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"内部开场执行声明与工具身份不符",path:["tools",index,"execution"]});
-  for(const [index,tool] of value.tools.entries())if(tool.execution==="host.task-submit" && (tool.name!=="planning.thesis" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"事务任务提交声明与工具身份不符",path:["tools",index,"execution"]});
+  for(const [index,tool] of value.tools.entries())if(tool.execution==="host.task-submit" && (!chatSubmittedTaskType(tool.name) || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"事务任务提交声明与工具身份不符",path:["tools",index,"execution"]});
   if (new Set(names.map(chatToolProviderName)).size !== names.length)
     ctx.addIssue({code:"custom",message:"工具名称编码冲突",path:["tools"]});
   for (const name of [value.forcedTool, ...(value.forcedToolSequence ?? [])])

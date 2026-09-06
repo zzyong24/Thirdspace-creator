@@ -1,3 +1,4 @@
+import {chatSubmittedTaskType} from "@creatoros/contract/execution-worker";
 import {classifyLlmError} from "@creatoros/ai-worker/retry-policy";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
@@ -29,7 +30,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
  }
  function assertPending(state:Awaited<ReturnType<typeof read>>,ref:ExecutionRef){
   const {call,bound,calls}=state;
-  if(bound.execution!=="host.task-submit" || bound.effect!=="committed" || bound.executionToolName!=="planning.thesis" || call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId || call.resultText || call.totalTokens!==null || call.reservedTokens!==0 || calls.some(row=>row.parentCallId===call.id))throw new ConflictError("当前调用不是可提交的原子任务工具");
+  if(bound.execution!=="host.task-submit" || bound.effect!=="committed" || !chatSubmittedTaskType(bound.executionToolName) || call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId || call.resultText || call.totalTokens!==null || call.reservedTokens!==0 || calls.some(row=>row.parentCallId===call.id))throw new ConflictError("当前调用不是可提交的原子任务工具");
   if(calls.filter(row=>row.kind==="model" && !row.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能提交新任务");
  }
  function priorResult(state:Awaited<ReturnType<typeof read>>){
@@ -100,7 +101,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
     let result=current.bound.validationOutcome??permission??reused?.result??preparationFailure;
     if(!result){
      const child=await prepared!.task.commit(scope.tx,{executionTaskId:ref.executionTaskId,callId,inputDigest:current.bound.inputDigest});
-     if(child.taskType!=="planning.thesis" || child.attemptId!==attemptId)throw new ConflictError("子任务与原工具提交不符");
+     if(child.taskType!==chatSubmittedTaskType(current.bound.executionToolName) || child.attemptId!==attemptId)throw new ConflictError("子任务与原工具提交不符");
      result=agenticToolOutcomeSchema.parse(prepared!.result(structuredClone(child)));
      const data=result.data as Record<string,unknown>|undefined;
      if(result.status!=="ok" || result.sideEffect!=="committed" || result.error || data?.kind!==current.bound.executionToolName || data?.taskId!==child.id)throw new ConflictError("子任务回执未引用真实提交结果");

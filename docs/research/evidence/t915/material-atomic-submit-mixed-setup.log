@@ -1,0 +1,23 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (31 tests | 1 failed) 4794ms
+   × 素材生成原子提交：recover 不遗留孤立任务或重复提交 78ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材生成原子提交：recover 不遗留孤立任务或重复提交
+ConflictError: 聊天工具执行或授权端口尚未装配
+ ❯ validateTask src/modules/execution/execution-chat-tool-ports.service.ts:43:760
+
+ ❯ scope src/modules/execution/execution-chat-tool-ports.service.ts:47:3
+ ❯ checkOnce src/modules/execution/execution-chat-tool-ports.service.ts:72:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 34 passed (35)
+   Start at  11:28:38
+   Duration  6.91s (transform 2.40s, setup 0ms, import 3.84s, tests 6.08s, environment 0ms)
+
