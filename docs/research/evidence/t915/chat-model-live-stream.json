@@ -1,0 +1,14 @@
+{
+  "task": "T-915",
+  "tests": 36,
+  "fullTaskComplete": false,
+  "review": "worker_review 独立复核本批无具体阻断",
+  "sourceSha256": {
+    "ai-worker/src/execution/durable-stream-model.ts": "6928bd8dd15d0487ae89a2d5e33ea4409695cfa5774d1c8e10bc9a3bd9d6cefa",
+    "ai-worker/src/execution/durable-stream-model.test.ts": "963ea9a0c0adb677cc6c174f3abe7ba09981f676c1c9726660859b1fbf27dc3b",
+    "ai-worker/src/execution/chat-model-stream-events.ts": "3688f18bda893811a133390e07c5b32452d49795fb60145727e312ab04c87bb9",
+    "ai-worker/src/execution/chat-model-stream-events.test.ts": "370047cd138f74fccc8594b508a7480393a54abd4472a9fd7858680629a705a1",
+    "ai-worker/src/execution/chat-worker-run.ts": "e254eaf6a2bd47654cc4796046583973d24dafe878dccac40c18239f8528470a",
+    "backend/src/integration/chat-worker-entry.test.ts": "b9d9a7434509c35929d4480ea4fddb355fbf02a2ec08ed68a4673abb3757671d"
+  }
+}

@@ -49,6 +49,8 @@ export function createDurableStreamModel(input: {
   operationKey: string;
   ports: DurableGenerationPorts;
   signal?: AbortSignal;
+  /** 仅新的已开始调用创建展示流；历史回放不再次写入。close必须在回执结算前完成。 */
+  streamEvents?(callId:string):{push(part:LanguageModelV4StreamPart):Promise<void>;close():Promise<void>};
 }) {
   if (typeof input.model === "string")
     throw Error("DURABLE_MODEL_REQUIRES_RESOLVED_PROVIDER");
@@ -135,6 +137,7 @@ export function createDurableStreamModel(input: {
           }
           throw failure;
         }
+        const events=input.streamEvents?.(reservation.callId);
         const reader = result.stream.getReader(),
           parts: Record<string, unknown>[] = [],
           content: Record<string, unknown>[] = [],
@@ -151,6 +154,7 @@ export function createDurableStreamModel(input: {
         const unknown = async () => {
           if (settled || settling || stopped) return;
           stopped = true;
+          await events?.close().catch(()=>{});
           await input.ports
             .settle(reservation.callId, { status: "unknown" })
             .catch(() => {});
@@ -237,6 +241,7 @@ export function createDurableStreamModel(input: {
                         }),
                       ),
                     ) as WorkerProviderReceipt;
+                    await events?.close();
                     const usage = receipt.usage;
                     settling = true;
                     try {
@@ -273,6 +278,7 @@ export function createDurableStreamModel(input: {
                   }
                   const part = next.value;
                   accept(part);
+                  await events?.push(part);
                   if (
                     part.type === "tool-call" ||
                     part.type === "tool-approval-request" ||

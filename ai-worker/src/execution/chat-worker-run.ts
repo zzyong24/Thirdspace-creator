@@ -1,3 +1,4 @@
+import { createChatModelStreamEvents } from "./chat-model-stream-events";
 import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import {
@@ -60,7 +61,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     }
     await checkpoint();
   };
-  const model=createDurableStreamModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
+  const model=createDurableStreamModel({model:modelFor(spec),operationKey:input.operationKey,signal,streamEvents:callId=>createChatModelStreamEvents(callId,batch=>ports.call("appendStreamEvents",batch,signal)),ports:{
     reserve:async(request)=>{
       const result=workerReservationSchema.parse(await ports.call("reserveGenerationCall",request,signal));
       if(result.status==="settled" && result.providerResult)await bind(result.callId,result.providerResult);

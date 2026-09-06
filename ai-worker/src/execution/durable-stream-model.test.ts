@@ -49,8 +49,8 @@ function fixture(parts: LanguageModelV4StreamPart[], failSettle = false) {
       if (value.status === "settled") saved = value.providerResult;
     }),
   };
-  const model = () =>
-    createDurableStreamModel({ model: provider, operationKey: "chat", ports });
+  const model = (streamEvents?:Parameters<typeof createDurableStreamModel>[0]["streamEvents"]) =>
+    createDurableStreamModel({ model: provider, operationKey: "chat", ports,streamEvents });
   return { provider, ports, model, states };
 }
 const textParts: LanguageModelV4StreamPart[] = [
@@ -298,4 +298,23 @@ it('等待模型保存回执时取消，不向SDK发布后续工具调用', asyn
   expect((await reader.read()).value?.type).toBe('stream-start');
   const pending=reader.read();await seen;const cancelled=reader.cancel();release();await cancelled;
   expect((await pending).done).toBe(true);expect(f.states).toEqual(['start','settled']);
+});
+
+it("展示流结算前保存，历史模型回放不再发布增量",async()=>{
+ const f=fixture(textParts);
+ const push=vi.fn(async()=>{f.states.push("display");});
+ const close=vi.fn(async()=>{f.states.push("flush");});
+ const events=vi.fn((callId:string)=>{expect(callId).toBe("call");return {push,close};});
+ expect(await streamText({model:f.model(events),prompt:"问题",maxRetries:0}).text).toBe("真实正文");
+ expect(f.states.indexOf("flush")).toBeLessThan(f.states.indexOf("settled"));
+ expect(await streamText({model:f.model(events),prompt:"问题",maxRetries:0}).text).toBe("真实正文");
+ expect(events).toHaveBeenCalledTimes(1);expect(close).toHaveBeenCalledTimes(1);expect(f.provider.doStream).toHaveBeenCalledTimes(1);
+});
+it("展示流保存回执丢失不能先结算模型再重放供应商",async()=>{
+ const f=fixture(textParts), errors:unknown[]=[];
+ const result=await f.model(()=>({push:async()=>{},close:async()=>{throw Error("save ack lost");}})).doStream({prompt:[]});
+ const reader=result.stream.getReader();
+ while(true){const next=await reader.read();if(next.done)break;if(next.value.type==="error")errors.push(next.value.error);}
+ expect(errors).toHaveLength(1);expect(f.states).toEqual(["start","unknown"]);
+ expect(f.provider.doStream).toHaveBeenCalledTimes(1);
 });

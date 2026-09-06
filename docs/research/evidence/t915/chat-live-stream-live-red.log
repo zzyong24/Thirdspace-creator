@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-worker-entry.test.ts (13 tests | 1 failed | 12 skipped) 1613ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：text 409ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：text
+AssertionError: expected '' to be '最终回复' // Object.is equality
+
+- Expected
++ Received
+
+- 最终回复
+
+ ❯ src/integration/chat-worker-entry.test.ts:72:111
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  21:12:57
+   Duration  3.15s (transform 858ms, setup 0ms, import 1.41s, tests 1.61s, environment 0ms)
+

@@ -1,6 +1,7 @@
+import { createExecutionStreamService,subscribeExecutionStream } from "../modules/execution/execution-stream.service";
 import { createServer } from "node:http";
 import { z } from "zod";
-import { createDb,aiMessages,aiTaskResults,executionCalls,executionTasks,eq,type Db } from "@creatoros/backend";
+import { createDb,executionStreamEvents,aiMessages,aiTaskResults,executionCalls,executionTasks,eq,type Db } from "@creatoros/backend";
 import { createChatTurnSubmissionService } from "../modules/ai/chat-turn-submission.service";
 import { createAiRepository } from "../modules/ai/ai.repository";
 import { createChatWorkerDispatcher } from "../modules/execution/model-worker-dispatcher";
@@ -19,15 +20,16 @@ it("正式 Worker 二进制真实声明 chat.run 能力",async()=>{
  try{expect(await worker.start()).toContain("chat.run");}finally{await worker.stop();}
 });
 
-it.each(["text","tool","retry","approval","denied","cancel","unknown","partial","missing-tools","revoked","login","late-denied"])("正式聊天子进程通过宿主完成并保留执行事实：%s",async mode=>{
+it.each(["text","tool","retry","approval","denied","cancel","unknown","partial","missing-tools","revoked","login","late-denied","live"])("正式聊天子进程通过宿主完成并保留执行事实：%s",async mode=>{
  const ctx={userId:"chat-entry-u",accountId:`chat-entry-a-${++sequence}`,requestId:"test",source:"user" as const};
  const now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-entry-${++sequence}`});
  const conversation=await repo.createConversation({title:"真实 Worker",projectId:null,scope:"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"查找来源",attachments:[],modelMetadata:{}});
  const parameters=z.object({query:z.string()}).strict();
- const usesTool=!["text","retry","cancel","partial"].includes(mode);
+ const usesTool=!["text","retry","cancel","partial","live"].includes(mode);
  const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"使用已授权工具查找来源",messages:[{role:"user",content:"查找来源"}],maxSteps:6,maxOutputTokens:128,tools:usesTool?[{name:"web.read",version:"1",effect:"none",description:"读取资料",parameters:z.record(z.string(),z.json()).parse(z.toJSONSchema(parameters))}]:[]})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const responseGate:{finish?:()=>void}={};
  let requests=0,grant=false,disconnected=false;const bodies:string[]=[];
  const server=createServer((req,res)=>{let body="";req.on("data",chunk=>{body+=chunk;});req.on("end",()=>{
   requests++;bodies.push(body);
@@ -37,6 +39,10 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
   const tool=usesTool && (!hasTool || (["revoked","login"].includes(mode) && !body.includes("https://source.test/evidence")));
   const delta=tool?{tool_calls:[{index:0,id:requests===1?"read-source":`read-source-${requests}`,type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]}:{content:"最终回复"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:tool?"tool_calls":mode==="partial"?"length":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  if(mode==="live"){
+    const encode=(chunk:unknown)=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk as object})}\n\n`;
+    res.writeHead(200,{"content-type":"text/event-stream"});res.write(encode(chunks[0]));responseGate.finish=()=>res.end(encode(chunks[1])+"data: [DONE]\n\n");return;
+  }
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });});
  await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
@@ -55,6 +61,17 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
  const state=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId)))[0]!;
  try{
   host.start();
+  if(mode==="live"){
+    const stream=createExecutionStreamService(db);
+    await vi.waitFor(async()=>expect((await stream.read(ctx,submission.executionTaskId)).events.some(event=>event.chunk.type==="text-delta")).toBe(true));
+    expect((await state()).status).toBe("running");
+    const stop=new AbortController(),subscription=subscribeExecutionStream(stream,ctx,submission.executionTaskId,{signal:stop.signal});
+    const first=await subscription.next();expect(first.done).toBe(false);
+    stop.abort();expect((await subscription.next()).done).toBe(true);
+    expect((await state()).status).toBe("running");expect(requests).toBe(1);
+    const cursor=first.value!.nextSequence;expect((await stream.read(ctx,submission.executionTaskId,{afterSequence:cursor})).events).toEqual([]);
+    responseGate.finish!();
+  }
   if(mode==="cancel"){
    await vi.waitFor(()=>expect(requests).toBe(1));await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
    await vi.waitFor(async()=>expect((await state()).status).toBe("cancelled"));expect(disconnected).toBe(true);
@@ -68,6 +85,9 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
     grant=true;await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"allow-and-resume"});
    }
    await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="partial"?"partial":"succeeded"),{timeout:15000});
+   const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
+   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
+   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
    const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:"最终回复"});
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
    expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);

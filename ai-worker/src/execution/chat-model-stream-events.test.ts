@@ -1,0 +1,20 @@
+import { expect,it } from "vitest";
+import { createChatModelStreamEvents } from "./chat-model-stream-events";
+it("展示事件保留模型附件与来源，隔离跨调用文本ID，不冒充工具或终态",async()=>{
+ const chunks:Array<Record<string,unknown>>=[];
+ const writer=createChatModelStreamEvents("model-2",async batch=>{chunks.push(...batch.chunks);return {nextIndex:batch.startIndex+batch.chunks.length,lastSequence:chunks.length};});
+ await writer.push({type:"text-start",id:"same"});await writer.push({type:"text-delta",id:"same",delta:"甲"});await writer.push({type:"text-delta",id:"same",delta:"乙"});await writer.push({type:"text-end",id:"same"});
+ await writer.push({type:"reasoning-start",id:"r"});await writer.push({type:"reasoning-delta",id:"r",delta:"思考"});await writer.push({type:"reasoning-end",id:"r"});
+ await writer.push({type:"source",sourceType:"url",id:"s",url:"https://example.com",title:"来源"});
+ await writer.push({type:"source",sourceType:"document",id:"d",mediaType:"application/pdf",title:"资料",filename:"a.pdf"});
+ await writer.push({type:"file",mediaType:"image/png",data:{type:"data",data:new Uint8Array([1,2,3])}});
+ await writer.push({type:"reasoning-file",mediaType:"image/png",data:{type:"url",url:new URL("https://example.com/image.png")}});
+ await writer.push({type:"tool-call",toolCallId:"t",toolName:"read",input:"{}"});
+ await writer.push({type:"finish",finishReason:{unified:"stop",raw:"stop"},usage:{inputTokens:{total:0,noCache:0,cacheRead:0,cacheWrite:0},outputTokens:{total:0,text:0,reasoning:0}}});
+ await writer.close();
+ expect(chunks.slice(0,3)).toEqual([{type:"text-start",id:"model-2:same"},{type:"text-delta",id:"model-2:same",delta:"甲乙"},{type:"text-end",id:"model-2:same"}]);
+ expect(chunks).toContainEqual({type:"file",mediaType:"image/png",url:"data:image/png;base64,AQID"});
+ expect(chunks).toContainEqual({type:"source-document",sourceId:"d",mediaType:"application/pdf",title:"资料",filename:"a.pdf"});
+ expect(chunks).toContainEqual({type:"reasoning-file",mediaType:"image/png",url:"https://example.com/image.png"});
+ expect(chunks.some(chunk=>["tool-call","finish"].includes(String(chunk.type)))).toBe(false);
+});
