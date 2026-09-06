@@ -1,0 +1,2 @@
+governance-guard HALT (1)
+  ✗ backend/src/modules/ai-runtime/chat-read-tool-host.ts: unledgered complexity marker ipc; record structured budget entry and default non-essential hardening to a later task

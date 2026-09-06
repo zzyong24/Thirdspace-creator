@@ -1,0 +1,6 @@
+src/server/chat-read-host.integration.test.ts(43,32): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(value: { userId: string | SQL<unknown> | Placeholder<string, any>; accountId: string | SQL<unknown> | Placeholder<string, any>; id: string | SQL<unknown> | Placeholder<...>; ... 21 more ...; modelCallStartedAt?: string | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Type 'string | null | undefined' is not assignable to type 'string | SQL<unknown> | Placeholder<string, any>'.
+      Type 'undefined' is not assignable to type 'string | SQL<unknown> | Placeholder<string, any>'.
+  Overload 2 of 2, '(values: { userId: string | SQL<unknown> | Placeholder<string, any>; accountId: string | SQL<unknown> | Placeholder<string, any>; id: string | SQL<unknown> | Placeholder<...>; ... 21 more ...; modelCallStartedAt?: string | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'id' does not exist in type '{ userId: string | SQL<unknown> | Placeholder<string, any>; accountId: string | SQL<unknown> | Placeholder<string, any>; id: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; modelCallStartedAt?: string | ... 3 more ... | undefined; }[]'.

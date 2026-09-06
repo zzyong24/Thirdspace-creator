@@ -1,0 +1,81 @@
+{
+  "task": "T-915",
+  "scope": "领域只读适配器及真实runtime/账本fixture集成，公开入口未迁移",
+  "tdd": "初版实现前红测缺失，未accepted-risk；卡片修复有前置红测",
+  "tests": {
+    "backendPassed": 20,
+    "runtimeLedgerPassed": 1
+  },
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-first.log",
+      "sha256": "2fea367aa288de6ef73cd4077330c0e8f09a0997910edbf5497d89a9f635d660",
+      "bytes": 1521
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-card-red.log",
+      "sha256": "2d564682281a531fa4a35950fd6954396ad9a505d9ed69644553d848b61a05b3",
+      "bytes": 1659
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-final.log",
+      "sha256": "d3532399d5a81187ec2745d0b846d35fc613e7657fe2cf0b94bb41763b0e46f9",
+      "bytes": 237
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-types.log",
+      "sha256": "7e7f2c1868374175b1e0606566bcb9075cde51725a72fb33f2b83ee35f8e9bc7",
+      "bytes": 1001
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-types-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-frontend-types.log",
+      "sha256": "6b11ae6f644cf7c5058bb01db51aa92e4e98675ad5782729bcb82b94ae8339fd",
+      "bytes": 1301
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-frontend-types-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-integration-final.log",
+      "sha256": "132aecc4e2cc9fd04369171edb3385fb70d33262dc70d2e9f317223af65c8261",
+      "bytes": 390
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-scope.log",
+      "sha256": "d92a56d3f4f89fa255dec860c4dcd79ab49df7bde2f98c5465ad2f8250bfff61",
+      "bytes": 204
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-scope-final.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-read-host-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "result": "与上一批一致，T-916 既有欠债保留"
+  }
+}

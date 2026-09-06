@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-read-tool-host.test.ts (5 tests | 1 failed) 14ms
+   × 定义变化、工具移除和授权失败都拒绝，授权回执符合严格契约 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-read-tool-host.test.ts > 定义变化、工具移除和授权失败都拒绝，授权回执符合严格契约
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "reason"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"reason\""
+  }
+]
+ ❯ src/modules/ai-runtime/chat-read-tool-host.test.ts:33:42
+     31|     const host = (await createChatReadToolHost({ "context.projects": m…
+     32|     const decision = await host.approve(ctx, {}, { execution, modelCal…
+     33|     expect(chatToolApprovalReceiptSchema.parse(decision)).toEqual({ st…
+       |                                          ^
+     34|     expect((await host.execute!(ctx, {}, scope)).status).not.toBe("ok"…
+     35|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  23:09:32
+   Duration  359ms (transform 93ms, setup 0ms, import 200ms, tests 14ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-read-tool-host.test.ts

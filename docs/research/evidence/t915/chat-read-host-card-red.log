@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-read-tool-host.test.ts > 读取瞬断是明确无副作用失败，不抛成结果未知，也不自动执行第二次
+[chat-tool] name=context.projects error durationMs=0 class=Error reason=http_503 status=503 message="network unavailable"
+
+ ❯ src/modules/ai-runtime/chat-read-tool-host.test.ts (5 tests | 1 failed) 20ms
+   × 读取瞬断是明确无副作用失败，不抛成结果未知，也不自动执行第二次 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-read-tool-host.test.ts > 读取瞬断是明确无副作用失败，不抛成结果未知，也不自动执行第二次
+AssertionError: expected { status: 'error', …(5) } to match object { status: 'error', …(3) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,11 +1,6 @@
+  {
+-   "data": {
+-     "error": Any<String>,
+-     "items": [],
+-     "kind": "context.projects",
+-   },
+    "error": {
+      "code": "transient",
+      "retryable": true,
+    },
+    "sideEffect": "none",
+
+ ❯ src/modules/ai-runtime/chat-read-tool-host.test.ts:42:47
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  23:13:56
+   Duration  386ms (transform 116ms, setup 0ms, import 224ms, tests 20ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-read-tool-host.test.ts

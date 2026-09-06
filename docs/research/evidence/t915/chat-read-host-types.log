@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/modules/ai-runtime/chat-read-tool-host.test.ts(31,92): error TS2322: Type 'Promise<{ "context.projects"?: undefined; } | { "context.projects": Tool; }>' is not assignable to type 'Promise<ToolSet>'.
+  Type '{ "context.projects"?: undefined; } | { "context.projects": Tool; }' is not assignable to type 'ToolSet'.
+    Type '{ "context.projects"?: undefined; }' is not assignable to type 'ToolSet'.
+      Property '"context.projects"' is incompatible with index signature.
+        Type 'undefined' is not assignable to type '(Tool<never, never, any> | Tool<any, any, any> | Tool<any, never, any> | Tool<never, any, any>) & Pick<Tool<any, any, any>, "execute" | "onInputAvailable" | "onInputStart" | "onInputDelta" | "needsApproval">'.
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2
