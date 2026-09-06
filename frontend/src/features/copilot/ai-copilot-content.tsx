@@ -2385,6 +2385,23 @@ export function AICopilotContent({
                         />
                       );
                     }
+                    if (
+                      part.state === "output-error" ||
+                      part.state === "output-denied" ||
+                      (part.state === "approval-responded" && part.approval.approved === false)
+                    ) {
+                      return (
+                        <div
+                          key={`${message.id}-terminal-${idx}`}
+                          data-slot="copilot-tool-terminal"
+                          className="mt-1 rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+                        >
+                          {part.state === "output-error"
+                            ? `未完成 ${traceLabel}：${part.errorText || "工具未返回结果。"}`
+                            : `已拒绝 ${traceLabel}`}
+                        </div>
+                      );
+                    }
                     // [T-060②] 调用中 → 进行态 trace 行(WorkBuddy 式过程可见)。
                     if (part.state !== "output-available") {
                       return (

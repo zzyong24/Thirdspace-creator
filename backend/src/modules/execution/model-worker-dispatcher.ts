@@ -1,3 +1,4 @@
+import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
 import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
 import {createExecutionTopicReadService} from "./execution-topic-read.service";
@@ -66,6 +67,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
+  const chatReplies=createChatTurnCompletionService(db,{now});
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
@@ -85,6 +87,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
       if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));

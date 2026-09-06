@@ -89,3 +89,5 @@ export {createResearchMaterialAdoptionService,type ResearchMaterialAdoptionPorts
 export { createTopicCandidateAdoptionService, type TopicCandidateAdoptionPorts } from "./topic-candidate-adoption.service";
 export { createDailyTopicCompletionService, type DailyTopicCompletionPorts } from './daily-topic-completion.service';
 export { createChatTurnSubmissionService, type ChatTurnSnapshot, type ChatTurnAssembly } from "./chat-turn-submission.service";
+
+export { createChatTurnCompletionService } from "./chat-turn-completion.service";

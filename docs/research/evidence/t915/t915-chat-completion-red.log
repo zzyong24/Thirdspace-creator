@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+ ❯ tests/chat-worker.test.ts (5 tests | 1 failed) 54ms
+   × 聊天完成端口只接收账本引用，拒绝自报消息、身份和终态 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/chat-worker.test.ts > 聊天完成端口只接收账本引用，拒绝自报消息、身份和终态
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/chat-worker.test.ts:30:66
+     28| it("聊天完成端口只接收账本引用，拒绝自报消息、身份和终态",async()=>{
+     29|   const {workerPortSchema,workerPortInputSchemas}=await import("../src…
+     30|   expect(workerPortSchema.safeParse("commitChatResult").success).toBe(…
+       |                                                                  ^
+     31|   const schema=(workerPortInputSchemas as any).commitChatResult;
+     32|   const input={lastModelCallId:"model-final",toolCallIds:["tool-1"]};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  20:22:25
+   Duration  235ms (transform 50ms, setup 0ms, import 51ms, tests 54ms, environment 0ms)
+

@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (8 tests | 1 failed) 6450ms
+   × 真实聊天 Worker 回合绑定账本并恢复：denied 776ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：denied
+AssertionError: expected [ { type: 'step-start', …(5) }, …(3) ] to deeply equal [ { type: 'step-start', …(5) }, …(3) ]
+
+- Expected
++ Received
+
+@@ -10,11 +10,11 @@
+    {
+      "input": {
+        "query": "真实查询",
+      },
+      "output": undefined,
+-     "state": "approval-responded",
++     "state": "output-denied",
+      "text": undefined,
+      "toolCallId": "read-1",
+      "type": "tool-web_read",
+    },
+    {
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:138:48
+    136|     expect(saved).toMatchObject({role:"assistant",content:final.text,i…
+    137|     const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Re…
+    138|     expect(visible(saved!.parts as unknown[])).toEqual(visible(final.m…
+       |                                                ^
+    139|     expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResu…
+    140|     const [done]=await f.db.select().from(executionTasks).where(eq(exe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  20:25:55
+   Duration  7.84s (transform 701ms, setup 0ms, import 1.25s, tests 6.45s, environment 0ms)
+

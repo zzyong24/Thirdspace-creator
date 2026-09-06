@@ -1,0 +1,22 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/chat-receipt-projection.test.ts (2 tests | 1 failed) 6ms
+   × 已结算参数错误后模型继续完成，保留错误历史而不反杀最终回复 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/chat-receipt-projection.test.ts > 已结算参数错误后模型继续完成，保留错误历史而不反杀最终回复
+ConflictError: 工具参数须先完成协议恢复
+ ❯ projectChatReceipts src/modules/ai/chat-receipt-projection.ts:44:31
+
+ ❯ src/modules/ai/chat-receipt-projection.test.ts:10:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  20:34:00
+   Duration  909ms (transform 376ms, setup 0ms, import 761ms, tests 6ms, environment 0ms)
+

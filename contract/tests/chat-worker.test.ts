@@ -24,3 +24,13 @@ it("复用关联只出现在后端回执，Worker不能指定复用来源结算"
   expect(agenticToolReservationSchema.parse({callId:"current",status:"settled",toolName:"web_read",input:{},receipt}).receipt?.reusedCallId).toBe("prior-call");
   expect(workerPortInputSchemas.settleAgenticTool.safeParse({callId:"current",status:"settled",output,reusedCallId:"invented"}).success).toBe(false);
 });
+
+it("聊天完成端口只接收账本引用，拒绝自报消息、身份和终态",async()=>{
+  const {workerPortSchema,workerPortInputSchemas}=await import("../src/internal/execution-worker");
+  expect(workerPortSchema.safeParse("commitChatResult").success).toBe(true);
+  const schema=workerPortInputSchemas.commitChatResult;
+  const input={lastModelCallId:"model-final",toolCallIds:["tool-1"]};
+  expect(schema.safeParse(input).success).toBe(true);
+  for(const extra of [{message:{text:"伪造"}},{userId:"foreign"},{outcome:"succeeded"}])expect(schema.safeParse({...input,...extra}).success).toBe(false);
+  expect(schema.safeParse({...input,toolCallIds:["tool-1","tool-1"]}).success).toBe(false);
+});

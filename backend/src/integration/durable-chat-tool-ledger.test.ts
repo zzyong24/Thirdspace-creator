@@ -1,8 +1,9 @@
+import { createChatTurnCompletionService } from "../modules/ai/chat-turn-completion.service";
 import { createServer } from "node:http";
 import { it, expect, vi } from "vitest";
 import { type ModelMessage } from "ai";
 import { z } from "zod";
-import { createDb, executionTasks, eq } from "@creatoros/backend";
+import { createDb, executionTasks, aiMessages, aiTaskResults, aiTasks, eq } from "@creatoros/backend";
 import { runChatInWorker } from "@creatoros/ai-worker/chat-worker-run";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "../modules/ai/ai.repository";
@@ -31,7 +32,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
       const hasResult=parsed.messages.some((message:{role:string})=>message.role==="tool");
       if(hasResult)bodies.push(body);
       const repeated=mode==="repeat" && requests===2;
-      const delta=repeated?{tool_calls:[{index:0,id:"read-2",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]}:mode==="empty"?{content:""}:hasResult ? {content:mode==="denied"?"未执行读取":"有来源的结论"} : {tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
+      const delta=repeated?{tool_calls:[{index:0,id:"read-2",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]}:mode==="empty"?{content:""}:hasResult ? {content:mode==="denied"?"未执行读取":"有来源的结论"} : {...(mode==="completed"?{content:"先查询。"}:{}),tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
       const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:repeated?"tool_calls":mode==="empty"?"stop":hasResult?(mode==="length"?"length":"stop"):"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
       res.writeHead(200,{"content-type":"text/event-stream"});
       res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
@@ -109,10 +110,12 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
       return;
     }
     if(mode==="approval"){
-      expect((await run()).outcome).toBe("awaiting_confirmation");
+      const pending=await run();expect(pending.outcome).toBe("awaiting_confirmation");
+      await expect(createChatTurnCompletionService(f.db,{now}).commitResult(ref,{lastModelCallId:pending.lastModelCallId,toolCallIds:pending.toolCallIds})).rejects.toThrow("待授权或未完成工具");
+      expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);
       expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();approved=true;
     }
-    await run();await run();
+    const final=await run();await run();
     if(mode!=="denied")expect(bodies[0]).toContain("https://source.test/real");
     expect(requests).toBe(mode==="repeat"?3:2);expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
     const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(mode==="repeat"?5:3);expect(state.spentTokens).toBe(mode==="repeat"?15:10);
@@ -126,6 +129,23 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     await expect(host.reserve(ref,{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();
     await expect(generation.reserveGenerationCall(ref,{operationKey:`${input.operationKey}/model/1`,request:{maxOutputTokens:128}})).rejects.toThrow();
     expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
+    await f.db.update(executionTasks).set({payload:task.payload}).where(eq(executionTasks.id,task.id));
+    const completion=createChatTurnCompletionService(f.db,{now});
+    const commit={lastModelCallId:final.lastModelCallId,toolCallIds:final.toolCallIds};
+    const [receipt,replayed]=await Promise.all([completion.commitResult(ref,commit),completion.commitResult(ref,commit)]);
+    expect(receipt).toEqual(replayed);
+    const [saved]=await f.db.select().from(aiMessages).where(eq(aiMessages.id,final.message.id));
+    expect(saved).toMatchObject({role:"assistant",content:(mode==="completed"?"先查询。":"")+final.text,inputTokens:mode==="repeat"?6:4,outputTokens:mode==="repeat"?9:6});
+    const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Record<string,unknown>;return {type:p.type,text:p.text,state:p.state,input:p.input,output:p.output,toolCallId:p.toolCallId};});
+    if(mode==="denied"){
+      expect(final.message.parts).toContainEqual(expect.objectContaining({type:"tool-web_read",state:"approval-responded",approval:expect.objectContaining({approved:false})}));
+      expect(saved!.parts).toContainEqual(expect.objectContaining({type:"tool-web_read",state:"output-denied",approval:expect.objectContaining({approved:false})}));
+      expect(visible(saved!.parts as unknown[]).filter(p=>!p.type?.toString().startsWith("tool-"))).toEqual(visible(final.message.parts).filter(p=>!p.type?.toString().startsWith("tool-")));
+    }else expect(visible(saved!.parts as unknown[])).toEqual(visible(final.message.parts));
+    expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
+    const [done]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
+    const [business]=await f.db.select().from(aiTasks).where(eq(aiTasks.id,submission.taskId));
+    expect(done!.status).toBe(mode==="length"?"partial":"succeeded");expect(business!.status).toBe(done!.status);
   } finally {
     server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));await f.client.close();
   }

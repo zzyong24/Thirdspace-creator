@@ -1620,3 +1620,11 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 });
+
+it.each(["output-error","output-denied","approval-responded"])("失败或拒绝工具 %s 显示终态，历史回放不永久转圈",state=>{
+  mockMessages=[{id:"terminal-tool",role:"assistant",parts:[{type:"tool-web_read",toolCallId:"read-terminal",state,...(state==="output-error"?{rawInput:'{"query":',errorText:"工具参数无效"}:{input:{query:"测试"},approval:{id:"receipt:tool",approved:false}})}]}];
+  const {container}=render(<AICopilotContent viewModel={VM} />);
+  expect(container.querySelector('[data-slot="copilot-tool-running"]')).toBeNull();
+  expect(screen.getByText(state==="output-error"?/工具参数无效/:/已拒绝/)).toBeInTheDocument();
+  expect(sendMessage).not.toHaveBeenCalled();
+});

@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:69893) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx (46 tests | 3 failed | 43 skipped) 104ms
+   × 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈 58ms (retry x2)
+   × 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈 23ms (retry x2)
+   × 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈 23ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈
+AssertionError: expected <div …(2)>…(1)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="mt-1 flex items-center gap-1.5 rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground"
+  data-slot="copilot-tool-running"
+>
+  <span
+    class="size-3 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent"
+  />
+  正在调用 
+  读网页正文
+  …
+</div>
+
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1627:73
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 43 skipped (46)
+   Start at  20:36:19
+   Duration  1.78s (transform 617ms, setup 104ms, import 1.05s, tests 104ms, environment 338ms)
+

@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "b2cfb821518290dd775581168d0a603adc5b121807bdd5c2432b512a6f7d0746",
+      "file_sha256": "d4f6bb19d4caa0b5d11278cbffb61d938b5ef9ab6b8707417bc1245ad3e1b919",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
+      "reason": "DEC-RUNTIME-055 已确认持久聊天消息与任务结果原子提交。本批只将 commitChatResult 纳入既有 IPC settlement 校验；端口自身重查租约、控制状态与已确认回执，不允许取消后新写消息或覆盖终态。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

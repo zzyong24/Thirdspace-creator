@@ -1,0 +1,2 @@
+governance-guard HALT (1)
+  ✗ backend/src/modules/execution/worker-supervisor.ts: complexity ledger entry for ipc has a missing/stale file_sha256; legacy category grants fail closed and must be rebound to this exact task/file hash

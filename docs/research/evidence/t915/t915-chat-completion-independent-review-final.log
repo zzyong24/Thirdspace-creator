@@ -1,0 +1,6 @@
+T-915 聊天完成增量独立只读复核
+结论：本批已发现阻断均已修复，未发现剩余确定阻断。
+1. 坏 JSON 历史仅在匹配 error + sideEffect none + invalid_input 已结算回执时投影 output-error/rawInput/errorText，不执行工具，不伪造有效 input。独立运行 chat-receipt-projection.test.ts：2 PASS，exit 0；原始日志 /tmp/t915-chat-completion-independent-review.log。
+2. ai-copilot-content.tsx 新增终态分支位于通用 spinner 之前，覆盖 output-error、output-denied、approval-responded 且 approved=false；显示真实 errorText 或已拒绝，无按钮、无调用副作用，保留既有 local.read 拒绝卡。此前永久 spinner 问题已解决。
+3. 已只读核对对应三种完整组件测试断言，不在此次复核重复运行 UI 全量测试，UI 运行结果由主代理实际日志证明。
+边界：本结论仅本批事务、历史投影和终态 UI 修复，不代表聊天完整生产迁移或 T-915 全量验收。

@@ -1,0 +1,98 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (8 tests | 5 failed) 7572ms
+   × 真实聊天 Worker 回合绑定账本并恢复：completed 1521ms
+   × 真实聊天 Worker 回合绑定账本并恢复：approval 1091ms
+   × 真实聊天 Worker 回合绑定账本并恢复：denied 1090ms
+   × 真实聊天 Worker 回合绑定账本并恢复：length 813ms
+   × 真实聊天 Worker 回合绑定账本并恢复：repeat 879ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：completed
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：approval
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：length
+AssertionError: expected { id: 'chat:ai-msg-ledger', …(11) } to match object { role: 'assistant', …(3) }
+(14 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "content": "有来源的结论",
+-   "inputTokens": 4,
+-   "outputTokens": 6,
++   "inputTokens": 0,
++   "outputTokens": 0,
+    "role": "assistant",
+  }
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:136:19
+    134|     expect(receipt).toEqual(replayed);
+    135|     const [saved]=await f.db.select().from(aiMessages).where(eq(aiMess…
+    136|     expect(saved).toMatchObject({role:"assistant",content:final.text,i…
+       |                   ^
+    137|     const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Re…
+    138|     expect(visible(saved!.parts as unknown[])).toEqual(visible(final.m…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：denied
+AssertionError: expected { id: 'chat:ai-msg-ledger', …(11) } to match object { role: 'assistant', …(3) }
+(14 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "content": "未执行读取",
+-   "inputTokens": 4,
+-   "outputTokens": 6,
++   "inputTokens": 0,
++   "outputTokens": 0,
+    "role": "assistant",
+  }
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:136:19
+    134|     expect(receipt).toEqual(replayed);
+    135|     const [saved]=await f.db.select().from(aiMessages).where(eq(aiMess…
+    136|     expect(saved).toMatchObject({role:"assistant",content:final.text,i…
+       |                   ^
+    137|     const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Re…
+    138|     expect(visible(saved!.parts as unknown[])).toEqual(visible(final.m…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：repeat
+AssertionError: expected { id: 'chat:ai-msg-ledger', …(11) } to match object { role: 'assistant', …(3) }
+(14 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "content": "有来源的结论",
+-   "inputTokens": 6,
+-   "outputTokens": 9,
++   "inputTokens": 0,
++   "outputTokens": 0,
+    "role": "assistant",
+  }
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:136:19
+    134|     expect(receipt).toEqual(replayed);
+    135|     const [saved]=await f.db.select().from(aiMessages).where(eq(aiMess…
+    136|     expect(saved).toMatchObject({role:"assistant",content:final.text,i…
+       |                   ^
+    137|     const visible=(parts:unknown[])=>parts.map(raw=>{const p=raw as Re…
+    138|     expect(visible(saved!.parts as unknown[])).toEqual(visible(final.m…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 3 passed (8)
+   Start at  20:25:22
+   Duration  9.30s (transform 885ms, setup 0ms, import 1.56s, tests 7.57s, environment 0ms)
+
