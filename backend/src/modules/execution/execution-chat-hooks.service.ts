@@ -10,6 +10,7 @@ import {
   type ExecutionRef,
 } from "@creatoros/contract/execution-worker";
 import {
+  replayTextGeneration,
   prepareScriptHooks,
   finalizeHookItems,
 } from "@creatoros/ai-worker/chat";
@@ -232,28 +233,17 @@ export function createExecutionChatHooksService(
         prepared = await prepare(ref, { callId: input.callId }, signal);
       const { maxOutputTokens } = prepared;
       const expectedModel = providerIdentityFor(prepared.modelIdentity);
-      const expectedPrompt = [
-        { role: "system", content: prepared.system },
-        { role: "user", content: [{ type: "text", text: prepared.prompt }] },
-      ];
+      const expected = await replayTextGeneration({ ...expectedModel, system: prepared.system, prompt: prepared.prompt, maxOutputTokens, receipts: [], signal });
+      // 旧文本协议允许省略默认 auto；除此之外逐字段核对真实节点产出的请求。
+      const normalized = (request: Record<string, unknown>) => {
+        const copy = { ...request };
+        if (isDeepStrictEqual(copy.toolChoice, { type: "auto" })) delete copy.toolChoice;
+        return copy;
+      };
       if (
         input.operationKey !== `${prepared.operationKey}/model/1` ||
-        input.request.modelId !== expectedModel.modelId ||
-        input.request.provider !== expectedModel.provider ||
-        input.request.maxOutputTokens !== maxOutputTokens ||
-        !isDeepStrictEqual(input.request.prompt, expectedPrompt) ||
-        (input.request.toolChoice !== undefined &&
-          !isDeepStrictEqual(input.request.toolChoice, { type: "auto" })) ||
-        Object.keys(input.request).some(
-          (key) =>
-            ![
-              "prompt",
-              "maxOutputTokens",
-              "toolChoice",
-              "modelId",
-              "provider",
-            ].includes(key),
-        )
+        expected.status !== "next-request" ||
+        !isDeepStrictEqual(normalized(input.request), normalized(expected.request))
       )
         throw new ConflictError("开场模型请求不符合冻结输入");
       const call = await ledger.reserve(

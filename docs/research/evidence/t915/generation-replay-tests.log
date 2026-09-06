@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  3 passed (3)
+      Tests  38 passed (38)
+   Start at  05:33:57
+   Duration  825ms (transform 764ms, setup 0ms, import 1.22s, tests 577ms, environment 0ms)
+
