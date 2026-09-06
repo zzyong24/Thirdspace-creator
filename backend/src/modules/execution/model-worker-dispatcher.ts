@@ -1,3 +1,4 @@
+import {createExecutionChatToolPorts,type ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
 import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
@@ -43,11 +44,13 @@ interface WorkerDispatcherDeps {
   onError?(code:string):void;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export interface ChatWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,ChatBackendTool>}
 export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>;browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
 export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
+export function createChatWorkerDispatcher(db:Db,deps:ChatWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"chat.run"});}
 /** 同一领取/进程池/取消/停止实现，命名端口按执行模式分别装配。 */
-function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"model"})|(AgenticWorkerDispatcherDeps&{executionMode:"agentic.run"})){
+function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"model"})|(AgenticWorkerDispatcherDeps&{executionMode:"agentic.run"})|(ChatWorkerDispatcherDeps&{executionMode:"chat.run"})){
 
   const concurrency=deps.modelConcurrency ?? 2;
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
@@ -71,7 +74,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
-  const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const chatTools=deps.executionMode==="chat.run"?createExecutionChatToolPorts(db,deps):null;
+  const agentTools=chatTools ?? (deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null);
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
   const browserActions=deps.executionMode==="agentic.run"?createExecutionBrowserActionService(db,{now,tools:deps.tools}):null;
   const browserEvidence=deps.executionMode==="agentic.run"?createExecutionBrowserEvidenceService(db,{now,tools:deps.tools,budget:deps.budget}):null;
@@ -87,6 +91,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="checkChatToolApproval" && chatTools)return chatTools.check(ref,raw,activeTools.get(executionKey(ref))?.controller.signal);
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
@@ -162,7 +167,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const execution=agentTools.execute(ref,raw,scope.controller.signal);scope.pending.add(execution);
         try{return await execution;}finally{scope.pending.delete(execution);}
       }
-      if(port==="reserveGenerationCall" && deps.executionMode==="model")return generation.reserveGenerationCall(ref,raw);
+      if(port==="reserveGenerationCall" && deps.executionMode!=="agentic.run")return generation.reserveGenerationCall(ref,raw);
       if(port==="settleGenerationCall")return generation.settleGenerationCall(ref,raw);
       if(port==="saveGenerationResult" && deps.executionMode==="model")return generation.saveGenerationResult(ref,raw);
       if(port==="readTaskContext")return calls.readTaskContext(ref);
@@ -243,6 +248,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         };
         controlTimer=setTimeout(()=>{void watch();},250);
         try{
+          if(chatTools){
+            try{await chatTools.validateTask(ref);await calls.readTaskContext(ref);}
+            catch{await outcomes.recordFailure(ref,{outcome:"failed",errorCode:"CHAT_WORKER_INPUT_UNAVAILABLE"}).catch(()=>{});throw new Error("CHAT_WORKER_INPUT_UNAVAILABLE");}
+          }
           const deadline=await leases.withLease(ref,"admission",async({task})=>task.deadlineAt);
           if(stopping)break;
           if(!deadline)throw new Error("PREPARED_DEADLINE_MISSING");

@@ -6,7 +6,7 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "df155752b78130c57b0f2efeccbfa2f2f5c0d9288c56680e9a0dc16785e4968a",
+      "file_sha256": "ba87ad4aa6cb4456961486cf9f4255cd341c2473dc4493cb39c75cfd67d0af69",
       "categories": [
         "ipc"
       ],
@@ -21,7 +21,7 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "e019908dfd6da153a6c63ae69c350388a76dc686ad9e690c57c752018da329b4",
+      "file_sha256": "c1fcc6dc8b78720f86811e0138cb08c621b45df578ffed3690fab4bd4a5e410a",
       "categories": [
         "ipc"
       ],

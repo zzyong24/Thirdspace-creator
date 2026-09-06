@@ -1,0 +1,23 @@
+{
+  "task": "T-915",
+  "scope": "正式聊天 Worker 接线与宿主权限恢复",
+  "fullTaskComplete": false,
+  "tests": 80,
+  "review": "worker_review 独立复核本批无剩余具体阻断；不代表全量验收",
+  "sourceSha256": {
+    "ai-worker/src/execution/chat-worker-run.ts": "f873f096e21188db6eb7a704162ccf25c24abf9c9ba53f33b1b1122ae7843dbe",
+    "ai-worker/src/execution/worker-entry.ts": "ba87ad4aa6cb4456961486cf9f4255cd341c2473dc4493cb39c75cfd67d0af69",
+    "ai-worker/src/execution/worker-runtime.ts": "c1fcc6dc8b78720f86811e0138cb08c621b45df578ffed3690fab4bd4a5e410a",
+    "ai-worker/src/execution/worker-runtime.test.ts": "2d31ded6f28fc681eec70cff7b21cf2ca1eb73a251efd87cee760f484e0841d9",
+    "backend/src/integration/chat-tool-authority.test.ts": "d66bdcdfd31773e58d010793c1b5dd71f8f6f87779c874f832280683b6483044",
+    "backend/src/integration/chat-worker-entry.test.ts": "a7bec426a41868eb10bf360bd26167b2a774023f90522c7c4d9431ef0e8b1d5b",
+    "backend/src/modules/execution/execution-chat-tool-ports.service.ts": "de8ed56b80755367fa4015b93a122c067833643cf3fc2130de5444779fc24c3d",
+    "backend/src/modules/execution/execution-research-blocked.ts": "900bfc5d96b7e58f8c9979b90b222ac0772b32e2e79306e38dab4755672a23db",
+    "backend/src/modules/execution/execution-worker-call-ports.service.ts": "f8eb55771a87f1f99258278c1b2bddce03cd9ecda8803a39cb894d50554c9c3a",
+    "backend/src/modules/execution/index.ts": "e7b3da933374fba728a7ecde35736dad63c156cb60df786e3837ad0cfcf68d9b",
+    "backend/src/modules/execution/model-worker-dispatcher.ts": "f1b752a1faabe7b02a66b7ae6c9b44358e94480e9a1246fad5e34c9885dc9c36",
+    "backend/src/modules/execution/persistent-task.service.ts": "1ddb81818ac5c6769b7dcc507f84b527acd29f57b2fced214c205be333dbeda9",
+    "contract/src/internal/execution-worker.ts": "105dbf7d0643ee489d0e42f541d0b84dfc429c1c7ad19d1bef5b125ddbe9c8c0",
+    "contract/tests/chat-worker-entry.test.ts": "4c010167332ccdac058882029492d0cd1308bd870a2ae17f32334a4515116fa2"
+  }
+}

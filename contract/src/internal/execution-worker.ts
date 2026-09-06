@@ -1,3 +1,4 @@
+import { chatWorkerInputSchema } from "./chat-worker";
 export { chatWorkerInputSchema, chatToolProviderName } from "./chat-worker";
 import {appendExecutionStreamSchema} from "./execution-stream";
 export {appendExecutionStreamSchema,readExecutionStreamSchema,executionStreamChunkSchema} from "./execution-stream";
@@ -18,7 +19,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
-  "appendStreamEvents", "commitChatResult",
+  "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
@@ -51,6 +52,7 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   appendStreamEvents:appendExecutionStreamSchema,
+  checkChatToolApproval:reserveAgenticToolSchema,
   commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复")}).strict(),
   completeDailyTopicSkip: emptyPortInput,
   commitDailyTopicResult: z.object({outcome:z.literal("succeeded"),callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
@@ -148,7 +150,7 @@ export const structuredGenerationInputSchema=z.object({
   kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
-export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
@@ -162,3 +164,9 @@ export type WorkerStructuredResult=z.infer<typeof workerStructuredResultSchema>;
 export {browserActionPreparationSchema,browserAuthorizationSnapshotSchema,type BrowserAuthorizationSnapshot,browserObserveInputSchema,browserActInputSchema,browserObservationSchema,type BrowserObserveInput,type BrowserActInput,type BrowserObservation} from "./execution-browser";
 
 export {topicReadTargetSchema,topicReadRequestSchema,topicReadReceiptSchema,topicReadStoredReceiptSchema,topicReadReservationSchema,topicReadErrorCodeSchema,type TopicReadTarget,type TopicReadRequest,type TopicReadReceipt} from "./execution-topic-read";
+
+export const chatToolApprovalReceiptSchema=z.discriminatedUnion("status",[
+ z.object({status:z.enum(["not-applicable","user-approval","unavailable"])}).strict(),
+ z.object({status:z.literal("denied"),reason:z.string().max(10000)}).strict(),
+]);
+export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTaskId:z.string().min(1),messageId:z.string().min(1),outcome:z.enum(["succeeded","partial"])}).strict();

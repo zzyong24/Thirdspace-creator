@@ -10,7 +10,7 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -92,7 +92,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         }});
         if(!reservedCallId)throw Error("tool receipt missing");
         toolCallIds.add(reservedCallId);await checkpoint();
-        if(output.error?.code==="needs_login" || output.error?.code==="captcha" || output.error?.code==="permission")throw new GenerationFailure("waiting_user","CHAT_TOOL_REQUIRES_USER");
+        if(!initial.acknowledgedBlockedCallIds.includes(reservedCallId) && (output.error?.code==="needs_login" || output.error?.code==="captcha" || output.error?.code==="permission"))throw new GenerationFailure("waiting_user","CHAT_TOOL_REQUIRES_USER");
         return output.data??output;
       }catch(error){throw fail(error,"CHAT_TOOL_RESULT_UNKNOWN");}
     },
@@ -107,7 +107,9 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         if(reservation.toolName!==sanitizeToolName(definition.name))throw Error("denied tool mismatch");
         const output=agenticToolOutcomeSchema.parse({status:"blocked",summary:"用户未允许本次操作",evidence:[],data:{denied:true},error:{code:"permission",retryable:false,recovery:"用户已拒绝，本次不执行。"},continuation:null,sideEffect:"none"});
         if(reservation.status==="settled"){
-          if(JSON.stringify(reservation.receipt?.output)!==JSON.stringify(output))throw Error("denial conflicts with existing receipt");
+          const previous=agenticToolOutcomeSchema.parse(reservation.receipt?.output);
+          const data=previous.data;
+          if(previous.status!=="blocked" || previous.sideEffect!=="none" || previous.error?.code!=="permission" || !data || typeof data!=="object" || Array.isArray(data) || data.denied!==true)throw Error("denial conflicts with existing receipt");
         }else{
           if(reservation.status!=="reserved")throw Error("denied tool requires reconciliation");
           const started=workerStartReceiptSchema.parse(await ports.call("startAgenticTool",{callId:reservation.callId},signal));

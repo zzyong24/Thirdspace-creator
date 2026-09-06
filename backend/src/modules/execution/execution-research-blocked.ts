@@ -15,5 +15,5 @@ export function isAcknowledgableResearchBlock(call: {kind: string; status: strin
   const output = parsed.data;
   if (output.status !== "blocked" || output.sideEffect !== "none" || output.error?.code === "unknown_commit") return false;
   return output.error?.code === "needs_login" || output.error?.code === "captcha"
-    || (!!output.data && typeof output.data === "object" && !Array.isArray(output.data) && output.data.recoveryState === "browser_runtime_unavailable");
+    || (!!output.data && typeof output.data === "object" && !Array.isArray(output.data) && (output.data.recoveryState === "browser_runtime_unavailable" || (output.error?.code === "permission" && output.data.recoveryState === "chat_authorization_required")));
 }

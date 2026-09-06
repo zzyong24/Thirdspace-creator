@@ -302,3 +302,23 @@ describe('每日选题Worker专用完成端口',()=>{
  it('正常daily只向专用结果端口提交',async()=>{const f=dailyFixture();f.worker.receive(run);await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true));expect(f.generateStructured).toHaveBeenCalledTimes(1);expect(f.messages.filter(m=>m.type==='call').map(m=>m.port)).toEqual(['readTaskContext','resolveModelCredential','commitDailyTopicResult']);f.worker.close();});
  it.each(['quota',undefined] as const)('每日完成回执丢失不二次覆盖终态 skip=%s',async(skip)=>{const f=dailyFixture(skip,true);f.worker.receive(run);await vi.waitFor(()=>expect(f.messages.some(m=>m.type==='stopped')).toBe(true));expect(f.messages.at(-1)).toMatchObject({type:'stopped',reason:'unknown_result'});expect(f.messages.filter(m=>m.type==='call').map(m=>m.port)).toEqual(skip?['readTaskContext','completeDailyTopicSkip']:['readTaskContext','resolveModelCredential','commitDailyTopicResult']);f.worker.close();});
 });
+
+it("宿主工具超过30秒但仍在任务预算内可以完成",async()=>{
+ vi.useFakeTimers();
+ const messages:WorkerMessage[]=[];
+ const worker=createExecutionWorker({generate:vi.fn(),runAgentic:async(_input,_model,signal,call)=>{
+  await call("executeAgenticTool",{callId:"long-tool"},signal);
+  return {actualEngine:"pi",summary:"完成",stopReason:"completed",lastModelCallId:"m",toolCallIds:["long-tool"]};
+ },send(message){
+  messages.push(message);if(message.type!=="call")return;
+  const data=message.port==="readTaskContext"?{kind:"agentic.run",operationKey:"long",taskType:"agentic.research",goal:"研究",systemPrompt:"冻结",capability:"research",maxOutputTokens:100,dryRun:false,tools:[{name:"web.read",version:"1",label:"读取",description:"读取",parameters:{type:"object"},effect:"none"}]}:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"test"}:message.port==="commitAgenticResult"?{resultId:"r",aiTaskId:"a"}:{};
+  setTimeout(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data}),message.port==="executeAgenticTool"?31000:0);
+ }});
+ try{
+  worker.receive({...run,deadlineAt:Date.now()+60000});
+  await vi.advanceTimersByTimeAsync(30500);
+  expect(messages.some(m=>m.type==="stopped")).toBe(false);
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(messages.find(m=>m.type==="stopped")).toMatchObject({reason:"completed"});
+ }finally{worker.close();vi.useRealTimers();}
+});

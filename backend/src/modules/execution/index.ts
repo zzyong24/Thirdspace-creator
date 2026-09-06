@@ -159,7 +159,7 @@ export { createExecutionLeaseService } from "./execution-lease.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";
-export { createModelWorkerDispatcher, createAgenticWorkerDispatcher, type ModelWorkerDispatcherDeps, type AgenticWorkerDispatcherDeps } from "./model-worker-dispatcher";
+export { createModelWorkerDispatcher, createAgenticWorkerDispatcher, createChatWorkerDispatcher, type ChatWorkerDispatcherDeps, type ModelWorkerDispatcherDeps, type AgenticWorkerDispatcherDeps } from "./model-worker-dispatcher";
 
 export { createResearchPorts } from "./agentic/adapters/research-ports";
 

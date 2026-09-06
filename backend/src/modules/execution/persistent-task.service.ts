@@ -105,7 +105,7 @@ export interface PersistentTaskService {
   claimNext(input: {
     workerId: string;
     kinds?: PersistentTaskKind[];
-    executionMode?: "model.generate" | "model" | "agentic.run";
+    executionMode?: "model.generate" | "model" | "agentic.run" | "chat.run";
     leaseSeconds?: number;
   }): Promise<PersistentTaskClaim | null>;
   claimTask(input: {
@@ -541,6 +541,7 @@ export function createPersistentTaskService(
       if (input.kinds && input.kinds.length === 0) return null;
       return db.transaction(async (tx) => {
         const filters = [claimableAt(stamp)];
+        if (input.executionMode === "chat.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'chat.run'`);
         if (input.executionMode === "agentic.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'agentic.run'`);
         if (input.executionMode === "model") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' IN ('model.generate','model.structured')`);
         if (input.executionMode === "model.generate") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'model.generate'`);

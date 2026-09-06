@@ -16,7 +16,7 @@ export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof c
     const payload = task.payload as Record<string, unknown>;
     return workerTaskInputSchema.parse(payload.modelInput);
     });
-    if(input.kind==="agentic.run")await ledger.initializeBudget(ref);
+    if(input.kind==="agentic.run" || input.kind==="chat.run")await ledger.initializeBudget(ref);
     return input;
   };
   return {

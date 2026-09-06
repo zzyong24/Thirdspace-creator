@@ -1,3 +1,4 @@
+import {runChatInWorker} from "./chat-worker-run";
 import {closeTopicWorkerResources} from "./topic-worker-reads";
 import { generateStructuredInWorker } from "./structured-worker-generation";
 import { streamText } from "ai";
@@ -9,6 +10,7 @@ if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启�
 // 包内 Pi 引擎能力尚待真实产物验证；未装配 runAgentic 时不声明该 capability。
 const worker = createExecutionWorker({
   generateStructured:generateStructuredInWorker,
+  runChat:runChatInWorker,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
     let streamFailed = false;

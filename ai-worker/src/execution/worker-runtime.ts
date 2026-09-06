@@ -1,9 +1,10 @@
+import type { runChatInWorker } from "./chat-worker-run";
 import {createPersistentStreamWriter} from "./persistent-stream-writer";
 import {dailyTopicInputSchema} from "./topic-worker-input";
 import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
-  hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
+  chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
   workerTaskInputSchema, structuredGenerationInputSchema, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
@@ -19,8 +20,9 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"model.generate"|"model.structured"|"agentic.run">;
+  capabilities?: Array<"model.generate"|"model.structured"|"agentic.run"|"chat.run">;
   runAgentic?: typeof runAgenticInWorker;
+  runChat?: typeof runChatInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
   generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
@@ -29,11 +31,11 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate", ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run"] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
-  let active: {execution: ExecutionRef; controller: AbortController} | undefined;
+  let active: {execution: ExecutionRef; controller: AbortController;deadlineAt:number} | undefined;
   let closed = false;
   const send = (message: WorkerMessage) => { if (!closed) deps.send(message); };
   const key = (ref: ExecutionRef) => JSON.stringify(ref);
@@ -43,7 +45,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, 30000);
+      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, port === "executeAgenticTool" && active && sameExecution(active.execution,execution) ? Math.max(1,active.deadlineAt-Date.now()) : 30000);
       const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
       pending.set(requestId, {resolve, reject, cleanup});
       signal?.addEventListener("abort", onAbort, {once: true});
@@ -53,7 +55,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
   };
   const execute = async (execution: ExecutionRef, deadlineAt: number, requestId: string) => {
     const controller = new AbortController();
-    active = {execution, controller};
+    active = {execution, controller,deadlineAt};
     const signal = controller.signal;
     const timer = setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
     let reason: WorkerStopReason = "failed";
@@ -76,6 +78,25 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       signal.throwIfAborted();
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      if(input.kind==="chat.run"){
+        if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");
+        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        const result=await deps.runChat(input,model,signal,{
+          call:(port,data,portSignal)=>call(execution,port,data,portSignal),
+          approve:async(request,approvalSignal)=>{
+            const decision=chatToolApprovalReceiptSchema.parse(await call(execution,"checkChatToolApproval",request,approvalSignal));
+            if(decision.status==="unavailable")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_UNAVAILABLE");
+            return decision.status==="denied"?{type:"denied",reason:decision.reason}:decision.status;
+          },
+          onChunk:async(chunk)=>{if(chunk.type==="text-delta" && !signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text:chunk.delta});},
+        });
+        signal.throwIfAborted();
+        if(result.outcome==="awaiting_confirmation")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_REQUIRED");
+        committing=true;
+        const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitChatResult",{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds},signal));
+        if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CHAT_COMMIT_RECEIPT_MISMATCH");
+        reason="completed";return;
+      }
       if(input.kind==="agentic.run"){
         if(!deps.runAgentic)throw new GenerationFailure("waiting_user","AGENTIC_WORKER_NOT_READY");
         const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
