@@ -283,3 +283,42 @@ it.each(["document-lock", "document-insert", "session-version", "session-cas"])(
  expect(await db.select().from(assets)).toHaveLength(0);
  expect(await f.sessions.getState(f.ctx,"example.com")).toBe(null);
 });
+
+it("网页登录失败取消后仍结算冻结域，重复回执不能变成成功素材",async()=>{
+  const f=await fixture();await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"cancel-fail"});
+  const result=await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login"}});
+  expect(result).toMatchObject({status:"blocked",sideEffect:"none",error:{code:"needs_login",retryable:false},data:{kind:"web.read",asset:null,needLogin:{domain:"example.com"},text:null,window:null,hasMore:false}});
+  expect(await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"read_error",code:"transient",message:"迟到错误"}})).toEqual(result);
+  expect(await db.select().from(assets)).toHaveLength(0);
+});
+it("HTTP 失败保留备用来源与原卡片语义，运行时缺失保持独立恢复状态",async()=>{
+  const f=await fixture(),alternates=[{title:"备用",url:"https://other.example/source",snippet:"可核验来源"}];
+  const result=await f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"http_blocked",status:403,message:"HTTP 403",alternates}});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{httpStatus:403,loginSuggested:true,alternates,asset:null,hasMore:false}});
+  const other=await fixture();expect(await other.service.fail(other.ref,{callId:other.parent.callId,failure:{kind:"browser_runtime_unavailable"}})).toMatchObject({status:"blocked",error:{code:"permission",retryable:false},data:{recoveryState:"browser_runtime_unavailable",asset:null}});
+});
+it("已有成功观察拒绝失败降级，已提交成功仅重放原结果",async()=>{
+  const f=await fixture(),failure={callId:f.parent.callId,failure:{kind:"read_error",code:"transient",message:"迟到超时"}};
+  await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+  await expect(f.service.fail(f.ref,failure)).rejects.toThrow();
+  const success=await f.service.complete(f.ref,{callId:f.parent.callId});
+  expect(await f.service.fail(f.ref,failure)).toEqual(success);expect(await db.select().from(assets)).toHaveLength(1);
+});
+it("失败与观察并发只有一种事实落库，失败已结算后不能上传正文",async()=>{
+  const f=await fixture();const results=await Promise.allSettled([f.service.fail(f.ref,{callId:f.parent.callId,failure:{kind:"needs_login"}}),f.service.observe(f.ref,{callId:f.parent.callId,observation})]);
+  expect(results.filter(r=>r.status==="fulfilled")).toHaveLength(1);
+  const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));
+  expect(await db.select().from(executionEvidence)).toHaveLength(parent!.status==="settled"?0:1);
+  expect(await db.select().from(assets)).toHaveLength(0);
+});
+it("失败请求拒绝伪造成功字段、跨调用、旧 fence 与取消后损坏上下文",async()=>{
+  const f=await fixture(),other=await fixture(),raw={callId:f.parent.callId,failure:{kind:"needs_login"}};
+  await expect(f.service.fail(f.ref,{...raw,assetId:"fake"})).rejects.toThrow();
+  await expect(f.service.fail(f.ref,{callId:other.parent.callId,failure:{kind:"needs_login"}})).rejects.toThrow();
+  await expect(f.service.fail({...f.ref,fenceToken:"stale"},raw)).rejects.toThrow();
+  await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"cancel-bad-context"});
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  const payload=structuredClone(task!.payload) as any;payload.hostContext.chatContext.webReadUrl="https://forged.example";
+  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
+  await expect(f.service.fail(f.ref,raw)).rejects.toThrow();
+});

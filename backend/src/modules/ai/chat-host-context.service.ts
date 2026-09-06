@@ -8,11 +8,11 @@ const object=(value:unknown):Record<string,unknown>=>value && typeof value==="ob
 /** 只由后端在当前租约下恢复工具上下文；不把宿主快照作为Worker或模型输入。 */
 export function createChatHostContextReader(db:Db,deps:{now?:()=>string}={}) {
   const leases=createExecutionLeaseService(db,deps);
-  return {read:(ref:ExecutionRef)=>leases.withLease(ref,"admission",async({tx,task,context})=>{
+  return {read:(ref:ExecutionRef,mode:"admission"|"settlement"="admission")=>leases.withLease(ref,mode,async({tx,task,context})=>{
     const payload=object(task.payload),modelInput=chatWorkerInputSchema.parse(payload.modelInput);
     const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
     const input=object(business?.inputData);
-    if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || payload.aiTaskId!==business.id || input.kind!=="chat.run" || modelInput.userId!==context.userId || modelInput.accountId!==context.accountId || input.modelInputDigest!==chatInputDigest(modelInput) || input.conversationId!==modelInput.conversationId || input.sourceMessageId!==modelInput.sourceMessageId)throw new ConflictError("聊天宿主任务映射无效");
+    if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || (mode==="admission" && !["queued","running"].includes(business.status)) || business.taskType!=="copilot.assist" || payload.aiTaskId!==business.id || input.kind!=="chat.run" || modelInput.userId!==context.userId || modelInput.accountId!==context.accountId || input.modelInputDigest!==chatInputDigest(modelInput) || input.conversationId!==modelInput.conversationId || input.sourceMessageId!==modelInput.sourceMessageId)throw new ConflictError("聊天宿主任务映射无效");
     const snapshot=await readChatTurnSnapshot(tx as unknown as Db,context,{conversationId:modelInput.conversationId,sourceMessageId:modelInput.sourceMessageId});
     if(business.projectId!==snapshot.conversation.projectId || object(snapshot.sourceMessage.modelMetadata).chatTaskId!==business.id || input.historyDigest!==chatHistoryDigest(snapshot) || JSON.stringify(input.historyMessageIds)!==JSON.stringify(snapshot.messages.map(message=>message.id)))throw new ConflictError("聊天宿主历史映射已变化");
     const hostContext=readChatHostContextPair(payload.hostContext,input.hostContextDigest,{userId:context.userId,accountId:context.accountId!,projectId:snapshot.conversation.projectId});

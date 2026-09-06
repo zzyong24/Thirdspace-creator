@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "beb9411a46688e963b1722cd61b3a350078434b70105092913106429691f7d0e",
+      "file_sha256": "fa4d2dceb5f666979916fa16b0d2b817f4aff6cd6ced68b9d4396c49cb0e7c7b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权版本化会话与受控命名端口。e8b69147 将取消信号传入会话事务并分类网页提交回执，沿用原凭据属主与进程拓扑；独立复核及 61 项回归见 chat-web-read-ports.md。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权受控网页执行端口。本批将明确网页失败归为已有调用结算，仅写原父调用回执，不访问网页或创建素材；独立复核与集成回归见 chat-web-read-failure.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

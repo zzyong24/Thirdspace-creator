@@ -4,7 +4,7 @@ import {assertSafeWebDomain,webDomainFromUrl} from "@creatoros/ai-worker/browser
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, executionCalls, type Db } from "@creatoros/backend";
-import { chatWebReadSessionSaveSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { chatWebReadFailureSchema, chatWebReadSessionSaveSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
 import { createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
@@ -62,6 +62,33 @@ export function createExecutionChatWebReadService(db: Db, deps: {
     return { row, observation };
   }
   return {
+    async fail(ref: ExecutionRef, raw: unknown) {
+      const {callId,failure}=chatWebReadFailureSchema.parse(raw);
+      return access(ref,callId,"settlement",async(state)=>{
+        if(state.parent.status==="settled")return receipt(state.parent);
+        started(state,ref);
+        if(state.calls.some(call=>call.parentCallId===callId) || await stored(state))throw new ConflictError("网页已有成功事实或内部调用，不能降级失败");
+        // settlement 只读取原冻结上下文；不重新访问网页、搜索或提交素材。
+        const restored=await createChatHostContextReader(state.tx as unknown as Db,{now}).read(ref,"settlement");
+        if(state.calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==state.bound.modelCallId)throw new ConflictError("旧模型回合不能提交新失败");
+        const url=normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? z.object({url:z.string()}).parse(state.bound.input).url);
+        if(!url || new URL(url).username || new URL(url).password)throw new ConflictError("冻结网页 URL 无效");
+        const domain=assertSafeWebDomain(webDomainFromUrl(url));
+        const summary=failure.kind==="needs_login"?"来源需要登录或人工验证":failure.kind==="browser_runtime_unavailable"?"浏览器运行环境不可用":failure.message;
+        const prototype=buildChatTools(["web.read"],{readWeb:async()=>{
+          if(failure.kind==="needs_login")return {needLogin:true,domain};
+          if(failure.kind==="http_blocked")return {blocked:true,status:failure.status,message:failure.message,alternates:failure.alternates};
+          throw new Error(summary);
+        }} as unknown as ChatToolDeps)["web.read"]!;
+        const projected=z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({...state.bound.input as Record<string,unknown>,url},{}))));
+        const blocked=failure.kind==="needs_login" || failure.kind==="browser_runtime_unavailable" || (failure.kind==="read_error" && failure.code==="permission");
+        const code=failure.kind==="needs_login"?"needs_login":failure.kind==="browser_runtime_unavailable"?"permission":failure.kind==="http_blocked"?"no_evidence":failure.code;
+        const output=agenticToolOutcomeSchema.parse({status:blocked?"blocked":"error",summary,evidence:[],data:{...projected as Record<string,unknown>,...(failure.kind==="browser_runtime_unavailable"?{recoveryState:"browser_runtime_unavailable"}:{})},error:{code,retryable:!blocked,recovery:failure.kind==="needs_login"?"在网站登录保管库完成登录后恢复":failure.kind==="browser_runtime_unavailable"?"修复系统或随包浏览器后恢复":blocked?"使用有权限的公开网页来源":"修改查询或选择其他来源后继续"},continuation:null,sideEffect:"none"});
+        const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:state.bound.toolCallId,toolName:state.bound.toolName,output}));
+        const settled=await createExecutionCallLedgerService(state.tx as unknown as Db,deps).settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText});
+        return receipt(settled);
+      });
+    },
     async readSession(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const {callId}=chatWebReadCallSchema.parse(raw);
       return access(ref,callId,"admission",async(state)=>{

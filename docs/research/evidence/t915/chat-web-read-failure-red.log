@@ -1,0 +1,63 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-commit.test.ts (28 tests | 5 failed) 20122ms
+   × 网页登录失败取消后仍结算冻结域，重复回执不能变成成功素材 642ms
+   × HTTP 失败保留备用来源与原卡片语义，运行时缺失保持独立恢复状态 640ms
+   × 已有成功观察拒绝失败降级，已提交成功仅重放原结果 654ms
+   × 失败与观察并发只有一种事实落库，失败已结算后不能上传正文 655ms
+   × 失败请求拒绝伪造成功字段、跨调用、旧 fence 与取消后损坏上下文 680ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 网页登录失败取消后仍结算冻结域，重复回执不能变成成功素材
+TypeError: f.service.fail is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:289:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > HTTP 失败保留备用来源与原卡片语义，运行时缺失保持独立恢复状态
+TypeError: f.service.fail is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:296:32
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 已有成功观察拒绝失败降级，已提交成功仅重放原结果
+TypeError: f.service.fail is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:303:26
+    301|   const f=await fixture(),failure={callId:f.parent.callId,failure:{kin…
+    302|   await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+    303|   await expect(f.service.fail(f.ref,failure)).rejects.toThrow();
+       |                          ^
+    304|   const success=await f.service.complete(f.ref,{callId:f.parent.callId…
+    305|   expect(await f.service.fail(f.ref,failure)).toEqual(success);expect(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 失败与观察并发只有一种事实落库，失败已结算后不能上传正文
+TypeError: f.service.fail is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:308:77
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 失败请求拒绝伪造成功字段、跨调用、旧 fence 与取消后损坏上下文
+TypeError: f.service.fail is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:316:26
+    314| it("失败请求拒绝伪造成功字段、跨调用、旧 fence 与取消后损坏上下文",async()=>{
+    315|   const f=await fixture(),other=await fixture(),raw={callId:f.parent.c…
+    316|   await expect(f.service.fail(f.ref,{...raw,assetId:"fake"})).rejects.…
+       |                          ^
+    317|   await expect(f.service.fail(f.ref,{callId:other.parent.callId,failur…
+    318|   await expect(f.service.fail({...f.ref,fenceToken:"stale"},raw)).reje…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 23 passed (28)
+   Start at  09:21:49
+   Duration  21.97s (transform 994ms, setup 0ms, import 1.71s, tests 20.12s, environment 0ms)
+
