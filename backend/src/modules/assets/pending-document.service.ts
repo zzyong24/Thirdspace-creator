@@ -44,7 +44,7 @@ export function createPendingDocumentService(deps: {
 }) {
   const repo = createPendingDocumentRepository(deps.db, deps.authorize);
   return {
-    async submit(ctx: RequestContext, input: PendingDocumentInput): Promise<PendingDocumentReceipt> {
+    async submit(ctx: RequestContext, input: PendingDocumentInput, signal?: AbortSignal): Promise<PendingDocumentReceipt> {
       ctx = { ...ctx };
       const { operationKey, name, sourceUrl, fullText } = input;
       const accountId = requireAccountId(ctx.accountId, "assets.pendingDocument");
@@ -69,21 +69,25 @@ export function createPendingDocumentService(deps: {
         storageKey: `${accountKeyPrefix(accountId)}document/committed-${identity}.txt`,
         name, sourceUrl, checksum, byteLength: bytes.byteLength,
         createdAt: deps.now(), committedAt: null,
-      });
+      }, signal);
       if (row.committedAt) return receipt(row);
+      signal?.throwIfAborted();
       const storage = await deps.objectStorageForCtx(ctx);
+      signal?.throwIfAborted();
       let stored: Uint8Array | null;
       try { stored = await storage.getObject(row.storageKey); }
       catch (error) { if (!missingObject(error)) throw error; stored = null; }
+      signal?.throwIfAborted();
       if (stored === null) {
         // LocalFS 原子发布完整文件；S3 PutObject 也只发布完整对象。同键并发只允许同一摘要。
         await storage.putObject({ storageKey: row.storageKey, bytes, mimeType: "text/plain", assetType: "document" });
         stored = await storage.getObject(row.storageKey);
       }
+      signal?.throwIfAborted();
       if (stored.byteLength !== row.byteLength || hash(stored) !== row.checksum) {
         throw new ConflictError("已准备的正文字节与提交摘要不符");
       }
-      return receipt(await repo.commit(ctx, operationKey, row, fullText, deps.now()));
+      return receipt(await repo.commit(ctx, operationKey, row, fullText, deps.now(), signal));
     },
   };
 }

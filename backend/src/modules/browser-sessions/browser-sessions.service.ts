@@ -46,7 +46,7 @@ export interface ServiceDeps {
 type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 export interface BrowserSessionsService {
   getStateVersioned(ctx:RequestContext,domain:string,transaction?:Transaction):Promise<{stateJson:string|null;revision:string|null}>;
-  saveStateVersioned(ctx:RequestContext,domain:string,stateJson:string,expectedRevision:string|null,transaction?:Transaction):Promise<{saved:boolean;revision:string|null}>;
+  saveStateVersioned(ctx:RequestContext,domain:string,stateJson:string,expectedRevision:string|null,transaction?:Transaction,signal?:AbortSignal):Promise<{saved:boolean;revision:string|null}>;
   /** 加密保存某域 storageState JSON(upsert)。master-key 缺失/加密失败 → 抛人话错拒存。 */
   saveState(ctx: RequestContext, domain: string, stateJson: string): Promise<void>;
   /** 读某域 storageState JSON(解密)。无记录 / 非密文 / 解密失败 → null(视为未登录)。 */
@@ -124,10 +124,14 @@ export function createBrowserSessionsService(
       const row=await repoFor(ctx,transaction).getState(WEB_DOMAIN_SCOPE,domain);
       return {stateJson:decrypt(row,domain),revision:revision(row)};
     },
-    saveStateVersioned: async (ctx,domain,stateJson,expectedRevision,transaction) => {
+    saveStateVersioned: async (ctx,domain,stateJson,expectedRevision,transaction,signal) => {
+      signal?.throwIfAborted();
       const repo=repoFor(ctx,transaction), row=await repo.getState(WEB_DOMAIN_SCOPE,domain);
+      signal?.throwIfAborted();
       if(revision(row)!==expectedRevision)return {saved:false,revision:revision(row)};
       const result=await repo.compareAndSetState(WEB_DOMAIN_SCOPE,domain,encrypt(stateJson),row);
+      // 在调用方事务中，迟到停止必须抛出并回滚 CAS；非事务写已提交则返回真实事实。
+      if(transaction)signal?.throwIfAborted();
       return {saved:result.saved,revision:revision(result.row)};
     },
 

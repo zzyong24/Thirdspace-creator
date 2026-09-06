@@ -13,3 +13,5 @@ export const chatWebReadObservationSchema = z.object({
 }).strict();
 export const chatWebReadCallSchema = z.object({ callId: z.string().min(1).max(256) }).strict();
 export const chatWebReadRecordSchema = chatWebReadCallSchema.extend({ observation: chatWebReadObservationSchema }).strict();
+
+export const chatWebReadSessionSaveSchema = chatWebReadCallSchema.extend({ revision: z.string().min(1).nullable(), stateJson: z.string().max(2 * 1024 * 1024) }).strict();

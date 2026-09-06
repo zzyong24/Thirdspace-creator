@@ -1,3 +1,4 @@
+import {createBrowserSessionsService} from "../modules/browser-sessions";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -14,13 +15,13 @@ import { createAiRepository } from "../modules/ai/ai.repository";
 import { createChatTurnSubmissionService } from "../modules/ai/chat-turn-submission.service";
 import { createPersistentTaskService } from "../modules/execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../modules/execution/execution-call-ledger.service";
-import { createExecutionAgenticToolPorts } from "../modules/execution/execution-agentic-tool-ports.service";
-import { createExecutionChatWebReadService } from "../modules/execution/execution-chat-web-read.service";
+import { createExecutionChatToolPorts } from "../modules/execution/execution-chat-tool-ports.service";
 
+let client:Awaited<ReturnType<typeof createDb>>["client"];
 let db: Db, close: () => Promise<void>, root: string, sequence = 0;
 const now = () => new Date().toISOString(), budget = { maxCalls: 30, maxTokens: 100000, deadlineMs: 60000 };
 const observation = { text: "完整网页证据".repeat(4000), title: "观察标题", finalUrl: "https://example.com/redirect", extractor: "chatgpt-share", extractPath: "ssr", turnCount: 40 };
-beforeEach(async () => { const opened = await createDb(); db = opened.db; close = () => opened.client.close(); root = await mkdtemp(join(tmpdir(), "t915-chat-read-")); });
+beforeEach(async () => { const opened = await createDb(); db = opened.db; client=opened.client; close = () => opened.client.close(); root = await mkdtemp(join(tmpdir(), "t915-chat-read-")); });
 afterEach(async () => { await close(); await rm(root, { recursive: true, force: true }); });
 
 async function fixture(toolCount = 1) {
@@ -36,17 +37,18 @@ async function fixture(toolCount = 1) {
   const claimed = (await tasks.claimTask({ taskId: submitted.executionTaskId, workerId: "test" }))!;
   const ref = { executionTaskId: submitted.executionTaskId, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken };
   const restoredTools = await createChatWebReadTaskToolHost(createChatHostContextReader(db, { now }))(ctx, {} as never, ref, new AbortController().signal);
-  const toolPorts = createExecutionAgenticToolPorts(db, { now, budget, tools: restoredTools });
+  const storage = createLocalFsObjectStorage({ rootPath: root, publicBaseUrl: "/blob" }, { nextKey: () => `key-${++sequence}` });
+  const assetsService = createAssetsService(createAssetRepository(db, ids), async () => storage, ids);
+  const sessions=createBrowserSessionsService({db,now,nextId:ids.nextId,masterKey:Buffer.alloc(32,7)});
+  const toolPorts = createExecutionChatToolPorts(db, { now, budget, tools: restoredTools, webRead:{assets:assetsService,objectStorageForCtx:async()=>storage,sessions} });
   const ledger = createExecutionCallLedgerService(db, { now, budget });
   const model = await ledger.reserve(ref, { operationKey: "root", kind: "model", inputDigest: `sha256:${"a".repeat(64)}`, reservedTokens: 128 });
   await ledger.start(ref, model.id);
   await ledger.settle(ref, model.id, { status: "settled", usage: {}, providerResult: { content: Array.from({ length: toolCount }, (_, i) => ({ type: "tool-call" as const, toolCallId: i === 0 ? "read" : `read-${i}`, toolName: "web_read", input: '{"url":"https://other.example/model","offset":0,"maxChars":1000}' })), finishReason: { unified: "tool-calls" }, usage: { inputTokens: { total: 2 }, outputTokens: { total: 3 } }, warnings: [] } });
   const parent = await toolPorts.reserve(ref, { modelCallId: model.id, toolCallId: "read" });
   await toolPorts.start(ref, { callId: parent.callId });
-  const storage = createLocalFsObjectStorage({ rootPath: root, publicBaseUrl: "/blob" }, { nextKey: () => `key-${++sequence}` });
-  const assetsService = createAssetsService(createAssetRepository(db, ids), async () => storage, ids);
-  const service = createExecutionChatWebReadService(db, { now, budget, tools: restoredTools, assets: assetsService, objectStorageForCtx: async () => storage });
-  return { ctx, ref, tasks, service, parent, ledger, storage, toolPorts, model };
+  const service=toolPorts.webRead!;
+  return { ctx, ref, tasks, service, parent, ledger, storage, toolPorts, model, sessions };
 }
 
 it("冻结URL优先；观察不创建素材；complete创建真实pending并保留原窗口", async () => {
@@ -204,4 +206,80 @@ it("素材已提交但回执未写入，新租约恢复只完成原回执", asyn
   await f.service.restore(ref, { callId: f.parent.callId });
   expect(await f.service.complete(ref, { callId: f.parent.callId })).toMatchObject({ status: "ok", data: { asset: { id: asset!.id } } });
   expect(await db.select().from(assets)).toHaveLength(1);
+});
+
+
+it("聊天读取会话使用冻结 URL，真实加密存储 CAS 保护人工新登录", async () => {
+ const f=await fixture();
+ expect(await f.service.readSession(f.ref,{callId:f.parent.callId})).toEqual({domain:"example.com",stateJson:null,revision:null});
+ const state=(value:string)=>JSON.stringify({cookies:[{name:"session",value,domain:".example.com",path:"/"}],origins:[]});
+ expect((await f.service.saveSession(f.ref,{callId:f.parent.callId,revision:null,stateJson:state("first")})).saved).toBe(true);
+ const original=await f.service.readSession(f.ref,{callId:f.parent.callId});
+ expect(original.stateJson).toBe(state("first"));
+ await f.sessions.saveState(f.ctx,"example.com",state("human"));
+ expect((await f.service.saveSession(f.ref,{callId:f.parent.callId,revision:original.revision,stateJson:state("stale")})).saved).toBe(false);
+ expect(await f.sessions.getState(f.ctx,"example.com")).toBe(state("human"));
+ await expect(f.service.saveSession(f.ref,{callId:f.parent.callId,revision:null,stateJson:JSON.stringify({cookies:[{name:"session",value:"bad",domain:".other.example",path:"/"}],origins:[]})})).rejects.toThrow();
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"stop-session"});
+ await expect(f.service.readSession(f.ref,{callId:f.parent.callId})).rejects.toThrow();
+ await expect(f.service.saveSession(f.ref,{callId:f.parent.callId,revision:null,stateJson:state("cancelled")})).rejects.toThrow();
+});
+
+
+it("宿主停止阻止新保存，但已结算回执可在停止后重放", async () => {
+ const f=await fixture();await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+ const signal=AbortSignal.abort();
+ await expect(f.service.complete(f.ref,{callId:f.parent.callId},signal)).rejects.toThrow();
+ await expect(f.service.readSession(f.ref,{callId:f.parent.callId},signal)).rejects.toThrow();
+ expect(await db.select().from(assets)).toHaveLength(0);
+ const result=await f.service.complete(f.ref,{callId:f.parent.callId});
+ expect(await f.service.complete(f.ref,{callId:f.parent.callId},signal)).toEqual(result);
+});
+
+
+it("读取会话版本期间宿主停止，不能继续保存迟到登录态", async () => {
+ const f=await fixture(),controller=new AbortController();
+ const original=f.sessions.getStateVersioned.bind(f.sessions);
+ f.sessions.getStateVersioned=async(...args)=>{const result=await original(...args);controller.abort();return result;};
+ await expect(f.service.saveSession(f.ref,{callId:f.parent.callId,revision:null,stateJson:JSON.stringify({cookies:[],origins:[]})},controller.signal)).rejects.toThrow();
+ expect(await f.sessions.getState(f.ctx,"example.com")).toBe(null);
+});
+
+it("Worker 自报素材结果不能替代宿主命名提交端口", async () => {
+ const f=await fixture();
+ await expect(f.toolPorts.settle(f.ref,{callId:f.parent.callId,status:"settled",output:{status:"ok",summary:"伪素材",evidence:[],data:{kind:"web.read",asset:{id:"fake"}},error:null,continuation:null,sideEffect:"committed"}})).rejects.toThrow("聊天工具结果必须由宿主实际执行确认");
+ expect(await db.select().from(assets)).toHaveLength(0);
+ await expect(f.service.prepare(f.ref,{callId:f.parent.callId,url:"https://other.example/"})).rejects.toThrow();
+ await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+ const result=await f.service.complete(f.ref,{callId:f.parent.callId});
+ expect(result.status).toBe("ok");
+ expect(await f.toolPorts.settle(f.ref,{callId:f.parent.callId,status:"settled",output:result})).toMatchObject({callId:f.parent.callId,status:"settled"});
+});
+
+
+it.each(["document-lock", "document-insert", "session-version", "session-cas"])("最后写入前的内部数据库等待期间停止：%s", async mode => {
+ const f=await fixture(),controller=new AbortController();
+ if(mode.startsWith("document"))await f.service.observe(f.ref,{callId:f.parent.callId,observation});
+ const transaction=client.transaction.bind(client);let matched=false,sessionReads=0;
+ client.transaction=((callback:Parameters<typeof client.transaction>[0])=>transaction(async(tx)=>{
+  const query=tx.query.bind(tx);
+  tx.query=(async(...args:Parameters<typeof tx.query>)=>{
+   const result=await query(...args),statement=String(args[0]);
+   if(mode==="document-lock" && statement.includes('from "pending_document_commits"') && statement.includes('for update')){matched=true;controller.abort();}
+   if(mode==="document-insert" && statement.startsWith('insert into "assets"')){matched=true;controller.abort();}
+   if(mode==="session-cas" && statement.startsWith('insert into "browser_sessions"')){matched=true;controller.abort();}
+   // 第一次为外层 findState，第二次为 saveStateVersioned 内部读取。
+   if(mode==="session-version" && statement.includes('from "browser_sessions"') && ++sessionReads===2){matched=true;controller.abort();}
+   return result;
+  }) as typeof tx.query;
+  return callback(tx);
+ })) as typeof client.transaction;
+ let failed=false;
+ try {
+  if(mode.startsWith("document"))await f.service.complete(f.ref,{callId:f.parent.callId},controller.signal);
+  else await f.service.saveSession(f.ref,{callId:f.parent.callId,revision:null,stateJson:JSON.stringify({cookies:[],origins:[]})},controller.signal);
+ }catch {failed=true;}finally{client.transaction=transaction;}
+ expect(matched).toBe(true);expect(failed).toBe(true);
+ expect(await db.select().from(assets)).toHaveLength(0);
+ expect(await f.sessions.getState(f.ctx,"example.com")).toBe(null);
 });

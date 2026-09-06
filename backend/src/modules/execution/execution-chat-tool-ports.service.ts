@@ -1,3 +1,4 @@
+import {createExecutionChatWebReadService} from "./execution-chat-web-read.service";
 import {createExecutionChatResearchService} from "./execution-chat-research.service";
 import {createExecutionChatGenerationService} from "./execution-chat-generation.service";
 import type {ChatGenerationPreparation} from "../ai-runtime/chat-structured-tool-host";
@@ -35,11 +36,11 @@ export async function readExecutionChatTask(db:Db,ref:ExecutionRef,now?:()=>stri
   });
 }
 /** 宿主独立核对冻结工具和当前权限；不依赖 Worker 先问过授权，也不接收 Worker 自报参数。 */
-export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:{maxCalls:number;maxTokens:number;deadlineMs:number};tools:Record<string,ChatBackendTool>;resolveGenerationCredential?:Parameters<typeof createExecutionChatGenerationService>[1]["resolveCredential"]}){
+export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:{maxCalls:number;maxTokens:number;deadlineMs:number};tools:Record<string,ChatBackendTool>;webRead?:Omit<Parameters<typeof createExecutionChatWebReadService>[1],"now"|"budget"|"tools">;resolveGenerationCredential?:Parameters<typeof createExecutionChatGenerationService>[1]["resolveCredential"]}){
  const leases=createExecutionLeaseService(db,deps),binding=createAgenticToolBinding(deps.tools);
  async function validateTask(ref:ExecutionRef){
    const {input}=await readExecutionChatTask(db,ref,deps.now);
-   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || (tool.execution??"host")!==(frozen.execution??"host") || ((frozen.execution??"host")==="host" && typeof tool.execute!=="function") || (frozen.execution==="host.task-submit" && (typeof tool.prepareTask!=="function" || typeof tool.execute==="function")) || (frozen.execution==="worker.research" && typeof tool.execute==="function") || (frozen.execution==="worker.structured-node" && (typeof tool.prepareGeneration!=="function" || typeof tool.execute==="function")))throw new ConflictError("聊天工具执行或授权端口尚未装配");}
+   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || (tool.execution??"host")!==(frozen.execution??"host") || ((frozen.execution??"host")==="host" && typeof tool.execute!=="function") || (frozen.execution==="host.task-submit" && (typeof tool.prepareTask!=="function" || typeof tool.execute==="function")) || (frozen.execution==="worker.web-read" && (!deps.webRead?.sessions || typeof tool.execute==="function")) || (frozen.execution==="worker.research" && typeof tool.execute==="function") || (frozen.execution==="worker.structured-node" && (typeof tool.prepareGeneration!=="function" || typeof tool.execute==="function")))throw new ConflictError("聊天工具执行或授权端口尚未装配");}
    return input;
  }
  async function scope(ref:ExecutionRef,request:{modelCallId:string;toolCallId:string}){
@@ -83,7 +84,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await project.recordApproval(ref,request,decision);
   return decision;
  }
- const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.research" || tool.execution==="worker.script-hooks" || tool.execution==="worker.structured-node" || tool.execution==="host.task-submit"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
+ const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.web-read" || tool.execution==="worker.research" || tool.execution==="worker.script-hooks" || tool.execution==="worker.structured-node" || tool.execution==="host.task-submit"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
   const bound=await leases.withLease(executionScope.execution,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
    const current=calls.find(call=>call.id===executionScope.callId);if(!current)throw new ConflictError("聊天调用不存在");return binding.forCall(task,calls,current);
@@ -109,11 +110,12 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   if(decision.status!=="denied")throw new ConflictError("宿主未确认用户拒绝");
   return tools.settle(ref,request);
  }
+ const webRead=deps.webRead?createExecutionChatWebReadService(db,{...deps,...deps.webRead}):undefined;
  const research=createExecutionChatResearchService(db,{...deps,check});
  const generation=createExecutionChatGenerationService(db,{...deps,check,resolveCredential:deps.resolveGenerationCredential??(async()=>{throw new ConflictError("生成模型凭据端口未装配");})});
  const hooks=createExecutionChatHooksService(db,{...deps,check});
  const submissions=createExecutionChatTaskSubmissionService(db,{...deps,check});
- return {...tools,validateTask,check,research:{...research,async settle(ref:ExecutionRef,raw:unknown){const output=await research.settle(ref,raw);await project(ref,workerPortInputSchemas.settleChatResearch.parse(raw).callId);return output;}},generation:{...generation,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await generation.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatGeneration.parse(raw).callId);return result;}},hooks:{...hooks,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await hooks.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatHooks.parse(raw).callId);return result;}},
+ return {...tools,validateTask,check,webRead:webRead?{...webRead,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const output=await webRead.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatWebRead.parse(raw).callId);return output;}}:undefined,research:{...research,async settle(ref:ExecutionRef,raw:unknown){const output=await research.settle(ref,raw);await project(ref,workerPortInputSchemas.settleChatResearch.parse(raw).callId);return output;}},generation:{...generation,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await generation.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatGeneration.parse(raw).callId);return result;}},hooks:{...hooks,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await hooks.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatHooks.parse(raw).callId);return result;}},
   async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled"){await submissions.wake(ref,result.callId);await project(ref,result.callId);}return result;},
   async execute(...args:Parameters<typeof tools.execute>){const result=await submissions.handles(args[0],args[1])?await submissions.execute(...args):await tools.execute(...args);await submissions.wake(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
   async settle(ref:ExecutionRef,raw:unknown){const result=await settle(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},

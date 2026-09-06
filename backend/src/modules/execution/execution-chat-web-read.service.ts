@@ -1,7 +1,10 @@
+import type {BrowserSessionsService} from "../browser-sessions";
+import {findBrowserSessionState,validateBrowserStorageState} from "./execution-browser-session.service";
+import {assertSafeWebDomain,webDomainFromUrl} from "@creatoros/ai-worker/browser/web-domain";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, executionCalls, type Db } from "@creatoros/backend";
-import { chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { chatWebReadSessionSaveSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
 import { createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
@@ -24,6 +27,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
   budget: { maxCalls: number; maxTokens: number; deadlineMs: number };
   tools: Record<string, ChatBackendTool>;
   objectStorageForCtx: ObjectStorageForCtx;
+  sessions?: Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;
   assets: Pick<AssetsService, "getAsset" | "getDownloadUrl" | "listFilesByIds">;
 }) {
   const now = deps.now ?? (() => new Date().toISOString());
@@ -58,28 +62,53 @@ export function createExecutionChatWebReadService(db: Db, deps: {
     return { row, observation };
   }
   return {
-    async restore(ref: ExecutionRef, raw: unknown) {
+    async readSession(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
+      const {callId}=chatWebReadCallSchema.parse(raw);
+      return access(ref,callId,"admission",async(state)=>{
+        signal?.throwIfAborted();started(state,ref);if(!deps.sessions)throw new ConflictError("网页会话端口尚未装配");
+        const domain=assertSafeWebDomain(webDomainFromUrl(state.url!)),record=await findBrowserSessionState(deps.sessions,state.context,domain,state.tx);
+        signal?.throwIfAborted();
+        if(record.stateJson!==null)validateBrowserStorageState(record.stateJson,new URL(state.url!),domain);
+        return {domain,stateJson:record.stateJson,revision:record.revision};
+      });
+    },
+    async saveSession(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
+      const request=chatWebReadSessionSaveSchema.parse(raw);
+      return access(ref,request.callId,"admission",async(state)=>{
+        signal?.throwIfAborted();started(state,ref);if(!deps.sessions)throw new ConflictError("网页会话端口尚未装配");
+        const domain=assertSafeWebDomain(webDomainFromUrl(state.url!));
+        validateBrowserStorageState(request.stateJson,new URL(state.url!),domain);
+        const record=await findBrowserSessionState(deps.sessions,state.context,domain,state.tx);
+        signal?.throwIfAborted();
+        if(record.revision!==request.revision || (record.revision!==null && record.stateJson===null))return {saved:false,revision:record.revision};
+        return deps.sessions.saveStateVersioned(state.context,record.key,request.stateJson,request.revision,state.tx,signal);
+      });
+    },
+    async restore(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const { callId } = chatWebReadCallSchema.parse(raw);
       return access(ref, callId, "admission", async (state) => {
+        signal?.throwIfAborted();
         if (state.parent.status !== "started" || state.parent.resultText || state.calls.some(call => call.parentCallId === callId)) throw new ConflictError("网页父调用不是可恢复读取");
         if (!await stored(state)) throw new ConflictError("网页没有已持久观察，不能恢复提交");
+        signal?.throwIfAborted();
         await state.tx.update(executionCalls).set({ startedAttempt: ref.attempt, updatedAt: now() }).where(eq(executionCalls.id, callId));
         return { callId, status: "started" as const };
       });
     },
-    async prepare(ref: ExecutionRef, raw: unknown) {
+    async prepare(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const { callId } = chatWebReadCallSchema.parse(raw);
       return access(ref, callId, "admission", async (state) => {
+        signal?.throwIfAborted();
         if (!["started", "settled"].includes(state.parent.status)) throw new ConflictError("网页父调用不可读取");
         const saved = await stored(state);
         if (state.parent.status !== "settled" && state.parent.startedAttempt !== ref.attempt && !saved) throw new ConflictError("旧执行没有可恢复网页事实");
         return { url: state.url!, observation: saved?.observation ?? null, evidenceRef: saved?.row.id ?? null };
       });
     },
-    async observe(ref: ExecutionRef, raw: unknown) {
+    async observe(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const { callId, observation } = chatWebReadRecordSchema.parse(raw);
       return access(ref, callId, "admission", async (state) => {
-        started(state, ref);
+        signal?.throwIfAborted();started(state, ref);
         const existing = await stored(state), contentHash = digest(state.url!, observation);
         if (existing) {
           if (existing.row.contentHash !== contentHash) throw new ConflictError("同一网页调用已有不同观察");
@@ -89,31 +118,36 @@ export function createExecutionChatWebReadService(db: Db, deps: {
         const byteLength = Buffer.byteLength(observation.text, "utf8");
         if (rows.reduce((total, row) => total + row.bytes, 0) + byteLength > 8 * 1024 * 1024) throw new ConflictError("任务网页正文超过 8 MiB 限制");
         const id = `evidence-${randomUUID()}`;
+        signal?.throwIfAborted();
         await state.tx.insert(executionEvidence).values({ id, executionTaskId: state.task.id, originCallId: callId, requestedUrl: state.url!, sourceUrl: observation.finalUrl, title: observation.title, fullText: observation.text, contentHash, byteLength, createdAt: now(), metadata: { kind: "chat.web.read", inputDigest: state.bound.inputDigest, extractor: observation.extractor, extractPath: observation.extractPath, turnCount: observation.turnCount } });
         return { evidenceRef: id, observation };
       });
     },
-    async complete(ref: ExecutionRef, raw: unknown) {
+    async complete(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const { callId } = chatWebReadCallSchema.parse(raw);
       const completed = await access(ref, callId, "settlement", async (state) => state.parent.status === "settled" ? receipt(state.parent) : null);
       if (completed) return completed;
+      signal?.throwIfAborted();
       try {
       const state = await access(ref, callId, "admission", async (state) => {
-        started(state, ref); const saved = await stored(state);
+        signal?.throwIfAborted();started(state, ref); const saved = await stored(state);
         if (!saved) throw new ConflictError("网页尚未保存可恢复观察");
         return { context: state.context, bound: state.bound, ...saved };
       });
       const operationKey = `chat.web.read:${callId}:${state.row.contentHash}`;
       const documents = createPendingDocumentService({ db, objectStorageForCtx: deps.objectStorageForCtx, now,
         authorize: async (context, key, tx) => {
+          signal?.throwIfAborted();
           if (key !== operationKey || context.userId !== state.context.userId || context.accountId !== state.context.accountId) throw new ConflictError("正文提交归属不符");
           await access(ref, callId, "admission", async (latest) => {
-            started(latest, ref); const saved = await stored(latest);
+            signal?.throwIfAborted();started(latest, ref); const saved = await stored(latest);
             if (saved?.row.contentHash !== state.row.contentHash || latest.bound.inputDigest !== state.bound.inputDigest) throw new ConflictError("正文提交期间网页身份改变");
+            signal?.throwIfAborted();
           }, tx as unknown as Db);
         },
       });
-      const saved = await documents.submit(state.context, { operationKey, name: `正文·${(state.observation.title || state.observation.finalUrl).slice(0, 40)}`, sourceUrl: state.row.requestedUrl, fullText: state.observation.text });
+      signal?.throwIfAborted();
+      const saved = await documents.submit(state.context, { operationKey, name: `正文·${(state.observation.title || state.observation.finalUrl).slice(0, 40)}`, sourceUrl: state.row.requestedUrl, fullText: state.observation.text }, signal);
       const current = await deps.assets.getAsset(state.context, saved.assetId);
       const files = await deps.assets.listFilesByIds(state.context, [saved.fileId]);
       const file = files.find((file) => file.id === current.currentFileId && file.assetId === current.id);

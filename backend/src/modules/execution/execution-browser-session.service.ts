@@ -59,25 +59,26 @@ export function createExecutionBrowserSessionService(db:Db,deps:{tools:Record<st
       return action({tx,context,domain,url});
     });
   }
-  async function findState(context:import("@creatoros/contract").RequestContext,domain:string,tx:Transaction){
-    for(const key of webSessionLookupDomains(domain)){
-      const record=await deps.sessions.getStateVersioned(context,key,tx);
-      // 损坏/不可解密记录也有revision，不能穿过它读取旧alias或当作空记录覆盖。
-      if(record.revision!==null)return {key,...record};
-    }
-    return {key:domain,stateJson:null,revision:null};
-  }
   return {
     async read(ref:ExecutionRef,raw:unknown){const {callId}=readSchema.parse(raw);return scoped(ref,callId,async({tx,context,domain,url})=>{
-      const record=await findState(context,domain,tx);
+      const record=await findBrowserSessionState(deps.sessions,context,domain,tx);
       if(record.stateJson!==null)validateBrowserStorageState(record.stateJson,url,domain);
       return {domain,stateJson:record.stateJson,revision:record.revision};
     });},
     async save(ref:ExecutionRef,raw:unknown){const request=saveSchema.parse(raw);return scoped(ref,request.callId,async({tx,context,domain,url})=>{
       validateBrowserStorageState(request.stateJson,url,domain);
-      const record=await findState(context,domain,tx);
+      const record=await findBrowserSessionState(deps.sessions,context,domain,tx);
       if(record.revision!==request.revision || (record.revision!==null && record.stateJson===null))return {saved:false,revision:record.revision};
       return deps.sessions.saveStateVersioned(context,record.key,request.stateJson,request.revision,tx);
     });},
   };
 }
+
+export async function findBrowserSessionState(sessions:Pick<BrowserSessionsService,"getStateVersioned">,context:import("@creatoros/contract").RequestContext,domain:string,tx:Transaction){
+    for(const key of webSessionLookupDomains(domain)){
+      const record=await sessions.getStateVersioned(context,key,tx);
+      // 损坏/不可解密记录也有revision，不能穿过它读取旧alias或当作空记录覆盖。
+      if(record.revision!==null)return {key,...record};
+    }
+    return {key:domain,stateJson:null,revision:null};
+  }
