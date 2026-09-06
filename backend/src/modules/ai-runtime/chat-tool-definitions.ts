@@ -66,7 +66,7 @@ export async function prepareChatToolDefinitions(tools: ToolSet, options:{worker
     const effect = CHAT_TOOL_EFFECTS[name]!;
     // 绑定真实schema变体与描述，避免不同上下文的同名工具共用错误版本。
     const execution=options.atomicPlanningThesis && name==="planning.thesis" ? "host.task-submit" as const : workerScriptHooks && name==="script.hooks" ? "worker.script-hooks" as const : undefined;
-    const revision=execution==="host.task-submit"?"chat-tools-atomic-planning-v1":execution?"chat-tools-worker-hooks-v1":IMPLEMENTATION_REVISION;
+    const revision=execution==="host.task-submit"?"chat-tools-atomic-planning-v1":execution?"chat-tools-worker-hooks-v1":(name==="local.tools"||name==="local.workspace")?"chat-tools-local-host-v2":IMPLEMENTATION_REVISION;
     const version = `${revision}:${createHash("sha256").update(JSON.stringify({ name, effect, description: tool.description, parameters: prepared.schema })).digest("hex")}`;
     const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema),...(execution?{execution}:{}) };
     return { name, prepared, definition };

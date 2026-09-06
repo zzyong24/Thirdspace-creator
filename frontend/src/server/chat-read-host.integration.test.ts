@@ -168,7 +168,7 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   }}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
   expect(resolveCredential).not.toHaveBeenCalled();expect(requests).toHaveLength(0);
   const missingTools:string[]=[];let factoryFailure="";
-  const resolveTools=createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask});
+  const resolveTools=createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}});
   host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"assembled-chat",budget:{maxCalls:12,maxTokens:300000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await resolveTools(...args);missingTools.push(...args[1].tools.filter(tool=>!Object.hasOwn(tools,tool.name)).map(tool=>tool.name));return tools;}catch(error){factoryFailure=error instanceof Error?error.message:String(error);throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
   host.start();
   await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(["queued","running"]).not.toContain(task!.status);},{timeout:15000});
@@ -241,4 +241,39 @@ it("候选工具经真实 Worker 回传卡片，项目当前值和经验实体�
   await host?.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));
   await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();vi.unstubAllEnvs();
  }
+},30000);
+
+it("真实聊天 Worker 连续探测本机 Node 和已授权目录，结果进入下一轮模型",async()=>{
+ const {createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
+ const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
+ const {executionTasks,executionCalls,eq}=await import("@creatoros/backend");
+ const {createServer}=await import("node:http"),{resolve}=await import("node:path"),{execFileSync}=await import("node:child_process");
+ const {mkdtempSync,writeFileSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os");
+ const {resetLocalReadGrantsForTest}=await import("./local-read-grants");
+ execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});
+ const directory=mkdtempSync(resolve(tmpdir(),"t915-local-host-")),allowed=resolve(directory,"allowed"),foreign=resolve(directory,"foreign"),grants=resolve(directory,"grants.json");
+ writeFileSync(grants,JSON.stringify({"local-worker":[allowed],"another-user":[foreign]}));
+ vi.stubEnv("DATABASE_URL","");vi.stubEnv("PGLITE_DATA_DIR",resolve(directory,"db"));vi.stubEnv("CREATOROS_LOCAL_READ_GRANTS_FILE",grants);__resetPersistenceForTests();resetLocalReadGrantsForTest();
+ const requests:any[]=[];
+ const server=createServer(async(req,res)=>{
+  let body="";for await(const chunk of req)body+=chunk.toString();requests.push(JSON.parse(body));
+  const turn=requests.length,name=turn===1?"local_tools":turn===2?"local_workspace":null;
+  const delta=name?{tool_calls:[{index:0,id:`local-${turn}`,type:"function",function:{name,arguments:turn===1?'{"tools":["node","unknown"]}':"{}"}}]}:{content:"已读取本机环境和授权目录"};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:name?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });
+ await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));let host:ReturnType<typeof createChatWorkerDispatcher>|undefined;
+ const ctx:RequestContext={userId:"local-worker",accountId:"a",source:"user",requestId:"test"};
+ try{
+  const runtime=await getChatRuntime(),db=fixture.db!,snapshot=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]));
+  const conversation=await runtime.ai.createConversation(ctx,{title:"本机工具",scope:"global"}),source=await runtime.ai.createMessage(ctx,conversation.id,{content:"查看 Node 和我的授权目录"});
+  // 专项验证真实本机端口；完整装配测试保留全部工具列表。
+  const definitions=(await prepareChatToolDefinitions(buildChatTools(["local.tools","local.workspace"],{} as ChatToolDeps))).definitions;
+  const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"读取本机工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:6,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:snapshot}})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"local-host",budget:{maxCalls:8,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+  host.start();await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(task?.status,JSON.stringify(task)).toBe("succeeded");},{timeout:15000});
+  expect(requests).toHaveLength(3);expect(JSON.stringify(requests[1])).toContain(process.versions.node);expect(JSON.stringify(requests[2])).toContain(allowed);expect(JSON.stringify(requests)).not.toContain(foreign);
+  const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));const tools=calls.filter(call=>call.kind==="tool");expect(tools).toHaveLength(2);expect(tools.every(call=>call.status==="settled")).toBe(true);
+  const outputs=tools.map(call=>JSON.parse(call.resultText!).output);expect(outputs).toEqual(expect.arrayContaining([expect.objectContaining({status:"ok",sideEffect:"none",data:expect.objectContaining({kind:"local.tools",rejected:["unknown"],tools:[expect.objectContaining({name:"node",installed:true,version:process.versions.node})]})}),expect.objectContaining({status:"ok",sideEffect:"none",data:expect.objectContaining({kind:"local.workspace",dirs:[allowed]})})]));
+ }finally{await host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();resetLocalReadGrantsForTest();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
 },30000);

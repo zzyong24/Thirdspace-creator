@@ -3867,19 +3867,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         "只探测用户本机的操作系统可执行文件(ffmpeg / ffprobe / node / python3 / git)，适用于抽音频、转码或本机脚本等明确依赖这些程序的动作。**不得用它探测 CreatorOS 的生图/文生视频/文本模型配置、provider、发布能力或其它应用内服务**；这类能力直接调用对应工具，由对应任务返回真实错误。返回系统工具是否已装、路径、版本和缺失时的安装提示；只读、白名单外名字会被拒绝。",
       inputSchema: LOCAL_TOOLS_PARAMS,
       execute: async ({ tools }): Promise<LocalToolsToolResult> => {
-        try {
-          const res = await deps.detectTools({
-            tools: Array.isArray(tools) ? tools : undefined,
-          });
-          return { kind: "local.tools", tools: res.tools, rejected: res.rejected, error: null };
-        } catch (err) {
-          return {
-            kind: "local.tools",
-            tools: [],
-            rejected: [],
-            error: err instanceof Error ? err.message : String(err),
-          };
-        }
+        const res = await deps.detectTools({tools:Array.isArray(tools)?tools:undefined});
+        return {kind:"local.tools",tools:res.tools,rejected:res.rejected,error:null};
       },
     }, deps.humanizeError),
     // [T-256a] 工作区感知:列用户「总是允许该目录」授权过的本地目录根(复用 T-253 授权表)。
@@ -3890,16 +3879,8 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         "列出用户**已长期授权**(在 local.read 确认卡上选过「总是允许该目录」)的本地目录清单。当用户问「看看我的工作区/我授权过哪些目录/我平时放素材的文件夹」时调用。返回的是你可以免弹卡直接读的目录根;**要看某个目录里有什么,再调 local.read 传那个目录路径**(会返回文件清单)——本工具只给目录清单、不列文件内容。若清单为空,说明用户还没「总是允许」过任何目录,引导 TA:让你 local.read 某个目录、在确认卡上选「总是允许该目录」,之后这个目录就会出现在这里。绝不臆造用户没授权过的目录。",
       inputSchema: LOCAL_WORKSPACE_PARAMS,
       execute: async (): Promise<LocalWorkspaceToolResult> => {
-        try {
-          const { dirs } = await deps.listAuthorizedDirs();
-          return { kind: "local.workspace", dirs: Array.isArray(dirs) ? dirs : [], error: null };
-        } catch (err) {
-          return {
-            kind: "local.workspace",
-            dirs: [],
-            error: err instanceof Error ? err.message : String(err),
-          };
-        }
+        const {dirs}=await deps.listAuthorizedDirs();
+        return {kind:"local.workspace",dirs:Array.isArray(dirs)?dirs:[],error:null};
       },
     }, deps.humanizeError),
     // [T-084c] AI 生成素材:文生图/文生视频。execute **不直接生成**(视频异步分钟级不能阻塞

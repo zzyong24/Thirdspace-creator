@@ -439,8 +439,7 @@ import {
   localBasename,
   type LocalSearchFs,
   // [T-256a] 工具探测纯函数:白名单过滤 + 防注入 + 版本解析(IO 在本文件端口)。
-  resolveToolsToProbe,
-  parseToolVersion,
+  createLocalEnvironmentHost,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   checkGrant as checkLocalReadGrant,
@@ -1578,7 +1577,7 @@ export interface ChatRuntime {
   // 缺失安装引导 + rejected 清单。
   detectTools: (
     ctx: RequestContext,
-    input: { tools?: string[] },
+    input: { tools?: string[]; signal?: AbortSignal },
   ) => Promise<{
     tools: Array<{
       name: string;
@@ -12607,67 +12606,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // [T-256a] local.tools 端口 —— 探测系统已装工具。安全铁律:工具名一律来自 local-env-probe 白名单
     // 常量(resolveToolsToProbe 已把非法/非白名单请求过滤进 rejected),用**固定 arg 数组** execFile
     // 统一解析绝对路径后执行 `<absolute> --version`，绝不拼 shell 字符串。只读探测、不执行任意命令。
-    detectTools: async (
-      _ctx: RequestContext,
-      input: { tools?: string[] },
-    ) => {
-      const { probe, rejected } = resolveToolsToProbe(input.tools);
-      const { execFile } = await import("node:child_process");
-      const { promisify } = await import("node:util");
-      const run = promisify(execFile);
-      const PROBE_TIMEOUT_MS = 3000;
-      const tools = await Promise.all(
-        probe.map(async (spec) => {
-          let installed = false;
-          let path: string | null = null;
-          let version: string | null = null;
-          // ① 统一路径解析：显式路径 → 随包 bin → PATH → 平台常见目录。
-          // Finder/桌面快捷方式启动时 PATH 不含 Homebrew；Windows 也没有 `which`，不能再
-          // 用 shell 命令当“是否安装”的真值。
-          try {
-            const found = resolveExecutablePath(spec.name, {
-              explicitEnvVar:
-                spec.name === "ffmpeg"
-                  ? "CREATOROS_FFMPEG_PATH"
-                  : spec.name === "ffprobe"
-                    ? "CREATOROS_FFPROBE_PATH"
-                    : undefined,
-              bundled: spec.name === "ffmpeg" || spec.name === "ffprobe",
-              preferredPaths:
-                spec.name === "node" ? [process.execPath] : undefined,
-            });
-            if (found) {
-              installed = true;
-              path = found;
-            }
-          } catch {
-            installed = false;
-          }
-          // ② 已装则读版本(<name> --version,argv;name 是白名单常量,安全)。拿不到版本仍算已装。
-          if (installed) {
-            try {
-              const { stdout, stderr } = await run(path!, [...spec.versionArgs], {
-                timeout: PROBE_TIMEOUT_MS,
-                windowsHide: true,
-              });
-              version = parseToolVersion(stdout || stderr);
-            } catch {
-              version = null;
-            }
-          }
-          return {
-            name: spec.name,
-            installed,
-            path,
-            version,
-            purpose: spec.purpose,
-            // 已装不冗余给安装引导;缺失才给(诚实引导)。
-            installHint: installed ? null : spec.installHint,
-          };
-        }),
-      );
-      return { tools, rejected };
-    },
+    detectTools: createLocalEnvironmentHost(resolveExecutablePath),
     // [T-256a] local.workspace 端口 —— 列该用户「总是允许该目录」授权过的本地目录根。复用 T-253
     // 授权表(local-read-grants),不新建授权机制;目录内容仍走 readLocalFile 的 listing(不重造)。
     listAuthorizedDirs: async (ctx: RequestContext) => {

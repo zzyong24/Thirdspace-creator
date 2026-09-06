@@ -131,3 +131,5 @@ export * from './topic-business-adapter';
 export {createDailyTopicBusinessAdapter,type DailyTopicPrepareDeps} from "./daily-topic-business-adapter";
 
 export {createCopilotBusinessAdapter} from "./copilot-business-adapter";
+
+export {createLocalEnvironmentHost} from "./local-environment-host";

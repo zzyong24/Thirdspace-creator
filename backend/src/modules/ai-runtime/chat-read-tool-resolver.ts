@@ -20,11 +20,12 @@ export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createC
   signal?.throwIfAborted();
   if(!expected.userId || !expected.accountId || restored.context.userId!==expected.userId || restored.context.accountId!==expected.accountId)throw new Error("读取工具账号与任务不符");
   const {context,hostContext,modelInput}=restored;
+  const definitions=modelInput.tools.filter(tool=>isChatReadToolName(tool.name));
+  if(!definitions.length)return {};
   const {runWithEffectiveSkillSnapshot}=await import("@creatoros/ai-worker");
   return runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,async()=>{
-   const guide=await resolveChatGuideSnapshot(hostContext.chatContext.surface);
+   const guide=definitions.some(tool=>tool.name==="creatoros.guide")?await resolveChatGuideSnapshot(hostContext.chatContext.surface):null;
    signal?.throwIfAborted();
-   const definitions=modelInput.tools.filter(tool=>isChatReadToolName(tool.name));
    const bindings=createChatReadToolBindings(context,readers,{
     boundProjectId:hostContext.chatContext.projectId??undefined,
     ...(hostContext.mediaRoute?.kind==="cover.publication_reference"?{publicationView:"published_cover_candidates"}:{}),

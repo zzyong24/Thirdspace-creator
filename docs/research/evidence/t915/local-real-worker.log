@@ -1,0 +1,34 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:55383) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+[chat-context] est=2590→2590 tokens cleared=0 truncated=0
+
+ ❯ src/server/chat-read-host.integration.test.ts (5 tests | 1 failed) 10701ms
+   × 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选 1888ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+AssertionError: 任务错误=CHAT_WORKER_INPUT_UNAVAILABLE; 模型请求=0; 工厂错误=; 未接工具=topic.generate,topic.enrich,script.draft,publish.package,cover.generate,knowledge.distill,positioning.generate,calibration.diagnose,material.gather,material.screenshot,web.read,local.read,material.generate: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/server/chat-read-host.integration.test.ts:176:143
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  05:06:30
+   Duration  15.15s (transform 2.62s, setup 162ms, import 3.58s, tests 10.70s, environment 506ms)
+

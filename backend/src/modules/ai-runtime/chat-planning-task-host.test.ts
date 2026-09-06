@@ -12,7 +12,7 @@ async function fixture(){
  const read=vi.fn(async()=>structuredClone(restored));
  const prepareTaskCommit=vi.fn(async()=>({commit:vi.fn()}));
  const wakeTask=vi.fn(async()=>{});
- const resolve=createChatTaskToolHost({read} as never,{} as ContextReaders,{prepareTaskCommit,wakeTask} as never);
+ const resolve=createChatTaskToolHost({read} as never,{} as ContextReaders,{planning:{prepareTaskCommit,wakeTask}} as never);
  const bound=await resolve(context,restored.modelInput as never,execution,new AbortController().signal);
  return {context,execution,tools,restored,read,prepareTaskCommit,wakeTask,bound,scope:{execution,callId:"call",attemptId:"chat-submit:original-call"}};
 }

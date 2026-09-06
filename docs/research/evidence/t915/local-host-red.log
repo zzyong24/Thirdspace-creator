@@ -1,0 +1,99 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts (7 tests | 7 failed) 376ms
+   × 两个真实本机工具复用原 schema 和短宿主端口 369ms
+   × account 失效不执行本机读取 2ms
+   × definition 失效不执行本机读取 1ms
+   × cancel 失效不执行本机读取 1ms
+   × input 失效不执行本机读取 1ms
+   × 瞬断进入可恢复结果，不把旧工具 catch 的字符串当不可重试失败 1ms
+   × 本机端口读取期间取消，迟到数据不返回模型 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > 两个真实本机工具复用原 schema 和短宿主端口
+EffectiveSkillRuntimeError: [SKILL_SNAPSHOT_INCOMPLETE] snapshot 缺少 required skill: creatoros.guide
+ ❯ getEffectiveSkill ../ai-worker/src/prompt/effective-skill-runtime.ts:103:11
+    101|   );
+    102|   if (!skill) {
+    103|     throw new EffectiveSkillRuntimeError(
+       |           ^
+    104|       "SKILL_SNAPSHOT_INCOMPLETE",
+    105|       `snapshot 缺少 required skill: ${skillId}`,
+ ❯ src/modules/ai-runtime/chat-guide-snapshot.ts:9:25
+ ❯ resolveChatGuideSnapshot src/modules/ai-runtime/chat-guide-snapshot.ts:30:9
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:25:16
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:50:20
+ ❯ src/modules/ai-runtime/chat-task-tool-host.ts:17:46
+ ❯ fixture src/modules/ai-runtime/chat-local-tool-host.test.ts:12:50
+ ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts:16:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > account 失效不执行本机读取
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > definition 失效不执行本机读取
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > cancel 失效不执行本机读取
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > input 失效不执行本机读取
+EffectiveSkillRuntimeError: [SKILL_SNAPSHOT_INCOMPLETE] snapshot 缺少 required skill: creatoros.guide
+ ❯ getEffectiveSkill ../ai-worker/src/prompt/effective-skill-runtime.ts:103:11
+    101|   );
+    102|   if (!skill) {
+    103|     throw new EffectiveSkillRuntimeError(
+       |           ^
+    104|       "SKILL_SNAPSHOT_INCOMPLETE",
+    105|       `snapshot 缺少 required skill: ${skillId}`,
+ ❯ src/modules/ai-runtime/chat-guide-snapshot.ts:9:25
+ ❯ resolveChatGuideSnapshot src/modules/ai-runtime/chat-guide-snapshot.ts:30:9
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:25:16
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:50:20
+ ❯ src/modules/ai-runtime/chat-task-tool-host.ts:17:46
+ ❯ fixture src/modules/ai-runtime/chat-local-tool-host.test.ts:12:50
+ ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts:22:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > 瞬断进入可恢复结果，不把旧工具 catch 的字符串当不可重试失败
+EffectiveSkillRuntimeError: [SKILL_SNAPSHOT_INCOMPLETE] snapshot 缺少 required skill: creatoros.guide
+ ❯ getEffectiveSkill ../ai-worker/src/prompt/effective-skill-runtime.ts:103:11
+    101|   );
+    102|   if (!skill) {
+    103|     throw new EffectiveSkillRuntimeError(
+       |           ^
+    104|       "SKILL_SNAPSHOT_INCOMPLETE",
+    105|       `snapshot 缺少 required skill: ${skillId}`,
+ ❯ src/modules/ai-runtime/chat-guide-snapshot.ts:9:25
+ ❯ resolveChatGuideSnapshot src/modules/ai-runtime/chat-guide-snapshot.ts:30:9
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:25:16
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:50:20
+ ❯ src/modules/ai-runtime/chat-task-tool-host.ts:17:46
+ ❯ fixture src/modules/ai-runtime/chat-local-tool-host.test.ts:12:50
+ ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts:28:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-local-tool-host.test.ts > 本机端口读取期间取消，迟到数据不返回模型
+EffectiveSkillRuntimeError: [SKILL_SNAPSHOT_INCOMPLETE] snapshot 缺少 required skill: creatoros.guide
+ ❯ getEffectiveSkill ../ai-worker/src/prompt/effective-skill-runtime.ts:103:11
+    101|   );
+    102|   if (!skill) {
+    103|     throw new EffectiveSkillRuntimeError(
+       |           ^
+    104|       "SKILL_SNAPSHOT_INCOMPLETE",
+    105|       `snapshot 缺少 required skill: ${skillId}`,
+ ❯ src/modules/ai-runtime/chat-guide-snapshot.ts:9:25
+ ❯ resolveChatGuideSnapshot src/modules/ai-runtime/chat-guide-snapshot.ts:30:9
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:25:16
+ ❯ src/modules/ai-runtime/chat-read-tool-resolver.ts:50:20
+ ❯ src/modules/ai-runtime/chat-task-tool-host.ts:17:46
+ ❯ fixture src/modules/ai-runtime/chat-local-tool-host.test.ts:12:50
+ ❯ src/modules/ai-runtime/chat-local-tool-host.test.ts:33:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  05:00:09
+   Duration  826ms (transform 432ms, setup 0ms, import 302ms, tests 376ms, environment 0ms)
+
