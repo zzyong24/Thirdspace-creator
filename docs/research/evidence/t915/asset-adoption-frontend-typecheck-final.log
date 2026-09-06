@@ -1,0 +1,16 @@
+
+> creatoros-frontend@1.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+../backend/src/modules/assets/generated-asset-candidate.service.ts(22,112): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(left: PgColumn<{ name: "account_id"; tableName: "assets"; dataType: "string"; columnType: "PgText"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, right: string | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | SQLWrapper'.
+      Type 'undefined' is not assignable to type 'string | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<string | null | undefined>, right: string | SQLWrapper | null | undefined): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "account_id"; tableName: "assets"; dataType: "string"; columnType: "PgText"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<string | null | undefined>'.
+      Type 'PgColumn<{ name: "account_id"; tableName: "assets"; dataType: "string"; columnType: "PgText"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<string | null | undefined>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "account_id"; tableName: "assets"; dataType: "string"; columnType: "PgText"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+ ELIFECYCLE  Command failed with exit code 2.

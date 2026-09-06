@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "6aea5e535532c3178047edee6bfe1075162dafff6229f8c7e1917d31d11efd25",
+      "file_sha256": "22f9353beb186b1997fddb38bc4f0721a4275faf388cb5bdaaec1b09a56f2bc6",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的任务恢复范围：按原 attempt 回读后，增加内部 prepareTaskCommit 端口，将配置准备与事务创建分离，使用既有数据库与任务实体。native_executable 标记仍来自既有 daemon 注释；本批不新增进程、运行时或凭据机制，按当前文件重新核对绑定。",
+      "reason": "DEC-RUNTIME-055 已批准的执行迁移范围：映射素材采纳和取消改经同事务服务；组合根复用既有项目链接端口，不新增进程、凭据保管或工具链。证据见 asset-adoption.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "9ee2270ebb2110665ad78378dc15201a2ee92b86b9a816baa86436fbba6c2865",
+      "file_sha256": "604133034f90691a00a67e021155f015e3245872268b2368044176ad2dea0d48",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的统一执行装配范围。本批将本地文件读取与授权判定提取到 backend ai-runtime，前端仅注入既有用户授权表；补读取取消和并发一次授权互斥，不新增授权存储、语言工具链或本机执行能力。验证与未完成边界见 chat-local-read-host.md。",
+      "reason": "DEC-RUNTIME-055 已批准的执行迁移范围：映射素材采纳和取消改经同事务服务；组合根复用既有项目链接端口，不新增进程、凭据保管或工具链。证据见 asset-adoption.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

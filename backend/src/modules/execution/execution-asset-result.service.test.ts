@@ -1,9 +1,15 @@
+import {createProjectsService,createProjectRepository} from "../projects";
+import {createAssetsService,createAssetRepository} from "../assets";
+import type {RequestContext} from "@creatoros/contract";
+import {createGeneratedAssetAdoptionService} from "../ai/generated-asset-adoption.service";
+import {createAiService} from "../ai/ai.service";
+import {createMaterialLinksService} from "../material-links";
 import {createExecutionCandidateService} from "../ai/execution-candidate.service";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {createDb,aiTasks,executionTasks,executionCalls,assets,assetFiles,aiTaskResults,eq,sql,type Db} from "@creatoros/backend";
+import {createDb,projects,materialLinks,aiTasks,executionTasks,executionCalls,assets,assetFiles,aiTaskResults,eq,sql,type Db} from "@creatoros/backend";
 import {createExecutionAuthorityService} from "./execution-authority.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
 import {createPersistentTaskService} from "./persistent-task.service";
@@ -220,4 +226,83 @@ it("素材已结算但未提交候选也不能绕过最大接管次数",async()=
  expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"over-budget"})).toBeNull();
  expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(1);
  expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.id)))[0]!.status).toBe("settled");
+});
+
+function adoptionAi(f:Awaited<ReturnType<typeof fixture>>,fail=false){
+ const unused=vi.fn(async():Promise<never>=>{throw new Error("未使用端口");});
+ const link=async(c:RequestContext,input:Parameters<ReturnType<typeof createMaterialLinksService>["create"]>[1],tx:unknown=db)=>{
+  const txDb=tx as Db,deps={now:f.now,nextId:(p:string)=>`${p}-${++sequence}`};
+  const projectService=createProjectsService(createProjectRepository(txDb),deps),assetService=createAssetsService(createAssetRepository(txDb,deps),async()=>f.storage,deps);
+  const row=await createMaterialLinksService({db:txDb,...deps,assertProjectOwned:async(context,id)=>{await projectService.listOutputIdsByProject(context,id);},assertAssetOwned:async(context,id)=>{const asset=await assetService.getAsset(context,id);if(asset.status!=="active")throw new Error("素材不可用");return asset;}}).create(c,input);
+  if(fail)throw new Error("链接写后失败");return row;
+ };
+ return createAiService({generatedAssets:createGeneratedAssetAdoptionService(db,{link},f.now),db,now:f.now,nextId:p=>`${p}-${++sequence}`,artifacts:{createVersion:unused},knowledge:{createKnowledge:unused},candidate:{createFromAIResult:unused,enrichCard:unused},learnings:{createLearning:unused},publishing:{createPublicationFromDraft:unused},materialLinks:{link},positioning:{upsertProfile:unused,createStatementVersion:unused},calibration:{createDraftPrediction:unused}});
+}
+async function candidateForAdoption(withProject=true){
+ const f=await fixture("image");
+ if(withProject){await db.insert(projects).values({id:f.id,userId:f.id,accountId:f.id,title:"真实项目",creationMode:"manual",status:"active",currentStage:"brief",startedAt:f.now(),createdAt:f.now(),updatedAt:f.now()});await db.update(aiTasks).set({projectId:f.id}).where(eq(aiTasks.id,f.id));}
+ await f.service.start(f.ref,f.call.id);const receipt=await f.service.save(f.ref,f.call.id,bytes);
+ const result=await createExecutionCandidateService(db,{now:f.now,projectCandidate:()=>{throw new Error("素材不可旁路");}}).commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)});
+ return {...f,receipt,result};
+}
+it("公共素材采纳在项目链接写后失败时完整回滚",async()=>{
+ const f=await candidateForAdoption();await expect(adoptionAi(f,true).confirmTask(f.ctx,f.id)).rejects.toThrow("链接写后失败");
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("pending");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(0);
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!.status).toBe("awaiting_confirmation");
+});
+
+it("公共素材采纳并发及回执丢失后重试只建一个链接",async()=>{
+ const f=await candidateForAdoption(),ai=adoptionAi(f);
+ const replies=await Promise.all([ai.confirmTask(f.ctx,f.id),ai.confirmTask(f.ctx,f.id)]);
+ expect(replies.map(reply=>reply.status)).toEqual(["succeeded","succeeded"]);
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toMatchObject([{entityId:f.receipt.assetId,role:"broll",stage:"production",priority:"normal"}]);
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(1);
+ await db.delete(materialLinks).where(eq(materialLinks.projectId,f.id));await db.update(assets).set({status:"deleted"}).where(eq(assets.id,f.receipt.assetId));
+ expect((await ai.confirmTask(f.ctx,f.id)).status).toBe("succeeded");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(0);
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("deleted");
+});
+it("无项目的公共采纳只激活原素材",async()=>{
+ const f=await candidateForAdoption(false);expect((await adoptionAi(f).confirmTask(f.ctx,f.id)).status).toBe("succeeded");
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("active");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.entityId,f.receipt.assetId))).toHaveLength(0);
+});
+it.each(["account","project","file","checksum","receipt","candidate","cancelled"])("公共素材采纳拒绝 %s 变化且不激活、不建链",async variant=>{
+ const f=await candidateForAdoption();
+ if(variant==="project")await db.update(projects).set({accountId:"foreign"}).where(eq(projects.id,f.id));
+ if(variant==="file")await db.update(assets).set({currentFileId:"foreign"}).where(eq(assets.id,f.receipt.assetId));
+ if(variant==="checksum")await db.update(assetFiles).set({checksum:"changed"}).where(eq(assetFiles.id,f.receipt.fileId));
+ if(variant==="receipt")await db.update(executionCalls).set({resultText:JSON.stringify({...f.receipt,assetId:"foreign"})}).where(eq(executionCalls.id,f.call.id));
+ if(variant==="candidate")await db.update(aiTaskResults).set({assetId:"foreign"}).where(eq(aiTaskResults.id,f.result.resultId));
+ if(variant==="cancelled")await db.update(aiTasks).set({status:"cancelled"}).where(eq(aiTasks.id,f.id));
+ await expect(adoptionAi(f).confirmTask(variant==="account"?{...f.ctx,accountId:"foreign"}:f.ctx,f.id)).rejects.toThrow();
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("pending");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(0);
+});
+it("公共取消素材候选删除 pending，重复取消不恢复素材",async()=>{
+ const f=await candidateForAdoption(),ai=adoptionAi(f);
+ expect((await ai.cancelTask(f.ctx,f.id)).status).toBe("cancelled");
+ expect((await ai.cancelTask(f.ctx,f.id)).status).toBe("cancelled");
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("deleted");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(0);
+ await expect(ai.confirmTask(f.ctx,f.id)).rejects.toThrow();
+});
+it("公共采纳与取消同时请求，只能有一个结果生效",async()=>{
+ const f=await candidateForAdoption(),ai=adoptionAi(f);
+ const replies=await Promise.allSettled([ai.confirmTask(f.ctx,f.id),ai.cancelTask(f.ctx,f.id)]);
+ expect(replies.filter(reply=>reply.status==="fulfilled")).toHaveLength(1);
+ const task=(await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!,asset=(await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!;
+ expect(["succeeded","cancelled"]).toContain(task.status);
+ expect(asset.status).toBe(task.status==="succeeded"?"active":"deleted");
+ expect(await db.select().from(materialLinks).where(eq(materialLinks.projectId,f.id))).toHaveLength(task.status==="succeeded"?1:0);
+});
+it("公共取消在状态写入失败时回滚素材删除",async()=>{
+ const f=await candidateForAdoption(),ai=adoptionAi(f);
+ await db.execute(sql.raw("CREATE FUNCTION fail_asset_cancel() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status = 'cancelled' THEN RAISE EXCEPTION 'cancel status failure'; END IF; RETURN NEW; END; $$;"));
+ await db.execute(sql.raw("CREATE TRIGGER fail_asset_cancel BEFORE UPDATE ON ai_tasks FOR EACH ROW EXECUTE FUNCTION fail_asset_cancel();"));
+ try{await expect(ai.cancelTask(f.ctx,f.id)).rejects.toThrow();}finally{await db.execute(sql.raw("DROP TRIGGER fail_asset_cancel ON ai_tasks;"));}
+ expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("pending");
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!.status).toBe("awaiting_confirmation");
+ expect((await ai.cancelTask(f.ctx,f.id)).status).toBe("cancelled");
 });

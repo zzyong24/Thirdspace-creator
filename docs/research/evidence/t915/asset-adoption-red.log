@@ -1,0 +1,35 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts -t '公共素材采纳'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts (34 tests | 1 failed | 33 skipped) 1085ms
+   × 公共素材采纳在项目链接写后失败时完整回滚 157ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 公共素材采纳在项目链接写后失败时完整回滚
+AssertionError: expected 'active' to be 'pending' // Object.is equality
+
+Expected: "pending"
+Received: "active"
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:244:93
+    242| it("公共素材采纳在项目链接写后失败时完整回滚",async()=>{
+    243|  const f=await candidateForAdoption();await expect(adoptionAi(f,true).…
+    244|  expect((await db.select().from(assets).where(eq(assets.id,f.receipt.a…
+       |                                                                                             ^
+    245|  expect(await db.select().from(materialLinks).where(eq(materialLinks.p…
+    246|  expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 33 skipped (34)
+   Start at  13:20:59
+   Duration  2.88s (transform 1.05s, setup 0ms, import 1.66s, tests 1.08s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

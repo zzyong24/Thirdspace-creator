@@ -244,6 +244,7 @@ export interface ServiceDeps {
   topicCandidates?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   researchMaterials?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   calibrationPositioning?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
+  generatedAssets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void>; cancelTask(ctx: RequestContext, taskId: string, errorMessage?: string): Promise<void> };
   structuredTargets?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   agenticProposals?: { confirmTask(ctx: RequestContext, taskId: string): Promise<void> };
   // T-513 composition seam: skill resolver injects immutable, server-only task state.
@@ -1144,6 +1145,10 @@ export function createAiService(deps: ServiceDeps): AiService {
         await deps.agenticProposals.confirmTask(ctx, taskId);
         return toTaskDto(await repo.requireTask(taskId));
       }
+      if(task.taskType==="asset.generate" && task.executionTaskId){
+        if(!deps.generatedAssets)throw new ConflictError("素材采纳服务尚未接入");
+        await deps.generatedAssets.confirmTask(ctx,taskId);return toTaskDto(await repo.requireTask(taskId));
+      }
       if(task.taskType==="topic.generate") {
         if(deps.topicCandidates){await deps.topicCandidates.confirmTask(ctx,taskId);return toTaskDto(await repo.requireTask(taskId));}
         if(task.executionTaskId)throw new ConflictError("选题采纳事务尚未接入");
@@ -1804,6 +1809,10 @@ export function createAiService(deps: ServiceDeps): AiService {
       if(task.executionTaskId && ["queued","running"].includes(task.status)){
         await createPersistentTaskService(deps.db,{now:deps.now}).command(ctx,{taskIds:[task.executionTaskId],command:"cancel",idempotencyKey:`ai-cancel:${task.id}`});
         return (await projectExecutionTasks(deps.db,ctx,[task]))[0]!;
+      }
+      if(task.taskType==="asset.generate" && task.executionTaskId){
+        if(!deps.generatedAssets)throw new ConflictError("素材采纳服务尚未接入");
+        await deps.generatedAssets.cancelTask(ctx,taskId,errorMessage);return toTaskDto(await repo.requireTask(taskId));
       }
       if (!canTransition(task.status, "cancelled")) {
         throw new ConflictError(

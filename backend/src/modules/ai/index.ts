@@ -92,3 +92,5 @@ export { createChatTurnSubmissionService, type ChatTurnSnapshot, type ChatTurnAs
 
 export { createChatTurnCompletionService } from "./chat-turn-completion.service";
 export { createAiTaskSubmissionService } from "./ai-task-submission.service";
+
+export {createGeneratedAssetAdoptionService} from "./generated-asset-adoption.service";

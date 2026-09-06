@@ -83,4 +83,4 @@ export {
 
 export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";
 
-export {verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+export {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";

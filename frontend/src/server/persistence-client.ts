@@ -12,7 +12,7 @@ import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusines
 import { createBrowserTaskAuthorizationService, createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
-import { createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
+import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
@@ -3124,15 +3124,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     knowledge: (c, proposal, tx) => knowledgeProposalAdoption.adopt(c, proposal, tx),
     assetTagsBatch: (c, proposals, tx) => assetTagProposalAdoption.adoptBatch(c, proposals, tx),
   }, deps.now);
-  const structuredTargetAdoption = createStructuredTargetAdoptionService(db, {
-    enrichCard(c,id,card,tx){
-      const txProjects=createProjectsService(createProjectRepository(tx as unknown as Db),deps);
-      return createCandidateService({db:tx as unknown as Db,...deps,
-        projects:{createProject:(context,input)=>txProjects.createProject(context,input)},
-        ingestion:{assertRunExists:async(context,runId)=>{await ingestionService.getRun(context,runId);}},
-      }).enrichCard(c,id,card);
-    },
-    link(c,input,tx){
+  const linkAdoptedMaterial: Parameters<typeof createStructuredTargetAdoptionService>[1]["link"] = (c,input,tx)=>{
       const txDb=tx as unknown as Db;
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txAssets=createAssetsService(createAssetRepository(txDb,deps),objectStorageForCtx,deps);
@@ -3144,7 +3136,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           return asset;
         },
       }).create(c,input);
+    };
+  const generatedAssetAdoption=createGeneratedAssetAdoptionService(db,{link:linkAdoptedMaterial},deps.now);
+  const structuredTargetAdoption = createStructuredTargetAdoptionService(db, {
+    enrichCard(c,id,card,tx){
+      const txProjects=createProjectsService(createProjectRepository(tx as unknown as Db),deps);
+      return createCandidateService({db:tx as unknown as Db,...deps,
+        projects:{createProject:(context,input)=>txProjects.createProject(context,input)},
+        ingestion:{assertRunExists:async(context,runId)=>{await ingestionService.getRun(context,runId);}},
+      }).enrichCard(c,id,card);
     },
+    link:linkAdoptedMaterial,
   },deps.now);
   const calibrationPositioningAdoption=createCalibrationPositioningAdoptionService(db,{
     async assertSubject(c,type,id,tx){
@@ -3205,6 +3207,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     topicCandidates:topicCandidateAdoption,
     researchMaterials:researchMaterialAdoption,
     calibrationPositioning:calibrationPositioningAdoption,
+    generatedAssets:generatedAssetAdoption,
     structuredTargets: structuredTargetAdoption,
     agenticProposals: agenticProposalAdoption,
     db,
