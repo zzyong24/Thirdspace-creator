@@ -133,7 +133,7 @@ downstreamRules 是**下游硬约束**（选题/写稿/项目节点会把它当�
 // 段头(与对话链路 buildPositioningPrompt 同一措辞),空则占位替换为空串、整段省略。
 // 导出供单测断言 facets 组装(纯函数)。
 export function positioningFacets(
-  context: CreativeContext,
+  context: Pick<CreativeContext,"positioningBrief"|"accountsBrief">,
   worksBrief = "",
 ): Record<string, string | undefined> {
   return {

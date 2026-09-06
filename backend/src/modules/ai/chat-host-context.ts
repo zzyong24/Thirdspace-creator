@@ -5,6 +5,8 @@ import { resolveSkillForSurface } from "../ai-runtime/chat-surface";
 import { canonicalJson } from "./canonical-json";
 import { ConflictError } from "../execution/execution.errors";
 const id = z.string().min(1);
+export const chatStructuredContextSchema=z.object({positioningBrief:z.string(),accountsBrief:z.string(),learningsBrief:z.string(),signalsBrief:z.string(),knowledgeBrief:z.string()}).strict();
+export const chatStructuredGenerationSchema=z.object({version:z.literal(1),maxOutputTokens:z.number().int().positive().max(65536)}).strict();
 export const chatHostContextSchema = z.object({
   schemaVersion: z.literal(1),
   chatContext: z.object({
@@ -16,6 +18,8 @@ export const chatHostContextSchema = z.object({
   positioningScratch: z.boolean(),
   trustedScriptSources: z.array(z.object({ref:id,label:z.string(),text:z.string(),truncated:z.boolean(),sourceType:z.enum(["message","attachment","project_text"]).optional(),sourceId:id.optional()}).strict()),
   skillSnapshot: workerSkillSnapshotSchema,
+  structuredContext:chatStructuredContextSchema.optional(),
+  structuredGeneration:chatStructuredGenerationSchema.optional(),
   scriptHooksContext: scriptHooksContextSchema.optional(),
   scriptHooksGeneration: z.object({version:z.literal(1),maxOutputTokens:z.number().int().positive().max(65536)}).strict().optional(),
 }).strict().superRefine((value, ctx) => {

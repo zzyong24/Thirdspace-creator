@@ -117,7 +117,7 @@ ${materialRule}
 // 把 CreativeContext + subject 映射成 topic.enrich 模板的 facets(占位化原 buildEnrichPrompt 的
 // 上下文块）。positioning/title/angle 是必需 facet,angle 沿用原 prompt 的兜底文案。
 export function enrichFacets(
-  context: CreativeContext,
+  context: Pick<CreativeContext,"positioningBrief"|"learningsBrief"|"signalsBrief"|"knowledgeBrief">,
   subject: { title: string; angle: string },
 ): Record<string, string | undefined> {
   return {

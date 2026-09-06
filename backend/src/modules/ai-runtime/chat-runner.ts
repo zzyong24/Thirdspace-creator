@@ -1,3 +1,4 @@
+import type {ChatStructuredContext} from "./chat-structured-tool-nodes";
 import { runChatTopicEnrich, runChatPositioning } from "./chat-structured-tool-nodes";
 import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
 import { EXTRA_BRIEF_HEADING, prepareScriptHooks, finalizeHookItems } from "@creatoros/ai-worker/chat";
@@ -919,7 +920,7 @@ export function resolveUniqueCoverReference(
  * 工具 execute 复用现有 runner 核心(runTopicNode / 选题卡补全),都在请求期用解析好的 model
  * 跑;故这里先解析 model(没配 key 抛 LlmCredentialError,由路由接住返 4xx,不假成功)。
  */
-export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string;scriptHooksContext?:ScriptHooksContext};
+export type ChatAssemblyPreparation = Omit<ChatAssembly,"modelSpec"> & {capability:string;structuredContext?:ChatStructuredContext;scriptHooksContext?:ScriptHooksContext};
 type ChatAssemblyArgs = [ctx:RequestContext,chatContext:ChatContext,deps:AssembleChatDeps,mediaRoute?:CopilotMediaRoute|null,options?:{positioningScratch?:boolean;verbatimSources?:readonly VerbatimSource[];latestUserInstruction?:string}];
 /** 准备上下文与真实工具，不取得主模型凭据；工具执行迁移仍由各真实端口承担。 */
 export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssemblyPreparation>{
@@ -930,7 +931,7 @@ export async function prepareChatAssembly(...args:ChatAssemblyArgs):Promise<Chat
 export async function buildChatAssembly(...args:ChatAssemblyArgs):Promise<ChatAssembly>{
   const assembled=await assembleChat(args[0],args[1],args[2],args[3],args[4],true);
   if(!assembled.modelSpec)throw new Error("聊天主模型未解析");
-  const {capability:_capability,scriptHooksContext:_hooks,...legacy}=assembled;
+  const {capability:_capability,scriptHooksContext:_hooks,structuredContext:_structured,...legacy}=assembled;
   return {...legacy,modelSpec:assembled.modelSpec};
 }
 
@@ -2279,6 +2280,7 @@ async function assembleChat(
     system,
     tools,
     capability: skillCapability,
+    ...((tools["topic.enrich"] || tools["positioning.generate"]) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
     ...(tools["script.hooks"] ? {scriptHooksContext:{...scriptHooksContext}} : {}),
     ...(modelSpec ? {modelSpec} : {}),
     forcedTool,

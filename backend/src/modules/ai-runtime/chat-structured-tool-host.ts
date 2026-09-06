@@ -1,0 +1,84 @@
+import type {RequestContext} from "@creatoros/contract";
+import type {ExecutionRef} from "@creatoros/contract/execution-worker";
+import type {createChatHostContextReader} from "../ai/chat-host-context.service";
+import {chatStructuredContextSchema,chatStructuredGenerationSchema} from "../ai/chat-host-context";
+import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
+import type {ChatBackendTool} from "../execution/execution-chat-tool-ports.service";
+import {canonicalJson} from "../ai/canonical-json";
+import {buildChatTools,clampExtraBrief,preparePositioningToolInput,type ChatToolDeps,type PositioningToolInput} from "./chat-tools";
+import {prepareChatToolDefinitions} from "./chat-tool-definitions";
+import {prepareChatPositioning,prepareChatTopicEnrich,type PreparedChatStructuredNode} from "./chat-structured-tool-nodes";
+
+export interface ChatStructuredToolPorts {
+ readWorks(context:RequestContext,limit:number|undefined,signal?:AbortSignal):Promise<string>;
+ getPositioningDiscovery(context:RequestContext,sessionId:string,signal?:AbortSignal):ReturnType<NonNullable<ChatToolDeps["getPositioningDiscovery"]>>;
+}
+export type ChatGenerationPreparation={
+ node:PreparedChatStructuredNode;
+ discovery:Awaited<ReturnType<typeof preparePositioningToolInput>>["discovery"];
+ maxOutputTokens:number;
+};
+const names=["topic.enrich","positioning.generate"] as const;
+/** 宿主只准备真实输入；调用账本层负责首次准备持久化，模型始终在 Worker 执行。 */
+export function createChatStructuredTaskToolHost(
+ reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
+ ports:ChatStructuredToolPorts,
+):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
+ async function current(ctx:RequestContext,ref:ExecutionRef,signal?:AbortSignal){
+  const owner=structuredClone(ctx),execution={...ref};
+  signal?.throwIfAborted();
+  const restored=structuredClone(await reader.read(execution));
+  signal?.throwIfAborted();
+  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("生成工具账号与原任务不符");
+  const definitions=restored.modelInput.tools.filter(tool=>names.some(name=>name===tool.name));
+  if(!definitions.length)return null;
+  const creative=chatStructuredContextSchema.parse(restored.hostContext.structuredContext);
+  const config=chatStructuredGenerationSchema.parse(restored.hostContext.structuredGeneration);
+  if(definitions.some(tool=>!restored.hostContext.skillSnapshot.skills.some(skill=>skill.skillId===tool.name)))throw new Error("原任务缺少生成节点 Skill");
+  const prototypes=buildChatTools(definitions.map(tool=>tool.name),{} as ChatToolDeps);
+  const prepared=await prepareChatToolDefinitions(prototypes,{workerStructuredNodes:true});
+  if(canonicalJson(prepared.definitions)!==canonicalJson(definitions))throw new Error("生成工具定义与原任务不符");
+  signal?.throwIfAborted();
+  return {restored,creative,config,prepared};
+ }
+ return async(ctx,_input,ref,signal)=>{
+  const initial=await current(ctx,ref,signal);
+  if(!initial)return {};
+  return Object.fromEntries(initial.prepared.definitions.map(definition=>{
+   const parameters=initial.prepared.parameters[definition.name]!.parameters;
+   async function resolve(context:RequestContext,raw:unknown,execution:ExecutionRef,abort?:AbortSignal){
+    const input=structuredClone(raw),resolved=await current(context,execution,abort);
+    if(!resolved || !resolved.prepared.definitions.some(tool=>tool.name===definition.name && tool.version===definition.version))throw new Error("生成工具已不属于当前任务");
+    return {...resolved,input:parameters.parse(input)};
+   }
+   return [definition.name,{
+    version:definition.version,effect:"proposal",execution:"worker.structured-node",parameters,
+    async approve(context,input,scope){
+     try{await resolve(context,input,scope.execution,scope.signal);return {status:"not-applicable"};}
+     catch{return {status:"unavailable"};}
+    },
+    async prepareGeneration(context,input,scope){
+     const resolved=await resolve(context,input,scope.execution,scope.signal);
+     if(definition.name==="topic.enrich"){
+      const args=resolved.input as {title:string;angle?:string;verifiedBrief?:string};
+      const node=await prepareChatTopicEnrich(resolved.creative,resolved.restored.hostContext.chatContext.selection,{title:args.title,angle:args.angle??"",verifiedBrief:clampExtraBrief(args.verifiedBrief)});
+      scope.signal?.throwIfAborted();
+      return {node,discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+     }
+     const prepared=await preparePositioningToolInput(resolved.input as PositioningToolInput,async sessionId=>{
+      scope.signal?.throwIfAborted();
+      const value=await ports.getPositioningDiscovery(structuredClone(resolved.restored.context),sessionId,scope.signal);
+      scope.signal?.throwIfAborted();return value;
+     });
+     const node=await prepareChatPositioning(resolved.creative,prepared.input,async limit=>{
+      scope.signal?.throwIfAborted();
+      const value=await ports.readWorks(structuredClone(resolved.restored.context),limit,scope.signal);
+      scope.signal?.throwIfAborted();return value;
+     });
+     scope.signal?.throwIfAborted();
+     return {node,discovery:prepared.discovery,maxOutputTokens:resolved.config.maxOutputTokens};
+    },
+   } satisfies ChatBackendTool];
+  }));
+ };
+}

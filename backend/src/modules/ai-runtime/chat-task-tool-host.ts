@@ -1,3 +1,4 @@
+import {createChatStructuredTaskToolHost,type ChatStructuredToolPorts} from "./chat-structured-tool-host";
 import {createChatLocalTaskToolHost,type ChatLocalToolPorts} from "./chat-local-tool-host";
 import {createChatPlanningTaskHost,type ChatPlanningTaskPorts} from "./chat-planning-task-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
@@ -11,12 +12,13 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
- ports:{planning?:ChatPlanningTaskPorts;local?:ChatLocalToolPorts}={},
+ ports:{planning?:ChatPlanningTaskPorts;local?:ChatLocalToolPorts;structured?:ChatStructuredToolPorts}={},
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
+ const structured=ports.structured?createChatStructuredTaskToolHost(reader,ports.structured):null;
  const read=createChatReadTaskToolHost(reader,readers),hooks=createChatHooksTaskToolHost(reader),candidates=createChatCandidateTaskToolHost(reader,readers);
  const planning=ports.planning?createChatPlanningTaskHost(reader,ports.planning):null,local=ports.local?createChatLocalTaskToolHost(reader,ports.local):null;
  return async(context,input,execution,signal)=>{
-  const groups=await Promise.all([read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{}]);
+  const groups=await Promise.all([read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
   signal.throwIfAborted();
   return Object.assign({},...groups);
  };

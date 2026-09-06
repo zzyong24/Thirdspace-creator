@@ -3376,3 +3376,28 @@ it("持久开场文案输入来自真实装配且与返回对象隔离",async()=
  expect(prepared.assembly.scriptHooksContext!.positioningBrief).not.toBe("后来的资料");
  expect(resolveModelSpec).not.toHaveBeenCalled();
 });
+
+it("持久结构化生成冻结实际上下文和专属 Skill，准备期间不取模型凭据",async()=>{
+ const {deps,resolveModelSpec}=makeDeps(),owner={...(ctx as RequestContext),accountId:"structured-snapshot"};
+ const snapshot=durableChatSnapshot(owner.accountId,"本轮方法");
+ snapshot.skills[0]!.effective.tools=["topic.enrich","positioning.generate"];
+ for(const skillId of ["topic.enrich","positioning.generate"])snapshot.skills.push({...structuredClone(snapshot.skills[0]!),skillId});
+ snapshot.skills.sort((a,b)=>a.skillId.localeCompare(b.skillId));
+ const options={structuredGeneration:{version:1 as const,maxOutputTokens:4096}};
+ const pending=prepareDurableChatTurn(owner,{messages:[],chatContext:{surface:"topics"}},deps,snapshot,options);
+ options.structuredGeneration.maxOutputTokens=1;
+ const prepared=await pending;
+ expect(prepared.hostContext.structuredGeneration).toEqual({version:1,maxOutputTokens:4096});
+ expect(prepared.toolDefinitions.filter(tool=>tool.execution==="worker.structured-node").map(tool=>tool.name)).toEqual(["topic.enrich","positioning.generate"]);
+ expect(prepared.hostContext.structuredContext).toMatchObject({positioningBrief:expect.stringContaining("硬核创作者")});
+ expect(prepared.hostContext.structuredContext).toEqual(prepared.assembly.structuredContext);
+ prepared.hostContext.structuredContext!.positioningBrief="后来的资料";
+ expect(prepared.assembly.structuredContext!.positioningBrief).not.toBe("后来的资料");
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});
+it("持久结构化生成缺少节点 Skill 时拒绝，不借场景 Skill 替代",async()=>{
+ const {deps,resolveModelSpec}=makeDeps(),owner={...(ctx as RequestContext),accountId:"structured-snapshot"};
+ const snapshot=durableChatSnapshot(owner.accountId,"本轮方法");snapshot.skills[0]!.effective.tools=["topic.enrich"];
+ await expect(prepareDurableChatTurn(owner,{messages:[],chatContext:{surface:"topics"}},deps,snapshot,{structuredGeneration:{version:1,maxOutputTokens:2048}})).rejects.toThrow("生成节点 Skill");
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+});

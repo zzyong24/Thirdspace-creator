@@ -2751,6 +2751,54 @@ const POSITIONING_GENERATE_PARAMS = jsonSchema<{
   additionalProperties: false,
 });
 
+export type PositioningToolInput = {extraBrief?:string;sourceMode?:"optimize"|"pivot"|"scratch";discoverySessionId?:string;discoveryRevision?:number;selectedDirectionKey?:string};
+/** 原对话与 Worker 准备共用前采归属、状态和候选版本规则；不执行模型。 */
+export async function preparePositioningToolInput(raw:PositioningToolInput,getPositioningDiscovery:ChatToolDeps["getPositioningDiscovery"]){
+ const {extraBrief,sourceMode,discoverySessionId,discoveryRevision,selectedDirectionKey}=structuredClone(raw);
+  const sessionId = discoverySessionId?.trim() ?? "";
+  const directionKey = selectedDirectionKey?.trim() || "direct";
+  const hasDiscoveryIdentity = sessionId.length > 0;
+  let authoritativeDiscovery: PositioningDiscoverySnapshot | null = null;
+  if (hasDiscoveryIdentity && getPositioningDiscovery) {
+    authoritativeDiscovery = await getPositioningDiscovery(sessionId);
+    if (!authoritativeDiscovery) {
+      throw new Error(
+        "定位前采会话不存在或当前账号无权访问，请返回定位中心重新开始。",
+      );
+    }
+    if (
+      authoritativeDiscovery.status !== "draft" &&
+      authoritativeDiscovery.status !== "ready"
+    ) {
+      throw new Error(
+        "这次定位梳理已经结束，请直接开始一轮新的定位对话。",
+      );
+    }
+  }
+  const requestedBrief = clampExtraBrief(extraBrief);
+  const effectiveBrief = authoritativeDiscovery
+    ? [
+        requestedBrief,
+        formatPositioningDiscoverySnapshot(authoritativeDiscovery),
+      ]
+        .filter(Boolean)
+        .join("\n\n")
+    : requestedBrief;
+  const candidateRevision = authoritativeDiscovery?.revision ?? discoveryRevision;
+  const hasDiscoveryProvenance =
+    hasDiscoveryIdentity && Number.isInteger(candidateRevision);
+  return {
+    input: { extraBrief: effectiveBrief, ...(authoritativeDiscovery ? {sourceMode:authoritativeDiscovery.sourceMode} : sourceMode ? {sourceMode} : {}) },
+    discovery: hasDiscoveryProvenance
+      ? {
+          sessionId,
+          candidateId: `poscand:${sessionId}:${candidateRevision}:${directionKey}`,
+          candidateRevision: candidateRevision!,
+        }
+      : null,
+  };
+}
+
 const DISCOVERY_THEME_LABELS: Record<string, string> = {
   goal: "最终目标",
   strength: "优势与积累",
@@ -4225,57 +4273,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         discoveryRevision,
         selectedDirectionKey,
       }): Promise<PositioningGenerateToolResult> => {
-        const sessionId = discoverySessionId?.trim() ?? "";
-        const directionKey = selectedDirectionKey?.trim() || "direct";
-        const hasDiscoveryIdentity = sessionId.length > 0;
-        let authoritativeDiscovery: PositioningDiscoverySnapshot | null = null;
-        if (hasDiscoveryIdentity && deps.getPositioningDiscovery) {
-          authoritativeDiscovery = await deps.getPositioningDiscovery(sessionId);
-          if (!authoritativeDiscovery) {
-            throw new Error(
-              "定位前采会话不存在或当前账号无权访问，请返回定位中心重新开始。",
-            );
-          }
-          if (
-            authoritativeDiscovery.status !== "draft" &&
-            authoritativeDiscovery.status !== "ready"
-          ) {
-            throw new Error(
-              "这次定位梳理已经结束，请直接开始一轮新的定位对话。",
-            );
-          }
-        }
-        const requestedBrief = clampExtraBrief(extraBrief);
-        const effectiveBrief = authoritativeDiscovery
-          ? [
-              requestedBrief,
-              formatPositioningDiscoverySnapshot(authoritativeDiscovery),
-            ]
-              .filter(Boolean)
-              .join("\n\n")
-          : requestedBrief;
-        const suggestion = await deps.generatePositioning({
-          extraBrief: effectiveBrief,
-          ...(authoritativeDiscovery
-            ? { sourceMode: authoritativeDiscovery.sourceMode }
-            : sourceMode
-              ? { sourceMode }
-              : {}),
-        });
-        const candidateRevision = authoritativeDiscovery?.revision ?? discoveryRevision;
-        const hasDiscoveryProvenance =
-          hasDiscoveryIdentity && Number.isInteger(candidateRevision);
-        return {
-          kind: "positioning.suggestion",
-          suggestion,
-          discovery: hasDiscoveryProvenance
-            ? {
-                sessionId,
-                candidateId: `poscand:${sessionId}:${candidateRevision}:${directionKey}`,
-                candidateRevision: candidateRevision!,
-              }
-            : null,
-        };
+        const prepared = await preparePositioningToolInput({extraBrief,sourceMode,discoverySessionId,discoveryRevision,selectedDirectionKey},deps.getPositioningDiscovery);
+        const suggestion = await deps.generatePositioning(prepared.input);
+        return {kind:"positioning.suggestion",suggestion,discovery:prepared.discovery};
       },
     }, deps.humanizeError),
     // [T-094] 知识蒸馏(倾倒场 Copilot 化):用户在对话里粘原文 → 本工具走既有 knowledge.distill

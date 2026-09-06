@@ -1,3 +1,4 @@
+import type {ChatGenerationPreparation} from "../ai-runtime/chat-structured-tool-host";
 import {createExecutionChatTaskSubmissionService,type ChatTaskPreparation} from "./execution-chat-task-submission.service";
 import {createExecutionChatHooksService} from "./execution-chat-hooks.service";
 import { createChatToolStreamProjection } from "./chat-tool-stream-projection.service";
@@ -13,6 +14,8 @@ import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.
 import { ConflictError } from "./execution.errors";
 type Approval=z.infer<typeof chatToolApprovalReceiptSchema>;
 export type ChatBackendTool=AgenticBackendTool & {
+  /** 只准备节点输入和候选锚点；调用方必须按父调用持久化首次返回值。 */
+  prepareGeneration?(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;callId:string;attemptId:string;signal?:AbortSignal}):Promise<ChatGenerationPreparation>;
   /** 只读取配置并准备事务；禁止在此执行模型、浏览器或领域写入。 */
   prepareTask?(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;callId:string;attemptId:string;signal?:AbortSignal}):Promise<ChatTaskPreparation>;
   /** 提交后只唤醒原子任务；不得新建任务或执行模型。 */

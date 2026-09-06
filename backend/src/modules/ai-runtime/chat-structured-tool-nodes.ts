@@ -7,6 +7,8 @@ import type { ChatToolDeps } from "./chat-tools";
 import { enrichFacets, normalizeCard } from "./topic-enrich-runner";
 import { positioningFacets, normalizeSuggestion } from "./positioning-runner";
 
+export type ChatStructuredContext = Pick<CreativeContext,"positioningBrief"|"accountsBrief"|"learningsBrief"|"signalsBrief"|"knowledgeBrief">;
+
 type EnrichInput = Parameters<ChatToolDeps["enrichTopic"]>[0];
 type PositioningInput = Parameters<ChatToolDeps["generatePositioning"]>[0];
 export interface ChatStructuredNodePorts {
@@ -20,7 +22,7 @@ export type PreparedChatStructuredNode =
   | { capability: "positioning.generate"; facets: Record<string, string | undefined> };
 
 export async function prepareChatTopicEnrich(
-  context: CreativeContext,
+  context: ChatStructuredContext,
   selection: ChatContext["selection"],
   input: EnrichInput,
 ): Promise<Extract<PreparedChatStructuredNode, { capability: "topic.enrich" }>> {
@@ -36,7 +38,7 @@ export async function prepareChatTopicEnrich(
 }
 
 export async function prepareChatPositioning(
-  context: CreativeContext,
+  context: ChatStructuredContext,
   input: PositioningInput,
   readWorks: (limit?: number) => Promise<string>,
 ): Promise<Extract<PreparedChatStructuredNode, { capability: "positioning.generate" }>> {

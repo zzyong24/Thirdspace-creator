@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-structured-tool-host.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-structured-tool-host.test.ts [ src/modules/ai-runtime/chat-structured-tool-host.test.ts ]
+Error: Cannot find module './chat-structured-tool-host' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/chat-structured-tool-host.test.ts
+ ❯ src/modules/ai-runtime/chat-structured-tool-host.test.ts:4:1
+      2| import {buildChatTools,type ChatToolDeps} from "./chat-tools";
+      3| import {prepareChatToolDefinitions} from "./chat-tool-definitions";
+      4| import {createChatStructuredTaskToolHost} from "./chat-structured-tool…
+       | ^
+      5| import type {createChatHostContextReader} from "../ai/chat-host-contex…
+      6| type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostConte…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  06:07:35
+   Duration  371ms (transform 133ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-structured-tool-host.test.ts
