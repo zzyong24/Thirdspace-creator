@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/integration/durable-chat-tool-ledger.test.ts > 聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行
+ConflictError: 同一操作键不能改换调用内容
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-call-ledger.service.ts:75:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616 {
+  code: 'ConflictError'
+}
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (1 test | 1 failed) 1097ms
+   × 聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行 1096ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行
+AssertionError: expected '' to be '有来源的结论' // Object.is equality
+
+- Expected
++ Received
+
+- 有来源的结论
+
+ ❯ run src/integration/durable-chat-tool-ledger.test.ts:66:33
+     64|         },
+     65|       })}});
+     66|       expect(await result.text).toBe("有来源的结论");
+       |                                 ^
+     67|     }
+     68|     await run();await run();
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:68:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:27:38
+   Duration  2.50s (transform 692ms, setup 0ms, import 1.26s, tests 1.10s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/durable-chat-tool-ledger.test.ts

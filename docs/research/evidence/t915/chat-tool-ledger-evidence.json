@@ -1,0 +1,125 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，正式聊天执行尚未接入",
+  "distinctTests": 71,
+  "files": [
+    {
+      "path": "contract/src/internal/chat-worker.ts",
+      "sha256": "0fabfd16369b470be423974d0451d097dece066011efc442a32ee80639a25428"
+    },
+    {
+      "path": "contract/tests/chat-worker.test.ts",
+      "sha256": "e955837903c9e515f0dcb8e22dc3fc0817890afc16c0783a1c70ed801ff5faca"
+    },
+    {
+      "path": "contract/src/internal/execution-worker.ts",
+      "sha256": "bc145add0989ad2a800cc58dad6c97182b29d132739efe410575370c0c309da2"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/tool-names.ts",
+      "sha256": "e5624589466fa3ed83683318ba1561db29c2575915be60fe09fe04c21c618beb"
+    },
+    {
+      "path": "backend/src/modules/execution/agentic-tool-binding.ts",
+      "sha256": "c83de60c3729df1ebf97c6cb243615b8b9ba54c2f259cf2f9ae0af80335a81d3"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+      "sha256": "c70a6882a27d697018d4ef58547505419d7ece1c68eb612c4ebadaaa64d8dd1c"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-generation-ports.service.ts",
+      "sha256": "f77910bf10cea3678eac4f7957a2af7ec0c0cc96eea0d03d2322625ca13d270c"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "7193a839cc11b2975b779d3c53aeb32ec18c62a798c2ad0b9b5eb69f43cb0d69"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-backend-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-checkpoint.log",
+      "sha256": "04298da320642be5ac5ea74b5c21f349fb1d22c92132b4fb016e04dc3e0c4fcf"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-contract-fixed.log",
+      "sha256": "d998263ccf46c6d9090b8056b15dae0e8243f5a7de2552caa1861afa6a82d585"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-contract.log",
+      "sha256": "4fe6009b08977b16b2da9a25a0979e3d9e69d548175055ec6ea3cedc73b05401"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-final-regression.log",
+      "sha256": "c9ff87dea003fb9ffc46a1c82bde8774a81b4dbe1374082aed6171e18d88cdff"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-ledger-diagnostic.log",
+      "sha256": "3da79874a5c62dd3e3a538ffa0eb94257bdc4882c3eda1f1ed1ef2ab814d2694"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-ledger-mapped.log",
+      "sha256": "d98cbe33ea5bdb4af7a9f8453183fd248f89e8f4aa61163b8feec30331da4127"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-ledger.log",
+      "sha256": "2663158efb621a15bdf5284d064f19386ca1d0bddadb6801002e34828103748f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-pmem.log",
+      "sha256": "ec54b4b1013161f7de5824fbde5e09e3d30c36777abbfb23e0eb7a9b3d5a3d8d"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-scope-final.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-scope.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-types-final.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-types.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-tools-worker.log",
+      "sha256": "baf2909ecddfd1099948f79449068117632c6e82f7e18ac750310f0dcad5a644"
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1
+  },
+  "independentReview": "待完成",
+  "limitations": [
+    "实际 SDK 和数据库使用隔离 fixture",
+    "未证明真实会话提交事务",
+    "chat.run 未加入 Worker 接收 union",
+    "完整授权恢复、性能和双平台未验收"
+  ]
+}

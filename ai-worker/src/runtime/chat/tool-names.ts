@@ -1,7 +1,6 @@
 // 工具名称只做供应商协议编码，内部业务名称保持原样。
-export function sanitizeToolName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_-]/g, "_");
-}
+export { chatToolProviderName as sanitizeToolName } from "@creatoros/contract/execution-worker";
+import { chatToolProviderName as sanitizeToolName } from "@creatoros/contract/execution-worker";
 
 /**
  * [T-439] 批量合规化「按工具名索引的 Record」的 key —— 泛型是刻意的:`tools`(ToolSet)与

@@ -47,7 +47,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(call.status!=="started" || call.startedAttempt!==ref.attempt)throw new ConflictError("工具未获当前执行许可或须对账");
     if(call.toolExecutionClaimId)return {kind:"waiting" as const,call};
     if(calls.filter(row=>row.kind==="model").at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
-    const handler=deps.tools[bound.toolName]?.execute;
+    const handler=deps.tools[bound.executionToolName]?.execute;
     if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
     const claimId=randomUUID();
     await tx.update(executionCalls).set({toolExecutionClaimId:claimId}).where(eq(executionCalls.id,callId));

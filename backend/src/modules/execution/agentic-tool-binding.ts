@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {z} from "zod";
 import type {executionCalls,executionTasks} from "@creatoros/backend";
-import {agenticToolOutcomeSchema,checkpointToolCallSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {agenticToolOutcomeSchema,checkpointToolCallSchema,chatWorkerInputSchema,chatToolProviderName,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {ConflictError} from "./execution.errors";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
@@ -17,14 +17,19 @@ const operationKey=(modelCallId:string,toolCallId:string)=>`tool:${hash([modelCa
 export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>){
  function binding(task:Task,calls:Call[],request:{modelCallId:string;toolCallId:string}){
   if(task.kind!=="ai_task")throw new ConflictError("当前任务不是Agent执行");
-  const frozen=frozenTools.parse((task.payload as Record<string,unknown>).modelInput);
+  const rawInput=(task.payload as Record<string,unknown>).modelInput;
+  const chat=chatWorkerInputSchema.safeParse(rawInput);
+  const frozen=chat.success ? {...chat.data,dryRun:false} : frozenTools.parse(rawInput);
+  if(chat.success && (chat.data.userId!==task.userId || chat.data.accountId!==task.accountId))throw new ConflictError("聊天冻结输入归属不符");
   const model=calls.find(call=>call.id===request.modelCallId);
   if(!model || model.kind!=="model" || model.status!=="settled" || !model.providerResult)throw new ConflictError("工具缺少已确认模型调用");
   const receipt=model.providerResult as {content:unknown[];finishReason:{unified:string}};
   const matching=receipt.content.filter(part=>part && typeof part==="object" && "toolCallId" in part && part.toolCallId===request.toolCallId);
   if(matching.length!==1 || receipt.finishReason.unified!=="tool-calls")throw new ConflictError("模型工具调用不唯一或不完整");
   const proposed=checkpointToolCallSchema.parse(matching[0]);
-  const definitions=frozen.tools.filter(tool=>tool.name===proposed.toolName);const definition=tools[proposed.toolName];
+  const definitions=frozen.tools.filter(tool=>(chat.success ? chatToolProviderName(tool.name) : tool.name)===proposed.toolName);
+  const toolName=definitions[0]?.name;
+  const definition=toolName ? tools[toolName] : undefined;
   if(definitions.length!==1 || !definition || definitions[0]!.version!==definition.version)throw new ConflictError("工具不在当前冻结白名单或定义版本已改变");
   let raw:unknown;let jsonError=false;try{raw=JSON.parse(proposed.input);}catch{raw=proposed.input;jsonError=true;}
   const jsonInput=z.json().safeParse(raw);
@@ -38,7 +43,7 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);
   const identity=[model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input];
   if(validationOutcome)identity.push({validationOutcome});
-  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
+  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,executionToolName:toolName!,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");

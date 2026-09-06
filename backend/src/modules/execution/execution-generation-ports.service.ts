@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { eq,executionTasks,type Db } from "@creatoros/backend";
-import { workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { chatWorkerInputSchema,workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { ConflictError,ExecutionBudgetError } from "./execution.errors";
@@ -13,8 +13,11 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
     async reserveGenerationCall(ref:ExecutionRef,raw:unknown){
       const request=workerPortInputSchemas.reserveGenerationCall.parse(raw);
       const scope=await leases.withLease(ref,"admission",async({task,context})=>{
-        const input=structuredGenerationInputSchema.parse((task.payload as Record<string,unknown>).modelInput);
-        if(task.kind!=="ai_task" || input.skillSnapshot.userId!==context.userId || input.skillSnapshot.accountId!==context.accountId)throw new ConflictError("结构化执行归属不符");
+        const rawInput=(task.payload as Record<string,unknown>).modelInput;
+        const chat=chatWorkerInputSchema.safeParse(rawInput);
+        const input=chat.success ? chat.data : structuredGenerationInputSchema.parse(rawInput);
+        const owner=input.kind==="chat.run" ? input : input.skillSnapshot;
+        if(task.kind!=="ai_task" || owner.userId!==context.userId || owner.accountId!==context.accountId)throw new ConflictError("模型执行归属不符");
         return {input,retryOfCallId:task.retryOfCallId};
       });
       const prefix=`${scope.input.operationKey}/model/`;

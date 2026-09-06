@@ -1,3 +1,4 @@
+export { chatWorkerInputSchema, chatToolProviderName } from "./chat-worker";
 import {appendExecutionStreamSchema} from "./execution-stream";
 export {appendExecutionStreamSchema,readExecutionStreamSchema,executionStreamChunkSchema} from "./execution-stream";
 import {topicReadPortInputSchemas} from "./execution-topic-read";

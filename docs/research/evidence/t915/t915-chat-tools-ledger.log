@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (1 test | 1 failed) 15004ms
+   × 聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行 15003ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/integration/durable-chat-tool-ledger.test.ts:15:1
+     13| import { createExecutionAgenticToolPorts } from "../modules/execution/…
+     14|
+     15| it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行", async () => {
+       | ^
+     16|   const f=await createDb();
+     17|   const ctx={userId:"chat-u",accountId:"chat-a",requestId:"fixture",so…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+AssertionError: expected '{"model":"fixture","max_tokens":128,"…' to contain 'https://source.test/real'
+ ❯ IncomingMessage.<anonymous> src/integration/durable-chat-tool-ledger.test.ts:30:33
+
+ ❯ IncomingMessage.emit node:events:509:20
+ ❯ endReadableNT node:internal/streams/readable:1729:12
+ ❯ processTicksAndRejections node:internal/process/task_queues:90:21
+
+This error originated in "src/integration/durable-chat-tool-ledger.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "聊天编码工具名绑定同一真实账本，完整模型循环恢复不重发模型和业务执行". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+     Errors  1 error
+   Start at  19:26:59
+   Duration  16.29s (transform 644ms, setup 0ms, import 1.14s, tests 15.00s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/durable-chat-tool-ledger.test.ts

@@ -1,0 +1,12 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+No test files found, exiting with code 1
+
+filter: src/internal/chat-worker.test.ts
+include: tests/**/*.test.ts
+exclude:  **/node_modules/**, **/.git/**
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/contract:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/internal/chat-worker.test.ts
