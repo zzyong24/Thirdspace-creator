@@ -11,9 +11,8 @@
 // createVersion, createdByType:"ai"). No cross-module repository import (SPEC §22).
 //
 // The Agent SDK lives ONLY in @creatoros/ai-worker — this module's service/transport/
-// pages NEVER import it (determinism boundary, design-spec §8). The worker reads/writes
-// the same shared pglite db via the user-scoped repositories; recordCandidate is the
-// service-side write seam it drives.
+// pages NEVER import it (determinism boundary, design-spec §8).
+// Worker 只经带归属和租约的 backend service port 交互；数据库由 backend 单一进程打开。
 
 export {
   createAiService,
@@ -89,3 +88,4 @@ export {createResearchMaterialAdoptionService,type ResearchMaterialAdoptionPorts
 
 export { createTopicCandidateAdoptionService, type TopicCandidateAdoptionPorts } from "./topic-candidate-adoption.service";
 export { createDailyTopicCompletionService, type DailyTopicCompletionPorts } from './daily-topic-completion.service';
+export { createChatTurnSubmissionService, type ChatTurnSnapshot, type ChatTurnAssembly } from "./chat-turn-submission.service";

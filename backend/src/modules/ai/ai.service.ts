@@ -1,3 +1,4 @@
+import { canonicalJson } from "./canonical-json";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { projectExecutionTasks } from "./execution-task-projection";
 import { createHash, randomUUID } from "node:crypto";
@@ -621,20 +622,6 @@ const CANDIDATE_RESULT_TYPES = new Set([
 
 function sanitizeRunnerLogValue(value: string): string {
   return value.replace(/[^\w.:-]/g, "_").slice(0, 160);
-}
-
-function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
-  }
-  const record = value as Record<string, unknown>;
-  return `{${Object.keys(record)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
-    .join(",")}}`;
 }
 
 function requestFingerprint(value: unknown): string {

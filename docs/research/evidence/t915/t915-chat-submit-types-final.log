@@ -1,0 +1,11 @@
+Scope: 3 of 6 workspace projects
+contract typecheck$ tsc --noEmit
+contract typecheck: Done
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: Done
+backend typecheck$ tsc --noEmit
+backend typecheck: src/integration/durable-chat-tool-ledger.test.ts(46,196): error TS1005: ',' expected.
+backend typecheck: Failed
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

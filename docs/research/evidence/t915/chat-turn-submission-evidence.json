@@ -1,0 +1,114 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，正式路由与 Worker 回合尚未连接",
+  "distinctTests": 67,
+  "files": [
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "8adddc8a70987e2bb03769cafe1867c8e36206624c703243af693305af8d4eb9"
+    },
+    {
+      "path": "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "sha256": "f54d998ad8f9a0bb3334b150e6fd81e27c039e204e538324cf2be5615470d99c"
+    },
+    {
+      "path": "backend/src/modules/ai/canonical-json.ts",
+      "sha256": "26de0ae0bf2a1bf4640c1a66075f76b4f7012f2ee005044bf1b36748aa69b595"
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "sha256": "3bfe0fa02d4ed94cebb1dc1d4cc9cb0d1308851da6a2d3673bf3f548d1ae2fe2"
+    },
+    {
+      "path": "backend/src/modules/ai/index.ts",
+      "sha256": "431e4d282379ec4f7aeed74d4ddbb7ded8a4a3f3124d47d0fb62c0074d3163bd"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "e506701d152d89f22c23bfa063901c0452e15bf5e27d9bc1fef0b8715c549b2f"
+    },
+    {
+      "path": "orchestrator/COMPLEXITY_LEDGER.json",
+      "sha256": "dc0a4bbcf0d546811cb35ead653f0599f5ac035380f2cfa356a7b7f86d1a9854"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-context.log",
+      "sha256": "8bb5bec04fc16e1ef3e06c75c049e83cce4ca6df5bd441a5976e94967a75468e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-final-tests.log",
+      "sha256": "47c3bb1d752fe25bce14e624019a5f8f3a586e0221ee7eff444f1c4ab894ccfc"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-full-ledger-fixed.log",
+      "sha256": "bdf932c3bf643c15127be025f77e16c13330c42b90349b6bf197f9569a8f1c13"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-full-ledger.log",
+      "sha256": "b448d8aeee65bb08e939300648b9c01454c127dbf093b3af3c504cb86dd5b50e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-pmem.log",
+      "sha256": "d9cae9f08788c11273bce660b55dd045060ff28167ff7cb6b933a4092f97509c"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-regression.log",
+      "sha256": "b71a3adfa2257f8322c85fa8b1666d35b2550ca7f3ecedf27003655aaa953bb7"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-scope-final.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-scope.log",
+      "sha256": "a2b85e154ca0a1f5f3aa89a3c32c08f9aef0557ec89ddd6f15e99d06257a4641"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-test.log",
+      "sha256": "c90cf8430c470e4d0a700fc93015550cf826069167f9d0c85e3691d4ce1bdd58"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-types-final.log",
+      "sha256": "89e04a810bce3f3e9eac0cde1da24881e54b2ba46b942aad748ca50541f0b89e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-types-verified.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-submit-types.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0"
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1
+  },
+  "independentReview": "待完成",
+  "limitations": [
+    "真实源消息与映射使用隔离数据库",
+    "装配与业务handler为隔离fixture",
+    "尚未接正式路由/独立Worker/授权续接",
+    "无事前行为红测",
+    "性能与双平台未验收"
+  ]
+}

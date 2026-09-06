@@ -2,11 +2,13 @@ import { createServer } from "node:http";
 import { it, expect, vi } from "vitest";
 import { tool, type ModelMessage } from "ai";
 import { z } from "zod";
-import { createDb, aiTasks, executionTasks, eq } from "@creatoros/backend";
+import { createDb, executionTasks, eq } from "@creatoros/backend";
 import { modelFor } from "@creatoros/ai-worker";
 import { createDurableStreamModel } from "@creatoros/ai-worker/durable-stream";
 import { createChatModelStream } from "@creatoros/ai-worker/chat";
 import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
+import { createAiRepository } from "../modules/ai/ai.repository";
+import { createChatTurnSubmissionService } from "../modules/ai/chat-turn-submission.service";
 import { createPersistentTaskService } from "../modules/execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../modules/execution/execution-call-ledger.service";
 import { createExecutionGenerationPorts } from "../modules/execution/execution-generation-ports.service";
@@ -19,7 +21,7 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
   const now=()=>new Date().toISOString(),budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
   const messages:ModelMessage[]=[{role:"user",content:"查询资料"}];
   const parameters=z.object({query:z.string()}).strict();
-  const input=chatWorkerInputSchema.parse({kind:"chat.run",operationKey:"chat-turn",capability:"copilot.assist",userId:ctx.userId,accountId:ctx.accountId,
+  let input=chatWorkerInputSchema.parse({kind:"chat.run",operationKey:"chat-turn",capability:"copilot.assist",userId:ctx.userId,accountId:ctx.accountId,
     conversationId:"conversation",sourceMessageId:"source-message",system:"查找真实来源",messages,maxSteps:6,maxOutputTokens:128,
     tools:[{name:"web.read",version:"1",description:"读取来源",parameters:z.toJSONSchema(parameters),effect:"none"}]});
   let requests=0;const bodies:string[]=[];
@@ -38,8 +40,19 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
   await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
   try {
     const tasks=createPersistentTaskService(f.db,{now});
-    const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:"chat",idempotencyKey:"chat",payload:{modelInput:input}});
-    await f.db.insert(aiTasks).values({id:"chat",userId:ctx.userId,accountId:ctx.accountId,taskType:"copilot.assist",status:"running",executionTaskId:task.id,idempotencyKey:"chat",requestedAt:now()});
+    const repo=createAiRepository(f.db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-ledger`});
+    const conversation=await repo.createConversation({title:"持久聊天",projectId:null,scope:"global"});
+    const source=await repo.createMessage(conversation.id,{role:"user",content:"查询资料",attachments:[],modelMetadata:{}});
+    const submission=await createChatTurnSubmissionService(f.db,{
+      now,
+      assemble:async(_ctx,snapshot)=>({
+        ...input,
+        messages:snapshot.messages.map(row=>({role:row.role as "user",content:row.content})),
+      }),
+    }).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+    const [task]=(await f.db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId)));
+    if(!task)throw Error("task missing");
+    input=chatWorkerInputSchema.parse((task.payload as {modelInput:unknown}).modelInput);
     const claim=(await tasks.claimTask({taskId:task.id,workerId:"worker"}))!;
     const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
     const ledger=createExecutionCallLedgerService(f.db,{now,budget}),generation=createExecutionGenerationPorts(f.db,{now,budget});
@@ -80,7 +93,7 @@ it("聊天编码工具名绑定同一真实账本，完整模型循环恢复不�
     await expect(host.reserve({...ref,fenceToken:"wrong"},{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();
     await f.db.update(executionTasks).set({payload:{modelInput:{...input,accountId:"foreign"}}}).where(eq(executionTasks.id,task.id));
     await expect(host.reserve(ref,{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();
-    await expect(generation.reserveGenerationCall(ref,{operationKey:"chat-turn/model/1",request:{maxOutputTokens:128}})).rejects.toThrow();
+    await expect(generation.reserveGenerationCall(ref,{operationKey:`${input.operationKey}/model/1`,request:{maxOutputTokens:128}})).rejects.toThrow();
     expect(execute).toHaveBeenCalledTimes(1);
   } finally {
     server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));await f.client.close();

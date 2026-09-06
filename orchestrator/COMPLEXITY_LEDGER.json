@@ -143,14 +143,14 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "8a6c6a9c3719ec6fe739cad8edc70a3c7140ceaab36bf58de206535fad463dfd",
+      "file_sha256": "3bfe0fa02d4ed94cebb1dc1d4cc9cb0d1308851da6a2d3673bf3f548d1ae2fe2",
       "categories": [
         "native_executable"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认旧公开对话迁入统一 Worker：消息与回复任务原子保存、冻结当轮历史、已结算回复幂等提交。复用现有私有提交协议，不增加规划模型或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已确认对话统一执行。本次仅将原 canonicalJson 提到同模块共享文件，供旧任务指纹与聊天冻结输入核对复用；不新增本机执行能力或改变既有任务语义。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
