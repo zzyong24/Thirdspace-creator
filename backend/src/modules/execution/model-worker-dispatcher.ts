@@ -1,4 +1,5 @@
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
+import {createExecutionModelIdentityService} from "./execution-model-identity.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
 import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
@@ -60,6 +61,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
+  const modelIdentity=createExecutionModelIdentityService(db,{now});
   const tasks=createPersistentTaskService(db,{now});
   const browserProfiles=createExecutionBrowserProfileLeaseService(db,{now});
   const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
@@ -214,8 +216,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const scope=await leases.withLease(ref,"admission",async({context,task})=>({context,aiTaskId:task.ownerId}));
         const credential=workerModelSpecSchema.parse(await deps.resolveModelCredential(scope.context,input.capability,{aiTaskId:scope.aiTaskId,executionTaskId:ref.executionTaskId}));
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。
-        await leases.withLease(ref,"admission",async()=>{});
-        return credential;
+        return modelIdentity.pin(ref,input.capability,credential);
       }
       if(port==="commitResult"){
         const input=workerPortInputSchemas.commitResult.parse(raw);

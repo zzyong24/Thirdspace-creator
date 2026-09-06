@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-worker-entry.test.ts src/modules/execution/agentic-worker-dispatcher.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  01:46:49
+   Duration  13.24s (transform 1.50s, setup 0ms, import 2.62s, tests 17.03s, environment 0ms)
+

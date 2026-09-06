@@ -11,6 +11,21 @@ import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
 import { createExecutionChatHooksService } from "./execution-chat-hooks.service";
+import { createExecutionModelIdentityService } from "./execution-model-identity.service";
+it.each([{ modelId: "another" }, { provider: "another" }])(
+  "内部生成拒绝冒用主模型身份：%j",
+  async (change) => {
+    const f = await fixture(),
+      prepared = await f.hooks.prepare(f.ref, { callId: f.parent.callId });
+    await expect(
+      f.hooks.reserve(f.ref, {
+        callId: f.parent.callId,
+        operationKey: `${prepared.operationKey}/model/1`,
+        request: { ...requestFor(prepared), ...change },
+      }),
+    ).rejects.toThrow();
+  },
+);
 it.each([
   { providerOptions: { custom: { flag: true } } },
   { temperature: 2 },
@@ -72,8 +87,6 @@ let db: Db,
   close: () => Promise<void>,
   seq = 0;
 it("真实 SDK 纯文本请求接宿主账本，重建模型包装后回放不增加 HTTP 请求", async () => {
-  const f = await fixture(),
-    prepared = await f.hooks.prepare(f.ref, { callId: f.parent.callId });
   const bodies: Record<string, unknown>[] = [];
   const server = createServer(async (req, res) => {
     let body = "";
@@ -103,6 +116,8 @@ it("真实 SDK 纯文本请求接宿主账本，重建模型包装后回放不�
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   try {
     const port = (server.address() as { port: number }).port;
+    const f = await fixture({ baseUrl: `http://127.0.0.1:${port}/v1` }),
+      prepared = await f.hooks.prepare(f.ref, { callId: f.parent.callId });
     const run = () =>
       generateText({
         model: createDurableGenerationModel({
@@ -173,7 +188,7 @@ beforeAll(async () => {
   close = () => c.client.close();
 });
 afterAll(async () => close());
-async function fixture() {
+async function fixture(options: { baseUrl?: string | null } = {}) {
   const ctx = {
     userId: "hooks-u",
     accountId: `hooks-a-${++seq}`,
@@ -286,6 +301,16 @@ async function fixture() {
     attempt: claim.lease.attempt,
     fenceToken: claim.lease.fenceToken,
   };
+  await createExecutionModelIdentityService(db, { now }).pin(
+    ref,
+    "copilot.assist",
+    {
+      apiFormat: "openai_chat",
+      baseUrl: options.baseUrl ?? null,
+      model: "fixture",
+      token: "fixture",
+    },
+  );
   const ledger = createExecutionCallLedgerService(db, { now, budget }),
     ports = createExecutionAgenticToolPorts(db, { now, budget, tools });
   const model = await ledger.reserve(ref, {
@@ -337,7 +362,7 @@ const requestFor = (prepared: {
   ],
   maxOutputTokens: prepared.maxOutputTokens,
   modelId: "fixture",
-  provider: "fixture",
+  provider: "openai.chat",
 });
 const success = {
   status: "settled" as const,

@@ -12,7 +12,7 @@ export function createExecutionWorkerCallPorts(db: Db, deps: Parameters<typeof c
   const readTaskContext = async (ref: ExecutionRef) => {
     const input=await leases.withLease(ref, "admission", async ({task}) => {
     if (task.kind !== "ai_task") throw new ConflictError("当前任务不是模型任务");
-    // execution_tasks.payload 在入队后保持不变；检查点独立存储。
+    // modelInput 在入队后保持不变；宿主运行元数据与检查点不改变原模型输入。
     const payload = task.payload as Record<string, unknown>;
     return workerTaskInputSchema.parse(payload.modelInput);
     });

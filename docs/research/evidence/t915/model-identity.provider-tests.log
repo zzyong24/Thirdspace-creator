@@ -1,0 +1,13 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/runtime/provider-identity.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  01:42:48
+   Duration  316ms (transform 66ms, setup 0ms, import 151ms, tests 34ms, environment 0ms)
+

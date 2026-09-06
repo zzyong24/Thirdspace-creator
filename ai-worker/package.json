@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./model-identity": {
+      "types": "./src/runtime/provider-identity.ts",
+      "default": "./src/runtime/provider-identity.ts"
+    },
     "./retry-policy": {
       "types": "./src/runtime/retry-policy.ts",
       "default": "./src/runtime/retry-policy.ts"

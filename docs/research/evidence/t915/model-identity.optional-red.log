@@ -1,0 +1,40 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-model-identity.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-model-identity.service.test.ts (12 tests | 1 failed) 1017ms
+   × 未设置的可选字段在持久化前后身份相同 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-model-identity.service.test.ts > 未设置的可选字段在持久化前后身份相同
+AssertionError: promise rejected "ConflictError: 模型配置与原执行身份不符 { …(1) }" instead of resolving
+ ❯ src/modules/execution/execution-model-identity.service.test.ts:51:103
+     49| it("未设置的可选字段在持久化前后身份相同",async()=>{
+     50|  const f=await fixture();await f.identity.pin(f.ref,"script",{...spec,…
+     51|  await expect(f.identity.pin(f.ref,"script",{...spec,structuredOutputs…
+       |                                                                                                       ^
+     52| });
+     53| it("并发首次绑定只能选定一份身份",async()=>{
+
+Caused by: ConflictError: 模型配置与原执行身份不符
+ ❯ src/modules/execution/execution-model-identity.service.ts:26:53
+ ❯ src/modules/execution/execution-lease.service.ts:41:16
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ConflictError' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  01:43:56
+   Duration  2.19s (transform 562ms, setup 0ms, import 1.04s, tests 1.02s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-model-identity.service.test.ts`
+Exit status 1

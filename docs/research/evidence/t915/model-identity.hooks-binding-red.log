@@ -1,0 +1,68 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-chat-hooks.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (23 tests | 2 failed) 2481ms
+   × 内部生成拒绝冒用主模型身份：{"modelId":"another"} 86ms
+   × 内部生成拒绝冒用主模型身份：{"provider":"another"} 51ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 内部生成拒绝冒用主模型身份：{"modelId":"another"}
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_355f3046-d251-4189-8988-aa0f02c86cb7",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:17:154
+     15| it.each([{modelId:"another"},{provider:"another"}])("内部生成拒绝冒用主模型身份：%j"…
+     16|  const f=await fixture(),prepared=await f.hooks.prepare(f.ref,{callId:…
+     17|  await expect(f.hooks.reserve(f.ref,{callId:f.parent.callId,operationK…
+       |                                                                                                                                                          ^
+     18| });
+     19| it.each([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 内部生成拒绝冒用主模型身份：{"provider":"another"}
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_ac365a3c-529f-4690-a969-5fe3e9a2e787",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:17:154
+     15| it.each([{modelId:"another"},{provider:"another"}])("内部生成拒绝冒用主模型身份：%j"…
+     16|  const f=await fixture(),prepared=await f.hooks.prepare(f.ref,{callId:…
+     17|  await expect(f.hooks.reserve(f.ref,{callId:f.parent.callId,operationK…
+       |                                                                                                                                                          ^
+     18| });
+     19| it.each([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 21 passed (23)
+   Start at  01:43:16
+   Duration  4.29s (transform 1.04s, setup 0ms, import 1.67s, tests 2.48s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-chat-hooks.service.test.ts`
+Exit status 1

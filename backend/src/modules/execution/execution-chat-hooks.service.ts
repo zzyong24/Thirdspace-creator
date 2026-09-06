@@ -22,6 +22,8 @@ import {
   type AgenticBackendTool,
 } from "./agentic-tool-binding";
 import { ConflictError } from "./execution.errors";
+import { createExecutionModelIdentityService } from "./execution-model-identity.service";
+import { providerIdentityFor } from "@creatoros/ai-worker/model-identity";
 const id = z.string().min(1).max(256),
   parentRequest = z.object({ callId: id }).strict();
 const reserveRequest = z
@@ -103,6 +105,10 @@ export function createExecutionChatHooksService(
     const input = parentRequest.parse(raw);
     signal?.throwIfAborted();
     const frozen = await reader.read(ref);
+    const modelIdentity = await createExecutionModelIdentityService(
+      db,
+      deps,
+    ).read(ref);
     if (!frozen.hostContext.scriptHooksContext)
       throw new ConflictError("原任务缺少开场生成上下文");
     if (!frozen.hostContext.scriptHooksGeneration)
@@ -146,10 +152,11 @@ export function createExecutionChatHooksService(
       ...args,
       extraBrief: clampExtraBrief(args.extraBrief),
     });
-    const operationKey = `hooks:${input.callId}:${digest({ binding: scope.bound.inputDigest, ...prepared, maxOutputTokens }).slice(7)}`;
+    const operationKey = `hooks:${input.callId}:${digest({ binding: scope.bound.inputDigest, ...prepared, maxOutputTokens, modelIdentity }).slice(7)}`;
     return {
       ...prepared,
       operationKey,
+      modelIdentity,
       maxOutputTokens,
       parent: scope.parent,
       bound: scope.bound,
@@ -193,12 +200,15 @@ export function createExecutionChatHooksService(
       const input = reserveRequest.parse(raw),
         prepared = await prepare(ref, { callId: input.callId }, signal);
       const { maxOutputTokens } = prepared;
+      const expectedModel = providerIdentityFor(prepared.modelIdentity);
       const expectedPrompt = [
         { role: "system", content: prepared.system },
         { role: "user", content: [{ type: "text", text: prepared.prompt }] },
       ];
       if (
         input.operationKey !== `${prepared.operationKey}/model/1` ||
+        input.request.modelId !== expectedModel.modelId ||
+        input.request.provider !== expectedModel.provider ||
         input.request.maxOutputTokens !== maxOutputTokens ||
         !isDeepStrictEqual(input.request.prompt, expectedPrompt) ||
         (input.request.toolChoice !== undefined &&

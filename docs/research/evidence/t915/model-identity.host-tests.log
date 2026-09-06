@@ -1,0 +1,15 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/server/chat-read-host.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:89227) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  01:46:49
+   Duration  8.09s (transform 2.49s, setup 148ms, import 3.36s, tests 3.89s, environment 523ms)
+

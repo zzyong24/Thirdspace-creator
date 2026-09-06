@@ -7,6 +7,7 @@ import { createDb,aiTasks,aiTaskResults,executionTasks,eq,type Db } from "@creat
 import { createExecutionAuthorityService } from "./execution-authority.service";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createModelWorkerDispatcher } from "./model-worker-dispatcher";
+import {createExecutionModelIdentityService} from "./execution-model-identity.service";
 const ctx={userId:"dispatcher",accountId:"dispatcher",requestId:"test",source:"user" as const};
 const budget={maxCalls:3,maxTokens:10000,deadlineMs:20000};
 const modelInput={kind:"model.generate" as const,prompt:"正文",capability:"script",maxOutputTokens:128,operationKey:"generate"};
@@ -32,11 +33,31 @@ describe("真实模型调度宿主",()=>{
     try{host.start();host.start();
       await vi.waitFor(async()=>expect((await createPersistentTaskService(db).get(ctx,mapped.executionTaskId)).status).toBe("succeeded"),{timeout:10000});
       expect(requests).toBe(2);
+      const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId));
+      expect(execution?.payload).toMatchObject({modelIdentity:{schemaVersion:1,capability:"script",model:"test",customEndpoint:true}});
+      expect(JSON.stringify(execution?.payload)).not.toContain('"token"');
       const page=await createExecutionStreamService(db).read(ctx,mapped.executionTaskId,{});
       expect(page.events.map(e=>e.chunk.delta).join("")).toBe("恢复正文");expect(page.status).toBe("succeeded");
       expect((await createExecutionStreamService(db).read(ctx,mapped.executionTaskId,{afterSequence:page.nextSequence})).events).toEqual([]);
       expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"retry-complete"))).toHaveLength(1);
     }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+  },15000);
+  it("恢复后凭据解析换了模型时，在供应商请求之前拒绝继续",async()=>{
+    const mapped=await prepare("model-identity-change");let requests=0;
+    const server=createServer((req,res)=>{requests++;req.resume();res.writeHead(500);res.end();});
+    await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+    const port=(server.address() as {port:number}).port,host=dispatcher(port),tasks=createPersistentTaskService(db);
+    try{
+      const claim=(await tasks.claimTask({taskId:mapped.executionTaskId,workerId:"previous"}))!;
+      const ref={executionTaskId:mapped.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+      await createExecutionModelIdentityService(db).pin(ref,"script",{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${port}/v1`,model:"original",token:"original-fixture"});
+      await tasks.command(ctx,{taskIds:[mapped.executionTaskId],command:"pause",idempotencyKey:"identity-pause"});
+      await tasks.acknowledgeControl({taskId:mapped.executionTaskId,workerId:"previous",attempt:ref.attempt});
+      await tasks.command(ctx,{taskIds:[mapped.executionTaskId],command:"resume",idempotencyKey:"identity-resume"});
+      await host.drainOnce();
+      expect(requests).toBe(0);
+      expect((await tasks.get(ctx,mapped.executionTaskId)).status).toBe("failed");
+    }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
   },15000);
   it("未准备输入的旧映射任务不会被宿主抢走",async()=>{
     const mapped=await prepare("unprepared",false);const host=dispatcher(1);

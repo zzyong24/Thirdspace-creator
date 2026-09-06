@@ -1,0 +1,51 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-model-identity.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-model-identity.service.test.ts (11 tests | 2 failed) 1039ms
+   × 身份固定不改变原请求幂等，调用者不能预设宿主模型身份 27ms
+   × 端点内的用户信息与查询凭据不落库，完整端点变化仍被拒绝 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-model-identity.service.test.ts > 身份固定不改变原请求幂等，调用者不能预设宿主模型身份
+ConflictError: idempotencyKey 已被另一份任务请求使用
+ ❯ Object.enqueue src/modules/execution/persistent-task.service.ts:400:15
+    398|           stableJson(input.costEstimate ?? null)
+    399|       ) {
+    400|         throw new ConflictError(
+       |               ^
+    401|           "idempotencyKey 已被另一份任务请求使用",
+    402|         );
+ ❯ src/modules/execution/execution-model-identity.service.test.ts:21:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-model-identity.service.test.ts > 端点内的用户信息与查询凭据不落库，完整端点变化仍被拒绝
+AssertionError: expected '{"unrelated":{"keep":true},"modelInpu…' not to contain 'private-password'
+
+Expected: "private-password"
+Received: "{"unrelated":{"keep":true},"modelInput":{"kind":"model.generate","prompt":"真实输入","capability":"script","operationKey":"identity-2","maxOutputTokens":128},"modelIdentity":{"model":"original","baseUrl":"https://user:private-password@fixture.invalid/v1?key=private-query-token","apiFormat":"openai_chat","capability":"script","schemaVersion":1}}"
+
+ ❯ src/modules/execution/execution-model-identity.service.test.ts:28:43
+     26|  await f.identity.pin(f.ref,"script",privateSpec);
+     27|  const [row]=await db.select().from(executionTasks).where(eq(execution…
+     28|  expect(JSON.stringify(row?.payload)).not.toContain("private-password"…
+       |                                           ^
+     29|  expect(JSON.stringify(row?.payload)).not.toContain("private-query-tok…
+     30|  await expect(f.identity.pin(f.ref,"script",{...privateSpec,baseUrl:pr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  01:41:31
+   Duration  2.23s (transform 574ms, setup 0ms, import 1.05s, tests 1.04s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-model-identity.service.test.ts`
+Exit status 1
