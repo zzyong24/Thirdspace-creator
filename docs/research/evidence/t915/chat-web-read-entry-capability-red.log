@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/worker-runtime.test.ts (29 tests | 1 failed | 28 skipped) 165ms
+   × 未声明网页能力时在读取模型凭据前拒绝网页任务 164ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 未声明网页能力时在读取模型凭据前拒绝网页任务
+ FAIL  src/execution/worker-runtime.test.ts > 未声明网页能力时在读取模型凭据前拒绝网页任务
+ FAIL  src/execution/worker-runtime.test.ts > 未声明网页能力时在读取模型凭据前拒绝网页任务
+AssertionError: expected [ 'readTaskContext', …(2) ] to not include 'resolveModelCredential'
+ ❯ src/execution/worker-runtime.test.ts:14:105
+     12|   worker.ready();worker.receive({version:1,type:"run",requestId:"web-r…
+     13|   await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).to…
+     14|   expect(runChat).not.toHaveBeenCalled();expect(messages.filter(m=>m.t…
+       |                                                                                                         ^
+     15|   expect(messages.find(m=>m.type==="call" && m.port==="recordWorkerFai…
+     16|  }finally{worker.close();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 28 skipped (29)
+   Start at  10:35:56
+   Duration  454ms (transform 95ms, setup 0ms, import 157ms, tests 165ms, environment 0ms)
+

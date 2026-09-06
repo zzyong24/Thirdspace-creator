@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "4d83a2197d19555698ef1cb013eb4773a6c928c2e924a716bf0069fd504c638a",
+      "file_sha256": "d9bb207a2f65fccc53e9cf92690e76c4404ba150dd676c915101044cbe392156",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行及私有 IPC。本批增加对话网页资源退出回收，复用原进程拓扑和数据库属主，不开启新能力声明。实际 Chromium 读取、取消及进程退出证据见 chat-web-read-resources.md。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权独立 Worker 与命名 IPC。本批为已接通的对话网页运行器声明 chat.web-read，缺能力时在凭据读取前拒绝任务；保持原进程拓扑与数据库属主。实际构建/fork 的缓存与权限拒绝路径、独立复核见 chat-web-read-entry.md，完整公共入口迁移尚未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "10641b983e5e2caad4756badbc8d2ed3fc6e0866a03e72eb57ce3f713ff610c3",
+      "file_sha256": "7ff5c7edb5d6101a0cf6d573cd4d62b41240be31279ac8f3d518ea9e1d3c0213",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权独立 Worker 与命名 IPC。本批为已接通的对话网页运行器声明 chat.web-read，缺能力时在凭据读取前拒绝任务；保持原进程拓扑与数据库属主。实际构建/fork 的缓存与权限拒绝路径、独立复核见 chat-web-read-entry.md，完整公共入口迁移尚未验收。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

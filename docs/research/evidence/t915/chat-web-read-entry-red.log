@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-entry.test.ts (2 tests | 2 failed) 2165ms
+   × 正式构建 Worker 与后端贯通：cache 474ms
+   × 正式构建 Worker 与后端贯通：permission 407ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-entry.test.ts > 正式构建 Worker 与后端贯通：cache
+AssertionError: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/integration/chat-web-read-entry.test.ts:45:24
+     43|  try{
+     44|   await host.drainOnce();const [task]=await db.select().from(execution…
+     45|   expect(task?.status).toBe(mode==="cache"?"succeeded":"waiting_user")…
+       |                        ^
+     46|   const calls=await db.select().from(executionCalls).where(eq(executio…
+     47|   expect(toolCalls).toHaveLength(1);expect(toolCalls[0]?.status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/integration/chat-web-read-entry.test.ts > 正式构建 Worker 与后端贯通：permission
+AssertionError: expected 'failed' to be 'waiting_user' // Object.is equality
+
+Expected: "waiting_user"
+Received: "failed"
+
+ ❯ src/integration/chat-web-read-entry.test.ts:45:24
+     43|  try{
+     44|   await host.drainOnce();const [task]=await db.select().from(execution…
+     45|   expect(task?.status).toBe(mode==="cache"?"succeeded":"waiting_user")…
+       |                        ^
+     46|   const calls=await db.select().from(executionCalls).where(eq(executio…
+     47|   expect(toolCalls).toHaveLength(1);expect(toolCalls[0]?.status).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  10:35:26
+   Duration  3.95s (transform 1.04s, setup 0ms, import 1.66s, tests 2.16s, environment 0ms)
+

@@ -4,6 +4,22 @@ import { GenerationFailure } from "./generation-error";
 import { createExecutionWorker } from "./worker-runtime";
 import type { WorkerMessage } from "@creatoros/contract/execution-worker";
 const execution = {executionTaskId: "exec-1", attempt: 1, fenceToken: "lease-1"};
+it.each([false,true])("网页能力声明依赖已装配对话运行器：%s",hasRunner=>{
+ const messages:WorkerMessage[]=[];
+ const worker=createExecutionWorker({generate:vi.fn(),supportsChatWebRead:true,...(hasRunner?{runChat:vi.fn()}:{}),send:message=>{messages.push(message);}});
+ try{worker.ready();const ready=messages.find(message=>message.type==="ready");expect(ready?.type==="ready" && ready.capabilities.includes("chat.web-read")).toBe(hasRunner);}finally{worker.close();}
+});
+it("未声明网页能力时在读取模型凭据前拒绝网页任务",async()=>{
+ const messages:WorkerMessage[]=[],runChat=vi.fn(async()=>{throw Error("不能进入对话执行器");});
+ const input={kind:"chat.run",operationKey:"web",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"事实",messages:[{role:"user",content:"读网页"}],maxSteps:4,maxOutputTokens:100,tools:[{name:"web.read",version:"1",description:"网页",parameters:{},effect:"committed",execution:"worker.web-read"}]};
+ const worker=createExecutionWorker({generate:vi.fn(),runChat,send(message){messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:message.port==="readTaskContext"?input:{}}));}});
+ try{
+  worker.ready();worker.receive({version:1,type:"run",requestId:"web-run",execution,deadlineAt:Date.now()+10000});
+  await vi.waitFor(()=>expect(messages.some(m=>m.type==="stopped")).toBe(true));
+  expect(runChat).not.toHaveBeenCalled();expect(messages.filter(m=>m.type==="call").map(m=>m.port)).not.toContain("resolveModelCredential");
+  expect(messages.find(m=>m.type==="call" && m.port==="commitResult")).toMatchObject({data:{outcome:"waiting_user",errorCode:"CHAT_WEB_READ_WORKER_UNAVAILABLE"}});
+ }finally{worker.close();}
+});
 
 function fixture(generate = vi.fn(async (): Promise<{text:string;usage:unknown}> => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number, reservationStatus = "reserved", recovery?: "requires_reconciliation") {
   const messages: WorkerMessage[] = [];
