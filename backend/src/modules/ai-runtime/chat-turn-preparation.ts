@@ -19,9 +19,11 @@ export async function prepareDurableChatTurn(
  input: Parameters<typeof runChatStream>[1],
  deps: Parameters<typeof runChatStream>[2],
  skillSnapshot: ChatHostContext["skillSnapshot"],
+ options: {scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"]} = {},
 ) {
  // 必须在首个 await 前复制，工具闭包也不能持有调用方可变的账号/选区对象。
  const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal;
+ const scriptHooksGeneration=structuredClone(options.scriptHooksGeneration);
  if(!context.userId || !context.accountId) throw new Error("持久聊天准备缺少真实账号");
  const hostContext=validateChatHostContext({
   schemaVersion:1,chatContext:input.chatContext,
@@ -36,7 +38,7 @@ export async function prepareDurableChatTurn(
  },deps));
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
  const completeHostContext=validateChatHostContext({
-  ...hostContext,...(prepared.assembly.scriptHooksContext ? {scriptHooksContext:prepared.assembly.scriptHooksContext} : {}),
+  ...hostContext,...(prepared.assembly.scriptHooksContext ? {scriptHooksContext:prepared.assembly.scriptHooksContext,...(scriptHooksGeneration?{scriptHooksGeneration}:{})} : {}),
  },{userId:context.userId,accountId:context.accountId,projectId:hostContext.chatContext.projectId??null});
  return {...prepared,hostContext:structuredClone(completeHostContext)};
 }

@@ -1,0 +1,5 @@
+独立只读评审：runtime_code_review。
+结论：本批结算、回合复查、冻结输出上限与候选重建未发现新的阻断。
+已核对 unknown→非unknown 和旧 attempt 首次结算的锁内拒绝；已结算回执幂等重放保留。
+输出上限随 hostContext 保存；授权返回与 reserve/start/complete 都复查当前根回合；已确认非文本回执保留用量并返回明确错误。
+限制：模型身份绑定尚未实现，无 Worker 路由，不能据此上线 hooks 执行。评审者未修改文件或独立重跑测试。

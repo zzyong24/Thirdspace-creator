@@ -124,7 +124,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         return started!;
       });
     },
-    async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>, validate?: (call: Call) => void) {
+    async settle(ref: ExecutionRef, callId: string, raw: z.infer<typeof settlementSchema>, validate?: (call: Call) => void, validateTree?: (calls: Call[], task: typeof executionTasks.$inferSelect) => void) {
       const input = settlementSchema.parse(raw);
       if (input.status === "settled" && input.providerResult) {
         const receipt = input.providerResult.usage;
@@ -151,6 +151,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
         validate?.(call);
+        if (validateTree) validateTree(await readCalls(tx, task.id), task);
         if (input.status === "rejected" && call.kind === "tool" && (await readCalls(tx, task.id)).some(child => child.parentCallId === call.id)) throw new ConflictError("已有子调用的父工具不能标记为未执行拒绝");
         if (input.status === "settled" && (call.kind === "tool" || call.parentCallId)) {
           const calls = await readCalls(tx, task.id);

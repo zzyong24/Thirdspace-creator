@@ -3366,7 +3366,8 @@ it("持久开场文案输入来自真实装配且与返回对象隔离",async()=
  const {deps,resolveModelSpec}=makeDeps();
  const owner={...(ctx as RequestContext),accountId:"hooks-snapshot"};
  const snapshot=durableChatSnapshot(owner.accountId,"开场策略");snapshot.skills[0]!.effective.tools=["script.hooks"];
- const prepared=await prepareDurableChatTurn(owner,{messages:[{id:"source",role:"user",parts:[{type:"text",text:"生成开场"}]}],chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:" 已选主题 "}}},deps,snapshot);
+ const prepared=await prepareDurableChatTurn(owner,{messages:[{id:"source",role:"user",parts:[{type:"text",text:"生成开场"}]}],chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:" 已选主题 "}}},deps,snapshot,{scriptHooksGeneration:{version:1,maxOutputTokens:4096}});
+ expect(prepared.hostContext.scriptHooksGeneration).toEqual({version:1,maxOutputTokens:4096});
  expect(prepared.assembly.tools["script.hooks"]).toBeDefined();
  expect(prepared.hostContext.scriptHooksContext).toMatchObject({selectionTitle:"已选主题",positioningBrief:expect.stringContaining("硬核创作者")});
  expect(prepared.hostContext.scriptHooksContext).toEqual(prepared.assembly.scriptHooksContext);

@@ -17,6 +17,7 @@ export const chatHostContextSchema = z.object({
   trustedScriptSources: z.array(z.object({ref:id,label:z.string(),text:z.string(),truncated:z.boolean(),sourceType:z.enum(["message","attachment","project_text"]).optional(),sourceId:id.optional()}).strict()),
   skillSnapshot: workerSkillSnapshotSchema,
   scriptHooksContext: scriptHooksContextSchema.optional(),
+  scriptHooksGeneration: z.object({version:z.literal(1),maxOutputTokens:z.number().int().positive().max(65536)}).strict().optional(),
 }).strict().superRefine((value, ctx) => {
   if (JSON.stringify(value).length > 4_000_000) ctx.addIssue({code:"custom",message:"宿主上下文过大"});
   const refs=value.trustedScriptSources.map(source=>source.ref),skills=value.skillSnapshot.skills.map(skill=>skill.skillId);

@@ -1,0 +1,69 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-chat-hooks.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (7 tests | 1 failed) 1470ms
+   × 等待授权时根模型已推进则不能返回旧回合生成指令 68ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 等待授权时根模型已推进则不能返回旧回合生成指令
+AssertionError: promise resolved "{ …(4) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "maxOutputTokens": 2048,
++   "operationKey": "hooks:call_528ef54c-9c08-4398-8d1c-0fc173aa00a9:0518bc5dd1894ca4536bdd72336d36501c671da51846939d55b9c360daad4fff",
++   "prompt": "为这条短视频内容生成 4 条口播开场 hook 候选(前 3 秒抓注意力的第一句话)。
++ 内容主题:《真实选题》
++ 创作者定位:
++ 原定位
++ 4 条彼此切角不同(如:反常识断言 / 数据冲击 / 场景代入 / 利益承诺)。每条 ≤40 字,口语化,不要书面腔。选「数据冲击」角度时,数字必须能追溯到上方素材/定位/立项资料原文;追溯不到就不用具体数字,改用可溯的反差或场景。
++
++ 【观众心智预设 —— 写法纪律,必须遵守】
++ - 按「刷着手机、随时划走」的最挑剔状态写:懒(多一个字都嫌多、不想动脑)、没耐心(几秒抓不住就走)、不被道理说服(只认结果、画面、情绪)、只关心「我能立刻得到什么」。
++ - 所以:好处/结论前置,每句话即时可懂;少论证、多断言+演示;步骤能一步不给两步;不铺垫、不绕弯、不自我介绍。好处要具体,但必须真实可溯(遵守可溯条款),不为勾人编造收益。
++ - 归因铁律:观众永远不会怪自己,只会怪你给的方法不好使。讲失败/困难一律归因到方法、工具、信息差——「不是你不行,是方法坑了你」;**绝不写任何暗示观众能力不足、不够努力、连这都不会的话**(哪怕当激将式钩子)。
++ - 教学与行动号召的口吻 = 「照着做就行」:把门槛讲小、把路径讲具体;不主动写「需要坚持/需要基础/看个人悟性」这类劝退限定。
++
++ 【可溯与反编造 —— 必须遵守】
++ - 你写进内容的每一个**具体数字、命名事实、机构/人物、成绩/结果**,都必须能追溯到上方给你的真实素材/知识库/立项资料原文。
++ - 追溯不到来源的,要么不写,要么显式标注「(我的推断)」——绝不把它当既定事实写出口。
++ - 绝不把 A 偷换成 B(如把「文档被多个 AI 评审」写成「22 个 AI 智能体互相盯」);绝不凭空编造论文编号、精确百分比、榜单名、涨粉/变现数字来撑观点或钩子。
++ - 宁可少写一个数据,也不编一个假数据。
++ 只输出 JSON 数组,形如 [{\"text\":\"hook 文案\",\"angle\":\"切角名\"}],不要多余文字。",
++   "system": "你是这位创作者的口播编导,专门打磨前 3 秒开场 hook。只输出 JSON,不要多余文字。
++
++ 【可溯与反编造 —— 必须遵守】
++ - 你写进内容的每一个**具体数字、命名事实、机构/人物、成绩/结果**,都必须能追溯到上方给你的真实素材/知识库/立项资料原文。
++ - 追溯不到来源的,要么不写,要么显式标注「(我的推断)」——绝不把它当既定事实写出口。
++ - 绝不把 A 偷换成 B(如把「文档被多个 AI 评审」写成「22 个 AI 智能体互相盯」);绝不凭空编造论文编号、精确百分比、榜单名、涨粉/变现数字来撑观点或钩子。
++ - 宁可少写一个数据,也不编一个假数据。",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:45:62
+     43|   return {status:"not-applicable"};
+     44|  });
+     45|  await expect(f.hooks.prepare(f.ref,{callId:f.parent.callId})).rejects…
+       |                                                              ^
+     46|  expect((await f.ledger.inspect(f.ref)).calls.filter(call=>call.parent…
+     47| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  01:24:39
+   Duration  2.84s (transform 747ms, setup 0ms, import 1.25s, tests 1.47s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-chat-hooks.service.test.ts`
+Exit status 1

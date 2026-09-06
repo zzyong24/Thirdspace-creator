@@ -1,0 +1,92 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-chat-hooks.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (5 tests | 3 failed) 1393ms
+   × 普通回执端口不能把未知模型结果改成成功 105ms
+   × 新租约不能将旧租约在途模型改为 settled 81ms
+   × 新租约不能将旧租约在途模型改为 rejected 74ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 普通回执端口不能把未知模型结果改成成功
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_4305c70a-17bd-4314-9ae8-18d3249bfab3",
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:41:69
+     39|  const f=await fixture(),child=await startedChild(f);
+     40|  await f.hooks.settle(f.ref,{callId:child.callId,status:"unknown"});
+     41|  await expect(f.hooks.settle(f.ref,{callId:child.callId,...success})).…
+       |                                                                     ^
+     42|  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===chi…
+     43| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 新租约不能将旧租约在途模型改为 settled
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_0bd81fc8-c1ec-49b1-a26d-83564d52672d",
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:51:99
+     49|  const claim=(await f.tasks.claimTask({taskId:f.task.executionTaskId,w…
+     50|  const fresh={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.le…
+     51|  await expect(f.hooks.settle(fresh,{callId:child.callId,...(status==="…
+       |                                                                                                   ^
+     52|  expect((await f.ledger.inspect(fresh)).calls.find(call=>call.id===chi…
+     53| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 新租约不能将旧租约在途模型改为 rejected
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_4363902c-03a9-41cd-8ae3-8d025fd10f36",
++   "status": "rejected",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:51:99
+     49|  const claim=(await f.tasks.claimTask({taskId:f.task.executionTaskId,w…
+     50|  const fresh={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.le…
+     51|  await expect(f.hooks.settle(fresh,{callId:child.callId,...(status==="…
+       |                                                                                                   ^
+     52|  expect((await f.ledger.inspect(fresh)).calls.find(call=>call.id===chi…
+     53| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)
+   Start at  01:23:14
+   Duration  2.76s (transform 746ms, setup 0ms, import 1.25s, tests 1.39s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-chat-hooks.service.test.ts`
+Exit status 1
