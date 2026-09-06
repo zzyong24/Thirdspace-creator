@@ -422,6 +422,8 @@ export interface AiService {
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
   discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  /** 宿主恢复提交时回读首次输入；保持账号隔离，不暴露运行配置。 */
+  findTaskByAttempt(ctx: RequestContext, taskType: string, attemptId: string): Promise<AITaskResource | null>;
   /** T-513 server-only worker seam. Never expose this value through DTO/transport/contract. */
   getTaskRuntimeData(
     ctx: RequestContext,
@@ -1867,6 +1869,13 @@ export function createAiService(deps: ServiceDeps): AiService {
         taskType: r.taskType, // [T-389] 透传给 sweep 做类型感知判死
         startedAt: r.startedAt ?? r.requestedAt,
       }));
+    },
+
+    async findTaskByAttempt(ctx, taskType, attemptId) {
+      const repo=repoFor(ctx,"ai.findTaskByAttempt");
+      if(attemptId.length<16 || attemptId.length>128)throw new AttemptIdInvalidError();
+      const task=await repo.findTaskByAttempt(taskType,attemptId);
+      return task ? (await projectExecutionTasks(deps.db,ctx,[task]))[0]! : null;
     },
 
     async getTask(ctx, taskId) {

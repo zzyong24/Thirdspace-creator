@@ -91,3 +91,4 @@ export { createDailyTopicCompletionService, type DailyTopicCompletionPorts } fro
 export { createChatTurnSubmissionService, type ChatTurnSnapshot, type ChatTurnAssembly } from "./chat-turn-submission.service";
 
 export { createChatTurnCompletionService } from "./chat-turn-completion.service";
+export { createAiTaskSubmissionService } from "./ai-task-submission.service";

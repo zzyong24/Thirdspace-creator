@@ -1,3 +1,4 @@
+import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
 import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
 import {countCandidatesForDay,lockCandidateSupply} from "@creatoros/backend/modules/candidate";
 import {lockAccountForSupply} from "@creatoros/backend/modules/platform-account";
@@ -1595,7 +1596,7 @@ export interface ChatRuntime {
   // ai.tasks.create,复用既有分派链 void runAssetGenerate),立即返回 taskId(不阻塞对话回合)。
   dispatchGenerateAsset: (
     ctx: RequestContext,
-    input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
+    input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
   ) => Promise<{ taskId: string }>;
   // [T-103b] review.script 端口 —— dispatch 既有 script.review ai_task(reviewGateService.triggerReview,
   // 复用 T-086 审核链路 L1 lint + L2 语义审 → 落 script_review_reports),立即返回 taskId。对话审核工具
@@ -1606,7 +1607,7 @@ export interface ChatRuntime {
   ) => Promise<{ taskId: string }>;
   dispatchPlanningThesis: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string },
+    input: { projectId: string; topic?: string; attemptId?: string },
   ) => Promise<{ taskId: string }>;
   // [T-271] cover.generate 端口 —— dispatch 既有 cover.generate ai_task(void runCoverGenerate:结构化
   // 封面方案硬锚 brief/口播稿 → 文案诚实门 → 结构化组装生图 prompt → image.generate 生图),立即返回
@@ -10562,6 +10563,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // services (positioning/learnings/candidate/knowledge), mirroring the topic.generate
   // trigger's bindings — no cross-module repo import (SPEC §22). The /api/chat route reads
   // these to assemble the system prompt; AI produces candidates (采纳 gate), never entities.
+  const chatTaskSubmissions=createAiTaskSubmissionService({
+    findTaskByAttempt:aiService.findTaskByAttempt,
+    submit:async(ctx,body)=>{
+      if(!body.attemptId)throw new Error("聊天任务提交缺少稳定 attemptId");
+      const res=await ai.request(ENDPOINTS.createAITask,{params:undefined,query:undefined,body:{...body,attemptId:body.attemptId}},ctx);
+      const task=(res as {data?:Awaited<ReturnType<typeof aiService.createTask>>}).data;
+      if(!task?.id)throw new Error("聊天任务提交未返回 taskId");
+      return task;
+    },
+  });
   const chatRuntime: ChatRuntime = {
     ai: aiService,
     resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
@@ -12663,38 +12674,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // createTask 据它归属项目)。立即返回 taskId,不阻塞对话回合(视频异步分钟级)。
     dispatchGenerateAsset: async (
       ctx: RequestContext,
-      input: { kind: "image" | "video"; prompt: string; projectId?: string | null },
+      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
     ) => {
-      const scriptSnapshot = input.projectId
-        ? await readCurrentArtifactTruth(ctx, input.projectId, "output_script").catch(
-            () => null,
-          )
-        : null;
-      const res = await ai.request(
-        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
-        ENDPOINTS.createAITask,
-        {
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "asset.generate",
-            attemptId: createAiTaskAttemptId(),
-            inputData: {
-              kind: input.kind,
-              prompt: input.prompt,
-              ...(input.projectId ? { projectId: input.projectId } : {}),
-              ...(scriptSnapshot ? { scriptSnapshot } : {}),
-            },
-          },
+      const task=await chatTaskSubmissions.submit(ctx,{
+        taskType:"asset.generate",attemptId:input.attemptId??createAiTaskAttemptId(),
+        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{})},
+      },{
+        snapshotKeys:["scriptSnapshot"],
+        prepareSnapshot:async(context,inputData)=>{
+          const projectId=typeof inputData.projectId==="string"?inputData.projectId:null;
+          const scriptSnapshot=projectId?await readCurrentArtifactTruth(context,projectId,"output_script").catch(()=>null):null;
+          return scriptSnapshot?{scriptSnapshot}:{};
         },
-        ctx,
-      );
-      const task = (res as { data?: { id?: unknown } }).data;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error("dispatchGenerateAsset: 起 asset.generate task 失败(无 taskId)");
-      }
-      return { taskId };
+      });
+      return {taskId:task.id};
     },
     // [T-103b] review.script 端口 —— 起 script.review ai_task 复用稿面「审核」按钮的旧 trigger 链路
     // (reviewGateService.triggerReview:createTask 后由注入 AI 端口显式接 dispatchScriptReview 在后台
@@ -12757,32 +12750,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
     dispatchPlanningThesis: async (
       ctx: RequestContext,
-      input: { projectId: string; topic?: string },
+      input: { projectId: string; topic?: string; attemptId?: string },
     ) => {
-      const res = await ai.request(
-        ENDPOINTS.createAITask,
-        {
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "planning.thesis",
-            attemptId: createAiTaskAttemptId(),
-            inputData: {
-              projectId: input.projectId,
-              ...(input.topic ? { topic: input.topic } : {}),
-            },
-          },
-        },
-        ctx,
-      );
-      const task = (res as { data?: { id?: unknown } }).data;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error(
-          "dispatchPlanningThesis: 起 planning.thesis task 失败(无 taskId)",
-        );
-      }
-      return { taskId };
+      const task=await chatTaskSubmissions.submit(ctx,{
+        taskType:"planning.thesis",attemptId:input.attemptId??createAiTaskAttemptId(),
+        inputData:{projectId:input.projectId,...(input.topic?{topic:input.topic}:{})},
+      });
+      return {taskId:task.id};
     },
     // [T-271] cover.generate 端口 —— dispatch 制作封面链 task(经 ai transport 的 ai.tasks.create →
     // dispatch 分支 task.taskType==="cover.generate" 触发 void runCoverGenerate)。projectId 走

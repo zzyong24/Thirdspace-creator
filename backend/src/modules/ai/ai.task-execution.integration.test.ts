@@ -84,6 +84,19 @@ describe("T-513 AI task idempotency and atomic execution ownership", () => {
     expect((await service.listTasks(ctx,{limit:100,offset:0})).rows).toHaveLength(1);
   });
 
+  it("按原 attempt 回读真实任务时保持账号隔离且不泄漏运行配置",async()=>{
+    const service=makeService(db,clock),attemptId="chat-tool-fixed-attempt";
+    const created=await service.createTask(ctx,{taskType:"planning.thesis",attemptId,inputData:{projectId:"project-1",topic:"原主题"}});
+    const found=await service.findTaskByAttempt(ctx,"planning.thesis",attemptId);
+    expect(found).toMatchObject({id:created.id,inputData:{projectId:"project-1",topic:"原主题"}});
+    expect(found).not.toHaveProperty("runtimeData");
+    expect(await service.findTaskByAttempt({...ctx,accountId:"other"},"planning.thesis",attemptId)).toBeNull();
+    expect(await service.findTaskByAttempt({...ctx,userId:"other"},"planning.thesis",attemptId)).toBeNull();
+    expect(await service.findTaskByAttempt(ctx,"script.draft",attemptId)).toBeNull();
+    await expect(service.findTaskByAttempt({...ctx,accountId:undefined},"planning.thesis",attemptId)).rejects.toThrow();
+    await expect(service.findTaskByAttempt(ctx,"planning.thesis","short")).rejects.toThrow();
+  });
+
   it("same attempt and payload returns one task, changed payload fails, runtimeData stays server-only", async () => {
     const service = makeService(db, clock);
     const attemptId = "018f8d8a-90ab-7def-8123-123456789abc";

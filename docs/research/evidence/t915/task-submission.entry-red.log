@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:22942) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-task-submission.integration.test.ts > 聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-task-submission.integration.test.ts (1 test | 1 failed) 2395ms
+   × 聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝 2394ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝
+AssertionError: expected 'ai-task-p-13' to be 'ai-task-p-12' // Object.is equality
+
+Expected: "ai-task-p-12"
+Received: "ai-task-p-13"
+
+ ❯ src/server/chat-task-submission.integration.test.ts:21:24
+     19|   const input={projectId:project.id,topic:"原主题",attemptId:"chat-planni…
+     20|   const first=await runtime.dispatchPlanningThesis(ctx,input),again=aw…
+     21|   expect(again.taskId).toBe(first.taskId);
+       |                        ^
+     22|   await expect(runtime.dispatchPlanningThesis(ctx,{...input,topic:"另一个…
+     23|   await vi.waitFor(async()=>expect((await call("ai.tasks.get",{taskId:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  03:31:34
+   Duration  6.71s (transform 2.53s, setup 153ms, import 3.45s, tests 2.39s, environment 517ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/chat-task-submission.integration.test.ts --retry 0
