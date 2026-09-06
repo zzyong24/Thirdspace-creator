@@ -56,7 +56,7 @@ export { buildTrendQuery, formatTrendBrief } from "@creatoros/ai-worker";
 /**
  * [T-235b] trend 依据多源并行装配:**已登记信源信号(主路)+ 联网 web 搜索(既有)**同时拉,
  * 拼成一份分段 brief。单路失败/未绑只丢该段(Promise.allSettled,诚实降级空);两路全空 → ""
- * (节点走无热点降级路径,与旧行为一致)。topic-task-adapter 的 trend 分支与 topic-daily-collector
+ * (节点走无热点降级路径,与旧行为一致)。topic-task-adapter 的 trend 分支与 daily-topic-business-adapter
  * 共用(端口形状兼容,additive 扩展)。
  */
 export async function assembleTrendBrief(

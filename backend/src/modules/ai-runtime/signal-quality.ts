@@ -15,7 +15,7 @@ import type {
 //     噪声占比;定位 9 facets + 5 规则完整度;知识条数/新鲜度;热点来源数/信号数);
 //   · AI 判断(topic.generate 模板 v3):画像渲成「依据质量画像」段注入 prompt,模板指引按画像
 //     动态定权,每条候选 reason 注明主要依据+权重理由。
-// 装配层共享:topic-task-adapter(chat 出题 topic.generate)与 topic-daily-collector(每日出题)
+// 装配层共享:topic-task-adapter(chat 出题 topic.generate)与 daily-topic-business-adapter(每日出题)
 // 都经 assembleSignalQualityInputs(best-effort 读源)+ buildSignalQualityProfile(纯函数)。
 //
 // 另一半修法(同任务):评论**强信号过滤** —— 666/纯 emoji/夸颜值类噪声不进 brief,强信号(含问题/

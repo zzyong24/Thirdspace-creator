@@ -88,3 +88,4 @@ export {createCalibrationPositioningAdoptionService,type CalibrationPositioningA
 export {createResearchMaterialAdoptionService,type ResearchMaterialAdoptionPorts} from "./research-material-adoption.service";
 
 export { createTopicCandidateAdoptionService, type TopicCandidateAdoptionPorts } from "./topic-candidate-adoption.service";
+export { createDailyTopicCompletionService, type DailyTopicCompletionPorts } from './daily-topic-completion.service';

@@ -1,0 +1,15 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+src/integration/daily-topic-automation.test.ts(25,155): error TS2345: Argument of type '{ now: () => string; resolveRun: (c: RequestContext, id: string) => Promise<{ jobId: string; jobRunId: string; dayKey: string; }>; countCandidatesForDay: () => Promise<number>; hasConfiguredModel: () => Promise<...>; listActivePreferences: () => Promise<...>; }' is not assignable to parameter of type 'DailyTopicPrepareDeps'.
+  Property 'positioning' is missing in type '{ now: () => string; resolveRun: (c: RequestContext, id: string) => Promise<{ jobId: string; jobRunId: string; dayKey: string; }>; countCandidatesForDay: () => Promise<number>; hasConfiguredModel: () => Promise<...>; listActivePreferences: () => Promise<...>; }' but required in type 'DailyTopicPrepareDeps'.
+src/integration/daily-topic-automation.test.ts(32,385): error TS2322: Type '() => Promise<never>' is not assignable to type '(context: RequestContext, input: { taskType: string; inputData: unknown; text: string; structuredResult?: { object: JSONType; generation: { finishReason: string; usage: { inputTokens: number | null; outputTokens: number | null; cachedTokens: number | null; totalTokens: number | null; }; attempts: { ...; }[]; }; mode...'.
+  Type 'Promise<never>' is missing the following properties from type 'RecordCandidateInput': resultType, resultData
+src/integration/daily-topic-automation.test.ts(48,48): error TS2345: Argument of type '{ now: () => string; dailyLimit: number; resolveRun: (c: RequestContext, id: string) => Promise<{ jobId: string; jobRunId: string; dayKey: string; }>; countCandidatesForDay: () => Promise<...>; hasConfiguredModel: () => Promise<...>; listActivePreferences: () => Promise<...>; sourceReader: { ...; }; }' is not assignable to parameter of type 'DailyTopicPrepareDeps'.
+  Property 'positioning' is missing in type '{ now: () => string; dailyLimit: number; resolveRun: (c: RequestContext, id: string) => Promise<{ jobId: string; jobRunId: string; dayKey: string; }>; countCandidatesForDay: () => Promise<...>; hasConfiguredModel: () => Promise<...>; listActivePreferences: () => Promise<...>; sourceReader: { ...; }; }' but required in type 'DailyTopicPrepareDeps'.
+src/integration/daily-topic-automation.test.ts(57,612): error TS2322: Type '() => Promise<never>' is not assignable to type '(context: RequestContext, input: { taskType: string; inputData: unknown; text: string; structuredResult?: { object: JSONType; generation: { finishReason: string; usage: { inputTokens: number | null; outputTokens: number | null; cachedTokens: number | null; totalTokens: number | null; }; attempts: { ...; }[]; }; mode...'.
+  Type 'Promise<never>' is missing the following properties from type 'RecordCandidateInput': resultType, resultData
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

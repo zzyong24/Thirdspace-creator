@@ -15,6 +15,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
   "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
   "prepareScriptImport", "saveScriptFallback", "saveScriptVoiceover",
@@ -44,6 +45,8 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  completeDailyTopicSkip: emptyPortInput,
+  commitDailyTopicResult: z.object({outcome:z.literal("succeeded"),callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   ...topicReadPortInputSchemas,
   readTaskContext: emptyPortInput,
   prepareScriptImport: emptyPortInput,

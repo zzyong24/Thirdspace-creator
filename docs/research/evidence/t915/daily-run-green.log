@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts (2 tests | 1 failed) 924ms
+   × 错误sourceKind或跨账号绑定拒绝；finish同事务回滚且成功重放不改统计 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts > 错误sourceKind或跨账号绑定拒绝；finish同事务回滚且成功重放不改统计
+error: duplicate key value violates unique constraint "ux_job_run_job_scheduled_for"
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:267:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  13:51:40
+   Duration  1.71s (transform 294ms, setup 0ms, import 637ms, tests 924ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/scheduling/daily-topic-run.service.test.ts

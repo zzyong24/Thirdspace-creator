@@ -6,6 +6,7 @@ const ratio = z.number().min(0).max(1);
 export const topicGenerateFrozenSchema = z
   .object({
     version: z.literal(1),
+    mode: z.literal("daily").optional(),
     basis: z.enum(["positioning", "comments", "knowledge", "trend"]),
     projectId: z.string().min(1).nullable(),
     context: z
@@ -106,3 +107,9 @@ export const topicGenerateFrozenSchema = z
   })
   .strict();
 export type TopicGenerateFrozen = z.infer<typeof topicGenerateFrozenSchema>;
+
+/** 宿主冻结的每日任务身份及采纳排序输入，Worker不能覆写。 */
+export const dailyTopicInputSchema=z.object({
+ jobId:z.string().min(1),jobRunId:z.string().min(1),dayKey:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),dailyLimit:z.number().int().nonnegative(),
+ preferences:z.array(z.object({keyword:z.string(),direction:z.enum(['avoid','prefer']),weight:z.number(),exampleCount:z.number().int().nonnegative(),lastReinforcedAt:z.string()})),rankingNow:z.string().datetime(),observedCount:z.number().int().nonnegative().optional(),skipReason:z.enum(['quota','model_unconfigured']).optional(),
+}).strict().refine(value=>value.skipReason!=='quota'||(value.observedCount!==undefined&&value.observedCount>=value.dailyLimit),'配额跳过缺少实际已满计数');

@@ -1,3 +1,4 @@
+import {dailyTopicInputSchema} from "./topic-worker-input";
 import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
@@ -89,6 +90,14 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return;
       }
       if(input.kind==="model.structured"){
+        const daily=input.facets.__dailyTopic!==undefined ? dailyTopicInputSchema.parse(JSON.parse(input.facets.__dailyTopic)) : undefined;
+        if(daily && (input.skillId!=="topic.generate" || input.capability!=="topic.generate"))throw new Error("DAILY_TOPIC_INPUT_MISMATCH");
+        if(daily?.skipReason){
+          signal.throwIfAborted();committing=true;
+          await call(execution,"completeDailyTopicSkip",{},signal);
+          reason="completed";return;
+        }
+        if(daily){const topic=z.object({mode:z.literal("daily")}).parse(JSON.parse(input.facets.__topicGenerate??"null"));void topic;}
         if(input.skillId==="script.draft" && input.facets.__scriptVerbatim){
           const result=z.object({callId:z.string().min(1),text:z.string().min(1)}).strict().parse(await call(execution,"prepareScriptImport",{},signal));
           signal.throwIfAborted();
@@ -114,7 +123,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
         signal.throwIfAborted();
         committing=true;
-        await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+        await call(execution,daily?"commitDailyTopicResult":"commitResult",{outcome:"succeeded",...result},signal);
         reason="completed";
         return;
       }

@@ -1,0 +1,40 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/execution-candidate.service.test.ts (6 tests | 1 failed) 1014ms
+     × 每日选题不能绕过自动入池端口变成普通待采纳候选 34ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/execution-candidate.service.test.ts > 持久执行候选提交 > 每日选题不能绕过自动入池端口变成普通待采纳候选
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "aiTaskId": "daily-generic-port",
++   "resultId": "ai-result:call_871d0120-18c5-4f28-a176-08cfa22c26fe",
+  }
+
+ ❯ src/modules/ai/execution-candidate.service.test.ts:28:56
+     26|     const f=await fixture("daily-generic-port");
+     27|     await db.update(aiTasks).set({taskType:"scheduled.topic.daily"}).w…
+     28|     await expect(f.service.commitResult(f.ref,f.commit)).rejects.toThr…
+       |                                                        ^
+     29|     expect(await db.select().from(aiTaskResults).where(eq(aiTaskResult…
+     30|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  14:03:42
+   Duration  1.84s (transform 336ms, setup 0ms, import 695ms, tests 1.01s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/execution-candidate.service.test.ts

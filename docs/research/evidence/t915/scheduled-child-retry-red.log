@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/modules/execution/execution-scheduled-child.service.test.ts > 每日child显式retry原子重开失败run，保留原预算与调用事实
+[scheduled-child] 父子任务关系异常，保留待检查 execution-task_671537a0-5679-48ec-9beb-f615c5ce3d25
+
+stderr | src/modules/execution/execution-scheduled-child.service.test.ts > 每日parent显式retry原子重开失败run，保留原预算与调用事实
+[scheduled-child] 父子任务关系异常，保留待检查 execution-task_671537a0-5679-48ec-9beb-f615c5ce3d25
+
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts (13 tests | 2 failed) 1105ms
+   × 每日child显式retry原子重开失败run，保留原预算与调用事实 24ms
+   × 每日parent显式retry原子重开失败run，保留原预算与调用事实 22ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-scheduled-child.service.test.ts > 每日child显式retry原子重开失败run，保留原预算与调用事实
+ FAIL  src/modules/execution/execution-scheduled-child.service.test.ts > 每日parent显式retry原子重开失败run，保留原预算与调用事实
+AssertionError: expected 'failed' to be 'running' // Object.is equality
+
+Expected: "running"
+Received: "failed"
+
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts:24:223
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  14:07:04
+   Duration  1.90s (transform 320ms, setup 0ms, import 665ms, tests 1.11s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-scheduled-child.service.test.ts --retry=0

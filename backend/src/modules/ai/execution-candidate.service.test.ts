@@ -22,6 +22,12 @@ describe("持久执行候选提交",()=>{
     await ledger.start(ref,call.id);await ledger.settle(ref,call.id,{status:"settled",usage:{totalTokens:5},resultText:"持久正文"});
     return {ref,tasks,ledger,call,commit:{outcome:"succeeded",callId:call.id,text:"持久正文"},service:createExecutionCandidateService(db,{now,projectCandidate})};
   }
+  it("每日选题不能绕过自动入池端口变成普通待采纳候选",async()=>{
+    const f=await fixture("daily-generic-port");
+    await db.update(aiTasks).set({taskType:"scheduled.topic.daily"}).where(eq(aiTasks.id,"daily-generic-port"));
+    await expect(f.service.commitResult(f.ref,f.commit)).rejects.toThrow("每日选题");
+    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"daily-generic-port"))).toHaveLength(0);
+  });
   it("并发重投只写一个现有业务候选，采纳后的迟到回执不改回待采纳",async()=>{
     const f=await fixture("once");const [a,b]=await Promise.all([f.service.commitResult(f.ref,f.commit),f.service.commitResult(f.ref,f.commit)]);expect(a).toEqual(b);
     const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:p=>p+Math.random()});

@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stdout | src/execution/structured-worker-generation.test.ts > daily真实HTTP与完成策略partial在保存前失败，不能转提交未知
+[structured-node] template=topic.generate status=ok durationMs=26 path=text_compat modelCalls=1 inputTokens=2 outputTokens=3
+
+ ❯ src/execution/structured-worker-generation.test.ts (37 tests | 1 failed | 36 skipped) 42ms
+   × daily真实HTTP与完成策略partial在保存前失败，不能转提交未知 41ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/structured-worker-generation.test.ts > daily真实HTTP与完成策略partial在保存前失败，不能转提交未知
+AssertionError: promise resolved "{ callId: 'call-1', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call-1",
++   "text": "{\"object\":{\"topics\":[{\"title\":\"真实选题\",\"angle\":\"角度\",\"contentRole\":\"\",\"source\":\"demand\",\"predictedScore\":80,\"reason\":\"依据\",\"sourceComments\":[]}]},\"modelLabel\":\"review-fixture-model\",\"generation\":{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"attempts\":[{\"finishReason\":\"stop\",\"usage\":{\"inputTokens\":2,\"outputTokens\":3,\"cachedTokens\":0,\"totalTokens\":5},\"kind\":\"initial\"}]},\"validation\":{\"status\":\"partial\",\"errors\":[{\"code\":\"MIN_SEGMENTS\",\"path\":\"segments\",\"message\":\"段落数 1 少于下限 2\"}],\"policySnapshot\":{\"policy\":{\"schemaVersion\":1,\"minSegments\":2,\"maxSegments\":null,\"requiredSequence\":[],\"repairAttempts\":0},\"adapter\":{\"id\":\"test.daily.partial\",\"version\":\"1\"}},\"originalSegmentCount\":1,\"finalSegmentCount\":1,\"repairAttemptsUsed\":0,\"repairReasons\":[{\"code\":\"MIN_SEGMENTS\",\"path\":\"segments\",\"message\":\"段落数 1 少于下限 2\"}]}}",
+  }
+
+ ❯ src/execution/structured-worker-generation.test.ts:178:98
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 36 skipped (37)
+   Start at  14:02:51
+   Duration  543ms (transform 210ms, setup 0ms, import 373ms, tests 42ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/structured-worker-generation.test.ts -t daily真实HTTP

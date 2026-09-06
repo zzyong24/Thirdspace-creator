@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import {and,eq,type Db} from "@creatoros/backend";
+import {platformAccounts} from "./platform-account.db-schema";
 import {
   createPlatformAccountRepository,
   type PlatformAccountRepository,
@@ -224,3 +225,10 @@ export function createPlatformAccountService(
 
 // Re-export for the cross-module seam consumers that only need the error type.
 export { OwnershipError };
+
+/** 日供给提交以真实账号为互斥键，锁寿命由调用方事务统一管理。 */
+export async function lockAccountForSupply(tx:Parameters<Parameters<Db["transaction"]>[0]>[0],ctx:RequestContext):Promise<void>{
+ if(!ctx.accountId)throw new OwnershipError("账号不存在");
+ const [account]=await tx.select({id:platformAccounts.id}).from(platformAccounts).where(and(eq(platformAccounts.id,ctx.accountId),eq(platformAccounts.userId,ctx.userId))).for("update");
+ if(!account)throw new OwnershipError("账号不存在");
+}

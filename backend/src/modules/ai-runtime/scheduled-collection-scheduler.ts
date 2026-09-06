@@ -83,7 +83,7 @@ export interface TriggerDeps {
       taskType: string;
       inputData: Record<string, unknown>;
     },
-  ) => void | Promise<void>;
+  ) => void | {executionTaskId:string} | Promise<void | {executionTaskId:string}>;
   now: () => string;
   // [T-201d] 可选:查一个账号的 status（隐藏号定时任务停跑 gate）。返回该号 status；
   //   号不存在 / 越权 / 查失败 → null（组合根用 .catch(()=>null) 兜底）。**未绑此端口 → 不查、保持原行为跑**
@@ -105,7 +105,7 @@ export interface TriggerResult {
    *  正常触发 / 幂等短路时缺省。跳过时 jobRunId/aiTaskId 为空串(不产 run,故无 id)。 */
   skippedReason?: string;
   /** 新持久 driver 会 await 它后再结束 execution task；旧 runNow 可继续忽略并立即返回。 */
-  completion?: Promise<void>;
+  completion?: Promise<void | {executionTaskId:string}>;
 }
 
 export interface JobRunFailureGuardDeps {
@@ -242,6 +242,7 @@ export async function triggerScheduledJob(
       idempotencyKey,
       jobId: job.id,
       target: job.target,
+      ...(job.sourceKind === "topic.daily" ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
     },
   });
   if (task.status !== "queued" && task.status !== "running") {

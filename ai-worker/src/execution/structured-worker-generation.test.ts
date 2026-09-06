@@ -31,7 +31,7 @@ async function fixture(content:string,reasoning:string|undefined,native=false,pr
     throw new Error(`unexpected ${port}`);
   };
   const run=()=>generateStructuredInWorker({...input,skillId,...(skillId==="planning.thesis"?{facets:{...input.facets,__planningThesisGrounding:JSON.stringify(["冻结真实材料",...Array(6).fill("")])}}:{}),skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId}))}},{apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture",structuredOutputs:native},new AbortController().signal,call);
-  return {run,requests,saved,rows,close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
+  return {run,requests,saved,rows,call,spec:{apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"review-fixture-model",token:"fixture"},close:async()=>{server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}};
 }
 it.each([
   {content:"{}",native:false},
@@ -166,3 +166,15 @@ function input() {
 it("planning.thesis宽松旧Skill不能把无效列变成空候选",async()=>{const f=await fixture(JSON.stringify({branches:[{column:"unknown",title:"表面非空"}]}),undefined,true,false,"planning.thesis");try{await expect(f.run()).rejects.toMatchObject({outcome:"failed"});expect(f.saved).toEqual([]);}finally{await f.close();}});
 it("planning.thesis固定协议保留Skill覆盖且不额外规划调用",async()=>{const f=await fixture(JSON.stringify({core:{title:"真实论点",summary:"说明"},branches:[{column:"支持",title:"依据",summary:"材料"}]}),undefined,true,false,"planning.thesis");try{await f.run();expect(f.requests).toHaveLength(1);expect(JSON.stringify(f.requests[0])).toContain("冻结审核方法");expect(JSON.parse(f.saved[0]!).object.branches[0].column).toBe("支持");}finally{await f.close();}});
 it.each([undefined,"[]",'[42]'])("planning.thesis缺失或坏grounding在模型预留前拒绝 %s",async rawGrounding=>{const call=vi.fn(async()=>{throw new Error("不得请求端口");});await expect(generateStructuredInWorker({...input,skillId:"planning.thesis",facets:rawGrounding ? {__planningThesisGrounding:rawGrounding} : {},skillSnapshot:{...input.skillSnapshot,skills:input.skillSnapshot.skills.map(s=>({...s,skillId:"planning.thesis"}))}},{apiFormat:"openai_chat",baseUrl:null,model:"unused",token:"unused"},new AbortController().signal,call)).rejects.toMatchObject({outcome:"failed"});expect(call).not.toHaveBeenCalled();});
+
+it("daily真实HTTP与完成策略partial在保存前失败，不能转提交未知",{retry:0},async()=>{
+ const {registerOfficialCompletionPolicyAdapter}=await import('../prompt/completion-policy');
+ registerOfficialCompletionPolicyAdapter({id:'test.daily.partial',version:'1',supportsSchema:()=>true,toSegments:value=>(value as {topics:unknown[]}).topics.map(()=>({role:'topic'}))});
+ const frozen={version:1,mode:'daily',basis:'positioning',projectId:null,context:{positioningBrief:'真实定位',knowledgeBrief:'',learningsBrief:''},qualityNow:input.skillSnapshot.resolvedAt,qualityInputs:{signals:[],positioning:null,knowledge:[]},qualityProfile:{comments:{count:0,coveredWorks:0,strongSignalRatio:0,noiseRatio:0},positioning:{filledFacets:0,totalFacets:9,rulesFilled:0,completeness:0},knowledge:{count:0,recentRatio:null},trend:{sourceCount:0,signalCount:0}},basisBrief:'',trendSources:[]};
+ const snapshot={...input.skillSnapshot,skills:input.skillSnapshot.skills.map(skill=>({...skill,skillId:'topic.generate',effective:{...skill.effective,requiredFacets:[],completionPolicy:{schemaVersion:1 as const,minSegments:2,maxSegments:null,requiredSequence:[],repairAttempts:0},completionPolicyAdapter:{id:'test.daily.partial',version:'1'}}}))};
+ const dailyInput={...input,skillId:'topic.generate',capability:'topic.generate',facets:{__dailyTopic:JSON.stringify({jobId:'j',jobRunId:'r',dayKey:'2026-09-05',dailyLimit:5,preferences:[],rankingNow:input.skillSnapshot.resolvedAt}),__topicGenerate:JSON.stringify(frozen)},skillSnapshot:snapshot};
+ const f=await fixture(JSON.stringify({topics:[{title:'真实选题',angle:'角度',source:'demand',predictedScore:80,reason:'依据'}]}),undefined);
+ const call=async(port:WorkerPort,data:unknown,signal?:AbortSignal)=>port==='reserveTopicRead'?{callId:'settled-search',status:'settled',request:{kind:'search',query:'冻结查询'},requestDigest:'sha256:'+'a'.repeat(64),receipt:{kind:'search',status:'ok',data:{results:[]}}}:f.call(port,data);
+ try{await expect(generateStructuredInWorker(dailyInput,f.spec,new AbortController().signal,call)).rejects.toMatchObject({outcome:'failed',errorCode:'STRUCTURED_OUTPUT_INVALID'});expect(f.requests).toHaveLength(1);expect(f.saved).toEqual([]);}
+ finally{await f.close();}
+});

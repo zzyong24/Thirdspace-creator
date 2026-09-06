@@ -4,6 +4,7 @@ import {
   topicFacets,
   normalizeTopics,
   topicArraySchema,
+  dailyTopicInputSchema,
 } from "@creatoros/ai-worker";
 import { assembleCreativeContext, type ContextDeps } from "./creative-context";
 import {
@@ -35,6 +36,7 @@ export async function prepareTopicGenerateContext(
   ctx: RequestContext,
   task: { projectId: string | null; inputData: Record<string, unknown> },
   deps: TopicGeneratePrepareDeps,
+  options: {mode?: "daily"} = {},
 ): Promise<TopicGenerateFrozen> {
   const inputProject =
     typeof task.inputData.projectId === "string" && task.inputData.projectId
@@ -47,7 +49,7 @@ export async function prepareTopicGenerateContext(
     if (!deps.assertProject) throw new Error("选题缺少项目归属读取端口");
     await deps.assertProject(ctx, projectId);
   }
-  const basis = normalizeTopicTaskBasis(task.inputData.basis);
+  const basis = options.mode === "daily" ? "positioning" : normalizeTopicTaskBasis(task.inputData.basis);
   const context = await assembleCreativeContext(
     ctx,
     { projectId, topic: "" },
@@ -61,7 +63,7 @@ export async function prepareTopicGenerateContext(
     nowIso: qualityNow,
   });
   const basisBrief =
-    basis === "comments"
+    (basis === "comments" || options.mode === "daily")
       ? qualityInputs.signals.length
         ? formatFilteredSignalsBrief(qualityInputs.signals)
         : context.signalsBrief
@@ -69,7 +71,7 @@ export async function prepareTopicGenerateContext(
         ? context.knowledgeBrief
         : "";
   let trendSources: TrendSourceProjection[] = [];
-  if (basis === "trend" && deps.sourceReader) {
+  if ((basis === "trend" || options.mode === "daily") && deps.sourceReader) {
     try {
       trendSources = await deps.sourceReader.listEnabledSources(ctx);
     } catch {
@@ -78,6 +80,7 @@ export async function prepareTopicGenerateContext(
   }
   return topicGenerateFrozenSchema.parse({
     version: 1,
+    ...(options.mode ? {mode:options.mode} : {}),
     basis,
     projectId,
     context: {
@@ -98,12 +101,20 @@ export async function prepareTopicGenerateContext(
     })),
   });
 }
+/** SEMANTIC_BOUNDARY_ALLOW: 从冻结网络步骤计数，只分配执行容量，不判断内容价值。 */
+export function topicAdditionalCalls(facets:Readonly<Record<string,string|undefined>>):number {
+  if(facets.__dailyTopic && dailyTopicInputSchema.parse(JSON.parse(facets.__dailyTopic)).skipReason)return 0;
+  const frozen=topicGenerateFrozenSchema.parse(JSON.parse(facets.__topicGenerate??'null'));
+  if(frozen.basis!=='trend'&&frozen.mode!=='daily')return 0;
+  return 1+frozen.trendSources.reduce((sum,source)=>sum+(source.sourceType==='web'?2:1),0);
+}
 export function createTopicGenerateBusinessAdapter(
   deps: TopicGeneratePrepareDeps,
 ): StructuredBusinessAdapter {
   return {
     skillId: "topic.generate",
     capability: "topic.generate",
+    additionalCalls:topicAdditionalCalls,
     async prepare(ctx, task) {
       const frozen = await prepareTopicGenerateContext(ctx, task, deps);
       return {

@@ -45,3 +45,7 @@ export {
   type ScheduledJobResource,
   type JobRunResource,
 } from "./scheduling.schema";
+
+export {createDailyTopicRunService,type DailyTopicRunRef} from "./daily-topic-run.service";
+
+export {createDailyTopicRunIntentService} from "./daily-topic-run-intent.service";

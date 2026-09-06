@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts (6 tests | 1 failed) 1229ms
+   × 每日失败同步后显式retry同事务重新打开原run，保留执行调用预算 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts > 每日失败同步后显式retry同事务重新打开原run，保留执行调用预算
+TypeError: f.service.reopenForExecutionRetry is not a function
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts:57:57
+
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pglite/session.ts:140:10
+ ❯ callback ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  14:07:00
+   Duration  2.00s (transform 334ms, setup 0ms, import 631ms, tests 1.23s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/scheduling/daily-topic-run.service.test.ts

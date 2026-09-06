@@ -1,3 +1,4 @@
+import {lockCandidateSupply} from "./candidate-supply-lock";
 import { and, desc, eq, gte, lt, sql, type Db } from "@creatoros/backend";
 import {
   candidates,
@@ -256,7 +257,9 @@ export function createCandidateRepository(
     },
 
     async createCandidate(input) {
-      const inserted = await db
+      return db.transaction(async tx=>{
+      await lockCandidateSupply(tx,deps);
+      const inserted = await tx
         .insert(candidates)
         .values({
           id: deps.nextId("cand"),
@@ -279,6 +282,7 @@ export function createCandidateRepository(
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async getCandidate(id) {

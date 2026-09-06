@@ -1,0 +1,54 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts (6 tests | 1 failed) 1077ms
+   × 等待子任务的父保留owner互斥，下一分钟不得入队重复作业 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-scheduled-child.service.test.ts > 等待子任务的父保留owner互斥，下一分钟不得入队重复作业
+AssertionError: promise resolved "{ …(21) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": "a",
++   "attempt": 0,
++   "checkpoint": null,
++   "costEstimate": null,
++   "createdAt": "2026-09-05T00:00:00.000Z",
++   "errorCode": null,
++   "errorMessage": null,
++   "heartbeatAt": null,
++   "id": "execution-task_7d6902ea-adf5-4bb4-a68b-5381794de8df",
++   "idempotencyKey": "next-minute-6",
++   "kind": "automation_sync",
++   "leaseExpiresAt": null,
++   "leaseOwner": null,
++   "maxAttempts": 3,
++   "ownerId": "6",
++   "ownerType": "scheduled_job",
++   "priority": 0,
++   "retryAt": null,
++   "status": "queued",
++   "updatedAt": "2026-09-05T00:00:00.000Z",
++   "userId": "u",
+  }
+
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts:13:436
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 19 passed (20)
+   Start at  14:00:10
+   Duration  6.49s (transform 711ms, setup 0ms, import 1.45s, tests 6.76s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-scheduled-child.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/ai-runtime/automation-driver.test.ts --retry=0

@@ -1,0 +1,134 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/topic-worker-pipeline.test.ts (18 tests | 2 failed) 16ms
+   × daily定位依据仍搜读热点，拼接冻结评论且仅最终一次生成 3ms
+   × daily热点未知立即停止，不以定位依据绕过 3ms
+ ❯ src/execution/worker-runtime.test.ts (26 tests | 4 failed) 1417ms
+     × 跳过quota在获取凭据前完成，零模型 64ms
+     × 跳过model_unconfigured在获取凭据前完成，零模型 53ms
+     × 正常daily只向专用结果端口提交 55ms
+     × 跳过完成回执丢失不二次覆盖终态 55ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/topic-worker-pipeline.test.ts > daily定位依据仍搜读热点，拼接冻结评论且仅最终一次生成
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "mode",
+      "commentsBrief"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"mode\", \"commentsBrief\""
+  }
+]
+ ❯ Module.runTopicWorkerPipeline src/execution/topic-worker-pipeline.ts:35:43
+     33|   },
+     34| ) {
+     35|   const input = topicGenerateFrozenSchema.parse(raw),
+       |                                           ^
+     36|     { signal } = deps;
+     37|   let basisBrief = input.basisBrief;
+ ❯ src/execution/topic-worker-pipeline.test.ts:277:8
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/topic-worker-pipeline.test.ts > daily热点未知立即停止，不以定位依据绕过
+AssertionError: expected ZodError: [
+  {
+    "code": "unrecognized… { …(8) } to be Error: UNKNOWN { …(3) } // Object.is equality
+
+- Expected
++ Received
+
+- GenerationFailure {
+-   "message": "UNKNOWN",
+-   "outcome": "unknown_result",
+-   "errorCode": "UNKNOWN",
+-   "retryAfterMs": undefined,
++ ZodError {
++   "message": "[
++   {
++     \"code\": \"unrecognized_keys\",
++     \"keys\": [
++       \"mode\",
++       \"commentsBrief\"
++     ],
++     \"path\": [],
++     \"message\": \"Unrecognized keys: \\\"mode\\\", \\\"commentsBrief\\\"\"
++   }
++ ]",
++   "name": "ZodError",
+  }
+
+ ❯ src/execution/topic-worker-pipeline.test.ts:279:229
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 每日选题Worker专用完成端口 > 跳过quota在获取凭据前完成，零模型
+ FAIL  src/execution/worker-runtime.test.ts > 每日选题Worker专用完成端口 > 跳过model_unconfigured在获取凭据前完成，零模型
+AssertionError: expected [ 'readTaskContext', …(2) ] to deeply equal [ 'readTaskContext', …(1) ]
+
+- Expected
++ Received
+
+  [
+    "readTaskContext",
+-   "completeDailyTopicSkip",
++   "resolveModelCredential",
++   "commitResult",
+  ]
+
+ ❯ src/execution/worker-runtime.test.ts:301:274
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 每日选题Worker专用完成端口 > 正常daily只向专用结果端口提交
+AssertionError: expected [ 'readTaskContext', …(2) ] to deeply equal [ 'readTaskContext', …(2) ]
+
+- Expected
++ Received
+
+  [
+    "readTaskContext",
+    "resolveModelCredential",
+-   "commitDailyTopicResult",
++   "commitResult",
+  ]
+
+ ❯ src/execution/worker-runtime.test.ts:302:275
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 每日选题Worker专用完成端口 > 跳过完成回执丢失不二次覆盖终态
+AssertionError: expected { version: 1, type: 'stopped', …(3) } to match object { type: 'stopped', …(1) }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "reason": "unknown_result",
++   "reason": "completed",
+    "type": "stopped",
+  }
+
+ ❯ src/execution/worker-runtime.test.ts:303:196
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 38 passed (44)
+   Start at  13:50:52
+   Duration  1.67s (transform 152ms, setup 0ms, import 245ms, tests 1.43s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/execution/topic-worker-pipeline.test.ts src/execution/worker-runtime.test.ts --retry=0

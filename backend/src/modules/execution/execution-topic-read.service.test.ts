@@ -213,6 +213,8 @@ it("未知提交不可换轮重发；跨任务和旧fence不能读取或结算",
 });
 it("登录阻断只认可本目标已settled的精确call；恢复消耗剩余预算", async () => {
   const f = await fixture("topic-read-login", 2);
+  // 本用例专测固定总额2的读账本；业务prepare现在另计正常pipeline必要步骤。
+  await db.update(executionTasks).set({executionBudget:{...budget,maxCalls:2}}).where(eq(executionTasks.id,f.ref.executionTaskId));
   const a = await perform(f, failure("NEEDS_LOGIN", false));
   expect((await f.service.reserveTopicRead(f.ref, { target })).callId).toBe(
     a.callId,
@@ -445,4 +447,21 @@ it("旧信源hostname含www或抖音alias仍能按真实登录域读取", async 
       domain: domain === "www.example.com" ? "example.com" : "douyin.com",
     });
   }
+});
+
+it('每日搜读必须验证同一真实调度运行，普通定位任务不能借用每日模式',async()=>{
+ const f=await fixture('daily-read-bound');
+ const model=(f.payload.modelInput as {facets:Record<string,string>});
+ model.facets.__topicGenerate=JSON.stringify({...JSON.parse(model.facets.__topicGenerate!),basis:'positioning',mode:'daily'});
+ model.facets.__dailyTopic=JSON.stringify({jobId:'real-job',jobRunId:'real-run'});
+ await db.update(executionTasks).set({payload:f.payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ await expect(f.service.reserveTopicRead(f.ref,{target:{kind:'search'}})).rejects.toThrow('模式');
+ await db.update(aiTasks).set({taskType:'scheduled.topic.daily'}).where(eq(aiTasks.id,'daily-read-bound'));
+ await expect(f.service.reserveTopicRead(f.ref,{target:{kind:'search'}})).rejects.toThrow('未绑定');
+ let checked=0;
+ const service=createExecutionTopicReadService(db,{now,budget,buildTrendQuery:s=>s,async validateDailyRun(c,input){expect(c.accountId).toBe(ctx.accountId);expect(input).toEqual({jobId:'real-job',jobRunId:'real-run',aiTaskId:'daily-read-bound'});checked++;}});
+ const reserved=await service.reserveTopicRead(f.ref,{target:{kind:'search'}});
+ expect(reserved.status).toBe('reserved');expect(checked).toBeGreaterThan(0);
+ const rejecting=createExecutionTopicReadService(db,{now,budget,buildTrendQuery:s=>s,async validateDailyRun(){throw new Error('运行已取消');}});
+ await expect(rejecting.startTopicRead(f.ref,{callId:reserved.callId})).rejects.toThrow('运行已取消');
 });

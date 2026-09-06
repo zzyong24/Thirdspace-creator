@@ -296,3 +296,12 @@ describe("T-517 automation driver", () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 });
+
+it('真实子任务委派释放分钟driver，不提前finish父任务；下一tick消费子终态',async()=>{
+ const {claim}=taskFixture();const finish=vi.fn();const attach=vi.fn(async()=>{});const wakeDelegated=vi.fn();const registry=createAutomationHandlerRegistry().register('scheduled_collection',async()=>({executionTaskId:'child-real'})).seal();
+ const tasks={recoverExpiredLeases:vi.fn(async()=>({requeued:0,failed:0})),enqueue:vi.fn(),claimNext:vi.fn().mockResolvedValueOnce(claim).mockResolvedValue(null),heartbeat:vi.fn(),finish} as unknown as PersistentTaskService;
+ const report=await runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[],now:()=>new Date().toISOString(),workerId:'w',cron:{validate:()=>true},scheduledChildren:{attach,reconcile:async()=>({succeeded:0,failed:0,pending:1})},wakeDelegated});
+ expect(attach).toHaveBeenCalledWith({executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},'child-real');expect(finish).not.toHaveBeenCalled();expect(report.succeeded).toBe(0);expect(wakeDelegated).toHaveBeenCalledTimes(1);
+ const next=await runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[],now:()=>new Date().toISOString(),workerId:'w',cron:{validate:()=>true},scheduledChildren:{attach,reconcile:async()=>({succeeded:1,failed:0,pending:0})}});expect(next.succeeded).toBe(1);
+});
+it('child已创建但attach回执丢失时不写父成功或失败，等待原幂等触发恢复',async()=>{const {claim}=taskFixture();const finish=vi.fn();const registry=createAutomationHandlerRegistry().register('scheduled_collection',async()=>({executionTaskId:'existing-child'})).seal();const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0}),claimNext:vi.fn().mockResolvedValueOnce(claim).mockResolvedValue(null),heartbeat:vi.fn(),finish} as unknown as PersistentTaskService;await runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[],now:()=>new Date().toISOString(),workerId:'w',cron:{validate:()=>true},scheduledChildren:{attach:async()=>{throw Error('reply lost')},reconcile:async()=>({succeeded:0,failed:0,pending:0})}});expect(finish).not.toHaveBeenCalled();});

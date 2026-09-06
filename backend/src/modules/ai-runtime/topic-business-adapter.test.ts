@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   createTopicGenerateBusinessAdapter,
   prepareTopicGenerateContext,
+  topicAdditionalCalls,
 } from "./topic-business-adapter";
 const ctx = {
   userId: "u",
@@ -231,4 +232,11 @@ it("trend纯prepare即使附带旧模型/搜索依赖也不执行，冻结定位
   expect(result.trendSources).toEqual([]);
   expect(trendSearch).not.toHaveBeenCalled();
   expect(resolveModelSpec).not.toHaveBeenCalled();
+});
+
+it('必要调用容量只由冻结来源计数，普通定位0、trend搜索加web抽取或rss读取',async()=>{
+ const adapter=createTopicGenerateBusinessAdapter({...base,sourceReader:{listEnabledSources:async()=>[{id:'w',name:'网页',url:'https://example.com',domain:'example.com',sourceType:'web'},{id:'r',name:'RSS',url:'https://example.com/feed',domain:'example.com',sourceType:'rss'}]}});
+ const makeTask=(basis:string)=>({...task(basis),id:'t',retryOfTaskId:null,skillSnapshot});
+ expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('positioning')))).toBe(0);
+ expect(topicAdditionalCalls(await adapter.prepare(ctx,makeTask('trend')))).toBe(4);
 });

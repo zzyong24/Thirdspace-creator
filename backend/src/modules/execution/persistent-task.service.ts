@@ -1,3 +1,5 @@
+import {createDailyTopicRunService} from "../scheduling";
+import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
 
 import {
@@ -214,6 +216,7 @@ function leaseExpiry(now: string, seconds: number): string {
 // 重试等待不能被直接领取或 pause/resume 绕过；旧任务未设置这两个字段时保持原行为。
 function claimableAt(stamp: string) {
   return sql`(${executionTasks.status} = 'queued' OR ${executionTasks.status} = 'retry_wait')
+    AND NOT (${executionTasks.payload} ? '__scheduledChild')
     AND (${executionTasks.retryAt} IS NULL OR ${executionTasks.retryAt} <= ${stamp})
     AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
 }
@@ -257,6 +260,7 @@ export function createPersistentTaskService(
 ): PersistentTaskService {
   const now = deps.now ?? (() => new Date().toISOString());
   const nextId = deps.nextId ?? ((prefix: string) => `${prefix}_${randomUUID()}`);
+  const dailyRuns = createDailyTopicRunService(db,{now});
 
   async function getOwnedRow(
     ctx: RequestContext,
@@ -301,7 +305,7 @@ export function createPersistentTaskService(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
-      if (Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
+      if (Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
         throw new ExecutionValidationError("研究阻断认可水位只能由用户恢复命令写入");
       }
       const maxAttempts = input.maxAttempts ?? 3;
@@ -381,6 +385,8 @@ export function createPersistentTaskService(
       const existingRequestPayload = {...asPayload(existing?.payload)};
       delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
       delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
+      delete existingRequestPayload.__scheduledChild;
+      delete existingRequestPayload.parentExecutionTaskId;
       if (
         !existing ||
         existing.ownerType !== input.ownerType ||
@@ -447,24 +453,29 @@ export function createPersistentTaskService(
         );
       }
       return db.transaction(async (tx) => {
+        const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId)));
+        const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
           .select()
           .from(executionTasks)
           .where(
             and(
-              inArray(executionTasks.id, taskIds),
+              inArray(executionTasks.id, lockIds),
               eq(executionTasks.userId, ctx.userId),
               eq(executionTasks.accountId, accountId),
             ),
           ).orderBy(asc(executionTasks.id)).for("update");
-        if (rows.length !== taskIds.length) {
+        if (rows.length !== lockIds.length) {
           throw new OwnershipError("Execution task not found");
         }
 
+        const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
+        for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
+        const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
         const targetById = new Map(
-          rows.map((row) => [
+          rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
-            commandTarget(
+            (input.command==='pause' && row.status==='queued' && parents.some(parent=>scheduledChildId(parent)===row.id)) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
               row.attempt,
@@ -474,10 +485,11 @@ export function createPersistentTaskService(
         );
         const stamp = now();
         const updated: TaskRow[] = [];
-        for (const taskId of taskIds) {
+        for (const taskId of effectiveIds) {
           const target = targetById.get(taskId);
           if (!target) throw new OwnershipError("Execution task not found");
           const previous = rows.find(row => row.id === taskId)!;
+          if(input.command==='retry')await dailyRuns.reopenForExecutionRetry(ctx,taskId,tx);
           let acknowledgedPayload: Record<string, unknown> | undefined;
           if (input.command === "resume" && previous.status === "waiting_user") {
             // 与状态变更持有同一execution行锁；仅用户此次明确恢复认可已经发生的阻断。
@@ -515,7 +527,8 @@ export function createPersistentTaskService(
           if (!row) throw new OwnershipError("Execution task not found");
           updated.push(row);
         }
-        return updated.map(toResource);
+        for(const parent of parents){const child=updated.find(row=>row.id===scheduledChildId(parent))!;const [projected]=await tx.update(executionTasks).set({...scheduledParentProjection(child),updatedAt:stamp}).where(eq(executionTasks.id,parent.id)).returning();updated.push(projected!);}
+        return taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
       });
     },
 

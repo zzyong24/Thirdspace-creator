@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/daily-topic-business-adapter.test.ts (5 tests | 1 failed) 14ms
+   × 投影必须使用daily冻结身份，保留旧空产出成功，不改变候选类型 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/daily-topic-business-adapter.test.ts > 投影必须使用daily冻结身份，保留旧空产出成功，不改变候选类型
+ZodError: [
+  {
+    "code": "custom",
+    "path": [],
+    "message": "至少返回一条有标题的选题"
+  }
+]
+ ❯ Object.project src/modules/ai-runtime/daily-topic-business-adapter.ts:42:49
+     40|    const topic=topicGenerateFrozenSchema.parse(JSON.parse(input.facets…
+     41|    if(daily.skipReason||topic.mode!=='daily'||topic.basis!=='positioni…
+     42|    const items=normalizeTopics(topicArraySchema.parse(object).topics);
+       |                                                 ^
+     43|    return {resultType:'candidate_list',resultData:{items}};
+     44|   },
+ ❯ src/modules/ai-runtime/daily-topic-business-adapter.test.ts:27:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 15 passed (16)
+   Start at  13:55:47
+   Duration  1.72s (transform 926ms, setup 0ms, import 1.59s, tests 953ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/daily-topic-business-adapter.test.ts src/modules/ai-runtime/topic-business-adapter.test.ts src/modules/scheduling/daily-topic-run.service.test.ts

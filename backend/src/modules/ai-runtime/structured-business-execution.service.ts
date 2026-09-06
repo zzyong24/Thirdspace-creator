@@ -8,6 +8,8 @@ type TaskType=typeof aiTasks.$inferSelect.taskType;
 export interface StructuredBusinessAdapter {
   skillId:string;
   capability:string;
+  /** 宿主适配器从其冻结步骤计算的必要额外调用；仅首次绑定消费。 */
+  additionalCalls?(facets:Readonly<Record<string,string|undefined>>):number;
   prepare(ctx:RequestContext,task:{id:string;retryOfTaskId:string|null;projectId:string|null;inputData:Record<string,unknown>;skillSnapshot:z.infer<typeof workerSkillSnapshotSchema>}):Promise<Record<string,string|undefined>>;
   project(inputData:Record<string,unknown>,object:unknown,execution?:{structuredResult?:WorkerStructuredResult;frozenInput?:unknown}):RecordCandidateInput;
 }
@@ -40,7 +42,10 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       const skillSnapshot=workerSkillSnapshotSchema.parse(runtime.skillSnapshot);
       if(skillSnapshot.userId!==ctx.userId || skillSnapshot.accountId!==ctx.accountId)throw new OwnershipError("Skill snapshot owner mismatch");
       const facets=await adapter.prepare(ctx,{id:task.id,retryOfTaskId:task.retryOfTaskId,projectId:task.projectId,inputData:task.inputData as Record<string,unknown>,skillSnapshot});
-      return authority.bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,budget:deps.budget,modelInput:{kind:"model.structured",operationKey:adapter.skillId,capability:adapter.capability,maxOutputTokens:deps.maxOutputTokens,skillId:adapter.skillId,skillSnapshot,facets:Object.fromEntries(Object.entries(facets).filter((entry):entry is [string,string]=>typeof entry[1]==="string"))}});
+      const additionalCalls=adapter.additionalCalls?.(Object.freeze({...facets}))??0;
+      if(!Number.isSafeInteger(additionalCalls)||additionalCalls<0||deps.budget.maxCalls+additionalCalls>10000)throw new Error("STRUCTURED_CALL_BUDGET_INVALID");
+      const budget={...deps.budget,maxCalls:deps.budget.maxCalls+additionalCalls};
+      return authority.bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,budget,modelInput:{kind:"model.structured",operationKey:adapter.skillId,capability:adapter.capability,maxOutputTokens:deps.maxOutputTokens,skillId:adapter.skillId,skillSnapshot,facets:Object.fromEntries(Object.entries(facets).filter((entry):entry is [string,string]=>typeof entry[1]==="string"))}});
     },
     async recoverQueued(onFailure:(ctx:RequestContext,taskId:string)=>Promise<void>,shouldStop=()=>false){
       // 单次启动分页扫描，以业务记录恢复属主；失败单项由调用方记录真实失败后继续。

@@ -1,0 +1,63 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts (12 tests | 1 failed) 9248ms
+   × 登录阻断只认可本目标已settled的精确call；恢复消耗剩余预算 250ms
+ ❯ src/modules/execution/persistent-task.service.test.ts (8 tests | 1 failed) 20008ms
+     × 研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等 6618ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-topic-read.service.test.ts > 登录阻断只认可本目标已settled的精确call；恢复消耗剩余预算
+AssertionError: promise resolved "{ …(4) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_593b668a-0d4c-41dd-9f83-72a8e20145f7",
++   "request": {
++     "domain": "example.com",
++     "kind": "web",
++     "name": "真实来源",
++     "sourceId": "source-1",
++     "url": "https://example.com/news",
++   },
++   "requestDigest": "sha256:1e966e85fdc23020b333920bb1dac2c9883771675768f99602269211028e70d9",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-topic-read.service.test.ts:240:61
+    238|     })
+    239|     .where(eq(executionTasks.id, f.ref.executionTaskId));
+    240|   await expect(f.service.reserveTopicRead(f.ref, { target })).rejects.…
+       |                                                             ^
+    241|     /预算/,
+    242|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/execution/persistent-task.service.test.ts:54:3
+     52|
+     53| describe("T-482 持久执行任务状态机", () => {
+     54|   it("研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等",async()=>{
+       |   ^
+     55|     const {db,client}=await createDb();const service=createPersistentT…
+     56|     const input={kind:"ai_task" as const,ownerType:"ai_task" as const,…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 19 passed (21)
+      Tests  2 failed | 196 passed (198)
+   Start at  18:04:31
+   Duration  35.45s (transform 26.64s, setup 0ms, import 56.68s, tests 199.26s, environment 3ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/daily-candidate-supply.test.ts src/integration/daily-topic-automation.test.ts src/integration/daily-topic-completion.test.ts src/integration/daily-topic-worker.fork.test.ts src/modules/ai/daily-topic-completion.service.test.ts src/modules/ai/execution-candidate.service.test.ts src/modules/ai-runtime/daily-topic-business-adapter.test.ts src/modules/ai-runtime/topic-business-adapter.test.ts src/modules/ai-runtime/automation-driver.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/scheduling/daily-topic-run-intent.service.test.ts src/modules/scheduling/daily-topic-run.service.test.ts src/modules/execution/execution-scheduled-child.service.test.ts src/modules/execution/execution-lease.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/execution-topic-read.service.test.ts src/modules/execution/model-worker-dispatcher.test.ts src/modules/execution/topic-worker.integration.test.ts src/modules/candidate/candidate.repository.integration.test.ts src/modules/candidate/candidate.service.test.ts src/modules/candidate/topic-preference-guardrail.test.ts

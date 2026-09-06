@@ -575,6 +575,13 @@
       "when": 1788652800011,
       "tag": "0081_execution_browser_profile_leases",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1788652800012,
+      "tag": "0082_scheduled_child_active_owner",
+      "breakpoints": true
     }
   ]
 }

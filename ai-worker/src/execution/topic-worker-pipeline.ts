@@ -37,7 +37,7 @@ export async function runTopicWorkerPipeline(
   let basisBrief = input.basisBrief;
   let trend = { sourceCount: 0, signalCount: 0 };
   signal.throwIfAborted();
-  if (input.basis === "trend") {
+  if (input.basis === "trend" || input.mode === "daily") {
     const signals: TrendSourceSignal[] = [];
     // 固定顺序保证中间模型调用序号跨恢复稳定。单个已知失败由read落回执后返回空。
     const search = await deps.read({ kind: "search" });
@@ -93,7 +93,7 @@ export async function runTopicWorkerPipeline(
       }
     }
     const hits = search?.kind === "search" ? search.results : [];
-    basisBrief = [formatTrendSourceBrief(signals), formatTrendBrief(hits)]
+    basisBrief = [input.mode === "daily" && input.basisBrief ? `【受众评论信号】\n${input.basisBrief}` : "", formatTrendSourceBrief(signals), formatTrendBrief(hits)]
       .filter(Boolean)
       .join("\n\n");
     trend = {

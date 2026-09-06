@@ -30,7 +30,8 @@ import type { RequestContext } from "@creatoros/contract";
 import { ConflictError } from "./execution.errors";
 const frozenSchema = z.object({
   version: z.literal(1),
-  basis: z.literal("trend"),
+  basis: z.enum(["trend", "positioning"]),
+  mode: z.literal("daily").optional(),
   context: z.object({ positioningBrief: z.string() }),
   trendSources: z.array(
     z.object({
@@ -47,6 +48,7 @@ const inputSchema = z.object({
   skillId: z.literal("topic.generate"),
   operationKey: z.string().min(1),
   facets: z.object({
+    __dailyTopic: z.string().optional(),
     __topicGenerate: z.string().transform((value, ctx) => {
       try {
         return frozenSchema.parse(JSON.parse(value));
@@ -74,6 +76,7 @@ export function createExecutionTopicReadService(
       BrowserSessionsService,
       "getStateVersioned" | "saveStateVersioned"
     >;
+    validateDailyRun?(ctx:RequestContext,input:{jobId:string;jobRunId:string;aiTaskId:string},tx:Parameters<Parameters<Db["transaction"]>[0]>[0]):Promise<unknown>;
   },
 ) {
   const leases = createExecutionLeaseService(db, deps),
@@ -104,10 +107,15 @@ export function createExecutionTopicReadService(
             eq(aiTasks.accountId, context.accountId!),
           ),
         );
-      if (!business || business.taskType !== "topic.generate")
+      if (!business || !["topic.generate","scheduled.topic.daily"].includes(business.taskType))
         throw new ConflictError("热点读取AI任务映射不符");
       const payload = task.payload as Record<string, unknown>,
         input = inputSchema.parse(payload.modelInput);
+      if(business.taskType==="scheduled.topic.daily"){
+        if(input.facets.__topicGenerate.mode!=="daily"||input.facets.__topicGenerate.basis!=="positioning"||!deps.validateDailyRun)throw new ConflictError("每日热点读取未绑定调度运行");
+        const daily=z.object({jobId:z.string().min(1),jobRunId:z.string().min(1),skipReason:z.never().optional()}).parse(JSON.parse(input.facets.__dailyTopic??"null"));
+        await deps.validateDailyRun(context,{jobId:daily.jobId,jobRunId:daily.jobRunId,aiTaskId:business.id},tx);
+      }else if(input.facets.__topicGenerate.basis!=="trend"||input.facets.__topicGenerate.mode)throw new ConflictError("热点读取模式不符");
       const calls = await tx
         .select()
         .from(executionCalls)

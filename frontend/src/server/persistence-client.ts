@@ -1,6 +1,9 @@
+import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
+import {countCandidatesForDay,lockCandidateSupply} from "@creatoros/backend/modules/candidate";
+import {lockAccountForSupply} from "@creatoros/backend/modules/platform-account";
 import {TOPIC_GENERATE_TEMPLATE} from "@creatoros/ai-worker";
 import {createTopicCandidateAdoptionService} from "@creatoros/backend/modules/ai";
-import {createTopicGenerateBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
+import {createTopicGenerateBusinessAdapter,createDailyTopicBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
 import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
 import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
 import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusinessAdapter, createPositioningGenerateBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
@@ -10,7 +13,7 @@ import { createAssetTagProposalService } from "@creatoros/backend/modules/taxono
 import { createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
-import { createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
@@ -460,7 +463,6 @@ import {
   // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
   assembleCreativeContext,
   // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
-  collectDailyTopics,
   // [T-235d] 正向归因回流(self.detail 采集尾 best-effort 触发:实绩 → 枚举化归因 → 实验候选进池)。
   runTopicAttribution,
   createTopicAttributionPort,
@@ -3196,9 +3198,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }).create(c,input);
     },
   },deps.now);
-  const topicCandidateAdoption=createTopicCandidateAdoptionService(db,{
-    assertProject(c,id,tx){return createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(c,id);},
-    createFromAIResult(c,input,tx){
+  const createTopicCandidateInTransaction: import("@creatoros/backend/modules/ai").DailyTopicCompletionPorts["createCandidate"] = (c,input,tx) => {
       const txDb=tx as unknown as Db;
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txPositioning=createPositioningService({db:txDb,...deps,projects:{getProjectSubject:async(context,id)=>{const row=await txProjects.getProjectOverviewCore(context,id);return {title:row.project.title,brief:row.project.brief};}}});
@@ -3209,7 +3209,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           try{return (await txPositioning.evaluateGate(context,{subjectType:"candidate",subjectId:"candidate-inline",candidate:{title:subject.title,angle:subject.angle,contentRole:subject.contentRole??undefined,productAnchorId:subject.productAnchorId??undefined}})).positioningFit;}catch{return null;}
         }},
       }).createFromAIResult(c,input);
-    },
+  };
+  const topicCandidateAdoption=createTopicCandidateAdoptionService(db,{
+    assertProject(c,id,tx){return createProjectsService(createProjectRepository(tx as unknown as Db),deps).getProjectOverviewCore(c,id);},
+    createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiService = createAiService({
     topicCandidates:topicCandidateAdoption,
@@ -7411,109 +7414,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       return result2;
     },
-    // [T-235a] 每天自动出题(topic.daily):多依据合并(定位+评论信号+知识库+热点)→ topic.generate
-    //   同模板出题(runTopicNode)→ T-212d 护栏排序(探索位保底)→ candidateService.createCandidate
-    //   落 pool(source 透传 trend/benchmark/demand)。防灌库 ≤N/天(env CREATOROS_TOPIC_DAILY_LIMIT,
-    //   默认 5,按当天已建候选计数);未配文本模型 → 诚实跳过(itemsNew=0 + message)。纯 AI + 库内
-    //   数据 + web 检索,不碰 douyinGateway(与采集类 job 无限流冲突;仍走 gate-F5 串行闸统一排队,
-    //   错峰 9:40 在 benchmark 9:30 后)。resolveModelSpec/searchWebPort 定义在本工厂后方 —— 采集器
-    //   闭包只在到点/触发时执行(工厂初始化早已完成),按闭包引用捕获无 TDZ 问题(与 dispatch 分支同款)。
-    "topic.daily": async (ctx, _target, report) => {
-      const dailyLimitRaw = Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT);
-      return collectDailyTopics(ctx, {
-        // ContextDeps(与 topic.generate dispatch 同源绑法,只装出题需要的读源;知识用 list dump,
-        // creative-context 内部 best-effort 空兜底)。
-        positioning: {
-          getPositioningCenter: (c) =>
-            positioningService.getPositioningCenter(c),
-        },
-        learnings: {
-          getSuggestions: (c, opts) => learningsService.getSuggestions(c, opts),
-        },
-        signals: {
-          list: async (c, opts) =>
-            (
-              await candidateService.listSignals(c, {
-                limit: opts.limit ?? 30,
-                offset: 0,
-              })
-            ).rows.map((s) => ({
-              source: s.source,
-              rawText: s.rawText,
-              demandTag: s.demandTag,
-              // [T-238] 评论按作品锚 → 信号质量画像算覆盖作品数。
-              publicationId: s.publicationId ?? null,
-            })),
-        },
-        knowledge: {
-          list: async (c, opts) =>
-            (await knowledgeService.listKnowledge(c))
-              .slice(0, opts.limit ?? 40)
-              .map((k) => ({
-                title: k.title,
-                knowledgeType: k.knowledgeType,
-                usedCount: k.usedCount,
-                usedInPublished: k.usedInPublished,
-                sourceNote: k.sourceNote ?? null,
-                // [T-238] 新鲜度 → 信号质量画像算近 30 天占比。
-                createdAt: k.createdAt ?? null,
-              })),
-        },
-        resolveModelSpec,
-        // [T-126] 热点依据:复用联网检索端口(rss 免 key / browser 无头采集)。未配 web.search →
-        // 抛 SearchConfigError,collector 内(assembleTrendBrief allSettled)成空热点段(诚实降级)。
-        trendSearch: (c, query, opts) => searchWebPort(c, query, opts),
-        // [T-235b] 已登记信源信号(主路),与 web 搜索并行拼热点段(单路失败只丢该段)。
-        trendSourceSignals: (c) => trendSourceSignalsPort(c),
-        // 出题节点:ai-worker runTopicNode(topic.generate 同模板 + runStructuredNode 跨模型健壮)。
-        // 多依据已合并进 basisBrief(分段),basis 取 "positioning"(定位为纲的通用出题 hint)。
-        generateTopics: async (_c, input) => {
-          const { modelFor, runTopicNode } = await import(
-            "@creatoros/ai-worker"
-          );
-          const { topics } = await runTopicNode({
-            model: modelFor(input.spec),
-            positioningBrief: input.positioningBrief,
-            basisBrief: input.basisBrief,
-            knowledgeBrief: input.knowledgeBrief,
-            learningsBrief: input.learningsBrief,
-            // [T-238] 依据质量画像段(collector 装配)→ 模板 v3 动态定权。
-            signalQualityBrief: input.signalQualityBrief,
-            basis: "positioning",
-          });
-          return topics;
-        },
-        // [T-212d] active 硬偏好(candidateService 是唯一读法;service 层已保 ±10 封顶/≥3 例)。
-        listActivePreferences: async (c) =>
-          (await candidateService.listActiveTopicPreferences(c)).map((p) => ({
-            keyword: p.keyword,
-            direction: p.direction === "prefer" ? ("prefer" as const) : ("avoid" as const),
-            weight: p.weight,
-            exampleCount: p.exampleCount,
-            lastReinforcedAt: p.lastReinforcedAt,
-          })),
-        // 防灌库计数:当天(UTC 自然日,与 triggerScheduledJob dayKey 同口径)已建候选数。
-        countCandidatesCreatedToday: async (c) => {
-          const today = deps.now().slice(0, 10);
-          const { rows } = await candidateService.listCandidates(c, {
-            limit: 1000,
-            offset: 0,
-          });
-          return rows.filter((r) => (r.createdAt ?? "").slice(0, 10) === today)
-            .length;
-        },
-        createCandidate: async (c, input) => {
-          const cand = await candidateService.createCandidate(c, input);
-          return { id: cand.id };
-        },
-        now: deps.now,
-        dailyLimit:
-          Number.isFinite(dailyLimitRaw) && dailyLimitRaw > 0
-            ? Math.floor(dailyLimitRaw)
-            : undefined,
-        report,
-      });
-    },
     // [T-235c] 旧指定收藏夹采集兼容链：只供迁移前存量任务读取；新来源统一在内容雷达登记。
     //   收藏夹列表按 name 精确匹配(回填 collectsId + lastSyncedAt)→ 逐匹配夹拉夹内视频
     //   (≤50/夹)→ favorites_items 幂等台账((user, aweme_id) 去重只插新)→ **≤3/run 限量进池**
@@ -7734,11 +7634,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
   // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
   // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
-  const dispatchScheduledCollection = (ctx: RequestContext, task: {
+  const dispatchScheduledCollection = async (ctx: RequestContext, task: {
     id: string;
     taskType: string;
     inputData: Record<string, unknown>;
   }) => {
+    if(task.taskType==="scheduled.topic.daily"){
+      if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
+      const bound=await businessExecution.prepare(ctx,task.id);
+      modelWorker.start();
+      return {executionTaskId:bound.executionTaskId};
+    }
     return runTaskWithEffectiveSkillSnapshot(ctx, task.id, () =>
       enqueueCollectionRun(() =>
         runScheduledCollection(ctx, task, {
@@ -7782,7 +7688,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     runs: {
-      createRun: (c, input) => schedulingService.createRun(c, input),
+      createRun: async(c,input)=>{
+        const job=await schedulingService.getJob(c,input.jobId);
+        if(job.sourceKind==="topic.daily"){
+          if(!input.aiTaskId)throw new Error("每日选题缺少任务绑定");
+          return dailyTopicRunIntents.ensureRunForTask(c,input.aiTaskId);
+        }
+        return schedulingService.createRun(c,input);
+      },
       listRunsByJob: async (c, jobId, query) => {
         const { rows, total } = await schedulingService.listRunsByJob(
           c,
@@ -7946,6 +7859,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const activeTaskIds = new Set(
         (await aiService.listRunningTasksSystem(schedulerCtx)).map((task) => task.id),
       );
+      const dailySync=await dailyTopicRuns.syncExecutionRuns(schedulerCtx);
+      for(const id of dailySync.activeAiTaskIds)activeTaskIds.add(id);
+      for(const item of dailySync.inconsistencies)console.error("[scheduler] 每日选题回执不一致",item);
       return await sweepStaleRuns({
         runs: {
           // sweep 只用 updateRun；其余端口为窄接口占位。
@@ -8085,6 +8001,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           { scheduledFor: input.scheduledFor },
         );
         if (result.skippedReason) throw new Error(result.skippedReason);
+        if(input.job.sourceKind==="topic.daily"){
+          const child=result.deduped
+            ? await dispatchScheduledCollection(c,{id:result.aiTaskId,taskType:"scheduled.topic.daily",inputData:{jobId:input.job.id,jobRunId:result.jobRunId,target:input.job.target}})
+            : await result.completion;
+          if(!child?.executionTaskId)throw new Error("每日选题缺少持久执行绑定");
+          return child;
+        }
+
         if (result.deduped) {
           if (input.attempt <= 1) {
             // 已有真实运行是一次成功的“重叠跳过”，不是执行失败；原 run 继续负责终态。
@@ -8111,6 +8035,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
         }
       } catch (error) {
+        if(input.job.sourceKind==="topic.daily"&&result?.aiTaskId){
+          const existing=await aiService.getTask(c,result.aiTaskId);
+          if(existing.executionTaskId)return {executionTaskId:existing.executionTaskId};
+          await aiService.markFailed(c,result.aiTaskId,error instanceof Error?error.message:String(error));
+        }
         // runner 进入后会在 finally 自己收口；这里兜住“终态 task 无法 claim / snapshot
         // 装配失败 / dispatch 外层异常”等 runner 尚未进入的路径，不能只让 execution_task 失败。
         if (result?.jobRunId) {
@@ -8144,6 +8073,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       maxClaims: 8,
       leaseSeconds: 120,
       sweepStaleJobRuns,
+      scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
+      wakeDelegated:()=>modelWorker?.start(),
     });
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
@@ -9667,7 +9598,61 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 },
               },
   };
+  const dailyTopicRuns=createDailyTopicRunService(db,{now:deps.now});
+  const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
+  const dailyTopicAdapter=createDailyTopicBusinessAdapter({
+        positioning: {
+          getPositioningCenter: (c) =>
+            positioningService.getPositioningCenter(c),
+        },
+        learnings: {
+          getSuggestions: (c, opts) => learningsService.getSuggestions(c, opts),
+        },
+        signals: {
+          list: async (c, opts) =>
+            (
+              await candidateService.listSignals(c, {
+                limit: opts.limit ?? 30,
+                offset: 0,
+              })
+            ).rows.map((s) => ({
+              source: s.source,
+              rawText: s.rawText,
+              demandTag: s.demandTag,
+              // [T-238] 评论按作品锚 → 信号质量画像算覆盖作品数。
+              publicationId: s.publicationId ?? null,
+            })),
+        },
+        knowledge: {
+          list: async (c, opts) =>
+            (await knowledgeService.listKnowledge(c))
+              .slice(0, opts.limit ?? 40)
+              .map((k) => ({
+                title: k.title,
+                knowledgeType: k.knowledgeType,
+                usedCount: k.usedCount,
+                usedInPublished: k.usedInPublished,
+                sourceNote: k.sourceNote ?? null,
+                // [T-238] 新鲜度 → 信号质量画像算近 30 天占比。
+                createdAt: k.createdAt ?? null,
+              })),
+        },
+        listActivePreferences: async (c) =>
+          (await candidateService.listActiveTopicPreferences(c)).map((p) => ({
+            keyword: p.keyword,
+            direction: p.direction === "prefer" ? ("prefer" as const) : ("avoid" as const),
+            weight: p.weight,
+            exampleCount: p.exampleCount,
+            lastReinforcedAt: p.lastReinforcedAt,
+          })),
+    sourceReader:{listEnabledSources:c=>trendSourcesService.listEnabledSources(c)},
+    resolveRun:async(c,id)=>{await dailyTopicRunIntents.ensureRunForTask(c,id);return dailyTopicRuns.resolveRun(c,id);},
+    countCandidatesForDay:(c,day)=>countCandidatesForDay(db,c,day),
+    async hasConfiguredModel(c){try{await resolveModelSpec(c,"topic.generate");return true;}catch{return false;}},
+    dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
+  });
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "scheduled.topic.daily":dailyTopicAdapter,
     "topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
@@ -9738,6 +9723,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
+    dailyTopicPorts:{
+      validateRun:(c,input,tx)=>dailyTopicRuns.validateRun(c,input,tx),
+      finishRun:(c,input,tx)=>dailyTopicRuns.finishRun(c,input,tx),
+      lockAccount:async(c,tx)=>{await lockAccountForSupply(tx,c);await lockCandidateSupply(tx,{userId:c.userId,accountId:c.accountId!});},
+      countCandidatesForDay:(c,day,tx)=>countCandidatesForDay(tx,c,day),
+      createCandidate:createTopicCandidateInTransaction,
+    },
     browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,

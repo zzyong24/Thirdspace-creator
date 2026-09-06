@@ -75,3 +75,7 @@ export {
   type AudienceSignalRow,
   type TopicPromotionRow,
 } from "./candidate.repository";
+
+export {countCandidatesForDay} from "./candidate.service";
+
+export {lockCandidateSupply} from "./candidate-supply-lock";

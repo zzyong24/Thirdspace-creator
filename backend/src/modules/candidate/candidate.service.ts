@@ -1,5 +1,6 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { Db } from "@creatoros/backend";
+import {and,eq,gte,lt,sql,type Db} from "@creatoros/backend";
+import {candidates} from "./candidate.db-schema";
 import {
   createCandidateRepository,
   type CandidateRepository,
@@ -858,4 +859,14 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
       return (await rankGuardrail(ctx, query)).rows;
     },
   };
+}
+
+/** 完整UTC日供给计数；不限分页、不按pool状态排除已被使用的当日供给。 */
+export async function countCandidatesForDay(db:Db|Parameters<Parameters<Db["transaction"]>[0]>[0],ctx:RequestContext,day:string):Promise<number>{
+ const accountId=requireAccountId(ctx.accountId,"candidate.countCandidatesForDay");
+ const start=`${day}T00:00:00.000Z`,stamp=Date.parse(start);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(day)||!Number.isFinite(stamp)||new Date(stamp).toISOString()!==start)throw new Error("UTC日期无效");
+ const end=new Date(stamp+86400000).toISOString();
+ const [row]=await db.select({total:sql<number>`count(*)::int`}).from(candidates).where(and(eq(candidates.userId,ctx.userId),eq(candidates.accountId,accountId),gte(candidates.createdAt,start),lt(candidates.createdAt,end)));
+ return row?.total??0;
 }

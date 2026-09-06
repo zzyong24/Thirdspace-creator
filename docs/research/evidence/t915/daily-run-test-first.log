@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts [ src/modules/scheduling/daily-topic-run.service.test.ts ]
+Error: Cannot find module './daily-topic-run.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/scheduling/daily-topic-run.service.test.ts
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts:4:1
+      2| import {createDb,aiTasks,type Db} from '@creatoros/backend';
+      3| import {createSchedulingService} from './scheduling.service';
+      4| import {createDailyTopicRunService} from './daily-topic-run.service';
+       | ^
+      5| const ctx={userId:'daily-user',accountId:'daily-account',requestId:'te…
+      6| const now=()=> '2026-09-05T01:00:00.000Z';let db:Db,close:()=>Promise<…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  13:51:06
+   Duration  760ms (transform 288ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/scheduling/daily-topic-run.service.test.ts

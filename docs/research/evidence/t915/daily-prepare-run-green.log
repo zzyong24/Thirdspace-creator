@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/daily-topic-business-adapter.test.ts (5 tests | 1 failed) 13ms
+   × 投影必须使用daily冻结身份，拒绝空产出，不改变候选类型 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/daily-topic-business-adapter.test.ts > 投影必须使用daily冻结身份，拒绝空产出，不改变候选类型
+ZodError: [
+  {
+    "origin": "array",
+    "code": "too_small",
+    "minimum": 1,
+    "inclusive": true,
+    "path": [
+      "skillSnapshot",
+      "skills"
+    ],
+    "message": "Too small: expected array to have >=1 items"
+  },
+  {
+    "code": "custom",
+    "path": [],
+    "message": "结构化任务缺少冻结输出契约"
+  }
+]
+ ❯ Object.project src/modules/ai-runtime/daily-topic-business-adapter.ts:37:48
+     35|   },
+     36|   project(_input,object,execution){
+     37|    const input=structuredGenerationInputSchema.parse(execution?.frozen…
+       |                                                ^
+     38|    if(input.skillId!=='topic.generate'||input.capability!=='topic.gene…
+     39|    const daily=dailyTopicInputSchema.parse(JSON.parse(input.facets.__d…
+ ❯ src/modules/ai-runtime/daily-topic-business-adapter.test.ts:26:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 15 passed (16)
+   Start at  13:54:50
+   Duration  1.72s (transform 936ms, setup 0ms, import 1.61s, tests 948ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/daily-topic-business-adapter.test.ts src/modules/ai-runtime/topic-business-adapter.test.ts src/modules/scheduling/daily-topic-run.service.test.ts

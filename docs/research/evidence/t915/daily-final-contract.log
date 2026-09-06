@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  14:10:35
+   Duration  209ms (transform 72ms, setup 0ms, import 158ms, tests 9ms, environment 0ms)
+

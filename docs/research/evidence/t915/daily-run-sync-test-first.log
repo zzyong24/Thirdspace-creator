@@ -1,0 +1,40 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts (5 tests | 3 failed) 984ms
+   × 真实持久失败和取消同步运行终态，不修改执行状态，重复同步幂等 55ms
+   × 等待/未知/暂停/排队真实执行一直受保护；成功缺少原子回执只报不一致 4ms
+   × 系统同步按真实用户过滤，不把同账号错绑执行当作可完成来源 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts > 真实持久失败和取消同步运行终态，不修改执行状态，重复同步幂等
+TypeError: f.service.syncExecutionRuns is not a function
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts:40:112
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts > 等待/未知/暂停/排队真实执行一直受保护；成功缺少原子回执只报不一致
+TypeError: f.service.syncExecutionRuns is not a function
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts:44:70
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/scheduling/daily-topic-run.service.test.ts > 系统同步按真实用户过滤，不把同账号错绑执行当作可完成来源
+TypeError: f.service.syncExecutionRuns is not a function
+ ❯ src/modules/scheduling/daily-topic-run.service.test.ts:48:67
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 2 passed (5)
+   Start at  13:58:36
+   Duration  1.77s (transform 350ms, setup 0ms, import 652ms, tests 984ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/scheduling/daily-topic-run.service.test.ts

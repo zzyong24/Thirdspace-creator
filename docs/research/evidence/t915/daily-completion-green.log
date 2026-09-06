@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/daily-topic-completion.service.test.ts src/integration/daily-topic-completion.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  13:54:57
+   Duration  4.81s (transform 1.07s, setup 0ms, import 1.99s, tests 4.71s, environment 0ms)
+

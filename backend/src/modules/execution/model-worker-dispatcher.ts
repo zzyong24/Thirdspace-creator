@@ -1,4 +1,5 @@
 import {createExecutionTopicReadService} from "./execution-topic-read.service";
+import {createDailyTopicCompletionService,type DailyTopicCompletionPorts} from "../ai/daily-topic-completion.service";
 import {buildTrendQuery} from "@creatoros/ai-worker";
 import {createExecutionBrowserProfileLeaseService,BrowserProfileBusyError} from "./execution-browser-profile-lease.service";
 import {createExecutionBrowserActionService} from "./execution-browser-action.service";
@@ -38,7 +39,7 @@ interface WorkerDispatcherDeps {
   modelConcurrency?:number;
   onError?(code:string):void;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>;browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
 export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
@@ -55,11 +56,12 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const calls=createExecutionWorkerCallPorts(db,{now,budget:deps.budget});
   const checkpoints=createExecutionCheckpointService(db,{now});
   const generation=createExecutionGenerationPorts(db,{now,budget:deps.budget});
-  const topicReads=deps.executionMode==="model" ? createExecutionTopicReadService(db,{now,budget:deps.budget,buildTrendQuery,sessions:deps.browserSessions}) : null;
+  const topicReads=deps.executionMode==="model" ? createExecutionTopicReadService(db,{now,budget:deps.budget,buildTrendQuery,sessions:deps.browserSessions,validateDailyRun:deps.dailyTopicPorts?.validateRun}) : null;
   const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
+  const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
@@ -79,6 +81,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
+      if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));
       if(topicReads){
         if(port==="reserveTopicRead")return topicReads.reserveTopicRead(ref,raw);
         if(port==="startTopicRead")return topicReads.startTopicRead(ref,raw);

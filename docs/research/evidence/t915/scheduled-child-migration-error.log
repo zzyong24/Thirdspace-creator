@@ -1,0 +1,91 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/modules/execution/execution-scheduled-child.service.test.ts
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts (6 tests | 6 skipped) 939ms
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > T-517:同一个 scheduled_job 同时至多一个活跃 automation_sync
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 同账号幂等创建复用任务，幂等键同名但请求不同会拒绝
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 并发 claim 只能有一个 worker 获得同一任务
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 租约持有者可心跳和保存 checkpoint，旧 attempt 与其他 worker 均被拒绝
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 暂停、恢复、取消与重试只允许合法迁移
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 批量命令先校验全部归属，混入跨账号任务时零写入
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+stderr | src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 启动恢复按重试预算重新入队，耗尽预算则失败
+[db] PGlite 迁移阶段失败(error: cannot insert multiple commands into a prepared statement, code=42601)。库已成功打开 → 这**不是**库损坏,常见为迁移 SQL / 权限 / 磁盘错误,数据完好。不隔离、不重建,如实上抛以便修复。
+
+ ❯ src/modules/execution/persistent-task.service.test.ts (8 tests | 8 failed) 5626ms
+     × 研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等 942ms
+     × T-517:同一个 scheduled_job 同时至多一个活跃 automation_sync 663ms
+     × 同账号幂等创建复用任务，幂等键同名但请求不同会拒绝 667ms
+     × 并发 claim 只能有一个 worker 获得同一任务 666ms
+     × 租约持有者可心跳和保存 checkpoint，旧 attempt 与其他 worker 均被拒绝 669ms
+     × 暂停、恢复、取消与重试只允许合法迁移 673ms
+     × 批量命令先校验全部归属，混入跨账号任务时零写入 671ms
+     × 启动恢复按重试预算重新入队，耗尽预算则失败 673ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-scheduled-child.service.test.ts [ src/modules/execution/execution-scheduled-child.service.test.ts ]
+error: cannot insert multiple commands into a prepared statement
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:223:43
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/modules/execution/execution-scheduled-child.service.test.ts [ src/modules/execution/execution-scheduled-child.service.test.ts ]
+TypeError: close is not a function
+ ❯ src/modules/execution/execution-scheduled-child.service.test.ts:6:102
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > T-517:同一个 scheduled_job 同时至多一个活跃 automation_sync
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 同账号幂等创建复用任务，幂等键同名但请求不同会拒绝
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 并发 claim 只能有一个 worker 获得同一任务
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 租约持有者可心跳和保存 checkpoint，旧 attempt 与其他 worker 均被拒绝
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 暂停、恢复、取消与重试只允许合法迁移
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 批量命令先校验全部归属，混入跨账号任务时零写入
+ FAIL  src/modules/execution/persistent-task.service.test.ts > T-482 持久执行任务状态机 > 启动恢复按重试预算重新入队，耗尽预算则失败
+error: cannot insert multiple commands into a prepared statement
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:223:43
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  8 failed | 7 passed | 6 skipped (21)
+   Start at  14:01:30
+   Duration  6.45s (transform 702ms, setup 0ms, import 1.42s, tests 6.57s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-scheduled-child.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/ai-runtime/automation-driver.test.ts --retry=0

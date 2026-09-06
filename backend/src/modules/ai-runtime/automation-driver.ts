@@ -28,7 +28,7 @@ export interface AutomationHandlerInput {
 export type AutomationHandler = (
   ctx: RequestContext,
   input: AutomationHandlerInput,
-) => Promise<void>;
+) => Promise<void | {executionTaskId:string}>;
 
 export interface AutomationHandlerRegistry {
   register(key: AutomationHandlerKey, handler: AutomationHandler): AutomationHandlerRegistry;
@@ -83,6 +83,8 @@ export interface AutomationDriverTickDeps {
   recoverMissedDailyRuns?: boolean;
   /** 复用唯一分钟 tick 清理无活跃执行的僵尸 job_run；不得另起第二个 timer。 */
   sweepStaleJobRuns?: () => Promise<number>;
+  scheduledChildren?: {attach(ref:{executionTaskId:string;attempt:number;fenceToken:string},childId:string):Promise<void>;reconcile():Promise<{succeeded:number;failed:number;pending:number}>};
+  wakeDelegated?:()=>void;
 }
 
 export interface AutomationDriverTickReport {
@@ -182,6 +184,7 @@ export async function runAutomationDriverTick(
   if (!deps.registry.isSealed()) {
     throw new Error("自动化 handler registry 必须先 seal");
   }
+  const delegated=await deps.scheduledChildren?.reconcile();
   const sweptJobRuns = await deps.sweepStaleJobRuns?.() ?? 0;
   const recovered = await deps.tasks.recoverExpiredLeases();
   const report: AutomationDriverTickReport = {
@@ -189,8 +192,8 @@ export async function runAutomationDriverTick(
     sweptJobRuns,
     enqueued: 0,
     overlapped: 0,
-    succeeded: 0,
-    failed: 0,
+    succeeded: delegated?.succeeded ?? 0,
+    failed: delegated?.failed ?? 0,
   };
   const nowIso = deps.now();
   const scheduledFor = minuteAnchor(nowIso);
@@ -271,15 +274,17 @@ export async function runAutomationDriverTick(
         .catch(() => undefined);
     }, heartbeatMs);
     heartbeat.unref?.();
+    let delegationReceived=false;
     try {
       const payload = payloadOf(claim.payload);
       const handler = deps.registry.resolve(payload.handler);
-      await handler(taskCtx, {
+      const outcome=await handler(taskCtx, {
         job: payload.job,
         scheduledFor: payload.scheduledFor,
         taskId: claim.task.id,
         attempt: claim.lease.attempt,
       });
+      if(outcome){delegationReceived=true;if(!deps.scheduledChildren)throw new Error('调度子任务跟踪端口未配置');await deps.scheduledChildren.attach({executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},outcome.executionTaskId);try{deps.wakeDelegated?.();}catch{/* 定时dispatcher仍会领取已持久绑定子任务。 */}continue;}
       await deps.tasks.finish({
         taskId: claim.task.id,
         workerId: claim.lease.workerId,
@@ -288,6 +293,8 @@ export async function runAutomationDriverTick(
       });
       report.succeeded += 1;
     } catch (error) {
+      // 子任务已存在而链接回执不明，不把父写失败。租约到期后以同一调度幂等键重新绑定。
+      if(delegationReceived){console.error('[automation-driver] 子任务绑定待恢复',errorMessageOf(error));continue;}
       await deps.tasks.finish({
         taskId: claim.task.id,
         workerId: claim.lease.workerId,

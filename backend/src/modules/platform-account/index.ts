@@ -43,3 +43,5 @@ export {
   toPlatformAccountDto,
   type PlatformAccountResource,
 } from "./platform-account.schema";
+
+export {lockAccountForSupply} from "./platform-account.service";

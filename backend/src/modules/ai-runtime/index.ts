@@ -84,7 +84,6 @@ export * from "./script-review-runner";
 export * from "./script-runner";
 export * from "./skill-config-overrides";
 // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
-export * from "./topic-daily-collector";
 // [T-235d] 正向归因回流(runTopicAttribution 编排 + createTopicAttributionPort AI 端口 + 分层纯函数)。
 export * from "./topic-attribution-runner";
 export * from "./topic-enrich-runner";
@@ -127,3 +126,5 @@ export * from "./calibration-positioning-business-adapters";
 export * from './research-business-adapter';
 
 export * from './topic-business-adapter';
+
+export {createDailyTopicBusinessAdapter,type DailyTopicPrepareDeps} from "./daily-topic-business-adapter";

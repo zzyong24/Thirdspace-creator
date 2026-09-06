@@ -271,3 +271,17 @@ describe("topic Worker纯流水线（非fork）", () => {
     expect(node).toHaveBeenCalledTimes(1);
   });
 });
+it('daily定位依据仍搜读热点，拼接冻结评论且仅最终一次生成',async()=>{
+ const raw={...input('positioning'),mode:'daily',basisBrief:'冻结受众真实评论'};
+ const read=vi.fn(async():Promise<TopicReadData>=>({kind:'search',results:[{title:'实际热点',url:'https://example.com',snippet:'热点正文'}]}));
+ await runTopicWorkerPipeline(raw,deps(read));expect(read).toHaveBeenCalledTimes(1);expect(node).toHaveBeenCalledTimes(1);const facets=node.mock.calls[0]![0].facets;expect(facets.basisContext).toContain('【受众评论信号】\n冻结受众真实评论');expect(facets.basisContext).toContain('实际热点');expect(facets.basisHint).toContain('围绕定位');expect(facets.signalQuality).toContain('1 条(来自 1 路信源)');
+});
+it('daily热点未知立即停止，不以定位依据绕过',async()=>{const error=new GenerationFailure('unknown_result','UNKNOWN');await expect(runTopicWorkerPipeline({...input('positioning'),mode:'daily',basisBrief:''},deps(vi.fn(async()=>{throw error})))).rejects.toBe(error);expect(node).not.toHaveBeenCalled();});
+it('daily仍执行网页抽取再最终生成，保留评论与抽取事实',async()=>{
+ const raw={...input('positioning'),mode:'daily' as const,basisBrief:'每日真实评论',trendSources:[{id:'web',name:'每日源',url:'https://example.com',domain:'example.com',sourceType:'web' as const}]};
+ const read=vi.fn(async(target:TopicReadTarget):Promise<TopicReadData|null>=>target.kind==='search'?null:{kind:'web',sourceUrl:'https://example.com',title:'每日页',text:'每日网页原始全文'});
+ node.mockImplementation(async(arg)=>({object:arg.outputSchema.parse(arg.template.id==='trend.extract'?{signals:[{title:'每日网页事实',url:'https://example.com',heat:null,publishedAt:null}]}:{topics:[{title:'每日结果'}]})}));
+ await runTopicWorkerPipeline(raw,deps(read));expect(node).toHaveBeenCalledTimes(2);expect(node.mock.calls[0]![0].facets.pageText).toBe('每日网页原始全文');expect(node.mock.calls[1]![0].facets.basisContext).toContain('每日真实评论');expect(node.mock.calls[1]![0].facets.basisContext).toContain('每日网页事实');
+});
+
+it('每日quota跳过必须冻结实际达到配额的计数',async()=>{const {dailyTopicInputSchema}=await import('./topic-worker-input');const value={jobId:'j',jobRunId:'r',dayKey:'2026-09-05',dailyLimit:3,preferences:[],rankingNow:'2026-09-05T00:00:00.000Z',skipReason:'quota'};expect(()=>dailyTopicInputSchema.parse(value)).toThrow('实际已满计数');expect(()=>dailyTopicInputSchema.parse({...value,observedCount:2})).toThrow();expect(dailyTopicInputSchema.parse({...value,observedCount:3}).observedCount).toBe(3);});

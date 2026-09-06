@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "c7cc5aca70b0b3ef849bcecc3e1242bba73cc1e89710ee24fb169b98991e9946",
+      "file_sha256": "463ede8d8eec16515479bee958e25e122126c2759b58dc457f2d1c286eca656a",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055范围内历史保真降级在凭证解析前执行，并只重放后端验真的原文回执；本次独立审查与升级兼容红绿验证。完整T-915尚未完成。",
+      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "f98a587d2719498f1a9895e1579e42e386f3ae62b02488f718e743946b824c8e",
+      "file_sha256": "fef50038d80d4a0771f2be8d056c03db7903ec9c7872101ced8d0344b0f81d0a",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1199,14 +1199,14 @@
       "files": [
         "ai-worker/src/execution/structured-worker-generation.ts"
       ],
-      "file_sha256": "1f06c3b22ecc6cb27b28c77dedbef6bdd3bba2e1b12e69c475b5f2edc80b025f",
+      "file_sha256": "23335c3527b22c3119266313bcfd416268747281ca9f066d42bd33a0a9230681",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认完整热点准备迁入既有 Worker：冻结源目标、同账本读取和模型调用、会话权限及停止资源、事务采纳。没有新增模型规划层或改变数据属主。",
+      "reason": "DEC-RUNTIME-055 已批准的每日选题迁移：沿现有 Worker/执行账本完成零模型跳过、固定来源调用预算、调度恢复与原子入池。此处仅登记现有私有协议与能力装配的实现复杂度，不新增规划模型或改变数据属主。",
       "acceptance": "本条只登记复杂度，不代表完整生产或历史验收通过。"
     },
     {
@@ -1433,6 +1433,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "已批准私有Worker端口的错误与回执验证，属于执行恢复必要证据。",
       "acceptance": "只登记当前证据的复杂度，不代表完整任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/scheduling/daily-topic-run.service.test.ts"
+      ],
+      "file_sha256": "ef28abc41ad102cdf6e51bb230e32f7b727f87345b486a555932f7c4367b0f78",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "每日运行恢复测试核对已有执行映射和终态；不是新增可执行程序能力。",
+      "acceptance": "只登记复杂度，不代表测试或整体任务通过。"
     }
   ],
   "historical_baselines": []

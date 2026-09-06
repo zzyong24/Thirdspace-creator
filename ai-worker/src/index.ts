@@ -593,4 +593,4 @@ export { renderSignalQualityBrief, type SignalQualityProfile } from "./nodes/top
 
 export {buildTrendQuery,formatTrendBrief,formatTrendSourceBrief} from "./nodes/topic-trend-context";
 
-export {topicGenerateFrozenSchema,type TopicGenerateFrozen} from "./execution/topic-worker-input";
+export {topicGenerateFrozenSchema,dailyTopicInputSchema,type TopicGenerateFrozen} from "./execution/topic-worker-input";

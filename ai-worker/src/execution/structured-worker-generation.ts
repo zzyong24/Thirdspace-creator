@@ -46,7 +46,7 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       catch{throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_RECEIPT_UNKNOWN");}
     }}) : runStructuredNode<unknown>({model,template:getEffectiveTemplate(input.skillId),facets:input.facets,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,signal,...reviewOptions,...(businessSchema?{outputSchema:businessSchema}:{})}));
     signal.throwIfAborted();
-    if(input.skillId==="script.review" && result.validation?.status==="partial")throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
+    if((input.skillId==="script.review" || (input.skillId==="topic.generate" && input.facets.__dailyTopic!==undefined)) && result.validation?.status==="partial")throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
     // 即使未来节点新增恢复路径，业务协议也必须在保存结果之前满足。
     if(businessSchema && !businessSchema.safeParse(result.object).success)throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
 

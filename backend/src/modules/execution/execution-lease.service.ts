@@ -1,4 +1,5 @@
-import { eq, executionTasks, type Db } from "@creatoros/backend";
+import {findScheduledParent} from "./execution-scheduled-child.service";
+import { eq, asc, inArray, executionTasks, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { executionRefSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { ConflictError } from "./execution.errors";
@@ -17,8 +18,11 @@ export function createExecutionLeaseService(db: Db, deps: {now?: () => string} =
     ): Promise<T> {
       const ref = executionRefSchema.parse(execution);
       return db.transaction(async tx => {
-        const [task] = await tx.select().from(executionTasks)
-          .where(eq(executionTasks.id, ref.executionTaskId)).for("update");
+        const [snapshot] = await tx.select().from(executionTasks).where(eq(executionTasks.id,ref.executionTaskId));
+        const parentSnapshot=mode==='admission'&&snapshot?await findScheduledParent(tx,snapshot):undefined;
+        const locked=await tx.select().from(executionTasks).where(inArray(executionTasks.id,parentSnapshot?[ref.executionTaskId,parentSnapshot.id]:[ref.executionTaskId])).orderBy(asc(executionTasks.id)).for("update");
+        const task=locked.find(row=>row.id===ref.executionTaskId);
+        if(mode==='admission'&&task){const parent=await findScheduledParent(tx,task);if(parent?.id!==parentSnapshot?.id)throw new ConflictError('调度父任务关系改变，请重新领取');if(parent&&['pause_requested','paused','cancel_requested','cancelled'].includes(parent.status))throw new ConflictError('调度父任务已停止，不能启动子任务动作');}
         if (!task || task.attempt !== ref.attempt || task.fenceToken !== ref.fenceToken) {
           throw new ConflictError("执行凭证已失效");
         }
