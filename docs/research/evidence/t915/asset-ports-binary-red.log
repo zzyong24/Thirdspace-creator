@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-ports.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-ports.integration.test.ts (1 test | 1 failed) 79ms
+   × 真实子进程双向保留 Uint8Array 的零字节和高位字节 78ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-ports.integration.test.ts > 真实子进程双向保留 Uint8Array 的零字节和高位字节
+AssertionError: expected 'failed' to be 'completed' // Object.is equality
+
+Expected: "completed"
+Received: "failed"
+
+ ❯ src/modules/execution/asset-worker-ports.integration.test.ts:11:63
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  12:37:31
+   Duration  334ms (transform 66ms, setup 0ms, import 119ms, tests 79ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

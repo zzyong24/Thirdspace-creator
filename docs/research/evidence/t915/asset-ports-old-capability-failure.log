@@ -1,0 +1,70 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-ports.integration.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/worker-supervisor.stop.test.ts src/modules/execution/model-worker-dispatcher.test.ts src/modules/execution/execution-worker-call-ports.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/worker-supervisor.test.ts (11 tests | 2 failed) 5407ms
+     × 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果 388ms
+     × 活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动 775ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 使用私有端口取上下文与凭据，经真实 SDK 调本地供应商并提交结果
+AssertionError: expected [ 'model.generate', …(6) ] to deeply equal [ 'model.generate', …(5) ]
+
+- Expected
++ Received
+
+@@ -3,6 +3,7 @@
+    "model.structured",
+    "chat.run",
+    "chat.hooks",
+    "chat.structured",
+    "chat.research",
++   "chat.web-read",
+  ]
+
+ ❯ src/modules/execution/worker-supervisor.test.ts:63:40
+     61|     }});
+     62|     try {
+     63|       expect(await supervisor.start()).toEqual(["model.generate", "mod…
+       |                                        ^
+     64|       expect(await supervisor.run(execution, Date.now()+10000)).toBe("…
+     65|       expect(requestCount).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/worker-supervisor.test.ts > 真实独立 Worker 进程 > 活动流取消会断开供应商，仅结算未知用量，不提交候选且能再次启动
+AssertionError: expected [ 'model.generate', …(6) ] to deeply equal [ 'model.generate', …(5) ]
+
+- Expected
++ Received
+
+@@ -3,6 +3,7 @@
+    "model.structured",
+    "chat.run",
+    "chat.hooks",
+    "chat.structured",
+    "chat.research",
++   "chat.web-read",
+  ]
+
+ ❯ src/modules/execution/worker-supervisor.test.ts:183:40
+    181|       expect(calls.find(x => x.port === "settleCall")?.data).toMatchOb…
+    182|       await supervisor.stop();
+    183|       expect(await supervisor.start()).toEqual(["model.generate", "mod…
+       |                                        ^
+    184|     } finally {
+    185|       await supervisor.stop(); server.closeAllConnections();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  2 failed | 32 passed (34)
+   Start at  12:40:28
+   Duration  10.11s (transform 2.81s, setup 0ms, import 5.01s, tests 18.66s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -60,7 +60,7 @@ describe("真实独立 Worker 进程", () => {
       },
     }});
     try {
-      expect(await supervisor.start()).toEqual(["model.generate", "model.structured", "chat.run", "chat.hooks", "chat.structured", "chat.research"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "model.structured", "chat.run", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
@@ -180,7 +180,7 @@ describe("真实独立 Worker 进程", () => {
       expect(calls.filter(x => x.port === "commitResult")).toHaveLength(0);
       expect(calls.find(x => x.port === "settleCall")?.data).toMatchObject({status: "unknown"});
       await supervisor.stop();
-      expect(await supervisor.start()).toEqual(["model.generate", "model.structured", "chat.run", "chat.hooks", "chat.structured", "chat.research"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "model.structured", "chat.run", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
     } finally {
       await supervisor.stop(); server.closeAllConnections();
       await new Promise<void>(resolve => server.close(() => resolve()));

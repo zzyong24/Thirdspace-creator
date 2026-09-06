@@ -1,3 +1,4 @@
+import {providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
 export {chatSubmittedTaskType} from "./chat-task-submission";
 import {chatWebReadCallSchema,chatWebReadRecordSchema,chatWebReadSessionSaveSchema,chatWebReadFailureSchema} from "./chat-web-read";
 export { scriptHooksContextSchema, type ScriptHooksContext } from "./execution-chat-hooks";
@@ -26,6 +27,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
   "prepareChatResearch", "settleChatResearch",
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
@@ -74,6 +76,12 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  reserveAssetCall:emptyPortInput,
+  startAssetCall:providerJobReadSchema,
+  recoverAssetResult:providerJobReadSchema,
+  readAssetProviderJob:providerJobReadSchema,
+  recordAssetProviderJob:providerJobRecordSchema,
+  saveAssetResult:z.object({callId:z.string().min(1).max(512),bytes:z.instanceof(Uint8Array).refine(bytes=>bytes.byteLength>0 && bytes.byteLength<=2147483647,"素材字节超出原存储范围")}).strict(),
   resolveChatWebReadSearch:chatWebReadCallSchema,
   readChatWebReadCache:chatWebReadCallSchema,
   failChatWebRead:chatWebReadFailureSchema,

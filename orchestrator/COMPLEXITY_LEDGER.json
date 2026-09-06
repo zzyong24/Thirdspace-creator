@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "38de41985b4659b80c8e3d4ce6b690f0c835335bc0d73ff6cba87ef54f30cd02",
+      "file_sha256": "f3115cad10d4f5df81329b73f55d89f22bdbc50042740955d88ec6fab08c9b2d",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权受控网页执行端口。本批缓存端口允许先重放既有回执，新的缓存确认仍在当前admission租约和取消信号下执行；未新增进程或凭据属主。独立复核和回归见 chat-web-read-cache.md。",
+      "reason": "沿用 DEC-RUNTIME-055 的现有 Worker 进程，启用原字节序列化并开放严格素材命名端口；素材新写仍经事务 admission，历史回执可 settlement。未扩大模型能力声明或部署范围。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1673,6 +1673,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "文档登记已授权素材执行服务与尚待接通的命名端口，不新增架构范围。",
       "acceptance": "只登记说明文档复杂度，不代表完整迁移或正式验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asset-worker-ports.md"
+      ],
+      "file_sha256": "3b7b779887a957330f771ee4a39d3658df1b84064d41d238771673c4d4714fb8",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录现有独立Worker的二进制素材端口与真实子进程证据，不增加进程拓扑或发布范围。",
+      "acceptance": "只登记本批复杂度，不代表生产素材执行或完整验收完成。"
     }
   ],
   "historical_baselines": []
