@@ -18,6 +18,27 @@ describe("[T-390] alternatesQueryForUrl — 搜索 query 构造", () => {
 });
 
 describe("[T-390] findAlternatesViaSearch — 多路回退编排", () => {
+  it("调用前已取消时不启动任何搜索", async () => {
+    const controller = new AbortController(); controller.abort();
+    const search = vi.fn(async () => [alt("https://other.com/a")]);
+    await expect(findAlternatesViaSearch("https://example.com/a", [search], { signal: controller.signal })).rejects.toThrow();
+    expect(search).not.toHaveBeenCalled();
+  });
+
+  it("第一路搜索取消后抛错，不再启动下一路", async () => {
+    const controller = new AbortController();
+    const first = vi.fn(async () => { controller.abort(); throw new Error("中断"); });
+    const second = vi.fn(async () => [alt("https://other.com/a")]);
+    await expect(findAlternatesViaSearch("https://example.com/a", [first, second], { signal: controller.signal })).rejects.toThrow();
+    expect(second).not.toHaveBeenCalled();
+  });
+
+  it("搜索收到同一信号，取消后的迟到结果不返回为候选", async () => {
+    const controller = new AbortController();
+    const search = vi.fn(async () => { controller.abort(); return [alt("https://other.com/a")]; });
+    await expect(findAlternatesViaSearch("https://example.com/a", [search], { signal: controller.signal })).rejects.toThrow();
+    expect(search).toHaveBeenCalledWith("example.com/a", 5, controller.signal);
+  });
   it("第一路命中即返回,不再调后续路", async () => {
     const first = vi.fn(async () => [alt("https://a.com/1")]);
     const second = vi.fn(async () => [alt("https://b.com/2")]);

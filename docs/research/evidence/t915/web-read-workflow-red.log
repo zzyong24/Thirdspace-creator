@@ -1,0 +1,105 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:17312) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/ingestion/web-read-fallback.test.ts (10 tests | 3 failed) 18ms
+     × 调用前已取消时不启动任何搜索 6ms (retry x2)
+     × 第一路搜索取消后抛错，不再启动下一路 1ms (retry x2)
+     × 搜索收到同一信号，取消后的迟到结果不返回为候选 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 调用前已取消时不启动任何搜索
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 调用前已取消时不启动任何搜索
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 调用前已取消时不启动任何搜索
+AssertionError: promise resolved "[ { title: 't', …(2) } ]" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+[
+  {
+    "snippet": "s",
+    "title": "t",
+    "url": "https://other.com/a",
+  },
+]
+
+ ❯ src/server/ingestion/web-read-fallback.test.ts:24:107
+     22|     const controller = new AbortController(); controller.abort();
+     23|     const search = vi.fn(async () => [alt("https://other.com/a")]);
+     24|     await expect(findAlternatesViaSearch("https://example.com/a", [sea…
+       |                                                                                                           ^
+     25|     expect(search).not.toHaveBeenCalled();
+     26|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 第一路搜索取消后抛错，不再启动下一路
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 第一路搜索取消后抛错，不再启动下一路
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 第一路搜索取消后抛错，不再启动下一路
+AssertionError: promise resolved "[ { title: 't', …(2) } ]" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+[
+  {
+    "snippet": "s",
+    "title": "t",
+    "url": "https://other.com/a",
+  },
+]
+
+ ❯ src/server/ingestion/web-read-fallback.test.ts:32:114
+     30|     const first = vi.fn(async () => { controller.abort(); throw new Er…
+     31|     const second = vi.fn(async () => [alt("https://other.com/a")]);
+     32|     await expect(findAlternatesViaSearch("https://example.com/a", [fir…
+       |                                                                                                                  ^
+     33|     expect(second).not.toHaveBeenCalled();
+     34|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 搜索收到同一信号，取消后的迟到结果不返回为候选
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 搜索收到同一信号，取消后的迟到结果不返回为候选
+ FAIL  src/server/ingestion/web-read-fallback.test.ts > [T-390] findAlternatesViaSearch — 多路回退编排 > 搜索收到同一信号，取消后的迟到结果不返回为候选
+AssertionError: promise resolved "[ { title: 't', …(2) } ]" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+[
+  {
+    "snippet": "s",
+    "title": "t",
+    "url": "https://other.com/a",
+  },
+]
+
+ ❯ src/server/ingestion/web-read-fallback.test.ts:39:107
+     37|     const controller = new AbortController();
+     38|     const search = vi.fn(async () => { controller.abort(); return [alt…
+     39|     await expect(findAlternatesViaSearch("https://example.com/a", [sea…
+       |                                                                                                           ^
+     40|     expect(search).toHaveBeenCalledWith("example.com/a", 5, controller…
+     41|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 7 passed (10)
+   Start at  07:51:32
+   Duration  899ms (transform 40ms, setup 145ms, import 13ms, tests 18ms, environment 502ms)
+

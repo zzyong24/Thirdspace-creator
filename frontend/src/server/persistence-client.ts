@@ -387,10 +387,8 @@ import {
   isBlockedHttpCaptureError,
 } from "@/server/ingestion/web-capture";
 // [T-390] web.read 被拒(403/5xx 等)→ 搜索引擎找替代来源(纯编排,searcher 在本组合根注入)。
-import {
-  findAlternatesViaSearch,
-  type AlternateSearcher,
-} from "@/server/ingestion/web-read-fallback";
+import { readWebDocument } from "@creatoros/ai-worker/browser/web-read-workflow";
+import type { AlternateSearcher } from "@creatoros/ai-worker/browser/web-read-fallback";
 // [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
 import {
   openWebLoginWindow,
@@ -12188,190 +12186,71 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { assetId: asset.id, name: asset.name, previewUrl, sourceUrl: input.url };
     },
-    // [T-217b/c] web.read 端口 —— launchPersistentContext(webAuthDirFor(domain)) 读正文 →
-    //   createGeneratedAsset 落**逐字稿文本素材**(assetType document,text/plain,pending 走
-    //   T-219 确认门,不自动入库)+ sourceUrl 存证(mergeAiAnnotation,同截图路径)。无会话/过期
-    //   (WebReaderLoginRequiredError)→ 不落库,返回 { needLogin:true, domain } 供编导引导登录。
+    // 读取与备用来源编排由 Worker 所属模块统一维护；本装配只注入既有宿主/领域端口。
     readWebUrl: async (
-      ctx: RequestContext,
+      context: RequestContext,
       input: { url: string; signal?: AbortSignal },
     ) => {
-      // [T-251] 重读同 URL 不重新抓取:先按 sourceUrl 反查已落库的 document asset(pending/active
-      // 都算 —— pending = 已抓到全文只是用户还没点「存入素材库」),命中则直接读回其正文全文按窗
-      // 返回(fromCache=true),不再开浏览器。查/读失败(极端:字节丢失)→ 静默回落真抓。
-      let cached: Awaited<ReturnType<typeof assetsService.findAssetBySourceUrl>> = null;
-      try {
-        cached = await assetsService.findAssetBySourceUrl(ctx, input.url);
-      } catch (err) {
-        console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", err);
-      }
-      if (cached) {
-        let cachedFullText: string | null = null;
-        try {
-          const blob = await assetsService.getAssetBytes(ctx, cached.id);
-          if (blob && blob.mimeType.startsWith("text/")) {
-            const fullText = new TextDecoder().decode(blob.bytes);
-            if (!fullText.trim()) throw new Error("缓存正文为空");
-            cachedFullText = fullText;
-          }
-        } catch (err) {
-          console.warn("[chat-runtime] web.read 缓存字节不可用,回落真抓:", err);
-        }
-        if (cachedFullText !== null) {
-          // [T-813] 网页正文已经是确定性纯文本，不再等异步文档抽取。来源、全文投影和
-          // done 状态是进入“可保存”的硬条件；写失败直接失败，不创建另一条重复缓存。
-          await assetsService.mergeAiAnnotation(ctx, cached.id, {
-            sourceUrl: input.url,
-          });
-          await assetsService.updateFileExtraction(ctx, cached.id, {
-            extractedText: cachedFullText,
-            extractStatus: "done",
-          });
-          let previewUrl: string | null = null;
+      const ctx = { ...context };
+      return readWebDocument(input, {
+        async readCached(url, signal) {
+          signal?.throwIfAborted();
+          let cached: Awaited<ReturnType<typeof assetsService.findAssetBySourceUrl>> = null;
+          try { cached = await assetsService.findAssetBySourceUrl(ctx, url); }
+          catch (error) { console.warn("[chat-runtime] web.read 缓存反查失败,回落真抓:", error); }
+          if (!cached) return null;
+          let fullText: string | null = null;
           try {
-            const dl = await assetsService.getDownloadUrl(ctx, cached.id);
-            previewUrl = dl.url ?? null;
-          } catch {
-            previewUrl = null;
-          }
-          return {
-            needLogin: false as const,
-            assetId: cached.id,
-            name: cached.name,
-            previewUrl,
-            sourceUrl: input.url,
-            title: cached.name.replace(/^正文·/, ""),
-            excerpt: cachedFullText.slice(0, 280),
-            extractor: "cached",
-            turnCount: null,
-            extraction: `复用已存正文素材(未重新抓取;全文 ${cachedFullText.length} 字,按窗读取)`,
-            fullText: cachedFullText,
-            fromCache: true,
-          };
-        }
-      }
-      const domain = webDomainFromUrl(input.url);
-      let read;
-      try {
-        // [T-239c] signal 透传进 readUrl:用户点「停止」→ 关带登录态浏览器提前退出(AbortError)。
-        // [T-370b] 读取走 profile 池(域亲和 checkout + DB 登录态注入;authDir 仅作存量惰性
-        //   迁移的旧目录定位,openContext 注入后不再直开该目录)。
-        read = await readWebUrlSidecar(input.url, {
-          authDir: webAuthDirFor(domain),
-          signal: input.signal,
-        }, {
-          openContext: () => openPooledReaderContext(ctx, domain, {signal: input.signal}) as never,
-        });
-      } catch (err) {
-        if (err instanceof WebReaderLoginRequiredError) {
-          return { needLogin: true as const, domain: err.domain };
-        }
-        // [T-390] 素材搜集韧性:HTTP 被拒(403 反爬 / 404 下架 / 5xx)→ 不当场认输,多路搜索
-        // (已配 search provider → 必应 → 百度,后两路免 key 浏览器采集)用原 URL 找「同一内容
-        // 的替代来源」,结构化返回给编导挑一条再读。登录态第一次就带着(池注入),不重复重试;
-        // 该域没登录过则在 message 里如实引导去保管库登录。全部搜不到 → alternates=[](诚实空)。
-        if (
-          err instanceof WebCaptureError &&
-          err.status !== null &&
-          err.status >= 400
-        ) {
-          const searchers: AlternateSearcher[] = [];
-          const configured = await resolveSearchSpec(ctx).catch(() => null);
-          if (
-            configured &&
-            configured.provider !== "rss" &&
-            configured.provider !== "browser"
-          ) {
-            // 用户已配的真检索 provider(bocha/tavily/serpapi)优先。
-            searchers.push((q, count) =>
-              searchWebFn(configured, q, searchRegistry, { count }),
-            );
-          }
-          const browserSpec = (baseUrl: string | null) => ({
-            provider: "browser",
-            baseUrl,
-            model: "",
-            token: "",
+            const blob = await assetsService.getAssetBytes(ctx, cached.id);
+            if (blob && blob.mimeType.startsWith("text/")) {
+              const decoded = new TextDecoder().decode(blob.bytes);
+              if (!decoded.trim()) throw new Error("缓存正文为空");
+              fullText = decoded;
+            }
+          } catch (error) { console.warn("[chat-runtime] web.read 缓存字节不可用,回落真抓:", error); }
+          if (fullText === null) return null;
+          signal?.throwIfAborted();
+          // 来源/全文修复写失败必须上抛，不得再抓取并创建重复素材。
+          await assetsService.mergeAiAnnotation(ctx, cached.id, { sourceUrl: url });
+          await assetsService.updateFileExtraction(ctx, cached.id, { extractedText: fullText, extractStatus: "done" });
+          const previewUrl = await assetsService.getDownloadUrl(ctx, cached.id).then((r) => r.url ?? null).catch(() => null);
+          return { assetId: cached.id, name: cached.name, previewUrl, fullText };
+        },
+        async read(url, signal) {
+          const domain = webDomainFromUrl(url);
+          return readWebUrlSidecar(url, { authDir: webAuthDirFor(domain), signal }, {
+            openContext: () => openPooledReaderContext(ctx, domain, { signal }) as never,
           });
-          // 免 key 浏览器采集:必应(browser 适配器默认引擎)→ 百度(引擎感知解析)。
-          searchers.push((q, count) =>
-            searchWebFn(browserSpec(null), q, searchRegistry, { count }),
-          );
-          searchers.push((q, count) =>
-            searchWebFn(
-              browserSpec("https://www.baidu.com/s?wd={q}"),
-              q,
-              searchRegistry,
-              { count },
-            ),
-          );
-          const alternates = await findAlternatesViaSearch(
-            input.url,
-            searchers,
-          ).catch(() => []);
-          const hasSession = await getWebSessionState(ctx, domain)
-            .then((s) => s !== null)
-            .catch(() => false);
-          return {
-            blocked: true as const,
-            status: err.status,
-            message: hasSession
-              ? err.message
-              : `${err.message}(该站还没在「设置 → 网站登录保管库」登录过 —— 登录后重试,带登录态访问更容易通过)`,
-            alternates,
-          };
-        }
-        throw err; // 三墙其余分类(打不开/抽不出正文)原样上抛,工具 execute 转人话
-      }
-      const name = `正文·${(read.title || read.finalUrl).slice(0, 40)}`;
-      const bytes = new TextEncoder().encode(read.text);
-      // 逐字稿文本素材:assetType document(文本正文;非截图),pending 待确认(铁律②)。
-      const asset = await assetsService.createGeneratedAsset(ctx, {
-        assetType: "document",
-        name,
-        bytes,
-        mimeType: "text/plain",
-        pending: true,
+        },
+        async searchers(signal) {
+          signal?.throwIfAborted();
+          const configured = await resolveSearchSpec(ctx).catch(() => null);
+          signal?.throwIfAborted();
+          const searchers: AlternateSearcher[] = [];
+          if (configured && configured.provider !== "rss" && configured.provider !== "browser") {
+            searchers.push((query, count, signal) => searchWebFn(configured, query, searchRegistry, { count, signal }));
+          }
+          for (const baseUrl of [null, "https://www.baidu.com/s?wd={q}"]) {
+            searchers.push((query, count, signal) => searchWebFn({ provider: "browser", baseUrl, model: "", token: "" }, query, searchRegistry, { count, signal }));
+          }
+          return searchers;
+        },
+        async hasSession(domain, signal) {
+          signal?.throwIfAborted();
+          return (await getWebSessionState(ctx, domain)) !== null;
+        },
+        async saveDocument({ name, sourceUrl, fullText }, signal) {
+          signal?.throwIfAborted();
+          // 旧宿主端口仍待执行账本接入；新 Worker 将绑定持久 pendingDocument 服务。
+          const asset = await assetsService.createGeneratedAsset(ctx, {
+            assetType: "document", name, bytes: new TextEncoder().encode(fullText), mimeType: "text/plain", pending: true,
+          });
+          await assetsService.mergeAiAnnotation(ctx, asset.id, { sourceUrl });
+          await assetsService.updateFileExtraction(ctx, asset.id, { extractedText: fullText, extractStatus: "done" });
+          const previewUrl = await assetsService.getDownloadUrl(ctx, asset.id).then((r) => r.url ?? null).catch(() => null);
+          return { assetId: asset.id, name: asset.name, previewUrl };
+        },
       });
-      // [T-813] 来源与全文投影是保存/预览真值，不再 best-effort。任一写失败时本轮报错，
-      // pending 仍隐藏且不会出现“保存到项目”。
-      await assetsService.mergeAiAnnotation(ctx, asset.id, {
-        sourceUrl: input.url,
-      });
-      await assetsService.updateFileExtraction(ctx, asset.id, {
-        extractedText: read.text,
-        extractStatus: "done",
-      });
-      let previewUrl: string | null = null;
-      try {
-        const dl = await assetsService.getDownloadUrl(ctx, asset.id);
-        previewUrl = dl.url ?? null;
-      } catch {
-        previewUrl = null;
-      }
-      // [T-237] 抽取诊断人话:让编导如实报告「抽到 N 轮(SSR 全量 / DOM 可能不全)」,
-      // 而不是把 DOM 截断误判成「分享页本来就短」。
-      const extraction =
-        read.turnCount != null
-          ? read.extractPath === "ssr"
-            ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)`
-            : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`
-          : null;
-      return {
-        needLogin: false as const,
-        assetId: asset.id,
-        name: asset.name,
-        previewUrl,
-        sourceUrl: input.url,
-        title: read.title,
-        excerpt: read.text.slice(0, 280),
-        extractor: read.extractor,
-        turnCount: read.turnCount,
-        extraction,
-        // [T-251] 全文透传 —— 工具 execute 侧按窗返回(首窗即含正文,不再只有 280 字 excerpt)。
-        fullText: read.text,
-        fromCache: false,
-      };
     },
     // [T-386] 后台任务状态真值端口 —— aiService.listTasks(strict 按当前号)最新 30 条最小投影;
     // 类型筛选/时间窗/格式化在 chat-runner 装配层纯函数做(selectRecentChatTasks)。读失败上抛

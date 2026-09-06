@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  07:54:42
+   Duration  247ms (transform 100ms, setup 0ms, import 127ms, tests 14ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  358 passed (358)
+   Start at  07:54:56
+   Duration  2.97s (transform 1.97s, setup 0ms, import 3.16s, tests 773ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:57:04
+   Duration  7.35s (transform 3.61s, setup 243ms, import 5.07s, tests 1.64s, environment 0ms)
+

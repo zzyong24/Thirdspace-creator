@@ -1,5 +1,3 @@
-import "server-only";
-
 // [T-390] web.read 被拒(HTTP 403/404/5xx)后的**搜索引擎替代来源回退**——素材搜集韧性:
 // 媒体站(36氪等)对无头浏览器常回 403/500,原文拿不到时不当场认输,按序尝试多路搜索
 // (已配 search provider → 必应(免 key 浏览器采集)→ 百度(同))用原 URL 当 query 找
@@ -23,11 +21,13 @@ export interface WebReadAlternate {
 export type AlternateSearcher = (
   query: string,
   count: number,
+  signal?: AbortSignal,
 ) => Promise<WebReadAlternate[]>;
 
 const DEFAULT_ALTERNATES_COUNT = 5;
 
 /** URL 归一(比对用):去协议、去尾斜杠、小写 host——过滤「搜到的就是原 URL 自己」。 */
+// SEMANTIC_BOUNDARY_ALLOW: 沿用来源 URL 去重，不判断内容相关性或替模型选择创作来源。
 function normalizeForCompare(url: string): string {
   return url
     .trim()
@@ -48,19 +48,23 @@ export function alternatesQueryForUrl(url: string): string {
 export async function findAlternatesViaSearch(
   originalUrl: string,
   searchers: AlternateSearcher[],
-  opts?: { count?: number },
+  opts?: { count?: number; signal?: AbortSignal },
 ): Promise<WebReadAlternate[]> {
+  opts?.signal?.throwIfAborted();
   const count = opts?.count ?? DEFAULT_ALTERNATES_COUNT;
   const query = alternatesQueryForUrl(originalUrl);
   if (!query) return [];
   const original = normalizeForCompare(originalUrl);
   for (const search of searchers) {
+    opts?.signal?.throwIfAborted();
     let results: WebReadAlternate[];
     try {
-      results = await search(query, count);
+      results = await search(query, count, opts?.signal);
     } catch {
+      opts?.signal?.throwIfAborted();
       continue; // 单路失败不拖垮:跳下一路(引擎反爬/未配 key 都可能)
     }
+    opts?.signal?.throwIfAborted();
     const seen = new Set<string>();
     const filtered = results.filter((r) => {
       if (!r || typeof r.url !== "string" || !/^https?:\/\//i.test(r.url)) {

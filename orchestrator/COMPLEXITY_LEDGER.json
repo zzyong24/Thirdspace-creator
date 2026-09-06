@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "9301a4d5024b555d4e00a0fdc929988ed23336fff58994629a7c01a2aa68292d",
+      "file_sha256": "befe650d2e14ab4f573db112ece50bc3577b8291fe6ecb24811aff597a74b4d4",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的统一执行与真实工具装配范围：当前已提交 967beef8 接入原任务提交与首次快照复用，保留既有凭据取得、桌面工具链和独立 Worker 装配；不新增凭据保管、语言工具链或本机执行能力，按当前文件重新核对绑定。",
+      "reason": "DEC-RUNTIME-055 已批准的统一执行与真实工具装配范围：本批将网页读取及备用来源编排迁到 ai-worker 并由原入口复用，透传现有取消信号；保留既有凭据取得、桌面工具链和运行装配，不新增凭据保管、语言工具链或本机执行能力。按当前文件重新核对绑定。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
