@@ -37,7 +37,20 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
    return {bound,context,previous};
   });
  }
+ const approvalChecks=new Map<string,Promise<Approval>>();
  async function check(ref:ExecutionRef,raw:unknown,signal?:AbortSignal):Promise<Approval>{
+  signal?.throwIfAborted();const request=workerPortInputSchemas.checkChatToolApproval.parse(raw);
+  // 同一租约内按请求顺序读取真实权限，避免较晚返回的旧检查覆盖新决定。
+  // 仅排队授权检查；等待外部授权服务时不持有数据库事务。
+  const key=JSON.stringify([ref.executionTaskId,ref.attempt,ref.fenceToken,request.modelCallId,request.toolCallId]);
+  const previous=approvalChecks.get(key);
+  const work=(previous?previous.catch(()=>undefined):Promise.resolve()).then(()=>checkOnce(ref,request,signal));
+  approvalChecks.set(key,work);
+  const cleanup=()=>{if(approvalChecks.get(key)===work)approvalChecks.delete(key);};
+  void work.then(cleanup,cleanup);
+  return work;
+ }
+ async function checkOnce(ref:ExecutionRef,raw:unknown,signal?:AbortSignal):Promise<Approval>{
   signal?.throwIfAborted();const request=workerPortInputSchemas.checkChatToolApproval.parse(raw);
   const before=await scope(ref,request);
   if(before.previous?.status==="settled"){
@@ -51,6 +64,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   catch{decision={status:"unavailable"};}
   signal?.throwIfAborted();const after=await scope(ref,request);
   if(before.bound.inputDigest!==after.bound.inputDigest)throw new ConflictError("授权期间工具绑定已改变");
+  await project.recordApproval(ref,request,decision);
   return decision;
  }
  const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,{...tool,execute:async(context,input,executionScope)=>{

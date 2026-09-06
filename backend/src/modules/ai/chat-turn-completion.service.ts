@@ -1,10 +1,10 @@
-import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, type Db } from "@creatoros/backend";
+import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema, workerProviderReceiptSchema, executionCheckpointSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError } from "../execution/execution.errors";
 import { createAiRepository } from "./ai.repository";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
-import { projectChatReceipts } from "./chat-receipt-projection";
+import { projectChatReceipts,readChatApprovalFacts } from "./chat-receipt-projection";
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 同一事务提交聊天消息、业务结果、调用结果引用和执行终态。完成请求只含已有账本引用。 */
 export function createChatTurnCompletionService(db: Db, deps: {
@@ -35,7 +35,8 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 const checkpoint = executionCheckpointSchema.parse(task.checkpoint);
                 if (checkpoint.ledgerSequence !== calls.at(-1)?.sequence || JSON.stringify(checkpoint.messages) !== JSON.stringify(confirmed.map(call => ({ role: call.kind === "model" ? "assistant" : "tool", callId: call.id }))))
                     throw new ConflictError("聊天检查点尚未确认全部调用");
-                const projected = projectChatReceipts(confirmed, frozen), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
+                const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
+                const projected = projectChatReceipts(confirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk))), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
                 const [existing] = await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id, resultId));
                 const metadata = { chatTaskId: business.id, sourceMessageId: source.id, actualEngine: "vercel", stopReason: projected.finishReason, completeness: projected.outcome === "succeeded" ? "completed" : "partial", checkpointRef: checkpoint.revision };
                 const resultData = { conversationId: conversation.id, sourceMessageId: source.id, messageId, actualEngine: "vercel", stopReason: projected.finishReason, completeness: metadata.completeness, checkpointRef: checkpoint.revision };

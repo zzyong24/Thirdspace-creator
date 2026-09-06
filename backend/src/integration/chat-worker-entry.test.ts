@@ -1,3 +1,4 @@
+import { readUIMessageStream,type UIMessage,type UIMessageChunk } from "ai";
 import { createExecutionStreamService,subscribeExecutionStream } from "../modules/execution/execution-stream.service";
 import { createServer } from "node:http";
 import { z } from "zod";
@@ -30,6 +31,7 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
  const usesTool=!["text","retry","cancel","partial","live"].includes(mode);
  const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"使用已授权工具查找来源",messages:[{role:"user",content:"查找来源"}],maxSteps:6,maxOutputTokens:128,tools:usesTool?[{name:"web.read",version:"1",effect:"none",description:"读取资料",parameters:z.record(z.string(),z.json()).parse(z.toJSONSchema(parameters))}]:[]})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const responseGate:{finish?:()=>void}={};
+ let pendingApprovalId:string|undefined;
  let requests=0,grant=false,disconnected=false;const bodies:string[]=[];
  const server=createServer((req,res)=>{let body="";req.on("data",chunk=>{body+=chunk;});req.on("end",()=>{
   requests++;bodies.push(body);
@@ -82,6 +84,15 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
    if(["approval","revoked","login","late-denied"].includes(mode)){
     await vi.waitFor(async()=>expect((await state()).status).toBe("waiting_user"));
     const waiting=await state();expect(waiting.lastErrorCode).toBe(mode==="approval"?"CHAT_APPROVAL_REQUIRED":"CHAT_TOOL_REQUIRES_USER");expect(execute).toHaveBeenCalledTimes(mode==="login"?1:0);expect(requests).toBe(1);
+    if(mode==="approval"){
+      const page=await createExecutionStreamService(db).read(ctx,submission.executionTaskId);
+      const approvals=page.events.filter(event=>event.chunk.type==="tool-approval-request");expect(approvals).toHaveLength(1);pendingApprovalId=String(approvals[0]!.chunk.approvalId);
+      await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"resume-without-grant"});
+      await vi.waitFor(async()=>expect(await state()).toMatchObject({status:"waiting_user",attempt:2}));
+      expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();
+      expect((await createExecutionStreamService(db).read(ctx,submission.executionTaskId)).events.filter(event=>event.chunk.type==="tool-approval-request")).toHaveLength(1);
+      expect((await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).filter(call=>call.kind==="tool")).toHaveLength(0);
+    }
     grant=true;await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"allow-and-resume"});
    }
    await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="partial"?"partial":"succeeded"),{timeout:15000});
@@ -97,7 +108,15 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
    expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
    if(usesTool && !["denied","late-denied"].includes(mode))expect(bodies.at(-1)).toContain("https://source.test/evidence");
-   if(["approval","revoked","login","late-denied"].includes(mode))expect((await state()).attempt).toBe(2);
+   if(["approval","revoked","login","late-denied"].includes(mode))expect((await state()).attempt).toBe(mode==="approval"?3:2);
+   if(mode==="approval"){
+    const expected=(rows.find(row=>row.role==="assistant")!.parts as Array<Record<string,unknown>>).find(part=>part.toolCallId==="read-source")!;
+    expect(expected.approval).toEqual({id:pendingApprovalId,approved:true});
+    let response:UIMessage|undefined;
+    const stream=new ReadableStream<UIMessageChunk>({start(c){c.enqueue({type:"start",messageId:"test"});for(const event of streamEvents.sort((a,b)=>a.sequence-b.sequence))c.enqueue(event.chunk as UIMessageChunk);c.enqueue({type:"finish"});c.close();}});
+    for await(const current of readUIMessageStream({stream}))response=current;
+    expect(JSON.parse(JSON.stringify(response!.parts.find(part=>"toolCallId" in part && part.toolCallId==="read-source")))).toMatchObject(expected);
+   }
   }
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
   if(mode==="retry")expect(calls.map(call=>call.status)).toEqual(["rejected","settled"]);

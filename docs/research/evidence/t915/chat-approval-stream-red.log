@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-worker-entry.test.ts (14 tests | 1 failed | 13 skipped) 1622ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：approval 396ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：approval
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/integration/chat-worker-entry.test.ts:87:85
+     85|     if(mode==="approval"){
+     86|       const page=await createExecutionStreamService(db).read(ctx,submi…
+     87|       expect(page.events.filter(event=>event.chunk.type==="tool-approv…
+       |                                                                                     ^
+     88|       expect((await db.select().from(executionCalls).where(eq(executio…
+     89|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  21:41:28
+   Duration  3.30s (transform 934ms, setup 0ms, import 1.54s, tests 1.62s, environment 0ms)
+

@@ -112,3 +112,25 @@ it("两个工具逆序完成，流卡片仍按模型声明顺序恢复",async()=
  expect(message!.parts[0]).toMatchObject({type:"text",text:"前言"});
  expect(f.execute).toHaveBeenCalledTimes(2);
 });
+it("授权卡只记录真实检查变化，执行前撤权保留同一ID且显示未执行",async()=>{
+ const f=await fixture(),stream=createExecutionStreamService(db);
+ f.approve.mockResolvedValue({status:"user-approval"});await f.host.check(f.ref,f.request);await f.host.check(f.ref,f.request);
+ const pending=(await stream.read(f.ctx,f.ref.executionTaskId)).events.filter(event=>event.chunk.type==="tool-approval-request");expect(pending).toHaveLength(1);
+ const id=pending[0]!.chunk.approvalId;
+ f.approve.mockResolvedValue({status:"not-applicable"});await f.host.check(f.ref,f.request);await f.host.check(f.ref,f.request);
+ expect((await stream.read(f.ctx,f.ref.executionTaskId)).events.filter(event=>event.chunk.type==="tool-approval-response" && event.chunk.approved===true)).toHaveLength(1);
+ f.approve.mockResolvedValue({status:"user-approval"});await f.host.execute(f.ref,{callId:f.reservation.callId});expect(f.execute).not.toHaveBeenCalled();
+ const page=await stream.read(f.ctx,f.ref.executionTaskId);let message:UIMessage|undefined;
+ const read=new ReadableStream<UIMessageChunk>({start(c){c.enqueue({type:"start",messageId:"revoked"});for(const event of page.events)c.enqueue(event.chunk as UIMessageChunk);c.enqueue({type:"finish"});c.close();}});
+ for await(const current of readUIMessageStream({stream:read}))message=current;
+ expect(message!.parts.find(part=>"toolCallId" in part)).toMatchObject({state:"output-denied",approval:{id,approved:false,reason:"本次操作需要恢复授权"}});
+ const count=page.events.length;await f.host.reserve(f.ref,f.request);expect((await stream.read(f.ctx,f.ref.executionTaskId)).events).toHaveLength(count);
+});
+it("同一工具的并发授权检查不能让旧等待覆盖新批准",async()=>{
+ const f=await fixture(),stream=createExecutionStreamService(db);f.approve.mockResolvedValue({status:"user-approval"});await f.host.check(f.ref,f.request);
+ let invocation=0,entered!:()=>void;const started=new Promise<void>(r=>{entered=r;});
+ f.approve.mockImplementation(async()=>{const n=++invocation;if(n===1){entered();await new Promise(r=>setTimeout(r,200));return {status:"user-approval"};}return {status:"not-applicable"};});
+ const first=f.host.check(f.ref,f.request);await started;const second=f.host.check(f.ref,f.request);await Promise.all([first,second]);
+ const events=(await stream.read(f.ctx,f.ref.executionTaskId)).events;
+ expect(events.at(-1)!.chunk).toMatchObject({type:"tool-approval-response",approved:true});expect(invocation).toBe(2);
+});

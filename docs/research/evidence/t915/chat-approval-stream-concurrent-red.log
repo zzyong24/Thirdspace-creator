@@ -1,0 +1,37 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-tool-authority.test.ts (15 tests | 1 failed | 14 skipped) 1196ms
+   × 同一工具的并发授权检查不能让旧等待覆盖新批准 295ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-tool-authority.test.ts > 同一工具的并发授权检查不能让旧等待覆盖新批准
+AssertionError: expected { type: 'tool-approval-request', …(2) } to match object { Object (type, approved) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "approved": true,
+-   "type": "tool-approval-response",
++   "type": "tool-approval-request",
+  }
+
+ ❯ src/integration/chat-tool-authority.test.ts:135:31
+    133|  const first=f.host.check(f.ref,f.request);await started;const second=…
+    134|  const events=(await stream.read(f.ctx,f.ref.executionTaskId)).events;
+    135|  expect(events.at(-1)!.chunk).toMatchObject({type:"tool-approval-respo…
+       |                               ^
+    136| });
+    137|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  21:48:13
+   Duration  2.59s (transform 736ms, setup 0ms, import 1.26s, tests 1.20s, environment 0ms)
+

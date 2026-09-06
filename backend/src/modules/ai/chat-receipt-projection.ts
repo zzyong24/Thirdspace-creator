@@ -10,7 +10,7 @@ type Call = {
 };
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 私有持久协议到既有聊天 parts 的投影；不执行模型、不采纳工具候选。 */
-export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>) {
+export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>, approvals:ReadonlyMap<string,ChatApprovalFact>=new Map()) {
     const parts: Record<string, Json>[] = [], pending = new Map<string, Record<string, Json>>(), seen = new Set<string>(), invalidInputs = new Set<string>();
     let finishReason = "", hasOutput = false;
     for (const call of calls) {
@@ -73,7 +73,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
             const part = pending.get(receipt.toolCallId);
             if (!part || part.type !== `tool-${receipt.toolName}`)
                 throw new ConflictError("工具回执未关联模型调用");
-            hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId)) || hasOutput;
+            hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId),approvals.get(receipt.toolCallId)) || hasOutput;
             pending.delete(receipt.toolCallId);
         }
         else
@@ -87,7 +87,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
 }
 
 /** 已确认工具结果到UI part的唯一规则；流事件和最终消息共用。 */
-export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:unknown,invalidInput:boolean){
+export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:unknown,invalidInput:boolean,approval?:ChatApprovalFact){
     const output = agenticToolOutcomeSchema.parse(raw);
     if (output.sideEffect === "unknown" || output.error?.code === "unknown_commit")
         throw new ConflictError("未知工具结果不能完成聊天");
@@ -97,13 +97,31 @@ export function applyChatToolOutcome(part:Record<string,Json>,callId:string,raw:
         part.state="output-error";part.rawInput=part.input!;delete part.input;part.errorText=output.summary;
         return false;
     }
-    const denied = output.sideEffect === "none" && output.error?.code === "permission" && object(output.data).denied === true;
+    const denied = output.sideEffect === "none" && output.error?.code === "permission" && (object(output.data).denied === true || approval?.approved===false);
     part.state = denied ? "output-denied" : "output-available";
     if (denied)
-        part.approval = { id: `receipt:${callId}`, approved: false, reason: output.error!.recovery };
+        part.approval = { id: approval?.id??`receipt:${callId}`, approved: false, reason: approval?.reason??output.error!.recovery };
     else {
         part.output = z.json().parse(output.data ?? output);
+        if(approval?.approved===true)part.approval={...approval,approved:true};
         return true;
     }
     return false;
+}
+
+export type ChatApprovalFact={id:string;approved?:boolean;reason?:string};
+/** 只恢复后端生成的展示事实；此函数不能授予工具执行权。 */
+export function readChatApprovalFacts(chunks:unknown[]):Map<string,ChatApprovalFact>{
+ const result=new Map<string,ChatApprovalFact>(),ids=new Map<string,string>();
+ for(const raw of chunks){const chunk=object(raw);
+  if(chunk.type==="tool-approval-request"){
+   const value=z.object({toolCallId:z.string(),approvalId:z.string()}).parse(chunk);
+   ids.set(value.approvalId,value.toolCallId);result.set(value.toolCallId,{id:value.approvalId});
+  }else if(chunk.type==="tool-approval-response"){
+   const value=z.object({approvalId:z.string(),approved:z.boolean(),reason:z.string().optional()}).parse(chunk),toolId=ids.get(value.approvalId);
+   if(!toolId)throw new ConflictError("授权响应缺少对应请求");
+   result.set(toolId,{id:value.approvalId,approved:value.approved,...(value.reason!==undefined?{reason:value.reason}:{})});
+  }
+ }
+ return result;
 }
