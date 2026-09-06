@@ -1,10 +1,13 @@
+import {buildChatTools,type ChatToolDeps} from "../modules/ai-runtime/chat-tools";
+import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
+import {createChatHooksTaskToolHost} from "../modules/ai-runtime/chat-hooks-tool-host";
+import {createChatHostContextReader} from "../modules/ai/chat-host-context.service";
 import * as supervisorModule from "../modules/execution/worker-supervisor";
 import * as hooksModule from "../modules/execution/execution-chat-hooks.service";
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
 import {resolve} from "node:path";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
-import {z} from "zod";
 import {createDb,executionTasks,executionCalls,aiMessages,eq,type Db} from "@creatoros/backend";
 import {createAiRepository} from "../modules/ai/ai.repository";
 import type {ChatHostContext} from "../modules/ai/chat-host-context";
@@ -22,9 +25,9 @@ it.each(["success","cancel","reject401","reject401resume","reject429","reject429
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
  const conversation=await repo.createConversation({title:"开场",projectId:null,scope:"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"生成开场",attachments:[],modelMetadata:{}});
- const parameters=z.object({topic:z.string().optional()}).strict();
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(["script.hooks"],{} as ChatToolDeps),{workerScriptHooks:true})).definitions;
  const hostContext:ChatHostContext={schemaVersion:1,chatContext:{surface:"topics"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],scriptHooksContext:{selectionTitle:"真实主题",positioningBrief:"原定位",projectBriefHard:"",userMaterialHardBrief:"",userMaterialRefBrief:"",knowledgeBrief:""},scriptHooksGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"策略",template:"",tools:["script.hooks"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
- const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"生成开场候选",messages:[{role:"user",content:"生成开场"}],maxSteps:6,maxOutputTokens:128,tools:[{name:"script.hooks",version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",description:"生成开场",parameters:z.record(z.string(),z.json()).parse(z.toJSONSchema(parameters))}],hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"生成开场候选",messages:[{role:"user",content:"生成开场"}],maxSteps:6,maxOutputTokens:128,tools:definitions,hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const requests:Record<string,unknown>[]=[];
  let childOpened=false;
  const server=createServer(async(req,res)=>{
@@ -38,7 +41,7 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownCh
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
- const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:mode.startsWith("crash")?300000:60000},modelConcurrency:1,tools:{"script.hooks":{version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",parameters,approve:async()=>({status:"not-applicable"})}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
+ const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:mode.startsWith("crash")?300000:60000},modelConcurrency:1,resolveTools:createChatHooksTaskToolHost(createChatHostContextReader(db,{now})),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
  let droppedFailure=false;
  const originalSupervisor=supervisorModule.createWorkerSupervisor;
  let stopExecution:ReturnType<typeof originalSupervisor>["stopExecutionTree"]|undefined;

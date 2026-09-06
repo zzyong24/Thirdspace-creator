@@ -41,3 +41,13 @@ describe("真实聊天工具定义", () => {
     expect(prepared.parameters["context.projects"]!.parameters.safeParse({ extra: true }).success).toBe(false);
   });
 });
+
+it("Worker 开场版本独立，未启用时原定义不变，其它工具不改执行位置",async()=>{
+ const tools={"script.hooks":make("script.hooks"),"context.projects":make("context.projects")};
+ const legacy=await prepareChatToolDefinitions(tools),worker=await prepareChatToolDefinitions(tools,{workerScriptHooks:true});
+ expect(legacy.definitions[0]).not.toHaveProperty("execution");
+ expect((await prepareChatToolDefinitions(tools,{workerScriptHooks:false})).definitions).toEqual(legacy.definitions);
+ expect(worker.definitions[0]).toMatchObject({execution:"worker.script-hooks",parameters:legacy.definitions[0]!.parameters,description:legacy.definitions[0]!.description,effect:"proposal"});
+ expect(worker.definitions[0]!.version).not.toBe(legacy.definitions[0]!.version);
+ expect(worker.definitions[1]).toEqual(legacy.definitions[1]);
+});

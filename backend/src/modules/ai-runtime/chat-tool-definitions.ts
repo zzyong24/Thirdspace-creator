@@ -56,7 +56,8 @@ export const CHAT_TOOL_EFFECTS: Readonly<Record<string, Definition["effect"]>> =
 });
 
 /** 只准备当轮实际工具；模型/浏览器闭包仍须迁至 Worker，不能因拥有声明便视为迁移完成。 */
-export async function prepareChatToolDefinitions(tools: ToolSet) {
+export async function prepareChatToolDefinitions(tools: ToolSet, options:{workerScriptHooks?:boolean}={}) {
+  const workerScriptHooks=options.workerScriptHooks===true;
   const entries = await Promise.all(Object.entries(tools).map(async ([name, tool]) => {
     if (!Object.hasOwn(CHAT_TOOL_EFFECTS, name)) throw new Error(`工具缺少副作用定义：${name}`);
     if (!getChatToolNativeExecutor(tool) || getChatToolRegisteredName(tool) !== name) throw new Error(`工具原始执行入口未登记或名称不匹配：${name}`);
@@ -64,8 +65,10 @@ export async function prepareChatToolDefinitions(tools: ToolSet) {
     const prepared = await prepareChatToolParameters(tool.inputSchema);
     const effect = CHAT_TOOL_EFFECTS[name]!;
     // 绑定真实schema变体与描述，避免不同上下文的同名工具共用错误版本。
-    const version = `${IMPLEMENTATION_REVISION}:${createHash("sha256").update(JSON.stringify({ name, effect, description: tool.description, parameters: prepared.schema })).digest("hex")}`;
-    const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema) };
+    const execution=workerScriptHooks && name==="script.hooks" ? "worker.script-hooks" as const : undefined;
+    const revision=execution?"chat-tools-worker-hooks-v1":IMPLEMENTATION_REVISION;
+    const version = `${revision}:${createHash("sha256").update(JSON.stringify({ name, effect, description: tool.description, parameters: prepared.schema })).digest("hex")}`;
+    const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema),...(execution?{execution}:{}) };
     return { name, prepared, definition };
   }));
   return { definitions: entries.map(entry => entry.definition), parameters: Object.fromEntries(entries.map(entry => [entry.name, entry.prepared])) };

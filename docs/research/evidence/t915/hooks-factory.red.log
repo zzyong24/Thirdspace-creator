@@ -1,0 +1,59 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 持久开场文案输入来自真实装配且与返回对象隔离
+[chat-context] est=2520→2520 tokens cleared=0 truncated=0
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts (146 tests | 1 failed | 145 skipped) 26ms
+   × 持久开场文案输入来自真实装配且与返回对象隔离 25ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-runner.test.ts > 持久开场文案输入来自真实装配且与返回对象隔离
+AssertionError: expected { name: 'script.hooks', …(4) } to match object { execution: 'worker.script-hooks' }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "execution": "worker.script-hooks",
++   "description": "为当前项目生成一组口播开场 hook 候选(3~5 条,不同切角)。创作者会逐条挑选「写入稿面」。当用户想改开头/要 hook/开场不抓人时调用。",
++   "effect": "proposal",
++   "name": "script.hooks",
++   "parameters": {
++     "additionalProperties": false,
++     "properties": {
++       "direction": {
++         "description": "hook 的方向要求(如「冲突感强一点」「用数据开场」),可选",
++         "type": "string",
++       },
++       "extraBrief": {
++         "description": "对话中获得的补充指令/洞察(如刚翻过的真实作品/评论提炼的结论、用户的具体要求),原样传入生成 prompt,优先级高于既有档案。对话里有生成方向共识时必须填,不要丢弃已聊出的洞察。",
++         "maxLength": 2000,
++         "type": "string",
++       },
++       "topic": {
++         "description": "这条内容的主题/标题(缺省用当前项目标题)",
++         "type": "string",
++       },
++     },
++     "type": "object",
++   },
++   "version": "chat-tools-v1:5a03723b88f96136cdbbf1be5020758e5eb10d7bc98ae7e06f5b76e3d15a6aad",
+  }
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts:3371:74
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 145 skipped (146)
+   Start at  02:42:19
+   Duration  1.37s (transform 704ms, setup 0ms, import 1.20s, tests 26ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-runner.test.ts -t 持久开场文案输入
