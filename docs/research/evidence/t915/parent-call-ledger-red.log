@@ -1,0 +1,88 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts (12 tests | 3 failed) 1257ms
+     × 子模型共用预算、保留父归属且成功父回执不能越过未结算子调用 11ms
+     × 父调用必须属于同一任务且已启动；模型不能充当父工具 13ms
+     × 子调用未知时父不能成功，不能换键或重试来源盲目重发 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 子模型共用预算、保留父归属且成功父回执不能越过未结算子调用
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "parentCallId"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"parentCallId\""
+  }
+]
+ ❯ Object.reserve src/modules/execution/execution-call-ledger.service.ts:65:39
+     63|     },
+     64|     async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSc…
+     65|       const input = reservationSchema.parse(raw);
+       |                                       ^
+     66|       return leases.withLease(ref, "admission", async ({tx, task}) => {
+     67|         const budget = task.executionBudget === null ? configuredBudge…
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:124:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 父调用必须属于同一任务且已启动；模型不能充当父工具
+AssertionError: expected ZodError: [
+  {
+    "code": "unrecognized… { …(8) } to match object { name: 'ConflictError' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "ConflictError",
++ ZodError {
++   "name": "ZodError",
+  }
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:141:75
+    139|     const parent = await other.ledger.reserve(other.ref,{...input,kind…
+    140|     await other.ledger.start(other.ref,parent.id);
+    141|     await expect(f.ledger.reserve(f.ref,{...input,parentCallId:parent.…
+       |                                                                           ^
+    142|     const model = await f.ledger.reserve(f.ref,input);
+    143|     await f.ledger.start(f.ref,model.id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 子调用未知时父不能成功，不能换键或重试来源盲目重发
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "parentCallId"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"parentCallId\""
+  }
+]
+ ❯ Object.reserve src/modules/execution/execution-call-ledger.service.ts:65:39
+     63|     },
+     64|     async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSc…
+     65|       const input = reservationSchema.parse(raw);
+       |                                       ^
+     66|       return leases.withLease(ref, "admission", async ({tx, task}) => {
+     67|         const budget = task.executionBudget === null ? configuredBudge…
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:154:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 9 passed (12)
+   Start at  00:33:56
+   Duration  2.73s (transform 725ms, setup 0ms, import 1.33s, tests 1.26s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-call-ledger.service.test.ts

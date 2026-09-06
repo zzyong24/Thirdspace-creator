@@ -1,3 +1,4 @@
+import { createExecutionStreamService } from "./execution-stream.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createServer } from "node:http";
 import { resolve } from "node:path";
@@ -47,12 +48,14 @@ describe("真实 Worker 与后端持久调用端口", () => {
     const address=server.address() as {port:number};
     const leases=createExecutionLeaseService(db);
     const checkpoints=createExecutionCheckpointService(db);
+    const streams=createExecutionStreamService(db);
     const checkpointReads:Array<{attempt:number;revision:number;messageIds:string[]}>=[];
     let saves=0;
     const candidates=createExecutionCandidateService(db,{projectCandidate(_ctx,input){return {resultType:"artifact_version",artifactId:"fixture-artifact",resultData:{body:input.text}};}});
     const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
       async validate(ref,mode){await leases.withLease(ref,mode,async()=>{});},
       async invoke(ref,port,data){
+        if(port==="appendStreamEvents")return streams.append(ref,data);
         if(port==="readCheckpoint") {
           const result=await checkpoints.read(ref);
           checkpointReads.push({attempt:ref.attempt,revision:result.revision,messageIds:result.messages.map(m=>m.callId)});

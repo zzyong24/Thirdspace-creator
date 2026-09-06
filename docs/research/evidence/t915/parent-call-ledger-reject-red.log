@@ -1,0 +1,58 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts (21 tests | 1 failed | 20 skipped) 1040ms
+     × 父已有子调用不能伪装成未执行拒绝，禁止重试整棵调用树 34ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 父已有子调用不能伪装成未执行拒绝，禁止重试整棵调用树
+AssertionError: promise resolved "{ …(20) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "createdAt": "2026-09-05T00:00:00.000Z",
++   "executionTaskId": "execution-task_b5804e45-493a-4c1b-8284-1989b466b83d",
++   "id": "call_7a9bd713-75c6-40e2-b183-76c7409d1c61",
++   "inputDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++   "kind": "tool",
++   "operationKey": "parent",
++   "parentCallId": null,
++   "providerResult": null,
++   "rejectionCode": null,
++   "reservedTokens": 0,
++   "resultRef": null,
++   "resultText": null,
++   "retryOfCallId": null,
++   "sequence": 1,
++   "startedAttempt": 1,
++   "status": "rejected",
++   "toolExecutionClaimId": null,
++   "totalTokens": null,
++   "updatedAt": "2026-09-05T00:00:00.000Z",
++   "usage": null,
+  }
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:249:70
+    247|     const parent=await f.ledger.reserve(f.ref,{...input,kind:"tool",op…
+    248|     const child=await f.ledger.reserve(f.ref,{...input,parentCallId:pa…
+    249|     await expect(f.ledger.settle(f.ref,parent.id,{status:"rejected"}))…
+       |                                                                      ^
+    250|     await f.ledger.start(f.ref,child.id);
+    251|     await f.ledger.settle(f.ref,child.id,{status:"settled",usage:{},pr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 skipped (21)
+   Start at  00:38:05
+   Duration  2.52s (transform 784ms, setup 0ms, import 1.33s, tests 1.04s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-call-ledger.service.test.ts -t 父已有子调用

@@ -1,0 +1,56 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-worker-call-ports.integration.test.ts (3 tests | 2 failed) 1718ms
+     × 真实进程检查点恢复不重放供应商（缺少usage=false） 301ms
+     × 真实进程检查点恢复不重放供应商（缺少usage=true） 284ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-worker-call-ports.integration.test.ts > 真实 Worker 与后端持久调用端口 > 真实进程检查点恢复不重放供应商（缺少usage=false）
+AssertionError: expected null to be 5 // Object.is equality
+
+- Expected:
+5
+
++ Received:
+null
+
+ ❯ src/modules/execution/execution-worker-call-ports.integration.test.ts:78:59
+     76|       expect(await supervisor.run(f.ref,Date.now()+30000)).toBe("unkno…
+     77|       expect(startedBeforeRequest).toBe(true);expect(requests).toBe(1);
+     78|       expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(unknown…
+       |                                                           ^
+     79|       const saved=await checkpoints.read(f.ref);
+     80|       expect(saved.revision).toBe(1);expect(saved.messages).toHaveLeng…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-worker-call-ports.integration.test.ts > 真实 Worker 与后端持久调用端口 > 真实进程检查点恢复不重放供应商（缺少usage=true）
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/execution/execution-worker-call-ports.integration.test.ts:80:30
+     78|       expect((await f.ledger.inspect(f.ref)).spentTokens).toBe(unknown…
+     79|       const saved=await checkpoints.read(f.ref);
+     80|       expect(saved.revision).toBe(1);expect(saved.messages).toHaveLeng…
+       |                              ^
+     81|       expect(saved.messages[0]).toMatchObject({role:"assistant",result…
+     82|       expect(saved.recovery).toBe(unknownUsage ? "requires_reconciliat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  00:38:27
+   Duration  3.08s (transform 708ms, setup 0ms, import 1.23s, tests 1.72s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-worker-call-ports.integration.test.ts

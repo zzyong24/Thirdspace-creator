@@ -1,4 +1,5 @@
 import {
+  type AnyPgColumn,
   boolean,
   integer,
   jsonb,
@@ -161,6 +162,7 @@ export const executionCalls = pgTable("execution_calls", {
   sequence: integer("sequence").notNull(),
   operationKey: text("operation_key").notNull(),
   retryOfCallId: text("retry_of_call_id"),
+  parentCallId: text("parent_call_id").references((): AnyPgColumn => executionCalls.id),
   kind: text("kind").notNull(),
   inputDigest: text("input_digest").notNull(),
   status: text("status").notNull(),

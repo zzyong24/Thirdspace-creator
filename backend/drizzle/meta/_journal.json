@@ -589,6 +589,13 @@
       "when": 1788652800013,
       "tag": "0083_execution_stream_events",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1788652800014,
+      "tag": "0084_execution_call_parent",
+      "breakpoints": true
     }
   ]
 }

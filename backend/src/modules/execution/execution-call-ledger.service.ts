@@ -12,6 +12,7 @@ const reservationSchema = z.object({
   operationKey: z.string().min(1).max(256), kind: z.enum(["model", "tool"]),
   inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/), reservedTokens: count,
   retryOfCallId: z.string().min(1).optional(),
+  parentCallId: z.string().min(1).optional(),
 }).strict();
 const settlementSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
@@ -21,6 +22,14 @@ const settlementSchema = z.discriminatedUnion("status", [
 type Call = typeof executionCalls.$inferSelect;
 type Budget = z.infer<typeof budgetSchema>;
 type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** 只允许顶层工具拥有模型子调用；业务授权由命名端口另行核验。 */
+function assertParent(calls: Call[], child: {kind:string;parentCallId?:string|null}, attempt?:number) {
+  if (!child.parentCallId) return;
+  const parent = calls.find(call => call.id === child.parentCallId);
+  if (child.kind !== "model" || !parent || parent.kind !== "tool" || parent.parentCallId) throw new ConflictError("子模型父工具归属无效");
+  if (attempt !== undefined && (parent.status !== "started" || parent.startedAttempt !== attempt)) throw new ConflictError("父工具当前不可创建或启动子调用");
+}
 
 function totals(calls: Call[]) {
   const knownSpentTokens = calls.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0);
@@ -69,9 +78,10 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         if (!(Date.parse(deadlineAt) > Date.parse(now()))) throw new ConflictError("执行截止时间已到");
         const calls = await readCalls(tx, task.id);
         validate?.(calls, task);
+        assertParent(calls, input);
         const previous = calls.filter(c => c.operationKey === input.operationKey).at(-1);
         if (previous) {
-          if (previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens) {
+          if (previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens || previous.parentCallId !== (input.parentCallId ?? null)) {
             throw new ConflictError("同一操作键不能改换调用内容");
           }
           if (!input.retryOfCallId || previous.retryOfCallId === input.retryOfCallId) return previous;
@@ -79,6 +89,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
             throw new ConflictError("只有明确拒绝的调用可按原操作键重试");
           }
         } else if (input.retryOfCallId) throw new ConflictError("重试来源不存在");
+        assertParent(calls, input, ref.attempt);
         assertResolved(calls, ref.attempt);
         const used = totals(calls);
         if (calls.length >= budget.maxCalls || used.knownSpentTokens + used.reservedTokens + input.reservedTokens > budget.maxTokens) {
@@ -89,7 +100,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         }
         const [created] = await tx.insert(executionCalls).values({
           id: `call_${randomUUID()}`, executionTaskId: task.id, sequence: calls.length + 1,
-          operationKey: input.operationKey, retryOfCallId: input.retryOfCallId ?? null, kind: input.kind,
+          operationKey: input.operationKey, retryOfCallId: input.retryOfCallId ?? null, parentCallId: input.parentCallId ?? null, kind: input.kind,
           inputDigest: input.inputDigest, reservedTokens: input.reservedTokens, status: "reserved",
           createdAt: now(), updatedAt: now(),
         }).returning();
@@ -103,6 +114,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const call = calls.find(c => c.id === callId);
         if (!call || call.status !== "reserved") throw new ConflictError("调用不可重复启动");
         validate?.(call, calls, task);
+        assertParent(calls, call, ref.attempt);
         assertResolved(calls, ref.attempt);
         const budget = budgetSchema.parse(task.executionBudget);
         const used = totals(calls);
@@ -139,6 +151,14 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
         validate?.(call);
+        if (input.status === "rejected" && call.kind === "tool" && (await readCalls(tx, task.id)).some(child => child.parentCallId === call.id)) throw new ConflictError("已有子调用的父工具不能标记为未执行拒绝");
+        if (input.status === "settled" && (call.kind === "tool" || call.parentCallId)) {
+          const calls = await readCalls(tx, task.id);
+          assertParent(calls, call);
+          if (call.parentCallId && !(input.providerResult ?? call.providerResult)) throw new ConflictError("子模型成功缺少供应商回执");
+          const children = calls.filter(child => child.parentCallId === call.id);
+          if (children.some(child => child.status !== "rejected" && (child.status !== "settled" || child.totalTokens === null || !child.providerResult))) throw new ConflictError("父工具仍有未确认的子模型调用");
+        }
         if (call.status === "settled" && input.status === "unknown") return call;
         if (call.status === "settled" && input.status === "rejected") throw new ConflictError("已确认结果不能变成拒绝");
         if (call.status === "rejected") {
