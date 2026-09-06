@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-resources.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-resources.test.ts [ src/execution/chat-web-read-resources.test.ts ]
+Error: Cannot find module '/src/execution/chat-web-read-resources' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/chat-web-read-resources.test.ts
+ ❯ src/execution/chat-web-read-resources.test.ts:6:1
+      4| const fake=vi.hoisted(()=>({create:vi.fn(),readDocument:vi.fn(),search…
+      5| vi.mock("./research-worker-tools",async importOriginal=>({...await imp…
+      6| import {createChatWebReadResources,closeChatWebReadResources} from "./…
+       | ^
+      7| const output={status:"ok",summary:"读取完成",evidence:[],data:{assetId:"as…
+      8| const read={text:"真实读取正文",title:"标题",finalUrl:"https://example.com/sou…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:16:00
+   Duration  204ms (transform 42ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

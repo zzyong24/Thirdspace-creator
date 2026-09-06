@@ -1,3 +1,4 @@
+import {closeChatWebReadResources} from "./chat-web-read-resources";
 import {closeChatResearchResources} from "./chat-research-worker";
 import {runChatInWorker} from "./chat-worker-run";
 import {closeTopicWorkerResources} from "./topic-worker-reads";
@@ -36,7 +37,7 @@ const worker = createExecutionWorker({
 });
 process.on("message", message => worker.receive(message));
 let shuttingDown=false;
-const shutdown=async()=>{if(shuttingDown)return;shuttingDown=true;worker.close();await Promise.all([closeTopicWorkerResources(),closeChatResearchResources()]);process.exit(0);};
+const shutdown=async()=>{if(shuttingDown)return;shuttingDown=true;worker.close();await Promise.all([closeTopicWorkerResources(),closeChatResearchResources(),closeChatWebReadResources()]);process.exit(0);};
 process.on("disconnect", () => {void shutdown();});
 process.on("SIGTERM", () => {void shutdown();});
 worker.ready();

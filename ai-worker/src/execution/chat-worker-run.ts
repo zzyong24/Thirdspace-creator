@@ -1,3 +1,4 @@
+import {createChatWebReadResources} from "./chat-web-read-resources";
 import {runChatResearchInWorker,createChatResearchResources} from "./chat-research-worker";
 import {runChatGenerationInWorker} from "./chat-generation-worker";
 import { createChatModelStreamEvents } from "./chat-model-stream-events";
@@ -14,7 +15,7 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -45,10 +46,17 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const saved=workerStartReceiptSchema.parse(await ports.call("restoreChatGeneration",{callId},signal));
     if(saved.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_GENERATION_RESTORE_RECEIPT_UNKNOWN");
   };
+  const restoreWebRead=async(callId:string)=>{
+    const saved=workerStartReceiptSchema.parse(await ports.call("restoreChatWebRead",{callId},signal));
+    if(saved.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_WEB_READ_RESTORE_RECEIPT_UNKNOWN");
+  };
   // 已成功子模型只恢复候选投影；不重新预留或调用供应商。
   for(const callId of initial.completableToolCallIds)agenticToolOutcomeSchema.parse(await ports.call("completeChatHooks",{callId},signal));
   for(const callId of initial.resumableToolCallIds)await restoreHooks(callId);
   for(const callId of initial.replayableGenerationToolCallIds)await restoreGeneration(callId);
+  for(const callId of initial.replayableWebReadToolCallIds)await restoreWebRead(callId);
+  // 已持久网页观察直接完成原提交；启动恢复不创建浏览器或查询搜索配置。
+  for(const callId of initial.replayableWebReadToolCallIds)agenticToolOutcomeSchema.parse(await ports.call("completeChatWebRead",{callId},signal));
   // 所有同轮父工具先归入当前租约，再允许任一节点申请后续修复调用。
   for(const callId of initial.replayableGenerationToolCallIds)await runChatGenerationInWorker(callId,signal,ports.call);
   let checkpointTail:Promise<void>=Promise.resolve();
@@ -92,13 +100,15 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     },
   }});
   const research=input.tools.some(tool=>tool.execution==="worker.research")?await createChatResearchResources(signal,ports.call):undefined;
+  let webRead:ReturnType<typeof createChatWebReadResources>|undefined;
   try{
+  if(input.tools.some(tool=>tool.execution==="worker.web-read"))webRead=createChatWebReadResources(signal,ports.call);
   const tools=Object.fromEntries(input.tools.map(definition=>[definition.name,tool({description:definition.description,inputSchema:jsonSchema(definition.parameters),
     execute:async(_input,options)=>{
       try{
         const modelCallId=modelForTool.get(options.toolCallId);if(!modelCallId)throw Error("model receipt missing");
         let reservedCallId:string|undefined;
-        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,...(definition.execution==="worker.script-hooks"?{resumeStarted:restoreHooks}:definition.execution==="worker.structured-node"?{resumeStarted:restoreGeneration}:{}),call:async(port,data,portSignal)=>{
+        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,...(definition.execution==="worker.web-read"?{resumeStarted:restoreWebRead}:definition.execution==="worker.script-hooks"?{resumeStarted:restoreHooks}:definition.execution==="worker.structured-node"?{resumeStarted:restoreGeneration}:{}),call:async(port,data,portSignal)=>{
           const result=await ports.call(port,data,portSignal);
           if(port==="reserveAgenticTool"){
             const reservation=agenticToolReservationSchema.parse(result);
@@ -108,6 +118,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           return result;
         },execute:async()=>{
           if(!reservedCallId)throw Error("tool reservation missing");
+          if(definition.execution==="worker.web-read"){if(!webRead)throw Error("网页读取尚未装配");return webRead.run(reservedCallId,signal);}
           if(definition.execution==="worker.research"){if(!research)throw Error("浏览器搜索尚未装配");return runChatResearchInWorker(reservedCallId,signal,ports.call,research);}
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.script-hooks")return runChatHooksInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
@@ -163,5 +174,5 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     if(!awaitingApproval && !hasOutput)throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
     return {message,text:await result.text,lastModelCallId,toolCallIds:[...toolCallIds],outcome:awaitingApproval?"awaiting_confirmation" as const:finishReason==="stop"?"completed" as const:"partial" as const,finishReason};
   }catch(error){stop.abort();await reader.cancel().catch(()=>{});throw failure??fail(error,"CHAT_STREAM_RESULT_UNKNOWN");}
-  }finally{await research?.close();}
+  }finally{await Promise.all([research?.close(),webRead?.close()]);}
 }

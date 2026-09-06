@@ -1,0 +1,46 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-resources.test.ts (6 tests | 1 failed | 5 skipped) 13ms
+   × 私有配置响应不符合契约时保留未知，不把协议故障结算成网页失败 12ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-resources.test.ts > 私有配置响应不符合契约时保留未知，不把协议故障结算成网页失败
+ FAIL  src/execution/chat-web-read-resources.test.ts > 私有配置响应不符合契约时保留未知，不把协议故障结算成网页失败
+ FAIL  src/execution/chat-web-read-resources.test.ts > 私有配置响应不符合契约时保留未知，不把协议故障结算成网页失败
+AssertionError: promise resolved "{ status: 'ok', summary: '读取完成', …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "continuation": null,
++   "data": {
++     "assetId": "asset",
++   },
++   "error": null,
++   "evidence": [],
++   "sideEffect": "committed",
++   "status": "ok",
++   "summary": "读取完成",
+  }
+
+ ❯ src/execution/chat-web-read-resources.test.ts:64:22
+     62|  const f=fixture();fake.readDocument.mockRejectedValue(new WebCaptureE…
+     63|  const original=f.call.getMockImplementation()!;f.call.mockImplementat…
+     64|  await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"…
+       |                      ^
+     65|  expect(fake.searchBrowser).not.toHaveBeenCalled();expect(f.call.mock.…
+     66| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  10:22:22
+   Duration  639ms (transform 170ms, setup 0ms, import 479ms, tests 13ms, environment 0ms)
+

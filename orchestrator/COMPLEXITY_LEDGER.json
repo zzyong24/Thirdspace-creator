@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "692fafde0b03e399da181f5e51a7b1e24889b0f020d244aceb705e174da991fe",
+      "file_sha256": "4d83a2197d19555698ef1cb013eb4773a6c928c2e924a716bf0069fd504c638a",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行及私有 IPC。本批增加对话网页资源退出回收，复用原进程拓扑和数据库属主，不开启新能力声明。实际 Chromium 读取、取消及进程退出证据见 chat-web-read-resources.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
