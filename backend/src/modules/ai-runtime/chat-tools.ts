@@ -1,3 +1,4 @@
+import {prepareMaterialGeneration,type MaterialGenerationInput} from "./material-generation-preparation";
 import { createHash } from "node:crypto";
 import { jsonSchema, type Tool, type ToolSet } from "ai";
 // [T-239a] 统一工具门:所有工具经 defineChatTool 包装(错误信封/结果预算/审计打点),
@@ -2443,14 +2444,7 @@ const LOCAL_WORKSPACE_PARAMS = jsonSchema<Record<string, never>>({
 });
 
 // [T-084c] material.generate 入参 —— 生成 kind(图/视频)+ prompt(必填)+ 可选风格。
-const MATERIAL_GENERATE_PARAMS = jsonSchema<{
-  kind: "image" | "video";
-  prompt: string;
-  style?: string;
-  sectionRef?: string;
-  visualPurpose?: "evidence" | "mechanism" | "comparison" | "consequence" | "emotion" | "analogy";
-  mediaKind?: "illustration" | "information_card" | "fact_capture";
-}>({
+const MATERIAL_GENERATE_PARAMS = jsonSchema<MaterialGenerationInput>({
   type: "object",
   properties: {
     kind: {
@@ -3938,89 +3932,18 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
       description:
         "用 AI 生成图片或视频素材(文生图/文生视频)。项目内容配图必须先用 context.artifact.text 读当前确认稿，判断它要替哪一句内容完成什么认知任务，从 sections 中选择服务的唯一 sectionRef，并说明 visualPurpose；执行端会重读当前版本，把该段正文和版本指纹冻结进任务。生成的是 AI 图/视频素材(非真实拍摄/截图)，用户采纳后才进素材中心。事实证据优先真实截图/网页，价格表、架构图、流程图等要求精确文字/数字/节点的信息卡必须把 mediaKind 设为 information_card，本工具会拒绝自由生成；真实公告/仓库截图设为 fact_capture，同样不生成。只有 illustration 适合本工具。图片 prompt 要把一个认知任务落实为一个可见关系，写清主体、动作或关系、环境、构图、光色和画幅；视频 prompt 只写一个连续短镜头，依次交代主体、主要动作、环境、构图与景深、一个平滑运镜、光色材质和平稳结尾，可带克制同步环境音但禁止音乐与人声。默认不要文字、数字、logo、水印、假产品界面、假新闻截图、畸形肢体、重复主体、突变、闪烁或跳帧，禁止万能 AI 海报。创作者定位只影响视觉语言与审美语气，不得改变当前稿主张。要生成封面改用 cover.generate。",
       inputSchema: MATERIAL_GENERATE_PARAMS,
-      execute: async ({
-        kind,
-        prompt,
-        style,
-        sectionRef,
-        visualPurpose,
-        mediaKind,
-      }): Promise<MaterialGenerateToolResult> => {
-        const effKind: "image" | "video" =
-          deps.forcedMaterialKind ?? (kind === "video" ? "video" : "image");
-        const effPrompt = typeof prompt === "string" ? prompt.trim() : "";
-        const effMediaKind = mediaKind ?? "illustration";
-        if (effMediaKind !== "illustration") {
-          return {
-            kind: "material.generate",
-            taskId: null,
-            kindOf: effKind,
-            status: "queued",
-            error:
-              effMediaKind === "information_card"
-                ? "这张画面要求精确文字、数字或节点关系，不能交给自由文生图。请使用真实截图或确定性信息卡/图表能力；当前没有对应工具时直接说明，不能生成一张看似正确的假表格。"
-                : "事实页面和公告不能用 AI 图冒充。请使用 web.read / material.screenshot 获取真实来源画面。",
-          };
-        }
-        if (!effPrompt) {
-          return {
-            kind: "material.generate",
-            taskId: null,
-            kindOf: effKind,
-            status: "queued",
-            error: "没有收到生成描述 —— 请说清楚要生成什么画面。",
-          };
-        }
+      execute: async (input,callOptions): Promise<MaterialGenerateToolResult> => {
+        const kind=deps.forcedMaterialKind ?? (input.kind==="video"?"video":"image");
+        const signal=(callOptions as {abortSignal?:AbortSignal}|undefined)?.abortSignal;
         try {
-          let groundedPrompt = effPrompt;
-          if (boundProjectId && deps.getArtifactText) {
-            const raw = await deps.getArtifactText({
-              projectId: boundProjectId,
-              artifactType: "output_script",
-            });
-            if (raw?.sections?.length) {
-              const ref = typeof sectionRef === "string" ? sectionRef.trim() : "";
-              const matches = raw.sections.filter(
-                (section) => section.sectionRef === ref,
-              );
-              if (matches.length !== 1) {
-                throw new Error(
-                  "项目内容配图必须绑定执行当下当前稿中的唯一段落。请先重新读取 context.artifact.text，再使用它返回的 sectionRef 重试。",
-                );
-              }
-              const target = matches[0]!;
-              groundedPrompt = [
-                "【当前确认稿绑定】",
-                `版本:${raw.currentVersionId ?? "unknown"}`,
-                `内容指纹:${raw.contentHash ?? "unknown"}`,
-                `目标段落:${target.heading || `第 ${target.index + 1} 段`}`,
-                `段落原文:${target.body}`,
-                `画面职责:${visualPurpose ?? "未说明"}`,
-                "【视觉方案】",
-                effPrompt,
-              ].join("\n");
-            }
-          }
-          const { taskId } = await deps.dispatchGenerateAsset({
-            kind: effKind,
-            prompt: groundedPrompt,
-            style: typeof style === "string" && style.trim() ? style.trim() : undefined,
+          const prepared=await prepareMaterialGeneration(input,{
+            boundProjectId,forcedMaterialKind:deps.forcedMaterialKind,getArtifactText:deps.getArtifactText,signal,
           });
-          return {
-            kind: "material.generate",
-            taskId,
-            kindOf: effKind,
-            status: "queued",
-            error: null,
-          };
-        } catch (err) {
-          return {
-            kind: "material.generate",
-            taskId: null,
-            kindOf: effKind,
-            status: "queued",
-            error: err instanceof Error ? err.message : String(err),
-          };
+          signal?.throwIfAborted();
+          const {taskId}=await deps.dispatchGenerateAsset(prepared);
+          return {kind:"material.generate",taskId,kindOf:kind,status:"queued",error:null};
+        } catch(err) {
+          return {kind:"material.generate",taskId:null,kindOf:kind,status:"queued",error:err instanceof Error?err.message:String(err)};
         }
       },
     }, deps.humanizeError),

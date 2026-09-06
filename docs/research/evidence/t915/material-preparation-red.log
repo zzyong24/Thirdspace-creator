@@ -1,0 +1,76 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/material-generation-preparation.test.ts > 素材生成读取当前稿期间取消，不再提交生成任务
+[chat-tool] name=material.generate ok durationMs=0 taskId=unexpected
+
+stdout | src/modules/ai-runtime/material-generation-preparation.test.ts > 已取消的素材请求不读取当前稿或派发任务
+[chat-tool] name=material.generate ok durationMs=0 taskId=unexpected
+
+ ❯ src/modules/ai-runtime/material-generation-preparation.test.ts (2 tests | 2 failed) 6ms
+   × 素材生成读取当前稿期间取消，不再提交生成任务 5ms
+   × 已取消的素材请求不读取当前稿或派发任务 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/material-generation-preparation.test.ts > 素材生成读取当前稿期间取消，不再提交生成任务
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "kind": "image",
+        "prompt": "单个主体",
+        "style": undefined,
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/ai-runtime/material-generation-preparation.test.ts:10:36
+      8|  const tool=buildChatTools(["material.generate"],{boundProjectId:"proj…
+      9|  const result=await getChatToolNativeExecutor(tool)!({kind:"image",pro…
+     10|  expect(dispatchGenerateAsset).not.toHaveBeenCalled();expect(result).t…
+       |                                    ^
+     11| });
+     12| it("已取消的素材请求不读取当前稿或派发任务",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai-runtime/material-generation-preparation.test.ts > 已取消的素材请求不读取当前稿或派发任务
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "artifactType": "output_script",
+        "projectId": "project",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/ai-runtime/material-generation-preparation.test.ts:16:30
+     14|  const tool=buildChatTools(["material.generate"],{boundProjectId:"proj…
+     15|  await getChatToolNativeExecutor(tool)!({kind:"image",prompt:"单个主体"},{…
+     16|  expect(getArtifactText).not.toHaveBeenCalled();expect(dispatchGenerat…
+       |                              ^
+     17| });
+     18|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  11:17:16
+   Duration  386ms (transform 136ms, setup 0ms, import 244ms, tests 6ms, environment 0ms)
+
