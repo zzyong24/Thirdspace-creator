@@ -25,7 +25,7 @@ flowchart TD
 ## 验证与边界
 
 - [资源红测](chat-web-read-resources-red.log)：首次缺新模块导致加载失败，没有运行行为测试。
-- [恢复红测](chat-web-read-recovery-red.log)：修正测试输入的 apiFormat 后，2 项实际行为用例失败，证明原 Worker 忽略网页恢复列表并提前进入模型；实现后通过。测试在模型创建处主动终止，仅验证恢复顺序与身份回执，不伪装真实模型恢复验收。
+- [恢复红测](chat-web-read-resources-recovery-red.log)：修正测试输入的 apiFormat 后，2 项实际行为用例失败，证明原 Worker 忽略网页恢复列表并提前进入模型；实现后通过。测试在模型创建处主动终止，仅验证恢复顺序与身份回执，不伪装真实模型恢复验收。
 - [协议红测](chat-web-read-resources-protocol-red.log)：1 项实际失败，确认无效配置响应原本被当普通网页失败；新增私有响应解析包装，将配置/会话协议异常归为固定未知错误后，[最终整组回归](chat-web-read-resources-final-green.log) 20 项 / 5 文件通过（包括真实 Chromium）。
 - [Worker 首轮回归](chat-web-read-resources-green.log)：17 项 / 4 文件通过，覆盖资源、网页适配器、启动恢复及原研究资源。资源用例使用明确执行器/搜索替身。
 - [真实 Chromium](chat-web-read-resources-browser.log)：2 项通过。测试仅允许本地 HTTP 站点，执行实际读取和取消；正常读取交回完整正文并保存会话；取消不上传观察、不保存会话；关闭后实际浏览器进程 PID 已退出。宿主端口为测试替身，不是端到端数据库验收。

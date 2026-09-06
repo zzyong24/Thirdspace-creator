@@ -1,0 +1,61 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-recovery.test.ts (2 tests | 2 failed) 13ms
+   × 恢复先接管全部网页父调用并完成原观察，再进入模型边界 9ms (retry x2)
+   × 网页恢复回执身份不符时拒绝新模型与后续提交 3ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 恢复先接管全部网页父调用并完成原观察，再进入模型边界
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 恢复先接管全部网页父调用并完成原观察，再进入模型边界
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 恢复先接管全部网页父调用并完成原观察，再进入模型边界
+AssertionError: expected [] to deeply equal [ 'restoreChatWebRead:one', …(3) ]
+
+- Expected
++ Received
+
+- [
+-   "restoreChatWebRead:one",
+-   "restoreChatWebRead:two",
+-   "completeChatWebRead:one",
+-   "completeChatWebRead:two",
+- ]
++ []
+
+ ❯ src/execution/chat-web-read-recovery.test.ts:19:16
+     17|  });
+     18|  await expect(runChatInWorker(input,spec,new AbortController().signal,…
+     19|  expect(order).toEqual(["restoreChatWebRead:one","restoreChatWebRead:t…
+       |                ^
+     20| });
+     21| it("网页恢复回执身份不符时拒绝新模型与后续提交",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 网页恢复回执身份不符时拒绝新模型与后续提交
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 网页恢复回执身份不符时拒绝新模型与后续提交
+ FAIL  src/execution/chat-web-read-recovery.test.ts > 网页恢复回执身份不符时拒绝新模型与后续提交
+AssertionError: expected Error: MODEL_BOUNDARY_TEST_STOP to match object { outcome: 'unknown_result', …(1) }
+
+- Expected
++ Received
+
+- {
+-   "errorCode": "CHAT_WEB_READ_RESTORE_RECEIPT_UNKNOWN",
+-   "outcome": "unknown_result",
++ Error {
++   "message": "MODEL_BOUNDARY_TEST_STOP",
+  }
+
+ ❯ src/execution/chat-web-read-recovery.test.ts:24:106
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  10:18:19
+   Duration  582ms (transform 245ms, setup 0ms, import 424ms, tests 13ms, environment 0ms)
+
