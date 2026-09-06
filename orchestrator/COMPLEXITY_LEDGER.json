@@ -218,14 +218,14 @@
       "files": [
         "backend/src/modules/browser-sessions/browser-sessions.service.ts"
       ],
-      "file_sha256": "b0128b44cca699ef7c1337a036832a19d484aa8e480583adaa72e0a74e709298",
+      "file_sha256": "2ca0f35806d79af4709846d8011021849560fd38d913c50e70f40264859faf2d",
       "categories": [
         "credential_store"
       ],
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权版本化会话与受控命名端口。e8b69147 将取消信号传入会话事务并分类网页提交回执，沿用原凭据属主与进程拓扑；独立复核及 61 项回归见 chat-web-read-ports.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "aef34aecefb6cd00572cc788bdb34aa8081c949241c02b06ad77d900fb8e433b",
+      "file_sha256": "beb9411a46688e963b1722cd61b3a350078434b70105092913106429691f7d0e",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权 Worker 浏览器执行、命名 IPC、能力声明和取消后结算。本次接入素材搜索并关闭执行资源，沿用原进程拓扑与数据库属主。独立只读审查已核对恢复标记、结果观察与资源关闭。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权版本化会话与受控命名端口。e8b69147 将取消信号传入会话事务并分类网页提交回执，沿用原凭据属主与进程拓扑；独立复核及 61 项回归见 chat-web-read-ports.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

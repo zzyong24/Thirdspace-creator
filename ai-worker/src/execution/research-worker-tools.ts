@@ -35,6 +35,7 @@ interface Dependencies {
 const sessionSchema = z.object({ domain: z.string().min(1), stateJson: z.string().nullable(), revision: z.string().nullable() });
 const readParams = z.object({ url: z.string().url(), snapshotId: z.string().optional() }).passthrough();
 const searchParams = z.object({ query: z.string().min(1), count: z.number().int().min(1).max(100).optional() });
+const browserSearchParams = searchParams.extend({baseUrl:z.string().url().nullable()}).strict();
 const transient = (): AgenticToolOutcome => ({ status: "error", summary: "网页操作失败，可调整查询或换来源后重试", evidence: [], error: { code: "transient", retryable: true, recovery: "修改查询或使用其他公开来源" }, continuation: null, sideEffect: "none" });
 
 /** 仅处理固定研究工具；浏览器属于当前Worker，登录态只经私有命名端口传递。 */
@@ -249,6 +250,16 @@ export function createResearchWorkerTools(deps: Dependencies) {
     executionTail=pending.catch(()=>{});return pending;
   }
   return {close,browserProcessIds:()=>[...pids],
+    searchBrowser(input:z.input<typeof browserSearchParams>,scope:{callId:string;signal:AbortSignal}) {
+      // 单个引擎的原始事实；备用顺序由调用方编排，不进入研究工具结算。
+      const params=browserSearchParams.parse(input),owner={...scope};
+      return enqueue(async()=>{
+        const combined=AbortSignal.any([signal,owner.signal]);combined.throwIfAborted();
+        const adapter=createBrowserScrapeAdapter({openContext:()=>openContext(owner.callId,combined),saveScreenshot:async()=>{}});
+        const results=await adapter.search({provider:"browser",baseUrl:params.baseUrl,model:"",token:""},params.query,{count:params.count??10,timeoutMs:15000,signal:combined});
+        combined.throwIfAborted();return results;
+      });
+    },
     readDocument(url:string,scope:{callId:string;signal:AbortSignal}) {
       // 排队前固定输入与执行身份，和搜索/交互共用串行资源及取消通道。
       const target=readParams.parse({url}).url, owner={...scope};

@@ -1,0 +1,53 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.test.ts (18 tests | 3 failed) 11517ms
+   × 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话 2ms (retry x2)
+   × 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源 1ms (retry x2)
+   × 原始搜索与读取串行排队，排队后修改输入和 signal 不改变取消归属 154ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索只访问指定引擎，保留结果且不触发宿主结算或会话
+TypeError: f.tools.searchBrowser is not a function
+ ❯ src/execution/research-worker-tools.test.ts:158:33
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索空结果不私自切引擎，导航错误保留供上层选择备用来源
+TypeError: f.tools.searchBrowser is not a function
+ ❯ src/execution/research-worker-tools.test.ts:169:26
+    167|   f.ctx.newPage.mockResolvedValue({goto,url:()=>"https://www.bing.com/…
+    168|   try {
+    169|     expect(await f.tools.searchBrowser({baseUrl:null,query:"test"},{ca…
+       |                          ^
+    170|     goto.mockRejectedValueOnce(new Error("导航断线"));
+    171|     await expect(f.tools.searchBrowser({baseUrl:null,query:"test"},{ca…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索与读取串行排队，排队后修改输入和 signal 不改变取消归属
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索与读取串行排队，排队后修改输入和 signal 不改变取消归属
+ FAIL  src/execution/research-worker-tools.test.ts > 原始搜索与读取串行排队，排队后修改输入和 signal 不改变取消归属
+TypeError: f.tools.searchBrowser is not a function
+ ❯ src/execution/research-worker-tools.test.ts:183:27
+    181|     const first=f.tools.readDocument("https://example.com",{callId:"fi…
+    182|     await vi.waitFor(()=>expect(f.read).toHaveBeenCalledTimes(1));
+    183|     const pending=f.tools.searchBrowser({baseUrl:null,query:"test"},sc…
+       |                           ^
+    184|     scope.signal=f.controller.signal;controller.abort();release();awai…
+    185|     expect(f.browser.newContext).toHaveBeenCalledTimes(1);expect(f.ctx…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 15 passed (18)
+   Start at  09:14:07
+   Duration  12.23s (transform 170ms, setup 0ms, import 548ms, tests 11.52s, environment 0ms)
+

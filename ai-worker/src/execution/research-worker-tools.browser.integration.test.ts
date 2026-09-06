@@ -8,6 +8,11 @@ let http: ReturnType<typeof createServer>,
   clicks = 0;
 beforeAll(async () => {
   http = createServer((req, res) => {
+    if (req.url?.startsWith("/search?")) {
+      res.writeHead(200, {"content-type":"text/html; charset=utf-8"});
+      res.end('<li class="b_algo"><h2><a href="https://example.com/source">备用来源</a></h2><p>本地搜索页证据</p></li>');
+      return;
+    }
     if (req.url === "/clicked") {
       clicks++;
       res.end("ok");
@@ -114,6 +119,14 @@ async function fixture(
   };
 }
 const observation = (result: any) => result.data.observation;
+it("单引擎搜索实际导航本地搜索页，关闭 context 并复用 Worker 浏览器",async()=>{
+  const f=await fixture();
+  try {
+    for(let i=0;i<2;i++)expect(await f.tools.searchBrowser({baseUrl:`${url}search?q={q}`,query:"备用来源",count:1},{callId:`search-${i}`,signal:new AbortController().signal})).toMatchObject([{title:"备用来源",url:"https://example.com/source",snippet:"本地搜索页证据"}]);
+    expect(f.launchServer).toHaveBeenCalledTimes(1);expect(f.browser!.contexts()).toHaveLength(0);expect(f.call).not.toHaveBeenCalled();
+  }finally{await f.tools.close();}
+  expect(f.browser!.isConnected()).toBe(false);
+},20000);
 it("正式工厂逐次prepare后observe→fill→click→extract保留页面且关闭真实server", async () => {
   clicks = 0;
   const f = await fixture();
