@@ -1,12 +1,12 @@
 import type {BrowserSessionsService} from "../browser-sessions";
 import {findBrowserSessionState,validateBrowserStorageState} from "./execution-browser-session.service";
 import {assertSafeWebDomain,webDomainFromUrl} from "@creatoros/ai-worker/browser/web-domain";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, executionCalls, type Db } from "@creatoros/backend";
 import { chatWebReadFailureSchema, chatWebReadSessionSaveSchema, chatWebReadCallSchema, chatWebReadRecordSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
-import { createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
+import { createWebDocumentCacheService, createPendingDocumentService, type AssetsService, type ObjectStorageForCtx } from "../assets";
 import { createChatHostContextReader } from "../ai/chat-host-context.service";
 import { chatWebReadDigest as digest, readChatWebReadEvidence } from "./chat-web-read-evidence";
 import { normalizeWebReadUrl } from "../ai-runtime/chat-context";
@@ -32,6 +32,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
 }) {
   const now = deps.now ?? (() => new Date().toISOString());
   const binding = createAgenticToolBinding(deps.tools);
+  const cache = createWebDocumentCacheService(db,{objectStorageForCtx:deps.objectStorageForCtx});
   type Lease = Parameters<Parameters<ReturnType<typeof createExecutionLeaseService>["withLease"]>[2]>[0];
   type State = Lease & { parent: Call; calls: Call[]; bound: ReturnType<typeof binding.forCall>; url: string | null };
   async function access<T>(ref: ExecutionRef, callId: string, mode: "admission" | "settlement", action: (state: State) => Promise<T>, store = db): Promise<T> {
@@ -61,7 +62,50 @@ export function createExecutionChatWebReadService(db: Db, deps: {
     const observation = readChatWebReadEvidence(row, { taskId: state.task.id, callId: state.parent.id, inputDigest: state.bound.inputDigest, ...(state.url === null ? {} : { url: state.url }) });
     return { row, observation };
   }
+  async function projectSuccess(input:unknown,url:string,read:Extract<Awaited<ReturnType<ChatToolDeps["readWeb"]>>,{needLogin:false}>,row:{id:string;contentHash:string;title:string},summary:string){
+    const prototype=buildChatTools(["web.read"],{readWeb:async()=>read} as unknown as ChatToolDeps)["web.read"]!;
+    const data=z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({...input as Record<string,unknown>,url},{}))));
+    const projected=z.object({text:z.string(),window:z.object({offset:z.number(),length:z.number(),total:z.number()}),hasMore:z.boolean()}).parse(data);
+    return agenticToolOutcomeSchema.parse({status:"ok",summary,evidence:[{entityId:row.id,version:row.contentHash,sourceUrl:url,title:row.title,text:projected.text}],data,error:null,continuation:projected.hasMore?{evidenceRef:row.id,nextOffset:projected.window.offset+projected.window.length,totalChars:projected.window.total}:null,sideEffect:"committed"});
+  }
   return {
+    async cache(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
+      const {callId}=chatWebReadCallSchema.parse(raw);
+      const replay=()=>access(ref,callId,"settlement",async state=>state.parent.status==="settled"?{status:"hit" as const,output:receipt(state.parent)}:null);
+      const previous=await replay();if(previous)return previous;
+      signal?.throwIfAborted();
+      try {
+        const before=await access(ref,callId,"admission",async state=>{
+          signal?.throwIfAborted();started(state,ref);
+          if(await stored(state))return null;
+          return {context:state.context,url:state.url!,inputDigest:state.bound.inputDigest};
+        });
+        if(!before)return {status:"miss" as const};
+        const prepared=await cache.prepare(before.context,before.url,signal);
+        return await access(ref,callId,"admission",async state=>{
+          signal?.throwIfAborted();
+          if(state.parent.status==="settled")return {status:"hit" as const,output:receipt(state.parent)};
+          started(state,ref);
+          if(state.url!==before.url || state.bound.inputDigest!==before.inputDigest)throw new ConflictError("缓存准备期间网页调用改变");
+          if(await stored(state))return {status:"miss" as const};
+          if(!prepared)return {status:"miss" as const};
+          const bytes=Buffer.byteLength(prepared.fullText,"utf8");
+          if(bytes>2*1024*1024)throw new ConflictError("单页缓存正文超过 2 MiB 限制");
+          const rows=await state.tx.select({bytes:executionEvidence.byteLength}).from(executionEvidence).where(eq(executionEvidence.executionTaskId,state.task.id));
+          if(bytes+rows.reduce((total,row)=>total+row.bytes,0)>8*1024*1024)throw new ConflictError("任务网页正文超过 8 MiB 限制");
+          const cached=await cache.confirm(state.context,prepared,state.tx,signal);
+          const title=cached.name.replace(/^正文·/,""),id=`evidence-${randomUUID()}`;
+          // SEMANTIC_BOUNDARY_ALLOW: 哈希绑定文件、来源及已读正文，不判断内容价值或选择来源。
+          const contentHash=createHash("sha256").update(JSON.stringify({url:state.url,assetId:cached.assetId,fileId:cached.fileId,text:cached.fullText})).digest("hex");
+          await state.tx.insert(executionEvidence).values({id,executionTaskId:state.task.id,originCallId:callId,requestedUrl:state.url!,sourceUrl:state.url!,title,fullText:cached.fullText,contentHash,byteLength:bytes,createdAt:now(),metadata:{kind:"chat.web.read.cache",inputDigest:state.bound.inputDigest,assetId:cached.assetId,fileId:cached.fileId}});
+          const output=await projectSuccess(state.bound.input,state.url!,{needLogin:false,...cached,sourceUrl:state.url!,title,excerpt:cached.fullText.slice(0,280),extractor:"cached",turnCount:null,extraction:`复用已存正文素材(未重新抓取;全文 ${cached.fullText.length} 字,按窗读取)`,fromCache:true},{id,contentHash,title},"已复用已有网页正文");
+          signal?.throwIfAborted();
+          const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:state.bound.toolCallId,toolName:state.bound.toolName,output}));
+          const settled=await createExecutionCallLedgerService(state.tx as unknown as Db,deps).settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText});
+          signal?.throwIfAborted();return {status:"hit" as const,output:receipt(settled)};
+        });
+      }catch(error){const settled=await replay();if(settled)return settled;throw error;}
+    },
     async fail(ref: ExecutionRef, raw: unknown) {
       const {callId,failure}=chatWebReadFailureSchema.parse(raw);
       return access(ref,callId,"settlement",async(state)=>{
@@ -127,6 +171,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       return access(ref, callId, "admission", async (state) => {
         signal?.throwIfAborted();
         if (!["started", "settled"].includes(state.parent.status)) throw new ConflictError("网页父调用不可读取");
+        if(state.parent.status==="settled")return {url:state.url!,observation:null,evidenceRef:null,output:receipt(state.parent)};
         const saved = await stored(state);
         if (state.parent.status !== "settled" && state.parent.startedAttempt !== ref.attempt && !saved) throw new ConflictError("旧执行没有可恢复网页事实");
         return { url: state.url!, observation: saved?.observation ?? null, evidenceRef: saved?.row.id ?? null };
@@ -184,10 +229,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       } else {
         const previewUrl = await deps.assets.getDownloadUrl(state.context, saved.assetId).then((result) => result.url).catch(() => null);
         const read = state.observation;
-        const prototype = buildChatTools(["web.read"], { readWeb: async () => ({ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false }) } as unknown as ChatToolDeps)["web.read"]!;
-        const data = z.json().parse(JSON.parse(JSON.stringify(await getChatToolNativeExecutor(prototype)!({ ...(state.bound.input as Record<string, unknown>), url: state.row.requestedUrl }, {}))));
-        const projected = z.object({ text: z.string(), window: z.object({ offset: z.number(), length: z.number(), total: z.number() }), hasMore: z.boolean() }).parse(data);
-        output = agenticToolOutcomeSchema.parse({ status: "ok", summary: "已读取网页正文，素材待用户确认", evidence: [{ entityId: state.row.id, version: state.row.contentHash, sourceUrl: state.row.requestedUrl, title: state.row.title, text: projected.text }], data, error: null, continuation: projected.hasMore ? { evidenceRef: state.row.id, nextOffset: projected.window.offset + projected.window.length, totalChars: projected.window.total } : null, sideEffect: "committed" });
+        output = await projectSuccess(state.bound.input,state.row.requestedUrl,{ needLogin: false, assetId: saved.assetId, name: current.name, previewUrl, sourceUrl: state.row.requestedUrl, title: read.title, excerpt: read.text.slice(0, 280), extractor: read.extractor, turnCount: read.turnCount, extraction: read.turnCount === null ? null : read.extractPath === "ssr" ? `抽到 ${read.turnCount} 轮对话(SSR 全量,长对话不截断)` : `抽到 ${read.turnCount} 轮对话(DOM 渲染抽取,超长对话可能不全)`, fullText: read.text, fromCache: false },state.row,"已读取网页正文，素材待用户确认");
       }
       const resultText = JSON.stringify(workerToolResultReceiptSchema.parse({ schemaVersion: 1, kind: "tool", toolCallId: state.bound.toolCallId, toolName: state.bound.toolName, output }));
       return await access(ref, callId, "settlement", async (latest) => {

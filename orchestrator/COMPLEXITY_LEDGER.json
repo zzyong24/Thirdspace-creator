@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "fa4d2dceb5f666979916fa16b0d2b817f4aff6cd6ced68b9d4396c49cb0e7c7b",
+      "file_sha256": "38de41985b4659b80c8e3d4ce6b690f0c835335bc0d73ff6cba87ef54f30cd02",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权受控网页执行端口。本批将明确网页失败归为已有调用结算，仅写原父调用回执，不访问网页或创建素材；独立复核与集成回归见 chat-web-read-failure.md。",
+      "reason": "DEC-RUNTIME-055 / SPEC R-02 已授权受控网页执行端口。本批缓存端口允许先重放既有回执，新的缓存确认仍在当前admission租约和取消信号下执行；未新增进程或凭据属主。独立复核和回归见 chat-web-read-cache.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

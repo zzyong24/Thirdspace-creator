@@ -1,0 +1,60 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-web-read-commit.test.ts (32 tests | 4 failed) 22779ms
+   × 缓存命中原子修复文件和父回执，无新增素材或浏览器会话 652ms
+   × 缓存结算回滚同时撤销证据和文件修复，再试只提交一次 664ms
+   × 缓存回执已持久后素材变化或取消只重放，不读字节或重建素材 645ms
+   × 缓存未命中不结算父调用；有新观察不转用另一份缓存 649ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 缓存命中原子修复文件和父回执，无新增素材或浏览器会话
+TypeError: f.service.cache is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:334:31
+    332|  const f=await fixture(),asset=await seedCache(f);
+    333|  f.service.readSession=async()=>{throw new Error("不能读取浏览器会话");};
+    334|  const result=await f.service.cache(f.ref,{callId:f.parent.callId});
+       |                               ^
+    335|  expect(result).toMatchObject({status:"hit",output:{status:"ok",data:{…
+    336|  expect(await db.select().from(assets)).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 缓存结算回滚同时撤销证据和文件修复，再试只提交一次
+TypeError: f.service.cache is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:345:25
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 缓存回执已持久后素材变化或取消只重放，不读字节或重建素材
+TypeError: f.service.cache is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:352:31
+    350| it("缓存回执已持久后素材变化或取消只重放，不读字节或重建素材",async()=>{
+    351|  const f=await fixture(),asset=await seedCache(f),request={callId:f.pa…
+    352|  const result=await f.service.cache(f.ref,request);
+       |                               ^
+    353|  await db.update(assets).set({status:"deleted"}).where(eq(assets.id,as…
+    354|  f.storage.getObject=async()=>{throw new Error("不应再读字节");};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/integration/chat-web-read-commit.test.ts > 缓存未命中不结算父调用；有新观察不转用另一份缓存
+TypeError: f.service.cache is not a function
+ ❯ src/integration/chat-web-read-commit.test.ts:359:49
+    357| });
+    358| it("缓存未命中不结算父调用；有新观察不转用另一份缓存",async()=>{
+    359|  const f=await fixture();expect(await f.service.cache(f.ref,{callId:f.…
+       |                                                 ^
+    360|  await f.service.observe(f.ref,{callId:f.parent.callId,observation});a…
+    361|  expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toEqual…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 28 passed (32)
+   Start at  09:41:34
+   Duration  24.59s (transform 1.00s, setup 0ms, import 1.67s, tests 22.78s, environment 0ms)
+

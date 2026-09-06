@@ -48,7 +48,7 @@ async function fixture(toolCount = 1) {
   const parent = await toolPorts.reserve(ref, { modelCallId: model.id, toolCallId: "read" });
   await toolPorts.start(ref, { callId: parent.callId });
   const service=toolPorts.webRead!;
-  return { ctx, ref, tasks, service, parent, ledger, storage, toolPorts, model, sessions };
+  return { ctx, ref, tasks, service, parent, ledger, storage, toolPorts, model, sessions, assetsService };
 }
 
 it("冻结URL优先；观察不创建素材；complete创建真实pending并保留原窗口", async () => {
@@ -321,4 +321,62 @@ it("失败请求拒绝伪造成功字段、跨调用、旧 fence 与取消后损
   const payload=structuredClone(task!.payload) as any;payload.hostContext.chatContext.webReadUrl="https://forged.example";
   await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
   await expect(f.service.fail(f.ref,raw)).rejects.toThrow();
+});
+
+async function seedCache(f:Awaited<ReturnType<typeof fixture>>){
+ const asset=await f.assetsService.createGeneratedAsset(f.ctx,{assetType:"document",name:"正文·已有网页",bytes:new TextEncoder().encode(observation.text),mimeType:"text/plain",pending:true});
+ await f.assetsService.mergeAiAnnotation(f.ctx,asset.id,{sourceUrl:"https://example.com/bound"});
+ return asset;
+}
+it("缓存命中原子修复文件和父回执，无新增素材或浏览器会话",async()=>{
+ const f=await fixture(),asset=await seedCache(f);
+ f.service.readSession=async()=>{throw new Error("不能读取浏览器会话");};
+ const result=await f.service.cache(f.ref,{callId:f.parent.callId});
+ expect(result).toMatchObject({status:"hit",output:{status:"ok",data:{fromCache:true,asset:{id:asset.id,extractor:"cached"},window:{length:1000,total:observation.text.length}}}});
+ expect(await db.select().from(assets)).toHaveLength(1);
+ expect(await db.select().from(executionEvidence)).toMatchObject([{metadata:{kind:"chat.web.read.cache",assetId:asset.id}}]);
+ expect(await db.select().from(assetFiles)).toMatchObject([{extractedText:observation.text,extractStatus:"done"}]);
+ if(result.status!=="hit")throw new Error("预期缓存命中");
+ expect(await f.service.complete(f.ref,{callId:f.parent.callId})).toEqual(result.output);
+ expect(await f.service.prepare(f.ref,{callId:f.parent.callId})).toMatchObject({observation:null,output:result.output});
+});
+it("缓存结算回滚同时撤销证据和文件修复，再试只提交一次",async()=>{
+ const f=await fixture();await seedCache(f);
+ await db.execute(sql.raw("CREATE FUNCTION fail_cache_parent() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.kind = 'tool' AND NEW.status = 'settled' THEN RAISE EXCEPTION 'cache parent failed'; END IF; RETURN NEW; END; $$;"));
+ await db.execute(sql.raw("CREATE TRIGGER fail_cache_parent BEFORE UPDATE ON execution_calls FOR EACH ROW EXECUTE FUNCTION fail_cache_parent();"));
+ await expect(f.service.cache(f.ref,{callId:f.parent.callId})).rejects.toThrow();
+ expect(await db.select().from(executionEvidence)).toHaveLength(0);expect(await db.select().from(assetFiles)).toMatchObject([{extractedText:null}]);
+ await db.execute(sql.raw("DROP TRIGGER fail_cache_parent ON execution_calls;"));
+ expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toMatchObject({status:"hit"});expect(await db.select().from(assets)).toHaveLength(1);
+});
+it("缓存回执已持久后素材变化或取消只重放，不读字节或重建素材",async()=>{
+ const f=await fixture(),asset=await seedCache(f),request={callId:f.parent.callId};
+ const result=await f.service.cache(f.ref,request);
+ await db.update(assets).set({status:"deleted"}).where(eq(assets.id,asset.id));
+ f.storage.getObject=async()=>{throw new Error("不应再读字节");};
+ await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"cache-cancel"});
+ expect(await f.service.cache(f.ref,request)).toEqual(result);expect(await db.select().from(assets)).toMatchObject([{status:"deleted"}]);
+});
+it("缓存未命中不结算父调用；有新观察不转用另一份缓存",async()=>{
+ const f=await fixture();expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toEqual({status:"miss"});
+ await f.service.observe(f.ref,{callId:f.parent.callId,observation});await seedCache(f);
+ expect(await f.service.cache(f.ref,{callId:f.parent.callId})).toEqual({status:"miss"});
+ expect(await db.select().from(executionEvidence)).toMatchObject([{metadata:{kind:"chat.web.read"}}]);
+});
+
+it("超出单页预算的缓存不修复或新增素材，不结算成功",async()=>{
+ const f=await fixture();const asset=await f.assetsService.createGeneratedAsset(f.ctx,{assetType:"document",name:"超限",bytes:new TextEncoder().encode("x".repeat(2*1024*1024+1)),mimeType:"text/plain",pending:true});
+ await f.assetsService.mergeAiAnnotation(f.ctx,asset.id,{sourceUrl:"https://example.com/bound"});
+ await expect(f.service.cache(f.ref,{callId:f.parent.callId})).rejects.toThrow("2 MiB");
+ expect(await db.select().from(executionEvidence)).toHaveLength(0);expect(await db.select().from(assetFiles)).toMatchObject([{extractedText:null}]);
+});
+it("缓存父回执写入等待后停止，正文修复与缓存证据一并回滚",async()=>{
+ const f=await fixture();await seedCache(f);const controller=new AbortController();let matched=false;
+ const transaction=client.transaction.bind(client);
+ client.transaction=((callback:any)=>transaction(async(tx:any)=>{
+  const query=tx.query.bind(tx);tx.query=async(text:string,...args:any[])=>{const result=await query(text,...args);if(!matched && /update "execution_calls"/i.test(text)){matched=true;controller.abort();}return result;};return callback(tx);
+ })) as typeof client.transaction;
+ try{await expect(f.service.cache(f.ref,{callId:f.parent.callId},controller.signal)).rejects.toThrow();expect(matched).toBe(true);}finally{client.transaction=transaction;}
+ expect(await db.select().from(executionEvidence)).toHaveLength(0);expect(await db.select().from(assetFiles)).toMatchObject([{extractedText:null}]);
+ const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));expect(parent!.status).toBe("started");
 });
