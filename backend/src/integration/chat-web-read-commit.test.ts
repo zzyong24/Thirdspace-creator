@@ -1,4 +1,7 @@
 import {createBrowserSessionsService} from "../modules/browser-sessions";
+import {runDurableAgenticTool} from "../../../ai-worker/src/execution/durable-agentic-tool";
+import {runChatWebReadInWorker} from "../../../ai-worker/src/execution/chat-web-read-worker";
+import type {WorkerPort} from "@creatoros/contract/execution-worker";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -20,11 +23,11 @@ import { createExecutionChatToolPorts } from "../modules/execution/execution-cha
 let client:Awaited<ReturnType<typeof createDb>>["client"];
 let db: Db, close: () => Promise<void>, root: string, sequence = 0;
 const now = () => new Date().toISOString(), budget = { maxCalls: 30, maxTokens: 100000, deadlineMs: 60000 };
-const observation = { text: "完整网页证据".repeat(4000), title: "观察标题", finalUrl: "https://example.com/redirect", extractor: "chatgpt-share", extractPath: "ssr", turnCount: 40 };
+const observation = { text: "完整网页证据".repeat(4000), title: "观察标题", finalUrl: "https://example.com/redirect", extractor: "chatgpt-share", extractPath: "ssr", turnCount: 40 } as const;
 beforeEach(async () => { const opened = await createDb(); db = opened.db; client=opened.client; close = () => opened.client.close(); root = await mkdtemp(join(tmpdir(), "t915-chat-read-")); });
 afterEach(async () => { await close(); await rm(root, { recursive: true, force: true }); });
 
-async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/contract").RequestContext)=>Promise<import("../modules/ai-runtime/search/resolve").SearchSpec|null>) {
+async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/contract").RequestContext)=>Promise<import("../modules/ai-runtime/search/resolve").SearchSpec|null>, startParent = true) {
   const ctx = { userId: "read-user", accountId: `account-${++sequence}`, requestId: "test", source: "user" as const };
   const ids = { now, nextId: (prefix: string) => `${prefix}-${++sequence}` };
   const repo = createAiRepository(db, { ...ctx, ...ids });
@@ -46,7 +49,7 @@ async function fixture(toolCount = 1, resolveSearch?: (ctx:import("@creatoros/co
   await ledger.start(ref, model.id);
   await ledger.settle(ref, model.id, { status: "settled", usage: {}, providerResult: { content: Array.from({ length: toolCount }, (_, i) => ({ type: "tool-call" as const, toolCallId: i === 0 ? "read" : `read-${i}`, toolName: "web_read", input: '{"url":"https://other.example/model","offset":0,"maxChars":1000}' })), finishReason: { unified: "tool-calls" }, usage: { inputTokens: { total: 2 }, outputTokens: { total: 3 } }, warnings: [] } });
   const parent = await toolPorts.reserve(ref, { modelCallId: model.id, toolCallId: "read" });
-  await toolPorts.start(ref, { callId: parent.callId });
+  if(startParent)await toolPorts.start(ref, { callId: parent.callId });
   const service=toolPorts.webRead!;
   return { ctx, ref, tasks, service, parent, ledger, storage, toolPorts, model, sessions, assetsService };
 }
@@ -328,6 +331,47 @@ async function seedCache(f:Awaited<ReturnType<typeof fixture>>){
  await f.assetsService.mergeAiAnnotation(f.ctx,asset.id,{sourceUrl:"https://example.com/bound"});
  return asset;
 }
+it.each(["observe","cache"])("真实 %s 提交后 ACK 丢失，Worker 回读原事实且只保存一份素材",async point=>{
+ const f=await fixture(1,undefined,false);if(point==="cache")await seedCache(f);
+ let reads=0,byteReads=0,observes=0,caches=0,prepares=0;
+ const get=f.storage.getObject.bind(f.storage);f.storage.getObject=async(...args)=>{byteReads++;return get(...args);};
+ const signal=new AbortController().signal;
+ const call=async(port:WorkerPort,raw:unknown)=>{
+  if(port==="prepareChatWebRead"){prepares++;return f.service.prepare(f.ref,raw,signal);}
+  if(port==="readChatWebReadCache"){caches++;const result=await f.service.cache(f.ref,raw,signal);if(point==="cache")throw new Error("已提交缓存但 ACK 丢失");return result;}
+  if(port==="observeChatWebRead"){observes++;await f.service.observe(f.ref,raw,signal);throw new Error("已提交观察但 ACK 丢失");}
+  if(port==="completeChatWebRead")return f.service.complete(f.ref,raw,signal);
+  throw new Error("不应重新执行或结算普通失败");
+ };
+ const result=await runDurableAgenticTool({modelCallId:f.model.id,toolCallId:"read"},{signal,call:async(port,raw)=>{
+  if(port==="reserveAgenticTool")return f.toolPorts.reserve(f.ref,raw);
+  if(port==="startAgenticTool")return f.toolPorts.start(f.ref,raw);
+  if(port==="settleAgenticTool")return f.toolPorts.settle(f.ref,raw);
+  throw new Error("非预期的持久工具端口");
+ },execute:()=>runChatWebReadInWorker(f.parent.callId,signal,{call,readDocument:async()=>{reads++;return observation;},searchers:async()=>[],hasSession:async()=>false})});
+ expect(result.status).toBe("ok");expect(prepares).toBe(2);expect(caches).toBe(1);expect(reads).toBe(point==="observe"?1:0);expect(observes).toBe(point==="observe"?1:0);
+ if(point==="cache")expect(byteReads).toBe(1);
+ expect(await db.select().from(assets)).toHaveLength(1);expect(await db.select().from(assetFiles)).toHaveLength(1);expect(await db.select().from(executionEvidence)).toHaveLength(1);
+ expect(await f.service.prepare(f.ref,{callId:f.parent.callId})).toMatchObject({output:result});
+ const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.parent.callId));expect(parent?.status).toBe("settled");
+});
+it.each(["cancel","fence"])("观察 ACK 丢失后 %s 使回读失效，禁止继续创建素材",async point=>{
+ const f=await fixture(),signal=new AbortController().signal;let completions=0,reads=0;
+ const call=async(port:WorkerPort,raw:unknown)=>{
+  if(port==="prepareChatWebRead")return f.service.prepare(f.ref,raw,signal);
+  if(port==="readChatWebReadCache")return f.service.cache(f.ref,raw,signal);
+  if(port==="observeChatWebRead"){
+   await f.service.observe(f.ref,raw,signal);
+   if(point==="cancel")await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:"cancel",idempotencyKey:"ack-cancel"});
+   else await db.update(executionTasks).set({fenceToken:"new-fence"}).where(eq(executionTasks.id,f.ref.executionTaskId));
+   throw new Error("ACK lost");
+  }
+  if(port==="completeChatWebRead")completions++;
+  throw new Error("禁止继续动作");
+ };
+ await expect(runChatWebReadInWorker(f.parent.callId,signal,{call,readDocument:async()=>{reads++;return observation;},searchers:async()=>[],hasSession:async()=>false})).rejects.toMatchObject({outcome:"unknown_result"});
+ expect(reads).toBe(1);expect(completions).toBe(0);expect(await db.select().from(assets)).toHaveLength(0);expect(await db.select().from(executionEvidence)).toHaveLength(1);
+});
 it("缓存命中原子修复文件和父回执，无新增素材或浏览器会话",async()=>{
  const f=await fixture(),asset=await seedCache(f);
  f.service.readSession=async()=>{throw new Error("不能读取浏览器会话");};

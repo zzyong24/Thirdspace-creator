@@ -1,0 +1,89 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-worker.test.ts (17 tests | 8 failed | 7 skipped) 17ms
+   × observe ACK 丢失后只回读原调用事实，不重复网页或缓存动作 3ms (retry x2)
+   × cache ACK 丢失后只回读原调用事实，不重复网页或缓存动作 1ms (retry x2)
+   × ACK 对账 absent 时不采信或重放 3ms (retry x2)
+   × ACK 对账 changed 时不采信或重放 1ms (retry x2)
+   × ACK 对账 url 时不采信或重放 1ms (retry x2)
+   × ACK 对账 missing-ref 时不采信或重放 1ms (retry x2)
+   × ACK 对账 read-lost 时不采信或重放 1ms (retry x2)
+   × ACK 对账 cache-observation 时不采信或重放 1ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-worker.test.ts > observe ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+ FAIL  src/execution/chat-web-read-worker.test.ts > observe ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+ FAIL  src/execution/chat-web-read-worker.test.ts > observe ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+Error: CHAT_WEB_READ_RECEIPT_UNKNOWN
+ ❯ host src/execution/chat-web-read-worker.ts:20:101
+     18| export async function runChatWebReadInWorker(callId:string,signal:Abor…
+     19|  const host=async(port:WorkerPort,input:unknown,requestSignal?:AbortSi…
+     20|   try{return await deps.call(port,input,requestSignal);}catch{requestS…
+       |                                                                                                     ^
+     21|  };
+     22|  const settle=async(port:"completeChatWebRead"|"failChatWebRead",input…
+ ❯ runChatWebReadInWorker src/execution/chat-web-read-worker.ts:53:2
+ ❯ src/execution/chat-web-read-worker.test.ts:70:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/24]⎯
+
+ FAIL  src/execution/chat-web-read-worker.test.ts > cache ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+ FAIL  src/execution/chat-web-read-worker.test.ts > cache ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+ FAIL  src/execution/chat-web-read-worker.test.ts > cache ACK 丢失后只回读原调用事实，不重复网页或缓存动作
+Error: CHAT_WEB_READ_RECEIPT_UNKNOWN
+ ❯ host src/execution/chat-web-read-worker.ts:20:101
+     18| export async function runChatWebReadInWorker(callId:string,signal:Abor…
+     19|  const host=async(port:WorkerPort,input:unknown,requestSignal?:AbortSi…
+     20|   try{return await deps.call(port,input,requestSignal);}catch{requestS…
+       |                                                                                                     ^
+     21|  };
+     22|  const settle=async(port:"completeChatWebRead"|"failChatWebRead",input…
+ ❯ runChatWebReadInWorker src/execution/chat-web-read-worker.ts:34:33
+ ❯ src/execution/chat-web-read-worker.test.ts:70:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/24]⎯
+
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 absent 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 absent 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 absent 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 changed 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 changed 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 changed 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 url 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 url 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 url 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 missing-ref 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 missing-ref 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 missing-ref 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 read-lost 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 read-lost 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 read-lost 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 cache-observation 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 cache-observation 时不采信或重放
+ FAIL  src/execution/chat-web-read-worker.test.ts > ACK 对账 cache-observation 时不采信或重放
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ src/execution/chat-web-read-worker.test.ts:83:95
+     81|   if(p===(variant==="cache-observation"?"readChatWebReadCache":"observ…
+     82|  });
+     83|  await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"…
+       |                                                                                               ^
+     84|  expect(f.call.mock.calls.some(c=>["completeChatWebRead","failChatWebR…
+     85| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/24]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 2 passed | 7 skipped (17)
+   Start at  10:27:06
+   Duration  605ms (transform 145ms, setup 0ms, import 437ms, tests 17ms, environment 0ms)
+

@@ -26,12 +26,28 @@ export async function runChatWebReadInWorker(callId:string,signal:AbortSignal,de
  };
  signal.throwIfAborted();
  const prepared=preparation.parse(await host("prepareChatWebRead",{callId},signal));signal.throwIfAborted();
+ const reconcile=async(expected?:ReturnType<typeof chatWebReadObservationSchema.parse>)=>{
+  // 回执未知只查原父调用一次；没有对应事实时不重复网页、缓存或观察写入。
+  signal.throwIfAborted();
+  let confirmed:ReturnType<typeof preparation.parse>;
+  try{confirmed=preparation.parse(await host("prepareChatWebRead",{callId},signal));}
+  catch{signal.throwIfAborted();throw new GenerationFailure("unknown_result","CHAT_WEB_READ_RECONCILIATION_UNKNOWN");}
+  signal.throwIfAborted();
+  if(confirmed.url!==prepared.url)throw new GenerationFailure("unknown_result","CHAT_WEB_READ_RECONCILIATION_MISMATCH");
+  if(confirmed.output)return confirmed.output;
+  // SEMANTIC_BOUNDARY_ALLOW: 比较同 schema 的完整协议事实，仅防止对账接受另一份观察，不判断内容语义。
+  if(!expected || !confirmed.evidenceRef || !confirmed.observation || JSON.stringify(confirmed.observation)!==JSON.stringify(expected))throw new GenerationFailure("unknown_result","CHAT_WEB_READ_RECONCILIATION_MISMATCH");
+  return settle("completeChatWebRead",{callId});
+ };
  if(prepared.output)return prepared.output;
  if(prepared.observation){
   await host("restoreChatWebRead",{callId},signal);signal.throwIfAborted();
   return settle("completeChatWebRead",{callId});
  }
- const cached=cacheResult.parse(await host("readChatWebReadCache",{callId},signal));signal.throwIfAborted();
+ let cached:ReturnType<typeof cacheResult.parse>;
+ try{cached=cacheResult.parse(await host("readChatWebReadCache",{callId},signal));}
+ catch{signal.throwIfAborted();return reconcile();}
+ signal.throwIfAborted();
  if(cached.status==="hit")return cached.output;
  let acquired:Awaited<ReturnType<typeof acquireWebDocument>>;
  try{
@@ -50,6 +66,8 @@ export async function runChatWebReadInWorker(callId:string,signal:AbortSignal,de
  const parsed=chatWebReadObservationSchema.safeParse(acquired.read);
  if(!parsed.success)return settle("failChatWebRead",{callId,failure:{kind:"read_error",code:"no_evidence",message:"网页正文或抽取诊断不符合读取约束"}});
  const observation=parsed.data;
- await host("observeChatWebRead",{callId,observation},signal);signal.throwIfAborted();
+ try{await host("observeChatWebRead",{callId,observation},signal);}
+ catch{signal.throwIfAborted();return reconcile(observation);}
+ signal.throwIfAborted();
  return settle("completeChatWebRead",{callId});
 }

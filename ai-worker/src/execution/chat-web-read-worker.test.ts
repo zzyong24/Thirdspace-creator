@@ -60,3 +60,32 @@ it("浏览器缺失与无效正文通过不同明确失败结算，不上传假�
  expect(invalid.call).toHaveBeenCalledWith("failChatWebRead",expect.objectContaining({failure:expect.objectContaining({kind:"read_error",code:"no_evidence"})}),undefined);
  expect(invalid.call.mock.calls.some(r=>r[0]==="observeChatWebRead")).toBe(false);
 });
+
+it.each(["observe","cache"])("%s ACK 丢失后只回读原调用事实，不重复网页或缓存动作",async point=>{
+ const f=fixture();let preparations=0;const original=f.call.getMockImplementation()!;
+ f.call.mockImplementation(async p=>{
+  if(p==="prepareChatWebRead" && preparations++>0)return (point==="observe"?{url:"https://example.com/bound",observation:read,evidenceRef:"stored"}:{url:"https://example.com/bound",observation:null,evidenceRef:null,output}) as any;
+  if(p===(point==="observe"?"observeChatWebRead":"readChatWebReadCache"))throw new Error("ACK lost");return original(p);
+ });
+ expect(await f.run()).toEqual(output);expect(preparations).toBe(2);expect(f.readDocument).toHaveBeenCalledTimes(point==="observe"?1:0);
+ expect(f.call.mock.calls.filter(c=>c[0]==="readChatWebReadCache")).toHaveLength(1);
+ expect(f.call.mock.calls.filter(c=>c[0]==="observeChatWebRead")).toHaveLength(point==="observe"?1:0);
+});
+it.each(["absent","changed","url","missing-ref","read-lost","cache-observation"])("ACK 对账 %s 时不采信或重放",async variant=>{
+ const f=fixture();let preparations=0;const original=f.call.getMockImplementation()!;
+ f.call.mockImplementation(async p=>{
+  if(p==="prepareChatWebRead" && preparations++>0){
+   if(variant==="read-lost")throw new Error("read ACK lost");
+   return {url:variant==="url"?"https://other.example/":"https://example.com/bound",observation:variant==="absent"?null:variant==="changed"?{...read,turnCount:4}:read,evidenceRef:variant==="missing-ref"?null:"stored"} as any;
+  }
+  if(p===(variant==="cache-observation"?"readChatWebReadCache":"observeChatWebRead"))throw new Error("ACK lost");return original(p);
+ });
+ await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"});expect(preparations).toBe(2);
+ expect(f.call.mock.calls.some(c=>["completeChatWebRead","failChatWebRead","restoreChatWebRead"].includes(c[0]))).toBe(false);
+});
+it("观察 ACK 丢失时已取消，不发起对账或完成",async()=>{
+ const f=fixture(),controller=new AbortController();let preparations=0;const original=f.call.getMockImplementation()!;
+ f.call.mockImplementation(async p=>{if(p==="prepareChatWebRead")preparations++;if(p==="observeChatWebRead"){controller.abort();throw new Error("lost during cancel");}return original(p);});
+ await expect(runChatWebReadInWorker("parent",controller.signal,f)).rejects.toThrow();expect(preparations).toBe(1);
+ expect(f.call.mock.calls.some(c=>["completeChatWebRead","failChatWebRead"].includes(c[0]))).toBe(false);
+});
