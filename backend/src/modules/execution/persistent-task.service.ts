@@ -1,3 +1,4 @@
+import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {completedChatHooksParents} from "./chat-hooks-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
@@ -777,6 +778,12 @@ export function createPersistentTaskService(
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          const atomicPending=uncommittedChatTaskCalls(row,calls);
+          // 子任务与回执严格同事务；只回收尚未提交的纯事务工具，不重置调用或预算。
+          for(const callId of atomicPending){
+            await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
+            calls.find(call=>call.id===callId)!.status="reserved";
+          }
           const completedParents=completedChatHooksParents(row,calls);
           if (row.status === "pause_requested") {
             target = "paused";

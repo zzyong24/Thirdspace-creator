@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (15 tests | 1 failed | 14 skipped) 1088ms
+   × 纯准备阶段的瞬时读取失败返回无副作用错误，不伪装未知提交 82ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 纯准备阶段的瞬时读取失败返回无副作用错误，不伪装未知提交
+Error: private endpoint detail
+ ❯ src/integration/chat-task-atomic.test.ts:112:68
+    110| });
+    111| it("纯准备阶段的瞬时读取失败返回无副作用错误，不伪装未知提交",async()=>{
+    112|  const f=await fixture();f.prepare.mockRejectedValue(Object.assign(new…
+       |                                                                    ^
+    113|  const output=await f.host.execute(f.ref,{callId:f.call.callId});
+    114|  expect(output).toMatchObject({status:"error",sideEffect:"none",error:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  04:17:16
+   Duration  3.69s (transform 1.60s, setup 0ms, import 2.47s, tests 1.09s, environment 0ms)
+

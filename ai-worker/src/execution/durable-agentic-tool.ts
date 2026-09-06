@@ -61,6 +61,16 @@ export async function runDurableAgenticTool(
     if(executionBegan && !settlementAcknowledged) {
       await deps.call("settleAgenticTool",{callId:reservation.callId,status:"unknown"}).catch(()=>{});
     }
+    // 回执丢失只查询原调用一次；绝不重新执行工具或换幂等键。
+    if(executionBegan && !settlementAcknowledged && !deps.signal.aborted){
+      try{
+        const confirmed=agenticToolReservationSchema.parse(await deps.call("reserveAgenticTool",reserveAgenticToolSchema.parse(input),deps.signal));
+        const receipt=confirmed.receipt;
+        if(confirmed.status==="settled" && confirmed.callId===reservation.callId && confirmed.toolName===reservation.toolName && receipt?.toolCallId===input.toolCallId && receipt.toolName===confirmed.toolName){
+          assertKnown(receipt.output);deps.signal.throwIfAborted();return receipt.output;
+        }
+      }catch{/* 没有原调用的已确认事实时仍保留未知结果。 */}
+    }
     // 不透传可能包含凭据或不可信网页内容的原始错误。
     throw unknownResult();
   }

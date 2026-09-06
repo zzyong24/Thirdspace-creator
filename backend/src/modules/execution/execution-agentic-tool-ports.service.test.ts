@@ -77,7 +77,7 @@ it("两个并发执行器共享真实端口，失败启动者不能把成功执�
  expect(results.filter(result=>result.status==="fulfilled")).toHaveLength(1);expect(executions).toBe(1);
  expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
 });
-it("真实结算已落库但回执丢失，新执行器复用原结果，不重复工具动作",async()=>{
+it("真实结算已落库但回执丢失，当轮和新执行器均复用原结果",async()=>{
  const f=await fixture("lost-settlement");const input=await f.model("m");let executions=0;let drop=true;
  const call=async(port:WorkerPort,data:unknown)=>{
   if(port==="reserveAgenticTool")return f.ports.reserve(f.ref,data);
@@ -86,7 +86,8 @@ it("真实结算已落库但回执丢失，新执行器复用原结果，不重�
   throw new Error("unexpected port");
  };
  const deps={signal:new AbortController().signal,call,execute:async()=>{executions++;return output;}};
- await expect(runDurableAgenticTool(input,deps)).rejects.toThrow();
+ expect(await runDurableAgenticTool(input,deps)).toEqual(output);
+ expect(drop).toBe(false);
  expect(await runDurableAgenticTool(input,{...deps,signal:new AbortController().signal})).toEqual(output);
  expect(executions).toBe(1);expect((await f.ledger.inspect(f.ref)).calls.at(-1)?.status).toBe("settled");
 });

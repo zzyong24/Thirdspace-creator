@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (14 tests | 1 failed | 13 skipped) 1096ms
+   × 真实 Worker 工具函数在提交 ACK 丢失后回读已确认回执继续执行 130ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 真实 Worker 工具函数在提交 ACK 丢失后回读已确认回执继续执行
+Error: TOOL_REQUIRES_RECONCILIATION
+ ❯ unknownResult ../ai-worker/src/execution/durable-agentic-tool.ts:17:29
+     15| }
+     16| const settlementSchema = z.object({callId:z.string().min(1),status:z.e…
+     17| const unknownResult = () => new GenerationFailure("unknown_result","TO…
+       |                             ^
+     18| function assertKnown(output:AgenticToolOutcome) {
+     19|   if(output.sideEffect === "unknown" || output.error?.code === "unknow…
+ ❯ runDurableAgenticTool ../ai-worker/src/execution/durable-agentic-tool.ts:65:11
+ ❯ src/integration/chat-task-atomic.test.ts:103:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  04:10:37
+   Duration  3.10s (transform 1.22s, setup 0ms, import 1.88s, tests 1.10s, environment 0ms)
+

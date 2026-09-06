@@ -1,0 +1,109 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (4 tests | 4 failed) 1054ms
+   × 实际宿主原子提交子任务与父回执，ACK丢失后回放不再创建 15ms
+   × 准备期间取消，迟到准备不创建子任务 4ms
+   × 父回执生成失败回滚子任务，不留下孤立已提交任务 3ms
+   × 提交前过期只恢复纯事务声明，旧凭证不能提交 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 实际宿主原子提交子任务与父回执，ACK丢失后回放不再创建
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "host",
+      "worker.script-hooks"
+    ],
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ],
+    "message": "Invalid option: expected one of \"host\"|\"worker.script-hooks\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:21:18
+ ❯ src/integration/chat-task-atomic.test.ts:35:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 准备期间取消，迟到准备不创建子任务
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "host",
+      "worker.script-hooks"
+    ],
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ],
+    "message": "Invalid option: expected one of \"host\"|\"worker.script-hooks\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:21:18
+ ❯ src/integration/chat-task-atomic.test.ts:43:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 父回执生成失败回滚子任务，不留下孤立已提交任务
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "host",
+      "worker.script-hooks"
+    ],
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ],
+    "message": "Invalid option: expected one of \"host\"|\"worker.script-hooks\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:21:18
+ ❯ src/integration/chat-task-atomic.test.ts:50:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 提交前过期只恢复纯事务声明，旧凭证不能提交
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "host",
+      "worker.script-hooks"
+    ],
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ],
+    "message": "Invalid option: expected one of \"host\"|\"worker.script-hooks\""
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:21:18
+ ❯ src/integration/chat-task-atomic.test.ts:55:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  03:59:46
+   Duration  3.12s (transform 1.26s, setup 0ms, import 1.94s, tests 1.05s, environment 0ms)
+

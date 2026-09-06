@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (13 tests | 1 failed | 12 skipped) 1150ms
+   × 同一模型回合并发重复工具调用共享原任务回执 195ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 同一模型回合并发重复工具调用共享原任务回执
+AssertionError: expected { status: 'ok', …(6) } to deeply equal { status: 'ok', …(6) }
+
+- Expected
++ Received
+
+@@ -2,11 +2,11 @@
+    "continuation": null,
+    "data": {
+      "error": null,
+      "kind": "planning.thesis",
+      "projectId": null,
+-     "taskId": "ai-task-4",
++     "taskId": "ai-task-5",
+    },
+    "error": null,
+    "evidence": [],
+    "sideEffect": "committed",
+    "status": "ok",
+
+ ❯ src/integration/chat-task-atomic.test.ts:97:16
+     95|  const f=await fixture(true);const second=await f.host.reserve(f.ref,{…
+     96|  const [first,again]=await Promise.all([f.host.execute(f.ref,{callId:f…
+     97|  expect(again).toEqual(first);expect((await f.children()).rows).toHave…
+       |                ^
+     98|  const [row]=await db.select().from(executionCalls).where(eq(execution…
+     99| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  04:06:33
+   Duration  3.18s (transform 1.25s, setup 0ms, import 1.91s, tests 1.15s, environment 0ms)
+

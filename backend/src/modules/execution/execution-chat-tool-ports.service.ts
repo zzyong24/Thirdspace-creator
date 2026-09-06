@@ -1,3 +1,4 @@
+import {createExecutionChatTaskSubmissionService,type ChatTaskPreparation} from "./execution-chat-task-submission.service";
 import {createExecutionChatHooksService} from "./execution-chat-hooks.service";
 import { createChatToolStreamProjection } from "./chat-tool-stream-projection.service";
 import { isDeepStrictEqual } from "node:util";
@@ -12,6 +13,8 @@ import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.
 import { ConflictError } from "./execution.errors";
 type Approval=z.infer<typeof chatToolApprovalReceiptSchema>;
 export type ChatBackendTool=AgenticBackendTool & {
+  /** 只读取配置并准备事务；禁止在此执行模型、浏览器或领域写入。 */
+  prepareTask?(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;callId:string;attemptId:string;signal?:AbortSignal}):Promise<ChatTaskPreparation>;
   approve(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;modelCallId:string;toolCallId:string;signal?:AbortSignal}):Promise<Approval>;
 };
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
@@ -29,7 +32,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
  const leases=createExecutionLeaseService(db,deps),binding=createAgenticToolBinding(deps.tools);
  async function validateTask(ref:ExecutionRef){
    const {input}=await readExecutionChatTask(db,ref,deps.now);
-   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || (tool.execution??"host")!==(frozen.execution??"host") || ((frozen.execution??"host")==="host" && typeof tool.execute!=="function"))throw new ConflictError("聊天工具执行或授权端口尚未装配");}
+   for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || (tool.execution??"host")!==(frozen.execution??"host") || ((frozen.execution??"host")==="host" && typeof tool.execute!=="function") || (frozen.execution==="host.task-submit" && (typeof tool.prepareTask!=="function" || typeof tool.execute==="function")))throw new ConflictError("聊天工具执行或授权端口尚未装配");}
    return input;
  }
  async function scope(ref:ExecutionRef,request:{modelCallId:string;toolCallId:string}){
@@ -73,7 +76,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await project.recordApproval(ref,request,decision);
   return decision;
  }
- const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.script-hooks"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
+ const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.script-hooks" || tool.execution==="host.task-submit"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
   const bound=await leases.withLease(executionScope.execution,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
    const current=calls.find(call=>call.id===executionScope.callId);if(!current)throw new ConflictError("聊天调用不存在");return binding.forCall(task,calls,current);
@@ -91,6 +94,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
     const call=calls.find(item=>item.id===request.callId);if(!call)throw new ConflictError("聊天调用不存在");
     return {call,bound:binding.forCall(task,calls,call)};
   });
+  if(state.bound.execution==="host.task-submit" && state.call.status!=="settled" && !state.bound.validationOutcome && request.status!=="settled")throw new ConflictError("事务提交只能由宿主原子保存回执");
   if(request.status!=="settled" || state.call.status==="settled" || state.bound.validationOutcome)return tools.settle(ref,request);
   const denial=agenticToolOutcomeSchema.parse({status:"blocked",summary:"用户未允许本次操作",evidence:[],data:{denied:true},error:{code:"permission",retryable:false,recovery:"用户已拒绝，本次不执行。"},continuation:null,sideEffect:"none"});
   if(!isDeepStrictEqual(request.output,denial))throw new ConflictError("聊天工具结果必须由宿主实际执行确认");
@@ -99,9 +103,10 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   return tools.settle(ref,request);
  }
  const hooks=createExecutionChatHooksService(db,{...deps,check});
+ const submissions=createExecutionChatTaskSubmissionService(db,{...deps,check});
  return {...tools,validateTask,check,hooks:{...hooks,async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){const result=await hooks.complete(ref,raw,signal);await project(ref,workerPortInputSchemas.completeChatHooks.parse(raw).callId);return result;}},
   async reserve(ref:ExecutionRef,raw:unknown){const result=await tools.reserve(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
-  async execute(...args:Parameters<typeof tools.execute>){const result=await tools.execute(...args);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
+  async execute(...args:Parameters<typeof tools.execute>){const result=await submissions.handles(args[0],args[1])?await submissions.execute(...args):await tools.execute(...args);await project(args[0],workerPortInputSchemas.executeAgenticTool.parse(args[1]).callId);return result;},
   async settle(ref:ExecutionRef,raw:unknown){const result=await settle(ref,raw);if(result.status==="settled")await project(ref,result.callId);return result;},
  };
 }

@@ -1538,6 +1538,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "本文件记录已授权 Worker 命名端口、明确失败恢复与回执丢失验证，不引入新的通信层或产品范围；按具体证据文件登记门卫识别的 IPC 标记。",
       "acceptance": "只登记说明文件复杂度标记，不代表完整 T-915 验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/task-commit.md"
+      ],
+      "file_sha256": "acab93bea04ebeac620f93233e700d83b93bb7377bcd50aeb88e50028526ae70",
+      "categories": [
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "此证据文档引用既有 service 注释以说明复杂度哈希重新绑定原因；不包含新本机进程、安装或部署机制。仅登记精确文件的既有术语引用，未增加实现范围。",
+      "acceptance": "记录复杂度标记归属，不代表功能、测试或历史任务通过。"
     }
   ],
   "historical_baselines": []

@@ -47,12 +47,12 @@ describe("Worker 持久工具执行边界",()=>{
     expect(f.execute).not.toHaveBeenCalled();
     expect(f.call.mock.calls.map(c=>c[0])).toEqual(["reserveAgenticTool","startAgenticTool"]);
   });
-  it("settle回执丢失不重做工具，仅补unknown结算",async()=>{
+  it("settle回执丢失且查询无已确认事实，不重做工具",async()=>{
     const f=fixture();const original=f.call.getMockImplementation()!;
     f.call.mockImplementation(async(port,data,signal)=>{if(port==="settleAgenticTool" && (data as {status:string}).status==="settled")throw new Error("lost");return original(port,data,signal);});
     await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"});
     expect(f.execute).toHaveBeenCalledTimes(1);
-    expect(f.call.mock.calls.at(-1)).toEqual(["settleAgenticTool",{callId:"call-1",status:"unknown"}]);
+    expect(f.call.mock.calls).toContainEqual(["settleAgenticTool",{callId:"call-1",status:"unknown"}]);
   });
   it("执行期间取消但工具返回真实结果，保存结算且不向循环返回",async()=>{
     const f=fixture();f.execute.mockImplementation(async()=>{f.controller.abort();return output;});
@@ -118,4 +118,25 @@ describe("Worker 持久工具执行边界",()=>{
     expect(shared.mock.calls.filter(c=>c[0]==="settleAgenticTool").map(c=>c[1])).toEqual([{callId:"call-1",status:"settled",output}]);
   });
 
+});
+it.each(["same","other-call","other-tool","other-proposal","unknown-effect"])("丢 ACK 后只采信同一调用的明确回执：%s",async variant=>{
+ const f=fixture(),original=f.call.getMockImplementation()!;let reservations=0;
+ f.execute.mockRejectedValue(new Error("ACK lost"));
+ f.call.mockImplementation(async(port,data,signal)=>{
+  if(port==="reserveAgenticTool" && ++reservations>1)return {callId:variant==="other-call"?"other":"call-1",status:"settled",toolName:variant==="other-tool"?"other":"web.read",input:{},receipt:{schemaVersion:1,kind:"tool",toolCallId:variant==="other-proposal"?"other":input.toolCallId,toolName:"web.read",output:variant==="unknown-effect"?{...output,sideEffect:"unknown"}:output}};
+  return original(port,data,signal);
+ });
+ if(variant==="same")expect(await f.run()).toEqual(output);else await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"});
+ expect(f.execute).toHaveBeenCalledTimes(1);expect(reservations).toBe(2);
+});
+it("回读已确认回执期间取消，迟到结果不交回模型循环",async()=>{
+ const f=fixture(),original=f.call.getMockImplementation()!;let reservations=0,release!:()=>void;
+ f.execute.mockRejectedValue(new Error("ACK lost"));
+ f.call.mockImplementation(async(port,data,signal)=>{
+  if(port==="reserveAgenticTool" && ++reservations>1){await new Promise<void>(r=>{release=r;});return {callId:"call-1",status:"settled",toolName:"web.read",input:{},receipt:{schemaVersion:1,kind:"tool",toolCallId:input.toolCallId,toolName:"web.read",output}};}
+  return original(port,data,signal);
+ });
+ const pending=f.run();await vi.waitFor(()=>expect(release).toBeDefined());f.controller.abort();release();
+ await expect(pending).rejects.toMatchObject({outcome:"unknown_result"});expect(f.execute).toHaveBeenCalledTimes(1);
+ expect(f.call.mock.calls.filter(c=>c[0]==="startAgenticTool")).toHaveLength(1);
 });

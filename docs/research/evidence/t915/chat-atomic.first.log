@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-task-atomic.test.ts (4 tests | 1 failed) 1362ms
+   × 提交前过期只恢复纯事务声明，旧凭证不能提交 39ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 提交前过期只恢复纯事务声明，旧凭证不能提交
+AssertionError: expected null to be truthy
+
+- Expected:
+true
+
++ Received:
+null
+
+ ❯ src/integration/chat-task-atomic.test.ts:56:107
+     54| it("提交前过期只恢复纯事务声明，旧凭证不能提交",async()=>{
+     55|  const f=await fixture();f.advance();await f.tasks.recoverExpiredLease…
+     56|  const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,wor…
+       |                                                                                                           ^
+     57|  const ref={executionTaskId:f.ref.executionTaskId,attempt:next.lease.a…
+     58|  await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  04:01:40
+   Duration  3.47s (transform 1.27s, setup 0ms, import 1.98s, tests 1.36s, environment 0ms)
+
