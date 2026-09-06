@@ -719,3 +719,88 @@ it.each(["未知子","缺用量","预留子","坏回执","宿主执行","跨任�
  if(kind==="两个成功子")changed.push({...model,id:"other-child",sequence:model.sequence+1,retryOfCallId:model.id});
  expect(completedChatHooksParents(changedTask,changed)).toEqual([]);
 });
+
+it("开场首次准备持久冻结，重建服务不重新拼接提示词或复用可变返回对象", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f = await fixture();
+  const prepared = await f.hooks.prepare(f.ref, {callId:f.parent.callId});
+  const original = prepared.prompt;
+  prepared.prompt = "调用方修改";
+  expect((await f.hooks.prepare(f.ref,{callId:f.parent.callId})).prompt).toBe(original);
+  const call = (await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const rebuild = vi.fn(async()=>{throw new Error("恢复不得重拼提示词");});
+  const restored = await createExecutionNodePreparationService(db,{now}).readOrPrepare(f.ref,{parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"script.hooks.v1"},z.object({prompt:z.string(),system:z.string(),grounding:z.array(z.string())}).strict(),rebuild);
+  expect(restored.prompt).toBe(original);expect(rebuild).not.toHaveBeenCalled();
+});
+
+it("并发首次准备只保存一个胜者，迟到资料不能覆盖已保存节点", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f=await fixture(), call=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const service=createExecutionNodePreparationService(db,{now}), key={parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"test.node.v1"}, schema=z.object({prompt:z.string()}).strict();
+  let release!: (value:{prompt:string})=>void, started!:()=>void;
+  const waiting=new Promise<void>(resolve=>{started=resolve;});
+  const slow=service.readOrPrepare(f.ref,key,schema,()=>{started();return new Promise(resolve=>{release=resolve;});});
+  await waiting;
+  const winner=await service.readOrPrepare(f.ref,key,schema,async()=>({prompt:"先保存的真实资料"}));
+  release({prompt:"迟到资料"});
+  expect(await slow).toEqual(winner);
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  expect(JSON.stringify(task!.payload)).toContain("先保存的真实资料");
+  expect(JSON.stringify(task!.payload)).not.toContain("迟到资料");
+});
+
+it("取消等待中的准备不保存迟到结果，错误父调用或摘要不执行准备", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f=await fixture(), call=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const service=createExecutionNodePreparationService(db,{now}), key={parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"test.node.v1"}, schema=z.object({prompt:z.string()}).strict();
+  const prepare=vi.fn(async()=>({prompt:"不应执行"}));
+  await expect(service.readOrPrepare(f.ref,{...key,inputDigest:"错误摘要"},schema,prepare)).rejects.toThrow();
+  await expect(service.readOrPrepare(f.ref,{...key,parentCallId:"另一个任务的父调用"},schema,prepare)).rejects.toThrow();
+  expect(prepare).not.toHaveBeenCalled();
+  const controller=new AbortController();
+  await expect(service.readOrPrepare(f.ref,key,schema,async()=>{controller.abort();return {prompt:"迟到结果"};},controller.signal)).rejects.toThrow();
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  expect((task!.payload as Record<string,unknown>).nodePreparations).toBeUndefined();
+});
+
+it("已保存节点内容或版本被改动时拒绝重建，不能覆盖原证据", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f=await fixture();await f.hooks.prepare(f.ref,{callId:f.parent.callId});
+  const call=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const service=createExecutionNodePreparationService(db,{now}), schema=z.object({prompt:z.string(),system:z.string(),grounding:z.array(z.string())}).strict();
+  const prepare=vi.fn(async()=>({prompt:"新",system:"新",grounding:[]}));
+  await expect(service.readOrPrepare(f.ref,{parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"changed"},schema,prepare)).rejects.toThrow();
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  const payload=structuredClone(task!.payload) as {nodePreparations:Record<string,{value:{prompt:string}}>};
+  payload.nodePreparations[call.id]!.value.prompt="被改动的提示词";
+  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,task!.id));
+  await expect(f.hooks.prepare(f.ref,{callId:call.id})).rejects.toThrow("已保存节点准备");
+  expect(prepare).not.toHaveBeenCalled();
+});
+
+it("资料读取挂起时取消立即结束等待，迟到准备不能写入原任务", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f=await fixture(), call=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const controller=new AbortController(), schema=z.object({prompt:z.string()});
+  let release!:(value:{prompt:string})=>void, started!:()=>void, ended=false;
+  const ready=new Promise<void>(resolve=>{started=resolve;});
+  const work=createExecutionNodePreparationService(db,{now}).readOrPrepare(f.ref,{parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"test.node.v1"},schema,()=>{started();return new Promise(resolve=>{release=resolve;});},controller.signal);
+  const observed=work.then(()=>{ended=true;return "saved";},()=>{ended=true;return "cancelled";});
+  await ready;controller.abort();
+  try { await vi.waitFor(()=>expect(ended).toBe(true),{timeout:200});expect(await observed).toBe("cancelled"); }
+  finally { release({prompt:"迟到不能保存"});await observed; }
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  expect((task!.payload as Record<string,unknown>).nodePreparations).toBeUndefined();
+});
+
+it("准备期间任务收到持久取消命令，即使本地信号未触发也不能保存节点", async () => {
+  const { createExecutionNodePreparationService } = await import("./execution-node-preparation.service");
+  const f=await fixture(), call=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!;
+  const schema=z.object({prompt:z.string()});
+  await expect(createExecutionNodePreparationService(db,{now}).readOrPrepare(f.ref,{parentCallId:call.id,inputDigest:call.inputDigest,nodeVersion:"test.node.v1"},schema,async()=>{
+    await f.tasks.command(f.ctx,{taskIds:[f.task.executionTaskId],command:"cancel",idempotencyKey:"cancel-preparing-node"});
+    return {prompt:"取消后不得保存"};
+  })).rejects.toThrow();
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+  expect((task!.payload as Record<string,unknown>).nodePreparations).toBeUndefined();
+});

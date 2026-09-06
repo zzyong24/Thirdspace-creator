@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (49 tests | 1 failed | 48 skipped) 1172ms
+   × 资料读取挂起时取消立即结束等待，迟到准备不能写入原任务 268ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 资料读取挂起时取消立即结束等待，迟到准备不能写入原任务
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ vi.waitFor.timeout src/modules/execution/execution-chat-hooks.service.test.ts:790:44
+    788|   const observed=work.then(()=>{ended=true;return "saved";},()=>{ended…
+    789|   await ready;controller.abort();
+    790|   try { await vi.waitFor(()=>expect(ended).toBe(true),{timeout:200});e…
+       |                                            ^
+    791|   finally { release({prompt:"迟到不能保存"});await observed; }
+    792|   const [task]=await db.select().from(executionTasks).where(eq(executi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 48 skipped (49)
+   Start at  05:44:47
+   Duration  2.97s (transform 1.04s, setup 0ms, import 1.66s, tests 1.17s, environment 0ms)
+

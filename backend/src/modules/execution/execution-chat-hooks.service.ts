@@ -1,3 +1,4 @@
+import { createExecutionNodePreparationService } from "./execution-node-preparation.service";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -140,11 +141,14 @@ export function createExecutionChatHooksService(
         .orderBy(asc(executionCalls.sequence));
       assertCurrentRound(calls, findParent(task, calls, input.callId));
     });
-    const args = argsSchema.parse(scope.bound.input);
-    const prepared = prepareScriptHooks(frozen.hostContext.scriptHooksContext, {
-      ...args,
-      extraBrief: clampExtraBrief(args.extraBrief),
-    });
+    const prepared = await createExecutionNodePreparationService(db, deps).readOrPrepare(
+      ref, { parentCallId: input.callId, inputDigest: scope.bound.inputDigest, nodeVersion: "script.hooks.v1" },
+      z.object({ prompt:z.string(), system:z.string(), grounding:z.array(z.string()) }).strict(),
+      async () => {
+        const args = argsSchema.parse(scope.bound.input);
+        return prepareScriptHooks(frozen.hostContext.scriptHooksContext!, { ...args, extraBrief:clampExtraBrief(args.extraBrief) });
+      }, signal,
+    );
     const operationKey = `hooks:${input.callId}:${digest({ binding: scope.bound.inputDigest, ...prepared, maxOutputTokens, modelIdentity }).slice(7)}`;
     return {
       ...prepared,
