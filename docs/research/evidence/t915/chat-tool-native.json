@@ -1,0 +1,59 @@
+{
+  "task": "T-915",
+  "scope": "工具原始异常入口；公开路径尚未迁移",
+  "tests": {
+    "redFailed": 4,
+    "greenPassed": 241
+  },
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-red.log",
+      "sha256": "496b2b5163dffa48b6680f68f16533d4e0e04d3f98a1e6784b3736ccf5886bab",
+      "bytes": 3679
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-green.log",
+      "sha256": "128fb22f8a3033427b20f36db8779f793a85096a2ea26e22176c09659f19ca81",
+      "bytes": 239
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-types.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-governance.log",
+      "sha256": "ccff23b7ff84a1cc13ba927f5ac77e83ae882090786726a2bef07f7d7d9c56c7",
+      "bytes": 63800
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-scope.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-native-reconcile.log",
+      "sha256": "98e43c7a1c4b67dc55186b3aedd1a8be900eb0c1c61e37cd79cab053528fe029",
+      "bytes": 26021
+    }
+  ],
+  "governance": {
+    "taskScope": "通过",
+    "unscopedAudit": "314 项阻断，包括现有桌面构建产物；不是本批通过证据"
+  },
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "status": "失败，与上一批一致；T-916 跟踪"
+  }
+}

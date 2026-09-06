@@ -382,6 +382,15 @@ const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
   ChatToolApprovalDecider<unknown>
 >();
 
+/** 宿主经过参数、授权及执行权校验后使用；此端口不自行授权或重试。 */
+type ChatToolNativeExecutor = (input: unknown, callOptions?: unknown) => Promise<unknown>;
+const CHAT_TOOL_NATIVE_EXECUTORS = new WeakMap<Tool, ChatToolNativeExecutor>();
+
+/** 保留原始异常。返回的业务错误信封仍须由具体工具适配器解释，不能一律当成功。 */
+export function getChatToolNativeExecutor(t: Tool): ChatToolNativeExecutor | undefined {
+  return CHAT_TOOL_NATIVE_EXECUTORS.get(t);
+}
+
 /** 取某 tool 登记的授权判定器(无 = 该工具无需授权门)。buildChatToolApproval 内部用。 */
 export function getChatToolApprovalDecider(
   t: Tool,
@@ -455,7 +464,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     throw new Error(`[chat-tool-gate] 工具 ${name} 未登记 CHAT_TOOL_ERROR_ENVELOPES —— 新增工具须同步登记错误信封(kind 与正常结果一致 + 结构占位)`);
   }
   const budget = envelope.budgetChars ?? CHAT_TOOL_RESULT_BUDGET_CHARS;
-  const gatedExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
+  const nativeExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
     const startedAt = Date.now();
     try {
       const result = await config.execute(input, callOptions);
@@ -480,6 +489,13 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
       console.log(
         `[chat-tool] name=${name} error durationMs=${Date.now() - startedAt} ${formatErrorDiagnostic(err)}`,
       );
+      throw err;
+    }
+  };
+  const gatedExecute = async (input: INPUT, callOptions?: unknown): Promise<unknown> => {
+    try {
+      return await nativeExecute(input, callOptions);
+    } catch (err) {
       const human = humanizeError?.(err) ?? null;
       return {
         ...(envelope.extras ?? {}),
@@ -495,6 +511,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     inputSchema: config.inputSchema,
     execute: gatedExecute,
   } as never) as Tool;
+  CHAT_TOOL_NATIVE_EXECUTORS.set(built, nativeExecute as ChatToolNativeExecutor);
   // [T-263] 登记授权判定器(旁挂 WeakMap)—— buildChatToolApproval 据此装配 SDK toolApproval 配置。
   if (config.needsApproval) {
     CHAT_TOOL_APPROVAL_DECIDERS.set(

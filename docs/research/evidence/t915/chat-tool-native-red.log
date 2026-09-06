@@ -1,0 +1,68 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-tool-native.test.ts (4 tests | 4 failed) 5ms
+     × 原样抛出异常且只执行一次；旧错误卡片仍兼容 4ms
+     × 透传参数和执行上下文，共用结果预算且保留真实 ID 0ms
+     × 不把非 Error 异常改造成成功结果，也不擅自分类返回信封 0ms
+     × 未登记工具不回落到吞异常的 SDK execute 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-native.test.ts > 真实工具执行入口 > 原样抛出异常且只执行一次；旧错误卡片仍兼容
+TypeError: getChatToolNativeExecutor is not a function
+ ❯ src/modules/ai-runtime/chat-tool-native.test.ts:13:18
+     11|     const humanize = vi.fn(() => ({ message: "暂时失败", suggestSwitchMode…
+     12|     const built = defineChatTool("topic.generate", { description: "d",…
+     13|     await expect(getChatToolNativeExecutor(built)!({})).rejects.toBe(f…
+       |                  ^
+     14|     expect(execute).toHaveBeenCalledTimes(1);
+     15|     expect(humanize).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-native.test.ts > 真实工具执行入口 > 透传参数和执行上下文，共用结果预算且保留真实 ID
+TypeError: getChatToolNativeExecutor is not a function
+ ❯ src/modules/ai-runtime/chat-tool-native.test.ts:25:26
+     23|     const input = { q: "实际输入" };
+     24|     const options = { signal: new AbortController().signal };
+     25|     const result = await getChatToolNativeExecutor(built)!(input, opti…
+       |                          ^
+     26|     expect(execute).toHaveBeenCalledExactlyOnceWith(input, options);
+     27|     expect(result.taskId).toBe("real-task");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-native.test.ts > 真实工具执行入口 > 不把非 Error 异常改造成成功结果，也不擅自分类返回信封
+TypeError: getChatToolNativeExecutor is not a function
+ ❯ src/modules/ai-runtime/chat-tool-native.test.ts:34:18
+     32|     const failure = { code: "unknown_commit" };
+     33|     const built = defineChatTool("topic.generate", { description: "d",…
+     34|     await expect(getChatToolNativeExecutor(built)!({})).rejects.toBe(f…
+       |                  ^
+     35|     const envelope = { kind: "topic.candidates", error: "业务显式失败", item…
+     36|     const returned = defineChatTool("topic.generate", { description: "…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-native.test.ts > 真实工具执行入口 > 未登记工具不回落到吞异常的 SDK execute
+TypeError: getChatToolNativeExecutor is not a function
+ ❯ src/modules/ai-runtime/chat-tool-native.test.ts:41:12
+     39|
+     40|   it("未登记工具不回落到吞异常的 SDK execute", () => {
+     41|     expect(getChatToolNativeExecutor(tool({ description: "external", i…
+       |            ^
+     42|   });
+     43| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  22:44:09
+   Duration  334ms (transform 89ms, setup 0ms, import 181ms, tests 5ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-tool-native.test.ts
