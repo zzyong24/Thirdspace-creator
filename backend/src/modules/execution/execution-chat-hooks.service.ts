@@ -1,3 +1,4 @@
+import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -115,7 +116,8 @@ export function createExecutionChatHooksService(
           .orderBy(asc(executionCalls.sequence));
         const found = findParent(task, calls, input.callId);
         assertCurrentRound(calls, found);
-        return found;
+        const retry=calls.find(call=>call.id===task.retryOfCallId && call.parentCallId===found.parent.id && call.status==="rejected");
+        return {...found,...(retry?{retryOfCallId:retry.id}:{})};
       },
     );
     const decision = await deps.check(
@@ -148,6 +150,7 @@ export function createExecutionChatHooksService(
       operationKey,
       modelIdentity,
       maxOutputTokens,
+      retryOfCallId:scope.retryOfCallId,
       parent: scope.parent,
       bound: scope.bound,
     };
@@ -177,14 +180,52 @@ export function createExecutionChatHooksService(
       throw new ConflictError("开场内部调用仍须对账");
     return { children, last };
   };
+  const rejectedChildren = (calls:Call[],parentId:string,operationKey:string) => {
+    const children=calls.filter(call=>call.parentCallId===parentId).sort((a,b)=>a.sequence-b.sequence);
+    if(!children.length || children.some(call=>call.kind!=="model" || call.status!=="rejected" || call.operationKey!==`${operationKey}/model/1`))throw new ConflictError("内部模型缺少完整明确拒绝事实");
+    return children;
+  };
   return {
+    async fail(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
+      const {callId,...failure}=workerPortInputSchemas.failChatHooks.parse(raw);
+      const replay=await leases.withLease(ref,"settlement",async({tx,task})=>{
+        if(!["waiting_user","retry_wait","failed"].includes(task.status))return null;
+        const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+        const found=findParent(task,calls,callId),children=calls.filter(call=>call.parentCallId===callId);
+        if(found.parent.status!=="started" || !children.length || children.some(call=>call.status!=="rejected") || children.at(-1)!.id!==calls.at(-1)!.id || children.at(-1)!.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原执行");
+        const budgetExhausted=task.status==="failed" && failure.outcome==="retry_wait" && task.lastErrorCode==="RETRY_BUDGET_EXHAUSTED";
+        if(!budgetExhausted && (task.status!==failure.outcome || task.lastErrorCode!==failure.errorCode || (task.status!=="failed" && task.retryOfCallId!==children.at(-1)!.id)))throw new ConflictError("挂起结果与原回执不符");
+        return {status:task.status,retryAt:task.retryAt};
+      });
+      if(replay)return replay;
+      const prepared=await prepare(ref,{callId},signal);
+      return createExecutionWorkerOutcomeService(db,deps).recordFailure(ref,failure,(calls,task)=>{
+        const found=findParent(task,calls,callId);assertCurrentRound(calls,found);
+        const children=rejectedChildren(calls,callId,prepared.operationKey);
+        if(found.parent.status!=="started" || found.parent.startedAttempt!==ref.attempt || children.at(-1)!.id!==calls.reduce((a,b)=>a.sequence>b.sequence?a:b).id || children.at(-1)!.startedAttempt!==ref.attempt)throw new ConflictError("开场失败不属于当前执行");
+        return [callId];
+      });
+    },
+    async restore(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
+      const {callId}=workerPortInputSchemas.restoreChatHooks.parse(raw);
+      const prepared=await prepare(ref,{callId},signal);
+      return leases.withLease(ref,"admission",async({tx,task})=>{
+        const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
+        const found=findParent(task,calls,callId);assertCurrentRound(calls,found);
+        const children=rejectedChildren(calls,callId,prepared.operationKey);
+        if(found.parent.status!=="started" || task.retryOfCallId!==children.at(-1)!.id || calls.some(call=>call.status==="unknown" || (call.status==="started" && call.id!==callId)))throw new ConflictError("原任务没有可恢复的开场拒绝记录");
+        signal?.throwIfAborted();
+        await tx.update(executionCalls).set({startedAttempt:ref.attempt,updatedAt:(deps.now??(()=>new Date().toISOString()))()}).where(eq(executionCalls.id,callId));
+        return {callId,status:"started" as const};
+      });
+    },
     async prepare(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
-      const { prompt, system, operationKey, maxOutputTokens } = await prepare(
+      const { prompt, system, operationKey, maxOutputTokens, retryOfCallId } = await prepare(
         ref,
         raw,
         signal,
       );
-      return { prompt, system, operationKey, maxOutputTokens };
+      return { prompt, system, operationKey, maxOutputTokens, ...(retryOfCallId?{retryOfCallId}:{}) };
     },
     async reserve(ref: ExecutionRef, raw: unknown, signal?: AbortSignal) {
       const input = reserveRequest.parse(raw),
@@ -233,6 +274,10 @@ export function createExecutionChatHooksService(
         (calls, task) => {
           const current = findParent(task, calls, input.callId);
           assertCurrentRound(calls, current);
+          if(input.retryOfCallId){
+            const source=calls.find(call=>call.id===input.retryOfCallId);
+            if(task.retryOfCallId!==input.retryOfCallId || source?.parentCallId!==input.callId || source.status!=="rejected" || source.startedAttempt===ref.attempt || current.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得任务恢复许可");
+          }
           if (current.bound.inputDigest !== prepared.bound.inputDigest)
             throw new ConflictError("开场工具绑定已改变");
         },

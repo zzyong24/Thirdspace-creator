@@ -5,7 +5,10 @@ import {
 } from "@creatoros/contract/execution-worker";
 import { GenerationFailure } from "./generation-error";
 
+/** 专用宿主已保存明确失败及任务恢复状态；不能再将父工具改成未知。 */
+export class DurableToolSuspension extends GenerationFailure {}
 export interface DurableAgenticToolDeps {
+  resumeStarted?(callId:string):Promise<void>;
   signal: AbortSignal;
   call(port: WorkerPort, data: unknown, signal?: AbortSignal): Promise<unknown>;
   execute(toolName: string, input: unknown, signal: AbortSignal): Promise<AgenticToolOutcome>;
@@ -32,13 +35,16 @@ export async function runDurableAgenticTool(
     assertKnown(receipt.output);
     return receipt.output;
   }
-  if(reservation.status!=="reserved")throw unknownResult();
+  if(reservation.status!=="reserved" && !(reservation.status==="started" && deps.resumeStarted))throw unknownResult();
   let executionBegan=false;
   let settlementAcknowledged=false;
   try {
     deps.signal.throwIfAborted();
-    const started=workerStartReceiptSchema.parse(await deps.call("startAgenticTool",{callId:reservation.callId},deps.signal));
-    if(started.callId!==reservation.callId)throw unknownResult();
+    if(reservation.status==="started")await deps.resumeStarted!(reservation.callId);
+    else {
+      const started=workerStartReceiptSchema.parse(await deps.call("startAgenticTool",{callId:reservation.callId},deps.signal));
+      if(started.callId!==reservation.callId)throw unknownResult();
+    }
     deps.signal.throwIfAborted();
     executionBegan=true;
     const output=reservation.validationOutcome ?? agenticToolOutcomeSchema.parse(await deps.execute(reservation.toolName,reservation.input,deps.signal));
@@ -50,7 +56,8 @@ export async function runDurableAgenticTool(
     assertKnown(output);
     deps.signal.throwIfAborted();
     return output;
-  } catch {
+  } catch (error) {
+    if(error instanceof DurableToolSuspension)throw error;
     if(executionBegan && !settlementAcknowledged) {
       await deps.call("settleAgenticTool",{callId:reservation.callId,status:"unknown"}).catch(()=>{});
     }

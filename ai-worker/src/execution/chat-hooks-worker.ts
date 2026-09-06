@@ -1,4 +1,6 @@
 import {generateText,type LanguageModel} from "ai";
+import {generationFailure} from "./generation-error";
+import {DurableToolSuspension} from "./durable-agentic-tool";
 import {z} from "zod";
 import {chatHooksPreparationSchema,workerReservationSchema,workerStartReceiptSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {createDurableGenerationModel} from "./durable-generation-model";
@@ -6,10 +8,17 @@ import {createDurableGenerationModel} from "./durable-generation-model";
 export async function runChatHooksInWorker(callId:string,model:LanguageModel,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  const prepared=chatHooksPreparationSchema.parse(await call("prepareChatHooks",{callId},signal));
  const durable=createDurableGenerationModel({model,operationKey:prepared.operationKey,signal,ports:{
-  reserve:async request=>workerReservationSchema.parse(await call("reserveChatHooksModel",{...request,callId},signal)),
+  reserve:async request=>workerReservationSchema.parse(await call("reserveChatHooksModel",{...request,callId,...(prepared.retryOfCallId?{retryOfCallId:prepared.retryOfCallId}:{})},signal)),
   start:async childId=>{const receipt=workerStartReceiptSchema.parse(await call("startChatHooksModel",{callId:childId},signal));if(receipt.callId!==childId)throw new Error("内部模型启动回执不符");},
   settle:async(childId,input)=>{const receipt=z.object({callId:z.string(),status:z.string()}).parse(await call("settleChatHooksModel",{callId:childId,...input}));if(receipt.callId!==childId || receipt.status!==input.status)throw new Error("内部模型结算回执不符");},
  }});
- await generateText({model:durable,system:prepared.system,prompt:prepared.prompt,maxOutputTokens:prepared.maxOutputTokens,maxRetries:0,abortSignal:signal});
+ try{await generateText({model:durable,system:prepared.system,prompt:prepared.prompt,maxOutputTokens:prepared.maxOutputTokens,maxRetries:0,abortSignal:signal});}catch(error){
+  const failure=generationFailure(error,false);
+  if(signal.aborted || failure.outcome==="unknown_result")throw error;
+  const report={callId,outcome:failure.outcome,errorCode:failure.errorCode,retryAfterMs:failure.retryAfterMs};
+  // 仅重读同一宿主挂起回执，不重发供应商请求；最终事实仍在任务账本。
+  const saved=z.object({status:z.enum(["retry_wait","waiting_user","failed"])}).parse(await call("failChatHooks",report).catch(()=>call("failChatHooks",report)));
+  throw new DurableToolSuspension(saved.status,failure.errorCode,failure.retryAfterMs);
+ }
  return agenticToolOutcomeSchema.parse(await call("completeChatHooks",{callId},signal));
 }

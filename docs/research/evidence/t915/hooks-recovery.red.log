@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-hooks-worker.test.ts (4 tests | 2 failed) 3214ms
+   × 同一真实Worker内部开场生成：reject401 479ms
+   × 同一真实Worker内部开场生成：reject429 467ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-hooks-worker.test.ts > 同一真实Worker内部开场生成：reject401
+AssertionError: expected 'unknown_result' to be 'waiting_user' // Object.is equality
+
+Expected: "waiting_user"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-hooks-worker.test.ts:48:28
+     46|   if(mode==="reject401" || mode==="reject429"){
+     47|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+     48|    expect(stopped?.status).toBe(mode==="reject401"?"waiting_user":"ret…
+       |                            ^
+     49|    const before=await db.select().from(executionCalls).where(eq(execut…
+     50|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/integration/chat-hooks-worker.test.ts > 同一真实Worker内部开场生成：reject429
+AssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality
+
+Expected: "retry_wait"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-hooks-worker.test.ts:48:28
+     46|   if(mode==="reject401" || mode==="reject429"){
+     47|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+     48|    expect(stopped?.status).toBe(mode==="reject401"?"waiting_user":"ret…
+       |                            ^
+     49|    const before=await db.select().from(executionCalls).where(eq(execut…
+     50|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  02:15:23
+   Duration  4.63s (transform 757ms, setup 0ms, import 1.28s, tests 3.21s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/chat-hooks-worker.test.ts

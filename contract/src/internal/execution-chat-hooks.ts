@@ -13,4 +13,4 @@ export type ScriptHooksContext = z.infer<typeof scriptHooksContextSchema>;
 const callId=z.string().min(1).max(256);
 export const chatHooksParentRequestSchema=z.object({callId}).strict();
 export const chatHooksReserveRequestSchema=z.object({callId,operationKey:callId,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000),retryOfCallId:callId.optional()}).strict();
-export const chatHooksPreparationSchema=z.object({prompt:z.string(),system:z.string(),operationKey:callId,maxOutputTokens:z.number().int().positive().max(65536)}).strict();
+export const chatHooksPreparationSchema=z.object({prompt:z.string(),system:z.string(),operationKey:callId,retryOfCallId:z.string().min(1).max(256).optional(),maxOutputTokens:z.number().int().positive().max(65536)}).strict();

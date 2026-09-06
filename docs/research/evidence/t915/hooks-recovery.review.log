@@ -1,0 +1,6 @@
+独立只读评审 runtime_code_review：
+1. 三个 IPC 文件仍属 DEC-RUNTIME-055/SPEC R-02 已授权范围，可按当前文件 hash 重绑原 in-budget 条目；不代表测试或完整验收通过。
+2. 发现子调用直接 retryOfCallId 可绕过任务退避/用户恢复；增加前置反例后，改为锁内验证任务许可、旧子 attempt 与父 restore 当前 attempt。
+3. 发现 fail 事务已保存但回执丢失会使父工具 unknown；增加前置反例，添加同键回放与持久账本保护。
+4. 发现 failed 分支 retryOfCallId 为空导致回放拒绝；增加前置反例，改为核对真实父子、最后调用、原错误码及 attempt，补 failed 父保护。
+最终只读复查确认这些修复无新增阻断。评审者没有独立运行测试或确认当时尚在运行的测试结果。

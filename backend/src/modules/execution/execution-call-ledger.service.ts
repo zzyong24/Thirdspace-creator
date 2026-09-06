@@ -152,6 +152,10 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
         validate?.(call);
         if (validateTree) validateTree(await readCalls(tx, task.id), task);
+        if(input.status==="unknown" && call.kind==="tool" && !call.toolExecutionClaimId && ["waiting_user","retry_wait","failed"].includes(task.status)){
+          const children=(await readCalls(tx,task.id)).filter(child=>child.parentCallId===call.id);
+          if(children.length && children.every(child=>child.status==="rejected") && (children.at(-1)!.id===task.retryOfCallId || task.status==="failed"))throw new ConflictError("明确拒绝已挂起，不能因回执丢失改成未知");
+        }
         if (input.status === "rejected" && call.kind === "tool" && (await readCalls(tx, task.id)).some(child => child.parentCallId === call.id)) throw new ConflictError("已有子调用的父工具不能标记为未执行拒绝");
         if (input.status === "settled" && (call.kind === "tool" || call.parentCallId)) {
           const calls = await readCalls(tx, task.id);

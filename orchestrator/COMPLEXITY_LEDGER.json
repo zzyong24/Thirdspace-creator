@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "ba87ad4aa6cb4456961486cf9f4255cd341c2473dc4493cb39c75cfd67d0af69",
+      "file_sha256": "84697bd6e1c3158de2ac336311c7e00269707e495dc3dc7edd1a517ae7fc94b4",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities、命名 IPC 与取消后既有调用结算。本次声明并核对 chat.hooks 能力，将内部模型结算接入既有 settlement 校验，不增加领域写入权。独立只读评审已核对 db847331 的三个 IPC 文件仍在授权范围。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "c1fcc6dc8b78720f86811e0138cb08c621b45df578ffed3690fab4bd4a5e410a",
+      "file_sha256": "c917f78e98cf5b428c750e403d134ec59a97375aed18a14a4dacadbb6cff3d27",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认流式输出经统一 Worker 事件适配。本批复用执行调用账本、租约和私有 IPC 保存展示事件，不赋予流事件执行终态或领域写入权。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权真实 Worker capabilities、命名 IPC 与取消后既有调用结算。本次声明并核对 chat.hooks 能力，将内部模型结算接入既有 settlement 校验，不增加领域写入权。独立只读评审已核对 db847331 的三个 IPC 文件仍在授权范围。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "d4f6bb19d4caa0b5d11278cbffb61d938b5ef9ab6b8707417bc1245ad3e1b919",
+      "file_sha256": "cbcadbcd3fc8149ff87d016be21ebd2bb2190398f3accadc0af6fba28ee0acb1",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已确认持久聊天消息与任务结果原子提交。本批只将 commitChatResult 纳入既有 IPC settlement 校验；端口自身重查租约、控制状态与已确认回执，不允许取消后新写消息或覆盖终态。",
+      "reason": "DEC-RUNTIME-055 与 SPEC R-02 已授权命名 IPC 与取消后既有调用结算。本次把内部模型结算及明确失败的幂等回执查询接入 settlement 校验；实际首次失败仍由宿主复查原任务和拒绝账本，不允许新模型动作。独立只读评审确认仍属现有授权范围。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

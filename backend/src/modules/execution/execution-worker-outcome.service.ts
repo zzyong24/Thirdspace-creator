@@ -9,12 +9,14 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
   return {
-    async recordFailure(ref:ExecutionRef, raw:unknown) {
+    async recordFailure(ref:ExecutionRef, raw:unknown, validate?: (calls:typeof executionCalls.$inferSelect[],task:typeof executionTasks.$inferSelect)=>string[]) {
       const input=workerPortInputSchemas.commitResult.parse(raw);
       if(input.outcome === "succeeded")throw new ConflictError("成功必须经候选提交端口");
       return leases.withLease(ref,"settlement",async({tx,task})=>{
         if(task.kind !== "ai_task" || task.status !== "running")throw new ConflictError("任务已停止，不能覆盖状态");
-        const [last]=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(desc(executionCalls.sequence)).limit(1);
+        const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(desc(executionCalls.sequence));
+        const allowedStarted=new Set(validate?.(calls,task)??[]),last=calls[0];
+        if(input.outcome!=="unknown_result" && calls.some(call=>call.status==="unknown" || (call.status==="started" && !allowedStarted.has(call.id))))throw new ConflictError("存在未确认调用，禁止改成可恢复失败");
         let status:string=input.outcome;
         let retryAt:string|null=null;
         let retryOfCallId:string|null=null;

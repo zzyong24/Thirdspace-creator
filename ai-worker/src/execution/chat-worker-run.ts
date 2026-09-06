@@ -12,7 +12,7 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -35,6 +35,11 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   signal.throwIfAborted();
   const initial=checkpointSchema.parse(await ports.call("readCheckpoint",{},signal));
   if(initial.recovery==="requires_reconciliation")throw new GenerationFailure("unknown_result","CHAT_CHECKPOINT_REQUIRES_RECONCILIATION");
+  const restoreHooks=async(callId:string)=>{
+    const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatHooks",{callId},signal));
+    if(receipt.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_HOOKS_RESTORE_RECEIPT_UNKNOWN");
+  };
+  for(const callId of initial.resumableToolCallIds)await restoreHooks(callId);
   let checkpointTail:Promise<void>=Promise.resolve();
   const checkpoint=()=>{
     checkpointTail=checkpointTail.then(async()=>{
@@ -80,7 +85,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       try{
         const modelCallId=modelForTool.get(options.toolCallId);if(!modelCallId)throw Error("model receipt missing");
         let reservedCallId:string|undefined;
-        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,call:async(port,data,portSignal)=>{
+        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,...(definition.execution==="worker.script-hooks"?{resumeStarted:restoreHooks}:{}),call:async(port,data,portSignal)=>{
           const result=await ports.call(port,data,portSignal);
           if(port==="reserveAgenticTool"){
             const reservation=agenticToolReservationSchema.parse(result);

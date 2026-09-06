@@ -119,11 +119,15 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
           return false;
         });
         const knownSpentTokens=calls.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0);
-        const recovery=unknownUsage || incompleteReceipt || pendingCalls.some(call=>call.status!=="reserved") ? "requires_reconciliation"
+        // 仅宿主已记录的子模型拒绝可进入专用恢复门；不能据 Worker 自报忽略在途调用。
+        const retryChild=children.find(call=>call.id===task.retryOfCallId && call.status==="rejected");
+        const retryParent=retryChild && roots.find(call=>call.id===retryChild.parentCallId && call.kind==="tool" && call.status==="started" && !call.toolExecutionClaimId);
+        const resumableToolCallIds=retryParent && children.filter(call=>call.parentCallId===retryParent.id).every(call=>call.status==="rejected")?[retryParent.id]:[];
+        const recovery=unknownUsage || incompleteReceipt || pendingCalls.some(call=>call.status!=="reserved" && !resumableToolCallIds.includes(call.callId)) ? "requires_reconciliation"
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";
         return {schemaVersion:1 as const,revision:checkpoint?.revision ?? 0,ledgerSequence:calls.at(-1)?.sequence ?? 0,
-          ...reconstructed,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
+          ...reconstructed,resumableToolCallIds,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
           knownSpentTokens,spentTokens:unknownUsage?null:knownSpentTokens,
           reservedTokens:calls.reduce((sum,call)=>sum+(call.status==="rejected" || call.totalTokens!==null?0:call.reservedTokens),0)};
       });

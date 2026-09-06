@@ -1,3 +1,4 @@
+import * as hooksModule from "../modules/execution/execution-chat-hooks.service";
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
 import {resolve} from "node:path";
@@ -14,7 +15,7 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 afterAll(async()=>close());
-it.each(["success","cancel"])("同一真实Worker内部开场生成：%s",async(mode)=>{
+it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop"])("同一真实Worker内部开场生成：%s",async(mode)=>{
  const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date().toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
  const conversation=await repo.createConversation({title:"开场",projectId:null,scope:"global"});
@@ -26,14 +27,23 @@ it.each(["success","cancel"])("同一真实Worker内部开场生成：%s",async(
  let childOpened=false;
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
-  if(!input.stream){childOpened=true;res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'[{"text":"真实开场","angle":"场景"}]'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
+  if(!input.stream){childOpened=true;
+   if((mode.startsWith("reject")) && requests.length===2){res.writeHead(mode.startsWith("reject401")?401:mode.startsWith("reject400")?400:429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rejected",type:"api_error"}}));return;}
+res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'[{"text":"真实开场","angle":"场景"}]'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
   const first=requests.length===1;
   const delta=first?{tool_calls:[{index:0,id:"hooks",type:"function",function:{name:"script_hooks",arguments:"{}"}}]}:{content:"候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
- const host=createChatWorkerDispatcher(db,{entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,tools:{"script.hooks":{version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",parameters,approve:async()=>({status:"not-applicable"})}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ const createHost=()=>createChatWorkerDispatcher(db,{entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,tools:{"script.hooks":{version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",parameters,approve:async()=>({status:"not-applicable"})}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
+ let droppedFailure=false;
+ const originalFactory=hooksModule.createExecutionChatHooksService;
+ const failureSpy=mode.endsWith("drop")?vi.spyOn(hooksModule,"createExecutionChatHooksService").mockImplementation((...args)=>{
+  const service=originalFactory(...args);
+  return {...service,async fail(...failureArgs){const result=await service.fail(...failureArgs);if(!droppedFailure){droppedFailure=true;throw new Error("fixture lost failure receipt");}return result;}};
+ }):undefined;
+ let host=createHost();
  try{
   const draining=host.drainOnce();
   if(mode==="cancel"){
@@ -41,22 +51,39 @@ it.each(["success","cancel"])("同一真实Worker内部开场生成：%s",async(
    await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
   }
   await draining;
+  if(mode.startsWith("reject")){
+   const [stopped]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+   expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_user":mode.startsWith("reject400")?"failed":"retry_wait");
+   const before=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
+   expect(before.find(call=>call.kind==="tool")).toMatchObject({status:"started"});
+   expect(before.find(call=>call.parentCallId)).toMatchObject({status:"rejected"});
+   if(mode==="reject401" || mode.startsWith("reject400")){expect(requests).toHaveLength(2);return;}
+   await host.stop();host=createHost();
+   if(mode==="reject401resume")await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"configured"});
+   else await vi.waitFor(()=>expect(Date.parse(stopped!.retryAt!)).toBeLessThanOrEqual(Date.now()),{timeout:5000});
+   await host.drainOnce();
+  }
   const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
   if(mode==="cancel"){
    expect(task?.status).toBe("cancelled");expect(requests).toHaveLength(2);
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"unknown",totalTokens:null});return;
   }
-  expect(task?.status).toBe("succeeded");expect(requests).toHaveLength(3);
+  expect(task?.status).toBe("succeeded");expect(requests).toHaveLength(mode.startsWith("reject")?4:3);
   expect(JSON.stringify(requests[1]?.messages)).toContain("真实主题");
-  expect(JSON.stringify(requests[2]?.messages)).toContain("真实开场");
+  expect(JSON.stringify(requests.at(-1)?.messages)).toContain("真实开场");
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
-  expect(calls.filter(call=>call.kind==="model")).toHaveLength(3);
-  expect(calls.filter(call=>call.parentCallId)).toHaveLength(1);
+  expect(calls.filter(call=>call.kind==="model")).toHaveLength(mode.startsWith("reject")?4:3);
+  expect(calls.filter(call=>call.parentCallId)).toHaveLength(mode.startsWith("reject")?2:1);
+  if(mode.startsWith("reject")){
+   const children=calls.filter(call=>call.parentCallId).sort((a,b)=>a.sequence-b.sequence);
+   expect(children[1]).toMatchObject({retryOfCallId:children[0]!.id,operationKey:children[0]!.operationKey,parentCallId:children[0]!.parentCallId});
+   expect(calls.filter(call=>!call.parentCallId && call.kind==="model")).toHaveLength(2);
+  }
   expect(calls.reduce((sum,call)=>sum+(call.totalTokens??0),0)).toBe(17);
   const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));
   expect(JSON.stringify(messages.find(message=>message.role==="assistant")?.parts)).toContain("真实开场");
   const page=await createExecutionStreamService(db).read(ctx,submission.executionTaskId,{});
   expect(page.events.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("候选已准备好");
- }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+ }finally{failureSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },15000);

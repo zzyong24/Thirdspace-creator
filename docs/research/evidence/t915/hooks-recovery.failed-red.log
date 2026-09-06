@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (32 tests | 1 failed) 3439ms
+   × 宿主 failed 回执丢失可同键回读，不能将明确拒绝父工具覆写未知 94ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 宿主 failed 回执丢失可同键回读，不能将明确拒绝父工具覆写未知
+AssertionError: promise rejected "ConflictError: 挂起结果与原回执不符 { code: 'C…' }" instead of resolving
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:694:40
+    692|  const input={callId:f.parent.callId,outcome,errorCode:outcome==="fail…
+    693|  const first=await f.hooks.fail(f.ref,input);
+    694|  await expect(f.hooks.fail(f.ref,input)).resolves.toEqual(first);
+       |                                        ^
+    695|  await expect(createExecutionAgenticToolPorts(db,{now,budget,tools}).s…
+    696|  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.p…
+
+Caused by: ConflictError: 挂起结果与原回执不符
+ ❯ src/modules/execution/execution-chat-hooks.service.ts:197:156
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ConflictError' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 31 passed (32)
+   Start at  02:23:42
+   Duration  5.20s (transform 993ms, setup 0ms, import 1.62s, tests 3.44s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-chat-hooks.service.test.ts

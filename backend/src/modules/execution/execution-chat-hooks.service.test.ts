@@ -11,6 +11,7 @@ import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
 import { createExecutionChatHooksService } from "./execution-chat-hooks.service";
+import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import { createExecutionChatToolPorts } from "./execution-chat-tool-ports.service";
 import { createExecutionModelIdentityService } from "./execution-model-identity.service";
 it.each([{ modelId: "another" }, { provider: "another" }])(
@@ -491,6 +492,11 @@ it("并发预留共享调用，明确拒绝后只允许同键有据重试", asyn
   await f.hooks.start(f.ref, { callId: a.callId });
   await f.hooks.settle(f.ref, { callId: a.callId, status: "rejected" });
   expect((await f.hooks.reserve(f.ref, request)).status).toBe("rejected");
+  await f.hooks.fail(f.ref,{callId:f.parent.callId,outcome:"waiting_user",errorCode:"auth_401"});
+  await f.tasks.command(f.ctx,{taskIds:[f.task.executionTaskId],command:"resume",idempotencyKey:"configured"});
+  const claim=(await f.tasks.claimTask({taskId:f.task.executionTaskId,workerId:"worker"}))!;
+  f.ref={...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  await f.hooks.restore(f.ref,{callId:f.parent.callId});
   const retry = await f.hooks.reserve(f.ref, {
     ...request,
     retryOfCallId: a.callId,
@@ -657,4 +663,35 @@ it("未知内部结果不能冒充候选或换键重发", async () => {
       operationKey: `${prepared.operationKey}/model/2`,
     }),
   ).rejects.toThrow();
+});
+
+it.each(["started","unknown","settled"])("子调用为 %s 时不能自报明确失败或恢复",async(status)=>{
+ const f=await fixture(),child=await startedChild(f);
+ if(status==="unknown")await f.hooks.settle(f.ref,{callId:child.callId,status:"unknown"});
+ if(status==="settled")await f.hooks.settle(f.ref,{callId:child.callId,...success});
+ await expect(f.hooks.fail(f.ref,{callId:f.parent.callId,outcome:"retry_wait",errorCode:"http_429"})).rejects.toThrow();
+ await expect(f.hooks.restore(f.ref,{callId:f.parent.callId})).rejects.toThrow();
+ expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)?.status).toBe("started");
+});
+it("通用失败端口不能只看最后拒绝就忽略未完成父调用",async()=>{
+ const f=await fixture(),child=await startedChild(f);
+ await f.hooks.settle(f.ref,{callId:child.callId,status:"rejected"});
+ await expect(createExecutionWorkerOutcomeService(db,{now}).recordFailure(f.ref,{outcome:"retry_wait",errorCode:"http_429"})).rejects.toThrow("未确认调用");
+ await expect(f.hooks.restore(f.ref,{callId:f.parent.callId})).rejects.toThrow("没有可恢复");
+});
+
+it("明确拒绝尚未挂起和恢复时，禁止 Worker 直接指定子 ID 重发",async()=>{
+ const f=await fixture(),child=await startedChild(f),prepared=await f.hooks.prepare(f.ref,{callId:f.parent.callId});
+ await f.hooks.settle(f.ref,{callId:child.callId,status:"rejected"});
+ await expect(f.hooks.reserve(f.ref,{callId:f.parent.callId,operationKey:`${prepared.operationKey}/model/1`,request:requestFor(prepared),retryOfCallId:child.callId})).rejects.toThrow();
+ expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(3);
+});
+it.each(["waiting_user","failed"] as const)("宿主 %s 回执丢失可同键回读，不能将明确拒绝父工具覆写未知",async(outcome)=>{
+ const f=await fixture(),child=await startedChild(f);
+ await f.hooks.settle(f.ref,{callId:child.callId,status:"rejected"});
+ const input={callId:f.parent.callId,outcome,errorCode:outcome==="failed"?"http_400":"auth_401"};
+ const first=await f.hooks.fail(f.ref,input);
+ await expect(f.hooks.fail(f.ref,input)).resolves.toEqual(first);
+ await expect(createExecutionAgenticToolPorts(db,{now,budget,tools}).settle(f.ref,{callId:f.parent.callId,status:"unknown"})).rejects.toThrow();
+ expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)?.status).toBe("started");
 });

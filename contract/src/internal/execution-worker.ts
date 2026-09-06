@@ -23,7 +23,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
-  "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
+  "failChatHooks", "restoreChatHooks", "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
   "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
@@ -61,6 +61,8 @@ const generationSettlementSchema=z.discriminatedUnion("status", [
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  failChatHooks:z.object({callId:operationKeySchema,outcome:z.enum(["retry_wait","waiting_user","failed"]),errorCode:z.string().min(1).max(128),retryAfterMs:z.number().finite().nonnegative().optional()}).strict(),
+  restoreChatHooks:chatHooksParentRequestSchema,
   prepareChatHooks:chatHooksParentRequestSchema,
   reserveChatHooksModel:chatHooksReserveRequestSchema,
   startChatHooksModel:chatHooksParentRequestSchema,

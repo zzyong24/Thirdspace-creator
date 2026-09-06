@@ -124,14 +124,14 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
-      const chatTools=deps.executionMode==="chat.run" && ["prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
+      const chatTools=deps.executionMode==="chat.run" && ["failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
       const currentTools=chatTools??agentTools;
       if(port==="checkChatToolApproval" && chatTools)return chatTools.check(ref,raw,activeTools.get(executionKey(ref))?.controller.signal);
       if(port==="settleChatHooksModel" && chatTools)return chatTools.hooks.settle(ref,raw);
-      if(chatTools && ["prepareChatHooks","reserveChatHooksModel","startChatHooksModel","completeChatHooks"].includes(port)){
+      if(chatTools && ["failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","completeChatHooks"].includes(port)){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
         const signal=scope.controller.signal;
-        const work=port==="prepareChatHooks"?chatTools.hooks.prepare(ref,raw,signal):port==="reserveChatHooksModel"?chatTools.hooks.reserve(ref,raw,signal):port==="startChatHooksModel"?chatTools.hooks.start(ref,raw,signal):chatTools.hooks.complete(ref,raw,signal);
+        const work=port==="failChatHooks"?chatTools.hooks.fail(ref,raw,signal):port==="restoreChatHooks"?chatTools.hooks.restore(ref,raw,signal):port==="prepareChatHooks"?chatTools.hooks.prepare(ref,raw,signal):port==="reserveChatHooksModel"?chatTools.hooks.reserve(ref,raw,signal):port==="startChatHooksModel"?chatTools.hooks.start(ref,raw,signal):chatTools.hooks.complete(ref,raw,signal);
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);

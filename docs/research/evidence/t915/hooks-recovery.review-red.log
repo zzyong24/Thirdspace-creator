@@ -1,0 +1,59 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts (31 tests | 2 failed) 3026ms
+   × 明确拒绝尚未挂起和恢复时，禁止 Worker 直接指定子 ID 重发 96ms
+   × 宿主挂起回执丢失可同键回读，不能将明确拒绝父工具覆写未知 79ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 明确拒绝尚未挂起和恢复时，禁止 Worker 直接指定子 ID 重发
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_d7efd686-4de4-4898-a13f-8ad780f649ec",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:681:166
+    679|  const f=await fixture(),child=await startedChild(f),prepared=await f.…
+    680|  await f.hooks.settle(f.ref,{callId:child.callId,status:"rejected"});
+    681|  await expect(f.hooks.reserve(f.ref,{callId:f.parent.callId,operationK…
+       |                                                                                                                                                                      ^
+    682|  expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(3);
+    683| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-chat-hooks.service.test.ts > 宿主挂起回执丢失可同键回读，不能将明确拒绝父工具覆写未知
+AssertionError: promise rejected "ConflictError: 当前执行已停止或租约到期，不能启动新动作 { code: '…' }" instead of resolving
+ ❯ src/modules/execution/execution-chat-hooks.service.test.ts:689:40
+    687|  const input={callId:f.parent.callId,outcome:"waiting_user" as const,e…
+    688|  const first=await f.hooks.fail(f.ref,input);
+    689|  await expect(f.hooks.fail(f.ref,input)).resolves.toEqual(first);
+       |                                        ^
+    690|  await expect(createExecutionAgenticToolPorts(db,{now,budget,tools}).s…
+    691|  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.p…
+
+Caused by: ConflictError: 当前执行已停止或租约到期，不能启动新动作
+ ❯ src/modules/execution/execution-lease.service.ts:33:18
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1616
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ConflictError' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 29 passed (31)
+   Start at  02:20:10
+   Duration  4.80s (transform 1.00s, setup 0ms, import 1.64s, tests 3.03s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-chat-hooks.service.test.ts
