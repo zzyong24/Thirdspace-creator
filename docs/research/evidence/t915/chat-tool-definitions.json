@@ -1,0 +1,58 @@
+{
+  "task": "T-915",
+  "scope": "真实工具声明准备，不是执行迁移",
+  "red": "1 suite import failure, no cases ran",
+  "green": 388,
+  "effects": {
+    "committed": 11,
+    "proposal": 11,
+    "none": 23
+  },
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-red.log",
+      "sha256": "2901e206018eeeb81b07a0b48bce0aedb7bff3505e191d08bc3e20eadc136929",
+      "bytes": 1305
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-final.log",
+      "sha256": "6f811e3e9b398885613951f5c1c42c5690784bc82b1048f80bbe5945deada5ee",
+      "bytes": 239
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-types-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-scope.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-tool-definitions-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "result": "与前批一致，T-916 既有欠债保留"
+  }
+}

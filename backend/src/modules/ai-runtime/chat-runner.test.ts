@@ -3289,6 +3289,8 @@ it("Worker聊天准备清理遗弃授权并转换附件，不修改持久消息�
  expect(prepared.modelMessages.at(-1)).toMatchObject({role:"user",content:expect.arrayContaining([{type:"text",text:"看这张图"},expect.objectContaining({type:"file",mediaType:"image/png",data:{type:"url",url:"data:image/png;base64,AQID"}})])});
  expect(prepared.assembly).not.toHaveProperty("modelSpec");
  expect(Object.keys(prepared.toolParameters)).toEqual(Object.keys(prepared.assembly.tools));
+ expect(prepared.toolDefinitions.map(tool=>tool.name)).toEqual(Object.keys(prepared.assembly.tools));
+ expect(prepared.toolDefinitions.find(tool=>tool.name==="local.read")?.effect).toBe("committed");
  expect(prepared.toolParameters["topic.enrich"]!.parameters.safeParse({title:42}).success).toBe(false);
 });
 

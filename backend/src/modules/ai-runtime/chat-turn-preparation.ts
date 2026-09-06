@@ -1,4 +1,4 @@
-import {prepareChatToolParameters} from "./chat-tool-parameters";
+import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {prepareChatAssembly,latestUserText,detectCopilotMediaRoute,isScratchPositioningConversation,type runChatStream} from "./chat-runner";
 import {prepareChatModelMessages} from "./chat-model-messages";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
@@ -8,9 +8,6 @@ export async function prepareChatTurn(ctx:Parameters<typeof runChatStream>[0],in
   verbatimSources:input.trustedScriptSources??[],
   latestUserInstruction:latestUserText(input.messages),
  });
- const toolParameters=Object.fromEntries(await Promise.all(Object.entries(assembly.tools).map(async([name,tool])=>{
-  if(!tool.inputSchema)throw new Error(`工具缺少参数定义：${name}`);
-  return [name,await prepareChatToolParameters(tool.inputSchema)] as const;
- })));
- return {assembly,toolParameters,modelMessages:await prepareChatModelMessages(input.messages,assembly)};
+ const preparedTools=await prepareChatToolDefinitions(assembly.tools);
+ return {assembly,toolParameters:preparedTools.parameters,toolDefinitions:preparedTools.definitions,modelMessages:await prepareChatModelMessages(input.messages,assembly)};
 }

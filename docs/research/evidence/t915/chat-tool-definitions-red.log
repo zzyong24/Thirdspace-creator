@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-tool-definitions.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-tool-definitions.test.ts [ src/modules/ai-runtime/chat-tool-definitions.test.ts ]
+Error: Cannot find module './chat-tool-definitions' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/chat-tool-definitions.test.ts
+ ❯ src/modules/ai-runtime/chat-tool-definitions.test.ts:3:1
+      1| import { describe, expect, it } from "vitest";
+      2| import { jsonSchema, tool } from "ai";
+      3| import { CHAT_TOOL_EFFECTS, prepareChatToolDefinitions } from "./chat-…
+       | ^
+      4| import { ALL_CHAT_TOOL_NAMES } from "./chat-tools";
+      5| import { defineChatTool } from "./chat-tool-gate";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  22:59:48
+   Duration  231ms (transform 18ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-tool-definitions.test.ts

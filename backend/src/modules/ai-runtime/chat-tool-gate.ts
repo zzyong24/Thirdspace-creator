@@ -384,11 +384,16 @@ const CHAT_TOOL_APPROVAL_DECIDERS = new WeakMap<
 
 /** 宿主经过参数、授权及执行权校验后使用；此端口不自行授权或重试。 */
 type ChatToolNativeExecutor = (input: unknown, callOptions?: unknown) => Promise<unknown>;
-const CHAT_TOOL_NATIVE_EXECUTORS = new WeakMap<Tool, ChatToolNativeExecutor>();
+const CHAT_TOOL_NATIVE_EXECUTORS = new WeakMap<Tool, { name: string; execute: ChatToolNativeExecutor }>();
 
 /** 保留原始异常。返回的业务错误信封仍须由具体工具适配器解释，不能一律当成功。 */
 export function getChatToolNativeExecutor(t: Tool): ChatToolNativeExecutor | undefined {
-  return CHAT_TOOL_NATIVE_EXECUTORS.get(t);
+  return CHAT_TOOL_NATIVE_EXECUTORS.get(t)?.execute;
+}
+
+/** 绑定登记名，防止装配时将另一工具执行函数挂到错误副作用声明下。 */
+export function getChatToolRegisteredName(t: Tool): string | undefined {
+  return CHAT_TOOL_NATIVE_EXECUTORS.get(t)?.name;
 }
 
 /** 取某 tool 登记的授权判定器(无 = 该工具无需授权门)。buildChatToolApproval 内部用。 */
@@ -511,7 +516,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
     inputSchema: config.inputSchema,
     execute: gatedExecute,
   } as never) as Tool;
-  CHAT_TOOL_NATIVE_EXECUTORS.set(built, nativeExecute as ChatToolNativeExecutor);
+  CHAT_TOOL_NATIVE_EXECUTORS.set(built, { name, execute: nativeExecute as ChatToolNativeExecutor });
   // [T-263] 登记授权判定器(旁挂 WeakMap)—— buildChatToolApproval 据此装配 SDK toolApproval 配置。
   if (config.needsApproval) {
     CHAT_TOOL_APPROVAL_DECIDERS.set(

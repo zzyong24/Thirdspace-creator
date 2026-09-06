@@ -1,3 +1,5 @@
+import {prepareChatToolDefinitions} from "./chat-tool-definitions";
+import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {prepareChatToolParameters} from "./chat-tool-parameters";
 import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
@@ -4544,6 +4546,9 @@ it("T-915 同查询失败后可重新执行，不缓存拒绝结果", async () =
 it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建立真实宿主校验",async mode=>{
  const tools=allChatTools(makeDeps(mode==="selected"?{scriptPatchAnchor:{artifactId:"a",versionId:"v",sectionId:"s",originalText:"原文"}}:{boundProjectId:"p"}).deps);
  expect(Object.keys(tools).sort()).toEqual([...ALL_CHAT_TOOL_NAMES].sort());
+ const preparedDefinitions=await prepareChatToolDefinitions(tools);
+ expect(chatWorkerInputSchema.shape.tools.parse(preparedDefinitions.definitions)).toEqual(preparedDefinitions.definitions);
+ expect(preparedDefinitions.definitions.map(tool=>tool.name)).toEqual(Object.keys(tools));
  for(const [name,tool] of Object.entries(tools)){
   expect(tool.inputSchema,name).toBeDefined();
   const {schema,parameters}=await prepareChatToolParameters(tool.inputSchema!);
