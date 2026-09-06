@@ -122,7 +122,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   }]));
   let message:UIMessage|undefined;
   const result=createChatModelStream({model,system:input.system,messages:await Promise.all(input.messages.map(message=>modelMessageSchema.parse(message))) as ModelMessage[],
-    tools,toolApproval,maxSteps:input.maxSteps,maxOutputTokens:input.maxOutputTokens,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,abortSignal:signal,
+    tools,toolApproval,deduplicateTools:false,maxSteps:input.maxSteps,maxOutputTokens:input.maxOutputTokens,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,abortSignal:signal,
     onError:({error})=>{fail(error,"CHAT_MODEL_RESULT_UNKNOWN");},
   });
   const reader=result.toUIMessageStream({generateMessageId:()=>`chat:${input.sourceMessageId}`,onFinish:({responseMessage})=>{message=responseMessage;}}).getReader();

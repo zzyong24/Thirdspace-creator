@@ -43,7 +43,7 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);
   const identity=[model.id,proposed.toolCallId,proposed.toolName,definition.version,definition.effect,input];
   if(validationOutcome)identity.push({validationOutcome});
-  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,executionToolName:toolName!,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
+  return {modelCallId:model.id,toolCallId:proposed.toolCallId,toolName:proposed.toolName,executionToolName:toolName!,reuseWithinRound:chat.success,input,validationOutcome,dryRun:frozen.dryRun===true,effect:definition.effect,operationKey:operationKey(model.id,proposed.toolCallId),inputDigest:`sha256:${hash(identity)}`};
  }
  function bindingForCall(task:Task,calls:Call[],call:Call){
   if(call.kind!=="tool")throw new ConflictError("工具端口不能处理模型调用");

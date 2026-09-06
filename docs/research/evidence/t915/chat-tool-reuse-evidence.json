@@ -1,0 +1,120 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，正式 Worker 与聊天路由尚未切换",
+  "distinctTests": 83,
+  "files": [
+    {
+      "path": "ai-worker/src/execution/chat-worker-run.ts",
+      "sha256": "80bac41cf6b84546ab49c03bdbb358b37654f08bf45d23f409045d0e4dcfd708"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-model-stream.ts",
+      "sha256": "c47de5c6dcff19f6ac5db20203fe1224b0ecc8d07af74ba3b8adbe0cc197da49"
+    },
+    {
+      "path": "backend/src/integration/durable-chat-tool-ledger.test.ts",
+      "sha256": "5262e2adcc3cdc0c37f26853ae8c6e9f1a34856f369a2853ed820491ba4b8336"
+    },
+    {
+      "path": "backend/src/modules/execution/agentic-tool-binding.ts",
+      "sha256": "54c94036f01cdcec6c8b72d82e5e46d9c2ec7dfa408599075651a9a4cba4adf9"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+      "sha256": "c0a62a5e999f5d47d9234e7e6844b1a83ee2c7477f98c5a9e0e743829ef78e43"
+    },
+    {
+      "path": "backend/src/modules/execution/chat-tool-reuse-host.test.ts",
+      "sha256": "40502dd86b1233c5b432dc5a5fafc486dd01b4b7ba8f5abda3ffcd726bf67e08"
+    },
+    {
+      "path": "contract/src/internal/agentic-tool-call.ts",
+      "sha256": "7961f211b2419801c7549c336824a18cc75ae57d125194ac498102cff842479a"
+    },
+    {
+      "path": "contract/src/internal/execution-checkpoint.ts",
+      "sha256": "97fbb72cb689e214495cf0b25a87bd8667276f5bbf884f9100b9fb2744baaff8"
+    },
+    {
+      "path": "contract/tests/chat-worker.test.ts",
+      "sha256": "2858e00474482a3917d694cf4f9736c0dd331bc1bc77cc10e76c0dadb817b57a"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-context.log",
+      "sha256": "8bb5bec04fc16e1ef3e06c75c049e83cce4ca6df5bd441a5976e94967a75468e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-contract.log",
+      "sha256": "5a0882d039a2d7040e0847bca2168f51bc2ae4c74dbcf284d535661b3574b421"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-green.log",
+      "sha256": "1b00b83e30c3cbd2e0041753a35fc9d117e11ad4dd68fa358bc8ccc0cd4a5876"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-host.log",
+      "sha256": "a48d712cd19cabcc95cc1da0c50f550c7c7742cfeec745eecda091f5aac548ea"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-pmem.log",
+      "sha256": "2b3ffa702cedaf17f2a3a99f6b76d8ab5804ffe220dfac271edc3516ed3943c7"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-red.log",
+      "sha256": "bbba53751c119a7a19aa60d4794cdb9f3c14a36c771e5c8f49f3786d1090cc07"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-regression.log",
+      "sha256": "ab8f83d5b808417a36901c71d0dab05dd0307af5a19450ce7c2e080fbb7401e4"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-scope-final.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-scope.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-types-final.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-types.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-reuse-worker.log",
+      "sha256": "ca4acda74fb7d2ced70ead8d4fb96c629bcb92b72b37ab5727bdc12673c860d6"
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "passed": false
+  },
+  "independentReview": "本批未执行",
+  "limitations": [
+    "隔离供应商及授权 fixtures，不是真实上游或 UI 授权验收",
+    "完整 T-915 尚未完成，未发布"
+  ]
+}

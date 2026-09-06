@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { and, asc, eq, aiTasks, executionCalls, type Db } from "@creatoros/backend";
@@ -14,8 +15,13 @@ type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
 export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{tools:Record<string,AgenticBackendTool>;waitForResultMs?:number}){
  const leases=createExecutionLeaseService(db,deps);const ledger=createExecutionCallLedgerService(db,deps);
  const {bind:binding,forCall:bindingForCall}=createAgenticToolBinding(deps.tools);
- async function settle(ref:ExecutionRef,raw:unknown,claimId?:string){
-   const request=workerPortInputSchemas.settleAgenticTool.parse(raw);
+ const readOutput=(call:Call)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText ?? "")).output);
+ // 已确认副作用不能重复；纯读只有成功结果可复用，明确无副作用错误仍允许后续调用。
+ const reusable=(output:ToolOutcome)=>output.sideEffect==="committed" || output.sideEffect==="proposal" || (output.status==="ok" && output.error===null);
+ async function settle(ref:ExecutionRef,raw:unknown,claimId?:string,reusedCallId?:string){
+   const validated=workerPortInputSchemas.settleAgenticTool.parse(raw);
+   // 先校验再按私有 JSON 传输形式规范化可选 undefined 字段。
+   const request=JSON.parse(JSON.stringify(validated)) as typeof validated;
    const state=await ledger.inspect(ref);const original=state.calls.find(call=>call.id===request.callId);if(!original)throw new ConflictError("工具调用不存在");
    if(original.toolExecutionClaimId && !claimId && original.status!=="settled")throw new ConflictError("Host执行回执只能由实际执行者结算");
    if(claimId && original.toolExecutionClaimId!==claimId)throw new ConflictError("工具执行领取凭证不符");
@@ -24,7 +30,9 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    const unknown=request.status==="unknown" || request.output.sideEffect==="unknown" || request.output.error?.code==="unknown_commit";
    if(request.status==="settled" && !unknown && bound.dryRun && request.output.sideEffect!=="none")throw new ConflictError("预演任务不能结算真实副作用");
    if(request.status==="settled" && !unknown && request.output.sideEffect!=="none" && request.output.sideEffect!==bound.effect)throw new ConflictError("工具回执副作用超出已授权定义");
-   const settled=await ledger.settle(ref,request.callId,unknown?{status:"unknown"}:{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:bound.toolCallId,toolName:bound.toolName,output:request.status==="settled"?request.output:null}))},call=>{
+   const savedReuse=original.status==="settled" && original.resultText ? workerToolResultReceiptSchema.parse(JSON.parse(original.resultText)).reusedCallId : undefined;
+   const reuse=reusedCallId??savedReuse;
+   const settled=await ledger.settle(ref,request.callId,unknown?{status:"unknown"}:{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:bound.toolCallId,toolName:bound.toolName,output:request.status==="settled"?request.output:null,...(reuse?{reusedCallId:reuse}:{})}))},call=>{
     if(claimId && call.toolExecutionClaimId!==claimId)throw new ConflictError("工具执行领取凭证已改变");
     if(call.toolExecutionClaimId && !claimId && call.status!=="settled")throw new ConflictError("等待者不能结算Host执行");
     if(call.kind!=="tool" || (!unknown && call.status==="unknown"))throw new ConflictError("未知工具提交须经独立对账，不能当正常重试结算");
@@ -49,11 +57,20 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(calls.filter(row=>row.kind==="model").at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
     const handler=deps.tools[bound.executionToolName]?.execute;
     if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
+    let reuseCallId:string|undefined;
+    if(bound.reuseWithinRound && !bound.validationOutcome){
+     for(const prior of [...calls].reverse()){
+      if(prior.sequence>=call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
+      const previous=bindingForCall(task,calls,prior);
+      if(previous.validationOutcome || previous.executionToolName!==bound.executionToolName || previous.effect!==bound.effect || !isDeepStrictEqual(previous.input,bound.input))continue;
+      if(prior.status==="settled" && !reusable(readOutput(prior)))continue;
+      reuseCallId=prior.id;break;
+     }
+    }
     const claimId=randomUUID();
     await tx.update(executionCalls).set({toolExecutionClaimId:claimId}).where(eq(executionCalls.id,callId));
-    return {kind:"owner" as const,claimId,bound,handler,context,aiTaskId:task.ownerId};
+    return {kind:"owner" as const,claimId,bound,handler,context,aiTaskId:task.ownerId,reuseCallId};
    });
-   const readOutput=(call:Call)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText ?? "")).output);
    if(claimed.kind==="replay")return readOutput(claimed.call);
    if(claimed.kind==="waiting"){
     const until=Date.now()+(deps.waitForResultMs ?? 5000);
@@ -76,10 +93,22 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    },250);
    try{
     signal.throwIfAborted();
-    const output=agenticToolOutcomeSchema.parse(claimed.bound.validationOutcome ?? (claimed.bound.dryRun && claimed.bound.effect!=="none"
+    let reused:ToolOutcome|undefined;
+    if(claimed.reuseCallId){
+     while(true){
+      signal.throwIfAborted();
+      const prior=(await ledger.inspect(ref)).calls.find(row=>row.id===claimed.reuseCallId);
+      if(!prior || prior.status==="unknown")throw new ConflictError("同参前序调用结果未知，不能重复执行");
+      if(prior.status==="settled"){const output=readOutput(prior);if(reusable(output))reused=output;break;}
+      if(prior.status==="rejected")break;
+      await new Promise(resolve=>setTimeout(resolve,25));
+     }
+    }
+    signal.throwIfAborted();
+    const output=agenticToolOutcomeSchema.parse(reused ?? claimed.bound.validationOutcome ?? (claimed.bound.dryRun && claimed.bound.effect!=="none"
      ? {status:"ok",summary:"已生成操作预演",evidence:[],data:{plan:{toolName:claimed.bound.toolName,input:claimed.bound.input}},error:null,continuation:null,sideEffect:"none"}
      : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal})));
-    const receipt=await settle(ref,{callId,status:"settled",output},claimed.claimId);
+    const receipt=await settle(ref,{callId,status:"settled",output},claimed.claimId,reused?claimed.reuseCallId:undefined);
     if(receipt.status!=="settled")throw new ConflictError("工具提交结果未知，须对账");
     return output;
    }catch{

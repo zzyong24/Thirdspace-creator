@@ -26,6 +26,7 @@ export const workerToolResultReceiptSchema = z.object({
   toolCallId: id,
   toolName: id,
   output: z.json(),
+  reusedCallId: id.optional(),
 }).strict().refine(value => JSON.stringify(value).length <= 2_000_000, "工具回执过大");
 export const checkpointToolCallSchema = z.object({
   type: z.literal("tool-call"),

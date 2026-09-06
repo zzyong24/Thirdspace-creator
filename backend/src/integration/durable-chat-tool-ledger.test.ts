@@ -13,7 +13,7 @@ import { createExecutionGenerationPorts } from "../modules/execution/execution-g
 import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { createExecutionAgenticToolPorts } from "../modules/execution/execution-agentic-tool-ports.service";
 
-it.each(["completed","unknown","approval","denied","empty","length","http429"])("真实聊天 Worker 回合绑定账本并恢复：%s", async mode => {
+it.each(["completed","unknown","approval","denied","empty","length","http429","repeat"])("真实聊天 Worker 回合绑定账本并恢复：%s", async mode => {
   const f=await createDb();
   const ctx={userId:"chat-u",accountId:"chat-a",requestId:"fixture",source:"user" as const};
   const now=()=>new Date().toISOString(),budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
@@ -30,8 +30,9 @@ it.each(["completed","unknown","approval","denied","empty","length","http429"])(
       const parsed=JSON.parse(body);
       const hasResult=parsed.messages.some((message:{role:string})=>message.role==="tool");
       if(hasResult)bodies.push(body);
-      const delta=mode==="empty"?{content:""}:hasResult ? {content:mode==="denied"?"未执行读取":"有来源的结论"} : {tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
-      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:mode==="empty"?"stop":hasResult?(mode==="length"?"length":"stop"):"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+      const repeated=mode==="repeat" && requests===2;
+      const delta=repeated?{tool_calls:[{index:0,id:"read-2",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]}:mode==="empty"?{content:""}:hasResult ? {content:mode==="denied"?"未执行读取":"有来源的结论"} : {tool_calls:[{index:0,id:"read-1",type:"function",function:{name:"web_read",arguments:'{"query":"真实查询"}'}}]};
+      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:repeated?"tool_calls":mode==="empty"?"stop":hasResult?(mode==="length"?"length":"stop"):"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
       res.writeHead(200,{"content-type":"text/event-stream"});
       res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
     });
@@ -113,9 +114,10 @@ it.each(["completed","unknown","approval","denied","empty","length","http429"])(
     }
     await run();await run();
     if(mode!=="denied")expect(bodies[0]).toContain("https://source.test/real");
-    expect(requests).toBe(2);expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
-    const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(3);expect(state.spentTokens).toBe(10);
-    expect(state.calls.map(call=>[call.kind,call.status])).toEqual([["model","settled"],["tool","settled"],["model","settled"]]);
+    expect(requests).toBe(mode==="repeat"?3:2);expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
+    const state=await ledger.inspect(ref);expect(state.calls).toHaveLength(mode==="repeat"?5:3);expect(state.spentTokens).toBe(mode==="repeat"?15:10);
+    expect(state.calls.map(call=>[call.kind,call.status])).toEqual(mode==="repeat"?[["model","settled"],["tool","settled"],["model","settled"],["tool","settled"],["model","settled"]]:[["model","settled"],["tool","settled"],["model","settled"]]);
+    if(mode==="repeat")expect(JSON.parse(state.calls[3]!.resultText!)).toMatchObject({reusedCallId:state.calls[1]!.id});
     expect((await checkpoints.read(ref)).recovery).toBe("ready");
     const badVersion=createExecutionAgenticToolPorts(f.db,{now,budget,tools:{"web.read":{version:"2",parameters,effect:"none",execute}}});
     await expect(badVersion.reserve(ref,{modelCallId:state.calls[0]!.id,toolCallId:"read-1"})).rejects.toThrow();

@@ -14,6 +14,8 @@ export type ChatModelStreamOptions = Pick<StreamOptions,
   system: string;
   tools: NonNullable<StreamOptions["tools"]>;
   maxSteps: number;
+  /** 持久回合由后端逐次记账并复用，不能在 SDK 外层跳过调用。 */
+  deduplicateTools?: boolean;
   forcedTool?: string;
   forcedToolSequence?: string[];
   onDuplicate?: (toolName: string) => void;
@@ -21,7 +23,7 @@ export type ChatModelStreamOptions = Pick<StreamOptions,
 
 /** 模型循环唯一入口；业务工具、授权、模型与任务信号由调用方按真实上下文提供。 */
 export function createChatModelStream(options: ChatModelStreamOptions) {
-  const { system, tools, toolApproval, maxSteps, forcedTool, forcedToolSequence, onDuplicate, ...rest } = options;
+  const { system, tools, toolApproval, maxSteps, forcedTool, forcedToolSequence, onDuplicate, deduplicateTools = true, ...rest } = options;
   return streamText({
     ...rest,
     // 重试由模型/持久任务层管理，不能与 SDK 默认重试相乘。
@@ -32,7 +34,7 @@ export function createChatModelStream(options: ChatModelStreamOptions) {
         : forcedTool ? `${system}\n\n${buildForcedToolInstruction(sanitizeToolName(forcedTool))}` : system,
       tools,
     ),
-    tools: dedupeChatToolExecutions(sanitizeToolNames(tools), onDuplicate),
+    tools: deduplicateTools ? dedupeChatToolExecutions(sanitizeToolNames(tools), onDuplicate) : sanitizeToolNames(tools),
     ...(forcedTool === "script.patch" ? {
       experimental_repairToolCall: async ({ toolCall }) => repairScriptPatchToolCall(toolCall),
     } : {}),

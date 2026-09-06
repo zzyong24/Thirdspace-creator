@@ -16,3 +16,11 @@ it("冻结输入拒绝函数、缺失归属与非持久消息字段",()=>{
   expect(chatWorkerInputSchema.safeParse({...input,messages:[{role:"user",content:"问题",callback:()=>{}}]}).success).toBe(false);
   expect(chatWorkerInputSchema.safeParse({...input,tools:[{...input.tools[0],execute:()=>{}}]}).success).toBe(false);
 });
+it("复用关联只出现在后端回执，Worker不能指定复用来源结算",async()=>{
+  const {workerToolResultReceiptSchema,agenticToolReservationSchema,workerPortInputSchemas}=await import("../src/internal/execution-worker");
+  const output={status:"ok",summary:"已完成",evidence:[],error:null,continuation:null,sideEffect:"none"};
+  const receipt={schemaVersion:1,kind:"tool",toolCallId:"model-tool",toolName:"web_read",output,reusedCallId:"prior-call"};
+  expect(workerToolResultReceiptSchema.parse(receipt).reusedCallId).toBe("prior-call");
+  expect(agenticToolReservationSchema.parse({callId:"current",status:"settled",toolName:"web_read",input:{},receipt}).receipt?.reusedCallId).toBe("prior-call");
+  expect(workerPortInputSchemas.settleAgenticTool.safeParse({callId:"current",status:"settled",output,reusedCallId:"invented"}).success).toBe(false);
+});

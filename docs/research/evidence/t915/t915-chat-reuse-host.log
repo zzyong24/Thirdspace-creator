@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/chat-tool-reuse-host.test.ts (6 tests | 1 failed) 1781ms
+   × 无副作用瞬态错误允许下一次真实调用，第三个并发调用复用成功结果 82ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/chat-tool-reuse-host.test.ts > 无副作用瞬态错误允许下一次真实调用，第三个并发调用复用成功结果
+ConflictError: 工具执行结果未确认，须按原调用对账
+ ❯ Object.execute src/modules/execution/execution-agentic-tool-ports.service.ts:114:11
+    112|    }catch{
+    113|     await settle(ref,{callId,status:"unknown"},claimed.claimId).catch(…
+    114|     throw new ConflictError("工具执行结果未确认，须按原调用对账");
+       |           ^
+    115|    }finally{clearInterval(timer);stop.abort();}
+    116|   },
+ ❯ src/modules/execution/chat-tool-reuse-host.test.ts:54:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  20:06:40
+   Duration  3.32s (transform 787ms, setup 0ms, import 1.38s, tests 1.78s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/chat-tool-reuse-host.test.ts

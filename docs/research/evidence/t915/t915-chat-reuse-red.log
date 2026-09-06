@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/durable-chat-tool-ledger.test.ts (8 tests | 1 failed | 7 skipped) 1133ms
+   × 真实聊天 Worker 回合绑定账本并恢复：repeat 1132ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/durable-chat-tool-ledger.test.ts > 真实聊天 Worker 回合绑定账本并恢复：repeat
+Error: CHAT_CHECKPOINT_RECEIPT_UNKNOWN
+ ❯ fail ../ai-worker/src/execution/chat-worker-run.ts:30:59
+     28|   const modelForTool=new Map<string,string>(),toolCallIds=new Set<stri…
+     29|   const fail=(error:unknown,code:string)=>{
+     30|     const result=error instanceof GenerationFailure?error:new Generati…
+       |                                                           ^
+     31|     failure??=result;stop.abort();return result;
+     32|   };
+ ❯ ../ai-worker/src/execution/chat-worker-run.ts:48:28
+ ❯ bind ../ai-worker/src/execution/chat-worker-run.ts:61:5
+ ❯ Object.settle ../ai-worker/src/execution/chat-worker-run.ts:73:36
+ ❯ Object.pull ../ai-worker/src/execution/durable-stream-model.ts:243:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  20:03:33
+   Duration  2.52s (transform 675ms, setup 0ms, import 1.25s, tests 1.13s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/durable-chat-tool-ledger.test.ts -t repeat
