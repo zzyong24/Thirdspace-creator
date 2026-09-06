@@ -1,6 +1,6 @@
 {
   "schema": "orchestrator-engine-vendor/v1",
-  "skill_version": "3.25.0",
+  "skill_version": "3.26.0",
   "files": {
     "anti-check.mjs": "96ffbbace4cdf3645643b8847d3e953c3a97e6b2c8e0cf1b9db1921ad8f415b8",
     "asset-check.config.example.json": "9f2309013bfe95b9960b891ccd74c40571645f0166c43d3b788c9b07bc4d54bc",
@@ -21,7 +21,7 @@
     "feature-sync.mjs": "3f29b70005f8172710de6e023fed9dd03c89bf17ec14e8bef2dd5e92138c43a1",
     "frontend-validation.mjs": "47c79d66e687b913d3d9a848dda50429f551bae071646d5efbed9263e1c38727",
     "governance-guard.mjs": "de06cdb13af2e73b20cd1beea9c4bb5705443d652fdc50170df677f1d3664eaf",
-    "harness/coding-agent.md": "916de1eec910ab3fa5eec84f82d5af9fe6cdb36ca276932e3845d34271de12c2",
+    "harness/coding-agent.md": "72be8d2e557979d95160762423ebc9bcfb5c0dc65c7e9124f5762a4c5f48e125",
     "harness/evaluator-rebuttal.md": "1f33bbaf02ffab7a581064bd4fd74e8d300d7c77c012c168028d7abe419be4a7",
     "harness/evaluator.md": "225993bb24b196eaee1b7f3689240990e9a3586a22a104def43200f76b54f7a7",
     "harness/init.sh": "4c5b66cbe412b032895fd521b017cdb1d9cb78c0ef0d7fd2f745c088a068e206",

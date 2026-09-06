@@ -1,0 +1,33 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "change": "通过受支持 --update --topology single 升级流程 3.25.0 → 3.26.0；保留项目规则和既有全局对账失败",
+  "managedFiles": 52,
+  "hashMismatches": [],
+  "files": [
+    {
+      "path": "orchestrator/process/.skill-version",
+      "sha256": "261c20ee5f366da519e1e15631f58108ec218ffd9ed2324bf8dc2f0cf8f0d32e"
+    },
+    {
+      "path": "orchestrator/process/.vendor-manifest.json",
+      "sha256": "b4a95eded66fdc39128c003af432a6db5073febddb34f329f1cde361f4f3ab0b"
+    },
+    {
+      "path": "orchestrator/process/harness/coding-agent.md",
+      "sha256": "72be8d2e557979d95160762423ebc9bcfb5c0dc65c7e9124f5762a4c5f48e125"
+    }
+  ],
+  "log": {
+    "path": "docs/research/evidence/t915/t915-process-326-update.log",
+    "sha256": "7479e269fa9cdaecd34937e22048173d0084639d73f8699971422e7e2c1ae5a5"
+  },
+  "updaterExitCode": 1,
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1,
+    "passed": false
+  },
+  "researchGate": "无未关闭 Research-First Gate",
+  "status": "T-915 继续实现，未完成完整验收；工程债务由既有 T-916 跟踪"
+}
