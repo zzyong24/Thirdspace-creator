@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+-------------------x--
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 动态工具解析不响应取消时，stop 仍能停止且迟到返回不能调用模型
+AssertionError: expected 'failed' to be 'running' // Object.is equality
+
+Expected: "running"
+Received: "failed"
+
+ ❯ src/integration/chat-worker-entry.test.ts:184:51
+    182|   let stopped=false;const stopping=host.stop().then(()=>{stopped=true;…
+    183|   await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:3000});awai…
+    184|   if(mode==="stop")expect((await state()).status).toBe("running");
+       |                                                   ^
+    185|   for(const release of releases)release({});await Promise.resolve();aw…
+    186|   expect(credentials).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 21 skipped (22)
+   Start at  00:07:25
+   Duration  3.51s (transform 1.01s, setup 0ms, import 1.67s, tests 1.70s, environment 0ms)
+

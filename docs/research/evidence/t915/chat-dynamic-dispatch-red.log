@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+--------------xxxx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'tool' dynamic=true resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=true resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'missing-tools' dynamic=true resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'missing-tools' dynamic=true resolverFailure=true
+TypeError: Cannot convert undefined or null to object
+ ❯ createExecutionChatToolPorts src/modules/execution/execution-chat-tool-ports.service.ts:70:47
+     68|   return decision;
+     69|  }
+     70|  const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(…
+       |                                               ^
+     71|   const bound=await leases.withLease(executionScope.execution,"admissi…
+     72|    const calls=await tx.select().from(executionCalls).where(eq(executi…
+ ❯ createDispatcher src/modules/execution/model-worker-dispatcher.ts:77:51
+ ❯ createChatWorkerDispatcher src/modules/execution/model-worker-dispatcher.ts:51:88
+ ❯ src/integration/chat-worker-entry.test.ts:65:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 14 skipped (18)
+   Start at  23:59:59
+   Duration  2.88s (transform 848ms, setup 0ms, import 1.43s, tests 1.32s, environment 0ms)
+

@@ -1,4 +1,4 @@
-import {createExecutionChatToolPorts,type ChatBackendTool} from "./execution-chat-tool-ports.service";
+import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
 import {createCopilotReplyCompletionService} from "../ai/copilot-reply-completion.service";
@@ -44,7 +44,10 @@ interface WorkerDispatcherDeps {
   onError?(code:string):void;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
-export interface ChatWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,ChatBackendTool>}
+export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & (
+ {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
+ {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
+);
 export interface AgenticWorkerDispatcherDeps extends WorkerDispatcherDeps {tools:Record<string,AgenticBackendTool>;browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">}
 export function createModelWorkerDispatcher(db:Db,deps:ModelWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"model"});}
 export function createAgenticWorkerDispatcher(db:Db,deps:AgenticWorkerDispatcherDeps){return createDispatcher(db,{...deps,executionMode:"agentic.run"});}
@@ -52,6 +55,7 @@ export function createChatWorkerDispatcher(db:Db,deps:ChatWorkerDispatcherDeps){
 /** 同一领取/进程池/取消/停止实现，命名端口按执行模式分别装配。 */
 function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"model"})|(AgenticWorkerDispatcherDeps&{executionMode:"agentic.run"})|(ChatWorkerDispatcherDeps&{executionMode:"chat.run"})){
 
+  if(deps.executionMode==="chat.run" && (Boolean(deps.tools)===(typeof deps.resolveTools==="function")))throw new Error("CHAT_TOOL_RESOLVER_CONFIG_INVALID");
   const concurrency=deps.modelConcurrency ?? 2;
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
@@ -74,16 +78,43 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
-  const chatTools=deps.executionMode==="chat.run"?createExecutionChatToolPorts(db,deps):null;
-  const agentTools=chatTools ?? (deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null);
+  const staticChatTools=deps.executionMode==="chat.run" && deps.tools?createExecutionChatToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
+  const agentTools=deps.executionMode==="agentic.run"?createExecutionAgenticToolPorts(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const browserSessions=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserSessionService(db,{now,budget:deps.budget,tools:deps.tools,sessions:deps.browserSessions}):null;
   const browserActions=deps.executionMode==="agentic.run"?createExecutionBrowserActionService(db,{now,tools:deps.tools}):null;
   const browserEvidence=deps.executionMode==="agentic.run"?createExecutionBrowserEvidenceService(db,{now,tools:deps.tools,budget:deps.budget}):null;
   const browserLogin=deps.executionMode==="agentic.run" && deps.browserSessions?createExecutionBrowserLoginSnapshotService(db,{now,sessions:deps.browserSessions}):null;
   const researchEvidence=deps.executionMode==="agentic.run"?createExecutionResearchEvidenceService(db,{now,budget:deps.budget,tools:deps.tools}):null;
   const agentCandidates=deps.executionMode==="agentic.run"?createExecutionAgenticCandidateService(db,{now}):null;
-  const activeTools=new Map<string,{controller:AbortController;pending:Set<Promise<unknown>>}>();
-  const executionKey=(ref:ExecutionRef)=>JSON.stringify(ref);
+  type ChatPorts=ReturnType<typeof createExecutionChatToolPorts>;
+  type ToolScope={controller:AbortController;pending:Set<Promise<unknown>>;chatPorts?:Promise<ChatPorts>;chatReady?:boolean};
+  const activeTools=new Map<string,ToolScope>();
+  const executionKey=(ref:ExecutionRef)=>JSON.stringify([ref.executionTaskId,ref.attempt,ref.fenceToken]);
+  async function getChatTools(ref:ExecutionRef):Promise<ChatPorts>{
+    const scope=activeTools.get(executionKey(ref));
+    if(!scope || deps.executionMode!=="chat.run")throw new Error("STALE_EXECUTION");
+    if(!scope.chatPorts)scope.chatPorts=(async()=>{
+      const signal=scope.controller.signal;signal.throwIfAborted();
+      if(staticChatTools)return staticChatTools;
+      const {context,input}=await readExecutionChatTask(db,ref,now);
+      await calls.readTaskContext(ref);
+      signal.throwIfAborted();
+      const work=deps.resolveTools!(structuredClone(context),structuredClone(input),{...ref},signal);
+      // 解析器只能构造端口；不响应取消的迟到解析不能阻塞退出或取得执行权。
+      const resolved=await new Promise<Record<string,ChatBackendTool>>((resolve,reject)=>{
+        const abort=()=>reject(signal.reason??new Error("CHAT_TOOL_RESOLUTION_CANCELLED"));
+        signal.addEventListener("abort",abort,{once:true});
+        work.then(value=>{signal.removeEventListener("abort",abort);resolve(value);},error=>{signal.removeEventListener("abort",abort);reject(error);});
+        if(signal.aborted)abort();
+      });
+      signal.throwIfAborted();
+      const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
+      const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools});
+      await ports.validateTask(ref);signal.throwIfAborted();
+      return ports;
+    })();
+    return scope.chatPorts;
+  }
   let stopping=false;
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
@@ -91,6 +122,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      const chatTools=deps.executionMode==="chat.run" && ["checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
+      const currentTools=chatTools??agentTools;
       if(port==="checkChatToolApproval" && chatTools)return chatTools.check(ref,raw,activeTools.get(executionKey(ref))?.controller.signal);
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
@@ -158,13 +191,13 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(port==="readCheckpoint")return checkpoints.read(ref);
       if(port==="saveCheckpoint")return checkpoints.save(ref,raw);
       if(port==="reserveAgenticModel" && agentModels)return agentModels.reserve(ref,raw);
-      if(port==="reserveAgenticTool" && agentTools)return agentTools.reserve(ref,raw);
-      if(port==="startAgenticTool" && agentTools)return agentTools.start(ref,raw);
-      if(port==="settleAgenticTool" && agentTools)return agentTools.settle(ref,raw);
+      if(port==="reserveAgenticTool" && currentTools)return currentTools.reserve(ref,raw);
+      if(port==="startAgenticTool" && currentTools)return currentTools.start(ref,raw);
+      if(port==="settleAgenticTool" && currentTools)return currentTools.settle(ref,raw);
       if(port==="commitAgenticResult" && agentCandidates)return agentCandidates.commitAgenticResult(ref,raw);
-      if(port==="executeAgenticTool" && agentTools){
+      if(port==="executeAgenticTool" && currentTools){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
-        const execution=agentTools.execute(ref,raw,scope.controller.signal);scope.pending.add(execution);
+        const execution=currentTools.execute(ref,raw,scope.controller.signal);scope.pending.add(execution);
         try{return await execution;}finally{scope.pending.delete(execution);}
       }
       if(port==="reserveGenerationCall" && deps.executionMode!=="agentic.run")return generation.reserveGenerationCall(ref,raw);
@@ -234,7 +267,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         }
         activeCount++;
         const ref={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-        const toolScope={controller:new AbortController(),pending:new Set<Promise<unknown>>()};
+        const toolScope:ToolScope={controller:new AbortController(),pending:new Set<Promise<unknown>>()};
         activeTools.set(executionKey(ref),toolScope);
         activeWorkers.set(executionKey(ref),{ref,supervisor});
         let watching=true;
@@ -243,14 +276,21 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
           try{
             const status=await leases.withLease(ref,"settlement",async({task})=>task.status);
             if(watching && (status==="pause_requested" || status==="cancel_requested")){toolScope.controller.abort();supervisor.cancel(ref);}
+            else if(watching && deps.executionMode==="chat.run" && !toolScope.chatReady)await leases.withLease(ref,"admission",async()=>{});
           }catch{if(watching){toolScope.controller.abort();try{supervisor.cancel(ref);}catch{/* 进程可能已经退出。 */}}}
           if(watching)controlTimer=setTimeout(()=>{void watch();},250);
         };
         controlTimer=setTimeout(()=>{void watch();},250);
         try{
-          if(chatTools){
-            try{await chatTools.validateTask(ref);await calls.readTaskContext(ref);}
-            catch{await outcomes.recordFailure(ref,{outcome:"failed",errorCode:"CHAT_WORKER_INPUT_UNAVAILABLE"}).catch(()=>{});throw new Error("CHAT_WORKER_INPUT_UNAVAILABLE");}
+          if(deps.executionMode==="chat.run"){
+            try{const chatTools=await getChatTools(ref);await chatTools.validateTask(ref);await calls.readTaskContext(ref);toolScope.chatReady=true;}
+            catch{
+              if(!stopping)await leases.withLease(ref,"settlement",async({tx,task})=>{
+                const rows=await tx.select({status:executionCalls.status}).from(executionCalls).where(eq(executionCalls.executionTaskId,task.id));
+                return rows.some(call=>call.status==="started" || call.status==="unknown");
+              }).then(unknown=>!stopping?outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":"failed",errorCode:"CHAT_WORKER_INPUT_UNAVAILABLE"}):undefined).catch(()=>{});
+              throw new Error("CHAT_WORKER_INPUT_UNAVAILABLE");
+            }
           }
           const deadline=await leases.withLease(ref,"admission",async({task})=>task.deadlineAt);
           if(stopping)break;

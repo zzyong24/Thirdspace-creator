@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+······················stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.projects ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.projects.search ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.project.detail ok durationMs=0
+
+stdout | src/modules/ai/chat-turn-submission.service.test.ts > 真实租约恢复只读工具，使用冻结产品说明及当前账号数据，拒绝旧租约和工具版本变化
+[chat-tool] name=context.publications ok durationMs=0
+
+···········
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  00:03:57
+   Duration  8.29s (transform 2.81s, setup 0ms, import 4.57s, tests 11.26s, environment 0ms)
+

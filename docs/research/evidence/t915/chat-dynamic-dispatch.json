@@ -1,0 +1,83 @@
+{
+  "task": "T-915",
+  "scope": "按租约动态构造聊天工具端口，正式应用组合根未接入",
+  "testsPassed": 57,
+  "evidence": [
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-red.log",
+      "sha256": "94d686b6b2bd6b5f85c22c888bd4a7d65b55d9e99e384bb9a73f228f9e1e6b5b",
+      "bytes": 1773
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-final2.log",
+      "sha256": "08bc87625f9d55d7b7513e0e9a1b214d663f457ac514e800c71d949cba4a95c7",
+      "bytes": 284
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-regression.log",
+      "sha256": "be68d2921a22bccb55e206eb605b0354b247865a958babc58526242fbfcf7cd8",
+      "bytes": 1481
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-types-final2.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd",
+      "bytes": 655
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-stop-red.log",
+      "sha256": "08c025d4a8fd3e3736d9fb65c97a3f6b24368e4882734c5fa2d7cbd0b7ada6c2",
+      "bytes": 1165
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-expired-red.log",
+      "sha256": "5153bd6ab3a44eec8c95a7ae0ebfc3dfc1d34f3424352650351b95fabd1c0aa5",
+      "bytes": 1042
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-final4.log",
+      "sha256": "033208eba8fc0a2172abe9f1ead7eea40ca34738c5b5f4943a27d39599cd151a",
+      "bytes": 288
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-types-final4.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0",
+      "bytes": 106
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-codegraph.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-governance.log",
+      "sha256": "19ccf355605c1a202d07f6d66556762c477ed898d2cae492ec629342198d79b5",
+      "bytes": 69
+    },
+    {
+      "file": "docs/research/evidence/t915/chat-dynamic-dispatch-reconcile.log",
+      "sha256": "98dd7034b0dfc3a16a586b740678cb6c2b93feb5f5b9aa96d6bc5a65d1705946",
+      "bytes": 26074
+    }
+  ],
+  "globalReconcile": {
+    "status": "FAIL",
+    "errors": 211,
+    "warnings": 1,
+    "existingDebtTask": "T-916"
+  }
+}

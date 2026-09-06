@@ -1,3 +1,5 @@
+import type {RequestContext} from "@creatoros/contract";
+import type {ChatBackendTool} from "../modules/execution/execution-chat-tool-ports.service";
 import { readUIMessageStream,type UIMessage,type UIMessageChunk } from "ai";
 import { createExecutionStreamService,subscribeExecutionStream } from "../modules/execution/execution-stream.service";
 import { createServer } from "node:http";
@@ -21,7 +23,8 @@ it("正式 Worker 二进制真实声明 chat.run 能力",async()=>{
  try{expect(await worker.start()).toContain("chat.run");}finally{await worker.stop();}
 });
 
-it.each(["text","tool","retry","approval","denied","cancel","unknown","partial","missing-tools","revoked","login","late-denied","live"])("正式聊天子进程通过宿主完成并保留执行事实：%s",async mode=>{
+const staticModes=["text","tool","retry","approval","denied","cancel","unknown","partial","missing-tools","revoked","login","late-denied","live"];
+it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),...["tool","approval","missing-tools"].map(mode=>({mode,dynamic:true,resolveFailure:false})),{mode:"missing-tools",dynamic:true,resolveFailure:true}])("正式聊天子进程通过宿主完成并保留执行事实：$mode dynamic=$dynamic resolverFailure=$resolveFailure",async ({mode,dynamic,resolveFailure})=>{
  const ctx={userId:"chat-entry-u",accountId:`chat-entry-a-${++sequence}`,requestId:"test",source:"user" as const};
  const now=()=>new Date().toISOString(),budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-entry-${++sequence}`});
@@ -56,7 +59,12 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
  });
  let approvalChecks=0;
  const approve=vi.fn(async()=>{approvalChecks++;return (mode==="denied" || (mode==="late-denied" && approvalChecks>1))?{status:"denied" as const,reason:"用户拒绝"}:(mode==="approval" || (mode==="revoked" && approvalChecks>1))&&!grant?{status:"user-approval" as const}:{status:"not-applicable" as const};});
- const host=createChatWorkerDispatcher(db,{entryPath,workerId:"chat-host",budget,pollMs:100,modelConcurrency:1,tools:mode==="missing-tools"?{}:{"web.read":{version:"1",effect:"none",parameters,execute,approve}},resolveModelCredential:async(context,capability)=>{
+ const resolveTools=vi.fn(async(context:RequestContext,input:{sourceMessageId:string},ref:{executionTaskId:string;attempt:number},signal:AbortSignal):Promise<Record<string,ChatBackendTool>>=>{
+  expect(context).toMatchObject({userId:ctx.userId,accountId:ctx.accountId});expect(input.sourceMessageId).toBe(source.id);expect(ref.executionTaskId).toBe(submission.executionTaskId);expect(signal.aborted).toBe(false);
+  if(resolveFailure)throw Error("fixture resolver unavailable");
+  return mode==="missing-tools"?{}:{"web.read":{version:"1",effect:"none" as const,parameters,execute,approve}};
+ });
+ const host=createChatWorkerDispatcher(db,{entryPath,workerId:"chat-host",budget,pollMs:100,modelConcurrency:1,...(dynamic?{resolveTools}:{tools:mode==="missing-tools"?{}:{"web.read":{version:"1",effect:"none" as const,parameters,execute,approve}}}),resolveModelCredential:async(context,capability)=>{
   expect(context).toMatchObject({userId:ctx.userId,accountId:ctx.accountId});expect(capability).toBe("copilot.assist");
   return {apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"};
  }});
@@ -125,8 +133,69 @@ it.each(["text","tool","retry","approval","denied","cancel","unknown","partial",
     expect(JSON.parse(JSON.stringify(response!.parts.find(part=>"toolCallId" in part && part.toolCallId==="read-source")))).toMatchObject(expected);
    }
   }
+  if(dynamic){expect(resolveTools).toHaveBeenCalledTimes((await state()).attempt);expect(new Set(resolveTools.mock.calls.map(call=>call[2].attempt)).size).toBe(resolveTools.mock.calls.length);}
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
   if(mode==="retry")expect(calls.map(call=>call.status)).toEqual(["rejected","settled"]);
   if(["cancel","unknown","missing-tools"].includes(mode))expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
 },20000);
+
+it.each(["cancel","stop","pause","unknown","expired","lease-expired"])("动态工具解析不响应取消时，%s 仍能停止且迟到返回不能调用模型",async mode=>{
+ let clockOffset=0;
+ const ctx={userId:"resolve-race",accountId:`resolve-${++sequence}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-race-${++sequence}`});
+ const conversation=await repo.createConversation({title:"解析竞态",projectId:null,scope:"global"}),source=await repo.createMessage(conversation.id,{role:"user",content:"问题",attachments:[],modelMetadata:{}});
+ const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"fixture",messages:[{role:"user",content:"问题"}],tools:[],maxSteps:3,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const releases:Array<(tools:Record<string,ChatBackendTool>)=>void>=[];
+ const resolveTools=vi.fn(()=>mode==="unknown"?Promise.reject(new Error("恢复工具不可用")):new Promise<Record<string,ChatBackendTool>>(resolve=>releases.push(resolve)));
+ const credentials=vi.fn(async()=>{throw Error("不应请求凭据");});
+ const host=createChatWorkerDispatcher(db,{now,entryPath,workerId:"resolve-race",budget:{maxCalls:5,maxTokens:10000,deadlineMs:mode==="expired"?1000:["stop","lease-expired"].includes(mode)?600000:60000},pollMs:100,modelConcurrency:1,resolveTools,resolveModelCredential:credentials});
+ const state=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
+ const tasks=createPersistentTaskService(db);
+ if(mode==="unknown"){
+  const claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId:"prior"}))!;
+  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const {createExecutionCallLedgerService}=await import("../modules/execution/execution-call-ledger.service");
+  const ledger=createExecutionCallLedgerService(db,{budget:{maxCalls:5,maxTokens:10000,deadlineMs:60000}});
+  const call=await ledger.reserve(ref,{kind:"model",operationKey:"original",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});await ledger.start(ref,call.id);
+  await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"pause",idempotencyKey:"prior-pause"});
+  await tasks.acknowledgeControl({taskId:submitted.executionTaskId,workerId:"prior",attempt:claim.lease.attempt});
+  await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"resume",idempotencyKey:"prior-resume"});
+ }
+ try{
+  host.start();await vi.waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(1));
+  if(mode==="unknown"){
+   await vi.waitFor(async()=>expect((await state()).status).toBe("unknown_result"));
+   expect(credentials).not.toHaveBeenCalled();
+   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
+   expect(calls).toHaveLength(1);expect(calls[0]!.operationKey).toBe("original");expect(calls[0]!.status).toBe("started");return;
+  }
+  if(mode==="expired" || mode==="lease-expired"){
+   clockOffset=mode==="expired"?2000:Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
+   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:1500});
+   expect(credentials).not.toHaveBeenCalled();return;
+  }
+  if(mode!=="stop"){
+   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:mode==="pause"?"pause":"cancel",idempotencyKey:"control"});
+   await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="pause"?"paused":"cancelled"));
+  }
+  if(mode==="pause"){
+   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"resume",idempotencyKey:"resume"});
+   await vi.waitFor(()=>expect(resolveTools).toHaveBeenCalledTimes(2));
+   releases[0]!({});await Promise.resolve();await Promise.resolve();
+   expect((await state()).attempt).toBe(2);expect((await state()).status).toBe("running");
+  }
+  let stopped=false;const stopping=host.stop().then(()=>{stopped=true;});
+  await vi.waitFor(()=>expect(stopped).toBe(true),{timeout:3000});await stopping;
+  if(mode==="stop"){
+   expect((await state()).status).toBe("running");
+   clockOffset=Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
+   await createPersistentTaskService(db,{now}).recoverExpiredLeases();
+   expect((await state()).status).toBe("queued");
+   await tasks.command(ctx,{taskIds:[submitted.executionTaskId],command:"cancel",idempotencyKey:"cleanup"});
+  }
+  for(const release of releases)release({});await Promise.resolve();await Promise.resolve();
+  expect(credentials).not.toHaveBeenCalled();
+  expect(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId))).toHaveLength(0);
+ }finally{for(const release of releases)release({});await host.stop();}
+},10000);

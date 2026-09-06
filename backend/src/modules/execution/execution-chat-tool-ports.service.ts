@@ -14,17 +14,22 @@ export type ChatBackendTool=AgenticBackendTool & {
   approve(context:RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;modelCallId:string;toolCallId:string;signal?:AbortSignal}):Promise<Approval>;
 };
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
+/** 共用执行/业务映射校验，动态装配前先恢复真实账号与冻结输入。 */
+export async function readExecutionChatTask(db:Db,ref:ExecutionRef,now?:()=>string){
+  return createExecutionLeaseService(db,{now}).withLease(ref,"admission",async({tx,task,context})=>{
+   const input=chatWorkerInputSchema.parse(object(task.payload).modelInput);
+   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==context.accountId)throw new ConflictError("聊天工具任务映射无效");
+   return {context,input};
+  });
+}
 /** 宿主独立核对冻结工具和当前权限；不依赖 Worker 先问过授权，也不接收 Worker 自报参数。 */
 export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:{maxCalls:number;maxTokens:number;deadlineMs:number};tools:Record<string,ChatBackendTool>}){
  const leases=createExecutionLeaseService(db,deps),binding=createAgenticToolBinding(deps.tools);
  async function validateTask(ref:ExecutionRef){
-  return leases.withLease(ref,"admission",async({tx,task,context})=>{
-   const input=chatWorkerInputSchema.parse(object(task.payload).modelInput);
-   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
-   if(task.kind!=="ai_task" || task.ownerType!=="ai_task" || !business || !["queued","running"].includes(business.status) || business.taskType!=="copilot.assist" || object(task.payload).aiTaskId!==business.id || object(business.inputData).modelInputDigest!==chatInputDigest(input) || input.userId!==context.userId || input.accountId!==context.accountId)throw new ConflictError("聊天工具任务映射无效");
+   const {input}=await readExecutionChatTask(db,ref,deps.now);
    for(const frozen of input.tools){const tool=deps.tools[frozen.name];if(!tool || tool.version!==frozen.version || tool.effect!==frozen.effect || typeof tool.approve!=="function" || typeof tool.execute!=="function")throw new ConflictError("聊天工具执行或授权端口尚未装配");}
    return input;
-  });
  }
  async function scope(ref:ExecutionRef,request:{modelCallId:string;toolCallId:string}){
   await validateTask(ref);

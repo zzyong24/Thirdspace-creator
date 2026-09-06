@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+----------------------x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 动态工具解析不响应取消时，expired 仍能停止且迟到返回不能调用模型
+AssertionError: expected 'running' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "running"
+
+ ❯ vi.waitFor.timeout src/integration/chat-worker-entry.test.ts:175:61
+    173|   if(mode==="expired"){
+    174|    clockOffset=120000;
+    175|    await vi.waitFor(async()=>expect((await state()).status).toBe("fail…
+       |                                                             ^
+    176|    expect(credentials).not.toHaveBeenCalled();return;
+    177|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  00:08:46
+   Duration  4.41s (transform 898ms, setup 0ms, import 1.47s, tests 2.81s, environment 0ms)
+
