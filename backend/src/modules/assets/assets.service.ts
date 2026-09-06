@@ -437,9 +437,9 @@ export function createAssetsService(
     },
     async getAssetBytes(ctx, assetId) {
       const accountId = requireAccountId(ctx.accountId, "assets.getAssetBytes");
-      await requireAsset(ctx, assetId);
+      const asset = await requireAsset(ctx, assetId);
       const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
-      const current = files[files.length - 1];
+      const current = files.find((file) => file.id === asset.currentFileId);
       if (!current) return null;
       const storage = await objectStorageForCtx(ctx);
       const bytes = await storage.getObject(current.storageKey);

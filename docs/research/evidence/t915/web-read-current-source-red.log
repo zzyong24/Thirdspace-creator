@@ -1,0 +1,162 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/assets/assets-current-source.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/assets/assets-current-source.test.ts (6 tests | 4 failed) 4372ms
+     × 历史文件的来源不能命中已经换稿的素材 935ms
+     × 回到早期版本后，来源与字节都读取选中的文件 716ms
+     × 当前指针缺失时不能悄悄回退另一版正文 664ms
+     × 错误指向别的素材文件时不能跨素材读字节或命中来源 686ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/assets/assets-current-source.test.ts > 网页缓存只认当前正文版本 > 历史文件的来源不能命中已经换稿的素材
+AssertionError: expected { id: 'asset-1', …(11) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accountId": "account",
+  "assetType": "document",
+  "createdAt": "2026-09-06T00:00:00.000Z",
+  "currentFileId": "afile-3",
+  "deletedAt": null,
+  "description": "",
+  "id": "asset-1",
+  "isFavorite": false,
+  "name": "正文",
+  "status": "pending",
+  "updatedAt": "2026-09-06T00:00:00.000Z",
+  "userId": "reader",
+}
+
+ ❯ src/modules/assets/assets-current-source.test.ts:44:58
+     42|   it("历史文件的来源不能命中已经换稿的素材", async () => {
+     43|     const { asset } = await document();
+     44|     expect(await service.findAssetBySourceUrl(ctx, url)).toBeNull();
+       |                                                          ^
+     45|     expect((await service.findAssetBySourceUrl(ctx, "https://example.c…
+     46|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/assets/assets-current-source.test.ts > 网页缓存只认当前正文版本 > 回到早期版本后，来源与字节都读取选中的文件
+AssertionError: expected { id: 'asset-1', …(11) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "accountId": "account",
+  "assetType": "document",
+  "createdAt": "2026-09-06T00:00:00.000Z",
+  "currentFileId": "afile-2",
+  "deletedAt": null,
+  "description": "",
+  "id": "asset-1",
+  "isFavorite": false,
+  "name": "正文",
+  "status": "pending",
+  "updatedAt": "2026-09-06T00:00:00.000Z",
+  "userId": "reader",
+}
+
+ ❯ src/modules/assets/assets-current-source.test.ts:52:88
+     50|     await repo.updateAssetStatus(ctx.userId, asset.id, { currentFileId…
+     51|     expect((await service.findAssetBySourceUrl(ctx, url))?.id).toBe(as…
+     52|     expect(await service.findAssetBySourceUrl(ctx, "https://example.co…
+       |                                                                                        ^
+     53|     const result = await service.getAssetBytes(ctx, asset.id);
+     54|     expect(new TextDecoder().decode(result?.bytes)).toBe(first.storage…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/assets/assets-current-source.test.ts > 网页缓存只认当前正文版本 > 当前指针缺失时不能悄悄回退另一版正文
+AssertionError: expected { …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "bytes": Uint8Array [
+    97,
+    115,
+    115,
+    101,
+    116,
+    45,
+    49,
+    47,
+    115,
+    101,
+    99,
+    111,
+    110,
+    100,
+  ],
+  "mimeType": "text/plain",
+}
+
+ ❯ src/modules/assets/assets-current-source.test.ts:61:56
+     59|     const { asset } = await document();
+     60|     await repo.updateAssetStatus(ctx.userId, asset.id, { currentFileId…
+     61|     expect(await service.getAssetBytes(ctx, asset.id)).toBeNull();
+       |                                                        ^
+     62|     expect(await service.findAssetBySourceUrl(ctx, url)).toBeNull();
+     63|     expect(getObject).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/assets/assets-current-source.test.ts > 网页缓存只认当前正文版本 > 错误指向别的素材文件时不能跨素材读字节或命中来源
+AssertionError: expected { …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "bytes": Uint8Array [
+    97,
+    115,
+    115,
+    101,
+    116,
+    45,
+    49,
+    47,
+    115,
+    101,
+    99,
+    111,
+    110,
+    100,
+  ],
+  "mimeType": "text/plain",
+}
+
+ ❯ src/modules/assets/assets-current-source.test.ts:70:56
+     68|     const foreign = await document("pending", { ...ctx, accountId: "ot…
+     69|     await repo.updateAssetStatus(ctx.userId, asset.id, { currentFileId…
+     70|     expect(await service.getAssetBytes(ctx, asset.id)).toBeNull();
+       |                                                        ^
+     71|     expect(await service.findAssetBySourceUrl(ctx, url)).toBeNull();
+     72|     expect(getObject).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  07:27:36
+   Duration  5.18s (transform 323ms, setup 0ms, import 670ms, tests 4.37s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/assets/assets-current-source.test.ts`
+Exit status 1

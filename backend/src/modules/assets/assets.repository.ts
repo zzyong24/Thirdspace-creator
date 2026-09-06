@@ -350,7 +350,7 @@ export function createAssetRepository(
     async findAssetBySourceUrl(userId, sourceUrl, accountId) {
       // [T-251] 两步查(jsonb 键匹配放 JS 侧,PGlite/PG 双栈无 SQL 方言分歧):
       //   ① 该 user 的 document 类 asset(pending/active),新→旧;
-      //   ② 批量拉它们的文件行,按 mediaMetadata.sourceUrl 精确匹配,取最新命中。
+      //   ② 仅匹配各素材 currentFileId 对应文件的来源，历史版本不代表当前正文。
       const candidates = await db
         .select()
         .from(assets)
@@ -373,17 +373,12 @@ export function createAssetRepository(
             candidates.map((a) => a.id),
           ),
         );
-      const matchedAssetIds = new Set(
-        files
-          .filter(
-            (f) =>
-              ((f.mediaMetadata as Record<string, unknown> | null) ?? {})[
-                "sourceUrl"
-              ] === sourceUrl,
-          )
-          .map((f) => f.assetId),
-      );
-      return candidates.find((a) => matchedAssetIds.has(a.id)) ?? null;
+      const fileById = new Map(files.map((file) => [file.id, file]));
+      return candidates.find((asset) => {
+        const current = asset.currentFileId ? fileById.get(asset.currentFileId) : undefined;
+        return current?.assetId === asset.id &&
+          ((current.mediaMetadata as Record<string, unknown> | null) ?? {})["sourceUrl"] === sourceUrl;
+      }) ?? null;
     },
 
     async insertAsset(userId, input, accountId) {
