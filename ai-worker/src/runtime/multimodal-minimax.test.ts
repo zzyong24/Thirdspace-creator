@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import {createServer} from "node:http";
 import { createMinimaxAdapter, type MinimaxAdapterDeps } from "./multimodal-minimax";
 import {
   MultimodalGenerationError,
@@ -16,6 +17,70 @@ const spec: MultimodalSpec = {
   token: "sk-test",
   kind: "image",
 };
+
+it("旧版视频恢复使用已存 job，不再次计费提交",async()=>{
+ const calls:string[]=[],submitted=vi.fn();
+ const fetchImpl=(async(url:unknown,init?:RequestInit)=>{
+  calls.push(String(url));expect(init?.method).toBe("GET");
+  if(String(url).includes("/query/"))return jsonResponse({status:"Success",file_id:"file"});
+  if(String(url).includes("/files/"))return jsonResponse({file:{download_url:"https://dl.example/video"}});
+  return bytesResponse(new Uint8Array([1]));
+ }) as typeof fetch;
+ await createMinimaxAdapter(deps(fetchImpl)).generateVideo!({...spec,kind:"video",model:"MiniMax-Hailuo-2.3"},{prompt:"片段",resumeJobId:"saved-job",onJobSubmitted:submitted});
+ expect(calls[0]).toContain("task_id=saved-job");expect(submitted).not.toHaveBeenCalled();
+});
+it("旧版视频取得任务号先持久确认，确认失败不轮询",async()=>{
+ const fetchImpl=vi.fn(async()=>jsonResponse({task_id:"new-job"}));
+ const onJobSubmitted=vi.fn(async()=>{throw new Error("checkpoint unavailable");});
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model:"MiniMax-Hailuo-2.3"},{prompt:"片段",onJobSubmitted})).rejects.toThrow("checkpoint unavailable");
+ expect(onJobSubmitted).toHaveBeenCalledExactlyOnceWith("new-job");expect(fetchImpl).toHaveBeenCalledTimes(1);
+});
+it.each(["MiniMax-Hailuo-2.3","MiniMax-H3"])("%s 预取消不发任何请求",async model=>{
+ const fetchImpl=vi.fn(async()=>jsonResponse({}));
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model},{prompt:"片段",signal:AbortSignal.abort(new Error("已停止"))} as never)).rejects.toThrow("已停止");
+ expect(fetchImpl).not.toHaveBeenCalled();
+});
+it.each(["MiniMax-Hailuo-2.3","MiniMax-H3"])("%s 轮询等待中取消立即结束，不继续查询",async model=>{
+ const controller=new AbortController(),sleep=vi.fn(async()=>new Promise<void>(()=>{}));
+ const fetchImpl=vi.fn(async(_url:unknown,init?:RequestInit)=>{
+  expect(init?.signal).toBe(controller.signal);
+  return jsonResponse(model==="MiniMax-H3"?{task:{status:"running"}}:{status:"Processing"});
+ });
+ const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch),sleep}).generateVideo!({...spec,kind:"video",model},{prompt:"片段",resumeJobId:"saved-job",signal:controller.signal} as never);
+ const failure=expect(pending).rejects.toThrow("停止轮询");
+ await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controller.abort(new Error("停止轮询"));
+ await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+});
+it.each(["MiniMax-Hailuo-2.3","MiniMax-H3"])("%s 任务号确认期间取消，保存已提交事实但不开始查询",async model=>{
+ const controller=new AbortController(),fetchImpl=vi.fn(async()=>jsonResponse({task_id:"accepted-job"}));
+ const onJobSubmitted=vi.fn(async()=>{controller.abort(new Error("停止后续动作"));});
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model},{prompt:"片段",signal:controller.signal,onJobSubmitted})).rejects.toThrow("停止后续动作");
+ expect(onJobSubmitted).toHaveBeenCalledExactlyOnceWith("accepted-job");expect(fetchImpl).toHaveBeenCalledTimes(1);
+});
+it.each(["MiniMax-Hailuo-2.3","MiniMax-H3"])("%s 查询已完成但读取正文期间取消，不进入下载",async model=>{
+ const controller=new AbortController(),fetchImpl=vi.fn(async()=>({ok:true,json:async()=>{
+  controller.abort(new Error("停止下载"));
+  return model==="MiniMax-H3"?{task:{status:"succeeded",content:{url:"https://dl.example/video"}}}:{status:"Success",file_id:"file"};
+ }} as Response));
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model},{prompt:"片段",resumeJobId:"saved-job",signal:controller.signal})).rejects.toThrow("停止下载");
+ expect(fetchImpl).toHaveBeenCalledTimes(1);
+});
+it("真实本地 HTTP 查询在取消后关闭连接，无新提交或后续请求",async()=>{
+ const controller=new AbortController(),calls:string[]=[];
+ let received!:()=>void,disconnected!:()=>void;
+ const ready=new Promise<void>(resolve=>{received=resolve;}),closed=new Promise<void>(resolve=>{disconnected=resolve;});
+ const server=createServer((req,res)=>{calls.push(`${req.method} ${req.url}`);res.on("close",disconnected);received();});
+ await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+ try{
+  const address=server.address();if(!address || typeof address==="string")throw new Error("缺少本地监听地址");
+  const pending=createMinimaxAdapter().generateVideo!({...spec,kind:"video",model:"MiniMax-Hailuo-2.3",baseUrl:`http://127.0.0.1:${address.port}`},{prompt:"片段",resumeJobId:"local-job",signal:controller.signal});
+  const failure=expect(pending).rejects.toThrow("本地停止");
+  await ready;controller.abort(new Error("本地停止"));await failure;await closed;
+  expect(calls).toEqual(["GET /v1/query/video_generation?task_id=local-job"]);
+ }finally{
+  controller.abort();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));
+ }
+});
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
   return {

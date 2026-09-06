@@ -76,6 +76,8 @@ export interface GenerateImageOptions {
 }
 
 export interface GenerateVideoOptions {
+  /** Worker 的任务取消/截止信号；适配器必须传给提交、查询、下载与等待。 */
+  signal?: AbortSignal;
   prompt: string;
   aspectRatio?: string;
   /** 首帧图(image-to-video 起始帧),可选。 */

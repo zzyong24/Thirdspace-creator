@@ -1,0 +1,259 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+stderr | src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+Promise returned by `expect(actual).rejects.toThrow(expected)` was not awaited. Vitest currently auto-awaits hanging assertions at the end of the test, but this will cause the test to fail in the next Vitest major. Please remember to await the assertion.
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/multimodal-minimax.test.ts:49:30
+
+ ❯ src/runtime/multimodal-minimax.test.ts (27 tests | 6 failed) 6047ms
+   × 旧版视频恢复使用已存 job，不再次计费提交 6ms (retry x2)
+   × 旧版视频取得任务号先持久确认，确认失败不轮询 3ms (retry x2)
+   × MiniMax-Hailuo-2.3 预取消不发任何请求 1ms (retry x2)
+   × MiniMax-H3 预取消不发任何请求 1ms (retry x2)
+   × MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询 3017ms (retry x2)
+   × MiniMax-H3 轮询等待中取消立即结束，不继续查询 3011ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频恢复使用已存 job，不再次计费提交
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频恢复使用已存 job，不再次计费提交
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频恢复使用已存 job，不再次计费提交
+AssertionError: expected 'POST' to be 'GET' // Object.is equality
+
+Expected: "GET"
+Received: "POST"
+
+ ❯ Object.fetchImpl [as fetch] src/runtime/multimodal-minimax.test.ts:23:48
+     21|  const calls:string[]=[],submitted=vi.fn();
+     22|  const fetchImpl=(async(url:unknown,init?:RequestInit)=>{
+     23|   calls.push(String(url));expect(init?.method).toBe("GET");
+       |                                                ^
+     24|   if(String(url).includes("/query/"))return jsonResponse({status:"Succ…
+     25|   if(String(url).includes("/files/"))return jsonResponse({file:{downlo…
+ ❯ generateVideo src/runtime/multimodal-minimax.ts:163:32
+ ❯ Object.generateVideo src/runtime/multimodal-minimax.ts:472:36
+ ❯ src/runtime/multimodal-minimax.test.ts:28:46
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频取得任务号先持久确认，确认失败不轮询
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频取得任务号先持久确认，确认失败不轮询
+ FAIL  src/runtime/multimodal-minimax.test.ts > 旧版视频取得任务号先持久确认，确认失败不轮询
+AssertionError: expected [Function] to throw error including 'checkpoint unavailable' but got 'MiniMax video task 轮询超时(task_id=new-j…'
+
+Expected: "checkpoint unavailable"
+Received: "MiniMax video task 轮询超时(task_id=new-job,10 次未完成)"
+
+ ❯ src/runtime/multimodal-minimax.test.ts:34:163
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 预取消不发任何请求
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 预取消不发任何请求
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 预取消不发任何请求
+AssertionError: expected [Function] to throw error including '已停止' but got 'MiniMax video_generation 提交未返 task_id'
+
+Expected: "已停止"
+Received: "MiniMax video_generation 提交未返 task_id"
+
+ ❯ src/runtime/multimodal-minimax.test.ts:39:179
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 预取消不发任何请求
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 预取消不发任何请求
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 预取消不发任何请求
+AssertionError: expected [Function] to throw error including '已停止' but got 'MiniMax H3 提交响应缺 task_id，结果未知，请先去控制台核对'
+
+Expected: "已停止"
+Received: "MiniMax H3 提交响应缺 task_id，结果未知，请先去控制台核对"
+
+ ❯ src/runtime/multimodal-minimax.test.ts:39:179
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+ FAIL  src/runtime/multimodal-minimax.test.ts > MiniMax-H3 轮询等待中取消立即结束，不继续查询
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/runtime/multimodal-minimax.test.ts:50:37
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+       |                                     ^
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+     52| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 6 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'expected undefined to be AbortSignal …'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'expected undefined to be AbortSignal …'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'expected undefined to be AbortSignal …'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-Hailuo-2.3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'MiniMax H3 查询网络失败'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-H3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'MiniMax H3 查询网络失败'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-H3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including '停止轮询' but got 'MiniMax H3 查询网络失败'
+ ❯ _Assertion.__VITEST_REJECTS__ ../node_modules/.pnpm/@vitest+expect@4.1.8/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27
+ ❯ Object.proxyGetter [as get] ../node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22
+ ❯ src/runtime/multimodal-minimax.test.ts:49:30
+     47|  });
+     48|  const pending=createMinimaxAdapter({...deps(fetchImpl as typeof fetch…
+     49|  const failure=expect(pending).rejects.toThrow("停止轮询");
+       |                              ^
+     50|  await vi.waitFor(()=>expect(sleep).toHaveBeenCalledTimes(1));controll…
+     51|  await failure;expect(fetchImpl).toHaveBeenCalledTimes(1);
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+
+This error originated in "src/runtime/multimodal-minimax.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "MiniMax-H3 轮询等待中取消立即结束，不继续查询". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 21 passed (27)
+     Errors  6 errors
+   Start at  11:45:34
+   Duration  6.31s (transform 49ms, setup 0ms, import 123ms, tests 6.05s, environment 0ms)
+

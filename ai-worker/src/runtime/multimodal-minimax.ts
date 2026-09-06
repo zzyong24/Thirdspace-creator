@@ -28,6 +28,7 @@ import {
   type MultimodalSpec,
 } from "./multimodal-factory";
 import { createHash } from "node:crypto";
+import {setTimeout as delay} from "node:timers/promises";
 import { resolveMinimaxH3Endpoints } from "./minimax-h3-endpoints";
 
 const DEFAULT_BASE_URL = "https://api.minimax.io";
@@ -36,7 +37,7 @@ const DEFAULT_BASE_URL = "https://api.minimax.io";
 export interface MinimaxAdapterDeps {
   fetch: typeof fetch;
   /** 轮询间隔的等待器。默认真 setTimeout;测试注入即时 resolve。 */
-  sleep: (ms: number) => Promise<void>;
+  sleep: (ms: number, signal?:AbortSignal) => Promise<void>;
   /** 轮询间隔(ms)。 */
   pollIntervalMs: number;
   /** 轮询最大次数(超出 → 超时失败,上层可接住)。M2 会把它接进 task 超时态。 */
@@ -47,7 +48,7 @@ export interface MinimaxAdapterDeps {
 
 const REAL_DEPS: MinimaxAdapterDeps = {
   fetch: (...args) => fetch(...args),
-  sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+  sleep: (ms,signal) => delay(ms,undefined,{signal}),
   pollIntervalMs: 5_000,
   maxPollAttempts: 60, // 5s × 60 ≈ 5 min 上限
   h3MaxPollAttempts: 240,
@@ -159,6 +160,9 @@ async function generateVideo(
   deps: MinimaxAdapterDeps,
 ): Promise<GeneratedAsset> {
   if (isH3(spec)) return generateH3Video(spec, opts, deps);
+  // 已有 provider job 必须原号续查，不能恢复时重新计费提交。
+  let taskId=opts.resumeJobId;
+  if(!taskId){
   // 1) 提交 → 拿 task_id
   const submitRes = await deps.fetch(`${base(spec)}/v1/video_generation`, {
     method: "POST",
@@ -179,11 +183,13 @@ async function generateVideo(
     );
   }
   const submit = (await submitRes.json()) as MinimaxVideoSubmitResponse;
-  const taskId = submit.task_id;
+  taskId = submit.task_id;
   if (!taskId) {
     throw new MultimodalGenerationError(
       "MiniMax video_generation 提交未返 task_id",
     );
+  }
+  if(opts.onJobSubmitted)await opts.onJobSubmitted(taskId);
   }
 
   // 2) 轮询 task 直到 Success/Fail 或超时(taskId 不外泄给上层 —— [gate-F1])
@@ -469,6 +475,31 @@ export function createMinimaxAdapter(
 ): MultimodalProviderAdapter {
   return {
     generateImage: (spec, opts) => generateImage(spec, opts, deps),
-    generateVideo: (spec, opts) => generateVideo(spec, opts, deps),
+    async generateVideo(spec, opts) {
+      // 固定本次恢复号和取消信号；调用方修改 options 不得把续查变成新提交。
+      const frozen={...opts},signal=frozen.signal;
+      signal?.throwIfAborted();
+      const bounded:MinimaxAdapterDeps=signal?{...deps,
+        fetch:async(input,init)=>{
+          signal.throwIfAborted();
+          return deps.fetch(input,{...init,signal});
+        },
+        sleep:ms=>new Promise<void>((resolve,reject)=>{
+          signal.throwIfAborted();
+          const cancel=()=>{signal.removeEventListener("abort",cancel);reject(signal.reason);};
+          signal.addEventListener("abort",cancel,{once:true});
+          // 注入等待器也可能忽略 signal；停止仍及时返回，后续请求前再校验。
+          Promise.resolve().then(()=>{signal.throwIfAborted();return deps.sleep(ms,signal);}).then(
+            ()=>{signal.removeEventListener("abort",cancel);resolve();},
+            error=>{signal.removeEventListener("abort",cancel);reject(error);},
+          );
+        }),
+      }:deps;
+      try{
+        const result=await generateVideo(spec,frozen,bounded);
+        signal?.throwIfAborted();
+        return result;
+      }catch(error){signal?.throwIfAborted();throw error;}
+    },
   };
 }
