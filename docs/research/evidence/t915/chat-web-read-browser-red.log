@@ -1,0 +1,58 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/research-worker-tools.test.ts (13 tests | 3 failed) 12333ms
+   × 原始读取保留完整抽取诊断，只读会话而不结算研究工具 3ms (retry x2)
+   × 原始读取保留 HTTP 错误身份和状态供共享编排选择备用来源 1ms (retry x2)
+   × 原始读取登录墙保留类型，同域后续读取不再次导航 1ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留完整抽取诊断，只读会话而不结算研究工具
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留完整抽取诊断，只读会话而不结算研究工具
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留完整抽取诊断，只读会话而不结算研究工具
+TypeError: f.tools.readDocument is not a function
+ ❯ src/execution/research-worker-tools.test.ts:108:26
+    106|   f.read.mockResolvedValueOnce(read as never);
+    107|   try {
+    108|     expect(await f.tools.readDocument("https://example.com",{callId:"r…
+       |                          ^
+    109|     expect(f.call.mock.calls.map(row=>row[0])).toEqual(["readBrowserSe…
+    110|   } finally {await f.tools.close();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留 HTTP 错误身份和状态供共享编排选择备用来源
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留 HTTP 错误身份和状态供共享编排选择备用来源
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取保留 HTTP 错误身份和状态供共享编排选择备用来源
+TypeError: f.tools.readDocument is not a function
+ ❯ src/execution/research-worker-tools.test.ts:117:26
+    115|   const f=fixture(),error=new WebCaptureError("页面返回 HTTP 403",{status:…
+    116|   try {
+    117|     await expect(f.tools.readDocument("https://example.com",{callId:"r…
+       |                          ^
+    118|     expect(f.call.mock.calls.map(row=>row[0])).toEqual(["readBrowserSe…
+    119|   } finally {await f.tools.close();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取登录墙保留类型，同域后续读取不再次导航
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取登录墙保留类型，同域后续读取不再次导航
+ FAIL  src/execution/research-worker-tools.test.ts > 原始读取登录墙保留类型，同域后续读取不再次导航
+TypeError: f.tools.readDocument is not a function
+ ❯ src/execution/research-worker-tools.test.ts:125:46
+    123|   const f=fixture();f.read.mockRejectedValue(new WebReaderLoginRequire…
+    124|   try {
+    125|     for(let i=0;i<2;i++)await expect(f.tools.readDocument("https://exa…
+       |                                              ^
+    126|     expect(f.read).toHaveBeenCalledTimes(1);
+    127|   } finally {await f.tools.close();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 10 passed (13)
+   Start at  08:37:54
+   Duration  13.10s (transform 176ms, setup 0ms, import 566ms, tests 12.33s, environment 0ms)
+

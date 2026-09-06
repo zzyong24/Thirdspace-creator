@@ -99,3 +99,54 @@ it("真实临时Chromium首读本地fixture并关闭，不把session带入观察
     expect(JSON.stringify(observations)).not.toContain("stateJson");expect(tools.browserProcessIds().length).toBeGreaterThan(0);
   }finally{await tools.close();page.closeAllConnections();await new Promise<void>(done=>page.close(()=>done()));}
 },30000);
+
+it("原始读取保留完整抽取诊断，只读会话而不结算研究工具", async () => {
+  const f=fixture();
+  const read={text:"长对话全文",title:"分享对话",finalUrl:"https://example.com/final",extractor:"chatgpt-share" as const,extractPath:"ssr" as const,turnCount:73};
+  f.read.mockResolvedValueOnce(read as never);
+  try {
+    expect(await f.tools.readDocument("https://example.com",{callId:"read",signal:f.controller.signal})).toEqual(read);
+    expect(f.call.mock.calls.map(row=>row[0])).toEqual(["readBrowserSession"]);
+  } finally {await f.tools.close();}
+});
+
+it("原始读取保留 HTTP 错误身份和状态供共享编排选择备用来源", async () => {
+  const {WebCaptureError}=await import("../runtime/browser/web-capture");
+  const f=fixture(),error=new WebCaptureError("页面返回 HTTP 403",{status:403});f.read.mockRejectedValueOnce(error);
+  try {
+    await expect(f.tools.readDocument("https://example.com",{callId:"read",signal:f.controller.signal})).rejects.toBe(error);
+    expect(f.call.mock.calls.map(row=>row[0])).toEqual(["readBrowserSession"]);
+  } finally {await f.tools.close();}
+});
+
+it("原始读取登录墙保留类型，同域后续读取不再次导航", async () => {
+  const f=fixture();f.read.mockRejectedValue(new WebReaderLoginRequiredError("example.com"));
+  try {
+    for(let i=0;i<2;i++)await expect(f.tools.readDocument("https://example.com",{callId:`read-${i}`,signal:f.controller.signal})).rejects.toBeInstanceOf(WebReaderLoginRequiredError);
+    expect(f.read).toHaveBeenCalledTimes(1);
+  } finally {await f.tools.close();}
+});
+
+it("宿主明确阻止会话时保留 blocked，不能转换成 HTTP 失败", async () => {
+  const {ResearchReadBlockedError}=await import("./research-worker-tools");
+  const f=fixture(),blocked={...outcome,status:"blocked",error:{code:"permission",retryable:false,recovery:"等待"}};
+  f.call.mockResolvedValueOnce({status:"blocked",outcome:blocked} as never);
+  try {
+    await expect(f.tools.readDocument("https://example.com",{callId:"read",signal:f.controller.signal})).rejects.toBeInstanceOf(ResearchReadBlockedError);
+    expect(f.read).not.toHaveBeenCalled();expect(f.launchServer).not.toHaveBeenCalled();
+  }finally{await f.tools.close();}
+});
+
+it("排队原始读取被取消后不创建新的 context，读取身份在排队时冻结", async () => {
+  const f=fixture();let release!:()=>void;
+  const held=new Promise<void>(resolve=>{release=resolve;});const original=f.read.getMockImplementation()!;
+  f.read.mockImplementationOnce(async(...args)=>{await held;return original(...args);});
+  const controller=new AbortController(),scope={callId:"queued",signal:controller.signal};
+  try {
+    const first=f.tools.readDocument("https://example.com",{callId:"first",signal:f.controller.signal});
+    await vi.waitFor(()=>expect(f.read).toHaveBeenCalledTimes(1));
+    const pending=f.tools.readDocument("https://example.com",scope);const rejected=expect(pending).rejects.toThrow();
+    scope.callId="changed";scope.signal=f.controller.signal;controller.abort();release();
+    await first;await rejected;expect(f.read).toHaveBeenCalledTimes(1);expect(f.browser.newContext).toHaveBeenCalledTimes(1);
+  }finally{release();await f.tools.close();}
+});
