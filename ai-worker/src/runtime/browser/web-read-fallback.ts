@@ -48,7 +48,7 @@ export function alternatesQueryForUrl(url: string): string {
 export async function findAlternatesViaSearch(
   originalUrl: string,
   searchers: AlternateSearcher[],
-  opts?: { count?: number; signal?: AbortSignal },
+  opts?: { count?: number; signal?: AbortSignal; rethrowError?: (error:unknown)=>boolean },
 ): Promise<WebReadAlternate[]> {
   opts?.signal?.throwIfAborted();
   const count = opts?.count ?? DEFAULT_ALTERNATES_COUNT;
@@ -60,8 +60,9 @@ export async function findAlternatesViaSearch(
     let results: WebReadAlternate[];
     try {
       results = await search(query, count, opts?.signal);
-    } catch {
+    } catch (error) {
       opts?.signal?.throwIfAborted();
+      if(opts?.rethrowError?.(error))throw error;
       continue; // 单路失败不拖垮:跳下一路(引擎反爬/未配 key 都可能)
     }
     opts?.signal?.throwIfAborted();

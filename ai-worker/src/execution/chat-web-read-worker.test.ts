@@ -1,0 +1,62 @@
+import {expect,it,vi} from "vitest";
+import {runChatWebReadInWorker} from "./chat-web-read-worker";
+import {BrowserRuntimeUnavailableError} from "../runtime/browser/browser-launch";
+import {GenerationFailure} from "./generation-error";
+import {WebCaptureError} from "../runtime/browser/web-capture";
+import {WebReaderLoginRequiredError} from "../runtime/browser/web-reader";
+const output={status:"ok",summary:"后端原回执",evidence:[],data:{asset:{id:"real"}},error:null,continuation:null,sideEffect:"committed"};
+const read={text:"真实全文",title:"标题",finalUrl:"https://example.com/final",extractor:"chatgpt-share",extractPath:"ssr",turnCount:3};
+function fixture(){
+ const signal=new AbortController().signal,call=vi.fn(async(port:string)=>{
+  if(port==="prepareChatWebRead")return {url:"https://example.com/bound",observation:null,evidenceRef:null};
+  if(port==="readChatWebReadCache")return {status:"miss"};
+  return output;
+ });
+ const readDocument=vi.fn(async()=>read as any),searchers=vi.fn(async()=>[]),hasSession=vi.fn(async()=>false);
+ return {signal,call,readDocument,searchers,hasSession,run:()=>runChatWebReadInWorker("parent",signal,{call,readDocument,searchers,hasSession})};
+}
+it("缓存回执直接返回，零网页和搜索调用",async()=>{
+ const f=fixture();f.call.mockImplementation(async p=>p==="prepareChatWebRead"?{url:"https://example.com/bound",observation:null,evidenceRef:null}:({status:"hit",output}) as any);
+ expect(await f.run()).toEqual(output);expect(f.readDocument).not.toHaveBeenCalled();expect(f.searchers).not.toHaveBeenCalled();
+});
+it("持久观察只恢复和完成，不再抓取正文",async()=>{
+ const f=fixture();f.call.mockImplementation(async p=>p==="prepareChatWebRead"?{url:"https://example.com/bound",observation:read,evidenceRef:"e"}:output as any);
+ expect(await f.run()).toEqual(output);expect(f.call.mock.calls.map(r=>r[0])).toEqual(["prepareChatWebRead","restoreChatWebRead","completeChatWebRead"]);expect(f.readDocument).not.toHaveBeenCalled();
+});
+it("新读取保留完整诊断，结算ACK丢失只重发完成请求",async()=>{
+ const f=fixture();let completions=0;const original=f.call.getMockImplementation()!;
+ f.call.mockImplementation(async p=>{if(p==="completeChatWebRead" && completions++===0)throw new Error("ACK lost");return original(p);});
+ expect(await f.run()).toEqual(output);expect(f.readDocument).toHaveBeenCalledTimes(1);
+ expect(f.call).toHaveBeenCalledWith("observeChatWebRead",{callId:"parent",observation:read},f.signal);
+ expect(f.call.mock.calls.filter(r=>r[0]==="completeChatWebRead")).toHaveLength(2);
+});
+it("HTTP备用来源沿共享顺序选择并结算失败，登录不触发备用搜索",async()=>{
+ const f=fixture(),alternate={title:"备用",url:"https://other.example",snippet:"摘要"};
+ f.readDocument.mockRejectedValueOnce(new WebCaptureError("HTTP 403",{status:403}));
+ const first=vi.fn(async()=>[]),second=vi.fn(async()=>[alternate]);f.searchers.mockResolvedValue([first,second] as never);
+ await f.run();expect(first).toHaveBeenCalled();expect(second).toHaveBeenCalled();
+ expect(f.call).toHaveBeenCalledWith("failChatWebRead",expect.objectContaining({failure:expect.objectContaining({kind:"http_blocked",status:403,alternates:[alternate]})}),undefined);
+ const login=fixture();login.readDocument.mockRejectedValueOnce(new WebReaderLoginRequiredError("example.com"));await login.run();expect(login.searchers).not.toHaveBeenCalled();
+});
+it("未知宿主回执不伪装网页读取失败，取消不触发失败结算",async()=>{
+ const f=fixture();f.call.mockRejectedValue(new Error("transport unknown"));await expect(f.run()).rejects.toMatchObject({outcome:"unknown_result"});
+ expect(f.call.mock.calls.some(r=>r[0]==="failChatWebRead")).toBe(false);
+ const c=new AbortController(),other=fixture();other.readDocument.mockImplementationOnce(async()=>{c.abort();throw new Error("stopped");});
+ await expect(runChatWebReadInWorker("parent",c.signal,other)).rejects.toThrow();expect(other.call.mock.calls.some(r=>r[0]==="failChatWebRead")).toBe(false);
+});
+
+it.each(["search","session"])("HTTP回退中的 %s 未知回执必须透传，不能结算普通失败",async(point)=>{
+ const f=fixture(),unknown=new GenerationFailure("unknown_result","RECEIPT_UNKNOWN"),next=vi.fn(async()=>[]);
+ f.readDocument.mockRejectedValueOnce(new WebCaptureError("HTTP 403",{status:403}));
+ if(point==="search")f.searchers.mockResolvedValue([async()=>{throw unknown;},next] as never);
+ else f.hasSession.mockRejectedValueOnce(unknown);
+ await expect(f.run()).rejects.toBe(unknown);expect(next).not.toHaveBeenCalled();expect(f.call.mock.calls.some(r=>r[0]==="failChatWebRead")).toBe(false);
+});
+
+it("浏览器缺失与无效正文通过不同明确失败结算，不上传假观察",async()=>{
+ const missing=fixture();missing.readDocument.mockRejectedValueOnce(new BrowserRuntimeUnavailableError());await missing.run();
+ expect(missing.call).toHaveBeenCalledWith("failChatWebRead",{callId:"parent",failure:{kind:"browser_runtime_unavailable"}},undefined);
+ const invalid=fixture();invalid.readDocument.mockResolvedValueOnce({...read,text:""});await invalid.run();
+ expect(invalid.call).toHaveBeenCalledWith("failChatWebRead",expect.objectContaining({failure:expect.objectContaining({kind:"read_error",code:"no_evidence"})}),undefined);
+ expect(invalid.call.mock.calls.some(r=>r[0]==="observeChatWebRead")).toBe(false);
+});

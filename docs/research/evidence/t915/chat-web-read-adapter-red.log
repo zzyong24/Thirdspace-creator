@@ -1,0 +1,76 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-worker.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-worker.test.ts [ src/execution/chat-web-read-worker.test.ts ]
+Error: Cannot find module './chat-web-read-worker' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/execution/chat-web-read-worker.test.ts
+ ❯ src/execution/chat-web-read-worker.test.ts:2:1
+      1| import {expect,it,vi} from "vitest";
+      2| import {runChatWebReadInWorker} from "./chat-web-read-worker";
+       | ^
+      3| import {WebCaptureError} from "../runtime/browser/web-capture";
+      4| import {WebReaderLoginRequiredError} from "../runtime/browser/web-read…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  09:51:55
+   Duration  158ms (transform 16ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/chat-web-read-worker.test.ts (7 tests | 2 failed | 5 skipped) 13ms
+   × HTTP回退中的 search 未知回执必须透传，不能结算普通失败 11ms (retry x2)
+   × HTTP回退中的 session 未知回执必须透传，不能结算普通失败 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 search 未知回执必须透传，不能结算普通失败
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 search 未知回执必须透传，不能结算普通失败
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 search 未知回执必须透传，不能结算普通失败
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 session 未知回执必须透传，不能结算普通失败
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 session 未知回执必须透传，不能结算普通失败
+ FAIL  src/execution/chat-web-read-worker.test.ts > HTTP回退中的 session 未知回执必须透传，不能结算普通失败
+AssertionError: promise resolved "{ status: 'ok', summary: '后端原回执', …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "continuation": null,
++   "data": {
++     "asset": {
++       "id": "real",
++     },
++   },
++   "error": null,
++   "evidence": [],
++   "sideEffect": "committed",
++   "status": "ok",
++   "summary": "后端原回执",
+  }
+
+ ❯ src/execution/chat-web-read-worker.test.ts:52:22
+     50|  if(point==="search")f.searchers.mockResolvedValue([async()=>{throw un…
+     51|  else f.hasSession.mockRejectedValueOnce(unknown);
+     52|  await expect(f.run()).rejects.toBe(unknown);expect(next).not.toHaveBe…
+       |                      ^
+     53| });
+     54|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 skipped (7)
+   Start at  09:54:22
+   Duration  557ms (transform 129ms, setup 0ms, import 397ms, tests 13ms, environment 0ms)
+
