@@ -1,3 +1,4 @@
+import { runChatTopicEnrich, runChatPositioning } from "./chat-structured-tool-nodes";
 import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
 import { EXTRA_BRIEF_HEADING, prepareScriptHooks, finalizeHookItems } from "@creatoros/ai-worker/chat";
 import {createChatReadToolBindings} from "./chat-read-tool-bindings";
@@ -15,13 +16,10 @@ import {
 import type { RequestContext } from "@creatoros/contract";
 import type {
   ModelSpec,
-  PositioningSuggestionOutput,
-  TopicCardOutput,
 } from "@creatoros/ai-worker";
 import {
   assembleCreativeContext,
   formatProjectStageBlock,
-  loadPositioningWorksBrief,
   type ContextDeps,
 } from "./creative-context";
 import {
@@ -63,10 +61,6 @@ import {
 import type { DetectToolsResult } from "./local-env-probe";
 import { buildSkillsBrief } from "@creatoros/contract";
 import { prepareChatModelMessages } from "./chat-model-messages";
-import {
-  enrichFacets,
-  normalizeCard,
-} from "./topic-enrich-runner";
 // [T-245] trend 出题多源装配(T-235b 信源信号 + web 搜索并行,与选题页出题同一装配器)——
 // 对话编导 topic.generate(basis=trend)复用,不再空 brief 出「假热点题」。
 import {
@@ -83,10 +77,6 @@ import {
 } from "./signal-quality";
 import { createRecoveringModel } from "./llm/recovering-model";
 import { resolveLlmMaxRetries } from "./llm/retry-policy";
-import {
-  normalizeSuggestion,
-  positioningFacets,
-} from "./positioning-runner";
 import { parseLearnings, reviewFacets } from "./review-runner";
 import { parseDiagnosis } from "./calibration-diagnose-runner";
 import {
@@ -1589,54 +1579,7 @@ async function assembleChat(
       // execute 兼容旧裸数组;无注记时 trendNote=null,execute 侧不渲字段)。
       return { items, trendNote };
     },
-    enrichTopic: async ({ title, angle, verifiedBrief }) => {
-      // [T-111] 选中某选题(编导起草深链 selection.kind="candidate")时,补全**一律锚定这条选题的
-      // 标题** —— 别让模型把开场选中的选题当「新选题」、或拿自己另生成的候选替换掉它(实录:模型
-      // 传错标题把《Hermes对比》补成不相干的《Claude Code 装好第一步报错》)。无 candidate 选中时
-      // 退回模型传的 title、再退回 selectionTitle 兜底(与其它工具同款锚定)。
-      const effTitle =
-        (chatContext.selection?.kind === "candidate" && selectionTitle) ||
-        title?.trim() ||
-        selectionTitle ||
-        "";
-      // [T-513] 对话补卡与后台 task 共用 topic.enrich 模板/schema；active scope 下真正
-      // method/template/requiredFacets 来自当前账号 snapshot，不再走绕过 overlay 的自由文本支路。
-      const {
-        ANTI_FABRICATION_CLAUSE,
-        getTemplate,
-        modelFor,
-        runStructuredNode,
-      } = await import("@creatoros/ai-worker");
-      const spec = await deps.resolveModelSpec(ctx, "topic.enrich");
-      const facets = enrichFacets(context, {
-        title: effTitle,
-        angle: angle ?? "",
-      });
-      facets.knowledge = [
-        facets.knowledge,
-        verifiedBrief
-          ? `【本轮联网核实素材(据实引用)】\n${verifiedBrief}`
-          : "【素材诚实门】本轮未联网核实；没有真实素材时必须明确写未核实，禁止写待拉取占位承诺。",
-        ANTI_FABRICATION_CLAUSE,
-      ]
-        .filter(Boolean)
-        .join("\n\n");
-      const { object } = await runWithSkillSnapshot(["topic.enrich"], () =>
-        runStructuredNode<TopicCardOutput>({
-          model: modelFor(spec),
-          template: getTemplate("topic.enrich"),
-          facets,
-        }),
-      );
-      // [T-266] 随卡回补全**当时**锚定的已有候选 id(selection.kind==="candidate" → 就地补全
-      // 这条);账号态/未选中某条候选 → null。持久化随 tool-result 走,刷新后前端仍据它 patch
-      // (而非依赖易失的当前 selection),null 则采纳走 createCandidate 新建(治死胡同)。
-      const candidateId =
-        chatContext.selection?.kind === "candidate"
-          ? (chatContext.selection.ids[0] ?? null)
-          : null;
-      return { card: normalizeCard(object), candidateId };
-    },
+    enrichTopic: input => runChatTopicEnrich(ctx, context, chatContext.selection, input, { resolveModelSpec: deps.resolveModelSpec, runWithSkillSnapshot }),
     generateHooks: async (input) => {
       const prepared=prepareScriptHooks(scriptHooksContext,input);
       const {runAgentNode}=await import("@creatoros/ai-worker");
@@ -2287,49 +2230,7 @@ async function assembleChat(
       );
       return { items: parseLearnings(text), error: null };
     },
-    generatePositioning: async ({ extraBrief, sourceMode }) => {
-      // 复用 positioning-runner 的 prompt + parseSuggestion —— 产定位提案候选(非实体)。
-      // [T-081②/T-578] 真实作品画像:与后台任务共用当前账号可见、publishedAt 新→旧的
-      // 专用 reader + brief 装配器；读失败 → 空(诚实降级,不阻断生成)。
-      // [T-081①] extraBrief:对话洞察经新 facet 段进 prompt(优先级高于既有档案)。
-      const scratch =
-        sourceMode === "scratch" ||
-        extraBrief?.includes("路径：完全从零开始") === true;
-      const worksBrief = scratch
-        ? ""
-        : await loadPositioningWorksBrief(
-            ctx,
-            deps.positioningWorks,
-            sourceMode ? 12 : undefined,
-          );
-      const spec = await deps.resolveModelSpec(ctx, "positioning.generate");
-      const facets = scratch
-        ? {
-            current:
-              "（本轮用户明确选择完全从零开始：禁止读取、引用或延续旧定位、账号画像与旧作品。）",
-            accounts: "",
-            works: "",
-          }
-        : positioningFacets(context, worksBrief);
-      if (extraBrief?.trim()) {
-        facets.current = [
-          facets.current,
-          `${EXTRA_BRIEF_HEADING}\n${extraBrief.trim()}`,
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-      }
-      const { object } = await runWithSkillSnapshot(
-        ["positioning.generate"],
-        () =>
-          runStructuredNode<PositioningSuggestionOutput>({
-            model: modelFor(spec),
-            template: getTemplate("positioning.generate"),
-            facets,
-          }),
-      );
-      return normalizeSuggestion(object);
-    },
+    generatePositioning: input => runChatPositioning(ctx, context, input, { resolveModelSpec: deps.resolveModelSpec, runWithSkillSnapshot, positioningWorks: deps.positioningWorks }),
     // [T-094] 对话蒸馏:复用倾倒场同一引擎 runKnowledgeDistill(knowledge.distill 模板 +
     // capability 走 model-config,多模态可配铁律)。失败抛错由工具 execute 接住转人话渲卡。
     distillKnowledge: async ({ content }) => {
