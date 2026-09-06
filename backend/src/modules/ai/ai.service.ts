@@ -1,3 +1,4 @@
+import {prepareAiTaskCommit,type PreparedAiTaskCommit} from "./ai-task-commit";
 import { canonicalJson } from "./canonical-json";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { projectExecutionTasks } from "./execution-task-projection";
@@ -366,6 +367,8 @@ export interface AiService {
     }[]
   >;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
+  /** 内部事务提交准备；不作为公开 RPC 暴露。 */
+  prepareTaskCommit(ctx: RequestContext, body: CreateTaskInput & {attemptId:string}):Promise<PreparedAiTaskCommit>;
   /**
    * Server-only production runner bridge. It atomically claims the task, writes the
    * model-call marker, maintains the lease, and binds legacy AiService writes to the
@@ -842,6 +845,8 @@ export function createAiService(deps: ServiceDeps): AiService {
       const rows = await repoFor(ctx, "ai.listMessages").listMessages(conversationId);
       return rows.map(toMessageDto);
     },
+
+    prepareTaskCommit: (ctx,body)=>prepareAiTaskCommit(deps,ctx,body),
 
     async createTask(ctx, body) {
       const accountId = requireAccountId(ctx.accountId, "ai.createTask");

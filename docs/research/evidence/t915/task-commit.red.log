@@ -1,0 +1,65 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/ai-task-commit.integration.test.ts (4 tests | 4 failed) 1054ms
+   × 原子准备不建任务，外层事务回滚同时撤销子任务 4ms
+   × 相同来源重放返回原任务，不能接管公开提交或其他父调用 0ms
+   × 准备期间及准备后修改外部输入，不改变账号、正文或冻结配置 0ms
+   × 缺账号、无稳定键、保留字段或非法来源不进入持久写入 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/ai-task-commit.integration.test.ts > 原子准备不建任务，外层事务回滚同时撤销子任务
+TypeError: f.service.prepareTaskCommit is not a function
+ ❯ src/modules/ai/ai-task-commit.integration.test.ts:16:51
+     14| }
+     15| it("原子准备不建任务，外层事务回滚同时撤销子任务",async()=>{
+     16|  const f=fixture();const prepared=await f.service.prepareTaskCommit(f.…
+       |                                                   ^
+     17|  expect(await f.service.findTaskByAttempt(f.ctx,f.input.taskType,f.inp…
+     18|  await expect(db.transaction(async tx=>{await prepared.commit(tx,f.bin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai/ai-task-commit.integration.test.ts > 相同来源重放返回原任务，不能接管公开提交或其他父调用
+TypeError: f.service.prepareTaskCommit is not a function
+ ❯ src/modules/ai/ai-task-commit.integration.test.ts:26:45
+     24| });
+     25| it("相同来源重放返回原任务，不能接管公开提交或其他父调用",async()=>{
+     26|  const f=fixture(),prepared=await f.service.prepareTaskCommit(f.ctx,f.…
+       |                                             ^
+     27|  const child=await db.transaction(tx=>prepared.commit(tx,f.binding));
+     28|  expect((await db.transaction(tx=>prepared.commit(tx,f.binding))).id).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/ai/ai-task-commit.integration.test.ts > 准备期间及准备后修改外部输入，不改变账号、正文或冻结配置
+TypeError: f.service.prepareTaskCommit is not a function
+ ❯ src/modules/ai/ai-task-commit.integration.test.ts:40:23
+     38|  const gate=new Promise<void>(r=>{release=r;});const runtime={skillSna…
+     39|  f.resolveTaskRuntimeData.mockImplementation(async()=>{await gate;retu…
+     40|  const work=f.service.prepareTaskCommit(f.ctx,f.input);
+       |                       ^
+     41|  f.ctx.accountId="changed";f.input.inputData.topic="changed";release();
+     42|  const prepared=await work;runtime.skillSnapshot.revision="changed";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/ai/ai-task-commit.integration.test.ts > 缺账号、无稳定键、保留字段或非法来源不进入持久写入
+TypeError: f.service.prepareTaskCommit is not a function
+ ❯ src/modules/ai/ai-task-commit.integration.test.ts:50:25
+     48| it("缺账号、无稳定键、保留字段或非法来源不进入持久写入",async()=>{
+     49|  const f=fixture();
+     50|  await expect(f.service.prepareTaskCommit({...f.ctx,accountId:null},f.…
+       |                         ^
+     51|  await expect(f.service.prepareTaskCommit(f.ctx,{...f.input,attemptId:…
+     52|  await expect(f.service.prepareTaskCommit(f.ctx,{...f.input,inputData:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  03:49:33
+   Duration  3.12s (transform 1.17s, setup 0ms, import 1.93s, tests 1.05s, environment 0ms)
+
