@@ -1,3 +1,4 @@
+import {completedChatHooksParents} from "./chat-hooks-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -776,15 +777,16 @@ export function createPersistentTaskService(
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          const completedParents=completedChatHooksParents(row,calls);
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
-          } else if (calls.some(call => call.status === "started" || call.status === "unknown")) {
+          } else if (calls.some(call => (call.status === "started" && !completedParents.includes(call.id)) || call.status === "unknown")) {
             target = "unknown_result";
           } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {
             target = "failed";
-          } else if (calls.some(call => call.status === "settled" && call.resultText)) {
+          } else if (completedParents.length || calls.some(call => call.status === "settled" && call.resultText)) {
             target = "queued";
           } else if (row.attempt < row.maxAttempts) {
             target = "queued";

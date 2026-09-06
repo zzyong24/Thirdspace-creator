@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-hooks-worker.test.ts (13 tests | 1 failed | 12 skipped) 1572ms
+   × 同一真实Worker内部开场生成：settlementDrop 547ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-hooks-worker.test.ts > 同一真实Worker内部开场生成：settlementDrop
+AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-hooks-worker.test.ts:107:24
+    105|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    106|   }
+    107|   expect(task?.status).toBe("succeeded");expect(requests).toHaveLength…
+       |                        ^
+    108|   expect(JSON.stringify(requests[1]?.messages)).toContain("真实主题");
+    109|   expect(JSON.stringify(requests.at(-1)?.messages)).toContain("真实开场");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  02:36:19
+   Duration  2.97s (transform 764ms, setup 0ms, import 1.27s, tests 1.57s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/integration/chat-hooks-worker.test.ts -t settlementDrop

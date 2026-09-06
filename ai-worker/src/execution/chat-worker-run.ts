@@ -12,7 +12,7 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -39,6 +39,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatHooks",{callId},signal));
     if(receipt.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_HOOKS_RESTORE_RECEIPT_UNKNOWN");
   };
+  // 已成功子模型只恢复候选投影；不重新预留或调用供应商。
+  for(const callId of initial.completableToolCallIds)agenticToolOutcomeSchema.parse(await ports.call("completeChatHooks",{callId},signal));
   for(const callId of initial.resumableToolCallIds)await restoreHooks(callId);
   let checkpointTail:Promise<void>=Promise.resolve();
   const checkpoint=()=>{

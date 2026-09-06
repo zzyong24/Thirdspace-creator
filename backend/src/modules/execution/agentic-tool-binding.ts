@@ -11,7 +11,9 @@ export type AgenticBackendTool={version:string;parameters:z.ZodType;effect:"none
 };
 const frozenTools=z.object({kind:z.literal("agentic.run"),dryRun:z.boolean().optional(),tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1)})).max(100)});
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const operationKey=(modelCallId:string,toolCallId:string)=>`tool:${hash([modelCallId,toolCallId])}`;
+export const agenticToolOperationKey=(modelCallId:string,toolCallId:string)=>`tool:${hash([modelCallId,toolCallId])}`;
+
+const operationKey=agenticToolOperationKey;
 
 /** 冻结工具身份与参数的唯一解析规则，工具执行和证据结算共用。 */
 export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>){

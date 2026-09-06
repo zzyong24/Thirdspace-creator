@@ -1,3 +1,4 @@
+import * as supervisorModule from "../modules/execution/worker-supervisor";
 import * as hooksModule from "../modules/execution/execution-chat-hooks.service";
 import {createServer} from "node:http";
 import {execFileSync} from "node:child_process";
@@ -15,8 +16,9 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 afterAll(async()=>close());
-it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop"])("同一真实Worker内部开场生成：%s",async(mode)=>{
- const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date().toISOString();
+it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop","crashAfterChild","crashUnknownChild","crashCancel","crashDeadline","crashPauseResume","settlementDrop"])("同一真实Worker内部开场生成：%s",async(mode)=>{
+ let clockOffset=0;
+ const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
  const conversation=await repo.createConversation({title:"开场",projectId:null,scope:"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"生成开场",attachments:[],modelMetadata:{}});
@@ -29,19 +31,29 @@ it.each(["success","cancel","reject401","reject401resume","reject429","reject429
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
   if(!input.stream){childOpened=true;
    if((mode.startsWith("reject")) && requests.length===2){res.writeHead(mode.startsWith("reject401")?401:mode.startsWith("reject400")?400:429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rejected",type:"api_error"}}));return;}
-res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'[{"text":"真实开场","angle":"场景"}]'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
+res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownChild"){res.destroy();return;}if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'[{"text":"真实开场","angle":"场景"}]'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
   const first=requests.length===1;
   const delta=first?{tool_calls:[{index:0,id:"hooks",type:"function",function:{name:"script_hooks",arguments:"{}"}}]}:{content:"候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
- const createHost=()=>createChatWorkerDispatcher(db,{entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,tools:{"script.hooks":{version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",parameters,approve:async()=>({status:"not-applicable"})}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
+ const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:mode.startsWith("crash")?300000:60000},modelConcurrency:1,tools:{"script.hooks":{version:"hooks-worker-v1",effect:"proposal",execution:"worker.script-hooks",parameters,approve:async()=>({status:"not-applicable"})}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:mode==="reject401resume"?`fixture-${requests.length}`:"fixture"})});
  let droppedFailure=false;
+ const originalSupervisor=supervisorModule.createWorkerSupervisor;
+ let stopExecution:ReturnType<typeof originalSupervisor>["stopExecutionTree"]|undefined;
+ const supervisorSpy=mode.startsWith("crash")?vi.spyOn(supervisorModule,"createWorkerSupervisor").mockImplementation(options=>{
+  const supervisor=originalSupervisor(options);stopExecution=ref=>supervisor.stopExecutionTree(ref);return supervisor;
+ }):undefined;
  const originalFactory=hooksModule.createExecutionChatHooksService;
- const failureSpy=mode.endsWith("drop")?vi.spyOn(hooksModule,"createExecutionChatHooksService").mockImplementation((...args)=>{
+ const failureSpy=(mode.endsWith("drop") || mode.startsWith("crash") || mode==="settlementDrop")?vi.spyOn(hooksModule,"createExecutionChatHooksService").mockImplementation((...args)=>{
   const service=originalFactory(...args);
-  return {...service,async fail(...failureArgs){const result=await service.fail(...failureArgs);if(!droppedFailure){droppedFailure=true;throw new Error("fixture lost failure receipt");}return result;}};
+  return {...service,async settle(...settleArgs){
+   const result=await service.settle(...settleArgs);
+   if(mode==="settlementDrop")throw new Error("fixture lost child settlement receipt");
+   if(mode.startsWith("crash")){expect(await stopExecution!(settleArgs[0])).toBe(true);}
+   return result;
+  },async fail(...failureArgs){const result=await service.fail(...failureArgs);if(!droppedFailure){droppedFailure=true;throw new Error("fixture lost failure receipt");}return result;}};
  }):undefined;
  let host=createHost();
  try{
@@ -51,6 +63,25 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.w
    await createPersistentTaskService(db).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel"});
   }
   await draining;
+  if(mode.startsWith("crash")){
+   const [interrupted]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+   const before=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
+   expect(interrupted?.status).toBe("running");
+   expect(before.find(call=>call.kind==="tool")).toMatchObject({status:"started"});
+   expect(before.find(call=>call.parentCallId)).toMatchObject(mode==="crashUnknownChild"?{status:"unknown",totalTokens:null}:{status:"settled",totalTokens:7});
+   expect(requests).toHaveLength(2);
+   await host.stop();failureSpy?.mockRestore();supervisorSpy?.mockRestore();
+   if(mode==="crashCancel")await createPersistentTaskService(db,{now}).command(ctx,{taskIds:[submission.executionTaskId],command:"cancel",idempotencyKey:"cancel-crashed"});
+   if(mode==="crashPauseResume")await createPersistentTaskService(db,{now}).command(ctx,{taskIds:[submission.executionTaskId],command:"pause",idempotencyKey:"pause-crashed"});
+   clockOffset=Date.parse(mode==="crashDeadline"?interrupted!.deadlineAt!:interrupted!.leaseExpiresAt!)-Date.now()+1;
+   host=createHost();await host.drainOnce();
+   if(mode==="crashPauseResume"){
+    const [paused]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+    expect(paused?.status).toBe("paused");expect(requests).toHaveLength(2);
+    await createPersistentTaskService(db,{now}).command(ctx,{taskIds:[submission.executionTaskId],command:"resume",idempotencyKey:"resume-completion"});
+    await host.drainOnce();
+   }
+  }
   if(mode.startsWith("reject")){
    const [stopped]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
    expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_user":mode.startsWith("reject400")?"failed":"retry_wait");
@@ -64,6 +95,10 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.w
    await host.drainOnce();
   }
   const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));
+  if(["crashUnknownChild","crashCancel","crashDeadline"].includes(mode)){
+   expect(task?.status).toBe(mode==="crashUnknownChild"?"unknown_result":mode==="crashCancel"?"cancelled":"failed");
+   expect(requests).toHaveLength(2);return;
+  }
   if(mode==="cancel"){
    expect(task?.status).toBe("cancelled");expect(requests).toHaveLength(2);
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
@@ -85,5 +120,5 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="cancel"){res.w
   expect(JSON.stringify(messages.find(message=>message.role==="assistant")?.parts)).toContain("真实开场");
   const page=await createExecutionStreamService(db).read(ctx,submission.executionTaskId,{});
   expect(page.events.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("候选已准备好");
- }finally{failureSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+ }finally{supervisorSpy?.mockRestore();failureSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },15000);

@@ -1523,6 +1523,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "登记已提交只读工具回执证据中对既有通信与JSON序列化的说明；未新增进程通信协议。",
       "acceptance": "只绑定本证据文件复杂度，不补记前置TDD或全任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/hooks-recovery.md"
+      ],
+      "file_sha256": "be0cfb22939e3f03db10c05bb874eba2416fdeaa3d324a7e6fbb0d41b841637f",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "本文件记录已授权 Worker 命名端口、明确失败恢复与回执丢失验证，不引入新的通信层或产品范围；按具体证据文件登记门卫识别的 IPC 标记。",
+      "acceptance": "只登记说明文件复杂度标记，不代表完整 T-915 验收通过。"
     }
   ],
   "historical_baselines": []

@@ -1,10 +1,11 @@
+import {completedChatHooksParents} from "./chat-hooks-recovery";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { createServer } from "node:http";
 import { generateText } from "ai";
 import { modelFor } from "@creatoros/ai-worker";
 import { createDurableGenerationModel } from "@creatoros/ai-worker/durable-generation";
 import { z } from "zod";
-import { createDb, type Db } from "@creatoros/backend";
+import { createDb, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createAiService } from "../ai/ai.service";
 import { createChatTurnSubmissionService } from "../ai/chat-turn-submission.service";
 import { createPersistentTaskService } from "./persistent-task.service";
@@ -694,4 +695,27 @@ it.each(["waiting_user","failed"] as const)("宿主 %s 回执丢失可同键回�
  await expect(f.hooks.fail(f.ref,input)).resolves.toEqual(first);
  await expect(createExecutionAgenticToolPorts(db,{now,budget,tools}).settle(f.ref,{callId:f.parent.callId,status:"unknown"})).rejects.toThrow();
  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)?.status).toBe("started");
+});
+
+it.each(["未知子","缺用量","预留子","坏回执","宿主执行","跨任务子","倒序子","非原工具","错误账号","宿主冻结声明","其他在途调用","两个成功子"])("完成恢复拒绝不完整事实：%s",async(kind)=>{
+ const f=await fixture(),child=await startedChild(f);
+ await f.hooks.settle(f.ref,{callId:child.callId,...success});
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const calls=(await f.ledger.inspect(f.ref)).calls;
+ expect(completedChatHooksParents(task!,calls)).toEqual([f.parent.callId]);
+ const changed=structuredClone(calls),changedTask=structuredClone(task!);
+ const parent=changed.find(call=>call.id===f.parent.callId)!,model=changed.find(call=>call.id===child.callId)!;
+ if(kind==="未知子")model.status="unknown";
+ if(kind==="缺用量")model.totalTokens=null;
+ if(kind==="预留子")model.status="reserved";
+ if(kind==="坏回执")model.providerResult={};
+ if(kind==="宿主执行")parent.toolExecutionClaimId="host-claim";
+ if(kind==="跨任务子")model.executionTaskId="other-task";
+ if(kind==="倒序子")model.sequence=parent.sequence;
+ if(kind==="非原工具")parent.operationKey="other-tool";
+ if(kind==="错误账号")changedTask.accountId="other-account";
+ if(kind==="宿主冻结声明")(changedTask.payload as {modelInput:{tools:Array<{execution?:string}>}}).modelInput.tools[0]!.execution="host";
+ if(kind==="其他在途调用")changed.push({...parent,id:"other-parent",sequence:model.sequence+1});
+ if(kind==="两个成功子")changed.push({...model,id:"other-child",sequence:model.sequence+1,retryOfCallId:model.id});
+ expect(completedChatHooksParents(changedTask,changed)).toEqual([]);
 });
