@@ -1,0 +1,38 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts -t '素材已结算但未提交候选'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts (33 tests | 1 failed | 32 skipped) 1004ms
+   × 素材已结算但未提交候选也不能绕过最大接管次数 119ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 素材已结算但未提交候选也不能绕过最大接管次数
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:219:40
+    217|  const f=await fixture("image");await f.service.start(f.ref,f.call.id)…
+    218|  await db.update(executionTasks).set({maxAttempts:f.ref.attempt}).wher…
+    219|  expect((await expireAsset(f)).failed).toBe(1);
+       |                                        ^
+    220|  expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId…
+    221|  expect(await db.select().from(assets).where(eq(assets.accountId,f.id)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 32 skipped (33)
+   Start at  13:13:12
+   Duration  2.33s (transform 689ms, setup 0ms, import 1.21s, tests 1.00s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
-import type {Db} from "@creatoros/backend";
+import {and,eq,type Db} from "@creatoros/backend";
+import {pendingGeneratedAssetCommits} from "../../schema/pending-generated-asset-commits";
 import type {RequestContext} from "@creatoros/contract";
 import type {ObjectStorageForCtx} from "./assets.service";
 import {accountKeyPrefix} from "./object-storage";
@@ -64,4 +65,12 @@ export function createPendingGeneratedAssetService(deps:{db:Db;objectStorageForC
    return finish(ctx,operationKey,row,undefined,signal);
   },
  };
+}
+
+/** 仅证明原提交已进入持久准备；不声称对象已存在，也不修改素材。 */
+export async function hasPendingGeneratedAssetCommit(db:Pick<Db,"select">,ctx:RequestContext,operationKey:string){
+ const accountId=requireAccountId(ctx.accountId,"assets.pendingGeneratedAsset");
+ const id=`generated-commit-${hash(JSON.stringify([ctx.userId,accountId,operationKey]))}`;
+ const [row]=await db.select({id:pendingGeneratedAssetCommits.id}).from(pendingGeneratedAssetCommits).where(and(eq(pendingGeneratedAssetCommits.id,id),eq(pendingGeneratedAssetCommits.userId,ctx.userId),eq(pendingGeneratedAssetCommits.accountId,accountId)));
+ return !!row;
 }

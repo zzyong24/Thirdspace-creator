@@ -1,3 +1,4 @@
+import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
@@ -786,14 +787,17 @@ export function createPersistentTaskService(
             calls.find(call=>call.id===callId)!.status="reserved";
           }
           const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
-          const completedParents=[...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads];
+          const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
+          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads];
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
-          } else if (calls.some(call => (call.status === "started" && !completedParents.includes(call.id)) || call.status === "unknown")) {
+          } else if (calls.some(call => (call.status === "started" && !completedParents.includes(call.id)) || (call.status === "unknown" && !assetCalls.includes(call.id)))) {
             target = "unknown_result";
           } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {
+            target = "failed";
+          } else if ((row.payload as {modelInput?:{kind?:string}})?.modelInput?.kind === "asset.generate" && row.attempt >= row.maxAttempts) {
             target = "failed";
           } else if (completedParents.length || calls.some(call => call.status === "settled" && call.resultText)) {
             target = "queued";

@@ -151,3 +151,73 @@ it("等待素材验证后截止时间已到，不得用旧时间提交成功",as
  await expect(candidate.commitResult(f.ref,{outcome:"succeeded",callId:f.call.id,text:JSON.stringify(receipt)})).rejects.toThrow();
  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,f.id))).toHaveLength(0);expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe("running");
 });
+
+async function expireAsset(f:Awaited<ReturnType<typeof fixture>>){
+ await db.update(executionTasks).set({leaseExpiresAt:"2026-09-05T23:59:59.000Z"}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ return f.tasks.recoverExpiredLeases();
+}
+it("租约过期后自动接管原视频任务号，不重置调用预算",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,{callId:f.call.id,job:{schemaVersion:1,provider:f.input.provider,model:f.input.model,baseUrl:null,jobId:"expired-original"}});
+ const before=await f.ledger.inspect(f.ref);expect((await expireAsset(f)).requeued).toBe(1);
+ const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"}))!;
+ const ref={...f.ref,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken};
+ expect(await f.service.reserve(ref,128)).toMatchObject({id:f.call.id,status:"started"});
+ expect(await f.ledger.inspect(ref)).toMatchObject({reservedTokens:before.reservedTokens});
+ expect(await createExecutionProviderJobService(db,{now:f.now}).read(ref,{callId:f.call.id})).toMatchObject({jobId:"expired-original"});
+ await expect(f.service.start(ref,f.call.id)).rejects.toThrow();
+});
+it("租约过期后自动恢复本地原字节，供应商无需任务号",async()=>{
+ const f=await fixture("image");await f.service.start(f.ref,f.call.id);const put=f.storage.putObject.bind(f.storage);
+ f.storage.putObject=async input=>{await put(input);throw new Error("写后中断");};
+ await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();
+ expect((await expireAsset(f)).requeued).toBe(1);
+ const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"}))!;
+ f.storage.putObject=vi.fn(async()=>{throw new Error("不得重新生成或写入");});
+ expect(await f.service.recover({...f.ref,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken},f.call.id)).toMatchObject({status:"committed"});
+ expect(f.storage.putObject).not.toHaveBeenCalled();
+});
+it.each(["missing","foreign-job","attempts","deadline","cancel","pause"])("过期素材恢复尊重 %s 边界",async variant=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ if(variant!=="missing")await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,{callId:f.call.id,job:{schemaVersion:1,provider:f.input.provider,model:f.input.model,baseUrl:null,jobId:"boundary-original"}});
+ if(variant==="foreign-job")await db.update(executionCalls).set({providerJob:{schemaVersion:1,provider:"other",model:f.input.model,baseUrl:null,jobId:"wrong"}}).where(eq(executionCalls.id,f.call.id));
+ if(variant==="attempts")await db.update(executionTasks).set({maxAttempts:f.ref.attempt}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ if(variant==="deadline")await db.update(executionTasks).set({deadlineAt:f.now()}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ if(variant==="cancel" || variant==="pause")await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:variant,idempotencyKey:variant});
+ await expireAsset(f);
+ expect((await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)))[0]!.status).toBe(variant==="cancel"?"cancelled":variant==="pause"?"paused":"unknown_result");
+ expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"unexpected"})).toBeNull();
+});
+
+it("原 job 的 unknown 调用可接管，但再次中断仍耗原尝试次数",async()=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,{callId:f.call.id,job:{schemaVersion:1,provider:f.input.provider,model:f.input.model,baseUrl:null,jobId:"unknown-original"}});
+ await f.ledger.settle(f.ref,f.call.id,{status:"unknown"});
+ await db.update(executionTasks).set({maxAttempts:2}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ expect((await expireAsset(f)).requeued).toBe(1);
+ const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"}))!;
+ expect(next.lease.attempt).toBe(2);
+ expect((await expireAsset(f)).unknownResult).toBe(1);
+ expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"third"})).toBeNull();
+ expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.id)))[0]).toMatchObject({status:"unknown",startedAttempt:1,reservedTokens:128});
+ expect((await f.tasks.recoverExpiredLeases()).requeued).toBe(0);
+});
+it("只有准备记录而没有字节时接管只回读，不产生素材或第二次自动接管",async()=>{
+ const f=await fixture("image");await f.service.start(f.ref,f.call.id);
+ f.storage.putObject=vi.fn(async()=>{throw new Error("写前中断");});await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();
+ expect((await expireAsset(f)).requeued).toBe(1);
+ const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"}))!;
+ vi.mocked(f.storage.putObject).mockClear();
+ expect(await f.service.recover({...f.ref,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken},f.call.id)).toEqual({status:"bytes_missing"});
+ expect(f.storage.putObject).not.toHaveBeenCalled();expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(0);
+ await db.update(executionTasks).set({status:"unknown_result"}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ expect((await f.tasks.recoverExpiredLeases()).requeued).toBe(0);
+});
+it("素材已结算但未提交候选也不能绕过最大接管次数",async()=>{
+ const f=await fixture("image");await f.service.start(f.ref,f.call.id);await f.service.save(f.ref,f.call.id,bytes);
+ await db.update(executionTasks).set({maxAttempts:f.ref.attempt}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ expect((await expireAsset(f)).failed).toBe(1);
+ expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"over-budget"})).toBeNull();
+ expect(await db.select().from(assets).where(eq(assets.accountId,f.id))).toHaveLength(1);
+ expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.id)))[0]!.status).toBe("settled");
+});

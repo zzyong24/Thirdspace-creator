@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/asset-worker-runtime.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  48 passed (48)
+   Start at  13:13:33
+   Duration  12.24s (transform 1.91s, setup 0ms, import 3.77s, tests 21.03s, environment 0ms)
+

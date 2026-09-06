@@ -1,0 +1,81 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts (30 tests | 6 failed) 3157ms
+   × 租约过期后自动接管原视频任务号，不重置调用预算 28ms
+   × 租约过期后自动恢复本地原字节，供应商无需任务号 58ms
+   × 过期素材恢复尊重 missing 边界 19ms
+   × 过期素材恢复尊重 foreign-job 边界 21ms
+   × 过期素材恢复尊重 attempts 边界 23ms
+   × 过期素材恢复尊重 deadline 边界 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 租约过期后自动接管原视频任务号，不重置调用预算
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:162:85
+    160|  const f=await fixture();await f.service.start(f.ref,f.call.id);
+    161|  await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,…
+    162|  const before=await f.ledger.inspect(f.ref);expect((await expireAsset(…
+       |                                                                                     ^
+    163|  const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,wor…
+    164|  const ref={...f.ref,attempt:next.lease.attempt,fenceToken:next.lease.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 租约过期后自动恢复本地原字节，供应商无需任务号
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:174:42
+    172|  f.storage.putObject=async input=>{await put(input);throw new Error("写…
+    173|  await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow();
+    174|  expect((await expireAsset(f)).requeued).toBe(1);
+       |                                          ^
+    175|  const next=(await f.tasks.claimTask({taskId:f.ref.executionTaskId,wor…
+    176|  f.storage.putObject=vi.fn(async()=>{throw new Error("不得重新生成或写入");});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 过期素材恢复尊重 missing 边界
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 过期素材恢复尊重 foreign-job 边界
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 过期素材恢复尊重 attempts 边界
+ FAIL  src/modules/execution/execution-asset-result.service.test.ts > 过期素材恢复尊重 deadline 边界
+AssertionError: expected 'blocked' to be 'unknown_result' // Object.is equality
+
+Expected: "unknown_result"
+Received: "blocked"
+
+ ❯ src/modules/execution/execution-asset-result.service.test.ts:188:66
+    186|  if(variant==="cancel" || variant==="pause")await f.tasks.command(f.ct…
+    187|  await expireAsset(f);
+    188|  expect((await f.tasks.get(f.ctx,f.ref.executionTaskId)).status).toBe(…
+       |                                                                  ^
+    189|  expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId…
+    190| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 24 passed (30)
+   Start at  13:10:30
+   Duration  4.41s (transform 609ms, setup 0ms, import 1.12s, tests 3.16s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
