@@ -22,6 +22,7 @@ flowchart LR
 - `material-atomic-submit-final.log`：协议与执行映射共用后 34 项通过。
 - `material-atomic-submit-final2.log`：增强 ACK 丢失和错误类型断言后 35 项通过。通过真实数据库、AI service、宿主账本及 Worker 的 `runDurableAgenticTool` 函数验证素材子任务提交、事务回滚、租约恢复、旧 fence 拒绝、并发同参复用、取消与 ACK 丢失恢复。该测试没有 fork Worker，也没有调用生成供应商，不能冒充实际素材生成验收。
 - `material-atomic-submit-contract.log`：9 项通过，检查明确映射、拒绝任意名称／原型属性与副作用声明降级。
+- 提交后发现新增契约测试意外覆盖了原文件的 5 项用例，已按上一个提交逐字恢复并追加新增测试。`material-atomic-submit-contract-restored.log` 最终 14 项通过，原协议编码、消息归属、结算与完成回执约束未删减。前述 9 项结果不是完整契约回归。
 - `material-atomic-submit-types.log`：contract、backend、frontend、ai-worker 类型检查。
 - `material-atomic-submit-mixed-setup.log`：混合工具测试最初遗漏额外工具端口，装配校验拒绝；补齐测试端口后，`final2` 已覆盖同一冻结清单同时含论点和素材工具的恢复路径。未放宽完整工具装配校验。
 - 独立只读复审确认未放宽 unknown 或普通宿主操作重放；审查者未运行测试。
