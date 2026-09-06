@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-worker-entry.test.ts (12 tests | 2 failed | 10 skipped) 32068ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：revoked 15484ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：login 15443ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：revoked
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：login
+AssertionError: expected 'waiting_user' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "waiting_user"
+
+ ❯ vi.waitFor.timeout src/integration/chat-worker-entry.test.ts:70:61
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 skipped (12)
+   Start at  20:51:01
+   Duration  33.39s (transform 689ms, setup 0ms, import 1.19s, tests 32.07s, environment 0ms)
+

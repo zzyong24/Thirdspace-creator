@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-worker-entry.test.ts (13 tests | 1 failed | 12 skipped) 16619ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：late-denied 15483ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：late-denied
+AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "unknown_result"
+
+ ❯ vi.waitFor.timeout src/integration/chat-worker-entry.test.ts:70:61
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  20:57:04
+   Duration  18.18s (transform 864ms, setup 0ms, import 1.43s, tests 16.62s, environment 0ms)
+

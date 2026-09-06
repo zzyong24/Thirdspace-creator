@@ -1,0 +1,55 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-tool-ports.service.test.ts (6 tests | 2 failed) 1301ms
+   × Worker跳过宿主执行不能自报成功或伪造用户拒绝 61ms
+   × 已确认成功的历史回放不因后来撤销授权而被改写成拒绝 71ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-tool-ports.service.test.ts > Worker跳过宿主执行不能自报成功或伪造用户拒绝
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_ed087091-287e-4f7a-a35b-23c2e789b650",
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-chat-tool-ports.service.test.ts:33:118
+     31| }
+     32| it("Worker跳过宿主执行不能自报成功或伪造用户拒绝",async()=>{
+     33|  const f=await fixture();await expect(f.host.settle(f.ref,{callId:f.re…
+       |                                                                                                                      ^
+     34|  const denied={status:"blocked",summary:"用户未允许本次操作",evidence:[],data:{…
+     35|  await expect(f.host.settle(f.ref,{callId:f.reservation.callId,status:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-chat-tool-ports.service.test.ts > 已确认成功的历史回放不因后来撤销授权而被改写成拒绝
+AssertionError: expected { status: 'denied', reason: '后来撤销' } to deeply equal { status: 'not-applicable' }
+
+- Expected
++ Received
+
+  {
+-   "status": "not-applicable",
++   "reason": "后来撤销",
++   "status": "denied",
+  }
+
+ ❯ src/modules/execution/execution-chat-tool-ports.service.test.ts:39:46
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  20:52:01
+   Duration  2.45s (transform 568ms, setup 0ms, import 1.01s, tests 1.30s, environment 0ms)
+
