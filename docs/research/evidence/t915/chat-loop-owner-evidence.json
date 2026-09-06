@@ -1,0 +1,121 @@
+{
+  "task": "T-915",
+  "date": "2026-09-05",
+  "status": "实现中，完整聊天进程迁移未完成",
+  "distinctTests": 220,
+  "files": [
+    {
+      "path": "ai-worker/package.json",
+      "sha256": "f9bea3f7ae57f3ed886c35539eb8a2f7627b8417a22b06cef7731780dbfa44a8"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-runner.ts",
+      "sha256": "f744fec01dddcb7e04b4ae69a56baa58087f9e7ae7264c22e9b5cac1258c355b"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-runner.test.ts",
+      "sha256": "9b83e759baf804fc644caad38c2d0c1e0efaa25d923eb0224a0b19fbeb56777c"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+      "sha256": "64951a312e018c0ead491c28d12b2a22040bc55a71e66c3d28853a7079d7b0f6"
+    },
+    {
+      "path": "orchestrator/COMPLEXITY_LEDGER.json",
+      "sha256": "40bf2f7fb267dfb435c7ee061aa2110073da94f752b686d36d716f7403c063af"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-loop-policy.ts",
+      "sha256": "761bc523c4bc0cdb2f727b0013c1f7fcd297e061e4b27fdcdcf7ef5372cd92fc"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-model-stream.test.ts",
+      "sha256": "fc9cc0c573adc41874dfd3c5c92caba39a2e061ef382d61bc19c86633b32d660"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/chat-model-stream.ts",
+      "sha256": "888a1d902bbb3dde108a80fed44be57b812564aa38737090ce7806f5208881f1"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/index.ts",
+      "sha256": "4275043703468556eafa3e6ae250fe4bc515b7a09c586f6507926b7a980b7b26"
+    },
+    {
+      "path": "ai-worker/src/runtime/chat/tool-names.ts",
+      "sha256": "ea96a0071c6aa654a1c264b370cfead01da0c058d692c44c2abf37ccc646f56f"
+    }
+  ],
+  "logs": [
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-backend-final.log",
+      "sha256": "dbc9901577e44e1dc11b16b9ff35b3e02151f6b30e0f0db15fce6331285679e0"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-boundary.log",
+      "sha256": "f18a606484139dd71ca4a368433a4008c25070def91b99aa0bcb00b968e4ebdd"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-integration.log",
+      "sha256": "8ab4a04c615b242f33ab1ed05751c6752d9fc14a3aeece6fffcf697d62bc3557"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-orphan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-pmem.log",
+      "sha256": "7e9141376e6123cb9d1a01edf9bce51f59663a6313b279d14157878a0230c09e"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-public-binding.log",
+      "sha256": "10cb0647154ba6237953d0220efd37ebff8999b384cd354285720ad12e339c74"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-reconcile.log",
+      "sha256": "fe2b7c8170ab7d2095dbbd6f256a69eb80849d225a89fe548f851c4d3f7b9de9"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-regression.log",
+      "sha256": "d94914bc4d768bcde9838ebaf23814ccc5e94846ddd185671cf621bebb185f8f"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-route.log",
+      "sha256": "b8a44fd3f0d70a5acd8aa6ba8b809e5c8cfd3947a8eb9fdc772013c8347c1b87"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-scope-final.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-scope.log",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-types-final.log",
+      "sha256": "43cfd4f2919698fe121518dd690d5a0baaed5cddbf1e7ace6c3024293de7ef53"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-types-fixed.log",
+      "sha256": "395c01753c061ca97434f4e9d31390f44ec8805263d9db87401a8fce54945423"
+    },
+    {
+      "path": "docs/research/evidence/t915/t915-chat-loop-types.log",
+      "sha256": "75d4215a443b7764c46fa42bf4111f2dbb6f139750f39387f53045db60b0b886"
+    }
+  ],
+  "reconcile": {
+    "errors": 211,
+    "warnings": 1
+  },
+  "independentReview": "待完成",
+  "limits": [
+    "真实 SDK 使用本地 fixture",
+    "实际 runChatStream 本地 SSE 接线通过，尚未迁入 Worker 子进程",
+    "路由测试 mock 模型运行",
+    "性能与双平台未验收"
+  ]
+}

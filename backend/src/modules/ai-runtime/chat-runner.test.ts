@@ -1,3 +1,5 @@
+import { createServer } from "node:http";
+import { resolveChatMaxSteps, buildChatPrepareStep, buildForcedToolInstruction, repairScriptPatchToolCall, dedupeChatToolExecutions } from "@creatoros/ai-worker/chat";
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import {
   registerAllTemplates,
@@ -6,21 +8,17 @@ import {
 } from "@creatoros/ai-worker";
 import {
   buildChatAssembly,
+  runChatStream,
   buildHooksPrompt,
   formatWorksBrief,
   EXTRA_BRIEF_HEADING,
   type AssembleChatDeps,
   parseHookItems,
-  resolveChatMaxSteps,
-  buildChatPrepareStep,
-  buildForcedToolInstruction,
   detectCopilotMediaRoute,
   isScratchPositioningConversation,
-  repairScriptPatchToolCall,
   resolveUniqueCoverReference,
   collectVerbatimSources,
   parseSemanticVerbatimSelection,
-  dedupeChatToolExecutions,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import {
@@ -3238,4 +3236,28 @@ describe("[T-386] buildChatAssembly — 后台任务状态真值块", () => {
     expect(a.system).not.toContain("task-sys");
     expect(a.system).not.toContain("系统本轮刚查的库内真实状态");
   });
+});
+
+
+it("实际聊天装配经 Worker 模型循环调用本地供应商，保持流与用量回调", async () => {
+  let requests = 0;
+  const server = createServer((req, res) => {
+    requests++;
+    req.resume();
+    res.writeHead(200, {"content-type":"text/event-stream"});
+    res.end('data: {"id":"chat-fixture","object":"chat.completion.chunk","created":1,"model":"fixture","choices":[{"index":0,"delta":{"content":"装配后的真实流"},"finish_reason":null}]}\n\ndata: {"id":"chat-fixture","object":"chat.completion.chunk","created":1,"model":"fixture","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":2,"completion_tokens":3,"total_tokens":5}}\n\ndata: [DONE]\n\n');
+  });
+  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+  try {
+    const {deps} = makeDeps({resolveModelSpec:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+    const onUsage=vi.fn(), onFinish=vi.fn();
+    const result=await runChatStream(ctx,{messages:[{id:"user",role:"user",parts:[{type:"text",text:"讨论一下创作思路"}]}],chatContext:{surface:"topics"},onUsage},deps,onFinish);
+    expect(await result.text).toBe("装配后的真实流");
+    expect(onFinish).toHaveBeenCalledWith("装配后的真实流");
+    expect(onUsage).toHaveBeenLastCalledWith({inputTokens:2,outputTokens:3,cachedTokens:0,modelKey:"fixture"});
+    expect(requests).toBe(1);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>(resolve=>server.close(()=>resolve()));
+  }
 });

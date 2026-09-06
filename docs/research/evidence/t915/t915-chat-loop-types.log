@@ -1,0 +1,15 @@
+Scope: 2 of 6 workspace projects
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: src/runtime/chat/chat-model-stream.ts(23,21): error TS2345: Argument of type '{ stopWhen: StopCondition<any, any>; toolApproval?: Record<string, ToolApprovalStatus | SingleToolApprovalFunction<any, never, Context>> | undefined; ... 58 more ...; toolsContext?: never | undefined; }' is not assignable to parameter of type '((LanguageModelCallOptions & (RequestOptions<ToolSet> & Prompt)) & { tools?: ToolSet | undefined; }) & { ...; } & { ...; }'.
+ai-worker typecheck:   Type '{ stopWhen: StopCondition<any, any>; toolApproval?: Record<string, ToolApprovalStatus | SingleToolApprovalFunction<any, never, Context>> | undefined; ... 58 more ...; toolsContext?: never | undefined; }' is not assignable to type 'LanguageModelCallOptions & RequestOptions<ToolSet> & { instructions?: Instructions | undefined; system?: Instructions | undefined; allowSystemInMessages?: boolean | undefined; } & { ...; } & { ...; } & { ...; } & { ...; }'.
+ai-worker typecheck:     Type '{ stopWhen: StopCondition<any, any>; toolApproval?: Record<string, ToolApprovalStatus | SingleToolApprovalFunction<any, never, Context>> | undefined; ... 58 more ...; toolsContext?: never | undefined; }' is not assignable to type '{ messages: ModelMessage[]; prompt?: undefined; }'.
+ai-worker typecheck:       Types of property 'messages' are incompatible.
+ai-worker typecheck:         Type 'ModelMessage[] | undefined' is not assignable to type 'ModelMessage[]'.
+ai-worker typecheck:           Type 'undefined' is not assignable to type 'ModelMessage[]'.
+ai-worker typecheck: src/runtime/chat/chat-model-stream.ts(42,58): error TS2345: Argument of type 'ToolApprovalConfiguration<ToolSet, Context>' is not assignable to parameter of type 'Record<string, ToolApprovalStatus | SingleToolApprovalFunction<any, never, Context>>'.
+ai-worker typecheck:   Type 'GenericToolApprovalFunction<ToolSet, Normalize<RequiredToolSetContext<ToolSet> & OptionalToolSetContext<ToolSet>>, Context>' is not assignable to type 'Record<string, ToolApprovalStatus | SingleToolApprovalFunction<any, never, Context>>'.
+ai-worker typecheck:     Index signature for type 'string' is missing in type 'GenericToolApprovalFunction<ToolSet, Normalize<RequiredToolSetContext<ToolSet> & OptionalToolSetContext<ToolSet>>, Context>'.
+ai-worker typecheck: Failed
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2

@@ -1478,6 +1478,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录本批已批准私有流事件通道的实现、测试和未完成范围；文档不新增IPC能力或改变产品契约。",
       "acceptance": "仅登记证据文档中的技术标记，不代表整体验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/durable-stream-model.md"
+      ],
+      "file_sha256": "d7877a8a4e8bb29b3ad9033a2132b3473e351b2f68fa380a0a7c43f44cb4eea2",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认 R-05 流式回执迁移所需的私有端口与真实测试，不新增执行权。",
+      "acceptance": "仅登记证据文档复杂度，不代表完整聊天迁移通过。"
     }
   ],
   "historical_baselines": []

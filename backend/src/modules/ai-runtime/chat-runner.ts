@@ -1,18 +1,13 @@
+import { createChatModelStream, resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import {
-  streamText,
   convertToModelMessages,
-  stepCountIs,
   type UIMessage,
   type ToolSet,
   type ToolApprovalStatus,
-  type ToolCallRepairFunction,
 } from "ai";
 // [T-263] HITL 授权门:从已挂工具装配 streamText 的 toolApproval 配置(单一真值在 chat-tool-gate)。
 import {
   buildChatToolApproval,
-  sanitizeSystemToolReferences,
-  sanitizeToolName,
-  sanitizeToolNames,
 } from "./chat-tool-gate";
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -2587,233 +2582,6 @@ export async function buildChatAssembly(
   };
 }
 
-// ── [T-239f S6] 步数收尾 ────────────────────────────────────────────────────
-/** 对话工具循环步数上限:env CREATOROS_CHAT_MAX_STEPS,默认 6,夹在 [2, 12](至少留 1 步
- *  给「禁工具强制收尾」;上限防误配无限循环)。 */
-export function resolveChatMaxSteps(
-  env: Record<string, string | undefined>,
-): number {
-  const raw = env.CREATOROS_CHAT_MAX_STEPS?.trim();
-  if (!raw) return 6;
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return 6;
-  return Math.min(12, Math.max(2, Math.floor(n)));
-}
-
-function canonicalToolInput(input: unknown): string {
-  const seen = new WeakSet<object>();
-  return JSON.stringify(input, (_key, value: unknown) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
-    if (seen.has(value)) return "[Circular]";
-    seen.add(value);
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-        a.localeCompare(b),
-      ),
-    );
-  });
-}
-
-function toolCallSignature(call: { toolName: string; input: unknown }): string {
-  return `${call.toolName}:${canonicalToolInput(call.input)}`;
-}
-
-function hasRepeatedToolCall(
-  steps: readonly {
-    toolCalls?: readonly { toolName: string; input: unknown }[];
-  }[],
-): boolean {
-  const seen = new Set<string>();
-  for (const step of steps) {
-    for (const call of step.toolCalls ?? []) {
-      const signature = toolCallSignature(call);
-      if (seen.has(signature)) return true;
-      seen.add(signature);
-    }
-  }
-  return false;
-}
-
-/**
- * 同一对话回合内，相同工具和规范化参数只执行一次。失败不缓存，瞬时错误仍可重试。
- * SEMANTIC_BOUNDARY_ALLOW:这里只做协议级副作用去重，不判断用户意图或创作内容。
- */
-export function dedupeChatToolExecutions(
-  tools: ToolSet,
-  onDuplicate?: (toolName: string) => void,
-): ToolSet {
-  const cache = new Map<string, Promise<unknown>>();
-  return Object.fromEntries(
-    Object.entries(tools).map(([toolName, tool]) => {
-      const executable = tool as unknown as {
-        execute?: (input: unknown, options: unknown) => unknown;
-      };
-      if (typeof executable.execute !== "function") return [toolName, tool];
-      const execute = executable.execute;
-      return [
-        toolName,
-        {
-          ...tool,
-          execute: async (input: unknown, options: unknown) => {
-            const key = toolCallSignature({ toolName, input });
-            const existing = cache.get(key);
-            if (existing) {
-              onDuplicate?.(toolName);
-              return existing;
-            }
-            const pending = Promise.resolve().then(() =>
-              execute.call(tool, input, options),
-            );
-            cache.set(key, pending);
-            try {
-              return await pending;
-            } catch (error) {
-              cache.delete(key);
-              throw error;
-            }
-          },
-        },
-      ];
-    }),
-  ) as ToolSet;
-}
-
-/**
- * [T-117 强制工具 + T-239f 末步禁工具] 的 prepareStep 纯函数(可单测):
- *   - 第 0 步:forcedTool 有值 → toolChoice 强制调它(深链按钮的显式意图,防弱模型吐文本谎称渲卡);
- *   - 最后一步(stepNumber === maxSteps-1):toolChoice:'none' 禁工具 —— stopWhen 只会「掐断」,
- *     模型没机会总结;末步禁工具让它**必须**用文字把已有工具结果收尾,多工具任务不再静默腰斩;
- *   - 其余步:{}(auto,行为不变)。
- */
-export function buildChatPrepareStep(opts: {
-  forcedTool?: string;
-  forcedToolSequence?: string[];
-  maxSteps: number;
-}): (step: {
-  stepNumber: number;
-  steps?: readonly {
-    toolCalls?: readonly { toolName: string; input: unknown }[];
-  }[];
-}) => {
-  toolChoice?: "none" | { type: "tool"; toolName: string };
-} {
-  return ({ stepNumber, steps = [] }) => {
-    const sequencedTool = opts.forcedToolSequence?.[stepNumber];
-    if (sequencedTool) {
-      return {
-        toolChoice: { type: "tool" as const, toolName: sequencedTool },
-      };
-    }
-    // [T-117] 第 0 步强制调 forcedTool —— 这是「点按钮/深链后卡片秒出」的关键:模型**直接执行**,
-    //   省掉它自己纠结要不要调工具(用户实测:MiniMax 带强制时"一下就出来")。
-    // [T-443] 曾因 DeepSeek thinking 对此 400 而一刀切改成 prompt 指令 —— 那让**所有**模型都变慢
-    //   (模型得先理解指令再决定调不调,思考模型还要先推理一大段),是明显的性能回归。
-    //   现在改为:**默认仍带强制(快)**,被拒时由 recovering-model 中间件自动降级成 auto 重试一次
-    //   (见 shouldDowngradeToolChoice),强制意图由 system 强指令兜底 —— 快与兼容两头都要。
-    if (opts.forcedTool && stepNumber === 0) {
-      return {
-        toolChoice: { type: "tool" as const, toolName: opts.forcedTool },
-      };
-    }
-    if (hasRepeatedToolCall(steps)) {
-      return { toolChoice: "none" as const };
-    }
-    if (stepNumber >= opts.maxSteps - 1) {
-      return { toolChoice: "none" as const };
-    }
-    return {};
-  };
-}
-
-/**
- * [T-443] forcedTool 的 **system 层**强指令 —— 替代 API 层 toolChoice 强制。
- * 传入的必须是**发给模型的合规工具名**(sanitizeToolName 之后),否则模型按名找不到该工具。
- */
-export function buildForcedToolInstruction(safeToolName: string): string {
-  return [
-    "【本轮硬性要求】用户是通过界面按钮/深链明确指定了要执行的操作,",
-    `你**必须首先调用 \`${safeToolName}\` 工具**来完成它。`,
-    "不要用文字描述你「将要做」或「已经做了」——必须真正发起这次工具调用,让结果以卡片呈现;",
-    "只有在该工具返回结果之后,才继续做后续说明。",
-  ].join("");
-}
-
-export function buildForcedToolSequenceInstruction(
-  safeToolNames: readonly string[],
-): string {
-  return [
-    "【本轮硬性顺序】用户已明确要求执行一个组合操作。",
-    `必须依次调用 ${safeToolNames.map((name) => `\`${name}\``).join(" → ")}；后一步必须读取前一步的真实结果填写参数。`,
-    "不要跳过中间读取，不要改用相邻工具，不要只给文字建议，也不要把系统已有事实再抛回用户选择。",
-  ].join("");
-}
-
-type RepairableToolCall = Parameters<ToolCallRepairFunction<ToolSet>>[0]["toolCall"];
-
-function unwrapJsonFence(value: string): string {
-  const trimmed = value.trim();
-  const match = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
-  return match?.[1]?.trim() ?? trimmed;
-}
-
-/**
- * T-716:部分兼容模型会理解“只改本段”，但把 replacementText 输出成 text/newText，
- * 或直接把新段落作为纯文本工具参数。这里仅修复这类可证明等价的字段别名，不生成任何
- * artifact/version/section 技术锚点——真实锚点仍由服务端工具闭包绑定，避免 AI 猜 ID。
- */
-export function repairScriptPatchToolCall(
-  toolCall: RepairableToolCall,
-): RepairableToolCall | null {
-  const safeToolName = sanitizeToolName("script.patch");
-  // SEMANTIC_BOUNDARY_ALLOW:这里只修复同一已注册工具的点号/下划线协议别名，
-  // 不根据用户文字判断创作意图，也不将其它工具猜成 script.patch。
-  if (toolCall.toolName !== "script.patch" && toolCall.toolName !== safeToolName) {
-    return null;
-  }
-  const rawInput = unwrapJsonFence(toolCall.input ?? "");
-  if (!rawInput) return null;
-
-  let replacementText = "";
-  let summary = "";
-  try {
-    const parsed = JSON.parse(rawInput) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-    const object = parsed as Record<string, unknown>;
-    const aliases = [
-      "replacementText",
-      "replacement_text",
-      "newText",
-      "new_text",
-      "text",
-      "content",
-      "rewrite",
-    ];
-    replacementText =
-      aliases
-        .map((key) => object[key])
-        .find((value): value is string =>
-          typeof value === "string" && value.trim().length > 0,
-        )
-        ?.trim() ?? "";
-    summary = typeof object.summary === "string" ? object.summary.trim() : "";
-  } catch {
-    // 只有明显不是 JSON 的纯文本才可安全解释为目标段落；疑似截断 JSON 必须失败，
-    // 不能把半截结构体写进稿面候选。
-    if (/^[{[]/.test(rawInput)) return null;
-    replacementText = rawInput;
-  }
-
-  if (!replacementText || replacementText.length > 12_000) return null;
-  return {
-    ...toolCall,
-    toolName: safeToolName,
-    input: JSON.stringify({
-      replacementText,
-      ...(summary ? { summary } : {}),
-    }),
-  };
-}
-
 /**
  * 串起 streamText(SPEC §3.3)—— 装配 + 把 UIMessage[] 转成 ModelMessage[] 喂模型,流式产出。
  * `onFinish` 由路由传入(落 ai_messages 的 assistant 文本)。返回 StreamTextResult,路由用
@@ -2974,63 +2742,17 @@ export async function runChatStream(
   // 兼管 [T-117] forcedTool 第 0 步强制)—— 多工具任务不再被 stopWhen 静默腰斩。
   const maxSteps = resolveChatMaxSteps(process.env);
 
-  const result = streamText({
+  const result = createChatModelStream({
     model,
-    maxRetries: 0,
-    // [T-239c S2] 中断真一致:route 传 req.signal —— 用户点「停止」/断开,服务端本轮立停
-    // (不再跑后续工具烧钱);SDK 会把 signal 经工具 execute 第二参 { abortSignal } 透传。
     abortSignal: input.abortSignal,
-    // [T-443] forcedTool 改走 **system 层**强指令(API 层 toolChoice 强制会被思考模型 400 拒)。
-    //   指令里必须用**合规名**(与下面 tools 的 key 一致),否则模型按名找不到该工具。
-    // [T-456] system prompt 里散落的 `context.xxx.yyy` 带点字面引用统一替换成合规名——
-    //   模型按 prompt 字面吐 tool_call,tools 侧 sanitize 后只认下划线名,不 sanitize prompt
-    //   会 AI_NoSuchToolError → chat aborted(2026-07-21 用户 log(4) 真机)。
-    system: sanitizeSystemToolReferences(
-      assembly.forcedToolSequence?.length
-        ? `${assembly.system}\n\n${buildForcedToolSequenceInstruction(
-            assembly.forcedToolSequence.map(sanitizeToolName),
-          )}`
-        : assembly.forcedTool
-          ? `${assembly.system}\n\n${buildForcedToolInstruction(sanitizeToolName(assembly.forcedTool))}`
-          : assembly.system,
-      assembly.tools,
-    ),
+    system: assembly.system,
     messages: modelMessages,
-    // [T-439] 发给模型前合规化工具名(点 → 下划线):DeepSeek/OpenAI/Anthropic 对
-    //   `tools[].function.name` 一律要求 `^[a-zA-Z0-9_-]+$`,原样发出 → 400 秒拒 → copilot 全废
-    //   (2026-07-20 真机)。SDK 用同一 key 发出 + 匹配模型回传的 tool_call → **execute 零改动**;
-    //   下面 toolApproval 必须走同一函数换名,否则回传时授权门键对不上 = HITL 形同虚设。
-    tools: dedupeChatToolExecutions(
-      sanitizeToolNames(assembly.tools),
-      (toolName) =>
-        console.warn(`[chat-turn] 同轮同参工具调用已复用 tool=${toolName}`),
-    ),
-    ...(assembly.forcedTool === "script.patch"
-      ? {
-          experimental_repairToolCall: async ({ toolCall }) =>
-            repairScriptPatchToolCall(toolCall),
-        }
-      : {}),
-    // [T-117 确定性修] functionKey 命中真工具时,第 0 步 toolChoice 强制调它 → 必产 tool-result
-    // → 前端渲真卡(弱 tool-calling 模型不再把卡当文本吐 + 谎称已渲卡);之后步恢复 auto,让模型
-    // 据工具结果把话说完。[T-239f] 最后一步 toolChoice:'none' 禁工具,模型必须文字总结收尾。
-    // [T-443] forcedTool 已改由 system 强指令承担(见上),这里传入仅保留签名语义;
-    //   prepareStep 现在只负责末步 toolChoice:'none' 收尾。
-    prepareStep: buildChatPrepareStep({
-      forcedTool: assembly.forcedTool ? sanitizeToolName(assembly.forcedTool) : undefined,
-      forcedToolSequence: assembly.forcedToolSequence?.map(sanitizeToolName),
-      maxSteps,
-    }),
-    // [T-263] 原生工具授权(HITL):local.read 未授权 → SDK 挂起该工具调用、以 approval-requested
-    // 态 surface 前端确认卡(execute 暂不跑),用户「允许」写 grant + addToolApprovalResponse →
-    // sendAutomaticallyWhen 同回合 resume 续跑 execute 读到内容。无需授权门时 undefined(行为不变)。
-    // [T-439] 与上面 tools 走**同一套换名**——键必须一致,否则 SDK 用合规名回传 tool_call 时
-    //   在授权门里查不到判定器 → 该弹确认的工具被直接放行。
-    ...(assembly.toolApproval
-      ? { toolApproval: sanitizeToolNames(assembly.toolApproval) }
-      : {}),
-    // 工具调用后让模型据工具结果继续把话说完(候选已在 tool-result part 里流回前端渲卡)。
-    stopWhen: stepCountIs(maxSteps),
+    tools: assembly.tools,
+    toolApproval: assembly.toolApproval,
+    forcedTool: assembly.forcedTool,
+    forcedToolSequence: assembly.forcedToolSequence,
+    maxSteps,
+    onDuplicate: toolName => console.warn(`[chat-turn] 同轮同参工具调用已复用 tool=${toolName}`),
     // [T-239b] typed 终止原因:成功轮按恢复层事件归纳;错误轮区分「可重试耗尽」与其它;
     // 中断轮(abortSignal / 客户端断开)单独记 aborted。打点不影响既有 onFinish 落库语义。
     onAbort: () => {

@@ -43,6 +43,10 @@
     "./durable-stream": {
       "types": "./src/execution/durable-stream-model.ts",
       "default": "./src/execution/durable-stream-model.ts"
+    },
+    "./chat": {
+      "types": "./src/runtime/chat/index.ts",
+      "default": "./src/runtime/chat/index.ts"
     }
   },
   "scripts": {

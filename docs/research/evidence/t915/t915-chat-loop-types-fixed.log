@@ -1,0 +1,5 @@
+Scope: 2 of 6 workspace projects
+ai-worker typecheck$ tsc --noEmit
+ai-worker typecheck: Done
+backend typecheck$ tsc --noEmit
+backend typecheck: Done
