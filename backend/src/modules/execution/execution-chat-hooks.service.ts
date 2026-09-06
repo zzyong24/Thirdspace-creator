@@ -25,7 +25,7 @@ import {
   type AgenticBackendTool,
 } from "./agentic-tool-binding";
 import { ConflictError } from "./execution.errors";
-import { createExecutionModelIdentityService } from "./execution-model-identity.service";
+import { createExecutionChatModelIdentityService } from "./execution-chat-model-identity.service";
 import { providerIdentityFor } from "@creatoros/ai-worker/model-identity";
 const parentRequest=workerPortInputSchemas.prepareChatHooks;
 const reserveRequest=workerPortInputSchemas.reserveChatHooksModel;
@@ -98,10 +98,6 @@ export function createExecutionChatHooksService(
     const input = parentRequest.parse(raw);
     signal?.throwIfAborted();
     const frozen = await reader.read(ref);
-    const modelIdentity = await createExecutionModelIdentityService(
-      db,
-      deps,
-    ).read(ref);
     if (!frozen.hostContext.scriptHooksContext)
       throw new ConflictError("原任务缺少开场生成上下文");
     if (!frozen.hostContext.scriptHooksGeneration)
@@ -141,6 +137,7 @@ export function createExecutionChatHooksService(
         .orderBy(asc(executionCalls.sequence));
       assertCurrentRound(calls, findParent(task, calls, input.callId));
     });
+    const modelIdentity = await createExecutionChatModelIdentityService(db, deps).pinPrimary(ref, input.callId);
     const prepared = await createExecutionNodePreparationService(db, deps).readOrPrepare(
       ref, { parentCallId: input.callId, inputDigest: scope.bound.inputDigest, nodeVersion: "script.hooks.v1" },
       z.object({ prompt:z.string(), system:z.string(), grounding:z.array(z.string()) }).strict(),

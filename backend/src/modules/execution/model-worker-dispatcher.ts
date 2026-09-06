@@ -305,7 +305,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         controlTimer=setTimeout(()=>{void watch();},250);
         try{
           if(deps.executionMode==="chat.run"){
-            try{const chatTools=await getChatTools(ref);const input=await chatTools.validateTask(ref);await calls.readTaskContext(ref);if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !(await supervisor.start()).includes("chat.hooks"))throw new Error("CHAT_HOOKS_WORKER_UNAVAILABLE");toolScope.chatReady=true;}
+            try{const chatTools=await getChatTools(ref);const input=await chatTools.validateTask(ref);await calls.readTaskContext(ref);if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !(await supervisor.start()).includes("chat.hooks"))throw new Error("CHAT_HOOKS_WORKER_UNAVAILABLE");if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !(await supervisor.start()).includes("chat.structured"))throw new Error("CHAT_STRUCTURED_WORKER_UNAVAILABLE");toolScope.chatReady=true;}
             catch{
               if(!stopping)await leases.withLease(ref,"settlement",async({tx,task})=>{
                 const rows=await tx.select({status:executionCalls.status}).from(executionCalls).where(eq(executionCalls.executionTaskId,task.id));

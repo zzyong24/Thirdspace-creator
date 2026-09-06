@@ -78,7 +78,7 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await project.recordApproval(ref,request,decision);
   return decision;
  }
- const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.script-hooks" || tool.execution==="host.task-submit"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
+ const guardedTools=Object.fromEntries(Object.entries(deps.tools).map(([name,tool])=>[name,tool.execution==="worker.script-hooks" || tool.execution==="worker.structured-node" || tool.execution==="host.task-submit"?{...tool,execute:undefined}:{...tool,execute:async(context,input,executionScope)=>{
   const bound=await leases.withLease(executionScope.execution,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
    const current=calls.find(call=>call.id===executionScope.callId);if(!current)throw new ConflictError("聊天调用不存在");return binding.forCall(task,calls,current);
