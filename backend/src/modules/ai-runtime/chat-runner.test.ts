@@ -1,3 +1,4 @@
+import { prepareChatTurn } from "./chat-turn-preparation";
 import { createServer } from "node:http";
 import { resolveChatMaxSteps, buildChatPrepareStep, buildForcedToolInstruction, repairScriptPatchToolCall, dedupeChatToolExecutions } from "@creatoros/ai-worker/chat";
 import { describe, it, expect, vi, beforeAll } from "vitest";
@@ -8,6 +9,7 @@ import {
 } from "@creatoros/ai-worker";
 import {
   buildChatAssembly,
+  prepareChatAssembly,
   runChatStream,
   buildHooksPrompt,
   formatWorksBrief,
@@ -3260,4 +3262,49 @@ it("实际聊天装配经 Worker 模型循环调用本地供应商，保持流�
     server.closeAllConnections();
     await new Promise<void>(resolve=>server.close(()=>resolve()));
   }
+});
+
+it("Worker聊天准备保留实际上下文与工具，但不读取主模型凭据",async()=>{
+ const {deps,resolveModelSpec}=makeDeps();
+ const context={surface:"topics" as const};
+ const prepared=await prepareChatAssembly(ctx,context,deps);
+ expect(resolveModelSpec).not.toHaveBeenCalled();
+ expect(prepared).not.toHaveProperty("modelSpec");
+ expect(prepared).toMatchObject({skillId:"chatbox.topic",capability:"topic.generate"});
+ const legacy=await buildChatAssembly(ctx,context,deps);
+ expect(resolveModelSpec).toHaveBeenCalledTimes(1);
+ expect(prepared.system).toBe(legacy.system);
+ expect(Object.keys(prepared.tools)).toEqual(Object.keys(legacy.tools));
+ expect(prepared.forcedTool).toBe(legacy.forcedTool);
+});
+
+it("Worker聊天准备清理遗弃授权并转换附件，不修改持久消息副本",async()=>{
+ const {deps,resolveModelSpec}=makeDeps();
+ const messages=[{id:"u1",role:"user",parts:[{type:"text",text:"上一个问题"}]},{id:"a1",role:"assistant",parts:[{type:"tool-local.read",toolCallId:"old",state:"approval-requested",input:{path:"/tmp/old"},approval:{id:"old-approval"}}]},{id:"u2",role:"user",parts:[{type:"text",text:"看这张图"},{type:"file",mediaType:"image/png",url:"data:image/png;base64,AQID"}]}] as Parameters<typeof prepareChatTurn>[1]["messages"];
+ const original=structuredClone(messages);
+ const prepared=await prepareChatTurn(ctx,{messages,chatContext:{surface:"topics"}},deps);
+ expect(resolveModelSpec).not.toHaveBeenCalled();expect(messages).toEqual(original);
+ expect(JSON.stringify(prepared.modelMessages)).not.toContain("old-approval");
+ expect(JSON.stringify(prepared.modelMessages)).not.toContain('"tool-call"');
+ expect(prepared.modelMessages.at(-1)).toMatchObject({role:"user",content:expect.arrayContaining([{type:"text",text:"看这张图"},expect.objectContaining({type:"file",mediaType:"image/png",data:{type:"url",url:"data:image/png;base64,AQID"}})])});
+ expect(prepared.assembly).not.toHaveProperty("modelSpec");
+});
+
+it.each(["prepare","legacy"])("%s装配的旧工具主模型按需解析且并发复用",async mode=>{
+ const {deps,resolveModelSpec}=makeDeps();
+ const assembly=await (mode==="prepare"?prepareChatAssembly:buildChatAssembly)(ctx,{surface:"topics"},deps);
+ expect(resolveModelSpec).toHaveBeenCalledTimes(mode==="prepare"?0:1);
+ const tool=assembly.tools["topic.generate"]!;
+ const results=await Promise.all([runToolExecute(tool,{basis:"trend"}),runToolExecute(tool,{basis:"trend"})]);
+ expect(results).toEqual([expect.objectContaining({kind:"topic.candidates"}),expect.objectContaining({kind:"topic.candidates"})]);
+ expect(resolveModelSpec).toHaveBeenCalledTimes(1);
+});
+
+it("准备路径首次凭据失败后恢复配置，同一工具可以重试",async()=>{
+ const {deps,resolveModelSpec}=makeDeps();resolveModelSpec.mockRejectedValueOnce(new Error("凭据暂时不可用"));
+ const assembly=await prepareChatAssembly(ctx,{surface:"topics"},deps),tool=assembly.tools["topic.generate"]!;
+ await runToolExecute(tool,{basis:"trend"});
+ await expect(resolveModelSpec.mock.results[0]!.value).rejects.toThrow("凭据暂时不可用");
+ expect(await runToolExecute(tool,{basis:"trend"})).toMatchObject({kind:"topic.candidates",items:[expect.objectContaining({title:"热点候选"})]});
+ expect(resolveModelSpec).toHaveBeenCalledTimes(2);
 });

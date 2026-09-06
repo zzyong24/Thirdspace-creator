@@ -1,0 +1,13 @@
+{
+  "task": "T-915",
+  "tests": 211,
+  "fullTaskComplete": false,
+  "review": "runtime_code_review 独立只读复核通过；范围为准备层与失败缓存修复，不代表公开入口迁移。",
+  "sourceSha256": {
+    "backend/src/modules/ai-runtime/chat-runner.ts": "16ce5e64cd2633c3eb61e34d445fec430d5b94d1e29eb8c7840d12592b1336aa",
+    "backend/src/modules/ai-runtime/chat-runner.test.ts": "9d0792f9b5578244c1ca804bfc94ba576c74814a805d34a26e43ba990f6ab727",
+    "backend/src/modules/ai-runtime/chat-model-messages.ts": "01360bbb3cd7920658253eee11522b5391f77466f4fc3fcd3f738ce414a11056",
+    "backend/src/modules/ai-runtime/chat-turn-preparation.ts": "ce180a18425c3520a78a4028267d05cebacaf5874aa0c2bd04fedfc17822c02b",
+    "backend/src/modules/ai-runtime/index.ts": "01226c60e7ccb67b6b755d31402e6da7cc0b2e1abafc66fba97f17366c76d2ea"
+  }
+}

@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 准备路径首次凭据失败后恢复配置，同一工具可以重试
+[chat-tool] name=topic.generate error durationMs=1 class=Error reason=unknown message="凭据暂时不可用"
+
+stdout | src/modules/ai-runtime/chat-runner.test.ts > 准备路径首次凭据失败后恢复配置，同一工具可以重试
+[chat-tool] name=topic.generate error durationMs=0 class=Error reason=unknown message="凭据暂时不可用"
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts (142 tests | 1 failed | 141 skipped) 13ms
+   × 准备路径首次凭据失败后恢复配置，同一工具可以重试 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-runner.test.ts > 准备路径首次凭据失败后恢复配置，同一工具可以重试
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ src/modules/ai-runtime/chat-runner.test.ts:3309:27
+    3307|  await expect(resolveModelSpec.mock.results[0]!.value).rejects.toThrow…
+    3308|  expect(await runToolExecute(tool,{basis:"trend"})).toMatchObject({kin…
+    3309|  expect(resolveModelSpec).toHaveBeenCalledTimes(2);
+       |                           ^
+    3310| });
+    3311|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 141 skipped (142)
+   Start at  22:15:39
+   Duration  1.23s (transform 762ms, setup 0ms, import 1.09s, tests 13ms, environment 0ms)
+

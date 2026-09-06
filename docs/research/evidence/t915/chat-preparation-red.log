@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts (138 tests | 1 failed | 137 skipped) 11ms
+   × Worker聊天准备保留实际上下文与工具，但不读取主模型凭据 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-runner.test.ts > Worker聊天准备保留实际上下文与工具，但不读取主模型凭据
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": "acct-current",
+        "correlationId": "c-1",
+        "userId": "u-1",
+      },
+      "topic.generate",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/ai-runtime/chat-runner.test.ts:3270:31
+    3268|  const context={surface:"topics" as const};
+    3269|  const prepared=await prepareChatAssembly(ctx,context,deps);
+    3270|  expect(resolveModelSpec).not.toHaveBeenCalled();
+       |                               ^
+    3271|  expect(prepared).not.toHaveProperty("modelSpec");
+    3272|  expect(prepared).toMatchObject({skillId:"chatbox.topic",capability:"t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 137 skipped (138)
+   Start at  22:11:22
+   Duration  1.12s (transform 668ms, setup 0ms, import 974ms, tests 11ms, environment 0ms)
+
