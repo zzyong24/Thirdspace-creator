@@ -18,6 +18,19 @@ const spec: MultimodalSpec = {
   kind: "image",
 };
 
+it.each(["submit","download"])("H3 %s 保留供应商 Retry-After",async stage=>{
+ const fetchImpl=vi.fn(async()=>stage==="submit" || fetchImpl.mock.calls.length>1
+  ?new Response("busy",{status:429,headers:{"Retry-After":"120"}})
+  :jsonResponse({task:{status:"succeeded",content:{url:"https://dl.example/video"}}}));
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model:"MiniMax-H3"},{prompt:"片段",...(stage==="download"?{resumeJobId:"saved-job"}:{})})).rejects.toMatchObject({stage,status:429,retryAfterMs:120000});
+});
+it("H3 下载连接中断保留可恢复阶段",async()=>{
+ const fetchImpl=vi.fn(async()=>fetchImpl.mock.calls.length===1
+  ?jsonResponse({task:{status:"succeeded",content:{url:"https://dl.example/video"}}})
+  :new Response(new ReadableStream({start(controller){controller.error(new TypeError("terminated"));}})));
+ await expect(createMinimaxAdapter(deps(fetchImpl as typeof fetch)).generateVideo!({...spec,kind:"video",model:"MiniMax-H3"},{prompt:"片段",resumeJobId:"saved-job"})).rejects.toMatchObject({stage:"download",reason:"network",retryable:true});
+});
+
 it("旧版视频恢复使用已存 job，不再次计费提交",async()=>{
  const calls:string[]=[],submitted=vi.fn();
  const fetchImpl=(async(url:unknown,init?:RequestInit)=>{

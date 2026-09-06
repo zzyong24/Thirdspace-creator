@@ -30,3 +30,10 @@ it("恢复原job时只传原任务号，不重新启动调用",async()=>{
  const result=await runAssetInWorker(video,new AbortController().signal,async port=>{seen.push(port);if(port==="reserveAssetCall")return {callId:"call",status:"unknown"};if(port==="recoverAssetResult")return {status:"bytes_missing"};if(port==="readAssetProviderJob")return {schemaVersion:1,provider:"minimax",model:"image",baseUrl:null,jobId:"original-job"};if(port==="resolveAssetCredential")return {provider:"minimax",model:"image",baseUrl:null,kind:"video",token:"rotated"};if(port==="saveAssetResult")return {...receipt,assetType:"video"};throw Error("unexpected");},async(_input,_spec,_signal,options)=>{expect(options.resumeJobId).toBe("original-job");return {assetBytes:new Uint8Array([1])};});
  expect(result.callId).toBe("call");expect(seen).not.toContain("startAssetCall");
 });
+it.each([401,402,403,404,429,503])("原视频查询 HTTP %s 只对瞬态故障请求续查",async status=>{
+ const video={...input,mediaKind:"video" as const,capability:"video.generate" as const,provider:"minimax"};
+ const seen:string[]=[];
+ const work=runAssetInWorker(video,new AbortController().signal,async(port,data)=>{seen.push(port);if(port==="reserveAssetCall")return {callId:"call",status:"unknown"};if(port==="recoverAssetResult")return {status:"missing"};if(port==="readAssetProviderJob")return {schemaVersion:1,provider:"minimax",model:"image",baseUrl:null,jobId:"original"};if(port==="resolveAssetCredential")return {provider:"minimax",model:"image",kind:"video",baseUrl:null,token:"secret"};if(port==="settleAssetCall"){expect(data).toEqual({callId:"call",status:"unknown"});return {};}throw new Error("unexpected");},async()=>{throw Object.assign(new Error("HTTP"),{stage:"poll",status,retryAfterMs:120000});});
+ await expect(work).rejects.toMatchObject({outcome:"unknown_result",errorCode:[429,503].includes(status)?"ASSET_RECONCILE_RETRYABLE":"ASSET_RESULT_UNKNOWN",retryAfterMs:[429,503].includes(status)?120000:undefined});
+ expect(seen).not.toContain("startAssetCall");
+});

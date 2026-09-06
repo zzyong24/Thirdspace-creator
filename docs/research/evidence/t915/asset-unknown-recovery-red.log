@@ -1,0 +1,30 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/asset-worker-runtime.integration.test.ts -t '视频查询503'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts (9 tests | 1 failed | 8 skipped) 8117ms
+   × 视频查询503自动续查原job，真实调度不重复POST 7945ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 视频查询503自动续查原job，真实调度不重复POST
+AssertionError: expected 'blocked' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "blocked"
+
+ ❯ vi.waitFor.timeout src/modules/execution/asset-worker-runtime.integration.test.ts:104:135
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  13:50:29
+   Duration  10.09s (transform 1.20s, setup 0ms, import 1.84s, tests 8.12s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

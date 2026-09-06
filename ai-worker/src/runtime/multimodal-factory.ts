@@ -176,6 +176,7 @@ export interface MultimodalFailureDetails {
   /** 脱敏后的稳定参考号，禁止放 provider job id、URL 或凭据。 */
   reference?: string;
   retryable?: boolean;
+  retryAfterMs?: number;
 }
 
 /** provider 生成过程本身失败(HTTP 非 2xx / 内容审核 / 轮询超时等)。 */
@@ -185,6 +186,7 @@ export class MultimodalGenerationError extends Error {
   readonly status?: number;
   readonly reference?: string;
   readonly retryable: boolean;
+  readonly retryAfterMs?: number;
 
   constructor(message: string, details: MultimodalFailureDetails = {}) {
     super(message);
@@ -194,6 +196,7 @@ export class MultimodalGenerationError extends Error {
     this.status = details.status;
     this.reference = details.reference;
     this.retryable = details.retryable ?? false;
+    this.retryAfterMs = details.retryAfterMs;
   }
 }
 

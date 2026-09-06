@@ -1,0 +1,32 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asset-result.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/asset-worker-runtime.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/asset-worker-runtime.integration.test.ts (10 tests | 2 failed) 27236ms
+   × 视频查询503自动续查原job，之前429=false 7690ms
+   × 视频查询503自动续查原job，之前429=true 7712ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 视频查询503自动续查原job，之前429=false
+ FAIL  src/modules/execution/asset-worker-runtime.integration.test.ts > 视频查询503自动续查原job，之前429=true
+AssertionError: expected 'blocked' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "blocked"
+
+ ❯ vi.waitFor.timeout src/modules/execution/asset-worker-runtime.integration.test.ts:105:135
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 67 passed (69)
+   Start at  13:52:17
+   Duration  29.18s (transform 2.47s, setup 0ms, import 4.42s, tests 33.06s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

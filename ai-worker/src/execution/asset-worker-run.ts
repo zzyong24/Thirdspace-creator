@@ -5,6 +5,7 @@ import {generateImage,generateVideo,type GeneratedAsset} from "../runtime/multim
 import {createMinimaxAdapter} from "../runtime/multimodal-minimax";
 import {createOpenaiImagesAdapter} from "../runtime/multimodal-openai-images";
 import {createOmnihiVideoAdapter} from "../runtime/multimodal-omnihi";
+import {classifyLlmError,getRetryAfterMs} from "../runtime/retry-policy";
 import {GenerationFailure,generationFailure} from "./generation-error";
 type Input=z.infer<typeof assetGenerationInputSchema>;
 type Credential=z.infer<typeof assetCredentialSchema>;
@@ -56,9 +57,12 @@ export async function runAssetInWorker(input:Input,signal:AbortSignal,call:Call,
  }catch(error){
   if(!started)throw error;
   // SEMANTIC_BOUNDARY_ALLOW: 只根据明确提交阶段 HTTP 拒绝执行预算重试，不判断内容语义。
-  const e=error as {stage?:string;status?:number};
+  const e=error as {stage?:string;status?:number;reason?:string;retryAfterMs?:number};
   const rejected=!jobKnown && !signal.aborted && e?.stage==="submit" && typeof e.status==="number" && e.status>=400 && e.status<500 && e.status!==408;
-  const failure=rejected?generationFailure(error,false):new GenerationFailure("unknown_result","ASSET_RESULT_UNKNOWN");
+  const classification=classifyLlmError(error);
+  const recoverable=jobKnown && !signal.aborted && (e?.stage==="poll" || e?.stage==="download") && (classification.retryable || (typeof e.status!=="number" && (e.reason==="network" || e.reason==="timeout")));
+  const retryAfterMs=typeof e?.retryAfterMs==="number" && Number.isFinite(e.retryAfterMs) && e.retryAfterMs>=0?e.retryAfterMs:getRetryAfterMs(error,Date.now,Infinity)??undefined;
+  const failure=rejected?generationFailure(error,false):new GenerationFailure("unknown_result",recoverable?"ASSET_RECONCILE_RETRYABLE":"ASSET_RESULT_UNKNOWN",recoverable?retryAfterMs:undefined);
   try{await call("settleAssetCall",{callId,status:rejected?"rejected":"unknown"});}catch{throw new GenerationFailure("unknown_result","ASSET_SETTLEMENT_UNKNOWN");}
   throw failure;
  }

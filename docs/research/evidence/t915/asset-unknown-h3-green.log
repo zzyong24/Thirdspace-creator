@@ -1,0 +1,13 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/asset-worker-run.test.ts src/runtime/multimodal-minimax.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  47 passed (47)
+   Start at  14:00:22
+   Duration  398ms (transform 126ms, setup 0ms, import 322ms, tests 139ms, environment 0ms)
+

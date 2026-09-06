@@ -1,3 +1,4 @@
+import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import {createProjectsService,createProjectRepository} from "../projects";
 import {createAssetsService,createAssetRepository} from "../assets";
 import type {RequestContext} from "@creatoros/contract";
@@ -305,4 +306,19 @@ it("公共取消在状态写入失败时回滚素材删除",async()=>{
  expect((await db.select().from(assets).where(eq(assets.id,f.receipt.assetId)))[0]!.status).toBe("pending");
  expect((await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!.status).toBe("awaiting_confirmation");
  expect((await ai.cancelTask(f.ctx,f.id)).status).toBe("cancelled");
+});
+
+it.each(["ready","missing-job","wrong-job","attempts","deadline","cancel","pause","unclassified"])("自动原视频对账尊重 %s 边界",async variant=>{
+ const f=await fixture();await f.service.start(f.ref,f.call.id);
+ if(variant!=="missing-job")await createExecutionProviderJobService(db,{now:f.now}).record(f.ref,{callId:f.call.id,job:{schemaVersion:1,provider:f.input.provider,model:f.input.model,baseUrl:null,jobId:"recover-original"}});
+ await f.ledger.settle(f.ref,f.call.id,{status:"unknown"});
+ if(variant==="wrong-job")await db.update(executionCalls).set({providerJob:{schemaVersion:1,provider:"wrong",model:f.input.model,baseUrl:null,jobId:"recover-original"}}).where(eq(executionCalls.id,f.call.id));
+ if(variant==="attempts")await db.update(executionTasks).set({maxAttempts:f.ref.attempt}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ if(variant==="deadline")await db.update(executionTasks).set({deadlineAt:"2026-09-06T00:00:10.000Z"}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ if(variant==="cancel" || variant==="pause")await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:variant,idempotencyKey:variant});
+ const work=createExecutionWorkerOutcomeService(db,{now:f.now,random:()=>0}).recordFailure(f.ref,{outcome:"unknown_result",errorCode:variant==="unclassified"?"ASSET_RESULT_UNKNOWN":"ASSET_RECONCILE_RETRYABLE",retryAfterMs:40000});
+ if(variant==="cancel" || variant==="pause"){await expect(work).rejects.toThrow();return;}
+ expect(await work).toEqual({status:variant==="ready"?"retry_wait":"unknown_result",retryAt:variant==="ready"?"2026-09-06T00:00:40.000Z":null});
+ expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"early"})).toBeNull();
+ expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.id)))[0]).toMatchObject({status:"unknown",startedAttempt:f.ref.attempt,reservedTokens:128});
 });

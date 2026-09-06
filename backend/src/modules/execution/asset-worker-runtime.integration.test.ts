@@ -7,7 +7,7 @@ import {resolve,join} from "node:path";
 import {mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {beforeAll,it,expect,vi} from "vitest";
-import {createDb,aiTasks,aiTaskResults,executionTasks,assets,eq} from "@creatoros/backend";
+import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,assets,eq} from "@creatoros/backend";
 import {createExecutionAuthorityService} from "./execution-authority.service";
 import {createPersistentTaskService} from "./persistent-task.service";
 import {createExecutionLeaseService} from "./execution-lease.service";
@@ -87,3 +87,22 @@ it("公开创建素材经业务准备、真实Worker重试后公开采纳",async
   expect(JSON.stringify(await db.select().from(executionTasks))).not.toContain("entry-secret");
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
 },15000);
+it.each([false,true])("视频查询503自动续查原job，之前429=%s",async firstRejected=>{
+ const opened=await createDb(),db=opened.db,dir=await mkdtemp(join(tmpdir(),"t915-asset-query-retry-"));let posts=0,queries=0;const queryTimes:number[]=[];
+ const server=createServer((req,res)=>{req.resume();if(req.method==="POST")posts++;
+  if(firstRejected && req.method==="POST" && posts===1){res.writeHead(429,{"content-type":"application/json"});res.end(JSON.stringify({error:"busy"}));return;}
+  if(req.url==="/media"){res.end(Buffer.from([1,2,3]));return;}
+  const query=req.url?.includes("query/video_generation");if(query){queries++;queryTimes.push(Date.now());}
+  res.writeHead(query && queries===1?503:200,{"content-type":"application/json",...(query && queries===1?{"retry-after":"1"}:{})});
+  res.end(JSON.stringify(query?(queries===1?{error:"busy"}:{status:"Success",file_id:"original-file"}):req.url?.includes("files/retrieve")?{file:{download_url:baseUrl+"/media"}}:{task_id:"original-video"}));
+ });
+ await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));const baseUrl=`http://127.0.0.1:${(server.address() as {port:number}).port}`;
+ const ctx={userId:"video-recovery-owner",accountId:"video-recovery-account",requestId:"test",source:"user" as const},id="video-recovery",budget={maxCalls:3,maxTokens:100000,deadlineMs:20000};
+ const business=createAssetBusinessExecutionService(db,{budget,assertProject:async()=>{},resolveSpec:async()=>({provider:"minimax",model:"video-01",kind:"video",baseUrl,token:"fixture"})});
+ await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"asset.generate",idempotencyKey:id,inputData:{kind:"video",prompt:"原视频"},requestedAt:new Date().toISOString()});
+ const prepared=await business.prepare(ctx,id),storage=createLocalFsObjectStorage({rootPath:dir,publicBaseUrl:"/blob"},{nextKey:()=>"unused"});
+ const host=createModelWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"video-recover-host",budget,pollMs:100,modelConcurrency:1,assetStorage:async()=>storage,resolveAssetCredential:(c,owner)=>business.resolveCredential(c,owner),resolveModelCredential:async()=>{throw new Error("不得调用文本模型");},projectCandidate:()=>{throw new Error("不得走通用候选");}});
+ try{host.start();await vi.waitFor(async()=>expect((await createPersistentTaskService(db).get(ctx,prepared.executionTaskId!)).status).toBe("succeeded"),{timeout:7000});
+  expect(posts).toBe(firstRejected?2:1);expect(queries).toBe(2);expect(queryTimes[1]!-queryTimes[0]!).toBeGreaterThanOrEqual(1000);expect(await db.select().from(executionCalls)).toHaveLength(firstRejected?2:1);expect(await db.select().from(assets)).toHaveLength(1);expect(await db.select().from(aiTaskResults)).toHaveLength(1);
+ }finally{await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));await opened.client.close();await rm(dir,{recursive:true,force:true});}
+},12000);

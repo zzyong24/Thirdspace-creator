@@ -27,6 +27,7 @@ import {
   type MultimodalProviderAdapter,
   type MultimodalSpec,
 } from "./multimodal-factory";
+import {getRetryAfterMs} from "./retry-policy";
 import { createHash } from "node:crypto";
 import {setTimeout as delay} from "node:timers/promises";
 import { resolveMinimaxH3Endpoints } from "./minimax-h3-endpoints";
@@ -83,6 +84,7 @@ function httpFailure(
   stage: "submit" | "poll" | "download",
   status: number,
   detail: string,
+  headers?: Headers,
 ): MultimodalGenerationError {
   const reason =
     status === 401 || status === 403
@@ -95,14 +97,20 @@ function httpFailure(
             ? "upstream"
             : "response_contract";
   return new MultimodalGenerationError(
-    `MiniMax H3 ${stage} HTTP ${status}: ${detail}`,
+    `MiniMax ${stage} HTTP ${status}: ${detail}`,
     {
       reason,
       stage,
       status,
       retryable: stage !== "submit" && (status === 429 || status >= 500),
+      retryAfterMs:getRetryAfterMs({headers},Date.now,Infinity)??undefined,
     },
   );
+}
+
+/** GET 故障携带真实阶段，Worker 可续查原任务；提交故障仍不能当成未计费。 */
+async function requestVideo(stage:"submit"|"poll"|"download",deps:MinimaxAdapterDeps,url:string,init:RequestInit){
+ try{return await deps.fetch(url,init);}catch{throw new MultimodalGenerationError(`MiniMax ${stage} 网络失败`,{stage,reason:"network",retryable:stage!=="submit"});}
 }
 
 // ── image(同步)───────────────────────────────────────────────────────────
@@ -164,7 +172,7 @@ async function generateVideo(
   let taskId=opts.resumeJobId;
   if(!taskId){
   // 1) 提交 → 拿 task_id
-  const submitRes = await deps.fetch(`${base(spec)}/v1/video_generation`, {
+  const submitRes = await requestVideo("submit",deps,`${base(spec)}/v1/video_generation`, {
     method: "POST",
     headers: authHeaders(spec),
     body: JSON.stringify({
@@ -178,9 +186,7 @@ async function generateVideo(
     }),
   });
   if (!submitRes.ok) {
-    throw new MultimodalGenerationError(
-      `MiniMax video_generation 提交 HTTP ${submitRes.status}: ${await safeText(submitRes)}`,
-    );
+    throw httpFailure("submit",submitRes.status,await safeText(submitRes),submitRes.headers);
   }
   const submit = (await submitRes.json()) as MinimaxVideoSubmitResponse;
   taskId = submit.task_id;
@@ -261,7 +267,7 @@ async function generateH3Video(
       );
     }
     if (!submitRes.ok) {
-      throw httpFailure("submit", submitRes.status, await safeText(submitRes));
+      throw httpFailure("submit", submitRes.status, await safeText(submitRes),submitRes.headers);
     }
     const submit = (await submitRes.json()) as MinimaxVideoSubmitResponse;
     taskId = submit.task_id;
@@ -285,16 +291,18 @@ async function generateH3Video(
     bytesRes = await deps.fetch(downloadUrl, { method: "GET" });
   } catch {
     throw new MultimodalGenerationError("MiniMax H3 成片下载网络失败", {
-      reason: "download",
+      reason: "network",
       stage: "download",
       reference: safeReference(taskId),
       retryable: true,
     });
   }
   if (!bytesRes.ok) {
-    throw httpFailure("download", bytesRes.status, "成片下载失败");
+    throw httpFailure("download", bytesRes.status, "成片下载失败",bytesRes.headers);
   }
-  const assetBytes = new Uint8Array(await bytesRes.arrayBuffer());
+  let assetBytes:Uint8Array;
+  try{assetBytes=new Uint8Array(await bytesRes.arrayBuffer());}
+  catch{throw new MultimodalGenerationError("MiniMax H3 成片下载连接中断",{reason:"network",stage:"download",retryable:true});}
   if (!assetBytes.byteLength) {
     throw new MultimodalGenerationError("MiniMax H3 成片下载为空", {
       reason: "download",
@@ -327,7 +335,7 @@ async function pollH3VideoTask(
         retryable: true,
       });
     }
-    if (!res.ok) throw httpFailure("poll", res.status, await safeText(res));
+    if (!res.ok) throw httpFailure("poll", res.status, await safeText(res),res.headers);
     const json = (await res.json()) as MinimaxH3QueryResponse;
     const status = json.task?.status;
     if (status === "succeeded") {
@@ -374,14 +382,12 @@ async function pollVideoTask(
   deps: MinimaxAdapterDeps,
 ): Promise<string> {
   for (let attempt = 0; attempt < deps.maxPollAttempts; attempt++) {
-    const res = await deps.fetch(
+    const res = await requestVideo("poll",deps,
       `${base(spec)}/v1/query/video_generation?task_id=${encodeURIComponent(taskId)}`,
       { method: "GET", headers: authHeaders(spec) },
     );
     if (!res.ok) {
-      throw new MultimodalGenerationError(
-        `MiniMax query/video_generation HTTP ${res.status}: ${await safeText(res)}`,
-      );
+      throw httpFailure("poll",res.status,await safeText(res),res.headers);
     }
     const json = (await res.json()) as MinimaxVideoQueryResponse;
     const status = json.status;
@@ -402,7 +408,8 @@ async function pollVideoTask(
     await deps.sleep(deps.pollIntervalMs);
   }
   throw new MultimodalGenerationError(
-    `MiniMax video task 轮询超时(task_id=${taskId},${deps.maxPollAttempts} 次未完成)`,
+    `MiniMax video task 轮询超时(${deps.maxPollAttempts} 次未完成)`,
+    {stage:"poll",reason:"timeout",retryable:true},
   );
 }
 
@@ -414,14 +421,12 @@ async function retrieveFile(
   // TODO 待 MiniMax 文档核实 + 真 key 验:file 检索 endpoint 的确切 path 与 resp 结构。
   //   按 MiniMax files 惯例:GET /v1/files/retrieve?file_id=… → resp.file.download_url,
   //   再 GET download_url 拿字节。path/字段名待真文档 + 真 key 核实(下方按惯例实现,结构就绪)。
-  const metaRes = await deps.fetch(
+  const metaRes = await requestVideo("download",deps,
     `${base(spec)}/v1/files/retrieve?file_id=${encodeURIComponent(fileId)}`,
     { method: "GET", headers: authHeaders(spec) },
   );
   if (!metaRes.ok) {
-    throw new MultimodalGenerationError(
-      `MiniMax files/retrieve HTTP ${metaRes.status}: ${await safeText(metaRes)}`,
-    );
+    throw httpFailure("download",metaRes.status,await safeText(metaRes),metaRes.headers);
   }
   const meta = (await metaRes.json()) as MinimaxFileRetrieveResponse;
   const downloadUrl = meta.file?.download_url;
@@ -430,13 +435,11 @@ async function retrieveFile(
       `MiniMax files/retrieve 无 download_url(file_id=${fileId})`,
     );
   }
-  const bytesRes = await deps.fetch(downloadUrl, { method: "GET" });
+  const bytesRes = await requestVideo("download",deps,downloadUrl, { method: "GET" });
   if (!bytesRes.ok) {
-    throw new MultimodalGenerationError(
-      `MiniMax 视频下载 HTTP ${bytesRes.status}`,
-    );
+    throw httpFailure("download",bytesRes.status,await safeText(bytesRes),bytesRes.headers);
   }
-  return new Uint8Array(await bytesRes.arrayBuffer());
+  try{return new Uint8Array(await bytesRes.arrayBuffer());}catch{throw new MultimodalGenerationError("MiniMax 下载字节中断",{stage:"download",reason:"network",retryable:true});}
 }
 
 async function safeText(res: Response): Promise<string> {
