@@ -1,0 +1,60 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/local-read-host.test.ts (8 tests | 2 failed) 131ms
+   × 同一用户并发读取只能消费一次授权 37ms
+   × 输入在等待文件系统时变更不能改换用户或读取路径 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/local-read-host.test.ts > 同一用户并发读取只能消费一次授权
+AssertionError: expected [ 'file', 'file' ] to deeply equal [ 'file', 'needApproval' ]
+
+- Expected
++ Received
+
+  [
+    "file",
+-   "needApproval",
++   "file",
+  ]
+
+ ❯ src/modules/ai-runtime/local-read-host.test.ts:20:42
+     18|  const f=await fixture(),host=createLocalReadHost(f.grants,{homedir:()…
+     19|  const results=await Promise.all([host.readLocalFile(f.context,{path:f…
+     20|  expect(results.map(r=>r.status).sort()).toEqual(["file","needApproval…
+       |                                          ^
+     21|  expect(f.grants.consumeOnce).toHaveBeenCalledTimes(1);
+     22| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai-runtime/local-read-host.test.ts > 输入在等待文件系统时变更不能改换用户或读取路径
+AssertionError: expected { status: 'needApproval', …(3) } to match object { status: 'file', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/local-host-gHL8pG/note.txt",
+-   "status": "file",
++   "status": "needApproval",
+  }
+
+ ❯ src/modules/ai-runtime/local-read-host.test.ts:28:23
+     26|  const host=createLocalReadHost(f.grants,{homedir:()=>f.home,fs:{...fs…
+     27|  const result=host.readLocalFile(context,input);context.userId="foreig…
+     28|  expect(await result).toMatchObject({status:"file",path:f.path});
+       |                       ^
+     29|  expect(f.grants.checkGrant).toHaveBeenCalledWith("reader",f.path);
+     30| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  10:55:37
+   Duration  1.40s (transform 699ms, setup 0ms, import 943ms, tests 131ms, environment 11ms)
+

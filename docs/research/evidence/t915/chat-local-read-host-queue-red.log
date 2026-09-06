@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/local-read-host.test.ts (9 tests | 1 failed) 144ms
+   × 排队取消立即结束，但后续读取不能越过未结束的前驱 127ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/local-read-host.test.ts > 排队取消立即结束，但后续读取不能越过未结束的前驱
+AssertionError: expected 'waiting' to be 'AbortError' // Object.is equality
+
+Expected: "AbortError"
+Received: "waiting"
+
+ ❯ vi.waitFor.timeout src/modules/ai-runtime/local-read-host.test.ts:36:45
+     34|  await new Promise(r=>setTimeout(r,20));controller.abort();
+     35|  try{
+     36|   await vi.waitFor(()=>expect(secondStatus).toBe("AbortError"),{timeou…
+       |                                             ^
+     37|   expect(thirdDone).toBe(false);expect(read).toHaveBeenCalledTimes(1);
+     38|  }finally{release();await Promise.all([first,second,third]);}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  10:57:17
+   Duration  335ms (transform 37ms, setup 0ms, import 49ms, tests 144ms, environment 0ms)
+

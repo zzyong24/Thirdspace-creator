@@ -1,0 +1,103 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:85065) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-local-read.integration.test.ts (1 test | 1 failed) 5648ms
+   × 正式本地读取取消后不消费一次授权，随后正常读取仍可成功 5648ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+AssertionError: promise resolved "{ status: 'file', …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "fullText": "真实本地正文",
++   "name": "note.txt",
++   "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/local-read-boeRVk/note.txt",
++   "status": "file",
+  }
+
+ ❯ src/server/chat-local-read.integration.test.ts:19:78
+     17|   grantOnce(context.userId,path);
+     18|   const controller=new AbortController();controller.abort();
+     19|   await expect(runtime.readLocalFile(context,{path,signal:controller.s…
+       |                                                                              ^
+     20|   expect(checkGrant(context.userId,path)).toBe("once");
+     21|   await expect(runtime.readLocalFile(context,{path})).resolves.toMatch…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+AssertionError: promise resolved "{ status: 'file', …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "fullText": "真实本地正文",
++   "name": "note.txt",
++   "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/local-read-bg865c/note.txt",
++   "status": "file",
+  }
+
+ ❯ src/server/chat-local-read.integration.test.ts:19:78
+     17|   grantOnce(context.userId,path);
+     18|   const controller=new AbortController();controller.abort();
+     19|   await expect(runtime.readLocalFile(context,{path,signal:controller.s…
+       |                                                                              ^
+     20|   expect(checkGrant(context.userId,path)).toBe("once");
+     21|   await expect(runtime.readLocalFile(context,{path})).resolves.toMatch…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/server/chat-local-read.integration.test.ts > 正式本地读取取消后不消费一次授权，随后正常读取仍可成功
+AssertionError: promise resolved "{ status: 'file', …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "fullText": "真实本地正文",
++   "name": "note.txt",
++   "path": "/private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/local-read-3iISSC/note.txt",
++   "status": "file",
+  }
+
+ ❯ src/server/chat-local-read.integration.test.ts:19:78
+     17|   grantOnce(context.userId,path);
+     18|   const controller=new AbortController();controller.abort();
+     19|   await expect(runtime.readLocalFile(context,{path,signal:controller.s…
+       |                                                                              ^
+     20|   expect(checkGrant(context.userId,path)).toBe("once");
+     21|   await expect(runtime.readLocalFile(context,{path})).resolves.toMatch…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  10:53:18
+   Duration  9.10s (transform 2.06s, setup 102ms, import 2.81s, tests 5.65s, environment 360ms)
+

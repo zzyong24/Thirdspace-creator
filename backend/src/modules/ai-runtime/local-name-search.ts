@@ -126,10 +126,12 @@ export async function searchLocalByBasename(opts: {
   fs: LocalSearchFs;
   /** 敏感判定(注入 local-read-security 的 sensitivePathReason(p) != null)。 */
   isSensitive: (absPath: string) => boolean;
+  signal?: AbortSignal;
   maxDepth?: number;
   maxResults?: number;
   maxNodes?: number;
 }): Promise<LocalSearchResult> {
+  opts.signal?.throwIfAborted();
   const maxDepth = opts.maxDepth ?? LOCAL_SEARCH_MAX_DEPTH;
   const maxResults = opts.maxResults ?? LOCAL_SEARCH_MAX_RESULTS;
   const maxNodes = opts.maxNodes ?? LOCAL_SEARCH_MAX_NODES;
@@ -147,6 +149,7 @@ export async function searchLocalByBasename(opts: {
   let truncated = false;
 
   outer: while (queue.length > 0) {
+    opts.signal?.throwIfAborted();
     const { dir, depth } = queue.shift()!;
     if (visited.has(dir)) continue;
     visited.add(dir);
@@ -154,9 +157,12 @@ export async function searchLocalByBasename(opts: {
     try {
       dirents = await opts.fs.readdir(dir);
     } catch {
+      opts.signal?.throwIfAborted();
       continue; // 目录不存在/无权限 → 跳过
     }
+    opts.signal?.throwIfAborted();
     for (const d of dirents) {
+      opts.signal?.throwIfAborted();
       nodes += 1;
       if (nodes > maxNodes) {
         truncated = true;
@@ -172,6 +178,7 @@ export async function searchLocalByBasename(opts: {
             size: await opts.fs.fileSize(child),
             type: extType(d.name),
           });
+          opts.signal?.throwIfAborted();
           if (items.length >= maxResults) {
             truncated = true;
             break outer;

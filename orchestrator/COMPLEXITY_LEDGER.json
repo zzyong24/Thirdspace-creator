@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "979db35468b6c2dd72085937721320482e4759e7567886f203c43f9d4774c8df",
+      "file_sha256": "9ee2270ebb2110665ad78378dc15201a2ee92b86b9a816baa86436fbba6c2865",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的统一执行装配范围。本批搜索配置解析器迁至 backend ai-runtime，原前端入口改用同一导出并移除旧实现；不新增凭据存储、语言工具链或本机执行能力。验证与边界见 chat-web-read-search-config.md。",
+      "reason": "DEC-RUNTIME-055 已批准的统一执行装配范围。本批将本地文件读取与授权判定提取到 backend ai-runtime，前端仅注入既有用户授权表；补读取取消和并发一次授权互斥，不新增授权存储、语言工具链或本机执行能力。验证与未完成边界见 chat-local-read-host.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
