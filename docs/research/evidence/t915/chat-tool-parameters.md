@@ -30,3 +30,5 @@ material.screenshot/web.read 可能保存 pending 资产；script.draft、publis
 上述只是源码接线事实与依赖顺序，没有缩减完整 T-915 范围，也没有将真实执行迁移标记为完成。
 
 最终全局 reconcile：211 errors / 1 warning，exit 1，与前批一致；既有欠债由 T-916 跟踪，未记全绿。
+
+首轮红测日志因 Vitest 展开完整 Zod 对象达到 9874 行，已无损压缩为 chat-tool-parameters-red.log.gz；解压往返字节校验通过，原始 SHA-256 见同名 JSON 证据。

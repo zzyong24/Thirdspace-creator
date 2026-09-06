@@ -9,5 +9,11 @@
     "backend/src/modules/ai-runtime/chat-turn-preparation.ts": "8add122271698ba9bdcd41b33149c18ce8341ede721f3e1a8c77be096994eff1",
     "backend/src/modules/ai-runtime/chat-tools.test.ts": "29314cebf0ac2c7d5eaebe1222356124c3b7fc13b16a9248b9dd160a0bc74f6f",
     "backend/src/modules/ai-runtime/chat-runner.test.ts": "808c7fb1e6c24447d2271bb47f7728820cd2d90138ca1772f8d8a83ab7e01df1"
+  },
+  "compressedEvidence": {
+    "file": "docs/research/evidence/t915/chat-tool-parameters-red.log.gz",
+    "originalSha256": "23b2746096d22d282be75d776fd3268f478a84f262a54fb57fc991ed04a7a6a3",
+    "originalBytes": 453150,
+    "losslessRoundTripVerified": true
   }
 }
