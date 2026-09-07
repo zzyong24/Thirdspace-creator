@@ -7,6 +7,14 @@ import {
 import type { DurableGenerationPorts } from "./durable-generation-model";
 import { GenerationFailure, generationFailure } from "./generation-error";
 
+/** 保留真实请求指纹，避免图片字节数组在 IPC JSON 中膨胀成数字对象。 */
+function requestJson(value: unknown): unknown {
+  if(value instanceof Uint8Array)return Buffer.from(value).toString("base64");
+  if(value instanceof URL)return value.toString();
+  if(Array.isArray(value))return value.map(requestJson);
+  if(value && typeof value === "object")return Object.fromEntries(Object.entries(value).map(([key,item])=>[key,requestJson(item)]));
+  return value;
+}
 /** SDK文件数据统一成其支持的base64，URL和时间只在Worker边界复原。 */
 function encode(part: LanguageModelV4StreamPart): Record<string, unknown> {
   let value: unknown = part;
@@ -77,11 +85,11 @@ export function createDurableStreamModel(input: {
         const reservation = await input.ports.reserve({
           operationKey: `${input.operationKey}/model/${++sequence}`,
           request: JSON.parse(
-            JSON.stringify({
+            JSON.stringify(requestJson({
               ...request,
               modelId: model.modelId,
               provider: model.provider,
-            }),
+            })),
           ),
         });
         params.abortSignal?.throwIfAborted();

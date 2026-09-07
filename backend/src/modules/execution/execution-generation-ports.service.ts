@@ -5,6 +5,22 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { ConflictError,ExecutionBudgetError } from "./execution.errors";
 
+/** 图片按独立视觉预算预留；base64传输长度不是模型文本token。
+ * SEMANTIC_BOUNDARY_ALLOW:只计量协议图片，不判断图片语义。实际用量仍以供应商回执结算。
+ * 每张预留65536是保守运行策略估值，不宣称为所有供应商的计费上界。
+ */
+function inputReservation(request:Record<string,unknown>):number {
+  let images=0;
+  const prompt=Array.isArray(request.prompt)?request.prompt.map(raw=>{
+    if(!raw || typeof raw!=="object" || !Array.isArray((raw as any).content))return raw;
+    return {...raw,content:(raw as any).content.map((part:any)=>{
+      if(part?.type==="image" && typeof part.image==="string") {images++;return {...part,image:"[image]"};}
+      if(part?.type==="file" && typeof part.mediaType==="string" && part.mediaType.startsWith("image/") && typeof part.data==="string") {images++;return {...part,data:"[image]"};}
+      return part;
+    })};
+  }):request.prompt;
+  return Buffer.byteLength(JSON.stringify({...request,...(prompt===undefined?{}:{prompt})}))+images*65536;
+}
 /** 结构化节点的逐次供应商调用端口；后端拥有总预算和不可变请求摘要。 */
 export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]){
   const leases=createExecutionLeaseService(db,deps);
@@ -27,9 +43,10 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
       if(limit!==scope.input.maxOutputTokens)throw new ConflictError("结构化输出预算与冻结值不符");
       if("headers" in request.request || "abortSignal" in request.request)throw new ConflictError("请求含非持久协议字段");
       const encoded=JSON.stringify(request.request);
+      if(scope.input.kind!=="chat.run" && encoded.length>4_000_000)throw new ConflictError("结构化请求超出原输入范围");
       const previous=(await ledger.inspect(ref)).calls.filter(call=>call.operationKey===request.operationKey).at(-1);
       const retryOfCallId=scope.retryOfCallId && (previous?.id===scope.retryOfCallId || previous?.retryOfCallId===scope.retryOfCallId) ? scope.retryOfCallId : undefined;
-      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:Buffer.byteLength(encoded)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})}).catch(async error=>{
+      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:inputReservation(request.request)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})}).catch(async error=>{
         if(error instanceof ExecutionBudgetError)await leases.withLease(ref,"admission",async({tx,task})=>{
           await tx.update(executionTasks).set({lastErrorCode:error.budgetCode,lastErrorMessage:"模型调用前预算已耗尽，正在保存已完成结果"}).where(eq(executionTasks.id,task.id));
         });

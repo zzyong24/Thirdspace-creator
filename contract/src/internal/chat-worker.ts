@@ -35,5 +35,6 @@ export const chatWorkerInputSchema = z.object({
     ctx.addIssue({code:"custom",message:"工具名称编码冲突",path:["tools"]});
   for (const name of [value.forcedTool, ...(value.forcedToolSequence ?? [])])
     if(name && !names.includes(name)) ctx.addIssue({code:"custom",message:"指定工具不在冻结范围",path:["tools"]});
-  if(JSON.stringify(value).length > 4_000_000) ctx.addIssue({code:"custom",message:"聊天冻结输入过大"});
+  // 保留正式入口30MiB图片总量的base64空间，另留原4M文本/工具定义容量。
+  if(JSON.stringify(value).length > 46_000_000) ctx.addIssue({code:"custom",message:"聊天冻结输入过大"});
 });

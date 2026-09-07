@@ -164,7 +164,7 @@ export const workerPortInputSchemas = {
   settleAgenticTool: settleAgenticToolSchema,
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
-  reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
+  reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=46_000_000)}).strict(),
   settleGenerationCall: generationSettlementSchema,
   saveGenerationResult:z.object({callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   startAgenticTool: z.object({callId: operationKeySchema}).strict(),
