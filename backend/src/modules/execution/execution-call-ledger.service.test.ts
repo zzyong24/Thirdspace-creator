@@ -20,6 +20,25 @@ describe("T-915 持久调用账本", () => {
     const ledger = createExecutionCallLedgerService(db, {now, budget});
     return {ref, task, tasks, ledger, now};
   }
+  it("请求计量保留 token 未知但允许已结算 ASR 的下一片，未知请求仍阻断", async () => {
+    const f = await fixture("asr-accounting", {maxCalls:3,maxTokens:50,deadlineMs:60000});
+    const request = {...input, reservedTokens:0, accountingBasis:"requests" as const};
+    const first = await f.ledger.reserve(f.ref,request);
+    await f.ledger.start(f.ref,first.id);
+    await f.ledger.settle(f.ref,first.id,{status:"settled",usage:{},resultText:"原文"});
+    expect(await f.ledger.inspect(f.ref)).toMatchObject({spentTokens:null,unknownUsage:true});
+    const second = await f.ledger.reserve(f.ref,{...request,operationKey:"second"});
+    await f.ledger.start(f.ref,second.id);
+    await f.ledger.settle(f.ref,second.id,{status:"unknown"});
+    await expect(f.ledger.reserve(f.ref,{...request,operationKey:"third"})).rejects.toMatchObject({name:"ConflictError"});
+  });
+  it("计量模式不能随同键回放偷换，混合任务的未知 token 仍阻断",async()=>{
+    const f=await fixture("mixed-accounting",{maxCalls:4,maxTokens:100,deadlineMs:60000});
+    const a=await f.ledger.reserve(f.ref,input);await f.ledger.start(f.ref,a.id);
+    await f.ledger.settle(f.ref,a.id,{status:"settled",usage:{}});
+    await expect(f.ledger.reserve(f.ref,{...input,reservedTokens:0,accountingBasis:"requests"})).rejects.toThrow();
+    await expect(f.ledger.reserve(f.ref,{...input,operationKey:"asr",reservedTokens:0,accountingBasis:"requests"})).rejects.toThrow();
+  });
   it("并发重复预留只占一次预算，同一次调用只能启动一次，实际缓存用量不重复计入", async () => {
     const f = await fixture("idempotent");
     const [a,b] = await Promise.all([f.ledger.reserve(f.ref,input), f.ledger.reserve(f.ref,input)]);

@@ -1,3 +1,4 @@
+import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {createExecutionModelIdentityService} from "./execution-model-identity.service";
@@ -76,6 +77,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
+  const asrPorts=deps.executionMode==="model"?createExecutionAsrPorts(db,{now,budget:deps.budget}):null;
   const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
@@ -133,6 +135,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(["reserveAsrRequest","startAsrRequest","settleAsrRequest"].includes(port)){
+        if(!asrPorts)throw new Error("ASR_PORT_UNAVAILABLE");
+        return asrPorts.invoke(ref,port,raw);
+      }
       if(["resolveAssetCredential","settleAssetCall","reserveAssetCall","startAssetCall","saveAssetResult","recoverAssetResult","readAssetProviderJob","recordAssetProviderJob"].includes(port)){
         if(!assetPorts)throw new Error("ASSET_STORAGE_UNAVAILABLE");
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");

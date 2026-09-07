@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-call-ledger.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  22:17:48
+   Duration  3.50s (transform 739ms, setup 0ms, import 1.27s, tests 2.10s, environment 0ms)
+

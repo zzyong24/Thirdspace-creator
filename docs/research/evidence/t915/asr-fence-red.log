@@ -1,0 +1,42 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '新租约不能'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (13 tests | 1 failed | 12 skipped) 951ms
+   × 新租约不能替旧未知请求上传成功正文，但可回读已确认回执 49ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 新租约不能替旧未知请求上传成功正文，但可回读已确认回执
+AssertionError: promise resolved "{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_e65932ec-139f-479a-b9bc-547e5672638f",
++   "result": {
++     "text": "无来源正文",
++   },
++   "status": "settled",
+  }
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:119:113
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  22:28:14
+   Duration  2.38s (transform 737ms, setup 0ms, import 1.29s, tests 951ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '新租约不能'`
+Exit status 1

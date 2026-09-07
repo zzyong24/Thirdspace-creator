@@ -1,0 +1,44 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '通用模型端口'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (10 tests | 1 failed | 9 skipped) 958ms
+   × 通用模型端口不能启动或伪造 ASR 回执 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 通用模型端口不能启动或伪造 ASR 回执
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_e3ce5d97-b77c-446c-a675-080ee9889076",
++   "status": "started",
+  }
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:79:60
+     77| it('通用模型端口不能启动或伪造 ASR 回执',async()=>{
+     78|  const f=await fixture(),call=await f.service.reserve(f.ref,{awemeId:'…
+     79|  await expect(generic.startCall(f.ref,{callId:call.callId})).rejects.t…
+       |                                                            ^
+     80|  await f.service.start(f.ref,{awemeId:'video',callId:call.callId});
+     81|  await expect(generic.settleCall(f.ref,{callId:call.callId,status:'set…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  22:23:26
+   Duration  2.44s (transform 746ms, setup 0ms, import 1.34s, tests 958ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '通用模型端口'`
+Exit status 1

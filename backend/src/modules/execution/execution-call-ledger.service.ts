@@ -11,13 +11,14 @@ const budgetSchema = z.object({maxCalls: count.min(1).max(10000), maxTokens: cou
 const reservationSchema = z.object({
   operationKey: z.string().min(1).max(256), kind: z.enum(["model", "tool"]),
   inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/), reservedTokens: count,
+  accountingBasis: z.enum(["tokens", "requests"]).default("tokens"),
   retryOfCallId: z.string().min(1).optional(),
   parentCallId: z.string().min(1).optional(),
 }).strict();
 const settlementSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
   z.object({status: z.literal("unknown")}).strict(),
-  z.object({status: z.literal("rejected"), rejectionCode: z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
+  z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional()}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
 type Budget = z.infer<typeof budgetSchema>;
@@ -50,7 +51,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
   const readCalls = (tx: Transaction, taskId: string) => tx.select().from(executionCalls)
     .where(eq(executionCalls.executionTaskId, taskId)).orderBy(asc(executionCalls.sequence));
   function assertResolved(calls: Call[], attempt: number) {
-    if (totals(calls).unknownUsage || calls.some(c => c.status === "started" && c.startedAttempt !== attempt)) {
+    if (calls.some(c => c.status === "unknown" || (c.status === "settled" && c.totalTokens === null && c.accountingBasis !== "requests")) || calls.some(c => c.status === "started" && c.startedAttempt !== attempt)) {
       throw new ConflictError("已有调用结果或用量未知，须先按原调用对账");
     }
   }
@@ -70,8 +71,9 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         return {budget: task.executionBudget === null ? null : budgetSchema.parse(task.executionBudget), deadlineAt: task.deadlineAt, calls, ...totals(calls)};
       });
     },
-    async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSchema>, validate?: (calls: Call[], task: typeof executionTasks.$inferSelect) => void) {
+    async reserve(ref: ExecutionRef, raw: z.input<typeof reservationSchema>, validate?: (calls: Call[], task: typeof executionTasks.$inferSelect) => void) {
       const input = reservationSchema.parse(raw);
+      if (input.accountingBasis === "requests" && (input.reservedTokens !== 0 || input.kind !== "model" || input.parentCallId)) throw new ConflictError("请求计量仅用于独立的非 token 预算调用");
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         const budget = task.executionBudget === null ? configuredBudget : budgetSchema.parse(task.executionBudget);
         const deadlineAt = task.deadlineAt ?? new Date(Date.parse(task.createdAt) + budget.deadlineMs).toISOString();
@@ -81,7 +83,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         assertParent(calls, input);
         const previous = calls.filter(c => c.operationKey === input.operationKey).at(-1);
         if (previous) {
-          if (previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens || previous.parentCallId !== (input.parentCallId ?? null)) {
+          if (previous.accountingBasis !== input.accountingBasis || previous.inputDigest !== input.inputDigest || previous.kind !== input.kind || previous.reservedTokens !== input.reservedTokens || previous.parentCallId !== (input.parentCallId ?? null)) {
             throw new ConflictError("同一操作键不能改换调用内容");
           }
           if (!input.retryOfCallId || previous.retryOfCallId === input.retryOfCallId) return previous;
@@ -101,7 +103,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         const [created] = await tx.insert(executionCalls).values({
           id: `call_${randomUUID()}`, executionTaskId: task.id, sequence: calls.length + 1,
           operationKey: input.operationKey, retryOfCallId: input.retryOfCallId ?? null, parentCallId: input.parentCallId ?? null, kind: input.kind,
-          inputDigest: input.inputDigest, reservedTokens: input.reservedTokens, status: "reserved",
+          inputDigest: input.inputDigest, reservedTokens: input.reservedTokens, accountingBasis: input.accountingBasis, status: "reserved",
           createdAt: now(), updatedAt: now(),
         }).returning();
         if (!created) throw new ConflictError("调用预留失败");

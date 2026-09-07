@@ -167,6 +167,8 @@ export const executionCalls = pgTable("execution_calls", {
   inputDigest: text("input_digest").notNull(),
   status: text("status").notNull(),
   reservedTokens: integer("reserved_tokens").notNull(),
+  /** 由宿主选择预算维度；requests 不代表 token 或费用为零。 */
+  accountingBasis: text("accounting_basis").notNull().default("tokens"),
   startedAttempt: integer("started_attempt"),
   toolExecutionClaimId: text("tool_execution_claim_id"),
   usage: jsonb("usage"),

@@ -1,0 +1,32 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts [ src/modules/execution/execution-asr-ports.service.test.ts ]
+Error: Cannot find module './execution-asr-ports.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/execution/execution-asr-ports.service.test.ts
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:7:1
+      5| import {createExecutionAuthorityService} from "./execution-authority.s…
+      6| import {createPersistentTaskService} from "./persistent-task.service";
+      7| import {createExecutionAsrPorts} from "./execution-asr-ports.service";
+       | ^
+      8| import {createExecutionCallLedgerService} from "./execution-call-ledge…
+      9| import {createDurableAsrRequestExecutor,AsrExecutionInterruption} from…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  22:20:31
+   Duration  1.61s (transform 791ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts`
+Exit status 1

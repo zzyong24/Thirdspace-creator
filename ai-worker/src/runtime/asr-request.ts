@@ -1,18 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { GeneratedTranscript, MultimodalSpec, TranscribeAudioOptions } from './multimodal-factory';
-export interface AsrRequest {
-    protocol: string;
-    provider: string;
-    model: string;
-    endpointDigest: string;
-    audioDigest: string;
-    audioByteLength: number;
-    chunkDigest: string;
-    chunkByteLength: number;
-    chunkIndex: number;
-    chunkCount: number;
-    language: string | null;
-}
+import type {AsrRequest} from "@creatoros/contract/execution-worker";
+export type {AsrRequest} from "@creatoros/contract/execution-worker";
 export type ExecuteAsrRequest = (request: AsrRequest, execute: () => Promise<GeneratedTranscript>) => Promise<GeneratedTranscript>;
 /** 仅带固定诊断，允许穿过渠道脱敏与本地回退包装，不附带供应商正文。 */
 export class AsrExecutionInterruption extends Error {
@@ -29,8 +18,8 @@ export function throwIfAsrAborted(signal?: AbortSignal) {
 }
 const digest = (input: string | Uint8Array) => `sha256:${createHash('sha256').update(input).digest('hex')}`;
 /** 指纹只用于精确恢复相同音频请求，不进行任何语义判断。凭据不进入描述。 */
-export function createAsrRequestExecutor(spec: MultimodalSpec, opts: TranscribeAudioOptions, endpoint: string, protocol: string) {
-    const common = { protocol, provider: spec.provider, model: spec.model, endpointDigest: digest(endpoint), audioDigest: digest(opts.audioBytes), audioByteLength: opts.audioBytes.byteLength, language: opts.language ?? null };
+export function createAsrRequestExecutor(spec: MultimodalSpec, opts: TranscribeAudioOptions, endpoint: string, protocol: AsrRequest["protocol"], chunks: Uint8Array[] = [opts.audioBytes]) {
+    const common = { chunks: chunks.map(chunk=>({digest:digest(chunk),byteLength:chunk.byteLength})), protocol, provider: spec.provider, model: spec.model, endpointDigest: digest(endpoint), audioDigest: digest(opts.audioBytes), audioByteLength: opts.audioBytes.byteLength, language: opts.language ?? null };
     return async (chunk: Uint8Array, chunkIndex: number, chunkCount: number, execute: () => Promise<GeneratedTranscript>) => {
         throwIfAsrAborted(opts.signal);
         const request = { ...common, chunkDigest: digest(chunk), chunkByteLength: chunk.byteLength, chunkIndex, chunkCount };

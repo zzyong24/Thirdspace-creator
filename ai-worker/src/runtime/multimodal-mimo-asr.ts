@@ -197,11 +197,11 @@ async function transcribeAudio(
   deps: MimoAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
   ({spec, opts} = snapshotAsrInput(spec, opts));
-  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'mimo-chat-audio.v1');
   const chunks = splitMp3ForMimo(
     opts.audioBytes,
     deps.maxEncodedBytes ?? DEFAULT_MAX_ENCODED_BYTES,
   );
+  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'mimo-chat-audio.v1',chunks);
   const texts: string[] = [];
   for (const [index,chunk] of chunks.entries()) {
     const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));

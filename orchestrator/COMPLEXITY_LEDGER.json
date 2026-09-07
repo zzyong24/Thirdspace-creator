@@ -233,7 +233,7 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "5a6199d2cf5467e4a06f71d36467671a7a2de4ded6e563492bbbffcd9f3720b0",
+      "file_sha256": "215ecb2dd5ea9d853e0b53032828d5ef736b237d2e7eb262992628a81552b19d",
       "categories": [
         "ipc"
       ],
@@ -1748,6 +1748,51 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已授权整稿 Worker 命名端口的实际实现及验证证据；文档不新增执行机制。",
       "acceptance": "仅登记复杂度，不代表 T-915 整体或历史任务通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asr-request-execution.md"
+      ],
+      "file_sha256": "9874bc4550df6e8bbdf833af06616295296f3e89f8bcda76b19c461d469524e5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已确认的转写命名端口实现与未完成 IPC 接线边界，文档不新增执行能力。",
+      "acceptance": "仅登记已有重构文档涉及 IPC，不代表产品验收通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "backend/src/modules/execution/execution-asr-ports.service.test.ts"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "使用独占临时子进程验证已确认的 ASR 命名端口与租约结算，不引入生产进程。",
+      "acceptance": "仅登记测试涉及 IPC；实际测试状态以本批原始日志为准。",
+      "file_sha256": "c4b79d5252f34fb870fdd8a15130c43c6065be5710912f514bab1a49cec2816b"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/asr-persistent-ledger.md"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已有独立 Worker 架构中的 ASR 命名端口验证及未完成生产编排边界。",
+      "acceptance": "文档与验证登记，不代表全部 T-915 验收通过。",
+      "file_sha256": "690a337c678654d475ea79f5e910e4a75912f43741b657f419af728ded73a860"
     }
   ],
   "historical_baselines": []

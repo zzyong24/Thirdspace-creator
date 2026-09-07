@@ -175,3 +175,5 @@ export { createExecutionBrowserProfileLeaseService, BrowserProfileBusyError } fr
 export {createExecutionScheduledChildService} from "./execution-scheduled-child.service";
 
 export {createSubmittedTaskPreparationService} from "./submitted-task-preparation.service";
+
+export {createExecutionAsrPorts} from "./execution-asr-ports.service";

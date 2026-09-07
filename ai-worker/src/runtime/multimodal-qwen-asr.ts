@@ -108,7 +108,6 @@ async function transcribeAudio(
   deps: QwenAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
   ({spec, opts} = snapshotAsrInput(spec, opts));
-  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'qwen-chat-audio.v1');
   if (spec.credentialLifecycle === "per_request") {
     if (
       spec.provider !== "qwen" ||
@@ -121,6 +120,7 @@ async function transcribeAudio(
     ) {
       throw new MultimodalGenerationError("语音转文字服务暂时不可用");
     }
+    const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'qwen-chat-audio.v1');
     const {text}=await execute(opts.audioBytes,0,1,async()=>({text:await transcribeChunk(spec,opts.audioBytes,opts.language,deps.fetch,opts.signal)}));
     const language = opts.language?.trim();
     return { text, ...(language ? { language } : {}) };
@@ -130,6 +130,7 @@ async function transcribeAudio(
     deps.maxEncodedBytes ?? DEFAULT_MAX_ENCODED_BYTES,
     "Qwen ASR",
   );
+  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'qwen-chat-audio.v1',chunks);
   const texts: string[] = [];
   for (const [index,chunk] of chunks.entries()) {
     const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));

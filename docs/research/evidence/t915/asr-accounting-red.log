@@ -1,0 +1,43 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-call-ledger.service.test.ts -t '请求计量'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts (23 tests | 1 failed | 22 skipped) 1005ms
+     × 请求计量保留 token 未知但允许已结算 ASR 的下一片，未知请求仍阻断 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本 > 请求计量保留 token 未知但允许已结算 ASR 的下一片，未知请求仍阻断
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "accountingBasis"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"accountingBasis\""
+  }
+]
+ ❯ Object.reserve src/modules/execution/execution-call-ledger.service.ts:74:39
+     72|     },
+     73|     async reserve(ref: ExecutionRef, raw: z.infer<typeof reservationSc…
+     74|       const input = reservationSchema.parse(raw);
+       |                                       ^
+     75|       return leases.withLease(ref, "admission", async ({tx, task}) => {
+     76|         const budget = task.executionBudget === null ? configuredBudge…
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:26:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  22:17:08
+   Duration  2.67s (transform 829ms, setup 0ms, import 1.51s, tests 1.01s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-call-ledger.service.test.ts -t '请求计量'`
+Exit status 1

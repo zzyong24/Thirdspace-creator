@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { createDurableAsrRequestExecutor, type DurableAsrPorts } from './durable-asr-request';
 import { AsrExecutionInterruption, type AsrRequest } from '../runtime/asr-request';
-const request: AsrRequest = { protocol: 'test.v1', provider: 'openai', model: 'asr', endpointDigest: 'hash', audioDigest: 'audio', audioByteLength: 4, chunkDigest: 'chunk', chunkByteLength: 4, chunkIndex: 0, chunkCount: 1, language: null };
+const request: AsrRequest = { chunks:[{digest:'chunk',byteLength:4}], protocol: 'openai-audio-transcriptions.v1', provider: 'openai', model: 'asr', endpointDigest: 'hash', audioDigest: 'audio', audioByteLength: 4, chunkDigest: 'chunk', chunkByteLength: 4, chunkIndex: 0, chunkCount: 1, language: null };
 function ledger() {
     const records = new Map<string, {
         callId: string;

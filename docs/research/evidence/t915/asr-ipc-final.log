@@ -1,0 +1,39 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (12 tests | 1 failed) 3086ms
+   × 真实子进程经命名端口结算，Supervisor 将 ASR 结算识别为 settlement 111ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 真实子进程经命名端口结算，Supervisor 将 ASR 结算识别为 settlement
+AssertionError: expected [ 'admission', 'admission', …(2) ] to deeply equal [ 'admission', 'admission', …(1) ]
+
+- Expected
++ Received
+
+  [
+    "admission",
+    "admission",
++   "admission",
+    "settlement",
+  ]
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:112:91
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  22:26:39
+   Duration  4.49s (transform 729ms, setup 0ms, import 1.27s, tests 3.09s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts`
+Exit status 1

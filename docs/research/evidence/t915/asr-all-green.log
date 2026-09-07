@@ -1,0 +1,44 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-call-ports.integration.test.ts src/modules/execution/chat-generation-recovery.test.ts src/modules/execution/worker-supervisor.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (13 tests | 1 failed) 4306ms
+   × 真实子进程经命名端口结算，Supervisor 将 ASR 结算识别为 settlement 113ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 真实子进程经命名端口结算，Supervisor 将 ASR 结算识别为 settlement
+AssertionError: expected [ 'admission', 'admission', …(2) ] to deeply equal [ 'admission', 'admission', …(1) ]
+
+- Expected
++ Received
+
+  [
+    "admission",
+    "admission",
++   "admission",
+    "settlement",
+  ]
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:167:23
+    165|     try {
+    166|         expect(await supervisor.run(f.ref, Date.now() + 30000)).toBe('…
+    167|         expect(modes).toEqual(['admission', 'admission', 'settlement']…
+       |                       ^
+    168|         expect(await f.run(request, vi.fn())).toEqual({ text: 'IPC 原文'…
+    169|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 62 passed (63)
+   Start at  22:29:01
+   Duration  6.49s (transform 2.41s, setup 0ms, import 5.43s, tests 17.51s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-call-ports.integration.test.ts src/modules/execution/chat-generation-recovery.test.ts src/modules/execution/worker-supervisor.test.ts`
+Exit status 1
