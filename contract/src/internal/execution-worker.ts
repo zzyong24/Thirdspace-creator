@@ -33,6 +33,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "prepareTranscribePostprocess", "readTranscribePostprocess", "reserveTranscribePostprocess", "startTranscribePostprocess", "settleTranscribePostprocess", "saveTranscribePostprocess",
   "selectTranscribeLocalFallback", "prepareTranscribeAsr", "readTranscribeAudio", "saveTranscribeAudio",
   "reserveAsrRequest", "startAsrRequest", "settleAsrRequest",
   "resolveAssetCredential", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
@@ -85,6 +86,16 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  prepareTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
+  readTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
+  saveTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),
+  reserveTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128),operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=4_000_000)}).strict(),
+  startTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128),callId:operationKeySchema}).strict(),
+  settleTranscribePostprocess:z.discriminatedUnion("status", [
+    generationSettlementSchema.options[0].extend({awemeId:z.string().min(1).max(128)}).strict(),
+    generationSettlementSchema.options[1].extend({awemeId:z.string().min(1).max(128)}).strict(),
+    generationSettlementSchema.options[2].extend({awemeId:z.string().min(1).max(128)}).strict(),
+  ]),
   selectTranscribeLocalFallback:z.object({awemeId:z.string().min(1).max(128)}).strict(),
   prepareTranscribeAsr:z.object({awemeId:z.string().min(1).max(128)}).strict(),
   ...transcribeAudioPortSchemas,
@@ -210,6 +221,31 @@ export const workerModelSpecSchema = z.object({
   displayModelKey: z.literal("channel-managed").optional(),
   structuredOutputs: z.boolean().optional(),
 });
+/** 后处理只消费已确认的 ASR 原文；固定输入与回执不含凭据。 */
+export const transcribePostprocessResultSchema=z.discriminatedUnion("applied",[
+  z.object({applied:z.literal(true),transcript:z.string().min(1).max(2_000_000)}).strict(),
+  z.object({applied:z.literal(false),transcript:z.string().max(2_000_000),reason:z.string().min(1).max(1000)}).strict(),
+]);
+export const transcribePostprocessIdentitySchema=workerModelSpecSchema.omit({token:true,baseUrl:true}).extend({
+  schemaVersion:z.literal(1),capability:z.literal("video.subtitles"),baseUrlDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),customEndpoint:z.boolean(),
+}).strict();
+export const transcribePostprocessPlanSchema=z.object({
+  schemaVersion:z.literal(1),sourceDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  transcript:z.string().max(2_000_000),accountPositioning:z.string().max(200000).optional(),title:z.string().max(10000).optional(),
+  templateVersion:z.string().min(1).max(128),templateDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  maxOutputTokens:z.number().int().positive().max(65536),identity:transcribePostprocessIdentitySchema.nullable(),operationKey:operationKeySchema,
+}).strict();
+export const transcribePostprocessPreparationSchema=z.discriminatedUnion("status",[
+  z.object({status:z.literal("prepared"),plan:transcribePostprocessPlanSchema,spec:workerModelSpecSchema.strict()}).strict(),
+  z.object({status:z.literal("restored"),result:transcribePostprocessResultSchema}).strict(),
+]);
+export const transcribePostprocessReservationSchema=z.union([
+  workerReservationSchema,
+  z.object({status:z.literal("skipped"),result:transcribePostprocessResultSchema}).strict(),
+]);
+export type TranscribePostprocessPlan=z.infer<typeof transcribePostprocessPlanSchema>;
+export type TranscribePostprocessResult=z.infer<typeof transcribePostprocessResultSchema>;
+
 export function sameExecution(a: ExecutionRef, b: ExecutionRef): boolean {
   return a.executionTaskId === b.executionTaskId && a.attempt === b.attempt && a.fenceToken === b.fenceToken;
 }
