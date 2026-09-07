@@ -599,3 +599,11 @@ export {COPILOT_ASSIST_TEMPLATE,copilotReplySchema,copilotReplyInputSchema} from
 
 export {AsrExecutionInterruption,isAsrExecutionControlError,throwIfAsrAborted,type AsrRequest,type ExecuteAsrRequest} from "./runtime/asr-request";
 export {createDurableAsrRequestExecutor,type DurableAsrPorts} from "./execution/durable-asr-request";
+
+export {
+  createTranscribeAudioExtractor,
+  streamAudioFromVideo,
+  TranscribeAudioExtractError,
+  type StreamAudioDeps,
+  type SpawnedAudioProcess,
+} from "./runtime/transcribe-audio-extract";
