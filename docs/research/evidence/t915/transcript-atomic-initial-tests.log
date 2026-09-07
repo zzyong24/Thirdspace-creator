@@ -1,0 +1,39 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/projects/transcript-artifact.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/projects/transcript-artifact.service.test.ts (4 tests | 1 failed) 3168ms
+   × 图集不建口播稿，已有人工稿不覆盖，跨账号无落稿 692ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/projects/transcript-artifact.service.test.ts > 图集不建口播稿，已有人工稿不覆盖，跨账号无落稿
+AssertionError: expected '' to be '人工正文' // Object.is equality
+
+- Expected
++ Received
+
+- 人工正文
+
+ ❯ src/modules/projects/transcript-artifact.service.test.ts:50:74
+     48|  await f.artifacts.createVersion(ctx,master.id,{contentText:'人工正文'});
+     49|  await f.service.ensure(ctx,{awemeId:'video',transcript:'另一次'});
+     50|  expect((await f.artifacts.listVersions(ctx,master.id))[0]?.contentTex…
+       |                                                                          ^
+     51|  expect((await f.service.ensure({...ctx,accountId:'other'},{awemeId:'v…
+     52| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  21:27:12
+   Duration  4.14s (transform 435ms, setup 0ms, import 835ms, tests 3.17s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/projects/transcript-artifact.service.test.ts`
+Exit status 1

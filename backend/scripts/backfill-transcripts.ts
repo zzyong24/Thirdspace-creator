@@ -4,13 +4,14 @@
 // 对 DB 只做 ensureTranscriptArtifact 的幂等写(重复跑不会重复建)。
 //
 // 用法:
-//   pnpm --filter @creatoros/backend backfill:transcripts [-- <蒸馏目录名> <userId>]
-//   或 tsx backend/scripts/backfill-transcripts.ts [<蒸馏目录名>] [<userId>]
+//   pnpm --filter @creatoros/backend backfill:transcripts <蒸馏目录名> <userId> <accountId>
+//   或 tsx backend/scripts/backfill-transcripts.ts <蒸馏目录名> <userId> <accountId>
 // 参数:
 //   argv[0] 蒸馏目录名(默认 "月明水清深");在 <VAULT>/01-收件箱/蒸馏/<目录名>/ 下找
 //           _transcribed.json 索引。可用 CREATOROS_VAULT 覆盖 vault 根(默认
 //           /Users/zyongzhu/ThirdSpace)。
 //   argv[1] userId(默认 "user-zyongzhu",即 canonical 用户;imported 作品的 owner)。
+//   argv[2] accountId（必填）；不推测或使用默认账号。
 //
 // 数据源形状(SPEC §5.4):
 //   索引 _transcribed.json:{ "transcribed": { "<aweme_id>": { "status":"ok", "path":"...", "chars":N } } }
@@ -21,21 +22,13 @@ import { readFileSync } from "node:fs";
 import { isAbsolute, join, resolve, dirname } from "node:path";
 import type { RequestContext } from "@creatoros/contract";
 import { createRuntimeDb } from "../src/db";
-import {
-  createProjectRepository,
-  ensureTranscriptArtifact,
-  extractTranscriptBody,
-  type TranscriptArtifactPorts,
-} from "../src/modules/projects";
-import {
-  createArtifactsService,
-  createArtifactRepository,
-} from "../src/modules/artifacts";
+import { randomUUID } from "node:crypto";
+import { createTranscriptArtifactService, extractTranscriptBody } from "../src/modules/projects";
 
 const VAULT_ROOT = process.env.CREATOROS_VAULT ?? "/Users/zyongzhu/ThirdSpace";
 const DISTILL_DIR = process.argv[2] ?? "月明水清深";
 const USER_ID = process.argv[3] ?? "user-zyongzhu";
-const PLATFORM = "douyin";
+const ACCOUNT_ID = process.argv[4];
 
 const url =
   process.env.DATABASE_URL ??
@@ -61,6 +54,7 @@ function resolveMdPath(entryPath: string, indexDir: string): string {
 }
 
 async function main(): Promise<void> {
+  if (!ACCOUNT_ID?.trim()) throw new Error("请显式传入逐字稿归属的 accountId（第三个位置参数）");
   const indexPath = join(
     VAULT_ROOT,
     "01-收件箱",
@@ -81,55 +75,13 @@ async function main(): Promise<void> {
 
   const { db, pool } = await createRuntimeDb({ connectionString: url });
 
-  // 确定性 deps(单进程、递增 id / 单一时钟)。回填一次性跑,不需要真随机。
-  const counters = new Map<string, number>();
-  const deps = {
-    now: () => new Date().toISOString(),
-    nextId: (prefix: string) => {
-      const n = (counters.get(prefix) ?? 0) + 1;
-      counters.set(prefix, n);
-      return `${prefix}-bf-${n}`;
-    },
-  };
-
-  const projectsRepo = createProjectRepository(db);
-  const artifactsService = createArtifactsService({ db, ...deps });
-  // 脚本层可直连 repo 取版本行的 content_data(service 不暴露 getVersion;跨模块运行时
-  // 调用方才受"只走 service"约束,一次性回填脚本不受此限)。user-baked repo。
-  const artifactsRepo = createArtifactRepository(db, { ...deps, userId: USER_ID });
-
+  const service = createTranscriptArtifactService({
+    db, now: () => new Date().toISOString(),
+    nextId: (prefix) => `${prefix}-${randomUUID()}`,
+  });
   const ctx: RequestContext = {
-    userId: USER_ID,
-    requestId: "backfill-transcripts",
-    source: "user",
-  };
-
-  // 把真 service/repo 适配到 helper 的窄端口(同 composition root 的接法)。
-  const ports: TranscriptArtifactPorts = {
-    findImportedProjectByAwemeId: async (c, awemeId) => {
-      const project = await projectsRepo.findImportedByRef(c, {
-        platform: PLATFORM,
-        externalId: awemeId,
-      });
-      return project?.id ?? null;
-    },
-    listProjectArtifacts: async (c, projectId) => {
-      const rows = await artifactsService.listProjectArtifacts(c, projectId);
-      return rows.map((r) => ({
-        id: r.id,
-        artifactType: r.artifactType,
-        currentVersionId: r.currentVersionId,
-      }));
-    },
-    getVersionContentData: async (_c, versionId) => {
-      const version = await artifactsRepo.getVersion(versionId);
-      return (version.contentData ?? null) as Record<string, unknown> | null;
-    },
-    createScriptArtifact: async (c, input) =>
-      artifactsService.createArtifact(c, input),
-    createArtifactVersion: async (c, artifactId, input) =>
-      artifactsService.createVersion(c, artifactId, input),
-    warn: (m) => console.warn(m),
+    userId: USER_ID, accountId: ACCOUNT_ID,
+    requestId: "backfill-transcripts", source: "user",
   };
 
   let bound = 0;
@@ -174,10 +126,9 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const result = await ensureTranscriptArtifact(
+    const result = await service.ensure(
       ctx,
       { awemeId, transcript: body, source: "transcribed" },
-      ports,
     );
     if (result.status === "bound") {
       bound++;

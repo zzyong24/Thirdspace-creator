@@ -1,0 +1,32 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/projects/transcript-artifact.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/projects/transcript-artifact.service.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/projects/transcript-artifact.service.test.ts [ src/modules/projects/transcript-artifact.service.test.ts ]
+Error: Cannot find module './transcript-artifact.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/projects/transcript-artifact.service.test.ts
+ ❯ src/modules/projects/transcript-artifact.service.test.ts:7:1
+      5| import {createProjectsService} from './projects.service';
+      6| import {createArtifactsService} from '../artifacts';
+      7| import {createTranscriptArtifactService} from './transcript-artifact.s…
+       | ^
+      8| const ctx:RequestContext={userId:'transcript-test',accountId:'transcri…
+      9| const closes:Array<()=>Promise<void>>=[];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  21:26:26
+   Duration  997ms (transform 433ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/projects/transcript-artifact.service.test.ts`
+Exit status 1

@@ -1,0 +1,40 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/projects/transcript-artifact.service.test.ts -t '显式禁止'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/projects/transcript-artifact.service.test.ts (6 tests | 1 failed | 5 skipped) 971ms
+   × 显式禁止口播初始化在后续恢复中仍然有效 970ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/projects/transcript-artifact.service.test.ts > 显式禁止口播初始化在后续恢复中仍然有效
+AssertionError: expected [ { id: 'artifact-16', …(13) }, …(1) ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/modules/projects/transcript-artifact.service.test.ts:83:78
+     81|     await f.service.restoreExisting(ctx, 'video');
+     82|     await f.service.ensure(ctx, { awemeId: 'video', transcript: '另一次' …
+     83|     expect(await f.artifacts.listProjectArtifacts(ctx, f.project.proje…
+       |                                                                              ^
+     84| });
+     85|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  21:30:46
+   Duration  1.91s (transform 434ms, setup 0ms, import 810ms, tests 971ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/projects/transcript-artifact.service.test.ts -t '显式禁止'`
+Exit status 1

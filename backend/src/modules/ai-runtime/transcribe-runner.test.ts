@@ -360,6 +360,21 @@ describe("runTranscribe(transcribe.douyin, T-030-D2)", () => {
   });
 });
 
+it.each([false,true])('已有事实恢复口播稿且恢复失败不重复 ASR (失败=%s)',async(fail)=>{
+ const {deps,spies}=makeDeps({awemeIds:['dup'],alreadyHas:()=>true});
+ const restore=vi.fn(async()=>{if(fail)throw new Error('temporary restore failure');});
+ deps.restoreTranscriptArtifact=restore;
+ const warn=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ try{
+  await runTranscribe(ctx,{id:'restore-existing',taskType:'transcribe.douyin',inputData:{awemeIds:['dup']}},deps);
+  expect(restore).toHaveBeenCalledWith(ctx,'dup');
+  expect(spies.fetchVideoUrl).not.toHaveBeenCalled();
+  expect(spies.transcribeAudio).not.toHaveBeenCalled();
+  expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+  expect(spies.markFailed).not.toHaveBeenCalled();
+ }finally{warn.mockRestore();}
+});
+
 // [T-243] 逐字稿覆盖率修复:图集诚实跳过 / ffmpeg 单次重试 / 失败分类计数。
 describe("[T-243] runTranscribe 图集跳过 + ffmpeg 重试 + 失败分类", () => {
   it("图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败", async () => {

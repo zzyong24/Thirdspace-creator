@@ -173,6 +173,8 @@ export interface TranscribeRunnerDeps {
     ctx: RequestContext,
     awemeId: string,
   ) => Promise<boolean>;
+  /** 已有事实的派生稿恢复，禁止重新抓取或 ASR。 */
+  restoreTranscriptArtifact?: (ctx: RequestContext, awemeId: string) => Promise<void>;
   /** 幂等绑作品(带真 transcript 写入):已有则返回 skipped(already-exists),否则建。host 绑 ensureTranscriptArtifact(注入其 5 端口)。 */
   ensureTranscriptArtifact: (
     ctx: RequestContext,
@@ -274,6 +276,11 @@ export async function runTranscribe(
       //    用 hasTranscriptArtifact(只读)而非 ensureTranscriptArtifact —— 后者「不存在则建」,
       //    拿空 transcript 当探针会写脏空稿。真正的写入在下面 §3 用真 text 调 ensure(它自身也幂等)。
       if (await deps.hasTranscriptArtifact(ctx, awemeId)) {
+        try {
+          await deps.restoreTranscriptArtifact?.(ctx, awemeId);
+        } catch {
+          console.warn(`[transcribe-runner] 逐字稿已保存，派生稿恢复待重试 (awemeId=${awemeId})`);
+        }
         stepNo += 1;
         await deps.ai.recordStep(ctx, task.id, {
           stepNo,

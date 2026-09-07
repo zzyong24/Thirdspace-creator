@@ -143,7 +143,7 @@ import {
   createProjectRepository,
   createProjectsService,
   createProjectsTransport,
-  ensureTranscriptArtifact,
+  createTranscriptArtifactService,
   PROJECT_OP_IDS,
   type StageGateReadersRef,
 } from "@creatoros/backend/modules/projects";
@@ -2539,6 +2539,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       learningsService.captureEditDelta(ctx, input),
   });
   const artifacts = createArtifactsTransport(() => artifactsService);
+  const transcriptArtifacts = createTranscriptArtifactService({
+    db, now: deps.now, nextId: deps.nextId,
+    searchUpsert: (ctx, input) => searchService.upsertDocument(ctx, input),
+  });
 
   // Production (module 09): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). The
@@ -4523,48 +4527,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   { resolveModelSpec },
                 );
               },
-              // 幂等绑作品:ensureTranscriptArtifact + 其 5 端口(projectsRepo/artifactsService 现成实例)。
-              ensureTranscriptArtifact: (c, ensureInput) =>
-                ensureTranscriptArtifact(c, ensureInput, {
-                  findImportedProjectByAwemeId: async (cc, awemeId) => {
-                    const p = await projectsRepo.findImportedByRef(cc, {
-                      platform: "douyin",
-                      externalId: awemeId,
-                    });
-                    return p?.id ?? null;
-                  },
-                  listProjectArtifacts: async (cc, projectId) => {
-                    const rows = await artifactsService.listProjectArtifacts(
-                      cc,
-                      projectId,
-                    );
-                    return rows.map((r) => ({
-                      id: r.id,
-                      artifactType: r.artifactType,
-                      currentVersionId: r.currentVersionId,
-                    }));
-                  },
-                  getVersionContentData: async (cc, versionId) => {
-                    // service 无 by-versionId 读 → per-ctx 现取 artifacts repo 的 getVersion。
-                    const repo = createArtifactRepository(db, {
-                      ...deps,
-                      userId: cc.userId,
-                      // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-                      accountId: requireAccountId(cc.accountId, "artifacts.repo"),
-                    });
-                    const version = await repo.getVersion(versionId);
-                    const data = version.contentData;
-                    return data &&
-                      typeof data === "object" &&
-                      !Array.isArray(data)
-                      ? (data as Record<string, unknown>)
-                      : null;
-                  },
-                  createScriptArtifact: (cc, artifactInput) =>
-                    artifactsService.createArtifact(cc, artifactInput),
-                  createArtifactVersion: (cc, artifactId, versionInput) =>
-                    artifactsService.createVersion(cc, artifactId, versionInput),
-                }),
+              ensureTranscriptArtifact: transcriptArtifacts.ensure,
+              restoreTranscriptArtifact: transcriptArtifacts.restoreExisting,
               // 真逐字稿一绑定就继续排项目重建，不等下一次定时采集；createTask 自带
               // IN-FLIGHT 幂等，且已存在 reconstructed artifact 时直接跳过。
               onTranscriptReady: async (c, { projectId }) => {

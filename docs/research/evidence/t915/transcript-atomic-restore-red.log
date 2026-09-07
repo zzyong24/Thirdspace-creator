@@ -1,0 +1,43 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/transcribe-runner.test.ts -t '已有事实恢复'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)
+[transcribe-runner] transcribe failed for task restore-existing: Error: temporary restore failure
+    at Object.<anonymous> (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/transcribe-runner.test.ts:365:46)
+    at Object.Mock [as restoreTranscriptArtifact] (file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34)
+    at processOne (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/transcribe-runner.ts:279:20)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at runTranscribe (/Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/transcribe-runner.ts:457:7)
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/transcribe-runner.test.ts:369:3
+    at file:///Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (22 tests | 1 failed | 20 skipped) 8ms
+   × 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:373:31
+    371|   expect(spies.fetchVideoUrl).not.toHaveBeenCalled();
+    372|   expect(spies.transcribeAudio).not.toHaveBeenCalled();
+    373|   expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
+       |                               ^
+    374|   expect(spies.markFailed).not.toHaveBeenCalled();
+    375|  }finally{warn.mockRestore();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 20 skipped (22)
+   Start at  21:29:01
+   Duration  206ms (transform 54ms, setup 0ms, import 67ms, tests 8ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai-runtime/transcribe-runner.test.ts -t '已有事实恢复'`
+Exit status 1

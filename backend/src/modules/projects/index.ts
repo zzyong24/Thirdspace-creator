@@ -83,3 +83,5 @@ export {
   type TaskResource,
   type ProjectActivityResource,
 } from "./projects.schema";
+
+export { createTranscriptArtifactService } from "./transcript-artifact.service";
