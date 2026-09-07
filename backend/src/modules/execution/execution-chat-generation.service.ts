@@ -1,3 +1,5 @@
+import {chatDiagnosisKeys,projectChatDiagnosis} from "../ai-runtime/chat-diagnosis-node";
+import {normalizeDiagnosis} from "../ai-runtime/calibration-diagnose-runner";
 import {executionEvidence} from "../../schema/intelligence";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
@@ -8,7 +10,7 @@ import type {RequestContext} from "@creatoros/contract";
 import {workerPortInputSchemas,workerSkillSnapshotSchema,chatStructuredNodeSchema,workerToolResultReceiptSchema,agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {replayStructuredGeneration,generationRequestDigest,type GenerationReplayReceipt} from "@creatoros/ai-worker/chat";
 import {providerIdentityFor,structuredModeForIdentity} from "@creatoros/ai-worker/model-identity";
-import {getTemplate,runWithEffectiveSkillSnapshot,type TopicCardOutput,type PositioningSuggestionOutput} from "@creatoros/ai-worker";
+import {getTemplate,runWithEffectiveSkillSnapshot,type TopicCardOutput,type PositioningSuggestionOutput,type DiagnosisOutput} from "@creatoros/ai-worker";
 import {normalizeCard} from "../ai-runtime/topic-enrich-runner";
 import {normalizeSuggestion} from "../ai-runtime/positioning-runner";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
@@ -34,7 +36,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   const parent=calls.find(call=>call.id===callId);
   if(!parent || parent.kind!=="tool" || parent.parentCallId || parent.toolExecutionClaimId)throw new ConflictError("生成缺少真实 Worker 父工具");
   const bound=binding.forCall(task,calls,parent);
-  if(bound.execution!=="worker.structured-node" || !["topic.enrich","positioning.generate"].includes(bound.executionToolName) || bound.effect!=="proposal" || bound.validationOutcome)throw new ConflictError("当前父工具不是有效结构化生成");
+  if(bound.execution!=="worker.structured-node" || !["topic.enrich","positioning.generate","calibration.diagnose"].includes(bound.executionToolName) || bound.effect!=="proposal" || bound.validationOutcome)throw new ConflictError("当前父工具不是有效结构化生成");
   return {parent,bound};
  }
  function current(calls:Call[],found:ReturnType<typeof find>){
@@ -90,7 +92,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   });
  }
  async function replay(value:Awaited<ReturnType<typeof prepared>>,recorded:GenerationReplayReceipt[],signal?:AbortSignal,captureNodeFailure=false){
-  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayStructuredGeneration<TopicCardOutput|PositioningSuggestionOutput>({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},{template:getTemplate(value.node.capability),facets:value.node.facets,maxOutputTokens:value.maxOutputTokens}));
+  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayStructuredGeneration<TopicCardOutput|PositioningSuggestionOutput|DiagnosisOutput>({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},{template:getTemplate(value.node.capability),facets:value.node.facets,maxOutputTokens:value.maxOutputTokens}));
  }
  function rejectedTail(calls:Call[],callId:string,key:string){
   const tree=groups(calls,callId,key),last=tree.result.at(-1)?.at(-1);
@@ -177,8 +179,19 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    if(!tree.result.length)throw new ConflictError("生成尚无模型回执");
    const result=await replay(value,receipts(tree.result),signal,true);
    if(result.status==="next-request" || result.consumed!==tree.result.length)throw new ConflictError("原节点仍需生成，不能伪造完成");
-   const data=result.status==="failed"?null:value.node.capability==="topic.enrich"?{kind:"topic.card",card:normalizeCard(result.value.object as TopicCardOutput),candidateId:value.node.candidateId}:{kind:"positioning.suggestion",suggestion:normalizeSuggestion(result.value.object as PositioningSuggestionOutput),discovery:value.discovery};
-   const output=agenticToolOutcomeSchema.parse(result.status==="failed"?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
+   let data:unknown=null;
+   if(result.status!=="failed"){
+    switch(value.node.capability){
+     case "topic.enrich": data={kind:"topic.card",card:normalizeCard(result.value.object as TopicCardOutput),candidateId:value.node.candidateId};break;
+     case "positioning.generate": data={kind:"positioning.suggestion",suggestion:normalizeSuggestion(result.value.object as PositioningSuggestionOutput),discovery:value.discovery};break;
+     case "calibration.diagnose": {
+      const diagnosis=projectChatDiagnosis(normalizeDiagnosis(result.value.object as DiagnosisOutput,chatDiagnosisKeys()));
+      if(diagnosis)data={kind:"calibration.diagnosis",diagnosis};
+      break;
+     }
+    }
+   }
+   const output=agenticToolOutcomeSchema.parse(result.status==="failed" || data===null?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
    const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:value.bound.toolCallId,toolName:value.bound.toolName,output}));
    await ledger.settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText},undefined,(calls,task)=>{
     const found=find(task,calls,callId);current(calls,found);

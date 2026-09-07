@@ -21,16 +21,17 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 afterAll(async()=>close());
-it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop","crashAfterChild","crashUnknownChild","crashCancel","crashDeadline","crashPauseResume","settlementDrop","badOutput","crashFallback","crashTwoNodes","positioning","crashMixed"])("同一真实 Worker 内部结构化生成：%s",async(mode)=>{
+it.each(["success","cancel","reject401","reject401resume","reject429","reject429drop","reject400drop","crashAfterChild","crashUnknownChild","crashCancel","crashDeadline","crashPauseResume","settlementDrop","badOutput","crashFallback","crashTwoNodes","positioning","crashMixed","diagnosis","crashDiagnosis","diagnosisEmpty"])("同一真实 Worker 内部结构化生成：%s",async(mode)=>{
  let clockOffset=0;
- const name=mode==="positioning"?"positioning.generate":"topic.enrich",facet=mode==="positioning"?"current":"title";
+ const diagnosis=mode==="diagnosis" || mode==="crashDiagnosis" || mode==="diagnosisEmpty";
+ const name=diagnosis?"calibration.diagnose":mode==="positioning"?"positioning.generate":"topic.enrich",facet=mode==="positioning"?"current":"title";
  const ctx={userId:"hooks-worker-u",accountId:`hooks-worker-a-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
  const conversation=await repo.createConversation({title:"开场",projectId:null,scope:"global"});
  const source=await repo.createMessage(conversation.id,{role:"user",content:"生成开场",attachments:[],modelMetadata:{}});
  const definitions=(await prepareChatToolDefinitions(buildChatTools(mode==="crashMixed"?[name,"script.hooks"]:[name],{} as ChatToolDeps),{workerStructuredNodes:true,workerScriptHooks:true})).definitions;
- const effective={methodSystem:"策略",template:`{{${facet}}}`,tools:[name],requiredFacets:[facet],contextRequirements:[],outputSchema:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false},completionPolicy:null,completionPolicyAdapter:null};
- const hostContext:ChatHostContext={schemaVersion:1,scriptHooksGeneration:{version:1,maxOutputTokens:2048},scriptHooksContext:{selectionTitle:"开场专用主题",positioningBrief:"原定位",projectBriefHard:"",userMaterialHardBrief:"",userMaterialRefBrief:"",knowledgeBrief:""},chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:"真实主题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],structuredContext:{positioningBrief:"原定位",accountsBrief:"",learningsBrief:"",signalsBrief:"",knowledgeBrief:""},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:["chatbox.topic",name].map(skillId=>({skillId,baseVersion:"1",overlayRevision:null,overlayVersion:null,effective}))}};
+ const effective:ChatHostContext["skillSnapshot"]["skills"][number]["effective"]={methodSystem:"策略",template:`{{${facet}}}`,tools:[name],requiredFacets:[facet],contextRequirements:[],outputSchema:diagnosis?{type:"object",properties:{dimensions:{type:"array",items:{type:"object",properties:{key:{type:"string"},score:{type:"number"}},required:["key","score"],additionalProperties:false}},verdict:{type:"string"}},required:["dimensions","verdict"],additionalProperties:false}:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false},completionPolicy:null,completionPolicyAdapter:null};
+ const hostContext:ChatHostContext={schemaVersion:1,scriptHooksGeneration:{version:1,maxOutputTokens:2048},scriptHooksContext:{selectionTitle:"开场专用主题",positioningBrief:"原定位",projectBriefHard:"",userMaterialHardBrief:"",userMaterialRefBrief:"",knowledgeBrief:""},chatContext:{surface:"topics",selection:{kind:"candidate",ids:["candidate"],label:"真实主题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],structuredContext:{positioningBrief:"原定位",accountsBrief:"",learningsBrief:"",signalsBrief:"",knowledgeBrief:""},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:["chatbox.topic",name].sort().map(skillId=>({skillId,baseVersion:"1",overlayRevision:null,overlayVersion:null,effective}))}};
  const submission=await createChatTurnSubmissionService(db,{now,assemble:async()=>({capability:"copilot.assist",system:"生成开场候选",messages:[{role:"user",content:"生成开场"}],maxSteps:6,maxOutputTokens:128,tools:definitions,hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const requests:Record<string,unknown>[]=[];
  let childOpened=false,recovered=false,settledChildren=0;
@@ -40,7 +41,7 @@ it.each(["success","cancel","reject401","reject401resume","reject429","reject429
   if(!input.stream){childOpened=true;
    const hook=mode==="crashMixed" && JSON.stringify(input.messages).includes("开场专用主题");
    if((mode.startsWith("reject")) && requests.length===2){res.writeHead(mode.startsWith("reject401")?401:mode.startsWith("reject400")?400:429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rejected",type:"api_error"}}));return;}
-res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownChild"){res.destroy();return;}if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:hook?'[ {"text":"真实开场卡","angle":"场景"} ]':mode==="badOutput" || (!recovered && ["crashFallback","crashTwoNodes","crashMixed"].includes(mode))?'无效对象':'{"oneLiner":"真实选题卡"}'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
+res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownChild"){res.destroy();return;}if(mode==="cancel"){res.write('{"id":');return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:hook?'[ {"text":"真实开场卡","angle":"场景"} ]':mode==="badOutput" || (!recovered && ["crashFallback","crashTwoNodes","crashMixed"].includes(mode))?'无效对象':mode==="diagnosisEmpty"?'{"dimensions":[],"verdict":""}':diagnosis?'{"dimensions":[{"key":"hook","score":4}],"verdict":"真实选题卡"}':'{"oneLiner":"真实选题卡"}'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
   const first=requests.length===1;
   const delta=first?{tool_calls:(["crashTwoNodes","crashMixed"].includes(mode)?[0,1]:[0]).map(index=>({index,id:`node-${index}`,type:"function",function:{name:mode==="crashMixed" && index===1?"script_hooks":name.replaceAll(".","_"),arguments:JSON.stringify(mode==="crashMixed" && index===1?{}:mode==="positioning"?{extraBrief:"真实主题"}:{title:"真实主题"})}}))}:{content:"候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
@@ -120,7 +121,7 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownCh
    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"unknown",totalTokens:null});return;
   }
   expect(task?.status).toBe("succeeded");
-  if(mode==="badOutput"){
+  if(mode==="badOutput" || mode==="diagnosisEmpty"){
    const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
    expect(rows.find(call=>call.kind==="tool")).toMatchObject({status:"settled"});
    expect(JSON.stringify(rows.find(call=>call.kind==="tool")?.resultText)).not.toContain("真实选题卡");
@@ -132,6 +133,7 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownCh
   if(mode==="crashMixed")expect(JSON.stringify(requests.at(-1)?.messages)).toContain("真实开场卡");
   expect(JSON.stringify(requests.at(-1)?.messages)).toContain("真实选题卡");
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
+  if(diagnosis) expect(JSON.parse(calls.find(call=>call.kind==="tool")!.resultText!).output.data).toMatchObject({kind:"calibration.diagnosis",diagnosis:{dimensions:[{key:"hook",score:4}]}});
   expect(calls.filter(call=>call.kind==="model")).toHaveLength(count);
   expect(calls.filter(call=>call.parentCallId)).toHaveLength(count-2);
   if(mode.startsWith("reject")){

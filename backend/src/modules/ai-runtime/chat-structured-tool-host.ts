@@ -1,3 +1,4 @@
+import {prepareChatDiagnosis} from "./chat-diagnosis-node";
 import type {RequestContext} from "@creatoros/contract";
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
@@ -18,7 +19,7 @@ export type ChatGenerationPreparation={
  discovery:Awaited<ReturnType<typeof preparePositioningToolInput>>["discovery"];
  maxOutputTokens:number;
 };
-const names=["topic.enrich","positioning.generate"] as const;
+const names=["topic.enrich","positioning.generate","calibration.diagnose"] as const;
 /** 宿主只准备真实输入；调用账本层负责首次准备持久化，模型始终在 Worker 执行。 */
 export function createChatStructuredTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
@@ -63,6 +64,11 @@ export function createChatStructuredTaskToolHost(
       const args=resolved.input as {title:string;angle?:string;verifiedBrief?:string};
       const node=await prepareChatTopicEnrich(resolved.creative,resolved.restored.hostContext.chatContext.selection,{title:args.title,angle:args.angle??"",verifiedBrief:clampExtraBrief(args.verifiedBrief)});
       scope.signal?.throwIfAborted();
+      return {node,discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+     }
+     if(definition.name==="calibration.diagnose"){
+      const args=resolved.input as {title?:string;script?:string;extraBrief?:string};
+      const node=prepareChatDiagnosis(resolved.creative,resolved.restored.hostContext.chatContext.selection?.label?.trim()||"",{...args,extraBrief:clampExtraBrief(args.extraBrief)});
       return {node,discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
      }
      const prepared=await preparePositioningToolInput(resolved.input as PositioningToolInput,async sessionId=>{

@@ -1,3 +1,4 @@
+import { prepareChatDiagnosis, projectChatDiagnosis, chatDiagnosisKeys } from "./chat-diagnosis-node";
 import {prepareChatResearchQuery,projectChatSearchResults,type ChatResearchContext} from "./chat-research-preparation";
 import type {ChatStructuredContext} from "./chat-structured-tool-nodes";
 import { runChatTopicEnrich, runChatPositioning } from "./chat-structured-tool-nodes";
@@ -608,20 +609,6 @@ const SKILL_PRIMARY_CAPABILITY: Record<string, string> = {
   "chatbox.distill": "knowledge.distill",
 };
 
-// 通用维度评分标准(对话里没有绑定 rubric reader 时的诚实降级)—— 让 calibration.diagnose 工具
-// 在 free-chat 也能逐维度盲评。一键岛带 subject 时仍走这套通用维度(对话不接库内 rubric reader,
-// 避免跨模块直连 repo;真·按用户 rubric 的诊断在工作台 StartPredictionButton 那条任务链上)。
-const GENERIC_RUBRIC_DIMENSIONS: ReadonlyArray<{
-  key: string;
-  label: string;
-  description: string;
-}> = [
-  { key: "hook", label: "开头钩子", description: "前 3 秒能否抓住注意力" },
-  { key: "value", label: "价值密度", description: "信息/情绪价值是否扎实" },
-  { key: "structure", label: "结构节奏", description: "推进是否清晰不拖沓" },
-  { key: "audience_fit", label: "人群契合", description: "是否打中目标受众的痛点" },
-  { key: "conversion", label: "转化引导", description: "是否自然引导到信任/转化" },
-];
 
 // [T-081①] 产内容工具的 extraBrief 统一注入段头 —— 对话中获得的补充指令/洞察进生成 prompt 的
 // 段标题(各工具/facet 同一措辞,单一真值)。导出供各 runner facet 拼装与单测锚定。
@@ -2107,53 +2094,12 @@ async function assembleChat(
       }
     },
     diagnoseContent: async ({ title, script, extraBrief }) => {
-      // 复用 calibration.diagnose 模板 + parseDiagnosis(与 calibration-diagnose-runner 同源)。
-      // 对话里没有库内 rubric reader → 用通用维度评(诚实降级)。产诊断候选(非实体)。
-      // T-027:模型没显式传 title 时用工作台选中内容的标题兜底(不拿空标题去诊断)。
-      const effTitle = title?.trim() ? title : selectionTitle;
-      const spec = await deps.resolveModelSpec(ctx, "calibration.diagnose");
-      const rubricBlock = GENERIC_RUBRIC_DIMENSIONS.map(
-        (d, i) => `${i + 1}. ${d.label}（key=${d.key}） —— ${d.description}`,
-      ).join("\n");
-      const { text } = await runWithSkillSnapshot(
-        ["calibration.diagnose"],
-        () =>
-          runTemplatedNode({
-            model: modelFor(spec),
-            // 调用方对象只提供受控 id；active scope 下实际模板取账号 snapshot。
-            template: getTemplate("calibration.diagnose"),
-            facets: {
-              positioning: context.positioningBrief
-                ? context.positioningBrief
-                : "（创作者尚未设置定位——按通用爆款逻辑判断）",
-              learnings: context.learningsBrief
-                ? `\n【过往复盘爆款要素】\n${context.learningsBrief}`
-                : "",
-              // [T-081①] 对话洞察/补充指令(模板 {{extraBrief}} 占位,空则整段省略)。
-              extraBrief: extraBrief
-                ? `\n${EXTRA_BRIEF_HEADING}\n${extraBrief}`
-                : "",
-              rubricBlock,
-              title: effTitle || "（未提供标题）",
-              script:
-                script && script.trim()
-                  ? script
-                  : "（暂无文稿——请基于标题与定位做尽力诊断,拿不准的指标给 null）",
-            },
-          }),
-      );
-      const parsed = parseDiagnosis(
-        text,
-        new Set(GENERIC_RUBRIC_DIMENSIONS.map((d) => d.key)),
-      );
-      if (!parsed) return null;
-      // 对话卡只用维度评分 + 综合判断三段(performance 留给工作台诊断卡;对话里不渲分数 chips)。
-      return {
-        dimensions: parsed.dimensions,
-        verdict: parsed.verdict,
-        mainIssues: parsed.mainIssues,
-        priorityFixes: parsed.priorityFixes,
-      };
+      const prepared = prepareChatDiagnosis(context, selectionTitle, { title, script, extraBrief });
+      const spec = await deps.resolveModelSpec(ctx, prepared.capability);
+      const { text } = await runWithSkillSnapshot([prepared.capability], () => runTemplatedNode({
+        model: modelFor(spec), template: getTemplate(prepared.capability), facets: prepared.facets,
+      }));
+      return projectChatDiagnosis(parseDiagnosis(text, chatDiagnosisKeys()));
     },
     analyzeReview: async ({ subject, projectId, extraBrief }) => {
       // 复用 review.insights 模板 + reviewFacets + parseLearnings(与 review-runner 同源、同一份
@@ -2268,7 +2214,7 @@ async function assembleChat(
     tools,
     capability: skillCapability,
     ...(tools["material.gather"] ? {researchContext:{selectionTitle,userMaterialQueryTerms:[...(context.userMaterialQueryTerms??[])],searchConfigured:Boolean(deps.searchWeb)}} : {}),
-    ...((tools["topic.enrich"] || tools["positioning.generate"]) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
+    ...((tools["topic.enrich"] || tools["positioning.generate"] || tools["calibration.diagnose"]) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
     ...(tools["script.hooks"] ? {scriptHooksContext:{...scriptHooksContext}} : {}),
     ...(modelSpec ? {modelSpec} : {}),
     forcedTool,

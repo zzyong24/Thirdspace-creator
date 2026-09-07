@@ -1703,6 +1703,36 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已授权素材Worker和私有端口的实现验证，不增加进程拓扑或发布范围。",
       "acceptance": "不代表公共入口迁移、商业供应商或完整任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/chat-generation-worker.ts"
+      ],
+      "file_sha256": "90f61fddcc7674499ece7702e0b91fe9e425efda8d456e7a0e229cb498b621ed",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "沿用已授权 Worker 命名端口，在 JSON 模型请求边界移除 SDK 可选 undefined，修复 advanced IPC 下宿主校验拒绝；不改变二进制传输或新增执行层。",
+      "acceptance": "真实 fork 结构化与开场共 35 项测试通过；此记录不代表全场景迁移或性能验收完成。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-diagnosis-migration.md"
+      ],
+      "file_sha256": "3007c5d1772442f58ef4ec037387d1b195e88a1d8c4ac2d5ca02d04eb7f2e5e5",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "仅记录已授权 Worker 请求边界故障与真实测试证据，没有追加执行层或通信协议。",
+      "acceptance": "文档引用日志，不替代全任务验收。"
     }
   ],
   "historical_baselines": []

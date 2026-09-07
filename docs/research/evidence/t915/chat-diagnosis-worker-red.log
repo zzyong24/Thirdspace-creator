@@ -1,0 +1,151 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-generation-worker.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/integration/chat-generation-worker.test.ts (20 tests | 20 failed) 22256ms
+   × 同一真实 Worker 内部结构化生成：success 870ms
+   × 同一真实 Worker 内部结构化生成：cancel 5028ms
+   × 同一真实 Worker 内部结构化生成：reject401 755ms
+   × 同一真实 Worker 内部结构化生成：reject401resume 752ms
+   × 同一真实 Worker 内部结构化生成：reject429 769ms
+   × 同一真实 Worker 内部结构化生成：reject429drop 742ms
+   × 同一真实 Worker 内部结构化生成：reject400drop 760ms
+   × 同一真实 Worker 内部结构化生成：crashAfterChild 743ms
+   × 同一真实 Worker 内部结构化生成：crashUnknownChild 751ms
+   × 同一真实 Worker 内部结构化生成：crashCancel 751ms
+   × 同一真实 Worker 内部结构化生成：crashDeadline 772ms
+   × 同一真实 Worker 内部结构化生成：crashPauseResume 975ms
+   × 同一真实 Worker 内部结构化生成：settlementDrop 720ms
+   × 同一真实 Worker 内部结构化生成：badOutput 753ms
+   × 同一真实 Worker 内部结构化生成：crashFallback 702ms
+   × 同一真实 Worker 内部结构化生成：crashTwoNodes 878ms
+   × 同一真实 Worker 内部结构化生成：positioning 835ms
+   × 同一真实 Worker 内部结构化生成：crashMixed 1009ms
+   × 同一真实 Worker 内部结构化生成：diagnosis 1271ms
+   × 同一真实 Worker 内部结构化生成：crashDiagnosis 1125ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 20 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：success
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：settlementDrop
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：badOutput
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：positioning
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：diagnosis
+AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:123:24
+    121|    expect(calls.find(call=>call.parentCallId)).toMatchObject({status:"…
+    122|   }
+    123|   expect(task?.status).toBe("succeeded");
+       |                        ^
+    124|   if(mode==="badOutput" || mode==="diagnosisEmpty"){
+    125|    const rows=await db.select().from(executionCalls).where(eq(executio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/20]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：cancel
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ vi.waitFor.timeout src/integration/chat-generation-worker.test.ts:78:45
+     76|   const draining=host.drainOnce();
+     77|   if(mode==="cancel"){
+     78|    await vi.waitFor(()=>expect(childOpened).toBe(true),{timeout:5000});
+       |                                             ^
+     79|    await createPersistentTaskService(db).command(ctx,{taskIds:[submiss…
+     80|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/20]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject401resume
+AssertionError: expected 'unknown_result' to be 'waiting_user' // Object.is equality
+
+Expected: "waiting_user"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:103:28
+    101|   if(mode.startsWith("reject")){
+    102|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+    103|    expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_…
+       |                            ^
+    104|    const before=await db.select().from(executionCalls).where(eq(execut…
+    105|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/20]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject429drop
+AssertionError: expected 'unknown_result' to be 'retry_wait' // Object.is equality
+
+Expected: "retry_wait"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:103:28
+    101|   if(mode.startsWith("reject")){
+    102|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+    103|    expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_…
+       |                            ^
+    104|    const before=await db.select().from(executionCalls).where(eq(execut…
+    105|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/20]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：reject400drop
+AssertionError: expected 'unknown_result' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:103:28
+    101|   if(mode.startsWith("reject")){
+    102|    const [stopped]=await db.select().from(executionTasks).where(eq(exe…
+    103|    expect(stopped?.status).toBe(mode.startsWith("reject401")?"waiting_…
+       |                            ^
+    104|    const before=await db.select().from(executionCalls).where(eq(execut…
+    105|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/20]⎯
+
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashAfterChild
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashUnknownChild
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashCancel
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDeadline
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashPauseResume
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashFallback
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashTwoNodes
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashMixed
+ FAIL  src/integration/chat-generation-worker.test.ts > 同一真实 Worker 内部结构化生成：crashDiagnosis
+AssertionError: expected 'unknown_result' to be 'running' // Object.is equality
+
+Expected: "running"
+Received: "unknown_result"
+
+ ❯ src/integration/chat-generation-worker.test.ts:85:32
+     83|    const [interrupted]=await db.select().from(executionTasks).where(eq…
+     84|    const before=await db.select().from(executionCalls).where(eq(execut…
+     85|    expect(interrupted?.status).toBe("running");
+       |                                ^
+     86|    expect(before.find(call=>call.kind==="tool")).toMatchObject({status…
+     87|    expect(before.find(call=>call.parentCallId)).toMatchObject(mode==="…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/20]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  20 failed (20)
+   Start at  19:26:32
+   Duration  24.64s (transform 1.32s, setup 0ms, import 2.24s, tests 22.26s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

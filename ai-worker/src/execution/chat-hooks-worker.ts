@@ -8,7 +8,8 @@ import {createDurableGenerationModel} from "./durable-generation-model";
 export async function runChatHooksInWorker(callId:string,model:LanguageModel,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  const prepared=chatHooksPreparationSchema.parse(await call("prepareChatHooks",{callId},signal));
  const durable=createDurableGenerationModel({model,operationKey:prepared.operationKey,signal,ports:{
-  reserve:async request=>workerReservationSchema.parse(await call("reserveChatHooksModel",{...request,callId,...(prepared.retryOfCallId?{retryOfCallId:prepared.retryOfCallId}:{})},signal)),
+  // 请求遵循 JSON 契约，显式移除 SDK 可选 undefined，兼容 advanced IPC。
+  reserve:async request=>workerReservationSchema.parse(await call("reserveChatHooksModel",JSON.parse(JSON.stringify({...request,callId,...(prepared.retryOfCallId?{retryOfCallId:prepared.retryOfCallId}:{})})),signal)),
   start:async childId=>{const receipt=workerStartReceiptSchema.parse(await call("startChatHooksModel",{callId:childId},signal));if(receipt.callId!==childId)throw new Error("内部模型启动回执不符");},
   settle:async(childId,input)=>{const receipt=z.object({callId:z.string(),status:z.string()}).parse(await call("settleChatHooksModel",{callId:childId,...input}));if(receipt.callId!==childId || receipt.status!==input.status)throw new Error("内部模型结算回执不符");},
  }});

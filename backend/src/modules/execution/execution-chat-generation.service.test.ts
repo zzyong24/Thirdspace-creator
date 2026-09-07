@@ -16,7 +16,7 @@ import {createDurableGenerationModel} from "@creatoros/ai-worker/durable-generat
 let db:Db,close:()=>void,seq=0;
 const now=()=>"2026-09-06T10:00:00.000Z",budget={maxCalls:20,maxTokens:200000,deadlineMs:600000};
 beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(()=>close());
-async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"="topic.enrich") {
+async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"calibration.diagnose"="topic.enrich") {
   const ctx = {
     userId: "structured-u",
     accountId: `structured-a-${++seq}`,
@@ -97,12 +97,14 @@ async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"="
     },
   };
   hostContext.skillSnapshot.skills.push({...structuredClone(hostContext.skillSnapshot.skills[0]!),skillId:name,effective:{...hostContext.skillSnapshot.skills[0]!.effective,template:"{{title}}",requiredFacets:["title"],outputSchema:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false}}});
+  if(name==="calibration.diagnose") hostContext.skillSnapshot.skills.at(-1)!.effective.outputSchema={type:"object",properties:{dimensions:{type:"array",items:{type:"object",properties:{key:{type:"string"},score:{type:"number"}},required:["key","score"],additionalProperties:false}}},required:["dimensions"],additionalProperties:false};
   if(repair){
    registerOfficialCompletionPolicyAdapter({id:"test.chat-generation-repair",version:"1",supportsSchema:()=>true,toSegments:value=>(value as {oneLiner:string}).oneLiner.split("|").map(()=>({role:"body"}))});
    const skill=hostContext.skillSnapshot.skills.at(-1)!;
    skill.effective.completionPolicy={schemaVersion:1,minSegments:2,maxSegments:null,requiredSequence:[],repairAttempts:1};
    skill.effective.completionPolicyAdapter={id:"test.chat-generation-repair",version:"1"};
   }
+  hostContext.skillSnapshot.skills.sort((a,b)=>a.skillId.localeCompare(b.skillId));
   const prepareGeneration=vi.fn(async()=>({node:name==="topic.enrich"?{capability:name,facets:{title:"原题目"},candidateId:"candidate-original"}:{capability:name,facets:{title:"原定位"}},discovery:name==="positioning.generate"?{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}:null,maxOutputTokens:2048}));
   const check=vi.fn(async()=>({status:"not-applicable" as const}));
   const tools={[name]:{version:"structured-v1",effect:"proposal" as const,execution:"worker.structured-node" as const,parameters:z.object({topic:z.string().optional()}).strict(),approve:check,prepareGeneration}};
@@ -295,4 +297,16 @@ it("定位节点按专属能力重建原 normalizer 结果并保留前采候选�
  await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success});
  expect((await f.service.complete(f.ref,{callId:f.parent.callId})).data).toMatchObject({kind:"positioning.suggestion",suggestion:{oneLiner:"原模型候选",keywords:["","",""]},discovery:{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}});
  expect(f.resolveCredential).toHaveBeenCalledWith({...f.ctx,source:"ai",requestId:`execution:${f.ref.executionTaskId}:${f.ref.attempt}`},"positioning.generate",f.ref,undefined);
+});
+
+it.each([true,false])("聊天诊断从原模型回执恢复，有效评分=%s",async valid=>{
+ const f=await fixture(false,"calibration.diagnose"),request=await next(f),child=await f.service.reserve(f.ref,request);
+ await f.service.start(f.ref,{callId:child.callId});
+ await f.service.settle(f.ref,{callId:child.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:JSON.stringify({dimensions:[{key:valid?"hook":"forged",score:4}]})}]}});
+ const restored=f.make(),out=await restored.complete(f.ref,{callId:f.parent.callId});
+ if(valid) expect(out).toMatchObject({status:"ok",sideEffect:"proposal",data:{kind:"calibration.diagnosis",diagnosis:{dimensions:[{key:"hook",score:4}],verdict:"",mainIssues:[],priorityFixes:[]}}});
+ else expect(out).toMatchObject({status:"error",sideEffect:"none",error:{code:"no_evidence"}});
+ expect(await restored.complete(f.ref,{callId:f.parent.callId})).toEqual(out);
+ expect(f.prepareGeneration).toHaveBeenCalledTimes(1);
+ expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(3);
 });

@@ -1,0 +1,31 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/chat-structured-tool-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-structured-tool-host.test.ts (11 tests | 1 failed) 341ms
+   × 聊天诊断准备沿用通用维度、原文和补充要求，没有宿主模型闭包 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-structured-tool-host.test.ts > 聊天诊断准备沿用通用维度、原文和补充要求，没有宿主模型闭包
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-structured-tool-host.test.ts:70:15
+     68| it("聊天诊断准备沿用通用维度、原文和补充要求，没有宿主模型闭包",async()=>{
+     69|  const f=await fixture(),tool=f.tools["calibration.diagnose"];
+     70|  expect(tool).toBeDefined();expect(tool!.execution).toBe("worker.struc…
+       |               ^
+     71|  const prepared=await tool!.prepareGeneration!(f.ctx,{script:"完整原文\n不应…
+     72|  expect(prepared.node).toMatchObject({capability:"calibration.diagnose…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  19:18:47
+   Duration  1.59s (transform 772ms, setup 0ms, import 1.10s, tests 341ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

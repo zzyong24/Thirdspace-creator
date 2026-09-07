@@ -25,7 +25,7 @@ export function createExecutionChatModelIdentityService(db: Db, deps: {now?:()=>
     if(bound.validationOutcome || bound.effect!=="proposal")throw new ConflictError("当前工具不能取得子模型身份");
     let capability:string;
     if(bound.execution==="worker.script-hooks" && bound.executionToolName==="script.hooks")capability=input.capability;
-    else if(bound.execution==="worker.structured-node" && ["topic.enrich","positioning.generate"].includes(bound.executionToolName))capability=bound.executionToolName;
+    else if(bound.execution==="worker.structured-node" && ["topic.enrich","positioning.generate","calibration.diagnose"].includes(bound.executionToolName))capability=bound.executionToolName;
     else throw new ConflictError("当前工具不是已登记的生成节点");
     if(parent.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新凭据");
     const identities=identitiesSchema.parse(payload.chatModelIdentities??{}), existing=identities[callId];

@@ -27,7 +27,7 @@ export const chatWorkerInputSchema = z.object({
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.web-read" && (tool.name!=="web.read" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"网页读取声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.research" && (tool.name!=="material.gather" || tool.effect!=="none"))ctx.addIssue({code:"custom",message:"研究执行声明与工具身份不符",path:["tools",index,"execution"]});
   const names = value.tools.map(tool => tool.name);
-  for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.structured-node" && (!["topic.enrich","positioning.generate"].includes(tool.name) || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"结构化子节点声明与工具身份不符",path:["tools",index,"execution"]});
+  for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.structured-node" && (!["topic.enrich","positioning.generate","calibration.diagnose"].includes(tool.name) || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"结构化子节点声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.script-hooks" && (tool.name!=="script.hooks" || tool.effect!=="proposal"))ctx.addIssue({code:"custom",message:"内部开场执行声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="host.task-submit" && (!chatSubmittedTaskType(tool.name) || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"事务任务提交声明与工具身份不符",path:["tools",index,"execution"]});
   if (new Set(names.map(chatToolProviderName)).size !== names.length)

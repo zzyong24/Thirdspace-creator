@@ -7,8 +7,8 @@ type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>[
 async function fixture(){
  const ctx={userId:"u",accountId:"a",source:"ai" as const,requestId:"r"},execution={executionTaskId:"task",attempt:2,fenceToken:"fence"};
  const controller=new AbortController();
- const definitions=(await prepareChatToolDefinitions(buildChatTools(["topic.enrich","positioning.generate"],{} as ChatToolDeps),{workerStructuredNodes:true})).definitions;
- const restored={context:{...ctx},modelInput:{tools:definitions},hostContext:{chatContext:{selection:{kind:"candidate",ids:["candidate-original"],label:"选中的标题"}},structuredContext:{positioningBrief:"旧定位事实甲",accountsBrief:"旧账号",learningsBrief:"复盘",signalsBrief:"评论",knowledgeBrief:"资料"},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{skills:[{skillId:"topic.enrich"},{skillId:"positioning.generate"}]}}};
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(["topic.enrich","positioning.generate","calibration.diagnose"],{} as ChatToolDeps),{workerStructuredNodes:true})).definitions;
+ const restored={context:{...ctx},modelInput:{tools:definitions},hostContext:{chatContext:{selection:{kind:"candidate",ids:["candidate-original"],label:"选中的标题"}},structuredContext:{positioningBrief:"旧定位事实甲",accountsBrief:"旧账号",learningsBrief:"复盘",signalsBrief:"评论",knowledgeBrief:"资料"},structuredGeneration:{version:1,maxOutputTokens:2048},skillSnapshot:{skills:[{skillId:"topic.enrich"},{skillId:"positioning.generate"},{skillId:"calibration.diagnose"}]}}};
  const read=vi.fn(async()=>structuredClone(restored) as unknown as Restored),works=vi.fn(async()=>"真实作品"),discovery=vi.fn(async():Promise<PositioningDiscoverySnapshot|null>=>null);
  const resolve=createChatStructuredTaskToolHost({read},{readWorks:works,getPositioningDiscovery:discovery});
  const tools=await resolve(ctx,{} as Restored["modelInput"],execution,controller.signal);
@@ -63,4 +63,13 @@ it("异步读取期间调用方修改参数不会串入本次生成",async()=>{
  const pending=f.tools["topic.enrich"]!.prepareGeneration!(f.ctx,input,f.scope);
  input.verifiedBrief="后来的事实";release(structuredClone(f.restored) as unknown as Restored);
  expect((await pending).node.facets.knowledge).toContain("最初事实");
+});
+
+it("聊天诊断准备沿用通用维度、原文和补充要求，没有宿主模型闭包",async()=>{
+ const f=await fixture(),tool=f.tools["calibration.diagnose"];
+ expect(tool).toBeDefined();expect(tool!.execution).toBe("worker.structured-node");expect(tool!.execute).toBeUndefined();
+ const prepared=await tool!.prepareGeneration!(f.ctx,{title:"",script:"完整原文\n不应摘要",extraBrief:"  只审结构  "},f.scope);
+ expect(prepared.node).toMatchObject({capability:"calibration.diagnose",facets:{title:"选中的标题",script:"完整原文\n不应摘要",positioning:"旧定位事实甲"}});
+ expect(prepared.node.facets.extraBrief).toContain("只审结构");expect(prepared.node.facets.rubricBlock).toContain("key=hook");
+ expect(prepared.discovery).toBeNull();expect(f.works).not.toHaveBeenCalled();
 });

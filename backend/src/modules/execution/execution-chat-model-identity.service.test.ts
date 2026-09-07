@@ -13,7 +13,7 @@ const now=()=>"2026-09-06T10:00:00.000Z", ctx={userId:"child-u",accountId:"child
 const budget={maxCalls:20,maxTokens:100000,deadlineMs:600000};
 const credential={apiFormat:"openai_chat" as const,baseUrl:"https://child.invalid/v1",model:"child-model",token:"secret-token-original",structuredOutputs:false};
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close());
-async function fixture(name:"topic.enrich"|"positioning.generate"="topic.enrich") {
+async function fixture(name:"topic.enrich"|"positioning.generate"|"calibration.diagnose"="topic.enrich") {
  const id=`chat-child-${++seq}`,tools={[name]:{version:"1",effect:"proposal" as const,execution:"worker.structured-node" as const,parameters:z.object({})}};
  const input=chatWorkerInputSchema.parse({kind:"chat.run",operationKey:id,capability:"copilot.assist",userId:ctx.userId,accountId:ctx.accountId,conversationId:id,sourceMessageId:id,system:"系统",messages:[{role:"user",content:"生成"}],maxSteps:4,maxOutputTokens:1024,tools:[{name,version:"1",effect:"proposal",execution:"worker.structured-node",description:"生成",parameters:{type:"object"}}]});
  const tasks=createPersistentTaskService(db,{now}),task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput:input}});
@@ -29,7 +29,7 @@ async function fixture(name:"topic.enrich"|"positioning.generate"="topic.enrich"
  await createExecutionModelIdentityService(db,{now}).pin(ref,"copilot.assist",{...credential,model:"main-chat-model"});
  return {task,tasks,ref,ledger,parent,tools,service:createExecutionChatModelIdentityService(db,{now,tools})};
 }
-it.each(["topic.enrich","positioning.generate"] as const)("%s 独立冻结专属模型，不借用主聊天身份，密钥不落快照",async name=>{
+it.each(["topic.enrich","positioning.generate","calibration.diagnose"] as const)("%s 独立冻结专属模型，不借用主聊天身份，密钥不落快照",async name=>{
  const f=await fixture(name);await f.service.pin(f.ref,f.parent.id,credential);
  expect(await f.service.read(f.ref,f.parent.id)).toMatchObject({capability:name,model:"child-model",customEndpoint:true});
  expect(await createExecutionModelIdentityService(db,{now}).read(f.ref)).toMatchObject({capability:"copilot.assist",model:"main-chat-model"});

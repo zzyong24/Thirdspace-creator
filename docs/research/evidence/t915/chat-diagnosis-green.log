@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/chat-structured-tool-host.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai-runtime/chat-structured-tool-nodes.test.ts src/modules/execution/execution-chat-model-identity.service.test.ts src/modules/ai-runtime/chat-runner.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  5 passed (5)
+      Tests  195 passed (195)
+   Start at  19:25:20
+   Duration  5.72s (transform 3.40s, setup 0ms, import 6.12s, tests 5.97s, environment 0ms)
