@@ -8,12 +8,8 @@ import "server-only";
 //   douyin-cdp.ts re-export 保持既有 import 路径全部兼容。
 
 /** 未登录抖音创作者中心 —— 调用方据此提示用户先「登录抖音」(弹窗扫码),区别于真正抓取失败。 */
-export class DouyinNotLoggedInError extends Error {
-  constructor() {
-    super("DouyinNotLoggedInError: 未检测到抖音创作者中心登录态,请先扫码登录");
-    this.name = "DouyinNotLoggedInError";
-  }
-}
+import { DouyinNotLoggedInError } from "@creatoros/ai-worker/douyin-errors";
+export { DouyinNotLoggedInError };
 
 /** 页面命中验证码/人机校验。新内容雷达严格路径必须把它标为 blocked，不能折叠成合法空数组。 */
 export class DouyinCaptchaError extends Error {

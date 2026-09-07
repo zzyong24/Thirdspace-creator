@@ -67,6 +67,14 @@
     "./douyin-transcribe-source": {
       "types": "./src/runtime/douyin-transcribe-source.ts",
       "default": "./src/runtime/douyin-transcribe-source.ts"
+    },
+    "./douyin-transcribe-detail": {
+      "types": "./src/runtime/douyin-transcribe-detail.ts",
+      "default": "./src/runtime/douyin-transcribe-detail.ts"
+    },
+    "./douyin-errors": {
+      "types": "./src/runtime/douyin-errors.ts",
+      "default": "./src/runtime/douyin-errors.ts"
     }
   },
   "scripts": {

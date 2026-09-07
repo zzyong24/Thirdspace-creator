@@ -1,3 +1,4 @@
+import { fetchDouyinVideoUrlViaDetail as fetchWorkerDouyinVideoUrlViaDetail, AWEME_DETAIL_API, mapDetailErr } from "@creatoros/ai-worker/douyin-transcribe-detail";
 import {
   DouyinAudioFetchError, normalizeDouyinPlaybackUrl, parseDouyinVideoUrl, parseAwemeDetail,
   fetchDouyinVideoUrl as fetchWorkerDouyinVideoUrl,
@@ -61,75 +62,9 @@ import {
 //   退避重试(默认 2s/5s/10s),全部失败才抛**原错**(保留 DouyinExportError 分类语义不变)。
 // ---------------------------------------------------------------------------
 
-/** gotoWithRetry 只依赖 page 的 goto + waitForTimeout(三处调用点的 page 接口都满足;
- *  fake page 单测同样只需这两件事)。 */
-interface GotoCapablePage {
-  goto(url: string, opts?: unknown): Promise<unknown>;
-  waitForTimeout(ms: number): Promise<void>;
-}
-
-export interface GotoWithRetryOptions {
-  signal?: AbortSignal;
-  /** 重试次数(不含首次尝试);默认 3(共 4 次)。 */
-  retries?: number;
-  /** 每次 goto 的超时(ms);默认 60000(与原裸 goto 一致)。 */
-  timeoutMs?: number;
-  /** 每次失败后的退避序列(ms);默认 [2000, 5000, 10000],超出长度取末位。 */
-  backoffMs?: number[];
-  /** goto 的 waitUntil(默认 domcontentloaded,与三处原调用一致)。 */
-  waitUntil?: "domcontentloaded" | "load" | "networkidle" | "commit";
-  /** 日志用短标签(默认取 url);标识是哪一步导航失败/自愈。 */
-  label?: string;
-  /** 敏感会话路径可关闭通用原错日志，由调用方记录脱敏分类。 */
-  logRetries?: boolean;
-}
-
-/**
- * [T-202] 带退避重试的 page.goto。瞬时导航抖动(超时/网络)→ 退避后重试;直到成功或用尽重试
- * 抛**最后一次的原错**(不吞、不改类型 —— 上层 mapExportErr / catch 分类逻辑不变)。成功但曾
- * 失败过会 console.log 一行自愈记录,真机可观测「本轮是否踩到瞬时超时」。退避用 page.waitForTimeout
- * (真 Playwright / fake page 都有),不额外引 timer 依赖,保持可注入单测。
- */
-export async function gotoWithRetry(
-  page: GotoCapablePage,
-  url: string,
-  opts: GotoWithRetryOptions = {},
-): Promise<void> {
-  const retries = opts.retries ?? 3;
-  const timeoutMs = opts.timeoutMs ?? 60_000;
-  const backoff = opts.backoffMs ?? [2_000, 5_000, 10_000];
-  const waitUntil = opts.waitUntil ?? "domcontentloaded";
-  const label = opts.label ?? url;
-  const logRetries = opts.logRetries ?? true;
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    opts.signal?.throwIfAborted();
-    try {
-      await page.goto(url, { waitUntil, timeout: timeoutMs });
-      opts.signal?.throwIfAborted();
-      if (attempt > 0 && logRetries) {
-        console.log(
-          `[douyin-goto] ${label} 第 ${attempt + 1} 次尝试成功(前 ${attempt} 次瞬时失败已自愈)`,
-        );
-      }
-      return;
-    } catch (err) {
-      opts.signal?.throwIfAborted();
-      lastErr = err;
-      if (attempt >= retries) break; // 用尽重试 → 跳出抛原错
-      const waitMs = backoff[Math.min(attempt, backoff.length - 1)] ?? 2_000;
-      if (logRetries) {
-        console.warn(
-          `[douyin-goto] ${label} 第 ${attempt + 1} 次导航失败(${String(
-            (err as { message?: unknown })?.message ?? err,
-          ).slice(0, 160)}),${waitMs}ms 后重试`,
-        );
-      }
-      await page.waitForTimeout(waitMs);
-    }
-  }
-  throw lastErr;
-}
+import { gotoWithRetry, type GotoCapablePage } from "@creatoros/ai-worker/browser/navigation-retry";
+export { gotoWithRetry };
+export type { GotoWithRetryOptions } from "@creatoros/ai-worker/browser/navigation-retry";
 
 // ---------------------------------------------------------------------------
 // 纯函数(可单测)
@@ -1641,14 +1576,6 @@ export async function fetchDouyinSearchVideos(
 //   (transcribe-runner)诚实跳过,不再当失败重试。
 // ---------------------------------------------------------------------------
 
-// detail 接口(darkhorse.py / SEARCH_ITEM_API 同款 webapp 公参;页内 fetch 借登录态)。
-const AWEME_DETAIL_API =
-  "https://www.douyin.com/aweme/v1/web/aweme/detail/?device_platform=webapp&aid=6383" +
-  "&channel=channel_pc_web&pc_client_type=1&version_code=170400&version_name=17.4.0" +
-  "&cookie_enabled=true&screen_width=1920&screen_height=1080&browser_language=zh-CN" +
-  "&browser_platform=Win32&browser_name=Chrome&browser_version=126.0.0.0" +
-  "&browser_online=true&platform=PC&aweme_id={id}";
-
 const DOUYIN_SHARE_HOSTS = ["douyin.com", "iesdouyin.com"] as const;
 
 function isDouyinShareHost(hostname: string): boolean {
@@ -1976,16 +1903,6 @@ export interface FetchVideoUrlViaDetailDeps {
   ) => Promise<SearchCapableContext>;
 }
 
-// detail 回落的错误 → classify 输入映射:验证码 → captcha(明确风控,顶退避);
-// aweme_detail 空(已删除/不可见,内容性质)→ empty-item-list(content-error 不退避);
-// 其余(网络/导航)→ net-timeout 单次。
-function mapDetailErr(err: unknown): ClassifyInput {
-  const raw = err instanceof Error ? err.message : String(err ?? "");
-  if (raw.includes("验证码")) return { kind: "captcha" };
-  if (raw.includes("aweme_detail 为空")) return { kind: "empty-item-list" };
-  return { kind: "net-timeout", consecutiveTimeouts: 1 };
-}
-
 /**
  * [T-243] 登录态回落取流:openContext(.auth/)→ 落到该作品页(建立 referer/风控上下文)→
  * 页内 fetch detail 接口(credentials:include 借登录态)→ parseAwemeDetail。
@@ -1993,77 +1910,18 @@ function mapDetailErr(err: unknown): ClassifyInput {
  * 不硬闯(单作品跳过,调用方分类计数)。每次调用 acquire 一次 creator-center gate(限流纪律)。
  * openContext 端口注入,故图集/验证码/解析分支可确定性单测。
  */
-export async function fetchDouyinVideoUrlViaDetail(
+export function fetchDouyinVideoUrlViaDetail(
   opts: FetchVideoUrlViaDetailOptions,
   deps: FetchVideoUrlViaDetailDeps = {},
 ): Promise<DouyinVideoSource> {
-  opts.signal?.throwIfAborted();
-  const gateway = opts.gateway ?? instantNoopGateway;
-  const openCtx =
-    deps.openContext ??
-    ((authDir: string, headless: boolean) =>
-      openContext(authDir, headless, opts.signal) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
-  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
-  try {
-    opts.signal?.throwIfAborted();
-    // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 search/user-posts)。
-    const cookies = await ctx.cookies("https://www.douyin.com");
-    opts.signal?.throwIfAborted();
-    const loggedIn = cookies.some(
-      (c) => c.name === "sessionid" || c.name === "sessionid_ss",
-    );
-    if (!loggedIn) throw new DouyinNotLoggedInError();
-    const page = ctx.pages()[0] ?? (await ctx.newPage());
-
-    const id = encodeURIComponent(opts.awemeId);
-    // 每 aweme acquire 一次限流网关(导航 + 页内 fetch 算一次请求节奏,同现有纪律)。
-    return await withDouyinChannel(
-      gateway,
-      "creator-center",
-      async () => {
-        opts.signal?.throwIfAborted();
-        // 先落到作品页(建立 referer/风控上下文),再页内 fetch detail(T-235b 搜索同款)。
-        await gotoWithRetry(
-          page as unknown as GotoCapablePage,
-          `https://www.douyin.com/video/${id}`,
-          { timeoutMs: 60_000, label: `作品详情(${opts.awemeId})`, signal: opts.signal },
-        );
-        opts.signal?.throwIfAborted();
-        await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
-
-        // 验证码检测:body 前 300 字含「验证」→ 不硬闯,该作品跳过(抛出让调用方分类计数)。
-        const bodyHead = await page
-          .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
-          .catch(() => "");
-        opts.signal?.throwIfAborted();
-        if (bodyHead.includes("验证")) {
-          throw new DouyinAudioFetchError(
-            `fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme ${opts.awemeId})`,
-          );
-        }
-
-        // 页内 fetch detail 接口(credentials:include 借登录态;fn 自包含,只引用页面全局)。
-        const json = await page.evaluate<unknown, string>(async (u: string) => {
-          try {
-            const r = await fetch(u, { credentials: "include" });
-            return (await r.json()) as unknown;
-          } catch (e) {
-            return { error: e instanceof Error ? e.message : String(e) };
-          }
-        }, AWEME_DETAIL_API.replace("{id}", id));
-
-        opts.signal?.throwIfAborted();
-        return parseAwemeDetail(json);
-      },
-      mapDetailErr,
-      opts.signal,
-    );
-  } catch(error) {
-    opts.signal?.throwIfAborted();throw error;
-  } finally {
-    await lifetime.close().catch(() => {}); // 关我们自起的 Chromium
-  }
+  return fetchWorkerDouyinVideoUrlViaDetail(opts, {
+    openContext: (signal) => deps.openContext
+      ? deps.openContext(opts.authDir, true)
+      : openContext(opts.authDir, true, signal) as unknown as Promise<SearchCapableContext>,
+    channel: (run, mapError, signal) => withDouyinChannel(
+      opts.gateway ?? instantNoopGateway, "creator-center", run, mapError, signal,
+    ),
+  });
 }
 
 /** 组合策略在 Worker；登录浏览器取详情仍是待迁移的宿主端口。 */

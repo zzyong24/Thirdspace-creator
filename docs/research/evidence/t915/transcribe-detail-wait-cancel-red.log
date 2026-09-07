@@ -1,0 +1,47 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run -- src/runtime/douyin-transcribe-detail.test.ts -t '页面等待期间取消'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/douyin-transcribe-detail.test.ts (7 tests | 1 failed) 13ms
+     × 页面等待期间取消后不再观察或取流，关闭一次 5ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/douyin-transcribe-detail.test.ts > Worker 转写详情读取 > 页面等待期间取消后不再观察或取流，关闭一次
+ FAIL  src/runtime/douyin-transcribe-detail.test.ts > Worker 转写详情读取 > 页面等待期间取消后不再观察或取流，关闭一次
+ FAIL  src/runtime/douyin-transcribe-detail.test.ts > Worker 转写详情读取 > 页面等待期间取消后不再观察或取流，关闭一次
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      [Function anonymous],
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/douyin-transcribe-detail.test.ts:54:28
+     52|     vi.mocked(f.page.waitForTimeout).mockImplementation(async () => { …
+     53|     await expect(fetchDouyinVideoUrlViaDetail({ awemeId: 'a', signal: …
+     54|     expect(f.evaluate).not.toHaveBeenCalled();
+       |                            ^
+     55|     expect(f.close).toHaveBeenCalledTimes(1);
+     56|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 95 passed (96)
+      Tests  1 failed | 872 passed (873)
+   Start at  00:47:37
+   Duration  12.42s (transform 5.77s, setup 0ms, import 25.79s, tests 88.83s, environment 7ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/ai-worker@0.1.0 test: `vitest run -- src/runtime/douyin-transcribe-detail.test.ts -t '页面等待期间取消'`
+Exit status 1

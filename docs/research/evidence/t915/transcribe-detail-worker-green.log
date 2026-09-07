@@ -1,0 +1,13 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run -- src/runtime/douyin-transcribe-detail.test.ts src/runtime/douyin-transcribe-source.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  96 passed (96)
+      Tests  873 passed (873)
+   Start at  00:47:20
+   Duration  19.90s (transform 2.94s, setup 0ms, import 16.39s, tests 134.70s, environment 6ms)
+
