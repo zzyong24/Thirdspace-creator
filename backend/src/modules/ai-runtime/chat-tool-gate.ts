@@ -106,6 +106,7 @@ export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   // [T-385] project.transcribe —— 异步 dispatch(kind === 工具名)。dispatch 失败/无项目上下文/
   // 无抖音锚 → 门兜结构占位(taskId/projectId=null,前端渲诚实错误文本)。
   "project.transcribe": { kind: "project.transcribe", extras: { taskId: null, projectId: null } },
+  "research.autonomous": {kind:"research.autonomous",extras:{taskId:null,projectId:null}},
   "material.gather": {
     kind: "material.gather",
     // [T-684] 浏览器失败时明确 unavailable；禁止再伪装成模型记忆素材。

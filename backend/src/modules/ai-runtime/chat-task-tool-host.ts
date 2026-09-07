@@ -1,3 +1,4 @@
+import {createChatAgenticResearchTaskHost,type ChatAgenticResearchTaskPorts} from "./chat-agentic-research-task-host";
 import {createChatPublishTaskHost,type ChatPublishTaskPorts} from "./chat-publish-task-host";
 import {createChatScriptDraftTaskHost,type ChatScriptDraftTaskPorts} from "./chat-script-draft-tool-host";
 import {createChatVideoEditTaskToolHost,type ChatVideoEditPorts} from "./chat-video-edit-tool-host";
@@ -21,8 +22,9 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
- ports:{publish?:ChatPublishTaskPorts;scriptDraft?:ChatScriptDraftTaskPorts;videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
+ ports:{agenticResearch?:ChatAgenticResearchTaskPorts;publish?:ChatPublishTaskPorts;scriptDraft?:ChatScriptDraftTaskPorts;videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
+ const agenticResearch=ports.agenticResearch?createChatAgenticResearchTaskHost(reader,ports.agenticResearch):null;
  const publish=ports.publish?createChatPublishTaskHost(reader,ports.publish):null;
  const scriptDraft=ports.scriptDraft?createChatScriptDraftTaskHost(reader,ports.scriptDraft):null;
  const webRead=ports.webRead?createChatWebReadTaskToolHost(reader):null;
@@ -36,7 +38,7 @@ export function createChatTaskToolHost(
  const planning=ports.planning?createChatPlanningTaskHost(reader,ports.planning):null,local=ports.local?createChatLocalTaskToolHost(reader,ports.local):null;
  const material=ports.material?createChatMaterialTaskHost(reader,readers,ports.material):null;
  return async(context,input,execution,signal)=>{
-  const groups=await Promise.all([review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
+  const groups=await Promise.all([agenticResearch?.(context,input,execution,signal)??{},review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
   groups.push(await publish?.(context,input,execution,signal)??{});
   groups.push(await scriptDraft?.(context,input,execution,signal)??{});
   groups.push(await videoEdit?.(context,input,execution,signal)??{});

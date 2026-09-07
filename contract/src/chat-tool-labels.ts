@@ -52,6 +52,7 @@ export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
     purpose:
       "复杂观点可先生成核心论点、支撑、证据与反驳；明确采纳后才用于生成式写稿",
   },
+  "research.autonomous": {name:"自主调研",purpose:"持续搜索、阅读和核实资料，以真实来源交付调研结果"},
   "material.gather": {
     name: "搜集素材",
     purpose: "围绕主题搜一批可用素材(案例/数据/金句)",

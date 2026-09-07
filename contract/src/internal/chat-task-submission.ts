@@ -1,6 +1,7 @@
 /** 经审计的纯事务工具与真实子任务类型。提交和租约恢复必须使用同一映射。 */
 const taskTypes:Readonly<Record<string,string>>=Object.freeze({
  "planning.thesis":"planning.thesis",
+ "research.autonomous":"exec.agentic.research",
  "material.generate":"asset.generate",
  "publish.package":"publish.platform_adapt",
  "script.draft":"script.draft",
