@@ -148,3 +148,4 @@ export {createTranscribeBusinessExecutionService} from "./transcribe-business-ex
 export {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 export * from "./chat-production-runtime";
 export {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
+export {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
