@@ -1,0 +1,60 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:49152) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 1 次导航失败(context closed),2000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 2 次导航失败(context closed),5000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 3 次导航失败(context closed),10000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 1 次导航失败(context closed),2000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 2 次导航失败(context closed),5000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 3 次导航失败(context closed),10000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 1 次导航失败(context closed),2000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 2 次导航失败(context closed),5000ms 后重试
+
+stderr | src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+[douyin-goto] 作品详情(one) 第 3 次导航失败(context closed),10000ms 后重试
+
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts (6 tests | 1 failed) 16ms
+   × 登录态导航中取消，不进入导航重试或详情请求 4ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 登录态导航中取消，不进入导航重试或详情请求
+AssertionError: expected "vi.fn()" to be called 1 times, but got 4 times
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts:35:15
+     33|  const page={goto,waitForTimeout,evaluate},ctx={cookies:async()=>[{nam…
+     34|  await expect(fetchDouyinVideoUrlViaDetail({awemeId:'one',authDir:'/un…
+     35|  expect(goto).toHaveBeenCalledTimes(1);expect(waitForTimeout).not.toHa…
+       |               ^
+     36| });
+     37| it('真实 runner 经兼容入口取消抽音，等进程关闭后退出且不重试或落稿',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  23:07:19
+   Duration  2.50s (transform 1.14s, setup 125ms, import 1.73s, tests 16ms, environment 441ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/ingestion/douyin-transcribe-cancel.test.ts

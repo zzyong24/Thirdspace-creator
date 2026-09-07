@@ -1,0 +1,80 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t915-whisper-450cfe65/ai-worker
+
+ ❯ src/runtime/transcribe-audio-extract.test.ts (10 tests | 5 failed) 9035ms
+     × 预取消不解析、不 spawn 3006ms (retry x2)
+     × 取消 kill 后等 close，期间 error 与输出不能提前结算 5ms (retry x2)
+     × kill throw 后本次拒绝，旧 close 前阻止新 spawn，随后恢复 3006ms (retry x2)
+     × kill false 后本次拒绝，旧 close 前阻止新 spawn，随后恢复 3008ms (retry x2)
+     × 完成后移除取消监听器，后续 abort 不 kill 已结束进程 6ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 预取消不解析、不 spawn
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 预取消不解析、不 spawn
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 预取消不解析、不 spawn
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/transcribe-audio-extract.test.ts:24:3
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 取消 kill 后等 close，期间 error 与输出不能提前结算
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 取消 kill 后等 close，期间 error 与输出不能提前结算
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 取消 kill 后等 close，期间 error 与输出不能提前结算
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'SIGKILL' ]
+
+Number of calls: 0
+
+ ❯ src/runtime/transcribe-audio-extract.test.ts:34:24
+     32|     const run = f.extract("fake-url", c.signal).catch(error => { done …
+     33|     const child = f.children[0]!; c.abort(); await tick();
+     34|     expect(child.kill).toHaveBeenCalledWith("SIGKILL"); expect(done).t…
+       |                        ^
+     35|     child.emit("error", new Error("进程终止中")); child.stdout.emit("data",…
+     36|     child.emit("close", null); expect(await run).toMatchObject({ name:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill throw 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill throw 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill throw 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill false 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill false 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > kill false 后本次拒绝，旧 close 前阻止新 spawn，随后恢复
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/transcribe-audio-extract.test.ts:39:29
+     37|     const next = f.extract("another-url"); f.children[1]!.succeed(); a…
+     38|   });
+     39|   it.each(["throw", "false"])("kill %s 后本次拒绝，旧 close 前阻止新 spawn，随后恢复",…
+       |                             ^
+     40|     const f = fixture(); const c = new AbortController();
+     41|     const run = streamAudioFromVideo("fake-url", f.deps, c.signal).cat…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 完成后移除取消监听器，后续 abort 不 kill 已结束进程
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 完成后移除取消监听器，后续 abort 不 kill 已结束进程
+ FAIL  src/runtime/transcribe-audio-extract.test.ts > Worker 独立抽音 > 完成后移除取消监听器，后续 abort 不 kill 已结束进程
+AssertionError: expected "removeEventListener" to be called with arguments: [ 'abort', Any<Function> ]
+
+Number of calls: 0
+
+ ❯ src/runtime/transcribe-audio-extract.test.ts:51:20
+     49|     const f = fixture(); const c = new AbortController(); const remove…
+     50|     const run = f.extract("fake-url", c.signal); f.children[0]!.succee…
+     51|     expect(remove).toHaveBeenCalledWith("abort", expect.any(Function))…
+       |                    ^
+     52|   });
+     53|   it("解析器惰性执行，解析错误和 spawn 错误保持旧文字", async () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 5 passed (10)
+   Start at  23:02:13
+   Duration  9.21s (transform 26ms, setup 0ms, import 35ms, tests 9.03s, environment 0ms)
+

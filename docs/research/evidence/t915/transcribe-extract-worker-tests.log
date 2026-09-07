@@ -1,0 +1,13 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/runtime/transcribe-audio-extract.test.ts src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local-cancel.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  3 passed (3)
+      Tests  51 passed (51)
+   Start at  23:08:01
+   Duration  291ms (transform 154ms, setup 0ms, import 335ms, tests 46ms, environment 0ms)
+

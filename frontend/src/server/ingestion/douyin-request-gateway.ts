@@ -203,14 +203,24 @@ export async function withDouyinChannel<T>(
   channel: DouyinChannel,
   fn: () => Promise<T>,
   mapErr?: (err: unknown) => ClassifyInput,
+  signal?: AbortSignal,
 ): Promise<T> {
-  await gateway.acquire(channel);
+  signal?.throwIfAborted();
+  // 取消只撤回等待者；晚到许可没有继续执行网络动作的权力。
+  await new Promise<void>((resolve,reject)=>{
+    const abort=()=>reject(signal?.reason);
+    signal?.addEventListener('abort',abort,{once:true});
+    Promise.resolve().then(()=>{signal?.throwIfAborted();return gateway.acquire(channel);}).then(resolve,reject).finally(()=>signal?.removeEventListener('abort',abort));
+  });
+  signal?.throwIfAborted();
   try {
     const r = await fn();
+    signal?.throwIfAborted();
     // 成功:清退避(report 可能返 Promise,不 await —— 持久化是后台副作用)。
     void gateway.report(channel, "ok");
     return r;
   } catch (e) {
+    signal?.throwIfAborted();
     // 失败:据映射分类 → report(throttled/content-error),**报告后仍抛原错**。
     const input: ClassifyInput = mapErr
       ? mapErr(e)

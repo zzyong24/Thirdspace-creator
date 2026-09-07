@@ -1,0 +1,83 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/transcribe-runner.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 把同一个取消信号传给首次和重试取流、抽音端口
+[transcribe-runner] aweme one 抽音失败,重取直链重试一次: expired
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (28 tests | 1 failed) 22ms
+   × 把同一个取消信号传给首次和重试取流、抽音端口 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 把同一个取消信号传给首次和重试取流、抽音端口
+AssertionError: expected [ undefined, undefined, …(2) ] to deeply equal [ Array(4) ]
+
+- Expected
++ Received
+
+  [
+-   AbortSignal {
+-     Symbol(kEvents): Map {},
+-     Symbol(events.maxEventTargetListeners): 0,
+-     Symbol(events.maxEventTargetListenersWarned): false,
+-     Symbol(kHandlers): Map {},
+-     Symbol(kAborted): false,
+-     Symbol(kReason): undefined,
+-     Symbol(kComposite): false,
+-   },
+-   AbortSignal {
+-     Symbol(kEvents): Map {},
+-     Symbol(events.maxEventTargetListeners): 0,
+-     Symbol(events.maxEventTargetListenersWarned): false,
+-     Symbol(kHandlers): Map {},
+-     Symbol(kAborted): false,
+-     Symbol(kReason): undefined,
+-     Symbol(kComposite): false,
+-   },
+-   AbortSignal {
+-     Symbol(kEvents): Map {},
+-     Symbol(events.maxEventTargetListeners): 0,
+-     Symbol(events.maxEventTargetListenersWarned): false,
+-     Symbol(kHandlers): Map {},
+-     Symbol(kAborted): false,
+-     Symbol(kReason): undefined,
+-     Symbol(kComposite): false,
+-   },
+-   AbortSignal {
+-     Symbol(kEvents): Map {},
+-     Symbol(events.maxEventTargetListeners): 0,
+-     Symbol(events.maxEventTargetListenersWarned): false,
+-     Symbol(kHandlers): Map {},
+-     Symbol(kAborted): false,
+-     Symbol(kReason): undefined,
+-     Symbol(kComposite): false,
+-   },
++   undefined,
++   undefined,
++   undefined,
++   undefined,
+  ]
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:755:18
+    753|  deps.streamAudio=async(...args)=>{signals.push(args[2]);if(++attempts…
+    754|  await runTranscribe(ctx,{id:'forward-signal',taskType:'transcribe.dou…
+    755|  expect(signals).toEqual([controller.signal,controller.signal,controll…
+       |                  ^
+    756| });
+    757| it('冷却等待可立即取消，不等待到期、不重新抓取',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 27 passed (28)
+   Start at  23:02:54
+   Duration  597ms (transform 281ms, setup 0ms, import 445ms, tests 22ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai-runtime/transcribe-runner.test.ts`
+Exit status 1

@@ -4406,15 +4406,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               //   可见作品就是解析不出)→ 回落登录态 detail 接口(.auth/douyin/<accountId>,
               //   页内 fetch 借 cookie);③ 图集识别 → { kind:"image-album" }(runner 诚实跳过)。
               // [gate-F7 插装点①] 两条路各走各的 channel 限流(iesdouyin / creator-center),注真单例。
-              fetchVideoUrl: async (c, awemeId) =>
+              fetchVideoUrl: async (c, awemeId, signal) =>
                 (await loadDouyinCdp()).fetchDouyinVideoSource({
                   awemeId,
                   authDir: douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
                   gateway: douyinGateway,
+                  signal,
                 }),
               // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
-              streamAudio: async (_c, playUrl) =>
-                (await loadDouyinCdp()).streamAudioFromVideo(playUrl),
+              streamAudio: async (_c, playUrl, signal) =>
+                (await loadDouyinCdp()).streamAudioFromVideo(playUrl, undefined, signal),
               // 解析 ASR model(transcribe.audio;用户云端配置优先，未配回退本地 Whisper)。
               resolveTranscribeSpec: (c) =>
                 resolveTranscribeSpecFn(c, {

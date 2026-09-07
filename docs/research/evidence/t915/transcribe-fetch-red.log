@@ -1,0 +1,107 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:48371) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+[transcribe] aweme one iesdouyin 解析失败,回落登录态 detail 路径:parseDouyinVideoUrl: absent
+
+stdout | src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+[transcribe] aweme one iesdouyin 解析失败,回落登录态 detail 路径:parseDouyinVideoUrl: absent
+
+stdout | src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+[transcribe] aweme one iesdouyin 解析失败,回落登录态 detail 路径:parseDouyinVideoUrl: absent
+
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts (4 tests | 4 failed) 60033ms
+   × 限流排队取消立即返回，晚到许可不执行请求也不记录风控失败 60017ms (retry x2)
+   × 匿名请求收到取消信号且取消不伪装成网络风控 11ms (retry x2)
+   × 解析失败同时取消，不再启动登录态兜底 2ms (retry x2)
+   × 打开登录态期间取消，关闭迟到的上下文且不读取或导航 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 限流排队取消立即返回，晚到许可不执行请求也不记录风控失败
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 限流排队取消立即返回，晚到许可不执行请求也不记录风控失败
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 限流排队取消立即返回，晚到许可不执行请求也不记录风控失败
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts:5:1
+      3| import {withDouyinChannel} from './douyin-request-gateway';
+      4|
+      5| it('限流排队取消立即返回，晚到许可不执行请求也不记录风控失败',async()=>{
+       | ^
+      6|  const controller=new AbortController();let release!:()=>void;
+      7|  const gate={acquire:()=>new Promise<void>(resolve=>{release=resolve;}…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 匿名请求收到取消信号且取消不伪装成网络风控
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 匿名请求收到取消信号且取消不伪装成网络风控
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 匿名请求收到取消信号且取消不伪装成网络风控
+AssertionError: expected DouyinAudioFetchError: parseDouyinVideoUr… to match object { name: 'AbortError' }
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ DouyinAudioFetchError {
++   "name": "DouyinAudioFetchError",
+  }
+
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts:15:119
+     13|  const controller=new AbortController(),report=vi.fn();let received:Ab…
+     14|  const fetcher=vi.fn(async(_url:unknown,init?:RequestInit)=>{received=…
+     15|  await expect(fetchDouyinVideoUrl('one',{fetch:fetcher,gateway:{acquir…
+       |                                                                                                                       ^
+     16|  expect(received?.aborted).toBe(true);expect(report).not.toHaveBeenCal…
+     17| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 解析失败同时取消，不再启动登录态兜底
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts:20:230
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 打开登录态期间取消，关闭迟到的上下文且不读取或导航
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 打开登录态期间取消，关闭迟到的上下文且不读取或导航
+ FAIL  src/server/ingestion/douyin-transcribe-cancel.test.ts > 打开登录态期间取消，关闭迟到的上下文且不读取或导航
+AssertionError: expected TypeError: Cannot read properties of unde… to match object { name: 'AbortError' }
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ TypeError {
++   "message": "Cannot read properties of undefined (reading 'some')",
+  }
+
+ ❯ src/server/ingestion/douyin-transcribe-cancel.test.ts:26:168
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  23:03:49
+   Duration  61.14s (transform 323ms, setup 104ms, import 450ms, tests 60.03s, environment 355ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/ingestion/douyin-transcribe-cancel.test.ts

@@ -746,6 +746,14 @@ it('抽音阶段取消不再重取直链或启动 ASR',async()=>{
  await expect(runTranscribe(ctx,{id:'cancel-stream',taskType:'transcribe.douyin',inputData:{awemeIds:['one']}},deps)).rejects.toMatchObject({name:'AbortError'});
  expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);expect(spies.transcribeAudio).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
 });
+it('把同一个取消信号传给首次和重试取流、抽音端口',async()=>{
+ const {deps}=makeDeps({awemeIds:['one']});const controller=new AbortController();deps.signal=controller.signal;
+ const signals:unknown[]=[];let attempts=0;
+ deps.fetchVideoUrl=async(...args)=>{signals.push(args[2]);return {playUrl:'https://fixture.invalid/audio'};};
+ deps.streamAudio=async(...args)=>{signals.push(args[2]);if(++attempts===1)throw Error('expired');return new Uint8Array([1]);};
+ await runTranscribe(ctx,{id:'forward-signal',taskType:'transcribe.douyin',inputData:{awemeIds:['one']}},deps);
+ expect(signals).toEqual([controller.signal,controller.signal,controller.signal,controller.signal]);
+});
 it('冷却等待可立即取消，不等待到期、不重新抓取',async()=>{
  const {deps,spies}=makeDeps({awemeIds:['cooldown']});const controller=new AbortController();deps.signal=controller.signal;
  spies.fetchVideoUrl.mockRejectedValue(Object.assign(new Error('cooldown'),{name:'DouyinCooldownError'}));

@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import type { MetricRecord } from "@creatoros/backend/modules/ingestion";
 // [T-326 RT-H09] ffmpeg 路径统一解析链(env → 随包 sidecar → PATH/常见目录 → 诚实报错)——
 // 与 ai-worker whisper-local PCM 解码共用同一把解析器,根治硬编码 /opt/homebrew/bin/ffmpeg。
-import { resolveFfmpegPath } from "@creatoros/ai-worker";
+import { streamAudioFromVideo as extractTranscribeAudio, TranscribeAudioExtractError, type StreamAudioDeps, type SpawnedAudioProcess } from "@creatoros/ai-worker";
 // [T-326 B-04] 错误类抽到零依赖叶子模块(见下方 re-export 注释);本文件内部 throw/instanceof 用它。
 import {
   DouyinCaptchaError,
@@ -59,6 +59,7 @@ interface GotoCapablePage {
 }
 
 export interface GotoWithRetryOptions {
+  signal?: AbortSignal;
   /** 重试次数(不含首次尝试);默认 3(共 4 次)。 */
   retries?: number;
   /** 每次 goto 的超时(ms);默认 60000(与原裸 goto 一致)。 */
@@ -92,8 +93,10 @@ export async function gotoWithRetry(
   const logRetries = opts.logRetries ?? true;
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    opts.signal?.throwIfAborted();
     try {
       await page.goto(url, { waitUntil, timeout: timeoutMs });
+      opts.signal?.throwIfAborted();
       if (attempt > 0 && logRetries) {
         console.log(
           `[douyin-goto] ${label} 第 ${attempt + 1} 次尝试成功(前 ${attempt} 次瞬时失败已自愈)`,
@@ -101,6 +104,7 @@ export async function gotoWithRetry(
       }
       return;
     } catch (err) {
+      opts.signal?.throwIfAborted();
       lastErr = err;
       if (attempt >= retries) break; // 用尽重试 → 跳出抛原错
       const waitMs = backoff[Math.min(attempt, backoff.length - 1)] ?? 2_000;
@@ -448,7 +452,6 @@ const DY_MOBILE_UA =
   "EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1";
 
 // ffmpeg 从直链抽音需带 Referer(抖音 CDN 校验来源),否则 403。对齐 skill DL_HEADERS。
-const DY_VIDEO_REFERER = "https://www.douyin.com/";
 
 /** iesdouyin 分享页解析结果:无水印播放直链 + 可选封面。 */
 export interface DouyinVideoUrl {
@@ -560,6 +563,7 @@ export function parseDouyinVideoUrl(html: string): DouyinVideoUrl {
 
 /** fetchDouyinVideoUrl 的可注入依赖(默认真全局 fetch;单测注 fake,不走网络)。 */
 export interface FetchDouyinVideoUrlDeps {
+  signal?: AbortSignal;
   fetch: typeof fetch;
   // T-038b [gate-F7 插装点①]:iesdouyin channel 限流网关(无 cookie,封 IP,minInterval 9s)。
   // 默认 instantNoopGateway(既有单测不传即不真等);runtime 注真单例。
@@ -601,12 +605,14 @@ export async function fetchDouyinVideoUrl(
   awemeId: string,
   deps: FetchDouyinVideoUrlDeps = REAL_FETCH_DEPS,
 ): Promise<DouyinVideoUrl> {
+  deps.signal?.throwIfAborted();
   const gateway = deps.gateway ?? instantNoopGateway;
   // [gate-F7 插装点①] iesdouyin channel:acquire→取直链→report(classify)。报告后仍抛原错。
   return withDouyinChannel(
     gateway,
     "iesdouyin",
     async () => {
+      deps.signal?.throwIfAborted();
       const pageUrl = `https://www.iesdouyin.com/share/video/${encodeURIComponent(
         awemeId,
       )}/`;
@@ -619,9 +625,10 @@ export async function fetchDouyinVideoUrl(
               "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.9",
           },
-          signal: AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS),
+          signal: deps.signal ? AbortSignal.any([deps.signal, AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS)]) : AbortSignal.timeout(IESDOUYIN_FETCH_TIMEOUT_MS),
         });
       } catch (err) {
+        deps.signal?.throwIfAborted();
         throw new DouyinAudioFetchError(
           `fetchDouyinVideoUrl: 请求 iesdouyin 失败 (aweme ${awemeId}): ${
             err instanceof Error ? err.message : String(err)
@@ -634,150 +641,23 @@ export async function fetchDouyinVideoUrl(
         );
       }
       const html = await res.text();
+      deps.signal?.throwIfAborted();
       return parseDouyinVideoUrl(html);
     },
     mapIesdouyinErr,
+    deps.signal,
   );
 }
 
-/** streamAudioFromVideo 的可注入依赖(默认 child_process.spawn;单测注 fake,不跑真 ffmpeg)。
- *  只收窄到 stdout/stderr/exit 这三件事,便于 fake。 */
-export interface SpawnedProcess {
-  stdout: {
-    on(event: "data", cb: (chunk: Uint8Array) => void): void;
-  };
-  stderr: {
-    on(event: "data", cb: (chunk: Uint8Array) => void): void;
-  };
-  on(event: "error", cb: (err: Error) => void): void;
-  on(event: "close", cb: (code: number | null) => void): void;
-}
-
-export interface StreamAudioDeps {
-  spawn: (command: string, args: string[]) => SpawnedProcess;
-  /** ffmpeg 可执行路径(显式注入则短路解析链;默认走 resolveFfmpegPath 四级解析,RT-H09)。 */
-  ffmpegPath?: string;
-  /** 解析器可注入(单测 fake 解析链结果/抛错;默认真 resolveFfmpegPath)。 */
-  resolveFfmpeg?: () => string;
-}
-
-const REAL_SPAWN_DEPS: StreamAudioDeps = {
-  spawn: (command, args) => {
-    // 动态引入 child_process(server-only;避免打进客户端 bundle)。
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { spawn } = require("node:child_process") as typeof import("node:child_process");
-    // [T-372 W5] windowsHide:Win 打包态 sidecar 无 console,spawn ffmpeg 会闪黑窗。
-    return spawn(command, args, { windowsHide: true }) as unknown as SpawnedProcess;
-  },
-  // ffmpegPath 不再硬编码 —— 每次抽音时惰性走 resolveFfmpegPath 解析链
-  // (env CREATOROS_FFMPEG_PATH → 随包 sidecar bin/ → PATH/常见安装目录 → 诚实报错)。
-};
-
-/**
- * ffmpeg 从无水印直链**流式**抽音频(16kHz / 单声道 / 64k mp3),收 stdout mp3 bytes(不落盘)。
- * 忠实移植 skill `ffmpeg_stream_to_audio` 的命令(带 Referer 头 → pipe:1 stdout):
- *   ffmpeg -headers "Referer: https://www.douyin.com/\r\n" -i {url} -vn -ar 16000 -ac 1 -b:a 64k -f mp3 pipe:1
- * spawn 可注入(默认 child_process.spawn),故 D2 runner 里这层单测注 fake(返固定 bytes / 模拟非 0 退出)。
- * 非 0 退出 / spawn error / 无 bytes → 抛 DouyinAudioFetchError(runner 标该 aweme 失败,其余继续)。
- * ffmpeg 找不到(解析链全 miss / env 配错)同样归 DouyinAudioFetchError —— 信息里带安装/配置
- * 引导,任务失败明细能看到「装 ffmpeg 或配 CREATOROS_FFMPEG_PATH」,不静默。
- */
-export async function streamAudioFromVideo(
-  playUrl: string,
-  deps: StreamAudioDeps = REAL_SPAWN_DEPS,
-): Promise<Uint8Array> {
-  // 解析链:显式注入 ffmpegPath > 注入的解析器 > 真 resolveFfmpegPath(env → 随包 → PATH → 报错)。
-  let ffmpegPath: string;
-  try {
-    ffmpegPath = deps.ffmpegPath ?? (deps.resolveFfmpeg ?? resolveFfmpegPath)();
-  } catch (err) {
-    throw new DouyinAudioFetchError(
-      `streamAudioFromVideo: ${err instanceof Error ? err.message : String(err)}`,
-    );
+/** 兼容旧入口的错误类型；抽音与取消由 Worker 运行时唯一实现。 */
+export type { StreamAudioDeps };
+export type SpawnedProcess = SpawnedAudioProcess;
+export async function streamAudioFromVideo(playUrl: string, deps?: StreamAudioDeps, signal?: AbortSignal): Promise<Uint8Array> {
+  try { return await extractTranscribeAudio(playUrl, deps, signal); }
+  catch (error) {
+    if (error instanceof TranscribeAudioExtractError) throw new DouyinAudioFetchError(error.message);
+    throw error;
   }
-  // -headers 需以 \r\n 结尾(ffmpeg HTTP header 注入格式,对齐 skill headers_str)。
-  const args = [
-    "-y",
-    "-hide_banner",
-    "-loglevel",
-    "error",
-    "-headers",
-    `Referer: ${DY_VIDEO_REFERER}\r\n`,
-    "-i",
-    playUrl,
-    "-vn",
-    "-ar",
-    "16000",
-    "-ac",
-    "1",
-    "-b:a",
-    "64k",
-    "-f",
-    "mp3",
-    "pipe:1",
-  ];
-
-  return await new Promise<Uint8Array>((resolve, reject) => {
-    let child: SpawnedProcess;
-    try {
-      child = deps.spawn(ffmpegPath, args);
-    } catch (err) {
-      reject(
-        new DouyinAudioFetchError(
-          `streamAudioFromVideo: 无法启动 ffmpeg(${ffmpegPath}): ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-        ),
-      );
-      return;
-    }
-
-    const chunks: Uint8Array[] = [];
-    let stderrTail = "";
-    child.stdout.on("data", (chunk) => {
-      chunks.push(chunk);
-    });
-    child.stderr.on("data", (chunk) => {
-      // 只留尾部一小段供报错(ffmpeg 错误信息在 stderr)。
-      stderrTail = (stderrTail + Buffer.from(chunk).toString("utf8")).slice(-500);
-    });
-    child.on("error", (err) => {
-      reject(
-        new DouyinAudioFetchError(
-          `streamAudioFromVideo: ffmpeg 进程错误: ${err.message}`,
-        ),
-      );
-    });
-    child.on("close", (code) => {
-      if (code !== 0) {
-        reject(
-          new DouyinAudioFetchError(
-            `streamAudioFromVideo: ffmpeg 非 0 退出 (code=${code}): ${
-              stderrTail || "<no stderr>"
-            }`,
-          ),
-        );
-        return;
-      }
-      // 拼接 stdout mp3 bytes。
-      const total = chunks.reduce((n, c) => n + c.byteLength, 0);
-      if (total === 0) {
-        reject(
-          new DouyinAudioFetchError(
-            "streamAudioFromVideo: ffmpeg 退出 0 但未产出音频字节(直链失效/去水印无效?)",
-          ),
-        );
-        return;
-      }
-      const out = new Uint8Array(total);
-      let off = 0;
-      for (const c of chunks) {
-        out.set(c, off);
-        off += c.byteLength;
-      }
-      resolve(out);
-    });
-  });
 }
 
 // ---------------------------------------------------------------------------
@@ -2316,6 +2196,7 @@ export function parseAwemeDetail(json: unknown): DouyinVideoSource {
 }
 
 export interface FetchVideoUrlViaDetailOptions {
+  signal?: AbortSignal;
   awemeId: string;
   /** 按号登录态目录(.auth/douyin/<accountId>);detail 接口页内 fetch 借它的 cookie。 */
   authDir: string;
@@ -2351,15 +2232,19 @@ export async function fetchDouyinVideoUrlViaDetail(
   opts: FetchVideoUrlViaDetailOptions,
   deps: FetchVideoUrlViaDetailDeps = {},
 ): Promise<DouyinVideoSource> {
+  opts.signal?.throwIfAborted();
   const gateway = opts.gateway ?? instantNoopGateway;
   const openCtx =
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
       openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
   const ctx = await openCtx(opts.authDir, true);
+  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   try {
+    opts.signal?.throwIfAborted();
     // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 search/user-posts)。
     const cookies = await ctx.cookies("https://www.douyin.com");
+    opts.signal?.throwIfAborted();
     const loggedIn = cookies.some(
       (c) => c.name === "sessionid" || c.name === "sessionid_ss",
     );
@@ -2372,18 +2257,21 @@ export async function fetchDouyinVideoUrlViaDetail(
       gateway,
       "creator-center",
       async () => {
+        opts.signal?.throwIfAborted();
         // 先落到作品页(建立 referer/风控上下文),再页内 fetch detail(T-235b 搜索同款)。
         await gotoWithRetry(
           page as unknown as GotoCapablePage,
           `https://www.douyin.com/video/${id}`,
-          { timeoutMs: 60_000, label: `作品详情(${opts.awemeId})` },
+          { timeoutMs: 60_000, label: `作品详情(${opts.awemeId})`, signal: opts.signal },
         );
+        opts.signal?.throwIfAborted();
         await page.waitForTimeout(3000); // 等页面就绪(建立会话上下文)
 
         // 验证码检测:body 前 300 字含「验证」→ 不硬闯,该作品跳过(抛出让调用方分类计数)。
         const bodyHead = await page
           .evaluate(() => (document.body?.innerText ?? "").slice(0, 300))
           .catch(() => "");
+        opts.signal?.throwIfAborted();
         if (bodyHead.includes("验证")) {
           throw new DouyinAudioFetchError(
             `fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme ${opts.awemeId})`,
@@ -2400,12 +2288,16 @@ export async function fetchDouyinVideoUrlViaDetail(
           }
         }, AWEME_DETAIL_API.replace("{id}", id));
 
+        opts.signal?.throwIfAborted();
         return parseAwemeDetail(json);
       },
       mapDetailErr,
+      opts.signal,
     );
+  } catch(error) {
+    opts.signal?.throwIfAborted();throw error;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await lifetime.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
 
@@ -2420,6 +2312,7 @@ export interface FetchVideoSourceDeps {
 }
 
 export interface FetchVideoSourceOptions {
+  signal?: AbortSignal;
   awemeId: string;
   /** 登录态目录(回落路径用;iesdouyin 匿名路径不需要)。 */
   authDir: string;
@@ -2441,19 +2334,23 @@ export async function fetchDouyinVideoSource(
   opts: FetchVideoSourceOptions,
   deps: FetchVideoSourceDeps = {},
 ): Promise<DouyinVideoSource> {
+  opts.signal?.throwIfAborted();
   const fetchIesdouyin =
     deps.fetchIesdouyin ??
     ((awemeId: string) =>
       fetchDouyinVideoUrl(awemeId, {
         fetch: (...args) => fetch(...args),
         gateway: opts.gateway,
+        signal: opts.signal,
       }));
   const fetchViaDetail = deps.fetchViaDetail ?? fetchDouyinVideoUrlViaDetail;
 
   try {
     const url = await fetchIesdouyin(opts.awemeId);
+    opts.signal?.throwIfAborted();
     return { kind: "video", ...url };
   } catch (err) {
+    opts.signal?.throwIfAborted();
     const msg = err instanceof Error ? err.message : String(err ?? "");
     const parseFailed =
       err instanceof DouyinAudioFetchError && msg.includes("parseDouyinVideoUrl");
@@ -2466,6 +2363,7 @@ export async function fetchDouyinVideoSource(
       awemeId: opts.awemeId,
       authDir: opts.authDir,
       gateway: opts.gateway,
+      signal: opts.signal,
     });
   }
 }

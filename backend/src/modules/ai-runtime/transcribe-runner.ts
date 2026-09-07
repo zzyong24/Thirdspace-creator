@@ -138,11 +138,13 @@ export interface TranscribeRunnerDeps {
   fetchVideoUrl: (
     ctx: RequestContext,
     awemeId: string,
+    signal?: AbortSignal,
   ) => Promise<DouyinVideoSource>;
   /** 从直链抽音频 bytes(ffmpeg)。host 绑 streamAudioFromVideo(注入真 spawn);测试注 fake。 */
   streamAudio: (
     ctx: RequestContext,
     playUrl: string,
+    signal?: AbortSignal,
   ) => Promise<Uint8Array>;
   /**
    * 解析 ASR model spec。T-641 起云端配置优先、未配置回退本地 Whisper。host 绑
@@ -304,7 +306,7 @@ export async function runTranscribe(
       // 2) 取音频 + 转写。取音频失败(DouyinAudioFetchError 等)→ 标该 aweme 失败、其余继续。
       //    ASR 未配置则立即抛到批级 catch，避免剩余作品重复取流和重复报错。
       try {
-        const src = await deps.fetchVideoUrl(ctx, awemeId);
+        const src = await deps.fetchVideoUrl(ctx, awemeId, signal);
         checkStopped();
 
         // [T-243] 图集作品(无口播音频)→ 诚实跳过:写占位锚(ensureTranscriptArtifact 现有
@@ -343,17 +345,17 @@ export async function runTranscribe(
         // 再失败照旧单作品失败继续(抛给外层 catch 分类计数)。
         let audioBytes: Uint8Array;
         try {
-          audioBytes = await deps.streamAudio(ctx, src.playUrl);
+          audioBytes = await deps.streamAudio(ctx, src.playUrl, signal);
         } catch (ffErr) {
           checkStopped();if(isAsrExecutionControlError(ffErr))throw ffErr;
           console.warn(
             `[transcribe-runner] aweme ${awemeId} 抽音失败,重取直链重试一次:`,
             ffErr instanceof Error ? ffErr.message : ffErr,
           );
-          const retrySrc = await deps.fetchVideoUrl(ctx, awemeId);
+          const retrySrc = await deps.fetchVideoUrl(ctx, awemeId, signal);
           checkStopped();
           if (retrySrc.kind === "image-album") throw ffErr; // 重取竟变图集(极罕见)→ 按原错处理
-          audioBytes = await deps.streamAudio(ctx, retrySrc.playUrl);
+          audioBytes = await deps.streamAudio(ctx, retrySrc.playUrl, signal);
         }
         checkStopped();
         const spec = deps.prepareTranscribeSpec
