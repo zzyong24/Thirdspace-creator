@@ -289,9 +289,15 @@ function realFfmpegDeps(): FfmpegDecoderDeps {
 export function createFfmpegPcmDecoder(
   deps: FfmpegDecoderDeps = realFfmpegDeps(),
 ): (audioBytes: Uint8Array, signal?: AbortSignal) => Promise<Float32Array> {
+  // kill 失败不代表进程已经停止；同实例在收到旧 child 的 close 前禁止新建解码资源。
+  const unconfirmed = new Set<ReturnType<FfmpegDecoderDeps["spawn"]>>();
   return (audioBytes: Uint8Array, signal?: AbortSignal) =>
     new Promise<Float32Array>((resolve, reject) => {
       throwIfAborted(signal);
+      if (unconfirmed.size > 0) {
+        reject(new Error("createFfmpegPcmDecoder: 上次 ffmpeg 尚未确认退出，暂时无法开始新的解码"));
+        return;
+      }
       // 解析链:显式注入 ffmpegPath > 注入的解析器 > 真 resolveFfmpegPath(env → 随包 → PATH → 报错)。
       let ffmpegPath: string;
       try {
@@ -348,6 +354,7 @@ export function createFfmpegPcmDecoder(
           // kill 调用失败不能从事件监听器逸出，也不能永远等不会到来的 close。
           // 不声称子进程已退出；停止保留输出并向调用方报告失败。
           released = true;
+          unconfirmed.add(child);
           chunks.length = 0;
           signal?.removeEventListener("abort", cancel);
           reject(cancelled ? abortError() : new Error(
@@ -370,6 +377,7 @@ export function createFfmpegPcmDecoder(
         failure = new Error(`createFfmpegPcmDecoder: ffmpeg 进程错误: ${err.message}`);
       });
       child.on("close", (code) => {
+        unconfirmed.delete(child);
         signal?.removeEventListener("abort", cancel);
         if (released) return;
         if (cancelled) { reject(abortError()); return; }

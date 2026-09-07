@@ -200,4 +200,28 @@ describe('本地 Whisper 取消与资源归属', () => {
         }
     }, 1000);
 
+    it('ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复', async () => {
+        const children: Array<ReturnType<typeof makeChild>> = [];
+        function makeChild() {
+            return Object.assign(new EventEmitter(), {
+                stdout: new EventEmitter(), stderr: new EventEmitter(),
+                kill: vi.fn(() => { throw new Error('kill 失败'); }),
+            });
+        }
+        const spawn = vi.fn(() => { const child = makeChild(); children.push(child); return child; });
+        const decode = createFfmpegPcmDecoder({ ffmpegPath: 'fake', spawn });
+        const controller = new AbortController();
+        const first = decode(new Uint8Array([1]), controller.signal).catch(error => error);
+        controller.abort();
+        expect(await first).toMatchObject({ name: 'AbortError' });
+        await expect(decode(new Uint8Array([2]))).rejects.toThrow('尚未确认退出');
+        expect(spawn).toHaveBeenCalledTimes(1);
+        children[0]!.emit('close', 1);
+        const next = decode(new Uint8Array([3]));
+        expect(spawn).toHaveBeenCalledTimes(2);
+        children[1]!.stdout.emit('data', new Uint8Array(new Float32Array([0.5]).buffer));
+        children[1]!.emit('close', 0);
+        expect(Array.from(await next)).toEqual([0.5]);
+    }, 1000);
+
 });
