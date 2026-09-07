@@ -1,0 +1,103 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/runtime/browser/chromium-guard-lifecycle.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts (3 tests | 3 failed) 35024ms
+   × 启动超时后，迟到浏览器关闭确认前不得清锁或放行后继 10010ms (retry x2)
+   × 关闭失败不能释放活浏览器，后续成功关闭才放行 10006ms (retry x2)
+   × 排队取消不执行预检，也不释放前一浏览器的占用 15005ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时后，迟到浏览器关闭确认前不得清锁或放行后继
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:9:105
+      7|  vi.useFakeTimers();const close=deferred<void>(),late={close:vi.fn(()=…
+      8|  const first=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5},de…
+      9|  const second=guardedLaunch(profile,next,{},deps);await vi.advanceTime…
+       |                                                                                                         ^
+     10|  launch.resolve(late);await vi.advanceTimersByTimeAsync(0);expect(late…
+     11|  close.resolve();const ctx=await second;expect(next).toHaveBeenCalledT…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时后，迟到浏览器关闭确认前不得清锁或放行后继
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时后，迟到浏览器关闭确认前不得清锁或放行后继
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:6:1
+      4| function deferred<T>(){let resolve!:(value:T)=>void;const promise=new …
+      5| afterEach(()=>vi.useRealTimers());
+      6| it('启动超时后，迟到浏览器关闭确认前不得清锁或放行后继',async()=>{
+       | ^
+      7|  vi.useFakeTimers();const close=deferred<void>(),late={close:vi.fn(()=…
+      8|  const first=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5},de…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不能释放活浏览器，后续成功关闭才放行
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array []
+
+
+Number of calls: 1
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:17:61
+     15|  const first=await guardedLaunch(profile,async()=>({close}),{},deps),n…
+     16|  await expect(first.close()).rejects.toThrow('still alive');const seco…
+     17|  expect(liveContextCount(profile)).toBe(1);expect(next).not.toHaveBeen…
+       |                                                             ^
+     18| });
+     19| it('排队取消不执行预检，也不释放前一浏览器的占用',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不能释放活浏览器，后续成功关闭才放行
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不能释放活浏览器，后续成功关闭才放行
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:13:1
+     11|  close.resolve();const ctx=await second;expect(next).toHaveBeenCalledT…
+     12| });
+     13| it('关闭失败不能释放活浏览器，后续成功关闭才放行',async()=>{
+       | ^
+     14|  vi.useFakeTimers();const profile='/isolated/guard-close-failed',close…
+     15|  const first=await guardedLaunch(profile,async()=>({close}),{},deps),n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 排队取消不执行预检，也不释放前一浏览器的占用
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 排队取消不执行预检，也不释放前一浏览器的占用
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 排队取消不执行预检，也不释放前一浏览器的占用
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:19:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  00:24:10
+   Duration  35.22s (transform 28ms, setup 0ms, import 40ms, tests 35.02s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

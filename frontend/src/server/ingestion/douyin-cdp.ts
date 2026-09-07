@@ -677,7 +677,8 @@ export async function ensureChromiumInstalled(): Promise<void> {
 }
 
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
-async function openContext(authDir: string, headless: boolean) {
+async function openContext(authDir: string, headless: boolean, signal?: AbortSignal) {
+  signal?.throwIfAborted();
   const { chromium } = await import("@playwright/test");
   const { mkdir } = await import("node:fs/promises");
   const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
@@ -699,7 +700,7 @@ async function openContext(authDir: string, headless: boolean) {
           ],
         }),
       ),
-    { label: "抖音浏览器窗口" },
+    { label: "抖音浏览器窗口", signal },
   );
 }
 
@@ -2001,7 +2002,7 @@ export async function fetchDouyinVideoUrlViaDetail(
   const openCtx =
     deps.openContext ??
     ((authDir: string, headless: boolean) =>
-      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
+      openContext(authDir, headless, opts.signal) as unknown as Promise<SearchCapableContext>);
   const ctx = await openCtx(opts.authDir, true);
   const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   try {

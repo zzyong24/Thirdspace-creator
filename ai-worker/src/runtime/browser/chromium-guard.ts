@@ -152,6 +152,10 @@ interface Closable {
 }
 
 export interface GuardedLaunchOptions {
+  /** 取消排队或等待启动；已启动但尚未关闭的资源继续持有占用。 */
+  signal?: AbortSignal;
+  /** 等待前一个浏览器退出的上限，默认同启动超时。 */
+  queueTimeoutMs?: number;
   /** launch 超时毫秒(默认 DEFAULT_LAUNCH_TIMEOUT_MS)。 */
   timeoutMs?: number;
   /** 错误文案里的入口名(如「登录窗口」「网页读取」),默认「浏览器」。 */
@@ -192,138 +196,77 @@ export async function guardedLaunch<T extends Closable>(
   deps: ChromiumGuardDeps = {},
 ): Promise<T> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS;
-  const label = opts.label ?? "浏览器";
-
-  const attempt = async (runPreflight = true): Promise<T> => {
-    if (runPreflight && profileDir && liveContextCount(profileDir) === 0) {
-      await ensureChromiumLaunchable(profileDir, deps);
-    }
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const launching = launch();
-    try {
-      const result = await Promise.race([
+  const label = opts.label ?? "浏览器",signal=opts.signal;
+  signal?.throwIfAborted();
+  let resourceUnresolved=false;
+  let releaseQueue=()=>{};
+  const track=(ctx:T):T=>{
+    if(profileDir)liveContexts.set(profileDir,liveContextCount(profileDir)+1);
+    let released=false;
+    const release=()=>{
+      if(released)return;released=true;resourceUnresolved=false;
+      if(profileDir)liveContexts.set(profileDir,Math.max(0,liveContextCount(profileDir)-1));
+      releaseQueue();
+    };
+    const close=ctx.close.bind(ctx);
+    ctx.close=async()=>{await close();release();};
+    try{ctx.on?.('close',release);}catch{/* 无事件时以 close 成功作为关闭证据。 */}
+    return ctx;
+  };
+  const attempt=async(runPreflight=true):Promise<T>=>{
+    signal?.throwIfAborted();
+    if(runPreflight&&profileDir&&liveContextCount(profileDir)===0)await ensureChromiumLaunchable(profileDir,deps);
+    signal?.throwIfAborted();
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    let onAbort:(()=>void)|undefined;
+    resourceUnresolved=true;
+    const launching=Promise.resolve().then(()=>{signal?.throwIfAborted();return launch();}).then(track,error=>{resourceUnresolved=false;throw error;});
+    try{
+      return await Promise.race([
         launching,
-        new Promise<never>((_, reject) => {
-          timer = setTimeout(
-            () =>
-              reject(
-                new BrowserLaunchError(
-                  `${label}启动超时(${Math.round(timeoutMs / 1000)} 秒)——可能有浏览器残留进程未退干净,已自动清理,请重试;若反复失败请重启应用。`,
-                ),
-              ),
-            timeoutMs,
-          );
+        new Promise<never>((_,reject)=>{
+          timer=setTimeout(()=>reject(new BrowserLaunchError(`${label}启动超时(${Math.round(timeoutMs/1000)} 秒)，正在等待已启动的浏览器退出；退出后请重试。`)),timeoutMs);
+          onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();
         }),
       ]);
-      return result;
-    } catch (err) {
-      // 超时后底层 launch 若迟到成功 → 顺手关掉,别泄漏进程。
-      launching.then((ctx) => void ctx.close().catch(() => {})).catch(() => {});
-      if (err instanceof BrowserLaunchError) throw err;
-      if (isChromiumProfileLockedFailure(err)) {
-        throw new BrowserLaunchError(
-          `${label}的登录档案仍被占用。已自动清理并重试一次；请关闭相关登录窗口后再试。`,
-          CHROMIUM_PROFILE_LOCKED_CODE,
-        );
-      }
-      const msg = err instanceof Error ? err.message : String(err);
-      throw new BrowserLaunchError(
-        `${label}没能启动:${msg.split("\n")[0]}。已自动清理残留进程与锁,请重试;若反复失败请重启应用。`,
-      );
-    } finally {
-      if (timer) clearTimeout(timer);
+    }catch(error){
+      // 超时/取消先返回；队列仍由未确认启动或迟到 context 持有，直到实际退出。
+      if(resourceUnresolved)void launching.then(async ctx=>{await ctx.close();},()=>{releaseQueue();}).catch(()=>{});
+      signal?.throwIfAborted();
+      if(error instanceof BrowserLaunchError)throw error;
+      if(isChromiumProfileLockedFailure(error))throw new BrowserLaunchError(`${label}的登录档案仍被占用。已自动清理并重试一次；请关闭相关登录窗口后再试。`,CHROMIUM_PROFILE_LOCKED_CODE);
+      const message=error instanceof Error?error.message:String(error);
+      throw new BrowserLaunchError(`${label}没能启动:${message.split('\n')[0]}。已自动清理残留进程与锁,请重试;若反复失败请重启应用。`);
+    }finally{
+      if(timer)clearTimeout(timer);if(onAbort)signal?.removeEventListener('abort',onAbort);
     }
   };
-
-  const runGuarded = async (): Promise<T> => {
-    let ctx: T;
-    try {
-      ctx = await attempt();
-    } catch (error) {
-      // profile 锁只允许在进程内确认无活 context 后恢复一次。预检仍按 profile
-      // 精确匹配残留 Chromium，绝不碰用户自己的 Chrome；第二次失败直接上抛。
-      if (
-        !profileDir ||
-        liveContextCount(profileDir) !== 0 ||
-        !isChromiumProfileLockedFailure(error)
-      ) {
-        throw error;
-      }
-      console.warn(
-        "[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次",
-      );
-      await ensureChromiumLaunchable(profileDir, deps);
-      ctx = await attempt(false);
+  const runGuarded=async():Promise<T>=>{
+    try{return await attempt();}
+    catch(error){
+      signal?.throwIfAborted();
+      if(!profileDir||resourceUnresolved||liveContextCount(profileDir)!==0||!isChromiumProfileLockedFailure(error))throw error;
+      console.warn('[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次');
+      await ensureChromiumLaunchable(profileDir,deps);return attempt(false);
     }
-    if (profileDir) {
-      liveContexts.set(profileDir, liveContextCount(profileDir) + 1);
-      let released = false;
-      const release = (): void => {
-        if (released) return;
-        released = true;
-        liveContexts.set(profileDir, Math.max(0, liveContextCount(profileDir) - 1));
-      };
-      // close 正常关 → 释放;浏览器崩溃(close 事件)也释放,避免 refcount 卡死让预检永远跳过。
-      const origClose = ctx.close.bind(ctx);
-      ctx.close = async () => {
-        try {
-          await origClose();
-        } finally {
-          release();
-        }
-      };
-      try {
-        ctx.on?.("close", release);
-      } catch {
-        // fake/收窄 context 无 on → close 包装已兜底
-      }
-    }
-    return ctx;
   };
-
-  if (!profileDir) return runGuarded();
-
-  // 同 profile 串行化到 context close：后来者不只等 launch 完成，还要等前一个 context
-  // 释放用户目录。失败路径立即释放；正常 close 与浏览器崩溃的 close event 都幂等释放。
-  const previousLease = launchQueues.get(profileDir) ?? Promise.resolve();
-  let resolveLease!: () => void;
-  const leaseOpen = new Promise<void>((resolve) => {
-    resolveLease = resolve;
-  });
-  const leaseTail = previousLease.catch(() => {}).then(() => leaseOpen);
-  launchQueues.set(profileDir, leaseTail);
-  void leaseTail.finally(() => {
-    if (launchQueues.get(profileDir) === leaseTail) {
-      launchQueues.delete(profileDir);
-    }
-  });
-
-  await previousLease.catch(() => {});
-  let leaseReleased = false;
-  const releaseLease = (): void => {
-    if (leaseReleased) return;
-    leaseReleased = true;
-    resolveLease();
-  };
-
-  try {
-    const ctx = await runGuarded();
-    const originalClose = ctx.close.bind(ctx);
-    ctx.close = async () => {
-      try {
-        await originalClose();
-      } finally {
-        releaseLease();
-      }
-    };
-    try {
-      ctx.on?.("close", releaseLease);
-    } catch {
-      // fake/收窄 context 无 on → close 包装已兜底
-    }
-    return ctx;
-  } catch (error) {
-    releaseLease();
-    throw error;
-  }
+  if(!profileDir)return runGuarded();
+  const previousLease=launchQueues.get(profileDir)??Promise.resolve();
+  let resolveLease!:()=>void;
+  const leaseOpen=new Promise<void>(resolve=>{resolveLease=resolve;});
+  const leaseTail=previousLease.catch(()=>{}).then(()=>leaseOpen);
+  launchQueues.set(profileDir,leaseTail);
+  void leaseTail.finally(()=>{if(launchQueues.get(profileDir)===leaseTail)launchQueues.delete(profileDir);});
+  let released=false;
+  releaseQueue=()=>{if(released)return;released=true;resolveLease();};
+  let onAbort:(()=>void)|undefined;
+  let queueTimer:ReturnType<typeof setTimeout>|undefined;
+  try{
+    await Promise.race([previousLease.catch(()=>{}),new Promise<never>((_,reject)=>{queueTimer=setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),opts.queueTimeoutMs??timeoutMs);onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();})]);
+    if(queueTimer)clearTimeout(queueTimer);
+    if(onAbort)signal?.removeEventListener('abort',onAbort);
+    signal?.throwIfAborted();return await runGuarded();
+  }catch(error){
+    if(!resourceUnresolved)releaseQueue();throw error;
+  }finally{if(queueTimer)clearTimeout(queueTimer);if(onAbort)signal?.removeEventListener('abort',onAbort);}
 }

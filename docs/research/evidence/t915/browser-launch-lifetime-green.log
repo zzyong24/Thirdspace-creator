@@ -1,0 +1,12 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/runtime/browser/chromium-guard-lifecycle.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  00:32:18
+   Duration  192ms (transform 28ms, setup 0ms, import 37ms, tests 11ms, environment 0ms)

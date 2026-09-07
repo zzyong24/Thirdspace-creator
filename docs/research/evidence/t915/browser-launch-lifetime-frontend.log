@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:77451) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77452) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77453) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/ingestion/chromium-guard.test.ts (14 tests | 1 failed) 40114ms
+     × 超时错误文案是人话(含「请重试」) 40031ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/ingestion/chromium-guard.test.ts > guardedLaunch 超时/失败诚实 > 超时错误文案是人话(含「请重试」)
+AssertionError: expected [Function] to throw error matching /启动超时.*请重试/ but got '浏览器启动超时(0 秒)，正在等待已启动的浏览器退出，请稍后重试。'
+
+- Expected:
+/启动超时.*请重试/
+
++ Received:
+"浏览器启动超时(0 秒)，正在等待已启动的浏览器退出，请稍后重试。"
+
+ ❯ src/server/ingestion/chromium-guard.test.ts:250:5
+    248|         fake.deps,
+    249|       ),
+    250|     ).rejects.toThrow(/启动超时.*请重试/);
+       |     ^
+    251|   });
+    252|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/server/ingestion/chromium-guard.test.ts > guardedLaunch 超时/失败诚实 > 超时错误文案是人话(含「请重试」)
+ FAIL  src/server/ingestion/chromium-guard.test.ts > guardedLaunch 超时/失败诚实 > 超时错误文案是人话(含「请重试」)
+Error: Test timed out in 20000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/server/ingestion/chromium-guard.test.ts:241:3
+    239|   });
+    240|
+    241|   it("超时错误文案是人话(含「请重试」)", async () => {
+       |   ^
+    242|     const fake = makeFakeDeps();
+    243|     await expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 141 passed (142)
+   Start at  00:27:21
+   Duration  41.50s (transform 2.24s, setup 687ms, import 3.29s, tests 40.96s, environment 2.33s)

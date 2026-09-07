@@ -1,0 +1,66 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/runtime/browser/chromium-guard-lifecycle.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stderr | src/runtime/browser/chromium-guard-lifecycle.test.ts > 锁失败的一次恢复仍持有队列，不能与后继启动并发
+[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts (4 tests | 1 failed) 13ms
+   × 锁失败的一次恢复仍持有队列，不能与后继启动并发 6ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 锁失败的一次恢复仍持有队列，不能与后继启动并发
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      undefined,
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:28:41
+     26|  const first=guardedLaunch(profile,async()=>{if(++calls===1)throw Obje…
+     27|  const next=vi.fn(async()=>({close:async()=>{}})),second=guardedLaunch…
+     28|  expect(calls).toBe(2);expect(next).not.toHaveBeenCalled();retry.resol…
+       |                                         ^
+     29| });
+     30|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 锁失败的一次恢复仍持有队列，不能与后继启动并发
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 锁失败的一次恢复仍持有队列，不能与后继启动并发
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:28:16
+     26|  const first=guardedLaunch(profile,async()=>{if(++calls===1)throw Obje…
+     27|  const next=vi.fn(async()=>({close:async()=>{}})),second=guardedLaunch…
+     28|  expect(calls).toBe(2);expect(next).not.toHaveBeenCalled();retry.resol…
+       |                ^
+     29| });
+     30|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  00:25:42
+   Duration  190ms (transform 28ms, setup 0ms, import 38ms, tests 13ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
