@@ -1,6 +1,7 @@
+import {createSubmittedTaskPreparationService} from "./submitted-task-preparation.service";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {z} from "zod";
-import {createDb,aiTasks,executionCalls,eq,type Db} from "@creatoros/backend";
+import {createDb,aiTasks,executionCalls,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createAiService} from "../ai/ai.service";
 import {createChatTurnSubmissionService} from "../ai/chat-turn-submission.service";
 import {createPersistentTaskService} from "./persistent-task.service";
@@ -282,4 +283,24 @@ it("子任务事务写入返回时停止，子任务与父回执一起回滚",as
  f.tools["script.draft"].prepareTask=async(...args)=>{const prepared=await original(...args);const commit=prepared.task.commit;return {...prepared,task:{async commit(...params:Parameters<typeof commit>){const child=await commit(...params);controller.abort();return child;}}};};
  await expect(f.hooks.complete(f.ref,{callId:f.parent.callId},controller.signal)).rejects.toThrow();
  expect((await db.select().from(aiTasks).where(eq(aiTasks.accountId,f.ctx.accountId))).filter(r=>r.taskType==="script.draft")).toHaveLength(0);
+});
+
+it("已提交整稿的准备 503 可原任务补偿，重建服务不重置计数",async()=>{
+ const f=await fixture(),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ let time=Date.parse(now());const prepare=vi.fn(async(_ctx:unknown,_id:string,_signal:AbortSignal)=>{}).mockRejectedValueOnce(Object.assign(new Error("fixture temporary"),{statusCode:503,responseHeaders:{"retry-after":"2"}}));
+ const options={deadlineMs:60000,now:()=>time,random:()=>0,prepare,fail:vi.fn(f.ai.markFailed)};
+ let recovery=createSubmittedTaskPreparationService(db,options);
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(1);await recovery.stop();
+ recovery=createSubmittedTaskPreparationService(db,options);await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(1);
+ time+=2000;await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledTimes(2);expect(prepare.mock.calls[1]?.[1]).toBe(id);
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.accountId,f.ctx.accountId))).filter(r=>r.taskType==="script.draft")).toHaveLength(1);
+ const task=await f.ai.getTaskRuntimeData(f.ctx,id);expect(task).toMatchObject({hostTaskPreparation:{attempts:2}});await recovery.stop();
+});
+it("普通 host.task-submit 伪整稿声明不能接管 Worker 提交",async()=>{
+ const f=await fixture(),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const [parent]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const payload=structuredClone(parent!.payload) as {modelInput:{tools:Array<{execution:string}>}};payload.modelInput.tools[0]!.execution="host.task-submit";
+ await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const prepare=vi.fn();const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn()});
+ await expect(recovery.prepare(f.ctx,id)).rejects.toThrow();expect(prepare).not.toHaveBeenCalled();await recovery.stop();
 });

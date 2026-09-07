@@ -140,3 +140,5 @@ export {resolveSearchSpec,type SearchSpec,type ResolveSearchDeps} from "./search
 export {createLocalReadHost,type LocalReadGrantPorts} from "./local-read-host";
 
 export {createAssetBusinessExecutionService} from "./asset-business-execution.service";
+
+export {preparePublishPackageTaskInput} from "./publish-package-task-input";

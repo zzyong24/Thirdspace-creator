@@ -12,8 +12,8 @@ import {createExecutionChatToolPorts,type ChatBackendTool} from "../modules/exec
 let db:Db,close:()=>Promise<void>,seq=0;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close());
 const budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
-async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"|"review.script"="planning.thesis",mixed=false){
- const childType=toolName==="material.generate"?"asset.generate":toolName==="review.script"?"script.review":"planning.thesis";
+async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"|"review.script"|"publish.package"="planning.thesis",mixed=false){
+ const childType=toolName==="material.generate"?"asset.generate":toolName==="review.script"?"script.review":toolName==="publish.package"?"publish.platform_adapt":"planning.thesis";
  const modelToolName=toolName.replaceAll(".","_");
  let time=Date.now();const now=()=>new Date(time).toISOString();
  const ctx={userId:"atomic-host",accountId:`account-${++seq}`,requestId:"test",source:"user" as const};
@@ -130,7 +130,7 @@ it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败�
  expect(f.wakeTask).toHaveBeenCalledTimes(2);expect(f.prepare).toHaveBeenCalledTimes(1);expect((await f.children()).rows).toHaveLength(1);
 });
 
-it.each(["planning.thesis","material.generate","review.script"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
+it.each(["planning.thesis","material.generate","review.script","publish.package"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
  const f=await fixture(false,true,toolName,toolName==="material.generate"),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const child=await f.ai.getTask(f.ctx,id);let time=Date.parse(child.requestedAt);
  const prepare=vi.fn(async()=>{throw Object.assign(new Error("private temporary text"),{statusCode:503,responseHeaders:{"retry-after":"2"}});});
@@ -186,8 +186,8 @@ it.each(["stop","deadline"])("实际纯准备挂起后 %s 能收口，迟到读�
  finally{release?.();await work;await recovery.stop();}
 });
 
-it.each(["ack","rollback","recover","duplicate","cancel"])("素材生成原子提交：%s 不遗留孤立任务或重复提交",async scenario=>{
- const f=await fixture(scenario==="duplicate",scenario!=="ack","material.generate",scenario==="recover");
+it.each((["material.generate","publish.package"] as const).flatMap(toolName=>["ack","rollback","recover","duplicate","cancel"].map(scenario=>({toolName,scenario}))))("$toolName 原子提交：$scenario 不遗留孤立任务或重复提交",async ({toolName,scenario})=>{
+ const f=await fixture(scenario==="duplicate",scenario!=="ack",toolName,scenario==="recover");
  if(scenario==="rollback"){
   const original=f.prepare.getMockImplementation()!;f.prepare.mockImplementation(async(...args)=>({...await original(...args),result:()=>{throw new Error("receipt failure");}}));
   await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.toThrow();expect((await f.children()).rows).toHaveLength(0);
@@ -201,14 +201,14 @@ it.each(["ack","rollback","recover","duplicate","cancel"])("素材生成原子�
    if(port==="settleAgenticTool")return f.host.settle(f.ref,raw);
    throw new Error("unexpected port");
   },execute:async()=>{attempts++;await f.host.execute(f.ref,{callId:f.call.callId});throw new Error("ACK lost after material commit");}});
-  expect(output).toMatchObject({status:"ok",sideEffect:"committed",data:{kind:"material.generate"}});expect(attempts).toBe(1);
+  expect(output).toMatchObject({status:"ok",sideEffect:"committed",data:{kind:toolName}});expect(attempts).toBe(1);
  }else if(scenario==="recover"){
   f.advance();await f.tasks.recoverExpiredLeases();
   const next=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"replacement"});expect(next).toBeTruthy();
   await expect(f.host.execute(f.ref,{callId:f.call.callId})).rejects.toThrow();
   const ref={executionTaskId:f.ref.executionTaskId,attempt:next!.lease.attempt,fenceToken:next!.lease.fenceToken};
   expect((await f.host.reserve(ref,f.request)).status).toBe("reserved");await f.host.start(ref,{callId:f.call.callId});
-  const output=await f.host.execute(ref,{callId:f.call.callId});expect(output).toMatchObject({data:{kind:"material.generate"},sideEffect:"committed"});
+  const output=await f.host.execute(ref,{callId:f.call.callId});expect(output).toMatchObject({data:{kind:toolName},sideEffect:"committed"});
  }else if(scenario==="cancel"){
   const original=f.prepare.getMockImplementation()!;let release!:()=>void;
   f.prepare.mockImplementation(async(...args)=>{await new Promise<void>(r=>{release=r;});return original(...args);});
@@ -225,7 +225,7 @@ it.each(["ack","rollback","recover","duplicate","cancel"])("素材生成原子�
    expect(await f.host.execute(f.ref,{callId:f.call.callId})).toEqual(committed);
   }
  }
- const children=(await f.children()).rows;expect(children).toHaveLength(1);expect(children[0]).toMatchObject({taskType:"asset.generate",inputData:{kind:"image",prompt:"原主题"}});
+ const children=(await f.children()).rows;expect(children).toHaveLength(1);expect(children[0]).toMatchObject(toolName==="material.generate"?{taskType:"asset.generate",inputData:{kind:"image",prompt:"原主题"}}:{taskType:"publish.platform_adapt",inputData:{topic:"原主题"}});
  const [parent]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));expect(parent!.status).toBe("settled");
  expect(JSON.parse(parent!.resultText!).output.data.taskId).toBe(children[0]!.id);
 });

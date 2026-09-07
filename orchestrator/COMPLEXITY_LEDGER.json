@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "a7b406a58106f9fa4f40bee3d8a4f562ddadd223b5eb61407d37d7c60316560c",
+      "file_sha256": "247ee9065e573a7317f226071f317c2ecee7ba21f9af28198de4aa3a7ef5b255",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
+      "reason": "沿用 DEC-RUNTIME-055 授权的独立 Worker 与命名端口，接入整稿授权单次模型节点及原子任务提交；与原开场共用账本，不新增进程或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "bdaf523d952cb7bd04e09dd5e8f646f44ebfab0e59fd96828cf353e0d73394c7",
+      "file_sha256": "7b4cff2a62eb8e0f14d55ea28a567f13619d5261bc8fcd1d37cbc92eb34e0eef",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
+      "reason": "沿用 DEC-RUNTIME-055 授权的独立 Worker 与命名端口，接入整稿授权单次模型节点及原子任务提交；与原开场共用账本，不新增进程或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "27ea8791c3f2a459421bd9edf8c13716001ec08410b687607495910daca0e93f",
+      "file_sha256": "c94914c65981291edce9d6c334135d0dfa88948edd715b71cfc0d3ae600287e0",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1733,6 +1733,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "仅记录已授权 Worker 请求边界故障与真实测试证据，没有追加执行层或通信协议。",
       "acceptance": "文档引用日志，不替代全任务验收。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/chat-script-draft-worker.md"
+      ],
+      "file_sha256": "3d6b8348fffbf0c52f32ed606a5da5f1010917f7aa409416802d2ce9e1f03aec",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已授权整稿 Worker 命名端口的实际实现及验证证据；文档不新增执行机制。",
+      "acceptance": "仅登记复杂度，不代表 T-915 整体或历史任务通过。"
     }
   ],
   "historical_baselines": []

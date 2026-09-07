@@ -7,7 +7,7 @@ import {createAgenticToolBinding} from "./agentic-tool-binding";
 const originSchema=z.object({executionTaskId:z.string(),callId:z.string(),inputDigest:z.string()}).strict();
 const recoverySchema=z.object({attempts:z.number().int().min(0).max(3),nextAt:z.string().datetime(),deadlineAt:z.string().datetime(),errorCode:z.string().nullable()}).strict();
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
-const supportedTaskTypes=["planning.thesis","asset.generate","script.review"];
+const supportedTaskTypes=["planning.thesis","asset.generate","script.review","script.draft","publish.platform_adapt"];
 /** 已提交子任务的准备补偿；只复用原任务，不创建模型调用或新任务。 */
 export function createSubmittedTaskPreparationService(db:Db,deps:{
  deadlineMs:number;now?:()=>number;random?:()=>number;
@@ -30,7 +30,7 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const [business]=parent?await tx.select().from(aiTasks).where(and(eq(aiTasks.id,parent.ownerId),eq(aiTasks.executionTaskId,parent.id),eq(aiTasks.userId,task.userId),eq(aiTasks.accountId,task.accountId))):[];
    if(!parent || parent.kind!=="ai_task" || parent.ownerType!=="ai_task" || business?.taskType!=="copilot.assist")throw new Error("子任务缺少真实聊天提交来源");
    const input=chatWorkerInputSchema.parse(object(parent.payload).modelInput);
-   const definition=input.tools.find(tool=>chatSubmittedTaskType(tool.name)===task.taskType && tool.execution==="host.task-submit" && tool.effect==="committed");
+   const definition=input.tools.find(tool=>chatSubmittedTaskType(tool.name)===task.taskType && (tool.execution==="host.task-submit" || (tool.name==="script.draft" && tool.execution==="worker.script-draft")) && tool.effect==="committed");
    if(!definition || input.userId!==task.userId || input.accountId!==task.accountId)throw new Error("父任务未声明对应的原子任务提交");
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,parent.id)).orderBy(asc(executionCalls.sequence));
    const call=calls.find(row=>row.id===origin.callId);

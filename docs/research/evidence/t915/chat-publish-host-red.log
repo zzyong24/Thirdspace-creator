@@ -1,0 +1,87 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-publish-task-host.test.ts (8 tests | 8 failed) 14ms
+   × 真实工厂生成独立事务声明，保留原生schema和描述 9ms
+   × 准备沿原项目和选区默认值，不派发或写库 {} 1ms
+   × 准备沿原项目和选区默认值，不派发或写库 {"topic":" explicit "} 1ms
+   × 准备前 account 失效不调用提交服务 1ms
+   × 准备前 definition 失效不调用提交服务 1ms
+   × 准备前 cancel 失效不调用提交服务 0ms
+   × 准备前 missing-project 失效不调用提交服务 0ms
+   × 空稿提示保留发布包卡，瞬断继续交给统一重试分类 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 真实工厂生成独立事务声明，保留原生schema和描述
+AssertionError: expected { name: 'publish.package', …(4) } to match object { execution: 'host.task-submit', …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,8 @@
+  {
+    "description": "为**当前项目**生成一份抖音发布物料(标题 + 简介文案 + 标签 + 封面文案),并**自动过一遍发布合规审核**(营销导流/绝对化用语/夸大/降权词等,命中会改成合规版并给出审核结论)。当用户要「生成发布物料/发布文案/写标题简介/打包发布/生成发布包」、点稿面「生成发布物料」时调用。物料生成在后台跑(不阻塞对话),结果渲成发布物料候选卡;用户点卡上「采纳」才落成正式发布行(铁律②确认门)——你没有直接写发布物料的能力,绝不口头宣称「发布物料已生成/已写入」。只能为当前项目对话生成;没有项目上下文、或稿面还没有整稿(空稿)时会诚实提示先去写整稿。平台固定为抖音(单平台),不必让用户选平台。",
+    "effect": "committed",
+-   "execution": "host.task-submit",
+    "parameters": {
+      "additionalProperties": false,
+      "properties": {
+        "topic": {
+          "description": "这条内容的主题/选题(可选;缺省由定位/项目兜底)",
+
+ ❯ src/modules/ai-runtime/chat-publish-task-host.test.ts:21:41
+     19| it("真实工厂生成独立事务声明，保留原生schema和描述",async()=>{
+     20|  const f=await fixture(),legacy=(await prepareChatToolDefinitions(f.to…
+     21|  expect(f.restored.modelInput.tools[0]).toMatchObject({execution:"host…
+       |                                         ^
+     22|  expect(f.restored.modelInput.tools[0]!.version).not.toBe(legacy.versi…
+     23|  expect(f.bound["publish.package"]?.prepareTask).toBeTypeOf("function"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {}
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {"topic":" explicit "}
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-publish-task-host.test.ts:26:72
+     24| });
+     25| it.each([{}, {topic:" explicit "}])("准备沿原项目和选区默认值，不派发或写库 %j",async inp…
+     26|  const f=await fixture(),tool=f.bound["publish.package"]!;expect(tool)…
+       |                                                                        ^
+     27|  const prepared=await tool.prepareTask!(f.context,JSON.parse(JSON.stri…
+     28|  expect(f.preparePublish).toHaveBeenCalledExactlyOnceWith(f.context,{a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备前 account 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备前 definition 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备前 cancel 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 准备前 missing-project 失效不调用提交服务
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-publish-task-host.test.ts:33:72
+     31| });
+     32| it.each(["account","definition","cancel","missing-project"])("准备前 %s 失…
+     33|  const f=await fixture(),tool=f.bound["publish.package"]!;expect(tool)…
+       |                                                                        ^
+     34|  if(reason==="account")f.restored.context.accountId="other";
+     35|  if(reason==="definition")f.restored.modelInput.tools[0]!.version="cha…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-publish-task-host.test.ts > 空稿提示保留发布包卡，瞬断继续交给统一重试分类
+TypeError: Cannot read properties of undefined (reading 'prepareTask')
+ ❯ src/modules/ai-runtime/chat-publish-task-host.test.ts:43:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  21:09:07
+   Duration  1.37s (transform 656ms, setup 0ms, import 1.22s, tests 14ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-publish-task-host.test.ts

@@ -1,0 +1,81 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-task-atomic.test.ts src/modules/execution/execution-chat-script-draft.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-script-draft.service.test.ts (13 tests | 1 failed) 2794ms
+   × 已提交整稿的准备 503 可原任务补偿，重建服务不重置计数 60ms
+ ❯ src/integration/chat-task-atomic.test.ts (48 tests | 6 failed) 6048ms
+   × publish.package 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次 6ms
+   × 'publish.package' 原子提交：'ack' 不遗留孤立任务或重复提交 2ms
+   × 'publish.package' 原子提交：'rollback' 不遗留孤立任务或重复提交 2ms
+   × 'publish.package' 原子提交：'recover' 不遗留孤立任务或重复提交 4ms
+   × 'publish.package' 原子提交：'duplicate' 不遗留孤立任务或重复提交 3ms
+   × 'publish.package' 原子提交：'cancel' 不遗留孤立任务或重复提交 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > publish.package 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次
+ZodError: [
+  {
+    "code": "custom",
+    "message": "事务任务提交声明与工具身份不符",
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ]
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:25:18
+ ❯ src/integration/chat-task-atomic.test.ts:134:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 'publish.package' 原子提交：'ack' 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 'publish.package' 原子提交：'rollback' 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 'publish.package' 原子提交：'recover' 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 'publish.package' 原子提交：'duplicate' 不遗留孤立任务或重复提交
+ FAIL  src/integration/chat-task-atomic.test.ts > 'publish.package' 原子提交：'cancel' 不遗留孤立任务或重复提交
+ZodError: [
+  {
+    "code": "custom",
+    "message": "事务任务提交声明与工具身份不符",
+    "path": [
+      "tools",
+      0,
+      "execution"
+    ]
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:25:18
+ ❯ src/integration/chat-task-atomic.test.ts:190:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 已提交整稿的准备 503 可原任务补偿，重建服务不重置计数
+Error: 提交任务不存在或归属不符
+ ❯ src/modules/execution/submitted-task-preparation.service.ts:26:66
+     24|    signal.throwIfAborted();
+     25|    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.i…
+     26|    if(!task || !supportedTaskTypes.includes(task.taskType))throw new E…
+       |                                                                  ^
+     27|    if(task.executionTaskId || task.status!=="queued" || task.leaseOwne…
+     28|    const runtime=object(task.runtimeData),origin=originSchema.parse(ru…
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 54 passed (61)
+   Start at  21:09:52
+   Duration  8.39s (transform 2.85s, setup 0ms, import 4.42s, tests 8.84s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

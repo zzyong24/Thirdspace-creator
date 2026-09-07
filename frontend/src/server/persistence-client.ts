@@ -1,3 +1,4 @@
+import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
 import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
 import {createVideoEditCandidatePreparer} from "@creatoros/backend/modules/ai-runtime";
 import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/execution";
@@ -1589,6 +1590,10 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
+  prepareChatScriptDraftTask: AiService["prepareScriptDraftTaskCommit"];
+  wakeChatScriptDraftTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
+  prepareChatPublishTask: (ctx:RequestContext,input:{projectId:string;topic?:string;attemptId:string})=>ReturnType<AiService["prepareTaskCommit"]>;
+  wakeChatPublishTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   prepareChatScriptReviewTask: (ctx:RequestContext,input:{projectId:string;attemptId:string})=>ReturnType<AiService["prepareTaskCommit"]>;
   wakeChatScriptReviewTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   wakeChatPlanningTask: (ctx: RequestContext, taskId: string) => Promise<void>;
@@ -1653,7 +1658,7 @@ export interface ChatRuntime {
   // 立即返回 taskId。发布物料工具(publish.package)据此触发,前端候选卡轮询 → 采纳物化 Publication。
   dispatchPublishPackage: (
     ctx: RequestContext,
-    input: { projectId: string; topic?: string },
+    input: { projectId: string; topic?: string; attemptId?: string },
   ) => Promise<{ taskId: string }>;
   // [T-385] project.transcribe 端口 —— 复用 T-374 projectsWithTranscribe 拦截链(解析该项目
   // platformRef 抖音锚 → ai.tasks.create 排单条 transcribe.douyin → live dispatch 后台跑;
@@ -9727,7 +9732,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     fail:(c,id,message)=>aiService.markFailed(c,id,message),
   });
-  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"){
+  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"|"script.draft"|"publish.platform_adapt"){
     const task=await aiService.getTask(c,id);
     if(task.taskType!==taskType)throw new Error("聊天唤醒任务类型不符");
     if(task.status!=="queued")return;
@@ -12340,6 +12345,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId };
     },
+    prepareChatScriptDraftTask:(ctx,input)=>aiService.prepareScriptDraftTaskCommit(ctx,input),
+    wakeChatScriptDraftTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.draft"),
+    prepareChatPublishTask:async(ctx,input)=>{
+      const inputData=await preparePublishPackageTaskInput(ctx,input,{getScript:(c,id)=>makeReviewSubjectReader().getScript(c,id),listOutputIdsByProject:(c,id)=>projectsService.listOutputIdsByProject(c,id)});
+      return aiService.prepareTaskCommit(ctx,{taskType:"publish.platform_adapt",attemptId:input.attemptId,inputData});
+    },
+    wakeChatPublishTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"publish.platform_adapt"),
     prepareChatScriptReviewTask: async (ctx,input)=>{
       await assertReviewableChatScript(ctx,input);
       const current=await readCurrentScriptRefForReview(ctx,input.projectId);
@@ -12492,64 +12504,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return { taskId };
     },
     prepareVideoEdit: createVideoEditCandidatePreparer({projectsService,productionService,materialLinksService,assetsService}),
-    // [T-350a] publish.package 端口 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
-    // (platform.adapt 模板已内嵌 cheat-package 发布审核 SOP),**单平台抖音**。
-    //   ① 空稿诚实门:当前整稿为空/过短 → 抛友好错误(同 dispatchScriptReview 口径,不生成空物料);
-    //   ② ensure 内容产出挂点 outputId(采纳时 createPublicationFromDraft 在其下铸真 Publication;
-    //      无产出行 → 抛错,理论上项目建时即建首个 output);
-    //   ③ createTask(taskType publish.platform_adapt,inputData.{outputId,scriptText,platforms:["douyin"],
-    //      topic,projectId})→ live dispatch 分支触发 runPlatformAdapt,立即返回 taskId。
-    dispatchPublishPackage: async (
-      ctx: RequestContext,
-      input: { projectId: string; topic?: string },
-    ) => {
-      const currentScript = await makeReviewSubjectReader().getScript(
-        ctx,
-        input.projectId,
-      );
-      if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
-        throw new Error(
-          "当前项目还没有可用的整稿(稿面为空或太短)—— 先生成整稿并采纳写入稿面,再来生成发布物料,别给空稿打包。",
-        );
-      }
-      const outputIds = await projectsService.listOutputIdsByProject(
-        ctx,
-        input.projectId,
-      );
-      const outputId = outputIds[0];
-      if (!outputId) {
-        throw new Error(
-          "dispatchPublishPackage: 项目还没有内容产出挂点(outputId)—— 无法铸发布物料。",
-        );
-      }
-      const res = await ai.request(
-        ENDPOINTS.createAITask,
-        {
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "publish.platform_adapt",
-            attemptId: createAiTaskAttemptId(),
-            inputData: {
-              outputId,
-              scriptText: currentScript,
-              // [T-350a] 稿面聚焦单平台抖音(不给模型选平台;多平台走发布中心既有全平台链)。
-              platforms: ["douyin"],
-              projectId: input.projectId,
-              ...(input.topic ? { topic: input.topic } : {}),
-            },
-          },
+    // 旧发布包入口共用后端正文准备及原任务派发；同 attempt 恢复首次 scriptText/outputId。
+    // 只使用项目已有产出挂点；缺稿或缺产出时保留原错误，不预建发布行。
+    dispatchPublishPackage: async (ctx:RequestContext,input:{projectId:string;topic?:string;attemptId?:string})=>{
+      const task=await chatTaskSubmissions.submit(ctx,{
+        taskType:"publish.platform_adapt",attemptId:input.attemptId??createAiTaskAttemptId(),
+        inputData:{projectId:input.projectId,platforms:["douyin"],...(input.topic?{topic:input.topic}:{})},
+      },{
+        snapshotKeys:["scriptText","outputId"],
+        prepareSnapshot:async(context,inputData)=>{
+          const {scriptText,outputId}=await preparePublishPackageTaskInput(context,{projectId:inputData.projectId as string},{getScript:(c,id)=>makeReviewSubjectReader().getScript(c,id),listOutputIdsByProject:(c,id)=>projectsService.listOutputIdsByProject(c,id)});
+          return {scriptText,outputId};
         },
-        ctx,
-      );
-      const task = (res as { data?: { id?: unknown } }).data;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error(
-          "dispatchPublishPackage: 起 publish.platform_adapt task 失败(无 taskId)",
-        );
-      }
-      return { taskId };
+      });
+      return {taskId:task.id};
     },
     // [T-385] project.transcribe 端口 —— 直调 T-374 的 projectsWithTranscribe 拦截链(单一真值:
     // 属主门/抖音锚解析/排 transcribe.douyin 全在 wrap 里,这里不复述)。无锚 ValidationError

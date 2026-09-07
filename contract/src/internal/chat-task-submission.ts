@@ -2,6 +2,7 @@
 const taskTypes:Readonly<Record<string,string>>=Object.freeze({
  "planning.thesis":"planning.thesis",
  "material.generate":"asset.generate",
+ "publish.package":"publish.platform_adapt",
  "script.draft":"script.draft",
  "review.script":"script.review",
 });

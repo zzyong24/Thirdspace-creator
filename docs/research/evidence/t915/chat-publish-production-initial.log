@@ -1,0 +1,38 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'publish.package' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-task-submission.integration.test.ts (13 tests | 2 failed) 58463ms
+   × 真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选 3524ms
+   × 真实 'publish.package' 工厂首次准备失败 1 次后，不重启也能读回候选 3034ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'publish.package' 工厂首次准备失败 1 次后，不重启也能读回候选
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/server/chat-task-submission.integration.test.ts:107:25
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  21:13:03
+   Duration  62.23s (transform 2.50s, setup 158ms, import 3.42s, tests 58.46s, environment 0ms)
+
