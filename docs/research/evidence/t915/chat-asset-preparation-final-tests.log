@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-task-atomic.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  39 passed (39)
+   Start at  14:08:53
+   Duration  7.38s (transform 1.22s, setup 0ms, import 1.89s, tests 5.36s, environment 0ms)
+

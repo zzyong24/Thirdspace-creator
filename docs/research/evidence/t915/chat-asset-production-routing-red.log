@@ -1,0 +1,80 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/server/chat-task-submission.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:39641) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-9c4a9368-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-8ed3ff6d-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-3b1a445c-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-0f8ebade-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-f2436ad8-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[ai-task-runner] taskId=ai-task-4ed0a67e-14 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+
+ ❯ src/server/chat-task-submission.integration.test.ts (5 tests | 2 failed) 119293ms
+   × 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选 52894ms (retry x2)
+   × 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选 52875ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+AssertionError: expected 'failed' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "failed"
+
+ ❯ vi.waitFor.timeout src/server/chat-task-submission.integration.test.ts:85:85
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  14:08:27
+   Duration  123.09s (transform 2.30s, setup 124ms, import 3.10s, tests 119.29s, environment 436ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

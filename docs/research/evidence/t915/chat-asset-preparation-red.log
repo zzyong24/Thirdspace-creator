@@ -1,0 +1,103 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-task-atomic.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-15 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-4 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-43 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-47 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-54 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-65 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[submitted-task] PREPARATION_RECOVERY_REJECTED
+
+stderr | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[submitted-task] PREPARATION_RECOVERY_REJECTED
+
+stderr | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[submitted-task] PREPARATION_RECOVERY_REJECTED
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-85 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+stdout | src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+[ai-task-runner] taskId=ai-task-89 taskType=planning.thesis status=failed finishReason=null usage=null candidateCount=0
+
+ ❯ src/integration/chat-task-atomic.test.ts (33 tests | 3 failed) 4651ms
+   × planning.thesis 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次 6ms
+   × material.generate 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次 79ms
+   × 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备 137ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > planning.thesis 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次
+ZodError: [
+  {
+    "code": "custom",
+    "message": "工具名称编码冲突",
+    "path": [
+      "tools"
+    ]
+  }
+]
+ ❯ Object.submit src/modules/ai/chat-turn-submission.service.ts:67:72
+
+ ❯ fixture src/integration/chat-task-atomic.test.ts:25:18
+ ❯ src/integration/chat-task-atomic.test.ts:134:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > material.generate 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次
+Error: 提交任务不存在或归属不符
+ ❯ src/modules/execution/submitted-task-preparation.service.ts:25:56
+     23|    signal.throwIfAborted();
+     24|    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.i…
+     25|    if(!task || task.taskType!=="planning.thesis")throw new Error("提交任务…
+       |                                                        ^
+     26|    if(task.executionTaskId || task.status!=="queued" || task.leaseOwne…
+     27|    const runtime=object(task.runtimeData),origin=originSchema.parse(ru…
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/integration/chat-task-atomic.test.ts > 素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备
+AssertionError: expected undefined to be truthy
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/integration/chat-task-atomic.test.ts:249:76
+    247|  try{
+    248|   await recovery.recover(new AbortController().signal);
+    249|   const mapped=await f.ai.getTask(f.ctx,id);expect(mapped.executionTas…
+       |                                                                            ^
+    250|   expect(prepare).toHaveBeenCalledWith(expect.objectContaining({userId…
+    251|   expect((await f.children()).rows).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 30 passed (33)
+   Start at  14:06:17
+   Duration  6.48s (transform 1.09s, setup 0ms, import 1.70s, tests 4.65s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

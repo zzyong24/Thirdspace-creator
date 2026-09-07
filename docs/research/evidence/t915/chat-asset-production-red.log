@@ -1,0 +1,57 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/server/chat-task-submission.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:39482) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/chat-task-submission.integration.test.ts (5 tests | 4 failed) 3627ms
+   × 真实 'planning.thesis' 工厂首次准备失败 +0 次后，不重启也能读回候选 4ms (retry x2)
+   × 真实 'planning.thesis' 工厂首次准备失败 1 次后，不重启也能读回候选 1ms (retry x2)
+   × 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选 1ms (retry x2)
+   × 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选 0ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'planning.thesis' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+Error: [vitest] No "createChatMaterialTaskHost" export is defined on the "@creatoros/backend/modules/ai-runtime" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@creatoros/backend/modules/ai-runtime"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ src/server/chat-task-submission.integration.test.ts:47:32
+     45|  const material=toolName==="material.generate",taskType=material?"asse…
+     46|  fixture.prepareFailures=failures;fixture.prepares=0;
+     47|  const {createChatTaskToolHost,createChatMaterialTaskHost}=await impor…
+       |                                ^
+     48|  const {buildChatTools}=await import("../../../backend/src/modules/ai-…
+     49|  const {prepareChatToolDefinitions}=await import("../../../backend/src…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  14:07:56
+   Duration  7.10s (transform 2.09s, setup 102ms, import 2.83s, tests 3.63s, environment 361ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

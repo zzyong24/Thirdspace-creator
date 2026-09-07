@@ -1,0 +1,72 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/server/chat-task-submission.integration.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:40061) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-task-submission.integration.test.ts (5 tests | 2 failed) 119684ms
+   × 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选 52943ms (retry x2)
+   × 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选 52839ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+AssertionError: expected 'running' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "running"
+
+ ❯ vi.waitFor.timeout src/server/chat-task-submission.integration.test.ts:85:85
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+AssertionError: expected 'running' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "running"
+
+ ❯ vi.waitFor.timeout src/server/chat-task-submission.integration.test.ts:85:85
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  14:10:56
+   Duration  123.50s (transform 2.31s, setup 132ms, import 3.13s, tests 119.68s, environment 429ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

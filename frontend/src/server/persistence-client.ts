@@ -1590,6 +1590,7 @@ export interface ChatRuntime {
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
   wakeChatPlanningTask: (ctx: RequestContext, taskId: string) => Promise<void>;
+  wakeChatMaterialTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   dispatchPlanningThesis: (
     ctx: RequestContext,
     input: { projectId: string; topic?: string; attemptId?: string },
@@ -9666,7 +9667,27 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if(stoppingPreparation)return;
     if(prepared.legacy)await runLegacyAssetTask(c,id);else modelWorker.start();
   }
-  const submittedPreparation=createSubmittedTaskPreparationService(db,{deadlineMs:workerBudget.deadlineMs,prepare:(c,id,signal)=>businessExecution.prepare(c,id,signal),fail:(c,id,message)=>aiService.markFailed(c,id,message)});
+  const submittedPreparation=createSubmittedTaskPreparationService(db,{
+    deadlineMs:workerBudget.deadlineMs,
+    async prepare(c,id,signal){
+      const task=await aiService.getTask(c,id);signal.throwIfAborted();
+      if(task.taskType==="asset.generate"){
+        const prepared=await assetBusiness.prepare(c,id,signal);
+        if(prepared.legacy)throw new Error("聊天素材任务存在旧提交事实，须先核对原结果");
+        return prepared;
+      }
+      return businessExecution.prepare(c,id,signal);
+    },
+    fail:(c,id,message)=>aiService.markFailed(c,id,message),
+  });
+  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"){
+    const task=await aiService.getTask(c,id);
+    if(task.taskType!==taskType)throw new Error("聊天唤醒任务类型不符");
+    if(task.status!=="queued")return;
+    if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
+    await submittedPreparation.prepare(c,id);
+    if(!stoppingPreparation)modelWorker.start();
+  }
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
     recoverPendingPreparation:signal=>submittedPreparation.recover(signal),
     dailyTopicPorts:{
@@ -12313,14 +12334,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
     // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
-    wakeChatPlanningTask: async (ctx,taskId) => {
-      const task=await aiService.getTask(ctx,taskId);
-      if(task.taskType!=="planning.thesis")throw new Error("聊天唤醒任务类型不符");
-      if(task.status!=="queued")return;
-      if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
-      await submittedPreparation.prepare(ctx,task.id);
-      modelWorker.start();
-    },
+    wakeChatPlanningTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"planning.thesis"),
+    wakeChatMaterialTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"asset.generate"),
     dispatchPlanningThesis: async (
       ctx: RequestContext,
       input: { projectId: string; topic?: string; attemptId?: string },

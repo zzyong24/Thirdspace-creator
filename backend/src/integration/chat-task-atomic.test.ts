@@ -130,8 +130,8 @@ it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败�
  expect(f.wakeTask).toHaveBeenCalledTimes(2);expect(f.prepare).toHaveBeenCalledTimes(1);expect((await f.children()).rows).toHaveLength(1);
 });
 
-it("准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async()=>{
- const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+it.each(["planning.thesis","material.generate"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
+ const f=await fixture(false,true,toolName,toolName==="material.generate"),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const child=await f.ai.getTask(f.ctx,id);let time=Date.parse(child.requestedAt);
  const prepare=vi.fn(async()=>{throw Object.assign(new Error("private temporary text"),{statusCode:503,responseHeaders:{"retry-after":"2"}});});
  const fail=vi.fn(f.ai.markFailed),options={deadlineMs:60000,now:()=>time,random:()=>0,prepare,fail};
@@ -147,11 +147,12 @@ it("准备瞬断的次数和退避持久保存，重建补偿服务不重置，�
  expect((raw!.runtimeData as any).hostTaskPreparation).toMatchObject({attempts:3,errorCode:"http_503",deadlineAt:new Date(Date.parse(child.requestedAt)+60000).toISOString()});
  expect(JSON.stringify(raw!.runtimeData)).not.toContain("private temporary text");await recovery.stop();
 });
-it.each(["account","origin","receipt","attempt"])("补偿必须核对真实父提交，不能用 %s 冒充可派发任务",async variant=>{
- const f=await fixture(),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+it.each(["planning.thesis","material.generate"].flatMap(toolName=>["account","origin","receipt","attempt","type"].map(variant=>({toolName:toolName as "planning.thesis"|"material.generate",variant}))))("$toolName 补偿必须核对真实父提交，不能用 $variant 冒充可派发任务",async({toolName,variant})=>{
+ const f=await fixture(false,true,toolName,toolName==="material.generate"),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const prepare=vi.fn(async()=>{}),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,prepare,fail:f.ai.markFailed});
  if(variant==="origin"){const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));await db.update(aiTasks).set({runtimeData:{...(task!.runtimeData as any),hostTaskSubmission:{...(task!.runtimeData as any).hostTaskSubmission,inputDigest:"changed"}}}).where(eq(aiTasks.id,id));}
  if(variant==="receipt"){const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.callId));const receipt=JSON.parse(call!.resultText!);receipt.output.data.taskId="other";await db.update(executionCalls).set({resultText:JSON.stringify(receipt)}).where(eq(executionCalls.id,f.call.callId));}
+ if(variant==="type")await db.update(aiTasks).set({taskType:toolName==="material.generate"?"planning.thesis":"asset.generate"}).where(eq(aiTasks.id,id));
  if(variant==="attempt")await db.update(aiTasks).set({attemptId:"other-attempt-id"}).where(eq(aiTasks.id,id));
  await expect(recovery.prepare(variant==="account"?{...f.ctx,accountId:"other"}:f.ctx,id)).rejects.toThrow();expect(prepare).not.toHaveBeenCalled();await recovery.stop();
 });
@@ -236,3 +237,23 @@ it("素材提交不能偷换子任务类型，错误映射在同一事务中回�
  expect((await f.ai.listTasks(f.ctx,{taskType:"planning.thesis",limit:100,offset:0})).rows).toHaveLength(0);
  expect((await f.children()).rows).toHaveLength(0);
 });
+
+ it("素材原子提交后重建恢复服务，扫描原任务并交给真实素材准备",async()=>{
+ const {createAssetBusinessExecutionService}=await import("../modules/ai-runtime/asset-business-execution.service");
+ const f=await fixture(false,true,"material.generate",true),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
+ const child=await f.ai.getTask(f.ctx,id);
+ const business=createAssetBusinessExecutionService(db,{budget,assertProject:async()=>{},resolveSpec:async()=>({kind:"image",provider:"openai",model:"gpt-image-1",token:"private-test-key",baseUrl:"http://localhost"})});
+ const prepare=vi.fn((c:any,taskId:string,signal:AbortSignal)=>business.prepare(c,taskId,signal));
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,prepare,fail:f.ai.markFailed});
+ try{
+  let mapped:typeof aiTasks.$inferSelect|undefined;
+  for(let scan=0;scan<20;scan++){await recovery.recover(new AbortController().signal);[mapped]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));if(mapped?.executionTaskId)break;}
+  expect(mapped!.executionTaskId).toBeTruthy();expect(mapped!.requestedAt).toBe(child.requestedAt);
+  expect(prepare).toHaveBeenCalledWith(expect.objectContaining({userId:f.ctx.userId,accountId:f.ctx.accountId}),id,expect.any(AbortSignal));
+  expect((await f.children()).rows).toHaveLength(1);
+  const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,mapped!.executionTaskId!));
+  expect(execution!.payload).toMatchObject({modelInput:{kind:"asset.generate",prompt:"原主题",mediaKind:"image"}});
+  expect(JSON.stringify(execution!.payload)).not.toContain("private-test-key");
+  await recovery.prepare(f.ctx,id);expect(prepare.mock.calls.filter(call=>call[1]===id)).toHaveLength(1);
+ }finally{await recovery.stop();business.stop();}
+ });

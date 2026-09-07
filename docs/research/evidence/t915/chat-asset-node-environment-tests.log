@@ -1,0 +1,13 @@
+
+> creatoros-frontend@1.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> vitest run src/server/chat-task-submission.integration.test.ts --environment node --retry 0
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  19:02:20
+   Duration  29.39s (transform 2.83s, setup 171ms, import 3.95s, tests 25.05s, environment 0ms)
+
