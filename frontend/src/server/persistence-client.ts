@@ -1,4 +1,4 @@
-import {createChatProductionRuntime,createChatTaskToolHost,createChatHostContextReader,loadPositioningWorksBrief} from "@creatoros/backend/modules/ai-runtime";
+import {createChatTrendRead,createChatBusinessGenerationPreparation,createChatIngestionTaskToolHost,createChatProductionRuntime,createChatTaskToolHost,createChatHostContextReader,loadPositioningWorksBrief} from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
 import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
@@ -12537,13 +12537,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   if(workerEntry){
     const hostReader=createChatHostContextReader(db);
+    const ingestionTools=createChatIngestionTaskToolHost(hostReader,{
+      captureScreenshot:chatRuntime.captureScreenshot,
+      dispatchProjectTranscribe:chatRuntime.dispatchProjectTranscribe,
+      dispatchDouyinShare:chatRuntime.dispatchDouyinShare,
+    });
     chatWorker=createChatProductionRuntime(db,{
       entryPath:workerEntry,workerId:`chat-worker-${process.pid}`,
-      budget:{maxCalls:48,maxTokens:250000,deadlineMs:600000},modelConcurrency:2,
+      budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       // 主模型身份由现有 execution identity 服务首次固定；凭据从当前受管权限读取。
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
-      resolveTools:createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
+      resolveTools:async(c,input,ref,signal)=>Object.assign({},await createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
         webRead:true,research:true,
         agenticResearch:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
         planning:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},
@@ -12556,10 +12561,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         local:{detectTools:chatRuntime.detectTools,listAuthorizedDirs:chatRuntime.listAuthorizedDirs},
         localRead:{readLocalFile:chatRuntime.readLocalFile,decideLocalReadAccess:chatRuntime.decideLocalReadAccess},
         structured:{
+          business:createChatBusinessGenerationPreparation({
+            ...chatRuntime.context,
+            sourceReader:{listEnabledSources:c=>trendSourcesService.listEnabledSources(c)},
+            now:deps.now,
+            async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
+            readTrend:createChatTrendRead({
+              listEnabledSources:c=>trendSourcesService.listEnabledSources(c),search:searchWebPort,
+              readWebSource:(c,source,signal)=>readWebUrlSidecar(source.url,{authDir:webAuthDirFor(source.domain),signal},{openContext:()=>openPooledReaderContext(c,source.domain,{signal}) as never}),
+            }),
+          }),
           readWorks:(c,limit)=>loadPositioningWorksBrief(c,chatRuntime.context.positioningWorks,limit),
           getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
         },
-      }),
+      })(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
       webRead:{assets:assetsService,objectStorageForCtx,sessions:browserSessionsService,resolveSearch:c=>resolveSearchSpec(c)},
       onError:code=>console.error(`[chat-worker] ${code}`),
     });

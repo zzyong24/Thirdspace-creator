@@ -1,3 +1,4 @@
+import {humanizeAiError} from '@/lib/ai-error-humanize';
 import type {RequestContext} from '@creatoros/contract';
 import type {ChatRuntime} from './persistence-client';
 
@@ -5,7 +6,7 @@ import type {ChatRuntime} from './persistence-client';
 export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:RequestContext,
  input:{executionTaskId:string;sourceMessageId:string;conversationId:string},requestSignal:AbortSignal){
  const subscription=new AbortController(),encoder=new TextEncoder();
- let ended=false;
+ let ended=false,approvalPending=false;
  const cancelTask=()=>{subscription.abort();void runtime.command(ctx,input.executionTaskId,'cancel').catch(()=>{});};
  requestSignal.addEventListener('abort',cancelTask,{once:true});
  const body=new ReadableStream<Uint8Array>({
@@ -15,13 +16,23 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
     if(requestSignal.aborted){cancelTask();return;}
     send({type:'start',messageId:`chat:${input.sourceMessageId}`});
     for await(const page of runtime.subscribe(ctx,input.executionTaskId,subscription.signal)){
-     for(const event of page.events)send(event.chunk);
+     for(const event of page.events){
+      if((event.chunk as {type?:string}).type==='tool-approval-request')approvalPending=true;
+      send(event.chunk);
+     }
      if(page.hasMore)continue;
      if(['waiting_user','paused','unknown_result','blocked'].includes(page.status)){
+      if(page.status==='waiting_user'&&!approvalPending){
+       const task=await runtime.get(ctx,input.executionTaskId);
+       send({type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行需要你处理权限、登录或模型配置，处理后再继续。'});
+      }
       if(page.status!=='waiting_user')send({type:'error',errorText:page.status==='unknown_result'?'本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。':'本次执行已暂停，请在任务中心继续。'});
       break;
      }
-     if(page.status==='failed')send({type:'error',errorText:'本次执行未完成，请在任务中心查看原因后重试。'});
+     if(page.status==='failed'){
+      const task=await runtime.get(ctx,input.executionTaskId);
+      send({type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行未完成，请检查模型配置后重试。'});
+     }
      if(page.status==='cancelled')send({type:'abort'});
     }
     if(!ended)controller.enqueue(encoder.encode('data: [DONE]\n\n'));
