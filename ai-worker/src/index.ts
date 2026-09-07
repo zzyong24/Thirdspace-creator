@@ -607,3 +607,12 @@ export {
   type StreamAudioDeps,
   type SpawnedAudioProcess,
 } from "./runtime/transcribe-audio-extract";
+
+export {
+  localWhisperSpec,
+  LocalWhisperTranscribeError,
+  transcribeWithLocalFallback,
+  type TranscribeExecutionMode,
+  type TranscribeWithFallbackResult,
+  type LocalWhisperFailureCode,
+} from "./runtime/transcribe-local-fallback";
