@@ -1,0 +1,102 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/asr-request.test.ts (5 tests | 5 failed) 41ms
+   × openai：预先取消不发 HTTP 31ms (retry x2)
+   × qwen：预先取消不发 HTTP 2ms (retry x2)
+   × mimo：预先取消不发 HTTP 1ms (retry x2)
+   × Qwen 每个分片单独执行并可直接复用已结算正文，描述不含凭据和音频正文 3ms (retry x2)
+   × 第一片完成后取消，不发送第二片；HTTP 接收到同一 signal 3ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/asr-request.test.ts > openai：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > openai：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > openai：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > qwen：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > qwen：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > qwen：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > mimo：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > mimo：预先取消不发 HTTP
+ FAIL  src/runtime/asr-request.test.ts > mimo：预先取消不发 HTTP
+AssertionError: promise resolved "{ text: '稿' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "text": "稿",
+  }
+
+ ❯ src/runtime/asr-request.test.ts:10:146
+      8|  const controller=new AbortController();controller.abort();const fetch…
+      9|  const factory=provider==='openai'?createOpenaiAsrAdapter:provider==='…
+     10|  await expect(transcribeAudio({...spec,provider},{audioBytes:new Uint8…
+       |                                                                                                                                                  ^
+     11|  expect(fetcher).not.toHaveBeenCalled();
+     12| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/runtime/asr-request.test.ts > Qwen 每个分片单独执行并可直接复用已结算正文，描述不含凭据和音频正文
+ FAIL  src/runtime/asr-request.test.ts > Qwen 每个分片单独执行并可直接复用已结算正文，描述不含凭据和音频正文
+ FAIL  src/runtime/asr-request.test.ts > Qwen 每个分片单独执行并可直接复用已结算正文，描述不含凭据和音频正文
+AssertionError: expected '第二段\n第二段' to be '首段回执\n第二段' // Object.is equality
+
+- Expected
++ Received
+
+- 首段回执
++ 第二段
+  第二段
+
+ ❯ src/runtime/asr-request.test.ts:19:22
+     17|  const executeRequest=vi.fn(async(request:unknown,execute:()=>Promise<…
+     18|  const result=await transcribeAudio({...spec,provider:'qwen'},{audioBy…
+     19|  expect(result.text).toBe('首段回执\n第二段');expect(fetcher).toHaveBeenCalle…
+       |                      ^
+     20|  expect(requests[0]).toMatchObject({chunkIndex:0,chunkCount:2,audioByt…
+     21|  expect(JSON.stringify(requests)).not.toContain('secret-fixture');expe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/runtime/asr-request.test.ts > 第一片完成后取消，不发送第二片；HTTP 接收到同一 signal
+ FAIL  src/runtime/asr-request.test.ts > 第一片完成后取消，不发送第二片；HTTP 接收到同一 signal
+ FAIL  src/runtime/asr-request.test.ts > 第一片完成后取消，不发送第二片；HTTP 接收到同一 signal
+AssertionError: expected AssertionError: expected undefined to be … { …(4) } to match object { name: 'AbortError' }
+(12 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ AssertionError {
++   "message": "expected undefined to be AbortSignal { aborted: false } // Object.is equality",
++   "actual": undefined,
++   "expected": AbortSignal {
++     Symbol(kEvents): Map {},
++     Symbol(events.maxEventTargetListeners): 0,
++     Symbol(events.maxEventTargetListenersWarned): false,
++     Symbol(kHandlers): Map {},
++     Symbol(kAborted): false,
++     Symbol(kReason): undefined,
++     Symbol(kComposite): false,
++   },
++   "showDiff": true,
++   "operator": "strictEqual",
+  }
+
+ ❯ src/runtime/asr-request.test.ts:26:166
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  21:54:19
+   Duration  316ms (transform 45ms, setup 0ms, import 111ms, tests 41ms, environment 0ms)
+

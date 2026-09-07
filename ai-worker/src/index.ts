@@ -596,3 +596,6 @@ export {buildTrendQuery,formatTrendBrief,formatTrendSourceBrief} from "./nodes/t
 export {topicGenerateFrozenSchema,dailyTopicInputSchema,type TopicGenerateFrozen} from "./execution/topic-worker-input";
 
 export {COPILOT_ASSIST_TEMPLATE,copilotReplySchema,copilotReplyInputSchema} from "./prompt/templates/copilot-assist";
+
+export {AsrExecutionInterruption,isAsrExecutionControlError,throwIfAsrAborted,type AsrRequest,type ExecuteAsrRequest} from "./runtime/asr-request";
+export {createDurableAsrRequestExecutor,type DurableAsrPorts} from "./execution/durable-asr-request";

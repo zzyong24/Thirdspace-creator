@@ -1,0 +1,50 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/transcribe-runner.test.ts -t '已存事实探测'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (27 tests | 1 failed | 25 skipped) 7ms
+   × 已存事实探测返回 false 时取消，不再启动恢复或取流 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 已存事实探测返回 false 时取消，不再启动恢复或取流
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "requestId": "r1",
+        "source": "user",
+        "userId": "u1",
+      },
+      "existing",
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:764:96
+    762|  deps.hasTranscriptArtifact=async()=>{controller.abort();return hasTra…
+    763|  await expect(runTranscribe(ctx,{id:'cancel-restore',taskType:'transcr…
+    764|  expect(deps.restoreTranscriptArtifact).not.toHaveBeenCalled();expect(…
+       |                                                                                                ^
+    765| });
+    766|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 25 skipped (27)
+   Start at  22:08:38
+   Duration  703ms (transform 351ms, setup 0ms, import 558ms, tests 7ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai-runtime/transcribe-runner.test.ts -t '已存事实探测'`
+Exit status 1

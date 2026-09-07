@@ -1,3 +1,4 @@
+import {isAsrExecutionControlError} from "@creatoros/ai-worker";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -176,6 +177,7 @@ async function invokeLocalWhisper(
     }
     return { transcript, effectiveSpec, mode: "whisper-local" };
   } catch (error) {
+    if(isAsrExecutionControlError(error))throw error;
     // 不附带 cause，避免调用方把绝对路径、stderr、token 或 worker 细节序列化到用户面。
     throw new LocalWhisperTranscribeError(localWhisperFailureCode(error));
   }
@@ -200,7 +202,8 @@ export async function transcribeWithLocalFallback(
       effectiveSpec: spec,
       mode: executionModeFor(spec),
     };
-  } catch {
+  } catch (error) {
+    if(isAsrExecutionControlError(error))throw error;
     return invokeLocalWhisper(invoke);
   }
 }

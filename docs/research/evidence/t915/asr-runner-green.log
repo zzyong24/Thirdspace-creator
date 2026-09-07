@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/transcribe-runner.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  22:08:49
+   Duration  757ms (transform 376ms, setup 0ms, import 580ms, tests 20ms, environment 0ms)
+

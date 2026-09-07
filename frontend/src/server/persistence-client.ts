@@ -4092,7 +4092,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // [T-513] createTask 已把 official base + 当前账号增量覆盖冻结进 server-only
         // runtimeData。执行端只消费该快照，绝不重新读“当前配置”，因此排队期间改配置、
         // 多账号并发、重试都不会串 prompt。缺失/属主不符一律 fail closed。
-        const dispatchCreatedTask = async () => {
+        const dispatchCreatedTask = async (signal:AbortSignal) => {
         const { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry } = makeGenerationReaders();
         // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
         // subprocess) drains in the background against the shared pglite. The UI polls
@@ -4393,6 +4393,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               inputData: (task.inputData ?? {}) as Record<string, unknown>,
             },
             {
+              signal,
               ai: {
                 markRunning: (c, id) => aiService.markRunning(c, id),
                 recordStep: (c, id, stepInput) =>

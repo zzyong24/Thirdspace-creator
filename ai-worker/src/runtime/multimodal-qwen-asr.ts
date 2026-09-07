@@ -1,3 +1,4 @@
+import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 import {
   MultimodalGenerationError,
   type GeneratedTranscript,
@@ -49,6 +50,7 @@ async function transcribeChunk(
   bytes: Uint8Array,
   language: string | undefined,
   fetchImpl: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<string> {
   const data = `data:audio/mpeg;base64,${Buffer.from(bytes).toString("base64")}`;
   const normalizedLanguage = language?.trim();
@@ -60,6 +62,7 @@ async function transcribeChunk(
       : undefined;
   const res = await fetchImpl(completionsUrl(spec), {
     method: "POST",
+    signal,
     redirect: spec.credentialLifecycle === "per_request" ? "error" : "follow",
     headers: {
       Authorization: `Bearer ${spec.token}`,
@@ -81,11 +84,11 @@ async function transcribeChunk(
   });
   if (!res.ok) {
     if (spec.credentialLifecycle === "per_request") {
-      throw new MultimodalGenerationError("语音转文字服务暂时不可用");
+      throw Object.assign(new MultimodalGenerationError("语音转文字服务暂时不可用"),{statusCode:res.status});
     }
-    throw new MultimodalGenerationError(
+    throw Object.assign(new MultimodalGenerationError(
       `Qwen ASR HTTP ${res.status}: ${await safeText(res)}`,
-    );
+    ),{statusCode:res.status});
   }
   const json = (await res.json()) as QwenAsrResponse;
   const text = json.choices?.[0]?.message?.content;
@@ -104,6 +107,8 @@ async function transcribeAudio(
   opts: TranscribeAudioOptions,
   deps: QwenAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
+  ({spec, opts} = snapshotAsrInput(spec, opts));
+  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'qwen-chat-audio.v1');
   if (spec.credentialLifecycle === "per_request") {
     if (
       spec.provider !== "qwen" ||
@@ -116,12 +121,7 @@ async function transcribeAudio(
     ) {
       throw new MultimodalGenerationError("语音转文字服务暂时不可用");
     }
-    const text = await transcribeChunk(
-      spec,
-      opts.audioBytes,
-      opts.language,
-      deps.fetch,
-    );
+    const {text}=await execute(opts.audioBytes,0,1,async()=>({text:await transcribeChunk(spec,opts.audioBytes,opts.language,deps.fetch,opts.signal)}));
     const language = opts.language?.trim();
     return { text, ...(language ? { language } : {}) };
   }
@@ -131,8 +131,9 @@ async function transcribeAudio(
     "Qwen ASR",
   );
   const texts: string[] = [];
-  for (const chunk of chunks) {
-    texts.push(await transcribeChunk(spec, chunk, opts.language, deps.fetch));
+  for (const [index,chunk] of chunks.entries()) {
+    const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));
+    texts.push(result.text);
   }
   const language = opts.language?.trim();
   return {

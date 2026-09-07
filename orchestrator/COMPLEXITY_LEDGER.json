@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "0cab7781c5eb17bc7abea67baccab80e59493948e4ec6b96c3284d9fa5d83b87",
+      "file_sha256": "8a9501365991ba24bbbbbe7c6310892352f15025c7e8f6c8f55cac0c50138402",
       "categories": [
         "credential_store",
         "language_toolchain",

@@ -1,3 +1,4 @@
+import {isAsrExecutionControlError,throwIfAsrAborted,type ExecuteAsrRequest} from "./asr-request";
 import { toChannelManagedError } from "./provider-factory";
 
 // 多模态 provider 工厂(SPEC 2026-07-01 多模态 model-config §2.2 / §8 M1)—— 把「一次运行
@@ -54,6 +55,7 @@ async function protectChannelCall<T>(
   try {
     return await call();
   } catch (error) {
+    if (isAsrExecutionControlError(error)) throw error;
     if (spec.displayModelKey === "channel-managed") {
       throw toChannelManagedError(error);
     }
@@ -99,6 +101,8 @@ export interface GenerateVideoOptions {
 /** ASR 逐字稿转写入参(T-030-D1)—— 与 image/video 的生成入参并列,但输入是**音频字节**
  *  (由 D2 的 ffmpeg 抽音产出),而非文本 prompt。 */
 export interface TranscribeAudioOptions {
+  signal?: AbortSignal;
+  executeRequest?: ExecuteAsrRequest;
   /** 待转写的音频字节(如 16kHz/单声道/mp3)。 */
   audioBytes: Uint8Array;
   /** 可选语言提示(如 "zh"/"en");多数 OpenAI 兼容端点可自动检测,省略即自动。 */
@@ -281,6 +285,9 @@ export async function transcribeAudio(
   opts: TranscribeAudioOptions,
   registry: MultimodalProviderRegistry,
 ): Promise<GeneratedTranscript> {
+  throwIfAsrAborted(opts.signal);
+  spec = structuredClone(spec);
+  opts = {...opts};
   return protectChannelCall(spec, async () => {
     const adapter = registry[spec.provider];
     if (!adapter) {
@@ -293,6 +300,7 @@ export async function transcribeAudio(
         `provider "${spec.provider}" 不支持逐字稿转写(transcribe.audio)`,
       );
     }
-    return adapter.transcribeAudio(spec, opts);
+    try{return await adapter.transcribeAudio(spec, opts);}
+    catch(error){throwIfAsrAborted(opts.signal);throw error;}
   });
 }

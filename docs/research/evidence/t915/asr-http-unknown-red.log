@@ -1,0 +1,44 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/durable-asr-request.test.ts (13 tests | 5 failed | 8 skipped) 11ms
+   × HTTP 408 不能证明提交未发生，必须保留 unknown 7ms (retry x2)
+   × HTTP 500 不能证明提交未发生，必须保留 unknown 1ms (retry x2)
+   × HTTP 502 不能证明提交未发生，必须保留 unknown 1ms (retry x2)
+   × HTTP 503 不能证明提交未发生，必须保留 unknown 1ms (retry x2)
+   × HTTP 504 不能证明提交未发生，必须保留 unknown 1ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 408 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 408 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 408 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 500 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 500 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 500 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 502 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 502 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 502 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 503 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 503 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 503 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 504 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 504 不能证明提交未发生，必须保留 unknown
+ FAIL  src/execution/durable-asr-request.test.ts > HTTP 504 不能证明提交未发生，必须保留 unknown
+AssertionError: expected Error: gateway response { …(1) } to be an instance of AsrExecutionInterruption
+ ❯ src/execution/durable-asr-request.test.ts:102:103
+    100| it.each([408,500,502,503,504])('HTTP %s 不能证明提交未发生，必须保留 unknown',async(…
+    101|  const f=ledger();const run=createDurableAsrRequestExecutor({operation…
+    102|  await expect(run(request,async()=>{throw Object.assign(new Error('gat…
+       |                                                                                                       ^
+    103|  expect(f.records.get('audio/asr/1')?.status).toBe('unknown');
+    104| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 8 skipped (13)
+   Start at  22:03:27
+   Duration  311ms (transform 31ms, setup 0ms, import 79ms, tests 11ms, environment 0ms)
+

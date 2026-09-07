@@ -733,3 +733,33 @@ describe("[T-357] 采集逐字稿后处理(落库前一遍,失败诚实落原文
     expect(spies.markSucceeded).toHaveBeenCalledTimes(1);
   });
 });
+it('取消后的 ASR 返回不继续后处理或落稿，并原样交回取消状态',async()=>{
+ const {deps,spies}=makeDeps({awemeIds:['one','two']});const controller=new AbortController();deps.signal=controller.signal;
+ deps.transcribeAudio=vi.fn(async(_spec,opts)=>{expect(opts.signal).toBe(controller.signal);controller.abort();return {text:'迟到正文'};});
+ deps.postprocessTranscript=vi.fn(async()=>({applied:false,transcript:'正文'}));
+ await expect(runTranscribe(ctx,{id:'cancel-asr',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toMatchObject({name:'AbortError'});
+ expect(deps.postprocessTranscript).not.toHaveBeenCalled();expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
+});
+it('抽音阶段取消不再重取直链或启动 ASR',async()=>{
+ const {deps,spies}=makeDeps({awemeIds:['one']});const controller=new AbortController();deps.signal=controller.signal;
+ deps.streamAudio=vi.fn(async()=>{controller.abort();throw new DOMException('cancel','AbortError');});
+ await expect(runTranscribe(ctx,{id:'cancel-stream',taskType:'transcribe.douyin',inputData:{awemeIds:['one']}},deps)).rejects.toMatchObject({name:'AbortError'});
+ expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);expect(spies.transcribeAudio).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
+});
+it('冷却等待可立即取消，不等待到期、不重新抓取',async()=>{
+ const {deps,spies}=makeDeps({awemeIds:['cooldown']});const controller=new AbortController();deps.signal=controller.signal;
+ spies.fetchVideoUrl.mockRejectedValue(Object.assign(new Error('cooldown'),{name:'DouyinCooldownError'}));
+ deps.isCooldownError=()=>true;deps.getCooldownRemainMs=()=>60_000;
+ let entered!:()=>void;const waiting=new Promise<void>(r=>{entered=r;});
+ spies.recordStep.mockImplementation(async(_c,_id,data)=>{if(data.text.includes('等待冷却结束'))entered();});
+ const running=runTranscribe(ctx,{id:'cancel-wait',taskType:'transcribe.douyin',inputData:{awemeIds:['cooldown']}},deps);
+ const stopped=expect(running).rejects.toMatchObject({name:'AbortError'});
+ await waiting;await Promise.resolve();controller.abort();await stopped;
+ expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);expect(spies.transcribeAudio).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
+});
+it.each([true,false])('已存事实探测返回 %s 时取消，不再启动恢复或取流',async(hasTranscript)=>{
+ const {deps,spies}=makeDeps({awemeIds:['existing']});const controller=new AbortController();deps.signal=controller.signal;
+ deps.hasTranscriptArtifact=async()=>{controller.abort();return hasTranscript;};deps.restoreTranscriptArtifact=vi.fn(async()=>{});
+ await expect(runTranscribe(ctx,{id:'cancel-restore',taskType:'transcribe.douyin',inputData:{awemeIds:['existing']}},deps)).rejects.toMatchObject({name:'AbortError'});
+ expect(deps.restoreTranscriptArtifact).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
+});

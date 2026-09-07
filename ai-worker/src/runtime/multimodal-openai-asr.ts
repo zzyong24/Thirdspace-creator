@@ -1,3 +1,4 @@
+import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 // OpenAI 兼容 ASR 适配器(T-030-D1,SPEC §5.1 / D-d)—— 实现 MultimodalProviderAdapter 的
 // `transcribeAudio`,直连 OpenAI 兼容的 `POST {baseUrl}/v1/audio/transcriptions`(multipart
 // form-data:file + model,Bearer 鉴权),返回体取 `.text`。**一个适配器覆盖 SiliconFlow /
@@ -49,6 +50,9 @@ async function transcribeAudio(
   opts: TranscribeAudioOptions,
   deps: OpenaiAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
+  ({spec, opts} = snapshotAsrInput(spec, opts));
+  const execute = createAsrRequestExecutor(spec,opts,transcriptionsUrl(spec),'openai-audio-transcriptions.v1');
+  return execute(opts.audioBytes,0,1,async()=>{
   // multipart/form-data:file(音频字节)+ model(+ 可选 language)。用全局 FormData/Blob
   // (Node 22 / undici 内建),fetch 会自动带 boundary 的 Content-Type —— 故**不手动设**
   // Content-Type(手动设会漏掉 boundary,导致服务端解析失败)。
@@ -63,6 +67,7 @@ async function transcribeAudio(
 
   const res = await deps.fetch(transcriptionsUrl(spec), {
     method: "POST",
+    signal: opts.signal,
     headers: {
       // 仅 Authorization;Content-Type 交给 FormData 自动生成(含 multipart boundary)。
       Authorization: `Bearer ${spec.token}`,
@@ -70,9 +75,9 @@ async function transcribeAudio(
     body: form,
   });
   if (!res.ok) {
-    throw new MultimodalGenerationError(
+    throw Object.assign(new MultimodalGenerationError(
       `ASR audio/transcriptions HTTP ${res.status}: ${await safeText(res)}`,
-    );
+    ),{statusCode:res.status});
   }
   const json = (await res.json()) as OpenaiTranscriptionResponse;
   // OpenAI 兼容转写(默认 response_format=json)返 `{ text, language? }`。
@@ -85,6 +90,7 @@ async function transcribeAudio(
     text: json.text,
     ...(typeof json.language === "string" ? { language: json.language } : {}),
   };
+  });
 }
 
 // Uint8Array → 精确切片的 ArrayBuffer(避免带上 view 之外的底层 buffer 尾部字节)。

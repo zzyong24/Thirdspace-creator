@@ -211,3 +211,13 @@ describe("transcribeWithLocalFallback", () => {
     expect(invoke).toHaveBeenCalledTimes(1);
   });
 });
+
+it('取消和持久回执未知不能进入本地回退，局部本地取消也不包装成失败',async()=>{
+ const {AsrExecutionInterruption}=await import('@creatoros/ai-worker');
+ for(const error of [new DOMException('stopped','AbortError'),new AsrExecutionInterruption()]){
+  const invoke=vi.fn(async()=>{throw error;});
+  await expect(transcribeWithLocalFallback(SPEC,invoke)).rejects.toBe(error);
+  expect(invoke).toHaveBeenCalledTimes(1);
+  await expect(transcribeWithLocalFallback({...SPEC,provider:'whisper-local'},invoke)).rejects.toBe(error);
+ }
+});

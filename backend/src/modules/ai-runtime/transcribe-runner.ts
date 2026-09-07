@@ -1,3 +1,4 @@
+import {isAsrExecutionControlError,throwIfAsrAborted} from "@creatoros/ai-worker";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   MultimodalProviderRegistry,
@@ -129,6 +130,7 @@ export interface TranscribeAiPort {
 }
 
 export interface TranscribeRunnerDeps {
+  signal?: AbortSignal;
   ai: TranscribeAiPort;
   /** 取无水印直链。[T-243] host 绑 fetchDouyinVideoSource(iesdouyin 匿名 → 登录态 detail
    *  回落);返回可为图集(kind:"image-album",runner 诚实跳过)。既有 fake 返回裸
@@ -157,7 +159,7 @@ export interface TranscribeRunnerDeps {
   /** 云端 ASR 转写(spec + 音频 bytes → 文本)。host 绑 ai-worker transcribeAudio;测试注 fake。 */
   transcribeAudio: (
     spec: MultimodalSpec,
-    opts: { audioBytes: Uint8Array; language?: string },
+    opts: { audioBytes: Uint8Array; language?: string; signal?: AbortSignal },
     registry: MultimodalProviderRegistry,
   ) => Promise<GeneratedTranscript & {
     /** T-768：实际成功的执行规格；host 统一回退 wrapper 填写，旧 host 可省略。 */
@@ -248,6 +250,8 @@ export async function runTranscribe(
   task: TranscribeTask,
   deps: TranscribeRunnerDeps,
 ): Promise<void> {
+  const signal=deps.signal;
+  const checkStopped=()=>throwIfAsrAborted(signal);
   const awemeIds = readAwemeIds(task.inputData);
   let stepNo = 0;
   let ok = 0;
@@ -259,6 +263,7 @@ export async function runTranscribe(
   }> = [];
 
   try {
+    checkStopped();
     await deps.ai.markRunning(ctx, task.id); // honest status while 逐条采集+转写
 
     if (awemeIds.length === 0) {
@@ -271,14 +276,18 @@ export async function runTranscribe(
     //   取流/抽音/ASR/绑作品/失败分类计数都只写一遍)。闭包直接读写外层计数器(stepNo/ok/
     //   albums/failures),重试成功即 ok+1、重试再失败即重新 push failures。
     const processOne = async (awemeId: string): Promise<void> => {
+      checkStopped();
       let resolvedSpec: MultimodalSpec | null = null;
       // 1) 幂等前置(只读探测):已有 transcript artifact 则 skip,**不重复 fetch/ASR**(省流)。
       //    用 hasTranscriptArtifact(只读)而非 ensureTranscriptArtifact —— 后者「不存在则建」,
       //    拿空 transcript 当探针会写脏空稿。真正的写入在下面 §3 用真 text 调 ensure(它自身也幂等)。
-      if (await deps.hasTranscriptArtifact(ctx, awemeId)) {
+      const hasTranscript = await deps.hasTranscriptArtifact(ctx, awemeId);
+      checkStopped();
+      if (hasTranscript) {
         try {
           await deps.restoreTranscriptArtifact?.(ctx, awemeId);
-        } catch {
+        } catch (error) {
+          checkStopped();if(isAsrExecutionControlError(error))throw error;
           console.warn(`[transcribe-runner] 逐字稿已保存，派生稿恢复待重试 (awemeId=${awemeId})`);
         }
         stepNo += 1;
@@ -296,6 +305,7 @@ export async function runTranscribe(
       //    ASR 未配置则立即抛到批级 catch，避免剩余作品重复取流和重复报错。
       try {
         const src = await deps.fetchVideoUrl(ctx, awemeId);
+        checkStopped();
 
         // [T-243] 图集作品(无口播音频)→ 诚实跳过:写占位锚(ensureTranscriptArtifact 现有
         // 幂等锚,hasTranscriptArtifact 下轮命中即 skip,防每轮重查);skipMasterScript 避免把
@@ -327,6 +337,7 @@ export async function runTranscribe(
         // 图集不需要 ASR，仍可在上面的分支诚实落锚。
         const baseSpec = await deps.resolveTranscribeSpec(ctx);
         resolvedSpec = baseSpec;
+        checkStopped();
 
         // [T-243] ffmpeg 失败单次重试:直链可能瞬时失效(CDN 签名过期)→ 重取直链再试一次;
         // 再失败照旧单作品失败继续(抛给外层 catch 分类计数)。
@@ -334,14 +345,17 @@ export async function runTranscribe(
         try {
           audioBytes = await deps.streamAudio(ctx, src.playUrl);
         } catch (ffErr) {
+          checkStopped();if(isAsrExecutionControlError(ffErr))throw ffErr;
           console.warn(
             `[transcribe-runner] aweme ${awemeId} 抽音失败,重取直链重试一次:`,
             ffErr instanceof Error ? ffErr.message : ffErr,
           );
           const retrySrc = await deps.fetchVideoUrl(ctx, awemeId);
+          checkStopped();
           if (retrySrc.kind === "image-album") throw ffErr; // 重取竟变图集(极罕见)→ 按原错处理
           audioBytes = await deps.streamAudio(ctx, retrySrc.playUrl);
         }
+        checkStopped();
         const spec = deps.prepareTranscribeSpec
           ? await deps.prepareTranscribeSpec(ctx, baseSpec, {
               audioBytes,
@@ -349,11 +363,13 @@ export async function runTranscribe(
             })
           : baseSpec;
         resolvedSpec = spec;
+        checkStopped();
         const transcriptResult = await deps.transcribeAudio(
           spec,
-          { audioBytes, language: deps.language ?? "zh" },
+          { audioBytes, language: deps.language ?? "zh", ...(signal?{signal}:{}) },
           deps.registry,
         );
+        checkStopped();
         resolvedSpec = transcriptResult.effectiveSpec ?? spec;
         const { text } = transcriptResult;
         if (!text || !text.trim()) {
@@ -378,12 +394,14 @@ export async function runTranscribe(
               postNote = ` · 后处理未执行:${post.reason ?? "未知原因"}`;
             }
           } catch (postErr) {
+            checkStopped();if(isAsrExecutionControlError(postErr))throw postErr;
             postNote = ` · 后处理未执行:${
               postErr instanceof Error ? postErr.message : String(postErr)
             }`;
           }
         }
         // 3) 绑作品(此刻带真 transcript;若并发下已被别处写入,ensure 幂等返回 already-exists 亦可)。
+        checkStopped();
         const bound = await deps.ensureTranscriptArtifact(ctx, {
           awemeId,
           transcript: finalText,
@@ -396,11 +414,13 @@ export async function runTranscribe(
             : undefined;
         if (boundProjectId && deps.onTranscriptReady) {
           try {
+            checkStopped();
             await deps.onTranscriptReady(ctx, {
               awemeId,
               projectId: boundProjectId,
             });
           } catch (enqueueErr) {
+            checkStopped();if(isAsrExecutionControlError(enqueueErr))throw enqueueErr;
             // 此时逐字稿已经可靠落库。下游排队是可补偿动作，绝不能把本条转写倒判失败。
             console.warn(
               `[transcribe-runner] 作品 ${awemeId} 逐字稿已就绪，但重建排队失败（后续采集将补偿）:`,
@@ -423,6 +443,7 @@ export async function runTranscribe(
         });
         ok += 1;
       } catch (err) {
+        checkStopped();if(isAsrExecutionControlError(err))throw err;
         if (
           err instanceof TranscribeConfigError ||
           (err instanceof Error && err.name === "TranscribeConfigError")
@@ -492,8 +513,15 @@ export async function runTranscribe(
         });
         const sleep =
           deps.sleep ??
-          ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+          ((ms: number) => new Promise<void>((resolve,reject) => {
+            const abort=()=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(new DOMException('转写已取消','AbortError'));};
+            const timer=setTimeout(()=>{signal?.removeEventListener('abort',abort);resolve();},ms);
+            signal?.addEventListener('abort',abort,{once:true});
+            if(signal?.aborted)abort();
+          }));
+        checkStopped();
         if (waitMs > 0) await sleep(waitMs);
+        checkStopped();
         for (const awemeId of cooldownFailedIds) {
           await processOne(awemeId);
         }
@@ -533,8 +561,10 @@ export async function runTranscribe(
       text: `逐字稿采集完成:成功 ${ok} 条${albumNote},失败 ${failures.length} 条${breakdownNote}(共 ${awemeIds.length} 条)`,
       toolCalls: [],
     });
+    checkStopped();
     await deps.ai.markSucceeded(ctx, task.id);
   } catch (err) {
+    checkStopped();if(isAsrExecutionControlError(err))throw err;
     // ASR 未配置与其它批级异常统一在此收口，确保任务绝不残留 running。
     const message =
       err instanceof TranscribeConfigError

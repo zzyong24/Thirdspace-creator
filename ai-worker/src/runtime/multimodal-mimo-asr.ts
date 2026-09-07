@@ -1,3 +1,4 @@
+import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 import {
   MultimodalGenerationError,
   type GeneratedTranscript,
@@ -154,10 +155,12 @@ async function transcribeChunk(
   bytes: Uint8Array,
   language: string | undefined,
   fetchImpl: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<string> {
   const data = `data:audio/mpeg;base64,${Buffer.from(bytes).toString("base64")}`;
   const res = await fetchImpl(completionsUrl(spec), {
     method: "POST",
+    signal,
     headers: {
       Authorization: `Bearer ${spec.token}`,
       "Content-Type": "application/json",
@@ -176,9 +179,9 @@ async function transcribeChunk(
     }),
   });
   if (!res.ok) {
-    throw new MultimodalGenerationError(
+    throw Object.assign(new MultimodalGenerationError(
       `MiMo ASR HTTP ${res.status}: ${await safeText(res)}`,
-    );
+    ),{statusCode:res.status});
   }
   const json = (await res.json()) as MimoResponse;
   const text = json.choices?.[0]?.message?.content;
@@ -193,13 +196,16 @@ async function transcribeAudio(
   opts: TranscribeAudioOptions,
   deps: MimoAsrAdapterDeps,
 ): Promise<GeneratedTranscript> {
+  ({spec, opts} = snapshotAsrInput(spec, opts));
+  const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'mimo-chat-audio.v1');
   const chunks = splitMp3ForMimo(
     opts.audioBytes,
     deps.maxEncodedBytes ?? DEFAULT_MAX_ENCODED_BYTES,
   );
   const texts: string[] = [];
-  for (const chunk of chunks) {
-    texts.push(await transcribeChunk(spec, chunk, opts.language, deps.fetch));
+  for (const [index,chunk] of chunks.entries()) {
+    const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));
+    texts.push(result.text);
   }
   return {
     text: texts.join("\n"),
