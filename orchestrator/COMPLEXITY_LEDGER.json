@@ -1029,7 +1029,7 @@
       "files": [
         "frontend/src-tauri/src/lib.rs"
       ],
-      "file_sha256": "ce5f9bc2cf2f65807a95893c50b64a943dc52a3ab66eca489211d8ee23cb6ab8",
+      "file_sha256": "f57804b96aa3253dbb7b8e44b5f70ca53be6a5588d5a971ab4955372f5a1b5a4",
       "categories": [
         "credential_store",
         "installer_deploy",
@@ -1040,7 +1040,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "仅登记 e17a13ee 已存在文件的准确复杂度基线；维持既有桌面工具链、凭据保管和发布配置，不授权新增机制、运行安装或部署。文件内容改变后本哈希失效，须重新评估。",
+      "reason": "T-915 受控 macOS sidecar 组停止确认修复：仅更换原Child管理与watcher，保留5秒优雅退出，不新增安装、签名、凭据或IPC机制；精确绑定当前文件。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
