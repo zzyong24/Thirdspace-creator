@@ -59,6 +59,10 @@
     "./asr-identity": {
       "types": "./src/runtime/asr-execution-identity.ts",
       "default": "./src/runtime/asr-execution-identity.ts"
+    },
+    "./asr-transcript": {
+      "types": "./src/runtime/asr-transcript.ts",
+      "default": "./src/runtime/asr-transcript.ts"
     }
   },
   "scripts": {

@@ -1,3 +1,4 @@
+import {assembleAsrTranscript} from './asr-transcript';
 import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 import {
   MultimodalGenerationError,
@@ -207,12 +208,7 @@ async function transcribeAudio(
     const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));
     texts.push(result.text);
   }
-  return {
-    text: texts.join("\n"),
-    ...(opts.language === "zh" || opts.language === "en"
-      ? { language: opts.language }
-      : {}),
-  };
+  return assembleAsrTranscript({protocol:'mimo-chat-audio.v1',language:opts.language??null},texts.map(text=>({text})));
 }
 
 export function createMimoAsrAdapter(

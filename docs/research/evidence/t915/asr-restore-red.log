@@ -1,0 +1,44 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (16 tests | 2 failed) 3300ms
+   × 完整识别直接回读所有已确认分片，无新增调用或凭据依赖 6ms
+   × 未知尾片不能被当完整成功，已确认调用摘要损坏也不能回放 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 完整识别直接回读所有已确认分片，无新增调用或凭据依赖
+TypeError: f.service.read is not a function
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:202:49
+    200|
+    201| it('完整识别直接回读所有已确认分片，无新增调用或凭据依赖',async()=>{
+    202|  const f=await fixture();expect(await f.service.read(f.ref,{awemeId:'v…
+       |                                                 ^
+    203|  await f.run(request,async()=>({text:'首片'}));expect(await f.service.re…
+    204|  await f.run(second,async()=>({text:'尾片'}));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 未知尾片不能被当完整成功，已确认调用摘要损坏也不能回放
+TypeError: f.service.read is not a function
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:213:25
+    211|  const f=await fixture();await f.run(request,async()=>({text:'首片'}));
+    212|  await expect(f.run(second,async()=>{throw Error('unknown');})).reject…
+    213|  expect(await f.service.read(f.ref,{awemeId:'video'})).toBeNull();
+       |                         ^
+    214|  const g=await fixture();await g.run(request,async()=>({text:'首片'}));a…
+    215|  const call=(await g.ledger.inspect(g.ref)).calls[0]!;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 14 passed (16)
+   Start at  23:50:22
+   Duration  4.87s (transform 812ms, setup 0ms, import 1.44s, tests 3.30s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

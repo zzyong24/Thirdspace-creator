@@ -3,7 +3,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {beforeAll,afterAll,it,expect,vi} from 'vitest';
 import {createDb,aiTasks,executionTasks,eq,type Db} from '@creatoros/backend';
-import {localWhisperSpec,createWhisperLocalAdapter,transcribeAudio,createDurableAsrRequestExecutor,type MultimodalSpec} from '@creatoros/ai-worker';
+import {runTranscribeAsrInWorker,localWhisperSpec,createQwenAsrAdapter,createWhisperLocalAdapter,transcribeAudio,createDurableAsrRequestExecutor,type MultimodalSpec} from '@creatoros/ai-worker';
 import {createTranscribeBusinessExecutionService} from '../ai-runtime/transcribe-business-execution.service';
 import {createExecutionTranscribePreparationService} from './execution-transcribe-preparation.service';
 import {createExecutionTranscribeAudioService} from './execution-transcribe-audio.service';
@@ -20,7 +20,7 @@ async function fixture(spec:MultimodalSpec={kind:'audio',provider:'qwen',model:'
  const claim=(await createPersistentTaskService(db).claimTask({taskId:mapped.executionTaskId!,workerId:'fixture'}))!,ref={executionTaskId:mapped.executionTaskId!,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const storage=createLocalFsObjectStorage({rootPath:join(dir,id),publicBaseUrl:'/unused'},{nextKey:()=>`blob-${++seq}`}),audio=createExecutionTranscribeAudioService(db,{objectStorageForCtx:async()=>storage});
  await audio.save(ref,{awemeId:'one',bytes:new Uint8Array([1])});await audio.save(ref,{awemeId:'two',bytes:new Uint8Array([2,3])});
- const prepareSpec=vi.fn(async(_ctx:unknown,current:MultimodalSpec,_input:{audioBytes:Uint8Array;intentId:string})=>current),service=createExecutionTranscribePreparationService(db,{audio,resolveSpec,prepareSpec});
+ const prepareSpec=vi.fn(async(_ctx:unknown,current:MultimodalSpec,_input:{audioBytes:Uint8Array;intentId:string})=>current),service=createExecutionTranscribePreparationService(db,{audio,asr:createExecutionAsrPorts(db,{budget}),resolveSpec,prepareSpec});
  return {id,ref,audio,service,prepareSpec,resolveSpec};
 }
 it('逐作品固定实际身份与稳定凭据意图，密钥不落库',async()=>{
@@ -33,7 +33,7 @@ it('逐作品固定实际身份与稳定凭据意图，密钥不落库',async()=
 });
 it('已固定云身份不能因凭据刷新失败改成本地，但可刷新同身份短效 token',async()=>{
  const f=await fixture(),first=await f.service.prepare(f.ref,'one');f.prepareSpec.mockImplementation(async(_ctx,spec)=>({...spec,token:'fresh-token'}));
- const refreshed=await f.service.prepare(f.ref,'one');expect(refreshed.plan).toEqual(first.plan);expect(refreshed.spec.token).toBe('fresh-token');
+ const refreshed=await f.service.prepare(f.ref,'one');expect(refreshed.plan).toEqual(first.plan);if(refreshed.status!=='prepared')throw Error('unexpected restored');expect(refreshed.spec.token).toBe('fresh-token');
  f.prepareSpec.mockResolvedValue(localWhisperSpec());await expect(f.service.prepare(f.ref,'one')).rejects.toThrow();
 });
 it.each(['cancel','fence'])('申请期间 %s 不保存迟到执行选择',async mode=>{
@@ -46,9 +46,41 @@ it('配置读取期间换租约，旧执行不再申请按次凭据',async()=>{
 });
 it('真实任务准备、文件保存、实际本地身份和识别回执贯通',async()=>{
  const f=await fixture({...localWhisperSpec(),model:'base'}),selected=await f.service.prepare(f.ref,'one'),asr=createExecutionAsrPorts(db,{budget});
+ if(selected.status!=='prepared')throw Error('unexpected restored');
  expect(selected.spec.model).toBe('small');
  const ports={reserve:(input:any)=>asr.reserve(f.ref,{awemeId:'one',request:input.request}),start:async(callId:string)=>{await asr.start(f.ref,{awemeId:'one',callId});},settle:async(callId:string,input:any)=>{await asr.settle(f.ref,{awemeId:'one',callId,...input});}};
  const pipeline=vi.fn(async()=>({text:'原逐字稿'})),registry={'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})};
  for(let i=0;i<2;i++){const saved=await f.audio.read(f.ref,{awemeId:'one'});if(saved.status!=='ready')throw Error('missing');expect((await transcribeAudio(selected.spec,{audioBytes:saved.bytes,language:'zh',executeRequest:createDurableAsrRequestExecutor({operationKey:'transcribe:one',ports})},registry)).text).toBe('原逐字稿');}
  expect(pipeline).toHaveBeenCalledTimes(1);
+ const read=vi.spyOn(f.audio,'read');read.mockRejectedValue(Error('原音频暂不可读取'));
+ f.resolveSpec.mockRejectedValue(Error('当前凭据失效'));f.prepareSpec.mockRejectedValue(Error('当前凭据失效'));
+ const priorResolves=f.resolveSpec.mock.calls.length;
+ expect(await f.service.prepare(f.ref,'one')).toMatchObject({status:'restored',result:{text:'原逐字稿'}});
+ expect(read).not.toHaveBeenCalled();expect(f.resolveSpec).toHaveBeenCalledTimes(priorResolves);
+
+});
+
+it('云端完整正文恢复先于原音频读取及凭据续期，失败凭据不影响已确认结果',async()=>{
+ const f=await fixture(),selected=await f.service.prepare(f.ref,'one');if(selected.status!=='prepared')throw Error('missing preparation');
+ const asr=createExecutionAsrPorts(db,{budget});
+ const ports={reserve:(input:any)=>asr.reserve(f.ref,{awemeId:'one',request:input.request}),start:async(callId:string)=>{await asr.start(f.ref,{awemeId:'one',callId});},settle:async(callId:string,input:any)=>{await asr.settle(f.ref,{awemeId:'one',callId,...input});}};
+ const fetcher=vi.fn(async()=>new Response(JSON.stringify({choices:[{message:{content:'云端原文'}}]})));
+ expect(await transcribeAudio(selected.spec,{audioBytes:new Uint8Array([1]),language:'zh',executeRequest:createDurableAsrRequestExecutor({operationKey:'transcribe:one',ports})},{qwen:createQwenAsrAdapter({fetch:fetcher})})).toEqual({text:'云端原文',language:'zh'});
+ f.resolveSpec.mockClear().mockRejectedValue(Error('expired'));f.prepareSpec.mockClear().mockRejectedValue(Error('expired'));
+ const read=vi.spyOn(f.audio,'read').mockRejectedValue(Error('storage unavailable'));
+ expect(await f.service.prepare(f.ref,'one')).toEqual({status:'restored',plan:selected.plan,result:{text:'云端原文',language:'zh'}});
+ const call=vi.fn(async(port:string,data:any)=>{if(port==='prepareTranscribeAsr')return f.service.prepare(f.ref,data.awemeId);throw Error('恢复不应读取音频或发起识别');});
+ expect(await runTranscribeAsrInWorker('one',new AbortController().signal,call,{})).toEqual({text:'云端原文',language:'zh'});
+ expect(call).toHaveBeenCalledTimes(1);
+ expect(read).not.toHaveBeenCalled();expect(f.resolveSpec).not.toHaveBeenCalled();expect(f.prepareSpec).not.toHaveBeenCalled();expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+it('Worker 识别节点经真实命名端口完成一次调用，恢复不再进入适配器',async()=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});
+ const call=vi.fn(async(port:any,data:any)=>port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data));
+ const fetcher=vi.fn(async()=>new Response(JSON.stringify({choices:[{message:{content:'Worker 原文'}}]}))),registry={qwen:createQwenAsrAdapter({fetch:fetcher})};
+ const first=await runTranscribeAsrInWorker('one',new AbortController().signal,call,registry);
+ expect(first).toEqual({text:'Worker 原文',language:'zh'});call.mockClear();
+ expect(await runTranscribeAsrInWorker('one',new AbortController().signal,call,{})).toEqual(first);
+ expect(call.mock.calls.map(args=>args[0])).toEqual(['prepareTranscribeAsr']);expect(fetcher).toHaveBeenCalledTimes(1);
 });

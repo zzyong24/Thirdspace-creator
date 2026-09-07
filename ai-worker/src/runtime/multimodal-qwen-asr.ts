@@ -1,3 +1,4 @@
+import {assembleAsrTranscript} from './asr-transcript';
 import {createAsrRequestExecutor, snapshotAsrInput} from "./asr-request";
 import {
   MultimodalGenerationError,
@@ -122,8 +123,7 @@ async function transcribeAudio(
     }
     const execute = createAsrRequestExecutor(spec,opts,completionsUrl(spec),'qwen-chat-audio.v1');
     const {text}=await execute(opts.audioBytes,0,1,async()=>({text:await transcribeChunk(spec,opts.audioBytes,opts.language,deps.fetch,opts.signal)}));
-    const language = opts.language?.trim();
-    return { text, ...(language ? { language } : {}) };
+    return assembleAsrTranscript({protocol:'qwen-chat-audio.v1',language:opts.language??null},[{text}]);
   }
   const chunks = splitMp3ForDataUrl(
     opts.audioBytes,
@@ -136,11 +136,7 @@ async function transcribeAudio(
     const result=await execute(chunk,index,chunks.length,async()=>({text:await transcribeChunk(spec,chunk,opts.language,deps.fetch,opts.signal)}));
     texts.push(result.text);
   }
-  const language = opts.language?.trim();
-  return {
-    text: texts.join("\n"),
-    ...(language ? { language } : {}),
-  };
+  return assembleAsrTranscript({protocol:'qwen-chat-audio.v1',language:opts.language??null},texts.map(text=>({text})));
 }
 
 export function createQwenAsrAdapter(

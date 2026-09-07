@@ -80,8 +80,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const transcribeAudio=deps.executionMode==="model"&&deps.transcribeAudioStorage?createExecutionTranscribeAudioService(db,{now,objectStorageForCtx:deps.transcribeAudioStorage}):null;
-  const transcribePreparation=deps.executionMode==="model"&&transcribeAudio&&deps.transcribePreparation?createExecutionTranscribePreparationService(db,{now,audio:transcribeAudio,...deps.transcribePreparation}):null;
   const asrPorts=deps.executionMode==="model"?createExecutionAsrPorts(db,{now,budget:deps.budget}):null;
+  const transcribePreparation=deps.executionMode==="model"&&transcribeAudio&&asrPorts&&deps.transcribePreparation?createExecutionTranscribePreparationService(db,{now,audio:transcribeAudio,asr:asrPorts,...deps.transcribePreparation}):null;
   const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;

@@ -1,0 +1,12 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/transcribe-asr-run.test.ts src/execution/durable-asr-request.test.ts src/runtime/multimodal-qwen-asr.test.ts src/runtime/multimodal-mimo-asr.test.ts src/runtime/multimodal-openai-asr.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  5 passed (5)
+      Tests  33 passed (33)
+   Start at  23:58:06
+   Duration  422ms (transform 335ms, setup 0ms, import 769ms, tests 207ms, environment 0ms)

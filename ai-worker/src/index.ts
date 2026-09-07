@@ -616,3 +616,5 @@ export {
   type TranscribeWithFallbackResult,
   type LocalWhisperFailureCode,
 } from "./runtime/transcribe-local-fallback";
+
+export {runTranscribeAsrInWorker} from './execution/transcribe-asr-run';

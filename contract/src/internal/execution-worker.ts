@@ -1,5 +1,5 @@
 import {transcribeTaskInputSchema} from "./transcribe-task";
-export {transcribeTaskInputSchema,transcribeConfigurationSchema,transcribeAsrPlanSchema,type TranscribeConfiguration} from "./transcribe-task";
+export {transcribeAsrPreparationSchema,transcribeTaskInputSchema,transcribeConfigurationSchema,transcribeAsrPlanSchema,type TranscribeConfiguration} from "./transcribe-task";
 import {transcribeAudioPortSchemas} from "./execution-transcribe-audio";
 export {transcribeAudioReceiptSchema} from "./execution-transcribe-audio";
 import {asrPortInputSchemas} from "./execution-asr";

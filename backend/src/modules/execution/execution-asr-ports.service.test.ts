@@ -197,3 +197,22 @@ it('未保存原音频时不能启动 ASR 预留',async()=>{
  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
  await expect(f.service.reserve(f.ref,{awemeId:'video',request})).rejects.toThrow();
 });
+
+it('完整识别直接回读所有已确认分片，无新增调用或凭据依赖',async()=>{
+ const f=await fixture();expect(await f.service.read(f.ref,{awemeId:'video'})).toBeNull();
+ await f.run(request,async()=>({text:'首片'}));expect(await f.service.read(f.ref,{awemeId:'video'})).toBeNull();
+ await f.run(second,async()=>({text:'尾片'}));
+ expect(await f.service.read(f.ref,{awemeId:'video'})).toEqual({identity,result:{text:'首片\n尾片',language:'zh'}});
+ expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(2);
+ await expect(f.service.read({...f.ref,fenceToken:'foreign'},{awemeId:'video'})).rejects.toThrow();
+ await expect(f.service.read(f.ref,{awemeId:'foreign'})).rejects.toThrow();
+});
+it('未知尾片不能被当完整成功，已确认调用摘要损坏也不能回放',async()=>{
+ const f=await fixture();await f.run(request,async()=>({text:'首片'}));
+ await expect(f.run(second,async()=>{throw Error('unknown');})).rejects.toThrow();
+ expect(await f.service.read(f.ref,{awemeId:'video'})).toBeNull();
+ const g=await fixture();await g.run(request,async()=>({text:'首片'}));await g.run(second,async()=>({text:'尾片'}));
+ const call=(await g.ledger.inspect(g.ref)).calls[0]!;
+ await db.update(executionCalls).set({inputDigest:hash('tampered')}).where(eq(executionCalls.id,call.id));
+ await expect(g.service.read(g.ref,{awemeId:'video'})).rejects.toThrow();
+});

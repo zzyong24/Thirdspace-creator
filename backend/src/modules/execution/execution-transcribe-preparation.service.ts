@@ -1,3 +1,4 @@
+import type {createExecutionAsrPorts} from './execution-asr-ports.service';
 import {isDeepStrictEqual} from 'node:util';
 import {eq,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
@@ -12,7 +13,7 @@ import {bindTranscribeExecution,type TranscribeExecutionScope} from './transcrib
 import {ConflictError} from './execution.errors';
 /** 凭据仅返回当前调用；音频与实际身份在原任务行锁下首次冻结。 */
 export function createExecutionTranscribePreparationService(db:Db,deps:{
- audio:ReturnType<typeof createExecutionTranscribeAudioService>;now?:()=>string;
+ audio:ReturnType<typeof createExecutionTranscribeAudioService>;asr:Pick<ReturnType<typeof createExecutionAsrPorts>,'read'>;now?:()=>string;
  resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>;
  prepareSpec(ctx:RequestContext,spec:MultimodalSpec,input:{audioBytes:Uint8Array;intentId:string}):Promise<MultimodalSpec>;
 }){
@@ -31,6 +32,7 @@ export function createExecutionTranscribePreparationService(db:Db,deps:{
   async prepare(ref:ExecutionRef,awemeId:string,signal?:AbortSignal){
    const abort=signal??new AbortController().signal;abort.throwIfAborted();
    const initial=await leases.withLease(ref,'admission',async scope=>({...await read(scope,awemeId),context:scope.context}));
+   if(initial.plan){const restored=await deps.asr.read(ref,{awemeId});abort.throwIfAborted();if(restored){if(!isDeepStrictEqual(restored.identity,initial.plan.identity))throw new ConflictError('恢复期间识别身份已改变');return {status:'restored' as const,plan:initial.plan,result:restored.result};}}
    const audio=await deps.audio.read(ref,{awemeId},abort);if(audio.status!=='ready')throw new ConflictError('识别准备需要已保存原音频');
    if(initial.plan&&(initial.plan.audioDigest!==audio.audioDigest||initial.plan.audioByteLength!==audio.audioByteLength))throw new ConflictError('原音频与已选执行不同');
    let spec:MultimodalSpec;
@@ -62,7 +64,7 @@ export function createExecutionTranscribePreparationService(db:Db,deps:{
     if(calls.some(call=>call.operationKey.startsWith(`transcribe:${awemeId}/asr/`)||call.operationKey.startsWith(`transcribe:${awemeId}/local-asr/`)))throw new ConflictError('已有识别调用不能补选新身份');
     await scope.tx.update(executionTasks).set({payload:{...current.payload,transcribeAsrPlans:{...current.plans,[awemeId]:plan}}}).where(eq(executionTasks.id,scope.task.id));
    });
-   abort.throwIfAborted();return {plan,spec};
+   abort.throwIfAborted();return {status:'prepared' as const,plan,spec:{...transcribeConfiguration(spec),token:spec.token}};
   },
  };
 }

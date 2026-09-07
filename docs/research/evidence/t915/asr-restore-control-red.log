@@ -1,0 +1,50 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/transcribe-asr-run.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/transcribe-asr-run.test.ts (7 tests | 2 failed) 33ms
+   × prepare 私有响应未知不得当普通识别失败进入回退 4ms (retry x2)
+   × audio 私有响应未知不得当普通识别失败进入回退 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/transcribe-asr-run.test.ts > prepare 私有响应未知不得当普通识别失败进入回退
+ FAIL  src/execution/transcribe-asr-run.test.ts > prepare 私有响应未知不得当普通识别失败进入回退
+ FAIL  src/execution/transcribe-asr-run.test.ts > prepare 私有响应未知不得当普通识别失败进入回退
+AssertionError: expected Error: ACK lost to be an instance of AsrExecutionInterruption
+ ❯ src/execution/transcribe-asr-run.test.ts:37:22
+     35|  const f=fixture();if(stage==='prepare')f.call.mockRejectedValue(Error…
+     36|  else f.reply.readTranscribeAudio={status:'ready',bytes:'bad'};
+     37|  await expect(f.run()).rejects.toBeInstanceOf(AsrExecutionInterruption…
+       |                      ^
+     38| });
+     39|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/execution/transcribe-asr-run.test.ts > audio 私有响应未知不得当普通识别失败进入回退
+ FAIL  src/execution/transcribe-asr-run.test.ts > audio 私有响应未知不得当普通识别失败进入回退
+ FAIL  src/execution/transcribe-asr-run.test.ts > audio 私有响应未知不得当普通识别失败进入回退
+AssertionError: expected ZodError: [
+  {
+    "code": "invalid_type… { …(8) } to be an instance of AsrExecutionInterruption
+ ❯ src/execution/transcribe-asr-run.test.ts:37:22
+     35|  const f=fixture();if(stage==='prepare')f.call.mockRejectedValue(Error…
+     36|  else f.reply.readTranscribeAudio={status:'ready',bytes:'bad'};
+     37|  await expect(f.run()).rejects.toBeInstanceOf(AsrExecutionInterruption…
+       |                      ^
+     38| });
+     39|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  23:57:41
+   Duration  443ms (transform 128ms, setup 0ms, import 254ms, tests 33ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
