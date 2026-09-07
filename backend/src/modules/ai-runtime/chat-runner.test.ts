@@ -1,3 +1,4 @@
+import { parseSemanticVerbatimSelection } from "./chat-script-import-authorization";
 import { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
 import { createServer } from "node:http";
 import { resolveChatMaxSteps, buildChatPrepareStep, buildForcedToolInstruction, repairScriptPatchToolCall, dedupeChatToolExecutions } from "@creatoros/ai-worker/chat";
@@ -20,7 +21,6 @@ import {
   isScratchPositioningConversation,
   resolveUniqueCoverReference,
   collectVerbatimSources,
-  parseSemanticVerbatimSelection,
 } from "./chat-runner";
 import { buildEnrichPrompt } from "./topic-enrich-runner";
 import {

@@ -1,0 +1,27 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-script-import-authorization.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-import-authorization.test.ts [ src/modules/ai-runtime/chat-script-import-authorization.test.ts ]
+Error: Cannot find module './chat-script-import-authorization' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai-runtime/chat-script-import-authorization.test.ts
+ ❯ src/modules/ai-runtime/chat-script-import-authorization.test.ts:2:1
+      1| import {it,expect} from "vitest";
+      2| import {prepareScriptImportAuthorization,parseSemanticVerbatimSelectio…
+       | ^
+      3| it("授权节点使用完整最新指令和完整来源，不消费模型建议作为最终边界",()=>{
+      4|  const text="我把稿子发给你。第一句正文不能被删。\n完整结尾。";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  20:35:39
+   Duration  165ms (transform 15ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-script-import-authorization.test.ts
