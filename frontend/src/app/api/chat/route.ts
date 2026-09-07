@@ -816,7 +816,7 @@ export async function POST(req: Request): Promise<Response> {
         // [T-385] project.transcribe 端口 —— 复用 T-374 projects.transcribe 链,对话内一键抓单条逐字稿。
         dispatchProjectTranscribePort: runtime.dispatchProjectTranscribe,
       },skillSnapshot,{workerScriptDraft:true,workerWebRead:true,workerResearch:true,
-        atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
+        atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
         scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192}});
       req.signal.throwIfAborted();
       return {capability:prepared.assembly.capability,system:prepared.assembly.system,

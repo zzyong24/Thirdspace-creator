@@ -1600,6 +1600,7 @@ export interface ChatRuntime {
   wakeChatPublishTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   prepareChatScriptReviewTask: (ctx:RequestContext,input:{projectId:string;attemptId:string})=>ReturnType<AiService["prepareTaskCommit"]>;
   wakeChatScriptReviewTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
+  wakeChatCoverTask:(ctx:RequestContext,taskId:string)=>Promise<void>;
   wakeChatResearchTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   wakeChatPlanningTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   wakeChatMaterialTask: (ctx: RequestContext, taskId: string) => Promise<void>;
@@ -9693,7 +9694,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     fail:(c,id,message)=>aiService.markFailed(c,id,message),
   });
-  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"|"script.draft"|"publish.platform_adapt"){
+  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"|"script.draft"|"publish.platform_adapt"|"cover.generate"){
     const task=await aiService.getTask(c,id);
     if(task.taskType!==taskType)throw new Error("聊天唤醒任务类型不符");
     if(task.status!=="queued")return;
@@ -12341,6 +12342,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     wakeChatScriptReviewTask: (ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.review"),
     // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
     // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
+    wakeChatCoverTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"cover.generate"),
     wakeChatResearchTask:async(ctx,taskId)=>{
       if(stoppingPreparation)throw new Error("应用正在停止");
       const task=await aiService.getTask(ctx,taskId);
@@ -12550,6 +12552,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveTools:async(c,input,ref,signal)=>Object.assign({},await createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
         webRead:true,research:true,
+        cover:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatCoverTask},
         agenticResearch:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
         planning:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},
         material:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatMaterialTask},

@@ -20,10 +20,11 @@ export async function prepareDurableChatTurn(
  input: Parameters<typeof runChatStream>[1],
  deps: Parameters<typeof runChatStream>[2],
  skillSnapshot: ChatHostContext["skillSnapshot"],
- options: {atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
+ options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
 ) {
  // 必须在首个 await 前复制，工具闭包也不能持有调用方可变的账号/选区对象。
  const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal;
+ const atomicCoverGenerate=options.atomicCoverGenerate===true;
  const atomicAgenticResearch=options.atomicAgenticResearch===true;
  const workerScriptDraft=options.workerScriptDraft===true;
  const workerWebRead=options.workerWebRead===true;
@@ -45,7 +46,7 @@ export async function prepareDurableChatTurn(
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
   messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,
   abortSignal,
- },deps,{atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration)}));
+ },deps,{atomicCoverGenerate,atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration)}));
  if(structuredGeneration && prepared.toolDefinitions.some(tool=>tool.execution==="worker.structured-node" && !hostContext.skillSnapshot.skills.some(skill=>skill.skillId===(tool.name==="review.analyze"?"review.insights":tool.name))))throw new Error("原任务缺少生成节点 Skill");
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
  const completeHostContext=validateChatHostContext({
