@@ -7,7 +7,7 @@ import {createAgenticToolBinding} from "./agentic-tool-binding";
 const originSchema=z.object({executionTaskId:z.string(),callId:z.string(),inputDigest:z.string()}).strict();
 const recoverySchema=z.object({attempts:z.number().int().min(0).max(3),nextAt:z.string().datetime(),deadlineAt:z.string().datetime(),errorCode:z.string().nullable()}).strict();
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
-const supportedTaskTypes=["planning.thesis","asset.generate","script.review","script.draft","publish.platform_adapt"];
+const supportedTaskTypes=["planning.thesis","asset.generate","script.review","script.draft","publish.platform_adapt","cover.generate"];
 /** 已提交子任务的准备补偿；只复用原任务，不创建模型调用或新任务。 */
 export function createSubmittedTaskPreparationService(db:Db,deps:{
  deadlineMs:number;now?:()=>number;random?:()=>number;

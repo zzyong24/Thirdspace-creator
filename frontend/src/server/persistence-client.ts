@@ -497,7 +497,8 @@ import {
 import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createAssetBusinessExecutionService, runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
-import { runCoverGenerate } from "@creatoros/backend/modules/ai-runtime";
+import {createCoverBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
+import {createExecutionCoverService} from "@creatoros/backend/modules/execution";
 import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
 import { runTranscriptPostprocess } from "@creatoros/backend/modules/ai-runtime";
@@ -4183,60 +4184,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                 } catch {
                   return [];
                 }
-              },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "cover.generate" &&
-          task.status === "queued"
-        ) {
-          // [T-271] 制作封面链 node —— 结构化封面方案(硬锚立项 brief 核心信息/内容形式 + 口播稿主张)
-          // → 封面文案诚实门(annotateUngroundedClaims,数字/成绩只能从内容提取禁编造)→ 生图 prompt
-          // 由结构化方案确定性组装(非裸自由文本)→ 走既有 image.generate 生图(模型用户可配,铁律不写死
-          // MiniMax)→ 记 generated_asset 候选(**复用既有 asset 采纳门**,人采纳才绑项目用料链,铁律②)。
-          // 声明式 context 注入(同 script.draft 范式):按 COVER_BRIEF_TEMPLATE
-          // .contextRequirements 从中央 registry 自动取 reader —— brief(立项硬锚)+ reviewSubject(读
-          // 口播稿)+ projectMaterials(封面数字可溯来源)+ knowledge。文本层 resolveModelSpec(封面方案)
-          // 与多模态 resolveMultimodalSpec/multimodalRegistry(生图)并列注入,是封面链「文案 + 图」两产物
-          // 的两套模型解析。positioning 显式 pin 满足 CoverGenerateDeps 必需类型(值同 registry)。
-          await runCoverGenerate(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              ...resolveContextDeps(
-                COVER_BRIEF_TEMPLATE.contextRequirements,
-                contextReaderRegistry,
-              ),
-              positioning: positioningReader,
-              // 封面方案(文案)的文本模型(Vercel SDK;复用 copy.generate capability)。
-              resolveModelSpec,
-              // 封面图的多模态模型(image.generate;用户可配)+ provider 适配器注册表 + 建 asset 窄端口
-              // —— 与 asset.generate 生图同一套(不重造生图能力)。
-              resolveMultimodalSpec,
-              registry: multimodalRegistry,
-              // 建生成 asset 的写端口(命名避开 ContextDeps.assets 素材库读端口)。
-              generatedAssets: {
-                createGeneratedAsset: async (c, input) => {
-                  const row = await assetsService.createGeneratedAsset(c, input);
-                  return {
-                    id: row.id,
-                    name: row.name,
-                    assetType: row.assetType,
-                  };
-                },
-              },
-              // [T-380] 以图生图风格参考读端口(user-scoped 读素材字节;inputData.
-              // referenceAssetId 存在时 runner 读它喂生图 adapter 的 image-to-image)。
-              referenceAssets: {
-                getAssetBytes: (c, assetId) =>
-                  assetsService.getAssetBytes(c, assetId),
               },
             },
           );
@@ -9545,6 +9492,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "cover.generate":createCoverBusinessAdapter({...resolveContextDeps(COVER_BRIEF_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),positioning:generationContext.positioning}),
     "copilot.assist":createCopilotBusinessAdapter({ai:aiService,positioning:generationContext.positioning,learnings:generationContext.learnings,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "scheduled.topic.daily":dailyTopicAdapter,
     "topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
@@ -9617,6 +9565,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
+  const coverExecutionPorts={
+    async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
+      const runtime=await aiService.getTaskRuntimeData(c,taskId);
+      const authority=pinModelAuthority(await readChannelModelAuthority());
+      if(!matchesPinnedModelAuthority(runtime,authority))throw new Error("MODEL_AUTHORITY_CHANGED");
+      return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
+    },
+    getReferenceBytes:(c:RequestContext,assetId:string)=>assetsService.getAssetBytes(c,assetId),
+  };
+  const coverBusiness=createExecutionCoverService(db,{...coverExecutionPorts,budget:workerBudget,now:deps.now});
   const assetBusiness=createAssetBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
     async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
@@ -9732,7 +9690,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
       prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
     },
-    assetStorage:objectStorageForCtx,resolveAssetCredential:(c,owner)=>assetBusiness.resolveCredential(c,owner),
+    cover:coverExecutionPorts,
+    assetStorage:objectStorageForCtx,resolveAssetCredential:async(c,owner)=>{
+      const task=await aiService.getTask(c,owner.aiTaskId);
+      return task.taskType==="cover.generate"?coverBusiness.resolveCredential(c,owner):assetBusiness.resolveCredential(c,owner);
+    },
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),
   }) : null;

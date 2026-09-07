@@ -149,3 +149,4 @@ export {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./cha
 export * from "./chat-production-runtime";
 export {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 export {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
+export {createCoverBusinessAdapter} from "./cover-business-adapter";

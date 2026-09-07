@@ -181,3 +181,5 @@ export {createExecutionAsrPorts} from "./execution-asr-ports.service";
 export {createExecutionTranscribeAudioService} from "./execution-transcribe-audio.service";
 
 export {createExecutionTranscribePreparationService} from "./execution-transcribe-preparation.service";
+
+export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
