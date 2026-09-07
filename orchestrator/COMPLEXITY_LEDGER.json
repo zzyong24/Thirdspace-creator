@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "906ee29136226fb4687655870d21ffbdb5a9594d7269c5277ff0a622b48898a4",
+      "file_sha256": "2827d02307790c63459a5bf6baa88b35b140128fe3d2e08286093a35950dbb80",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的聊天子任务迁移：素材与文案审核复用原业务准备、持久补偿与独立 Worker 唤醒；审核沿用当前整稿可审检查和原版本绑定。仅调整既有服务装配，不新增凭据保管、工具链或执行层；证据见 chat-asset-preparation.md 与 chat-script-patch-migration.md。",
+      "reason": "T-915 已确认架构内将抖音登录/采集/转写目录解析接入统一只读规范路径服务；原凭据保管、工具链及浏览器选择保持，不新增凭据或执行机制。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

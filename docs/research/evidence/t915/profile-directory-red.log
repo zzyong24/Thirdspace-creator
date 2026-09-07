@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/browser/profile-directory.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/browser/profile-directory.test.ts [ src/runtime/browser/profile-directory.test.ts ]
+Error: Cannot find module './profile-directory' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker/src/runtime/browser/profile-directory.test.ts
+ ❯ src/runtime/browser/profile-directory.test.ts:5:1
+      3| import { tmpdir } from 'node:os';
+      4| import { join, win32 } from 'node:path';
+      5| import { douyinProfileDirectory, resolveDouyinProfileIdentity } from '…
+       | ^
+      6| const owned: string[] = [];
+      7| afterEach(async () => { for (const path of owned.splice(0)) await rm(p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:21:34
+   Duration  150ms (transform 14ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/browser/profile-directory.test.ts
