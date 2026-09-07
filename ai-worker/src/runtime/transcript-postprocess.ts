@@ -42,7 +42,7 @@ export const TRANSCRIPT_POSTPROCESS_CAPABILITY = "video.subtitles";
 // runStructuredNode 的显式逃生口,不依赖 registry 解析)。
 // 纠错条款复用 T-320a video.subtitles 的打法:同音/近音认错字、专名、改动最小、
 // 语气词/口语重复不动、拿不准不改。
-const TRANSCRIPT_POSTPROCESS_TEMPLATE = {
+export const TRANSCRIPT_POSTPROCESS_TEMPLATE = {
   id: "transcript.postprocess.inline",
   version: "v1",
   system: [
@@ -71,7 +71,7 @@ const TRANSCRIPT_POSTPROCESS_TEMPLATE = {
 
 // 输出契约(JSON Schema,经 ai 的 jsonSchema 包装喂 runStructuredNode;显式传入压过 registry)。
 // 禁止模型自由发挥附加解释:schema 只有 correctedText 一个字段,additionalProperties:false。
-const TRANSCRIPT_POSTPROCESS_SCHEMA = {
+export const TRANSCRIPT_POSTPROCESS_SCHEMA = {
   type: "object",
   properties: {
     correctedText: { type: "string" },
@@ -231,7 +231,7 @@ async function defaultCallStructured(input: {
 }
 
 /** 组装可选上下文 facet(有就带,没有为空串 → bindPrompt 把占位替换成空)。 */
-function buildContextFacet(input: TranscriptPostprocessInput): string {
+export function buildContextFacet(input: TranscriptPostprocessInput): string {
   const lines: string[] = [];
   if (input.accountPositioning?.trim()) {
     lines.push(`【账号定位(专名参照)】${input.accountPositioning.trim()}`);
