@@ -151,4 +151,53 @@ describe('本地 Whisper 取消与资源归属', () => {
         workers[1]!.reply();
         await fourth;
     });
+    it.each(['throw', 'reject'])('terminate %s 后必须等 owner exit，不能提前启动下一项', async mode => {
+        const workers: FakeWorker[] = [];
+        const pipe = await createWorkerPipelineProvider(() => {
+            const w = new FakeWorker();
+            if (!workers.length) w.terminate.mockImplementation(() => {
+                if (mode === 'throw') throw new Error('终止失败');
+                return Promise.reject(new Error('终止失败'));
+            });
+            workers.push(w);
+            return w as WhisperWorkerLike;
+        })('small');
+        const controller = new AbortController();
+        let settled = false;
+        const first = pipe(new Float32Array([1]), {}, controller.signal).catch(error => { settled = true; return error; });
+        await tick();
+        const next = pipe(new Float32Array([2]));
+        controller.abort();
+        await tick();
+        expect(settled).toBe(false);
+        expect(workers).toHaveLength(1);
+        workers[0]!.emit('error', new Error('仍非退出确认'));
+        workers[0]!.reply('迟到结果');
+        await tick();
+        expect(workers).toHaveLength(1);
+        workers[0]!.emit('exit', 0);
+        expect(await first).toMatchObject({ name: 'AbortError' });
+        await tick();
+        expect(workers).toHaveLength(2);
+        workers[1]!.reply();
+        await next;
+    }, 1000);
+    it.each(['abort', 'stdin'])('ffmpeg %s 后 kill 抛错不能成为未捕获异常或悬挂请求', async trigger => {
+        const child = Object.assign(new EventEmitter(), {
+            stdout: new EventEmitter(), stderr: new EventEmitter(),
+            stdin: Object.assign(new EventEmitter(), { write: vi.fn(), end: vi.fn() }),
+            kill: vi.fn(() => { throw new Error('kill 失败'); }),
+        });
+        const controller = new AbortController();
+        const decode = createFfmpegPcmDecoder({ ffmpegPath: 'fake', spawn: () => child });
+        const result = decode(new Uint8Array([1]), controller.signal).catch(error => error);
+        if (trigger === 'abort') {
+            controller.abort();
+            expect(await result).toMatchObject({ name: 'AbortError' });
+        } else {
+            child.stdin.emit('error', new Error('EPIPE'));
+            expect((await result).message).toContain('无法终止 ffmpeg');
+        }
+    }, 1000);
+
 });

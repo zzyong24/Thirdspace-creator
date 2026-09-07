@@ -340,22 +340,38 @@ export function createFfmpegPcmDecoder(
       let stderrTail = "";
       let failure: Error | undefined;
       let cancelled = false;
+      let released = false;
+      const kill = () => {
+        try {
+          child.kill("SIGKILL");
+        } catch (err) {
+          // kill 调用失败不能从事件监听器逸出，也不能永远等不会到来的 close。
+          // 不声称子进程已退出；停止保留输出并向调用方报告失败。
+          released = true;
+          chunks.length = 0;
+          signal?.removeEventListener("abort", cancel);
+          reject(cancelled ? abortError() : new Error(
+            `createFfmpegPcmDecoder: 无法终止 ffmpeg: ${err instanceof Error ? err.message : String(err)}`,
+          ));
+        }
+      };
       const cancel = () => {
         if (cancelled) return;
         cancelled = true;
         chunks.length = 0;
         // 必须等 close 确认进程和管道关闭，不能只让调用方的 Promise 提前结束。
-        child.kill("SIGKILL");
+        kill();
       };
-      child.stdout.on("data", (c) => { if (!cancelled) chunks.push(c); });
+      child.stdout.on("data", (c) => { if (!cancelled && !released) chunks.push(c); });
       child.stderr.on("data", (c) => {
-        if (!cancelled) stderrTail = (stderrTail + Buffer.from(c).toString("utf8")).slice(-500);
+        if (!cancelled && !released) stderrTail = (stderrTail + Buffer.from(c).toString("utf8")).slice(-500);
       });
       child.on("error", (err) => {
         failure = new Error(`createFfmpegPcmDecoder: ffmpeg 进程错误: ${err.message}`);
       });
       child.on("close", (code) => {
         signal?.removeEventListener("abort", cancel);
+        if (released) return;
         if (cancelled) { reject(abortError()); return; }
         if (failure) { reject(failure); return; }
         if (code !== 0) {
@@ -386,7 +402,7 @@ export function createFfmpegPcmDecoder(
       if (child.stdin) {
         child.stdin.on("error", (err) => {
           failure = new Error(`createFfmpegPcmDecoder: ffmpeg stdin 错误: ${err.message}`);
-          child.kill("SIGKILL");
+          kill();
         });
         if (!cancelled) {
           try {
@@ -394,7 +410,7 @@ export function createFfmpegPcmDecoder(
             child.stdin.end();
           } catch (err) {
             failure = err instanceof Error ? err : new Error(String(err));
-            child.kill("SIGKILL");
+            kill();
           }
         }
       }
@@ -554,6 +570,7 @@ export function createWorkerPipelineProvider(
   let nextId = 1;
   type Pending = { owner: WhisperWorkerLike; resolve: (text: string) => void; reject: (err: Error) => void };
   const pending = new Map<number, Pending>();
+  const exits = new WeakMap<WhisperWorkerLike, Promise<number>>();
   let queue: Promise<unknown> = Promise.resolve();
   const spawn = spawnWorker ?? (() => createWhisperWorker());
 
@@ -569,6 +586,8 @@ export function createWorkerPipelineProvider(
   function ensureWorker(): WhisperWorkerLike {
     if (worker) return worker;
     const w = spawn();
+    let confirmExit!: (code: number) => void;
+    exits.set(w, new Promise<number>((resolve) => { confirmExit = resolve; }));
     w.on("message", (msg) => {
       const p = pending.get(msg.id);
       if (!p || p.owner !== w) return;
@@ -583,10 +602,13 @@ export function createWorkerPipelineProvider(
       `whisper-local worker 崩溃: ${err.message}`,
       { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
     )));
-    w.on("exit", (code) => failPending(w, new MultimodalGenerationError(
-      `whisper-local worker 退出 (code=${code})`,
-      { reference: "LOCAL_WHISPER_WORKER_EXIT", retryable: true },
-    )));
+    w.on("exit", (code) => {
+      confirmExit(code);
+      failPending(w, new MultimodalGenerationError(
+        `whisper-local worker 退出 (code=${code})`,
+        { reference: "LOCAL_WHISPER_WORKER_EXIT", retryable: true },
+      ));
+    });
     worker = w;
     return w;
   }
@@ -603,7 +625,9 @@ export function createWorkerPipelineProvider(
             // 删除 pending，使 terminate 引发的 exit/error 不会提前放行队列。
             pending.delete(id);
             if (worker === w) worker = null;
-            stopping = w.terminate();
+            // terminate 自身也可能失败；同步抛错和异步拒绝都不能算退出确认。
+            // 此时继续等待该 owner 的 exit，期间队列保留屏障，不创建替代 worker。
+            stopping = Promise.resolve().then(() => w.terminate()).catch(() => exits.get(w)!);
             stopping.then(() => reject(abortError()), reject);
           };
           const cleanup = () => signal?.removeEventListener("abort", cancel);
