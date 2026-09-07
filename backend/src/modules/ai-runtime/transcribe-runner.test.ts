@@ -1,3 +1,4 @@
+import { GenerationFailure } from "../../../../ai-worker/src/execution/generation-error";
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -770,4 +771,17 @@ it.each([true,false])('已存事实探测返回 %s 时取消，不再启动恢�
  deps.hasTranscriptArtifact=async()=>{controller.abort();return hasTranscript;};deps.restoreTranscriptArtifact=vi.fn(async()=>{});
  await expect(runTranscribe(ctx,{id:'cancel-restore',taskType:'transcribe.douyin',inputData:{awemeIds:['existing']}},deps)).rejects.toMatchObject({name:'AbortError'});
  expect(deps.restoreTranscriptArtifact).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();
+});
+
+it('后处理取消传播 signal 并阻止落稿和下一作品',async()=>{
+ const {deps,spies}=makeDeps({awemeIds:['one','two']});const controller=new AbortController();deps.signal=controller.signal;
+ deps.postprocessTranscript=vi.fn(async(_ctx,input)=>{expect(input.signal).toBe(controller.signal);controller.abort();return {applied:true,transcript:'迟到校正'};});
+ await expect(runTranscribe(ctx,{id:'cancel-post',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toMatchObject({name:'AbortError'});
+ expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
+});
+it('后处理结果未知不能记成原文成功，也不继续下一作品',async()=>{
+ const {deps,spies}=makeDeps({awemeIds:['one','two']});const error=new GenerationFailure('unknown_result','MODEL_RESULT_UNKNOWN');
+ deps.postprocessTranscript=vi.fn(async()=>{throw error;});
+ await expect(runTranscribe(ctx,{id:'unknown-post',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},deps)).rejects.toBe(error);
+ expect(spies.ensureTranscriptArtifact).not.toHaveBeenCalled();expect(spies.markFailed).not.toHaveBeenCalled();expect(spies.fetchVideoUrl).toHaveBeenCalledTimes(1);
 });

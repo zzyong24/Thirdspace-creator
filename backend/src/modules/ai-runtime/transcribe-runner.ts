@@ -1,4 +1,5 @@
-import {isAsrExecutionControlError,throwIfAsrAborted} from "@creatoros/ai-worker";
+import {isTranscriptExecutionControlError} from "@creatoros/ai-worker/transcript-postprocess";
+import {throwIfAsrAborted} from "@creatoros/ai-worker";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   MultimodalProviderRegistry,
@@ -195,11 +196,11 @@ export interface TranscribeRunnerDeps {
 
   /** [T-357] 采集逐字稿后处理(ASR 文本落库前一遍):同音错字纠正 + 补标点 + 语义分段。
    *  host 绑 runTranscriptPostprocess(model-config capability 解析,绝不写死厂商);实现自身
-   *  **绝不抛**(失败/越权/未配模型 → applied:false + 原文 + reason),runner 侧再套 try/catch
-   *  双保险 —— 转写链绝不因后处理挂掉。缺省(旧 host / 单测)→ 不后处理,零回归。 */
+   *  普通失败降级(失败/越权/未配模型 → applied:false + 原文 + reason),runner 侧再套 try/catch
+   *  普通故障保留原文；取消和未知调用必须穿透到任务层。缺省(旧 host / 单测)→ 不后处理,零回归。 */
   postprocessTranscript?: (
     ctx: RequestContext,
-    input: { awemeId: string; transcript: string },
+    input: { awemeId: string; transcript: string; signal?: AbortSignal },
   ) => Promise<{ applied: boolean; transcript: string; reason?: string }>;
 
   // ── [T-230] 限流冷却批级延迟重试的可选端口(全部缺省 → 旧行为:冷却失败即终态,零回归)──
@@ -289,7 +290,7 @@ export async function runTranscribe(
         try {
           await deps.restoreTranscriptArtifact?.(ctx, awemeId);
         } catch (error) {
-          checkStopped();if(isAsrExecutionControlError(error))throw error;
+          checkStopped();if(isTranscriptExecutionControlError(error))throw error;
           console.warn(`[transcribe-runner] 逐字稿已保存，派生稿恢复待重试 (awemeId=${awemeId})`);
         }
         stepNo += 1;
@@ -347,7 +348,7 @@ export async function runTranscribe(
         try {
           audioBytes = await deps.streamAudio(ctx, src.playUrl, signal);
         } catch (ffErr) {
-          checkStopped();if(isAsrExecutionControlError(ffErr))throw ffErr;
+          checkStopped();if(isTranscriptExecutionControlError(ffErr))throw ffErr;
           console.warn(
             `[transcribe-runner] aweme ${awemeId} 抽音失败,重取直链重试一次:`,
             ffErr instanceof Error ? ffErr.message : ffErr,
@@ -380,7 +381,7 @@ export async function runTranscribe(
         // [T-357] 后处理(轻 AI 校正:同音错字+标点+语义分段)—— **落库前一遍,单一收口点**:
         // 所有走本 runner → ensureTranscriptArtifact 的采集转写路径(每日批量 transcribe.douyin、
         // T-374 单条手动 projects.transcribe 排的同类型任务)统一在此生效。实现自身诚实落原文
-        // 不抛;这里再套 try/catch 双保险 —— 后处理任何异常都只带注记,绝不让该 aweme 失败。
+        // ；普通失败只带注记，取消和未知调用保持控制状态。
         let finalText = text;
         let postNote = "";
         if (deps.postprocessTranscript) {
@@ -388,6 +389,7 @@ export async function runTranscribe(
             const post = await deps.postprocessTranscript(ctx, {
               awemeId,
               transcript: text,
+              signal: deps.signal,
             });
             if (post.applied && post.transcript.trim()) {
               finalText = post.transcript;
@@ -396,7 +398,7 @@ export async function runTranscribe(
               postNote = ` · 后处理未执行:${post.reason ?? "未知原因"}`;
             }
           } catch (postErr) {
-            checkStopped();if(isAsrExecutionControlError(postErr))throw postErr;
+            checkStopped();if(isTranscriptExecutionControlError(postErr))throw postErr;
             postNote = ` · 后处理未执行:${
               postErr instanceof Error ? postErr.message : String(postErr)
             }`;
@@ -422,7 +424,7 @@ export async function runTranscribe(
               projectId: boundProjectId,
             });
           } catch (enqueueErr) {
-            checkStopped();if(isAsrExecutionControlError(enqueueErr))throw enqueueErr;
+            checkStopped();if(isTranscriptExecutionControlError(enqueueErr))throw enqueueErr;
             // 此时逐字稿已经可靠落库。下游排队是可补偿动作，绝不能把本条转写倒判失败。
             console.warn(
               `[transcribe-runner] 作品 ${awemeId} 逐字稿已就绪，但重建排队失败（后续采集将补偿）:`,
@@ -445,7 +447,7 @@ export async function runTranscribe(
         });
         ok += 1;
       } catch (err) {
-        checkStopped();if(isAsrExecutionControlError(err))throw err;
+        checkStopped();if(isTranscriptExecutionControlError(err))throw err;
         if (
           err instanceof TranscribeConfigError ||
           (err instanceof Error && err.name === "TranscribeConfigError")
@@ -566,7 +568,7 @@ export async function runTranscribe(
     checkStopped();
     await deps.ai.markSucceeded(ctx, task.id);
   } catch (err) {
-    checkStopped();if(isAsrExecutionControlError(err))throw err;
+    checkStopped();if(isTranscriptExecutionControlError(err))throw err;
     // ASR 未配置与其它批级异常统一在此收口，确保任务绝不残留 running。
     const message =
       err instanceof TranscribeConfigError

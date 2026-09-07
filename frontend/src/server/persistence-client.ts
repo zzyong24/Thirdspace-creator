@@ -4505,7 +4505,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               //   capability 复用 video.subtitles(T-320a「ASR 认错字校正」同任务族既有档,未配
               //   自动回退 default 行 → env,零新增配置负担,绝不写死厂商);上下文可选注入:
               //   账号定位 oneLiner + imported 作品标题(有就带,拿不到就裸纠,best-effort 不抛);
-              //   runTranscriptPostprocess 自身绝不抛(失败/越权改写 → 落原文 + reason 注记)。
+              //   普通后处理失败保留原文，取消与结果未知交回任务层。
               postprocessTranscript: async (c, ppInput) => {
                 let accountPositioning: string | undefined;
                 let title: string | undefined;
@@ -4530,6 +4530,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
                   c,
                   {
                     transcript: ppInput.transcript,
+                    signal: ppInput.signal,
                     accountPositioning,
                     title,
                   },

@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "2827d02307790c63459a5bf6baa88b35b140128fe3d2e08286093a35950dbb80",
+      "file_sha256": "1608c8377d045f39b4029c385ae8b0a9b2d2cb563f06f419dd9dd84488efb39c",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "T-915 已确认架构内将抖音登录/采集/转写目录解析接入统一只读规范路径服务；原凭据保管、工具链及浏览器选择保持，不新增凭据或执行机制。",
+      "reason": "T-915 已确认迁移范围内传递后处理取消信号；既有模型配置、凭据及宿主工具链不增加，仅绑定当前组合根准确文件摘要。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

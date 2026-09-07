@@ -75,6 +75,10 @@
     "./douyin-errors": {
       "types": "./src/runtime/douyin-errors.ts",
       "default": "./src/runtime/douyin-errors.ts"
+    },
+    "./transcript-postprocess": {
+      "types": "./src/runtime/transcript-postprocess.ts",
+      "default": "./src/runtime/transcript-postprocess.ts"
     }
   },
   "scripts": {

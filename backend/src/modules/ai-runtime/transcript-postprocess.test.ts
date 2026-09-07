@@ -1,3 +1,4 @@
+import { GenerationFailure } from "../../../../ai-worker/src/execution/generation-error";
 import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec } from "@creatoros/ai-worker";
@@ -176,4 +177,30 @@ describe("runTranscriptPostprocess(T-357)", () => {
     expect(r.applied).toBe(false);
     expect(resolveModelSpec).not.toHaveBeenCalled();
   });
+});
+
+// T-915：真实控制结果不能被后处理降级吞掉。
+describe("后处理取消边界", () => {
+  it("解析期间取消后不再提交模型", async () => {
+    const controller = new AbortController();
+    const callStructured = vi.fn();
+    const reason = new DOMException("已取消", "AbortError");
+    await expect(runTranscriptPostprocess(ctx, {transcript: RAW, signal: controller.signal}, {
+      resolveModelSpec: async () => { controller.abort(reason); return SPEC; }, callStructured,
+    })).rejects.toBe(reason);
+    expect(callStructured).not.toHaveBeenCalled();
+  });
+  it("调用接收同一 signal，取消后的成功返回不得采纳", async () => {
+    const controller = new AbortController();
+    const reason = new DOMException("已取消", "AbortError");
+    await expect(runTranscriptPostprocess(ctx, {transcript: RAW, signal: controller.signal}, {
+      resolveModelSpec: async () => SPEC,
+      callStructured: async input => { expect(input.signal).toBe(controller.signal); controller.abort(reason); return {correctedText: CORRECTED}; },
+    })).rejects.toBe(reason);
+  });
+});
+
+it("后处理运行时保持已知未知账本结果", async () => {
+ const error = new GenerationFailure('unknown_result', 'MODEL_RESULT_UNKNOWN');
+ await expect(runTranscriptPostprocess(ctx,{transcript: RAW},{resolveModelSpec:async()=>SPEC,callStructured:async()=>{throw error;}})).rejects.toBe(error);
 });

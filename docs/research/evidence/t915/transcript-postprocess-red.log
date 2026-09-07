@@ -1,0 +1,63 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/transcript-postprocess.test.ts (15 tests | 2 failed) 13ms
+     × 解析期间取消后不再提交模型 5ms
+     × 调用接收同一 signal，取消后的成功返回不得采纳 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcript-postprocess.test.ts > 后处理取消边界 > 解析期间取消后不再提交模型
+AssertionError: promise resolved "{ applied: false, …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "applied": false,
++   "reason": "输出未过保真校验:模型输出为空文本",
++   "transcript": "大家好今天我们聊一聊账号定为的问题很多人做知识付废都没想清楚自己的定为是什么所以内容越做越散今天我给你三个判断标准第一看你的受众是谁第二看你能持续输出什么第三看市场愿不愿意为它买单",
+  }
+
+ ❯ src/modules/ai-runtime/transcript-postprocess.test.ts:189:7
+    187|     await expect(runTranscriptPostprocess(ctx, {transcript: RAW, signa…
+    188|       resolveModelSpec: async () => { controller.abort(reason); return…
+    189|     })).rejects.toBe(reason);
+       |       ^
+    190|     expect(callStructured).not.toHaveBeenCalled();
+    191|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/ai-runtime/transcript-postprocess.test.ts > 后处理取消边界 > 调用接收同一 signal，取消后的成功返回不得采纳
+AssertionError: promise resolved "{ applied: false, …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "applied": false,
++   "reason": "模型调用失败:expected undefined to be AbortSignal { aborted: false } // Object.is equality",
++   "transcript": "大家好今天我们聊一聊账号定为的问题很多人做知识付废都没想清楚自己的定为是什么所以内容越做越散今天我给你三个判断标准第一看你的受众是谁第二看你能持续输出什么第三看市场愿不愿意为它买单",
+  }
+
+ ❯ src/modules/ai-runtime/transcript-postprocess.test.ts:198:7
+    196|       resolveModelSpec: async () => SPEC,
+    197|       callStructured: async input => { expect(input.signal).toBe(contr…
+    198|     })).rejects.toBe(reason);
+       |       ^
+    199|   });
+    200| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)
+   Start at  01:35:47
+   Duration  250ms (transform 45ms, setup 0ms, import 92ms, tests 13ms, environment 0ms)
+
