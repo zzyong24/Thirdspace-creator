@@ -16,3 +16,5 @@ export const transcribeAsrPreparationSchema=z.discriminatedUnion('status',[
  z.object({status:z.literal('restored'),plan:transcribeAsrPlanSchema,result:asrTranscriptSchema.extend({text:z.string()})}).strict(),
  z.object({status:z.literal('prepared'),plan:transcribeAsrPlanSchema,spec:transcribeConfigurationSchema.extend({token:z.string()}).strict()}).strict(),
 ]);
+
+export const transcribeLocalFallbackSchema=z.object({plan:transcribeAsrPlanSchema,sourceCallIds:z.array(z.string().min(1)).min(1).max(10000),reason:z.enum(['rejected','empty'])}).strict();

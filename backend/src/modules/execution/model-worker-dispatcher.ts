@@ -144,7 +144,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(port==="prepareTranscribeAsr"&&!transcribePreparation)throw new Error("TRANSCRIBE_PREPARATION_UNAVAILABLE");
         const work=port==="prepareTranscribeAsr"?transcribePreparation!.prepare(ref,workerPortInputSchemas.prepareTranscribeAsr.parse(raw).awemeId,scope.controller.signal):transcribeAudio.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
-      if(["reserveAsrRequest","startAsrRequest","settleAsrRequest"].includes(port)){
+      if(["selectTranscribeLocalFallback","reserveAsrRequest","startAsrRequest","settleAsrRequest"].includes(port)){
         if(!asrPorts)throw new Error("ASR_PORT_UNAVAILABLE");
         return asrPorts.invoke(ref,port,raw);
       }

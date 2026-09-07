@@ -2,8 +2,8 @@ import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {beforeAll,afterAll,it,expect,vi} from 'vitest';
-import {createDb,aiTasks,executionTasks,eq,type Db} from '@creatoros/backend';
-import {runTranscribeAsrInWorker,localWhisperSpec,createQwenAsrAdapter,createWhisperLocalAdapter,transcribeAudio,createDurableAsrRequestExecutor,type MultimodalSpec} from '@creatoros/ai-worker';
+import {createDb,aiTasks,executionTasks,executionCalls,eq,type Db} from '@creatoros/backend';
+import {runTranscribeAsrInWorker,localWhisperSpec,createQwenAsrAdapter,createOpenaiAsrAdapter,createWhisperLocalAdapter,transcribeAudio,createDurableAsrRequestExecutor,type MultimodalSpec} from '@creatoros/ai-worker';
 import {createTranscribeBusinessExecutionService} from '../ai-runtime/transcribe-business-execution.service';
 import {createExecutionTranscribePreparationService} from './execution-transcribe-preparation.service';
 import {createExecutionTranscribeAudioService} from './execution-transcribe-audio.service';
@@ -83,4 +83,71 @@ it('Worker 识别节点经真实命名端口完成一次调用，恢复不再进
  expect(first).toEqual({text:'Worker 原文',language:'zh'});call.mockClear();
  expect(await runTranscribeAsrInWorker('one',new AbortController().signal,call,{})).toEqual(first);
  expect(call.mock.calls.map(args=>args[0])).toEqual(['prepareTranscribeAsr']);expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+it('云端明确拒绝后原任务只回退一次本地，恢复不续凭据也不再推理',async()=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});
+ const call=vi.fn(async(port:any,data:any)=>port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data));
+ const fetcher=vi.fn(async()=>new Response('拒绝',{status:401})),pipeline=vi.fn(async()=>({text:'本地补回原文'}));
+ const registry={qwen:createQwenAsrAdapter({fetch:fetcher}),'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})};
+ expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).text).toBe('本地补回原文');
+ f.resolveSpec.mockClear().mockRejectedValue(Error('不能续凭据'));f.prepareSpec.mockClear().mockRejectedValue(Error('不能续凭据'));
+ expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,{})).text).toBe('本地补回原文');
+ expect(fetcher).toHaveBeenCalledTimes(1);expect(pipeline).toHaveBeenCalledTimes(1);expect(f.resolveSpec).not.toHaveBeenCalled();expect(f.prepareSpec).not.toHaveBeenCalled();
+ const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));
+ expect(calls.map(c=>({key:c.operationKey,status:c.status}))).toEqual([{key:'transcribe:one/asr/1',status:'rejected'},{key:'transcribe:one/local-asr/1',status:'settled'}]);
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ expect((task!.payload as any).transcribeAsrPlans.one.identity.protocol).toBe('qwen-chat-audio.v1');
+ expect((task!.payload as any).transcribeLocalFallbacks.one.plan.identity.protocol).toBe('whisper-local.v1');
+});
+it('没有云端失败事实时不能申请本地回退',async()=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});await f.service.prepare(f.ref,'one');
+ await expect(asr.invoke(f.ref,'selectTranscribeLocalFallback' as any,{awemeId:'one'})).rejects.toThrow();
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));expect((task!.payload as any).transcribeLocalFallbacks).toBeUndefined();
+});
+
+it.each(['unknown','budget','deadline','local-failure'])('%s 仍守原账本，不无限回退或重置预算',async mode=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});
+ if(mode==='budget')await db.update(executionTasks).set({executionBudget:{...budget,maxCalls:1}}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const call=vi.fn(async(port:any,data:any)=>port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data));
+ const fetcher=vi.fn(async()=>{if(mode==='unknown')throw Error('connection lost');if(mode==='deadline')await db.update(executionTasks).set({deadlineAt:'2000-01-01T00:00:00.000Z'}).where(eq(executionTasks.id,f.ref.executionTaskId));return new Response('拒绝',{status:401});});
+ const pipeline=vi.fn(async()=>{throw Error('local inference failed');}),registry={qwen:createQwenAsrAdapter({fetch:fetcher}),'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})};
+ await expect(runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).rejects.toThrow();
+ if(mode==='unknown')await expect(asr.selectLocalFallback(f.ref,{awemeId:'one'})).rejects.toThrow();
+ const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));
+ expect(fetcher).toHaveBeenCalledTimes(1);expect(pipeline).toHaveBeenCalledTimes(mode==='local-failure'?1:0);expect(calls).toHaveLength(mode==='local-failure'?2:1);
+ if(mode==='local-failure'){
+  await expect(runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).rejects.toThrow();expect(pipeline).toHaveBeenCalledTimes(1);
+ }else {const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));expect((task!.payload as any).transcribeLocalFallbacks).toBeUndefined();}
+});
+it('云端已确认空正文可回退，本地完成后原空回执仍保留',async()=>{
+ const f=await fixture({kind:'audio',provider:'openai',model:'whisper-1',baseUrl:null,token:'fixture'}),asr=createExecutionAsrPorts(db,{budget});
+ const call=async(port:any,data:any)=>port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data);
+ const pipeline=vi.fn(async()=>({text:'补回正文'})),fetcher=vi.fn(async()=>new Response(JSON.stringify({text:''})));
+ expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,{openai:createOpenaiAsrAdapter({fetch:fetcher}),'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})})).text).toBe('补回正文');
+ const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));expect(calls.map(c=>c.status)).toEqual(['settled','settled']);
+ expect(JSON.parse(calls[0]!.resultText!).result.text).toBe('');
+});
+
+it('云拒绝后选择回退前退出，重建 Worker 不需要重新取得云凭据',async()=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});
+ const call=vi.fn(async(port:any,data:any)=>{if(port==='selectTranscribeLocalFallback')throw Error('Worker exited before selection');return port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data);});
+ const fetcher=vi.fn(async()=>new Response('拒绝',{status:401})),pipeline=vi.fn(async()=>({text:'恢复后的本地正文'})),registry={qwen:createQwenAsrAdapter({fetch:fetcher}),'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})};
+ await expect(runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).rejects.toThrow();expect(pipeline).not.toHaveBeenCalled();
+ f.resolveSpec.mockClear().mockRejectedValue(Error('expired'));f.prepareSpec.mockClear().mockRejectedValue(Error('expired'));
+ expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).text).toBe('恢复后的本地正文');
+ expect(fetcher).toHaveBeenCalledTimes(1);expect(pipeline).toHaveBeenCalledTimes(1);expect(f.resolveSpec).not.toHaveBeenCalled();expect(f.prepareSpec).not.toHaveBeenCalled();
+});
+
+it('选择本地的 ACK 丢失后恢复原选择，旧云事实仍可核对但不能改换结果或再投',async()=>{
+ const f=await fixture(),asr=createExecutionAsrPorts(db,{budget});let lost=true;
+ const call=vi.fn(async(port:any,data:any)=>{if(port==='selectTranscribeLocalFallback'){const result=await asr.invoke(f.ref,port,data);if(lost){lost=false;throw Error('selection ACK lost');}return result;}return port==='prepareTranscribeAsr'?f.service.prepare(f.ref,data.awemeId):port==='readTranscribeAudio'?f.audio.read(f.ref,data):asr.invoke(f.ref,port,data);});
+ const fetcher=vi.fn(async()=>new Response('拒绝',{status:401})),pipeline=vi.fn(async()=>({text:'原回退结果'})),registry={qwen:createQwenAsrAdapter({fetch:fetcher}),'whisper-local':createWhisperLocalAdapter({getPipeline:async()=>pipeline,decodeAudioToFloat32:async()=>new Float32Array([.1])})};
+ await expect(runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).rejects.toThrow();expect(pipeline).not.toHaveBeenCalled();
+ await expect(asr.selectLocalFallback({...f.ref,fenceToken:'old'},{awemeId:'one'})).rejects.toThrow();await expect(asr.selectLocalFallback(f.ref,{awemeId:'foreign'})).rejects.toThrow();
+ const [cloud]=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));
+ expect(await asr.settle(f.ref,{awemeId:'one',callId:cloud!.id,status:'rejected',rejectionStatus:401})).toMatchObject({status:'rejected'});
+ await expect(asr.settle(f.ref,{awemeId:'one',callId:cloud!.id,status:'settled',result:{text:'伪造云端正文'}})).rejects.toThrow();
+ const request=call.mock.calls.find(args=>args[0]==='reserveAsrRequest')![1];await expect(asr.reserve(f.ref,request)).rejects.toThrow();
+ expect((await runTranscribeAsrInWorker('one',new AbortController().signal,call,registry)).text).toBe('原回退结果');expect(fetcher).toHaveBeenCalledTimes(1);expect(pipeline).toHaveBeenCalledTimes(1);
 });

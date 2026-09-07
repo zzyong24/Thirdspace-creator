@@ -63,6 +63,10 @@
     "./asr-transcript": {
       "types": "./src/runtime/asr-transcript.ts",
       "default": "./src/runtime/asr-transcript.ts"
+    },
+    "./douyin-transcribe-source": {
+      "types": "./src/runtime/douyin-transcribe-source.ts",
+      "default": "./src/runtime/douyin-transcribe-source.ts"
     }
   },
   "scripts": {

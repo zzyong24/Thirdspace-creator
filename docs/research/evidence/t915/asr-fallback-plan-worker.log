@@ -1,0 +1,12 @@
+
+> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+> vitest run src/execution/transcribe-asr-run.test.ts src/execution/durable-asr-request.test.ts src/runtime/transcribe-local-fallback.test.ts src/runtime/douyin-transcribe-source.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  4 passed (4)
+      Tests  59 passed (59)
+   Start at  00:12:32
+   Duration  612ms (transform 407ms, setup 0ms, import 668ms, tests 247ms, environment 0ms)

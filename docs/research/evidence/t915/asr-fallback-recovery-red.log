@@ -1,0 +1,33 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-transcribe-preparation.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-transcribe-preparation.service.test.ts (16 tests | 1 failed) 3321ms
+   × 云拒绝后选择回退前退出，重建 Worker 不需要重新取得云凭据 146ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-transcribe-preparation.service.test.ts > 云拒绝后选择回退前退出，重建 Worker 不需要重新取得云凭据
+AsrExecutionInterruption: 转写结果待核对，不能重复提交
+ ❯ controlled ../ai-worker/src/execution/transcribe-asr-run.ts:16:167
+     14| export async function runTranscribeAsrInWorker(awemeId:string,signal:A…
+     15|  signal.throwIfAborted();
+     16|  const controlled=async<T>(work:()=>Promise<T>):Promise<T>=>{try{const…
+       |                                                                                                                                                                       ^
+     17|  let prepared=await controlled(async()=>transcribeAsrPreparationSchema…
+     18|  signal.throwIfAborted();
+ ❯ runTranscribeAsrInWorker ../ai-worker/src/execution/transcribe-asr-run.ts:17:15
+ ❯ src/modules/execution/execution-transcribe-preparation.service.test.ts:138:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  00:11:19
+   Duration  4.86s (transform 816ms, setup 0ms, import 1.41s, tests 3.32s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

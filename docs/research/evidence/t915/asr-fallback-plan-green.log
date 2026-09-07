@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-transcribe-preparation.service.test.ts src/modules/execution/execution-asr-ports.service.test.ts src/modules/execution/execution-local-asr.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  34 passed (34)
+   Start at  00:08:33
+   Duration  7.03s (transform 2.59s, setup 0ms, import 5.17s, tests 11.48s, environment 0ms)

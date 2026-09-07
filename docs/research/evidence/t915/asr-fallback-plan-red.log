@@ -1,0 +1,39 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-transcribe-preparation.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-transcribe-preparation.service.test.ts (10 tests | 1 failed) 2596ms
+   × 云端明确拒绝后原任务只回退一次本地，恢复不续凭据也不再推理 146ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-transcribe-preparation.service.test.ts > 云端明确拒绝后原任务只回退一次本地，恢复不续凭据也不再推理
+MultimodalGenerationError: Qwen ASR HTTP 401: 拒绝
+ ❯ transcribeChunk ../ai-worker/src/runtime/multimodal-qwen-asr.ts:90:25
+     88|       throw Object.assign(new MultimodalGenerationError("语音转文字服务暂时不可用"…
+     89|     }
+     90|     throw Object.assign(new MultimodalGenerationError(
+       |                         ^
+     91|       `Qwen ASR HTTP ${res.status}: ${await safeText(res)}`,
+     92|     ),{statusCode:res.status});
+ ❯ ../ai-worker/src/runtime/multimodal-qwen-asr.ts:136:74
+ ❯ Object.executeRequest ../ai-worker/src/execution/durable-asr-request.ts:62:41
+ ❯ ../ai-worker/src/runtime/asr-request.ts:27:24
+ ❯ transcribeAudio ../ai-worker/src/runtime/multimodal-qwen-asr.ts:136:18
+ ❯ ../ai-worker/src/runtime/multimodal-factory.ts:303:16
+ ❯ protectChannelCall ../ai-worker/src/runtime/multimodal-factory.ts:56:12
+ ❯ runTranscribeAsrInWorker ../ai-worker/src/execution/transcribe-asr-run.ts:28:15
+ ❯ src/modules/execution/execution-transcribe-preparation.service.test.ts:93:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  00:06:26
+   Duration  4.27s (transform 848ms, setup 0ms, import 1.53s, tests 2.60s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
