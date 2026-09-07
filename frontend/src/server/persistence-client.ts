@@ -4507,25 +4507,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               //   账号定位 oneLiner + imported 作品标题(有就带,拿不到就裸纠,best-effort 不抛);
               //   普通后处理失败保留原文，取消与结果未知交回任务层。
               postprocessTranscript: async (c, ppInput) => {
-                let accountPositioning: string | undefined;
-                let title: string | undefined;
-                try {
-                  const center =
-                    await positioningService.readPositioningCenter(c);
-                  accountPositioning =
-                    center.currentStatement?.oneLiner || undefined;
-                } catch {
-                  /* 可选上下文,拿不到就裸纠 */
-                }
-                try {
-                  const p = await projectsRepo.findImportedByRef(c, {
-                    platform: "douyin",
-                    externalId: ppInput.awemeId,
-                  });
-                  title = p?.title || undefined;
-                } catch {
-                  /* 同上 */
-                }
+                const {accountPositioning,title}=await readTranscribePostprocessContext(c,ppInput.awemeId,ppInput.signal);
                 return runTranscriptPostprocess(
                   c,
                   {
@@ -9716,6 +9698,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     await submittedPreparation.prepare(c,id);
     if(!stoppingPreparation)modelWorker.start();
   }
+  async function readTranscribePostprocessContext(c:RequestContext,awemeId:string,signal?:AbortSignal){
+    signal?.throwIfAborted();
+    const [positioning,project]=await Promise.allSettled([
+      positioningService.readPositioningCenter(c),
+      projectsRepo.findImportedByRef(c,{platform:"douyin",externalId:awemeId}),
+    ]);
+    signal?.throwIfAborted();
+    return {
+      accountPositioning:positioning.status==="fulfilled"?positioning.value.currentStatement?.oneLiner||undefined:undefined,
+      title:project.status==="fulfilled"?project.value?.title||undefined:undefined,
+    };
+  }
   const modelWorker=workerEntry ? createModelWorkerDispatcher(db,{
     recoverPendingPreparation:signal=>submittedPreparation.recover(signal),
     dailyTopicPorts:{
@@ -9728,6 +9722,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
+    transcribePostprocess:{resolveModelSpec,readContext:readTranscribePostprocessContext},
     transcribeAudioStorage:objectStorageForCtx,
     transcribePreparation:{
       resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),

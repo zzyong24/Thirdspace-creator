@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "215ecb2dd5ea9d853e0b53032828d5ef736b237d2e7eb262992628a81552b19d",
+      "file_sha256": "953d5b3074a6b8369e0150eca0b7b74cfe90fffeb21637fae40a181fc8e62160",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用已授权独立Worker和命名端口，新增真实素材生成、凭据校验、原回执恢复与拒绝重试；没有新增进程、凭据属主或默认业务入口迁移。",
+      "reason": "T-915 原执行机制内接通转写后处理命名端口与取消后结算；复用既有凭据、进程和账本，绑定当前文件，不新增执行架构。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "1608c8377d045f39b4029c385ae8b0a9b2d2cb563f06f419dd9dd84488efb39c",
+      "file_sha256": "1d86b6d6fc31e3ed501466a8ef555998e3bcd352c63d209535f9f9a598c50e74",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "T-915 已确认迁移范围内传递后处理取消信号；既有模型配置、凭据及宿主工具链不增加，仅绑定当前组合根准确文件摘要。",
+      "reason": "T-915 原执行机制内接通转写后处理命名端口与取消后结算；复用既有凭据、进程和账本，绑定当前文件，不新增执行架构。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1808,6 +1808,21 @@
       "reason": "记录统一浏览器租约的宿主持有者与既有Worker私有端口边界，不新增IPC或第二套租约。",
       "acceptance": "仅登记文档复杂度；生产接线与完整T-915仍未完成。",
       "file_sha256": "f233d5f92e0bc4b9a2e082187d557859d3d48511894adfd82fa2dfcff2b2e7d4"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/2026-09-07-macos-sidecar-group-stop.md"
+      ],
+      "file_sha256": "4b91fb376a300cf91c2893b9497d0dc6800516c399e996681617a77eb8772490",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录已批准桌面进程生命周期修复的既有Rust编译与聚焦测试命令，只是证据文档，不新增工具链或打包机制。",
+      "acceptance": "仅登记证据文档触发的标记，不代表完整T-915或双平台打包通过。"
     }
   ],
   "historical_baselines": []
