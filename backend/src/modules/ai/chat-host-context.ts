@@ -21,6 +21,7 @@ export const chatHostContextSchema = z.object({
   researchContext:z.object({selectionTitle:z.string(),userMaterialQueryTerms:z.array(z.string()),searchConfigured:z.boolean()}).strict().optional(),
   structuredContext:chatStructuredContextSchema.optional(),
   structuredGeneration:chatStructuredGenerationSchema.optional(),
+  scriptDraftContext:z.object({latestUserInstruction:z.string()}).strict().optional(),
   scriptHooksContext: scriptHooksContextSchema.optional(),
   scriptHooksGeneration: z.object({version:z.literal(1),maxOutputTokens:z.number().int().positive().max(65536)}).strict().optional(),
 }).strict().superRefine((value, ctx) => {

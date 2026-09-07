@@ -20,6 +20,11 @@ export class ChatTaskPreparationFailure extends Error {
   if(this.outcome.status!=="error" || this.outcome.sideEffect!=="none")throw new Error("任务准备失败不得声明副作用");
  }
 }
+/** 仅供宿主文本节点使用；Worker IPC 没有此参数。 */
+export interface VerifiedScriptDraftPreparation {
+ inputDigest:string;children:(typeof executionCalls.$inferSelect)[];
+ prepare(context:import("@creatoros/contract").RequestContext,scope:{execution:ExecutionRef;callId:string;attemptId:string;signal?:AbortSignal}):Promise<ChatTaskPreparation>;
+}
 export interface ChatTaskPreparation {task:PreparedAiTaskCommit;result(task:Child):Outcome}
 /** 只处理冻结为纯数据库提交的工具；子任务与工具成功回执共用父执行行锁与事务。 */
 export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>string;tools:Record<string,ChatBackendTool>;check:(ref:ExecutionRef,input:{modelCallId:string;toolCallId:string},signal?:AbortSignal)=>Promise<{status:string}>}){
@@ -36,9 +41,9 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
   const bound=binding.forCall(task,calls,call);
   return {call,bound,calls,context,task};
  }
- function assertPending(state:Awaited<ReturnType<typeof read>>,ref:ExecutionRef){
+ function assertPending(state:Awaited<ReturnType<typeof read>>,ref:ExecutionRef,verified?:VerifiedScriptDraftPreparation){
   const {call,bound,calls}=state;
-  if(bound.execution!=="host.task-submit" || bound.effect!=="committed" || !chatSubmittedTaskType(bound.executionToolName) || call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId || call.resultText || call.totalTokens!==null || call.reservedTokens!==0 || calls.some(row=>row.parentCallId===call.id))throw new ConflictError("当前调用不是可提交的原子任务工具");
+  if((verified ? bound.execution!=="worker.script-draft" || bound.executionToolName!=="script.draft" || bound.inputDigest!==verified.inputDigest || !isDeepStrictEqual(calls.filter(row=>row.parentCallId===call.id),verified.children) : bound.execution!=="host.task-submit") || bound.effect!=="committed" || !chatSubmittedTaskType(bound.executionToolName) || call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId || call.resultText || call.totalTokens!==null || call.reservedTokens!==0 || (!verified && calls.some(row=>row.parentCallId===call.id)))throw new ConflictError("当前调用不是可提交的原子任务工具");
   if(calls.filter(row=>row.kind==="model" && !row.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能提交新任务");
  }
  function priorResult(state:Awaited<ReturnType<typeof read>>){
@@ -46,7 +51,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
   for(const prior of [...state.calls].reverse()){
    if(prior.sequence>=state.call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
    const previous=binding.forCall(state.task,state.calls,prior);
-   if(previous.validationOutcome || previous.execution!=="host.task-submit" || previous.executionToolName!==state.bound.executionToolName || !isDeepStrictEqual(previous.input,state.bound.input))continue;
+   if(previous.validationOutcome || previous.execution!==state.bound.execution || previous.executionToolName!==state.bound.executionToolName || !isDeepStrictEqual(previous.input,state.bound.input))continue;
    if(prior.status==="settled"){
     const result=output(prior);
     if(result.status==="ok" && result.sideEffect==="committed" && !result.error)return {callId:prior.id,result};
@@ -60,7 +65,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
  return {
   async wake(ref:ExecutionRef,callId:string){
    const state=await leases.withLease(ref,"settlement",scope=>read(scope,callId,true));
-   if(state.bound.execution!=="host.task-submit" || state.call.status!=="settled")return;
+   if(!["host.task-submit","worker.script-draft"].includes(state.bound.execution) || state.call.status!=="settled")return;
    const result=output(state.call),data=result.data as Record<string,unknown>|undefined;
    if(result.status!=="ok" || result.sideEffect!=="committed" || result.error || typeof data?.taskId!=="string")return;
    // 已提交事实不因唤醒失败降为未知；启动恢复继续处理原 queued 子任务。
@@ -68,11 +73,11 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
    catch{console.error("[chat-task] TASK_WAKE_FAILED");}
   },
   async handles(ref:ExecutionRef,raw:unknown){const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);return leases.withLease(ref,"admission",async scope=>(await read(scope,callId)).bound.execution==="host.task-submit");},
-  async execute(ref:ExecutionRef,raw:unknown,signal?:AbortSignal):Promise<Outcome>{
+  async execute(ref:ExecutionRef,raw:unknown,signal?:AbortSignal,verified?:VerifiedScriptDraftPreparation):Promise<Outcome>{
    signal?.throwIfAborted();const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);
    const initial=await leases.withLease(ref,"admission",scope=>read(scope,callId));
    if(initial.call.status==="settled")return output(initial.call);
-   assertPending(initial,ref);
+   assertPending(initial,ref,verified);
    const tool=deps.tools[initial.bound.executionToolName];if(!tool?.prepareTask || tool.execute)throw new ConflictError("事务工具未装配纯提交端口");
    const request={modelCallId:initial.bound.modelCallId,toolCallId:initial.bound.toolCallId};
    const decision=await deps.check(ref,request,signal);signal?.throwIfAborted();
@@ -83,12 +88,12 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
     await new Promise(resolve=>setTimeout(resolve,25));
     const state=await leases.withLease(ref,"admission",scope=>read(scope,callId));
     if(state.call.status==="settled")return output(state.call);
-    assertPending(state,ref);reuse=priorResult(state);
+    assertPending(state,ref,verified);reuse=priorResult(state);
    }
    const attemptId=`chat-submit:${callId}`;
    let prepared:ChatTaskPreparation|null=null,preparationFailure:Outcome|undefined;
    if(!permission && !reuse?.result && !initial.bound.validationOutcome){
-    try{prepared=await tool.prepareTask(structuredClone(initial.context),structuredClone(initial.bound.input),{execution:{...ref},callId,attemptId,signal});}
+    try{prepared=verified ? await verified.prepare(structuredClone(initial.context),{execution:{...ref},callId,attemptId,signal}) : await tool.prepareTask(structuredClone(initial.context),structuredClone(initial.bound.input),{execution:{...ref},callId,attemptId,signal});}
     catch(error){
      signal?.throwIfAborted();
      const classified=classifyLlmError(error);
@@ -101,7 +106,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
    return leases.withLease(ref,"admission",async scope=>{
     signal?.throwIfAborted();const current=await read(scope,callId);
     if(current.call.status==="settled")return output(current.call);
-    assertPending(current,ref);
+    assertPending(current,ref,verified);
     if(current.bound.inputDigest!==initial.bound.inputDigest)throw new ConflictError("准备期间工具输入改变");
     const prior=priorResult(current);
     if(prior && !prior.result)throw new ConflictError("同参提交尚未完成");
@@ -109,6 +114,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
     let result=current.bound.validationOutcome??permission??reused?.result??preparationFailure;
     if(!result){
      const child=await prepared!.task.commit(scope.tx,{executionTaskId:ref.executionTaskId,callId,inputDigest:current.bound.inputDigest});
+     signal?.throwIfAborted();
      if(child.taskType!==chatSubmittedTaskType(current.bound.executionToolName) || child.attemptId!==attemptId)throw new ConflictError("子任务与原工具提交不符");
      result=agenticToolOutcomeSchema.parse(prepared!.result(structuredClone(child)));
      const data=result.data as Record<string,unknown>|undefined;
@@ -116,6 +122,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
     }
     const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:current.bound.toolCallId,toolName:current.bound.toolName,output:result,...(reused?{reusedCallId:reused.callId}:{})}));
     await scope.tx.update(executionCalls).set({status:"settled",usage:{totalTokens:0},totalTokens:0,resultText,updatedAt:now()}).where(eq(executionCalls.id,callId));
+    signal?.throwIfAborted();
     return result;
    });
   },

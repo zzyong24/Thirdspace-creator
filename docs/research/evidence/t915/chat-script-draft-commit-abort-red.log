@@ -1,0 +1,47 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-chat-script-draft.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-chat-script-draft.service.test.ts (11 tests | 1 failed) 2693ms
+   × 子任务事务写入返回时停止，子任务与父回执一起回滚 136ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-chat-script-draft.service.test.ts > 子任务事务写入返回时停止，子任务与父回执一起回滚
+AssertionError: promise resolved "{ status: 'ok', summary: '整稿已提交', …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "continuation": null,
++   "data": {
++     "error": null,
++     "kind": "script.draft",
++     "projectId": "fixture-project",
++     "taskId": "ai-task-40",
++   },
++   "error": null,
++   "evidence": [],
++   "sideEffect": "committed",
++   "status": "ok",
++   "summary": "整稿已提交",
+  }
+
+ ❯ src/modules/execution/execution-chat-script-draft.service.test.ts:283:81
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  20:57:40
+   Duration  4.96s (transform 1.44s, setup 0ms, import 2.14s, tests 2.69s, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -788,7 +788,7 @@ export function createPersistentTaskService(
           }
           const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
           const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
-          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads];
+          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {

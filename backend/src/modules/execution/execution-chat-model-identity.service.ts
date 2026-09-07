@@ -22,9 +22,9 @@ export function createExecutionChatModelIdentityService(db: Db, deps: {now?:()=>
     const parent=calls.find(call=>call.id===callId);
     if(!parent || parent.kind!=="tool" || parent.parentCallId || parent.toolExecutionClaimId || !["started","settled"].includes(parent.status))throw new ConflictError("子模型缺少真实父工具");
     const bound=binding.forCall(task,calls,parent);
-    if(bound.validationOutcome || bound.effect!=="proposal")throw new ConflictError("当前工具不能取得子模型身份");
+    if(bound.validationOutcome || (bound.effect!=="proposal" && !(bound.execution==="worker.script-draft" && bound.executionToolName==="script.draft" && bound.effect==="committed")))throw new ConflictError("当前工具不能取得子模型身份");
     let capability:string;
-    if(bound.execution==="worker.script-hooks" && bound.executionToolName==="script.hooks")capability=input.capability;
+    if((bound.execution==="worker.script-hooks" && bound.executionToolName==="script.hooks") || (bound.execution==="worker.script-draft" && bound.executionToolName==="script.draft"))capability=input.capability;
     else if(bound.execution==="worker.structured-node" && ["topic.enrich","positioning.generate","calibration.diagnose"].includes(bound.executionToolName))capability=bound.executionToolName;
     else throw new ConflictError("当前工具不是已登记的生成节点");
     if(parent.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新凭据");
@@ -43,7 +43,7 @@ export function createExecutionChatModelIdentityService(db: Db, deps: {now?:()=>
     /** 开场沿用原主模型，但仍将其与实际父工具绑定，恢复不可替换。 */
     pinPrimary(ref:ExecutionRef,callId:string) {
       return access(ref,callId,async state=>{
-        if(state.bound.execution!=="worker.script-hooks")throw new ConflictError("专属生成节点不能借用聊天主模型");
+        if(state.bound.execution!=="worker.script-hooks" && state.bound.execution!=="worker.script-draft")throw new ConflictError("专属生成节点不能借用聊天主模型");
         const identity=executionModelIdentitySchema.parse(state.payload.modelIdentity);
         return save(state,callId,identity);
       });

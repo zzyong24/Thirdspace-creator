@@ -2,7 +2,7 @@ import {createChatWebReadResources} from "./chat-web-read-resources";
 import {runChatResearchInWorker,createChatResearchResources} from "./chat-research-worker";
 import {runChatGenerationInWorker} from "./chat-generation-worker";
 import { createChatModelStreamEvents } from "./chat-model-stream-events";
-import {runChatHooksInWorker} from "./chat-hooks-worker";
+import {runChatTextNodeInWorker} from "./chat-text-node-worker";
 import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import {
@@ -15,7 +15,7 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -42,6 +42,10 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatHooks",{callId},signal));
     if(receipt.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_HOOKS_RESTORE_RECEIPT_UNKNOWN");
   };
+  const restoreScriptDraft=async(callId:string)=>{
+    const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatScriptDraft",{callId},signal));
+    if(receipt.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_SCRIPT_DRAFT_RESTORE_RECEIPT_UNKNOWN");
+  };
   const restoreGeneration=async(callId:string)=>{
     const saved=workerStartReceiptSchema.parse(await ports.call("restoreChatGeneration",{callId},signal));
     if(saved.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_GENERATION_RESTORE_RECEIPT_UNKNOWN");
@@ -55,10 +59,12 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   for(const callId of initial.resumableToolCallIds)await restoreHooks(callId);
   for(const callId of initial.replayableGenerationToolCallIds)await restoreGeneration(callId);
   for(const callId of initial.replayableWebReadToolCallIds)await restoreWebRead(callId);
+  for(const callId of initial.replayableScriptDraftToolCallIds)await restoreScriptDraft(callId);
   // 已持久网页观察直接完成原提交；启动恢复不创建浏览器或查询搜索配置。
   for(const callId of initial.replayableWebReadToolCallIds)agenticToolOutcomeSchema.parse(await ports.call("completeChatWebRead",{callId},signal));
   // 所有同轮父工具先归入当前租约，再允许任一节点申请后续修复调用。
   for(const callId of initial.replayableGenerationToolCallIds)await runChatGenerationInWorker(callId,signal,ports.call);
+  for(const callId of initial.replayableScriptDraftToolCallIds)await runChatTextNodeInWorker(callId,modelFor(spec),signal,ports.call,"script-draft");
   let checkpointTail:Promise<void>=Promise.resolve();
   const checkpoint=()=>{
     checkpointTail=checkpointTail.then(async()=>{
@@ -108,7 +114,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       try{
         const modelCallId=modelForTool.get(options.toolCallId);if(!modelCallId)throw Error("model receipt missing");
         let reservedCallId:string|undefined;
-        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,...(definition.execution==="worker.web-read"?{resumeStarted:restoreWebRead}:definition.execution==="worker.script-hooks"?{resumeStarted:restoreHooks}:definition.execution==="worker.structured-node"?{resumeStarted:restoreGeneration}:{}),call:async(port,data,portSignal)=>{
+        const output=await runDurableAgenticTool({modelCallId,toolCallId:options.toolCallId},{signal,...(definition.execution==="worker.script-draft"?{resumeStarted:restoreScriptDraft}:definition.execution==="worker.web-read"?{resumeStarted:restoreWebRead}:definition.execution==="worker.script-hooks"?{resumeStarted:restoreHooks}:definition.execution==="worker.structured-node"?{resumeStarted:restoreGeneration}:{}),call:async(port,data,portSignal)=>{
           const result=await ports.call(port,data,portSignal);
           if(port==="reserveAgenticTool"){
             const reservation=agenticToolReservationSchema.parse(result);
@@ -121,7 +127,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           if(definition.execution==="worker.web-read"){if(!webRead)throw Error("网页读取尚未装配");return webRead.run(reservedCallId,signal);}
           if(definition.execution==="worker.research"){if(!research)throw Error("浏览器搜索尚未装配");return runChatResearchInWorker(reservedCallId,signal,ports.call,research);}
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);
-          if(definition.execution==="worker.script-hooks")return runChatHooksInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
+          if(definition.execution==="worker.script-draft")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,ports.call,"script-draft");
+          if(definition.execution==="worker.script-hooks")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
           return agenticToolOutcomeSchema.parse(await ports.call("executeAgenticTool",{callId:reservedCallId},signal));
         }});
         if(!reservedCallId)throw Error("tool receipt missing");

@@ -1,0 +1,13 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-chat-script-draft.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  20:58:31
+   Duration  4.48s (transform 1.33s, setup 0ms, import 2.03s, tests 2.32s, environment 0ms)
+

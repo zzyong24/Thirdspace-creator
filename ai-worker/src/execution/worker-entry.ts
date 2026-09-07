@@ -17,6 +17,7 @@ const worker = createExecutionWorker({
   runChat:runChatInWorker,
   supportsChatWebRead:true,
   supportsChatHooks:true,
+  supportsChatScriptDraft:true,
   supportsChatResearch:true,
   supportsChatStructured:true,
   send(message) {if (process.connected) process.send!(message);},

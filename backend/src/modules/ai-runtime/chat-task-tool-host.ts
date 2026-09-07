@@ -1,3 +1,4 @@
+import {createChatScriptDraftTaskHost,type ChatScriptDraftTaskPorts} from "./chat-script-draft-tool-host";
 import {createChatVideoEditTaskToolHost,type ChatVideoEditPorts} from "./chat-video-edit-tool-host";
 import {createChatReviewTaskHost,type ChatReviewTaskPorts} from "./chat-review-task-host";
 import {createChatScriptPatchTaskToolHost,type ChatScriptPatchPorts} from "./chat-script-patch-tool-host";
@@ -19,8 +20,9 @@ import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";
 export function createChatTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
  readers:ContextReaders,
- ports:{videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
+ ports:{scriptDraft?:ChatScriptDraftTaskPorts;videoEdit?:ChatVideoEditPorts;review?:ChatReviewTaskPorts;scriptPatch?:ChatScriptPatchPorts;webRead?:boolean;research?:boolean;planning?:ChatPlanningTaskPorts;material?:ChatMaterialTaskPorts;local?:ChatLocalToolPorts;localRead?:ChatLocalReadPorts;structured?:ChatStructuredToolPorts}={},
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
+ const scriptDraft=ports.scriptDraft?createChatScriptDraftTaskHost(reader,ports.scriptDraft):null;
  const webRead=ports.webRead?createChatWebReadTaskToolHost(reader):null;
  const videoEdit=ports.videoEdit?createChatVideoEditTaskToolHost(reader,ports.videoEdit):null;
  const localRead=ports.localRead?createChatLocalReadTaskToolHost(reader,ports.localRead):null;
@@ -33,6 +35,7 @@ export function createChatTaskToolHost(
  const material=ports.material?createChatMaterialTaskHost(reader,readers,ports.material):null;
  return async(context,input,execution,signal)=>{
   const groups=await Promise.all([review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
+  groups.push(await scriptDraft?.(context,input,execution,signal)??{});
   groups.push(await videoEdit?.(context,input,execution,signal)??{});
   signal.throwIfAborted();
   return Object.assign({},...groups);

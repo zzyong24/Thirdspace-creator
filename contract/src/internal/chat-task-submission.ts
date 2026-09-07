@@ -2,6 +2,7 @@
 const taskTypes:Readonly<Record<string,string>>=Object.freeze({
  "planning.thesis":"planning.thesis",
  "material.generate":"asset.generate",
+ "script.draft":"script.draft",
  "review.script":"script.review",
 });
 // SEMANTIC_BOUNDARY_ALLOW: 工具协议映射不理解内容或决定创作取舍，也不允许任意任务类型。

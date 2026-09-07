@@ -17,11 +17,11 @@ function fixture(){
 }
 it("混合父工具以同一集合恢复，已确认末尾仍交给节点决定是否修复",()=>{
  const {task,calls}=fixture();
- expect(recoverableChatNodeParents(task,calls)).toEqual({structured:["a"],completedHooks:["b"],resumableHooks:[],webReads:[]});
+ expect(recoverableChatNodeParents(task,calls)).toEqual({structured:["a"],completedHooks:["b"],resumableHooks:[],scriptDrafts:[],webReads:[]});
 });
 it.each(["unknown","started","reserved"])("任一子调用 %s 时不恢复父集合",status=>{
  const {task,calls,childB}=fixture();childB.status=status;
- expect(recoverableChatNodeParents(task,calls)).toEqual({structured:[],completedHooks:[],resumableHooks:[],webReads:[]});
+ expect(recoverableChatNodeParents(task,calls)).toEqual({structured:[],completedHooks:[],resumableHooks:[],scriptDrafts:[],webReads:[]});
 });
 it("仅确认协议拒绝能作为下一逻辑调用前缀",()=>{
  const {task,calls,childA}=fixture();childA.status="rejected";childA.rejectionCode="STRUCTURED_PROTOCOL_UNSUPPORTED";childA.totalTokens=null;
@@ -41,7 +41,7 @@ it.each(["跳号","换输入重试","跨任务","未知用量","多余父工具"
  if(mode==="跨任务")childA.executionTaskId="other";
  if(mode==="未知用量")childA.totalTokens=null;
  if(mode==="多余父工具")calls.push({...calls[1]!,id:"foreign",sequence:6});
- expect(recoverableChatNodeParents(task,calls)).toEqual({structured:[],completedHooks:[],resumableHooks:[],webReads:[]});
+ expect(recoverableChatNodeParents(task,calls)).toEqual({structured:[],completedHooks:[],resumableHooks:[],scriptDrafts:[],webReads:[]});
 });
 
 it("混合网页与生成回合共享恢复集合；缺少网页事实时整体待对账",()=>{
@@ -52,8 +52,22 @@ it("混合网页与生成回合共享恢复集合；缺少网页事实时整体�
  const parent={...calls[1]!,id:"web",sequence:6,operationKey:agenticToolOperationKey("root","web")};calls.push(parent);
  const observation={text:"正文",title:"标题",finalUrl:"https://example.com/",extractor:"readability" as const,extractPath:"readability" as const,turnCount:null};
  const evidence={id:"fact",executionTaskId:task.id,originCallId:parent.id,requestedUrl:observation.finalUrl,sourceUrl:observation.finalUrl,title:observation.title,fullText:observation.text,contentHash:chatWebReadDigest(observation.finalUrl,observation),byteLength:Buffer.byteLength(observation.text),createdAt:"fixed",metadata:{kind:"chat.web.read",inputDigest:parent.inputDigest,extractor:observation.extractor,extractPath:observation.extractPath,turnCount:null}};
- expect(recoverableChatNodeParents(task,calls,[evidence])).toEqual({structured:["a"],completedHooks:["b"],resumableHooks:[],webReads:["web"]});
+ expect(recoverableChatNodeParents(task,calls,[evidence])).toEqual({structured:["a"],completedHooks:["b"],resumableHooks:[],scriptDrafts:[],webReads:["web"]});
  for(const rows of [[],[{...evidence,executionTaskId:"other"}],[{...evidence,metadata:{...evidence.metadata,turnCount:1}}]]) {
-  expect(recoverableChatNodeParents(task,calls,rows)).toEqual({structured:[],completedHooks:[],resumableHooks:[],webReads:[]});
+  expect(recoverableChatNodeParents(task,calls,rows)).toEqual({structured:[],completedHooks:[],resumableHooks:[],scriptDrafts:[],webReads:[]});
  }
+});
+
+
+it("整稿纯事务及已结算授权与同轮生成一起恢复，未知授权不重发",()=>{
+ const {task,calls}=fixture();
+ const payload=task.payload as {modelInput:{tools:unknown[]}};
+ payload.modelInput.tools.push({name:"script.draft",version:"1",description:"整稿",parameters:{},effect:"committed",execution:"worker.script-draft"});
+ (calls[0]!.providerResult as {content:unknown[]}).content.push({type:"tool-call",toolCallId:"draft",toolName:"script_draft",input:'{"mode":"generate"}'});
+ const parent={...calls[1]!,id:"draft",sequence:6,operationKey:agenticToolOperationKey("root","draft")};calls.push(parent);
+ expect(recoverableChatNodeParents(task,calls)).toMatchObject({structured:["a"],completedHooks:["b"],scriptDrafts:["draft"]});
+ const child={...calls[4]!,id:"draft-auth",parentCallId:"draft",sequence:7,operationKey:`script-draft:draft:${"c".repeat(64)}/model/1`};calls.push(child);
+ expect(recoverableChatNodeParents(task,calls).scriptDrafts).toEqual(["draft"]);
+ child.status="unknown";child.totalTokens=null;
+ expect(recoverableChatNodeParents(task,calls)).toEqual({structured:[],completedHooks:[],resumableHooks:[],scriptDrafts:[],webReads:[]});
 });

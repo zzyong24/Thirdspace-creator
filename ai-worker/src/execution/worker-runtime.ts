@@ -21,10 +21,11 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
+  supportsChatScriptDraft?:boolean;
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
   runAgentic?: typeof runAgenticInWorker;
@@ -37,7 +38,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate", ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
@@ -95,6 +96,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(input.tools.some(tool=>tool.execution==="worker.web-read") && !capabilities.includes("chat.web-read"))throw new GenerationFailure("waiting_user","CHAT_WEB_READ_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.research") && !capabilities.includes("chat.research"))throw new GenerationFailure("waiting_user","CHAT_RESEARCH_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.structured-node") && !capabilities.includes("chat.structured"))throw new GenerationFailure("waiting_user","CHAT_STRUCTURED_WORKER_UNAVAILABLE");
+        if(input.tools.some(tool=>tool.execution==="worker.script-draft") && !capabilities.includes("chat.script-draft"))throw new GenerationFailure("waiting_user","CHAT_SCRIPT_DRAFT_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !capabilities.includes("chat.hooks"))throw new GenerationFailure("waiting_user","CHAT_HOOKS_WORKER_UNAVAILABLE");
         if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");
         const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
