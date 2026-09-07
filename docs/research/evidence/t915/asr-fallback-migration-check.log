@@ -1,0 +1,2 @@
+PASS: localWhisperSpec 与完整纯运行时类型/函数逐字一致；仅增加 worker 内相对导入和迁移注释。
+PASS: 没有凭据申请、backend、server-only 依赖。

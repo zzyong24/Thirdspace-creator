@@ -36,7 +36,7 @@ const REAL_DEPS: OpenaiAsrAdapterDeps = {
  *      (否则再拼一次 `/v1/audio/transcriptions` → 双路径 404,真机踩过)
  * null → 走 provider 默认端点。
  */
-function transcriptionsUrl(spec: MultimodalSpec): string {
+export function transcriptionsUrl(spec: MultimodalSpec): string {
   const trimmed = (spec.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
   // ③ baseUrl 已指向转写端点(含 /audio/transcriptions)→ 直接用,别再拼。
   if (trimmed.endsWith("/audio/transcriptions")) return trimmed;

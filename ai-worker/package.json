@@ -55,6 +55,10 @@
     "./chat-worker-run": {
       "types": "./src/execution/chat-worker-run.ts",
       "default": "./src/execution/chat-worker-run.ts"
+    },
+    "./asr-identity": {
+      "types": "./src/runtime/asr-execution-identity.ts",
+      "default": "./src/runtime/asr-execution-identity.ts"
     }
   },
   "scripts": {

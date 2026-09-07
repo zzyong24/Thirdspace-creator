@@ -20,7 +20,7 @@ const REAL_DEPS: MimoAsrAdapterDeps = {
   fetch: (...args) => fetch(...args),
 };
 
-function completionsUrl(spec: MultimodalSpec): string {
+export function completionsUrl(spec: MultimodalSpec): string {
   const trimmed = (spec.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
   if (trimmed.endsWith("/chat/completions")) return trimmed;
   if (trimmed.endsWith("/v1")) return `${trimmed}/chat/completions`;

@@ -192,6 +192,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         },signal));
         if(saved.revision!==checkpoint.revision+1)throw new Error("CHECKPOINT_REVISION_MISMATCH");
       };
+      if(input.kind!=="model.generate")throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;

@@ -21,7 +21,7 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "7b4cff2a62eb8e0f14d55ea28a567f13619d5261bc8fcd1d37cbc92eb34e0eef",
+      "file_sha256": "2b3c224b87e50071ecd4c90bd30459c4b904aa3bdaa869e68375191762654166",
       "categories": [
         "ipc"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "aac41210226639d67bd63723c0e68547143cc7b2c18e46c7ca1c1c489341f8d5",
+      "file_sha256": "906ee29136226fb4687655870d21ffbdb5a9594d7269c5277ff0a622b48898a4",
       "categories": [
         "credential_store",
         "language_toolchain",

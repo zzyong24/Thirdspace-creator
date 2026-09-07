@@ -9723,6 +9723,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
     transcribeAudioStorage:objectStorageForCtx,
+    transcribePreparation:{
+      resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
+      prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+    },
     assetStorage:objectStorageForCtx,resolveAssetCredential:(c,owner)=>assetBusiness.resolveCredential(c,owner),
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),

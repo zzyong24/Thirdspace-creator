@@ -142,3 +142,5 @@ export {createLocalReadHost,type LocalReadGrantPorts} from "./local-read-host";
 export {createAssetBusinessExecutionService} from "./asset-business-execution.service";
 
 export {preparePublishPackageTaskInput} from "./publish-package-task-input";
+
+export {createTranscribeBusinessExecutionService} from "./transcribe-business-execution.service";

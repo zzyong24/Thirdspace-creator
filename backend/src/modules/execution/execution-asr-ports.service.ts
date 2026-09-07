@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { transcribeAudioReceiptSchema, asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
+import { transcribeAudioReceiptSchema, transcribeTaskInputSchema, transcribeAsrPlanSchema, asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { canonicalJson } from "../ai/canonical-json";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -15,7 +15,11 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
     const leases = createExecutionLeaseService(db, deps);
     const ledgerFor = (scope: Scope) => createExecutionCallLedgerService(scope.tx as unknown as Db, deps);
     async function bind(scope: Scope, awemeId: string) {
-        const { task, tx, context } = scope, payload = task.payload as Record<string, unknown>, input = asrTaskInputSchema.parse(payload.modelInput);
+        const { task, tx, context } = scope, payload = task.payload as Record<string, unknown>;
+        const legacy=asrTaskInputSchema.safeParse(payload.modelInput);
+        const plan=legacy.success?null:transcribeAsrPlanSchema.parse((payload.transcribeAsrPlans as Record<string,unknown>)?.[awemeId]);
+        const input=legacy.success?legacy.data:{...transcribeTaskInputSchema.parse(payload.modelInput),identity:plan!.identity};
+        if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
         const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!)));
         const raw = business?.inputData as {
             awemeIds?: unknown;

@@ -52,7 +52,7 @@ export function createExecutionModelIdentityService(
       await leases.withLease(ref, "admission", async ({ tx, task }) => {
         const payload = payloadSchema.parse(task.payload),
           input = workerTaskInputSchema.parse(payload.modelInput);
-        if (task.kind !== "ai_task" || input.capability !== capability)
+        if (task.kind !== "ai_task" || input.kind === "transcribe.douyin" || input.capability !== capability)
           throw new ConflictError("模型能力与原任务不符");
         if (payload.modelIdentity !== undefined) {
           const existing = executionModelIdentitySchema.parse(payload.modelIdentity);
@@ -75,7 +75,7 @@ export function createExecutionModelIdentityService(
         if (task.kind !== "ai_task" || payload.modelIdentity === undefined)
           throw new ConflictError("任务尚未绑定真实模型身份");
         const identity = executionModelIdentitySchema.parse(payload.modelIdentity);
-        if (identity.capability !== input.capability)
+        if (input.kind === "transcribe.douyin" || identity.capability !== input.capability)
           throw new ConflictError("模型身份与原任务能力不符");
         return identity;
       });

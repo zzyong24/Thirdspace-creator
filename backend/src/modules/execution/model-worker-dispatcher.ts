@@ -1,3 +1,4 @@
+import {createExecutionTranscribePreparationService} from "./execution-transcribe-preparation.service";
 import {createExecutionTranscribeAudioService} from "./execution-transcribe-audio.service";
 import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
@@ -49,7 +50,7 @@ interface WorkerDispatcherDeps {
   /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
@@ -79,6 +80,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
   const transcribeAudio=deps.executionMode==="model"&&deps.transcribeAudioStorage?createExecutionTranscribeAudioService(db,{now,objectStorageForCtx:deps.transcribeAudioStorage}):null;
+  const transcribePreparation=deps.executionMode==="model"&&transcribeAudio&&deps.transcribePreparation?createExecutionTranscribePreparationService(db,{now,audio:transcribeAudio,...deps.transcribePreparation}):null;
   const asrPorts=deps.executionMode==="model"?createExecutionAsrPorts(db,{now,budget:deps.budget}):null;
   const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
@@ -137,9 +139,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
-      if(["readTranscribeAudio","saveTranscribeAudio"].includes(port)){
+      if(["prepareTranscribeAsr","readTranscribeAudio","saveTranscribeAudio"].includes(port)){
         const scope=activeTools.get(executionKey(ref));if(!transcribeAudio||!scope)throw new Error("TRANSCRIBE_AUDIO_PORT_UNAVAILABLE");
-        const work=transcribeAudio.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+        if(port==="prepareTranscribeAsr"&&!transcribePreparation)throw new Error("TRANSCRIBE_PREPARATION_UNAVAILABLE");
+        const work=port==="prepareTranscribeAsr"?transcribePreparation!.prepare(ref,workerPortInputSchemas.prepareTranscribeAsr.parse(raw).awemeId,scope.controller.signal):transcribeAudio.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       if(["reserveAsrRequest","startAsrRequest","settleAsrRequest"].includes(port)){
         if(!asrPorts)throw new Error("ASR_PORT_UNAVAILABLE");
@@ -282,7 +285,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(port==="resolveModelCredential"){
         const input=workerPortInputSchemas.resolveModelCredential.parse(raw);
         const modelInput=await calls.readTaskContext(ref);
-        if(input.capability!==modelInput.capability)throw new Error("MODEL_CAPABILITY_MISMATCH");
+        if(modelInput.kind==="transcribe.douyin"||input.capability!==modelInput.capability)throw new Error("MODEL_CAPABILITY_MISMATCH");
         const scope=await leases.withLease(ref,"admission",async({context,task})=>({context,aiTaskId:task.ownerId}));
         const credential=workerModelSpecSchema.parse(await deps.resolveModelCredential(scope.context,input.capability,{aiTaskId:scope.aiTaskId,executionTaskId:ref.executionTaskId}));
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。
