@@ -1,3 +1,4 @@
+import {submitProjectTranscription,type ProjectTranscriptionSubmission} from "./project-transcription-submission";
 import {prepareScriptDraftTaskSubmission,type ScriptDraftSubmissionInput} from "./script-draft-task-submission";
 import {prepareAiTaskCommit,type PreparedAiTaskCommit} from "./ai-task-commit";
 import { canonicalJson } from "./canonical-json";
@@ -229,6 +230,7 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
+  projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
   scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string):Promise<string>};
   db: Db;
   now: () => string;
@@ -370,6 +372,7 @@ export interface AiService {
     }[]
   >;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
+  createProjectTranscriptionTask(ctx:RequestContext,input:ProjectTranscriptionSubmission):Promise<AITaskResource>;
   createScriptDraftTask(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<AITaskResource>;
   prepareScriptDraftTaskCommit(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<PreparedAiTaskCommit>;
   /** 内部事务提交准备；不作为公开 RPC 暴露。 */
@@ -851,6 +854,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       return rows.map(toMessageDto);
     },
 
+    createProjectTranscriptionTask:(ctx,input)=>submitProjectTranscription(deps,ctx,input),
     prepareTaskCommit: (ctx,body)=>prepareAiTaskCommit(deps,ctx,body),
     prepareScriptDraftTaskCommit:(ctx,input)=>prepareScriptDraftTaskSubmission(deps,ctx,input),
     async createScriptDraftTask(ctx,input){const prepared=await prepareScriptDraftTaskSubmission(deps,ctx,input);return deps.db.transaction(tx=>prepared.commit(tx));},

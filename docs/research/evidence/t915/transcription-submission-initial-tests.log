@@ -1,0 +1,37 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/project-transcription-submission.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/project-transcription-submission.test.ts (4 tests | 1 failed) 1035ms
+   × 无来源拒绝，删除已提交任务不能凭旧回执重建 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/project-transcription-submission.test.ts > 无来源拒绝，删除已提交任务不能凭旧回执重建
+AssertionError: expected [Function] to throw error including '没有关联抖音' but got '__vite_ssr_import_3__.ValidationError…'
+
+Expected: "没有关联抖音"
+Received: "__vite_ssr_import_3__.ValidationError is not a constructor"
+
+ ❯ src/modules/ai/project-transcription-submission.test.ts:33:70
+     31| it('无来源拒绝，删除已提交任务不能凭旧回执重建',async()=>{
+     32|  const f=await fixture();await db.update(projects).set({platformRef:{}…
+     33|  await expect(f.service.createProjectTranscriptionTask(f.ctx,f.input))…
+       |                                                                      ^
+     34|  await db.update(projects).set({platformRef:{platform:'douyin',externa…
+     35|  const task=await f.service.createProjectTranscriptionTask(f.ctx,f.inp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  21:40:09
+   Duration  3.21s (transform 1.28s, setup 0ms, import 2.04s, tests 1.04s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai/project-transcription-submission.test.ts`
+Exit status 1

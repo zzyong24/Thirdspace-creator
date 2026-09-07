@@ -1,0 +1,32 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/project-transcription-submission.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/project-transcription-submission.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/project-transcription-submission.test.ts [ src/modules/ai/project-transcription-submission.test.ts ]
+Error: Cannot find module '../projects/project-transcription-target.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/project-transcription-submission.test.ts
+ ❯ src/modules/ai/project-transcription-submission.test.ts:4:1
+      2| import {createDb,projects,aiTasks,eq,type Db} from '@creatoros/backend…
+      3| import {createAiService,type ServiceDeps} from './ai.service';
+      4| import {createProjectTranscriptionTargetService} from '../projects/pro…
+       | ^
+      5| import {createTranscriptArtifactService} from '../projects/transcript-…
+      6| let db:Db,close:()=>Promise<void>,seq=0;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  21:38:52
+   Duration  2.17s (transform 1.33s, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai/project-transcription-submission.test.ts`
+Exit status 1

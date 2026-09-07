@@ -1,0 +1,35 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/project-transcription-submission.test.ts -t '来源后来清空'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/project-transcription-submission.test.ts (11 tests | 1 failed | 10 skipped) 880ms
+   × 旧任务没有回执且项目来源后来清空，同请求仍回原任务 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/project-transcription-submission.test.ts > 旧任务没有回执且项目来源后来清空，同请求仍回原任务
+Error: ValidationError: 该项目没有关联抖音作品(无 platformRef.externalId),无法抓取逐字稿
+ ❯ Object.read src/modules/projects/project-transcription-target.service.ts:15:35
+     13|   const ref=project.platformRef as {platform?:string;externalId?:strin…
+     14|   const awemeId=ref?.platform==='douyin' && typeof ref.externalId==='s…
+     15|   if(!awemeId)throw Object.assign(new Error('ValidationError: 该项目没有关联抖…
+       |                                   ^
+     16|   const artifacts=createArtifactsService({db:tx,now:()=>{throw new Err…
+     17|   for(const row of await artifacts.listProjectArtifacts(ctx,projectId)…
+ ❯ src/modules/ai/project-transcription-submission.ts:43:17
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  21:45:16
+   Duration  2.86s (transform 1.21s, setup 0ms, import 1.85s, tests 880ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai/project-transcription-submission.test.ts -t '来源后来清空'`
+Exit status 1

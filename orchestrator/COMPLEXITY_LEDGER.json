@@ -97,7 +97,7 @@
       "files": [
         "backend/src/index.ts"
       ],
-      "file_sha256": "d1ce92863a4d3ee9884d75e28b7a9c0c7af15143f7fcf281ffe73885b713e0dd",
+      "file_sha256": "1bc0f53266d88bc5cceb37617194a15ea1a88e55a76cff31d85c7406c6a38b5e",
       "categories": [
         "credential_store"
       ],
@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "dfd6428d2e7a6bb07a5f85e45872c41e5da57b4a2945de85c11b52aba0e0de12",
+      "file_sha256": "b95e9135fabd086c9e5104d5a1e4c6248891c3a515dd7d15f4e232c3fcd2feae",
       "categories": [
         "native_executable"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "12b1c3f04e227043d0ca8404a7a598b8b3c8065e2110c3780321032b11dc8681",
+      "file_sha256": "0cab7781c5eb17bc7abea67baccab80e59493948e4ec6b96c3284d9fa5d83b87",
       "categories": [
         "credential_store",
         "language_toolchain",

@@ -144,6 +144,7 @@ import {
   createProjectsService,
   createProjectsTransport,
   createTranscriptArtifactService,
+  createProjectTranscriptionTargetService,
   PROJECT_OP_IDS,
   type StageGateReadersRef,
 } from "@creatoros/backend/modules/projects";
@@ -3217,6 +3218,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiService = createAiService({
+    projectTranscriptionTargets:createProjectTranscriptionTargetService(),
     scriptDraftTargets:createScriptDraftTargetService({now:deps.now,nextId:deps.nextId}),
     topicCandidates:topicCandidateAdoption,
     researchMaterials:researchMaterialAdoption,
@@ -8114,14 +8116,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return benchmark.request(endpoint, input, ctx);
     },
   };
-  // [T-374] 自己作品单条立抓逐字稿(composition-only op):wrap projects transport,拦
-  //   projects.transcribe(解析 platformRef 抖音锚 → ai transport 排 transcribe.douyin →
-  //   live dispatch 后台跑;无锚 → ValidationError 400)。逻辑抽在 projects-transcribe-wrap.ts
-  //   工厂(注入假 transports 可确定性单测,同文件头注释);此处只绑真 projects + ai。
+  // 来源与任务回执在后端原子提交；事务后沿原派发入口唤醒同一个任务。
   const projectsWithTranscribe = createProjectsWithTranscribe({
     projects,
-    ai,
-    artifacts,
+    submit: (ctx, input) => aiService.createProjectTranscriptionTask(ctx, input),
+    wake: async (ctx, task) => {
+      await ai.request(ENDPOINTS.createAITask, {
+        params: undefined, query: undefined,
+        body: {taskType: task.taskType, attemptId: task.attemptId, inputData: task.inputData},
+      }, ctx);
+    },
   });
   // [T-235b] 热点信源 CRUD transport(trendSourcesService 已在 collectors 装配前创建,复用同一实例)。
   const trendSources = createTrendSourcesTransport(() => trendSourcesService);

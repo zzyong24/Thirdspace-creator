@@ -624,6 +624,13 @@
       "when": 1788652800018,
       "tag": "0088_pending_generated_asset_commits",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1788652800019,
+      "tag": "0089_project_transcription_requests",
+      "breakpoints": true
     }
   ]
 }

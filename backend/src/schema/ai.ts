@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb, real, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, real, integer, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { executionTasks, executionCalls } from "./intelligence";
 
@@ -243,3 +243,15 @@ ALTER TABLE ai_tasks ADD COLUMN IF NOT EXISTS model_call_started_at TEXT;
 CREATE INDEX IF NOT EXISTS idx_ai_conversations_user_account ON ai_conversations (user_id, account_id, updated_at);
 CREATE INDEX IF NOT EXISTS idx_ai_tasks_user_account ON ai_tasks (user_id, account_id);
 `;
+
+// 请求回执不复制执行状态，也不级联删除；原任务删除后禁止旧请求重建它。
+export const projectTranscriptionRequests = pgTable("project_transcription_requests", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  accountId: text("account_id").notNull(),
+  attemptId: text("attempt_id").notNull(),
+  projectId: text("project_id").notNull(),
+  awemeId: text("aweme_id").notNull(),
+  aiTaskId: text("ai_task_id").notNull(),
+  createdAt: text("created_at").notNull(),
+}, table => [uniqueIndex("project_transcription_requests_user_id_account_id_attempt_id_key").on(table.userId, table.accountId, table.attemptId)]);

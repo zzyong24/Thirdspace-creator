@@ -1,0 +1,33 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai/project-transcription-submission.test.ts src/modules/ai/script-draft-task-submission.integration.test.ts src/modules/projects/transcript-artifact.service.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/project-transcription-submission.test.ts (10 tests | 1 failed) 1326ms
+   × 旧单请求任务接入回执，不改变原任务；迁移重复执行保留回执 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/project-transcription-submission.test.ts > 旧单请求任务接入回执，不改变原任务；迁移重复执行保留回执
+Error: ENOENT: no such file or directory, open '/Users/zyongzhu/Workbase/Thirdspace-creator/drizzle/0089_project_transcription_requests.sql'
+ ❯ src/modules/ai/project-transcription-submission.test.ts:80:12
+     78|  expect((await f.service.createProjectTranscriptionTask(f.ctx,f.input)…
+     79|  const {readFile}=await import('node:fs/promises');
+     80|  const ddl=await readFile(new URL('../../../../drizzle/0089_project_tr…
+       |            ^
+     81|  await db.execute(sql.raw(ddl));await db.execute(sql.raw(ddl));
+     82|  expect((await createAiService(f.deps).createProjectTranscriptionTask(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 23 passed (24)
+   Start at  21:43:28
+   Duration  7.56s (transform 3.27s, setup 0ms, import 5.32s, tests 9.08s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/ai/project-transcription-submission.test.ts src/modules/ai/script-draft-task-submission.integration.test.ts src/modules/projects/transcript-artifact.service.test.ts`
+Exit status 1

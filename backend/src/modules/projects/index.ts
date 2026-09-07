@@ -85,3 +85,5 @@ export {
 } from "./projects.schema";
 
 export { createTranscriptArtifactService } from "./transcript-artifact.service";
+
+export { createProjectTranscriptionTargetService } from "./project-transcription-target.service";

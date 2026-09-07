@@ -151,6 +151,7 @@ export {
   aiConversations,
   aiMessages,
   aiTasks,
+  projectTranscriptionRequests,
   aiTaskReferences,
   aiTaskResults,
   aiTaskSteps,
