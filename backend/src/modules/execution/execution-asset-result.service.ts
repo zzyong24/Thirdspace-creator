@@ -64,7 +64,7 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
    const input=bound.input;
    const receipt=await assets(ref,callId).submit(bound.context,{
     operationKey:operationKey(callId),assetType:input.mediaKind,mimeType:input.mediaKind==="image"?"image/png":"video/mp4",
-    name:deriveName(input.prompt,input.mediaKind),description:generatedAssetDescription(input.prompt),bytes,
+    name:bound.name??deriveName(input.prompt,input.mediaKind),description:generatedAssetDescription(input.prompt),bytes,
    },signal);
    return settle(ref,callId,receipt);
   },

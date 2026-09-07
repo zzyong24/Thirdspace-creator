@@ -79,6 +79,10 @@
     "./transcript-postprocess": {
       "types": "./src/runtime/transcript-postprocess.ts",
       "default": "./src/runtime/transcript-postprocess.ts"
+    },
+    "./cover": {
+      "types": "./src/runtime/cover-plan.ts",
+      "default": "./src/runtime/cover-plan.ts"
     }
   },
   "scripts": {

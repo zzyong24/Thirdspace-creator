@@ -9,12 +9,12 @@ const identity={provider:id,model:id,baseUrl:endpoint,serviceId:id.optional()};
 /** 私有素材执行输入；后端冻结供应商身份，密钥另经凭据端口取得。 */
 export const assetGenerationInputSchema=z.object({
  kind:z.literal("asset.generate"),operationKey:z.string().min(1).max(200),
- mediaKind:z.enum(["image","video"]),capability:z.enum(["image.generate","video.generate"]),
+ mediaKind:z.enum(["image","video"]),capability:z.enum(["image.generate","image.edit","video.generate"]),
  runtimeOptionsDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),
  prompt:z.string().min(1).max(100000),...identity,
  aspectRatio:z.string().min(1).max(32).optional(),durationSec:z.number().int().positive().max(3600).optional(),resolution:z.enum(["768P","2K"]).optional(),
 }).strict().superRefine((value,ctx)=>{
- if(value.capability!==`${value.mediaKind}.generate`)ctx.addIssue({code:"custom",message:"素材类型与能力不符"});
+ if(value.capability!==`${value.mediaKind}.generate` && !(value.mediaKind==="image" && value.capability==="image.edit"))ctx.addIssue({code:"custom",message:"素材类型与能力不符"});
  if(value.mediaKind==="image" && (value.durationSec!==undefined || value.resolution!==undefined))ctx.addIssue({code:"custom",message:"图片不能携带视频规格"});
 });
 /** 只表示已提交的外部任务，不表示生成成功或用量已知。 */

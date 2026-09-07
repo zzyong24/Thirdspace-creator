@@ -1,3 +1,4 @@
+import {readCoverImageBinding} from "../execution/cover-execution-binding";
 import {verifyGeneratedAssetCandidate} from "../assets";
 import {bindAssetExecution} from "../execution/asset-execution-binding";
 import { and, eq, aiTasks, aiTaskResults, aiTaskSteps, executionCalls, executionTasks, type Db } from "@creatoros/backend";
@@ -27,7 +28,7 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
         if(business.taskType==="scheduled.topic.daily")throw new ConflictError("每日选题必须经调度入池完成端口");
         const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.executionTaskId,task.id),eq(executionCalls.id,input.callId),eq(executionCalls.status,"settled")));
         if(!call || call.resultText!==input.text)throw new ConflictError("提交正文与持久调用证据不符");
-        const assetBinding=business.taskType==="asset.generate" ? await bindAssetExecution({tx,task,context},call.id) : null;
+        const assetBinding=(business.taskType==="asset.generate"||business.taskType==="cover.generate") ? await bindAssetExecution({tx,task,context},call.id) : null;
         const [existing]=await tx.select().from(aiTaskResults).where(eq(aiTaskResults.executionCallId,call.id));
         if(existing){
           if(existing.aiTaskId!==business.id || call.resultRef!==existing.id || !["succeeded","partial"].includes(task.status))throw new ConflictError("候选提交回执不一致");
@@ -39,14 +40,15 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
           (task.deadlineAt && Date.parse(task.deadlineAt)<=Date.parse(stamp)) || !["queued","running"].includes(business.status)) {
           throw new ConflictError("当前任务不能提交新候选");
         }
-        const structured=(task.payload as {modelInput?:{kind?:string}}).modelInput?.kind === "model.structured" ? workerStructuredResultSchema.parse(JSON.parse(call.resultText!)) : undefined;
+        const structured=business.taskType!=="cover.generate" && (task.payload as {modelInput?:{kind?:string}}).modelInput?.kind === "model.structured" ? workerStructuredResultSchema.parse(JSON.parse(call.resultText!)) : undefined;
         const partial=structured?.validation?.status === "partial";
-        const projected=business.taskType==="asset.generate" ? await (async():Promise<RecordCandidateInput>=>{
+        const projected=(business.taskType==="asset.generate"||business.taskType==="cover.generate") ? await (async():Promise<RecordCandidateInput>=>{
           const binding=assetBinding!;
           const receipt=await verifyGeneratedAssetCandidate(tx as unknown as Db,context,call.id,JSON.parse(call.resultText!));
           if(receipt.assetType!==binding.input.mediaKind)throw new ConflictError("素材类型与冻结调用不符");
           const frozen=binding.input;
-          return {resultType:"generated_asset",assetId:receipt.assetId,resultData:{assetId:receipt.assetId,assetType:receipt.assetType,name:receipt.name,prompt:frozen.prompt,...(frozen.aspectRatio?{aspectRatio:frozen.aspectRatio}:{}),...(frozen.mediaKind==="video"?{durationSec:frozen.durationSec,resolution:frozen.resolution}:{})}};
+          const cover=business.taskType==="cover.generate"?await readCoverImageBinding({tx,task,context}):null;
+          return {resultType:"generated_asset",assetId:receipt.assetId,resultData:{assetId:receipt.assetId,assetType:receipt.assetType,name:receipt.name,...(cover?cover.resultData:{}),prompt:frozen.prompt,...(frozen.aspectRatio?{aspectRatio:frozen.aspectRatio}:{}),...(frozen.mediaKind==="video"?{durationSec:frozen.durationSec,resolution:frozen.resolution}:{})}};
         })() : deps.projectCandidate(context,{taskType:business.taskType,inputData:business.inputData,text:structured ? JSON.stringify(structured.object) : call.resultText!,...(structured ? {structuredResult:structured} : {}),frozenInput:(task.payload as {modelInput?:unknown}).modelInput});
         // 素材验证可能等待领域行锁；进入写入前重新检查实际截止时间。
         stamp=now();

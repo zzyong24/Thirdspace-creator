@@ -7,7 +7,8 @@ import {ConflictError} from "./execution.errors";
 /** 原任务行锁内核验；只允许同键对账，不重置调用、预算或已启动事实。 */
 export async function recoverableAssetCalls(scope:Parameters<typeof bindAssetExecution>[0],calls:(typeof executionCalls.$inferSelect)[],stamp:string){
  const {task}=scope;
- if((task.payload as {modelInput?:{kind?:string}})?.modelInput?.kind!=="asset.generate" || task.attempt>=task.maxAttempts || (task.deadlineAt!==null && Date.parse(task.deadlineAt)<=Date.parse(stamp)))return [];
+ const input=(task.payload as {modelInput?:{kind?:string;skillId?:string}})?.modelInput;
+ if(!(input?.kind==="asset.generate" || (input?.kind==="model.structured" && input.skillId==="cover.brief")) || task.attempt>=task.maxAttempts || (task.deadlineAt!==null && Date.parse(task.deadlineAt)<=Date.parse(stamp)))return [];
  const recoverable:string[]=[];
  for(const call of calls){
   if(!["started","unknown"].includes(call.status))continue;

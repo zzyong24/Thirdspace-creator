@@ -3,6 +3,7 @@ const taskTypes:Readonly<Record<string,string>>=Object.freeze({
  "planning.thesis":"planning.thesis",
  "research.autonomous":"exec.agentic.research",
  "material.generate":"asset.generate",
+ "cover.generate":"cover.generate",
  "publish.package":"publish.platform_adapt",
  "script.draft":"script.draft",
  "review.script":"script.review",
