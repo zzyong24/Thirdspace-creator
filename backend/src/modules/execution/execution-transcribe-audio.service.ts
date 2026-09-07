@@ -15,9 +15,9 @@ export function createExecutionTranscribeAudioService(db:Db,deps:{objectStorageF
   if(raw!==undefined&&(!raw||typeof raw!=='object'||Array.isArray(raw)))throw new ConflictError('原音频快照记录损坏');
   const inputs=(raw??{}) as Record<string,unknown>,record=Object.hasOwn(inputs,awemeId)?transcribeAudioReceiptSchema.parse(inputs[awemeId]):null;
   if(!record){
-   const manifests=payload.asrAudioManifests;
+   const manifests=payload.asrAudioManifests,localManifests=payload.localAsrAudioManifests;
    const calls=await scope.tx.select({operationKey:executionCalls.operationKey}).from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id));
-   if((manifests&&typeof manifests==='object'&&Object.hasOwn(manifests,awemeId))||calls.some(call=>call.operationKey.startsWith(`transcribe:${awemeId}/asr/`)))throw new ConflictError('已有 ASR 执行缺少原音频，不能重新取流');
+   if([manifests,localManifests].some(value=>value&&typeof value==='object'&&Object.hasOwn(value,awemeId))||calls.some(call=>call.operationKey.startsWith(`transcribe:${awemeId}/asr/`)||call.operationKey.startsWith(`transcribe:${awemeId}/local-asr/`)))throw new ConflictError('已有 ASR 执行缺少原音频，不能重新取流');
   }
   return {payload,inputs,record};
  }

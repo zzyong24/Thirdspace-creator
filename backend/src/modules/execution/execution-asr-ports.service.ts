@@ -8,7 +8,7 @@ import { createExecutionCallLedgerService } from "./execution-call-ledger.servic
 import { ConflictError } from "./execution.errors";
 type Scope = Parameters<Parameters<ReturnType<typeof createExecutionLeaseService>["withLease"]>[2]>[0];
 const digest = (value: unknown) => `sha256:${createHash('sha256').update(canonicalJson(value)).digest('hex')}`;
-const operationKey = (awemeId: string, index: number) => `transcribe:${awemeId}/asr/${index + 1}`;
+const operationKey = (awemeId: string, index: number, protocol: AsrRequest["protocol"]) => `transcribe:${awemeId}/${protocol === "whisper-local.v1" ? "local-asr" : "asr"}/${index + 1}`;
 const manifestOf = (request: AsrRequest) => asrAudioManifestSchema.parse({ audioDigest: request.audioDigest, audioByteLength: request.audioByteLength, chunks: request.chunks });
 /** ASR 顶层请求专用端口；任务、归属和请求清单由后端锁内绑定，不放宽聊天子模型账本。 */
 export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createExecutionCallLedgerService>[1]) {
@@ -24,28 +24,29 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         const ids = Array.isArray(raw?.awemeIds) ? raw.awemeIds : typeof raw?.awemeId === 'string' ? [raw.awemeId] : [];
         if (task.kind !== 'ai_task' || task.ownerType !== 'ai_task' || !business || payload.aiTaskId !== business.id || business.taskType !== 'transcribe.douyin' || !isDeepStrictEqual(input.awemeIds, ids) || !input.awemeIds.includes(awemeId))
             throw new ConflictError('转写执行与原作品归属不符');
-        const manifests = payload.asrAudioManifests;
+        const manifestKey = input.identity.protocol === "whisper-local.v1" ? "localAsrAudioManifests" : "asrAudioManifests";
+        const manifests = payload[manifestKey];
         if (manifests !== undefined && (!manifests || typeof manifests !== 'object' || Array.isArray(manifests)))
             throw new ConflictError('转写音频清单损坏');
-        return { input, payload, manifests: (manifests ?? {}) as Record<string, unknown> };
+        return { input, payload, manifestKey, manifests: (manifests ?? {}) as Record<string, unknown> };
     }
     async function boundCall(scope: Scope, awemeId: string, callId: string) {
         const bound = await bind(scope, awemeId), manifest = asrAudioManifestSchema.parse(bound.manifests[awemeId]);
         const [call] = await scope.tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, scope.task.id)));
-        const index = manifest.chunks.findIndex((_, i) => call?.operationKey === operationKey(awemeId, i));
+        const index = manifest.chunks.findIndex((_, i) => call?.operationKey === operationKey(awemeId, i, bound.input.identity.protocol));
         if (!call || index < 0 || call.kind !== 'model' || call.parentCallId || call.toolExecutionClaimId || call.accountingBasis !== 'requests' || call.reservedTokens !== 0)
             throw new ConflictError('ASR 调用与原作品不符');
         const request = { ...bound.input.identity, ...manifest, chunkIndex: index, chunkCount: manifest.chunks.length, chunkDigest: manifest.chunks[index]!.digest, chunkByteLength: manifest.chunks[index]!.byteLength };
         if (call.inputDigest !== digest(request))
             throw new ConflictError('ASR 调用与冻结请求不符');
-        return { call, manifest, index };
+        return { call, manifest, index, protocol:bound.input.identity.protocol };
     }
     const receipt = (call: typeof executionCalls.$inferSelect) => ({ callId: call.id, status: call.status, ...(call.status === 'settled' ? { result: asrResultReceiptSchema.parse(JSON.parse(call.resultText ?? 'null')).result } : {}), ...(call.rejectionCode?.startsWith('ASR_HTTP_') ? { rejectionStatus: Number(call.rejectionCode.slice(9)) } : {}) });
     const service = {
         async reserve(ref: ExecutionRef, raw: unknown) {
             const { awemeId, request } = workerPortInputSchemas.reserveAsrRequest.parse(raw);
             return leases.withLease(ref, 'admission', async (scope) => {
-                const { input, payload, manifests } = await bind(scope, awemeId);
+                const { input, payload, manifestKey, manifests } = await bind(scope, awemeId);
                 const { protocol, provider, model, endpointDigest, language } = request;
                 if (!isDeepStrictEqual(input.identity, { protocol, provider, model, endpointDigest, language }))
                     throw new ConflictError('ASR 身份与冻结模型不符');
@@ -57,15 +58,15 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
                         throw new ConflictError('原音频或分片清单已改变');
                 }
                 else {
-                    if (request.chunkIndex !== 0 || state.calls.some(call => call.operationKey.startsWith(`transcribe:${awemeId}/asr/`)))
+                    if (request.chunkIndex !== 0 || state.calls.some(call => call.operationKey.startsWith(operationKey(awemeId, 0, input.identity.protocol).slice(0,-1))))
                         throw new ConflictError('已有请求不能补写新音频清单');
-                    await scope.tx.update(executionTasks).set({ payload: { ...payload, asrAudioManifests: { ...manifests, [awemeId]: manifest } } }).where(eq(executionTasks.id, scope.task.id));
+                    await scope.tx.update(executionTasks).set({ payload: { ...payload, [manifestKey]: { ...manifests, [awemeId]: manifest } } }).where(eq(executionTasks.id, scope.task.id));
                 }
-                const key = operationKey(awemeId, request.chunkIndex), existing = state.calls.filter(call => call.operationKey === key).at(-1);
+                const key = operationKey(awemeId, request.chunkIndex, input.identity.protocol), existing = state.calls.filter(call => call.operationKey === key).at(-1);
                 // 原事实先回读，不能被后片的 unknown 误伤。
                 if (!existing)
                     for (let i = 0; i < request.chunkIndex; i++) {
-                        const prefix = state.calls.filter(call => call.operationKey === operationKey(awemeId, i)).at(-1);
+                        const prefix = state.calls.filter(call => call.operationKey === operationKey(awemeId, i, input.identity.protocol)).at(-1);
                         if (!prefix || prefix.status !== 'settled' || prefix.accountingBasis !== 'requests')
                             throw new ConflictError('前一分片尚未确认');
                         asrResultReceiptSchema.parse(JSON.parse(prefix.resultText ?? 'null'));
@@ -81,7 +82,8 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         async settle(ref: ExecutionRef, raw: unknown) {
             const input = workerPortInputSchemas.settleAsrRequest.parse(raw);
             return leases.withLease(ref, 'settlement', async (scope) => {
-                const { call } = await boundCall(scope, input.awemeId, input.callId);
+                const { call, protocol } = await boundCall(scope, input.awemeId, input.callId);
+                if(protocol==='whisper-local.v1'&&input.status==='rejected'&&input.rejectionStatus!==undefined)throw new ConflictError('本地识别不能声明 HTTP 拒绝');
                 if (input.status !== "unknown" && !["settled", "rejected"].includes(call.status) && call.startedAttempt !== ref.attempt)
                     throw new ConflictError("新租约不能替旧未知 ASR 调用补交正文或拒绝事实");
                 const settlement = input.status === 'settled' ? { status: 'settled' as const, usage: {}, resultText: JSON.stringify({ schemaVersion: 1, result: input.result }) } : input.status === 'unknown' ? { status: 'unknown' as const } : { status: 'rejected' as const, ...(input.rejectionStatus ? { rejectionCode: `ASR_HTTP_${input.rejectionStatus}` as const } : {}) };

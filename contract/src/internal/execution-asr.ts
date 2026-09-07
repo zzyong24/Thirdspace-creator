@@ -1,12 +1,15 @@
 import { z } from "zod";
 const digest = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 const bytes = z.number().int().positive().max(2147483647);
-export const asrIdentitySchema = z.object({
+const cloudIdentitySchema = z.object({
     protocol: z.enum(["openai-audio-transcriptions.v1", "qwen-chat-audio.v1", "mimo-chat-audio.v1"]),
     provider: z.string().min(1).max(128), model: z.string().min(1).max(512), endpointDigest: digest, language: z.string().max(128).nullable(),
 }).strict();
+const localIdentitySchema = z.object({protocol:z.literal('whisper-local.v1'),provider:z.literal('whisper-local'),model:z.enum(['Xenova/whisper-tiny','Xenova/whisper-base','Xenova/whisper-small','Xenova/whisper-medium']),endpointDigest:z.null(),language:z.string().max(128).nullable()}).strict();
+export const asrIdentitySchema = z.union([cloudIdentitySchema,localIdentitySchema]);
 export const asrAudioManifestSchema = z.object({ audioDigest: digest, audioByteLength: bytes, chunks: z.array(z.object({ digest, byteLength: bytes }).strict()).min(1).max(10000) }).strict().refine(value => value.chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0) <= value.audioByteLength, "分片字节不能超出原音频");
-export const asrRequestSchema = asrIdentitySchema.extend({ audioDigest: digest, audioByteLength: bytes, chunks: asrAudioManifestSchema.shape.chunks, chunkDigest: digest, chunkByteLength: bytes, chunkIndex: z.number().int().nonnegative(), chunkCount: z.number().int().positive().max(10000) }).strict().refine(value => value.chunkCount === value.chunks.length && value.chunks[value.chunkIndex]?.digest === value.chunkDigest && value.chunks[value.chunkIndex]?.byteLength === value.chunkByteLength && asrAudioManifestSchema.safeParse({ audioDigest: value.audioDigest, audioByteLength: value.audioByteLength, chunks: value.chunks }).success, "分片与完整清单不符");
+const requestFields={ audioDigest: digest, audioByteLength: bytes, chunks: asrAudioManifestSchema.shape.chunks, chunkDigest: digest, chunkByteLength: bytes, chunkIndex: z.number().int().nonnegative(), chunkCount: z.number().int().positive().max(10000) };
+export const asrRequestSchema = z.union([cloudIdentitySchema.extend(requestFields).strict(),localIdentitySchema.extend(requestFields).strict()]).refine(value => value.chunkCount === value.chunks.length && value.chunks[value.chunkIndex]?.digest === value.chunkDigest && value.chunks[value.chunkIndex]?.byteLength === value.chunkByteLength && asrAudioManifestSchema.safeParse({ audioDigest: value.audioDigest, audioByteLength: value.audioByteLength, chunks: value.chunks }).success, "分片与完整清单不符").refine(value=>value.protocol!=='whisper-local.v1'||(value.chunkCount===1&&value.chunkIndex===0&&value.chunkDigest===value.audioDigest&&value.chunkByteLength===value.audioByteLength),'本地识别必须绑定完整原音频');
 export const asrTaskInputSchema = z.object({ kind: z.literal("transcribe.douyin"), awemeIds: z.array(z.string().min(1).max(128)).min(1).max(10000), identity: asrIdentitySchema }).strict().refine(value => new Set(value.awemeIds).size === value.awemeIds.length, "作品不能重复");
 export const asrTranscriptSchema = z.object({ text: z.string().max(1900000), language: z.string().max(128).optional() }).strict();
 export const asrResultReceiptSchema = z.object({ schemaVersion: z.literal(1), result: asrTranscriptSchema }).strict();

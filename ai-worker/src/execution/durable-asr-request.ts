@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AsrExecutionInterruption, throwIfAsrAborted, type AsrRequest, type ExecuteAsrRequest } from '../runtime/asr-request';
+import { AsrExecutionInterruption, isAsrExecutionControlError, throwIfAsrAborted, type AsrRequest, type ExecuteAsrRequest } from '../runtime/asr-request';
 const resultSchema = z.object({ text: z.string(), language: z.string().optional() }).strict();
 export interface DurableAsrPorts {
     reserve(input: {
@@ -32,7 +32,7 @@ export function createDurableAsrRequestExecutor(input: {
         throwIfAsrAborted(input.signal);
         let reserved: Awaited<ReturnType<DurableAsrPorts['reserve']>>;
         try {
-            reserved = await input.ports.reserve({ operationKey: `${input.operationKey}/asr/${request.chunkIndex + 1}`, request });
+            reserved = await input.ports.reserve({ operationKey: `${input.operationKey}/${request.protocol === "whisper-local.v1" ? "local-asr" : "asr"}/${request.chunkIndex + 1}`, request });
         }
         catch {
             throwIfAsrAborted(input.signal);
@@ -46,7 +46,7 @@ export function createDurableAsrRequestExecutor(input: {
             return result.data;
         }
         if (reserved.status === 'rejected')
-            throw Object.assign(new Error('ASR 请求已被拒绝'), { statusCode: reserved.rejectionStatus });
+            throw Object.assign(new Error(request.protocol==='whisper-local.v1'?'本地识别未完成':'ASR 请求已被拒绝'), { statusCode: reserved.rejectionStatus });
         if (reserved.status !== 'reserved')
             throw new AsrExecutionInterruption();
         try {
@@ -66,15 +66,18 @@ export function createDurableAsrRequestExecutor(input: {
                 statusCode?: unknown;
             }).statusCode : undefined;
             // 网关超时与服务端错误可能发生在受理之后，不能据此认定未执行。
-            const rejected = typeof status === 'number' && [400, 401, 402, 403, 404, 405, 413, 415, 422, 429].includes(status);
+            const local=request.protocol==='whisper-local.v1';
+            // 本地计算已返回普通失败时不存在外部提交；取消或执行控制异常仍待核对。
+            const localFailed=local&&!isAsrExecutionControlError(error)&&!input.signal?.aborted;
+            const rejected = !local&&typeof status === 'number' && [400, 401, 402, 403, 404, 405, 413, 415, 422, 429].includes(status);
             try {
-                await input.ports.settle(reserved.callId, !dispatched ? { status: 'rejected' } : rejected ? { status: 'rejected', rejectionStatus: status } : { status: 'unknown' });
+                await input.ports.settle(reserved.callId, !dispatched||localFailed ? { status: 'rejected' } : rejected ? { status: 'rejected', rejectionStatus: status } : { status: 'unknown' });
             }
             catch {
                 throw new AsrExecutionInterruption();
             }
             throwIfAsrAborted(input.signal);
-            if (!dispatched || rejected)
+            if (!dispatched || rejected || localFailed)
                 throw error;
             throw new AsrExecutionInterruption();
         }

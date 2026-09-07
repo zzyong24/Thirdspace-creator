@@ -1,0 +1,74 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-local-asr.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-local-asr.test.ts (3 tests | 3 failed) 955ms
+   × 本地识别使用真实模型身份和原音频，恢复不再解码或推理 15ms
+   × 本地结算 ACK 丢失时回读原正文，不重新推理 7ms
+   × 本地开始 ACK 未确认不启动解码或推理，也不重投 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-local-asr.test.ts > 本地识别使用真实模型身份和原音频，恢复不再解码或推理
+AssertionError: expected "vi.fn()" to be called 1 times, but got 2 times
+ ❯ src/modules/execution/execution-local-asr.test.ts:28:21
+     26| it('本地识别使用真实模型身份和原音频，恢复不再解码或推理',async()=>{
+     27|  const f=await fixture();expect((await f.run()).text).toBe('完整本地正文');e…
+     28|  expect(f.pipeline).toHaveBeenCalledTimes(1);expect(f.decode).toHaveBe…
+       |                     ^
+     29|  const calls=await db.select().from(executionCalls).where(eq(execution…
+     30|  expect(calls).toHaveLength(1);expect(calls[0]).toMatchObject({operati…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/execution/execution-local-asr.test.ts > 本地结算 ACK 丢失时回读原正文，不重新推理
+AssertionError: promise resolved "{ text: '完整本地正文' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "text": "完整本地正文",
+  }
+
+ ❯ src/modules/execution/execution-local-asr.test.ts:34:22
+     32| it('本地结算 ACK 丢失时回读原正文，不重新推理',async()=>{
+     33|  const f=await fixture(),settle=f.ports.settle;f.ports.settle=async(..…
+     34|  await expect(f.run()).rejects.toBeInstanceOf(AsrExecutionInterruption…
+       |                      ^
+     35| });
+     36| it('本地开始 ACK 未确认不启动解码或推理，也不重投',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/execution/execution-local-asr.test.ts > 本地开始 ACK 未确认不启动解码或推理，也不重投
+AssertionError: promise resolved "{ text: '完整本地正文' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "text": "完整本地正文",
+  }
+
+ ❯ src/modules/execution/execution-local-asr.test.ts:38:22
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  23:14:22
+   Duration  2.20s (transform 609ms, setup 0ms, import 1.11s, tests 955ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-local-asr.test.ts`
+Exit status 1

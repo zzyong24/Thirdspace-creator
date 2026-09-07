@@ -1,3 +1,5 @@
+import {createHash} from "node:crypto";
+import {snapshotAsrInput,type AsrRequest} from "./asr-request";
 // 本地 Whisper 适配器(T-160,SPEC 2026-07-06 §3.1/§3.2 方案 A)—— 实现
 // MultimodalProviderAdapter 的 `transcribeAudio`,用 Transformers.js(`@xenova/transformers`)
 // 在 Node 里跑 Whisper 推理,**零 key、零外部 API**。ASR 从「必配 key」变「选配」的兜底后端:
@@ -53,7 +55,7 @@ export function whisperLevelFromSpec(spec: MultimodalSpec): WhisperLevel {
 }
 
 /** Transformers.js 的 whisper 模型 id(Xenova 转好的 ONNX 权重,HF 上公开)。 */
-export function whisperModelId(level: WhisperLevel): string {
+export function whisperModelId(level: WhisperLevel): `Xenova/whisper-${WhisperLevel}` {
   return `Xenova/whisper-${level}`;
 }
 
@@ -179,7 +181,17 @@ export function createWhisperLocalAdapter(
   deps: WhisperLocalAdapterDeps,
 ): MultimodalProviderAdapter {
   return {
-    transcribeAudio: (spec, opts) => transcribeAudio(spec, opts, deps),
+    async transcribeAudio(spec, opts) {
+      // 冻结输入后再等待回执；回放已确认正文时不启动解码、模型加载或推理。
+      const frozen = snapshotAsrInput(spec, opts);
+      if (!opts.executeRequest) return transcribeAudio(frozen.spec, frozen.opts, deps);
+      const audioDigest=`sha256:${createHash('sha256').update(frozen.opts.audioBytes).digest('hex')}`;
+      const audioByteLength=frozen.opts.audioBytes.byteLength;
+      const request:AsrRequest={protocol:'whisper-local.v1',provider:'whisper-local',model:whisperModelId(whisperLevelFromSpec(frozen.spec)),endpointDigest:null,language:frozen.opts.language??null,audioDigest,audioByteLength,chunks:[{digest:audioDigest,byteLength:audioByteLength}],chunkDigest:audioDigest,chunkByteLength:audioByteLength,chunkIndex:0,chunkCount:1};
+      const result=await opts.executeRequest(request,()=>transcribeAudio(frozen.spec,frozen.opts,deps));
+      throwIfAborted(opts.signal);
+      return result;
+    },
   };
 }
 

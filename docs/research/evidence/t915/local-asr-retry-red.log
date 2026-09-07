@@ -1,0 +1,33 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-local-asr.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-local-asr.test.ts (4 tests | 1 failed) 1064ms
+   × 本地已返回失败可按宿主指定原调用重试，仍消耗原次数预算 26ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-local-asr.test.ts > 本地已返回失败可按宿主指定原调用重试，仍消耗原次数预算
+AssertionError: expected AsrExecutionInterruption: 转写结果待核对，不能重复提交 { …(2) } to not be an instance of AsrExecutionInterruption
+ ❯ src/modules/execution/execution-local-asr.test.ts:42:22
+     40| it('本地已返回失败可按宿主指定原调用重试，仍消耗原次数预算',async()=>{
+     41|  const f=await fixture();f.pipeline.mockRejectedValue(Error('inference…
+     42|  await expect(f.run()).rejects.not.toBeInstanceOf(AsrExecutionInterrup…
+       |                      ^
+     43|  for(let i=0;i<2;i++){
+     44|   const calls=await db.select().from(executionCalls).where(eq(executio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  23:16:54
+   Duration  2.33s (transform 619ms, setup 0ms, import 1.13s, tests 1.06s, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-local-asr.test.ts`
+Exit status 1
