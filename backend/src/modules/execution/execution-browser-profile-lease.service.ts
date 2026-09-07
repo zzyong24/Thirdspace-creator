@@ -21,7 +21,7 @@ import { ConflictError } from "./execution.errors";
 export class BrowserProfileBusyError extends Error {
   readonly code = "BROWSER_PROFILE_BUSY";
   constructor() {
-    super("当前用户的网站浏览器仍由另一个执行持有，等待已确认停止后再领取");
+    super("浏览器登录档案仍被其他操作占用，请等待相关窗口或任务停止后再试");
     this.name = "BrowserProfileBusyError";
   }
 }
@@ -33,72 +33,53 @@ export function createExecutionBrowserProfileLeaseService(
 ) {
   const now = deps.now ?? (() => new Date().toISOString()),
     leases = createExecutionLeaseService(db, { now });
+  type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+  type Owner = Pick<typeof executionBrowserProfileLeases.$inferInsert,
+    "ownerExecutionTaskId" | "attempt" | "fenceToken" | "hostInstanceId" | "hostOperationId">;
+  const profileKeySchema = z.union([z.literal(""), z.string().regex(/^[a-f0-9]{64}$/)]);
+  const hostSchema = z.object({
+    userId: z.string().min(1), domain: z.string().max(253),
+    profileKey: profileKeySchema.default(""),
+    hostInstanceId: z.string().min(1), hostOperationId: z.string().min(1),
+  }).strict();
+  type HostOwner = z.input<typeof hostSchema>;
+  const canonical = (raw: string) => assertSafeWebDomain(webDomainFromUrl(`https://${assertSafeWebDomain(raw)}`));
+  function sameOwner(held: Owner, owner: Owner) {
+    return held.ownerExecutionTaskId === owner.ownerExecutionTaskId &&
+      held.attempt === owner.attempt && held.fenceToken === owner.fenceToken &&
+      held.hostInstanceId === owner.hostInstanceId && held.hostOperationId === owner.hostOperationId;
+  }
+  const workerOwner = (ref: ExecutionRef): Owner => ({
+    ownerExecutionTaskId: ref.executionTaskId, attempt: ref.attempt, fenceToken: ref.fenceToken,
+    hostInstanceId: null, hostOperationId: null,
+  });
+  const hostOwner = (host: HostOwner): Owner => ({
+    ownerExecutionTaskId: null, attempt: null, fenceToken: null,
+    hostInstanceId: host.hostInstanceId, hostOperationId: host.hostOperationId,
+  });
+  async function acquireInTransaction(tx: Transaction, userId: string, domain: string, profileKey: string, owner: Owner) {
+    // 物理目录摘要全局互斥；原网站保管库继续按 user+domain 隔离。
+    const identity = profileKey ? eq(executionBrowserProfileLeases.profileKey, profileKey) : and(
+      eq(executionBrowserProfileLeases.userId, userId),
+      eq(executionBrowserProfileLeases.domain, domain),
+      eq(executionBrowserProfileLeases.profileKey, ""),
+    );
+    const fresh = { userId, domain, profileKey, ...owner, leaseId: randomUUID(), acquiredAt: now(), releasedAt: null };
+    await tx.insert(executionBrowserProfileLeases).values(fresh).onConflictDoNothing();
+    const [held] = await tx.select().from(executionBrowserProfileLeases).where(identity).for("update");
+    if (!held) throw new ConflictError("浏览器profile租约记录不存在");
+    if (held.releasedAt === null) {
+      if (!sameOwner(held, owner) || held.userId !== userId || held.domain !== domain) throw new BrowserProfileBusyError();
+      return { leaseId: held.leaseId, domain };
+    }
+    await tx.update(executionBrowserProfileLeases).set(fresh).where(identity);
+    return { leaseId: fresh.leaseId, domain };
+  }
   async function acquireMany(ref: ExecutionRef, rawDomains: string[]) {
-    const domains = [
-      ...new Set(
-        z
-          .array(z.string().max(253))
-          .min(1)
-          .max(30)
-          .parse(rawDomains)
-          .map((raw) =>
-            assertSafeWebDomain(
-              webDomainFromUrl(`https://${assertSafeWebDomain(raw)}`),
-            ),
-          ),
-      ),
-    ].sort();
+    const domains = [...new Set(z.array(z.string().max(253)).min(1).max(30).parse(rawDomains).map(canonical))].sort();
     return leases.withLease(ref, "admission", async ({ tx, task }) => {
-      const receipts: Array<{
-        leaseId: string;
-        domain: string;
-      }> = [];
-      for (const domain of domains) {
-        const identity = and(
-          eq(executionBrowserProfileLeases.userId, task.userId),
-          eq(executionBrowserProfileLeases.domain, domain),
-        );
-        const fresh = {
-          userId: task.userId,
-          domain,
-          ownerExecutionTaskId: task.id,
-          attempt: ref.attempt,
-          fenceToken: ref.fenceToken,
-          leaseId: randomUUID(),
-          acquiredAt: now(),
-          releasedAt: null,
-        };
-        await tx
-          .insert(executionBrowserProfileLeases)
-          .values(fresh)
-          .onConflictDoNothing({
-            target: [
-              executionBrowserProfileLeases.userId,
-              executionBrowserProfileLeases.domain,
-            ],
-          });
-        const [held] = await tx
-          .select()
-          .from(executionBrowserProfileLeases)
-          .where(identity)
-          .for("update");
-        if (!held) throw new ConflictError("浏览器profile租约记录不存在");
-        if (held.releasedAt === null) {
-          if (
-            held.ownerExecutionTaskId !== task.id ||
-            held.attempt !== ref.attempt ||
-            held.fenceToken !== ref.fenceToken
-          )
-            throw new BrowserProfileBusyError();
-          receipts.push({ leaseId: held.leaseId, domain });
-        } else {
-          await tx
-            .update(executionBrowserProfileLeases)
-            .set(fresh)
-            .where(identity);
-          receipts.push({ leaseId: fresh.leaseId, domain });
-        }
-      }
+      const receipts: Array<{ leaseId: string; domain: string }> = [];
+      for (const domain of domains) receipts.push(await acquireInTransaction(tx, task.userId, domain, "", workerOwner(ref)));
       return receipts;
     });
   }
@@ -106,6 +87,30 @@ export function createExecutionBrowserProfileLeaseService(
     acquireMany,
     async acquire(ref: ExecutionRef, rawDomain: string) {
       return (await acquireMany(ref, [rawDomain]))[0]!;
+    },
+    /** 仅宿主授权适配器可传目录摘要；不得暴露任意 profileKey 的 Worker IPC。 */
+    async acquireProfile(ref: ExecutionRef, rawDomain: string, rawProfileKey: string) {
+      const domain = canonical(rawDomain), profileKey = profileKeySchema.parse(rawProfileKey);
+      if (!profileKey) throw new ConflictError("物理浏览器档案缺少受控目录摘要");
+      return leases.withLease(ref, "admission", ({ tx, task }) =>
+        acquireInTransaction(tx, task.userId, domain, profileKey, workerOwner(ref)));
+    },
+    /** 宿主登录窗口不是执行任务；调用方必须从真实 RequestContext 和授权路径派生范围。 */
+    async acquireForHost(rawHost: HostOwner) {
+      const host = hostSchema.parse(rawHost), domain = canonical(host.domain);
+      return db.transaction(tx => acquireInTransaction(tx, host.userId, domain, host.profileKey, hostOwner(host)));
+    },
+    /** 仅在宿主确认实际 context/子树停止后调用，不以 TTL 或 Worker 自报关闭替代证明。 */
+    async releaseAfterHostStopped(rawHost: HostOwner, leaseId: string): Promise<boolean> {
+      const host = hostSchema.parse(rawHost), domain = canonical(host.domain);
+      return db.transaction(async tx => {
+        const [held] = await tx.select().from(executionBrowserProfileLeases).where(eq(executionBrowserProfileLeases.leaseId, leaseId)).for("update");
+        if (!held || !sameOwner(held, hostOwner(host)) || held.userId !== host.userId || held.domain !== domain || held.profileKey !== host.profileKey)
+          throw new ConflictError("浏览器profile释放凭证与实际持有者不符");
+        if (held.releasedAt !== null) return false;
+        await tx.update(executionBrowserProfileLeases).set({ releasedAt: now() }).where(eq(executionBrowserProfileLeases.leaseId, leaseId));
+        return true;
+      });
     },
     /** 宿主清理读端口；允许读取已停止或旧attempt仍持有的租约，不授予动作权限。 */
     async listOwned(rawRef: ExecutionRef) {

@@ -1,0 +1,55 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-browser-profile-lease.service.test.ts (12 tests | 3 failed) 1118ms
+   × 宿主登录与 Worker 共用同一物理 profile，跨用户与域名不能绕开互斥 2ms
+   × 不同物理 profile 独立，宿主占用没有过期抢占且不伪造执行任务 0ms
+   × 网站原 user+domain 范围与宿主相互阻塞，保留已有调用兼容 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-browser-profile-lease.service.test.ts > 宿主登录与 Worker 共用同一物理 profile，跨用户与域名不能绕开互斥
+TypeError: service.acquireForHost is not a function
+ ❯ src/modules/execution/execution-browser-profile-lease.service.test.ts:91:32
+     89|     const profileKey = 'a'.repeat(64);
+     90|     const host = { userId: 'host-user', domain: 'douyin.com', profileK…
+     91|     const held = await service.acquireForHost(host);
+       |                                ^
+     92|     expect(await service.acquireForHost(host)).toEqual(held);
+     93|     const worker = await owner('physical-worker', 'another-user');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/execution/execution-browser-profile-lease.service.test.ts > 不同物理 profile 独立，宿主占用没有过期抢占且不伪造执行任务
+TypeError: service.acquireForHost is not a function
+ ❯ src/modules/execution/execution-browser-profile-lease.service.test.ts:106:35
+    104|     const service = createExecutionBrowserProfileLeaseService(db, { no…
+    105|     const host = { userId: 'physical-user', domain: 'douyin.com', prof…
+    106|     const receipt = await service.acquireForHost(host);
+       |                                   ^
+    107|     const later = createExecutionBrowserProfileLeaseService(db, { now:…
+    108|     await expect(later.acquireForHost({ ...host, hostInstanceId: 'rest…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/execution/execution-browser-profile-lease.service.test.ts > 网站原 user+domain 范围与宿主相互阻塞，保留已有调用兼容
+TypeError: service.acquireForHost is not a function
+ ❯ src/modules/execution/execution-browser-profile-lease.service.test.ts:118:26
+    116|     const lease = await service.acquire(worker.ref, 'www.example.com');
+    117|     const host = { userId: 'web-host-user', domain: 'example.com', hos…
+    118|     await expect(service.acquireForHost(host)).rejects.toMatchObject({…
+       |                          ^
+    119|     await service.releaseAfterWorkerStopped(worker.ref, lease.leaseId);
+    120|     const held = await service.acquireForHost(host);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 9 passed (12)
+   Start at  00:55:44
+   Duration  2.41s (transform 629ms, setup 0ms, import 1.15s, tests 1.12s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/execution-browser-profile-lease.service.test.ts

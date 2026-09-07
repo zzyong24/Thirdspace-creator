@@ -1793,6 +1793,21 @@
       "reason": "记录已有独立 Worker 架构中的 ASR 命名端口验证及未完成生产编排边界。",
       "acceptance": "文档与验证登记，不代表全部 T-915 验收通过。",
       "file_sha256": "690a337c678654d475ea79f5e910e4a75912f43741b657f419af728ded73a860"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "docs/research/evidence/t915/browser-profile-host-owner.md"
+      ],
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "记录统一浏览器租约的宿主持有者与既有Worker私有端口边界，不新增IPC或第二套租约。",
+      "acceptance": "仅登记文档复杂度；生产接线与完整T-915仍未完成。",
+      "file_sha256": "f233d5f92e0bc4b9a2e082187d557859d3d48511894adfd82fa2dfcff2b2e7d4"
     }
   ],
   "historical_baselines": []

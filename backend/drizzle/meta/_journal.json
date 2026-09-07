@@ -638,6 +638,13 @@
       "when": 1788652800020,
       "tag": "0090_execution_call_accounting_basis",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1788652800021,
+      "tag": "0091_browser_profile_host_owner",
+      "breakpoints": true
     }
   ]
 }

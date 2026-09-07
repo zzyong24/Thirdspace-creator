@@ -83,3 +83,70 @@ it("批次canonical去重排序、30域边界、listOwned精确ref且排除已�
     await expect(service.acquireMany(a.ref, [...domains, "excess.example.com"])).rejects.toThrow();
     expect((await service.listOwned(a.ref)).some(row => row.domain === "excess.example.com")).toBe(false);
 });
+
+it('宿主登录与 Worker 共用同一物理 profile，跨用户与域名不能绕开互斥', async () => {
+    const service = createExecutionBrowserProfileLeaseService(db, { now });
+    const profileKey = 'a'.repeat(64);
+    const host = { userId: 'host-user', domain: 'douyin.com', profileKey, hostInstanceId: 'host-1', hostOperationId: 'login-1' };
+    const held = await service.acquireForHost(host);
+    expect(await service.acquireForHost(host)).toEqual(held);
+    const worker = await owner('physical-worker', 'another-user');
+    await expect(service.acquireProfile(worker.ref, 'example.com', profileKey)).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    await expect(service.acquireForHost({ ...host, domain: 'example.com', hostOperationId: 'other' })).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    await expect(service.releaseAfterHostStopped({ ...host, hostOperationId: 'wrong' }, held.leaseId)).rejects.toThrow();
+    expect(await service.releaseAfterHostStopped(host, held.leaseId)).toBe(true);
+    const next = await service.acquireProfile(worker.ref, 'example.com', profileKey);
+    await expect(service.releaseAfterHostStopped(host, next.leaseId)).rejects.toThrow();
+    await expect(service.releaseAfterHostStopped(host, held.leaseId)).rejects.toThrow();
+    expect((await service.listOwned(worker.ref)).map(row => row.leaseId)).toEqual([next.leaseId]);
+});
+it('不同物理 profile 独立，宿主占用没有过期抢占且不伪造执行任务', async () => {
+    const service = createExecutionBrowserProfileLeaseService(db, { now });
+    const host = { userId: 'physical-user', domain: 'douyin.com', profileKey: 'b'.repeat(64), hostInstanceId: 'process-1', hostOperationId: 'login-1' };
+    const receipt = await service.acquireForHost(host);
+    const later = createExecutionBrowserProfileLeaseService(db, { now: () => '2099-01-01T00:00:00Z' });
+    await expect(later.acquireForHost({ ...host, hostInstanceId: 'restarted' })).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    expect((await service.acquireForHost({ ...host, profileKey: 'c'.repeat(64) })).leaseId).not.toBe(receipt.leaseId);
+    const [row] = await db.select().from(executionBrowserProfileLeases).where(eq(executionBrowserProfileLeases.leaseId, receipt.leaseId));
+    expect(row).toMatchObject({ ownerExecutionTaskId: null, attempt: null, fenceToken: null, hostInstanceId: 'process-1', hostOperationId: 'login-1' });
+});
+it('网站原 user+domain 范围与宿主相互阻塞，保留已有调用兼容', async () => {
+    const service = createExecutionBrowserProfileLeaseService(db, { now });
+    const worker = await owner('web-host-compat', 'web-host-user');
+    const lease = await service.acquire(worker.ref, 'www.example.com');
+    const host = { userId: 'web-host-user', domain: 'example.com', hostInstanceId: 'host', hostOperationId: 'login' };
+    await expect(service.acquireForHost(host)).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    await service.releaseAfterWorkerStopped(worker.ref, lease.leaseId);
+    const held = await service.acquireForHost(host);
+    await expect(service.acquire(worker.ref, 'example.com')).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    expect(await service.releaseAfterHostStopped(host, held.leaseId)).toBe(true);
+    expect(await service.releaseAfterHostStopped(host, held.leaseId)).toBe(false);
+});
+it('宿主与Worker并发只产生一个占用；旧fence不能申请新物理资源', async () => {
+    const service = createExecutionBrowserProfileLeaseService(db, { now });
+    const worker = await owner('race-host-worker', 'race-user');
+    const profileKey = 'd'.repeat(64);
+    const outcomes = await Promise.allSettled([
+        service.acquireProfile(worker.ref, 'douyin.com', profileKey),
+        service.acquireForHost({ userId: 'race-user', domain: 'douyin.com', profileKey, hostInstanceId: 'race-host', hostOperationId: 'race-login' }),
+    ]);
+    expect(outcomes.filter(result => result.status === 'fulfilled')).toHaveLength(1);
+    expect((outcomes.find(result => result.status === 'rejected') as PromiseRejectedResult).reason.code).toBe('BROWSER_PROFILE_BUSY');
+    await expect(service.acquireProfile({ ...worker.ref, fenceToken: 'old' }, 'douyin.com', 'e'.repeat(64))).rejects.toThrow();
+    expect(await db.select().from(executionBrowserProfileLeases).where(eq(executionBrowserProfileLeases.profileKey, 'e'.repeat(64)))).toEqual([]);
+});
+it('数据库拒绝混合或缺失owner，旧租约升级保留原占用与回读', async () => {
+    const { PGlite } = await import('@electric-sql/pglite');
+    const { readFile } = await import('node:fs/promises');
+    const isolated = new PGlite();
+    try {
+        await isolated.exec(await readFile(new URL('../../../drizzle/0081_execution_browser_profile_leases.sql', import.meta.url), 'utf8'));
+        await isolated.query(`INSERT INTO execution_browser_profile_leases(user_id,domain,owner_execution_task_id,attempt,fence_token,lease_id,acquired_at) VALUES ('legacy-user','example.com','legacy-task',2,'legacy-fence','legacy-lease','2026-01-01')`);
+        await isolated.exec(await readFile(new URL('../../../drizzle/0091_browser_profile_host_owner.sql', import.meta.url), 'utf8'));
+        expect((await isolated.query('SELECT * FROM execution_browser_profile_leases')).rows).toEqual([expect.objectContaining({ user_id: 'legacy-user', owner_execution_task_id: 'legacy-task', attempt: 2, fence_token: 'legacy-fence', lease_id: 'legacy-lease', released_at: null, profile_key: '', host_instance_id: null, host_operation_id: null })]);
+        await expect(isolated.query(`UPDATE execution_browser_profile_leases SET host_instance_id='host', host_operation_id='operation'`)).rejects.toThrow();
+        await expect(isolated.query(`UPDATE execution_browser_profile_leases SET owner_execution_task_id=NULL,attempt=NULL,fence_token=NULL`)).rejects.toThrow();
+        await expect(isolated.query(`UPDATE execution_browser_profile_leases SET owner_execution_task_id=NULL,attempt=NULL,fence_token=NULL,host_instance_id='',host_operation_id='op'`)).rejects.toThrow();
+        expect((await isolated.query('SELECT owner_execution_task_id FROM execution_browser_profile_leases')).rows).toEqual([{ owner_execution_task_id: 'legacy-task' }]);
+    } finally { await isolated.close(); }
+});
