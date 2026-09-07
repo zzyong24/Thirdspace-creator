@@ -144,3 +144,5 @@ export {createAssetBusinessExecutionService} from "./asset-business-execution.se
 export {preparePublishPackageTaskInput} from "./publish-package-task-input";
 
 export {createTranscribeBusinessExecutionService} from "./transcribe-business-execution.service";
+
+export {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";

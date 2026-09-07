@@ -1667,7 +1667,7 @@ export interface ChatRuntime {
   // 无锚 → ValidationError 人话拒)。对话工具 project.transcribe 据此触发(复盘无稿门的可执行动作)。
   dispatchProjectTranscribe: (
     ctx: RequestContext,
-    input: { projectId: string },
+    input: { projectId: string; attemptId?: string },
   ) => Promise<{ taskId: string }>;
 }
 
@@ -12500,14 +12500,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 人话文案原样抛出 → chat-runner catch 转工具 error 卡渲。
     dispatchProjectTranscribe: async (
       ctx: RequestContext,
-      input: { projectId: string },
+      input: { projectId: string; attemptId?: string },
     ) => {
       const res = await projectsWithTranscribe.request(
         ENDPOINTS.transcribeProjectWork,
         {
           params: { projectId: input.projectId },
           query: undefined,
-          body: { attemptId: createAiTaskAttemptId() },
+          body: { attemptId: input.attemptId ?? createAiTaskAttemptId() },
         },
         ctx,
       );
