@@ -30,6 +30,8 @@ mod logging;
 // 防线的 Win 等价(Win 无 POSIX 进程组/killpg)。整个模块 cfg(windows),mac/Linux 不编译。
 #[cfg(windows)]
 mod win_job;
+#[cfg(target_os = "macos")]
+mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
 
@@ -459,7 +461,7 @@ fn resolve_machine_id(app: &AppHandle) -> Option<String> {
 enum SidecarChild {
     /// macOS：std 直接 spawn 的子进程(走 server.app 内层二进制,Dock 隐身)。
     #[cfg(target_os = "macos")]
-    Std(std::sync::Arc<shared_child::SharedChild>),
+    Std(std::sync::Arc<sidecar_process::OwnedSidecar>),
     /// Win/Linux：tauri sidecar(externalBin)的子进程。
     /// [T-372 W3] Windows 额外持有 Job Object 守护(KILL_ON_JOB_CLOSE):壳退出/崩溃
     /// → Job 句柄被 OS 回收 → sidecar 整棵进程树(含 Chrome/ffmpeg)内核级必死。
@@ -479,36 +481,7 @@ impl SidecarChild {
     fn kill_confirmed(self) -> Result<(), String> {
         match self {
             #[cfg(target_os = "macos")]
-            SidecarChild::Std(c) => {
-                // [T-365/T-362] 树杀 + 优雅窗口:此前 `Child::kill()` = SIGKILL 单个 node ——
-                //   ① Chrome/ffmpeg 子进程直接孤儿(真机实锤:孤儿 next-server 带 headless Chrome 树);
-                //   ② 正在写 PGlite 时硬杀 = WAL 半写库损坏(2026-07-16 数据事故根因)。
-                // 现在:对**进程组**(spawn 时 process_group(0),组长=sidecar pid)先 SIGTERM
-                //   (sidecar instrumentation 挂了 graceful handler:flush PGlite 后自退;Chrome 收到
-                //   SIGTERM 也自关)→ 轮询等最多 5s → 还活着才 SIGKILL 组兜底。
-                let pid = c.id() as i32;
-                unsafe {
-                    let _ = libc::killpg(pid, libc::SIGTERM);
-                }
-                let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-                loop {
-                    match c.try_wait() {
-                        Ok(Some(_)) => return Ok(()), // sidecar 已优雅退出
-                        Ok(None) if std::time::Instant::now() < deadline => {
-                            std::thread::sleep(std::time::Duration::from_millis(150));
-                        }
-                        _ => {
-                            unsafe {
-                                let _ = libc::killpg(pid, libc::SIGKILL);
-                            }
-                            return c
-                                .wait()
-                                .map(|_| ())
-                                .map_err(|error| format!("等待 sidecar 退出失败：{error}"));
-                        }
-                    }
-                }
-            }
+            SidecarChild::Std(c) => c.stop(),
             // [T-372 W3/W4] Windows 停机序列(对齐 macOS「killpg SIGTERM → 等 5s → SIGKILL」):
             //   ① 经 stdin 写停机哨兵(Node 在 Win 收不到真 SIGTERM)→ sidecar-lifecycle Win
             //     分支读到即优雅退出(flush PGlite 防 WAL 半写);
@@ -2569,15 +2542,13 @@ pub fn run() {
                     });
                 }
 
-                let shared_child = std::sync::Arc::new(
-                    shared_child::SharedChild::new(child)
-                        .expect("接管 creatoros-server sidecar 句柄失败"),
-                );
+                let shared_child =
+                    std::sync::Arc::new(sidecar_process::OwnedSidecar::new(child));
                 let watched_child = shared_child.clone();
                 let startup_tx_exit = startup_tx.clone();
                 std::thread::spawn(move || {
-                    let reason = match watched_child.wait() {
-                        Ok(status) => format!("sidecar 已退出({status})"),
+                    let reason = match watched_child.watch_exit() {
+                        Ok(()) => "sidecar 已退出，受控进程组已停止".to_string(),
                         Err(error) => format!("sidecar 退出状态读取失败({error})"),
                     };
                     let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
