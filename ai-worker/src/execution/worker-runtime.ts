@@ -1,3 +1,4 @@
+import type {runCoverInWorker} from "./cover-worker-run";
 import type {runAssetInWorker} from "./asset-worker-run";
 import type { runChatInWorker } from "./chat-worker-run";
 import {createPersistentStreamWriter} from "./persistent-stream-writer";
@@ -28,6 +29,7 @@ export interface WorkerDependencies {
   supportsChatScriptDraft?:boolean;
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
+  runCover?:typeof runCoverInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
@@ -131,6 +133,16 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return;
       }
       if(input.kind==="model.structured"){
+        if(input.skillId==="cover.brief"){
+          if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
+          if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
+          // 先沿原凭据端口锁定业务任务的模型身份，封面链返回最终图片回执。
+          const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+          const result=await deps.runCover(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+          signal.throwIfAborted();committing=true;
+          await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+          reason="completed";return;
+        }
         const daily=input.facets.__dailyTopic!==undefined ? dailyTopicInputSchema.parse(JSON.parse(input.facets.__dailyTopic)) : undefined;
         if(daily && (input.skillId!=="topic.generate" || input.capability!=="topic.generate"))throw new Error("DAILY_TOPIC_INPUT_MISMATCH");
         if(daily?.skipReason){

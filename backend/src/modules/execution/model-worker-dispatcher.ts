@@ -1,3 +1,4 @@
+import {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
 import {createExecutionTranscribePostprocessService} from "./execution-transcribe-postprocess.service";
 import {createExecutionTranscribePreparationService} from "./execution-transcribe-preparation.service";
 import {createExecutionTranscribeAudioService} from "./execution-transcribe-audio.service";
@@ -51,7 +52,7 @@ interface WorkerDispatcherDeps {
   /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
@@ -85,6 +86,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const transcribePreparation=deps.executionMode==="model"&&transcribeAudio&&asrPorts&&deps.transcribePreparation?createExecutionTranscribePreparationService(db,{now,audio:transcribeAudio,asr:asrPorts,...deps.transcribePreparation}):null;
   const transcribePostprocess=deps.executionMode==="model"&&deps.transcribePostprocess?createExecutionTranscribePostprocessService(db,{now,budget:deps.budget,...deps.transcribePostprocess}):null;
   const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
+  const cover=deps.executionMode==="model" && deps.cover ? createExecutionCoverService(db,{now,budget:deps.budget,...deps.cover}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
@@ -141,6 +143,19 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(["reserveCoverModel","startCoverModel","settleCoverModel","prepareCoverImage","readCoverReference"].includes(port)){
+        const scope=activeTools.get(executionKey(ref));if(!cover||!scope)throw new Error("COVER_PORT_UNAVAILABLE");
+        const work=(async()=>{
+          // 已发出的文案调用允许在取消后结算，不能继承已中止的信号。
+          if(port==="settleCoverModel")return cover.settleModel(ref,raw);
+          scope.controller.signal.throwIfAborted();
+          if(port==="reserveCoverModel")return cover.reserveModel(ref,raw,scope.controller.signal);
+          if(port==="startCoverModel")return cover.startModel(ref,raw);
+          if(port==="prepareCoverImage")return cover.prepareImage(ref,raw,scope.controller.signal);
+          return cover.readReference(ref,raw,scope.controller.signal);
+        })();
+        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
       if(["prepareTranscribePostprocess","readTranscribePostprocess","reserveTranscribePostprocess","startTranscribePostprocess","settleTranscribePostprocess","saveTranscribePostprocess"].includes(port)){
         const scope=activeTools.get(executionKey(ref));if(!transcribePostprocess||!scope)throw new Error("TRANSCRIBE_POSTPROCESS_PORT_UNAVAILABLE");
         const work=transcribePostprocess.invoke(ref,port,raw,port==="settleTranscribePostprocess"?undefined:scope.controller.signal);
@@ -158,7 +173,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(["resolveAssetCredential","settleAssetCall","reserveAssetCall","startAssetCall","saveAssetResult","recoverAssetResult","readAssetProviderJob","recordAssetProviderJob"].includes(port)){
         if(!assetPorts)throw new Error("ASSET_STORAGE_UNAVAILABLE");
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
-        const work=assetPorts.invoke(ref,port,raw,scope.controller.signal);
+        const settlement=["settleAssetCall","saveAssetResult","recoverAssetResult","recordAssetProviderJob"].includes(port);
+        const work=assetPorts.invoke(ref,port,raw,settlement?undefined:scope.controller.signal);
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       const chatTools=deps.executionMode==="chat.run" && ["resolveChatWebReadSearch","readChatWebReadCache","failChatWebRead","prepareChatWebRead","observeChatWebRead","restoreChatWebRead","completeChatWebRead","readChatWebReadSession","saveChatWebReadSession","prepareChatResearch","settleChatResearch","failChatGeneration","restoreChatGeneration","resolveChatGenerationCredential","prepareChatGeneration","reserveChatGenerationModel","startChatGenerationModel","settleChatGenerationModel","completeChatGeneration","failChatScriptDraft","restoreChatScriptDraft","prepareChatScriptDraft","reserveChatScriptDraftModel","startChatScriptDraftModel","settleChatScriptDraftModel","completeChatScriptDraft","failChatHooks","restoreChatHooks","prepareChatHooks","reserveChatHooksModel","startChatHooksModel","settleChatHooksModel","completeChatHooks","checkChatToolApproval","reserveAgenticTool","startAgenticTool","settleAgenticTool","executeAgenticTool"].includes(port)?await getChatTools(ref):null;
