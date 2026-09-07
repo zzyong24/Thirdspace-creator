@@ -55,6 +55,8 @@ export interface ChatToolDeps {
    * 参数：模型只负责产 replacementText，execute 必须用这里的 artifact/version/section/
    * originalText 封装候选。这样弱模型也不会反问用户 sectionId，更不能伪造锚点改到别段。
    */
+  /** 持久工具实际执行前校验冻结锚点；历史已结算回放不调用。 */
+  validateScriptPatchAnchor?: () => Promise<void>;
   scriptPatchAnchor?: Readonly<{
     artifactId: string;
     versionId: string;
@@ -3186,6 +3188,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
           "只修改用户在稿面明确选中的一个口播稿段落。系统已经锁定目标段落和当前版本；不要向用户索要 artifactId、versionId、sectionId 或原文，也不要在参数里复述这些技术信息。只把改写后的该段完整正文放进 replacementText。工具返回局部补丁候选，用户确认后才写入稿面；禁止重写整稿。",
         inputSchema: SCRIPT_PATCH_BOUND_PARAMS,
         execute: async ({ replacementText, summary }): Promise<ScriptPatchToolResult> => {
+          await deps.validateScriptPatchAnchor?.();
           const next = replacementText.trim();
           const noOp =
             normalizePatchText(next) ===

@@ -1,0 +1,29 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/chat-script-patch-tool-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts (11 tests | 1 failed) 26ms
+   × 重建工具只消费冻结定义，用户改稿不阻断历史结果回放 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 重建工具只消费冻结定义，用户改稿不阻断历史结果回放
+Error: 选中段落或版本已改变，请重新读取当前稿后生成补丁
+ ❯ resolve src/modules/ai-runtime/chat-script-patch-tool-host.ts:39:190
+
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.ts:46:20
+ ❯ Object.resolve src/modules/ai-runtime/chat-task-tool-host.ts:33:16
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts:65:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  19:51:20
+   Duration  1.26s (transform 580ms, setup 0ms, import 1.10s, tests 26ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

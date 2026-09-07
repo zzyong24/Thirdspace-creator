@@ -1,0 +1,12 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/integration/chat-script-patch-worker.test.ts src/modules/ai-runtime/chat-script-patch-tool-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  19:54:00
+   Duration  7.10s (transform 1.65s, setup 0ms, import 2.97s, tests 5.14s, environment 0ms)

@@ -12,8 +12,8 @@ import {createExecutionChatToolPorts,type ChatBackendTool} from "../modules/exec
 let db:Db,close:()=>Promise<void>,seq=0;
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});afterAll(async()=>close());
 const budget={maxCalls:6,maxTokens:100000,deadlineMs:60000};
-async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"="planning.thesis",mixed=false){
- const childType=toolName==="material.generate"?"asset.generate":"planning.thesis";
+async function fixture(second=false,start=true,toolName:"planning.thesis"|"material.generate"|"review.script"="planning.thesis",mixed=false){
+ const childType=toolName==="material.generate"?"asset.generate":toolName==="review.script"?"script.review":"planning.thesis";
  const modelToolName=toolName.replaceAll(".","_");
  let time=Date.now();const now=()=>new Date(time).toISOString();
  const ctx={userId:"atomic-host",accountId:`account-${++seq}`,requestId:"test",source:"user" as const};
@@ -28,7 +28,7 @@ async function fixture(second=false,start=true,toolName:"planning.thesis"|"mater
  const ledger=createExecutionCallLedgerService(db,{now,budget}),generation=createExecutionGenerationPorts(db,{now,budget});
  const model=await generation.reserveGenerationCall(ref,{operationKey:`chat:${source.id}/model/1`,request:{maxOutputTokens:128}});await ledger.start(ref,model.callId);
  await generation.settleGenerationCall(ref,{callId:model.callId,status:"settled",providerResult:{content:[{type:"tool-call",toolCallId:"submit",toolName:modelToolName,input:'{"topic":"原主题"}'},...(second?[{type:"tool-call",toolCallId:"submit2",toolName:modelToolName,input:'{"topic":"原主题"}'}]:[])],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:2},outputTokens:{total:3}},warnings:[]},usage:{inputTokens:2,outputTokens:3}});
- const prepare=vi.fn(async(context:typeof ctx,input:any,scope:any)=>({task:await ai.prepareTaskCommit(context,{taskType:childType,attemptId:scope.attemptId,inputData:toolName==="material.generate"?{kind:"image",prompt:input.topic}:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"已提交论点任务",data:{kind:toolName,taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
+ const prepare=vi.fn(async(context:typeof ctx,input:any,scope:any)=>({task:await ai.prepareTaskCommit(context,{taskType:childType,attemptId:scope.attemptId,inputData:toolName==="material.generate"?{kind:"image",prompt:input.topic}:{topic:input.topic}}),result:(task:any)=>({status:"ok",summary:"已提交论点任务",data:{kind:toolName==="review.script"?"review.report":toolName,taskId:task.id,projectId:null,error:null},evidence:[],error:null,continuation:null,sideEffect:"committed"})}));
  const wakeTask=vi.fn(async(_context:typeof ctx,_taskId:string)=>{});
  const approve=vi.fn(async()=>({status:"not-applicable" as const}));
  const host=createExecutionChatToolPorts(db,{now,budget,tools:{[toolName]:{...definition,parameters,approve,prepareTask:prepare,wakeTask} as unknown as ChatBackendTool,...(mixed?{"planning.thesis":{...definition,name:"planning.thesis",parameters,approve,prepareTask:async()=>{throw new Error("本用例未调用额外论点工具");},wakeTask} as unknown as ChatBackendTool}:{})}});
@@ -130,7 +130,7 @@ it("真实原子回执才唤醒同一个子任务，回读可补偿唤醒失败�
  expect(f.wakeTask).toHaveBeenCalledTimes(2);expect(f.prepare).toHaveBeenCalledTimes(1);expect((await f.children()).rows).toHaveLength(1);
 });
 
-it.each(["planning.thesis","material.generate"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
+it.each(["planning.thesis","material.generate","review.script"] as const)("%s 准备瞬断的次数和退避持久保存，重建补偿服务不重置，最多三次",async toolName=>{
  const f=await fixture(false,true,toolName,toolName==="material.generate"),result=await f.host.execute(f.ref,{callId:f.call.callId}),id=(result.data as any).taskId;
  const child=await f.ai.getTask(f.ctx,id);let time=Date.parse(child.requestedAt);
  const prepare=vi.fn(async()=>{throw Object.assign(new Error("private temporary text"),{statusCode:503,responseHeaders:{"retry-after":"2"}});});
@@ -257,3 +257,20 @@ it("素材提交不能偷换子任务类型，错误映射在同一事务中回�
   await recovery.prepare(f.ctx,id);expect(prepare.mock.calls.filter(call=>call[1]===id)).toHaveLength(1);
  }finally{await recovery.stop();business.stop();}
  });
+
+it("审核任务成功回执丢失后重读同一提交，重复模型调用只绑定一个子任务",async()=>{
+ const f=await fixture(true,true,"review.script"),first=await f.host.execute(f.ref,{callId:f.call.callId});
+ expect(first).toMatchObject({status:"ok",sideEffect:"committed",data:{kind:"review.report"}});
+ expect(await f.host.execute(f.ref,{callId:f.call.callId})).toEqual(first);
+ const second=await f.host.reserve(f.ref,{modelCallId:f.request.modelCallId,toolCallId:"submit2"});
+ await f.host.start(f.ref,{callId:second.callId});
+ expect(await f.host.execute(f.ref,{callId:second.callId})).toEqual(first);
+ expect((await f.children()).rows).toHaveLength(1);expect(f.prepare).toHaveBeenCalledTimes(1);
+});
+it("已确认未提交的审核前置失败保留原卡片，无子任务或唤醒",async()=>{
+ const {ChatTaskPreparationFailure}=await import("../modules/execution/execution-chat-task-submission.service");
+ const f=await fixture(false,true,"review.script");
+ f.prepare.mockRejectedValue(new ChatTaskPreparationFailure({status:"error",summary:"请先保存整稿",evidence:[],data:{kind:"review.report",taskId:null,projectId:null,error:"请先保存整稿"},error:{code:"no_evidence",retryable:false,recovery:"请先保存整稿"},continuation:null,sideEffect:"none"}));
+ expect(await f.host.execute(f.ref,{callId:f.call.callId})).toMatchObject({status:"error",sideEffect:"none",data:{kind:"review.report",taskId:null,error:"请先保存整稿"}});
+ expect((await f.children()).rows).toHaveLength(0);expect(f.wakeTask).not.toHaveBeenCalled();
+});

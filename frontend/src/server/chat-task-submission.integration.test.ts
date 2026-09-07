@@ -19,6 +19,7 @@ vi.mock("@creatoros/backend/modules/ai-runtime",async original=>{
  return {...actual,resolveMultimodalSpec:async()=>({kind:"image",provider:"openai",model:"gpt-image-1",token:"fixture",baseUrl:fixture.url}),
   createAssetBusinessExecutionService:(...args:Parameters<typeof actual.createAssetBusinessExecutionService>)=>{const service=actual.createAssetBusinessExecutionService(...args);return {...service,prepare:async(...input:Parameters<typeof service.prepare>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture asset prepare unavailable"),{statusCode:503});}return service.prepare(...input);}};},
   resolveLlmConfig:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture",settings:{structuredOutputs:true}}),
+  prepareScriptReviewContext:async(...args:Parameters<typeof actual.prepareScriptReviewContext>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture review prepare unavailable"),{statusCode:503});}return actual.prepareScriptReviewContext(...args);},
   createPlanningThesisBusinessAdapter:(...args:Parameters<typeof actual.createPlanningThesisBusinessAdapter>)=>{const adapter=actual.createPlanningThesisBusinessAdapter(...args);return {...adapter,prepare:async(...input:Parameters<typeof adapter.prepare>)=>{fixture.prepares++;if(fixture.prepareFailures>0){fixture.prepareFailures--;throw Object.assign(new Error("fixture prepare unavailable"),{statusCode:503});}return adapter.prepare(...input);}};},
  };
 });
@@ -47,8 +48,8 @@ it("聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同�
  }
 },30000);
 
-it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",failures:1},{toolName:"material.generate",failures:0},{toolName:"material.generate",failures:1}])("真实 $toolName 工厂首次准备失败 $failures 次后，不重启也能读回候选",async({toolName,failures})=>{
- const material=toolName==="material.generate",taskType=material?"asset.generate":"planning.thesis";
+it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",failures:1},{toolName:"material.generate",failures:0},{toolName:"material.generate",failures:1},{toolName:"review.script",failures:0},{toolName:"review.script",failures:1},{toolName:"review.script",failures:0,empty:true}])("真实 $toolName 工厂首次准备失败 $failures 次后，不重启也能读回候选",async({toolName,failures,empty=false}:{toolName:string;failures:number;empty?:boolean})=>{
+ const material=toolName==="material.generate",review=toolName==="review.script",taskType=material?"asset.generate":review?"script.review":"planning.thesis";
  fixture.prepareFailures=failures;fixture.prepares=0;
  const {createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
  const {createChatMaterialTaskHost}=await import("../../../backend/src/modules/ai-runtime/chat-material-task-host");
@@ -66,7 +67,7 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
   if(!input.stream && material){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({data:[{b64_json:Buffer.from("fixture-image").toString("base64")}]}));return;}
-  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify({core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]})},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));return;}
+  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(review?{verdict:"pass",summary:"已依据原文完成审核",findings:[]}:{core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]})},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));return;}
   const first=requests.filter(item=>item.stream).length===1;
   const delta=first?{tool_calls:[{index:0,id:"planning-call",type:"function",function:{name:toolName.replaceAll(".","_"),arguments:material?JSON.stringify({kind:"image",prompt:"原素材画面"}):"{}"}}]}:{content:"论点任务已提交，请在候选中查看。"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
@@ -81,24 +82,38 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   // 测试只初始化隔离数据库的存储配置；禁止调用会迁移真实默认媒体目录的设置 API。
   if(material)await db.insert(storageConfigs).values({userId:ctx.userId,rootPath:resolve(directory,"media"),backend:"local",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
   const project=await call("projects.create",undefined,{title:"论点真实工厂项目"});
+  const reviewArtifact=review?await call("artifacts.create",{projectId:project.id},{title:"当前原稿",artifactType:"output_script",stage:"script"}):null;
+  const originalScript="这是一份已经保存的完整原稿，说明实际操作和适用边界。".repeat(4);
+  const reviewVersion=review?await call("artifacts.versions.create",{artifactId:reviewArtifact.id},{contentText:empty?"":originalScript}):null;
   const conversation=await runtime.ai.createConversation(ctx,{title:"论点工厂",scope:"project",projectId:project.id});
   const source=await runtime.ai.createMessage(ctx,conversation.id,{content:"给选中主题生成论点"});
   const snapshot=await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]);
   // 专项声明对应真实工具；全场景和正式聊天路由仍需独立验收。
   const prototypes=buildChatTools([toolName] as never,{} as never);
-  const definitions=(await prepareChatToolDefinitions(prototypes,{atomicPlanningThesis:true,atomicMaterialGenerate:material})).definitions;
+  const definitions=(await prepareChatToolDefinitions(prototypes,{atomicPlanningThesis:true,atomicMaterialGenerate:material,atomicScriptReview:review})).definitions;
   const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
-  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
   host.start();
   await vi.waitFor(async()=>{const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));expect(row?.status,JSON.stringify(row)).toBe("succeeded");},{timeout:15000});
-  const children=await runtime.ai.listTasks(ctx,{taskType,limit:100,offset:0});expect(children.rows).toHaveLength(1);const child=children.rows[0]!;
-  await vi.waitFor(async()=>{const current=await runtime.ai.getTask(ctx,child.id);const [raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,child.id));const [execution]=raw?.executionTaskId?await db.select().from(executionTasks).where(eq(executionTasks.id,raw.executionTaskId)):[];expect(current.status,JSON.stringify({task:current,execution,requests})).toBe("awaiting_confirmation");},{timeout:15000});
-  expect((await runtime.ai.getTask(ctx,child.id)).inputData).toMatchObject(material?{projectId:project.id,kind:"image",prompt:"原素材画面"}:{projectId:project.id,topic:"原选区标题"});
+  const children=await runtime.ai.listTasks(ctx,{taskType,limit:100,offset:0});
+  if(empty){
+   expect(children.rows).toHaveLength(0);expect(requests.filter(item=>!item.stream)).toHaveLength(0);expect(fixture.prepares).toBe(0);
+   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
+   expect(JSON.parse(calls.find(row=>row.kind==="tool")!.resultText!).output).toMatchObject({status:"error",sideEffect:"none",data:{kind:"review.report",taskId:null,projectId:project.id,error:expect.stringContaining("可审的整稿")}});return;
+  }
+  expect(children.rows).toHaveLength(1);const child=children.rows[0]!;
+  await vi.waitFor(async()=>{const current=await runtime.ai.getTask(ctx,child.id);const [raw]=await db.select().from(aiTasks).where(eq(aiTasks.id,child.id));const [execution]=raw?.executionTaskId?await db.select().from(executionTasks).where(eq(executionTasks.id,raw.executionTaskId)):[];expect(current.status,JSON.stringify({task:current,execution,requests})).toBe(review?"succeeded":"awaiting_confirmation");},{timeout:15000});
+  expect((await runtime.ai.getTask(ctx,child.id)).inputData).toMatchObject(material?{projectId:project.id,kind:"image",prompt:"原素材画面"}:review?{projectId:project.id,artifactId:reviewArtifact.id,artifactVersion:reviewVersion.versionNumber}:{projectId:project.id,topic:"原选区标题"});
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));const tool=calls.find(row=>row.kind==="tool")!;
-  expect(JSON.parse(tool.resultText!).output.data).toMatchObject({kind:toolName,taskId:child.id,...(material?{}:{projectId:project.id})});
+  expect(JSON.parse(tool.resultText!).output.data).toMatchObject({kind:review?"review.report":toolName,taskId:child.id,...(material?{}:{projectId:project.id})});
   expect(JSON.stringify(requests.filter(item=>item.stream)[1])).toContain(child.id);
   expect(requests.filter(item=>!item.stream)).toHaveLength(1);
   expect(fixture.prepares).toBe(1+failures);
+  if(review){
+   expect(await call("scriptReviews.getLatest",{projectId:project.id})).toMatchObject({artifactId:reviewArtifact.id,artifactVersion:reviewVersion.versionNumber,verdict:"pass"});
+   expect(await runtime.contextReaders.getArtifactText!(ctx,{projectId:project.id,artifactType:"output_script"})).toMatchObject({currentVersionId:reviewVersion.id});
+   expect(await call("ai.tasks.results.list",{taskId:child.id})).toEqual([]);
+  }
   if(material){await runtime.ai.confirmTask(ctx,child.id);await runtime.ai.confirmTask(ctx,child.id);expect((await runtime.ai.getTask(ctx,child.id)).status).toBe("succeeded");}
  }finally{fixture.prepareFailures=0;await host?.stop();await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});}
 },45000);

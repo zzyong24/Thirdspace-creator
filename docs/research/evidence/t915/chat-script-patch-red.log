@@ -1,0 +1,75 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/chat-script-patch-tool-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts (9 tests | 9 failed) 24ms
+   × 局部改稿经组合宿主保留原卡片和参数，选中模式=false 12ms
+   × 局部改稿经组合宿主保留原卡片和参数，选中模式=true 3ms
+   × 冻结选中段的版本改变后拒绝产补丁 1ms
+   × 冻结选中段的原文改变后拒绝产补丁 2ms
+   × 冻结选中段的段落改变后拒绝产补丁 2ms
+   × 冻结选中段的账号改变后拒绝产补丁 1ms
+   × 冻结选中段的定义改变后拒绝产补丁 1ms
+   × 自然语言模式执行时重读当前稿，失效引用与重复引用不能产候选 1ms
+   × 不变正文、伪造锚点和取消均不产生可采纳成功 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 局部改稿经组合宿主保留原卡片和参数，选中模式=false
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 局部改稿经组合宿主保留原卡片和参数，选中模式=true
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts:23:46
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 冻结选中段的版本改变后拒绝产补丁
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 冻结选中段的原文改变后拒绝产补丁
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 冻结选中段的段落改变后拒绝产补丁
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 冻结选中段的账号改变后拒绝产补丁
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 冻结选中段的定义改变后拒绝产补丁
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts:29:45
+     27| });
+     28| it.each(["版本","原文","段落","账号","定义"])("冻结选中段的%s改变后拒绝产补丁",async kind=>{
+     29|  const f=await fixture(true);expect(f.tool).toBeDefined();
+       |                                             ^
+     30|  if(kind==="版本")f.raw.currentVersionId="version-2";
+     31|  if(kind==="原文")f.raw.sections[0]!.body="另一份原文";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 自然语言模式执行时重读当前稿，失效引用与重复引用不能产候选
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts:38:41
+     36| });
+     37| it("自然语言模式执行时重读当前稿，失效引用与重复引用不能产候选",async()=>{
+     38|  const f=await fixture();expect(f.tool).toBeDefined();
+       |                                         ^
+     39|  f.raw.sections=[{sectionRef:"new-ref",body:"当前段落"}];f.raw.currentVers…
+     40|  expect((await f.tool!.execute!(f.context,{sectionRef:"section-1",repl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/modules/ai-runtime/chat-script-patch-tool-host.test.ts > 不变正文、伪造锚点和取消均不产生可采纳成功
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-script-patch-tool-host.test.ts:46:45
+     44| });
+     45| it("不变正文、伪造锚点和取消均不产生可采纳成功",async()=>{
+     46|  const f=await fixture(true);expect(f.tool).toBeDefined();
+       |                                             ^
+     47|  expect((await f.tool!.execute!(f.context,{replacementText:" 原始段落 "},f…
+     48|  expect((await f.tool!.execute!(f.context,{replacementText:"新文稿",artif…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed (9)
+   Start at  19:39:14
+   Duration  3.62s (transform 2.21s, setup 0ms, import 3.38s, tests 24ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

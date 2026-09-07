@@ -1,13 +1,13 @@
 import {z} from "zod";
 import {and,asc,eq,inArray,isNull,sql,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {agenticToolOutcomeSchema,chatWorkerInputSchema,workerToolResultReceiptSchema,chatSubmittedTaskType} from "@creatoros/contract/execution-worker";
+import {agenticToolOutcomeSchema,chatWorkerInputSchema,workerToolResultReceiptSchema,chatSubmittedTaskType,chatSubmittedTaskResultKind} from "@creatoros/contract/execution-worker";
 import {classifyLlmError,computeBackoffMs,getRetryAfterMs} from "@creatoros/ai-worker/retry-policy";
 import {createAgenticToolBinding} from "./agentic-tool-binding";
 const originSchema=z.object({executionTaskId:z.string(),callId:z.string(),inputDigest:z.string()}).strict();
 const recoverySchema=z.object({attempts:z.number().int().min(0).max(3),nextAt:z.string().datetime(),deadlineAt:z.string().datetime(),errorCode:z.string().nullable()}).strict();
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
-const supportedTaskTypes=["planning.thesis","asset.generate"];
+const supportedTaskTypes=["planning.thesis","asset.generate","script.review"];
 /** 已提交子任务的准备补偿；只复用原任务，不创建模型调用或新任务。 */
 export function createSubmittedTaskPreparationService(db:Db,deps:{
  deadlineMs:number;now?:()=>number;random?:()=>number;
@@ -37,7 +37,7 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    if(!call || call.kind!=="tool" || call.parentCallId || call.status!=="settled" || call.inputDigest!==origin.inputDigest || task.attemptId!==`chat-submit:${call.id}`)throw new Error("提交来源与原调用不符");
    const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:definition.execution,parameters:z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0])}}).forCall(parent,calls,call);
    const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")),result=agenticToolOutcomeSchema.parse(receipt.output),data=object(result.data);
-   if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==definition.name || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
+   if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==chatSubmittedTaskResultKind(definition.name) || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
    const stamp=now(),deadlineAt=new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();
    const previous=runtime.hostTaskPreparation===undefined?{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt,errorCode:null}:recoverySchema.parse(runtime.hostTaskPreparation);
    if(previous.deadlineAt!==deadlineAt)throw new Error("准备期限与原任务不符");

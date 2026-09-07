@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "11f324d48c35314b903d9df731a894ddff8d6c5bce5e5213203b5a1e68db342c",
+      "file_sha256": "83d7150b2a842ea53ffdb8a6978248d52c25edb8325b57253120602de737c47a",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "DEC-RUNTIME-055 已批准的聊天子任务执行迁移：原子素材提交使用素材业务准备、同一恢复扫描与独立 Worker 唤醒；保留真实父回执校验，不把旧提交事实重新派发。仅调整既有服务装配，不新增凭据保管、工具链或本机执行机制；证据见 chat-asset-preparation.md。",
+      "reason": "DEC-RUNTIME-055 已批准的聊天子任务迁移：素材与文案审核复用原业务准备、持久补偿与独立 Worker 唤醒；审核沿用当前整稿可审检查和原版本绑定。仅调整既有服务装配，不新增凭据保管、工具链或执行层；证据见 chat-asset-preparation.md 与 chat-script-patch-migration.md。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {

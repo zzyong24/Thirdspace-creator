@@ -1589,6 +1589,8 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: { projectId: string },
   ) => Promise<{ taskId: string }>;
+  prepareChatScriptReviewTask: (ctx:RequestContext,input:{projectId:string;attemptId:string})=>ReturnType<AiService["prepareTaskCommit"]>;
+  wakeChatScriptReviewTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   wakeChatPlanningTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   wakeChatMaterialTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   dispatchPlanningThesis: (
@@ -9667,6 +9669,48 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     if(stoppingPreparation)return;
     if(prepared.legacy)await runLegacyAssetTask(c,id);else modelWorker.start();
   }
+  async function assertReviewableChatScript(ctx:RequestContext,input:{projectId:string}){
+      // [T-708] 当前已保存稿面是审核唯一真值。后台新候选即使仍在生成或等待采纳，也不能
+      // 反向锁死一份已经可审的稿件；只有稿面为空/过短时，才查看任务状态并解释缺口。
+      const currentScript = await makeReviewSubjectReader().getScript(
+        ctx,
+        input.projectId,
+      );
+      let taskStatuses: string[] = [];
+      if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
+        try {
+          const { rows } = await aiService.listTasks(ctx, {
+            limit: 20,
+            offset: 0,
+            projectId: input.projectId,
+            taskType: "script.draft",
+          });
+          taskStatuses = rows.map((task) => task.status);
+        } catch {
+          // 状态探测失败不冒充「仍在生成」；按当前真实稿面给出空稿提示。
+        }
+      }
+      const blockReason = getScriptReviewBlockReason(
+        currentScript,
+        taskStatuses,
+        MIN_REVIEWABLE_SCRIPT_CHARS,
+      );
+      if (blockReason === "running") {
+        throw new Error(
+          "当前稿面还没有可审的整稿，新的整稿正在生成中。你可以等它完成，也可以先粘贴并保存现有文案再审核。",
+        );
+      }
+      if (blockReason === "awaiting_adoption") {
+        throw new Error(
+          "当前稿面还没有可审的整稿，但已有一份候选稿等待确认。采纳候选，或直接粘贴并保存自己的文案后即可审核。",
+        );
+      }
+      if (blockReason === "empty") {
+        throw new Error(
+          "当前项目还没有可审的整稿（稿面为空或太短）。可以生成候选，也可以直接粘贴并保存文案后审核。",
+        );
+      }
+  }
   const submittedPreparation=createSubmittedTaskPreparationService(db,{
     deadlineMs:workerBudget.deadlineMs,
     async prepare(c,id,signal){
@@ -9680,7 +9724,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     fail:(c,id,message)=>aiService.markFailed(c,id,message),
   });
-  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"){
+  async function wakeSubmittedTask(c:RequestContext,id:string,taskType:"planning.thesis"|"asset.generate"|"script.review"){
     const task=await aiService.getTask(c,id);
     if(task.taskType!==taskType)throw new Error("聊天唤醒任务类型不符");
     if(task.status!=="queued")return;
@@ -12282,46 +12326,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ctx: RequestContext,
       input: { projectId: string },
     ) => {
-      // [T-708] 当前已保存稿面是审核唯一真值。后台新候选即使仍在生成或等待采纳，也不能
-      // 反向锁死一份已经可审的稿件；只有稿面为空/过短时，才查看任务状态并解释缺口。
-      const currentScript = await makeReviewSubjectReader().getScript(
-        ctx,
-        input.projectId,
-      );
-      let taskStatuses: string[] = [];
-      if (currentScript.trim().length < MIN_REVIEWABLE_SCRIPT_CHARS) {
-        try {
-          const { rows } = await aiService.listTasks(ctx, {
-            limit: 20,
-            offset: 0,
-            projectId: input.projectId,
-            taskType: "script.draft",
-          });
-          taskStatuses = rows.map((task) => task.status);
-        } catch {
-          // 状态探测失败不冒充「仍在生成」；按当前真实稿面给出空稿提示。
-        }
-      }
-      const blockReason = getScriptReviewBlockReason(
-        currentScript,
-        taskStatuses,
-        MIN_REVIEWABLE_SCRIPT_CHARS,
-      );
-      if (blockReason === "running") {
-        throw new Error(
-          "当前稿面还没有可审的整稿，新的整稿正在生成中。你可以等它完成，也可以先粘贴并保存现有文案再审核。",
-        );
-      }
-      if (blockReason === "awaiting_adoption") {
-        throw new Error(
-          "当前稿面还没有可审的整稿，但已有一份候选稿等待确认。采纳候选，或直接粘贴并保存自己的文案后即可审核。",
-        );
-      }
-      if (blockReason === "empty") {
-        throw new Error(
-          "当前项目还没有可审的整稿（稿面为空或太短）。可以生成候选，也可以直接粘贴并保存文案后审核。",
-        );
-      }
+      await assertReviewableChatScript(ctx,input);
       const task = (await reviewGateService.triggerReview(
         ctx,
         input.projectId,
@@ -12332,6 +12337,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId };
     },
+    prepareChatScriptReviewTask: async (ctx,input)=>{
+      await assertReviewableChatScript(ctx,input);
+      const current=await readCurrentScriptRefForReview(ctx,input.projectId);
+      return aiService.prepareTaskCommit(ctx,{taskType:"script.review",attemptId:input.attemptId,inputData:{projectId:input.projectId,artifactId:current.artifactId,artifactVersion:current.artifactVersion}});
+    },
+    wakeChatScriptReviewTask: (ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.review"),
     // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
     // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
     wakeChatPlanningTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"planning.thesis"),

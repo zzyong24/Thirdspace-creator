@@ -1,4 +1,4 @@
-import {chatSubmittedTaskType} from "@creatoros/contract/execution-worker";
+import {chatSubmittedTaskType,chatSubmittedTaskResultKind} from "@creatoros/contract/execution-worker";
 import {classifyLlmError} from "@creatoros/ai-worker/retry-policy";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
@@ -12,6 +12,14 @@ import {ConflictError} from "./execution.errors";
 
 type Outcome=z.infer<typeof agenticToolOutcomeSchema>;
 type Child=Awaited<ReturnType<PreparedAiTaskCommit["commit"]>>;
+/** 已确认未提交的业务前置失败，保留原工具卡；不能携带成功或副作用声明。 */
+export class ChatTaskPreparationFailure extends Error {
+ readonly outcome:Outcome;
+ constructor(outcome:Outcome){
+  super(outcome.summary);this.outcome=agenticToolOutcomeSchema.parse(outcome);
+  if(this.outcome.status!=="error" || this.outcome.sideEffect!=="none")throw new Error("任务准备失败不得声明副作用");
+ }
+}
 export interface ChatTaskPreparation {task:PreparedAiTaskCommit;result(task:Child):Outcome}
 /** 只处理冻结为纯数据库提交的工具；子任务与工具成功回执共用父执行行锁与事务。 */
 export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>string;tools:Record<string,ChatBackendTool>;check:(ref:ExecutionRef,input:{modelCallId:string;toolCallId:string},signal?:AbortSignal)=>Promise<{status:string}>}){
@@ -84,7 +92,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
     catch(error){
      signal?.throwIfAborted();
      const classified=classifyLlmError(error);
-     preparationFailure=classified.reason==="auth_401" || classified.reason==="auth_403"?blocked("unavailable"):agenticToolOutcomeSchema.parse({status:"error",summary:"任务准备未完成，尚未提交",evidence:[],error:{code:classified.retryable?"transient":"no_evidence",retryable:classified.retryable,recovery:"检查任务输入与服务状态后继续"},continuation:null,sideEffect:"none"});
+     preparationFailure=error instanceof ChatTaskPreparationFailure?error.outcome:classified.reason==="auth_401" || classified.reason==="auth_403"?blocked("unavailable"):agenticToolOutcomeSchema.parse({status:"error",summary:"任务准备未完成，尚未提交",evidence:[],error:{code:classified.retryable?"transient":"no_evidence",retryable:classified.retryable,recovery:"检查任务输入与服务状态后继续"},continuation:null,sideEffect:"none"});
     }
    }
    signal?.throwIfAborted();
@@ -104,7 +112,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
      if(child.taskType!==chatSubmittedTaskType(current.bound.executionToolName) || child.attemptId!==attemptId)throw new ConflictError("子任务与原工具提交不符");
      result=agenticToolOutcomeSchema.parse(prepared!.result(structuredClone(child)));
      const data=result.data as Record<string,unknown>|undefined;
-     if(result.status!=="ok" || result.sideEffect!=="committed" || result.error || data?.kind!==current.bound.executionToolName || data?.taskId!==child.id)throw new ConflictError("子任务回执未引用真实提交结果");
+     if(result.status!=="ok" || result.sideEffect!=="committed" || result.error || data?.kind!==chatSubmittedTaskResultKind(current.bound.executionToolName) || data?.taskId!==child.id)throw new ConflictError("子任务回执未引用真实提交结果");
     }
     const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:current.bound.toolCallId,toolName:current.bound.toolName,output:result,...(reused?{reusedCallId:reused.callId}:{})}));
     await scope.tx.update(executionCalls).set({status:"settled",usage:{totalTokens:0},totalTokens:0,resultText,updatedAt:now()}).where(eq(executionCalls.id,callId));

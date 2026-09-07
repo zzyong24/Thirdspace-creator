@@ -1,0 +1,81 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/ai-runtime/chat-review-task-host.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-review-task-host.test.ts (7 tests | 7 failed) 15ms
+   × 真实工厂生成独立事务声明，保留原生schema和描述 10ms
+   × 准备沿原项目和选区默认值，不派发或写库 {} 1ms
+   × 准备沿原项目和选区默认值，不派发或写库 {"projectId":" explicit "} 1ms
+   × 准备前 account 失效不调用提交服务 1ms
+   × 准备前 definition 失效不调用提交服务 0ms
+   × 准备前 cancel 失效不调用提交服务 0ms
+   × 准备前 missing-project 失效不调用提交服务 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 真实工厂生成独立事务声明，保留原生schema和描述
+AssertionError: expected { name: 'review.script', …(4) } to match object { execution: 'host.task-submit', …(3) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,8 @@
+  {
+    "description": "对当前项目的脚本做发布前合规/表达审核(L1 违禁词 lint + L2 语义审)。当用户说「审核这份文案/审一下脚本/查违禁词/合规诊断」时调用。语义审核使用当前通用文本模型。审核在后台跑(分钟内),结果渲成审核报告卡(verdict + 命中项 + 逐条改写建议);改写建议由用户逐条点「应用」才写入脚本新版本——你没有改稿能力,绝不口头宣称「已改」。只能审当前项目对话里的脚本;没有项目上下文时会诚实提示去项目稿面里审。通用文本模型调用没有完成时整次审核失败并允许重试，不生成残缺报告。",
+    "effect": "committed",
+-   "execution": "host.task-submit",
+    "parameters": {
+      "additionalProperties": false,
+      "properties": {
+        "projectId": {
+          "description": "要审核脚本的项目 id(可选)。缺省用当前项目对话的项目——所以在稿面右栏对话里直接调、不用传。",
+
+ ❯ src/modules/ai-runtime/chat-review-task-host.test.ts:21:41
+     19| it("真实工厂生成独立事务声明，保留原生schema和描述",async()=>{
+     20|  const f=await fixture(),legacy=(await prepareChatToolDefinitions(f.to…
+     21|  expect(f.restored.modelInput.tools[0]).toMatchObject({execution:"host…
+       |                                         ^
+     22|  expect(f.restored.modelInput.tools[0]!.version).not.toBe(legacy.versi…
+     23|  expect(f.bound["review.script"]?.prepareTask).toBeTypeOf("function");…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {}
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备沿原项目和选区默认值，不派发或写库 {"projectId":" explicit "}
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-review-task-host.test.ts:26:70
+     24| });
+     25| it.each([{}, {projectId:" explicit "}])("准备沿原项目和选区默认值，不派发或写库 %j",async…
+     26|  const f=await fixture(),tool=f.bound["review.script"]!;expect(tool).t…
+       |                                                                      ^
+     27|  const prepared=await tool.prepareTask!(f.context,JSON.parse(JSON.stri…
+     28|  expect(f.prepareReview).toHaveBeenCalledExactlyOnceWith(f.context,{at…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备前 account 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备前 definition 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备前 cancel 失效不调用提交服务
+ FAIL  src/modules/ai-runtime/chat-review-task-host.test.ts > 准备前 missing-project 失效不调用提交服务
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-review-task-host.test.ts:33:70
+     31| });
+     32| it.each(["account","definition","cancel","missing-project"])("准备前 %s 失…
+     33|  const f=await fixture(),tool=f.bound["review.script"]!;expect(tool).t…
+       |                                                                      ^
+     34|  if(reason==="account")f.restored.context.accountId="other";
+     35|  if(reason==="definition")f.restored.modelInput.tools[0]!.version="cha…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  19:45:04
+   Duration  1.18s (transform 537ms, setup 0ms, import 1.02s, tests 15ms, environment 0ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
