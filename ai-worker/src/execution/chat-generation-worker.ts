@@ -1,8 +1,7 @@
 import {z} from "zod";
 import {chatGenerationPreparationSchema,workerModelSpecSchema,workerReservationSchema,workerStartReceiptSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
-import {getTemplate} from "../prompt/registry";
+import {runChatStructuredSequence} from "./chat-structured-sequence";
 import {runWithEffectiveSkillSnapshot} from "../prompt/effective-skill-runtime";
-import {runStructuredNode} from "../nodes/structured-node";
 import {modelFor} from "../runtime/provider-factory";
 import {createDurableGenerationModel} from "./durable-generation-model";
 import {generationFailure} from "./generation-error";
@@ -19,7 +18,7 @@ export async function runChatGenerationInWorker(callId:string,signal:AbortSignal
  }});
  const complete=async()=>agenticToolOutcomeSchema.parse(await call("completeChatGeneration",{callId},signal));
  try{
-  await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>runStructuredNode({model,template:getTemplate(prepared.node.capability),facets:prepared.node.facets,maxOutputTokens:prepared.maxOutputTokens,signal}));
+  await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>runChatStructuredSequence(prepared.node,model,prepared.maxOutputTokens,signal));
  }catch(error){
   signal.throwIfAborted();
   // 已确认坏结构或结算 ACK 丢失可由宿主重建成功/失败；此处不会重发模型。

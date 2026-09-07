@@ -2165,7 +2165,7 @@ async function assembleChat(
     tools,
     capability: skillCapability,
     ...(tools["material.gather"] ? {researchContext:{selectionTitle,userMaterialQueryTerms:[...(context.userMaterialQueryTerms??[])],searchConfigured:Boolean(deps.searchWeb)}} : {}),
-    ...((tools["topic.enrich"] || tools["positioning.generate"] || tools["calibration.diagnose"]) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
+    ...((["topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.analyze","knowledge.distill"].some(name=>tools[name])) ? {structuredContext:{positioningBrief:context.positioningBrief,accountsBrief:context.accountsBrief,learningsBrief:context.learningsBrief,signalsBrief:context.signalsBrief,knowledgeBrief:context.knowledgeBrief}} : {}),
     ...(tools["script.hooks"] ? {scriptHooksContext:{...scriptHooksContext}} : {}),
     ...(modelSpec ? {modelSpec} : {}),
     forcedTool,

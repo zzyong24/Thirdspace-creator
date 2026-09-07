@@ -1,3 +1,5 @@
+import {chunkTextDeterministically} from "./chunk-and-merge";
+import {clampDistillContent} from "./chat-tools";
 import {prepareChatDiagnosis} from "./chat-diagnosis-node";
 import type {RequestContext} from "@creatoros/contract";
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
@@ -11,6 +13,10 @@ import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {prepareChatPositioning,prepareChatTopicEnrich,type PreparedChatStructuredNode} from "./chat-structured-tool-nodes";
 
 export interface ChatStructuredToolPorts {
+ business?: {
+  prepareTopic(context:RequestContext,input:{basis:"positioning"|"comments"|"knowledge"|"trend";extraBrief?:string;projectId?:string},signal?:AbortSignal):Promise<{facets:Record<string,string|undefined>;trendNote?:string|null}>;
+  prepareReview(context:RequestContext,input:{projectId:string;subject?:string;extraBrief?:string},signal?:AbortSignal):Promise<{facets:Record<string,string|undefined>}>;
+ };
  readWorks(context:RequestContext,limit:number|undefined,signal?:AbortSignal):Promise<string>;
  getPositioningDiscovery(context:RequestContext,sessionId:string,signal?:AbortSignal):ReturnType<NonNullable<ChatToolDeps["getPositioningDiscovery"]>>;
 }
@@ -19,7 +25,7 @@ export type ChatGenerationPreparation={
  discovery:Awaited<ReturnType<typeof preparePositioningToolInput>>["discovery"];
  maxOutputTokens:number;
 };
-const names=["topic.enrich","positioning.generate","calibration.diagnose"] as const;
+const names=["topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.analyze","knowledge.distill"] as const;
 /** 宿主只准备真实输入；调用账本层负责首次准备持久化，模型始终在 Worker 执行。 */
 export function createChatStructuredTaskToolHost(
  reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
@@ -35,7 +41,7 @@ export function createChatStructuredTaskToolHost(
   if(!definitions.length)return null;
   const creative=chatStructuredContextSchema.parse(restored.hostContext.structuredContext);
   const config=chatStructuredGenerationSchema.parse(restored.hostContext.structuredGeneration);
-  if(definitions.some(tool=>!restored.hostContext.skillSnapshot.skills.some(skill=>skill.skillId===tool.name)))throw new Error("原任务缺少生成节点 Skill");
+  if(definitions.some(tool=>!restored.hostContext.skillSnapshot.skills.some(skill=>skill.skillId===(tool.name==="review.analyze"?"review.insights":tool.name))))throw new Error("原任务缺少生成节点 Skill");
   const prototypes=buildChatTools(definitions.map(tool=>tool.name),{} as ChatToolDeps);
   const prepared=await prepareChatToolDefinitions(prototypes,{workerStructuredNodes:true});
   if(canonicalJson(prepared.definitions)!==canonicalJson(definitions))throw new Error("生成工具定义与原任务不符");
@@ -60,6 +66,28 @@ export function createChatStructuredTaskToolHost(
     },
     async prepareGeneration(context,input,scope){
      const resolved=await resolve(context,input,scope.execution,scope.signal);
+     if(definition.name==="knowledge.distill"){
+      const args=resolved.input as {content:string},inputChars=args.content.trim().length;
+      const originalText=clampDistillContent(args.content);
+      if(!originalText)throw new Error("没有收到要蒸馏的原文，请把材料整段粘进对话再试");
+      return {node:{capability:"knowledge.distill",facets:{},chunks:chunkTextDeterministically(originalText,7000).map(chunk=>chunk.text),originalText,coverage:{inputChars,submittedChars:originalText.length,truncatedChars:Math.max(0,inputChars-originalText.length)}},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+     }
+     if(definition.name==="topic.generate"){
+      if(!ports.business)throw new Error("选题上下文准备端口未装配");
+      const args=resolved.input as {basis?:"positioning"|"comments"|"knowledge"|"trend";extraBrief?:string};
+      const prepared=await ports.business.prepareTopic(resolved.restored.context,{basis:args.basis??"positioning",extraBrief:clampExtraBrief(args.extraBrief),projectId:resolved.restored.hostContext.chatContext.projectId??undefined},scope.signal);
+      scope.signal?.throwIfAborted();
+      return {node:{capability:"topic.generate",facets:prepared.facets,trendNote:prepared.trendNote??null},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+     }
+     if(definition.name==="review.analyze"){
+      if(!ports.business)throw new Error("复盘上下文准备端口未装配");
+      const args=resolved.input as {projectId?:string;subject?:string;extraBrief?:string};
+      const projectId=args.projectId?.trim()||resolved.restored.hostContext.chatContext.projectId||"";
+      if(!projectId)throw new Error("请指定要复盘的作品项目，不能用账号通用规律代替真实作品");
+      const prepared=await ports.business.prepareReview(resolved.restored.context,{projectId,subject:args.subject?.trim(),extraBrief:clampExtraBrief(args.extraBrief)},scope.signal);
+      scope.signal?.throwIfAborted();
+      return {node:{capability:"review.analyze",facets:prepared.facets},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+     }
      if(definition.name==="topic.enrich"){
       const args=resolved.input as {title:string;angle?:string;verifiedBrief?:string};
       const node=await prepareChatTopicEnrich(resolved.creative,resolved.restored.hostContext.chatContext.selection,{title:args.title,angle:args.angle??"",verifiedBrief:clampExtraBrief(args.verifiedBrief)});

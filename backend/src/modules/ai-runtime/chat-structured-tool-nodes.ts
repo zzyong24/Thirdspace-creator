@@ -18,6 +18,9 @@ export interface ChatStructuredNodePorts {
 }
 /** 可持久化的节点输入；不携带模型实例、凭据或执行闭包。 */
 export type PreparedChatStructuredNode =
+  | { capability: "topic.generate"; facets: Record<string,string|undefined>; trendNote:string|null }
+  | { capability: "review.analyze"; facets: Record<string,string|undefined> }
+  | { capability: "knowledge.distill"; facets: Record<string,string>; chunks:string[]; originalText:string; coverage:{inputChars:number;submittedChars:number;truncatedChars:number} }
   | { capability: "topic.enrich"; facets: Record<string, string | undefined>; candidateId: string | null }
   | { capability: "calibration.diagnose"; facets: Record<string, string> }
   | { capability: "positioning.generate"; facets: Record<string, string | undefined> };

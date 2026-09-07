@@ -258,6 +258,9 @@ export const workerSkillSnapshotSchema=z.object({
   }).strict()}).strict()).min(1),
 }).strict();
 export const chatStructuredNodeSchema=z.discriminatedUnion("capability",[
+ z.object({capability:z.literal("topic.generate"),facets:z.record(z.string(),z.string()),trendNote:z.string().nullable()}).strict(),
+ z.object({capability:z.literal("review.analyze"),facets:z.record(z.string(),z.string())}).strict(),
+ z.object({capability:z.literal("knowledge.distill"),facets:z.record(z.string(),z.string()),chunks:z.array(z.string().min(1).max(7002)).min(1).max(64),originalText:z.string().max(200000),coverage:z.object({inputChars:z.number().int().nonnegative(),submittedChars:z.number().int().nonnegative(),truncatedChars:z.number().int().nonnegative()}).strict()}).strict(),
  z.object({capability:z.literal("calibration.diagnose"),facets:z.record(z.string(),z.string())}).strict(),
  z.object({capability:z.literal("topic.enrich"),facets:z.record(z.string(),z.string()),candidateId:z.string().min(1).nullable()}).strict(),
  z.object({capability:z.literal("positioning.generate"),facets:z.record(z.string(),z.string())}).strict(),

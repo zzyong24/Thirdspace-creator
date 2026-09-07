@@ -1,3 +1,6 @@
+import {normalizeDistillation,mergeDistillations} from "../ai-runtime/knowledge-distill-runner";
+import {normalizeLearnings} from "../ai-runtime/review-context";
+import {normalizeTopics,topicArraySchema,reviewInsightsSchema,knowledgeDistillSchema} from "@creatoros/ai-worker";
 import {chatDiagnosisKeys,projectChatDiagnosis} from "../ai-runtime/chat-diagnosis-node";
 import {normalizeDiagnosis} from "../ai-runtime/calibration-diagnose-runner";
 import {executionEvidence} from "../../schema/intelligence";
@@ -8,9 +11,9 @@ import {z} from "zod";
 import {asc,eq,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import {workerPortInputSchemas,workerSkillSnapshotSchema,chatStructuredNodeSchema,workerToolResultReceiptSchema,agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
-import {replayStructuredGeneration,generationRequestDigest,type GenerationReplayReceipt} from "@creatoros/ai-worker/chat";
+import {replayGenerationNode,runChatStructuredSequence,chatGenerationSkillId,generationRequestDigest,type GenerationReplayReceipt} from "@creatoros/ai-worker/chat";
 import {providerIdentityFor,structuredModeForIdentity} from "@creatoros/ai-worker/model-identity";
-import {getTemplate,runWithEffectiveSkillSnapshot,type TopicCardOutput,type PositioningSuggestionOutput,type DiagnosisOutput} from "@creatoros/ai-worker";
+import {runWithEffectiveSkillSnapshot,type TopicCardOutput,type PositioningSuggestionOutput,type DiagnosisOutput} from "@creatoros/ai-worker";
 import {normalizeCard} from "../ai-runtime/topic-enrich-runner";
 import {normalizeSuggestion} from "../ai-runtime/positioning-runner";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
@@ -36,7 +39,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   const parent=calls.find(call=>call.id===callId);
   if(!parent || parent.kind!=="tool" || parent.parentCallId || parent.toolExecutionClaimId)throw new ConflictError("生成缺少真实 Worker 父工具");
   const bound=binding.forCall(task,calls,parent);
-  if(bound.execution!=="worker.structured-node" || !["topic.enrich","positioning.generate","calibration.diagnose"].includes(bound.executionToolName) || bound.effect!=="proposal" || bound.validationOutcome)throw new ConflictError("当前父工具不是有效结构化生成");
+  if(bound.execution!=="worker.structured-node" || !["topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.analyze","knowledge.distill"].includes(bound.executionToolName) || bound.effect!=="proposal" || bound.validationOutcome)throw new ConflictError("当前父工具不是有效结构化生成");
   return {parent,bound};
  }
  function current(calls:Call[],found:ReturnType<typeof find>){
@@ -55,7 +58,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    const tool=deps.tools[state.bound.executionToolName];
    if(!tool?.prepareGeneration)throw new ConflictError("结构化生成准备端口未装配");
    const value=await tool.prepareGeneration(structuredClone(frozen.context),structuredClone(state.bound.input),{execution:{...ref},callId,attemptId:`${ref.attempt}`,signal});
-   if(value.node.capability!==state.bound.executionToolName || !frozen.hostContext.skillSnapshot.skills.some(skill=>skill.skillId===value.node.capability))throw new ConflictError("节点或 Skill 与父工具不符");
+   if(value.node.capability!==state.bound.executionToolName || !frozen.hostContext.skillSnapshot.skills.some(skill=>skill.skillId===chatGenerationSkillId(value.node.capability)))throw new ConflictError("节点或 Skill 与父工具不符");
    // JSON 序列化仅移除旧 facets 的可选 undefined；不修改内容或推断语义。
    return JSON.parse(JSON.stringify({...value,skillSnapshot:frozen.hostContext.skillSnapshot}));
   },signal);
@@ -92,7 +95,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   });
  }
  async function replay(value:Awaited<ReturnType<typeof prepared>>,recorded:GenerationReplayReceipt[],signal?:AbortSignal,captureNodeFailure=false){
-  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayStructuredGeneration<TopicCardOutput|PositioningSuggestionOutput|DiagnosisOutput>({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},{template:getTemplate(value.node.capability),facets:value.node.facets,maxOutputTokens:value.maxOutputTokens}));
+  return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayGenerationNode({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},model=>runChatStructuredSequence(value.node,model,value.maxOutputTokens,signal)));
  }
  function rejectedTail(calls:Call[],callId:string,key:string){
   const tree=groups(calls,callId,key),last=tree.result.at(-1)?.at(-1);
@@ -135,7 +138,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   },
   async resolveCredential(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const value=await base(ref,raw,signal);signal?.throwIfAborted();
-   const credential=await deps.resolveCredential(structuredClone(value.context),value.node.capability,ref,signal);
+   const credential=await deps.resolveCredential(structuredClone(value.context),chatGenerationSkillId(value.node.capability),ref,signal);
    signal?.throwIfAborted();return identities.pin(ref,value.parent.id,credential);
   },
   async prepare(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
@@ -182,6 +185,15 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    let data:unknown=null;
    if(result.status!=="failed"){
     switch(value.node.capability){
+     case "topic.generate": {const items=normalizeTopics(topicArraySchema.parse(result.value.object).topics);if(items.length)data={kind:"topic.candidates",items,...(value.node.trendNote?{trendNote:value.node.trendNote}:{})};break;}
+     case "review.analyze": {const items=normalizeLearnings(reviewInsightsSchema.parse(result.value.object).learnings);if(items.length)data={kind:"review.learnings",items,error:null};break;}
+     case "knowledge.distill": {
+      const parts=z.object({parts:z.array(knowledgeDistillSchema)}).parse(result.value.object).parts.map(normalizeDistillation);
+      if(parts.some(part=>part===null))break;
+      const merged=mergeDistillations(parts.filter(part=>part!==null));
+      if(merged.atoms.length)data={kind:"knowledge.distill",...merged,originalText:value.node.originalText,coverage:value.node.coverage,error:null,suggestSwitchModel:false};
+      break;
+     }
      case "topic.enrich": data={kind:"topic.card",card:normalizeCard(result.value.object as TopicCardOutput),candidateId:value.node.candidateId};break;
      case "positioning.generate": data={kind:"positioning.suggestion",suggestion:normalizeSuggestion(result.value.object as PositioningSuggestionOutput),discovery:value.discovery};break;
      case "calibration.diagnose": {
@@ -191,7 +203,9 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
      }
     }
    }
-   const output=agenticToolOutcomeSchema.parse(result.status==="failed" || data===null?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
+   const failureMessage="模型未返回符合要求的候选，请重试；原始输入已保留";
+   const failureData=value.node.capability==="knowledge.distill"?{kind:"knowledge.distill",atoms:[],suggestedTags:[],originalText:value.node.originalText,coverage:value.node.coverage,error:failureMessage,suggestSwitchModel:false}:value.node.capability==="review.analyze"?{kind:"review.learnings",items:[],error:failureMessage}:value.node.capability==="topic.generate"?{kind:"topic.candidates",items:[],trendNote:failureMessage}:undefined;
+   const output=agenticToolOutcomeSchema.parse(result.status==="failed" || data===null?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],...(failureData?{data:failureData}:{}),error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
    const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:value.bound.toolCallId,toolName:value.bound.toolName,output}));
    await ledger.settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText},undefined,(calls,task)=>{
     const found=find(task,calls,callId);current(calls,found);
