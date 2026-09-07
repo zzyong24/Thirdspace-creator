@@ -205,27 +205,27 @@ export interface TranscriptPostprocessRuntimeDeps {
   callStructured?: (input: {spec: ModelSpec; facets: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; maxOutputTokens?: number; model?: LanguageModel}) => Promise<RawCorrected>;
 }
 
-// 默认结构化调用:modelFor(spec) + runStructuredNode(内联模板 + 显式 JSON schema)。
-// 动态 import 与 material-summary / video-decisions 同款(backend 不静态吃 ai-worker 运行时)。
-async function defaultCallStructured(input: {
-  model?: LanguageModel;
-  spec: ModelSpec;
-  facets: Readonly<Record<string, string | undefined>>;
-  signal?: AbortSignal;
-  maxOutputTokens?: number;
-}): Promise<RawCorrected> {
+/** 同一节点用于 Worker 调用与后端无网络回执回放，schema 包装仅按需加载。 */
+export async function buildTranscriptPostprocessNode(input: TranscriptPostprocessInput) {
+  const { jsonSchema } = await import("ai");
+  return {
+    template: TRANSCRIPT_POSTPROCESS_TEMPLATE,
+    facets: {transcript: input.transcript, context: buildContextFacet(input)},
+    outputSchema: jsonSchema<RawCorrected>(TRANSCRIPT_POSTPROCESS_SCHEMA as Parameters<typeof jsonSchema>[0]),
+    maxOutputTokens: input.maxOutputTokens,
+  };
+}
+
+async function defaultCallStructured(spec: ModelSpec, input: TranscriptPostprocessInput, model?: LanguageModel): Promise<RawCorrected> {
   const { modelFor } = await import("./provider-factory");
   const { runStructuredNode } = await import("../nodes/structured-node");
-  const { jsonSchema } = await import("ai");
+  input.signal?.throwIfAborted();
+  const node = await buildTranscriptPostprocessNode(input);
+  input.signal?.throwIfAborted();
   const { object } = await runStructuredNode<RawCorrected>({
-    model: input.model ?? modelFor(input.spec),
+    ...node,
+    model: model ?? modelFor(spec),
     signal: input.signal,
-    maxOutputTokens: input.maxOutputTokens,
-    template: TRANSCRIPT_POSTPROCESS_TEMPLATE,
-    facets: input.facets,
-    outputSchema: jsonSchema<RawCorrected>(
-      TRANSCRIPT_POSTPROCESS_SCHEMA as Parameters<typeof jsonSchema>[0],
-    ),
   });
   return object;
 }
@@ -263,8 +263,7 @@ export async function runTranscriptPostprocessRuntime(
   // 2) 结构化调用(schema 卡死 { correctedText };失败 → 落原文)。
   let raw: RawCorrected;
   try {
-    const call = deps.callStructured ?? defaultCallStructured;
-    raw = await call({
+    raw = deps.callStructured ? await deps.callStructured({
       spec,
       model: deps.model,
       signal: input.signal,
@@ -273,7 +272,7 @@ export async function runTranscriptPostprocessRuntime(
         transcript: original,
         context: buildContextFacet(input),
       },
-    });
+    }) : await defaultCallStructured(spec, input, deps.model);
     input.signal?.throwIfAborted();
   } catch (err) {
     input.signal?.throwIfAborted();
