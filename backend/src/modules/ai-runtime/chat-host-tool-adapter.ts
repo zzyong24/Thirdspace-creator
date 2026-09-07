@@ -55,10 +55,12 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
           if (approval && approval.status !== "not-applicable") return failure("blocked", "permission", false, "本次读取需要恢复工具授权");
           scope.signal.throwIfAborted();
           const result = await getChatToolNativeExecutor(tool)!(checked.data, { abortSignal: scope.signal });
+          scope.signal.throwIfAborted();
           // 沿用旧工具的JSON序列化，省略DTO可选undefined；不改变卡片字段和实际内容。
           const data = z.json().parse(JSON.parse(JSON.stringify(result)));
           const record = data && typeof data === "object" && !Array.isArray(data) ? data : {};
-          if (record.kind !== definition.name) throw new Error("宿主工具结果类型与定义不符");
+          // 卡片协议由既有工具登记表决定，例如 video.edit.render 返回 video.edit。
+          if (record.kind !== CHAT_TOOL_ERROR_ENVELOPES[definition.name]?.kind) throw new Error("宿主工具结果类型与定义不符");
           const failed = typeof record.error === "string" && record.error.length > 0;
           return agenticToolOutcomeSchema.parse({ status: failed ? "error" : "ok", summary: failed ? "读取未完成，请查看工具结果" : definition.effect === "proposal" ? "已生成候选，等待用户采纳" : "已读取当前工具结果", evidence: [], data, error: failed ? {code:"no_evidence",retryable:false,recovery:"检查工具结果后继续"} : null, continuation: null, sideEffect: failed ? "none" : definition.effect });
         } catch (error) {

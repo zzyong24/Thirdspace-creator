@@ -1,3 +1,4 @@
+import {createVideoEditCandidatePreparer} from "@creatoros/backend/modules/ai-runtime";
 import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/execution";
 import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
 import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
@@ -35,7 +36,6 @@ import {
   restorePreservedUserAssets,
 } from "@creatoros/backend";
 import {
-  videoRenderProps,
   type Endpoint,
   type Transport,
   type RequestContext,
@@ -12512,103 +12512,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId };
     },
-    prepareVideoEdit: async (ctx, input) => {
-      const outputId = (await projectsService.listOutputIdsByProject(ctx, input.projectId))[0];
-      if (!outputId) throw new Error("当前项目还没有可调整的制作记录。");
-      const production = await productionService.readProduction(ctx, outputId);
-      if (!production) throw new Error("当前项目还没有可调整的制作记录。");
-      const plan = (production.recordingConfig as Record<string, unknown> | null)?.videoEditingPlan as
-        | Record<string, unknown>
-        | undefined;
-      if (!plan || typeof plan.revision !== "number") {
-        throw new Error("当前项目还没有已确认的分镜方案，请先完成 AI 分场决策并确认。");
-      }
-      const parsed = videoRenderProps.safeParse(plan.renderProps);
-      if (!parsed.success) throw new Error("当前剪辑方案已损坏，请回制作页重新确认分镜。");
-
-      const props = structuredClone(parsed.data);
-      const summary: string[] = [];
-      const replacements = input.replaceBroll ?? [];
-      if (replacements.length > 0) {
-        const { rows: projectLinks } = await materialLinksService.list(ctx, {
-          projectId: input.projectId,
-          page: 1,
-          pageSize: 100,
-        });
-        const linkedAssetIds = new Set(
-          projectLinks
-            .filter((link) => link.entityType === "asset")
-            .map((link) => link.entityId),
-        );
-        for (const replacement of replacements) {
-          if (!linkedAssetIds.has(replacement.assetId)) {
-            throw new Error(`素材 ${replacement.assetId} 不属于当前项目，请先上传或关联到“创作素材”。`);
-          }
-          await assetsService.getAsset(ctx, replacement.assetId);
-        }
-      }
-      const removeIds = new Set(input.removeBrollAssetIds ?? []);
-      if (removeIds.size > 0) {
-        const before = props.broll.length;
-        props.broll = props.broll.filter((item) => !removeIds.has(item.file));
-        summary.push(`移除 ${before - props.broll.length} 条 B-roll`);
-      }
-      for (const replacement of replacements) {
-        const scene = props.scenes[replacement.sceneIdx];
-        if (!scene) throw new Error(`找不到第 ${replacement.sceneIdx + 1} 个场景。`);
-        props.broll = props.broll.filter(
-          (item) => item.at < scene.startSec || item.at >= scene.endSec,
-        );
-        props.broll.push({
-          file: replacement.assetId,
-          at: scene.startSec,
-          durationSec: Math.max(0.2, Math.min(3, scene.endSec - scene.startSec)),
-          label: "项目素材",
-          big: false,
-        });
-        summary.push(`第 ${replacement.sceneIdx + 1} 场改用指定素材`);
-      }
-      for (const move of input.moveBroll ?? []) {
-        const found = props.broll.find((item) => item.file === move.assetId);
-        if (!found) throw new Error(`当前时间线里没有素材 ${move.assetId}。`);
-        found.at = move.at;
-        if (typeof move.durationSec === "number") found.durationSec = move.durationSec;
-        summary.push(`调整素材 ${move.assetId} 的出现时间`);
-      }
-      const removeCards = new Set(input.removeCardIndexes ?? []);
-      if (removeCards.size > 0) {
-        let globalIndex = 0;
-        let removed = 0;
-        for (const scene of props.scenes) {
-          scene.cards = scene.cards.filter(() => {
-            const keep = !removeCards.has(globalIndex++);
-            if (!keep) removed += 1;
-            return keep;
-          });
-        }
-        summary.push(`移除 ${removed} 张信息卡`);
-      }
-      if (summary.length === 0) {
-        throw new Error("这条意见还没有形成可执行的剪辑改动，请明确要替换、移除或移动哪个素材/卡片。");
-      }
-      const verified = videoRenderProps.parse(props);
-      return {
-        kind: "video.edit" as const,
-        projectId: input.projectId,
-        outputId,
-        expectedRevision: plan.revision,
-        sourceRenderTaskId:
-          typeof plan.sourceRenderTaskId === "string" ? plan.sourceRenderTaskId : null,
-        instruction: input.instruction,
-        summary,
-        decisions:
-          plan.decisions && typeof plan.decisions === "object"
-            ? (plan.decisions as Record<string, unknown>)
-            : {},
-        renderProps: verified as unknown as Record<string, unknown>,
-        error: null,
-      };
-    },
+    prepareVideoEdit: createVideoEditCandidatePreparer({projectsService,productionService,materialLinksService,assetsService}),
     // [T-350a] publish.package 端口 —— 稿面「生成发布物料」:复用既有 publish.platform_adapt runner
     // (platform.adapt 模板已内嵌 cheat-package 发布审核 SOP),**单平台抖音**。
     //   ① 空稿诚实门:当前整稿为空/过短 → 抛友好错误(同 dispatchScriptReview 口径,不生成空物料);

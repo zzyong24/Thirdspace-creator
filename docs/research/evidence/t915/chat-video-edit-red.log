@@ -1,0 +1,87 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts (8 tests | 8 failed) 17ms
+   × 剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本 9ms
+   × 账号不触发剪辑候选准备 2ms
+   × 定义不触发剪辑候选准备 1ms
+   × 伪造项目不触发剪辑候选准备 1ms
+   × 无项目不触发剪辑候选准备 1ms
+   × 删除目标或读取失败保留真实错误卡，不产生成功候选 1ms
+   × 候选准备期间取消后不能返回可采纳成功 1ms
+   × 错误的结果卡不能冒充剪辑候选 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:20:41
+     18| }
+     19| it("剪辑候选工具保留 video.edit 卡与原参数，在真正执行时读取当前版本",async()=>{
+     20|  const f=await fixture();expect(f.tool).toBeDefined();expect(f.prepare…
+       |                                         ^
+     21|  f.current.expectedRevision=4;
+     22|  const input={instruction:"移除第一张卡",removeCardIndexes:[0]};
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 账号不触发剪辑候选准备
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 定义不触发剪辑候选准备
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 伪造项目不触发剪辑候选准备
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 无项目不触发剪辑候选准备
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:27:41
+     25| });
+     26| it.each(["账号","定义","伪造项目","无项目"])("%s不触发剪辑候选准备",async mode=>{
+     27|  const f=await fixture();expect(f.tool).toBeDefined();
+       |                                         ^
+     28|  if(mode==="账号")f.restored.context.accountId="other";
+     29|  if(mode==="定义")f.restored.modelInput.tools[0]!.version="changed";
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 删除目标或读取失败保留真实错误卡，不产生成功候选
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:35:41
+     33| });
+     34| it("删除目标或读取失败保留真实错误卡，不产生成功候选",async()=>{
+     35|  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEd…
+       |                                         ^
+     36|  expect(await f.tool!.execute!(f.context,{instruction:"删卡"},f.scope)).…
+     37| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 候选准备期间取消后不能返回可采纳成功
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:39:41
+     37| });
+     38| it("候选准备期间取消后不能返回可采纳成功",async()=>{
+     39|  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEd…
+       |                                         ^
+     40|  expect(await f.tool!.execute!(f.context,{instruction:"删卡"},f.scope)).…
+     41| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/modules/ai-runtime/chat-video-edit-tool-host.test.ts > 错误的结果卡不能冒充剪辑候选
+AssertionError: expected undefined to be defined
+ ❯ src/modules/ai-runtime/chat-video-edit-tool-host.test.ts:43:41
+     41| });
+     42| it("错误的结果卡不能冒充剪辑候选",async()=>{
+     43|  const f=await fixture();expect(f.tool).toBeDefined();f.prepareVideoEd…
+       |                                         ^
+     44|  expect((await f.tool!.execute!(f.context,{instruction:"删卡"},f.scope))…
+     45| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  20:04:43
+   Duration  2.54s (transform 1.28s, setup 0ms, import 2.18s, tests 17ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/chat-video-edit-tool-host.test.ts

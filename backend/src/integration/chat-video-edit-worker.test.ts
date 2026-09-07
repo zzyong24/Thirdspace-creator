@@ -1,0 +1,68 @@
+import * as supervisorModule from "../modules/execution/worker-supervisor";
+import {createServer} from "node:http";
+import {execFileSync} from "node:child_process";
+import {resolve} from "node:path";
+import {beforeAll,afterAll,it,expect,vi} from "vitest";
+import {createDb,executionCalls,executionTasks,aiMessages,eq,type Db} from "@creatoros/backend";
+import {createAiRepository} from "../modules/ai/ai.repository";
+import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";
+import {createChatHostContextReader} from "../modules/ai/chat-host-context.service";
+import type {ChatHostContext} from "../modules/ai/chat-host-context";
+import {createChatWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
+import * as toolPorts from "../modules/execution/execution-chat-tool-ports.service";
+import {createChatTaskToolHost} from "../modules/ai-runtime/chat-task-tool-host";
+import {buildChatTools,type ChatToolDeps} from "../modules/ai-runtime/chat-tools";
+import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
+import type {ContextReaders} from "../modules/ai-runtime/chat-runner";
+let db:Db,close:()=>Promise<void>,seq=0;
+const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
+beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
+afterAll(async()=>close());
+it.each(["success","missingPlan","lostAck","crashAfterCandidate"])("真实 Worker 剪辑调整只产原版本候选：%s",async mode=>{
+ let clockOffset=0;
+ const ctx={userId:"video-worker-u",accountId:`video-worker-${++seq}`,requestId:"test",source:"user" as const},now=()=>new Date(Date.now()+clockOffset).toISOString();
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId:prefix=>`${prefix}-${++seq}`});
+ const conversation=await repo.createConversation({title:"改这一段",projectId:"project",scope:"project"});
+ const source=await repo.createMessage(conversation.id,{role:"user",content:"改这一段",attachments:[],modelMetadata:{}});
+ const candidate={kind:"video.edit" as const,projectId:"project",outputId:"output",expectedRevision:3,sourceRenderTaskId:"render",instruction:"移除第一张卡",summary:["移除 1 张信息卡"],decisions:{},renderProps:{scenes:[]},error:null};
+ const definitions=(await prepareChatToolDefinitions(buildChatTools(["video.edit.render"],{} as ChatToolDeps))).definitions;
+ const hostContext:ChatHostContext={schemaVersion:1,chatContext:{surface:"project",projectId:"project"},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:"fixed",platformPolicyVersion:"1",platformPolicy:"候选",skills:[{skillId:"chatbox.topic",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"策略",template:"",tools:["video.edit.render"],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+ const submitted=await createChatTurnSubmissionService(db,{now,assertProject:async()=>{},assemble:async()=>({capability:"copilot.assist",system:"只修改选中段",messages:[{role:"user",content:"改这一段"}],maxSteps:4,maxOutputTokens:128,tools:definitions,hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const requests:Record<string,unknown>[]=[];
+ const server=createServer(async(req,res)=>{
+  let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
+  expect(input.stream).toBe(true);
+  const first=requests.length===1,delta=first?{tool_calls:[{index:0,id:"patch",type:"function",function:{name:"video_edit_render",arguments:JSON.stringify({instruction:"移除第一张卡",removeCardIndexes:[0]})}}]}:{content:"请确认候选"};
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end([{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}].map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });
+ await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));
+ const current=structuredClone(candidate),prepareVideoEdit=vi.fn(async()=>{if(mode==="missingPlan")throw new Error("当前项目还没有已确认的分镜方案");return structuredClone(current);}),resolveTools=createChatTaskToolHost(createChatHostContextReader(db,{now}),{} as ContextReaders,{videoEdit:{prepareVideoEdit}});
+ const originalSupervisor=supervisorModule.createWorkerSupervisor;
+ let stopExecution:ReturnType<typeof originalSupervisor>["stopExecutionTree"]|undefined;
+ const supervisorSpy=mode==="crashAfterCandidate"?vi.spyOn(supervisorModule,"createWorkerSupervisor").mockImplementation(options=>{const supervisor=originalSupervisor(options);stopExecution=ref=>supervisor.stopExecutionTree(ref);return supervisor;}):undefined;
+ const original=toolPorts.createExecutionChatToolPorts;let lost=false;
+ const spy=(mode==="lostAck" || mode==="crashAfterCandidate")?vi.spyOn(toolPorts,"createExecutionChatToolPorts").mockImplementation((...args)=>{const ports=original(...args);return {...ports,async execute(...input){const result=await ports.execute(...input);if(mode==="crashAfterCandidate"){expect(await stopExecution!(input[0])).toBe(true);return result;}if(!lost){lost=true;throw new Error("fixture lost committed tool receipt");}return result;}};}):undefined;
+ const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"video-host",budget:{maxCalls:6,maxTokens:100000,deadlineMs:mode==="crashAfterCandidate"?300000:60000},modelConcurrency:1,resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ let host=createHost();
+ try{
+  await host.drainOnce();
+  if(mode==="crashAfterCandidate"){
+   const [interrupted]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
+   expect(interrupted!.status).toBe("running");expect(requests).toHaveLength(1);
+   await host.stop();spy?.mockRestore();supervisorSpy?.mockRestore();
+   current.expectedRevision=4;current.summary=["用户已确认另一版方案"];
+   clockOffset=Date.parse(interrupted!.leaseExpiresAt!)-Date.now()+1;host=createHost();await host.drainOnce();
+  }
+  expect((await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!.status).toBe("succeeded");
+  expect(requests).toHaveLength(2);
+  const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
+  expect(calls.filter(call=>call.kind==="tool")).toHaveLength(1);expect(calls.filter(call=>call.parentCallId)).toHaveLength(0);
+  const output=JSON.parse(calls.find(call=>call.kind==="tool")!.resultText!).output;
+  if(mode==="missingPlan")expect(output).toMatchObject({status:"error",sideEffect:"none"});
+  else expect(output).toMatchObject({status:"ok",sideEffect:"proposal",data:candidate});
+  const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));
+  expect(messages.filter(message=>message.role==="assistant")).toHaveLength(1);
+  expect(JSON.stringify(messages.find(message=>message.role==="assistant")!.parts)).toContain("tool-video_edit_render");
+  expect(candidate.expectedRevision).toBe(3);expect(prepareVideoEdit).toHaveBeenCalledTimes(1);expect(JSON.stringify(requests[1])).toContain("video.edit");if(mode==="lostAck")expect(lost).toBe(true);
+ }finally{spy?.mockRestore();supervisorSpy?.mockRestore();await host.stop();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));}
+},15000);

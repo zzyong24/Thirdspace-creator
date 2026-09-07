@@ -1,3 +1,4 @@
+export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
 // AI runtime module (T-163) —— 前端 AI SDK 解耦:26 个 runner + AI 编排基底(creative-context /
 // llm 适配 / multimodal 解析 / skill 覆盖)从 frontend 包下沉至此,使 AI 生成逻辑 + prompt 调用
 // 住在受保护的 backend 侧(桌面化 T-147 护城河前置)。前端只经 `@creatoros/backend/modules/

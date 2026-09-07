@@ -1,3 +1,10 @@
+// @vitest-environment node
+import {mkdtempSync,rmSync} from "node:fs";
+import {resolve} from "node:path";
+import {tmpdir} from "node:os";
+import {createChatTaskToolHost} from "../../../backend/src/modules/ai-runtime/chat-task-tool-host";
+import {buildChatTools,type ChatToolDeps} from "../../../backend/src/modules/ai-runtime/chat-tools";
+import {prepareChatToolDefinitions} from "../../../backend/src/modules/ai-runtime/chat-tool-definitions";
 import { describe, it, expect, vi } from "vitest";
 import type { Db } from "@creatoros/backend";
 const fixture = vi.hoisted(() => ({ db: undefined as Db | undefined }));
@@ -7,6 +14,7 @@ vi.mock("@creatoros/backend", async original => {
     const result = await actual.createConfiguredDb(...args); fixture.db = result.db; return result;
   } };
 });
+vi.mock("@creatoros/backend/modules/assets",async original=>{const actual=await original<typeof import("@creatoros/backend/modules/assets")>();return {...actual,migrateStorageRoot:async()=>{throw new Error("本测试禁止迁移媒体目录");}};});
 import { productions, eq } from "@creatoros/backend";
 import { createPositioningService } from "@creatoros/backend/modules/positioning";
 import type { Endpoint } from "@creatoros/contract";
@@ -16,7 +24,8 @@ const ctx = { userId: "read-effects", accountId: "read-effects", requestId: "r",
 
 describe("T-915 聊天实际装配无隐藏写入", () => {
   it("定位读取屏蔽错误计数但不改库；剪辑候选缺记录不创建，有记录只返回候选", async () => {
-    vi.stubEnv("DATABASE_URL", ""); vi.stubEnv("PGLITE_DATA_DIR", ""); __resetPersistenceForTests();
+    const directory=mkdtempSync(resolve(tmpdir(),"t915-video-candidate-"));
+    vi.stubEnv("DATABASE_URL", ""); vi.stubEnv("PGLITE_DATA_DIR", resolve(directory,"db")); __resetPersistenceForTests();
     try {
       const runtime = await getChatRuntime(); const db = fixture.db!;
       const positioning = createPositioningService({ db, now: () => new Date().toISOString(), nextId: p => `${p}-read-effects`, projects: { getProjectSubject: async () => ({ title: "测试", brief: "" }) } });
@@ -38,6 +47,15 @@ describe("T-915 聊天实际装配无隐藏写入", () => {
         scenes: [{ id: "s1", label: "开场", title: "测试", startSec: 0, endSec: 10, cards: [{ kind: "stat", at: 2, value: "3", unit: "小时", label: "测试" }] }],
       } } } }).where(eq(productions.contentOutputId, output.data.id));
       const rows = await readRows();
+      const definitions=(await prepareChatToolDefinitions(buildChatTools(["video.edit.render"],{} as ChatToolDeps))).definitions;
+      const execution={executionTaskId:"video-production",attempt:1,fenceToken:"fence"},signal=new AbortController().signal;
+      const restored={context:ctx,modelInput:{tools:definitions},hostContext:{chatContext:{surface:"project",projectId:project.data.id}}};
+      const host=createChatTaskToolHost({read:async()=>structuredClone(restored) as never},runtime.contextReaders,{videoEdit:{prepareVideoEdit:runtime.prepareVideoEdit}});
+      const tools=await host(ctx,restored.modelInput as never,execution,signal);
+      const prepared=await tools["video.edit.render"]!.execute!(ctx,{instruction:input.instruction,removeCardIndexes:input.removeCardIndexes},{execution,aiTaskId:"ai",callId:"call",toolCallId:"tool",signal});
+      expect(prepared).toMatchObject({status:"ok",sideEffect:"proposal",data:{kind:"video.edit",projectId:project.data.id,expectedRevision:3}});
+      expect(await readRows()).toEqual(rows);
+      expect((await runtime.ai.listTasks(ctx,{limit:100,offset:0})).rows).toEqual([]);
       const candidate = await runtime.prepareVideoEdit(ctx, input);
       expect(candidate.expectedRevision).toBe(3);
       expect(candidate.kind).toBe("video.edit");
@@ -48,7 +66,7 @@ describe("T-915 聊天实际装配无隐藏写入", () => {
       expect(await readRows()).toEqual(rows);
     } finally {
       await (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence?.();
-      __resetPersistenceForTests(); vi.unstubAllEnvs();
+      __resetPersistenceForTests(); vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});
     }
   }, 30000);
 });
