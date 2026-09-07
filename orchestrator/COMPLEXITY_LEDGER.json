@@ -143,7 +143,7 @@
       "files": [
         "backend/src/modules/ai/ai.service.ts"
       ],
-      "file_sha256": "22f9353beb186b1997fddb38bc4f0721a4275faf388cb5bdaaec1b09a56f2bc6",
+      "file_sha256": "dfd6428d2e7a6bb07a5f85e45872c41e5da57b4a2945de85c11b52aba0e0de12",
       "categories": [
         "native_executable"
       ],
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "7120fa6ccd18f598ae3715d309e647af5a456357b54a29873683ce9a8c39eea1",
+      "file_sha256": "27ea8791c3f2a459421bd9edf8c13716001ec08410b687607495910daca0e93f",
       "categories": [
         "credential_store",
         "language_toolchain",

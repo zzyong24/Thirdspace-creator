@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
-import { buildScriptDraftTaskInputData } from "@/server/script-draft-task-input";
+import { buildScriptDraftTaskInputData } from "./script-draft-task-input";
 
 describe("[T-727] script.draft 任务输入装配", () => {
   it("verbatim 把完整原文/ref/长度/hash 原样写入 task input，不混入 generate 摘要字段", () => {

@@ -1,0 +1,81 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-d5dcd8f0-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-8a2f7e72-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-82b8efe7-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-2cee3e53-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-8c9f3848-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+stderr | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+[ai-task-runner] taskId=ai-task-7c0efc73-14 taskType=script.draft status=failed finishReason=null usage=null candidateCount=0
+
+ ❯ src/server/chat-script-draft-submission.integration.test.ts (2 tests | 2 failed) 102974ms
+   × 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿 51831ms (retry x2)
+   × 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿 51143ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=false，保真候选零模型且仅采纳后改稿
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+ FAIL  src/server/chat-script-draft-submission.integration.test.ts > 正式整稿派发复用原子提交，已提交未唤醒=true，保真候选零模型且仅采纳后改稿
+AssertionError: expected 'failed' to be 'awaiting_confirmation' // Object.is equality
+
+Expected: "awaiting_confirmation"
+Received: "failed"
+
+ ❯ vi.waitFor.timeout src/server/chat-script-draft-submission.integration.test.ts:32:86
+     30|   const [a,b]=await Promise.all([runtime.dispatchScriptDraft(ctx,input…
+     31|   expect(a.taskId).toBe(b.taskId);if(prior)expect(a.taskId).toBe(prior…
+     32|   await vi.waitFor(async()=>{expect((await runtime.ai.getTask(ctx,a.ta…
+       |                                                                                      ^
+     33|   const tasks=await runtime.ai.listTasks(ctx,{taskType:"script.draft",…
+     34|   const {artifacts,artifactVersions,eq}=await import("@creatoros/backe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  20:22:22
+   Duration  107.35s (transform 2.90s, setup 173ms, import 3.99s, tests 102.97s, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/chat-script-draft-submission.integration.test.ts

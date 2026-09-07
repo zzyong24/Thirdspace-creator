@@ -1,3 +1,4 @@
+export {createScriptDraftTargetService} from "./script-draft-target.service";
 // Artifacts module — the ONLY public entry (foundation §1 / MODULE-ARCH §2). The
 // composite transport imports Artifacts ONLY through this file (never its
 // internals): the service factory to construct it over the shared db, the

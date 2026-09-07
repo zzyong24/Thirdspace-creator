@@ -1,3 +1,4 @@
+export {lockOwnedProjectForUpdate} from "./project-lock.service";
 // Projects module — the ONLY public entry (foundation §1 / MODULE-ARCH §2). The
 // composite transport imports Projects ONLY through this file (never its
 // internals): the service + repository factories to construct it over the shared

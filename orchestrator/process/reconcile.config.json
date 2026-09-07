@@ -257,7 +257,7 @@
     "website-pricing:test": "node --test website/pricing.test.mjs",
     "channel-skill-no-account:test": "pnpm --dir frontend exec vitest run src/features/settings/skills-section.test.tsx -t \"未选择账号时\"",
     "project-publication-convergence:test": "pnpm --dir frontend exec vitest run src/features/projects/projects-page.test.tsx src/features/draft-workbench/register-published-form.test.tsx src/app/api/v1/dispatch/route.test.ts",
-    "verbatim-script-import:test": "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx src/server/script-draft-task-input.test.ts",
+    "verbatim-script-import:test": "pnpm --dir backend exec vitest run src/modules/ai/script-draft-task-input.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/chat-script-draft-card.test.tsx",
     "creatoros-local-package:test": "pnpm --dir frontend exec vitest run scripts/desktop/package-local.test.mjs scripts/desktop/desktop-release-workflow.test.mjs scripts/desktop/notarize.test.mjs scripts/desktop/tauri-signing-config.test.mjs",
     "motion-card-preview:e2e": "node orchestrator/process/verify-t794-motion-card-preview.mjs",
     "scene-graph-loop:e2e": "node orchestrator/process/verify-t802-scene-graph.mjs",

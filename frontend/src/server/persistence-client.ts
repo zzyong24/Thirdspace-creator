@@ -1,3 +1,4 @@
+import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
 import {createVideoEditCandidatePreparer} from "@creatoros/backend/modules/ai-runtime";
 import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/execution";
 import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
@@ -52,7 +53,6 @@ import {
   transcribeWithLocalFallback,
 } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
-import { buildScriptDraftTaskInputData } from "@/server/script-draft-task-input";
 import {
   contentRadarDraftSeedOf,
   selectReadableProjectScriptArtifact,
@@ -1623,6 +1623,7 @@ export interface ChatRuntime {
     ctx: RequestContext,
     input: {
       projectId: string;
+      attemptId?: string;
       topic?: string;
       angle?: string;
       targetDurationSeconds?: number;
@@ -3207,6 +3208,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiService = createAiService({
+    scriptDraftTargets:createScriptDraftTargetService({now:deps.now,nextId:deps.nextId}),
     topicCandidates:topicCandidateAdoption,
     researchMaterials:researchMaterialAdoption,
     calibrationPositioning:calibrationPositioningAdoption,
@@ -9600,7 +9602,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       readRuntime:(c,id)=>createExecutionScriptCheckpointService(db).readRuntime(c,id),
       async assertArtifact(c,artifactId,projectId){
         const artifact=await artifactsService.getArtifact(c,artifactId);
-        if((projectId!==null && artifact.projectId!==projectId) || artifact.artifactType!=="master_script")throw new Error("文稿目标与当前项目或工件类型不一致");
+        // 新提交只选 output_script；保留已经绑定旧 master_script 的历史任务兼容。
+        if((projectId!==null && artifact.projectId!==projectId) || !["output_script","master_script"].includes(artifact.artifactType))throw new Error("文稿目标与当前项目或工件类型不一致");
       },
     }),
     "planning.thesis":createPlanningThesisBusinessAdapter({
@@ -12445,18 +12448,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       }
       return { taskId: task.id, ownerId: task.ownerId };
     },
-    // [T-268] script.draft 端口 —— 复活孤儿 runScriptDraft 的创建端(此前全仓无任何
-    // createTask({taskType:'script.draft'}),runner 是死链;对话整稿 inline 同步跑必超时)。整稿
-    // runner 要求 inputData.artifactId(采纳时 confirmTask 的 artifact_version 分支 append 新
-    // ArtifactVersion 到该 output_script artifact → 稿面编辑器读回),故先 ensure 项目的
-    // output_script artifact(无则建 output_script,stage=script),再经 ai transport
-    // 的 ai.tasks.create 起 script.draft task(inputData.projectId 让 service createTask 归属项目 →
-    // dispatch 分支 task.taskType==="script.draft" 触发 void runScriptDraft)。立即返回 { taskId },
-    // 不阻塞对话回合(整稿重、分钟级)。artifactsService 与本工厂同作用域(同 aiService 装配)。
+    // 整稿目标、空白初始版本与任务同事务提交；沿原公开派发入口启动持久执行。
     dispatchScriptDraft: async (
       ctx: RequestContext,
       input: {
         projectId: string;
+        attemptId?: string;
         topic?: string;
         angle?: string;
         targetDurationSeconds?: number;
@@ -12470,24 +12467,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         verbatimSourceSha256?: string;
       },
     ) => {
-      // ensure output_script artifact(读写同一目标:采纳 append 版本、稿面编辑器读当前版本)。
-      // 新生成的候选永远写入 output_script。master_script 仅作为历史项目只读兼容，
-      // 不能再成为采纳写入目标，否则审核端会误判“没有采纳文案”。
-      const arts = await artifactsService.listProjectArtifacts(ctx, input.projectId);
-      const scriptArts = arts.filter((a) => a.stage === "script");
-      const existing = scriptArts.find(
-        (a) => a.artifactType === "output_script",
-      );
-      const artifactId =
-        existing?.id ??
-        (
-          await artifactsService.createArtifact(ctx, {
-            projectId: input.projectId,
-            title: "分镜脚本",
-            artifactType: "output_script",
-            stage: "script",
-          })
-        ).id;
+      const attemptId=input.attemptId??createAiTaskAttemptId();
+      const preparedTask=await aiService.createScriptDraftTask(ctx,{...input,attemptId});
+      // 仍走现有正式派发入口；同键回读复用原任务，恢复提交后尚未唤醒的窗口。
       const res = await ai.request(
         // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
         ENDPOINTS.createAITask,
@@ -12496,11 +12478,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           query: undefined,
           body: {
             taskType: "script.draft",
-            attemptId: createAiTaskAttemptId(),
-            inputData: buildScriptDraftTaskInputData({
-              ...input,
-              artifactId,
-            }),
+            attemptId,
+            inputData: preparedTask.inputData,
           },
         },
         ctx,

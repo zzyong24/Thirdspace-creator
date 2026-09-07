@@ -1,3 +1,4 @@
+import {prepareScriptDraftTaskSubmission,type ScriptDraftSubmissionInput} from "./script-draft-task-submission";
 import {prepareAiTaskCommit,type PreparedAiTaskCommit} from "./ai-task-commit";
 import { canonicalJson } from "./canonical-json";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
@@ -228,6 +229,7 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
+  scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string):Promise<string>};
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
@@ -368,6 +370,8 @@ export interface AiService {
     }[]
   >;
   createTask(ctx: RequestContext, body: CreateTaskInput): Promise<AITaskResource>;
+  createScriptDraftTask(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<AITaskResource>;
+  prepareScriptDraftTaskCommit(ctx:RequestContext,input:ScriptDraftSubmissionInput):Promise<PreparedAiTaskCommit>;
   /** 内部事务提交准备；不作为公开 RPC 暴露。 */
   prepareTaskCommit(ctx: RequestContext, body: CreateTaskInput & {attemptId:string}):Promise<PreparedAiTaskCommit>;
   /**
@@ -848,6 +852,8 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     prepareTaskCommit: (ctx,body)=>prepareAiTaskCommit(deps,ctx,body),
+    prepareScriptDraftTaskCommit:(ctx,input)=>prepareScriptDraftTaskSubmission(deps,ctx,input),
+    async createScriptDraftTask(ctx,input){const prepared=await prepareScriptDraftTaskSubmission(deps,ctx,input);return deps.db.transaction(tx=>prepared.commit(tx));},
 
     async createTask(ctx, body) {
       const accountId = requireAccountId(ctx.accountId, "ai.createTask");

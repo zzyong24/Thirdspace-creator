@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/script-draft-task-submission.integration.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/script-draft-task-submission.integration.test.ts [ src/modules/ai/script-draft-task-submission.integration.test.ts ]
+Error: Cannot find module '../artifacts/script-draft-target.service' imported from /Users/zyongzhu/Workbase/Thirdspace-creator/backend/src/modules/ai/script-draft-task-submission.integration.test.ts
+ ❯ src/modules/ai/script-draft-task-submission.integration.test.ts:4:1
+      2| import {createDb,projects,artifacts,aiTasks,eq,type Db} from "@creator…
+      3| import {createAiService,type ServiceDeps} from "./ai.service";
+      4| import {createScriptDraftTargetService} from "../artifacts/script-draf…
+       | ^
+      5| let db:Db,close:()=>Promise<void>,seq=0;
+      6| beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.clien…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  20:18:18
+   Duration  2.46s (transform 1.44s, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai/script-draft-task-submission.integration.test.ts
