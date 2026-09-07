@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "8a9501365991ba24bbbbbe7c6310892352f15025c7e8f6c8f55cac0c50138402",
+      "file_sha256": "6dfe12ba9cbb2151f88acfefecfd20b07280bc08103f3671a4e2a657e24f92ab",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -1777,7 +1777,7 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "使用独占临时子进程验证已确认的 ASR 命名端口与租约结算，不引入生产进程。",
       "acceptance": "仅登记测试涉及 IPC；实际测试状态以本批原始日志为准。",
-      "file_sha256": "c4b79d5252f34fb870fdd8a15130c43c6065be5710912f514bab1a49cec2816b"
+      "file_sha256": "97982ce0a263fe544d433571f5f18d83e8768c28c60b1e5e660b602aa2325cd7"
     },
     {
       "task_id": "T-915",

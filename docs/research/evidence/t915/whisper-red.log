@@ -1,0 +1,142 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t915-whisper-450cfe65/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts (8 tests | 8 failed) 3019ms
+     × 预取消不启动解码 7ms (retry x2)
+     × decode 阶段取消保持 AbortError 2ms (retry x2)
+     × load 阶段取消保持 AbortError 1ms (retry x2)
+     × inference 阶段取消保持 AbortError 1ms (retry x2)
+     × ffmpeg 取消 kill 后等待 close 才拒绝 1ms (retry x2)
+     × 排队取消不发送，在途取消等待 terminate，旧事件不能破坏新 worker 1ms (retry x2)
+     × exit 0 结算 pending，下一项重建 3003ms (retry x2)
+     × subarray 仅发送有效 PCM 范围 2ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 预取消不启动解码
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 预取消不启动解码
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 预取消不启动解码
+AssertionError: promise resolved "{ text: 'x' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "text": "x",
+  }
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:18:97
+     16|     const c = new AbortController(); c.abort('取消'); const decode = vi.…
+     17|     const adapter = createWhisperLocalAdapter({decodeAudioToFloat32:de…
+     18|     await expect(adapter.transcribeAudio!(spec,{audioBytes:new Uint8Ar…
+       |                                                                                                 ^
+     19|     expect(decode).not.toHaveBeenCalled();
+     20|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/24]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > decode 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > decode 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > decode 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > load 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > load 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > load 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > inference 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > inference 阶段取消保持 AbortError
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > inference 阶段取消保持 AbortError
+AssertionError: expected MultimodalGenerationError: whisper-local … { …(6) } to match object { name: 'AbortError' }
+(6 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "name": "AbortError",
++ MultimodalGenerationError {
++   "name": "MultimodalGenerationError",
+  }
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:24:81
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/24]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg 取消 kill 后等待 close 才拒绝
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg 取消 kill 后等待 close 才拒绝
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg 取消 kill 后等待 close 才拒绝
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'SIGKILL' ]
+
+Number of calls: 0
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:30:49
+     28|     const c = new AbortController(); const decode = createFfmpegPcmDec…
+     29|     const result = decode(new Uint8Array([1]), c.signal); let done = f…
+     30|     c.abort(); await tick(); expect(child.kill).toHaveBeenCalledWith('…
+       |                                                 ^
+     31|     child.emit('close',null); expect(await caught).toMatchObject({name…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/24]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 排队取消不发送，在途取消等待 terminate，旧事件不能破坏新 worker
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 排队取消不发送，在途取消等待 terminate，旧事件不能破坏新 worker
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > 排队取消不发送，在途取消等待 terminate，旧事件不能破坏新 worker
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:38:49
+     36|     const first=pipe(new Float32Array([1]),{},a.signal).catch(e=>e); a…
+     37|     const second=pipe(new Float32Array([2]),{},b.signal).catch(e=>e); …
+     38|     await tick(); expect(workers[0]!.terminate).toHaveBeenCalledTimes(…
+       |                                                 ^
+     39|     workers[0]!.stopped.resolve(1); expect(await first).toMatchObject(…
+     40|     expect(workers).toHaveLength(2); workers[0]!.emit('error',new Erro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/24]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > exit 0 结算 pending，下一项重建
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > exit 0 结算 pending，下一项重建
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > exit 0 结算 pending，下一项重建
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:42:3
+     40|     expect(workers).toHaveLength(2); workers[0]!.emit('error',new Erro…
+     41|   });
+     42|   it('exit 0 结算 pending，下一项重建', async () => {
+       |   ^
+     43|     const workers: FakeWorker[]=[]; const provider=createWorkerPipelin…
+     44|     const first=pipe(new Float32Array([1])).catch(e=>e); await tick();…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/24]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > subarray 仅发送有效 PCM 范围
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > subarray 仅发送有效 PCM 范围
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > subarray 仅发送有效 PCM 范围
+AssertionError: expected [ 99, 1, 2, 99 ] to deeply equal [ 1, 2 ]
+
+- Expected
++ Received
+
+  [
++   99,
+    1,
+    2,
++   99,
+  ]
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:50:133
+     48|   it('subarray 仅发送有效 PCM 范围', async () => {
+     49|     const w=new FakeWorker(); const pipe=await createWorkerPipelinePro…
+     50|     const run=pipe(new Float32Array([99,1,2,99]).subarray(1,3)); await…
+       |                                                                                                                                     ^
+     51|   });
+     52| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/24]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  22:40:28
+   Duration  3.34s (transform 64ms, setup 0ms, import 172ms, tests 3.02s, environment 0ms)
+

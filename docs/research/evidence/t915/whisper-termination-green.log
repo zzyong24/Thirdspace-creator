@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t915-whisper-450cfe65/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  37 passed (37)
+   Start at  22:49:16
+   Duration  303ms (transform 117ms, setup 0ms, import 286ms, tests 41ms, environment 0ms)
+

@@ -1,3 +1,5 @@
+import {transcribeAudioPortSchemas} from "./execution-transcribe-audio";
+export {transcribeAudioReceiptSchema} from "./execution-transcribe-audio";
 import {asrPortInputSchemas} from "./execution-asr";
 export {asrRequestSchema,asrAudioManifestSchema,asrIdentitySchema,asrTaskInputSchema,asrResultReceiptSchema,type AsrRequest} from "./execution-asr";
 import {assetGenerationInputSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
@@ -29,6 +31,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "readTranscribeAudio", "saveTranscribeAudio",
   "reserveAsrRequest", "startAsrRequest", "settleAsrRequest",
   "resolveAssetCredential", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
@@ -80,6 +83,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  ...transcribeAudioPortSchemas,
   ...asrPortInputSchemas,
   resolveAssetCredential:providerJobReadSchema,
   settleAssetCall:providerJobReadSchema.extend({status:z.enum(["unknown","rejected"])}).strict(),

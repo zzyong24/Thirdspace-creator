@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t915-whisper-450cfe65/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts (18 tests | 1 failed) 3018ms
+     × ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复 3007ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:203:5
+    201|     }, 1000);
+    202|
+    203|     it('ffmpeg kill 失败后阻止同 decoder 再 spawn，旧 close 后恢复', async () => {
+       |     ^
+    204|         const children: Array<ReturnType<typeof makeChild>> = [];
+    205|         function makeChild() {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  22:50:46
+   Duration  3.32s (transform 71ms, setup 0ms, import 153ms, tests 3.02s, environment 0ms)
+

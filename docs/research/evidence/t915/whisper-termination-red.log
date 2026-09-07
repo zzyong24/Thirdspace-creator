@@ -1,0 +1,218 @@
+
+ RUN  v4.1.8 /private/tmp/creatoros-t915-whisper-450cfe65/ai-worker
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts (16 tests | 3 failed) 6022ms
+     × terminate throw 后必须等 owner exit，不能提前启动下一项 3004ms (retry x2)
+     × terminate reject 后必须等 owner exit，不能提前启动下一项 4ms (retry x2)
+     × ffmpeg kill 抛错不能成为未捕获异常或悬挂请求 3002ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate throw 后必须等 owner exit，不能提前启动下一项
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate throw 后必须等 owner exit，不能提前启动下一项
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate throw 后必须等 owner exit，不能提前启动下一项
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:154:32
+    152|         await fourth;
+    153|     });
+    154|     it.each(['throw', 'reject'])('terminate %s 后必须等 owner exit，不能提前启动下…
+       |                                ^
+    155|         const workers: FakeWorker[] = [];
+    156|         const pipe = await createWorkerPipelineProvider(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate reject 后必须等 owner exit，不能提前启动下一项
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate reject 后必须等 owner exit，不能提前启动下一项
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > terminate reject 后必须等 owner exit，不能提前启动下一项
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:172:25
+    170|         controller.abort();
+    171|         await tick();
+    172|         expect(settled).toBe(false);
+       |                         ^
+    173|         expect(workers).toHaveLength(1);
+    174|         workers[0]!.emit('error', new Error('仍非退出确认'));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 抛错不能成为未捕获异常或悬挂请求
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 抛错不能成为未捕获异常或悬挂请求
+ FAIL  src/runtime/multimodal-whisper-local-cancel.test.ts > 本地 Whisper 取消与资源归属 > ffmpeg kill 抛错不能成为未捕获异常或悬挂请求
+Error: Test timed out in 1000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:185:5
+    183|         await next;
+    184|     }, 1000);
+    185|     it('ffmpeg kill 抛错不能成为未捕获异常或悬挂请求', async () => {
+       |     ^
+    186|         const child = Object.assign(new EventEmitter(), {
+    187|             stdout: new EventEmitter(), stderr: new EventEmitter(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 6 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: 终止失败
+ ❯ FakeWorker.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:159:45
+    157|             const w = new FakeWorker();
+    158|             if (!workers.length) w.terminate.mockImplementation(() => {
+    159|                 if (mode === 'throw') throw new Error('终止失败');
+       |                                             ^
+    160|                 return Promise.reject(new Error('终止失败'));
+    161|             });
+ ❯ FakeWorker.Mock [as terminate] ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:606:26
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:170:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "terminate throw 后必须等 owner exit，不能提前启动下一项". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: 终止失败
+ ❯ FakeWorker.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:159:45
+    157|             const w = new FakeWorker();
+    158|             if (!workers.length) w.terminate.mockImplementation(() => {
+    159|                 if (mode === 'throw') throw new Error('终止失败');
+       |                                             ^
+    160|                 return Promise.reject(new Error('终止失败'));
+    161|             });
+ ❯ FakeWorker.Mock [as terminate] ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:606:26
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:170:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "terminate throw 后必须等 owner exit，不能提前启动下一项". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: 终止失败
+ ❯ FakeWorker.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:159:45
+    157|             const w = new FakeWorker();
+    158|             if (!workers.length) w.terminate.mockImplementation(() => {
+    159|                 if (mode === 'throw') throw new Error('终止失败');
+       |                                             ^
+    160|                 return Promise.reject(new Error('终止失败'));
+    161|             });
+ ❯ FakeWorker.Mock [as terminate] ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:606:26
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:170:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "terminate throw 后必须等 owner exit，不能提前启动下一项". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: kill 失败
+ ❯ EventEmitter.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:188:39
+    186|         const child = Object.assign(new EventEmitter(), {
+    187|             stdout: new EventEmitter(), stderr: new EventEmitter(),
+    188|             kill: vi.fn(() => { throw new Error('kill 失败'); }),
+       |                                       ^
+    189|         });
+    190|         const controller = new AbortController();
+ ❯ EventEmitter.Mock ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:348:15
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:193:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "ffmpeg kill 抛错不能成为未捕获异常或悬挂请求". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: kill 失败
+ ❯ EventEmitter.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:188:39
+    186|         const child = Object.assign(new EventEmitter(), {
+    187|             stdout: new EventEmitter(), stderr: new EventEmitter(),
+    188|             kill: vi.fn(() => { throw new Error('kill 失败'); }),
+       |                                       ^
+    189|         });
+    190|         const controller = new AbortController();
+ ❯ EventEmitter.Mock ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:348:15
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:193:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "ffmpeg kill 抛错不能成为未捕获异常或悬挂请求". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯⎯ Uncaught Exception ⎯⎯⎯⎯⎯
+Error: kill 失败
+ ❯ EventEmitter.<anonymous> src/runtime/multimodal-whisper-local-cancel.test.ts:188:39
+    186|         const child = Object.assign(new EventEmitter(), {
+    187|             stdout: new EventEmitter(), stderr: new EventEmitter(),
+    188|             kill: vi.fn(() => { throw new Error('kill 失败'); }),
+       |                                       ^
+    189|         });
+    190|         const controller = new AbortController();
+ ❯ EventEmitter.Mock ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+spy@4.1.8/node_modules/@vitest/spy/dist/index.js:332:34
+ ❯ AbortSignal.cancel src/runtime/multimodal-whisper-local.ts:348:15
+ ❯ AbortSignal.[nodejs.internal.kHybridDispatch] node:internal/event_target:843:20
+ ❯ AbortSignal.dispatchEvent node:internal/event_target:776:26
+ ❯ runAbort node:internal/abort_controller:488:10
+ ❯ abortSignal node:internal/abort_controller:459:3
+ ❯ AbortController.abort node:internal/abort_controller:507:5
+ ❯ src/runtime/multimodal-whisper-local-cancel.test.ts:193:20
+ ❯ ../../../../Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+
+This error originated in "src/runtime/multimodal-whisper-local-cancel.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "ffmpeg kill 抛错不能成为未捕获异常或悬挂请求". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 13 passed (16)
+     Errors  6 errors
+   Start at  22:48:06
+   Duration  6.38s (transform 78ms, setup 0ms, import 193ms, tests 6.02s, environment 0ms)
+

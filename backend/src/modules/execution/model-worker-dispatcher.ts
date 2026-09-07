@@ -1,3 +1,4 @@
+import {createExecutionTranscribeAudioService} from "./execution-transcribe-audio.service";
 import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
@@ -48,7 +49,7 @@ interface WorkerDispatcherDeps {
   /** 现有队列领取前有界恢复已提交任务的准备；不得直接执行模型。 */
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
-export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
+export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
 export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
@@ -77,6 +78,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptLocal=createExecutionScriptLocalService(db,{now,budget:deps.budget});
   const scriptCheckpoints=createExecutionScriptCheckpointService(db,{now});
   const outcomes=createExecutionWorkerOutcomeService(db,{now});
+  const transcribeAudio=deps.executionMode==="model"&&deps.transcribeAudioStorage?createExecutionTranscribeAudioService(db,{now,objectStorageForCtx:deps.transcribeAudioStorage}):null;
   const asrPorts=deps.executionMode==="model"?createExecutionAsrPorts(db,{now,budget:deps.budget}):null;
   const assetPorts=deps.executionMode==="model" && deps.assetStorage ? createExecutionAssetPorts({db,now,budget:deps.budget,objectStorageForCtx:deps.assetStorage,resolveCredential:deps.resolveAssetCredential}) : null;
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
@@ -135,6 +137,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(["readTranscribeAudio","saveTranscribeAudio"].includes(port)){
+        const scope=activeTools.get(executionKey(ref));if(!transcribeAudio||!scope)throw new Error("TRANSCRIBE_AUDIO_PORT_UNAVAILABLE");
+        const work=transcribeAudio.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
       if(["reserveAsrRequest","startAsrRequest","settleAsrRequest"].includes(port)){
         if(!asrPorts)throw new Error("ASR_PORT_UNAVAILABLE");
         return asrPorts.invoke(ref,port,raw);

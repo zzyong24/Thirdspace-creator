@@ -1,0 +1,44 @@
+
+> @creatoros/backend@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '未保存原音频'
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts (14 tests | 1 failed | 13 skipped) 996ms
+   × 未保存原音频时不能启动 ASR 预留 31ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-asr-ports.service.test.ts > 未保存原音频时不能启动 ASR 预留
+AssertionError: promise resolved "{ …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "callId": "call_6b15a4db-faad-4f8d-81db-cb36b1ff044f",
++   "status": "reserved",
+  }
+
+ ❯ src/modules/execution/execution-asr-ports.service.test.ts:196:65
+    194|  const payload={...task!.payload as Record<string,unknown>};delete pay…
+    195|  await db.update(executionTasks).set({payload}).where(eq(executionTask…
+    196|  await expect(f.service.reserve(f.ref,{awemeId:'video',request})).reje…
+       |                                                                 ^
+    197| });
+    198|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:48:29
+   Duration  2.59s (transform 825ms, setup 0ms, import 1.45s, tests 996ms, environment 0ms)
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @creatoros/backend@0.1.0 test: `vitest run src/modules/execution/execution-asr-ports.service.test.ts -t '未保存原音频'`
+Exit status 1

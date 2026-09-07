@@ -9721,6 +9721,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
+    transcribeAudioStorage:objectStorageForCtx,
     assetStorage:objectStorageForCtx,resolveAssetCredential:(c,owner)=>assetBusiness.resolveCredential(c,owner),
     projectCandidate(_c,input){return businessExecution.projectCandidate(input);},
     onError:code=>console.error(`[execution-worker] ${code}`),

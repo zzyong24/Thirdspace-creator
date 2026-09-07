@@ -177,3 +177,5 @@ export {createExecutionScheduledChildService} from "./execution-scheduled-child.
 export {createSubmittedTaskPreparationService} from "./submitted-task-preparation.service";
 
 export {createExecutionAsrPorts} from "./execution-asr-ports.service";
+
+export {createExecutionTranscribeAudioService} from "./execution-transcribe-audio.service";

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { and, eq, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
-import { asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
+import { transcribeAudioReceiptSchema, asrTaskInputSchema, asrRequestSchema, asrAudioManifestSchema, asrResultReceiptSchema, workerPortInputSchemas, type AsrRequest, type ExecutionRef, type WorkerPort } from "@creatoros/contract/execution-worker";
 import { canonicalJson } from "../ai/canonical-json";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -49,6 +49,8 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
                 const { protocol, provider, model, endpointDigest, language } = request;
                 if (!isDeepStrictEqual(input.identity, { protocol, provider, model, endpointDigest, language }))
                     throw new ConflictError('ASR 身份与冻结模型不符');
+                const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>|undefined)?.[awemeId]);
+                if(audio.state!=="ready"||audio.audioDigest!==request.audioDigest||audio.audioByteLength!==request.audioByteLength)throw new ConflictError("ASR 缺少与当前请求一致的原音频快照");
                 const manifest = manifestOf(request), current = manifests[awemeId], ledger = ledgerFor(scope), state = await ledger.inspect(ref);
                 if (current !== undefined) {
                     if (!isDeepStrictEqual(asrAudioManifestSchema.parse(current), manifest))

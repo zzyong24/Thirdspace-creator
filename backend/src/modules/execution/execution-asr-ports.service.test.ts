@@ -24,7 +24,7 @@ async function fixture(maxCalls = 3, store: Db = db) {
     const id = `asr-${++seq}`, now = () => new Date().toISOString(), ctx = { userId: 'asr-user', accountId: 'asr-account', requestId: id, source: 'user' as const };
     await store.insert(aiTasks).values({ id, userId: ctx.userId, accountId: ctx.accountId, taskType: 'transcribe.douyin', idempotencyKey: id, inputData: { awemeIds: ['video'] }, requestedAt: now() });
     const mapped = await createExecutionAuthorityService(store).bindAiTask(ctx, id);
-    await store.update(executionTasks).set({ payload: { aiTaskId: id, modelInput: { kind: 'transcribe.douyin', awemeIds: ['video'], identity } } }).where(eq(executionTasks.id, mapped.executionTaskId));
+    await store.update(executionTasks).set({ payload: { aiTaskId: id, transcribeAudioInputs:{video:{schemaVersion:1,state:'ready',storageKey:'fixture-input',audioDigest:request.audioDigest,audioByteLength:request.audioByteLength}}, modelInput: { kind: 'transcribe.douyin', awemeIds: ['video'], identity } } }).where(eq(executionTasks.id, mapped.executionTaskId));
     const tasks = createPersistentTaskService(store), claim = (await tasks.claimTask({ taskId: mapped.executionTaskId, workerId: 'fixture' }))!;
     const ref = { executionTaskId: mapped.executionTaskId, attempt: claim.lease.attempt, fenceToken: claim.lease.fenceToken }, budget = { maxCalls, maxTokens: 1000, deadlineMs: 60000 };
     const service = createExecutionAsrPorts(store, { now, budget });
@@ -123,6 +123,8 @@ it('临时磁盘数据库关闭重开后，真实 Qwen 分片适配器复用原�
         const audio = new Uint8Array(834);
         audio.set(frame);
         audio.set(frame, 417);
+        const [owner]=await opened.db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+        await opened.db.update(executionTasks).set({payload:{...owner!.payload as Record<string,unknown>,transcribeAudioInputs:{video:{schemaVersion:1,state:'ready',storageKey:'fixture-input',audioDigest:`sha256:${createHash('sha256').update(audio).digest('hex')}`,audioByteLength:audio.byteLength}}}}).where(eq(executionTasks.id,f.ref.executionTaskId));
         const fetcher = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: '片段' } }] })));
         const registry = { qwen: createQwenAsrAdapter({ fetch: fetcher, maxEncodedBytes: 600 }) };
         const spec = { provider: 'qwen', model: 'asr', baseUrl: 'https://fixture.invalid', kind: 'audio' as const, token: 'fixture-only' };
@@ -187,4 +189,11 @@ it('新租约不能替旧未知请求上传成功正文，但可回读已确认�
     const resumed = { ...confirmed.ref, attempt: confirmed.ref.attempt + 1, fenceToken: 'resumed-fence' };
     await db.update(executionTasks).set({ attempt: resumed.attempt, fenceToken: resumed.fenceToken }).where(eq(executionTasks.id, resumed.executionTaskId));
     expect((await confirmed.service.settle(resumed, { awemeId: 'video', callId: saved.callId, status: 'settled', result: { text: '原回执' } })).result).toEqual({ text: '原回执' });
+});
+
+it('未保存原音频时不能启动 ASR 预留',async()=>{
+ const f=await fixture();const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const payload={...task!.payload as Record<string,unknown>};delete payload.transcribeAudioInputs;
+ await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ await expect(f.service.reserve(f.ref,{awemeId:'video',request})).rejects.toThrow();
 });
