@@ -1,3 +1,4 @@
+import type { GuardedLaunchOptions } from "./chromium-guard";
 
 import { isSafeWebDomain,webDomainFromUrl } from "./web-domain";
 
@@ -163,9 +164,12 @@ export interface WebSessionCapableContext {
 
 /** loginWeb / checkWebSessionStatus 的可注入依赖(默认真 openWebContext;单测注 fake ctx)。 */
 export interface WebSessionDeps {
+  /** 每次真实启动独立领取；迁移探针与后续检查不能复用已释放的租约。 */
+  acquireLaunch?: (authDir: string, headless: boolean) => Promise<Pick<GuardedLaunchOptions, "onStopped" | "signal">>;
   openContext?: (
     authDir: string,
     headless: boolean,
+    options?: Pick<GuardedLaunchOptions, "onStopped" | "signal">,
   ) => Promise<WebSessionCapableContext>;
   // [T-370a] 登录态 DB 端口(persistence-client 绑 browserSessionsService + ctx 注入;缺省 =
   // 旧行为,只走 profile 目录)。saveState 失败(master-key 不可用)会**上抛人话错**(gate F-3
@@ -201,39 +205,40 @@ async function realArchiveLegacyProfile(authDir: string): Promise<void> {
 async function realOpenWebContext(
   authDir: string,
   headless: boolean,
+  options: Pick<GuardedLaunchOptions, "onStopped" | "signal"> = {},
 ): Promise<WebSessionCapableContext> {
-  const { chromium } = await import("@playwright/test");
-  const { mkdir } = await import("node:fs/promises");
   const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
-  await mkdir(authDir, { recursive: true }).catch(() => {});
-  // [T-236] 登录窗优先用**系统正式 Chrome**(channel:"chrome"),而非 Playwright 自带的
-  //   测试构建 Chromium:真机实测 Google OAuth 对测试构建/自动化痕迹格外警惕(强制 passkey
-  //   /拒登「browser may not be secure」),正式 Chrome 构建接受度高得多。仍是**独立隔离
-  //   profile(authDir)**,绝不连用户日常 Chrome(connectOverCDP 对用户 Chrome149 卡死,
-  //   记忆有档)。系统没装 Chrome → 回落自带 Chromium(功能不减,只是 OAuth 兼容差些)。
-  //   ignoreDefaultArgs 去掉 --enable-automation(减少「受自动化控制」横幅/检测面)。
-  const baseOpts = {
-    headless,
-    viewport: { width: 1440, height: 900 },
-    ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(登录窗警告横幅根因)
-    args: ["--disable-blink-features=AutomationControlled"],
-    ignoreDefaultArgs: ["--enable-automation"],
-  };
-  // [T-307] 统一浏览器选择(优先系统 Chrome → 回落**打包全量 chromium**):原来 catch 分支回落
-  //   裸 baseOpts(无 executablePath)→ 无系统 Chrome 时 headless 状态探针会找 chrome-headless-shell 崩;
-  //   且必须和 web-reader 读取用**同一套**选择,登录态 profile 才互通。
-  // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行(登录窗跨请求
-  //   保持打开时,同域状态探针不会把活窗的锁清掉/进程杀掉)→ 超时人话报错。
-  const { launchWithBrowser } = await import("./browser-launch");
-  const ctx = await guardedLaunch(
-    authDir,
-    () =>
-      launchWithBrowser((sel) =>
-        chromium.launchPersistentContext(authDir, { ...baseOpts, ...sel }),
-      ),
-    { label: "登录浏览器窗口" },
-  );
+  const ctx = await guardedLaunch(authDir, async () => {
+    // 准备失败也走同一个停止回调；取消后不再加载/启动外部浏览器。
+    const { chromium } = await import("@playwright/test");
+    const { mkdir } = await import("node:fs/promises");
+    await mkdir(authDir, { recursive: true }).catch(() => {});
+    options.signal?.throwIfAborted();
+    const { launchWithBrowser } = await import("./browser-launch");
+    // 保留系统 Chrome → 打包 Chromium、系统代理、沙箱与既有登录窗口参数。
+    return launchWithBrowser(sel => {
+      options.signal?.throwIfAborted();
+      return chromium.launchPersistentContext(authDir, {
+      headless,
+      viewport: { width: 1440, height: 900 },
+      ...chromiumSandboxOpts(),
+      args: ["--disable-blink-features=AutomationControlled"],
+      ignoreDefaultArgs: ["--enable-automation"],
+      ...sel,
+      });
+    });
+  }, { ...options, label: "登录浏览器窗口" });
   return ctx as unknown as WebSessionCapableContext;
+}
+
+async function openSessionContext(authDir: string, headless: boolean, deps: WebSessionDeps) {
+  if (deps.acquireLaunch) {
+    // 先重试已确认停止的旧释放；否则重新领取会被同一未清理租约拦住。
+    const { retryBrowserProfileCleanup } = await import("./chromium-guard");
+    await retryBrowserProfileCleanup(authDir);
+  }
+  const options = await deps.acquireLaunch?.(authDir, headless);
+  return (deps.openContext ?? realOpenWebContext)(authDir, headless, options);
 }
 
 /**
@@ -246,8 +251,7 @@ export async function loginWeb(
   deps: WebSessionDeps = {},
 ): Promise<{ loggedIn: boolean }> {
   const timeoutSec = opts.timeoutSec ?? 300;
-  const openContext = deps.openContext ?? realOpenWebContext;
-  const ctx = await openContext(opts.authDir, false);
+  const ctx = await openSessionContext(opts.authDir, false, deps);
   const cookieUrl = `https://${opts.domain}`;
   try {
     const page = ctx.pages()[0] ?? (await ctx.newPage());
@@ -320,8 +324,7 @@ export async function openWebLoginWindow(
   opts: { authDir: string; url: string; domain: string },
   deps: WebSessionDeps = {},
 ): Promise<WebLoginHandle> {
-  const openContext = deps.openContext ?? realOpenWebContext;
-  const ctx = await openContext(opts.authDir, false); // 有头,让用户自己登
+  const ctx = await openSessionContext(opts.authDir, false, deps); // 有头,让用户自己登
   const page = ctx.pages()[0] ?? (await ctx.newPage());
   await page
     .goto(opts.url, { waitUntil: "domcontentloaded", timeout: 30_000 })
@@ -373,10 +376,9 @@ export async function importLegacyProfileState(
   if (!isSafeWebDomain(opts.domain)) return null;
   const hasData = deps.legacyProfileHasData ?? realLegacyProfileHasData;
   const archive = deps.archiveLegacyProfile ?? realArchiveLegacyProfile;
-  const openContext = deps.openContext ?? realOpenWebContext;
   if (!(await hasData(opts.authDir).catch(() => false))) return null;
   let stateJson: string | null = null;
-  const ctx = await openContext(opts.authDir, true);
+  const ctx = await openSessionContext(opts.authDir, true, deps);
   try {
     if (typeof ctx.storageState === "function") {
       const state = await ctx.storageState().catch(() => null);
@@ -414,7 +416,6 @@ export async function checkWebSessionStatus(
   opts: { authDir: string; domain: string },
   deps: WebSessionDeps = {},
 ): Promise<{ loggedIn: boolean }> {
-  const openContext = deps.openContext ?? realOpenWebContext;
   // [T-370a] DB 单一真值优先:有该域加密 state → 注入回灌(addCookies + localStorage init
   // script,§2.5)后按 cookie 判定(Chromium 会丢弃过期 cookie,注入后读回 = 真实有效性);
   // 无 → 存量惰性迁移(旧 `.auth/web/<domain>` 目录导入 DB 后归档);都无 → 旧行为
@@ -426,7 +427,7 @@ export async function checkWebSessionStatus(
   if (!stateJson) {
     stateJson = await importLegacyProfileState(opts, deps);
   }
-  const ctx = await openContext(opts.authDir, true);
+  const ctx = await openSessionContext(opts.authDir, true, deps);
   try {
     if (stateJson) await injectStorageState(ctx, stateJson);
     const cookies = await ctx

@@ -30,6 +30,14 @@ export class BrowserLaunchError extends Error {
   }
 }
 
+/** 浏览器已停但宿主租约尚未释放；宿主持有同一清理能力重试，不能重新启动。 */
+export class BrowserCleanupPendingError extends BrowserLaunchError {
+  constructor(readonly retryCleanup: () => Promise<void>) {
+    super("浏览器已停止，登录档案释放尚未完成，请重试清理。", "BROWSER_CLEANUP_PENDING");
+    this.name = "BrowserCleanupPendingError";
+  }
+}
+
 /** 持久 profile 锁的稳定内部码；收藏链会映射为用户可操作的 contract code。 */
 export const CHROMIUM_PROFILE_LOCKED_CODE = "CHROMIUM_PROFILE_LOCKED";
 
@@ -137,7 +145,35 @@ export async function ensureChromiumLaunchable(
 // launch 那一瞬间。旧实现只等前一个 launch Promise resolve，context 仍活着时第二个请求
 // 已经开始 launchPersistentContext，必然撞 SingletonLock。队列尾因此必须一直持有到
 // context close/close event，再放行同 profile 的后继请求。
-const launchQueues = new Map<string, Promise<void>>();
+type LaunchQueue = Promise<void> & { previous?: LaunchQueue; retryCleanup?: () => Promise<void> };
+const launchQueues = new Map<string, LaunchQueue>();
+async function retryStoppedQueue(queue: LaunchQueue): Promise<void> {
+  if (queue.previous) await retryStoppedQueue(queue.previous);
+  if (queue.retryCleanup) await queue.retryCleanup();
+}
+/** 仅重试已确认浏览器停止后的清理，绝不关闭活资源或抢占租约。 */
+export async function retryBrowserProfileCleanup(
+  profileDir: string,
+  opts: Pick<GuardedLaunchOptions, "signal" | "queueTimeoutMs"> = {},
+): Promise<void> {
+  opts.signal?.throwIfAborted();
+  const queue = launchQueues.get(profileDir);
+  if (!queue) return;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
+  try {
+    await Promise.race([retryStoppedQueue(queue), new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new BrowserCleanupPendingError(() => retryBrowserProfileCleanup(profileDir))), opts.queueTimeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS);
+      onAbort = () => reject(opts.signal!.reason);
+      opts.signal?.addEventListener("abort", onAbort, { once: true });
+      if (opts.signal?.aborted) onAbort();
+    })]);
+  } finally {
+    if (timer) clearTimeout(timer);
+    if (onAbort) opts.signal?.removeEventListener("abort", onAbort);
+  }
+}
+
 const liveContexts = new Map<string, number>();
 
 /** 单测辅助:读某 profile 当前活 context 数。 */
@@ -152,6 +188,8 @@ interface Closable {
 }
 
 export interface GuardedLaunchOptions {
+  /** 宿主预先持有的资源租约：仅实际停止后释放；失败时保持本地占用，可重试。 */
+  onStopped?: () => Promise<void>;
   /** 取消排队或等待启动；已启动但尚未关闭的资源继续持有占用。 */
   signal?: AbortSignal;
   /** 等待前一个浏览器退出的上限，默认同启动超时。 */
@@ -197,20 +235,45 @@ export async function guardedLaunch<T extends Closable>(
 ): Promise<T> {
   const timeoutMs = opts.timeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS;
   const label = opts.label ?? "浏览器",signal=opts.signal;
-  signal?.throwIfAborted();
   let resourceUnresolved=false;
   let releaseQueue=()=>{};
+  let registerCleanup: (retry: () => Promise<void>) => void = () => {};
+  let stopped = false;
+  let stopPending: Promise<void> | undefined;
+  const notifyStopped = (): Promise<void> => {
+    if (stopped) return Promise.resolve();
+    if (!stopPending) {
+      stopPending = Promise.resolve().then(() => opts.onStopped?.()).then(() => { stopped = true; });
+      void stopPending.catch(() => { stopPending = undefined; });
+    }
+    return stopPending;
+  };
+  const finishStopped = async (): Promise<void> => {
+    registerCleanup(finishStopped);
+    try { await notifyStopped(); releaseQueue(); }
+    catch { registerCleanup(finishStopped); throw new BrowserCleanupPendingError(finishStopped); }
+  };
+  if (signal?.aborted) { await finishStopped(); signal.throwIfAborted(); }
   const track=(ctx:T):T=>{
     if(profileDir)liveContexts.set(profileDir,liveContextCount(profileDir)+1);
     let released=false;
-    const release=()=>{
-      if(released)return;released=true;resourceUnresolved=false;
-      if(profileDir)liveContexts.set(profileDir,Math.max(0,liveContextCount(profileDir)-1));
-      releaseQueue();
+    let releasePending: Promise<void> | undefined;
+    const release=(): Promise<void> => {
+      if (released) return Promise.resolve();
+      if (!releasePending) {
+        releasePending = notifyStopped().then(() => {
+          released=true;resourceUnresolved=false;
+          if(profileDir)liveContexts.set(profileDir,Math.max(0,liveContextCount(profileDir)-1));
+          releaseQueue();
+        });
+        registerCleanup(release);
+        void releasePending.catch(() => { releasePending = undefined; });
+      }
+      return releasePending;
     };
     const close=ctx.close.bind(ctx);
-    ctx.close=async()=>{await close();release();};
-    try{ctx.on?.('close',release);}catch{/* 无事件时以 close 成功作为关闭证据。 */}
+    ctx.close=async()=>{await close();await release();};
+    try{ctx.on?.('close',()=>{void release().catch(()=>{});});}catch{/* 无事件时以 close 成功作为关闭证据。 */}
     return ctx;
   };
   const attempt=async(runPreflight=true):Promise<T>=>{
@@ -231,7 +294,7 @@ export async function guardedLaunch<T extends Closable>(
       ]);
     }catch(error){
       // 超时/取消先返回；队列仍由未确认启动或迟到 context 持有，直到实际退出。
-      if(resourceUnresolved)void launching.then(async ctx=>{await ctx.close();},()=>{releaseQueue();}).catch(()=>{});
+      if(resourceUnresolved)void launching.then(async ctx=>{await ctx.close();},()=>finishStopped()).catch(()=>{});
       signal?.throwIfAborted();
       if(error instanceof BrowserLaunchError)throw error;
       if(isChromiumProfileLockedFailure(error))throw new BrowserLaunchError(`${label}的登录档案仍被占用。已自动清理并重试一次；请关闭相关登录窗口后再试。`,CHROMIUM_PROFILE_LOCKED_CODE);
@@ -250,23 +313,28 @@ export async function guardedLaunch<T extends Closable>(
       await ensureChromiumLaunchable(profileDir,deps);return attempt(false);
     }
   };
-  if(!profileDir)return runGuarded();
+  if(!profileDir) {
+    try { return await runGuarded(); }
+    catch (error) { if (!resourceUnresolved) await finishStopped(); throw error; }
+  }
   const previousLease=launchQueues.get(profileDir)??Promise.resolve();
   let resolveLease!:()=>void;
   const leaseOpen=new Promise<void>(resolve=>{resolveLease=resolve;});
-  const leaseTail=previousLease.catch(()=>{}).then(()=>leaseOpen);
+  const leaseTail=previousLease.catch(()=>{}).then(()=>leaseOpen) as LaunchQueue;
+  leaseTail.previous=previousLease;
+  registerCleanup=retry=>{leaseTail.retryCleanup=retry;};
   launchQueues.set(profileDir,leaseTail);
   void leaseTail.finally(()=>{if(launchQueues.get(profileDir)===leaseTail)launchQueues.delete(profileDir);});
   let released=false;
-  releaseQueue=()=>{if(released)return;released=true;resolveLease();};
+  releaseQueue=()=>{if(released)return;released=true;delete leaseTail.retryCleanup;resolveLease();};
   let onAbort:(()=>void)|undefined;
   let queueTimer:ReturnType<typeof setTimeout>|undefined;
   try{
-    await Promise.race([previousLease.catch(()=>{}),new Promise<never>((_,reject)=>{queueTimer=setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),opts.queueTimeoutMs??timeoutMs);onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();})]);
+    await Promise.race([retryStoppedQueue(previousLease).then(()=>previousLease.catch(()=>{})),new Promise<never>((_,reject)=>{queueTimer=setTimeout(()=>reject(new BrowserLaunchError(`${label}的登录档案仍被占用，请等待相关浏览器退出后重试。`,CHROMIUM_PROFILE_LOCKED_CODE)),opts.queueTimeoutMs??timeoutMs);onAbort=()=>reject(signal!.reason);signal?.addEventListener('abort',onAbort,{once:true});if(signal?.aborted)onAbort();})]);
     if(queueTimer)clearTimeout(queueTimer);
     if(onAbort)signal?.removeEventListener('abort',onAbort);
     signal?.throwIfAborted();return await runGuarded();
   }catch(error){
-    if(!resourceUnresolved)releaseQueue();throw error;
+    if(!resourceUnresolved)await finishStopped();throw error;
   }finally{if(queueTimer)clearTimeout(queueTimer);if(onAbort)signal?.removeEventListener('abort',onAbort);}
 }

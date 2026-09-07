@@ -1,0 +1,84 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+stderr | src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+stderr | src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+stderr | src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+[chromium-guard] profile 锁启动失败，确认无活 context 后清理并重试一次
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts (12 tests | 4 failed) 18ms
+   × 实际关闭后才通知宿主释放租约，释放完成前不放行队列 3ms (retry x2)
+   × 启动超时不通知宿主释放，迟到 context 实际关闭后才通知 2ms (retry x2)
+   × 关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行 3ms (retry x2)
+   × 普通启动失败与锁重试仅在最终停止时通知宿主一次 1ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 实际关闭后才通知宿主释放租约，释放完成前不放行队列
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 实际关闭后才通知宿主释放租约，释放完成前不放行队列
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 实际关闭后才通知宿主释放租约，释放完成前不放行队列
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:61:67
+     59|  const first=await guardedLaunch(profile,async()=>({close:physicalClos…
+     60|  expect(onStopped).not.toHaveBeenCalled();const closing=first.close();…
+     61|  expect(physicalClose).toHaveBeenCalledTimes(1);expect(onStopped).toHa…
+       |                                                                   ^
+     62|  const next=vi.fn(async()=>({close:async()=>{}})),second=guardedLaunch…
+     63|  confirmation.resolve();await closing;await (await second).close();exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时不通知宿主释放，迟到 context 实际关闭后才通知
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时不通知宿主释放，迟到 context 实际关闭后才通知
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 启动超时不通知宿主释放，迟到 context 实际关闭后才通知
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:69:197
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:75:26
+     73|  const ctx=await guardedLaunch(profile,async()=>({close:physical}),{on…
+     74|  await expect(ctx.close()).rejects.toThrow('still live');expect(onStop…
+     75|  await expect(ctx.close()).rejects.toThrow('db unavailable');expect(li…
+       |                          ^
+     76|  await ctx.close();expect(onStopped).toHaveBeenCalledTimes(2);expect(l…
+     77| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+ FAIL  src/runtime/browser/chromium-guard-lifecycle.test.ts > 普通启动失败与锁重试仅在最终停止时通知宿主一次
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/runtime/browser/chromium-guard-lifecycle.test.ts:81:45
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 8 passed (12)
+   Start at  01:05:00
+   Duration  196ms (transform 28ms, setup 0ms, import 36ms, tests 18ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime/browser/chromium-guard-lifecycle.test.ts

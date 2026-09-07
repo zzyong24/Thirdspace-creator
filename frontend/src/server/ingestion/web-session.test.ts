@@ -463,3 +463,49 @@ describe("checkWebSessionStatus(headless 被动探针,不弹窗)", () => {
     expect(closed()).toBe(true);
   });
 });
+it('T-915 存量迁移与后续探针各领取自己的启动租约', async () => {
+  const events: string[] = [];
+  let count = 0;
+  const page = { goto: async () => {}, waitForTimeout: async () => {} };
+  const result = await checkWebSessionStatus({ authDir: '/isolated/web-owner', domain: 'example.com' }, {
+    acquireLaunch: async () => {
+      const id = ++count; events.push(`acquire:${id}`);
+      return { onStopped: async () => { events.push(`release:${id}`); } };
+    },
+    openContext: async (_dir, _headless, options) => {
+      events.push(`open:${count}`);
+      return { pages: () => [page], newPage: async () => page, cookies: async () => [{ name: 'sessionid' }],
+        storageState: async () => ({ cookies: [{ name: 'sessionid', value: 'fixture' }], origins: [] }),
+        close: async () => { await options?.onStopped?.(); } };
+    },
+    getState: async () => null, saveState: async () => {}, legacyProfileHasData: async () => true,
+    archiveLegacyProfile: async () => { events.push('archive'); },
+  });
+  expect(result).toEqual({ loggedIn: true });
+  expect(events).toEqual(['acquire:1', 'open:1', 'release:1', 'archive', 'acquire:2', 'open:2', 'release:2']);
+});
+it('T-915 再次登录先恢复已停止资源的释放，再申请新租约', async () => {
+  const { guardedLaunch } = await import('@creatoros/ai-worker/browser/chromium-guard');
+  const events: string[] = [];
+  let held = false, releases = 0;
+  const page = { goto: async () => {}, waitForTimeout: async () => {} };
+  const deps = {
+    acquireLaunch: async () => {
+      if (held) throw new Error('profile still owned');
+      held = true; events.push('acquire');
+      return { onStopped: async () => {
+        if (++releases === 1) { events.push('release-failed'); throw new Error('db unavailable'); }
+        held = false; events.push('release');
+      } };
+    },
+    openContext: async (dir: string, _headless: boolean, options: { onStopped?: () => Promise<void> } = {}) => guardedLaunch(dir,
+      async () => ({ pages: () => [page], newPage: async () => page, cookies: async () => [], close: async () => {} }), options,
+      { listProfileProcesses: async () => [], killPid: async () => {}, removeFile: async () => {} }),
+  };
+  const opts = { authDir: '/isolated/web-owner-recover', domain: 'example.com', url: 'https://example.com' };
+  await (await openWebLoginWindow(opts, deps)).cancel();
+  expect(held).toBe(true);
+  await (await openWebLoginWindow(opts, deps)).cancel();
+  expect(held).toBe(false);
+  expect(events).toEqual(['acquire', 'release-failed', 'release', 'acquire', 'release']);
+});

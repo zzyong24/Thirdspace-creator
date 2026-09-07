@@ -150,3 +150,19 @@ it('数据库拒绝混合或缺失owner，旧租约升级保留原占用与回�
         expect((await isolated.query('SELECT owner_execution_task_id FROM execution_browser_profile_leases')).rows).toEqual([{ owner_execution_task_id: 'legacy-task' }]);
     } finally { await isolated.close(); }
 });
+it('真实守卫关闭证明绑定同一宿主租约：关闭失败保留，关闭成功后Worker可领取', async () => {
+    const { guardedLaunch } = await import('@creatoros/ai-worker/browser/chromium-guard');
+    const service = createExecutionBrowserProfileLeaseService(db, { now });
+    const host = { userId: 'hook-user', domain: 'example.com', profileKey: 'f'.repeat(64), hostInstanceId: 'hook-host', hostOperationId: 'hook-login' };
+    const receipt = await service.acquireForHost(host);
+    let closeFails = true;
+    const ctx = await guardedLaunch('/isolated/host-profile-db-hook', async () => ({ close: async () => { if (closeFails) throw new Error('browser remains open'); } }), {
+        onStopped: async () => { await service.releaseAfterHostStopped(host, receipt.leaseId); },
+    }, { listProfileProcesses: async () => [], killPid: async () => {}, removeFile: async () => {} });
+    const worker = await owner('hook-worker', 'hook-user');
+    await expect(ctx.close()).rejects.toThrow('browser remains open');
+    await expect(service.acquireProfile(worker.ref, host.domain, host.profileKey)).rejects.toMatchObject({ code: 'BROWSER_PROFILE_BUSY' });
+    closeFails = false;
+    await ctx.close();
+    expect((await service.acquireProfile(worker.ref, host.domain, host.profileKey)).leaseId).not.toBe(receipt.leaseId);
+});

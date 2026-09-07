@@ -1,5 +1,5 @@
 import {afterEach,it,expect,vi} from 'vitest';
-import {guardedLaunch,liveContextCount} from './chromium-guard';
+import {guardedLaunch,liveContextCount,retryBrowserProfileCleanup} from './chromium-guard';
 const deps={listProfileProcesses:async()=>[],killPid:async()=>{},removeFile:async()=>{}};
 function deferred<T>(){let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>{resolve=r;});return {promise,resolve};}
 afterEach(()=>vi.useRealTimers());
@@ -53,4 +53,49 @@ it('排队有界超时只退出自己的等待，不能清理或释放原浏览�
  const waiting=guardedLaunch(profile,next,{queueTimeoutMs:5},deps),failure=expect(waiting).rejects.toMatchObject({code:'CHROMIUM_PROFILE_LOCKED'});await vi.advanceTimersByTimeAsync(10);await failure;
  expect(next).not.toHaveBeenCalled();expect(liveContextCount(profile)).toBe(1);await first.close();await vi.advanceTimersByTimeAsync(0);expect(next).not.toHaveBeenCalled();
  const final=await guardedLaunch(profile,next,{},deps);await final.close();
+});
+it('实际关闭后才通知宿主释放租约，释放完成前不放行队列',async()=>{
+ vi.useFakeTimers();const profile='/isolated/guard-host-release',confirmation=deferred<void>(),onStopped=vi.fn(()=>confirmation.promise),physicalClose=vi.fn(async()=>{});
+ const first=await guardedLaunch(profile,async()=>({close:physicalClose}),{onStopped},deps);
+ expect(onStopped).not.toHaveBeenCalled();const closing=first.close();await vi.advanceTimersByTimeAsync(0);
+ expect(physicalClose).toHaveBeenCalledTimes(1);expect(onStopped).toHaveBeenCalledTimes(1);
+ const next=vi.fn(async()=>({close:async()=>{}})),second=guardedLaunch(profile,next,{},deps);await vi.advanceTimersByTimeAsync(0);expect(next).not.toHaveBeenCalled();
+ confirmation.resolve();await closing;await (await second).close();expect(onStopped).toHaveBeenCalledTimes(1);
+});
+it('启动超时不通知宿主释放，迟到 context 实际关闭后才通知',async()=>{
+ vi.useFakeTimers();const profile='/isolated/guard-late-host-release',closing=deferred<void>(),launch=deferred<{close:()=>Promise<void>}>(),onStopped=vi.fn(async()=>{});
+ const pending=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5,onStopped},deps),failure=expect(pending).rejects.toThrow('启动超时');
+ await vi.advanceTimersByTimeAsync(10);await failure;expect(onStopped).not.toHaveBeenCalled();
+ launch.resolve({close:()=>closing.promise});await vi.advanceTimersByTimeAsync(0);expect(onStopped).not.toHaveBeenCalled();closing.resolve();await vi.advanceTimersByTimeAsync(0);expect(onStopped).toHaveBeenCalledTimes(1);
+});
+it('关闭失败不通知宿主；释放失败可通过再次关闭重试且不提前放行',async()=>{
+ vi.useFakeTimers();const profile='/isolated/guard-host-release-failed',onStopped=vi.fn().mockRejectedValueOnce(Error('db unavailable')).mockResolvedValue(undefined),physical=vi.fn().mockRejectedValueOnce(Error('still live')).mockResolvedValue(undefined);
+ const ctx=await guardedLaunch(profile,async()=>({close:physical}),{onStopped},deps);
+ await expect(ctx.close()).rejects.toThrow('still live');expect(onStopped).not.toHaveBeenCalled();
+ await expect(ctx.close()).rejects.toThrow('db unavailable');expect(liveContextCount(profile)).toBe(1);
+ await ctx.close();expect(onStopped).toHaveBeenCalledTimes(2);expect(liveContextCount(profile)).toBe(0);
+});
+it('普通启动失败与锁重试仅在最终停止时通知宿主一次',async()=>{
+ const onStopped=vi.fn(async()=>{});let attempts=0;
+ await expect(guardedLaunch('/isolated/guard-host-final-failure',async()=>{attempts++;throw Object.assign(Error('locked'),{code:'EBUSY'});},{onStopped},deps)).rejects.toMatchObject({code:'CHROMIUM_PROFILE_LOCKED'});
+ expect(attempts).toBe(2);expect(onStopped).toHaveBeenCalledTimes(1);
+});
+it('启动失败未返回context时，宿主可用同一清理凭证恢复释放',async()=>{
+ const onStopped=vi.fn().mockRejectedValueOnce(Error('db temporary')).mockResolvedValue(undefined),profile='/isolated/guard-host-cleanup-handle';
+ const error=await guardedLaunch(profile,async()=>{throw Error('launch failed');},{onStopped},deps).catch(error=>error);
+ expect(error.code).toBe('BROWSER_CLEANUP_PENDING');expect(typeof error.retryCleanup).toBe('function');
+ await error.retryCleanup();expect(onStopped).toHaveBeenCalledTimes(2);
+ const next=await guardedLaunch(profile,async()=>({close:async()=>{}}),{},deps);await next.close();
+});
+it('超时后的迟到资源已停但释放失败，后继请求重试原清理后再启动',async()=>{
+ vi.useFakeTimers();const profile='/isolated/guard-late-host-cleanup-retry',launch=deferred<{close:()=>Promise<void>}>(),onStopped=vi.fn().mockRejectedValueOnce(Error('db down')).mockResolvedValue(undefined);
+ const pending=guardedLaunch(profile,()=>launch.promise,{timeoutMs:5,onStopped},deps),failure=expect(pending).rejects.toThrow('启动超时');await vi.advanceTimersByTimeAsync(10);await failure;
+ launch.resolve({close:async()=>{}});await vi.advanceTimersByTimeAsync(0);expect(onStopped).toHaveBeenCalledTimes(1);expect(liveContextCount(profile)).toBe(1);
+ const next=await guardedLaunch(profile,async()=>({close:async()=>{}}),{},deps);expect(onStopped).toHaveBeenCalledTimes(2);await next.close();expect(liveContextCount(profile)).toBe(0);
+});
+it('宿主清理等待超时不重复结算或释放占用，原清理仍可完成',async()=>{
+ vi.useFakeTimers();const profile='/isolated/guard-host-pending-timeout',settlement=deferred<void>(),onStopped=vi.fn(()=>settlement.promise);
+ const ctx=await guardedLaunch(profile,async()=>({close:async()=>{}}),{onStopped},deps),closing=ctx.close();await vi.advanceTimersByTimeAsync(0);
+ const waiting=retryBrowserProfileCleanup(profile,{queueTimeoutMs:5}),failure=expect(waiting).rejects.toMatchObject({code:'BROWSER_CLEANUP_PENDING'});await vi.advanceTimersByTimeAsync(10);await failure;
+ expect(onStopped).toHaveBeenCalledTimes(1);expect(liveContextCount(profile)).toBe(1);settlement.resolve();await closing;expect(liveContextCount(profile)).toBe(0);
 });
