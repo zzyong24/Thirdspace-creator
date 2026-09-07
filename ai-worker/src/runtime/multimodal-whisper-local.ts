@@ -62,16 +62,29 @@ export function whisperModelId(level: WhisperLevel): string {
 export type AsrPipeline = (
   audio: Float32Array,
   options?: Record<string, unknown>,
+  signal?: AbortSignal,
 ) => Promise<{ text: string } | { text: string }[]>;
 
 /** 可注入副作用(测试零成本:注 fake pipeline/fake decode;真跑走默认 transformers + ffmpeg)。 */
 export interface WhisperLocalAdapterDeps {
   /** 惰性拿到某级别的 ASR pipeline。**必须自身幂等**:同一级别第二次调用复用首次实例
    *  (不重下模型)。真实现见 createDefaultPipelineProvider(内部 memo by level)。 */
-  getPipeline: (modelId: string) => Promise<AsrPipeline>;
+  getPipeline: (modelId: string, signal?: AbortSignal) => Promise<AsrPipeline>;
   /** 把音频字节(MP3/m4a 等容器)解成 16kHz mono Float32 PCM([-1,1] 归一)。
    *  默认 ffmpeg spawn(见 createFfmpegPcmDecoder);测试注 fake(返固定 Float32Array)。 */
-  decodeAudioToFloat32: (audioBytes: Uint8Array) => Promise<Float32Array>;
+  decodeAudioToFloat32: (audioBytes: Uint8Array, signal?: AbortSignal) => Promise<Float32Array>;
+}
+
+function abortError(): Error {
+  const error = new Error("本地转写已取消");
+  error.name = "AbortError";
+  return error;
+}
+
+function throwIfAborted(signal?: AbortSignal, error?: unknown): void {
+  if (signal?.aborted || (error && typeof error === "object" && "name" in error && error.name === "AbortError")) {
+    throw abortError();
+  }
 }
 
 /**
@@ -83,13 +96,16 @@ async function transcribeAudio(
   opts: TranscribeAudioOptions,
   deps: WhisperLocalAdapterDeps,
 ): Promise<GeneratedTranscript> {
+  throwIfAborted(opts.signal);
   const level = whisperLevelFromSpec(spec);
   const modelId = whisperModelId(level);
 
   let pcm: Float32Array;
   try {
-    pcm = await deps.decodeAudioToFloat32(opts.audioBytes);
+    pcm = await deps.decodeAudioToFloat32(opts.audioBytes, opts.signal);
+    throwIfAborted(opts.signal);
   } catch (err) {
+    throwIfAborted(opts.signal, err);
     throw new MultimodalGenerationError(
       `whisper-local 音频解码失败(${modelId}): ${
         err instanceof Error ? err.message : String(err)
@@ -107,8 +123,10 @@ async function transcribeAudio(
   let pipeline: AsrPipeline;
   try {
     // getPipeline 幂等:首次下模型(~几百 MB)+ 建 pipeline,后续复用(不重下)。
-    pipeline = await deps.getPipeline(modelId);
+    pipeline = await deps.getPipeline(modelId, opts.signal);
+    throwIfAborted(opts.signal);
   } catch (err) {
+    throwIfAborted(opts.signal, err);
     throw new MultimodalGenerationError(
       `whisper-local 模型加载失败(${modelId}): ${
         err instanceof Error ? err.message : String(err)
@@ -130,8 +148,10 @@ async function transcribeAudio(
       stride_length_s: 5,
       ...(opts.language ? { language: opts.language, task: "transcribe" } : {}),
     };
-    result = await pipeline(pcm, pipelineOptions);
+    result = await pipeline(pcm, pipelineOptions, opts.signal);
+    throwIfAborted(opts.signal);
   } catch (err) {
+    throwIfAborted(opts.signal, err);
     if (err instanceof MultimodalGenerationError) throw err;
     throw new MultimodalGenerationError(
       `whisper-local 推理失败(${modelId}): ${
@@ -226,6 +246,7 @@ export interface FfmpegDecoderDeps {
     command: string,
     args: string[],
   ) => {
+    kill(signal?: NodeJS.Signals): boolean;
     stdout: { on(event: "data", cb: (chunk: Uint8Array) => void): void };
     stderr: { on(event: "data", cb: (chunk: Uint8Array) => void): void };
     on(event: "error", cb: (err: Error) => void): void;
@@ -267,9 +288,10 @@ function realFfmpegDeps(): FfmpegDecoderDeps {
  */
 export function createFfmpegPcmDecoder(
   deps: FfmpegDecoderDeps = realFfmpegDeps(),
-): (audioBytes: Uint8Array) => Promise<Float32Array> {
-  return (audioBytes: Uint8Array) =>
+): (audioBytes: Uint8Array, signal?: AbortSignal) => Promise<Float32Array> {
+  return (audioBytes: Uint8Array, signal?: AbortSignal) =>
     new Promise<Float32Array>((resolve, reject) => {
+      throwIfAborted(signal);
       // 解析链:显式注入 ffmpegPath > 注入的解析器 > 真 resolveFfmpegPath(env → 随包 → PATH → 报错)。
       let ffmpegPath: string;
       try {
@@ -316,16 +338,26 @@ export function createFfmpegPcmDecoder(
 
       const chunks: Uint8Array[] = [];
       let stderrTail = "";
-      child.stdout.on("data", (c) => chunks.push(c));
+      let failure: Error | undefined;
+      let cancelled = false;
+      const cancel = () => {
+        if (cancelled) return;
+        cancelled = true;
+        chunks.length = 0;
+        // 必须等 close 确认进程和管道关闭，不能只让调用方的 Promise 提前结束。
+        child.kill("SIGKILL");
+      };
+      child.stdout.on("data", (c) => { if (!cancelled) chunks.push(c); });
       child.stderr.on("data", (c) => {
-        stderrTail = (stderrTail + Buffer.from(c).toString("utf8")).slice(-500);
+        if (!cancelled) stderrTail = (stderrTail + Buffer.from(c).toString("utf8")).slice(-500);
       });
-      child.on("error", (err) =>
-        reject(
-          new Error(`createFfmpegPcmDecoder: ffmpeg 进程错误: ${err.message}`),
-        ),
-      );
+      child.on("error", (err) => {
+        failure = new Error(`createFfmpegPcmDecoder: ffmpeg 进程错误: ${err.message}`);
+      });
       child.on("close", (code) => {
+        signal?.removeEventListener("abort", cancel);
+        if (cancelled) { reject(abortError()); return; }
+        if (failure) { reject(failure); return; }
         if (code !== 0) {
           reject(
             new Error(
@@ -348,15 +380,23 @@ export function createFfmpegPcmDecoder(
         );
       });
 
-      // 把音频字节写进 ffmpeg stdin(真实现有 stdin;fake 可省略)。
+      signal?.addEventListener("abort", cancel, { once: true });
+      if (signal?.aborted) cancel();
+      // stdin 出错后同样等 close，确保解码资源不遗留。
       if (child.stdin) {
-        child.stdin.on("error", (err) =>
-          reject(
-            new Error(`createFfmpegPcmDecoder: ffmpeg stdin 错误: ${err.message}`),
-          ),
-        );
-        child.stdin.write(audioBytes);
-        child.stdin.end();
+        child.stdin.on("error", (err) => {
+          failure = new Error(`createFfmpegPcmDecoder: ffmpeg stdin 错误: ${err.message}`);
+          child.kill("SIGKILL");
+        });
+        if (!cancelled) {
+          try {
+            child.stdin.write(audioBytes);
+            child.stdin.end();
+          } catch (err) {
+            failure = err instanceof Error ? err : new Error(String(err));
+            child.kill("SIGKILL");
+          }
+        }
       }
     });
 }
@@ -512,19 +552,18 @@ export function createWorkerPipelineProvider(
 ): (modelId: string) => Promise<AsrPipeline> {
   let worker: WhisperWorkerLike | null = null;
   let nextId = 1;
-  const pending = new Map<
-    number,
-    { resolve: (text: string) => void; reject: (err: Error) => void }
-  >();
-  // 串行队列(用户拍板「一个个跑」):promise 链,前一条推理(成败皆可)结束才发下一条。
+  type Pending = { owner: WhisperWorkerLike; resolve: (text: string) => void; reject: (err: Error) => void };
+  const pending = new Map<number, Pending>();
   let queue: Promise<unknown> = Promise.resolve();
-
   const spawn = spawnWorker ?? (() => createWhisperWorker());
 
-  function failAllPending(err: Error): void {
-    for (const [, p] of pending) p.reject(err);
-    pending.clear();
-    worker = null; // 下次调用重建,不永久钉死
+  function failPending(owner: WhisperWorkerLike, err: Error): void {
+    if (worker === owner) worker = null;
+    for (const [id, p] of pending) {
+      if (p.owner !== owner) continue;
+      pending.delete(id);
+      p.reject(err);
+    }
   }
 
   function ensureWorker(): WhisperWorkerLike {
@@ -532,64 +571,67 @@ export function createWorkerPipelineProvider(
     const w = spawn();
     w.on("message", (msg) => {
       const p = pending.get(msg.id);
-      if (!p) return;
+      if (!p || p.owner !== w) return;
       pending.delete(msg.id);
       if (msg.ok && typeof msg.text === "string") p.resolve(msg.text);
-      else
-        p.reject(
-          new MultimodalGenerationError(
-            `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
-            {
-              reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN",
-              retryable: true,
-            },
-          ),
-        );
+      else p.reject(new MultimodalGenerationError(
+        `whisper-local(worker)执行失败: ${msg.error ?? "未知错误"}`,
+        { reference: msg.errorCode ?? "LOCAL_WHISPER_WORKER_UNKNOWN", retryable: true },
+      ));
     });
-    w.on("error", (err) =>
-      failAllPending(
-        new MultimodalGenerationError(
-          `whisper-local worker 崩溃: ${err.message}`,
-          { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
-        ),
-      ),
-    );
-    w.on("exit", (code) => {
-      if (code !== 0)
-        failAllPending(
-          new MultimodalGenerationError(
-            `whisper-local worker 非 0 退出 (code=${code})`,
-            { reference: "LOCAL_WHISPER_WORKER_EXIT", retryable: true },
-          ),
-        );
-      else worker = null;
-    });
+    w.on("error", (err) => failPending(w, new MultimodalGenerationError(
+      `whisper-local worker 崩溃: ${err.message}`,
+      { reference: "LOCAL_WHISPER_WORKER_CRASH", retryable: true },
+    )));
+    w.on("exit", (code) => failPending(w, new MultimodalGenerationError(
+      `whisper-local worker 退出 (code=${code})`,
+      { reference: "LOCAL_WHISPER_WORKER_EXIT", retryable: true },
+    )));
     worker = w;
     return w;
   }
 
   return async (modelId: string) => {
-    // 返回的「pipeline」= worker 代理:每次调用进串行队列,一次只跑一条。
-    const proxy: AsrPipeline = (audio, options) => {
-      const job = () =>
-        new Promise<{ text: string }>((resolve, reject) => {
-          const w = ensureWorker();
-          const id = nextId++;
-          pending.set(id, { resolve: (text) => resolve({ text }), reject });
-          // pcm buffer 以 transferable 转移(零拷贝;主线程用完即弃)。
-          // 注意 subarray 场景:确保传整段 —— decode 产的是独立 buffer,直接转移安全。
-          const buf = audio.buffer as ArrayBuffer;
-          w.postMessage(
-            {
-              id,
-              modelId,
-              cacheDir: defaultCacheDir(),
-              pcm: buf,
-              options: options ?? {},
-            },
-            [buf],
-          );
+    const proxy: AsrPipeline = (audio, options, signal) => {
+      const job = async () => {
+        throwIfAborted(signal);
+        const w = ensureWorker();
+        const id = nextId++;
+        let stopping: Promise<number> | undefined;
+        const result = new Promise<{ text: string }>((resolve, reject) => {
+          const cancel = () => {
+            // 删除 pending，使 terminate 引发的 exit/error 不会提前放行队列。
+            pending.delete(id);
+            if (worker === w) worker = null;
+            stopping = w.terminate();
+            stopping.then(() => reject(abortError()), reject);
+          };
+          const cleanup = () => signal?.removeEventListener("abort", cancel);
+          pending.set(id, {
+            owner: w,
+            resolve: (text) => { cleanup(); resolve({ text }); },
+            reject: (err) => { cleanup(); reject(err); },
+          });
+          signal?.addEventListener("abort", cancel, { once: true });
+          if (signal?.aborted) { cancel(); return; }
+          try {
+            // 有偏移或共享底层存储时复制有效范围，避免传入其它音频/哨兵数据。
+            const buf = audio.byteOffset === 0 && audio.byteLength === audio.buffer.byteLength && audio.buffer instanceof ArrayBuffer
+              ? audio.buffer : audio.slice().buffer as ArrayBuffer;
+            w.postMessage({ id, modelId, cacheDir: defaultCacheDir(), pcm: buf, options: options ?? {} }, [buf]);
+          } catch (err) {
+            pending.delete(id);
+            cleanup();
+            reject(err);
+          }
         });
+        try {
+          return await result;
+        } finally {
+          // 保留真实终止完成屏障，后续任务不能与被取消的推理重叠。
+          if (stopping) await stopping;
+        }
+      };
       const run = queue.then(job, job);
       queue = run.catch(() => {});
       return run;
