@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { consumeStream, type UIMessage } from "ai";
+import type { UIMessage } from "ai";
+import {chatExecutionResponse} from "@/server/chat-execution-stream";
 import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import {
@@ -9,12 +10,13 @@ import {
 } from "@/server/persistence-client";
 import {
   requiredSkillIdsForTask,
-  runChatStream,
+  prepareDurableChatTurn,
   formatErrorDiagnostic,
   type ChatContext,
   type VerbatimSource,
   normalizeWebReadUrl,
 } from "@creatoros/backend/modules/ai-runtime";
+import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import { readSessionCookie } from "../v1/auth/_session";
 import {
@@ -29,14 +31,9 @@ import {
 } from "@/lib/loopback-guard.server";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 
-// 上下文感知 ChatBox 的流式入口(SPEC §3.3)—— 全程 Vercel AI SDK,**不走 RPC envelope**:
-// useChat 客户端 POST { messages, chatContext } 到这里 → 鉴权(同 dispatch:session cookie →
-// RequestContext)→ runChatStream 装配(resolve skill + 注入 CreativeContext facets + 挂工具)
-// → streamText 流式返回 → onFinish 把这轮的 user/assistant 文本落 ai_conversations/ai_messages。
-//
-// 铁律:AI 只产候选(工具 execute 产候选,经 tool-result part 流回前端渲 AdoptCandidateCard,
-// 人采纳走 confirm 门;AI 不直接写实体)。没配 model key → runChatStream 抛 LlmCredentialError,
-// 这里接住返 4xx(不假成功、不静默吞)。
+// 正式聊天入口：验证当前账号/会话/选区与附件，保存用户消息后原子提交已有 chat.run。
+// 独立 Worker 执行原模型和业务工具；这里仅订阅持久 UIMessage 事件，完成消息由后端事务写入。
+// 人采纳仍走原候选确认门；HTTP 停止信号转成同一执行任务取消。
 
 export const dynamic = "force-dynamic";
 
@@ -592,8 +589,7 @@ export async function POST(req: Request): Promise<Response> {
   // 持久化(SPEC §3.3:消息落 ai_conversations/ai_messages)——
   //   会话:body.conversationId 复用;缺省 lazy 建一个(标题取首条用户消息前缀)。
   //   本轮用户消息:落 createMessage(最新一条 user)。
-  //   assistant 回复:streamText.onFinish 落 appendAssistantMessage(纯文本)。
-  // 持久化失败绝不阻断流式(对话优先);best-effort + 记日志。
+  //   assistant 回复由 chat completion 事务保存完整 parts。用户消息保存失败不能启动模型。
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
   const userText = textOf(lastUser);
 
@@ -613,10 +609,10 @@ export async function POST(req: Request): Promise<Response> {
   // [T-096] 续接校验(服务端硬门,SPEC §1.3-3):带 conversationId 且显式声明了 scope 时,
   // 核对库中会话的 scope 与声明一致。不一致 = 跨作用域续接(泄漏路径)→ 4xx 拒绝,不续写、
   // 不读回。校验在持久化/流式之前 —— 该门失败绝不算 best-effort。
-  if (conversationId && declaredScope) {
+  if (conversationId) {
     try {
       const conv = await runtime.ai.getConversation(ctx, conversationId);
-      if (conv.scope !== declaredScope) {
+      if (conv.scope !== scope || (conv.projectId??null)!==(chatContext.projectId??null)) {
         return NextResponse.json(
           {
             error: `conversation scope mismatch: conversation belongs to "${conv.scope}", request declared "${declaredScope}"`,
@@ -652,8 +648,9 @@ export async function POST(req: Request): Promise<Response> {
       //   ② 兜底(老客户端/手工请求无 trigger):续接会话时查库中最后一条消息 —— 若它就是
       //     同内容的 user 行(上一轮流失败/中断,assistant 未落库),说明这条 user 已在库里,
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
-      let skipInsert = body.trigger === "regenerate-message";
-      if (!skipInsert && isExistingConversation) {
+      const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
+      let skipInsert = approvalContinuation;
+      if (!skipInsert && isExistingConversation && body.trigger!=="regenerate-message") {
         try {
           const history = await runtime.ai.listMessages(ctx, conversationId);
           const last = history[history.length - 1];
@@ -680,7 +677,7 @@ export async function POST(req: Request): Promise<Response> {
         persistedUserMessageId = persisted.id;
       } else {
         const history = await runtime.ai.listMessages(ctx, conversationId);
-        const last = history[history.length - 1];
+        const last = [...history].reverse().find(message=>message.role==="user");
         if (last?.role === "user" && last.content === userText) {
           persistedUserMessageId = last.id;
         }
@@ -688,6 +685,7 @@ export async function POST(req: Request): Promise<Response> {
     }
   } catch (err) {
     console.error("[api/chat] persist user turn failed:", err);
+    return NextResponse.json({error:"消息保存失败，请重试。"},{status:500});
   }
 
   // [T-791] 写稿资料引用只从已持久化消息与本轮已验归属/确定性抽取的附件建立。
@@ -739,45 +737,27 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
-  // [T-239e] 本轮 token 用量(runChatStream 每步累计回报,finish 以 totalUsage 权威值覆盖)。
-  // route 只持最新值;toUIMessageStreamResponse onFinish 落库时随 assistant 消息带上 ——
-  // 中断轮已完成步的用量也已回报过,照落。null = 本轮没拿到任何 usage(落库 NULL,不填 0)。
-  let turnUsage: {
-    inputTokens: number | null;
-    outputTokens: number | null;
-    cachedTokens: number | null;
-    modelKey: string;
-  } | null = null;
-
   try {
-    // [T-513] 对话同样走 account-scoped immutable snapshot。surface → official skill
-    // 的映射由服务端控制，客户端不能注入 prompt / policy；ALS 隔离并发账号。
-    const skillSnapshot = await runtime.resolveEffectiveSkillSnapshot(
-      ctx,
-      requiredSkillIdsForTask("chat.sync", {
-        surface: chatContext.surface,
-      }),
-    );
-    const result = await runWithEffectiveSkillSnapshot(skillSnapshot, () =>
-      runChatStream(
-        ctx,
-        // [T-239c] req.signal 贯通:用户点「停止」/关页 → streamText abort(服务端 1s 内停,
-        // 不再空跑后续工具烧钱);signal 同时经工具 execute 第二参透传给长工具提前退出。
-        {
-          messages: messagesForModel,
-          chatContext,
-          trustedScriptSources,
-          abortSignal: req.signal,
-          // [T-239e] 用量回报口:持最新累计值(闭包变量,onFinish 落库时读)。
-          onUsage: (u) => {
-            turnUsage = u;
-          },
-        },
-        {
-        // 展开 runtime.context 里所有已绑定的 CreativeContext reader(positioning / learnings /
-        // signals / knowledge / accounts / reviewSubject …)。原来手列 4 个,漏了 reviewSubject
-        // (T-039a 复盘对象)与 accounts(T-039b 账号画像)—— 装配点 assembleCreativeContext 拿不到
-        // 就跳过对应 facet。改为整体展开:composition root 绑什么,装配层就能读什么,不再逐个漏接。
+    if(!conversationId || !persistedUserMessageId)throw new Error("用户消息未保存，无法启动聊天执行");
+    req.signal.throwIfAborted();
+    const submitted=await runtime.durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId},async(owner,snapshot)=>{
+      const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[
+        ...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),
+        "topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill",
+      ]);
+      // 历史只取后端已保存的消息。附件只替换本轮已验归属的用户输入副本。
+      const trustedMessages: UIMessage[]=snapshot.messages.map(message=>({
+        id:message.id,role:message.role as UIMessage["role"],
+        parts:Array.isArray(message.parts)&&message.parts.length?message.parts as UIMessage["parts"]:[{type:"text",text:message.content}],
+      }));
+      const source=trustedMessages.at(-1)!;
+      const attached=[...messagesForModel].reverse().find(message=>message.role==="user");
+      if(attachments.length && attached)source.parts=[{type:"text",text:snapshot.sourceMessage.content},...attached.parts.slice(lastUser?.parts.length??0)];
+      const boundSources:VerbatimSource[]=[
+        ...snapshot.messages.filter(message=>message.role==="user"&&message.content.trim()).slice(-16).map(message=>({ref:`message:${message.id}`,label:`用户消息 ${message.createdAt}`,text:message.content,truncated:false,sourceType:"message" as const,sourceId:message.id})),
+        ...trustedScriptSources.filter(source=>source.sourceType==="attachment"),
+      ];
+      const prepared=await prepareDurableChatTurn(owner,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal},{
         ...runtime.context,
         // [T-163] 错误→人话端口:chat-tools 下沉 backend 后不再直 import 前端 ai-error-humanize
         // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
@@ -835,158 +815,24 @@ export async function POST(req: Request): Promise<Response> {
         dispatchPublishPackagePort: runtime.dispatchPublishPackage,
         // [T-385] project.transcribe 端口 —— 复用 T-374 projects.transcribe 链,对话内一键抓单条逐字稿。
         dispatchProjectTranscribePort: runtime.dispatchProjectTranscribe,
-        },
-      ),
-    );
-    // 流式回前端(useChat 消费 UIMessage stream);回带 conversationId 头供客户端复用会话。
-    // [T-094] onError:流中错误(如 MiniMax 内容安全审核拦截整轮输入 new_sensitive/1026)
-    // 转人话再进 error part —— 不用 SDK 默认掩码("An error occurred"),也不裸吐机器码;
-    // 人话规则未命中时回落原始 message(诚实)。前端错误气泡直接渲这段文案。
-    return result.toUIMessageStreamResponse({
-      headers: { "x-conversation-id": conversationId },
-      // [T-673] HITL 授权后的请求不是一条全新 assistant 消息，而是对末条
-      // approval-responded 工具调用的续写。SDK 随后只会流出 tool-output；若不把原消息作为
-      // 组装基线，服务端内部 processUIMessageStream 会从空态查 toolCallId，抛
-      // “No tool invocation found”，并在输出抵达客户端前截断，触发前端无限自动续跑。
-      originalMessages: messages,
-      // [T-239c] 关键:客户端 abort/断开后没人消费 SSE 流 → onFinish 不会触发、部分产出落不了库。
-      // consumeSseStream 让服务端自己把流消费完(SDK 官方中断持久化形态),onFinish 才能在中断轮
-      // 也拿到 isAborted + 已组装的部分 responseMessage。
-      consumeSseStream: consumeStream,
-      // [T-239e] 本轮 usage 以 message metadata 流回前端(SDK 官方口:finish part 携带
-      // totalUsage)—— copilot 会话成本角标据此在流式中即时累加本轮,不用等重拉历史。
-      messageMetadata: ({ part }) => {
-        if (part.type !== "finish") return undefined;
-        const u = part.totalUsage;
-        if (!u) return undefined;
-        return {
-          usage: {
-            inputTokens: u.inputTokens ?? null,
-            outputTokens: u.outputTokens ?? null,
-          },
-        };
-      },
-      onError: (error) => {
-        console.error("[api/chat] stream_error", {
-          category: "provider_stream_error",
-          reference: diagnosticRef,
-          operation: chatContext.functionKey ?? "chat",
-          surface: chatContext.surface,
-          hasSelection: chatContext.selection?.kind === "script_section",
-          diagnostic: formatErrorDiagnostic(error),
-        });
-        const human = humanizeAiError(error);
-        if (human) return human.message;
-        if (chatContext.functionKey === "script.patch") {
-          return `本次局部改写中断，稿面未被修改，目标段落已保留。参考号：${diagnosticRef}。请直接重试。`;
-        }
-        return "模型调用失败，请稍后重试。";
-      },
-      // [T-128] assistant 回复落库带**完整 parts**(text + tool-result 卡数据)。之前 onFinish 只拿
-      // finalText → 只存纯文本,tool-result 卡(候选卡/素材卡/审核报告卡)在存那刻就丢 → 刷新即消失
-      // (用户实录)。这里的 responseMessage 是 SDK 组装好的这轮 assistant UIMessage,与 useChat 内存
-      // 态同形,存它 → 恢复时 toUIMessages 原样回放 parts → 复用现有卡渲染分支,卡不再丢。
-      // best-effort:落库失败不影响已流给前端的内容(对话优先)。
-      // [T-239c] isAborted:中断轮也进这里(consumeSseStream 兜底消费)—— 已产出的部分文本 +
-      // 已完成 tool parts 照落库,带 aborted 标记(modelMetadata.aborted=true,同存储不建新表),
-      // 刷新后该轮仍在(不再丢半轮)。
-      onFinish: async ({ responseMessage, isAborted }) => {
-        if (!conversationId) return;
-        const rawParts = (responseMessage as { parts?: unknown[] } | undefined)
-          ?.parts;
-        const rawPartsArr = Array.isArray(rawParts) ? rawParts : [];
-        // [T-263] HITL 授权门:local.read 未授权时本回合**挂起**(approval-requested),onFinish 也会
-        // 携该「未决态」tool part。**不落库未决/已回执但未出结果的 tool part**(state ∈
-        // {approval-requested, approval-responded})—— 否则 reload 会回放一张点不动的旧授权卡(该调用
-        // 的真实结果落在续跑那一轮:output-available/output-denied,由那轮独立落库)。其余 part 照落。
-        const parts = rawPartsArr.filter((p) => {
-          const rec = p as { type?: unknown; state?: unknown };
-          if (
-            typeof rec.type === "string" &&
-            rec.type.startsWith("tool-") &&
-            (rec.state === "approval-requested" ||
-              rec.state === "approval-responded")
-          ) {
-            return false;
-          }
-          return true;
-        });
-        const text = textOf(responseMessage as UIMessage | undefined);
-        // 有文本 或 有可渲染的 tool-result 部件才落库(纯空轮不留空气泡);tool part 的 type 形如
-        // `tool-<name>`(AI SDK v5 ToolUIPart),据此判定「这轮产出了卡」。中断轮同判:开头即停
-        // (毫无产出)不留空气泡,产出过半的落库保住。
-        const hasRenderable =
-          text.length > 0 ||
-          parts.some(
-            (p) =>
-              typeof (p as { type?: unknown }).type === "string" &&
-              (p as { type: string }).type.startsWith("tool-"),
-          );
-        if (!hasRenderable) {
-          // [T-464] 空回复兜底 —— 2026-07-22 codex.hiyo.top 代理返回 200 + 空 SSE 流实证:
-          //   AI SDK onFinish 正常触发(视作"成功"),但 responseMessage 无 text 也无 tool part。
-          //   原行为:直接 return 不落库 → 用户看到"发了消息 → UI 完全无反应"(空白),分不清是
-          //   卡了/挂了/代理坏了 → 疑惑无解。改为落一条**信封提示** assistant 消息,让用户明确
-          //   "AI 未返回内容" + 建议(换模型/换 key),自诊断快。非中断轮才落(中断=用户主动停,
-          //   本就该空;只在真实"完成但空"时提示)。best-effort,不影响响应流。
-          if (!isAborted && conversationId) {
-            const hint =
-              "AI 未返回任何内容。可能的原因:①API 代理返回空流(如自建/第三方 endpoint 异常)②模型名无效(代理转发失败)③密钥被限流。建议:设置 → 模型配置 → 换一个模型或换 API 密钥,再重试。";
-            try {
-              await runtime.ai.appendAssistantMessage(
-                ctx,
-                conversationId,
-                hint,
-                [],
-              );
-            } catch (err) {
-              console.error("[api/chat] persist empty-reply hint failed:", err);
-            }
-          }
-          return;
-        }
-        try {
-          // [T-239e] usage 随 assistant 消息落库(有才带,没拿到 → 不带 = 列 NULL,诚实缺省);
-          // 中断轮(aborted)已完成步的用量照带。opts 全空时保持 4 参调用(既有语义/测试锚定)。
-          const opts: {
-            aborted?: boolean;
-            usage?: {
-              inputTokens: number | null;
-              outputTokens: number | null;
-              cachedTokens: number | null;
-            };
-            modelKey?: string;
-          } = {};
-          if (isAborted) opts.aborted = true;
-          if (turnUsage) {
-            opts.usage = {
-              inputTokens: turnUsage.inputTokens,
-              outputTokens: turnUsage.outputTokens,
-              cachedTokens: turnUsage.cachedTokens,
-            };
-            opts.modelKey = turnUsage.modelKey;
-          }
-          if (Object.keys(opts).length > 0) {
-            await runtime.ai.appendAssistantMessage(
-              ctx,
-              conversationId,
-              text,
-              parts,
-              opts,
-            );
-          } else {
-            await runtime.ai.appendAssistantMessage(
-              ctx,
-              conversationId,
-              text,
-              parts,
-            );
-          }
-        } catch (err) {
-          console.error("[api/chat] persist assistant reply failed:", err);
-        }
-      },
+      },skillSnapshot,{workerScriptDraft:true,workerWebRead:true,workerResearch:true,
+        atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
+        scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192}});
+      req.signal.throwIfAborted();
+      return {capability:prepared.assembly.capability,system:prepared.assembly.system,
+        messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,
+        maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens:8192,
+        ...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),
+        ...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),
+        hostContext:prepared.hostContext};
     });
+    // 授权按钮只续接执行；真实权限仍由宿主 approve 重新检查。
+    if(messages.some(message=>message.parts.some(part=>typeof part==='object' && part!==null && 'state' in part && part.state==='approval-responded'))){
+      const task=await runtime.durable.get(ctx,submitted.executionTaskId);
+      if(task.status==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
+    }
+    if(req.signal.aborted){await runtime.durable.command(ctx,submitted.executionTaskId,'cancel');req.signal.throwIfAborted();}
+    return chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
   } catch (err) {
     if (err instanceof OwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

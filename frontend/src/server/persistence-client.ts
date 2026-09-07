@@ -1,3 +1,4 @@
+import {createChatProductionRuntime,createChatTaskToolHost,createChatHostContextReader,loadPositioningWorksBrief} from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
 import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
@@ -1359,6 +1360,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  durable: ReturnType<typeof createChatProductionRuntime>;
   ai: AiService;
   // [T-513] 每轮对话在服务端按当前 user/account 解析不可变 Effective Skill。
   // route 只传受控的 official skill id，不接收客户端自带 prompt/policy。
@@ -1598,6 +1600,7 @@ export interface ChatRuntime {
   wakeChatPublishTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   prepareChatScriptReviewTask: (ctx:RequestContext,input:{projectId:string;attemptId:string})=>ReturnType<AiService["prepareTaskCommit"]>;
   wakeChatScriptReviewTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
+  wakeChatResearchTask: (ctx:RequestContext,taskId:string)=>Promise<void>;
   wakeChatPlanningTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   wakeChatMaterialTask: (ctx: RequestContext, taskId: string) => Promise<void>;
   dispatchPlanningThesis: (
@@ -9755,10 +9758,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     tools:{...materialWorkerTools.tools,...researchWorkerTools.tools},browserSessions:browserSessionsService,resolveModelCredential:resolveWorkerCredential,
     onError:code=>console.error(`[agentic-worker] ${code}`),
   }) : null;
+  let chatWorker: ReturnType<typeof createChatProductionRuntime> | undefined;
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
@@ -10594,6 +10598,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const chatRuntime: ChatRuntime = {
+    get durable(){if(!chatWorker)throw new Error("聊天执行服务未就绪，请更新应用后重试");return chatWorker;},
     ai: aiService,
     resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
       if (!resolveEffectiveSkillSnapshotForRuntime) {
@@ -12336,6 +12341,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     wakeChatScriptReviewTask: (ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.review"),
     // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
     // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
+    wakeChatResearchTask:async(ctx,taskId)=>{
+      if(stoppingPreparation)throw new Error("应用正在停止");
+      const task=await aiService.getTask(ctx,taskId);
+      if(task.taskType!=="exec.agentic.research")throw new Error("自主调研任务类型不符");
+      if(!agenticWorker)throw new Error("自主调研执行服务未就绪");
+      await agenticBusiness.prepare(ctx,taskId);
+      if(!stoppingPreparation)agenticWorker.start();
+    },
     wakeChatPlanningTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"planning.thesis"),
     wakeChatMaterialTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"asset.generate"),
     dispatchPlanningThesis: async (
@@ -12521,6 +12534,37 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return { taskId };
     },
   };
+
+  if(workerEntry){
+    const hostReader=createChatHostContextReader(db);
+    chatWorker=createChatProductionRuntime(db,{
+      entryPath:workerEntry,workerId:`chat-worker-${process.pid}`,
+      budget:{maxCalls:48,maxTokens:250000,deadlineMs:600000},modelConcurrency:2,
+      assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
+      // 主模型身份由现有 execution identity 服务首次固定；凭据从当前受管权限读取。
+      resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
+      resolveTools:createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
+        webRead:true,research:true,
+        agenticResearch:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
+        planning:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},
+        material:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatMaterialTask},
+        publish:{preparePublish:chatRuntime.prepareChatPublishTask,wakeTask:chatRuntime.wakeChatPublishTask},
+        review:{prepareReview:chatRuntime.prepareChatScriptReviewTask,wakeTask:chatRuntime.wakeChatScriptReviewTask},
+        scriptDraft:{prepareDraft:chatRuntime.prepareChatScriptDraftTask,wakeTask:chatRuntime.wakeChatScriptDraftTask},
+        scriptPatch:{resolveSelection:(c,input)=>chatRuntime.resolveCurrentScriptSelection!(c,input)},
+        videoEdit:{prepareVideoEdit:chatRuntime.prepareVideoEdit},
+        local:{detectTools:chatRuntime.detectTools,listAuthorizedDirs:chatRuntime.listAuthorizedDirs},
+        localRead:{readLocalFile:chatRuntime.readLocalFile,decideLocalReadAccess:chatRuntime.decideLocalReadAccess},
+        structured:{
+          readWorks:(c,limit)=>loadPositioningWorksBrief(c,chatRuntime.context.positioningWorks,limit),
+          getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
+        },
+      }),
+      webRead:{assets:assetsService,objectStorageForCtx,sessions:browserSessionsService,resolveSearch:c=>resolveSearchSpec(c)},
+      onError:code=>console.error(`[chat-worker] ${code}`),
+    });
+    chatWorker.start();
+  }
 
   if(modelWorker)preparationRecovery=Promise.all([
     businessExecution.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});},()=>stoppingPreparation),

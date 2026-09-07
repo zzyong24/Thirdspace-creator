@@ -53,6 +53,7 @@
  *     status-scoped query would make 「继续」 land exactly on the in-flight node.
  */
 
+import {ExecutionTaskCard} from "./execution-task-card";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -2437,6 +2438,10 @@ export function AICopilotContent({
                         </pre>
                       </details>
                     );
+                    if(name==="research.autonomous" && out.kind==="research.autonomous"){
+                      const research=out as {taskId?:string|null;error?:string|null};
+                      return <React.Fragment key={key}>{traceRow}{research.taskId?<ExecutionTaskCard taskId={research.taskId}/>:<div className="text-sm text-error">{research.error||"自主调研任务未提交，请重试。"}</div>}</React.Fragment>;
+                    }
                     // 选题候选(topic.generate)→ 逐条采纳进候选池。
                     if (
                       name === "topic.generate" &&
