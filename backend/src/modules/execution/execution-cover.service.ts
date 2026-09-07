@@ -26,9 +26,19 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
   const state=await bindCoverExecution(scope),rows=await scope.tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id)).orderBy(asc(executionCalls.sequence));
   return fn(scope,state,rows);
  });
+ // SEMANTIC_BOUNDARY_ALLOW: 同键明确拒绝重试按账本序列归并，不判断封面内容。
  function modelRows(rows:Call[],key:string){
-  const models=rows.filter(row=>row.operationKey!==`${key}/image`);
-  for(const [i,row] of models.entries())if(row.kind!=="model"||row.parentCallId||row.toolExecutionClaimId||row.retryOfCallId||row.operationKey!==`${key}/model/${i+1}`)throw new ConflictError("封面文案调用序列不连续，须沿原任务核对");
+  const models:Call[]=[];
+  for(const row of rows.filter(row=>row.operationKey!==`${key}/image`)){
+   const prefix=`${key}/model/`,suffix=row.operationKey.startsWith(prefix)?row.operationKey.slice(prefix.length):"",index=Number(suffix);
+   if(row.kind!=="model"||row.parentCallId||row.toolExecutionClaimId||row.accountingBasis!=="tokens"||!/^[1-9][0-9]*$/.test(suffix))throw new ConflictError("封面文案调用序列不连续，须沿原任务核对");
+   if(index===models.length+1){if(row.retryOfCallId)throw new ConflictError("新封面逻辑调用不能冒用重试来源");models.push(row);}
+   else if(index===models.length && models.length){
+    const previous=models[index-1]!;
+    if(previous.status!=="rejected"||previous.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED"||row.retryOfCallId!==previous.id||row.inputDigest!==previous.inputDigest||row.reservedTokens!==previous.reservedTokens)throw new ConflictError("封面重试缺少同键明确拒绝证据");
+    models[index-1]=row;
+   }else throw new ConflictError("封面逻辑调用序号不连续");
+  }
   return models;
  }
  function receipts(rows:Call[]):GenerationReplayReceipt[]{return rows.map(row=>{
@@ -52,7 +62,11 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
     const expected=await replay(state.payload.modelIdentity,state.input,models.slice(0,index-1),signal),digest=generationRequestDigest(request.request);
     if(expected.status!=="next-request"||generationRequestDigest(expected.request)!==digest)throw new ConflictError("封面模型请求不属于原节点");
     if(models[index-1]&&models[index-1]!.inputDigest!==digest)throw new ConflictError("封面原请求发生变化");
-    const saved=await ledger(scope.tx as unknown as Db).reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:digest,reservedTokens:Buffer.byteLength(JSON.stringify(request.request))+1024+state.input.maxOutputTokens});
+    const previous=models[index-1],authority=scope.task.retryOfCallId;
+    // 重试来源只能取当前任务授权；Worker 不携带或选择 retryOfCallId。
+    const retryOfCallId=authority && previous && ((previous.id===authority && previous.status==="rejected" && previous.rejectionCode!=="STRUCTURED_PROTOCOL_UNSUPPORTED") || previous.retryOfCallId===authority) ? authority : undefined;
+    if(previous?.status==="rejected" && previous.rejectionCode!=="STRUCTURED_PROTOCOL_UNSUPPORTED" && previous.id!==authority)throw new ConflictError("封面明确拒绝尚未获得原任务重试授权");
+    const saved=await ledger(scope.tx as unknown as Db).reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:digest,reservedTokens:Buffer.byteLength(JSON.stringify(request.request))+1024+state.input.maxOutputTokens,...(retryOfCallId?{retryOfCallId}:{})});
     return {callId:saved.id,status:saved.status,...(saved.providerResult?{providerResult:saved.providerResult}:{}),...(saved.rejectionCode?{rejectionCode:saved.rejectionCode}:{})};
    });
   },
@@ -66,9 +80,16 @@ export function createExecutionCoverService(db:Db,deps:Parameters<typeof createE
   });},
   async prepareImage(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    workerPortInputSchemas.prepareCoverImage.parse(raw);signal?.throwIfAborted();
-   const initial=await access(ref,"admission",async(scope,state,rows)=>({...state,context:scope.context,rows,existing:state.payload.coverImage?await readCoverImageBinding(scope):null}));
+   const initial=await access(ref,"admission",async(scope,state,rows)=>({...state,context:scope.context,retryOfCallId:scope.task.retryOfCallId,rows,existing:state.payload.coverImage?await readCoverImageBinding(scope):null}));
    if(initial.existing)return {status:"prepared" as const,value:coverImagePreparationSchema.parse({input:initial.existing.input,reference:initial.existing.reference,resultData:initial.existing.resultData})};
-   const result=await replay(initial.payload.modelIdentity,initial.input,modelRows(initial.rows,initial.input.operationKey),signal);
+   const models=modelRows(initial.rows,initial.input.operationKey),tail=models.at(-1);
+   // reserve 回执丢失安全回读原预留；明确拒绝仅在本任务已授权原 call 时恢复。
+   if(tail?.status==="reserved" || (tail?.status==="rejected" && tail.rejectionCode!=="STRUCTURED_PROTOCOL_UNSUPPORTED" && tail.id===initial.retryOfCallId)){
+    const expected=await replay(initial.payload.modelIdentity,initial.input,models.slice(0,-1),signal);
+    if(expected.status!=="next-request"||generationRequestDigest(expected.request)!==tail.inputDigest)throw new ConflictError("封面待恢复调用与原节点请求不符");
+    return {status:"pending" as const};
+   }
+   const result=await replay(initial.payload.modelIdentity,initial.input,models,signal);
    if(result.status==="next-request")return {status:"pending" as const};
    if(result.status!=="complete")throw new ConflictError("封面文案尚未完成，不能准备图片");
    const source=JSON.parse(initial.input.facets.__coverContext??"null") as {context:CoverContext;visualRequirements:string;referenceAssetId:string|null};
