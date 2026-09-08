@@ -1,4 +1,6 @@
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
+import {videoPortInputSchemas} from "./execution-video";
+export {videoPortInputSchemas,videoFrozenSchema,videoSkillSchema} from "./execution-video";
 import {transcribeWorkflowPortSchemas} from "./transcribe-workflow";
 export {transcribeWorkflowPortSchemas,transcribeSourceSchema,transcribeItemReceiptSchema} from "./transcribe-workflow";
 import {coverPortInputSchemas} from "./execution-cover";
@@ -41,6 +43,7 @@ export const workerPortSchema = z.enum([
   "settleCoverModel",
   ...Object.keys(transcribeWorkflowPortSchemas) as Array<keyof typeof transcribeWorkflowPortSchemas>,
   ...Object.keys(coverPortInputSchemas) as Array<keyof typeof coverPortInputSchemas>,
+  "resolveVideoModel","reserveVideoModel","recordVideoStep","saveVideoCheckpoint","saveVideoResult",
   "prepareTranscribePostprocess", "readTranscribePostprocess", "reserveTranscribePostprocess", "startTranscribePostprocess", "settleTranscribePostprocess", "saveTranscribePostprocess",
   "selectTranscribeLocalFallback", "prepareTranscribeAsr", "readTranscribeAudio", "saveTranscribeAudio",
   "reserveAsrRequest", "startAsrRequest", "settleAsrRequest",
@@ -94,6 +97,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  ...videoPortInputSchemas,
   ...transcribeWorkflowPortSchemas,
   ...coverPortInputSchemas,
   settleCoverModel:generationSettlementSchema,

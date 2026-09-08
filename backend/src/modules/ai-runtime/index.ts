@@ -156,3 +156,4 @@ export {composeChatProduction,type ChatProductionCompositionDeps,type ChatProduc
 export {createAgenticCollectionTools} from "./agentic-collection-tools";
 
 export * from "./reconstruct-business-adapter";
+export {createVideoDecisionsBusinessAdapter} from "./video-decisions-business-adapter";

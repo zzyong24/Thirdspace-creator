@@ -1,3 +1,4 @@
+import {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import {runTranscribeInWorker} from "./transcribe-worker-run";
 import {runCoverInWorker} from "./cover-worker-run";
 import {runAssetInWorker} from "./asset-worker-run";
@@ -15,6 +16,7 @@ if (!process.send) throw new Error("执行 Worker 只能由宿主私有 IPC 启�
 // 包内 Pi 引擎能力尚待真实产物验证；未装配 runAgentic 时不声明该 capability。
 const worker = createExecutionWorker({
   runAsset:runAssetInWorker,
+  runVideo:runVideoDecisionsInWorker,
   runTranscribe:runTranscribeInWorker,
   runCover:runCoverInWorker,
   generateStructured:generateStructuredInWorker,

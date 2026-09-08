@@ -1,3 +1,4 @@
+import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
 import type {runCoverInWorker} from "./cover-worker-run";
 import type {runAssetInWorker} from "./asset-worker-run";
@@ -32,6 +33,7 @@ export interface WorkerDependencies {
   runAsset?:typeof runAssetInWorker;
   runTranscribe?:typeof runTranscribeInWorker;
   runCover?:typeof runCoverInWorker;
+  runVideo?:typeof runVideoDecisionsInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
   generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
@@ -140,6 +142,12 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return;
       }
       if(input.kind==="model.structured"){
+        if(input.facets.__videoDecisions!==undefined){
+          if(!deps.runVideo)throw new GenerationFailure("waiting_user","VIDEO_WORKER_UNAVAILABLE");
+          const result=await deps.runVideo(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+          signal.throwIfAborted();committing=true;
+          await call(execution,"commitResult",{outcome:"succeeded",...result},signal);reason="completed";return;
+        }
         if(input.skillId==="cover.brief"){
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");

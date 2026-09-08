@@ -83,6 +83,22 @@
     "./cover": {
       "types": "./src/runtime/cover-plan.ts",
       "default": "./src/runtime/cover-plan.ts"
+    },
+    "./video-decisions-runner": {
+      "types": "./src/runtime/video-decisions-runner.ts",
+      "default": "./src/runtime/video-decisions-runner.ts"
+    },
+    "./srt": {
+      "types": "./src/runtime/srt.ts",
+      "default": "./src/runtime/srt.ts"
+    },
+    "./chunk-and-merge": {
+      "types": "./src/runtime/chunk-and-merge.ts",
+      "default": "./src/runtime/chunk-and-merge.ts"
+    },
+    "./error-diagnostics": {
+      "types": "./src/runtime/error-diagnostics.ts",
+      "default": "./src/runtime/error-diagnostics.ts"
     }
   },
   "scripts": {
