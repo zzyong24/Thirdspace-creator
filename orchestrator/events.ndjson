@@ -949,3 +949,4 @@
 {"ts":"2026-09-06T21:21:07.082Z","actor":"taskctl","action":"block","task":"T-915","reason":"T-917 媒体目录事故未恢复：原目录、工作区副本与事故临时目录均不存在，无已知本地快照；等待用户提供备份或原始素材位置，暂停测试和构建，完整验收范围保持不变。","sha_before":"edaa7ff1e0a5","sha_after":"625687d6aa94"}
 {"ts":"2026-09-07T02:02:19.812Z","actor":"taskctl","action":"resume","task":"T-915","reason":"用户明确表示不再以已清理数据的恢复阻塞重构，要求加速落地；事故事实保留，测试已移除媒体迁移 API，后续仅使用隔离测试数据库和临时媒体根。","sha_before":"625687d6aa94","sha_after":"edaa7ff1e0a5"}
 {"ts":"2026-09-08T05:16:59.893Z","actor":"taskctl","action":"start","task":"T-918","sha_before":"39311e133bec","sha_after":"129d45103a5b"}
+{"ts":"2026-09-08T05:46:04.866Z","actor":"taskctl","action":"complete","task":"T-918","evidence":"docs/verification/t918-local-package-2026-09-07.md；候选 9ead4cb7 本地 DMG 构建退出0、hdiutil VALID、签名验证退出0；用户暂缓业务测试及全局 reconcile，未安装，T915仍待完整验收","sha_before":"129d45103a5b","sha_after":"a698596c75ee"}
