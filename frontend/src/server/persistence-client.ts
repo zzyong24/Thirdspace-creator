@@ -485,17 +485,7 @@ import {
 } from "@creatoros/backend/modules/ai-runtime";
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 import { resolveSearchSpec as resolveSearchSpecFn } from "@creatoros/backend/modules/ai-runtime";
-// 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
-// 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
-import {
-  createMinimaxAdapter,
-  createOmnihiVideoAdapter,
-  // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
-  createOpenaiImagesAdapter,
-  // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
-  resolveExecutablePath,
-  type MultimodalProviderRegistry,
-} from "@creatoros/ai-worker";
+import {resolveExecutablePath} from "@creatoros/ai-worker";
 // [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
 import {
   createSettingsWithModelTest,
@@ -8326,17 +8316,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return taskModelAuthorityScope.run(authority,()=>resolveMultimodalSpec(c,capability));
     },
   });
-  async function runLegacyAssetTask(c:RequestContext,id:string){
-    if(stoppingPreparation)return;
-    const task=await aiService.getTask(c,id);
-    if(stoppingPreparation || task.status!=="queued")return;
-    await runTaskWithEffectiveSkillSnapshot(c,id,()=>{if(stoppingPreparation)throw new Error("素材准备已停止");return runAssetGenerate(c,{id,projectId:task.projectId??null,retryOfTaskId:task.retryOfTaskId,inputData:task.inputData as Record<string,unknown>},{ai:aiService,resolveMultimodalSpec,registry:multimodalRegistry,assets:{createGeneratedAsset:async(context,input)=>{const asset=await assetsService.createGeneratedAsset(context,input);return {id:asset.id,name:asset.name,assetType:asset.assetType};}}});});
-  }
   async function dispatchAssetTask(c:RequestContext,id:string){
     if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
-    const prepared=await assetBusiness.prepare(c,id);
+    await assetBusiness.prepare(c,id);
     if(stoppingPreparation)return;
-    if(prepared.legacy)await runLegacyAssetTask(c,id);else modelWorker.start();
+    modelWorker.start();
   }
   async function assertReviewableChatScript(ctx:RequestContext,input:{projectId:string}){
       // [T-708] 当前已保存稿面是审核唯一真值。后台新候选即使仍在生成或等待采纳，也不能
@@ -8602,22 +8586,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelSelection: (selectedCapability) =>
         getChannelModelSelection(ctx, selectedCapability),
     });
-  // 多模态 provider 适配器注册表(keyed by provider)。真链路注册 MiniMax(M1 适配器,含 video
-  // 异步轮询状态机 submit→poll→retrieve + 超时);加 provider = 在此注册一个适配器,不改 runner
-  // 与业务代码([gate-F1])。真出图/视频要真 image.generate/video.generate key(本环境无 →
-  // 未配抛错、诚实禁用);单测装配用 M1 的 fake provider 注入,不碰这个真 registry。
-  // [T-379] "openai" = OpenAI 兼容 images API 适配器(POST /v1/images/generations)——
-  // 覆盖 gpt-image 系官方 + one-api/new-api 系中转站(Seedream/Flux/Nano Banana 等经中转
-  // 同形状;用户配中转 baseUrl + 任意生图 model id 即通)。生视频额外接入 OmniHi 的
-  // Seedance 异步任务协议；历史保存的 seedance / seeddance provider 拼写继续兼容。
-  const omnihiVideoAdapter = createOmnihiVideoAdapter();
-  const multimodalRegistry: MultimodalProviderRegistry = {
-    minimax: createMinimaxAdapter(),
-    openai: createOpenaiImagesAdapter(),
-    omnihi: omnihiVideoAdapter,
-    seedance: omnihiVideoAdapter,
-    seeddance: omnihiVideoAdapter,
-  };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
   if (transcriptStartupDeps) {
     // [T-632] 启动恢复覆盖全部 queued 积压；固定两路执行，避免把历史任务一次性
@@ -11088,7 +11056,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       ()=>stoppingPreparation,
     ),
     businessExecution.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});},()=>stoppingPreparation),
-    assetBusiness.recoverQueued(runLegacyAssetTask,async(c,id)=>{await aiService.markFailed(c,id,"素材任务准备未完成，请检查配置与原任务").catch(()=>{});},()=>stoppingPreparation),
+    assetBusiness.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"素材任务准备未完成，请检查配置与原任务").catch(()=>{});},()=>stoppingPreparation),
   ]).then(()=>{}).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));
   if(agenticWorker)agenticPreparationRecovery=agenticBusiness.recoverQueued(async(c,id)=>{
     await aiService.markFailed(c,id,"自主任务准备未完成，请重新发起").catch(()=>{});
