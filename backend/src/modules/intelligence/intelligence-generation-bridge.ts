@@ -10,7 +10,7 @@ import {createExecutionLeaseService} from "../execution/execution-lease.service"
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionWorkerCallPorts} from "../execution/execution-worker-call-ports.service";
 import {prepareExecutionModelIdentity} from "../execution/execution-model-identity.service";
-import {createWorkerSupervisor} from "../execution/worker-supervisor";
+import {createClaimedWorkerSupervision} from "../execution/claimed-worker-supervision";
 import type {PersistentTaskClaim,PersistentTaskService} from "../execution/persistent-task.service";
 import type {TopicPreviewGeneratorPort,TopicPreviewCheckpoint} from "./topic-preview-runner";
 import type {ProjectScriptCandidateGeneratorPort} from "./project-script-candidate.runner";
@@ -29,12 +29,12 @@ export interface IntelligenceGenerationBridgeDeps {
 }
 /** 原 topic_preview/script_candidate claim 是唯一执行权；此桥只监督模型进程，不入队新任务。 */
 export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenerationBridgeDeps){
- let stopping=false;const active=new Set<ReturnType<typeof createWorkerSupervisor>>();
+ const supervision=createClaimedWorkerSupervision(deps);
  const budget={maxCalls:16,maxTokens:1000000,deadlineMs:600000};
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,{...deps,budget}),calls=createExecutionWorkerCallPorts(db,{...deps,budget});
  const outcomes=createExecutionWorkerOutcomeService(db,{...deps,allowedKinds:["topic_preview","script_candidate"]});
  async function execute(ctx:RequestContext,mode:"topic_preview"|"script_candidate",target:unknown,claim:PersistentTaskClaim|undefined,onCheckpoint?:(value:TopicPreviewCheckpoint)=>Promise<void>){
-  if(stopping)throw new Error("INTELLIGENCE_WORKER_STOPPING");
+  if(supervision.isStopping())throw new Error("INTELLIGENCE_WORKER_STOPPING");
   if(!claim)throw new Error("INTELLIGENCE_GENERATION_CLAIM_REQUIRED");
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const verify=()=>leases.withLease(ref,"admission",async({task,context})=>{if(task.kind!==mode || context.userId!==ctx.userId || context.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");return task;});
@@ -66,7 +66,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const prior=state.calls.at(-1);
   if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);}
   let completed:unknown, persistedStatus:string|undefined,requestSequence=0,closedPorts=false;
-  const supervisor=createWorkerSupervisor({entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:{
+  const ports:Parameters<typeof supervision.run>[0]["ports"]={
    async validate(current,kind){if(closedPorts)throw new Error("INTELLIGENCE_PORTS_CLOSED");if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
    async invoke(current,port,raw){
     if(port==="readTaskContext"){await verify();return saved.input;}
@@ -112,12 +112,8 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     }
     throw new Error("INTELLIGENCE_PORT_UNAVAILABLE");
    },
-  }});
-  if(stopping){await supervisor.stop();throw new Error("INTELLIGENCE_WORKER_STOPPING");}
-  active.add(supervisor);
-  let checking=false;
-  const timer=setInterval(()=>{if(checking||closedPorts)return;checking=true;void verify().catch(()=>{if(!closedPorts)supervisor.cancel(ref);}).finally(()=>{checking=false;});},250);
-  try{const outcome=await supervisor.run(ref,Date.parse(state.deadlineAt!));if(persistedStatus)throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,persistedStatus);if(outcome!=="completed"||completed===undefined)throw new Error("INTELLIGENCE_WORKER_INCOMPLETE");return completed;}
+  };
+  try{const outcome=await supervision.run({ref,deadlineAt:Date.parse(state.deadlineAt!),ports,verify,isClosed:()=>closedPorts,close:()=>{closedPorts=true;},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined});if(persistedStatus)throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,persistedStatus);if(outcome!=="completed"||completed===undefined)throw new Error("INTELLIGENCE_WORKER_INCOMPLETE");return completed;}
   catch(error){
    if(!persistedStatus){
     const last=(await ledger.inspect(ref)).calls.at(-1);
@@ -129,7 +125,6 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    }
    throw error;
   }
-  finally{closedPorts=true;clearInterval(timer);try{await supervisor.stop();}catch(error){if(completed===undefined&&!persistedStatus)throw error;}finally{active.delete(supervisor);}}
  }
  async function generate(ctx:RequestContext,mode:"topic_preview"|"script_candidate",target:unknown,claim:PersistentTaskClaim|undefined,onCheckpoint?:(value:TopicPreviewCheckpoint)=>Promise<void>){
   if(!claim)throw new Error("INTELLIGENCE_GENERATION_CLAIM_REQUIRED");
@@ -142,7 +137,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     const task=await leases.withLease(ref,"settlement",async({task})=>task);
     status=task.status;
     if(task.kind!==mode || task.userId!==ctx.userId || task.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");
-    if(task.status==="running"&&!stopping){
+    if(task.status==="running"&&!supervision.isStopping()){
      const state=await ledger.inspect(ref);
      // IPC/结算回执丢失不推测为未调用；只留给原账本恢复，不给runner覆盖失败的机会。
      if(!state.calls.length){unstartedFailure=true;}else{
@@ -159,5 +154,5 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
  }
  const topicPreviewGenerator:TopicPreviewGeneratorPort={async generate(ctx,target,onCheckpoint,claim){return topicResult.parse(await generate(ctx,"topic_preview",target,claim,onCheckpoint));}};
  const projectScriptGenerator:ProjectScriptCandidateGeneratorPort={async generate(ctx,target,claim){return z.object({text:z.string().min(1)}).parse(await generate(ctx,"script_candidate",target,claim));}};
- return {topicPreviewGenerator,projectScriptGenerator,async stop(){stopping=true;await Promise.all([...active].map(worker=>worker.stop()));}};
+ return {topicPreviewGenerator,projectScriptGenerator,stop:supervision.stop};
 }
