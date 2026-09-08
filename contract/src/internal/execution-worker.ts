@@ -1,3 +1,4 @@
+export {transcribeSourceFailureSchema} from "./transcribe-workflow";
 import {transcribeWorkflowPortSchemas} from "./transcribe-workflow";
 export {transcribeWorkflowPortSchemas,transcribeSourceSchema,transcribeItemReceiptSchema} from "./transcribe-workflow";
 import {coverPortInputSchemas} from "./execution-cover";

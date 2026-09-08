@@ -1,7 +1,7 @@
 import type {z} from "zod";
 import type {Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {workerPortInputSchemas,transcribeSourceSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {workerPortInputSchemas,transcribeSourceFailureSchema,transcribeSourceSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {bindTranscribeExecution} from './transcribe-execution-binding';
 import {ConflictError} from './execution.errors';
@@ -19,9 +19,19 @@ export function createExecutionTranscribeSourceService(db:Db,deps:TranscribeSour
   const input=workerPortInputSchemas[port].parse(raw) as {awemeId:string;channel:'iesdouyin'|'creator-center';result:{kind:string;consecutiveTimeouts?:number}};
   const check=()=>leases.withLease(ref,'admission',async scope=>{await bindTranscribeExecution(scope,input.awemeId);signal?.throwIfAborted();return scope.context;});
   const ctx=await check();let output:unknown;
+  try{
   if(port==='fetchLoggedInTranscribeSource')output=transcribeSourceSchema.parse(await deps.fetchLoggedInSource(ctx,input.awemeId,signal));
   else if(port==='acquireTranscribeChannel')output=await deps.acquireChannel(ctx,input.channel,signal);
   else output=await deps.reportChannel(ctx,input.channel,workerPortInputSchemas.reportTranscribeChannel.parse(raw).result);
+  }catch(error){
+   signal?.throwIfAborted();await check();
+   if(error instanceof ConflictError || (error&&typeof error==='object'&&(error as {name?:string}).name==='ZodError'))throw error;
+   const failure=error as {name?:string;remainMs?:number};
+   // SEMANTIC_BOUNDARY_ALLOW: 只识别已有资源错误类别，不判断用户意图或替换付费回执。
+   return transcribeSourceFailureSchema.parse({sourceFailure:failure?.name==='DouyinNotLoggedInError'
+    ?{outcome:'waiting_user',errorCode:'TRANSCRIBE_LOGIN_REQUIRED'}
+    :{outcome:'retry_wait',errorCode:failure?.name==='DouyinCooldownActiveError'?'TRANSCRIBE_SOURCE_COOLDOWN':'TRANSCRIBE_SOURCE_UNAVAILABLE',retryAfterMs:typeof failure?.remainMs==='number'&&Number.isFinite(failure.remainMs)?Math.max(0,Math.min(2147483647,Math.ceil(failure.remainMs))):5000}});
+  }
   await check();return port==='fetchLoggedInTranscribeSource'?output:{ok:true};
  }};
 }

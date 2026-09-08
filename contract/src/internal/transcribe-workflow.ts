@@ -15,3 +15,5 @@ export const transcribeWorkflowPortSchemas={
  acquireTranscribeChannel:item.extend({channel:z.enum(['iesdouyin','creator-center'])}).strict(),
  reportTranscribeChannel:item.extend({channel:z.enum(['iesdouyin','creator-center']),result:z.union([z.object({kind:z.literal('success')}).strict(),z.object({kind:z.enum(['captcha','empty-item-list','router-data-missing','net-timeout']),consecutiveTimeouts:z.number().int().positive().optional()}).strict()])}).strict(),
 };
+/** 仅来源读操作的可恢复故障；不用于ASR/模型或工件提交回执。 */
+export const transcribeSourceFailureSchema=z.object({sourceFailure:z.object({outcome:z.enum(['waiting_user','retry_wait']),errorCode:z.enum(['TRANSCRIBE_LOGIN_REQUIRED','TRANSCRIBE_SOURCE_COOLDOWN','TRANSCRIBE_SOURCE_UNAVAILABLE']),retryAfterMs:z.number().int().nonnegative().max(2147483647).optional()}).strict()}).strict();
