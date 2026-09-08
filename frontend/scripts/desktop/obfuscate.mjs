@@ -648,6 +648,8 @@ export function buildSmokeSidecarEnv(
     DATABASE_URL: "",
     PGLITE_DATA_DIR: join(smokeDataRoot, "db"),
     CREATOROS_DB_DIR: join(smokeDataRoot, "db"),
+    CREATOROS_MEDIA_ROOT: join(smokeDataRoot, "media"),
+    CREATOROS_WORKSPACES_ROOT: join(smokeDataRoot, "workspaces"),
     DYLD_LIBRARY_PATH: libDir,
     LD_LIBRARY_PATH: libDir,
   };
