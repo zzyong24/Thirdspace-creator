@@ -12,8 +12,10 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
 }){
  const profiles=createExecutionBrowserProfileLeaseService(db),hostInstanceId=deps.hostInstanceId??randomUUID();
  const identitySchema=z.object({userId:z.string().min(1),authDir:z.string().min(1),profileKey:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
- return {async acquire(authDir:string,signal?:AbortSignal){
+ const stoppedCleanup=new Map<string,()=>Promise<void>>();
+ const acquire=async(authDir:string,signal?:AbortSignal)=>{
   signal?.throwIfAborted();const identity=identitySchema.parse(await deps.resolveProfile(authDir,signal));signal?.throwIfAborted();
+  await stoppedCleanup.get(identity.authDir)?.();
   // 只重试本进程已经收到实际停止证明的释放；不抢占活资源或按TTL解锁。
   await retryBrowserProfileCleanup(identity.authDir,{signal});signal?.throwIfAborted();
   const owner={userId:identity.userId,domain:'douyin.com',profileKey:identity.profileKey,hostInstanceId,hostOperationId:randomUUID()};
@@ -26,5 +28,17 @@ export function createHostBrowserProfileLifecycle(db:Db,deps:{
   };
   // 即使此刻取消仍交给guardedLaunch；其停止/释放重试不能在适配器中丢失。
   return {authDir:identity.authDir,onStopped};
+ };
+ return {acquire,async withProfiles<T>(authDirs:string[],action:()=>Promise<T>):Promise<T>{
+  const held:Array<Awaited<ReturnType<typeof acquire>>>=[];
+  try{for(const dir of [...new Set(authDirs)].sort())held.push(await acquire(dir));return await action();}
+  finally{
+   // 目录操作没有浏览器子进程；action 已退出即有停止证明。释放失败保留给下一次 checkout 重试。
+   const results=await Promise.allSettled(held.map(async resource=>{
+    const cleanup=async()=>{await resource.onStopped();stoppedCleanup.delete(resource.authDir);};
+    stoppedCleanup.set(resource.authDir,cleanup);await cleanup();
+   }));
+   const failure=results.find(result=>result.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
+  }
  }};
 }

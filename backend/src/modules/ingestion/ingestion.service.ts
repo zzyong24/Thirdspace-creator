@@ -224,17 +224,18 @@ export type DouyinFetchResult =
 export interface DouyinFetchPort {
   fetch(opts: {
     capturedAt: string;
+    userId?: string;
     accountId?: string | null;
     // [T-177 增量化] 库里已知作品 awemeId 集(refreshDouyin 从 publications 反查后透传)。抓取层
     //   据此在倒序作品列表翻页里 early-stop。省略 → fetchDouyinMetrics 退化为原全量滚动。
     knownAwemeIds?: Set<string>;
   }): Promise<DouyinFetchResult>;
-  login(opts?: { accountId?: string | null }): Promise<boolean>;
+  login(opts?: { accountId?: string | null; userId?:string }): Promise<boolean>;
   // [T-546] 热点宝 OAuth 与普通抖音扫码是同账号、同 profile 的不同授权目标。
   // 可选保持旧组合根兼容；请求热点宝而端口未装配时必须诚实失败。
-  loginDouhot?(opts?: { accountId?: string | null }): Promise<boolean>;
+  loginDouhot?(opts?: { accountId?: string | null; userId?:string }): Promise<boolean>;
   // 被动探针(T-032a):headless 快查登录态,不弹窗。设置页「账号绑定」徽标读它。
-  status(opts?: { accountId?: string | null }): Promise<boolean>;
+  status(opts?: { accountId?: string | null; userId?:string }): Promise<boolean>;
   // [T-330] 「绑定新号」staging 四步端口(全部可选,additive;组合根未升级装配时 forceNew
   //   诚实报错,不假装支持)。stagingKey 是组合根发的**不透明句柄**(service 不碰文件路径):
   //   - loginNew:在全新 staging 临时目录弹扫码 —— 空 profile 必出二维码,绝不因目录里
@@ -244,10 +245,10 @@ export interface DouyinFetchPort {
   //   - adoptStaging:身份确认后把 staging 登录态搬到该号正式目录 `.auth/douyin/<accountId>`
   //     (同号重扫 = 旧登录态被替换,即登录态更新)。
   //   - discardStaging:任何失败路径清理 staging(诚实:绝不把无主登录态默默挂 _default/旧号)。
-  loginNew?(): Promise<{ loggedIn: boolean; stagingKey: string }>;
-  fetchIdentity?(opts: { stagingKey: string }): Promise<DouyinSelfIdentity | null>;
-  adoptStaging?(opts: { stagingKey: string; accountId: string }): Promise<void>;
-  discardStaging?(opts: { stagingKey: string }): Promise<void>;
+  loginNew?(opts:{userId:string}): Promise<{ loggedIn: boolean; stagingKey: string }>;
+  fetchIdentity?(opts: { userId:string; stagingKey: string }): Promise<DouyinSelfIdentity | null>;
+  adoptStaging?(opts: { userId:string; stagingKey: string; accountId: string }): Promise<void>;
+  discardStaging?(opts: { userId:string; stagingKey: string }): Promise<void>;
 }
 
 // [T-136 §D] 归一 fetch 返回:旧数组形状 → { records, identity: null };新对象形状原样返回。
@@ -503,10 +504,10 @@ export function createIngestionService(args: {
       throw new Error("绑定新抖音号需要 platformAccount 端口(未注入)");
     }
     // ① staging 隔离扫码:全新空 profile 必出二维码,不会被旧 sessionid 短路。
-    const { loggedIn, stagingKey } = await fetchPort.loginNew();
+    const { loggedIn, stagingKey } = await fetchPort.loginNew({userId:ctx.userId});
     const discardStaging = async () => {
       try {
-        await fetchPort.discardStaging!({ stagingKey });
+        await fetchPort.discardStaging!({ userId:ctx.userId,stagingKey });
       } catch (err) {
         console.error(
           "[ingestion] loginDouyin(forceNew): 清理 staging 登录态失败:",
@@ -523,7 +524,7 @@ export function createIngestionService(args: {
     // 身份接口可能因灰度/新号空数据暂时不给结果；扫码登录态本身已被 cookie 验证，不能因此丢弃。
     let identity: DouyinSelfIdentity | null = null;
     try {
-      identity = await fetchPort.fetchIdentity({ stagingKey });
+      identity = await fetchPort.fetchIdentity({ userId:ctx.userId,stagingKey });
     } catch (err) {
       console.warn(
         `[ingestion] loginDouyin(forceNew): 身份暂不可读，先绑定为待识别账号:${
@@ -557,7 +558,7 @@ export function createIngestionService(args: {
     // ④ staging → 正式目录(同号重扫:旧目录被替换 = 登录态更新)。失败也诚实:清 staging +
     //   报错(账号行已建/复用无妨 —— 该号显「未连接」,用户可重扫)。
     try {
-      await fetchPort.adoptStaging({ stagingKey, accountId: ensured.id });
+      await fetchPort.adoptStaging({ userId:ctx.userId,stagingKey, accountId: ensured.id });
     } catch (err) {
       await discardStaging();
       throw new Error(
@@ -995,7 +996,7 @@ export function createIngestionService(args: {
       // [T-136 §D 切片 c] 带当前号 → composition root 用 `.auth/douyin/<accountId>` 登录态复刷。
       const { records, identity } = normalizeFetch(
         await douyinFetch.fetch({
-          capturedAt,
+          capturedAt,userId:ctx.userId,
           accountId: ctx.accountId ?? null,
           knownAwemeIds, // [T-177] 翻页 early-stop 锚(undefined → 全量)
         }),
@@ -1129,7 +1130,7 @@ export function createIngestionService(args: {
         }
         return {
           loggedIn: await douyinFetch.loginDouhot({
-            accountId: ctx.accountId ?? null,
+            userId:ctx.userId,accountId: ctx.accountId ?? null,
           }),
         };
       }
@@ -1140,7 +1141,7 @@ export function createIngestionService(args: {
       }
       // 弹 Chromium 窗口扫码;成功后登录态落 .auth/,后续 refreshDouyin 直接 headless 复用。
       // [T-136 §D 切片 c] 带当前号 → 落 `.auth/douyin/<accountId>` 独立登录态(每号各自扫码)。
-      const loggedIn = await douyinFetch.login({ accountId: ctx.accountId ?? null });
+      const loggedIn = await douyinFetch.login({ userId:ctx.userId,accountId: ctx.accountId ?? null });
       // T-144 —— 扫码成功才建绑定(诚实:失败不假装);同时 ensure external_source(采集源)+
       // platform_account(端口注入时),让「设置徽标 / 切换器 / 日历」三处同源。ensure 是尽力
       // 而为:建绑定失败绝不把"已成功的扫码"翻成失败(登录态已落 .auth/,是真的)。
@@ -1195,7 +1196,7 @@ export function createIngestionService(args: {
       }
       // headless 快查 .auth/ 里的 sessionid cookie(不弹窗);cookie 失效即 false(登录态过期)。
       // [T-136 §D 切片 c] 带当前号 → 查 `.auth/douyin/<accountId>` 该号独立登录态。
-      const loggedIn = await douyinFetch.status({ accountId: ctx.accountId ?? null });
+      const loggedIn = await douyinFetch.status({ userId:ctx.userId,accountId: ctx.accountId ?? null });
       // T-144 → [T-136] sourceReady:是否已有该号真实采集源(当前号新源 or 存量回落)。
       // 设置页据此把「可采集」承诺收敛到真实能力(登录态有效 + 源就绪);去虚假承诺。选号后
       // 存量源仍算就绪(findDouyinSourceId 回落),不因换 id 判假阴性。

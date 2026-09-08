@@ -45,3 +45,5 @@ export {
 } from "./platform-account.schema";
 
 export {lockAccountForSupply} from "./platform-account.service";
+
+export {createBrowserProfileAuthority} from "./browser-profile-authority.service";

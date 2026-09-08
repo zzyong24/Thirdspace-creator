@@ -1,3 +1,5 @@
+import {configureHostBrowserProfileLifecycle} from "./ingestion/host-browser-profile-lifecycle";
+import {createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
 import {createAgenticCollectionTools} from "@creatoros/backend/modules/ai-runtime";
 import {composeChatProduction,createChatProductionRuntime} from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
@@ -8,7 +10,7 @@ import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/
 import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
 import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
 import {countCandidatesForDay,lockCandidateSupply} from "@creatoros/backend/modules/candidate";
-import {lockAccountForSupply} from "@creatoros/backend/modules/platform-account";
+import {createBrowserProfileAuthority,lockAccountForSupply} from "@creatoros/backend/modules/platform-account";
 import {TOPIC_GENERATE_TEMPLATE} from "@creatoros/ai-worker";
 import {createTopicCandidateAdoptionService} from "@creatoros/backend/modules/ai";
 import {createTopicGenerateBusinessAdapter,createDailyTopicBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
@@ -1768,8 +1770,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const douyinAuthDirBase =
     process.env.CREATOROS_DOUYIN_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "douyin");
-  const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal): Promise<string> =>
-    (await resolveDouyinProfileIdentity(douyinAuthDirBase, accountId, signal)).authDir;
+  const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase);
+  const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile});
+  configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire);
+  const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal,userId?:string): Promise<string> => {
+    if(!accountId){
+      if(!userId)throw new Error("旧登录目录缺少当前用户授权");
+      return (await profileAuthority.authorizeTemporary(userId,"_default")).authDir;
+    }
+    const identity=await resolveDouyinProfileIdentity(douyinAuthDirBase,accountId,signal);
+    if(userId && (await profileAuthority.resolveProfile(identity.authDir,signal)).userId!==userId)throw new Error("登录目录与当前用户不符");
+    return identity.authDir;
+  };
+  const ownedStagingDir=async(stagingKey:string,userId:string)=>{
+    const dir=douyinStagingDirFor(douyinAuthDirBase,stagingKey),identity=await profileAuthority.resolveProfile(dir);
+    if(identity.userId!==userId)throw new Error("临时登录目录与当前用户不符");
+    return identity.authDir;
+  };
 
   // [T-217a] Web Session Vault 登录态**按域名分目录**:`.auth/web/<domain>/`(每站独立持久
   //   profile,与 `.auth/douyin/<accountId>` 并列、与用户日常浏览器隔离)。base 走 env
@@ -2810,7 +2827,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     // 线 B:抖音真抓端口 —— 自起持久化 Chromium(.auth/ 复用扫码登录态,见 douyin-cdp.ts)。
-    // [T-136 §D 切片 c] authDir **按号分目录**(douyinAuthDirFor(opts.accountId)):每号独立
+    // [T-136 §D 切片 c] authDir **按号分目录**(douyinAuthDirFor(opts.accountId,undefined,opts.userId)):每号独立
     //   登录态,互不顶号;accountId 为 null → `_default` 回退(单号 / 未选号,兼容旧行为)。
     //   测试经各自的 createIngestionService 注入 fake,不连真浏览器。
     douyinFetch: {
@@ -2820,13 +2837,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       fetch: async (opts) =>
         (await loadDouyinCdp()).fetchDouyinMetrics({
           capturedAt: opts.capturedAt,
-          authDir: await douyinAuthDirFor(opts.accountId),
+          authDir: await douyinAuthDirFor(opts.accountId,undefined,opts.userId),
           gateway: douyinGateway, // [gate-F7 插装点②] creator-center 翻页限流(注真单例)
           knownAwemeIds: opts.knownAwemeIds, // [T-177] 翻页 early-stop 锚(undefined → 全量)
         }),
       login: async (opts) =>
         (await loadDouyinCdp()).loginDouyin({
-          authDir: await douyinAuthDirFor(opts?.accountId),
+          authDir: await douyinAuthDirFor(opts?.accountId,undefined,opts?.userId),
         }),
       // [T-546] 热点宝 OAuth 使用与该采集账号相同的持久 profile；只切换登录目标，
       // 不复制 cookie、不新建另一套账号保管逻辑。
@@ -2834,7 +2851,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         (
           await loadDouhotCdp()
         ).loginDouhot({
-          authDir: await douyinAuthDirFor(opts?.accountId),
+          authDir: await douyinAuthDirFor(opts?.accountId,undefined,opts?.userId),
         }).then((result) => result.loggedIn),
       // [T-330] 绑新号 staging 四步端口(service loginDouyinForceNew 编排;根治「绑新号命中
       //   当前号/_default 旧 sessionid → 二维码不出现直接登进旧号」):
@@ -2842,30 +2859,32 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       //   身份(轻量 maxPages=1,口径同 refresh 采集);adoptStaging 身份确认后整目录搬到
       //   `.auth/douyin/<accountId>`(已存在先删=登录态更新;EXDEV 回退 copy+rm);
       //   discardStaging 失败路径清理。token→路径映射收在此组合根,service 不碰文件路径。
-      loginNew: async () => {
-        const stagingKey = createDouyinStagingToken();
-        const loggedIn = await (await loadDouyinCdp()).loginDouyin({
-          authDir: douyinStagingDirFor(douyinAuthDirBase, stagingKey),
-        });
-        return { loggedIn, stagingKey };
+      loginNew: async ({userId}) => {
+        const stagingKey=createDouyinStagingToken();
+        const identity=await profileAuthority.authorizeTemporary(userId,`_staging-${stagingKey}`);
+        try{
+          const loggedIn=await (await loadDouyinCdp()).loginDouyin({authDir:identity.authDir});
+          return {loggedIn,stagingKey};
+        }catch(error){
+          await hostProfileLifecycle.withProfiles([identity.authDir],()=>discardDouyinStagingDir(identity.authDir)).then(()=>profileAuthority.forgetTemporary(`_staging-${stagingKey}`)).catch(()=>{});
+          throw error;
+        }
       },
-      fetchIdentity: async (opts) =>
-        (await loadDouyinCdp()).fetchDouyinIdentity({
-          authDir: douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
-        }),
-      adoptStaging: async (opts) =>
-        adoptDouyinStagingDir(
-          douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
-          await douyinAuthDirFor(opts.accountId),
-        ),
-      discardStaging: async (opts) =>
-        discardDouyinStagingDir(
-          douyinStagingDirFor(douyinAuthDirBase, opts.stagingKey),
-        ),
+      fetchIdentity: async opts => (await loadDouyinCdp()).fetchDouyinIdentity({authDir:await ownedStagingDir(opts.stagingKey,opts.userId)}),
+      adoptStaging: async opts => {
+        const source=await ownedStagingDir(opts.stagingKey,opts.userId),target=await douyinAuthDirFor(opts.accountId,undefined,opts.userId);
+        await hostProfileLifecycle.withProfiles([source,target],()=>adoptDouyinStagingDir(source,target));
+        profileAuthority.forgetTemporary(`_staging-${opts.stagingKey}`);
+      },
+      discardStaging: async opts => {
+        const source=await ownedStagingDir(opts.stagingKey,opts.userId);
+        await hostProfileLifecycle.withProfiles([source],()=>discardDouyinStagingDir(source));
+        profileAuthority.forgetTemporary(`_staging-${opts.stagingKey}`);
+      },
       // T-032a:被动状态探针 —— headless 快查登录态(不弹窗),设置页「账号绑定」徽标读它。
       status: async (opts) =>
         (await loadDouyinCdp()).checkDouyinStatus({
-          authDir: await douyinAuthDirFor(opts?.accountId),
+          authDir: await douyinAuthDirFor(opts?.accountId,undefined,opts?.userId),
         }),
     },
     // T-038c:限流可观测读端口 —— 绑 gateway 单例 getChannelStatus(内存镜像,同步无 IO)。
@@ -4787,7 +4806,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const parsed = await cdp.fetchDouyinSharedItem({
           awemeId: target.awemeId,
           canonicalUrl: target.canonicalUrl,
-          authDir: await douyinAuthDirFor(ctx.accountId),
+          authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
           capturedAt: input.capturedAt,
           gateway: douyinGateway,
         });
@@ -5533,7 +5552,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // collectors:每个 sourceKind 一个确定性采集器(抓真数据 → ingestion 落库 → 返回新鲜度
   // 统计)。runner 靠注入调它,不 import fetchDouyin*(保持可测)。
   //
-  // [T-136 §D 切片 c] 抖音 authDir **按号分目录**:采集器内用 douyinAuthDirFor(ctx.accountId)
+  // [T-136 §D 切片 c] 抖音 authDir **按号分目录**:采集器内用 douyinAuthDirFor(ctx.accountId,undefined,ctx.userId)
   //   逐调解析(每号独立登录态,与 douyinFetch 端口同源、同 base)。评论 / 明细采集直连
   //   fetchDouyinComments*/Export,故在此按当前号拼路径(不像 refresh 走端口透传)。
 
@@ -5556,7 +5575,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const cdp = await loadDouyinCdp();
     const src = await cdp.fetchDouyinVideoSource({
       awemeId,
-      authDir: await douyinAuthDirFor(c.accountId),
+      authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId),
       gateway: douyinGateway,
     });
     if (src.kind === "image-album") return null;
@@ -5626,7 +5645,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           const cdp = await loadDouyinCdp();
           const source = await cdp.fetchDouyinVideoSource({
             awemeId,
-            authDir: await douyinAuthDirFor(c.accountId),
+            authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId),
             gateway: douyinGateway,
           });
           logStage("done");
@@ -5890,7 +5909,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const records = await (await loadDouyinCdp()).fetchDouyinComments(
           {
             awemeId: single,
-            authDir: await douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+            authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
             maxPages,
           },
           { gateway: douyinGateway, commentWatermark }, // [T-177] 增量 early-break
@@ -5966,7 +5985,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const batch = await (await loadDouyinCdp()).fetchDouyinCommentsForWorks(
         awemeIds,
         {
-          authDir: await douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+          authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
           maxPages,
         },
         {
@@ -6043,7 +6062,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       const rawBatch = await (await loadDouyinCdp()).fetchDouyinMetrics({
         capturedAt,
-        authDir: await douyinAuthDirFor(ctx.accountId),
+        authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
         gateway: douyinGateway,
         // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
         knownAwemeIds: undefined,
@@ -6059,7 +6078,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
         report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
         const bytes = await (await loadDouyinCdp()).fetchDouyinWorkListExport(
-          { authDir: await douyinAuthDirFor(ctx.accountId) }, // [T-136] 按当前号登录态
+          { authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
         );
         // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
@@ -6319,7 +6338,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           fetchVideoUrl: async (awemeId) =>
             (await loadDouyinCdp()).fetchDouyinCoverUrl({
               awemeId,
-              authDir: await douyinAuthDirFor(ctx.accountId),
+              authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
               gateway: douyinGateway,
             }),
           downloadImage: (url) => downloadDouyinImage(url),
@@ -6632,7 +6651,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         fetchSourcePosts: async (c, source) => {
           const works = await (await loadDouyinCdp()).fetchDouyinUserPosts(
             {
-              authDir: await douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态指纹
+              authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId), // [T-136] 按当前号登录态指纹
               secUid: source.externalAccountId,
               gateway: douyinGateway,
             },
@@ -6677,7 +6696,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           searchVideos: async (c, keyword) => {
             const videos = await (await loadDouyinCdp()).fetchDouyinSearchVideos(
               {
-                authDir: await douyinAuthDirFor(c.accountId), // [T-136] 按当前号登录态
+                authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId), // [T-136] 按当前号登录态
                 keyword,
                 gateway: douyinGateway,
               },
@@ -6793,7 +6812,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // ① 拉本人收藏夹列表(未登录在此抛 DouyinNotLoggedInError → needs_reconnect;验证码返空)。
       report({ stage: "favorites", processed: 0, total: folders.length, message: "拉取抖音收藏夹列表" });
       const remoteFolders = await (await loadDouyinCdp()).fetchDouyinCollectsFolders({
-        authDir: await douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+        authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
         gateway: douyinGateway,
         diagnostics: {
           requestId: ctx.requestId,
@@ -6845,7 +6864,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         try {
           const videos = await (await loadDouyinCdp()).fetchDouyinCollectsVideos({
-            authDir: await douyinAuthDirFor(ctx.accountId), // [T-136] 按当前号登录态
+            authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
             collectsId: folder.collectsId,
             maxItems: 50,
             gateway: douyinGateway,
@@ -7081,11 +7100,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   多号各自扫码 = T-136 §D)。同步 renameSync(同目录基址、原子);best-effort,失败不阻断建 job/采集。
     if (ctx.accountId) {
       try {
-        const fromDir = await douyinAuthDirFor(null); // _default
-        const toDir = await douyinAuthDirFor(ctx.accountId);
-        if (fromDir !== toDir && existsSync(fromDir) && !existsSync(toDir)) {
-          renameSync(fromDir, toDir);
-        }
+        const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
+        const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);
+        await hostProfileLifecycle.withProfiles([fromDir,toDir],async()=>{
+          if (fromDir !== toDir && existsSync(fromDir) && !existsSync(toDir)) renameSync(fromDir, toDir);
+        });
       } catch {
         /* 登录态迁移 best-effort:失败则 statusDouyin 仍回退可查(见 douyinAuthDirFor 回退),不阻断绑定 */
       }
@@ -9228,9 +9247,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     transcribeSource:{
-      async fetchLoggedInSource(c,awemeId,signal){
-        const source=await (await loadDouyinCdp()).fetchDouyinVideoUrlViaDetail({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal),gateway:douyinGateway,signal});
-        return {...source,kind:source.kind??"video"};
+      resolveProfile:async(c,signal)=>{
+        if(!c.accountId)throw new Error("转写登录来源缺少真实账号");
+        await platformAccountService.getAccount(c,c.accountId);signal?.throwIfAborted();
+        return resolveDouyinProfileIdentity(douyinAuthDirBase,c.accountId,signal);
       },
       async acquireChannel(_c,channel,signal){signal?.throwIfAborted();await douyinGateway.acquire(channel);signal?.throwIfAborted();},
       reportChannel:(_c,channel,result)=>douyinGateway.report(channel,classifyDouyinOutcome(result.kind==="success"?{kind:"ok"}:result)),
