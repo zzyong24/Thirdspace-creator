@@ -60,6 +60,25 @@ function stripHtml(raw: string): string {
  *   <li class="b_algo"> ... <h2><a href="URL">Title</a></h2> ... <p>snippet</p> ... </li>
  * 天生脆弱(Bing 改版即失效)→ 解析不出即返 [],上层降级 model_memory(诚实,不硬凑)。导出供单测。
  */
+// SEMANTIC_BOUNDARY_ALLOW: 仅解码搜索引擎的跳转协议，不判断内容可信度或替用户选择来源。
+export function resolveBingResultUrl(raw: string): string {
+  try {
+    const link = new URL(raw);
+    if (!['http:', 'https:'].includes(link.protocol)) return '';
+    if ((link.hostname === 'bing.com' || link.hostname.endsWith('.bing.com')) && link.pathname === '/ck/a') {
+      const encoded = link.searchParams.get('u');
+      if (!encoded) return raw;
+      const target = new URL(encoded.startsWith('a1')
+        ? Buffer.from(encoded.slice(2), 'base64url').toString('utf8')
+        : encoded);
+      return ['http:', 'https:'].includes(target.protocol) ? target.href : '';
+    }
+    return link.href;
+  } catch {
+    return '';
+  }
+}
+
 export function parseBingResults(html: string): SearchResult[] {
   const out: SearchResult[] = [];
   const blocks = html.match(/<li class="b_algo"[\s\S]*?<\/li>/gi) ?? [];
@@ -68,7 +87,7 @@ export function parseBingResults(html: string): SearchResult[] {
       block,
     );
     if (!a) continue;
-    const url = stripHtml(a[1] ?? "");
+    const url = resolveBingResultUrl(stripHtml(a[1] ?? ""));
     if (!/^https?:\/\//i.test(url)) continue; // URL 一等公民,非 http(s) 丢弃
     const title = stripHtml(a[2] ?? "");
     const p = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(block);

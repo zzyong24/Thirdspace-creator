@@ -202,3 +202,12 @@ describe("[T-390] createBrowserScrapeAdapter — baseUrl 指到百度也能解�
     expect(results[0]!.url).toBe("https://a.com/article-1");
   });
 });
+
+it("[T-919] Bing 跳转链接投影真实来源，拒绝非 HTTP 目标", () => {
+  const target = "https://openai.com/index/example/?a=1&b=2";
+  const wrap = (url: string) => `<li class="b_algo"><h2><a href="https://www.bing.com/ck/a?u=a1${Buffer.from(url).toString('base64url')}&amp;ntb=1">来源</a></h2></li>`;
+  expect(parseBingResults(wrap(target))).toEqual([
+    { title: "来源", url: target, snippet: "", siteName: "openai.com" },
+  ]);
+  expect(parseBingResults(wrap("javascript:alert(1)"))).toEqual([]);
+});

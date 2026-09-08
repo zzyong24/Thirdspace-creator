@@ -252,3 +252,12 @@ describe("detectTaskNotifications", () => {
     expect(nextSnapshot.get("a")).toBe("succeeded");
   });
 });
+
+it("[T-919] 普通聊天成功不重复通知，但失败和等待处理仍可见", () => {
+  const rows = ["succeeded", "failed", "waiting_user"].map((status) => ({
+    id: status, taskType: "copilot.assist", status,
+  }));
+  const result = detectTaskNotifications(new Map(rows.map(row => [row.id, "running"])), rows, true);
+  expect(result.notifications.map(row => row.status)).toEqual(["failed", "waiting_user"]);
+  expect(result.nextSnapshot.get("succeeded")).toBe("succeeded");
+});

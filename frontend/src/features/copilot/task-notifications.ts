@@ -120,6 +120,9 @@ export function detectTaskNotifications(
     const before = nextSnapshot.get(row.id);
     const status=taskRuntimeStatus(row);
     nextSnapshot.set(row.id, status);
+    // 每轮普通对话已在消息区显示回答，不再当作后台长任务完成提示。
+    // 失败和需要用户处理的状态仍保留，避免吞掉恢复入口。
+    if (row.taskType === "copilot.assist" && status === "succeeded") continue;
     if (!seeded && !["waiting_user","unknown_result","paused"].includes(status)) continue;
     if (NOTIFY_STATUSES.has(status) && before !== status) {
       notifications.push({
