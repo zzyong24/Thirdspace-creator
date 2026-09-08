@@ -1,7 +1,7 @@
 import type {RequestContext} from "@creatoros/contract";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {canonicalJson} from "../ai/canonical-json";

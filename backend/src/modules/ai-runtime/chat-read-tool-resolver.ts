@@ -3,7 +3,7 @@ import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatche
 import type { RequestContext } from "@creatoros/contract";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { createChatHostContextReader } from "../ai/chat-host-context.service";
-import type { ContextReaders } from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import { buildChatTools, type ChatToolDeps } from "./chat-tools";
 import { createChatReadToolBindings } from "./chat-read-tool-bindings";
 import { isChatReadToolName } from "./chat-read-tool-names";

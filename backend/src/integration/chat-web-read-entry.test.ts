@@ -10,7 +10,7 @@ import {createBrowserSessionsService} from "../modules/browser-sessions";
 import {buildChatTools,type ChatToolDeps} from "../modules/ai-runtime/chat-tools";
 import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
 import {createChatTaskToolHost} from "../modules/ai-runtime/chat-task-tool-host";
-import type {ContextReaders} from "../modules/ai-runtime/chat-runner";
+import type {ContextReaders} from "../modules/ai-runtime/chat-assembly-types";
 import {createChatHostContextReader} from "../modules/ai/chat-host-context.service";
 import {createAiRepository} from "../modules/ai/ai.repository";
 import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";

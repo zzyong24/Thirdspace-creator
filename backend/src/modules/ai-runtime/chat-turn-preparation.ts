@@ -1,9 +1,12 @@
+import type {RequestContext} from "@creatoros/contract";
+import type {ChatTurnInput,AssembleChatDeps} from "./chat-assembly-types";
 import { validateChatHostContext, type ChatHostContext } from "../ai/chat-host-context";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
-import {prepareChatAssembly,latestUserText,detectCopilotMediaRoute,isScratchPositioningConversation,type runChatStream} from "./chat-runner";
+import {prepareChatAssembly} from "./chat-assembly";
+import {latestUserText,detectCopilotMediaRoute,isScratchPositioningConversation} from "./chat-assembly-context";
 import {prepareChatModelMessages} from "./chat-model-messages";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
-export async function prepareChatTurn(ctx:Parameters<typeof runChatStream>[0],input:Parameters<typeof runChatStream>[1],deps:Parameters<typeof runChatStream>[2],options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
+export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,deps:AssembleChatDeps,options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
  const frozenOptions={...options};
  const assembly=await prepareChatAssembly(ctx,input.chatContext,deps,detectCopilotMediaRoute(input.messages),{
   positioningScratch:isScratchPositioningConversation(input.messages),
@@ -16,9 +19,9 @@ export async function prepareChatTurn(ctx:Parameters<typeof runChatStream>[0],in
 
 /** 仅接服务端已验归属的消息/来源与快照；不从客户端输入解析权限或当前配置。 */
 export async function prepareDurableChatTurn(
- ctx: Parameters<typeof runChatStream>[0],
- input: Parameters<typeof runChatStream>[1],
- deps: Parameters<typeof runChatStream>[2],
+ ctx: RequestContext,
+ input: ChatTurnInput,
+ deps: AssembleChatDeps,
  skillSnapshot: ChatHostContext["skillSnapshot"],
  options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
 ) {

@@ -2,7 +2,7 @@ import {it,expect,vi} from "vitest";
 import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 async function fixture(){
  const context={userId:"u",accountId:"a",source:"user" as const,requestId:"r"},execution={executionTaskId:"e",attempt:1,fenceToken:"f"};
  const definitions=(await prepareChatToolDefinitions(buildChatTools(["local.tools","local.workspace"],{} as ChatToolDeps))).definitions;

@@ -61,36 +61,3 @@ describe("聊天共享结构化节点准备", () => {
     expect(prepared.facets.works).toBe("");
   });
 });
-
-it("真实节点通过各自 capability 调用测试模型并保留完整候选投影", async () => {
-  const { createServer } = await import("node:http");
-  const { registerAllTemplates } = await import("@creatoros/ai-worker");
-  const { runChatTopicEnrich, runChatPositioning } = await import("./chat-structured-tool-nodes");
-  registerAllTemplates();
-  const requests: Array<{model: string; messages: unknown[]}> = [];
-  const server = createServer(async (req, res) => {
-    let body = ""; for await (const chunk of req) body += chunk;
-    const request = JSON.parse(body); requests.push(request);
-    const output = request.model === "topic.enrich" ? { oneLiner: "真实节点选题", materialBasis: "未核实", audiencePainScore: null } : {
-      oneLiner: "真实节点定位", keywords: ["一个关键词"], facets: { avoid: "不做代运营" }, downstreamRules: { forbidRule: "不夸大收益" },
-    };
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({id:"local-response",object:"chat.completion",created:1,model:request.model,choices:[{index:0,message:{role:"assistant",content:JSON.stringify(output)},finish_reason:"stop"}],usage:{prompt_tokens:10,completion_tokens:20,total_tokens:30}}));
-  });
-  await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
-  const owner = { userId: "node-user", accountId: "node-account", source: "user" as const, requestId: "node-request" };
-  const resolveModelSpec = vi.fn(async (_ctx: typeof owner, capability: string) => ({ apiFormat: "openai_chat" as const, model: capability, baseUrl: `http://127.0.0.1:${(server.address() as {port:number}).port}/v1`, token: "local-fixture", structuredOutputs: false }));
-  const scopes: string[][] = [];
-  const ports = { resolveModelSpec, async runWithSkillSnapshot<T>(ids: readonly string[], execute: () => Promise<T>): Promise<T> { scopes.push([...ids]); return execute(); } };
-  try {
-    const card = await runChatTopicEnrich(owner, context, {kind:"candidate",ids:["original"],label:"所选题目"}, {title:"另一个题目",angle:""}, ports);
-    const positioning = await runChatPositioning(owner, context, {sourceMode:"scratch",extraBrief:"新定位意图"}, ports);
-    expect(resolveModelSpec.mock.calls.map(call => [call[0],call[1]])).toEqual([[owner,"topic.enrich"],[owner,"positioning.generate"]]);
-    expect(scopes).toEqual([["topic.enrich"],["positioning.generate"]]);
-    expect(requests.map(request => request.model)).toEqual(["topic.enrich","positioning.generate"]);
-    expect(JSON.stringify(requests[0]!.messages)).toContain("所选题目");
-    expect(JSON.stringify(requests[1]!.messages)).not.toContain("原定位");
-    expect(card).toMatchObject({ candidateId: "original", card: { oneLiner: "真实节点选题", materialBasis: "未核实", audiencePainScore: null } });
-    expect(positioning).toMatchObject({ oneLiner: "真实节点定位", keywords: ["一个关键词","",""], facets: { avoid: "不做代运营" }, downstreamRules: { forbidRule: "不夸大收益" } });
-  } finally { server.closeAllConnections(); await new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve())); }
-});

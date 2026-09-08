@@ -2,7 +2,7 @@ import {it,expect,vi} from "vitest";
 import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>["read"]>>;
 async function fixture(bound=false){

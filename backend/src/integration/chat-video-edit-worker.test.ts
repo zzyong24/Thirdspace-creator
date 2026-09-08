@@ -13,7 +13,7 @@ import * as toolPorts from "../modules/execution/execution-chat-tool-ports.servi
 import {createChatTaskToolHost} from "../modules/ai-runtime/chat-task-tool-host";
 import {buildChatTools,type ChatToolDeps} from "../modules/ai-runtime/chat-tools";
 import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
-import type {ContextReaders} from "../modules/ai-runtime/chat-runner";
+import type {ContextReaders} from "../modules/ai-runtime/chat-assembly-types";
 let db:Db,close:()=>Promise<void>,seq=0;
 const entryPath=resolve("../ai-worker/dist/execution-worker.cjs");
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);

@@ -14,7 +14,7 @@ import {createChatPlanningTaskHost,type ChatPlanningTaskPorts} from "./chat-plan
 import {createChatMaterialTaskHost,type ChatMaterialTaskPorts} from "./chat-material-task-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
 import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import {createChatReadTaskToolHost} from "./chat-read-tool-resolver";
 import {createChatHooksTaskToolHost} from "./chat-hooks-tool-host";
 import {createChatCandidateTaskToolHost} from "./chat-candidate-tool-host";

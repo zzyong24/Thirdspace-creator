@@ -1,5 +1,5 @@
 import type { RequestContext } from "@creatoros/contract";
-import type { ContextReaders } from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import type { ChatToolDeps } from "./chat-tools";
 
 export type ChatReadToolBindings=Pick<ChatToolDeps,

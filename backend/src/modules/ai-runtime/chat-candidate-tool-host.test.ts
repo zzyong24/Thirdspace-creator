@@ -3,7 +3,7 @@ import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
 import type {createChatHostContextReader} from "../ai/chat-host-context.service";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 type Restored=Awaited<ReturnType<ReturnType<typeof createChatHostContextReader>["read"]>>;
 async function fixture(projectId:string|null=null){
  const context={userId:"u",accountId:"a",requestId:"r",source:"user" as const};

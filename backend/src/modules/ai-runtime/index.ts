@@ -6,7 +6,7 @@ export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
 //
 // 边界(design-spec §3.1/§3.4):本模块 import `@creatoros/ai-worker`(模板 REGISTRY +
 // runStructuredNode),故**独立于** `modules/ai`(那个持久化模块的不变量禁 import ai-worker)。
-// chat 流式(chat-runner/chat-tools/chat-context)与 web search(search/)不在此 —— 前者走
+// chat 上下文与工具定义准备及 web search(search/)不在此说明范围 —— 前者走
 // §3.2 流式端点(Batch 3),后者属前端 browser 设施经端口注入。
 
 export * from "./agent-run";
@@ -30,10 +30,11 @@ export * from "./trend-source-signals";
 export * from "./signal-quality";
 // [T-212d] 防茧房校准:淘汰原因蒸馏(runTopicPreferenceDistill 编排 + createTopicPreferenceDistillPort AI 端口)。
 export * from "./topic-preference-distill-runner";
-// [T-163 Batch 3] chat 流式(runChatStream + tools + context 装配)—— streamText/tool/jsonSchema
-// (Vercel AI SDK)在此;前端只留 /api/chat 薄代理 + useChat UI。
+// 聊天上下文与工具定义准备；模型执行由独立持久 Worker 承担。
 export * from "./chat-context";
-export * from "./chat-runner";
+export * from "./chat-assembly";
+export * from "./chat-assembly-types";
+export * from "./chat-assembly-context";
 export { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
 export { createChatTaskToolHost } from "./chat-task-tool-host";
 export * from "./chat-tools";
@@ -63,7 +64,6 @@ export * from "./llm/anthropic-adapter";
 export * from "./llm/parse";
 export * from "./llm/provider";
 // [T-239b S1] 错误恢复层:分类重试/退避纯函数 + 恢复模型包装器(chat 主链路 + 组合根消费)。
-export * from "./llm/recovering-model";
 export * from "./llm/resolve";
 export * from "./llm/retry-policy";
 export * from "./material-extract-runner";

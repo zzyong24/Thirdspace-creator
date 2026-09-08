@@ -5,7 +5,7 @@ import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatche
 import type {ChatBackendTool} from "../execution/execution-chat-tool-ports.service";
 import {canonicalJson} from "../ai/canonical-json";
 import {buildChatTools,type ChatToolDeps} from "./chat-tools";
-import type {ContextReaders} from "./chat-runner";
+import type {ContextReaders} from "./chat-assembly-types";
 import type {createAiService} from "../ai/ai.service";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {getChatToolApprovalDecider} from "./chat-tool-gate";
