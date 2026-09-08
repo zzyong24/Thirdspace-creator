@@ -1,7 +1,7 @@
 import {createApplicationTransport} from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
-import {createKnowledgeSearchRuntime} from "@creatoros/backend/modules/search";
+import {createKnowledgeApplication} from "@creatoros/backend/application/knowledge";
 import {configureHostBrowserProfileLifecycle} from "./ingestion/host-browser-profile-lifecycle";
 import {createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
 import {createAgenticCollectionTools} from "@creatoros/backend/modules/ai-runtime";
@@ -107,9 +107,6 @@ import {
   createNotificationsTransport,
 } from "@creatoros/backend/modules/notifications";
 import {
-  createSearchRepository,
-  createSearchService,
-  createSearchTransport,
   // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
   type HybridSearchHit,
 } from "@creatoros/backend/modules/search";
@@ -152,7 +149,6 @@ import {
 import {
   createKnowledgeRepository,
   createKnowledgeService,
-  createKnowledgeTransport,
 } from "@creatoros/backend/modules/knowledge";
 import {
   createAssetRepository,
@@ -1774,62 +1770,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createNotificationsService(notificationsRepo, deps),
   );
 
-  // Search (module 02): the composed `pages.search.get` read served over the
-  // SAME pglite store. The service mints a per-ctx repo internally so every index
-  // query + history write is scoped to `ctx.userId`; the transport's per-request
-  // serviceFactory can therefore return ONE shared service. Clock/ids share the
-  // deterministic `deps` (createSeq keeps searchdoc/searchhist ids collision-free).
-  const searchService = createSearchService(
-    (ctx) =>
-      createSearchRepository(db, {
-        ...deps,
-        userId: ctx.userId,
-        // [T-332 S2] strict:搜索投影/检索是 per-account 域(跨号搜到=串味),未选号 →
-        //   AccountRequiredError(引导态);「未选号=全局视图」退化已废除(SPEC §4.2)。
-        accountId: requireAccountId(ctx.accountId, "search.repo"),
-      }),
-    deps,
-  );
-  const search = createSearchTransport(() => searchService);
-
-  // Knowledge (module 06): one user-scoped repository over the shared db (the
-  // repo takes ctx per-call, not at construction). Its transport mints a per-ctx
-  // service so every list/get/create/revise/relate is scoped to `ctx.userId`,
-  // and children inherit ownership via the parent item's gate. Clock/ids share
-  // the deterministic `deps` (createSeq keeps knowledge/revision/relation ids
-  // collision-free across requests).
-  const knowledgeRepo = createKnowledgeRepository(db, deps);
-  const knowledgeService = createKnowledgeService(knowledgeRepo);
-  const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
-  // [T-093] 知识写路径的搜索索引 fan-out(composition root 组合,knowledge 模块不反向
-  // 依赖 search):create / revisions.create 成功后 best-effort 重建该条的 search_document
-  // (含可配 embedding;失败绝不回滚业务真值——SPEC §16 派生索引纪律)。
-  // `indexKnowledgeDocumentBestEffort` 定义在下方 settingsService/resolveModelSpec 之后,
-  // 此回调在请求期才执行,闭包引用无 TDZ 问题(与 llmCompleter 同款)。
-  const knowledge: Transport = {
-    async request(endpoint, input, ctx) {
-      const result = await knowledgeBaseTransport.request(endpoint, input, ctx);
-      if (
-        ctx &&
-        (endpoint.id === "knowledge.create" ||
-          endpoint.id === "knowledge.revisions.create")
-      ) {
-        const data = (result as { data?: unknown }).data as
-          | { id?: string; knowledgeItemId?: string }
-          | undefined;
-        const knowledgeId =
-          endpoint.id === "knowledge.create" ? data?.id : data?.knowledgeItemId;
-        if (knowledgeId) {
-          // [全局搜索修复②] 原 `void ...catch()` fire-and-forget 有「建完即搜」竞态:
-          // knowledge.create 返回后 search_document 可能尚未落库 → 立刻搜命中不到。改为
-          // 同步 await(indexKnowledgeDocumentBestEffort 内部已 try/catch 吞错,失败绝不
-          // 回滚业务真值),消除竞态。
-          await indexKnowledgeDocumentBestEffort(ctx, knowledgeId);
-        }
-      }
-      return result;
-    },
-  };
+  const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime}=createKnowledgeApplication(db,deps,{
+    resolveEmbedSpec:c=>resolveEmbedSpec(c),
+    embedTexts:(c,spec,texts)=>embedTexts(c,spec,texts),
+  });
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
   // takes ctx per-call, not at construction). The service is the SOLE
@@ -8811,11 +8755,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
     texts: string[],
   ): Promise<number[][]> => embeddingIo.embed(ctx, spec, texts);
-
-  const knowledgeSearchRuntime = createKnowledgeSearchRuntime({
-    knowledge:knowledgeService, search:searchService, resolveEmbedSpec, embedTexts,
-  });
-  const {indexKnowledgeDocumentBestEffort}=knowledgeSearchRuntime;
 
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
