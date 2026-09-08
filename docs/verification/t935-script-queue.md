@@ -9,3 +9,9 @@
 修复不修改历史摘要算法，也不取消来源校验。恢复时注入原生产解析器，先验证工具版本、执行位置、副作用、schema 与冻结定义一致，再按原解析顺序核对原摘要。继续原子任务和原工具回执，不新建替代任务。所有恢复前置错误仍需可诊断，不再只吞成泛化代码。
 
 独立实现与回归：`pnpm -C backend exec vitest run src/modules/execution/execution-chat-script-draft.service.test.ts` 15/15通过。完整内存PGlite父/子事务重现旧恢复失败；生产resolver使同一子任务prepare一次成功，原digest不变、子任务仍只有一条，伪造schema仍拒绝。frontend tsc通过。实际用户任务尚待安装后恢复。
+
+## 安装结果
+
+候选 `4806dcab` 已由干净隔离工作树固定本地入口构建并安装（exit 0），PID24309，sidecar启动日志 SIDECAR_STARTUP_VERIFIED。DMG SHA256 `f87a14fa28deaadb08c17a079952390280239f29487f7aaeefcfa59d3c9e5b7f`；安装和候选sidecar同为 `ea68fea6b5da6d8e8a14ec419ddb081aea71cbd31941a343ab6d89580cdafb14`。签名及hdiutil校验通过。日志 `/tmp/t935-package.log`。
+
+新启动诊断日志暂未出现此前反复的 PREPARATION_RECOVERY_REJECTED；这不等于脚本已生成。CLI授权因安装重启失效，原任务最终结果尚待公开CLI回读，T-935仍保持进行中。搜索业务验收仍失败，见T-934记录。
