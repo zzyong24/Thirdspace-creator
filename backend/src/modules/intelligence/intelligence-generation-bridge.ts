@@ -104,10 +104,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     if(port==="commitResult"){
      const request=workerPortInputSchemas.commitResult.parse(raw);
      if(request.outcome!=="succeeded"){
-      const recorded=(await ledger.inspect(ref)).calls;
-      // 旧Worker可能丢失HTTP分类，但账本明确拒绝仍可有界重试；未知回执不能走这条路。
-      const recoverRejected=request.outcome==="failed"&&request.errorCode==="WORKER_EXECUTION_INTERRUPTED"&&recorded.at(-1)?.status==="rejected"&&!recorded.some(row=>row.status==="started"||row.status==="unknown");
-      const result=await outcomes.recordFailure(ref,recoverRejected?{...request,outcome:"retry_wait"}:request);
+      const result=await outcomes.recordFailure(ref,request);
       persistedStatus=result.status;closedPorts=true;return result;
      }
      await verify();const last=(await ledger.inspect(ref)).calls.at(-1);if(last?.id!==request.callId||last.resultText!==request.text||last.status!=="settled")throw new Error("INTELLIGENCE_COMMIT_MISMATCH");
@@ -151,7 +148,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
      if(!state.calls.length){unstartedFailure=true;}else{
      const unknown=state.calls.some(row=>row.status==="started"||row.status==="unknown");
      const rejected=state.calls.at(-1)?.status==="rejected";
-     const result=await outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":rejected?"retry_wait":"failed",errorCode:unknown?"INTELLIGENCE_CALL_REQUIRES_RECONCILIATION":rejected?"INTELLIGENCE_REJECTED_RECEIPT_RECOVERY":"INTELLIGENCE_WORKER_INTERRUPTED"});
+     const result=await outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":rejected?"waiting_user":"failed",errorCode:unknown?"INTELLIGENCE_CALL_REQUIRES_RECONCILIATION":rejected?"INTELLIGENCE_REJECTED_OUTCOME_MISSING":"INTELLIGENCE_WORKER_INTERRUPTED"});
      status=result.status;
      }
     }

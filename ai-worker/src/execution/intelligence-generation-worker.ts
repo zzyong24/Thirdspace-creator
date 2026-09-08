@@ -1,3 +1,4 @@
+import {GenerationFailure,generationFailure} from "./generation-error";
 import {generateText} from "ai";
 import {z} from "zod";
 import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type workerModelSpecSchema} from "@creatoros/contract/execution-worker";
@@ -24,7 +25,7 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   if(!lastCallId)throw new Error("INTELLIGENCE_RECEIPT_MISSING");
   const text=JSON.stringify(value);await call("saveGenerationResult",{callId:lastCallId,text},signal);return {callId:lastCallId,text};
  };
- return runWithEffectiveSkillSnapshot(input.skillSnapshot,async()=>{
+ try{return await runWithEffectiveSkillSnapshot(input.skillSnapshot,async()=>{
   const target=JSON.parse(input.facets.target??"null");
   if(input.facets.mode==="script_candidate"){
    const source=scriptTarget.parse(target);
@@ -45,5 +46,10 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   const adaptedDraft=draft.text.trim();if(!adaptedDraft)throw new Error("output invalid: adapted draft is empty");
   await save({kind:"checkpoint",stage:"draft",value:{contentText:adaptedDraft}});
   return save({kind:"result",value:{...decomposition,...topic,adaptedDraft}});
- });
+ });}catch(error){
+  signal.throwIfAborted();
+  if(error instanceof GenerationFailure)throw error;
+  // HTTP明确拒绝保留配置/限流分类；网络和回执丢失不能当作未提交重试。
+  throw generationFailure(error,false);
+ }
 }
