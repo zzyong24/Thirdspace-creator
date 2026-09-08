@@ -6,6 +6,7 @@ const radarTransport = createHttpTransport();
 
 export function defaultApi(): RadarApi {
   return {
+    async commandTask(input){const result=await client.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[input.taskId],command:input.command,idempotencyKey:input.idempotencyKey}});if(!result.tasks.some(task=>task.id===input.taskId))throw new Error("任务操作回执不匹配，请刷新后核对。");},
     listCollectors: (input) =>
       client.listIntelligenceCollectors({
         params: undefined,

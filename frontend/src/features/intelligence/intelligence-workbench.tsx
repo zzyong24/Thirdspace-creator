@@ -1,6 +1,7 @@
 "use client";
 import { compactNumber,dateLabel,progressLabel,runStatusLabel,sourceTypeLabel,transcriptLabel } from "./intelligence-display";
 import { SourceRunHistoryDialog } from "./source-run-history-dialog";
+import {TopicTaskControls} from "./topic-task-controls";
 import { TopicCandidateEditor } from "./topic-candidate-editor";
 
 import {
@@ -1423,6 +1424,8 @@ function IntelligenceWorkbenchScope({
           >
             {detail ? (
               <ItemDetail
+                api={api}
+                onTaskDetail={(refreshed)=>setDetail(current=>current?.item.id===refreshed.item.id?refreshed:current)}
                 detail={detail}
                 busy={busy}
                 topicGenerating={topicGenerating}
@@ -1668,6 +1671,7 @@ function ItemCard({
 }
 
 function ItemDetail({
+  api,onTaskDetail,
   detail,
   busy,
   topicGenerating,
@@ -1678,6 +1682,8 @@ function ItemDetail({
   onConfirmTopic,
   onUpgradeProject,
 }: {
+  api:RadarApi;
+  onTaskDetail:(detail:RadarItemDetail)=>void;
   detail: RadarItemDetail;
   busy: boolean;
   topicGenerating: boolean;
@@ -1836,6 +1842,7 @@ function ItemDetail({
               </span>
             ) : null}
           </div>
+          {latestTransform?<TopicTaskControls key={latestTransform.id} transform={latestTransform} itemId={detail.item.id} api={api} onDetail={onTaskDetail}/>:null}
           {latestTransform && topicCandidate ? (
             <TopicCandidateEditor
               key={latestTransform.id}

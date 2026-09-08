@@ -177,6 +177,7 @@ export function useTopicPreview({api,detail,positioningVersionId,setDetail,setNo
         status: started.transform.status,
         taskStatus: started.task.status as RadarItemDetail["transforms"][number]["taskStatus"],
         taskRuntimeStatus: started.task.runtimeStatus,
+        executionTaskId: started.task.id,
         taskErrorCode: null,
         taskErrorMessage: null,
         // 重试只替换执行状态；后端会复用检查点，前端也不能在等待期间

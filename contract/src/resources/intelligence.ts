@@ -364,6 +364,7 @@ export const intelligenceTransformResource = z
     // 详情投影这三列后，客户端才能把失败/受阻与“仍在生成”区分开。
     taskStatus: executionTaskStatusV2.nullable(),
     taskRuntimeStatus: executionRuntimeStatusV2.optional(),
+    executionTaskId: id.nullable().optional(),
     taskErrorCode: z.string().nullable(),
     taskErrorMessage: z.string().nullable(),
     createdAt: iso8601,

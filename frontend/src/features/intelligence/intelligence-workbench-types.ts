@@ -162,6 +162,7 @@ export interface RadarItemDetail {
     id: string;
     status: "candidate" | "confirmed" | "cancelled";
     taskStatus?: ExecutionTaskResourceV2["status"] | null;
+    executionTaskId?: string | null;
     taskRuntimeStatus?: ExecutionTaskResourceV2["runtimeStatus"];
     taskErrorCode?: string | null;
     taskErrorMessage?: string | null;
@@ -251,6 +252,7 @@ export interface StartRunResult {
 }
 
 export interface RadarApi {
+  commandTask?(input:{taskId:string;command:"resume"|"cancel";idempotencyKey:string}):Promise<void>;
   listCollectors(input: { accountId: string }): Promise<
     Array<{
       accountId: string;
