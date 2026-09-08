@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { FolderPlus,Link2 } from "lucide-react";
 import * as React from "react";
 import type { RadarApi,RadarCollection } from "./intelligence-workbench-types";
+import { useShareImportTasks } from "./use-share-import-tasks";
+import { ShareImportTaskStatus } from "./share-import-task-status";
 import { operationKey } from "./radar-operation-key";
 export function AddCollectionDialog({
   accountId,
@@ -74,22 +76,24 @@ export function AddCollectionDialog({
   );
 }
 
-export function ImportDouyinShareDialog({
+type ShareDialogProps = {
+  accountId: string; collections: RadarCollection[]; api: RadarApi; onDone: () => void;
+};
+
+export function ImportDouyinShareDialog(props: ShareDialogProps) {
+  return <ShareImportDialogSession key={props.accountId} {...props} />;
+}
+
+function ShareImportDialogSession({
   accountId,
   collections,
   api,
   onDone,
-}: {
-  accountId: string;
-  collections: RadarCollection[];
-  api: RadarApi;
-  onDone: () => void;
-}) {
+}: ShareDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [shareText, setShareText] = React.useState("");
   const [collectionId, setCollectionId] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [pending, startTransition] = React.useTransition();
+  const {tasks, hasMore, error, pending, unconfirmed, commandBusy, submit, command, refresh} = useShareImportTasks(accountId, api, open, onDone);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -111,6 +115,7 @@ export function ImportDouyinShareDialog({
           autoFocus
           aria-label="抖音分享文本"
           rows={5}
+          disabled={pending || unconfirmed}
           value={shareText}
           onChange={(event) => setShareText(event.target.value)}
           placeholder="例如：复制打开抖音，看看这个视频 https://v.douyin.com/..."
@@ -120,6 +125,7 @@ export function ImportDouyinShareDialog({
           导入到分类
           <select
             aria-label="导入到分类"
+            disabled={pending || unconfirmed}
             value={collectionId}
             onChange={(event) => setCollectionId(event.target.value)}
             className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground"
@@ -134,36 +140,21 @@ export function ImportDouyinShareDialog({
         </label>
         <div className="rounded-xl border border-border/70 bg-muted/45 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
           建档层级为“分类 → 博主 → 视频”。导入会排进持久任务队列；短链解析、登录校验或
-          验证码受阻时会诚实显示失败，不会建立只有标题的空记录。
+          验证码受阻时会等待处理。关闭弹窗只离开查看，任务继续保留，可再次打开查看。
         </div>
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
+        {unconfirmed ? <p className="text-xs text-muted-foreground">原提交回执待核对，输入已保留。再次核对会复用同一个幂等标识。</p> : null}
+        <div className="grid max-h-64 gap-2 overflow-y-auto" aria-live="polite">
+          {tasks.map(task => <ShareImportTaskStatus key={task.id} task={task} busy={commandBusy !== null}
+            canCommand={!!api.commandTask} onCommand={action => void command(task, action)} onRefresh={() => void refresh(task)} />)}
+        </div>
+        {hasMore ? <Button type="button" variant="ghost" size="sm" onClick={() => void refresh(undefined, true)}>读取更早的导入任务</Button> : null}
         <DialogFooter>
-          <Button
-            type="button"
-            disabled={pending || !shareText.trim()}
-            onClick={() =>
-              startTransition(async () => {
-                setError(null);
-                try {
-                  await api.importDouyinShare({
-                    accountId,
-                    collectionId: collectionId || null,
-                    shareInput: shareText.trim(),
-                    idempotencyKey: operationKey("douyin-share-import"),
-                  });
-                  setShareText("");
-                  setCollectionId("");
-                  setOpen(false);
-                  onDone();
-                } catch {
-                  setError(
-                    "暂时无法进入导入队列。请确认分享文本含抖音链接，并检查当前账号登录状态。",
-                  );
-                }
-              })
-            }
-          >
-            {pending ? "正在排队…" : "识别并建档"}
+          <Button type="button" disabled={pending || !shareText.trim()}
+            onClick={async () => {
+              if (await submit(shareText, collectionId || null)) { setShareText(""); setCollectionId(""); }
+            }}>
+            {pending ? "正在核对提交…" : unconfirmed ? "核对原提交" : "识别并建档"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -252,6 +252,7 @@ export interface StartRunResult {
 }
 
 export interface RadarApi {
+  listShareImportTasks?(input: {accountId: string; ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
   commandTask?(input:{taskId:string;command:"resume"|"cancel";idempotencyKey:string}):Promise<void>;
   listCollectors(input: { accountId: string }): Promise<
     Array<{
@@ -325,7 +326,7 @@ export interface RadarApi {
     collectionId: string | null;
     shareInput: string;
     idempotencyKey: string;
-  }): Promise<unknown>;
+  }): Promise<{task: ExecutionTaskResourceV2}>;
   startRun(input: {
     sourceId: string;
     idempotencyKey: string;
