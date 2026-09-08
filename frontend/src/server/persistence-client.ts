@@ -1,3 +1,4 @@
+import {prepareChatReply} from "./prepare-chat-reply";
 import {createSchedulingAutomation} from "@creatoros/backend/application/scheduling/automation";
 import {createSchedulingControls} from "@creatoros/backend/application/scheduling/controls";
 import {createCollectionExecution} from "@creatoros/backend/application/scheduling/collection-execution";
@@ -2533,6 +2534,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFromAIResult:createTopicCandidateInTransaction,
   },deps.now);
   const aiService = createAiService({
+    prepareChatReply:(ctx,snapshot)=>{
+      if(stoppingPreparation)throw new Error("应用正在停止，无法启动新聊天");
+      void chatRuntime.durable;
+      return prepareChatReply(chatRuntime,ctx,snapshot);
+    },
+    assertChatProject:(ctx,id)=>projectsService.getProjectOverviewCore(ctx,id),
     projectTranscriptionTargets:createProjectTranscriptionTargetService(),
     scriptDraftTargets:createScriptDraftTargetService({now:deps.now,nextId:deps.nextId}),
     topicCandidates:topicCandidateAdoption,
@@ -2917,17 +2924,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             .catch(() => undefined);
         });
       }
-      // 只唤醒已与消息同事务保存的真实回复任务；重启可扫描 queued 任务恢复。
+      // 公开 CLI 和页面共用持久聊天 Worker；此时消息与 chat.run 已原子提交。
       if (endpoint.id === "ai.conversations.messages.create" && ctx) {
-        const message = (res as {data:{modelMetadata?:{replyTaskId?:unknown}}}).data;
-        const replyTaskId = message.modelMetadata?.replyTaskId;
-        if (typeof replyTaskId !== "string" || !replyTaskId) throw new Error("回复任务未保存");
-        const execution = modelWorker
-          ? businessExecution.prepare(ctx,replyTaskId).then(()=>{modelWorker.start();})
-          : Promise.reject(new Error("生成服务未就绪，请修复或更新应用"));
-        void execution.catch(async error=>{
-          await aiService.markFailed(ctx,replyTaskId,error instanceof Error?error.message:String(error)).catch(()=>undefined);
-        });
+        const message = (res as {data:{modelMetadata?:{chatTaskId?:unknown}}}).data;
+        if(typeof message.modelMetadata?.chatTaskId!=="string")throw new Error("聊天任务未保存");
+        chatRuntime.durable.start();
       }
       return res;
     },

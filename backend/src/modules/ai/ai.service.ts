@@ -1,3 +1,4 @@
+import { chatHistoryDigest, createChatTurnSubmissionService, type ChatTurnAssembly, type ChatTurnSnapshot } from "./chat-turn-submission.service";
 import {submitProjectTranscription,type ProjectTranscriptionSubmission} from "./project-transcription-submission";
 import {prepareScriptDraftTaskSubmission,type ScriptDraftSubmissionInput} from "./script-draft-task-submission";
 import {prepareAiTaskCommit,type PreparedAiTaskCommit} from "./ai-task-commit";
@@ -230,6 +231,8 @@ export interface AiAssetLibraryPort {
 }
 
 export interface ServiceDeps {
+  prepareChatReply?: (ctx:RequestContext,snapshot:ChatTurnSnapshot)=>Promise<ChatTurnAssembly>;
+  assertChatProject?: (ctx:RequestContext,projectId:string)=>Promise<unknown>;
   projectTranscriptionTargets?: {lock(tx:Db,ctx:RequestContext,projectId:string):Promise<unknown>;read(tx:Db,ctx:RequestContext,projectId:string):Promise<{awemeId:string;hasTranscript:boolean}>};
   scriptDraftTargets?: {ensure(tx:Db,ctx:RequestContext,projectId:string):Promise<string>};
   db: Db;
@@ -800,24 +803,34 @@ export function createAiService(deps: ServiceDeps): AiService {
     },
 
     async createMessageWithReplyTask(ctx,conversationId,body){
-      // 在任何配置读取前先验证会话；事务内再次按真实归属锁定，冻结当轮历史。
-      await repoFor(ctx,"ai.createMessageWithReplyTask").requireConversation(conversationId);
-      const runtimeData=await deps.resolveTaskRuntimeData?.(ctx,"copilot.assist",Object.freeze({conversationId}))??{};
+      const repo=repoFor(ctx,"ai.createMessageWithReplyTask");
+      const conversation=await repo.requireConversation(conversationId);
+      if(!deps.prepareChatReply)throw new ConflictError("聊天执行服务未装配");
+      if(conversation.projectId){
+        if(!deps.assertChatProject)throw new ConflictError("项目归属验证端口未装配");
+        await deps.assertChatProject(ctx,conversation.projectId);
+      }
+      const history=await repo.listMessages(conversationId);
+      const sourceMessage:ChatTurnSnapshot["sourceMessage"]={
+        id:deps.nextId("ai-msg"),conversationId,role:"user",content:body.content,
+        parts:[],attachments:body.attachments??[],modelMetadata:{},inputTokens:null,outputTokens:null,cachedTokens:null,modelKey:null,createdAt:deps.now(),
+      };
+      const snapshot={conversation,messages:[...history,sourceMessage],sourceMessage};
+      // 所有跨服务读取在事务外完成；PGlite 单连接不能在锁内等待全局读取。
+      const assembly=await deps.prepareChatReply(ctx,structuredClone(snapshot));
       return deps.db.transaction(async tx=>{
         const accountId=requireAccountId(ctx.accountId,"ai.createMessageWithReplyTask");
-        const [conversation]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),eq(aiConversations.accountId,accountId))).for("update");
-        if(!conversation)throw new ConflictError("会话已不可用");
+        const [current]=await tx.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),eq(aiConversations.accountId,accountId))).for("update");
+        if(!current)throw new ConflictError("会话已不可用");
         const txDb=tx as unknown as Db;
-        const repo=createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId});
-        const history=await repo.listMessages(conversationId);
-        const message=await repo.createMessage(conversationId,{role:"user",content:body.content,attachments:body.attachments??[],modelMetadata:{}});
-        const task=await createAiService({...deps,db:txDb,resolveTaskRuntimeData:async()=>runtimeData}).createTask(ctx,{
-          taskType:"copilot.assist",attemptId:`conversation-reply:${message.id}`,
-          inputData:{conversationId,sourceMessageId:message.id,historyMessageIds:[...history.map(row=>row.id),message.id],projectId:conversation.projectId??null},
-        });
-        const metadata={replyTaskId:task.id};
-        await tx.update(aiMessages).set({modelMetadata:metadata}).where(eq(aiMessages.id,message.id));
-        return toMessageDto({...message,modelMetadata:metadata});
+        const currentHistory=await createAiRepository(txDb,{now:deps.now,nextId:deps.nextId,userId:ctx.userId,accountId}).listMessages(conversationId);
+        if(chatHistoryDigest({conversation:current,messages:[...currentHistory,sourceMessage],sourceMessage})!==chatHistoryDigest(snapshot))throw new ConflictError("会话在准备期间改变，请重试");
+        await tx.insert(aiMessages).values(sourceMessage);
+        await tx.update(aiConversations).set({updatedAt:sourceMessage.createdAt}).where(eq(aiConversations.id,conversationId));
+        const submitted=await createChatTurnSubmissionService(txDb,{
+          now:deps.now,nextId:deps.nextId,assemble:async()=>assembly,assertProject:async()=>undefined,
+        }).submit(ctx,{conversationId,sourceMessageId:sourceMessage.id});
+        return toMessageDto({...sourceMessage,modelMetadata:{chatTaskId:submitted.taskId}});
       });
     },
 
@@ -897,6 +910,8 @@ export function createAiService(deps: ServiceDeps): AiService {
         }
         return toTaskDto(existing);
       }
+
+      if(body.taskType==="copilot.assist")throw new ConflictError("请通过会话发送消息，通用回复任务入口已退役");
 
       // T-915：两种公开重试入口都必须沿用原持久执行，不能复制任务重置账本。
       const retrySpec = inputData.spec;

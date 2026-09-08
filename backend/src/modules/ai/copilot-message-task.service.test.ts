@@ -15,17 +15,10 @@ const unused = async (): Promise<never> => {
   throw new Error("unused domain port");
 };
 function fixture(fail = false) {
-  const resolve = vi.fn(async () => ({
-    skillSnapshot: {
-      snapshotVersion: 1,
-      userId: ctx.userId,
-      accountId: ctx.accountId,
-      resolvedAt: now(),
-      platformPolicyVersion: "1",
-      platformPolicy: "真实策略",
-      skills: [],
-    },
-  }));
+  const resolve = vi.fn(async (_ctx, snapshot) => {
+    await db.select().from(aiTasks); // 真实 PGlite 读取：验证装配不在外层事务内自锁。
+    return {capability:"copilot.assist",system:"真实策略",messages:snapshot.messages.map(m=>({role:m.role,content:m.content})),tools:[],maxSteps:6,maxOutputTokens:128};
+  });
   const service = createAiService({
     db,
     now,
@@ -41,7 +34,7 @@ function fixture(fail = false) {
     materialLinks: { link: unused },
     positioning: { upsertProfile: unused, createStatementVersion: unused },
     calibration: { createDraftPrediction: unused },
-    resolveTaskRuntimeData: resolve,
+    prepareChatReply: resolve,
   });
   return { service, resolve };
 }
@@ -51,7 +44,7 @@ beforeAll(async () => {
   close = () => c.client.close();
 });
 afterAll(async () => close?.());
-it("旧公开消息与回复任务同时落库，流式入口的原保存方法不启动第二份回复", async () => {
+it("公开消息与持久聊天任务同时落库，流式入口的原保存方法不启动第二份回复", async () => {
   const { service, resolve } = fixture(),
     conv = await service.createConversation(ctx, { title: "旧对话" });
   const first = await service.createMessage(ctx, conv.id, {
@@ -65,11 +58,12 @@ it("旧公开消息与回复任务同时落库，流式入口的原保存方法�
   const [task] = await db
     .select()
     .from(aiTasks)
-    .where(eq(aiTasks.id, String(message.modelMetadata.replyTaskId)));
+    .where(eq(aiTasks.id, String(message.modelMetadata.chatTaskId)));
   expect(task).toMatchObject({
     taskType: "copilot.assist",
     status: "queued",
     inputData: {
+      kind: "chat.run",
       conversationId: conv.id,
       sourceMessageId: message.id,
       historyMessageIds: [first.id, message.id],
@@ -106,36 +100,17 @@ it("跨账号请求在读取模型/Skill配置前拒绝", async () => {
   ).rejects.toThrow();
   expect(resolve).not.toHaveBeenCalled();
 });
-it("并发消息各有一个任务，后续消息不会进入前一轮已冻结历史", async () => {
-  const { service } = fixture(),
-    conv = await service.createConversation(ctx, { title: "并发" });
-  const replies = await Promise.all(
-    ["甲", "乙"].map((content) =>
-      service.createMessageWithReplyTask(ctx, conv.id, { content }),
-    ),
-  );
-  const tasks = await Promise.all(
-    replies.map(
-      async (m) =>
-        (
-          await db
-            .select()
-            .from(aiTasks)
-            .where(eq(aiTasks.id, String(m.modelMetadata.replyTaskId)))
-        )[0]!,
-    ),
-  );
-  expect(new Set(tasks.map((t) => t.id)).size).toBe(2);
-  const lengths = tasks
-    .map(
-      (t) =>
-        (t.inputData as { historyMessageIds: string[] }).historyMessageIds
-          .length,
-    )
-    .sort();
-  expect(lengths).toEqual([1, 2]);
-  for (const [i, t] of tasks.entries())
-    expect(
-      (t.inputData as { historyMessageIds: string[] }).historyMessageIds.at(-1),
-    ).toBe(replies[i]!.id);
+it("装配期间历史变化被拒绝，失败调用不留下消息", async () => {
+  const {service,resolve}=fixture();
+  const conv=await service.createConversation(ctx,{title:"并发"});
+  resolve.mockImplementationOnce(async()=>{
+    await service.createMessage(ctx,conv.id,{content:"另一条并发消息"});
+    return {capability:"copilot.assist",system:"策略",messages:[],tools:[],maxSteps:6,maxOutputTokens:128};
+  });
+  await expect(service.createMessageWithReplyTask(ctx,conv.id,{content:"过期输入"})).rejects.toThrow("会话在准备期间改变");
+  expect((await service.listMessages(ctx,conv.id)).map(m=>m.content)).toEqual(["另一条并发消息"]);
+});
+it("直接创建通用回复任务已退役",async()=>{
+ const {service}=fixture();
+ await expect(service.createTask(ctx,{taskType:"copilot.assist",attemptId:"retired-entry-attempt",inputData:{}})).rejects.toThrow("通用回复任务入口已退役");
 });
