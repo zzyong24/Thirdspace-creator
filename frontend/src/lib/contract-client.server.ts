@@ -8,7 +8,7 @@ import {
   type EndpointInput,
   type RequestContext,
 } from "@creatoros/contract";
-import { compositeTransport } from "@/server/persistence-client";
+import { compositeTransport, readPageRevision } from "@/server/persistence-client";
 import { resolveSession } from "./session.server";
 import { AuthenticationError } from "@creatoros/backend/modules/identity";
 
@@ -27,7 +27,7 @@ export function createServerClient(ctx: RequestContext) {
 
 /** 仅展示页在 resolveSession 校验当前账号后使用，不供 AI 或写操作读取真值。 */
 export function createCachedPageClient(ctx: RequestContext) {
-  return createClient(ENDPOINTS, withPageReadCache(compositeTransport), ctx);
+  return createClient(ENDPOINTS, withPageReadCache(compositeTransport, readPageRevision), ctx);
 }
 
 export function requestServerListWithMeta<E extends Endpoint>(

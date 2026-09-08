@@ -645,6 +645,13 @@
       "when": 1788652800021,
       "tag": "0091_browser_profile_host_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1788854400000,
+      "tag": "0092_page_read_revision",
+      "breakpoints": true
     }
   ]
 }

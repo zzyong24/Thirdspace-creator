@@ -961,3 +961,6 @@
 {"ts":"2026-09-08T08:59:07.366Z","actor":"taskctl","action":"complete","task":"T-923","evidence":"36d61973、3fada816、f04fa676及本次接线；独立SPEC/代码复核；frontend tsc退出0；docs/verification/t923-continuous-agent.md。用户授权暂缓业务测试与全局reconcile，accepted-risk，未打包安装，不代表T-915完成。","sha_before":"841c90568e74","sha_after":"636303342e7c"}
 {"ts":"2026-09-08T09:05:48.817Z","actor":"taskctl","action":"start","task":"T-924","sha_before":"ee8f5793b600","sha_after":"ae976f6dbc2e"}
 {"ts":"2026-09-08T09:11:12.707Z","actor":"taskctl","action":"complete","task":"T-924","evidence":"两个页面显式隔离缓存、公共写失效、选题并行读取；独立SPEC与代码复核；tsc退出0、diff检查通过。见docs/verification/t924-navigation-cache.md；用户授权暂缓业务测试与全局reconcile，accepted-risk，未打包实测。","sha_before":"ae976f6dbc2e","sha_after":"9384b14556d7"}
+{"ts":"2026-09-08T09:21:13.686Z","actor":"taskctl","action":"start","task":"T-925","sha_before":"8214610b0cac","sha_after":"84512524d4f7"}
+{"ts":"2026-09-08T09:26:05.947Z","actor":"taskctl","action":"complete","task":"T-925","evidence":"独立SPEC/代码复核PASS，tsc退出0，变更修订号替代数据TTL；docs/verification/t925-change-cache.md；业务测试/全局reconcile暂缓accepted-risk，迁移未在用户库试跑。","sha_before":"84512524d4f7","sha_after":"e97c40586f29"}
+{"ts":"2026-09-08T09:26:06.093Z","actor":"taskctl","action":"start","task":"T-926","sha_before":"e97c40586f29","sha_after":"f549a198f28e"}

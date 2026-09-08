@@ -12,6 +12,46 @@
   },
   "verticals": [
     {
+      "id": "T-925",
+      "task_id": "T-925",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-change-cache.md",
+        "frontend/**",
+        "backend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/**",
+        "backend/**",
+        "docs/verification/t925-*"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {}
+    },
+    {
       "id": "T-924",
       "task_id": "T-924",
       "archetype": [

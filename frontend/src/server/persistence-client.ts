@@ -1,3 +1,4 @@
+import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
 import {createRecoveryWakeCoordinator} from "@creatoros/backend/application/recovery-wake";
 import {rebuildOwnedSearchIndex} from "@creatoros/backend/application/search-bootstrap";
 import {createThesisAdoption} from "@creatoros/backend/application/thesis-adoption";
@@ -915,6 +916,7 @@ function extractArtifactText(
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  readPageRevision: () => Promise<string>;
   cliInvocations: CliInvocationService;
   projects: Transport;
   taxonomy: Transport;
@@ -10871,6 +10873,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   modelWorker?.start();
 
   return {
+    readPageRevision: createPageReadRevisionReader(db),
     cliInvocations,
     projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
     taxonomy,
@@ -11146,4 +11149,9 @@ export function __resetPersistenceForTests(): void {
 
 export async function getBrowserTaskAuthorizationRuntime(): Promise<PersistenceBundle["browserTaskAuthorizationRuntime"]> {
   return (await getBundle()).browserTaskAuthorizationRuntime;
+}
+
+/** 仅展示缓存读取提交版本；业务服务和 AI 不使用展示快照。 */
+export async function readPageRevision(): Promise<string> {
+  return (await getBundle()).readPageRevision();
 }

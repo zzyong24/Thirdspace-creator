@@ -673,6 +673,36 @@
         "design-review": []
       },
       "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-925": {
+      "task_id": "T-925",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-navigation-change-cache.md",
+        "frontend/**",
+        "backend/**",
+        "contract/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/**",
+        "backend/**",
+        "docs/verification/t925-*"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
     }
   }
 }
