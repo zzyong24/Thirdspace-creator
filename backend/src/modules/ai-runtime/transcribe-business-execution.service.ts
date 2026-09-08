@@ -1,5 +1,5 @@
 import {isDeepStrictEqual} from 'node:util';
-import {and,eq,aiTasks,aiTaskSteps,aiTaskResults,executionTasks,OwnershipError,type Db} from '@creatoros/backend';
+import {and,asc,eq,isNull,aiTasks,aiTaskSteps,aiTaskResults,executionTasks,OwnershipError,type Db} from '@creatoros/backend';
 import {transcribeTaskInputSchema,transcribeConfigurationSchema,type TranscribeConfiguration} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import type {MultimodalSpec} from './multimodal/resolve';
@@ -23,7 +23,7 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Prep
   if((await tx.select({id:aiTaskSteps.id}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,task.id)).limit(1))[0])return true;
   return !!(await tx.select({id:aiTaskResults.id}).from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,task.id)).limit(1))[0];
  }
- return {
+ const service={
   async prepare(context:RequestContext,taskId:string,signal?:AbortSignal):Promise<{legacy:true;executionTaskId?:never}|{legacy?:never;aiTaskId:string;executionTaskId:string}>{
    const ctx={...context},abort=signal?AbortSignal.any([signal,controller.signal]):controller.signal;abort.throwIfAborted();
    const [task]=await db.select().from(aiTasks).where(owned(ctx,taskId));if(!task||task.taskType!=='transcribe.douyin')throw new OwnershipError('转写任务不存在');
@@ -39,6 +39,13 @@ export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:Prep
     const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:deps.budget});abort.throwIfAborted();return mapped;
    });
   },
+  async recoverQueued(onLegacy:(ctx:RequestContext,id:string)=>Promise<void>,onFailure:(ctx:RequestContext,id:string)=>Promise<void>,shouldStop=()=>false){
+   const tasks=await db.select().from(aiTasks).where(and(eq(aiTasks.taskType,'transcribe.douyin'),eq(aiTasks.status,'queued'),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner))).orderBy(asc(aiTasks.requestedAt));
+   for(const task of tasks){if(shouldStop()||controller.signal.aborted)return;const ctx:RequestContext={userId:task.userId,accountId:task.accountId,requestId:`transcribe-recover:${task.id}`,source:'user'};
+    try{const result=await service.prepare(ctx,task.id);if(result.legacy)await onLegacy(ctx,task.id);}catch{if(shouldStop()||controller.signal.aborted)return;await onFailure(ctx,task.id);}
+   }
+  },
   stop(){controller.abort();},
  };
+ return service;
 }

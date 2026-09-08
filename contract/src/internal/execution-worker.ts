@@ -1,3 +1,5 @@
+import {transcribeWorkflowPortSchemas} from "./transcribe-workflow";
+export {transcribeWorkflowPortSchemas,transcribeSourceSchema,transcribeItemReceiptSchema} from "./transcribe-workflow";
 import {coverPortInputSchemas} from "./execution-cover";
 export {coverPortInputSchemas,coverImageReadinessSchema,coverImagePreparationSchema,coverReferenceSchema} from "./execution-cover";
 import {transcribeTaskInputSchema} from "./transcribe-task";
@@ -88,6 +90,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  ...transcribeWorkflowPortSchemas,
   ...coverPortInputSchemas,
   settleCoverModel:generationSettlementSchema,
   prepareTranscribePostprocess:z.object({awemeId:z.string().min(1).max(128)}).strict(),

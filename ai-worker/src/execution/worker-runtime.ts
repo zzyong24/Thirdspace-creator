@@ -1,3 +1,4 @@
+import type {runTranscribeInWorker} from "./transcribe-worker-run";
 import type {runCoverInWorker} from "./cover-worker-run";
 import type {runAssetInWorker} from "./asset-worker-run";
 import type { runChatInWorker } from "./chat-worker-run";
@@ -22,13 +23,14 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
   supportsChatScriptDraft?:boolean;
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
+  runTranscribe?:typeof runTranscribeInWorker;
   runCover?:typeof runCoverInWorker;
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
@@ -40,7 +42,7 @@ export interface WorkerDependencies {
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate", ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate", ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
@@ -54,7 +56,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, port === "executeAgenticTool" && active && sameExecution(active.execution,execution) ? Math.max(1,active.deadlineAt-Date.now()) : 30000);
+      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","fetchLoggedInTranscribeSource","acquireTranscribeChannel"].includes(port) && active && sameExecution(active.execution,execution) ? Math.max(1,active.deadlineAt-Date.now()) : 30000);
       const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
       pending.set(requestId, {resolve, reject, cleanup});
       signal?.addEventListener("abort", onAbort, {once: true});
@@ -87,6 +89,11 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       signal.throwIfAborted();
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      if(input.kind==="transcribe.douyin"){
+        if(!deps.runTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
+        const result=await deps.runTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+        reason=result.status==="succeeded"?"completed":"failed";return;
+      }
       if(input.kind==="asset.generate"){
         if(!deps.runAsset)throw new GenerationFailure("waiting_user","ASSET_WORKER_UNAVAILABLE");
         const result=await deps.runAsset(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
