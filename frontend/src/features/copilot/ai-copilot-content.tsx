@@ -441,6 +441,12 @@ const MENTION_MAX_OPTIONS = 8;
 // bug #6:taskType(如 "calibration.diagnose")是机器枚举,用户看不懂。这里给一张中文 label +
 // 一句简短副文映射,任务卡显中文标题 + 副文。未知 taskType 回退到原串(诚实兜底,不编一个假中文)。
 const TASK_TYPE_LABEL: Record<string, { label: string; sub: string }> = {
+  "topic.preference": { label: "更新选题偏好", sub: "从淘汰原因中提炼偏好" },
+  "script.source_similarity": { label: "检查稿件原创性", sub: "与引用来源核对相似程度" },
+  "asset.classify": { label: "识别图片素材", sub: "补充描述与用途标签" },
+  "material.extract": { label: "提取文档资料", sub: "读取全文并整理摘要" },
+  "video.decisions": { label: "编排视频", sub: "规划场景、字幕和素材" },
+  "benchmark.transcribe": { label: "转写对标作品", sub: "读取作品音频并保存逐字稿" },
   "calibration.diagnose": { label: "编导诊断", sub: "逐维度盲评内容" },
   "topic.generate": { label: "AI 出题", sub: "生成选题候选" },
   "topic.enrich": { label: "选题补全", sub: "补全成完整选题卡" },
