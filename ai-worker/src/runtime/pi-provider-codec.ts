@@ -6,10 +6,24 @@ const object=(value:unknown):Record<string,any>=>value && typeof value==="object
 const zeroUsage=()=>({input:0,output:0,cacheRead:0,cacheWrite:0,totalTokens:0,cost:{input:0,output:0,cacheRead:0,cacheWrite:0,total:0}});
 export function toPiContext(request:LanguageModelV4CallOptions,model:Model<Api>,mediaParts=new Map<string,Record<string,unknown>>()):Context{
   const messages:Message[]=[],systems:string[]=[];
+  const wireMedia=(native:Record<string,unknown>):TextContent=>{
+    let marker=`[creatoros-media:${mediaParts.size}]`;
+    while(JSON.stringify(request).includes(marker)||mediaParts.has(marker))marker+="_";
+    mediaParts.set(marker,native);return {type:"text",text:marker};
+  };
+  const unavailableMedia=(part:any):TextContent=>({type:"text",text:`[附件读取提示：${part.filename??part.mediaType??part.type} 当前模型协议不能直接读取；原附件仍保留，内容未知。${part.data?.type==="url"?`来源：${String(part.data.url)}。`:part.data?.type==="reference"?`文件引用：${JSON.stringify(part.data.reference)}。`:""}可继续使用已有正文，或调用附件提取/转写工具获取正文，不能声称已读取此附件。]`});
   const media=(part:any):TextContent|ImageContent=>{
     if(part.type==="text")return {type:"text",text:part.text};
     const data=part.data;
     if(data?.type==="text")return {type:"text",text:data.text};
+    if(part.mediaType?.startsWith("text/")&&data?.type==="data")return {type:"text",text:Buffer.from(data.data,typeof data.data==="string"?"base64":undefined).toString("utf8")};
+    if(data?.type==="reference"){
+      const ref=object(data.reference),id=ref.openai??ref[model.provider]??ref[request.providerOptions?Object.keys(request.providerOptions)[0]??"":""];
+      if(typeof id==="string"&&model.api==="openai-completions")return wireMedia({type:"file",file:{file_id:id}});
+      if(typeof id==="string"&&model.api==="openai-responses")return wireMedia({type:"input_file",file_id:id});
+      return unavailableMedia(part);
+    }
+    if(model.api==="openai-completions"&&["audio/wav","audio/mp3","audio/mpeg"].includes(part.mediaType)&&data?.type==="data")return wireMedia({type:"input_audio",input_audio:{data:typeof data.data==="string"?data.data:Buffer.from(data.data).toString("base64"),format:part.mediaType==="audio/wav"?"wav":"mp3"}});
     if(part.mediaType?.startsWith("image/") && data?.type==="data")return {type:"image",mimeType:part.mediaType,data:typeof data.data==="string"?data.data:Buffer.from(data.data).toString("base64")};
     if(part.mediaType==="application/pdf" || (part.mediaType?.startsWith("image/") && data?.type==="url")){
       const encoded=data?.type==="data"?(typeof data.data==="string"?data.data:Buffer.from(data.data).toString("base64")):undefined;
@@ -19,14 +33,12 @@ export function toPiContext(request:LanguageModelV4CallOptions,model:Model<Api>,
       else if(model.api==="anthropic-messages")native={type:"document",source:encoded?{type:"base64",media_type:"application/pdf",data:encoded}:{type:"url",url}};
       else if(model.api==="openai-responses")native=encoded?{type:"input_file",filename:part.filename??"document.pdf",file_data:`data:application/pdf;base64,${encoded}`}:{type:"input_file",file_url:url};
       else if(encoded)native={type:"file",file:{filename:part.filename??"document.pdf",file_data:`data:application/pdf;base64,${encoded}`}};
-      else throw new PiProtocolError("Chat Completions PDF 需要文件字节，不能静默丢弃远程附件");
+      else return unavailableMedia(part);
       if(!encoded&&!url)throw new PiProtocolError("附件缺少可用数据");
-      let marker=`[creatoros-media:${mediaParts.size}]`;
-      while(JSON.stringify(request).includes(marker)||mediaParts.has(marker))marker+="_";
-      mediaParts.set(marker,native);return {type:"text",text:marker};
+      return wireMedia(native);
     }
-    // 无受支持协议的媒体明确报错，不能用文件名或空字符串冒充已经读过附件。
-    throw new PiProtocolError(`当前 Pi 消息协议不支持此附件表示：${part.mediaType??part.type}；请先提取正文`);
+    // 可选媒体的协议差异不反杀整项任务；明确声明未读取，保留可用正文继续执行。
+    return unavailableMedia(part);
   };
   const toolResult=(part:any)=>{
     const out=part.output;
@@ -37,7 +49,10 @@ export function toPiContext(request:LanguageModelV4CallOptions,model:Model<Api>,
     if(message.role==="system"){systems.push(message.content);continue;}
     if(message.role==="user"){messages.push({role:"user",content:message.content.map(media),timestamp:0});continue;}
     if(message.role==="tool"){
-      for(const part of message.content){if(part.type==="tool-result")toolResult(part);else throw new PiProtocolError("授权响应必须由宿主先完成工具回执，不能当模型执行许可");}
+      for(const part of message.content){if(part.type==="tool-result")toolResult(part);
+        // SEMANTIC_BOUNDARY_ALLOW: 授权响应是宿主协议事实；与旧供应商编译器一致不发送它，
+        // 本地授权执行仍由后端判断，不能从该历史消息获得执行权。
+        else if(part.type!=="tool-approval-response")throw new PiProtocolError("未知工具消息类型");}
       continue;
     }
     const assistant:AssistantMessage={role:"assistant",content:[],api:model.api,provider:model.provider,model:model.id,usage:zeroUsage(),stopReason:"stop",timestamp:0};
@@ -51,6 +66,7 @@ export function toPiContext(request:LanguageModelV4CallOptions,model:Model<Api>,
       }else if(part.type==="tool-call"){
         assistant.content.push({type:"toolCall",id:part.toolCallId,name:part.toolName,arguments:part.input as Record<string,unknown>,...(pi.thoughtSignature?{thoughtSignature:pi.thoughtSignature}:{})});assistant.stopReason="toolUse";
       }else if(part.type==="tool-result")results.push(part);
+      else if(part.type==="file" || part.type==="reasoning-file")assistant.content.push(unavailableMedia(part));
       else throw new PiProtocolError(`Pi 历史消息暂不支持 ${part.type}，未丢弃原始内容`);
     }
     if(assistant.content.length)messages.push(assistant);
