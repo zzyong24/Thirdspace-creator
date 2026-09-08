@@ -1,4 +1,5 @@
 import {createExecutionChatFallbackService} from "./execution-chat-fallback.service";
+import {createReconstructCompletionService} from "../ai/reconstruct-completion.service";
 import {createExecutionTranscribeWorkflowService,type TranscribeWorkflowDeps} from "./execution-transcribe-workflow.service";
 import {createExecutionTranscribeSourceService,type TranscribeSourceDeps} from "./execution-transcribe-source.service";
 import {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
@@ -97,6 +98,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
   const chatReplies=createChatTurnCompletionService(db,{now});
+  const reconstructions=deps.executionMode==="model"?createReconstructCompletionService(db,{now}):null;
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
   const reviewReports=deps.executionMode==="model"?createExecutionReviewReportService(db,{now}):null;
   const agentModels=deps.executionMode==="agentic.run"?createExecutionAgenticModelPorts(db,{now,budget:deps.budget}):null;
@@ -335,6 +337,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         }
         if(!candidates)throw new Error("UNSUPPORTED_AGENT_CANDIDATE_PORT");
         const skillId=await leases.withLease(ref,"settlement",async({task})=>(task.payload as {modelInput?:{skillId?:string}}).modelInput?.skillId);
+        if(skillId==="reconstruct.project"&&reconstructions)return reconstructions.commitResult(ref,input,signal);
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
         if(skillId==="copilot.assist" && copilotReplies)return copilotReplies.commitResult(ref,input);
         return candidates.commitResult(ref,input);

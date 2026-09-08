@@ -10,3 +10,11 @@ export async function lockOwnedProjectForUpdate(tx:Db,ctx:RequestContext,project
  if(!project)throw new OwnershipError("Project not found");
  return project;
 }
+
+/** 重建只能写当前账号的导入项目；与新建稿件共用项目行锁。 */
+export async function lockImportedProjectForReconstruction(tx:Db,ctx:RequestContext,projectId:string){
+ const accountId=requireAccountId(ctx.accountId,'projects.reconstruction');
+ const [project]=await tx.select({id:projects.id,source:projects.source}).from(projects).where(and(eq(projects.id,projectId),eq(projects.userId,ctx.userId),eq(projects.accountId,accountId))).for('update');
+ if(!project||project.source!=='imported')throw new OwnershipError('仅当前账号的导入项目可重建');
+ return project;
+}

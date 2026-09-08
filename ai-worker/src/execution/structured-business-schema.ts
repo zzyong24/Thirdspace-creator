@@ -1,3 +1,4 @@
+import {reconstructProjectSchema} from "../prompt/templates/reconstruct-project";
 import {copilotReplySchema,copilotReplyInputSchema} from "../prompt/templates/copilot-assist";
 import {topicArraySchema} from "../prompt/templates/topic-generate";
 import { researchMaterialSchema } from "../prompt/templates/research-gather";
@@ -25,6 +26,7 @@ export function resolveStructuredBusinessSchema(
 ): z.ZodType | undefined {
   // SEMANTIC_BOUNDARY_ALLOW: 只检查类型、非空结果和冻结真实ID范围，不评判内容、素材或评分质量。
   switch (input.skillId) {
+    case "reconstruct.project": return reconstructProjectSchema.refine(value=>Boolean(value.research.coreTopic.trim()),"研究重建缺少主题");
     case "copilot.assist": copilotReplyInputSchema.parse(JSON.parse(input.facets.__copilotReply??"null")); return copilotReplySchema;
     case "topic.generate": return topicArraySchema;
     case "research.gather":
