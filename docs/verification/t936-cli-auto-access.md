@@ -15,3 +15,9 @@ flowchart LR
 验证范围：偏好默认/关闭/重新开启、产品隔离、退出后偏好保留，设置按钮真实命令，类型及桌面编译，安装重启后的公开CLI连接。
 
 独立评审已通过设计；实施保留“偏好损坏/身份不匹配时关闭”、关闭偏好保存失败仍撤销当前凭据、状态失败后回读真值。原生偏好测试1/1、设置UI4/4、CLI连接测试5/5通过；frontend及CLI类型检查通过。CLI access revoke同样记住关闭，退出清理不删除选择。
+
+## 实际安装验收
+
+候选 `1a79d186` 固定本地打包入口exit0，已替换启动PID30926。未手动点击授权，公开CLI status实测 installed/connected/full，自动开启通过。签名及DMG校验通过；DMG SHA256 `7d83bfe25b2ed6f500e24e3cfa7b9fad6ef008f053003e648534013e797c8661`，安装与候选sidecar同为 `085d68c494febcab4794d8e9bfa7edbdf8d4239275cc8f2599199a91f51b7ae6`。本地签名未公证，未公开发布。
+
+pmem sync已运行，全局reconcile仍沿用户此前暂缓决定；不声称全局通过。日志 `/tmp/t936-package.log`、`/tmp/t936-dmg.log`。
