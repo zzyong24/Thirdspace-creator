@@ -47,7 +47,7 @@ export function createExecutionFlywheelGenerationService(db:Db,deps:FlywheelGene
   let closed=false,result:unknown,persisted:string|undefined,sequence=0;
   try{
    const budget=await ledger.initializeBudget(ref);
-   await supervision.run({ref,deadlineAt:Date.parse(budget.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;},hasDurableOutcome:()=>result!==undefined||persisted!==undefined,ports:{
+   await supervision.run({ref,deadlineAt:budget.deadlineAt === null ? null : Date.parse(budget.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;},hasDurableOutcome:()=>result!==undefined||persisted!==undefined,ports:{
     async validate(current,kind){if(closed||!isDeepStrictEqual(current,ref))throw new Error('FLYWHEEL_EXECUTION_CLOSED');await leases.withLease(ref,kind,scope=>bindScheduledFlywheel(scope));},
     async invoke(_current,port,raw){
      if(port==='readTaskContext'){await verify();return saved.input;}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {browserAuthorizationSnapshotSchema} from "./execution-browser";
 export const agenticWorkerInputSchema=z.object({
+ runtimeVersion:z.literal("intent-v1").optional(),
  kind:z.literal("agentic.run"),operationKey:z.string().min(1).max(200),
  taskType:z.enum(["agentic.research","agentic.material","agentic.collect"]),
  goal:z.string().min(1).max(100000),systemPrompt:z.string().max(500000),capability:z.string().min(1).max(128),

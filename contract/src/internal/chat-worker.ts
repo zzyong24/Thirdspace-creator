@@ -3,6 +3,7 @@ import { z } from "zod";
 /** SEMANTIC_BOUNDARY_ALLOW:仅编码供应商工具标识符，不判断意图。 */
 export const chatToolProviderName = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
 export const chatWorkerInputSchema = z.object({
+  executionEngine:z.literal("pi").optional(),
   kind: z.literal("chat.run"),
   operationKey: z.string().min(1).max(200),
   capability: z.string().min(1).max(128),

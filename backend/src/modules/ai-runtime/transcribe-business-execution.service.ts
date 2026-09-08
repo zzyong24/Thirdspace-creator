@@ -1,3 +1,4 @@
+import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from 'node:util';
 import {and,asc,eq,isNull,aiTasks,aiTaskSteps,aiTaskResults,executionTasks,OwnershipError,type Db} from '@creatoros/backend';
 import {transcribeTaskInputSchema,transcribeConfigurationSchema,type TranscribeConfiguration} from '@creatoros/contract/execution-worker';
@@ -15,7 +16,7 @@ export function transcribeConfiguration(spec:MultimodalSpec):TranscribeConfigura
 }
 function ids(task:Task){const input=task.inputData as Record<string,unknown>;return Array.isArray(input.awemeIds)?input.awemeIds:typeof input.awemeId==='string'?[input.awemeId]:[];}
 /** 只有没有旧执行事实的任务才转交；配置读取在事务外，提交时重新核对原任务。 */
-export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:PreparedModelExecution['budget'];now?:()=>string;resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>}){
+export function createTranscribeBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>}){
  const controller=new AbortController(),authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??''));
  async function legacy(tx:Pick<Db,'select'>,task:Task){

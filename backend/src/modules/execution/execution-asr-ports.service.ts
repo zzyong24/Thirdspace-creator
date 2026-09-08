@@ -83,7 +83,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
                     parts.push(asrResultReceiptSchema.parse(JSON.parse(call.resultText??'null')).result);
                 }
                 if(!rejected&&assembleAsrTranscript(bound.input.identity,parts).text.trim()){if(onlyIfProven)return null;throw new ConflictError('云端已有正文，无需改走本地');}
-                if(!state.budget||!state.deadlineAt||state.calls.length>=state.budget.maxCalls||Date.parse(state.deadlineAt)<=Date.parse((deps.now??(()=>new Date().toISOString()))()))throw new ExecutionBudgetError('原执行预算不足，不能另开本地识别');
+                if(!state.budget||(state.budget.maxCalls!==null&&state.calls.length>=state.budget.maxCalls)||(state.deadlineAt!==null&&Date.parse(state.deadlineAt)<=Date.parse((deps.now??(()=>new Date().toISOString()))())))throw new ExecutionBudgetError('原执行预算不足，不能另开本地识别');
                 const plan=transcribeAsrPlanSchema.parse({...selected.primary,identity:asrExecutionIdentity(localWhisperSpec(),selected.primary.identity.language)});
                 await scope.tx.update(executionTasks).set({payload:{...bound.payload,transcribeLocalFallbacks:{...selected.fallbacks,[awemeId]:{plan,sourceCallIds:sources.map(call=>call.id),reason:rejected?'rejected':'empty'}}}}).where(eq(executionTasks.id,scope.task.id));
                 return plan;

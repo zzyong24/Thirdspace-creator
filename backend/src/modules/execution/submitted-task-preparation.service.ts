@@ -1,3 +1,4 @@
+import {isContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import {z} from "zod";
 import {and,asc,eq,inArray,isNull,sql,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
@@ -5,7 +6,7 @@ import {agenticToolOutcomeSchema,chatWorkerInputSchema,workerToolResultReceiptSc
 import {classifyLlmError,computeBackoffMs,getRetryAfterMs} from "@creatoros/ai-worker/retry-policy";
 import {createAgenticToolBinding} from "./agentic-tool-binding";
 const originSchema=z.object({executionTaskId:z.string(),callId:z.string(),inputDigest:z.string()}).strict();
-const recoverySchema=z.object({attempts:z.number().int().min(0).max(3),nextAt:z.string().datetime(),deadlineAt:z.string().datetime(),errorCode:z.string().nullable()}).strict();
+const recoverySchema=z.object({attempts:z.number().int().min(0),nextAt:z.string().datetime(),deadlineAt:z.string().datetime().nullable(),continuous:z.boolean().optional(),errorCode:z.string().nullable()}).strict();
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 const supportedTaskTypes=["planning.thesis","asset.generate","script.review","script.draft","publish.platform_adapt","cover.generate"];
 /** 已提交子任务的准备补偿；只复用原任务，不创建模型调用或新任务。 */
@@ -38,35 +39,35 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:definition.execution,parameters:z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0])}}).forCall(parent,calls,call);
    const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")),result=agenticToolOutcomeSchema.parse(receipt.output),data=object(result.data);
    if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==chatSubmittedTaskResultKind(definition.name) || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
-   const stamp=now(),deadlineAt=new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();
-   const previous=runtime.hostTaskPreparation===undefined?{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt,errorCode:null}:recoverySchema.parse(runtime.hostTaskPreparation);
+   const stamp=now(),continuous=isContinuousExecutionBudget(parent.executionBudget),deadlineAt=continuous?parent.deadlineAt:new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();
+   const previous=runtime.hostTaskPreparation===undefined?{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt,continuous,errorCode:null}:recoverySchema.parse(runtime.hostTaskPreparation);
    if(previous.deadlineAt!==deadlineAt)throw new Error("准备期限与原任务不符");
-   if(stamp>=Date.parse(deadlineAt))return {failed:"任务准备已超过原定期限，请重新发起"};
-   if(previous.attempts>=3)return {failed:"任务准备连续失败，请检查服务后重新发起"};
+   if(deadlineAt!==null&&stamp>=Date.parse(deadlineAt))return {failed:"任务准备已超过原定期限，请重新发起"};
+   if(!previous.continuous&&previous.attempts>=3)return {failed:"任务准备连续失败，请检查服务后重新发起"};
    if(stamp<Date.parse(previous.nextAt))return null;
    const next={...previous,attempts:previous.attempts+1,nextAt:new Date(stamp+computeBackoffMs(previous.attempts+1,deps.random)).toISOString(),errorCode:null};
    signal.throwIfAborted();
    await tx.update(aiTasks).set({runtimeData:{...runtime,hostTaskPreparation:next}}).where(eq(aiTasks.id,task.id));
-   return {attempt:next.attempts,deadlineAt};
+   return {attempt:next.attempts,deadlineAt,continuous:next.continuous===true};
   });
  }
  async function run(context:RequestContext,taskId:string,signal:AbortSignal){
   signal.throwIfAborted();const claim=await claimed(context,taskId,signal);signal.throwIfAborted();if(!claim)return;
   if("failed" in claim){await deps.fail(context,taskId,claim.failed!);return;}
-  const bounded=AbortSignal.any([signal,AbortSignal.timeout(Math.max(1,Date.parse(claim.deadlineAt)-now()))]);
+  const bounded=AbortSignal.any([signal,AbortSignal.timeout(claim.deadlineAt===null?deps.deadlineMs:Math.max(1,Math.min(deps.deadlineMs,Date.parse(claim.deadlineAt)-now())))]);
   try{await deps.prepare(context,taskId,bounded);bounded.throwIfAborted();}
   catch(error){
    if(signal.aborted)throw error;
-   const classified=bounded.aborted?{retryable:false,reason:"deadline"}:classifyLlmError(error),stamp=now(),retryAt=stamp+(getRetryAfterMs(error,now)??computeBackoffMs(claim.attempt,deps.random));
+   const classified=bounded.aborted?{retryable:claim.continuous,reason:"deadline"}:classifyLlmError(error),stamp=now(),retryAt=stamp+(getRetryAfterMs(error,now)??computeBackoffMs(claim.attempt,deps.random));
    await db.transaction(async tx=>{
     const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
     if(!task || task.executionTaskId || task.status!=="queued")return;
     const runtime=object(task.runtimeData),current=recoverySchema.parse(runtime.hostTaskPreparation);
     if(current.attempts!==claim.attempt)return;
-    await tx.update(aiTasks).set({runtimeData:{...runtime,hostTaskPreparation:{...current,nextAt:new Date(Math.min(retryAt,Date.parse(claim.deadlineAt))).toISOString(),errorCode:classified.reason}}}).where(eq(aiTasks.id,task.id));
+    await tx.update(aiTasks).set({runtimeData:{...runtime,hostTaskPreparation:{...current,nextAt:new Date(claim.deadlineAt===null?retryAt:Math.min(retryAt,Date.parse(claim.deadlineAt))).toISOString(),errorCode:classified.reason}}}).where(eq(aiTasks.id,task.id));
    });
    signal.throwIfAborted();
-   if(!classified.retryable || claim.attempt>=3 || stamp>=Date.parse(claim.deadlineAt))await deps.fail(context,taskId,"任务准备未完成，请检查项目与服务后重新发起");
+   if(!classified.retryable || (!claim.continuous&&claim.attempt>=3) || (claim.deadlineAt!==null&&stamp>=Date.parse(claim.deadlineAt)))await deps.fail(context,taskId,"任务准备未完成，请检查项目与服务后重新发起");
   }
  }
  function prepare(context:RequestContext,taskId:string,signal?:AbortSignal):Promise<void>{

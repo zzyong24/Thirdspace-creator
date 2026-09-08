@@ -7,7 +7,7 @@ export function createClaimedWorkerSupervision(deps:{entryPath:string|(()=>strin
  const active=new Set<ReturnType<typeof createWorkerSupervisor>>();
  return {
   isStopping:()=>stopping,
-  async run(input:{ref:ExecutionRef;deadlineAt:number;ports:WorkerSupervisorPorts;verify():Promise<unknown>;isClosed():boolean;close():void;hasDurableOutcome():boolean}) {
+  async run(input:{ref:ExecutionRef;deadlineAt:number|null;ports:WorkerSupervisorPorts;verify():Promise<unknown>;isClosed():boolean;close():void;hasDurableOutcome():boolean}) {
    if(stopping)throw new Error("CLAIMED_WORKER_STOPPING");
    const worker=createWorkerSupervisor({entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:input.ports});
    active.add(worker);

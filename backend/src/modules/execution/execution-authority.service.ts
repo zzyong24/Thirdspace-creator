@@ -1,3 +1,4 @@
+import {executionBudgetSchema, executionBudgetDeadline} from "@creatoros/contract/execution-worker";
 import { assertFrozenBrowserTaskGrant } from "./browser-task-grant";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -10,7 +11,7 @@ import { ConflictError } from "./execution.errors";
 const preparedExecutionSchema = z.object({
   requestFingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/),
   modelInput: workerTaskInputSchema,
-  budget: z.object({maxCalls:z.number().int().min(1).max(10000),maxTokens:z.number().int().min(1).max(2_000_000_000),deadlineMs:z.number().int().min(1).max(2_000_000_000)}).strict(),
+  budget: executionBudgetSchema,
 }).strict();
 export type PreparedModelExecution = z.infer<typeof preparedExecutionSchema>;
 
@@ -51,7 +52,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
           id: executionTaskId, userId: task.userId, accountId: task.accountId,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
           idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id, ...(prepared ? {modelInput:prepared.modelInput} : {})},
-          ...(prepared ? {executionBudget:prepared.budget,deadlineAt:new Date(Date.parse(browserGrant?.grantedAt ?? task.requestedAt)+prepared.budget.deadlineMs).toISOString()} : {}),
+          ...(prepared ? {executionBudget:prepared.budget,deadlineAt:executionBudgetDeadline(prepared.budget,browserGrant?.grantedAt ?? task.requestedAt)} : {}),
           createdAt: stamp, updatedAt: stamp,
         });
         await tx.update(aiTasks).set({executionTaskId}).where(eq(aiTasks.id, task.id));

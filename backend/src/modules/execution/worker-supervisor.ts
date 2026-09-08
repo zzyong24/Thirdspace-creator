@@ -128,14 +128,14 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
   };
   return {
     start,
-    async run(execution: ExecutionRef, deadlineAt: number): Promise<string> {
+    async run(execution: ExecutionRef, deadlineAt: number | null): Promise<string> {
       await start();
       if (stopping) throw new Error("WORKER_STOPPED");
       if (current) throw new Error("WORKER_BUSY");
       await options.ports.validate(execution, "admission");
       if (stopping) throw new Error("WORKER_STOPPED");
       if (current) throw new Error("WORKER_BUSY");
-      if (Date.now() >= deadlineAt) throw new Error("EXECUTION_DEADLINE");
+      if (deadlineAt !== null && Date.now() >= deadlineAt) throw new Error("EXECUTION_DEADLINE");
       return new Promise((resolve, reject) => {
         const boundExecution = {...execution};
         const handle = child;
@@ -146,7 +146,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
         latestExecution.set(handle, bindingKey);
         while (executionHandles.size > 256) executionHandles.delete(executionHandles.keys().next().value!);
         current = {execution:boundExecution, resolve, reject, lastSeq: -1};
-        current.deadlineTimer = setTimeout(() => cancel(boundExecution), Math.max(0, deadlineAt-Date.now()));
+        if (deadlineAt !== null) current.deadlineTimer = setTimeout(() => cancel(boundExecution), Math.max(0, deadlineAt-Date.now()));
         try {send({version: 1, type: "run", requestId: randomUUID(), execution: boundExecution, deadlineAt});}
         catch {clearRun(); reject(new Error("WORKER_DISCONNECTED"));}
       });

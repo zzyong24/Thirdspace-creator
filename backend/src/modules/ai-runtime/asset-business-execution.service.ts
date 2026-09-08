@@ -1,3 +1,4 @@
+import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
 import {prepareLegacyAssetRecovery} from "./asset-legacy-recovery.service";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
@@ -19,7 +20,7 @@ function fields(task:Task){
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:PreparedModelExecution["budget"];now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??""));

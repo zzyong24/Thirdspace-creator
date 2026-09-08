@@ -34,6 +34,30 @@ import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
 
+/** 后端冻结的任务总预算；null 仅由 continuous 策略显式授权，单次请求仍独立限时。 */
+export const executionBudgetSchema = z.union([
+  z.object({maxCalls:z.number().int().positive().max(10000),maxTokens:z.number().int().positive().max(2_000_000_000),deadlineMs:z.number().int().positive().max(2_000_000_000)}).strict(),
+  z.object({policy:z.literal("continuous"),maxAttempts:z.number().int().positive().optional(),maxCalls:z.number().int().positive().max(10000).nullable(),maxTokens:z.number().int().positive().max(2_000_000_000).nullable(),deadlineMs:z.number().int().positive().max(2_000_000_000).nullable()}).strict(),
+]);
+export type BoundedExecutionBudget = {maxCalls:number;maxTokens:number;deadlineMs:number};
+export type ExecutionBudget = z.infer<typeof executionBudgetSchema>;
+export function createContinuousExecutionBudget(limits:Partial<{maxCalls:number;maxTokens:number;deadlineMs:number;maxAttempts:number}> = {}):ExecutionBudget {
+  return executionBudgetSchema.parse({policy:"continuous",...(limits.maxAttempts===undefined?{}:{maxAttempts:limits.maxAttempts}),maxCalls:limits.maxCalls??null,maxTokens:limits.maxTokens??null,deadlineMs:limits.deadlineMs??null});
+}
+export function isContinuousExecutionBudget(value:unknown):boolean {
+  const parsed=executionBudgetSchema.safeParse(value);
+  return parsed.success && "policy" in parsed.data && parsed.data.policy === "continuous";
+}
+/** attempt 是租约代数；持续策略只执行显式的恢复次数限制。 */
+export function executionAttemptAvailable(value:unknown,attempt:number,legacyMaxAttempts:number):boolean {
+  const parsed=executionBudgetSchema.safeParse(value);
+  if(parsed.success && "policy" in parsed.data) return parsed.data.maxAttempts === undefined || attempt < parsed.data.maxAttempts;
+  return attempt < legacyMaxAttempts;
+}
+export function executionBudgetDeadline(budget:ExecutionBudget,startedAt:string):string|null {
+  return budget.deadlineMs === null ? null : new Date(Date.parse(startedAt)+budget.deadlineMs).toISOString();
+}
+
 /** 私有父子进程协议；用户身份由后端任务记录恢复，不在 Worker 消息中指定。 */
 export const executionRefSchema = z.object({
   executionTaskId: z.string().min(1),
@@ -214,7 +238,7 @@ const envelope = { version: z.literal(1), requestId: z.string().min(1) };
 export const workerStopReasonSchema = z.enum(["completed", "cancelled", "failed", "unknown_result", "retry_wait", "waiting_user"]);
 export type WorkerStopReason = z.infer<typeof workerStopReasonSchema>;
 export const hostMessageSchema = z.discriminatedUnion("type", [
-  z.object({...envelope, type: z.literal("run"), execution: executionRefSchema, deadlineAt: z.number().finite()}),
+  z.object({...envelope, type: z.literal("run"), execution: executionRefSchema, deadlineAt: z.number().finite().nullable()}),
   z.object({...envelope, type: z.literal("cancel"), execution: executionRefSchema}),
   z.object({...envelope, type: z.literal("reply"), ok: z.boolean(), data: z.unknown().optional(), errorCode: z.string().optional()}),
 ]);

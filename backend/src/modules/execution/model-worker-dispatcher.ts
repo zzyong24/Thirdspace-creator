@@ -1,3 +1,4 @@
+import {executionBudgetSchema} from "@creatoros/contract/execution-worker";
 import {createScriptSimilarityCompletionService} from "../ai/script-similarity-completion.service";
 import {createTopicPreferenceCompletionService} from "../ai/topic-preference-completion.service";
 import {createExecutionChatFallbackService} from "./execution-chat-fallback.service";
@@ -436,9 +437,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
               throw new Error("CHAT_WORKER_INPUT_UNAVAILABLE");
             }
           }
-          const deadline=await leases.withLease(ref,"admission",async({task})=>task.deadlineAt);
+          const deadline=await leases.withLease(ref,"admission",async({task})=>{const budget=executionBudgetSchema.parse(task.executionBudget);if(task.deadlineAt===null&&budget.deadlineMs!==null)throw new Error("PREPARED_DEADLINE_MISSING");return task.deadlineAt;});
           if(stopping)break;
-          if(!deadline)throw new Error("PREPARED_DEADLINE_MISSING");
+
           if(deps.executionMode==="agentic.run"){
             try{
               const capabilities=await supervisor.start();
@@ -455,7 +456,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
             }
             if(stopping)break;
           }
-          await supervisor.run(ref,Date.parse(deadline));
+          await supervisor.run(ref,deadline === null ? null : Date.parse(deadline));
         }catch{
           // 不推测外部提交结果；持久恢复按调用账本决定恢复/待对账，禁止换键重放。
           report("MODEL_WORKER_RUN_INTERRUPTED");

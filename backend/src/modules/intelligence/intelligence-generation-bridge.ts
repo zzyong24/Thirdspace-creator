@@ -55,7 +55,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     const payload=task.payload as Record<string,unknown>;
     if(payload.intelligenceGeneration)return payload.intelligenceGeneration;
     const value=json({sourceDigest,input,identity});
-    await tx.update(executionTasks).set({payload:{...payload,intelligenceGeneration:value},...(task.deadlineAt===null?{deadlineAt:new Date(Date.now()+budget.deadlineMs).toISOString()}: {})}).where(eq(executionTasks.id,task.id));return value;
+    await tx.update(executionTasks).set({payload:{...payload,intelligenceGeneration:value},...(task.deadlineAt===null && task.executionBudget===null?{deadlineAt:new Date(Date.now()+budget.deadlineMs).toISOString()}: {})}).where(eq(executionTasks.id,task.id));return value;
    });
   }
   const saved=savedSchema.parse(frozen);
@@ -113,7 +113,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     throw new Error("INTELLIGENCE_PORT_UNAVAILABLE");
    },
   };
-  try{const outcome=await supervision.run({ref,deadlineAt:Date.parse(state.deadlineAt!),ports,verify,isClosed:()=>closedPorts,close:()=>{closedPorts=true;},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined});if(persistedStatus)throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,persistedStatus);if(outcome!=="completed"||completed===undefined)throw new Error("INTELLIGENCE_WORKER_INCOMPLETE");return completed;}
+  try{const outcome=await supervision.run({ref,deadlineAt:state.deadlineAt === null ? null : Date.parse(state.deadlineAt),ports,verify,isClosed:()=>closedPorts,close:()=>{closedPorts=true;},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined});if(persistedStatus)throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,persistedStatus);if(outcome!=="completed"||completed===undefined)throw new Error("INTELLIGENCE_WORKER_INCOMPLETE");return completed;}
   catch(error){
    if(!persistedStatus){
     const last=(await ledger.inspect(ref)).calls.at(-1);

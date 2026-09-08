@@ -1,3 +1,4 @@
+import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
 import {awaitPreparation} from "../execution/await-preparation";
 import { and,eq,isNull,asc,inArray,sql,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -17,7 +18,7 @@ export interface StructuredBusinessAdapter {
 export type StructuredBusinessAdapters=Partial<Record<TaskType,StructuredBusinessAdapter>>;
 
 /** 只准备任务并转交执行权；上下文与Skill均在调用供应商前冻结，不调用模型。 */
-export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:StructuredBusinessAdapters;budget:PreparedModelExecution["budget"];maxOutputTokens:number}){
+export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:StructuredBusinessAdapters;budget:BoundedExecutionBudget;maxOutputTokens:number}){
   const taskTypes=Object.keys(deps.adapters) as TaskType[];
   const adapterFor=(type:string)=>Object.prototype.hasOwnProperty.call(deps.adapters,type) ? deps.adapters[type as TaskType] : undefined;
   const authority=createExecutionAuthorityService(db);

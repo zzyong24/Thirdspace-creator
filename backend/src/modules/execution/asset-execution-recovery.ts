@@ -1,3 +1,4 @@
+import {executionAttemptAvailable} from "@creatoros/contract/execution-worker";
 import {ZodError} from "zod";
 import type {executionCalls} from "@creatoros/backend";
 import {hasPendingGeneratedAssetCommit} from "../assets";
@@ -8,7 +9,7 @@ import {ConflictError} from "./execution.errors";
 export async function recoverableAssetCalls(scope:Parameters<typeof bindAssetExecution>[0],calls:(typeof executionCalls.$inferSelect)[],stamp:string){
  const {task}=scope;
  const input=(task.payload as {modelInput?:{kind?:string;skillId?:string}})?.modelInput;
- if(!(input?.kind==="asset.generate" || (input?.kind==="model.structured" && input.skillId==="cover.brief")) || task.attempt>=task.maxAttempts || (task.deadlineAt!==null && Date.parse(task.deadlineAt)<=Date.parse(stamp)))return [];
+ if(!(input?.kind==="asset.generate" || (input?.kind==="model.structured" && input.skillId==="cover.brief")) || !executionAttemptAvailable(task.executionBudget,task.attempt,task.maxAttempts) || (task.deadlineAt!==null && Date.parse(task.deadlineAt)<=Date.parse(stamp)))return [];
  const recoverable:string[]=[];
  for(const call of calls){
   if(!["started","unknown"].includes(call.status))continue;

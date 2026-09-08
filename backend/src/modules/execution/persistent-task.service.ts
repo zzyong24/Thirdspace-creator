@@ -1,3 +1,4 @@
+import {executionBudgetSchema, executionBudgetDeadline, isContinuousExecutionBudget, executionAttemptAvailable, type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
@@ -65,6 +66,8 @@ export interface EnqueuePersistentTaskInput {
   payload: Record<string, unknown>;
   priority?: number;
   maxAttempts?: number;
+  /** 后端创建策略，不在公共入队契约中暴露。 */
+  executionBudget?: ExecutionBudget;
   costEstimate?: ExecutionTaskResourceV2["costEstimate"];
 }
 
@@ -237,6 +240,7 @@ function commandTarget(
   command: PersistentTaskCommand,
   attempt: number,
   maxAttempts: number,
+  attemptAvailable = attempt < maxAttempts,
 ): PersistentTaskStatus {
   if (command === "pause" && status === "retry_wait") return "paused";
   if (command === "resume" && status === "waiting_user") return "queued";
@@ -251,7 +255,7 @@ function commandTarget(
   if (
     command === "retry" &&
     (status === "failed" || status === "blocked") &&
-    attempt < maxAttempts
+    attemptAvailable
   ) {
     return "queued";
   }
@@ -319,7 +323,10 @@ export function createPersistentTaskService(
         throw new ExecutionValidationError("maxAttempts 必须是正整数");
       }
       const stamp = now();
+      const executionBudget = input.executionBudget === undefined ? null : executionBudgetSchema.parse(isContinuousExecutionBudget(input.executionBudget)&&input.maxAttempts!==undefined?{...input.executionBudget,maxAttempts:input.maxAttempts}:input.executionBudget);
       const row = {
+        executionBudget,
+        deadlineAt: executionBudget === null ? null : executionBudgetDeadline(executionBudget, stamp),
         id: nextId("execution-task"),
         userId: ctx.userId,
         accountId,
@@ -503,6 +510,7 @@ export function createPersistentTaskService(
               input.command,
               row.attempt,
               row.maxAttempts,
+              executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts),
             ),
           ]),
         );
@@ -760,7 +768,7 @@ export function createPersistentTaskService(
             const next=Date.parse(stamp)+delay;
             const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
             const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
-            if(row.attempt>=limit||(row.deadlineAt!==null&&next>=Date.parse(row.deadlineAt)))status='failed';
+            if((!executionAttemptAvailable(row.executionBudget,row.attempt,limit))||(row.deadlineAt!==null&&next>=Date.parse(row.deadlineAt)))status='failed';
             else retryAt=new Date(next).toISOString();
           }
           const [updated]=await tx.update(executionTasks).set({status,retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
@@ -844,11 +852,13 @@ export function createPersistentTaskService(
             target = "unknown_result";
           } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {
             target = "failed";
-          } else if ((row.payload as {modelInput?:{kind?:string}})?.modelInput?.kind === "asset.generate" && row.attempt >= row.maxAttempts) {
+          } else if ((row.payload as {modelInput?:{kind?:string}})?.modelInput?.kind === "asset.generate" && !executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts)) {
+            target = "failed";
+          } else if (isContinuousExecutionBudget(row.executionBudget) && !executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts)) {
             target = "failed";
           } else if (completedParents.length || calls.some(call => call.status === "settled" && call.resultText)) {
             target = "queued";
-          } else if (row.attempt < row.maxAttempts) {
+          } else if (executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts)) {
             target = "queued";
           } else {
             target = "failed";

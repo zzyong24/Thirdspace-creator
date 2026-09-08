@@ -1,3 +1,4 @@
+import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import { readBrowserTaskGrant, assertFrozenBrowserTaskGrant } from "../execution/browser-task-grant";
 import { createHash } from "node:crypto";
 import { and, eq, isNull, asc, inArray, aiTasks, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
@@ -54,12 +55,14 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
       if (spec.taskType === "agentic.research" && spec.params.browserAuthorization !== undefined && !grant) return {aiTaskId:task.id,status:"awaiting_authorization" as const,executionTaskId:undefined};
       const browserAuthorization = grant?.authorization;
       const methodSystem = await deps.resolveMethodSystem?.(ctx, spec.taskType);
-      const modelInput = agenticWorkerInputSchema.parse({ ...definition,
+      const modelInput = agenticWorkerInputSchema.parse({ ...definition, runtimeVersion:"intent-v1",
         ...(methodSystem !== undefined ? {systemPrompt: methodSystem} : {}), ...(browserAuthorization ? {browserAuthorization:{...browserAuthorization,source:"user_task"}} : {}), kind: "agentic.run", operationKey, goal: spec.goal,
         maxOutputTokens: deps.maxOutputTokens, dryRun });
-      const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCalls, deps.budget.maxCalls),
-        maxTokens: Math.min(tokens ?? deps.budget.maxTokens, deps.budget.maxTokens),
-        deadlineMs: Math.min(spec.constraints.timeoutSec! * 1000, deps.budget.deadlineMs) };
+      const budget = createContinuousExecutionBudget({
+        ...(steps === undefined ? {} : {maxCalls:steps}),
+        ...(tokens === undefined ? {} : {maxTokens:tokens}),
+        ...(spec.constraints.timeoutSec === null ? {} : {deadlineMs:spec.constraints.timeoutSec * 1000}),
+      });
       await deps.validateInputs(ctx, spec.inputs);
       return authority.bindAiTask(ctx, task.id, { requestFingerprint: task.requestFingerprint, modelInput, budget });
     },

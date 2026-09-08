@@ -1,3 +1,4 @@
+import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import { createHash, randomUUID } from "node:crypto";
 
 import {
@@ -4235,6 +4236,7 @@ export function createIntelligenceService(
       await deps.positioning.getVersion(ctx, input.positioningVersionId);
       const task = await deps.tasks.enqueue(ctx, {
         kind: "topic_preview",
+        executionBudget: createContinuousExecutionBudget(),
         ownerType: "transform",
         ownerId: item.id,
         idempotencyKey: input.idempotencyKey,

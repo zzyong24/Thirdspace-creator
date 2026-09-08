@@ -1,3 +1,4 @@
+import {createContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import type {
   ExecutionTaskResourceV2,
   RequestContext,
@@ -184,6 +185,7 @@ export function createProjectScriptCandidateService(deps: {
       });
       return deps.tasks.enqueue(ctx, {
         kind: "script_candidate",
+        executionBudget: createContinuousExecutionBudget(),
         ownerType: "project",
         ownerId: input.projectId,
         idempotencyKey: input.idempotencyKey,

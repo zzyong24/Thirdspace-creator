@@ -1,3 +1,4 @@
+import {executionBudgetSchema,executionAttemptAvailable,isContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
 import {recoverableAssetCalls} from "./asset-execution-recovery";
 import { and, desc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import { workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
@@ -23,10 +24,10 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         let retryOfCallId:string|null=null;
         if(input.outcome === "retry_wait") {
           if(!last || last.status !== "rejected")throw new ConflictError("没有明确拒绝事实，禁止自动重试");
-          const budget=task.executionBudget as {maxCalls?:number}|null;
+          const budget=task.executionBudget === null ? null : executionBudgetSchema.parse(task.executionBudget);
           const delay=Math.max(input.retryAfterMs ?? 0,computeBackoffMs(last.sequence,deps.random));
           const next=Date.parse(now())+delay;
-          if(!budget?.maxCalls || last.sequence >= budget.maxCalls || !task.deadlineAt || next >= Date.parse(task.deadlineAt)) {
+          if(!budget || (task.deadlineAt===null&&!isContinuousExecutionBudget(budget)) || (isContinuousExecutionBudget(budget)&&!executionAttemptAvailable(budget,task.attempt,task.maxAttempts)) || (budget.maxCalls !== null && last.sequence >= budget.maxCalls) || (task.deadlineAt !== null && next >= Date.parse(task.deadlineAt))) {
             status="failed";
           }else{
             retryAt=new Date(next).toISOString();retryOfCallId=last.id;
@@ -35,7 +36,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         if(input.outcome==="unknown_result" && input.errorCode==="ASSET_RECONCILE_RETRYABLE" && last?.providerJob && calls.every(call=>call.id===last.id || call.status==="rejected")){
           const stamp=now(),recoverable=await recoverableAssetCalls({tx,task,context},calls,stamp);
           const next=Date.parse(stamp)+Math.max(input.retryAfterMs??0,computeBackoffMs(task.attempt,deps.random));
-          if(recoverable.includes(last.id) && task.deadlineAt && next<Date.parse(task.deadlineAt)){
+          if(recoverable.includes(last.id) && (task.deadlineAt === null ? isContinuousExecutionBudget(task.executionBudget) : next<Date.parse(task.deadlineAt))){
             // 只重新领取原调用查询结果，账本继续 unknown，不能获得新提交资格。
             status="retry_wait";retryAt=new Date(next).toISOString();retryOfCallId=last.retryOfCallId;
           }

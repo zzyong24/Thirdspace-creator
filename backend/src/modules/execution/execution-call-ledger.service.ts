@@ -1,3 +1,4 @@
+import {executionBudgetSchema as budgetSchema, executionBudgetDeadline} from "@creatoros/contract/execution-worker";
 import { isDeepStrictEqual } from "node:util";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError,ExecutionBudgetError } from "./execution.errors";
 
 const count = z.number().int().nonnegative().max(2_000_000_000);
-const budgetSchema = z.object({maxCalls: count.min(1).max(10000), maxTokens: count.min(1), deadlineMs: count.min(1)}).strict();
+
 const reservationSchema = z.object({
   operationKey: z.string().min(1).max(256), kind: z.enum(["model", "tool"]),
   inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/), reservedTokens: count,
@@ -59,8 +60,8 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
     async initializeBudget(ref: ExecutionRef) {
       return leases.withLease(ref,"admission",async({tx,task})=>{
         const budget=task.executionBudget===null?configuredBudget:budgetSchema.parse(task.executionBudget);
-        const deadlineAt=task.deadlineAt ?? new Date(Date.parse(task.createdAt)+budget.deadlineMs).toISOString();
-        if(!(Date.parse(deadlineAt)>Date.parse(now())))throw new ConflictError("执行截止时间已到");
+        const deadlineAt=task.deadlineAt ?? executionBudgetDeadline(budget,task.createdAt);
+        if(deadlineAt !== null && !(Date.parse(deadlineAt)>Date.parse(now())))throw new ConflictError("执行截止时间已到");
         if(task.executionBudget===null || task.deadlineAt===null)await tx.update(executionTasks).set({executionBudget:budget,deadlineAt}).where(eq(executionTasks.id,task.id));
         return {budget,deadlineAt};
       });
@@ -76,8 +77,8 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
       if (input.accountingBasis === "requests" && (input.reservedTokens !== 0 || input.kind !== "model" || input.parentCallId)) throw new ConflictError("请求计量仅用于独立的非 token 预算调用");
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         const budget = task.executionBudget === null ? configuredBudget : budgetSchema.parse(task.executionBudget);
-        const deadlineAt = task.deadlineAt ?? new Date(Date.parse(task.createdAt) + budget.deadlineMs).toISOString();
-        if (!(Date.parse(deadlineAt) > Date.parse(now()))) throw new ConflictError("执行截止时间已到");
+        const deadlineAt = task.deadlineAt ?? executionBudgetDeadline(budget,task.createdAt);
+        if (deadlineAt !== null && !(Date.parse(deadlineAt) > Date.parse(now()))) throw new ConflictError("执行截止时间已到");
         const calls = await readCalls(tx, task.id);
         validate?.(calls, task);
         assertParent(calls, input);
@@ -94,7 +95,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         assertParent(calls, input, ref.attempt);
         assertResolved(calls, ref.attempt);
         const used = totals(calls);
-        if (calls.length >= budget.maxCalls || used.knownSpentTokens + used.reservedTokens + input.reservedTokens > budget.maxTokens) {
+        if ((budget.maxCalls !== null && calls.length >= budget.maxCalls) || (budget.maxTokens !== null && used.knownSpentTokens + used.reservedTokens + input.reservedTokens > budget.maxTokens)) {
           throw new ExecutionBudgetError("执行调用次数或用量预算不足");
         }
         if (task.executionBudget === null || task.deadlineAt === null) {
@@ -120,7 +121,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         assertResolved(calls, ref.attempt);
         const budget = budgetSchema.parse(task.executionBudget);
         const used = totals(calls);
-        if (used.knownSpentTokens + used.reservedTokens > budget.maxTokens) throw new ConflictError("实际用量已超预算");
+        if (budget.maxTokens !== null && used.knownSpentTokens + used.reservedTokens > budget.maxTokens) throw new ConflictError("实际用量已超预算");
         const [started] = await tx.update(executionCalls).set({status: "started", startedAttempt: ref.attempt, updatedAt: now()})
           .where(eq(executionCalls.id, callId)).returning();
         return started!;

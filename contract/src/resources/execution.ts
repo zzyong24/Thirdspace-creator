@@ -31,8 +31,8 @@ export const executionTaskInput = z.object({
 export type ExecutionTaskInput = z.infer<typeof executionTaskInput>;
 
 // 执行约束:可选总超时 + 网络策略 + 产物总量硬顶(收割时超限 → 任务失败,诚实不截断)。
-// timeoutSec=null 只允许 video.render：长视频的总耗时随时长/帧率/图层变化，固定总时限会把
-// 仍持续产出捕帧心跳的健康任务误杀。其他执行类型仍保留有界总时限。
+// timeoutSec=null 允许 video.render 与 agentic.*：长视频的总耗时随时长/帧率/图层变化，固定总时限会把
+// 仍持续产出捕帧心跳的健康任务误杀。普通短任务仍保留有界总时限。
 // [RT-H06] network 的诚实语义(执行在 backend run-execution-task 的 network 门):
 //   - "deny"(默认):平台无 OS 级网络沙箱,不假装隔离 —— 以「executor 网络姿态声明
 //     (不出网/仅经平台受控端口)+ 子进程 env allowlist 收窄(密钥/DB/S3 不进沙箱进程树)」
@@ -47,8 +47,15 @@ export type ExecutionConstraints = z.infer<typeof executionConstraints>;
 
 // 任务契约(脑→手):taskType 枚举 + goal + inputs 物化声明 + per-taskType params
 // (params 的细化 zod 由各 executor 自带 paramsSchema 二次校验)+ constraints。
-export const executionTaskSpec = z
-  .object({
+// SEMANTIC_BOUNDARY_ALLOW: 按已声明任务类型补协议默认值，不判断用户意图；显式时限保持原值。
+export const executionTaskSpec = z.preprocess((value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const spec = value as Record<string, unknown>;
+  if (!["agentic.research", "agentic.collect", "agentic.material"].includes(String(spec.taskType))) return value;
+  if (spec.constraints !== undefined && (!spec.constraints || typeof spec.constraints !== "object" || Array.isArray(spec.constraints))) return value;
+  const constraints = (spec.constraints ?? {}) as Record<string, unknown>;
+  return constraints.timeoutSec === undefined ? {...spec, constraints:{...constraints, timeoutSec:null}} : value;
+}, z.object({
     taskType: executionTaskType,
     goal: z.string().min(1),
     inputs: z.array(executionTaskInput).default([]),
@@ -60,14 +67,14 @@ export const executionTaskSpec = z
     }),
   })
   .superRefine((spec, ctx) => {
-    if (spec.constraints.timeoutSec === null && spec.taskType !== "video.render") {
+    if (spec.constraints.timeoutSec === null && spec.taskType !== "video.render" && !spec.taskType.startsWith("agentic.")) {
       ctx.addIssue({
         code: "custom",
         path: ["constraints", "timeoutSec"],
-        message: "只有 video.render 可关闭固定总超时",
+        message: "只有 video.render 和自主任务可关闭固定总超时",
       });
     }
-  });
+  }));
 export type ExecutionTaskSpec = z.infer<typeof executionTaskSpec>;
 
 // 单个产物(收割自沙箱 out/):path 是相对 out/ 的路径(采纳时服务端按它读实体,
