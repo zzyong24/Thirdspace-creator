@@ -1,3 +1,4 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "@creatoros/backend/modules/execution";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   PersistentTaskClaim,
@@ -11,7 +12,7 @@ import type {
 export interface DouyinShareImportFetcher {
   fetch(
     ctx: RequestContext,
-    input: { shareText: string; capturedAt: string },
+    input: { shareText: string; capturedAt: string; signal?:AbortSignal },
   ): Promise<{
     shareUrl: string;
     resolvedUrl: string;
@@ -58,9 +59,10 @@ function taskFailure(error: unknown): {
 
 export async function runDouyinShareImportTask(
   ctx: RequestContext,
-  input: { taskId: string; existingClaim?: PersistentTaskClaim },
+  input: { taskId: string; existingClaim?: PersistentTaskClaim; signal?:AbortSignal },
   deps: RunDouyinShareImportDeps,
 ): Promise<void> {
+  if(input.signal?.aborted)return;
   const claim =
     input.existingClaim ??
     (await deps.tasks.claimTask({
@@ -70,7 +72,7 @@ export async function runDouyinShareImportTask(
         `intelligence-share-import:${input.taskId}:${Date.now().toString(36)}`,
       leaseSeconds: 180,
     }));
-  if (!claim) return;
+  if (!claim||input.signal?.aborted) return;
   const lease = {
     taskId: input.taskId,
     workerId: claim.lease.workerId,
@@ -91,8 +93,10 @@ export async function runDouyinShareImportTask(
 
     const fetched = await deps.fetcher.fetch(ctx, {
       shareText,
+      signal:input.signal,
       capturedAt: deps.now?.() ?? new Date().toISOString(),
     });
+    input.signal?.throwIfAborted();
     const result = await deps.intelligence.importDouyinSharedItem(ctx, {
       taskId: input.taskId,
       lease,
@@ -115,6 +119,7 @@ export async function runDouyinShareImportTask(
       }
     }
   } catch (error) {
+    if(input.signal?.aborted)return;
     const failure = taskFailure(error);
     await deps.tasks.finish({
       ...lease,
@@ -129,9 +134,10 @@ export async function runDouyinShareImportTask(
 export async function drainDouyinShareImportQueue(
   deps: RunDouyinShareImportDeps,
   maxTasks = 20,
+  control:TaskDrainControl = {},
 ): Promise<number> {
   let processed = 0;
-  for (; processed < maxTasks; processed += 1) {
+  for (; processed < maxTasks && !isTaskDrainStopping(control); processed += 1) {
     const claim = await deps.tasks.claimNext({
       workerId:
         deps.workerId?.() ??
@@ -139,7 +145,7 @@ export async function drainDouyinShareImportQueue(
       kinds: ["share_import"],
       leaseSeconds: 180,
     });
-    if (!claim) break;
+    if (!claim || isTaskDrainStopping(control)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
       accountId: claim.task.accountId,
@@ -149,7 +155,7 @@ export async function drainDouyinShareImportQueue(
     };
     await runDouyinShareImportTask(
       ctx,
-      { taskId: claim.task.id, existingClaim: claim },
+      { taskId: claim.task.id, existingClaim: claim, signal:control.signal },
       deps,
     );
   }

@@ -1620,12 +1620,14 @@ export interface DouyinShareTarget {
 
 export async function resolveDouyinShareTarget(
   shareText: string,
-  deps: { fetch?: typeof globalThis.fetch } = {},
+  deps: { fetch?: typeof globalThis.fetch; signal?:AbortSignal } = {},
 ): Promise<DouyinShareTarget> {
+  deps.signal?.throwIfAborted();
   const shareUrl = extractDouyinShareUrl(shareText);
   const request = deps.fetch ?? globalThis.fetch;
   let current = new URL(shareUrl);
   for (let hop = 0; hop <= 5; hop += 1) {
+    deps.signal?.throwIfAborted();
     if (
       !["http:", "https:"].includes(current.protocol) ||
       !isDouyinShareHost(current.hostname)
@@ -1645,7 +1647,7 @@ export async function resolveDouyinShareTarget(
     const response = await request(current, {
       method: "GET",
       redirect: "manual",
-      signal: AbortSignal.timeout(10_000),
+      signal: deps.signal?AbortSignal.any([deps.signal,AbortSignal.timeout(10_000)]):AbortSignal.timeout(10_000),
       headers: {
         "user-agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
@@ -1811,6 +1813,7 @@ export function parseDouyinSharedItem(
 }
 
 export interface FetchDouyinSharedItemOptions {
+  signal?:AbortSignal;
   awemeId: string;
   canonicalUrl: string;
   authDir: string;
@@ -1822,6 +1825,7 @@ export interface FetchDouyinSharedItemDeps {
   openContext?: (
     authDir: string,
     headless: boolean,
+    signal?:AbortSignal,
   ) => Promise<SearchCapableContext>;
 }
 
@@ -1833,13 +1837,16 @@ export async function fetchDouyinSharedItem(
   opts: FetchDouyinSharedItemOptions,
   deps: FetchDouyinSharedItemDeps = {},
 ): Promise<ParsedDouyinSharedItem> {
+  opts.signal?.throwIfAborted();
   const gateway = opts.gateway ?? instantNoopGateway;
   const openCtx =
     deps.openContext ??
-    ((authDir: string, headless: boolean) =>
-      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+    ((authDir: string, headless: boolean,signal?:AbortSignal) =>
+      openContext(authDir, headless,signal) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true,opts.signal);
+  const lifetime=bindAbortContext(opts.signal,()=>ctx.close());
   try {
+    opts.signal?.throwIfAborted();
     const cookies = await ctx.cookies("https://www.douyin.com");
     const loggedIn = cookies.some(
       (cookie) =>
@@ -1855,7 +1862,7 @@ export async function fetchDouyinSharedItem(
         await gotoWithRetry(
           page as unknown as GotoCapablePage,
           opts.canonicalUrl,
-          { timeoutMs: 60_000, label: `单条作品导入(${opts.awemeId})` },
+          { timeoutMs: 60_000, label: `单条作品导入(${opts.awemeId})`,signal:opts.signal },
         );
         await page.waitForTimeout(2_000);
         const bodyHead = await page
@@ -1882,9 +1889,12 @@ export async function fetchDouyinSharedItem(
         );
       },
       mapDetailErr,
+      opts.signal,
     );
+  } catch(error){
+    opts.signal?.throwIfAborted();throw error;
   } finally {
-    await ctx.close().catch(() => {});
+    await lifetime.close();
   }
 }
 

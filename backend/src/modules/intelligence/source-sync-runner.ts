@@ -1,3 +1,4 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   PersistentTaskClaim,
@@ -137,6 +138,7 @@ export async function runIntelligenceSourceTask(
     taskId: string;
     existingClaim?: PersistentTaskClaim;
     signal?: AbortSignal;
+    cancelOnAbort?:boolean;
   },
   deps: RunIntelligenceSourceTaskDeps,
 ): Promise<void> {
@@ -158,9 +160,11 @@ export async function runIntelligenceSourceTask(
   let heartbeatStopped = false;
   let heartbeatInFlight: Promise<void> = Promise.resolve();
   let parentCancellation: Promise<void> | undefined;
+  let adapterPending:Promise<IntelligenceAdapterEnvelope>|undefined;
   const leaseInput = {taskId: input.taskId, workerId: claim.lease.workerId, attempt: claim.lease.attempt};
   const onParentAbort = () => {
     control.abort(input.signal?.reason);
+    if(input.cancelOnAbort===false)return;
     parentCancellation ??= (async () => {
       // Persist cancellation even when abort raced the claim response.
       try {
@@ -203,9 +207,8 @@ export async function runIntelligenceSourceTask(
     });
     let envelope: IntelligenceAdapterEnvelope;
     try {
-      envelope = await Promise.race([deps.adapter.run(ctx, {
-        ...sourceInput, checkpoint: claim.task.checkpoint, signal: control.signal,
-      }), aborted]);
+      adapterPending=deps.adapter.run(ctx,{...sourceInput,checkpoint:claim.task.checkpoint,signal:control.signal});
+      envelope = await Promise.race([adapterPending,aborted]);
     } catch (error) {
       if (control.signal.aborted) return;
       envelope = failureEnvelope(sourceInput.source, deps.now?.() ?? new Date().toISOString(), error);
@@ -222,6 +225,7 @@ export async function runIntelligenceSourceTask(
     clearInterval(heartbeatTimer);
     input.signal?.removeEventListener("abort", onParentAbort);
     if (abortListener) control.signal.removeEventListener("abort", abortListener);
+    if(input.cancelOnAbort===false&&adapterPending)await adapterPending.catch(()=>{});
     await heartbeatInFlight;
     if (parentCancellation) await parentCancellation;
     if (control.signal.aborted && !leaseLost) {
@@ -237,9 +241,10 @@ export async function runIntelligenceSourceTask(
 export async function drainIntelligenceSourceQueue(
   deps: RunIntelligenceSourceTaskDeps,
   maxTasks = 20,
+  control:TaskDrainControl = {},
 ): Promise<number> {
   let processed = 0;
-  for (; processed < maxTasks; processed += 1) {
+  for (; processed < maxTasks && !isTaskDrainStopping(control); processed += 1) {
     const claim = await deps.tasks.claimNext({
       workerId:
         deps.workerId?.() ??
@@ -247,7 +252,7 @@ export async function drainIntelligenceSourceQueue(
       kinds: ["source_sync"],
       leaseSeconds: 90,
     });
-    if (!claim) break;
+    if (!claim || isTaskDrainStopping(control)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
       accountId: claim.task.accountId,
@@ -266,6 +271,8 @@ export async function drainIntelligenceSourceQueue(
         runId: run.id,
         taskId: claim.task.id,
         existingClaim: claim,
+        signal:control.signal,
+        cancelOnAbort:false,
       },
       deps,
     );

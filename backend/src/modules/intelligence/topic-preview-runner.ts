@@ -1,3 +1,4 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   PersistentTaskClaim,
@@ -81,8 +82,8 @@ export interface TopicPreviewRunnerDeps {
   workerId?: () => string;
 }
 
-export interface TopicPreviewDrainOptions {
-  /** 仅供测试与诊断限量；启动恢复默认顺序处理到队列为空。 */
+export interface TopicPreviewDrainOptions extends TaskDrainControl {
+  /** 每轮领取上限；默认 10，积压留给下一轮唤醒。 */
   maxTasks?: number;
 }
 
@@ -168,9 +169,10 @@ export function classifyTopicPreviewFailure(error: unknown): {
 
 export async function runIntelligenceTopicPreviewTask(
   ctx: RequestContext,
-  input: { taskId: string; existingClaim?: PersistentTaskClaim },
+  input: { taskId: string; existingClaim?: PersistentTaskClaim; signal?:AbortSignal },
   deps: TopicPreviewRunnerDeps,
 ): Promise<void> {
+  if(input.signal?.aborted)return;
   const claim =
     input.existingClaim ??
     (await deps.tasks.claimTask({
@@ -180,7 +182,7 @@ export async function runIntelligenceTopicPreviewTask(
         `intelligence-topic:${input.taskId}:${Date.now().toString(36)}`,
       leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
     }));
-  if (!claim) return;
+  if (!claim || input.signal?.aborted) return;
   const lease = {
     taskId: input.taskId,
     workerId: claim.lease.workerId,
@@ -194,10 +196,12 @@ export async function runIntelligenceTopicPreviewTask(
       input.taskId,
     );
     targetTransformId = target.transformId;
+    input.signal?.throwIfAborted();
     const generated = await deps.generator.generate(
       ctx,
       target,
       async (checkpoint) => {
+        input.signal?.throwIfAborted();
         await deps.intelligence.saveTopicPreviewCheckpoint(
           ctx,
           target.transformId,
@@ -220,6 +224,7 @@ export async function runIntelligenceTopicPreviewTask(
       },
       claim,
     );
+    input.signal?.throwIfAborted();
     await deps.intelligence.finishTopicPreview(
       ctx,
       target.transformId,
@@ -234,6 +239,7 @@ export async function runIntelligenceTopicPreviewTask(
       status: "succeeded",
     });
   } catch (error) {
+    if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     const failure = classifyTopicPreviewFailure(error);
     const blocked =
@@ -280,7 +286,7 @@ export async function drainIntelligenceTopicPreviewQueue(
   deps: TopicPreviewRunnerDeps,
   options: TopicPreviewDrainOptions = {},
 ): Promise<number> {
-  const maxTasks = options.maxTasks ?? Number.POSITIVE_INFINITY;
+  const maxTasks = options.maxTasks ?? 10;
   if (
     (!Number.isInteger(maxTasks) && maxTasks !== Number.POSITIVE_INFINITY) ||
     maxTasks <= 0
@@ -289,7 +295,7 @@ export async function drainIntelligenceTopicPreviewQueue(
   }
 
   let processed = 0;
-  while (processed < maxTasks) {
+  while (processed < maxTasks && !isTaskDrainStopping(options)) {
     const claim = await deps.tasks.claimNext({
       workerId:
         deps.workerId?.() ??
@@ -297,7 +303,7 @@ export async function drainIntelligenceTopicPreviewQueue(
       kinds: ["topic_preview"],
       leaseSeconds: TOPIC_PREVIEW_LEASE_SECONDS,
     });
-    if (!claim) break;
+    if (!claim || isTaskDrainStopping(options)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
       accountId: claim.task.accountId,
@@ -306,7 +312,7 @@ export async function drainIntelligenceTopicPreviewQueue(
     };
     await runIntelligenceTopicPreviewTask(
       ctx,
-      { taskId: claim.task.id, existingClaim: claim },
+      { taskId: claim.task.id, existingClaim: claim, signal:options.signal },
       deps,
     );
     processed += 1;

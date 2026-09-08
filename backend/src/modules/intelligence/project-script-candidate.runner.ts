@@ -1,3 +1,4 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import { randomUUID } from "node:crypto";
 
@@ -24,7 +25,7 @@ export interface ProjectScriptCandidateGeneratorPort {
 
 export async function runProjectScriptCandidateTask(
   ctx: RequestContext,
-  input: { taskId: string; existingClaim?: PersistentTaskClaim },
+  input: { taskId: string; existingClaim?: PersistentTaskClaim; signal?:AbortSignal },
   deps: {
     tasks: PersistentTaskService;
     references: ProjectIntelligenceReferenceService;
@@ -32,6 +33,7 @@ export async function runProjectScriptCandidateTask(
     workerId?: string;
   },
 ): Promise<void> {
+  if(input.signal?.aborted)return;
   const workerId = input.existingClaim?.lease.workerId ?? deps.workerId ?? `project-script-${randomUUID()}`;
   const claim =
     input.existingClaim ??
@@ -40,7 +42,7 @@ export async function runProjectScriptCandidateTask(
       workerId,
       leaseSeconds: 180,
     }));
-  if (!claim) return;
+  if (!claim || input.signal?.aborted) return;
   try {
     const referenceIds = Array.isArray(claim.payload.referenceIds)
       ? claim.payload.referenceIds.filter(
@@ -60,16 +62,19 @@ export async function runProjectScriptCandidateTask(
       projectId: claim.task.ownerId,
       referenceIds,
     });
+    input.signal?.throwIfAborted();
     const generated = await deps.generator.generate(ctx, {
       strategy,
       sources,
     },claim);
+    input.signal?.throwIfAborted();
     const text = generated.text.trim();
     if (!text) {
       throw Object.assign(new Error("模型未返回可用口播稿"), {
         code: "EMPTY_SCRIPT_CANDIDATE",
       });
     }
+    input.signal?.throwIfAborted();
     await deps.tasks.saveCheckpoint({
       taskId: claim.task.id,
       workerId,
@@ -83,6 +88,7 @@ export async function runProjectScriptCandidateTask(
       status: "succeeded",
     });
   } catch (error) {
+    if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     await deps.tasks.finish({
       taskId: claim.task.id,
@@ -107,9 +113,10 @@ export async function drainProjectScriptCandidateQueue(
     workerId?: string;
   },
   maxTasks = 10,
+  control:TaskDrainControl = {},
 ): Promise<number> {
   let processed = 0;
-  for (; processed < maxTasks; processed += 1) {
+  for (; processed < maxTasks && !isTaskDrainStopping(control); processed += 1) {
     const claim = await deps.tasks.claimNext({
       workerId:
         deps.workerId ??
@@ -117,7 +124,7 @@ export async function drainProjectScriptCandidateQueue(
       kinds: ["script_candidate"],
       leaseSeconds: 180,
     });
-    if (!claim) break;
+    if (!claim || isTaskDrainStopping(control)) break;
     const ctx: RequestContext = {
       userId: claim.task.userId,
       accountId: claim.task.accountId,
@@ -126,7 +133,7 @@ export async function drainProjectScriptCandidateQueue(
     };
     await runProjectScriptCandidateTask(
       ctx,
-      { taskId: claim.task.id, existingClaim: claim },
+      { taskId: claim.task.id, existingClaim: claim, signal:control.signal },
       deps,
     );
   }

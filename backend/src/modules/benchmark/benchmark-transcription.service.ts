@@ -16,7 +16,7 @@ import {createClaimedAsrStageService,ClaimedAsrSuspended,type ClaimedAsrStageDep
 import type {TranscribeResourceBinding} from '../execution/transcribe-execution-binding';
 
 export interface BenchmarkTranscriptionDeps extends Omit<ClaimedAsrStageDeps,'bindResource'|'runWorker'> {
- ai:Pick<AiService,'createTask'>;entryPath:string|(()=>string);
+ ai:Pick<AiService,'createTask'>;entryPath:string|(()=>string);wake?:()=>void;
 }
 export class BenchmarkTranscriptionPending extends Error {
  readonly code='BENCHMARK_TRANSCRIPTION_PENDING';
@@ -81,6 +81,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
   const pending=work();runs.set(id,pending);try{await pending;}finally{runs.delete(id);}
  };
  const service={
+  prepare,
   async submit(ctx:RequestContext,workId:string){
    shutdown.signal.throwIfAborted();
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
@@ -97,7 +98,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
   async transcribe(ctx:RequestContext,workId:string,options:{waitMs?:number}={}){
    const [work]=await db.select().from(benchmarkWorks).where(workWhere(ctx,workId));if(!work)throw new Error('BENCHMARK_WORK_NOT_FOUND');
    if(work.transcript?.trim())return {status:'reused' as const,transcript:work.transcript};
-   const mapped=await service.submit(ctx,workId);void service.run(ctx,mapped.aiTaskId).catch(()=>{});
+   const mapped=await service.submit(ctx,workId);if(deps.wake)deps.wake();else void service.run(ctx,mapped.aiTaskId).catch(()=>{});
    const expires=Date.now()+Math.max(0,options.waitMs??120000);
    while(!shutdown.signal.aborted){
     const task=await tasks.get(ctx,mapped.executionTaskId);

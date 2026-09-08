@@ -1,3 +1,4 @@
+import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -31,8 +32,8 @@ export interface IntelligenceTranscriptRunnerDeps {
   workerId?: () => string;
 }
 
-export interface IntelligenceTranscriptDrainOptions {
-  /** 仅供测试或人工诊断限量；启动恢复默认持续处理到队列为空。 */
+export interface IntelligenceTranscriptDrainOptions extends TaskDrainControl {
+  /** 每轮领取上限；默认 10，积压留给下一轮唤醒。 */
   maxTasks?: number;
   /** 小并发保护抖音取流、ASR 配额与本机资源，禁止按积压数量同时发起。 */
   concurrency?: number;
@@ -69,9 +70,10 @@ function classify(error: unknown): {
 
 export async function runIntelligenceTranscriptTask(
   ctx: RequestContext,
-  input: { taskId: string; existingClaim?: PersistentTaskClaim },
+  input: { taskId: string; existingClaim?: PersistentTaskClaim; signal?:AbortSignal },
   deps: IntelligenceTranscriptRunnerDeps,
 ): Promise<void> {
+  if(input.signal?.aborted)return;
   const claim =
     input.existingClaim ??
     (await deps.tasks.claimTask({
@@ -81,7 +83,7 @@ export async function runIntelligenceTranscriptTask(
         `intelligence-transcript:${input.taskId}:${Date.now().toString(36)}`,
       leaseSeconds: 300,
     }));
-  if (!claim) return;
+  if (!claim || input.signal?.aborted) return;
   const lease = {
     taskId: input.taskId,
     workerId: claim.lease.workerId,
@@ -93,9 +95,12 @@ export async function runIntelligenceTranscriptTask(
       input.taskId,
     );
     await deps.intelligence.markTranscriptRunning(ctx, input.taskId);
+    input.signal?.throwIfAborted();
     const result = await deps.transcript.transcribe(ctx, target, claim);
+    input.signal?.throwIfAborted();
     const text = result.text?.trim() || null;
     if (!text) {
+      input.signal?.throwIfAborted();
       await deps.intelligence.finishTranscript(ctx, {
         taskId: input.taskId,
         status: "skipped",
@@ -110,6 +115,7 @@ export async function runIntelligenceTranscriptTask(
       });
       return;
     }
+    input.signal?.throwIfAborted();
     await deps.intelligence.finishTranscript(ctx, {
       taskId: input.taskId,
       status: "done",
@@ -120,8 +126,10 @@ export async function runIntelligenceTranscriptTask(
     });
     await deps.tasks.finish({ ...lease, status: "succeeded" });
   } catch (error) {
+    if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     const classified = classify(error);
+    input.signal?.throwIfAborted();
     await deps.intelligence.finishTranscript(ctx, {
       taskId: input.taskId,
       status: classified.transcriptStatus,
@@ -143,7 +151,7 @@ export async function drainIntelligenceTranscriptQueue(
   const maxTasks =
     typeof options === "number"
       ? options
-      : (options.maxTasks ?? Number.POSITIVE_INFINITY);
+      : (options.maxTasks ?? 10);
   const concurrency =
     typeof options === "number" ? 1 : (options.concurrency ?? 2);
   if (
@@ -156,13 +164,14 @@ export async function drainIntelligenceTranscriptQueue(
     throw new RangeError("concurrency 必须是正整数");
   }
 
+  const control=typeof options==="number"?{}:options;
   let processed = 0;
-  while (processed < maxTasks) {
+  while (processed < maxTasks && !isTaskDrainStopping(control)) {
     const slots = Math.min(concurrency, maxTasks - processed);
     const claims: PersistentTaskClaim[] = [];
     // PGlite 是单写者；先顺序领取并锁定任务，再并发执行，避免并发 claim 的事务快照
     // 互相看见同一候选而让第二个 worker 空转。
-    for (let offset = 0; offset < slots; offset += 1) {
+    for (let offset = 0; offset < slots && !isTaskDrainStopping(control); offset += 1) {
       const claim = await deps.tasks.claimNext({
         workerId:
           deps.workerId?.() ??
@@ -170,10 +179,10 @@ export async function drainIntelligenceTranscriptQueue(
         kinds: ["transcribe"],
         leaseSeconds: 300,
       });
-      if (!claim) break;
+      if (!claim || isTaskDrainStopping(control)) break;
       claims.push(claim);
     }
-    if (claims.length === 0) break;
+    if (claims.length === 0 || isTaskDrainStopping(control)) break;
 
     await Promise.all(
       claims.map(async (claim) => {
@@ -186,7 +195,7 @@ export async function drainIntelligenceTranscriptQueue(
         };
         await runIntelligenceTranscriptTask(
           ctx,
-          { taskId: claim.task.id, existingClaim: claim },
+          { taskId: claim.task.id, existingClaim: claim, signal:control.signal },
           deps,
         );
       }),

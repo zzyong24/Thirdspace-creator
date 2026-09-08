@@ -1,3 +1,4 @@
+import {createRecoveryWakeCoordinator} from "@creatoros/backend/application/recovery-wake";
 import {rebuildOwnedSearchIndex} from "@creatoros/backend/application/search-bootstrap";
 import {createThesisAdoption} from "@creatoros/backend/application/thesis-adoption";
 import {createApplicationTransport} from "@creatoros/backend/application/transport";
@@ -225,20 +226,16 @@ import {
   createIntelligenceTranscriptBridge,
   createIntelligenceGenerationBridge,
   createProjectScriptCandidateService,
-  runProjectScriptCandidateTask,
   drainProjectScriptCandidateQueue,
   runIntelligenceSourceTask,
   drainIntelligenceSourceQueue,
-  runIntelligenceTranscriptTask,
   drainIntelligenceTranscriptQueue,
   type IntelligenceTranscriptRunnerDeps,
   drainIntelligenceTopicPreviewQueue,
-  runIntelligenceTopicPreviewTask,
 } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import {
   drainDouyinShareImportQueue,
-  runDouyinShareImportTask,
 } from "@/server/intelligence/share-import-runner";
 import type {
   ContextDeps as ChatContextDeps,
@@ -3676,7 +3673,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
         const execution = task.taskType==="benchmark.transcribe" && task.status==="queued"
-          ? benchmarkTranscription.run(ctx,String(task.id))
+          ? benchmarkTranscription.prepare(ctx,String(task.id)).then(mapped=>{recoveryWake?.wake("benchmark");return mapped;})
           : task.taskType==="transcribe.douyin" && task.status==="queued"
           ? dispatchTranscribeTask(ctx,String(task.id))
           : task.taskType==="asset.generate" && task.status==="queued"
@@ -3923,6 +3920,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },now:deps.now,
   });
   const {projectScriptGenerator,topicPreviewGenerator}=intelligenceGeneration;
+  let recoveryWake:ReturnType<typeof createRecoveryWakeCoordinator>|undefined;
   const projectScriptRunnerDeps={tasks:persistentTaskService,references:projectIntelligenceReferences,generator:projectScriptGenerator};
   const topicPreviewRunnerDeps = {
     tasks: persistentTaskService,
@@ -4092,36 +4090,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     tasks: persistentTaskService,
     intelligence: intelligenceService,
     now: deps.now,
-    onTranscriptTasksQueued: (
-      ctx: RequestContext,
-      taskIds: string[],
-    ): void => {
-      const transcriptDeps = intelligenceTranscriptRunnerDeps;
-      if (!transcriptDeps) return;
-      for (const taskId of taskIds) {
-        void runIntelligenceTranscriptTask(
-          ctx,
-          { taskId },
-          transcriptDeps,
-        ).catch((error) => {
-          console.error(
-            "[intelligence] 分享建档后的逐字稿任务启动失败:",
-            error instanceof Error ? error.name : "UnknownError",
-          );
-        });
-      }
+    onTranscriptTasksQueued: (_ctx:RequestContext,taskIds:string[]):void=>{
+      if(taskIds.length)recoveryWake?.wake("transcribe");
     },
     fetcher: {
       fetch: async (
         ctx: RequestContext,
-        input: { shareText: string; capturedAt: string },
+        input: { shareText: string; capturedAt: string; signal?:AbortSignal },
       ) => {
         const cdp = await loadDouyinCdp();
-        const target = await cdp.resolveDouyinShareTarget(input.shareText);
+        const target = await cdp.resolveDouyinShareTarget(input.shareText,{signal:input.signal});
         const parsed = await cdp.fetchDouyinSharedItem({
+          signal:input.signal,
           awemeId: target.awemeId,
           canonicalUrl: target.canonicalUrl,
-          authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
+          authDir: await douyinAuthDirFor(ctx.accountId,input.signal,ctx.userId),
           capturedAt: input.capturedAt,
           gateway: douyinGateway,
         });
@@ -4157,20 +4140,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       typeof data?.task?.id === "string" &&
       data.task.status === "queued"
     ) {
-      void runIntelligenceSourceTask(
-        ctx,
-        {
-          sourceId,
-          runId: data.run.id,
-          taskId: data.task.id,
-        },
-        sourceRunnerDeps,
-      ).catch((error) => {
-        console.error(
-          "[intelligence] 来源任务启动失败:",
-          error instanceof Error ? error.name : "UnknownError",
-        );
-      });
+      recoveryWake?.wake("source_sync");
     }
   };
   const intelligence: Transport = {
@@ -4382,16 +4352,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           typeof task?.id === "string" &&
           task.status === "queued"
         ) {
-          void runDouyinShareImportTask(
-            ctx,
-            { taskId: task.id },
-            shareImportRunnerDeps,
-          ).catch((error) => {
-            console.error(
-              "[intelligence] 单条分享导入任务启动失败:",
-              error instanceof Error ? error.name : "UnknownError",
-            );
-          });
+          recoveryWake?.wake("share_import");
         }
       }
       if (
@@ -4411,16 +4372,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ).data?.tasks;
         for (const task of tasks ?? []) {
           if (typeof task.id !== "string") continue;
-          void runIntelligenceTranscriptTask(
-            ctx,
-            { taskId: task.id },
-            intelligenceTranscriptRunnerDeps,
-          ).catch((error) => {
-            console.error(
-              "[intelligence] 逐字稿任务启动失败:",
-              error instanceof Error ? error.name : "UnknownError",
-            );
-          });
+          recoveryWake?.wake("transcribe");
         }
       }
       if (
@@ -4434,16 +4386,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           typeof task?.id === "string" &&
           task.status === "queued"
         ) {
-          void runIntelligenceTopicPreviewTask(
-            ctx,
-            { taskId: task.id },
-            topicPreviewRunnerDeps,
-          ).catch((error) => {
-            console.error(
-              "[intelligence] 选题候选任务启动失败:",
-              error instanceof Error ? error.name : "UnknownError",
-            );
-          });
+          recoveryWake?.wake("topic_preview");
         }
       }
       if (
@@ -4453,16 +4396,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const task = (result as { data?: { id?: unknown; status?: unknown } })
           .data;
         if (typeof task?.id === "string" && task.status === "queued") {
-          void runProjectScriptCandidateTask(
-            ctx,
-            { taskId: task.id },
-            projectScriptRunnerDeps,
-          ).catch((error) => {
-            console.error(
-              "[intelligence] Project 稿件候选任务启动失败:",
-              error instanceof Error ? error.name : "UnknownError",
-            );
-          });
+          recoveryWake?.wake("script_candidate");
         }
       }
       return result;
@@ -4470,39 +4404,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
   // T-598：内容雷达不再自建 timer。到期发现由下方唯一 automation-driver 触发
   // `intelligence.sync`；本段只保留用户手动操作产生的持久 source_sync runner。
-  void drainProjectScriptCandidateQueue(projectScriptRunnerDeps).catch(
-    (error) => {
-      console.error(
-        "[intelligence] Project 稿件候选启动恢复失败:",
-        error instanceof Error ? error.name : "UnknownError",
-      );
-    },
-  );
-  void drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps)
-    .then((processed) => {
-      if (processed > 0) {
-        console.info(
-          `[intelligence] 选题候选启动恢复完成: processed=${processed}`,
-        );
-      }
-    })
-    .catch((error) => {
-      console.error(
-        "[intelligence] 选题候选启动恢复失败:",
-        error instanceof Error ? error.name : "UnknownError",
-      );
-    });
-  void drainDouyinShareImportQueue(shareImportRunnerDeps).catch((error) => {
-    console.error(
-      "[intelligence] 单条分享导入启动恢复失败:",
-      error instanceof Error ? error.name : "UnknownError",
-    );
-  });
+
+
+
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
   const execution: Transport = {
     async request(endpoint, input, ctx) {
       const res = await executionBase.request(endpoint, input, ctx);
+      if(endpoint.id==="execution.tasks.command")recoveryWake?.wake();
       if (endpoint.id === "execution.tasks.create" && ctx) {
         const task = (
           res as { data?: { id?: string; status?: string; spec?: unknown } }
@@ -4887,7 +4797,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
   };
   const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService});
-  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath});
+  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath,wake:()=>recoveryWake?.wake("benchmark")});
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
@@ -4898,10 +4808,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createFavoritesAsr:runWorker=>createScheduledFavoritesAsrService(db,{...asrResourceDeps,runWorker}),
   });
   const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","favorites"]);
-  let flywheelRecovery:Promise<void>|undefined;
-  let flywheelRecoveryTimer:ReturnType<typeof setInterval>|undefined;
-  let benchmarkRecoveryTimer:ReturnType<typeof setInterval>|undefined;
-  let benchmarkRecovery:Promise<void>|undefined;
 
   intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript};
 
@@ -4924,7 +4830,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       let processed = 0;
       // source_sync 是统一自动化的持久子任务；分批 drain，避免只处理前 20 条。
       for (let batchNo = 0; batchNo < 10; batchNo += 1) {
-        const batch = await drainIntelligenceSourceQueue(sourceRunnerDeps, 20);
+        const batch = Number(await recoveryWake?.run("source_sync") ?? 0);
         processed += batch;
         if (batch < 20) break;
       }
@@ -6192,14 +6098,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);});scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError,now:deps.now,
     });
   }));
-  const wakeScheduledFlywheel=()=>{
-    if(stoppingPreparation||flywheelRecovery)return;
-    flywheelRecovery=(async()=>{
-      await scheduledFlywheel.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"调度任务准备未完成，请检查原任务配置");});
-      if(!stoppingPreparation)await scheduledFlywheel.drain(collectFlywheel,10);
-    })().catch(error=>{if(!(error instanceof ScheduledFlywheelSuspended))console.error("[scheduled-flywheel] RECOVERY_FAILED",error);})
-      .finally(()=>{flywheelRecovery=undefined;});
-  };
+  const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
+
   const dispatchScheduledCollection = async (ctx: RequestContext, task: {
     id: string;
     taskType: string;
@@ -8469,7 +8369,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;if(benchmarkRecoveryTimer)clearInterval(benchmarkRecoveryTimer);if(flywheelRecoveryTimer)clearInterval(flywheelRecoveryTimer);assetBusiness.stop();transcribeBusiness.stop();await Promise.all([scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery,benchmarkRecovery,flywheelRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -8567,28 +8467,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       getChannelModelSelection: (selectedCapability) =>
         getChannelModelSelection(ctx, selectedCapability),
     });
-  const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
-  if (transcriptStartupDeps) {
-    // [T-632] 启动恢复覆盖全部 queued 积压；固定两路执行，避免把历史任务一次性
-    // 并发打向抖音取流、ASR 与本机数据库。新请求仍可走上方即时 dispatch，claim
-    // 的条件更新保证两条路径不会重复消费同一任务。
-    void drainIntelligenceTranscriptQueue(transcriptStartupDeps, {
-      concurrency: 2,
-    })
-      .then((processed) => {
-        if (processed > 0) {
-          console.info(
-            `[intelligence] 逐字稿启动恢复完成: processed=${processed}`,
-          );
-        }
-      })
-      .catch((error) => {
-        console.error(
-          "[intelligence] 逐字稿启动恢复失败:",
-          error instanceof Error ? error.name : "UnknownError",
-        );
-      });
-  }
 
   // ── [T-084a] 联网检索解析 + registry(SPEC 2026-07-03 §1.1)─────────────────────
   // resolveSearchSpec:与多模态层同一套 getModelConfig(settings 拥有 model_configurations)+ env,
@@ -10903,16 +10781,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         transcribeAfterImport: input.transcribe,
       });
       if (task.status === "queued") {
-        void runDouyinShareImportTask(
-          ctx,
-          { taskId: task.id },
-          shareImportRunnerDeps,
-        ).catch((error) => {
-          console.error(
-            "[intelligence] Copilot 抖音分享任务启动失败:",
-            error instanceof Error ? error.name : "UnknownError",
-          );
-        });
+        recoveryWake?.wake("share_import");
       }
       return { taskId: task.id, ownerId: task.ownerId };
     },
@@ -11019,16 +10888,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     chatWorker.start();
   }
 
-  const recoverBenchmarkTranscriptions=()=>{
-    if(stoppingPreparation||benchmarkRecovery)return;
-    benchmarkRecovery=(async()=>{if(!modelWorker)await persistentTaskService.recoverExpiredLeases();await benchmarkTranscription.recoverQueued();await benchmarkTranscription.drain(10);})()
-      .catch(()=>console.error("[benchmark-transcribe] RECOVERY_FAILED"))
-      .finally(()=>{benchmarkRecovery=undefined;});
-  };
-  wakeScheduledFlywheel();
-  flywheelRecoveryTimer=setInterval(wakeScheduledFlywheel,2000);
-  recoverBenchmarkTranscriptions();
-  benchmarkRecoveryTimer=setInterval(recoverBenchmarkTranscriptions,2000);
+  recoveryWake=createRecoveryWakeCoordinator({
+    intervalMs:2000,
+    lanes:{
+      script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
+      topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
+      transcribe:control=>intelligenceTranscriptRunnerDeps?drainIntelligenceTranscriptQueue(intelligenceTranscriptRunnerDeps,{...control,maxTasks:4,concurrency:2}):Promise.resolve(0),
+      source_sync:control=>drainIntelligenceSourceQueue(sourceRunnerDeps,5,control),
+      share_import:control=>drainDouyinShareImportQueue(shareImportRunnerDeps,5,control),
+      async benchmark(control){if(control.shouldStop())return;await benchmarkTranscription.recoverQueued();if(!control.shouldStop())await benchmarkTranscription.drain(5);},
+      async flywheel(control){if(control.shouldStop())return;await scheduledFlywheel.recoverQueued(async(c,id)=>{if(!control.shouldStop())await aiService.markFailed(c,id,"调度任务准备未完成，请检查原任务配置");});if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5);},
+    },
+    onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,error instanceof Error?error.name:"UnknownError"),
+  });
+  if(stoppingPreparation)await recoveryWake.stop();else recoveryWake.start();
 
   if(modelWorker)preparationRecovery=Promise.all([
     transcribeBusiness.recoverQueued(

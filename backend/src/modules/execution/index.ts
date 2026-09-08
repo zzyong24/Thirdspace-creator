@@ -185,3 +185,5 @@ export {createExecutionTranscribePreparationService} from "./execution-transcrib
 export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
 
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
+
+export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
