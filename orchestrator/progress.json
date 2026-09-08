@@ -12,6 +12,42 @@
   },
   "verticals": [
     {
+      "id": "T-918",
+      "task_id": "T-918",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src/**",
+        "frontend/scripts/desktop/**",
+        "docs/verification/**"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        "frontend/scripts/desktop/**",
+        "frontend/src-tauri/**",
+        "frontend/package.json",
+        "ai-worker/**",
+        "backend/src/modules/ai-runtime/**",
+        "contract/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
       "id": "T-915",
       "archetype": [
         "orchestration"
