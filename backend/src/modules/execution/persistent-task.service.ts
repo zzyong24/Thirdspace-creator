@@ -430,7 +430,15 @@ export function createPersistentTaskService(
       if (query.ownerId) {
         filters.push(eq(executionTasks.ownerId, query.ownerId));
       }
-      if (query.status) filters.push(eq(executionTasks.status, query.status));
+      if (query.status) {
+        // 过滤与公开 DTO 的状态投影一致；否则“排队/阻塞”列表会漏掉自动重试和等待用户。
+        const projectedStatuses: Partial<Record<PersistentTaskStatus, string[]>> = {
+          queued: ["queued", "retry_wait"],
+          blocked: ["blocked", "waiting_user", "unknown_result"],
+          succeeded: ["succeeded", "partial"],
+        };
+        filters.push(inArray(executionTasks.status, projectedStatuses[query.status] ?? [query.status]));
+      }
       const all = await db
         .select()
         .from(executionTasks)
