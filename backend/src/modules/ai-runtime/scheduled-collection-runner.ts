@@ -38,6 +38,7 @@ export interface ScheduledCollectionAiPort {
     input: { stepNo: number; kind: string; text: string; toolCalls: unknown[] },
   ): Promise<void>;
   markSucceeded(ctx: RequestContext, taskId: string): Promise<void>;
+  markWaitingUser?(ctx: RequestContext, taskId: string, errorMessage: string): Promise<void>;
   markFailed(
     ctx: RequestContext,
     taskId: string,
@@ -267,12 +268,12 @@ export async function runScheduledCollection(
   } catch (err) {
     if(err instanceof ScheduledFlywheelSuspended){suspended=true;throw err;}
     if (deps.isNotLoggedInError(err)) {
-      // 未登录 → 不当普通失败(§6):job_run 标 needs_reconnect + 提示文案。task 也置 failed
-      // (一个诚实终态;D4 再接"停后续到点触发" + 「登录抖音」恢复,此处只正确置态)。
+      // 登录阻断保留原持久任务等待恢复；旧执行入口保留既有失败投影。
       runStatus = "needs_reconnect";
       runError = NEEDS_RECONNECT_ERROR;
       try {
-        await deps.ai.markFailed(ctx, task.id, NEEDS_RECONNECT_ERROR);
+        if(deps.ai.markWaitingUser)await deps.ai.markWaitingUser(ctx,task.id,NEEDS_RECONNECT_ERROR);
+        else await deps.ai.markFailed(ctx, task.id, NEEDS_RECONNECT_ERROR);
       } catch {
         /* task may already be terminal */
       }
