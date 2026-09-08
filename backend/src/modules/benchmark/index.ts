@@ -60,3 +60,4 @@ export {
   type DarkhorseTier,
   type DetectDarkhorseOptions,
 } from "./benchmark.darkhorse";
+export {createBenchmarkTranscriptionService,BenchmarkTranscriptionPending,type BenchmarkTranscriptionDeps} from './benchmark-transcription.service';

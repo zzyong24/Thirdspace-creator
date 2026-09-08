@@ -292,7 +292,9 @@ export const structuredGenerationInputSchema=z.object({
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
 /** 原调度业务任务的执行标记；模型阶段只由后端固定能力端口准备。 */
 export const scheduledFlywheelTaskInputSchema=z.object({kind:z.literal("scheduled.flywheel"),sourceKind:z.enum(["benchmark","self.detail","self.metrics","favorites"]),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json()),skillSnapshot:workerSkillSnapshotSchema}).strict();
-export const workerTaskInputSchema=z.union([scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+/** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
+export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
+export const workerTaskInputSchema=z.union([benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({
