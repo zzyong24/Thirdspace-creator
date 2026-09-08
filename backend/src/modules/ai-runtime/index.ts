@@ -54,7 +54,6 @@ export * from "./knowledge-classify-runner";
 export * from "./knowledge-distill-runner";
 export * from "./knowledge-relate-runner";
 export * from "./favorites-distill-runner";
-export * from "./llm/anthropic-adapter";
 export * from "./llm/parse";
 export * from "./llm/provider";
 // [T-239b S1] 错误恢复层:分类重试/退避纯函数 + 恢复模型包装器(chat 主链路 + 组合根消费)。

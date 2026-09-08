@@ -462,7 +462,7 @@ import {
   requiredSkillIdsForTask,
   type EffectiveSkillSnapshotResolver,
 } from "@creatoros/backend/modules/ai-runtime";
-import { createLlmCompleter, LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
+import { LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
 import {
   channelLlmConfigFromRoute,
   resolveChannelCapabilityRoute,
@@ -1765,7 +1765,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // holds a singleton adapter: each storage-touching method resolves the adapter
   // for the REQUEST's ctx. The choice reads that user's storage_config (via the
   // SettingsService, built below — the factory runs at request time so closing
-  // over the later `settingsService` const is TDZ-safe, same as `llmCompleter`):
+  // over the later `settingsService` const is TDZ-safe, resolved only when invoked):
   //
   //   backend='s3' AND S3_* env present → createS3ObjectStorage (bytes land in the
   //     bucket via presigned PUT/GET),
@@ -3737,7 +3737,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     hasExecutor: (t) => executorRegistry.has(t),
     // [T-256b] 判定规则建任务端 gate:taskType 命名判定的循环类型必须与其 executor 声明一致
-    // (agentic 执行器在下方 llmCompleter 就绪后追加注册;请求期才读,注册已完成)。
+    // (agentic 执行器在下方配置解析就绪后追加注册；请求期才读取)。
     loopTypeOf: (t) => executorRegistry.loopTypeOf(t),
     workspacesRoot: executionWorkspacesRoot,
     // 丢弃在跑任务 → 中止其 executor(abort signal 贯通,T-239c 模式)。
@@ -7542,26 +7542,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     env: process.env,
   });
 
-  // 纯-prompt 节点的可配置 LLM completer:resolveLlmConfig 读 settings 拥有的
-  // model_configurations 行(注入 getModelConfig,settings 不反向依赖 ai 层)+ process.env。
-  // 在此(settingsService 已定义后)构造;6 个 `void runXxx(...)` dispatch 调用位于
-  // `ai` transport 的 request 回调里——该回调在请求期才执行(工厂体初始化早已完成),
-  // 故按闭包引用捕获此 `const llmCompleter` 无 TDZ 问题。
-  const llmCompleter = createLlmCompleter((ctx, capability) =>
-    resolveLlmConfig(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-      env: process.env,
-      getChannelModelConfig,
-      getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(ctx, serviceId),
-      getChannelModelSelection: (capability) =>
-        getChannelModelSelection(ctx, capability),
-    }),
-  );
-
-  // resolveModelSpec — 新 Agent Runtime(modelFor)按 capability 解析用户配的 model;复用
-  // llmCompleter 同一套 resolve(getModelConfig + env),投影成 ModelSpec。没配 key → 抛
-  // LlmCredentialError(适配器接住 → cancelTask,不假成功)。
+  // 只解析冻结模型配置；实际模型调用归独立 Worker。
   const resolveModelSpec = async (ctx: RequestContext, capability: string) => {
     const cfg = await resolveLlmConfig(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
