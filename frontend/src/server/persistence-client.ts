@@ -20,9 +20,9 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -252,10 +252,10 @@ import {
   createIntelligenceService,
   createIntelligenceTransport,
   createProjectIntelligenceReferenceService,
+  createIntelligenceGenerationBridge,
   createProjectScriptCandidateService,
   runProjectScriptCandidateTask,
   drainProjectScriptCandidateQueue,
-  type ProjectScriptCandidateGeneratorPort,
   runIntelligenceSourceTask,
   drainIntelligenceSourceQueue,
   runIntelligenceTranscriptTask,
@@ -263,7 +263,6 @@ import {
   type IntelligenceTranscriptRunnerDeps,
   drainIntelligenceTopicPreviewQueue,
   runIntelligenceTopicPreviewTask,
-  type TopicPreviewGeneratorPort,
   INTELLIGENCE_OP_IDS,
 } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
@@ -495,7 +494,6 @@ import {
   runMaterialExtract,
   MaterialSummaryModelNotConfiguredError,
 } from "@creatoros/backend/modules/ai-runtime";
-import { runReconstruct } from "@creatoros/backend/modules/ai-runtime";
 import {
   getOfficialSkillBase,
   listOfficialSkillBases,
@@ -516,8 +514,6 @@ import {
   resolveDedicatedLlmConfig,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
-  TOPIC_ADAPTED_DRAFT_TIMEOUT_MS,
-  topicPreviewGenerationOptions,
 } from "@/server/intelligence-topic-preview-config";
 import {
   matchesPinnedModelAuthority,
@@ -4310,161 +4306,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "reconstruct.project" &&
-          task.status === "queued"
-        ) {
-          // 作品初始化 auto-fill 重建 node(reconstruct.project, T-030-D4, SPEC §4.5/§6/§7)——
-          // 仅 source='imported' 的已发布作品:逐字稿(D3)+ 真实指标 + 定位 → runStructuredNode
-          // 只产 research 并物化 trend_analysis(origin='reconstructed')。
-          // §5 守卫:runner 断言仅 imported,manual/topic 不触发。
-          // 确定性终态 runner(不产候选、不过采纳门,§6.1 明确不走 candidate 确认路径)。端口全注入。
-          await runReconstruct(
-            ctx,
-            {
-              id: String(task.id),
-              taskType: task.taskType,
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: {
-                markRunning: (c, id) => aiService.markRunning(c, id),
-                recordStep: (c, id, stepInput) =>
-                  aiService.recordStep(c, id, stepInput),
-                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-              },
-              positioning: positioningReader,
-              learnings: learningsReader,
-              resolveModelSpec,
-              // §5 守卫(边界①):读该项目 source,断言仅 imported(非 imported → runner markFailed 不写)。
-              getProjectSource: async (c, projectId) => {
-                try {
-                  const row = await projectsRepo.get(c, projectId);
-                  return row.source ?? null;
-                } catch {
-                  return null; // 读不到 → runner 视为非 imported → 失败,不误触发
-                }
-              },
-              // 读该作品逐字稿(D3 绑的 output_script transcript artifact 当前版本 contentText/
-              // contentData.transcript)。走公开 service(listProjectArtifacts)+ per-ctx repo getVersion。
-              getTranscript: async (c, projectId) => {
-                const rows = await artifactsService.listProjectArtifacts(
-                  c,
-                  projectId,
-                );
-                const repo = createArtifactRepository(db, {
-                  ...deps,
-                  userId: c.userId,
-                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-                });
-                for (const r of rows) {
-                  if (r.artifactType !== "output_script") continue;
-                  if (!r.currentVersionId) continue;
-                  const version = await repo.getVersion(r.currentVersionId);
-                  const data = version.contentData as
-                    | Record<string, unknown>
-                    | null
-                    | undefined;
-                  const t =
-                    data && typeof data.transcript === "string"
-                      ? data.transcript
-                      : version.contentText;
-                  if (t && t.trim()) return t;
-                }
-                return null;
-              },
-              // 读该作品真实指标摘要(digg/comment/play 等)——解析项目 publications → 最新 snapshot
-              // 的 rawMetrics(views/likes/comments/...)→ 人类可读串喂给模型(数据是真实值,模型不改)。
-              getMetricsSummary: async (c, projectId) => {
-                try {
-                  const outputIds =
-                    await projectsService.listOutputIdsByProject(c, projectId);
-                  const merged = new Map<string, number>();
-                  for (const outputId of outputIds) {
-                    let pubs: Array<{ id: string }> = [];
-                    try {
-                      pubs = await publishingService.listPublications(
-                        c,
-                        outputId,
-                        { limit: 20, offset: 0 },
-                      );
-                    } catch {
-                      pubs = [];
-                    }
-                    for (const pub of pubs) {
-                      try {
-                        const page =
-                          await analyticsService.getPublicationAnalytics(
-                            c,
-                            pub.id,
-                            1,
-                            10,
-                          );
-                        const latest = page.rows
-                          .slice()
-                          .sort((a, b) =>
-                            b.capturedAt.localeCompare(a.capturedAt),
-                          )[0];
-                        const raw = (latest?.rawMetrics ?? {}) as Record<
-                          string,
-                          unknown
-                        >;
-                        for (const [k, v] of Object.entries(raw)) {
-                          if (typeof v === "number" && Number.isFinite(v)) {
-                            merged.set(k, v);
-                          }
-                        }
-                      } catch {
-                        /* single publication read failing → skip, never crash */
-                      }
-                    }
-                  }
-                  if (merged.size === 0) return "";
-                  const LABELS: Record<string, string> = {
-                    views: "播放",
-                    plays: "播放",
-                    likes: "点赞",
-                    digg: "点赞",
-                    comments: "评论",
-                    shares: "分享",
-                    favorites: "收藏",
-                    finish_rate: "完播率",
-                  };
-                  return Array.from(merged.entries())
-                    .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
-                    .join(" · ");
-                } catch {
-                  return "";
-                }
-              },
-              // 物化重建产物 —— createArtifact(origin='reconstructed')+ createVersion 写内容
-              // (createdByType='ai' + 显式 origin='reconstructed';F1 强制,消费侧靠 origin 隔离)。
-              artifacts: {
-                materializeReconstructed: async (c, matInput) => {
-                  const artifact = await artifactsService.createArtifact(c, {
-                    projectId: matInput.projectId,
-                    title: matInput.title,
-                    artifactType: matInput.artifactType,
-                    stage: matInput.stage,
-                    origin: "reconstructed",
-                  });
-                  await artifactsService.createVersion(c, artifact.id, {
-                    contentText: matInput.contentText,
-                    contentData: matInput.contentData,
-                    changeSummary: "AI 历史反推重建",
-                    createdByType: "ai",
-                    origin: "reconstructed",
-                  });
-                  return { id: artifact.id };
-                },
-              },
-            },
-          );
-        } else if (
-          task &&
           typeof task.taskType === "string" &&
           task.taskType.startsWith("scheduled.") &&
           task.status === "queued"
@@ -4740,169 +4581,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
   });
-  const projectScriptGenerator: ProjectScriptCandidateGeneratorPort = {
-    generate: async (c, target) => {
-        const { modelFor, runScriptNode } = await import(
-          "@creatoros/ai-worker"
-        );
-        const spec = await resolveModelSpec(c, "script.draft");
-        const sourceBrief = target.sources
-          .map(
-            (source, index) =>
-              `【来源 ${index + 1}·只作事实与结构参照，禁照搬原句】\n` +
-              `链接：${source.item.canonicalUrl}\n` +
-              `已确认拆写：${JSON.stringify(source.transform.outputSnapshot)}\n` +
-              `逐字稿：${source.transcript.text}`,
-          )
-          .join("\n\n");
-        const generated = await runWithResolvedEffectiveSkills(
-          c,
-          ["script.draft"],
-          () =>
-            runScriptNode({
-              model: modelFor(spec),
-              positioningBrief:
-                "必须按当前 Project 已确认的选题与创作者定位表达，不冒充来源作者。",
-              ...(target.sources[0]?.item.title
-                ? { topicTitle: target.sources[0].item.title }
-                : {}),
-              extraBrief: `${target.strategy}\n\n${sourceBrief}`,
-            }),
-        );
-        return {
-          text: generated.shots
-            .map((shot) => shot.口播.trim())
-            .filter(Boolean)
-            .join("\n"),
-        };
-    },
-  };
-  const projectScriptRunnerDeps = {
-    tasks: persistentTaskService,
-    references: projectIntelligenceReferences,
-    generator: projectScriptGenerator,
-  };
-  const topicPreviewGenerator: TopicPreviewGeneratorPort = {
-    generate: async (c, target, onCheckpoint) => {
-      const {
-        INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
-        INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
-        INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
-        intelligenceTopicDecomposeSchema,
-        normalizeIntelligenceTopicDecomposeOutput,
-        intelligenceTopicFromDecompositionSchema,
-        modelFor,
-        runStructuredNode,
-        runTemplatedNode,
-      } = await import("@creatoros/ai-worker");
-      const spec = await resolveModelSpec(c, "topic.generate");
-      const positioning = [
-        target.positioning.oneLiner,
-        target.positioning.keywords.length > 0
-          ? `关键词：${target.positioning.keywords.join("、")}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
-      const sourceAuthor = target.item.authorName ?? target.item.platform;
-      const decomposition = target.reusableDecomposition
-        ? target.reusableDecomposition
-        : intelligenceTopicDecomposeSchema.parse(
-            (
-              await runWithResolvedEffectiveSkills(
-                c,
-                ["intelligence.topic-decompose"],
-                () =>
-                  runStructuredNode({
-                    model: modelFor(spec),
-                    template: INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE,
-                    normalizeObject: normalizeIntelligenceTopicDecomposeOutput,
-                    facets: {
-                      positioning,
-                      sourceTitle: target.item.title,
-                      sourceAuthor,
-                      sourceUrl: target.item.canonicalUrl,
-                      transcript: target.transcript.text,
-                    },
-                    ...topicPreviewGenerationOptions({
-                      hasReusableDecomposition: false,
-                    }),
-                  }),
-              )
-            ).object,
-          );
-      await onCheckpoint({ stage: "decomposition", value: decomposition });
-
-      const topicCandidate = target.reusableCandidate
-        ? target.reusableCandidate
-        : intelligenceTopicFromDecompositionSchema.parse(
-            (
-              await runWithResolvedEffectiveSkills(
-                c,
-                ["intelligence.topic-from-decomposition"],
-                () =>
-                  runStructuredNode({
-                    model: modelFor(spec),
-                    template: INTELLIGENCE_TOPIC_FROM_DECOMPOSITION_TEMPLATE,
-                    facets: {
-                      positioning,
-                      sourceTitle: target.item.title,
-                      sourceAuthor,
-                      sourceUrl: target.item.canonicalUrl,
-                      decomposition: JSON.stringify(decomposition),
-                    },
-                    ...topicPreviewGenerationOptions({
-                      hasReusableDecomposition: true,
-                    }),
-                  }),
-              )
-            ).object,
-          );
-      await onCheckpoint({ stage: "topic", value: topicCandidate });
-
-      const draftResult = await runWithResolvedEffectiveSkills(
-        c,
-        ["intelligence.topic-adapted-draft"],
-        () =>
-          runTemplatedNode({
-            model: modelFor(spec),
-            template: INTELLIGENCE_TOPIC_ADAPTED_DRAFT_TEMPLATE,
-            maxSteps: 1,
-            timeoutMs: TOPIC_ADAPTED_DRAFT_TIMEOUT_MS,
-            facets: {
-              positioning,
-              sourceTitle: target.item.title,
-              sourceAuthor,
-              sourceUrl: target.item.canonicalUrl,
-              transcript: target.transcript.text,
-              decomposition: JSON.stringify(decomposition),
-              topicCandidate: JSON.stringify({
-                title: topicCandidate.title,
-                angle: topicCandidate.angle,
-                differentiation: topicCandidate.differentiation,
-                sourceSummary: topicCandidate.sourceSummary,
-                targetAudience: topicCandidate.targetAudience,
-                audiencePain: topicCandidate.audiencePain,
-                coreConflict: topicCandidate.coreConflict,
-                format: topicCandidate.format,
-              }),
-              adaptationStrategy: JSON.stringify(
-                topicCandidate.adaptationStrategy,
-              ),
-            },
-          }),
-      );
-      const adaptedDraft = draftResult.text.trim();
-      if (!adaptedDraft) {
-        throw new Error("output invalid: adapted draft is empty");
-      }
-      await onCheckpoint({
-        stage: "draft",
-        value: { contentText: adaptedDraft },
-      });
-      return { ...decomposition, ...topicCandidate, adaptedDraft };
-    },
-  };
+  const intelligenceGeneration=createIntelligenceGenerationBridge(db,{
+    entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
+    resolveSkillSnapshot:(c,ids)=>{
+      if(!resolveEffectiveSkillSnapshotForRuntime)throw new Error("Skill 服务未就绪");
+      return resolveEffectiveSkillSnapshotForRuntime(c,ids);
+    },now:deps.now,
+  });
+  const {projectScriptGenerator,topicPreviewGenerator}=intelligenceGeneration;
+  const projectScriptRunnerDeps={tasks:persistentTaskService,references:projectIntelligenceReferences,generator:projectScriptGenerator};
   const topicPreviewRunnerDeps = {
     tasks: persistentTaskService,
     intelligence: intelligenceService,
@@ -9223,6 +8910,110 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "reconstruct.project":createReconstructBusinessAdapter({...generationContext,
+              getProjectSource: async (c, projectId) => {
+                try {
+                  const row = await projectsRepo.get(c, projectId);
+                  return row.source ?? null;
+                } catch {
+                  return null; // 读不到 → runner 视为非 imported → 失败,不误触发
+                }
+              },
+              // 读该作品逐字稿(D3 绑的 output_script transcript artifact 当前版本 contentText/
+              // contentData.transcript)。走公开 service(listProjectArtifacts)+ per-ctx repo getVersion。
+              getTranscript: async (c, projectId) => {
+                const rows = await artifactsService.listProjectArtifacts(
+                  c,
+                  projectId,
+                );
+                const repo = createArtifactRepository(db, {
+                  ...deps,
+                  userId: c.userId,
+                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
+            accountId: requireAccountId(c.accountId, "artifacts.repo"),
+                });
+                for (const r of rows) {
+                  if (r.artifactType !== "output_script") continue;
+                  if (!r.currentVersionId) continue;
+                  const version = await repo.getVersion(r.currentVersionId);
+                  const data = version.contentData as
+                    | Record<string, unknown>
+                    | null
+                    | undefined;
+                  const t =
+                    data && typeof data.transcript === "string"
+                      ? data.transcript
+                      : version.contentText;
+                  if (t && t.trim()) return t;
+                }
+                return null;
+              },
+              // 读该作品真实指标摘要(digg/comment/play 等)——解析项目 publications → 最新 snapshot
+              // 的 rawMetrics(views/likes/comments/...)→ 人类可读串喂给模型(数据是真实值,模型不改)。
+              getMetricsSummary: async (c, projectId) => {
+                try {
+                  const outputIds =
+                    await projectsService.listOutputIdsByProject(c, projectId);
+                  const merged = new Map<string, number>();
+                  for (const outputId of outputIds) {
+                    let pubs: Array<{ id: string }> = [];
+                    try {
+                      pubs = await publishingService.listPublications(
+                        c,
+                        outputId,
+                        { limit: 20, offset: 0 },
+                      );
+                    } catch {
+                      pubs = [];
+                    }
+                    for (const pub of pubs) {
+                      try {
+                        const page =
+                          await analyticsService.getPublicationAnalytics(
+                            c,
+                            pub.id,
+                            1,
+                            10,
+                          );
+                        const latest = page.rows
+                          .slice()
+                          .sort((a, b) =>
+                            b.capturedAt.localeCompare(a.capturedAt),
+                          )[0];
+                        const raw = (latest?.rawMetrics ?? {}) as Record<
+                          string,
+                          unknown
+                        >;
+                        for (const [k, v] of Object.entries(raw)) {
+                          if (typeof v === "number" && Number.isFinite(v)) {
+                            merged.set(k, v);
+                          }
+                        }
+                      } catch {
+                        /* single publication read failing → skip, never crash */
+                      }
+                    }
+                  }
+                  if (merged.size === 0) return "";
+                  const LABELS: Record<string, string> = {
+                    views: "播放",
+                    plays: "播放",
+                    likes: "点赞",
+                    digg: "点赞",
+                    comments: "评论",
+                    shares: "分享",
+                    favorites: "收藏",
+                    finish_rate: "完播率",
+                  };
+                  return Array.from(merged.entries())
+                    .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
+                    .join(" · ");
+                } catch {
+                  return "";
+                }
+              },
+
+    }),
     "cover.generate":createCoverBusinessAdapter({...resolveContextDeps(COVER_BRIEF_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),positioning:generationContext.positioning}),
     "copilot.assist":createCopilotBusinessAdapter({ai:aiService,positioning:generationContext.positioning,learnings:generationContext.learnings,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
     "scheduled.topic.daily":dailyTopicAdapter,
@@ -9496,7 +9287,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),intelligenceGeneration.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。

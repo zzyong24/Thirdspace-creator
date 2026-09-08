@@ -19,7 +19,7 @@ const json=(value:unknown)=>z.json().parse(JSON.parse(JSON.stringify(value)));
 const savedSchema=z.object({sourceDigest:z.string(),input:structuredGenerationInputSchema,identity:z.json()});
 const topicResult=intelligenceTopicDecomposeSchema.and(intelligenceTopicFromDecompositionSchema).and(z.object({adaptedDraft:z.string().min(1)}));
 export interface IntelligenceGenerationBridgeDeps {
- entryPath:string;
+ entryPath:string|(()=>string);
  tasks:Pick<PersistentTaskService,"heartbeat">;
  resolveModelSpec(ctx:RequestContext,capability:string):Promise<unknown>;
  resolveSkillSnapshot(ctx:RequestContext,skillIds:readonly string[]):Promise<unknown>;
@@ -63,7 +63,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const prior=state.calls.at(-1);
   if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);}
   let completed:unknown, failure="INTELLIGENCE_WORKER_INCOMPLETE";
-  const supervisor=createWorkerSupervisor({entryPath:deps.entryPath,ports:{
+  const supervisor=createWorkerSupervisor({entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:{
    async validate(current,kind){if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
    async invoke(current,port,raw){
     if(port==="readTaskContext"){await verify();return saved.input;}
