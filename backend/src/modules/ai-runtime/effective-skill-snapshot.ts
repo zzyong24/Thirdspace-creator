@@ -71,6 +71,7 @@ export const REGISTERED_SKILL_TASK_TYPES = [
   "research.gather",
   "review.insights",
   "script.draft",
+  "script.source_similarity",
   "script.storyboard.segment",
   "script.voiceover.compose",
   "script.review",
@@ -94,16 +95,19 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "research.gather_material": ["research.gather"],
   "script.generate": [
     "script.draft",
+  "script.source_similarity",
     "script.storyboard.segment",
     "script.voiceover.compose",
   ],
   "script.rewrite": [
     "script.draft",
+  "script.source_similarity",
     "script.storyboard.segment",
     "script.voiceover.compose",
   ],
   script_polish: [
     "script.draft",
+  "script.source_similarity",
     "script.storyboard.segment",
     "script.voiceover.compose",
   ],
@@ -185,6 +189,7 @@ export function requiredSkillIdsForTask(
   if (taskType === "script.draft") {
     return [
       "script.draft",
+  "script.source_similarity",
       "script.storyboard.segment",
       "script.voiceover.compose",
     ];

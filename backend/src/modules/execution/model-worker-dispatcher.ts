@@ -1,3 +1,4 @@
+import {createScriptSimilarityCompletionService} from "../ai/script-similarity-completion.service";
 import {createTopicPreferenceCompletionService} from "../ai/topic-preference-completion.service";
 import {createExecutionChatFallbackService} from "./execution-chat-fallback.service";
 import {createExecutionAssetProcessingService} from "./execution-asset-processing.service";
@@ -103,6 +104,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
   const chatReplies=createChatTurnCompletionService(db,{now});
   const assetProcessing=deps.executionMode==="model"&&deps.assetProcessing?createExecutionAssetProcessingService(db,{...deps.assetProcessing,now}):null;
+  const similarities=deps.executionMode==="model"?createScriptSimilarityCompletionService(db,{now}):null;
   const preferences=deps.executionMode==="model"?createTopicPreferenceCompletionService(db,{now}):null;
   const reconstructions=deps.executionMode==="model"?createReconstructCompletionService(db,{now}):null;
   const copilotReplies=deps.executionMode==="model"?createCopilotReplyCompletionService(db,{now}):null;
@@ -354,6 +356,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const skillId=await leases.withLease(ref,"settlement",async({task})=>(task.payload as {modelInput?:{skillId?:string}}).modelInput?.skillId);
         if(skillId==="reconstruct.project"&&reconstructions){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('RECONSTRUCT_SCOPE_UNAVAILABLE');const work=reconstructions.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="topic.preference"&&preferences){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('PREFERENCE_SCOPE_UNAVAILABLE');const work=preferences.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
+        if(skillId==="script.source_similarity"&&similarities){const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");const work=similarities.commitResult(ref,input,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}}
         if(skillId==="script.review" && reviewReports)return reviewReports.commitResult(ref,input);
         if(skillId==="copilot.assist" && copilotReplies)return copilotReplies.commitResult(ref,input);
         return candidates.commitResult(ref,input);

@@ -155,3 +155,5 @@ export {createVideoDecisionsBusinessAdapter} from "./video-decisions-business-ad
 
 export * from "./asset-processing-business-adapter";
 export {createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission} from "./topic-preference-business-adapter";
+
+export {createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator} from "./script-similarity-business-adapter";

@@ -35,7 +35,7 @@ export interface ProjectScriptArtifactPort {
   listVersions(
     ctx: RequestContext,
     artifactId: string,
-  ): Promise<Array<{ id: string; aiTaskId: string | null }>>;
+  ): Promise<Array<{ id: string; aiTaskId: string | null; contentData?:Record<string,unknown>|null }>>;
   createVersion(
     ctx: RequestContext,
     artifactId: string,
@@ -52,7 +52,7 @@ export interface ProjectScriptArtifactPort {
 export interface ScriptSemanticSimilarityPort {
   evaluate(
     ctx: RequestContext,
-    input: { candidateText: string; sourceTexts: string[] },
+    input: { candidateText: string; sourceTaskId:string; projectId:string },
   ): Promise<number>;
 }
 
@@ -213,6 +213,11 @@ export function createProjectScriptCandidateService(deps: {
       const checkpoint = checkpointOf(task.checkpoint);
       const candidateText =
         input.editedText?.trim() || checkpoint.candidateText.trim();
+      const artifacts = await deps.artifacts.listProjectArtifacts(ctx,input.projectId);
+      let script = artifacts.find(artifact=>artifact.artifactType==="output_script"||artifact.artifactType==="master_script");
+      if(script){const versions=await deps.artifacts.listVersions(ctx,script.id);const existing=versions.find(version=>version.aiTaskId===task.id);
+       if(existing){const recorded=existing.contentData?.similarityRisk;if(recorded!=="low"&&recorded!=="medium")throw new IntelligenceConflictError("已采纳版本缺少相似度回执");return {artifactVersionId:existing.id,similarityRisk:recorded,referenceIds:checkpoint.referenceIds};}
+      }
       const contexts = await deps.references.getSourceContexts(ctx, {
         projectId: input.projectId,
         referenceIds: checkpoint.referenceIds,
@@ -230,7 +235,7 @@ export function createProjectScriptCandidateService(deps: {
       }
       const semanticScore = await deps.similarity.evaluate(ctx, {
         candidateText,
-        sourceTexts,
+        sourceTaskId:task.id,projectId:input.projectId,
       });
       const risk = combinedRisk(
         lexicalRisk,
@@ -242,15 +247,6 @@ export function createProjectScriptCandidateService(deps: {
         );
       }
 
-      const artifacts = await deps.artifacts.listProjectArtifacts(
-        ctx,
-        input.projectId,
-      );
-      let script = artifacts.find(
-        (artifact) =>
-          artifact.artifactType === "output_script" ||
-          artifact.artifactType === "master_script",
-      );
       if (!script) {
         script = {
           ...(await deps.artifacts.createArtifact(ctx, {
@@ -261,17 +257,6 @@ export function createProjectScriptCandidateService(deps: {
           })),
           artifactType: "output_script",
           currentVersionId: null,
-        };
-      }
-      const versions = await deps.artifacts.listVersions(ctx, script.id);
-      const existing = versions.find(
-        (version) => version.aiTaskId === task.id,
-      );
-      if (existing) {
-        return {
-          artifactVersionId: existing.id,
-          similarityRisk: risk,
-          referenceIds: checkpoint.referenceIds,
         };
       }
       const version = await deps.artifacts.createVersion(ctx, script.id, {

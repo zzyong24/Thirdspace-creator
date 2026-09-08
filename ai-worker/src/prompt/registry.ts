@@ -1,4 +1,5 @@
 import {MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE} from './templates/asset-processing';
+import {SCRIPT_SOURCE_SIMILARITY_TEMPLATE} from "./templates/script-source-similarity";
 import {COPILOT_ASSIST_TEMPLATE} from "./templates/copilot-assist";
 /**
  * 提示词模板注册表(脊柱-1 → 三位一体一等入口,SPEC §4)—— 集中持有所有 AI 能力的 skill
@@ -129,6 +130,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   RESEARCH_GATHER_TEMPLATE,
   RECONSTRUCT_PROJECT_TEMPLATE,
   MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE,
+  SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
   POSITIONING_GENERATE_TEMPLATE,
   TOPIC_ENRICH_TEMPLATE,
   MATERIAL_MATCH_TEMPLATE,
