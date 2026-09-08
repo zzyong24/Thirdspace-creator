@@ -12,7 +12,7 @@ import { attachmentIdsOf, withAttachmentContext, MAX_CHAT_ATTACHMENT_TOTAL_BYTES
 export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,snapshot:ChatTurnSnapshot,input?:{
  chatContext:ChatContext;messages?:UIMessage[];trustedScriptSources?:VerbatimSource[];abortSignal?:AbortSignal;
 }){
- const chatContext=input?.chatContext??{surface:"copilot",projectId:snapshot.conversation.projectId};
+ const chatContext=input?.chatContext??{surface:snapshot.conversation.projectId?"project":"topics",projectId:snapshot.conversation.projectId};
  let messages: UIMessage[]=input?.messages??snapshot.messages.map(message=>({id:message.id,role:message.role as UIMessage["role"],parts:Array.isArray(message.parts)&&message.parts.length?message.parts as UIMessage["parts"]:[{type:"text",text:message.content}]}));
  const sources:VerbatimSource[]=input?.trustedScriptSources??snapshot.messages.filter(m=>m.role==="user"&&m.content.trim()).slice(-16).map(m=>({ref:`message:${m.id}`,label:`用户消息 ${m.createdAt}`,text:m.content,truncated:false,sourceType:"message",sourceId:m.id}));
  if(!input?.messages){

@@ -29,3 +29,9 @@ flowchart LR
 - codesign deep strict exit 0，hdiutil verify VALID。本地 ad-hoc 签名，未公证、未发布。
 - 日志 `/tmp/t934-package.log`、`/tmp/t934-dmg-verify.log`。
 - 安装重启后公开 CLI 返回 CONNECTION_NOT_FOUND，要求本次启动开启完整访问。没有绕过授权，没有伪称真实联网复验通过；T-934/T-933 保持进行中，待用户开启后复用公开 CLI 验收。
+
+## 首次 CLI 复验发现的装配缺陷
+
+用户开启 CLI 后，独立会话 `ai-conv-8933b989-131` 发消息被 SKILL_TASK_MAPPING_MISSING 拒绝：默认 surface 错写成未登记的 copilot。公开回读确认会话消息为空，未创建模型任务。修复为与页面一致的 topics（全局）/project（绑定项目），没有放宽 Skill 映射校验。
+
+新增 `prepare-chat-reply.test.ts` 直接调用真实装配及真实模板注册，两个场景均通过，并确认 method.research、skill.read、history.read、web.read、material.gather 实际进入冻结输入。此前五项数据库测试未覆盖该装配错误，不能作为完整生产接线已通过的证明。
