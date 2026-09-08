@@ -477,6 +477,14 @@ export function createPersistentTaskService(
         const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
         for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
         const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
+        // 旧素材核对态没有可证明的模型输入/回执，不能通过通用继续或重试获得执行权。
+        // 同时覆盖升级前已保存为 waiting_user 的记录；已有候选采纳不经过此控制端口。
+        if(input.command==='resume'||input.command==='retry'){
+          for(const row of rows.filter(row=>effectiveIds.includes(row.id))){
+            const recovery=asPayload(row.payload).assetLegacyRecovery as {mode?:string}|undefined;
+            if(recovery?.mode==='review')throw new ConflictError('旧素材提交结果待核对，仅允许取消或采纳已有候选，不能继续或重试');
+          }
+        }
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,

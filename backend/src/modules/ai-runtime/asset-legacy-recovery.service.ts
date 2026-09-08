@@ -45,22 +45,22 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
     jobId=jobs[0]!.jobId;
     reason='沿已提交的原供应商任务号恢复读取';
    }else if(!canResume)reason='原供应商尚无安全的任务号读取适配，请核对原结果';
-  }else reason='原模型身份或配置不可用，请恢复原配置后核对供应商任务，禁止新提交';
+  }else reason='原模型身份无法验证，请核对原供应商记录；此任务不支持继续执行或重新提交';
   // 无原 execution 映射的旧链没有冻结截止；此窗口仅授权读取已知 job。已有映射从上方原样返回。
   const deadlineAt=new Date(Date.parse(stamp)+options.deadlineMs).toISOString();
-  const status=ownResults.length?'succeeded':jobId?'queued':'waiting_user';
+  const status=ownResults.length?'succeeded':jobId?'queued':'unknown_result';
   const frozen=modelInput?assetGenerationInputSchema.parse(modelInput):undefined;
   const callId=jobId?`call_${randomUUID()}`:undefined;
   const reservedTokens=frozen?Buffer.byteLength(frozen.prompt)+1024:1;
   // 旧链没有可证明的 token 用量，不能置零；唯一旧请求占满调用额度，仅允许同键回读。
   await tx.insert(executionTasks).values({id:executionTaskId,userId:current.userId,accountId:current.accountId,kind:'ai_task',ownerType:'ai_task',ownerId:current.id,idempotencyKey:`ai:${current.id}`,status,
-   payload:{aiTaskId:current.id,...(frozen?{modelInput:frozen}:{}),assetLegacyRecovery:{schemaVersion:1,mode:jobId?'provider_job':'review',originalTaskId:original.id,callId:callId??null,inputData:current.inputData,requestFingerprint:current.requestFingerprint,recoveryStartedAt:stamp}},
+   payload:{aiTaskId:current.id,...(frozen?{modelInput:frozen}:{}),assetLegacyRecovery:{schemaVersion:1,mode:jobId?'provider_job':'review',originalTaskId:original.id,callId:callId??null,inputData:current.inputData,requestFingerprint:current.requestFingerprint,recoveryStartedAt:stamp,sourceModelCallStartedAt:original.modelCallStartedAt??null,sourceTaskStartedAt:original.startedAt??null}},
    executionBudget:{maxCalls:1,maxTokens:reservedTokens,deadlineMs:options.deadlineMs},deadlineAt,createdAt:original.requestedAt,updatedAt:stamp,
    lastErrorCode:jobId?null:'ASSET_LEGACY_REVIEW_REQUIRED',lastErrorMessage:jobId?null:reason});
   if(jobId&&frozen&&callId){
    await tx.insert(executionCalls).values({id:callId,executionTaskId,sequence:1,kind:'model',operationKey:frozen.operationKey,inputDigest:`sha256:${createHash('sha256').update(canonicalJson(frozen)).digest('hex')}`,reservedTokens,accountingBasis:'tokens',status:'unknown',startedAttempt:null,
     providerJob:{schemaVersion:1,provider:frozen.provider,model:frozen.model,baseUrl:frozen.baseUrl,...(frozen.serviceId?{serviceId:frozen.serviceId}:{}),jobId},
-    createdAt:original.modelCallStartedAt??original.startedAt??original.requestedAt,updatedAt:stamp});
+    createdAt:stamp,updatedAt:stamp});
    await tx.update(aiTasks).set({runtimeData:{...(original.runtimeData as Record<string,unknown>),assetWorkerRecoveryExecutionTaskId:executionTaskId}}).where(eq(aiTasks.id,original.id));
   }
   await tx.update(aiTasks).set({executionTaskId,...(ownResults.length?{status:'awaiting_confirmation'}:{}),errorMessage:jobId?null:reason}).where(eq(aiTasks.id,current.id));
