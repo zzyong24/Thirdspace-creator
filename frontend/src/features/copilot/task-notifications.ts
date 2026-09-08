@@ -1,3 +1,4 @@
+import {taskRuntimeStatus} from '@/lib/ai-task-runtime';
 /**
  * [T-239g] 长任务完成 → 对话内通知卡:纯检测逻辑(无 React 依赖,可直接单测)。
  *
@@ -20,12 +21,13 @@ export const NOTIFY_STATUSES: ReadonlySet<string> = new Set([
   "succeeded",
   "failed",
   "awaiting_confirmation",
+  "waiting_user", "unknown_result", "paused", "partial",
 ]);
 
 export type TaskNotifyStatus =
   | "succeeded"
   | "failed"
-  | "awaiting_confirmation";
+  | "awaiting_confirmation" | "waiting_user" | "unknown_result" | "paused" | "partial";
 
 /** feed 行的最小投影(ai.tasks.list 返回 aiTaskResource 的子集,含 errorMessage 供失败带原因)。 */
 export interface TaskStatusRow {
@@ -33,6 +35,8 @@ export interface TaskStatusRow {
   readonly taskType: string;
   readonly status: string;
   readonly errorMessage?: string | null;
+  readonly executionTaskId?:string|null;
+  readonly runtimeStatus?:string|null;
 }
 
 /** 一条通知的载荷(渲染层据 taskType 查中文名、据 status 选文案/配色、据 errorMessage 带原因)。 */
@@ -43,6 +47,8 @@ export interface TaskNotification {
   readonly errorMessage: string | null;
   /** 同一轮同因后台任务合并后的真实数量；单条省略。 */
   readonly count?: number;
+  readonly executionTaskId?:string|null;
+  readonly runtimeStatus?:string|null;
 }
 
 export interface DetectResult {
@@ -93,8 +99,8 @@ export function mergeTaskNotifications(
  *
  * @param prev    上一轮的 taskId → status 快照(首帧传空 Map)。
  * @param rows    本轮 feed 行(创作类任务;scheduled.* 巡航噪音应由调用侧先过滤掉)。
- * @param seeded  是否已完成首帧「只播种不通知」——首帧(false)只记快照、绝不产通知,
- *                否则每次进面板会把历史已完成任务全刷成通知(噪音)。
+ * @param seeded  是否已完成首帧「只播种不通知」——首帧(false)只提示需处理的等待/未知/暂停,
+ *                历史已完成任务仍不重复提示。
  *
  * 迁移判据:本轮 `status ∈ NOTIFY_STATUSES` 且与上轮已知 status **不同** → 一条通知。
  * 覆盖:running→succeeded/failed、running→awaiting_confirmation、awaiting_confirmation→succeeded。
@@ -112,13 +118,15 @@ export function detectTaskNotifications(
   const notifications: TaskNotification[] = [];
   for (const row of rows) {
     const before = nextSnapshot.get(row.id);
-    nextSnapshot.set(row.id, row.status);
-    if (!seeded) continue; // 首帧只播种
-    if (NOTIFY_STATUSES.has(row.status) && before !== row.status) {
+    const status=taskRuntimeStatus(row);
+    nextSnapshot.set(row.id, status);
+    if (!seeded && !["waiting_user","unknown_result","paused"].includes(status)) continue;
+    if (NOTIFY_STATUSES.has(status) && before !== status) {
       notifications.push({
         taskId: row.id,
         taskType: row.taskType,
-        status: row.status as TaskNotifyStatus,
+        status: status as TaskNotifyStatus,
+        executionTaskId:row.executionTaskId,runtimeStatus:row.runtimeStatus,
         errorMessage: row.errorMessage ?? null,
       });
     }

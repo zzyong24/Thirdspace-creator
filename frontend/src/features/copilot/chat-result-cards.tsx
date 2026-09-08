@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import {TaskRuntimeActions,taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
 import { client } from "@/lib/contract-client";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
@@ -80,6 +81,8 @@ export function ChatDiagnosisCard({
 }) {
   const router = useRouter();
   const [phase, setPhase] = React.useState<LockPhase>("idle");
+  const taskRef=React.useRef<{id:string}|null>(null),subjectRef=React.useRef<string|null>(blindPredict?.outputId??null),attemptRef=React.useRef<string|null>(null);
+  const [runtimeTask,setRuntimeTask]=React.useState<RuntimeTask|null>(null);
   // 卸载后停止在 await 链里 setState(与旧盲预测行同款长任务守卫)。
   const cancelledRef = React.useRef(false);
   React.useEffect(
@@ -98,25 +101,26 @@ export function ChatDiagnosisCard({
     void (async () => {
       try {
         // 1. 确保有 ContentOutput 挂点(纯站内项目可能还没走制作)。
-        let subjectId = blindPredict.outputId;
+        let subjectId = subjectRef.current;
         if (!subjectId) {
           const created = (await client.createOutput({
             params: { projectId: blindPredict.projectId },
             query: undefined,
             body: { title: blindPredict.projectTitle || "主内容" },
           })) as { id: string };
-          subjectId = created.id;
+          subjectId = created.id;subjectRef.current=subjectId;
         }
         // 2. 起编导诊断任务(既有盲预测流:按真实变现 rubric 铸 draft Prediction)。
-        const task = (await client.createAITask({
+        const task = taskRef.current??(await client.createAITask({
           params: undefined,
           query: undefined,
           body: {
             taskType: "calibration.diagnose",
-            attemptId: createAiTaskAttemptId(),
+            attemptId: attemptRef.current??(attemptRef.current=createAiTaskAttemptId()),
             inputData: { subjectType: "content_output", subjectId },
           },
         })) as { id: string };
+        taskRef.current=task;
         // 3. 轮询到 awaiting_confirmation → confirmTask 铸 draft Prediction → 拿 predictionId。
         for (let i = 0; i < 75; i++) {
           if (cancelledRef.current) return;
@@ -126,7 +130,9 @@ export function ChatDiagnosisCard({
             params: { taskId: task.id },
             query: undefined,
             body: undefined,
-          })) as { status: string };
+          })) as RuntimeTask;
+          setRuntimeTask(status);
+          if(status.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(status))){setPhase("error");return;}
           if (status.status === "awaiting_confirmation") {
             // confirmTask 铸 draft Prediction 但只回 task(不回 predictionId)。故 confirm 后
             // 从 listPredictions(user-scoped, createdAt desc)取该 subject 最新一条 draft →
@@ -249,7 +255,7 @@ export function ChatDiagnosisCard({
               <button
                 type="button"
                 data-slot="chat-diagnosis-lock"
-                disabled={phase === "locking"}
+                disabled={phase === "locking" || !!runtimeTask?.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(runtimeTask))}
                 onClick={lock}
                 className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
               >
@@ -257,10 +263,11 @@ export function ChatDiagnosisCard({
               </button>
               {phase === "error" ? (
                 <span className="text-[10px] text-destructive">
-                  锁定失败(可能没配模型),请重试
+                  尚未确认锁定完成，请查看原任务状态
                 </span>
               ) : null}
             </div>
+            {runtimeTask?.executionTaskId?<TaskRuntimeActions task={runtimeTask} onUpdated={lock}/>:null}
             <span className="text-[9.5px] text-text-subtle">
               锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准；
               锁定前可继续追问、重新诊断。

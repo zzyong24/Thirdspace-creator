@@ -55,6 +55,7 @@ import {createChatTaskControl} from "./chat-task-control";
  *     status-scoped query would make 「继续」 land exactly on the in-flight node.
  */
 
+import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime-actions";
 import {ExecutionTaskCard} from "./execution-task-card";
 import * as React from "react";
 import Link from "next/link";
@@ -382,6 +383,8 @@ interface WireTask {
     | "succeeded"
     | "failed"
     | "cancelled";
+  readonly executionTaskId?:string|null;
+  readonly runtimeStatus?:string|null;
   readonly requestedAt: string;
   // [T-239g] 失败通知需诚实带原因 —— ai.tasks.list 返回 aiTaskResource 已含 errorMessage,
   // 此前 WireTask cast 未取(feed 用不到);通知卡要读它,故在此补齐(老调用侧零影响)。
@@ -543,6 +546,10 @@ const NOTIFY_STATUS_META: Record<
   TaskNotification["status"],
   { verb: string; hint: string; dot: string; text: string }
 > = {
+  waiting_user:{verb:"等待处理",hint:"处理原任务提示后可继续。",dot:"bg-warning",text:"text-warning"},
+  unknown_result:{verb:"结果待核对",hint:"调用可能已发生，请保留原任务核对结果。",dot:"bg-warning",text:"text-warning"},
+  paused:{verb:"已暂停",hint:"可以继续原任务。",dot:"bg-warning",text:"text-warning"},
+  partial:{verb:"已完成部分",hint:"已保存实际完成的结果。",dot:"bg-warning",text:"text-warning"},
   succeeded: {
     verb: "已完成",
     hint: "任务跑完了，结果可在任务列表查看。",
@@ -1799,11 +1806,11 @@ export function AICopilotContent({
         );
         notifSnapshotRef.current = nextSnapshot;
         notifSeededRef.current = true;
-        if (notifications.length > 0) {
+        {
           setTaskNotifications((prev) => {
             // 同 taskId 用最新一条覆盖(awaiting_confirmation→succeeded 就地更新文案),
             // 新任务追加在后。保持插入顺序。
-            return mergeTaskNotifications(prev, notifications);
+            return mergeTaskNotifications(prev.filter(n=>{const current=creative.find(row=>row.id===n.taskId);return !n.executionTaskId||!current||taskRuntimeStatus(current)===n.status;}), notifications);
           });
         }
       } catch {
@@ -1825,7 +1832,7 @@ export function AICopilotContent({
   // [T-239g] 有在途任务时才轮询 feed(检测其到终态 → 推通知);全部终态即停,省网络、不空转。
   // 一旦某在途任务转终态,通知已推 + 它移出 continuingTasks → 无在途则本 effect 清 interval。
   const hasInflightTasks = (recentTasks ?? []).some((t) =>
-    CONTINUING_STATUSES.has(t.status),
+    (t.executionTaskId?["queued","running","retry_wait","pause_requested","cancel_requested","paused","waiting_user","unknown_result"].includes(taskRuntimeStatus(t)):CONTINUING_STATUSES.has(t.status)),
   );
   React.useEffect(() => {
     if (!hasInflightTasks) return;
@@ -2286,6 +2293,7 @@ export function AICopilotContent({
                       {(n.count ?? 1) > 1 ? `（${n.count} 个任务）` : ""}
                       <span className={meta.text}>{meta.verb}</span>
                     </span>
+                    {n.executionTaskId?<TaskRuntimeActions task={{status:n.status,executionTaskId:n.executionTaskId,runtimeStatus:n.runtimeStatus}} onUpdated={refreshRecentTasks}/>:null}
                     {detail ? (
                       <span
                         data-slot="task-notification-detail"
