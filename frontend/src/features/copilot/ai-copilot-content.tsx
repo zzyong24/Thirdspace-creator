@@ -1,5 +1,7 @@
 "use client";
 
+import {createChatTaskControl} from "./chat-task-control";
+
 /**
  * `AICopilotContent` is the page-specs §16 component tree for the
  * AI Copilot dialog (Task 24).
@@ -1006,6 +1008,8 @@ export function AICopilotContent({
     (next: CopilotAttachmentState) => setAttachmentState(next),
     [],
   );
+  const taskControl=React.useRef(createChatTaskControl());
+  const [stopPending,setStopPending]=React.useState(false);
   const transport = React.useMemo(
     () =>
       new DefaultChatTransport<UIMessage>({
@@ -1051,7 +1055,7 @@ export function AICopilotContent({
         // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
-          const res = await fetch(input as RequestInfo, init);
+          const res = await taskControl.current.fetch(input as RequestInfo, init);
           try {
             const cid = res.headers.get("x-conversation-id");
             if (cid) captureConversationId(cid);
@@ -1093,6 +1097,13 @@ export function AICopilotContent({
     transport,
     sendAutomaticallyWhen: resumeApprovedToolsOnce,
   });
+  const stopTask=async()=>{
+    if(stopPending)return;
+    setStopPending(true);
+    try{await taskControl.current.cancel();stop();}
+    catch{setComposerLifecycleError("停止请求尚未确认，请重试停止，或到任务中心核对原任务。");}
+    finally{setStopPending(false);}
+  };
   const streaming = status === "streaming" || status === "submitted";
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
@@ -3158,7 +3169,8 @@ export function AICopilotContent({
                 {streaming ? (
                   <button
                     type="button"
-                    onClick={() => stop()}
+                    onClick={() => void stopTask()}
+                    disabled={stopPending}
                     data-slot="prompt-stop"
                     data-testid="stop-button"
                     aria-label="停止生成"

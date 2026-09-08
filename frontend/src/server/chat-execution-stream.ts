@@ -7,13 +7,14 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
  input:{executionTaskId:string;sourceMessageId:string;conversationId:string},requestSignal:AbortSignal){
  const subscription=new AbortController(),encoder=new TextEncoder();
  let ended=false,approvalPending=false;
- const cancelTask=()=>{subscription.abort();void runtime.command(ctx,input.executionTaskId,'cancel').catch(()=>{});};
- requestSignal.addEventListener('abort',cancelTask,{once:true});
+ // 订阅断开只释放事件连接；任务停止由显式命令提交。
+ const detach=()=>subscription.abort();
+ requestSignal.addEventListener('abort',detach,{once:true});
  const body=new ReadableStream<Uint8Array>({
   async start(controller){
    const send=(chunk:unknown)=>{if(!ended)controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));};
    try{
-    if(requestSignal.aborted){cancelTask();return;}
+    if(requestSignal.aborted){detach();return;}
     send({type:'start',messageId:`chat:${input.sourceMessageId}`});
     for await(const page of runtime.subscribe(ctx,input.executionTaskId,subscription.signal)){
      for(const event of page.events){
@@ -39,11 +40,11 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
    }catch{
     if(!subscription.signal.aborted)send({type:'error',errorText:'聊天事件连接中断，已完成内容仍保存在原任务中。'});
    }finally{
-    requestSignal.removeEventListener('abort',cancelTask);subscription.abort();
+    requestSignal.removeEventListener('abort',detach);subscription.abort();
     if(!ended){ended=true;controller.close();}
    }
   },
-  cancel(){ended=true;cancelTask();requestSignal.removeEventListener('abort',cancelTask);},
+  cancel(){ended=true;detach();requestSignal.removeEventListener('abort',detach);},
  });
  return new Response(body,{headers:{'content-type':'text/event-stream','cache-control':'no-cache','x-vercel-ai-ui-message-stream':'v1','x-conversation-id':input.conversationId,'x-execution-task-id':input.executionTaskId}});
 }
