@@ -60,6 +60,12 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.4.3
+      mammoth:
+        specifier: ^1.12.0
+        version: 1.12.0
+      pdf-parse:
+        specifier: ^2.4.5
+        version: 2.4.5
     devDependencies:
       '@ai-sdk/provider':
         specifier: ^4.0.0

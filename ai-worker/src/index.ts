@@ -618,3 +618,5 @@ export {
 } from "./runtime/transcribe-local-fallback";
 
 export {runTranscribeAsrInWorker} from './execution/transcribe-asr-run';
+
+export * from './prompt/templates/asset-processing';

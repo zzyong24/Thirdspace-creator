@@ -1,7 +1,7 @@
 import {chatFallbackParent} from "./execution-chat-fallback.service";
 import { createHash } from "node:crypto";
 import { eq,executionTasks,type Db } from "@creatoros/backend";
-import { chatWorkerInputSchema,workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { assetProcessingInputSchema,materialExtractionSchema,chatWorkerInputSchema,workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { ConflictError,ExecutionBudgetError } from "./execution.errors";
@@ -33,6 +33,11 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
         const rawInput=(task.payload as Record<string,unknown>).modelInput;
         const chat=chatWorkerInputSchema.safeParse(rawInput);
         const input=chat.success ? chat.data : structuredGenerationInputSchema.parse(rawInput);
+        if(input.kind==='model.structured'&&['asset.classify','material.extract'].includes(input.skillId)){
+          const target=assetProcessingInputSchema.parse(JSON.parse(input.facets.__assetProcessing??'null'));
+          if(target.taskType!==input.skillId||target.skipModel||!target.checksum||(target.taskType==='asset.classify'&&!target.mimeType.startsWith('image/')))throw new ConflictError('当前素材处理不允许模型调用');
+          if(target.taskType==='material.extract'&&materialExtractionSchema.parse((task.payload as {materialExtraction?:unknown}).materialExtraction).status!=='done')throw new ConflictError('尚无完整文档正文，不能调用摘要模型');
+        }
         const owner=input.kind==="chat.run" ? input : input.skillSnapshot;
         if(task.kind!=="ai_task" || owner.userId!==context.userId || owner.accountId!==context.accountId)throw new ConflictError("模型执行归属不符");
         return {input,retryOfCallId:task.retryOfCallId,hasFallback:Boolean((task.payload as Record<string,unknown>).chatFallbackModelIdentity)};
@@ -45,7 +50,7 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
       if(limit!==scope.input.maxOutputTokens)throw new ConflictError("结构化输出预算与冻结值不符");
       if("headers" in request.request || "abortSignal" in request.request)throw new ConflictError("请求含非持久协议字段");
       const encoded=JSON.stringify(request.request);
-      if(scope.input.kind!=="chat.run" && encoded.length>4_000_000)throw new ConflictError("结构化请求超出原输入范围");
+      if(scope.input.kind!=="chat.run" && !(scope.input.kind==="model.structured"&&scope.input.skillId==="asset.classify") && encoded.length>4_000_000)throw new ConflictError("结构化请求超出原输入范围");
       const previous=(await ledger.inspect(ref)).calls.filter(call=>call.operationKey===request.operationKey).at(-1);
       const retryOfCallId=scope.retryOfCallId && (previous?.id===scope.retryOfCallId || previous?.retryOfCallId===scope.retryOfCallId) ? scope.retryOfCallId : undefined;
       const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:inputReservation(request.request)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})},calls=>{

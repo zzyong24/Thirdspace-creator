@@ -10,7 +10,6 @@ export {createVideoEditCandidatePreparer} from "./video-edit-candidate";
 // §3.2 流式端点(Batch 3),后者属前端 browser 设施经端口注入。
 
 export * from "./agent-run";
-export * from "./asset-classify-runner";
 export * from "./asset-generate-runner";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 export * from "./cover-runner";
@@ -66,9 +65,7 @@ export * from "./llm/provider";
 // [T-239b S1] 错误恢复层:分类重试/退避纯函数 + 恢复模型包装器(chat 主链路 + 组合根消费)。
 export * from "./llm/resolve";
 export * from "./llm/retry-policy";
-export * from "./material-extract-runner";
 export * from "./material-match-runner";
-export * from "./material-summary";
 export * from "./remote-prompt-bundle";
 export * from "./multimodal/resolve";
 export * from "./planning-contract-runner";
@@ -157,3 +154,5 @@ export {createAgenticCollectionTools} from "./agentic-collection-tools";
 
 export * from "./reconstruct-business-adapter";
 export {createVideoDecisionsBusinessAdapter} from "./video-decisions-business-adapter";
+
+export * from "./asset-processing-business-adapter";

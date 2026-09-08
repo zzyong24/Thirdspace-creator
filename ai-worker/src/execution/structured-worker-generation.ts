@@ -1,3 +1,5 @@
+import {generateText} from "ai";
+import {parseClassification,classificationSchema} from "../prompt/templates/asset-processing";
 import {runTopicWorkerPipeline} from "./topic-worker-pipeline";
 import {createTopicWorkerReads} from "./topic-worker-reads";
 import { resolveStructuredBusinessSchema } from "./structured-business-schema";
@@ -12,13 +14,13 @@ import { GenerationFailure,generationFailure } from "./generation-error";
 import { scriptReviewSchema, normalizeScriptReviewOutput, isCompleteRawScriptReview } from "../prompt/templates/script-review";
 
 
-export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
+export async function generateStructuredInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>,image?:{bytes:Uint8Array;mimeType:string}){
   let lastCallId:string|undefined;
   const model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
     async reserve(request){
       // JSON IPC 的序列化形式也是后端摘要输入；不携带 undefined 或进程对象。
       let raw:unknown;
-      try{raw=await call("reserveGenerationCall",JSON.parse(JSON.stringify(request)),signal);}
+      try{raw=await call("reserveGenerationCall",JSON.parse(JSON.stringify(request,(_key,value)=>value instanceof Uint8Array?Buffer.from(value).toString("base64"):value)),signal);}
       catch(error){if(error instanceof GenerationFailure)throw error;const code=error instanceof Error?error.message:"HOST_PORT_REJECTED";throw new GenerationFailure(["HOST_PORT_TIMEOUT","WORKER_DISCONNECTED"].includes(code)?"unknown_result":"failed","MODEL_RESERVATION_REJECTED");}
       let receipt;
       try{receipt=workerReservationSchema.parse(raw);}catch{throw new GenerationFailure("unknown_result","MODEL_RESERVATION_RECEIPT_INVALID");}
@@ -39,8 +41,16 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       reasoningFallback:{acceptRaw:isCompleteRawScriptReview},
     }:{};
     const businessSchema=resolveStructuredBusinessSchema(input);
+    const runClassification=async()=>{
+      if(!image)throw new Error("CLASSIFICATION_IMAGE_MISSING");
+      const template=getEffectiveTemplate('asset.classify');
+      const result=await generateText({model,abortSignal:signal,maxRetries:0,maxOutputTokens:input.maxOutputTokens,messages:[{role:'user',content:[{type:'image',image:Buffer.from(image.bytes).toString('base64'),mediaType:image.mimeType},{type:'text',text:template.system}]}]});
+      const object=classificationSchema.parse(parseClassification(result.text));
+      const usage={inputTokens:result.usage.inputTokens??null,outputTokens:result.usage.outputTokens??null,cachedTokens:result.usage.inputTokenDetails?.cacheReadTokens??null,totalTokens:result.usage.totalTokens??null};
+      return {object,generation:{finishReason:result.finishReason,usage,attempts:[{finishReason:result.finishReason,usage,kind:'initial' as const}]}};
+    };
     const runTopic=async()=>{const reads=createTopicWorkerReads({signal,call});try{return await runTopicWorkerPipeline(JSON.parse(input.facets.__topicGenerate??"null"),{model,signal,maxOutputTokens:input.maxOutputTokens,timeoutMs:input.timeoutMs,read:reads.read});}finally{await reads.close();}};
-    const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="topic.generate" ? runTopic() : input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
+    const result=await runWithEffectiveSkillSnapshot<{object:unknown;generation:WorkerStructuredResult["generation"];validation?:WorkerStructuredResult["validation"]}>(input.skillSnapshot,()=>input.skillId==="asset.classify" ? runClassification() : input.skillId==="topic.generate" ? runTopic() : input.skillId==="script.draft" ? runScriptWorkerPipeline(JSON.parse(input.facets.__scriptDraft ?? "null"),{model,signal,maxOutputTokens:input.maxOutputTokens,onVoiceover:async value=>{
       if(!lastCallId)throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_CALL_MISSING");
       try{await call("saveScriptVoiceover",{callId:lastCallId,...value},signal);}
       catch{throw new GenerationFailure("unknown_result","SCRIPT_VOICEOVER_RECEIPT_UNKNOWN");}

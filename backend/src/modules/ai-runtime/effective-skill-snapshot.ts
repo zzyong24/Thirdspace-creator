@@ -41,6 +41,7 @@ export const EFFECTIVE_SKILL_SNAPSHOT_MAX_BYTES = 256 * 1024;
  * 新增 official Skill 时必须同步更新这份确定性注册表；未知 taskType 一律 fail closed。
  */
 export const REGISTERED_SKILL_TASK_TYPES = [
+  "asset.classify", "material.extract",
   "benchmark.teardown",
   "calibration.diagnose",
   "calibration.score",

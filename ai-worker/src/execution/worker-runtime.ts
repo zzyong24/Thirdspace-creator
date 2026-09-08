@@ -1,4 +1,5 @@
 import type {runVideoDecisionsInWorker} from "./video-decisions-worker";
+import type {runAssetProcessingInWorker} from "./asset-processing-worker";
 import type {runTranscribeInWorker} from "./transcribe-worker-run";
 import type {runCoverInWorker} from "./cover-worker-run";
 import type {runAssetInWorker} from "./asset-worker-run";
@@ -31,6 +32,7 @@ export interface WorkerDependencies {
   supportsChatScriptDraft?:boolean;
   supportsChatStructured?:boolean;
   runAsset?:typeof runAssetInWorker;
+  runAssetProcessing?:typeof runAssetProcessingInWorker;
   runTranscribe?:typeof runTranscribeInWorker;
   runCover?:typeof runCoverInWorker;
   runVideo?:typeof runVideoDecisionsInWorker;
@@ -148,6 +150,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           signal.throwIfAborted();committing=true;
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);reason="completed";return;
         }
+        if(input.facets.__assetProcessing!==undefined){if(!deps.runAssetProcessing)throw new Error("ASSET_PROCESSING_WORKER_UNAVAILABLE");await deps.runAssetProcessing(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));reason="completed";return;}
         if(input.skillId==="cover.brief"){
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
