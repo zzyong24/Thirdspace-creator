@@ -1,3 +1,5 @@
+import {rebuildOwnedSearchIndex} from "@creatoros/backend/application/search-bootstrap";
+import {createThesisAdoption} from "@creatoros/backend/application/thesis-adoption";
 import {createApplicationTransport} from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
@@ -37,8 +39,6 @@ import {
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
-  sql,
-  eq,
   type Db,
   type CliInvocationService,
   // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
@@ -111,20 +111,10 @@ import {
   type HybridSearchHit,
 } from "@creatoros/backend/modules/search";
 import {
-  buildCanonicalSearchDocuments,
   // [T-332 S2 · ISO-06] 启动全量重建的显式系统路径:整删该 user 派生索引 → 按源实体行
   //   自带的 accountId 整批重播(跨号各归各号,不经 ctx.accountId)。
-  rebuildSearchIndexSystem,
 } from "@creatoros/backend/modules/search";
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import {
-  projects as projectsTable,
-  knowledgeItems as knowledgeItemsTable,
-  knowledgeRevisions as knowledgeRevisionsTable,
-  assets as assetsTable,
-  publications as publicationsTable,
-  publicationRevisions as publicationRevisionsTable,
-} from "@creatoros/backend";
 import {
   createSettingsRepository,
   createSettingsService,
@@ -2917,98 +2907,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     artifacts: {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
-      adoptThesisCandidate: async (ctx, input) => {
-        const accountId = requireAccountId(
-          ctx.accountId,
-          "ai.adoptThesisCandidate",
-        );
-        await db.transaction(async (transaction) => {
-          const txDb = transaction as unknown as Db;
-          // 先锁项目，再锁任务：同一项目的并发确认按固定顺序串行，避免铸出两个 thesis_tree。
-          const projectLock = await txDb.execute(sql`
-            SELECT id
-            FROM projects
-            WHERE id = ${input.projectId}
-              AND user_id = ${ctx.userId}
-              AND account_id = ${accountId}
-            FOR UPDATE
-          `);
-          if (projectLock.rows.length === 0) {
-            throw new OwnershipError("Project not found");
-          }
-          await txDb.execute(sql`
-            SELECT id
-            FROM ai_tasks
-            WHERE id = ${input.taskId}
-              AND user_id = ${ctx.userId}
-              AND account_id = ${accountId}
-            FOR UPDATE
-          `);
-
-          const txAiRepo = createAiRepository(txDb, {
-            now: deps.now,
-            nextId: deps.nextId,
-            userId: ctx.userId,
-            accountId,
-          });
-          const lockedTask = await txAiRepo.requireTask(input.taskId);
-          if (lockedTask.status === "succeeded") return;
-          if (
-            lockedTask.status !== "awaiting_confirmation" ||
-            lockedTask.taskType !== "planning.thesis" ||
-            lockedTask.projectId !== input.projectId
-          ) {
-            throw new Error(
-              `planning.thesis adoption state mismatch: ${lockedTask.status}`,
-            );
-          }
-
-          const txArtifacts = createArtifactsService({
-            db: txDb,
-            now: deps.now,
-            nextId: deps.nextId,
-          });
-          const projectArtifacts = await txArtifacts.listProjectArtifacts(
-            ctx,
-            input.projectId,
-          );
-          const thesisArtifact =
-            projectArtifacts.find(
-              (artifact) => artifact.artifactType === "thesis_tree",
-            ) ??
-            (await txArtifacts.createArtifact(ctx, {
-              projectId: input.projectId,
-              title: "论点骨架",
-              artifactType: "thesis_tree",
-              stage: "planning",
-            }));
-          const versions = await txArtifacts.listVersions(ctx, thesisArtifact.id);
-          const existing = versions.find(
-            (version) => version.aiTaskId === input.taskId,
-          );
-          if (existing) {
-            if (thesisArtifact.currentVersionId !== existing.id) {
-              await txArtifacts.restoreVersion(
-                ctx,
-                thesisArtifact.id,
-                existing.id,
-              );
-            }
-          } else {
-            await txArtifacts.createVersion(ctx, thesisArtifact.id, {
-              contentText: input.contentText,
-              changeSummary: input.changeSummary,
-              contentData: input.contentData,
-              createdByType: "ai",
-              aiTaskId: input.taskId,
-            });
-          }
-          await txAiRepo.updateTaskStatus(input.taskId, {
-            status: "succeeded",
-            completedAt: deps.now(),
-          });
-        });
-      },
+      adoptThesisCandidate: createThesisAdoption(db,deps),
     },
     // 机制③ candidate-confirm bus — confirmTask materializes a `material_list` candidate
     // (research_gather node) into KnowledgeItems through the Knowledge public service.
@@ -7728,77 +7627,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   // [T-050] canonical artifacts 种子已退役(挂在已删除的 demo 项目上)。
   // 真实项目的 artifact 由 AI 节点首次起草时创建(见 AdoptCandidateCard.prepareInput)。
-  // [T-050 ⑦] 搜索索引投影**真实数据**:旧实现投影 canonical mock 数据集 → 用户自己
-  // 的真实作品一条都搜不到(审计 B19)。现在启动时从 DB 读真 projects/knowledge/assets/
-  // publications(+revision 真标题)拼成同形状喂 buildCanonicalSearchDocuments。
-  // [全局搜索修复④] 启动全量重建改用 searchService.rebuildUserIndex(deleteAll +
-  //   re-upsert),取代旧的 seedDocuments(insert-only + onConflictDoNothing)。旧路径三宗罪:
-  //   ① 只 insert 不刷新 —— 存量项目改了标题,search_document 仍是旧标题;② onConflictDoNothing
-  //   固定 seed id,重启后新建的项目/删除的实体既不进也不清(孤儿留存);③ 存量项目(如既有
-  //   2 个)若 seed id 已占位就永不回填。rebuildUserIndex 先 deleteAllDocuments(user-scoped)
-  //   再从 DB 真值逐条 re-upsert —— 幂等、刷新标题、清孤儿,把存量一并索引。启动时跑一次即可
-  //   (运行时 create/patch/delete 由上面的 fan-out wrapper 增量维护)。
-  // [T-332 S2] 启动全量重建改走 rebuildSearchIndexSystem(ISO-06 显式系统路径):
-  //   search_documents 是 per-account 投影(NOT NULL),重建行的号由**源实体行**派生
-  //   (projects/knowledge_items/assets/publications 自 S1 起 account_id NOT NULL)——
-  //   不是「无号退化全量」,而是「逐行自带号」的多号重播;经 ctx 的业务读写
-  //   (searchService)一律 strict 按号。语义与旧 rebuildUserIndex 相同:先整删该 user
-  //   派生索引再重播(幂等、刷新标题、清孤儿)。
-  {
-    const [dbProjects, dbKnowledge, dbKRevisions, dbAssets, dbPubs, dbPubRevs] =
-      await Promise.all([
-        db.select().from(projectsTable).where(eq(projectsTable.userId, localUser.id)),
-        db.select().from(knowledgeItemsTable).where(eq(knowledgeItemsTable.userId, localUser.id)),
-        db.select().from(knowledgeRevisionsTable),
-        db.select().from(assetsTable).where(eq(assetsTable.userId, localUser.id)),
-        db.select().from(publicationsTable).where(eq(publicationsTable.userId, localUser.id)),
-        db.select().from(publicationRevisionsTable),
-      ]);
-    const ownedKnowledgeIds = new Set(dbKnowledge.map((row) => row.id));
-    const ownedPublicationIds = new Set(dbPubs.map((row) => row.id));
-    const rebuildRows = buildCanonicalSearchDocuments(
-      {
-        user: { id: localUser.id },
-        projects: dbProjects.map((p) => ({
-          id: p.id,
-          title: p.title,
-          brief: p.brief ?? "",
-          currentStage: p.currentStage,
-          progressPct: p.progressPct ?? 0,
-          accountId: p.accountId, // [T-332 S2] 源行派生号
-        })),
-        knowledgeItems: dbKnowledge.map((k) => ({
-          id: k.id,
-          title: k.title,
-          currentRevisionId: k.currentRevisionId ?? "",
-          accountId: k.accountId, // [T-332 S2] 源行派生号
-        })),
-        knowledgeRevisions: dbKRevisions.filter((r) => ownedKnowledgeIds.has(r.knowledgeItemId)).map((r) => ({
-          id: r.id,
-          knowledgeItemId: r.knowledgeItemId,
-          content: r.content ?? "",
-        })),
-        assets: dbAssets.map((a) => ({
-          id: a.id,
-          name: a.name,
-          assetType: a.assetType,
-          accountId: a.accountId, // [T-332 S2] 源行派生号
-        })),
-        publications: dbPubs.map((pub) => ({
-          id: pub.id,
-          platform: pub.platform,
-          currentRevisionId: pub.currentRevisionId ?? null,
-          accountId: pub.accountId, // [T-332 S2] 源行派生号
-        })),
-        publicationRevisions: dbPubRevs.filter((r) => ownedPublicationIds.has(r.publicationId)).map((r) => ({
-          id: r.id,
-          title: r.title ?? "",
-        })),
-      },
-      deps.now(),
-    );
-    await rebuildSearchIndexSystem(db, localUser.id, rebuildRows);
-  }
+  await rebuildOwnedSearchIndex(db,localUser.id,deps.now);
 
   // [T-050] canonical analytics 种子已退役(快照/留存/观众全挂在已删除的 demo 发布上)。
   // 真实指标由采集管线写入(self.metrics/self.detail,T-030/T-036)。
