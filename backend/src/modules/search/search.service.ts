@@ -2,6 +2,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId } from "@creatoros/backend";
 import type {
   SearchRepository,
+  EmbeddingSnapshot,
   SearchDocumentRow,
   SearchHistoryRow,
   SearchOpts,
@@ -108,6 +109,8 @@ export function cosineSimilarity(
 }
 
 export interface SearchService {
+  listMissingEmbeddings(ctx: RequestContext, entityType: string, limit: number): Promise<SearchDocumentResource[]>;
+  fillMissingEmbedding(ctx: RequestContext, snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal): Promise<boolean>;
   upsertDocument(ctx: RequestContext, input: UpsertInput): Promise<SearchDocumentResource>;
   removeDocument(ctx: RequestContext, entityType: string, entityId: string): Promise<void>;
   search(ctx: RequestContext, query: string, opts?: SearchOpts): Promise<SearchDocumentResource[]>;
@@ -270,6 +273,17 @@ export function createSearchService(
       return hits.slice(0, limit);
     },
 
+    async listMissingEmbeddings(ctx, entityType, limit) {
+      requireAccountId(ctx.accountId, "search.listMissingEmbeddings");
+      if (!Number.isInteger(limit) || limit < 1 || limit > 16) throw new Error("索引补算批次必须为 1–16 条");
+      return (await repoForCtx(ctx).listMissingEmbeddings(entityType, limit)).map(toResource);
+    },
+    async fillMissingEmbedding(ctx, snapshot, embedding, signal) {
+      requireAccountId(ctx.accountId, "search.fillMissingEmbedding");
+      signal?.throwIfAborted();
+      if (!embedding.length || !embedding.every(Number.isFinite)) throw new Error("向量结果无效");
+      return repoForCtx(ctx).fillMissingEmbedding({...snapshot}, [...embedding], signal);
+    },
     async listDocumentsByEntityType(ctx, entityType) {
       requireAccountId(ctx.accountId, "search.listDocumentsByEntityType");
       const rows = await repoForCtx(ctx).listByEntityType(entityType);

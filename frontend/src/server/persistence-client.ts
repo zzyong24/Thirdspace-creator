@@ -1749,7 +1749,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
     resolveEmbedSpec:c=>resolveEmbedSpec(c),
-    embedTexts:(c,spec,texts)=>embedTexts(c,spec,texts),
+    embedTexts:(c,spec,texts,signal)=>embedTexts(c,spec,texts,signal),
   });
 
   // Assets (module 07): one user-scoped repository over the shared db (the repo
@@ -8334,7 +8334,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([recoveryWake?.stop(),scheduledFlywheel.stop(),submittedPreparation.stop(),knowledgeSearchRuntime.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -8413,7 +8413,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     ctx: RequestContext,
     spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
     texts: string[],
-  ): Promise<number[][]> => embeddingIo.embed(ctx, spec, texts);
+    signal?: AbortSignal,
+  ): Promise<number[][]> => embeddingIo.embed(ctx, spec, texts, signal);
 
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+

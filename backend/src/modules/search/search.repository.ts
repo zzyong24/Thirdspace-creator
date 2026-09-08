@@ -1,6 +1,7 @@
 import {
   and,
   eq,
+  sql,
   desc,
   ilike,
   type Db,
@@ -51,7 +52,11 @@ export interface SearchOpts {
   limit?: number;
 }
 
+export type EmbeddingSnapshot = Pick<SearchDocumentRow, "id" | "entityType" | "entityId" | "indexedAt" | "title" | "body" | "searchText">;
+
 export interface SearchRepository {
+  listMissingEmbeddings(entityType: string, limit: number): Promise<SearchDocumentRow[]>;
+  fillMissingEmbedding(snapshot: EmbeddingSnapshot, embedding: number[], signal?: AbortSignal): Promise<boolean>;
   upsertDocument(input: UpsertDocumentInput): Promise<SearchDocumentRow>;
   removeDocument(entityType: string, entityId: string): Promise<void>;
   search(query: string, opts?: SearchOpts): Promise<SearchDocumentRow[]>;
@@ -96,6 +101,26 @@ export function createSearchRepository(db: Db, deps: RepoDeps): SearchRepository
   const scopedHist = eq(searchHistory.userId, deps.userId);
 
   return {
+    async listMissingEmbeddings(entityType, limit) {
+      return db.select().from(searchDocuments).where(and(scopedDoc,
+        eq(searchDocuments.entityType, entityType), sql`${searchDocuments.embedding} = '[]'::jsonb`,
+      )).orderBy(desc(searchDocuments.indexedAt)).limit(limit);
+    },
+    async fillMissingEmbedding(snapshot, embedding, signal) {
+      // 只补原内容的空向量，不 upsert；删除/重建/修订都不能被迟到计算覆盖。
+      return db.transaction(async tx => {
+        signal?.throwIfAborted();
+        const rows = await tx.update(searchDocuments).set({embedding}).where(and(
+          scopedDoc, eq(searchDocuments.id, snapshot.id),
+          eq(searchDocuments.entityType, snapshot.entityType), eq(searchDocuments.entityId, snapshot.entityId),
+          eq(searchDocuments.indexedAt, snapshot.indexedAt), eq(searchDocuments.title, snapshot.title),
+          eq(searchDocuments.body, snapshot.body), eq(searchDocuments.searchText, snapshot.searchText),
+          sql`${searchDocuments.embedding} = '[]'::jsonb`,
+        )).returning({id: searchDocuments.id});
+        signal?.throwIfAborted();
+        return rows.length === 1;
+      });
+    },
     async upsertDocument(input) {
       const indexedAt = deps.now();
       const inserted = await db

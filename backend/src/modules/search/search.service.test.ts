@@ -102,6 +102,8 @@ describe("SearchService", () => {
     // Inject a repo whose appendHistory throws → recordSearch must resolve,
     // returning { ok:false, retryable:true, error } and NOT throw.
     const throwingRepo: SearchRepository = {
+      listMissingEmbeddings: async () => [],
+      fillMissingEmbedding: async () => false,
       upsertDocument: async () => { throw new Error("nope"); },
       removeDocument: async () => {},
       search: async () => [],

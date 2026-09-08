@@ -8,7 +8,7 @@ import {createSearchRepository,createSearchService,createSearchTransport,createK
 /** 知识写入与派生搜索索引的应用边界；宿主仅提供向量 IO 和配置解析。 */
 export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof createKnowledgeRepository>[1]&Parameters<typeof createSearchService>[1],ports:{
  resolveEmbedSpec:(ctx:RequestContext)=>Promise<Spec|null>;
- embedTexts:(ctx:RequestContext,spec:Spec,texts:string[])=>Promise<number[][]>;
+ embedTexts:(ctx:RequestContext,spec:Spec,texts:string[],signal?:AbortSignal)=>Promise<number[][]>;
 }){
   // Search (module 02): the composed `pages.search.get` read served over the
   // SAME pglite store. The service mints a per-ctx repo internally so every index
@@ -44,7 +44,7 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   const {indexKnowledgeDocumentBestEffort}=knowledgeSearchRuntime;
   // [T-093] 知识写路径的搜索索引 fan-out(composition root 组合,knowledge 模块不反向
   // 依赖 search):create / revisions.create 成功后 best-effort 重建该条的 search_document
-  // (含可配 embedding;失败绝不回滚业务真值——SPEC §16 派生索引纪律)。
+  // (关键词同步可搜、向量后台补算；失败绝不回滚业务真值——SPEC §16 派生索引纪律)。
   const knowledge: Transport = {
     async request(endpoint, input, ctx) {
       const result = await knowledgeBaseTransport.request(endpoint, input, ctx);
