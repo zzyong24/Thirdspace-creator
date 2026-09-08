@@ -183,11 +183,13 @@ async function openDouhotPage(
   headless = true,
 ): Promise<DouhotPage> {
   const { chromium } = await import("@playwright/test");
+  const {acquireHostBrowserProfile}=await import("./host-browser-profile-lifecycle");
+  const lease=await acquireHostBrowserProfile(authDir);
   const context = await guardedLaunch(
-    authDir,
+    lease.authDir,
     () =>
       launchWithBrowser((selection) =>
-        chromium.launchPersistentContext(authDir, {
+        chromium.launchPersistentContext(lease.authDir, {
           headless,
           ...selection,
           ...chromiumSandboxOpts(),
@@ -196,7 +198,7 @@ async function openDouhotPage(
           ignoreDefaultArgs: ["--enable-automation"],
         }),
       ),
-    { label: "抖音热点宝" },
+    { label: "抖音热点宝",onStopped:lease.onStopped },
   );
   const page = context.pages()[0] ?? (await context.newPage());
   return {

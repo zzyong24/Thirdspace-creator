@@ -183,3 +183,5 @@ export {createExecutionTranscribeAudioService} from "./execution-transcribe-audi
 export {createExecutionTranscribePreparationService} from "./execution-transcribe-preparation.service";
 
 export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
+
+export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';

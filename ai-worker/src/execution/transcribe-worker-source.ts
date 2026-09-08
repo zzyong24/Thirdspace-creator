@@ -1,10 +1,15 @@
 import {z} from 'zod';
 import {setTimeout as delay} from 'node:timers/promises';
-import {transcribeSourceSchema,transcribeSourceFailureSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {transcribeProfileSchema,transcribeSourceFailureSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {fetchDouyinVideoSource} from '../runtime/douyin-transcribe-source';
+import path from 'node:path';
+import {resolveDouyinProfileIdentity} from '../runtime/browser/profile-directory';
+import {openDouyinProfileContext} from '../runtime/browser/douyin-profile-context';
+import {fetchDouyinVideoUrlViaDetail} from '../runtime/douyin-transcribe-detail';
+import {DouyinNotLoggedInError} from '../runtime/douyin-errors';
 import {GenerationFailure} from './generation-error';
 type Call=(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>;
-/** 匿名取流属于 Worker；原账号登录 profile 尚由真实宿主详情桥持有，不能换成网页会话冒充。 */
+/** 匿名与登录详情均由Worker执行；宿主只授权真实账号profile与共享请求网关。 */
 export function createTranscribeWorkerSource(signal:AbortSignal,call:Call){
  const ack=z.object({ok:z.literal(true)}).strict();
  const invoke=async<T>(schema:z.ZodType<T>,port:WorkerPort,raw:unknown):Promise<T>=>{
@@ -20,19 +25,35 @@ export function createTranscribeWorkerSource(signal:AbortSignal,call:Call){
   }
   throw new GenerationFailure('waiting_user','TRANSCRIBE_SOURCE_UNAVAILABLE');
  };
- const fetchSource=(awemeId:string)=>fetchDouyinVideoSource({awemeId,authDir:'host-account-profile',signal},{
-  async channel(run,mapError){
-   await invoke(ack,'acquireTranscribeChannel',{awemeId,channel:'iesdouyin'});
+ const channel=(awemeId:string,channel:'iesdouyin'|'creator-center')=>async<T>(run:()=>Promise<T>,mapError:(error:unknown)=>{kind:string})=>{
+   await invoke(ack,'acquireTranscribeChannel',{awemeId,channel});
    let result;
-   try{result=await run();}catch(error){signal.throwIfAborted();await invoke(ack,'reportTranscribeChannel',{awemeId,channel:'iesdouyin',result:mapError(error)});throw error;}
-   await invoke(ack,'reportTranscribeChannel',{awemeId,channel:'iesdouyin',result:{kind:'success'}});return result;
+   try{result=await run();}catch(error){
+    signal.throwIfAborted();const failure=mapError(error);
+    await invoke(ack,'reportTranscribeChannel',{awemeId,channel,result:failure});
+    if(failure.kind==='captcha')throw new GenerationFailure('waiting_user','TRANSCRIBE_CAPTCHA_REQUIRED');
+    throw error;
+   }
+   await invoke(ack,'reportTranscribeChannel',{awemeId,channel,result:{kind:'success'}});return result;
+  };
+ const fetchSource=(awemeId:string)=>fetchDouyinVideoSource({awemeId,authDir:'authorized-account-profile',signal},{
+  channel:channel(awemeId,'iesdouyin'),
+  fetchViaDetail:async()=>{
+   const profile=await invoke(transcribeProfileSchema,'acquireTranscribeProfile',{awemeId});
+   // SEMANTIC_BOUNDARY_ALLOW: 规范目录和摘要协议一致性，不作账号语义选择。
+   const identity=await resolveDouyinProfileIdentity(path.dirname(profile.authDir),path.basename(profile.authDir),signal);
+   if(identity.authDir!==profile.authDir||identity.profileKey!==profile.profileKey)throw new GenerationFailure('waiting_user','TRANSCRIBE_PROFILE_CHANGED');
+   return fetchDouyinVideoUrlViaDetail({awemeId,signal},{
+    openContext:()=>openDouyinProfileContext(identity.authDir,true,{signal}),
+    channel:channel(awemeId,'creator-center'),
+   });
   },
-  fetchViaDetail:()=>invoke(transcribeSourceSchema,'fetchLoggedInTranscribeSource',{awemeId}),
  });
  return async(awemeId:string)=>{
   for(let attempt=0;attempt<3;attempt++){
    try{return await fetchSource(awemeId);}catch(error){
     signal.throwIfAborted();if(error instanceof GenerationFailure)throw error;
+    if(error instanceof DouyinNotLoggedInError)throw new GenerationFailure('waiting_user','TRANSCRIBE_LOGIN_REQUIRED');
     if(attempt===2)throw new GenerationFailure('waiting_user','TRANSCRIBE_SOURCE_UNAVAILABLE');
     await delay(1000*2**attempt,undefined,{signal});
    }

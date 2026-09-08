@@ -164,9 +164,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         })();
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
-      if(["prepareTranscribeItem","recordTranscribeSource","saveTranscribeArtifact","failTranscribeItem","completeTranscribeTask","fetchLoggedInTranscribeSource","acquireTranscribeChannel","reportTranscribeChannel"].includes(port)){
+      if(["prepareTranscribeItem","recordTranscribeSource","saveTranscribeArtifact","failTranscribeItem","completeTranscribeTask","acquireTranscribeProfile","acquireTranscribeChannel","reportTranscribeChannel"].includes(port)){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("TRANSCRIBE_SCOPE_UNAVAILABLE");
-        const service=["fetchLoggedInTranscribeSource","acquireTranscribeChannel","reportTranscribeChannel"].includes(port)?transcribeSource:transcribeWorkflow;
+        const service=["acquireTranscribeProfile","acquireTranscribeChannel","reportTranscribeChannel"].includes(port)?transcribeSource:transcribeWorkflow;
         if(!service)throw new Error("TRANSCRIBE_WORKFLOW_UNAVAILABLE");
         const work=service.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }

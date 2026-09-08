@@ -614,29 +614,10 @@ export async function ensureChromiumInstalled(): Promise<void> {
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal) {
   signal?.throwIfAborted();
-  const { chromium } = await import("@playwright/test");
-  const { mkdir } = await import("node:fs/promises");
-  const { guardedLaunch, chromiumSandboxOpts } = await import("./chromium-guard");
-  await mkdir(authDir, { recursive: true }).catch(() => {});
-  // [T-369] guardedLaunch:预检杀残留+清锁(只清锁,不动登录态)→ 同 profile 串行 → 超时人话报错。
-  return guardedLaunch(
-    authDir,
-    () =>
-      launchWithBrowser((selection) =>
-        chromium.launchPersistentContext(authDir, {
-          headless,
-          ...selection,
-          ...chromiumSandboxOpts(), // [T-369] 去掉 Playwright 默认 --no-sandbox(警告横幅根因)
-          viewport: { width: 1440, height: 900 },
-          acceptDownloads: true, // 明细导出走 download 事件截 xlsx;现代 Playwright 默认 true,显式设上保险
-          args: [
-            "--disable-blink-features=AutomationControlled",
-            "--no-proxy-server", // 抖音国内站直连,跳过系统代理避免 Clash 端口变化报错
-          ],
-        }),
-      ),
-    { label: "抖音浏览器窗口", signal },
-  );
+  const {acquireHostBrowserProfile}=await import('./host-browser-profile-lifecycle');
+  const {openDouyinProfileContext}=await import('@creatoros/ai-worker/browser/douyin-profile-context');
+  const lease=await acquireHostBrowserProfile(authDir,signal);
+  return openDouyinProfileContext(lease.authDir,headless,{signal,onStopped:lease.onStopped});
 }
 
 async function isLoggedIn(
