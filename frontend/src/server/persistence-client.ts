@@ -1,3 +1,4 @@
+import {createApplicationTransport} from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
 import {createKnowledgeSearchRuntime} from "@creatoros/backend/modules/search";
@@ -33,7 +34,6 @@ import { createHash } from "node:crypto";
 import {
   createConfiguredDb,
   createCliInvocationService,
-  UnsupportedOperationError,
   resolveMasterKey,
   // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
   requireAccountId,
@@ -46,7 +46,6 @@ import {
   restorePreservedUserAssets,
 } from "@creatoros/backend";
 import {
-  type Endpoint,
   type Transport,
   type RequestContext,
   type ProjectOverviewPage,
@@ -101,19 +100,16 @@ import {
   createTaxonomyRepository,
   createTaxonomyService,
   createTaxonomyTransport,
-  TAXONOMY_OP_IDS,
 } from "@creatoros/backend/modules/taxonomy";
 import {
   createNotificationRepository,
   createNotificationsService,
   createNotificationsTransport,
-  NOTIFICATION_OP_IDS,
 } from "@creatoros/backend/modules/notifications";
 import {
   createSearchRepository,
   createSearchService,
   createSearchTransport,
-  SEARCH_OP_IDS,
   // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
   type HybridSearchHit,
 } from "@creatoros/backend/modules/search";
@@ -136,7 +132,6 @@ import {
   createSettingsRepository,
   createSettingsService,
   createSettingsTransport,
-  SETTINGS_OP_IDS,
   type SettingsService,
   // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
   // canonical settings seed(toModelRow/toPreferenceRow/toAgentRow)退役一并移除。
@@ -152,14 +147,12 @@ import {
   createProjectsTransport,
   createTranscriptArtifactService,
   createProjectTranscriptionTargetService,
-  PROJECT_OP_IDS,
   type StageGateReadersRef,
 } from "@creatoros/backend/modules/projects";
 import {
   createKnowledgeRepository,
   createKnowledgeService,
   createKnowledgeTransport,
-  KNOWLEDGE_OP_IDS,
 } from "@creatoros/backend/modules/knowledge";
 import {
   createAssetRepository,
@@ -171,7 +164,6 @@ import {
   createLocalFsObjectStorage,
   ensureBucket,
   type ObjectStorageForCtx,
-  ASSET_OP_IDS,
   // [T-135] AssetRow / AssetFileRow 已随 canonical assets seed(toAssetRow/toAssetFileRow)退役移除。
 } from "@creatoros/backend/modules/assets";
 import {
@@ -179,41 +171,34 @@ import {
   createArtifactRepository,
   createArtifactsService,
   createArtifactsTransport,
-  ARTIFACT_OP_IDS,
 } from "@creatoros/backend/modules/artifacts";
 import {
   createProductionService,
   createProductionTransport,
-  PRODUCTION_OP_IDS,
 } from "@creatoros/backend/modules/production";
 import {
   createPublishingService,
   createPublishingTransport,
   createUnavailablePublisher,
-  PUBLISHING_OP_IDS,
 } from "@creatoros/backend/modules/publishing";
 import {
   createAnalyticsRepository,
   createAnalyticsService,
   createAnalyticsTransport,
-  ANALYTICS_OP_IDS,
 } from "@creatoros/backend/modules/analytics";
 import {
   createIngestionRepository,
   createIngestionService,
   createIngestionTransport,
-  INGESTION_OP_IDS,
 } from "@creatoros/backend/modules/ingestion";
 import {
   createReviewsService,
   createReviewsTransport,
-  REVIEWS_OP_IDS,
 } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
 import {
   createReviewGateService,
   createReviewGateTransport,
-  REVIEW_GATE_OP_IDS,
   buildReviewRuleSeedRows,
   createReviewGateRepository,
 } from "@creatoros/backend/modules/review";
@@ -224,7 +209,6 @@ import {
   createLearningsService,
   createLearningsTransport,
   // [T-135] createLearningsRepository / LearningRow 已随 canonical learnings seed 退役移除。
-  LEARNINGS_OP_IDS,
 } from "@creatoros/backend/modules/learnings";
 import {
   createAiService,
@@ -232,7 +216,6 @@ import {
   createAiRepository,
   buildAiModelConfigs,
   buildAiAgentConfigs,
-  AI_OP_IDS,
   type AiService,
 } from "@creatoros/backend/modules/ai";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
@@ -248,7 +231,6 @@ import {
   resolveWorkspacesRoot,
   sweepInterruptedRenderFrames,
   sweepOrphanSandboxes,
-  EXECUTION_OP_IDS,
 } from "@creatoros/backend/modules/execution";
 import {
   createIntelligenceService,
@@ -266,7 +248,6 @@ import {
   type IntelligenceTranscriptRunnerDeps,
   drainIntelligenceTopicPreviewQueue,
   runIntelligenceTopicPreviewTask,
-  INTELLIGENCE_OP_IDS,
 } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import {
@@ -569,7 +550,6 @@ import {
   type PositioningDiscoverySessionResource,
   // [T-135] createPositioningRepository / CreatorProfileRow / PositioningStatementRow
   // 已随 canonical positioning seed(Zyong Zhu 人设)退役移除——唯一调用点是被删的 seed。
-  POSITIONING_OP_IDS,
 } from "@creatoros/backend/modules/positioning";
 
 // T-513 official-only 平台规则：它属于程序基座，不接受账号 overlay，也不从客户端输入。
@@ -584,13 +564,11 @@ import {
   createCandidateService,
   createCandidateTransport,
   // [T-135] createCandidateRepository / CandidateRow 已随 canonical candidates seed 退役移除。
-  CANDIDATE_OP_IDS,
 } from "@creatoros/backend/modules/candidate";
 import {
   createCalibrationService,
   createCalibrationTransport,
   createCalibrationRepository,
-  CALIBRATION_OP_IDS,
   type RubricRow as CalibrationRubricRow,
   type RubricVersionRow as CalibrationRubricVersionRow,
   // [T-135] CalibrationRuleSuggestionRow(RuleSuggestionRow)已随 canonical 复盘回流建议 seed 退役移除。
@@ -600,25 +578,21 @@ import {
   createPlatformAccountTransport,
   type PlatformAccountService,
   // [T-135] createPlatformAccountRepository / PlatformAccountRow 已随 canonical platform account seed 退役移除。
-  PLATFORM_ACCOUNT_OP_IDS,
 } from "@creatoros/backend/modules/platform-account";
 import {
   createContentCalendarService,
   createContentCalendarTransport,
-  CONTENT_CALENDAR_OP_IDS,
   type ContentCalendarService,
 } from "@creatoros/backend/modules/content-calendar";
 import {
   createMaterialLinksService,
   createMaterialLinksTransport,
-  MATERIAL_LINKS_OP_IDS,
 } from "@creatoros/backend/modules/material-links";
 // [T-212a] 对标源 + 对标作品(选题/对标强化)。
 import {
   createBenchmarkService,
   createBenchmarkTranscriptionService,
   createBenchmarkTransport,
-  BENCHMARK_OP_IDS,
   OwnershipError as BenchmarkOwnershipError,
   type BenchmarkService,
 } from "@creatoros/backend/modules/benchmark";
@@ -626,27 +600,23 @@ import {
 import {
   createTrendSourcesService,
   createTrendSourcesTransport,
-  TREND_SOURCES_OP_IDS,
   type TrendSourcesService,
 } from "@creatoros/backend/modules/trend-sources";
 // [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
 import {
   createFavoritesService,
   createFavoritesTransport,
-  FAVORITES_OP_IDS,
   type FavoritesService,
 } from "@creatoros/backend/modules/favorites";
 // [T-235d] 选题归因(正向归因回流 —— 选题验证库;读侧 1 op + runner 写侧薄层)。
 import {
   createTopicAttributionService,
   createTopicAttributionTransport,
-  TOPIC_ATTRIBUTION_OP_IDS,
   type TopicAttributionService,
 } from "@creatoros/backend/modules/topic-attribution";
 import {
   createSchedulingService,
   createSchedulingTransport,
-  SCHEDULING_OP_IDS,
 } from "@creatoros/backend/modules/scheduling";
 import {
   createDashboardQueryService,
@@ -654,208 +624,8 @@ import {
   createGlobalSearchQueryService,
   createPublishingCenterQueryService,
   createQueryServicesTransport,
-  QUERY_SERVICES_OP_IDS,
   type PublishingCenterQueryService,
 } from "@creatoros/backend/modules/query-services";
-
-// 显式登记真实服务属主；未知操作在打开数据库前拒绝，静态构建不得初始化持久层。
-const PERSISTED_OPS = new Set<string>([
-  // Projects (module 05) — all 15 "项目与流程" ops served by the module's own
-  // user-scoped transport (outputs/tasks/stages/activity included).
-  ...PROJECT_OP_IDS,
-  // Taxonomy (module 04) — tags + entity_tags served by REAL SQL persistence.
-  ...TAXONOMY_OP_IDS,
-  // Notifications (module 01) — list + read served by REAL SQL persistence.
-  ...NOTIFICATION_OP_IDS,
-  // Search (module 02) — the composed `pages.search.get` read served by REAL SQL.
-  ...SEARCH_OP_IDS,
-  // Settings (module 03) — account read + preference/model/agent mutations.
-  ...SETTINGS_OP_IDS,
-  // Knowledge (module 06) — list/create/get + revisions.create + relations.create.
-  ...KNOWLEDGE_OP_IDS,
-  // Assets (module 07) — list/get + two-phase upload + files.create + trash/restore.
-  ...ASSET_OP_IDS,
-  // Artifacts (module 08) — list/create/get + versions.create/list + restore +
-  // relations.create, all user-scoped with append-only immutable versions.
-  ...ARTIFACT_OP_IDS,
-  // Production (module 09) — get/put production + segments.create + exports
-  // create/complete, user-scoped with §12 status machine + cross-module fan-out.
-  ...PRODUCTION_OP_IDS,
-  // Publishing (module 10) — list/create/get publications + revisions.create +
-  // transition, user-scoped with §12 publish machine + MockPublisher idempotency.
-  ...PUBLISHING_OP_IDS,
-  // Analytics (module 11) — publication/project metric reads, user-scoped over the
-  // append-only metric store; idempotent appendSnapshot is the Ingestion seam.
-  ...ANALYTICS_OP_IDS,
-  // Ingestion (module 12) — the 7 batch-push run ops, user-scoped, idempotent
-  // (§17), fanning out to peer Services. No FE page (external skill writes only).
-  ...INGESTION_OP_IDS,
-  // Reviews (module 13) — create/get review + insights.create + complete,
-  // user-scoped with §12 Review status machine (idempotent complete). Period from
-  // the Publishing window, evidence from the Analytics snapshot (injected ports).
-  ...REVIEWS_OP_IDS,
-  ...REVIEW_GATE_OP_IDS,
-  // Learnings (module 14) — list/create + applications.create + evaluate,
-  // user-scoped with the §12 validationStatus machine (candidate→validated|
-  // discarded; validated→discarded). Apply-target project ownership + activity via
-  // the injected Projects port; reusable across projects (reviewId nullable).
-  ...LEARNINGS_OP_IDS,
-  // AI (module 15) — conversations list/create + messages.create + tasks
-  // create/confirm/cancel, user-scoped with the §12 AI Task state machine. confirmTask
-  // formalizes an artifact_version candidate through the Artifacts public service
-  // (createVersion createdByType:'ai'); the Agent SDK runs only in @creatoros/ai-worker.
-  ...AI_OP_IDS,
-  // [T-255a] Execution(执行层,脑手分离)— execution.tasks create/list/get/confirm/
-  // discard。存储复用 ai_tasks(taskType `exec.*`);沙箱产物过确认门才入资产库(铁律②)。
-  ...EXECUTION_OP_IDS,
-  // T-482 内容雷达：当前已落地的分类、来源、运行、作品与手动转写主链。
-  ...INTELLIGENCE_OP_IDS,
-  // Query services (module Q, Wave 4) — the 3 page-composition reads
-  // (pages.dashboard.get / pages.projectOverview.get / pages.search.get). Composes
-  // public upstream services only (SPEC §19); pages.search.get is TAKEN OVER from
-  // the Search module's interim composer here. publishingCenterPage has no op.
-  ...QUERY_SERVICES_OP_IDS,
-  // Positioning (module 17, Wave 5) — 七步①② 定位中心. profile get/upsert +
-  // statements list/create/get (append-only immutable version chain) + gate.evaluate
-  // (deterministic advisory 0–100 fit) + pages.positioning.get (定位中心 page DTO),
-  // all user-scoped. The gate reaches Projects via the injected port; the AI 定位演进
-  // 回流 formalizes through createStatementVersion (createdByType:'ai') — no parallel
-  // candidate machine (C-3).
-  ...POSITIONING_OP_IDS,
-  // [T-052 裁决③] Monetization(module 18)已随变现中心物理删除(宪法 §8)。
-  // Candidate (module 19, Wave 5) — 七步③ 选题情报层. candidates.list/create/get/
-  // patch/promote + audienceSignals.list/linkToCandidate, all user-scoped. AI-sourced
-  // candidates arrive via the service's createFromAIResult (C-3 formalize — no
-  // duplicate submit/confirm op); AudienceSignal writes ride Ingestion's intake
-  // (C-4 — no second write op). promote → Project reaches Projects via the injected
-  // port; the PositioningGate is a nullable soft-dep port (fit=null when unwired).
-  ...CANDIDATE_OP_IDS,
-  // Calibration (module 20, Wave 5–7) — 七步⑤⑥ 校准闭环. rubrics.create/bumpVersion/
-  // get + predictions.create/lock/get + results.create, all user-scoped. Prediction is
-  // immutable once locked; RubricVersion is an append-only chain; CalibrationResult.
-  // actualMetrics is recycled via a verified IngestionRun (§C-4/RISK-005). The §6.3
-  // confidence feedback reaches Learnings via an injected port (no cross-module repo
-  // import).
-  ...CALIBRATION_OP_IDS,
-  // PlatformAccount (module 21, Wave 5–7) — 七步⑤ 多账号矩阵. accounts.list/create/
-  // get/update/archive, all user-scoped. Promotes 矩阵号 from a free-text
-  // account_reference string to a first-class user-scoped entity; the PUBLIC
-  // assertOwnedAccount(ctx, accountId, platform) guard is the cross-module binding seam
-  // Publishing/Projects call before stamping accountId (no cross-module repo import).
-  // secretReference is an opaque reference (§7.1) — never a raw token. archive is a soft
-  // flip (attribution preserved); per-account metrics are a read-time rollup over
-  // Publication.accountId (C-4 — no new metric write path, no MetricSnapshot.accountId).
-  ...PLATFORM_ACCOUNT_OP_IDS,
-  // ContentCalendar (module 22, Wave 5–7) — 七步⑦ 发布节奏 / 内容日历. The 8 ops
-  // accounts.calendar.list / .entries.create + calendar.entries.update/transition/
-  // delete + accounts.cadence.get/upsert/attainment, all user-scoped. Entries hang off
-  // an account_id (a soft FK validated via PlatformAccountService — no cross-module repo
-  // import). The planned→published/missed reconcile reads already-ingested publishing
-  // reality (C-4 — no new external-write path); 断更 fires a Notification only on the
-  // planned→missed edge. attainment is a derived read (no stored table).
-  ...CONTENT_CALENDAR_OP_IDS,
-  // MaterialLinks (用料链 / Bill-of-Materials, Plan A4) — materialLinks.list/create/
-  // delete, all user-scoped. The 料库⇄创作 edge: a project (and optionally an output)
-  // USES a KnowledgeItem or Asset with a role + stage + provenance. Pure local records
-  // (entityId/contentOutputId are soft references validated at the caller's seam, no
-  // cross-module repo import); delete is ownership-gated (cross-user → OwnershipError →
-  // 404).
-  ...MATERIAL_LINKS_OP_IDS,
-  // [T-212a] Benchmark 对标源 CRUD(选题/对标强化,SPEC 2026-07-11 §2.1)。user/account-scoped,
-  // 采集 job 落对标作品供 T-212c 拆解转化。
-  ...BENCHMARK_OP_IDS,
-  // [T-235b] 热点信源 CRUD(热点多源证据,SPEC 2026-07-11 daily-topic-autopilot §2.2)。
-  // user/account-scoped,出题时逐 enabled 源抓信号拼 trend brief。
-  ...TREND_SOURCES_OP_IDS,
-  // [T-235c] 指定收藏夹登记 CRUD(收藏夹跟拍信号源)。user/account-scoped,采集 job 按名匹配
-  // 拉夹内视频 → 限量进候选池(source=favorites)。
-  ...FAVORITES_OP_IDS,
-  // [T-235d] 选题归因只读(正向归因回流,SPEC 2026-07-11 daily-topic-autopilot §2.4)。
-  // user/account-scoped;写侧由 self.detail 采集尾的归因 runner 落库,不走契约 op。
-  ...TOPIC_ATTRIBUTION_OP_IDS,
-  // Scheduling (module 23, T-007) — scheduled_job CRUD (create/list/get/update/setEnabled)
-  // + job_run reads (listByJob/get). owned-root, transport 按 ctx.userId 收窄, job_run 经
-  // requireJob ownership gate。D1 建了 backend module 却没接 dispatch;这条接线让 /automations
-  // 的 client island 走 HTTP → dispatch → REAL SQL(pglite 迁移 0009 已建两表),读/管才真跑通。
-  ...SCHEDULING_OP_IDS,
-]);
-
-// The set of op ids owned by the taxonomy module's transport (module 04).
-const TAXONOMY_OPS = new Set<string>(TAXONOMY_OP_IDS);
-
-// The set of op ids owned by the notifications module's transport (module 01).
-const NOTIFICATION_OPS = new Set<string>(NOTIFICATION_OP_IDS);
-
-// The set of op ids the Search module's transport handles at DISPATCH time
-// (module 02). Wave-4 takeover (foundation §6): the query-services module now owns
-// `pages.search.get`, so the Search transport is NO LONGER routed for it. But the
-// module DOES still own its own standalone reads — `search.facets`
-// (GAP-SRCH-facets, GET /search/facets) is routed here. So this set is
-// SEARCH_OP_IDS minus the taken-over page op (rather than a hardcoded empty set):
-// adding a new standalone op to SEARCH_OP_IDS auto-registers it for dispatch, while
-// pages.search.get stays owned by query-services below. The Search SERVICE is also
-// consumed by the GlobalSearchQueryService facade (search/recordSearch/listHistory).
-const SEARCH_OPS = new Set<string>(
-  SEARCH_OP_IDS.filter((opId) => opId !== "pages.search.get"),
-);
-
-// The set of op ids owned by the query-services module's transport (module Q).
-const QUERY_SERVICES_OPS = new Set<string>(QUERY_SERVICES_OP_IDS);
-
-// The set of op ids owned by the settings module's transport (module 03).
-const SETTINGS_OPS = new Set<string>(SETTINGS_OP_IDS);
-
-// The set of op ids owned by the projects module's transport (module 05).
-const PROJECT_OPS = new Set<string>(PROJECT_OP_IDS);
-
-// The set of op ids owned by the knowledge module's transport (module 06).
-const KNOWLEDGE_OPS = new Set<string>(KNOWLEDGE_OP_IDS);
-
-// The set of op ids owned by the assets module's transport (module 07).
-const ASSET_OPS = new Set<string>(ASSET_OP_IDS);
-
-// The set of op ids owned by the artifacts module's transport (module 08).
-const ARTIFACT_OPS = new Set<string>(ARTIFACT_OP_IDS);
-
-// The set of op ids owned by the production module's transport (module 09).
-const PRODUCTION_OPS = new Set<string>(PRODUCTION_OP_IDS);
-
-// The set of op ids owned by the publishing module's transport (module 10).
-const PUBLISHING_OPS = new Set<string>(PUBLISHING_OP_IDS);
-
-// The set of op ids owned by the analytics module's transport (module 11).
-const ANALYTICS_OPS = new Set<string>(ANALYTICS_OP_IDS);
-
-// The set of op ids owned by the ingestion module's transport (module 12).
-const INGESTION_OPS = new Set<string>(INGESTION_OP_IDS);
-
-// The set of op ids owned by the reviews module's transport (module 13).
-const REVIEWS_OPS = new Set<string>(REVIEWS_OP_IDS);
-
-// T-086 审核门 op ids(reviewRules.* + scriptReviews.*),独立 transport 路由。
-const REVIEW_GATE_OPS = new Set<string>(REVIEW_GATE_OP_IDS);
-
-// The set of op ids owned by the learnings module's transport (module 14).
-const LEARNINGS_OPS = new Set<string>(LEARNINGS_OP_IDS);
-
-// The set of op ids owned by the ai module's transport (module 15).
-const AI_OPS = new Set<string>(AI_OP_IDS);
-
-// [T-255a] The set of op ids owned by the execution module's transport.
-const EXECUTION_OPS = new Set<string>(EXECUTION_OP_IDS);
-const INTELLIGENCE_OPS = new Set<string>(INTELLIGENCE_OP_IDS);
-
-// The set of op ids owned by the positioning module's transport (module 17).
-const POSITIONING_OPS = new Set<string>(POSITIONING_OP_IDS);
-
-// The set of op ids owned by the candidate module's transport (module 19).
-const CANDIDATE_OPS = new Set<string>(CANDIDATE_OP_IDS);
-
-// The set of op ids owned by the calibration module's transport (module 20).
-const CALIBRATION_OPS = new Set<string>(CALIBRATION_OP_IDS);
-
-// The set of op ids owned by the platform-account module's transport (module 21).
-const PLATFORM_ACCOUNT_OPS = new Set<string>(PLATFORM_ACCOUNT_OP_IDS);
 
 // [T-136§D-bind⑤] 抖音号占位 handle 集合 —— 扫码阶段 cookie 不含昵称,先占位;真实身份由
 // applyDouyinIdentity(refresh 抓 secUid/昵称)回填后合并。判定用于:①ensureAccount 复用既有
@@ -1089,23 +859,6 @@ export async function mergeDouyinPlaceholders(
     await archivePlaceholderBestEffort(service, ctx, p.id);
   }
 }
-
-// The set of op ids owned by the content-calendar module's transport (module 22).
-const CONTENT_CALENDAR_OPS = new Set<string>(CONTENT_CALENDAR_OP_IDS);
-
-// The set of op ids owned by the material-links module's transport (Plan A4).
-const MATERIAL_LINKS_OPS = new Set<string>(MATERIAL_LINKS_OP_IDS);
-// [T-212a] 对标源 CRUD ops 路由集。
-const BENCHMARK_OPS = new Set<string>(BENCHMARK_OP_IDS);
-// [T-235b] 热点信源 CRUD ops 路由集。
-const TREND_SOURCES_OPS = new Set<string>(TREND_SOURCES_OP_IDS);
-// [T-235c] 指定收藏夹登记 CRUD ops 路由集。
-const FAVORITES_OPS = new Set<string>(FAVORITES_OP_IDS);
-// [T-235d] 选题归因只读 ops 路由集。
-const TOPIC_ATTRIBUTION_OPS = new Set<string>(TOPIC_ATTRIBUTION_OP_IDS);
-
-// The set of op ids owned by the scheduling module's transport (module 23, T-007).
-const SCHEDULING_OPS = new Set<string>(SCHEDULING_OP_IDS);
 
 // [T-332 S2] canonical 变现加权 Rubric 改为 **per-account** 种子(SPEC §3.2:rubrics 是
 // per-account 域、每号一套打分口径,account_id NOT NULL 后不能再有「系统级 null 号」rubric)。
@@ -5655,6 +5408,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         message: "抓取完整作品目录（尚未入库）",
       });
       const rawBatch = await (await loadDouyinCdp()).fetchDouyinMetrics({
+        signal:scheduledSignals.getStore(),
         capturedAt,
         authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),
         gateway: douyinGateway,
@@ -5672,7 +5426,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
         report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
         const bytes = await (await loadDouyinCdp()).fetchDouyinWorkListExport(
-          { authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
+          { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
         );
         // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
@@ -6295,6 +6049,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           searchVideos: async (c, keyword) => {
             const videos = await (await loadDouyinCdp()).fetchDouyinSearchVideos(
               {
+                signal:scheduledSignals.getStore(),
                 authDir: await douyinAuthDirFor(c.accountId,scheduledSignals.getStore(),c.userId), // [T-136] 按当前号登录态
                 keyword,
                 gateway: douyinGateway,
@@ -11691,121 +11446,16 @@ async function getProjects(): Promise<Transport> {
   return (await getBundle()).projects;
 }
 
-async function getTaxonomy(): Promise<Transport> {
-  return (await getBundle()).taxonomy;
-}
-
-async function getNotifications(): Promise<Transport> {
-  return (await getBundle()).notifications;
-}
-
-async function getSearch(): Promise<Transport> {
-  return (await getBundle()).search;
-}
-
 async function getKnowledge(): Promise<Transport> {
   return (await getBundle()).knowledge;
-}
-
-async function getAssets(): Promise<Transport> {
-  return (await getBundle()).assets;
-}
-
-async function getArtifacts(): Promise<Transport> {
-  return (await getBundle()).artifacts;
 }
 
 async function getProduction(): Promise<Transport> {
   return (await getBundle()).production;
 }
 
-async function getPublishing(): Promise<Transport> {
-  return (await getBundle()).publishing;
-}
-
-async function getAnalytics(): Promise<Transport> {
-  return (await getBundle()).analytics;
-}
-
-async function getIngestion(): Promise<Transport> {
-  return (await getBundle()).ingestion;
-}
-
-async function getReviews(): Promise<Transport> {
-  return (await getBundle()).reviews;
-}
-
-async function getReviewGate(): Promise<Transport> {
-  return (await getBundle()).reviewGate;
-}
-
-async function getLearnings(): Promise<Transport> {
-  return (await getBundle()).learnings;
-}
-
-async function getAi(): Promise<Transport> {
-  return (await getBundle()).ai;
-}
-
-// [T-255a] 执行层 transport 取用(execution.tasks.*)。
-async function getExecution(): Promise<Transport> {
-  return (await getBundle()).execution;
-}
-
-async function getIntelligence(): Promise<Transport> {
-  return (await getBundle()).intelligence;
-}
-
-async function getPositioning(): Promise<Transport> {
-  return (await getBundle()).positioning;
-}
-
 async function getCandidate(): Promise<Transport> {
   return (await getBundle()).candidate;
-}
-
-async function getCalibration(): Promise<Transport> {
-  return (await getBundle()).calibration;
-}
-
-async function getPlatformAccount(): Promise<Transport> {
-  return (await getBundle()).platformAccount;
-}
-
-async function getScheduling(): Promise<Transport> {
-  return (await getBundle()).scheduling;
-}
-
-async function getContentCalendar(): Promise<Transport> {
-  return (await getBundle()).contentCalendar;
-}
-
-async function getMaterialLinks(): Promise<Transport> {
-  return (await getBundle()).materialLinks;
-}
-
-// [T-212a] 对标源 CRUD transport 访问器。
-async function getBenchmark(): Promise<Transport> {
-  return (await getBundle()).benchmark;
-}
-
-// [T-235b] 热点信源 CRUD transport 访问器。
-async function getTrendSources(): Promise<Transport> {
-  return (await getBundle()).trendSources;
-}
-
-// [T-235c] 指定收藏夹登记 CRUD transport 访问器。
-async function getFavoritesFolders(): Promise<Transport> {
-  return (await getBundle()).favoritesFolders;
-}
-
-// [T-235d] 选题归因只读 transport 访问器。
-async function getTopicAttribution(): Promise<Transport> {
-  return (await getBundle()).topicAttribution;
-}
-
-async function getQueryServices(): Promise<Transport> {
-  return (await getBundle()).queryServices;
 }
 
 /**
@@ -11943,262 +11593,7 @@ export async function getWebSessionRuntime(): Promise<
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
-export const compositeTransport: Transport = {
-  async request(endpoint: Endpoint, input, ctx) {
-    // 未登记属主的操作不进入数据库，也不以无归属fixture冒充成功。
-    if (!PERSISTED_OPS.has(endpoint.id)) {
-      throw new UnsupportedOperationError(endpoint.id);
-    }
-    // Taxonomy ops (module 04) are served by the module's own transport over
-    // the SAME pglite store. Routed before the projects persistence transport so
-    // each module owns its op ids (foundation §1 module registry).
-    if (TAXONOMY_OPS.has(endpoint.id)) {
-      const taxonomy = await getTaxonomy();
-      return taxonomy.request(endpoint, input, ctx);
-    }
-    // Notifications ops (module 01) are served by the module's own transport over
-    // the SAME pglite store. Each module owns its op ids (foundation §1 registry).
-    if (NOTIFICATION_OPS.has(endpoint.id)) {
-      const notifications = await getNotifications();
-      return notifications.request(endpoint, input, ctx);
-    }
-    // Search ops (module 02) — the composed `pages.search.get` read served by the
-    // module's own transport over the SAME pglite store (foundation §1 registry).
-    if (SEARCH_OPS.has(endpoint.id)) {
-      const search = await getSearch();
-      return search.request(endpoint, input, ctx);
-    }
-    // Settings ops (module 03) — account read + preference/model/agent mutations
-    // served by the module's own transport over the SAME pglite store (foundation
-    // §1 registry).
-    if (SETTINGS_OPS.has(endpoint.id)) {
-      const bundle = await getBundle();
-      return bundle.settings.request(endpoint, input, ctx);
-    }
-    // Knowledge ops (module 06) — list/create/get + revisions.create +
-    // relations.create served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). No ctx ⇒ AuthenticationError.
-    if (KNOWLEDGE_OPS.has(endpoint.id)) {
-      const knowledge = await getKnowledge();
-      return knowledge.request(endpoint, input, ctx);
-    }
-    // Assets ops (module 07) — list/get + two-phase upload + files.create +
-    // trash/restore served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). No ctx ⇒ AuthenticationError.
-    if (ASSET_OPS.has(endpoint.id)) {
-      const assets = await getAssets();
-      return assets.request(endpoint, input, ctx);
-    }
-    // Artifacts ops (module 08) — list/create/get + versions.create/list +
-    // restore + relations.create served by the module's own user-scoped transport
-    // over the SAME pglite store (foundation §1 registry). No ctx ⇒
-    // AuthenticationError.
-    if (ARTIFACT_OPS.has(endpoint.id)) {
-      const artifacts = await getArtifacts();
-      return artifacts.request(endpoint, input, ctx);
-    }
-    // Production ops (module 09) — get/put production + segments.create + exports
-    // create/complete served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). completeExport's cross-module
-    // fan-out runs inside the service via injected public peer services. No ctx ⇒
-    // AuthenticationError.
-    if (PRODUCTION_OPS.has(endpoint.id)) {
-      const production = await getProduction();
-      return production.request(endpoint, input, ctx);
-    }
-    // Publishing ops (module 10) — list/create/get publications + revisions.create
-    // + transition served by the module's own user-scoped transport over the SAME
-    // pglite store (foundation §1 registry). The transition publish/remove
-    // side-effect runs inside the service via the MockPublisher seam; the
-    // cross-module fan-out reaches peers via injected public services. No ctx ⇒
-    // AuthenticationError.
-    if (PUBLISHING_OPS.has(endpoint.id)) {
-      const publishing = await getPublishing();
-      return publishing.request(endpoint, input, ctx);
-    }
-    // Analytics ops (module 11) — analytics.publications.get / analytics.projects.get
-    // served by the module's own user-scoped transport over the SAME pglite store
-    // (foundation §1 registry). The project→publication ownership resolve runs
-    // inside the service via the injected Publishing public seam. No ctx ⇒
-    // AuthenticationError.
-    if (ANALYTICS_OPS.has(endpoint.id)) {
-      const analytics = await getAnalytics();
-      return analytics.request(endpoint, input, ctx);
-    }
-    // Ingestion ops (module 12) — the 7 batch-push run ops served by the module's
-    // own user-scoped transport over the SAME pglite store (foundation §1 registry).
-    // The fan-out to peer modules runs inside the service via injected public Service
-    // ports (no repo import). No ctx ⇒ AuthenticationError.
-    if (INGESTION_OPS.has(endpoint.id)) {
-      const ingestion = await getIngestion();
-      return ingestion.request(endpoint, input, ctx);
-    }
-    // Reviews ops (module 13) — reviews.create/get + reviews.insights.create +
-    // reviews.complete served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). Period/evidence derivation +
-    // ownership gates run inside the service via injected public peer ports. No ctx
-    // ⇒ AuthenticationError.
-    if (REVIEWS_OPS.has(endpoint.id)) {
-      const reviews = await getReviews();
-      return reviews.request(endpoint, input, ctx);
-    }
-    // T-086 审核门 ops(reviewRules.* + scriptReviews.*)—— 规则库 CRUD + 稿面审核
-    // 报告读/触发,走本模块 user-scoped transport(同一 pglite store)。scriptReviews.trigger
-    // 起 script.review ai_task,dispatch 后台跑 L1+L2。No ctx ⇒ AuthenticationError。
-    if (REVIEW_GATE_OPS.has(endpoint.id)) {
-      const reviewGate = await getReviewGate();
-      return reviewGate.request(endpoint, input, ctx);
-    }
-    // Learnings ops (module 14) — learnings.list/create + learnings.applications.create
-    // + learnings.evaluate served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). The §12 validationStatus machine +
-    // apply-target ownership/activity run inside the service via the injected Projects
-    // port. No ctx ⇒ AuthenticationError.
-    if (LEARNINGS_OPS.has(endpoint.id)) {
-      const learnings = await getLearnings();
-      return learnings.request(endpoint, input, ctx);
-    }
-    // AI ops (module 15) — conversations list/create + messages.create + tasks
-    // create/confirm/cancel served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). The §12 AI Task state machine +
-    // candidate→confirm formalize (through the injected Artifacts service) run inside the
-    // service; the Agent SDK runs only in @creatoros/ai-worker. No ctx ⇒
-    // AuthenticationError.
-    if (AI_OPS.has(endpoint.id)) {
-      const ai = await getAi();
-      return ai.request(endpoint, input, ctx);
-    }
-    // [T-255a] Execution ops — execution.tasks create/list/get/confirm/discard served
-    // by the module's own transport(存储复用 ai_tasks,taskType `exec.*`)。create 后
-    // composition 层 fire-and-forget runExecutionTask(沙箱→物化→executor→收割 manifest
-    // →awaiting_confirmation);confirm 采纳产物入资产库(铁律②),discard 中止+清沙箱。
-    // No ctx ⇒ AuthenticationError.
-    if (EXECUTION_OPS.has(endpoint.id)) {
-      const execution = await getExecution();
-      return execution.request(endpoint, input, ctx);
-    }
-    // T-482 内容雷达：分类/来源/运行/作品/手动转写均走真实 DB；不回退 mock，
-    // 防止界面显示“成功”但实际没有入库。
-    if (INTELLIGENCE_OPS.has(endpoint.id)) {
-      const intelligence = await getIntelligence();
-      return intelligence.request(endpoint, input, ctx);
-    }
-    // Positioning ops (module 17, Wave 5) — profile get/upsert + statements
-    // list/create/get + gate.evaluate + pages.positioning.get served by the module's
-    // own user-scoped transport over the SAME pglite store (foundation §1 registry).
-    // The append-only version chain + deterministic advisory gate run inside the
-    // service; the gate's project subject reaches Projects via the injected port. No
-    // ctx ⇒ AuthenticationError.
-    if (POSITIONING_OPS.has(endpoint.id)) {
-      const positioning = await getPositioning();
-      return positioning.request(endpoint, input, ctx);
-    }
-    // [T-052 裁决③] Monetization ops 分发分支已随变现中心物理删除(宪法 §8)。
-    // Candidate ops (module 19, Wave 5) — candidates.list/create/get/patch/promote +
-    // audienceSignals.list/linkToCandidate served by the module's own user-scoped
-    // transport over the SAME pglite store (foundation §1 registry). The lightweight
-    // pool + promote → Project + demand_count aggregation run inside the service;
-    // AI-sourced candidates arrive via createFromAIResult (C-3) and signal writes ride
-    // Ingestion (C-4) — neither is a contract op here. No ctx ⇒ AuthenticationError.
-    if (CANDIDATE_OPS.has(endpoint.id)) {
-      const candidate = await getCandidate();
-      return candidate.request(endpoint, input, ctx);
-    }
-    // Calibration ops (module 20, Wave 5–7) — rubrics.create/bumpVersion/get +
-    // predictions.create/lock/get/list + results.create + overview (校准中心总览) served by
-    // the module's own user-scoped transport over the SAME pglite store (registry). The
-    // immutable lock + append-only RubricVersion + §C-4/RISK-005 run guard run inside
-    // the service; the IngestionRun existence + §6.3 Learnings feedback reach peers via
-    // injected ports. No ctx ⇒ AuthenticationError.
-    if (CALIBRATION_OPS.has(endpoint.id)) {
-      const calibration = await getCalibration();
-      return calibration.request(endpoint, input, ctx);
-    }
-    // PlatformAccount ops (module 21, Wave 5–7) — accounts.list/create/get/update/
-    // archive served by the module's own user-scoped transport over the SAME pglite
-    // store (foundation §1 registry). 矩阵号 registry + the assertOwnedAccount binding
-    // guard run inside the service; no peer fan-out (pure local records). No ctx ⇒
-    // AuthenticationError.
-    if (PLATFORM_ACCOUNT_OPS.has(endpoint.id)) {
-      const platformAccount = await getPlatformAccount();
-      return platformAccount.request(endpoint, input, ctx);
-    }
-    // Scheduling ops (module 23, T-007) — scheduledJobs.create/list/get/update/setEnabled
-    // + jobRuns.listByJob/get served by the module's own user-scoped transport over the
-    // SAME pglite store (foundation §1 registry). owned-root, job_run 经 requireJob
-    // ownership gate;pure local records, no peer fan-out. No ctx ⇒ AuthenticationError.
-    if (SCHEDULING_OPS.has(endpoint.id)) {
-      const scheduling = await getScheduling();
-      return scheduling.request(endpoint, input, ctx);
-    }
-    // ContentCalendar ops (module 22, Wave 5–7) — accounts.calendar.list/.entries.create
-    // + calendar.entries.update/transition/delete + accounts.cadence.get/upsert/
-    // attainment served by the module's own user-scoped transport over the SAME pglite
-    // store (foundation §1 registry). The §7.2 state machine + 达成率/断更 reconcile run
-    // inside the service; account ownership is gated via the injected
-    // PlatformAccountService port (no cross-module repo import). No ctx ⇒
-    // AuthenticationError.
-    if (CONTENT_CALENDAR_OPS.has(endpoint.id)) {
-      const contentCalendar = await getContentCalendar();
-      return contentCalendar.request(endpoint, input, ctx);
-    }
-    // MaterialLinks ops (Plan A4) — materialLinks.list/create/delete served by the
-    // module's own user-scoped transport over the SAME pglite store (foundation §1
-    // registry). The 料库⇄创作 用料链 edge; delete is ownership-gated (cross-user →
-    // OwnershipError → 404). No peer fan-out (pure local records). No ctx ⇒
-    // AuthenticationError.
-    if (MATERIAL_LINKS_OPS.has(endpoint.id)) {
-      const materialLinks = await getMaterialLinks();
-      return materialLinks.request(endpoint, input, ctx);
-    }
-    // [T-212a] Benchmark 对标源 CRUD(选题/对标强化)—— 4 ops(list/create/toggle/remove)由模块
-    // 自有 user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
-    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
-    if (BENCHMARK_OPS.has(endpoint.id)) {
-      const benchmark = await getBenchmark();
-      return benchmark.request(endpoint, input, ctx);
-    }
-    // [T-235b] 热点信源 CRUD(热点多源证据)—— 4 ops(list/create/toggle/remove)由模块自有
-    // user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
-    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
-    if (TREND_SOURCES_OPS.has(endpoint.id)) {
-      const trendSources = await getTrendSources();
-      return trendSources.request(endpoint, input, ctx);
-    }
-    // [T-235c] 指定收藏夹登记 CRUD(收藏夹跟拍信号源)—— 4 ops(list/create/toggle/remove)由模块
-    // 自有 user/account-scoped transport 服务,同一 pglite store。toggle/remove ownership-gated
-    // (跨用户 → OwnershipError → 404)。No ctx ⇒ AuthenticationError。
-    if (FAVORITES_OPS.has(endpoint.id)) {
-      const favoritesFolders = await getFavoritesFolders();
-      return favoritesFolders.request(endpoint, input, ctx);
-    }
-    // [T-235d] 选题归因只读(正向归因回流)—— topics.attributions.list 由模块自有
-    // user/account-scoped transport 服务,同一 pglite store。No ctx ⇒ AuthenticationError。
-    if (TOPIC_ATTRIBUTION_OPS.has(endpoint.id)) {
-      const topicAttribution = await getTopicAttribution();
-      return topicAttribution.request(endpoint, input, ctx);
-    }
-    // Query-services ops (module Q, Wave 4) — the 3 page-composition reads
-    // (pages.dashboard.get / pages.projectOverview.get / pages.search.get) served by
-    // the module's own transport, composing public upstream services (SPEC §19). This
-    // TAKES OVER pages.search.get from the Search interim composer (foundation §6) —
-    // checked before SEARCH_OPS (now empty) so exactly one handler owns it. No ctx ⇒
-    // AuthenticationError.
-    if (QUERY_SERVICES_OPS.has(endpoint.id)) {
-      const queryServices = await getQueryServices();
-      return queryServices.request(endpoint, input, ctx);
-    }
-    // Projects ops (module 05) — all 15 "项目与流程" ops served by the module's
-    // own user-scoped transport over the SAME pglite store (foundation §1
-    // registry). No ctx ⇒ the transport throws AuthenticationError (→401).
-    if (PROJECT_OPS.has(endpoint.id)) {
-      const projects = await getProjects();
-      return projects.request(endpoint, input, ctx);
-    }
-    // 声明已持久化却缺少实际handler同样拒绝，不隐藏装配缺口。
-    throw new UnsupportedOperationError(endpoint.id);
-  },
-};
+export const compositeTransport: Transport = createApplicationTransport(getBundle);
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {

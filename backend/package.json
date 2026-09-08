@@ -11,6 +11,10 @@
     "./modules/*": {
       "types": "./src/modules/*/index.ts",
       "default": "./src/modules/*/index.ts"
+    },
+    "./application/*": {
+      "types": "./src/application/*.ts",
+      "default": "./src/application/*.ts"
     }
   },
   "scripts": {
