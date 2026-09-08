@@ -17,6 +17,7 @@ import {
   unlink,
 } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
 import { resolveMasterKey } from "@creatoros/backend";
 
@@ -1355,10 +1356,12 @@ export class EncryptedClientConfigStore implements ClientConfigStore {
   }
 
   async save(record: ClientConfigCacheRecord): Promise<void> {
+    // 校验并统一可选字段；回读解析会重建对象，字段插入顺序不是完整性判据。
+    const expected = parseCacheRecord(record);
     const iv = randomBytes(IV_BYTES);
     const cipher = createCipheriv("aes-256-gcm", this.key, iv);
     const plain = Buffer.from(
-      JSON.stringify({ schemaVersion: CACHE_SCHEMA, record }),
+      JSON.stringify({ schemaVersion: CACHE_SCHEMA, record: expected }),
     );
     const ciphertext = Buffer.concat([cipher.update(plain), cipher.final()]);
     const packed = Buffer.concat([iv, cipher.getAuthTag(), ciphertext]);
@@ -1390,7 +1393,7 @@ export class EncryptedClientConfigStore implements ClientConfigStore {
       await directory.close();
     }
     const readback = await this.load();
-    if (JSON.stringify(readback) !== JSON.stringify(record)) {
+    if (!isDeepStrictEqual(readback, expected)) {
       throw new Error("client config cache readback mismatch");
     }
   }
