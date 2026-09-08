@@ -13,9 +13,9 @@ export async function resolveChatGuideSnapshot(surface:string):Promise<ReturnTyp
             guide.overlayVersion !== null ||
             guide.effective.methodSystem.trim().length === 0
           ) {
-            throw new Error(
+            throw Object.assign(new Error(
               "[CREATOROS_GUIDE_UNAVAILABLE] creatoros.guide@v1 不可用",
-            );
+            ), { code: "CREATOROS_GUIDE_UNAVAILABLE" });
           }
           return {
             skillId: "creatoros.guide" as const,
