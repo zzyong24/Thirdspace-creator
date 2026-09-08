@@ -24,7 +24,7 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -434,8 +434,6 @@ import {
   createFavoritesTriagePort,
   runKnowledgeDistill,
   // [T-212d] 防茧房校准:淘汰原因蒸馏(选题淘汰写原因后 best-effort 触发)。
-  runTopicPreferenceDistill,
-  createTopicPreferenceDistillPort,
   // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
   assembleCreativeContext,
   // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
@@ -5069,14 +5067,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   (护栏在 service 内强制:±10 封顶 / ≥3 例才升级 active)。fire-and-forget,不阻塞淘汰返回;
     //   失败只记日志。蒸馏端口/落库端口都绑 candidateService 自身的公开方法(同一 service,无跨模块 repo)。
     dispatchPreferenceDistill: (ctx) => {
-      void runWithResolvedEffectiveSkills(ctx, ["topic.preference"], () =>
-        runTopicPreferenceDistill(ctx, {
-          listDropReasons: (c) => candidateService.listDropReasons(c),
-          distill: createTopicPreferenceDistillPort({ resolveModelSpec }),
-          upsertPreference: (c, input) =>
-            candidateService.upsertTopicPreference(c, input),
-        }),
-      ).catch((err) => {
+      void topicPreferenceSubmission.submit(ctx).catch((err) => {
         console.error(
           "[topic-preference] 淘汰原因蒸馏触发失败(best-effort,不影响淘汰):",
           err,
@@ -8686,6 +8677,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
   }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "topic.preference":createTopicPreferenceBusinessAdapter({listDropReasons:c=>candidateService.listDropReasons(c)}),
     "asset.classify":createAssetProcessingBusinessAdapter("asset.classify",assetProcessingPreparation),
     "material.extract":createAssetProcessingBusinessAdapter("material.extract",assetProcessingPreparation),
     "video.decisions":createVideoDecisionsBusinessAdapter({resolveModelSpec,getTaskRuntimeData:(c,id)=>aiService.getTaskRuntimeData(c,id),
@@ -9124,6 +9116,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
+  const topicPreferenceSubmission=createTopicPreferenceSubmission({
+    ai:aiService,listDropReasons:c=>candidateService.listDropReasons(c),
+    prepare:(c,id)=>businessExecution.prepare(c,id),
+    wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
+  });
   stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),intelligenceGeneration.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
