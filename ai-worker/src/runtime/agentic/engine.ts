@@ -9,7 +9,7 @@
 //   - onStep             ↔ Pi `Agent.subscribe`(事件流 → ai_task_steps 步骤流,SPEC §4.3)
 //   - signal             ↔ Pi `Agent.abort()` / `Agent.signal`(abort 贯通,SPEC §4.7)
 //
-// 默认实现 = 确定性引擎(deterministic-engine.ts):同一接口跑通框架 + 测试 + headless 真机。
+// 生产实现由 Pi 引擎提供；接口本身不隐含备用执行器。
 // 真 Pi 就绪后替换引擎实现即可(执行器/适配器/护栏零改动)。
 import type { z } from "zod";
 import type { LoopController } from "./loop-control";
@@ -71,7 +71,7 @@ export interface AgenticTool {
   ): Promise<AgenticToolResult>;
   /**
    * [确定性引擎专用] 据当前目标 + 已有产出确定性构造本工具入参(无 LLM 也能驱动链路)。
-   * 真 Pi 不需要(入参由模型产)—— 仅供 deterministic-engine 跑通框架/测试。返回 undefined = 跳过。
+   * 真 Pi 不需要(入参由模型产)—— 仅供显式测试适配器。返回 undefined = 跳过。
    */
   planInput?: (goal: string, priorOutputs: Record<string, unknown>) => unknown;
 }

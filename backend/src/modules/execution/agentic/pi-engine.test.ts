@@ -16,7 +16,7 @@ import {
   __setPiSdkForTest,
   type PiSdkHandle,
 } from "./pi-engine";
-import { createDeterministicAgenticEngine } from "./deterministic-engine";
+const unavailableFallback = () => ({name:"unavailable", async run():Promise<never>{throw new Error("PI_TEST_UNEXPECTED_FALLBACK");}});
 import type {
   AgenticTool,
   AgenticEngine,
@@ -372,7 +372,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     const search = makeTool("web.search", "none");
     const controller = createLoopController({ maxSteps: 8, maxTokens: 100000 });
     const engine = createPiAgenticEngine({
-      fallback: createDeterministicAgenticEngine(),
+      fallback: unavailableFallback(),
       buildStreamSimple: () => core.streamSimple,
     });
     const final = await engine.run(
@@ -404,7 +404,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     const search = makeTool("web.search", "none");
     const controller = createLoopController({ maxSteps: 2, maxTokens: 1000000 });
     const engine = createPiAgenticEngine({
-      fallback: createDeterministicAgenticEngine(),
+      fallback: unavailableFallback(),
       buildStreamSimple: () => core.streamSimple,
     });
     const final = await engine.run(
@@ -428,7 +428,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     __setPiSdkForTest(sdk);
     const search = makeTool("web.search");
     search.tool.execute = async () => ({summary: "找到来源", data: {url: "https://example.com/evidence", body: "模型应看到的正文证据"}});
-    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    const final = await createPiAgenticEngine({fallback: unavailableFallback(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
     expect(final.stopReason).toBe("completed");
     expect(nextContext).toContain("https://example.com/evidence");
     expect(nextContext).toContain("模型应看到的正文证据");
@@ -447,7 +447,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     }));
     __setPiSdkForTest(sdk);
     const search = makeTool("web.search");
-    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 2, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    const final = await createPiAgenticEngine({fallback: unavailableFallback(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 2, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
     expect(modelCalls).toBe(1);
     expect(search.calls).toHaveLength(1);
     expect(final.stopReason).toBe("max_steps");
@@ -468,7 +468,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     search.tool.execute = async () => ++calls === 1
       ? {summary: "找到来源", hasEvidence: true, data: {url: "https://example.com/kept", body: "需要保留的证据"}}
       : {summary: "无结果", hasEvidence: false, data: {results: []}};
-    const final = await createPiAgenticEngine({fallback: createDeterministicAgenticEngine(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
+    const final = await createPiAgenticEngine({fallback: unavailableFallback(), buildStreamSimple: () => core.streamSimple}).run(runInput({tools: [search.tool], controller: createLoopController({maxSteps: 10, maxTokens: 100000}), llmConfig: ANTHROPIC_BEARER}));
     expect(final.stopReason).toBe("llm_error");
     expect(final.hasUsableOutput).toBe(true);
     expect(JSON.stringify(final.output.evidence)).toContain("https://example.com/kept");
@@ -483,7 +483,7 @@ describe("pi-engine 真 SDK 集成(faux,不打网络)", () => {
     // 不传 buildStreamSimple → 走 pi 内建 anthropic-messages api(真烧「用户 provider」);
     // baseUrl 指死端口 → 连接失败,验「api 真被 wire 到 custom provider」+「报错诚实标记」。
     const engine = createPiAgenticEngine({
-      fallback: createDeterministicAgenticEngine(),
+      fallback: unavailableFallback(),
     });
     const final = await engine.run(
       runInput({

@@ -26,7 +26,6 @@ export type {
   EngineLlm,
   EngineLlmResult,
 } from "./engine";
-export { createDeterministicAgenticEngine } from "./deterministic-engine";
 export {
   createPiAgenticEngine,
   PiNotInstalledError,
@@ -38,10 +37,6 @@ export {
   resolveAgenticToolScope,
   filterToolsToScope,
 } from "./tool-scopes";
-export {
-  createAgenticExecutor,
-  type AgenticExecutorDeps,
-} from "./agentic-executor";
 export {
   createResearchTools,
   RESEARCH_WEB_READ_WINDOW_CHARS,

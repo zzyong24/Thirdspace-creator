@@ -122,13 +122,11 @@ export {
   AGENTIC_TASK_TYPE_PREFIX,
   createLoopController,
   estimateTokens,
-  createDeterministicAgenticEngine,
   createPiAgenticEngine,
   PiNotInstalledError,
   AGENTIC_TASK_TOOL_SCOPES,
   resolveAgenticToolScope,
   filterToolsToScope,
-  createAgenticExecutor,
   createResearchTools,
   createCollectionTools,
   createMaterialTools,
@@ -147,7 +145,6 @@ export {
   type ToolEffect,
   type EngineLlm,
   type EngineLlmResult,
-  type AgenticExecutorDeps,
   type PiAgenticEngineDeps,
   type PiStreamFnBuilder,
   type ResearchPorts,
@@ -167,7 +164,7 @@ export { createExecutionCheckpointService } from "./execution-checkpoint.service
 
 export { createExecutionAgenticToolPorts, type AgenticBackendTool } from "./execution-agentic-tool-ports.service";
 
-export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/agentic-executor";
+export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/default-system-prompt";
 export { createExecutionScriptCheckpointService } from "./execution-script-checkpoint.service";
 
 export { createExecutionBrowserProfileLeaseService, BrowserProfileBusyError } from "./execution-browser-profile-lease.service";
