@@ -16,7 +16,7 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
  async function binding(ref:ExecutionRef,callId:string){
   return leases.withLease(ref,"settlement",async scope=>{
    const bound=await bindAssetExecution(scope,callId);
-   if(!bound.call || !["started","unknown","settled"].includes(bound.call.status) || !bound.call.startedAttempt)throw new ConflictError("素材缺少原调用的实际启动事实");
+   if(!bound.call || !["started","unknown","settled"].includes(bound.call.status) || (!bound.call.startedAttempt&&!bound.legacyRecovery))throw new ConflictError("素材缺少原调用的实际启动事实");
    return {...bound,call:bound.call,context:scope.context};
   });
  }
@@ -27,7 +27,7 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
     if(key!==operationKey(callId))throw new ConflictError("素材操作键与原调用不符");
     await createExecutionLeaseService(tx as unknown as Db,{now}).withLease(ref,"admission",async scope=>{
      const bound=await bindAssetExecution(scope,callId);
-     if(ctx.userId!==scope.context.userId || ctx.accountId!==scope.context.accountId || !bound.call || !["started","unknown"].includes(bound.call.status) || !bound.call.startedAttempt)throw new ConflictError("素材提交缺少当前归属或原启动事实");
+     if(ctx.userId!==scope.context.userId || ctx.accountId!==scope.context.accountId || !bound.call || !["started","unknown"].includes(bound.call.status) || (!bound.call.startedAttempt&&!bound.legacyRecovery))throw new ConflictError("素材提交缺少当前归属或原启动事实");
     });
    },
   });

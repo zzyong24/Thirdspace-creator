@@ -20,7 +20,7 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   const recovery=payload.assetLegacyRecovery as {mode?:string;callId?:string}|undefined;
   if(recovery&&recovery.mode!=="provider_job")throw new ConflictError("历史素材只允许读取原结果并核对");
   if(recovery&&callId!==undefined&&callId!==recovery.callId)throw new ConflictError("历史素材只能读取原导入调用");
-  if(callId===undefined)return {input,digest,name,call:null,saved:null};
+  if(callId===undefined)return {input,digest,name,call:null,saved:null,legacyRecovery:false};
   const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.id,callId),eq(executionCalls.executionTaskId,task.id)));
 
   if(!call || call.kind!=="model" || call.parentCallId || call.operationKey!==input.operationKey || call.inputDigest!==digest || call.toolExecutionClaimId)throw new ConflictError("素材执行与原调用不符");
@@ -31,6 +31,7 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   }
   const saved=call.providerJob===null?null:identity(call.providerJob);
   if(saved && input.mediaKind!=="video")throw new ConflictError("图片调用不能携带视频任务号");
-  if(saved && (!["started","unknown","settled"].includes(call.status) || !call.startedAttempt))throw new ConflictError("供应商任务号缺少实际启动事实");
-  return {input,digest,name,call,identity,saved};
+  const legacyRecovery=!!(recovery&&recovery.mode==="provider_job"&&recovery.callId===call.id&&saved&&call.startedAttempt===null);
+  if(saved && (!["started","unknown","settled"].includes(call.status) || (!call.startedAttempt&&!legacyRecovery)))throw new ConflictError("供应商任务号缺少实际启动事实");
+  return {input,digest,name,call,identity,saved,legacyRecovery};
  }

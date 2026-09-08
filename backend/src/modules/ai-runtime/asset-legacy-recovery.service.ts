@@ -58,7 +58,7 @@ export async function prepareLegacyAssetRecovery(db:Db,ctx:RequestContext,snapsh
    executionBudget:{maxCalls:1,maxTokens:reservedTokens,deadlineMs:options.deadlineMs},deadlineAt,createdAt:original.requestedAt,updatedAt:stamp,
    lastErrorCode:jobId?null:'ASSET_LEGACY_REVIEW_REQUIRED',lastErrorMessage:jobId?null:reason});
   if(jobId&&frozen&&callId){
-   await tx.insert(executionCalls).values({id:callId,executionTaskId,sequence:1,kind:'model',operationKey:frozen.operationKey,inputDigest:`sha256:${createHash('sha256').update(canonicalJson(frozen)).digest('hex')}`,reservedTokens,accountingBasis:'tokens',status:'unknown',startedAttempt:1,
+   await tx.insert(executionCalls).values({id:callId,executionTaskId,sequence:1,kind:'model',operationKey:frozen.operationKey,inputDigest:`sha256:${createHash('sha256').update(canonicalJson(frozen)).digest('hex')}`,reservedTokens,accountingBasis:'tokens',status:'unknown',startedAttempt:null,
     providerJob:{schemaVersion:1,provider:frozen.provider,model:frozen.model,baseUrl:frozen.baseUrl,...(frozen.serviceId?{serviceId:frozen.serviceId}:{}),jobId},
     createdAt:original.modelCallStartedAt??original.startedAt??original.requestedAt,updatedAt:stamp});
    await tx.update(aiTasks).set({runtimeData:{...(original.runtimeData as Record<string,unknown>),assetWorkerRecoveryExecutionTaskId:executionTaskId}}).where(eq(aiTasks.id,original.id));
