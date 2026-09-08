@@ -37,10 +37,14 @@
  */
 
 import * as React from "react";
+import {TaskRuntimeActions} from "@/components/ai/task-runtime-actions";
+import {useVideoDecisionTask,readVideoDecisionCandidate,submitVideoDecisionTask,videoDecisionRuntimeLabel} from "./use-video-decision-task";
+import {BrollThumb,FinalVideoPreview} from "./production-media-previews";
+import {useProductionDelivery} from "./use-production-delivery";
+import {useProductionMaterialInventory} from "./use-production-material-inventory";
 import { Check, Copy } from "lucide-react";
 
 import { client } from "@/lib/contract-client";
-import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 // [T-285] mount 恢复已上传素材:取 SRT 资产签名下载 URL 回读文本。
 import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url";
 import { ExecutionTaskCard } from "@/features/copilot/execution-task-card";
@@ -64,341 +68,12 @@ import {
   buildRenderInputs,
   humanizeRenderError,
   // [T-726] B-roll 自动聚合只取脚本画面点名 + 项目弹药。
-  aggregateAutoBroll,
-  assetRefsFromScriptContentData,
   BROLL_SOURCE_LABEL,
-  type AutoBrollItem,
   type ProductionStatus,
 } from "./production-flow";
 
-const POLL_MS = 4000;
-// [FE-H01] 后台长任务轮询退避上限:决策/渲染都是分钟级(MiniMax 下更久),不能设「最多轮
-// N 次就静默放弃」——那样「后台运行,可离开」承诺不成立(进度会丢)。改为持续轮询,前若干次
-// 密集(4s),之后指数退避拉长到 30s 封顶,绝不放弃(只在终态或组件卸载时停)。
-const POLL_MAX_MS = 30_000;
-
-/** 决策轮询退避间隔:前 15 次 4s,之后每 15 次翻倍,封顶 30s。持续轮询、绝不静默退出。 */
-function pollDelay(attempt: number): number {
-  const backed = POLL_MS * 2 ** Math.floor(attempt / 15);
-  return Math.min(backed, POLL_MAX_MS);
-}
-
-/**
- * 局部选材动作的稳定 attemptId：同一项目、同一稳定分镜、同一选择只能创建一条任务。
- * SEMANTIC_BOUNDARY_ALLOW: 该哈希只做请求幂等，不参与任何素材/场景创作判断。
- */
-function materialAdjustmentAttemptId(input: unknown): string {
-  const text = JSON.stringify(input);
-  const hash = (seed: number) => {
-    let value = seed >>> 0;
-    for (let index = 0; index < text.length; index += 1) {
-      value ^= text.charCodeAt(index);
-      value = Math.imul(value, 0x01000193) >>> 0;
-    }
-    return value.toString(16).padStart(8, "0");
-  };
-  return `materials-${hash(0x811c9dc5)}-${hash(0x9e3779b9)}-${hash(0x85ebca6b)}-${hash(0xc2b2ae35)}`;
-}
-
-// ── wire 形状(只声明本组件读的字段;服务端 zod 是单一真值)────────────────────
-
-interface WireAsset {
-  id: string;
-}
-
-interface WireAITask {
-  id: string;
-  status: string;
-  retryOfTaskId?: string | null;
-  requestedAt?: string;
-}
-
-interface DecisionFailureDisplay {
-  summary: string;
-  detail: string | null;
-}
-
-function decisionFailureDisplay(raw: string): DecisionFailureDisplay {
-  const [summaryPart = "", ...detailParts] = raw.split(/\n原始错误（已脱敏）：/);
-  const detail = detailParts.join("\n原始错误（已脱敏）：").trim() || null;
-  const where = summaryPart.match(/^(①[^：:]*|②[^：:]*|③[^：:]*|④[^：:]*|⑤[^：:]*|备料[^：:]*)/)?.[1]
-    ?.replace(/\s*失败\s*$/, "")
-    .trim();
-  if (detail) {
-    return {
-      summary: summaryPart || `${where || "AI 分场"}暂时失败，请继续上次分场。`,
-      detail,
-    };
-  }
-  // 兼容旧任务：旧步骤把摘要和原始错误写在同一行，尽量保留冒号后的原文。
-  const legacy = raw.match(/失败\s*[:：]\s*(.+)$/)?.[1]?.trim() ?? null;
-  if (/provider|http\s*\d|端点|econn|fetch failed|network|timeout/i.test(raw)) {
-    return {
-      summary: `${where || "AI 分场"}暂时失败，请继续上次分场。`,
-      detail: legacy,
-    };
-  }
-  return {
-    summary: raw || "AI 分场暂时失败，请继续上次分场。",
-    detail: null,
-  };
-}
-
-interface WireTaskResult {
-  resultType: string;
-  resultData: Record<string, unknown>;
-}
-
-interface WireProduction {
-  id: string;
-  status: string;
-  recordingConfig?: Record<string, unknown>;
-}
-
-interface WireExecTask {
-  id: string;
-  execType: string;
-  status: string;
-  requestedAt?: string;
-  spec?: {
-    params?: Record<string, unknown>;
-  };
-  adoptedAssetIds: string[];
-  errorMessage: string | null;
-}
-
-type RenderFlowStatus =
-  | "saving_plan"
-  | "creating_task"
-  | "queued"
-  | "running"
-  | "awaiting_confirmation"
-  | "succeeded"
-  | "failed"
-  | "cancelled";
-
-interface WireMaterialLink {
-  projectId: string;
-  contentOutputId: string | null;
-  entityType: string;
-  entityId: string;
-  role: string;
-  stage: string;
-}
-
-/**
- * [T-548] 旧版卡内重试没有把 projectId 传给新任务，导致按项目 list 时只看得到旧失败
- * 任务。retryOf 是服务端已持久化的稳定父指针；从当前项目任务集合出发闭包追后代，可把
- * 这些历史孤儿重试安全归回原项目（不会靠标题/文件名猜归属）。
- */
-export function includeExecutionRetryDescendants(
-  projectTasks: readonly WireExecTask[],
-  allTasks: readonly WireExecTask[],
-): WireExecTask[] {
-  const relatedIds = new Set(projectTasks.map((task) => task.id));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const task of allTasks) {
-      const retryOf = task.spec?.params?.retryOf;
-      if (
-        typeof retryOf === "string" &&
-        relatedIds.has(retryOf) &&
-        !relatedIds.has(task.id)
-      ) {
-        relatedIds.add(task.id);
-        changed = true;
-      }
-    }
-  }
-  // allTasks 服务端按新到旧；先保留它的顺序，项目列表独有行补在末尾。
-  return [
-    ...allTasks.filter((task) => relatedIds.has(task.id)),
-    ...projectTasks.filter(
-      (task) => !allTasks.some((candidate) => candidate.id === task.id),
-    ),
-  ].filter(
-    (task, index, rows) =>
-      rows.findIndex((candidate) => candidate.id === task.id) === index,
-  );
-}
-
-// ── 客户端读视频时长(<video> metadata,免 ffprobe 往返;失败诚实 null)────────
-
-async function readVideoDurationViaElement(file: File): Promise<number | null> {
-  if (typeof document === "undefined" || typeof URL === "undefined") return null;
-  return new Promise((resolve) => {
-    try {
-      const url = URL.createObjectURL(file);
-      const el = document.createElement("video");
-      el.preload = "metadata";
-      const done = (v: number | null) => {
-        URL.revokeObjectURL(url);
-        resolve(v);
-      };
-      const timer = setTimeout(() => done(null), 10_000);
-      el.onloadedmetadata = () => {
-        clearTimeout(timer);
-        done(Number.isFinite(el.duration) ? el.duration : null);
-      };
-      el.onerror = () => {
-        clearTimeout(timer);
-        done(null);
-      };
-      el.src = url;
-    } catch {
-      resolve(null);
-    }
-  });
-}
-
-// 读文件文本(jsdom 的 File 可能没有 .text() —— FileReader 兜底)。
-async function readFileText(file: File): Promise<string> {
-  if (typeof file.text === "function") return file.text();
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(String(fr.result ?? ""));
-    fr.onerror = () => reject(fr.error ?? new Error("读取文件失败"));
-    fr.readAsText(file);
-  });
-}
-
-/**
- * 结构化分镜稿 → 纯口播稿。
- *
- * 命中「口播:」标记时，只保留该段及其续行；画面/字幕/时长等制作说明全部剔除。
- * 没有任何结构标记时，说明稿件本来就是纯文本，原样复制，避免把用户自由稿误删空。
- */
-export function extractVoiceoverText(script: string): string {
-  const normalized = script.replace(/\r\n?/g, "\n").trim();
-  if (!normalized) return "";
-
-  const voiceoverBlocks: string[] = [];
-  let current: string[] = [];
-  let collecting = false;
-  let foundVoiceoverLabel = false;
-
-  const flush = () => {
-    const block = current.join("\n").trim();
-    if (block) voiceoverBlocks.push(block);
-    current = [];
-  };
-
-  for (const rawLine of normalized.split("\n")) {
-    const line = rawLine.trim();
-    const voiceover = line.match(/^口播\s*[：:]\s*(.*)$/i);
-    if (voiceover) {
-      flush();
-      collecting = true;
-      foundVoiceoverLabel = true;
-      if (voiceover[1]?.trim()) current.push(voiceover[1].trim());
-      continue;
-    }
-
-    if (
-      /^(画面|字幕|时长|镜头|景别|动作|素材|音效|配乐|BGM)\s*[：:]/i.test(
-        line,
-      )
-    ) {
-      flush();
-      collecting = false;
-      continue;
-    }
-
-    if (!collecting) continue;
-    if (!line) {
-      flush();
-      collecting = false;
-      continue;
-    }
-    if (/^(?:#{1,6}\s*)?\d+[.、]\s+/.test(line)) {
-      flush();
-      collecting = false;
-      continue;
-    }
-    current.push(line);
-  }
-  flush();
-
-  return foundVoiceoverLabel
-    ? voiceoverBlocks.join("\n\n").trim()
-    : normalized;
-}
-
-async function writeClipboardText(text: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-  const input = document.createElement("textarea");
-  input.value = text;
-  input.setAttribute("readonly", "");
-  input.style.position = "fixed";
-  input.style.opacity = "0";
-  document.body.appendChild(input);
-  input.select();
-  const copied = document.execCommand("copy");
-  input.remove();
-  if (!copied) throw new Error("copy_failed");
-}
-
-// ── 两阶段上传链(同 upload-to-project 先例;stage="production" 挂用料链)────────
-
-async function uploadProductionAsset(
-  projectId: string,
-  file: File,
-  assetType: "video" | "subtitle" | "image",
-  // [T-294] 用料链 role 可覆盖:B-roll 素材传 "broll"(缺省按类型:video=clip / 其它=reference)。
-  role?: string,
-): Promise<string> {
-  const mimeType =
-    file.type ||
-    (assetType === "video"
-      ? "video/mp4"
-      : assetType === "image"
-        ? "image/png"
-        : "application/x-subrip");
-  const upload = (await client.createUpload({
-    params: undefined,
-    query: undefined,
-    body: {
-      assetType,
-      mimeType,
-      fileSize: Math.max(1, file.size),
-      projectId,
-      fileName: file.name,
-    },
-  })) as unknown as { uploadId: string; uploadUrl: string };
-  if (!upload.uploadUrl.startsWith("mock://")) {
-    const put = await fetch(upload.uploadUrl, {
-      method: "PUT",
-      headers: { "content-type": mimeType },
-      body: file,
-    });
-    if (!put.ok) throw new Error(`上传失败(PUT ${put.status})`);
-  }
-  const asset = (await client.completeUpload({
-    params: { uploadId: upload.uploadId },
-    query: undefined,
-    body: { name: file.name },
-  })) as unknown as WireAsset;
-  if (!asset?.id) throw new Error("上传完成但没有返回 asset id");
-  // 用料链是制作页后续读取的真入口；登记失败必须让用户看到，不能假报“已上传可用”。
-  await client.createMaterialLink({
-    params: undefined,
-    query: undefined,
-    body: {
-      projectId,
-      entityType: "asset",
-      entityId: asset.id,
-      role: role ?? (assetType === "video" ? "clip" : "reference"),
-      stage: "production",
-    },
-  });
-  return asset.id;
-}
-
-// ── 组件 ──────────────────────────────────────────────────────────────────────
+import {pollDelay, materialAdjustmentAttemptId, decisionFailureDisplay, includeExecutionRetryDescendants, readVideoDurationViaElement, readFileText, extractVoiceoverText, writeClipboardText, uploadProductionAsset, type WireAITask, type WireProduction, type WireExecTask, type RenderFlowStatus, type WireMaterialLink} from "./production-resource-operations";
+export {includeExecutionRetryDescendants,extractVoiceoverText} from "./production-resource-operations";
 
 export interface ProductionWorkbenchProps {
   projectId: string;
@@ -477,6 +152,8 @@ export function ProductionWorkbench({
   const videoInputRef = React.useRef<HTMLInputElement>(null);
   const srtInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [decisionRuntime,setDecisionRuntime]=React.useState<WireAITask|null>(null);
+  const [decisionPollEpoch,setDecisionPollEpoch]=React.useState(0);
   const [decisionsTaskId, setDecisionsTaskId] = React.useState<string | null>(
     null,
   );
@@ -491,6 +168,17 @@ export function ProductionWorkbench({
   const [decisionsErrorDetail, setDecisionsErrorDetail] = React.useState<
     string | null
   >(null);
+  const observeDecisionRuntime = React.useCallback((task: WireAITask) => {
+    setDecisionRuntime(task);
+    // 只有服务端确认取消后，才重新开放显式发起入口。
+    if (task.executionTaskId && task.runtimeStatus === "cancelled") {
+      setDecisionsTaskId((current) => current === task.id ? null : current);
+      setDecisionsRetryOfTaskId(null);
+    }
+  }, []);
+  const observeLegacyDecisionFailure=React.useCallback((id:string,summary:string,detail:string|null)=>{
+    setDecisionsError(summary);setDecisionsErrorDetail(detail);setDecisionsRetryOfTaskId(id);setDecisionsTaskId(null);
+  },[]);
   const copyDecisionError = React.useCallback(async () => {
     if (!decisionsErrorDetail) return;
     try {
@@ -509,19 +197,11 @@ export function ProductionWorkbench({
     string | null
   >(null);
   // [T-294] 制作页 B-roll 素材(role=broll):列/补传/剔除;决策读它们做 B-roll 匹配。
-  const [brollItems, setBrollItems] = React.useState<
-    ReadonlyArray<{ linkId: string; assetId: string; kind: string; name: string }>
-  >([]);
-  const [brollInventoryStatus, setBrollInventoryStatus] = React.useState<
-    "loading" | "ready" | "error"
-  >("loading");
+  const {brollItems,brollInventoryStatus,autoBroll,loadBroll}=useProductionMaterialInventory(projectId);
   const [brollBusy, setBrollBusy] = React.useState(false);
   const [brollDragActive, setBrollDragActive] = React.useState(false);
   // [T-387c] 自动聚合的 B-roll 候选(脚本画面点名/论点树挂载/项目弹药,带来源徽标)+
   // 人剔除集(只影响本次决策的 inputData.excludedAssetIds,不动用料链)。
-  const [autoBroll, setAutoBroll] = React.useState<ReadonlyArray<AutoBrollItem>>(
-    [],
-  );
   const [excludedAuto, setExcludedAuto] = React.useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -553,28 +233,7 @@ export function ProductionWorkbench({
         : "渲染任务进行中…";
 
   // ── [T-366a] 制作方式二选一 ──────────────────────────────────────────────────
-  const [method, setMethod] = React.useState<"creatoros" | "upload">(
-    "creatoros",
-  );
-  const [finalBusy, setFinalBusy] = React.useState(false);
-  const [finalError, setFinalError] = React.useState<string | null>(null);
-  const [finalNotice, setFinalNotice] = React.useState<string | null>(null);
-  // 已有成片时的替换确认门(§4.1:已 ready 覆盖需二次确认,不静默丢)。
-  const [replaceOk, setReplaceOk] = React.useState(false);
-  // §5.1③:成片已被 publication 登记 → 禁覆盖(null=未探测/无需探测)。
-  const [pubLocked, setPubLocked] = React.useState<boolean | null>(null);
   const finalInputRef = React.useRef<HTMLInputElement>(null);
-
-  // ── [T-366b] 素材包导出 ─────────────────────────────────────────────────────
-  const [exportBusy, setExportBusy] = React.useState(false);
-  const [exportError, setExportError] = React.useState<string | null>(null);
-  const [exportDone, setExportDone] = React.useState<{
-    fileName: string;
-    fileCount: number;
-    hasDecisions: boolean;
-  } | null>(null);
-  // 预计大小(项目素材 fileSize 求和;读不到就不提示,不编数)。
-  const [estBytes, setEstBytes] = React.useState<number | null>(null);
 
   // ── [T-285] mount 恢复已上传素材 ─────────────────────────────────────────────
   //   病根:粗剪视频 + SRT 两阶段上传已落库(materialLink stage=production),但 video/srt 只
@@ -769,6 +428,8 @@ export function ProductionWorkbench({
   );
 
   // ── 上传 handlers ────────────────────────────────────────────────────────────
+  const {method,setMethod,finalBusy,finalError,finalNotice,replaceOk,setReplaceOk,pubLocked,exportBusy,exportError,exportDone,estBytes,hasExistingFinal,onFinalFile,onExportMaterials}=useProductionDelivery({projectId,outputId,status,finalVideoAssetId,renderOrientation,readVideoDuration,ensureOutputId,advanceStatus,setFinalVideoAssetId});
+
   const onVideoFile = React.useCallback(
     async (file: File) => {
       setUploadBusy("video");
@@ -820,164 +481,6 @@ export function ProductionWorkbench({
   // [T-387c/T-739] 扩自动聚合:除手动上传(role=broll)外,把当前项目用料链中的
   // image/video 资产自动列入；脚本凝固分镜点名只调整当前项目已挂载素材的来源和优先级。
   // 服务端决策的 listBrollInventory 用同一批来源;这里的剔除经 inputData.excludedAssetIds 传给决策。
-  const loadBroll = React.useCallback(async () => {
-    setBrollInventoryStatus("loading");
-    try {
-      const links = (await client.listMaterialLinks({
-        params: undefined,
-        query: { projectId, page: 1, pageSize: 100 },
-        body: undefined,
-      })) as unknown as ReadonlyArray<{
-        id: string;
-        entityType: string;
-        entityId: string;
-        role: string;
-      }>;
-      const brollLinks = links.filter(
-        (l) => l.entityType === "asset" && l.role === "broll",
-      );
-      const items = await Promise.all(
-        brollLinks.map(async (l) => {
-          try {
-            const a = (await client.getAsset({
-              params: { assetId: l.entityId },
-              query: undefined,
-              body: undefined,
-            })) as unknown as { assetType: string; name: string };
-            return {
-              linkId: l.id,
-              assetId: l.entityId,
-              kind: a.assetType,
-              name: a.name,
-            };
-          } catch {
-            return null; // 单条越权/已删跳过,不牵连整批
-          }
-        }),
-      );
-      const manual = items.filter((i): i is NonNullable<typeof i> => i !== null);
-      setBrollItems(manual);
-
-      // ── 自动聚合(best-effort:任一来源读失败只丢该来源,不牵连)────────────
-      // 读某类型 artifact 当前版本 contentData(与稿面读侧同款 listArtifacts →
-      // getArtifact → listArtifactVersions 三连;失败 → null)。
-      const readContentData = async (
-        artifactType: string,
-      ): Promise<unknown> => {
-        try {
-          const listed = (await client.listArtifacts({
-            params: { projectId },
-            query: { page: 1, pageSize: 200 },
-            body: undefined,
-          })) as unknown as Array<{ id: string; artifactType: string }>;
-          const target = (Array.isArray(listed) ? listed : []).find(
-            (a) => a.artifactType === artifactType,
-          );
-          if (!target) return null;
-          const artifact = (await client.getArtifact({
-            params: { artifactId: target.id },
-            query: undefined,
-            body: undefined,
-          })) as unknown as { currentVersionId?: string };
-          const versions = (await client.listArtifactVersions({
-            params: { artifactId: target.id },
-            query: { page: 1, pageSize: 100 },
-            body: undefined,
-          })) as unknown as Array<{
-            id: string;
-            versionNumber: number;
-            contentData?: unknown;
-          }>;
-          const rows = Array.isArray(versions) ? versions : [];
-          const current =
-            rows.find((v) => v.id === artifact.currentVersionId) ??
-            rows.slice().sort((a, b) => b.versionNumber - a.versionNumber)[0];
-          return current?.contentData ?? null;
-        } catch {
-          return null;
-        }
-      };
-      const scriptData = await readContentData("output_script");
-      const projectAssetLinks = links.filter(
-        (link) =>
-          link.entityType === "asset" &&
-          link.role !== "cover" &&
-          link.role !== "final",
-      );
-      const projectAssetIds = new Set(
-        projectAssetLinks.map((link) => link.entityId),
-      );
-      const projectRoleByAssetId = new Map(
-        projectAssetLinks.map((link) => [link.entityId, link.role]),
-      );
-      // 候选 id(按来源优先级 script → ammo;聚合时先到先得)。
-      const candidates: Array<{
-        assetId: string;
-        source: AutoBrollItem["source"];
-        role?: string;
-      }> =
-        [
-          ...assetRefsFromScriptContentData(scriptData)
-            .filter((id) => projectAssetIds.has(id))
-            .map((id) => ({
-              assetId: id,
-              source: "script" as const,
-              role: projectRoleByAssetId.get(id),
-            })),
-          ...projectAssetLinks
-            .filter(
-              (l) =>
-                l.role !== "broll" &&
-                l.role !== "cover" &&
-                l.role !== "final",
-            )
-            .map((l) => ({
-              assetId: l.entityId,
-              source: "ammo" as const,
-              role: l.role,
-            })),
-        ];
-      const resolved = await Promise.all(
-        candidates.map(async (cand) => {
-          try {
-            const a = (await client.getAsset({
-              params: { assetId: cand.assetId },
-              query: undefined,
-              body: undefined,
-            })) as unknown as { assetType: string; name: string };
-            // 只有图/视频能当 B-roll(文档/知识条目自然被 getAsset 失败或类型过滤掉)。
-            if (a.assetType !== "video" && a.assetType !== "image") return null;
-            if (cand.role === "clip" && a.assetType === "video") return null;
-            return {
-              assetId: cand.assetId,
-              name: a.name,
-              kind: a.assetType,
-              source: cand.source,
-            } satisfies AutoBrollItem;
-          } catch {
-            return null; // 知识条目 id / 越权 / 已删 → 跳过
-          }
-        }),
-      );
-      setAutoBroll(
-        aggregateAutoBroll(
-          resolved.filter((i): i is AutoBrollItem => i !== null),
-          manual.map((m) => m.assetId),
-        ),
-      );
-      setBrollInventoryStatus("ready");
-    } catch {
-      setBrollInventoryStatus("error");
-    }
-  }, [projectId]);
-
-  React.useEffect(() => {
-    const id = window.setTimeout(() => {
-      void loadBroll();
-    }, 0);
-    return () => window.clearTimeout(id);
-  }, [loadBroll]);
-
   // 兼容 1.0 已保存但尚未携带 inventory 的旧方案：只从当前项目用料链重建下拉清单，
   // 不读取全局素材、不重新跑 AI，也不改既有 assetId/时间线。
   React.useEffect(() => {
@@ -1189,213 +692,6 @@ export function ProductionWorkbench({
   // ── [T-366a] 直接上传成品视频(跳过四决策/渲染直登成片)──────────────────────
   //   §5.1③ 探测:已有成片 + 该 output 已有 publication 登记 → 禁覆盖(先解除登记或
   //   新增产出,绝不静默换片)。只在 upload 视图且存在既有成片时探测(best-effort)。
-  const hasExistingFinal = Boolean(finalVideoAssetId || status === "ready");
-  React.useEffect(() => {
-    if (method !== "upload" || !outputId || !hasExistingFinal) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- 离开探测语境时复位(同 FinalVideoPreview 复位先例)
-      setPubLocked(null);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const pubs = (await client.listPublications({
-          params: { outputId },
-          query: { page: 1, pageSize: 50 },
-          body: undefined,
-        })) as unknown as ReadonlyArray<{ id: string }>;
-        if (!cancelled) setPubLocked(pubs.length > 0);
-      } catch {
-        if (!cancelled) setPubLocked(null); // 探测失败 → 上传时再兜一次
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [method, outputId, hasExistingFinal]);
-
-  const onFinalFile = React.useCallback(
-    async (file: File) => {
-      setFinalError(null);
-      setFinalNotice(null);
-      // 基本校验(§5.1⑤):格式收窄 mp4/mov + 可读时长探针,坏文件诚实拒收不直登 ready。
-      const isMp4Mov =
-        /\.(mp4|mov)$/i.test(file.name) ||
-        file.type === "video/mp4" ||
-        file.type === "video/quicktime";
-      if (!isMp4Mov) {
-        setFinalError("成品只收 mp4 / mov 格式 —— 请从剪辑软件导出后再上传。");
-        return;
-      }
-      setFinalBusy(true);
-      try {
-        const durationSec = await readVideoDuration(file);
-        if (durationSec == null || durationSec <= 0) {
-          setFinalError(
-            "读不出有效时长(文件可能损坏或不是视频)—— 已拒收,请检查文件后重试。",
-          );
-          return;
-        }
-        // §5.1③ 禁覆盖:已有成片且该产出已被 publication 登记 → 不覆盖已登记事实。
-        if (hasExistingFinal && outputId) {
-          let locked = pubLocked;
-          if (locked === null) {
-            try {
-              const pubs = (await client.listPublications({
-                params: { outputId },
-                query: { page: 1, pageSize: 50 },
-                body: undefined,
-              })) as unknown as ReadonlyArray<{ id: string }>;
-              locked = pubs.length > 0;
-            } catch {
-              locked = null; // 探测不到 → 保守放行(登记事实在服务端仍不可变)
-            }
-          }
-          if (locked) {
-            setPubLocked(true);
-            setFinalError(
-              "当前成片已登记过发布 —— 不能覆盖已登记的事实。请先在发布面解除登记,或新建产出再上传。",
-            );
-            return;
-          }
-        }
-        // 复用两阶段上传链(role=final,与粗剪 clip / B-roll 隔离)。
-        const assetId = await uploadProductionAsset(
-          projectId,
-          file,
-          "video",
-          "final",
-        );
-        // 状态机跳转语义(SPEC §5 待决点 1,选「补记中间态」):后端 putProduction 只接受
-        // 相邻 +1(跨步 → ConflictError),不为本路径开非相邻跳 —— 复用 statusStepsTo 依次
-        // PUT recording→editing→rendering(advanceStatus 内部逐步),语义零改动。
-        const productionId = await advanceStatus("rendering");
-        if (!productionId) {
-          throw new Error("production 状态机推进失败,请重试");
-        }
-        // 复用既有导出范式:export 建档(queued)→ completeExport(resultAssetId=成品)。
-        // completeExport 的后端 fan-out 会把成品挂为 output primary asset —— 发布登记 /
-        // 盲预测 / 发布物料链照常(§5.1⑤ 飞轮不脱钩)。
-        const exp = (await client.createProductionExport({
-          params: { productionId },
-          query: undefined,
-          body: {
-            format: "mp4",
-            resolution:
-              renderOrientation === "portrait" ? "1080x1920" : "1920x1080",
-            aspectRatio:
-              renderOrientation === "portrait" ? "9:16" : "16:9",
-          },
-        })) as unknown as { id: string };
-        await client.completeExport({
-          params: { exportId: exp.id },
-          query: undefined,
-          body: { resultAssetId: assetId },
-        });
-        await advanceStatus("ready");
-        setFinalVideoAssetId(assetId);
-        setReplaceOk(false);
-        setFinalNotice(
-          `成品「${file.name}」已登记为本项目成片(export ready)。盲预测 / 发布物料 / 登记发布照常可用。`,
-        );
-      } catch (err) {
-        setFinalError(
-          err instanceof Error ? err.message : "成品上传失败,请重试",
-        );
-      } finally {
-        setFinalBusy(false);
-      }
-    },
-    [
-      projectId,
-      readVideoDuration,
-      advanceStatus,
-      renderOrientation,
-      hasExistingFinal,
-      outputId,
-      pubLocked,
-    ],
-  );
-
-  // ── [T-366b] 素材包导出(辅助入口)────────────────────────────────────────────
-  // 预计大小:项目素材 fileSize 求和(asset 投影自带 fileSize;读不到就不提示,不编数)。
-  React.useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const links = (await client.listMaterialLinks({
-          params: undefined,
-          query: { projectId, page: 1, pageSize: 100 },
-          body: undefined,
-        })) as unknown as ReadonlyArray<{ entityType: string; entityId: string }>;
-        const assetIds = links
-          .filter((l) => l.entityType === "asset")
-          .map((l) => l.entityId);
-        let sum = 0;
-        let any = false;
-        for (const id of assetIds) {
-          try {
-            const a = (await client.getAsset({
-              params: { assetId: id },
-              query: undefined,
-              body: undefined,
-            })) as unknown as { fileSize: number | null };
-            if (typeof a.fileSize === "number") {
-              sum += a.fileSize;
-              any = true;
-            }
-          } catch {
-            /* 单条读不到跳过 */
-          }
-        }
-        if (!cancelled && any) setEstBytes(sum);
-      } catch {
-        /* 估算失败 → 不显示提示(诚实跳过) */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId]);
-
-  const onExportMaterials = React.useCallback(async () => {
-    setExportBusy(true);
-    setExportError(null);
-    setExportDone(null);
-    try {
-      const oid = await ensureOutputId();
-      const prod = (await client.getOutputProduction({
-        params: { outputId: oid },
-        query: undefined,
-        body: undefined,
-      })) as unknown as WireProduction;
-      const res = (await client.exportProductionMaterials({
-        params: { productionId: prod.id },
-        query: undefined,
-        body: undefined,
-      })) as unknown as {
-        downloadUrl: string;
-        fileName: string;
-        fileCount: number;
-        hasDecisions: boolean;
-      };
-      setExportDone(res);
-      // 经既有签名下载 URL 通道触发浏览器下载。
-      const a = document.createElement("a");
-      a.href = res.downloadUrl;
-      a.download = res.fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (err) {
-      setExportError(
-        err instanceof Error ? err.message : "素材包导出失败,请重试",
-      );
-    } finally {
-      setExportBusy(false);
-    }
-  }, [ensureOutputId]);
-
   // ── ② AI 分场决策 dispatch + 轮询 ───────────────────────────────────────────
   const dispatchDecisions = React.useCallback(
     async (
@@ -1407,15 +703,8 @@ export function ProductionWorkbench({
       setDecisionsErrorDetail(null);
       setBrollRevisionNotice(null);
       try {
-        const task = (await client.createAITask({
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "video.decisions",
-            attemptId: createAiTaskAttemptId(),
-            ...(decisionsRetryOfTaskId
-              ? { retryOfTaskId: decisionsRetryOfTaskId }
-              : {}),
+        const task = (await submitVideoDecisionTask({
+            retryOfTaskId:decisionsRetryOfTaskId,
             inputData: {
               projectId,
               srtText: srt.text,
@@ -1429,7 +718,6 @@ export function ProductionWorkbench({
                 ? { manualMaterialAssignments }
                 : {}),
             },
-          },
         })) as unknown as WireAITask;
         // 新任务创建成功才切走旧确认卡。历史 plan/render/final 都在服务端与现有 state
         // 保留；这里只把“当前正在编辑的候选”切到新任务。
@@ -1459,19 +747,8 @@ export function ProductionWorkbench({
 
   const loadDecisionResult = React.useCallback(
     async (taskId: string): Promise<boolean> => {
-      const results = (await client.listTaskResults({
-        params: { taskId },
-        query: undefined,
-        body: undefined,
-      })) as unknown as WireTaskResult[];
-      const candidate = [...results]
-        .reverse()
-        .find((r) => r.resultType === "video_decisions");
-      if (!candidate) return false;
-      const data = candidate.resultData as {
-        decisions?: unknown;
-        inventory?: unknown;
-      };
+      const data=await readVideoDecisionCandidate(taskId);
+      if(!data)return false;
       if (!data.decisions) return false;
       setDecisions(data.decisions as VideoDecisions);
       setDecisionsConfirmed(false);
@@ -1658,60 +935,11 @@ export function ProductionWorkbench({
     ],
   );
 
-  React.useEffect(() => {
-    if (!decisionsTaskId || decisions) return;
-    let abandoned = false;
-    void (async () => {
-      // [FE-H01] 持续轮询(退避到 30s 封顶),绝不因「轮询次数用尽」静默退出:四决策后台跑
-      // 分钟级,离开再回来仍能接着看进度/终态。只在 awaiting_confirmation / failed / cancelled
-      // 终态或组件卸载(abandoned)时停。
-      for (let attempt = 0; ; attempt++) {
-        try {
-          const task = (await client.getTask({
-            params: { taskId: decisionsTaskId },
-            query: undefined,
-            body: undefined,
-          })) as unknown as WireAITask;
-          if (abandoned) return;
-          if (task.status === "awaiting_confirmation") {
-            await loadDecisionResult(decisionsTaskId);
-            return;
-          }
-          if (task.status === "succeeded") {
-            await loadDecisionResult(decisionsTaskId);
-            return;
-          }
-          if (task.status === "failed" || task.status === "cancelled") {
-            // 诚实报是哪一步失败(runner 把失败步骤写进步骤流末条)。
-            let detail = "";
-            try {
-              const steps = (await client.listTaskSteps({
-                params: { taskId: decisionsTaskId },
-                query: undefined,
-                body: undefined,
-              })) as unknown as Array<{ text: string }>;
-              detail = steps[steps.length - 1]?.text ?? "";
-            } catch {
-              /* 步骤读取失败不影响错误主信息 */
-            }
-            const failure = decisionFailureDisplay(detail);
-            setDecisionsError(failure.summary);
-            setDecisionsErrorDetail(failure.detail);
-            setDecisionsRetryOfTaskId(decisionsTaskId);
-            setDecisionsTaskId(null);
-            return;
-          }
-        } catch {
-          /* 单次拉取失败下轮再试 */
-        }
-        await new Promise((r) => setTimeout(r, pollDelay(attempt)));
-        if (abandoned) return;
-      }
-    })();
-    return () => {
-      abandoned = true;
-    };
-  }, [decisionsTaskId, decisions, loadDecisionResult]);
+  useVideoDecisionTask({taskId:decisionsTaskId,hasCandidate:!!decisions,pollEpoch:decisionPollEpoch,
+    onCandidate:loadDecisionResult,
+    onRuntime:observeDecisionRuntime,
+    onLegacyFailure:observeLegacyDecisionFailure,
+  });
 
   // ── ③ 确认决策 → 渲染任务 dispatch(mountAs=assetId 约定)──────────────────
   const onConfirmDecisions = React.useCallback(
@@ -2153,7 +1381,7 @@ export function ProductionWorkbench({
           (t) =>
             t.status === "queued" ||
             t.status === "running" ||
-            t.status === "awaiting_confirmation",
+            t.status === "awaiting_confirmation" || (!!t.executionTaskId&&["paused","waiting_user","unknown_result","failed","retry_wait","pause_requested","cancel_requested"].includes(t.runtimeStatus??t.status)),
         );
         if (activeDecision && !abandoned) {
           if (activeDecision.status === "awaiting_confirmation") {
@@ -2861,6 +2089,10 @@ export function ProductionWorkbench({
             ) : null}
           </div>
         ) : null}
+            {decisionRuntime?.executionTaskId&&decisionsTaskId===decisionRuntime.id?<div className="text-sm" aria-live="polite">
+              <p>{videoDecisionRuntimeLabel(decisionRuntime)}</p>
+              <TaskRuntimeActions task={decisionRuntime} onUpdated={()=>setDecisionPollEpoch(value=>value+1)}/>
+            </div>:null}
         {!decisionsTaskId && !decisions ? (
           <>
             <button
@@ -2890,7 +2122,7 @@ export function ProductionWorkbench({
             ) : null}
           </>
         ) : null}
-        {decisionsTaskId && !decisions ? (
+        {decisionsTaskId && !decisions && !(decisionRuntime?.executionTaskId && decisionRuntime.id === decisionsTaskId) ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-brand border-t-transparent" />
             分镜统筹中(分场/信息卡/素材/字幕/总导演审片)…任务后台跑,可离开本页
@@ -3103,82 +2335,3 @@ export function ProductionWorkbench({
 /**
  * [T-294] B-roll 素材缩略:assetId → 签名 URL → 视频/图片缩略;取不到 URL 显类型占位。
  */
-function BrollThumb({
-  assetId,
-  kind,
-  name,
-}: {
-  assetId: string;
-  kind: string;
-  name: string;
-}) {
-  const [url, setUrl] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    let cancelled = false;
-    void resolveAssetPreviewUrl(assetId).then((u) => {
-      if (!cancelled) setUrl(u ?? null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [assetId]);
-  const cls =
-    "aspect-video w-full rounded-control border border-border bg-black object-cover";
-  if (!url) {
-    return (
-      <div
-        className={`${cls} flex items-center justify-center text-[10px] text-muted-foreground`}
-      >
-        {kind}
-      </div>
-    );
-  }
-  if (kind === "image") {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={url} alt={name} className={cls} />
-    );
-  }
-  return (
-    <video src={url} muted preload="metadata" className={cls} />
-  );
-}
-
-/**
- * [T-292] 成片预览:采纳后的 final.mp4 assetId → 签名 URL → 内联 <video>。
- * 画幅决定播放器比例(竖版 9:16 居中限高 / 横版 16:9);取不到 URL 诚实不渲染。
- */
-function FinalVideoPreview({
-  assetId,
-  orientation,
-}: {
-  assetId: string;
-  orientation?: "portrait" | "landscape";
-}) {
-  const [url, setUrl] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 换素材时重置,避免旧片闪
-    setUrl(null);
-    void resolveAssetPreviewUrl(assetId).then((u) => {
-      if (!cancelled) setUrl(u ?? null);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [assetId]);
-  if (!url) return null;
-  const shape =
-    orientation === "portrait"
-      ? "mx-auto aspect-[9/16] max-h-[70vh]"
-      : "aspect-video";
-  return (
-    <video
-      src={url}
-      controls
-      preload="metadata"
-      data-slot="production-final-video"
-      className={`w-full rounded-control border border-border bg-black object-contain ${shape}`}
-    />
-  );
-}
