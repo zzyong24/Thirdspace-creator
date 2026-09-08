@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
-import {and,asc,eq,isNull,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
+import {and,asc,eq,inArray,isNull,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
 import {scheduledFlywheelTaskInputSchema,workerSkillSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {createExecutionAuthorityService} from '../execution/execution-authority.service';
@@ -11,47 +11,87 @@ import {createPersistentTaskService,type PersistentTaskClaim} from '../execution
 import {createExecutionFlywheelGenerationService,type FlywheelGenerationDeps} from '../execution/execution-flywheel-generation.service';
 import {bindScheduledFlywheel} from '../execution/scheduled-flywheel-binding';
 import {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
+import {benchmarkTeardownSchema,topicAttributionSchema,favoritesTriageSchema,flywheelKnowledgeResultSchema} from '@creatoros/ai-worker';
+import {normalizeDistillation,mergeDistillations,MAX_DISTILL_CONTENT_CHARS,DISTILL_CHUNK_CHARS} from './knowledge-distill-runner';
+import {chunkTextDeterministically} from './chunk-and-merge';
+import {truncateForTriage,type FavoritesTriagePort,type FavoritesKnowledgeDistillPort,type FavoritesTranscribePort} from './favorites-distill-runner';
+import type {TopicAttributionPort} from './topic-attribution-runner';
+import type {FlywheelCapability} from '../execution/execution-flywheel-generation.service';
 import {teardownFacets,type BenchmarkTeardownPort} from './benchmark-teardown-runner';
 import type {ScheduledCollectionAiPort,ScheduledCollectionTask} from './scheduled-collection-runner';
 
-export interface ScheduledFlywheelScope {signal:AbortSignal;ai:ScheduledCollectionAiPort;models:{teardown:BenchmarkTeardownPort}}
+export interface ScheduledFlywheelModels {teardown:BenchmarkTeardownPort;attribute:TopicAttributionPort;triage:FavoritesTriagePort;distillKnowledge:FavoritesKnowledgeDistillPort;transcribeOne:FavoritesTranscribePort}
+export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSignal;ai:ScheduledCollectionAiPort;models:ScheduledFlywheelModels}
+export interface ScheduledFlywheelDeps extends FlywheelGenerationDeps {
+ createFavoritesAsr?(runWorker:ReturnType<typeof createExecutionFlywheelGenerationService>['runWorker']):{transcribe(ref:ExecutionRef,ctx:RequestContext,input:{itemId:string;awemeId:string},signal:AbortSignal):Promise<string|null>};
+}
+const sourceKinds=['benchmark','self.detail','self.metrics','favorites'] as const;
+const taskTypes=sourceKinds.map(kind=>`scheduled.${kind}`);
 export type ScheduledFlywheelCollector=(ctx:RequestContext,task:ScheduledCollectionTask,scope:ScheduledFlywheelScope)=>Promise<void>;
 /** 原aiTask单向交接给execution_tasks；不生成第二份业务任务或调度队列。 */
-export function createScheduledFlywheelExecutionService(db:Db,deps:FlywheelGenerationDeps){
+export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlywheelDeps){
  const tasks=createPersistentTaskService(db,deps),authority=createExecutionAuthorityService(db,deps),leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps),outcomes=createExecutionWorkerOutcomeService(db,deps),generation=createExecutionFlywheelGenerationService(db,deps),abort=new AbortController(),scopeStore=new AsyncLocalStorage<{ref:ExecutionRef;signal:AbortSignal}>();
  const now=deps.now??(()=>new Date().toISOString());
  const activeRuns=new Set<Promise<void>>();
  const track=async(pending:Promise<void>)=>{activeRuns.add(pending);try{await pending;}finally{activeRuns.delete(pending);}};
- const models:{teardown:BenchmarkTeardownPort}={async teardown(ctx,input){
-  const scope=scopeStore.getStore();if(!scope)throw new Error('飞轮模型缺少原调度任务执行权');scope.signal.throwIfAborted();
-  await leases.withLease(scope.ref,'admission',async bound=>{const owned=await bindScheduledFlywheel(bound);if(owned.context.userId!==ctx.userId||owned.context.accountId!==ctx.accountId)throw new Error('飞轮模型账号不符');});
-  try{return await generation.teardown(scope.ref,input.work.id,teardownFacets(input.positioningBrief,input.work));}
+ const favoriteAsr=deps.createFavoritesAsr?.(generation.runWorker);
+ async function contextFor(ctx:RequestContext){
+  const scope=scopeStore.getStore();if(!scope)throw new Error('飞轮阶段缺少原调度任务执行权');scope.signal.throwIfAborted();
+  const bound=await leases.withLease(scope.ref,'admission',async bound=>{const owned=await bindScheduledFlywheel(bound);if(owned.context.userId!==ctx.userId||owned.context.accountId!==ctx.accountId)throw new Error('飞轮模型账号不符');return owned;});
+  return {...scope,bound};
+ }
+ async function generate(ctx:RequestContext,capability:FlywheelCapability,resourceId:string|undefined,facets:Record<string,string|undefined>){
+  if(!resourceId)throw new Error('飞轮模型缺少原业务资源ID');const scope=await contextFor(ctx);
+  try{return await generation.generate(scope.ref,capability,resourceId,facets);}
   catch(error){
    if(error instanceof ScheduledFlywheelSuspended)throw error;
    const state=await ledger.inspect(scope.ref),unknown=state.calls.some(row=>row.status==='started'||row.status==='unknown');
    if(unknown){const result=await outcomes.recordFailure(scope.ref,{outcome:'unknown_result',errorCode:'FLYWHEEL_MODEL_RECEIPT_UNKNOWN'});throw new ScheduledFlywheelSuspended(scope.ref.executionTaskId,result.status);}
-   // 未开始的配置/业务错误仍走原可选增强降级，原采集结果保留。
    throw error;
   }
- }};
+ }
+ const models:ScheduledFlywheelModels={
+  async teardown(ctx,input){return benchmarkTeardownSchema.parse(await generate(ctx,'benchmark.teardown',input.work.id,teardownFacets(input.positioningBrief,input.work)));},
+  async attribute(ctx,input){return topicAttributionSchema.parse(await generate(ctx,'topic.attribution',input.publicationId,{positioning:input.positioningBrief||'（本账号尚未设置定位——按通用短视频逻辑归因，实验选题给通用可迁移角度）',workBrief:input.workBrief,transcript:input.transcript}));},
+  async triage(ctx,input){return favoritesTriageSchema.parse(await generate(ctx,'favorites.triage',input.itemId,{title:input.title||'(无标题)',transcript:truncateForTriage(input.transcript)}));},
+  async distillKnowledge(ctx,content,itemId){
+   const text=content.trim();if(!text)throw new Error('知识蒸馏原文为空');
+   const submitted=text.slice(0,MAX_DISTILL_CONTENT_CHARS),chunks=chunkTextDeterministically(submitted,DISTILL_CHUNK_CHARS).map(chunk=>chunk.text);
+   const node={capability:'knowledge.distill',facets:{},chunks,originalText:submitted,coverage:{inputChars:text.length,submittedChars:submitted.length,truncatedChars:text.length-submitted.length}};
+   const result=flywheelKnowledgeResultSchema.parse(await generate(ctx,'knowledge.distill',itemId,{__knowledgeNode:JSON.stringify(node)}));
+   if(result.parts.length!==result.coverage.chunkCount)throw new Error('知识蒸馏缺少完整分块结果');
+   const parts=result.parts.map(normalizeDistillation);if(parts.some(part=>part===null))throw new Error('模型未蒸馏出可用知识原子');
+   const merged=mergeDistillations(parts.filter(part=>part!==null));if(!merged.atoms.length)throw new Error('模型未蒸馏出可用知识原子');return {...merged,coverage:result.coverage};
+  },
+  async transcribeOne(ctx,awemeId,itemId){
+   const scope=await contextFor(ctx);if(scope.bound.input.sourceKind!=='favorites'||!itemId)throw new Error('收藏转写缺少原条目归属');
+   if(!favoriteAsr){const result=await outcomes.recordFailure(scope.ref,{outcome:'waiting_user',errorCode:'FAVORITES_ASR_NOT_CONFIGURED'});throw new ScheduledFlywheelSuspended(scope.ref.executionTaskId,result.status);}
+   try{return await favoriteAsr.transcribe(scope.ref,ctx,{itemId,awemeId},scope.signal);}catch(error){
+    const current=await leases.withLease(scope.ref,'settlement',async({task})=>task);
+    if(current.status!=='running')throw new ScheduledFlywheelSuspended(scope.ref.executionTaskId,current.status);
+    const state=await ledger.inspect(scope.ref);if(state.calls.some(call=>call.status==='started'||call.status==='unknown')){const result=await outcomes.recordFailure(scope.ref,{outcome:'unknown_result',errorCode:'FAVORITES_ASR_RECEIPT_UNKNOWN'});throw new ScheduledFlywheelSuspended(scope.ref.executionTaskId,result.status);}
+    throw error;
+   }
+  },
+ };
  const service={
  models,
  async prepare(ctx:RequestContext,aiTaskId:string){
   abort.signal.throwIfAborted();
   const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??'')));
-  if(!task||task.taskType!=='scheduled.benchmark')throw new Error('不支持的原调度任务');
+  if(!task||!taskTypes.includes(task.taskType))throw new Error('不支持的原调度任务');
   if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));scheduledFlywheelTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);return authority.bindAiTask(ctx,aiTaskId);}
   if(task.startedAt||task.modelCallStartedAt||task.retryOfTaskId)throw new Error('已有旧执行事实，须恢复原任务，不能重置预算');
   const raw=task.inputData as Record<string,unknown>,snapshot=workerSkillSnapshotSchema.parse((task.runtimeData as Record<string,unknown>).skillSnapshot);
-  if(snapshot.userId!==ctx.userId||snapshot.accountId!==ctx.accountId||!snapshot.skills.some(skill=>skill.skillId==='benchmark.teardown'))throw new Error('原任务缺少对标拆解授权快照');
-  const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:'benchmark',jobId:raw.jobId,jobRunId:raw.jobRunId,target:raw.target??{},skillSnapshot:snapshot});
+  if(snapshot.userId!==ctx.userId||snapshot.accountId!==ctx.accountId)throw new Error('原任务缺少对标拆解授权快照');
+  const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:raw.jobRunId,target:raw.target??{},skillSnapshot:snapshot});
   const [run]=await db.select().from(jobRuns).where(eq(jobRuns.id,modelInput.jobRunId)),[job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
-  if(run?.aiTaskId!==task.id||run?.jobId!==modelInput.jobId||run?.userId!==ctx.userId||job?.userId!==ctx.userId||job?.accountId!==ctx.accountId||job?.sourceKind!=='benchmark')throw new Error('原调度运行归属不符');
+  if(run?.aiTaskId!==task.id||run?.jobId!==modelInput.jobId||run?.userId!==ctx.userId||job?.userId!==ctx.userId||job?.accountId!==ctx.accountId||job?.sourceKind!==modelInput.sourceKind)throw new Error('原调度运行归属不符');
   return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:deps.budget});
  },
  async run(ctx:RequestContext,aiTaskId:string,collector:ScheduledFlywheelCollector){const bound=await service.prepare(ctx,aiTaskId),claim=await tasks.claimTask({taskId:bound.executionTaskId,workerId:`flywheel:${randomUUID()}`,leaseSeconds:300});if(claim)await track(consume(claim,collector));return bound;},
  async drain(collector:ScheduledFlywheelCollector,maxTasks=10){let processed=0;while(!abort.signal.aborted&&processed<maxTasks){const claim=await tasks.claimNext({kinds:['ai_task'],executionMode:'scheduled.flywheel',workerId:`flywheel-drain:${randomUUID()}`,leaseSeconds:300});if(!claim)break;await track(consume(claim,collector));processed++;}return processed;},
- async recoverQueued(onFailure:(ctx:RequestContext,taskId:string)=>Promise<void>){const rows=await db.select().from(aiTasks).where(and(eq(aiTasks.taskType,'scheduled.benchmark'),eq(aiTasks.status,'queued'),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner))).orderBy(asc(aiTasks.requestedAt));for(const row of rows){if(abort.signal.aborted)return;const ctx:RequestContext={userId:row.userId,accountId:row.accountId,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};try{await service.prepare(ctx,row.id);}catch{await onFailure(ctx,row.id);}}},
+ async recoverQueued(onFailure:(ctx:RequestContext,taskId:string)=>Promise<void>){const rows=await db.select().from(aiTasks).where(and(inArray(aiTasks.taskType,taskTypes),eq(aiTasks.status,'queued'),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner))).orderBy(asc(aiTasks.requestedAt));for(const row of rows){if(abort.signal.aborted)return;const ctx:RequestContext={userId:row.userId,accountId:row.accountId,requestId:`flywheel-recover:${row.id}`,source:'ingestion'};try{await service.prepare(ctx,row.id);}catch{await onFailure(ctx,row.id);}}},
  async stop(){abort.abort();const stopped=await Promise.allSettled([generation.stop(),...activeRuns]);if(stopped.some(value=>value.status==='rejected'))throw new Error('飞轮执行尚未确认停止');},
  };
  async function consume(claim:PersistentTaskClaim,collector:ScheduledFlywheelCollector){
@@ -70,7 +110,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:FlywheelGener
   };
   const ai:ScheduledCollectionAiPort={async markRunning(c,id){checkInput(c,id);await verify();},async recordStep(c,id,input){checkInput(c,id);await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();const stepId=`flywheel-step:${task.id}:${input.stepNo}`;await scope.tx.insert(aiTaskSteps).values({id:stepId,aiTaskId:task.id,...input,createdAt:now()}).onConflictDoNothing();});},async markSucceeded(c,id){checkInput(c,id);await finish('succeeded');},async markFailed(c,id,message){checkInput(c,id);await finish('failed',message);}};
   const timer=setInterval(()=>{if(finished||checking)return;checking=true;void verify().then(()=>tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300})).catch(()=>control.abort()).finally(()=>{checking=false;});},10000);
-  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{signal,ai,models}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
+  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
   catch(error){
    if(error instanceof ScheduledFlywheelSuspended){
     // job_run只是运行投影：等待重试保留进行中，其余明确呈现挂起/失败，不改execution权威。

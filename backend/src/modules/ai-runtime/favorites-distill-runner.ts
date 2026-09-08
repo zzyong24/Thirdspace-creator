@@ -1,3 +1,4 @@
+import {ScheduledFlywheelSuspended} from "./scheduled-flywheel-suspension";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec, FavoritesTriageOutput } from "@creatoros/ai-worker";
 import type { DistillCandidateItem, DistillVerdict } from "../favorites";
@@ -32,19 +33,21 @@ import type { KnowledgeDistillation } from "./knowledge-distill-runner";
 /** 判库 AI 端口:一条收藏(标题 + 逐字稿)→ 结构化裁决(knowledge/topic/skip + reason)。 */
 export type FavoritesTriagePort = (
   ctx: RequestContext,
-  input: { title: string; transcript: string },
+  input: { itemId?:string;title: string; transcript: string },
 ) => Promise<FavoritesTriageOutput>;
 
 /** 取逐字稿端口(host 复用 transcribe 原语)。null = 无口播/图集/空转写(诚实跳过,非失败)。 */
 export type FavoritesTranscribePort = (
   ctx: RequestContext,
   awemeId: string,
+  itemId?:string,
 ) => Promise<string | null>;
 
 /** 知识蒸馏端口(host 转发 runKnowledgeDistill)。产不出可用原子会抛(调用方按 failed 处理)。 */
 export type FavoritesKnowledgeDistillPort = (
   ctx: RequestContext,
   content: string,
+  itemId?:string,
 ) => Promise<KnowledgeDistillation>;
 
 export interface FavoritesDistillDeps {
@@ -156,7 +159,7 @@ export async function runFavoritesDistill(
       // 1) transcript 落点(已有则复用,省流;他人作品落 favorites_items,不建 project artifact)。
       let transcript = (item.transcript ?? "").trim();
       if (!transcript) {
-        const text = await deps.transcribeOne(ctx, item.awemeId);
+        const text = await deps.transcribeOne(ctx, item.awemeId,item.id);
         if (!text || !text.trim()) {
           // 图集/无口播/空转写 → 诚实 skip(终态,非失败,不重试;下轮不再入 NULL 批)。
           await deps.saveVerdict(ctx, item.id, {
@@ -172,13 +175,13 @@ export async function runFavoritesDistill(
       }
 
       // 2) 判库(AI):knowledge / topic / skip。
-      const triage = await deps.triage(ctx, { title: item.title, transcript });
+      const triage = await deps.triage(ctx, { itemId:item.id,title: item.title, transcript });
       const reason = (triage.reason ?? "").trim().slice(0, 120);
 
       // 3) 路由。
       if (triage.verdict === "knowledge") {
         try {
-          const distillation = await deps.distillKnowledge(ctx, transcript);
+          const distillation = await deps.distillKnowledge(ctx, transcript,item.id);
           // atoms 存确认门候选 —— **不物化 knowledge 实体**(铁律②:AI 只产候选,人采纳才落库)。
           await deps.saveVerdict(ctx, item.id, {
             status: "knowledge",
@@ -190,6 +193,7 @@ export async function runFavoritesDistill(
           });
           result.knowledge += 1;
         } catch (distillErr) {
+          if(distillErr instanceof ScheduledFlywheelSuspended)throw distillErr;
           // 判为知识但蒸不出可用原子(模型产空/不可用)→ failed(带 error,可后续重试/人工补录)。
           const msg =
             distillErr instanceof Error
@@ -218,6 +222,7 @@ export async function runFavoritesDistill(
       }
       result.processed += 1;
     } catch (err) {
+      if(err instanceof ScheduledFlywheelSuspended)throw err;
       // 单条失败(转写 IO / 判库 AI / 落库任一)→ 标 failed(移出 NULL 批防 FIFO 头阻塞),
       // 其余继续,不崩整批。标记本身再失败也吞掉(不让台账写挂拖垮整轮)。
       const msg = err instanceof Error ? err.message : String(err ?? "unknown error");

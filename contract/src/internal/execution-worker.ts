@@ -291,7 +291,7 @@ export const structuredGenerationInputSchema=z.object({
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
 /** 原调度业务任务的执行标记；模型阶段只由后端固定能力端口准备。 */
-export const scheduledFlywheelTaskInputSchema=z.object({kind:z.literal("scheduled.flywheel"),sourceKind:z.literal("benchmark"),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json()),skillSnapshot:workerSkillSnapshotSchema}).strict();
+export const scheduledFlywheelTaskInputSchema=z.object({kind:z.literal("scheduled.flywheel"),sourceKind:z.enum(["benchmark","self.detail","self.metrics","favorites"]),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json()),skillSnapshot:workerSkillSnapshotSchema}).strict();
 export const workerTaskInputSchema=z.union([scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});

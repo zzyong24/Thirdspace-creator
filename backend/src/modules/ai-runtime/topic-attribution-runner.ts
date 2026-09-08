@@ -1,3 +1,4 @@
+import {ScheduledFlywheelSuspended} from "./scheduled-flywheel-suspension";
 import type { RequestContext } from "@creatoros/contract";
 import type { ModelSpec, TopicAttributionOutput } from "@creatoros/ai-worker";
 
@@ -135,7 +136,7 @@ export interface AttributableWork {
 /** AI 归因端口:作品材料(brief+真逐字稿+定位)→ 枚举化归因输出。 */
 export type TopicAttributionPort = (
   ctx: RequestContext,
-  input: { workBrief: string; transcript: string; positioningBrief: string },
+  input: { publicationId?:string;workBrief: string; transcript: string; positioningBrief: string },
 ) => Promise<TopicAttributionOutput>;
 
 export interface TopicAttributionDeps {
@@ -359,6 +360,7 @@ export async function runTopicAttribution(
 
       // AI 归因(runStructuredNode 绑 gate-F3 枚举 schema;抛错 → 本条跳过,不落库,下轮重试)。
       const out = await deps.attribute(ctx, {
+        publicationId:work.publicationId,
         workBrief,
         transcript,
         positioningBrief,
@@ -406,6 +408,7 @@ export async function runTopicAttribution(
               evidenceStrength: grounded ? "grounded" : null,
             });
           } catch (err) {
+      if(err instanceof ScheduledFlywheelSuspended)throw err;
             console.error(
               `[topic-attribution] 可复用公式回流 learning 失败(跳过该条,归因已落库):${formula}`,
               err,
@@ -432,6 +435,7 @@ export async function runTopicAttribution(
           });
           result.experimentsPromoted += 1;
         } catch (err) {
+      if(err instanceof ScheduledFlywheelSuspended)throw err;
           console.error(
             `[topic-attribution] 实验候选进池失败(跳过该条):${title}`,
             err,
@@ -439,6 +443,7 @@ export async function runTopicAttribution(
         }
       }
     } catch (err) {
+      if(err instanceof ScheduledFlywheelSuspended)throw err;
       // 单条失败(读稿/指标/AI/落库任一)→ 跳过,不崩整批;未落库的下轮自然重试。
       console.error(
         `[topic-attribution] 作品 ${work.publicationId} 归因失败,跳过:`,
