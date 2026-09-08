@@ -8921,6 +8921,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
+  const resolveChatFallbackCredential=async(ctx:RequestContext)=>{
+    const cfg=await resolveDedicatedLlmConfig(ctx,"chat.fallback",{
+      getModelConfig:(c,cap)=>settingsService.getModelConfig(c,cap),env:process.env,
+      getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(ctx,serviceId),
+    });
+    if(!cfg)return null;
+    return {apiFormat:cfg.apiFormat,authStyle:cfg.authStyle,baseUrl:cfg.baseUrl,model:cfg.model,token:cfg.token,
+      ...(typeof cfg.settings.structuredOutputs==="boolean"?{structuredOutputs:cfg.settings.structuredOutputs}:{}),
+      ...(cfg.displayModelKey?{displayModelKey:cfg.displayModelKey}:{})};
+  };
+
   const workerBudget={maxCalls:6,maxTokens:1_000_000,deadlineMs:600_000};
   const {readArtifactContentData,thesisReader,contractReader,outlineReader,artifactOriginReader}=createArtifactContextReaders(artifactsService);
   const generationContext={positioning:{getPositioningCenter:(c:RequestContext)=>positioningService.readPositioningCenter(c)},learnings:{getSuggestions:(c:RequestContext,options:{limit?:number})=>learningsService.getSuggestions(c,options)}};
@@ -10308,7 +10319,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     runWithEffectiveSkills: runWithResolvedEffectiveSkills,
     resolveModelSpec,
-    // [T-239b] 备用对话模型端口(只认 chat.fallback 专配行)。
     getPositioningDiscovery: (c, sessionId) =>
       positioningService.getDiscoverySession(c, sessionId),
     resolveCurrentScriptSelection: async (c, input) => {
@@ -12238,6 +12248,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
+      resolveFallbackModelCredential:resolveChatFallbackCredential,
       prepareTaskCommit:aiService.prepareTaskCommit,
       trend:{
         listEnabledSources:c=>trendSourcesService.listEnabledSources(c),search:searchWebPort,

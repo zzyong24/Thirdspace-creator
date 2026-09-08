@@ -38,6 +38,7 @@ export interface ChatProductionCompositionDeps {
  now?:()=>string;
  assertProject:ProductionDeps["assertProject"];
  resolveModelCredential:ProductionDeps["resolveModelCredential"];
+ resolveFallbackModelCredential?:ProductionDeps["resolveFallbackModelCredential"];
  prepareTaskCommit:RequiredTaskPorts["cover"]["prepareTaskCommit"];
  trend:ChatTrendReadDeps;
  webRead:ProductionDeps["webRead"];
@@ -78,6 +79,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
   assertProject:deps.assertProject,
   resolveModelCredential:deps.resolveModelCredential,
+  resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
   resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
   webRead:deps.webRead,
   onError:deps.onError,

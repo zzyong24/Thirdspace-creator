@@ -9,7 +9,7 @@ export interface DurableGenerationPorts {
   /** 宿主根据请求内容计算指纹和预留，Worker 不自报预算真值。 */
   reserve(input:{operationKey:string;request:Record<string,unknown>}):Promise<{callId:string;status:string;providerResult?:unknown;rejectionCode?:string|null}>;
   start(callId:string):Promise<void>;
-  settle(callId:string,input:{status:"settled";providerResult:WorkerProviderReceipt;usage:{inputTokens?:number;outputTokens?:number;inputTokenDetails:{noCacheTokens?:number;cacheReadTokens?:number;cacheWriteTokens?:number};outputTokenDetails:{textTokens?:number;reasoningTokens?:number}}}|{status:"unknown"}|{status:"rejected";rejectionCode?:"STRUCTURED_PROTOCOL_UNSUPPORTED"}):Promise<void>;
+  settle(callId:string,input:{status:"settled";providerResult:WorkerProviderReceipt;usage:{inputTokens?:number;outputTokens?:number;inputTokenDetails:{noCacheTokens?:number;cacheReadTokens?:number;cacheWriteTokens?:number};outputTokenDetails:{textTokens?:number;reasoningTokens?:number}}}|{status:"unknown"}|{status:"rejected";rejectionCode?:"STRUCTURED_PROTOCOL_UNSUPPORTED"|"CHAT_MODEL_RETRYABLE_REJECTION"}):Promise<void>;
 }
 const durableModels=new WeakSet<object>();
 export function isDurableGenerationModel(model:LanguageModel){return typeof model==="object" && model!==null && durableModels.has(model);}

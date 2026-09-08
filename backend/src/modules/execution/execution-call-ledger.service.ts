@@ -18,7 +18,7 @@ const reservationSchema = z.object({
 const settlementSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
   z.object({status: z.literal("unknown")}).strict(),
-  z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional()}).strict(),
+  z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional()}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
 type Budget = z.infer<typeof budgetSchema>;

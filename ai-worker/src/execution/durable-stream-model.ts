@@ -1,5 +1,5 @@
 import { wrapLanguageModel, type LanguageModel } from "ai";
-import type { LanguageModelV4StreamPart } from "@ai-sdk/provider";
+import type { LanguageModelV4, LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import {
   workerProviderReceiptSchema,
   type WorkerProviderReceipt,
@@ -55,11 +55,13 @@ function decode(raw: unknown): LanguageModelV4StreamPart {
 export function createDurableStreamModel(input: {
   model: LanguageModel;
   operationKey: string;
+  /** 仅明确拒绝且尚未出流时使用已配置备用模型；仍走同一任务账本。 */
+  fallbackModel?(operationKey:string):Promise<LanguageModel|null>;
   ports: DurableGenerationPorts;
   signal?: AbortSignal;
   /** 仅新的已开始调用创建展示流；历史回放不再次写入。close必须在回执结算前完成。 */
   streamEvents?(callId:string):{push(part:LanguageModelV4StreamPart):Promise<void>;close():Promise<void>};
-}) {
+}):LanguageModelV4 {
   if (typeof input.model === "string")
     throw Error("DURABLE_MODEL_REQUIRES_RESOLVED_PROVIDER");
   let sequence = 0;
@@ -82,8 +84,15 @@ export function createDurableStreamModel(input: {
       async wrapStream({ params, doStream, model }) {
         params.abortSignal?.throwIfAborted();
         const { abortSignal: _signal, headers: _headers, ...request } = params;
+        const operationKey=`${input.operationKey}/model/${++sequence}`;
+        const fallback=async()=>{
+          const model=await input.fallbackModel?.(operationKey);
+          if(!model)return undefined;
+          params.abortSignal?.throwIfAborted();
+          return createDurableStreamModel({...input,model,operationKey:`${operationKey}/fallback`,fallbackModel:undefined}).doStream(params);
+        };
         const reservation = await input.ports.reserve({
-          operationKey: `${input.operationKey}/model/${++sequence}`,
+          operationKey,
           request: JSON.parse(
             JSON.stringify(requestJson({
               ...request,
@@ -111,6 +120,11 @@ export function createDurableStreamModel(input: {
             }),
           };
         }
+        if(reservation.status==="rejected" && reservation.rejectionCode==="CHAT_MODEL_RETRYABLE_REJECTION"){
+          const recovered=await fallback();
+          if(recovered)return recovered;
+          throw new GenerationFailure("retry_wait","CHAT_MODEL_RETRYABLE_REJECTION");
+        }
         if (reservation.status !== "reserved")
           throw new GenerationFailure(
             "unknown_result",
@@ -130,12 +144,13 @@ export function createDurableStreamModel(input: {
           result = await doStream();
         } catch (error) {
           const failure = generationFailure(error, false);
+          const fallbackEligible=failure.outcome==="retry_wait" && Boolean(input.fallbackModel);
           try {
             await input.ports.settle(
               reservation.callId,
               failure.outcome === "unknown_result"
                 ? { status: "unknown" }
-                : { status: "rejected" },
+                : { status: "rejected",...(fallbackEligible?{rejectionCode:"CHAT_MODEL_RETRYABLE_REJECTION" as const}:{}) },
             );
           } catch {
             throw new GenerationFailure(
@@ -143,6 +158,7 @@ export function createDurableStreamModel(input: {
               "MODEL_SETTLEMENT_RECEIPT_UNKNOWN",
             );
           }
+          if(fallbackEligible){const recovered=await fallback();if(recovered)return recovered;}
           throw failure;
         }
         const events=input.streamEvents?.(reservation.callId);

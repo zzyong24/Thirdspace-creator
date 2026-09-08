@@ -50,7 +50,7 @@ export const workerPortSchema = z.enum([
   "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
-  "readTaskContext", "resolveModelCredential", "reserveCall", "startCall", "settleCall",
+  "readTaskContext", "resolveModelCredential", "resolveChatFallbackCredential", "reserveCall", "startCall", "settleCall",
   "prepareScriptImport", "saveScriptFallback", "saveScriptVoiceover",
   "settleBrowserObservation", "prepareBrowserAction", "readBrowserSession", "saveBrowserSession", "settleResearchRead", "executeEvidenceRead", "reserveAgenticModel", "executeAgenticTool", "commitAgenticResult", "reserveAgenticTool", "startAgenticTool", "settleAgenticTool", "reserveGenerationCall", "settleGenerationCall", "saveGenerationResult", "readCheckpoint", "saveCheckpoint", "commitResult", "heartbeat", "acknowledgeControl",
 ]);
@@ -78,7 +78,7 @@ export const workerProviderReceiptSchema = z.object({
 export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 const generationSettlementSchema=z.discriminatedUnion("status", [
  z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
- z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional()}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional()}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
 ]);
 
@@ -170,6 +170,7 @@ export const workerPortInputSchemas = {
   commitAgenticResult:z.object({actualEngine:z.literal("pi"),summary:z.string().max(10000),stopReason:z.enum(["completed","max_steps","budget_exhausted","aborted","llm_error"]),lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000)}).strict(),
   reserveAgenticTool: reserveAgenticToolSchema,
   settleAgenticTool: settleAgenticToolSchema,
+  resolveChatFallbackCredential: z.object({operationKey:operationKeySchema}).strict(),
   resolveModelCredential: z.object({capability: z.string().min(1).max(128)}).strict(),
   reserveCall: z.object({operationKey: operationKeySchema, maxOutputTokens: z.number().int().positive().max(65536)}).strict(),
   reserveGenerationCall: z.object({operationKey:operationKeySchema,request:z.record(z.string(),z.json()).refine(value=>JSON.stringify(value).length<=46_000_000)}).strict(),
@@ -194,7 +195,7 @@ export const workerReservationSchema = z.object({
   callId: operationKeySchema,
   status: z.enum(["reserved", "started", "settled", "unknown", "rejected"]),
   providerResult:workerProviderReceiptSchema.optional(),
-  rejectionCode:z.literal("STRUCTURED_PROTOCOL_UNSUPPORTED").optional(),
+  rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional(),
   resultText: z.string().min(1).max(2_000_000).optional(),
 }).strict();
 export const workerStartReceiptSchema = z.object({callId: operationKeySchema, status: z.literal("started")}).strict();

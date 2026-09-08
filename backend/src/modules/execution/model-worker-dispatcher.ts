@@ -1,3 +1,4 @@
+import {createExecutionChatFallbackService} from "./execution-chat-fallback.service";
 import {createExecutionTranscribeWorkflowService,type TranscribeWorkflowDeps} from "./execution-transcribe-workflow.service";
 import {createExecutionTranscribeSourceService,type TranscribeSourceDeps} from "./execution-transcribe-source.service";
 import {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
@@ -55,7 +56,7 @@ interface WorkerDispatcherDeps {
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
-export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
+export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
 );
@@ -72,6 +73,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
   const modelIdentity=createExecutionModelIdentityService(db,{now});
+  const chatFallback=deps.executionMode==="chat.run"?createExecutionChatFallbackService(db,{now,resolve:c=>deps.resolveFallbackModelCredential?.(c)??Promise.resolve(null)}):null;
   const tasks=createPersistentTaskService(db,{now});
   const browserProfiles=createExecutionBrowserProfileLeaseService(db,{now});
   const activeWorkers=new Map<string,{ref:ExecutionRef;supervisor:ReturnType<typeof createWorkerSupervisor>}>();
@@ -315,6 +317,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(port==="reserveCall" && deps.executionMode==="model")return calls.reserveCall(ref,raw);
       if(port==="startCall")return calls.startCall(ref,raw);
       if(port==="settleCall" && deps.executionMode==="model")return calls.settleCall(ref,raw);
+      if(port==="resolveChatFallbackCredential" && chatFallback)return chatFallback.resolve(ref,workerPortInputSchemas.resolveChatFallbackCredential.parse(raw).operationKey);
       if(port==="resolveModelCredential"){
         const input=workerPortInputSchemas.resolveModelCredential.parse(raw);
         const modelInput=await calls.readTaskContext(ref);

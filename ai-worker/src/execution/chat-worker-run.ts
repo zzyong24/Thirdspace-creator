@@ -92,7 +92,11 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     }
     await checkpoint();
   };
-  const model=createDurableStreamModel({model:modelFor(spec),operationKey:input.operationKey,signal,streamEvents:callId=>createChatModelStreamEvents(callId,batch=>ports.call("appendStreamEvents",batch,signal)),ports:{
+  const model=createDurableStreamModel({model:modelFor(spec),operationKey:input.operationKey,signal,
+    fallbackModel:async operationKey=>{
+      const raw=await ports.call("resolveChatFallbackCredential",{operationKey},signal);
+      return raw===null?null:modelFor(workerModelSpecSchema.parse(raw));
+    },streamEvents:callId=>createChatModelStreamEvents(callId,batch=>ports.call("appendStreamEvents",batch,signal)),ports:{
     reserve:async(request)=>{
       const result=workerReservationSchema.parse(await ports.call("reserveGenerationCall",request,signal));
       if(result.status==="settled" && result.providerResult)await bind(result.callId,result.providerResult);

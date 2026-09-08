@@ -1,3 +1,4 @@
+import {chatFallbackParent} from "./execution-chat-fallback.service";
 import { createHash } from "node:crypto";
 import { eq,executionTasks,type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema,workerStructuredResultSchema,workerPortInputSchemas,structuredGenerationInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
@@ -34,11 +35,12 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
         const input=chat.success ? chat.data : structuredGenerationInputSchema.parse(rawInput);
         const owner=input.kind==="chat.run" ? input : input.skillSnapshot;
         if(task.kind!=="ai_task" || owner.userId!==context.userId || owner.accountId!==context.accountId)throw new ConflictError("模型执行归属不符");
-        return {input,retryOfCallId:task.retryOfCallId};
+        return {input,retryOfCallId:task.retryOfCallId,hasFallback:Boolean((task.payload as Record<string,unknown>).chatFallbackModelIdentity)};
       });
       const prefix=`${scope.input.operationKey}/model/`;
       const suffix=request.operationKey.slice(prefix.length);
-      if(!request.operationKey.startsWith(prefix) || !/^[1-9][0-9]*$/.test(suffix))throw new ConflictError("结构化调用键不符");
+      const fallbackParent=scope.input.kind==="chat.run"?chatFallbackParent(scope.input.operationKey,request.operationKey):null;
+      if(!fallbackParent && (!request.operationKey.startsWith(prefix) || !/^[1-9][0-9]*$/.test(suffix)))throw new ConflictError("结构化调用键不符");
       const limit=request.request.maxOutputTokens;
       if(limit!==scope.input.maxOutputTokens)throw new ConflictError("结构化输出预算与冻结值不符");
       if("headers" in request.request || "abortSignal" in request.request)throw new ConflictError("请求含非持久协议字段");
@@ -46,7 +48,11 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
       if(scope.input.kind!=="chat.run" && encoded.length>4_000_000)throw new ConflictError("结构化请求超出原输入范围");
       const previous=(await ledger.inspect(ref)).calls.filter(call=>call.operationKey===request.operationKey).at(-1);
       const retryOfCallId=scope.retryOfCallId && (previous?.id===scope.retryOfCallId || previous?.retryOfCallId===scope.retryOfCallId) ? scope.retryOfCallId : undefined;
-      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:inputReservation(request.request)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})}).catch(async error=>{
+      const call=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${createHash("sha256").update(encoded).digest("hex")}`,reservedTokens:inputReservation(request.request)+1024+scope.input.maxOutputTokens,...(retryOfCallId ? {retryOfCallId} : {})},calls=>{
+        if(!fallbackParent)return;
+        const parent=calls.filter(call=>call.operationKey===fallbackParent).at(-1);
+        if(!scope.hasFallback || !parent || parent.kind!=="model" || parent.parentCallId || parent.status!=="rejected" || parent.rejectionCode!=="CHAT_MODEL_RETRYABLE_REJECTION")throw new ConflictError("备用模型缺少原调用拒绝事实或冻结身份");
+      }).catch(async error=>{
         if(error instanceof ExecutionBudgetError)await leases.withLease(ref,"admission",async({tx,task})=>{
           await tx.update(executionTasks).set({lastErrorCode:error.budgetCode,lastErrorMessage:"模型调用前预算已耗尽，正在保存已完成结果"}).where(eq(executionTasks.id,task.id));
         });
