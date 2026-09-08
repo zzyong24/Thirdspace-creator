@@ -54,3 +54,5 @@ export {
 } from "./intelligence.errors";
 
 export { createCollectionToolPorts } from "./collection-tool-ports";
+
+export {createIntelligenceGenerationBridge,type IntelligenceGenerationBridgeDeps} from "./intelligence-generation-bridge";

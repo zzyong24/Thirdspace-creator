@@ -17,6 +17,7 @@ export interface ProjectScriptCandidateGeneratorPort {
       strategy: string;
       sources: ProjectIntelligenceSourceContext[];
     },
+    claim?:PersistentTaskClaim,
   ): Promise<{ text: string }>;
 }
 
@@ -30,7 +31,7 @@ export async function runProjectScriptCandidateTask(
     workerId?: string;
   },
 ): Promise<void> {
-  const workerId = deps.workerId ?? `project-script-${randomUUID()}`;
+  const workerId = input.existingClaim?.lease.workerId ?? deps.workerId ?? `project-script-${randomUUID()}`;
   const claim =
     input.existingClaim ??
     (await deps.tasks.claimTask({
@@ -61,7 +62,7 @@ export async function runProjectScriptCandidateTask(
     const generated = await deps.generator.generate(ctx, {
       strategy,
       sources,
-    });
+    },claim);
     const text = generated.text.trim();
     if (!text) {
       throw Object.assign(new Error("模型未返回可用口播稿"), {

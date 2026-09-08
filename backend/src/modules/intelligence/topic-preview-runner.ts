@@ -12,6 +12,7 @@ export interface TopicPreviewGeneratorPort {
       ReturnType<IntelligenceService["getTopicPreviewForExecution"]>
     >,
     onCheckpoint: (checkpoint: TopicPreviewCheckpoint) => Promise<void>,
+    claim?:PersistentTaskClaim,
   ): Promise<{
     hook: string;
     structureSteps: string[];
@@ -210,6 +211,7 @@ export async function runIntelligenceTopicPreviewTask(
               ? "draft"
               : "draft";
       },
+      claim,
     );
     await deps.intelligence.finishTopicPreview(
       ctx,
