@@ -5,6 +5,7 @@ import type { SearchService, HybridSearchHit } from "./search.service";
 const BACKFILL_BATCH = 8;
 const BACKFILL_INTERVAL_MS = 60_000;
 const BACKFILL_DEADLINE_MS = 120_000;
+const QUERY_EMBEDDING_DEADLINE_MS = 8_000;
 
 /** 查询只等待本次查询向量；存量补算由同一应用生命周期管理，不创建业务任务。 */
 export function createKnowledgeSearchRuntime<Spec>(deps: {
@@ -91,17 +92,23 @@ export function createKnowledgeSearchRuntime<Spec>(deps: {
       return tracked(async () => {
         let queryEmbedding: number[] | null = null;
         let semanticError: string | null = null;
+        const querySignal = AbortSignal.any([
+          controller.signal,
+          AbortSignal.timeout(QUERY_EMBEDDING_DEADLINE_MS),
+        ]);
         try {
           const spec = await deps.resolveEmbedSpec(ctx);
-          controller.signal.throwIfAborted();
+          querySignal.throwIfAborted();
           if (spec) {
-            const [vector] = await deps.embedTexts(ctx, spec, [query], controller.signal);
-            controller.signal.throwIfAborted();
+            const [vector] = await deps.embedTexts(ctx, spec, [query], querySignal);
+            querySignal.throwIfAborted();
             queryEmbedding = vector?.length ? vector : null;
           }
         } catch (error) {
           if (controller.signal.aborted) throw error;
-          semanticError = error instanceof Error ? error.message : String(error);
+          semanticError = querySignal.aborted
+            ? "语义查询超时，已使用关键词搜索"
+            : error instanceof Error ? error.message : String(error);
         }
         controller.signal.throwIfAborted();
         const hits = await deps.search.hybridSearch(ctx, query, {
