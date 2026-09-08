@@ -964,3 +964,4 @@
 {"ts":"2026-09-08T09:21:13.686Z","actor":"taskctl","action":"start","task":"T-925","sha_before":"8214610b0cac","sha_after":"84512524d4f7"}
 {"ts":"2026-09-08T09:26:05.947Z","actor":"taskctl","action":"complete","task":"T-925","evidence":"独立SPEC/代码复核PASS，tsc退出0，变更修订号替代数据TTL；docs/verification/t925-change-cache.md；业务测试/全局reconcile暂缓accepted-risk，迁移未在用户库试跑。","sha_before":"84512524d4f7","sha_after":"e97c40586f29"}
 {"ts":"2026-09-08T09:26:06.093Z","actor":"taskctl","action":"start","task":"T-926","sha_before":"e97c40586f29","sha_after":"f549a198f28e"}
+{"ts":"2026-09-08T09:34:47.224Z","actor":"taskctl","action":"block","task":"T-926","reason":"固定本地入口在bundle_dmg.sh退出1，未生成DMG；磁盘约609MiB但内部原因未明。按打包技能失败即停止，待退出冻结授权后排查重打。证据docs/verification/t926-package-blocked.md。","sha_before":"f549a198f28e","sha_after":"1047646af92a"}

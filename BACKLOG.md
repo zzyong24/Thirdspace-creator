@@ -10,7 +10,7 @@
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
 | T-925 | 页面缓存改为数据变更驱动，取消固定数据 TTL【用户纠正缓存策略】 | ✅ 待办 | — | — | [SPEC](docs/superpowers/specs/2026-09-08-navigation-change-cache.md) | 缓存按已提交数据版本复用，后台和跨进程写也能检测；保留容量上限、账号隔离及在途防回填。 |
-| T-926 | 打包包含持续 Agent 与变更缓存的 macOS 本地安装包【用户明确打包】 | 🔨 待办 | — | — | [官方打包技能](.agents/skills/packaging-creatoros-release/SKILL.md) | T-925 提交后冻结候选，独立干净工作树运行本地官方入口，核对产物与摘要；不安装、不推送发布，沿用用户暂缓业务测试授权。 |
+| T-926 | 打包包含持续 Agent 与变更缓存的 macOS 本地安装包【用户明确打包】 | ⏸️ 待办 | — | — | [官方打包技能](.agents/skills/packaging-creatoros-release/SKILL.md) | T-925 提交后冻结候选，独立干净工作树运行本地官方入口，核对产物与摘要；不安装、不推送发布，沿用用户暂缓业务测试授权。 |
 | T-924 | 缓存选题与项目页读取，减少 Tab 和账号切换重复加载【用户明确要求 cache】 | ✅ 待办 | — | — | [SPEC](docs/superpowers/specs/2026-09-08-navigation-read-cache.md) | 为已验证账号的页面读取加有界短期缓存与并发请求复用；变更失效、账号隔离，选题读取并行；不把缓存命中当作实际卡顿验收。 |
 | T-923 | 按 NomiFun 对照落实持续任务循环与自动恢复【用户确认开始】 | ✅ 待办 | — | — | [SPEC](docs/superpowers/specs/2026-09-08-continuous-agent-execution.md) | 统一主聊天 Pi 执行、移除强制收尾、接通会话续跑与上下文恢复；可恢复失败持续执行，保留产物及真实阻塞，不以局部格式重试冒充完成。 |
 | T-922 | 对照 nomifun-desktop 审查 Agent Loop 中断与自主恢复【用户指定参考工程】 | ✅ 待办 | — | — | [审查范围](docs/research/2026-09-08-agent-loop-comparison.md) | 只读追踪两工程执行主链、停止条件、工具失败与自动续跑；以代码证据解释 CreatorOS 主动中断点并给出迁移方案，不把 SDK 接入等同任务闭环。 |
