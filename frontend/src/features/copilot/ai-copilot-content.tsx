@@ -1,6 +1,6 @@
 "use client";
 
-import {createChatTaskControl} from "./chat-task-control";
+import {getLiveChatSession} from "./live-chat-session";
 
 /**
  * Copilot 页面负责输入、流式消息、候选卡与原任务控制。
@@ -157,7 +157,7 @@ import {
 } from "@/lib/ai-error-humanize";
 import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { client } from "@/lib/contract-client";
-import { creatorApiHeaders } from "@/lib/http-transport";
+import { creatorApiHeaders, readCurrentAccountId } from "@/lib/http-transport";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
   readStoredConversationId,
@@ -783,6 +783,11 @@ export function AICopilotContent({
         }
       : null,
   });
+  const sessionAccountId = readCurrentAccountId();
+  const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
+  const liveSession = getLiveChatSession(liveSessionKey);
+  const liveSessionRef = React.useRef(liveSession);
+  liveSessionRef.current = liveSession;
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
   // 只是后续轮次不带 selection/projectId)。
   const [selectionDismissed, setSelectionDismissed] = React.useState(false);
@@ -820,7 +825,7 @@ export function AICopilotContent({
   // 让后端续接同一会话;并从 /api/chat 的响应头 `x-conversation-id` 捕获后端 lazy 建/复用的
   // 会话 id 存起来。conversationId 随 scope 切换重置(不同入口各自独立会话)。
   const [conversationId, setConversationId] = React.useState<string | null>(
-    null,
+    liveSession.conversationId,
   );
   // conversationId 放 ref 供 transport 的 body(Resolvable 函数)读最新值,避免因 body 变化
   // 重建 transport(重建会打断进行中的流)。fetch 包装层用 ref 里的 setter 回写捕获到的 id。
@@ -861,11 +866,12 @@ export function AICopilotContent({
   scopeRef.current = scope;
   const captureConversationId = React.useCallback((id: string) => {
     if (!id) return;
-    if (conversationIdRef.current === id) return;
+    liveSession.conversationId = id;
+    writeStoredConversationId(scope, id);
+    if (liveSessionRef.current !== liveSession || conversationIdRef.current === id) return;
     conversationIdRef.current = id;
     setConversationId(id);
-    writeStoredConversationId(scopeRef.current, id);
-  }, []);
+  }, [liveSession, scope]);
 
   // @项目引用(T-039b):输入框 @ 选中的项目。存在时等价「选中态项目」注入后端(见下 chatContextBody)。
   // 与 URL 带来的选中态(一键岛)并存时,URL 选中态优先(它是打开来源的强上下文);@ 只在无 URL
@@ -976,7 +982,8 @@ export function AICopilotContent({
     (next: CopilotAttachmentState) => setAttachmentState(next),
     [],
   );
-  const taskControl=React.useRef(createChatTaskControl());
+  const taskControl=React.useRef(liveSession.control);
+  taskControl.current = liveSession.control;
   const [stopPending,setStopPending]=React.useState(false);
   const transport = React.useMemo(
     () =>
@@ -1012,8 +1019,8 @@ export function AICopilotContent({
                 ? { assetAliases: assetAliasRegistryRef.current.aliases }
                 : {}),
             },
-            ...(conversationIdRef.current
-              ? { conversationId: conversationIdRef.current }
+            ...(liveSession.conversationId
+              ? { conversationId: liveSession.conversationId }
               : {}),
             ...(requestAttachmentIdsRef.current.length > 0
               ? { attachmentIds: requestAttachmentIdsRef.current }
@@ -1023,10 +1030,11 @@ export function AICopilotContent({
         // useChat 不直接暴露响应头 → 在 transport 的 fetch 层包一层,读 `x-conversation-id`
         // 后原样把 Response 交回给 SDK(不改流)。这是本 SDK 版本捕获会话 id 最稳的办法。
         fetch: async (input, init) => {
-          const res = await taskControl.current.fetch(input as RequestInfo, init);
+          const epoch = liveSession.epoch;
+          const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
             const cid = res.headers.get("x-conversation-id");
-            if (cid) captureConversationId(cid);
+            if (cid && liveSession.epoch === epoch) captureConversationId(cid);
           } catch {
             /* 读头失败不影响流式 */
           }
@@ -1052,6 +1060,8 @@ export function AICopilotContent({
   // [T-263] addToolApprovalResponse:HITL 授权卡「允许/拒绝」的回执口。sendAutomaticallyWhen 挂
   // lastAssistantMessageIsCompleteWithApprovalResponses —— local.read 的授权响应齐了就
   // **同回合自动 resume** execute,无新 user 消息、无第二回合叙述(根治「点了还得手动发」)。
+  liveSession.transport = transport;
+  liveSession.shouldResume = input => readCurrentAccountId() === sessionAccountId && resumeApprovedToolsOnce(input);
   const {
     messages,
     sendMessage,
@@ -1062,9 +1072,15 @@ export function AICopilotContent({
     regenerate,
     addToolApprovalResponse,
   } = useChat({
-    transport,
-    sendAutomaticallyWhen: resumeApprovedToolsOnce,
+    chat: liveSession.chat,
+    experimental_throttle: 50,
   });
+  React.useEffect(() => {
+    if (liveSession.conversationId && conversationIdRef.current !== liveSession.conversationId) {
+      conversationIdRef.current = liveSession.conversationId;
+      setConversationId(liveSession.conversationId);
+    }
+  }, [liveSession, messages, status]);
   const stopTask=async()=>{
     if(stopPending)return;
     setStopPending(true);
@@ -1563,6 +1579,7 @@ export function AICopilotContent({
   const loadConversation = React.useCallback(
     async (id: string): Promise<boolean> => {
       if (!id) return false;
+      const messagesBeforeRead = liveSession.chat.messages;
       try {
         // 注意:契约 listMessages 只声明 params(conversationId),未声明分页 query(与 listConversations
         // 不同)—— 故 query 传 undefined,拿该会话全部消息(读回历史)。
@@ -1571,11 +1588,15 @@ export function AICopilotContent({
           query: undefined,
           body: undefined,
         })) as unknown as ReadonlyArray<WireAIMessage> | null | undefined;
+        if (liveSessionRef.current !== liveSession) return false;
+        if (liveSession.chat.messages !== messagesBeforeRead) return true;
+        if (liveSession.chat.status === "streaming" || liveSession.chat.status === "submitted") return true;
         const mapped = toUIMessages(rows ?? []);
         // [T-239e] 会话成本角标的历史底数:落库行 token 列累计(老行/无 usage 行 null 跳过)。
         // 读回的 UIMessage 不带 metadata → 与下方流式增量(sumStreamedUsage)天然不重复计。
         setHistoryUsage(sumUsageTokens(rows ?? []));
         setMessages(mapped);
+        liveSession.conversationId = id;
         conversationIdRef.current = id;
         setConversationId(id);
         writeStoredConversationId(scopeRef.current, id);
@@ -1585,7 +1606,7 @@ export function AICopilotContent({
         return false;
       }
     },
-    [setMessages],
+    [setMessages, scope, liveSession],
   );
 
   // 历史记录面板状态(声明提前:下方 scope 恢复 effect 在 scope 切换时要重置它)。
@@ -1603,11 +1624,17 @@ export function AICopilotContent({
   // 读回失败自愈不毁档:失效指针只清指针本身,随即走服务端兜底,不再「一错清档、永远新建」。
   const hydratedForKeyRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (hydratedForKeyRef.current === scope) return;
-    hydratedForKeyRef.current = scope;
+    if (hydratedForKeyRef.current === liveSessionKey) return;
+    hydratedForKeyRef.current = liveSessionKey;
     // scope 变了(入口/内嵌项目切换):重置会话态 + 历史面板缓存(历史只列当前 scope)。
     setHistoryRows(null);
     setHistoryOpen(false);
+    if (liveSession.chat.messages.length > 0 || ["submitted", "streaming"].includes(liveSession.chat.status)) {
+      conversationIdRef.current = liveSession.conversationId;
+      setConversationId(liveSession.conversationId);
+      prefilledRef.current = true;
+      return;
+    }
     const stored = readStoredConversationId(scope);
     conversationIdRef.current = stored;
     setConversationId(stored);
@@ -1642,6 +1669,7 @@ export function AICopilotContent({
         // 兜底失败(离线等)→ 诚实空会话,不弹错;下次进入再试。
         console.error("[copilot] scope fallback recovery failed:", err);
       }
+      if (liveSessionRef.current !== liveSession || liveSession.chat.messages.length > 0) return;
       // 两路皆空 → 干净空会话,放开一键岛预填(首次进入可预填一次)。
       conversationIdRef.current = null;
       setConversationId(null);
@@ -1651,7 +1679,7 @@ export function AICopilotContent({
     })();
     // loadConversation 依赖稳定;scope 变化触发恢复。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scope]);
+  }, [scope, liveSessionKey]);
 
   // 历史记录(SPEC 本切片,做实占位按钮):点「历史记录」→ 拉过往会话列表(标题+时间),
   // 点某条 → 切到该会话 + 读回消息。open 时懒加载一次(scope 切换时缓存已被上方 effect 清掉)。
@@ -1705,13 +1733,16 @@ export function AICopilotContent({
     setConsumedRequestNonce((current) =>
       Math.max(current, providerRequest?.nonce ?? 0),
     );
+    stop();
+    liveSession.epoch += 1;
+    liveSession.conversationId = null;
     conversationIdRef.current = null;
     setConversationId(null);
     writeStoredConversationId(scopeRef.current, null);
     setMessages([]);
     setHistoryUsage({ inputTokens: 0, outputTokens: 0 }); // [T-239e] 新对话底数归零
     prefilledRef.current = false;
-  }, [providerRequest?.nonce, setMessages]);
+  }, [providerRequest?.nonce, setMessages, stop, liveSession]);
 
   // GAP-COP-feed: 最近任务 is now backed by the REAL global task feed (ai.tasks.list) —
   // the user's cross-project AI tasks, newest first. `recentTasks` is null while loading,
