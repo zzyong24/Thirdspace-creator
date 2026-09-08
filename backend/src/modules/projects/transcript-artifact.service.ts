@@ -55,7 +55,20 @@ export function createTranscriptArtifactService(deps: {
             warn(`[transcript] 逐字稿已保存，口播脚本初始化待重试 (projectId=${projectId})`);
         }
     }
-    const service = { async ensure(context: RequestContext, original: EnsureTranscriptArtifactInput): Promise<EnsureTranscriptArtifactResult> {
+    const service = {
+        /** 只读省流探针归逐字稿领域所有，执行器不拼装项目与工件仓库。 */
+        async hasExisting(ctx:RequestContext,awemeId:string):Promise<boolean>{
+            const project=await createProjectRepository(deps.db).findImportedByRef(ctx,{platform:'douyin',externalId:awemeId});
+            if(!project)return false;
+            const artifacts=createArtifactsService(deps);
+            for(const artifact of await artifacts.listProjectArtifacts(ctx,project.id)){
+                if(artifact.artifactType!=='output_script'||!artifact.currentVersionId)continue;
+                const version=(await artifacts.listVersions(ctx,artifact.id)).find(row=>row.id===artifact.currentVersionId);
+                if((version?.contentData as Record<string,unknown>|undefined)?.awemeId===awemeId)return true;
+            }
+            return false;
+        },
+        async ensure(context: RequestContext, original: EnsureTranscriptArtifactInput): Promise<EnsureTranscriptArtifactResult> {
             const ctx = structuredClone(context), input = structuredClone(original);
             const result = await deps.db.transaction(async (transaction) => {
                 const tx = transaction as unknown as Db;

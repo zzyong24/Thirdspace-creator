@@ -499,9 +499,8 @@ import { createAssetBusinessExecutionService, runAssetGenerate } from "@creatoro
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import {createCoverBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
 import {createExecutionCoverService} from "@creatoros/backend/modules/execution";
-import { runTranscribe } from "@creatoros/backend/modules/ai-runtime";
+import {createTranscribeBusinessExecutionService} from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
-import { runTranscriptPostprocess } from "@creatoros/backend/modules/ai-runtime";
 import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
 import {
@@ -4332,169 +4331,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           );
         } else if (
           task &&
-          task.taskType === "transcribe.douyin" &&
-          task.status === "queued"
-        ) {
-          // 抖音逐字稿采集 node(transcribe.douyin, T-030-D2, SPEC §5.2/§5.3)—— 取音频(iesdouyin
-          // 无水印直链 + ffmpeg 抽 mp3)→ 云端 ASR(用户可配 provider,铁律:绝不写死)→ 按 aweme_id
-          // 绑 imported 作品的 script transcript artifact(幂等,已有则跳过 fetch/ASR 省流)。F7 失败
-          // 分类:旧 host 配置错误(TranscribeConfigError)→ 整任务停 markFailed；正常未配置
-          // 会由 resolveTranscribeSpec 回退本地 Whisper。取音频失败 → 标该
-          // aweme 失败其余继续。端口全注入真依赖(下方装配),runner 本身可确定性单测(见 test)。
-          await runTranscribe(
-            ctx,
-            {
-              id: String(task.id),
-              taskType: task.taskType,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              signal,
-              ai: {
-                markRunning: (c, id) => aiService.markRunning(c, id),
-                recordStep: (c, id, stepInput) =>
-                  aiService.recordStep(c, id, stepInput),
-                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-              },
-              // 取无水印直链 —— [T-243] host 绑组合入口 fetchDouyinVideoSource:
-              //   ① iesdouyin 匿名分享页(快,无 cookie);② 解析失败(item_list 空等,对部分
-              //   可见作品就是解析不出)→ 回落登录态 detail 接口(.auth/douyin/<accountId>,
-              //   页内 fetch 借 cookie);③ 图集识别 → { kind:"image-album" }(runner 诚实跳过)。
-              // [gate-F7 插装点①] 两条路各走各的 channel 限流(iesdouyin / creator-center),注真单例。
-              fetchVideoUrl: async (c, awemeId, signal) =>
-                (await loadDouyinCdp()).fetchDouyinVideoSource({
-                  awemeId,
-                  authDir: await douyinAuthDirFor(c.accountId, signal), // [T-136] 按当前号登录态
-                  gateway: douyinGateway,
-                  signal,
-                }),
-              // 抽音频 bytes(ffmpeg)—— host 绑真 streamAudioFromVideo(默认 child_process.spawn)。
-              streamAudio: async (_c, playUrl, signal) =>
-                (await loadDouyinCdp()).streamAudioFromVideo(playUrl, undefined, signal),
-              // 解析 ASR model(transcribe.audio;用户云端配置优先，未配回退本地 Whisper)。
-              resolveTranscribeSpec: (c) =>
-                resolveTranscribeSpecFn(c, {
-                  getModelConfig: (cc, cap) =>
-                    settingsService.getModelConfig(cc, cap),
-                  env: process.env,
-                  getChannelModelConfig,
-                  getChannelModelCredential: (serviceId) =>
-                    getChannelModelCredential(c, serviceId),
-                  getChannelModelSelection: (capability) =>
-                    getChannelModelSelection(c, capability),
-                }),
-              prepareTranscribeSpec: (c, spec, input) =>
-                prepareManagedTranscribeSpec(c, spec, input),
-              // 云端 ASR 转写(ai-worker 工厂,按 spec.provider 取 ASR 适配器)。
-              transcribeAudio: async (spec, opts, registry) => {
-                const execution = await transcribeWithLocalFallback(spec, (current) =>
-                  transcribeAudioFn(current, opts, registry),
-                );
-                return {
-                  ...execution.transcript,
-                  effectiveSpec: execution.effectiveSpec,
-                  executionMode: execution.mode,
-                };
-              },
-              // ASR provider 适配器注册表 —— OpenAI 兼容 adapter 一件覆盖 SiliconFlow/OpenAI/Groq
-              // (同形状转写端点);按用户所配 provider 名归一到同一适配器,加 provider 只需在此注册。
-              registry: asrRegistry,
-              // 幂等**只读**探测:该 aweme 是否已有 output_script transcript artifact(content_data.awemeId
-              // 命中)。只读组合 findImportedByRef + listProjectArtifacts + getVersion,不写(不像 ensure
-              // 那样「不存在则建」),故可安全当省流探针(已有 → 跳过 fetch/ASR)。
-              hasTranscriptArtifact: async (c, awemeId) => {
-                const p = await projectsRepo.findImportedByRef(c, {
-                  platform: "douyin",
-                  externalId: awemeId,
-                });
-                if (!p) return false;
-                const rows = await artifactsService.listProjectArtifacts(
-                  c,
-                  p.id,
-                );
-                const repo = createArtifactRepository(db, {
-                  ...deps,
-                  userId: c.userId,
-                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-                });
-                for (const r of rows) {
-                  if (r.artifactType !== "output_script") continue;
-                  if (!r.currentVersionId) continue;
-                  const version = await repo.getVersion(r.currentVersionId);
-                  const data = version.contentData as
-                    | Record<string, unknown>
-                    | null
-                    | undefined;
-                  if (data && data.awemeId === awemeId) return true;
-                }
-                return false;
-              },
-              // [T-230] 冷却延迟重试三件套:runner 检测到冷却类失败 → 查通道剩余 → 上限内
-              //   sleep 到冷却结束重试失败子集一次(幂等锚已保成功子集不重转)。
-              //   判别用 instanceof(runner 不 import 前端 ingestion,经注入,同 isNotLoggedInError 先例)。
-              isCooldownError: (e) => e instanceof DouyinCooldownActiveError,
-              //   剩余冷却取两通道 max:transcribe 主路走 iesdouyin,解析失败回落登录态 detail
-              //   走 creator-center —— 任一在冷却都会让重试再撞,保守等最长的。
-              getCooldownRemainMs: () =>
-                Math.max(
-                  douyinGateway.getChannelStatus("iesdouyin").cooldownEtaMs,
-                  douyinGateway.getChannelStatus("creator-center").cooldownEtaMs,
-                ),
-              //   等待上限 env 可配(默认 30min;> gateway 单通道 maxAcquireWaitMs 15min,
-              //   覆盖真机撞到的「剩 960s」场景;仍 < T-207 ai_task 僵尸阈值 2h,不会被误扫)。
-              maxCooldownWaitMs: (() => {
-                const raw = Number(
-                  process.env.CREATOROS_TRANSCRIBE_COOLDOWN_WAIT_MAX_MS,
-                );
-                return Number.isFinite(raw) && raw > 0
-                  ? Math.floor(raw)
-                  : 30 * 60 * 1000;
-              })(),
-              // [T-357] 采集逐字稿后处理:ASR 文本落库前轻 AI 校正(同音错字+补标点+语义分段)。
-              //   capability 复用 video.subtitles(T-320a「ASR 认错字校正」同任务族既有档,未配
-              //   自动回退 default 行 → env,零新增配置负担,绝不写死厂商);上下文可选注入:
-              //   账号定位 oneLiner + imported 作品标题(有就带,拿不到就裸纠,best-effort 不抛);
-              //   普通后处理失败保留原文，取消与结果未知交回任务层。
-              postprocessTranscript: async (c, ppInput) => {
-                const {accountPositioning,title}=await readTranscribePostprocessContext(c,ppInput.awemeId,ppInput.signal);
-                return runTranscriptPostprocess(
-                  c,
-                  {
-                    transcript: ppInput.transcript,
-                    signal: ppInput.signal,
-                    accountPositioning,
-                    title,
-                  },
-                  { resolveModelSpec },
-                );
-              },
-              ensureTranscriptArtifact: transcriptArtifacts.ensure,
-              restoreTranscriptArtifact: transcriptArtifacts.restoreExisting,
-              // 真逐字稿一绑定就继续排项目重建，不等下一次定时采集；createTask 自带
-              // IN-FLIGHT 幂等，且已存在 reconstructed artifact 时直接跳过。
-              onTranscriptReady: async (c, { projectId }) => {
-                const rows = await artifactsService.listProjectArtifacts(c, projectId);
-                if (rows.some((row) => row.origin === "reconstructed")) return;
-                await ai.request(
-                  ENDPOINTS.createAITask,
-                  {
-                    params: undefined,
-                    query: undefined,
-                    body: {
-                      taskType: "reconstruct.project",
-                      attemptId: createAiTaskAttemptId(),
-                      inputData: { projectId },
-                    },
-                  },
-                  c,
-                );
-              },
-            },
-          );
-        } else if (
-          task &&
           task.taskType === "reconstruct.project" &&
           task.status === "queued"
         ) {
@@ -4671,7 +4507,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        const execution = task.taskType==="asset.generate" && task.status==="queued"
+        const execution = task.taskType==="transcribe.douyin" && task.status==="queued"
+          ? dispatchTranscribeTask(ctx,String(task.id))
+          : task.taskType==="asset.generate" && task.status==="queued"
           ? dispatchAssetTask(ctx,String(task.id))
           : agenticBusiness.supports(String(task.taskType)) && task.status === "queued"
           ? (agenticWorker ? agenticBusiness.prepare(ctx,String(task.id)).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
@@ -9565,6 +9403,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
+  const transcribeBusiness=createTranscribeBusinessExecutionService(db,{
+    budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
+    resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
+  });
+  async function dispatchTranscribeTask(c:RequestContext,id:string,signal?:AbortSignal){
+    if(!modelWorker)throw new Error("转写服务未就绪，请更新应用后重试");
+    const prepared=await transcribeBusiness.prepare(c,id,signal);
+    if(prepared.legacy)throw new Error("此转写任务已有旧执行记录，请先核对已有逐字稿，再从作品重新发起转写");
+    if(!stoppingPreparation)modelWorker.start();
+  }
   const coverExecutionPorts={
     async resolveImageSpec(c:RequestContext,capability:"image.generate"|"image.edit",taskId:string){
       const runtime=await aiService.getTaskRuntimeData(c,taskId);
@@ -9686,6 +9534,20 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     resolveModelCredential:resolveWorkerCredential,
     transcribePostprocess:{resolveModelSpec,readContext:readTranscribePostprocessContext},
     transcribeAudioStorage:objectStorageForCtx,
+    transcribeWorkflow:{
+      nextId:deps.nextId,
+      hasTranscriptArtifact:(c,awemeId)=>transcriptArtifacts.hasExisting(c,awemeId),
+      async onTranscriptReady(c,{projectId}){
+        const artifacts=await artifactsService.listProjectArtifacts(c,projectId);
+        if(artifacts.some(row=>row.origin==="reconstructed"))return;
+        await ai.request(ENDPOINTS.createAITask,{params:undefined,query:undefined,body:{taskType:"reconstruct.project",attemptId:createAiTaskAttemptId(),inputData:{projectId}}},c);
+      },
+    },
+    transcribeSource:{
+      fetchLoggedInSource:async(c,awemeId,signal)=>(await loadDouyinCdp()).fetchDouyinVideoUrlViaDetail({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal),gateway:douyinGateway,signal}),
+      async acquireChannel(_c,channel,signal){signal.throwIfAborted();await douyinGateway.acquire(channel);signal.throwIfAborted();},
+      reportChannel:(_c,channel,result)=>douyinGateway.report(channel,result),
+    },
     transcribePreparation:{
       resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
       prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
@@ -9725,7 +9587,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let agenticPreparationRecovery:Promise<void>|undefined;
   let preparationRecovery:Promise<void>|undefined;
   let stoppingPreparation=false;
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
