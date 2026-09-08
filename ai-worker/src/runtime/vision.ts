@@ -1,5 +1,5 @@
 import { generateText } from "ai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { modelFor } from "./provider-factory";
 
 import type { MultimodalSpec } from "./multimodal-factory";
 
@@ -11,13 +11,8 @@ export async function describeImageOpenAICompatible(
   spec: MultimodalSpec,
   input: { bytes: Uint8Array; mimeType: string; prompt: string },
 ): Promise<string> {
-  const provider = createOpenAICompatible({
-    name: spec.provider,
-    baseURL: spec.baseUrl ?? "https://api.siliconflow.cn/v1",
-    apiKey: spec.token,
-  });
   const res = await generateText({
-    model: provider.chatModel(spec.model),
+    model: modelFor({apiFormat:"openai_chat",baseUrl:spec.baseUrl??"https://api.siliconflow.cn/v1",token:spec.token,model:spec.model}),
     messages: [
       {
         role: "user",

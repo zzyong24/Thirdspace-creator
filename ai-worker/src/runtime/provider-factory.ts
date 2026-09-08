@@ -1,8 +1,8 @@
+import { isStructuredResponseCompatibilityError } from "../nodes/structured-response-errors";
 import {structuredModeForIdentity} from "./provider-identity";
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createPiProviderModel } from "./pi-provider";
+import { createHttpEmbeddingModel } from "./pi-provider-embedding";
 import { getRetryAfterMs } from "./retry-policy";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { EmbeddingModelV3, EmbeddingModelV4 } from "@ai-sdk/provider";
 import {
   wrapEmbeddingModel,
@@ -11,14 +11,14 @@ import {
   type LanguageModel,
 } from "ai";
 
-// Provider 工厂(Phase 3)—— 把「一次运行解析出来的模型配置」变成一个 AI SDK LanguageModel。
+// Provider 工厂：Pi 原生模型网络，自有 HTTP 向量；暂保既有账本调用接口。
 // 这是「模型中立层」的落点:换厂商 = 换 apiFormat/baseUrl/token,不动 AgentRuntime,也不绑
 // 任何厂商 SDK 的业务调用。用户自带 key + 自定义 baseURL(relay / MiniMax / DeepSeek)全支持。
 //
 // 协议族(apiFormat)而非厂商名做开关:加一个 OpenAI 兼容端点 = 配 baseUrl,不改代码。
-//   - anthropic  → @ai-sdk/anthropic(官方端点或 relay baseURL)
+//   - anthropic → Pi Anthropic Messages
 //   - openai_chat → 显式 Chat Completions(不依赖 provider 默认 callable,防 SDK 升级漂移)
-//   - openai_responses → @ai-sdk/openai Responses(官方或 New API/relay 自定义 baseURL)
+//   - openai_responses → Pi OpenAI Responses
 
 export type ApiFormat =
   | "anthropic"
@@ -34,6 +34,7 @@ export interface ModelSpec {
   model: string;
   /** 用户自带的 API key。 */
   token: string;
+  authStyle?: "bearer" | "x-api-key";
   displayModelKey?: "channel-managed";
   /**
    * 端点是否明确支持原生结构化响应。自定义 OpenAI Chat 端点默认按不支持处理；
@@ -400,55 +401,17 @@ export function normalizeAnthropicBaseUrl(baseUrl: string): string {
 }
 
 /** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
+function safePiRejection(spec:ModelSpec,facts:{statusCode:number;responseHeaders:Record<string,string>;message:string}):Error{
+  if(spec.displayModelKey==="channel-managed" && isManagedAiCreditExhaustedError(facts))return new ManagedAiCreditExhaustedError();
+  const message=isStructuredResponseCompatibilityError(facts)?"response_format unsupported":`Pi provider HTTP ${facts.statusCode}`;
+  return Object.assign(new Error(message),{statusCode:facts.statusCode,responseHeaders:facts.responseHeaders});
+}
+
 export function modelFor(spec: ModelSpec): LanguageModel {
-  let model: LanguageModel;
-  const structuredOutputMode = structuredModeForIdentity({...spec,customEndpoint:Boolean(spec.baseUrl)});
-  switch (spec.apiFormat) {
-    case "anthropic": {
-      const provider = createAnthropic({
-        apiKey: spec.token,
-        ...(spec.baseUrl
-          ? { baseURL: normalizeAnthropicBaseUrl(spec.baseUrl) }
-          : {}),
-      });
-      model = provider(spec.model);
-      break;
-    }
-    case "openai_responses": {
-      const provider = createOpenAI({
-        apiKey: spec.token,
-        ...(spec.baseUrl
-          ? { baseURL: spec.baseUrl, name: "creatoros-custom" }
-          : {}),
-      });
-      model = provider.responses(spec.model);
-      break;
-    }
-    case "openai_chat": {
-      // openai_chat 必须显式选 Chat，不能依赖 SDK 默认 callable。
-      if (spec.baseUrl) {
-        // OpenAI-compatible 只描述 wire shape，不保证端点实现 json_schema。
-        // 默认走文本 JSON + 本地 schema 校验；明确 opt-in 后才发送原生结构化响应。
-        const provider = createOpenAICompatible({
-          name: "creatoros-custom",
-          apiKey: spec.token,
-          baseURL: spec.baseUrl,
-          supportsStructuredOutputs: spec.structuredOutputs === true,
-        });
-        model = provider.chatModel(spec.model);
-        break;
-      }
-      const provider = createOpenAI({ apiKey: spec.token });
-      model = provider.chat(spec.model);
-      break;
-    }
-    default:
-      throw new ModelConfigurationError();
-  }
-  const protectedModel = spec.displayModelKey === "channel-managed"
-    ? protectChannelModel(model)
-    : model;
-  return markStructuredOutputMode(protectedModel, structuredOutputMode);
+  if(!["anthropic","openai_chat","openai_responses"].includes(spec.apiFormat))throw new ModelConfigurationError();
+  const model=createPiProviderModel(spec,facts=>safePiRejection(spec,facts));
+  const protectedModel=spec.displayModelKey==="channel-managed"?protectChannelModel(model):model;
+  return markStructuredOutputMode(protectedModel,structuredModeForIdentity({...spec,customEndpoint:Boolean(spec.baseUrl)}));
 }
 
 /**
@@ -462,37 +425,9 @@ export function modelFor(spec: ModelSpec): LanguageModel {
  */
 export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
   try {
-    let model: ChannelEmbeddingInput;
-    switch (spec.apiFormat) {
-      case "anthropic":
-        throw new Error(
-          "anthropic 协议不提供 embedding 端点:请为该 capability 配置 openai_chat 协议的 embedding 模型(如 SiliconFlow BAAI/bge-m3)",
-        );
-      case "openai_chat":
-      case "openai_responses": {
-        if (spec.baseUrl) {
-          const provider = createOpenAICompatible({
-            name: "creatoros-custom-embedding",
-            apiKey: spec.token,
-            baseURL: spec.baseUrl,
-          });
-          model = provider.textEmbeddingModel(spec.model);
-          break;
-        }
-        const provider = createOpenAI({ apiKey: spec.token });
-        model = provider.textEmbeddingModel(spec.model);
-        break;
-      }
-      default:
-        throw new ModelConfigurationError();
-    }
-    return spec.displayModelKey === "channel-managed"
-      ? protectChannelEmbeddingModel(model)
-      : model;
-  } catch (error) {
-    if (spec.displayModelKey === "channel-managed") {
-      throw toChannelManagedError(error);
-    }
-    throw error;
-  }
+    if(spec.apiFormat==="anthropic")throw new Error("anthropic 协议不提供 embedding 端点，请配置 OpenAI 兼容向量模型");
+    if(!["openai_chat","openai_responses"].includes(spec.apiFormat))throw new ModelConfigurationError();
+    const model=createHttpEmbeddingModel(spec,facts=>safePiRejection(spec,facts));
+    return spec.displayModelKey==="channel-managed"?protectChannelEmbeddingModel(model):model;
+  } catch(error){if(spec.displayModelKey==="channel-managed")throw toChannelManagedError(error);throw error;}
 }
