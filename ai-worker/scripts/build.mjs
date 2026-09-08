@@ -38,3 +38,11 @@ await build({
   external: ["@playwright/test", "jsdom", "@mozilla/readability", "@xenova/transformers"],
 });
 await build({entryPoints:[fileURLToPath(new URL("../src/io/embedding-worker-entry.ts",import.meta.url))],outfile:fileURLToPath(new URL("../dist/embedding-worker.cjs",import.meta.url)),bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning"});
+
+// 原 scheduled.* 任务的固定飞轮模型与收藏 ASR 阶段，共用原 claim。
+await build({
+  entryPoints:[fileURLToPath(new URL("../src/execution/flywheel-generation-worker-entry.ts",import.meta.url))],
+  outfile:fileURLToPath(new URL("../dist/flywheel-generation-worker.cjs",import.meta.url)),
+  bundle:true,platform:"node",target:"node24",format:"cjs",logLevel:"warning",
+  external:["@playwright/test","jsdom","@mozilla/readability","@xenova/transformers"],
+});

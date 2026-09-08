@@ -52,6 +52,7 @@ export function createClaimedAsrStageService(db:Db,deps:ClaimedAsrStageDeps){
    const reason=await deps.runWorker({ref,deadlineAt:Date.parse(state.deadlineAt!),verify,isClosed:()=>closed,close:()=>{closed=true;},hasDurableOutcome:()=>completed!==undefined||persisted!==undefined,ports:{
     async validate(current,mode){if(closed||!isDeepStrictEqual(current,ref))throw new Error('ASR_STAGE_CLOSED');await leases.withLease(ref,mode,async scope=>{await deps.bindResource(scope,awemeId);});},
     async invoke(_ref,port,raw){
+     if(!['readTaskContext','heartbeat','completeTranscribeTask','commitResult'].includes(port)&&(raw as {awemeId?:unknown})?.awemeId!==awemeId)throw new Error('ASR_STAGE_RESOURCE_MISMATCH');
      if(port==='readTaskContext'){await verify();return initial.input;}
      if(port==='heartbeat'){await verify();return {ok:true};}
      if(port==='prepareTranscribeItem'){

@@ -1,3 +1,6 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
+import {createKnowledgeSearchRuntime} from "@creatoros/backend/modules/search";
 import {configureHostBrowserProfileLifecycle} from "./ingestion/host-browser-profile-lifecycle";
 import {createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
 import {createAgenticCollectionTools} from "@creatoros/backend/modules/ai-runtime";
@@ -22,7 +25,7 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator,createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
@@ -56,7 +59,6 @@ import { isLegacyIncompleteReview } from "@/lib/script-review-status";
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
 import {
   prepareManagedTranscribeSpec,
-  transcribeWithLocalFallback,
 } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
 import {
@@ -217,7 +219,7 @@ import {
 } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
+import { createEmbeddingIoService } from "@creatoros/backend/modules/ai-runtime";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -429,23 +431,20 @@ import {
   collectBenchmark,
   // [T-212c] 对标爆款拆解 → 转化进选题池(采集落库后 best-effort 触发)。
   runBenchmarkTeardown,
-  createBenchmarkTeardownPort,
+  createScheduledFlywheelExecutionService,
+  ScheduledFlywheelSuspended,
+  type ScheduledFlywheelCollector,
   // [T-235d-distill] 收藏夹作品蒸馏链(收藏采集落库后 best-effort 触发):transcribe→判库→知识蒸馏确认门。
   runFavoritesDistill,
-  createFavoritesTriagePort,
-  runKnowledgeDistill,
   // [T-212d] 防茧房校准:淘汰原因蒸馏(选题淘汰写原因后 best-effort 触发)。
   // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
   assembleCreativeContext,
   // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
   // [T-235d] 正向归因回流(self.detail 采集尾 best-effort 触发:实绩 → 枚举化归因 → 实验候选进池)。
   runTopicAttribution,
-  createTopicAttributionPort,
   // [T-235b] 低粉黑马雷达采集器(并进 benchmark 采集:对标源后跑黑马关键词,共享限流预算)。
   collectDarkhorse,
   // [T-235b] 热点信源信号采集(web 主路 readUrl+AI 抽取 / rss 辅路 feed 解析)+ AI 抽取端口工厂。
-  collectTrendSourceSignals,
-  createTrendExtractPort,
 } from "@creatoros/backend/modules/ai-runtime";
 import {
   runJobNow,
@@ -521,20 +520,12 @@ import {
 import { resolveSearchSpec as resolveSearchSpecFn } from "@creatoros/backend/modules/ai-runtime";
 // 多模态 provider 适配器(L5 asset.generate)。createMinimaxAdapter 是纯自建 REST(image
 // 同步 / video 异步轮询),不碰 Agent SDK —— 不违 determinism 边界,可在 host 组合层直接注册。
-// createOpenaiAsrAdapter(T-030-D2)= OpenAI 兼容 ASR(SiliconFlow/OpenAI/Groq),逐字稿转写用。
-// transcribeAudio = ASR 工厂(按 provider 取适配器 → { text })。
 import {
   createMinimaxAdapter,
   createOmnihiVideoAdapter,
   modelFor,
   // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
   createOpenaiImagesAdapter,
-  createOpenaiAsrAdapter,
-  createMimoAsrAdapter,
-  createQwenAsrAdapter,
-  // 本地 Whisper 同时支持旧显式配置与未配置云端 ASR 时的自动回退。
-  createDefaultWhisperLocalAdapter,
-  transcribeAudio as transcribeAudioFn,
   // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
   generateImage as generateImageFn,
   resolveExecutablePath,
@@ -628,6 +619,7 @@ import {
 // [T-212a] 对标源 + 对标作品(选题/对标强化)。
 import {
   createBenchmarkService,
+  createBenchmarkTranscriptionService,
   createBenchmarkTransport,
   BENCHMARK_OP_IDS,
   OwnershipError as BenchmarkOwnershipError,
@@ -1908,13 +1900,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   let collectionRunTail: Promise<void> = Promise.resolve();
   const enqueueCollectionRun = (run: () => Promise<void>): Promise<void> => {
     // 串到链尾:上一个采集跑完(无论成败)才开始本次;链尾用 catch 吞错防一次失败堵死后续。
-    collectionRunTail = collectionRunTail.then(
+    const pending = collectionRunTail.then(
       () => run(),
       () => run(),
     );
     // 兜底:链尾自身的 reject 不外溢(fire-and-forget;每个 run 内部已 try/catch 落终态)。
-    collectionRunTail = collectionRunTail.catch(() => {});
-    return collectionRunTail;
+    collectionRunTail = pending.catch(() => {});
+    return pending;
   };
 
   // Projects (module 05): one user-scoped repository over the shared db (every
@@ -3208,6 +3200,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     now: deps.now,
     nextId: deps.nextId,
     resolveTaskRuntimeData: async (ctx, taskType, inputData) => {
+      // 纯 ASR 使用业务提交冻结的音源/配置及按次凭据，不申请文本 Skill。
+      if(taskType==="benchmark.transcribe")return {};
       if (!resolveEffectiveSkillSnapshotForRuntime) {
         throw new Error(
           "[T-513] Effective Skill snapshot resolver 尚未完成装配",
@@ -4098,7 +4092,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         };
         // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
         // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
-        const execution = task.taskType==="transcribe.douyin" && task.status==="queued"
+        const execution = task.taskType==="benchmark.transcribe" && task.status==="queued"
+          ? benchmarkTranscription.run(ctx,String(task.id))
+          : task.taskType==="transcribe.douyin" && task.status==="queued"
           ? dispatchTranscribeTask(ctx,String(task.id))
           : task.taskType==="asset.generate" && task.status==="queued"
           ? dispatchAssetTask(ctx,String(task.id))
@@ -4106,6 +4102,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           ? (agenticWorker ? agenticBusiness.prepare(ctx,String(task.id)).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
           : businessExecution.supports(String(task.taskType)) && task.status === "queued"
           ? (modelWorker ? businessExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
+          : flywheelSourceKinds.has(String(task.taskType).replace(/^scheduled\./,"")) && task.status==="queued"
+          ? dispatchScheduledCollection(ctx,{id:String(task.id),taskType:String(task.taskType),inputData:(task.inputData??{}) as Record<string,unknown>})
           : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
         void execution.catch(async (error) => {
           if(stoppingPreparation)return;
@@ -5291,48 +5289,10 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       : DEFAULT_COVER_BACKFILL_LIMIT;
   };
 
-  // [T-349] 单条按需逐字稿公共原语(iesdouyin 直链 → ffmpeg 抽音 → 云 ASR)。抽成 buildPersistence
-  //   作用域内具名闭包 —— favorites-distill(收藏他人作品)与 benchmark(对标他号作品)复用同一份,
-  //   **绝不复制**。图集/无口播 → 返 null(诚实 skip)。[T-136] 按当前号(c.accountId)登录态指纹。
-  //   origin 隔离:两条调用方都**不**走 ensureTranscriptArtifact —— 逐字稿落各自表自身,永不建 imported。
-  const transcribeOneAweme = async (
-    c: RequestContext,
-    awemeId: string,
-  ): Promise<string | null> => {
-    const cdp = await loadDouyinCdp();
-    const src = await cdp.fetchDouyinVideoSource({
-      awemeId,
-      authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId),
-      gateway: douyinGateway,
-    });
-    if (src.kind === "image-album") return null;
-    const audioBytes = await cdp.streamAudioFromVideo(src.playUrl);
-    const baseSpec = await resolveTranscribeSpecFn(c, {
-      getModelConfig: (cc, cap) => settingsService.getModelConfig(cc, cap),
-      env: process.env,
-      getChannelModelConfig,
-      getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(c, serviceId),
-      getChannelModelSelection: (capability) =>
-        getChannelModelSelection(c, capability),
-    });
-    const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
-      audioBytes,
-      intentId: `aweme:${awemeId}`,
-    });
-    const execution = await transcribeWithLocalFallback(spec, (current) =>
-      transcribeAudioFn(
-        current,
-        { audioBytes, language: "zh" },
-        asrRegistry,
-      ),
-    );
-    const { text } = execution.transcript;
-    return text && text.trim() ? text : null;
-  };
-  const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{
-    entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService,
-    budget:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},objectStorageForCtx,now:deps.now,
+  const asrResourceDeps:Omit<Parameters<typeof createIntelligenceTranscriptBridge>[1],"entryPath"|"tasks">={
+    // ASR 最小分片限额(Qwen) raw=2,324,982；MP3 帧≤1,441 B，2 GiB 输入≤925片。
+    // 2048覆盖925云请求+1本地回退并留同规模恢复余量；原token/时限与已冻结预算不重置。
+    budget:{maxCalls:2048,maxTokens:1_000_000,deadlineMs:1_800_000},objectStorageForCtx,now:deps.now,
     resolveSpec:c=>resolveTranscribeRuntimeSpec(c),
     prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
     async readSource(c,awemeId,signal){
@@ -5341,7 +5301,23 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       return source.kind==="image-album"?{kind:"image-album" as const}:{kind:"video" as const,playUrl:source.playUrl};
     },
     extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
+  };
+  const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{...asrResourceDeps,entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService});
+  const benchmarkTranscription=createBenchmarkTranscriptionService(db,{...asrResourceDeps,ai:aiService,entryPath:resolveIntelligenceTranscriptWorkerPath});
+  const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
+  const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
+  const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
+    entryPath:resolveFlywheelWorkerPath,resolveModelSpec,
+    // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
+    budget:{maxCalls:384,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
+    createFavoritesAsr:runWorker=>createScheduledFavoritesAsrService(db,{...asrResourceDeps,runWorker}),
   });
+  const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","favorites"]);
+  let flywheelRecovery:Promise<void>|undefined;
+  let flywheelRecoveryTimer:ReturnType<typeof setInterval>|undefined;
+  let benchmarkRecoveryTimer:ReturnType<typeof setInterval>|undefined;
+  let benchmarkRecovery:Promise<void>|undefined;
+
   intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript};
 
   const recentVisibleCollections = new Map<
@@ -5418,6 +5394,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       const commentPorts: CommentIngestPorts = {
         createRun: async (input) => {
+      checkScheduledSignal();
           const run = await ingestionService.createRun(ctx, {
             externalSourceId: input.externalSourceId,
             runType: input.runType,
@@ -5527,7 +5504,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         const records = await (await loadDouyinCdp()).fetchDouyinComments(
           {
             awemeId: single,
-            authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
+            authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
             maxPages,
           },
           { gateway: douyinGateway, commentWatermark }, // [T-177] 增量 early-break
@@ -5603,7 +5580,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const batch = await (await loadDouyinCdp()).fetchDouyinCommentsForWorks(
         awemeIds,
         {
-          authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
+          authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
           maxPages,
         },
         {
@@ -5680,7 +5657,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       const rawBatch = await (await loadDouyinCdp()).fetchDouyinMetrics({
         capturedAt,
-        authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
+        authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),
         gateway: douyinGateway,
         // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
         knownAwemeIds: undefined,
@@ -5696,7 +5673,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
         report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
         const bytes = await (await loadDouyinCdp()).fetchDouyinWorkListExport(
-          { authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId) }, // [T-136] 按当前号登录态
+          { authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
         );
         // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
@@ -5787,7 +5764,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             visibility: "hidden",
           });
         }
-        const metricsRun = await ingestionService.ingestApprovedDouyinBatch(ctx, {
+        checkScheduledSignal();
+      const metricsRun = await ingestionService.ingestApprovedDouyinBatch(ctx, {
           externalSourceId,
           capturedAt,
           records: decision.visibleRecords,
@@ -5890,6 +5868,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             total: records.length,
             message: `匹配落库 ${records.length} 条明细`,
           });
+      checkScheduledSignal();
           const run = await ingestionService.createRun(ctx, {
             externalSourceId,
             runType: "douyin_detail",
@@ -5955,8 +5934,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           //   登录态回落 detail；网络/HTTP/冷却错误不双路重试。两条路继续走真网关单例。
           fetchVideoUrl: async (awemeId) =>
             (await loadDouyinCdp()).fetchDouyinCoverUrl({
+              signal:scheduledSignals.getStore(),
               awemeId,
-              authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId),
+              authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),
               gateway: douyinGateway,
             }),
           downloadImage: (url) => downloadDouyinImage(url),
@@ -6170,7 +6150,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return "";
           }
         },
-        attribute: createTopicAttributionPort({ resolveModelSpec }),
+        attribute: scheduledFlywheel.models.attribute,
         saveAttribution: async (c, input) => {
           const saved = await topicAttributionService.saveAttribution(c, input);
           return { id: saved.id };
@@ -6230,6 +6210,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           })(),
         },
       }).catch((err) => {
+        if(err instanceof ScheduledFlywheelSuspended)throw err;
         console.error(
           "[topic-attribution] 归因回流触发失败(best-effort,不影响明细采集):",
           err,
@@ -6269,7 +6250,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         fetchSourcePosts: async (c, source) => {
           const works = await (await loadDouyinCdp()).fetchDouyinUserPosts(
             {
-              authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId), // [T-136] 按当前号登录态指纹
+              signal:scheduledSignals.getStore(),
+              authDir: await douyinAuthDirFor(c.accountId,scheduledSignals.getStore(),c.userId), // [T-136] 按当前号登录态指纹
               secUid: source.externalAccountId,
               gateway: douyinGateway,
             },
@@ -6286,7 +6268,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             createTime: w.createTime ? String(w.createTime) : null, // unix 秒原值
           }));
         },
-        recordWork: (c, input) => benchmarkService.recordWork(c, input),
+        recordWork: (c, input) => {checkScheduledSignal();return benchmarkService.recordWork(c, input);},
         now: deps.now,
         report,
       });
@@ -6314,7 +6296,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           searchVideos: async (c, keyword) => {
             const videos = await (await loadDouyinCdp()).fetchDouyinSearchVideos(
               {
-                authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId), // [T-136] 按当前号登录态
+                authDir: await douyinAuthDirFor(c.accountId,scheduledSignals.getStore(),c.userId), // [T-136] 按当前号登录态
                 keyword,
                 gateway: douyinGateway,
               },
@@ -6334,11 +6316,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               authorFollowerCount: v.authorFollowerCount,
             }));
           },
-          recordWork: (c, input) => benchmarkService.recordWork(c, input),
+          recordWork: (c, input) => {checkScheduledSignal();return benchmarkService.recordWork(c, input);},
           now: deps.now,
           report,
         });
       } catch (err) {
+        checkScheduledSignal();
         // 黑马整体失败(极端)→ 只丢黑马,不影响对标采集结果(诚实记错)。
         console.error("[darkhorse] 黑马雷达失败(不影响对标采集):", err);
       }
@@ -6373,7 +6356,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             return "";
           }
         },
-        teardown: createBenchmarkTeardownPort({ resolveModelSpec }),
+        teardown: scheduledFlywheel.models.teardown,
         createCandidate: async (c, input) => {
           const cand = await candidateService.createCandidate(c, input);
           return { id: cand.id };
@@ -6386,6 +6369,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         markTeardownDone: (c, workId) =>
           benchmarkService.markTeardownDone(c, workId),
       }).catch((err) => {
+        if(err instanceof ScheduledFlywheelSuspended)throw err;
         console.error(
           "[benchmark] 拆解转化触发失败(best-effort,不影响采集):",
           err,
@@ -6430,7 +6414,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // ① 拉本人收藏夹列表(未登录在此抛 DouyinNotLoggedInError → needs_reconnect;验证码返空)。
       report({ stage: "favorites", processed: 0, total: folders.length, message: "拉取抖音收藏夹列表" });
       const remoteFolders = await (await loadDouyinCdp()).fetchDouyinCollectsFolders({
-        authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
+              signal:scheduledSignals.getStore(),
+        authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
         gateway: douyinGateway,
         diagnostics: {
           requestId: ctx.requestId,
@@ -6482,7 +6467,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         });
         try {
           const videos = await (await loadDouyinCdp()).fetchDouyinCollectsVideos({
-            authDir: await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId), // [T-136] 按当前号登录态
+              signal:scheduledSignals.getStore(),
+            authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
             collectsId: folder.collectsId,
             maxItems: 50,
             gateway: douyinGateway,
@@ -6568,15 +6554,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             favoritesService.saveTranscript(c, itemId, t),
           saveVerdict: (c, itemId, v) =>
             favoritesService.saveDistillVerdict(c, itemId, v),
-          // 取逐字稿:复用 [T-349] 抽出的公共原语 transcribeOneAweme(iesdouyin 直链 → ffmpeg
-          //   抽音 → 云 ASR)。图集/无口播 → 返 null(runner 诚实 skip)。行为零变(原内联段抽出)。
-          transcribeOne: (c, awemeId) => transcribeOneAweme(c, awemeId),
+          // 同原定时任务 claim 逐作品执行 ASR，图集仍返回 null。
+          transcribeOne: scheduledFlywheel.models.transcribeOne,
           // 判库(favorites.triage)+ 知识蒸馏(knowledge.distill)—— capability 经 model-config 解析,不写死。
-          triage: createFavoritesTriagePort({ resolveModelSpec }),
-          distillKnowledge: (c, content) =>
-            runKnowledgeDistill(c, { content }, { resolveModelSpec }),
+          triage: scheduledFlywheel.models.triage,
+          distillKnowledge: scheduledFlywheel.models.distillKnowledge,
         });
-      } catch {
+      } catch (error) {
+        if(error instanceof ScheduledFlywheelSuspended)throw error;
         // 蒸馏链整体失败(不该发生;runner 内已逐条 best-effort)→ 记日志,采集主流程照常返回。
         console.error(
           "[favorites] request_failed",
@@ -6613,11 +6598,31 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
   // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
   // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
+  const collectFlywheel:ScheduledFlywheelCollector=(ctx,task,scope)=>enqueueCollectionRun(()=>scheduledSignals.run(scope.signal,async()=>{
+    scope.signal.throwIfAborted();
+    await runScheduledCollection(ctx,task,{
+      ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
+      collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);});scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError,now:deps.now,
+    });
+  }));
+  const wakeScheduledFlywheel=()=>{
+    if(stoppingPreparation||flywheelRecovery)return;
+    flywheelRecovery=(async()=>{
+      await scheduledFlywheel.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"调度任务准备未完成，请检查原任务配置");});
+      if(!stoppingPreparation)await scheduledFlywheel.drain(collectFlywheel,10);
+    })().catch(error=>{if(!(error instanceof ScheduledFlywheelSuspended))console.error("[scheduled-flywheel] RECOVERY_FAILED",error);})
+      .finally(()=>{flywheelRecovery=undefined;});
+  };
   const dispatchScheduledCollection = async (ctx: RequestContext, task: {
     id: string;
     taskType: string;
     inputData: Record<string, unknown>;
   }) => {
+    if(flywheelSourceKinds.has(task.taskType.replace(/^scheduled\./,""))){
+      const bound=await scheduledFlywheel.prepare(ctx,task.id);
+      wakeScheduledFlywheel();
+      return {executionTaskId:bound.executionTaskId};
+    }
     if(task.taskType==="scheduled.topic.daily"){
       if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
       const bound=await businessExecution.prepare(ctx,task.id);
@@ -6980,11 +6985,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           { scheduledFor: input.scheduledFor },
         );
         if (result.skippedReason) throw new Error(result.skippedReason);
-        if(input.job.sourceKind==="topic.daily"){
+        if(input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind)){
           const child=result.deduped
-            ? await dispatchScheduledCollection(c,{id:result.aiTaskId,taskType:"scheduled.topic.daily",inputData:{jobId:input.job.id,jobRunId:result.jobRunId,target:input.job.target}})
+            ? await dispatchScheduledCollection(c,{id:result.aiTaskId,taskType:`scheduled.${input.job.sourceKind}`,inputData:{jobId:input.job.id,jobRunId:result.jobRunId,target:input.job.target}})
             : await result.completion;
-          if(!child?.executionTaskId)throw new Error("每日选题缺少持久执行绑定");
+          if(!child?.executionTaskId)throw new Error("调度任务缺少持久执行绑定");
           return child;
         }
 
@@ -7014,7 +7019,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
         }
       } catch (error) {
-        if(input.job.sourceKind==="topic.daily"&&result?.aiTaskId){
+        if((input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind))&&result?.aiTaskId){
           const existing=await aiService.getTask(c,result.aiTaskId);
           if(existing.executionTaskId)return {executionTaskId:existing.executionTaskId};
           await aiService.markFailed(c,result.aiTaskId,error instanceof Error?error.message:String(error));
@@ -7053,7 +7058,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       leaseSeconds: 120,
       sweepStaleJobRuns,
       scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
-      wakeDelegated:()=>modelWorker?.start(),
+      wakeDelegated:()=>{modelWorker?.start();wakeScheduledFlywheel();},
     });
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
@@ -7165,35 +7170,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             `OwnershipError: benchmark work not found: ${workId}`,
           );
         }
-        // 已有非空逐字稿 → 复用,不重抓(单条按需的幂等)。
-        if (work.transcript && work.transcript.trim()) {
-          return {
-            data: { status: "reused", transcript: work.transcript },
-            meta: { requestId: ctx.requestId },
-          };
-        }
-        // 标记抓取中(前端可渲 pending)。
-        await benchmarkService.saveWorkTranscript(ctx, workId, null, "pending");
-        try {
-          const text = await transcribeOneAweme(ctx, work.awemeId);
-          if (!text) {
-            // 图集/无口播 → transcribeOne 返 null → skipped(诚实,非失败)。
-            await benchmarkService.saveWorkTranscript(ctx, workId, null, "skipped");
-            return {
-              data: { status: "skipped", transcript: null },
-              meta: { requestId: ctx.requestId },
-            };
-          }
-          await benchmarkService.saveWorkTranscript(ctx, workId, text, "done");
-          return {
-            data: { status: "done", transcript: text },
-            meta: { requestId: ctx.requestId },
-          };
-        } catch (err) {
-          // 抓取抛错 → failed(可重试)→ 重新抛错(前端渲失败可重试)。
-          await benchmarkService.saveWorkTranscript(ctx, workId, null, "failed");
-          throw err;
-        }
+        const data=await benchmarkTranscription.transcribe(ctx,workId);
+        return {data,meta:{requestId:ctx.requestId}};
       }
       return benchmark.request(endpoint, input, ctx);
     },
@@ -8999,7 +8977,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;if(benchmarkRecoveryTimer)clearInterval(benchmarkRecoveryTimer);if(flywheelRecoveryTimer)clearInterval(flywheelRecoveryTimer);assetBusiness.stop();transcribeBusiness.stop();await Promise.all([scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery,benchmarkRecovery,flywheelRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -9071,118 +9049,18 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     };
   };
 
-  // [T-163 Batch 4] 批量算 embedding 已下沉 backend ai-runtime 的 runEmbedTexts(embedMany +
-  // embeddingModelFor 用 embedding key,不住前端包);组合根只解析 spec + 传入。
+  // 交互向量请求复用 IO Worker；领域权限与索引写入仍由当前 service 负责。
+  const embeddingIo = createEmbeddingIoService({entryPath:resolveEmbeddingWorkerPath});
   const embedTexts = async (
+    ctx: RequestContext,
     spec: NonNullable<Awaited<ReturnType<typeof resolveEmbedSpec>>>,
     texts: string[],
-  ): Promise<number[][]> => runEmbedTexts(spec, texts);
+  ): Promise<number[][]> => embeddingIo.embed(ctx, spec, texts);
 
-  // 单条知识 → search_document 重建(标题+正文摘要;embedding 可配则同步算)。
-  // best-effort:任何失败只丢索引增益,业务真值不回滚。
-  const indexKnowledgeDocumentBestEffort = async (
-    ctx: RequestContext,
-    knowledgeId: string,
-  ): Promise<void> => {
-    try {
-      const item = await knowledgeService.getKnowledge(ctx, knowledgeId);
-      const revisions = await knowledgeService.listRevisions(ctx, knowledgeId);
-      const head =
-        revisions.find((r) => r.id === item.currentRevisionId) ?? revisions[0];
-      const content = head?.content ?? "";
-      let embedding: number[] | undefined;
-      try {
-        const spec = await resolveEmbedSpec(ctx);
-        if (spec) {
-          const [vec] = await embedTexts(spec, [
-            `${item.title}\n${content}`.trim(),
-          ]);
-          embedding = vec;
-        }
-      } catch (err) {
-        // embedding 失败 → 只落关键词索引(诚实降级,不假装有向量)。
-        console.warn("[knowledge-index] embedding 计算失败:", err);
-      }
-      await searchService.upsertDocument(ctx, {
-        entityType: "knowledge",
-        entityId: item.id,
-        title: item.title,
-        body: JSON.stringify({ excerpt: content.slice(0, 120), tags: [] }),
-        searchText: `${item.title}\n${content}`.toLowerCase().trim(),
-        ...(embedding ? { embedding } : {}),
-      });
-    } catch (err) {
-      console.warn("[knowledge-index] 索引失败(业务真值不受影响):", err);
-    }
-  };
-
-  // 知识库 hybrid 搜索运行时(/api/knowledge/search 消费):
-  //   1. 存量回填:embedding 为空的 knowledge 文档批量补算(幂等,一次 embedMany);
-  //   2. 查询向量:query 单条 embed;
-  //   3. searchService.hybridSearch(exact 优先 + 余弦补位,阈值截断);
-  //   4. search_history 落真实记录(失败不抛,SPEC §16)。
-  // 未配 capability → 纯关键词 + semanticEnabled:false(诚实降级,不静默装 AI)。
-  const knowledgeSearchRuntime = {
-    hybridSearch: async (
-      ctx: RequestContext,
-      query: string,
-    ): Promise<{
-      semanticEnabled: boolean;
-      semanticError: string | null;
-      hits: HybridSearchHit[];
-    }> => {
-      let semanticEnabled = false;
-      let semanticError: string | null = null;
-      let queryEmbedding: number[] | null = null;
-      const spec = await resolveEmbedSpec(ctx);
-      if (spec) {
-        try {
-          // 存量回填(embedding 空的 knowledge 文档;<5000 条量级,一次批量)。
-          const docs = await searchService.listDocumentsByEntityType(
-            ctx,
-            "knowledge",
-          );
-          const missing = docs.filter((d) => (d.embedding ?? []).length === 0);
-          if (missing.length > 0) {
-            const vectors = await embedTexts(
-              spec,
-              missing.map((d) => d.searchText),
-            );
-            for (let i = 0; i < missing.length; i++) {
-              const doc = missing[i]!;
-              await searchService.upsertDocument(ctx, {
-                entityType: doc.entityType,
-                entityId: doc.entityId,
-                title: doc.title,
-                body: doc.body,
-                searchText: doc.searchText,
-                embedding: vectors[i],
-              });
-            }
-          }
-          const [qVec] = await embedTexts(spec, [query]);
-          queryEmbedding = qVec ?? null;
-          semanticEnabled = queryEmbedding !== null;
-        } catch (err) {
-          // 配置了但跑不通(key 失效/anthropic 协议/网络)→ 诚实降级 + 带原因。
-          semanticError = err instanceof Error ? err.message : String(err);
-          queryEmbedding = null;
-          semanticEnabled = false;
-        }
-      }
-      const hits = await searchService.hybridSearch(ctx, query, {
-        entityType: "knowledge",
-        limit: 20,
-        queryEmbedding,
-      });
-      await searchService.recordSearch(ctx, {
-        query,
-        filters: { entityType: "knowledge", semantic: semanticEnabled },
-        resultCount: hits.length,
-      });
-      return { semanticEnabled, semanticError, hits };
-    },
-  };
+  const knowledgeSearchRuntime = createKnowledgeSearchRuntime({
+    knowledge:knowledgeService, search:searchService, resolveEmbedSpec, embedTexts,
+  });
+  const {indexKnowledgeDocumentBestEffort}=knowledgeSearchRuntime;
 
   // resolveMultimodalSpec — L5 asset.generate 的多模态解析(SPEC 2026-07-01 §2.2 / M2),与文本
   // 层 resolveModelSpec 并列:复用同一套 getModelConfig(settings 拥有 model_configurations)+
@@ -9216,24 +9094,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     omnihi: omnihiVideoAdapter,
     seedance: omnihiVideoAdapter,
     seeddance: omnihiVideoAdapter,
-  };
-  // ASR provider 注册表(T-030-D2 逐字稿转写)—— 一个 OpenAI 兼容 adapter 覆盖 SiliconFlow/
-  // OpenAI/Groq(转写端点同形状,SPEC D-d)。按用户可能所配的 provider 名各挂同一适配器实例
-  // (归一);加 provider = 在此注册。未配置云端 ASR 时 resolveTranscribeSpec 返回
-  // whisper-local；单测装配注 fake,不碰这个真 registry。
-  const openaiAsrAdapter = createOpenaiAsrAdapter();
-  const mimoAsrAdapter = createMimoAsrAdapter();
-  const qwenAsrAdapter = createQwenAsrAdapter();
-  // 本地 Whisper 同时承接旧显式配置与未配置云端 ASR 时的默认回退。
-  const whisperLocalAdapter = createDefaultWhisperLocalAdapter();
-  const asrRegistry: MultimodalProviderRegistry = {
-    siliconflow: openaiAsrAdapter,
-    openai: openaiAsrAdapter,
-    groq: openaiAsrAdapter,
-    "xiaomi-mimo": mimoAsrAdapter,
-    "qwen-asr": qwenAsrAdapter,
-    qwen: qwenAsrAdapter,
-    "whisper-local": whisperLocalAdapter,
   };
   const transcriptStartupDeps = intelligenceTranscriptRunnerDeps;
   if (transcriptStartupDeps) {
@@ -9457,53 +9317,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           secret,
         ),
     });
-  // [T-235b] 已登记信源信号端口(热点多源证据主路)—— trend 出题(topic.generate trend basis /
-  //   topic.daily)经它逐 enabled 信源抓信号:
-  //   · web 型:readUrl(webAuthDirFor(domain),T-217b 带登录态读正文,**只 import 不改**)→
-  //     trend.extract 结构化抽取(runStructuredNode 绑 Zod,无热度 null 不编);
-  //   · rss 型:直接 fetch feed → parseFeed(search-rss 同一解析,辅路不调 AI)。
-  //   单源失败跳过不拖垮(collectTrendSourceSignals 内容错);未登记信源 → [](诚实空)。
-  const trendExtractPort = createTrendExtractPort({ resolveModelSpec });
-  const trendSourceSignalsPort = (ctx: RequestContext) =>
-    collectTrendSourceSignals(ctx, {
-      listEnabledSources: (c) => trendSourcesService.listEnabledSources(c),
-      readWebSource: async (c, source) => {
-        // [T-370b] 读取走 profile 池(域亲和 checkout + DB 登录态注入;authDir 仅作
-        //   存量惰性迁移的旧目录定位,openContext 注入后不再直开该目录)。
-        const result = await readWebUrlSidecar(source.url, {
-          authDir: webAuthDirFor(source.domain),
-        }, {
-          openContext: () =>
-            openPooledReaderContext(c, source.domain) as never,
-        });
-        return { text: result.text };
-      },
-      extractSignals: (c, input) => trendExtractPort(c, input),
-      fetchRssSignals: async (_c, source) => {
-        const resp = await fetch(source.url, {
-          headers: {
-            Accept:
-              "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
-          },
-          signal: AbortSignal.timeout(15_000),
-        });
-        if (!resp.ok) {
-          throw new Error(`RSS 信源 HTTP ${resp.status}: ${source.url}`);
-        }
-        const xml = await resp.text();
-        // parseFeed → 信号形状(feed 无热度概念 → heat=null,诚实;时间/链接原样)。
-        return parseFeed(xml, source.domain)
-          .slice(0, 8)
-          .map((item) => ({
-            title: item.title,
-            url: item.url || null,
-            heat: null,
-            publishedAt: item.publishedAt ?? null,
-            sourceName: source.name,
-          }));
-      },
-    });
-
   // 浏览器搜索随包可用，不再探测隐藏的搜索模型配置。
   const probeSearchConfigured = async (_ctx: RequestContext): Promise<boolean> => true;
 
@@ -10035,10 +9848,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 此前对话路径根本没绑 brief → 项目态 chat 的 context.projectBriefHard 恒空(A3 注入落不了地)。
       // 与 dispatch 路径共用 makeBriefReader(单一真值,扩投影全字段)。
       brief: makeBriefReader(),
-      // [T-245] 已登记信源信号端口 —— 对话编导 topic.generate(basis=trend)与选题页出题共用
-      // 同一个 trendSourceSignalsPort(readUrl 带登录态读热榜页 + AI 结构化抽取 / rss 解析),
-      // 不造影子。经 route 的 `...runtime.context` 展开注入 chat-runner,不加路由接线。
-      trendSourceSignals: (c: RequestContext) => trendSourceSignalsPort(c),
       // [T-245] enabled 信源计数 —— 只用于 trend 出题降级注记「已登记 N 个」的诚实措辞。
       countEnabledTrendSources: async (c: RequestContext) =>
         (await trendSourcesService.listEnabledSources(c)).length,
@@ -11762,6 +11571,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     });
     chatWorker.start();
   }
+
+  const recoverBenchmarkTranscriptions=()=>{
+    if(stoppingPreparation||benchmarkRecovery)return;
+    benchmarkRecovery=(async()=>{if(!modelWorker)await persistentTaskService.recoverExpiredLeases();await benchmarkTranscription.recoverQueued();await benchmarkTranscription.drain(10);})()
+      .catch(()=>console.error("[benchmark-transcribe] RECOVERY_FAILED"))
+      .finally(()=>{benchmarkRecovery=undefined;});
+  };
+  wakeScheduledFlywheel();
+  flywheelRecoveryTimer=setInterval(wakeScheduledFlywheel,2000);
+  recoverBenchmarkTranscriptions();
+  benchmarkRecoveryTimer=setInterval(recoverBenchmarkTranscriptions,2000);
 
   if(modelWorker)preparationRecovery=Promise.all([
     transcribeBusiness.recoverQueued(
