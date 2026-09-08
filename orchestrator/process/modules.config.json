@@ -611,6 +611,40 @@
       },
       "data_source": "冻结候选构建与真实DMG文件，不访问用户业务数据",
       "flows": "本地安装包交付，业务运行由用户验证"
+    },
+    "T-923": {
+      "task_id": "T-923",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-continuous-agent-execution.md",
+        "docs/research/2026-09-08-agent-loop-comparison.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "docs/verification/t923-*"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务自动测试和全局reconcile，真实模型交付待用户验证，不记为PASS。"
     }
   }
 }

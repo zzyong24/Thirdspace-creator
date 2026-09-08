@@ -59,6 +59,8 @@ export interface RunStructuredNodeInput<T> {
   outputSchema?: FlexibleSchema<T>;
   /** SDK 请求重试次数（默认 0；持久模型固定 0），不控制格式修复。 */
   maxRetries?: number;
+  /** 已冻结持续任务可传 null：已确认格式错误持续修复，未知提交仍停止。 */
+  formatRepairLimit?: number | null;
   /** 限制单次响应 token，避免小型结构化任务被超长输出拖慢。 */
   maxOutputTokens?: number;
   /**
@@ -341,7 +343,7 @@ export async function runStructuredNode<T>(
     : null;
   const repairBudget = policy?.repairAttempts ?? 0;
   // 格式恢复是节点级共享预算，不能随完整度修复轮数成倍增长。
-  let formatRepairsRemaining = 2;
+  let formatRepairsRemaining = input.formatRepairLimit === null ? null : (input.formatRepairLimit ?? 2);
   const attempts: RunStructuredNodeResult<T>["generation"]["attempts"] = [];
   let totalUsage = EMPTY_USAGE;
   let firstSegmentCount: number | null = null;
@@ -423,8 +425,8 @@ export async function runStructuredNode<T>(
       while (true) {
         input.signal?.throwIfAborted();
         if (isRepair) {
-          if (formatRepairsRemaining <= 0) break;
-          formatRepairsRemaining -= 1;
+          if (formatRepairsRemaining !== null && formatRepairsRemaining <= 0) break;
+          if (formatRepairsRemaining !== null) formatRepairsRemaining -= 1;
           console.info(`[structured-node] template=${template.id} recovery=format remaining=${formatRepairsRemaining}`);
           textPrompt = `${currentPrompt}
 请修复上次响应，只输出符合以下 JSON Schema 的完整 JSON。保留有效内容，不补造事实：

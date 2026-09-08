@@ -3,7 +3,7 @@ import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {eq,executionTasks,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {structuredGenerationInputSchema,workerModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {isContinuousExecutionBudget,structuredGenerationInputSchema,workerModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import {createExecutionWorkerOutcomeService} from "../execution/execution-worker-outcome.service";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
@@ -50,7 +50,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
    const skillIds=mode==="topic_preview"?["intelligence.topic-decompose","intelligence.topic-from-decomposition","intelligence.topic-adapted-draft"]:["script.draft"];
    const snapshot=workerSkillSnapshotSchema.parse(await deps.resolveSkillSnapshot(ctx,skillIds));
    if(snapshot.userId!==ctx.userId || snapshot.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_SKILL_OWNER_MISMATCH");
-   const input=structuredGenerationInputSchema.parse({kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target)}});
+   const input=structuredGenerationInputSchema.parse({kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}});
    frozen=await leases.withLease(ref,"admission",async({tx,task})=>{
     const payload=task.payload as Record<string,unknown>;
     if(payload.intelligenceGeneration)return payload.intelligenceGeneration;
@@ -90,7 +90,9 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
     if(port==="settleGenerationCall"){const {callId,...settlement}=workerPortInputSchemas.settleGenerationCall.parse(raw);const row=await ledger.settle(ref,callId,settlement,call=>{if(call.kind!=="model"||call.parentCallId)throw new Error("INTELLIGENCE_MODEL_CALL_INVALID");});return {callId:row.id,status:row.status};}
     if(port==="saveGenerationResult"){
      await verify();const request=workerPortInputSchemas.saveGenerationResult.parse(raw),value=z.object({kind:z.enum(["checkpoint","result"]),stage:z.enum(["decomposition","topic","draft"]).optional(),value:z.json()}).parse(JSON.parse(request.text));
-     const last=(await ledger.inspect(ref)).calls.at(-1);if(last?.id!==request.callId || last.status!=="settled" || !last.providerResult)throw new Error("INTELLIGENCE_RESULT_RECEIPT_INVALID");
+     const recorded=(await ledger.inspect(ref)).calls;
+     const last=value.kind==="checkpoint"?recorded.find(row=>row.id===request.callId):recorded.at(-1);
+     if(last?.id!==request.callId || last.status!=="settled" || !last.providerResult || last.kind!=="model" || last.parentCallId || last.operationKey!==`${saved.input.operationKey}/model/${requestSequence}`)throw new Error("INTELLIGENCE_RESULT_RECEIPT_INVALID");
      if(value.kind==="checkpoint"){
       if(mode!=="topic_preview" || !onCheckpoint)throw new Error("INTELLIGENCE_CHECKPOINT_INVALID");
       const checkpoint=value.stage==="decomposition"?{stage:"decomposition" as const,value:intelligenceTopicDecomposeSchema.parse(value.value)}:value.stage==="topic"?{stage:"topic" as const,value:intelligenceTopicFromDecompositionSchema.parse(value.value)}:value.stage==="draft"?{stage:"draft" as const,value:z.object({contentText:z.string().min(1)}).parse(value.value)}:null;

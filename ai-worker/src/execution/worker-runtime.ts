@@ -50,7 +50,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void}>();
   // 只缓存最近的 IPC 重投结果；跨进程/历史幂等仍由后端账本负责。
   const completed = new Map<string, WorkerStopReason>();
-  let active: {execution: ExecutionRef; controller: AbortController;deadlineAt:number} | undefined;
+  let active: {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null} | undefined;
   let closed = false;
   const send = (message: WorkerMessage) => { if (!closed) deps.send(message); };
   const key = (ref: ExecutionRef) => JSON.stringify(ref);
@@ -60,7 +60,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     const requestId = randomUUID();
     return new Promise((resolve, reject) => {
       const onAbort = () => { cleanup(); reject(new Error("WORKER_CANCELLED")); };
-      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel"].includes(port) && active && sameExecution(active.execution,execution) ? Math.max(1,active.deadlineAt-Date.now()) : 30000);
+      const timer = setTimeout(() => {cleanup(); reject(new Error("HOST_PORT_TIMEOUT"));}, ["executeAgenticTool","acquireTranscribeProfile","acquireTranscribeChannel"].includes(port) && active && sameExecution(active.execution,execution) ? active.deadlineAt===null ? 600000 : Math.max(1,active.deadlineAt-Date.now()) : 30000);
       const cleanup = () => {clearTimeout(timer); signal?.removeEventListener("abort", onAbort); pending.delete(requestId);};
       pending.set(requestId, {resolve, reject, cleanup});
       signal?.addEventListener("abort", onAbort, {once: true});
@@ -68,11 +68,11 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       catch {cleanup(); reject(new Error("WORKER_DISCONNECTED"));}
     });
   };
-  const execute = async (execution: ExecutionRef, deadlineAt: number, requestId: string) => {
+  const execute = async (execution: ExecutionRef, deadlineAt: number|null, requestId: string) => {
     const controller = new AbortController();
     active = {execution, controller,deadlineAt};
     const signal = controller.signal;
-    const timer = setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
+    const timer = deadlineAt===null ? undefined : setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
     let reason: WorkerStopReason = "failed";
     let started = false;
     let settled = false;
@@ -89,7 +89,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     };
     heartbeatTimer = setTimeout(() => {void heartbeat();}, deps.heartbeatMs ?? 10000);
     try {
-      if (deadlineAt <= Date.now()) controller.abort();
+      if (deadlineAt !== null && deadlineAt <= Date.now()) controller.abort();
       signal.throwIfAborted();
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");

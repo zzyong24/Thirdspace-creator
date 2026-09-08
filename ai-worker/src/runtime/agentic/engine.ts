@@ -120,6 +120,8 @@ export type EngineLlm = (
 
 /** 一次自主循环运行的输入(执行器组装,喂引擎)。 */
 export interface AgenticEngineRunInput {
+  /** 新持久任务允许同会话在输出截断后继续；旧冻结任务保持请求序列。 */
+  continueTruncated?: boolean;
   /** 任务目标(自然语言)。 */
   goal: string;
   /** 系统提示(角色/护栏说明)。 */

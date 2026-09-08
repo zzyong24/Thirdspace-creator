@@ -13,7 +13,7 @@ const checkpointSchema=z.object({revision:z.number().int().nonnegative(),ledgerS
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"]),
   acknowledgedBlockedCallIds:z.array(z.string().min(1)).default([]),
-  budget:z.object({maxCalls:z.number().int().positive(),maxTokens:z.number().int().positive()})});
+  budget:z.object({maxCalls:z.number().int().positive().nullable(),maxTokens:z.number().int().positive().nullable()})});
 /** Rebuild the Pi transcript by replaying durable calls from the initial frozen context. */
 export async function runAgenticInWorker(
   rawInput:z.infer<typeof agenticWorkerInputSchema>,rawModel:z.infer<typeof workerModelSpecSchema>,
@@ -82,7 +82,7 @@ export async function runAgenticInWorker(
     },
   }));
   const engine=createPiAgenticEngine({fallback:{name:"unavailable",run:async()=>{throw new GenerationFailure("failed","PI_RUNTIME_UNAVAILABLE");}},
-    wrapStream:stream=>wrapDurablePiStream(stream as StreamFunction,{call,signal,maxOutputTokens:input.maxOutputTokens,frozenSystemPrompt:input.systemPrompt,
+    wrapStream:stream=>wrapDurablePiStream(stream as StreamFunction,{call,signal,maxOutputTokens:input.maxOutputTokens,continuousContext:input.runtimeVersion==="intent-v1",frozenSystemPrompt:input.systemPrompt,
       frozenTools:input.tools.map(tool=>({name:tool.name,description:tool.description,parameters:tool.parameters})) as Context["tools"],
       onFailure:error=>{failure=error;stop.abort();},
       onSettled:async(callId,receipt)=>{
@@ -99,7 +99,7 @@ export async function runAgenticInWorker(
       },
     }),
   });
-  const result=await engine.run({goal:input.goal,systemPrompt:input.systemPrompt,tools,
+  const result=await engine.run({goal:input.goal,systemPrompt:input.systemPrompt,tools,continueTruncated:input.runtimeVersion==="intent-v1",
     llm:async()=>{throw new GenerationFailure("failed","UNMANAGED_MODEL_CALL");},
     llmConfig:{...model,authStyle:model.authStyle},
     controller:createLoopController({maxSteps:initial.budget.maxCalls,maxTokens:initial.budget.maxTokens}),

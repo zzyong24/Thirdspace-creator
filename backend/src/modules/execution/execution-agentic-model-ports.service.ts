@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
-import { canonicalToPiAssistant, normalizePiContext } from "@creatoros/ai-worker/durable-pi-stream";
+import { canonicalToPiAssistant, normalizePiContext, AGENTIC_CONTINUATION_PROMPT, windowAgenticContext } from "@creatoros/ai-worker/durable-pi-stream";
 import { type Db } from "@creatoros/backend";
 import { agenticWorkerInputSchema, workerPortInputSchemas, workerProviderReceiptSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -35,6 +35,7 @@ export function createExecutionAgenticModelPorts(db:Db,deps:Parameters<typeof cr
        if(pending.has(part.id))throw new ConflictError("模型工具ID重复");pending.set(part.id,part.name);
       }
       messages.push(message);
+      if(input.runtimeVersion==="intent-v1" && message.stopReason==="length" && !pending.size)messages.push({role:"user",content:[{type:"text",text:AGENTIC_CONTINUATION_PROMPT}],timestamp:0});
      }else if(previous.kind==="tool"){
       const receipt=workerToolResultReceiptSchema.parse(JSON.parse(previous.resultText ?? ""));
       if(pending.get(receipt.toolCallId)!==receipt.toolName)throw new ConflictError("工具结果没有模型调用依据");pending.delete(receipt.toolCallId);
@@ -43,8 +44,9 @@ export function createExecutionAgenticModelPorts(db:Db,deps:Parameters<typeof cr
      }else throw new ConflictError("不支持恢复该调用类型");
     }
     if(pending.size)throw new ConflictError("工具结果尚未全部确认");
-    if(messages.length>1 && (messages.at(-1) as {role:string}).role!=="toolResult")throw new ConflictError("模型已结束，不能追加无依据回合");
-    const expected=normalizePiContext({systemPrompt:input.systemPrompt,messages,tools:input.tools.map(tool=>({name:tool.name,description:tool.description,parameters:tool.parameters}))} as Parameters<typeof normalizePiContext>[0]);
+    if(messages.length>1 && (messages.at(-1) as {role:string}).role!=="toolResult" && !(input.runtimeVersion==="intent-v1" && (messages.at(-1) as {role:string}).role==="user"))throw new ConflictError("模型已结束，不能追加无依据回合");
+    const fullContext={systemPrompt:input.systemPrompt,messages,tools:input.tools.map(tool=>({name:tool.name,description:tool.description,parameters:tool.parameters}))} as Parameters<typeof normalizePiContext>[0];
+    const expected=normalizePiContext(input.runtimeVersion==="intent-v1" ? windowAgenticContext(fullContext) : fullContext);
     if(!isDeepStrictEqual(expected,request.request))throw new ConflictError("模型上下文与冻结输入及真实调用回执不符");
    });
    return {callId:call.id,status:call.status,...(call.providerResult?{providerResult:call.providerResult}:{})};

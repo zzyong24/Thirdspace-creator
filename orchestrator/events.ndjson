@@ -957,3 +957,5 @@
 {"ts":"2026-09-08T08:20:34.363Z","actor":"taskctl","action":"complete","task":"T-921","evidence":"共享输出有界修复与错误分类落地；TypeScript 退出0；独立代码复核通过；docs/verification/t921-generation-recovery.md；按用户授权暂缓业务自动测试及全局reconcile，真实模型和安装包待验证","sha_before":"7d58cdd6c7bc","sha_after":"e758e3717ad7"}
 {"ts":"2026-09-08T08:30:53.130Z","actor":"taskctl","action":"start","task":"T-922","sha_before":"f91be2239e99","sha_after":"087f0961af9d"}
 {"ts":"2026-09-08T08:34:47.746Z","actor":"taskctl","action":"complete","task":"T-922","evidence":"双工程只读代码对照与独立CreatorOS停止点审查完成；docs/research/2026-09-08-agent-loop-comparison.md；不含产品实现或模型验收","sha_before":"087f0961af9d","sha_after":"18731c1a6e07"}
+{"ts":"2026-09-08T08:37:22.655Z","actor":"taskctl","action":"start","task":"T-923","sha_before":"0e77b58e6ecc","sha_after":"841c90568e74"}
+{"ts":"2026-09-08T08:59:07.366Z","actor":"taskctl","action":"complete","task":"T-923","evidence":"36d61973、3fada816、f04fa676及本次接线；独立SPEC/代码复核；frontend tsc退出0；docs/verification/t923-continuous-agent.md。用户授权暂缓业务测试与全局reconcile，accepted-risk，未打包安装，不代表T-915完成。","sha_before":"841c90568e74","sha_after":"636303342e7c"}

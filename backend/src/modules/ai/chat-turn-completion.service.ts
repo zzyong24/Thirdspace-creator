@@ -52,8 +52,8 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 }
                 };
                 const [existing] = await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id, resultId));
-                const metadata = { chatTaskId: business.id, sourceMessageId: source.id, actualEngine: "vercel", stopReason: projected.finishReason, completeness: projected.outcome === "succeeded" ? "completed" : "partial", checkpointRef: checkpoint.revision };
-                const resultData = { conversationId: conversation.id, sourceMessageId: source.id, messageId, actualEngine: "vercel", stopReason: projected.finishReason, completeness: metadata.completeness, checkpointRef: checkpoint.revision };
+                const metadata = { chatTaskId: business.id, sourceMessageId: source.id, actualEngine: frozen.executionEngine ?? "vercel", stopReason: projected.finishReason, completeness: projected.outcome === "succeeded" ? "completed" : "partial", checkpointRef: checkpoint.revision };
+                const resultData = { conversationId: conversation.id, sourceMessageId: source.id, messageId, actualEngine: frozen.executionEngine ?? "vercel", stopReason: projected.finishReason, completeness: metadata.completeness, checkpointRef: checkpoint.revision };
                 const finish={type:"finish",finishReason:["stop","length","tool-calls","content-filter","error","other","unknown"].includes(projected.finishReason)?projected.finishReason:"other",messageMetadata:metadata};
                 const finishes=events.filter(event=>event.chunk.type==="finish");
                 if(finishes.length && (finishes.length!==1 || finishes[0]!.callId!==lastModel.id || finishes[0]!.sequence!==events.at(-1)!.sequence || !isDeepStrictEqual(finishes[0]!.chunk,finish)))throw new ConflictError("聊天结束事件不一致");

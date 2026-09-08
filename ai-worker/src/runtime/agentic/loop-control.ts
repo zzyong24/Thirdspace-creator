@@ -1,19 +1,11 @@
-// [T-256b] 自主循环控制模型(SPEC §4)—— 步数/预算硬顶 + 检查点续跑。
-//
-// 自主循环无人盯每步(SPEC §2),故这些护栏比对话时更关键(SPEC §7 模型现实:MiniMax 弱模型
-// 自主循环风险最高 → 步数/预算硬顶是必需不是可选)。控制器是纯内存状态机,引擎每步问它「还能不能
-// 走」;到顶即诚实终止(不无限绕圈,SPEC §4.2)。
-//
-// 检查点续跑(SPEC §4.3):长任务分步落 AITaskStep,中断/超时可续。关键安全性质 ——
-// **续跑不重置预算**:从检查点恢复的循环,stepsUsed/tokensUsed 从上次值起算,硬顶跨续跑生效
-// (否则「续跑」= 反复重置预算无限绕圈的后门)。
+// 持续任务的 null 上限由后端显式授权；有限任务仍累计记账并遵守冻结限制。
 
 /** 步数 + token 预算硬顶(SPEC §4.2)。 */
 export interface LoopBudget {
   /** 最大循环步数(每步 = 一次模型请求或一次工具调用；确定性适配器按工具计步)。 */
-  maxSteps: number;
+  maxSteps: number | null;
   /** 最大累计 token(引擎每步推理烧的 token 之和)。 */
-  maxTokens: number;
+  maxTokens: number | null;
 }
 
 /** 循环终止原因(诚实写进产物 summary,供人判断是「干完了」还是「到顶被截断」)。 */
@@ -69,8 +61,8 @@ export function createLoopController(
 
   const canContinue = (): boolean => {
     if (reason) return false;
-    if (tokens >= budget.maxTokens) { reason = "budget_exhausted"; return false; }
-    if (steps >= budget.maxSteps) { reason = "max_steps"; return false; }
+    if (budget.maxTokens !== null && tokens >= budget.maxTokens) { reason = "budget_exhausted"; return false; }
+    if (budget.maxSteps !== null && steps >= budget.maxSteps) { reason = "max_steps"; return false; }
     return true;
   };
 
@@ -86,7 +78,7 @@ export function createLoopController(
     },
     chargeTokens(n) {
       tokens += Math.max(0, Math.floor(n));
-      if (tokens >= budget.maxTokens) {
+      if (budget.maxTokens !== null && tokens >= budget.maxTokens) {
         if (!reason) reason = "budget_exhausted";
         return false;
       }

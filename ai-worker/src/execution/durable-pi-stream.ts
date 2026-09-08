@@ -1,3 +1,5 @@
+import { windowAgenticContext } from "../runtime/agentic/continuation";
+export { AGENTIC_CONTINUATION_PROMPT, windowAgenticContext } from "../runtime/agentic/continuation";
 import { z } from "zod";
 import type { AssistantMessage, AssistantMessageEvent, Context, StreamFunction } from "@earendil-works/pi-ai";
 import {workerProviderReceiptSchema,workerReservationSchema,workerStartReceiptSchema,type WorkerProviderReceipt,type WorkerPort} from "@creatoros/contract/execution-worker";
@@ -60,6 +62,7 @@ export interface DurablePiStreamDeps {
   call(port:WorkerPort,data:unknown,signal?:AbortSignal):Promise<unknown>;
   signal:AbortSignal;
   maxOutputTokens:number;
+  continuousContext?:boolean;
   frozenSystemPrompt?:string;
   frozenTools?:Context["tools"];
   onSettled(callId:string,receipt:WorkerProviderReceipt):void|Promise<void>;
@@ -72,7 +75,10 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
     let resolve!:(message:AssistantMessage)=>void,reject!:(error:unknown)=>void;
     const result=new Promise<AssistantMessage>((yes,no)=>{resolve=yes;reject=no;});void result.catch(()=>{});
     const push=(event:AssistantMessageEvent)=>{queue.push(event);wake();};
-    const signal=options?.signal?AbortSignal.any([deps.signal,options.signal]):deps.signal;
+    const idle=new AbortController();
+    const signal=AbortSignal.any([deps.signal,idle.signal,...(options?.signal?[options.signal]:[])]);
+    let idleTimer:ReturnType<typeof setTimeout>|undefined;
+    const progress=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>idle.abort(new Error("AGENT_MODEL_IDLE_TIMEOUT")),180000);};
     void(async()=>{
       let responseFact:{status:number;responseHeaders:Record<string,string>;retryAfterMs?:number}|undefined;
       let callId:string|undefined;let nativeBegan=false;let terminalSettled=false;let settling=false;let hasOutput=false;
@@ -80,7 +86,8 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
         signal.throwIfAborted();
         const ceiling=count.positive().parse(deps.maxOutputTokens);
         const maxTokens=Math.min(ceiling,options?.maxTokens===undefined?ceiling:count.positive().parse(options.maxTokens));
-        const effectiveContext={...context,systemPrompt:deps.frozenSystemPrompt ?? context.systemPrompt,tools:deps.frozenTools ?? context.tools};
+        const frozenContext={...context,systemPrompt:deps.frozenSystemPrompt ?? context.systemPrompt,tools:deps.frozenTools ?? context.tools};
+        const effectiveContext=deps.continuousContext ? windowAgenticContext(frozenContext) : frozenContext;
         const request=normalizePiContext(effectiveContext);
         const reserved=workerReservationSchema.parse(await deps.call("reserveAgenticModel",{request,maxOutputTokens:maxTokens},signal));callId=reserved.callId;
         signal.throwIfAborted();
@@ -89,7 +96,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
         else {
           if(reserved.status!=="reserved")throw new GenerationFailure("unknown_result","MODEL_CALL_REQUIRES_RECONCILIATION");
           const start=workerStartReceiptSchema.parse(await deps.call("startCall",{callId},signal));if(start.callId!==callId)throw new Error("MODEL_START_RECEIPT_MISMATCH");
-          signal.throwIfAborted();nativeBegan=true;
+          signal.throwIfAborted();nativeBegan=true;progress();
           const source=await native(model,effectiveContext,{...options,maxTokens,signal,maxRetries:0,
             onResponse:async(response,responseModel)=>{
               // 固定版本provider补丁仅从SDK APIError补发拒绝响应；2xx后的流错误仍未知。
@@ -114,6 +121,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
               const next=await Promise.race([iterator.next(),aborted]);
               if(next.done)break;
               const event=next.value;
+              progress();
               signal.throwIfAborted();
               if(event.type==="done"){message=event.message;break;}
               if(event.type==="error"){
@@ -151,7 +159,7 @@ export function wrapDurablePiStream(native:StreamFunction,deps:DurablePiStreamDe
         }
         try{deps.onFailure?.(failure as GenerationFailure);}catch{/* Observer errors cannot rewrite the persisted call outcome. */}
         reject(failure);
-      }finally{finished=true;wake();}
+      }finally{clearTimeout(idleTimer);finished=true;wake();}
     })();
     return {result:()=>result,async *[Symbol.asyncIterator](){while(true){if(queue.length){yield queue.shift()!;continue;}if(finished){if(failure)throw failure;return;}await new Promise<void>(r=>{wake=r;});}}} as unknown as ReturnType<StreamFunction>;
   }) as StreamFunction;

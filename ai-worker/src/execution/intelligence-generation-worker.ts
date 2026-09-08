@@ -43,17 +43,19 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   }
   if(input.facets.mode!=="topic_preview")throw new Error("INTELLIGENCE_MODE_INVALID");
   const source=topicTarget.parse(target);
+  const continuous=input.facets.continuousRecovery==="true";
+  const recovery=continuous?{formatRepairLimit:null}:{};
   const facets={positioning:[source.positioning.oneLiner,source.positioning.keywords.length?`关键词：${source.positioning.keywords.join("、")}`:""].filter(Boolean).join("\n"),sourceTitle:source.item.title,sourceAuthor:source.item.authorName??source.item.platform,sourceUrl:source.item.canonicalUrl,transcript:source.transcript.text};
-  const decomposition=source.reusableDecomposition??parseGeneratedOutput(intelligenceTopicDecomposeSchema,(await runStructuredNode({model,template:getEffectiveTemplate("intelligence.topic-decompose"),normalizeObject:normalizeIntelligenceTopicDecomposeOutput,facets,maxRetries:0,maxOutputTokens:3072,signal})).object);
+  const decomposition=source.reusableDecomposition??parseGeneratedOutput(intelligenceTopicDecomposeSchema,(await runStructuredNode({model,...recovery,template:getEffectiveTemplate("intelligence.topic-decompose"),normalizeObject:normalizeIntelligenceTopicDecomposeOutput,facets,maxRetries:0,maxOutputTokens:3072,signal})).object);
   // 可复用阶段没有新模型调用，其原 checkpoint 已由业务服务核验，无须伪造回执。
   if(!source.reusableDecomposition)await save({kind:"checkpoint",stage:"decomposition",value:decomposition});
-  const topic=source.reusableCandidate??parseGeneratedOutput(intelligenceTopicFromDecompositionSchema,(await runStructuredNode({model,template:getEffectiveTemplate("intelligence.topic-from-decomposition"),facets:{...facets,decomposition:JSON.stringify(decomposition)},maxRetries:0,maxOutputTokens:2048,signal})).object);
+  const topic=source.reusableCandidate??parseGeneratedOutput(intelligenceTopicFromDecompositionSchema,(await runStructuredNode({model,...recovery,template:getEffectiveTemplate("intelligence.topic-from-decomposition"),facets:{...facets,decomposition:JSON.stringify(decomposition)},maxRetries:0,maxOutputTokens:2048,signal})).object);
   if(!source.reusableCandidate)await save({kind:"checkpoint",stage:"topic",value:topic});
   const {system,prompt}=bindPrompt(getEffectiveTemplate("intelligence.topic-adapted-draft"),{...facets,decomposition:JSON.stringify(decomposition),topicCandidate:JSON.stringify({title:topic.title,angle:topic.angle,differentiation:topic.differentiation,sourceSummary:topic.sourceSummary,targetAudience:topic.targetAudience,audiencePain:topic.audiencePain,coreConflict:topic.coreConflict,format:topic.format}),adaptationStrategy:JSON.stringify(topic.adaptationStrategy)});
   let adaptedDraft="";
-  for(let attempt=0;attempt<2;attempt++){
+  for(let attempt=0;(continuous || attempt<2);attempt++){
    signal.throwIfAborted();
-   if(attempt>0)console.info("[intelligence-topic] recovery=empty_draft attempt=1");
+   if(attempt>0)console.info(`[intelligence-topic] recovery=empty_draft attempt=${attempt}`);
    const draft=await generateText({model,system,prompt:attempt===0?prompt:`${prompt}\n上一轮响应没有正文，请直接输出口播初稿正文。`,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:AbortSignal.any([signal,AbortSignal.timeout(180000)])});
    adaptedDraft=draft.text.trim();
    if(adaptedDraft || draft.finishReason==="content-filter")break;

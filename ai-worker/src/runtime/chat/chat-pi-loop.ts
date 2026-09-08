@@ -128,9 +128,14 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
     },
   }))},streamFn,toolExecution:"sequential"});
   const unsubscribe=agent.subscribe(event=>{
-    if(event.type==="message_end" && event.message?.stopReason==="length" && !awaitingApproval && !failure){
-      history.push({role:"user",content:CHAT_LENGTH_CONTINUATION});
-      agent.followUp({role:"user",content:CHAT_LENGTH_CONTINUATION,timestamp:0});
+    if(event.type==="message_end" && !awaitingApproval && !failure){
+      const length=event.message?.stopReason==="length";
+      // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
+      const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !parts.some(part=>part.type==="file");
+      if(!length && !empty)return;
+      const continuation=length?CHAT_LENGTH_CONTINUATION:"上一轮响应没有可见正文或工具行动。请继续当前用户请求，执行所需工具或交付实际结果。";
+      history.push({role:"user",content:continuation});
+      agent.followUp({role:"user",content:continuation,timestamp:0});
     }
   });
   const abort=()=>agent.abort();options.signal.addEventListener("abort",abort,{once:true});

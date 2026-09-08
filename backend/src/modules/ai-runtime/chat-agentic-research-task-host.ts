@@ -43,7 +43,7 @@ export function createChatAgenticResearchTaskHost(reader:Pick<ReturnType<typeof 
     if(!goal)throw new Error("请提供具体调研目标");
     const spec=executionTaskSpec.parse({taskType:"agentic.research",goal,inputs:[],
       params:parsed.browserAuthorization?{browserAuthorization:structuredClone(parsed.browserAuthorization)}:{},
-      constraints:{network:"deny",timeoutSec:600,maxOutputMB:512},
+      constraints:{network:"deny",timeoutSec:null,maxOutputMB:512},
     });
     scope.signal?.throwIfAborted();
     const task=await ports.prepareTaskCommit(resolved.context,{taskType:"exec.agentic.research",attemptId:scope.attemptId,inputData:{...(projectId?{projectId}:{}),spec}});

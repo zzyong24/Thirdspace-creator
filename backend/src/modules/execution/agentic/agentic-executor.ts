@@ -89,8 +89,8 @@ function effectiveBudget(
   const reqSteps = posInt(params.maxSteps);
   const reqTokens = posInt(params.maxTokens);
   return {
-    maxSteps: reqSteps ? Math.min(reqSteps, def.maxSteps) : def.maxSteps,
-    maxTokens: reqTokens ? Math.min(reqTokens, def.maxTokens) : def.maxTokens,
+    maxSteps: reqSteps ? def.maxSteps===null ? reqSteps : Math.min(reqSteps, def.maxSteps) : def.maxSteps,
+    maxTokens: reqTokens ? def.maxTokens===null ? reqTokens : Math.min(reqTokens, def.maxTokens) : def.maxTokens,
   };
 }
 

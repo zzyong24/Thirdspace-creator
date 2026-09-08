@@ -12,6 +12,50 @@
   },
   "verticals": [
     {
+      "id": "T-923",
+      "task_id": "T-923",
+      "archetype": [
+        "orchestration"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-08-continuous-agent-execution.md",
+        "docs/research/2026-09-08-agent-loop-comparison.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/server/**",
+        "docs/verification/t923-*"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend exec tsc --noEmit --pretty false"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户暂缓业务自动测试和全局reconcile，真实模型交付待用户验证，不记为PASS。",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {}
+    },
+    {
       "id": "T-918",
       "task_id": "T-918",
       "archetype": [

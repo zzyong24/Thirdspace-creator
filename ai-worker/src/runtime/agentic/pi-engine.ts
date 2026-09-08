@@ -1,3 +1,4 @@
+import { AGENTIC_CONTINUATION_PROMPT } from "./continuation";
 // [T-313] 真 Pi 引擎 —— 把 AgenticEngine 循环真接上 `@earendil-works/pi-coding-agent` SDK
 // 的 `createAgentSession()`(库级内嵌 sidecar,无 TTY)。执行器/适配器/护栏零改动(engine.ts 契约)。
 //
@@ -571,8 +572,8 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
           };
         }
 
-        // 关 pi 自带 auto-retry:retry/backoff 由我方层(端口 + LoopController 预算)掌控;
-        // 放任 pi 自动重试会不受预算约束地绕圈 + 报错不及时浮现(诚实原则:fail fast)。
+        // 暂态重试由持久宿主记录retryAt并续跑；SDK不能另发未记账请求。
+        // 上下文窗口由durable stream按同一回执规范缩减，内建compaction会绕开该端口。
         sess.setAutoRetryEnabled?.(false);
         sess.setAutoCompactionEnabled?.(false);
 
@@ -605,13 +606,22 @@ export function createPiAgenticEngine(deps: PiAgenticEngineDeps): AgenticEngine 
         if (signal.aborted) signal.throwIfAborted();
         await sess.prompt(input.goal);
         await sess.waitForIdle();
+        // 输出窗口耗尽只结束单次生成，同一任务与会话继续；后端预算和用户取消仍有效。
+        while (input.continueTruncated && !signal.aborted && controller.canContinue()) {
+          const last = sess.messages?.filter(message => message.role === "assistant").at(-1);
+          if (last?.stopReason !== "length") break;
+          await input.onStep("输出达到单次长度上限，正在继续剩余工作", "info");
+          await sess.prompt(AGENTIC_CONTINUATION_PROMPT);
+          await sess.waitForIdle();
+        }
         stopReason = controller.terminationReason() ?? stopReason;
 
         // 诚实:LLM 调用报错(未配/凭据错/网络)→ 末条助手消息 stopReason "error" → 记 llm_error,
         // 不假成功(与确定性引擎 llm_error 同口径,SPEC honesty)。
         let llmErrorCategory: "provider_error" | undefined;
         if (stopReason === "completed") {
-          const errored = sess.messages?.find((m) => m.stopReason === "error");
+          const lastAssistant = sess.messages?.filter((m) => m.role === "assistant").at(-1);
+          const errored = lastAssistant?.stopReason === "error" ? lastAssistant : undefined;
           if (errored) {
             stopReason = "llm_error";
             llmErrorCategory = "provider_error";

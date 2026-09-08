@@ -67,7 +67,7 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
                     }
                 }
             }
-            if ((finishReason === "tool-calls") !== (modelTools > 0))
+            if ((finishReason === "tool-calls") !== (modelTools > 0) && !(input.executionEngine === "pi" && finishReason === "length" && modelTools > 0))
                 throw new ConflictError("模型结束原因与工具回执不一致");
         }
         else if (call.kind === "tool") {
