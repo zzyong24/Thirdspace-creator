@@ -32,3 +32,16 @@
 新策略字段仅写入新任务并参与摘要；旧任务无字段时沿原策略。Skill和工具读取均用同一账号冻结版本，不能用当前全局配置补历史。超大历史提交仍保留旧投影退路，避免新增全文冻结触及既有包体上限。当前上下文是确定性投影及可恢复原文，不是模型语义总结；240k字符预算也不是对任意模型上下文大小的保证。
 
 过程修复仅把T-923/T-924/T-925不受支持的中间通配路径改为已有精确文件，并为T-932登记任务包；未改变既有任务状态、验收证据或把全局对账写成通过。全局reconcile与实际业务质量验证按用户既有授权暂缓。
+
+## 本地安装交付
+
+候选 `db5d1303802ae6743150d8133721d0696143a2ed`，干净隔离工作树 `/private/tmp/creatoros-t918-package`，四处版本1.1.0。固定命令 `pnpm -C frontend desktop:package-local` exit 0；构建期间未修改代码或检查规则。
+
+- 安装包：`/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`
+- DMG SHA-256：`0a5d6a34829c71f0442dda60f473c3d921d61f409c9be818aaa1f421bb00f9ab`
+- 安装app与候选sidecar SHA-256一致：`e5a62778304e288a715c0147b5682929d3a7d618309c3f163412c8ef2e0a7033`
+- `hdiutil verify` VALID；`codesign --verify --deep --strict` exit 0。
+- 固定构建内实际sidecar启动：ready、GET / 200、browser hydration PASS；最终tar回放签名通过。
+- 已替换并启动 `/Applications/CreatorOS.app`，PID95669进程实存。未在安装后代用户运行付费模型任务。
+- 本地ad-hoc包，未Apple公证，未推送/tag/Release/Windows发布。独立四项打包vitest仍按用户原授权暂缓；固定入口自带启动检查实际执行并通过。
+- 日志 `/tmp/t932-package.log`、`/tmp/t932-dmg-verify.log`；独立审查对上述4项问题的最终复核通过。

@@ -978,3 +978,4 @@
 {"ts":"2026-09-08T12:41:20.334Z","actor":"taskctl","action":"start","task":"T-931","sha_before":"609dd9a73200","sha_after":"052df526b996"}
 {"ts":"2026-09-08T13:08:22.018Z","actor":"taskctl","action":"complete","task":"T-931","evidence":"候选 f74cc911；类型/worker构建/CodeGraph/独立审查通过，实际双源搜索核验；本地DMG已安装启动 PID83356，镜像与签名校验通过；docs/verification/t931-material-search-delivery.md。用户暂缓业务/付费模型测试及全局reconcile，T-916过程欠债保留。","sha_before":"052df526b996","sha_after":"65be118c49ad"}
 {"ts":"2026-09-08T13:13:35.863Z","actor":"taskctl","action":"start","task":"T-932","sha_before":"bdec3b975128","sha_after":"aaaec1edfe1c"}
+{"ts":"2026-09-08T13:45:25.183Z","actor":"taskctl","action":"complete","task":"T-932","evidence":"代码aa7f1f5b/47ba4c2f/90c58f94，候选db5d1303本地包已安装启动PID95669；类型/worker构建/CodeGraph/无IO实际Pi与host恢复探针/独立审查/DMG签名校验通过。逐项见docs/verification/t932-runtime-alignment.md；真实模型质量及全局reconcile按用户授权暂缓，240k字符投影非自适应语义压缩。","sha_before":"aaaec1edfe1c","sha_after":"4919301328f0"}
