@@ -11,6 +11,7 @@ import {
 } from "@creatoros/contract/execution-worker";
 import { modelFor } from "../runtime/provider-factory";
 import { createChatModelStream } from "../runtime/chat/chat-model-stream";
+import { runChatPiLoop } from "../runtime/chat/chat-pi-loop";
 import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
@@ -138,7 +139,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         if(!reservedCallId)throw Error("tool receipt missing");
         toolCallIds.add(reservedCallId);await checkpoint();
         if(!initial.acknowledgedBlockedCallIds.includes(reservedCallId) && (output.error?.code==="needs_login" || output.error?.code==="captcha" || output.error?.code==="permission"))throw new GenerationFailure("waiting_user","CHAT_TOOL_REQUIRES_USER");
-        return output.data??output;
+        return (input as typeof input & {executionEngine?:"pi"}).executionEngine==="pi" && output.error ? output : output.data??output;
       }catch(error){throw fail(error,"CHAT_TOOL_RESULT_UNKNOWN");}
     },
   })]));
@@ -167,6 +168,25 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       return decision;
     }catch(error){throw fail(error,"CHAT_APPROVAL_RESULT_UNKNOWN");}
   }]));
+  // 旧冻结任务保留原 SDK 请求指纹；所有新任务由宿主冻结 executionEngine:pi。
+  if((input as typeof input & {executionEngine?:"pi"}).executionEngine==="pi"){
+    const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
+      definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
+      forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      approve:(name,args,options)=>toolApproval[name]!(args,options),
+      approvalId:toolCallId=>`chat-approval:${modelForTool.get(toolCallId)!}:${toolCallId}`,
+      execute:async(name,args,options)=>{
+        const executable=tools[name] as unknown as {execute:(input:unknown,options:{toolCallId:string;messages:ModelMessage[];abortSignal:AbortSignal})=>Promise<unknown>};
+        return executable.execute(args,{...options,messages:[],abortSignal:signal});
+      },
+    });
+    await checkpointTail;
+    if(failure)throw failure;
+    parentSignal.throwIfAborted();
+    if(!lastModelCallId)throw new GenerationFailure("unknown_result","CHAT_RESULT_RECEIPT_MISSING");
+    if(!result.awaitingApproval && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
+    return {...result,lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.finishReason==="stop"?"completed" as const:"partial" as const};
+  }
   let message:UIMessage|undefined;
   const result=createChatModelStream({model,system:input.system,messages:await Promise.all(input.messages.map(message=>modelMessageSchema.parse(message))) as ModelMessage[],
     tools,toolApproval,deduplicateTools:false,maxSteps:input.maxSteps,maxOutputTokens:input.maxOutputTokens,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,abortSignal:signal,
