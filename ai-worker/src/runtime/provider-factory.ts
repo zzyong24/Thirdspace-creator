@@ -389,24 +389,13 @@ export function protectChannelEmbeddingModel(
   });
 }
 
-/**
- * 统一 anthropic baseURL 约定 —— 与旧 @anthropic-ai/sdk 路径共用同一份模型配置。
- * 旧 SDK 给 baseURL `…/anthropic` 会自己补 `/v1/messages`;而 @ai-sdk/anthropic 只补 `/messages`
- * (它默认 baseURL 本身已含 `/v1`)。若不归一,同一条 `…/anthropic` 配置在新路径会缺 `/v1` → 404。
- * 这里把缺版本段(/vN)的 anthropic baseURL 补上 `/v1`,用户只配 `…/anthropic` 两条 SDK 路径都通。
- */
-export function normalizeAnthropicBaseUrl(baseUrl: string): string {
-  const trimmed = baseUrl.replace(/\/+$/, "");
-  return /\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/v1`;
-}
-
-/** 把 ModelSpec 解析成一个可直接喂给 runAgentNode 的 LanguageModel。 */
 function safePiRejection(spec:ModelSpec,facts:{statusCode:number;responseHeaders:Record<string,string>;message:string}):Error{
   if(spec.displayModelKey==="channel-managed" && isManagedAiCreditExhaustedError(facts))return new ManagedAiCreditExhaustedError();
   const message=isStructuredResponseCompatibilityError(facts)?"response_format unsupported":`Pi provider HTTP ${facts.statusCode}`;
   return Object.assign(new Error(message),{statusCode:facts.statusCode,responseHeaders:facts.responseHeaders});
 }
 
+/** 把模型配置绑定到 Pi 网络适配及既有任务账本协议。 */
 export function modelFor(spec: ModelSpec): LanguageModel {
   if(!["anthropic","openai_chat","openai_responses"].includes(spec.apiFormat))throw new ModelConfigurationError();
   const model=createPiProviderModel(spec,facts=>safePiRejection(spec,facts));
@@ -414,15 +403,7 @@ export function modelFor(spec: ModelSpec): LanguageModel {
   return markStructuredOutputMode(protectedModel,structuredModeForIdentity({...spec,customEndpoint:Boolean(spec.baseUrl)}));
 }
 
-/**
- * [T-093] 把 ModelSpec 解析成一个 AI SDK EmbeddingModel(与文本 `modelFor` 并列,
- * 供 `embed`/`embedMany` 直用)。协议族开关同 modelFor:
- *   - openai_chat/openai_responses + baseUrl → openai-compatible 的 textEmbeddingModel(SiliconFlow/
- *     DeepSeek/任意 OpenAI 兼容 embedding 端点);
- *   - openai_chat 无 baseUrl → 官方 OpenAI textEmbeddingModel;
- *   - anthropic → 诚实抛错(Anthropic Messages 协议不提供 embedding 端点;调用方
- *     应引导用户为该 capability 配 OpenAI 兼容 embedding 模型,不静默降级成聊天模型)。
- */
+/** Pi 不提供向量 API；此独立 HTTP 适配复用向量账本协议与受管错误保护。 */
 export function embeddingModelFor(spec: ModelSpec): EmbeddingModel {
   try {
     if(spec.apiFormat==="anthropic")throw new Error("anthropic 协议不提供 embedding 端点，请配置 OpenAI 兼容向量模型");

@@ -4,7 +4,6 @@ import {
   ManagedAiCreditExhaustedError,
   ModelConfigurationError,
   modelFor,
-  normalizeAnthropicBaseUrl,
   protectChannelEmbeddingModel,
   protectChannelModel,
   structuredOutputModeFor,
@@ -260,26 +259,6 @@ describe("modelFor", () => {
       token: "sk-test",
     });
     expect(providerOf(m)).toBe("openai.responses");
-  });
-});
-
-describe("normalizeAnthropicBaseUrl", () => {
-  it("缺版本段 → 补 /v1(与旧 @anthropic-ai/sdk 约定统一,用户只配 …/anthropic)", () => {
-    expect(normalizeAnthropicBaseUrl("https://api.minimaxi.com/anthropic")).toBe(
-      "https://api.minimaxi.com/anthropic/v1",
-    );
-  });
-
-  it("已含 /v1 → 不重复补(幂等,避免 …/v1/v1)", () => {
-    expect(
-      normalizeAnthropicBaseUrl("https://api.minimaxi.com/anthropic/v1"),
-    ).toBe("https://api.minimaxi.com/anthropic/v1");
-  });
-
-  it("末尾斜杠 + 其它版本段 → 去斜杠、保留 vN", () => {
-    expect(normalizeAnthropicBaseUrl("https://relay.example.com/v2/")).toBe(
-      "https://relay.example.com/v2",
-    );
   });
 });
 
