@@ -37,3 +37,7 @@ flowchart LR
 新增 `prepare-chat-reply.test.ts` 直接调用真实装配及真实模板注册，两个场景均通过，并确认 method.research、skill.read、history.read、web.read、material.gather 实际进入冻结输入。此前五项数据库测试未覆盖该装配错误，不能作为完整生产接线已通过的证明。
 
 修正候选 `1092bcdb` 已经固定本地打包入口重新安装，exit 0；PID 17284。DMG SHA-256 `e921335a0aae2900c115baa1165c75becc03a1b04b20ffcfbe4c50a72fd130eb`，安装与候选 sidecar 同为 `e3185eb759e6bfc317ade18b39f8844c95f769955495cd9eba2ca2c0287a3d28`。签名和 DMG 校验通过。日志 `/tmp/t934-fixed-package.log`。重启后 CLI 再次返回 CONNECTION_NOT_FOUND，真实联网验收仍待本次启动授权，未标完成。
+
+## 修正版真实联网验收
+
+用户再次授权后确认旧失败提交对应会话为空；旧幂等键重放返回 data:null，无模型任务，遂以新尝试键提交同一需求，生成唯一 chat.run `ai-task-6be44512-165`。14:56:27→14:57:17，约50秒，实际引擎 pi。真实消息回执有6次 material.gather（换词两轮），全部 items:[]；没有 skill.read/web.read，最终没有交付三篇资料。CLI→Pi工具循环接线已确认；搜索及方法使用的业务验收仍失败，不能写为全量完成。

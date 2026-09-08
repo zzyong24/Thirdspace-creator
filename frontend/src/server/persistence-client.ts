@@ -1,3 +1,4 @@
+import {resolveSubmittedChatToolParameters} from "@creatoros/backend/modules/ai-runtime";
 import {prepareChatReply} from "./prepare-chat-reply";
 import {createSchedulingAutomation} from "@creatoros/backend/application/scheduling/automation";
 import {createSchedulingControls} from "@creatoros/backend/application/scheduling/controls";
@@ -4767,6 +4768,7 @@ FAVORITES_PROMOTE_PER_RUN
       }
   }
   const submittedPreparation=createSubmittedTaskPreparationService(db,{
+    resolveToolParameters:resolveSubmittedChatToolParameters,
     deadlineMs:workerBudget.deadlineMs,
     async prepare(c,id,signal){
       const task=await aiService.getTask(c,id);signal.throwIfAborted();

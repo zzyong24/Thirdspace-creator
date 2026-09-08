@@ -981,3 +981,4 @@
 {"ts":"2026-09-08T13:45:25.183Z","actor":"taskctl","action":"complete","task":"T-932","evidence":"代码aa7f1f5b/47ba4c2f/90c58f94，候选db5d1303本地包已安装启动PID95669；类型/worker构建/CodeGraph/无IO实际Pi与host恢复探针/独立审查/DMG签名校验通过。逐项见docs/verification/t932-runtime-alignment.md；真实模型质量及全局reconcile按用户授权暂缓，240k字符投影非自适应语义压缩。","sha_before":"aaaec1edfe1c","sha_after":"4919301328f0"}
 {"ts":"2026-09-08T14:16:08.589Z","actor":"taskctl","action":"start","task":"T-933","sha_before":"5948a8c6d9e4","sha_after":"7f2b4a5c3df9"}
 {"ts":"2026-09-08T14:27:52.955Z","actor":"taskctl","action":"start","task":"T-934","sha_before":"02ee8e657ed4","sha_after":"1813fb40de98"}
+{"ts":"2026-09-08T14:56:08.473Z","actor":"taskctl","action":"start","task":"T-935","sha_before":"5afbd184ad67","sha_after":"8325690c1841"}

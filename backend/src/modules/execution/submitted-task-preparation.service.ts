@@ -1,4 +1,5 @@
 import {isContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
+import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {and,asc,eq,inArray,isNull,sql,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
@@ -14,6 +15,7 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  deadlineMs:number;now?:()=>number;random?:()=>number;
  prepare(context:RequestContext,taskId:string,signal:AbortSignal):Promise<unknown>;
  fail(context:RequestContext,taskId:string,message:string):Promise<unknown>;
+ resolveToolParameters?(definition:z.infer<typeof chatWorkerInputSchema>["tools"][number]):Promise<{schema:Record<string,unknown>;parameters:z.ZodType}>;
 }){
  if(!Number.isSafeInteger(deps.deadlineMs)||deps.deadlineMs<1)throw new Error("准备期限无效");
  const now=deps.now??Date.now,controller=new AbortController(),active=new Map<string,Promise<void>>();
@@ -36,7 +38,13 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,parent.id)).orderBy(asc(executionCalls.sequence));
    const call=calls.find(row=>row.id===origin.callId);
    if(!call || call.kind!=="tool" || call.parentCallId || call.status!=="settled" || call.inputDigest!==origin.inputDigest || task.attemptId!==`chat-submit:${call.id}`)throw new Error("提交来源与原调用不符");
-   const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:definition.execution,parameters:z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0])}}).forCall(parent,calls,call);
+   // JSONB 会重排 properties；从回读 JSON Schema 重建解析器会改变输入键序，
+   // 从而破坏既有调用摘要。恢复复用原生产解析器，绝不重算或覆盖历史摘要。
+   const restored=await deps.resolveToolParameters?.(definition);
+   // SEMANTIC_BOUNDARY_ALLOW: 对冻结参数契约做对象精确比较，忽略对象键序，不判断内容语义。
+   if(restored && !isDeepStrictEqual(restored.schema,definition.parameters))throw new Error("SUBMITTED_TOOL_SCHEMA_MISMATCH");
+   const parameters=restored?.parameters??z.fromJSONSchema(definition.parameters as Parameters<typeof z.fromJSONSchema>[0]);
+   const binding=createAgenticToolBinding({[definition.name]:{version:definition.version,effect:definition.effect,execution:definition.execution,parameters}}).forCall(parent,calls,call);
    const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")),result=agenticToolOutcomeSchema.parse(receipt.output),data=object(result.data);
    if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==chatSubmittedTaskResultKind(definition.name) || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
    const stamp=now(),continuous=isContinuousExecutionBudget(parent.executionBudget),deadlineAt=continuous?parent.deadlineAt:new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();

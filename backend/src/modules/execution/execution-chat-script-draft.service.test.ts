@@ -1,3 +1,6 @@
+import {buildChatTools,type ChatToolDeps} from "../ai-runtime/chat-tools";
+import {prepareChatToolDefinitions} from "../ai-runtime/chat-tool-definitions";
+import {resolveSubmittedChatToolParameters} from "../ai-runtime/chat-submitted-tool-parameters";
 import {createSubmittedTaskPreparationService} from "./submitted-task-preparation.service";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {z} from "zod";
@@ -14,7 +17,7 @@ let db:Db,close:()=>Promise<void>,seq=0;
 const now=()=>"2026-09-06T10:00:00.000Z",budget={maxCalls:10,maxTokens:100000,deadlineMs:60000};
 beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();});
 afterAll(async()=>close());
-async function fixture(options: { verbatim?: boolean } = {}) {
+async function fixture(options: { verbatim?: boolean; production?: boolean } = {}) {
   const ctx = {
     userId: "hooks-u",
     accountId: `hooks-a-${++seq}`,
@@ -43,8 +46,9 @@ async function fixture(options: { verbatim?: boolean } = {}) {
     },
     calibration: { createDraftPrediction: unexpectedWrite },
   });
+  const production=options.production?await prepareChatToolDefinitions(buildChatTools(["script.draft"],{} as ChatToolDeps),{workerScriptDraft:true}):null;
   const check=vi.fn(async()=>({status:"not-applicable" as const}));
-  const tools={"script.draft":{version:"draft-v1",parameters:z.record(z.string(),z.json()),effect:"committed" as const,execution:"worker.script-draft" as const,approve:check,
+  const tools={"script.draft":{version:production?.definitions[0]!.version??"draft-v1",parameters:production?.parameters["script.draft"]!.parameters??z.record(z.string(),z.json()),effect:"committed" as const,execution:"worker.script-draft" as const,approve:check,
     async prepareTask(context:typeof ctx,input:unknown,scope:{attemptId:string}){
       const task=await ai.prepareTaskCommit(context,{taskType:"script.draft",attemptId:scope.attemptId,inputData:{...(input as Record<string,unknown>),projectId:"fixture-project",artifactId:"fixture-artifact"}});
       return {task,result:(child:{id:string})=>({status:"ok" as const,summary:"整稿已提交",data:{kind:"script.draft",taskId:child.id,projectId:"fixture-project",error:null},evidence:[],error:null,continuation:null,sideEffect:"committed" as const})};
@@ -109,7 +113,7 @@ async function fixture(options: { verbatim?: boolean } = {}) {
       capability: "copilot.assist",
       maxSteps: 6,
       maxOutputTokens: 128,
-      tools: [
+      tools: production?.definitions??[
         {
           name: "script.draft",
           version: "draft-v1",
@@ -163,7 +167,7 @@ async function fixture(options: { verbatim?: boolean } = {}) {
           type: "tool-call",
           toolCallId: "hooks",
           toolName: "script_draft",
-          input: JSON.stringify(options.verbatim?{mode:"verbatim",sourceRef:"message:original"}:{mode:"generate",topic:"真实主题"}),
+          input: JSON.stringify(options.verbatim?{mode:"verbatim",sourceRef:"message:original"}:{mode:"generate",topic:"真实主题",...(options.production?{angle:"匿名案例的因果过程",extraBrief:"已有资料足以起草，缺少事实先标注待补",sourceRefs:[]}: {})}),
         },
       ],
       finishReason: { unified: "tool-calls" },
@@ -303,4 +307,24 @@ it("普通 host.task-submit 伪整稿声明不能接管 Worker 提交",async()=>
  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.ref.executionTaskId));
  const prepare=vi.fn();const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn()});
  await expect(recovery.prepare(f.ctx,id)).rejects.toThrow();expect(prepare).not.toHaveBeenCalled();await recovery.stop();
+});
+
+
+it("JSONB 重排真实整稿 schema 后，恢复沿用生产解析器与原任务摘要",async()=>{
+ const f=await fixture({production:true}),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const before=(await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!.inputDigest;
+ const prepare=vi.fn(async()=>{});
+ const legacy=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn()});
+ await expect(legacy.prepare(f.ctx,id)).rejects.toThrow("工具调用与冻结参数不符");
+ expect(prepare).not.toHaveBeenCalled();await legacy.stop();
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn(),resolveToolParameters:resolveSubmittedChatToolParameters});
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledExactlyOnceWith(f.ctx,id,expect.any(AbortSignal));
+ expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!.inputDigest).toBe(before);
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.accountId,f.ctx.accountId))).filter(row=>row.taskType==="script.draft").map(row=>row.id)).toEqual([id]);
+ await recovery.stop();
+});
+it("恢复解析器参数契约不符仍拒绝执行原子子任务",async()=>{
+ const f=await fixture({production:true}),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const prepare=vi.fn(),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn(),resolveToolParameters:async definition=>({...await resolveSubmittedChatToolParameters(definition),schema:{type:"object"}})});
+ await expect(recovery.prepare(f.ctx,id)).rejects.toThrow("SUBMITTED_TOOL_SCHEMA_MISMATCH");expect(prepare).not.toHaveBeenCalled();await recovery.stop();
 });

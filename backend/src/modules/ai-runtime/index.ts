@@ -154,3 +154,5 @@ export {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
 export {createEmbeddingIoService} from "./embedding-io.service";
 
 export {createModelProbeIoService} from "./model-probe-io.service";
+
+export {resolveSubmittedChatToolParameters} from "./chat-submitted-tool-parameters";
