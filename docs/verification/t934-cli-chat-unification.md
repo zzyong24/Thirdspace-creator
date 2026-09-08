@@ -35,3 +35,5 @@ flowchart LR
 用户开启 CLI 后，独立会话 `ai-conv-8933b989-131` 发消息被 SKILL_TASK_MAPPING_MISSING 拒绝：默认 surface 错写成未登记的 copilot。公开回读确认会话消息为空，未创建模型任务。修复为与页面一致的 topics（全局）/project（绑定项目），没有放宽 Skill 映射校验。
 
 新增 `prepare-chat-reply.test.ts` 直接调用真实装配及真实模板注册，两个场景均通过，并确认 method.research、skill.read、history.read、web.read、material.gather 实际进入冻结输入。此前五项数据库测试未覆盖该装配错误，不能作为完整生产接线已通过的证明。
+
+修正候选 `1092bcdb` 已经固定本地打包入口重新安装，exit 0；PID 17284。DMG SHA-256 `e921335a0aae2900c115baa1165c75becc03a1b04b20ffcfbe4c50a72fd130eb`，安装与候选 sidecar 同为 `e3185eb759e6bfc317ade18b39f8844c95f769955495cd9eba2ca2c0287a3d28`。签名和 DMG 校验通过。日志 `/tmp/t934-fixed-package.log`。重启后 CLI 再次返回 CONNECTION_NOT_FOUND，真实联网验收仍待本次启动授权，未标完成。
