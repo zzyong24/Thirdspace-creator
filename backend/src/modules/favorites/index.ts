@@ -35,3 +35,4 @@ export {
   toFavoritesFolderDto,
   type FavoritesFolderResource,
 } from "./favorites.schema";
+export {createScheduledFavoritesAsrService,type ScheduledFavoritesAsrDeps} from './scheduled-favorites-asr.service';
