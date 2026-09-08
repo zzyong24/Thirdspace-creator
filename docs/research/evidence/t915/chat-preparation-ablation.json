@@ -1,0 +1,2128 @@
+{
+  "method": {
+    "scope": "同一工作树双构建，仅通过内存覆盖撤销聊天准备拆分提交作为对照，不改文件",
+    "ablationCommit": "438ae928",
+    "restoredFiles": [
+      "backend/src/modules/ai-runtime/chat-candidate-tool-host.ts",
+      "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+      "backend/src/modules/ai-runtime/chat-material-task-host.ts",
+      "backend/src/modules/ai-runtime/chat-read-tool-bindings.ts",
+      "backend/src/modules/ai-runtime/chat-read-tool-resolver.ts",
+      "backend/src/modules/ai-runtime/chat-runner.ts",
+      "backend/src/modules/ai-runtime/chat-script-patch-tool-host.ts",
+      "backend/src/modules/ai-runtime/chat-structured-tool-nodes.ts",
+      "backend/src/modules/ai-runtime/chat-task-tool-host.ts",
+      "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+      "backend/src/modules/ai-runtime/index.ts",
+      "backend/src/modules/ai-runtime/llm/recovering-model.ts"
+    ],
+    "entryPoint": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+    "treeShaking": true,
+    "platform": "node",
+    "target": "node24",
+    "format": "esm",
+    "thirdParty": "external",
+    "appExecuted": false,
+    "providerCalled": false
+  },
+  "before": {
+    "outputBytes": 1389181,
+    "inputModules": 275,
+    "modules": [
+      {
+        "path": "contract/src/internal/transcribe-workflow.ts",
+        "bytesInOutput": 1616
+      },
+      {
+        "path": "contract/src/internal/asset-generation.ts",
+        "bytesInOutput": 2911
+      },
+      {
+        "path": "contract/src/internal/execution-cover.ts",
+        "bytesInOutput": 1256
+      },
+      {
+        "path": "contract/src/internal/execution-asr.ts",
+        "bytesInOutput": 3952
+      },
+      {
+        "path": "contract/src/internal/transcribe-task.ts",
+        "bytesInOutput": 2195
+      },
+      {
+        "path": "contract/src/internal/execution-transcribe-audio.ts",
+        "bytesInOutput": 906
+      },
+      {
+        "path": "contract/src/internal/chat-task-submission.ts",
+        "bytesInOutput": 607
+      },
+      {
+        "path": "contract/src/internal/chat-web-read.ts",
+        "bytesInOutput": 2438
+      },
+      {
+        "path": "contract/src/internal/execution-chat-hooks.ts",
+        "bytesInOutput": 1266
+      },
+      {
+        "path": "contract/src/internal/chat-provider-content.ts",
+        "bytesInOutput": 1113
+      },
+      {
+        "path": "contract/src/internal/chat-worker.ts",
+        "bytesInOutput": 4533
+      },
+      {
+        "path": "contract/src/internal/execution-stream.ts",
+        "bytesInOutput": 889
+      },
+      {
+        "path": "contract/src/internal/execution-topic-read.ts",
+        "bytesInOutput": 3717
+      },
+      {
+        "path": "contract/src/internal/agentic-tool-call.ts",
+        "bytesInOutput": 2165
+      },
+      {
+        "path": "contract/src/internal/execution-browser.ts",
+        "bytesInOutput": 4345
+      },
+      {
+        "path": "contract/src/internal/agentic-worker.ts",
+        "bytesInOutput": 1897
+      },
+      {
+        "path": "contract/src/internal/execution-checkpoint.ts",
+        "bytesInOutput": 1622
+      },
+      {
+        "path": "contract/src/internal/execution-worker.ts",
+        "bytesInOutput": 26347
+      },
+      {
+        "path": "ai-worker/src/runtime/retry-policy.ts",
+        "bytesInOutput": 4002
+      },
+      {
+        "path": "ai-worker/src/prompt/grounding-facets.ts",
+        "bytesInOutput": 5321
+      },
+      {
+        "path": "ai-worker/src/nodes/structured-response-errors.ts",
+        "bytesInOutput": 900
+      },
+      {
+        "path": "ai-worker/src/execution/generation-error.ts",
+        "bytesInOutput": 139
+      },
+      {
+        "path": "ai-worker/src/runtime/provider-identity.ts",
+        "bytesInOutput": 334
+      },
+      {
+        "path": "ai-worker/src/runtime/provider-factory.ts",
+        "bytesInOutput": 12723
+      },
+      {
+        "path": "ai-worker/src/execution/durable-generation-model.ts",
+        "bytesInOutput": 515
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/copilot-assist.ts",
+        "bytesInOutput": 1831
+      },
+      {
+        "path": "ai-worker/src/prompt/creative-output-recovery.ts",
+        "bytesInOutput": 3343
+      },
+      {
+        "path": "ai-worker/src/prompt/schema-bridge.ts",
+        "bytesInOutput": 1200
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-generate.ts",
+        "bytesInOutput": 4622
+      },
+      {
+        "path": "ai-worker/src/prompt/effective-skill-runtime.ts",
+        "bytesInOutput": 3941
+      },
+      {
+        "path": "ai-worker/src/prompt/completion-policy.ts",
+        "bytesInOutput": 7021
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-draft.ts",
+        "bytesInOutput": 18506
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-voiceover-storyboard.ts",
+        "bytesInOutput": 7504
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-thesis.ts",
+        "bytesInOutput": 4657
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-review.ts",
+        "bytesInOutput": 7120
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/cover-brief.ts",
+        "bytesInOutput": 9206
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-contract.ts",
+        "bytesInOutput": 2572
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-outline.ts",
+        "bytesInOutput": 2884
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/platform-adapt.ts",
+        "bytesInOutput": 9702
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/review-insights.ts",
+        "bytesInOutput": 3411
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/calibration-diagnose.ts",
+        "bytesInOutput": 3825
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/calibration-score.ts",
+        "bytesInOutput": 3847
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/research-gather.ts",
+        "bytesInOutput": 7521
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/reconstruct-project.ts",
+        "bytesInOutput": 4065
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/positioning-generate.ts",
+        "bytesInOutput": 9841
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-enrich.ts",
+        "bytesInOutput": 5000
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/material-match.ts",
+        "bytesInOutput": 14596
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/chatbox-turn.ts",
+        "bytesInOutput": 6961
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-classify.ts",
+        "bytesInOutput": 3254
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-distill.ts",
+        "bytesInOutput": 4523
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-relate.ts",
+        "bytesInOutput": 3555
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/comment-qa-sift.ts",
+        "bytesInOutput": 3596
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/benchmark-teardown.ts",
+        "bytesInOutput": 5985
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-decompose.ts",
+        "bytesInOutput": 5976
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-from-decomposition.ts",
+        "bytesInOutput": 3823
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-adapted-draft.ts",
+        "bytesInOutput": 1959
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-preference-distill.ts",
+        "bytesInOutput": 4680
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/trend-extract.ts",
+        "bytesInOutput": 3529
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-attribution.ts",
+        "bytesInOutput": 7087
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/favorites-triage.ts",
+        "bytesInOutput": 3778
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/video-decisions.ts",
+        "bytesInOutput": 60081
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/chatbox-surfaces.ts",
+        "bytesInOutput": 17727
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/creatoros-guide.ts",
+        "bytesInOutput": 7695
+      },
+      {
+        "path": "ai-worker/src/prompt/registry.ts",
+        "bytesInOutput": 11337
+      },
+      {
+        "path": "ai-worker/src/prompt/template.ts",
+        "bytesInOutput": 812
+      },
+      {
+        "path": "ai-worker/src/nodes/structured-node.ts",
+        "bytesInOutput": 15209
+      },
+      {
+        "path": "ai-worker/src/runtime/agent-runtime.ts",
+        "bytesInOutput": 1810
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-request.ts",
+        "bytesInOutput": 2025
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-factory.ts",
+        "bytesInOutput": 3199
+      },
+      {
+        "path": "ai-worker/src/runtime/minimax-h3-endpoints.ts",
+        "bytesInOutput": 903
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-minimax.ts",
+        "bytesInOutput": 14587
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-omnihi.ts",
+        "bytesInOutput": 11571
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-openai-images.ts",
+        "bytesInOutput": 8399
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-openai-asr.ts",
+        "bytesInOutput": 2494
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-transcript.ts",
+        "bytesInOutput": 813
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-mimo-asr.ts",
+        "bytesInOutput": 6375
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-qwen-asr.ts",
+        "bytesInOutput": 4512
+      },
+      {
+        "path": "ai-worker/src/runtime/executable-path.ts",
+        "bytesInOutput": 2953
+      },
+      {
+        "path": "ai-worker/src/runtime/ffmpeg-path.ts",
+        "bytesInOutput": 2380
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "bytesInOutput": 15568
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-factory.fake.ts",
+        "bytesInOutput": 1213
+      },
+      {
+        "path": "ai-worker/src/runtime/search-factory.ts",
+        "bytesInOutput": 1125
+      },
+      {
+        "path": "ai-worker/src/runtime/search-http.ts",
+        "bytesInOutput": 1499
+      },
+      {
+        "path": "ai-worker/src/runtime/search-bocha.ts",
+        "bytesInOutput": 1846
+      },
+      {
+        "path": "ai-worker/src/runtime/search-tavily.ts",
+        "bytesInOutput": 1803
+      },
+      {
+        "path": "ai-worker/src/runtime/search-serpapi.ts",
+        "bytesInOutput": 1850
+      },
+      {
+        "path": "ai-worker/src/runtime/search-rss.ts",
+        "bytesInOutput": 4142
+      },
+      {
+        "path": "ai-worker/src/runtime/vision.ts",
+        "bytesInOutput": 778
+      },
+      {
+        "path": "ai-worker/src/runtime/tool-registry.ts",
+        "bytesInOutput": 394
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-node.ts",
+        "bytesInOutput": 4917
+      },
+      {
+        "path": "ai-worker/src/orchestrate/run-topic-task.ts",
+        "bytesInOutput": 1022
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-source-similarity.ts",
+        "bytesInOutput": 1462
+      },
+      {
+        "path": "ai-worker/src/review/lint.ts",
+        "bytesInOutput": 1644
+      },
+      {
+        "path": "ai-worker/src/nodes/script-node.ts",
+        "bytesInOutput": 9427
+      },
+      {
+        "path": "ai-worker/src/nodes/script-pipeline.ts",
+        "bytesInOutput": 4916
+      },
+      {
+        "path": "ai-worker/src/nodes/research-node.ts",
+        "bytesInOutput": 8469
+      },
+      {
+        "path": "ai-worker/src/nodes/templated-node.ts",
+        "bytesInOutput": 638
+      },
+      {
+        "path": "ai-worker/src/execution/script-fallback.ts",
+        "bytesInOutput": 7142
+      },
+      {
+        "path": "ai-worker/src/execution/planning-thesis-output.ts",
+        "bytesInOutput": 3189
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-signal-quality.ts",
+        "bytesInOutput": 3268
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-trend-context.ts",
+        "bytesInOutput": 1396
+      },
+      {
+        "path": "ai-worker/src/execution/topic-worker-input.ts",
+        "bytesInOutput": 4246
+      },
+      {
+        "path": "ai-worker/src/execution/durable-asr-request.ts",
+        "bytesInOutput": 2661
+      },
+      {
+        "path": "ai-worker/src/runtime/transcribe-audio-extract.ts",
+        "bytesInOutput": 4744
+      },
+      {
+        "path": "ai-worker/src/runtime/transcribe-local-fallback.ts",
+        "bytesInOutput": 2696
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-execution-identity.ts",
+        "bytesInOutput": 1399
+      },
+      {
+        "path": "ai-worker/src/execution/transcribe-asr-run.ts",
+        "bytesInOutput": 4506
+      },
+      {
+        "path": "ai-worker/src/index.ts",
+        "bytesInOutput": 17189
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chunk-and-merge.ts",
+        "bytesInOutput": 3069
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/knowledge-distill-runner.ts",
+        "bytesInOutput": 5356
+      },
+      {
+        "path": "backend/src/modules/ai/chat-host-context.ts",
+        "bytesInOutput": 3397
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-surface.ts",
+        "bytesInOutput": 684
+      },
+      {
+        "path": "contract/src/envelope.ts",
+        "bytesInOutput": 480
+      },
+      {
+        "path": "contract/src/index.ts",
+        "bytesInOutput": 0
+      },
+      {
+        "path": "contract/src/primitives.ts",
+        "bytesInOutput": 4107
+      },
+      {
+        "path": "contract/src/operations/projects.ts",
+        "bytesInOutput": 7921
+      },
+      {
+        "path": "contract/src/resources/projects.ts",
+        "bytesInOutput": 4608
+      },
+      {
+        "path": "contract/src/resources/candidate.ts",
+        "bytesInOutput": 6915
+      },
+      {
+        "path": "contract/src/operations/artifacts.ts",
+        "bytesInOutput": 4083
+      },
+      {
+        "path": "contract/src/resources/artifacts.ts",
+        "bytesInOutput": 3719
+      },
+      {
+        "path": "contract/src/operations/knowledge.ts",
+        "bytesInOutput": 5788
+      },
+      {
+        "path": "contract/src/resources/knowledge.ts",
+        "bytesInOutput": 2240
+      },
+      {
+        "path": "contract/src/operations/taxonomy.ts",
+        "bytesInOutput": 2360
+      },
+      {
+        "path": "contract/src/resources/taxonomy.ts",
+        "bytesInOutput": 517
+      },
+      {
+        "path": "contract/src/operations/assets.ts",
+        "bytesInOutput": 4598
+      },
+      {
+        "path": "contract/src/resources/assets.ts",
+        "bytesInOutput": 2633
+      },
+      {
+        "path": "contract/src/resources/material-links.ts",
+        "bytesInOutput": 673
+      },
+      {
+        "path": "contract/src/operations/production.ts",
+        "bytesInOutput": 5122
+      },
+      {
+        "path": "contract/src/resources/production.ts",
+        "bytesInOutput": 1783
+      },
+      {
+        "path": "contract/src/operations/publishing.ts",
+        "bytesInOutput": 3996
+      },
+      {
+        "path": "contract/src/resources/publishing.ts",
+        "bytesInOutput": 1688
+      },
+      {
+        "path": "contract/src/operations/analytics.ts",
+        "bytesInOutput": 702
+      },
+      {
+        "path": "contract/src/resources/analytics.ts",
+        "bytesInOutput": 1012
+      },
+      {
+        "path": "contract/src/operations/reviews.ts",
+        "bytesInOutput": 2024
+      },
+      {
+        "path": "contract/src/resources/reviews.ts",
+        "bytesInOutput": 828
+      },
+      {
+        "path": "contract/src/operations/review-gate.ts",
+        "bytesInOutput": 2788
+      },
+      {
+        "path": "contract/src/resources/ai.ts",
+        "bytesInOutput": 4316
+      },
+      {
+        "path": "contract/src/resources/review-gate.ts",
+        "bytesInOutput": 2136
+      },
+      {
+        "path": "contract/src/operations/learnings.ts",
+        "bytesInOutput": 4406
+      },
+      {
+        "path": "contract/src/resources/learnings.ts",
+        "bytesInOutput": 1506
+      },
+      {
+        "path": "contract/src/resources/calibration.ts",
+        "bytesInOutput": 5270
+      },
+      {
+        "path": "contract/src/operations/ai.ts",
+        "bytesInOutput": 4559
+      },
+      {
+        "path": "contract/src/operations/execution.ts",
+        "bytesInOutput": 2069
+      },
+      {
+        "path": "contract/src/resources/agentic-proposal.ts",
+        "bytesInOutput": 1146
+      },
+      {
+        "path": "contract/src/resources/execution.ts",
+        "bytesInOutput": 2300
+      },
+      {
+        "path": "contract/src/resources/intelligence.ts",
+        "bytesInOutput": 9972
+      },
+      {
+        "path": "contract/src/operations/search.ts",
+        "bytesInOutput": 293
+      },
+      {
+        "path": "contract/src/resources/search.ts",
+        "bytesInOutput": 758
+      },
+      {
+        "path": "contract/src/operations/notifications.ts",
+        "bytesInOutput": 568
+      },
+      {
+        "path": "contract/src/resources/notifications.ts",
+        "bytesInOutput": 343
+      },
+      {
+        "path": "contract/src/operations/settings.ts",
+        "bytesInOutput": 7808
+      },
+      {
+        "path": "contract/src/resources/settings.ts",
+        "bytesInOutput": 6573
+      },
+      {
+        "path": "contract/src/operations/ingestion.ts",
+        "bytesInOutput": 5363
+      },
+      {
+        "path": "contract/src/resources/ingestion.ts",
+        "bytesInOutput": 1636
+      },
+      {
+        "path": "contract/src/operations/positioning.ts",
+        "bytesInOutput": 5832
+      },
+      {
+        "path": "contract/src/resources/positioning.ts",
+        "bytesInOutput": 5462
+      },
+      {
+        "path": "contract/src/operations/candidate.ts",
+        "bytesInOutput": 5307
+      },
+      {
+        "path": "contract/src/operations/calibration.ts",
+        "bytesInOutput": 5380
+      },
+      {
+        "path": "contract/src/operations/platform-accounts.ts",
+        "bytesInOutput": 1666
+      },
+      {
+        "path": "contract/src/resources/platform-accounts.ts",
+        "bytesInOutput": 599
+      },
+      {
+        "path": "contract/src/operations/content-calendar.ts",
+        "bytesInOutput": 3865
+      },
+      {
+        "path": "contract/src/resources/content-calendar.ts",
+        "bytesInOutput": 1010
+      },
+      {
+        "path": "contract/src/operations/material-links.ts",
+        "bytesInOutput": 1246
+      },
+      {
+        "path": "contract/src/operations/benchmark.ts",
+        "bytesInOutput": 2826
+      },
+      {
+        "path": "contract/src/resources/benchmark.ts",
+        "bytesInOutput": 1996
+      },
+      {
+        "path": "contract/src/operations/trend-source.ts",
+        "bytesInOutput": 1407
+      },
+      {
+        "path": "contract/src/resources/trend-source.ts",
+        "bytesInOutput": 630
+      },
+      {
+        "path": "contract/src/operations/favorites-folder.ts",
+        "bytesInOutput": 1351
+      },
+      {
+        "path": "contract/src/resources/favorites-folder.ts",
+        "bytesInOutput": 590
+      },
+      {
+        "path": "contract/src/operations/topic-attribution.ts",
+        "bytesInOutput": 512
+      },
+      {
+        "path": "contract/src/resources/topic-attribution.ts",
+        "bytesInOutput": 963
+      },
+      {
+        "path": "contract/src/operations/scheduling.ts",
+        "bytesInOutput": 3545
+      },
+      {
+        "path": "contract/src/resources/scheduling.ts",
+        "bytesInOutput": 2180
+      },
+      {
+        "path": "contract/src/operations/pages.ts",
+        "bytesInOutput": 1031
+      },
+      {
+        "path": "contract/src/pages/dashboard.ts",
+        "bytesInOutput": 2841
+      },
+      {
+        "path": "contract/src/pages/project-overview.ts",
+        "bytesInOutput": 1863
+      },
+      {
+        "path": "contract/src/pages/global-search.ts",
+        "bytesInOutput": 1472
+      },
+      {
+        "path": "contract/src/pages/publishing-center.ts",
+        "bytesInOutput": 1018
+      },
+      {
+        "path": "contract/src/operations/auth.ts",
+        "bytesInOutput": 1308
+      },
+      {
+        "path": "contract/src/operations/intelligence.ts",
+        "bytesInOutput": 19540
+      },
+      {
+        "path": "contract/src/endpoints.ts",
+        "bytesInOutput": 2052
+      },
+      {
+        "path": "contract/src/local-platform.ts",
+        "bytesInOutput": 2141
+      },
+      {
+        "path": "contract/src/cli-policy.ts",
+        "bytesInOutput": 9987
+      },
+      {
+        "path": "contract/src/version.ts",
+        "bytesInOutput": 32
+      },
+      {
+        "path": "contract/src/resources/video-render.ts",
+        "bytesInOutput": 17852
+      },
+      {
+        "path": "contract/src/chat-tool-labels.ts",
+        "bytesInOutput": 9743
+      },
+      {
+        "path": "backend/src/schema/execution-stream.ts",
+        "bytesInOutput": 929
+      },
+      {
+        "path": "backend/src/schema/intelligence.ts",
+        "bytesInOutput": 13432
+      },
+      {
+        "path": "backend/src/index.ts",
+        "bytesInOutput": 167
+      },
+      {
+        "path": "backend/src/schema/pending-document-commits.ts",
+        "bytesInOutput": 875
+      },
+      {
+        "path": "backend/src/schema/pending-generated-asset-commits.ts",
+        "bytesInOutput": 1003
+      },
+      {
+        "path": "backend/src/db.ts",
+        "bytesInOutput": 1634
+      },
+      {
+        "path": "backend/src/schema/projects.ts",
+        "bytesInOutput": 8033
+      },
+      {
+        "path": "backend/src/schema/identity.ts",
+        "bytesInOutput": 1475
+      },
+      {
+        "path": "backend/src/schema/taxonomy.ts",
+        "bytesInOutput": 1813
+      },
+      {
+        "path": "backend/src/schema/notifications.ts",
+        "bytesInOutput": 2081
+      },
+      {
+        "path": "backend/src/schema/search.ts",
+        "bytesInOutput": 3617
+      },
+      {
+        "path": "backend/src/schema/settings.ts",
+        "bytesInOutput": 8668
+      },
+      {
+        "path": "backend/src/schema/knowledge.ts",
+        "bytesInOutput": 5351
+      },
+      {
+        "path": "backend/src/schema/assets.ts",
+        "bytesInOutput": 5651
+      },
+      {
+        "path": "backend/src/schema/artifacts.ts",
+        "bytesInOutput": 6830
+      },
+      {
+        "path": "backend/src/schema/production.ts",
+        "bytesInOutput": 4513
+      },
+      {
+        "path": "backend/src/schema/publishing.ts",
+        "bytesInOutput": 4989
+      },
+      {
+        "path": "backend/src/schema/analytics.ts",
+        "bytesInOutput": 5328
+      },
+      {
+        "path": "backend/src/schema/ingestion.ts",
+        "bytesInOutput": 6054
+      },
+      {
+        "path": "backend/src/schema/reviews.ts",
+        "bytesInOutput": 3816
+      },
+      {
+        "path": "backend/src/schema/review-gate.ts",
+        "bytesInOutput": 3478
+      },
+      {
+        "path": "backend/src/schema/learnings.ts",
+        "bytesInOutput": 5960
+      },
+      {
+        "path": "backend/src/schema/ai.ts",
+        "bytesInOutput": 11115
+      },
+      {
+        "path": "backend/src/schema/positioning.ts",
+        "bytesInOutput": 8659
+      },
+      {
+        "path": "backend/src/schema/candidate.ts",
+        "bytesInOutput": 9268
+      },
+      {
+        "path": "backend/src/schema/calibration.ts",
+        "bytesInOutput": 7228
+      },
+      {
+        "path": "backend/src/schema/platform-account.ts",
+        "bytesInOutput": 2675
+      },
+      {
+        "path": "backend/src/schema/content-calendar.ts",
+        "bytesInOutput": 3962
+      },
+      {
+        "path": "backend/src/schema/material-links.ts",
+        "bytesInOutput": 1846
+      },
+      {
+        "path": "backend/src/schema/scheduling.ts",
+        "bytesInOutput": 6669
+      },
+      {
+        "path": "backend/src/schema/benchmark.ts",
+        "bytesInOutput": 5829
+      },
+      {
+        "path": "backend/src/schema/trend-sources.ts",
+        "bytesInOutput": 1823
+      },
+      {
+        "path": "backend/src/schema/favorites.ts",
+        "bytesInOutput": 4789
+      },
+      {
+        "path": "backend/src/schema/topic-attribution.ts",
+        "bytesInOutput": 2762
+      },
+      {
+        "path": "backend/src/schema/activation.ts",
+        "bytesInOutput": 2071
+      },
+      {
+        "path": "backend/src/schema/browser-sessions.ts",
+        "bytesInOutput": 1256
+      },
+      {
+        "path": "backend/src/schema/execution-browser-profile-leases.ts",
+        "bytesInOutput": 1805
+      },
+      {
+        "path": "backend/src/schema/proposal-adoptions.ts",
+        "bytesInOutput": 993
+      },
+      {
+        "path": "backend/src/schema/cli-invocations.ts",
+        "bytesInOutput": 1725
+      },
+      {
+        "path": "backend/src/repositories/project-repository.ts",
+        "bytesInOutput": 39
+      },
+      {
+        "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+        "bytesInOutput": 195
+      },
+      {
+        "path": "backend/src/secret-crypto.ts",
+        "bytesInOutput": 259
+      },
+      {
+        "path": "backend/src/reset-preserve.ts",
+        "bytesInOutput": 887
+      },
+      {
+        "path": "backend/src/workspace-restore.ts",
+        "bytesInOutput": 318
+      },
+      {
+        "path": "backend/src/modules/execution/execution.errors.ts",
+        "bytesInOutput": 173
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "bytesInOutput": 4686
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+        "bytesInOutput": 11915
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/llm/retry-policy.ts",
+        "bytesInOutput": 21
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/error-diagnostics.ts",
+        "bytesInOutput": 2149
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/chat-model-stream.ts",
+        "bytesInOutput": 46
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/tool-names.ts",
+        "bytesInOutput": 50
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/index.ts",
+        "bytesInOutput": 0
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/script-hooks.ts",
+        "bytesInOutput": 4279
+      },
+      {
+        "path": "ai-worker/src/execution/generation-replay.ts",
+        "bytesInOutput": 150
+      },
+      {
+        "path": "ai-worker/src/execution/chat-structured-sequence.ts",
+        "bytesInOutput": 41
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+        "bytesInOutput": 4715
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-context.ts",
+        "bytesInOutput": 9940
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-script-import-authorization.ts",
+        "bytesInOutput": 5003
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-diagnosis-node.ts",
+        "bytesInOutput": 2028
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-research-preparation.ts",
+        "bytesInOutput": 549
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/creative-context.ts",
+        "bytesInOutput": 25095
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/llm/parse.ts",
+        "bytesInOutput": 655
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/topic-enrich-runner.ts",
+        "bytesInOutput": 1897
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/positioning-runner.ts",
+        "bytesInOutput": 2555
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-structured-tool-nodes.ts",
+        "bytesInOutput": 3345
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-read-tool-bindings.ts",
+        "bytesInOutput": 4881
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-guide-snapshot.ts",
+        "bytesInOutput": 1322
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/material-generation-preparation.ts",
+        "bytesInOutput": 2765
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+        "bytesInOutput": 170242
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/untrusted-content.ts",
+        "bytesInOutput": 1541
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-model-messages.ts",
+        "bytesInOutput": 659
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-history-window.ts",
+        "bytesInOutput": 5859
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/trend-source-signals.ts",
+        "bytesInOutput": 12
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/topic-task-adapter.ts",
+        "bytesInOutput": 1319
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/signal-quality.ts",
+        "bytesInOutput": 4787
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/llm/recovering-model.ts",
+        "bytesInOutput": 62
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/review-context.ts",
+        "bytesInOutput": 1790
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/review-runner.ts",
+        "bytesInOutput": 89
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/agent-run.ts",
+        "bytesInOutput": 471
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/calibration-diagnose-runner.ts",
+        "bytesInOutput": 1792
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-runner.ts",
+        "bytesInOutput": 87740
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+        "bytesInOutput": 3998
+      }
+    ]
+  },
+  "after": {
+    "outputBytes": 1311410,
+    "inputModules": 260,
+    "modules": [
+      {
+        "path": "contract/src/internal/transcribe-workflow.ts",
+        "bytesInOutput": 1616
+      },
+      {
+        "path": "contract/src/internal/asset-generation.ts",
+        "bytesInOutput": 2911
+      },
+      {
+        "path": "contract/src/internal/execution-cover.ts",
+        "bytesInOutput": 1256
+      },
+      {
+        "path": "contract/src/internal/execution-asr.ts",
+        "bytesInOutput": 3952
+      },
+      {
+        "path": "contract/src/internal/transcribe-task.ts",
+        "bytesInOutput": 2195
+      },
+      {
+        "path": "contract/src/internal/execution-transcribe-audio.ts",
+        "bytesInOutput": 906
+      },
+      {
+        "path": "contract/src/internal/chat-task-submission.ts",
+        "bytesInOutput": 607
+      },
+      {
+        "path": "contract/src/internal/chat-web-read.ts",
+        "bytesInOutput": 2438
+      },
+      {
+        "path": "contract/src/internal/execution-chat-hooks.ts",
+        "bytesInOutput": 1266
+      },
+      {
+        "path": "contract/src/internal/chat-provider-content.ts",
+        "bytesInOutput": 1113
+      },
+      {
+        "path": "contract/src/internal/chat-worker.ts",
+        "bytesInOutput": 4533
+      },
+      {
+        "path": "contract/src/internal/execution-stream.ts",
+        "bytesInOutput": 889
+      },
+      {
+        "path": "contract/src/internal/execution-topic-read.ts",
+        "bytesInOutput": 3717
+      },
+      {
+        "path": "contract/src/internal/agentic-tool-call.ts",
+        "bytesInOutput": 2165
+      },
+      {
+        "path": "contract/src/internal/execution-browser.ts",
+        "bytesInOutput": 4345
+      },
+      {
+        "path": "contract/src/internal/agentic-worker.ts",
+        "bytesInOutput": 1897
+      },
+      {
+        "path": "contract/src/internal/execution-checkpoint.ts",
+        "bytesInOutput": 1622
+      },
+      {
+        "path": "contract/src/internal/execution-worker.ts",
+        "bytesInOutput": 26347
+      },
+      {
+        "path": "ai-worker/src/runtime/retry-policy.ts",
+        "bytesInOutput": 4002
+      },
+      {
+        "path": "ai-worker/src/prompt/grounding-facets.ts",
+        "bytesInOutput": 5321
+      },
+      {
+        "path": "ai-worker/src/nodes/structured-response-errors.ts",
+        "bytesInOutput": 900
+      },
+      {
+        "path": "ai-worker/src/execution/generation-error.ts",
+        "bytesInOutput": 139
+      },
+      {
+        "path": "ai-worker/src/runtime/provider-identity.ts",
+        "bytesInOutput": 334
+      },
+      {
+        "path": "ai-worker/src/runtime/provider-factory.ts",
+        "bytesInOutput": 12723
+      },
+      {
+        "path": "ai-worker/src/execution/durable-generation-model.ts",
+        "bytesInOutput": 515
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/copilot-assist.ts",
+        "bytesInOutput": 1831
+      },
+      {
+        "path": "ai-worker/src/prompt/creative-output-recovery.ts",
+        "bytesInOutput": 3343
+      },
+      {
+        "path": "ai-worker/src/prompt/schema-bridge.ts",
+        "bytesInOutput": 1200
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-generate.ts",
+        "bytesInOutput": 4622
+      },
+      {
+        "path": "ai-worker/src/prompt/effective-skill-runtime.ts",
+        "bytesInOutput": 3941
+      },
+      {
+        "path": "ai-worker/src/prompt/completion-policy.ts",
+        "bytesInOutput": 7021
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-draft.ts",
+        "bytesInOutput": 18506
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-voiceover-storyboard.ts",
+        "bytesInOutput": 7504
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-thesis.ts",
+        "bytesInOutput": 4657
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-review.ts",
+        "bytesInOutput": 7120
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/cover-brief.ts",
+        "bytesInOutput": 9206
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-contract.ts",
+        "bytesInOutput": 2572
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/planning-outline.ts",
+        "bytesInOutput": 2884
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/platform-adapt.ts",
+        "bytesInOutput": 9702
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/review-insights.ts",
+        "bytesInOutput": 3411
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/calibration-diagnose.ts",
+        "bytesInOutput": 3825
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/calibration-score.ts",
+        "bytesInOutput": 3847
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/research-gather.ts",
+        "bytesInOutput": 7521
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/reconstruct-project.ts",
+        "bytesInOutput": 4065
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/positioning-generate.ts",
+        "bytesInOutput": 9841
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-enrich.ts",
+        "bytesInOutput": 5000
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/material-match.ts",
+        "bytesInOutput": 14596
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/chatbox-turn.ts",
+        "bytesInOutput": 6961
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-classify.ts",
+        "bytesInOutput": 3254
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-distill.ts",
+        "bytesInOutput": 4523
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/knowledge-relate.ts",
+        "bytesInOutput": 3555
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/comment-qa-sift.ts",
+        "bytesInOutput": 3596
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/benchmark-teardown.ts",
+        "bytesInOutput": 5985
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-decompose.ts",
+        "bytesInOutput": 5976
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-from-decomposition.ts",
+        "bytesInOutput": 3823
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/intelligence-topic-adapted-draft.ts",
+        "bytesInOutput": 1959
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-preference-distill.ts",
+        "bytesInOutput": 4680
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/trend-extract.ts",
+        "bytesInOutput": 3529
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/topic-attribution.ts",
+        "bytesInOutput": 7087
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/favorites-triage.ts",
+        "bytesInOutput": 3778
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/video-decisions.ts",
+        "bytesInOutput": 60081
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/chatbox-surfaces.ts",
+        "bytesInOutput": 17727
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/creatoros-guide.ts",
+        "bytesInOutput": 7695
+      },
+      {
+        "path": "ai-worker/src/prompt/registry.ts",
+        "bytesInOutput": 11337
+      },
+      {
+        "path": "ai-worker/src/prompt/template.ts",
+        "bytesInOutput": 812
+      },
+      {
+        "path": "ai-worker/src/nodes/structured-node.ts",
+        "bytesInOutput": 15209
+      },
+      {
+        "path": "ai-worker/src/runtime/agent-runtime.ts",
+        "bytesInOutput": 1810
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-request.ts",
+        "bytesInOutput": 2025
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-factory.ts",
+        "bytesInOutput": 3199
+      },
+      {
+        "path": "ai-worker/src/runtime/minimax-h3-endpoints.ts",
+        "bytesInOutput": 903
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-minimax.ts",
+        "bytesInOutput": 14587
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-omnihi.ts",
+        "bytesInOutput": 11571
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-openai-images.ts",
+        "bytesInOutput": 8399
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-openai-asr.ts",
+        "bytesInOutput": 2494
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-transcript.ts",
+        "bytesInOutput": 813
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-mimo-asr.ts",
+        "bytesInOutput": 6375
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-qwen-asr.ts",
+        "bytesInOutput": 4512
+      },
+      {
+        "path": "ai-worker/src/runtime/executable-path.ts",
+        "bytesInOutput": 2953
+      },
+      {
+        "path": "ai-worker/src/runtime/ffmpeg-path.ts",
+        "bytesInOutput": 2380
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-whisper-local.ts",
+        "bytesInOutput": 15568
+      },
+      {
+        "path": "ai-worker/src/runtime/multimodal-factory.fake.ts",
+        "bytesInOutput": 1213
+      },
+      {
+        "path": "ai-worker/src/runtime/search-factory.ts",
+        "bytesInOutput": 1125
+      },
+      {
+        "path": "ai-worker/src/runtime/search-http.ts",
+        "bytesInOutput": 1499
+      },
+      {
+        "path": "ai-worker/src/runtime/search-bocha.ts",
+        "bytesInOutput": 1846
+      },
+      {
+        "path": "ai-worker/src/runtime/search-tavily.ts",
+        "bytesInOutput": 1803
+      },
+      {
+        "path": "ai-worker/src/runtime/search-serpapi.ts",
+        "bytesInOutput": 1850
+      },
+      {
+        "path": "ai-worker/src/runtime/search-rss.ts",
+        "bytesInOutput": 4142
+      },
+      {
+        "path": "ai-worker/src/runtime/vision.ts",
+        "bytesInOutput": 778
+      },
+      {
+        "path": "ai-worker/src/runtime/tool-registry.ts",
+        "bytesInOutput": 394
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-node.ts",
+        "bytesInOutput": 4914
+      },
+      {
+        "path": "ai-worker/src/orchestrate/run-topic-task.ts",
+        "bytesInOutput": 1022
+      },
+      {
+        "path": "ai-worker/src/prompt/templates/script-source-similarity.ts",
+        "bytesInOutput": 1462
+      },
+      {
+        "path": "ai-worker/src/review/lint.ts",
+        "bytesInOutput": 1644
+      },
+      {
+        "path": "ai-worker/src/nodes/script-node.ts",
+        "bytesInOutput": 9427
+      },
+      {
+        "path": "ai-worker/src/nodes/script-pipeline.ts",
+        "bytesInOutput": 4916
+      },
+      {
+        "path": "ai-worker/src/nodes/research-node.ts",
+        "bytesInOutput": 8469
+      },
+      {
+        "path": "ai-worker/src/nodes/templated-node.ts",
+        "bytesInOutput": 638
+      },
+      {
+        "path": "ai-worker/src/execution/script-fallback.ts",
+        "bytesInOutput": 7142
+      },
+      {
+        "path": "ai-worker/src/execution/planning-thesis-output.ts",
+        "bytesInOutput": 3189
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-signal-quality.ts",
+        "bytesInOutput": 3268
+      },
+      {
+        "path": "ai-worker/src/nodes/topic-trend-context.ts",
+        "bytesInOutput": 1396
+      },
+      {
+        "path": "ai-worker/src/execution/topic-worker-input.ts",
+        "bytesInOutput": 4246
+      },
+      {
+        "path": "ai-worker/src/execution/durable-asr-request.ts",
+        "bytesInOutput": 2661
+      },
+      {
+        "path": "ai-worker/src/runtime/transcribe-audio-extract.ts",
+        "bytesInOutput": 4744
+      },
+      {
+        "path": "ai-worker/src/runtime/transcribe-local-fallback.ts",
+        "bytesInOutput": 2696
+      },
+      {
+        "path": "ai-worker/src/runtime/asr-execution-identity.ts",
+        "bytesInOutput": 1399
+      },
+      {
+        "path": "ai-worker/src/execution/transcribe-asr-run.ts",
+        "bytesInOutput": 4506
+      },
+      {
+        "path": "ai-worker/src/index.ts",
+        "bytesInOutput": 17189
+      },
+      {
+        "path": "backend/src/modules/ai/chat-host-context.ts",
+        "bytesInOutput": 3397
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-surface.ts",
+        "bytesInOutput": 684
+      },
+      {
+        "path": "contract/src/envelope.ts",
+        "bytesInOutput": 480
+      },
+      {
+        "path": "contract/src/index.ts",
+        "bytesInOutput": 0
+      },
+      {
+        "path": "contract/src/primitives.ts",
+        "bytesInOutput": 4107
+      },
+      {
+        "path": "contract/src/operations/projects.ts",
+        "bytesInOutput": 7921
+      },
+      {
+        "path": "contract/src/resources/projects.ts",
+        "bytesInOutput": 4608
+      },
+      {
+        "path": "contract/src/resources/candidate.ts",
+        "bytesInOutput": 6915
+      },
+      {
+        "path": "contract/src/operations/artifacts.ts",
+        "bytesInOutput": 4083
+      },
+      {
+        "path": "contract/src/resources/artifacts.ts",
+        "bytesInOutput": 3719
+      },
+      {
+        "path": "contract/src/operations/knowledge.ts",
+        "bytesInOutput": 5788
+      },
+      {
+        "path": "contract/src/resources/knowledge.ts",
+        "bytesInOutput": 2240
+      },
+      {
+        "path": "contract/src/operations/taxonomy.ts",
+        "bytesInOutput": 2360
+      },
+      {
+        "path": "contract/src/resources/taxonomy.ts",
+        "bytesInOutput": 517
+      },
+      {
+        "path": "contract/src/operations/assets.ts",
+        "bytesInOutput": 4598
+      },
+      {
+        "path": "contract/src/resources/assets.ts",
+        "bytesInOutput": 2633
+      },
+      {
+        "path": "contract/src/resources/material-links.ts",
+        "bytesInOutput": 673
+      },
+      {
+        "path": "contract/src/operations/production.ts",
+        "bytesInOutput": 5122
+      },
+      {
+        "path": "contract/src/resources/production.ts",
+        "bytesInOutput": 1783
+      },
+      {
+        "path": "contract/src/operations/publishing.ts",
+        "bytesInOutput": 3996
+      },
+      {
+        "path": "contract/src/resources/publishing.ts",
+        "bytesInOutput": 1688
+      },
+      {
+        "path": "contract/src/operations/analytics.ts",
+        "bytesInOutput": 702
+      },
+      {
+        "path": "contract/src/resources/analytics.ts",
+        "bytesInOutput": 1012
+      },
+      {
+        "path": "contract/src/operations/reviews.ts",
+        "bytesInOutput": 2024
+      },
+      {
+        "path": "contract/src/resources/reviews.ts",
+        "bytesInOutput": 828
+      },
+      {
+        "path": "contract/src/operations/review-gate.ts",
+        "bytesInOutput": 2788
+      },
+      {
+        "path": "contract/src/resources/ai.ts",
+        "bytesInOutput": 4316
+      },
+      {
+        "path": "contract/src/resources/review-gate.ts",
+        "bytesInOutput": 2136
+      },
+      {
+        "path": "contract/src/operations/learnings.ts",
+        "bytesInOutput": 4406
+      },
+      {
+        "path": "contract/src/resources/learnings.ts",
+        "bytesInOutput": 1506
+      },
+      {
+        "path": "contract/src/resources/calibration.ts",
+        "bytesInOutput": 5270
+      },
+      {
+        "path": "contract/src/operations/ai.ts",
+        "bytesInOutput": 4559
+      },
+      {
+        "path": "contract/src/operations/execution.ts",
+        "bytesInOutput": 2069
+      },
+      {
+        "path": "contract/src/resources/agentic-proposal.ts",
+        "bytesInOutput": 1146
+      },
+      {
+        "path": "contract/src/resources/execution.ts",
+        "bytesInOutput": 2300
+      },
+      {
+        "path": "contract/src/resources/intelligence.ts",
+        "bytesInOutput": 9972
+      },
+      {
+        "path": "contract/src/operations/search.ts",
+        "bytesInOutput": 293
+      },
+      {
+        "path": "contract/src/resources/search.ts",
+        "bytesInOutput": 758
+      },
+      {
+        "path": "contract/src/operations/notifications.ts",
+        "bytesInOutput": 568
+      },
+      {
+        "path": "contract/src/resources/notifications.ts",
+        "bytesInOutput": 343
+      },
+      {
+        "path": "contract/src/operations/settings.ts",
+        "bytesInOutput": 7808
+      },
+      {
+        "path": "contract/src/resources/settings.ts",
+        "bytesInOutput": 6573
+      },
+      {
+        "path": "contract/src/operations/ingestion.ts",
+        "bytesInOutput": 5363
+      },
+      {
+        "path": "contract/src/resources/ingestion.ts",
+        "bytesInOutput": 1636
+      },
+      {
+        "path": "contract/src/operations/positioning.ts",
+        "bytesInOutput": 5832
+      },
+      {
+        "path": "contract/src/resources/positioning.ts",
+        "bytesInOutput": 5462
+      },
+      {
+        "path": "contract/src/operations/candidate.ts",
+        "bytesInOutput": 5307
+      },
+      {
+        "path": "contract/src/operations/calibration.ts",
+        "bytesInOutput": 5380
+      },
+      {
+        "path": "contract/src/operations/platform-accounts.ts",
+        "bytesInOutput": 1666
+      },
+      {
+        "path": "contract/src/resources/platform-accounts.ts",
+        "bytesInOutput": 599
+      },
+      {
+        "path": "contract/src/operations/content-calendar.ts",
+        "bytesInOutput": 3865
+      },
+      {
+        "path": "contract/src/resources/content-calendar.ts",
+        "bytesInOutput": 1010
+      },
+      {
+        "path": "contract/src/operations/material-links.ts",
+        "bytesInOutput": 1246
+      },
+      {
+        "path": "contract/src/operations/benchmark.ts",
+        "bytesInOutput": 2826
+      },
+      {
+        "path": "contract/src/resources/benchmark.ts",
+        "bytesInOutput": 1996
+      },
+      {
+        "path": "contract/src/operations/trend-source.ts",
+        "bytesInOutput": 1407
+      },
+      {
+        "path": "contract/src/resources/trend-source.ts",
+        "bytesInOutput": 630
+      },
+      {
+        "path": "contract/src/operations/favorites-folder.ts",
+        "bytesInOutput": 1351
+      },
+      {
+        "path": "contract/src/resources/favorites-folder.ts",
+        "bytesInOutput": 590
+      },
+      {
+        "path": "contract/src/operations/topic-attribution.ts",
+        "bytesInOutput": 512
+      },
+      {
+        "path": "contract/src/resources/topic-attribution.ts",
+        "bytesInOutput": 963
+      },
+      {
+        "path": "contract/src/operations/scheduling.ts",
+        "bytesInOutput": 3545
+      },
+      {
+        "path": "contract/src/resources/scheduling.ts",
+        "bytesInOutput": 2180
+      },
+      {
+        "path": "contract/src/operations/pages.ts",
+        "bytesInOutput": 1031
+      },
+      {
+        "path": "contract/src/pages/dashboard.ts",
+        "bytesInOutput": 2841
+      },
+      {
+        "path": "contract/src/pages/project-overview.ts",
+        "bytesInOutput": 1863
+      },
+      {
+        "path": "contract/src/pages/global-search.ts",
+        "bytesInOutput": 1472
+      },
+      {
+        "path": "contract/src/pages/publishing-center.ts",
+        "bytesInOutput": 1018
+      },
+      {
+        "path": "contract/src/operations/auth.ts",
+        "bytesInOutput": 1308
+      },
+      {
+        "path": "contract/src/operations/intelligence.ts",
+        "bytesInOutput": 19540
+      },
+      {
+        "path": "contract/src/endpoints.ts",
+        "bytesInOutput": 2052
+      },
+      {
+        "path": "contract/src/local-platform.ts",
+        "bytesInOutput": 2141
+      },
+      {
+        "path": "contract/src/cli-policy.ts",
+        "bytesInOutput": 9987
+      },
+      {
+        "path": "contract/src/version.ts",
+        "bytesInOutput": 32
+      },
+      {
+        "path": "contract/src/resources/video-render.ts",
+        "bytesInOutput": 17852
+      },
+      {
+        "path": "contract/src/chat-tool-labels.ts",
+        "bytesInOutput": 9743
+      },
+      {
+        "path": "backend/src/schema/execution-stream.ts",
+        "bytesInOutput": 929
+      },
+      {
+        "path": "backend/src/schema/intelligence.ts",
+        "bytesInOutput": 13432
+      },
+      {
+        "path": "backend/src/index.ts",
+        "bytesInOutput": 167
+      },
+      {
+        "path": "backend/src/schema/pending-document-commits.ts",
+        "bytesInOutput": 875
+      },
+      {
+        "path": "backend/src/schema/pending-generated-asset-commits.ts",
+        "bytesInOutput": 1003
+      },
+      {
+        "path": "backend/src/db.ts",
+        "bytesInOutput": 1634
+      },
+      {
+        "path": "backend/src/schema/projects.ts",
+        "bytesInOutput": 8033
+      },
+      {
+        "path": "backend/src/schema/identity.ts",
+        "bytesInOutput": 1475
+      },
+      {
+        "path": "backend/src/schema/taxonomy.ts",
+        "bytesInOutput": 1813
+      },
+      {
+        "path": "backend/src/schema/notifications.ts",
+        "bytesInOutput": 2081
+      },
+      {
+        "path": "backend/src/schema/search.ts",
+        "bytesInOutput": 3617
+      },
+      {
+        "path": "backend/src/schema/settings.ts",
+        "bytesInOutput": 8668
+      },
+      {
+        "path": "backend/src/schema/knowledge.ts",
+        "bytesInOutput": 5351
+      },
+      {
+        "path": "backend/src/schema/assets.ts",
+        "bytesInOutput": 5651
+      },
+      {
+        "path": "backend/src/schema/artifacts.ts",
+        "bytesInOutput": 6830
+      },
+      {
+        "path": "backend/src/schema/production.ts",
+        "bytesInOutput": 4513
+      },
+      {
+        "path": "backend/src/schema/publishing.ts",
+        "bytesInOutput": 4989
+      },
+      {
+        "path": "backend/src/schema/analytics.ts",
+        "bytesInOutput": 5328
+      },
+      {
+        "path": "backend/src/schema/ingestion.ts",
+        "bytesInOutput": 6054
+      },
+      {
+        "path": "backend/src/schema/reviews.ts",
+        "bytesInOutput": 3816
+      },
+      {
+        "path": "backend/src/schema/review-gate.ts",
+        "bytesInOutput": 3478
+      },
+      {
+        "path": "backend/src/schema/learnings.ts",
+        "bytesInOutput": 5960
+      },
+      {
+        "path": "backend/src/schema/ai.ts",
+        "bytesInOutput": 11115
+      },
+      {
+        "path": "backend/src/schema/positioning.ts",
+        "bytesInOutput": 8659
+      },
+      {
+        "path": "backend/src/schema/candidate.ts",
+        "bytesInOutput": 9268
+      },
+      {
+        "path": "backend/src/schema/calibration.ts",
+        "bytesInOutput": 7228
+      },
+      {
+        "path": "backend/src/schema/platform-account.ts",
+        "bytesInOutput": 2675
+      },
+      {
+        "path": "backend/src/schema/content-calendar.ts",
+        "bytesInOutput": 3962
+      },
+      {
+        "path": "backend/src/schema/material-links.ts",
+        "bytesInOutput": 1846
+      },
+      {
+        "path": "backend/src/schema/scheduling.ts",
+        "bytesInOutput": 6669
+      },
+      {
+        "path": "backend/src/schema/benchmark.ts",
+        "bytesInOutput": 5829
+      },
+      {
+        "path": "backend/src/schema/trend-sources.ts",
+        "bytesInOutput": 1823
+      },
+      {
+        "path": "backend/src/schema/favorites.ts",
+        "bytesInOutput": 4789
+      },
+      {
+        "path": "backend/src/schema/topic-attribution.ts",
+        "bytesInOutput": 2762
+      },
+      {
+        "path": "backend/src/schema/activation.ts",
+        "bytesInOutput": 2071
+      },
+      {
+        "path": "backend/src/schema/browser-sessions.ts",
+        "bytesInOutput": 1256
+      },
+      {
+        "path": "backend/src/schema/execution-browser-profile-leases.ts",
+        "bytesInOutput": 1805
+      },
+      {
+        "path": "backend/src/schema/proposal-adoptions.ts",
+        "bytesInOutput": 993
+      },
+      {
+        "path": "backend/src/schema/cli-invocations.ts",
+        "bytesInOutput": 1725
+      },
+      {
+        "path": "backend/src/repositories/project-repository.ts",
+        "bytesInOutput": 39
+      },
+      {
+        "path": "backend/src/modules/cli-invocations/cli-invocations.service.ts",
+        "bytesInOutput": 195
+      },
+      {
+        "path": "backend/src/secret-crypto.ts",
+        "bytesInOutput": 259
+      },
+      {
+        "path": "backend/src/reset-preserve.ts",
+        "bytesInOutput": 887
+      },
+      {
+        "path": "backend/src/workspace-restore.ts",
+        "bytesInOutput": 318
+      },
+      {
+        "path": "backend/src/modules/execution/execution.errors.ts",
+        "bytesInOutput": 173
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-definitions.ts",
+        "bytesInOutput": 4686
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-gate.ts",
+        "bytesInOutput": 11250
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/llm/retry-policy.ts",
+        "bytesInOutput": 21
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/error-diagnostics.ts",
+        "bytesInOutput": 2149
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/chat-model-stream.ts",
+        "bytesInOutput": 46
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/tool-names.ts",
+        "bytesInOutput": 50
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/index.ts",
+        "bytesInOutput": 0
+      },
+      {
+        "path": "ai-worker/src/runtime/chat/script-hooks.ts",
+        "bytesInOutput": 25
+      },
+      {
+        "path": "ai-worker/src/execution/generation-replay.ts",
+        "bytesInOutput": 150
+      },
+      {
+        "path": "ai-worker/src/execution/chat-structured-sequence.ts",
+        "bytesInOutput": 41
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+        "bytesInOutput": 4715
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-guide-snapshot.ts",
+        "bytesInOutput": 1322
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/creative-context.ts",
+        "bytesInOutput": 23812
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-context.ts",
+        "bytesInOutput": 9683
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/material-generation-preparation.ts",
+        "bytesInOutput": 2765
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+        "bytesInOutput": 170242
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/untrusted-content.ts",
+        "bytesInOutput": 1541
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly-context.ts",
+        "bytesInOutput": 6782
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-read-tool-bindings.ts",
+        "bytesInOutput": 4881
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly-tool-deps.ts",
+        "bytesInOutput": 1163
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-assembly.ts",
+        "bytesInOutput": 44126
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-model-messages.ts",
+        "bytesInOutput": 659
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-history-window.ts",
+        "bytesInOutput": 5859
+      },
+      {
+        "path": "backend/src/modules/ai-runtime/chat-turn-preparation.ts",
+        "bytesInOutput": 3998
+      }
+    ]
+  },
+  "delta": {
+    "outputBytes": -77771,
+    "inputModules": -15
+  }
+}

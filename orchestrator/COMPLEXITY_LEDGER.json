@@ -6,14 +6,14 @@
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
       ],
-      "file_sha256": "247ee9065e573a7317f226071f317c2ecee7ba21f9af28198de4aa3a7ef5b255",
+      "file_sha256": "69d20c1bc07cca8145f357fc8aa13b94a332860e0dcf91b112434fc4b4e988dc",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用 DEC-RUNTIME-055 授权的独立 Worker 与命名端口，接入整稿授权单次模型节点及原子任务提交；与原开场共用账本，不新增进程或数据归属。",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -21,14 +21,14 @@
       "files": [
         "ai-worker/src/execution/worker-runtime.ts"
       ],
-      "file_sha256": "2b3c224b87e50071ecd4c90bd30459c4b904aa3bdaa869e68375191762654166",
+      "file_sha256": "a863a478e8dea9bf45c12d0127edca9ed2f217792dc4603c6eec5d97acba3312",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用 DEC-RUNTIME-055 授权的独立 Worker 与命名端口，接入整稿授权单次模型节点及原子任务提交；与原开场共用账本，不新增进程或数据归属。",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -233,14 +233,14 @@
       "files": [
         "backend/src/modules/execution/worker-supervisor.ts"
       ],
-      "file_sha256": "953d5b3074a6b8369e0150eca0b7b74cfe90fffeb21637fae40a181fc8e62160",
+      "file_sha256": "c858fd67279e4690f50d9a7748137a3b871051b2b8782e4371b71528bf782025",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "T-915 原执行机制内接通转写后处理命名端口与取消后结算；复用既有凭据、进程和账本，绑定当前文件，不新增执行架构。",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -885,7 +885,7 @@
       "files": [
         "frontend/src/server/persistence-client.ts"
       ],
-      "file_sha256": "1d86b6d6fc31e3ed501466a8ef555998e3bcd352c63d209535f9f9a598c50e74",
+      "file_sha256": "226a03251f38e06cfa3b29cdc9fdc919bd84a6b71e70b443b9d2feb4a856e991",
       "categories": [
         "credential_store",
         "language_toolchain",
@@ -894,7 +894,7 @@
       "disposition": "baseline-migrated",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "T-915 原执行机制内接通转写后处理命名端口与取消后结算；复用既有凭据、进程和账本，绑定当前文件，不新增执行架构。",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
       "acceptance": "此条只登记实现复杂度，不代表测试、产品或历史任务通过。"
     },
     {
@@ -1709,14 +1709,14 @@
       "files": [
         "ai-worker/src/execution/chat-generation-worker.ts"
       ],
-      "file_sha256": "90f61fddcc7674499ece7702e0b91fe9e425efda8d456e7a0e229cb498b621ed",
+      "file_sha256": "540f2f9c8540e4cf4561836b59a9800da8560d04a1bebf9b510c70c09239038b",
       "categories": [
         "ipc"
       ],
       "disposition": "in-budget",
       "decision": "DEC-RUNTIME-055",
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
-      "reason": "沿用已授权 Worker 命名端口，在 JSON 模型请求边界移除 SDK 可选 undefined，修复 advanced IPC 下宿主校验拒绝；不改变二进制传输或新增执行层。",
+      "reason": "DEC-RUNTIME-055 已批准的持久 Worker、正式聊天和封面执行接线；本轮按用户授权删除旧实现并拆分装配，不新增执行权或数据归属。",
       "acceptance": "真实 fork 结构化与开场共 35 项测试通过；此记录不代表全场景迁移或性能验收完成。"
     },
     {
@@ -1823,6 +1823,21 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "记录已批准桌面进程生命周期修复的既有Rust编译与聚焦测试命令，只是证据文档，不新增工具链或打包机制。",
       "acceptance": "仅登记证据文档触发的标记，不代表完整T-915或双平台打包通过。"
+    },
+    {
+      "task_id": "T-915",
+      "files": [
+        "ai-worker/src/execution/durable-stream-model.ts"
+      ],
+      "file_sha256": "d0a59322f08e0c432ab01fed57433fcce7fe48f461025d646e7e639c4690f280",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-RUNTIME-055",
+      "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "reason": "沿用原模型端口与账本，图片字节在请求中编码为base64，保持原附件范围而不引入新协议通道。",
+      "acceptance": "仅记录实现复杂度，不代表运行验收；用户暂缓测试。"
     }
   ],
   "historical_baselines": []
