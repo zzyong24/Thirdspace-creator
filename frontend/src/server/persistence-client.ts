@@ -25,7 +25,7 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator,createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
@@ -219,7 +219,7 @@ import {
 } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { createEmbeddingIoService } from "@creatoros/backend/modules/ai-runtime";
+import { createEmbeddingIoService,createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import {
   createLearningsService,
   createLearningsTransport,
@@ -523,17 +523,14 @@ import { resolveSearchSpec as resolveSearchSpecFn } from "@creatoros/backend/mod
 import {
   createMinimaxAdapter,
   createOmnihiVideoAdapter,
-  modelFor,
   // [T-379] OpenAI 兼容生图(gpt-image 系官方 + one-api/new-api 系中转站同形状)。
   createOpenaiImagesAdapter,
   // [T-377] 「测试连接」image.generate 真实最小生图探测用(与 runner 同一工厂真路径)。
-  generateImage as generateImageFn,
   resolveExecutablePath,
   type MultimodalProviderRegistry,
 } from "@creatoros/ai-worker";
 // [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
 import {
-  consumeTextProbeStream,
   createSettingsWithModelTest,
 } from "./settings-model-test-wrap";
 import { createSettingsWithChannelModelCredentials } from "./settings-channel-model-credentials-wrap";
@@ -5289,6 +5286,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       : DEFAULT_COVER_BACKFILL_LIMIT;
   };
 
+  // 2 GiB 既有输入上限在最小云端分片下最多 925 次请求；保留本地回退及恢复余量。
   const asrResourceDeps:Omit<Parameters<typeof createIntelligenceTranscriptBridge>[1],"entryPath"|"tasks">={
     // ASR 最小分片限额(Qwen) raw=2,324,982；MP3 帧≤1,441 B，2 GiB 输入≤925片。
     // 2048覆盖925云请求+1本地回退并留同规模恢复余量；原token/时限与已冻结预算不重置。
@@ -5309,7 +5307,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
     entryPath:resolveFlywheelWorkerPath,resolveModelSpec,
     // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
-    budget:{maxCalls:384,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
+    // 每轮最多 3 条收藏；覆盖音频分片、知识分块和有界修复，仍服从 token/截止时间。
+    budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
     createFavoritesAsr:runWorker=>createScheduledFavoritesAsrService(db,{...asrResourceDeps,runWorker}),
   });
   const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","favorites"]);
@@ -8977,7 +8976,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;if(benchmarkRecoveryTimer)clearInterval(benchmarkRecoveryTimer);if(flywheelRecoveryTimer)clearInterval(flywheelRecoveryTimer);assetBusiness.stop();transcribeBusiness.stop();await Promise.all([scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery,benchmarkRecovery,flywheelRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;if(benchmarkRecoveryTimer)clearInterval(benchmarkRecoveryTimer);if(flywheelRecoveryTimer)clearInterval(flywheelRecoveryTimer);assetBusiness.stop();transcribeBusiness.stop();await Promise.all([scheduledFlywheel.stop(),submittedPreparation.stop(),embeddingIo.stop(),modelProbeIo.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),benchmarkTranscription.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery,benchmarkRecovery,flywheelRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
@@ -9050,6 +9049,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
 
   // 交互向量请求复用 IO Worker；领域权限与索引写入仍由当前 service 负责。
+  const modelProbeIo = createModelProbeIoService({entryPath:resolveModelProbeWorkerPath});
   const embeddingIo = createEmbeddingIoService({entryPath:resolveEmbeddingWorkerPath});
   const embedTexts = async (
     ctx: RequestContext,
@@ -9267,15 +9267,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         spec ? { ...spec, authStyle: "bearer" as const } : null,
       ),
     resolveSearch: (ctx) => resolveSearchSpec(ctx),
-    // 真实最小生图(与 runner 同一工厂真路径;kind 补齐成 MultimodalSpec)。
-    generateImageMinimal: async (spec) => {
-      const { assetBytes } = await generateImageFn(
-        { ...spec, kind: "image" },
-        { prompt: "连接测试:一个纯色小圆点", aspectRatio: "1:1" },
-        multimodalRegistry,
-      );
-      return { byteLength: assetBytes?.byteLength ?? 0 };
-    },
+    generateImageMinimal: (spec,c) => modelProbeIo.probeImage(c,spec),
     // 真实最小检索(count=1;bocha/tavily/serpapi 消耗少量额度)。
     searchMinimal: async (_ctx, spec) => {
       const results = await searchWebFn(
@@ -9286,21 +9278,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       );
       return results.length;
     },
-    // 与正式聊天完全复用同一 modelFor + streamText；必须消费出非空文本，
-    // 不能再把 HTML 200 / 2xx 空流误报成“连通”。
-    probeTextModel: async (spec) => {
-      const { streamText } = await import("ai");
-      const result = streamText({
-        model: modelFor(spec),
-        prompt: "连接测试。请只回复 OK。",
-        // DeepSeek V4 默认先输出思考流；8 tokens 会在最终正文前耗尽。探针收到首个正文或
-        // reasoning delta 即结束，因此 128 只是兼容缓冲，不会无谓消费完整额度。
-        maxOutputTokens: 128,
-        maxRetries: 0,
-        abortSignal: AbortSignal.timeout(30_000),
-      });
-      return consumeTextProbeStream(result.fullStream);
-    },
+    probeTextModel: (spec,c) => modelProbeIo.probeText(c,spec),
     fetchImpl: fetch,
   });
   const settingsWithChannelModelCredentials =
@@ -9848,9 +9826,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       // 此前对话路径根本没绑 brief → 项目态 chat 的 context.projectBriefHard 恒空(A3 注入落不了地)。
       // 与 dispatch 路径共用 makeBriefReader(单一真值,扩投影全字段)。
       brief: makeBriefReader(),
-      // [T-245] enabled 信源计数 —— 只用于 trend 出题降级注记「已登记 N 个」的诚实措辞。
-      countEnabledTrendSources: async (c: RequestContext) =>
-        (await trendSourcesService.listEnabledSources(c)).length,
       // [T-578] 由 route 的 ...runtime.context 自动透传给 chat-runner，和后台 runner
       // 绑定同一个 reader；无需在控制层手枚举新增字段。
       positioningWorks: positioningWorksReader,
