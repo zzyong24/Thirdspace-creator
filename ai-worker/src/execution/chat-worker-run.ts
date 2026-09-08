@@ -3,20 +3,19 @@ import {runChatResearchInWorker,createChatResearchResources} from "./chat-resear
 import {runChatGenerationInWorker} from "./chat-generation-worker";
 import { createChatModelStreamEvents } from "./chat-model-stream-events";
 import {runChatTextNodeInWorker} from "./chat-text-node-worker";
-import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk } from "ai";
+import { tool, jsonSchema, modelMessageSchema, type ModelMessage, type ToolApprovalStatus, type UIMessageChunk } from "ai";
 import { z } from "zod";
 import {
   chatWorkerInputSchema, workerModelSpecSchema, workerReservationSchema, workerStartReceiptSchema,
   agenticToolReservationSchema, agenticToolOutcomeSchema, type WorkerPort, type WorkerProviderReceipt,
 } from "@creatoros/contract/execution-worker";
 import { modelFor } from "../runtime/provider-factory";
-import { createChatModelStream } from "../runtime/chat/chat-model-stream";
 import { runChatPiLoop } from "../runtime/chat/chat-pi-loop";
 import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
-const checkpointSchema=z.object({replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({pendingCalls:z.array(z.object({status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -38,6 +37,9 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   };
   signal.throwIfAborted();
   const initial=checkpointSchema.parse(await ports.call("readCheckpoint",{},signal));
+  // 旧协议任务保留账本与历史，但升级后不再启动已退役的执行器。
+  // 未知回执继续要求对账；其余旧任务明确等待用户另建任务，不自动重发动作。
+  if(input.executionEngine!=="pi")throw new GenerationFailure((initial.recovery==="requires_reconciliation" || initial.pendingCalls.some(call=>call.status==="started" || call.status==="unknown"))?"unknown_result":"waiting_user","CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED");
   if(initial.recovery==="requires_reconciliation")throw new GenerationFailure("unknown_result","CHAT_CHECKPOINT_REQUIRES_RECONCILIATION");
   const restoreHooks=async(callId:string)=>{
     const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatHooks",{callId},signal));
@@ -168,8 +170,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       return decision;
     }catch(error){throw fail(error,"CHAT_APPROVAL_RESULT_UNKNOWN");}
   }]));
-  // 旧冻结任务保留原 SDK 请求指纹；所有新任务由宿主冻结 executionEngine:pi。
-  if((input as typeof input & {executionEngine?:"pi"}).executionEngine==="pi"){
+  // 所有可执行聊天只进入 Pi；旧非终态在任何工具恢复之前已明确暂停。
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
@@ -186,24 +187,5 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     if(!lastModelCallId)throw new GenerationFailure("unknown_result","CHAT_RESULT_RECEIPT_MISSING");
     if(!result.awaitingApproval && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
     return {...result,lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.finishReason==="stop"?"completed" as const:"partial" as const};
-  }
-  let message:UIMessage|undefined;
-  const result=createChatModelStream({model,system:input.system,messages:await Promise.all(input.messages.map(message=>modelMessageSchema.parse(message))) as ModelMessage[],
-    tools,toolApproval,deduplicateTools:false,maxSteps:input.maxSteps,maxOutputTokens:input.maxOutputTokens,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,abortSignal:signal,
-    onError:({error})=>{fail(error,"CHAT_MODEL_RESULT_UNKNOWN");},
-  });
-  const reader=result.toUIMessageStream({generateMessageId:()=>`chat:${input.sourceMessageId}`,onFinish:({responseMessage})=>{message=responseMessage;}}).getReader();
-  try{
-    while(true){const next=await reader.read();if(next.done)break;await ports.onChunk?.(next.value);}
-    await checkpointTail;
-    if(failure)throw failure;
-    parentSignal.throwIfAborted();
-    if(!message || !lastModelCallId)throw new GenerationFailure("unknown_result","CHAT_RESULT_RECEIPT_MISSING");
-    const awaitingApproval=message.parts.some(part=>"state" in part && part.state==="approval-requested");
-    const finishReason=await result.finishReason;
-    const hasOutput=message.parts.some(part=>(part.type==="text" && part.text.trim().length>0) || part.type==="file" || ("state" in part && part.state==="output-available"));
-    if(!awaitingApproval && !hasOutput)throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
-    return {message,text:await result.text,lastModelCallId,toolCallIds:[...toolCallIds],outcome:awaitingApproval?"awaiting_confirmation" as const:finishReason==="stop"?"completed" as const:"partial" as const,finishReason};
-  }catch(error){stop.abort();await reader.cancel().catch(()=>{});throw failure??fail(error,"CHAT_STREAM_RESULT_UNKNOWN");}
   }finally{await Promise.all([research?.close(),webRead?.close()]);}
 }

@@ -38,6 +38,7 @@ export function createExecutionGenerationPorts(db:Db,deps:Parameters<typeof crea
           if(target.taskType!==input.skillId||target.skipModel||!target.checksum||(target.taskType==='asset.classify'&&!target.mimeType.startsWith('image/')))throw new ConflictError('当前素材处理不允许模型调用');
           if(target.taskType==='material.extract'&&materialExtractionSchema.parse((task.payload as {materialExtraction?:unknown}).materialExtraction).status!=='done')throw new ConflictError('尚无完整文档正文，不能调用摘要模型');
         }
+        if(input.kind==="chat.run" && input.executionEngine!=="pi")throw new ConflictError("旧聊天任务使用已退役执行协议，请新建任务继续；原账本与历史已保留");
         const owner=input.kind==="chat.run" ? input : input.skillSnapshot;
         if(task.kind!=="ai_task" || owner.userId!==context.userId || owner.accountId!==context.accountId)throw new ConflictError("模型执行归属不符");
         return {input,retryOfCallId:task.retryOfCallId,hasFallback:Boolean((task.payload as Record<string,unknown>).chatFallbackModelIdentity)};

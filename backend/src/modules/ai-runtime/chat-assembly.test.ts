@@ -4,7 +4,7 @@ import type {AssembleChatDeps} from "./chat-assembly-types";
 import {detectCopilotMediaRoute,isScratchPositioningConversation} from "./chat-assembly-context";
 import { parseSemanticVerbatimSelection } from "./chat-script-import-authorization";
 import { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
-import { resolveChatMaxSteps, buildChatPrepareStep, buildForcedToolInstruction, repairScriptPatchToolCall, dedupeChatToolExecutions } from "@creatoros/ai-worker/chat";
+import { resolveChatMaxSteps, buildForcedToolInstruction } from "@creatoros/ai-worker/chat";
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import {
   registerAllTemplates,
@@ -776,54 +776,6 @@ describe("prepareChatAssembly — 三层注入装配", () => {
     expect(a.system).toContain("不代表本轮必须局部改稿");
   });
 
-  it("[T-716] 局部改稿工具参数只修复等价字段别名和纯文本，不猜锚点或吞截断 JSON", () => {
-    const base = {
-      type: "tool-call" as const,
-      toolCallId: "tc-repair",
-      toolName: "script_patch",
-      input: JSON.stringify({
-        new_text: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
-        summary: "讲清两条选题来源",
-      }),
-    };
-    const repaired = repairScriptPatchToolCall(base);
-    expect(repaired).not.toBeNull();
-    expect(JSON.parse(repaired!.input)).toEqual({
-      replacementText: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
-      summary: "讲清两条选题来源",
-    });
-    expect(repaired).not.toHaveProperty("artifactId");
-    expect(repaired).not.toHaveProperty("sectionId");
-
-    // 旧会话/部分 provider 会沿用项目内部点号名；修复后必须统一为
-    // 真正发给模型的安全名，才能命中当前工具表。
-    const dottedName = repairScriptPatchToolCall({
-      ...base,
-      toolName: "script.patch",
-    });
-    expect(dottedName).not.toBeNull();
-    expect(dottedName!.toolName).toBe("script_patch");
-    expect(JSON.parse(dottedName!.input)).toEqual({
-      replacementText: "内容雷达改写对标选题；自动化任务原创生成账号选题。",
-      summary: "讲清两条选题来源",
-    });
-
-    const plain = repairScriptPatchToolCall({
-      ...base,
-      input: "这是模型直接返回的新段落正文。",
-    });
-    expect(JSON.parse(plain!.input)).toEqual({
-      replacementText: "这是模型直接返回的新段落正文。",
-    });
-
-    expect(
-      repairScriptPatchToolCall({ ...base, input: '{"replacementText":"半截' }),
-    ).toBeNull();
-    expect(
-      repairScriptPatchToolCall({ ...base, toolName: "script_draft" }),
-    ).toBeNull();
-  });
-
   it("[T-117] 无 functionKey / functionKey 非真工具 → forcedTool undefined(自由对话不强制)", async () => {
     const { deps } = makeDeps();
     const none = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
@@ -1506,108 +1458,13 @@ describe("[T-239f] resolveChatMaxSteps — 步数上限可配", () => {
   });
 });
 
-describe("[T-239f] buildChatPrepareStep — 末步禁工具收尾 + T-117 强制工具兼容", () => {
-  it("同一轮相同工具和参数第二次出现后，下一步立即禁工具收尾", () => {
-    const prep = buildChatPrepareStep({ maxSteps: 6 });
-    const repeated = {
-      toolName: "material_gather",
-      input: { query: "维生素D 镁" },
-    };
-    expect(
-      prep({
-        stepNumber: 2,
-        steps: [
-          { toolCalls: [repeated] },
-          { toolCalls: [{ input: { query: "维生素D 镁" }, toolName: "material_gather" }] },
-        ],
-      }),
-    ).toEqual({ toolChoice: "none" });
-  });
-
-  it("最后一步(stepNumber === maxSteps-1)→ toolChoice:'none'(模型必须文字总结,不再被 stopWhen 静默腰斩)", () => {
-    const prep = buildChatPrepareStep({ maxSteps: 6 });
-    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
-    // 中间步不干预(auto)。
-    expect(prep({ stepNumber: 0 })).toEqual({});
-    expect(prep({ stepNumber: 4 })).toEqual({});
-  });
-
-  it("[T-117/T-443] forcedTool 第 0 步**仍下发强制**(快路径:点按钮秒出卡);末步照旧禁工具", () => {
-    const prep = buildChatPrepareStep({
-      forcedTool: "topic_enrich",
-      maxSteps: 6,
-    });
-    // 保留 API 层强制 = 模型第 0 步直接执行,不必自己纠结要不要调工具(用户实测 MiniMax「一下就出来」)。
-    // 思考模型对它 400 的兼容问题,由 recovering-model 中间件「被拒才降级」兜底,而不是让所有模型变慢。
-    expect(prep({ stepNumber: 0 })).toEqual({
-      toolChoice: { type: "tool", toolName: "topic_enrich" },
-    });
-    expect(prep({ stepNumber: 1 })).toEqual({});
-    // 末步禁工具收尾(T-239f)不受影响。
-    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
-  });
-
-  it("[T-716] 局部改稿首步必须调用唯一补丁候选工具", () => {
-    const prep = buildChatPrepareStep({
-      forcedTool: "script_patch",
-      maxSteps: 6,
-    });
-    expect(prep({ stepNumber: 0 })).toEqual({
-      toolChoice: { type: "tool", toolName: "script_patch" },
-    });
-    expect(prep({ stepNumber: 5 })).toEqual({ toolChoice: "none" });
-  });
-
-  it("[T-779] 参考历史作品封面按只读候选→真实生成的顺序强制执行", () => {
-    const prep = buildChatPrepareStep({
-      forcedToolSequence: ["context_publications", "cover_generate"],
-      maxSteps: 6,
-    });
-    expect(prep({ stepNumber: 0 })).toEqual({
-      toolChoice: { type: "tool", toolName: "context_publications" },
-    });
-    expect(prep({ stepNumber: 1 })).toEqual({
-      toolChoice: { type: "tool", toolName: "cover_generate" },
-    });
-    expect(prep({ stepNumber: 2 })).toEqual({});
-  });
-
+describe("Pi 显式工具指令", () => {
   it("[T-443] 强制意图改由 system 指令承担,且必须用**合规工具名**(与发给模型的 tools key 一致)", () => {
     const s = buildForcedToolInstruction("topic_enrich");
     expect(s).toContain("topic_enrich"); // 用合规名,否则模型按名找不到工具
     expect(s).not.toContain("topic.enrich"); // 不能漏用原名
     expect(s).toMatch(/必须首先调用/); // 强制语义仍在(T-117 的意图不丢)
     expect(s).toMatch(/不要用文字描述/); // 防「谎称已渲卡」
-  });
-});
-
-describe("dedupeChatToolExecutions — 同轮同参只执行一次", () => {
-  it("成功结果复用，失败结果不缓存，避免瞬时错误被永久粘住", async () => {
-    const execute = vi
-      .fn()
-      .mockResolvedValueOnce({ rows: [1] })
-      .mockRejectedValueOnce(new Error("瞬时失败"))
-      .mockResolvedValueOnce({ rows: [2] });
-    const tools = dedupeChatToolExecutions({
-      "material.gather": { execute },
-    } as never);
-    const call = (
-      tools["material.gather"] as unknown as {
-        execute: (input: unknown, options?: unknown) => Promise<unknown>;
-      }
-    ).execute;
-
-    await expect(call({ query: "同一查询", filters: { b: 2, a: 1 } })).resolves.toEqual({
-      rows: [1],
-    });
-    await expect(call({ filters: { a: 1, b: 2 }, query: "同一查询" })).resolves.toEqual({
-      rows: [1],
-    });
-    expect(execute).toHaveBeenCalledTimes(1);
-
-    await expect(call({ query: "另一个查询" })).rejects.toThrow("瞬时失败");
-    await expect(call({ query: "另一个查询" })).resolves.toEqual({ rows: [2] });
-    expect(execute).toHaveBeenCalledTimes(3);
   });
 });
 
