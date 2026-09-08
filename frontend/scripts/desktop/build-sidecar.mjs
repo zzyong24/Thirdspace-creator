@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime } from "./execution-worker-runtime.mjs";
+import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime,assertWorkerExternalPackages,workerExternalPackages } from "./execution-worker-runtime.mjs";
 // [T-147 P1] sidecar 二进制化 —— 桌面化「唯一中风险」(RFC §8.1)。
 //
 // 目标:产出 Tauri externalBin 需要的、按 target-triple 命名的可执行体
@@ -454,6 +454,7 @@ function packSidecarTarball() {
   assertNoPackagedBuildArtifacts(SIDECAR_RUNTIME);
   assertCreatorOsCliRuntime(SIDECAR_RUNTIME);
   assertExecutionWorkerRuntime(SIDECAR_RUNTIME);
+  assertWorkerExternalPackages(SIDECAR_RUNTIME);
   const prunedPortableMetadata = prunePortableMetadataFiles(SIDECAR_RUNTIME);
   if (prunedPortableMetadata.length > 0) {
     console.log(
@@ -1092,6 +1093,28 @@ export function materializeRuntimePackageClosure({
   return { rootEntry, closure };
 }
 
+/** Worker 的外置纯 JS 解析器，复用原闭包复制工具，不依赖 Next 的导入追踪。 */
+function bundleWorkerExternalPackages() {
+  const srcPnpm = join(REPO, "node_modules", ".pnpm");
+  const destPnpm = join(SIDECAR_RUNTIME, "node_modules", ".pnpm");
+  for (const packageName of workerExternalPackages) {
+    const entry = findPnpmEntryForPackage(srcPnpm, packageName);
+    if (!entry) throw new Error(`[build-sidecar] Worker 必备依赖缺失：${packageName}`);
+    const anchor = join(SIDECAR_RUNTIME, "frontend/node_modules", ...packageName.split("/"));
+    rmSync(anchor, { recursive: true, force: true });
+    mkdirSync(dirname(anchor), { recursive: true });
+    if (platform === "win32") {
+      materializeNestedEntryTree(srcPnpm, entry, anchor, new Set([entry]));
+    } else {
+      mkdirSync(destPnpm, { recursive: true });
+      copyPnpmClosureVerbatim(srcPnpm, destPnpm, [entry]);
+      const body = resolveEntryPackage(destPnpm, entry).dir;
+      symlinkSync(relative(dirname(anchor), body), anchor, "dir");
+    }
+  }
+  assertWorkerExternalPackages(SIDECAR_RUNTIME);
+}
+
 export function canvasNativePackageFor(
   targetPlatform = platform,
   targetArch = arch,
@@ -1344,7 +1367,7 @@ function materializeStandaloneWin() {
 //   病根:pi-engine.ts 运行时**深文件导入** `dist/core/sdk.js`(+ model-registry/auth-storage/
 //   session-manager),而 pi 是 serverExternalPackages + 动态 import → Next standalone tracing
 //   **整棵 pi 树没拖进 sidecar**(实测:打包 sidecar 的 .pnpm 里 0 个 pi-coding-agent / openai / chalk
-//   / debug / ws)→ locatePiCoreDir() 找不到 sdk.js → Pi 引擎永远退确定性兜底,「点亮」名存实亡。
+//   / debug / ws)→ locatePiCoreDir() 找不到 sdk.js → Agent Worker 无法启动,「点亮」名存实亡。
 //   修:照 playwright/gsap 三件套,把 pi 的**完整依赖闭包**实拷进 sidecar node_modules/.pnpm。
 //
 //   闭包如何算(不硬编码版本名 —— pi 版本一升,peer-suffix 目录名全变,硬编码会静默失配):
@@ -1374,14 +1397,9 @@ function bundlePiEngine() {
   const CUT_PKG = ["@aws-sdk/client-bedrock-runtime", "@google/genai", "@mistralai/mistralai"];
   const isCut = (entry) => CUT_PKG.includes(resolveEntryPackage(srcPnpm, entry).name);
 
-  // 定位 pi-coding-agent 根 entry;缺 → pi 没装(feature 层可退兜底)→ 警告跳过,不硬阻塞打包。
+  // Pi 是独立 Agent Worker 的必备运行时；缺包时不能产出残缺安装包。
   const rootEntry = readdirSync(srcPnpm).find((x) => x.startsWith(`${PI_PNPM}@`));
-  if (!rootEntry) {
-    console.warn(
-      `[build-sidecar] ⚠ 源 .pnpm 无 ${PI_PKG}@*(未装?)—— 跳过 Pi 实拷。打包版 Pi 引擎将退确定性兜底。`,
-    );
-    return;
-  }
+  if (!rootEntry) throw new Error(`[build-sidecar] 缺少必备 Pi 运行时 ${PI_PKG}`);
 
   // BFS 算闭包(剪掉 provider 顶包子树)。
   const visited = collectPnpmClosure(srcPnpm, rootEntry, isCut);
@@ -1429,7 +1447,7 @@ function bundlePiEngine() {
   // HARD 自检:sidecar node **真深导入** sdk.js + 三个兄弟 + CreatorOS 会用的三种 wire API,
   //   断言 createAgentSession / provider factory 都是函数。这条同时验证:
   //   ①闭包完整(任一 entry 漏 → 相对 symlink 悬空 → import 崩)②剪枝安全(cut 的 provider 不在静态图)。
-  //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出「点亮却失活」的包。
+  //   假通过零容忍(教训同 playwright 自检②):import 崩则 throw,宁 build 失败也不出 Agent Worker 无法启动的包。
   const coreDir = join(destPnpm, rootEntry, "node_modules", PI_PKG, "dist", "core");
   const selfCheck = `
     import { existsSync } from 'node:fs';
@@ -2124,6 +2142,10 @@ function bundleMediaTools(triple) {
 }
 
 function main() {
+  if (process.env.CREATOROS_SKIP_PI === "1") {
+    throw new Error("[build-sidecar] CREATOROS_SKIP_PI 不再允许：独立 Agent Worker 必须随包提供 Pi");
+  }
+
   // [T-586] 必须早于所有局部构建/缓存短路：即使复用 clean runtime，也不能让安装声明与
   // 实际会随包复制的 Node Mach-O 要求漂移。
   assertMacosRuntimeCompatibility();
@@ -2385,14 +2407,9 @@ function main() {
     bundleRenderDeps();
   }
 
-  // [T-313] 实拷 Pi 引擎依赖闭包(补 Next tracing 漏的整棵 @earendil-works/pi-coding-agent 树)——
-  //   pi-engine.ts 运行时深导入 dist/core/sdk.js;不实拷则打包版 Pi 引擎永退兜底(见 bundlePiEngine 注释)。放打 tarball 前。
-  // [T-452] CREATOROS_SKIP_PI=1 跳,省 1-2 分钟;Pi 引擎会退确定性兜底。
-  if (process.env.CREATOROS_SKIP_PI === "1") {
-    console.log("[build-sidecar] ⏭ [T-452] CREATOROS_SKIP_PI=1 → 跳 bundlePiEngine(Pi 引擎退兜底)");
-  } else {
-    bundlePiEngine();
-  }
+  // Pi 缺席时 Agent Worker 会拒绝启动，不能作为可选功能跳过。
+  bundlePiEngine();
+  bundleWorkerExternalPackages();
 
   // [T-383] 实拷 @xenova/transformers 完整闭包(修 T-356 worker 化后打包版 whisper-local
   //   「Cannot find module '@xenova/transformers'」)—— 放 T-225/T-225b 安全网之前、打 tarball 前。
