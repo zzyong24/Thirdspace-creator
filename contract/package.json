@@ -15,6 +15,10 @@
     "./embedding-io": {
       "types": "./src/internal/embedding-io.ts",
       "default": "./src/internal/embedding-io.ts"
+    },
+    "./model-probe-io": {
+      "types": "./src/internal/model-probe-io.ts",
+      "default": "./src/internal/model-probe-io.ts"
     }
   },
   "scripts": {

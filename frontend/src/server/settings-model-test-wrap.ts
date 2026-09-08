@@ -86,7 +86,7 @@ export interface SettingsModelTestDeps {
   /** 搜索解析:未配 → 抛 SearchConfigError。 */
   resolveSearch: (ctx: RequestContext) => Promise<SearchSpecLite>;
   /** 真实最小生图(image.generate 走真调用;host 绑 multimodal registry 的 generateImage)。 */
-  generateImageMinimal: (spec: MmSpecLite) => Promise<{ byteLength: number }>;
+  generateImageMinimal: (spec: MmSpecLite, ctx:RequestContext) => Promise<{ byteLength: number }>;
   /** 真实最小检索(bocha/tavily/serpapi;host 绑 searchWeb + registry,count=1)。 */
   searchMinimal: (
     ctx: RequestContext,
@@ -99,6 +99,7 @@ export interface SettingsModelTestDeps {
    */
   probeTextModel: (
     spec: LlmSpecLite,
+    ctx:RequestContext,
   ) => Promise<{ text: string; reasoningText?: string }>;
   fetchImpl: typeof fetch;
 }
@@ -191,9 +192,10 @@ export async function consumeTextProbeStream(
 async function textModelProbe(
   spec: LlmSpecLite,
   probe: SettingsModelTestDeps["probeTextModel"],
+  ctx:RequestContext,
 ): Promise<{ ok: boolean; detail: string }> {
   try {
-    const { text, reasoningText = "" } = await probe(spec);
+    const { text, reasoningText = "" } = await probe(spec,ctx);
     if (text.trim().length > 0) {
       return {
         ok: true,
@@ -418,7 +420,7 @@ export async function runModelConnectionTest(
       case "default":
       case "script.review": {
         const spec = await deps.resolveLlm(ctx, capability);
-        const r = await textModelProbe(spec, deps.probeTextModel);
+        const r = await textModelProbe(spec, deps.probeTextModel,ctx);
         return {
           ...r,
           ...resultIdentity(spec, spec.apiFormat, spec.model),
@@ -431,7 +433,7 @@ export async function runModelConnectionTest(
             "备用对话模型只认专配行(不回退主模型),请先保存配置。",
           );
         }
-        const r = await textModelProbe(spec, deps.probeTextModel);
+        const r = await textModelProbe(spec, deps.probeTextModel,ctx);
         return {
           ...r,
           ...resultIdentity(spec, spec.apiFormat, spec.model),
@@ -452,6 +454,7 @@ export async function runModelConnectionTest(
               : {}),
           },
           deps.probeTextModel,
+          ctx,
         );
         return {
           ...r,
@@ -471,7 +474,7 @@ export async function runModelConnectionTest(
         const spec = await deps.resolveMultimodal(ctx, capability);
         // 供应商无免费生图探测端点 → 真实最小调用(消耗少量额度;UI 已提示)。
         try {
-          const { byteLength } = await deps.generateImageMinimal(spec);
+          const { byteLength } = await deps.generateImageMinimal(spec,ctx);
           if (byteLength > 0) {
             return {
               ok: true,

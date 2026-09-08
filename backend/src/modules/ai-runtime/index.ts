@@ -24,7 +24,6 @@ export * from "./benchmark-teardown-runner";
 // [T-235b] 低粉黑马雷达采集器(平台内证据:关键词搜近1天最多赞 → 三档判黑马 → 落对标爆款库)。
 export * from "./darkhorse-collector";
 // [T-235b] 热点信源信号采集(通用网页信源主路 readUrl+AI 抽取 / RSS 辅路 feed 解析)。
-export * from "./trend-source-signals";
 // [T-238] 出题依据信号质量画像(纯函数)+ 评论强信号过滤 —— chat 出题 / topic.daily 共享装配。
 export * from "./signal-quality";
 // 聊天上下文与工具定义准备；模型执行由独立持久 Worker 承担。
@@ -84,7 +83,7 @@ export * from "./skill-config-overrides";
 export * from "./topic-attribution-runner";
 export * from "./topic-enrich-runner";
 export * from "./topic-runner";
-export * from "./topic-task-adapter";
+export * from "./topic-basis";
 export * from "./transcribe-runner";
 // [T-357] 采集逐字稿后处理(同音错字纠正+补标点+语义分段;落库前一遍,失败诚实落原文)。
 export * from "./transcript-postprocess";
@@ -160,3 +159,5 @@ export {createScheduledFlywheelExecutionService,type ScheduledFlywheelScope,type
 export {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
 
 export {createEmbeddingIoService} from "./embedding-io.service";
+
+export {createModelProbeIoService} from "./model-probe-io.service";

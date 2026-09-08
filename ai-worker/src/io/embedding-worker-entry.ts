@@ -14,6 +14,7 @@ process.on("message",async raw=>{
  const timer=setTimeout(()=>controller.abort(),Math.max(0,input.deadlineAt-Date.now()));
  try{
   controller.signal.throwIfAborted();if(Date.now()>=input.deadlineAt)throw new Error("expired");
+  if(!input.texts.length){send({type:"result",requestId:input.requestId,embeddings:[]});return;}
   // SDK 不做隐式重试；仅整个单次请求明确 429 时重试一次，已完成的分批不重发。
   const rawModel=embeddingModelFor(input.spec);
   if(typeof rawModel==="string"||rawModel.specificationVersion==="v2")throw new Error("embedding factory returned unsupported identity");

@@ -27,3 +27,4 @@ export function resolveEmbeddingWorkerPath(cwd=process.cwd(),desktop=process.env
 export function resolveFlywheelWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){
   return resolveWorkerPath("flywheel-generation-worker.cjs","FLYWHEEL_WORKER_BUILD_MISSING",cwd,desktop);
 }
+export function resolveModelProbeWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){return resolveWorkerPath("model-probe-worker.cjs","MODEL_PROBE_WORKER_BUILD_MISSING",cwd,desktop);}

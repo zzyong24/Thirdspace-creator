@@ -13,7 +13,7 @@ import {
   formatFilteredSignalsBrief,
   renderSignalQualityBrief,
 } from "./signal-quality";
-import { normalizeTopicTaskBasis } from "./topic-task-adapter";
+import { normalizeTopicTaskBasis } from "./topic-basis";
 import type { TrendSourceProjection } from "./trend-source-signals";
 import type { StructuredBusinessAdapter } from "./structured-business-execution.service";
 
