@@ -3,56 +3,11 @@
 import {createChatTaskControl} from "./chat-task-control";
 
 /**
- * `AICopilotContent` is the page-specs §16 component tree for the
- * AI Copilot dialog (Task 24).
- *
- *   AICopilotContent
- *   ├── PromptComposer
- *   │   ├── PromptInput
- *   │   ├── SuggestedActionChips
- *   │   └── SubmitButton
- *   ├── CopilotDashboard
- *   │   ├── RecommendedCommands
- *   │   ├── RecentTasks
- *   │   └── ContinuingTasks
- *   ├── QuickEntries
- *   └── SmartRecommendation
- *
- * This is a client island. T-004 ChatBox slice 1: the composer is now driven by
- * `useChat` (@ai-sdk/react) streaming against `/api/chat` (Vercel AI SDK streamText) —
- * NOT the old createMessage→poll-listMessages loop. A submit `sendMessage({text})`,
- * the reply streams token-by-token, `stop()` aborts mid-stream. The route resolves the
- * 选题编导 (chatbox.topic) skill, injects CreativeContext facets, and exposes the first-wave
- * tools (topic.generate / topic.enrich). Tool results arrive as candidate parts → rendered
- * inline as `ChatCandidateCard` → 人逐条采纳 via the candidates.create confirm gate (AI never
- * writes entities directly, 铁律②). The thread still persists to ai_conversations/ai_messages
- * server-side (the route's onFinish). ChatContext is carried in the transport body (surface
- * layer + data layer wired; functionKey 叠加 left for a later slice).
- *
- * The dashboard chips below the prompt are fixture-driven (via the
- * `buildCopilotViewModel` selector in `@/fixtures/selectors`) but their
- * interactions are now REAL (GAP-COP-1, low-cost做真):
- *   - RecommendedCommands / SmartRecommendation chips fill the composer
- *     (`setPrompt`), feeding straight into the real-backend submit path.
- *   - QuickEntries navigate to their real (creator) routes via `next/link`.
- *   - RecentTasks is backed by the REAL global AI-task feed (ai.tasks.list); it
- *     resolves to an honest empty state on a fresh DB.
- *   - ContinuingTasks is now REAL (GAP-COP-1 做真): it reuses the SAME
- *     ai.tasks.list fetch and filters to the user's cross-project in-progress
- *     tasks (status ∈ {queued, running, awaiting_confirmation}). Each row gets a
- *     「继续」 button that routes to the task's project/stage, derived from
- *     `task.projectId` + `task.taskType` (taskType → stage map below). Tasks
- *     without a `projectId` (global tasks) can't be resumed into a project route,
- *     so their 「继续」 degrades to a disabled state. When the feed is genuinely
- *     empty it renders an honest 「暂无进行中的任务」 empty state — no fixture rows,
- *     no 规划中 badge.
- *
- *     Honest limit (see sharedChangesNeeded): ai.tasks.list returns paginated
- *     {id, projectId, taskType, status, requestedAt} but NOT a per-task resume
- *     anchor (e.g. the conversation/node id to re-open) nor a server-side
- *     status filter. We resume at the stage granularity (project/stage route)
- *     and filter client-side over a single page; a deep-link anchor + a
- *     status-scoped query would make 「继续」 land exactly on the in-flight node.
+ * Copilot 页面负责输入、流式消息、候选卡与原任务控制。
+ * `/api/chat` 只提交持久 chat.run 并订阅事件，模型和工具循环由独立 Worker 执行。
+ * useChat 保留为消息协议与 UI 状态适配；停止订阅与取消后台任务分别处理。
+ * 候选经用户采纳后由 backend 落库，完成消息也由 backend 持久化。
+ * 最近任务读取真实 ai.tasks.list，恢复与取消使用原 executionTaskId；空列表显示空态。
  */
 
 import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime-actions";
