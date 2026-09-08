@@ -7,7 +7,7 @@ export interface BundledBrowserSearchHit {
 }
 
 export interface BrowserSearchAttempt {
-  readonly engine: "baidu" | "bing";
+  readonly engine: "baidu" | "duckduckgo";
   readonly status: "ok" | "empty" | "error" | "skipped";
   readonly resultCount: number;
   readonly durationMs: number;
@@ -49,11 +49,11 @@ function isConfirmedLoginWall(error: unknown): boolean {
 
 const ENGINES = [
   { name: "baidu" as const, baseUrl: "https://www.baidu.com/s?wd={q}" },
-  { name: "bing" as const, baseUrl: null },
+  { name: "duckduckgo" as const, baseUrl: null },
 ] as const;
 
 /**
- * 内置浏览器检索：国内中文默认百度；失败或零结果时切 Bing。
+ * 内置浏览器检索：国内中文默认百度；失败或零结果时切 DuckDuckGo HTML。
  * 两路都是真浏览器结果，绝不补模型记忆。只有两路都抛错才抛聚合错误；
  * 正常执行但均为 0 条则诚实返回空数组。
  */

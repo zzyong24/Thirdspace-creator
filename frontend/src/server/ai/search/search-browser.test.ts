@@ -37,16 +37,18 @@ function fakeDeps(opts: {
 } {
   const savedSlugs: string[] = [];
   const gotoOptions: Array<{ waitUntil?: string; timeout?: number }> = [];
+  let requestedUrl = "";
   const page = {
     goto: async (_url: string, navigationOptions?: { waitUntil?: string; timeout?: number }) => {
+      requestedUrl = _url;
       gotoOptions.push(navigationOptions ?? {});
       if (opts.gotoThrows) throw new Error("net::ERR_TIMED_OUT");
       return {
         status: () => opts.status ?? 200,
-        url: () => opts.finalUrl ?? "https://www.bing.com/search?q=x",
+        url: () => opts.finalUrl ?? requestedUrl,
       };
     },
-    url: () => opts.finalUrl ?? "https://www.bing.com/search?q=x",
+    url: () => opts.finalUrl ?? requestedUrl,
     title: async () => "Bing",
     content: async () => opts.html ?? BING_HTML,
     screenshot: async () => new Uint8Array([1, 2, 3]),
@@ -68,9 +70,9 @@ function fakeDeps(opts: {
 }
 
 describe("buildSearchUrl(T-126b)", () => {
-  it("无 baseUrl → 默认 Bing,query 编码进 {q}", () => {
+  it("无 baseUrl → 默认 DuckDuckGo HTML,query 编码进 {q}", () => {
     expect(buildSearchUrl(browserSpec(null), "抖音 运营")).toBe(
-      `https://www.bing.com/search?q=${encodeURIComponent("抖音 运营")}`,
+      `https://html.duckduckgo.com/html/?q=${encodeURIComponent("抖音 运营")}`,
     );
   });
   it("baseUrl 含 {q} 模板 → 替换", () => {
@@ -91,7 +93,7 @@ describe("parseBingResults(T-126b) —— 纯函数 SERP 解析", () => {
     expect(results[0]?.snippet).toContain("涨粉实操");
     expect(results[0]?.siteName).toBe("a.com");
   });
-  it("Bing 改版/无匹配 → 返 [](上层降级 model_memory)", () => {
+  it("Bing 改版/无匹配 → 返 [](上层切换真实来源)", () => {
     expect(parseBingResults("<html>结构变了</html>")).toEqual([]);
   });
 });
@@ -100,7 +102,7 @@ describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图�
   it("正常:导航成功 → 解析结果 + 触发自截图存证", async () => {
     const { deps, savedSlugs, gotoOptions } = fakeDeps({});
     const results = await createBrowserScrapeAdapter(deps).search(
-      browserSpec(null),
+      browserSpec("https://www.bing.com/search?q={q}"),
       "抖音运营",
       OPTS,
     );
@@ -117,21 +119,21 @@ describe("createBrowserScrapeAdapter(T-126b) —— 导航→解析→自截图�
   it("命中登录墙/验证码 → SearchExecutionError(上层降级)", async () => {
     const { deps } = fakeDeps({ html: "<html>请完成人机验证 captcha</html>" });
     await expect(
-      createBrowserScrapeAdapter(deps).search(browserSpec(null), "抖音", OPTS),
+      createBrowserScrapeAdapter(deps).search(browserSpec("https://www.bing.com/search?q={q}"), "抖音", OPTS),
     ).rejects.toBeInstanceOf(SearchExecutionError);
   });
 
   it("HTTP 4xx → SearchExecutionError", async () => {
     const { deps } = fakeDeps({ status: 403 });
     await expect(
-      createBrowserScrapeAdapter(deps).search(browserSpec(null), "抖音", OPTS),
+      createBrowserScrapeAdapter(deps).search(browserSpec("https://www.bing.com/search?q={q}"), "抖音", OPTS),
     ).rejects.toBeInstanceOf(SearchExecutionError);
   });
 
   it("导航失败(超时/DNS)→ SearchExecutionError", async () => {
     const { deps } = fakeDeps({ gotoThrows: true });
     await expect(
-      createBrowserScrapeAdapter(deps).search(browserSpec(null), "抖音", OPTS),
+      createBrowserScrapeAdapter(deps).search(browserSpec("https://www.bing.com/search?q={q}"), "抖音", OPTS),
     ).rejects.toBeInstanceOf(SearchExecutionError);
   });
 });
@@ -190,7 +192,7 @@ describe("[T-390] createBrowserScrapeAdapter — baseUrl 指到百度也能解�
   it("百度 SERP(finalUrl baidu.com)→ 引擎感知解析出结果", async () => {
     const { deps } = fakeDeps({
       html: BAIDU_HTML,
-      finalUrl: "https://www.baidu.com/s?wd=x",
+      finalUrl: "https://www.baidu.com/s?wd=%E6%8A%96%E9%9F%B3%E8%BF%90%E8%90%A5",
     });
     const adapter = createBrowserScrapeAdapter(deps);
     const results = await adapter.search(

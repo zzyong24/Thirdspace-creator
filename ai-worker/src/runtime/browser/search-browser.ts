@@ -1,9 +1,10 @@
+import { parseDuckDuckGoResults } from "./search-duckduckgo";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
 // 浏览器搜索适配器(T-126b)—— 实现 ai-worker SearchProviderAdapter,**免 key + 自截图**。
 // 对应用户诉求「之前通过 Chrome DevTools 让 Agent 操作浏览器」:provider="browser" 时,服务端真开
-// 无头 Chromium 导航到搜索引擎(默认 Bing,可 baseUrl 换)→ 抓 SERP HTML → 纯函数解析结果 →
+// 无头 Chromium 导航到搜索引擎(默认 DuckDuckGo HTML,可 baseUrl 换)→ 抓 SERP HTML → 纯函数解析结果 →
 // SearchResult[];同时 page.screenshot() 落 .cache/ 存证(不可抵赖的检索证据)。任意模型都能真联网。
 //
 // ── 分层(对齐 web-capture.ts 可测范式)──────────────────────────────────────────
@@ -29,8 +30,8 @@ import {
   type CaptureCapableContext,
 } from "./web-capture";
 
-// 默认搜索引擎:Bing(相对抓取容忍)。baseUrl 可换成含 {q} 占位的 URL 模板(如自建/其它引擎)。
-const DEFAULT_ENGINE = "https://www.bing.com/search?q={q}";
+// 默认搜索引擎:DuckDuckGo HTML。baseUrl 可换成含 {q} 占位的 URL 模板(如自建/其它引擎)。
+const DEFAULT_ENGINE = "https://html.duckduckgo.com/html/?q={q}";
 const NAV_TIMEOUT_MS = 20000;
 
 // 从 spec.baseUrl 模板(或默认)构造搜索 URL,{q}=编码后的 query。无 {q} 占位则追加在末尾。
@@ -38,6 +39,43 @@ export function buildSearchUrl(spec: SearchSpec, query: string): string {
   const tpl = (spec.baseUrl ?? "").trim() || DEFAULT_ENGINE;
   const enc = encodeURIComponent(query.trim());
   return tpl.includes("{q}") ? tpl.replace(/\{q\}/g, enc) : `${tpl}${enc}`;
+}
+
+/** SEMANTIC_BOUNDARY_ALLOW: 只核对搜索协议传输身份，不判断查询或结果语义。
+ * 内置引擎比较明确的 q/wd；自定义模板仅核对可确定的查询载体，不约束地区或跟踪参数。
+ */
+export function assertSearchQueryIdentity(requestedUrl: string, finalUrl: string, query: string): void {
+  let requested: URL, final: URL;
+  try { requested = new URL(requestedUrl); final = new URL(finalUrl); }
+  catch { throw new SearchExecutionError("搜索回执地址无效，无法核对查询词"); }
+  const engine = (url: URL) => url.hostname === "bing.com" || url.hostname.endsWith(".bing.com") ? "bing"
+    : url.hostname === "baidu.com" || url.hostname.endsWith(".baidu.com") ? "baidu"
+    : url.hostname === "duckduckgo.com" || url.hostname.endsWith(".duckduckgo.com") ? "duckduckgo" : null;
+  const requestedEngine = engine(requested);
+  if (requestedEngine) {
+    const key = requestedEngine === "baidu" ? "wd" : "q";
+    const before = requested.searchParams.getAll(key), after = final.searchParams.getAll(key);
+    if (engine(final) !== requestedEngine || before.length !== 1 || before[0] !== query.trim() || after.length !== 1 || after[0] !== before[0]) {
+      throw new SearchExecutionError("搜索页面查询词与本次请求不一致，不能使用这批结果");
+    }
+    return;
+  }
+  const expected = query.trim();
+  if (!expected) return;
+  const carriers = [...new Set([...requested.searchParams].filter(([, value]) => value === expected).map(([key]) => key))]
+    .filter(key => requested.searchParams.getAll(key).length === 1);
+  if (carriers.length) {
+    for (const key of carriers) {
+      const values = final.searchParams.getAll(key);
+      if (values.length !== 1 || values[0] !== expected) throw new SearchExecutionError("自定义搜索页面查询词与本次请求不一致");
+    }
+    return;
+  }
+  const segments = (url: URL) => url.pathname.split("/").map(value => { try { return decodeURIComponent(value); } catch { return value; } });
+  // 地区前缀或尾部斜线变化不改变明确的查询路径段；不推测未知模板的协议。
+  if (segments(requested).includes(expected) && !segments(final).includes(expected)) {
+    throw new SearchExecutionError("自定义搜索页面查询路径与本次请求不一致");
+  }
 }
 
 // 解 CDATA/HTML 标签 + 常见实体 → 纯文本。
@@ -58,7 +96,7 @@ function stripHtml(raw: string): string {
 /**
  * 纯函数:Bing SERP HTML → SearchResult[]。Bing 自然结果结构:
  *   <li class="b_algo"> ... <h2><a href="URL">Title</a></h2> ... <p>snippet</p> ... </li>
- * 天生脆弱(Bing 改版即失效)→ 解析不出即返 [],上层降级 model_memory(诚实,不硬凑)。导出供单测。
+ * 天生脆弱(Bing 改版即失效)→ 解析不出即返 [],上层切换真实来源(不硬凑)。导出供单测。
  */
 // SEMANTIC_BOUNDARY_ALLOW: 仅解码搜索引擎的跳转协议，不判断内容可信度或替用户选择来源。
 export function resolveBingResultUrl(raw: string): string {
@@ -117,9 +155,8 @@ export function parseBingResults(html: string): SearchResult[] {
  */
 export function parseBaiduResults(html: string): SearchResult[] {
   const out: SearchResult[] = [];
-  const tagRe = /<div\b[^>]*>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = tagRe.exec(html)) !== null) {
+  const tags = [...html.matchAll(/<div\b[^>]*>/gi)].filter(match => /class="[^"]*\bresult\b[^"]*"/i.test(match[0]));
+  for (const [index, m] of tags.entries()) {
     const tag = m[0];
     if (!/class="[^"]*\bresult\b[^"]*"/i.test(tag)) continue;
     const mu = /\bmu="(https?:\/\/[^"]+)"/i.exec(tag);
@@ -127,9 +164,13 @@ export function parseBaiduResults(html: string): SearchResult[] {
     const url = stripHtml(mu[1] ?? "");
     if (!/^https?:\/\//i.test(url)) continue;
     // 标题/摘要在本块后续片段里(到下一个 result 块或 3000 字符窗口内,best-effort)。
-    const windowEnd = html.slice(m.index + tag.length, m.index + tag.length + 3000);
+    const start = m.index! + tag.length;
+    const end = Math.min(start + 3000, tags[index + 1]?.index ?? html.length);
+    const windowEnd = html.slice(start, end);
     const a = /<h3[^>]*>[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i.exec(windowEnd);
-    const title = a ? stripHtml(a[1] ?? "") : "";
+    if (!a) continue;
+    const title = stripHtml(a[1] ?? "");
+    if (!title) continue;
     const sn = /<span[^>]*class="[^"]*content-right[^"]*"[^>]*>([\s\S]*?)<\/span>/i.exec(
       windowEnd,
     );
@@ -150,7 +191,7 @@ export function parseBaiduResults(html: string): SearchResult[] {
   return out;
 }
 
-/** [T-390] 按 SERP 最终 URL 的 host 选解析器(baidu → 百度解析,其余 → Bing 解析);主解析
+/** 按 SERP 最终 URL 的 host 选解析器(DDG独立解析，baidu → 百度解析,其它保留Bing兼容);主解析
  *  空结果时再试另一家(engine 模板可自定义,host 判断失误时兜底)。导出供单测。 */
 export function parseSerpResults(finalUrl: string, html: string): SearchResult[] {
   let host = "";
@@ -159,6 +200,7 @@ export function parseSerpResults(finalUrl: string, html: string): SearchResult[]
   } catch {
     host = "";
   }
+  if (host === "duckduckgo.com" || host.endsWith(".duckduckgo.com")) return parseDuckDuckGoResults(html);
   const isBaidu = host === "baidu.com" || host.endsWith(".baidu.com");
   const primary = isBaidu ? parseBaiduResults : parseBingResults;
   const secondary = isBaidu ? parseBingResults : parseBaiduResults;
@@ -232,13 +274,16 @@ export function createBrowserScrapeAdapter(
             `browser 检索返回 HTTP ${status}(搜索页不可访问)`,
           );
         }
-        const finalUrl = (resp ? resp.url() : "") || page.url();
+        const finalUrl = page.url() || (resp ? resp.url() : "");
         const html = await page.content().catch(() => "");
         if (detectLoginWall(finalUrl, html)) {
           throw new SearchExecutionError(
             "browser 检索命中登录墙 / 反爬验证 —— 换搜索引擎(baseUrl)或改用 rss provider。",
           );
         }
+        // response.url 可能属于重定向前的响应；只认实际页面与本次查询的传输关联。
+        assertSearchQueryIdentity(url, finalUrl, query);
+        assertSearchQueryIdentity(url, page.url() || finalUrl, query);
         // 自截图存证(best-effort;失败不阻断结果)。
         try {
           const bytes = await page.screenshot({ type: "png", fullPage: false });

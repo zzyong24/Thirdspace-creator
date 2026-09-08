@@ -16,7 +16,7 @@ describe("内置浏览器检索双引擎降级", () => {
     expect(calls[0]?.[0]).toContain("baidu.com");
   });
 
-  it("百度报错或零结果时切换 Bing，仍只返回真实 URL", async () => {
+  it("百度报错或零结果时切换 DuckDuckGo，仍只返回真实 URL", async () => {
     const run = vi.fn(async (baseUrl: string | null) => {
       if (baseUrl) throw new Error("captcha");
       return [{ title: "备用来源", url: "https://example.com/b", snippet: "摘要" }];
@@ -26,7 +26,7 @@ describe("内置浏览器检索双引擎降级", () => {
       attempts.push(`${attempt.engine}:${attempt.status}`);
     });
     expect(rows[0]?.url).toBe("https://example.com/b");
-    expect(attempts).toEqual(["baidu:error", "bing:ok"]);
+    expect(attempts).toEqual(["baidu:error", "duckduckgo:ok"]);
   });
 
   it("两个引擎都正常但无结果时诚实返回空，不造模型记忆素材", async () => {
@@ -38,7 +38,7 @@ describe("内置浏览器检索双引擎降级", () => {
       searchBundledBrowserWithFallback("失败", undefined, async () => {
         throw new Error("blocked");
       }),
-    ).rejects.toThrow(/baidu.*blocked.*bing.*blocked/);
+    ).rejects.toThrow(/baidu.*blocked.*duckduckgo.*blocked/);
   });
 
   it("同一运行轮次已确认百度登录墙后有界跳过，冷却到期再真实重试", async () => {
@@ -54,7 +54,7 @@ describe("内置浏览器检索双引擎降级", () => {
     const run = async (baseUrl: string | null) => {
       calls.push(baseUrl);
       if (baseUrl) throw new Error("检索命中登录墙 / 反爬验证");
-      return [{ title: "Bing", url: "https://example.com", snippet: "真实结果" }];
+      return [{ title: "DuckDuckGo", url: "https://example.com", snippet: "真实结果" }];
     };
 
     await searchBundledBrowserWithFallback("第一次", undefined, run, undefined, runtime);
@@ -67,7 +67,7 @@ describe("内置浏览器检索双引擎降级", () => {
       null,
       null,
     ]);
-    expect(attempts).toEqual(["baidu:skipped", "bing:ok"]);
+    expect(attempts).toEqual(["baidu:skipped", "duckduckgo:ok"]);
 
     now += 60_001;
     await searchBundledBrowserWithFallback("冷却后", undefined, run, undefined, runtime);
@@ -83,7 +83,7 @@ describe("内置浏览器检索双引擎降级", () => {
         baiduCalls += 1;
         throw new Error("ECONNRESET");
       }
-      return [{ title: "Bing", url: "https://example.com", snippet: "真实结果" }];
+      return [{ title: "DuckDuckGo", url: "https://example.com", snippet: "真实结果" }];
     };
     const runtime = { state, now: () => 1_000 };
 
@@ -94,7 +94,7 @@ describe("内置浏览器检索双引擎降级", () => {
   });
 });
 
-it("T-915 取消后不再启动 Bing，也不把取消改写成搜索失败", async () => {
+it("T-915 取消后不再启动 DuckDuckGo，也不把取消改写成搜索失败", async () => {
   const controller = new AbortController();
   const run = vi.fn(async () => {controller.abort(); throw controller.signal.reason;});
   await expect(searchBundledBrowserWithFallback("查来源", {signal: controller.signal}, run)).rejects.toBe(controller.signal.reason);
