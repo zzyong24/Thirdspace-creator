@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 
 /** 通过公开服务组合lifecycle读取；不持有数据库或任务执行权。 */
 export function createChatLifecycleReaders(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProject">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>, "listPublications">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>, "getPublicationAnalytics">;
 assetsService: Pick<ReturnType<typeof import("../../modules/assets").createAssetsService>, "getAsset">;
@@ -17,7 +17,7 @@ extractArtifactText: (contentText: string | null | undefined, contentData: unkno
 isLegacyIncompleteReview: (report: Pick<import("@creatoros/contract").ScriptReviewReportResource,"summary" | "modelLabel">) => boolean;
 }): Pick<ContextReaders,"getProjectLifecycle" | "getReviewReport"> {
  const {projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,reviewGateService,extractArtifactText,isLegacyIncompleteReview}=ports;
-const readProject = async (ctx: RequestContext, id: string) => (await projectsService.getProjectOverviewCore(ctx,id)).project;
+const readProject = async (ctx: RequestContext, id: string) => await projectsService.getProject(ctx,id);
 const readArtifactVersion = async (ctx: RequestContext, artifactId: string, versionId: string) => { const versions=await artifactsService.listVersions(ctx,artifactId); const version=versions.find(row=>row.id===versionId); if(!version)throw new Error("工件版本不存在或不可读取"); return version; };
 
 return {

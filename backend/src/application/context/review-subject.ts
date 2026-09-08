@@ -2,7 +2,7 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ReviewSubjectReader } from "../../modules/ai-runtime";
 /** 共享业务上下文读取；聊天和持久生成消费同一投影。 */
 export function createReviewSubjectContext(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProjectOverviewCore" | "listOutputIdsByProject">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProject" | "listOutputIdsByProject">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"listPublications">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics">;
 candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>,"listCommentsForPublication">;
@@ -15,7 +15,7 @@ return ((): ReviewSubjectReader => ({
     // 本作品真标题 —— projectsRepo.get 顺带做 ownership 门(跨用户/未知 → OwnershipError)。
     getTitle: async (c, projectId) => {
       try {
-        const row = await projectsService.getProjectOverviewCore(c, projectId).then(detail => detail.project);
+        const row = await projectsService.getProject(c, projectId);
         return row.title ?? "";
       } catch {
         return "";

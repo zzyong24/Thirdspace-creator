@@ -3,7 +3,7 @@ import { createDashboardQueryService, composeDashboardTodos } from "../../module
 type ProjectStageName=NonNullable<DashboardPage["continueCreating"]>["stage"];
 type TaskStatus=DashboardPage["todos"][number]["status"];
 export function createDashboardApplication(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "getDashboardSummary" | "listProjectsForComposition" | "listOutputRefsByProjects" | "hasImportedProjects" | "getOutputOwnerSummary" | "getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "getDashboardSummary" | "listProjectsForComposition" | "listOutputRefsByProjects" | "hasImportedProjects" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>, "listPublicationsByOutputIds" | "getRecentPublicationsWithTitle">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>, "getPublicationAnalytics" | "getDashboardRollup" | "getDailyPlayTrend">;
 learningsService: Pick<ReturnType<typeof import("../../modules/learnings").createLearningsService>, "getSuggestions">;
@@ -262,11 +262,8 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
             let title = r.title;
             if (!title) {
               try {
-                const owner = await projectsService.getOutputOwnerSummary(ctx, r.contentOutputId);
-                if (owner) {
-                  const detail = await projectsService.getProjectOverviewCore(ctx, owner.projectId);
-                  title = detail.outputs.find(output => output.id === r.contentOutputId)?.title ?? title;
-                }
+                const output = await projectsService.getOutput(ctx, r.contentOutputId);
+                title = output.title;
               } catch {
                 // 输出读失败(防御)→ 保持空,落到下方"未命名发布"兜底。
               }

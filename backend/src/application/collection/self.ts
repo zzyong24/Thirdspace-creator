@@ -8,7 +8,7 @@ import { runDouyinHeavyBackfill } from "./douyin-heavy-backfill";
 
 /** 同账号公开作品采集：确认可见性后写入，再按原任务补齐封面和归因。 */
 export function createSelfCollector(ports:{
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutputOwnerSummary" | "getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getRecentPublicationsWithTitle" | "listPublicationsMissingCover" | "setCover">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics" | "getDashboardRollup">;
 ingestionService: Pick<ReturnType<typeof import("../../modules/ingestion").createIngestionService>,"ensureDouyinSource" | "ingestApprovedDouyinBatch" | "createRun" | "ingestMetrics" | "completeRun">;
@@ -35,7 +35,7 @@ downloadDouyinImage:(url:string)=>Promise<{bytes:Uint8Array;mimeType:string}>;
 parseDouyinWorkListXlsx:(bytes:Uint8Array)=>Promise<import("./douyin-work-detail").DouyinWorkDetail[]>;
 }):ScheduledCollector {
 const {projectsService,publishingService,analyticsService,ingestionService,assetsService,artifactsService,materialLinksService,topicAttributionService,candidateService,learningsService,positioningService,now,models,checkScheduledSignal,assertAttributionConfigured,makeReviewSubjectReader,ai,createAiTaskAttemptId,resolveCoverBackfillLimit,configuration,readMetrics,readExport,readCover,downloadDouyinImage,parseDouyinWorkListXlsx}=ports;
-const readOutput = async (ctx: RequestContext, id: string) => { const owner=await projectsService.getOutputOwnerSummary(ctx,id); if(!owner)throw new OwnershipError(); const {outputs}=await projectsService.getProjectOverviewCore(ctx,owner.projectId); const output=outputs.find(row=>row.id===id); if(!output)throw new OwnershipError(); return output; };
+const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutput(ctx, id);
 const recentVisibleCollections=new Map<string,{completedAtMs:number;result:Awaited<ReturnType<ScheduledCollector>>}>();
 const attributeCollectedWorks=createCollectedWorkAttribution({projectsService,publishingService,analyticsService,topicAttributionService,candidateService,learningsService,positioningService,models,assertAttributionConfigured,makeReviewSubjectReader,configuration});
 return async (ctx, target, report) => {

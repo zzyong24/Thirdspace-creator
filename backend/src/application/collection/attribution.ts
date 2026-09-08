@@ -3,7 +3,7 @@ import { runTopicAttribution, assembleCreativeContext } from "../../modules/ai-r
 import { OwnershipError } from "../../modules/projects";
 /** 已发布作品归因回流；沿采集原模型阶段与原候选服务。 */
 export function createCollectedWorkAttribution(ports:{
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutputOwnerSummary" | "getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getRecentPublicationsWithTitle" | "listPublicationsMissingCover" | "setCover">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics" | "getDashboardRollup">;
 topicAttributionService: Pick<ReturnType<typeof import("../../modules/topic-attribution").createTopicAttributionService>,"hasAttribution" | "saveAttribution">;
@@ -16,7 +16,7 @@ makeReviewSubjectReader:()=>import("../../modules/ai-runtime").ReviewSubjectRead
 configuration:{CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT?:string;CREATOROS_LEARNING_GROUNDING_MIN_METRICS?:string;CREATOROS_TOPIC_ATTRIBUTION_LIMIT?:string;CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE?:string;CREATOROS_ATTRIBUTION_LOW_MULTIPLE?:string};
 }) {
 const {projectsService,publishingService,analyticsService,topicAttributionService,candidateService,learningsService,positioningService,models,assertAttributionConfigured,makeReviewSubjectReader,configuration}=ports;
-const readOutput = async (ctx: RequestContext, id: string) => { const owner=await projectsService.getOutputOwnerSummary(ctx,id); if(!owner)throw new OwnershipError(); const {outputs}=await projectsService.getProjectOverviewCore(ctx,owner.projectId); const output=outputs.find(row=>row.id===id); if(!output)throw new OwnershipError(); return output; };
+const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutput(ctx, id);
 return (ctx:RequestContext)=>runTopicAttribution(ctx, {
         // 未配文本模型 → 整轮诚实跳过(resolveModelSpec 抛 = 未配;闭包引用,无 TDZ,同 topic.daily)。
         isModelConfigured: async (c) => {

@@ -5,7 +5,7 @@ import { OwnershipError } from "../../modules/projects";
 
 /** 通过公开服务组合performance读取；不持有数据库或任务执行权。 */
 export function createChatPerformanceReaders(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProjectOverviewCore" | "getOutputOwnerSummary">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProject" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>, "getRecentPublicationsWithTitle" | "listPublications">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>, "getPublicationAnalytics">;
 learningsService: Pick<ReturnType<typeof import("../../modules/learnings").createLearningsService>, "listLearnings">;
@@ -16,8 +16,8 @@ calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").c
 canonicalRubricIdFor: (ctx: RequestContext) => string;
 }): Pick<ContextReaders,"listComments" | "getPositioningDetail" | "listPublications" | "getMetrics" | "listLearnings" | "listCandidates" | "getPredictions"> {
  const {projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService,canonicalRubricIdFor}=ports;
-const readProject = async (ctx: RequestContext, id: string) => (await projectsService.getProjectOverviewCore(ctx,id)).project;
-const readOutput = async (ctx: RequestContext, id: string) => { const owner=await projectsService.getOutputOwnerSummary(ctx,id); if(!owner)throw new OwnershipError(); const {outputs}=await projectsService.getProjectOverviewCore(ctx,owner.projectId); const output=outputs.find(row=>row.id===id); if(!output)throw new OwnershipError(); return output; };
+const readProject = async (ctx: RequestContext, id: string) => await projectsService.getProject(ctx,id);
+const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutput(ctx, id);
 
 return {
 listComments: async (

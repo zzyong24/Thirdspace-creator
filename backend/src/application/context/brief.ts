@@ -2,13 +2,13 @@
 import type { ProjectBriefReader } from "../../modules/ai-runtime";
 /** 共享业务上下文读取；聊天和持久生成消费同一投影。 */
 export function createBriefContext(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProject">;
 }) {
 const {projectsService}=ports;
 return ((): ProjectBriefReader => ({
     getBriefDetail: async (c, projectId) => {
       try {
-        const row = await projectsService.getProjectOverviewCore(c, projectId).then(detail => detail.project);
+        const row = await projectsService.getProject(c, projectId);
         const d = (row.briefDetail ?? {}) as {
           orientation?: "landscape" | "portrait";
           coreMessage?: string;

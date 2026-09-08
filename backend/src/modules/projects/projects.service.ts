@@ -216,6 +216,9 @@ export interface EnsureImportedProjectResult {
 }
 
 export interface ProjectsService {
+  /** 组合读取仅取归属校验后的单行，不加载阶段、动态或全部产出。 */
+  getProject(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
+  getOutput(ctx: RequestContext, outputId: string): Promise<ContentOutputRow>;
   // [T-332 S2] 所有经 ctx 的入口(读+写)统一断言 requireAccountId(SPEC §4.2:未选号 =
   //   引导态,创作域禁读写);claimOrphanImportedProjects 已随 claimOrphans 全链退役(§4.4)。
   createProject(ctx: RequestContext, cmd: CreateProjectCommand): Promise<ProjectRow>;
@@ -928,6 +931,8 @@ export function createProjectsService(
   // 命名 const(非裸 return 对象字面量),让方法间可互调(ensureImportedProject 复用
   // createProject/createOutput,同 ingestion.service 的 `service.createRun` 自引用套路)。
   const service: ProjectsService = {
+    getProject: (ctx, projectId) => repo.get(ctx, projectId),
+    getOutput: (ctx, outputId) => repo.getOutput(ctx, outputId),
     async createProject(ctx, cmd) {
       requireAccountId(ctx.accountId, "projects.createProject");
       const ts = deps.now();

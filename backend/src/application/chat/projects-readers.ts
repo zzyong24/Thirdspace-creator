@@ -3,7 +3,7 @@ import type { ContextReaders } from "../../modules/ai-runtime";
 
 /** 通过公开服务组合projects读取；不持有数据库或任务执行权。 */
 export function createChatProjectsReaders(ports: {
-projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProjectOverviewCore">;
+projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>, "listOutputIdsByProject" | "getProject">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>, "listPublications">;
 artifactsService: Pick<ReturnType<typeof import("../../modules/artifacts").createArtifactsService>, "listProjectArtifacts" | "listVersions">;
 listRecentProjects: NonNullable<ContextReaders["listProjects"]>;
@@ -15,7 +15,7 @@ readProjectRadarDraftSeed: (ctx: RequestContext, projectId: string) => Promise<s
 readCurrentArtifactTruth: (ctx: RequestContext, projectId: string, artifactType: string) => ReturnType<NonNullable<ContextReaders["getArtifactText"]>>;
 }): Pick<ContextReaders,"listProjects" | "searchProjects" | "getProjectBrief" | "getProjectDetail" | "listProjectArtifacts" | "getArtifactText"> {
  const {projectsService,publishingService,artifactsService,listRecentProjects,searchProjects,contentRadarDraftSeedOf,extractArtifactText,makeReviewSubjectReader,readProjectRadarDraftSeed,readCurrentArtifactTruth}=ports;
-const readProject = async (ctx: RequestContext, id: string) => (await projectsService.getProjectOverviewCore(ctx,id)).project;
+const readProject = async (ctx: RequestContext, id: string) => await projectsService.getProject(ctx,id);
 const readArtifactVersion = async (ctx: RequestContext, artifactId: string, versionId: string) => { const versions=await artifactsService.listVersions(ctx,artifactId); const version=versions.find(row=>row.id===versionId); if(!version)throw new Error("工件版本不存在或不可读取"); return version; };
 
 return {
