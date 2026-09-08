@@ -1805,7 +1805,7 @@ function ItemDetail({
             href={detail.item.canonicalUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-primary hover:underline"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-primary hover:underline"
           >
             原链接 <Link2 className="size-3" />
           </a>
@@ -1842,10 +1842,18 @@ function ItemDetail({
               </span>
             ) : null}
           </div>
-          {latestTransform?<TopicTaskControls key={latestTransform.id} transform={latestTransform} itemId={detail.item.id} api={api} onDetail={onTaskDetail}/>:null}
+          {latestTransform ? (
+            <TopicTaskControls
+              key={`task-controls:${latestTransform.id}`}
+              transform={latestTransform}
+              itemId={detail.item.id}
+              api={api}
+              onDetail={onTaskDetail}
+            />
+          ) : null}
           {latestTransform && topicCandidate ? (
             <TopicCandidateEditor
-              key={latestTransform.id}
+              key={`candidate-editor:${latestTransform.id}`}
               transform={{
                 ...latestTransform,
                 outputSnapshot: topicCandidate,

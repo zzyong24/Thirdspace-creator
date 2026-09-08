@@ -969,3 +969,6 @@
 {"ts":"2026-09-08T09:50:14.044Z","actor":"taskctl","action":"complete","task":"T-926","evidence":"冻结候选cc75de0f，本地固定入口退出0；DMG 438804271 bytes，sha256=1c50e3e3364c88764c41fbe7674b1b4bdec77cf39176df794280e84375036b15；hdiutil VALID、codesign通过。docs/verification/t926-package.md；未安装/公证/发布，业务测试按用户授权暂缓。","sha_before":"f549a198f28e","sha_after":"712110766110"}
 {"ts":"2026-09-08T10:37:18.984Z","actor":"taskctl","action":"start","task":"T-927","sha_before":"6e6118b155a7","sha_after":"cc5dfd2324fd"}
 {"ts":"2026-09-08T10:41:30.262Z","actor":"taskctl","action":"complete","task":"T-927","evidence":"清理本轮临时构建产物后原安装应用重新解压成功；新日志Ready，sidecar监听，首页HTTP200。docs/verification/t927-startup-recovery.md；用户数据未清理，独立账号/配置告警未宣称解决。","sha_before":"cc5dfd2324fd","sha_after":"4677f7da9d9a"}
+{"ts":"2026-09-08T10:55:57.410Z","actor":"taskctl","action":"start","task":"T-928","sha_before":"f9009dd14ad1","sha_after":"7a97c5e05ea7"}
+{"ts":"2026-09-08T10:55:57.536Z","actor":"taskctl","action":"start","task":"T-929","sha_before":"7a97c5e05ea7","sha_after":"94a0cd25ee6b"}
+{"ts":"2026-09-08T11:04:23.133Z","actor":"taskctl","action":"complete","task":"T-929","evidence":"docs/superpowers/specs/2026-09-08-business-topic-script-method.md；独立只读设计评审通过；仅适配设计交付，未实施；按用户授权暂缓业务测试及全局 reconcile","sha_before":"94a0cd25ee6b","sha_after":"e0fd8f05b6ea"}
