@@ -1,3 +1,18 @@
+import {createSchedulingAutomation} from "@creatoros/backend/application/scheduling/automation";
+import {createSchedulingControls} from "@creatoros/backend/application/scheduling/controls";
+import {createCollectionExecution} from "@creatoros/backend/application/scheduling/collection-execution";
+import {createIntelligenceApplicationTransport} from "@creatoros/backend/application/intelligence/transport";
+import {createDiscoveryBusinessAdapters} from "@creatoros/backend/application/generation/discovery";
+import {createWritingBusinessAdapters} from "@creatoros/backend/application/generation/writing";
+import {createMediaBusinessAdapters} from "@creatoros/backend/application/generation/media";
+
+import {createCalibrationScoreReaders} from "@creatoros/backend/application/context/calibration-score";
+import {createCalibrationDiagnoseReaders} from "@creatoros/backend/application/context/calibration-diagnose";
+import {createChatIngestionTasks} from "@creatoros/backend/application/chat/ingestion-tasks";
+import {createChatGenerationTasks} from "@creatoros/backend/application/chat/generation-tasks";
+import {createChatPreparationTasks} from "@creatoros/backend/application/chat/preparation-tasks";
+import {createCurrentArtifactReader,extractArtifactText} from "@creatoros/backend/application/context/current-artifact";
+import {createCurrentScriptSelectionReader} from "@creatoros/backend/application/context/current-script-selection";
 import {downloadDouyinImage} from "./ingestion/douyin-cover-backfill";
 import {parseDouyinWorkListXlsx} from "./ingestion/douyin-work-detail";
 import {isLegacyIncompleteReview} from "@/lib/script-review-status";
@@ -29,7 +44,7 @@ import { createHostBrowserProfileLifecycle } from "@creatoros/backend/modules/ex
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
 import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
-import { preparePublishPackageTaskInput } from "@creatoros/backend/modules/ai-runtime";
+
 import { createScriptDraftTargetService } from "@creatoros/backend/modules/artifacts";
 import { createVideoEditCandidatePreparer } from "@creatoros/backend/modules/ai-runtime";
 import { createSubmittedTaskPreparationService } from "@creatoros/backend/modules/execution";
@@ -37,22 +52,22 @@ import { createAiTaskSubmissionService } from "@creatoros/backend/modules/ai";
 import { createDailyTopicRunService, createDailyTopicRunIntentService } from "@creatoros/backend/modules/scheduling";
 import { countCandidatesForDay, lockCandidateSupply } from "@creatoros/backend/modules/candidate";
 import { createBrowserProfileAuthority, lockAccountForSupply } from "@creatoros/backend/modules/platform-account";
-import { TOPIC_GENERATE_TEMPLATE } from "@creatoros/ai-worker";
+
 import { createTopicCandidateAdoptionService } from "@creatoros/backend/modules/ai";
-import { createTopicGenerateBusinessAdapter, createDailyTopicBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+import { createDailyTopicBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
 import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
-import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusinessAdapter, createPositioningGenerateBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+
 import { createBrowserTaskAuthorizationService, createAgenticBusinessExecutionService, createAgenticMaterialTools, createAgenticResearchTools } from "@creatoros/backend/modules/ai-runtime";
 import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modules/knowledge";
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
-import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createScriptSimilarityBusinessAdapter, createScriptSimilarityEvaluator, createTopicPreferenceBusinessAdapter, createTopicPreferenceSubmission, createAssetProcessingBusinessAdapter, createVideoDecisionsBusinessAdapter, createReconstructBusinessAdapter, createArtifactContextReaders, createStructuredBusinessExecutionService, preparePlatformAdaptContext, projectPlatformAdaptCandidate, preparePlanningOutlineContext, projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
-import { createHash } from "node:crypto";
+
 import { createConfiguredDb, createCliInvocationService, resolveMasterKey,
 // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
 requireAccountId, type Db, type CliInvocationService,
@@ -103,7 +118,7 @@ import { assembleActivationService, type ActivationService } from "./activation"
 import { createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
 import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
-import { canonicalizeScriptSectionRecords, createArtifactRepository, createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
+import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
 import { createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
@@ -113,7 +128,7 @@ import { createReviewsService, createReviewsTransport } from "@creatoros/backend
 // T-086 文案审核门(review_rules + script_review_reports)。
 import { createReviewGateService, createReviewGateTransport, buildReviewRuleSeedRows, createReviewGateRepository } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
-import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+
 import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
 import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
 import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
@@ -130,10 +145,9 @@ import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/
 // 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
 // [T-184] 声明式 context 注入:CreativeContextDeps = creative-context 的 ContextDeps(facet reader
 // 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
-import type { ContextDeps as CreativeContextDeps } from "@creatoros/backend/modules/ai-runtime";
+
 import type { ContextReaders as ChatContextReaders } from "@creatoros/backend/modules/ai-runtime";
 
-import { createResearchGatherBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createResearchMaterialAdoptionService } from "@creatoros/backend/modules/ai";
 import * as nodePath from "node:path";
 import { existsSync, renameSync } from "node:fs";
@@ -221,21 +235,16 @@ import { readUrl as readWebUrlSidecar, WebReaderLoginRequiredError } from "@/ser
 import { assertUrlAllowed } from "@/server/ingestion/url-guard";
 import { createLocalReadHost, createLocalEnvironmentHost } from "@creatoros/backend/modules/ai-runtime";
 import { checkGrant as checkLocalReadGrant, consumeOnce as consumeLocalReadOnceGrant, listAlwaysDirs as listLocalReadAlwaysDirs } from "@/server/local-read-grants";
-import { runScheduledCollection, type Collector as ScheduledCollector, createScheduledFlywheelExecutionService, type ScheduledFlywheelCollector } from "@creatoros/backend/modules/ai-runtime";
-import { runJobNow, triggerScheduledJob, closeRunningJobRunOnError, createAutomationHandlerRegistry, startAutomationDriver, sweepStaleRuns,
-// [T-207] 启动 sweep 僵尸 ai_task(与 sweepStaleRuns 同族;running 超时标 failed)。
-sweepStaleAiTasks, type AutomationDriverJob, type TriggerDeps } from "@creatoros/backend/modules/ai-runtime";
+import { type Collector as ScheduledCollector, createScheduledFlywheelExecutionService } from "@creatoros/backend/modules/ai-runtime";
+import { sweepStaleAiTasks } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
-import { bootstrapDouyinCollectionJobs, ensureCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
-import { createTopicEnrichBusinessAdapter, createMaterialMatchBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { createScriptBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { preparePlanningContractContext, projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
-import { prepareReviewContext, projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { ensureCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
+
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
@@ -245,12 +254,11 @@ import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-r
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
 // [T-309] collectProjectBrollInventory 把项目/账号边界收进唯一 B-roll 素材入口；
 // storyboardFromContentData 仍用于四决策 authored 分镜 facet。
-import { collectProjectBrollInventory, storyboardFromContentData } from "@creatoros/backend/modules/ai-runtime";
-import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+
 import { createAssetBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
-import { createCoverBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+
 import { createExecutionCoverService } from "@creatoros/backend/modules/execution";
 import { createTranscribeBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
@@ -281,10 +289,10 @@ import { searchWeb as searchWebFn, createBochaAdapter, createTavilyAdapter, crea
 parseFeed, type SearchProviderRegistry } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
-import { PLANNING_THESIS_TEMPLATE, SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
+
 // [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
 // [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
-import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
+
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
@@ -362,19 +370,7 @@ async function archivePlaceholderBestEffort(
 // - registry 里没有 / 值为 undefined 的 key → 跳过(诚实:声明了但装配层没登记该源就是没注入,不塞空壳)。
 // future(本切片不做):当 contextRequirements 升级成带权重/渐进/askUser 的结构时,resolver 在此按预算/
 // 轮次裁剪;当前只做「声明 key → 静态取 reader」最小映射。
-export function resolveContextDeps(
-  requirements: readonly string[] | undefined,
-  registry: Partial<CreativeContextDeps>,
-): Partial<CreativeContextDeps> {
-  const deps: Partial<CreativeContextDeps> = {};
-  const reg = registry as Record<string, unknown>;
-  const out = deps as Record<string, unknown>;
-  for (const key of requirements ?? []) {
-    const reader = reg[key];
-    if (reader !== undefined) out[key] = reader;
-  }
-  return deps;
-}
+export {resolveContextDeps} from "@creatoros/backend/application/context/registry";
 
 // [T-136§D-bind⑤] 扫码 ensureAccount 的 upsert 去重:传占位 handle 时,若已存在**任意** active
 // douyin 占位号(migration 0025 的「待完善」/ 上次扫码的「我的抖音」)→ 复用它,绝不冒第二个占位;
@@ -575,49 +571,6 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // [T-099c] 产物版本正文抽取(单一真值,context.artifacts 字数 + context.artifact.text 全文共用)——
 // T-816：稿面实际渲染的 contentData.sections 是当前确认稿第一真相；旧 transcript/contentText
 // 可能只是同版本的派生快照，不能反向覆盖结构稿。无 sections 时再兼容 transcript/contentText/body。
-function extractArtifactText(
-  contentText: string | null | undefined,
-  contentData: unknown,
-): string {
-  const data =
-    contentData && typeof contentData === "object"
-      ? (contentData as Record<string, unknown>)
-      : null;
-  // 结构化稿面：用与稳定段落引用相同的规范化顺序拼正文。
-  if (data && Array.isArray(data.sections)) {
-    const joined = canonicalizeScriptSectionRecords(data.sections)
-      .map((section) => {
-        const heading = [section.heading, section.label].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        const body = [
-          section.body,
-          section.narration,
-          section.text,
-          section.content,
-        ].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        return [heading, body].filter(Boolean).join("\n");
-      })
-      .filter((line) => line.length > 0)
-      .join("\n\n");
-    if (joined.trim()) return joined;
-  }
-  if (data && typeof data.transcript === "string" && data.transcript.trim()) {
-    return data.transcript;
-  }
-  if (typeof contentText === "string" && contentText.trim()) {
-    return contentText;
-  }
-  // 兜底:contentData.body 纯文本字段。
-  if (data && typeof data.body === "string" && data.body.trim()) {
-    return data.body;
-  }
-  return "";
-}
 
 // [T-135] toKnowledgeRow/toRevisionRow(及 toRelationRow/toAssetRow/toAssetFileRow/
 // toPreferenceRow/toModelRow/toAgentRow 等)已随全部 canonical + douyin 内容 seed 退役移除
@@ -3413,179 +3366,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       recoveryWake?.wake("source_sync");
     }
   };
-  const intelligence: Transport = {
-    async request(endpoint, input, ctx) {
-      if (ctx && endpoint.id === "intelligence.sources.previewProfile") {
-        const body = (input as {
-          body?: {
-            accountId?: string;
-            collectorAccountId?: string;
-            url?: string;
-          };
-        })?.body;
-        const accountId = requireAccountId(
-          ctx.accountId,
-          endpoint.id,
-        );
-        if (body?.accountId !== accountId) {
-          throw new Error("Intelligence source not found");
-        }
-        const collectorAccountId = body.collectorAccountId ?? "";
-        const collector =
-          await requirePlatformAccountServiceForCollectors().getAccount(
-            ctx,
-            collectorAccountId,
-          );
-        if (
-          collector.status !== "active" ||
-          collector.platform !== "douyin"
-        ) {
-          throw new OwnershipError("采集账号不可用，请重新选择");
-        }
-        const url = new URL(body.url ?? "");
-        if (
-          !/(^|\.)douyin\.com$/i.test(url.hostname) ||
-          !url.pathname.match(/\/user\/([^/?#]+)/)
-        ) {
-          throw new Error("请输入完整的抖音博主主页链接");
-        }
-        const externalAccountId = decodeURIComponent(
-          url.pathname.match(/\/user\/([^/?#]+)/)?.[1] ?? "",
-        );
-        const preview = await (
+  const intelligence: Transport = createIntelligenceApplicationTransport({intelligenceBase,
+getCollectorAccount:(ctx,id)=>requirePlatformAccountServiceForCollectors().getAccount(ctx,id),
+previewProfile:async (collectorAccountId:string, externalAccountId:string, canonicalUrl:string)=>(
           await loadDouyinCdp()
         ).previewDouyinUserProfile({
           authDir: await douyinAuthDirFor(collectorAccountId),
           secUid: externalAccountId,
-          canonicalUrl: url.toString(),
+          canonicalUrl,
           maxPages: 1,
           strictEvidence: true,
           gateway: douyinGateway,
-        });
-        return {
-          data: {
-            platform: "douyin",
-            ...preview,
-          },
-          meta: { requestId: ctx.requestId },
-        };
-      }
-      if (ctx && endpoint.id === "intelligence.sources.previewWeb") {
-        const body = (input as {
-          body?: {
-            accountId?: string;
-            url?: string;
-            instruction?: string;
-            browserSessionRef?: string;
-          };
-        })?.body;
-        const accountId = requireAccountId(ctx.accountId, endpoint.id);
-        if (body?.accountId !== accountId) {
-          throw new Error("Intelligence source not found");
-        }
-        const requestedUrl = new URL(body.url ?? "").toString();
-        try {
-          const feed = await fetchIntelligenceFeed(requestedUrl);
-          if (isSyndicationFeed(feed.xml)) {
-            const rows = parseFeed(
-              feed.xml,
-              new URL(feed.finalUrl).hostname,
-            );
-            return {
-              data: {
-                type: "rss",
-                title: new URL(feed.finalUrl).hostname,
-                finalUrl: feed.finalUrl,
-                samples: rows.slice(0, 3).map((row) => ({
-                  title: row.title,
-                  url: row.url,
-                  summary: row.snippet || null,
-                })),
-                loginRequired: false,
-                parser: "rss-or-atom-feed",
-                browserSessionRef: body.browserSessionRef ?? null,
-              },
-              meta: { requestId: ctx.requestId },
-            };
-          }
-        } catch {
-          // 不是公开 feed 时继续尝试受控浏览器正文预览；最终错误由该真实读取路径返回。
-        }
-        const domain = webDomainFromUrl(requestedUrl);
-        try {
-          const read = await readWebUrlSidecar(
-            requestedUrl,
-            { authDir: webAuthDirFor(domain) },
-            {
-              openContext: () =>
-                openPooledReaderContext(ctx, domain) as never,
-            },
-          );
-          return {
-            data: {
-              type: "web",
-              title: read.title || null,
-              finalUrl: read.finalUrl,
-              samples: [
-                {
-                  title: read.title,
-                  url: read.finalUrl,
-                  summary: read.text.trim().slice(0, 320) || null,
-                },
-              ],
-              loginRequired: false,
-              parser: `readable:${read.extractor}`,
-              browserSessionRef: body.browserSessionRef ?? null,
-            },
-            meta: { requestId: ctx.requestId },
-          };
-        } catch (error) {
-          if (error instanceof WebReaderLoginRequiredError) {
-            return {
-              data: {
-                type: "web",
-                title: null,
-                finalUrl: requestedUrl,
-                samples: [],
-                loginRequired: true,
-                parser: "login-required",
-                browserSessionRef: body.browserSessionRef ?? null,
-              },
-              meta: { requestId: ctx.requestId },
-            };
-          }
-          throw error;
-        }
-      }
-      if (
-        ctx &&
-        endpoint.id === "intelligence.sources.listFavoriteFolders"
-      ) {
-        const query = (input as {
-          query?: {
-            accountId?: string;
-            collectorAccountId?: string;
-          };
-        })?.query;
-        const accountId = requireAccountId(ctx.accountId, endpoint.id);
-        if (query?.accountId !== accountId) {
-          // 已知是当前页面账号与收藏归属不一致；仍使用 404-class OwnershipError，
-          // 但给本机用户可操作的收藏语义，避免 UI 只得到无关的 source not found。
-          throw new OwnershipError("收藏账号与当前页面账号不一致");
-        }
-        const collectorAccountId = query.collectorAccountId ?? "";
-        const collector =
-          await requirePlatformAccountServiceForCollectors().getAccount(
-            ctx,
-            collectorAccountId,
-          );
-        if (
-          collector.status !== "active" ||
-          collector.platform !== "douyin"
-        ) {
-          throw new OwnershipError("采集账号不可用，请重新选择");
-        }
-        const folders = await (
+        }),
+readFavoriteFolders:async (ctx:RequestContext, collectorAccountId:string)=>(
           await loadDouyinCdp()
         ).fetchDouyinCollectsFolders({
           authDir: await douyinAuthDirFor(collectorAccountId),
@@ -3595,83 +3388,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             requestId: ctx.requestId,
             accountId: collectorAccountId,
           },
-        });
-        return {
-          data: folders.map((folder) => ({
-            id: folder.collectsId,
-            name: folder.name,
-            itemCount: folder.totalCount,
-          })),
-          meta: {
-            requestId: ctx.requestId,
-            page: 1,
-            pageSize: folders.length || 1,
-            total: folders.length,
-          },
-        };
-      }
-      const result = await intelligenceBase.request(endpoint, input, ctx);
-      if (
-        ctx &&
-        endpoint.id === "intelligence.items.importDouyinShare"
-      ) {
-        const task = (
-          result as { data?: { task?: { id?: unknown; status?: unknown } } }
-        ).data?.task;
-        if (
-          typeof task?.id === "string" &&
-          task.status === "queued"
-        ) {
-          recoveryWake?.wake("share_import");
-        }
-      }
-      if (
-        ctx &&
-        (endpoint.id === "intelligence.sources.create" ||
-          endpoint.id === "intelligence.runs.start")
-      ) {
-        dispatchIntelligenceRun(ctx, result);
-      }
-      if (
-        ctx &&
-        endpoint.id === "intelligence.transcripts.enqueue" &&
-        intelligenceTranscriptRunnerDeps
-      ) {
-        const tasks = (
-          result as { data?: { tasks?: Array<{ id?: unknown }> } }
-        ).data?.tasks;
-        for (const task of tasks ?? []) {
-          if (typeof task.id !== "string") continue;
-          recoveryWake?.wake("transcribe");
-        }
-      }
-      if (
-        ctx &&
-        endpoint.id === "intelligence.transforms.previewTopic"
-      ) {
-        const task = (
-          result as { data?: { task?: { id?: unknown; status?: unknown } } }
-        ).data?.task;
-        if (
-          typeof task?.id === "string" &&
-          task.status === "queued"
-        ) {
-          recoveryWake?.wake("topic_preview");
-        }
-      }
-      if (
-        ctx &&
-        endpoint.id === "projects.scripts.generateCandidate"
-      ) {
-        const task = (result as { data?: { id?: unknown; status?: unknown } })
-          .data;
-        if (typeof task?.id === "string" && task.status === "queued") {
-          recoveryWake?.wake("script_candidate");
-        }
-      }
-      return result;
-    },
-  };
+        }),
+fetchIntelligenceFeed,
+isSyndicationFeed,
+readWeb:(ctx,url)=>{const domain=webDomainFromUrl(url);return readWebUrlSidecar(url,{authDir:webAuthDirFor(domain)},{openContext:()=>openPooledReaderContext(ctx,domain) as never});},
+isLoginRequiredError:error=>error instanceof WebReaderLoginRequiredError,
+wake:kind=>recoveryWake?.wake(kind),
+canWakeTranscript:()=>Boolean(intelligenceTranscriptRunnerDeps),
+dispatchIntelligenceRun});
   // T-598：内容雷达不再自建 timer。到期发现由下方唯一 automation-driver 触发
   // `intelligence.sync`；本段只保留用户手动操作产生的持久 source_sync runner。
 
@@ -4275,52 +3999,8 @@ FAVORITES_PROMOTE_PER_RUN
   // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
   // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
   // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
-  const collectFlywheel:ScheduledFlywheelCollector=(ctx,task,scope)=>enqueueCollectionRun(()=>scheduledSignals.run(scope.signal,async()=>{
-    scope.signal.throwIfAborted();
-    await runScheduledCollection(ctx,task,{
-      ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
-      collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);});scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError,now:deps.now,
-    });
-  }));
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-
-  const dispatchScheduledCollection = async (ctx: RequestContext, task: {
-    id: string;
-    taskType: string;
-    inputData: Record<string, unknown>;
-  }) => {
-    if(flywheelSourceKinds.has(task.taskType.replace(/^scheduled\./,""))){
-      const bound=await scheduledFlywheel.prepare(ctx,task.id);
-      wakeScheduledFlywheel();
-      return {executionTaskId:bound.executionTaskId};
-    }
-    if(task.taskType==="scheduled.topic.daily"){
-      if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");
-      const bound=await businessExecution.prepare(ctx,task.id);
-      modelWorker.start();
-      return {executionTaskId:bound.executionTaskId};
-    }
-    return runTaskWithEffectiveSkillSnapshot(ctx, task.id, () =>
-      enqueueCollectionRun(() =>
-        runScheduledCollection(ctx, task, {
-          ai: {
-            markRunning: (c, id) => aiService.markRunning(c, id),
-            recordStep: (c, id, input) => aiService.recordStep(c, id, input),
-            markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-            markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-          },
-          runs: {
-            updateRun: (c, runId, patch) =>
-              schedulingService.updateRun(c, runId, patch),
-          },
-          collectors: scheduledCollectors,
-          // runner 不 import douyin-cdp:未登录判别经注入(→ needs_reconnect,§6)。
-          isNotLoggedInError: (err) => err instanceof DouyinNotLoggedInError,
-          now: deps.now,
-        }),
-      ),
-    );
-  };
+  const {collectFlywheel,dispatchScheduledCollection}=createCollectionExecution({scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,enqueueCollectionRun,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -4335,64 +4015,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const triggerDeps: TriggerDeps = {
-    ai: {
-      createTask: async (c, body) => {
-        const t = await aiService.createTask(c, body);
-        return { id: t.id, status: t.status };
-      },
-    },
-    runs: {
-      createRun: async(c,input)=>{
-        const job=await schedulingService.getJob(c,input.jobId);
-        if(job.sourceKind==="topic.daily"){
-          if(!input.aiTaskId)throw new Error("每日选题缺少任务绑定");
-          return dailyTopicRunIntents.ensureRunForTask(c,input.aiTaskId);
-        }
-        return schedulingService.createRun(c,input);
-      },
-      listRunsByJob: async (c, jobId, query) => {
-        const { rows, total } = await schedulingService.listRunsByJob(
-          c,
-          jobId,
-          query,
-        );
-        return {
-          rows: rows.map((r) => ({
-            id: r.id,
-            status: r.status,
-            startedAt: r.startedAt,
-            aiTaskId: r.aiTaskId ?? null,
-          })),
-          total,
-        };
-      },
-      updateRun: (c, runId, patch) =>
-        schedulingService.updateRun(c, runId, patch),
-    },
-    dispatch: (ctx, task) => dispatchScheduledCollection(ctx, task),
-    now: deps.now,
-    // [T-201d] 隐藏号定时任务停跑 gate 的查号端口:复用 platformAccountService.getAccount
-    //   (自带 ownership gate)取该号 status;号不存在/越权/查失败 → null(降级放行,不误停)。
-    getAccountStatus: (c, accountId) =>
-      platformAccountService
-        .getAccount(c, accountId)
-        .then((a) => a?.status ?? null)
-        .catch(() => null),
-  };
-
-  // [T-189a] 绑定抖音成功回调实体(loginDouyin 成功后 fire-and-forget 调):幂等建三个每天定时采集
-  //   job(self.metrics / self.detail / comments)+ 按序初始化触发一次拉全量(triggerScheduledJob
-  //   经 triggerDeps → dispatch 挂 gate-F5 串行链)。用**请求 ctx**(带当前号 accountId,init 采集
-  //   走该号 authDir);整体经 void 包裹不阻塞绑定返回。schedulingService/triggerDeps 均已在上方装配。
-  const bootstrapDouyinOnBind = async (ctx: RequestContext) => {
-    // [T-201a2] 登录态锚点对齐:新绑号 scan 时 ctx.accountId=null(号是 scan 后 ensureAccount 才建)→
-    //   loginDouyin 的 `login({accountId: null})` 把登录态落 `.auth/douyin/_default`;而账号是真 id →
-    //   设置/自动化按号探针 statusDouyin(带 x-account-id)读 `.auth/douyin/<id>` 找不到登录 → 误报
-    //   「重新扫码」;初始采集按号也读 `<id>`(空)→ 采不到。**在触发采集前**(此刻 `<id>` 目录尚未被
-    //   采集建成空壳)把 `_default` 登录态迁到 `<id>` 目录 → 登录态与不可变 id 锚点一致(单号现实;
-    //   多号各自扫码 = T-136 §D)。同步 renameSync(同目录基址、原子);best-effort,失败不阻断建 job/采集。
-    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);
@@ -4403,101 +4026,7 @@ FAVORITES_PROMOTE_PER_RUN
         /* 登录态迁移 best-effort:失败则 statusDouyin 仍回退可查(见 douyinAuthDirFor 回退),不阻断绑定 */
       }
     }
-    // [T-332 S2] 新号绑定即补种该号的默认变现加权 rubric(rubrics 是 per-account 域,
-    //   NOT NULL;不种则该号校准/编导评分无默认口径,要等下次启动)。幂等
-    //   (onConflictDoNothing);fire-and-forget,失败不阻断绑定。
-    //   注:ensureCanonicalRubricForAccount 在本工厂靠后定义 —— 绑定回调只在构造完成后
-    //   触发,无 TDZ 风险(与 calibrationService lazy thunk 同款模式)。
-    if (ctx.accountId) {
-      void ensureCanonicalRubricForAccount(ctx.accountId).catch((err) =>
-        console.warn("[seed] 绑定补种默认 rubric 失败(不阻断绑定):", err),
-      );
-    }
-    void bootstrapDouyinCollectionJobs(ctx, {
-      listJobsBySourceKind: async (c, sourceKind) => {
-        const { rows } = await schedulingService.listJobs(c, {
-          sourceKind,
-          limit: 1,
-          offset: 0,
-        });
-        // [T-200] 带既有 job 属主号:复用既有 job 时把号带给 trigger(触发采集 ctx 由此派生)。
-        return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
-      },
-      createJob: async (c, input) => {
-        const job = await schedulingService.createJob(c, {
-          name: input.name,
-          prompt: input.prompt,
-          sourceKind: input.sourceKind,
-          schedule: input.schedule,
-          target: input.target,
-          // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
-          enabled: input.enabled,
-          systemManaged: input.sourceKind === "intelligence.sync",
-        });
-        return { id: job.id };
-      },
-      // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
-      //   [T-433 S1] 透传 options(绑号 self.detail 带 skipHeavyBackfill,重活延后次日)。
-      trigger: async (c, job, options) => {
-        await triggerScheduledJob(c, job, triggerDeps, options);
-      },
-      // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
-      //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化
-      //   触发,零 claim —— 绑第二个号不改动任何既有行归属(ISO-08)。
-      // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
-      target: {},
-    }).catch((err) =>
-      console.error("[persistence-client] 绑定抖音 bootstrap 建 job/初始化失败:", err),
-    );
-  };
-
-  // 「立即运行」(D5):wrap scheduling transport,拦 scheduledJobs.runNow(composition-only
-  // op —— module transport 不认它,因触发后台动作要 dispatchScheduledCollection,在此 composition
-  // 层才可见)。命中 → 用**请求 ctx**(真实 userId,手动触发归当前用户)查 job → triggerScheduledJob
-  // (幂等双闸 + fire-and-forget)→ 返回 { jobRunId, aiTaskId, deduped }。其余 op 透传 module
-  // transport(scheduling)。
-  const schedulingWithRunNow: Transport = {
-    async request(endpoint, input, ctx) {
-      if (endpoint.id === "scheduledJobs.runNow") {
-        if (!ctx) throw new Error("AuthenticationError: runNow requires ctx");
-        const { params } = (input ?? {}) as { params?: { jobId?: string } };
-        const jobId = params?.jobId ?? "";
-        const result = await runJobNow(ctx, jobId, {
-          ...triggerDeps,
-          job: {
-            getJob: async (c, id) => {
-              const j = await schedulingService.getJob(c, id);
-              // [T-200] 带 job 属主号:触发采集 ctx.accountId 由此派生(与 cron/bind 三路统一)。
-              return {
-                id: j.id,
-                sourceKind: j.sourceKind,
-                target: j.target,
-                accountId: j.accountId ?? null,
-              };
-            },
-          },
-        });
-        // [T-201d] 归属号已隐藏(status 非 active)→ triggerScheduledJob 跳过不产 run,
-        //   jobRunId 为空串。runNow response 契约要求 jobRunId 非空(id=min(1)),且此路是用户
-        //   手动「立即运行」→ 诚实抛错告知(账号已隐藏,先恢复再运行),不假装产了 run。
-        //   (与既有 getJob ownership 错误传播同款:runNow 本就可抛。)
-        if (result.skippedReason) {
-          throw new Error(
-            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该抖音号后再运行。`,
-          );
-        }
-        return {
-          data: {
-            jobRunId: result.jobRunId,
-            aiTaskId: result.aiTaskId,
-            deduped: result.deduped,
-          },
-          meta: { requestId: ctx.requestId },
-        };
-      }
-      return scheduling.request(endpoint, input, ctx);
-    },
-  };
+},scheduling});
 
   // [T-207] sweep 阈值 env 可配(毫秒;非法/缺省 → fallback)。job_run 默认 30min;
   //   ai_task 默认 2h(转录等长活合法,阈值更宽)。
@@ -4509,42 +4038,6 @@ FAVORITES_PROMOTE_PER_RUN
   // T-616：僵尸 job_run 清扫并入唯一 automation-driver 的分钟 tick，不再只在启动时扫。
   // 先读取仍真实 running 的 AI task 作为保护集，合法长采集不会被 30 分钟阈值误杀；
   // task 已终态/失联而 run 仍 running 才会收口。任一只读失败则 fail-closed 跳过本轮清扫。
-  const sweepStaleJobRuns = async (): Promise<number> => {
-    try {
-      const activeTaskIds = new Set(
-        (await aiService.listRunningTasksSystem(schedulerCtx)).map((task) => task.id),
-      );
-      const dailySync=await dailyTopicRuns.syncExecutionRuns(schedulerCtx);
-      for(const id of dailySync.activeAiTaskIds)activeTaskIds.add(id);
-      for(const item of dailySync.inconsistencies)console.error("[scheduler] 每日选题回执不一致",item);
-      return await sweepStaleRuns({
-        runs: {
-          // sweep 只用 updateRun；其余端口为窄接口占位。
-          createRun: async () => ({ id: "" }),
-          listRunsByJob: async () => ({ rows: [], total: 0 }),
-          updateRun: (c, runId, patch) =>
-            schedulingService.updateRun(c, runId, patch),
-        },
-        listRunningRuns: async (c) => {
-          const rows = await schedulingService.listRunningRuns(c);
-          return rows.map((r) => ({
-            id: r.id,
-            jobId: r.jobId,
-            aiTaskId: r.aiTaskId,
-            startedAt: r.startedAt,
-          }));
-        },
-        isRunActive: async (_c, run) =>
-          Boolean(run.aiTaskId && activeTaskIds.has(run.aiTaskId)),
-        ctx: schedulerCtx,
-        now: deps.now,
-        staleMs: envMsOf("CREATOROS_STALE_JOB_RUN_MS", 30 * 60 * 1000),
-      });
-    } catch (error) {
-      console.error("[scheduler] 运行期 job_run 清扫失败，本轮已安全跳过:", error);
-      return 0;
-    }
-  };
 
   // [T-207] 启动 sweep 僵尸 ai_task:app 被杀后 ai_tasks 也会留 running 僵尸(真机逮到
   // transcribe 挂 running 2.5h+),撞 createTask 的 in-flight 幂等闸挡后续同键任务。
@@ -4603,134 +4096,14 @@ FAVORITES_PROMOTE_PER_RUN
 
   // [T-517] 单一持久自动化 driver：scheduled_job 只供 due producer 读取；
   // execution_tasks/PersistentTaskService 才是 lease/attempt/recovery 唯一真值。
-  const listRunnableAutomationJobs = async (
-    c: RequestContext,
-  ): Promise<AutomationDriverJob[]> => {
-    // enabled job 全取,再逐个用最近一次 run 过滤掉"最近 needs_reconnect"的(§6 停跑)。
-    // [T-332 S2 · ISO-06] 调度器是系统 daemon:枚举走显式 listJobsSystem(跨号全见;用户面
-    //   listJobs 已 strict 按号,系统 ctx 无号会被断言拒绝)。逐 job 的 run 读用该 job 的
-    //   account_id 派生 ctx(读写恒同号,过 strict 门)。
-    const { rows } = await schedulingService.listJobsSystem(c, {
-      enabled: true,
-      limit: 200,
-      offset: 0,
-    });
-    const runnable: AutomationDriverJob[] = [];
-    for (const job of rows) {
-      if (!job.accountId) continue;
-      const jobCtx: RequestContext = { ...c, accountId: job.accountId };
-      const recent = await schedulingService.listRunsByJob(jobCtx, job.id, {
-        limit: 1,
-        offset: 0,
-      });
-      const last = recent.rows[0];
-      if (last && last.status === "needs_reconnect") continue;
-      runnable.push({
-        id: job.id,
-        sourceKind: job.sourceKind,
-        target: (job.target ?? {}) as Record<string, unknown>,
-        schedule: job.schedule,
-        enabled: job.enabled,
-        accountId: job.accountId,
-        // [T-636] 每日作品同步漏跑补偿只需知道“当天计划后是否已经尝试过”。最近 run
-        // 无论成功或失败都算一次尝试，避免失败时每分钟自动重试；needs_reconnect 已在上方停跑。
-        lastRunStartedAt: last?.startedAt ?? null,
-      });
-    }
-    return runnable;
-  };
-
-  const automationHandlers = createAutomationHandlerRegistry()
-    .register("scheduled_collection", async (c, input) => {
-      let result: Awaited<ReturnType<typeof triggerScheduledJob>> | null = null;
-      try {
-        result = await triggerScheduledJob(
-          c,
-          {
-            id: input.job.id,
-            sourceKind: input.job.sourceKind,
-            target: input.job.target,
-            accountId: input.job.accountId,
-          },
-          triggerDeps,
-          { scheduledFor: input.scheduledFor },
-        );
-        if (result.skippedReason) throw new Error(result.skippedReason);
-        if(input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind)){
-          const child=result.deduped
-            ? await dispatchScheduledCollection(c,{id:result.aiTaskId,taskType:`scheduled.${input.job.sourceKind}`,inputData:{jobId:input.job.id,jobRunId:result.jobRunId,target:input.job.target}})
-            : await result.completion;
-          if(!child?.executionTaskId)throw new Error("调度任务缺少持久执行绑定");
-          return child;
-        }
-
-        if (result.deduped) {
-          if (input.attempt <= 1) {
-            // 已有真实运行是一次成功的“重叠跳过”，不是执行失败；原 run 继续负责终态。
-            return;
-          }
-          // 重启恢复时旧 job_run 仍 running：复用原 ai_task/run 继续真实 collector。
-          if (!result.aiTaskId || !result.jobRunId) {
-            throw new Error("已有自动化运行缺少 task/run 关联，无法恢复");
-          }
-          await dispatchScheduledCollection(c, {
-            id: result.aiTaskId,
-            taskType: `scheduled.${input.job.sourceKind}`,
-            inputData: {
-              jobId: input.job.id,
-              jobRunId: result.jobRunId,
-              target: input.job.target,
-            },
-          });
-        } else {
-          await result.completion;
-        }
-        const run = await schedulingService.getRun(c, result.jobRunId);
-        if (run.status !== "succeeded") {
-          throw new Error(run.error || `自动化运行结束状态为 ${run.status}`);
-        }
-      } catch (error) {
-        if((input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind))&&result?.aiTaskId){
-          const existing=await aiService.getTask(c,result.aiTaskId);
-          if(existing.executionTaskId)return {executionTaskId:existing.executionTaskId};
-          await aiService.markFailed(c,result.aiTaskId,error instanceof Error?error.message:String(error));
-        }
-        // runner 进入后会在 finally 自己收口；这里兜住“终态 task 无法 claim / snapshot
-        // 装配失败 / dispatch 外层异常”等 runner 尚未进入的路径，不能只让 execution_task 失败。
-        if (result?.jobRunId) {
-          try {
-            await closeRunningJobRunOnError(c, result.jobRunId, error, {
-              getRun: (ctx, runId) => schedulingService.getRun(ctx, runId),
-              updateRun: (ctx, runId, patch) =>
-                schedulingService.updateRun(ctx, runId, patch),
-              now: deps.now,
-            });
-          } catch (finalizeError) {
-            console.error(
-              `[automation-driver] job_run ${result.jobRunId} 失败终态回写失败:`,
-              finalizeError,
-            );
-          }
-        }
-        throw error;
-      }
-    })
-    .seal();
-
-  const startUnifiedAutomationDriver = () =>
-    startAutomationDriver({
-      ctx: schedulerCtx,
-      tasks: persistentTaskService,
-      registry: automationHandlers,
-      listRunnableJobs: listRunnableAutomationJobs,
-      now: deps.now,
-      workerId: `automation-driver:${process.pid}`,
-      maxClaims: 8,
-      leaseSeconds: 120,
-      sweepStaleJobRuns,
-      scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
-      wakeDelegated:()=>{modelWorker?.start();wakeScheduledFlywheel();},
-    });
+  const {start:startUnifiedAutomationDriver}=createSchedulingAutomation({
+    aiService,schedulingService,schedulerCtx,
+    syncDailyExecutionRuns:(ctx)=>dailyTopicRuns.syncExecutionRuns(ctx),
+    staleJobRunMs:envMsOf("CREATOROS_STALE_JOB_RUN_MS",30*60*1000),
+    deps,triggerDeps,flywheelSourceKinds,dispatchScheduledCollection,persistentTaskService,
+    scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
+    wakeDelegated:()=>{modelWorker?.start();wakeScheduledFlywheel();},
+  });
 
   // ContentCalendar (module 22, Wave 5–7): the service builds a per-ctx user-scoped
   // repo over the shared db; peer modules are reached ONLY through narrow injected
@@ -5232,208 +4605,8 @@ FAVORITES_PROMOTE_PER_RUN
             : null;
         },
       };
-  const calibrationDiagnoseReaders = {
-              subject: {
-                get: async (
-                  c: RequestContext,
-                  subjectType: string,
-                  subjectId: string,
-                ) => {
-                  if (subjectType === "publication") {
-                    // publication → its title + current revision body (the 文稿 the agent
-                    // scores). A publication with no revision keeps "" (尽力诊断).
-                    const pub = await publishingService.getPublication(
-                      c,
-                      subjectId,
-                    );
-                    const revisions = await publishingService.listRevisions(
-                      c,
-                      subjectId,
-                      { limit: 1, offset: 0 },
-                    );
-                    const rev = revisions[0];
-                    return {
-                      title: rev?.title || `${pub.platform} 发布`,
-                      scriptText: rev?.description ?? "",
-                    };
-                  }
-                  // content_output → its title (the storyboard/文稿 plumbing lands later; the
-                  // agent grounds on title + positioning + rubric for Slice 1).
-                  const output = await projectsRepo.getOutput(c, subjectId);
-                  return { title: output.title, scriptText: "" };
-                },
-              },
-              rubric: {
-                current: async (c: RequestContext) => {
-                  // The creator's default 变现加权 rubric (canonical seed id) — its current
-                  // version's dimensions are exactly what the agent scores. 这里固定读取当前默认版本，不接受模型或客户端覆盖评分标准。
-                  // [T-332 S2] per-account 默认 rubric(当前号的 canonical id)。
-                  const v = await calibrationService.getCurrentRubricVersion(
-                    c,
-                    canonicalRubricIdFor(c),
-                  );
-                  return {
-                    rubricVersionId: v.id,
-                    dimensions: v.dimensions.map((d) => ({
-                      key: d.key,
-                      label: d.label,
-                      description: d.description,
-                    })),
-                  };
-                },
-              },
-  };
-  const calibrationScoreReaders = {
-              prediction: {
-                get: async (c: RequestContext, predictionId: string) => {
-                  // The locked prediction's 维度评分约定 (predictedConversion.dimensions =
-                  // [{key,score,...}]) + subject. Ownership-gated via the calibration public
-                  // service (cross-user / unknown → 404). The rubric version resolves each
-                  // dimension's 中文 label (取不到回退 key).
-                  const pred = await calibrationService.getPrediction(
-                    c,
-                    predictionId,
-                  );
-                  if(pred.status!=="locked")throw new Error("请先锁定盲预测，再生成真实表现评分");
-                  if(pred.subjectType==="publication")await publishingService.getPublication(c,pred.subjectId);
-                  else if(!await projectsService.getOutputOwnerSummary(c,pred.subjectId))throw new OwnershipError("评分作品不存在");
-                  const conv = (pred.predictedConversion ?? {}) as {
-                    dimensions?: Array<{ key?: unknown; score?: unknown }>;
-                  };
-                  const rawDims = Array.isArray(conv.dimensions)
-                    ? conv.dimensions
-                    : [];
-                  // Resolve dimension labels from the prediction's rubric version (best-effort).
-                  const labelByKey = new Map<string, string>();
-                  try {
-                    const version =
-                      await calibrationService.getRubricVersion(c,pred.rubricVersionId);
-                    for (const d of version.dimensions) {
-                      labelByKey.set(d.key, d.label);
-                    }
-                  } catch {
-                    /* label is decoration — fall back to key */
-                  }
-                  const dimensions = rawDims
-                    .map((d) => {
-                      const key = typeof d.key === "string" ? d.key : "";
-                      const predicted =
-                        typeof d.score === "number" && Number.isFinite(d.score)
-                          ? d.score
-                          : null;
-                      return {
-                        key,
-                        label: labelByKey.get(key) ?? key,
-                        predicted,
-                      };
-                    })
-                    .filter((d) => d.key !== "");
-                  // The subject's 标题 (the work being scored). For a publication, the latest
-                  // revision title; for a content_output, its title. Best-effort — 取不到给空串。
-                  let title = "";
-                  try {
-                    if (pred.subjectType === "publication") {
-                      const revisions = await publishingService.listRevisions(
-                        c,
-                        pred.subjectId,
-                        { limit: 1, offset: 0 },
-                      );
-                      title = revisions[0]?.title ?? "";
-                    } else {
-                      const output = await projectsRepo.getOutput(
-                        c,
-                        pred.subjectId,
-                      );
-                      title = output.title;
-                    }
-                  } catch {
-                    /* title is decoration — 尽力评分 */
-                  }
-                  return {
-                    status: pred.status,
-                    subjectType: pred.subjectType,
-                    subjectId: pred.subjectId,
-                    title,
-                    dimensions,
-                  };
-                },
-              },
-              metrics: {
-                forSubject: async (
-                  c: RequestContext,
-                  subjectType: string,
-                  subjectId: string,
-                ) => {
-                  // Real metrics live in analytics' metric_snapshots (rawMetrics jsonb with the
-                  // platform payload: views/likes/comments/shares/favorites/finish_rate/...).
-                  // For a publication, subjectId IS the publicationId; for a content_output,
-                  // resolve its publication(s) via publishing first. Read the LATEST snapshot
-                  // per publication (captured-at desc), merge numeric rawMetrics. No snapshot →
-                  // [](honest: the runner then scores from title+定位 and says so).
-                  const numericMetrics = (
-                    raw: Record<string, unknown>,
-                  ): Array<{ key: string; value: number }> =>
-                    Object.entries(raw)
-                      .filter(
-                        ([, v]) =>
-                          typeof v === "number" && Number.isFinite(v),
-                      )
-                      .map(([key, v]) => ({ key, value: v as number }));
-                  const latestFor = async (
-                    publicationId: string,
-                  ): Promise<Array<{ key: string; value: number }>> => {
-                    try {
-                      const page =
-                        await analyticsService.getPublicationAnalytics(
-                          c,
-                          publicationId,
-                          1,
-                          10,
-                        );
-                      const latest = page.rows
-                        .slice()
-                        .sort((a, b) =>
-                          b.capturedAt.localeCompare(a.capturedAt),
-                        )[0];
-                      const raw = (latest?.rawMetrics ?? {}) as Record<
-                        string,
-                        unknown
-                      >;
-                      return numericMetrics(raw);
-                    } catch {
-                      return []; // a single publication's read failing → no metrics, never crash
-                    }
-                  };
-                  let publicationIds: string[] = [];
-                  if (subjectType === "publication") {
-                    publicationIds = [subjectId];
-                  } else {
-                    try {
-                      const pubs = await publishingService.listPublications(
-                        c,
-                        subjectId,
-                        { limit: 20, offset: 0 },
-                      );
-                      publicationIds = pubs.map((p) => p.id);
-                    } catch {
-                      publicationIds = [];
-                    }
-                  }
-                  // Merge metrics across the subject's publications (last写入 wins per key —
-                  // a single-publication subject is the common case).
-                  const merged = new Map<string, number>();
-                  for (const pid of publicationIds) {
-                    for (const m of await latestFor(pid)) {
-                      merged.set(m.key, m.value);
-                    }
-                  }
-                  return Array.from(merged.entries()).map(([key, value]) => ({
-                    key,
-                    value,
-                  }));
-                },
-              },
-  };
+  const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,canonicalRubricIdFor});
+  const calibrationScoreReaders = createCalibrationScoreReaders({projectsService,publishingService,analyticsService,calibrationService});
   const dailyTopicRuns=createDailyTopicRunService(db,{now:deps.now});
   const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
   const dailyTopicAdapter=createDailyTopicBusinessAdapter({
@@ -5492,230 +4665,12 @@ FAVORITES_PROMOTE_PER_RUN
     catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
   }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
-    "script.source_similarity":createScriptSimilarityBusinessAdapter({tasks:persistentTaskService,references:projectIntelligenceReferences}),
-    "topic.preference":createTopicPreferenceBusinessAdapter({listDropReasons:c=>candidateService.listDropReasons(c)}),
-    "asset.classify":createAssetProcessingBusinessAdapter("asset.classify",assetProcessingPreparation),
-    "material.extract":createAssetProcessingBusinessAdapter("material.extract",assetProcessingPreparation),
-    "video.decisions":createVideoDecisionsBusinessAdapter({resolveModelSpec,getTaskRuntimeData:(c,id)=>aiService.getTaskRuntimeData(c,id),
-              listBrollInventory: (c, projectId) =>
-                collectProjectBrollInventory(c, projectId, {
-                  assertProjectAccess: async (scopeCtx, scopeProjectId) => {
-                    await projectsService.listOutputIdsByProject(
-                      scopeCtx,
-                      scopeProjectId,
-                    );
-                  },
-                  readArtifactContentData,
-                  listProjectMaterialLinks: async (
-                    scopeCtx,
-                    scopeProjectId,
-                  ) =>
-                    (
-                      await materialLinksService.list(scopeCtx, {
-                        projectId: scopeProjectId,
-                        page: 1,
-                        pageSize: 100,
-                      })
-                    ).rows,
-                  getAsset: async (scopeCtx, assetId) => {
-                    const asset = await assetsService.getAsset(scopeCtx, assetId);
-                    const file = asset.currentFileId
-                      ? (
-                          await assetsService.listFilesByIds(scopeCtx, [
-                            asset.currentFileId,
-                          ])
-                        )[0] ?? null
-                      : null;
-                    return {
-                      ...asset,
-                      width: file?.width ?? null,
-                      height: file?.height ?? null,
-                      durationMs: file?.durationMs ?? null,
-                    };
-                  },
-                }),
-              // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
-              // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
-              readStoryboard: async (c, projectId) => {
-                if (!projectId) return [];
-                try {
-                  return storyboardFromContentData(
-                    await readArtifactContentData(c, projectId, "output_script"),
-                  );
-                } catch {
-                  return [];
-                }
-              },
+    ...createDiscoveryBusinessAdapters({projectsService,candidateService,trendSourcesService,deps,aiService,persistentTaskService,projectIntelligenceReferences,generationContext,makeGenerationReaders,makeProjectMaterialsReader,calibrationDiagnoseReaders,calibrationScoreReaders,dailyTopicAdapter,positioningWorksReader}),
 
-    }),
-    "reconstruct.project":createReconstructBusinessAdapter({...generationContext,
-              getProjectSource: async (c, projectId) => {
-                try {
-                  const row = await projectsRepo.get(c, projectId);
-                  return row.source ?? null;
-                } catch {
-                  return null; // 读不到 → runner 视为非 imported → 失败,不误触发
-                }
-              },
-              // 读该作品逐字稿(D3 绑的 output_script transcript artifact 当前版本 contentText/
-              // contentData.transcript)。走公开 service(listProjectArtifacts)+ per-ctx repo getVersion。
-              getTranscript: async (c, projectId) => {
-                const rows = await artifactsService.listProjectArtifacts(
-                  c,
-                  projectId,
-                );
-                const repo = createArtifactRepository(db, {
-                  ...deps,
-                  userId: c.userId,
-                  // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-                });
-                for (const r of rows) {
-                  if (r.artifactType !== "output_script") continue;
-                  if (!r.currentVersionId) continue;
-                  const version = await repo.getVersion(r.currentVersionId);
-                  const data = version.contentData as
-                    | Record<string, unknown>
-                    | null
-                    | undefined;
-                  const t =
-                    data && typeof data.transcript === "string"
-                      ? data.transcript
-                      : version.contentText;
-                  if (t && t.trim()) return t;
-                }
-                return null;
-              },
-              // 读该作品真实指标摘要(digg/comment/play 等)——解析项目 publications → 最新 snapshot
-              // 的 rawMetrics(views/likes/comments/...)→ 人类可读串喂给模型(数据是真实值,模型不改)。
-              getMetricsSummary: async (c, projectId) => {
-                try {
-                  const outputIds =
-                    await projectsService.listOutputIdsByProject(c, projectId);
-                  const merged = new Map<string, number>();
-                  for (const outputId of outputIds) {
-                    let pubs: Array<{ id: string }> = [];
-                    try {
-                      pubs = await publishingService.listPublications(
-                        c,
-                        outputId,
-                        { limit: 20, offset: 0 },
-                      );
-                    } catch {
-                      pubs = [];
-                    }
-                    for (const pub of pubs) {
-                      try {
-                        const page =
-                          await analyticsService.getPublicationAnalytics(
-                            c,
-                            pub.id,
-                            1,
-                            10,
-                          );
-                        const latest = page.rows
-                          .slice()
-                          .sort((a, b) =>
-                            b.capturedAt.localeCompare(a.capturedAt),
-                          )[0];
-                        const raw = (latest?.rawMetrics ?? {}) as Record<
-                          string,
-                          unknown
-                        >;
-                        for (const [k, v] of Object.entries(raw)) {
-                          if (typeof v === "number" && Number.isFinite(v)) {
-                            merged.set(k, v);
-                          }
-                        }
-                      } catch {
-                        /* single publication read failing → skip, never crash */
-                      }
-                    }
-                  }
-                  if (merged.size === 0) return "";
-                  const LABELS: Record<string, string> = {
-                    views: "播放",
-                    plays: "播放",
-                    likes: "点赞",
-                    digg: "点赞",
-                    comments: "评论",
-                    shares: "分享",
-                    favorites: "收藏",
-                    finish_rate: "完播率",
-                  };
-                  return Array.from(merged.entries())
-                    .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
-                    .join(" · ");
-                } catch {
-                  return "";
-                }
-              },
+    ...createMediaBusinessAdapters({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,resolveModelSpec,aiService,assetProcessingPreparation,generationContext,makeGenerationReaders,readArtifactContentData}),
 
-    }),
-    "cover.generate":createCoverBusinessAdapter({...resolveContextDeps(COVER_BRIEF_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),positioning:generationContext.positioning}),
-    "copilot.assist":createCopilotBusinessAdapter({ai:aiService,positioning:generationContext.positioning,learnings:generationContext.learnings,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
-    "scheduled.topic.daily":dailyTopicAdapter,
-    "topic.generate":createTopicGenerateBusinessAdapter({...resolveContextDeps(TOPIC_GENERATE_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),...generationContext,signals:makeGenerationReaders().signalsReader,knowledge:makeGenerationReaders().knowledgeReader,sourceReader:{listEnabledSources:(c)=>trendSourcesService.listEnabledSources(c)},now:deps.now,async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
-    "research.gather_material":createResearchGatherBusinessAdapter({positioning:generationContext.positioning,projectMaterials:makeProjectMaterialsReader(),async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);}}),
-    "calibration.diagnose":createCalibrationDiagnoseBusinessAdapter({...generationContext,...calibrationDiagnoseReaders}),
-    "calibration.score":createCalibrationScoreBusinessAdapter({...generationContext,...calibrationScoreReaders}),
-    "positioning.generate":createPositioningGenerateBusinessAdapter({positioning:generationContext.positioning,accounts:makeGenerationReaders().accountsReader,positioningWorks:positioningWorksReader}),
-    "topic.enrich":createTopicEnrichBusinessAdapter({
-      ...generationContext,
-      signals:makeGenerationReaders().signalsReader,
-      knowledge:makeGenerationReaders().knowledgeReader,
-      candidate:{async get(c,id){const candidate=await candidateService.getCandidate(c,id);return {title:candidate.title,angle:candidate.angle};}},
-    }),
-    "material.match":createMaterialMatchBusinessAdapter({
-      ...generationContext,
-      assets:makeGenerationReaders().assetsReader,
-      async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
-    }),
-    "script.draft":createScriptBusinessAdapter({
-      ...resolveContextDeps(SCRIPT_DRAFT_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
-      positioning:generationContext.positioning,
-      readRuntime:(c,id)=>createExecutionScriptCheckpointService(db).readRuntime(c,id),
-      async assertArtifact(c,artifactId,projectId){
-        const artifact=await artifactsService.getArtifact(c,artifactId);
-        // 新提交只选 output_script；保留已经绑定旧 master_script 的历史任务兼容。
-        if((projectId!==null && artifact.projectId!==projectId) || !["output_script","master_script"].includes(artifact.artifactType))throw new Error("文稿目标与当前项目或工件类型不一致");
-      },
-    }),
-    "planning.thesis":createPlanningThesisBusinessAdapter({
-      ...resolveContextDeps(PLANNING_THESIS_TEMPLATE.contextRequirements,makeGenerationReaders().contextReaderRegistry),
-      positioning:generationContext.positioning,
-      async assertProject(c,projectId){await projectsService.getProjectOverviewCore(c,projectId);},
-    }),
-    "review.analyze":{
-      skillId:"review.insights",capability:"review.insights",
-      prepare:(c,task)=>prepareReviewContext(c,task,{...generationContext,reviewSubject:makeReviewSubjectReader()}),
-      project:projectReviewCandidate,
-    },
-    "planning.contract":{
-      skillId:"planning.contract",capability:"planning.contract",
-      prepare:(c,task)=>preparePlanningContractContext(c,task,{...generationContext,artifactOrigin:artifactOriginReader,
-        async assertTargetArtifact(context,target){
-          const artifact=await artifactsService.getArtifact(context,target.artifactId);
-          if((target.projectId!==null && artifact.projectId!==target.projectId) || artifact.artifactType!=="content_contract")throw new Error("内容合同目标与当前项目或工件类型不一致");
-        },
-      }),
-      project:projectPlanningContractCandidate,
-    },
-    "script.review":{
-      skillId:"script.review",capability:"default",
-      prepare:(c,task)=>prepareScriptReviewContext(c,task,{scriptSource:reviewScriptSource,lintRules:reviewGateService,positioning:generationContext.positioning}),
-      project(){throw new Error("审核报告必须经审核事务提交，不能创建采纳候选");},
-    },
-    "publish.platform_adapt":{
-      skillId:"platform.adapt",capability:"script.rewrite",
-      prepare:(c,task)=>preparePlatformAdaptContext(c,task,{...generationContext}),
-      project:(input,object)=>projectPlatformAdaptCandidate(input,object as Parameters<typeof projectPlatformAdaptCandidate>[1]),
-    },
-    "planning.outline":{
-      skillId:"planning.outline",capability:"planning.outline",
-      prepare:(c,task)=>preparePlanningOutlineContext(c,task,{...generationContext,contract:contractReader,artifactOrigin:artifactOriginReader,brief:makeBriefReader()}),
-      project:(input,object)=>projectPlanningOutlineCandidate(input,object as Parameters<typeof projectPlanningOutlineCandidate>[1]),
-    },
+    ...createWritingBusinessAdapters({projectsService,artifactsService,db,generationContext,makeGenerationReaders,makeBriefReader,makeReviewSubjectReader,artifactOriginReader,contractReader,reviewScriptSource,reviewGateService}),
+
   }});
   const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{console.error("EXECUTION_WORKER_BUILD_MISSING");return null;}})();
   const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
@@ -6402,108 +5357,7 @@ FAVORITES_PROMOTE_PER_RUN
    * context.artifact.text、自然语言 script.patch 与生成任务快照都必须调用这里，避免各自
    * 猜“当前版本”。只走现有 projects/artifacts public service；不写库。
    */
-  const readCurrentArtifactTruth = async (
-    c: RequestContext,
-    projectId: string,
-    artifactType: string,
-  ) => {
-    await projectsRepo.get(c, projectId);
-    const artifactRows = await artifactsService.listProjectArtifacts(c, projectId);
-    const target = artifactRows.find((row) => row.artifactType === artifactType);
-    if (!target?.currentVersionId) return null;
-    const versions = await artifactsService.listVersions(c, target.id);
-    const current = versions.find(
-      (version) => version.id === target.currentVersionId,
-    );
-    if (!current) return null;
-
-    const data =
-      current.contentData &&
-      typeof current.contentData === "object" &&
-      !Array.isArray(current.contentData)
-        ? (current.contentData as Record<string, unknown>)
-        : {};
-    let sections = canonicalizeScriptSectionRecords(data.sections).map(
-      (section, index) => {
-        const heading = [section.heading, section.label].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        const body = [
-          section.body,
-          section.narration,
-          section.text,
-          section.content,
-        ].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        const sectionType = [section.sectionType, section.type, section.role].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        const finite = (value: unknown): number | null =>
-          typeof value === "number" && Number.isFinite(value) ? value : null;
-        return {
-          sectionRef: section.id,
-          index,
-          heading: heading?.trim() ?? "",
-          body: body ?? "",
-          sectionType: sectionType?.trim() ?? null,
-          startSeconds: finite(section.startSeconds ?? section.start),
-          endSeconds: finite(section.endSeconds ?? section.end),
-        };
-      },
-    );
-    if (sections.length === 0 && artifactType === "output_script") {
-      const rows = await artifactsService.getScriptSections(c, current.id);
-      sections = rows.flatMap((section, index) => {
-        const body =
-          typeof section.content === "string" ? section.content : "";
-        const sectionRef =
-          typeof section.id === "string" ? section.id.trim() : "";
-        if (!body.trim() || !sectionRef) return [];
-        return [
-          {
-            sectionRef,
-            index,
-            heading: "",
-            body,
-            sectionType:
-              typeof section.sectionType === "string"
-                ? section.sectionType
-                : null,
-            startSeconds:
-              typeof section.startSeconds === "number"
-                ? section.startSeconds
-                : null,
-            endSeconds:
-              typeof section.endSeconds === "number" ? section.endSeconds : null,
-          },
-        ];
-      });
-    }
-    const fullText =
-      sections.length > 0
-        ? sections
-            .map((section) =>
-              [section.heading, section.body].filter(Boolean).join("\n"),
-            )
-            .join("\n\n")
-        : extractArtifactText(current.contentText, current.contentData);
-    return {
-      artifactType: target.artifactType,
-      projectId,
-      artifactId: target.id,
-      currentVersionId: current.id,
-      versionNumber: current.versionNumber,
-      updatedAt: target.updatedAt ?? null,
-      contentHash: createHash("sha256").update(fullText).digest("hex"),
-      truthPriority: "current_confirmed_script" as const,
-      sections,
-      fullText,
-    };
-  };
+  const readCurrentArtifactTruth = createCurrentArtifactReader({projectsService,artifactsService});
 
   // T-004 ChatBox runtime — bundle the /api/chat route's needs: persist (aiService),
   // resolve model (resolveModelSpec), and the bound CreativeContext readers (定位/飞轮/
@@ -6536,125 +5390,7 @@ FAVORITES_PROMOTE_PER_RUN
     resolveModelSpec,
     getPositioningDiscovery: (c, sessionId) =>
       positioningService.getDiscoverySession(c, sessionId),
-    resolveCurrentScriptSelection: async (c, input) => {
-      const artifact = await artifactsService.getArtifact(c, input.artifactId);
-      if (!artifact.currentVersionId) return null;
-      const versions = await artifactsService.listVersions(c, input.artifactId);
-      const current = versions.find(
-        (version) => version.id === artifact.currentVersionId,
-      );
-      if (!current) return null;
-
-      const data =
-        current.contentData && typeof current.contentData === "object"
-          ? (current.contentData as Record<string, unknown>)
-          : null;
-      const rawSections =
-        data && Array.isArray(data.sections) ? data.sections : [];
-      const contentDataSections = canonicalizeScriptSectionRecords(
-        rawSections,
-      ).map((section) => {
-        const id = section.id;
-        const originalText = [
-          section.body,
-          section.narration,
-          section.text,
-          section.content,
-        ].find(
-          (value): value is string =>
-            typeof value === "string" && value.trim().length > 0,
-        );
-        return { id, originalText: originalText ?? "" };
-      });
-
-      // 一些历史稿把结构化段落存在 script_sections，而 contentData 只留整稿/摘要。
-      // 版本恢复后必须读取“当前版本自己的”结构化行，不能继续拿恢复前的前端快照判定
-      // sectionId 不存在。两种存储形态合并后仍只允许 id 命中或唯一原文命中。
-      const storedRows = await artifactsService.getScriptSections(c, current.id);
-      const structuredSections = storedRows.flatMap((section) => {
-        const id = typeof section.id === "string" ? section.id.trim() : "";
-        const originalText =
-          typeof section.content === "string" ? section.content.trim() : "";
-        return id && originalText ? [{ id, originalText }] : [];
-      });
-
-      // 旧桌面包的局部改稿请求还没有 sectionIndex。若用户在 v16 点过第 3 段、随后稿面
-      // 切到 v17，不能因为旧 sectionId 失效就要求再点一次；服务端从请求明确指向的 v16
-      // 恢复“第 3 段”这个结构位置，再交给 resolver 读取 v17 的第 3 段当前正文。
-      // 该历史版本只用于恢复用户已明确表达的位置，不会把历史正文重新送给工具。
-      let requestedVersionSections:
-        | Array<{ id: string; originalText: string }>
-        | undefined;
-      if (
-        !Number.isInteger(input.sectionIndex) &&
-        input.versionId &&
-        input.versionId !== current.id
-      ) {
-        const requestedVersion = versions.find(
-          (version) => version.id === input.versionId,
-        );
-        if (requestedVersion) {
-          const requestedData =
-            requestedVersion.contentData &&
-            typeof requestedVersion.contentData === "object"
-              ? (requestedVersion.contentData as Record<string, unknown>)
-              : null;
-          const requestedRawSections =
-            requestedData && Array.isArray(requestedData.sections)
-              ? requestedData.sections
-              : [];
-          requestedVersionSections = canonicalizeScriptSectionRecords(
-            requestedRawSections,
-          ).map((section) => {
-            const id = section.id;
-            const originalText = [
-              section.body,
-              section.narration,
-              section.text,
-              section.content,
-            ].find(
-              (value): value is string =>
-                typeof value === "string" && value.trim().length > 0,
-            );
-            return { id, originalText: originalText ?? "" };
-          });
-          if (requestedVersionSections.length === 0) {
-            const requestedRows = await artifactsService.getScriptSections(
-              c,
-              requestedVersion.id,
-            );
-            requestedVersionSections = requestedRows.flatMap((section) => {
-              const id =
-                typeof section.id === "string" ? section.id.trim() : "";
-              const originalText =
-                typeof section.content === "string"
-                  ? section.content.trim()
-                  : "";
-              return id && originalText ? [{ id, originalText }] : [];
-            });
-          }
-        }
-      }
-      const selected = resolveCurrentScriptSelectionFromTruth({
-        currentVersionId: current.id,
-        requestedVersionId: input.versionId,
-        requestedSectionId: input.sectionId,
-        requestedSectionIndex: input.sectionIndex,
-        requestedExcerpt: input.excerpt,
-        requestedVersionSections,
-        contentDataSections,
-        structuredSections,
-        contentText: current.contentText,
-      });
-      if (!selected) return null;
-      return {
-        artifactId: artifact.id,
-        versionId: current.id,
-        sectionId: selected.sectionId,
-        originalText: selected.originalText,
-        matchStrategy: selected.matchStrategy,
-      };
-    },
+    resolveCurrentScriptSelection: createCurrentScriptSelectionReader({artifactsService,resolveCurrentScriptSelectionFromTruth}),
     readChatAttachment: async (c, assetId) => {
       const asset = await assetsService.getAsset(c, assetId);
       if (!asset.currentFileId) {
@@ -6917,243 +5653,10 @@ FAVORITES_PROMOTE_PER_RUN
     listAuthorizedDirs: async (ctx: RequestContext) => {
       return { dirs: listLocalReadAlwaysDirs(ctx.userId) };
     },
-    // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(经 ai transport
-    // 的 ai.tasks.create,交由持久素材执行入口，旧提交事实沿原对账路径;projectId 走 inputData,service
-    // createTask 据它归属项目)。立即返回 taskId,不阻塞对话回合(视频异步分钟级)。
-    dispatchGenerateAsset: async (
-      ctx: RequestContext,
-      input: { kind: "image" | "video"; prompt: string; projectId?: string | null; attemptId?: string },
-    ) => {
-      const task=await chatTaskSubmissions.submit(ctx,{
-        taskType:"asset.generate",attemptId:input.attemptId??createAiTaskAttemptId(),
-        inputData:{kind:input.kind,prompt:input.prompt,...(input.projectId?{projectId:input.projectId}:{})},
-      },{
-        snapshotKeys:["scriptSnapshot"],
-        prepareSnapshot:async(context,inputData)=>{
-          const projectId=typeof inputData.projectId==="string"?inputData.projectId:null;
-          const scriptSnapshot=projectId?await readCurrentArtifactTruth(context,projectId,"output_script").catch(()=>null):null;
-          return scriptSnapshot?{scriptSnapshot}:{};
-        },
-      });
-      return {taskId:task.id};
-    },
-    // [T-103b] review.script 端口 —— 起 script.review ai_task 复用稿面「审核」按钮的旧 trigger 链路
-    // (reviewGateService.triggerReview:createTask 后由注入 AI 端口显式接 dispatchScriptReview 在后台
-    // 跑 L1 违禁词 lint + L2 语义审 → saveReport)。立即返回 taskId,不阻塞对话回合(审核分钟内)。
-    dispatchScriptReview: async (
-      ctx: RequestContext,
-      input: { projectId: string },
-    ) => {
-      await assertReviewableChatScript(ctx,input);
-      const task = (await reviewGateService.triggerReview(
-        ctx,
-        input.projectId,
-      )) as { id?: unknown } | null;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error("dispatchScriptReview: 起 script.review task 失败(无 taskId)");
-      }
-      return { taskId };
-    },
-    prepareChatScriptDraftTask:(ctx,input)=>aiService.prepareScriptDraftTaskCommit(ctx,input),
-    wakeChatScriptDraftTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.draft"),
-    prepareChatPublishTask:async(ctx,input)=>{
-      const inputData=await preparePublishPackageTaskInput(ctx,input,{getScript:(c,id)=>makeReviewSubjectReader().getScript(c,id),listOutputIdsByProject:(c,id)=>projectsService.listOutputIdsByProject(c,id)});
-      return aiService.prepareTaskCommit(ctx,{taskType:"publish.platform_adapt",attemptId:input.attemptId,inputData});
-    },
-    wakeChatPublishTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"publish.platform_adapt"),
-    prepareChatScriptReviewTask: async (ctx,input)=>{
-      await assertReviewableChatScript(ctx,input);
-      const current=await readCurrentScriptRefForReview(ctx,input.projectId);
-      return aiService.prepareTaskCommit(ctx,{taskType:"script.review",attemptId:input.attemptId,inputData:{projectId:input.projectId,artifactId:current.artifactId,artifactVersion:current.artifactVersion}});
-    },
-    wakeChatScriptReviewTask: (ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"script.review"),
-    // T-730：只创建 AI task，不预建 thesis_tree 或空版本。生成失败因此保持零 artifact/version
-    // 写入；用户在候选卡点击“采纳并用于写稿”后，confirm UoW 才原子 ensure + 追加 adopted 版本。
-    wakeChatCoverTask:(ctx,taskId)=>wakeSubmittedTask(ctx,taskId,"cover.generate"),
-    wakeChatResearchTask:async(ctx,taskId)=>{
-      if(stoppingPreparation)throw new Error("应用正在停止");
-      const task=await aiService.getTask(ctx,taskId);
-      if(task.taskType!=="exec.agentic.research")throw new Error("自主调研任务类型不符");
-      if(!agenticWorker)throw new Error("自主调研执行服务未就绪");
-      await agenticBusiness.prepare(ctx,taskId);
-      if(!stoppingPreparation)agenticWorker.start();
-    },
-    wakeChatPlanningTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"planning.thesis"),
-    wakeChatMaterialTask: (ctx,taskId) => wakeSubmittedTask(ctx,taskId,"asset.generate"),
-    dispatchPlanningThesis: async (
-      ctx: RequestContext,
-      input: { projectId: string; topic?: string; attemptId?: string },
-    ) => {
-      const task=await chatTaskSubmissions.submit(ctx,{
-        taskType:"planning.thesis",attemptId:input.attemptId??createAiTaskAttemptId(),
-        inputData:{projectId:input.projectId,...(input.topic?{topic:input.topic}:{})},
-      });
-      return {taskId:task.id};
-    },
-    // [T-271] cover.generate 端口 —— dispatch 制作封面链 task(经 ai transport 的 ai.tasks.create →
-    // dispatch 分支 task.taskType==="cover.generate" 触发 void runCoverGenerate)。projectId 走
-    // inputData(service createTask 据它归属项目 → 采纳时既有 asset 采纳门把封面图绑进该项目用料链)。
-    // 封面记 generated_asset 候选(非 artifact_version),故**不 ensure
-    // artifact**(复用既有 asset 采纳门,无需 artifactId)。立即返回 { taskId },不阻塞对话回合。
-    dispatchGenerateCover: async (
-      ctx: RequestContext,
-      // [T-380] referenceAssetId = 以图生图风格参考(素材库 asset id,走 inputData 透传;
-      // cover-runner host 侧 getAssetBytes 读字节喂生图 adapter 的 image-to-image)。
-      input: {
-        projectId: string;
-        topic?: string;
-        referenceAssetId?: string;
-        visualRequirements?: string;
-      },
-    ) => {
-      const scriptSnapshot = await readCurrentArtifactTruth(
-        ctx,
-        input.projectId,
-        "output_script",
-      ).catch(() => null);
-      const res = await ai.request(
-        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
-        ENDPOINTS.createAITask,
-        {
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "cover.generate",
-            attemptId: createAiTaskAttemptId(),
-            inputData: {
-              projectId: input.projectId,
-              ...(input.topic ? { topic: input.topic } : {}),
-              ...(input.referenceAssetId
-                ? { referenceAssetId: input.referenceAssetId }
-                : {}),
-              ...(input.visualRequirements
-                ? { visualRequirements: input.visualRequirements }
-                : {}),
-              ...(scriptSnapshot ? { scriptSnapshot } : {}),
-            },
-          },
-        },
-        ctx,
-      );
-      const task = (res as { data?: { id?: unknown } }).data;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error("dispatchGenerateCover: 起 cover.generate task 失败(无 taskId)");
-      }
-      return { taskId };
-    },
-    dispatchDouyinShare: async (
-      ctx: RequestContext,
-      input: { shareInput: string; transcribe: boolean },
-    ) => {
-      const shareInput = input.shareInput.trim();
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "chat.douyin.share",
-      );
-      const fingerprint = createHash("sha256")
-        .update(
-          `${ctx.userId}\n${accountId}\n${
-            input.transcribe ? "archive_and_transcribe" : "archive"
-          }\n${shareInput}`,
-        )
-        .digest("hex");
-      const { task } = await intelligenceService.enqueueDouyinShareImport(ctx, {
-        collectionId: null,
-        shareInput,
-        idempotencyKey: `chat-douyin-share:${fingerprint}`,
-        transcribeAfterImport: input.transcribe,
-      });
-      if (task.status === "queued") {
-        recoveryWake?.wake("share_import");
-      }
-      return { taskId: task.id, ownerId: task.ownerId };
-    },
-    // 整稿目标、空白初始版本与任务同事务提交；沿原公开派发入口启动持久执行。
-    dispatchScriptDraft: async (
-      ctx: RequestContext,
-      input: {
-        projectId: string;
-        attemptId?: string;
-        topic?: string;
-        angle?: string;
-        targetDurationSeconds?: number;
-        extraBrief?: string;
-        instruction?: string;
-        sourceSnapshots?: import("@creatoros/backend/modules/ai-runtime").ScriptDraftSourceSnapshot[];
-        draftMode?: "verbatim";
-        verbatimSourceRef?: string;
-        verbatimSourceText?: string;
-        verbatimSourceLength?: number;
-        verbatimSourceSha256?: string;
-      },
-    ) => {
-      const attemptId=input.attemptId??createAiTaskAttemptId();
-      const preparedTask=await aiService.createScriptDraftTask(ctx,{...input,attemptId});
-      // 仍走现有正式派发入口；同键回读复用原任务，恢复提交后尚未唤醒的窗口。
-      const res = await ai.request(
-        // key = op 方法名 createAITask;其 .id === "ai.tasks.create"(ai transport 拦此 id 分派)。
-        ENDPOINTS.createAITask,
-        {
-          params: undefined,
-          query: undefined,
-          body: {
-            taskType: "script.draft",
-            attemptId,
-            inputData: preparedTask.inputData,
-          },
-        },
-        ctx,
-      );
-      const task = (res as { data?: { id?: unknown } }).data;
-      const taskId = task && typeof task.id === "string" ? task.id : "";
-      if (!taskId) {
-        throw new Error("dispatchScriptDraft: 起 script.draft task 失败(无 taskId)");
-      }
-      return { taskId };
-    },
+    ...createChatGenerationTasks({aiService,projectsService,reviewGateService,chatTaskSubmissions,readCurrentArtifactTruth,createAiTaskAttemptId,makeReviewSubjectReader,assertReviewableChatScript,ai}),
+    ...createChatPreparationTasks({aiService,projectsService,makeReviewSubjectReader,assertReviewableChatScript,readCurrentScriptRefForReview,wakeSubmittedTask,agenticBusiness,getAgenticWorker:()=>agenticWorker,isStopping:()=>stoppingPreparation}),
+    ...createChatIngestionTasks({createAiTaskAttemptId,intelligenceService,wakeShareImport:()=>recoveryWake?.wake("share_import"),projectsWithTranscribe}),
     prepareVideoEdit: createVideoEditCandidatePreparer({projectsService,productionService,materialLinksService,assetsService}),
-    // 旧发布包入口共用后端正文准备及原任务派发；同 attempt 恢复首次 scriptText/outputId。
-    // 只使用项目已有产出挂点；缺稿或缺产出时保留原错误，不预建发布行。
-    dispatchPublishPackage: async (ctx:RequestContext,input:{projectId:string;topic?:string;attemptId?:string})=>{
-      const task=await chatTaskSubmissions.submit(ctx,{
-        taskType:"publish.platform_adapt",attemptId:input.attemptId??createAiTaskAttemptId(),
-        inputData:{projectId:input.projectId,platforms:["douyin"],...(input.topic?{topic:input.topic}:{})},
-      },{
-        snapshotKeys:["scriptText","outputId"],
-        prepareSnapshot:async(context,inputData)=>{
-          const {scriptText,outputId}=await preparePublishPackageTaskInput(context,{projectId:inputData.projectId as string},{getScript:(c,id)=>makeReviewSubjectReader().getScript(c,id),listOutputIdsByProject:(c,id)=>projectsService.listOutputIdsByProject(c,id)});
-          return {scriptText,outputId};
-        },
-      });
-      return {taskId:task.id};
-    },
-    // [T-385] project.transcribe 端口 —— 直调 T-374 的 projectsWithTranscribe 拦截链(单一真值:
-    // 属主门/抖音锚解析/排 transcribe.douyin 全在 wrap 里,这里不复述)。无锚 ValidationError
-    // 人话文案原样抛出 → chat-runner catch 转工具 error 卡渲。
-    dispatchProjectTranscribe: async (
-      ctx: RequestContext,
-      input: { projectId: string; attemptId?: string },
-    ) => {
-      const res = await projectsWithTranscribe.request(
-        ENDPOINTS.transcribeProjectWork,
-        {
-          params: { projectId: input.projectId },
-          query: undefined,
-          body: { attemptId: input.attemptId ?? createAiTaskAttemptId() },
-        },
-        ctx,
-      );
-      const data = (res as { data?: { taskId?: unknown } }).data;
-      const taskId = data && typeof data.taskId === "string" ? data.taskId : "";
-      if (!taskId) {
-        throw new Error(
-          "dispatchProjectTranscribe: 起 transcribe.douyin task 失败(无 taskId)",
-        );
-      }
-      return { taskId };
-    },
   };
 
   if(workerEntry){
