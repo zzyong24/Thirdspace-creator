@@ -35,6 +35,28 @@ const METHODS = {
 先回答用户当前要完成的事，使用已提供的产品能力和当前状态给最短可行路径。只推荐真实存在的入口和工具；不能承诺未接入能力。遇到故障先区分配置、输入、权限和执行失败，给对应可执行动作，不反复讲抽象概念或要求重做已经完成的步骤。`,
 } as const;
 type Method = keyof typeof METHODS;
+/** 纯方法的用途说明也是冻结方法正文的一部分；目录无需猜测正文语义。 */
+const METHOD_PURPOSES: Record<Method, string> = {
+ research: '围绕当前问题研究资料，核对来源并整理证据与用途。',
+ positioning: '建立或修改定位，明确受众、价值和内容边界。',
+ topic: '根据目标与真实线索发展选题和热点角度。',
+ planning: '组织核心主张、证据与内容结构。',
+ writing: '根据当前要求写稿、改稿并核对全文一致性。',
+ visual: '根据稿件与素材规划视觉、封面和制作。',
+ publishing: '把真实稿件适配成各平台发布物料。',
+ review: '基于稿件和真实表现复盘、拆解与形成归因假设。',
+ knowledge: '理解资料、提炼知识与偏好候选并保留出处。',
+ guide: '根据真实产品能力回答使用问题与排查故障。',
+};
+export const BUSINESS_METHOD_TEMPLATES: readonly PromptTemplate[] = (Object.keys(METHODS) as Method[]).map(method => ({
+ id: `method.${method}`,
+ version: 'v1',
+ system: `${METHODS[method].split('\n')[0]}\n用途：${METHOD_PURPOSES[method]}\n\n${METHODS[method]}`,
+ template: '按当前意图使用本方法；只使用本轮实际工具与已知内容，产出仍遵守调用节点的原契约。',
+ requiredFacets: [],
+ tools: [],
+ editableFields: ['system', 'template'],
+}));
 // 明确的注册 ID→职责绑定，不用于猜测用户意图。
 export const BUSINESS_METHOD_BINDINGS: Readonly<Record<string, Method>> = {
  'agentic.research':'research', 'agentic.material':'visual', 'agentic.collect':'research',
@@ -60,9 +82,9 @@ export function withBusinessMethod(template: PromptTemplate): PromptTemplate {
  const method = BUSINESS_METHOD_BINDINGS[template.id];
  const conversational = CONVERSATIONAL_METHOD_SKILLS.has(template.id);
  if (!method && !conversational) return template;
- const body = conversational
-   ? '【按当前意图使用方法】以下是可选职责目录，由你根据本轮用户意图选择；页面名称和历史任务不强制当前任务类型，不要求一次跑完全部方法。\n'+Object.values(METHODS).join('\n\n')
-   : METHODS[method!];
+ if (conversational) return {...template,
+   version: `${template.version}+methods-on-demand-2026-09-08`,
+   system: `${template.system}\n\n${COMMON}`};
  return {...template, version: `${template.version}+${BUSINESS_METHOD_VERSION}`,
-   system: `${template.system}\n\n${COMMON}\n\n${body}`};
+   system: `${template.system}\n\n${COMMON}\n\n${METHODS[method!]}`};
 }

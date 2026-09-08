@@ -1,5 +1,5 @@
 import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
-import { withBusinessMethod } from "./business-methods";
+import { BUSINESS_METHOD_TEMPLATES, withBusinessMethod } from "./business-methods";
 import {MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE} from './templates/asset-processing';
 import {SCRIPT_SOURCE_SIMILARITY_TEMPLATE} from "./templates/script-source-similarity";
 import {COPILOT_ASSIST_TEMPLATE} from "./templates/copilot-assist";
@@ -133,6 +133,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CALIBRATION_SCORE_TEMPLATE,
   RESEARCH_GATHER_TEMPLATE,
   RESEARCH_PLAN_TEMPLATE,
+  ...BUSINESS_METHOD_TEMPLATES,
   RECONSTRUCT_PROJECT_TEMPLATE,
   MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE,
   SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
