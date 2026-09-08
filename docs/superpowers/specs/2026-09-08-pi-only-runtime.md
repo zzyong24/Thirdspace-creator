@@ -34,3 +34,18 @@ flowchart LR
 ## 已确认的协议边界
 
 模型网络迁移后，`ai` 与 `@ai-sdk/provider` 的消息类型、请求规范化、结构化校验和账本流编解码暂保留；这不等于彻底卸载所有 SDK 包。去掉这些协议依赖必须有等价旧摘要编译证据，不能在本轮把协议重写伪装成无风险清理。供应商直接依赖及多步策略引擎已退役，短节点调用由 Pi provider 执行。UI 的 `@ai-sdk/react` 不属于模型供应商或任务执行引擎。
+
+## 当前交付证据与明确保留项
+
+- 独立架构与旧任务升级边界评审：continuous_budget；Pi 适配、错误提示白名单和窄查询复核：chat_pi_execution。复核属于源码审查，不等同真机验收。
+- 已移除旧 deterministic/agentic executor、SDK 聊天多步流、无消费者的 runAgentNode/runTemplatedNode/tool-registry，以及旧供应商研究探针；删除只覆盖这些退役路径的测试，未声称等价 Pi 业务覆盖已建立。
+- 模型供应商依赖移除 anthropic、deepseek、openai、openai-compatible 和未使用的 Claude Agent SDK；Pi 支持三种文本/工具协议，向量走独立 HTTP。请求账本与 UI 协议依赖按上文明确保留。
+- 公开 CLI 仅只读查看任务与对话，没有重提生成、取消任务、改账号或读写私有数据库。截图聊天故障仍归 T-928，当前只收敛到任务提交前，新增阶段与机器码诊断；真实工具参数族均可编译。
+- 主仓 frontend 类型检查与 ai-worker 构建通过。未运行真实模型、业务测试套件、媒体操作或全局 reconcile；本轮没有重新打包、安装、推送或发布。
+- 过程工具的历史欠债：progress done 被已有 T-923 write_set 的 docs/verification/t923-* 拒绝（只允许完整路径或末尾 /**），尚未进入本任务转换。归 T-916 既有配置漂移范围；不绕过门卫、不伪记全局全绿，任务源码交付与此过程队列失败分别记录。
+
+### 合并后的源码交付（2026-09-08）
+
+最终装配提交 de5479b4；persistence-client.ts 从 11,157 行降到 5,998 行，backend/src/application 现有 43 个职责模块。根入口仍保留领域服务构造、宿主资源/凭据、端口绑定及原启动生命周期，不声称根入口已经很小。独立复核确认窄查询、账号归属、聊天提交及 automation 延迟接线保留；原驱动无 stop API，本次没有新增或伪造关闭句柄。
+
+最终集成 frontend tsc、ai-worker build、git diff --check 均退出 0；CodeGraph index 与 status 成功，2,677 文件、33,077 节点、77,765 边。业务自动测试、真实模型、安装验收与全局 reconcile 仍按用户授权暂缓，列作 accepted-risk，不能复用旧 SDK 测试声称 Pi 验收通过。Git 提交输出提示本机 lefthook 不在 PATH，本次没有伪记 hook 检查成功。T-930 按源码范围交付，T-928 聊天失败的安装现场诊断仍未闭环；T-915 全项目重构也不因此自动完成。
