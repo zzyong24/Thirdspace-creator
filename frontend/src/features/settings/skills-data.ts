@@ -146,6 +146,10 @@ export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
     name: "编导评分",
     purpose: "按 rubric 结合表现数据给作品自动打分。",
   },
+  "research.plan": {
+    name: "素材检索规划",
+    purpose: "结合主题与全文规划短查询，核对正文并整理带来源和用途的素材。",
+  },
   "research.gather": {
     name: "素材搜集",
     purpose: "围绕选题联网搜集论据与事实素材。",

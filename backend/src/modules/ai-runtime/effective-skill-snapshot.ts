@@ -232,8 +232,8 @@ export function requiredSkillIdsForTask(
       return mappingMissing(taskType, "chat surface 不在受控枚举内");
     }
     return surface === "topics" || surface === "project"
-      ? [CHAT_SURFACE_TO_SKILL[surface]!, "creatoros.guide"]
-      : [CHAT_SURFACE_TO_SKILL[surface]!];
+      ? [CHAT_SURFACE_TO_SKILL[surface]!, "creatoros.guide", "research.plan"]
+      : [CHAT_SURFACE_TO_SKILL[surface]!, "research.plan"];
   }
 
   return mappingMissing(taskType);

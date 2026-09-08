@@ -56,6 +56,7 @@ const REGISTERED_SKILL_IDS: ReadonlySet<string> = new Set([
   "calibration.diagnose",
   "calibration.score",
   "research.gather",
+  "research.plan",
   "reconstruct.project",
   "positioning.generate",
   "topic.enrich",

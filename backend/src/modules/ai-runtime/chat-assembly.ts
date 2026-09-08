@@ -48,7 +48,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 1) 页面层:surface → 基础 skill。
     const skillId = resolveSkillForSurface(chatContext.surface);
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
-    const { getEffectiveTemplate, getEffectiveTools, getTemplate, getTools, hasActiveEffectiveSkillSnapshot, } = await import("@creatoros/ai-worker");
+    const { getEffectiveTemplate, getEffectiveTools, getTemplate, getTools, hasActiveEffectiveSkillSnapshot, getActiveEffectiveSkillSnapshot, } = await import("@creatoros/ai-worker");
     const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
     const skill = hasEffectiveScope
         ? getEffectiveTemplate(skillId)
@@ -390,6 +390,13 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const verbatimSourceBlock = formatVerbatimSourceInventory(options.verbatimSources ?? []);
     // [T-386] 后台任务状态真值块(recentTasks 上方已 best-effort 读取;空列表 → 空串不注)。
     const taskTruthBlock = formatRecentTasksBlock(recentTasks, Date.now());
+    // 方法来自本轮冻结快照；旧任务缺新增 Skill 时保持旧上下文，不借当前配置补入。
+    const hasResearchTools = toolWhitelist.some(name => name === "material.gather" || name === "web.read");
+    const researchPlanAvailable = !hasEffectiveScope || getActiveEffectiveSkillSnapshot().skills.some(item => item.skillId === "research.plan");
+    const researchPlan = hasResearchTools && researchPlanAvailable
+        ? (hasEffectiveScope ? getEffectiveTemplate("research.plan") : getTemplate("research.plan"))
+        : null;
+    const researchPlanBlock = researchPlan ? [researchPlan.system, researchPlan.template].filter(Boolean).join("\n\n") : "";
     const system = isScriptPatchAction
         ? [
             "【局部改稿专用回合】",
@@ -402,6 +409,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         : [
             baseSystem,
             honestyBlock,
+            researchPlanBlock,
             coverPublicationReferenceBlock,
             skillsBriefBlock,
             currentAccountBlock,
@@ -436,7 +444,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         ? forcedToolSequence[0]
         : routedTool && toolWhitelist.includes(routedTool)
             ? routedTool
-            : effectiveFunctionKey && toolWhitelist.includes(effectiveFunctionKey)
+            : effectiveFunctionKey && effectiveFunctionKey !== "material.gather" && toolWhitelist.includes(effectiveFunctionKey)
                 ? effectiveFunctionKey
                 : undefined;
     return {

@@ -49,6 +49,7 @@ import { PLATFORM_ADAPT_TEMPLATE } from "./templates/platform-adapt";
 import { REVIEW_INSIGHTS_TEMPLATE } from "./templates/review-insights";
 import { CALIBRATION_DIAGNOSE_TEMPLATE } from "./templates/calibration-diagnose";
 import { CALIBRATION_SCORE_TEMPLATE } from "./templates/calibration-score";
+import { RESEARCH_PLAN_TEMPLATE } from "./templates/research-plan";
 import { RESEARCH_GATHER_TEMPLATE } from "./templates/research-gather";
 import { RECONSTRUCT_PROJECT_TEMPLATE } from "./templates/reconstruct-project";
 import { POSITIONING_GENERATE_TEMPLATE } from "./templates/positioning-generate";
@@ -131,6 +132,7 @@ const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
   CALIBRATION_DIAGNOSE_TEMPLATE,
   CALIBRATION_SCORE_TEMPLATE,
   RESEARCH_GATHER_TEMPLATE,
+  RESEARCH_PLAN_TEMPLATE,
   RECONSTRUCT_PROJECT_TEMPLATE,
   MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE,
   SCRIPT_SOURCE_SIMILARITY_TEMPLATE,

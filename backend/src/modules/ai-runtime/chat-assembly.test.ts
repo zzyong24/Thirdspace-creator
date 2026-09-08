@@ -1711,3 +1711,19 @@ it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{
  const prepared=await runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,durableChatSnapshot("a","显式方法")));
  expect(prepared.assembly.system).toContain("显式方法");expect(prepared.assembly.system).not.toContain("外层方法");
 });
+
+it("素材快捷入口允许先读上下文，并注入当前冻结的检索规划覆写", async () => {
+ const {deps}=makeDeps();
+ const snapshot=durableChatSnapshot("acct-current","本轮方法");
+ snapshot.skills.push({skillId:"research.plan",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"本账号检索规划覆写",template:"本账号查询交付方法",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
+ const assembled=await runWithEffectiveSkillSnapshot(snapshot,()=>prepareChatAssembly(ctx,{surface:"topics",functionKey:"material.gather"},deps));
+ expect(assembled.forcedTool).toBeUndefined();
+ expect(assembled.system).toContain("本账号检索规划覆写");
+ expect(assembled.system).toContain("本账号查询交付方法");
+});
+it("旧冻结快照缺检索规划时不补入当前方法，也不阻断素材回合",async()=>{
+ const {deps}=makeDeps();
+ const assembled=await runWithEffectiveSkillSnapshot(durableChatSnapshot("acct-current","旧方法"),()=>prepareChatAssembly(ctx,{surface:"topics",functionKey:"material.gather"},deps));
+ expect(assembled.system).not.toContain("主题驱动素材调研方法");
+ expect(assembled.forcedTool).toBeUndefined();
+});

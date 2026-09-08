@@ -143,18 +143,21 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "review" })).toEqual([
       "chatbox.review",
+      "research.plan",
     ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "topics" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
+      "research.plan",
     ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "project" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
+      "research.plan",
     ]);
     expect(
       requiredSkillIdsForTask("chat.sync", { surface: "knowledge-distill" }),
-    ).toEqual(["chatbox.distill"]);
+    ).toEqual(["chatbox.distill", "research.plan"]);
     for (const surface of [
       "calibration",
       "positioning",
