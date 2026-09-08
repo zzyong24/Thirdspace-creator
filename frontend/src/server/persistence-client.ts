@@ -7442,16 +7442,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     );
   }
 
-  // 所有 active account 的 system job 已 ensure 后再启动唯一 driver，使启动恢复不会
-  // 因 intelligence.sync 尚未创建而漏掉本次补跑。
-  // [T-712] 真实剪辑回归会复制生产 DB 到临时目录，并通过同一 transport 跑当前模型。
-  // 回归进程不应顺带启动自动化采集；生产默认不变，只有显式测试环境变量才关闭 driver。
-  if (process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
-    void startUnifiedAutomationDriver().catch((e) =>
-      console.error("[automation-driver] 启动失败:", e),
-    );
-  }
-
   // [T-050] canonical 通知种子已退役(demo 文案指向已删除的演示项目);通知全部
   // 来自运行时真实事件。
 
@@ -10849,6 +10839,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,error instanceof Error?error.name:"UnknownError"),
   });
   if(stoppingPreparation)await recoveryWake.stop();else recoveryWake.start();
+
+  // 所有模型、每日任务回执与恢复消费者装配完成后才启动自动化，避免首轮 tick 读取未初始化服务。
+  if (!stoppingPreparation && process.env.CREATOROS_DISABLE_BACKGROUND_DRIVERS !== "1") {
+    void startUnifiedAutomationDriver().catch(error =>
+      console.error("[automation-driver] 启动失败:", error),
+    );
+  }
+
 
   if(modelWorker)preparationRecovery=Promise.all([
     transcribeBusiness.recoverQueued(
