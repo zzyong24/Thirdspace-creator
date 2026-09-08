@@ -16,8 +16,8 @@ export interface ChatIngestionToolPorts {
 const names=new Set(['material.screenshot','project.transcribe','intelligence.douyin.share']);
 /** 既有截图/采集服务的持久工具入口；不改变候选采纳和采集任务归属。 */
 export function createChatIngestionTaskToolHost(reader:Pick<ReturnType<typeof createChatHostContextReader>,'read'>,ports:ChatIngestionToolPorts):NonNullable<ChatWorkerDispatcherDeps['resolveTools']>{
- async function current(ctx:RequestContext,execution:ExecutionRef,signal:AbortSignal){
-  signal.throwIfAborted();const restored=await reader.read(execution);signal.throwIfAborted();
+ async function current(ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal){
+  signal?.throwIfAborted();const restored=await reader.read(execution);signal?.throwIfAborted();
   if(!ctx.accountId||restored.context.userId!==ctx.userId||restored.context.accountId!==ctx.accountId)throw Error('采集工具归属已变化');
   return restored;
  }
@@ -33,15 +33,16 @@ export function createChatIngestionTaskToolHost(reader:Pick<ReturnType<typeof cr
     const invoke=async<T>(work:()=>Promise<T>)=>{try{scope.signal.throwIfAborted();const value=await work();scope.signal.throwIfAborted();return value;}catch(error){failure=error;throw error;}};
     const tools=buildChatTools([definition.name],{
      projectId:restored.hostContext.chatContext.projectId,
-     captureScreenshot:data=>invoke(()=>ports.captureScreenshot(restored.context,{...data,signal:scope.signal})),
-     dispatchProjectTranscribe:async data=>{
+     humanizeError:()=>"采集操作未完成，请查看原任务状态。",
+     captureScreenshot:(data:Parameters<ChatToolDeps["captureScreenshot"]>[0])=>invoke(()=>ports.captureScreenshot(restored.context,{...data,signal:scope.signal})),
+     dispatchProjectTranscribe:async (data:Parameters<ChatToolDeps["dispatchProjectTranscribe"]>[0])=>{
       const projectId=data.projectId?.trim()||restored.hostContext.chatContext.projectId;
       if(!projectId)return {taskId:null,projectId:null,error:'请先选择需要转写的作品。'};
       const result=await invoke(()=>ports.dispatchProjectTranscribe(restored.context,{projectId,attemptId:`chat-transcribe:${scope.callId}`}));
       return {...result,projectId,error:null};
      },
-     dispatchDouyinShare:async data=>({...await invoke(()=>ports.dispatchDouyinShare(restored.context,data)),transcribe:data.transcribe,error:null}),
-    } as ChatToolDeps);
+     dispatchDouyinShare:async (data:Parameters<NonNullable<ChatToolDeps["dispatchDouyinShare"]>>[0])=>({...await invoke(()=>ports.dispatchDouyinShare(restored.context,data)),transcribe:data.transcribe,error:null}),
+    } as unknown as ChatToolDeps);
     const tool=tools[definition.name]!,native=getChatToolNativeExecutor(tool);
     if(!native)throw Error('采集工具执行入口缺失');
     const data=await native(input,{toolCallId:scope.toolCallId,messages:[],abortSignal:scope.signal} as never);

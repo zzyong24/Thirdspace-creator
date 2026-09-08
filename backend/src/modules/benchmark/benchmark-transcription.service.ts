@@ -53,7 +53,7 @@ export function createBenchmarkTranscriptionService(db:Db,deps:BenchmarkTranscri
  async function consume(claim:PersistentTaskClaim){
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const ctx:RequestContext={userId:claim.task.userId,accountId:claim.task.accountId,requestId:`benchmark-transcribe:${claim.task.id}`,source:'user'};
-  const input=benchmarkTranscribeTaskInputSchema.parse((claim.task.payload as Record<string,unknown>).modelInput);
+  const input=await leases.withLease(ref,"admission",async({task})=>benchmarkTranscribeTaskInputSchema.parse((task.payload as Record<string,unknown>).modelInput));
   let checking=false,finished=false;
   const verify=()=>leases.withLease(ref,'admission',async scope=>{shutdown.signal.throwIfAborted();return bindResource(scope,input.awemeId);});
   const timer=setInterval(()=>{if(checking||finished)return;checking=true;void verify().then(()=>tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300})).catch(()=>{}).finally(()=>{checking=false;});},10000);

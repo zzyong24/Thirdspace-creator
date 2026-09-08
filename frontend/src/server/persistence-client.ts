@@ -446,7 +446,7 @@ import {
   storyboardFromContentData,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { createAssetBusinessExecutionService, runAssetGenerate } from "@creatoros/backend/modules/ai-runtime";
+import { createAssetBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
 import {createCoverBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
 import {createExecutionCoverService} from "@creatoros/backend/modules/execution";
@@ -1750,7 +1750,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     createNotificationsService(notificationsRepo, deps),
   );
 
-  const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime}=createKnowledgeApplication(db,deps,{
+  const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
     resolveEmbedSpec:c=>resolveEmbedSpec(c),
     embedTexts:(c,spec,texts)=>embedTexts(c,spec,texts),
   });
@@ -4891,7 +4891,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const scheduledSignals=new AsyncLocalStorage<AbortSignal>();
   const checkScheduledSignal=()=>scheduledSignals.getStore()?.throwIfAborted();
   const scheduledFlywheel=createScheduledFlywheelExecutionService(db,{
-    entryPath:resolveFlywheelWorkerPath,resolveModelSpec,
+    entryPath:resolveFlywheelWorkerPath,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
     // 收藏每轮 3 条 × 至多 29 个知识分块；预算同时覆盖 ASR、判库与结构修复。
     // 每轮最多 3 条收藏；覆盖音频分片、知识分块和有界修复，仍服从 token/截止时间。
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
@@ -7499,25 +7499,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 的跳过 → 幂等,重启不重复动)。renameTitleSystem 只改 title + updatedAt(不动 content/
     // revision/status)。[T-332 S2 · ISO-06] 种子巡检跨号扫描走显式 *System 方法(组合根
     // 种子维护语义),不是隐式全量读退化。
-    const legacyPrefix = WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX;
-    const canonKnowledgeRows =
-      await knowledgeRepo.listAllAccountsSystem(localUser.id);
-    let renamed = 0;
-    for (const row of canonKnowledgeRows) {
-      const meta = row.sourceMetadata as { origin?: unknown } | null;
-      const isSeed =
-        typeof meta === "object" &&
-        meta !== null &&
-        (meta as { origin?: unknown }).origin === "win-video-tutor";
-      if (!isSeed) continue;
-      if (!row.title.startsWith(legacyPrefix)) continue;
-      await knowledgeRepo.renameTitleSystem(
-        localUser.id,
-        row.id,
-        row.title.slice(legacyPrefix.length),
-      );
-      renamed += 1;
-    }
+    const renamed=await repairSeedTitles(localUser.id,"win-video-tutor",WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);
     if (renamed > 0) {
       console.log(
         `[seed] win-video-tutor ${renamed} 条存量标题已去「Win 短视频私教 · 」前缀`,
@@ -8370,7 +8352,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const task=await aiService.getTask(c,id);signal.throwIfAborted();
       if(task.taskType==="asset.generate"){
         const prepared=await assetBusiness.prepare(c,id,signal);
-        if(prepared.legacy)throw new Error("聊天素材任务存在旧提交事实，须先核对原结果");
         return prepared;
       }
       return businessExecution.prepare(c,id,signal);

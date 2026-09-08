@@ -1,7 +1,8 @@
 import type {RequestContext} from "@creatoros/contract";
 import {buildTrendQuery,parseFeed} from "@creatoros/ai-worker";
 import {assertUrlAllowed} from "@creatoros/ai-worker/browser/url-guard";
-import type {TrendSourceProjection} from "./trend-source-signals";
+import type {EnabledTrendSource} from "../trend-sources";
+type TrendSourceProjection=Pick<EnabledTrendSource,"id"|"name"|"url"|"sourceType"|"domain">;
 
 export interface ChatTrendReadDeps {
  listEnabledSources(context:RequestContext):Promise<TrendSourceProjection[]>;

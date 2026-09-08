@@ -14,7 +14,8 @@ import {
   renderSignalQualityBrief,
 } from "./signal-quality";
 import { normalizeTopicTaskBasis } from "./topic-basis";
-import type { TrendSourceProjection } from "./trend-source-signals";
+import type {EnabledTrendSource} from "../trend-sources";
+type TrendSourceProjection=Pick<EnabledTrendSource,"id"|"name"|"url"|"sourceType"|"domain">;
 import type { StructuredBusinessAdapter } from "./structured-business-execution.service";
 
 export {

@@ -70,5 +70,16 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
     },
   };
 
-  return {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime};
+  async function repairSeedTitles(userId:string,origin:string,prefix:string){
+    if(!prefix)throw new Error("种子标题前缀不可为空");
+    const rows=await knowledgeRepo.listAllAccountsSystem(userId);let renamed=0;
+    // SEMANTIC_BOUNDARY_ALLOW: 仅依据已登记种子来源移除旧展示前缀，不判断内容语义。
+    for(const row of rows){
+      const meta=row.sourceMetadata as {origin?:unknown}|null;
+      if(!meta||meta.origin!==origin||!row.title.startsWith(prefix))continue;
+      await knowledgeRepo.renameTitleSystem(userId,row.id,row.title.slice(prefix.length));renamed++;
+    }
+    return renamed;
+  }
+  return {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles};
 }

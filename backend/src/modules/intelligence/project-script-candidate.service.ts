@@ -35,7 +35,7 @@ export interface ProjectScriptArtifactPort {
   listVersions(
     ctx: RequestContext,
     artifactId: string,
-  ): Promise<Array<{ id: string; aiTaskId: string | null; contentData?:Record<string,unknown>|null }>>;
+  ): Promise<Array<{ id: string; aiTaskId: string | null; contentData?:unknown }>>;
   createVersion(
     ctx: RequestContext,
     artifactId: string,
@@ -216,7 +216,7 @@ export function createProjectScriptCandidateService(deps: {
       const artifacts = await deps.artifacts.listProjectArtifacts(ctx,input.projectId);
       let script = artifacts.find(artifact=>artifact.artifactType==="output_script"||artifact.artifactType==="master_script");
       if(script){const versions=await deps.artifacts.listVersions(ctx,script.id);const existing=versions.find(version=>version.aiTaskId===task.id);
-       if(existing){const recorded=existing.contentData?.similarityRisk;if(recorded!=="low"&&recorded!=="medium")throw new IntelligenceConflictError("已采纳版本缺少相似度回执");return {artifactVersionId:existing.id,similarityRisk:recorded,referenceIds:checkpoint.referenceIds};}
+       if(existing){const recorded=existing.contentData&&typeof existing.contentData==="object"&&!Array.isArray(existing.contentData)?(existing.contentData as Record<string,unknown>).similarityRisk:undefined;if(recorded!=="low"&&recorded!=="medium")throw new IntelligenceConflictError("已采纳版本缺少相似度回执");return {artifactVersionId:existing.id,similarityRisk:recorded,referenceIds:checkpoint.referenceIds};}
       }
       const contexts = await deps.references.getSourceContexts(ctx, {
         projectId: input.projectId,

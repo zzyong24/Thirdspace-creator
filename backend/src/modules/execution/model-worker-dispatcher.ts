@@ -340,7 +340,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(port==="resolveModelCredential"){
         const input=workerPortInputSchemas.resolveModelCredential.parse(raw);
         const modelInput=await calls.readTaskContext(ref);
-        if(modelInput.kind==="transcribe.douyin"||input.capability!==modelInput.capability)throw new Error("MODEL_CAPABILITY_MISMATCH");
+        if(!("capability" in modelInput)||input.capability!==modelInput.capability)throw new Error("MODEL_CAPABILITY_MISMATCH");
         const scope=await leases.withLease(ref,"admission",async({context,task})=>({context,aiTaskId:task.ownerId}));
         const credential=workerModelSpecSchema.parse(await deps.resolveModelCredential(scope.context,input.capability,{aiTaskId:scope.aiTaskId,executionTaskId:ref.executionTaskId}));
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。

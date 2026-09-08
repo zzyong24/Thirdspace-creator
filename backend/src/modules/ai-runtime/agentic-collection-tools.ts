@@ -26,7 +26,7 @@ export function createAgenticCollectionTools(ports:{forTask(ctx:RequestContext,p
      return agenticToolOutcomeSchema.parse({status:"ok",summary:`发现 ${result.targets.length} 个可采集目标`,data:result,evidence:result.targets.map(target=>({entityId:target.id,title:target.label})),error:null,continuation:null,sideEffect:"none"});
     }
     const args=definition.name==="collect.status"?status.parse(input):run.parse(input);
-    const result="runId" in args?await collection.readCollection(args,scope.signal):await collection.runCollection(args,scope.signal);
+    const result="runId" in args?await collection.readCollection(status.parse(args),scope.signal):await collection.runCollection(args,scope.signal);
     scope.signal.throwIfAborted();
     const summary=result.ok?`采集完成：新增 ${result.itemsNew}、更新 ${result.itemsUpdated}`:"pending" in result?`采集任务${result.status}，尚未完成，请使用collect.status继续观察`:"采集需要重新登录，请处理登录后查看原任务";
     return agenticToolOutcomeSchema.parse({status:"ok",summary,data:{targetId:args.targetId,...result,...("observation" in args?{observation:args.observation}:{})},evidence:result.ok?[{entityId:args.targetId,title:summary}]:[],error:null,continuation:null,sideEffect:definition.effect});

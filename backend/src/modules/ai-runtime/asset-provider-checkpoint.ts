@@ -19,7 +19,7 @@ export function generationFingerprint(input: {
   aspectRatio?: string;
   durationSec?: number;
   resolution?: string;
-  spec: {provider:string;baseUrl:string;model:string;serviceId?:string};
+  spec: {provider:string;baseUrl:string|null;model:string;serviceId?:string};
 }): string {
   return `sha256:${createHash("sha256")
     .update(
