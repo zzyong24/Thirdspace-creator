@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 //   - grounding=unavailable → 头部黄条明确浏览器搜索失败,绝不拿模型记忆冒充联网结果。
 //   - 带 sourceUrl 的条目 → 可点域名链接(新窗打开真实来源)。
 //   - 无 sourceUrl 的条目 → 「需核实」徽标(非查证过的真信源)。
-//   - grounding=web → 不显黄条,头部文案「联网找到资料」。
+//   - grounding=web → 不显黄条,头部文案「检索返回线索」。
 // [T-813] 搜索结果只是线索：只能阅读全文，读成功后才由 web.read 卡保存。
 
 import { ChatGatherCard } from "./chat-gather-card";
@@ -69,7 +69,7 @@ describe("ChatGatherCard — T-084a/T-684 诚实失败", () => {
     // 链接文案是去 www 的域名。
     expect(link?.textContent).toContain("blog.example.com");
     // web 头部文案。
-    expect(screen.getByText(/联网找到资料/)).toBeTruthy();
+    expect(screen.getByText(/检索返回线索/)).toBeTruthy();
   });
 
   it("grounding 缺省 → 默认 unavailable(显黄条,诚实失败)", () => {

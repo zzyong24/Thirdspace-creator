@@ -77,7 +77,7 @@ export function ChatGatherCard({
         </div>
       ) : null}
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        {grounding === "web" ? "联网找到资料" : "未找到联网资料"} · {items.length} 条 · 先阅读正文
+        {grounding === "web" ? "检索返回线索" : "未找到联网线索"} · {items.length} 条 · 待读取正文并核对相关性
       </span>
       <ol className="flex flex-col gap-1.5">
         {items.map((it, i) => {

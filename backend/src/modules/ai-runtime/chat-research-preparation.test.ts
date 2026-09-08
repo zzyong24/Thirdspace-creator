@@ -1,9 +1,9 @@
 import {expect,it} from "vitest";
 import {prepareChatResearchQuery,projectChatSearchResults} from "./chat-research-preparation";
-it("保留原用户查询、选区兜底与高优先素材词，不发明搜索内容",()=>{
+it("显式查询不被资料词污染，空查询仅使用真实主题兜底",()=>{
  const context={selectionTitle:"原主题",userMaterialQueryTerms:["原资料实体","原资料术语"]};
- expect(prepareChatResearchQuery(context,{query:"  用户  查询\n"})).toBe("用户 查询 原资料实体 原资料术语");
- expect(prepareChatResearchQuery(context,{})).toBe("原主题 原资料实体 原资料术语");
+ expect(prepareChatResearchQuery(context,{query:"  用户  查询\n"})).toBe("用户 查询");
+ expect(prepareChatResearchQuery(context,{})).toBe("原主题");
  expect(prepareChatResearchQuery({selectionTitle:"",userMaterialQueryTerms:[]},{})).toBe("");
 });
 it("搜索卡仅使用真实 URL、标题和摘要，空结果保持空",()=>{
