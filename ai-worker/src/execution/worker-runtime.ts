@@ -93,6 +93,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       signal.throwIfAborted();
       const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      if(input.kind==="scheduled.flywheel")throw new GenerationFailure("failed","FLYWHEEL_STAGE_AUTHORIZATION_REQUIRED");
       if(input.kind==="transcribe.douyin"){
         if(!deps.runTranscribe)throw new GenerationFailure("waiting_user","TRANSCRIBE_WORKER_UNAVAILABLE");
         const result=await deps.runTranscribe(input,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));

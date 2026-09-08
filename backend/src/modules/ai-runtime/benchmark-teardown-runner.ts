@@ -1,3 +1,4 @@
+import {ScheduledFlywheelSuspended} from "./scheduled-flywheel-suspension";
 import type { RequestContext, BenchmarkTeardownRef } from "@creatoros/contract";
 import type { ModelSpec, BenchmarkTeardownOutput } from "@creatoros/ai-worker";
 import type { PendingViralWork } from "../benchmark";
@@ -263,6 +264,7 @@ export async function runBenchmarkTeardown(
       await deps.markTeardownDone(ctx, work.id);
       worksProcessed += 1;
     } catch (err) {
+      if(err instanceof ScheduledFlywheelSuspended)throw err;
       // 单条失败（AI 拆解/转化/标记任一）→ 跳过，不标 done（下次重试），不崩整批。
       // eslint-disable-next-line no-console
       console.error(

@@ -157,3 +157,5 @@ export * from "./asset-processing-business-adapter";
 export {createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission} from "./topic-preference-business-adapter";
 
 export {createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator} from "./script-similarity-business-adapter";
+export {createScheduledFlywheelExecutionService,type ScheduledFlywheelScope,type ScheduledFlywheelCollector} from './scheduled-flywheel-execution.service';
+export {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';

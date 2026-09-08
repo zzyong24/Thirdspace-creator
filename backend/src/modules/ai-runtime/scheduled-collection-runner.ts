@@ -1,3 +1,4 @@
+import {ScheduledFlywheelSuspended} from "./scheduled-flywheel-suspension";
 import type { RequestContext } from "@creatoros/contract";
 
 // 调度采集 runner(T-007 D3,SPEC 2026-06-30 §3/§5/§6,已 re-gate PASS)。
@@ -191,6 +192,7 @@ export async function runScheduledCollection(
   const label = SOURCE_LABEL[sourceKind] ?? sourceKind;
 
   // finally 用它落 job_run 终态;三条路径各自赋值(默认 failed,防"忘记赋值"漏成功)。
+  let suspended=false;
   let runStatus: "succeeded" | "failed" | "needs_reconnect" = "failed";
   let runError: string | null = null;
   let itemsNew = 0;
@@ -263,6 +265,7 @@ export async function runScheduledCollection(
     runStatus = "succeeded";
     runError = null;
   } catch (err) {
+    if(err instanceof ScheduledFlywheelSuspended){suspended=true;throw err;}
     if (deps.isNotLoggedInError(err)) {
       // 未登录 → 不当普通失败(§6):job_run 标 needs_reconnect + 提示文案。task 也置 failed
       // (一个诚实终态;D4 再接"停后续到点触发" + 「登录抖音」恢复,此处只正确置态)。
@@ -292,7 +295,7 @@ export async function runScheduledCollection(
     // gate finding 3:job_run 终态 + finished_at + items 回填一律在 finally 落,任何异常路径
     // job_run 都不悬挂 running。jobRunId 缺失(异常输入)→ 跳过回填(无处可写),但 task 已在
     // try/catch 里落终态。best-effort:回填失败不再抛(否则 fire-and-forget 崩服务)。
-    if (jobRunId) {
+    if (jobRunId && !suspended) {
       try {
         await deps.runs.updateRun(ctx, jobRunId, {
           status: runStatus,
