@@ -47,7 +47,6 @@ export * from "./local-name-search";
 // [T-256a] 环境感知扩展:工具探测纯函数(白名单/防注入/版本解析)—— 端口层与工具门共用。
 export * from "./local-env-probe";
 export * from "./comment-qa-sift-runner";
-export * from "./embed";
 export * from "./error-diagnostics";
 // [T-513] account-scoped immutable Effective Skill snapshot：task→skill 确定性映射、
 // official+overlay 合并、server platform policy 注入与 256 KiB 序列化门。
@@ -159,3 +158,5 @@ export {createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission} fr
 export {createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator} from "./script-similarity-business-adapter";
 export {createScheduledFlywheelExecutionService,type ScheduledFlywheelScope,type ScheduledFlywheelCollector} from './scheduled-flywheel-execution.service';
 export {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
+
+export {createEmbeddingIoService} from "./embedding-io.service";

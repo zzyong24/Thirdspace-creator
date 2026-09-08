@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync,mkdirSync,copyFileSync } from "node:fs";
 import { join,dirname } from "node:path";
-const workerEntries=["execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs"];
+const workerEntries=["execution-worker.cjs","agentic-worker.cjs","intelligence-generation-worker.cjs","intelligence-transcript-worker.cjs","embedding-worker.cjs"];
 export function assertExecutionWorkerRuntime(runtimeRoot){
   const entry=join(runtimeRoot,"frontend/runtime/execution-worker.cjs");
   for(const filename of workerEntries){

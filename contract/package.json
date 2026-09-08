@@ -11,6 +11,10 @@
     "./execution-worker": {
       "types": "./src/internal/execution-worker.ts",
       "default": "./src/internal/execution-worker.ts"
+    },
+    "./embedding-io": {
+      "types": "./src/internal/embedding-io.ts",
+      "default": "./src/internal/embedding-io.ts"
     }
   },
   "scripts": {

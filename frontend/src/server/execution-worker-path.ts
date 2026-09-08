@@ -22,3 +22,4 @@ export function resolveIntelligenceGenerationWorkerPath(cwd=process.cwd(),deskto
 export function resolveIntelligenceTranscriptWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){
   return resolveWorkerPath("intelligence-transcript-worker.cjs","INTELLIGENCE_TRANSCRIPT_WORKER_BUILD_MISSING",cwd,desktop);
 }
+export function resolveEmbeddingWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){return resolveWorkerPath("embedding-worker.cjs","EMBEDDING_WORKER_BUILD_MISSING",cwd,desktop);}
