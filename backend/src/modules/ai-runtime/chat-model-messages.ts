@@ -3,6 +3,8 @@ import {projectChatHistory,formatChatContextLog,resolveToolResultKeepTurns,resol
 /** 只处理喂模型的副本：先清理悬空工具，再按原规则截窗及转换附件，持久消息保持原样。 */
 export async function prepareChatModelMessages(messages:UIMessage[],assembly:{system:string;tools:Record<string,unknown>}){
  const sanitized=dropUnavailableScriptPatchParts(dropAbandonedApprovalParts(messages),Boolean(assembly.tools["script.patch"]));
+ // 新运行时在每次供应商调用时投影，冻结原历史供history.read，不在提交前销毁正文。
+ if(assembly.tools["history.read"] && JSON.stringify(sanitized).length <= 36_000_000)return convertToModelMessages(sanitized,{ignoreIncompleteToolCalls:true});
  const projection=projectChatHistory(sanitized,{
   systemText:assembly.system,
   keepToolResultTurns:resolveToolResultKeepTurns(process.env),

@@ -1,3 +1,5 @@
+import { pageChatToolResult } from "../ai/chat-tool-result-page";
+import { createChatSkillLibrary } from "./chat-skill-library";
 import {createChatReadToolHost} from "./chat-read-tool-host";
 import type {ChatWorkerDispatcherDeps} from "../execution/model-worker-dispatcher";
 import type { RequestContext } from "@creatoros/contract";
@@ -12,7 +14,7 @@ import { prepareChatToolDefinitions } from "./chat-tool-definitions";
 import { canonicalJson } from "../ai/canonical-json";
 
 /** 由真实租约reader恢复；只构造冻结清单中的短读取，不重新装配创作上下文。 */
-export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,readers:ContextReaders) {
+export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createChatHostContextReader>,"read"> & Partial<Pick<ReturnType<typeof createChatHostContextReader>,"readToolResult">>,readers:ContextReaders) {
  return async (ctx:RequestContext,execution:ExecutionRef,signal?:AbortSignal)=>{
   const expected={userId:ctx.userId,accountId:ctx.accountId};
   signal?.throwIfAborted();
@@ -32,7 +34,11 @@ export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createC
     readCreatorOsGuide:guide?()=>guide:undefined,
    });
    // 仅暴露经过固定短读取白名单的工具；其它工具闭包不会返回或执行。
-   const tools=buildChatTools(definitions.map(tool=>tool.name),bindings as ChatToolDeps);
+   const tools=buildChatTools(definitions.map(tool=>tool.name),{...bindings,readHistory:async(input:{messageIndex?:number;offset?:number})=>{
+    if(input.messageIndex===undefined)return pageChatToolResult("history-catalog",modelInput.messages.map((message,messageIndex)=>({messageIndex,role:message.role,characters:JSON.stringify(message).length})),input.offset);
+    if(!Number.isSafeInteger(input.messageIndex)||input.messageIndex<0||input.messageIndex>=modelInput.messages.length)throw Error("HISTORY_INDEX_OUT_OF_RANGE");
+    return pageChatToolResult(`message:${input.messageIndex}`,modelInput.messages[input.messageIndex],input.offset);
+   },skillLibrary:createChatSkillLibrary(hostContext.skillSnapshot,context),readToolResult:reader.readToolResult?input=>reader.readToolResult!({...execution},input):undefined} as ChatToolDeps);
    const current=(await prepareChatToolDefinitions(tools)).definitions;
    if(canonicalJson(current)!==canonicalJson(definitions))throw new Error("读取工具定义与任务快照不符");
    signal?.throwIfAborted();
@@ -43,7 +49,7 @@ export function createChatReadToolResolver(reader:Pick<ReturnType<typeof createC
 
 /** 提供动态调度器的短读取部分；其它工具必须另外装配，调度器仍验证完整名单。 */
 export function createChatReadTaskToolHost(
- reader:Pick<ReturnType<typeof createChatHostContextReader>,"read">,
+ reader:Pick<ReturnType<typeof createChatHostContextReader>,"read"> & Partial<Pick<ReturnType<typeof createChatHostContextReader>,"readToolResult">>,
  readers:ContextReaders,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
  const resolve=createChatReadToolResolver(reader,readers);

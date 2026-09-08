@@ -1,4 +1,5 @@
-import { and,eq,aiTasks,type Db } from "@creatoros/backend";
+import { pageChatToolResult } from "./chat-tool-result-page";
+import { and,eq,aiTasks,executionCalls,type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError } from "../execution/execution.errors";
@@ -8,7 +9,30 @@ const object=(value:unknown):Record<string,unknown>=>value && typeof value==="ob
 /** 只由后端在当前租约下恢复工具上下文；不把宿主快照作为Worker或模型输入。 */
 export function createChatHostContextReader(db:Db,deps:{now?:()=>string}={}) {
   const leases=createExecutionLeaseService(db,deps);
-  return {read:(ref:ExecutionRef,mode:"admission"|"settlement"="admission")=>leases.withLease(ref,mode,async({tx,task,context})=>{
+  return {
+    readToolResult: (ref:ExecutionRef,input:{toolCallId?:string;offset?:number})=>leases.withLease(ref,"admission",async({tx,task,context})=>{
+      const modelInput=chatWorkerInputSchema.parse(object(task.payload).modelInput);
+      if(task.kind!=="ai_task" || modelInput.userId!==context.userId || modelInput.accountId!==context.accountId)throw new ConflictError("工具结果账号与任务不符");
+      const rows=await tx.select({resultText:executionCalls.resultText}).from(executionCalls).where(and(eq(executionCalls.executionTaskId,task.id),eq(executionCalls.kind,"tool"),eq(executionCalls.status,"settled")));
+      if(input.toolCallId===undefined){
+        const catalog:Array<{toolCallId:string;toolName:string}>=[];
+        for(const row of rows){try{const r=object(JSON.parse(row.resultText??"null"));if(r.kind==="tool" && typeof r.toolCallId==="string" && typeof r.toolName==="string")catalog.push({toolCallId:r.toolCallId,toolName:r.toolName});}catch{}}
+        for(const message of modelInput.messages){if(message.role!=="tool" || !Array.isArray(message.content))continue;for(const raw of message.content){const r=object(raw);if(r.type==="tool-result" && typeof r.toolCallId==="string" && typeof r.toolName==="string" && !catalog.some(item=>item.toolCallId===r.toolCallId))catalog.push({toolCallId:r.toolCallId,toolName:r.toolName});}}
+        return pageChatToolResult("tool-result-catalog",catalog,input.offset);
+      }
+      let output:unknown,found=false;
+      for(const row of rows){
+        let receipt:Record<string,unknown>;try{receipt=object(JSON.parse(row.resultText??"null"));}catch{continue;}
+        if(receipt.kind==="tool" && receipt.toolCallId===input.toolCallId){output=receipt.output;found=true;break;}
+      }
+      if(!found)for(const message of modelInput.messages){
+        if(message.role!=="tool" || !Array.isArray(message.content))continue;
+        for(const raw of message.content){const part=object(raw);if(part.type==="tool-result" && part.toolCallId===input.toolCallId){output=part.output;found=true;}}
+      }
+      if(!found)throw new ConflictError("当前任务没有该已结算工具结果");
+      return pageChatToolResult(input.toolCallId,output,input.offset);
+    }),
+    read:(ref:ExecutionRef,mode:"admission"|"settlement"="admission")=>leases.withLease(ref,mode,async({tx,task,context})=>{
     const payload=object(task.payload),modelInput=chatWorkerInputSchema.parse(payload.modelInput);
     const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!)));
     const input=object(business?.inputData);

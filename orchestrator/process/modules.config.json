@@ -635,7 +635,7 @@
         "ai-worker/**",
         "contract/**",
         "frontend/src/server/**",
-        "docs/verification/t923-*"
+        "docs/verification/t923-continuous-agent.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -663,7 +663,7 @@
       ],
       "write_set": [
         "frontend/**",
-        "docs/verification/t924-*"
+        "docs/verification/t924-navigation-cache.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -693,7 +693,7 @@
       "write_set": [
         "frontend/**",
         "backend/**",
-        "docs/verification/t925-*"
+        "docs/verification/t925-change-cache.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -801,6 +801,42 @@
         "design-review": []
       },
       "acceptance_note": "用户暂缓业务测试和全局reconcile，真实大数据切换待用户验证。"
+    },
+    "T-932": {
+      "task_id": "T-932",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build",
+        "acceptance"
+      ],
+      "read_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/superpowers/specs/2026-09-08-nomifun-skill-execution.md",
+        "docs/research/2026-09-08-nomifun-skill-execution-comparison.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/verification/**"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": "pnpm -C frontend typecheck",
+        "acceptance": "pnpm -C ai-worker build"
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "acceptance_note": "用户授权逐项对照并落地；编译/无IO探针可执行，业务自动测试、付费模型与全局reconcile仍按既有授权暂缓，不据此宣称模型质量通过。"
     }
   }
 }

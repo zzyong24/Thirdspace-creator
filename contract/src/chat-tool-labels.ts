@@ -19,6 +19,9 @@ export interface ChatToolLabel {
 
 /** 全部 chatbox 白名单工具的中文名 + 一句话用途。 */
 export const CHAT_TOOL_LABELS: Readonly<Record<string, ChatToolLabel>> = {
+  "history.read": { name: "读取对话原文", purpose: "按页读回本轮已冻结的历史消息" },
+  "tool.result.read": { name: "继续读取执行结果", purpose: "分页读取已完成工具的原始回执，不重复执行" },
+  "skill.read": { name: "读取执行方法", purpose: "按需读取本轮 Skill 方法与后续页面" },
   "creatoros.guide": {
     name: "CreatorOS 产品说明",
     purpose: "按需读取 CreatorOS 当前官方产品事实与边界",

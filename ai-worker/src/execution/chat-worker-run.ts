@@ -10,7 +10,7 @@ import {
   agenticToolReservationSchema, agenticToolOutcomeSchema, type WorkerPort, type WorkerProviderReceipt,
 } from "@creatoros/contract/execution-worker";
 import { modelFor } from "../runtime/provider-factory";
-import { runChatPiLoop } from "../runtime/chat/chat-pi-loop";
+import { runChatPiLoop, ChatFinalRecoveryError } from "../runtime/chat/chat-pi-loop";
 import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
@@ -173,14 +173,14 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   // 所有可执行聊天只进入 Pi；旧非终态在任何工具恢复之前已明确暂停。
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
-      forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
       approve:(name,args,options)=>toolApproval[name]!(args,options),
       approvalId:toolCallId=>`chat-approval:${modelForTool.get(toolCallId)!}:${toolCallId}`,
       execute:async(name,args,options)=>{
         const executable=tools[name] as unknown as {execute:(input:unknown,options:{toolCallId:string;messages:ModelMessage[];abortSignal:AbortSignal})=>Promise<unknown>};
         return executable.execute(args,{...options,messages:[],abortSignal:signal});
       },
-    });
+    }).catch(error=>{if(error instanceof ChatFinalRecoveryError)throw new GenerationFailure("failed",error.code);throw error;});
     await checkpointTail;
     if(failure)throw failure;
     parentSignal.throwIfAborted();

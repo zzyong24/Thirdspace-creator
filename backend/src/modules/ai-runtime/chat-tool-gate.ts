@@ -59,6 +59,9 @@ export interface ChatToolErrorEnvelope {
 export const CHAT_TOOL_ERROR_ENVELOPES: Readonly<
   Record<string, ChatToolErrorEnvelope>
 > = {
+  "history.read": { kind: "history.read", extras: { text: null, hasMore: false, nextOffset: null } },
+  "tool.result.read": { kind: "tool.result.read", extras: { text: null, hasMore: false, nextOffset: null } },
+  "skill.read": { kind: "skill.read", extras: { text: null, hasMore: false, nextOffset: null } },
   "creatoros.guide": {
     kind: "creatoros.guide",
     extras: {

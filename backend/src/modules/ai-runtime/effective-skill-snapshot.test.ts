@@ -5,6 +5,7 @@ import {
   type OfficialSkillBase,
 } from "@creatoros/ai-worker";
 import {
+  CHAT_METHOD_SKILL_IDS,
   EffectiveSkillSnapshotError,
   REGISTERED_SKILL_TASK_TYPES,
   createEffectiveSkillSnapshotResolver,
@@ -144,20 +145,23 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     expect(requiredSkillIdsForTask("chat.sync", { surface: "review" })).toEqual([
       "chatbox.review",
       "research.plan",
+      ...CHAT_METHOD_SKILL_IDS,
     ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "topics" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
       "research.plan",
+      ...CHAT_METHOD_SKILL_IDS,
     ]);
     expect(requiredSkillIdsForTask("chat.sync", { surface: "project" })).toEqual([
       "chatbox.topic",
       "creatoros.guide",
       "research.plan",
+      ...CHAT_METHOD_SKILL_IDS,
     ]);
     expect(
       requiredSkillIdsForTask("chat.sync", { surface: "knowledge-distill" }),
-    ).toEqual(["chatbox.distill", "research.plan"]);
+    ).toEqual(["chatbox.distill", "research.plan", ...CHAT_METHOD_SKILL_IDS]);
     for (const surface of [
       "calibration",
       "positioning",

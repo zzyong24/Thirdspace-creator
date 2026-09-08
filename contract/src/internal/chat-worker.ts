@@ -4,6 +4,8 @@ import { z } from "zod";
 export const chatToolProviderName = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
 export const chatWorkerInputSchema = z.object({
   executionEngine:z.literal("pi").optional(),
+  recoverMissingFinal:z.boolean().optional(),
+  contextPolicyVersion:z.literal(2).optional(),
   kind: z.literal("chat.run"),
   operationKey: z.string().min(1).max(200),
   capability: z.string().min(1).max(128),

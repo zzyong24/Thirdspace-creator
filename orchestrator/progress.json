@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 22,
+    "verticals": 23,
     "tasks_done": 29,
-    "tasks_total": 90,
-    "tasks_pending": 61,
+    "tasks_total": 93,
+    "tasks_pending": 64,
     "verticals_complete": 0
   },
   "verticals": [
@@ -155,7 +155,7 @@
       "write_set": [
         "frontend/**",
         "backend/**",
-        "docs/verification/t925-*"
+        "docs/verification/t925-change-cache.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -193,7 +193,7 @@
       ],
       "write_set": [
         "frontend/**",
-        "docs/verification/t924-*"
+        "docs/verification/t924-navigation-cache.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -237,7 +237,7 @@
         "ai-worker/**",
         "contract/**",
         "frontend/src/server/**",
-        "docs/verification/t923-*"
+        "docs/verification/t923-continuous-agent.md"
       ],
       "verify_commands": {
         "design-review": "node orchestrator/process/research-gate.mjs audit",
@@ -1181,6 +1181,53 @@
       ],
       "exclusive_resources": [],
       "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-932",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-932",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/verification/**"
+      ],
+      "read_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/superpowers/specs/2026-09-08-nomifun-skill-execution.md",
+        "docs/research/2026-09-08-nomifun-skill-execution-comparison.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}

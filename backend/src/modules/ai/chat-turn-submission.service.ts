@@ -65,7 +65,7 @@ export function createChatTurnSubmissionService(db:Db,deps:{
       const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot));
       // 先通过严格 schema，再统一成数据库 JSON 形态；可选 undefined 不得进入摘要后在落库时消失。
       const hostContext=rawHostContext===undefined?undefined:JSON.parse(JSON.stringify(validateChatHostContext(rawHostContext,{userId:ctx.userId,accountId:ctx.accountId!,projectId:snapshot.conversation.projectId}))) as ChatHostContext;
-      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine:"pi",kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
+      const modelInput=JSON.parse(JSON.stringify(chatWorkerInputSchema.parse({...assembly,executionEngine:"pi",recoverMissingFinal:true,...(assembly.tools.some(tool=>tool.name==="history.read")?{contextPolicyVersion:2}:{}),kind:"chat.run",operationKey:`chat:${snapshot.sourceMessage.id}`,userId:ctx.userId,accountId:ctx.accountId,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id}))) as ChatInput;
       return db.transaction(async tx=>{
         const store=tx as unknown as Db;
         const current=await readChatTurnSnapshot(store,ctx,request,true);

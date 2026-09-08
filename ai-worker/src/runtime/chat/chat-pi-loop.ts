@@ -1,3 +1,4 @@
+import { windowChatContextV2 } from "./chat-context-window-v2";
 import { streamText, jsonSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk, type LanguageModel } from "ai";
 import { createAssistantMessageEventStream, type AssistantMessage } from "@earendil-works/pi-ai";
 import { loadChatPiAgent, type ChatPiAgent } from "./chat-pi-core";
@@ -13,6 +14,7 @@ export class ChatFinalRecoveryError extends Error {
 }
 interface Definition {name:string;description:string;parameters:Record<string,unknown>}
 export interface ChatPiLoopOptions {
+  contextPolicyVersion?:2;
   model:LanguageModel; system:string;messages:ModelMessage[];definitions:Definition[];
   execute(name:string,input:unknown,options:{toolCallId:string}):Promise<unknown>;
   approve(name:string,input:unknown,options:{toolCallId:string}):Promise<ToolApprovalStatus>;
@@ -57,9 +59,9 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         lastMessageHasFile=false;
         const forced=options.forcedToolSequence?.[step]??(step===0?options.forcedTool:undefined);
         // 单步协议适配：工具没有 execute，SDK 不会规划下一步或执行副作用。
-        const window=windowChatPiMessages(history);
+        const window=options.contextPolicyVersion===2 ? windowChatContextV2(history,system,options.definitions,240000,options.messages.length) : windowChatPiMessages(history);
         const response=streamText({model:options.model,
-          system:window.shortened?`${system}\n\n[传输上下文窗口] 较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。`:system,
+          system:window.shortened?`${system}\n\n[传输上下文窗口] ${options.contextPolicyVersion===2?"较早消息与长结果可能省略，这不是语义摘要。需要原用户约束时先调用 history.read（不传索引）获取冻结历史目录再分页读回；工具结果调用 tool.result.read（不传toolCallId）获取已结算结果目录，禁止重做原操作。":"较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。"}`:system,
           messages:window.messages,tools:recoveryRequest?{}:tools,maxRetries:0,
 
           maxOutputTokens:options.maxOutputTokens,abortSignal:AbortSignal.any([options.signal,idle.signal]),

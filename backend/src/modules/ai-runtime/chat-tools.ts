@@ -1,3 +1,5 @@
+import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
+import { buildChatSkillReadTool, type ChatSkillLibrary } from "./chat-skill-library";
 import {prepareMaterialGeneration,type MaterialGenerationInput} from "./material-generation-preparation";
 import { createHash } from "node:crypto";
 import { jsonSchema, type Tool, type ToolSet } from "ai";
@@ -31,6 +33,9 @@ import { wrapUntrustedContent } from "./untrusted-content";
 // 路由在请求期解析(resolveModelSpec + assembleCreativeContext)后注入,故工具本身无副作用、
 // 不碰持久化、不直连模块 repo —— 可单测(注入 fake 的 generate/enrich 实现即可)。
 export interface ChatToolDeps {
+  skillLibrary?: ChatSkillLibrary;
+  readToolResult?: ChatToolResultReader;
+  readHistory?: ChatHistoryReader;
   /**
    * [T-770] 从本轮 effective snapshot 读取代码随版的 CreatorOS 产品说明。
    * 只读内存端口：不得访问 repository、网络、文件系统或可变全局 registry。
@@ -3260,6 +3265,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
         }, deps.humanizeError)
       : null;
   return {
+    "history.read": buildChatHistoryReader(deps.readHistory),
+    "tool.result.read": buildChatToolResultReader(deps.readToolResult),
+    "skill.read": buildChatSkillReadTool(deps.skillLibrary),
     "creatoros.guide": defineChatTool("creatoros.guide", {
       description:
         "严格调用门：仅满足以下任一条件时必须调用一次：①用户直接询问 CreatorOS 的产品事实、功能、工作流或设计理念；②用户明确要围绕 CreatorOS 创作或校对产品介绍、教程、方法论、复盘内容，包括明确说当前项目/选题就是讲 CreatorOS。第二类必须先读本工具，再继续选题、研究或写稿工具。除此之外一律不要调用：普通选题、改稿、审核、素材搜索、翻译、压缩或格式化；只泛称 AI/Agent/智能体/工作流/创作系统；只研究、比较或介绍其他产品且未要求与 CreatorOS 对比；引用材料偶然出现 CreatorOS。不要为补背景主动调用。本工具只读、不写库、不替代创作工具。",
@@ -4840,6 +4848,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
  * drift 由 chat-tools.test.ts 的 guard 用例锁(必须 === Object.keys(allChatTools(deps)))。
  */
 export const ALL_CHAT_TOOL_NAMES: readonly string[] = [
+  "history.read",
+  "tool.result.read",
+  "skill.read",
   "creatoros.guide",
   "topic.generate",
   "topic.enrich",

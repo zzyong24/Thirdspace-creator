@@ -155,6 +155,7 @@ const VIDEO_KIND_TO_SKILL: Readonly<Record<string, string>> = {
   scenes: "video.scenes",
   subtitles: "video.subtitles",
 };
+export const CHAT_METHOD_SKILL_IDS = ["method.research", "method.positioning", "method.topic", "method.planning", "method.writing", "method.visual", "method.publishing", "method.review", "method.knowledge", "method.guide"] as const;
 const CHAT_SURFACE_TO_SKILL: Readonly<Record<string, string>> = {
   calibration: "chatbox.calibration",
   distill: "chatbox.distill",
@@ -232,8 +233,8 @@ export function requiredSkillIdsForTask(
       return mappingMissing(taskType, "chat surface 不在受控枚举内");
     }
     return surface === "topics" || surface === "project"
-      ? [CHAT_SURFACE_TO_SKILL[surface]!, "creatoros.guide", "research.plan"]
-      : [CHAT_SURFACE_TO_SKILL[surface]!, "research.plan"];
+      ? [CHAT_SURFACE_TO_SKILL[surface]!, "creatoros.guide", "research.plan", ...CHAT_METHOD_SKILL_IDS]
+      : [CHAT_SURFACE_TO_SKILL[surface]!, "research.plan", ...CHAT_METHOD_SKILL_IDS];
   }
 
   return mappingMissing(taskType);

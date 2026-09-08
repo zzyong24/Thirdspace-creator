@@ -1,3 +1,4 @@
+import { createChatSkillLibrary } from "./chat-skill-library";
 import { type ChatResearchContext } from "./chat-research-preparation";
 import type { ChatStructuredContext } from "./chat-structured-tool-nodes";
 import type { ScriptHooksContext } from "@creatoros/contract/execution-worker";
@@ -50,6 +51,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 2) registry 取 skill(模板 system + 工具白名单)。懒加载 ai-worker(AI SDK 不进顶层 bundle)。
     const { getEffectiveTemplate, getEffectiveTools, getTemplate, getTools, hasActiveEffectiveSkillSnapshot, getActiveEffectiveSkillSnapshot, } = await import("@creatoros/ai-worker");
     const hasEffectiveScope = hasActiveEffectiveSkillSnapshot();
+    const skillLibrary = hasEffectiveScope ? createChatSkillLibrary(getActiveEffectiveSkillSnapshot(), ctx) : undefined;
     const skill = hasEffectiveScope
         ? getEffectiveTemplate(skillId)
         : getTemplate(skillId);
@@ -104,6 +106,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         projectPublished: projectStage ? projectStage.published : null,
     });
     let baseAllowed = scopedNames ?? ALL_CHAT_TOOL_NAMES;
+    baseAllowed = baseAllowed.filter(name => name !== "skill.read" && name !== "tool.result.read" && name !== "history.read");
+    if (skillLibrary?.catalog) baseAllowed = [...baseAllowed, "skill.read", "tool.result.read", "history.read"];
     // [T-770] `creatoros.guide` 是低误触发元 Skill，不继承未知 surface 的“全量工具”兼容回退。
     // 只有产品协议明确批准的 topics/project 能看到短工具描述；其它已知或未来 surface 一律物理排除。
     if (chatContext.surface !== "topics" && chatContext.surface !== "project") {
@@ -235,63 +239,14 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // [T-684] 联网检索已改成随包浏览器能力，不再读取被隐藏的搜索模型配置。
     // 只要宿主装配了 searchWeb 端口，就是真联网；失败时诚实失败，不回落模型记忆。
     const searchConfigured = Boolean(deps.searchWeb);
-    // [T-058①B / T-240②] 能力边界诚实(实录复盘:模型口头宣称「已采纳写入定位母版」但 DB 未动):
-    // 写库只经工具产卡+用户点采纳;禁止假承诺;工具带分页限制时如实说明。
-    // [T-240②] 规则带作用域:分「全局条款」(1-10,任何场景都生效:不假承诺/不编数字/指针权/
-    // 直接写稿规则…)与「场景条款」(S1/S2,只对对应场景生效)。治的实录病例:原第 9 条无稿门不带
-    // 作用域 → 创作前起草也会被它压住,编导会错误要求用户先贴逐字稿。
+    // 宿主只声明真实能力与执行边界；业务方法由冻结Skill按需加载。
     const honestyBlock = [
-        "【能力边界 —— 全局条款,任何场景都必须遵守】",
-        "1. 你对任何数据的写入都只有一条路径:调用对应工具产出候选卡,由用户点卡上的「采纳/写入」按钮完成。你自己没有直接写库能力。",
-        "2. 绝不口头宣称「已写入/已采纳/已保存」—— 除非你看到用户明确说 TA 已点过采纳按钮。用户想落库时,引导 TA:先让你调工具产卡,再点卡上的按钮。",
-        "3. 用户要新定位 → 必须调 positioning.generate 工具(产带采纳按钮的卡),不要只在文本里写定位 —— 文本无法被采纳。",
-        "4. 工具有分页/条数上限时,如实告知拿到了多少、还有没有更多,不要谎称已看全部。",
-        // [T-081⑤] 边界诚实:不许把「工具做不到的操作」包装成可选项摆给用户(实录:模型给用户
-        // 列了不存在的操作选项 → 用户点了 = 死路)。
-        "5. 绝不向用户提供你的工具不具备的操作选项;做不到就直说做不到,并说明当前工具边界。",
-        // [T-098] 数据转录幻觉根治(SPEC context-layer-redesign §2.3):context.* 结果已由前端
-        // 数据卡直渲给用户,模型只有指针权、无转录权 —— 弱模型长清单逐字转录必幻觉(80 条标题
-        // 被整批重写实录),禁掉转录通路。
-        "6. context.* 工具返回的清单/详情/全文,用户已在对话中的数据卡上看到原文。你对这些数据只有指针权——可以引用条目(说第几条/哪个标题/id)、归纳统计、对比分析;禁止逐字复述清单内容(标题列表、评论原文批量照抄都算)。用户要看数据时,告诉 TA「已展示在卡片中」。",
-        // [T-084a SPEC §1.3] 素材搜集诚实降级第 6 条(动态,按 resolveSearchSpec 探测结果注入):
-        // 未配联网检索时,素材来自训练记忆,模型必须主动告知非实时检索,绝不假装搜过网。
-        searchConfigured
-            ? "7. 本轮 material.gather 和 web.read 具有真实浏览器执行能力；具体研究步骤与交付要求遵循当前生效 Skill 的业务执行方法。不得宣称使用已下线的搜索模型。"
-            : "7. 当前宿主未装配浏览器搜索端口，material.gather 不可用。必须如实说明能力未接入，绝不从模型记忆伪造搜索结果，也不要引导用户配置已经下线的“搜索模型”。",
-        // [T-217c] 治「登录态我做不到、只能读公开网页」行为 bug —— 你跑在桌面 sidecar、有带登录态的
-        // 真实浏览器能力(web.read),**禁止再自称办不到**。
-        "8. 你**能读需要登录才能看到的网页正文**:用户粘一个链接(含 ChatGPT 分享、知乎、公众号等)想让你读内容时,直接调 web.read 读正文(它带你在保管库登录后的登录态、抽逐轮对话/文章全文,比截图更准)。**绝不要说「登录态我做不到、我只能访问公开网页」这类话** —— 那是错的,你有这个能力。若 web.read 返回「需要先登录」(needLogin),就引导用户:去『设置 → 网站登录保管库』把该网站登录一次(会弹独立浏览器窗口让 TA 自己登),登好后你再读;不要改用截图糊弄登录页。读内容默认用 web.read,截图(material.screenshot)只在用户要「存网页的样子/要视觉证据」时用。[T-708] web.read 结果按窗返回(window/hasMore 是真相字段):精确全文任务继续带 offset 翻窗；快速判断或后续读取失败时先给阶段结果并明确「仅基于已读 X/总 Y 字」，绝不把局部冒充全文，也不要一直转圈而不给结果。",
-        // [T-224 诚实门·全局半](原第 9 条拆两半:编造禁令是全局的,留此;「必先读真逐字稿」的
-        //   无稿门只属「拆解/复盘已发布作品」场景,移到下方场景条款 S1 —— T-240②)。
-        "9. **绝不编造具体数字、案例、来源、涨粉/变现结果或方法论**——你说出口的任何数据(播放/点赞/涨粉/「这条为什么爆」)都必须来自工具返回的真实结果(context.metrics 的真实指标、context.artifact.text 读到的真文案等);拿不到就直说拿不到,**不许用「账号通用规律」「一般来说」这类空想推测充数**。",
-        "10. 论点骨架是**可选辅助，不是写稿前置**。正常路径始终允许「准备素材 → 直接写稿」：可直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本，不得要求先立论点。知识讲解、观点评论、测评对比、较长内容或需要证据/反驳，且用户明确想先梳理时，可调用 planning.thesis 给候选；已有完整逐字稿、简单通知、短口播、纯记录或用户要快速成稿时直接调用 script.draft。只有用户点击「采纳并用于写稿」的当前论点版本才能进入普通生成；verbatim 原文保真永远不读取论点。",
-        // [T-245] 治「没有实时热搜/热点榜单拉取能力」认知错位(T-217c 同族:能力在,prompt 没告诉它)——
-        // T-235b 已建信源系统(登记热榜站点→readUrl 拉真信号)+黑马雷达,编导必须知道自己有这些能力。
-        "11. **你有真实热点能力,绝不自称「没有实时热点/热搜拉取能力」——那是错的**。你的热点能力有三路:①内容雷达中的网页/RSS 来源会保留真实条目、链接与抓取证据;②内容雷达的热点宝/黑马发现会保留官方榜单口径与原视频链接;③web 联网搜索(已配时)。用户要蹭热点/追热榜出题时:**优先调 topic.generate 并传 basis=trend**;若结果注明未拉到实时信号或用户还没登记来源,**引导 TA 去『内容雷达』登记网页/RSS、博主或分享链接**(需登录才能看的站点,先去『设置 → 网站登录保管库』登录一次),而不是让用户手动编造热点、更不是自称没能力。",
-        // [T-253] 本机文件读取能力认知 + 授权协议 + 安全边界诚实(denylist 拒读时如实说明,绝不绕)。
-        "12. **你能读用户本机的文件**(local.read,支持 macOS/Linux 绝对路径、Windows 盘符路径和 UNC 网络路径，也支持 ~ 展开):用户说「读一下我桌面那份稿子 / 看看 ~/xx/某文件 / 读 E:\\资料\\稿子.md / 读 \\\\server\\share\\稿子.md」时直接调它,绝不自称「Windows 路径读不了」「我碰不到你的本地文件」或要求用户换到 macOS。授权协议:首次读某路径会弹**确认卡**(needApproval)并挂起当前调用——告诉用户在卡上选「允许一次/总是允许该目录/拒绝」；允许后系统会在**同一回合自动续跑**，不要要求用户重发，也不要重复调用制造循环；被拒绝就不再尝试。安全边界(如实转述,绝不绕):敏感文件(.env、含 key/secret/token 的文件、SSH/钥匙串/证书)无论授权与否都拒读——被拒时向用户说明这是确定性安全规则并给出原因,**绝不换路径/改名建议来绕过**;超 1MB 或二进制文件拒读,建议用户直接上传到素材库。",
-        // [T-256a] 环境感知能力认知(能力在,须诚实用):编导能探测本机已装工具 + 能列已授权工作区目录。
-        // 铁律:探到什么报什么,缺工具诚实引导安装,绝不假装工具存在/编造版本号/臆造未授权目录。
-        "13. **你能感知用户的电脑环境,但只能读、不能装、不能乱跑命令**。两件事:①**探测已装工具**(local.tools):只在动作确实依赖操作系统可执行文件时探——如用户要「抽音频/转码」前看 ffmpeg，在本机跑脚本前看 node/python3。**绝不能用 local.tools 探测 CreatorOS 的生图/文生视频/文本模型配置、provider、发布能力或其它应用内服务**；这类能力直接调用对应工具，由对应任务返回真实配置或调用错误。系统工具装了就说装了(可报版本),没装就直说并给安装命令；只支持 ffmpeg/ffprobe/node/python3/git，绝不假装工具存在、绝不编造版本号。②**列工作区目录**(local.workspace):用户问「我授权过哪些目录/我放素材的文件夹」时列出 TA 已「总是允许该目录」的本地目录;要看某目录里有什么,再用 local.read 读那个目录。清单为空就说还没授权过、引导 TA 去授权,绝不臆造用户没授权过的目录。你没有安装工具、执行任意命令、写本地文件的能力——只有「读环境」这一层,别对用户承诺装工具或跑命令。",
-        // [T-265] 反工具冒充:能力不存在时诚实说明，不能抓相邻工具冒充。
-        //   工具清单(上方「你的技能清单」)是你能力的单一真值:清单没列的能力=你现在没有。
-        "14. **绝不用「用途不同的工具」冒充用户真正要的能力**。用户要某能力(如生成封面、做某种产物)时,先看你的技能清单里**有没有对应的工具**:有就调那个对的工具;**没有就诚实告诉用户「这个能力我现在没有对应工具」**,并说明现有工具能做到的最接近的事。宁可诚实说没有,也不误接工具骗过去。",
-        // [T-380] 对话减摩擦:能力边界当场诚实 + 顺手的事直接做,不摆选项清单、不堆免责预防针。
-        "15. **能力边界诚实 + 减摩擦**:系统不支持的能力(如某种生成方式/某个平台/某类操作)**绝不假装执行**,在动手前当场说明「这个当前不支持」;反过来,你的工具能顺手替用户做到的动作就**直接做**(该调工具就调),不要把本可直接执行的事拆成多选项清单抛回给用户选。要么先拦(不支持就直说),要么干净执行(支持就直接干)——**不要在执行前堆一段免责/预防针式的铺垫**(「可能会失败/仅供参考/我先说明几点」云云),执行结果如何就如实报什么。",
-        // [T-386] 治实录病例:整稿卡已显「✓写入稿面」,编导下轮仍说「整稿还在后台跑,先审 brief
-        // 草案」—— 凭对话记忆断言任务状态 + 凭记忆叙述稿面内容(其实已被采纳的新稿覆盖)。
-        "16. **后台任务状态绝不凭记忆断言**:整稿/发布物料/封面/审核/逐字稿这类后台任务的状态,**只信系统注入的【后台任务状态真值】块和界面卡片**——你上一轮说「在后台跑」不代表现在还在跑,任务状态在你回答之间随时变化。真值块显示已完成/已写入的任务,绝不再说「还在跑/还没好/先等等」;不确定时直说「以卡片显示的状态为准」,绝不猜。同理,**要评价/审核/引用稿面当前内容时,先调 context.artifact.text 读当前版本再叙述**——你记忆里的「草案」可能已被用户采纳的新稿覆盖,凭记忆叙述旧版本 = 对着不存在的东西发言。",
-        // [T-708] 创作质量条件统一软化。权限/归属/真相仍由其它条款与执行层守住。
-        "17. **创作完整度不是拒绝服务的理由**:六问未答完、未先比较方向、逐字稿/素材不齐、联网失败、用户没指定长度或格式，都只能影响候选质量，不能阻止定位卡、选题卡或第一版整稿生成。用户明确说「直接生成/先给一版」时立即调用正确工具；用“待验证/待补证据/待补真实案例”标缺口，禁止编造事实。只有鉴权与数据归属、隐私安全、破坏性操作、幂等冲突、外部发送/发布，以及会把虚假事实沉淀进正式数据的情况可以硬拦。",
-        "18. **故障归因必须有运行时证据**:只有工具本轮返回的 error、系统注入的【后台任务状态真值】错误，或界面卡片中的脱敏原始错误，才能支持你判断这一次为什么失败。拿到证据时引用脱敏后的原始错误和发生步骤，区分 HTTP/模型拒绝/超时/配置缺失/输入问题；不要擅自扩大成整个平台坏了。没有这些证据时必须说“原因尚未确认，以错误卡或任务状态为准”，不得笼统说“系统有问题”“平台故障”“配置坏了”，也不得用这些话替代继续执行当前能做的工作。",
-        "",
-        // [T-240②] 场景条款 —— 带作用域的规则,只在对应场景生效,禁止跨场景套用。
-        "【场景条款 —— 只在对应场景生效,禁止跨场景套用】",
-        // [T-224 诚实门·场景半] 无稿门只管「拆解/复盘已发布作品」;创作前立框架不适用(S2)。
-        chatContext.projectId
-            ? `S1.(仅在拆解/复盘一条**已发布**作品时生效)当前作品已绑定 projectId="${chatContext.projectId}",**先调 context.project.lifecycle 看全流程真状态,正文再调 context.artifact.text**,绝不调 context.projects 拉全库找它;拆经验再调 review.analyze。任何 lifecycle 分区是 error 都必须说“读取失败”,不能说“用户没生成/没采纳”。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。`
-            : "S1.(仅在拆解/复盘一条**已发布**作品时生效)拆它、产它的经验/方法论之前,**必须先读到这条作品的真逐字稿**:账号级未引用具体作品时,用户说“前几期/历史/之前发布/同系列”就用 context.projects.search 按真实发布时间找 projectId；普通最近项目才用 context.projects。拿到 id 后先调 context.project.lifecycle,正文再调 context.artifact.text;拆经验再调 review.analyze。读不到真稿时,若关联抖音就顺手调 project.transcribe 发起抓取;抓不了就直说并请用户贴稿,绝不推测充数。",
-        "S2.(仅在为**创作前(未发布)**的项目搭结构或起草脚本时生效)依据是定位+选题卡+已搜集素材——这是正常创作流,**不适用 S1 的无稿门**:创作前没有逐字稿不是缺陷,不要因读不到逐字稿而卡住、不要向用户索要逐字稿、更不要把「没有逐字稿」当成拒绝起草的理由。",
+        "【执行边界】",
+        "只使用本轮真实工具；权限、账号归属与当前实体状态以工具回执为准。读取或执行被拒绝时尊重拒绝，不换路径绕过；需要授权或登录时说明当前阻塞。",
+        "候选、排队、执行中、已执行与已采纳是不同状态。只有真实回执能证明保存或执行；卡片不是完成全部请求的证据。不要声称后台任务已经完成。",
+        "可以引用、整理、比较工具返回的正文，解释依据并提出明确标为推演的建议；不得伪造来源、数字、案例或操作结果。摘要和片段不能冒充全文，存在后续页时按需要继续读取。",
+        "只缺私人经历凭证、账号定位、项目绑定或雷达来源，不阻断可独立完成的公开研究；利用现有信息推进用户当前目标，必需的操作参数仍由工具校验。",
+        searchConfigured ? "本轮已接通浏览器搜索和正文读取；方法由你按需选择。" : "本轮未装配浏览器搜索端口；不得伪称已经联网。",
     ].join("\n");
     const coverPublicationReferenceBlock = mediaRoute?.kind === "cover.publication_reference"
         ? [
@@ -307,7 +262,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     // 让模型能如实回答「你能干什么」,并在对话中主动建议(「这个我可以用『记录经验』帮你存下来」)。
     // 词表与前端工具 trace 行同源(lib/chat-tool-labels 单一真值),不编造白名单外的能力。
     const skillsBriefBlock = [
-        "【你的技能清单 —— 本对话你能调用的全部工具,回答「你能干什么」时以此为准,不要编造清单外的能力】",
+        "【本轮可调用工具 —— 这是操作能力，不是工作方法；具体参数以工具定义为准】",
         buildSkillsBrief(toolWhitelist),
     ].join("\n");
     const selectionBlock = assembleSelectionContext(chatContext.selection, {
@@ -390,13 +345,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const verbatimSourceBlock = formatVerbatimSourceInventory(options.verbatimSources ?? []);
     // [T-386] 后台任务状态真值块(recentTasks 上方已 best-effort 读取;空列表 → 空串不注)。
     const taskTruthBlock = formatRecentTasksBlock(recentTasks, Date.now());
-    // 方法来自本轮冻结快照；旧任务缺新增 Skill 时保持旧上下文，不借当前配置补入。
-    const hasResearchTools = toolWhitelist.some(name => name === "material.gather" || name === "web.read");
-    const researchPlanAvailable = !hasEffectiveScope || getActiveEffectiveSkillSnapshot().skills.some(item => item.skillId === "research.plan");
-    const researchPlan = hasResearchTools && researchPlanAvailable
-        ? (hasEffectiveScope ? getEffectiveTemplate("research.plan") : getTemplate("research.plan"))
-        : null;
-    const researchPlanBlock = researchPlan ? [researchPlan.system, researchPlan.template].filter(Boolean).join("\n\n") : "";
+    const methodCatalogBlock = skillLibrary?.catalog ?? "";
     const system = isScriptPatchAction
         ? [
             "【局部改稿专用回合】",
@@ -409,7 +358,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         : [
             baseSystem,
             honestyBlock,
-            researchPlanBlock,
+            methodCatalogBlock,
             coverPublicationReferenceBlock,
             skillsBriefBlock,
             currentAccountBlock,
@@ -437,7 +386,7 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
     const toolDeps = createChatAssemblyToolDeps(ctx, chatContext, deps, { mediaRoute, forcedMaterialKind, creatorOsGuideSnapshot, verbatimSources: options.verbatimSources, latestUserInstruction: options.latestUserInstruction, searchConfigured });
     // [T-439] 装配层一律用**原名**(内部真值:错误信封登记 / 白名单 / 深链 functionKey / 审计日志
     //   都按原名)。合规化只在发给模型那一刻做,见下方 streamText 入参。
-    const tools = buildChatTools(toolWhitelist, toolDeps);
+    const tools = buildChatTools(toolWhitelist, { ...toolDeps, skillLibrary });
     // [T-117 确定性修] functionKey 是深链/按钮明确指定的工具(如「补全选题卡」深链 fn=topic.enrich);
     // 命中真工具时强制本轮调它,防模型把卡当文本吐 + 谎称已渲卡(弱 tool-calling 模型的常态)。
     const forcedTool = forcedToolSequence?.[0] && toolWhitelist.includes(forcedToolSequence[0])

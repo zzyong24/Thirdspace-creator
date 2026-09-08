@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {createChatSkillLibrary,buildChatSkillReadTool} from '../../backend/src/modules/ai-runtime/chat-skill-library.ts';
+import {pageChatToolResult} from '../../backend/src/modules/ai/chat-tool-result-page.ts';
+import {windowChatContextV2} from '../../ai-worker/src/runtime/chat/chat-context-window-v2.ts';
+import {buildChatTools} from '../../backend/src/modules/ai-runtime/chat-tools.ts';
+import {prepareChatToolDefinitions} from '../../backend/src/modules/ai-runtime/chat-tool-definitions.ts';
+const ctx={userId:'u',accountId:'a'};
+const body='冻结方法'.repeat(12000);
+const snapshot:any={...ctx,skills:[{skillId:'method.research',baseVersion:'1',overlayRevision:7,effective:{methodSystem:body,template:''}}]};
+const library=createChatSkillLibrary(snapshot,ctx);snapshot.skills[0].effective.methodSystem='changed';
+let full='',offset=0;while(true){const page:any=library.read({skillId:'method.research',offset});full+=page.text;if(!page.hasMore)break;offset=page.nextOffset;}assert.equal(full,body);
+assert.throws(()=>createChatSkillLibrary(snapshot,{userId:'u',accountId:'b'}));assert.throws(()=>library.read({skillId:'unknown'}));
+const tools=buildChatTools(['skill.read','tool.result.read','history.read'],{skillLibrary:library} as any);
+const definitions=await prepareChatToolDefinitions(tools);assert.equal(definitions.definitions.length,3);assert.ok(definitions.definitions.every(x=>x.effect==='none'));
+const original={text:'原结果'.repeat(15000)};let result='',cursor=0;while(true){const p=pageChatToolResult('call',original,cursor);result+=p.text;if(!p.hasMore)break;cursor=p.nextOffset!;}assert.deepEqual(JSON.parse(result),original);
+const messages:any=[{role:'user',content:'原任务'.repeat(15000)},{role:'assistant',content:[{type:'tool-call',toolCallId:'call',toolName:'web_read',input:{}}]},{role:'tool',content:[{type:'tool-result',toolCallId:'call',toolName:'web_read',output:{type:'json',value:original}}]}];
+const projected=windowChatContextV2(messages,'system',definitions.definitions);assert.ok(projected.shortened);assert.match(JSON.stringify(projected.messages),/history.read/);assert.match(JSON.stringify(projected.messages),/tool.result.read/);assert.equal(messages[0].content.length,45000);
+console.log('PASS frozen methods, account boundary, three native read definitions, lossless result pages, context pointers');
