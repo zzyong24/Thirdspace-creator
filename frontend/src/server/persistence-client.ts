@@ -1371,15 +1371,6 @@ export interface ChatRuntime {
     model: string;
     token: string;
   }>;
-  // [T-239b S1] 备用对话模型解析 —— **只认 `chat.fallback` 专配行**(resolveDedicatedLlmConfig,
-  // 不回退 default/env,否则「备用」会解析成主模型自己);未配/无 key → null(现状报错,诚实降级)。
-  // chat-runner 在主模型流开始前可重试错误耗尽时用它接管一次。
-  resolveFallbackModelSpec: (ctx: RequestContext) => Promise<{
-    apiFormat: "anthropic" | "openai_chat" | "openai_responses";
-    baseUrl: string | null;
-    model: string;
-    token: string;
-  } | null>;
   /** [T-652] Copilot 生成定位卡前读取最新前采真值，避免旧 revision 候选。 */
   getPositioningDiscovery: (
     ctx: RequestContext,
@@ -9497,31 +9488,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
-  // [T-239b S1] 备用对话模型 —— 只认 chat.fallback 专配行(不回退 default/env;回退会把
-  // 「备用」解析成主模型自己,fallback 失去意义)。未配/无 key → null(chat-runner 按现状报错)。
-  const resolveFallbackModelSpec = async (ctx: RequestContext) => {
-    const cfg = await resolveDedicatedLlmConfig(ctx, "chat.fallback", {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-      env: process.env,
-      getChannelModelConfig,
-      getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(ctx, serviceId),
-    });
-    if (!cfg) return null;
-    return {
-      apiFormat: cfg.apiFormat,
-      baseUrl: cfg.baseUrl,
-      model: cfg.model,
-      token: cfg.token,
-      ...(typeof cfg.settings.structuredOutputs === "boolean"
-        ? { structuredOutputs: cfg.settings.structuredOutputs }
-        : {}),
-      ...(cfg.displayModelKey
-        ? { displayModelKey: cfg.displayModelKey }
-        : {}),
-    };
-  };
-
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
   const dispatchScriptReview = async (
     ctx: RequestContext,
@@ -10343,7 +10309,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     runWithEffectiveSkills: runWithResolvedEffectiveSkills,
     resolveModelSpec,
     // [T-239b] 备用对话模型端口(只认 chat.fallback 专配行)。
-    resolveFallbackModelSpec,
     getPositioningDiscovery: (c, sessionId) =>
       positioningService.getDiscoverySession(c, sessionId),
     resolveCurrentScriptSelection: async (c, input) => {
