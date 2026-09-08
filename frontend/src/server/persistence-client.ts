@@ -8288,6 +8288,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       "exec.agentic.research":{taskType:"agentic.research",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.research",tools:researchWorkerTools.definitions},
     },
     budget:agenticBudget,maxOutputTokens:4096,now:deps.now,
+    async resolveMethodSystem(c,skillId){
+      const snapshot=await resolveEffectiveSkillSnapshotForRuntime(c,[skillId]);
+      const skill=snapshot.skills.find(row=>row.skillId===skillId);
+      if(!skill)throw new Error("自主任务缺少业务 Skill");
+      return skill.effective.methodSystem;
+    },
     async validateInputs(c,inputs){for(const input of inputs)await assetsService.getAsset(c,input.assetId);},
   });
   const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{return null;}})();

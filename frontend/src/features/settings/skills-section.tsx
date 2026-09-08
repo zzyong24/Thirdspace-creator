@@ -273,6 +273,7 @@ function PolicyNumberField({
 function SkillDetail({ skill }: { skill: SkillItem }) {
   const router = useRouter();
   const canCustomize = skill.accountId !== null;
+  const canEditTemplate = skill.editableFields?.includes("template") ?? true;
   // 草稿初值 = 当前生效值(override ?? 内置,server 侧已归一投影)。
   const [system, setSystem] = React.useState<string>(skill.system);
   const [template, setTemplate] = React.useState<string>(skill.template);
@@ -353,7 +354,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
 
   const save = React.useCallback(() => {
     if (!dirty) return;
-    const patch: AccountSkillOverlayPatchResource = { system, template };
+    const patch: AccountSkillOverlayPatchResource = { system, ...(canEditTemplate ? {template} : {}) };
     if (skill.completionPolicySupported && policyTouched) {
       const parsed = parseCompletionPolicyDraft({
         minSegments: policyMinSegments,
@@ -370,6 +371,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
     runPut(patch);
   }, [
     dirty,
+    canEditTemplate,
     policyMaxSegments,
     policyMinSegments,
     policyRepairAttempts,
@@ -383,8 +385,8 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
 
   // 恢复默认:null 表示删除这两个账号增量字段，服务端回退 official 基座。
   const restore = React.useCallback(() => {
-    runPut({ system: null, template: null });
-  }, [runPut]);
+    runPut({ system: null, ...(canEditTemplate ? {template: null} : {}) });
+  }, [runPut, canEditTemplate]);
 
   const restoreCompletionPolicy = React.useCallback(() => {
     runPut({ completionPolicy: null });
@@ -438,7 +440,7 @@ function SkillDetail({ skill }: { skill: SkillItem }) {
           id={`skill-template-${skill.id}`}
           data-slot="skill-template-input"
           value={template}
-          disabled={pending || !canCustomize}
+          disabled={pending || !canCustomize || !canEditTemplate}
           rows={8}
           onChange={(event) => setTemplate(event.target.value)}
           className="w-full resize-y rounded-md border border-border bg-background p-2 font-mono text-xs leading-relaxed text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

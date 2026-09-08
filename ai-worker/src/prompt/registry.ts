@@ -1,3 +1,5 @@
+import { AGENTIC_BUSINESS_TEMPLATES } from "./templates/agentic-business";
+import { withBusinessMethod } from "./business-methods";
 import {MATERIAL_EXTRACT_TEMPLATE,ASSET_CLASSIFY_TEMPLATE} from './templates/asset-processing';
 import {SCRIPT_SOURCE_SIMILARITY_TEMPLATE} from "./templates/script-source-similarity";
 import {COPILOT_ASSIST_TEMPLATE} from "./templates/copilot-assist";
@@ -110,6 +112,7 @@ const SCHEMA_OVERRIDES = new Map<string, SchemaValidator>();
 
 /** 全部内置 skill(三位一体)。 */
 const BUILTIN_TEMPLATES: readonly PromptTemplate[] = [
+  ...AGENTIC_BUSINESS_TEMPLATES,
   COPILOT_ASSIST_TEMPLATE,
   CREATOROS_GUIDE_TEMPLATE,
   TOPIC_GENERATE_TEMPLATE,
@@ -180,7 +183,8 @@ export function registerTemplate(tpl: PromptTemplate): void {
 
 /** 全量注册内置 skill(启动调一次)。 */
 export function registerAllTemplates(): void {
-  for (const tpl of BUILTIN_TEMPLATES) {
+  for (const base of BUILTIN_TEMPLATES) {
+    const tpl = withBusinessMethod(base);
     REGISTRY.set(tpl.id, tpl);
     OFFICIAL_REGISTRY.set(tpl.id, tpl);
   }

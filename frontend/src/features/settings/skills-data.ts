@@ -22,6 +22,7 @@ import type {
 
 /** 一条技能列表条目(route server 侧投影,全部可序列化,客户端只读渲染 + 编辑草稿)。 */
 export interface SkillItem {
+  readonly editableFields?: readonly string[];
   /** 当前联合目录归属账号；null 表示未选号、只展示 official 目录。 */
   readonly accountId: string | null;
   /** skill id(REGISTRY 注册 id,如 "script.draft")。 */
@@ -75,6 +76,9 @@ export interface SkillLabel {
 
 /** 全部内置 skill 的中文词表(REGISTRY 18+ 个 id 全覆盖;新增 skill 缺词表时回退显 id)。 */
 export const SKILL_LABELS: Readonly<Record<string, SkillLabel>> = {
+  "agentic.research": {name:"自主资料研究",purpose:"围绕目标搜索、读原文、核实并交付有用途的资料。"},
+  "agentic.material": {name:"自主素材整理",purpose:"检查真实素材，按内容需要匹配并提出整理建议。"},
+  "agentic.collect": {name:"自主来源采集",purpose:"在授权范围内采集来源，核对完整性并保留缺口。"},
   // —— 对话技能(chatbox.*)——
   "chatbox.topic": {
     name: "选题编导",
@@ -380,6 +384,7 @@ export function buildSkillItems(
 ): SkillItem[] {
   return catalog.map((row) => ({
     accountId: row.accountId,
+    editableFields: row.editableFields,
     id: row.skillId,
     version: row.overlayVersion ?? row.baseVersion,
     rowRevision: row.rowRevision,

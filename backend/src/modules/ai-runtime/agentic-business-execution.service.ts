@@ -13,6 +13,7 @@ export interface AgenticBusinessExecutionDeps {
   definitions: Partial<Record<AgentTaskType, AgenticBusinessDefinition>>;
   budget: PreparedModelExecution["budget"];
   maxOutputTokens: number;
+  resolveMethodSystem?(ctx: RequestContext, skillId: AgentInput["taskType"]): Promise<string>;
   validateInputs(ctx: RequestContext, inputs: ExecutionTaskInput[]): Promise<void>;
   now?: () => string;
 }
@@ -52,7 +53,9 @@ export function createAgenticBusinessExecutionService(db: Db, deps: AgenticBusin
       const grant = spec.taskType === "agentic.research" ? readBrowserTaskGrant(task) : null;
       if (spec.taskType === "agentic.research" && spec.params.browserAuthorization !== undefined && !grant) return {aiTaskId:task.id,status:"awaiting_authorization" as const,executionTaskId:undefined};
       const browserAuthorization = grant?.authorization;
-      const modelInput = agenticWorkerInputSchema.parse({ ...definition, ...(browserAuthorization ? {browserAuthorization:{...browserAuthorization,source:"user_task"}} : {}), kind: "agentic.run", operationKey, goal: spec.goal,
+      const methodSystem = await deps.resolveMethodSystem?.(ctx, spec.taskType);
+      const modelInput = agenticWorkerInputSchema.parse({ ...definition,
+        ...(methodSystem !== undefined ? {systemPrompt: methodSystem} : {}), ...(browserAuthorization ? {browserAuthorization:{...browserAuthorization,source:"user_task"}} : {}), kind: "agentic.run", operationKey, goal: spec.goal,
         maxOutputTokens: deps.maxOutputTokens, dryRun });
       const budget = { maxCalls: Math.min(steps ?? deps.budget.maxCalls, deps.budget.maxCalls),
         maxTokens: Math.min(tokens ?? deps.budget.maxTokens, deps.budget.maxTokens),
