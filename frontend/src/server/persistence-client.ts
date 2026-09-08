@@ -24,7 +24,7 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -480,7 +480,6 @@ import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-r
 // storyboardFromContentData 仍用于四决策 authored 分镜 facet。
 import {
   collectProjectBrollInventory,
-  runVideoDecisions,
   storyboardFromContentData,
 } from "@creatoros/backend/modules/ai-runtime";
 import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
@@ -4101,86 +4100,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
         if (
-          task &&
-          task.taskType === "video.decisions" &&
-          task.status === "queued"
-        ) {
-          // [T-254b] 制作视频四决策 node(video.decisions,SPEC 2026-07-11 §3.1 步骤 2-3)——
-          // 粗剪 SRT + 口播稿 → ①语义分场 ②信息卡(可溯剔除)③B-roll(清单硬门)④双语字幕,
-          // 四个 runStructuredNode 顺序编排,产 `video_decisions` 候选(awaiting_confirmation)→
-          // 前端分场预览卡过目可改,确认才组 props 交渲染(T-254a video.render executor)。
-          // 素材清单投影只读当前账号下的当前项目；缺项目/越权直接失败，绝不回退整库。
-          await runVideoDecisions(
-            ctx,
-            {
-              id: String(task.id),
-              projectId:
-                typeof task.projectId === "string" ? task.projectId : null,
-              retryOfTaskId:
-                typeof task.retryOfTaskId === "string"
-                  ? task.retryOfTaskId
-                  : null,
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: aiService,
-              resolveModelSpec,
-              // [T-309/T-387c] B-roll 备料自动聚合:数据源从「项目 material-links」扩为——
-              //   ① 脚本凝固分镜点名的素材(visual.assetRefs,source:"script")
-              //   ② 项目弹药 image/video 资产(material-links;role=broll 手动上传标 "manual",
-              //      其余标 "ammo";role=clip 口播原片仍排除)
-              listBrollInventory: (c, projectId) =>
-                collectProjectBrollInventory(c, projectId, {
-                  assertProjectAccess: async (scopeCtx, scopeProjectId) => {
-                    await projectsService.listOutputIdsByProject(
-                      scopeCtx,
-                      scopeProjectId,
-                    );
-                  },
-                  readArtifactContentData,
-                  listProjectMaterialLinks: async (
-                    scopeCtx,
-                    scopeProjectId,
-                  ) =>
-                    (
-                      await materialLinksService.list(scopeCtx, {
-                        projectId: scopeProjectId,
-                        page: 1,
-                        pageSize: 100,
-                      })
-                    ).rows,
-                  getAsset: async (scopeCtx, assetId) => {
-                    const asset = await assetsService.getAsset(scopeCtx, assetId);
-                    const file = asset.currentFileId
-                      ? (
-                          await assetsService.listFilesByIds(scopeCtx, [
-                            asset.currentFileId,
-                          ])
-                        )[0] ?? null
-                      : null;
-                    return {
-                      ...asset,
-                      width: file?.width ?? null,
-                      height: file?.height ?? null,
-                      durationMs: file?.durationMs ?? null,
-                    };
-                  },
-                }),
-              // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
-              // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
-              readStoryboard: async (c, projectId) => {
-                if (!projectId) return [];
-                try {
-                  return storyboardFromContentData(
-                    await readArtifactContentData(c, projectId, "output_script"),
-                  );
-                } catch {
-                  return [];
-                }
-              },
-            },
-          );
-        } else if (
           task &&
           task.taskType === "asset.classify" &&
           task.status === "queued"
@@ -8929,6 +8848,58 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "video.decisions":createVideoDecisionsBusinessAdapter({resolveModelSpec,getTaskRuntimeData:(c,id)=>aiService.getTaskRuntimeData(c,id),
+              listBrollInventory: (c, projectId) =>
+                collectProjectBrollInventory(c, projectId, {
+                  assertProjectAccess: async (scopeCtx, scopeProjectId) => {
+                    await projectsService.listOutputIdsByProject(
+                      scopeCtx,
+                      scopeProjectId,
+                    );
+                  },
+                  readArtifactContentData,
+                  listProjectMaterialLinks: async (
+                    scopeCtx,
+                    scopeProjectId,
+                  ) =>
+                    (
+                      await materialLinksService.list(scopeCtx, {
+                        projectId: scopeProjectId,
+                        page: 1,
+                        pageSize: 100,
+                      })
+                    ).rows,
+                  getAsset: async (scopeCtx, assetId) => {
+                    const asset = await assetsService.getAsset(scopeCtx, assetId);
+                    const file = asset.currentFileId
+                      ? (
+                          await assetsService.listFilesByIds(scopeCtx, [
+                            asset.currentFileId,
+                          ])
+                        )[0] ?? null
+                      : null;
+                    return {
+                      ...asset,
+                      width: file?.width ?? null,
+                      height: file?.height ?? null,
+                      durationMs: file?.durationMs ?? null,
+                    };
+                  },
+                }),
+              // [T-387c] 凝固分镜 reader:output_script 当前版本 contentData → 分镜投影
+              // (storyboardFromContentData 宽容解析;旧稿无 visual → 空数组 → facet 空 = 现状)。
+              readStoryboard: async (c, projectId) => {
+                if (!projectId) return [];
+                try {
+                  return storyboardFromContentData(
+                    await readArtifactContentData(c, projectId, "output_script"),
+                  );
+                } catch {
+                  return [];
+                }
+              },
+
+    }),
     "reconstruct.project":createReconstructBusinessAdapter({...generationContext,
               getProjectSource: async (c, projectId) => {
                 try {
@@ -9235,6 +9206,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     browserSessions:browserSessionsService,
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
+    video:{resolveModelSpec},
     transcribePostprocess:{resolveModelSpec,readContext:readTranscribePostprocessContext},
     transcribeAudioStorage:objectStorageForCtx,
     transcribeWorkflow:{
