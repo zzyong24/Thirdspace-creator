@@ -1,6 +1,7 @@
 import { streamText, jsonSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk, type LanguageModel } from "ai";
 import { createAssistantMessageEventStream, type AssistantMessage } from "@earendil-works/pi-ai";
 import { loadChatPiAgent, type ChatPiAgent } from "./chat-pi-core";
+import { windowChatPiMessages } from "./chat-pi-context";
 import { sanitizeToolNames, sanitizeToolName, sanitizeSystemToolReferences } from "./tool-names";
 import { buildForcedToolInstruction, buildForcedToolSequenceInstruction } from "./chat-loop-policy";
 
@@ -37,20 +38,30 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
     const events=createAssistantMessageEventStream();
     void(async()=>{
       const message=blank();
+      const idle=new AbortController();
+      let idleTimer:ReturnType<typeof setTimeout>|undefined;
+      const heartbeat=()=>{clearTimeout(idleTimer);idleTimer=setTimeout(()=>idle.abort(new Error("CHAT_MODEL_IDLE_TIMEOUT")),180_000);};
       try{
+        heartbeat();
         options.signal.throwIfAborted();
         if(awaitingApproval)throw Error("CHAT_APPROVAL_PENDING");
         const step=turn++;
         const forced=options.forcedToolSequence?.[step]??(step===0?options.forcedTool:undefined);
         // 单步协议适配：工具没有 execute，SDK 不会规划下一步或执行副作用。
-        const response=streamText({model:options.model,system,messages:history,tools,maxRetries:0,
-          maxOutputTokens:options.maxOutputTokens,abortSignal:options.signal,
+        const window=windowChatPiMessages(history);
+        const response=streamText({model:options.model,
+          system:window.shortened?`${system}\n\n[传输上下文窗口] 较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。`:system,
+          messages:window.messages,tools,maxRetries:0,
+
+          maxOutputTokens:options.maxOutputTokens,abortSignal:AbortSignal.any([options.signal,idle.signal]),
           ...(forced?{toolChoice:{type:"tool" as const,toolName:sanitizeToolName(forced)}}:{}),
         });
         parts.push({type:"step-start"});
         events.push({type:"start",partial:message});
         let text="",reasoning="";
         for await(const event of response.fullStream){
+          // 首响应前也计时；每个新供应商事件刷新，绝不累计成整项任务截止。
+          heartbeat();
           if(event.type==="error")throw event.error;
           if(event.type==="text-delta"){
             text+=event.text;
@@ -83,7 +94,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         failure??=error;message.stopReason=options.signal.aborted?"aborted":"error";
         message.errorMessage=error instanceof Error?error.message:String(error);
         events.push({type:"error",reason:message.stopReason,error:message});
-      }
+      }finally{clearTimeout(idleTimer);}
     })();
     return events;
   };
