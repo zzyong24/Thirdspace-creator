@@ -7,6 +7,10 @@ import { buildForcedToolInstruction, buildForcedToolSequenceInstruction } from "
 
 /** 协议续接文字不决定业务完成；完成判断来自冻结的业务 Skill。 */
 export const CHAT_LENGTH_CONTINUATION = "上一次输出达到单次长度上限。请在当前任务与已有结果基础上继续未完成部分，不重复已成功的操作，直到交付满足本轮用户意图。";
+export const CHAT_FINAL_RECOVERY = "[宿主生成的最终回复恢复，不是新任务] 上一轮在工具执行后结束，但缺少最终答复。不得调用工具、重复任何操作、生成或修改文件、提交任务或发布内容。仅根据本会话已有证据，用用户的语言给出非空最终答复：哪些已核实完成、哪些尚未完成、有哪些阻塞；只引用已经存在且核实的交付物，不把未完成事项说成已完成。";
+export class ChatFinalRecoveryError extends Error {
+  constructor(readonly code: "CHAT_FINAL_RECOVERY_EMPTY" | "CHAT_FINAL_RECOVERY_INCOMPLETE" | "CHAT_FINAL_RECOVERY_TOOL_CALL") { super(code); this.name = "ChatFinalRecoveryError"; }
+}
 interface Definition {name:string;description:string;parameters:Record<string,unknown>}
 export interface ChatPiLoopOptions {
   model:LanguageModel; system:string;messages:ModelMessage[];definitions:Definition[];
@@ -15,6 +19,8 @@ export interface ChatPiLoopOptions {
   approvalId(toolCallId:string):string;
   signal:AbortSignal;maxOutputTokens:number;messageId:string;
   forcedTool?:string;forcedToolSequence?:string[];
+  /** 仅由宿主冻结的新运行策略启用；旧账本回放必须沿用原请求序列。 */
+  recoverMissingFinal?:boolean;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
 }
 /**
@@ -25,6 +31,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
   const Agent=await loadChatPiAgent();
   let agent:ChatPiAgent;
   let failure:unknown,awaitingApproval=false,finishReason="stop",turn=0;
+  let completedTool=false,finalRecovery=false,lastMessageHasFile=false;
   const history:ModelMessage[]=[...options.messages];
   const parts:UIMessage["parts"]=[];
   const definitions=sanitizeToolNames(Object.fromEntries(options.definitions.map(def=>[def.name,def])));
@@ -46,15 +53,17 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         options.signal.throwIfAborted();
         if(awaitingApproval)throw Error("CHAT_APPROVAL_PENDING");
         const step=turn++;
+        const recoveryRequest=finalRecovery;
+        lastMessageHasFile=false;
         const forced=options.forcedToolSequence?.[step]??(step===0?options.forcedTool:undefined);
         // 单步协议适配：工具没有 execute，SDK 不会规划下一步或执行副作用。
         const window=windowChatPiMessages(history);
         const response=streamText({model:options.model,
           system:window.shortened?`${system}\n\n[传输上下文窗口] 较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。`:system,
-          messages:window.messages,tools,maxRetries:0,
+          messages:window.messages,tools:recoveryRequest?{}:tools,maxRetries:0,
 
           maxOutputTokens:options.maxOutputTokens,abortSignal:AbortSignal.any([options.signal,idle.signal]),
-          ...(forced?{toolChoice:{type:"tool" as const,toolName:sanitizeToolName(forced)}}:{}),
+          ...(recoveryRequest?{toolChoice:"none" as const}:forced?{toolChoice:{type:"tool" as const,toolName:sanitizeToolName(forced)}}:{}),
         });
         parts.push({type:"step-start"});
         events.push({type:"start",partial:message});
@@ -67,11 +76,15 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
             text+=event.text;
             await options.onChunk?.({type:"text-delta",id:`${options.messageId}:${step}`,delta:event.text});
           }else if(event.type==="reasoning-delta")reasoning+=event.text;
-          else if(event.type==="file" || event.type==="reasoning-file")parts.push({type:event.type,mediaType:event.file.mediaType,url:`data:${event.file.mediaType};base64,${event.file.base64}`});
+          else if(event.type==="file" || event.type==="reasoning-file"){
+            if(event.type==="file")lastMessageHasFile=true;
+            parts.push({type:event.type,mediaType:event.file.mediaType,url:`data:${event.file.mediaType};base64,${event.file.base64}`});
+          }
           else if(event.type==="source")parts.push(event.sourceType==="url"
             ? {type:"source-url",sourceId:event.id,url:event.url,title:event.title}
             : {type:"source-document",sourceId:event.id,mediaType:event.mediaType,title:event.title,filename:event.filename});
           else if(event.type==="tool-call"){
+            if(recoveryRequest)throw new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_TOOL_CALL");
             const def=definitions[event.toolName];
             if(!def)throw Error("CHAT_TOOL_OUTSIDE_FROZEN_SCOPE");
             // Pi 仅派发已结算调用 ID；真实参数由宿主从模型回执恢复和校验，
@@ -89,6 +102,10 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         message.usage={...message.usage,input:usage.inputTokens??0,output:usage.outputTokens??0,totalTokens:usage.totalTokens??0};
         message.stopReason=message.content.some(part=>part.type==="toolCall")?"toolUse":finishReason==="length"?"length":"stop";
         if(finishReason==="error" || finishReason==="unknown")throw Error("CHAT_MODEL_FINISH_UNKNOWN");
+        if(recoveryRequest){
+          if(!text.trim())throw new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");
+          if(finishReason!=="stop")throw new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_INCOMPLETE");
+        }
         events.push({type:"done",reason:message.stopReason,message});
       }catch(error){
         failure??=error;message.stopReason=options.signal.aborted?"aborted":"error";
@@ -122,6 +139,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
           output=await options.execute(def.name,args,{toolCallId});
           if(part){part.state="output-available";part.output=output;}
         }
+        completedTool=true;
         history.push({role:"tool",content:[{type:"tool-result",toolCallId,toolName:name,output:{type:"json",value:JSON.parse(JSON.stringify(output??null))}}]});
         return {content:[{type:"text" as const,text:JSON.stringify(output??null)}],details:output};
       }catch(error){failure??=error;agent.abort();throw error;}
@@ -131,8 +149,16 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
     if(event.type==="message_end" && !awaitingApproval && !failure){
       const length=event.message?.stopReason==="length";
       // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
-      const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !parts.some(part=>part.type==="file");
+      const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !(options.recoverMissingFinal?lastMessageHasFile:parts.some(part=>part.type==="file"));
       if(!length && !empty)return;
+      if(options.recoverMissingFinal && empty && completedTool){
+        // 缺终稿只补一次只读答复，绝不重开工具策略或重复已执行动作。
+        if(finalRecovery){failure??=new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");agent.abort();return;}
+        finalRecovery=true;
+        history.push({role:"user",content:CHAT_FINAL_RECOVERY});
+        agent.followUp({role:"user",content:CHAT_FINAL_RECOVERY,timestamp:0});
+        return;
+      }
       const continuation=length?CHAT_LENGTH_CONTINUATION:"上一轮响应没有可见正文或工具行动。请继续当前用户请求，执行所需工具或交付实际结果。";
       history.push({role:"user",content:continuation});
       agent.followUp({role:"user",content:continuation,timestamp:0});
