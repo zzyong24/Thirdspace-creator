@@ -3623,13 +3623,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     return { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry };
   };
 
-  // 机制③④ — the gather-trigger seam. The AI module/service stays deterministic (never
-  // imports the Agent SDK); the non-determinism lives HERE in the composition layer. We
-  // wrap the AI transport so that a freshly-queued `research.gather_material` task fires
-  // the real-agent runner in the BACKGROUND (Option A: in-process, non-blocking). The
-  // runner assembles CreativeContext (positioning + topic), runs the Vercel AI SDK research
-  // node (@creatoros/ai-worker + 外置 research.gather 模板 + anthropic 内置 web search), and
-  // records a `material_list` candidate via aiService.recordCandidate → awaiting_confirmation.
+  // 创建只负责唤醒对应执行 owner；租约与冻结快照由该 owner 领取一次。
   const ai: Transport = {
     async request(endpoint, input, ctx) {
       const res = await aiBase.request(endpoint, input, ctx);
@@ -3641,37 +3635,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         ) {
           return res;
         }
-        // [T-513] createTask 已把 official base + 当前账号增量覆盖冻结进 server-only
-        // runtimeData。执行端只消费该快照，绝不重新读“当前配置”，因此排队期间改配置、
-        // 多账号并发、重试都不会串 prompt。缺失/属主不符一律 fail closed。
-        const dispatchCreatedTask = async (signal:AbortSignal) => {
-        const { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry } = makeGenerationReaders();
-        // Fire-and-forget: the HTTP response returns immediately; the agent (30–60s
-        // subprocess) drains in the background against the shared pglite. The UI polls
-        // getTask/listResults for the candidate. Each node has a runner; one trigger map.
-        if (
-          task &&
-          typeof task.taskType === "string" &&
-          task.taskType.startsWith("scheduled.") &&
-          task.status === "queued"
-        ) {
-          // 调度采集 node (scheduled.self.metrics | scheduled.comments, T-007 D3, SPEC
-          // 2026-06-30 §3/§5) — 确定性、不调 LLM 的又一个 live dispatch runner。区别于上面
-          // 15 个 LLM runner:不产候选、不过采纳门,直接调注入的 collector 抓真数据(fetchDouyin
-          // Metrics/Comments,数值程序化抽取)→ ingestion 落库 → 合成 step 写 ai_task_steps →
-          // task succeeded → 回填 job_run。未登录 → job_run needs_reconnect(§6);任一异常 →
-          // task failed + job_run failed(finally 兜底,绝不悬挂 running)。**不碰死链
-          // drainQueue/runTask(见 SPEC 顶部🔧)。** 触发经 dispatchScheduledCollection(与调度器
-          // triggerScheduledJob 共用的单一触发点,下方装配)。
-          await dispatchScheduledCollection?.(ctx, {
-            id: String(task.id),
-            taskType: task.taskType,
-            inputData: (task.inputData ?? {}) as Record<string, unknown>,
-          });
-        }
-        };
-        // 真 runner promise 留在 snapshot/lease scope 内等待；最外层才 fire-and-forget，
-        // 保持 create API 立即返回 taskId，同时 heartbeat 不会因 `void runXxx` 提前结束。
+        // 幂等命中终态或在途任务只回读，不重新领取、取消或覆盖原结果。
+        if (task.status !== "queued") return res;
         const execution = task.taskType==="benchmark.transcribe" && task.status==="queued"
           ? benchmarkTranscription.prepare(ctx,String(task.id)).then(mapped=>{recoveryWake?.wake("benchmark");return mapped;})
           : task.taskType==="transcribe.douyin" && task.status==="queued"
@@ -3682,9 +3647,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           ? (agenticWorker ? agenticBusiness.prepare(ctx,String(task.id)).then(()=>{agenticWorker.start();}) : Promise.reject(new Error("自主执行服务未就绪，请修复或更新应用")))
           : businessExecution.supports(String(task.taskType)) && task.status === "queued"
           ? (modelWorker ? businessExecution.prepare(ctx,String(task.id)).then(()=>{modelWorker.start();}) : Promise.reject(new Error("生成服务未就绪，请修复或更新应用")))
-          : flywheelSourceKinds.has(String(task.taskType).replace(/^scheduled\./,"")) && task.status==="queued"
+          : String(task.taskType).startsWith("scheduled.")
           ? dispatchScheduledCollection(ctx,{id:String(task.id),taskType:String(task.taskType),inputData:(task.inputData??{}) as Record<string,unknown>})
-          : runTaskWithEffectiveSkillSnapshot(ctx,String(task.id),dispatchCreatedTask);
+          : Promise.reject(new Error(`任务类型未注册执行服务：${String(task.taskType)}`));
         void execution.catch(async (error) => {
           if(stoppingPreparation)return;
           const message =
