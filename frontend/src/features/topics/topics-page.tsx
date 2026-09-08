@@ -148,7 +148,7 @@ async function loadViewModel(
   const dayStart = new Date();
   dayStart.setHours(0, 0, 0, 0);
   const dayStartIso = dayStart.toISOString();
-  const [candidates, todayCandidates] = await Promise.all([
+  const [candidates, todayCandidates, filteredCandidates, overviewResult] = await Promise.all([
     client.listCandidates({
       params: undefined,
       query: { page: 1, pageSize: 100, sort, status: "pool" },
@@ -167,28 +167,15 @@ async function loadViewModel(
       },
       body: undefined,
     }) as unknown as Promise<CandidateResource[]>,
-  ]);
-  // [T-244] 来源过滤走服务端 `candidates.list?source=`(真 SQL 过滤,非前端糊)。
-  // 全量 `candidates` 仍照常读:今日条带 / 健康条 / 来源行禁用判定不受过滤影响。
-  let poolCandidates = candidates;
-  if (sourceFilter) {
-    poolCandidates = (await client.listCandidates({
+    sourceFilter ? client.listCandidates({
       params: undefined,
-      query: {
-        page: 1,
-        pageSize: 100,
-        sort,
-        source: sourceFilter,
-        status: "pool",
-      },
+      query: { page: 1, pageSize: 100, sort, source: sourceFilter, status: "pool" },
       body: undefined,
-    })) as unknown as CandidateResource[];
-  }
-  const overview = (await client.overviewTopics({
-    params: undefined,
-    query: undefined,
-    body: undefined,
-  })) as unknown as TopicsOverviewResource;
+    }) as unknown as Promise<CandidateResource[]> : Promise.resolve(null),
+    client.overviewTopics({ params: undefined, query: undefined, body: undefined }) as unknown as Promise<TopicsOverviewResource>,
+  ]);
+  const poolCandidates = filteredCandidates ?? candidates;
+  const overview = overviewResult;
   // [T-060①] TopicReviewDialog 弹窗任务流退役(对话内 ChatCandidateCard 即出即采,
   // 没有「待审阅弹窗」概念);[T-248 批C] 契约 op ai.tasks.pending_topic_review 已删,
   // pendingReview 恒 null(仅为 TopicGenerateBand props 兼容保留)。

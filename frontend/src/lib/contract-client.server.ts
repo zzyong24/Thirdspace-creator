@@ -1,4 +1,5 @@
 import "server-only";
+import { withPageReadCache } from "./page-read-cache.server";
 import {
   ENDPOINTS,
   createClient,
@@ -22,6 +23,11 @@ import { AuthenticationError } from "@creatoros/backend/modules/identity";
 // calls `createServerClient(ctx)`.
 export function createServerClient(ctx: RequestContext) {
   return createClient(ENDPOINTS, compositeTransport, ctx);
+}
+
+/** 仅展示页在 resolveSession 校验当前账号后使用，不供 AI 或写操作读取真值。 */
+export function createCachedPageClient(ctx: RequestContext) {
+  return createClient(ENDPOINTS, withPageReadCache(compositeTransport), ctx);
 }
 
 export function requestServerListWithMeta<E extends Endpoint>(

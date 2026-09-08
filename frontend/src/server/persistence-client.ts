@@ -1,6 +1,7 @@
 import {createRecoveryWakeCoordinator} from "@creatoros/backend/application/recovery-wake";
 import {rebuildOwnedSearchIndex} from "@creatoros/backend/application/search-bootstrap";
 import {createThesisAdoption} from "@creatoros/backend/application/thesis-adoption";
+import { withPageReadInvalidation } from "@/lib/page-read-cache.server";
 import {createApplicationTransport} from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
@@ -11134,7 +11135,7 @@ export async function getWebSessionRuntime(): Promise<
 // Used by BOTH the server pages (contract-client.server) and the /api/v1 route,
 // so server reads and island writes share one pglite store — island mutations
 // persist and a router.refresh() reflects them.
-export const compositeTransport: Transport = createApplicationTransport(getBundle);
+export const compositeTransport: Transport = withPageReadInvalidation(createApplicationTransport(getBundle));
 
 // Test hook: drop the pglite singleton so each test starts from a fresh seed.
 export function __resetPersistenceForTests(): void {

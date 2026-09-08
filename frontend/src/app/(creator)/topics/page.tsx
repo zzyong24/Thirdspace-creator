@@ -15,7 +15,7 @@
  */
 import { TopicsPage } from "@/features/topics/topics-page";
 import type { CandidateSortKey } from "@/features/topics/topics-interactive-region";
-import { createServerClient } from "@/lib/contract-client.server";
+import { createCachedPageClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 
@@ -49,7 +49,7 @@ export default async function TopicsRoutePage({
     <TopicsPage
       sort={sortKey}
       source={source}
-      client={createServerClient(session.ctx)}
+      client={createCachedPageClient(session.ctx)}
     />
   );
 }

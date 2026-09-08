@@ -15,7 +15,7 @@
  */
 
 import { ProjectsPage } from "@/features/projects/projects-page";
-import { createServerClient } from "@/lib/contract-client.server";
+import { createCachedPageClient } from "@/lib/contract-client.server";
 import { resolveSession } from "@/lib/session.server";
 import { ZeroAccountGuidance } from "@/components/shell/zero-account-guidance";
 import { getContentCalendarService } from "@/server/persistence-client";
@@ -73,7 +73,7 @@ export default async function Page({
       page={page}
       status={status}
       sort={sort}
-      client={createServerClient(session.ctx)}
+      client={createCachedPageClient(session.ctx)}
       scheduleContext={{
         accountId: session.ctx.accountId,
         referenceDateKey: calendarContext.today,
