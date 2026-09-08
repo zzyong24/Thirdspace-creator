@@ -46,6 +46,12 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
    const ref=executionRefSchema.parse(execution);
    return leases.withLease(ref,"admission",async scope=>{
     const {input,digest}=await bindAssetExecution(scope);
+    const recovery=(scope.task.payload as {assetLegacyRecovery?:{callId:string}}).assetLegacyRecovery;
+    if(recovery){
+     const bound=await bindAssetExecution(scope,recovery.callId);
+     if(!bound.call||!bound.saved||!["unknown","started","settled"].includes(bound.call.status))throw new ConflictError("历史素材缺少原提交事实，不能创建调用");
+     return bound.call;
+    }
     return ledger(scope.tx as unknown as Db).reserve(ref,{operationKey:input.operationKey,kind:"model",inputDigest:digest,reservedTokens,...(scope.task.retryOfCallId?{retryOfCallId:scope.task.retryOfCallId}:{})});
    });
   },
@@ -53,6 +59,7 @@ export function createExecutionAssetResultService(deps:{db:Db;now:()=>string;bud
    const ref=executionRefSchema.parse(execution);
    return leases.withLease(ref,"admission",async scope=>{
     await bindAssetExecution(scope,callId);
+    if((scope.task.payload as {assetLegacyRecovery?:unknown}).assetLegacyRecovery)throw new ConflictError("历史素材恢复没有新提交权限");
     return ledger(scope.tx as unknown as Db).start(ref,callId);
    });
   },

@@ -17,6 +17,9 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
   if(!cover && ((businessInput.kind==="video"?"video":"image")!==input.mediaKind || businessInput.prompt!==input.prompt))throw new ConflictError("素材执行输入与原业务任务不符");
   const name=cover&&typeof cover.resultData.name==="string"?cover.resultData.name:undefined;
   const digest=`sha256:${createHash("sha256").update(canonicalJson(input)).digest("hex")}`;
+  const recovery=payload.assetLegacyRecovery as {mode?:string;callId?:string}|undefined;
+  if(recovery&&recovery.mode!=="provider_job")throw new ConflictError("历史素材只允许读取原结果并核对");
+  if(recovery&&callId!==undefined&&callId!==recovery.callId)throw new ConflictError("历史素材只能读取原导入调用");
   if(callId===undefined)return {input,digest,name,call:null,saved:null};
   const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.id,callId),eq(executionCalls.executionTaskId,task.id)));
 
