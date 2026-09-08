@@ -972,3 +972,4 @@
 {"ts":"2026-09-08T10:55:57.410Z","actor":"taskctl","action":"start","task":"T-928","sha_before":"f9009dd14ad1","sha_after":"7a97c5e05ea7"}
 {"ts":"2026-09-08T10:55:57.536Z","actor":"taskctl","action":"start","task":"T-929","sha_before":"7a97c5e05ea7","sha_after":"94a0cd25ee6b"}
 {"ts":"2026-09-08T11:04:23.133Z","actor":"taskctl","action":"complete","task":"T-929","evidence":"docs/superpowers/specs/2026-09-08-business-topic-script-method.md；独立只读设计评审通过；仅适配设计交付，未实施；按用户授权暂缓业务测试及全局 reconcile","sha_before":"94a0cd25ee6b","sha_after":"e0fd8f05b6ea"}
+{"ts":"2026-09-08T11:13:40.048Z","actor":"taskctl","action":"start","task":"T-930","sha_before":"60c462704186","sha_after":"c096fc7e2ed0"}

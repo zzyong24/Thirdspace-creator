@@ -59,3 +59,5 @@ T-930 同时退役仅验证旧供应商 SDK 的 T-501 research/model-stream-tool
 修复：真实 Zod 工具复用原校验器，冻结 JSON 不变；纯 JSON fallback 识别受支持的 draft-7 元数据，仍执行原严格约束。无外部 IO 的协议探针得到 valid=true、empty=false、extra=false、metadataPreserved=true。增加对应回归用例但按用户指示未运行自动测试套件。
 
 真实工具集合的无外部 IO 复核：allChatTools(dummy deps) 普通与绑定项目各 44/44，选区绑定 45/45；prepareChatToolDefinitions 均完整通过。因此 Zod 修复属于潜在协议缺陷消除，不能作为本次截图的直接根因。
+
+产品说明快照的合成诊断：官方 v1、无覆盖时通过；缺失快照、版本不同或存在覆盖时，会在聊天装配前明确拒绝。当前没有真实账号配置证据，不能认定为截图根因。已为 CREATOROS_GUIDE_UNAVAILABLE 补 Error.code，保留原判断；SKILL_SNAPSHOT_INCOMPLETE 原本已有 code。
