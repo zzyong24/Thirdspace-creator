@@ -368,7 +368,7 @@ import { runDouyinHeavyBackfill } from "@/server/ingestion/douyin-heavy-backfill
 // [T-230] DouyinCooldownActiveError:transcribe-runner 冷却延迟重试的判别锚(isCooldownError)。
 import {
   DouyinRequestGateway,
-  DouyinCooldownActiveError,
+  classifyDouyinOutcome,
   type DouyinChannel,
 } from "@/server/ingestion/douyin-request-gateway";
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
@@ -9435,9 +9435,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       },
     },
     transcribeSource:{
-      fetchLoggedInSource:async(c,awemeId,signal)=>(await loadDouyinCdp()).fetchDouyinVideoUrlViaDetail({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal),gateway:douyinGateway,signal}),
-      async acquireChannel(_c,channel,signal){signal.throwIfAborted();await douyinGateway.acquire(channel);signal.throwIfAborted();},
-      reportChannel:(_c,channel,result)=>douyinGateway.report(channel,result),
+      async fetchLoggedInSource(c,awemeId,signal){
+        const source=await (await loadDouyinCdp()).fetchDouyinVideoUrlViaDetail({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal),gateway:douyinGateway,signal});
+        return {...source,kind:source.kind??"video"};
+      },
+      async acquireChannel(_c,channel,signal){signal?.throwIfAborted();await douyinGateway.acquire(channel);signal?.throwIfAborted();},
+      reportChannel:(_c,channel,result)=>douyinGateway.report(channel,classifyDouyinOutcome(result.kind==="success"?{kind:"ok"}:result)),
     },
     transcribePreparation:{
       resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
@@ -12282,6 +12285,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   }
 
   if(modelWorker)preparationRecovery=Promise.all([
+    transcribeBusiness.recoverQueued(
+      async(c,id)=>{await aiService.markFailed(c,id,"此转写任务已有旧执行记录，请核对逐字稿后从作品重新发起").catch(()=>{});},
+      async(c,id)=>{await aiService.markFailed(c,id,"转写任务准备未完成，请检查模型配置后重试").catch(()=>{});},
+      ()=>stoppingPreparation,
+    ),
     businessExecution.recoverQueued(async(c,id)=>{await aiService.markFailed(c,id,"任务准备未完成，请重新发起").catch(()=>{});},()=>stoppingPreparation),
     assetBusiness.recoverQueued(runLegacyAssetTask,async(c,id)=>{await aiService.markFailed(c,id,"素材任务准备未完成，请检查配置与原任务").catch(()=>{});},()=>stoppingPreparation),
   ]).then(()=>{}).catch(()=>console.error("[execution-worker] PREPARATION_RECOVERY_FAILED"));

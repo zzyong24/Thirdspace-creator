@@ -1,3 +1,4 @@
+import type {z} from "zod";
 import type {Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
 import {workerPortInputSchemas,transcribeSourceSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
@@ -8,7 +9,7 @@ export interface TranscribeSourceDeps {
  /** 仅原账号profile的登录详情窄桥；不得指向user/domain网页会话。原detail已含creator-center网关。 */
  fetchLoggedInSource(ctx:RequestContext,awemeId:string,signal?:AbortSignal):Promise<unknown>;
  acquireChannel(ctx:RequestContext,channel:'iesdouyin'|'creator-center',signal?:AbortSignal):Promise<unknown>;
- reportChannel(ctx:RequestContext,channel:'iesdouyin'|'creator-center',result:{kind:string;consecutiveTimeouts?:number}):Promise<unknown>;
+ reportChannel(ctx:RequestContext,channel:'iesdouyin'|'creator-center',result:z.infer<typeof workerPortInputSchemas.reportTranscribeChannel>['result']):Promise<unknown>;
 }
 /** 资源授权与共享网关单独保留，不负责ASR或作品结果。 */
 export function createExecutionTranscribeSourceService(db:Db,deps:TranscribeSourceDeps&{now?:()=>string}){
@@ -20,7 +21,7 @@ export function createExecutionTranscribeSourceService(db:Db,deps:TranscribeSour
   const ctx=await check();let output:unknown;
   if(port==='fetchLoggedInTranscribeSource')output=transcribeSourceSchema.parse(await deps.fetchLoggedInSource(ctx,input.awemeId,signal));
   else if(port==='acquireTranscribeChannel')output=await deps.acquireChannel(ctx,input.channel,signal);
-  else output=await deps.reportChannel(ctx,input.channel,input.result);
+  else output=await deps.reportChannel(ctx,input.channel,workerPortInputSchemas.reportTranscribeChannel.parse(raw).result);
   await check();return port==='fetchLoggedInTranscribeSource'?output:{ok:true};
  }};
 }
