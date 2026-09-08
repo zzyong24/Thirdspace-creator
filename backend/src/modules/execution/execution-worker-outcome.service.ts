@@ -6,7 +6,7 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
 /** 后端保存等待时间和重试来源；调度 attempt 仅用于 fencing，不作为供应商调用次数。 */
-export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>string; random?:()=>number} = {}) {
+export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>string; random?:()=>number;allowedKinds?:readonly ("ai_task"|"topic_preview"|"script_candidate")[]} = {}) {
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
   return {
@@ -14,7 +14,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
       const input=workerPortInputSchemas.commitResult.parse(raw);
       if(input.outcome === "succeeded")throw new ConflictError("成功必须经候选提交端口");
       return leases.withLease(ref,"settlement",async({tx,task,context})=>{
-        if(task.kind !== "ai_task" || task.status !== "running")throw new ConflictError("任务已停止，不能覆盖状态");
+        if(!(deps.allowedKinds??["ai_task"]).includes(task.kind as "ai_task"|"topic_preview"|"script_candidate") || task.status !== "running")throw new ConflictError("任务已停止，不能覆盖状态");
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(desc(executionCalls.sequence));
         const allowedStarted=new Set(validate?.(calls,task)??[]),last=calls[0];
         if(input.outcome!=="unknown_result" && calls.some(call=>call.status==="unknown" || (call.status==="started" && !allowedStarted.has(call.id))))throw new ConflictError("存在未确认调用，禁止改成可恢复失败");

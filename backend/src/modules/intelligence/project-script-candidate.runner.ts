@@ -1,3 +1,4 @@
+import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import { randomUUID } from "node:crypto";
 
 import type { RequestContext } from "@creatoros/contract";
@@ -82,6 +83,7 @@ export async function runProjectScriptCandidateTask(
       status: "succeeded",
     });
   } catch (error) {
+    if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     await deps.tasks.finish({
       taskId: claim.task.id,
       workerId,

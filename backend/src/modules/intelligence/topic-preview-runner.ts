@@ -5,6 +5,13 @@ import type {
 } from "../execution";
 import type { IntelligenceService } from "./intelligence.service";
 
+/** 桥已交还持久恢复，runner不能用普通失败覆盖等待/未知/控制状态。 */
+export class IntelligenceGenerationSuspended extends Error {
+  constructor(readonly taskId:string,readonly attempt:number,readonly fenceToken:string,readonly runtimeStatus:string){
+    super('INTELLIGENCE_GENERATION_SUSPENDED');
+  }
+}
+
 export interface TopicPreviewGeneratorPort {
   generate(
     ctx: RequestContext,
@@ -227,6 +234,7 @@ export async function runIntelligenceTopicPreviewTask(
       status: "succeeded",
     });
   } catch (error) {
+    if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     const failure = classifyTopicPreviewFailure(error);
     const blocked =
       failure.category === "positioning" || failure.category === "credential";

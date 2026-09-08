@@ -4,6 +4,8 @@ import {z} from "zod";
 import {eq,executionTasks,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import {structuredGenerationInputSchema,workerModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
+import {createExecutionWorkerOutcomeService} from "../execution/execution-worker-outcome.service";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionWorkerCallPorts} from "../execution/execution-worker-call-ports.service";
@@ -30,7 +32,8 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
  let stopping=false;const active=new Set<ReturnType<typeof createWorkerSupervisor>>();
  const budget={maxCalls:16,maxTokens:1000000,deadlineMs:600000};
  const leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,{...deps,budget}),calls=createExecutionWorkerCallPorts(db,{...deps,budget});
- async function generate(ctx:RequestContext,mode:"topic_preview"|"script_candidate",target:unknown,claim:PersistentTaskClaim|undefined,onCheckpoint?:(value:TopicPreviewCheckpoint)=>Promise<void>){
+ const outcomes=createExecutionWorkerOutcomeService(db,{...deps,allowedKinds:["topic_preview","script_candidate"]});
+ async function execute(ctx:RequestContext,mode:"topic_preview"|"script_candidate",target:unknown,claim:PersistentTaskClaim|undefined,onCheckpoint?:(value:TopicPreviewCheckpoint)=>Promise<void>){
   if(stopping)throw new Error("INTELLIGENCE_WORKER_STOPPING");
   if(!claim)throw new Error("INTELLIGENCE_GENERATION_CLAIM_REQUIRED");
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
@@ -62,20 +65,25 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   // 已保存最终模型结果可按原调用回放，不能换模型重新烧费。
   const prior=state.calls.at(-1);
   if(prior?.status==="settled" && prior.resultText){const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(prior.resultText));return mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);}
-  let completed:unknown, failure="INTELLIGENCE_WORKER_INCOMPLETE";
+  let completed:unknown, persistedStatus:string|undefined,requestSequence=0,closedPorts=false;
   const supervisor=createWorkerSupervisor({entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:{
-   async validate(current,kind){if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
+   async validate(current,kind){if(closedPorts)throw new Error("INTELLIGENCE_PORTS_CLOSED");if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
    async invoke(current,port,raw){
     if(port==="readTaskContext"){await verify();return saved.input;}
     if(port==="resolveModelCredential"){await verify();if(workerPortInputSchemas.resolveModelCredential.parse(raw).capability!==capability)throw new Error("INTELLIGENCE_CAPABILITY_MISMATCH");return spec;}
-    if(port==="heartbeat")return deps.tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});
+    if(port==="heartbeat"){await verify();return deps.tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}
     if(port==="reserveGenerationCall"){
      await verify();const request=workerPortInputSchemas.reserveGenerationCall.parse(raw),prefix=`${saved.input.operationKey}/model/`;
-     if(!request.operationKey.startsWith(prefix)|| !/^[1-9][0-9]*$/.test(request.operationKey.slice(prefix.length)))throw new Error("INTELLIGENCE_OPERATION_MISMATCH");
+     if(!request.operationKey.startsWith(prefix)|| request.operationKey.slice(prefix.length)!==String(requestSequence+1))throw new Error("INTELLIGENCE_OPERATION_MISMATCH");
      const requested=request.request.maxOutputTokens;
      if(typeof requested!=="number" || requested<1 || requested>saved.input.maxOutputTokens || "headers" in request.request || "abortSignal" in request.request)throw new Error("INTELLIGENCE_MODEL_BUDGET_INVALID");
      const encoded=JSON.stringify(request.request);if(encoded.length>4000000)throw new Error("INTELLIGENCE_MODEL_INPUT_TOO_LARGE");
-     const row=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${hash(request.request)}`,reservedTokens:Buffer.byteLength(encoded)+1024+requested});
+     const currentTask=await verify(),recorded=(await ledger.inspect(ref)).calls;
+     const retry=recorded.find(row=>row.id===currentTask.retryOfCallId && row.operationKey===request.operationKey);
+     const row=await ledger.reserve(ref,{operationKey:request.operationKey,kind:"model",inputDigest:`sha256:${hash(request.request)}`,reservedTokens:Buffer.byteLength(encoded)+1024+requested,...(retry?{retryOfCallId:retry.id}:{})},(_rows,task)=>{
+      if(retry && task.retryOfCallId!==retry.id)throw new Error("INTELLIGENCE_RETRY_AUTHORITY_CHANGED");
+     });
+     requestSequence++;
      return {callId:row.id,status:row.status,...(row.providerResult?{providerResult:row.providerResult}:{}),...(row.rejectionCode?{rejectionCode:row.rejectionCode}:{})};
     }
     if(port==="startCall")return calls.startCall(ref,raw);
@@ -94,9 +102,16 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
      return {callId:last.id};
     }
     if(port==="commitResult"){
-     const request=workerPortInputSchemas.commitResult.parse(raw);if(request.outcome!=="succeeded"){failure=request.errorCode;return {};}
+     const request=workerPortInputSchemas.commitResult.parse(raw);
+     if(request.outcome!=="succeeded"){
+      const recorded=(await ledger.inspect(ref)).calls;
+      // 旧Worker可能丢失HTTP分类，但账本明确拒绝仍可有界重试；未知回执不能走这条路。
+      const recoverRejected=request.outcome==="failed"&&request.errorCode==="WORKER_EXECUTION_INTERRUPTED"&&recorded.at(-1)?.status==="rejected"&&!recorded.some(row=>row.status==="started"||row.status==="unknown");
+      const result=await outcomes.recordFailure(ref,recoverRejected?{...request,outcome:"retry_wait"}:request);
+      persistedStatus=result.status;closedPorts=true;return result;
+     }
      await verify();const last=(await ledger.inspect(ref)).calls.at(-1);if(last?.id!==request.callId||last.resultText!==request.text||last.status!=="settled")throw new Error("INTELLIGENCE_COMMIT_MISMATCH");
-     completed=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(request.text)).value;return {};
+     completed=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(request.text)).value;closedPorts=true;return {};
     }
     throw new Error("INTELLIGENCE_PORT_UNAVAILABLE");
    },
@@ -104,9 +119,46 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   if(stopping){await supervisor.stop();throw new Error("INTELLIGENCE_WORKER_STOPPING");}
   active.add(supervisor);
   let checking=false;
-  const timer=setInterval(()=>{if(checking)return;checking=true;void verify().catch(()=>supervisor.cancel(ref)).finally(()=>{checking=false;});},250);
-  try{const outcome=await supervisor.run(ref,Date.parse(state.deadlineAt!));if(outcome!=="completed"||completed===undefined)throw new Error(failure);return completed;}
-  finally{clearInterval(timer);try{await supervisor.stop();}finally{active.delete(supervisor);}}
+  const timer=setInterval(()=>{if(checking||closedPorts)return;checking=true;void verify().catch(()=>{if(!closedPorts)supervisor.cancel(ref);}).finally(()=>{checking=false;});},250);
+  try{const outcome=await supervisor.run(ref,Date.parse(state.deadlineAt!));if(persistedStatus)throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,persistedStatus);if(outcome!=="completed"||completed===undefined)throw new Error("INTELLIGENCE_WORKER_INCOMPLETE");return completed;}
+  catch(error){
+   if(!persistedStatus){
+    const last=(await ledger.inspect(ref)).calls.at(-1);
+    if(last?.status==="settled"&&last.resultText){
+     const value=z.object({kind:z.literal("result"),value:z.json()}).parse(JSON.parse(last.resultText));
+     completed=mode==="topic_preview"?topicResult.parse(value.value):z.object({text:z.string().min(1)}).parse(value.value);
+     return completed;
+    }
+   }
+   throw error;
+  }
+  finally{closedPorts=true;clearInterval(timer);try{await supervisor.stop();}catch(error){if(completed===undefined&&!persistedStatus)throw error;}finally{active.delete(supervisor);}}
+ }
+ async function generate(ctx:RequestContext,mode:"topic_preview"|"script_candidate",target:unknown,claim:PersistentTaskClaim|undefined,onCheckpoint?:(value:TopicPreviewCheckpoint)=>Promise<void>){
+  if(!claim)throw new Error("INTELLIGENCE_GENERATION_CLAIM_REQUIRED");
+  const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  try{return await execute(ctx,mode,target,claim,onCheckpoint);}
+  catch(error){
+   if(error instanceof IntelligenceGenerationSuspended)throw error;
+   let status="recovery_pending",unstartedFailure=false;
+   try{
+    const task=await leases.withLease(ref,"settlement",async({task})=>task);
+    status=task.status;
+    if(task.kind!==mode || task.userId!==ctx.userId || task.accountId!==ctx.accountId)throw new Error("INTELLIGENCE_GENERATION_OWNER_MISMATCH");
+    if(task.status==="running"&&!stopping){
+     const state=await ledger.inspect(ref);
+     // IPC/结算回执丢失不推测为未调用；只留给原账本恢复，不给runner覆盖失败的机会。
+     if(!state.calls.length){unstartedFailure=true;}else{
+     const unknown=state.calls.some(row=>row.status==="started"||row.status==="unknown");
+     const rejected=state.calls.at(-1)?.status==="rejected";
+     const result=await outcomes.recordFailure(ref,{outcome:unknown?"unknown_result":rejected?"retry_wait":"failed",errorCode:unknown?"INTELLIGENCE_CALL_REQUIRES_RECONCILIATION":rejected?"INTELLIGENCE_REJECTED_RECEIPT_RECOVERY":"INTELLIGENCE_WORKER_INTERRUPTED"});
+     status=result.status;
+     }
+    }
+   }catch{/* 失去fence/数据库不可用时保留原状态，由原claimNext/过期恢复接管。 */}
+   if(unstartedFailure)throw error;
+   throw new IntelligenceGenerationSuspended(ref.executionTaskId,ref.attempt,ref.fenceToken,status);
+  }
  }
  const topicPreviewGenerator:TopicPreviewGeneratorPort={async generate(ctx,target,onCheckpoint,claim){return topicResult.parse(await generate(ctx,"topic_preview",target,claim,onCheckpoint));}};
  const projectScriptGenerator:ProjectScriptCandidateGeneratorPort={async generate(ctx,target,claim){return z.object({text:z.string().min(1)}).parse(await generate(ctx,"script_candidate",target,claim));}};
