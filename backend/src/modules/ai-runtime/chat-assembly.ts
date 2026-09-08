@@ -54,8 +54,8 @@ export async function prepareChatAssembly(ctx: RequestContext, chatContext: Chat
         ? getEffectiveTemplate(skillId)
         : getTemplate(skillId);
     // [T-770] 在当前 ALS scope 内一次性校验并冻结代码随版的产品说明。正文只留在服务端闭包，
-    // 不拼进 system；模型真正调用 creatoros.guide 时才进入 tool result。批准 surface 缺失/
-    // 错版本/账号 overlay 一律让本轮显式失败，不等工具调用后再用模型记忆兜底。
+    // 不拼进 system；模型真正调用 creatoros.guide 时才进入 tool result。说明不可用时
+    // 只让该工具返回不可用，不能让无关的写稿、找素材等聊天在提交前失败。
     const creatorOsGuideSnapshot = await resolveChatGuideSnapshot(chatContext.surface);
     // [T-240①] 阶段判据(动态层):项目对话读该项目的 stage + 发布状态(getProjectDetail 读端口
     // 已在 composition root 绑好,不新造)。best-effort:读不到/端口未装配 → null(不注阶段块、

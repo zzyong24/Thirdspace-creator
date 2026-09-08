@@ -1705,7 +1705,9 @@ it("持久聊天准备不借外层快照补齐缺失的产品说明",async()=>{
  const input:Parameters<typeof prepareChatTurn>[1]={messages:[],chatContext:{surface:"topics"}};
  const outer=durableChatSnapshot("a","外层方法"),inner=durableChatSnapshot("a","本轮方法");
  inner.skills.pop();
- await expect(runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,inner))).rejects.toThrow("creatoros.guide");
+ const withoutGuide=await runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,inner));
+ expect(withoutGuide.assembly.system).toContain("本轮方法");
+ expect(withoutGuide.assembly.system).not.toContain("外层方法");
  const prepared=await runWithEffectiveSkillSnapshot(outer,()=>prepareDurableChatTurn(owner,input,deps,durableChatSnapshot("a","显式方法")));
  expect(prepared.assembly.system).toContain("显式方法");expect(prepared.assembly.system).not.toContain("外层方法");
 });

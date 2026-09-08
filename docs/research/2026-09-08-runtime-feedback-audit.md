@@ -61,3 +61,24 @@ T-930 同时退役仅验证旧供应商 SDK 的 T-501 research/model-stream-tool
 真实工具集合的无外部 IO 复核：allChatTools(dummy deps) 普通与绑定项目各 44/44，选区绑定 45/45；prepareChatToolDefinitions 均完整通过。因此 Zod 修复属于潜在协议缺陷消除，不能作为本次截图的直接根因。
 
 产品说明快照的合成诊断：官方 v1、无覆盖时通过；缺失快照、版本不同或存在覆盖时，会在聊天装配前明确拒绝。当前没有真实账号配置证据，不能认定为截图根因。已为 CREATOROS_GUIDE_UNAVAILABLE 补 Error.code，保留原判断；SKILL_SNAPSHOT_INCOMPLETE 原本已有 code。
+
+## T-928 聊天提交失败的直接根因与修复（用户要求继续解决）
+
+公开 CLI `settings.prompts.get` 查询 creatoros.guide（req-3302704d-595）得到真实安装版 baseVersion=v1+methods-intent-2026-09-08、rowRevision=null、overlayVersion=null、compatibility=compatible。此前仅按错误字段名筛选 operations，漏掉了 settings.prompts 公共入口；现已按 operation 字段正确发现并读取，未绕过 CLI。
+
+方法增强会装饰官方 Skill 版本，chat-guide-snapshot 却硬编码只接受 v1。真实官方模板构建的完整 prepareDurableChatTurn 在普通项目聊天、script.draft、script.hooks 三个入口均复现此抛错，尚未读取任何项目上下文，和用户消息已保存、无任务 ID 的现场吻合。独立审查 continuous_budget PASS。
+
+修复沿用当前任务授权：冻结说明与不可变 getOfficialSkillBase 的完整版本及正文精确比对，保留无账号覆盖要求；工具响应接口版本 v1 与 Skill 内部版本分开。已知可选说明缺失、旧版本、覆盖或不完整只让说明工具不可用，不阻断其它聊天；无效任务快照及账号错误仍阻断，不借外层快照补全。该公共 resolver 同时覆盖提交准备和 Worker 读工具恢复两处消费者。没有删除或修改用户配置/业务数据。
+
+```mermaid
+flowchart LR
+ A[用户发消息] --> B[冻结本轮 Skill]
+ B --> C[按当前官方版本核对产品说明]
+ C -->|有效| D[准备聊天并提交任务]
+ C -->|仅说明不可用| D
+ D --> E[Pi 执行本轮请求]
+```
+
+修复后无外部 IO 的完整准备链路检查：普通项目聊天、script.draft、script.hooks 全部成功，各 40 工具；模型消息和 research/structured/scriptDraft/scriptHooks 冻结字段完整。说明缺失、旧 v1、覆盖、正文篡改四类普通准备成功而说明工具明确不可用；主 Skill 缺失及跨账号依然拒绝。frontend tsc 通过。该检查未调用真实模型/数据库，不作为安装后实际生成成功的证据。
+
+沿用用户本地打包授权，修复提交后进入官方固定打包流程，业务套件与独立打包 vitest 按既有暂缓授权不运行；构建失败时保留原始证据，不在打包中修改源码。
