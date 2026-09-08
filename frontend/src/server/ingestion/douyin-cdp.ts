@@ -420,6 +420,7 @@ export async function streamAudioFromVideo(playUrl: string, deps?: StreamAudioDe
 // ---------------------------------------------------------------------------
 
 export interface FetchDouyinOptions {
+  signal?: AbortSignal;
   /** 持久化 profile 目录(cookie 落这;首次扫码后复刷复用)。 */
   authDir: string;
   /** 抓取的 capturedAt(ISO8601);调用方传入(纯函数化 Date)。 */
@@ -736,11 +737,12 @@ export interface FetchDouyinMetricsDeps {
   openContext?: (
     authDir: string,
     headless: boolean,
+    signal?: AbortSignal,
   ) => Promise<MetricsCapableContext>;
 }
 
-const realMetricsOpenContext = (authDir: string, headless: boolean) =>
-  openContext(authDir, headless) as unknown as Promise<MetricsCapableContext>;
+const realMetricsOpenContext = (authDir: string, headless: boolean, signal?: AbortSignal) =>
+  openContext(authDir, headless, signal) as unknown as Promise<MetricsCapableContext>;
 
 type DouyinSessionProbeResult = "active" | "expired" | "unknown";
 
@@ -839,11 +841,14 @@ export async function fetchDouyinMetrics(
   opts: FetchDouyinOptions,
   deps: FetchDouyinMetricsDeps = {},
 ): Promise<FetchDouyinMetricsResult> {
+  opts.signal?.throwIfAborted();
   const maxPages = opts.maxPages ?? 40; // 上限(每页 ~12 条;has_more=false 会提前停,40 覆盖 ~480 作品)
   const gateway = opts.gateway ?? instantNoopGateway; // [gate-F7 插装点②] creator-center 每页限流
   const openCtx = deps.openContext ?? realMetricsOpenContext;
-  const ctx = await openCtx(opts.authDir, true);
+  const ctx = await openCtx(opts.authDir, true, opts.signal);
+  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   try {
+    opts.signal?.throwIfAborted();
     // 登录校验(窄接口只用 ctx.cookies;真 BrowserContext 结构满足)。
     const cookies = await ctx.cookies("https://creator.douyin.com");
     const loggedIn = cookies.some(
@@ -891,6 +896,7 @@ export async function fetchDouyinMetrics(
     await gotoWithRetry(page, CREATOR_CONTENT, {
       timeoutMs: 60_000,
       label: "creator-content(作品列表)",
+      signal:opts.signal,
     });
     await page.waitForTimeout(3000); // 等首屏 work_list XHR 回来
 
@@ -898,6 +904,7 @@ export async function fetchDouyinMetrics(
     // 容器,是只抓到首页 24 条的根因。停止:某页 has_more=false(可靠),或连续 3 轮无新作品,或到上限。
     let staleRounds = 0;
     for (let i = 0; i < maxPages; i++) {
+      opts.signal?.throwIfAborted();
       if (!hasMore) break; // 抖音 work_list 明确翻到底
       // [T-177 增量化] 首屏(goto 后)或上一轮滚动加载的页已全是库里已知作品 → 提前停,少滚几十页。
       if (reachedKnown) break;
@@ -932,7 +939,7 @@ export async function fetchDouyinMetrics(
         await page.keyboard.press("End").catch(() => {});
         await page.mouse.wheel(0, 3000).catch(() => {});
         await page.waitForTimeout(2500);
-      });
+      }, undefined, opts.signal);
       if (reachedKnown) break; // [T-177] 本轮滚动加载的页全是已知作品 → 停
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // has_more 不返回时的兜底,防死循环
@@ -962,9 +969,13 @@ export async function fetchDouyinMetrics(
     } else {
       console.log("[douyin-identity] 未解析到身份(作品列表空/无 author/脏 JSON)");
     }
+    opts.signal?.throwIfAborted();
     return { records, identity };
+  } catch (error) {
+    opts.signal?.throwIfAborted();
+    throw error;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+    await lifetime.close(); // 等待真实 context 停止；关闭失败不伪装已释放 profile
   }
 }
 
@@ -1465,6 +1476,7 @@ interface SearchCapableContext {
 }
 
 export interface FetchSearchVideosOptions {
+  signal?: AbortSignal;
   authDir: string;
   /** 搜索关键词(定位 keywords / 用户可配)。 */
   keyword: string;
@@ -1476,6 +1488,7 @@ export interface FetchSearchVideosDeps {
   openContext?: (
     authDir: string,
     headless: boolean,
+    signal?: AbortSignal,
   ) => Promise<SearchCapableContext>;
 }
 
@@ -1489,13 +1502,16 @@ export async function fetchDouyinSearchVideos(
   opts: FetchSearchVideosOptions,
   deps: FetchSearchVideosDeps = {},
 ): Promise<DouyinSearchVideo[]> {
+  opts.signal?.throwIfAborted();
   const gateway = opts.gateway ?? instantNoopGateway;
   const openCtx =
     deps.openContext ??
-    ((authDir: string, headless: boolean) =>
-      openContext(authDir, headless) as unknown as Promise<SearchCapableContext>);
-  const ctx = await openCtx(opts.authDir, true);
+    ((authDir: string, headless: boolean, signal?: AbortSignal) =>
+      openContext(authDir, headless, signal) as unknown as Promise<SearchCapableContext>);
+  const ctx = await openCtx(opts.authDir, true, opts.signal);
+  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   try {
+    opts.signal?.throwIfAborted();
     // 登录态校验(页内 fetch credentials:include 要借它;未登录 → 提示扫码,同 user-posts)。
     const cookies = await ctx.cookies("https://www.douyin.com");
     const loggedIn = cookies.some(
@@ -1511,7 +1527,7 @@ export async function fetchDouyinSearchVideos(
       await gotoWithRetry(
         page as unknown as GotoCapablePage,
         `https://www.douyin.com/search/${kw}?publish_time=1&sort_type=1&type=video`,
-        { timeoutMs: 60_000, label: `黑马搜索(${opts.keyword})` },
+        { timeoutMs: 60_000, label: `黑马搜索(${opts.keyword})`, signal:opts.signal },
       );
       await page.waitForTimeout(5000); // 等页面就绪(darkhorse.py 等 6s,这里 5s + gateway 节奏)
 
@@ -1540,10 +1556,14 @@ export async function fetchDouyinSearchVideos(
       console.log(
         `[darkhorse] fetchDouyinSearchVideos 关键词「${opts.keyword}」→ ${videos.length} 条候选`,
       );
+      opts.signal?.throwIfAborted();
       return videos;
-    });
+    }, undefined, opts.signal);
+  } catch (error) {
+    opts.signal?.throwIfAborted();
+    throw error;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium
+    await lifetime.close(); // 等待真实 context 停止；关闭失败不伪装已释放 profile
   }
 }
 
@@ -2320,7 +2340,7 @@ interface ExportCapableContext {
 /** fetchDouyinWorkListExport 的可注入依赖(默认真 openContext + fs 读;单测注 fake page/fs)。 */
 export interface FetchWorkListExportDeps {
   /** 打开(或复用)一个带登录态的 headless context(默认 openContext(.auth/, headless))。 */
-  openContext?: (authDir: string, headless: boolean) => Promise<ExportCapableContext>;
+  openContext?: (authDir: string, headless: boolean, signal?: AbortSignal) => Promise<ExportCapableContext>;
   /** 读下载文件 bytes(默认 fs.readFile;单测注 fake 返 canned bytes)。 */
   readFile?: (path: string) => Promise<Uint8Array>;
   /** 等按钮/下载超时(ms;默认 40s 下载 / 每步等待照 TzFilm 节奏)。 */
@@ -2337,6 +2357,7 @@ const TOAST_NO_DATA_CODES = [
 ];
 
 export interface FetchWorkListExportOptions {
+  signal?: AbortSignal;
   authDir: string;
 }
 
@@ -2598,10 +2619,11 @@ export async function fetchDouyinWorkListExport(
   opts: FetchWorkListExportOptions,
   deps: FetchWorkListExportDeps = {},
 ): Promise<Uint8Array> {
+  opts.signal?.throwIfAborted();
   const openCtx =
     deps.openContext ??
-    ((authDir, headless) =>
-      openContext(authDir, headless) as unknown as Promise<ExportCapableContext>);
+    ((authDir, headless, signal) =>
+      openContext(authDir, headless, signal) as unknown as Promise<ExportCapableContext>);
   const readFile =
     deps.readFile ??
     (async (p: string) => {
@@ -2611,7 +2633,8 @@ export async function fetchDouyinWorkListExport(
   const downloadTimeoutMs = deps.downloadTimeoutMs ?? 40_000;
   const gateway = deps.gateway ?? instantNoopGateway; // [gate-F7 插装点⑤] creator-center 整个导出一次限流
 
-  const ctx = await openCtx(opts.authDir, true);
+  const ctx = await openCtx(opts.authDir, true, opts.signal);
+  const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   // [gate-F6] download 超时时探到的「当前暂无数据可导出」toast 结果(true=内容空非频控)。
   // 由下方 download 失败分支填,mapExportErr 读它决定 export-download-timeout 的最终分类。
   let sawNoDataToast = false;
@@ -2633,14 +2656,19 @@ export async function fetchDouyinWorkListExport(
   };
 
   try {
+    opts.signal?.throwIfAborted();
     return await withDouyinChannel(
       gateway,
       "creator-center",
-      () => runExportOnce(ctx, { downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
+      () => runExportOnce(ctx, { signal:opts.signal, downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
       mapExportErr,
+      opts.signal,
     );
+  } catch (error) {
+    opts.signal?.throwIfAborted();
+    throw error;
   } finally {
-    await ctx.close().catch(() => {}); // 关我们自起的 Chromium(非用户浏览器)
+    await lifetime.close(); // 等待真实 context 停止；关闭失败不伪装已释放 profile
   }
 }
 
@@ -2649,12 +2677,14 @@ export async function fetchDouyinWorkListExport(
 async function runExportOnce(
   ctx: ExportCapableContext,
   args: {
+    signal?: AbortSignal;
     downloadTimeoutMs: number;
     readFile: (path: string) => Promise<Uint8Array>;
     onDownloadTimeout: (hasNoDataToast: boolean) => void;
   },
 ): Promise<Uint8Array> {
   const { downloadTimeoutMs, readFile, onDownloadTimeout } = args;
+  args.signal?.throwIfAborted();
   {
     if (!(await isLoggedInExport(ctx))) throw new DouyinNotLoggedInError();
     const page = ctx.pages()[0] ?? (await ctx.newPage());
@@ -2664,6 +2694,7 @@ async function runExportOnce(
     await gotoWithRetry(page, CREATOR_DATA_CENTER_CONTENT, {
       timeoutMs: 60_000,
       label: "data-center-content(xlsx 导出)",
+      signal:args.signal,
     });
     // 等 Garfish 微前端初始化(真机 ~15s;DATA-2 已验)。
     await page.waitForTimeout(15_000);
@@ -2835,6 +2866,7 @@ async function runExportOnce(
     try {
       download = await downloadPromise;
     } catch (timeoutErr) {
+      args.signal?.throwIfAborted();
       const hasNoDataToast = await page
         .evaluate(hasVisibleByCharCodesInPage, TOAST_NO_DATA_CODES)
         .catch(() => false);
@@ -2843,7 +2875,9 @@ async function runExportOnce(
       throw timeoutErr; // 原超时错向上传(withDouyinChannel 据 mapExportErr 分类后仍抛)
     }
     const path = await download.path();
+    args.signal?.throwIfAborted();
     const bytes = await readFile(path);
+    args.signal?.throwIfAborted();
 
     // 8) 校验 PK 头(登录态过期时抖音返 JSON / HTML,非真 xlsx —— TzFilm Pitfall)。
     if (!isXlsxBytes(bytes)) {
