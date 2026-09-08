@@ -831,23 +831,8 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
     },
 
     async upsertTopicPreference(ctx, input) {
-      // 护栏①:权重 ±10 封顶。缺省由 exampleCount 派生(例越多越强,3 例→9,≥4 例→10 封顶),
-      //   显式传入亦一律再 clamp(单条偏好对评分的影响绝不越 ±10)。存正向 magnitude,方向在评分时施符号。
-      const rawWeight =
-        input.weight !== undefined ? input.weight : input.exampleCount * 3;
-      const weight = Math.abs(clampPreferenceWeight(rawWeight));
-      // 护栏②:≥3 例才升级为 active 硬偏好(注入评分);不足则记为 candidate(只记不改规则)。
-      const status: "candidate" | "active" = isHardPreference(input.exampleCount)
-        ? "active"
-        : "candidate";
-      return repoFor(ctx, "candidate.upsertTopicPreference").upsertTopicPreference({
-        keyword: input.keyword,
-        direction: input.direction,
-        signal: input.signal,
-        exampleCount: input.exampleCount,
-        weight,
-        status,
-      });
+      return upsertDistilledTopicPreference(deps.db,ctx,input,deps);
+
     },
 
     async listActiveTopicPreferences(ctx) {
@@ -869,4 +854,21 @@ export async function countCandidatesForDay(db:Db|Parameters<Parameters<Db["tran
  const end=new Date(stamp+86400000).toISOString();
  const [row]=await db.select({total:sql<number>`count(*)::int`}).from(candidates).where(and(eq(candidates.userId,ctx.userId),eq(candidates.accountId,accountId),gte(candidates.createdAt,start),lt(candidates.createdAt,end)));
  return row?.total??0;
+}
+
+/** 事务调用者复用同一偏好护栏，不依赖项目、采集等无关端口。 */
+export async function upsertDistilledTopicPreference(db:Db,ctx:RequestContext,input:{keyword:string;direction:"avoid"|"prefer";signal:string;exampleCount:number;weight?:number},deps:{now:()=>string;nextId:(prefix:string)=>string}){
+ const accountId=requireAccountId(ctx.accountId,"candidate.upsertTopicPreference");
+ return createCandidateRepository(db,{...deps,userId:ctx.userId,accountId}).upsertTopicPreference({
+  keyword:input.keyword,direction:input.direction,signal:input.signal,exampleCount:input.exampleCount,
+  weight:Math.abs(clampPreferenceWeight(input.weight??input.exampleCount*3)),status:isHardPreference(input.exampleCount)?"active":"candidate",
+ });
+}
+
+/** 锁住真实原因来源；旧快照完成只记结果，不覆盖更新后的偏好。 */
+export async function topicPreferenceSourceIsCurrent(db:Db,ctx:RequestContext,reasons:string[]){
+ const accountId=requireAccountId(ctx.accountId,"candidate.preferenceSource");
+ await db.select({id:candidates.id}).from(candidates).where(and(eq(candidates.userId,ctx.userId),eq(candidates.accountId,accountId))).orderBy(candidates.id).for("update");
+ const current=await createCandidateRepository(db,{userId:ctx.userId,accountId,now:()=>new Date().toISOString(),nextId:()=>{throw new Error("只读来源不生成ID");}}).listDropReasons();
+ return JSON.stringify(current.slice(0,50))===JSON.stringify(reasons);
 }

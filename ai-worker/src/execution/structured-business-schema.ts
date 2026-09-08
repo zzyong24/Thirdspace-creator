@@ -1,4 +1,5 @@
 import {classificationSchema,materialSummarySchema} from "../prompt/templates/asset-processing";
+import {topicPreferenceDistillSchema} from "../prompt/templates/topic-preference-distill";
 import {reconstructProjectSchema} from "../prompt/templates/reconstruct-project";
 import {copilotReplySchema,copilotReplyInputSchema} from "../prompt/templates/copilot-assist";
 import {topicArraySchema} from "../prompt/templates/topic-generate";
@@ -31,6 +32,7 @@ export function resolveStructuredBusinessSchema(
     case "material.extract":return materialSummarySchema;
     case "reconstruct.project": return reconstructProjectSchema.refine(value=>Boolean(value.research.coreTopic.trim()),"研究重建缺少主题");
     case "copilot.assist": copilotReplyInputSchema.parse(JSON.parse(input.facets.__copilotReply??"null")); return copilotReplySchema;
+    case "topic.preference": return topicPreferenceDistillSchema;
     case "topic.generate": return topicArraySchema;
     case "research.gather":
       z.object({

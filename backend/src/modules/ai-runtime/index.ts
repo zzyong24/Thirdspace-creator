@@ -27,8 +27,6 @@ export * from "./darkhorse-collector";
 export * from "./trend-source-signals";
 // [T-238] 出题依据信号质量画像(纯函数)+ 评论强信号过滤 —— chat 出题 / topic.daily 共享装配。
 export * from "./signal-quality";
-// [T-212d] 防茧房校准:淘汰原因蒸馏(runTopicPreferenceDistill 编排 + createTopicPreferenceDistillPort AI 端口)。
-export * from "./topic-preference-distill-runner";
 // 聊天上下文与工具定义准备；模型执行由独立持久 Worker 承担。
 export * from "./chat-context";
 export * from "./chat-assembly";
@@ -156,3 +154,4 @@ export * from "./reconstruct-business-adapter";
 export {createVideoDecisionsBusinessAdapter} from "./video-decisions-business-adapter";
 
 export * from "./asset-processing-business-adapter";
+export {createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission} from "./topic-preference-business-adapter";

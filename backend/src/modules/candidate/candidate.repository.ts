@@ -702,7 +702,7 @@ export function createCandidateRepository(
             eq(candidates.status, "dropped"),
           ),
         )
-        .orderBy(desc(candidates.updatedAt));
+        .orderBy(desc(candidates.updatedAt), candidates.id);
       return rows
         .map((r) => (r.dropReason ?? "").trim())
         .filter((s) => s.length > 0);
