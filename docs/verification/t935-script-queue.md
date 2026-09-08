@@ -23,3 +23,9 @@
 修复通过已验证的父来源向业务准备端口传递父预算；旧任务的恢复严格限制为旧默认script.draft预算、EXECUTION_DEADLINE、没有模型调用/回执/证据/候选/租约/检查点，保留相同业务和执行ID及payload，并记录原预算/错误的修复审计。其他失败任务不自动修改。19项针对性恢复测试通过；扩大旧原子任务套件有历史deadline断言与新continuous行为冲突，不能报告全套通过。
 
 最终19/19通过，包含真实StructuredBusinessExecutionService在入队一小时后绑定continuous/null deadline。日志 `/tmp/t935-budget-tests-final-script.log`。独立复核恢复条件与审计通过。
+
+## 原任务真实恢复结果
+
+候选 `1a79d186` 安装并启动后，CLI 自动连接 full（安装证据见 T-936）。同一业务任务 `ai-task-8933b989-127`、同一执行 `exec_4522f002-446e-4cba-85e8-d21c2fa615c1` 从 queued 进入 running，最终 runtimeStatus=succeeded、业务状态 awaiting_confirmation、errorMessage=null。公开 ai.tasks.results.list 返回一个可采纳的 artifact_version，24 段分镜；两次模型调用分别生成口播与分镜，总输出4594 tokens。未新建替代任务、未代用户采纳。
+
+执行恢复通过，内容验收未通过：输入明确要求无凭证时占位，结果却断言“卡了三天”、具体驳回理由“经营场景与主体不匹配”和“两天被打回”。结构 validationStatus=valid 不能代表事实可靠。待修复口播 Skill 对已知事实、用户计划和缺失凭证的处理，不能通过硬编码词表判断创作内容。T-934 搜索质量复验也仍未通过，因此 T-935 不标全量完成。公开结果留存 `/tmp/t936-script-results.json`。
