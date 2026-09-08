@@ -35,6 +35,8 @@ export function useShareImportTasks(accountId: string, api: RadarApi, open: bool
     const map = new Map(tasksRef.current.map(task => [task.id, task]));
     for (const task of rows) {
       if (task.accountId !== accountId || task.kind !== "share_import" || task.ownerType !== "item_import") continue;
+      const previous = map.get(task.id);
+      if (previous && previous.updatedAt > task.updatedAt) continue;
       map.set(task.id, task);
       if (shareImportStatus(task) === "succeeded" && !notified.current.has(task.id)) {
         notified.current.add(task.id);

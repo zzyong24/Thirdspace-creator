@@ -1,14 +1,15 @@
 import { client } from "@/lib/contract-client";
 import { createHttpTransport } from "@/lib/http-transport";
-import { ENDPOINTS,requestListWithMeta, type ExecutionTaskResourceV2 } from "@creatoros/contract";
+import { ENDPOINTS,requestListWithMeta, executionTaskResourceV2 } from "@creatoros/contract";
 import type { RadarApi,RadarItemDetail,RadarItemRow,RadarRun,RadarRunEvent,RadarSource } from "./intelligence-workbench-types";
 const radarTransport = createHttpTransport();
 
 export function defaultApi(): RadarApi {
   return {
     async listShareImportTasks(input) {
-      const rows = await client.listExecutionTasks({params: undefined, query: {...input, kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
-      return rows.filter((task): task is ExecutionTaskResourceV2 => "kind" in task && task.kind === "share_import" && task.accountId === input.accountId && task.ownerType === "item_import");
+      const rows: unknown = await client.listExecutionTasks({params: undefined, query: {...input, kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
+      if (!Array.isArray(rows)) throw new Error("导入任务列表回执格式不正确，请刷新核对。");
+      return rows.map(row => executionTaskResourceV2.parse(row)).filter(task => task.kind === "share_import" && task.accountId === input.accountId && task.ownerType === "item_import");
     },
     async commandTask(input){const result=await client.commandExecutionTasks({params:undefined,query:undefined,body:{taskIds:[input.taskId],command:input.command,idempotencyKey:input.idempotencyKey}});if(!result.tasks.some(task=>task.id===input.taskId))throw new Error("任务操作回执不匹配，请刷新后核对。");},
     listCollectors: (input) =>
@@ -191,4 +192,3 @@ export function defaultApi(): RadarApi {
       }),
   };
 }
-
