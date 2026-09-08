@@ -1,10 +1,11 @@
-import {isContinuousExecutionBudget} from "@creatoros/contract/execution-worker";
+import {executionBudgetSchema,isContinuousExecutionBudget,type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
-import {and,asc,eq,inArray,isNull,sql,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
+import {and,asc,eq,inArray,isNull,or,sql,aiTasks,executionTasks,executionCalls,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import {agenticToolOutcomeSchema,chatWorkerInputSchema,workerToolResultReceiptSchema,chatSubmittedTaskType,chatSubmittedTaskResultKind} from "@creatoros/contract/execution-worker";
 import {classifyLlmError,computeBackoffMs,getRetryAfterMs} from "@creatoros/ai-worker/retry-policy";
+import {restoreUnstartedSubmittedBudget} from "./submitted-task-budget-recovery";
 import {createAgenticToolBinding} from "./agentic-tool-binding";
 const originSchema=z.object({executionTaskId:z.string(),callId:z.string(),inputDigest:z.string()}).strict();
 const recoverySchema=z.object({attempts:z.number().int().min(0),nextAt:z.string().datetime(),deadlineAt:z.string().datetime().nullable(),continuous:z.boolean().optional(),errorCode:z.string().nullable()}).strict();
@@ -13,7 +14,7 @@ const supportedTaskTypes=["planning.thesis","asset.generate","script.review","sc
 /** 已提交子任务的准备补偿；只复用原任务，不创建模型调用或新任务。 */
 export function createSubmittedTaskPreparationService(db:Db,deps:{
  deadlineMs:number;now?:()=>number;random?:()=>number;
- prepare(context:RequestContext,taskId:string,signal:AbortSignal):Promise<unknown>;
+ prepare(context:RequestContext,taskId:string,signal:AbortSignal,inheritedBudget?:ExecutionBudget):Promise<unknown>;
  fail(context:RequestContext,taskId:string,message:string):Promise<unknown>;
  resolveToolParameters?(definition:z.infer<typeof chatWorkerInputSchema>["tools"][number]):Promise<{schema:Record<string,unknown>;parameters:z.ZodType}>;
 }){
@@ -21,13 +22,14 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
  const now=deps.now??Date.now,controller=new AbortController(),active=new Map<string,Promise<void>>();
  // 轮询游标只用于公平扫描；重启丢失游标不改变持久重试次数、截止时间或原任务 ID。
  let cursor:string|undefined;
- const pending=()=>and(inArray(aiTasks.taskType,supportedTaskTypes),eq(aiTasks.status,"queued"),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner),sql`${aiTasks.runtimeData}->'hostTaskSubmission' IS NOT NULL`);
+ const pending=()=>and(inArray(aiTasks.taskType,supportedTaskTypes),inArray(aiTasks.status,["queued","failed"]),or(isNull(aiTasks.executionTaskId),sql`EXISTS (SELECT 1 FROM execution_tasks e WHERE e.id = ${aiTasks.executionTaskId} AND e.status = 'failed' AND e.last_error_code = 'EXECUTION_DEADLINE')`),isNull(aiTasks.leaseOwner),sql`${aiTasks.runtimeData}->'hostTaskSubmission' IS NOT NULL`);
  async function claimed(context:RequestContext,taskId:string,signal:AbortSignal){
   return db.transaction(async tx=>{
    signal.throwIfAborted();
    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId??""))).for("update");
    if(!task || !supportedTaskTypes.includes(task.taskType))throw new Error("提交任务不存在或归属不符");
-   if(task.executionTaskId || task.status!=="queued" || task.leaseOwner || task.leaseToken || task.modelCallStartedAt)return null;
+   if(!["queued","failed"].includes(task.status) || task.leaseOwner || task.leaseToken || task.modelCallStartedAt)return null;
+   if(!task.executionTaskId && task.status!=="queued")return null;
    const runtime=object(task.runtimeData),origin=originSchema.parse(runtime.hostTaskSubmission);
    const [parent]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,origin.executionTaskId),eq(executionTasks.userId,task.userId),eq(executionTasks.accountId,task.accountId)));
    const [business]=parent?await tx.select().from(aiTasks).where(and(eq(aiTasks.id,parent.ownerId),eq(aiTasks.executionTaskId,parent.id),eq(aiTasks.userId,task.userId),eq(aiTasks.accountId,task.accountId))):[];
@@ -48,6 +50,12 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")),result=agenticToolOutcomeSchema.parse(receipt.output),data=object(result.data);
    if(binding.validationOutcome || binding.executionToolName!==definition.name || receipt.toolCallId!==binding.toolCallId || receipt.toolName!==binding.toolName || result.status!=="ok" || result.sideEffect!=="committed" || result.error || data.kind!==chatSubmittedTaskResultKind(definition.name) || data.taskId!==task.id)throw new Error("子任务没有真实成功回执");
    const stamp=now(),continuous=isContinuousExecutionBudget(parent.executionBudget),deadlineAt=continuous?parent.deadlineAt:new Date(Date.parse(task.requestedAt)+deps.deadlineMs).toISOString();
+   if(deadlineAt!==null && stamp>=Date.parse(deadlineAt))return task.executionTaskId?null:{failed:"任务准备已超过原定期限，请重新发起"};
+   const inheritedBudget=continuous?executionBudgetSchema.parse({...executionBudgetSchema.parse(parent.executionBudget),deadlineMs:deadlineAt===null?null:Date.parse(deadlineAt)-Date.parse(task.requestedAt)}):undefined;
+   if(task.executionTaskId){
+    if(inheritedBudget)await restoreUnstartedSubmittedBudget(tx as unknown as Db,task,parent,inheritedBudget,new Date(stamp).toISOString());
+    return null;
+   }
    const previous=runtime.hostTaskPreparation===undefined?{attempts:0,nextAt:new Date(0).toISOString(),deadlineAt,continuous,errorCode:null}:recoverySchema.parse(runtime.hostTaskPreparation);
    if(previous.deadlineAt!==deadlineAt)throw new Error("准备期限与原任务不符");
    if(deadlineAt!==null&&stamp>=Date.parse(deadlineAt))return {failed:"任务准备已超过原定期限，请重新发起"};
@@ -56,14 +64,14 @@ export function createSubmittedTaskPreparationService(db:Db,deps:{
    const next={...previous,attempts:previous.attempts+1,nextAt:new Date(stamp+computeBackoffMs(previous.attempts+1,deps.random)).toISOString(),errorCode:null};
    signal.throwIfAborted();
    await tx.update(aiTasks).set({runtimeData:{...runtime,hostTaskPreparation:next}}).where(eq(aiTasks.id,task.id));
-   return {attempt:next.attempts,deadlineAt,continuous:next.continuous===true};
+   return {attempt:next.attempts,deadlineAt,continuous:next.continuous===true,inheritedBudget};
   });
  }
  async function run(context:RequestContext,taskId:string,signal:AbortSignal){
   signal.throwIfAborted();const claim=await claimed(context,taskId,signal);signal.throwIfAborted();if(!claim)return;
   if("failed" in claim){await deps.fail(context,taskId,claim.failed!);return;}
   const bounded=AbortSignal.any([signal,AbortSignal.timeout(claim.deadlineAt===null?deps.deadlineMs:Math.max(1,Math.min(deps.deadlineMs,Date.parse(claim.deadlineAt)-now())))]);
-  try{await deps.prepare(context,taskId,bounded);bounded.throwIfAborted();}
+  try{await (claim.inheritedBudget ? deps.prepare(context,taskId,bounded,claim.inheritedBudget) : deps.prepare(context,taskId,bounded));bounded.throwIfAborted();}
   catch(error){
    if(signal.aborted)throw error;
    const classified=bounded.aborted?{retryable:claim.continuous,reason:"deadline"}:classifyLlmError(error),stamp=now(),retryAt=stamp+(getRetryAfterMs(error,now)??computeBackoffMs(claim.attempt,deps.random));

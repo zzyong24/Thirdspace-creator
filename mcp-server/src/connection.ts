@@ -1,6 +1,6 @@
 import { constants as fsConstants } from "node:fs";
 import { createHash } from "node:crypto";
-import { access, readFile, stat, unlink } from "node:fs/promises";
+import { access, readFile, stat, unlink, writeFile, rename } from "node:fs/promises";
 import { homedir, platform } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 
@@ -239,10 +239,19 @@ export async function discoverConnection(
 
 /** 当前 OS 用户主动撤销：先移除公开 descriptor 阻断新发现，再销毁秘密文件。 */
 export async function revokeConnection(connection: CreatorOsConnection): Promise<void> {
+  let preferenceError: unknown;
+  const preference = join(dirname(connection.descriptorPath), "preference.json");
+  const temporary = `${preference}.tmp-${process.pid}`;
+  try {
+    await writeFile(temporary, JSON.stringify({schema:"creatoros-cli-preference/v1",productId:connection.productId,packageId:connection.packageId,enabled:false}), {mode:0o600});
+    await rename(temporary, preference);
+  } catch (error) { preferenceError=error; }
+  finally { await unlink(temporary).catch(()=>undefined); }
   await unlink(connection.descriptorPath).catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
   });
   await unlink(connection.credentialPath).catch((error: NodeJS.ErrnoException) => {
     if (error.code !== "ENOENT") throw error;
   });
+  if(preferenceError)throw preferenceError;
 }

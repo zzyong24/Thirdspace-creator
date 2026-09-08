@@ -1,3 +1,4 @@
+import {createStructuredBusinessExecutionService} from "../ai-runtime/structured-business-execution.service";
 import {buildChatTools,type ChatToolDeps} from "../ai-runtime/chat-tools";
 import {prepareChatToolDefinitions} from "../ai-runtime/chat-tool-definitions";
 import {resolveSubmittedChatToolParameters} from "../ai-runtime/chat-submitted-tool-parameters";
@@ -318,7 +319,7 @@ it("JSONB 重排真实整稿 schema 后，恢复沿用生产解析器与原任�
  await expect(legacy.prepare(f.ctx,id)).rejects.toThrow("工具调用与冻结参数不符");
  expect(prepare).not.toHaveBeenCalled();await legacy.stop();
  const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn(),resolveToolParameters:resolveSubmittedChatToolParameters});
- await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledExactlyOnceWith(f.ctx,id,expect.any(AbortSignal));
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledExactlyOnceWith(f.ctx,id,expect.any(AbortSignal),expect.objectContaining({policy:"continuous",deadlineMs:null}));
  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.parent.callId)!.inputDigest).toBe(before);
  expect((await db.select().from(aiTasks).where(eq(aiTasks.accountId,f.ctx.accountId))).filter(row=>row.taskType==="script.draft").map(row=>row.id)).toEqual([id]);
  await recovery.stop();
@@ -327,4 +328,43 @@ it("恢复解析器参数契约不符仍拒绝执行原子子任务",async()=>{
  const f=await fixture({production:true}),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
  const prepare=vi.fn(),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:60000,now:()=>Date.parse(now()),prepare,fail:vi.fn(),resolveToolParameters:async definition=>({...await resolveSubmittedChatToolParameters(definition),schema:{type:"object"}})});
  await expect(recovery.prepare(f.ctx,id)).rejects.toThrow("SUBMITTED_TOOL_SCHEMA_MISMATCH");expect(prepare).not.toHaveBeenCalled();await recovery.stop();
+});
+
+it("已验证 continuous 父任务给准备端传递原预算，不再新建十分钟总期限",async()=>{
+ const f=await fixture(),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const continuous={policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null};
+ await db.update(executionTasks).set({executionBudget:continuous,deadlineAt:null}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const prepare=vi.fn(),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:600000,now:()=>Date.parse(now())+3600000,prepare,fail:vi.fn()});
+ await recovery.prepare(f.ctx,id);expect(prepare).toHaveBeenCalledExactlyOnceWith(f.ctx,id,expect.any(AbortSignal),continuous);await recovery.stop();
+});
+it.each([false,true])("原任务零调用 deadline 缺陷可修复；存在调用=%s 时不恢复",async(hasCall)=>{
+ const f=await fixture(),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ const continuous={policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null},executionId=`repair-${++seq}`;
+ await db.update(executionTasks).set({executionBudget:continuous,deadlineAt:null}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ await db.insert(executionTasks).values({id:executionId,userId:f.ctx.userId,accountId:f.ctx.accountId,ownerId:id,ownerType:"ai_task",kind:"ai_task",idempotencyKey:`ai:${id}`,status:"failed",executionBudget:{maxCalls:6,maxTokens:1000000,deadlineMs:600000},deadlineAt:new Date(Date.parse(task!.requestedAt)+600000).toISOString(),lastErrorCode:"EXECUTION_DEADLINE",lastErrorMessage:"原任务截止时间已到",payload:{modelInput:{kind:"model.structured",skillId:"script.draft"}},createdAt:now(),updatedAt:now()});
+ await db.update(aiTasks).set({executionTaskId:executionId,status:"failed"}).where(eq(aiTasks.id,id));
+ if(hasCall){const [source]=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId));await db.insert(executionCalls).values({...source!,id:`repair-call-${++seq}`,executionTaskId:executionId});}
+ const prepare=vi.fn(),recovery=createSubmittedTaskPreparationService(db,{deadlineMs:600000,now:()=>Date.parse(now())+3600000,prepare,fail:vi.fn()});
+ await recovery.recover(new AbortController().signal);
+ const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,executionId));
+ expect(execution!.status).toBe(hasCall?"failed":"queued");expect(execution!.deadlineAt).toBe(hasCall?new Date(Date.parse(task!.requestedAt)+600000).toISOString():null);
+ expect(prepare.mock.calls.some(call=>call[1]===id)).toBe(false);
+ const [updated]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(updated!.executionTaskId).toBe(executionId);
+ if(!hasCall)expect(updated!.runtimeData).toHaveProperty("submittedBudgetRepair.previousErrorCode","EXECUTION_DEADLINE");
+ await recovery.stop();
+});
+
+it("continuous 父提交整稿在一小时排队后绑定真实执行仍无总期限",async()=>{
+ const f=await fixture(),result=await f.hooks.complete(f.ref,{callId:f.parent.callId}),id=(result.data as {taskId:string}).taskId;
+ const continuous={policy:"continuous",maxCalls:null,maxTokens:null,deadlineMs:null};
+ await db.update(executionTasks).set({executionBudget:continuous,deadlineAt:null}).where(eq(executionTasks.id,f.ref.executionTaskId));
+ const [unprepared]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));
+ await db.update(aiTasks).set({runtimeData:{...unprepared!.runtimeData as Record<string,unknown>,skillSnapshot:{snapshotVersion:1,userId:f.ctx.userId,accountId:f.ctx.accountId,resolvedAt:now(),platformPolicyVersion:"1",platformPolicy:"规则",skills:[{skillId:"script.draft",baseVersion:"1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"写稿",template:"{{topic}}",tools:[],requiredFacets:["topic"],contextRequirements:[],outputSchema:{type:"object"},completionPolicy:null,completionPolicyAdapter:null}}]}}}).where(eq(aiTasks.id,id));
+ const business=createStructuredBusinessExecutionService(db,{budget:{maxCalls:6,maxTokens:1000000,deadlineMs:600000},maxOutputTokens:100,adapters:{"script.draft":{skillId:"script.draft",capability:"script.draft",prepare:async()=>({topic:"fixture"}),project:()=>{throw new Error("不写候选");}}}});
+ const recovery=createSubmittedTaskPreparationService(db,{deadlineMs:600000,now:()=>Date.parse(now())+3600000,prepare:(ctx,id,signal,budget)=>business.prepare(ctx,id,signal,budget),fail:vi.fn()});
+ await recovery.prepare(f.ctx,id);
+ const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,id));expect(task!.executionTaskId).toBeTruthy();
+ const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task!.executionTaskId!));expect(execution!.executionBudget).toEqual(continuous);expect(execution!.deadlineAt).toBeNull();
+ await recovery.stop();
 });

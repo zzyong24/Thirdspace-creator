@@ -1,4 +1,4 @@
-import { chmod, mkdir, writeFile } from "node:fs/promises";
+import { chmod, mkdir, writeFile, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash, randomUUID } from "node:crypto";
@@ -8,6 +8,7 @@ import {
   CREDENTIAL_SCHEMA,
   ConnectionError,
   discoverConnection,
+  revokeConnection,
 } from "../src/connection";
 
 async function fixture(overrides: Record<string, unknown> = {}) {
@@ -108,4 +109,14 @@ describe("discoverConnection", () => {
     }).catch((value) => value as ConnectionError);
     expect(error).toMatchObject({ code: "CONNECTION_INSECURE" });
   });
+});
+
+it("撤销 CLI 连接同时记住关闭选择，不保留凭据", async()=>{
+ const {connectionFile}=await fixture();
+ const connection=await discoverConnection({connectionFile,productId:"creatoros",now:new Date("2026-08-15T01:00:00.000Z"),processAlive:()=>true});
+ await revokeConnection(connection);
+ const preference=JSON.parse(await readFile(join(connectionFile,"..","preference.json"),"utf8"));
+ expect(preference).toEqual({schema:"creatoros-cli-preference/v1",productId:"creatoros",packageId:"com.creatoros.app",enabled:false});
+ await expect(stat(connection.descriptorPath)).rejects.toMatchObject({code:"ENOENT"});
+ await expect(stat(connection.credentialPath)).rejects.toMatchObject({code:"ENOENT"});
 });

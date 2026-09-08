@@ -88,6 +88,10 @@ export function CliAccessCard() {
       setStatus(next);
       setPhase("ready");
     } catch (error) {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        setStatus(await invoke<CliAccessStatus>("cli_access_status"));
+      } catch { setStatus(null); }
       setPhase("error");
       setMessage(errorMessage(error));
     }
@@ -108,7 +112,7 @@ export function CliAccessCard() {
             ? "inline-flex h-6 items-center rounded-md bg-success-soft px-2 text-xs font-medium text-success"
             : "inline-flex h-6 items-center rounded-md bg-surface-subtle px-2 text-xs font-medium text-muted-foreground"}
         >
-          {enabled ? "本次启动已开启" : "未开启"}
+          {enabled ? "已开启 · 启动时自动开启" : "未开启"}
         </span>
       }
     >
@@ -120,10 +124,10 @@ export function CliAccessCard() {
               {status?.installed === false ? "命令入口尚未安装" : "命令行随桌面版安装"}
             </p>
             <p className="mt-1 leading-5 text-muted-foreground">
-              授权只在 CreatorOS 本次启动期间有效，退出或点击撤销后立即失效。不会暴露模型密钥、登录 Cookie 或内部数据库。
+              CLI 默认随应用启动开启；关闭后会记住你的选择。每次启动重新签发访问凭据，退出时清理凭据。不会暴露模型密钥、登录 Cookie 或内部数据库。
             </p>
             {enabled && expires ? (
-              <p className="mt-1 text-xs text-muted-foreground">最晚于 {expires} 自动失效</p>
+              <p className="mt-1 text-xs text-muted-foreground">本次访问凭据于 {expires} 到期，重启时自动更新</p>
             ) : null}
             {status?.commandPath ? (
               <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
@@ -170,7 +174,7 @@ export function CliAccessCard() {
               {phase === "loading" || phase === "changing" ? (
                 <Loader2 aria-hidden="true" className="size-4 animate-spin" />
               ) : null}
-              {enabled ? "立即撤销" : "本次启动开启"}
+              {enabled ? "关闭并记住" : "开启并记住"}
             </Button>
           </div>
         ) : null}

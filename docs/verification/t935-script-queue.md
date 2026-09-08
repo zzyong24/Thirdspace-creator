@@ -15,3 +15,11 @@
 候选 `4806dcab` 已由干净隔离工作树固定本地入口构建并安装（exit 0），PID24309，sidecar启动日志 SIDECAR_STARTUP_VERIFIED。DMG SHA256 `f87a14fa28deaadb08c17a079952390280239f29487f7aaeefcfa59d3c9e5b7f`；安装和候选sidecar同为 `ea68fea6b5da6d8e8a14ec419ddb081aea71cbd31941a343ab6d89580cdafb14`。签名及hdiutil校验通过。日志 `/tmp/t935-package.log`。
 
 新启动诊断日志暂未出现此前反复的 PREPARATION_RECOVERY_REJECTED；这不等于脚本已生成。CLI授权因安装重启失效，原任务最终结果尚待公开CLI回读，T-935仍保持进行中。搜索业务验收仍失败，见T-934记录。
+
+## 原任务期限继承补修
+
+恢复排队后，公开CLI确认同一业务任务建立执行任务 `exec_4522f002-446e-4cba-85e8-d21c2fa615c1`，但立即失败“原任务截止时间已到”。原因是子任务模型准备仍使用旧默认10分钟预算，且从原入队时间起算；父聊天continuous只覆盖准备重试，未传入模型执行。
+
+修复通过已验证的父来源向业务准备端口传递父预算；旧任务的恢复严格限制为旧默认script.draft预算、EXECUTION_DEADLINE、没有模型调用/回执/证据/候选/租约/检查点，保留相同业务和执行ID及payload，并记录原预算/错误的修复审计。其他失败任务不自动修改。19项针对性恢复测试通过；扩大旧原子任务套件有历史deadline断言与新continuous行为冲突，不能报告全套通过。
+
+最终19/19通过，包含真实StructuredBusinessExecutionService在入队一小时后绑定continuous/null deadline。日志 `/tmp/t935-budget-tests-final-script.log`。独立复核恢复条件与审计通过。

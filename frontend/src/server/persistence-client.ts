@@ -4770,13 +4770,13 @@ FAVORITES_PROMOTE_PER_RUN
   const submittedPreparation=createSubmittedTaskPreparationService(db,{
     resolveToolParameters:resolveSubmittedChatToolParameters,
     deadlineMs:workerBudget.deadlineMs,
-    async prepare(c,id,signal){
+    async prepare(c,id,signal,inheritedBudget){
       const task=await aiService.getTask(c,id);signal.throwIfAborted();
       if(task.taskType==="asset.generate"){
-        const prepared=await assetBusiness.prepare(c,id,signal);
+        const prepared=await assetBusiness.prepare(c,id,signal,inheritedBudget);
         return prepared;
       }
-      return businessExecution.prepare(c,id,signal);
+      return businessExecution.prepare(c,id,signal,inheritedBudget);
     },
     fail:(c,id,message)=>aiService.markFailed(c,id,message),
   });

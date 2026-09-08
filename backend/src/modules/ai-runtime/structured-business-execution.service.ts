@@ -1,4 +1,4 @@
-import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
+import type {BoundedExecutionBudget,ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {awaitPreparation} from "../execution/await-preparation";
 import { and,eq,isNull,asc,inArray,sql,aiTasks,executionTasks,OwnershipError,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -29,7 +29,7 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       if(!adapter)throw new Error("MODEL_CANDIDATE_ADAPTER_UNAVAILABLE");
       return adapter.project(input.inputData as Record<string,unknown>,JSON.parse(input.text),input);
     },
-    async prepare(ctx:RequestContext,taskId:string,signal?:AbortSignal){
+    async prepare(ctx:RequestContext,taskId:string,signal?:AbortSignal,inheritedBudget?:ExecutionBudget){
       signal?.throwIfAborted();
       const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId ?? "")));
       if(!task)throw new OwnershipError("生成任务不存在");
@@ -48,7 +48,7 @@ export function createStructuredBusinessExecutionService(db:Db,deps:{adapters:St
       signal?.throwIfAborted();
       const additionalCalls=adapter.additionalCalls?.(Object.freeze({...facets}))??0;
       if(!Number.isSafeInteger(additionalCalls)||additionalCalls<0||deps.budget.maxCalls+additionalCalls>10000)throw new Error("STRUCTURED_CALL_BUDGET_INVALID");
-      const budget={...deps.budget,maxCalls:deps.budget.maxCalls+additionalCalls};
+      const budget=inheritedBudget??{...deps.budget,maxCalls:deps.budget.maxCalls+additionalCalls};
       return authority.bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,budget,modelInput:{kind:"model.structured",operationKey:adapter.skillId,capability:adapter.capability,maxOutputTokens:deps.maxOutputTokens,skillId:adapter.skillId,skillSnapshot,facets:Object.fromEntries(Object.entries(facets).filter((entry):entry is [string,string]=>typeof entry[1]==="string"))}});
     },
     async recoverQueued(onFailure:(ctx:RequestContext,taskId:string)=>Promise<void>,shouldStop=()=>false){

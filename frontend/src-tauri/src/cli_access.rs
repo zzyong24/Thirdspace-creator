@@ -97,6 +97,36 @@ pub struct CliAccessStatus {
     last_invocation_at: Option<u64>,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AccessPreference {
+    schema: String,
+    product_id: String,
+    package_id: String,
+    enabled: bool,
+}
+
+fn auto_access_enabled(runtime: &CliAccessRuntime) -> Result<bool, String> {
+    let bytes = match std::fs::read(runtime.dir.join("preference.json")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(true),
+        Err(error) => return Err(format!("读取 CLI 自动开启设置失败: {error}")),
+    };
+    let value: AccessPreference = serde_json::from_slice(&bytes)
+        .map_err(|_| "CLI 自动开启设置损坏".to_string())?;
+    if value.schema != "creatoros-cli-preference/v1" || value.product_id != runtime.product_id || value.package_id != runtime.package_id {
+        return Err("CLI 自动开启设置身份不匹配".to_string());
+    }
+    Ok(value.enabled)
+}
+
+fn save_auto_access(runtime: &CliAccessRuntime, enabled: bool) -> Result<(), String> {
+    write_json_atomic(&runtime.dir.join("preference.json"), &AccessPreference {
+        schema: "creatoros-cli-preference/v1".to_string(),
+        product_id: runtime.product_id.clone(), package_id: runtime.package_id.clone(), enabled,
+    })
+}
+
 fn epoch_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -449,6 +479,14 @@ pub fn initialize(state: &CliAccessState, runtime: CliAccessRuntime) {
     if let Err(error) = install_launcher(&runtime) {
         eprintln!("[shell] CreatorOS CLI 命令入口安装失败: {error}");
     }
+    match auto_access_enabled(&runtime) {
+        Ok(true) => { if let Err(error) = enable_runtime(&runtime) {
+            revoke_runtime(&runtime);
+            eprintln!("[shell] CLI 自动开启失败: {error}");
+        } },
+        Ok(false) => {},
+        Err(error) => eprintln!("[shell] CLI 保持关闭: {error}"),
+    }
     *state.0.lock().unwrap() = Some(runtime);
 }
 
@@ -497,14 +535,21 @@ pub fn cli_access_status(state: tauri::State<'_, CliAccessState>) -> CliAccessSt
 #[tauri::command]
 pub fn cli_access_enable(state: tauri::State<'_, CliAccessState>) -> Result<CliAccessStatus, String> {
     let guard = state.0.lock().unwrap();
-    enable_runtime(guard.as_ref().ok_or_else(|| "CreatorOS sidecar 尚未就绪".to_string())?)
+    let runtime = guard.as_ref().ok_or_else(|| "CreatorOS sidecar 尚未就绪".to_string())?;
+    save_auto_access(runtime, true)?;
+    match enable_runtime(runtime) {
+        Ok(status) => Ok(status),
+        Err(error) => { revoke_runtime(runtime); Err(error) },
+    }
 }
 
 #[tauri::command]
 pub fn cli_access_revoke(state: tauri::State<'_, CliAccessState>) -> Result<CliAccessStatus, String> {
     let guard = state.0.lock().unwrap();
     let runtime = guard.as_ref().ok_or_else(|| "CreatorOS sidecar 尚未就绪".to_string())?;
+    let saved = save_auto_access(runtime, false);
     revoke_runtime(runtime);
+    saved?;
     Ok(CliAccessStatus {
         supported: true,
         ready: true,
@@ -525,6 +570,28 @@ pub fn revoke_on_exit(state: &CliAccessState) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn auto_access_remembers_choice_without_retaining_credentials() {
+        let dir = std::env::temp_dir().join(format!("creatoros-cli-preference-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let runtime = CliAccessRuntime {
+            dir: dir.clone(), product_id: "creatoros-test".into(), package_id: "test.package".into(),
+            port: 1, handshake_token: "test".into(), cli_access_token: "test".into(), launch_nonce: "test".into(),
+            cli_node: dir.join("node"), cli_script: dir.join("cli"),
+        };
+        assert!(auto_access_enabled(&runtime).unwrap());
+        save_auto_access(&runtime, false).unwrap();
+        revoke_runtime(&runtime);
+        assert!(!auto_access_enabled(&runtime).unwrap());
+        save_auto_access(&runtime, true).unwrap();
+        assert!(auto_access_enabled(&runtime).unwrap());
+        let mut other = runtime.clone(); other.package_id = "other.package".into();
+        assert!(auto_access_enabled(&other).is_err());
+        std::fs::write(dir.join("preference.json"), b"broken").unwrap();
+        assert!(auto_access_enabled(&runtime).is_err());
+        let _ = std::fs::remove_dir_all(dir);
+    }
 
     #[cfg(unix)]
     #[test]

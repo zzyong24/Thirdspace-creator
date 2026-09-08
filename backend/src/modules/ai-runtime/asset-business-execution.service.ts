@@ -1,4 +1,4 @@
-import type {BoundedExecutionBudget} from "@creatoros/contract/execution-worker";
+import type {BoundedExecutionBudget,ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {prepareLegacyAssetRecovery} from "./asset-legacy-recovery.service";
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
@@ -29,7 +29,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
   return !!(await tx.select({id:aiTaskResults.id}).from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,task.id)).limit(1))[0];
  }
  const service={
-  async prepare(context:RequestContext,taskId:string,signal?:AbortSignal):Promise<Preparation>{
+  async prepare(context:RequestContext,taskId:string,signal?:AbortSignal,inheritedBudget?:ExecutionBudget):Promise<Preparation>{
    const ctx={...context};signal=signal?AbortSignal.any([signal,controller.signal]):controller.signal;signal.throwIfAborted();
    const [task]=await db.select().from(aiTasks).where(owned(ctx,taskId));
    if(!task || task.taskType!=="asset.generate")throw new OwnershipError("素材生成任务不存在");
@@ -65,7 +65,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     if(!current || current.requestFingerprint!==task.requestFingerprint || !isDeepStrictEqual(current.inputData,task.inputData) || current.projectId!==task.projectId)throw new Error("素材准备期间原任务发生变化");
     if(!current.executionTaskId && await hasLegacy(tx,current))throw new Error("素材准备期间出现旧提交事实，请重新读取原记录");
     signal?.throwIfAborted();
-    const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:deps.budget});
+    const mapped=await createExecutionAuthorityService(tx as unknown as Db,{now:deps.now}).bindAiTask(ctx,task.id,{requestFingerprint:task.requestFingerprint,modelInput,budget:inheritedBudget??deps.budget});
     signal!.throwIfAborted();return mapped;
    });
   },
