@@ -24,7 +24,7 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator,createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -4327,29 +4327,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       createVersion: (ctx, artifactId, input) =>
         artifactsService.createVersion(ctx, artifactId, input),
     },
-    similarity: {
-      evaluate: async (ctx, input) => {
-        const {
-          SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
-          scriptSourceSimilaritySchema,
-          modelFor,
-          runStructuredNode,
-        } = await import("@creatoros/ai-worker");
-        // 相似度判断也是通用文本能力，不再依赖已隐藏的审核专用配置。
-        const spec = await resolveModelSpec(ctx, "default");
-        const result = await runStructuredNode({
-          model: modelFor(spec),
-          template: SCRIPT_SOURCE_SIMILARITY_TEMPLATE,
-          facets: {
-            candidate: input.candidateText,
-            sources: input.sourceTexts
-              .map((text, index) => `【来源 ${index + 1}】\n${text}`)
-              .join("\n\n"),
-          },
-        });
-        return scriptSourceSimilaritySchema.parse(result.object).score;
-      },
-    },
+    similarity:createScriptSimilarityEvaluator({
+      tasks:persistentTaskService,references:projectIntelligenceReferences,ai:aiService,
+      prepare:(c,id)=>businessExecution.prepare(c,id),
+      wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
+    }),
   });
   const intelligenceGeneration=createIntelligenceGenerationBridge(db,{
     entryPath:resolveIntelligenceGenerationWorkerPath,tasks:persistentTaskService,resolveModelSpec:(c,capability)=>resolveModelSpec(c,capability),
@@ -8677,6 +8659,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
   }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "script.source_similarity":createScriptSimilarityBusinessAdapter({tasks:persistentTaskService,references:projectIntelligenceReferences}),
     "topic.preference":createTopicPreferenceBusinessAdapter({listDropReasons:c=>candidateService.listDropReasons(c)}),
     "asset.classify":createAssetProcessingBusinessAdapter("asset.classify",assetProcessingPreparation),
     "material.extract":createAssetProcessingBusinessAdapter("material.extract",assetProcessingPreparation),
