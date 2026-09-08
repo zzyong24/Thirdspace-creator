@@ -1,3 +1,4 @@
+import { StructuredOutputError } from "./structured-output-error";
 import type { LanguageModel } from "ai";
 import type { AgentStepEvent } from "../runtime/agent-runtime";
 import { runStructuredNode } from "./structured-node";
@@ -180,7 +181,7 @@ export async function runTopicNode(
   }
   const topics = normalizeTopics(object.topics);
   if (topics.length === 0) {
-    throw new Error("topic-node: agent 未产出可解析选题");
+    throw new StructuredOutputError("topic-node: agent 未产出可解析选题");
   }
   const step: AgentStepEvent = {
     stepNo: 1,

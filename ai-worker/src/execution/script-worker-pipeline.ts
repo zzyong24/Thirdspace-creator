@@ -1,3 +1,4 @@
+import { findGenerationFailure } from "./generation-error";
 import {scriptWorkerPayloadSchema,buildDeterministicStoryboard,reanchorWhitespaceOnly,firstMismatchIndex,buildScriptFallbackResult} from "./script-fallback";
 import { createHash } from "node:crypto";
 import type { LanguageModel } from "ai";
@@ -10,7 +11,7 @@ import {
   runVoiceoverComposeNode,
   runStoryboardSegmentNode,
 } from "../nodes/script-pipeline";
-import { GenerationFailure, generationFailure } from "./generation-error";
+import { generationFailure } from "./generation-error";
 export async function runScriptWorkerPipeline(
   raw: unknown,
   deps: {
@@ -104,7 +105,8 @@ export async function runScriptWorkerPipeline(
       });
     } catch (error) {
       signal.throwIfAborted();
-      if (error instanceof GenerationFailure) throw error;
+      const knownFailure=findGenerationFailure(error);
+      if(knownFailure)throw knownFailure;
       const failure = generationFailure(error, false);
       if (
         failure.outcome === "retry_wait" ||

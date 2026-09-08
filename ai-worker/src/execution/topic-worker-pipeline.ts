@@ -1,3 +1,5 @@
+import { StructuredOutputError } from "../nodes/structured-output-error";
+import { findGenerationFailure } from "./generation-error";
 import type { LanguageModel } from "ai";
 import { topicGenerateFrozenSchema } from "./topic-worker-input";
 import { runStructuredNode } from "../nodes/structured-node";
@@ -12,7 +14,6 @@ import {
 import { topicArraySchema } from "../prompt/templates/topic-generate";
 import { trendExtractSchema } from "../prompt/templates/trend-extract";
 import { parseFeed } from "../runtime/search-rss";
-import { GenerationFailure } from "./generation-error";
 export type TopicReadTarget =
   { kind: "search" } | { kind: "source"; sourceId: string };
 export type TopicReadData =
@@ -71,10 +72,10 @@ export async function runTopicWorkerPipeline(
           signal,
         });
         signal.throwIfAborted();
+        const parsed=trendExtractSchema.safeParse(result.object);
+        if(!parsed.success)throw new StructuredOutputError("结构化节点:热点来源输出不合法",{cause:parsed.error});
         signals.push(
-          ...trendExtractSchema
-            .parse(result.object)
-            .signals.filter((row) => row.title.trim())
+          ...parsed.data.signals.filter((row) => row.title.trim())
             .slice(0, 8)
             .map((row) => ({
               ...row,
@@ -85,7 +86,8 @@ export async function runTopicWorkerPipeline(
       } catch (error) {
         signal.throwIfAborted();
         // 已确认格式失败保留旧单源降级；预算、鉴权和任何未知供应商结果必须停止。
-        if (error instanceof GenerationFailure) throw error;
+        const knownFailure=findGenerationFailure(error);
+        if(knownFailure)throw knownFailure;
         if (!(
           error instanceof Error && error.message.startsWith("结构化节点:")
         ))

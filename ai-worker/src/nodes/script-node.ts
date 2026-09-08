@@ -1,3 +1,4 @@
+import { StructuredOutputError } from "./structured-output-error";
 import type { LanguageModel } from "ai";
 import type { AgentStepEvent } from "../runtime/agent-runtime";
 import {
@@ -282,7 +283,7 @@ export async function runScriptNode(
     })
     .filter((s) => s.口播 || s.画面 || s.字幕);
   if (shots.length === 0) {
-    throw new Error("script-node: agent 未产出可解析分镜");
+    throw new StructuredOutputError("script-node: agent 未产出可解析分镜");
   }
   // 结构化路径是单发(无多步工具循环),合成一条完成步事件喂窗口步骤日志(诚实:就一步)。
   const step: AgentStepEvent = {

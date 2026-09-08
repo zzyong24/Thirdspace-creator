@@ -1,3 +1,6 @@
+import { StructuredOutputError } from "../nodes/structured-node";
+import { findStructuredOutputError } from "../nodes/structured-output-error";
+import { findGenerationFailure } from "./generation-error";
 import {generateText} from "ai";
 import {parseClassification,classificationSchema} from "../prompt/templates/asset-processing";
 import {runTopicWorkerPipeline} from "./topic-worker-pipeline";
@@ -45,7 +48,9 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
       if(!image)throw new Error("CLASSIFICATION_IMAGE_MISSING");
       const template=getEffectiveTemplate('asset.classify');
       const result=await generateText({model,abortSignal:signal,maxRetries:0,maxOutputTokens:input.maxOutputTokens,messages:[{role:'user',content:[{type:'image',image:Buffer.from(image.bytes).toString('base64'),mediaType:image.mimeType},{type:'text',text:template.system}]}]});
-      const object=classificationSchema.parse(parseClassification(result.text));
+      let object:z.infer<typeof classificationSchema>;
+      try{object=classificationSchema.parse(parseClassification(result.text));}
+      catch(error){throw new StructuredOutputError("结构化节点:分类输出不合法",{cause:error});}
       const usage={inputTokens:result.usage.inputTokens??null,outputTokens:result.usage.outputTokens??null,cachedTokens:result.usage.inputTokenDetails?.cacheReadTokens??null,totalTokens:result.usage.totalTokens??null};
       return {object,generation:{finishReason:result.finishReason,usage,attempts:[{finishReason:result.finishReason,usage,kind:'initial' as const}]}};
     };
@@ -73,10 +78,9 @@ export async function generateStructuredInWorker(input:z.infer<typeof structured
     return {callId:lastCallId,text};
   }catch(error){
     signal.throwIfAborted();
-    if(error instanceof GenerationFailure)throw error;
-    const failure=generationFailure(error,false);
-    // 结构化节点校验失败不代表供应商提交未知；账本已持久化真实调用事实。
-    if(failure.outcome==="unknown_result")throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
-    throw failure;
+    const knownFailure=findGenerationFailure(error);
+    if(knownFailure)throw knownFailure;
+    if(findStructuredOutputError(error))throw new GenerationFailure("failed","STRUCTURED_OUTPUT_INVALID");
+    throw generationFailure(error,false);
   }
 }

@@ -26,3 +26,15 @@ export function generationFailure(error: unknown, hasOutput: boolean): Generatio
   }
   return new GenerationFailure("unknown_result", "MODEL_RESULT_UNKNOWN");
 }
+
+/** 包装错误不得抹去账本已知的暂停/未知回执状态。 */
+export function findGenerationFailure(error: unknown): GenerationFailure | undefined {
+  const seen = new Set<unknown>();
+  let current = error;
+  while (current && typeof current === "object" && !seen.has(current)) {
+    if (current instanceof GenerationFailure) return current;
+    seen.add(current);
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+}
