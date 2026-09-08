@@ -24,7 +24,7 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
 import {
@@ -200,7 +200,6 @@ import {
   createIngestionRepository,
   createIngestionService,
   createIngestionTransport,
-  createMockIngestionSource,
   INGESTION_OP_IDS,
 } from "@creatoros/backend/modules/ingestion";
 import {
@@ -218,7 +217,6 @@ import {
 } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { runMaterialSummary } from "@creatoros/backend/modules/ai-runtime";
 import { runEmbedTexts } from "@creatoros/backend/modules/ai-runtime";
 import {
   createLearningsService,
@@ -489,12 +487,7 @@ import {createCoverBusinessAdapter} from "@creatoros/backend/modules/ai-runtime"
 import {createExecutionCoverService} from "@creatoros/backend/modules/execution";
 import {createTranscribeBusinessExecutionService} from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
-import { runAssetClassify } from "@creatoros/backend/modules/ai-runtime";
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
-import {
-  runMaterialExtract,
-  MaterialSummaryModelNotConfiguredError,
-} from "@creatoros/backend/modules/ai-runtime";
 import {
   getOfficialSkillBase,
   listOfficialSkillBases,
@@ -676,9 +669,6 @@ import {
   QUERY_SERVICES_OP_IDS,
   type PublishingCenterQueryService,
 } from "@creatoros/backend/modules/query-services";
-
-// [T-163 Batch 4] 文档 AI 摘要节点(模板 + JSON schema + runStructuredNode)已提到 backend
-// ai-runtime 的 runMaterialSummary —— 组合根只解析 spec + 映射错误,AI 逻辑不住前端包。
 
 // 显式登记真实服务属主；未知操作在打开数据库前拒绝，静态构建不得初始化持久层。
 const PERSISTED_OPS = new Set<string>([
@@ -2138,30 +2128,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   if (s3Cfg) await ensureBucket(s3Cfg);
   // The in-memory mock (no real backend) — pinned once for the vitest / no-storage
   // path so storage keys stay collision-free.
-  const mockStorage = createMockObjectStorage({ nextKey });
-  // Whether local-fs is usable at all: in vitest we keep the deterministic mock
-  // (no real disk writes / blob route). The runtime (Next server) opts in via
-  // CREATOROS_STORAGE=local or simply by NOT being a test env.
-  const localFsEnabled =
-    process.env.CREATOROS_STORAGE === "local" ||
-    (process.env.NODE_ENV !== "test" && !process.env.VITEST);
-
+  const mockStorage = process.env.NODE_ENV === "test" && process.env.CREATOROS_STORAGE !== "local"
+    ? createMockObjectStorage({ nextKey }) : null;
   const objectStorageForCtx: ObjectStorageForCtx = async (ctx) => {
-    // Defensive: before settingsService exists, or for the mock path.
+    // 内存适配器只用于隔离测试；正式上传必须取得真实存储。
+    if(mockStorage)return mockStorage;
     const svc = settingsService as SettingsService | undefined;
-    if (!svc) return mockStorage;
+    if (!svc) throw new Error("存储设置服务未就绪");
     const backend = await svc.resolveStorageBackend(ctx);
     if (backend === "s3" && s3Cfg) {
       return createS3ObjectStorage(s3Cfg, { nextKey });
     }
-    if (localFsEnabled) {
-      const rootPath = await svc.resolveStorageRoot(ctx);
-      return createLocalFsObjectStorage(
-        { rootPath, publicBaseUrl: "/api/v1/blob" },
-        { nextKey },
-      );
-    }
-    return mockStorage;
+    const rootPath = await svc.resolveStorageRoot(ctx);
+    return createLocalFsObjectStorage({ rootPath, publicBaseUrl: "/api/v1/blob" },{ nextKey });
   };
 
   // [T-055d SPEC §7.1] 项目目录名:projects/<safe-title>-<id 后 6 位>。safe-title = 去
@@ -2749,8 +2728,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // The transport returns this ONE shared service. Clock/ids share the
   // deterministic `deps`. The MockIngestionSource is the deterministic producer
   // (foundation §4) used by dev/seeds — not on the dispatch path.
-  const ingestionMockSource = createMockIngestionSource();
-  void ingestionMockSource; // producer-side seam; reserved for dev/seed import flows
   const ingestionService = createIngestionService({
     deps,
     db,
@@ -4100,149 +4077,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         // subprocess) drains in the background against the shared pglite. The UI polls
         // getTask/listResults for the candidate. Each node has a runner; one trigger map.
         if (
-          task &&
-          task.taskType === "asset.classify" &&
-          task.status === "queued"
-        ) {
-          // [T-055h SPEC §6.2 第二层] 素材 AI 归类 —— 倾倒场上传完成后 fire-and-forget:
-          // VLM(用户可配 asset.classify capability)看图打标签+一句话描述;未配置诚实跳过
-          // (只跑确定性第一层),绝不阻塞上传主链。
-          await runAssetClassify(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: {
-                markRunning: (c, id) => aiService.markRunning(c, id),
-                recordStep: (c, id, stepInput) =>
-                  aiService.recordStep(c, id, stepInput),
-                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-              },
-              resolveVisionSpec: (c) =>
-                resolveMultimodalSpecFn(c, "asset.classify", {
-                  getModelConfig: (cc: RequestContext, cap: string) =>
-                    settingsService.getModelConfig(cc, cap),
-                  env: process.env,
-                  getChannelModelConfig,
-                  getChannelModelCredential: (serviceId) =>
-                    getChannelModelCredential(c, serviceId),
-                  getChannelModelSelection: (capability) =>
-                    getChannelModelSelection(c, capability),
-                }),
-              assets: {
-                getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
-                mergeAiAnnotation: (c, id, patch) =>
-                  assetsService.mergeAiAnnotation(c, id, patch),
-              },
-              // taxonomy 落标签:同名 tag 幂等(list 命中复用,缺则 create),再 assign。
-              assignTags: async (c, assetId, tags) => {
-                const taxonomySvc = createTaxonomyService(taxonomyRepo);
-                const listed = await taxonomySvc.listTags(c, { limit: 200 });
-                const byName = new Map(
-                  listed.map((t: { name: string; id: string }) => [t.name, t.id]),
-                );
-                const tagIds: string[] = [];
-                for (const name of tags) {
-                  const hit = byName.get(name);
-                  if (hit) {
-                    tagIds.push(hit);
-                    continue;
-                  }
-                  const created = await taxonomySvc.createTag(c, {
-                    name,
-                    kind: "asset-usage",
-                  });
-                  tagIds.push(created.id);
-                }
-                await taxonomySvc.assignTags(c, {
-                  entityType: "asset",
-                  entityId: assetId,
-                  tagIds,
-                });
-              },
-              describeImage: async (spec, input) => {
-                const { describeImageOpenAICompatible } = await import(
-                  "@creatoros/ai-worker"
-                );
-                return describeImageOpenAICompatible(spec, input);
-              },
-            },
-          );
-        } else if (
-          task &&
-          task.taskType === "material.extract" &&
-          task.status === "queued"
-        ) {
-          // [T-146 切片 a SPEC §1] 用户上传文档抽取 —— 上传 document 完成后 fire-and-forget:
-          // ① 确定性抽全文(pdf-parse/mammoth/UTF-8,无 AI)② AI 摘要要点卡(复用现有文本模型
-          // script.draft capability + runStructuredNode,不新增 capability)。三类诚实降级(抽取
-          // 失败/未配摘要模型/超长截断),绝不阻塞上传主链。
-          await runMaterialExtract(
-            ctx,
-            {
-              id: String(task.id),
-              inputData: (task.inputData ?? {}) as Record<string, unknown>,
-            },
-            {
-              ai: {
-                markRunning: (c, id) => aiService.markRunning(c, id),
-                recordStep: (c, id, stepInput) =>
-                  aiService.recordStep(c, id, stepInput),
-                markSucceeded: (c, id) => aiService.markSucceeded(c, id),
-                markFailed: (c, id, err) => aiService.markFailed(c, id, err),
-              },
-              assets: {
-                getAssetBytes: (c, id) => assetsService.getAssetBytes(c, id),
-                updateExtraction: (c, id, patch) =>
-                  assetsService.updateFileExtraction(c, id, patch),
-                mergeSummary: (c, id, summary) =>
-                  assetsService.mergeAiAnnotation(c, id, {
-                    materialSummary: summary,
-                  }),
-              },
-              // 阶段①确定性抽全文:按 family 分派纯文本抽取器(只取文本层,不执行 PDF JS / Word 宏)。
-              extractText: async (family, bytes) => {
-                if (family === "plaintext") {
-                  return new TextDecoder("utf-8").decode(bytes);
-                }
-                if (family === "docx") {
-                  const mammoth = (await import("mammoth")).default;
-                  const { value } = await mammoth.extractRawText({
-                    buffer: Buffer.from(bytes),
-                  });
-                  return value;
-                }
-                // pdf:pdf-parse v2 —— new PDFParse({ data }).getText().text(纯文本层)。
-                const { PDFParse } = await import("pdf-parse");
-                const parser = new PDFParse({ data: bytes });
-                const result = await parser.getText();
-                return result.text;
-              },
-              // 阶段② AI 摘要:复用现有文本模型(script.draft capability)+ runStructuredNode 绑
-              // materialSummary JSON schema(逃生口,不污染 registry / 不新增 capability)。未配模型
-              // → LlmCredentialError → 转 MaterialSummaryModelNotConfiguredError(runner 诚实降级)。
-              summarize: async (fullText) => {
-                let spec: Awaited<ReturnType<typeof resolveModelSpec>>;
-                try {
-                  spec = await resolveModelSpec(ctx, "script.draft");
-                } catch (err) {
-                  if (err instanceof LlmCredentialError) {
-                    throw new MaterialSummaryModelNotConfiguredError(
-                      err.message,
-                    );
-                  }
-                  throw err;
-                }
-                // [T-163 Batch 4] AI 摘要节点(模板 + jsonSchema + runStructuredNode)已下沉
-                // backend ai-runtime;组合根只解析 spec + 映射未配错误,把 spec 传进去。
-                return runMaterialSummary(spec, fullText);
-              },
-            },
-          );
-        } else if (
           task &&
           typeof task.taskType === "string" &&
           task.taskType.startsWith("scheduled.") &&
@@ -8847,7 +8681,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     async hasConfiguredModel(c){try{await resolveModelSpec(c,"topic.generate");return true;}catch{return false;}},
     dailyLimit:Number(process.env.CREATOROS_TOPIC_DAILY_LIMIT),now:deps.now,
   });
+  const assetProcessingPreparation={assets:assetsService,async isModelConfigured(c:RequestContext,taskType:"asset.classify"|"material.extract"){
+    try{if(taskType==="asset.classify")await resolveMultimodalSpec(c,"asset.classify");else await resolveModelSpec(c,"script.draft");return true;}
+    catch(error){if(error instanceof LlmCredentialError || (error instanceof Error && error.name==="MultimodalConfigError"))return false;throw error;}
+  }};
   const businessExecution=createStructuredBusinessExecutionService(db,{budget:workerBudget,maxOutputTokens:65536,adapters:{
+    "asset.classify":createAssetProcessingBusinessAdapter("asset.classify",assetProcessingPreparation),
+    "material.extract":createAssetProcessingBusinessAdapter("material.extract",assetProcessingPreparation),
     "video.decisions":createVideoDecisionsBusinessAdapter({resolveModelSpec,getTaskRuntimeData:(c,id)=>aiService.getTaskRuntimeData(c,id),
               listBrollInventory: (c, projectId) =>
                 collectProjectBrollInventory(c, projectId, {
@@ -9074,7 +8914,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
       const authority=pinModelAuthority(await readChannelModelAuthority());
       if(!matchesPinnedModelAuthority(runtime,authority))throw Object.assign(new Error("MODEL_AUTHORITY_CHANGED"),{code:"MODEL_AUTHORITY_CHANGED"});
-      try{return await taskModelAuthorityScope.run(authority,()=>resolveModelSpec(c,capability));}
+      try{return await taskModelAuthorityScope.run(authority,async()=>{
+        if(capability!=="asset.classify")return resolveModelSpec(c,capability);
+        const spec=await resolveMultimodalSpec(c,"asset.classify");
+        return {apiFormat:"openai_chat" as const,baseUrl:spec.baseUrl??"https://api.siliconflow.cn/v1",model:spec.model,token:spec.token};
+      });}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
   const transcribeBusiness=createTranscribeBusinessExecutionService(db,{
@@ -9207,6 +9051,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     entryPath:workerEntry,workerId:`model-worker-${process.pid}`,budget:workerBudget,
     resolveModelCredential:resolveWorkerCredential,
     video:{resolveModelSpec},
+    assetProcessing:{assets:assetsService},
     transcribePostprocess:{resolveModelSpec,readContext:readTranscribePostprocessContext},
     transcribeAudioStorage:objectStorageForCtx,
     transcribeWorkflow:{
@@ -9470,7 +9315,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 未配 → 抛 MultimodalConfigError(runner 接住 → cancelTask + 录制页「未配置生图/生视频模型」)。
   const resolveMultimodalSpec = (
     ctx: RequestContext,
-    capability: "image.generate" | "image.edit" | "video.generate",
+    capability: "image.generate" | "image.edit" | "video.generate" | "asset.classify",
   ) =>
     resolveMultimodalSpecFn(ctx, capability, {
       getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
