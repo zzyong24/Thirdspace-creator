@@ -1,6 +1,6 @@
 import { StructuredOutputError } from "./structured-output-error";
 import type { LanguageModel } from "ai";
-import type { AgentStepEvent } from "../runtime/agent-runtime";
+import type { AgentStepEvent } from "../runtime/agent-step-event";
 import { runStructuredNode } from "./structured-node";
 import {
   TOPIC_GENERATE_TEMPLATE,

@@ -18,8 +18,7 @@ import type { SearchResult } from "../runtime/search-factory";
 // 四类原样回带(categories),供研究工作台分类展示候选。
 //
 // 工具:本节点现为**纯结构化生成**,不挂 web search(内置 web search 只真 Anthropic 可用,
-// 而模型用户可配;项目规则不强依赖某厂商服务端工具)。anthropicWebSearchTools 仍导出(供
-// 未来真 Anthropic 路径或 runner 选用),但默认 run 路径不再用它。
+// 而模型用户可配;项目规则不强依赖某厂商服务端工具)。检索统一消费真实搜索端口。
 
 export interface MaterialItem {
   title: string;
@@ -106,37 +105,6 @@ export function formatUserMaterialFacet(materialBrief: string): string {
     body,
     "",
   ].join("\n");
-}
-
-/**
- * Anthropic provider 内置 web search 工具集 —— 服务端执行,仅 anthropic 协议族可用。
- * 本节点默认路径(纯结构化生成)不再用它;保留导出供调用方/未来真 Anthropic 路径选用。
- * 需要时调用方在外层自行用 generateText/runAgentNode 注入,不在本结构化路径里挂工具。
- *
- * [T-084a TODO —— 真 Anthropic 增强路(SPEC §1.2 末,兜底增强非主路,本切片留待后续)]
- * SPEC 允许:`isGenuineAnthropic` 且用户未配 web.search 时,可挂回本工具作为兜底增强(两者都配
- * 时独立搜索优先)。**本切片未接线**,原因(诚实标注,非偷懒):
- *   1. 主路(独立搜索 provider bocha/tavily/serpapi 前置注入)已让**任何模型**(含用户默认 MiniMax)
- *      拿到真实信源 —— 增强路只在「真配 Claude 官方端点 + 未配独立搜索」这个窄交集白赚,收益小。
- *   2. 结构化脊梁走 generateObject(无工具循环)。接 anthropic server web_search 需另开 generateText
- *      工具循环 + 复活 fb8d056 的 isGenuineAnthropic 判定(现已随 ffb7951 删除,仓内无残留)——
- *      这正是 SPEC §6/ffb7951 教训要避免的「回自由文本工具循环」风险面。
- *   3. SPEC §1.9 明示:「如果这一条会显著增加复杂度/风险,可标注 TODO 留注释」——即此处。
- * 接线时的落点:在 gatherMaterials(chat-runner)先探测 isGenuineAnthropic(需先在 provider-factory
- * 补该判定)→ 未配 web.search 且真 Anthropic → 走一条 generateText+本工具的增强综合,再回填 items。
- */
-export function anthropicWebSearchTools(opts?: { maxUses?: number }): {
-  web_search: unknown;
-} {
-  // 惰性 import 以免本模块默认路径牵连 @ai-sdk/anthropic 的 server-tool 依赖。
-  // 仅在调用方显式需要时构造(真 Anthropic 路径)。
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { anthropic } = require("@ai-sdk/anthropic") as typeof import("@ai-sdk/anthropic");
-  return {
-    web_search: anthropic.tools.webSearch_20250305({
-      maxUses: opts?.maxUses ?? 6,
-    }),
-  };
 }
 
 const trim = (s: unknown): string => (typeof s === "string" ? s.trim() : "");

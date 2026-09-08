@@ -1,20 +1,7 @@
 export const AI_WORKER_PACKAGE = "@creatoros/ai-worker";
 
-// Public worker surface. 全程 Vercel AI SDK(产品定位 §9 铁律1):real generation runs on the
-// Vercel AI SDK runtime (runtime/agent-runtime + provider-factory + the templated/script/research
-// nodes), so this package no longer depends on the Agent SDK at all. The legacy Claude Agent SDK
-// 编排链(orchestrator / run-loop drainQueue / confirm / state-machine / context-tools /
-// agent-config-resolver / candidate-schemas / ports / runner factory + fake runner)已随 T-193
-// 退役删除(live 零调用);唯一 live 出口是下面的 Agent Runtime + 节点 + 编排 + 提示词模板。
-
-// Phase 3 Agent Runtime(Vercel AI SDK 薄壳)+ 节点 + 编排。host(persistence-client)
-// 解析 model(modelFor)+ 装配 positioningBrief + 注入真 ports,调 runTopicTask 即可。
-export {
-  runAgentNode,
-  type AgentStepEvent,
-  type RunAgentNodeOptions,
-  type RunAgentNodeResult,
-} from "./runtime/agent-runtime";
+// Worker 公共能力：Pi 执行模型与工具循环，宿主持有任务及业务写入权。
+export type { AgentStepEvent } from "./runtime/agent-step-event";
 export {
   modelFor,
   // [T-093] 语义检索 embedding 模型工厂(与文本 modelFor 并列;anthropic 协议诚实抛错)。
@@ -157,7 +144,6 @@ export { createRssAdapter, parseFeed } from "./runtime/search-rss";
 
 // [T-055h asset.classify] 视觉理解(OpenAI 兼容 chat vision,VLM 看图打标签)。
 export { describeImageOpenAICompatible } from "./runtime/vision";
-export { toToolSet, type ToolDef } from "./runtime/tool-registry";
 export {
   runTopicNode,
   parseTopics,
@@ -405,7 +391,6 @@ export {
   normalizeResearchResult,
   type MaterialGrounding,
   flattenCategories,
-  anthropicWebSearchTools,
   // [T-146d] 用户第一手资料要点 facet 组装 —— chat-runner/research-runner 装配后注入 research 综合。
   formatUserMaterialFacet,
   // [T-228] 搜索诚实门:伪引用检测 + model_memory 输出清洗(纯函数,调用方/单测可观测)。
@@ -429,12 +414,6 @@ export {
   reconstructProjectSchema,
   type ReconstructProjectOutput,
 } from "./prompt/templates/reconstruct-project";
-// 通用模板节点 —— 6 个无工具纯生成 runner 共用(bindPrompt → runAgentNode → {text, steps})。
-export {
-  runTemplatedNode,
-  type RunTemplatedNodeInput,
-  type RunTemplatedNodeResult,
-} from "./nodes/templated-node";
 // 结构化模板节点 —— 每轮 schema 约束(generateObject 绑 Zod,校验失败自动重试,防发散)。
 // B2 编导自动评分(calibration.score)用它产「维度真实分」候选。
 export {

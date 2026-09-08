@@ -106,16 +106,8 @@ const nextConfig: NextConfig = {
     // node-postgres (P1 runtime driver) — keep external so its native/dynamic deps resolve
     // at server runtime instead of being bundled.
     "pg",
-    // Phase 3 Agent Runtime — Vercel AI SDK + providers are lazily imported via
-    // @creatoros/ai-worker (topic-task-adapter / research-runner / …). Keep external so the
-    // dynamic import resolves at server runtime instead of being bundled into the Next
-    // server output. (The Claude Agent SDK external was removed when 全程 Vercel AI SDK
-    // landed — 产品定位 §9 铁律1: no Claude Agent SDK anywhere in the frontend.)
+    // 保留消息/请求编译协议；供应商网络已由 Worker 内的 Pi 实现。
     "ai",
-    "@ai-sdk/openai",
-    "@ai-sdk/anthropic",
-    "@ai-sdk/deepseek",
-    "@ai-sdk/openai-compatible",
     // [T-716] Copilot/PDF 素材抽取需要 pdf-parse 的完整 Node 运行时闭包。若让 Next
     // 内联 pdf-parse，会漏掉 pdfjs 动态加载的 @napi-rs/canvas，安装包里解析 PDF 时
     // 只剩 DOMMatrix/ImageData 缺失警告。保持两者外置，让 standalone tracing 带齐

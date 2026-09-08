@@ -1,8 +1,4 @@
-
-// 共享解析辅助。原本这里还有一个 runClaudeAgent(机制④,跑 Claude Agent SDK 订阅)——
-// 已随「全程 Vercel AI SDK」迁移退役(产品定位 §9 铁律1):所有生成节点都走 @creatoros/ai-worker
-// 的 Vercel AI SDK 运行时(modelFor + runAgentNode),素材搜集的联网搜索改用 @ai-sdk/anthropic
-// 的 provider 内置 web search。本文件只剩一个厂商无关的 JSON 解析工具,供若干 runner 复用。
+// 厂商无关的历史 JSON 数组解析工具；不包含模型或 Agent 执行。
 
 // Robustly pull a JSON array out of an agent's final text (tolerate ``` fences / leading
 // prose / trailing notes). Returns [] when nothing parseable. Shared by every node that

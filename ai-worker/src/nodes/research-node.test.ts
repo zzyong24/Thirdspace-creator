@@ -6,7 +6,6 @@ import {
   flattenCategories,
   formatSearchResultsFacet,
   formatUserMaterialFacet,
-  anthropicWebSearchTools,
   hasPseudoCitation,
   sanitizeModelMemoryCategories,
   MODEL_MEMORY_SOURCE_LABEL,
@@ -272,10 +271,7 @@ describe("runResearchNode（结构化四类候选)", () => {
     expect(capturedPrompt).not.toContain("创作者第一手资料");
   });
 
-  it("anthropicWebSearchTools 仍暴露 provider 内置 web_search(真 Anthropic 路径备用)", () => {
-    const tools = anthropicWebSearchTools();
-    expect(tools.web_search).toBeDefined();
-  });
+
 });
 
 // [T-228] 搜索诚实门:model_memory 模式禁假精度 —— 伪引用检测 + 输出后处理清洗。
