@@ -18,3 +18,7 @@ export function resolveAgenticWorkerPath(cwd=process.cwd(),desktop=process.env.C
 export function resolveIntelligenceGenerationWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){
   return resolveWorkerPath("intelligence-generation-worker.cjs","INTELLIGENCE_GENERATION_WORKER_BUILD_MISSING",cwd,desktop);
 }
+
+export function resolveIntelligenceTranscriptWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){
+  return resolveWorkerPath("intelligence-transcript-worker.cjs","INTELLIGENCE_TRANSCRIPT_WORKER_BUILD_MISSING",cwd,desktop);
+}

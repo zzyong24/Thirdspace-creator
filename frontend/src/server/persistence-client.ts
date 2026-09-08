@@ -22,7 +22,7 @@ import { createKnowledgeProposalAdoptionService } from "@creatoros/backend/modul
 import { createAssetTagProposalService } from "@creatoros/backend/modules/taxonomy";
 import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionService, createAgenticProposalAdoptionService, createAgenticProposalStagingService } from "@creatoros/backend/modules/ai";
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
-import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath } from "./execution-worker-path";
+import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator,createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
@@ -252,6 +252,7 @@ import {
   createIntelligenceService,
   createIntelligenceTransport,
   createProjectIntelligenceReferenceService,
+  createIntelligenceTranscriptBridge,
   createIntelligenceGenerationBridge,
   createProjectScriptCandidateService,
   runProjectScriptCandidateTask,
@@ -5329,128 +5330,19 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     const { text } = execution.transcript;
     return text && text.trim() ? text : null;
   };
-  intelligenceTranscriptRunnerDeps = {
-    tasks: persistentTaskService,
-    intelligence: intelligenceService,
-    transcript: {
-      transcribe: async (c, input) => {
-        const totalStartedAt = Date.now();
-        let stage = "resolve-source";
-        let stageStartedAt = totalStartedAt;
-        const logStage = (
-          status: "start" | "done" | "error",
-          extra: Record<string, unknown> = {},
-        ) => {
-          console.log(
-            "[intelligence-transcript]",
-            JSON.stringify({
-              itemId: input.itemId,
-              stage,
-              status,
-              durationMs:
-                status === "start" ? 0 : Date.now() - stageStartedAt,
-              ...extra,
-            }),
-          );
-        };
-        const awemeId =
-          input.externalId ??
-          input.canonicalUrl.match(/\/video\/([^/?#]+)/)?.[1] ??
-          null;
-        if (!awemeId) {
-          return {
-            text: null,
-            provider: null,
-            model: null,
-            language: "zh",
-            skippedReason: "NO_AUDIO_SOURCE",
-          };
-        }
-        try {
-          logStage("start");
-          const cdp = await loadDouyinCdp();
-          const source = await cdp.fetchDouyinVideoSource({
-            awemeId,
-            authDir: await douyinAuthDirFor(c.accountId,undefined,c.userId),
-            gateway: douyinGateway,
-          });
-          logStage("done");
-          if (source.kind === "image-album") {
-            return {
-              text: null,
-              provider: null,
-              model: null,
-              language: "zh",
-              skippedReason: "IMAGE_ALBUM",
-            };
-          }
-
-          stage = "extract-audio";
-          stageStartedAt = Date.now();
-          logStage("start");
-          const audioBytes = await cdp.streamAudioFromVideo(source.playUrl);
-          logStage("done", { audioBytes: audioBytes.byteLength });
-
-          stage = "resolve-model";
-          stageStartedAt = Date.now();
-          logStage("start");
-          const baseSpec = await resolveTranscribeSpecFn(c, {
-            getModelConfig: (cc, capability) =>
-              settingsService.getModelConfig(cc, capability),
-            env: process.env,
-            getChannelModelConfig,
-            getChannelModelCredential: (serviceId) =>
-              getChannelModelCredential(c, serviceId),
-            getChannelModelSelection: (selectedCapability) =>
-              getChannelModelSelection(c, selectedCapability),
-          });
-          const spec = await prepareManagedTranscribeSpec(c, baseSpec, {
-            audioBytes,
-            intentId: `intelligence:${input.itemId}:aweme:${awemeId}`,
-          });
-          const requestedMode =
-            spec.displayModelKey === "channel-managed"
-              ? "channel-managed"
-              : spec.provider === "whisper-local"
-                ? "whisper-local"
-                : "configured-cloud";
-          logStage("done", { model: requestedMode });
-
-          stage = "asr";
-          stageStartedAt = Date.now();
-          logStage("start", { model: requestedMode });
-          const execution = await transcribeWithLocalFallback(spec, (current) =>
-            transcribeAudioFn(
-              current,
-              { audioBytes, language: "zh" },
-              asrRegistry,
-            ),
-          );
-          logStage("done", {
-            model: execution.mode,
-            totalDurationMs: Date.now() - totalStartedAt,
-          });
-          return {
-            text: execution.transcript.text,
-            provider: execution.mode,
-            model: execution.mode,
-            language: "zh",
-          };
-        } catch (error) {
-          logStage("error", {
-            errorName:
-              error instanceof Error ? error.name : "UnknownError",
-            errorCode:
-              error && typeof error === "object" && "code" in error
-                ? String(error.code)
-                : "unknown",
-            totalDurationMs: Date.now() - totalStartedAt,
-          });
-          throw error;
-        }
-      },
+  const intelligenceTranscriptBridge=createIntelligenceTranscriptBridge(db,{
+    entryPath:resolveIntelligenceTranscriptWorkerPath,tasks:persistentTaskService,
+    budget:{maxCalls:6,maxTokens:1_000_000,deadlineMs:1_800_000},objectStorageForCtx,now:deps.now,
+    resolveSpec:c=>resolveTranscribeRuntimeSpec(c),
+    prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
+    async readSource(c,awemeId,signal){
+      const cdp=await loadDouyinCdp();
+      const source=await cdp.fetchDouyinVideoSource({awemeId,authDir:await douyinAuthDirFor(c.accountId,signal,c.userId),gateway:douyinGateway,signal});
+      return source.kind==="image-album"?{kind:"image-album" as const}:{kind:"video" as const,playUrl:source.playUrl};
     },
-  };
+    extractAudio:async(playUrl,signal)=>(await loadDouyinCdp()).streamAudioFromVideo(playUrl,undefined,signal),
+  });
+  intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript};
 
   const recentVisibleCollections = new Map<
     string,
@@ -8896,9 +8788,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });}
       catch{throw Object.assign(new Error("MODEL_CREDENTIAL_UNAVAILABLE"),{code:"MODEL_CREDENTIAL_UNAVAILABLE"});}
     };
+  function resolveTranscribeRuntimeSpec(c:RequestContext){
+    return resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)});
+  }
   const transcribeBusiness=createTranscribeBusinessExecutionService(db,{
     budget:{...workerBudget,deadlineMs:1_800_000},now:deps.now,
-    resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
+    resolveSpec:resolveTranscribeRuntimeSpec,
   });
   async function dispatchTranscribeTask(c:RequestContext,id:string,signal?:AbortSignal){
     if(!modelWorker)throw new Error("转写服务未就绪，请更新应用后重试");
@@ -9048,7 +8943,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       reportChannel:(_c,channel,result)=>douyinGateway.report(channel,classifyDouyinOutcome(result.kind==="success"?{kind:"ok"}:result)),
     },
     transcribePreparation:{
-      resolveSpec:c=>resolveTranscribeSpecFn(c,{getModelConfig:(cc,cap)=>settingsService.getModelConfig(cc,cap),env:process.env,getChannelModelConfig,getChannelModelCredential:serviceId=>getChannelModelCredential(c,serviceId),getChannelModelSelection:capability=>getChannelModelSelection(c,capability)}),
+      resolveSpec:resolveTranscribeRuntimeSpec,
       prepareSpec:(c,spec,input)=>prepareManagedTranscribeSpec(c,spec,input),
     },
     cover:coverExecutionPorts,
@@ -9104,7 +8999,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     prepare:(c,id)=>businessExecution.prepare(c,id),
     wake:()=>{if(!modelWorker)throw new Error("生成服务未就绪");modelWorker.start();},
   });
-  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),intelligenceGeneration.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
+  stopExecutionWorker=async()=>{stoppingPreparation=true;assetBusiness.stop();transcribeBusiness.stop();await Promise.all([submittedPreparation.stop(),intelligenceGeneration.stop(),intelligenceTranscriptBridge.stop(),modelWorker?.stop(),agenticWorker?.stop(),chatWorker?.stop()]);await Promise.all([preparationRecovery,agenticPreparationRecovery]);};
   globalForPersistence.__creatorosStopExecutionWorker=stopExecutionWorker;
 
   // 两个审核入口转交同一持久执行权，报告由后端审核端口绑定冻结版本并原子提交。
