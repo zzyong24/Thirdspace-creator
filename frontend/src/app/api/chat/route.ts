@@ -6,7 +6,6 @@ import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import {
   getChatRuntime,
-  type ChatRuntime,
 } from "@/server/persistence-client";
 import {
   requiredSkillIdsForTask,
@@ -17,7 +16,6 @@ import {
   normalizeWebReadUrl,
 } from "@creatoros/backend/modules/ai-runtime";
 import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
-import { runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
 import { readSessionCookie } from "../v1/auth/_session";
 import {
   resolveRequestContext,
@@ -33,7 +31,7 @@ import { humanizeAiError } from "@/lib/ai-error-humanize";
 
 // 正式聊天入口：验证当前账号/会话/选区与附件，保存用户消息后原子提交已有 chat.run。
 // 独立 Worker 执行原模型和业务工具；这里仅订阅持久 UIMessage 事件，完成消息由后端事务写入。
-// 人采纳仍走原候选确认门；HTTP 停止信号转成同一执行任务取消。
+// 人采纳仍走原候选确认门；HTTP 断开只释放订阅，用户停止经任务命令提交。
 
 export const dynamic = "force-dynamic";
 
@@ -262,24 +260,6 @@ export async function withAttachmentContext(
         } as UIMessage)
       : message,
   );
-}
-
-/**
- * 对话主 surface 与工具子 Skill 必须落在同一份 ai-worker AsyncLocalStorage 实例。
- * 若委托 persistence runtime 自己进入作用域，Next production bundle 可能把 ai-worker
- * 拆成另一份模块实例：子调用仍看到外层 chatbox 快照，随后稳定报 required skill 缺失。
- */
-export async function runWithChatChildSkillSnapshot<T>(
-  runtime: Pick<ChatRuntime, "resolveEffectiveSkillSnapshot">,
-  ctx: RequestContext,
-  requiredSkillIds: readonly string[],
-  execute: () => Promise<T>,
-): Promise<T> {
-  const snapshot = await runtime.resolveEffectiveSkillSnapshot(
-    ctx,
-    requiredSkillIds,
-  );
-  return runWithEffectiveSkillSnapshot(snapshot, execute);
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -762,59 +742,9 @@ export async function POST(req: Request): Promise<Response> {
         // [T-163] 错误→人话端口:chat-tools 下沉 backend 后不再直 import 前端 ai-error-humanize
         // (它含 ArtifactType 依赖),改由这里(前端边界)把 humanizeAiError 注入。
         humanizeError: humanizeAiError,
-        resolveModelSpec: runtime.resolveModelSpec,
-        // [T-652] 模型填入的前采版本不可信；执行定位工具前从服务端读取最新 session。
-        getPositioningDiscovery: runtime.getPositioningDiscovery,
-        // [T-513] chatbox 工具同步调用 topic/research/review 等子 Skill 时，为子调用
-        // 按同一 user/account 解析独立 snapshot；AsyncLocalStorage 嵌套作用域结束后会
-        // 自动恢复外层 chatbox snapshot，账号之间不会共享可变 registry。
-        runWithSkillSnapshot: async (runCtx, requiredSkillIds, execute) => {
-          return runWithChatChildSkillSnapshot(
-            runtime,
-            runCtx,
-            requiredSkillIds,
-            execute,
-          );
-        },
-        // [T-239b] 备用对话模型端口 —— 主模型流开始前可重试错误耗尽时,恢复层用它接管一次
-        // (只认 chat.fallback 专配行,用户没配 = 现状报错)。
-        resolveFallbackModelSpec: runtime.resolveFallbackModelSpec,
-        // 只读 context 工具(context.projects/knowledge/materials)的真数据读端口(user-scoped)。
         contextReaders: runtime.contextReaders,
-        // [T-084a] 联网检索端口 —— gatherMaterials 先真搜索、honestyBlock 探测未配诚实降级。
-        probeSearchConfigured: runtime.probeSearchConfigured,
         searchWeb: runtime.searchWeb,
-        // [T-084b] material.screenshot 端口 —— 真无头浏览器截公开页 → 落 asset(带 sourceUrl)。
-        captureScreenshotPort: runtime.captureScreenshot,
-        // [T-217c] web.read 端口 —— 带 .auth/web 登录态读正文全文 → 落逐字稿素材(pending 确认门);
-        //   无会话/过期返 { needLogin, domain } 供编导引导去保管库登录。
-        readWebUrlPort: runtime.readWebUrl,
-        // [T-386] 后台任务状态真值端口 —— 每轮注入近期任务库内真实状态,治凭记忆断言任务状态。
         listRecentTasksPort: runtime.listRecentTasks,
-        // [T-253] local.read 端口 —— 本机文件读取(运行时逐次授权 + 敏感 denylist 硬门)。
-        readLocalFilePort: runtime.readLocalFile,
-        // [T-263] local.read 授权判定端口(HITL 门)—— 判定与执行拆开,未授权 → SDK 挂起弹确认卡。
-        decideLocalReadAccessPort: runtime.decideLocalReadAccess,
-        // [T-256a] local.tools 端口 —— 环境工具探测(白名单 which/--version,只读不执行任意命令)。
-        detectToolsPort: runtime.detectTools,
-        // [T-256a] local.workspace 端口 —— 列已授权本地目录(复用 T-253 授权表)。
-        listAuthorizedDirsPort: runtime.listAuthorizedDirs,
-        // [T-084c] material.generate 端口 —— dispatch 既有 asset.generate task(立即返回 taskId)。
-        dispatchGenerateAssetPort: runtime.dispatchGenerateAsset,
-        // [T-271] cover.generate 端口 —— dispatch 制作封面链(结构化封面方案 + 文案诚实门 + 生图)。
-        dispatchGenerateCoverPort: runtime.dispatchGenerateCover,
-        // [T-523] 抖音分享走 intelligence 持久建档/可选转写专路，禁止误落 web.read。
-        dispatchDouyinSharePort: runtime.dispatchDouyinShare,
-        // [T-103b] review.script 端口 —— dispatch 既有 script.review 审核链路(L1 lint + L2 语义审)。
-        dispatchScriptReviewPort: runtime.dispatchScriptReview,
-        dispatchPlanningThesisPort: runtime.dispatchPlanningThesis,
-        // [T-268] script.draft 端口 —— ensure output_script artifact + dispatch 异步整稿(采纳写稿面)。
-        dispatchScriptDraftPort: runtime.dispatchScriptDraft,
-        prepareVideoEditPort: runtime.prepareVideoEdit,
-        // [T-350a] publish.package 端口 —— 空稿门 + ensure outputId + dispatch 单平台抖音发布物料(采纳物化 Publication)。
-        dispatchPublishPackagePort: runtime.dispatchPublishPackage,
-        // [T-385] project.transcribe 端口 —— 复用 T-374 projects.transcribe 链,对话内一键抓单条逐字稿。
-        dispatchProjectTranscribePort: runtime.dispatchProjectTranscribe,
       },skillSnapshot,{workerScriptDraft:true,workerWebRead:true,workerResearch:true,
         atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
         scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192}});
@@ -831,7 +761,6 @@ export async function POST(req: Request): Promise<Response> {
       const task=await runtime.durable.get(ctx,submitted.executionTaskId);
       if(task.status==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
     }
-    if(req.signal.aborted){await runtime.durable.command(ctx,submitted.executionTaskId,'cancel');req.signal.throwIfAborted();}
     return chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
   } catch (err) {
     if (err instanceof OwnershipError) {

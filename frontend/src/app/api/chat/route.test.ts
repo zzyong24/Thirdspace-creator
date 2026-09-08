@@ -96,7 +96,6 @@ vi.mock("@creatoros/ai-worker", () => ({
 import {
   POST,
   deriveConversationTitle,
-  runWithChatChildSkillSnapshot,
 } from "./route";
 
 function chatReq(body: unknown, cookie?: string): Request {
@@ -226,40 +225,6 @@ beforeEach(() => {
       return new Response("stream", { status: 200, headers: init?.headers });
     },
   });
-});
-
-it("[T-546/T-513] 对话子 Skill 用路由同一快照作用域，不委托另一份 runtime ALS", async () => {
-  const childSnapshot = {
-    snapshotVersion: 1,
-    userId: "u-1",
-    accountId: "acct-1",
-    skills: [{ skillId: "topic.generate" }],
-  };
-  resolveEffectiveSkillSnapshot.mockResolvedValueOnce(childSnapshot);
-  const execute = vi.fn(async () => "topic-ok");
-  const childContext = {
-    userId: "u-1",
-    accountId: "acct-1",
-    requestId: "req-t546-skill",
-    source: "user" as const,
-  };
-
-  await expect(
-    runWithChatChildSkillSnapshot(
-      { resolveEffectiveSkillSnapshot },
-      childContext,
-      ["topic.generate"],
-      execute,
-    ),
-  ).resolves.toBe("topic-ok");
-  expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
-    childContext,
-    ["topic.generate"],
-  );
-  expect(runWithEffectiveSkillSnapshot).toHaveBeenCalledWith(
-    childSnapshot,
-    execute,
-  );
 });
 
 // ── [T-267②] 会话标题净化:斜杠命令 / 裸路径不当标题 ──────────────────────────────
