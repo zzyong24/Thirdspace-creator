@@ -955,3 +955,5 @@
 {"ts":"2026-09-08T06:28:53.142Z","actor":"taskctl","action":"complete","task":"T-920","evidence":"docs/verification/t920-business-skills.md；48项注册覆盖/重复注册/管理同源检查通过，frontend类型检查退出0；用户暂缓业务自动测试及全局reconcile，真实模型与安装包待验证","sha_before":"67d64fc0d2ab","sha_after":"1e00dc64e6fc"}
 {"ts":"2026-09-08T08:13:19.653Z","actor":"taskctl","action":"start","task":"T-921","sha_before":"c5ce19c4bd41","sha_after":"7d58cdd6c7bc"}
 {"ts":"2026-09-08T08:20:34.363Z","actor":"taskctl","action":"complete","task":"T-921","evidence":"共享输出有界修复与错误分类落地；TypeScript 退出0；独立代码复核通过；docs/verification/t921-generation-recovery.md；按用户授权暂缓业务自动测试及全局reconcile，真实模型和安装包待验证","sha_before":"7d58cdd6c7bc","sha_after":"e758e3717ad7"}
+{"ts":"2026-09-08T08:30:53.130Z","actor":"taskctl","action":"start","task":"T-922","sha_before":"f91be2239e99","sha_after":"087f0961af9d"}
+{"ts":"2026-09-08T08:34:47.746Z","actor":"taskctl","action":"complete","task":"T-922","evidence":"双工程只读代码对照与独立CreatorOS停止点审查完成；docs/research/2026-09-08-agent-loop-comparison.md；不含产品实现或模型验收","sha_before":"087f0961af9d","sha_after":"18731c1a6e07"}
