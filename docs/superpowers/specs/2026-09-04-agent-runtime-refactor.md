@@ -243,3 +243,20 @@ Worker ready 返回协议版本和真实 capabilities；父进程有限并发调
 2026-09-07 生产接线与页面收敛（截至 `7d5380ba`）：四类定时采集后的模型阶段、收藏 ASR、单条对标转写、embedding 与模型连接探针均已接入实际装配；旧宿主转写函数及无消费者热点提取链删除。Metrics/WorkListExport/SearchVideos 已增加取消信号和浏览器关闭等待，并接到定时任务信号。知识搜索装配及 30 类公开服务分发已移至 backend 应用/service 层；未知操作仍在初始化数据库之前拒绝。情报工作台按来源表单、运行观察、选题任务、候选编辑等职责拆分，透传原任务 runtimeStatus，隔离账号与旧请求回显。只完成静态依赖构建和代码提交，没有实际启动应用或运行真实模型验收。
 
 继续处理的明确兼容缺口：旧素材任务的供应商 checkpoint 仍需安全迁移，页面恢复/取消操作仍在核对具体可达入口；整个数据库/宿主装配尚未完全从 persistence-client 提取。不能写成“全项目重构完成”或“AI SDK 已卸载”。
+
+### 2026-09-07 原任务恢复与旧出口退役（截至 `9dfdb507`）
+
+以下为实际代码接线，均未作真实供应商或桌面运行验收：
+
+| 功能 | 当前实现与旧路径处理 |
+|---|---|
+| 素材生成历史任务 | 原供应商 job、输入指纹与归属可证明时，由 Worker 只查询原 job；证据不足保持 unknown_result，禁止通用恢复重新提交。旧宿主素材生成 runner 删除。 |
+| 恢复与取消页面 | Copilot、情报选题、制作页读取真实 executionTaskId/runtimeStatus，操作原任务；等待用户、暂停、未知结果均有真实状态，未知结果不盲目重建任务。 |
+| 到期重试 | backend application recovery-wake 持续唤醒 script_candidate、topic_preview、transcribe、source_sync、share_import、benchmark、flywheel 七类原队列，每类单飞且有限批量；新请求/用户恢复即时唤醒。原启动一次的 drain 与两套独立 timer 删除。 |
+| 应用停止 | 先中断唤醒器，拒绝后续领取，再等待队列与模型监督器停止；来源同步区分宿主退出与用户取消，分享导入的 fetch/浏览器收到真实停止信号。 |
+| 短结构化生成旧出口 | 删除无生产消费者的 planning contract/thesis、platform adapt、review analyze、script review 五个旧 runner，保留 Worker 上下文、候选契约和仍使用的纯函数。 |
+| 应用与页面拆分 | 论点采纳事务、知识与搜索装配、搜索索引重建、公开 transport 路由迁入 backend application；情报、设置、制作页面按状态和职责拆分。 |
+
+静态接线核对修复了定时模型解析初始化次序、对标转写读取 claim DTO 不含 payload、种子维护仍访问旧仓储变量、残留旧素材入口等问题。本次 Worker 构建成功，production 装配、唤醒器及对标转写三个文件的定向语义检查为 0 条诊断；这不是全库类型或业务验收 PASS。
+
+仍需推进：知识查询不应等待整库存量 embedding；分享导入的运行中控制与失败恢复需进一步收口；完整数据库/宿主装配和部分浏览器资源物理边界仍未拆完。性能对照、真实搜索/浏览器循环、所有公共旅程与双平台包仍待用户实测。AI SDK 保留在短模型/流协议适配用途，不能宣称依赖已卸载；T915 继续执行中。

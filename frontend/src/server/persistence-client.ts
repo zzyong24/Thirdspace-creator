@@ -4828,11 +4828,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       });
       const enqueued = await intelligenceService.enqueueDueSourceRuns(ctx);
       let processed = 0;
-      // source_sync 是统一自动化的持久子任务；分批 drain，避免只处理前 20 条。
+      // source_sync 共用每轮 5 条的恢复队列；剩余任务由周期唤醒继续领取。
       for (let batchNo = 0; batchNo < 10; batchNo += 1) {
         const batch = Number(await recoveryWake?.run("source_sync") ?? 0);
         processed += batch;
-        if (batch < 20) break;
+        if (batch < 5) break;
       }
       report({
         stage: "radar_sync",
