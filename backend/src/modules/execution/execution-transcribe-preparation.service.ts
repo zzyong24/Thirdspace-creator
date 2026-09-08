@@ -11,7 +11,7 @@ import {transcribeConfiguration} from '../ai-runtime/transcribe-business-executi
 import {awaitPreparation} from './await-preparation';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {createExecutionTranscribeAudioService} from './execution-transcribe-audio.service';
-import {bindTranscribeExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
+import {bindTranscribeAudioExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
 import {ConflictError} from './execution.errors';
 /** 凭据仅返回当前调用；音频与实际身份在原任务行锁下首次冻结。 */
 export function createExecutionTranscribePreparationService(db:Db,deps:{
@@ -21,7 +21,7 @@ export function createExecutionTranscribePreparationService(db:Db,deps:{
 }){
  const leases=createExecutionLeaseService(db,deps);
  async function read(scope:TranscribeExecutionScope,awemeId:string){
-  const bound=await bindTranscribeExecution(scope,awemeId),input=transcribeTaskInputSchema.parse(bound.payload.modelInput);
+  const bound=await bindTranscribeAudioExecution(scope,awemeId),input=transcribeTaskInputSchema.parse(bound.payload.modelInput);
   const {plans,plan}=readTranscribeAsrPlan(bound.payload,awemeId);
   if(!plan){
    const calls=await scope.tx.select({operationKey:executionCalls.operationKey}).from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id));
@@ -45,7 +45,7 @@ export function createExecutionTranscribePreparationService(db:Db,deps:{
     if(spec.provider!=='whisper-local'){
      if(!isDeepStrictEqual(transcribeConfiguration(spec),initial.input.configuration))throw new ConflictError('模型配置已变化，不能替换原转写执行');
      await leases.withLease(ref,'admission',async scope=>{abort.throwIfAborted();const current=await read(scope,awemeId);if(!isDeepStrictEqual(current.input,initial.input)||!isDeepStrictEqual(current.plan,initial.plan))throw new ConflictError('申请凭据前原执行选择已变化');});
-     spec=await awaitPreparation(()=>deps.prepareSpec(initial.context,spec,{audioBytes:audio.bytes,intentId:`task:${initial.business.id}:aweme:${awemeId}`}),abort);
+     spec=await awaitPreparation(()=>deps.prepareSpec(initial.context,spec,{audioBytes:audio.bytes,intentId:`task:${initial.credentialIntentId}:aweme:${awemeId}`}),abort);
      if(spec.provider!=='whisper-local'&&!isDeepStrictEqual(transcribeConfiguration(spec),initial.input.configuration))throw new ConflictError('按次凭据与冻结配置不符');
     }
     if(spec.provider==='whisper-local')spec=localWhisperSpec();

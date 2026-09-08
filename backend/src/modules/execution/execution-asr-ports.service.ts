@@ -1,3 +1,4 @@
+import {bindTranscribeAudioExecution} from './transcribe-execution-binding';
 import {readTranscribeAsrPlan} from './transcribe-asr-plan';
 import {asrExecutionIdentity} from '@creatoros/ai-worker/asr-identity';
 import {localWhisperSpec} from '@creatoros/ai-worker';
@@ -26,6 +27,8 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         if(!legacy.success&&!plan)throw new ConflictError('缺少原识别选择');
         const input=legacy.success?legacy.data:{...transcribeTaskInputSchema.parse(payload.modelInput),identity:plan!.identity};
         if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
+        if(!legacy.success)await bindTranscribeAudioExecution(scope,awemeId);
+        else {
         const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!)));
         const raw = business?.inputData as {
             awemeIds?: unknown;
@@ -34,6 +37,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         const ids = Array.isArray(raw?.awemeIds) ? raw.awemeIds : typeof raw?.awemeId === 'string' ? [raw.awemeId] : [];
         if (task.kind !== 'ai_task' || task.ownerType !== 'ai_task' || !business || payload.aiTaskId !== business.id || business.taskType !== 'transcribe.douyin' || !isDeepStrictEqual(input.awemeIds, ids) || !input.awemeIds.includes(awemeId))
             throw new ConflictError('转写执行与原作品归属不符');
+        }
         const manifestKey = input.identity.protocol === "whisper-local.v1" ? "localAsrAudioManifests" : "asrAudioManifests";
         const manifests = payload[manifestKey];
         if (manifests !== undefined && (!manifests || typeof manifests !== 'object' || Array.isArray(manifests)))

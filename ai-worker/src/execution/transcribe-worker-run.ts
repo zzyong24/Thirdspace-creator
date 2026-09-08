@@ -2,10 +2,7 @@ import {createTranscribeWorkerSource} from "./transcribe-worker-source";
 import {z} from 'zod';
 import {transcribeItemReceiptSchema,transcribeSourceSchema,type transcribeTaskInputSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createTranscribeAudioExtractor} from '../runtime/transcribe-audio-extract';
-import {createOpenaiAsrAdapter} from '../runtime/multimodal-openai-asr';
-import {createMimoAsrAdapter} from '../runtime/multimodal-mimo-asr';
-import {createQwenAsrAdapter} from '../runtime/multimodal-qwen-asr';
-import {createDefaultWhisperLocalAdapter} from '../runtime/multimodal-whisper-local';
+import {createTranscribeAsrRegistry} from './transcribe-asr-registry';
 import {runTranscribeAsrInWorker} from './transcribe-asr-run';
 import {runTranscribePostprocessInWorker} from './transcribe-postprocess-run';
 import {GenerationFailure} from './generation-error';
@@ -18,9 +15,7 @@ export async function runTranscribeInWorker(input:z.infer<typeof transcribeTaskI
   try{const value=schema.parse(await call(port,data,signal));signal.throwIfAborted();return value;}catch{signal.throwIfAborted();throw new GenerationFailure('unknown_result','TRANSCRIBE_HOST_RECEIPT_UNKNOWN');}
  };
  const source=createTranscribeWorkerSource(signal,call);
- const extract=createTranscribeAudioExtractor(),openai=createOpenaiAsrAdapter();
- const mimo=createMimoAsrAdapter(),qwen=createQwenAsrAdapter();
- const registry={openai,siliconflow:openai,groq:openai,'xiaomi-mimo':mimo,'qwen-asr':qwen,qwen,'whisper-local':createDefaultWhisperLocalAdapter()};
+ const extract=createTranscribeAudioExtractor(),registry=createTranscribeAsrRegistry();
  const ack=z.object({ok:z.literal(true)}).strict();
  for(const awemeId of input.awemeIds){
    signal.throwIfAborted();const state=await guarded(itemState,'prepareTranscribeItem',{awemeId});

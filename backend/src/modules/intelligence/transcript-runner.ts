@@ -1,3 +1,4 @@
+import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import type { RequestContext } from "@creatoros/contract";
 import type {
   PersistentTaskClaim,
@@ -13,6 +14,7 @@ export interface IntelligenceTranscriptPort {
       canonicalUrl: string;
       externalId: string | null;
     },
+    claim?: PersistentTaskClaim,
   ): Promise<{
     text: string | null;
     provider: string | null;
@@ -91,7 +93,7 @@ export async function runIntelligenceTranscriptTask(
       input.taskId,
     );
     await deps.intelligence.markTranscriptRunning(ctx, input.taskId);
-    const result = await deps.transcript.transcribe(ctx, target);
+    const result = await deps.transcript.transcribe(ctx, target, claim);
     const text = result.text?.trim() || null;
     if (!text) {
       await deps.intelligence.finishTranscript(ctx, {
@@ -118,6 +120,7 @@ export async function runIntelligenceTranscriptTask(
     });
     await deps.tasks.finish({ ...lease, status: "succeeded" });
   } catch (error) {
+    if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
     const classified = classify(error);
     await deps.intelligence.finishTranscript(ctx, {
       taskId: input.taskId,

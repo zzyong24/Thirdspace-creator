@@ -1,3 +1,4 @@
+import {bindIntelligenceTranscript} from '../intelligence/transcript-execution-binding';
 import {z} from 'zod';
 import {and,eq,aiTasks} from '@creatoros/backend';
 import {createExecutionLeaseService} from './execution-lease.service';
@@ -12,4 +13,15 @@ export async function bindTranscribeExecution(scope:TranscribeExecutionScope,awe
  const raw=business?.inputData as {awemeIds?:unknown;awemeId?:unknown}|undefined,ids=Array.isArray(raw?.awemeIds)?raw.awemeIds:typeof raw?.awemeId==='string'?[raw.awemeId]:[];
  if(task.kind!=='ai_task'||task.ownerType!=='ai_task'||!business||business.taskType!=='transcribe.douyin'||payload.aiTaskId!==business.id||!isDeepStrictEqual(input.awemeIds,ids)||!input.awemeIds.includes(awemeId))throw new ConflictError('转写输入与原任务作品不符');
  return {payload,input,business};
+}
+
+/** 仅共享音频与 ASR 叶子；作品工件/ai_task 终态仍只用上面的严格绑定。 */
+export async function bindTranscribeAudioExecution(scope:TranscribeExecutionScope,awemeId:string){
+ if(scope.task.kind!=='transcribe'){
+  const bound=await bindTranscribeExecution(scope,awemeId);
+  return {payload:bound.payload,input:bound.input,credentialIntentId:bound.business.id};
+ }
+ const bound=await bindIntelligenceTranscript(scope),payload=scope.task.payload as Record<string,unknown>,input=target.parse(payload.modelInput);
+ if(bound.awemeId!==awemeId||!isDeepStrictEqual(input.awemeIds,[awemeId]))throw new ConflictError('情报 ASR 与原来源不符');
+ return {payload,input,credentialIntentId:scope.task.id};
 }

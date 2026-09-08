@@ -2,7 +2,7 @@ import {eq,executionTasks,executionCalls,type Db} from '@creatoros/backend';
 import {transcribeAudioReceiptSchema,workerPortInputSchemas,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {createTranscribeAudioStorage,transcribeAudioDigest} from '../assets/transcribe-audio-storage';
 import type {ObjectStorageForCtx} from '../assets/assets.service';
-import {bindTranscribeExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
+import {bindTranscribeAudioExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {ConflictError} from './execution.errors';
 import type {z} from 'zod';
@@ -11,7 +11,7 @@ type Receipt=z.infer<typeof transcribeAudioReceiptSchema>;
 export function createExecutionTranscribeAudioService(db:Db,deps:{objectStorageForCtx:ObjectStorageForCtx;now?:()=>string}){
  const leases=createExecutionLeaseService(db,deps),storage=createTranscribeAudioStorage(deps.objectStorageForCtx);
  async function bound(scope:TranscribeExecutionScope,awemeId:string){
-  const {payload}=await bindTranscribeExecution(scope,awemeId),raw=payload.transcribeAudioInputs;
+  const {payload}=await bindTranscribeAudioExecution(scope,awemeId),raw=payload.transcribeAudioInputs;
   if(raw!==undefined&&(!raw||typeof raw!=='object'||Array.isArray(raw)))throw new ConflictError('原音频快照记录损坏');
   const inputs=(raw??{}) as Record<string,unknown>,record=Object.hasOwn(inputs,awemeId)?transcribeAudioReceiptSchema.parse(inputs[awemeId]):null;
   if(!record){
