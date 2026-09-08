@@ -14,11 +14,26 @@ export function createCollectionToolPorts(
   service: Pick<IntelligenceService, "listSources" | "startRun" | "getRun">,
   tasks: Pick<PersistentTaskService, "get" | "command">,
   dispatch: (ctx: RequestContext, input: DispatchInput) => Promise<void>,
-): CollectionPorts {
+  lifecycle?:{signal:AbortSignal;isParentCancelled():Promise<boolean>},
+): CollectionPorts & {
+  readCollection(input:{targetId:string;runId:string},signal:AbortSignal):ReturnType<CollectionPorts["runCollection"]>;
+} {
   if (!parentTaskId) throw new IntelligenceValidationError("采集工具缺少父任务标识");
   const running = new Map<string, Promise<void>>();
   const watches = new Map<string, () => void>();
   return {
+    async readCollection(input,signal){
+      signal.throwIfAborted();
+      const {run}=await service.getRun(ctx,input.runId);
+      const task=await tasks.get(ctx,run.executionTaskId);
+      const key="agentic-collect:"+createHash("sha256").update(JSON.stringify([parentTaskId,input.targetId])).digest("hex");
+      if(run.sourceId!==input.targetId || task.idempotencyKey!==key)throw new IntelligenceValidationError("采集回执不属于当前父任务和目标");
+      signal.throwIfAborted();
+      if(run.status==="succeeded_with_items" || run.status==="succeeded_no_change")return {ok:true,itemsNew:run.newCount,itemsUpdated:run.updatedCount};
+      if(run.status==="blocked" && run.nextAction==="login")return {ok:false,needsLogin:true,runId:run.id,taskId:run.executionTaskId};
+      if(run.status==="queued" || run.status==="running")return {ok:false,pending:true,runId:run.id,taskId:run.executionTaskId,status:run.status};
+      throw new IntelligenceValidationError(`采集未完成（${run.status}）：${run.errorSummary ?? "请查看任务详情"}`);
+    },
     async listTargets(input, signal) {
       signal.throwIfAborted();
       const offset = input.offset ?? 0;
@@ -53,7 +68,7 @@ export function createCollectionToolPorts(
         runId = started.run.id;
         submittedTask = started.task;
       }
-      if (submittedTask && signal.aborted && submittedTask.idempotencyKey === key) {
+      if (submittedTask && signal.aborted && submittedTask.idempotencyKey === key && (!lifecycle || await lifecycle.isParentCancelled())) {
         await tasks.command(ctx, { taskIds: [submittedTask.id], command: "cancel", idempotencyKey: `${key}:cancel` });
         signal.throwIfAborted();
       }
@@ -62,26 +77,32 @@ export function createCollectionToolPorts(
       if (run.sourceId !== input.targetId || task.idempotencyKey !== key) {
         throw new IntelligenceValidationError("采集回执不属于当前父任务和目标");
       }
+      const childController=lifecycle?new AbortController():undefined;
+      const parentSignal=lifecycle?.signal??signal;
       const cancel = async () => {
+        // 工具完成、暂停、宿主收尾都可能 abort；只有持久取消才取消已提交采集。
+        if(lifecycle && !await lifecycle.isParentCancelled())return;
+        childController?.abort();
         await tasks.command(ctx, { taskIds: [task.id], command: "cancel", idempotencyKey: `${key}:cancel` });
       };
-      if (signal.aborted) {
+      if (parentSignal.aborted) {
         await cancel();
         signal.throwIfAborted();
       }
       if ((task.status === "queued" || task.status === "running") && !watches.has(task.id)) {
         // 父停止必须先写持久取消，不能只取消当前工具等待而让队列继续启动。
         const onAbort = () => { void cancel().catch(error => console.error("[collection] 取消失败", error instanceof Error ? error.name : "UnknownError")); };
-        signal.addEventListener("abort", onAbort, { once: true });
-        watches.set(task.id, () => signal.removeEventListener("abort", onAbort));
+        parentSignal.addEventListener("abort", onAbort, { once: true });
+        watches.set(task.id, () => parentSignal.removeEventListener("abort", onAbort));
+        if(parentSignal.aborted)onAbort();
       } else if (task.status !== "queued" && task.status !== "running") {
         watches.get(task.id)?.();
         watches.delete(task.id);
       }
       if (task.status === "queued" && !running.has(task.id)) {
-        const work = Promise.resolve().then(() => dispatch(ctx, { sourceId: input.targetId, runId, taskId: task.id, signal }))
+        const work = Promise.resolve().then(() => dispatch(ctx, { sourceId: input.targetId, runId, taskId: task.id, signal:childController?.signal??signal }))
           .catch(error => console.error("[collection] 执行失败", error instanceof Error ? error.name : "UnknownError"))
-          .finally(() => { running.delete(task.id); });
+          .finally(() => { running.delete(task.id);watches.get(task.id)?.();watches.delete(task.id); });
         running.set(task.id, work);
       }
       signal.throwIfAborted();

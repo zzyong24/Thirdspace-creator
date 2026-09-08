@@ -1,3 +1,4 @@
+import {createAgenticCollectionTools} from "@creatoros/backend/modules/ai-runtime";
 import {composeChatProduction,createChatProductionRuntime} from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
@@ -246,19 +247,6 @@ import {
   sweepInterruptedRenderFrames,
   sweepOrphanSandboxes,
   EXECUTION_OP_IDS,
-  // [T-256b/c/T-313] 自主任务运行时:agentic executor + Pi 引擎(带确定性兜底)+ 三领域适配器 + token 估算。
-  createAgenticExecutor,
-  createDeterministicAgenticEngine,
-  createPiAgenticEngine,
-  createResearchTools,
-  createResearchPorts,
-  createCollectionTools,
-  createMaterialTools,
-  estimateTokens as estimateAgenticTokens,
-  type EngineLlm as AgenticEngineLlm,
-  type ResearchPorts,
-  type CollectionPorts,
-  type MaterialPorts,
 } from "@creatoros/backend/modules/execution";
 import {
   createIntelligenceService,
@@ -8914,103 +8902,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     }),
   );
 
-  // 自主任务：搜索和网页读取复用真实服务，其他领域写入/采集端口仍待接通。
-  // 此处仍是旧宿主装配；Pi/浏览器迁入独立Worker及持久检查点属于T-915剩余范围。
-  const buildAgenticLlm = (
-    ctx: RequestContext,
-    capability: string,
-  ): AgenticEngineLlm => {
-    return async (prompt, opts) => {
-      const r = await llmCompleter(ctx, capability, prompt, {
-        system: opts?.system,
-        maxTokens: opts?.maxTokens,
-      });
-      return {
-        text: r.text,
-        tokensUsed:
-          estimateAgenticTokens(prompt) + estimateAgenticTokens(r.text ?? ""),
-      };
-    };
-  };
-  const agenticResearchPorts=(ctx:RequestContext,taskId:string):ResearchPorts=>createResearchPorts(ctx,{
-    requireReadEvidence: true,
-    search:(c,query,options)=>searchWebPort(c,query,options),
-    async read(c,url,signal){
-      const domain=webDomainFromUrl(url);
-      try{
-        const read=await readWebUrlSidecar(url,{authDir:webAuthDirFor(domain),signal},{openContext:()=>openPooledReaderContext(c,domain,{signal}) as never});
-        return {needLogin:false,title:read.title,fullText:read.text,sourceUrl:read.finalUrl};
-      }catch(error){
-        if(error instanceof WebReaderLoginRequiredError)return {needLogin:true,domain:error.domain};
-        throw error;
-      }
-    },
-    async stageKnowledge(c,input,signal){
-      const proposal=await agenticProposalStaging.stage(c,taskId,{kind:"knowledge.create",title:input.title,note:input.note,sourceNote:input.sourceNote,toolCallId:input.toolCallId ?? "",evidenceRefs:input.evidenceRefs ?? []},signal);
-      return {pendingId:proposal.proposalId,proposal};
-    },
-  });
-  const agenticCollectionPorts = (ctx: RequestContext, taskId: string): CollectionPorts =>
-    createCollectionToolPorts(ctx, taskId, intelligenceService, persistentTaskService,
-      (c, input) => runIntelligenceSourceTask(c, input, sourceRunnerDeps));
-  const agenticMaterialPorts=(ctx:RequestContext,taskId:string):MaterialPorts=>({
-    async searchMaterials(input,signal){
-      signal.throwIfAborted();const result=await assetsService.searchAssets(ctx,{query:input.query,limit:input.limit ?? 20,cursor:input.cursor});signal.throwIfAborted();
-      return {items:result.rows.map(row=>({id:row.id,title:row.name,kind:row.assetType})),nextCursor:result.nextCursor};
-    },
-    async organizeMaterials(input,signal) {
-      const proposal=await agenticProposalStaging.stage(ctx,taskId,{kind:"asset.tags",assetIds:input.assetIds,tag:input.tag,toolCallId:input.toolCallId ?? "",evidenceRefs:input.assetIds},signal);
-      return {affected:input.assetIds.length,proposal};
-    },
-  });
-  // [T-313] 引擎切 Pi:createPiAgenticEngine 真接 pi-coding-agent SDK 自主循环;**保留确定性兜底**
-  //   (依赖缺席 / 打包实拷缺失 / 无 §6.1 raw config / 运行异常 → 退 deterministicEngine,现有全绿路径)。
-  //   §6.1 raw config 经 resolveLlmConfig(同 llmCompleter 一套 getModelConfig+env)注入引擎自建 provider;
-  //   production 不传 buildStreamSimple(走 pi 内建 anthropic-messages/openai-completions api,真烧用户 provider)。
-  const deterministicEngine = createDeterministicAgenticEngine();
-  const agenticEngine = createPiAgenticEngine({ fallback: deterministicEngine });
-  const buildAgenticLlmConfig = (ctx: RequestContext, capability: string) =>
-    resolveLlmConfig(ctx, capability, {
-      getModelConfig: (c, cap) => settingsService.getModelConfig(c, cap),
-      env: process.env,
-      getChannelModelConfig,
-      getChannelModelCredential: (serviceId) =>
-        getChannelModelCredential(ctx, serviceId),
-      getChannelModelSelection: (capability) =>
-        getChannelModelSelection(ctx, capability),
-    });
-  const AGENTIC_DEFAULT_BUDGET = { maxSteps: 8, maxTokens: 20000 };
-  executorRegistry.register(
-    createAgenticExecutor({
-      taskType: "agentic.research",
-      engine: agenticEngine,
-      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.research"),
-      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.research"),
-      resolveTools: (ctx,execution) => createResearchTools(agenticResearchPorts(ctx,execution?.taskId ?? "")),
-      defaultBudget: AGENTIC_DEFAULT_BUDGET,
-    }),
-  );
-  executorRegistry.register(
-    createAgenticExecutor({
-      taskType: "agentic.collect",
-      engine: agenticEngine,
-      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.collect"),
-      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.collect"),
-      resolveTools: (ctx,execution) => createCollectionTools(agenticCollectionPorts(ctx,execution?.taskId ?? "")),
-      defaultBudget: AGENTIC_DEFAULT_BUDGET,
-    }),
-  );
-  executorRegistry.register(
-    createAgenticExecutor({
-      taskType: "agentic.material",
-      engine: agenticEngine,
-      resolveLlm: (ctx) => buildAgenticLlm(ctx, "agentic.material"),
-      resolveLlmConfig: (ctx) => buildAgenticLlmConfig(ctx, "agentic.material"),
-      resolveTools: (ctx,execution) => createMaterialTools(agenticMaterialPorts(ctx,execution?.taskId ?? "")),
-      defaultBudget: AGENTIC_DEFAULT_BUDGET,
-    }),
-  );
-
   // resolveModelSpec — 新 Agent Runtime(modelFor)按 capability 解析用户配的 model;复用
   // llmCompleter 同一套 resolve(getModelConfig + env),投影成 ModelSpec。没配 key → 抛
   // LlmCredentialError(适配器接住 → cancelTask,不假成功)。
@@ -9568,9 +9459,22 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     stage:(ref,input,signal)=>agenticProposalStaging.stageForExecution(ref,input,signal),
   });
   const researchWorkerTools=createAgenticResearchTools({stage:(ref,input,signal)=>agenticProposalStaging.stageForExecution(ref,input,signal)});
-  const agenticBudget={maxCalls:AGENTIC_DEFAULT_BUDGET.maxSteps,maxTokens:AGENTIC_DEFAULT_BUDGET.maxTokens,deadlineMs:600_000};
+  const collectionWorkerTools=createAgenticCollectionTools({
+    forTask:(c,taskId,signal)=>createCollectionToolPorts(c,taskId,intelligenceService,persistentTaskService,
+      (ctx,input)=>runIntelligenceSourceTask(ctx,input,sourceRunnerDeps),{
+        signal,async isParentCancelled(){
+          const parent=await aiService.getTask(c,taskId);
+          if(parent.status==="cancelled")return true;
+          if(!parent.executionTaskId)return false;
+          const execution=await persistentTaskService.get(c,parent.executionTaskId);
+          return execution.status==="cancelled" || execution.status==="cancel_requested";
+        },
+      }),
+  });
+  const agenticBudget={maxCalls:8,maxTokens:20000,deadlineMs:600_000};
   const agenticBusiness=createAgenticBusinessExecutionService(db,{
     definitions:{
+      "exec.agentic.collect":{taskType:"agentic.collect",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.collect",tools:collectionWorkerTools.definitions},
       "exec.agentic.material":{taskType:"agentic.material",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.material",tools:materialWorkerTools.definitions},
       "exec.agentic.research":{taskType:"agentic.research",systemPrompt:DEFAULT_AGENTIC_SYSTEM_PROMPT,capability:"agentic.research",tools:researchWorkerTools.definitions},
     },
@@ -9580,7 +9484,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{return null;}})();
   const agenticWorker=agenticEntry ? createAgenticWorkerDispatcher(db,{
     entryPath:agenticEntry,workerId:`agentic-worker-${process.pid}`,budget:agenticBudget,modelConcurrency:1,
-    tools:{...materialWorkerTools.tools,...researchWorkerTools.tools},browserSessions:browserSessionsService,resolveModelCredential:resolveWorkerCredential,
+    tools:{...materialWorkerTools.tools,...researchWorkerTools.tools,...collectionWorkerTools.tools},browserSessions:browserSessionsService,resolveModelCredential:resolveWorkerCredential,
     onError:code=>console.error(`[agentic-worker] ${code}`),
   }) : null;
   let chatWorker: ReturnType<typeof createChatProductionRuntime> | undefined;

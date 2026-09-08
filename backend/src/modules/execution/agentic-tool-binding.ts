@@ -7,7 +7,7 @@ type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
 export type AgenticBackendTool={version:string;parameters:z.ZodType;effect:"none"|"proposal"|"committed";execution?:"host"|"worker.web-read"|"worker.research"|"worker.script-draft"|"worker.script-hooks"|"worker.structured-node"|"host.task-submit";
- execute?(context:import("@creatoros/contract").RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;signal:AbortSignal}):Promise<ToolOutcome>;
+ execute?(context:import("@creatoros/contract").RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;signal:AbortSignal;executionSignal?:AbortSignal}):Promise<ToolOutcome>;
 };
 const frozenTools=z.object({kind:z.literal("agentic.run"),dryRun:z.boolean().optional(),tools:z.array(z.object({name:z.string().min(1),version:z.string().min(1)})).max(100)});
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");

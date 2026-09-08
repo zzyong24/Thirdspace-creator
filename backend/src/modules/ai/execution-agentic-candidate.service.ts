@@ -33,6 +33,10 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
             if(task.status!=="failed" || business.status!=="failed" || task.lastErrorCode!=="AGENT_NO_PROPOSALS")throw new ConflictError("失败提交回执与终态不一致");
             return agenticCommitReceiptSchema.parse({outcome:"failed",resultId:existing.id,aiTaskId:business.id,errorCode:"AGENT_NO_PROPOSALS"});
           }
+          if(frozen.taskType==="agentic.collect" && existing.resultType==="execution_manifest" && business.status==="failed"){
+            if(task.status!=="partial" || task.lastErrorCode!=="COLLECTION_INCOMPLETE")throw new ConflictError("采集部分结果与终态不一致");
+            return agenticCommitReceiptSchema.parse({outcome:"failed",resultId:existing.id,aiTaskId:business.id,errorCode:"COLLECTION_INCOMPLETE"});
+          }
           if(!["succeeded","partial"].includes(task.status))throw new ConflictError("候选提交回执不一致");
           return {resultId:existing.id,aiTaskId:business.id};
         }
@@ -46,6 +50,7 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
         if(checkpoint.ledgerSequence!==calls.at(-1)?.sequence || checkpoint.messages.length!==settled.length || checkpoint.messages.some((message,index)=>message.callId!==settled[index]?.id || message.role!==(settled[index]?.kind==="model"?"assistant":"tool")))throw new ConflictError("检查点尚未确认完整调用记录");
         const pending=new Map<string,string>();const seenTools=new Set<string>();
         const confirmedProposals=new Map<string,AgenticProposal>();const plans:unknown[]=[];
+        const collectionResults=new Map<string,Record<string,unknown>>();
         for(const call of settled){
           if(call.kind==="model"){
             if(pending.size)throw new ConflictError("模型越过未确认工具调用");
@@ -62,6 +67,11 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
             pending.delete(receipt.toolCallId);
             const output=agenticToolOutcomeSchema.parse(receipt.output);
             if(output.sideEffect==="unknown" || output.error?.code==="unknown_commit")throw new ConflictError("工具提交仍待对账");
+            if(frozen.taskType==="agentic.collect" && !frozen.dryRun && ["collect.run","collect.status"].includes(receipt.toolName) && output.status==="ok" && !output.error){
+              const data=object(output.data);
+              if(typeof data.targetId!=="string" || typeof data.ok!=="boolean")throw new ConflictError("采集回执缺少真实目标或结果");
+              collectionResults.set(data.targetId,{...collectionResults.get(data.targetId),...data});
+            }
             if(frozen.dryRun){
               if(output.sideEffect!=="none")throw new ConflictError("预演含有真实副作用");
               if(object(output.data).plan)plans.push(object(output.data).plan);
@@ -88,6 +98,17 @@ export function createExecutionAgenticCandidateService(db:Db,deps:{now?:()=>stri
         const meta={engine:"pi",actualEngine:"pi",completeness:partial?"partial":"completed",stopReason:request.stopReason,
           checkpointRef:`execution-checkpoint:${task.id}:${checkpoint.revision}`,usageRef:`execution-calls:${task.id}`,
           tokensUsed:settled.some(call=>call.totalTokens===null)?null:settled.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0)};
+        if(frozen.taskType==="agentic.collect" && !frozen.dryRun){
+          const collections=[...collectionResults.values()];
+          const incomplete=partial || !collections.length || collections.some(result=>result.ok!==true);
+          const errorMessage=incomplete?"采集观察尚未全部完成，请查看原采集任务或处理登录；未将提交视为完成。":null;
+          await tx.insert(aiTaskResults).values({id:resultId,executionCallId:lastModel.id,aiTaskId:business.id,resultType:"execution_manifest",
+            resultData:{taskType:frozen.taskType,summary:errorMessage??`已确认 ${collections.length} 个目标采集完成`,executionCommitDigest:requestDigest,collections,meta:{...meta,completeness:incomplete?"partial":"completed"}}});
+          await tx.update(aiTasks).set({status:incomplete?"failed":"succeeded",completedAt:stamp,errorMessage,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,business.id));
+          await tx.update(executionCalls).set({resultRef:resultId,updatedAt:stamp}).where(eq(executionCalls.id,lastModel.id));
+          await tx.update(executionTasks).set({status:incomplete?"partial":"succeeded",leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:incomplete?"COLLECTION_INCOMPLETE":null,lastErrorMessage:errorMessage,updatedAt:stamp}).where(eq(executionTasks.id,task.id));
+          return agenticCommitReceiptSchema.parse({outcome:incomplete?"failed":"succeeded",resultId,aiTaskId:business.id,...(incomplete?{errorCode:"COLLECTION_INCOMPLETE"}:{})});
+        }
         if(!frozen.dryRun && !proposals.length){
           const errorCode="AGENT_NO_PROPOSALS";const errorMessage="本次自主任务未产生可采纳的业务建议，请调整任务后重试。";
           // 完整账本已证明没有业务候选：失败回执与双任务终态同事务提交，不能伪装未知重跑。

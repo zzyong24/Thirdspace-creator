@@ -107,7 +107,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     signal.throwIfAborted();
     const output=agenticToolOutcomeSchema.parse(reused ?? claimed.bound.validationOutcome ?? (claimed.bound.dryRun && claimed.bound.effect!=="none"
      ? {status:"ok",summary:"已生成操作预演",evidence:[],data:{plan:{toolName:claimed.bound.toolName,input:claimed.bound.input}},error:null,continuation:null,sideEffect:"none"}
-     : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal})));
+     : await claimed.handler!(claimed.context,claimed.bound.input,{execution:ref,aiTaskId:claimed.aiTaskId,callId,toolCallId:claimed.bound.toolCallId,signal,executionSignal:parentSignal})));
     const receipt=await settle(ref,{callId,status:"settled",output},claimed.claimId,reused?claimed.reuseCallId:undefined);
     if(receipt.status!=="settled")throw new ConflictError("工具提交结果未知，须对账");
     return output;

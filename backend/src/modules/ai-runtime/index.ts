@@ -152,3 +152,5 @@ export {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
 export {createCoverBusinessAdapter} from "./cover-business-adapter";
 
 export {composeChatProduction,type ChatProductionCompositionDeps,type ChatProductionServicePorts} from "./chat-production-composition";
+
+export {createAgenticCollectionTools} from "./agentic-collection-tools";

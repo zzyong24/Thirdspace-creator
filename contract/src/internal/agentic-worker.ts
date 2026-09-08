@@ -15,6 +15,6 @@ export const reserveAgenticModelSchema=z.object({
 
 /** 已提交的明确失败与响应未知分开；旧成功回执仍可解析。 */
 export const agenticCommitReceiptSchema=z.union([
- z.object({outcome:z.literal("failed"),resultId:z.string().min(1),aiTaskId:z.string().min(1),errorCode:z.literal("AGENT_NO_PROPOSALS")}).strict(),
+ z.object({outcome:z.literal("failed"),resultId:z.string().min(1),aiTaskId:z.string().min(1),errorCode:z.enum(["AGENT_NO_PROPOSALS","COLLECTION_INCOMPLETE"])}).strict(),
  z.object({outcome:z.literal("succeeded").default("succeeded"),resultId:z.string().min(1),aiTaskId:z.string().min(1)}).strict(),
 ]);
