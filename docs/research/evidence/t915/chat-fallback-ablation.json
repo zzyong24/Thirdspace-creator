@@ -1,0 +1,55 @@
+{
+  "scope": "局部受控消融：仅模型流适配器与模拟账本；不代表真实供应商/持久数据库/业务验收",
+  "results": {
+    "withoutFallback": {
+      "first": {
+        "status": "retry_wait",
+        "code": "http_429"
+      },
+      "primaryCalls": 1,
+      "fallbackCalls": 0,
+      "calls": [
+        {
+          "callId": "controlled-turn/model/1",
+          "status": "rejected"
+        }
+      ]
+    },
+    "withFallback": {
+      "first": {
+        "status": "completed",
+        "text": "result"
+      },
+      "restored": {
+        "status": "completed",
+        "text": "result"
+      },
+      "primaryCalls": 1,
+      "fallbackCalls": 1,
+      "calls": [
+        {
+          "callId": "controlled-turn/model/1",
+          "status": "rejected"
+        },
+        {
+          "callId": "controlled-turn/model/1/fallback/model/1",
+          "status": "settled"
+        }
+      ]
+    },
+    "unknownSubmission": {
+      "first": {
+        "status": "unknown_result",
+        "code": "MODEL_RESULT_UNKNOWN"
+      },
+      "primaryCalls": 1,
+      "fallbackCalls": 0,
+      "calls": [
+        {
+          "callId": "controlled-turn/model/1",
+          "status": "unknown"
+        }
+      ]
+    }
+  }
+}

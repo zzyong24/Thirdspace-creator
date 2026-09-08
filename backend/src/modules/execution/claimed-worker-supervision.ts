@@ -20,10 +20,14 @@ export function createClaimedWorkerSupervision(deps:{entryPath:string|(()=>strin
    try{return await worker.run(input.ref,input.deadlineAt);}
    finally {
     input.close();clearInterval(timer);
-    try{await worker.stop();}catch(error){if(!input.hasDurableOutcome())throw error;}
-    finally{active.delete(worker);}
+    try{await worker.stop();active.delete(worker);}
+    catch(error){
+     // 已保存业务结果不回滚，但未确认退出的进程必须继续被宿主持有，不能从停机清单消失。
+     if(!input.hasDurableOutcome())throw error;
+     console.error("[execution-worker] 任务结果已保存，进程清理仍待确认");
+    }
    }
   },
-  async stop(){stopping=true;await Promise.all([...active].map(worker=>worker.stop()));},
+  async stop(){stopping=true;await Promise.all([...active].map(async worker=>{await worker.stop();active.delete(worker);}));},
  };
 }
