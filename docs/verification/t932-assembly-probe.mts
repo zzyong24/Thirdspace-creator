@@ -10,7 +10,7 @@ const options={workerScriptDraft:true,workerWebRead:true,workerResearch:true,ato
 
 for(const mode of ['official','old-frozen','override']){
  const frozen=structuredClone(snapshot);
- if(mode==='old-frozen')frozen.skills=frozen.skills.filter(s=>s.skillId!=='research.plan'&&!s.skillId.startsWith('method.')); 
+ if(mode==='old-frozen')frozen.skills=frozen.skills.filter(s=>s.skillId!=='research.plan'&&!s.skillId.startsWith('method.'));
  if(mode==='override'){const plan=frozen.skills.find(s=>s.skillId==='research.plan')!;plan.effective.methodSystem='PROBE_RESEARCH_METHOD_OVERRIDE';plan.effective.template='PROBE_RESEARCH_TEMPLATE_OVERRIDE';}
  const text='围绕独立开发者收款主题找可用案例和资料';
  try{
