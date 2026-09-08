@@ -161,7 +161,7 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
    const prepared=await prepareDurableChatTurn(context,{
     messages:snapshot.messages.map(message=>({id:message.id,role:message.role as "user"|"assistant",parts:[{type:"text" as const,text:message.content}]})),
     chatContext:{surface:"topics",selection:{kind:"candidate",ids:[],label:"用户选中的主题"}},
-   },{...runtime.context,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,resolveModelSpec:resolveCredential,humanizeError:()=>null},skills,{workerResearch:true,scriptHooksGeneration:{version:1,maxOutputTokens:2048},structuredGeneration:{version:1,maxOutputTokens:2048}});
+   },{...runtime.context,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,humanizeError:()=>null},skills,{workerResearch:true,scriptHooksGeneration:{version:1,maxOutputTokens:2048},structuredGeneration:{version:1,maxOutputTokens:2048}});
    expect(prepared.hostContext.scriptHooksContext!.selectionTitle).toBe("用户选中的主题");
    // Skill 工具是优先顺序；完整场景清单不能为了测试通过而裁掉。
    expect(prepared.toolDefinitions.map(tool=>tool.name)).toEqual(expect.arrayContaining(["context.projects","script.hooks","topic.generate","brief.fill"]));

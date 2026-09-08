@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import type { UIMessage } from "ai";
+import {workerSkillSnapshotSchema} from "@creatoros/contract/execution-worker";
 import {chatExecutionResponse} from "@/server/chat-execution-stream";
 import type { RequestContext } from "@creatoros/contract";
 import { OwnershipError } from "@creatoros/backend/modules/identity";
 import {
   getChatRuntime,
+  type ChatRuntime,
 } from "@/server/persistence-client";
 import {
   requiredSkillIdsForTask,
@@ -745,7 +747,7 @@ export async function POST(req: Request): Promise<Response> {
         contextReaders: runtime.contextReaders,
         searchWeb: runtime.searchWeb,
         listRecentTasksPort: runtime.listRecentTasks,
-      },skillSnapshot,{workerScriptDraft:true,workerWebRead:true,workerResearch:true,
+      },workerSkillSnapshotSchema.parse(skillSnapshot),{workerScriptDraft:true,workerWebRead:true,workerResearch:true,
         atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
         scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192}});
       req.signal.throwIfAborted();
@@ -759,7 +761,7 @@ export async function POST(req: Request): Promise<Response> {
     // 授权按钮只续接执行；真实权限仍由宿主 approve 重新检查。
     if(messages.some(message=>message.parts.some(part=>typeof part==='object' && part!==null && 'state' in part && part.state==='approval-responded'))){
       const task=await runtime.durable.get(ctx,submitted.executionTaskId);
-      if(task.status==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
+      if((task.runtimeStatus??task.status)==='waiting_user')await runtime.durable.command(ctx,submitted.executionTaskId,'resume');
     }
     return chatExecutionResponse(runtime.durable,ctx,{...submitted,conversationId},req.signal);
   } catch (err) {

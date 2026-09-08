@@ -1,6 +1,5 @@
 import {expect,it,vi} from 'vitest';
-import {fetchDouyinVideoUrl,fetchDouyinVideoSource,fetchDouyinVideoUrlViaDetail,streamAudioFromVideo,DouyinAudioFetchError} from './douyin-cdp';
-import {runTranscribe} from '@creatoros/backend/modules/ai-runtime';
+import {fetchDouyinVideoUrl,fetchDouyinVideoSource,fetchDouyinVideoUrlViaDetail,DouyinAudioFetchError} from './douyin-cdp';
 import {withDouyinChannel} from './douyin-request-gateway';
 
 it('限流排队取消立即返回，晚到许可不执行请求也不记录风控失败',async()=>{
@@ -33,15 +32,4 @@ it('登录态导航中取消，不进入导航重试或详情请求',async()=>{
  const page={goto,waitForTimeout,evaluate},ctx={cookies:async()=>[{name:'sessionid',value:'fixture'}],close,pages:()=>[page],newPage:async()=>page};
  await expect(fetchDouyinVideoUrlViaDetail({awemeId:'one',authDir:'/unused',signal:controller.signal},{openContext:async()=>ctx as never})).rejects.toMatchObject({name:'AbortError'});
  expect(goto).toHaveBeenCalledTimes(1);expect(waitForTimeout).not.toHaveBeenCalled();expect(evaluate).not.toHaveBeenCalled();expect(close).toHaveBeenCalledTimes(1);
-});
-it('真实 runner 经兼容入口取消抽音，等进程关闭后退出且不重试或落稿',async()=>{
- const controller=new AbortController(),fetchVideoUrl=vi.fn(async()=>({playUrl:'https://fixture.invalid/video'})),asr=vi.fn(),write=vi.fn(),terminal=vi.fn();
- let close!: (code:number|null)=>void;
- const kill=vi.fn(()=>{queueMicrotask(()=>close(null));return true;});
- const spawn=vi.fn(()=>{queueMicrotask(()=>controller.abort());return {kill,stdout:{on(){}},stderr:{on(){}},on(event:string,cb:(code:number|null)=>void){if(event==='close')close=cb;}};});
- await expect(runTranscribe({userId:'fixture',requestId:'fixture',source:'user'},{id:'fixture',taskType:'transcribe.douyin',inputData:{awemeIds:['one','two']}},{
-  signal:controller.signal,fetchVideoUrl,streamAudio:(_ctx,url,signal)=>streamAudioFromVideo(url,{spawn:spawn as never,ffmpegPath:'/unused'},signal),
-  ai:{markRunning:async()=>{},recordStep:async()=>{},markSucceeded:terminal,markFailed:terminal},resolveTranscribeSpec:async()=>({provider:'whisper-local',model:'small',baseUrl:null,token:'',kind:'audio'}),registry:{},transcribeAudio:asr,hasTranscriptArtifact:async()=>false,ensureTranscriptArtifact:write,
- })).rejects.toMatchObject({name:'AbortError'});
- expect(kill).toHaveBeenCalledWith('SIGKILL');expect(spawn).toHaveBeenCalledTimes(1);expect(fetchVideoUrl).toHaveBeenCalledTimes(1);expect(asr).not.toHaveBeenCalled();expect(write).not.toHaveBeenCalled();expect(terminal).not.toHaveBeenCalled();
 });

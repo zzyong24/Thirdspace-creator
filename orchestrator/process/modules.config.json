@@ -582,6 +582,35 @@
       ],
       "write_set": [],
       "boundary_note": "T-916：仅允许读取历史模块；旧任务缺有效绑定与验收证据，须由 progress block 隔离，不授予实现权限。"
+    },
+    "T-918": {
+      "task_id": "T-918",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "build"
+      ],
+      "read_set": [
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        ".agents/skills/packaging-creatoros-release/SKILL.md",
+        "frontend/scripts/desktop/**",
+        "frontend/src-tauri/**",
+        "frontend/package.json",
+        "ai-worker/**",
+        "backend/src/modules/ai-runtime/**",
+        "contract/**"
+      ],
+      "write_set": [
+        "frontend/src/**",
+        "frontend/scripts/desktop/**",
+        "docs/verification/**"
+      ],
+      "verify_commands": {
+        "build": "CREATOROS_LOCAL_SKIP_INSTALL=1 pnpm -C frontend desktop:package-local"
+      },
+      "data_source": "冻结候选构建与真实DMG文件，不访问用户业务数据",
+      "flows": "本地安装包交付，业务运行由用户验证"
     }
   }
 }
