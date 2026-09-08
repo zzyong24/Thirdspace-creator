@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildLexiconBlock } from "./script-review-runner";
+import { buildLexiconBlock } from "./script-review-context";
 
 // T-124 审核简化:违禁词表本身注进语义审 prompt(词表确定 → 让模型照表复核 lint 精确匹配漏掉的
 // 谐音/变体/拆字/同义命中)。buildLexiconBlock 是纯函数,锁「词表如何渲成可注入文本」。

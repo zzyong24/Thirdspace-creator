@@ -1,13 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { REVIEW_INSIGHTS_TEMPLATE, bindPrompt } from "@creatoros/ai-worker";
-import { reviewFacets } from "./review-runner";
+import { reviewFacets } from "./review-context";
 import type { CreativeContext } from "./creative-context";
 
 // T-039a 端到端(prompt 层,不 mock ai-worker)—— 验证「review prompt 加占位符 + reviewFacets 映射
 // 真数据」真的让本项目的文案/标题/数据/评论进入最终喂给模型的 prompt,且空块诚实省略(不留占位残留、
 // 不硬塞空标题)。这一条是复盘「吃到真数据」的核心回归保护。
 //
-// 单独文件(不像 review-runner.test.ts 那样 vi.mock 掉 @creatoros/ai-worker)——这里要真 template +
+// 使用真实模板和上下文映射，验证注入材料不会改变模板边界。
+// 真 template +
 // 真 bindPrompt,才能断言占位符落位与空块省略。
 
 function makeContext(over: Partial<CreativeContext> = {}): CreativeContext {

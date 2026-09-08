@@ -1,6 +1,56 @@
 import type {RequestContext} from "@creatoros/contract";
 import {lintScript,DEFAULT_OFFICIAL_RULES} from "@creatoros/ai-worker";
-import {buildLexiconBlock,type ScriptSource,type LintRulesSource,type ScriptReviewPositioningReader} from "./script-review-runner";
+
+export interface ScriptSource {
+  /** 返回项目「脚本」stage 当前版本的 { artifactId, version, text };无脚本 → null。 */
+  getLatestScript(
+    ctx: RequestContext,
+    projectId: string,
+  ): Promise<{ artifactId: string | null; version: number; text: string } | null>;
+}
+
+// L1 词表端口(review-gate service 满足:拉 active 规则)。
+export interface LintRulesSource {
+  listActiveLintRules(ctx: RequestContext): Promise<
+    {
+      id: string;
+      tier: "official_hard" | "empirical" | "doudplus";
+      category: string;
+      matchType: "word" | "regex";
+      pattern: string;
+      replacement: string | null;
+      note: string;
+    }[]
+  >;
+}
+
+export interface ScriptReviewPositioningReader {
+  getPositioningCenter(ctx: RequestContext): Promise<unknown>;
+}
+
+// [T-124] 把 active 违禁词表渲成一段可注入 L2 语义审的文本(让模型照表复核 lint 精确匹配漏掉的
+// 谐音/变体/拆字/同义命中)。纯函数、确定性、无 IO —— 违禁词是确定的,注进 prompt 让模型也照表审。
+export function buildLexiconBlock(
+  rules: {
+    tier: string;
+    category: string;
+    pattern: string;
+    replacement: string | null;
+  }[],
+): string {
+  if (rules.length === 0) {
+    return "（创作者未配置违禁词表——按官方硬规则与语义判断)";
+  }
+  return rules
+    .map(
+      (r) =>
+        `· [${r.tier}/${r.category}] ${r.pattern}${
+          r.replacement ? ` → 建议:${r.replacement}` : ""
+        }`,
+    )
+    .join("\n");
+}
+
 
 /** 后端准备真实版本的审核输入；快照与提示词一起由执行权转交事务冻结。 */
 export async function prepareScriptReviewContext(

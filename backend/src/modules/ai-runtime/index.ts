@@ -63,18 +63,13 @@ export * from "./llm/retry-policy";
 export * from "./material-match-runner";
 export * from "./remote-prompt-bundle";
 export * from "./multimodal/resolve";
-export * from "./planning-contract-runner";
 export * from "./planning-outline-context";
-export * from "./planning-runner";
-export * from "./platform-adapt-runner";
 export * from "./positioning-runner";
 export * from "./reconstruct-content";
 export * from "./research-runner";
-export * from "./review-runner";
 export * from "./scheduled-collection-runner";
 export * from "./scheduled-collection-scheduler";
 export * from "./automation-driver";
-export * from "./script-review-runner";
 export * from "./script-runner";
 export * from "./skill-config-overrides";
 // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
@@ -92,12 +87,12 @@ export * from "./srt";
 export * from "./video-decisions-runner";
 
 export { createPlatformAdaptExecutionService } from "./platform-adapt-execution.service";
-export { preparePlatformAdaptContext,projectPlatformAdaptCandidate } from "./platform-adapt-context";
+export { preparePlatformAdaptContext, projectPlatformAdaptCandidate, type PlatformDraft } from "./platform-adapt-context";
 export { createPlatformDraftAdoptionPort } from "./platform-draft-adoption";
 
 export * from "./structured-business-execution.service";
-export {prepareScriptReviewContext} from "./script-review-context";
-export {prepareReviewContext,projectReviewCandidate} from "./review-context";
+export { prepareScriptReviewContext, buildLexiconBlock, type ScriptSource, type LintRulesSource, type ScriptReviewPositioningReader } from "./script-review-context";
+export { prepareReviewContext, projectReviewCandidate, reviewFacets, normalizeLearnings, type LearningItem, type ReviewTask } from "./review-context";
 export {preparePlanningContractContext,projectPlanningContractCandidate} from "./planning-contract-context";
 
 export * from "./artifact-context-readers";
