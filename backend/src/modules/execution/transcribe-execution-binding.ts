@@ -25,3 +25,6 @@ export async function bindTranscribeAudioExecution(scope:TranscribeExecutionScop
  if(bound.awemeId!==awemeId||!isDeepStrictEqual(input.awemeIds,[awemeId]))throw new ConflictError('情报 ASR 与原来源不符');
  return {payload,input,credentialIntentId:scope.task.id};
 }
+
+/** 领域提供锁内真实资源归属与冻结输入；ASR 叶子不接收任意 Worker 资源声明。 */
+export type TranscribeResourceBinding=(scope:TranscribeExecutionScope,awemeId:string)=>Promise<{payload:Record<string,unknown>;input:unknown;credentialIntentId:string}>;

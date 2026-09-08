@@ -1,4 +1,4 @@
-import {bindTranscribeAudioExecution} from './transcribe-execution-binding';
+import {bindTranscribeAudioExecution,type TranscribeResourceBinding} from './transcribe-execution-binding';
 import {readTranscribeAsrPlan} from './transcribe-asr-plan';
 import {asrExecutionIdentity} from '@creatoros/ai-worker/asr-identity';
 import {localWhisperSpec} from '@creatoros/ai-worker';
@@ -16,18 +16,19 @@ const digest = (value: unknown) => `sha256:${createHash('sha256').update(canonic
 const operationKey = (awemeId: string, index: number, protocol: AsrRequest["protocol"]) => `transcribe:${awemeId}/${protocol === "whisper-local.v1" ? "local-asr" : "asr"}/${index + 1}`;
 const manifestOf = (request: AsrRequest) => asrAudioManifestSchema.parse({ audioDigest: request.audioDigest, audioByteLength: request.audioByteLength, chunks: request.chunks });
 /** ASR 顶层请求专用端口；任务、归属和请求清单由后端锁内绑定，不放宽聊天子模型账本。 */
-export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createExecutionCallLedgerService>[1]) {
+export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createExecutionCallLedgerService>[1]&{bindResource?:TranscribeResourceBinding}) {
     const leases = createExecutionLeaseService(db, deps);
     const ledgerFor = (scope: Scope) => createExecutionCallLedgerService(scope.tx as unknown as Db, deps);
     async function bind(scope: Scope, awemeId: string,primaryOnly=false) {
         const { task, tx, context } = scope, payload = task.payload as Record<string, unknown>;
-        const legacy=asrTaskInputSchema.safeParse(payload.modelInput);
+        const resource=deps.bindResource?await deps.bindResource(scope,awemeId):null;
+        const legacy=asrTaskInputSchema.safeParse(resource?null:payload.modelInput);
         const selected=legacy.success?null:readTranscribeAsrPlan(payload,awemeId);
         const plan=selected?(primaryOnly?selected.primary:selected.plan):null;
         if(!legacy.success&&!plan)throw new ConflictError('缺少原识别选择');
-        const input=legacy.success?legacy.data:{...transcribeTaskInputSchema.parse(payload.modelInput),identity:plan!.identity};
+        const input=legacy.success?legacy.data:{...transcribeTaskInputSchema.parse(resource?resource.input:payload.modelInput),identity:plan!.identity};
         if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
-        if(!legacy.success)await bindTranscribeAudioExecution(scope,awemeId);
+        if(!legacy.success){if(!resource)await bindTranscribeAudioExecution(scope,awemeId);if(!input.awemeIds.includes(awemeId))throw new ConflictError("ASR 输入与领域资源不符");}
         else {
         const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!)));
         const raw = business?.inputData as {

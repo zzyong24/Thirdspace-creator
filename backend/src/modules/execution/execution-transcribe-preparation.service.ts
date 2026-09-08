@@ -11,17 +11,17 @@ import {transcribeConfiguration} from '../ai-runtime/transcribe-business-executi
 import {awaitPreparation} from './await-preparation';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {createExecutionTranscribeAudioService} from './execution-transcribe-audio.service';
-import {bindTranscribeAudioExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
+import {bindTranscribeAudioExecution,type TranscribeResourceBinding,type TranscribeExecutionScope} from './transcribe-execution-binding';
 import {ConflictError} from './execution.errors';
 /** 凭据仅返回当前调用；音频与实际身份在原任务行锁下首次冻结。 */
 export function createExecutionTranscribePreparationService(db:Db,deps:{
- audio:ReturnType<typeof createExecutionTranscribeAudioService>;asr:Pick<ReturnType<typeof createExecutionAsrPorts>,'read'|'recoverLocalFallback'>;now?:()=>string;
+ audio:ReturnType<typeof createExecutionTranscribeAudioService>;asr:Pick<ReturnType<typeof createExecutionAsrPorts>,'read'|'recoverLocalFallback'>;now?:()=>string;bindResource?:TranscribeResourceBinding;
  resolveSpec(ctx:RequestContext):Promise<MultimodalSpec>;
  prepareSpec(ctx:RequestContext,spec:MultimodalSpec,input:{audioBytes:Uint8Array;intentId:string}):Promise<MultimodalSpec>;
 }){
  const leases=createExecutionLeaseService(db,deps);
  async function read(scope:TranscribeExecutionScope,awemeId:string){
-  const bound=await bindTranscribeAudioExecution(scope,awemeId),input=transcribeTaskInputSchema.parse(bound.payload.modelInput);
+  const bound=await (deps.bindResource??bindTranscribeAudioExecution)(scope,awemeId),input=transcribeTaskInputSchema.parse(deps.bindResource?bound.input:bound.payload.modelInput);
   const {plans,plan}=readTranscribeAsrPlan(bound.payload,awemeId);
   if(!plan){
    const calls=await scope.tx.select({operationKey:executionCalls.operationKey}).from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id));
