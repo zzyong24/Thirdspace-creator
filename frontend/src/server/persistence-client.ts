@@ -1,4 +1,4 @@
-import {createChatTrendRead,createChatBusinessGenerationPreparation,createChatIngestionTaskToolHost,createChatProductionRuntime,createChatTaskToolHost,createChatHostContextReader,loadPositioningWorksBrief} from "@creatoros/backend/modules/ai-runtime";
+import {composeChatProduction,createChatProductionRuntime} from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
 import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
@@ -12500,46 +12500,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   };
 
   if(workerEntry){
-    const hostReader=createChatHostContextReader(db);
-    const ingestionTools=createChatIngestionTaskToolHost(hostReader,{
-      captureScreenshot:chatRuntime.captureScreenshot,
-      dispatchProjectTranscribe:chatRuntime.dispatchProjectTranscribe,
-      dispatchDouyinShare:chatRuntime.dispatchDouyinShare,
-    });
-    chatWorker=createChatProductionRuntime(db,{
-      entryPath:workerEntry,workerId:`chat-worker-${process.pid}`,
-      budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
+    chatWorker=composeChatProduction(db,{
+      entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
-      // 主模型身份由现有 execution identity 服务首次固定；凭据从当前受管权限读取。
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
-      resolveTools:async(c,input,ref,signal)=>Object.assign({},await createChatTaskToolHost(hostReader,chatRuntime.contextReaders,{
-        webRead:true,research:true,
-        cover:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatCoverTask},
-        agenticResearch:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatResearchTask},
-        planning:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatPlanningTask},
-        material:{prepareTaskCommit:aiService.prepareTaskCommit,wakeTask:chatRuntime.wakeChatMaterialTask},
-        publish:{preparePublish:chatRuntime.prepareChatPublishTask,wakeTask:chatRuntime.wakeChatPublishTask},
-        review:{prepareReview:chatRuntime.prepareChatScriptReviewTask,wakeTask:chatRuntime.wakeChatScriptReviewTask},
-        scriptDraft:{prepareDraft:chatRuntime.prepareChatScriptDraftTask,wakeTask:chatRuntime.wakeChatScriptDraftTask},
-        scriptPatch:{resolveSelection:(c,input)=>chatRuntime.resolveCurrentScriptSelection!(c,input)},
-        videoEdit:{prepareVideoEdit:chatRuntime.prepareVideoEdit},
-        local:{detectTools:chatRuntime.detectTools,listAuthorizedDirs:chatRuntime.listAuthorizedDirs},
-        localRead:{readLocalFile:chatRuntime.readLocalFile,decideLocalReadAccess:chatRuntime.decideLocalReadAccess},
-        structured:{
-          business:createChatBusinessGenerationPreparation({
-            ...chatRuntime.context,
-            sourceReader:{listEnabledSources:c=>trendSourcesService.listEnabledSources(c)},
-            now:deps.now,
-            async assertProject(c,id){await projectsService.getProjectOverviewCore(c,id);},
-            readTrend:createChatTrendRead({
-              listEnabledSources:c=>trendSourcesService.listEnabledSources(c),search:searchWebPort,
-              readWebSource:(c,source,signal)=>readWebUrlSidecar(source.url,{authDir:webAuthDirFor(source.domain),signal},{openContext:()=>openPooledReaderContext(c,source.domain,{signal}) as never}),
-            }),
-          }),
-          readWorks:(c,limit)=>loadPositioningWorksBrief(c,chatRuntime.context.positioningWorks,limit),
-          getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
-        },
-      })(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
+      prepareTaskCommit:aiService.prepareTaskCommit,
+      trend:{
+        listEnabledSources:c=>trendSourcesService.listEnabledSources(c),search:searchWebPort,
+        readWebSource:(c,source,signal)=>readWebUrlSidecar(source.url,{authDir:webAuthDirFor(source.domain),signal},{openContext:()=>openPooledReaderContext(c,source.domain,{signal}) as never}),
+      },
       webRead:{assets:assetsService,objectStorageForCtx,sessions:browserSessionsService,resolveSearch:c=>resolveSearchSpec(c)},
       onError:code=>console.error(`[chat-worker] ${code}`),
     });
