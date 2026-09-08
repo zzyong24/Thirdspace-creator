@@ -1,28 +1,45 @@
+import {downloadDouyinImage} from "./ingestion/douyin-cover-backfill";
+import {parseDouyinWorkListXlsx} from "./ingestion/douyin-work-detail";
+import {isLegacyIncompleteReview} from "@/lib/script-review-status";
+import { createSelfCollector } from "@creatoros/backend/application/collection/self";
+import { createCommentsCollector } from "@creatoros/backend/application/collection/comments";
+import { createFavoritesCollector } from "@creatoros/backend/application/collection/favorites";
+import { createBenchmarkCollector } from "@creatoros/backend/application/collection/benchmark";
+import { createGenerationContextReaders } from "@creatoros/backend/application/context/generation";
+import { createProjectMaterialsContext } from "@creatoros/backend/application/context/project-materials";
+import { createBriefContext } from "@creatoros/backend/application/context/brief";
+import { createReviewSubjectContext } from "@creatoros/backend/application/context/review-subject";
+import { createChatPerformanceReaders } from "@creatoros/backend/application/chat/performance-readers";
+import { createChatEvidenceReaders } from "@creatoros/backend/application/chat/evidence-readers";
+import { createChatLifecycleReaders } from "@creatoros/backend/application/chat/lifecycle-readers";
+import { createChatProjectsReaders } from "@creatoros/backend/application/chat/projects-readers";
+import { createProjectOverviewApplication } from "@creatoros/backend/application/queries/project-overview";
+import { createDashboardApplication } from "@creatoros/backend/application/queries/dashboard";
 import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
-import {createRecoveryWakeCoordinator} from "@creatoros/backend/application/recovery-wake";
-import {rebuildOwnedSearchIndex} from "@creatoros/backend/application/search-bootstrap";
-import {createThesisAdoption} from "@creatoros/backend/application/thesis-adoption";
+import { createRecoveryWakeCoordinator } from "@creatoros/backend/application/recovery-wake";
+import { rebuildOwnedSearchIndex } from "@creatoros/backend/application/search-bootstrap";
+import { createThesisAdoption } from "@creatoros/backend/application/thesis-adoption";
 import { withPageReadInvalidation } from "@/lib/page-read-cache.server";
-import {createApplicationTransport} from "@creatoros/backend/application/transport";
+import { createApplicationTransport } from "@creatoros/backend/application/transport";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
-import {createKnowledgeApplication} from "@creatoros/backend/application/knowledge";
-import {configureHostBrowserProfileLifecycle} from "./ingestion/host-browser-profile-lifecycle";
-import {createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
-import {createAgenticCollectionTools} from "@creatoros/backend/modules/ai-runtime";
-import {composeChatProduction,createChatProductionRuntime} from "@creatoros/backend/modules/ai-runtime";
+import { createKnowledgeApplication } from "@creatoros/backend/application/knowledge";
+import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
+import { createHostBrowserProfileLifecycle } from "@creatoros/backend/modules/execution";
+import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
+import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
-import {preparePublishPackageTaskInput} from "@creatoros/backend/modules/ai-runtime";
-import {createScriptDraftTargetService} from "@creatoros/backend/modules/artifacts";
-import {createVideoEditCandidatePreparer} from "@creatoros/backend/modules/ai-runtime";
-import {createSubmittedTaskPreparationService} from "@creatoros/backend/modules/execution";
-import {createAiTaskSubmissionService} from "@creatoros/backend/modules/ai";
-import {createDailyTopicRunService,createDailyTopicRunIntentService} from "@creatoros/backend/modules/scheduling";
-import {countCandidatesForDay,lockCandidateSupply} from "@creatoros/backend/modules/candidate";
-import {createBrowserProfileAuthority,lockAccountForSupply} from "@creatoros/backend/modules/platform-account";
-import {TOPIC_GENERATE_TEMPLATE} from "@creatoros/ai-worker";
-import {createTopicCandidateAdoptionService} from "@creatoros/backend/modules/ai";
-import {createTopicGenerateBusinessAdapter,createDailyTopicBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
+import { preparePublishPackageTaskInput } from "@creatoros/backend/modules/ai-runtime";
+import { createScriptDraftTargetService } from "@creatoros/backend/modules/artifacts";
+import { createVideoEditCandidatePreparer } from "@creatoros/backend/modules/ai-runtime";
+import { createSubmittedTaskPreparationService } from "@creatoros/backend/modules/execution";
+import { createAiTaskSubmissionService } from "@creatoros/backend/modules/ai";
+import { createDailyTopicRunService, createDailyTopicRunIntentService } from "@creatoros/backend/modules/scheduling";
+import { countCandidatesForDay, lockCandidateSupply } from "@creatoros/backend/modules/candidate";
+import { createBrowserProfileAuthority, lockAccountForSupply } from "@creatoros/backend/modules/platform-account";
+import { TOPIC_GENERATE_TEMPLATE } from "@creatoros/ai-worker";
+import { createTopicCandidateAdoptionService } from "@creatoros/backend/modules/ai";
+import { createTopicGenerateBusinessAdapter, createDailyTopicBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createCalibrationPositioningAdoptionService } from "@creatoros/backend/modules/ai";
 import { lockPositioningAdoptionAccount } from "@creatoros/backend/modules/positioning";
 import { createCalibrationDiagnoseBusinessAdapter, createCalibrationScoreBusinessAdapter, createPositioningGenerateBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
@@ -33,229 +50,89 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createExecutionScriptCheckpointService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
-import { createScriptSimilarityBusinessAdapter,createScriptSimilarityEvaluator,createTopicPreferenceBusinessAdapter,createTopicPreferenceSubmission,createAssetProcessingBusinessAdapter,createVideoDecisionsBusinessAdapter,createReconstructBusinessAdapter,createArtifactContextReaders,createStructuredBusinessExecutionService,preparePlatformAdaptContext,projectPlatformAdaptCandidate,preparePlanningOutlineContext,projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { createScriptSimilarityBusinessAdapter, createScriptSimilarityEvaluator, createTopicPreferenceBusinessAdapter, createTopicPreferenceSubmission, createAssetProcessingBusinessAdapter, createVideoDecisionsBusinessAdapter, createReconstructBusinessAdapter, createArtifactContextReaders, createStructuredBusinessExecutionService, preparePlatformAdaptContext, projectPlatformAdaptCandidate, preparePlanningOutlineContext, projectPlanningOutlineCandidate } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 import { createHash } from "node:crypto";
-import {
-  createConfiguredDb,
-  createCliInvocationService,
-  resolveMasterKey,
-  // [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
-  requireAccountId,
-  type Db,
-  type CliInvocationService,
-  // [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
-  // 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
-  restorePreservedUserAssets,
-} from "@creatoros/backend";
-import {
-  type Transport,
-  type RequestContext,
-  type ProjectOverviewPage,
-} from "@creatoros/contract";
+import { createConfiguredDb, createCliInvocationService, resolveMasterKey,
+// [T-332 S2] per-account 域 repo 工厂的统一断言:未选号 → AccountRequiredError(引导态)。
+requireAccountId, type Db, type CliInvocationService,
+// [T-363] 「重置工作区」归档后的首启:PRESERVE 表(模型配置/skill 定制/激活态…)从
+// 归档库迁回新库(一次性、幂等、失败诚实不阻断启动)。
+restorePreservedUserAssets } from "@creatoros/backend";
+import { type Transport, type RequestContext } from "@creatoros/contract";
+// [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
+// 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 // [T-084c] ENDPOINTS 值导入 —— dispatchGenerateAsset 经 ai transport 起 asset.generate task
 // 时用真 endpoint 对象(带 body zod 类型),避免裸 { id } 造成 body 类型收窄为 undefined。
 import { ENDPOINTS } from "@creatoros/contract";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
-import { isLegacyIncompleteReview } from "@/lib/script-review-status";
+
 import { readChannelModelAuthority } from "@/server/activation/client-config.server";
-import {
-  prepareManagedTranscribeSpec,
-} from "@/server/activation/managed-asr.server";
+import { prepareManagedTranscribeSpec } from "@/server/activation/managed-asr.server";
 import { getScriptReviewBlockReason } from "@/server/script-review-readiness";
-import {
-  contentRadarDraftSeedOf,
-  selectReadableProjectScriptArtifact,
-} from "@/server/project-script-truth";
-import {
-  buildPublishingScheduleProjection,
-  type PublishingScheduleProjection,
-} from "./publishing-schedule-projection";
+import { contentRadarDraftSeedOf, selectReadableProjectScriptArtifact } from "@/server/project-script-truth";
+import { buildPublishingScheduleProjection, type PublishingScheduleProjection } from "./publishing-schedule-projection";
 import { resolveCurrentScriptSelectionFromTruth } from "./current-script-selection";
 // [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
+// [T-374] projects.transcribe composition-only 拦截工厂(抽出为可单测模块)。
 import { createProjectsWithTranscribe } from "./projects-transcribe-wrap";
-import {
-  listPositioningWorksWithPublicationFacts,
-  listRecentProjectsWithPublicationFacts,
-  searchProjectsWithPublicationFacts,
-} from "./recent-projects-context";
-import { composeDashboardTodos } from "@creatoros/backend/modules/query-services";
+import { listPositioningWorksWithPublicationFacts, listRecentProjectsWithPublicationFacts, searchProjectsWithPublicationFacts } from "./recent-projects-context";
+
 import { listAllProjectMaterialAssets } from "@/server/material-export-pagination";
 // [T-050] 抖音真实数据里只保留金句知识库 seed(项目/发布/指标图谱旧种子已全删)。
 // [T-135] DOUYIN_FAN_TOTAL 已随 canonical platform account seed(唯一使用点)退役移除。
-import type { MetricCard } from "@/types/view-models";
-import type { ProjectStageName, TaskStatus } from "@/types/domain";
+
+import { createIdentityRepository, createIdentityService, OwnershipError, ensureLocalUser, type IdentityService } from "@creatoros/backend/modules/identity";
+import { seedWinVideoTutor,
+// [T-211] 存量去前缀 fixup 用的旧标题前缀常量。
+WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX,
+// [T-218] 存量按 module 挂 tag 的回填(观点地图开箱即在)。
+fixupWinVideoTutorModuleTags } from "@/server/seeds/win-video-tutor";
+import { createTaxonomyRepository, createTaxonomyService, createTaxonomyTransport } from "@creatoros/backend/modules/taxonomy";
+import { createNotificationRepository, createNotificationsService, createNotificationsTransport } from "@creatoros/backend/modules/notifications";
 import {
-  createIdentityRepository,
-  createIdentityService,
-  OwnershipError,
-  ensureLocalUser,
-  type IdentityService,
-} from "@creatoros/backend/modules/identity";
-import {
-  seedWinVideoTutor,
-  // [T-211] 存量去前缀 fixup 用的旧标题前缀常量。
-  WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX,
-  // [T-218] 存量按 module 挂 tag 的回填(观点地图开箱即在)。
-  fixupWinVideoTutorModuleTags,
-} from "@/server/seeds/win-video-tutor";
-import {
-  createTaxonomyRepository,
-  createTaxonomyService,
-  createTaxonomyTransport,
-} from "@creatoros/backend/modules/taxonomy";
-import {
-  createNotificationRepository,
-  createNotificationsService,
-  createNotificationsTransport,
-} from "@creatoros/backend/modules/notifications";
-import {
-  // [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
-  type HybridSearchHit,
-} from "@creatoros/backend/modules/search";
-import {
-  // [T-332 S2 · ISO-06] 启动全量重建的显式系统路径:整删该 user 派生索引 → 按源实体行
-  //   自带的 accountId 整批重播(跨号各归各号,不经 ctx.accountId)。
-} from "@creatoros/backend/modules/search";
+// [T-093] hybrid 检索(exact 优先 + 语义余弦补位)。
+type HybridSearchHit } from "@creatoros/backend/modules/search";
+
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import {
-  createSettingsRepository,
-  createSettingsService,
-  createSettingsTransport,
-  type SettingsService,
-  // [T-135] ModelConfigurationRow / UserPreferenceRow / AgentConfigurationRow 已随
-  // canonical settings seed(toModelRow/toPreferenceRow/toAgentRow)退役一并移除。
-} from "@creatoros/backend/modules/settings";
+// [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
+import { createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
-import {
-  assembleActivationService,
-  type ActivationService,
-} from "./activation";
-import {
-  createProjectRepository,
-  createProjectsService,
-  createProjectsTransport,
-  createTranscriptArtifactService,
-  createProjectTranscriptionTargetService,
-  type StageGateReadersRef,
-} from "@creatoros/backend/modules/projects";
-import {
-  createKnowledgeRepository,
-  createKnowledgeService,
-} from "@creatoros/backend/modules/knowledge";
-import {
-  createAssetRepository,
-  createAssetsService,
-  createWebDocumentCacheService,
-  createAssetsTransport,
-  createMockObjectStorage,
-  createS3ObjectStorage,
-  createLocalFsObjectStorage,
-  ensureBucket,
-  type ObjectStorageForCtx,
-  // [T-135] AssetRow / AssetFileRow 已随 canonical assets seed(toAssetRow/toAssetFileRow)退役移除。
-} from "@creatoros/backend/modules/assets";
-import {
-  canonicalizeScriptSectionRecords,
-  createArtifactRepository,
-  createArtifactsService,
-  createArtifactsTransport,
-} from "@creatoros/backend/modules/artifacts";
-import {
-  createProductionService,
-  createProductionTransport,
-} from "@creatoros/backend/modules/production";
-import {
-  createPublishingService,
-  createPublishingTransport,
-  createUnavailablePublisher,
-} from "@creatoros/backend/modules/publishing";
-import {
-  createAnalyticsRepository,
-  createAnalyticsService,
-  createAnalyticsTransport,
-} from "@creatoros/backend/modules/analytics";
-import {
-  createIngestionRepository,
-  createIngestionService,
-  createIngestionTransport,
-} from "@creatoros/backend/modules/ingestion";
-import {
-  createReviewsService,
-  createReviewsTransport,
-} from "@creatoros/backend/modules/reviews";
+// T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
+import { assembleActivationService, type ActivationService } from "./activation";
+import { createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
+import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { canonicalizeScriptSectionRecords, createArtifactRepository, createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
+import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
+import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
+import { createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
+import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
-import {
-  createReviewGateService,
-  createReviewGateTransport,
-  buildReviewRuleSeedRows,
-  createReviewGateRepository,
-} from "@creatoros/backend/modules/review";
+// T-086 文案审核门(review_rules + script_review_reports)。
+import { createReviewGateService, createReviewGateTransport, buildReviewRuleSeedRows, createReviewGateRepository } from "@creatoros/backend/modules/review";
 import { prepareScriptReviewContext } from "@creatoros/backend/modules/ai-runtime";
 import { createPlanningThesisBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { createEmbeddingIoService,createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
-import {
-  createLearningsService,
-  createLearningsTransport,
-  // [T-135] createLearningsRepository / LearningRow 已随 canonical learnings seed 退役移除。
-} from "@creatoros/backend/modules/learnings";
-import {
-  createAiService,
-  createAiTransport,
-  createAiRepository,
-  buildAiModelConfigs,
-  buildAiAgentConfigs,
-  type AiService,
-} from "@creatoros/backend/modules/ai";
+import { createEmbeddingIoService, createModelProbeIoService } from "@creatoros/backend/modules/ai-runtime";
+import { createLearningsService, createLearningsTransport } from "@creatoros/backend/modules/learnings";
+import { createAiService, createAiTransport, createAiRepository, buildAiModelConfigs, buildAiAgentConfigs, type AiService } from "@creatoros/backend/modules/ai";
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import {
-  createExecutionService,
-  createPersistentTaskService,
-  createExecutionTransport,
-  createExecutorRegistry,
-  registerBuiltinExecutors,
-  runExecutionTask,
-  abortExecutionTask,
-  resolveWorkspacesRoot,
-  sweepInterruptedRenderFrames,
-  sweepOrphanSandboxes,
-} from "@creatoros/backend/modules/execution";
-import {
-  createIntelligenceService,
-  createIntelligenceTransport,
-  createProjectIntelligenceReferenceService,
-  createIntelligenceTranscriptBridge,
-  createIntelligenceGenerationBridge,
-  createProjectScriptCandidateService,
-  drainProjectScriptCandidateQueue,
-  runIntelligenceSourceTask,
-  drainIntelligenceSourceQueue,
-  drainIntelligenceTranscriptQueue,
-  type IntelligenceTranscriptRunnerDeps,
-  drainIntelligenceTopicPreviewQueue,
-} from "@creatoros/backend/modules/intelligence";
+// [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
+// dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
+import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
-import {
-  drainDouyinShareImportQueue,
-} from "@creatoros/backend/modules/intelligence";
-import type {
-  ContextDeps as ChatContextDeps,
-  ReviewSubjectReader,
-  ProjectMaterialsReader,
-  ProjectMaterial,
-} from "@creatoros/backend/modules/ai-runtime";
+import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
+import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/ai-runtime";
 // [T-184] 声明式 context 注入:CreativeContextDeps = creative-context 的 ContextDeps(facet reader
 // 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
-import type {
-  ContextDeps as CreativeContextDeps,
-  ProjectBriefReader,
-} from "@creatoros/backend/modules/ai-runtime";
-import type {
-  ContextReaders as ChatContextReaders,
-  ProjectLifecycleRaw,
-} from "@creatoros/backend/modules/ai-runtime";
-import { knowledgeRelevanceScore } from "@creatoros/backend/modules/ai-runtime";
+// [T-184] 声明式 context 注入:CreativeContextDeps = creative-context 的 ContextDeps(facet reader
+// 集合的类型),供中央 reader registry + resolveContextDeps 定型;ProjectBriefReader 供命名 briefReader。
+import type { ContextDeps as CreativeContextDeps } from "@creatoros/backend/modules/ai-runtime";
+import type { ContextReaders as ChatContextReaders } from "@creatoros/backend/modules/ai-runtime";
+
 import { createResearchGatherBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createResearchMaterialAdoptionService } from "@creatoros/backend/modules/ai";
 import * as nodePath from "node:path";
@@ -268,19 +145,13 @@ import { existsSync, renameSync } from "node:fs";
 //   loadDouyinCdp() 在调用点动态 import —— 与 web-session/web-capture/web-reader 内部
 //   `await import("./douyin-cdp")` 同款、字面量 specifier(Turbopack 可解析,运行时真实
 //   调用路径不变:dispatch → 采集端口 → await loadDouyinCdp() → 真函数)。
-import type {
-  CommentIngestPorts,
-  CommentRecord,
-} from "@/server/ingestion/douyin-cdp";
+
 import { DouyinNotLoggedInError } from "@/server/ingestion/douyin-errors";
 // [T-330] 绑新号 staging 登录态目录 helpers —— 纯 fs 叶子模块(零 playwright 依赖,静态
 //   import 不破 douyin-cdp 懒加载);token→路径映射收在组合根,service 只见不透明 stagingKey。
-import {
-  adoptDouyinStagingDir,
-  createDouyinStagingToken,
-  discardDouyinStagingDir,
-  douyinStagingDirFor,
-} from "@/server/ingestion/douyin-auth-staging";
+// [T-330] 绑新号 staging 登录态目录 helpers —— 纯 fs 叶子模块(零 playwright 依赖,静态
+//   import 不破 douyin-cdp 懒加载);token→路径映射收在组合根,service 只见不透明 stagingKey。
+import { adoptDouyinStagingDir, createDouyinStagingToken, discardDouyinStagingDir, douyinStagingDirFor } from "@/server/ingestion/douyin-auth-staging";
 
 // douyin-cdp 懒加载单例(模块加载幂等,天然可并发复用;失败不缓存 → 下次调用重试)。
 type DouyinCdpModule = typeof import("@/server/ingestion/douyin-cdp");
@@ -310,222 +181,116 @@ function loadDouhotCdp(): Promise<DouhotCdpModule> {
   return douhotCdpModulePromise;
 }
 // [T-232] 评论批量采集预算规划(纯逻辑):未采优先 + 爆款优先排序 + 全量/截断诚实 message。
-import {
-  orderCommentCollection,
-  buildCommentCoverageMessage,
-  type CommentCollectionCandidate,
-} from "@/server/ingestion/comment-collection-plan";
-import {
-  parseDouyinWorkListXlsx,
-  matchDetailsToPublications,
-  toDetailMetricRecords,
-  visibilityFromDetailStatus,
-  type PublicationCatalogEntry,
-} from "@/server/ingestion/douyin-work-detail";
-import { decideVisibleDouyinCollection } from "@/server/ingestion/visible-douyin-collection";
+
 // [T-078] 作品封面回填字节下载 + 默认上限(封面回填/逐字稿/重建编排见 douyin-heavy-backfill)。
-import {
-  downloadDouyinImage,
-  DEFAULT_COVER_BACKFILL_LIMIT,
-} from "@/server/ingestion/douyin-cover-backfill";
+// [T-078] 作品封面回填字节下载 + 默认上限(封面回填/逐字稿/重建编排见 douyin-heavy-backfill)。
+import { DEFAULT_COVER_BACKFILL_LIMIT } from "@/server/ingestion/douyin-cover-backfill";
 // [T-195/T-595] 抖音重活编排直接消费源边界归一后的公开作品域。
 //   由 self.detail 落完明细(hidden_at/platform_status 已标)后调 —— 可见性已知才跑重活(见根因注释)。
 //   多闸幂等在子 helper 内(runner 逐 aweme 跳已转写 / 已有 reconstructed artifact 跳过 / createTask 去重)。
-import { runDouyinHeavyBackfill } from "@/server/ingestion/douyin-heavy-backfill";
+
 // T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
 // [T-230] DouyinCooldownActiveError:transcribe-runner 冷却延迟重试的判别锚(isCooldownError)。
-import {
-  DouyinRequestGateway,
-  classifyDouyinOutcome,
-  type DouyinChannel,
-} from "@/server/ingestion/douyin-request-gateway";
+// T-038b 抖音采集限流网关(单例接线):所有对外抖音请求经它 acquire/report(SPEC §4.4)。
+// [T-230] DouyinCooldownActiveError:transcribe-runner 冷却延迟重试的判别锚(isCooldownError)。
+import { DouyinRequestGateway, classifyDouyinOutcome, type DouyinChannel } from "@/server/ingestion/douyin-request-gateway";
 import { resolveDouyinThrottleConfig } from "@/server/ingestion/douyin-throttle-config";
 import { createPgliteThrottleStatePort } from "@/server/ingestion/douyin-throttle-state-port.pglite";
 // [T-084b] 通用网页截图(公开页无头 Chromium)—— material.screenshot 端口用。
-import {
-  captureUrl,
-  WebCaptureError,
-  isBlockedHttpCaptureError,
-} from "@/server/ingestion/web-capture";
+// [T-084b] 通用网页截图(公开页无头 Chromium)—— material.screenshot 端口用。
+import { captureUrl, WebCaptureError, isBlockedHttpCaptureError } from "@/server/ingestion/web-capture";
+// [T-390] web.read 被拒(403/5xx 等)→ 搜索引擎找替代来源(纯编排,searcher 在本组合根注入)。
 // [T-390] web.read 被拒(403/5xx 等)→ 搜索引擎找替代来源(纯编排,searcher 在本组合根注入)。
 import { readWebDocument } from "@creatoros/ai-worker/browser/web-read-workflow";
 import type { AlternateSearcher } from "@creatoros/ai-worker/browser/web-read-fallback";
 // [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
-import {
-  openWebLoginWindow,
-  checkWebSessionStatus,
-  webDomainFromUrl,
-  webSessionLookupDomains,
-  importLegacyProfileState,
-  type WebLoginHandle,
-} from "@/server/ingestion/web-session";
+// [T-217a] Web Session Vault —— 泛化抖音登录态底座成任意域名保管库(有头登录 + headless 探针)。
+import { openWebLoginWindow, checkWebSessionStatus, webDomainFromUrl, webSessionLookupDomains, importLegacyProfileState, type WebLoginHandle } from "@/server/ingestion/web-session";
 // [B-01] Web Session 域名净化/校验(防路径穿越递归删应用数据/上级目录)。纯函数,与 route 入口共用。
-import {
-  assertSafeWebDomain,
-  isArchivedWebProfileName,
-  isNestedArchivedWebProfileName,
-  isSafeWebDomain,
-  WebDomainError,
-} from "@/lib/web-domain";
+// [B-01] Web Session 域名净化/校验(防路径穿越递归删应用数据/上级目录)。纯函数,与 route 入口共用。
+import { assertSafeWebDomain, isArchivedWebProfileName, isNestedArchivedWebProfileName, isSafeWebDomain, WebDomainError } from "@/lib/web-domain";
 // [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,无契约 op)。
-import {
-  createBrowserSessionsService,
-  type BrowserSessionsService,
-} from "@creatoros/backend/modules/browser-sessions";
+// [T-370a] 浏览器登录态系统化:web 域 storageState 加密单一真值(host 内部 service,无契约 op)。
+import { createBrowserSessionsService, type BrowserSessionsService } from "@creatoros/backend/modules/browser-sessions";
 // [T-370b] 持久 profile 池(域亲和 sticky + 征用擦除 + FIFO 排队);web-reader 读取走池。
-import {
-  createBrowserPool,
-  type BrowserPool,
-  type PoolCapableContext,
-} from "@/server/ingestion/browser-pool";
+// [T-370b] 持久 profile 池(域亲和 sticky + 征用擦除 + FIFO 排队);web-reader 读取走池。
+import { createBrowserPool, type BrowserPool, type PoolCapableContext } from "@/server/ingestion/browser-pool";
 // [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
-import {
-  readUrl as readWebUrlSidecar,
-  WebReaderLoginRequiredError,
-} from "@/server/ingestion/web-reader";
+// [T-217b] Web Reader —— 带 .auth/web 登录态读正文全文(编导 web.read 端口用)。
+import { readUrl as readWebUrlSidecar, WebReaderLoginRequiredError } from "@/server/ingestion/web-reader";
 import { assertUrlAllowed } from "@/server/ingestion/url-guard";
-import {createLocalReadHost,createLocalEnvironmentHost} from "@creatoros/backend/modules/ai-runtime";
-import {
-  checkGrant as checkLocalReadGrant,
-  consumeOnce as consumeLocalReadOnceGrant,
-  listAlwaysDirs as listLocalReadAlwaysDirs,
-} from "@/server/local-read-grants";
-import {
-  runScheduledCollection,
-  type Collector as ScheduledCollector,
-  // [T-212a] 对标采集器(benchmark sourceKind)。
-  collectBenchmark,
-  // [T-212c] 对标爆款拆解 → 转化进选题池(采集落库后 best-effort 触发)。
-  runBenchmarkTeardown,
-  createScheduledFlywheelExecutionService,
-  ScheduledFlywheelSuspended,
-  type ScheduledFlywheelCollector,
-  // [T-235d-distill] 收藏夹作品蒸馏链(收藏采集落库后 best-effort 触发):transcribe→判库→知识蒸馏确认门。
-  runFavoritesDistill,
-  // [T-212d] 防茧房校准:淘汰原因蒸馏(选题淘汰写原因后 best-effort 触发)。
-  // [T-212c] 定位简报装配(拆解 getPositioningBrief 端口复用,与各 runner 同一格式)。
-  assembleCreativeContext,
-  // [T-235a] 每天自动出题采集器(topic.daily sourceKind:多依据合并出题 → 护栏排序 → 候选落 pool)。
-  // [T-235d] 正向归因回流(self.detail 采集尾 best-effort 触发:实绩 → 枚举化归因 → 实验候选进池)。
-  runTopicAttribution,
-  // [T-235b] 低粉黑马雷达采集器(并进 benchmark 采集:对标源后跑黑马关键词,共享限流预算)。
-  collectDarkhorse,
-  // [T-235b] 热点信源信号采集(web 主路 readUrl+AI 抽取 / rss 辅路 feed 解析)+ AI 抽取端口工厂。
-} from "@creatoros/backend/modules/ai-runtime";
-import {
-  runJobNow,
-  triggerScheduledJob,
-  closeRunningJobRunOnError,
-  createAutomationHandlerRegistry,
-  startAutomationDriver,
-  sweepStaleRuns,
-  // [T-207] 启动 sweep 僵尸 ai_task(与 sweepStaleRuns 同族;running 超时标 failed)。
-  sweepStaleAiTasks,
-  type AutomationDriverJob,
-  type TriggerDeps,
-} from "@creatoros/backend/modules/ai-runtime";
+import { createLocalReadHost, createLocalEnvironmentHost } from "@creatoros/backend/modules/ai-runtime";
+import { checkGrant as checkLocalReadGrant, consumeOnce as consumeLocalReadOnceGrant, listAlwaysDirs as listLocalReadAlwaysDirs } from "@/server/local-read-grants";
+import { runScheduledCollection, type Collector as ScheduledCollector, createScheduledFlywheelExecutionService, type ScheduledFlywheelCollector } from "@creatoros/backend/modules/ai-runtime";
+import { runJobNow, triggerScheduledJob, closeRunningJobRunOnError, createAutomationHandlerRegistry, startAutomationDriver, sweepStaleRuns,
+// [T-207] 启动 sweep 僵尸 ai_task(与 sweepStaleRuns 同族;running 超时标 failed)。
+sweepStaleAiTasks, type AutomationDriverJob, type TriggerDeps } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
-import {
-  bootstrapDouyinCollectionJobs,
-  ensureCollectionJobs,
-} from "@creatoros/backend/modules/ai-runtime";
+// [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
+//   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
+//   DEFAULT_JOBS(只建不触发)。
+import { bootstrapDouyinCollectionJobs, ensureCollectionJobs } from "@creatoros/backend/modules/ai-runtime";
 import { createTopicEnrichBusinessAdapter, createMaterialMatchBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createScriptBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
-import { preparePlanningContractContext,projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
-import { prepareReviewContext,projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { preparePlanningContractContext, projectPlanningContractCandidate } from "@creatoros/backend/modules/ai-runtime";
+import { prepareReviewContext, projectReviewCandidate } from "@creatoros/backend/modules/ai-runtime";
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
 // [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
 // 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
 // [T-309] collectProjectBrollInventory 把项目/账号边界收进唯一 B-roll 素材入口；
 // storyboardFromContentData 仍用于四决策 authored 分镜 facet。
-import {
-  collectProjectBrollInventory,
-  storyboardFromContentData,
-} from "@creatoros/backend/modules/ai-runtime";
+// [T-254b] 制作视频四决策编排(分场/信息卡/B-roll/双语字幕 → video_decisions 候选,
+// 预览卡确认门;素材清单投影类型一并引入给 listBrollInventory 端口)。
+// [T-309] collectProjectBrollInventory 把项目/账号边界收进唯一 B-roll 素材入口；
+// storyboardFromContentData 仍用于四决策 authored 分镜 facet。
+import { collectProjectBrollInventory, storyboardFromContentData } from "@creatoros/backend/modules/ai-runtime";
 import { createCopilotBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
 import { createAssetBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 // [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
-import {createCoverBusinessAdapter} from "@creatoros/backend/modules/ai-runtime";
-import {createExecutionCoverService} from "@creatoros/backend/modules/execution";
-import {createTranscribeBusinessExecutionService} from "@creatoros/backend/modules/ai-runtime";
+// [T-271] 制作封面链 runner(结构化封面方案 + 文案诚实门 + 结构化组装生图 prompt)。
+import { createCoverBusinessAdapter } from "@creatoros/backend/modules/ai-runtime";
+import { createExecutionCoverService } from "@creatoros/backend/modules/execution";
+import { createTranscribeBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 // [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
 // [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
-import {
-  getOfficialSkillBase,
-  listOfficialSkillBases,
-  runWithEffectiveSkillSnapshot,
-  type EffectiveSkillSnapshotV1,
-} from "@creatoros/ai-worker";
-import {
-  createEffectiveSkillSnapshotResolver,
-  parseEffectiveSkillSnapshot,
-  requiredSkillIdsForTask,
-  type EffectiveSkillSnapshotResolver,
-} from "@creatoros/backend/modules/ai-runtime";
+// [T-357] 采集逐字稿后处理(ASR 文本落库前:同音错字纠正+补标点+语义分段;失败诚实落原文)。
+// [T-146 切片 a] 文档抽取 runner + 未配摘要模型的信号错误(诚实降级)。
+import { getOfficialSkillBase, listOfficialSkillBases, runWithEffectiveSkillSnapshot, type EffectiveSkillSnapshotV1 } from "@creatoros/ai-worker";
+import { createEffectiveSkillSnapshotResolver, parseEffectiveSkillSnapshot, requiredSkillIdsForTask, type EffectiveSkillSnapshotResolver } from "@creatoros/backend/modules/ai-runtime";
 import { LlmCredentialError } from "@creatoros/backend/modules/ai-runtime";
-import {
-  channelLlmConfigFromRoute,
-  resolveChannelCapabilityRoute,
-  resolveLlmConfig,
-  resolveDedicatedLlmConfig,
-} from "@creatoros/backend/modules/ai-runtime";
-import {
-} from "@/server/intelligence-topic-preview-config";
-import {
-  matchesPinnedModelAuthority,
-  pinModelAuthority,
-  TaskModelAuthorityScope,
-} from "./task-model-authority";
-import {
-  resolveMultimodalSpec as resolveMultimodalSpecFn,
-  resolveTranscribeSpec as resolveTranscribeSpecFn,
-} from "@creatoros/backend/modules/ai-runtime";
+import { channelLlmConfigFromRoute, resolveChannelCapabilityRoute, resolveLlmConfig, resolveDedicatedLlmConfig } from "@creatoros/backend/modules/ai-runtime";
+
+import { matchesPinnedModelAuthority, pinModelAuthority, TaskModelAuthorityScope } from "./task-model-authority";
+import { resolveMultimodalSpec as resolveMultimodalSpecFn, resolveTranscribeSpec as resolveTranscribeSpecFn } from "@creatoros/backend/modules/ai-runtime";
+// [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 // [T-084a] 联网检索解析层 —— 与多模态 resolve 并列(web.search capability,自由字符串零契约改)。
 import { resolveSearchSpec as resolveSearchSpecFn } from "@creatoros/backend/modules/ai-runtime";
-import {resolveExecutablePath} from "@creatoros/ai-worker";
+import { resolveExecutablePath } from "@creatoros/ai-worker";
 // [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
-import {
-  createSettingsWithModelTest,
-} from "./settings-model-test-wrap";
+// [T-377] settings.models.test composition-only 拦截工厂(抽出为可单测模块)。
+import { createSettingsWithModelTest } from "./settings-model-test-wrap";
 import { createSettingsWithChannelModelCredentials } from "./settings-channel-model-credentials-wrap";
 // [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
 // gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
-import {
-  searchWeb as searchWebFn,
-  createBochaAdapter,
-  createTavilyAdapter,
-  createSerpapiAdapter,
-  createRssAdapter,
-  // [T-235b] rss 型热点信源辅路:直接 fetch feed 后复用同一解析(不重造)。
-  parseFeed,
-  type SearchProviderRegistry,
-} from "@creatoros/ai-worker";
+// [T-084a] 联网检索工厂 + 三家 provider 适配器 —— host 注册进 registry(keyed by provider),
+// gatherMaterials 前置检索用。与多模态 registry 并列;加 provider = 在此注册一个适配器。
+import { searchWeb as searchWebFn, createBochaAdapter, createTavilyAdapter, createSerpapiAdapter, createRssAdapter,
+// [T-235b] rss 型热点信源辅路:直接 fetch feed 后复用同一解析(不重造)。
+parseFeed, type SearchProviderRegistry } from "@creatoros/ai-worker";
 // [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
-import {
-  PLANNING_THESIS_TEMPLATE,
-  SCRIPT_DRAFT_TEMPLATE,
-} from "@creatoros/ai-worker";
+// [T-184] script.draft 模板的 contextRequirements 声明 —— 组合根按它 resolveContextDeps 注入 reader。
+import { PLANNING_THESIS_TEMPLATE, SCRIPT_DRAFT_TEMPLATE } from "@creatoros/ai-worker";
+// [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
 // [T-271] 封面链 cover.generate 也走声明式 context 注入(brief 硬锚 + reviewSubject 读口播稿 + 素材可溯)。
 import { COVER_BRIEF_TEMPLATE } from "@creatoros/ai-worker";
 // [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
+// [T-126b] 浏览器搜索适配器落 frontend/server(需 playwright,复用 web-capture 无头 context)。
 import { createBrowserScrapeAdapter } from "@/server/ai/search/search-browser";
-import {
-  createBrowserSearchFallbackState,
-  searchBundledBrowserWithFallback,
-} from "@/server/ai/search/browser-search-fallback";
-import {
-  discoverSameOriginFeedUrl,
-  isSyndicationFeed,
-} from "@/server/intelligence/feed-discovery";
-import {
-  createPositioningService,
-  createPositioningTransport,
-  type PositioningDiscoverySessionResource,
-  // [T-135] createPositioningRepository / CreatorProfileRow / PositioningStatementRow
-  // 已随 canonical positioning seed(Zyong Zhu 人设)退役移除——唯一调用点是被删的 seed。
-} from "@creatoros/backend/modules/positioning";
+import { createBrowserSearchFallbackState, searchBundledBrowserWithFallback } from "@/server/ai/search/browser-search-fallback";
+import { discoverSameOriginFeedUrl, isSyndicationFeed } from "@/server/intelligence/feed-discovery";
+import { createPositioningService, createPositioningTransport, type PositioningDiscoverySessionResource } from "@creatoros/backend/modules/positioning";
 
 // T-513 official-only 平台规则：它属于程序基座，不接受账号 overlay，也不从客户端输入。
 // 版本随规则正文变化而递增，和 effective Skill 一起内联到每个任务的 server-only snapshot。
@@ -535,72 +300,25 @@ const PLATFORM_POLICY_TEXT = [
   "不得编造指标、来源、执行结果或已保存状态；缺失数据必须如实标空。",
   "工具只允许使用 effective Skill 白名单与当前账号授权范围的交集。",
 ].join("\n");
-import {
-  createCandidateService,
-  createCandidateTransport,
-  // [T-135] createCandidateRepository / CandidateRow 已随 canonical candidates seed 退役移除。
-} from "@creatoros/backend/modules/candidate";
-import {
-  createCalibrationService,
-  createCalibrationTransport,
-  createCalibrationRepository,
-  type RubricRow as CalibrationRubricRow,
-  type RubricVersionRow as CalibrationRubricVersionRow,
-  // [T-135] CalibrationRuleSuggestionRow(RuleSuggestionRow)已随 canonical 复盘回流建议 seed 退役移除。
-} from "@creatoros/backend/modules/calibration";
-import {
-  createPlatformAccountService,
-  createPlatformAccountTransport,
-  type PlatformAccountService,
-  // [T-135] createPlatformAccountRepository / PlatformAccountRow 已随 canonical platform account seed 退役移除。
-} from "@creatoros/backend/modules/platform-account";
-import {
-  createContentCalendarService,
-  createContentCalendarTransport,
-  type ContentCalendarService,
-} from "@creatoros/backend/modules/content-calendar";
-import {
-  createMaterialLinksService,
-  createMaterialLinksTransport,
-} from "@creatoros/backend/modules/material-links";
+import { createCandidateService, createCandidateTransport } from "@creatoros/backend/modules/candidate";
+import { createCalibrationService, createCalibrationTransport, createCalibrationRepository, type RubricRow as CalibrationRubricRow, type RubricVersionRow as CalibrationRubricVersionRow } from "@creatoros/backend/modules/calibration";
+import { createPlatformAccountService, createPlatformAccountTransport, type PlatformAccountService } from "@creatoros/backend/modules/platform-account";
+import { createContentCalendarService, createContentCalendarTransport, type ContentCalendarService } from "@creatoros/backend/modules/content-calendar";
+import { createMaterialLinksService, createMaterialLinksTransport } from "@creatoros/backend/modules/material-links";
 // [T-212a] 对标源 + 对标作品(选题/对标强化)。
-import {
-  createBenchmarkService,
-  createBenchmarkTranscriptionService,
-  createBenchmarkTransport,
-  OwnershipError as BenchmarkOwnershipError,
-  type BenchmarkService,
-} from "@creatoros/backend/modules/benchmark";
+// [T-212a] 对标源 + 对标作品(选题/对标强化)。
+import { createBenchmarkService, createBenchmarkTranscriptionService, createBenchmarkTransport, OwnershipError as BenchmarkOwnershipError, type BenchmarkService } from "@creatoros/backend/modules/benchmark";
 // [T-235b] 热点信源(通用网页/RSS 信源登记,热点多源证据)。
-import {
-  createTrendSourcesService,
-  createTrendSourcesTransport,
-  type TrendSourcesService,
-} from "@creatoros/backend/modules/trend-sources";
+// [T-235b] 热点信源(通用网页/RSS 信源登记,热点多源证据)。
+import { createTrendSourcesService, createTrendSourcesTransport, type TrendSourcesService } from "@creatoros/backend/modules/trend-sources";
 // [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
-import {
-  createFavoritesService,
-  createFavoritesTransport,
-  type FavoritesService,
-} from "@creatoros/backend/modules/favorites";
+// [T-235c] 指定抖音收藏夹(收藏夹跟拍信号源)。
+import { createFavoritesService, createFavoritesTransport, type FavoritesService } from "@creatoros/backend/modules/favorites";
 // [T-235d] 选题归因(正向归因回流 —— 选题验证库;读侧 1 op + runner 写侧薄层)。
-import {
-  createTopicAttributionService,
-  createTopicAttributionTransport,
-  type TopicAttributionService,
-} from "@creatoros/backend/modules/topic-attribution";
-import {
-  createSchedulingService,
-  createSchedulingTransport,
-} from "@creatoros/backend/modules/scheduling";
-import {
-  createDashboardQueryService,
-  createProjectOverviewQueryService,
-  createGlobalSearchQueryService,
-  createPublishingCenterQueryService,
-  createQueryServicesTransport,
-  type PublishingCenterQueryService,
-} from "@creatoros/backend/modules/query-services";
+// [T-235d] 选题归因(正向归因回流 —— 选题验证库;读侧 1 op + runner 写侧薄层)。
+import { createTopicAttributionService, createTopicAttributionTransport, type TopicAttributionService } from "@creatoros/backend/modules/topic-attribution";
+import { createSchedulingService, createSchedulingTransport } from "@creatoros/backend/modules/scheduling";
+import { createGlobalSearchQueryService, createPublishingCenterQueryService, createQueryServicesTransport, type PublishingCenterQueryService } from "@creatoros/backend/modules/query-services";
 
 // [T-136§D-bind⑤] 抖音号占位 handle 集合 —— 扫码阶段 cookie 不含昵称,先占位;真实身份由
 // applyDouyinIdentity(refresh 抓 secUid/昵称)回填后合并。判定用于:①ensureAccount 复用既有
@@ -3190,223 +2908,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // artifact(与 reconstruct-runner 的 getTranscript 同法),数据走 analytics 最新 snapshot rawMetrics
   // (播放优先 views 回退 plays,与 dashboard 同口径),评论走 candidateService.listSignals 里 source
   // 含 comment 的信号。绑到 creative-context 的 ReviewSubjectReader 端口。
-  const makeReviewSubjectReader = (): ReviewSubjectReader => ({
-    // 本作品真标题 —— projectsRepo.get 顺带做 ownership 门(跨用户/未知 → OwnershipError)。
-    getTitle: async (c, projectId) => {
-      try {
-        const row = await projectsRepo.get(c, projectId);
-        return row.title ?? "";
-      } catch {
-        return "";
-      }
-    },
-    // 本作品真文案 —— 新项目只读 output_script；旧项目在 output_script 尚无正式版本时，
-    // 兼容读取 master_script。正文仍按 transcript 优先、contentText 回退。
-    getScript: async (c, projectId) => {
-      try {
-        const rows = await artifactsService.listProjectArtifacts(c, projectId);
-        const repo = createArtifactRepository(db, {
-          ...deps,
-          userId: c.userId,
-          // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-          accountId: requireAccountId(c.accountId, "artifacts.repo"),
-        });
-        const scriptArtifact = selectReadableProjectScriptArtifact(rows);
-        if (scriptArtifact?.currentVersionId) {
-          const version = await repo.getVersion(scriptArtifact.currentVersionId);
-          const data = version.contentData as
-            | Record<string, unknown>
-            | null
-            | undefined;
-          const t =
-            data && typeof data.transcript === "string"
-              ? data.transcript
-              : version.contentText;
-          // 一旦正式版本存在，它就是唯一正文真相；用户主动保存空稿时也不回灌 seed。
-          return t?.trim() ? t : "";
-        }
-        return (await readProjectRadarDraftSeed(c, projectId)) ?? "";
-      } catch {
-        return "";
-      }
-    },
-    // 本作品真实数据摘要 —— 解析项目 outputs → publications → 最新 snapshot rawMetrics,合并成
-    // 人类可读串(播放优先 views 回退 plays,与 dashboard/getMetricsSummary 同口径)。数据是真实值。
-    getMetricsSummary: async (c, projectId) => {
-      try {
-        const outputIds = await projectsService.listOutputIdsByProject(
-          c,
-          projectId,
-        );
-        const merged = new Map<string, number>();
-        for (const outputId of outputIds) {
-          let pubs: Array<{ id: string }> = [];
-          try {
-            pubs = await publishingService.listPublications(c, outputId, {
-              limit: 20,
-              offset: 0,
-            });
-          } catch {
-            pubs = [];
-          }
-          for (const pub of pubs) {
-            try {
-              const page = await analyticsService.getPublicationAnalytics(
-                c,
-                pub.id,
-                1,
-                10,
-              );
-              const latest = page.rows
-                .slice()
-                .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
-              const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
-              for (const [k, v] of Object.entries(raw)) {
-                if (typeof v === "number" && Number.isFinite(v)) {
-                  merged.set(k, v);
-                }
-              }
-            } catch {
-              /* single publication read failing → skip, never crash */
-            }
-          }
-        }
-        if (merged.size === 0) return "";
-        // 播放量归一(views/plays 同义合并,只呈现一次;views 真采集优先)。
-        if (merged.has("views") && merged.has("plays")) merged.delete("plays");
-        const LABELS: Record<string, string> = {
-          views: "播放",
-          plays: "播放",
-          likes: "点赞",
-          digg: "点赞",
-          comments: "评论",
-          shares: "分享",
-          favorites: "收藏",
-          finish_rate: "完播率",
-        };
-        return Array.from(merged.entries())
-          .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
-          .join(" · ");
-      } catch {
-        return "";
-      }
-    },
-    // [T-182b] 本作品观众评论 —— 走 per-work 归属查询(不再账号级内存筛)。project → outputs →
-    // 逐 publication 调 listCommentsForPublication(source='comment' AND publication_id=pubId,
-    // 已按点赞热榜倒序)→ 合并取前 limit 条。与 getMetricsSummary 同一 project→outputs→pubs 装配
-    // 口径,零 schema 变更(per-work 外键与查询已建齐)。无 publication / 读失败 → 诚实空兜底。
-    getComments: async (c, projectId, opts) => {
-      try {
-        const outputIds = await projectsService.listOutputIdsByProject(
-          c,
-          projectId,
-        );
-        const comments: string[] = [];
-        for (const outputId of outputIds) {
-          let pubs: Array<{ id: string }> = [];
-          try {
-            pubs = await publishingService.listPublications(c, outputId, {
-              limit: 20,
-              offset: 0,
-            });
-          } catch {
-            pubs = []; // 单 output 的 publication 读失败 → 跳过,不牵连其它、不崩
-          }
-          for (const pub of pubs) {
-            if (comments.length >= opts.limit) break;
-            try {
-              const rows = await candidateService.listCommentsForPublication(
-                c,
-                pub.id,
-                opts.limit,
-              );
-              for (const r of rows) {
-                if (typeof r.rawText === "string" && r.rawText.trim() !== "") {
-                  comments.push(r.rawText);
-                }
-              }
-            } catch {
-              /* 单 publication 评论读失败 → skip, never crash */
-            }
-          }
-          if (comments.length >= opts.limit) break;
-        }
-        return comments.slice(0, opts.limit);
-      } catch {
-        return [];
-      }
-    },
-  });
+  const makeReviewSubjectReader = () => createReviewSubjectContext({projectsService,publishingService,analyticsService,candidateService,artifactsService,selectReadableProjectScriptArtifact,readProjectRadarDraftSeed});
 
   // [T-270] 立项 Brief reader 工厂(单一真值)—— 读项目 brief_detail jsonb 的全核心字段(画幅 +
   // 核心信息/内容目标/内容形式/目标受众/成功标准),供 creative-context 渲成立项硬锚段。dispatch 路径
   // script.draft 与对话路径(runtime.context → chat)共用同一份读法,不造影子。
   // 病根:此前 dispatch 内联 briefReader 只投影 orientation + 对话路径根本没绑 brief → brief 核心字段
   // 从读取端就被丢。best-effort:读不到 → null(绝不阻塞写文案)。
-  const makeBriefReader = (): ProjectBriefReader => ({
-    getBriefDetail: async (c, projectId) => {
-      try {
-        const row = await projectsRepo.get(c, projectId);
-        const d = (row.briefDetail ?? {}) as {
-          orientation?: "landscape" | "portrait";
-          coreMessage?: string;
-          contentGoal?: string;
-          contentFormat?: string;
-          targetAudience?: string;
-          successCriteria?: string;
-          // [T-284a] 复刻补链 G1 —— 复刻项目携带的原爆款拆解要素(briefDetail.benchmarkRef jsonb)。
-          benchmarkRef?: {
-            钩子拆解?: string;
-            结构拆解?: string;
-            为什么爆?: string;
-            可借鉴点?: string[];
-            适配本账号建议?: string;
-          };
-          contentRadarEvidence?: {
-            sourceReferences: Array<{
-              kind: "original_video" | "source_page";
-              platform: string;
-              label: string;
-              url: string;
-              intelligenceItemId?: string;
-            }>;
-            decomposition: {
-              hook: string;
-              structureSteps: string[];
-              coreClaims: string[];
-              reusablePattern: string;
-              factRisks: string[];
-            };
-            strategy: {
-              keep: string[];
-              replace: string[];
-              add: string[];
-              avoid: string[];
-            };
-            adaptedDraftSeed: {
-              contentText: string;
-              generatedFromTranscriptHash: string;
-              strategyHash: string;
-              templateVersion: string;
-            };
-          };
-        };
-        return {
-          orientation: d.orientation,
-          coreMessage: d.coreMessage,
-          contentGoal: d.contentGoal,
-          contentFormat: d.contentFormat,
-          targetAudience: d.targetAudience,
-          successCriteria: d.successCriteria,
-          // [T-284a] 带出复刻参照(creative-context 据此产 benchmarkRefBrief 回流写稿/搭结构)。
-          benchmarkRef: d.benchmarkRef,
-          contentRadarEvidence: d.contentRadarEvidence,
-        };
-      } catch {
-        return null; // best-effort;读不到 brief 绝不阻塞写文案
-      }
-    },
-  });
+  const makeBriefReader = () => createBriefContext({projectsService});
 
   // [T-146 切片 c/d] 项目素材 reader —— 读**当前项目**挂载的用户上传 document 素材(带 per-project
   // priority + 文档抽取投影),供写文案(script.draft)硬约束注入 + 搜索(gatherMaterials)深度结合。
@@ -3415,216 +2924,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // ProjectMaterial。只保留 document 类且解析成功/有内容的(失败/非文档不进,不冒充可读)。全程 best-
   // effort:任一素材读失败只跳过该条(不牵连其它、不阻断节点)。与既有 assetsReader/复盘 reader 同
   // 「per-ctx 公开 service 读法」,不造影子 repo。
-  const makeProjectMaterialsReader = (): ProjectMaterialsReader => ({
-    listProjectMaterials: async (c, projectId) => {
-      // material_links 是「料库⇄创作」一等公民边;list(projectId) 已 user-scoped(repo 用 ctx.userId)。
-      const { rows } = await materialLinksService.list(c, {
-        projectId,
-        page: 1,
-        pageSize: 100,
-      });
-      const assetLinks = rows.filter((r) => r.entityType === "asset");
-      const materials: ProjectMaterial[] = [];
-      for (const link of assetLinks) {
-        try {
-          const asset = await assetsService.getAsset(c, link.entityId); // OwnershipError → catch 跳过
-          // 只读 document 类(图/视/音不是「资料」,不进硬约束);非文档跳过。
-          if (asset.assetType !== "document") continue;
-          // 文档抽取的三件套(extractedText/extractStatus/materialSummary)都落在**当前文件**行
-          // (切片 a:extracted_text/extract_status 是 asset_files 列,materialSummary 在其 mediaMetadata),
-          // 与契约 assetResource 的 file 派生投影同源。故一并从 current file 读(与 toAssetResource 一致)。
-          let materialSummary: ProjectMaterial["materialSummary"] = null;
-          let extractStatus: string | null = null;
-          let extractedText: string | null = null;
-          if (asset.currentFileId) {
-            const files = await assetsService.listFilesByIds(c, [
-              asset.currentFileId,
-            ]);
-            const file = files[0] ?? null;
-            extractStatus = file?.extractStatus ?? null;
-            extractedText = file?.extractedText ?? null;
-            const meta = (file?.mediaMetadata ?? null) as Record<
-              string,
-              unknown
-            > | null;
-            const summary = meta?.materialSummary;
-            if (summary && typeof summary === "object" && !Array.isArray(summary)) {
-              materialSummary = summary as ProjectMaterial["materialSummary"];
-            }
-          }
-          materials.push({
-            name: asset.name,
-            priority: link.priority === "high" ? "high" : "normal",
-            extractStatus,
-            materialSummary,
-            extractedText,
-          });
-        } catch {
-          // 单份素材读失败(越权/已删)→ 跳过该条,不牵连其它素材、不阻断写文案/搜索。
-          continue;
-        }
-      }
-      return materials;
-    },
-  });
+  const makeProjectMaterialsReader = () => createProjectMaterialsContext({assetsService,materialLinksService});
 
-  const makeGenerationReaders = () => {
-        const positioningReader = {
-          getPositioningCenter: (c: RequestContext) =>
-            positioningService.readPositioningCenter(c),
-        };
-        // 飞轮回流 — top validated Learnings feed the agent's context (topic/script nodes).
-        const learningsReader = {
-          getSuggestions: (c: RequestContext, opts: { limit?: number }) =>
-            learningsService.getSuggestions(c, opts),
-        };
-        // 素材库 reader (Plan D2) — the creator's asset library (id + name + type) feeds the
-        // material.match node's context so the agent matches REAL assets. Maps the Asset DTO
-        // (name, assetType) onto the runner's {id,name,type} shape.
-        const assetsReader = {
-          list: async (c: RequestContext) =>
-            (await assetsService.listAssets(c, { limit: 200, cursor: null })).map(
-              (a) => ({ id: a.id, name: a.name, type: a.assetType }),
-            ),
-        };
-        // 抖音账号 reader (Plan Phase A) — the creator's connected platform accounts
-        // (platform + handle + follower baseline) feed the positioning.generate node's
-        // context as material for who they already are on-platform. Maps the
-        // PlatformAccount DTO onto the runner's {platform, accountHandle, followerBaseline}
-        // shape. platformAccountService is constructed below; this thunk only runs inside
-        // the (async) request handler, never at construction.
-        const accountsReader = {
-          list: async (c: RequestContext) =>
-            (
-              await platformAccountService.listAccounts(c, {
-                limit: 100,
-                offset: 0,
-              })
-            ).rows.map((a) => ({
-              // [T-382] 透传账号 id —— 装配层据它与 ctx.accountId 匹配标「⭐当前选中号」。
-              id: a.id,
-              platform: a.platform,
-              accountHandle: a.accountHandle,
-              followerBaseline: a.followerBaseline,
-            })),
-        };
-        // 受众信号 reader (topic.generate comments basis, 选题中心大改) — the creator's
-        // audience signals feed the agent's context so it can出题 from REAL demand. Maps the
-        // AudienceSignal DTO onto the runner's {source, rawText, demandTag} shape.
-        const signalsReader = {
-          list: async (c: RequestContext, opts: { limit?: number }) =>
-            (
-              await candidateService.listSignals(c, {
-                limit: opts.limit ?? 30,
-                offset: 0,
-              })
-            ).rows.map((s) => ({
-              source: s.source,
-              rawText: s.rawText,
-              demandTag: s.demandTag,
-              // [T-238] 评论按作品锚(存量/非评论 null)→ 信号质量画像算覆盖作品数。
-              publicationId: s.publicationId ?? null,
-            })),
-        };
-        // 知识库 reader (topic.generate knowledge basis + topic.enrich 素材依据) — the
-        // creator's KnowledgeItems feed the agent's context so选题 has 素材依据.
-        // [T-079c] 投影补战绩/出处字段(usedCount/usedInPublished/sourceNote,
-        // T-079a listKnowledge 已一次算齐)→ knowledgeBrief 按四原子分段 + 战绩排序。
-        const knowledgeReader = {
-          list: async (c: RequestContext, opts: { limit?: number }) =>
-            (await knowledgeService.listKnowledge(c))
-              .slice(0, opts.limit ?? 40)
-              .map((k) => ({
-                title: k.title,
-                knowledgeType: k.knowledgeType,
-                usedCount: k.usedCount,
-                usedInPublished: k.usedInPublished,
-                sourceNote: k.sourceNote ?? null,
-                // [T-238] 新鲜度(ISO text 列)→ 信号质量画像算近 30 天占比。
-                createdAt: k.createdAt ?? null,
-              })),
-          // [T-186] L3 策展护栏:按 query 相关性检索知识,复用已建 hybridSearch 运行时
-          // (knowledgeSearchRuntime,entityType=knowledge,exact ILIKE 优先 + 余弦补位 + 阈值截断;
-          // 未配 embedding 时诚实降级纯关键词)。把命中 knowledge id 按 hybridSearch 相关性顺序映射回
-          // listKnowledge 的全字段行(带 knowledgeType/战绩/出处),供 creative-context 的
-          // formatKnowledgeBrief 分段渲染。knowledgeSearchRuntime 定义在本文件后方,search 仅在任务
-          // dispatch(build 完成后)被调用,前向引用安全(与 dispatchScheduledCollection 同款范式)。
-          // 无命中 → 空数组(creative-context 据此退回 .list dump 降级)。
-          search: async (
-            c: RequestContext,
-            query: string,
-            opts: { limit?: number },
-          ) => {
-            const { hits } = await knowledgeSearchRuntime.hybridSearch(c, query);
-            if (hits.length === 0) return [];
-            const all = await knowledgeService.listKnowledge(c);
-            const byId = new Map(all.map((k) => [k.id, k]));
-            const rows: Array<{
-              title: string;
-              knowledgeType: string;
-              usedCount?: number;
-              usedInPublished?: boolean;
-              sourceNote?: string | null;
-            }> = [];
-            const limit = opts.limit ?? 40;
-            for (const h of hits) {
-              const k = byId.get(h.document.entityId);
-              if (!k) continue; // 命中的索引行对应的知识已删/跨号不可见 → 跳过
-              rows.push({
-                title: k.title,
-                knowledgeType: k.knowledgeType,
-                usedCount: k.usedCount,
-                usedInPublished: k.usedInPublished,
-                sourceNote: k.sourceNote ?? null,
-              });
-              if (rows.length >= limit) break;
-            }
-            return rows;
-          },
-        };
-        // 立项 Brief reader(立项画幅 横/竖屏 → script.draft 据此调钩子与时长)。best-effort:读不到
-        // 画幅返回 null,绝不阻塞写文案。[T-184] 从 script.draft dispatch 内联提到这里命名,供中央
-        // registry 登记(逻辑与原内联逐字一致,零行为变化)。
-        // [T-270] 立项 Brief reader —— 用共享工厂(单一真值,dispatch/对话两路同一读法,扩投影全字段)。
-        const briefReader: ProjectBriefReader = makeBriefReader();
-        // [T-184] 中央 context reader registry —— key(= ContextDeps facet 字段名)→ 已构造 reader。
-        // 模板用 contextRequirements 声明要哪些源,resolveContextDeps 据此自动取 reader 组 deps,取代
-        // runXxx dispatch 手列(手列漏接 = facet 恒空的根因)。本切片只让 script.draft 一条 dispatch
-        // 走声明式注入(script-first 范式);其它节点仍各自手列,后续按同范式逐条迁移。ai /
-        // resolveModelSpec 是非 facet 基础设施,不进 registry(组合根 always-注入)。
-        const contextReaderRegistry: Partial<CreativeContextDeps> = {
-          positioning: positioningReader,
-          learnings: learningsReader,
-          assets: assetsReader,
-          accounts: accountsReader,
-          signals: signalsReader,
-          knowledge: knowledgeReader,
-          thesis: thesisReader,
-          contract: contractReader,
-          outline: outlineReader,
-          artifactOrigin: artifactOriginReader,
-          projectMaterials: makeProjectMaterialsReader(),
-          brief: briefReader,
-          projectIntelligence: {
-            getSourceContexts: async (c, projectId) => {
-              const contexts = await projectIntelligenceReferences.getSourceContexts(c, {
-                projectId,
-              });
-              return contexts.map((context) => ({
-                item: context.item,
-                transcript: {
-                  text: context.transcript.text,
-                  hash: context.transcript.hash,
-                },
-              }));
-            },
-          },
-          // [T-271] 封面链声明 reviewSubject 以读**口播稿主张**(getScript 读 output_script 当前版本,
-          // 与复盘同一读法)—— assembleCreativeContext 据此填 context.reviewScript,封面文案硬锚正片主张。
-          reviewSubject: makeReviewSubjectReader(),
-        };
-    return { positioningReader, learningsReader, assetsReader, accountsReader, signalsReader, knowledgeReader, briefReader, contextReaderRegistry };
-  };
+  const makeGenerationReaders = () => createGenerationContextReaders({candidateService,assetsService,knowledgeService,positioningService,learningsService,platformAccountService,projectIntelligenceReferences,knowledgeSearchRuntime,makeBriefReader,makeReviewSubjectReader,makeProjectMaterialsReader,thesisReader,contractReader,outlineReader,artifactOriginReader});
 
   // 创建只负责唤醒对应执行 owner；租约与冻结快照由该 owner 领取一次。
   const ai: Transport = {
@@ -4373,8 +3675,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // T-598：内容雷达不再自建 timer。到期发现由下方唯一 automation-driver 触发
   // `intelligence.sync`；本段只保留用户手动操作产生的持久 source_sync runner。
 
-
-
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
   const execution: Transport = {
@@ -4779,13 +4079,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
 
   intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript};
 
-  const recentVisibleCollections = new Map<
-    string,
-    {
-      completedAtMs: number;
-      result: Awaited<ReturnType<ScheduledCollector>>;
-    }
-  >();
   const scheduledCollectors: Record<string, ScheduledCollector> = {
     "intelligence.sync": async (ctx, _target, report) => {
       report({
@@ -4829,254 +4122,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
     // "comment",带 ingestionRunId,C-4)→ completeRun)。itemsNew=written(新写信号数);
     // 评论只新写不更新 → itemsUpdated 恒 0。
-    comments: async (ctx, target, report) => {
-      // [T-152] 阶段①:登录校验 + 确保采集源(抓评论前 fetchDouyinComments* 内先校验登录态)。
-      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
-      const externalSourceId =
-        typeof target.externalSourceId === "string" && target.externalSourceId
-          ? target.externalSourceId
-          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
-            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
-            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
-            await ingestionService.ensureDouyinSource(ctx);
-      const maxPages =
-        typeof target.maxPages === "number" ? target.maxPages : undefined;
-      // CommentIngestPorts 真实装配(所有作品共用一套 ports):ingestion repo(去重 ledger)+
-      // candidate service(信号写,C-4 骑 ingestion run)+ ingestion service(run 生命周期)。
-      const ingestionRepo = createIngestionRepository(db, {
-        now: deps.now,
-        nextId: deps.nextId,
-        userId: ctx.userId,
-        // [T-136 §D 切片 c] 评论采集 run/去重 ledger 按当前号(去重锚仍是 run+recordKey,
-        //   run 已 stamp 号;这里带号让 repo 门与 service 侧一致)。
-        accountId: ctx.accountId ?? null,
-      });
-      const commentPorts: CommentIngestPorts = {
-        createRun: async (input) => {
-      checkScheduledSignal();
-          const run = await ingestionService.createRun(ctx, {
-            externalSourceId: input.externalSourceId,
-            runType: input.runType,
-            idempotencyKey: input.idempotencyKey,
-          });
-          return { id: run.id };
-        },
-        recordExists: (runId, recordKey) =>
-          ingestionRepo.recordExists(runId, recordKey),
-        markRecordWritten: (runId, recordKey) =>
-          ingestionRepo.markRecordResult(runId, recordKey, "written"),
-        ingestSignal: async (input) => {
-          // C-4:AudienceSignal 写必带 ctx.ingestionRunId(source="ingestion")。
-          // [T-136 §D 切片 c] 关键:透传当前号 —— candidateService.ingestAudienceSignal 的
-          //   repo 门据 ctx.accountId stamp audience_signals.account_id。漏传 = 评论信号无号
-          //   归属(切号看不到该号受众信号 / 串味)。这是手搓 ctx,不经 downstreamCtx,必须显式带。
-          const signalCtx: RequestContext = {
-            userId: ctx.userId,
-            requestId: ctx.requestId,
-            source: "ingestion",
-            accountId: ctx.accountId ?? null,
-            ingestionRunId: input.ingestionRunId,
-          };
-          const res = await candidateService.ingestAudienceSignal(signalCtx, {
-            source: input.source,
-            rawText: input.rawText,
-            demandTag: input.demandTag,
-            // 评论按作品可读 (T-030 D6) — 回填作品绑定(ingestComments 已按评论自身 aweme_id 解析)。
-            publicationId: input.publicationId,
-            // 评论点赞数 (T-042 热榜排序依据) — 采集抓的 digg_count。
-            likeCount: input.likeCount,
-            // 评论粒度幂等锚 (T-065) — `douyin:comment:<cid>`;跨 run 唯一,重采不重复入库。
-            externalId: input.externalId,
-          });
-          // inserted=false → 命中跨 run 幂等锚(库里已有该评论),ingestComments 计 skipped。
-          return { inserted: res.inserted };
-        },
-        // 按 aweme_id 查对应作品的 publication_id(T-030 D6 回填,F3):命中 published +
-        // external_id=aweme_id 的 publication → id,否则 null(评论仍落库,只是不绑作品)。
-        resolvePublicationId: async (aweme: string) => {
-          const pub = await publishingService.resolvePublication(ctx, {
-            platform: "douyin",
-            externalId: aweme,
-          });
-          return pub?.id ?? null;
-        },
-        completeRun: async (runId: string) => {
-          await ingestionService.completeRun(ctx, { runId });
-        },
-      };
-      // 单作品评论落库(纯 ingest 部分,抓取已由调用方完成;每作品前 100 条由抓取层 maxPages 控)。
-      // commentPorts 复用(整批共用一套),ingest 逻辑不变。
-      const ingestRecordsForWork = async (
-        awemeId: string,
-        records: CommentRecord[],
-      ): Promise<number> => {
-        const capturedAt = deps.now();
-        const result = await (await loadDouyinCdp()).ingestComments(
-          awemeId,
-          records,
-          {
-            externalSourceId,
-            capturedAt,
-            ports: commentPorts,
-          },
-        );
-        return result.written;
-      };
-      // [T-177 增量化] 评论 watermark 只读端口:按 awemeId 反查库里该作品已知评论的 externalId 集
-      //   (`douyin:comment:<cid>`)。resolvePublication(aweme→pubId) + listCommentsForPublication
-      //   (source='comment' AND publication_id=pubId 的信号,externalId 即去重锚)。抓取层据此在倒序
-      //   翻页里 early-break(某页评论全 ∈ 该集 → 停)。无匹配作品 / 无已知评论 → 空集 → 退化全量。
-      //   limit 取大值(覆盖该作品全量已存评论);该读一次/作品,不在热路径,成本远低于省下的重复滚动。
-      const commentWatermark = async (aweme: string): Promise<Set<string>> => {
-        const pub = await publishingService.resolvePublication(ctx, {
-          platform: "douyin",
-          externalId: aweme,
-        });
-        if (!pub?.id) return new Set<string>();
-        const rows = await candidateService.listCommentsForPublication(
-          ctx,
-          pub.id,
-          5000,
-        );
-        const ids = new Set<string>();
-        for (const r of rows) if (r.externalId) ids.add(r.externalId);
-        return ids;
-      };
-      // ① 指定 target.awemeId → 只抓该作品;② 未指定 → 抓「我所有作品」评论:遍历用户所有
-      //    douyin publications(external_id=aweme_id),**复用单 browser context 跨作品**
-      //    (fetchDouyinCommentsForWorks:openContext 开一次 → 循环内逐作品抓 → close 一次),
-      //    取代旧「N 作品 × 各开一个 headless 浏览器」路径。
-      const single =
-        typeof target.awemeId === "string" && target.awemeId
-          ? target.awemeId
-          : "";
-      if (single) {
-        // 单作品仍走单作品抓取路径(fetchDouyinComments 内部 openContext 一次)。
-        // [gate-F7 插装点③] creator-center 评论翻页限流(注真单例)。
-        // [T-152] 单作品:标进入抓取阶段(1/1)。
-        report({
-          stage: "comments",
-          processed: 0,
-          total: 1,
-          message: "抓取该作品评论",
-        });
-        const records = await (await loadDouyinCdp()).fetchDouyinComments(
-          {
-            awemeId: single,
-            authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
-            maxPages,
-          },
-          { gateway: douyinGateway, commentWatermark }, // [T-177] 增量 early-break
-        );
-        const written = await ingestRecordsForWork(single, records);
-        report({
-          stage: "comments",
-          processed: 1,
-          total: 1,
-          message: `已落库 ${written} 条评论`,
-        });
-        return { itemsNew: written, itemsUpdated: 0 };
-      }
-      const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
-        limit: 500,
-      });
-      const douyinPubs = pubs.filter(
-        (p) => p.platform === "douyin" && p.externalId,
-      );
-      // [T-232 断点续采] 逐作品预取 watermark:一石二鸟 ——「已采与否」的判据(非空 = 采过,
-      //   复用 T-177 既有机制不新造持久锚)+ 直接喂给抓取层做增量 early-break(免每作品双读)。
-      const watermarks = new Map<string, Set<string>>();
-      for (const p of douyinPubs) {
-        const aweme = p.externalId as string;
-        watermarks.set(
-          aweme,
-          await commentWatermark(aweme).catch(() => new Set<string>()),
-        );
-      }
-      // [T-232 爆款优先] 逐作品取 analytics 最新快照的评论数(采集顺序依据:330 评的先采,
-      //   额度别烧在 0 评作品上)。读不到/无快照 → 0(诚实降级排后,不编)。
-      const candidates: CommentCollectionCandidate[] = [];
-      for (const p of douyinPubs) {
-        const aweme = p.externalId as string;
-        let commentCount = 0;
-        try {
-          const pageOfSnapshots = await analyticsService.getPublicationAnalytics(
-            ctx,
-            p.id,
-            1,
-            1, // capturedAt 降序 → 第 1 条即最新快照
-          );
-          const raw = pageOfSnapshots.rows[0]?.rawMetrics as
-            | Record<string, unknown>
-            | undefined;
-          const n = Number(raw?.comments);
-          if (Number.isFinite(n) && n > 0) commentCount = n;
-        } catch {
-          /* 快照读不到 → 0,排序自然靠后 */
-        }
-        candidates.push({
-          awemeId: aweme,
-          commentCount,
-          collected: (watermarks.get(aweme)?.size ?? 0) > 0,
-        });
-      }
-      // [T-232] 顺序 = 未采优先(断点续采:上轮截断后下轮自动从未采作品继续)→ 组内评论数
-      //   降序(爆款优先)。已采作品排后,额度富余时增量补新评论(watermark early-break 保便宜)。
-      const awemeIds = orderCommentCollection(candidates);
-      // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
-      // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
-      // [gate-F7 插装点③④] creator-center:每作品 acquire 一次 + 作品内翻页每页 acquire(注真单例)。
-      // [T-152] 标进入抓取阶段(总作品数已知 → total=awemeIds.length)。
-      report({
-        stage: "comments",
-        processed: 0,
-        total: awemeIds.length,
-        message: `抓取 ${awemeIds.length} 个作品的评论(未采/爆款优先)`,
-      });
-      let total = 0;
-      // [T-232 额度断点] 抓取层撞 DouyinCooldownActiveError → 立即停剩余作品,带回部分结果
-      //   (truncated=true);不再逐作品白撞冷却。
-      const batch = await (await loadDouyinCdp()).fetchDouyinCommentsForWorks(
-        awemeIds,
-        {
-          authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
-          maxPages,
-        },
-        {
-          gateway: douyinGateway,
-          // [T-177] 每作品增量 early-break(预取缓存版;缺失键退化空集全量)。
-          commentWatermark: async (aweme) =>
-            watermarks.get(aweme) ?? new Set<string>(),
-          // T-616：抓完一个作品立即落库并上报，不再等 51 个作品整批返回后才从 0 跳到 N。
-          onWorkComplete: async ({ awemeId, records }, progress) => {
-            total += await ingestRecordsForWork(awemeId, records);
-            report({
-              stage: "comments",
-              processed: progress.processed,
-              total: progress.total,
-              message:
-                `已处理 ${progress.processed}/${progress.total} 个作品` +
-                ` · 累计 ${total} 条评论`,
-            });
-          },
-        },
-      );
-      // [T-232 run 诚实] 全量完成 vs 额度截断,message 走 CollectResult.message(T-235a 既有
-      //   机制,runner 拼进合成 step 文本供运行详情展示);itemsNew 照实,不假装全量。
-      const coverageMessage = buildCommentCoverageMessage({
-        collectedWorks: batch.works.length,
-        totalWorks: awemeIds.length,
-        truncated: batch.truncated,
-        cooldownRemainMs: batch.cooldownRemainMs,
-      });
-      report({
-        stage: "comments",
-        processed: batch.works.length,
-        total: awemeIds.length,
-        message: coverageMessage,
-      });
-      return { itemsNew: total, itemsUpdated: 0, message: coverageMessage };
-    },
+    comments: createCommentsCollector({db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,
+readComments: async (ctx,awemeId,options)=>(await loadDouyinCdp()).fetchDouyinComments({awemeId,maxPages:options.maxPages,authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId)},{gateway:douyinGateway,commentWatermark:options.commentWatermark}),
+readCommentsForWorks:async(ctx,awemeIds,options)=>(await loadDouyinCdp()).fetchDouyinCommentsForWorks(awemeIds,{authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),maxPages:options.maxPages},{gateway:douyinGateway,commentWatermark:options.commentWatermark,onWorkComplete:options.onWorkComplete})}),
     // 作品明细导出(T-030-D8a,SPEC §9b):fetchDouyinWorkListExport(headless 复用 .auth/ →
     // 导航数据中心作品分析 → 点「刷新数据」+「导出数据」→ 截 xlsx 校验 PK 头)→ parseDouyin
     // WorkListXlsx(16 字段容错解析)→ 按 title/pub_date 匹配 publication(无 aweme_id 维度,
@@ -5084,630 +4132,58 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // rawMetrics 带完播/封面CTR/5s完播/2s跳出/主页访问 → 复盘核心指标从 0/fixture 变真)。
     // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
     // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
-    "self.detail": async (ctx, target, report) => {
-      const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}`;
-      const cached = recentVisibleCollections.get(collectionCacheKey);
-      if (cached && Date.now() - cached.completedAtMs < 30 * 60_000) {
-        report({
-          stage: "visibility",
-          processed: cached.result.itemsNew,
-          total: cached.result.itemsNew,
-          message: "已复用 30 分钟内同账号的公开作品采集结果",
-        });
-        return cached.result;
-      }
-      // [T-152] 阶段①:登录校验 + 确保采集源(导出前 fetchDouyinWorkListExport 内先校验登录态)。
-      report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
-      const externalSourceId =
-        typeof target.externalSourceId === "string" && target.externalSourceId
-          ? target.externalSourceId
-          : // [T-144] 空 target(job 未绑源)→ ensure 本 user 的真实抖音采集源(无源建、有源
-            // 复用),绝不再指已退役的 "src-douyin-canonical"(新库查无 → 抛「外部来源不存在」
-            // → runner 报 failed → 采 0 条的根因)。ensure 后 refreshDouyin 能校验通过。
-            await ingestionService.ensureDouyinSource(ctx);
-      const capturedAt = deps.now();
-      const detailCapturedAt = new Date(Date.parse(capturedAt) + 1).toISOString();
-      // [T-595] 原始指标先只进内存；禁止在可见性已确认前调用 ingestion 写库。
-      report({
-        stage: "fetch",
-        processed: 0,
-        total: null,
-        message: "抓取完整作品目录（尚未入库）",
-      });
-      const rawBatch = await (await loadDouyinCdp()).fetchDouyinMetrics({
+    "self.detail": createSelfCollector({projectsService,
+publishingService,
+analyticsService,
+ingestionService,
+assetsService,
+artifactsService,
+materialLinksService:()=>materialLinksService,
+topicAttributionService,
+candidateService,
+learningsService,
+positioningService,
+now:deps.now,
+models:scheduledFlywheel.models,
+checkScheduledSignal,
+assertAttributionConfigured:c=>resolveModelSpec(c,"topic.attribution"),
+makeReviewSubjectReader,
+ai,
+createAiTaskAttemptId,
+resolveCoverBackfillLimit,
+configuration:{CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT:process.env.CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT,CREATOROS_LEARNING_GROUNDING_MIN_METRICS:process.env.CREATOROS_LEARNING_GROUNDING_MIN_METRICS,CREATOROS_TOPIC_ATTRIBUTION_LIMIT:process.env.CREATOROS_TOPIC_ATTRIBUTION_LIMIT,CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE:process.env.CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE,CREATOROS_ATTRIBUTION_LOW_MULTIPLE:process.env.CREATOROS_ATTRIBUTION_LOW_MULTIPLE},
+readMetrics: async (ctx: RequestContext, capturedAt: string) => (await loadDouyinCdp()).fetchDouyinMetrics({
         signal:scheduledSignals.getStore(),
         capturedAt,
         authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),
         gateway: douyinGateway,
         // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
         knownAwemeIds: undefined,
-      });
-      // [T-322] detailWritten 提到 try 外(下方封面回填段 return 读它)。导出→解析→可见性
-      //   同步→明细落库整段包 try:任一抛错只 console.error + 报一条 export 降级,**不**
-      //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
-      let detailWritten = 0;
-      let metricsWritten = 0;
-      try {
-        // 1) 抓导出 xlsx bytes(headless 复用扫码登录态;未登录/非 xlsx 抛,run 不建 → 快速失败)。
-        // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
-        // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
-        report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
-        const bytes = await (await loadDouyinCdp()).fetchDouyinWorkListExport(
+      }),
+readExport: async (ctx: RequestContext) => (await loadDouyinCdp()).fetchDouyinWorkListExport(
           { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
-        );
-        // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
-        // [T-152] 阶段③:解析明细(N 条)。
-        report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });
-        const details = await parseDouyinWorkListXlsx(bytes);
-        // [T-202] 导出/解析条数落 console(不止 job_run progress):真机排「隐藏 0 标」时,先看这行——
-        //   details.length===0 → 导出本身 0 条(登录态/tab/导出按钮问题,查上面 debugShot);
-        //   details.length>0 但下方 hiddenSynced===0 → 同步/匹配问题(看 [douyin-detail-visibility])。
-        console.log(
-          `[douyin-detail-export] 解析 xlsx 得 ${details.length} 条明细行(bytes ${bytes.byteLength})`,
-        );
-        report({
-          stage: "parse",
-          processed: details.length,
-          total: null,
-          message: `解析出 ${details.length} 条明细`,
-        });
-        // 3) 装配作品目录(title + externalId=aweme_id + publishedAt),按 title/pub_date 匹配。
-        //    T-034 断裂修复:导入作品(external_id=aweme_id)故意无 revision(见 publishing.repository
-        //    createImportedPublication),故 getRecentPublicationsWithTitle 回来的 title 为空 —— 与
-        //    L3004 dossier 装配同款回退:revision title 空时取 content_output 真实标题(导入时落在
-        //    projects/content_output 上)。不回退 → 72 条采集作品 catalog title 恒空 → xlsx 明细
-        //    永远匹配不上 → items_new 恒 0(断裂根因)。
-        const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
-          limit: 500,
-        });
-        const catalogByExternalId = new Map<string, PublicationCatalogEntry>();
-        for (const record of rawBatch.records) {
-          catalogByExternalId.set(record.externalId, {
-            id: record.externalId,
-            platform: record.platform,
-            title: record.title ?? "",
-            publishedAt: record.publishedAt ?? null,
-            externalId: record.externalId,
-          });
-        }
-        for (const p of pubs) {
-          if (!p.externalId) continue;
-          let title = p.title;
-          if (!title) {
-            try {
-              const out = await projectsRepo.getOutput(ctx, p.contentOutputId);
-              title = out.title;
-            } catch {
-              // 防御:取不到作品标题就保持空(该条明细自然匹配不上,诚实跳过)。
-            }
-          }
-          // catalog 的 id 统一使用 externalId，避免同一作品的“原始记录 + 存量 publication”
-          // 形成两个候选而被误判多义；存量只补原始记录缺失的标题/发布时间。
-          const previous = catalogByExternalId.get(p.externalId);
-          catalogByExternalId.set(p.externalId, {
-            id: p.externalId,
-            platform: p.platform,
-            title: previous?.title || title,
-            publishedAt: previous?.publishedAt || p.publishedAt,
-            externalId: p.externalId,
-          });
-        }
-        const catalog = [...catalogByExternalId.values()];
-        const externalIdById = new Map<string, string>();
-        for (const item of catalog) {
-          if (item.externalId) externalIdById.set(item.id, item.externalId);
-        }
-        const matches = matchDetailsToPublications(details, catalog);
-        const decision = decideVisibleDouyinCollection({
-          records: rawBatch.records,
-          details,
-          catalog,
-        });
-        const visibleExternalIds = new Set(
-          decision.visibleRecords.map((record) => record.externalId),
-        );
-        report({
-          stage: "visibility",
-          processed: decision.counts.visible,
-          total: decision.counts.observed,
-          message:
-            `公开 ${decision.counts.visible} · 隐藏 ${decision.counts.hidden} · ` +
-            `未知跳过 ${decision.counts.unknown} · 明细未匹配 ${decision.counts.unmatchedDetails}`,
-        });
-
-        // 先原子清理明确隐藏的存量平台派生树；任一失败直接抛出，禁止继续入库或跑重活。
-        for (const externalId of decision.hiddenExternalIds) {
-          await projectsService.reconcilePlatformWork(ctx, {
-            platform: "douyin",
-            externalId,
-            visibility: "hidden",
-          });
-        }
-        checkScheduledSignal();
-      const metricsRun = await ingestionService.ingestApprovedDouyinBatch(ctx, {
-          externalSourceId,
-          capturedAt,
-          records: decision.visibleRecords,
-          identity: rawBatch.identity,
-        });
-        metricsWritten = metricsRun.recordsWritten;
-        // 3b) [T-073] 平台侧可见性同步:明细「审核状态」列(如「仅自己可见」/「已通过」)
-        //     → publication.hidden_at + 导入项目 platform_ref.hidden。判定不了(审核中/
-        //     未通过/空)诚实跳过,不动既有标记;找不到承载行也跳过(不硬造)。放在指标
-        //     落库之前、且不受 records.length===0 早退影响(隐藏作品也可能产不出 record)。
-        // [T-151 缺口 C 诊断] 可见性同步逐档计数 —— 存量真机 hidden_at 全 NULL 的根因需真机 xlsx
-        //   才能定位(是 title 匹配不上?还是「审核状态」列没解析到值?还是状态字面量不含隐藏口径?)。
-        //   加这组计数 + 采样,让下次真扫**自证根因**(不改数据、不硬猜),诚实分层。
-        const visDiag = {
-          total: matches.length,
-          unmatched: 0, // publicationId=null(title 匹配不上 → T-034 断裂域)
-          unknownStatus: 0, // 匹上了但审核状态判不出(列没解析 / 字面量不含隐藏口径)
-          noExtId: 0, // 匹上了但无 externalId 锚(fixture 轨)
-          hiddenSynced: 0, // 真标了 hidden
-          visibleSynced: 0, // 真标了 visible
-        };
-        const statusSamples = new Set<string>();
-        // [T-202] 未匹配明细的「作品标题」采样(锚 = title,匹不上多因 title 断裂 T-034)。真机看到
-        //   具体标题 → 立刻能判是 catalog title 空、还是 xlsx 标题被截断/带表情不一致导致匹不上。
-        const unmatchedTitleSamples = new Set<string>();
-        for (const m of matches) {
-          if (!m.publicationId) {
-            visDiag.unmatched += 1;
-            // 采样未匹配明细的「审核状态」原值 + 「标题」(去重,最多留几个),便于真机比对列/字面量。
-            if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
-            if (unmatchedTitleSamples.size < 8)
-              unmatchedTitleSamples.add(m.detail.title ?? "");
-            continue;
-          }
-          const vis = visibilityFromDetailStatus(m.detail.status);
-          if (vis === "unknown") {
-            visDiag.unknownStatus += 1;
-            if (statusSamples.size < 8) statusSamples.add(m.detail.status ?? "");
-            continue;
-          }
-          const extId = externalIdById.get(m.publicationId);
-          if (!extId) {
-            visDiag.noExtId += 1;
-            continue; // 无 externalId 锚(fixture 轨)→ 跳过
-          }
-          const hidden = vis === "hidden";
-          if (hidden) {
-            // 已由上方原子清理链处理；不再回写一份 hidden 标记制造双写真相。
-            visDiag.hiddenSynced += 1;
-            continue;
-          }
-          try {
-            // [T-595] 旧 hidden_at/platform_ref.hidden 只作迁移兼容；公开归一也由同一
-            // Projects 事务协调器一次提交，退役原先三个 service 的 best-effort 双写链。
-            await projectsService.reconcilePlatformWork(ctx, {
-              platform: "douyin",
-              externalId: extId,
-              visibility: "visible",
-            });
-            visDiag.visibleSynced += 1;
-          } catch {
-            // 可见性同步失败不拖垮整批指标落库(best-effort;下轮采集会再同步)。
-          }
-        }
-        // [缺口 C 诊断] 打印逐档结果 + 未判定明细的审核状态采样。真机看这行即知根因:
-        //   unmatched 高 → title 匹配断裂;unknownStatus 高 + 采样非空 → 列/字面量口径需扩;
-        //   hidden/visibleSynced 有值 → 同步链本身通(问题只在存量那一次)。
-        console.log(
-          `[douyin-detail-visibility] 明细 ${visDiag.total}(catalog ${catalog.length} 条作品):未匹配 ${visDiag.unmatched},状态判不出 ${visDiag.unknownStatus},无锚 ${visDiag.noExtId},标隐藏 ${visDiag.hiddenSynced},标可见 ${visDiag.visibleSynced}` +
-            (statusSamples.size > 0
-              ? ` · 未判定审核状态采样: ${Array.from(statusSamples)
-                  .map((s) => JSON.stringify(s))
-                  .join(", ")}`
-              : "") +
-            (unmatchedTitleSamples.size > 0
-              ? ` · 未匹配标题采样: ${Array.from(unmatchedTitleSamples)
-                  .map((s) => JSON.stringify(s))
-                  .join(", ")}`
-              : ""),
-        );
-        // 4) 匹配上的明细 → MetricRecord[](未匹配 / 无 externalId 锚 → 跳过,诚实)。
-        const records = toDetailMetricRecords(
-          matches,
-          (pubId) => {
-            const externalId = externalIdById.get(pubId) ?? null;
-            return externalId && visibleExternalIds.has(externalId)
-              ? externalId
-              : null;
-          },
-          detailCapturedAt,
-        );
-        // [T-195] records 空(一条都没匹配上)时**不早退**:可见性已在上面同步(hidden_at/
-        //   platform_status 已标),缺封面 / 待重建的可见作品仍应跑重活。故只跳过「建空 run」,
-        //   下面的初始化重活(封面回填 + 逐字稿/重建)无论 records 是否为空都要跑。
-        if (records.length > 0) {
-          // [T-152] 阶段④:匹配落库(records.length 条匹配上的明细 → ingestMetrics)。
-          report({
-            stage: "ingest",
-            processed: 0,
-            total: records.length,
-            message: `匹配落库 ${records.length} 条明细`,
-          });
-      checkScheduledSignal();
-          const run = await ingestionService.createRun(ctx, {
-            externalSourceId,
-            runType: "douyin_detail",
-            idempotencyKey: `${externalSourceId}:detail:${detailCapturedAt}`,
-          });
-          const result = await ingestionService.ingestMetrics(ctx, {
-            runId: run.id,
-            records: records as unknown as Array<Record<string, unknown>>,
-          });
-          await ingestionService.completeRun(ctx, { runId: run.id });
-          report({
-            stage: "ingest",
-            processed: result.recordsWritten,
-            total: records.length,
-            message: `已落库 ${result.recordsWritten} 条明细`,
-          });
-          detailWritten = result.recordsWritten;
-        }
-        // [T-202] 落库条数落 console:与上面 export/visibility 三行拼成完整链路证据
-        //   (导出 N 行 → 匹配 M 条 → 落库 detailWritten 条),真机一眼定位断点。
-        console.log(
-          `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
-        );
-      } catch (detailErr) {
-        // [T-595] 可见性闸门失败必须 fail-closed：不入新作品、不按缺失状态清理，也不继续
-        // 跑封面/逐字稿等重活。旧“吞错后继续”会把 unknown 当可见，已正式退役。
-        console.error(
-          "[douyin-visible-collection] 源可见性确认失败，本轮未入库:",
-          detailErr,
-        );
-        report({
-          stage: "export",
-          processed: 0,
-          total: null,
-          message: "可见性无法确认，本轮未入库且未清理",
-        });
-        throw detailErr;
-      }
-      // 5) 已确认公开并落库后再跑初始化重活：①封面回填 ②逐字稿 + 重建排队。
-      //    隐藏/未知作品从未进入本轮写集合，重活天然只看到公开作品。
-      // [T-433 S1] 绑号轻触发:target.__skipHeavyBackfill 时跳过尾部逐条重活(封面/逐字稿/重建),
-      //   避免多账号绑号把逐条重活堆进 gate-F5 超长串行队列;重活留次日 daily self.detail(不带此标)
-      //   到点幂等补,不漏。明细导出/落库主流程不受影响(coversFilled=0 仅供 return itemsUpdated)。
-      const heavy = (target as { __skipHeavyBackfill?: boolean })
-        .__skipHeavyBackfill
-        ? { coversFilled: 0 }
-        : await runDouyinHeavyBackfill(
-        ctx,
-        {
-          // ── 封面回填 host ──────────────────────────────────────────────────
-          listPublicationsMissingCover: async (c, limit) =>
-            (
-              await publishingService.listPublicationsMissingCover(c, {
-                platform: "douyin",
-                limit,
-              })
-            ).map((p) => ({
-              id: p.id,
-              externalId: p.externalId ?? null,
-              contentOutputId: p.contentOutputId ?? null,
-            })),
-          // [T-862/gate-F7] 封面复用组合入口：匿名 iesdouyin 解析失败时才按当前账号
-          //   登录态回落 detail；网络/HTTP/冷却错误不双路重试。两条路继续走真网关单例。
-          fetchVideoUrl: async (awemeId) =>
-            (await loadDouyinCdp()).fetchDouyinCoverUrl({
+        ),
+readCover: async (ctx: RequestContext, awemeId: string) => (await loadDouyinCdp()).fetchDouyinCoverUrl({
               signal:scheduledSignals.getStore(),
               awemeId,
               authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),
               gateway: douyinGateway,
             }),
-          downloadImage: (url) => downloadDouyinImage(url),
-          createImageAsset: (c, input) =>
-            assetsService.createGeneratedAsset(c, {
-              assetType: "image",
-              name: input.name,
-              bytes: input.bytes,
-              mimeType: input.mimeType,
-            }),
-          setCover: async (c, publicationId, coverAssetId) => {
-            await publishingService.setCover(c, publicationId, coverAssetId);
-          },
-          // [T-151 缺口 B] 封面绑作品所属项目:contentOutputId → getOutput().projectId →
-          //   materialLinksService.create(entityType='asset')。素材中心「按项目」可见该封面。
-          //   解析不到 project → 诚实跳过;建边失败由本 host 独立吞掉(封面已落是真的)。
-          bindCoverToProjectByOutput: async (c, { contentOutputId, coverAssetId }) => {
-            const output = await projectsRepo.getOutput(c, contentOutputId);
-            const projectId = output.projectId;
-            if (!projectId) return;
-            await materialLinksService.create(c, {
-              projectId,
-              contentOutputId,
-              entityType: "asset",
-              entityId: coverAssetId,
-              role: "cover",
-              stage: "publishing",
-              addedByType: "ingestion",
-            });
-          },
-          // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
-          listImportedWorks: (c) => projectsService.listImportedWorks(c),
-          // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
-          //   ai.tasks.create → runTranscribe;直调 service 会死链)。
-          enqueueTranscribe: async (c, awemeIds) => {
-            await ai.request(
-              ENDPOINTS.createAITask,
-              {
-                params: undefined,
-                query: undefined,
-                body: {
-                  taskType: "transcribe.douyin",
-                  attemptId: createAiTaskAttemptId(),
-                  inputData: { awemeIds },
-                },
-              },
-              c,
-            );
-          },
-          // 依赖闸：只有真实 ASR 逐字稿才允许重建；图集占位锚不能喂给重建模型。
-          hasReconstructableTranscript: async (c, projectId) => {
-            const rows = await artifactsService.listProjectArtifacts(c, projectId);
-            for (const row of rows) {
-              if (row.artifactType !== "output_script" || !row.currentVersionId) {
-                continue;
-              }
-              const versions = await artifactsService.listVersions(c, row.id);
-              const current = versions.find((v) => v.id === row.currentVersionId);
-              const data = current?.contentData as
-                | Record<string, unknown>
-                | null
-                | undefined;
-              if (
-                data?.source !== "image-album" &&
-                typeof data?.transcript === "string" &&
-                data.transcript.trim().length > 0
-              ) {
-                return true;
-              }
-            }
-            return false;
-          },
-          // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。
-          hasReconstructedArtifact: async (c, projectId) => {
-            const rows = await artifactsService.listProjectArtifacts(c, projectId);
-            return rows.some((r) => r.origin === "reconstructed");
-          },
-          // 重建:经 ai transport 的 ai.tasks.create 起 reconstruct.project(dispatch 链后台跑;
-          //   service 从 inputData.projectId 派生幂等键去重 IN-FLIGHT 重复)。
-          enqueueReconstruct: async (c, projectId) => {
-            await ai.request(
-              ENDPOINTS.createAITask,
-              {
-                params: undefined,
-                query: undefined,
-                body: {
-                  taskType: "reconstruct.project",
-                  attemptId: createAiTaskAttemptId(),
-                  inputData: { projectId },
-                },
-              },
-              c,
-            );
-          },
-        },
-        {
-          coverLimit: resolveCoverBackfillLimit(),
-          transcribeBatchLimit: (() => {
-            const raw = Number(
-              process.env.CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT,
-            );
-            return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 5;
-          })(),
-          // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
-          onCoverProgress: (doneN, totalN) =>
-            report({
-              stage: "cover_backfill",
-              processed: doneN,
-              total: totalN,
-              message: `回填封面 ${doneN}/${totalN}`,
-            }),
-        },
-      );
-      // 6) [T-235d/T-513] 明细落库后 **best-effort** 触发正向归因回流；必须 await 到当前
-      //    scheduled task 的 snapshot/lease 内（失败仍 catch，不把采集主结果改成失败）：
-      //    对「有新指标 + 有真逐字稿 + 未归因」
-      //    的已发布作品逐条 AI 归因(枚举化,相对本账号基线分层)→ 落 topic_attributions →
-      //    next_experiments ≤3/run 进候选池(title 前缀「实验|」,card.attributionId 溯源)。
-      //    幂等锚 publication_id;未配文本模型 / 无稿 / 无指标各态诚实跳过(runner 内计数)。
-      //    本轮 enqueueTranscribe 排的新逐字稿要到下一轮 self.detail 才可归因(异步,诚实滞后)。
-      //    [gate-F1] 与 learnings 零接触:由发布实绩触发,独立表,不互相触发。
-      await runTopicAttribution(ctx, {
-        // 未配文本模型 → 整轮诚实跳过(resolveModelSpec 抛 = 未配;闭包引用,无 TDZ,同 topic.daily)。
-        isModelConfigured: async (c) => {
-          try {
-            await resolveModelSpec(c, "topic.attribution");
-            return true;
-          } catch {
-            return false;
-          }
-        },
-        // 候选作品:近期已发布 + 解析 projectId(output → project;导入作品的
-        // title 回退 content_output 真实标题,与上方 catalog 装配同款回退)。单条解析失败跳过。
-        listWorks: async (c, limit) => {
-          const recent = await publishingService.getRecentPublicationsWithTitle(
-            c,
-            { limit },
-          );
-          const works: Array<{
-            publicationId: string;
-            projectId: string | null;
-            title: string;
-          }> = [];
-          for (const p of recent) {
-            let projectId: string | null = null;
-            let title = p.title;
-            try {
-              const out = await projectsRepo.getOutput(c, p.contentOutputId);
-              projectId = out.projectId ?? null;
-              if (!title) title = out.title;
-            } catch {
-              /* output 读不到 → projectId null(runner 按无稿跳过,诚实) */
-            }
-            works.push({ publicationId: p.id, projectId, title: title ?? "" });
-          }
-          return works;
-        },
-        hasAttribution: (c, publicationId) =>
-          topicAttributionService.hasAttribution(c, publicationId),
-        // 真逐字稿:output_script contentData.transcript(与复盘 reader getScript 同一读法,T-225 管线)。
-        getTranscript: (c, projectId) =>
-          makeReviewSubjectReader().getScript(c, projectId),
-        // 该作品最新指标(最新 metric_snapshot rawMetrics;播放归一 views??plays)。无快照 → null。
-        getMetrics: async (c, publicationId) => {
-          const page = await analyticsService.getPublicationAnalytics(
-            c,
-            publicationId,
-            1,
-            10,
-          );
-          const latest = page.rows
-            .slice()
-            .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
-          if (!latest) return null;
-          const raw: Record<string, number> = {};
-          for (const [k, v] of Object.entries(
-            (latest.rawMetrics ?? {}) as Record<string, unknown>,
-          )) {
-            const n = typeof v === "number" ? v : Number(v);
-            if (Number.isFinite(n)) raw[k] = n;
-          }
-          const plays = raw.views ?? raw.plays ?? null;
-          const likes = raw.likes ?? null;
-          return { plays, likes, raw };
-        },
-        // 本账号基线 = 各发布最新快照的播放/赞均值(dashboard rollup 现成口径,latest-per-publication)。
-        getAccountBaseline: async (c) => {
-          const rollup = await analyticsService.getDashboardRollup(c);
-          if (rollup.snapshotCount === 0) return null;
-          return {
-            avgPlays:
-              rollup.plays > 0 ? rollup.plays / rollup.snapshotCount : null,
-            avgLikes:
-              rollup.likes > 0 ? rollup.likes / rollup.snapshotCount : null,
-          };
-        },
-        getPositioningBrief: async (c) => {
-          try {
-            const cc = await assembleCreativeContext(
-              c,
-              { projectId: null, topic: "" },
-              {
-                positioning: {
-                  getPositioningCenter: (c2) =>
-                    positioningService.readPositioningCenter(c2),
-                },
-              },
-            );
-            return cc.positioningBrief;
-          } catch {
-            return "";
-          }
-        },
-        attribute: scheduledFlywheel.models.attribute,
-        saveAttribution: async (c, input) => {
-          const saved = await topicAttributionService.saveAttribution(c, input);
-          return { id: saved.id };
-        },
-        // 实验候选进池:source 用现有枚举里语义最近的 demand(回流实验 = 账号自证的需求信号);
-        // card.attributionId 溯源(additive 字段,UI「实验」徽标点开看归因依据)。
-        createExperimentCandidate: async (c, input) => {
-          const cand = await candidateService.createCandidate(c, {
-            title: input.title,
-            angle: input.angle,
-            source: "demand",
-          });
-          try {
-            await candidateService.patchCandidate(c, cand.id, {
-              card: { attributionId: input.attributionId },
-            });
-          } catch (e) {
-            // 溯源 patch 失败只丢角标(候选已进池是真的),不崩进池。
-            console.error(
-              `[topic-attribution] 实验候选 ${cand.id} 归因溯源 patch 失败(候选已进池):`,
-              e,
-            );
-          }
-          return { id: cand.id };
-        },
-        // [T-284b G2 / T-284c G3-A] 可复用公式回流成 learning(复用 learnings 管线)。
-        // attribution 只在「已发布 + 有真实指标 + 有真逐字稿」作品跑,故其经验天然扎在真实发布
-        // 数据上 → evidenceStrength='grounded' → learningsService 直接落 validated 自动进生成
-        // (守宪法②第二道闸唯一放开口:只放行客观真实数据背书,不放 AI 空想)。best-effort。
-        createLearning: async (c, input) => {
-          await learningsService.createLearning(c, {
-            title: input.title,
-            insight: input.insight,
-            learningType: input.learningType,
-            evidenceStrength: input.evidenceStrength,
-          });
-        },
-        // grounded 判据阈值 N(真实指标条数下限;env 配置化,默认 1)。
-        groundingMinMetrics: (() => {
-          const n = Number(process.env.CREATOROS_LEARNING_GROUNDING_MIN_METRICS);
-          return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
-        })(),
-        // 单轮归因上限(省 token,默认 3;env 配置化)。
-        maxWorksPerRun: (() => {
-          const n = Number(process.env.CREATOROS_TOPIC_ATTRIBUTION_LIMIT);
-          return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
-        })(),
-        // 分层阈值配置化(默认 ≥3x 爆款 / ≤0.5x 低表现)。
-        tierThresholds: {
-          viralMultiple: (() => {
-            const n = Number(process.env.CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE);
-            return Number.isFinite(n) && n > 0 ? n : undefined;
-          })(),
-          lowMultiple: (() => {
-            const n = Number(process.env.CREATOROS_ATTRIBUTION_LOW_MULTIPLE);
-            return Number.isFinite(n) && n > 0 ? n : undefined;
-          })(),
-        },
-      }).catch((err) => {
-        if(err instanceof ScheduledFlywheelSuspended)throw err;
-        console.error(
-          "[topic-attribution] 归因回流触发失败(best-effort,不影响明细采集):",
-          err,
-        );
-      });
-      // itemsUpdated 承载本轮真回填的封面数(诚实;明细写入数入 itemsNew)。
-      const visibleCollectionResult = {
-        itemsNew: metricsWritten + detailWritten,
-        itemsUpdated: heavy.coversFilled,
-      };
-      recentVisibleCollections.set(collectionCacheKey, {
-        completedAtMs: Date.now(),
-        result: visibleCollectionResult,
-      });
-      return visibleCollectionResult;
-    },
+downloadDouyinImage,
+parseDouyinWorkListXlsx}),
     // [T-212a] 对标他号采集:读该号 enabled 对标源 → 逐源抓公开作品列表(fetchDouyinUserPosts:
     //   sec_uid 主页 aweme/post,只读公开统计)→ detectViral 筛爆款 → 每源 ≤10 条落 benchmark_works
     //   (拆解状态=待拆,供 T-212c)。降频(源间 sleep ≥1.5s)、单源失败跳过、限流网关已接(gateway
     //   在 fetchDouyinUserPosts 内每页 acquire)。空源 → 诚实 0 跑(非失败)。
-    benchmark: async (ctx, _target, report) => {
-      if (await intelligenceService.isLegacySignalSourceWriteFenced(ctx)) {
-        report({
-          stage: "retired",
-          processed: 0,
-          total: 0,
-          message: "旧对标采集已退役；请在内容雷达同步博主与作品。",
-        });
-        return {
-          itemsNew: 0,
-          itemsUpdated: 0,
-          message: "旧对标采集已退役；来源、作品与转选题统一由内容雷达处理。",
-        };
-      }
-      const result = await collectBenchmark(ctx, {
-        listEnabledSources: (c) => benchmarkService.listEnabledSources(c),
-        fetchSourcePosts: async (c, source) => {
+    benchmark: createBenchmarkCollector({
+benchmarkService,
+intelligenceService,
+candidateService,
+positioningService,
+now: deps.now,
+models: scheduledFlywheel.models,
+fetchSourcePosts: async (c, source) => {
           const works = await (await loadDouyinCdp()).fetchDouyinUserPosts(
             {
               signal:scheduledSignals.getStore(),
@@ -5728,32 +4204,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
             createTime: w.createTime ? String(w.createTime) : null, // unix 秒原值
           }));
         },
-        recordWork: (c, input) => {checkScheduledSignal();return benchmarkService.recordWork(c, input);},
-        now: deps.now,
-        report,
-      });
-      // [T-235b] 黑马雷达(平台内证据):对标源采集后**串行**跑关键词黑马搜索(共享 gate-F5
-      //   串行闸 + douyinGateway 限流预算)。关键词 = 定位 keywords + env
-      //   CREATOROS_DARKHORSE_KEYWORDS(逗号分隔)可配;无关键词/未登录/验证码 → 采集器内
-      //   诚实降级(0 跑/跳词),**绝不回退对标采集结果**(黑马失败只丢黑马)。
-      let darkhorseResult: { itemsNew: number; itemsUpdated: number; message?: string } = { itemsNew: 0, itemsUpdated: 0 };
-      try {
-        darkhorseResult = await collectDarkhorse(ctx, {
-          listKeywords: async (c) => {
-            const envKeywords = (process.env.CREATOROS_DARKHORSE_KEYWORDS ?? "")
-              .split(/[,，]/)
-              .map((k) => k.trim())
-              .filter((k) => k.length > 0);
-            let positioningKeywords: string[] = [];
-            try {
-              const center = await positioningService.readPositioningCenter(c);
-              positioningKeywords = center.keywords ?? [];
-            } catch {
-              positioningKeywords = []; // 定位读失败 → 只用 env(诚实降级)
-            }
-            return [...positioningKeywords, ...envKeywords];
-          },
-          searchVideos: async (c, keyword) => {
+searchVideos: async (c, keyword) => {
             const videos = await (await loadDouyinCdp()).fetchDouyinSearchVideos(
               {
                 signal:scheduledSignals.getStore(),
@@ -5777,67 +4228,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
               authorFollowerCount: v.authorFollowerCount,
             }));
           },
-          recordWork: (c, input) => {checkScheduledSignal();return benchmarkService.recordWork(c, input);},
-          now: deps.now,
-          report,
-        });
-      } catch (err) {
-        checkScheduledSignal();
-        // 黑马整体失败(极端)→ 只丢黑马,不影响对标采集结果(诚实记错)。
-        console.error("[darkhorse] 黑马雷达失败(不影响对标采集):", err);
-      }
-      // 合并计数(job_run 的 itemsNew/Updated = 对标 + 黑马;message 注明黑马实绩)。
-      const result2 = {
-        itemsNew: result.itemsNew + darkhorseResult.itemsNew,
-        itemsUpdated: result.itemsUpdated + darkhorseResult.itemsUpdated,
-        message: darkhorseResult.message,
-      };
-      // [T-212c/T-513] 采集落库后 **best-effort** 触发拆解转化；await 保证模型调用不逃出
-      // 当前 scheduled task 的 snapshot/lease（失败仍 catch，不影响采集主结果）：
-      //   读该号待拆爆款(is_viral+pending)→ AI 拆解(runStructuredNode,不抄袭换角度)→ 高适配
-      //   ≤3 条 createCandidate(source=benchmark,参考链接+爆款倍数入 angle)→ 标 teardown_status=done。
-      //   拆解走真 AI(慢),故不并进采集的 await;失败只记日志,绝不回退采集结果。
-      await runBenchmarkTeardown(ctx, {
-        listPendingViralWorks: (c, limit) =>
-          benchmarkService.listPendingViralWorks(c, limit),
-        getPositioningBrief: async (c) => {
-          try {
-            const cc = await assembleCreativeContext(
-              c,
-              { projectId: null, topic: "" },
-              {
-                positioning: {
-                  getPositioningCenter: (c2) =>
-                    positioningService.readPositioningCenter(c2),
-                },
-              },
-            );
-            return cc.positioningBrief;
-          } catch {
-            return "";
-          }
-        },
-        teardown: scheduledFlywheel.models.teardown,
-        createCandidate: async (c, input) => {
-          const cand = await candidateService.createCandidate(c, input);
-          return { id: cand.id };
-        },
-        // [T-284a] 复刻补链 G1:给刚建的 benchmark 候选补挂原爆款拆解要素(card.teardown)。绑
-        //   candidateService.patchCandidate(card partial 浅合并;pickCardFields 已放行 teardown 对象)。
-        patchCandidate: async (c, candidateId, patch) => {
-          await candidateService.patchCandidate(c, candidateId, patch);
-        },
-        markTeardownDone: (c, workId) =>
-          benchmarkService.markTeardownDone(c, workId),
-      }).catch((err) => {
-        if(err instanceof ScheduledFlywheelSuspended)throw err;
-        console.error(
-          "[benchmark] 拆解转化触发失败(best-effort,不影响采集):",
-          err,
-        );
-      });
-      return result2;
-    },
+darkhorseKeywords: process.env.CREATOROS_DARKHORSE_KEYWORDS ?? "",
+checkScheduledSignal
+}),
     // [T-235c] 旧指定收藏夹采集兼容链：只供迁移前存量任务读取；新来源统一在内容雷达登记。
     //   收藏夹列表按 name 精确匹配(回填 collectsId + lastSyncedAt)→ 逐匹配夹拉夹内视频
     //   (≤50/夹)→ favorites_items 幂等台账((user, aweme_id) 去重只插新)→ **≤3/run 限量进池**
@@ -5846,35 +4239,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     //   诚实降级:无登记夹 → 0 跑 + 引导 message(非失败);抖音上找不到同名夹 → message 点名;
     //   验证码 → fetch 函数内返空跳过。未登录 → DouyinNotLoggedInError 直接上抛(runner
     //   isNotLoggedInError → needs_reconnect,与 self.metrics/comments 同款路径)。
-    favorites: async (ctx, _target, report) => {
-      if (await intelligenceService.isLegacySignalSourceWriteFenced(ctx)) {
-        report({
-          stage: "retired",
-          processed: 0,
-          total: 0,
-          message: "旧收藏夹采集已退役；请在内容雷达使用“我的收藏”。",
-        });
-        return {
-          itemsNew: 0,
-          itemsUpdated: 0,
-          message: "旧收藏夹采集已退役；收藏作品统一由内容雷达建档。",
-        };
-      }
-      report({ stage: "favorites", processed: 0, total: null, message: "读取登记的收藏夹" });
-      const folders = await favoritesService.listEnabledFolders(ctx);
-      if (folders.length === 0) {
-        // 诚实降级(照 benchmark collector 空源 0 跑风格):没登记 = 没开这路信号,引导去登记。
-        return {
-          itemsNew: 0,
-          itemsUpdated: 0,
-          message:
-            "未指定收藏夹：请在内容雷达添加“我的收藏”来源；旧收藏夹自动化已进入迁移兼容期。",
-        };
-      }
-
-      // ① 拉本人收藏夹列表(未登录在此抛 DouyinNotLoggedInError → needs_reconnect;验证码返空)。
-      report({ stage: "favorites", processed: 0, total: folders.length, message: "拉取抖音收藏夹列表" });
-      const remoteFolders = await (await loadDouyinCdp()).fetchDouyinCollectsFolders({
+    favorites: createFavoritesCollector({
+favoritesService,
+intelligenceService,
+candidateService,
+now: deps.now,
+models: scheduledFlywheel.models,
+readFolders: async (ctx: RequestContext) => (await loadDouyinCdp()).fetchDouyinCollectsFolders({
               signal:scheduledSignals.getStore(),
         authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
         gateway: douyinGateway,
@@ -5882,176 +4253,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
           requestId: ctx.requestId,
           accountId: ctx.accountId ?? undefined,
         },
-      });
-      const remoteByName = new Map(remoteFolders.map((f) => [f.name, f]));
-
-      // ② 按 name 精确匹配登记夹;匹配到回填 collectsId + lastSyncedAt,匹配不到记 message 点名。
-      const messages: string[] = [];
-      const matched: { id: string; name: string; collectsId: string }[] = [];
-      for (const folder of folders) {
-        const remote = remoteByName.get(folder.name);
-        if (!remote) {
-          messages.push(
-            `抖音上找不到收藏夹「${folder.name}」,请在抖音建同名夹或改登记名`,
-          );
-          continue;
-        }
-        matched.push({ id: folder.id, name: folder.name, collectsId: remote.collectsId });
-        try {
-          await favoritesService.updateFolderSync(ctx, folder.id, {
-            collectsId: remote.collectsId,
-            lastSyncedAt: deps.now(),
-          });
-        } catch {
-          // 回填失败只丢诊断字段(下轮重匹配即可),不阻断该夹采集。
-          console.error(
-            "[favorites] request_failed",
-            JSON.stringify({
-              category: "folder_sync",
-              requestId: ctx.requestId,
-              traceId: null,
-              accountId: ctx.accountId,
-            }),
-          );
-        }
-      }
-
-      // ③ 逐匹配夹拉视频 → 幂等落台账(单夹失败跳过不崩整批;未登录仍上抛保持 needs_reconnect)。
-      let recordedNew = 0;
-      for (let i = 0; i < matched.length; i++) {
-        const folder = matched[i]!;
-        report({
-          stage: "favorites",
-          processed: i,
-          total: matched.length,
-          message: `采集收藏夹「${folder.name}」`,
-        });
-        try {
-          const videos = await (await loadDouyinCdp()).fetchDouyinCollectsVideos({
+      }),
+readVideos: async (ctx: RequestContext, collectsId: string) => (await loadDouyinCdp()).fetchDouyinCollectsVideos({
               signal:scheduledSignals.getStore(),
             authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), // [T-136] 按当前号登录态
-            collectsId: folder.collectsId,
+            collectsId,
             maxItems: 50,
             gateway: douyinGateway,
             diagnostics: {
               requestId: ctx.requestId,
               accountId: ctx.accountId ?? undefined,
             },
-          });
-          const { recordedNew: n } = await favoritesService.recordItems(
-            ctx,
-            folder.id,
-            videos.map((v) => ({
-              awemeId: v.awemeId,
-              // title = desc 截 80(展示/进池标题;空 desc 进池侧再兜「收藏夹视频」)。
-              title: v.description.slice(0, 80),
-              authorNickname: v.authorNickname,
-              url: `https://www.douyin.com/video/${v.awemeId}`,
-            })),
-          );
-          recordedNew += n;
-        } catch (err) {
-          if (err instanceof DouyinNotLoggedInError) throw err; // 登录态断 → needs_reconnect
-          // 单夹失败(验证码外的网络/解析)→ 跳过该夹,不崩整批(诚实记错,同 benchmark 单源纪律)。
-          console.error(
-            "[favorites] folder_ingest_failed",
-            JSON.stringify({
-              category: "service",
-              requestId: ctx.requestId,
-              traceId: null,
-              accountId: ctx.accountId,
-            }),
-          );
-          messages.push(`收藏夹「${folder.name}」本次采集失败,已跳过`);
-        }
-      }
-
-      // ④ 进池:pending 台账 FIFO → createCandidate(source=favorites)→ 标 promoted。单条失败跳过
-      //   (候选门失败不吞台账;下轮 pending 仍在)。
-      //   [T-278] 上限 3→50:收藏夹是**用户亲手挑的**,不是自动发现的信息流(benchmark/darkhorse
-      //   那种才需 ≤3/run「防灌库」)。3/run + 每天只跑一次 → 用户存 13 条要 ~5 天才全进池,实测
-      //   「采集 13 条但今日新选题只见 3 条」的根因。50 = 匹配单夹抓取上限 ≤50/夹,一轮把用户新存
-      //   的全部进池,当天即见。
-      const folderNameById = new Map(folders.map((f) => [f.id, f.name]));
-      const pending = await favoritesService.listPendingItems(
-        ctx,
-        FAVORITES_PROMOTE_PER_RUN,
-      );
-      let promoted = 0;
-      for (const item of pending) {
-        const folderName = folderNameById.get(item.folderId) ?? "收藏夹";
-        try {
-          const cand = await candidateService.createCandidate(ctx, {
-            title: item.title || "收藏夹视频",
-            angle: `收藏夹「${folderName}」跟拍参考 · @${item.authorNickname || "未知作者"} · ${item.url}`,
-            source: "favorites",
-          });
-          await favoritesService.markItemPromoted(ctx, item.id, cand.id);
-          promoted += 1;
-        } catch {
-          console.error(
-            "[favorites] request_failed",
-            JSON.stringify({
-              category: "candidate_promotion",
-              requestId: ctx.requestId,
-              traceId: null,
-              accountId: ctx.accountId,
-            }),
-          );
-        }
-      }
-
-      // ⑤ [T-235d-distill] 蒸馏链(best-effort,采集主流程绝不受影响):transcribe→判库→知识蒸馏确认门。
-      //   与④进池路径**正交**:一条收藏既是跟拍候选(④),又可判知识(⑤)——各答各的问题,不去重。
-      //   **origin 隔离**:逐字稿落 favorites_items.transcript,**永不建 imported project/artifact**
-      //   (见 favorites-distill-runner);故 transcribeOne 复用 transcribe 原语但**不**走 ensureTranscriptArtifact。
-      //   ≤3/run(runner 默认)防超载;整体 try/catch 兜底(runner 内已 best-effort 逐条,这里再保一层)。
-      let distilled = { processed: 0, knowledge: 0, topic: 0, skip: 0, failed: 0 };
-      try {
-        distilled = await runFavoritesDistill(ctx, {
-          listItemsForDistill: (c, limit) =>
-            favoritesService.listItemsForDistill(c, limit),
-          saveTranscript: (c, itemId, t) =>
-            favoritesService.saveTranscript(c, itemId, t),
-          saveVerdict: (c, itemId, v) =>
-            favoritesService.saveDistillVerdict(c, itemId, v),
-          // 同原定时任务 claim 逐作品执行 ASR，图集仍返回 null。
-          transcribeOne: scheduledFlywheel.models.transcribeOne,
-          // 判库(favorites.triage)+ 知识蒸馏(knowledge.distill)—— capability 经 model-config 解析,不写死。
-          triage: scheduledFlywheel.models.triage,
-          distillKnowledge: scheduledFlywheel.models.distillKnowledge,
-        });
-      } catch (error) {
-        if(error instanceof ScheduledFlywheelSuspended)throw error;
-        // 蒸馏链整体失败(不该发生;runner 内已逐条 best-effort)→ 记日志,采集主流程照常返回。
-        console.error(
-          "[favorites] request_failed",
-          JSON.stringify({
-            category: "distillation",
-            requestId: ctx.requestId,
-            traceId: null,
-            accountId: ctx.accountId,
           }),
-        );
-      }
-
-      const distillNote =
-        distilled.processed > 0
-          ? `,蒸馏 ${distilled.processed} 条(知识 ${distilled.knowledge}/选题 ${distilled.topic}/跳过 ${distilled.skip}/失败 ${distilled.failed})`
-          : "";
-      report({
-        stage: "favorites",
-        processed: matched.length,
-        total: matched.length,
-        message: `收藏夹采集完成:台账新增 ${recordedNew} 条,进池 ${promoted} 条${distillNote}`,
-      });
-      // itemsNew=台账真新增;itemsUpdated=本轮真进池数(诚实);message 汇总匹配失败/引导。
-      return {
-        itemsNew: recordedNew,
-        itemsUpdated: promoted,
-        message: messages.length > 0 ? messages.join(";") : undefined,
-      };
-    },
+isNotLoggedInError: error => error instanceof DouyinNotLoggedInError,
+FAVORITES_PROMOTE_PER_RUN
+}),
   };
 
   // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
@@ -6668,600 +4884,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     deps,
   );
 
-  const dashboardQuery = createDashboardQueryService({
-    projects: {
-      // GAP-DASH-1 做真:继续创作 = 用户最近活跃的非归档项目;待办 = 该项目下真实
-      // 未完成 task。数据来自 projectsService.getDashboardSummary(本模块 repo 组合,
-      // 不跨模块);facade 只补 heading + 收窄类型。
-      getDashboardSummary: async (ctx) => {
-        const s = await projectsService.getDashboardSummary(ctx);
-        const clampPriority = (p: number): 1 | 2 | 3 | 4 | 5 =>
-          Math.min(5, Math.max(1, Math.round(p))) as 1 | 2 | 3 | 4 | 5;
-        // [T-302] 派生待办:待确认渲染(exec.video.render 处 awaiting_confirmation → 采纳成片)。
-        //   读时按当前状态算——采纳/丢弃后该任务离开 awaiting_confirmation → 待办自动消失,
-        //   不依赖没人写的 stored task。派生项 completable=false(不给「完成」勾,状态驱动),
-        //   href 直达制作视频页去采纳。读失败不崩看板。
-        let derivedTodos: Array<{
-          id: string;
-          title: string;
-          projectId: string;
-          projectTitle: string;
-          stage: ProjectStageName;
-          dueAt: string | null;
-          priority: 1 | 2 | 3 | 4 | 5;
-          status: TaskStatus;
-          href: string;
-          completable: boolean;
-          origin: "system_derived";
-          reason: "video_render";
-          plannedDate: null;
-        }> = [];
-        try {
-          const { rows } = await executionService.list(ctx, {
-            limit: 30,
-            offset: 0,
-          });
-          derivedTodos = rows
-            .filter(
-              (t) =>
-                t.status === "awaiting_confirmation" &&
-                t.execType === "video.render" &&
-                typeof t.projectId === "string",
-            )
-            .slice(0, 3)
-            .map((t) => ({
-              id: t.id,
-              title: "成片待采纳",
-              projectId: t.projectId as string,
-              projectTitle: "制作视频",
-              stage: "production" as ProjectStageName,
-              dueAt: null,
-              priority: 2 as const,
-              status: "todo" as TaskStatus,
-              href: `/projects/${t.projectId}/production`,
-              completable: false,
-              origin: "system_derived" as const,
-              reason: "video_render" as const,
-              plannedDate: null,
-            }));
-        } catch {
-          // 派生待办读失败 → 只出 stored 待办(通常也空),不崩看板。
-        }
-        const storedTodos = s.todos.map((t) => ({
-          id: t.id,
-          title: t.title,
-          projectId: t.projectId,
-          projectTitle: t.projectTitle,
-          stage: t.stage as ProjectStageName,
-          dueAt: t.dueAt,
-          priority: clampPriority(t.priority),
-          status: t.status as TaskStatus,
-          href: null,
-          completable: true,
-          origin: "task" as const,
-          reason: null,
-          plannedDate: null,
-        }));
-        let scheduleReminderReadState:
-          | { state: "ready"; error: null }
-          | {
-              state: "error";
-              error: {
-                code: "schedule_reminders_unavailable";
-                message: string;
-              };
-            } = { state: "ready", error: null };
-        let todos = composeDashboardTodos({
-          today: "1970-01-01",
-          schedules: [],
-          projects: [],
-          publishedProjectIds: new Set(),
-          videoTodos: derivedTodos,
-          storedTodos,
-        });
-        const scheduleAccountId = ctx.accountId;
-        // 排期属于抖音账号维度。尚未绑定账号是正常上手状态，不应调用账号服务，更不能误报成
-        // “排期暂不可用”。只有已绑定账号后的真实读取异常才进入可重试错误态。
-        if (scheduleAccountId) {
-          try {
-            const [calendarContext, schedules, projects] = await Promise.all([
-              contentCalendarService.getCalendarRequestContext(ctx),
-              contentCalendarService.listActiveProjectSchedules(
-                ctx,
-                scheduleAccountId,
-              ),
-              projectsService.listProjectsForComposition(ctx),
-            ]);
-            const outputRefs = await projectsService.listOutputRefsByProjects(
-              ctx,
-              projects.map((project) => project.id),
-            );
-            const publications =
-              await publishingService.listPublicationsByOutputIds(
-                ctx,
-                outputRefs.map((output) => output.outputId),
-              );
-            const projectIdByOutput = new Map(
-              outputRefs.map((output) => [
-                output.outputId,
-                output.projectId,
-              ]),
-            );
-            const publishedProjectIds = new Set(
-              publications
-                .filter((publication) => publication.publishedAt !== null)
-                .map((publication) =>
-                  projectIdByOutput.get(publication.contentOutputId),
-                )
-                .filter((projectId): projectId is string => Boolean(projectId)),
-            );
-            const outputsByProject = new Map<
-              string,
-              Array<{ id: string; status: string }>
-            >();
-            for (const output of outputRefs) {
-              const rows = outputsByProject.get(output.projectId) ?? [];
-              rows.push({ id: output.outputId, status: output.status });
-              outputsByProject.set(output.projectId, rows);
-            }
-            todos = composeDashboardTodos({
-              today: calendarContext.today,
-              schedules: schedules.map((entry) => ({
-                id: entry.id,
-                projectId: entry.projectId,
-                plannedDate: entry.plannedDate,
-              })),
-              projects: projects.map((project) => ({
-                id: project.id,
-                title: project.title,
-                status: project.status,
-                source: project.source,
-                currentStage: project.currentStage as ProjectStageName,
-                updatedAt: project.updatedAt,
-                outputs: outputsByProject.get(project.id) ?? [],
-              })),
-              publishedProjectIds,
-              videoTodos: derivedTodos,
-              storedTodos,
-            });
-          } catch (error) {
-            console.error("[dashboard.schedule-reminders] 读取排期失败", {
-              requestId: ctx.requestId,
-              errorName: error instanceof Error ? error.name : "UnknownError",
-              errorCode:
-                error && typeof error === "object" && "code" in error
-                  ? String(error.code)
-                  : "unknown",
-            });
-            scheduleReminderReadState = {
-              state: "error",
-              error: {
-                code: "schedule_reminders_unavailable",
-                message: "排期提醒暂不可用，请重试",
-              },
-            };
-          }
-        }
-        return {
-          continueCreating: s.continueCreating
-            ? {
-                heading: "继续创作",
-                projectId: s.continueCreating.projectId,
-                projectTitle: s.continueCreating.projectTitle,
-                stage: s.continueCreating.stage as ProjectStageName,
-                progressPct: s.continueCreating.progressPct,
-                updatedAt: s.continueCreating.updatedAt,
-              }
-            : null,
-          todos,
-          scheduleReminderReadState,
-        };
-      },
-    },
-    publishing: {
-      getRecentPublications: async (ctx) => {
-        // GAP-DASH-3 做真:真标题(来自 revision,publishing 模块内解析)+ 真播放/
-        // 互动(facade 层 join analytics 最新快照 rawMetrics,跨模块组合只在此层)。
-        // 数据底座(SPEC §1.4):有 imported 真项目 → 只取真实导入作品的发布(演示 fixture
-        //   发布让位,治 dy-pub-00 假标题/0 播放);无 imported → 全量(过渡期演示态)。
-        //   先多取一些再按 imported 集过滤,保证过滤后仍能凑满前 5 条真发布。
-        const hasImported = await projectsService.hasImportedProjects(ctx);
-        const importedPubIds = hasImported
-          ? new Set(await resolveImportedPublicationIds(ctx))
-          : null;
-        const fetched = await publishingService.getRecentPublicationsWithTitle(
-          ctx,
-          { limit: importedPubIds ? 100 : 5 },
-        );
-        const rows = (
-          importedPubIds
-            ? fetched.filter((r) => importedPubIds.has(r.id))
-            : fetched
-        ).slice(0, 5);
-        const numOf = (raw: Record<string, unknown>, key: string): number => {
-          const v = raw[key];
-          return typeof v === "number" && Number.isFinite(v) ? v : 0;
-        };
-        return Promise.all(
-          rows.map(async (r) => {
-            let views = 0;
-            let engagement = 0;
-            try {
-              const page = await analyticsService.getPublicationAnalytics(
-                ctx,
-                r.id,
-                1,
-                10,
-              );
-              const latest = page.rows
-                .slice()
-                .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
-              const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
-              // 数据底座(SPEC §1.4):播放量键名归一 —— 真采集(douyin ingestion)写
-              //   `views`,演示 fixture 写 `plays`;优先真 `views`,缺失回退 `plays`(二者
-              //   不并存)。否则真实导入作品的播放恒为 0(原只读 `plays`)。
-              views = numOf(raw, "views") || numOf(raw, "plays");
-              engagement =
-                numOf(raw, "likes") +
-                numOf(raw, "comments") +
-                numOf(raw, "shares");
-            } catch {
-              // A single publication's analytics read failing degrades to 0 —
-              // never crashes the whole dashboard composition.
-            }
-            // 数据底座(SPEC §1.4):imported publication 不带 revision(标题挂在
-            //   content_output / project),故 revision 解析的 r.title 为空 → 回退到
-            //   作品(content_output)的真实标题(治"未命名发布",出真实导入标题)。
-            let title = r.title;
-            if (!title) {
-              try {
-                const out = await projectsRepo.getOutput(ctx, r.contentOutputId);
-                title = out.title;
-              } catch {
-                // 输出读失败(防御)→ 保持空,落到下方"未命名发布"兜底。
-              }
-            }
-            return {
-              id: r.id,
-              title: title || "未命名发布",
-              platform: r.platform as "youtube",
-              status: r.status as "published",
-              views,
-              engagement,
-              publishedAt: r.publishedAt ?? r.createdAt,
-            };
-          }),
-        );
-      },
-    },
-    analytics: {
-      // GAP-DASH-2 做真:5 张指标卡(总播放/总点赞/新增粉丝/平均完播/总分享)+ 本周
-      // 播放趋势,全来自 analyticsService.getDashboardRollup(本模块 user-scoped 聚合,
-      // 每 publication 取最新快照)。无快照 → 空集(composer 判 empty),不造假。
-      getDashboardMetrics: async (ctx) => {
-        // 数据底座(SPEC §1.4):有 imported 真项目 → 指标卡/趋势只汇总真实导入作品的
-        //   快照(演示 fixture 让位);无 imported → 全量 user-scoped(过渡期演示态)。
-        const hasImported = await projectsService.hasImportedProjects(ctx);
-        const r = hasImported
-          ? await analyticsService.getDashboardRollup(ctx, {
-              publicationIds: await resolveImportedPublicationIds(ctx),
-            })
-          : await analyticsService.getDashboardRollup(ctx);
-        if (r.snapshotCount === 0) return { metrics: [], trend: [] };
-        const fmt = (v: number) =>
-          v >= 10000
-            ? `${(v / 10000).toFixed(1)} 万`
-            : v.toLocaleString("zh-CN");
-        const card = (
-          id: string,
-          label: string,
-          value: string,
-        ): MetricCard => ({
-          id,
-          label,
-          value,
-          delta: "",
-          trend: "flat",
-          tone: "positive",
-        });
-        // [T-071] 总粉丝(用户裁决:算不了增量就算总数)—— platform_accounts 基线求和,
-        // 读失败诚实「—」。[Bug-2 T-015] 用户没手动设基线(baseline=0)时,**回退到 rollup
-        // 的 followerGain**(采集期内粉丝增长,真值),label 跟着切到「新增粉丝(期内)」——不
-        // 假装那是「总粉丝」。两者都没 → 「—」诚实空。
-        let followerTotal: { label: string; value: string } = {
-          label: "总粉丝",
-          value: "—",
-        };
-        try {
-          const { rows: accounts } = await platformAccountService.listAccounts(
-            ctx,
-            { limit: 100, offset: 0 },
-          );
-          // [T-074 用户裁决] 总粉丝只统计抖音(B站 8400 系 seed 幻觉数据已清,
-          // 用户:「不要统计B站」);未来接别的平台前不并入总数。
-          // [T-358] 账号隔离:只取**当前选中号**的基线——T-071 单号时代的「全号求和」在多号下
-          // 变成跨号加总(真机实锤:两号 1103+2570=3673 同值串号,ISO-08 反例)。dashboard 其余
-          // 指标走 per-account rollup 本就隔离,粉丝这条此前漏改。
-          const baselineSum = accounts
-            .filter(
-              (a) =>
-                a.status === "active" &&
-                a.platform === "douyin" &&
-                a.id === ctx.accountId,
-            )
-            .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
-          if (baselineSum > 0) {
-            followerTotal = { label: "总粉丝", value: fmt(baselineSum) };
-          } else if (r.followerGain > 0) {
-            // [Bug-2 T-015] 真值兜底:期内采集到的新增粉丝总和(label 显式标「期内」,别假装总数)。
-            followerTotal = {
-              label: "新增粉丝(期内)",
-              value: fmt(r.followerGain),
-            };
-          }
-        } catch {
-          /* 显「—」 */
-        }
-        const metrics: MetricCard[] = [
-          card("d-views", "总播放量", fmt(r.plays)),
-          card("d-likes", "总点赞", fmt(r.likes)),
-          // [Bug-2 T-015] label 随数据源动态切(基线 vs 期内增长 vs 诚实空)。
-          card("d-followers", followerTotal.label, followerTotal.value),
-          // [T-071] 完播率只在有明细快照(finish_rate 字段,拉明细采集产)时显真均值;
-          // 没有 → 「—」,绝不显假 0.0%。
-          {
-            ...card(
-              "d-finish",
-              "平均完播率",
-              r.finishCount > 0 ? `${r.finishAvg.toFixed(1)}%` : "—",
-            ),
-            tone: "info",
-          },
-          card("d-shares", "总分享", fmt(r.shares)),
-        ];
-        // [T-071] 本周趋势改真逐日:快照按日聚合差分(替换旧「总量按固定形状分摊」的
-        // 假曲线)。有效点 < 2 天 → 空 trend(composer 显引导),不编形状。
-        const daily = hasImported
-          ? await analyticsService.getDailyPlayTrend(ctx, {
-              publicationIds: await resolveImportedPublicationIds(ctx),
-              days: 7,
-            })
-          : await analyticsService.getDailyPlayTrend(ctx, { days: 7 });
-        const trend =
-          daily.length >= 2
-            ? daily.map((d) => ({
-                label: d.day.slice(5).replace("-", "/"),
-                value: d.plays,
-              }))
-            : [];
-        return { metrics, trend };
-      },
-    },
-    learnings: {
-      getSuggestions: async (ctx) => {
-        const rows = await learningsService.getSuggestions(ctx, { limit: 3 });
-        return rows.map((r) => ({
-          id: r.id,
-          title: r.title,
-          description: r.recommendation ?? r.insight ?? "",
-          category: r.learningType ?? "建议",
-        }));
-      },
-    },
-    notifications: {
-      getUnreadCount: (ctx) => notificationsServiceForQuery.getUnreadCount(ctx),
-    },
-    knowledge: {
-      // GAP-DASH-4 做真:热门选题 = 用户选题池(candidate)按预测分排序的前几条。
-      // [T-049 B8] heat 直接用 predictedScore —— rubric 全链就是 0–100 分,旧代码误当
-      // 0–1 再 ×100 → UI 显「热度 8800」;无分候选诚实置 0(不再编 50-i*5 假数)。
-      // 读失败降级为空集,不崩面板。
-      getTrendingTopics: async (ctx) => {
-        try {
-          const { rows } = await candidateService.listCandidates(ctx, {
-            status: "pool",
-            sort: "predictedScore",
-            limit: 5,
-            offset: 0,
-          });
-          return rows.map((c) => ({
-            id: c.id,
-            title: c.title,
-            // [T-303] 热度优先预测分(每日出题落库);为空/0 时兜底 positioningFit(每候选都有的
-            //   0–100 契合分)→ 存量/手动候选也有真热度,不再死列恒 0。都无 → 0(诚实)。
-            heat:
-              typeof c.predictedScore === "number" && c.predictedScore > 0
-                ? Math.round(c.predictedScore)
-                : typeof c.positioningFit === "number" && c.positioningFit > 0
-                  ? Math.round(c.positioningFit)
-                  : 0,
-            trend: "up" as const,
-          }));
-        } catch {
-          return [];
-        }
-      },
-    },
-  });
+  const dashboardQuery = createDashboardApplication({projectsService,publishingService,analyticsService,learningsService,executionService,candidateService,platformAccountService,contentCalendarService,notificationsServiceForQuery,resolveImportedPublicationIds});
 
-  const overviewActivity = (
-    row: { id: string; eventType: string; occurredAt: string },
-  ): ProjectOverviewPage["activities"][number] => {
-    const labels: Record<string, string> = {
-      project_created: "项目已创建",
-      project_archived: "项目已归档",
-      stage_transition: "项目阶段已更新",
-      stage_gate_blocked: "阶段交付物待补齐",
-      output_created: "已创建内容产出",
-      output_updated: "内容产出已更新",
-      task_created: "已创建项目任务",
-      artifact_updated: "脚本或内容产物已更新",
-      evidence_linked: "项目已关联新资料",
-    };
-    return {
-      id: row.id,
-      title: labels[row.eventType] ?? "项目状态变化",
-      eventType: row.eventType,
-      occurredAt: row.occurredAt,
-      tone: row.eventType === "stage_gate_blocked" ? "warning" : "info",
-    };
-  };
-  const overviewMetric = (
-    id: string,
-    label: string,
-    value: number,
-  ): ProjectOverviewPage["assetStats"][number] => ({
-    id,
-    label,
-    value: String(value),
-    delta: "",
-    trend: "flat",
-    tone: "neutral",
-  });
-  const artifactFileKind = (
-    artifactType: string,
-  ): ProjectOverviewPage["recentFiles"][number]["fileKind"] =>
-    artifactType === "output_script" || artifactType === "master_script"
-      ? "script"
-      : artifactType === "shot_list" || artifactType === "timeline"
-        ? "shot"
-        : "document";
-  const assetFileKind = (
-    assetType: string,
-  ): ProjectOverviewPage["recentFiles"][number]["fileKind"] =>
-    assetType === "video" || assetType === "image"
-      ? "shot"
-      : assetType === "document" || assetType === "subtitle"
-        ? "document"
-        : "data";
-
-  const overviewQuery = createProjectOverviewQueryService({
-    projects: {
-      getProjectOverview: async (ctx, projectId) => {
-        const { project, stages, outputs, activities } =
-          await projectsService.getProjectOverviewCore(ctx, projectId);
-        return {
-          projectId: project.id,
-          projectTitle: project.title,
-          stage: project.currentStage as ProjectStageName,
-          progressPct: project.progressPct,
-          stages: stages.map((row) => ({
-            stage: row.stage as ProjectStageName,
-            // `blocked` is an internal transition state and is never serialized.
-            status: (row.status === "blocked" ? "needs_review" : row.status) as
-              ProjectOverviewPage["stages"][number]["status"],
-            progressPct: row.progressPct,
-          })),
-          outputs: outputs.map((row) => ({
-            id: row.id,
-            title: row.title,
-            contentType:
-              row.contentType as ProjectOverviewPage["outputs"][number]["contentType"],
-            status:
-              row.status as ProjectOverviewPage["outputs"][number]["status"],
-          })),
-          activities: activities
-            .slice()
-            .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
-            .map(overviewActivity),
-          projectInfo: [
-            { label: "内容分类", value: project.contentCategory || "—" },
-            { label: "创建模式", value: project.creationMode || "—" },
-            { label: "项目状态", value: project.status || "—" },
-            { label: "开始时间", value: project.startedAt },
-            { label: "目标完成", value: project.targetCompletedAt ?? "—" },
-          ],
-          milestones: [],
-        };
-      },
-    },
-    assets: {
-      getProjectAssetStats: async (ctx, projectId) => {
-        // Repeat the project ownership gate because this facade runs concurrently
-        // with the core facade; no project-scoped child read may become an oracle.
-        await projectsService.listOutputIdsByProject(ctx, projectId);
-        const [{ rows: links }, artifacts] = await Promise.all([
-          materialLinksService.list(ctx, { projectId, page: 1, pageSize: 500 }),
-          artifactsService.listProjectArtifacts(ctx, projectId),
-        ]);
-        const assetLinks = links.filter((row) => row.entityType === "asset");
-        const knowledgeCount = links.filter(
-          (row) => row.entityType === "knowledge",
-        ).length;
-        const uniqueAssetIds = [...new Set(assetLinks.map((row) => row.entityId))];
-        const linkedAssets = (
-          await Promise.all(
-            uniqueAssetIds.map(async (assetId) => {
-              try {
-                return await assetsService.getAsset(ctx, assetId);
-              } catch (err) {
-                // Legacy dangling soft links are omitted honestly; new writes are
-                // prevented by the MaterialLinks ownership validators.
-                if (
-                  err instanceof OwnershipError ||
-                  (typeof err === "object" &&
-                    err !== null &&
-                    "code" in err &&
-                    String(err.code).includes("Ownership"))
-                ) {
-                  return null;
-                }
-                throw err;
-              }
-            }),
-          )
-        ).filter((row): row is NonNullable<typeof row> => row !== null);
-
-        const recentFiles: ProjectOverviewPage["recentFiles"] = [
-          ...artifacts.map((row) => ({
-            id: row.id,
-            name: row.title,
-            type: row.artifactType,
-            fileKind: artifactFileKind(row.artifactType),
-            updatedAt: row.updatedAt,
-          })),
-          ...linkedAssets.map((row) => ({
-            id: row.id,
-            name: row.name,
-            type: row.assetType,
-            fileKind: assetFileKind(row.assetType),
-            updatedAt: row.updatedAt,
-          })),
-        ]
-          .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-          .slice(0, 12);
-
-        return {
-          assetStats: [
-            overviewMetric("stat-assets", "关联素材", assetLinks.length),
-            overviewMetric("stat-knowledge", "关联知识", knowledgeCount),
-            overviewMetric("stat-artifacts", "内容产物", artifacts.length),
-          ],
-          recentFiles,
-        };
-      },
-    },
-    publishing: {
-      getProjectPublishing: async (ctx, projectId) => {
-        const outputIds = await projectsService.listOutputIdsByProject(
-          ctx,
-          projectId,
-        );
-        const rows = await publishingService.listPublicationsByOutputIds(
-          ctx,
-          outputIds,
-        );
-        return rows.map((row) => ({
-          id: row.id,
-          platform:
-            row.platform as ProjectOverviewPage["publishing"][number]["platform"],
-          status:
-            row.status as ProjectOverviewPage["publishing"][number]["status"],
-          publishedAt: row.publishedAt ?? null,
-        }));
-      },
-    },
-  });
+  const overviewQuery = createProjectOverviewApplication({projectsService,publishingService,assetsService,artifactsService,materialLinksService});
 
   const searchQuery = createGlobalSearchQueryService({
     search: {
@@ -8092,7 +5717,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       project:(input,object)=>projectPlanningOutlineCandidate(input,object as Parameters<typeof projectPlanningOutlineCandidate>[1]),
     },
   }});
-  const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{return null;}})();
+  const workerEntry=(()=>{try{return resolveExecutionWorkerPath();}catch{console.error("EXECUTION_WORKER_BUILD_MISSING");return null;}})();
   const resolveWorkerCredential=async(c:RequestContext,capability:string,owner:{aiTaskId:string;executionTaskId:string})=>{
       const runtime=await aiService.getTaskRuntimeData(c,owner.aiTaskId);
       const authority=pinModelAuthority(await readChannelModelAuthority());
@@ -8299,7 +5924,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
     async validateInputs(c,inputs){for(const input of inputs)await assetsService.getAsset(c,input.assetId);},
   });
-  const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{return null;}})();
+  const agenticEntry=(()=>{try{return resolveAgenticWorkerPath();}catch{console.error("AGENTIC_WORKER_BUILD_MISSING");return null;}})();
   const agenticWorker=agenticEntry ? createAgenticWorkerDispatcher(db,{
     entryPath:agenticEntry,workerId:`agentic-worker-${process.pid}`,budget:agenticBudget,modelConcurrency:1,
     tools:{...materialWorkerTools.tools,...researchWorkerTools.tools,...collectionWorkerTools.tools},browserSessions:browserSessionsService,resolveModelCredential:resolveWorkerCredential,
@@ -8897,7 +6522,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const chatRuntime: ChatRuntime = {
-    get durable(){if(!chatWorker)throw new Error("聊天执行服务未就绪，请更新应用后重试");return chatWorker;},
+    get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
     ai: aiService,
     resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
       if (!resolveEffectiveSkillSnapshotForRuntime) {
@@ -9131,1297 +6756,11 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     // 现成读端口,不新造 repo 方法)。诚实说明:knowledge 的 query 仍是内存 contains 过滤；materials 已走领域分页检索
     // (list 本身不带全文检索);projects 无真实 publishedAt(那在 publication 上)→ 不塞、留空。
     contextReaders: {
-      // context.projects —— 复用 projectsRepo.list(user-scoped: WHERE user_id = ctx.userId)。
-      // [T-058②] 分页 + 总数仍走通用 listRecentProjects；定位生成另走上方
-      // positioningWorks，避免隐藏作品混入画像又不误伤项目检索。
-      listProjects: listRecentProjects,
-      searchProjects: async (c, opts) =>
-        searchProjectsWithPublicationFacts(c, opts, {
-          listProjects: (ctx) => projectsRepo.list(ctx),
-          listOutputRefsByProjects: (ctx, projectIds) =>
-            projectsService.listOutputRefsByProjects(ctx, projectIds),
-          listPublicationsByOutputIds: (ctx, outputIds) =>
-            publishingService.listPublicationsByOutputIds(ctx, outputIds),
-        }),
-      // [T-077b] brief.fill 的现状读 —— 复用 projectsRepo.get(user-scoped)取当前项目的
-      // brief_detail jsonb 原样返回(契约 projectBriefDetail 形状)。读不到(项目不存在/越权)
-      // → null(工具结果 current=null,前端卡现值显「未填」),绝不抛崩对话流。
-      getProjectBrief: async (
-        c: RequestContext,
-        opts: { projectId: string },
-      ) => {
-        try {
-          const row = await projectsRepo.get(c, opts.projectId);
-          return (row.briefDetail ?? null) as {
-            targetAudience?: string;
-            contentGoal?: string;
-            contentFormat?: string;
-            orientation?: "landscape" | "portrait";
-            targetPlatforms?: string[];
-            durationEstimate?: string;
-            coreMessage?: string;
-            successCriteria?: string;
-          } | null;
-        } catch {
-          return null;
-        }
-      },
-      // [T-058③] 观众评论只读(audience_signals source='comment',最新在前,带 total)。
-      listComments: async (
-        c: RequestContext,
-        opts: { limit: number; offset: number },
-      ) => {
-        const { rows, total } = await candidateService.listSignals(c, {
-          source: "comment",
-          limit: opts.limit,
-          offset: opts.offset,
-        });
-        return {
-          total,
-          rows: rows.map((r) => ({
-            text: r.rawText,
-            likeCount: r.likeCount ?? null,
-            source: r.source,
-            createdAt: r.createdAt,
-          })),
-        };
-      },
-      // context.knowledge —— 复用 knowledgeService.listKnowledge(user-scoped: repo.list(ctx.userId))。
-      // query 空 → 回最近若干条;非空 → **分词 OR 模糊匹配**(T-039a 放宽:原来是「整串 title.includes」
-      // 精确子串,复盘拿主题/标题搜时命中率极低 → 用户反馈「匹配太死」)。用 knowledgeRelevanceScore 对
-      // 标题+摘要计相关度(命中的 query 词数),命中(>0)才留,按相关度降序 + 原序稳定排。**诚实**:
-      // 全不命中就空(不塞无关资料),不是全返回。snippet:item row 不含正文 → 用摘要/描述元数据兜一句,
-      // 真拿不到给空串(不编内容)。
-      searchKnowledge: async (
-        c: RequestContext,
-        opts: { query: string; limit: number },
-      ) => {
-        const rows = await knowledgeService.listKnowledge(c);
-        const snippetOf = (k: (typeof rows)[number]): string => {
-          const meta = (k.sourceMetadata ?? {}) as {
-            summary?: unknown;
-            description?: unknown;
-          };
-          return typeof meta.summary === "string"
-            ? meta.summary
-            : typeof meta.description === "string"
-              ? meta.description
-              : "";
-        };
-        const q = opts.query.trim();
-        if (!q) {
-          return rows.slice(0, opts.limit).map((k) => ({
-            id: k.id,
-            title: k.title,
-            snippet: snippetOf(k),
-          }));
-        }
-        // 标题 + 摘要一起当 haystack 做模糊匹配(放宽命中面,但仍以真实内容为准)。
-        const scored = rows
-          .map((k, idx) => ({
-            k,
-            idx,
-            score: knowledgeRelevanceScore(`${k.title}\n${snippetOf(k)}`, q),
-          }))
-          .filter((r) => r.score > 0)
-          // 相关度降序;同分保持原顺序(listKnowledge 的近→远)稳定。
-          .sort((a, b) => b.score - a.score || a.idx - b.idx);
-        return scored.slice(0, opts.limit).map(({ k }) => ({
-          id: k.id,
-          title: k.title,
-          snippet: snippetOf(k),
-        }));
-      },
-      // context.materials 与自主素材工具复用领域字面搜索；先全库过滤再按调用方limit返回。
-      searchMaterials: async (
-        c: RequestContext,
-        opts: { query: string; limit: number },
-      ) => {
-        const result=await assetsService.searchAssets(c,{query:opts.query,limit:Math.max(1,Math.min(100,opts.limit))});
-        return result.rows.map(a=>({id:a.id,title:a.name,kind:a.assetType}));
-      },
-      // 参考封面自动选择必须建立在“全库图片精确只有 1 张”上，不能把首 100 条误当全库。
-      // assets service 是内部端口，repo 本身已取完账号内 active 行再 slice，因此用无限上限
-      // 一次得到完整集合；仅回传少量候选供澄清，但 total 是精确图片总数。
-      listCoverReferenceImages: async (c: RequestContext) => {
-        const all = await assetsService.listAssets(c, {
-          limit: Number.MAX_SAFE_INTEGER,
-          cursor: null,
-        });
-        const images = all.filter((asset) => asset.assetType === "image");
-        return {
-          rows: images.slice(0, 20).map((asset) => ({
-            id: asset.id,
-            title: asset.name,
-            kind: asset.assetType,
-          })),
-          total: images.length,
-        };
-      },
-      // [T-099b] context.project.detail —— 某项目全档。复用既有公开读源(不新造 repo 方法):
-      //   · 项目行(标题/阶段/状态/brief)→ projectsRepo.get(user-scoped,顺带 ownership 门)
-      //   · 产物索引(type/版本数/updatedAt/字数)→ artifactsService.listProjectArtifacts +
-      //     listVersions + 当前版本 contentText 长度(transcript 回退,与 getScript 同口径)
-      //   · 发布状态 → listOutputIdsByProject → publishingService.listPublications(取首个已发布)
-      //   · 最新指标摘要 → makeReviewSubjectReader().getMetricsSummary(同口径,不新造)
-      // 读不到(不存在/越权)→ null(projectsRepo.get 抛 → catch 成 null,诚实降级不崩)。
-      getProjectDetail: async (c: RequestContext, opts: { projectId: string }) => {
-        try {
-          const project = await projectsRepo.get(c, opts.projectId);
-          const brief = (project.briefDetail ?? {}) as Record<string, unknown>;
-          const s = (v: unknown): string | undefined =>
-            typeof v === "string" && v.trim() ? v.trim() : undefined;
-          const platforms = Array.isArray(brief.targetPlatforms)
-            ? brief.targetPlatforms.filter((p): p is string => typeof p === "string")
-            : undefined;
-          // 产物索引 —— 每类产物的版本数 + updatedAt + 当前版本字数(全文走 context.artifact.text)。
-          const artifactRows = await artifactsService.listProjectArtifacts(
-            c,
-            opts.projectId,
-          );
-          const repo = createArtifactRepository(db, {
-            ...deps,
-            userId: c.userId,
-            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-          });
-          const persistedArtifacts = await Promise.all(
-            artifactRows.map(async (a) => {
-              let versionCount = 0;
-              let charCount = 0;
-              try {
-                const versions = await artifactsService.listVersions(c, a.id);
-                versionCount = versions.length;
-              } catch {
-                versionCount = 0;
-              }
-              if (a.currentVersionId) {
-                try {
-                  const version = await repo.getVersion(a.currentVersionId);
-                  const data = version.contentData as
-                    | Record<string, unknown>
-                    | null
-                    | undefined;
-                  const text =
-                    version.contentText && version.contentText.trim()
-                      ? version.contentText
-                      : data && typeof data.transcript === "string"
-                        ? data.transcript
-                        : "";
-                  charCount = text.length;
-                } catch {
-                  charCount = 0;
-                }
-              }
-              return {
-                artifactType: a.artifactType,
-                versionCount,
-                updatedAt: a.updatedAt ?? null,
-                charCount,
-              };
-            }),
-          );
-          const radarDraftSeed = contentRadarDraftSeedOf(project.briefDetail);
-          const hasPersistedOutputScript = persistedArtifacts.some(
-            (artifact) =>
-              artifact.artifactType === "output_script" &&
-              artifact.versionCount > 0,
-          );
-          const artifacts =
-            radarDraftSeed && !hasPersistedOutputScript
-              ? [
-                  ...persistedArtifacts.filter(
-                    (artifact) => artifact.artifactType !== "output_script",
-                  ),
-                  {
-                    artifactType: "output_script",
-                    versionCount: 0,
-                    updatedAt: project.updatedAt ?? null,
-                    charCount: radarDraftSeed.length,
-                  },
-                ]
-              : persistedArtifacts;
-          // 发布状态 —— 项目 outputs → publications;取首个已发布(publishedAt 非空)作代表。
-          let publish = {
-            published: false,
-            platform: null as string | null,
-            publishedAt: null as string | null,
-          };
-          try {
-            const outputIds = await projectsService.listOutputIdsByProject(
-              c,
-              opts.projectId,
-            );
-            outer: for (const outputId of outputIds) {
-              const pubs = await publishingService.listPublications(c, outputId, {
-                limit: 20,
-                offset: 0,
-              });
-              for (const pub of pubs) {
-                if (pub.publishedAt) {
-                  publish = {
-                    published: true,
-                    platform: pub.platform,
-                    publishedAt: pub.publishedAt,
-                  };
-                  break outer;
-                }
-              }
-            }
-          } catch {
-            /* 发布状态 best-effort,读失败按未发布(诚实,不编) */
-          }
-          // 最新指标摘要 —— 复用 ReviewSubjectReader 口径(views/plays 归一,人类可读串)。
-          let metricsSummary = "";
-          try {
-            metricsSummary = await makeReviewSubjectReader().getMetricsSummary(
-              c,
-              opts.projectId,
-            );
-          } catch {
-            metricsSummary = "";
-          }
-          return {
-            id: project.id,
-            title: project.title,
-            stage: project.currentStage,
-            status: project.status,
-            publish,
-            brief: {
-              targetAudience: s(brief.targetAudience),
-              contentGoal: s(brief.contentGoal),
-              contentFormat: s(brief.contentFormat),
-              targetPlatforms: platforms,
-              durationEstimate: s(brief.durationEstimate),
-              coreMessage: s(brief.coreMessage),
-              successCriteria: s(brief.successCriteria),
-            },
-            artifacts,
-            metricsSummary,
-          };
-        } catch {
-          return null;
-        }
-      },
-      // [T-691] 项目生命周期索引：一次给编导稳定 id 与各模块真实状态。项目本身失败才整体失败；
-      // 产物/素材/发布/指标/审核各自隔离，失败显式进入 errors，绝不把异常伪装成“用户没做”。
-      getProjectLifecycle: async (
-        c: RequestContext,
-        opts: { projectId: string },
-      ) => {
-        let project: Awaited<ReturnType<typeof projectsRepo.get>>;
-        try {
-          project = await projectsRepo.get(c, opts.projectId);
-        } catch (error) {
-          if (
-            error instanceof OwnershipError ||
-            (error instanceof Error && /not found/i.test(error.message))
-          ) {
-            return null;
-          }
-          throw error;
-        }
-
-        const traceId = `lifecycle-${createHash("sha256")
-          .update(`${c.userId}:${opts.projectId}:${Date.now()}`)
-          .digest("hex")
-          .slice(0, 12)}`;
-        const errors: Array<{ section: string; code: string }> = [];
-        const availability = (
-          value: unknown[] | null | undefined,
-        ): "available" | "empty" =>
-          Array.isArray(value) && value.length > 0 ? "available" : "empty";
-        const errorCode = (section: string, error: unknown): void => {
-          const name = error instanceof Error ? error.name : "UnknownError";
-          errors.push({ section, code: `${section.toUpperCase()}_${name}` });
-        };
-        const artifactRepo = createArtifactRepository(db, {
-          ...deps,
-          userId: c.userId,
-          accountId: requireAccountId(c.accountId, "artifacts.repo"),
-        });
-
-        const artifactsPromise = (async () => {
-          const rows = await artifactsService.listProjectArtifacts(c, project.id);
-          return Promise.all(
-            rows.map(async (artifact) => {
-              const versions = await artifactsService.listVersions(c, artifact.id);
-              const current = artifact.currentVersionId
-                ? await artifactRepo.getVersion(artifact.currentVersionId)
-                : null;
-              return {
-                artifactId: artifact.id,
-                artifactType: artifact.artifactType,
-                currentVersionId: artifact.currentVersionId ?? null,
-                versionNumber: current?.versionNumber ?? null,
-                charCount: current
-                  ? extractArtifactText(current.contentText, current.contentData).length
-                  : 0,
-                updatedAt: artifact.updatedAt ?? versions[0]?.createdAt ?? null,
-              };
-            }),
-          );
-        })();
-
-        const materialsPromise = (async () => {
-          const { rows } = await materialLinksService.list(c, {
-            projectId: project.id,
-            page: 1,
-            pageSize: 200,
-          });
-          return Promise.all(
-            rows
-              .filter((link) => link.entityType === "asset")
-              .map(async (link) => {
-                const asset = await assetsService.getAsset(c, link.entityId);
-                return {
-                  linkId: link.id,
-                  assetId: asset.id,
-                  title: asset.name,
-                  kind: asset.assetType,
-                  role: link.role,
-                  priority: link.priority,
-                };
-              }),
-          );
-        })();
-
-        const publicationsPromise = (async () => {
-          const outputIds = await projectsService.listOutputIdsByProject(
-            c,
-            project.id,
-          );
-          const rows = (
-            await Promise.all(
-              outputIds.map((outputId) =>
-                publishingService.listPublications(c, outputId, {
-                  limit: 100,
-                  offset: 0,
-                }),
-              ),
-            )
-          ).flat();
-          return rows
-            .map((publication) => ({
-              id: publication.id,
-              platform: publication.platform,
-              url: publication.externalUrl ?? null,
-              publishedAt: publication.publishedAt ?? null,
-              projectTitle: project.title,
-              // listPublications 的窄读不投影封面；封面真值从项目素材 role=cover 解析。
-              coverAssetId: null,
-              status: publication.status,
-            }))
-            .sort((a, b) =>
-              (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
-            );
-        })();
-
-        const reviewPromise = (async () => {
-          try {
-            const report = await reviewGateService.getLatestReport(c, project.id);
-            if (isLegacyIncompleteReview(report)) return null;
-            return {
-              reportId: report.id,
-              verdict: report.verdict,
-              artifactId: report.artifactId,
-              artifactVersion: report.artifactVersion,
-              findingCount:
-                report.lintFindings.length + report.llmFindings.length,
-              reviewedAt: report.reviewedAt,
-            };
-          } catch (error) {
-            if (error instanceof Error && error.name === "ReportNotFoundError") {
-              return null;
-            }
-            throw error;
-          }
-        })();
-
-        const [artifactsResult, materialsResult, publicationsResult, reviewResult] =
-          await Promise.allSettled([
-            artifactsPromise,
-            materialsPromise,
-            publicationsPromise,
-            reviewPromise,
-          ]);
-        if (artifactsResult.status === "rejected")
-          errorCode("artifacts", artifactsResult.reason);
-        if (materialsResult.status === "rejected")
-          errorCode("materials", materialsResult.reason);
-        if (publicationsResult.status === "rejected")
-          errorCode("publications", publicationsResult.reason);
-        if (reviewResult.status === "rejected")
-          errorCode("review", reviewResult.reason);
-
-        const artifacts =
-          artifactsResult.status === "fulfilled" ? artifactsResult.value : [];
-        const materials =
-          materialsResult.status === "fulfilled" ? materialsResult.value : [];
-        const publications =
-          publicationsResult.status === "fulfilled"
-            ? publicationsResult.value
-            : [];
-        const review =
-          reviewResult.status === "fulfilled" ? reviewResult.value : null;
-
-        const metrics: {
-          subject: string | null;
-          rows: Array<{
-            projectId?: string;
-            title: string;
-            plays: number | null;
-            likes: number | null;
-            comments: number | null;
-            shares: number | null;
-          }>;
-          retention: Array<{ atSeconds: number; retentionRate: number }>;
-        } = { subject: project.title, rows: [], retention: [] };
-        try {
-          const merged = {
-            plays: null as number | null,
-            likes: null as number | null,
-            comments: null as number | null,
-            shares: null as number | null,
-          };
-          for (const publication of publications) {
-            const page = await analyticsService.getPublicationAnalytics(
-              c,
-              publication.id,
-              1,
-              10,
-            );
-            const latest = page.rows
-              .slice()
-              .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
-            const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
-            const num = (key: string): number | null => {
-              const value = raw[key];
-              return typeof value === "number" && Number.isFinite(value)
-                ? value
-                : null;
-            };
-            merged.plays = merged.plays ?? num("views") ?? num("plays");
-            merged.likes = merged.likes ?? num("likes") ?? num("digg");
-            merged.comments = merged.comments ?? num("comments");
-            merged.shares = merged.shares ?? num("shares");
-          }
-          if (Object.values(merged).some((value) => value !== null)) {
-            metrics.rows.push({ projectId: project.id, title: project.title, ...merged });
-          }
-        } catch (error) {
-          errorCode("metrics", error);
-        }
-
-        let cover: { assetId: string; title: string } | null = null;
-        const coverAssetId =
-          publications.find((publication) => publication.coverAssetId)?.coverAssetId ??
-          materials.find((material) => material.role === "cover")?.assetId ??
-          null;
-        if (coverAssetId) {
-          try {
-            const asset = await assetsService.getAsset(c, coverAssetId);
-            cover = { assetId: asset.id, title: asset.name };
-          } catch (error) {
-            errorCode("cover", error);
-          }
-        }
-
-        const brief = (project.briefDetail ?? {}) as Record<string, unknown>;
-        const str = (value: unknown): string | undefined =>
-          typeof value === "string" && value.trim() ? value.trim() : undefined;
-        const publishedAt = publications.find((row) => row.publishedAt)?.publishedAt ?? null;
-        const lifecycle: ProjectLifecycleRaw = {
-          traceId,
-          project: {
-            id: project.id,
-            title: project.title,
-            stage: project.currentStage,
-            status: project.status,
-            source: project.source,
-            publishedAt,
-          },
-          brief: {
-            targetAudience: str(brief.targetAudience),
-            contentGoal: str(brief.contentGoal),
-            contentFormat: str(brief.contentFormat),
-            targetPlatforms: Array.isArray(brief.targetPlatforms)
-              ? brief.targetPlatforms.filter(
-                  (value): value is string => typeof value === "string",
-                )
-              : undefined,
-            durationEstimate: str(brief.durationEstimate),
-            coreMessage: str(brief.coreMessage),
-            successCriteria: str(brief.successCriteria),
-          },
-          artifacts,
-          materials,
-          cover,
-          publications,
-          metrics,
-          review,
-          retrospective: { learningCount: 0 },
-          completeness: {
-            brief: Object.keys(brief).length > 0 ? "available" : "empty",
-            artifacts:
-              artifactsResult.status === "rejected"
-                ? "error"
-                : availability(artifacts),
-            materials:
-              materialsResult.status === "rejected"
-                ? "error"
-                : availability(materials),
-            cover: errors.some((error) => error.section === "cover")
-              ? "error"
-              : cover
-                ? "available"
-                : "empty",
-            publications:
-              publicationsResult.status === "rejected"
-                ? "error"
-                : availability(publications),
-            metrics: errors.some((error) => error.section === "metrics")
-              ? "error"
-              : availability(metrics.rows),
-            review:
-              reviewResult.status === "rejected"
-                ? "error"
-                : review
-                  ? "available"
-                  : "empty",
-            retrospective: "unavailable",
-          },
-          errors,
-        };
-        console.info(
-          "[copilot-context]",
-          JSON.stringify({
-            traceId,
-            userId: c.userId,
-            accountId: c.accountId ?? null,
-            projectId: project.id,
-            artifactCount: artifacts.length,
-            artifacts: artifacts.map((artifact) => ({
-              artifactId: artifact.artifactId,
-              currentVersionId: artifact.currentVersionId,
-              versionNumber: artifact.versionNumber,
-            })),
-            readSurface: "copilot-context",
-            errorSections: errors.map((error) => error.section),
-          }),
-        );
-        return lifecycle;
-      },
-      getReviewReport: async (
-        c: RequestContext,
-        opts: { projectId: string; reportId?: string },
-      ) => {
-        await projectsRepo.get(c, opts.projectId);
-        let report: Awaited<ReturnType<typeof reviewGateService.getLatestReport>>;
-        try {
-          report = await reviewGateService.getLatestReport(c, opts.projectId);
-        } catch (error) {
-          if (error instanceof Error && error.name === "ReportNotFoundError") {
-            return null;
-          }
-          throw error;
-        }
-        if (isLegacyIncompleteReview(report)) return null;
-        // 当前 service 只有 latest 窄读；指定过期 reportId 时明确查不到，绝不拿最新冒充。
-        if (opts.reportId && opts.reportId !== report.id) return null;
-
-        let artifactVersionId: string | null = null;
-        let currentVersionId: string | null = null;
-        let reviewedText = "";
-        if (report.artifactId) {
-          const artifact = await artifactsService.getArtifact(c, report.artifactId);
-          currentVersionId = artifact.currentVersionId ?? null;
-          const versions = await artifactsService.listVersions(c, report.artifactId);
-          artifactVersionId =
-            versions.find(
-              (version) => version.versionNumber === report.artifactVersion,
-            )?.id ?? null;
-          if (artifactVersionId) {
-            const repo = createArtifactRepository(db, {
-              ...deps,
-              userId: c.userId,
-              accountId: requireAccountId(c.accountId, "artifacts.repo"),
-            });
-            const reviewedVersion = await repo.getVersion(artifactVersionId);
-            reviewedText = extractArtifactText(
-              reviewedVersion.contentText,
-              reviewedVersion.contentData,
-            );
-          }
-        }
-        const stale = Boolean(
-          currentVersionId && currentVersionId !== artifactVersionId,
-        );
-        const occurrence = (
-          quote: string,
-        ): { start: number | null; end: number | null; unique: boolean } => {
-          if (!quote) return { start: null, end: null, unique: false };
-          const start = reviewedText.indexOf(quote);
-          const unique =
-            start >= 0 &&
-            reviewedText.indexOf(quote, start + quote.length) < 0;
-          return {
-            start: start >= 0 ? start : null,
-            end: start >= 0 ? start + quote.length : null,
-            unique,
-          };
-        };
-        return {
-          id: report.id,
-          projectId: report.projectId,
-          artifactId: report.artifactId,
-          artifactVersion: report.artifactVersion,
-          artifactVersionId,
-          verdict: report.verdict,
-          summary: report.summary,
-          modelLabel: report.modelLabel,
-          reviewedAt: report.reviewedAt,
-          stale,
-          findings: [
-            ...report.lintFindings.map((finding, index) => {
-              const located = occurrence(finding.quote);
-              return {
-                findingId: `${report.id}:L1:${finding.ruleId}:${index}`,
-                level: "L1" as const,
-                quote: finding.quote,
-                start: located.start ?? finding.offset,
-                end:
-                  located.end ?? finding.offset + finding.quote.length,
-                category: finding.category,
-                reason: finding.note,
-                suggestion: finding.replacement,
-                applicable:
-                  !stale && Boolean(finding.replacement) && located.unique,
-              };
-            }),
-            ...report.llmFindings.map((finding, index) => {
-              const located = occurrence(finding.quote);
-              return {
-                findingId: `${report.id}:L2:${index}`,
-                level: "L2" as const,
-                quote: finding.quote,
-                start: located.start,
-                end: located.end,
-                category: finding.category,
-                reason: finding.reason,
-                suggestion: finding.suggestion,
-                applicable:
-                  !stale && Boolean(finding.suggestion) && located.unique,
-              };
-            }),
-          ],
-        };
-      },
-      // [T-099b] context.positioning.detail —— 定位母版全档 + 账号画像并入(不单开账号工具)。
-      // 复用 positioningService.readPositioningCenter(profile 全 facets + downstreamRules + 陈述 +
-      // history 版本数)+ platformAccountService.listAccounts(账号画像)。母版未建 → profile:null
-      // (诚实空态)。best-effort:账号读失败 → 空数组(不阻断定位档案)。
-      getPositioningDetail: async (c: RequestContext) => {
-        const center = await positioningService.readPositioningCenter(c);
-        const p = center.profile;
-        const facets = (p?.facets ?? {}) as Record<string, string>;
-        const rules = (p?.downstreamRules ?? {}) as Record<string, string>;
-        let accounts: Array<{
-          platform: string;
-          accountHandle: string;
-          followerBaseline: number;
-          current?: boolean;
-        }> = [];
-        try {
-          const res = await platformAccountService.listAccounts(c, {
-            limit: 100,
-            offset: 0,
-          });
-          accounts = res.rows.map((a) => ({
-            platform: a.platform,
-            accountHandle: a.accountHandle,
-            followerBaseline: a.followerBaseline,
-            // [T-382] 当前选中号标注(ctx.accountId 已验属主)—— 模型读工具结果时能直接
-            // 回答「我当前登录的是哪个账号」,不再把两个号当并列无主态。
-            ...(c.accountId != null && a.id === c.accountId
-              ? { current: true }
-              : {}),
-          }));
-        } catch {
-          accounts = [];
-        }
-        return {
-          profile: p
-            ? {
-                persona: p.persona,
-                field: p.field,
-                audience: p.audience,
-                differentiation: p.differentiation,
-                capabilities: p.capabilities,
-                facets: {
-                  contentScope: facets.contentScope || undefined,
-                  avoid: facets.avoid || undefined,
-                  corePain: facets.corePain || undefined,
-                  coreValue: facets.coreValue || undefined,
-                  tone: facets.tone || undefined,
-                  statusNote: facets.statusNote || undefined,
-                },
-                downstreamRules: {
-                  topicRule: rules.topicRule || undefined,
-                  scriptRule: rules.scriptRule || undefined,
-                  projectRule: rules.projectRule || undefined,
-                  forbidRule: rules.forbidRule || undefined,
-                  expressionRule: rules.expressionRule || undefined,
-                },
-              }
-            : null,
-          currentStatement: center.currentStatement
-            ? {
-                oneLiner: center.currentStatement.oneLiner,
-                keywords: center.currentStatement.keywords,
-              }
-            : null,
-          statementCount: Array.isArray(center.history)
-            ? center.history.length
-            : null,
-          accounts,
-        };
-      },
-      // [T-099b] context.knowledge.detail —— 单条知识全字段。复用 knowledgeService.getKnowledge
-      //   (带 T-079c 战绩投影 usedCount/usedInPublished)+ listRevisions(取当前修订正文 note)+
-      //   listRelations(语义关联边)。tags 从 sourceMetadata.tags 取(schema 无独立 tags 列)。
-      //   读不到(不存在/越权)→ null(getKnowledge 抛 → catch 成 null,诚实降级)。
-      getKnowledgeDetail: async (c: RequestContext, opts: { id: string }) => {
-        try {
-          const item = await knowledgeService.getKnowledge(c, opts.id);
-          // 正文 note —— 当前修订 content(缺则取 revisionNumber 最大的最新修订)。
-          let note = "";
-          try {
-            const revisions = await knowledgeService.listRevisions(c, opts.id);
-            const current =
-              revisions.find((r) => r.id === item.currentRevisionId) ??
-              revisions
-                .slice()
-                .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
-            note = current?.content ?? "";
-          } catch {
-            note = "";
-          }
-          // 关联边 —— 语义关系(目标 id + 关系类型)。
-          let relations: Array<{
-            targetKnowledgeId: string;
-            relationType: string;
-          }> = [];
-          try {
-            const rels = await knowledgeService.listRelations(c, opts.id);
-            relations = rels.map((r) => ({
-              targetKnowledgeId: r.targetKnowledgeId,
-              relationType: r.relationType,
-            }));
-          } catch {
-            relations = [];
-          }
-          // tags —— sourceMetadata.tags(字符串数组;缺失/形状不符 → 空)。
-          const meta = (item.sourceMetadata ?? {}) as { tags?: unknown };
-          const tags = Array.isArray(meta.tags)
-            ? meta.tags.filter((t): t is string => typeof t === "string")
-            : [];
-          return {
-            id: item.id,
-            title: item.title,
-            knowledgeType: item.knowledgeType,
-            note,
-            sourceNote: item.sourceNote ?? null,
-            sourceType: item.sourceType,
-            sourceUrl: item.sourceUrl ?? null,
-            tags,
-            usedCount: item.usedCount,
-            usedInPublished: item.usedInPublished,
-            relations,
-          };
-        } catch {
-          return null;
-        }
-      },
-      // [T-099c] context.artifacts —— 某项目产物清单。复用既有公开读源(不新造 repo 方法):
-      //   · 产物行 → artifactsService.listProjectArtifacts(user-scoped)
-      //   · 每类产物版本数 → listVersions;当前版本字数 → getVersion 的 contentText/transcript 长度
-      //     (与 getProjectDetail 的产物索引、getScript 同口径,不造影子)。
-      // projectsRepo.get 顺带 ownership 门(越权/不存在 → 抛 → catch 成 null,诚实降级)。
-      listProjectArtifacts: async (
-        c: RequestContext,
-        opts: { projectId: string },
-      ) => {
-        try {
-          const project = await projectsRepo.get(c, opts.projectId);
-          const artifactRows = await artifactsService.listProjectArtifacts(
-            c,
-            opts.projectId,
-          );
-          const repo = createArtifactRepository(db, {
-            ...deps,
-            userId: c.userId,
-            // [T-332 S2] strict:artifact 是 per-account 域,未选号 → AccountRequiredError。
-            accountId: requireAccountId(c.accountId, "artifacts.repo"),
-          });
-          const persistedItems = await Promise.all(
-            artifactRows.map(async (a) => {
-              let currentVersion: number | null = null;
-              let totalChars = 0;
-              try {
-                const versions = await artifactsService.listVersions(c, a.id);
-                // T-816：恢复历史版本后 currentVersionId 可能指向较小版本号；不能用 max 冒充当前。
-                const current = a.currentVersionId
-                  ? versions.find((version) => version.id === a.currentVersionId)
-                  : undefined;
-                currentVersion = current?.versionNumber ?? null;
-              } catch {
-                currentVersion = null;
-              }
-              if (a.currentVersionId) {
-                try {
-                  const version = await repo.getVersion(a.currentVersionId);
-                  totalChars = extractArtifactText(
-                    version.contentText,
-                    version.contentData,
-                  ).length;
-                } catch {
-                  totalChars = 0;
-                }
-              }
-              return {
-                artifactType: a.artifactType,
-                currentVersion,
-                updatedAt: a.updatedAt ?? null,
-                totalChars,
-              };
-            }),
-          );
-          const radarDraftSeed = contentRadarDraftSeedOf(project.briefDetail);
-          const hasPersistedOutputScript = persistedItems.some(
-            (item) =>
-              item.artifactType === "output_script" &&
-              item.currentVersion !== null,
-          );
-          const items =
-            radarDraftSeed && !hasPersistedOutputScript
-              ? [
-                  ...persistedItems.filter(
-                    (item) => item.artifactType !== "output_script",
-                  ),
-                  {
-                    artifactType: "output_script",
-                    currentVersion: null,
-                    updatedAt: project.updatedAt ?? null,
-                    totalChars: radarDraftSeed.length,
-                  },
-                ]
-              : persistedItems;
-          return {
-            projectId: project.id,
-            projectTitle: project.title,
-            items,
-          };
-        } catch {
-          return null;
-        }
-      },
-      // [T-099c] context.artifact.text —— 某项目某类产物正文全文(事故二根治)。找该 artifactType 的
-      // 当前版本,抽正文:output_script transcript 优先(与 getScript 同读法),回退 contentText,再回退
-      // contentData.sections 拼段 / body(与 scriptSource.getLatestScript 同抽取口径)。找不到该类产物 /
-      // 无当前版本 → null(诚实空态,工具侧渲「这个项目还没有 X 产物」)。ownership 门经 projectsRepo.get。
-      getArtifactText: async (
-        c: RequestContext,
-        opts: { projectId: string; artifactType: string },
-      ) => {
-        try {
-          const truth = await readCurrentArtifactTruth(
-            c,
-            opts.projectId,
-            opts.artifactType,
-          );
-          if (!truth) {
-            if (opts.artifactType !== "output_script") return null;
-            const seed = await readProjectRadarDraftSeed(c, opts.projectId);
-            return seed
-              ? { artifactType: "output_script", fullText: seed }
-              : null;
-          }
-          return truth;
-        } catch {
-          return null;
-        }
-      },
-      // [T-099c] context.knowledge.text —— 某知识条目长文正文全文。取当前修订(缺则 revisionNumber 最大)
-      // 的 content(transcript/reference/note 长文都落在 revision content,与 getKnowledgeDetail 的 note
-      // 同读法)。读不到(不存在/越权)→ null(getKnowledge 抛 → catch 成 null,诚实降级)。
-      getKnowledgeText: async (c: RequestContext, opts: { id: string }) => {
-        try {
-          const item = await knowledgeService.getKnowledge(c, opts.id);
-          let fullText = "";
-          try {
-            const revisions = await knowledgeService.listRevisions(c, opts.id);
-            const current =
-              revisions.find((r) => r.id === item.currentRevisionId) ??
-              revisions
-                .slice()
-                .sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
-            fullText = current?.content ?? "";
-          } catch {
-            fullText = "";
-          }
-          return {
-            id: item.id,
-            title: item.title,
-            knowledgeType: item.knowledgeType,
-            fullText,
-          };
-        } catch {
-          return null;
-        }
-      },
-      // [T-099 切片四] context.publications —— 该用户发布记录清单。复用 publishing 公开读源
-      // getRecentPublicationsWithTitle(user-scoped,已把 revision 标题解析进 row.title)。该读源
-      // 无 total:多拉一页(limit+1)探 hasMore,total 用「offset+已见 + (还有更多 ? 1 : 0)」诚实近似
-      // (不新造 count op;分页真相 hasMore 精确,total 为下界近似,前端脚注不谎称已看全)。
-      listPublications: async (
-        c: RequestContext,
-        opts: {
-          limit: number;
-          offset: number;
-          view?: "published_cover_candidates";
-        },
-      ) => {
-        try {
-          if (opts.view === "published_cover_candidates") {
-            // SEMANTIC_BOUNDARY_ALLOW:这里只筛真实状态/时间/coverAssetId 并按时间排序；
-            // “哪个最关联”由编导模型结合当前创作上下文判断，不在代码里做关键词相似度。
-            const eligible: Awaited<
-              ReturnType<typeof publishingService.getRecentPublicationsWithTitle>
-            > = [];
-            let offset = 0;
-            const pageSize = 50;
-            while (eligible.length < opts.limit) {
-              const page = await publishingService.getRecentPublicationsWithTitle(c, {
-                limit: pageSize,
-                offset,
-              });
-              eligible.push(
-                ...page.filter(
-                  (publication) =>
-                    publication.status === "published" &&
-                    Boolean(publication.publishedAt) &&
-                    Boolean(publication.coverAssetId),
-                ),
-              );
-              if (page.length < pageSize) break;
-              offset += page.length;
-            }
-            const rows = eligible
-              .sort((a, b) =>
-                (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""),
-              )
-              .slice(0, opts.limit);
-            return {
-              rows: rows.map((p) => ({
-                id: p.id,
-                platform: p.platform,
-                url: p.externalUrl ?? null,
-                publishedAt: p.publishedAt ?? null,
-                projectTitle: p.title ?? "",
-                coverAssetId: p.coverAssetId ?? null,
-                status: p.status,
-              })),
-              total: rows.length,
-            };
-          }
-          const probe = await publishingService.getRecentPublicationsWithTitle(c, {
-            limit: opts.limit + 1,
-            offset: opts.offset,
-          });
-          const hasMore = probe.length > opts.limit;
-          const page = probe.slice(0, opts.limit);
-          return {
-            rows: page.map((p) => ({
-              id: p.id,
-              platform: p.platform,
-              url: p.externalUrl ?? null,
-              publishedAt: p.publishedAt ?? null,
-              projectTitle: p.title ?? "",
-              coverAssetId: p.coverAssetId ?? null,
-              status: p.status,
-            })),
-            // total 下界:本页起点 + 本页条数 (+1 当还有更多)。工具 hasMore 精确,total 诚实近似。
-            total: opts.offset + page.length + (hasMore ? 1 : 0),
-          };
-        } catch {
-          return { rows: [], total: 0 };
-        }
-      },
-      // [T-099 切片四] context.metrics —— 给 projectId → 单作品指标快照(播放/点赞/评论/分享,复用
-      // dashboard 的 views??plays 归一 + 最新帧口径,与 getMetricsSummary 同读法);不给 → 账号级最近
-      // N 作品指标行(getRecentPublicationsWithTitle 的作品 × 各自最新 snapshot)。留存点无公开读 seam
-      // (不跨模块直连 repo,守 SPEC §22 / 零新 contract)→ 诚实回空数组(不编)。全 best-effort 空兜底。
-      getMetrics: async (
-        c: RequestContext,
-        opts: { projectId?: string; limit: number },
-      ) => {
-        // 从一条 publication 的最新 snapshot rawMetrics 抽 4 项核心指标(views??plays 归一)。
-        const metricsOfPublication = async (
-          publicationId: string,
-        ): Promise<{
-          plays: number | null;
-          likes: number | null;
-          comments: number | null;
-          shares: number | null;
-        }> => {
-          try {
-            const page = await analyticsService.getPublicationAnalytics(
-              c,
-              publicationId,
-              1,
-              10,
-            );
-            const latest = page.rows
-              .slice()
-              .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0];
-            const raw = (latest?.rawMetrics ?? {}) as Record<string, unknown>;
-            const num = (k: string): number | null => {
-              const v = raw[k];
-              return typeof v === "number" && Number.isFinite(v) ? v : null;
-            };
-            return {
-              plays: num("views") ?? num("plays"),
-              likes: num("likes") ?? num("digg"),
-              comments: num("comments"),
-              shares: num("shares"),
-            };
-          } catch {
-            return { plays: null, likes: null, comments: null, shares: null };
-          }
-        };
-        // 单作品模式:该项目 outputs → publications,合并各 publication 最新 snapshot(取有值者)。
-        if (opts.projectId) {
-          try {
-            const project = await projectsRepo.get(c, opts.projectId); // ownership 门
-            const outputIds = await projectsService.listOutputIdsByProject(
-              c,
-              opts.projectId,
-            );
-            const merged = {
-              plays: null as number | null,
-              likes: null as number | null,
-              comments: null as number | null,
-              shares: null as number | null,
-            };
-            for (const outputId of outputIds) {
-              let pubs: Array<{ id: string }> = [];
-              try {
-                pubs = await publishingService.listPublications(c, outputId, {
-                  limit: 20,
-                  offset: 0,
-                });
-              } catch {
-                pubs = [];
-              }
-              for (const pub of pubs) {
-                const m = await metricsOfPublication(pub.id);
-                merged.plays = merged.plays ?? m.plays;
-                merged.likes = merged.likes ?? m.likes;
-                merged.comments = merged.comments ?? m.comments;
-                merged.shares = merged.shares ?? m.shares;
-              }
-            }
-            const hasAny =
-              merged.plays !== null ||
-              merged.likes !== null ||
-              merged.comments !== null ||
-              merged.shares !== null;
-            return {
-              subject: project.title,
-              // [T-223] 单作品模式该行也带 projectId(前端/编导映射一致);externalId 从 platformRef 兜底。
-              rows: hasAny
-                ? [{ projectId: opts.projectId, title: project.title, ...merged }]
-                : [],
-              // 留存点无公开读 seam → 诚实空(不跨模块直连 repo、不编)。
-              retention: [],
-            };
-          } catch {
-            return { subject: null, rows: [], retention: [] };
-          }
-        }
-        // 账号级模式:最近 N 发布作品,每作品一行(标题 + 该 publication 最新 snapshot 指标)。
-        // [T-223] 每行 join 出 projectId + 真实 project.title —— 治「编导认不出作品」:原本只给
-        //   revision 标题(imported publication 无 revision → 空 → 退到 platform="douyin" 匿名行),
-        //   编导拿不到 projectId 无法读真逐字稿,只能瞎连/编造。现经 publication.contentOutputId →
-        //   content_output(projectId) → project.title 补上锚点(project.title 是导入时落的真标题,
-        //   reconstruct/复盘全档也在这条 project 上),让编导能把「最高播放」映射到具体作品读真稿。
-        try {
-          const pubs = await publishingService.getRecentPublicationsWithTitle(c, {
-            limit: opts.limit,
-            offset: 0,
-          });
-          // 同一 projectId 的真标题缓存(避免每行重复 get 项目)。
-          const projectTitleCache = new Map<string, string>();
-          const rows = await Promise.all(
-            pubs.map(async (p) => {
-              const m = await metricsOfPublication(p.id);
-              let projectId: string | null = null;
-              let projectTitle = "";
-              try {
-                // publication → content_output(带 projectId + output 标题,ownership 门)。
-                const out = await projectsRepo.getOutput(c, p.contentOutputId);
-                projectId = out.projectId;
-                if (projectTitleCache.has(projectId)) {
-                  projectTitle = projectTitleCache.get(projectId) ?? "";
-                } else {
-                  try {
-                    const proj = await projectsRepo.get(c, projectId);
-                    projectTitle = proj.title?.trim() ?? "";
-                  } catch {
-                    // 项目读不到(越权/已删)→ 退回 output 标题(仍比匿名平台名强)。
-                    projectTitle = out.title?.trim() ?? "";
-                  }
-                  projectTitleCache.set(projectId, projectTitle);
-                }
-              } catch {
-                // 解析不到作品映射 → projectId 留 null(诚实空,不硬造)。
-                projectId = null;
-              }
-              return {
-                projectId,
-                externalId: p.externalId ?? null,
-                // 真标题优先 project.title;回退 revision(p.title)→ 平台兜底(不再匿名化为 douyin)。
-                title: projectTitle || p.title || p.platform || "（无标题发布）",
-                ...m,
-              };
-            }),
-          );
-          return { subject: null, rows, retention: [] };
-        } catch {
-          return { subject: null, rows: [], retention: [] };
-        }
-      },
-      // [T-099 切片五] context.learnings —— 经验清单(含 validated/candidate 状态)。复用 learnings
-      // 公开读源 listLearnings(user-scoped,带 reuseCount 战绩)。契约 list op 无 query/type/status
-      // 过滤 → 多拉一批(上限 200)后内存过滤:query 命中标题/洞察(knowledgeRelevanceScore 分词 OR),
-      // learningType/status 精确匹配。诚实:全不命中 → 空。total = 过滤后全量数(前端脚注真相)。
-      listLearnings: async (
-        c: RequestContext,
-        opts: {
-          query?: string;
-          learningType?: string;
-          status?: string;
-          limit: number;
-        },
-      ) => {
-        try {
-          const { rows } = await learningsService.listLearnings(c, {
-            limit: 200,
-            offset: 0,
-          });
-          const q = (opts.query ?? "").trim();
-          const filtered = rows.filter((r) => {
-            if (opts.learningType && r.learningType !== opts.learningType)
-              return false;
-            if (opts.status && r.validationStatus !== opts.status) return false;
-            if (q && knowledgeRelevanceScore(`${r.title}\n${r.insight}`, q) === 0)
-              return false;
-            return true;
-          });
-          return {
-            total: filtered.length,
-            rows: filtered.slice(0, opts.limit).map((r) => ({
-              id: r.id,
-              title: r.title,
-              insight: r.insight,
-              learningType: r.learningType,
-              status: r.validationStatus,
-              reuseCount: r.reuseCount,
-            })),
-          };
-        } catch {
-          return { rows: [], total: 0 };
-        }
-      },
-      // [T-099 切片五] context.candidates —— 选题候选池清单。复用 candidate 公开读源 listCandidates
-      // (user-scoped,带 total 分页)。title/status/predictedScore/source 直投影。
-      listCandidates: async (
-        c: RequestContext,
-        opts: { limit: number; offset: number },
-      ) => {
-        try {
-          const { rows, total } = await candidateService.listCandidates(c, {
-            limit: opts.limit,
-            offset: opts.offset,
-          });
-          return {
-            total,
-            rows: rows.map((r) => ({
-              id: r.id,
-              title: r.title,
-              status: r.status,
-              score: r.predictedScore,
-              source: r.source,
-            })),
-          };
-        } catch {
-          return { rows: [], total: 0 };
-        }
-      },
-      // [T-099 切片五] context.predictions —— 预测 vs 实绩对照 + 当前 rubric 摘要。复用 calibration
-      // 公开读源:getOverview(reflowRows = prediction+result 逐维度对照 + KPI)+ getCurrentRubricVersion
-      // (canonical rubric 摘要)。overview.reflowRows 只含已回流的预测;total 用 reflowRows 长度(诚实:
-      // 未回流的预测无对照行,不编 actual)。rubric 读失败 / 母版未建 → rubric:null(诚实空态)。
-      getPredictions: async (c: RequestContext, opts: { limit: number }) => {
-        let rubric: {
-          name: string;
-          versionNumber: number;
-          dimensionCount: number;
-        } | null = null;
-        try {
-          const version = await calibrationService.getCurrentRubricVersion(
-            c,
-            canonicalRubricIdFor(c), // [T-332 S2] per-account 默认 rubric
-          );
-          rubric = {
-            name: "校准评分标准",
-            versionNumber: version.versionNumber,
-            dimensionCount: version.dimensions.length,
-          };
-        } catch {
-          rubric = null; // 母版未建 / 读不到 → 诚实空(不编版本号)
-        }
-        try {
-          const overview = await calibrationService.getOverview(c);
-          const reflow = overview.reflowRows.slice(0, opts.limit);
-          // 各对照行的作品标题 —— 从 pendingSubjects 按 subjectId 反查(overview 已含,不新读)。
-          const titleBySubject = new Map(
-            overview.pendingSubjects.map((s) => [s.subjectId, s.title]),
-          );
-          const rows = reflow.map((r) => {
-            const hasResult = r.dimensions.some((d) => d.actual !== null);
-            return {
-              predictionId: r.predictionId,
-              subjectTitle: titleBySubject.get(r.subjectId) ?? "",
-              hasResult,
-              deviationBand: r.deviationBand,
-              finding: r.reason,
-              dimensions: r.dimensions.map((d) => ({
-                key: d.key,
-                label: d.label,
-                predicted: d.predicted,
-                actual: d.actual,
-                deviation: d.deviation,
-              })),
-            };
-          });
-          return { rubric, rows, total: overview.reflowRows.length };
-        } catch {
-          return { rubric, rows: [], total: 0 };
-        }
-      },
-    },
+...createChatProjectsReaders({projectsService,publishingService,artifactsService,listRecentProjects,searchProjects: (c,opts)=>searchProjectsWithPublicationFacts(c,opts,{listProjects: ctx=>projectsService.listProjectsForComposition(ctx),listOutputRefsByProjects: (ctx,ids)=>projectsService.listOutputRefsByProjects(ctx,ids),listPublicationsByOutputIds: (ctx,ids)=>publishingService.listPublicationsByOutputIds(ctx,ids)}),contentRadarDraftSeedOf,extractArtifactText,makeReviewSubjectReader,readProjectRadarDraftSeed,readCurrentArtifactTruth}),
+...createChatLifecycleReaders({projectsService,publishingService,analyticsService,assetsService,artifactsService,materialLinksService,reviewGateService,extractArtifactText,isLegacyIncompleteReview}),
+...createChatEvidenceReaders({assetsService,knowledgeService}),
+...createChatPerformanceReaders({projectsService,publishingService,analyticsService,learningsService,candidateService,platformAccountService,positioningService,calibrationService,canonicalRubricIdFor})
+},
     // [T-084a] 联网检索端口 —— gatherMaterials 前置检索 + honestyBlock/工具动态描述探测。
     probeSearchConfigured,
     searchWeb: searchWebPort,
@@ -10855,7 +7194,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       console.error("[automation-driver] 启动失败:", error),
     );
   }
-
 
   if(modelWorker)preparationRecovery=Promise.all([
     transcribeBusiness.recoverQueued(
