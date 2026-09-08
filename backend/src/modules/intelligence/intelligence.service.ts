@@ -855,6 +855,7 @@ function toTransform(
     > | null,
     targetTopicId: row.targetTopicId,
     taskStatus: task?.status ?? null,
+    taskRuntimeStatus: task?.runtimeStatus,
     taskErrorCode: task?.errorCode ?? null,
     taskErrorMessage: task?.errorMessage ?? null,
     createdAt: row.createdAt,

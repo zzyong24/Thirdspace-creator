@@ -344,6 +344,8 @@ export const sourceSnapshotResource = z
   })
   .strict();
 
+const executionRuntimeStatusV2 = z.enum(["retry_wait", "waiting_user", "unknown_result", "partial"]);
+
 export const intelligenceTransformResource = z
   .object({
     id,
@@ -361,6 +363,7 @@ export const intelligenceTransformResource = z
     // transform 只保存候选内容；真实执行终态仍来自 execution_tasks。
     // 详情投影这三列后，客户端才能把失败/受阻与“仍在生成”区分开。
     taskStatus: executionTaskStatusV2.nullable(),
+    taskRuntimeStatus: executionRuntimeStatusV2.optional(),
     taskErrorCode: z.string().nullable(),
     taskErrorMessage: z.string().nullable(),
     createdAt: iso8601,
@@ -399,7 +402,7 @@ export const executionTaskResourceV2 = z
     ]),
     ownerId: id,
     status: executionTaskStatusV2,
-    runtimeStatus: z.enum(["retry_wait", "waiting_user", "unknown_result", "partial"]).optional(),
+    runtimeStatus: executionRuntimeStatusV2.optional(),
     retryAt: iso8601.nullable().optional(),
     priority: z.number().int(),
     idempotencyKey: z.string().min(1),
