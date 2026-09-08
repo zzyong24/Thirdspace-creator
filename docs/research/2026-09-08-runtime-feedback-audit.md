@@ -43,3 +43,19 @@ CodeGraph 已执行 `codegraph index --force --quiet .`，随后 status 显示 u
 本轮仅局部 UI 源码修复、静态消费者盘点与 CodeGraph 更新。按用户指示未运行业务测试、真机生成或全局 reconcile；不记录为 PASS。T-928 保持进行中，聊天故障根因、安装验证与实际旧任务存量待核查。T-915/T-919 不能据此标记全量完成。
 
 独立源码复核（2026-09-08，continuous_budget）：局部 diff 无阻断问题；角色前缀 key 保留按任务重建行为，链接样式与可收缩标题兼容。仅代码复核，未运行测试。源码修改后再次增量更新 CodeGraph，命令退出 0。`git diff --check` 通过。
+
+## 用户开启 CLI 后的复查
+
+2026-09-08 status/access status 均确认 connected/full；accounts.list 仅一个账号 acct-ae1a8346-9（月明水清深），自动绑定该唯一账号。公开 conversations.list/messages.list 找到截图会话 ai-conv-3302704d-525，归属 project-3302704d-510。会话包含 7 条相同用户请求，modelMetadata 都为空，没有助手回复；ai.tasks.list 按该项目过滤返回 total=0（req-3302704d-570）。这将问题限定到用户消息保存后、任务绑定前；不是已启动 Worker 的自动重试失效。
+
+已核对当前进程 cwd 为 sidecar/frontend，runtime/execution-worker.cjs 文件存在，所以“路径文件缺失”不能当作本次根因。源码启动路径会吞 Worker 定位异常、对话错误会隐藏提交阶段，本轮新增有限阶段及机器码日志，不输出 SQL、参数、密钥或模型正文，并保留服务端已翻译的人话错误供界面展示。尚未安装新代码、未重提真实生成；原始失败具体抛出点仍待新诊断或可复现证据。
+
+T-930 同时退役仅验证旧供应商 SDK 的 T-501 research/model-stream-tool-rat.mts；历史 T-501 审计引用仍属于当时提交，不改成新 Pi 验证。运行时新的 Pi 三协议尚未执行真实模型验收，旧 RAT 证据不能挪作新实现 PASS。
+
+### 已复现的提交阻断：标准工具 Schema 被拒绝
+
+直接对真实 `asSchema(z.object({query:z.string()}))` 调用 `prepareChatToolParameters`，无模型/数据库/网络输入，得到 `Error: 工具参数约束尚不支持：$schema`。SDK 正常输出 draft-7 `$schema`，手写子集转换器将它误认为未知约束；已有测试仅手写不含元数据的 JSON，未覆盖真实 Zod 注册链。这是原生 Zod 工具准备时的确定性阻断，但当前业务注册还大量使用手写 jsonSchema，不能直接认定为截图根因。真实工具集合的复核与安装验证尚待完成。
+
+修复：真实 Zod 工具复用原校验器，冻结 JSON 不变；纯 JSON fallback 识别受支持的 draft-7 元数据，仍执行原严格约束。无外部 IO 的协议探针得到 valid=true、empty=false、extra=false、metadataPreserved=true。增加对应回归用例但按用户指示未运行自动测试套件。
+
+真实工具集合的无外部 IO 复核：allChatTools(dummy deps) 普通与绑定项目各 44/44，选区绑定 45/45；prepareChatToolDefinitions 均完整通过。因此 Zod 修复属于潜在协议缺陷消除，不能作为本次截图的直接根因。

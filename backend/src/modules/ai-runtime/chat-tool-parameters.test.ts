@@ -53,3 +53,12 @@ it("公开schema副本的修改不能改变已建立的校验约束",async()=>{
  ((p.schema.properties as Record<string,unknown>).label as Record<string,unknown>).maxLength=99;
  expect(p.parameters.safeParse({label:"xx"}).success).toBe(false);
 });
+
+it("真实Zod工具带标准元数据和nullable时可装配，仍拒绝非法参数",async()=>{
+ const {z}=await import("zod");
+ const prepared=await prepareChatToolParameters(z.object({query:z.string().min(1),projectId:z.string().nullable().optional()}).strict());
+ expect(prepared.schema.$schema).toBe("http://json-schema.org/draft-07/schema#");
+ expect(prepared.parameters.parse({query:"资料",projectId:null})).toEqual({query:"资料",projectId:null});
+ expect(prepared.parameters.safeParse({query:""}).success).toBe(false);
+ expect(prepared.parameters.safeParse({query:"资料",extra:true}).success).toBe(false);
+});

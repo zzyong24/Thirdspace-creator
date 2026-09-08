@@ -6,6 +6,12 @@ const common=["type","description","title","enum"];
 const keys:Record<string,string[]>={object:["properties","required","additionalProperties"],array:["items","minItems","maxItems"],string:["minLength","maxLength"],number:["minimum","maximum"],integer:["minimum","maximum"],boolean:[],null:[]};
 /** SEMANTIC_BOUNDARY_ALLOW: 只校验明确参数契约，不判断意图或创作选择；未支持约束不能静默放行。 */
 function checked(node:Node):Node{
+ // JSON Schema 方言声明是元数据，不是新增业务约束。只接受本转换器实际支持的 draft-7。
+ if(node.$schema!==undefined){
+  if(node.$schema!=="http://json-schema.org/draft-07/schema#" && node.$schema!=="https://json-schema.org/draft-07/schema#")throw new Error("工具参数JSON Schema方言尚不支持");
+  const {$schema: _dialect,...constraints}=node;
+  return checked(constraints);
+ }
  const type=node.type;
  if(type!==undefined && (typeof type!=="string" || !Object.hasOwn(keys,type)))throw new Error("工具参数类型尚不支持");
  const allowed=[...common,...(typeof type==="string"?keys[type]!:[])];
@@ -45,6 +51,12 @@ function checkValues(node:Node,value:unknown,ctx:z.RefinementCtx,path:Array<stri
 export async function prepareChatToolParameters(inputSchema:FlexibleSchema<unknown>){
  const schema=object.parse(await asSchema(inputSchema).jsonSchema);
  if(schema.type!=="object")throw new Error("工具参数必须是对象");
+ // 真实工具的 Zod 契约已有完整校验能力。复用它，避免 JSON 子集转换器拒绝
+ // 标准元数据、nullable/default 等合法工具定义；权限仍由工具宿主独立检查。
+ if(inputSchema instanceof z.ZodType){
+  const original=inputSchema as z.ZodType<unknown,z.infer<ReturnType<typeof z.json>>>;
+  return {schema:structuredClone(schema),parameters:z.json().pipe(original)};
+ }
  const supported=checked(schema);
  const converted=z.fromJSONSchema(supported as Parameters<typeof z.fromJSONSchema>[0],{defaultTarget:"draft-7"}) as z.ZodType<unknown,z.infer<ReturnType<typeof z.json>>>;
  const parameters=z.json().pipe(converted).superRefine((value,ctx)=>checkValues(schema,value,ctx));

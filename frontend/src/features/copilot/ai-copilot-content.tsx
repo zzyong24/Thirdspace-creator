@@ -1210,7 +1210,7 @@ export function AICopilotContent({
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
           : suggestSwitchModel
             ? "刚才输入的内容已经保留。完成设置后，回来即可继续。"
-            : terminalScriptSelectionError || localPatchWasPreserved
+            : terminalScriptSelectionError || localPatchWasPreserved || chatApiPublicError
               ? publicMessage
               : "刚才输入的内容还在，可以直接再试一次。",
       suggestSwitchModel,

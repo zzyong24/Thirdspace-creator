@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { chatSubmissionDiagnostic } from "@/server/chat-submission-diagnostic";
 import { randomUUID } from "node:crypto";
 import type { UIMessage } from "ai";
 import {workerSkillSnapshotSchema} from "@creatoros/contract/execution-worker";
@@ -719,10 +720,15 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
+  let submissionPhase = "message_binding";
   try {
     if(!conversationId || !persistedUserMessageId)throw new Error("用户消息未保存，无法启动聊天执行");
     req.signal.throwIfAborted();
-    const submitted=await runtime.durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId},async(owner,snapshot)=>{
+    submissionPhase = "runtime_access";
+    const durable = runtime.durable;
+    submissionPhase = "task_submission";
+    const submitted=await durable.submit(ctx,{conversationId,sourceMessageId:persistedUserMessageId},async(owner,snapshot)=>{
+      submissionPhase = "skill_snapshot";
       const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[
         ...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),
         "topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill",
@@ -739,6 +745,7 @@ export async function POST(req: Request): Promise<Response> {
         ...snapshot.messages.filter(message=>message.role==="user"&&message.content.trim()).slice(-16).map(message=>({ref:`message:${message.id}`,label:`用户消息 ${message.createdAt}`,text:message.content,truncated:false,sourceType:"message" as const,sourceId:message.id})),
         ...trustedScriptSources.filter(source=>source.sourceType==="attachment"),
       ];
+      submissionPhase = "context_preparation";
       const prepared=await prepareDurableChatTurn(owner,{messages:trustedMessages,chatContext,trustedScriptSources:boundSources,abortSignal:req.signal},{
         ...runtime.context,
         // [T-163] 错误→人话端口:chat-tools 下沉 backend 后不再直 import 前端 ai-error-humanize
@@ -751,6 +758,7 @@ export async function POST(req: Request): Promise<Response> {
         atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,
         scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192}});
       req.signal.throwIfAborted();
+      submissionPhase = "task_persistence";
       return {capability:prepared.assembly.capability,system:prepared.assembly.system,
         messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,
         maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens:8192,
@@ -758,6 +766,7 @@ export async function POST(req: Request): Promise<Response> {
         ...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),
         hostContext:prepared.hostContext};
     });
+    submissionPhase = "stream_subscription";
     // 授权按钮只续接执行；真实权限仍由宿主 approve 重新检查。
     if(messages.some(message=>message.parts.some(part=>typeof part==='object' && part!==null && 'state' in part && part.state==='approval-responded'))){
       const task=await runtime.durable.get(ctx,submitted.executionTaskId);
@@ -772,11 +781,16 @@ export async function POST(req: Request): Promise<Response> {
     // [T-094] 平台类错误(内容审核/限流/配额)先过人话映射,用户拿到能行动的说明。
     const message =
       humanizeAiError(err)?.message ??
-      "模型调用失败，请稍后重试或检查模型配置。";
+      (submissionPhase === "runtime_access"
+        ? "聊天执行服务尚未就绪，输入已保留。请重启应用；仍失败时请提供诊断日志。"
+        : submissionPhase === "stream_subscription"
+          ? "任务已经提交，但回复连接暂时中断。输入和任务已保留，请重新打开当前对话。"
+          : "本轮请求准备或提交未完成，输入已保留。请重试；仍失败时请提供诊断日志。");
     console.error(
       `[api/chat] stream failed ${formatErrorDiagnostic(err, {
         omitMessage: true,
       })}`,
+      chatSubmissionDiagnostic(err, submissionPhase),
     );
     return NextResponse.json(
       { error: message },
