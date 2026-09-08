@@ -5,7 +5,7 @@ import type {
   PersistentTaskService,
 } from "@creatoros/backend/modules/execution";
 
-import { runDouyinShareImportTask } from "./share-import-runner";
+import { runDouyinShareImportTask } from "@creatoros/backend/modules/intelligence";
 
 const ctx: RequestContext = {
   userId: "user-1",
@@ -55,6 +55,8 @@ describe("[T-482] 单条分享导入持久任务", () => {
     const saveCheckpoint = vi.fn().mockResolvedValue({});
     const finish = vi.fn().mockResolvedValue({});
     const tasks = {
+      get:vi.fn().mockResolvedValue(claim().task),
+      heartbeat:vi.fn().mockResolvedValue(claim().task),
       saveCheckpoint,
       finish,
     } as unknown as PersistentTaskService;
@@ -115,18 +117,18 @@ describe("[T-482] 单条分享导入持久任务", () => {
     expect(finish).not.toHaveBeenCalled();
   });
 
-  it("登录态失效进入 blocked，不伪装成功空记录", async () => {
+  it("登录态失效进入 waiting_user，不伪装成功空记录", async () => {
     const finish = vi.fn().mockResolvedValue({});
     await runDouyinShareImportTask(
       ctx,
       { taskId: "task-1", existingClaim: claim() },
       {
-        tasks: { finish } as unknown as PersistentTaskService,
+        tasks: { finish,get:vi.fn().mockResolvedValue(claim().task),heartbeat:vi.fn().mockResolvedValue(claim().task) } as unknown as PersistentTaskService,
         fetcher: {
           fetch: vi
             .fn()
             .mockRejectedValue(
-              new Error("DouyinNotLoggedInError: 请先登录"),
+              Object.assign(new Error("请先登录"),{name:"DouyinNotLoggedInError"}),
             ),
         },
         intelligence: {} as never,
@@ -134,28 +136,28 @@ describe("[T-482] 单条分享导入持久任务", () => {
     );
     expect(finish).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: "blocked",
+        status: "waiting_user",
         errorCode: "LOGIN_REQUIRED",
       }),
     );
   });
 
-  it("验证码进入 blocked/CAPTCHA，保留可恢复状态", async () => {
+  it("验证码进入 waiting_user/CAPTCHA，保留可恢复状态", async () => {
     const finish = vi.fn().mockResolvedValue({});
     await runDouyinShareImportTask(
       ctx,
       { taskId: "task-1", existingClaim: claim() },
       {
-        tasks: { finish } as unknown as PersistentTaskService,
+        tasks: { finish,get:vi.fn().mockResolvedValue(claim().task),heartbeat:vi.fn().mockResolvedValue(claim().task) } as unknown as PersistentTaskService,
         fetcher: {
-          fetch: vi.fn().mockRejectedValue(new Error("CaptchaError: 人机校验")),
+          fetch: vi.fn().mockRejectedValue(Object.assign(new Error("人机校验"),{name:"DouyinCaptchaError"})),
         },
         intelligence: {} as never,
       },
     );
     expect(finish).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: "blocked",
+        status: "waiting_user",
         errorCode: "CAPTCHA",
       }),
     );
@@ -179,7 +181,7 @@ describe("[T-482] 单条分享导入持久任务", () => {
         existingClaim: claim({ transcribeAfterImport: true }),
       },
       {
-        tasks: { finish } as unknown as PersistentTaskService,
+        tasks: { finish,get:vi.fn().mockResolvedValue(claim().task),heartbeat:vi.fn().mockResolvedValue(claim().task) } as unknown as PersistentTaskService,
         fetcher: {
           fetch: vi.fn().mockResolvedValue({
             shareUrl: "https://v.douyin.com/abc/",

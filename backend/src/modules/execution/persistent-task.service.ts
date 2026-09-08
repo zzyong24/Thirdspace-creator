@@ -138,7 +138,9 @@ export interface PersistentTaskService {
     taskId: string;
     workerId: string;
     attempt: number;
-    status: "succeeded" | "failed" | "blocked";
+    status: "succeeded" | "failed" | "blocked" | "waiting_user" | "retry_wait";
+    fenceToken?:string;
+    retryAfterMs?:number;
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
@@ -735,11 +737,37 @@ export function createPersistentTaskService(
 
     async finish(input) {
       const current = await getWorkerRow(input);
+      if(input.status==='waiting_user'||input.status==='retry_wait'){
+        // 非计费来源读取的恢复门：仅原 share_import，无模型调用账本，不能给模型未知结果重试权。
+        return db.transaction(async tx=>{
+          const [row]=await tx.select().from(executionTasks).where(eq(executionTasks.id,input.taskId)).for('update');
+          const stamp=now();
+          if(!row||row.kind!=='share_import'||row.ownerType!=='item_import'||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('分享读取恢复缺少当前执行凭证');
+          const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).limit(1);
+          if(calls.length)throw new ConflictError('存在调用账本的任务不能走无副作用读取重试');
+          let status:string=input.status,retryAt:string|null=null;
+          if(input.status==='retry_wait'){
+            if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('分享读取重试时间非法');
+            const delay=Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
+            const next=Date.parse(stamp)+delay;
+            const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
+            const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
+            if(row.attempt>=limit||(row.deadlineAt!==null&&next>=Date.parse(row.deadlineAt)))status='failed';
+            else retryAt=new Date(next).toISOString();
+          }
+          const [updated]=await tx.update(executionTasks).set({status,retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
+            lastErrorCode:status==='failed'?'SHARE_READ_RETRY_EXHAUSTED':input.errorCode??null,
+            lastErrorMessage:status==='failed'?'分享读取重试次数已用尽，请检查网络或原链接':input.errorMessage??null,updatedAt:stamp,
+          }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
+          if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
+        });
+      }
+      if(input.fenceToken&&input.fenceToken!==current.fenceToken)throw new ConflictError("任务完成时 fence 已变化");
       const legal =
         current.status === "running" ||
         ((current.status === "pause_requested" ||
           current.status === "cancel_requested") &&
-          input.status === "failed");
+          input.status === "failed" && !(current.kind==='share_import'&&input.fenceToken));
       if (!legal) {
         throw new ConflictError(
           `任务状态 ${current.status} 不允许结束为 ${input.status}`,
@@ -764,6 +792,7 @@ export function createPersistentTaskService(
             eq(executionTasks.leaseOwner, input.workerId),
             eq(executionTasks.attempt, input.attempt),
             eq(executionTasks.status, current.status),
+            ...(input.fenceToken?[eq(executionTasks.fenceToken,input.fenceToken)]:[]),
           ),
         )
         .returning();

@@ -236,7 +236,7 @@ import {
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import {
   drainDouyinShareImportQueue,
-} from "@/server/intelligence/share-import-runner";
+} from "@creatoros/backend/modules/intelligence";
 import type {
   ContextDeps as ChatContextDeps,
   ReviewSubjectReader,

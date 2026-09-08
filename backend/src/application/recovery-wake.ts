@@ -9,6 +9,7 @@ export function createRecoveryWakeCoordinator(deps: {
   intervalMs?: number;
   onError?(kind: string, error: unknown): void;
 }) {
+  const stopFailures: unknown[] = [];
   const abort = new AbortController();
   const active = new Map<string, Promise<unknown>>();
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -29,6 +30,9 @@ export function createRecoveryWakeCoordinator(deps: {
         if (!abort.signal.aborted) return lane(control);
       })
       .catch(error => {
+        if ((error as {resourceStopUnconfirmed?: boolean})?.resourceStopUnconfirmed === true) {
+          stopFailures.push(error);
+        }
         if (!abort.signal.aborted) deps.onError?.(kind, error);
       })
       .finally(() => active.delete(kind));
@@ -52,6 +56,7 @@ export function createRecoveryWakeCoordinator(deps: {
       if (timer) clearInterval(timer);
       timer = undefined;
       await Promise.all([...active.values()]);
+      if (stopFailures.length) throw new AggregateError(stopFailures, "恢复消费者的资源尚未确认停止");
     },
   };
 }

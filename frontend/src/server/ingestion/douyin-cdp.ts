@@ -1597,7 +1597,7 @@ export function extractDouyinShareUrl(shareText: string): string {
       // 继续检查下一段 URL。
     }
   }
-  throw new DouyinAudioFetchError("分享文本中没有可识别的抖音链接");
+  throw Object.assign(new DouyinAudioFetchError("分享文本中没有可识别的抖音链接"),{code:"DOUYIN_SHARE_UNSAFE_URL"});
 }
 
 function awemeIdFromDouyinUrl(url: URL): string | null {
@@ -1632,7 +1632,7 @@ export async function resolveDouyinShareTarget(
       !["http:", "https:"].includes(current.protocol) ||
       !isDouyinShareHost(current.hostname)
     ) {
-      throw new DouyinAudioFetchError("分享链接跳转到了非抖音域名，已停止读取");
+      throw Object.assign(new DouyinAudioFetchError("分享链接跳转到了非抖音域名，已停止读取"),{code:"DOUYIN_SHARE_UNSAFE_URL"});
     }
     const directId = awemeIdFromDouyinUrl(current);
     if (directId) {
@@ -1653,8 +1653,10 @@ export async function resolveDouyinShareTarget(
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
       },
     });
+    if(response.status>=400)throw Object.assign(new Error("抖音分享读取 HTTP 失败"),{name:"DouyinShareHttpError",status:response.status});
     if (response.status < 300 || response.status >= 400) {
       const finalUrl = response.url ? new URL(response.url) : current;
+      if(!isDouyinShareHost(finalUrl.hostname)||!["http:","https:"].includes(finalUrl.protocol))throw Object.assign(new DouyinAudioFetchError("分享链接跳转到了非抖音域名，已停止读取"),{code:"DOUYIN_SHARE_UNSAFE_URL"});
       const id = awemeIdFromDouyinUrl(finalUrl);
       if (id) {
         return {
@@ -1670,9 +1672,7 @@ export async function resolveDouyinShareTarget(
     if (!location) break;
     current = new URL(location, current);
   }
-  throw new DouyinAudioFetchError(
-    "抖音分享链接未解析出作品 ID，可能已失效或不是单条作品",
-  );
+  throw Object.assign(new DouyinAudioFetchError("抖音分享链接未解析出作品 ID，可能已失效或不是单条作品"),{code:"DOUYIN_SHARE_UNSAFE_URL"});
 }
 
 function nullableCount(value: unknown): number | null {
@@ -1874,14 +1874,17 @@ export async function fetchDouyinSharedItem(
         const json = await page.evaluate<unknown, string>(async (url) => {
           try {
             const response = await fetch(url, { credentials: "include" });
+            if(!response.ok)return {__shareHttpStatus:response.status};
             return (await response.json()) as unknown;
           } catch (error) {
-            return {
-              error:
-                error instanceof Error ? error.message : String(error),
-            };
+            return error instanceof SyntaxError?{__shareResponseInvalid:true}:{__shareNetworkFailure:true};
           }
         }, AWEME_DETAIL_API.replace("{id}", id));
+        const envelope=(json??{}) as Record<string,unknown>;
+        if(typeof envelope.__shareHttpStatus==="number")throw Object.assign(new Error("抖音作品读取 HTTP 失败"),{name:"DouyinShareHttpError",status:envelope.__shareHttpStatus});
+        if(envelope.__shareResponseInvalid===true)throw new DouyinAudioFetchError("抖音作品响应不是有效JSON");
+        if(envelope.__shareNetworkFailure===true)throw Object.assign(new Error("抖音作品读取网络失败"),{name:"DouyinShareNetworkError"});
+        if(envelope.status_code===8)throw new DouyinNotLoggedInError();
         return parseDouyinSharedItem(
           json,
           opts.canonicalUrl,
@@ -1892,9 +1895,12 @@ export async function fetchDouyinSharedItem(
       opts.signal,
     );
   } catch(error){
-    opts.signal?.throwIfAborted();throw error;
+    opts.signal?.throwIfAborted();
+    // SEMANTIC_BOUNDARY_ALLOW: Chromium 协议错误码只表示网络传输失败，不判断业务语义。
+    if(error instanceof Error&&/\bnet::ERR_(?:CONNECTION_RESET|TIMED_OUT|CONNECTION_REFUSED|NETWORK_CHANGED|NAME_NOT_RESOLVED)\b/.test(error.message))throw Object.assign(new Error("抖音页面读取网络失败",{cause:error}),{name:"DouyinShareNetworkError"});
+    throw error;
   } finally {
-    await lifetime.close();
+    try{await lifetime.close();}catch(error){throw Object.assign(new Error("分享读取浏览器尚未确认关闭",{cause:error}),{code:"SHARE_BROWSER_STOP_UNCONFIRMED",resourceStopUnconfirmed:true});}
   }
 }
 
