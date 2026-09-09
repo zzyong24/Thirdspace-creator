@@ -47,11 +47,11 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    return {...bound,task:scope.task};
   });
   const projectFailure=async(status:string)=>{
-   if(status!=='failed'&&status!=='waiting_user')return;
+   if(status!=='failed'&&status!=='waiting_user'&&status!=='unknown_result')return;
    await leases.withLease(ref,'settlement',async scope=>{
     const bound=await bindIntelligenceTranscript(scope);if(scope.task.status!==status)return;
     const stamp=(deps.now??(()=>new Date().toISOString()))(),retained=!!bound.transcript.text?.trim();
-    await scope.tx.update(itemTranscripts).set({status:retained?'done':status==='failed'?'failed':'blocked',errorCode:'TRANSCRIBE_FAILED',completedAt:stamp,updatedAt:stamp}).where(and(eq(itemTranscripts.itemId,bound.item.id),eq(itemTranscripts.executionTaskId,scope.task.id)));
+    await scope.tx.update(itemTranscripts).set({status:retained?'done':status==='failed'?'failed':'blocked',errorCode:status==='unknown_result'?'TRANSCRIBE_RESULT_UNCONFIRMED':'TRANSCRIBE_FAILED',completedAt:stamp,updatedAt:stamp}).where(and(eq(itemTranscripts.itemId,bound.item.id),eq(itemTranscripts.executionTaskId,scope.task.id)));
    });
   };
   let persistedStatus:string|undefined,completed:Result|undefined,closed=false,preparationError:unknown;

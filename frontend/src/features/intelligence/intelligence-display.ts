@@ -94,7 +94,7 @@ export function transcriptLabel(status: RadarItemDetail["transcript"]["status"])
     done: "已完成",
     skipped: "已跳过",
     failed: "转写失败",
-    blocked: "需要配置",
+    blocked: "需要处理",
   }[status];
 }
 

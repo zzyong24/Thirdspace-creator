@@ -8,9 +8,19 @@ export function upgradeProjectId(task?:ExecutionTaskResourceV2):string|null {
   const checkpoint=task?.checkpoint;
   return checkpoint && typeof checkpoint==="object" && "projectId" in checkpoint && typeof checkpoint.projectId==="string"?checkpoint.projectId:null;
 }
+export function upgradeNeedsResultCheck(task?:ExecutionTaskResourceV2):boolean {
+  return task?.status === "blocked" && (task.runtimeStatus === "unknown_result" || ["BOUND_ASR_RESULT_UNKNOWN", "TRANSCRIBE_ASR_RESULT_UNKNOWN", "ASR_STAGE_REQUIRES_RECONCILIATION", "INTELLIGENCE_ASR_REQUIRES_RECONCILIATION", "CALL_RESULT_UNKNOWN"].includes(task.errorCode ?? ""));
+}
+export function upgradeNotice(task?:ExecutionTaskResourceV2):string|null {
+  if (upgradeNeedsResultCheck(task)) return "转写结果尚未确认，升级已暂停，已完成内容保留。可打开作品详情补充逐字稿，再继续升级。";
+  if (task?.runtimeStatus === "retry_wait") return "暂时无法处理，系统会等待后自动继续。";
+  return task?.errorMessage ?? null;
+}
+
 export function upgradeLabel(task?:ExecutionTaskResourceV2):string {
   if(!task)return "升级为项目";
   if(task.status==="succeeded")return "查看项目";
+  if(upgradeNeedsResultCheck(task))return "检查并继续升级";
   if(["failed","blocked"].includes(task.status))return "重试升级";
   if(task.status==="cancelled")return "重新加入队列";
   if(task.status==="paused")return "继续升级";
@@ -56,6 +66,13 @@ export function useProjectUpgradeQueue({api,accountId,positioningVersionId,setNo
     if(!positioningVersionId){setNotice("请先在定位中心保存当前账号定位，再升级为项目。");return;}
     pending.current.add(itemId);setSubmitting(new Set(pending.current));
     try{
+      if(upgradeNeedsResultCheck(task)){
+        const detail=await api.getItem(itemId);
+        if(detail.transcript.status!=="done" || !detail.transcript.text?.trim()){
+          setNotice("尚未取得完整转写结果。请打开这条作品补充逐字稿；原任务和已完成内容已保留，不会重复提交转写。");
+          return;
+        }
+      }
       if(task && api.commandTask){
         await api.commandTask({taskId:task.id,command:task.status==="paused"?"resume":"retry",idempotencyKey:operationKey(`upgrade-${task.id}`)});
         if(mounted.current)merge([{...task,status:"queued",errorCode:null,errorMessage:null}]);

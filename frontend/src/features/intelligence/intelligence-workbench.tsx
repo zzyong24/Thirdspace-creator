@@ -33,7 +33,7 @@ import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttent
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
 import { useTranscriptRefresh } from "./use-transcript-refresh";
-import { useProjectUpgradeQueue,upgradeLabel,upgradeProjectId } from "./use-project-upgrade-queue";
+import { useProjectUpgradeQueue,upgradeLabel,upgradeProjectId,upgradeNotice,upgradeNeedsResultCheck } from "./use-project-upgrade-queue";
 import type {ExecutionTaskResourceV2} from "@creatoros/contract";
 export { favoriteFoldersErrorMessage,sourceVerificationErrorMessage } from "./intelligence-errors";
 export type * from "./intelligence-workbench-types";
@@ -1710,7 +1710,7 @@ function ItemCard({
           <span>{row.sourceCount} 个来源</span>
           {progressLabel(row.progressState) ? (
             <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-              {progressLabel(row.progressState)}
+              {upgradeNeedsResultCheck(upgradeTask)?"转写待确认":progressLabel(row.progressState)}
             </span>
           ) : null}
         </div>
@@ -1726,7 +1726,7 @@ function ItemCard({
           </Button>}
           {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
         </div>
-        {upgradeTask?.errorMessage?<p className="mt-1 text-xs text-warning">{upgradeTask.errorMessage}</p>:null}
+        {upgradeNotice(upgradeTask)?<p className="mt-1 text-xs text-warning">{upgradeNotice(upgradeTask)}</p>:null}
       </div>:null}
     </div>
   );

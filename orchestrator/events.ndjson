@@ -992,3 +992,4 @@
 {"ts":"2026-09-09T04:07:13.627Z","actor":"taskctl","action":"complete","task":"T-939","evidence":"566ca273；定位48/前端及流水线38/打包42项通过；合并tsc通过；安装PID60955，公开CLI迁移前后v11历史11不变。远程安装缺口转T-940待落地；未运行Windows发布；全局reconcile沿既有暂缓授权，旧类型欠债保留。","sha_before":"03af61cd9cae","sha_after":"346ff1f4431f"}
 {"ts":"2026-09-09T04:07:57.185Z","actor":"taskctl","action":"start","task":"T-941","sha_before":"00e6f7e2509c","sha_after":"cf19f15ca303"}
 {"ts":"2026-09-09T04:29:23.623Z","actor":"taskctl","action":"complete","task":"T-941","evidence":"e78b834b 本地包已安装；首页data一致；19+3+20+35针对性回归、42打包测试及tsc通过；冷读2.717s/暖读0.825、0.629s；未做原生导航E2E，全局reconcile按用户此前要求暂缓，详见SPEC","sha_before":"cf19f15ca303","sha_after":"f522d8feebf0"}
+{"ts":"2026-09-09T05:16:12.108Z","actor":"taskctl","action":"start","task":"T-942","sha_before":"9da5e8c0deb0","sha_after":"5d481d20d0e6"}

@@ -47,7 +47,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         }
         const [updated]=await tx.update(executionTasks).set({status,retryAt,retryOfCallId,
           leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,lastErrorCode: status === "failed" && input.outcome === "retry_wait" ? "RETRY_BUDGET_EXHAUSTED" : input.errorCode,
-          lastErrorMessage:input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "提交结果未知，须同键对账" : "执行停止，等待恢复或诊断",
+          lastErrorMessage:input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
           updatedAt:now(),
         }).where(and(eq(executionTasks.id,task.id),eq(executionTasks.fenceToken,ref.fenceToken))).returning();
         return {status:updated!.status,retryAt:updated!.retryAt};

@@ -991,6 +991,46 @@
       },
       "data_source": "公开CLI实际任务与服务端队列",
       "flows": "作品转写、选题、项目与文案候选"
+    },
+    "T-942": {
+      "task_id": "T-942",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design-review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t942-radar-recovery.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t942-radar-recovery.md",
+        ".github/workflows/desktop-release.yml",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design-review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "step_write_set": {
+        "design-review": []
+      },
+      "data_source": "公开CLI实际任务与服务端队列",
+      "flows": "作品转写、选题、项目与文案候选"
     }
   }
 }
