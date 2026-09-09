@@ -561,7 +561,7 @@ describe("positioning service", () => {
     expect(center.history.map((item) => item.id)).toEqual([v1.id]);
   });
 
-  it("[T-632] reset 前保留完整母版，恢复会回写全部字段并追加新版本而不改旧历史", async () => {
+  it("[T-939] 恢复回写完整母版并选择原版本，不追加或改写旧历史", async () => {
     const service = makeService(db, makeProjectsPort(), "restore");
     await service.upsertProfile(ctx, {
       ...PROFILE_INPUT,
@@ -590,7 +590,8 @@ describe("positioning service", () => {
 
     const restored = await service.restoreMaster(ctx, v1.id);
     expect(restored.restoredFromVersion).toBe(1);
-    expect(restored.statement.versionNumber).toBe(2);
+    expect(restored.statement.versionNumber).toBe(1);
+    expect(restored.statement.id).toBe(v1.id);
     expect(restored.statement.oneLiner).toBe("完整旧母版");
     expect(restored.profile).toMatchObject({
       persona: PROFILE_INPUT.persona,

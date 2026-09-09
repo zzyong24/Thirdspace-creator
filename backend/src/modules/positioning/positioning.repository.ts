@@ -263,6 +263,15 @@ export function createPositioningRepository(
     return rows[0];
   };
 
+  // SEMANTIC_BOUNDARY_ALLOW: 当前陈述由用户明确选择的 ID 决定，不进行语义匹配。
+  async function readCurrent(handle:Db,profile:CreatorProfileRow):Promise<PositioningStatementRow|undefined> {
+    const rows=await handle.select().from(positioningStatements).where(and(
+      eq(positioningStatements.userId,deps.userId),eq(positioningStatements.accountId,deps.accountId),eq(positioningStatements.profileId,profile.id),
+      profile.currentStatementId!==null?eq(positioningStatements.id,profile.currentStatementId):sql`${positioningStatements.versionNumber} > ${profile.statementVersionFloor}`,
+    )).orderBy(desc(positioningStatements.versionNumber)).limit(1);
+    // 有指针却找不到 owned 陈述时返回空，禁止悄悄改选别的版本。
+    return rows[0];
+  }
   return {
     async seedProfiles(rows) {
       if (rows.length === 0) return;
@@ -354,20 +363,7 @@ export function createPositioningRepository(
           );
         }
 
-        const currentRows = await tx
-          .select()
-          .from(positioningStatements)
-          .where(
-            and(
-              eq(positioningStatements.userId, deps.userId),
-              eq(positioningStatements.accountId, deps.accountId),
-              eq(positioningStatements.profileId, profileId),
-              sql`${positioningStatements.versionNumber} > ${profile.statementVersionFloor}`,
-            ),
-          )
-          .orderBy(desc(positioningStatements.versionNumber))
-          .limit(1);
-        const current = currentRows[0];
+        const current = await readCurrent(tx as unknown as Db,profile);
         if (current) {
           if (current.masterSnapshot == null) {
             // 只写一次补齐旧版元数据；不改陈述正文、关键词、锚点或版本号。
@@ -446,6 +442,7 @@ export function createPositioningRepository(
               expressionRule: "",
             },
             statementVersionFloor: versionFloor,
+            currentStatementId: null,
             updatedAt: deps.now(),
           })
           .where(
@@ -495,80 +492,10 @@ export function createPositioningRepository(
           );
         }
 
-        // 恢复前先保护当前真实母版；用户随后仍可从历史撤回这次恢复。
-        const currentRows = await tx
-          .select()
-          .from(positioningStatements)
-          .where(
-            and(
-              eq(positioningStatements.userId, deps.userId),
-              eq(positioningStatements.accountId, deps.accountId),
-              eq(positioningStatements.profileId, profile.id),
-              sql`${positioningStatements.versionNumber} > ${profile.statementVersionFloor}`,
-            ),
-          )
-          .orderBy(desc(positioningStatements.versionNumber))
-          .limit(1);
-        const current = currentRows[0];
-        const currentSnapshot = snapshotFromProfileRow(profile);
-        if (current?.masterSnapshot == null && current) {
-          await tx
-            .update(positioningStatements)
-            .set({ masterSnapshot: currentSnapshot })
-            .where(
-              and(
-                eq(positioningStatements.id, current.id),
-                isNull(positioningStatements.masterSnapshot),
-              ),
-            );
-        } else if (
-          current &&
-          !sameSnapshot(current.masterSnapshot, currentSnapshot)
-        ) {
-          const maxRows = await tx
-            .select({ versionNumber: positioningStatements.versionNumber })
-            .from(positioningStatements)
-            .where(
-              and(
-                eq(positioningStatements.userId, deps.userId),
-                eq(positioningStatements.accountId, deps.accountId),
-                eq(positioningStatements.profileId, profile.id),
-              ),
-            )
-            .orderBy(desc(positioningStatements.versionNumber))
-            .limit(1);
-          await tx.insert(positioningStatements).values({
-            id: deps.nextId("posstmt"),
-            userId: deps.userId,
-            accountId: deps.accountId,
-            profileId: profile.id,
-            oneLiner: current.oneLiner,
-            keywords: current.keywords,
-            productAnchorIds: current.productAnchorIds,
-            versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
-            createdByType: "human",
-            aiTaskId: null,
-            changeReason: `恢复前自动备份（基于 v${current.versionNumber}）`,
-            masterSnapshot: currentSnapshot,
-            createdAt: deps.now(),
-          });
-        }
-
-        const maxRows = await tx
-          .select({ versionNumber: positioningStatements.versionNumber })
-          .from(positioningStatements)
-          .where(
-            and(
-              eq(positioningStatements.userId, deps.userId),
-              eq(positioningStatements.accountId, deps.accountId),
-              eq(positioningStatements.profileId, profile.id),
-            ),
-          )
-          .orderBy(desc(positioningStatements.versionNumber))
-          .limit(1);
         const restoredProfiles = await tx
           .update(creatorProfiles)
           .set({
+            currentStatementId: source.id,
             persona: snapshot.persona,
             field: snapshot.field,
             audience: snapshot.audience,
@@ -586,27 +513,9 @@ export function createPositioningRepository(
             ),
           )
           .returning();
-        const restoredStatements = await tx
-          .insert(positioningStatements)
-          .values({
-            id: deps.nextId("posstmt"),
-            userId: deps.userId,
-            accountId: deps.accountId,
-            profileId: profile.id,
-            oneLiner: source.oneLiner,
-            keywords: source.keywords,
-            productAnchorIds: source.productAnchorIds,
-            versionNumber: (maxRows[0]?.versionNumber ?? 0) + 1,
-            createdByType: "human",
-            aiTaskId: null,
-            changeReason: `恢复自 v${source.versionNumber}`,
-            masterSnapshot: snapshot,
-            createdAt: deps.now(),
-          })
-          .returning();
         return {
           profile: restoredProfiles[0]!,
-          statement: restoredStatements[0]!,
+          statement: source,
           restoredFromVersion: source.versionNumber,
         };
       });
@@ -673,21 +582,9 @@ export function createPositioningRepository(
       return row;
     },
 
-    async getCurrentStatement(profileId, statementVersionFloor) {
-      const rows = await db
-        .select()
-        .from(positioningStatements)
-        .where(
-          and(
-            eq(positioningStatements.userId, deps.userId),
-            eq(positioningStatements.accountId, deps.accountId),
-            eq(positioningStatements.profileId, profileId),
-            sql`${positioningStatements.versionNumber} > ${statementVersionFloor}`,
-          ),
-        )
-        .orderBy(desc(positioningStatements.versionNumber))
-        .limit(1);
-      return rows[0];
+    async getCurrentStatement(profileId, _statementVersionFloor) {
+      const [profile]=await db.select().from(creatorProfiles).where(and(eq(creatorProfiles.id,profileId),eq(creatorProfiles.userId,deps.userId),eq(creatorProfiles.accountId,deps.accountId))).limit(1);
+      return profile?readCurrent(db,profile):undefined;
     },
 
     async maxVersionNumber(profileId) {
@@ -707,7 +604,8 @@ export function createPositioningRepository(
     },
 
     async insertStatement(input) {
-      const inserted = await db
+      return db.transaction(async tx=>{
+      const inserted = await tx
         .insert(positioningStatements)
         .values({
           id: deps.nextId("posstmt"),
@@ -727,7 +625,9 @@ export function createPositioningRepository(
           createdAt: deps.now(),
         })
         .returning();
+      await tx.update(creatorProfiles).set({currentStatementId:inserted[0]!.id,updatedAt:deps.now()}).where(and(eq(creatorProfiles.id,input.profileId),eq(creatorProfiles.userId,deps.userId),eq(creatorProfiles.accountId,deps.accountId)));
       return inserted[0]!;
+      });
     },
 
     async getActiveDiscoverySession() {
@@ -959,23 +859,9 @@ export function createPositioningRepository(
           )
           .limit(1);
         const existingProfile = profileRows[0];
-        const currentRows = existingProfile
-          ? await tx
-              .select()
-              .from(positioningStatements)
-              .where(
-                and(
-                  eq(positioningStatements.userId, deps.userId),
-                  eq(positioningStatements.accountId, deps.accountId),
-                  eq(positioningStatements.profileId, existingProfile.id),
-                  sql`${positioningStatements.versionNumber} > ${existingProfile.statementVersionFloor}`,
-                ),
-              )
-              .orderBy(desc(positioningStatements.versionNumber))
-              .limit(1)
-          : [];
+        const current = existingProfile?await readCurrent(tx as unknown as Db,existingProfile):undefined;
         if (
-          (currentRows[0]?.id ?? null) !== input.expectedCurrentStatementId
+          (current?.id ?? null) !== input.expectedCurrentStatementId
         ) {
           return undefined;
         }
@@ -1008,6 +894,7 @@ export function createPositioningRepository(
               await tx
                 .update(creatorProfiles)
                 .set({
+                  currentStatementId: statementId,
                   persona: input.proposal.persona,
                   field: input.proposal.field,
                   audience: input.proposal.audience,
@@ -1033,6 +920,7 @@ export function createPositioningRepository(
                   id: deps.nextId("profile"),
                   userId: deps.userId,
                   accountId: deps.accountId,
+                  currentStatementId: statementId,
                   persona: input.proposal.persona,
                   field: input.proposal.field,
                   audience: input.proposal.audience,

@@ -241,7 +241,7 @@ describe("positioning contract (each op validates against its DTO)", () => {
     expect(parsedCenter.history).toHaveLength(1);
   });
 
-  it("positioning.master.restore → restored profile + appended statement", async () => {
+  it("positioning.master.restore → restored profile + selected original statement", async () => {
     const transport = makeTransport(db);
     const statementId = await seedProfileAndStatement(transport);
     const env = await call(
@@ -252,7 +252,8 @@ describe("positioning contract (each op validates against its DTO)", () => {
     );
     const parsed = ENDPOINTS.restorePositioningMaster.response.parse(env.data);
     expect(parsed.restoredFromVersion).toBe(1);
-    expect(parsed.statement.versionNumber).toBe(2);
+    expect(parsed.statement.versionNumber).toBe(1);
+    expect(parsed.statement.id).toBe(statementId);
     expect(parsed.profile.persona).toBe("p");
   });
 

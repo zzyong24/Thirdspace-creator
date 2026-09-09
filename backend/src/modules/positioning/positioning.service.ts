@@ -671,7 +671,9 @@ export function createPositioningService(
           `StatementValidationError: keywords must be exactly 3 (got ${input.proposal.keywords.length})`,
         );
       }
-      const repo = repoFor(ctx, "positioning.discovery.confirm");
+      return db.transaction(async tx=>{
+      await lockPositioningAdoptionAccount(ctx,tx,false);
+      const repo = repoFor(ctx, "positioning.discovery.confirm",tx as unknown as Db);
       const result = await repo.confirmDiscoveryCandidate(input);
       if (!result) {
         throw new DiscoveryConflictError(
@@ -683,6 +685,7 @@ export function createPositioningService(
         statement: toPositioningStatementDto(result.statement),
         session: toPositioningDiscoverySessionDto(result.session),
       };
+      });
     },
 
     async upsertProfile(ctx, input) {
@@ -749,7 +752,9 @@ export function createPositioningService(
     },
 
     async restoreMaster(ctx, statementId) {
-      const repo = repoFor(ctx, "positioning.restoreMaster");
+      return db.transaction(async tx=>{
+      await lockPositioningAdoptionAccount(ctx,tx,false);
+      const repo = repoFor(ctx, "positioning.restoreMaster",tx as unknown as Db);
       const source = toPositioningStatementDto(
         await repo.getStatement(statementId),
       );
@@ -767,6 +772,7 @@ export function createPositioningService(
         statement: toPositioningStatementDto(restored.statement),
         restoredFromVersion: restored.restoredFromVersion,
       };
+      });
     },
 
     async createStatementVersion(ctx, input) {
