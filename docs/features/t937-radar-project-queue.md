@@ -27,3 +27,9 @@ flowchart LR
 公开 CLI 读取同一作品 intelligence-item-693b96ef-11484 的最近三次 topic_preview：2026-09-09T02:37:49/52/59 UTC 均在约0.3秒内 failed，错误 WORKER_EXECUTION_INTERRUPTED。现有日志没有具体阶段，因此不能宣称唯一根因。已增加上下文读取/校验、凭据读取/校验、模型初始化的安全阶段码；Worker 真实 Pi 本地构造到预留端口离线检查通过，没有网络调用。37项相关测试通过，实际失败仍需复验。
 
 前端已验证：转写完成更新正文和卡片，无需router.refresh；读失败后继续追踪；第一项入队未返回不妨碍第二项提交，重复点击不重复提交。针对性3项通过。
+
+## 安装复验与初始化根因
+
+候选831d95dd已安装，PID22894，CLI自动full，DMG校验/签名验证通过；DMG SHA256 2e28317a9413de4538b3a1ba12ed061ca9633885c66dba66adddba5b9338d9b4。原任务 execution-task-2368a14a-514 用同ID重试后返回 INTELLIGENCE_MODEL_SETUP_FAILED，确定在模型初始化、尚未进入模型预留前失败。以纯假数据私有IPC探测本次打包worker，同样复现且没有网络请求。独立诊断复制包到临时目录后得到 TypeError: ModelsImpl is not a constructor，CJS产物里createModels调用前models模块初始化未执行；源码单测未覆盖此产物缺陷。退出打包阶段修复该根因后须重新验证和打包，不能将831d95dd宣称生成链路已修好。
+
+独立复核修正了父重试续接 waiting_user/paused 子任务与旧租约继续执行两个问题，补测7项通过。合并frontend tsc通过；完整UI49通过/5失败，与隔离基线46通过/5失败为同一组旧失败。boundary仍报告本轮未改的live-chat-session.ts两项SDK引用违规，未宣称全局通过。
