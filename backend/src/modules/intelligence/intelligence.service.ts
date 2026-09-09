@@ -3322,7 +3322,7 @@ export function createIntelligenceService(
       await db
         .update(itemTranscripts)
         .set({ status: "running", errorCode: null, updatedAt: now() })
-        .where(eq(itemTranscripts.itemId, target.itemId));
+        .where(and(eq(itemTranscripts.itemId, target.itemId), eq(itemTranscripts.executionTaskId, taskId)));
     },
 
     async finishTranscript(
@@ -3377,7 +3377,7 @@ export function createIntelligenceService(
           errorCode: input.errorCode ?? null,
           updatedAt: now(),
         })
-        .where(eq(itemTranscripts.itemId, target.itemId));
+        .where(and(eq(itemTranscripts.itemId, target.itemId), eq(itemTranscripts.executionTaskId, input.taskId)));
     },
 
     async listRuns(
@@ -3736,6 +3736,39 @@ export function createIntelligenceService(
         }
       }
       if (!transcript) throw new Error("failed to create transcript state");
+      // SEMANTIC_BOUNDARY_ALLOW: 仅校准任务终态与关联逐字稿投影，不判断内容或重放外部调用。
+      // 老版本可能在 ASR 停止后留下 running；持任务锁避免与重试争用，关联 CAS 不覆盖新稿。
+      if (transcript.executionTaskId && ["queued", "running"].includes(transcript.status)) {
+        const previous = transcript;
+        transcript = await db.transaction(async (tx) => {
+          const [task] = await tx.select().from(executionTasks).where(and(
+            eq(executionTasks.id, previous.executionTaskId!),
+            eq(executionTasks.userId, item.userId),
+            eq(executionTasks.accountId, item.accountId),
+            eq(executionTasks.kind, "transcribe"),
+            eq(executionTasks.ownerType, "item"),
+            eq(executionTasks.ownerId, item.id),
+          )).limit(1).for("update");
+          if (!task || !["unknown_result", "waiting_user", "blocked", "failed", "cancelled"].includes(task.status)) return previous;
+          const retained = Boolean(previous.text?.trim());
+          const [updated] = await tx.update(itemTranscripts).set({
+            status: retained ? "done" : ["failed", "cancelled"].includes(task.status) ? "failed" : "blocked",
+            errorCode: retained ? null : task.lastErrorCode ?? "TRANSCRIBE_STOPPED",
+            completedAt: task.updatedAt,
+            updatedAt: now(),
+          }).where(and(
+            eq(itemTranscripts.itemId, item.id),
+            eq(itemTranscripts.userId, item.userId),
+            eq(itemTranscripts.accountId, item.accountId),
+            eq(itemTranscripts.executionTaskId, previous.executionTaskId!),
+            eq(itemTranscripts.status, previous.status),
+          )).returning();
+          if (updated) return updated;
+          const [current] = await tx.select().from(itemTranscripts).where(eq(itemTranscripts.itemId, item.id)).limit(1);
+          return current ?? previous;
+        });
+      }
+
       const [metrics, observations, snapshots, transforms] = await Promise.all([
         db
           .select()
@@ -3844,7 +3877,19 @@ export function createIntelligenceService(
       }
 
       const stamp = now();
-      const [updated] = await db
+      const updated = await db.transaction(async (tx) => {
+        // 与任务重试/领取共用行锁；读到停止态后若任务已恢复，不能覆盖它的新结果。
+        if (initial.executionTaskId) {
+          const [linked] = await tx.select().from(executionTasks).where(and(
+            eq(executionTasks.id, initial.executionTaskId),
+            eq(executionTasks.userId, item.userId),
+            eq(executionTasks.accountId, item.accountId),
+          )).limit(1).for("update");
+          if (linked && ["queued", "running", "retry_wait", "pause_requested", "cancel_requested"].includes(linked.status)) {
+            throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
+          }
+        }
+        const [row] = await tx
         .update(itemTranscripts)
         .set({
           status: "done",
@@ -3874,6 +3919,8 @@ export function createIntelligenceService(
           ),
         )
         .returning();
+        return row;
+      });
       if (updated) return toTranscript(updated);
 
       const [current] = await db

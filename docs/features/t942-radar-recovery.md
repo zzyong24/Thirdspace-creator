@@ -41,3 +41,13 @@ BROWSER_PROFILE_BUSY保留精确错误类型，同task/run自动退避5–60秒�
 同一原任务execution-task-f1e15754-651已succeeded，经公开CLI回读项目project-radar-e44ad83e3fe5fdf9b740708ceff97ca9，标题“AI 项目跑通过一次就别再手维护 Skill：让模型自己当配置管家”；候选intelligence-transform-f1e15754-826有1335字文案，转写done。未重复提交，待原任务完成后才替换安装。
 
 候选936660b9已安装，PID85933，CLI full；4项提示/恢复测试、42项打包测试通过，DMG与codesign校验通过。本地包SHA-256 f9f831bc6379f1c5eb73072c2d2c583d089f8e81eebe3f958631963787da2f2e。旧Gemini未知转写未恢复，T-942继续保留此缺口。
+
+## 用户再次催修：Gemini 原未知转写
+
+用户最新截图明确要求修复这条原任务，不接受一直停在人工补稿提示。本轮复查原转写和供应商调用回执，先寻找可恢复的原结果；基于实际证据修复恢复路径，保留原父任务和已有内容。不得仅改文案、直接写数据库或虚报恢复。
+
+实证缺口：公开 execution.tasks.list 显示原 transcribe 为 unknown_result/blocked，而 intelligence.items.get 返回同一 executionTaskId 的 transcript=running/text=null；uploadManualTranscript 会因此报 TRANSCRIPT_BUSY。最小修复在作品读取时校准已停止任务的逐字稿投影：同账号、同作品、kind=transcribe 且当前任务确实处于停止态才将 queued/running 改为 blocked/failed；持有任务行锁并比较原关联，防止与真实重试/新任务竞争。保留旧正文、任务关联和未知调用账本，不补假成功。活动任务仍拒绝人工覆盖。真实恢复用本地 Whisper 从原视频产生正文，经公开 uploadManual 上传，再恢复原升级父任务。
+
+本轮新增 3 个停止态回归先红后绿；补充恢复竞争与迟到回调保护后，intelligence.service + radar-project-queue 共 36 测试通过，frontend 合并类型检查通过。人工上传在写事务锁关联任务并复查活动态；markTranscriptRunning/finishTranscript 最终写入比对 executionTaskId，旧 worker 不能覆盖已补入正文。独立评审指出并发两项已落实。
+
+本地 douyin-transcribe 已从同一 externalId=7574748560332295460 的 542.6 秒原音频完成识别，faster-whisper small/cpu/int8，348 段、3967 字，耗时190.8秒。正文尚待更新安装版后经公开 API 写入与恢复原父任务；不将此本地识别结果记为旧云端请求成功。

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   benchmarkSources,
@@ -979,6 +979,55 @@ describe("T-482 内容雷达领域主链", () => {
     } finally {
       await client.close();
     }
+  });
+
+  it.each(["unknown_result", "failed", "cancelled"] as const)("[T-942] 已停止的 %s 不得留下假转写中并阻止补稿，原任务状态保留", async (status) => {
+    const { db, client } = await createDb();
+    const d = deps();
+    const tasks = createPersistentTaskService(db, d);
+    const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, { canonicalUrl: "https://www.douyin.com/video/stopped", externalId: "stopped", title: "转写恢复" });
+      const { tasks: queued } = await service.enqueueTranscripts(ctx, { itemIds: [itemId], idempotencyKey: "stopped-asr" });
+      const taskId = queued[0]!.id;
+      await db.update(executionTasks).set({ status, lastErrorCode: "BOUND_ASR_RESULT_UNKNOWN" }).where(eq(executionTasks.id, taskId));
+      await db.update(itemTranscripts).set({ status: "running" }).where(eq(itemTranscripts.itemId, itemId));
+      expect((await service.getItem(ctx, itemId)).transcript).toMatchObject({ status: status === "unknown_result" ? "blocked" : "failed", text: null, executionTaskId: taskId });
+      await expect(service.uploadManualTranscript(ctx, { itemId, inputMode: "paste", text: "从原音频本地识别得到的真实正文" })).resolves.toMatchObject({ status: "done", text: "从原音频本地识别得到的真实正文" });
+      expect((await db.select().from(executionTasks).where(eq(executionTasks.id, taskId)))[0]!.status).toBe(status);
+    } finally { await client.close(); }
+  });
+
+  it("[T-942] 校准停止态后原任务重新排队，仍禁止上传覆盖", async () => {
+    const { db, client } = await createDb(); const d = deps();
+    const tasks = createPersistentTaskService(db, d); const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, { canonicalUrl: "https://www.douyin.com/video/retry-race", externalId: "retry-race", title: "恢复竞争" });
+      const result = await service.enqueueTranscripts(ctx, { itemIds: [itemId], idempotencyKey: "retry-race" }); const taskId = result.tasks[0]!.id;
+      await db.update(executionTasks).set({ status: "failed" }).where(eq(executionTasks.id, taskId));
+      expect((await service.getItem(ctx, itemId)).transcript.status).toBe("failed");
+      await tasks.command(ctx, { taskIds: [taskId], command: "retry", idempotencyKey: "retry-before-upload" });
+      await expect(service.uploadManualTranscript(ctx, { itemId, inputMode: "paste", text: "不能覆盖正在恢复的任务" })).rejects.toThrow("TRANSCRIPT_BUSY");
+    } finally { await client.close(); }
+  });
+
+  it.each(["running", "done"] as const)("[T-942] 旧 worker 延迟 %s 回调不能覆盖已补入的正文", async (stage) => {
+    const { db, client } = await createDb(); const d = deps();
+    const tasks = createPersistentTaskService(db, d); const service = createIntelligenceService(db, { ...d, tasks });
+    try {
+      const itemId = await service.seedItemForTest(ctx, { canonicalUrl: "https://www.douyin.com/video/late-worker", externalId: "late-worker", title: "旧回调" });
+      const result = await service.enqueueTranscripts(ctx, { itemIds: [itemId], idempotencyKey: "late-worker" }); const taskId = result.tasks[0]!.id;
+      await db.update(executionTasks).set({ status: "unknown_result" }).where(eq(executionTasks.id, taskId));
+      const original = service.getTranscriptTaskForExecution.bind(service);
+      vi.spyOn(service, "getTranscriptTaskForExecution").mockImplementationOnce(async (...args) => {
+        const target = await original(...args);
+        await service.uploadManualTranscript(ctx, { itemId, inputMode: "paste", text: "已恢复的真实正文" });
+        return target;
+      });
+      if (stage === "running") await service.markTranscriptRunning(ctx, taskId);
+      else await service.finishTranscript(ctx, { taskId, status: "done", text: "迟到结果" });
+      expect((await service.getItem(ctx, itemId)).transcript).toMatchObject({ status: "done", text: "已恢复的真实正文", executionTaskId: null });
+    } finally { vi.restoreAllMocks(); await client.close(); }
   });
 
   it("[T-603] 人工逐字稿写入既有 item 真相且不创建转写任务", async () => {
