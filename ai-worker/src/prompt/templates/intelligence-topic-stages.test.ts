@@ -69,3 +69,11 @@ describe("[T-646] 内容雷达分段输出契约", () => {
     );
   });
 });
+
+
+it("[T-944] 推荐类型与理由被保留，无推荐和未知分类不会阻断合法旧选题", () => {
+  const input = { title: "用真实服务过程回答客户的购买顾虑", contentRole: "conversion", contentRoleReason: "原作品做问题科普，本账号有对应服务证据，适合解释购买决策。" };
+  expect(intelligenceTopicFromDecompositionSchema.parse(input)).toMatchObject(input);
+  expect(intelligenceTopicFromDecompositionSchema.parse({ title: "已有选题" }).contentRole).toBeUndefined();
+  expect(intelligenceTopicFromDecompositionSchema.parse({ title: "已有选题", contentRole: "段子", contentRoleReason: "x".repeat(501) })).toMatchObject({ title: "已有选题", contentRole: null });
+});

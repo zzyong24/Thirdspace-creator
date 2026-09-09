@@ -3015,6 +3015,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     input: {
       title: string;
       angle: string;
+      contentRole?: "traffic" | "trust" | "conversion" | null;
       card?: {
         oneLiner?: string;
         hook?: string;
@@ -3552,6 +3553,7 @@ dispatchIntelligenceRun});
       title: input.title,
       angle: input.angle,
       source: "benchmark",
+      contentRole: input.contentRole,
       card: input.card,
       sourceReferences: input.sourceReferences,
     });

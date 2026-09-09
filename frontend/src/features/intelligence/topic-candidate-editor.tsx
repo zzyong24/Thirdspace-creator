@@ -6,6 +6,28 @@ import { FolderPlus,Link2,RefreshCw } from "lucide-react";
 import * as React from "react";
 import type { RadarItemDetail } from "./intelligence-workbench-types";
 import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
+const CONTENT_ROLE_LABELS = { traffic: "流量型", trust: "信任型", conversion: "获客型" } as const;
+type CandidateSnapshot = NonNullable<RadarItemDetail["transforms"][number]["outputSnapshot"]>;
+function candidateFromSnapshot(snapshot: CandidateSnapshot) {
+  return {
+    ...snapshot,
+    title: snapshot.title ?? "",
+    angle: snapshot.angle ?? "",
+    differentiation: snapshot.differentiation ?? "",
+    sourceSummary: snapshot.sourceSummary ?? "",
+    targetAudience: snapshot.targetAudience ?? "",
+    audiencePain: snapshot.audiencePain ?? "",
+    coreConflict: snapshot.coreConflict ?? "",
+    format: snapshot.format ?? "",
+    contentRole: snapshot.contentRole ?? null,
+    adaptationStrategy: snapshot.adaptationStrategy ?? {
+      keep: [],
+      replace: [],
+      add: [],
+      avoid: [],
+    },
+  };
+}
 export function TopicCandidateEditor({
   transform,
   sourceTranscript,
@@ -38,27 +60,28 @@ export function TopicCandidateEditor({
     existingTopicId: string | null,
   ) => void;
 }) {
-  const [candidate, setCandidate] = React.useState(() => ({
-    ...transform.outputSnapshot,
-    title: transform.outputSnapshot.title ?? "",
-    angle: transform.outputSnapshot.angle ?? "",
-    differentiation: transform.outputSnapshot.differentiation ?? "",
-    sourceSummary: transform.outputSnapshot.sourceSummary ?? "",
-    targetAudience: transform.outputSnapshot.targetAudience ?? "",
-    audiencePain: transform.outputSnapshot.audiencePain ?? "",
-    coreConflict: transform.outputSnapshot.coreConflict ?? "",
-    format: transform.outputSnapshot.format ?? "",
-    adaptationStrategy: transform.outputSnapshot.adaptationStrategy ?? {
-      keep: [],
-      replace: [],
-      add: [],
-      avoid: [],
-    },
-  }));
-  const [draftText] = React.useState(
-    transform.outputSnapshot.adaptedDraft?.contentText ?? "",
-  );
+  const dirtyFields = React.useRef(new Set<string>());
+  const [candidate, setCandidate] = React.useState(() => candidateFromSnapshot(transform.outputSnapshot));
+  // 同一 transform 的分段检查点持续到达，刷新未编辑字段，保留用户主动改选或清空。
+  React.useEffect(() => {
+    setCandidate((current) => {
+      const next = candidateFromSnapshot(transform.outputSnapshot);
+      for (const field of dirtyFields.current) {
+        Object.assign(next, { [field]: current[field as keyof typeof current] });
+      }
+      return next;
+    });
+  }, [transform.outputSnapshot]);
+  const editCandidate = (changes: Partial<typeof candidate>) => {
+    Object.keys(changes).forEach((field) => dirtyFields.current.add(field));
+    setCandidate((current) => ({ ...current, ...changes }));
+  };
+  const draftText = transform.outputSnapshot.adaptedDraft?.contentText ?? "";
   const confirmed = transform.status === "confirmed";
+  const recommendedRole = confirmed
+    ? transform.outputSnapshot.recommendedContentRole
+    : transform.outputSnapshot.contentRole;
+  const roleChanged = (candidate.contentRole ?? null) !== (recommendedRole ?? null);
   // [T-900] 改写初稿是进入后续创作的最小内容真相；选题辅助字段允许后补。
   // 归属、来源与 provenance 等安全门仍由 confirmTopic 在执行当下重新校验。
   const incomplete = !draftText.trim();
@@ -191,10 +214,30 @@ export function TopicCandidateEditor({
         value={candidate.title}
         disabled={confirmed || busy || retrying}
         onChange={(event) =>
-          setCandidate({ ...candidate, title: event.target.value })
+          editCandidate({ title: event.target.value })
         }
         className="bg-surface text-sm font-medium"
       />
+      <section aria-label="内容目的" className="space-y-2 rounded-lg border border-border/70 bg-surface p-3">
+        <label className="grid gap-1 text-xs font-medium">
+          内容目的
+          <select
+            aria-label="选题候选内容目的"
+            value={candidate.contentRole ?? ""}
+            disabled={confirmed || busy || retrying}
+            onChange={(event) => editCandidate({ contentRole: (event.target.value || null) as typeof candidate.contentRole })}
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">未选择</option>
+            {Object.entries(CONTENT_ROLE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        <p className="text-[11px] leading-5 text-muted-foreground">流量型：吸引相关新观众 · 信任型：展示判断与证据 · 获客型：解决购买顾虑、促成咨询</p>
+        <p className="text-xs leading-5">原推荐：{recommendedRole ? CONTENT_ROLE_LABELS[recommendedRole] : "未推荐"}</p>
+        {transform.outputSnapshot.contentRoleReason ? <p className="text-xs leading-5 text-muted-foreground">推荐依据：{transform.outputSnapshot.contentRoleReason}</p> : null}
+        {roleChanged ? <p role="status" className="text-xs leading-5 text-primary">已改选，采纳后用于项目后续写稿；当前初稿仍是原推荐下的参考稿，尚未按新目的重写。</p> : null}
+        {confirmed ? <p className="text-[11px] text-muted-foreground">已随选题保存，在项目中继续创作。</p> : null}
+      </section>
       {(
         [
           ["angle", "角度"],
@@ -213,7 +256,7 @@ export function TopicCandidateEditor({
             value={candidate[field]}
             disabled={confirmed || busy || retrying}
             onChange={(event) =>
-              setCandidate({ ...candidate, [field]: event.target.value })
+              editCandidate({ [field]: event.target.value })
             }
             className="min-h-16 resize-y rounded-lg border border-input bg-surface px-3 py-2 text-xs leading-5 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />

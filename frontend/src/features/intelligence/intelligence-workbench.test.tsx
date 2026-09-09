@@ -2489,6 +2489,8 @@ describe("T-482 内容雷达工作区", () => {
                 audiencePain: "交付结果不稳定",
                 coreConflict: "模型参数与流程责任的冲突",
                 format: "案例复盘口播",
+                contentRole: "traffic",
+                contentRoleReason: "原作靠共同处境吸引观看，本账号可用同类问题吸引业务负责人。",
                 adaptationStrategy: {
                   keep: ["反常识结构"],
                   replace: ["来源案例"],
@@ -2514,6 +2516,9 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
+    expect(screen.getByText("原推荐：流量型")).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("选题候选内容目的"), "conversion");
+    expect(screen.getByText(/当前初稿仍是原推荐下的参考稿/)).toBeInTheDocument();
     await userEvent.click(
       screen.getByRole("button", { name: "一键升级项目" }),
     );
@@ -2522,6 +2527,7 @@ describe("T-482 内容雷达工作区", () => {
       expect(stub.confirmTopic).toHaveBeenCalledWith(
         expect.objectContaining({
           transformId: "transform-upgrade",
+          editedCandidate: expect.objectContaining({ contentRole: "conversion" }),
           idempotencyKey: expect.stringMatching(/^topic-confirm:/),
         }),
       ),
@@ -2682,6 +2688,8 @@ describe("T-482 内容雷达工作区", () => {
       />,
     );
 
+    expect(screen.getByLabelText("选题候选内容目的")).toBeDisabled();
+    expect(screen.getByText("原推荐：未推荐")).toBeInTheDocument();
     await userEvent.click(
       screen.getByRole("button", { name: "一键升级项目" }),
     );

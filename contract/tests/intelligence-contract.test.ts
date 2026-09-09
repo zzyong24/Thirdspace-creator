@@ -232,3 +232,14 @@ describe("T-482 内容雷达 contract", () => {
     ).toBe(false);
   });
 });
+
+it("[T-944] 确认允许可选内容目的，但不能改写只读推荐理由或提交未知分类", () => {
+  const editedCandidate = { title: "选题", angle: "", differentiation: "", sourceSummary: "", targetAudience: "", audiencePain: "", coreConflict: "", format: "", adaptationStrategy: { keep: [], replace: [], add: [], avoid: [] } };
+  const schema = ENDPOINTS.confirmIntelligenceTopic.body;
+  for (const contentRole of [undefined, null, "traffic", "trust", "conversion"]) {
+    expect(schema.safeParse({ editedCandidate: { ...editedCandidate, contentRole }, idempotencyKey: "confirm" }).success).toBe(true);
+  }
+  for (const extra of [{ contentRole: "段子" }, { contentRoleReason: "伪造模型理由" }, { recommendedContentRole: "conversion" }]) {
+    expect(schema.safeParse({ editedCandidate: { ...editedCandidate, ...extra }, idempotencyKey: "confirm" }).success).toBe(false);
+  }
+});

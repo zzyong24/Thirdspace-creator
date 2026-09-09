@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import { ErrorCode, type RequestContext } from "@creatoros/contract";
+import { assembleCreativeContext } from "../ai-runtime/creative-context";
 import {
   createCandidateService,
   type CandidateService,
@@ -319,7 +320,7 @@ describe("candidate service", () => {
     // current_stage=brief 由 ProjectsService 内部设(promote 不显式传);此处验草稿映射。
     expect(cmd.briefDetail).toEqual({
       targetAudience: "想转型做内容的职场人",
-      contentGoal: "建立专业信任,引导私域咨询",
+      contentGoal: expect.stringContaining("当前内容目的：信任型"),
       contentFormat: "口播",
       coreMessage: "三步找到你的内容定位",
     });
@@ -371,9 +372,10 @@ describe("candidate service", () => {
     expect(cmd.briefDetail?.contentRadarEvidence).toBeUndefined();
   });
 
-  it("[T-642] promote freezes radar decomposition and adaptation strategy into Project brief", async () => {
+  it("[T-944] 用户改选获客型后升级和写稿使用当前目标，原流量初稿保留为参考", async () => {
     const cand = await svc.createCandidate(ctx, {
       title: "不是模型强，而是工作流稳",
+      contentRole: "conversion",
       angle: "用交付失败复盘切入",
       source: "benchmark",
       card: {
@@ -382,7 +384,7 @@ describe("candidate service", () => {
         audiencePain: "模型升级了但交付仍不稳定",
         coreConflict: "模型参数与责任边界的优先级冲突",
         format: "案例复盘口播",
-        proposal: "先用交付失败现场证明责任边界比换模型更重要",
+        proposal: "原推荐：流量型；原推荐依据：以常见误区引起更广泛讨论；仅作背景。",
         sourceReferences: [{
           kind: "original_video",
           platform: "douyin",
@@ -416,9 +418,9 @@ describe("candidate service", () => {
     expect(cmd.briefDetail?.targetAudience).toBe("AI 业务负责人");
     expect(cmd.briefDetail?.contentFormat).toBe("案例复盘口播");
     expect(cmd.briefDetail?.coreMessage).toBe("工作流决定 AI 能否稳定交付");
-    expect(cmd.briefDetail?.contentGoal).toBe(
-      "先用交付失败现场证明责任边界比换模型更重要",
-    );
+    expect(cmd.briefDetail?.contentGoal).toContain("当前内容目的：获客型");
+    expect(cmd.briefDetail?.contentGoal).toContain("优先于原推荐及参考初稿");
+    expect(cmd.briefDetail?.contentGoal).toContain("原推荐：流量型");
     expect(cmd.briefDetail?.contentRadarEvidence).toEqual({
       sourceReferences: expect.arrayContaining([
         expect.objectContaining({ intelligenceItemId: "item-1" }),
@@ -435,6 +437,26 @@ describe("candidate service", () => {
         generatedFromTranscriptHash: "sha256:transcript",
       }),
     });
+    const context = await assembleCreativeContext(ctx, { projectId: "proj-radar", topic: cand.title }, {
+      positioning: { getPositioningCenter: async () => ({ profile: null, currentStatement: null }) },
+      brief: { getBriefDetail: async () => cmd.briefDetail },
+      projectIntelligence: { getSourceContexts: async () => [{
+        item: { title: "原流量对标", canonicalUrl: "https://www.douyin.com/video/1", authorName: "来源作者" },
+        transcript: { text: "经校验的来源正文", hash: "sha256:transcript" },
+      }] },
+    });
+    expect(context.projectBriefHard).toContain("当前内容目的：获客型");
+    expect(context.projectIntelligenceBrief).toContain("内容雷达参考初稿");
+    expect(context.projectIntelligenceBrief).toContain("当前内容目标优先");
+    expect(context.projectIntelligenceBrief).toContain("交付现场真正先坏掉的是责任边界");
+  });
+
+  it("[T-944] 无推荐的旧候选升级不补假分类", async () => {
+    const cand = await svc.createCandidate(ctx, { title: "没有类型的旧选题", card: { proposal: "解释真实问题" } });
+    expect(cand.contentRole).toBeNull();
+    await svc.promote(ctx, cand.id);
+    const [, cmd] = ports.projects.createProject.mock.calls[0]!;
+    expect(cmd.briefDetail?.contentGoal).toBe("解释真实问题");
   });
 
   it("[T-870] promote replay returns the existing Project without creating a duplicate", async () => {

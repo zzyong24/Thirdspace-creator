@@ -993,3 +993,5 @@
 {"ts":"2026-09-09T04:07:57.185Z","actor":"taskctl","action":"start","task":"T-941","sha_before":"00e6f7e2509c","sha_after":"cf19f15ca303"}
 {"ts":"2026-09-09T04:29:23.623Z","actor":"taskctl","action":"complete","task":"T-941","evidence":"e78b834b 本地包已安装；首页data一致；19+3+20+35针对性回归、42打包测试及tsc通过；冷读2.717s/暖读0.825、0.629s；未做原生导航E2E，全局reconcile按用户此前要求暂缓，详见SPEC","sha_before":"cf19f15ca303","sha_after":"f522d8feebf0"}
 {"ts":"2026-09-09T05:16:12.108Z","actor":"taskctl","action":"start","task":"T-942","sha_before":"9da5e8c0deb0","sha_after":"5d481d20d0e6"}
+{"ts":"2026-09-09T08:28:59.632Z","actor":"taskctl","action":"start","task":"T-944","sha_before":"fb682eac2cf4","sha_after":"468046477bf2"}
+{"ts":"2026-09-09T08:57:36.763Z","actor":"taskctl","action":"complete","task":"T-944","evidence":"源码实现与独立评审完成；AI 47、后端75、契约8、UI关键5回归及真实浏览器组件交互通过，frontend/ai-worker类型通过。全局既有对账、边界7、backend类型13、雷达基线5失败与progress复杂度账本阻断保留T-916；未做真实模型A/B或打包安装，详见SPEC。","sha_before":"1958443ea9ea","sha_after":"e04ea3ed71ad"}

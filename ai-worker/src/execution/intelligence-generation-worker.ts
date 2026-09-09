@@ -56,7 +56,7 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
   if(!source.reusableDecomposition)await save({kind:"checkpoint",stage:"decomposition",value:decomposition});
   const topic=source.reusableCandidate??parseGeneratedOutput(intelligenceTopicFromDecompositionSchema,(await runStructuredNode({model,...recovery,template:getEffectiveTemplate("intelligence.topic-from-decomposition"),facets:{...facets,decomposition:JSON.stringify(decomposition)},maxRetries:0,maxOutputTokens:2048,signal})).object);
   if(!source.reusableCandidate)await save({kind:"checkpoint",stage:"topic",value:topic});
-  const {system,prompt}=bindPrompt(getEffectiveTemplate("intelligence.topic-adapted-draft"),{...facets,decomposition:JSON.stringify(decomposition),topicCandidate:JSON.stringify({title:topic.title,angle:topic.angle,differentiation:topic.differentiation,sourceSummary:topic.sourceSummary,targetAudience:topic.targetAudience,audiencePain:topic.audiencePain,coreConflict:topic.coreConflict,format:topic.format}),adaptationStrategy:JSON.stringify(topic.adaptationStrategy)});
+  const {system,prompt}=bindPrompt(getEffectiveTemplate("intelligence.topic-adapted-draft"),{...facets,decomposition:JSON.stringify(decomposition),topicCandidate:JSON.stringify({title:topic.title,angle:topic.angle,differentiation:topic.differentiation,sourceSummary:topic.sourceSummary,targetAudience:topic.targetAudience,audiencePain:topic.audiencePain,coreConflict:topic.coreConflict,format:topic.format,contentRole:topic.contentRole,contentRoleReason:topic.contentRoleReason}),adaptationStrategy:JSON.stringify(topic.adaptationStrategy)});
   let adaptedDraft="";
   for(let attempt=0;(continuous || attempt<2);attempt++){
    signal.throwIfAborted();

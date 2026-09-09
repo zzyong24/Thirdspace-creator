@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { withBusinessMethod } from "../business-methods";
 import { SCRIPT_DRAFT_TEMPLATE } from "./script-draft";
+import { SCRIPT_VOICEOVER_COMPOSE_TEMPLATE } from "./script-voiceover-storyboard";
 
-describe("[T-790] script.draft 用认知对打组织说服", () => {
-  it("围绕一个旧判断与新判断连续施压，而不是并列讲知识", () => {
-    expect(SCRIPT_DRAFT_TEMPLATE.template).toContain(
-      "观众当前相信的一个具体旧判断",
-    );
-    expect(SCRIPT_DRAFT_TEMPLATE.template).toContain(
-      "每一段必须继续削弱旧判断或增强新判断",
-    );
-    expect(SCRIPT_DRAFT_TEMPLATE.template).toContain(
-      "反例、类比、因果推演、预判异议、亲历案例",
-    );
+describe("T-944 写稿保留认知推进，但不强造对立", () => {
+  it.each([SCRIPT_DRAFT_TEMPLATE, SCRIPT_VOICEOVER_COMPOSE_TEMPLATE])("$id 的最终方法用事实推进，避免凑时长或虚构旧观点", template => {
+    const effective = withBusinessMethod(template);
+    expect(effective.system).toContain("不能为制造反转虚构一个愚蠢的旧观点");
+    expect(effective.system).toContain("每段增加事实、解释、证据");
+    expect(effective.system).toContain("不能换词重复凑时长");
   });
 });

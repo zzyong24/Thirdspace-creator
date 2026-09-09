@@ -1,3 +1,4 @@
+import { createChatSkillLibrary } from "./chat-skill-library";
 import type { RequestContext } from "@creatoros/contract";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -112,6 +113,7 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     ]);
     expect(requiredSkillIdsForTask("script.draft", {})).toEqual([
       "script.draft",
+      "script.source_similarity",
       "script.storyboard.segment",
       "script.voiceover.compose",
     ]);
@@ -233,8 +235,11 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
     );
   });
 
-  it("同名映射集合与 ai-worker official registry 完全等价", () => {
-    expect([...REGISTERED_SKILL_TASK_TYPES].sort()).toEqual(
+  it("执行节点和聊天纯方法共同覆盖 official registry，纯方法不冒充独立任务", () => {
+    for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan"]) {
+      expect(() => requiredSkillIdsForTask(skillId, {})).toThrow("SKILL_TASK_MAPPING_MISSING");
+    }
+    expect([...REGISTERED_SKILL_TASK_TYPES, ...CHAT_METHOD_SKILL_IDS, "research.plan"].sort()).toEqual(
       listOfficialSkillBases()
         .map((base) => base.skillId)
         .sort(),
@@ -477,5 +482,34 @@ describe("[T-513] snapshot serialization", () => {
         status: 413,
       }),
     );
+  });
+});
+
+
+describe("T-944 官方编导方法到聊天读取链路", () => {
+  it("按真实官方注册表冻结后，目录可发现找对标方法，正文逐字来自同一官方版本", async () => {
+    const bases = listOfficialSkillBases();
+    const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
+    const ids = requiredSkillIdsForTask("chat.sync", {surface: "project"});
+    const snapshot = await resolver(ctx, ids);
+    const library = createChatSkillLibrary(snapshot, ctx);
+    expect(library.catalog).toContain("method.research: 【找对标与素材研究】");
+    for (const id of ["method.research", "method.writing", "method.review"]) {
+      const base = bases.find(item => item.skillId === id)!;
+      const result = library.read({skillId: id});
+      expect(result.text).toBe([base.methodSystem, base.template].join("\n\n"));
+      expect(result.version).toBe(base.baseVersion);
+      expect(result.hasMore).toBe(false);
+    }
+  });
+  it("新基线保留账号自定义写法，已冻结任务不随后续修改漂移", async () => {
+    const rows = [row("method.writing", {system: "账号自定义写法：先讲维修现场"}, {observedBaseVersion: "v1"})];
+    const resolver = createEffectiveSkillSnapshotResolver(deps(listOfficialSkillBases(), rows));
+    const frozen = await resolver(ctx, ["method.writing"]);
+    rows[0]!.overlay = {system: "账号下一版写法"};
+    const next = await resolver(ctx, ["method.writing"]);
+    expect(createChatSkillLibrary(frozen, ctx).read({skillId: "method.writing"}).text).toContain("先讲维修现场");
+    expect(createChatSkillLibrary(frozen, ctx).read({skillId: "method.writing"}).text).not.toContain("账号下一版写法");
+    expect(createChatSkillLibrary(next, ctx).read({skillId: "method.writing"}).text).toContain("账号下一版写法");
   });
 });

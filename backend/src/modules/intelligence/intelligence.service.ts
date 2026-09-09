@@ -32,6 +32,7 @@ import {
   trendSources,
   type Db,
 } from "@creatoros/backend";
+import { contentRole as contentRoleSchema } from "@creatoros/contract";
 import type {
   ExecutionTaskResourceV2,
   IntelligenceCollectionResource,
@@ -193,6 +194,8 @@ export interface ReusableTopicCandidate {
   audiencePain: string;
   coreConflict: string;
   format: string;
+  contentRole?: "traffic" | "trust" | "conversion" | null;
+  contentRoleReason?: string;
   adaptationStrategy: {
     keep: string[];
     replace: string[];
@@ -289,6 +292,8 @@ function topicCandidateFromSnapshot(
     audiencePain: value.audiencePain as string,
     coreConflict: value.coreConflict as string,
     format: value.format as string,
+    contentRole: contentRoleSchema.safeParse(value.contentRole).data ?? null,
+    contentRoleReason: typeof value.contentRoleReason === "string" ? value.contentRoleReason.slice(0, 500) : undefined,
     adaptationStrategy: {
       keep: strategy.keep as string[],
       replace: strategy.replace as string[],
@@ -449,6 +454,7 @@ export interface IntelligenceServiceDeps {
       input: {
         title: string;
         angle: string;
+  contentRole?: "traffic" | "trust" | "conversion" | null;
         card?: {
           oneLiner?: string;
           targetAudience?: string;
@@ -4581,6 +4587,8 @@ export function createIntelligenceService(
         audiencePain: string;
         coreConflict: string;
         format: string;
+        contentRole?: "traffic" | "trust" | "conversion" | null;
+        contentRoleReason?: string;
         adaptationStrategy: {
           keep: string[];
           replace: string[];
@@ -4678,6 +4686,7 @@ export function createIntelligenceService(
           audiencePain: string;
           coreConflict: string;
           format: string;
+          contentRole?: "traffic" | "trust" | "conversion" | null;
           adaptationStrategy: {
             keep: string[];
             replace: string[];
@@ -4751,6 +4760,23 @@ export function createIntelligenceService(
           "选题标题和来源作品标题均为空，请补充标题后再继续",
         );
       }
+      // SEMANTIC_BOUNDARY_ALLOW: 枚举校验只落实用户选择，不根据文本推断内容目的。
+      const chosenRole = input.editedCandidate.contentRole === undefined
+        ? contentRoleSchema.safeParse(persistedSnapshot.contentRole).data ?? null
+        : input.editedCandidate.contentRole;
+      if (chosenRole !== null && !contentRoleSchema.safeParse(chosenRole).success) {
+        throw new IntelligenceValidationError("内容目的无效");
+      }
+      const recommendedContentRole = contentRoleSchema.safeParse(persistedSnapshot.contentRole).data ?? null;
+      const roleLabels = { traffic: "流量型", trust: "信任型", conversion: "获客型" };
+      const originalReason = typeof persistedSnapshot.contentRoleReason === "string"
+        ? persistedSnapshot.contentRoleReason.slice(0, 500) : "";
+      const proposal = [
+        input.editedCandidate.differentiation.trim() ? `差异化切法：${input.editedCandidate.differentiation.trim()}` : "",
+        recommendedContentRole ? `原推荐：${roleLabels[recommendedContentRole]}；参考初稿按此目的生成。` : "参考初稿未记录内容目的。",
+        originalReason ? `原推荐依据：${originalReason}` : "",
+        "原推荐和初稿仅作背景，后续写稿以当前已选内容目的为准。",
+      ].filter(Boolean).join("\n");
       const candidate = {
         title: resolvedTitle,
         angle: input.editedCandidate.angle.trim(),
@@ -4760,6 +4786,7 @@ export function createIntelligenceService(
         audiencePain: input.editedCandidate.audiencePain.trim(),
         coreConflict: input.editedCandidate.coreConflict.trim(),
         format: input.editedCandidate.format.trim(),
+        contentRole: chosenRole,
         adaptationStrategy: input.editedCandidate.adaptationStrategy,
       };
       const preview = transform.outputSnapshot as {
@@ -4813,6 +4840,7 @@ export function createIntelligenceService(
       }
       const topic = await deps.topics.create(ctx, {
         title: candidate.title,
+        contentRole: candidate.contentRole,
         angle: [
           candidate.angle,
           candidate.differentiation
@@ -4846,9 +4874,7 @@ export function createIntelligenceService(
           ...(factRisks.length > 0
             ? { riskNote: factRisks.join("；") }
             : {}),
-          ...(candidate.differentiation
-            ? { proposal: `差异化切法：${candidate.differentiation}` }
-            : {}),
+          proposal,
           ...(typeof preview.hook === "string" &&
           preview.hook.trim() &&
           structureSteps.length >= 2 &&
@@ -4903,6 +4929,7 @@ export function createIntelligenceService(
           outputSnapshot: {
             ...(transform.outputSnapshot as Record<string, unknown>),
             ...candidate,
+            recommendedContentRole,
           },
           targetTopicId: topic.id,
           updatedAt: now(),

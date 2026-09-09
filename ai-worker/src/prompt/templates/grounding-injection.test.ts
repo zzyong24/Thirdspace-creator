@@ -93,7 +93,7 @@ describe("[T-371] topic.enrich 模板 — 素材依据诚实门 + verifiedBrief 
 });
 
 // [T-355] 观众心智预设写法纪律段(用户拍板文案观的消化版)嵌入文案生成面 —— 单一真值
-// AUDIENCE_MINDSET_CLAUSE。核心不变量:归因外置(禁写让观众觉得「我不行」的话)逐字在场。
+// AUDIENCE_MINDSET_CLAUSE。核心不变量:尊重观众且不隐藏真实条件。
 describe("[T-355] 观众心智预设段下沉到文案生成模板", () => {
   it("script.draft 模板正文含逐字一致的 AUDIENCE_MINDSET_CLAUSE", async () => {
     const { AUDIENCE_MINDSET_CLAUSE } = await import("../grounding-facets");
@@ -104,9 +104,9 @@ describe("[T-355] 观众心智预设段下沉到文案生成模板", () => {
     const { PLATFORM_ADAPT_TEMPLATE } = await import("./platform-adapt");
     expect(PLATFORM_ADAPT_TEMPLATE.template).toContain(AUDIENCE_MINDSET_CLAUSE);
   });
-  it("条款含归因外置铁律关键句(禁写观众能力否定)", async () => {
+  it("尊重观众，但失败归因和使用条件仍按事实表达", async () => {
     const { AUDIENCE_MINDSET_CLAUSE } = await import("../grounding-facets");
-    expect(AUDIENCE_MINDSET_CLAUSE).toContain("观众永远不会怪自己");
-    expect(AUDIENCE_MINDSET_CLAUSE).toContain("绝不写任何暗示观众能力不足");
+    expect(AUDIENCE_MINDSET_CLAUSE).toContain("不羞辱能力或努力");
+    expect(AUDIENCE_MINDSET_CLAUSE).toContain("必要条件和能力边界");
   });
 });

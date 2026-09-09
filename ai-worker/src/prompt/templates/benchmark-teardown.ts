@@ -43,7 +43,7 @@ export type BenchmarkTeardownOutput = z.infer<typeof benchmarkTeardownSchema>;
 export const BENCHMARK_TEARDOWN_TEMPLATE: PromptTemplate = {
   id: "benchmark.teardown",
   outputRecovery: "creative-partial",
-  version: "v1",
+  version: "v2",
   // 三位一体「输出 Zod schema」位收口到 registry（SPEC §4.2）：runStructuredNode 从 registry 取它
   // 绑 generateObject（不再由调用方手传），校验失败自动重试。
   outputSchema: benchmarkTeardownSchema,
@@ -60,14 +60,15 @@ export const BENCHMARK_TEARDOWN_TEMPLATE: PromptTemplate = {
 【对标爆款作品（他号，仅作拆解，严禁照搬）】
 {{benchmarkBrief}}
 
-【任务】拆解上面这条对标爆款，输出可迁移的爆款要素，并**换本账号角度**给出转化选题：
+【证据边界】只根据实际提供的内容判断。只有标题和互动数据而没有正文/逐字稿时，只能分析标题与选题线索；钩子拆解和结构拆解明确写“缺正文，待核实”，不能猜前三秒、段落、情绪或成交原因。“为什么爆”区分数据观察与解释假设，无留存、评论或对照样本不能声称因果已证实。
+【任务】先识别来源受众、观众任务和想带来的变化，再输出可迁移的方法，并**换本账号角度**给出转化选题：
 1. 钩子拆解：它前3秒/开头怎么抓住人。
-2. 结构拆解：它内容的结构与节奏怎么编排。
+2. 结构拆解：根据正文说明各段的功能、证据与衔接，回答为什么上一段会引出下一段；不只贴“总分总”标签。
 3. 为什么爆：它爆的**底层原因**（戳中什么需求/情绪，给了什么信息增量或反差），不要停在表面。
-4. 可借鉴点：列出可迁移到本账号的要素（3-6 条）。
+4. 可借鉴点：只列有依据且可迁移到本账号的段落功能、演示方法或推进关系，剥离原作者措辞、专属案例和数字；不凑数量。
 5. 适配本账号建议：结合【本账号定位】，这套要素在本账号该怎么改造落地。
 6. 转化选题：给 1-3 个**本账号自己的新选题**。每个必须**换角度**（同一底层需求，用本账号的定位/人设/领域重做，不是原标题改几个字）。
-   - fit 标本账号适配度：high=本账号能做且贴合定位、值得进选题池；medium/low=偏离定位或本账号不擅长。
+   - fit 标本账号适配度：high=已有内容证据支持受众/任务匹配，且本账号有真实材料可以承接；只有标题线索或缺少本账号依据时至多 medium；medium/low=偏离定位或本账号不擅长。
    - 只有 fit=high 的会被采纳进池，请对 high 从严。
 
 【输出】只输出一个 JSON 对象：

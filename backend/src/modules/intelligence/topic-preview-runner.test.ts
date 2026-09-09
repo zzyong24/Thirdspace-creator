@@ -231,7 +231,7 @@ describe("[T-646] 内容雷达分段生成", () => {
 });
 
 describe("T-482 内容雷达转为我的选题", () => {
-  it("预览阶段只产候选，用户确认后才写入选题池并保留来源 provenance", async () => {
+  it("[T-944] 预览和复用保留类型推荐，确认改选后保存当前类型与原推荐 provenance", async () => {
     const { db, client } = await createDb();
     let serial = 0;
     const d = {
@@ -362,6 +362,8 @@ describe("T-482 内容雷达转为我的选题", () => {
                 audiencePain: "只盯模型参数却无法稳定交付",
                 coreConflict: "参数竞赛与业务闭环的优先级冲突",
                 format: "案例拆解口播",
+                contentRole: "traffic" as const,
+                contentRoleReason: "来源用误区引起讨论，本账号可借此触达尚未认识我们的业务负责人。",
                 adaptationStrategy: {
                   keep: ["反常识开场"],
                   replace: ["替换来源案例"],
@@ -390,6 +392,8 @@ describe("T-482 内容雷达转为我的选题", () => {
       const ready = await intelligence.getItem(ctx, detail.item.id);
       expect(ready.transforms[0]?.outputSnapshot).toMatchObject({
         title: "参数不重要，工作流才是 AI 落地的分水岭",
+        contentRole: "traffic",
+        contentRoleReason: expect.stringContaining("本账号可借此触达"),
         structureSteps: [
           "指出常见误区",
           "拆解业务输入与责任边界",
@@ -482,6 +486,8 @@ describe("T-482 内容雷达转为我的选题", () => {
                   audiencePain: next.audiencePain,
                   coreConflict: next.coreConflict,
                   format: next.format,
+                  contentRole: input.reusableCandidate?.contentRole,
+                  contentRoleReason: input.reusableCandidate?.contentRoleReason,
                   adaptationStrategy: next.adaptationStrategy,
                 },
               });
@@ -515,6 +521,8 @@ describe("T-482 内容雷达转为我的选题", () => {
       expect(reusedCandidate).toMatchObject({
         title: "参数不重要，工作流才是 AI 落地的分水岭",
         angle: expect.stringContaining("帮助中小团队"),
+        contentRole: "traffic",
+        contentRoleReason: expect.stringContaining("本账号可借此触达"),
         adaptationStrategy: {
           keep: ["反常识开场"],
           replace: ["替换来源案例"],
@@ -528,7 +536,8 @@ describe("T-482 内容雷达转为我的选题", () => {
         ctx,
         transform.transform.id,
         {
-          editedCandidate: ready.transforms[0]!.outputSnapshot as {
+          editedCandidate: { ...ready.transforms[0]!.outputSnapshot, contentRole: "conversion" } as {
+            contentRole: "conversion";
             title: string;
             angle: string;
             differentiation: string;
@@ -551,6 +560,7 @@ describe("T-482 内容雷达转为我的选题", () => {
       expect(createTopic).toHaveBeenCalledWith(
         ctx,
         expect.objectContaining({
+          contentRole: "conversion",
           card: {
             oneLiner: "参数不重要，工作流才是 AI 落地的分水岭",
             targetAudience: "正在落地 AI 的业务负责人",
@@ -564,7 +574,7 @@ describe("T-482 内容雷达转为我的选题", () => {
             ],
             format: "案例拆解口播",
             materialBasis: "来源用参数与工作流的反差解释 AI 落地",
-            proposal: "差异化切法：不做参数盘点，只拆业务中的责任边界",
+            proposal: expect.stringContaining("原推荐：流量型"),
             sourceDecomposition: {
               hook: "先反驳参数决定论制造认知反差",
               structureSteps: [
@@ -599,6 +609,11 @@ describe("T-482 内容雷达转为我的选题", () => {
       );
       expect(confirmed).toMatchObject({
         topicId: "topic-1",
+        transform: { outputSnapshot: {
+          contentRole: "conversion",
+          recommendedContentRole: "traffic",
+          contentRoleReason: "来源用误区引起讨论，本账号可借此触达尚未认识我们的业务负责人。",
+        } },
         provenance: {
           itemId: detail.item.id,
           sourceSnapshotId: detail.snapshots[0]!.id,

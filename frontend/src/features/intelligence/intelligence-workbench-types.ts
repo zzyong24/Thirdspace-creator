@@ -180,6 +180,9 @@ export interface RadarItemDetail {
       audiencePain?: string;
       coreConflict?: string;
       format?: string;
+      contentRole?: "traffic" | "trust" | "conversion" | null;
+      recommendedContentRole?: "traffic" | "trust" | "conversion" | null;
+      contentRoleReason?: string;
       adaptationStrategy?: {
         keep: string[];
         replace: string[];
@@ -399,6 +402,7 @@ export interface RadarApi {
       audiencePain: string;
       coreConflict: string;
       format: string;
+      contentRole?: "traffic" | "trust" | "conversion" | null;
       adaptationStrategy: {
         keep: string[];
         replace: string[];

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { defineEndpoint } from "../endpoints";
-import { id, paginationQuery } from "../primitives";
+import { contentRole, id, paginationQuery } from "../primitives";
 import {
   adapterErrorCode,
   executionTaskResourceV2,
@@ -71,6 +71,7 @@ const topicCandidate = z
     audiencePain: z.string().max(300),
     coreConflict: z.string().max(300),
     format: z.string().max(100),
+    contentRole: contentRole.nullish(),
     adaptationStrategy: z
       .object({
         keep: z.array(z.string().min(1)).max(8),

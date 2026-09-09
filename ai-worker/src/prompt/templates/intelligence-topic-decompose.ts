@@ -165,7 +165,7 @@ export function normalizeIntelligenceTopicDecomposeOutput(
 
 export const INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE: PromptTemplate = {
   id: "intelligence.topic-decompose",
-  version: "v3",
+  version: "v4",
   tools: [],
   outputSchema: intelligenceTopicDecomposeSchema,
   system:
@@ -185,10 +185,10 @@ export const INTELLIGENCE_TOPIC_DECOMPOSE_TEMPLATE: PromptTemplate = {
 
 【任务】
 1. hook：概括原作品如何在开头抓住注意力，不抄原句。
-2. structureSteps：按内容推进顺序列出 2-8 个结构步骤。
+2. structureSteps：按内容推进顺序列出 2-8 个结构步骤，每步说明段落功能、证据方式及如何承接前一步/引出下一步，不复述原句或只贴标签。
 3. coreClaims：列出原作品的核心主张；不要把推测写成事实。
-4. reusablePattern：提炼可以迁移的方法或结构，不得复刻表达。
-5. factRisks：列出需要二次核验的数字、因果、引用或身份信息；没有则空数组。
+4. reusablePattern：说明目标受众当前判断、这条内容试图带来的变化，以及促成变化的推进关系；只提炼去表达化的方法，不包含原作者的故事、数字、特有比喻和口癖。
+5. factRisks：列出需要二次核验的数字、因果、引用或身份信息，并标明不能迁移为本账号事实的经历/案例；没有则空数组。
 只输出符合 schema 的 JSON。`,
   requiredFacets: [
     "positioning",

@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 23,
-    "tasks_done": 29,
-    "tasks_total": 93,
-    "tasks_pending": 64,
+    "verticals": 24,
+    "tasks_done": 31,
+    "tasks_total": 96,
+    "tasks_pending": 65,
     "verticals_complete": 0
   },
   "verticals": [
@@ -1437,6 +1437,58 @@
       "exclusive_resources": [],
       "step_write_set": {
         "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-944",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-944",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "test",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t944-director-prompts.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "read_set": [
+        "docs/features/t944-director-prompts.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/features/intelligence/**",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": [],
+        "test": [
+          "backend/src/modules/candidate/candidate.service.test.ts",
+          "backend/src/modules/intelligence/topic-preview-runner.test.ts"
+        ]
       },
       "step_read_set": {},
       "step_exclusive_resources": {},

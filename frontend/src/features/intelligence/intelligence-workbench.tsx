@@ -831,6 +831,7 @@ function IntelligenceWorkbenchScope({
             audiencePain: candidate.audiencePain ?? "",
             coreConflict: candidate.coreConflict ?? "",
             format: candidate.format ?? "",
+            contentRole: candidate.contentRole ?? null,
             adaptationStrategy: candidate.adaptationStrategy ?? {
               keep: [],
               replace: [],
@@ -883,6 +884,7 @@ function IntelligenceWorkbenchScope({
               audiencePain: candidate.audiencePain ?? "",
               coreConflict: candidate.coreConflict ?? "",
               format: candidate.format ?? "",
+              contentRole: candidate.contentRole ?? null,
               adaptationStrategy: candidate.adaptationStrategy ?? {
                 keep: [],
                 replace: [],

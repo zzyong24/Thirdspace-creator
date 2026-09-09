@@ -583,7 +583,11 @@ export function createCandidateService(deps: ServiceDeps): CandidateService {
         Parameters<CandidateProjectsPort["createProject"]>[1]["briefDetail"]
       > = {
         targetAudience: card.targetAudience,
-        contentGoal: card.proposal,
+        // SEMANTIC_BOUNDARY_ALLOW: 既有枚举的展示映射，落实已选目的，不做语义分类。
+        contentGoal: [
+          dto.contentRole ? `当前内容目的：${({ traffic: "流量型", trust: "信任型", conversion: "获客型" })[dto.contentRole]}（用户已选，优先于原推荐及参考初稿）` : "",
+          card.proposal,
+        ].filter(Boolean).join("\n") || undefined,
         contentFormat: card.format,
         coreMessage: card.oneLiner ?? (dto.angle || undefined),
       };

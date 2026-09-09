@@ -1078,7 +1078,7 @@ export function renderProjectIntelligence(
     return `【${context.item.title}｜${context.item.authorName ?? "作者未提供"}】\n${clipped}`;
   });
   return [
-    "【本次创作依据·内容雷达 —— 必须消费】以下是用户已确认的来源证据与改写策略；学习方法和结构，但禁止照搬原标题、原句、案例及叙事顺序。",
+    "【本次创作依据·内容雷达 —— 必须消费】以下是用户已确认的来源证据与改写策略；学习方法和结构，可借鉴脱离原表达的因果推进关系，但禁止照搬原标题、原句或冒用原作者案例。",
     "来源：",
     ...sourceLines,
     `来源钩子机制：${decomposition.hook}`,
@@ -1090,7 +1090,7 @@ export function renderProjectIntelligence(
     list("必须替换", strategy.replace),
     list("本账号新增", strategy.add),
     list("明确避开", strategy.avoid),
-    `【内容雷达已生成的本账号改写初稿】\n${evidence.adaptedDraftSeed.contentText}`,
+    `【内容雷达参考初稿】当前内容目标优先；初稿按原推荐生成，目的不同时需重新组织表达，不得直接沿用旧目的。\n${evidence.adaptedDraftSeed.contentText}`,
     transcriptLines.length ? `【经 hash 校验的来源逐字稿】\n${transcriptLines.join("\n\n")}` : "",
   ]
     .filter(Boolean)
