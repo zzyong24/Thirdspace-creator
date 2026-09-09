@@ -1,3 +1,4 @@
+import { resolveImportedPublicationIdsInBatch } from "../../application/queries/imported-publication-ids";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -236,6 +237,13 @@ describe("数据底座 §1.4 — 优先读 source:imported 真值,fixture 兜底
       publishingService,
     );
     expect(importedPubIds).toHaveLength(1);
+    // T-941：批量和旧逐项目链返回同一真实集合；不越过账号边界。
+    expect(await resolveImportedPublicationIdsInBatch(ctx, {
+      projects: projectsService, publishing: publishingService,
+    })).toEqual(importedPubIds);
+    expect(await resolveImportedPublicationIdsInBatch({...ctx, accountId: "other-account"}, {
+      projects: projectsService, publishing: publishingService,
+    })).toEqual([]);
 
     // ① 最近发布:按 imported 集过滤后,只剩真实导入作品的发布,演示发布让位。
     const allRecent = await publishingService.getRecentPublicationsWithTitle(

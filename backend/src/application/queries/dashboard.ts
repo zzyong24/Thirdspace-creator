@@ -14,7 +14,12 @@ contentCalendarService: Pick<ReturnType<typeof import("../../modules/content-cal
 notificationsServiceForQuery: Pick<ReturnType<typeof import("../../modules/notifications").createNotificationsService>, "getUnreadCount">;
 resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
 }) {
- const {projectsService,publishingService,analyticsService,learningsService,executionService,candidateService,platformAccountService,contentCalendarService,notificationsServiceForQuery,resolveImportedPublicationIds}=ports;
+ const {projectsService,publishingService,analyticsService,learningsService,executionService,candidateService,platformAccountService,contentCalendarService,notificationsServiceForQuery}=ports;
+ return { async getDashboard(ctx: RequestContext) {
+  // 单次页面组合共享，不跨请求缓存；账号上下文始终使用本次调用。
+  let importedIds: Promise<string[]> | undefined;
+  const resolveImportedPublicationIds = (_ctx: RequestContext) =>
+    importedIds ??= ports.resolveImportedPublicationIds(ctx);
   const dashboardQuery = createDashboardQueryService({
     projects: {
       // GAP-DASH-1 做真:继续创作 = 用户最近活跃的非归档项目;待办 = 该项目下真实
@@ -431,5 +436,6 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
     },
   });
 
- return dashboardQuery;
+ return dashboardQuery.getDashboard(ctx);
+ }};
 }

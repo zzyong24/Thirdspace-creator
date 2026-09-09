@@ -1,3 +1,4 @@
+import { resolveImportedPublicationIdsInBatch } from "@creatoros/backend/application/queries/imported-publication-ids";
 import {resolveSubmittedChatToolParameters} from "@creatoros/backend/modules/ai-runtime";
 import {prepareChatReply} from "./prepare-chat-reply";
 import {createSchedulingAutomation} from "@creatoros/backend/application/scheduling/automation";
@@ -2013,24 +2014,17 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 判据单一:projectsService.hasImportedProjects(ctx)(source='imported' 非空)。判据为真时,
   // 把 dashboard/复盘 的作品级读收窄到"真实导入作品"的 publication 集 —— 让演示 fixture 让位、
   // 界面直接出真值(治 dy-pub-00 假标题/0 播放);为假时(用户尚未拉真账号)三向回退全量
-  // fixture 演示态(过渡期不破)。解析链:imported 项目 id → 各项目 ContentOutput id →
-  // 各 output 的 publication id,全程经公共 service(projects.listImportedProjectIds /
-  // publishing.listPublicationIdsByProject),不跨模块直连 repo(守 SPEC §22)。定义在
+  // fixture 演示态(过渡期不破)。解析链:imported 项目 id → 批量 ContentOutput 引用 →
+  // 批量 publication id,全程经公共 service 且保留 user/account 守卫,
+  // 不跨模块直连 repo(守 SPEC §22)。定义在
   // projects/publishing service 之后、各读侧装配之前,供 dashboard/calibration 复用(无前向引用)。
   const resolveImportedPublicationIds = async (
     ctx: RequestContext,
   ): Promise<string[]> => {
-    const projectIds = await projectsService.listImportedProjectIds(ctx);
-    if (projectIds.length === 0) return [];
-    const ids = new Set<string>();
-    for (const projectId of projectIds) {
-      const pubIds = await publishingService.listPublicationIdsByProject(
-        ctx,
-        projectId,
-      );
-      for (const id of pubIds) ids.add(id);
-    }
-    return [...ids];
+    return resolveImportedPublicationIdsInBatch(ctx, {
+      projects: projectsService,
+      publishing: publishingService,
+    });
   };
 
   // Analytics (module 11): one user-scoped repository over the shared db (the repo
