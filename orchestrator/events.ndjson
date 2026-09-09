@@ -987,3 +987,4 @@
 {"ts":"2026-09-09T02:39:44.958Z","actor":"taskctl","action":"start","task":"T-937","sha_before":"488f5933510c","sha_after":"0faaa3a5584a"}
 {"ts":"2026-09-09T03:21:20.769Z","actor":"taskctl","action":"complete","task":"T-937","evidence":"2681cf84；针对性UI3项/队列7项/Pi产物7项/打包42项通过；本地安装PID28612，原任务execution-task-2368a14a-514真实读回succeeded（拆解/选题/初稿均完成）；SPEC记录DMG校验。原生UI与真实多作品项目端到端待用户验收；全局reconcile沿既有暂缓授权，基线UI5项与boundary旧欠债保留。","sha_before":"0faaa3a5584a","sha_after":"960ae5140767"}
 {"ts":"2026-09-09T03:25:53.261Z","actor":"taskctl","action":"start","task":"T-938","sha_before":"3a13547f46d8","sha_after":"f38fe3140f42"}
+{"ts":"2026-09-09T03:44:48.024Z","actor":"taskctl","action":"complete","task":"T-938","evidence":"81102ec5；UI5/恢复6/队列7/打包42项通过，frontend tsc通过；安装PID36733；原15352转写done1020字，原父161 succeeded并创建项目。166后台继续；真实冷却时序fixture验证。全局reconcile沿既有暂缓授权；旧runner断言失败保留，详见SPEC。","sha_before":"f38fe3140f42","sha_after":"0383d94cbab9"}

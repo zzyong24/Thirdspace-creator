@@ -21,3 +21,11 @@ flowchart LR
  C -->|否| E[转写、拆解、初稿]
  E --> F[已升级为项目 → 查看项目]
 ```
+
+## 交付证据
+
+候选81102ec5已通过固定本地打包入口安装并启动，PID36733，公开CLI connected/full。5项前端针对性检查（含返回恢复与账号隔离、真实项目href）通过，frontend tsc通过；新冷却恢复6项、既有队列7项通过，42项打包基础检查通过。旧transcript-runner默认10/期待25的既有断言失败保留，未宣称全局全绿；reconcile沿已有暂缓授权不扩大本次范围。
+
+公开CLI显式恢复当前两父任务execution-task-bf64f03b-161/166，没有扫描历史。161引用的原转写execution-task-693b96ef-15352读回done、1020字、无错误；其后自动完成选题/初稿并创建project-radar-7fe17fb275c48409ee0b9163b25453fe，父任务succeeded。166仍按顺序在后台继续，不宣称完成。没有强制制造真实站点冷却；指数退避时序由隔离fixture验证，真实旧失败恢复由安装版验证。原生UI点击未自动验收。
+
+安装包：/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg；SHA256 d4477334d8ba197bfc9d3778d2824fd749747c43dbf5145c6bb3ff920f98a892。hdiutil verify、codesign --verify --deep --strict均通过。本地ad-hoc包未公证，不涉及Windows或公开发布。
