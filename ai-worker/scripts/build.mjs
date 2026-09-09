@@ -1,4 +1,6 @@
-import { build } from "esbuild";
+import { build as esbuild } from "esbuild";
+import { piRuntimeInitializationPlugin } from "./pi-runtime-bundle.mjs";
+const build = options => esbuild({...options, plugins: [...(options.plugins ?? []), piRuntimeInitializationPlugin()]});
 import { fileURLToPath } from "node:url";
 await build({
   entryPoints: [fileURLToPath(new URL("../src/execution/worker-entry.ts", import.meta.url))],
