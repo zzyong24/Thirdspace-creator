@@ -1801,6 +1801,7 @@ function ItemDetail({
       Boolean(transform.outputSnapshot?.title?.trim()),
   );
   const topicTaskBusy=topicGenerating||detail.transforms.some(transform=>isTopicTaskPending(topicTaskStatus(transform)));
+  const transcriptCooling=detail.transcript.errorCode==="TRANSCRIBE_SOURCE_COOLDOWN" && detail.transcript.status==="queued";
   const transcriptBusy =
     detail.transcript.status === "queued" ||
     detail.transcript.status === "running";
@@ -2066,7 +2067,7 @@ function ItemDetail({
                     : "bg-muted text-muted-foreground",
                 )}
               >
-                {transcriptLabel(detail.transcript.status)}
+                {transcriptCooling?"等待自动继续":transcriptLabel(detail.transcript.status)}
               </span>
             )}
           </div>
@@ -2077,7 +2078,7 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                {transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
+                {transcriptCooling ? "来源通道正在冷却，系统会在等待结束后自动继续，无需重新添加或点击重试。" : transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
               </p>
             </div>
           )}
