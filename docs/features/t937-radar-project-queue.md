@@ -33,3 +33,13 @@ flowchart LR
 候选831d95dd已安装，PID22894，CLI自动full，DMG校验/签名验证通过；DMG SHA256 2e28317a9413de4538b3a1ba12ed061ca9633885c66dba66adddba5b9338d9b4。原任务 execution-task-2368a14a-514 用同ID重试后返回 INTELLIGENCE_MODEL_SETUP_FAILED，确定在模型初始化、尚未进入模型预留前失败。以纯假数据私有IPC探测本次打包worker，同样复现且没有网络请求。独立诊断复制包到临时目录后得到 TypeError: ModelsImpl is not a constructor，CJS产物里createModels调用前models模块初始化未执行；源码单测未覆盖此产物缺陷。退出打包阶段修复该根因后须重新验证和打包，不能将831d95dd宣称生成链路已修好。
 
 独立复核修正了父重试续接 waiting_user/paused 子任务与旧租约继续执行两个问题，补测7项通过。合并frontend tsc通过；完整UI49通过/5失败，与隔离基线46通过/5失败为同一组旧失败。boundary仍报告本轮未改的live-chat-session.ts两项SDK引用违规，未宣称全局通过。
+
+## 最终本地交付（2026-09-09 UTC）
+
+候选2681cf84统一在构建入口保留Pi根模块副作用初始化，未关闭全局tree shaking。新增7项真实CJS子进程检查通过，覆盖intelligence/execution三种协议及model-probe，均以假数据阻止真实网络调用；最终sidecar产物亦走到reserveGenerationCall，初始化不再失败。
+
+固定入口desktop:package-local成功，42项打包基本检查通过；已替换并启动/Applications/CreatorOS.app，PID28612，公开CLI确认connected/full。唯一验收包/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg，SHA256为4686f8a3c3a657351211e09a3390857d3ae7c75fb78a3e9061d4160a6fd16e46。hdiutil verify与codesign --verify --deep --strict通过。本地ad-hoc包，未公证、未发布、未构建Windows。
+
+公开CLI于03:18:58 UTC恢复原任务execution-task-2368a14a-514（同任务ID，无新建重复任务）。03:20:17 UTC读回succeeded，无错误；outputSnapshot包含decomposition、topic、adaptedDraft，三个generationProgress均completed，改写初稿序列化2383字符。约79秒完成，保留候选，未自动采纳正式稿。真实模型原错误链已验证恢复，不等同全部内容质量问题已解决。
+
+页面刷新、独立多项提交、队列幂等/恢复由本轮针对性检查覆盖；未执行原生界面点击或真实多作品创建项目端到端验证，由用户本机体验验收。全局reconcile与既有业务失败仍沿此前暂缓授权保留，不宣称全项目全绿。
