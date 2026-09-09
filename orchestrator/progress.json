@@ -1315,6 +1315,48 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-939",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-939",
+      "tasks": [
+        {
+          "step": "design-review",
+          "status": "pending"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**",
+        "docs/features/t939-positioning-release.md"
+      ],
+      "read_set": [
+        "docs/features/t939-positioning-release.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/**",
+        "ai-worker/**",
+        "contract/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "design-review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {}

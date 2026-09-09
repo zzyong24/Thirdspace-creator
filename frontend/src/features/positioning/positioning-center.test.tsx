@@ -246,9 +246,18 @@ describe("PositioningCenterView", () => {
     expect(screen.getByText("AI 建议")).toBeTruthy();
   });
 
-  it("有完整快照的历史行提供真实恢复，并且不篡改旧行为设为当前", () => {
+  it("T-939 恢复旧版时当前标记跟随ID而非历史第一行",()=>{
+    render(<PositioningCenterView viewModel={{...POPULATED,currentStatement:POPULATED.history[1]!}}/>);
+    const rows=screen.getAllByTestId("positioning-history-row");
+    expect(rows[0]).not.toHaveTextContent("当前使用");
+    expect(rows[1]).toHaveTextContent("当前使用");
+  });
+
+  it("T-939 历史恢复不新增版本，并按真实当前ID标注", () => {
     render(<PositioningCenterView viewModel={POPULATED} />);
     expect(screen.getAllByRole("button", { name: "恢复此版本" }).length).toBe(2);
+    expect(screen.getByText("当前使用")).toBeInTheDocument();
+    expect(screen.getByText(/恢复会切换到所选版本，不新增重复定位/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "设为当前" })).toBeNull();
   });
 

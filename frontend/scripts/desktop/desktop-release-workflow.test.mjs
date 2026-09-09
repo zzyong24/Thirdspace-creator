@@ -33,6 +33,8 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
   });
 
   it("草稿 Release 在无需 checkout 的 job 中显式绑定当前仓库", () => {
+    const releaseJob=workflow.slice(workflow.indexOf("  draft-release:"));
+    expect(releaseJob).toContain("pattern: desktop-*");
     expect(workflow).toContain(
       'gh release view "$tag" --repo "$GITHUB_REPOSITORY"',
     );

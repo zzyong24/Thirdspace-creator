@@ -178,7 +178,7 @@ export function PositioningCenterView({
                 productAnchors={productAnchors}
               />
 
-              <HistoryTable history={history} profile={profile} />
+              <HistoryTable history={history} profile={profile} currentStatementId={currentStatement?.id ?? null} />
             </div>
 
             <DownstreamRules profile={profile} />
@@ -520,7 +520,9 @@ const RULE_HINTS: ReadonlyArray<{ label: string; icon: LucideIcon }> = [
 function HistoryTable({
   history,
   profile,
+  currentStatementId,
 }: {
+  readonly currentStatementId: string | null;
   readonly history: readonly PositioningStatementResource[];
   readonly profile: CreatorProfileResource | null;
 }) {
@@ -528,7 +530,7 @@ function HistoryTable({
     <SectionCard
       className="shrink-0"
       title="版本历史"
-      description="完整母版按版本保留，恢复会生成新版本，旧历史不变。"
+      description="恢复会切换到所选版本，不新增重复定位。历史版本保留。"
     >
       <ol
         data-testid="positioning-history"
@@ -548,6 +550,7 @@ function HistoryTable({
               <span className="truncate text-foreground">{s.oneLiner}</span>
             </span>
             <span className="flex shrink-0 items-center gap-2">
+              {s.id === currentStatementId ? <Badge variant="outline" className="text-[10px]">当前使用</Badge> : null}
               {s.createdByType === "ai" ? (
                 <Badge variant="outline" className="text-[10px]">
                   AI 建议

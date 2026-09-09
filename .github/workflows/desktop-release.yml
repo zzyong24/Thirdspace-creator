@@ -1313,6 +1313,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: desktop-*
           path: artifacts
           merge-multiple: true
 

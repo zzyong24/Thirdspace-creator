@@ -160,7 +160,7 @@ export function RestorePositioningMasterButton({
         <DialogHeader>
           <DialogTitle>恢复 v{versionNumber} 为当前母版？</DialogTitle>
           <DialogDescription>
-            画像、定位规则和定位陈述都会恢复，并生成一个新的当前版本。旧历史不会被修改。
+            画像、定位规则和定位陈述会恢复到这个版本，不新增定位版本。当前母版中的修改会被所选快照替换，已有历史和项目引用保持不变。
           </DialogDescription>
         </DialogHeader>
         {error ? (

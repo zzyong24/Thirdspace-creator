@@ -3298,3 +3298,7 @@ T-930 补充：公开 CLI 核实本机 copilot.assist 仅7项且全部 succeeded
 ## DEC-RUNTIME-062：作品点击授权后台升级为项目
 
 用户明确要求每条内容雷达作品一键排队完成 AI 转写、拆解选题和生成文案，可连续加入多条。点击“升级为项目”即对该作品授权后台创建关联项目；文案仍保留候选，不自动覆盖正式稿或发布。队列属于 backend，沿用 execution_tasks/Pi/租约/控制命令；等待子任务让出执行槽。独立评审指出旧 confirmTopic/promote 非原子窗口，改用 projects 端口按 queueTaskId 原子幂等建项目，复用 topic_preview 已有改写初稿并关联来源，避免第二次写稿。前端仅持续刷新服务端进度，不用页面生命周期、缓存 TTL 或固定轮询总时长控制后台任务。详见 T-937 SPEC。
+
+## DEC-RUNTIME-063：恢复定位切换原版本而非复制新版本
+
+用户T-939反馈恢复每次新增定位。经独立评审，新增内部currentStatementId；恢复指向原statement并恢复profile快照，不生成恢复副本；NULL兼容旧max/floor语义。新创作仍max+1，reset与discovery CAS统一读取；恢复使用账号锁。已有历史和项目引用不变，不清理用户旧版本；公开响应结构不变。双端更新仅对标审计及明确流水线artifact隔离修正，不据此授权公开发布或生产自动更新。
