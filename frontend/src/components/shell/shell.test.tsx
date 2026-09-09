@@ -66,6 +66,7 @@ vi.mock("next/navigation", () => ({
 // Stub `next/link` so we can query the rendered anchors without invoking the
 // real client-side router.
 vi.mock("next/link", () => ({
+  useLinkStatus: () => ({pending:false}),
   default: ({
     children,
     href,

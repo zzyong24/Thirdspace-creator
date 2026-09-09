@@ -22,8 +22,9 @@
 
 import * as React from "react";
 import Image from "next/image";
-import Link from "next/link";
+import Link, {useLinkStatus} from "next/link";
 import {
+  LoaderCircle,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
@@ -147,6 +148,15 @@ interface NavEntry {
   readonly href: string;
   readonly icon: LucideIcon;
   readonly match: (pathname: string) => boolean;
+}
+
+function PrimaryNavContents({icon:Icon,label,collapsed}:{icon:LucideIcon;label:string;collapsed:boolean}) {
+  const {pending}=useLinkStatus();
+  return <>
+    {pending?<LoaderCircle className="size-4 shrink-0 animate-spin text-primary" aria-hidden="true"/>:<Icon className="size-4 shrink-0" aria-hidden="true"/>}
+    {!collapsed?<span>{label}</span>:null}
+    {pending?<span role="status" className={collapsed?"sr-only":"ml-auto text-[10px] text-primary"}>正在打开</span>:null}
+  </>;
 }
 
 const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
@@ -428,8 +438,7 @@ function PrimaryNav({
               isActive && "bg-brand-soft font-medium text-brand",
             )}
           >
-            <Icon className="size-4 shrink-0" aria-hidden="true" />
-            {!collapsed ? <span>{entry.label}</span> : null}
+            <PrimaryNavContents icon={Icon} label={entry.label} collapsed={collapsed}/>
           </Link>
         );
         if (!collapsed) {
