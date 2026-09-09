@@ -33,7 +33,7 @@ function fixture() {
     }),
   };
   const projects={ensureRadarProject:vi.fn(async(_ctx: RequestContext, _input: any)=>({id:"project-1"}))};
-  const queue=createRadarProjectQueueService({tasks,intelligence:intelligence as unknown as IntelligenceService,assertPositioning:async()=>{},projects});
+  const queue=createRadarProjectQueueService({tasks,now:()=>new Date(clock).toISOString(),intelligence:intelligence as unknown as IntelligenceService,assertPositioning:async()=>{},projects});
   const tick=async()=>{clock+=3000;await queue.tick({shouldStop:()=>false});};
   return {queue,tick,intelligence,projects,details,item};
 }
@@ -83,5 +83,24 @@ describe("雷达升级项目持久队列",()=>{
   it("跨账号批次未写入父队列",async()=>{
     const f=fixture();await expect(f.queue.enqueue({...ctx,accountId:"other"},{itemIds:["one"],positioningVersionId:"p",idempotencyKey:"x"})).rejects.toThrow("ownership");
     expect((await tasks.list(ctx,{kind:"radar_project_upgrade"})).total).toBe(0);
+  });
+  it("用户重试父项可继续等待用户的原子项，未知结果仍不重放",async()=>{
+    const f=fixture();const parent=(await f.queue.enqueue(ctx,{itemIds:["one"],positioningVersionId:"p",idempotencyKey:"x"})).tasks[0]!;
+    await f.tick();const child=((await tasks.get(ctx,parent.id)).checkpoint as any).topicTaskId;
+    await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,child));
+    await f.tick();await tasks.command(ctx,{taskIds:[parent.id],command:"retry",idempotencyKey:"retry-auth"});
+    await f.tick();expect((await tasks.get(ctx,child)).status).toBe("queued");
+    await db.update(executionTasks).set({status:"unknown_result"}).where(eq(executionTasks.id,child));
+    await f.tick();await tasks.command(ctx,{taskIds:[parent.id],command:"retry",idempotencyKey:"retry-unknown"});
+    await f.tick();expect((await tasks.get(ctx,child)).runtimeStatus).toBe("unknown_result");
+    expect((await tasks.get(ctx,parent.id)).status).toBe("blocked");
+  });
+  it("旧tick丢失租约后不会继续创建模型子项",async()=>{
+    const f=fixture();const parent=(await f.queue.enqueue(ctx,{itemIds:["one"],positioningVersionId:"p",idempotencyKey:"x"})).tasks[0]!;
+    f.intelligence.getItem.mockImplementationOnce(async()=>{
+      await db.update(executionTasks).set({attempt:77,leaseOwner:"new-worker"}).where(eq(executionTasks.id,parent.id));
+      return f.item("one");
+    });
+    await f.tick();expect(f.intelligence.startTopicPreview).not.toHaveBeenCalled();expect(f.projects.ensureRadarProject).not.toHaveBeenCalled();
   });
 });

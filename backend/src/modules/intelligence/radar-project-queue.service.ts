@@ -16,6 +16,7 @@ type Checkpoint = {
   blockedAtAttempt?: number;
 };
 export interface RadarProjectQueueDeps {
+  now?:()=>string;
   tasks: PersistentTaskService;
   intelligence: IntelligenceService;
   assertPositioning(ctx: RequestContext, id: string): Promise<unknown>;
@@ -59,6 +60,7 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
       let checkpoint: Checkpoint = {stage: "queued", ...claim.task.checkpoint as Partial<Checkpoint>};
       const live = async () => {
         const task = await deps.tasks.get(ctx, claim.task.id);
+        if(task.attempt!==claim.lease.attempt || task.leaseOwner!==claim.lease.workerId || !task.leaseExpiresAt || Date.parse(task.leaseExpiresAt)<=Date.parse(deps.now?.()??new Date().toISOString()))return false;
         if (task.status === "cancel_requested" || task.status === "pause_requested") {
           await deps.tasks.acknowledgeControl(lease);
           return false;
@@ -77,9 +79,10 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
         if (child.status === "succeeded") return true;
         if (["failed", "blocked", "cancelled", "paused"].includes(child.status)) {
           // 只有用户对已受阻父项显式重试后才续接同一个失败子项；未知结果保留诊断。
-          if ((child.status === "failed" || child.status === "blocked") && !child.runtimeStatus
-            && checkpoint.blockedChildId === taskId && (checkpoint.blockedAtAttempt ?? claim.task.attempt) < claim.task.attempt) {
-            await deps.tasks.command(ctx, {taskIds: [taskId], command: "retry", idempotencyKey: `${claim.task.id}:retry:${taskId}:${claim.task.attempt}`});
+          const command=child.runtimeStatus==="waiting_user" || child.status==="paused"?"resume":!child.runtimeStatus && ["failed","blocked","cancelled"].includes(child.status)?"retry":null;
+          if (command && checkpoint.blockedChildId === taskId && (checkpoint.blockedAtAttempt ?? claim.task.attempt) < claim.task.attempt) {
+            if(!await live())return false;
+            await deps.tasks.command(ctx, {taskIds: [taskId], command, idempotencyKey: `${claim.task.id}:${command}:${taskId}:${claim.task.attempt}`});
             await save({blockedChildId: undefined, blockedAtAttempt: undefined});
             await wait();
             return false;

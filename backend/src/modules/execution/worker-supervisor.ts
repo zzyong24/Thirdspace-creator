@@ -113,6 +113,11 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
               return {version: 1, type: "reply", requestId: message.requestId, ok: true, data};
             } catch(error) {
               const code=error && typeof error === "object" ? (error as {code?:unknown}).code : undefined;
+              const name=error instanceof Error && ["ZodError","ConflictError","OwnershipError","AuthenticationError"].includes(error.name)?error.name:"Error";
+              // 只记协议端口、稳定内部码与异常类别；不输出正文、凭据或上游错误对象。
+              const failureMessage=error instanceof Error?error.message:"";
+              const diagnostic=["INTELLIGENCE_PORTS_CLOSED","INTELLIGENCE_CLAIM_MISMATCH","INTELLIGENCE_CAPABILITY_MISMATCH","INTELLIGENCE_GENERATION_OWNER_MISMATCH","INTELLIGENCE_OPERATION_MISMATCH","INTELLIGENCE_MODEL_BUDGET_INVALID","INTELLIGENCE_MODEL_INPUT_TOO_LARGE","INTELLIGENCE_RESULT_RECEIPT_INVALID","INTELLIGENCE_COMMIT_MISMATCH","INTELLIGENCE_PORT_UNAVAILABLE","MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE","STALE_EXECUTION"].includes(failureMessage)?failureMessage:"HOST_PORT_REJECTED";
+              console.error(`[execution-worker-port] task=${message.execution.executionTaskId} port=${message.port} category=${name} code=${diagnostic}`);
               const errorCode=message.port==="reserveTopicRead" && error && typeof error==="object" && (error as {budgetCode?:unknown}).budgetCode==="EXECUTION_BUDGET_EXHAUSTED" ? "EXECUTION_BUDGET_EXHAUSTED" : message.port==="resolveModelCredential" && typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "HOST_PORT_REJECTED";
               return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode};
             }
