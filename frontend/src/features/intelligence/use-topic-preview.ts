@@ -3,7 +3,6 @@ import * as React from "react";
 import type { RadarApi,RadarItemDetail } from "./intelligence-workbench-types";
 import { operationKey } from "./radar-operation-key";
 import { isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
-const TOPIC_PREVIEW_POLL_TIMEOUT_MS=480_000;
 function topicPreviewPollDelayMs(attempt: number): number {
   return Math.min(400 + attempt * 100, 2_500);
 }
@@ -27,12 +26,11 @@ export function useTopicPreview({api,detail,positioningVersionId,setDetail,setNo
       if (topicPollingKeys.current.has(pollingKey)) return;
       topicPollingKeys.current.add(pollingKey);
 
-      const startedAt = Date.now();
       void (async () => {
         try {
           for (
             let attempt = 0;
-            Date.now() - startedAt < TOPIC_PREVIEW_POLL_TIMEOUT_MS;
+            mounted.current && activeDetailItemId.current === itemId;
             attempt += 1
           ) {
             if (attempt > 0) {

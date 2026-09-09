@@ -6,6 +6,13 @@ const radarTransport = createHttpTransport();
 
 export function defaultApi(): RadarApi {
   return {
+    async enqueueProjectUpgrades(input){
+      return client.enqueueIntelligenceProjectUpgrades({params:undefined,query:undefined,body:input});
+    },
+    async listProjectUpgrades(input){
+      const result=await requestListWithMeta(radarTransport,ENDPOINTS.listExecutionTasks,{params:undefined,query:{accountId:input.accountId,kind:"radar_project_upgrade",page:input.page,pageSize:100},body:undefined});
+      return {tasks:result.data.map(row=>executionTaskResourceV2.parse(row)),total:result.meta.total};
+    },
     async listShareImportTasks(input) {
       const rows: unknown = await client.listExecutionTasks({params: undefined, query: {...input, kind: "share_import", page: input.page ?? 1, pageSize: 100}, body: undefined});
       if (!Array.isArray(rows)) throw new Error("导入任务列表回执格式不正确，请刷新核对。");

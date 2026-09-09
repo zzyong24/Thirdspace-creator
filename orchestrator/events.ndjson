@@ -984,3 +984,4 @@
 {"ts":"2026-09-08T14:56:08.473Z","actor":"taskctl","action":"start","task":"T-935","sha_before":"5afbd184ad67","sha_after":"8325690c1841"}
 {"ts":"2026-09-08T15:12:09.053Z","actor":"taskctl","action":"start","task":"T-936","sha_before":"18c54f935d14","sha_after":"46b8b393a5bb"}
 {"ts":"2026-09-08T15:25:23.059Z","actor":"taskctl","action":"complete","task":"T-936","evidence":"1a79d186；原生1/UI4/CLI5通过；安装PID30926后无手动授权creatoros status connected/full；pmem sync；全局reconcile沿既有暂缓，未宣称通过","sha_before":"46b8b393a5bb","sha_after":"9bdec2451268"}
+{"ts":"2026-09-09T02:39:44.958Z","actor":"taskctl","action":"start","task":"T-937","sha_before":"488f5933510c","sha_after":"0faaa3a5584a"}

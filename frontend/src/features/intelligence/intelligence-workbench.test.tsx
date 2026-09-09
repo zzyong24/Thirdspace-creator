@@ -213,6 +213,38 @@ afterEach(() => {
 });
 
 describe("T-482 内容雷达工作区", () => {
+  it("T-937 转写完成直接更新详情与卡片，不需要切 Tab", async()=>{
+    vi.useFakeTimers();
+    const stub=api();
+    vi.mocked(stub.getItem).mockResolvedValue({...detail,transcript:{...detail.transcript,status:"done",text:"后台生成的完整逐字稿"}});
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[{item:detail.item,latestMetric:null,sourceCount:1,transcriptState:"processing",progressState:"transcript_processing"}]} initialDetail={{...detail,transcript:{...detail.transcript,status:"running"}}} api={stub}/>);
+    await act(async()=>{await vi.advanceTimersByTimeAsync(2100);});
+    expect(screen.getByText("后台生成的完整逐字稿")).toBeInTheDocument();
+    expect(screen.getByText("待生成选题")).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(stub.enqueueTranscript).not.toHaveBeenCalled();
+  });
+
+  it("T-937 转写读取抖动后继续刷新原任务", async()=>{
+    vi.useFakeTimers();
+    const stub=api();
+    vi.mocked(stub.getItem).mockRejectedValueOnce(new Error("offline")).mockResolvedValue({...detail,transcript:{...detail.transcript,status:"done",text:"重连后的正文"}});
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} items={[]} initialDetail={{...detail,transcript:{...detail.transcript,status:"running"}}} api={stub}/>);
+    await act(async()=>{await vi.advanceTimersByTimeAsync(4100);});
+    expect(screen.getByText("重连后的正文")).toBeInTheDocument();
+    expect(stub.getItem).toHaveBeenCalledTimes(2);
+  });
+
+  it("T-937 升级入队未返回时仍可添加第二个作品，重复点击不重复提交", async()=>{
+    const stub=api();
+    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
+    stub.enqueueProjectUpgrades=vi.fn(()=>new Promise<{tasks:never[]}>(()=>{}));
+    render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1},{item:{...detail.item,id:"item-2",title:"第二个作品"},latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
+    const buttons=screen.getAllByRole("button",{name:"升级为项目"});
+    fireEvent.click(buttons[0]!);fireEvent.click(buttons[0]!);fireEvent.click(buttons[1]!);
+    expect(stub.enqueueProjectUpgrades).toHaveBeenCalledTimes(2);
+    expect(stub.enqueueProjectUpgrades).toHaveBeenNthCalledWith(2,expect.objectContaining({itemIds:["item-2"],positioningVersionId:"position-1"}));
+  });
   it("显示服务端真实总量，并允许继续读取 100 条之后的内容", async () => {
     const firstPage = Array.from({ length: 100 }, (_, index) => ({
       item: {
@@ -1043,7 +1075,7 @@ describe("T-482 内容雷达工作区", () => {
     expect(screen.getByText("黑马发现")).toBeInTheDocument();
     expect(screen.getAllByText("未知").length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/系统不会自动转写其他作品|不会自动转写/),
+      screen.getByText(/点击 AI 转写即可自动提取正文/),
     ).toBeInTheDocument();
   });
 
@@ -1720,7 +1752,7 @@ describe("T-482 内容雷达工作区", () => {
     ).toBeInTheDocument();
   });
 
-  it("逐字稿只有点击“手动转写”后才进入队列", async () => {
+  it("逐字稿只有点击“AI 转写”后才进入队列", async () => {
     const stub = api();
     render(
       <IntelligenceWorkbench
@@ -1733,7 +1765,7 @@ describe("T-482 内容雷达工作区", () => {
     );
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();
     await userEvent.click(
-      screen.getByRole("button", { name: "手动转写" }),
+      screen.getByRole("button", { name: "AI 转写" }),
     );
     expect(stub.enqueueTranscript).toHaveBeenCalledWith(
       expect.objectContaining({ itemId: "item-1" }),
@@ -2026,7 +2058,7 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "替换逐字稿" }),
     ).toBeEnabled();
     expect(
-      screen.getByRole("button", { name: "重新转写" }),
+      screen.getByRole("button", { name: "重新 AI 转写" }),
     ).toBeEnabled();
   });
 
@@ -2103,7 +2135,7 @@ describe("T-482 内容雷达工作区", () => {
       screen.queryByRole("button", { name: "替换逐字稿" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "重新转写" }),
+      screen.queryByRole("button", { name: "重新 AI 转写" }),
     ).not.toBeInTheDocument();
   });
 

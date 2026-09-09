@@ -30,6 +30,9 @@ import { AddSourceDialog } from "./source-setup-dialog";
 import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
+import { useTranscriptRefresh } from "./use-transcript-refresh";
+import { useProjectUpgradeQueue,upgradeLabel,upgradeProjectId } from "./use-project-upgrade-queue";
+import type {ExecutionTaskResourceV2} from "@creatoros/contract";
 export { favoriteFoldersErrorMessage,sourceVerificationErrorMessage } from "./intelligence-errors";
 export type * from "./intelligence-workbench-types";
 
@@ -157,6 +160,8 @@ function IntelligenceWorkbenchScope({
   }, [detail?.item.id]);
 
   const {topicGenerating,previewTopic,resetTopicPreview}=useTopicPreview({api,detail,positioningVersionId,setDetail,setNotice,setBusy,activeDetailItemId});
+  useTranscriptRefresh({api,detail,rows:scopedItems,setDetail,setRows:setScopedItems,activeItemId:activeDetailItemId});
+  const upgrades=useProjectUpgradeQueue({api,accountId,positioningVersionId,setNotice});
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -714,14 +719,11 @@ function IntelligenceWorkbenchScope({
     try {
       await api.enqueueTranscript({
         itemId: detail.item.id,
-        idempotencyKey: operationKey("manual-transcribe"),
+        idempotencyKey: operationKey("ai-transcribe"),
       });
-      setDetail({
-        ...detail,
-        transcript: { ...detail.transcript, status: "queued" },
-      });
-      setNotice("逐字稿已进入异步队列。系统不会自动转写其他作品。");
-      router.refresh();
+      setDetail(current=>current?.item.id===detail.item.id?{...current,transcript:{...current.transcript,status:"queued"}}:current);
+      setScopedItems(rows=>rows.map(row=>row.item.id===detail.item.id?{...row,transcriptState:"processing",progressState:"transcript_processing"}:row));
+      setNotice("已加入 AI 转写队列，完成后会自动更新正文。");
     } catch {
       setNotice("逐字稿排队失败，请检查 ASR 模型配置后重试。");
     } finally {
@@ -1335,6 +1337,12 @@ function IntelligenceWorkbenchScope({
             </span>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {upgrades.tasks.some(task=>!["succeeded","cancelled"].includes(task.status)) ? (
+              <div role="status" className="mb-3 rounded-xl bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+                项目升级队列 · {upgrades.tasks.filter(task=>!["succeeded","failed","blocked","cancelled"].includes(task.status)).length} 项处理中或排队
+                {upgrades.tasks.some(task=>["failed","blocked"].includes(task.status))?" · 部分作品需要处理，可在对应卡片重试":" · 后台依次处理，可继续添加作品"}
+              </div>
+            ):null}
             {itemsLoading && filteredItems.length === 0 ? (
               <div
                 role="status"
@@ -1371,6 +1379,14 @@ function IntelligenceWorkbenchScope({
                     row={row}
                     active={detail?.item.id === row.item.id}
                     onSelect={() => selectItem(row.item.id)}
+                    upgradeTask={upgrades.byItem.get(row.item.id)}
+                    upgradeSubmitting={upgrades.submitting.has(row.item.id)}
+                    onUpgrade={api.enqueueProjectUpgrades?()=>{
+                      const projectId=upgradeProjectId(upgrades.byItem.get(row.item.id));
+                      if(projectId)router.push(`/projects/${encodeURIComponent(projectId)}`);
+                      else void upgrades.enqueue(row.item.id);
+                    }:undefined}
+                    onCancelUpgrade={()=>{const task=upgrades.byItem.get(row.item.id);if(task)void upgrades.cancel(task);}}
                   />
                 ))}
               </div>
@@ -1627,23 +1643,26 @@ function ItemCard({
   row,
   active,
   onSelect,
+  upgradeTask,upgradeSubmitting,onUpgrade,onCancelUpgrade,
 }: {
   row: RadarItemRow;
   active: boolean;
   onSelect: () => void;
+  upgradeTask?:ExecutionTaskResourceV2;
+  upgradeSubmitting?:boolean;
+  onUpgrade?:()=>void;
+  onCancelUpgrade?:()=>void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
+    <div
       className={cn(
-        "group flex min-h-28 w-full overflow-hidden rounded-2xl border bg-surface text-left transition",
+        "group flex min-h-28 w-full flex-col overflow-hidden rounded-2xl border bg-surface text-left transition",
         active
           ? "border-primary/60 shadow-card ring-1 ring-primary/20"
           : "border-border/80 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm",
       )}
     >
-      <div className="flex min-w-0 flex-1 flex-col p-3.5">
+      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 flex-col p-3.5 text-left">
         <span className="line-clamp-2 text-sm font-semibold leading-5 text-foreground">
           {row.item.title || "未命名内容"}
         </span>
@@ -1665,8 +1684,18 @@ function ItemCard({
             </span>
           ) : null}
         </div>
-      </div>
-    </button>
+      </button>
+      {onUpgrade ? <div className="border-t border-border/50 px-3.5 py-2">
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
+            disabled={upgradeSubmitting || Boolean(upgradeTask && !["succeeded","failed","blocked","cancelled","paused"].includes(upgradeTask.status))}>
+            <Sparkles className="size-3.5" />{upgradeSubmitting?"正在加入…":upgradeLabel(upgradeTask)}
+          </Button>
+          {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
+        </div>
+        {upgradeTask?.errorMessage?<p className="mt-1 text-xs text-warning">{upgradeTask.errorMessage}</p>:null}
+      </div>:null}
+    </div>
   );
 }
 
@@ -1978,7 +2007,7 @@ function ItemDetail({
                 </p>
               ) : detail.transcript.status !== "done" ? (
                 <p className="mt-2 text-[11px] text-warning">
-                  请先在下方手动转写或上传逐字稿。只有完整逐字稿拆解完成后，才能生成有结构依据的选题。
+                  可先 AI 转写或上传逐字稿，也可点击作品上的“升级为项目”，自动排队完成转写、选题拆解和文案生成。
                 </p>
               ) : null}
             </div>
@@ -2015,7 +2044,7 @@ function ItemDetail({
           ) : (
             <div className="mt-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-xs leading-5 text-muted-foreground">
-                不会自动转写。你可以直接粘贴正文、从文件导入，或手动发起转写。
+                {transcriptBusy ? "AI 正在后台转写，完成后正文会自动出现在这里。你可以继续处理其他作品。" : "点击 AI 转写即可自动提取正文，也可以粘贴正文或从文件导入。"}
               </p>
             </div>
           )}
@@ -2060,7 +2089,7 @@ function ItemDetail({
                 className="gap-1.5"
               >
                 <FileAudio className="size-3.5" />
-                {detail.transcript.text ? "重新转写" : "手动转写"}
+                {detail.transcript.text ? "重新 AI 转写" : "AI 转写"}
               </Button>
             </div>
           ) : null}

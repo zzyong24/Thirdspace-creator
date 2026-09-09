@@ -252,8 +252,10 @@ export interface StartRunResult {
 }
 
 export interface RadarApi {
+  enqueueProjectUpgrades?(input:{itemIds:string[];positioningVersionId:string;idempotencyKey:string}):Promise<{tasks:ExecutionTaskResourceV2[]}>;
+  listProjectUpgrades?(input:{accountId:string;page:number}):Promise<{tasks:ExecutionTaskResourceV2[];total:number}>;
   listShareImportTasks?(input: {accountId: string; ownerId?: string; page?: number}): Promise<ExecutionTaskResourceV2[]>;
-  commandTask?(input:{taskId:string;command:"resume"|"cancel";idempotencyKey:string}):Promise<void>;
+  commandTask?(input:{taskId:string;command:"resume"|"cancel"|"retry";idempotencyKey:string}):Promise<void>;
   listCollectors(input: { accountId: string }): Promise<
     Array<{
       accountId: string;
@@ -418,4 +420,3 @@ export type RadarTranscriptState = NonNullable<
 export type RadarTopicState = NonNullable<
   Parameters<RadarApi["listItems"]>[0]["topicState"]
 >;
-
