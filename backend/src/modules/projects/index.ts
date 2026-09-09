@@ -87,3 +87,5 @@ export {
 export { createTranscriptArtifactService } from "./transcript-artifact.service";
 
 export { createProjectTranscriptionTargetService } from "./project-transcription-target.service";
+export { createRadarProjectService } from "./radar-project.service";
+export type { BriefDetail } from "./projects.service";

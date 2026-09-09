@@ -117,7 +117,7 @@ import { createSettingsRepository, createSettingsService, createSettingsTranspor
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
-import { createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
+import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
 import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
@@ -139,7 +139,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
-import { createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
+import { createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
 import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/ai-runtime";
@@ -3152,10 +3152,16 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     intelligence: intelligenceService,
     generator: topicPreviewGenerator,
   };
+  const radarProjectQueue = createRadarProjectQueueService({
+    tasks: persistentTaskService, intelligence: intelligenceService,
+    assertPositioning: (c, id) => positioningService.getStatement(c, id),
+    projects: createRadarProjectService(db, deps),
+  });
   const intelligenceBase = createIntelligenceTransport(
     () => intelligenceService,
     () => projectIntelligenceReferences,
     () => projectScriptCandidates,
+    () => radarProjectQueue,
   );
   const fetchIntelligenceFeed = async (url: string, signal?: AbortSignal) => {
     signal?.throwIfAborted();
@@ -5682,6 +5688,7 @@ FAVORITES_PROMOTE_PER_RUN
   recoveryWake=createRecoveryWakeCoordinator({
     intervalMs:2000,
     lanes:{
+      radar_project_upgrade: control => radarProjectQueue.tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),
       transcribe:control=>intelligenceTranscriptRunnerDeps?drainIntelligenceTranscriptQueue(intelligenceTranscriptRunnerDeps,{...control,maxTasks:4,concurrency:2}):Promise.resolve(0),

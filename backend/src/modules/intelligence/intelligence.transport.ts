@@ -4,6 +4,7 @@ import {
   OwnershipError,
   UnsupportedOperationError,
 } from "@creatoros/backend";
+import type { RadarProjectQueueService } from "./radar-project-queue.service";
 import type { IntelligenceService } from "./intelligence.service";
 import type { ProjectIntelligenceReferenceService } from "./project-reference.service";
 import type { ProjectScriptCandidateService } from "./project-script-candidate.service";
@@ -28,6 +29,7 @@ export const INTELLIGENCE_OP_IDS = [
   "intelligence.items.get",
   "intelligence.items.importDouyinShare",
   "intelligence.transcripts.enqueue",
+  "intelligence.projects.enqueue",
   "intelligence.transcripts.uploadManual",
   "intelligence.transforms.previewTopic",
   "intelligence.transforms.confirmTopic",
@@ -57,6 +59,7 @@ export function createIntelligenceTransport(
   serviceFactory: () => IntelligenceService,
   projectReferencesFactory?: () => ProjectIntelligenceReferenceService,
   projectScriptsFactory?: () => ProjectScriptCandidateService,
+  radarProjectsFactory?: () => RadarProjectQueueService,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, rawCtx) {
@@ -333,6 +336,13 @@ export function createIntelligenceTransport(
             }),
             meta: { requestId },
           };
+        }
+        case "intelligence.projects.enqueue": {
+          if (!radarProjectsFactory) throw new UnsupportedOperationError("intelligence.projects.enqueue");
+          const b = (body ?? {}) as {itemIds?: string[]; positioningVersionId?: string; idempotencyKey?: string};
+          return {data: await radarProjectsFactory().enqueue(ctx, {
+            itemIds: b.itemIds ?? [], positioningVersionId: b.positioningVersionId ?? "", idempotencyKey: b.idempotencyKey ?? "",
+          }), meta: {requestId}};
         }
         case "intelligence.transcripts.enqueue": {
           const b = (body ?? {}) as {

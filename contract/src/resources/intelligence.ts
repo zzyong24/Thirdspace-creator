@@ -101,6 +101,7 @@ export const executionTaskKindV2 = z.enum([
   "share_import",
   "transcribe",
   "topic_preview",
+  "radar_project_upgrade",
   "script_candidate",
   "automation_sync",
   "migration",

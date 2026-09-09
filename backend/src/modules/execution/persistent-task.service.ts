@@ -36,6 +36,7 @@ export type PersistentTaskKind =
   | "share_import"
   | "transcribe"
   | "topic_preview"
+  | "radar_project_upgrade"
   | "script_candidate"
   | "automation_sync"
   | "migration";
@@ -147,7 +148,7 @@ export interface PersistentTaskService {
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
-  recoverExpiredLeases(): Promise<{
+  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[]}): Promise<{
     requeued: number;
     unknownResult: number;
     failed: number;
@@ -581,11 +582,20 @@ export function createPersistentTaskService(
         if (input.kinds) {
           filters.push(inArray(executionTasks.kind, input.kinds));
         }
+        // T-937：队列父项只编排已持久化子任务。等待中的最早作品继续占顺序，
+        // blocked/paused/cancelled 不阻塞后续；模型子任务使用各自队列，不占父租约。
+        if (input.kinds?.length === 1 && input.kinds[0] === "radar_project_upgrade") {
+          filters.push(sql`NOT EXISTS (SELECT 1 FROM execution_tasks older
+            WHERE older.kind = 'radar_project_upgrade'
+              AND older.status IN ('queued','retry_wait','running','pause_requested','cancel_requested')
+              AND (older.created_at < ${executionTasks.createdAt}
+                OR (older.created_at = ${executionTasks.createdAt} AND older.id < ${executionTasks.id})))`);
+        }
         const candidates = await tx
           .select()
           .from(executionTasks)
           .where(and(...filters))
-          .orderBy(desc(executionTasks.priority), asc(executionTasks.createdAt))
+          .orderBy(desc(executionTasks.priority), asc(executionTasks.createdAt), asc(executionTasks.id))
           .limit(1)
           .for("update", {skipLocked: true});
         for (const candidate of candidates) {
@@ -754,17 +764,17 @@ export function createPersistentTaskService(
     async finish(input) {
       const current = await getWorkerRow(input);
       if(input.status==='waiting_user'||input.status==='retry_wait'){
-        // 非计费来源读取的恢复门：仅原 share_import，无模型调用账本，不能给模型未知结果重试权。
+        // 非模型等待门：来源读取，或只串联持久子任务的雷达父项；有调用账本一律不走此门。
         return db.transaction(async tx=>{
           const [row]=await tx.select().from(executionTasks).where(eq(executionTasks.id,input.taskId)).for('update');
           const stamp=now();
-          if(!row||row.kind!=='share_import'||row.ownerType!=='item_import'||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('分享读取恢复缺少当前执行凭证');
+          if(!row||!((row.kind==='share_import'&&row.ownerType==='item_import')||(row.kind==='radar_project_upgrade'&&row.ownerType==='item'))||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
           const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).limit(1);
           if(calls.length)throw new ConflictError('存在调用账本的任务不能走无副作用读取重试');
           let status:string=input.status,retryAt:string|null=null;
           if(input.status==='retry_wait'){
-            if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('分享读取重试时间非法');
-            const delay=Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
+            if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('任务恢复等待时间非法');
+            const delay=row.kind==='radar_project_upgrade'?Math.max(1000,input.retryAfterMs??2000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
             const next=Date.parse(stamp)+delay;
             const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
             const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
@@ -816,7 +826,7 @@ export function createPersistentTaskService(
       return toResource(updated);
     },
 
-    async recoverExpiredLeases() {
+    async recoverExpiredLeases(input = {}) {
       const stamp = now();
       const report = {
         requeued: 0,
@@ -830,7 +840,7 @@ export function createPersistentTaskService(
           .select()
           .from(executionTasks)
           .where(
-            recoveryDueAt(stamp),
+            and(recoveryDueAt(stamp), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
