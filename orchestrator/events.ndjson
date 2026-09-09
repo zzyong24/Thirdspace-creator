@@ -986,3 +986,4 @@
 {"ts":"2026-09-08T15:25:23.059Z","actor":"taskctl","action":"complete","task":"T-936","evidence":"1a79d186；原生1/UI4/CLI5通过；安装PID30926后无手动授权creatoros status connected/full；pmem sync；全局reconcile沿既有暂缓，未宣称通过","sha_before":"46b8b393a5bb","sha_after":"9bdec2451268"}
 {"ts":"2026-09-09T02:39:44.958Z","actor":"taskctl","action":"start","task":"T-937","sha_before":"488f5933510c","sha_after":"0faaa3a5584a"}
 {"ts":"2026-09-09T03:21:20.769Z","actor":"taskctl","action":"complete","task":"T-937","evidence":"2681cf84；针对性UI3项/队列7项/Pi产物7项/打包42项通过；本地安装PID28612，原任务execution-task-2368a14a-514真实读回succeeded（拆解/选题/初稿均完成）；SPEC记录DMG校验。原生UI与真实多作品项目端到端待用户验收；全局reconcile沿既有暂缓授权，基线UI5项与boundary旧欠债保留。","sha_before":"0faaa3a5584a","sha_after":"960ae5140767"}
+{"ts":"2026-09-09T03:25:53.261Z","actor":"taskctl","action":"start","task":"T-938","sha_before":"3a13547f46d8","sha_after":"f38fe3140f42"}

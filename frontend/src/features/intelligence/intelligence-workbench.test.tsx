@@ -208,11 +208,42 @@ function api(): RadarApi {
 afterEach(() => {
   vi.useRealTimers();
   cleanup();
+  window.localStorage.clear();
   refresh.mockReset();
   push.mockReset();
 });
 
 describe("T-482 内容雷达工作区", () => {
+  it("T-938 返回页面恢复筛选排序，其他账号不复用", async()=>{
+    const stub=api();
+    const props={accountId:"account-1",workspace,items:[],initialDetail:null,api:stub};
+    const first=render(<IntelligenceWorkbench {...props}/>);
+    fireEvent.change(screen.getByRole("combobox",{name:"内容排序"}),{target:{value:"collect_desc"}});
+    await waitFor(()=>expect(screen.getByRole("combobox",{name:"内容排序"})).toBeEnabled());
+    fireEvent.change(screen.getByRole("combobox",{name:"逐字稿筛选"}),{target:{value:"extracted"}});
+    await waitFor(()=>expect(screen.getByRole("combobox",{name:"逐字稿筛选"})).toBeEnabled());
+    first.unmount();vi.mocked(stub.listItems).mockClear();
+    const returned=render(<IntelligenceWorkbench {...props}/>);
+    await waitFor(()=>expect(stub.listItems).toHaveBeenCalledWith(expect.objectContaining({accountId:"account-1",sort:"collect_desc",transcriptState:"extracted"})));
+    expect(screen.getByRole("combobox",{name:"内容排序"})).toHaveValue("collect_desc");
+    expect(screen.getByRole("combobox",{name:"逐字稿筛选"})).toHaveValue("extracted");
+    returned.unmount();
+    render(<IntelligenceWorkbench {...props} accountId="account-other"/>);
+    expect(screen.getByRole("combobox",{name:"内容排序"})).toHaveValue("published_desc");
+    expect(screen.getByRole("combobox",{name:"逐字稿筛选"})).toHaveValue("");
+  });
+
+  it("T-938 已升级作品显示真实项目链接，页头不显示受阻计数", async()=>{
+    const stub=api();
+    stub.enqueueProjectUpgrades=vi.fn();
+    stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[{id:"upgrade-1",accountId:"account-1",ownerId:detail.item.id,status:"succeeded",checkpoint:{stage:"completed",projectId:"project-actual"},createdAt:"2026-09-09T00:00:00Z"}],total:1});
+    render(<IntelligenceWorkbench accountId="account-1" workspace={{...workspace,blockedCount:2}} items={[{item:detail.item,latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);
+    expect(await screen.findByRole("link",{name:"查看项目"})).toHaveAttribute("href","/projects/project-actual");
+    expect(screen.getByText("已升级为项目")).toBeInTheDocument();
+    expect(screen.queryByText("受阻 2")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button",{name:"升级为项目"})).not.toBeInTheDocument();
+  });
+
   it("T-937 转写完成直接更新详情与卡片，不需要切 Tab", async()=>{
     vi.useFakeTimers();
     const stub=api();
@@ -237,6 +268,7 @@ describe("T-482 内容雷达工作区", () => {
 
   it("T-937 升级入队未返回时仍可添加第二个作品，重复点击不重复提交", async()=>{
     const stub=api();
+    stub.enqueueProjectUpgrades=vi.fn();
     stub.listProjectUpgrades=vi.fn().mockResolvedValue({tasks:[],total:0});
     stub.enqueueProjectUpgrades=vi.fn(()=>new Promise<{tasks:never[]}>(()=>{}));
     render(<IntelligenceWorkbench accountId="account-1" workspace={workspace} positioningVersionId="position-1" items={[{item:detail.item,latestMetric:null,sourceCount:1},{item:{...detail.item,id:"item-2",title:"第二个作品"},latestMetric:null,sourceCount:1}]} initialDetail={null} api={stub}/>);

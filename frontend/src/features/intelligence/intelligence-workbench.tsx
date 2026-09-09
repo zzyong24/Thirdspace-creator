@@ -22,6 +22,8 @@ Trash2,
 Upload
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import {readRadarView,saveRadarView} from "./radar-view-preferences";
 import * as React from "react";
 import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import-dialogs";
 import { transcriptSaveErrorMessage } from "./intelligence-errors";
@@ -160,8 +162,10 @@ function IntelligenceWorkbenchScope({
   }, [detail?.item.id]);
 
   const {topicGenerating,previewTopic,resetTopicPreview}=useTopicPreview({api,detail,positioningVersionId,setDetail,setNotice,setBusy,activeDetailItemId});
-  useTranscriptRefresh({api,detail,rows:scopedItems,setDetail,setRows:setScopedItems,activeItemId:activeDetailItemId});
   const upgrades=useProjectUpgradeQueue({api,accountId,positioningVersionId,setNotice});
+  useTranscriptRefresh({api,detail,rows:scopedItems,setDetail,setRows:setScopedItems,activeItemId:activeDetailItemId,
+    pendingItemIds:upgrades.tasks.filter(task=>["queued","running"].includes(task.status)&&task.checkpoint&&typeof task.checkpoint==="object"&&"stage" in task.checkpoint&&task.checkpoint.stage==="transcribing").map(task=>task.ownerId),
+  });
 
   React.useEffect(() => {
     let timer: number | null = null;
@@ -255,6 +259,35 @@ function IntelligenceWorkbenchScope({
     },
     [api],
   );
+
+  const [viewRestored,setViewRestored]=React.useState(false);
+  React.useEffect(()=>{
+    let disposed=false;
+    const saved=readRadarView(accountId);
+    setViewRestored(true);
+    if(!saved)return;
+    const collectionId=workspace.collections.some(row=>row.id===saved.collectionId)?saved.collectionId:null;
+    const sourceId=workspace.sources.some(row=>row.id===saved.sourceId)?saved.sourceId:null;
+    setSelectedCollectionId(collectionId);setSelectedSourceId(sourceId);
+    setSort(saved.sort);setTranscriptState(saved.transcriptState);setTopicState(saved.topicState);
+    setQuery(saved.query);setSourceQuery(saved.sourceQuery);
+    const requestId=++itemScopeRequestId.current;
+    setItemsLoading(true);
+    void api.listItems({accountId,page:1,pageSize:ITEM_PAGE_SIZE,sort:saved.sort,
+      ...(collectionId?{collectionId}:{}),...(sourceId?{sourceId}:{}),
+      ...(saved.query.trim()?{query:saved.query.trim()}:{}),
+      ...(saved.transcriptState?{transcriptState:saved.transcriptState}:{}),
+      ...(saved.topicState?{topicState:saved.topicState}:{}),
+    }).then(page=>{if(!disposed)return settleItemRows(page,requestId);})
+      .catch(()=>{if(!disposed)setNotice("上次筛选已恢复，列表读取失败，请稍后重试。");})
+      .finally(()=>{if(!disposed&&itemScopeRequestId.current===requestId)setItemsLoading(false);});
+    return()=>{disposed=true;};
+    // 每个账号组件首次进入恢复一次，工作区刷新不覆盖用户本次选择。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[accountId]);
+  React.useEffect(()=>{
+    if(viewRestored)saveRadarView(accountId,{sort,transcriptState,topicState,query,sourceQuery,collectionId:selectedCollectionId,sourceId:selectedSourceId});
+  },[accountId,viewRestored,sort,transcriptState,topicState,query,sourceQuery,selectedCollectionId,selectedSourceId]);
 
   const selectItemScope = React.useCallback(
     async (collectionId: string | null, sourceId: string | null) => {
@@ -909,9 +942,6 @@ function IntelligenceWorkbenchScope({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-full bg-warning-soft px-2.5 py-1 text-warning">
             待处理 {workspace.pendingCount}
-          </span>
-          <span className="rounded-full bg-danger-soft px-2.5 py-1 text-danger">
-            受阻 {workspace.blockedCount}
           </span>
           <AddCollectionDialog
             accountId={accountId}
@@ -1687,10 +1717,13 @@ function ItemCard({
       </button>
       {onUpgrade ? <div className="border-t border-border/50 px-3.5 py-2">
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
+          {upgradeProjectId(upgradeTask) ? <>
+            <span className="text-xs text-muted-foreground">已升级为项目</span>
+            <Link className="ml-auto inline-flex h-7 items-center gap-1 text-xs text-primary" href={`/projects/${encodeURIComponent(upgradeProjectId(upgradeTask)!)}`}>查看项目<ChevronRight className="size-3.5" /></Link>
+          </> : <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-primary" onClick={onUpgrade}
             disabled={upgradeSubmitting || Boolean(upgradeTask && !["succeeded","failed","blocked","cancelled","paused"].includes(upgradeTask.status))}>
             <Sparkles className="size-3.5" />{upgradeSubmitting?"正在加入…":upgradeLabel(upgradeTask)}
-          </Button>
+          </Button>}
           {upgradeTask && ["queued","running","paused","pause_requested"].includes(upgradeTask.status)?<Button size="sm" variant="ghost" className="ml-auto h-7 text-xs text-muted-foreground" onClick={onCancelUpgrade}>取消</Button>:null}
         </div>
         {upgradeTask?.errorMessage?<p className="mt-1 text-xs text-warning">{upgradeTask.errorMessage}</p>:null}
