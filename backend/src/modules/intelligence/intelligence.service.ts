@@ -5278,6 +5278,7 @@ export function createIntelligenceService(
         }
         const task = await deps.tasks.enqueue(ctx, {
           kind: "transcribe",
+          executionBudget: createContinuousExecutionBudget(),
           ownerType: "item",
           ownerId: itemId,
           idempotencyKey: `${input.idempotencyKey}:${itemId}`,

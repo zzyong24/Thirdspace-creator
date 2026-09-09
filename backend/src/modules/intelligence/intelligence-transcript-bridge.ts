@@ -1,7 +1,7 @@
 import {isDeepStrictEqual} from 'node:util';
 import {and,eq,executionTasks,executionCalls,itemTranscripts,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {transcribeTaskInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {isContinuousExecutionBudget,transcribeTaskInputSchema,workerPortInputSchemas,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import {createClaimedWorkerSupervision} from '../execution/claimed-worker-supervision';
 import {createExecutionLeaseService} from '../execution/execution-lease.service';
 import {createExecutionCallLedgerService} from '../execution/execution-call-ledger.service';
@@ -70,7 +70,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
      const current=scope.task.payload as Record<string,unknown>;
      if(!current.modelInput){
       if((await scope.tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,scope.task.id)).limit(1)).length)throw new Error('INTELLIGENCE_TRANSCRIPT_PLAN_MISSING');
-      await scope.tx.update(executionTasks).set({payload:{...current,modelInput:input},...(scope.task.deadlineAt===null?{deadlineAt:new Date(Date.parse((deps.now??(()=>new Date().toISOString()))())+deps.budget.deadlineMs).toISOString()}: {})}).where(eq(executionTasks.id,scope.task.id));
+      await scope.tx.update(executionTasks).set({payload:{...current,modelInput:input},...(scope.task.deadlineAt===null&&!isContinuousExecutionBudget(scope.task.executionBudget)?{deadlineAt:new Date(Date.parse((deps.now??(()=>new Date().toISOString()))())+deps.budget.deadlineMs).toISOString()}: {})}).where(eq(executionTasks.id,scope.task.id));
      }
     });
    }
@@ -88,7 +88,7 @@ export function createIntelligenceTranscriptBridge(db:Db,deps:IntelligenceTransc
    };
    completed=await readResult();if(completed)return completed;
    const state=await ledger.inspect(ref);
-   const outcome=await supervision.run({ref,deadlineAt:Date.parse(state.deadlineAt!),verify,isClosed:()=>closed,close:()=>{closed=true;controller.abort();},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined,ports:{
+   const outcome=await supervision.run({ref,deadlineAt:state.deadlineAt===null?null:Date.parse(state.deadlineAt),verify,isClosed:()=>closed,close:()=>{closed=true;controller.abort();},hasDurableOutcome:()=>completed!==undefined||persistedStatus!==undefined,ports:{
     async validate(current,mode){if(closed||!isDeepStrictEqual(ref,current))throw new Error('INTELLIGENCE_TRANSCRIPT_PORT_CLOSED');await leases.withLease(ref,mode,async()=>{});},
     async invoke(_ref,port,raw){
      if(port==='readTaskContext'){await verify();return input;}

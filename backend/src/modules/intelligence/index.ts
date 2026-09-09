@@ -60,3 +60,5 @@ export {createIntelligenceGenerationBridge,type IntelligenceGenerationBridgeDeps
 export {createIntelligenceTranscriptBridge,type IntelligenceTranscriptBridgeDeps} from './intelligence-transcript-bridge';
 
 export * from "./share-import-runner";
+
+export {createTranscriptSourceRecoveryService} from "./transcript-source-recovery.service";

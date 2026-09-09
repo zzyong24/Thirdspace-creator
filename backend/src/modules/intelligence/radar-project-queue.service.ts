@@ -19,6 +19,7 @@ export interface RadarProjectQueueDeps {
   now?:()=>string;
   tasks: PersistentTaskService;
   intelligence: IntelligenceService;
+  recoverSourceCooldown?(ctx:RequestContext,taskId:string):Promise<boolean>;
   assertPositioning(ctx: RequestContext, id: string): Promise<unknown>;
   projects: { ensureRadarProject(ctx: RequestContext, input: {queueTaskId: string; title: string; briefDetail: BriefDetail}): Promise<{id: string}> };
 }
@@ -77,6 +78,10 @@ export function createRadarProjectQueueService(deps: RadarProjectQueueDeps) {
       const childReady = async (taskId: string) => {
         const child = await deps.tasks.get(ctx, taskId);
         if (child.status === "succeeded") return true;
+        if(child.status==="failed" && deps.recoverSourceCooldown){
+          if(!await live())return false;
+          if(await deps.recoverSourceCooldown(ctx,taskId)){await wait();return false;}
+        }
         if (["failed", "blocked", "cancelled", "paused"].includes(child.status)) {
           // 只有用户对已受阻父项显式重试后才续接同一个失败子项；未知结果保留诊断。
           const command=child.runtimeStatus==="waiting_user" || child.status==="paused"?"resume":!child.runtimeStatus && ["failed","blocked","cancelled"].includes(child.status)?"retry":null;

@@ -1,3 +1,4 @@
+import type {TranscriptSourceRecoveryService} from "./transcript-source-recovery.service";
 import {isTaskDrainStopping,type TaskDrainControl} from "../execution/task-drain-control";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import type { RequestContext } from "@creatoros/contract";
@@ -30,6 +31,7 @@ export interface IntelligenceTranscriptRunnerDeps {
   intelligence: IntelligenceService;
   transcript: IntelligenceTranscriptPort;
   workerId?: () => string;
+  sourceRecovery?: Pick<TranscriptSourceRecoveryService,"defer">;
 }
 
 export interface IntelligenceTranscriptDrainOptions extends TaskDrainControl {
@@ -128,6 +130,7 @@ export async function runIntelligenceTranscriptTask(
   } catch (error) {
     if(input.signal?.aborted)return;
     if(error instanceof IntelligenceGenerationSuspended && error.taskId===claim.task.id && error.attempt===claim.lease.attempt && error.fenceToken===claim.lease.fenceToken)return;
+    if(await deps.sourceRecovery?.defer(ctx,{executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},error))return;
     const classified = classify(error);
     input.signal?.throwIfAborted();
     await deps.intelligence.finishTranscript(ctx, {

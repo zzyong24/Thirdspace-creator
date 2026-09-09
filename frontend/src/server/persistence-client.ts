@@ -139,7 +139,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
-import { createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
+import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
 import type { ContextDeps as ChatContextDeps } from "@creatoros/backend/modules/ai-runtime";
@@ -3152,10 +3152,12 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     intelligence: intelligenceService,
     generator: topicPreviewGenerator,
   };
+  const transcriptSourceRecovery=createTranscriptSourceRecoveryService(db,deps);
   const radarProjectQueue = createRadarProjectQueueService({
     tasks: persistentTaskService, intelligence: intelligenceService,
     assertPositioning: (c, id) => positioningService.getStatement(c, id),
     projects: createRadarProjectService(db, deps),
+    recoverSourceCooldown:(c,id)=>transcriptSourceRecovery.recoverReferenced(c,id),
   });
   const intelligenceBase = createIntelligenceTransport(
     () => intelligenceService,
@@ -3809,7 +3811,7 @@ dispatchIntelligenceRun});
   });
   const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","favorites"]);
 
-  intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript};
+  intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript,sourceRecovery:transcriptSourceRecovery};
 
   const scheduledCollectors: Record<string, ScheduledCollector> = {
     "intelligence.sync": async (ctx, _target, report) => {
