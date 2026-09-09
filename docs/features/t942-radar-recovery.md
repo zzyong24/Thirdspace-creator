@@ -25,3 +25,9 @@ flowchart LR
 BROWSER_PROFILE_BUSY保留精确错误类型，同task/run自动退避5–60秒；仅本批零产物、无调用账本的source_sync进入等待，不抢浏览器锁。短期唤醒仅由execution.retryAt驱动，不用source.nextRunAt创建另一队列。旧失败运行只有原任务显式重试、新attempt和有效租约才可重新更新。
 
 来源公共链路43项、未知结果前端3项、执行终态5项测试通过；各改动类型检查通过。原未知ASR仍待有证据的恢复，T-942保持进行中，不宣称所有失败已经根治。
+
+## 安装与实际恢复
+
+候选4215659c固定入口打包并替换/启动本机应用PID78821，CLI full。42项打包测试、合并tsc、hdiutil verify、codesign --verify --deep --strict通过。本地ad-hoc未公证，无远程发布。安装包/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg，SHA-256 7988d1f20e72a45cec1ad2d8bf939afc232d12652292e0388c9069615d541462。
+
+公开CLI同账号acct-ae1a8346-9，使用幂等键t942-original-sources-retry恢复原source_sync任务execution-task-1ecc18cd-{83,73,77,59,63}。最终五项全部succeeded、attempt=2、errorCode=null，对应Geo逸哥、Win先生、南吴、嘉弟干编导、天诺企业流量咨询。未新建替代任务，未改真实数据为假成功。原ASR未知仍保留，未再次提交；全局reconcile沿用用户暂缓要求，本任务因ASR自动核验缺口保持进行中。
