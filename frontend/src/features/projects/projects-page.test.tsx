@@ -26,6 +26,7 @@ import type { ReactNode } from "react";
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
+  useLinkStatus: () => ({ pending: false }),
   default: ({
     children,
     href,
@@ -66,6 +67,33 @@ async function renderProjects(overrides: Partial<ProjectsPageProps> = {}) {
   const element = await ProjectsPage({ ...overrides, viewModel });
   return render(<AppShell pathname="/projects">{element}</AppShell>);
 }
+
+describe("项目封面批量读取", () => {
+  afterEach(cleanup);
+  it.each([false, true])("只读取当前页封面，失败也保留项目列表（失败=%s）", async (fail) => {
+    const { ProjectsPage } = await import("./projects-page");
+    const { canonicalDataset } = await import("@/fixtures/canonical");
+    const projects = Array.from({ length: 12 }, (_, i) => ({
+      ...canonicalDataset.projects[0], id: `real-${i}`, title: `真实项目${i}`,
+    }));
+    const listOutputs = vi.fn();
+    const resolveCoverIds = vi.fn(async () => {
+      if (fail) throw new Error("封面服务不可用");
+      return {};
+    });
+    const element = await ProjectsPage({
+      page: 2,
+      client: { listProjects: vi.fn().mockResolvedValue(projects), listOutputs },
+      resolveCoverIds,
+    });
+    render(element);
+    expect(resolveCoverIds).toHaveBeenCalledExactlyOnceWith(["real-10", "real-11"]);
+    expect(listOutputs).not.toHaveBeenCalled();
+    expect(screen.getByText("真实项目10")).toBeInTheDocument();
+    expect(screen.getByText("真实项目11")).toBeInTheDocument();
+    expect(screen.queryByText("真实项目0")).not.toBeInTheDocument();
+  });
+});
 
 describe("ProjectsPage", () => {
   afterEach(() => {

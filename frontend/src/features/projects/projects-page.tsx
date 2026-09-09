@@ -83,6 +83,8 @@ export interface ProjectsPageProps {
    * passes `createServerClient(session.ctx)`; defaults to the singleton seam.
    */
   readonly client?: ProjectsReadClient;
+  /** 当前页封面通过账号作用域的批量服务读取。 */
+  readonly resolveCoverIds?: (projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   /**
    * T-599：由 route/server composition 一次性读取当前账号的有效项目排期后传入。
    * 缺省不渲染控件，避免未登录/未选号或旧调用方制造无归属写请求。
@@ -125,6 +127,7 @@ export async function ProjectsPage({
   sort = "updated",
   client = defaultClient,
   scheduleContext,
+  resolveCoverIds,
 }: ProjectsPageProps = {}) {
   // Reads flow page -> await client.* -> MockTransport -> store -> DTO. The
   // `viewModel?` prop remains the test-override seam (fixture-driven, sync).
@@ -187,8 +190,14 @@ export async function ProjectsPage({
   // [T-078] 只给当前页的行解析真封面(每页 10 行,N+1 可控):项目 → outputs →
   // publications → 当前 revision.coverAssetId。测试 viewModel 覆写路径 / 窄桩
   // client 不解析(coverAssetId 缺省 → 渐变占位,现状不回退)。
+  // 封面是可选展示；批量读取失败仍展示项目，不放大为整页错误。
+  const coverIds = paginate && resolveCoverIds && pagedRows.length
+    ? await resolveCoverIds(pagedRows.map((row) => row.id)).catch(() => ({} as Record<string, string | null>))
+    : undefined;
   const rows =
-    paginate && canResolveCovers(client)
+    coverIds
+      ? pagedRows.map((row) => ({ ...row, coverAssetId: coverIds[row.id] ?? null }))
+      : paginate && canResolveCovers(client)
       ? await Promise.all(
           pagedRows.map(async (row) => ({
             ...row,
