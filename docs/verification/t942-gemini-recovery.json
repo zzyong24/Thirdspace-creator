@@ -1,0 +1,45 @@
+{
+  "candidateSha": "a314fc7209323376259a3e90a14bb7ecd3862df4",
+  "accountId": "acct-ae1a8346-9",
+  "itemId": "intelligence-item-693b96ef-14563",
+  "externalId": "7574748560332295460",
+  "sourceTitle": "Gemini3深度实测！一年可以做300个AI应用 #人工智能 #Gemini#Gemini3 #抖音知识年终大赏  #ai新星计划",
+  "transcript": {
+    "status": "done",
+    "chars": 3971,
+    "sha256": "6276018a932752fb26253240ada2d3b59137b22a05ddc3f32e50636400ab54e8",
+    "source": "外部本地 faster-whisper small 识别，经公开 uploadManual 导入",
+    "uncertainty": "原转写包含一处 U+FFFD，替换为明确的〔未识别〕标记，未猜补原词"
+  },
+  "originalUpgradeTask": {
+    "id": "execution-task-bf64f03b-166",
+    "status": "succeeded",
+    "projectId": "project-radar-02c5647a5fcf35a241c32f75d140291b"
+  },
+  "project": {
+    "id": "project-radar-02c5647a5fcf35a241c32f75d140291b",
+    "title": "老板让我一周搭个AI工具，我没写一行代码",
+    "draftChars": 1340
+  },
+  "originalCloudTask": {
+    "id": "execution-task-693b96ef-15537",
+    "status": "unknown_result",
+    "replayed": false
+  },
+  "installed": {
+    "path": "/Applications/CreatorOS.app",
+    "pid": 45595,
+    "cliAccess": "full",
+    "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg",
+    "sha256": "f06a451c6732e2d155fc9a7339a45ba52200603850c704cc8561d9f6631b904a",
+    "hdiutilVerify": "VALID",
+    "codesignVerify": "passed",
+    "notarized": false
+  },
+  "tests": {
+    "business": 36,
+    "packaging": 42,
+    "frontendTypecheck": "passed",
+    "reconcile": "233 errors, 0 warnings; 既有 T-916 全局欠债"
+  }
+}

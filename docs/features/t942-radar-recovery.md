@@ -51,3 +51,17 @@ BROWSER_PROFILE_BUSY保留精确错误类型，同task/run自动退避5–60秒�
 本轮新增 3 个停止态回归先红后绿；补充恢复竞争与迟到回调保护后，intelligence.service + radar-project-queue 共 36 测试通过，frontend 合并类型检查通过。人工上传在写事务锁关联任务并复查活动态；markTranscriptRunning/finishTranscript 最终写入比对 executionTaskId，旧 worker 不能覆盖已补入正文。独立评审指出并发两项已落实。
 
 本地 douyin-transcribe 已从同一 externalId=7574748560332295460 的 542.6 秒原音频完成识别，faster-whisper small/cpu/int8，348 段、3967 字，耗时190.8秒。正文尚待更新安装版后经公开 API 写入与恢复原父任务；不将此本地识别结果记为旧云端请求成功。
+
+## 本轮真实恢复完成
+
+候选 `a314fc72` 从独立干净 worktree 构建并安装，本机 PID45595，CLI full。隔离依赖首次缺少 sharp 原生扩展，固定入口按自检停止；退出打包、通过既有 pnpm allowlist 重新安装原生依赖后，原生加载及42项预检通过，再次用同一冻结候选成功构建，未修改产品或构建代码绕过自检。
+
+安装版 getItem 首次真实回读将旧 running 校准为 blocked。通过公开 uploadManual 写入3971字真实识别正文（原识别3967字，一处无法识别字符改为明确的〔未识别〕，不猜原词），回读 done。随后公开 command retry 恢复原父任务 execution-task-bf64f03b-166，最终 succeeded，原来源未重复建档、旧云 ASR 未重放。
+
+已回读项目 `project-radar-02c5647a5fcf35a241c32f75d140291b`，题目“老板让我一周搭个AI工具，我没写一行代码”，候选稿1340字，transform `intelligence-transform-649424be-68` succeeded。这里验证的是生成链路恢复，候选文案仍需用户审稿，不代表其中案例和主张已被人工核实。
+
+原云转写 execution-task-693b96ef-15537 仍保留 unknown_result 及原账本，本次业务恢复没有把它改成假成功。恢复补稿不需要重放这次云提交。
+
+安装包 `/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`；SHA-256 `f06a451c6732e2d155fc9a7339a45ba52200603850c704cc8561d9f6631b904a`；hdiutil verify VALID、codesign --verify --deep --strict 通过。本地 ad-hoc 包，未公证、未公开发布。结构化回读证据见 `docs/verification/t942-gemini-recovery.json`。
+
+收尾已运行 pmem sync 与 reconcile，后者仍为233 errors/0 warnings，与T-916既有基线一致，未宣称全局全绿。当前截图对应业务链路已恢复，完成T-942；未知云提交的历史记账保留，不通过篡改终态消除记录。
