@@ -91,7 +91,21 @@ export function createExecutionWorker(deps: WorkerDependencies) {
     try {
       if (deadlineAt !== null && deadlineAt <= Date.now()) controller.abort();
       signal.throwIfAborted();
-      const input = workerTaskInputSchema.parse(await call(execution, "readTaskContext", {}, signal));
+      // 只暴露阶段码，不传宿主原始错误/上下文/凭据。此时尚未调用模型。
+      const readBoundary = async <T>(port: "readTaskContext" | "resolveModelCredential", data: unknown, schema: z.ZodType<T>): Promise<T> => {
+        const stage = port === "readTaskContext" ? "CONTEXT" : "CREDENTIAL";
+        let raw: unknown;
+        try { raw = await call(execution, port, data, signal); }
+        catch (error) {
+          signal.throwIfAborted();
+          if (error instanceof GenerationFailure) throw error;
+          throw new GenerationFailure("failed", `WORKER_${stage}_UNAVAILABLE`);
+        }
+        const parsed = schema.safeParse(raw);
+        if (!parsed.success) throw new GenerationFailure("failed", `WORKER_${stage}_INVALID`);
+        return parsed.data;
+      };
+      const input = await readBoundary("readTaskContext", {}, workerTaskInputSchema);
       if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
       if((input.kind==="scheduled.flywheel"||input.kind==="benchmark.transcribe"))throw new GenerationFailure("failed","DOMAIN_STAGE_AUTHORIZATION_REQUIRED");
       if(input.kind==="transcribe.douyin"){
@@ -113,7 +127,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(input.tools.some(tool=>tool.execution==="worker.script-draft") && !capabilities.includes("chat.script-draft"))throw new GenerationFailure("waiting_user","CHAT_SCRIPT_DRAFT_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !capabilities.includes("chat.hooks"))throw new GenerationFailure("waiting_user","CHAT_HOOKS_WORKER_UNAVAILABLE");
         if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");
-        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
         const result=await deps.runChat(input,model,signal,{
           call:(port,data,portSignal)=>call(execution,port,data,portSignal),
           approve:async(request,approvalSignal)=>{
@@ -132,7 +146,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       }
       if(input.kind==="agentic.run"){
         if(!deps.runAgentic)throw new GenerationFailure("waiting_user","AGENTIC_WORKER_NOT_READY");
-        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
         signal.throwIfAborted();
         const result=await deps.runAgentic(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),text=>{
           if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
@@ -156,7 +170,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
           // 先沿原凭据端口锁定业务任务的模型身份，封面链返回最终图片回执。
-          const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+          const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
           const result=await deps.runCover(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
           signal.throwIfAborted();committing=true;
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
@@ -191,7 +205,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           return;
         }
         if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
-        const model=workerModelSpecSchema.parse(await call(execution,"resolveModelCredential",{capability:input.capability},signal));
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
         const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
         signal.throwIfAborted();
         committing=true;
@@ -236,7 +250,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       }
       if (initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
       if (reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
-      const model = workerModelSpecSchema.parse(await call(execution, "resolveModelCredential", {capability: input.capability}, signal));
+      const model = await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
       signal.throwIfAborted();
       // 启动回执丢失也视为未知；没有明确许可绝不调用供应商。
       started = true;

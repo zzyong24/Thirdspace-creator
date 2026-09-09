@@ -24,11 +24,16 @@ function parseGeneratedOutput<T>(schema:z.ZodType<T>,output:unknown):T {
 /** 原采集任务的模型阶段；只通过宿主同任务账本和检查点端口回传。 */
 export async function generateIntelligenceInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  let lastCallId:string|undefined;
- const model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
+ // 本地模型适配器初始化失败尚未预留或启动供应商调用，不能记成结果未知。
+ let model:ReturnType<typeof createDurableGenerationModel>;
+ try { model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
   async reserve(request){const receipt=workerReservationSchema.parse(await call("reserveGenerationCall",JSON.parse(JSON.stringify(request)),signal));lastCallId=receipt.callId;return receipt;},
   async start(callId){const receipt=workerStartReceiptSchema.parse(await call("startCall",{callId},signal));if(receipt.callId!==callId)throw new Error("INTELLIGENCE_CALL_MISMATCH");},
   async settle(callId,settlement){await call("settleGenerationCall",{callId,...settlement});},
- }});
+ }}); } catch {
+  signal.throwIfAborted();
+  throw new GenerationFailure("failed","INTELLIGENCE_MODEL_SETUP_FAILED");
+ }
  const save=async(value:unknown)=>{
   if(!lastCallId)throw new Error("INTELLIGENCE_RECEIPT_MISSING");
   const text=JSON.stringify(value);await call("saveGenerationResult",{callId:lastCallId,text},signal);return {callId:lastCallId,text};
