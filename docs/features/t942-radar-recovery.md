@@ -35,3 +35,9 @@ BROWSER_PROFILE_BUSY保留精确错误类型，同task/run自动退避5–60秒�
 ## 用户继续反馈（正常子任务等待误报）
 
 “暂时无法处理，系统会等待后自动继续”出现于新父任务execution-task-f1e15754-651；子转写execution-task-f1e15754-653为running，心跳正常。父任务无errorCode/errorMessage，只用retry_wait周期等待子任务，前端错误地将所有retry_wait视为故障。本轮明确只有带真实错误的退避显示恢复说明，正常等待沿stage显示转写/写稿中；跟踪原任务到业务产物后再报完成。
+
+### 正常等待修复实证
+
+同一原任务execution-task-f1e15754-651已succeeded，经公开CLI回读项目project-radar-e44ad83e3fe5fdf9b740708ceff97ca9，标题“AI 项目跑通过一次就别再手维护 Skill：让模型自己当配置管家”；候选intelligence-transform-f1e15754-826有1335字文案，转写done。未重复提交，待原任务完成后才替换安装。
+
+候选936660b9已安装，PID85933，CLI full；4项提示/恢复测试、42项打包测试通过，DMG与codesign校验通过。本地包SHA-256 f9f831bc6379f1c5eb73072c2d2c583d089f8e81eebe3f958631963787da2f2e。旧Gemini未知转写未恢复，T-942继续保留此缺口。
