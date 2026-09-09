@@ -9,6 +9,7 @@ import {
   desc,
   eq,
   executionTasks,
+  executionCalls,
   favoritesFolders,
   favoritesItems,
   inArray,
@@ -4932,9 +4933,16 @@ export function createIntelligenceService(
       assertSafeDiagnostics(input.envelope.safeDiagnostics);
       const run = await requireRun(ctx, input.runId);
       const sourceForSchedule = await requireSource(ctx, run.sourceId);
+      // 显式重试沿原 execution ID 领取到新租约后，允许失败的原 run 写入恢复结果。
+      // 仅“run 已终态”就提前返回会让原任务 retry 永远无法完成。
+      const retryExecution = !["queued", "running"].includes(run.status)
+        ? await deps.tasks.get(ctx, run.executionTaskId) : null;
+      const resumedFailure = ["failed", "blocked"].includes(run.status)
+        && retryExecution?.status === "running"
+        && retryExecution.attempt === input.lease.attempt && input.lease.attempt > 1;
       if (
         !["queued", "running"].includes(run.status) &&
-        input.terminal
+        input.terminal && !resumedFailure
       ) {
         const observations = await db
           .select()
@@ -5160,7 +5168,17 @@ export function createIntelligenceService(
             }
           }
         }
-        const terminalStatus = input.terminal
+        // BROWSER_PROFILE_BUSY 是互斥资源尚未释放，不是采集失败或登录失效。
+        // 此源任务只读页面；无产物、无调用账本才允许原任务延后领取，不抢占浏览器锁。
+        const waitingForBrowser = input.terminal && execution.kind === "source_sync"
+          && input.envelope.adapterStatus === "failed" && input.envelope.errorCode === "BROWSER_PROFILE_BUSY"
+          && input.envelope.items.length === 0
+          && !(await tx.select({id: executionCalls.id}).from(executionCalls)
+            .where(eq(executionCalls.executionTaskId, execution.id)).limit(1)).length;
+        const retryAt = waitingForBrowser
+          ? new Date(Date.parse(now()) + Math.min(60_000, 5_000 * 2 ** Math.min(execution.attempt - 1, 4))).toISOString()
+          : null;
+        const terminalStatus = waitingForBrowser ? "queued" : input.terminal
           ? input.envelope.adapterStatus
           : "running";
         await tx
@@ -5170,18 +5188,18 @@ export function createIntelligenceService(
             checkpoint: input.envelope.checkpoint,
             adapterEvidence: input.envelope.upstreamEvidence,
             startedAt: run.startedAt ?? now(),
-            finishedAt: input.terminal ? now() : null,
+            finishedAt: input.terminal && !waitingForBrowser ? now() : null,
             scannedCount: run.scannedCount + input.envelope.items.length,
             newCount: run.newCount + created,
             updatedCount: run.updatedCount + updated,
             failedCount:
               run.failedCount +
-              (input.envelope.adapterStatus === "failed" ? 1 : 0),
+              (input.envelope.adapterStatus === "failed" && !waitingForBrowser ? 1 : 0),
             errorCode: input.envelope.errorCode,
-            errorSummary: input.envelope.errorCode
+            errorSummary: waitingForBrowser ? "浏览器正被其他任务使用，系统稍后自动继续同步" : input.envelope.errorCode
               ? `adapter ${input.envelope.upstreamEvidence.adapter}: ${input.envelope.errorCode}`
               : null,
-            nextAction: nextActionFor(input.envelope.errorCode),
+            nextAction: waitingForBrowser ? "none" : nextActionFor(input.envelope.errorCode),
             updatedAt: now(),
           })
           .where(eq(intelligenceSyncRuns.id, run.id));
@@ -5191,10 +5209,10 @@ export function createIntelligenceService(
           accountId,
           runId: run.id,
           step: input.envelope.upstreamEvidence.adapter,
-          status: input.envelope.adapterStatus,
+          status: terminalStatus,
           occurredAt: now(),
           itemRef: null,
-          message: input.envelope.errorCode
+          message: waitingForBrowser ? "浏览器忙，已安排自动重试" : input.envelope.errorCode
             ? `同步未完成：${input.envelope.errorCode}`
             : `已处理 ${input.envelope.items.length} 条`,
           safeDetails: input.envelope.safeDiagnostics,
@@ -5203,7 +5221,7 @@ export function createIntelligenceService(
           .update(intelligenceSources)
           .set({
             lastRunAt: input.terminal ? now() : run.startedAt ?? now(),
-            nextRunAt: input.terminal
+            nextRunAt: waitingForBrowser ? sourceForSchedule.nextRunAt : input.terminal
               ? sourceForSchedule.monitorEnabled &&
                 input.envelope.adapterStatus !== "blocked"
                 ? nextDailyRunAt(now())
@@ -5218,9 +5236,12 @@ export function createIntelligenceService(
         await tx.update(executionTasks).set({
           checkpoint: input.envelope.checkpoint,
           ...(input.terminal ? {
-            status: executionStatus, leaseOwner: null, leaseExpiresAt: null, heartbeatAt: null,
+            status: waitingForBrowser ? "retry_wait" : executionStatus,
+            retryAt,
+            ...(waitingForBrowser && execution.executionBudget === null ? {executionBudget: createContinuousExecutionBudget()} : {}),
+            leaseOwner: null, leaseExpiresAt: null, heartbeatAt: null,
             lastErrorCode: executionStatus === "succeeded" ? null : input.envelope.errorCode,
-            lastErrorMessage: executionStatus === "succeeded" ? null : input.envelope.errorCode,
+            lastErrorMessage: waitingForBrowser ? "浏览器正被其他任务使用，系统稍后自动继续同步" : executionStatus === "succeeded" ? null : input.envelope.errorCode,
           } : {}),
           updatedAt: now(),
         }).where(eq(executionTasks.id, run.executionTaskId));

@@ -88,7 +88,9 @@ function failureEnvelope(
   );
   let errorCode: NonNullable<IntelligenceAdapterEnvelope["errorCode"]> =
     "NO_VALID_RESPONSE";
-  if (captcha) {
+  if (matches(/^(BROWSER_PROFILE_BUSY|BrowserProfileBusyError)$/i)) {
+    errorCode = "BROWSER_PROFILE_BUSY";
+  } else if (captcha) {
     errorCode = "CAPTCHA";
   } else if (login) {
     errorCode = "LOGIN_REQUIRED";

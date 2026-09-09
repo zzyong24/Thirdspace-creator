@@ -4,7 +4,7 @@ import { createDb } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { createPersistentTaskService } from "../execution";
 import { createIntelligenceService } from "./intelligence.service";
-import { runIntelligenceSourceTask } from "./source-sync-runner";
+import { drainIntelligenceSourceQueue, runIntelligenceSourceTask } from "./source-sync-runner";
 
 const ctx: RequestContext = {
   userId: "user-1",
@@ -510,5 +510,50 @@ describe("来源任务真实取消控制", () => {
       expect((await intelligence.listItems(ctx)).rows).toHaveLength(0);
       expect(vi.getTimerCount()).toBe(0);
     } finally {unblock(); vi.useRealTimers(); await client.close();}
+  });
+});
+
+describe("T-942 浏览器忙沿原来源任务自动恢复", () => {
+  it("互斥冲突退避而非失败，超过旧 attempt=3 仍等待，资源释放后原 run 完成", async () => {
+    const {db, client} = await createDb();
+    let clock = Date.parse("2026-09-09T04:06:00Z");
+    const d = {...deps(), now: () => new Date(clock).toISOString()};
+    const tasks = createPersistentTaskService(db,d);
+    const intelligence = createIntelligenceService(db,{...d,tasks});
+    try {
+      const created = await intelligence.createSource(ctx,{collectionId:null,type:"rss",config:{type:"rss",url:"https://example.com/busy.xml"},monitorEnabled:true,runInitial:true,idempotencyKey:"busy"});
+      if (!created.run || !created.task) throw new Error("missing task");
+      const input={sourceId:created.source.id,runId:created.run.id,taskId:created.task.id};
+      for(let n=0;n<4;n++) {
+        await runIntelligenceSourceTask(ctx,input,{tasks,intelligence,now:d.now,adapter:{run:async()=>{throw Object.assign(new Error("not retained"),{name:"BrowserProfileBusyError",code:"BROWSER_PROFILE_BUSY"});}}});
+        const task=await tasks.get(ctx,created.task.id);
+        expect(task).toMatchObject({status:"queued",runtimeStatus:"retry_wait",errorCode:"BROWSER_PROFILE_BUSY",attempt:n+1,leaseOwner:null});
+        const run=(await intelligence.getRun(ctx,created.run.id)).run;
+        expect(run).toMatchObject({status:"queued",failedCount:0,nextAction:"none",finishedAt:null});
+        expect(await tasks.claimTask({taskId:created.task.id,workerId:"too-early"})).toBeNull();
+        clock=Date.parse(task.retryAt!)+1;
+      }
+      expect(await drainIntelligenceSourceQueue({tasks,intelligence,now:d.now,adapter:{run:async()=>succeededEnvelope(d.now())}},1)).toBe(1);
+      expect(await tasks.get(ctx,created.task.id)).toMatchObject({status:"succeeded",retryAt:null,attempt:5});
+      expect((await intelligence.getRun(ctx,created.run.id)).run.status).toBe("succeeded_with_items");
+      expect((await tasks.list(ctx,{kind:"source_sync"})).total).toBe(1);
+    } finally {await client.close();}
+  });
+
+  it("失败旧任务经公开 command retry 后沿新租约更新原 run，不被旧终态短路", async () => {
+    const {db,client}=await createDb();const d=deps();
+    const tasks=createPersistentTaskService(db,d);const intelligence=createIntelligenceService(db,{...d,tasks});
+    try {
+      const created=await intelligence.createSource(ctx,{collectionId:null,type:"rss",config:{type:"rss",url:"https://example.com/retry.xml"},monitorEnabled:true,runInitial:true,idempotencyKey:"retry-old"});
+      if(!created.run||!created.task)throw new Error("missing");
+      const input={sourceId:created.source.id,runId:created.run.id,taskId:created.task.id};
+      await runIntelligenceSourceTask(ctx,input,{tasks,intelligence,adapter:{run:async()=>{throw new Error("unknown old error");}}});
+      expect((await tasks.get(ctx,created.task.id)).errorCode).toBe("NO_VALID_RESPONSE");
+      await tasks.command(ctx,{taskIds:[created.task.id],command:"retry",idempotencyKey:"user-retry"});
+      await runIntelligenceSourceTask(ctx,input,{tasks,intelligence,adapter:{run:async()=>succeededEnvelope(d.now())}});
+      expect((await tasks.get(ctx,created.task.id)).status).toBe("succeeded");
+      expect((await intelligence.getRun(ctx,created.run.id)).run.status).toBe("succeeded_with_items");
+      expect((await tasks.list(ctx,{kind:"source_sync"})).total).toBe(1);
+    }finally{await client.close();}
   });
 });

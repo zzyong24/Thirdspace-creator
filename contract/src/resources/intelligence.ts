@@ -72,6 +72,7 @@ export const adapterErrorCode = z.enum([
   "FOLDER_MISSING",
   "SIGNATURE_FAILED",
   "NO_VALID_RESPONSE",
+  "BROWSER_PROFILE_BUSY",
   "RESPONSE_SHAPE_CHANGED",
   "UNSAFE_URL",
   "LOGIN_WALL",
