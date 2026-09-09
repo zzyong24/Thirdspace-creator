@@ -33,3 +33,11 @@ flowchart LR
 已确认的局部流水线缺陷：draft-release下载全部artifacts后又拒绝非安装文件，会被验收JSON/log阻断。限定pattern:desktop-*保留独立证据artifact，相关配置测试通过；没有触发真实发布。
 
 远程更新不等于差分：对标糯米饭应先形成包级清单+签名制品托管、检查→下载验签→保留包→停sidecar安装→重启的真实链，再做双端旧版升级测试。真正增量还需要旧版本基线、补丁生成、校验/失败回退，不能只添加Range或endpoint。此次审计未擅自开启生产远程更新或公开发布。
+
+## 本轮验收
+
+定位48项（service26、repository6、迁移/指针4、contract12）通过；前端和流水线配置38项通过，合并frontend tsc通过；打包基本42项通过。候选566ca273已从固定入口生成并安装本地Mac包，PID60955，CLI connected/full；公开定位页只读前后均为posstmt-0e30b481-87/v11、历史11条，未切换用户真实定位。重复恢复无新版本由隔离PGlite与前端测试验证，不伪称真实用户点击验收。
+
+DMG /Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg，SHA256 0e2160db8b012199f404c9bf638870a14fa28a9eed9ca6608c9c920d389118ea；hdiutil verify与codesign深度严格校验通过。本地ad-hoc未公证，未执行Windows构建或公开发布。全局reconcile沿用户既有暂缓授权，backend全局旧类型欠债保留；未宣称全项目全绿。
+
+应用内远程下载安装尚未实现，作为后续T-940保留：需明确官方/渠道更新元数据与签名托管，串联下载验签、sidecar退出、安装重启、错误恢复和双端旧版升级验收。真正差分另需基线/补丁/回退设计，不以Range探针替代。
