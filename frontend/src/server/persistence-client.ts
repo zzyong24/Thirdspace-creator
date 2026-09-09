@@ -1,3 +1,4 @@
+import { readProjectListCoverIds } from "@creatoros/backend/application/queries/project-list-covers";
 import { resolveImportedPublicationIdsInBatch } from "@creatoros/backend/application/queries/imported-publication-ids";
 import {resolveSubmittedChatToolParameters} from "@creatoros/backend/modules/ai-runtime";
 import {prepareChatReply} from "./prepare-chat-reply";
@@ -590,6 +591,7 @@ const FAVORITES_PROMOTE_PER_RUN = 50;
 // cookie via `getIdentityService()`, so the ctx they thread into the transport
 // reads/writes the same store the persistence transport serves.
 interface PersistenceBundle {
+  projectListCoverIds: (ctx: RequestContext, projectIds: readonly string[]) => Promise<Record<string, string | null>>;
   readPageRevision: () => Promise<string>;
   cliInvocations: CliInvocationService;
   projects: Transport;
@@ -5721,6 +5723,7 @@ FAVORITES_PROMOTE_PER_RUN
 
   return {
     readPageRevision: createPageReadRevisionReader(db),
+    projectListCoverIds: (ctx, projectIds) => readProjectListCoverIds(ctx, projectIds, { projects: projectsService, publishing: publishingService }),
     cliInvocations,
     projects: projectsWithTranscribe, // wrap:透传 CRUD + 拦 projects.transcribe(T-374)
     taxonomy,
@@ -6001,4 +6004,9 @@ export async function getBrowserTaskAuthorizationRuntime(): Promise<PersistenceB
 /** 仅展示缓存读取提交版本；业务服务和 AI 不使用展示快照。 */
 export async function readPageRevision(): Promise<string> {
   return (await getBundle()).readPageRevision();
+}
+
+/** 项目列表封面仅经账号隔离的批量业务读取；失败由页面回退占位。 */
+export async function getProjectListCoverIds(ctx: RequestContext, projectIds: readonly string[]): Promise<Record<string, string | null>> {
+  return (await getBundle()).projectListCoverIds(ctx, projectIds);
 }
