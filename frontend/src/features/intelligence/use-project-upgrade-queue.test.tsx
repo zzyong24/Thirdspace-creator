@@ -7,6 +7,12 @@ import {useProjectUpgradeQueue,upgradeLabel,upgradeNotice} from './use-project-u
 afterEach(cleanup);
 const task={id:'upgrade',accountId:'account',ownerId:'item',status:'blocked',errorCode:'BOUND_ASR_RESULT_UNKNOWN',errorMessage:'提交结果未知，须同键对账',createdAt:'2026-09-09'} as ExecutionTaskResourceV2;
 describe('升级未知结果处理',()=>{
+ it('父任务正常等待子任务不显示故障，真实退避保留原因',()=>{
+  const waiting={...task,status:'queued',runtimeStatus:'retry_wait',errorCode:null,errorMessage:null,checkpoint:{stage:'transcribing'}} as ExecutionTaskResourceV2;
+  expect(upgradeNotice(waiting)).toBeNull();
+  expect(upgradeLabel(waiting)).toBe('AI 转写中');
+  expect(upgradeNotice({...waiting,errorCode:'BROWSER_PROFILE_BUSY',errorMessage:'浏览器占用，稍后重试'})).toBe('浏览器占用，稍后重试');
+ });
  it.each([false,true])('检查真实逐字稿再决定继续，正文完整=%s',async(done)=>{
   const commandTask=vi.fn().mockResolvedValue({});const setNotice=vi.fn();
   const api={listProjectUpgrades:vi.fn().mockResolvedValue({tasks:[task],total:1}),enqueueProjectUpgrades:vi.fn(),commandTask,getItem:vi.fn().mockResolvedValue({transcript:{status:done?'done':'running',text:done?'真实逐字稿':null}})} as unknown as RadarApi;

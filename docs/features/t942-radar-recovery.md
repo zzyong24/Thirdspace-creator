@@ -31,3 +31,7 @@ BROWSER_PROFILE_BUSY保留精确错误类型，同task/run自动退避5–60秒�
 候选4215659c固定入口打包并替换/启动本机应用PID78821，CLI full。42项打包测试、合并tsc、hdiutil verify、codesign --verify --deep --strict通过。本地ad-hoc未公证，无远程发布。安装包/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg，SHA-256 7988d1f20e72a45cec1ad2d8bf939afc232d12652292e0388c9069615d541462。
 
 公开CLI同账号acct-ae1a8346-9，使用幂等键t942-original-sources-retry恢复原source_sync任务execution-task-1ecc18cd-{83,73,77,59,63}。最终五项全部succeeded、attempt=2、errorCode=null，对应Geo逸哥、Win先生、南吴、嘉弟干编导、天诺企业流量咨询。未新建替代任务，未改真实数据为假成功。原ASR未知仍保留，未再次提交；全局reconcile沿用用户暂缓要求，本任务因ASR自动核验缺口保持进行中。
+
+## 用户继续反馈（正常子任务等待误报）
+
+“暂时无法处理，系统会等待后自动继续”出现于新父任务execution-task-f1e15754-651；子转写execution-task-f1e15754-653为running，心跳正常。父任务无errorCode/errorMessage，只用retry_wait周期等待子任务，前端错误地将所有retry_wait视为故障。本轮明确只有带真实错误的退避显示恢复说明，正常等待沿stage显示转写/写稿中；跟踪原任务到业务产物后再报完成。
