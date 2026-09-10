@@ -998,3 +998,5 @@
 {"ts":"2026-09-09T10:09:30.245Z","actor":"taskctl","action":"complete","task":"T-942","evidence":"a314fc72已安装PID45595；原Gemini父任务succeeded，3971字逐字稿done、项目与1340字候选回读通过；36业务+42打包测试、tsc、DMG/codesign通过。原云unknown未重放/未伪造成功；全局reconcile233旧欠债保留T-916，详见SPEC及恢复JSON。","sha_before":"4105d12fef92","sha_after":"ed2bb2b8ac7e"}
 {"ts":"2026-09-10T02:07:33.024Z","actor":"taskctl","action":"start","task":"T-945","sha_before":"c4b788d08d49","sha_after":"b8620d1dfa0c"}
 {"ts":"2026-09-10T02:09:50.598Z","actor":"taskctl","action":"block","task":"T-945","reason":"日志确认原视频 0820(2).mov 磁盘缺失；已查当前及旧存储目录未找到副本，待原文件或备份位置后恢复验证。","sha_before":"b8620d1dfa0c","sha_after":"0b69481dba4c"}
+{"ts":"2026-09-10T02:20:36.875Z","actor":"taskctl","action":"start","task":"T-946","sha_before":"a674002cedd0","sha_after":"e629dcf2527a"}
+{"ts":"2026-09-10T02:23:23.371Z","actor":"taskctl","action":"complete","task":"T-946","evidence":"docs/research/t946-agent-architecture.md；重新核对双方源码，boundary-scan 实测 7 条既有违规并保留 T-916 欠债；只读咨询报告，无产品代码变更，无模型效果或独立评审 PASS 声明。","sha_before":"e629dcf2527a","sha_after":"555e1e1af5d5"}
