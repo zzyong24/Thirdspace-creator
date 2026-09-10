@@ -996,3 +996,5 @@
 {"ts":"2026-09-09T08:28:59.632Z","actor":"taskctl","action":"start","task":"T-944","sha_before":"fb682eac2cf4","sha_after":"468046477bf2"}
 {"ts":"2026-09-09T08:57:36.763Z","actor":"taskctl","action":"complete","task":"T-944","evidence":"源码实现与独立评审完成；AI 47、后端75、契约8、UI关键5回归及真实浏览器组件交互通过，frontend/ai-worker类型通过。全局既有对账、边界7、backend类型13、雷达基线5失败与progress复杂度账本阻断保留T-916；未做真实模型A/B或打包安装，详见SPEC。","sha_before":"1958443ea9ea","sha_after":"e04ea3ed71ad"}
 {"ts":"2026-09-09T10:09:30.245Z","actor":"taskctl","action":"complete","task":"T-942","evidence":"a314fc72已安装PID45595；原Gemini父任务succeeded，3971字逐字稿done、项目与1340字候选回读通过；36业务+42打包测试、tsc、DMG/codesign通过。原云unknown未重放/未伪造成功；全局reconcile233旧欠债保留T-916，详见SPEC及恢复JSON。","sha_before":"4105d12fef92","sha_after":"ed2bb2b8ac7e"}
+{"ts":"2026-09-10T02:07:33.024Z","actor":"taskctl","action":"start","task":"T-945","sha_before":"c4b788d08d49","sha_after":"b8620d1dfa0c"}
+{"ts":"2026-09-10T02:09:50.598Z","actor":"taskctl","action":"block","task":"T-945","reason":"日志确认原视频 0820(2).mov 磁盘缺失；已查当前及旧存储目录未找到副本，待原文件或备份位置后恢复验证。","sha_before":"b8620d1dfa0c","sha_after":"0b69481dba4c"}
