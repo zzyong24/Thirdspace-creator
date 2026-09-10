@@ -1004,3 +1004,5 @@
 {"ts":"2026-09-10T02:37:06.897Z","actor":"taskctl","action":"complete","task":"T-947","evidence":"外置 /Users/zyongzhu/plugins/agent-product-studio/DESIGN.md；官方 GPT-6/Skills/Plugins 与五个行业参考调研；8 Skill、manifest、255 文件哈希、6 脚本测试和隔离 CLI smoke 通过；候选未替换旧 Skill，行为对照未运行。","sha_before":"0b2baf6272fd","sha_after":"73c6abb2189b"}
 {"ts":"2026-09-10T02:49:27.870Z","actor":"taskctl","action":"start","task":"T-948","sha_before":"ece2db4aa331","sha_after":"5fdcaa57805c"}
 {"ts":"2026-09-10T02:57:38.202Z","actor":"taskctl","action":"complete","task":"T-948","evidence":"原 Skill 3.27.0 已提交 fb3535fb；独立范围/实现审阅完成；selfcheck 259/259、S/M fresh init、quick_validate、diff-check 通过；原任务/上下文引擎未改。未执行旧产品全局验收，真实模型选型效果待项目验证。","sha_before":"5fdcaa57805c","sha_after":"135ef2190655"}
+{"ts":"2026-09-10T03:02:57.140Z","actor":"taskctl","action":"start","task":"T-949","sha_before":"8910f1da9ab4","sha_after":"a4168a19c8ae"}
+{"ts":"2026-09-10T03:03:15.346Z","actor":"taskctl","action":"complete","task":"T-949","evidence":"原 Skill 3.27.1 统一 loop 基线；初始化接线回归 3/3、quick_validate、diff-check 通过；仅指引与模板变更，未改执行引擎。","sha_before":"a4168a19c8ae","sha_after":"fab7c055ea02"}
