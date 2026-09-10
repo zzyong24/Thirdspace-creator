@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-948 | 补强原脚手架初始化的 Agent 架构设计【用户明确落地】 | ✅ 待办 | — | — | Skill decisions/agent-architecture-initialization.md | 保留任务和上下文机制，补内核选型、分层、目录依赖和工程验证；不推进候选插件。 |
 | T-947 | 将产品开发 Skill 设计为可复用多 Skill Plugin【后续 Agent 产品】 | ✅ 待办 | — | — | 外置插件 agent-product-studio | 调研官方与开源最佳实践，原生能力优先，补架构研究与复用；独立候选保留旧 Skill，不改本产品。 |
 | T-946 | 对照 NomiFun 审计 Agent 架构、目录与工程分工【用户咨询】 | ✅ 待办 | — | — | [报告](docs/research/t946-agent-architecture.md) | 用当前源码解释实际链路与边界，提出可迁移的职责和验收方案，不直接执行架构重构。 |
 | T-945 | 排查并修复当前视频渲染再次失败【用户要求看日志】 | ⏸️ 待办 | — | — | [诊断](docs/verification/t945-render-failure.md) | 对齐最新原任务与安装版日志，定位真实失败点并验证修复，不凭历史错误猜测。 |
