@@ -1006,3 +1006,5 @@
 {"ts":"2026-09-10T02:57:38.202Z","actor":"taskctl","action":"complete","task":"T-948","evidence":"原 Skill 3.27.0 已提交 fb3535fb；独立范围/实现审阅完成；selfcheck 259/259、S/M fresh init、quick_validate、diff-check 通过；原任务/上下文引擎未改。未执行旧产品全局验收，真实模型选型效果待项目验证。","sha_before":"5fdcaa57805c","sha_after":"135ef2190655"}
 {"ts":"2026-09-10T03:02:57.140Z","actor":"taskctl","action":"start","task":"T-949","sha_before":"8910f1da9ab4","sha_after":"a4168a19c8ae"}
 {"ts":"2026-09-10T03:03:15.346Z","actor":"taskctl","action":"complete","task":"T-949","evidence":"原 Skill 3.27.1 统一 loop 基线；初始化接线回归 3/3、quick_validate、diff-check 通过；仅指引与模板变更，未改执行引擎。","sha_before":"a4168a19c8ae","sha_after":"fab7c055ea02"}
+{"ts":"2026-09-10T04:15:49.682Z","actor":"taskctl","action":"start","task":"T-950","sha_before":"b1a1467d8b50","sha_after":"d4dc07af1bf5"}
+{"ts":"2026-09-10T04:22:56.715Z","actor":"taskctl","action":"block","task":"T-950","reason":"已恢复33文件约4.10GB且33/33公开下载验证通过；203文件未找到确认副本，待更多来源/具体缺失实例。未宣称整体恢复完成。","sha_before":"d4dc07af1bf5","sha_after":"b075797ae012"}

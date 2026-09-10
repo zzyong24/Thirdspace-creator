@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-950 | 排查并恢复当前产品缺失历史数据【用户要求恢复】 | ⏸️ 待办 | — | — | [记录](docs/verification/t950-data-recovery.md) | 先核对账号、数据路径和备份；保留现状后恢复可验证的数据，不覆盖新内容。 |
 | T-949 | Agent 初始化统一以 loop 为内核【用户纠正】 | ✅ 待办 | — | — | Skill decisions/agent-architecture-initialization.md | 删除裸模型 API 产品分支，简单任务也沿用可扩展执行循环。 |
 | T-948 | 补强原脚手架初始化的 Agent 架构设计【用户明确落地】 | ✅ 待办 | — | — | Skill decisions/agent-architecture-initialization.md | 保留任务和上下文机制，补内核选型、分层、目录依赖和工程验证；不推进候选插件。 |
 | T-947 | 将产品开发 Skill 设计为可复用多 Skill Plugin【后续 Agent 产品】 | ✅ 待办 | — | — | 外置插件 agent-product-studio | 调研官方与开源最佳实践，原生能力优先，补架构研究与复用；独立候选保留旧 Skill，不改本产品。 |
