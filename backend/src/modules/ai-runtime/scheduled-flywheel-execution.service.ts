@@ -1,7 +1,7 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
 import {and,asc,eq,inArray,isNull,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
-import {createContinuousExecutionBudget,scheduledFlywheelTaskInputSchema,workerSkillSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {createContinuousExecutionBudget,scheduledFlywheelTaskInputSchema,scheduledFlywheelSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {createExecutionAuthorityService} from '../execution/execution-authority.service';
 import {createExecutionLeaseService} from '../execution/execution-lease.service';
@@ -85,7 +85,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   if(!task||!taskTypes.includes(task.taskType))throw new Error('不支持的原调度任务');
   if(task.executionTaskId){const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId));scheduledFlywheelTaskInputSchema.parse((execution?.payload as Record<string,unknown>)?.modelInput);return authority.bindAiTask(ctx,aiTaskId);}
   if(task.startedAt||task.modelCallStartedAt||task.retryOfTaskId)throw new Error('已有旧执行事实，须恢复原任务，不能重置预算');
-  const raw=task.inputData as Record<string,unknown>,snapshot=workerSkillSnapshotSchema.parse((task.runtimeData as Record<string,unknown>).skillSnapshot);
+  const raw=task.inputData as Record<string,unknown>,snapshot=scheduledFlywheelSnapshotSchema.parse({sourceKind:task.taskType.slice('scheduled.'.length),skillSnapshot:(task.runtimeData as Record<string,unknown>).skillSnapshot}).skillSnapshot;
   if(snapshot.userId!==ctx.userId||snapshot.accountId!==ctx.accountId)throw new Error('原任务缺少对标拆解授权快照');
   // 调度run是持久绑定真相；dispatch内存对象不是恢复输入。旧任务可缺jobRunId，不能猜ID。
   const run=await runIntents.ensureRunForTask(ctx,task.id);

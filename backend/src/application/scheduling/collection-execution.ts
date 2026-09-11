@@ -5,8 +5,8 @@ export function createCollectionExecution(ports:{scheduledCollectors:Record<stri
 scheduledSignals:Pick<import("node:async_hooks").AsyncLocalStorage<AbortSignal>,"run">;
 flywheelSourceKinds:ReadonlySet<string>;
 scheduledFlywheel:Pick<ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>,"prepare">;
-schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun">;
-aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"markRunning"|"recordStep"|"markSucceeded"|"markFailed">;
+schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun"|"getRun">;
+aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"getTask"|"markRunning"|"recordStep"|"markSucceeded"|"markFailed">;
 deps:{now:()=>string};
 enqueueCollectionRun:(run:()=>Promise<void>)=>Promise<void>;
 wakeScheduledFlywheel:()=>void;
@@ -28,7 +28,24 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
     inputData: Record<string, unknown>;
   }) => {
     if(flywheelSourceKinds.has(task.taskType.replace(/^scheduled\./,""))){
-      const bound=await scheduledFlywheel.prepare(ctx,task.id);
+      let bound;
+      try { bound=await scheduledFlywheel.prepare(ctx,task.id); }
+      catch(error){
+        const message=error instanceof Error?error.message:"采集准备失败";
+        const current=await aiService.getTask(ctx,task.id);
+        // 已交接的执行权不由准备层改终态；旧任务/数据保留，错误仍交调用方显示。
+        if(!current.executionTaskId){
+          await aiService.markFailed(ctx,task.id,`采集准备失败：${message}`);
+          const settled=await aiService.getTask(ctx,task.id);
+          const runId=task.inputData.jobRunId;
+          if(!settled.executionTaskId && ['failed','cancelled'].includes(settled.status) && typeof runId==='string'){
+            const run=await schedulingService.getRun(ctx,runId);
+            if(run.aiTaskId!==task.id || run.jobId!==task.inputData.jobId)throw new Error('采集失败运行归属与原任务不符',{cause:error});
+            if(run.status==='running')await schedulingService.updateRun(ctx,runId,{status:'failed',finishedAt:deps.now(),error:`采集准备失败：${message}`});
+          }
+        }
+        throw error;
+      }
       wakeScheduledFlywheel();
       return {executionTaskId:bound.executionTaskId};
     }

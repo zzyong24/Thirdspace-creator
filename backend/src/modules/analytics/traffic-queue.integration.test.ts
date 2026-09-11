@@ -70,3 +70,12 @@ it('作品平台标识修正后重试采用最新标识，不被旧队列永久�
  const read=vi.fn(async()=>data);const result=await run(f.collector(read),'retry');
  expect(read).toHaveBeenCalledWith(ctx,'corrected-id');expect(result).toMatchObject({itemsUpdated:1,incomplete:false});
 });
+it('启动失败仅结算冻结的待采条目，保留成功数据和后续新请求',async()=>{
+ const f=await fixture(2);await f.service.enqueueProject(ctx,'project');await run(f.collector());
+ f.setNow('2026-09-12T00:00:00.000Z');await f.service.enqueueProject(ctx,'project');const snapshot=await f.service.pending(ctx);
+ await f.service.settle(ctx,snapshot[1]!,{data},'other');f.setNow('2026-09-13T00:00:00.000Z');await f.service.enqueueProject(ctx,'project');
+ const {startTrafficCollection,TRAFFIC_START_FAILURE}=await import('../../application/scheduling/traffic-start');
+ await expect(startTrafficCollection(ctx,{snapshot:async()=>snapshot,trigger:async()=>({aiTaskId:'real-task',completion:Promise.reject(new Error('prepare failed'))}),fail:(rows,message)=>f.service.failPending(ctx,rows,message)})).rejects.toThrow(TRAFFIC_START_FAILURE);
+ const rows=(await f.service.getProject(ctx,'project')).items;
+ expect(rows[0]).toMatchObject({status:'failed',data,error:TRAFFIC_START_FAILURE});expect(rows[1]).toMatchObject({status:'pending',data,error:null});
+});

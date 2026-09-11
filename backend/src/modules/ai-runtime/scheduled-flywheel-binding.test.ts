@@ -1,3 +1,5 @@
+import {listOfficialSkillBases} from '@creatoros/ai-worker';
+import {createEffectiveSkillSnapshotResolver,requiredSkillIdsForTask} from './effective-skill-snapshot';
 import {beforeEach,afterEach,it,expect} from 'vitest';
 import {createDb,aiTasks,executionTasks,eq,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
 import {createSchedulingService} from '../scheduling/scheduling.service';
@@ -17,7 +19,7 @@ async function trigger(sourceKind:string,skipHeavyBackfill=false,defer=false,rec
  const [job]=await db.insert(scheduledJobs).values({id:nextId('job'),userId:ctx.userId,accountId:ctx.accountId,name:'采集',sourceKind,schedule:'40 9 * * *',target:{source:'fixture'},createdAt:now(),updatedAt:now()}).returning();
  if(!job)throw new Error('fixture job missing');
  const result=await triggerScheduledJob(ctx,{id:job.id,sourceKind,target:{source:'fixture'},accountId:ctx.accountId},{now,ai:{createTask:async(c,input)=>{
-  const id=nextId('task');await db.insert(aiTasks).values({id,userId:c.userId,accountId:c.accountId!,taskType:input.taskType,inputData:input.inputData,idempotencyKey:id,requestFingerprint:'sha256:'+'a'.repeat(64),requestedAt:now(),runtimeData:{skillSnapshot:{snapshotVersion:1,userId:c.userId,accountId:c.accountId,resolvedAt:now(),platformPolicyVersion:'1',platformPolicy:'fixture',skills:[{skillId:'topic.attribution',baseVersion:'1',overlayRevision:null,overlayVersion:null,effective:{methodSystem:'JSON',template:'fixture',tools:[],requiredFacets:[],contextRequirements:[],outputSchema:{type:'object'},completionPolicy:null,completionPolicyAdapter:null}}]}}});return {id,status:'queued'};
+  const id=nextId('task');await db.insert(aiTasks).values({id,userId:c.userId,accountId:c.accountId!,taskType:input.taskType,inputData:input.inputData,idempotencyKey:id,requestFingerprint:'sha256:'+'a'.repeat(64),requestedAt:now(),runtimeData:{skillSnapshot:await createEffectiveSkillSnapshotResolver({officialSkills:{get:id=>listOfficialSkillBases().find(base=>base.skillId===id)??null,list:()=>listOfficialSkillBases(),platformPolicy:()=>({version:'1',text:'binding fixture policy'})},accountOverlays:{listBySkillIds:async()=>[]},now})(c,requiredSkillIdsForTask(input.taskType,input.inputData))}});return {id,status:'queued'};
  }},runs:{...scheduling,createRun:async(c,input)=>{
   if(recoverBeforeRun){
    await service.recoverQueued(async(_c,id)=>{await db.update(aiTasks).set({status:'failed'}).where(eq(aiTasks.id,id));});
@@ -31,7 +33,7 @@ async function trigger(sourceKind:string,skipHeavyBackfill=false,defer=false,rec
 }
 it.each(['self.metrics','self.detail','self.traffic','benchmark','favorites'])('真实trigger落库后prepare与claim保持真实run绑定：%s',async kind=>{
  const f=await trigger(kind,true);await f.result.completion;
- const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));if(!task)throw new Error('fixture task missing');expect(task.executionTaskId).toBeTruthy();
+ const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));if(!task)throw new Error('fixture task missing');expect(task.executionTaskId).toBeTruthy();if(kind==='self.traffic')expect((task.runtimeData as {skillSnapshot:{skills:unknown[]}}).skillSnapshot.skills).toEqual([]);
  const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId!));if(!execution)throw new Error('fixture execution missing');expect(execution.payload).toMatchObject({modelInput:{jobRunId:f.result.jobRunId,target:{__skipHeavyBackfill:true}}});
  await f.service.drain((c,t,scope)=>runScheduledCollection(c,t,{ai:scope.ai,runs:f.scheduling,isNotLoggedInError:()=>false,collectors:{[kind]:async(_c,target)=>{expect(target.__skipHeavyBackfill).toBe(true);return {itemsNew:1200,itemsUpdated:0};}},now}),1);
  const run=await f.scheduling.getRun(ctx,f.result.jobRunId);expect(run).toMatchObject({status:'succeeded',itemsNew:1200});
@@ -117,4 +119,17 @@ it('流量补采跨多批、等待登录、暂停和进程恢复仍使用原任�
  expect((await tasks.get(ctx,id)).attempt).toBeGreaterThan(4);
  expect(await f.scheduling.getRun(ctx,f.result.jobRunId)).toMatchObject({status:'succeeded',aiTaskId:task!.id,itemsUpdated:160});
  await restarted.stop();
+});
+it('纯补采空snapshot仍核对快照归属，其他采集不允许空Skill',async()=>{
+ const traffic=await trigger('self.traffic',false,true);await traffic.result.completion;
+ const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,traffic.result.aiTaskId));
+ const runtime=task!.runtimeData as {skillSnapshot:Record<string,unknown>};
+ await db.update(aiTasks).set({runtimeData:{...runtime,skillSnapshot:{...runtime.skillSnapshot,accountId:'foreign'}}}).where(eq(aiTasks.id,task!.id));
+ await expect(traffic.service.prepare(ctx,task!.id)).rejects.toThrow('授权快照');await traffic.service.stop();
+ const model=await trigger('self.metrics',false,true);await model.result.completion;
+ const [modelTask]=await db.select().from(aiTasks).where(eq(aiTasks.id,model.result.aiTaskId));
+ const modelRuntime=modelTask!.runtimeData as {skillSnapshot:Record<string,unknown>};
+ await db.update(aiTasks).set({runtimeData:{...modelRuntime,skillSnapshot:{...modelRuntime.skillSnapshot,skills:[]}}}).where(eq(aiTasks.id,modelTask!.id));
+ await expect(model.service.prepare(ctx,modelTask!.id)).rejects.toThrow();
+ expect((await db.select().from(aiTasks).where(eq(aiTasks.id,modelTask!.id)))[0]?.executionTaskId).toBeNull();await model.service.stop();
 });

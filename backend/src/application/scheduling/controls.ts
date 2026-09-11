@@ -1,7 +1,7 @@
 import type {RequestContext,Transport} from "@creatoros/contract";
 import {triggerScheduledJob,runJobNow,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
 /** 绑定初始化、立即运行与自动化共用同一触发协议。 */
-export function createSchedulingControls(ports:{aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"createTask">;
+export function createSchedulingControls(ports:{aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"createTask"|"getTask">;
 schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"getJob"|"createRun"|"listRunsByJob"|"updateRun"|"listJobs"|"createJob">;
 platformAccountService:Pick<import("../../modules/platform-account").PlatformAccountService,"getAccount">;
 dispatchScheduledCollection:ReturnType<typeof import("./collection-execution").createCollectionExecution>["dispatchScheduledCollection"];
@@ -53,6 +53,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
     },
     dispatch: (ctx, task) => dispatchScheduledCollection(ctx, task),
     now: deps.now,
+    getTaskState:(ctx,id)=>aiService.getTask(ctx,id),
     // [T-201d] 隐藏号定时任务停跑 gate 的查号端口:复用 platformAccountService.getAccount
     //   (自带 ownership gate)取该号 status;号不存在/越权/查失败 → null(降级放行,不误停)。
     getAccountStatus: (c, accountId) =>

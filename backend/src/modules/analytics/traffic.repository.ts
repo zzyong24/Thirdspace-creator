@@ -16,6 +16,9 @@ export function createTrafficRepository(db:Db){
   async settle(userId:string,accountId:string,publicationId:string,requestedAt:string,stamp:string,taskId:string,result:{data:TrafficSourcePayload}|{error:string;status:'failed'|'needs_reconnect'}){
    return db.update(publicationTraffic).set('data' in result?{lastTaskId:taskId,status:'succeeded',capturedAt:stamp,attemptedAt:stamp,error:null,data:result.data}:{lastTaskId:taskId,status:result.status,attemptedAt:stamp,error:result.error}).where(and(owned(userId,accountId),eq(publicationTraffic.publicationId,publicationId),eq(publicationTraffic.requestedAt,requestedAt),eq(publicationTraffic.status,'pending'))).returning();
   },
+  async failPending(userId:string,accountId:string,rows:readonly {publicationId:string;externalId:string;requestedAt:string}[],stamp:string,error:string){
+   for(const row of rows)await db.update(publicationTraffic).set({status:'failed',attemptedAt:stamp,error}).where(and(owned(userId,accountId),eq(publicationTraffic.publicationId,row.publicationId),eq(publicationTraffic.externalId,row.externalId),eq(publicationTraffic.requestedAt,row.requestedAt),eq(publicationTraffic.status,'pending')));
+  },
   async summary(userId:string,accountId:string,taskId:string){
    const rows=await db.select({status:publicationTraffic.status}).from(publicationTraffic).where(and(owned(userId,accountId),eq(publicationTraffic.lastTaskId,taskId)));
    return {written:rows.filter(r=>r.status==='succeeded').length,failed:rows.filter(r=>r.status==='failed'||r.status==='needs_reconnect').length};

@@ -315,7 +315,18 @@ export const structuredGenerationInputSchema=z.object({
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
 /** 原调度业务任务的执行标记；模型阶段只由后端固定能力端口准备。 */
-export const scheduledFlywheelTaskInputSchema=z.object({kind:z.literal("scheduled.flywheel"),sourceKind:z.enum(["benchmark","self.detail","self.metrics","self.traffic","favorites"]),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json()),skillSnapshot:workerSkillSnapshotSchema}).strict();
+// 纯浏览器补采没有模型阶段；仅这个显式 sourceKind 允许真实 resolver 的空 Skill 清单。
+// 其他调度/结构化/聊天路径继续使用 workerSkillSnapshotSchema 的 min(1)。
+const trafficSkillSnapshotSchema=workerSkillSnapshotSchema.extend({skills:z.array(workerSkillSnapshotSchema.shape.skills.element)});
+export const scheduledFlywheelSnapshotSchema=z.discriminatedUnion("sourceKind",[
+ z.object({sourceKind:z.literal("self.traffic"),skillSnapshot:trafficSkillSnapshotSchema}).strict(),
+ z.object({sourceKind:z.enum(["benchmark","self.detail","self.metrics","favorites"]),skillSnapshot:workerSkillSnapshotSchema}).strict(),
+]);
+const scheduledFlywheelTaskBaseSchema=z.object({kind:z.literal("scheduled.flywheel"),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json())}).strict();
+export const scheduledFlywheelTaskInputSchema=z.discriminatedUnion("sourceKind",[
+ scheduledFlywheelTaskBaseSchema.extend(scheduledFlywheelSnapshotSchema.options[0].shape),
+ scheduledFlywheelTaskBaseSchema.extend(scheduledFlywheelSnapshotSchema.options[1].shape),
+]);
 /** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
 export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
 export const workerTaskInputSchema=z.union([benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);

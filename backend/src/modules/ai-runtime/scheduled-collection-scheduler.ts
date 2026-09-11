@@ -88,6 +88,8 @@ export interface TriggerDeps {
   // [T-201d] 可选:查一个账号的 status（隐藏号定时任务停跑 gate）。返回该号 status；
   //   号不存在 / 越权 / 查失败 → null（组合根用 .catch(()=>null) 兜底）。**未绑此端口 → 不查、保持原行为跑**
   //   （诚实降级：绝不因查号失败而误停已在跑的采集）。见 triggerScheduledJob 的 gate。
+  /** 流量历史run复用前核对真实任务；失败读取不能推断为终态。 */
+  getTaskState?: (ctx:RequestContext,id:string)=>Promise<{status:string;executionTaskId?:string;runtimeStatus?:string}>;
   getAccountStatus?: (
     ctx: RequestContext,
     accountId: string,
@@ -214,9 +216,19 @@ export async function triggerScheduledJob(
     limit: 20,
     offset: 0,
   });
-  const inflight = recent.rows.find(
-    (r) => (r.status === "running" || (job.sourceKind === "self.traffic" && r.status === "needs_reconnect")) && (job.sourceKind === "self.traffic" || dayKeyOf(r.startedAt) === today),
-  );
+  let inflight: (typeof recent.rows)[number] | undefined;
+  for(const candidate of recent.rows){
+    if(!(candidate.status==='running'||(job.sourceKind==='self.traffic'&&candidate.status==='needs_reconnect')))continue;
+    if(job.sourceKind!=='self.traffic' && dayKeyOf(candidate.startedAt)!==today)continue;
+    if(job.sourceKind==='self.traffic' && candidate.aiTaskId && deps.getTaskState){
+      const state=await deps.getTaskState(collectionCtx,candidate.aiTaskId);
+      if(['failed','cancelled'].includes(state.status) && (!state.executionTaskId || ['failed','cancelled'].includes(state.runtimeStatus??''))){
+        await deps.runs.updateRun(collectionCtx,candidate.id,{status:'failed',finishedAt:nowIso,error:'原采集任务已失败或取消，请查看原任务错误'});
+        continue;
+      }
+    }
+    inflight=candidate;break;
+  }
   if (inflight) {
     return {
       jobRunId: inflight.id,
@@ -278,7 +290,10 @@ export async function triggerScheduledJob(
 
   // 触发确定性采集 runner(fire-and-forget:即返,runner 后台跑并回填 job_run)。
   //   collectionCtx 带派生号 → runner → collectors → ingestion 落库全 stamp 正确 account_id。
-  const completion = Promise.resolve(deps.dispatch(collectionCtx, dispatchInput));
+  const completion = Promise.resolve().then(()=>deps.dispatch(collectionCtx, dispatchInput));
+  // 立即安装拒绝处理器，fire-and-forget调用方不制造unhandledRejection；
+  // 返回原promise，调用方await仍看到原始失败。实际task/run失败由dispatch负责结算。
+  void completion.catch(()=>{});
 
   return {
     jobRunId: run.id,

@@ -1,3 +1,4 @@
+import {startTrafficCollection} from "@creatoros/backend/application/scheduling/traffic-start";
 import { recoverTrafficQueues } from "@creatoros/backend/application/scheduling/traffic-wake";
 import {triggerScheduledJob} from '@creatoros/backend/modules/ai-runtime';
 import {createTrafficCollector} from '@creatoros/backend/application/collection/traffic';
@@ -2052,7 +2053,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{},schedule:'0 0 * * *',enabled:false,systemManaged:true});
   const startTrafficJob=async(ctx:RequestContext)=>{
     const job=await ensureTrafficJob(ctx);
-    return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);
+    return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:()=>triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps),fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
   const analytics = createAnalyticsTransport(() => analyticsService,{
     getProject:(ctx,id)=>trafficService.getProject(ctx,id),

@@ -65,3 +65,11 @@ it('重复手动刷新响应乱序时保留后一次结果',async()=>{
  await act(async()=>{resolve({items:[row('failed','过期来源')]});});
  expect(screen.getByText('最新来源')).toBeTruthy();expect(screen.queryByText('过期来源')).toBeNull();
 });
+it('启动失败立即回读已结算失败行，不再挂抓取中且可重试',async()=>{
+ mocks.get.mockResolvedValueOnce({items:[row()]}).mockResolvedValue({items:[{...row('failed'),error:'启动失败，数据保留'}]});
+ mocks.refresh.mockRejectedValue(new Error('prepare failed'));
+ render(<TrafficSourcesPanel projectId="p1"/>);await settle();
+ fireEvent.click(screen.getByRole('button',{name:'补采 / 重试'}));await settle();
+ expect(screen.queryByText('后台补采中')).toBeNull();expect(screen.getByText('读取失败，可重试')).toBeTruthy();expect(screen.getByRole('alert')).toBeTruthy();expect(screen.getByRole('button',{name:'补采 / 重试'})).not.toBeDisabled();
+ const calls=mocks.get.mock.calls.length;await act(async()=>{await vi.advanceTimersByTimeAsync(15000);});expect(mocks.get).toHaveBeenCalledTimes(calls);
+});

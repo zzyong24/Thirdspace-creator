@@ -700,3 +700,26 @@ describe('T954 流量队列触发身份',()=>{
   expect((first._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId).toEqual((second._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId);
  });
 });
+
+describe('T956 流量准备失败与拒绝传播',()=>{
+ it('明确failed且未绑定的旧task不再被running run挡住',async()=>{
+  const deps=makeTriggerDeps([{id:'old-run',status:'running',startedAt:'2026-06-30T00:00:00.000Z',aiTaskId:'old-task'}]);
+  deps.getTaskState=async()=>({status:'failed'});
+  const result=await triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},deps);
+  expect(result.deduped).toBe(false);expect(deps.runs.updateRun).toHaveBeenCalledWith({...ctx,accountId:null},'old-run',expect.objectContaining({status:'failed'}));
+ });
+ it('已绑定且paused的执行任务不自动另起任务',async()=>{
+  const deps=makeTriggerDeps([{id:'old-run',status:'running',startedAt:'2026-06-30T00:00:00.000Z',aiTaskId:'old-task'}]);
+  deps.getTaskState=async()=>({status:'failed',executionTaskId:'e',runtimeStatus:'paused'});
+  const result=await triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},deps);expect(result.deduped).toBe(true);expect(deps._createTask).not.toHaveBeenCalled();
+ });
+ it('completion立即消费拒绝，晚await仍得到原异常',async()=>{
+  const deps=makeTriggerDeps();const failure=new Error('prepare failed');deps.dispatch=async()=>{throw failure;};
+  const result=await triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},deps);
+  await new Promise(resolve=>setTimeout(resolve,5));await expect(result.completion).rejects.toBe(failure);
+ });
+ it('同步dispatch异常同样由completion返回',async()=>{
+  const deps=makeTriggerDeps();const failure=new Error('sync prepare failed');deps.dispatch=()=>{throw failure;};
+  const result=await triggerScheduledJob(ctx,job,deps);await expect(result.completion).rejects.toBe(failure);
+ });
+});

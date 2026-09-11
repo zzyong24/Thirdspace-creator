@@ -34,6 +34,7 @@ export function createTrafficService(db:Db,ports:{now:()=>string;publishing:Pick
    return {items:rows.map(r=>publicationTrafficResource.parse(r))};
   },
   async pending(ctx:RequestContext,limit=20){return repo.pending(ctx.userId,account(ctx),limit);},
+  async failPending(ctx:RequestContext,rows:readonly {publicationId:string;externalId:string;requestedAt:string}[],message:string){return repo.failPending(ctx.userId,account(ctx),rows,ports.now(),message);},
   async summary(ctx:RequestContext,taskId:string){return repo.summary(ctx.userId,account(ctx),taskId);},
   async reconnect(ctx:RequestContext){return repo.reconnect(ctx.userId,account(ctx));},
   async settle(ctx:RequestContext,row:{publicationId:string;requestedAt:string},result:{data:TrafficSourcePayload}|{error:string;status:'failed'|'needs_reconnect'},taskId:string){

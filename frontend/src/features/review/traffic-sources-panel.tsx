@@ -50,7 +50,7 @@ export function TrafficSourcesPanel({projectId}:{projectId:string}){
     setMessage(result.jobRunId?'已交给后台补采，可在任务中心暂停或继续；结果会自动更新。':'本项目暂无可补采的已发布抖音作品。');
     pending=Boolean(result.jobRunId);
     await load();
-   }catch(e){if(current())setError(describeUserError(e,'流量补采未启动，请重试'));}
+   }catch(e){if(current()){await load();if(current()){setMessage(null);setError(describeUserError(e,'流量补采未启动，请重试'));}}}
    finally{refreshing=false;if(current())setBusy(false);}
   };
   operations.current={load,refresh};
