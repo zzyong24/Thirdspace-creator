@@ -124,6 +124,7 @@ const TASK_ALIASES: Readonly<Record<string, readonly string[]>> = {
   "scheduled.topic.daily": ["topic.generate", "trend.extract"],
 };
 const NON_SKILL_TASK_TYPES = new Set([
+  "scheduled.self.traffic",
   "agentic.research",
   "asset.classify",
   "asset.generate",

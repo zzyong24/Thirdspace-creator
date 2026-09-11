@@ -29,6 +29,7 @@ createAiTaskAttemptId:()=>string;
 resolveCoverBackfillLimit:()=>number;
 configuration:{CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT?:string;CREATOROS_LEARNING_GROUNDING_MIN_METRICS?:string;CREATOROS_TOPIC_ATTRIBUTION_LIMIT?:string;CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE?:string;CREATOROS_ATTRIBUTION_LOW_MULTIPLE?:string};
 readMetrics:(ctx:RequestContext,capturedAt:string)=>Promise<{incomplete?:boolean;records:import("../../modules/ingestion").MetricRecord[];identity:Parameters<ReturnType<typeof import("../../modules/ingestion").createIngestionService>["ingestApprovedDouyinBatch"]>[1]["identity"]}>;
+enqueueTraffic?:(ctx:RequestContext,visibleIds:ReadonlySet<string>)=>Promise<unknown>;
 readExport:(ctx:RequestContext)=>Promise<Uint8Array>;
 readCover:(ctx:RequestContext,awemeId:string)=>Promise<{coverUrl?:string}>;
 downloadDouyinImage:(url:string)=>Promise<{bytes:Uint8Array;mimeType:string}>;
@@ -72,6 +73,7 @@ return async (ctx, target, report) => {
       // [T-322] detailWritten 提到 try 外(下方封面回填段 return 读它)。导出→解析→可见性
       //   同步→明细落库整段包 try:任一抛错只 console.error + 报一条 export 降级,**不**
       //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
+      let trafficVisibleIds=new Set<string>();
       let detailWritten = 0;
       let metricsWritten = 0;
       try {
@@ -151,6 +153,7 @@ return async (ctx, target, report) => {
         const visibleExternalIds = new Set(
           decision.visibleRecords.map((record) => record.externalId),
         );
+        trafficVisibleIds=visibleExternalIds;
         report({
           stage: "visibility",
           processed: decision.counts.visible,
@@ -311,6 +314,8 @@ return async (ctx, target, report) => {
         });
         throw detailErr;
       }
+      // 明细另起持久任务；只排已核实公开集合，失败不改变基础采集结果。
+      if(ports.enqueueTraffic&&trafficVisibleIds.size){try{await ports.enqueueTraffic(ctx,trafficVisibleIds);}catch(error){checkScheduledSignal();console.error('[traffic-enqueue] 基础指标已保存，流量补采可在复盘页重试',error);}}
       if (rawBatch.incomplete) return {itemsNew:metricsWritten+detailWritten,itemsUpdated:0,incomplete:true,message:`本轮已保存可确认的作品数据，但目录尚未采完，请继续采集；已取回 ${rawBatch.records.length} 条目录记录`};
       // 5) 已确认公开并落库后再跑初始化重活：①封面回填 ②逐字稿 + 重建排队。
       //    隐藏/未知作品从未进入本轮写集合，重活天然只看到公开作品。

@@ -26,7 +26,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
           if(!input.aiTaskId)throw new Error("每日选题缺少任务绑定");
           return ensureDailyRun(c,input.aiTaskId);
         }
-        if(["self.metrics","self.detail","benchmark","favorites"].includes(job.sourceKind)){
+        if(["self.metrics","self.traffic","self.detail","benchmark","favorites"].includes(job.sourceKind)){
           if(!input.aiTaskId)throw new Error("采集缺少任务绑定");
           return ensureCollectionRun(c,input.aiTaskId);
         }

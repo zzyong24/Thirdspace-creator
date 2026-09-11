@@ -10,7 +10,7 @@
  *  - 空态:引导文案 + 「加第一段」起结构稿。
  */
 
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ScriptStructureToggle } from "./script-structure-view";
@@ -503,4 +503,18 @@ describe("ScriptStructureEditor(凝固分镜 visual)", () => {
     });
     expect(sections[1]!.visual).toBeUndefined();
   });
+});
+
+let strictStructureFlush: () => Promise<void>;
+function StructureFlushProbe() { strictStructureFlush = useDraftChatRequest().flushSaveStrict; return null; }
+it("结构视图严格 flush 真实失败不吞掉，保留编辑并可重试", async () => {
+  render(<DraftChatRequestProvider><StructureFlushProbe /><ScriptStructureToggle sections={SECTIONS} artifactId="a1" projectId="p1" currentVersionId="v1"><div /></ScriptStructureToggle></DraftChatRequestProvider>);
+  const input = document.querySelector('textarea')!;
+  fireEvent.change(input, { target: { value: "当前新正文" } });
+  mockCreateArtifactVersion.mockRejectedValueOnce(new Error("保存失败"));
+  await act(async () => { await expect(strictStructureFlush()).rejects.toThrow("保存失败"); });
+  expect(input.value).toBe("当前新正文");
+  await act(async () => { await strictStructureFlush(); });
+  expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+  expect(mockCreateArtifactVersion.mock.calls[1]?.[0]).toMatchObject({ body: { contentText: expect.stringContaining("当前新正文") } });
 });

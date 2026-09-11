@@ -94,6 +94,9 @@ export function createLearningsTransport(
             title: string;
             insight?: string;
             learningType?: string;
+            projectId?: string;
+            source?: string;
+            applicability?: string;
           };
           // [T-610] 这个 wire op 只由用户确认动作调用，因此语义是“采纳进知识库”，
           // 不是 AI 自动产候选。候选内部写仍直接走 service.createLearning。

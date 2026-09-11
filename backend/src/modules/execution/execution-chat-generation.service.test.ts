@@ -16,7 +16,7 @@ import {createDurableGenerationModel} from "@creatoros/ai-worker/durable-generat
 let db:Db,close:()=>void,seq=0;
 const now=()=>"2026-09-06T10:00:00.000Z",budget={maxCalls:20,maxTokens:200000,deadlineMs:600000};
 beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(()=>close());
-async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"calibration.diagnose"="topic.enrich") {
+async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"calibration.diagnose"|"review.analyze"="topic.enrich") {
   const ctx = {
     userId: "structured-u",
     accountId: `structured-a-${++seq}`,
@@ -96,7 +96,8 @@ async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"
       ],
     },
   };
-  hostContext.skillSnapshot.skills.push({...structuredClone(hostContext.skillSnapshot.skills[0]!),skillId:name,effective:{...hostContext.skillSnapshot.skills[0]!.effective,template:"{{title}}",requiredFacets:["title"],outputSchema:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false}}});
+  hostContext.skillSnapshot.skills.push({...structuredClone(hostContext.skillSnapshot.skills[0]!),skillId:name==="review.analyze"?"review.insights":name,effective:{...hostContext.skillSnapshot.skills[0]!.effective,template:"{{title}}",requiredFacets:["title"],outputSchema:{type:"object",properties:{oneLiner:{type:"string"}},required:["oneLiner"],additionalProperties:false}}});
+  if(name==="review.analyze") hostContext.skillSnapshot.skills.at(-1)!.effective.outputSchema={type:"object",properties:{learnings:{type:"array",items:{type:"object"}},observations:{type:"array",items:{type:"string"}},hypotheses:{type:"array",items:{type:"string"}},nextExperiment:{type:"string"},insufficientReason:{type:"string"}},required:["learnings","observations","hypotheses","nextExperiment","insufficientReason"],additionalProperties:false};
   if(name==="calibration.diagnose") hostContext.skillSnapshot.skills.at(-1)!.effective.outputSchema={type:"object",properties:{dimensions:{type:"array",items:{type:"object",properties:{key:{type:"string"},score:{type:"number"}},required:["key","score"],additionalProperties:false}}},required:["dimensions"],additionalProperties:false};
   if(repair){
    registerOfficialCompletionPolicyAdapter({id:"test.chat-generation-repair",version:"1",supportsSchema:()=>true,toSegments:value=>(value as {oneLiner:string}).oneLiner.split("|").map(()=>({role:"body"}))});
@@ -105,7 +106,7 @@ async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"
    skill.effective.completionPolicyAdapter={id:"test.chat-generation-repair",version:"1"};
   }
   hostContext.skillSnapshot.skills.sort((a,b)=>a.skillId.localeCompare(b.skillId));
-  const prepareGeneration=vi.fn(async()=>({node:name==="topic.enrich"?{capability:name,facets:{title:"原题目"},candidateId:"candidate-original"}:{capability:name,facets:{title:"原定位"}},discovery:name==="positioning.generate"?{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}:null,maxOutputTokens:2048}));
+  const prepareGeneration=vi.fn(async()=>({node:name==="topic.enrich"?{capability:name,facets:{title:"原题目"},candidateId:"candidate-original"}:{capability:name,facets:{title:"原定位",__reviewProjectId:"source-project"}},discovery:name==="positioning.generate"?{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}:null,maxOutputTokens:2048}));
   const check=vi.fn(async()=>({status:"not-applicable" as const}));
   const tools={[name]:{version:"structured-v1",effect:"proposal" as const,execution:"worker.structured-node" as const,parameters:z.object({topic:z.string().optional()}).strict(),approve:check,prepareGeneration}};
   const task = await createChatTurnSubmissionService(db, {
@@ -191,7 +192,7 @@ async function fixture(repair=false,name:"topic.enrich"|"positioning.generate"|"
 async function next(f:Awaited<ReturnType<typeof fixture>>,receipts:Parameters<typeof replayStructuredGeneration>[0]["receipts"]=[]) {
  await f.service.resolveCredential(f.ref,{callId:f.parent.callId});
  const prepared=await f.service.prepare(f.ref,{callId:f.parent.callId});
- const result=await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>replayStructuredGeneration({modelId:"fixture",provider:"openai.chat",receipts},{template:getTemplate(prepared.node.capability),facets:prepared.node.facets,maxOutputTokens:prepared.maxOutputTokens}));
+ const result=await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>replayStructuredGeneration({modelId:"fixture",provider:"openai.chat",receipts},{template:getTemplate(prepared.node.capability==="review.analyze"?"review.insights":prepared.node.capability),facets:prepared.node.facets,maxOutputTokens:prepared.maxOutputTokens}));
  if(result.status!=="next-request")throw new Error("expected next request");
  return {callId:f.parent.callId,operationKey:`${prepared.operationKey}/model/${result.consumed+1}`,request:result.request};
 }
@@ -253,7 +254,7 @@ it("真实 SDK 请求经共享端口结算，重建节点零额外 HTTP 调用",
   const run=async()=>{
    const service=f.make(),spec=await service.resolveCredential(f.ref,{callId:f.parent.callId}),prepared=await service.prepare(f.ref,{callId:f.parent.callId});
    const model=createDurableGenerationModel({model:modelFor(spec),operationKey:prepared.operationKey,ports:{reserve:input=>service.reserve(f.ref,JSON.parse(JSON.stringify({...input,callId:f.parent.callId}))),start:async callId=>{await service.start(f.ref,{callId});},settle:async(callId,input)=>{await service.settle(f.ref,{callId,...input});}}});
-   await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>runStructuredNode({model,template:getTemplate(prepared.node.capability),facets:prepared.node.facets,maxOutputTokens:prepared.maxOutputTokens}));
+   await runWithEffectiveSkillSnapshot(prepared.skillSnapshot,()=>runStructuredNode({model,template:getTemplate(prepared.node.capability==="review.analyze"?"review.insights":prepared.node.capability),facets:prepared.node.facets,maxOutputTokens:prepared.maxOutputTokens}));
    return service.complete(f.ref,{callId:f.parent.callId});
   };
   expect((await run()).data).toMatchObject({card:{oneLiner:"HTTP 原候选"}});await run();
@@ -309,4 +310,12 @@ it.each([true,false])("聊天诊断从原模型回执恢复，有效评分=%s",a
  expect(await restored.complete(f.ref,{callId:f.parent.callId})).toEqual(out);
  expect(f.prepareGeneration).toHaveBeenCalledTimes(1);
  expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(3);
+});
+
+it("复盘空经验报告经持久模型账本到聊天结果并保留项目来源",async()=>{
+ const f=await fixture(false,"review.analyze"),request=await next(f),child=await f.service.reserve(f.ref,request);
+ const report={learnings:[],observations:["只有当前稿件"],hypotheses:["开头收益可能不清晰"],nextExperiment:"保持主题，只提前演示",insufficientReason:"没有发布数据"};
+ await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success,providerResult:{...success.providerResult,content:[{type:"text",text:JSON.stringify(report)}]}});
+ const result=await f.make().complete(f.ref,{callId:f.parent.callId});
+ expect(result.data).toEqual({kind:"review.learnings",items:[],observations:report.observations,hypotheses:report.hypotheses,nextExperiment:report.nextExperiment,insufficientReason:report.insufficientReason,projectId:"source-project",error:null});
 });

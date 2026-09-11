@@ -76,6 +76,21 @@ let mockStatus = "ready";
 const regenerate = vi.fn();
 let mockError: Error | null = null;
 let initialChatTransport: { body?: unknown } | null = null;
+// T-954：真实组件已改用持久 Chat 会话；替身仍保留首个 transport 检查发送时上下文。
+let mockedLiveSession: object | null = null;
+vi.mock("./live-chat-session", () => ({
+  getLiveChatSession: () => {
+    mockedLiveSession ??= {
+      chat: { messages: [], status: "ready" },
+      control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
+      conversationId: null,
+      epoch: 0,
+      get transport() { return initialChatTransport; },
+      set transport(value: { body?: unknown } | null) { initialChatTransport ??= value; },
+    };
+    return mockedLiveSession;
+  },
+}));
 vi.mock("@ai-sdk/react", () => ({
   useChat: (options?: { transport?: { body?: unknown } }) => {
     // AI SDK 的对话实例在首次挂载时持有 transport。测试故意保留第一个
@@ -122,6 +137,7 @@ const VM: CopilotContentViewModel = {
 };
 
 beforeEach(() => {
+  mockedLiveSession = null;
   listTasks.mockReset();
   listTasks.mockResolvedValue([]);
   createCandidate.mockReset();
@@ -396,7 +412,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
             input: { subject: "我的视频" },
             output: {
               kind: "review.learnings",
-              items: [{ title: "前3秒给结果", insight: "完播更高" }],
+              projectId:"project-review",
+              items: [{ title: "前3秒给结果", insight: "完播更高", source:"当前作品开头", applicability:"同主题的演示稿" }],
             },
           },
         ],
@@ -410,7 +427,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     await waitFor(() => {
       expect(createLearning).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: { title: "前3秒给结果", insight: "完播更高" },
+          body: { title: "前3秒给结果", insight: "完播更高", projectId:"project-review",source:"当前作品开头",applicability:"同主题的演示稿" },
         }),
       );
     });
@@ -496,6 +513,31 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       ).toBe("帮我复盘,提炼可复用的爆款要素沉淀成经验。");
     });
     expect(sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("[T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束", async () => {
+    mockSearch = "copilot=open&fn=script.patch";
+    const embed = {
+      surface: "project",
+      selection: { kind: "project", id: "proj-1", title: "我的作品" },
+      persistKey: "project:proj-1",
+      request: {
+        prefill: "判断当前稿的观看理由，不要自动改稿。",
+        autoSend: true,
+        selection: { kind: "project", id: "proj-1", artifactId: "artifact-1", versionId: "version-8" },
+        nonce: 1,
+      },
+    } as const;
+    const { rerender } = render(<AICopilotContent viewModel={VM} embed={embed} />);
+    await waitFor(() => expect(sendMessage).toHaveBeenCalledWith({ text: embed.request.prefill }));
+    const body = await (initialChatTransport!.body as () => Record<string, unknown>)();
+    expect((body.chatContext as Record<string, unknown>).functionKey).toBeUndefined();
+    expect(body).toMatchObject({ chatContext: { projectId: "proj-1", selection: { artifactId: "artifact-1", versionId: "version-8" } } });
+    mockMessages = [{ id: "diagnosis", role: "assistant", parts: [{ type: "text", text: "当前稿开头的收益清楚，但例子缺少可核对来源。" }] }];
+    rerender(<AICopilotContent viewModel={VM} embed={embed} />);
+    await waitFor(() => expect(screen.getByText("当前稿开头的收益清楚，但例子缺少可核对来源。")).toBeTruthy());
+    expect(screen.queryByText(/本轮回复没有生成可采纳的局部改稿候选/)).toBeNull();
+    expect(sendMessage).toHaveBeenCalledTimes(1);
   });
 
   it("[T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文", async () => {

@@ -28,6 +28,7 @@ export type JobRunRow = typeof jobRuns.$inferSelect;
 // 的 WHERE 列表。非采集类 kind 不在集合内 → 行为不变(可多实例)。
 export const COLLECTION_JOB_SOURCE_KINDS: ReadonlySet<string> = new Set([
   "self.metrics",
+  "self.traffic",
   "self.detail",
   "comments",
   "benchmark",

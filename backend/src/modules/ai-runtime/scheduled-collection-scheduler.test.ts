@@ -101,8 +101,8 @@ describe("triggerScheduledJob(幂等双闸)", () => {
       scheduledFor: "2026-07-01T09:01:00.000Z",
     });
 
-    const firstAttempt = first._createTask.mock.calls[0]![1].attemptId;
-    const secondAttempt = second._createTask.mock.calls[0]![1].attemptId;
+    const firstAttempt = (first._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId;
+    const secondAttempt = (second._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId;
     expect(firstAttempt).toMatch(/^scheduled-[a-f0-9]{32}$/);
     expect(secondAttempt).toMatch(/^scheduled-[a-f0-9]{32}$/);
     expect(secondAttempt).not.toBe(firstAttempt);
@@ -685,4 +685,18 @@ describe("sweepStaleAiTasks(T-207 启动 sweep 僵尸 ai_task)", () => {
     expect(swept).toBe(1); // boom 失败不计,zombie2 照扫
     expect(markFailed).toHaveBeenCalledTimes(2);
   });
+});
+
+describe('T954 流量队列触发身份',()=>{
+ it.each(['running','needs_reconnect'])('跨日复用%s原运行',async status=>{
+  const deps=makeTriggerDeps([{id:'old',status,startedAt:'2026-06-30T09:00:00.000Z',aiTaskId:'old-task'}]);
+  const result=await triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},deps);
+  expect(result).toMatchObject({jobRunId:'old',aiTaskId:'old-task',deduped:true});expect(deps._createTask).not.toHaveBeenCalled();
+ });
+ it('同一队列代次并发触发使用相同AI幂等身份，不受请求时间影响',async()=>{
+  const rows=[{id:'completed-run',status:'succeeded',startedAt:'2026-06-30T09:00:00.000Z',aiTaskId:'old-task'}];
+  const first=makeTriggerDeps(rows),second=makeTriggerDeps(rows);second.now=()=> '2026-07-02T12:00:00.000Z';
+  await Promise.all([triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},first),triggerScheduledJob(ctx,{...job,sourceKind:'self.traffic'},second)]);
+  expect((first._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId).toEqual((second._createTask.mock.calls as unknown as Array<[unknown,{attemptId:string}]>)[0]![1].attemptId);
+ });
 });

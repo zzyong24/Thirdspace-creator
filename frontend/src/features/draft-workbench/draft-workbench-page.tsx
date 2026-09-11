@@ -17,6 +17,7 @@ import { ScriptRichEditor } from "@/features/script/script-rich-editor";
 import { ScriptStructureToggle } from "@/features/script/script-structure-view";
 import { ScriptVersionMenu } from "@/features/script/script-version-restore";
 import { sectionsToHtml } from "@/features/script/script-editor-bridge";
+import { ContentDirectionActions } from "./content-direction-actions";
 import { TopicCard } from "./topic-card";
 import { DraftChatRail } from "./draft-chat-rail";
 import { DraftChatRequestProvider } from "./draft-chat-request";
@@ -183,9 +184,8 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
                   .map((item) => [item.id, item.title]),
               )}
             >
-              {/* [T-055c] key=版本数:对话「写入稿面/撤销」refresh 后强制重挂,编辑器吃到新版本。 */}
+              {/* 编辑器自身处理版本回流；不可按版本数重挂而丢失在途编辑。 */}
               <ScriptRichEditor
-                key={`v${script.versionCount}`}
                 initialHtml={initialHtml}
                 artifactId={scriptArtifactId}
                 projectId={project.id}
@@ -193,6 +193,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
             </ScriptStructureToggle>
             {/* [T-086 SPEC §3] 编导文案审核门(软门):审核按钮 + 结构化报告 + 命中列表。
                 硬门切换点见 blind-predict-row / PublishPackSection 的软门提示注释。 */}
+            <ContentDirectionActions projectId={project.id} projectTitle={project.title} />
             <ScriptReviewGate
               projectId={project.id}
               projectTitle={project.title}

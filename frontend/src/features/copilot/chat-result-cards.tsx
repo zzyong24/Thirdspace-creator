@@ -287,13 +287,20 @@ export function ChatDiagnosisCard({
 export interface ChatLearningItem {
   title: string;
   insight: string;
+  source?: string;
+  applicability?: string;
 }
 
 export function ChatLearningsCard({
-  items,
+  items, projectId, observations = [], hypotheses = [], nextExperiment = "", insufficientReason = "",
   error = null,
 }: {
   readonly items: readonly ChatLearningItem[];
+  readonly projectId?: string | null;
+  readonly observations?: readonly string[];
+  readonly hypotheses?: readonly string[];
+  readonly nextExperiment?: string;
+  readonly insufficientReason?: string;
   /** [T-224 诚实门] 没读到真逐字稿 → 空 items + 非空 error:渲诚实提示卡(要 projectId/逐字稿),不产经验卡。 */
   readonly error?: string | null;
 }) {
@@ -313,7 +320,7 @@ export function ChatLearningsCard({
         await client.createLearning({
           params: undefined,
           query: undefined,
-          body: { title: l.title, insight: l.insight },
+          body: { title: l.title, insight: l.insight, ...(projectId ? {projectId} : {}), source:l.source, applicability:l.applicability },
         });
         setAt(i, "adopted");
         router.refresh();
@@ -321,11 +328,11 @@ export function ChatLearningsCard({
         setAt(i, "error");
       }
     },
-    [router, setAt],
+    [router, setAt, projectId],
   );
 
   // [T-224 诚实门] 没读到真逐字稿 → 不产经验卡,渲诚实提示(要 projectId/逐字稿)。
-  if (items.length === 0) {
+  if (items.length === 0 && !observations.length && !hypotheses.length && !nextExperiment && !insufficientReason) {
     if (error) {
       return (
         <div
@@ -347,8 +354,12 @@ export function ChatLearningsCard({
       className="mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"
     >
       <span className="text-[10px] font-medium uppercase tracking-wide text-brand">
-        AI 复盘经验 · 逐条采纳进知识库
+        复盘观察与下一次检验
       </span>
+      {observations.length > 0 ? <div className="text-xs"><strong>实际观察</strong>{observations.map((text,i)=><p key={i}>{text}</p>)}</div> : null}
+      {hypotheses.length > 0 ? <div className="text-xs"><strong>待验证解释</strong>{hypotheses.map((text,i)=><p key={i}>{text}</p>)}</div> : null}
+      {nextExperiment ? <p className="text-xs"><strong>下一条检验：</strong>{nextExperiment}</p> : null}
+      {insufficientReason ? <p className="text-xs text-text-subtle">暂不沉淀经验：{insufficientReason}</p> : null}
       <ul className="flex flex-col gap-1.5" aria-label="复盘经验候选">
         {items.map((l, i) => {
           const s = state.get(i) ?? "idle";
@@ -364,6 +375,8 @@ export function ChatLearningsCard({
               {l.insight ? (
                 <span className="text-[11px] text-text-subtle">{l.insight}</span>
               ) : null}
+              {l.source ? <p className="text-xs text-text-subtle">依据：{l.source}</p> : null}
+              {l.applicability ? <p className="text-xs text-text-subtle">适用条件：{l.applicability}</p> : null}
               <div className="flex items-center gap-2">
                 {s === "adopted" ? (
                   <span
@@ -376,7 +389,8 @@ export function ChatLearningsCard({
                   <button
                     type="button"
                     data-slot="chat-learning-adopt"
-                    disabled={s === "adopting"}
+                    disabled={s === "adopting" || !projectId || !l.source?.trim() || !l.applicability?.trim()}
+                    title={!projectId || !l.source?.trim() || !l.applicability?.trim() ? "请重新复盘以补齐来源项目、依据与适用条件" : undefined}
                     onClick={() => adopt(i, l)}
                     className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
                   >

@@ -218,6 +218,7 @@ export function createLearningsRepository(
               and(
                 eq(learnings.userId, deps.userId),
                 eq(learnings.accountId, deps.accountId),
+                input.projectId ? eq(learnings.projectId, input.projectId) : sql`${learnings.projectId} IS NULL`,
                 sql`${learnings.validationStatus} <> 'discarded'`,
                 or(
                   eq(learnings.contentFingerprint, input.contentFingerprint),

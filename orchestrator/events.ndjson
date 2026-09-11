@@ -1014,3 +1014,4 @@
 {"ts":"2026-09-11T09:41:10.920Z","actor":"taskctl","action":"complete","task":"T-952","evidence":"源码修复：87项聚焦回归、frontend tsc通过；RED两处阻断已复现。保留backend 13项存量测试类型错误、boundary7、semantic既有失败、reconcile233漂移（T-916），未替换安装包。见docs/features/t952-blocking-reliability.md","sha_before":"b004e6136318","sha_after":"8d17a2f2db65"}
 {"ts":"2026-09-11T09:44:30.498Z","actor":"taskctl","action":"start","task":"T-953","sha_before":"7acd3ff345ee","sha_after":"97043629e31e"}
 {"ts":"2026-09-11T09:54:15.406Z","actor":"taskctl","action":"complete","task":"T-953","evidence":"Archify2.17已安装；34模块44对静态依赖，21份HTML全部9/9 showcase、四视口浏览器检查通过，视觉复核与索引交互验证完成；保留全局reconcile233既有漂移。见docs/research/t953-architecture/verification.json","sha_before":"97043629e31e","sha_after":"95de79c5aeaa"}
+{"ts":"2026-09-11T10:32:33.845Z","actor":"taskctl","action":"start","task":"T-954","sha_before":"26aae960702b","sha_after":"ec3d93e94879"}

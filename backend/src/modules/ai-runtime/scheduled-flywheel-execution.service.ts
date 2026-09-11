@@ -1,7 +1,7 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
 import {and,asc,eq,inArray,isNull,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
-import {scheduledFlywheelTaskInputSchema,workerSkillSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
+import {createContinuousExecutionBudget,scheduledFlywheelTaskInputSchema,workerSkillSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {createExecutionAuthorityService} from '../execution/execution-authority.service';
 import {createExecutionLeaseService} from '../execution/execution-lease.service';
@@ -26,7 +26,7 @@ export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSign
 export interface ScheduledFlywheelDeps extends FlywheelGenerationDeps {
  createFavoritesAsr?(runWorker:ReturnType<typeof createExecutionFlywheelGenerationService>['runWorker']):{transcribe(ref:ExecutionRef,ctx:RequestContext,input:{itemId:string;awemeId:string},signal:AbortSignal):Promise<string|null>};
 }
-const sourceKinds=['benchmark','self.detail','self.metrics','favorites'] as const;
+const sourceKinds=['benchmark','self.detail','self.metrics','self.traffic','favorites'] as const;
 const taskTypes=sourceKinds.map(kind=>`scheduled.${kind}`);
 export type ScheduledFlywheelCollector=(ctx:RequestContext,task:ScheduledCollectionTask,scope:ScheduledFlywheelScope)=>Promise<void>;
 /** 原aiTask单向交接给execution_tasks；不生成第二份业务任务或调度队列。 */
@@ -93,7 +93,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:run.id,target:raw.target??{},skillSnapshot:snapshot});
   const [job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
   if(run?.aiTaskId!==task.id||run?.jobId!==modelInput.jobId||run?.userId!==ctx.userId||job?.userId!==ctx.userId||job?.accountId!==ctx.accountId||job?.sourceKind!==modelInput.sourceKind)throw new Error('原调度运行归属不符');
-  return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:deps.budget});
+  return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:modelInput.sourceKind==='self.traffic'?createContinuousExecutionBudget():deps.budget});
  },
  async run(ctx:RequestContext,aiTaskId:string,collector:ScheduledFlywheelCollector){const bound=await service.prepare(ctx,aiTaskId),claim=await tasks.claimTask({taskId:bound.executionTaskId,workerId:`flywheel:${randomUUID()}`,leaseSeconds:300});if(claim)await track(consume(claim,collector));return bound;},
  async drain(collector:ScheduledFlywheelCollector,maxTasks=10){let processed=0;while(!abort.signal.aborted&&processed<maxTasks){const claim=await tasks.claimNext({kinds:['ai_task'],executionMode:'scheduled.flywheel',workerId:`flywheel-drain:${randomUUID()}`,leaseSeconds:300});if(!claim)break;await track(consume(claim,collector));processed++;}return processed;},
@@ -114,7 +114,12 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
    if(status==='succeeded'&&original&&latest?.status!=='settled'){const result=await outcomes.recordFailure(ref,{outcome:'waiting_user',errorCode:'FLYWHEEL_RETRY_SOURCE_UNAVAILABLE'});throw new ScheduledFlywheelSuspended(ref.executionTaskId,result.status);}
    await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(aiTasks).set({status,completedAt:now(),errorMessage:errorMessage??null}).where(eq(aiTasks.id,task.id));await scope.tx.update(jobRuns).set({status,error:errorMessage??null,finishedAt:now()}).where(eq(jobRuns.id,bound.input.jobRunId));await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now(),lastErrorMessage:errorMessage??null}).where(eq(executionTasks.id,ref.executionTaskId));});finished=true;
   };
-  const ai:ScheduledCollectionAiPort={async markWaitingUser(c,id){
+  const ai:ScheduledCollectionAiPort={async deferCollection(c,id){
+   checkInput(c,id);await verify();
+   if(bound.input.sourceKind!=='self.traffic')throw new Error('仅流量分批采集可交还执行权');
+   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(executionTasks).set({status:'queued',retryAt:new Date(Date.parse(now())+2000).toISOString(),leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now()}).where(eq(executionTasks.id,ref.executionTaskId));});
+   finished=true;throw new ScheduledFlywheelSuspended(ref.executionTaskId,'queued');
+  },async markWaitingUser(c,id){
    checkInput(c,id);await verify();
    const state=await ledger.inspect(ref),unknown=state.calls.some(call=>call.status==='started'||call.status==='unknown');
    await outcomes.recordFailure(ref,{outcome:unknown?'unknown_result':'waiting_user',errorCode:unknown?'FLYWHEEL_CALL_REQUIRES_RECONCILIATION':'FLYWHEEL_LOGIN_REQUIRED'});
@@ -125,7 +130,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   catch(error){
    if(error instanceof ScheduledFlywheelSuspended){
     // job_run只是运行投影：等待重试保留进行中，其余明确呈现挂起/失败，不改execution权威。
-    await leases.withLease(ref,'settlement',async scope=>{const current=await bindScheduledFlywheel(scope),retry=current.task.status==='retry_wait';await scope.tx.update(jobRuns).set({status:retry?'running':'failed',error:current.task.lastErrorMessage??'模型阶段已挂起，请在原任务中恢复',finishedAt:retry?null:now()}).where(eq(jobRuns.id,current.input.jobRunId));}).catch(()=>{});
+    await leases.withLease(ref,'settlement',async scope=>{const current=await bindScheduledFlywheel(scope),retry=current.task.status==='retry_wait'||current.task.status==='queued';await scope.tx.update(jobRuns).set({status:retry?'running':'failed',error:current.task.lastErrorMessage??'模型阶段已挂起，请在原任务中恢复',finishedAt:retry?null:now()}).where(eq(jobRuns.id,current.input.jobRunId));}).catch(()=>{});
     return;
    }
    if(!signal.aborted){try{await finish('failed','飞轮执行中断，请查看原任务恢复状态');}catch{/* 已挂起/失去fence不得覆盖，原租约恢复接管。 */}}

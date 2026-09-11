@@ -35,7 +35,7 @@ export function createChatBusinessGenerationPreparation(deps:TopicGeneratePrepar
    const creative=await assembleCreativeContext(owner,{projectId:args.projectId,topic:args.subject??""},deps);
    signal?.throwIfAborted();
    if(!creative.reviewScript.trim())throw new Error("没读到这条作品的真实逐字稿；请先抓取逐字稿或补充真实文稿，再重新复盘");
-   if(!creative.reviewMetrics.trim()&&!creative.reviewComments.trim())throw new Error("这条作品还没有真实指标或观众评论，请同步本作品数据后再复盘");
+   // 无发布数据仍可诊断真实稿件；复盘模板区分内容观察与效果假设，不补造指标。
    return {facets:reviewFacets(creative,args.subject,args.extraBrief)};
   },
  };

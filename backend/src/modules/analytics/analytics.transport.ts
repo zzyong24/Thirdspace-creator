@@ -20,6 +20,8 @@ import type { MetricSnapshotResource } from "./analytics.schema";
 
 export const ANALYTICS_OP_IDS = [
   "analytics.publications.get",
+  "analytics.traffic.get",
+  "analytics.traffic.refresh",
   "analytics.projects.get",
 ] as const;
 
@@ -48,6 +50,7 @@ function paginationFrom(query: unknown): { page: number; pageSize: number } {
 
 export function createAnalyticsTransport(
   serviceFactory: () => AnalyticsService,
+  traffic?: {getProject:import('./traffic.service').TrafficService['getProject'];refresh:(ctx:RequestContext,projectId:string)=>Promise<{queued:number;jobRunId:string|null;aiTaskId:string|null}>},
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -64,6 +67,12 @@ export function createAnalyticsTransport(
       const { page, pageSize } = paginationFrom(query);
 
       switch (endpoint.id) {
+        case 'analytics.traffic.get':
+          if(!traffic)throw new Error('流量来源服务尚未接入');
+          return {data:await traffic.getProject(ctx,p.projectId??''),meta:{requestId}};
+        case 'analytics.traffic.refresh':
+          if(!traffic)throw new Error('流量来源服务尚未接入');
+          return {data:await traffic.refresh(ctx,p.projectId??''),meta:{requestId}};
         case "analytics.publications.get": {
           const { rows, total } = await service.getPublicationAnalytics(
             ctx,

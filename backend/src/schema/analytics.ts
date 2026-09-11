@@ -145,3 +145,9 @@ CREATE INDEX IF NOT EXISTS idx_metric_values_user_account ON metric_values (user
 CREATE INDEX IF NOT EXISTS idx_retention_points_user_account ON retention_points (user_id, account_id);
 CREATE INDEX IF NOT EXISTS idx_audience_snapshots_user_account ON audience_snapshots (user_id, account_id);
 `;
+
+/** 独立明细与持久待采状态；成功数据保留至下一次成功，不污染基本指标快照。 */
+export const publicationTraffic = pgTable('publication_traffic',{
+ publicationId:text('publication_id').primaryKey(),userId:text('user_id').notNull(),accountId:text('account_id').notNull(),externalId:text('external_id').notNull(),
+ lastTaskId:text('last_task_id'),requestedAt:text('requested_at').notNull(),attemptedAt:text('attempted_at'),capturedAt:text('captured_at'),status:text('status').notNull(),error:text('error'),data:jsonb('data'),
+});

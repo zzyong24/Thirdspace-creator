@@ -186,7 +186,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    if(result.status!=="failed"){
     switch(value.node.capability){
      case "topic.generate": {const items=normalizeTopics(topicArraySchema.parse(result.value.object).topics);if(items.length)data={kind:"topic.candidates",items,...(value.node.trendNote?{trendNote:value.node.trendNote}:{})};break;}
-     case "review.analyze": {const items=normalizeLearnings(reviewInsightsSchema.parse(result.value.object).learnings);if(items.length)data={kind:"review.learnings",items,error:null};break;}
+     case "review.analyze": {const {learnings,...report}=reviewInsightsSchema.parse(result.value.object);const items=normalizeLearnings(learnings);data={kind:"review.learnings",items,...report,projectId:value.node.facets.__reviewProjectId??null,error:null};break;}
      case "knowledge.distill": {
       const parts=z.object({parts:z.array(knowledgeDistillSchema)}).parse(result.value.object).parts.map(normalizeDistillation);
       if(parts.some(part=>part===null))break;

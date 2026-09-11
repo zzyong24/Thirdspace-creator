@@ -1,3 +1,6 @@
+import { recoverTrafficQueues } from "@creatoros/backend/application/scheduling/traffic-wake";
+import {triggerScheduledJob} from '@creatoros/backend/modules/ai-runtime';
+import {createTrafficCollector} from '@creatoros/backend/application/collection/traffic';
 import { readProjectListCoverIds } from "@creatoros/backend/application/queries/project-list-covers";
 import { resolveImportedPublicationIdsInBatch } from "@creatoros/backend/application/queries/imported-publication-ids";
 import {resolveSubmittedChatToolParameters} from "@creatoros/backend/modules/ai-runtime";
@@ -125,7 +128,7 @@ import { createAssetRepository, createAssetsService, createWebDocumentCacheServi
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
-import { createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
@@ -2045,7 +2048,21 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         publishingService.listPublicationIdsByProject(ctx, projectId),
     },
   });
-  const analytics = createAnalyticsTransport(() => analyticsService);
+  const trafficService=createTrafficService(db,{now:deps.now,publishing:publishingService});
+  const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{},schedule:'0 0 * * *',enabled:false,systemManaged:true});
+  const startTrafficJob=async(ctx:RequestContext)=>{
+    const job=await ensureTrafficJob(ctx);
+    return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);
+  };
+  const analytics = createAnalyticsTransport(() => analyticsService,{
+    getProject:(ctx,id)=>trafficService.getProject(ctx,id),
+    refresh:async(ctx,id)=>{
+      await ensureTrafficJob(ctx);
+      const queued=await trafficService.enqueueProject(ctx,id);
+      if(!(await trafficService.pending(ctx,1)).length)return {queued,jobRunId:null,aiTaskId:null};
+      const run=await startTrafficJob(ctx);return {queued,jobRunId:run.jobRunId||null,aiTaskId:run.aiTaskId||null};
+    },
+  });
 
   // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It
@@ -2865,7 +2882,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // artifact(与 reconstruct-runner 的 getTranscript 同法),数据走 analytics 最新 snapshot rawMetrics
   // (播放优先 views 回退 plays,与 dashboard 同口径),评论走 candidateService.listSignals 里 source
   // 含 comment 的信号。绑到 creative-context 的 ReviewSubjectReader 端口。
-  const makeReviewSubjectReader = () => createReviewSubjectContext({projectsService,publishingService,analyticsService,candidateService,artifactsService,selectReadableProjectScriptArtifact,readProjectRadarDraftSeed});
+  const makeReviewSubjectReader = () => createReviewSubjectContext({trafficService,projectsService,publishingService,analyticsService,candidateService,artifactsService,selectReadableProjectScriptArtifact,readProjectRadarDraftSeed});
 
   // [T-270] 立项 Brief reader 工厂(单一真值)—— 读项目 brief_detail jsonb 的全核心字段(画幅 +
   // 核心信息/内容目标/内容形式/目标受众/成功标准),供 creative-context 渲成立项硬锚段。dispatch 路径
@@ -3807,7 +3824,7 @@ dispatchIntelligenceRun});
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
     createFavoritesAsr:runWorker=>createScheduledFavoritesAsrService(db,{...asrResourceDeps,runWorker}),
   });
-  const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","favorites"]);
+  const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","self.traffic","favorites"]);
 
   intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript,sourceRecovery:transcriptSourceRecovery};
 
@@ -3864,7 +3881,9 @@ readCommentsForWorks:async(ctx,awemeIds,options)=>(await loadDouyinCdp()).fetchD
     // rawMetrics 带完播/封面CTR/5s完播/2s跳出/主页访问 → 复盘核心指标从 0/fixture 变真)。
     // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
     // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
+    "self.traffic":createTrafficCollector({service:trafficService,checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,read:async(ctx,awemeId)=>(await loadDouyinCdp()).fetchDouyinTraffic({awemeId,authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),signal:scheduledSignals.getStore(),gateway:douyinGateway})}),
     "self.detail": createSelfCollector({projectsService,
+ enqueueTraffic:async(ctx,ids)=>{await ensureTrafficJob(ctx);await trafficService.enqueueVisible(ctx,ids);if((await trafficService.pending(ctx,1)).length)await startTrafficJob(ctx);},
 publishingService,
 analyticsService,
 ingestionService,
@@ -5695,6 +5714,12 @@ FAVORITES_PROMOTE_PER_RUN
       source_sync:control=>drainIntelligenceSourceQueue(sourceRunnerDeps,5,control),
       share_import:control=>drainDouyinShareImportQueue(shareImportRunnerDeps,5,control),
       async benchmark(control){if(control.shouldStop())return;await benchmarkTranscription.recoverQueued();if(!control.shouldStop())await benchmarkTranscription.drain(5);},
+      async traffic_queue(control){await recoverTrafficQueues({userId:localUser.id,accountId:null,requestId:"traffic-recovery",source:"ingestion"},{
+        listJobs:(ctx,query)=>schedulingService.listJobsSystem(ctx,query),
+        listRuns:(ctx,id)=>schedulingService.listRunsByJob(ctx,id,{limit:20,offset:0}),
+        hasPending:async ctx=>(await trafficService.pending(ctx,1)).length>0,
+        start:ctx=>startTrafficJob(ctx),shouldStop:control.shouldStop,
+      });},
       async flywheel(control){if(control.shouldStop())return;await scheduledFlywheel.recoverQueued(async(c,id)=>{if(!control.shouldStop())await aiService.markFailed(c,id,"调度任务准备未完成，请检查原任务配置");});if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5);},
     },
     onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,error instanceof Error?error.name:"UnknownError"),

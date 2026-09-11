@@ -43,3 +43,5 @@ export {
   metricSnapshotResource,
   type MetricSnapshotResource,
 } from "./analytics.schema";
+export {parseTrafficTables} from './traffic-parser';
+export {createTrafficService,type TrafficService} from './traffic.service';

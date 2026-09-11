@@ -2,7 +2,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { reviewInsightsSchema, type ReviewInsightsOutput } from "@creatoros/ai-worker";
 import type { RecordCandidateInput } from "../ai/ai.service";
 import { assembleCreativeContext, type ContextDeps, type CreativeContext } from "./creative-context";
-export interface LearningItem { title: string; insight: string }
+export interface LearningItem { title: string; insight: string; source?: string; applicability?: string }
 export interface ReviewTask { id: string; projectId: string | null; inputData: Record<string, unknown> }
 // 把 CreativeContext 映射成 review.insights 模板的 facets(占位化原 buildReviewPrompt 的上下文块）。
 // subject(本次复盘对象)是必需 facet。
@@ -63,7 +63,7 @@ export function normalizeLearnings(
     .map((o): LearningItem | null => {
       const title = (o.title ?? "").trim();
       if (!title) return null;
-      return { title, insight: o.insight ?? "" };
+      return { title, insight: o.insight ?? "", ...(o.source ? {source:o.source} : {}), ...(o.applicability ? {applicability:o.applicability} : {}) };
     })
     .filter((l): l is LearningItem => l !== null);
 }
@@ -72,12 +72,12 @@ export function normalizeLearnings(
 export async function prepareReviewContext(ctx: RequestContext, task: Pick<ReviewTask,"projectId"|"inputData">, deps: ContextDeps): Promise<Record<string, string | undefined>> {
   const topic = typeof task.inputData.topic === "string" ? task.inputData.topic : "";
   const context = await assembleCreativeContext(ctx, { projectId: task.projectId, topic }, deps);
-  if (!context.reviewMetrics.trim() && !context.reviewComments.trim()) throw new Error("review-runner: missing current-project post-publish metrics/comments");
+  if (!context.reviewScript.trim() && !context.reviewMetrics.trim() && !context.reviewComments.trim()) throw new Error("review-runner: missing current-project post-publish metrics/comments");
   return reviewFacets(context);
 }
 export function projectReviewCandidate(_inputData: Record<string, unknown>, object: unknown): RecordCandidateInput {
   const parsed = reviewInsightsSchema.parse(object);
   const items = normalizeLearnings(parsed.learnings);
-  if (items.length === 0) throw new Error("review-runner: agent returned no parseable learnings");
-  return { resultType: "learning_list", resultData: { items } };
+  const {learnings: _, ...report} = parsed;
+  return { resultType: "learning_list", resultData: { items, ...report } };
 }

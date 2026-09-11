@@ -199,6 +199,7 @@ export const cadenceFrequency = z.enum([
 //   service 层建 job 绕过 enum,故 job 已在库却读不回),对齐后 favorites 创建/调度/采集端到端合法。
 export const scheduledJobSourceKind = z.enum([
   "self.metrics",
+  "self.traffic",
   "comments",
   "self.detail",
   "benchmark",

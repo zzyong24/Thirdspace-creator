@@ -3393,3 +3393,15 @@ export async function fetchDouyinCollectsVideos(
     await lifetime?.close().catch(() => {}); // 关我们自起的 Chromium
   }
 }
+
+/** T-954:独立流量明细读取，复用账号profile和限速；任何退出都释放浏览器。 */
+export async function fetchDouyinTraffic(opts:{authDir:string;awemeId:string;signal?:AbortSignal;gateway?:DouyinChannelGate}){
+ opts.signal?.throwIfAborted();
+ const ctx=await openContext(opts.authDir,true,opts.signal),lifetime=bindAbortContext(opts.signal,()=>ctx.close());
+ try{
+  if(!await isLoggedIn(ctx))throw new DouyinNotLoggedInError();
+  const page=ctx.pages()[0]??await ctx.newPage();
+  const {readDouyinTrafficPage}=await import('./douyin-traffic');
+  return await withDouyinChannel(opts.gateway??instantNoopGateway,'creator-center',()=>readDouyinTrafficPage(page,opts.awemeId,opts.signal),()=>({kind:'net-timeout',consecutiveTimeouts:1}),opts.signal);
+ }finally{await lifetime.close();}
+}

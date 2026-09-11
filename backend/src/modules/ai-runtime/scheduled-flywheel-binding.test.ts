@@ -3,14 +3,14 @@ import {createDb,aiTasks,executionTasks,eq,jobRuns,scheduledJobs,type Db} from '
 import {createSchedulingService} from '../scheduling/scheduling.service';
 import {runScheduledCollection} from './scheduled-collection-runner';
 import {triggerScheduledJob} from './scheduled-collection-scheduler';
-import {createScheduledFlywheelExecutionService} from './scheduled-flywheel-execution.service';
+import {createScheduledFlywheelExecutionService,type ScheduledFlywheelCollector} from './scheduled-flywheel-execution.service';
 import {createPersistentTaskService} from '../execution/persistent-task.service';
 import {createExecutionLeaseService} from '../execution/execution-lease.service';
 import {bindScheduledFlywheel} from '../execution/scheduled-flywheel-binding';
 const ctx={userId:'t951-user',accountId:'t951-account',requestId:'t951',source:'user' as const};
-const now=()=> '2026-09-11T01:00:00.000Z';let db:Db,close:()=>Promise<void>,seq=0;
+let tick=0;const now=()=> new Date(Date.parse('2026-09-11T01:00:00.000Z')+tick).toISOString();let db:Db,close:()=>Promise<void>,seq=0;
 const nextId=(p:string)=>`${p}-t951-${++seq}`;
-beforeEach(async()=>{const r=await createDb();db=r.db;close=()=>r.client.close();});afterEach(async()=>close?.());
+beforeEach(async()=>{tick=0;const r=await createDb();db=r.db;close=()=>r.client.close();});afterEach(async()=>close?.());
 const deps={entryPath:'/never-start-a-worker-for-prepare',resolveModelSpec:async()=>{throw new Error('no model in binding test');},budget:{maxCalls:4,maxTokens:1000,deadlineMs:60000},now};
 async function trigger(sourceKind:string,skipHeavyBackfill=false,defer=false,recoverBeforeRun=false){
  const scheduling=createSchedulingService({db,now,nextId}),service=createScheduledFlywheelExecutionService(db,deps);
@@ -29,7 +29,7 @@ async function trigger(sourceKind:string,skipHeavyBackfill=false,defer=false,rec
  }},dispatch:(c,t)=>defer?Promise.resolve({executionTaskId:"deferred-fixture"}):service.prepare(c,t.id)},{skipHeavyBackfill});
  return {result,service,scheduling,job};
 }
-it.each(['self.metrics','self.detail','benchmark','favorites'])('真实trigger落库后prepare与claim保持真实run绑定：%s',async kind=>{
+it.each(['self.metrics','self.detail','self.traffic','benchmark','favorites'])('真实trigger落库后prepare与claim保持真实run绑定：%s',async kind=>{
  const f=await trigger(kind,true);await f.result.completion;
  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));if(!task)throw new Error('fixture task missing');expect(task.executionTaskId).toBeTruthy();
  const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.executionTaskId!));if(!execution)throw new Error('fixture execution missing');expect(execution.payload).toMatchObject({modelInput:{jobRunId:f.result.jobRunId,target:{__skipHeavyBackfill:true}}});
@@ -57,7 +57,7 @@ it.each(['missing','duplicate','forged'])('运行绑定%s时不能绑定执行',
  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));expect(task?.executionTaskId).toBeNull();await f.service.stop();
 });
 
-it.each(['self.metrics','self.detail','benchmark','favorites'])('恢复器在task创建与run落库之间执行，不误杀原任务：%s',async kind=>{
+it.each(['self.metrics','self.detail','self.traffic','benchmark','favorites'])('恢复器在task创建与run落库之间执行，不误杀原任务：%s',async kind=>{
  const f=await trigger(kind,false,false,true);await f.result.completion;
  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));
  expect(task?.status).not.toBe('failed');expect(task?.executionTaskId).toBeTruthy();
@@ -96,4 +96,25 @@ it('最终回填端口异常时，已完成执行的运行记录仍能结束',as
  await f.service.drain((c,t,scope)=>runScheduledCollection(c,t,{ai:scope.ai,runs:{updateRun:async()=>{throw new Error('fixture final projection failed');}},isNotLoggedInError:()=>false,collectors:{'self.metrics':async()=>({itemsNew:0,itemsUpdated:0})},now}),1);
  expect(await f.scheduling.getRun(ctx,f.result.jobRunId)).toMatchObject({status:'succeeded',finishedAt:now()});
  await f.service.stop();
+});
+
+it('流量补采跨多批、等待登录、暂停和进程恢复仍使用原任务',async()=>{
+ const f=await trigger('self.traffic');await f.result.completion;
+ const tasks=createPersistentTaskService(db,{now});
+ const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));
+ const id=task!.executionTaskId!;let batches=0;
+ const collect:ScheduledFlywheelCollector=async(c,t,scope)=>runScheduledCollection(c,t,{ai:scope.ai,runs:f.scheduling,isNotLoggedInError:(e)=>e instanceof Error&&e.message==='login',collectors:{'self.traffic':async()=>{batches++;if(batches===5)throw new Error('login');return {itemsNew:0,itemsUpdated:batches*20,continueCollection:batches<8};}},now});
+ for(let i=0;i<5;i++){expect(await f.service.drain(collect,1)).toBe(1);tick+=3000;}
+ expect((await tasks.get(ctx,id)).runtimeStatus).toBe('waiting_user');
+ await tasks.command(ctx,{taskIds:[id],command:'resume',idempotencyKey:'login-restored'});
+ await tasks.command(ctx,{taskIds:[id],command:'pause',idempotencyKey:'pause-between-batches'});
+ expect(await f.service.drain(collect,1)).toBe(0);
+ await tasks.command(ctx,{taskIds:[id],command:'resume',idempotencyKey:'resume-batches'});
+ await f.service.stop();
+ const restarted=createScheduledFlywheelExecutionService(db,deps);
+ for(let i=0;i<3;i++){tick+=3000;expect(await restarted.drain(collect,1)).toBe(1);}
+ expect((await tasks.get(ctx,id)).status).toBe('succeeded');
+ expect((await tasks.get(ctx,id)).attempt).toBeGreaterThan(4);
+ expect(await f.scheduling.getRun(ctx,f.result.jobRunId)).toMatchObject({status:'succeeded',aiTaskId:task!.id,itemsUpdated:160});
+ await restarted.stop();
 });

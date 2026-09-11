@@ -171,7 +171,7 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
     expect(region.querySelector('[data-slot="learning-adopt"]')).toBeNull();
   });
 
-  it("[T-739] 未发布或没有本项目指标/评论时，不展示候选和帮我复盘入口", () => {
+  it("[T-739] 无指标时仍有内容诊断入口，不展示效果经验候选", () => {
     const { container } = render(
       <AnalyticsReviewPage
         projectId={PROJECT_ID}
@@ -181,10 +181,10 @@ describe("本期经验区(T-118a §D → [T-356③] AI 要点卡下架后收敛�
       />,
     );
 
-    expect(container.querySelector('[data-slot="review-analyze-island"]')).toBeNull();
+    expect(container.querySelector('[data-slot="review-analyze-primary"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="candidate-card"]')).toBeNull();
     expect(container.querySelector('[data-slot="current-period-learnings-cta"]')).toBeNull();
-    expect(container.textContent).toContain("发布并同步真实数据后才能复盘");
+    expect(container.textContent).toContain("暂无可沉淀的效果经验，仍可诊断内容");
   });
 
   it("[T-739] 复盘候选长依据默认只展示摘要，可按需展开全文", () => {

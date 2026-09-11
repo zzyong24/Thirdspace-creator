@@ -174,6 +174,8 @@ export interface LearningsService {
       insight?: string;
       learningType?: string;
       projectId?: string | null;
+      source?: string;
+      applicability?: string;
     },
   ): Promise<LearningResource>;
   // The Reviews→Learnings bridge (roadmap §4 G13/G14). Called by ReviewsService via
@@ -388,8 +390,10 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
     },
 
     async adoptLearning(ctx, body) {
+      if ((body.source !== undefined || body.applicability !== undefined) && (!body.projectId || !body.source?.trim() || !body.applicability?.trim())) throw new ConflictError("复盘经验须附来源项目、依据与适用条件");
+      if (body.projectId) await projects.assertOwnsProject(ctx, body.projectId);
       const title = body.title.trim();
-      const insight = (body.insight ?? "").trim();
+      const insight = [(body.insight ?? "").trim(), body.source?.trim() ? `来源依据：${body.source.trim()}` : "", body.applicability?.trim() ? `适用条件：${body.applicability.trim()}` : ""].filter(Boolean).join("\n");
       const row = await repoFor(
         ctx,
         "learnings.adoptLearning",
@@ -398,7 +402,7 @@ export function createLearningsService(deps: ServiceDeps): LearningsService {
         insight,
         learningType: body.learningType ?? "strategy",
         projectId: body.projectId ?? null,
-        contentFingerprint: adoptedContentFingerprint(title, insight),
+        contentFingerprint: adoptedContentFingerprint(title, body.projectId ? `${body.projectId}\u001f${insight}` : insight),
       });
       return toLearningDto(row);
     },

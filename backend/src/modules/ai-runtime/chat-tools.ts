@@ -281,7 +281,8 @@ export interface ChatToolDeps {
     projectId?: string;
     extraBrief?: string;
   }) => Promise<{
-    items: Array<{ title: string; insight: string }>;
+    items: Array<{ title: string; insight: string; source?: string; applicability?: string }>;
+    projectId?: string | null; observations?: string[]; hypotheses?: string[]; nextExperiment?: string; insufficientReason?: string;
     /** [T-224 诚实门] 无真逐字稿 → 空 items + 非空 error(诚实提示,不产卡)。 */
     error?: string | null;
   }>;
@@ -1352,7 +1353,8 @@ export interface PlanningThesisToolResult {
 // review.analyze 工具结果 —— 可复用经验候选(渲成经验卡,逐条采纳沉淀)。
 export interface ReviewAnalyzeToolResult {
   kind: "review.learnings";
-  items: Array<{ title: string; insight: string }>;
+  items: Array<{ title: string; insight: string; source?: string; applicability?: string }>;
+    projectId?: string | null; observations?: string[]; hypotheses?: string[]; nextExperiment?: string; insufficientReason?: string;
   // [T-224 诚实门] 没读到该作品真逐字稿 → 不产经验卡,带诚实提示(前端卡渲提示态,要 projectId/逐字稿);
   //   正常产卡时为 null。
   error?: string | null;
@@ -4093,14 +4095,14 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     }, deps.humanizeError),
     "review.analyze": defineChatTool("review.analyze", {
       description:
-        "从一条**具体作品**提炼 3-6 条可复用、可迁移的爆款要素/方法论。**拆某条作品必须传它的 projectId**(从 context.metrics/context.projects 每行拿):工具会先读该作品的真逐字稿再提炼,读不到真逐字稿会拒绝产卡并要你补 projectId/逐字稿——绝不凭标题、指标、账号通用规律编造方法论或数字当经验。结果是经验候选,需人逐条采纳后才沉淀经验——不直接写库。",
+        "复盘一条具体作品，传真实 projectId。读取稿件及可用指标，输出观察、待验证解释与下一条检验。无指标可诊断内容但不能归因传播/成交效果。经验可以为空；候选附当前作品依据和适用条件，用户采纳后才沉淀。",
       inputSchema: REVIEW_ANALYZE_PARAMS,
       execute: async ({
         subject,
         projectId,
         extraBrief,
       }): Promise<ReviewAnalyzeToolResult> => {
-        const { items, error } = await deps.analyzeReview({
+        const result = await deps.analyzeReview({
           subject,
           projectId:
             typeof projectId === "string" && projectId.trim()
@@ -4108,7 +4110,7 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
               : undefined,
           extraBrief: clampExtraBrief(extraBrief),
         });
-        return { kind: "review.learnings", items, error: error ?? null };
+        return { kind: "review.learnings", ...result, error: result.error ?? null };
       },
     }, deps.humanizeError),
     // [T-103b] 稿面文案审核进对话:dispatch 既有 script.review 审核链路(L1 违禁词 lint + L2 豆包

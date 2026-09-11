@@ -18,7 +18,7 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
     scope.signal.throwIfAborted();
     await runScheduledCollection(ctx,task,{
       ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
-      collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);});scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:isNotLoggedInError,now:deps.now,
+      collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report,execution)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);},execution);scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:isNotLoggedInError,now:deps.now,
     });
   }));
 

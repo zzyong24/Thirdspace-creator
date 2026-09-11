@@ -1,3 +1,4 @@
+import { createScheduledRunIntentService } from "./daily-topic-run-intent.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -166,7 +167,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         );
       }
       if (
-        input.sourceKind === "intelligence.sync" &&
+        ["intelligence.sync","self.traffic"].includes(input.sourceKind) &&
         input.systemManaged !== true
       ) {
         throw new ValidationError(
@@ -235,6 +236,12 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createRun(ctx, input) {
+      if (input.aiTaskId && (await repoFor(ctx).getJob(input.jobId)).sourceKind === "self.traffic") {
+        // 与崩溃恢复共用 task→job 行锁，两个同时触发只产生原 task 的一条 run。
+        const row = await createScheduledRunIntentService(db, { now, nextId }, ["self.traffic"]).ensureRunForTask(ctx, input.aiTaskId);
+        if(row.jobId!==input.jobId)throw new ValidationError("流量任务与作业不匹配");
+        return toJobRunDto(row);
+      }
       const row = await repoFor(ctx).createRun({
         jobId: input.jobId,
         aiTaskId: input.aiTaskId ?? null,

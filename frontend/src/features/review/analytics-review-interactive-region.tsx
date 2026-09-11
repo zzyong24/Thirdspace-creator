@@ -695,10 +695,10 @@ function CurrentPeriodLearnings({
           className="rounded-lg border border-dashed border-border bg-surface px-3 py-4"
         >
           <p className="text-[12px] font-medium text-foreground">
-            发布并同步真实数据后才能复盘
+            暂无可沉淀的效果经验，仍可诊断内容
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-            当前项目还没有可核验的指标或观众评论，不会读取其他作品的改稿记录来补位。
+            当前项目还没有可核验的指标或观众评论。可先检查稿件，效果结论需等待真实数据。
           </p>
         </div>
       ) : isEmpty ? (

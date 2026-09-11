@@ -1,0 +1,49 @@
+{
+  "status": "四条初步样本，不代表两位专家完整体系",
+  "sources": [
+    {
+      "videoId": "7479430790355488040",
+      "author": "泛小识",
+      "title": "2026短视频的赛马分值②：多目标排序计算过程！爆肝七天力作",
+      "url": "https://www.douyin.com/video/7479430790355488040",
+      "durationSeconds": 52.7,
+      "method": "douyin-transcribe / faster-whisper small；机器转写，非人工校对全文",
+      "transcriptLocalPath": "/private/tmp/creatoros-t954-corpus/2026-09-11/7479430790355488040/7479430790355488040.txt",
+      "transcriptSha256": "597c2709132f8ffb45b67066fc630df9cf9ac450822c457316de2aa66b52906c",
+      "fetchedAt": "2026-09-11T03:35:05"
+    },
+    {
+      "videoId": "7682604200261487923",
+      "author": "泛小识",
+      "title": "推荐页占比减少13，计算真实的推荐比例。 #推荐页恢复",
+      "url": "https://www.douyin.com/video/7682604200261487923",
+      "durationSeconds": 22.8,
+      "method": "douyin-transcribe / faster-whisper small；机器转写，非人工校对全文",
+      "transcriptLocalPath": "/private/tmp/creatoros-t954-corpus/2026-09-11/7682604200261487923/7682604200261487923.txt",
+      "transcriptSha256": "7ed3ff66a483e4056a228aa5334dc69134092e040fe1f3c709886764189ec50d",
+      "fetchedAt": "2026-09-11T03:34:20"
+    },
+    {
+      "videoId": "7683145754588643304",
+      "author": "薛辉小清新",
+      "title": "短视频和直播哪个获客更容易成交 #编导#代运营#短视频运营",
+      "url": "https://www.douyin.com/video/7683145754588643304",
+      "durationSeconds": 97.5,
+      "method": "douyin-transcribe / faster-whisper small；机器转写，非人工校对全文",
+      "transcriptLocalPath": "/private/tmp/creatoros-t954-corpus/2026-09-11/7683145754588643304/7683145754588643304.txt",
+      "transcriptSha256": "4cca563119c4bca47e7e0d793ae125fef7a73d38edb5b4d626dc83bff2f0d981",
+      "fetchedAt": "2026-09-11T03:34:53"
+    },
+    {
+      "videoId": "7684146173884653667",
+      "author": "薛辉小清新",
+      "title": "会做生意就会做短视频 #短视频运营 #编导#代运营",
+      "url": "https://www.douyin.com/video/7684146173884653667",
+      "durationSeconds": 117.7,
+      "method": "douyin-transcribe / faster-whisper small；机器转写，非人工校对全文",
+      "transcriptLocalPath": "/private/tmp/creatoros-t954-corpus/2026-09-11/7684146173884653667/7684146173884653667.txt",
+      "transcriptSha256": "84c16b19cd6d7b737f19a9c514a2cb422feb664dc617ae9f7e894be8935213b1",
+      "fetchedAt": "2026-09-11T03:34:22"
+    }
+  ]
+}

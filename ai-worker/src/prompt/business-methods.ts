@@ -1,6 +1,6 @@
 import type { PromptTemplate } from './template';
 
-export const BUSINESS_METHOD_VERSION = 'methods-director-2026-09-09';
+export const BUSINESS_METHOD_VERSION = 'methods-director-2026-09-11';
 const COMMON = `【业务执行方法】
 先明确当前这次请求要交付什么，使用已经提供的文案、选题、附件与真实上下文；不要把旧请求自动并入当前任务，也不要让用户重复提供已有信息。信息够用就执行，只有影响正确性、归属或授权的关键歧义才提问。
 下列方法是工作指南，不扩展工具权限。只使用本轮实际提供的工具和输入；无工具的结构化节点只基于输入产出原契约候选，不虚构搜索、执行或保存。语义判断由你完成，不以标题包含某词代替理解全文。
@@ -16,6 +16,14 @@ const CONTENT_PURPOSE_METHOD = `【内容目的与表现形式】
 每条只定一个主要目的，可以有次要收益；这不是账号终身分类。表现形式是另一维：地域共鸣（如家乡情）、情景段子、引导式表达、知识演示、案例复盘、问题诊断都可跨目的使用，也允许更合适的自定义形式。按内容和创作者可用经历/素材选择，不靠关键词分型，不把所有稿子套成同一种结构。
 推荐时区分原作品的目的与本账号采用的目的，说明为什么、需替换哪些事实、怎样观察效果。反复有效的形式只能依据真实多次发布数据提出假设；不得承诺找到“流量密码”就能随时恢复流量或稳定获客。`;
 
+// 首批四条公开作品的概括；仅在相关方法被调用时注入，不充当平台算法事实。
+const EXPERT_METHODS = {
+ topic: `【XH-01：从实际动机选题】来源：薛辉 https://www.douyin.com/video/7684146173884653667（全片，117.7秒，机器转写概括）。适用：需要把产品主题转成观众问题。行动：先读真实客户问题/评论，区分服务名称和观众想得到的结果；缺依据的动机标为假设。反例：不能把所有家长概括为攀比，也不编造客户内心。`,
+ writing: `【XH-02：用过程与验证建立信任】来源：薛辉 https://www.douyin.com/video/7683145754588643304（全片，97.5秒，机器转写概括）。适用：稿件提出能力或效果主张。行动：用当前已有实测、案例或演示说明过程；缺证明就缩小承诺或建议待拍演示。反例：知识解释可用推理与可核对材料，不强制拍测评；不编客户成绩，不把直播成交优势泛化到所有行业。
+内容诊断只指出最重要的1–3处：具体句段、观众缺失的信息、局部修改候选；没有问题不凑数，不以审美建议阻断合法写稿或发布。`,
+ review: `【FX-01：先查口径再解释数据】来源：泛小识 https://www.douyin.com/video/7682604200261487923（全片，22.8秒，音画核对后概括）。适用：解释推荐来源比例变化。行动：核对分母、播放量、统计窗口、来源构成和投放是否已知；重算必须另命名、说明分母。反例：不把推荐占比当曝光，不用粉丝阈值判断限流，不命名为平台真实推荐率。
+【FX-02：多指标观察】来源：泛小识 https://www.douyin.com/video/7479430790355488040（全片，52.7秒，机器转写概括）。适用：单指标不足以解释表现。行动：结合可用留存、互动与来源提出有限假设，给下次对照。证据状态：作者对推荐算法的解释未经官方证实。反例：不采用私有评分公式、权重或评级，不承诺播放量。`,
+};
 const METHODS = {
  research: `【找对标与素材研究】
 1. 先理解完整稿件/选题的核心主张、受众与表达顺序。把素材需求分成待核实事实、对照案例、解释材料和可展示画面；不因存在发布指标就擅自转做复盘。
@@ -67,7 +75,7 @@ const METHOD_PURPOSES: Record<Method, string> = {
 // 注册职责决定哪些节点获得方法，不据文本作创作判断。
 function methodBody(method: Method): string {
  return ['topic', 'writing', 'review', 'research'].includes(method)
-   ? `${METHODS[method]}\n\n${CONTENT_PURPOSE_METHOD}` : METHODS[method];
+   ? `${METHODS[method]}\n\n${CONTENT_PURPOSE_METHOD}${method in EXPERT_METHODS ? "\n\n" + EXPERT_METHODS[method as keyof typeof EXPERT_METHODS] : ""}` : METHODS[method];
 }
 export const BUSINESS_METHOD_TEMPLATES: readonly PromptTemplate[] = (Object.keys(METHODS) as Method[]).map(method => ({
  id: `method.${method}`,

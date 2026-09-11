@@ -215,7 +215,7 @@ export async function triggerScheduledJob(
     offset: 0,
   });
   const inflight = recent.rows.find(
-    (r) => r.status === "running" && dayKeyOf(r.startedAt) === today,
+    (r) => (r.status === "running" || (job.sourceKind === "self.traffic" && r.status === "needs_reconnect")) && (job.sourceKind === "self.traffic" || dayKeyOf(r.startedAt) === today),
   );
   if (inflight) {
     return {
@@ -226,7 +226,8 @@ export async function triggerScheduledJob(
   }
 
   const taskType = `scheduled.${job.sourceKind}`;
-  const idempotencyKey = `${job.id}:${today}`;
+  const trafficAnchor = `traffic-after:${recent.rows[0]?.id ?? "initial"}`;
+  const idempotencyKey = job.sourceKind === "self.traffic" ? `${job.id}:${trafficAnchor}` : `${job.id}:${today}`;
 
   // 闸②(createTask 层):idempotencyKey 走 inputData,命中 in-flight task 返回既有
   //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。ctx 带派生号 → ai_task 落正确号。
@@ -236,13 +237,13 @@ export async function triggerScheduledJob(
     // cron 用 scheduledFor 分钟锚；立即运行用本次 nowIso。相同计划重放仍命中同一 attempt。
     attemptId: scheduledAttemptId(
       job.id,
-      options?.scheduledFor ?? nowIso,
+      job.sourceKind === "self.traffic" ? trafficAnchor : options?.scheduledFor ?? nowIso,
     ),
     inputData: {
       idempotencyKey,
       jobId: job.id,
       target: options?.skipHeavyBackfill ? {...job.target,__skipHeavyBackfill:true} : job.target,
-      ...(["topic.daily","self.metrics","self.detail","benchmark","favorites"].includes(job.sourceKind) ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
+      ...(["topic.daily","self.metrics","self.traffic","self.detail","benchmark","favorites"].includes(job.sourceKind) ? {scheduledRun:{version:1,scheduledFor:job.sourceKind === "self.traffic" ? null : options?.scheduledFor ?? null}} : {}),
     },
   });
   if (task.status !== "queued" && task.status !== "running") {
@@ -257,7 +258,7 @@ export async function triggerScheduledJob(
     jobId: job.id,
     aiTaskId: task.id,
     status: "running",
-    scheduledFor: options?.scheduledFor ?? null,
+    scheduledFor: job.sourceKind === "self.traffic" ? null : options?.scheduledFor ?? null,
   });
 
   const dispatchInput = {

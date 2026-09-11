@@ -12,7 +12,7 @@ vi.mock("@/features/draft-workbench/draft-chat-request", () => ({
   }),
 }));
 
-import { ReviewAnalyzeIsland } from "./review-analyze-island";
+import { ReviewAnalyzeIsland, REVIEW_ANALYZE_PREFILL } from "./review-analyze-island";
 
 afterEach(() => {
   cleanup();
@@ -31,11 +31,13 @@ describe("ReviewAnalyzeIsland", () => {
     expect(button).toBeInTheDocument();
     expect(container.querySelector('a[href*="copilot=open"]')).toBeNull();
 
+    expect(REVIEW_ANALYZE_PREFILL).toContain("没有表现数据时只诊断内容，不作效果归因");
+    expect(REVIEW_ANALYZE_PREFILL).toContain("没有足够依据可以没有经验候选");
     fireEvent.click(button);
     expect(openChat).toHaveBeenCalledWith({
       functionKey: "review.analyze",
-      prefill: "帮我复盘,提炼可复用的爆款要素沉淀成经验。",
-      autoSend: false,
+      prefill: REVIEW_ANALYZE_PREFILL,
+      autoSend: true,
       selection: {
         kind: "project",
         id: "project-1",

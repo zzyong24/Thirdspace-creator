@@ -11,11 +11,12 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Editor } from "@tiptap/react";
 
+import { DraftChatRequestProvider, useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 import { ScriptRichEditor } from "./script-rich-editor";
 
 const mockRouter = {
@@ -409,5 +410,42 @@ describe("ScriptRichEditor (TipTap)", () => {
     expect(pm.textContent).not.toContain("旧稿");
     // 局部刷新走 setContent,**不**触发整页 router.refresh。
     expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+});
+
+let strictFlush: () => Promise<void>;
+function FlushProbe() { strictFlush = useDraftChatRequest().flushSaveStrict; return null; }
+describe("真实富文本编辑器严格保存", () => {
+  it("实际落库失败向调用者 reject，保留正文并可重试", async () => {
+    let editor: Editor | null = null;
+    render(<DraftChatRequestProvider><FlushProbe /><ScriptRichEditor artifactId="a1" initialHtml="<p>原稿</p>" onEditorReady={e => { editor = e; }} /></DraftChatRequestProvider>);
+    await findProseMirror();
+    await act(async () => { editor!.commands.insertContent("尚未保存"); });
+    mockCreateArtifactVersion.mockRejectedValueOnce(new Error("写库失败"));
+    await act(async () => { await expect(strictFlush()).rejects.toThrow("写库失败"); });
+    expect(editor!.getText()).toContain("尚未保存");
+    expect(document.querySelector('[data-save-status="dirty"]')).not.toBeNull();
+    await act(async () => { await strictFlush(); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
+    expect(document.querySelector('[data-save-status="saved"]')).not.toBeNull();
+  });
+  it("保存中再次 flush 等待同一次写入，期间新增文字保留且拒绝旧稿诊断", async () => {
+    let editor: Editor | null = null;
+    render(<DraftChatRequestProvider><FlushProbe /><ScriptRichEditor artifactId="a1" initialHtml="<p>原稿</p>" onEditorReady={e => { editor = e; }} /></DraftChatRequestProvider>);
+    await findProseMirror();
+    await act(async () => { editor!.commands.insertContent("第一改"); });
+    let resolve!: (value: unknown) => void;
+    mockCreateArtifactVersion.mockImplementationOnce(() => new Promise(r => { resolve = r; }));
+    let first!: Promise<unknown>; let second!: Promise<unknown>;
+    await act(async () => {
+      first = strictFlush().catch(e => e);
+      second = strictFlush().catch(e => e);
+    });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(1);
+    await act(async () => { editor!.commands.insertContent("第二改"); resolve({ id: "v1" }); });
+    expect(await first).toBeInstanceOf(Error); expect(await second).toBeInstanceOf(Error);
+    expect(editor!.getText()).toContain("第二改");
+    await act(async () => { await strictFlush(); });
+    expect(mockCreateArtifactVersion).toHaveBeenCalledTimes(2);
   });
 });

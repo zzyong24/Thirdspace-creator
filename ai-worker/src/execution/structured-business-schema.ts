@@ -59,10 +59,7 @@ export function resolveStructuredBusinessSchema(
       );
       return planningThesisOutputSchema;
     case "review.insights":
-      return reviewInsightsSchema.refine(
-        (value) => value.learnings.some((item) => item.title.trim()),
-        "至少需要一条非空标题经验",
-      );
+      return reviewInsightsSchema;
     case "planning.contract":
       return contractSchema.refine(
         (value) =>

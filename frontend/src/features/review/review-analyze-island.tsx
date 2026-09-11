@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { useDraftChatRequest } from "@/features/draft-workbench/draft-chat-request";
 
 export const REVIEW_ANALYZE_PREFILL =
-  "帮我复盘,提炼可复用的爆款要素沉淀成经验。";
+  "复盘当前作品：分别说明实际观察、待验证的解释、下一条具体检验什么。结合真实稿件、指标及流量来源；没有表现数据时只诊断内容，不作效果归因。没有足够依据可以没有经验候选，不强行总结成功规律。";
 
 export function ReviewAnalyzeButton({
   projectId,
@@ -37,7 +37,7 @@ export function ReviewAnalyzeButton({
         openChat({
           functionKey: "review.analyze",
           prefill: REVIEW_ANALYZE_PREFILL,
-          autoSend: false,
+          autoSend: true,
           selection: {
             kind: "project",
             id: projectId,

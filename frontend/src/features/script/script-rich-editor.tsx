@@ -222,6 +222,7 @@ export function ScriptRichEditor({
       },
     },
     onUpdate: ({ editor: ed }) => {
+      saveStatusRef.current = "dirty";
       setSaveStatus("dirty");
       setWordCount(ed.getText().length);
     },
@@ -303,65 +304,80 @@ export function ScriptRichEditor({
   //   ① 「保存」按钮(handleSave 包一层 transition 调它);
   //   ② [T-108 v2] flushSave(审核/盲预测自动发前 await 它,确保审最新版)。
   // 无 artifactId 且无 projectId(结构测试)→ 仅本地翻「已保存」,不打契约(与原行为一致)。
+  const pendingSaveRef = React.useRef<Promise<void> | null>(null);
   const performSave = React.useCallback(async (): Promise<void> => {
-    if (!editor) return;
-    const html = editor.getHTML();
-    const contentText = editor.getText();
-    if (!artifactId && !projectId) {
-      setSaveStatus("saved");
-      return;
-    }
-    const sections = htmlToSections(html);
-    setSaveStatus("saving");
-    // T-024 ②:进入保存在途态 + 记刚存 html —— 抑制此期间(及之后异步回流的)refresh echo
-    // 覆盖用户在途键入。lastSavedHtmlRef 让 timing 无关:回流值 == 刚存 html 即认作 echo。
-    savePendingRef.current = true;
-    lastSavedHtmlRef.current = html;
-    try {
-      // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
-      // (消掉「显示已保存但什么都没存」的假保存)。
-      let targetId = artifactId;
-      if (!targetId && projectId) {
-        const ensured = await ensureScriptArtifact(projectId, null);
-        targetId = ensured.artifactId as string;
+    if (pendingSaveRef.current) return pendingSaveRef.current;
+    if (!editor) throw new Error("编辑器尚未准备好");
+    const saving = (async () => {
+      const html = editor.getHTML();
+      const contentText = editor.getText();
+      if (!artifactId && !projectId) {
+        setSaveStatus("saved");
+        return;
       }
-      if (!targetId) throw new Error("no script artifact target");
-      await client.createArtifactVersion({
-        params: { artifactId: targetId },
-        query: undefined,
-        body: {
-          contentText,
-          // html = 富文本真值(忠实往返);sections = 派生(大纲/金句读侧 + AI 兼容)。
-          contentData: { html, sections },
-          changeSummary: "编辑脚本",
-        },
-      });
-      setSaveStatus("saved");
-      router.refresh();
-    } catch {
-      // 失败保留 dirty,用户可重试。
-      setSaveStatus("dirty");
+      const sections = htmlToSections(html);
+      setSaveStatus("saving");
+      // T-024 ②:进入保存在途态 + 记刚存 html —— 抑制此期间(及之后异步回流的)refresh echo
+      // 覆盖用户在途键入。lastSavedHtmlRef 让 timing 无关:回流值 == 刚存 html 即认作 echo。
+      savePendingRef.current = true;
+      lastSavedHtmlRef.current = html;
+      try {
+        // [T-053 断点①] 真项目还没有脚本 artifact → 首存时 getOrCreate 再落库
+        // (消掉「显示已保存但什么都没存」的假保存)。
+        let targetId = artifactId;
+        if (!targetId && projectId) {
+          const ensured = await ensureScriptArtifact(projectId, null);
+          targetId = ensured.artifactId as string;
+        }
+        if (!targetId) throw new Error("no script artifact target");
+        await client.createArtifactVersion({
+          params: { artifactId: targetId },
+          query: undefined,
+          body: {
+            contentText,
+            // html = 富文本真值(忠实往返);sections = 派生(大纲/金句读侧 + AI 兼容)。
+            contentData: { html, sections },
+            changeSummary: "编辑脚本",
+          },
+        });
+        if (editor.getHTML() !== html) throw new Error("保存期间稿件有新修改，请重试诊断。");
+        saveStatusRef.current = "saved";
+        setSaveStatus("saved");
+        router.refresh();
+      } catch (error) {
+        // 失败保留 dirty,用户可重试。
+        saveStatusRef.current = "dirty";
+        setSaveStatus("dirty");
+        throw error;
+      } finally {
+        // 保存动作结束(成功/失败)→ 解除在途抑制。router.refresh 的 props 回流是下一轮
+        // effect,此时 pending 已解除;若回流值与当前编辑器不同(用户在途改过 → getHTML 已变),
+        // 那正是「刚存的旧值」,会与用户在途新值不一致 —— 但 appliedHtmlRef 在途已被标记消费,
+        // 故不会再 setContent 覆盖,保住在途编辑。之后真正的新外部值(如版本回滚)仍能正常应用。
+        savePendingRef.current = false;
+      }
+    })();
+    pendingSaveRef.current = saving;
+    try {
+      await saving;
     } finally {
-      // 保存动作结束(成功/失败)→ 解除在途抑制。router.refresh 的 props 回流是下一轮
-      // effect,此时 pending 已解除;若回流值与当前编辑器不同(用户在途改过 → getHTML 已变),
-      // 那正是「刚存的旧值」,会与用户在途新值不一致 —— 但 appliedHtmlRef 在途已被标记消费,
-      // 故不会再 setContent 覆盖,保住在途编辑。之后真正的新外部值(如版本回滚)仍能正常应用。
-      savePendingRef.current = false;
+      pendingSaveRef.current = null;
     }
   }, [artifactId, projectId, editor, router]);
 
   const handleSave = React.useCallback(() => {
     startTransition(() => {
-      void performSave();
+      void performSave().catch(() => {});
     });
   }, [performSave]);
 
   // [T-108 v2] 注册 flushSave 到稿面对话请求 context:审核/盲预测按钮自动发前 `await flushSave()`。
-  // dirty(有在途未保存修改)→ 真 performSave 落库;saved/saving 态 → no-op 立即返回(不重复存)。
+  // 等待在途保存；有未保存修改则落库，失败必须传播给严格诊断入口。
   // 卸载注销(传 null),避免旧编辑器闭包泄漏。
   React.useEffect(() => {
     registerFlush(async () => {
-      if (saveStatusRef.current !== "dirty") return; // 已保存/保存中 → no-op。
+      if (pendingSaveRef.current) await pendingSaveRef.current;
+      if (saveStatusRef.current !== "dirty") return;
       await performSave();
     });
     return () => registerFlush(null);
@@ -395,7 +411,7 @@ export function ScriptRichEditor({
     const onBlur = () => {
       if (!autosaveEnabledRef.current) return;
       if (saveStatusRef.current !== "dirty") return; // 无未保存修改 → no-op。
-      void performSave();
+      void performSave().catch(() => {});
     };
     editor.on("blur", onBlur);
     return () => {

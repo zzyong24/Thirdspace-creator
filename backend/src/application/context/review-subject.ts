@@ -2,6 +2,7 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ReviewSubjectReader } from "../../modules/ai-runtime";
 /** 共享业务上下文读取；聊天和持久生成消费同一投影。 */
 export function createReviewSubjectContext(ports: {
+trafficService?:Pick<import("../../modules/analytics").TrafficService,"getProject">;
 projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getProject" | "listOutputIdsByProject">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"listPublications">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics">;
@@ -87,7 +88,12 @@ return ((): ReviewSubjectReader => ({
             }
           }
         }
-        if (merged.size === 0) return "";
+        let trafficSummary='';
+        try{const result=await ports.trafficService?.getProject(c,projectId);trafficSummary=(result?.items??[]).map(row=>{
+         const data=row.data;if(!data)return `作品 ${row.externalId}：流量来源暂无（${row.status}）`;
+         return `作品 ${row.externalId}：${data.app}，统计窗口：${data.windowLabel??'平台未说明'}，采集于 ${row.capturedAt}，来源${data.complete?'':'未展开完整'}：${data.entries.map(e=>`${e.label} ${e.percentage===null?'暂无':e.percentage+'%'}`).join('、')}。当前读取状态 ${row.status}；投放数据未知。占比不是曝光数，不可凭它单独判断限流。`;
+        }).join('\n');}catch{/* 可选流量失败不丢已有基础数据 */}
+        if (merged.size === 0) return trafficSummary;
         // 播放量归一(views/plays 同义合并,只呈现一次;views 真采集优先)。
         if (merged.has("views") && merged.has("plays")) merged.delete("plays");
         const LABELS: Record<string, string> = {
@@ -102,7 +108,7 @@ return ((): ReviewSubjectReader => ({
         };
         return Array.from(merged.entries())
           .map(([k, v]) => `${LABELS[k] ?? k}：${v}`)
-          .join(" · ");
+          .join(" · ") + (trafficSummary?`\n${trafficSummary}`:"");
       } catch {
         return "";
       }

@@ -86,7 +86,7 @@ export function createChatStructuredTaskToolHost(
       if(!projectId)throw new Error("请指定要复盘的作品项目，不能用账号通用规律代替真实作品");
       const prepared=await ports.business.prepareReview(resolved.restored.context,{projectId,subject:args.subject?.trim(),extraBrief:clampExtraBrief(args.extraBrief)},scope.signal);
       scope.signal?.throwIfAborted();
-      return {node:{capability:"review.analyze",facets:prepared.facets},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+      return {node:{capability:"review.analyze",facets:{...prepared.facets,__reviewProjectId:projectId}},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
      }
      if(definition.name==="topic.enrich"){
       const args=resolved.input as {title:string;angle?:string;verifiedBrief?:string};

@@ -135,6 +135,7 @@ describe("scheduling contract", () => {
     // [T-258] favorites = 指定收藏夹采集(collection-bootstrap 建 job + collector 已接;补枚举修漂移)。
     expect(scheduledJobSourceKind.options).toEqual([
       "self.metrics",
+      "self.traffic",
       "comments",
       "self.detail",
       "benchmark",

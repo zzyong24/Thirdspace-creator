@@ -27,11 +27,13 @@ export interface CollectResult {
   itemsUpdated: number;
   message?: string;
   incomplete?: boolean;
+  continueCollection?: boolean;
 }
 
 /** runner 需要的 AI 生命周期窄端口(host 绑 aiService;测试注 fake)。不产候选,故无
  *  recordCandidate —— 只 markRunning / recordStep / markSucceeded / markFailed。 */
 export interface ScheduledCollectionAiPort {
+  deferCollection?(ctx:RequestContext,taskId:string):Promise<never>;
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
   recordStep(
     ctx: RequestContext,
@@ -90,6 +92,7 @@ export type Collector = (
   ctx: RequestContext,
   target: Record<string, unknown>,
   report: ReportProgress,
+  execution?: {taskId:string},
 ) => Promise<CollectResult>;
 
 export interface ScheduledCollectionDeps {
@@ -160,6 +163,7 @@ function sourceKindOf(taskType: string): string {
 
 const SOURCE_LABEL: Record<string, string> = {
   "self.metrics": "抖音主页作品",
+  "self.traffic": "作品流量来源",
   comments: "抖音评论",
   "self.detail": "抖音作品明细数据",
   // [T-212a] 对标他号作品（benchmark sourceKind）。
@@ -248,7 +252,7 @@ export async function runScheduledCollection(
     // 确定性采集(collector 内:抓真 XHR/DOM 抽值 → ingestion 落库 → 返回新鲜度统计)。
     // 绝不调 LLM —— 数值程序化抽取(SPEC §2 铁律①)。
     // [T-152] 传入 report:采集器在关键阶段上报进度(runner 节流 + best-effort 写 job_run)。
-    const result = await collector(ctx, target, report);
+    const result = await collector(ctx, target, report,{taskId:task.id});
     itemsNew = result.itemsNew;
     itemsUpdated = result.itemsUpdated;
 
@@ -263,6 +267,8 @@ export async function runScheduledCollection(
       toolCalls: [],
     });
 
+    if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id);
+    if (result.continueCollection) throw new Error("流量补采尚未完成，请继续原任务");
     if (result.incomplete) throw new Error(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
     await deps.ai.markSucceeded(ctx, task.id);
     runStatus = "succeeded";

@@ -22,8 +22,8 @@ import * as React from "react";
 
 /** 稿面 AI 按钮发起的一次对话请求(注入 rail)。 */
 export interface DraftChatRequest {
-  /** 置顶的专用工具 id(review.script / calibration.diagnose)。 */
-  readonly functionKey: string;
+  /** 可选的专用工具 id；内容判断省略，使用自由对话 loop。 */
+  readonly functionKey?: string;
   /** 话术文本 —— autoSend=true 时作为自动发出的消息;否则预填进输入框(T-055b)。 */
   readonly prefill: string;
   /**
@@ -68,6 +68,7 @@ interface DraftChatRequestContextValue {
    * resolve 空(no-op)。审核/盲预测按钮点击 = `await flushSave()` 后再 autoSend。
    */
   readonly flushSave: FlushSaveFn;
+  readonly flushSaveStrict: FlushSaveFn;
 }
 
 const DraftChatRequestContext =
@@ -116,9 +117,24 @@ export function DraftChatRequestProvider({
       }),
     ]);
   }, []);
+  const flushSaveStrict = React.useCallback<FlushSaveFn>(async () => {
+    const fn = flushFnRef.current;
+    if (!fn) throw new Error("编辑器尚未准备好，请稍后重试。");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("保存仍在处理中，本次未发送诊断。请稍后重试。")), 10000);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }, []);
   const value = React.useMemo<DraftChatRequestContextValue>(
-    () => ({ request, openChat, registerFlush, flushSave }),
-    [request, openChat, registerFlush, flushSave],
+    () => ({ request, openChat, registerFlush, flushSave, flushSaveStrict }),
+    [request, openChat, registerFlush, flushSave, flushSaveStrict],
   );
   return (
     <DraftChatRequestContext.Provider value={value}>
@@ -141,4 +157,5 @@ const NOOP_VALUE: DraftChatRequestContextValue = {
   openChat: () => {},
   registerFlush: () => {},
   flushSave: async () => {},
+  flushSaveStrict: async () => { throw new Error("请在稿面中使用内容诊断。"); },
 };

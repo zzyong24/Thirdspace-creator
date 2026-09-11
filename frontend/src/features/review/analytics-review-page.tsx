@@ -27,6 +27,7 @@
  */
 
 import * as React from "react";
+import {TrafficSourcesPanel} from "./traffic-sources-panel";
 
 import {
   ErrorState,
@@ -115,9 +116,8 @@ export function AnalyticsReviewPage({
         <ErrorState error={vm.error} />
       ) : (
         <>
-          {reviewEvidenceReady ? (
-            <ReviewAnalyzeIsland projectId={vm.projectId} />
-          ) : null}
+          <ReviewAnalyzeIsland projectId={vm.projectId} />
+          {reviewsWiring ? <TrafficSourcesPanel projectId={vm.projectId} /> : null}
           {/* [T-063e] 预测 vs 实际 对照(校准飞轮对照步并入复盘)。空指标态也照渲 ——
               已锁定盲预测、数据还没回流,正是「等待回流」该被看见的时刻。 */}
           {predictionComparison !== undefined ? (

@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 24,
-    "tasks_done": 31,
-    "tasks_total": 96,
-    "tasks_pending": 65,
+    "verticals": 25,
+    "tasks_done": 32,
+    "tasks_total": 98,
+    "tasks_pending": 66,
     "verticals_complete": 0
   },
   "verticals": [
@@ -1489,6 +1489,49 @@
           "backend/src/modules/candidate/candidate.service.test.ts",
           "backend/src/modules/intelligence/topic-preview-runner.test.ts"
         ]
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-954",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-954",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t954-director-content-loop.md",
+        "docs/research/t954-director/**",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "read_set": [
+        "docs/features/t954-director-content-loop.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "ai-worker/**",
+        "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
       },
       "step_read_set": {},
       "step_exclusive_resources": {},

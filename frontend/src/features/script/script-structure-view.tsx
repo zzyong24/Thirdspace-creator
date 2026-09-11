@@ -185,7 +185,7 @@ function ScriptStructureEditor({
   readonly assetLabels: Readonly<Record<string, string>>;
 }) {
   const router = useRouter();
-  const { openChat } = useDraftChatRequest();
+  const { openChat, registerFlush } = useDraftChatRequest();
   const [local, setLocal] = React.useState<EditableSection[]>(() =>
     toEditable(sections),
   );
@@ -218,7 +218,12 @@ function ScriptStructureEditor({
     appliedKeyRef.current = propsKey;
   }, [artifactId, currentVersionId, propsKey, sections, status]);
 
-  const markDirty = React.useCallback(() => setStatus("dirty"), []);
+  const editRevisionRef = React.useRef(0);
+  const markDirty = React.useCallback(() => {
+    editRevisionRef.current += 1;
+    statusRef.current = "dirty";
+    setStatus("dirty");
+  }, []);
 
   const updateSection = React.useCallback(
     (index: number, patch: Partial<EditableSection>) => {
@@ -275,61 +280,86 @@ function ScriptStructureEditor({
     (s) => s.heading.trim().length > 0 || s.body.trim().length > 0,
   );
 
+  const pendingSaveRef = React.useRef<Promise<PersistedScriptAnchor | null> | null>(null);
   const persistCurrentSections = React.useCallback(async (
     changeSummary = "结构编辑",
   ): Promise<PersistedScriptAnchor | null> => {
-    if (!artifactId && !projectId) {
-      // fixture-only 渲染(结构测试):不打契约,仅本地翻「已保存」。
+    if (pendingSaveRef.current) return pendingSaveRef.current;
+    const revision = editRevisionRef.current;
+    const saving = (async () => {
+      if (!artifactId && !projectId) {
+        // fixture-only 渲染(结构测试):不打契约,仅本地翻「已保存」。
+        setStatus("saved");
+        return null;
+      }
+      if (nonEmpty.length === 0) throw new Error("当前稿为空，请先填写内容。");
+      setStatus("saving");
+      // 真项目还没有脚本 artifact → 首存 getOrCreate(与 TipTap 保存同路径)。
+      let targetId = artifactId;
+      if (!targetId && projectId) {
+        const ensured = await ensureScriptArtifact(projectId, null);
+        targetId = ensured.artifactId as string;
+      }
+      if (!targetId) throw new Error("no script artifact target");
+      const expectedCurrentVersionId =
+        persistedAnchorRef.current?.artifactId === targetId
+          ? persistedAnchorRef.current.versionId
+          : undefined;
+      const payloadSections = nonEmpty.map((s, i) => ({
+        id: s.id || `script-section-${i}`,
+        type: s.type,
+        heading: s.heading,
+        body: s.body,
+        // 金句段型语义上即强调;其余保留原 emphasis(TipTap 整段加粗的往返)。
+        emphasis: s.type === "golden_quote" ? true : s.emphasis,
+        startSeconds: s.startSeconds,
+        endSeconds: s.endSeconds,
+        // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
+        ...(s.visual ? { visual: s.visual } : {}),
+      }));
+      const created = (await client.createArtifactVersion({
+        params: { artifactId: targetId },
+        query: undefined,
+        body: {
+          ...(expectedCurrentVersionId ? { expectedCurrentVersionId } : {}),
+          // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
+          // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
+          contentText: plainTextFromSections(
+            payloadSections as unknown as ReadonlyArray<ScriptSectionView>,
+          ),
+          contentData: { sections: payloadSections },
+          changeSummary,
+        },
+      })) as unknown as { id?: string };
+      const versionId = created.id?.trim();
+      if (!versionId) throw new Error("script version id missing after save");
+      const anchor = { artifactId: targetId, versionId };
+      persistedAnchorRef.current = anchor;
+      if (revision !== editRevisionRef.current) throw new Error("保存期间稿件有新修改，请重试诊断。");
+      statusRef.current = "saved";
       setStatus("saved");
-      return null;
+      router.refresh();
+      return anchor;
+    })();
+    pendingSaveRef.current = saving;
+    try {
+      return await saving;
+    } catch (error) {
+      statusRef.current = "dirty";
+      setStatus("dirty");
+      throw error;
+    } finally {
+      pendingSaveRef.current = null;
     }
-    if (nonEmpty.length === 0) return null;
-    setStatus("saving");
-    // 真项目还没有脚本 artifact → 首存 getOrCreate(与 TipTap 保存同路径)。
-    let targetId = artifactId;
-    if (!targetId && projectId) {
-      const ensured = await ensureScriptArtifact(projectId, null);
-      targetId = ensured.artifactId as string;
-    }
-    if (!targetId) throw new Error("no script artifact target");
-    const expectedCurrentVersionId =
-      persistedAnchorRef.current?.artifactId === targetId
-        ? persistedAnchorRef.current.versionId
-        : undefined;
-    const payloadSections = nonEmpty.map((s, i) => ({
-      id: s.id || `script-section-${i}`,
-      type: s.type,
-      heading: s.heading,
-      body: s.body,
-      // 金句段型语义上即强调;其余保留原 emphasis(TipTap 整段加粗的往返)。
-      emphasis: s.type === "golden_quote" ? true : s.emphasis,
-      startSeconds: s.startSeconds,
-      endSeconds: s.endSeconds,
-      // [T-387b] 凝固分镜原样带回(结构编辑不洗掉分镜真源;无 visual 的段不带字段)。
-      ...(s.visual ? { visual: s.visual } : {}),
-    }));
-    const created = (await client.createArtifactVersion({
-      params: { artifactId: targetId },
-      query: undefined,
-      body: {
-        ...(expectedCurrentVersionId ? { expectedCurrentVersionId } : {}),
-        // 不写 contentData.html:读侧会从新 sections 重拼编辑器 HTML,
-        // 避免结构改动被旧富文本真值盖掉(双向一致的关键)。
-        contentText: plainTextFromSections(
-          payloadSections as unknown as ReadonlyArray<ScriptSectionView>,
-        ),
-        contentData: { sections: payloadSections },
-        changeSummary,
-      },
-    })) as unknown as { id?: string };
-    const versionId = created.id?.trim();
-    if (!versionId) throw new Error("script version id missing after save");
-    const anchor = { artifactId: targetId, versionId };
-    persistedAnchorRef.current = anchor;
-    setStatus("saved");
-    router.refresh();
-    return anchor;
   }, [artifactId, projectId, nonEmpty, router]);
+
+  React.useEffect(() => {
+    registerFlush(async () => {
+      if (pendingSaveRef.current) await pendingSaveRef.current;
+      if (statusRef.current === "dirty") await persistCurrentSections();
+    });
+    return () => registerFlush(null);
+  }, [registerFlush, persistCurrentSections]);
 
   const handleSave = React.useCallback(async () => {
     try {

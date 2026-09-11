@@ -302,7 +302,7 @@ export interface AICopilotContentProps {
      * null/nonce=0 = 还没发起(首帧),不动。nonce 天然去重(重渲不重复发)。
      */
     readonly request?: {
-      readonly functionKey: string;
+      readonly functionKey?: string;
       readonly prefill: string;
       readonly autoSend?: boolean;
       readonly selection?: {
@@ -718,7 +718,7 @@ export function AICopilotContent({
     React.useState<string | null>(null);
   const inFlightComposerRequestRef = React.useRef<{
     nonce: number;
-    functionKey: string;
+    functionKey?: string;
     messageCountBefore: number;
     mode: "required" | "available";
   } | null>(null);
@@ -730,7 +730,7 @@ export function AICopilotContent({
   const contextRequest =
     pendingComposerRequest ?? activeRequest ?? stickyScriptPatchRequest;
   const functionKey =
-    contextRequest?.functionKey || searchParams?.get("fn") || undefined;
+    contextRequest ? contextRequest.functionKey : searchParams?.get("fn") || undefined;
   const functionKeyCommandIdentity = contextRequest
     ? `request:${contextRequest.nonce}:${functionKey ?? ""}`
     : functionKey
@@ -1372,7 +1372,7 @@ export function AICopilotContent({
     if (request) {
       // entry function key 在失败的首次请求中已被 one-shot 消费；重试前重新武装，保证
       // regenerate 仍是 script.patch，而不是退化为普通闲聊或整稿生成。
-      quickFunctionKeyRef.current = request.functionKey;
+      quickFunctionKeyRef.current = request.functionKey ?? null;
       const lastUserMessageIndex = messages.findLastIndex(
         (message) => message.role === "user",
       );
@@ -1434,7 +1434,7 @@ export function AICopilotContent({
       if (streaming) return;
       handledRequestNonceRef.current = req.nonce;
       beginComposerRequest(req);
-      quickFunctionKeyRef.current = req.functionKey;
+      quickFunctionKeyRef.current = req.functionKey ?? null;
       setPrompt("");
       const pending = Promise.resolve(sendMessage({ text }));
       // sendMessage Promise 只代表请求已提交，不代表流、工具和候选卡成功。附件等本轮资源
@@ -1501,7 +1501,7 @@ export function AICopilotContent({
     if (explicitRequest) {
       beginComposerRequest(explicitRequest);
       // transport.body 是发送瞬间求值；同步写 ref，避免 React state 尚未提交就退化为普通聊天。
-      quickFunctionKeyRef.current = explicitRequest.functionKey;
+      quickFunctionKeyRef.current = explicitRequest.functionKey ?? null;
     } else if (stickyRequest) {
       // 用户没有点“重试”而是发送了新消息，说明已经离开上一次失败命令；旧重试快照到此失效，
       // 避免将来一次无关的网络错误又被误写成“局部改写中断”。段落本身仍只是本轮可选锚点。
@@ -2858,12 +2858,14 @@ export function AICopilotContent({
                     ) {
                       const o = out as {
                         items?: ChatLearningItem[];
+                        projectId?: string | null; observations?: string[]; hypotheses?: string[]; nextExperiment?: string; insufficientReason?: string;
                         error?: string | null;
                       };
                       return (
                         <ChatLearningsCard
                           key={key}
                           items={o.items ?? []}
+                          projectId={o.projectId} observations={o.observations} hypotheses={o.hypotheses} nextExperiment={o.nextExperiment} insufficientReason={o.insufficientReason}
                           error={o.error ?? null}
                         />
                       );

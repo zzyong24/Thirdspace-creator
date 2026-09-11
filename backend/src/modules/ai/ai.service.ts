@@ -1629,7 +1629,7 @@ export function createAiService(deps: ServiceDeps): AiService {
           const m = (raw ?? {}) as Record<string, unknown>;
           const title = typeof m.title === "string" ? m.title : "";
           if (!title) continue;
-          const insight = typeof m.insight === "string" ? m.insight : "";
+          const insight = [typeof m.insight === "string" ? m.insight : "", typeof m.source === "string" && m.source.trim() ? `来源依据：${m.source}` : "", typeof m.applicability === "string" && m.applicability.trim() ? `适用条件：${m.applicability}` : ""].filter(Boolean).join("\n");
           // [DATA-H06] 稳定键 = title+insight:第 N 条失败重试不重复建前 N-1 条 Learning。
           const key = adoptKey("learning", title, insight);
           if (adopted.has(key)) continue;
