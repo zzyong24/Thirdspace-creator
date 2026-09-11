@@ -1015,3 +1015,5 @@
 {"ts":"2026-09-11T09:44:30.498Z","actor":"taskctl","action":"start","task":"T-953","sha_before":"7acd3ff345ee","sha_after":"97043629e31e"}
 {"ts":"2026-09-11T09:54:15.406Z","actor":"taskctl","action":"complete","task":"T-953","evidence":"Archify2.17已安装；34模块44对静态依赖，21份HTML全部9/9 showcase、四视口浏览器检查通过，视觉复核与索引交互验证完成；保留全局reconcile233既有漂移。见docs/research/t953-architecture/verification.json","sha_before":"97043629e31e","sha_after":"95de79c5aeaa"}
 {"ts":"2026-09-11T10:32:33.845Z","actor":"taskctl","action":"start","task":"T-954","sha_before":"26aae960702b","sha_after":"ec3d93e94879"}
+{"ts":"2026-09-11T11:34:40.649Z","actor":"taskctl","action":"start","task":"T-955","sha_before":"08165342ab9e","sha_after":"0d90e96deada"}
+{"ts":"2026-09-11T11:50:25.897Z","actor":"taskctl","action":"complete","task":"T-955","evidence":"39c5749e本地1.1.0已安装启动PID85188；42打包测试、hdiutil VALID、codesign、首页HTTP200通过；1800数据库文件备份校验一致。真实模型效果未验收，保留T916全局233旧漂移；详见docs/verification/t955-local-package.md","sha_before":"0d90e96deada","sha_after":"a1b972cce7a2"}
