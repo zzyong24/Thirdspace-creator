@@ -1528,6 +1528,7 @@ describe("[T-177] 评论增量 watermark early-break", () => {
 function makeFakeMetricsContext(
   pages: Array<Array<{ aweme_id: string }>>,
   loggedIn = true,
+  options: {decodeDelayMs?:number;completeAfterLast?:boolean} = {},
 ) {
   const calls = { openContext: 0, close: 0, goto: 0, wheel: 0 };
   type MetricsResp = { url(): string; json(): Promise<unknown> };
@@ -1536,7 +1537,7 @@ function makeFakeMetricsContext(
     const resp: MetricsResp = {
       url: () => "https://creator.douyin.com/aweme/v1/creator/item/list?count=12",
       // has_more:true 故意保持 —— 证明停翻页来自 knownAwemeIds early-stop 而非 has_more=false。
-      json: () => Promise.resolve({ aweme_list: works, has_more: true }),
+      json: async () => { if(options.decodeDelayMs)await new Promise(resolve=>setTimeout(resolve,options.decodeDelayMs));return {aweme_list:works,has_more:options.completeAfterLast ? works!==pages.at(-1) : true}; },
     };
     for (const h of handlers) h(resp);
   };
@@ -3385,4 +3386,23 @@ describe("[T-235c] fetchDouyinCollectsVideos(fake context)", () => {
     );
     expect(out).toEqual([]);
   });
+});
+
+describe('T-951 大账号作品目录',()=>{
+ it('默认翻页能读取1200条而非40轮截断',async()=>{
+  const pages=Array.from({length:100},(_,p)=>Array.from({length:12},(_,i)=>({aweme_id:`large-${p*12+i}`})));
+  const f=makeFakeMetricsContext(pages,true,{completeAfterLast:true});const result=await fetchDouyinMetrics({authDir:'/isolated-fake',capturedAt:'2026-09-11T00:00:00.000Z'},{openContext:f.openContext});
+  expect(result.records).toHaveLength(1200);expect(result.incomplete).toBeUndefined();expect(f.calls.close).toBe(1);
+ });
+ it('人为翻页预算到顶仍返回已有记录，并明确未完成',async()=>{
+  const f=makeFakeMetricsContext([[{aweme_id:'a'}],[{aweme_id:'b'}],[{aweme_id:'c'}]]);
+  const result=await fetchDouyinMetrics({authDir:'/isolated-fake',capturedAt:'2026-09-11T00:00:00.000Z',maxPages:1},{openContext:f.openContext});
+  expect(result.records).toHaveLength(2);expect(result).toMatchObject({incomplete:true});
+ });
+});
+
+it('T-951 等待延迟响应体解析完成才判断无新页或关闭浏览器',async()=>{
+ const f=makeFakeMetricsContext([[{aweme_id:'slow-a'}],[{aweme_id:'slow-b'}]],true,{decodeDelayMs:20,completeAfterLast:true});
+ const result=await fetchDouyinMetrics({authDir:'/isolated-fake',capturedAt:'2026-09-11T00:00:00.000Z'},{openContext:f.openContext});
+ expect(result.records).toHaveLength(2);expect(result.incomplete).toBeUndefined();expect(f.calls.close).toBe(1);
 });

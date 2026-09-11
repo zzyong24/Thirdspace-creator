@@ -26,6 +26,7 @@ export interface CollectResult {
   itemsNew: number;
   itemsUpdated: number;
   message?: string;
+  incomplete?: boolean;
 }
 
 /** runner 需要的 AI 生命周期窄端口(host 绑 aiService;测试注 fake)。不产候选,故无
@@ -262,6 +263,7 @@ export async function runScheduledCollection(
       toolCalls: [],
     });
 
+    if (result.incomplete) throw new Error(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
     await deps.ai.markSucceeded(ctx, task.id);
     runStatus = "succeeded";
     runError = null;

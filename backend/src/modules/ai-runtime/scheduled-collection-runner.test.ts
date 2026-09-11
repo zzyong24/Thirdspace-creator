@@ -422,3 +422,11 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
     expect(deps.ai.markSucceeded).toHaveBeenCalled();
   });
 });
+
+it('T-951 部分采集保留已写数量，终态不伪报全量成功',async()=>{
+ const deps=makeDeps({collectors:{'self.metrics':async()=>({itemsNew:1200,itemsUpdated:0,incomplete:true,message:'已保存1200条，目录尚未采完，请继续采集'})}});
+ await runScheduledCollection(ctx,baseTask,deps);
+ expect(deps.ai.markSucceeded).not.toHaveBeenCalled();
+ expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx,baseTask.id,expect.stringContaining('已保存1200条'));
+ expect(deps.runs.updateRun).toHaveBeenCalledWith(ctx,'run1',expect.objectContaining({status:'failed',itemsNew:1200}));
+});

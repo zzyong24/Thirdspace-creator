@@ -820,6 +820,8 @@ async function probeDouyinSessionAcceptance(
 export interface FetchDouyinMetricsResult {
   records: MetricRecord[];
   identity: DouyinSelfIdentity | null;
+  /** 已取回部分目录但尚未确认翻到底；调用方保留已验证数据并提示继续采集。 */
+  incomplete?: boolean;
 }
 
 /**
@@ -834,7 +836,7 @@ export async function fetchDouyinMetrics(
   deps: FetchDouyinMetricsDeps = {},
 ): Promise<FetchDouyinMetricsResult> {
   opts.signal?.throwIfAborted();
-  const maxPages = opts.maxPages ?? 40; // 上限(每页 ~12 条;has_more=false 会提前停,40 覆盖 ~480 作品)
+  const maxPages = opts.maxPages ?? 500; // 千条账号需超过40轮；仍保留有界预算与平台原限速
   const gateway = opts.gateway ?? instantNoopGateway; // [gate-F7 插装点②] creator-center 每页限流
   const openCtx = deps.openContext ?? realMetricsOpenContext;
   const ctx = await openCtx(opts.authDir, true, opts.signal);
@@ -855,17 +857,24 @@ export async function fetchDouyinMetrics(
     const known = opts.knownAwemeIds ?? new Set<string>();
     let reachedKnown = false; // 某页作品全已知(且非空)→ 已翻到旧作品,提前停翻页
     let hasMore = true; // 直到某页 work_list 明确 has_more=false 才停(比"无新响应"可靠)
+    let hasMoreObserved = false;
     const readHasMore = (j: unknown): boolean | undefined => {
       const root = (j ?? {}) as Record<string, unknown>;
       const data = (root.data ?? root) as Record<string, unknown>;
       const v = root.has_more ?? data.has_more ?? root.hasMore ?? data.hasMore;
       return typeof v === "boolean" ? v : v == null ? undefined : Boolean(v);
     };
-    page.on("response", async (resp) => {
+    const pending = new Set<Promise<void>>();
+    let failedResponses = 0;
+    const drainResponses = async () => { while (pending.size) await Promise.all([...pending]); };
+    page.on("response", (resp) => {
       const url = resp.url();
       if (!WORK_LIST_HINTS.some((h) => url.includes(h))) return;
+      const parsing = (async () => {
       try {
-        const j = await resp.json();
+        const finished = await resp.finished?.();
+        if (finished) throw finished;
+        const j = resp.text ? JSON.parse(await resp.text()) : await resp.json();
         workJsons.push(j);
         const works = parseWorkList(j);
         // [T-177] 本页作品全部已是库里已知 awemeId(且非空)→ 无新作品 → 更深页更旧、也全已知 → 停翻页。
@@ -878,10 +887,13 @@ export async function fetchDouyinMetrics(
         }
         for (const w of works) seenIds.add(w.awemeId);
         const hm = readHasMore(j);
-        if (hm !== undefined) hasMore = hm;
+        if (hm !== undefined) { hasMore = hm; hasMoreObserved = true; }
       } catch {
-        /* 非 JSON 响应,忽略 */
+        failedResponses += 1;
       }
+      })();
+      pending.add(parsing);
+      void parsing.finally(() => pending.delete(parsing));
     });
 
     // [T-202] 导航加退避重试(瞬时超时自愈,不首撞就抛)。
@@ -891,18 +903,21 @@ export async function fetchDouyinMetrics(
       signal:opts.signal,
     });
     await page.waitForTimeout(3000); // 等首屏 work_list XHR 回来
+    await drainResponses();
 
     // 激进滚动翻页:window 滚到底 + 滚最高可滚容器 + End 键 + 滚轮。单一 mouse.wheel 触不到列表
     // 容器,是只抓到首页 24 条的根因。停止:某页 has_more=false(可靠),或连续 3 轮无新作品,或到上限。
     let staleRounds = 0;
-    for (let i = 0; i < maxPages; i++) {
+    let interrupted = false;
+    let pagesScrolled = 0;
+    for (; pagesScrolled < maxPages; pagesScrolled++) {
       opts.signal?.throwIfAborted();
       if (!hasMore) break; // 抖音 work_list 明确翻到底
       // [T-177 增量化] 首屏(goto 后)或上一轮滚动加载的页已全是库里已知作品 → 提前停,少滚几十页。
       if (reachedKnown) break;
       const before = seenIds.size;
       // [gate-F7 插装点②] 每翻一页 acquire 一次 creator-center(把翻页真正限速,防高频撞账号风控)。
-      await withDouyinChannel(gateway, "creator-center", async () => {
+      try { await withDouyinChannel(gateway, "creator-center", async () => {
         await page
           .evaluate(() => window.scrollTo(0, document.body.scrollHeight))
           .catch(() => {});
@@ -932,11 +947,20 @@ export async function fetchDouyinMetrics(
         await page.mouse.wheel(0, 3000).catch(() => {});
         await page.waitForTimeout(2500);
       }, undefined, opts.signal);
+      } catch (error) {
+        opts.signal?.throwIfAborted();
+        if (!seenIds.size) throw error;
+        interrupted = true;
+        break;
+      }
+      await drainResponses();
       if (reachedKnown) break; // [T-177] 本轮滚动加载的页全是已知作品 → 停
       staleRounds = seenIds.size === before ? staleRounds + 1 : 0;
       if (staleRounds >= 3) break; // has_more 不返回时的兜底,防死循环
     }
 
+    await drainResponses();
+    if (!workJsons.length) throw new Error("作品目录未收到有效响应，请检查登录状态或稍后重试");
     const works = workJsons.flatMap((j) => parseWorkList(j));
     // 去重(同 aweme_id 保留最后一次)。明细(完播/转粉)留后续补;先返回列表级真实指标。
     const byId = new Map<string, DouyinWork>();
@@ -962,7 +986,7 @@ export async function fetchDouyinMetrics(
       console.log("[douyin-identity] 未解析到身份(作品列表空/无 author/脏 JSON)");
     }
     opts.signal?.throwIfAborted();
-    return { records, identity };
+    return { records, identity, ...((interrupted || failedResponses > 0 || (!reachedKnown && (pagesScrolled >= maxPages || (hasMoreObserved && hasMore)))) ? {incomplete:true} : {}) };
   } catch (error) {
     opts.signal?.throwIfAborted();
     throw error;
@@ -2638,7 +2662,7 @@ export async function fetchDouyinWorkListExport(
       const { readFile: rf } = await import("node:fs/promises");
       return new Uint8Array(await rf(p));
     });
-  const downloadTimeoutMs = deps.downloadTimeoutMs ?? 40_000;
+  const downloadTimeoutMs = deps.downloadTimeoutMs ?? 180_000; // 大账号导出保留生成时间；注入超时仍可覆盖
   const gateway = deps.gateway ?? instantNoopGateway; // [gate-F7 插装点⑤] creator-center 整个导出一次限流
 
   const ctx = await openCtx(opts.authDir, true, opts.signal);

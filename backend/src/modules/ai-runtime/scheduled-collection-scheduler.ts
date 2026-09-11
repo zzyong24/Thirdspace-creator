@@ -241,7 +241,7 @@ export async function triggerScheduledJob(
     inputData: {
       idempotencyKey,
       jobId: job.id,
-      target: job.target,
+      target: options?.skipHeavyBackfill ? {...job.target,__skipHeavyBackfill:true} : job.target,
       ...(job.sourceKind === "topic.daily" ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
     },
   });

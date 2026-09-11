@@ -84,8 +84,13 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   if(task.startedAt||task.modelCallStartedAt||task.retryOfTaskId)throw new Error('已有旧执行事实，须恢复原任务，不能重置预算');
   const raw=task.inputData as Record<string,unknown>,snapshot=workerSkillSnapshotSchema.parse((task.runtimeData as Record<string,unknown>).skillSnapshot);
   if(snapshot.userId!==ctx.userId||snapshot.accountId!==ctx.accountId)throw new Error('原任务缺少对标拆解授权快照');
-  const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:raw.jobRunId,target:raw.target??{},skillSnapshot:snapshot});
-  const [run]=await db.select().from(jobRuns).where(eq(jobRuns.id,modelInput.jobRunId)),[job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
+  // 调度run是持久绑定真相；dispatch内存对象不是恢复输入。旧任务可缺jobRunId，不能猜ID。
+  const runs=await db.select().from(jobRuns).where(eq(jobRuns.aiTaskId,task.id));
+  if(runs.length!==1)throw new Error('采集任务尚未绑定唯一运行记录，请恢复原调度任务');
+  const run=runs[0]!;
+  if(raw.jobRunId!==undefined&&raw.jobRunId!==run.id)throw new Error('采集任务运行引用与真实绑定不符');
+  const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:run.id,target:raw.target??{},skillSnapshot:snapshot});
+  const [job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
   if(run?.aiTaskId!==task.id||run?.jobId!==modelInput.jobId||run?.userId!==ctx.userId||job?.userId!==ctx.userId||job?.accountId!==ctx.accountId||job?.sourceKind!==modelInput.sourceKind)throw new Error('原调度运行归属不符');
   return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:deps.budget});
  },
@@ -98,7 +103,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const ref:ExecutionRef={executionTaskId:claim.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},control=new AbortController(),signal=AbortSignal.any([abort.signal,control.signal]);
   let finished=false,checking=false;
   const verify=()=>leases.withLease(ref,'admission',async scope=>{signal.throwIfAborted();return bindScheduledFlywheel(scope);});
-  const bound=await verify(),ctx=bound.context,task:ScheduledCollectionTask={id:bound.business.id,taskType:bound.business.taskType,inputData:bound.business.inputData as Record<string,unknown>};
+  const bound=await verify(),ctx=bound.context,task:ScheduledCollectionTask={id:bound.business.id,taskType:bound.business.taskType,inputData:{...(bound.business.inputData as Record<string,unknown>),jobId:bound.input.jobId,jobRunId:bound.input.jobRunId,target:bound.input.target}};
   const checkInput=(c:RequestContext,id:string)=>{if(c.userId!==ctx.userId||c.accountId!==ctx.accountId||id!==task.id)throw new Error('飞轮生命周期归属不符');};
   const finish=async(status:'succeeded'|'failed',errorMessage?:string)=>{
    const current=await leases.withLease(ref,'settlement',async({task})=>task);

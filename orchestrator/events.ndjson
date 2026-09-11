@@ -1008,3 +1008,5 @@
 {"ts":"2026-09-10T03:03:15.346Z","actor":"taskctl","action":"complete","task":"T-949","evidence":"原 Skill 3.27.1 统一 loop 基线；初始化接线回归 3/3、quick_validate、diff-check 通过；仅指引与模板变更，未改执行引擎。","sha_before":"a4168a19c8ae","sha_after":"fab7c055ea02"}
 {"ts":"2026-09-10T04:15:49.682Z","actor":"taskctl","action":"start","task":"T-950","sha_before":"b1a1467d8b50","sha_after":"d4dc07af1bf5"}
 {"ts":"2026-09-10T04:22:56.715Z","actor":"taskctl","action":"block","task":"T-950","reason":"已恢复33文件约4.10GB且33/33公开下载验证通过；203文件未找到确认副本，待更多来源/具体缺失实例。未宣称整体恢复完成。","sha_before":"d4dc07af1bf5","sha_after":"b075797ae012"}
+{"ts":"2026-09-11T09:15:12.725Z","actor":"taskctl","action":"start","task":"T-951","sha_before":"d99f7c589bc4","sha_after":"540dc76a2326"}
+{"ts":"2026-09-11T09:28:00.306Z","actor":"taskctl","action":"block","task":"T-951","reason":"源码修复与213项聚焦回归通过；待安装包更新及真实千条账号验收，未声称线上全通过。全局类型/边界/reconcile既有欠债另列SPEC，未改宽基线。","sha_before":"540dc76a2326","sha_after":"b6c07ad0ddab"}

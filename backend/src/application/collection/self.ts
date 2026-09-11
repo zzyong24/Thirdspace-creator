@@ -28,7 +28,7 @@ ai:Transport;
 createAiTaskAttemptId:()=>string;
 resolveCoverBackfillLimit:()=>number;
 configuration:{CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT?:string;CREATOROS_LEARNING_GROUNDING_MIN_METRICS?:string;CREATOROS_TOPIC_ATTRIBUTION_LIMIT?:string;CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE?:string;CREATOROS_ATTRIBUTION_LOW_MULTIPLE?:string};
-readMetrics:(ctx:RequestContext,capturedAt:string)=>Promise<{records:import("../../modules/ingestion").MetricRecord[];identity:Parameters<ReturnType<typeof import("../../modules/ingestion").createIngestionService>["ingestApprovedDouyinBatch"]>[1]["identity"]}>;
+readMetrics:(ctx:RequestContext,capturedAt:string)=>Promise<{incomplete?:boolean;records:import("../../modules/ingestion").MetricRecord[];identity:Parameters<ReturnType<typeof import("../../modules/ingestion").createIngestionService>["ingestApprovedDouyinBatch"]>[1]["identity"]}>;
 readExport:(ctx:RequestContext)=>Promise<Uint8Array>;
 readCover:(ctx:RequestContext,awemeId:string)=>Promise<{coverUrl?:string}>;
 downloadDouyinImage:(url:string)=>Promise<{bytes:Uint8Array;mimeType:string}>;
@@ -311,6 +311,7 @@ return async (ctx, target, report) => {
         });
         throw detailErr;
       }
+      if (rawBatch.incomplete) return {itemsNew:metricsWritten+detailWritten,itemsUpdated:0,incomplete:true,message:`本轮已保存可确认的作品数据，但目录尚未采完，请继续采集；已取回 ${rawBatch.records.length} 条目录记录`};
       // 5) 已确认公开并落库后再跑初始化重活：①封面回填 ②逐字稿 + 重建排队。
       //    隐藏/未知作品从未进入本轮写集合，重活天然只看到公开作品。
       // [T-433 S1] 绑号轻触发:target.__skipHeavyBackfill 时跳过尾部逐条重活(封面/逐字稿/重建),
