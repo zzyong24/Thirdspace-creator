@@ -4023,7 +4023,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);

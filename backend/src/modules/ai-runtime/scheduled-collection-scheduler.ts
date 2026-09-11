@@ -242,7 +242,7 @@ export async function triggerScheduledJob(
       idempotencyKey,
       jobId: job.id,
       target: options?.skipHeavyBackfill ? {...job.target,__skipHeavyBackfill:true} : job.target,
-      ...(job.sourceKind === "topic.daily" ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
+      ...(["topic.daily","self.metrics","self.detail","benchmark","favorites"].includes(job.sourceKind) ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
     },
   });
   if (task.status !== "queued" && task.status !== "running") {

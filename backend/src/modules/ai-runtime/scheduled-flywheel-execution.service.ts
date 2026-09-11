@@ -10,6 +10,7 @@ import {createExecutionWorkerOutcomeService} from '../execution/execution-worker
 import {createPersistentTaskService,type PersistentTaskClaim} from '../execution/persistent-task.service';
 import {createExecutionFlywheelGenerationService,type FlywheelGenerationDeps} from '../execution/execution-flywheel-generation.service';
 import {bindScheduledFlywheel} from '../execution/scheduled-flywheel-binding';
+import {createScheduledRunIntentService} from '../scheduling/daily-topic-run-intent.service';
 import {ScheduledFlywheelSuspended} from './scheduled-flywheel-suspension';
 import {benchmarkTeardownSchema,topicAttributionSchema,favoritesTriageSchema,flywheelKnowledgeResultSchema} from '@creatoros/ai-worker';
 import {normalizeDistillation,mergeDistillations,MAX_DISTILL_CONTENT_CHARS,DISTILL_CHUNK_CHARS} from './knowledge-distill-runner';
@@ -32,6 +33,7 @@ export type ScheduledFlywheelCollector=(ctx:RequestContext,task:ScheduledCollect
 export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlywheelDeps){
  const tasks=createPersistentTaskService(db,deps),authority=createExecutionAuthorityService(db,deps),leases=createExecutionLeaseService(db,deps),ledger=createExecutionCallLedgerService(db,deps),outcomes=createExecutionWorkerOutcomeService(db,deps),generation=createExecutionFlywheelGenerationService(db,deps),abort=new AbortController(),scopeStore=new AsyncLocalStorage<{ref:ExecutionRef;signal:AbortSignal}>();
  const now=deps.now??(()=>new Date().toISOString());
+ const runIntents=createScheduledRunIntentService(db,{now,nextId:prefix=>`${prefix}-${randomUUID()}`},sourceKinds);
  const activeRuns=new Set<Promise<void>>();
  const track=async(pending:Promise<void>)=>{activeRuns.add(pending);try{await pending;}finally{activeRuns.delete(pending);}};
  const favoriteAsr=deps.createFavoritesAsr?.(generation.runWorker);
@@ -76,6 +78,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  };
  const service={
  models,
+ ensureRunForTask:runIntents.ensureRunForTask,
  async prepare(ctx:RequestContext,aiTaskId:string){
   abort.signal.throwIfAborted();
   const [task]=await db.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??'')));
@@ -85,9 +88,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const raw=task.inputData as Record<string,unknown>,snapshot=workerSkillSnapshotSchema.parse((task.runtimeData as Record<string,unknown>).skillSnapshot);
   if(snapshot.userId!==ctx.userId||snapshot.accountId!==ctx.accountId)throw new Error('原任务缺少对标拆解授权快照');
   // 调度run是持久绑定真相；dispatch内存对象不是恢复输入。旧任务可缺jobRunId，不能猜ID。
-  const runs=await db.select().from(jobRuns).where(eq(jobRuns.aiTaskId,task.id));
-  if(runs.length!==1)throw new Error('采集任务尚未绑定唯一运行记录，请恢复原调度任务');
-  const run=runs[0]!;
+  const run=await runIntents.ensureRunForTask(ctx,task.id);
   if(raw.jobRunId!==undefined&&raw.jobRunId!==run.id)throw new Error('采集任务运行引用与真实绑定不符');
   const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:run.id,target:raw.target??{},skillSnapshot:snapshot});
   const [job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
@@ -111,7 +112,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
    const state=await ledger.inspect(ref);if(state.calls.some(row=>row.status==='started'||row.status==='unknown')){const result=await outcomes.recordFailure(ref,{outcome:'unknown_result',errorCode:'FLYWHEEL_CALL_REQUIRES_RECONCILIATION'});throw new ScheduledFlywheelSuspended(ref.executionTaskId,result.status);}
    const original=state.calls.find(row=>row.id===current.retryOfCallId),latest=original?state.calls.filter(row=>row.operationKey===original.operationKey).at(-1):undefined;
    if(status==='succeeded'&&original&&latest?.status!=='settled'){const result=await outcomes.recordFailure(ref,{outcome:'waiting_user',errorCode:'FLYWHEEL_RETRY_SOURCE_UNAVAILABLE'});throw new ScheduledFlywheelSuspended(ref.executionTaskId,result.status);}
-   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(aiTasks).set({status,completedAt:now(),errorMessage:errorMessage??null}).where(eq(aiTasks.id,task.id));await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now(),lastErrorMessage:errorMessage??null}).where(eq(executionTasks.id,ref.executionTaskId));});finished=true;
+   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(aiTasks).set({status,completedAt:now(),errorMessage:errorMessage??null}).where(eq(aiTasks.id,task.id));await scope.tx.update(jobRuns).set({status,error:errorMessage??null,finishedAt:now()}).where(eq(jobRuns.id,bound.input.jobRunId));await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now(),lastErrorMessage:errorMessage??null}).where(eq(executionTasks.id,ref.executionTaskId));});finished=true;
   };
   const ai:ScheduledCollectionAiPort={async markWaitingUser(c,id){
    checkInput(c,id);await verify();

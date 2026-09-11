@@ -7,10 +7,11 @@ platformAccountService:Pick<import("../../modules/platform-account").PlatformAcc
 dispatchScheduledCollection:ReturnType<typeof import("./collection-execution").createCollectionExecution>["dispatchScheduledCollection"];
 deps:{now:()=>string};
 ensureDailyRun:ReturnType<typeof import("../../modules/scheduling").createDailyTopicRunIntentService>["ensureRunForTask"];
+ensureCollectionRun:ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>["ensureRunForTask"];
 ensureCanonicalRubricForAccount:(accountId:string)=>Promise<void>;
 migrateProfile:(ctx:RequestContext)=>Promise<void>;
 scheduling:Transport;}){
-const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCanonicalRubricForAccount,migrateProfile,scheduling}=ports;
+const {aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun,ensureCollectionRun,ensureCanonicalRubricForAccount,migrateProfile,scheduling}=ports;
   const triggerDeps: TriggerDeps = {
     ai: {
       createTask: async (c, body) => {
@@ -24,6 +25,10 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
         if(job.sourceKind==="topic.daily"){
           if(!input.aiTaskId)throw new Error("每日选题缺少任务绑定");
           return ensureDailyRun(c,input.aiTaskId);
+        }
+        if(["self.metrics","self.detail","benchmark","favorites"].includes(job.sourceKind)){
+          if(!input.aiTaskId)throw new Error("采集缺少任务绑定");
+          return ensureCollectionRun(c,input.aiTaskId);
         }
         return schedulingService.createRun(c,input);
       },

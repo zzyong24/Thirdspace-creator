@@ -1010,3 +1010,5 @@
 {"ts":"2026-09-10T04:22:56.715Z","actor":"taskctl","action":"block","task":"T-950","reason":"已恢复33文件约4.10GB且33/33公开下载验证通过；203文件未找到确认副本，待更多来源/具体缺失实例。未宣称整体恢复完成。","sha_before":"d4dc07af1bf5","sha_after":"b075797ae012"}
 {"ts":"2026-09-11T09:15:12.725Z","actor":"taskctl","action":"start","task":"T-951","sha_before":"d99f7c589bc4","sha_after":"540dc76a2326"}
 {"ts":"2026-09-11T09:28:00.306Z","actor":"taskctl","action":"block","task":"T-951","reason":"源码修复与213项聚焦回归通过；待安装包更新及真实千条账号验收，未声称线上全通过。全局类型/边界/reconcile既有欠债另列SPEC，未改宽基线。","sha_before":"540dc76a2326","sha_after":"b6c07ad0ddab"}
+{"ts":"2026-09-11T09:34:51.921Z","actor":"taskctl","action":"start","task":"T-952","sha_before":"2fa37c4afa23","sha_after":"b004e6136318"}
+{"ts":"2026-09-11T09:41:10.920Z","actor":"taskctl","action":"complete","task":"T-952","evidence":"源码修复：87项聚焦回归、frontend tsc通过；RED两处阻断已复现。保留backend 13项存量测试类型错误、boundary7、semantic既有失败、reconcile233漂移（T-916），未替换安装包。见docs/features/t952-blocking-reliability.md","sha_before":"b004e6136318","sha_after":"8d17a2f2db65"}
