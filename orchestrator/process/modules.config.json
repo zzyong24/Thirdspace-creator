@@ -1112,6 +1112,40 @@
           "node orchestrator/process/boundary-scan.mjs"
         ]
       }
+    },
+    "T-956": {
+      "task_id": "T-956",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "docs/features/t956-installed-collection-stuck.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
     }
   }
 }
