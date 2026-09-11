@@ -4,9 +4,13 @@ import {runScheduledCollection,type Collector as ScheduledCollector,type Schedul
 export function createCollectionExecution(ports:{scheduledCollectors:Record<string,ScheduledCollector>;
 scheduledSignals:Pick<import("node:async_hooks").AsyncLocalStorage<AbortSignal>,"run">;
 flywheelSourceKinds:ReadonlySet<string>;
-scheduledFlywheel:Pick<ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>,"prepare">;
-schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun"|"getRun">;
+scheduledFlywheel:Pick<ReturnType<typeof import("../../modules/ai-runtime").createScheduledFlywheelExecutionService>,"prepare"|"recoverQueued">;
+schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun"|"getRun"|"listRunsByJob">;
 aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"getTask"|"markRunning"|"recordStep"|"markSucceeded"|"markFailed">;
+trafficQueue?:{
+ snapshot:(ctx:RequestContext)=>Promise<Array<{publicationId:string;externalId:string;requestedAt:string}>>;
+ fail:(ctx:RequestContext,rows:Array<{publicationId:string;externalId:string;requestedAt:string}>,message:string)=>Promise<unknown>;
+};
 deps:{now:()=>string};
 enqueueCollectionRun:(run:()=>Promise<void>)=>Promise<void>;
 wakeScheduledFlywheel:()=>void;
@@ -28,6 +32,7 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
     inputData: Record<string, unknown>;
   }) => {
     if(flywheelSourceKinds.has(task.taskType.replace(/^scheduled\./,""))){
+      const pending=task.taskType==="scheduled.self.traffic"?await ports.trafficQueue?.snapshot(ctx):undefined;
       let bound;
       try { bound=await scheduledFlywheel.prepare(ctx,task.id); }
       catch(error){
@@ -37,12 +42,24 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
         if(!current.executionTaskId){
           await aiService.markFailed(ctx,task.id,`采集准备失败：${message}`);
           const settled=await aiService.getTask(ctx,task.id);
-          const runId=task.inputData.jobRunId;
+          let runId=task.inputData.jobRunId;
+          // 重启读到的持久input不一定带dispatch内存里的jobRunId，按真实task关联回查。
+          if(runId===undefined && typeof settled.inputData?.jobId==='string'){
+            const matches=[];
+            for(let offset=0;;offset+=100){
+              const page=await schedulingService.listRunsByJob(ctx,settled.inputData.jobId,{limit:100,offset});
+              matches.push(...page.rows.filter(run=>run.aiTaskId===task.id));
+              if(offset+page.rows.length>=page.total||!page.rows.length)break;
+            }
+            if(matches.length>1)throw new Error('采集失败运行绑定不唯一',{cause:error});
+            runId=matches[0]?.id;
+          }
           if(!settled.executionTaskId && ['failed','cancelled'].includes(settled.status) && typeof runId==='string'){
             const run=await schedulingService.getRun(ctx,runId);
             if(run.aiTaskId!==task.id || run.jobId!==task.inputData.jobId)throw new Error('采集失败运行归属与原任务不符',{cause:error});
             if(run.status==='running')await schedulingService.updateRun(ctx,runId,{status:'failed',finishedAt:deps.now(),error:`采集准备失败：${message}`});
           }
+          if(!settled.executionTaskId && ['failed','cancelled'].includes(settled.status) && pending)await ports.trafficQueue?.fail(ctx,pending,`流量补采未能启动，已有数据已保留，请重试或查看任务中心。`);
         }
         throw error;
       }
@@ -75,5 +92,9 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
     );
   };
 
-return {collectFlywheel,dispatchScheduledCollection};
+  const recoverQueuedCollection=()=>scheduledFlywheel.recoverQueued(async(_ctx,_id,error)=>{throw new Error("采集恢复准备失败，请检查任务中心和恢复日志",{cause:error});},async(ctx,id)=>{
+    const task=await aiService.getTask(ctx,id);
+    return dispatchScheduledCollection(ctx,task);
+  });
+return {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection};
 }

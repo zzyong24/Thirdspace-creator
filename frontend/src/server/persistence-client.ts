@@ -2052,8 +2052,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const trafficService=createTrafficService(db,{now:deps.now,publishing:publishingService});
   const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{},schedule:'0 0 * * *',enabled:false,systemManaged:true});
   const startTrafficJob=async(ctx:RequestContext)=>{
-    const job=await ensureTrafficJob(ctx);
-    return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:()=>triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps),fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
+    return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
   const analytics = createAnalyticsTransport(() => analyticsService,{
     getProject:(ctx,id)=>trafficService.getProject(ctx,id),
@@ -4028,7 +4027,7 @@ FAVORITES_PROMOTE_PER_RUN
   // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
   // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-  const {collectFlywheel,dispatchScheduledCollection}=createCollectionExecution({scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,enqueueCollectionRun,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
+  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,enqueueCollectionRun,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -5721,9 +5720,9 @@ FAVORITES_PROMOTE_PER_RUN
         hasPending:async ctx=>(await trafficService.pending(ctx,1)).length>0,
         start:ctx=>startTrafficJob(ctx),shouldStop:control.shouldStop,
       });},
-      async flywheel(control){if(control.shouldStop())return;await scheduledFlywheel.recoverQueued(async(c,id)=>{if(!control.shouldStop())await aiService.markFailed(c,id,"调度任务准备未完成，请检查原任务配置");});if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5);},
+      async flywheel(control){if(control.shouldStop())return;await recoverQueuedCollection();if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5);},
     },
-    onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,error instanceof Error?error.name:"UnknownError"),
+    onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,kind==="flywheel"?error:error instanceof Error?error.name:"UnknownError"),
   });
   if(stoppingPreparation)await recoveryWake.stop();else recoveryWake.start();
 
