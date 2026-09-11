@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ai-runtime · 模块依赖 4",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        60,
+        187
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "type": "backend",
+      "label": "projects",
+      "sublabel": "项目",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/video-edit-candidate.ts",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "production",
+      "type": "backend",
+      "label": "production",
+      "sublabel": "业务模块",
+      "pos": [
+        590,
+        190
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/video-edit-candidate.ts",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "id": "material-links",
+      "type": "backend",
+      "label": "material-links",
+      "sublabel": "业务模块",
+      "pos": [
+        590,
+        340
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/video-edit-candidate.ts",
+          "line": 4
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ai-runtime-to-projects",
+      "from": "ai-runtime",
+      "to": "projects"
+    },
+    {
+      "id": "ai-runtime-to-production",
+      "from": "ai-runtime",
+      "to": "production"
+    },
+    {
+      "id": "ai-runtime-to-material-links",
+      "from": "ai-runtime",
+      "to": "material-links"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 3 / 15 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

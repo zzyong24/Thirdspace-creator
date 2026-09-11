@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "业务模块 · 无直接跨模块导入 3",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "publishing",
+      "type": "backend",
+      "label": "publishing",
+      "sublabel": "9 个非测试源码文件",
+      "pos": [
+        60,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "query-services",
+      "type": "backend",
+      "label": "query-services",
+      "sublabel": "6 个非测试源码文件",
+      "pos": [
+        430,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "reviews",
+      "type": "backend",
+      "label": "reviews",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        800,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "scheduling",
+      "type": "backend",
+      "label": "scheduling",
+      "sublabel": "9 个非测试源码文件",
+      "pos": [
+        60,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "taxonomy",
+      "type": "backend",
+      "label": "taxonomy",
+      "sublabel": "9 个非测试源码文件",
+      "pos": [
+        430,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "topic-attribution",
+      "type": "backend",
+      "label": "topic-attribution",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        800,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "trend-sources",
+      "type": "backend",
+      "label": "trend-sources",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        60,
+        320
+      ],
+      "size": [
+        280,
+        80
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "无连线的含义",
+      "items": [
+        "这些模块未检测到对其他业务模块的直接导入",
+        "仍可引用 contract、数据库基座和外部库"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "由应用层组合",
+      "items": [
+        "没有静态跨模块引用，不等于没有业务协作",
+        "注入端口、调用方和源码清单在目录中查看"
+      ]
+    }
+  ]
+}

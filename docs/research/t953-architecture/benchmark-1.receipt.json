@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/benchmark-1.json",
+  "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/benchmark-1.html",
+  "specification": {
+    "sha256": "58709674cfbe3b255edc8c7dfe47d2b8fd0f2f6f0375cd755e9567cc499224c0",
+    "bytes": 2624
+  },
+  "artifact": {
+    "sha256": "569a25aa13a1b086874ddb5fc584145d398a2b1acecf08847f039129ab3a5dd5",
+    "bytes": 796432
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "evidence": {
+    "verified": true,
+    "repository": "https://github.com/zzyong24/Thirdspace-creator",
+    "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+    "references": 4,
+    "linkMode": "local-only"
+  }
+}

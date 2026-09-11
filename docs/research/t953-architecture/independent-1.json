@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "业务模块 · 无直接跨模块导入 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "analytics",
+      "type": "backend",
+      "label": "analytics",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        60,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "assets",
+      "type": "backend",
+      "label": "assets",
+      "sublabel": "23 个非测试源码文件",
+      "pos": [
+        430,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "browser-sessions",
+      "type": "backend",
+      "label": "browser-sessions",
+      "sublabel": "4 个非测试源码文件",
+      "pos": [
+        800,
+        40
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "calibration",
+      "type": "backend",
+      "label": "calibration",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        60,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "candidate",
+      "type": "backend",
+      "label": "candidate",
+      "sublabel": "9 个非测试源码文件",
+      "pos": [
+        430,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "cli-invocations",
+      "type": "backend",
+      "label": "cli-invocations",
+      "sublabel": "1 个非测试源码文件",
+      "pos": [
+        800,
+        180
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "content-calendar",
+      "type": "backend",
+      "label": "content-calendar",
+      "sublabel": "7 个非测试源码文件",
+      "pos": [
+        60,
+        320
+      ],
+      "size": [
+        280,
+        80
+      ]
+    },
+    {
+      "id": "identity",
+      "type": "backend",
+      "label": "identity",
+      "sublabel": "6 个非测试源码文件",
+      "pos": [
+        430,
+        320
+      ],
+      "size": [
+        280,
+        80
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "无连线的含义",
+      "items": [
+        "这些模块未检测到对其他业务模块的直接导入",
+        "仍可引用 contract、数据库基座和外部库"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "由应用层组合",
+      "items": [
+        "没有静态跨模块引用，不等于没有业务协作",
+        "注入端口、调用方和源码清单在目录中查看"
+      ]
+    }
+  ]
+}

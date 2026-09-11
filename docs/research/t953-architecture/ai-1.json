@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ai · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "ai",
+      "type": "backend",
+      "label": "ai",
+      "sublabel": "AI 业务任务",
+      "pos": [
+        60,
+        185
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        880,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/agentic-proposal-staging.service.ts",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "type": "backend",
+      "label": "knowledge",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        145
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/agentic-proposal-staging.service.ts",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        880,
+        250
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/chat-host-context.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "candidate",
+      "type": "backend",
+      "label": "candidate",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        355
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/daily-topic-completion.service.ts",
+          "line": 6
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ai-to-execution",
+      "from": "ai",
+      "to": "execution"
+    },
+    {
+      "id": "ai-to-knowledge",
+      "from": "ai",
+      "to": "knowledge"
+    },
+    {
+      "id": "ai-to-ai-runtime",
+      "from": "ai",
+      "to": "ai-runtime"
+    },
+    {
+      "id": "ai-to-candidate",
+      "from": "ai",
+      "to": "candidate"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 4 / 7 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,982 @@
+[
+  {
+    "name": "ai-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-1.html",
+      "specification": {
+        "sha256": "3b46361fca856b04b6a05247bc92a447c273f58f42afc57c5f7c2539d697ae4d",
+        "bytes": 3012
+      },
+      "artifact": {
+        "sha256": "c3e6d091873a366133c5b91e74939cb833ce761c84377fe7859b54b19656bc4c",
+        "bytes": 797892
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "ai-2",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-2.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-2.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-2.html",
+      "specification": {
+        "sha256": "78fad8655eb7356c8b77c5eb68b2b4a57ae4ad847433659df409635d0869d1d6",
+        "bytes": 2546
+      },
+      "artifact": {
+        "sha256": "4eab384caf6304903deb79b1573e3c52ab991b53b6c3479488c523688d152cbd",
+        "bytes": 796291
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 4,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "ai-runtime-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-1.html",
+      "specification": {
+        "sha256": "412a005aab2f8a4ec705b68a7cfa5ce8f7d1957a594d002eb5fede1f433ff39c",
+        "bytes": 3116
+      },
+      "artifact": {
+        "sha256": "958cb71d537117010c4f43055d269fc2e0dcac990b71d33d80ee80e1788d2929",
+        "bytes": 798036
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "ai-runtime-2",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-2.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-2.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-2.html",
+      "specification": {
+        "sha256": "adc312b13171dcdfff0b006fce611db02f055c04c6e3e362e833492c4f357eee",
+        "bytes": 3085
+      },
+      "artifact": {
+        "sha256": "7aab0ae32b187e8ba4f2458162ca38b84d8ebfca794e54c9fb9fa59c8a3f46b9",
+        "bytes": 797935
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "ai-runtime-3",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-3.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-3.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-3.html",
+      "specification": {
+        "sha256": "ba3c5de63d9f2454150897bb5c9fdebb33625eaefb5a3cb6c4610e0c3bd3814d",
+        "bytes": 3130
+      },
+      "artifact": {
+        "sha256": "3dc14750df900b3038a808545618f18d842b9df9b93ff750208e5f39c74c26cd",
+        "bytes": 798026
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "ai-runtime-4",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-4.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-4.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-4.html",
+      "specification": {
+        "sha256": "606b902eea195458b797cd43b8e1fd7b19caf6151b2723feea54660e949cfdf9",
+        "bytes": 2640
+      },
+      "artifact": {
+        "sha256": "0ca3dba4bfdbc477349dfcbd483d47f6ab95a4c940f9e6dd4bc23b590b3cf1fd",
+        "bytes": 796483
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 4,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "artifacts-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/artifacts-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/artifacts-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/artifacts-1.html",
+      "specification": {
+        "sha256": "28c6656131f7a1bae7a313d2b2b1f05ae9c5b9c13caef9511d71df3a3edcdc1c",
+        "bytes": 1666
+      },
+      "artifact": {
+        "sha256": "204820193f94a9e46bd951e556af5eb23cff0caf78ee841a62501436244549b1",
+        "bytes": 793534
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "benchmark-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/benchmark-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/benchmark-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/benchmark-1.html",
+      "specification": {
+        "sha256": "58709674cfbe3b255edc8c7dfe47d2b8fd0f2f6f0375cd755e9567cc499224c0",
+        "bytes": 2624
+      },
+      "artifact": {
+        "sha256": "569a25aa13a1b086874ddb5fc584145d398a2b1acecf08847f039129ab3a5dd5",
+        "bytes": 796432
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 4,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "execution-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-1.html",
+      "specification": {
+        "sha256": "b7f392ddb08159aa8f44b9a83d3e13e8050fefebae469912245040d1a46f51ef",
+        "bytes": 3073
+      },
+      "artifact": {
+        "sha256": "d3c813743106ae31b86f8346d6ec2d952c97b5a778ceb12512d1beb04e856d36",
+        "bytes": 797929
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "execution-2",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-2.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-2.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-2.html",
+      "specification": {
+        "sha256": "e4358d308557c1d6a404bfdb1acabfbb5084dd26086571719e8a7f3663e1586e",
+        "bytes": 3119
+      },
+      "artifact": {
+        "sha256": "d689714923936d2271856f5a6a18e17f8ebf54e2e6ff0736d9a7658ef8c93698",
+        "bytes": 797973
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 5,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "execution-3",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-3.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-3.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/execution-3.html",
+      "specification": {
+        "sha256": "489187a372c17093e293a692188649d60ef0f0426b6918d259ec93f6b7fa7450",
+        "bytes": 1689
+      },
+      "artifact": {
+        "sha256": "c5bef0b2cabd2686b98d1d76e8a5f4e83c89ae48bed35e5fcc84a34c1acef94c",
+        "bytes": 793604
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "favorites-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/favorites-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/favorites-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/favorites-1.html",
+      "specification": {
+        "sha256": "62449ae0d47efcd6d4cc9bcf925af644ca165586f71e3a4500610c3e7ee79a3b",
+        "bytes": 2171
+      },
+      "artifact": {
+        "sha256": "af1d2405a6cb8f51c6e0f5fa1bb58066ce1e0a154a1bf078a4a68498bc2d9f8f",
+        "bytes": 795018
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 3,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "independent-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-1.html",
+      "specification": {
+        "sha256": "cbc7d361bfc42e3ddba49af71f3ae33d8761e56b06584645d58146cd59b359ad",
+        "bytes": 2614
+      },
+      "artifact": {
+        "sha256": "55fb88ca63cef18ff4e1db95a070869637366e14d479928c1f6266e207ef9b25",
+        "bytes": 799547
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "independent-2",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-2.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-2.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-2.html",
+      "specification": {
+        "sha256": "1913fb0eff42fd800acc365d833d68fd5d4811e74dff2f09fda1e4d2e7e9d6b7",
+        "bytes": 2615
+      },
+      "artifact": {
+        "sha256": "8fd5c74cfde27a297d4c5dd3887bb1519634552b73ed394acf85ecdc004aa33b",
+        "bytes": 799549
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "independent-3",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-3.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-3.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-3.html",
+      "specification": {
+        "sha256": "1b9c5923f21dbef3ffcac9e43d432d650ef8a6ca78ed47e66984b45f2de7ee2d",
+        "bytes": 2373
+      },
+      "artifact": {
+        "sha256": "8193babf7f01a2a17d31cb6c7b1c9ef73cea86e7d0ac169a23420c5b1cdfbbfc",
+        "bytes": 798438
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "intelligence-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/intelligence-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/intelligence-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/intelligence-1.html",
+      "specification": {
+        "sha256": "6780b7f9983a84ec7645509e819e58ba87901be32c77c934c3c5f53a015e2de8",
+        "bytes": 2670
+      },
+      "artifact": {
+        "sha256": "43ab4a043bfdee277b048039ee2a62ed2e4126617f0714e00089fc65c5684dcc",
+        "bytes": 796520
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 4,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "overview",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/overview.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/overview.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/overview.html",
+      "specification": {
+        "sha256": "c8552443ac40eb03fd464c45d6cb211fd2fd1e17a2289e2eec29e07aa114fc38",
+        "bytes": 3974
+      },
+      "artifact": {
+        "sha256": "f439fb2ce2a276eb1199774f27d47544d81a5823b2707dbc06dbf1e579f9d252",
+        "bytes": 808781
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 2,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "projects-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/projects-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/projects-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/projects-1.html",
+      "specification": {
+        "sha256": "ba11d03230543c2081fa2c02ab3979dcfa7675780ccee3f676529ee0700dcfec",
+        "bytes": 1669
+      },
+      "artifact": {
+        "sha256": "f40010fabea0ef682c9873018c1e08587719a444abb26bbf7af7db9ee43b8103",
+        "bytes": 793535
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "review-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/review-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/review-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/review-1.html",
+      "specification": {
+        "sha256": "8f7b0cfb3351b8862cb32a8113622d9589f9ef23b6f929a739fe82775886bf1e",
+        "bytes": 1653
+      },
+      "artifact": {
+        "sha256": "68a182c29e2f10d2dd46764bb623cff31326990e26d71d60d8820edd605f68f0",
+        "bytes": 793514
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "search-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/search-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/search-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/search-1.html",
+      "specification": {
+        "sha256": "4f22b7bd4a12a63747a2048d9cb6329c74c06e95f8801b2f37947824b2306d70",
+        "bytes": 1648
+      },
+      "artifact": {
+        "sha256": "d5938a154a413a12006c3347b5c89e1e664d60a71908119ab5adb1fd544578ef",
+        "bytes": 793491
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  },
+  {
+    "name": "settings-1",
+    "diagram_type": "architecture",
+    "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/settings-1.html",
+    "delivery": {
+      "schemaVersion": 1,
+      "ok": true,
+      "command": "deliver",
+      "type": "architecture",
+      "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/settings-1.json",
+      "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/settings-1.html",
+      "specification": {
+        "sha256": "5db701a182fef01446d28c80713a302fbfb0a0fa44d2a73eb5b8f665c0d97263",
+        "bytes": 1629
+      },
+      "artifact": {
+        "sha256": "30ddab8761f36a4c0b97b960d3e963c0a64b9650c19ad94562927244f80c6b35",
+        "bytes": 793453
+      },
+      "validation": {
+        "checksPassed": 9,
+        "checkCount": 9,
+        "compositionProfile": "showcase",
+        "compositionStatus": "pass",
+        "errors": 0,
+        "warnings": 0
+      },
+      "evidence": {
+        "verified": true,
+        "repository": "https://github.com/zzyong24/Thirdspace-creator",
+        "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+        "references": 2,
+        "linkMode": "local-only"
+      }
+    },
+    "validation": {
+      "checks": 9,
+      "ok": true,
+      "composition": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "browser_evidence": "pass",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "visual_review_scope": "全量浅色截图联系表；总览与四分支、无导入组另做大图及深色抽检。未逐项操作图内全部导出格式。"
+  }
+]

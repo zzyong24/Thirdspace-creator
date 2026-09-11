@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "intelligence · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "intelligence",
+      "type": "backend",
+      "label": "intelligence",
+      "sublabel": "内容雷达",
+      "pos": [
+        60,
+        187
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/intelligence/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/intelligence/collection-tool-ports.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        590,
+        190
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/intelligence/intelligence-transcript-bridge.ts",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "type": "backend",
+      "label": "projects",
+      "sublabel": "项目",
+      "pos": [
+        590,
+        340
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/intelligence/radar-project-queue.service.ts",
+          "line": 5
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "intelligence-to-execution",
+      "from": "intelligence",
+      "to": "execution"
+    },
+    {
+      "id": "intelligence-to-ai-runtime",
+      "from": "intelligence",
+      "to": "ai-runtime"
+    },
+    {
+      "id": "intelligence-to-projects",
+      "from": "intelligence",
+      "to": "projects"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 3 / 3 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

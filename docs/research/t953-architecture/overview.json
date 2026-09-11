@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CreatorOS · 当前模块架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "页面与桌面入口",
+      "sublabel": "frontend · Next.js / Tauri",
+      "pos": [
+        40.0,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "host",
+      "type": "backend",
+      "label": "宿主装配与 RPC",
+      "sublabel": "frontend/src/server",
+      "pos": [
+        300.0,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "应用组合层",
+      "sublabel": "backend/src/application",
+      "pos": [
+        560.0,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "domain",
+      "type": "backend",
+      "label": "业务模块",
+      "sublabel": "backend/src/modules",
+      "pos": [
+        820.0,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "持久化",
+      "sublabel": "Drizzle · PGlite / PostgreSQL",
+      "pos": [
+        1080.0,
+        270
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "cli",
+      "type": "external",
+      "label": "CLI / MCP",
+      "sublabel": "mcp-server",
+      "pos": [
+        300.0,
+        60
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "contract",
+      "type": "backend",
+      "label": "类型与操作契约",
+      "sublabel": "contract",
+      "pos": [
+        560.0,
+        60
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "exec",
+      "type": "backend",
+      "label": "持久执行权",
+      "sublabel": "modules/execution",
+      "pos": [
+        820.0,
+        500
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "模型与工具 Worker",
+      "sublabel": "ai-worker",
+      "pos": [
+        560.0,
+        500
+      ],
+      "size": [
+        200,
+        76
+      ]
+    },
+    {
+      "id": "models",
+      "type": "cloud",
+      "label": "模型供应商",
+      "sublabel": "Pi provider / HTTP",
+      "pos": [
+        300.0,
+        500
+      ],
+      "size": [
+        200,
+        76
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ui-host",
+      "from": "ui",
+      "to": "host",
+      "label": "RPC"
+    },
+    {
+      "id": "cli-host",
+      "from": "cli",
+      "to": "host",
+      "label": "HTTP",
+      "labelDy": 48
+    },
+    {
+      "id": "host-app",
+      "from": "host",
+      "to": "app",
+      "label": "装配"
+    },
+    {
+      "id": "app-domain",
+      "from": "app",
+      "to": "domain",
+      "label": "服务端口"
+    },
+    {
+      "id": "domain-db",
+      "from": "domain",
+      "to": "db",
+      "label": "读写"
+    },
+    {
+      "id": "app-contract",
+      "from": "app",
+      "to": "contract",
+      "label": "引用"
+    },
+    {
+      "id": "domain-exec",
+      "from": "domain",
+      "to": "exec",
+      "label": "提交任务",
+      "labelDy": 48
+    },
+    {
+      "id": "exec-worker",
+      "from": "exec",
+      "to": "worker",
+      "label": "执行与回执"
+    },
+    {
+      "id": "worker-models",
+      "from": "worker",
+      "to": "models",
+      "label": "API"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "当前实现",
+      "items": [
+        "宿主装配和部分采集仍在 frontend/src/server",
+        "架构约定与迁移现状须分开阅读"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "依赖读法",
+      "items": [
+        "本图箭头表示主要调用方向",
+        "完整静态模块导入另附逐模块视图"
+      ]
+    }
+  ]
+}

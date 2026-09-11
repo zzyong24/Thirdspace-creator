@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/intelligence-1.json",
+  "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/intelligence-1.html",
+  "specification": {
+    "sha256": "6780b7f9983a84ec7645509e819e58ba87901be32c77c934c3c5f53a015e2de8",
+    "bytes": 2670
+  },
+  "artifact": {
+    "sha256": "43ab4a043bfdee277b048039ee2a62ed2e4126617f0714e00089fc65c5684dcc",
+    "bytes": 796520
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "evidence": {
+    "verified": true,
+    "repository": "https://github.com/zzyong24/Thirdspace-creator",
+    "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+    "references": 4,
+    "linkMode": "local-only"
+  }
+}

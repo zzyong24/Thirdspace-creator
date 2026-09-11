@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-3.json",
+  "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/independent-3.html",
+  "specification": {
+    "sha256": "1b9c5923f21dbef3ffcac9e43d432d650ef8a6ca78ed47e66984b45f2de7ee2d",
+    "bytes": 2373
+  },
+  "artifact": {
+    "sha256": "8193babf7f01a2a17d31cb6c7b1c9ef73cea86e7d0ac169a23420c5b1cdfbbfc",
+    "bytes": 798438
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

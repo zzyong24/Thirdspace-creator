@@ -1,0 +1,192 @@
+[
+  {
+    "key": "ai-1",
+    "module": "ai",
+    "targets": [
+      "execution",
+      "knowledge",
+      "ai-runtime",
+      "candidate"
+    ]
+  },
+  {
+    "key": "ai-2",
+    "module": "ai",
+    "targets": [
+      "assets",
+      "artifacts",
+      "material-links"
+    ]
+  },
+  {
+    "key": "ai-runtime-1",
+    "module": "ai-runtime",
+    "targets": [
+      "execution",
+      "intelligence",
+      "ai",
+      "artifacts"
+    ]
+  },
+  {
+    "key": "ai-runtime-2",
+    "module": "ai-runtime",
+    "targets": [
+      "assets",
+      "benchmark",
+      "settings",
+      "trend-sources"
+    ]
+  },
+  {
+    "key": "ai-runtime-3",
+    "module": "ai-runtime",
+    "targets": [
+      "candidate",
+      "favorites",
+      "publishing",
+      "scheduling"
+    ]
+  },
+  {
+    "key": "ai-runtime-4",
+    "module": "ai-runtime",
+    "targets": [
+      "projects",
+      "production",
+      "material-links"
+    ]
+  },
+  {
+    "key": "artifacts-1",
+    "module": "artifacts",
+    "targets": [
+      "projects"
+    ]
+  },
+  {
+    "key": "benchmark-1",
+    "module": "benchmark",
+    "targets": [
+      "ai",
+      "ai-runtime",
+      "execution"
+    ]
+  },
+  {
+    "key": "execution-1",
+    "module": "execution",
+    "targets": [
+      "ai",
+      "assets",
+      "taxonomy",
+      "ai-runtime"
+    ]
+  },
+  {
+    "key": "execution-2",
+    "module": "execution",
+    "targets": [
+      "browser-sessions",
+      "projects",
+      "review",
+      "scheduling"
+    ]
+  },
+  {
+    "key": "execution-3",
+    "module": "execution",
+    "targets": [
+      "intelligence"
+    ]
+  },
+  {
+    "key": "favorites-1",
+    "module": "favorites",
+    "targets": [
+      "execution",
+      "ai-runtime"
+    ]
+  },
+  {
+    "key": "intelligence-1",
+    "module": "intelligence",
+    "targets": [
+      "execution",
+      "ai-runtime",
+      "projects"
+    ]
+  },
+  {
+    "key": "projects-1",
+    "module": "projects",
+    "targets": [
+      "artifacts"
+    ]
+  },
+  {
+    "key": "review-1",
+    "module": "review",
+    "targets": [
+      "execution"
+    ]
+  },
+  {
+    "key": "search-1",
+    "module": "search",
+    "targets": [
+      "knowledge"
+    ]
+  },
+  {
+    "key": "settings-1",
+    "module": "settings",
+    "targets": [
+      "assets"
+    ]
+  },
+  {
+    "key": "independent-1",
+    "module": null,
+    "members": [
+      "analytics",
+      "assets",
+      "browser-sessions",
+      "calibration",
+      "candidate",
+      "cli-invocations",
+      "content-calendar",
+      "identity"
+    ],
+    "targets": []
+  },
+  {
+    "key": "independent-2",
+    "module": null,
+    "members": [
+      "ingestion",
+      "knowledge",
+      "learnings",
+      "material-links",
+      "notifications",
+      "platform-account",
+      "positioning",
+      "production"
+    ],
+    "targets": []
+  },
+  {
+    "key": "independent-3",
+    "module": null,
+    "members": [
+      "publishing",
+      "query-services",
+      "reviews",
+      "scheduling",
+      "taxonomy",
+      "topic-attribution",
+      "trend-sources"
+    ],
+    "targets": []
+  }
+]

@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ai · 模块依赖 2",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "ai",
+      "type": "backend",
+      "label": "ai",
+      "sublabel": "AI 业务任务",
+      "pos": [
+        60,
+        187
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "type": "backend",
+      "label": "assets",
+      "sublabel": "素材",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/execution-candidate.service.ts",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "type": "backend",
+      "label": "artifacts",
+      "sublabel": "稿件与版本",
+      "pos": [
+        590,
+        190
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/reconstruct-completion.service.ts",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "material-links",
+      "type": "backend",
+      "label": "material-links",
+      "sublabel": "业务模块",
+      "pos": [
+        590,
+        340
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai/structured-target-adoption.service.ts",
+          "line": 10
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ai-to-assets",
+      "from": "ai",
+      "to": "assets"
+    },
+    {
+      "id": "ai-to-artifacts",
+      "from": "ai",
+      "to": "artifacts"
+    },
+    {
+      "id": "ai-to-material-links",
+      "from": "ai",
+      "to": "material-links"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 3 / 7 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

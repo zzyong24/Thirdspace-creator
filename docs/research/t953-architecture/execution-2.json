@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "execution · 模块依赖 2",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        60,
+        185
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "browser-sessions",
+      "type": "backend",
+      "label": "browser-sessions",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/execution-browser-login-snapshot.service.ts",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "type": "backend",
+      "label": "projects",
+      "sublabel": "项目",
+      "pos": [
+        880,
+        145
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "type": "backend",
+      "label": "review",
+      "sublabel": "审核",
+      "pos": [
+        880,
+        250
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/model-worker-dispatcher.ts",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "id": "scheduling",
+      "type": "backend",
+      "label": "scheduling",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        355
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/persistent-task.service.ts",
+          "line": 6
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "execution-to-browser-sessions",
+      "from": "execution",
+      "to": "browser-sessions"
+    },
+    {
+      "id": "execution-to-projects",
+      "from": "execution",
+      "to": "projects"
+    },
+    {
+      "id": "execution-to-review",
+      "from": "execution",
+      "to": "review"
+    },
+    {
+      "id": "execution-to-scheduling",
+      "from": "execution",
+      "to": "scheduling"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 4 / 9 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

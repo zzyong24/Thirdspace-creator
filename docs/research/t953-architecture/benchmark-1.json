@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "benchmark · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "benchmark",
+      "type": "backend",
+      "label": "benchmark",
+      "sublabel": "对标",
+      "pos": [
+        60,
+        187
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/benchmark/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "type": "backend",
+      "label": "ai",
+      "sublabel": "AI 业务任务",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/benchmark/benchmark-transcription.service.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        590,
+        190
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/benchmark/benchmark-transcription.service.ts",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        590,
+        340
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/benchmark/benchmark-transcription.service.ts",
+          "line": 9
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "benchmark-to-ai",
+      "from": "benchmark",
+      "to": "ai"
+    },
+    {
+      "id": "benchmark-to-ai-runtime",
+      "from": "benchmark",
+      "to": "ai-runtime"
+    },
+    {
+      "id": "benchmark-to-execution",
+      "from": "benchmark",
+      "to": "execution"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 3 / 3 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

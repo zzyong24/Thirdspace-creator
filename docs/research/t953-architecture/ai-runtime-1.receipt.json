@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-1.json",
+  "output": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/research/t953-architecture/ai-runtime-1.html",
+  "specification": {
+    "sha256": "412a005aab2f8a4ec705b68a7cfa5ce8f7d1957a594d002eb5fede1f433ff39c",
+    "bytes": 3116
+  },
+  "artifact": {
+    "sha256": "958cb71d537117010c4f43055d269fc2e0dcac990b71d33d80ee80e1788d2929",
+    "bytes": 798036
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "evidence": {
+    "verified": true,
+    "repository": "https://github.com/zzyong24/Thirdspace-creator",
+    "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+    "references": 5,
+    "linkMode": "local-only"
+  }
+}

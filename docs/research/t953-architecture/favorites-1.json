@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "favorites · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "favorites",
+      "type": "backend",
+      "label": "favorites",
+      "sublabel": "收藏",
+      "pos": [
+        60,
+        182
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/favorites/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/favorites/scheduled-favorites-asr.service.ts",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        590,
+        190
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/favorites/scheduled-favorites-asr.service.ts",
+          "line": 9
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "favorites-to-execution",
+      "from": "favorites",
+      "to": "execution"
+    },
+    {
+      "id": "favorites-to-ai-runtime",
+      "from": "favorites",
+      "to": "ai-runtime"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 2 / 2 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

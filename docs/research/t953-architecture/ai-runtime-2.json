@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ai-runtime · 模块依赖 2",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        60,
+        185
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "type": "backend",
+      "label": "assets",
+      "sublabel": "素材",
+      "pos": [
+        880,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/asset-processing-business-adapter.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "benchmark",
+      "type": "backend",
+      "label": "benchmark",
+      "sublabel": "对标",
+      "pos": [
+        880,
+        145
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/benchmark-collector.ts",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "type": "backend",
+      "label": "settings",
+      "sublabel": "设置",
+      "pos": [
+        880,
+        250
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/channel-model-config.ts",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "trend-sources",
+      "type": "backend",
+      "label": "trend-sources",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        355
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/chat-trend-read.ts",
+          "line": 4
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ai-runtime-to-assets",
+      "from": "ai-runtime",
+      "to": "assets"
+    },
+    {
+      "id": "ai-runtime-to-benchmark",
+      "from": "ai-runtime",
+      "to": "benchmark"
+    },
+    {
+      "id": "ai-runtime-to-settings",
+      "from": "ai-runtime",
+      "to": "settings"
+    },
+    {
+      "id": "ai-runtime-to-trend-sources",
+      "from": "ai-runtime",
+      "to": "trend-sources"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 4 / 15 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "projects · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "projects",
+      "type": "backend",
+      "label": "projects",
+      "sublabel": "项目",
+      "pos": [
+        60,
+        182
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/projects/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "type": "backend",
+      "label": "artifacts",
+      "sublabel": "稿件与版本",
+      "pos": [
+        590,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/projects/project-transcription-target.service.ts",
+          "line": 5
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "projects-to-artifacts",
+      "from": "projects",
+      "to": "artifacts"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 1 / 1 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

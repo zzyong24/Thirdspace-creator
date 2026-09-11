@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "ai-runtime · 模块依赖 3",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        60,
+        185
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "candidate",
+      "type": "backend",
+      "label": "candidate",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/daily-topic-business-adapter.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "favorites",
+      "type": "backend",
+      "label": "favorites",
+      "sublabel": "收藏",
+      "pos": [
+        880,
+        145
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/favorites-distill-runner.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "publishing",
+      "type": "backend",
+      "label": "publishing",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        250
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/platform-draft-adoption.ts",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "id": "scheduling",
+      "type": "backend",
+      "label": "scheduling",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        355
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+          "line": 13
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ai-runtime-to-candidate",
+      "from": "ai-runtime",
+      "to": "candidate"
+    },
+    {
+      "id": "ai-runtime-to-favorites",
+      "from": "ai-runtime",
+      "to": "favorites"
+    },
+    {
+      "id": "ai-runtime-to-publishing",
+      "from": "ai-runtime",
+      "to": "publishing"
+    },
+    {
+      "id": "ai-runtime-to-scheduling",
+      "from": "ai-runtime",
+      "to": "scheduling"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 4 / 15 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}

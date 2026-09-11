@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "execution · 模块依赖 1",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/zzyong24/Thirdspace-creator",
+      "revision": "336f5fcf01e8711597d595a172aa3354f64e1959",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "execution",
+      "sublabel": "持久执行内核",
+      "pos": [
+        60,
+        185
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/index.ts"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "type": "backend",
+      "label": "ai",
+      "sublabel": "AI 业务任务",
+      "pos": [
+        880,
+        40
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/asset-execution-binding.ts",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "type": "backend",
+      "label": "assets",
+      "sublabel": "素材",
+      "pos": [
+        880,
+        145
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/asset-execution-recovery.ts",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "id": "taxonomy",
+      "type": "backend",
+      "label": "taxonomy",
+      "sublabel": "业务模块",
+      "pos": [
+        880,
+        250
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/execution-asset-processing.service.ts",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "id": "ai-runtime",
+      "type": "backend",
+      "label": "ai-runtime",
+      "sublabel": "任务准备与宿主执行",
+      "pos": [
+        880,
+        355
+      ],
+      "size": [
+        240,
+        76
+      ],
+      "sources": [
+        {
+          "path": "backend/src/modules/execution/execution-asset-result.service.ts",
+          "line": 5
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "execution-to-ai",
+      "from": "execution",
+      "to": "ai"
+    },
+    {
+      "id": "execution-to-assets",
+      "from": "execution",
+      "to": "assets"
+    },
+    {
+      "id": "execution-to-taxonomy",
+      "from": "execution",
+      "to": "taxonomy"
+    },
+    {
+      "id": "execution-to-ai-runtime",
+      "from": "execution",
+      "to": "ai-runtime"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "箭头含义：源码引用",
+      "items": [
+        "方向为引用方 → 被引用模块；包含类型引用",
+        "线段不重复标注同一含义；证据见节点与依赖清单"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "范围",
+      "items": [
+        "本页 4 / 9 个直接依赖",
+        "端口注入与运行时动态调用不计入静态导入"
+      ]
+    }
+  ]
+}
