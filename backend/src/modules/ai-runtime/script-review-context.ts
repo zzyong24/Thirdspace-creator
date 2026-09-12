@@ -28,14 +28,14 @@ export interface ScriptReviewPositioningReader {
   getPositioningCenter(ctx: RequestContext): Promise<unknown>;
 }
 
-// [T-124] 把 active 违禁词表渲成一段可注入 L2 语义审的文本(让模型照表复核 lint 精确匹配漏掉的
-// 谐音/变体/拆字/同义命中)。纯函数、确定性、无 IO —— 违禁词是确定的,注进 prompt 让模型也照表审。
+// 将配置规则及说明交给语义审核；字面命中只说明出现了该字符串，不证明违规。
 export function buildLexiconBlock(
   rules: {
     tier: string;
     category: string;
     pattern: string;
     replacement: string | null;
+    note?: string;
   }[],
 ): string {
   if (rules.length === 0) {
@@ -46,7 +46,7 @@ export function buildLexiconBlock(
       (r) =>
         `· [${r.tier}/${r.category}] ${r.pattern}${
           r.replacement ? ` → 建议:${r.replacement}` : ""
-        }`,
+        }${r.note ? `；规则说明:${r.note}` : ""}`,
     )
     .join("\n");
 }

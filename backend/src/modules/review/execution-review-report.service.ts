@@ -52,7 +52,8 @@ export function createExecutionReviewReportService(db: Db, deps: { now?: () => s
         const quoted = (finding: { quote: string }) => finding.quote.length > 0 && snapshot.script.includes(finding.quote);
         const lintFindings = snapshot.lintFindings.filter(quoted);
         const llmFindings = review.findings.filter(quoted);
-        const verdict = review.verdict === "block" || lintFindings.some(f => f.tier === "official_hard") ? "block" : review.verdict === "risk" || lintFindings.length > 0 ? "risk" : "pass";
+        // 字面命中只保留为复核线索；风险判定来自模型对完整原稿和用户规则的语义审核。
+        const verdict = review.verdict;
         const unavailable = async (): Promise<never> => { throw new ConflictError("审核提交不允许创建任务或重读稿件"); };
         const reports = createReviewGateService({ db: tx as unknown as Db, now: () => stamp, nextId: () => resultId, ai: { createTask: unavailable }, script: { getCurrentScriptRef: unavailable } });
         await reports.saveReport(context, { projectId: snapshot.projectId, artifactId: snapshot.artifactId, artifactVersion: snapshot.artifactVersion, summary: review.summary, verdict, lintFindings, llmFindings, modelLabel });

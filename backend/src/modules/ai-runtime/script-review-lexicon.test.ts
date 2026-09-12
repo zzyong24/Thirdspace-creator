@@ -16,11 +16,13 @@ describe("buildLexiconBlock — 违禁词表注进语义审 prompt(T-124 照表�
         category: "导流",
         pattern: "加微信",
         replacement: "关注主页",
+        note: "仅审核要求站外联系的表达",
       },
       { tier: "empirical", category: "夸大", pattern: "最强", replacement: null },
     ]);
     expect(block).toContain("[official_hard/导流] 加微信 → 建议:关注主页");
     expect(block).toContain("[empirical/夸大] 最强");
+    expect(block).toContain("规则说明:仅审核要求站外联系的表达");
     // replacement 为 null 的条目不加箭头(不编造替换)
     expect(block).not.toContain("最强 → 建议");
   });

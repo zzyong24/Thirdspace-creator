@@ -9,8 +9,8 @@ let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const c=await createDb();db=c.db;close=()=>c.client.close();});afterAll(async()=>close?.());
 const finding={quote:"保证赚钱",category:"夸大",severity:"warn",reason:"需核实",suggestion:"描述实际结果",ruleRef:null};
 const lint={ruleId:"official-rule",quote:"保证赚钱",offset:0,tier:"official_hard",category:"夸大",replacement:null,note:"硬规则"};
-async function fixture(id:string,changes:{object?:unknown;modelLabel?:string|null;lintFindings?:unknown[];partial?:boolean}={}){
- const snapshot={projectId:`project-${id}`,artifactId:`script-${id}`,artifactVersion:2,script:"保证赚钱是不当承诺，应描述实际案例。",lintFindings:changes.lintFindings ?? [lint]};
+async function fixture(id:string,changes:{object?:unknown;modelLabel?:string|null;lintFindings?:unknown[];partial?:boolean;script?:string}={}){
+ const snapshot={projectId:`project-${id}`,artifactId:`script-${id}`,artifactVersion:2,script:changes.script ?? "保证赚钱是不当承诺，应描述实际案例。",lintFindings:changes.lintFindings ?? [lint]};
  const modelInput={kind:"model.structured",skillId:"script.review",facets:{__reviewSnapshot:JSON.stringify(snapshot)}};
  const tasks=createPersistentTaskService(db,{now});const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{modelInput}});
  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:"script.review",projectId:snapshot.projectId,inputData:{projectId:snapshot.projectId},status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:stamp});
@@ -23,7 +23,7 @@ async function fixture(id:string,changes:{object?:unknown;modelLabel?:string|nul
 }
 it("真实报告同事务提交且并发重放幂等，无候选写入，保留冻结版本与模型名",async()=>{
  const f=await fixture("review-once");const [a,b]=await Promise.all([f.service.commitResult(f.ref,f.commit),f.service.commitResult(f.ref,f.commit)]);expect(a).toEqual(b);expect(a).toEqual({resultId:`srreport:${f.call.id}`,aiTaskId:"review-once"});
- const rows=await db.select().from(scriptReviewReports).where(eq(scriptReviewReports.id,a.resultId));expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({projectId:f.snapshot.projectId,artifactId:f.snapshot.artifactId,artifactVersion:2,verdict:"block",summary:"审核完成",modelLabel:"real-provider-model",llmFindings:[finding],lintFindings:[lint]});
+ const rows=await db.select().from(scriptReviewReports).where(eq(scriptReviewReports.id,a.resultId));expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({projectId:f.snapshot.projectId,artifactId:f.snapshot.artifactId,artifactVersion:2,verdict:"pass",summary:"审核完成",modelLabel:"real-provider-model",llmFindings:[finding],lintFindings:[lint]});
  expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,"review-once"))).toHaveLength(0);
  expect((await db.select().from(aiTasks).where(eq(aiTasks.id,"review-once")))[0]).toMatchObject({status:"succeeded",completedAt:stamp});
  expect((await f.tasks.get(ctx,f.task.id)).status).toBe("succeeded");
@@ -70,3 +70,18 @@ it("错误任务类型、冻结Skill、坏快照与跨账号映射均不能借�
 });
 
 it("partial审核不能冒充完成报告",async()=>{ const f=await fixture("review-partial",{partial:true});await expect(f.service.commitResult(f.ref,f.commit)).rejects.toThrow("审核原始报告不完整");expect((await f.tasks.get(ctx,f.task.id)).status).toBe("running");expect(await db.select().from(scriptReviewReports).where(eq(scriptReviewReports.projectId,f.snapshot.projectId))).toHaveLength(0); });
+
+it.each([
+ {id:"keyboard",script:"按QQ键释放技能，再移动角色。",verdict:"pass",summary:"按键操作无站外联络意图",findings:[]},
+ {id:"contact",script:"加我QQ领取资料，再联系报名。",verdict:"block",summary:"明确要求站外联系领取资料",findings:[{quote:"加我QQ领取资料",category:"导流",severity:"block",reason:"要求观众站外联系以领取资料",suggestion:null,ruleRef:"公约34"}]},
+])("同一词表命中由语义复核决定：$id",async ({id,script,verdict,summary,findings})=>{
+ const hit={...lint,quote:"QQ",category:"导流",offset:script.indexOf("QQ")};
+ const f=await fixture(`semantic-${id}`,{script,lintFindings:[hit],object:{verdict,summary,findings}});
+ const result=await f.service.commitResult(f.ref,f.commit);
+ expect((await db.select().from(scriptReviewReports).where(eq(scriptReviewReports.id,result.resultId)))[0]).toMatchObject({verdict,summary,lintFindings:[hit],llmFindings:findings});
+});
+it.each(["official_hard","empirical","doudplus"])("词表层级与命中数量不能覆写语义结论 %s",async tier=>{
+ const f=await fixture(`many-${tier}`,{lintFindings:Array.from({length:8},(_,i)=>({...lint,tier,ruleId:`rule-${i}`})),object:{verdict:"pass",summary:"原文在解释不当承诺，没有作出承诺",findings:[]}});
+ const result=await f.service.commitResult(f.ref,f.commit);
+ expect((await db.select().from(scriptReviewReports).where(eq(scriptReviewReports.id,result.resultId)))[0]?.verdict).toBe("pass");
+});

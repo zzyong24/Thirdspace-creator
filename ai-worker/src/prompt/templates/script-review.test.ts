@@ -19,6 +19,11 @@ describe("SCRIPT_REVIEW_TEMPLATE — 违禁词表注入(T-124)", () => {
     expect(prompt).toContain("违禁词表");
     expect(prompt).toContain("· [official_hard/导流] 加微信");
     expect(prompt).toContain("照表复核");
+    expect(SCRIPT_REVIEW_TEMPLATE.version).toBe("v2");
+    expect(prompt).toContain("不是已确认违规");
+    expect(prompt).toContain("确认存在风险的命中必须写入 findings");
+    expect(prompt).toContain("创作者明确配置的规则及适用范围");
+    expect(prompt).not.toContain("不要复述 L1");
   });
 
   it("requiredFacets 仍只 script(lexicon 非必需,未提供替空串不抛)", () => {

@@ -9,13 +9,13 @@ import type { PromptTemplate } from "../template";
  *   - script(必需):待审全文。
  *   - lexicon:创作者配置的违禁词表(runner 注入 active 词表);L1 已按表精确匹配,模型据此照表
  *     复核 lint 精确匹配漏掉的谐音/变体/拆字/同义命中。空则省略。
- *   - lintFindings:L1 结果注入(让 L2 不复述已报原词、可交叉确认),空则整段省略。
+ *   - lintFindings:L1 结果注入(让 L2 结合语境复核字面线索),空则整段省略。
  *   - officialRules:公约 Tier1 条文摘要(模板内置默认,可被 skill_config_overrides 换)。
  *   - positioning:创作者定位(判「是否带货/医疗金融资质红线」语境),空则省略。
  * outputSchema(顶层对象,generateObject 稳定):
  *   { verdict, summary, findings: [{ quote, category, severity, reason, suggestion, ruleRef }] }。
  * prompt 铁律:只审注入文本、逐条给原文引用(quote 必为原文子串防幻觉命中)、区分官方硬规则
- *   与经验建议、不复述 lint 已报条目、suggestion 给最小改写而非重写全文。
+ *   与经验建议、复核每一条 lint 线索、suggestion 给最小改写而非重写全文。
  * 注:`script.review` 只是任务/Skill ID；运行时始终解析通用文本模型 `default`。
  */
 export const llmFindingSchema = z.object({
@@ -81,7 +81,7 @@ export function normalizeScriptReviewOutput(value: unknown): unknown {
 }
 
 // 公约 Tier1 条文摘要默认值(可被 overrides 换;来自 douyin-compliance.md 主源)。
-const DEFAULT_OFFICIAL_RULES = `- 公约34 恶意导流:禁站外联络方式(微信/QQ/手机号/二维码及谐音变体)、禁引导跳转其他平台。
+const DEFAULT_OFFICIAL_RULES = `- 公约34 恶意导流:结合完整上下文判断是否引导观众站外联系或跳转其他平台；平台名、字符、号码等字面出现本身不构成导流证据。
 - 公约33 不当营销:禁无合理依据的断言、夸大功效、诱导性收益承诺。
 - 公约35 欺骗误导:禁虚假人设、伪造资质/身份、编造事实。
 - 公约25 知识产权:禁盗版/破解/搬运他人作品。
@@ -90,7 +90,7 @@ const DEFAULT_OFFICIAL_RULES = `- 公约34 恶意导流:禁站外联络方式(�
 
 export const SCRIPT_REVIEW_TEMPLATE: PromptTemplate = {
   id: "script.review",
-  version: "v1",
+  version: "v2",
   outputSchema: scriptReviewSchema,
   tools: [],
   system: "你是抖音平台的「合规审核编导」,帮创作者在发布前发现限流/自见/删除风险。",
@@ -102,21 +102,21 @@ export const SCRIPT_REVIEW_TEMPLATE: PromptTemplate = {
 【官方硬规则(判 block/warn 依据)】
 {{officialRules}}
 
-【违禁词表(创作者配置的确定词表;L1 已按此表精确匹配命中,你在此基础上照表复核 lint 漏掉的谐音/变体/拆字/同义命中)】
+【违禁词表与配置规则(照表复核完整语义；保留创作者明确配置的规则说明与适用范围)】
 {{lexicon}}
 
-【L1 已确定命中(违禁词 lint 精确匹配,已计入报告,勿复述原词)】
+【L1 字面匹配线索(只证明字符串出现，不是已确认违规；必须结合完整原文逐条复核)】
 {{lintFindings}}
 
 【待审文案(只审这段文本,逐字比对)】
 {{script}}
 
-【任务】像专业审核那样逐条排查语义级风险(L1 词表抓不住的):擦边/性暗示、虚假夸大/无依据断言、人设造假/伪造资质、标题党诱导语气、隐私泄露、导流暗示(非明面词)、医疗金融等资质红线。**硬性要求(违反即算错):**
+【任务】像专业审核那样逐条复核字面线索并排查全文语义风险:擦边/性暗示、虚假夸大/无依据断言、人设造假/伪造资质、标题党诱导语气、隐私泄露、明确或暗示的站外导流、医疗金融等资质红线。**硬性要求(违反即算错):**
 ① 每条 finding 的 quote **必须是上面文案的原文子串**(逐字照抄命中片段),严禁编造原文不存在的句子;
 ② severity:block(明确违禁,发出去大概率删/封)/ warn(风险,建议改)/ info(提示,可不改);
 ③ reason 说明踩了哪条规则/为什么有风险;ruleRef 尽量给公约小节号(如「公约34」),无对应留 null;
 ④ suggestion 给**最小改写**(只改命中片段,不重写全文),无更优改法留 null;
-⑤ **不要复述 L1 已精确命中的原词**(已由确定性 lint 报出);但要照【违禁词表】补出 lint 精确匹配漏掉的**谐音/变体/拆字/同义**命中,以及词表外的语义级风险;
+⑤ L1 命中、tier 标签和命中数量都不能直接推出风险或阻断。逐条结合完整语境复核：确认存在风险的命中必须写入 findings 并说明证据；无风险的字面命中不写入 findings。复核词表漏掉的谐音/变体/拆字/同义表达和词表外语义风险，不能只审未命中的部分。保留并执行创作者明确配置的规则及适用范围，不能把词表标签扩大为全局禁止；对含混的规则如实说明待确认，不编造用户禁令;
 ⑥ 材料无风险就诚实少给或空 findings,绝不为凑数编造。
 【verdict 汇总】任一 block → "block";无 block 但有 warn → "risk";全无或仅 info → "pass"。
 【输出】只输出一个 JSON 对象 {"verdict","summary"(一句话总体结论,中文),"findings":[...]},不要多余文字、不要代码块包裹。`,
