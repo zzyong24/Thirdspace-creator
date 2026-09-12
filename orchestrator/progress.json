@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 25,
-    "tasks_done": 32,
-    "tasks_total": 98,
-    "tasks_pending": 66,
+    "verticals": 38,
+    "tasks_done": 33,
+    "tasks_total": 123,
+    "tasks_pending": 90,
     "verticals_complete": 0
   },
   "verticals": [
@@ -1528,6 +1528,48 @@
         "backend/**",
         "ai-worker/**",
         "frontend/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {
+        "review": []
+      },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-959",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-959",
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done"
+        },
+        {
+          "step": "build",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t959-ai-blockers.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "read_set": [
+        "docs/features/t959-ai-blockers.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
       ],
       "exclusive_resources": [],
       "step_write_set": {
