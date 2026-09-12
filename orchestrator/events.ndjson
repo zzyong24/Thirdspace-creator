@@ -1020,3 +1020,5 @@
 {"ts":"2026-09-11T16:12:25.483Z","actor":"taskctl","action":"start","task":"T-956","sha_before":"91a3f229e33b","sha_after":"d5ec0d8d962b"}
 {"ts":"2026-09-11T17:01:48.806Z","actor":"taskctl","action":"start","task":"T-957","sha_before":"e14b60196070","sha_after":"d13f0041f1a5"}
 {"ts":"2026-09-12T08:53:21.395Z","actor":"taskctl","action":"block","task":"T-957","reason":"修复已安装9901cf2f；真实旧稿复测ai-task-24509a92-64反复retry_wait（供应商明确拒绝），未得到候选；保留原任务，不重复提交。","sha_before":"d13f0041f1a5","sha_after":"ecfed1ee8e03"}
+{"ts":"2026-09-12T09:45:38.813Z","actor":"taskctl","action":"start","task":"T-958","sha_before":"3b8181504b28","sha_after":"0d84849bde83"}
+{"ts":"2026-09-12T09:45:38.933Z","actor":"taskctl","action":"complete","task":"T-958","evidence":"三份日志完整解密；按同一reference去重，识别3次工具成功后HTTP400及额度/超时/网络事件；分析报告保留未确定根因，不修改产品代码。","sha_before":"0d84849bde83","sha_after":"20cf0ae9e711"}
