@@ -61,14 +61,16 @@ export function buildScriptDraftTaskInputData(
       verbatimSourceSha256: sourceSha256,
     };
   }
+  const instruction=input.instruction?.trim();
+  if(instruction && instruction.length>210_000)throw new Error("本轮要求超过可处理长度，请拆分消息后重试。");
   const sourceSnapshots = input.sourceSnapshots ?? [];
   if (sourceSnapshots.length > 0) {
     const instruction = input.instruction?.trim() ?? "";
     let totalChars = 0;
     const valid =
       instruction.length > 0 &&
-      instruction.length <= 4_000 &&
-      sourceSnapshots.length <= 16 &&
+      instruction.length <= 210_000 &&
+      sourceSnapshots.length <= 17 &&
       sourceSnapshots.every((source, index) => {
         totalChars += source.body.length;
         return (
@@ -83,7 +85,7 @@ export function buildScriptDraftTaskInputData(
             createHash("sha256").update(source.body).digest("hex")
         );
       }) &&
-      totalChars <= 200_000;
+      totalChars <= 400_000;
     if (!valid) {
       throw new Error("资料快照校验失败，请重新选择完整资料后生成。");
     }
@@ -96,9 +98,9 @@ export function buildScriptDraftTaskInputData(
       ? { targetDurationSeconds: input.targetDurationSeconds }
       : {}),
     ...(input.extraBrief ? { extraBrief: input.extraBrief } : {}),
+    ...(instruction ? {instruction} : {}),
     ...(sourceSnapshots.length > 0
       ? {
-          instruction: input.instruction!.trim(),
           sourceSnapshots,
         }
       : {}),

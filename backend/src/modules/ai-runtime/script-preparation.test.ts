@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { expect, it, vi } from "vitest";
-import { prepareScriptDraftContext } from "./script-preparation";
+import { describe, expect, it, vi } from "vitest";
+import { prepareScriptDraftContext, readFrozenScriptSources } from "./script-preparation";
 import type { ContextDeps } from "./creative-context";
 const ctx = {
   userId: "u",
@@ -148,3 +148,6 @@ it("资料篡改先于上下文读取失败", async () => {
   ).rejects.toThrow("资料快照");
   expect(d.positioning.getPositioningCenter).not.toHaveBeenCalled();
 });
+
+// T959 无来源的指令同样必须进入生成上下文。
+describe("T959 无来源指令",()=>{it("不因sourceSnapshots缺失丢弃instruction",()=>{expect(readFrozenScriptSources({instruction:"只改开头"}).instruction).toBe("只改开头");});});

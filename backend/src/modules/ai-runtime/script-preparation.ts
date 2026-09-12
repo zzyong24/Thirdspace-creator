@@ -20,15 +20,19 @@ export function readFrozenScriptSources(inputData: Record<string, unknown>): {
   metadata: Array<Omit<FrozenScriptSource, "body">>;
 } {
   const raw = inputData.sourceSnapshots;
-  if (raw === undefined) return { sources: [], metadata: [] };
-  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 16) {
+  if (raw === undefined) {
+    const instruction = typeof inputData.instruction === "string" ? inputData.instruction.trim() : undefined;
+    if ((inputData.instruction !== undefined && typeof inputData.instruction !== "string") || (instruction?.length ?? 0) > 210_000) throw new Error("写作方向格式无效或过长。");
+    return { instruction: instruction || undefined, sources: [], metadata: [] };
+  }
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 17) {
     throw new Error("资料快照校验失败：来源清单为空或数量异常。");
   }
   const instruction =
     typeof inputData.instruction === "string"
       ? inputData.instruction.trim()
       : "";
-  if (!instruction || instruction.length > 4_000) {
+  if (!instruction || instruction.length > 210_000) {
     throw new Error("资料快照校验失败：本轮写作方向缺失或过长。");
   }
   let totalChars = 0;
@@ -52,7 +56,7 @@ export function readFrozenScriptSources(inputData: Record<string, unknown>): {
       !body.trim() ||
       item.charCount !== body.length ||
       sha256 !== createHash("sha256").update(body).digest("hex") ||
-      totalChars > 200_000
+      totalChars > 400_000
     ) {
       throw new Error(
         "资料快照校验失败：正文、顺序、字符数或 SHA-256 不一致。",

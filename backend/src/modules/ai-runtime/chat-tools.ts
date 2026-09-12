@@ -1903,6 +1903,16 @@ export interface VerbatimSource {
   sourceId?: string;
 }
 
+/** 宿主冻结原始要求，模型建议不替代用户指令；仅做传输边界校验。 */
+export function buildScriptDraftInstruction(instruction:unknown,latestUserInstruction:string,sourceRefs:unknown):string {
+ const userDirection=latestUserInstruction.trim();
+ const modelDirection=typeof instruction==="string"?instruction.trim():"";
+ const preserved=[userDirection?`【用户本轮原始要求（优先）】\n${userDirection}`:"",modelDirection?`【编导补充建议（不得覆盖用户要求或作为事实来源）】\n${modelDirection}`:""].filter(Boolean).join("\n\n");
+ if(preserved.length>210_000)throw new Error("本轮要求超过可处理长度，请拆分消息后重试。");
+ if(Array.isArray(sourceRefs) && sourceRefs.length>0 && !preserved)throw new Error("基于资料创作时需要保留用户本轮调整方向，请重新发起。");
+ return preserved;
+}
+
 export interface ScriptDraftSourceSnapshot {
   sourceType: "message" | "attachment" | "project_text";
   sourceId: string;
@@ -2238,7 +2248,7 @@ const SCRIPT_DRAFT_PARAMS = jsonSchema<{
       maxItems: MAX_SCRIPT_DRAFT_SOURCE_COUNT,
       items: { type: "string", maxLength: 180 },
       description:
-        "mode=generate 使用：按用户要求纳入的顺序，从 system 的受信资料清单选择全部 sourceRef。任一必需来源不可读时整次失败，不静默跳过。",
+        "mode=generate 使用：当前项目现有稿件由宿主自动读取，无需编造引用。其他资料按用户要求纳入的顺序，仅从 system 的受信资料清单选择真实 sourceRef，禁止猜测 artifact ID。任一必需来源不可读时整次失败，不静默跳过。",
     },
     sourceRef: {
       type: "string",
@@ -3498,16 +3508,9 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
                       ? targetDurationSeconds
                       : undefined,
                   extraBrief: clampExtraBrief(extraBrief),
+                  instruction: buildScriptDraftInstruction(instruction,deps.latestUserInstruction ?? "",sourceRefs) || undefined,
                   ...(Array.isArray(sourceRefs) && sourceRefs.length > 0
                     ? {
-                        instruction:
-                          typeof instruction === "string" && instruction.trim()
-                            ? instruction.trim().slice(0, 4000)
-                            : (() => {
-                                throw new Error(
-                                  "基于资料创作时需要保留用户本轮调整方向，请重新发起。",
-                                );
-                              })(),
                         sourceSnapshots: resolveScriptDraftSourceSnapshots(
                           deps.verbatimSources ?? [],
                           sourceRefs,

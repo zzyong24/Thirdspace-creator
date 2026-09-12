@@ -1818,7 +1818,7 @@ describe("[T-268] script.draft 工具 — 整稿异步 dispatch(不再 inline �
       angle: undefined,
       targetDurationSeconds: undefined,
       extraBrief: undefined,
-      instruction: "保留事实，重写成逻辑更强的口播",
+      instruction: expect.stringContaining("保留事实，重写成逻辑更强的口播"),
       sourceSnapshots: [
         expect.objectContaining({
           sourceType: "attachment",

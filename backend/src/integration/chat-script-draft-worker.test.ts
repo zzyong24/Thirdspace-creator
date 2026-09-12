@@ -37,16 +37,20 @@ it.each(["generate","verbatim","unauthorized","reject429","crashAfterChild","cra
  const requests:Record<string,unknown>[]=[];
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
-  if(!input.stream){
+  if(mode!=="generate" && (requests.length===2 || (mode.startsWith("reject") && requests.length===3))){
    if((mode.startsWith("reject")) && requests.length===2){res.writeHead(429,{"content-type":"application/json","retry-after":"1"});res.end(JSON.stringify({error:{message:"fixture rejected",type:"api_error"}}));return;}
-res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownChild"){res.destroy();return;}res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify({authorized:mode!=="unauthorized",startAnchor:null,endAnchor:null,reason:"仅交付原稿"})},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
+if(mode==="crashUnknownChild"){res.destroy();return;}
+   const content=JSON.stringify({authorized:mode!=="unauthorized",startAnchor:null,endAnchor:null,reason:"仅交付原稿"});
+   res.writeHead(200,{"content-type":"text/event-stream"});
+   res.end([ {choices:[{index:0,delta:{role:"assistant",content},finish_reason:null}]}, {choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}} ].map(chunk=>`data: ${JSON.stringify({id:"child",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");return;
+  }
   const first=requests.length===1;
   const delta=first?{tool_calls:[{index:0,id:"hooks",type:"function",function:{name:"script_draft",arguments:JSON.stringify(mode==="generate"?{mode:"generate"}:{mode:"verbatim",sourceRef:"source"})}}]}:{content:"候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
  await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
- const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:300000},modelConcurrency:1,resolveTools:createChatScriptDraftTaskHost(createChatHostContextReader(db,{now}),{prepareDraft:(context,input)=>ai.prepareScriptDraftTaskCommit(context,input),wakeTask:async()=>{}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ const createHost=()=>createChatWorkerDispatcher(db,{now,entryPath,workerId:"hooks-host",budget:{maxCalls:10,maxTokens:100000,deadlineMs:300000},modelConcurrency:1,resolveTools:createChatScriptDraftTaskHost(createChatHostContextReader(db,{now}),{readCurrentScript:async()=>({projectId,artifactId:"current-artifact",currentVersionId:"current-v2",contentHash:"unused",fullText:"WASD移动、QQ回血，自动射击。"}),prepareDraft:(context,input)=>ai.prepareScriptDraftTaskCommit(context,input),wakeTask:async()=>{}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
  let droppedFailure=false;
  const originalSupervisor=supervisorModule.createWorkerSupervisor;
  let stopExecution:ReturnType<typeof originalSupervisor>["stopExecutionTree"]|undefined;
@@ -101,7 +105,7 @@ res.writeHead(200,{"content-type":"application/json"});if(mode==="crashUnknownCh
   expect(children).toHaveLength(mode==="unauthorized"?0:1);
   const targets=await db.select().from(artifacts).where(eq(artifacts.projectId,projectId));
   expect(targets).toHaveLength(mode==="unauthorized"?0:1);
-  if(mode==="generate")expect(children[0]!.inputData).toMatchObject({topic:"缺省标题"});
+  if(mode==="generate")expect(children[0]!.inputData).toMatchObject({topic:"缺省标题",instruction:expect.stringContaining("先给候选"),sourceSnapshots:[expect.objectContaining({body:"WASD移动、QQ回血，自动射击。",sourceId:"current-artifact:current-v2"})]});
   else if(mode!=="unauthorized")expect(children[0]!.inputData).toMatchObject({draftMode:"verbatim",verbatimSourceText:body,verbatimSourceLength:body.length});
   if(mode!=="generate")expect(JSON.stringify(requests[1]?.messages)).toContain(body.replace(/\n/g,"\\n"));
   const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));

@@ -3,11 +3,20 @@ import {createHash} from "node:crypto";
 import {prepareScriptDraftInput,finalizeScriptDraftImport} from "./chat-script-draft-preparation";
 const source={ref:"message:1",label:"原稿",text:"说明。第一句正文。\n最后一句。",truncated:false};
 describe("宿主整稿输入准备",()=>{
+ it("T959 无资料引用仍传用户要求与编导建议",()=>{
+  const r=prepareScriptDraftInput({instruction:"保留射击玩法"},[],"只生成候选，不改已有稿");
+  if(r.mode!=="generate")throw new Error();
+  expect(r.dispatchInput.instruction).toContain("只生成候选，不改已有稿");
+  expect(r.dispatchInput.instruction).toContain("保留射击玩法");
+ });
+
  it("generate 保留原清洗与真实多源顺序，不需要授权请求",()=>{
   const second={...source,ref:"attachment:2",text:"第二份完整资料"};
   const result=prepareScriptDraftInput({topic:" 主题 ",angle:" 角度 ",targetDurationSeconds:180,instruction:" 修改方向 ",sourceRefs:[second.ref,source.ref]},[source,second],"真实指令");
   expect(result.mode).toBe("generate");if(result.mode!=="generate")throw new Error();
-  expect(result.dispatchInput).toMatchObject({topic:"主题",angle:"角度",targetDurationSeconds:180,instruction:"修改方向"});
+  expect(result.dispatchInput).toMatchObject({topic:"主题",angle:"角度",targetDurationSeconds:180});
+  expect(result.dispatchInput.instruction).toContain("真实指令");
+  expect(result.dispatchInput.instruction).toContain("修改方向");
   expect(result.dispatchInput.sourceSnapshots?.map(s=>[s.body,s.order,s.sha256])).toEqual([second,source].map((s,i)=>[s.text,i,createHash("sha256").update(s.text).digest("hex")]));
   expect(result).not.toHaveProperty("authorization");
  });

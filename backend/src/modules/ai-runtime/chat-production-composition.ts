@@ -58,7 +58,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   material:{prepareTaskCommit:deps.prepareTaskCommit,wakeTask:chatRuntime.wakeChatMaterialTask},
   publish:{preparePublish:chatRuntime.prepareChatPublishTask,wakeTask:chatRuntime.wakeChatPublishTask},
   review:{prepareReview:chatRuntime.prepareChatScriptReviewTask,wakeTask:chatRuntime.wakeChatScriptReviewTask},
-  scriptDraft:{prepareDraft:chatRuntime.prepareChatScriptDraftTask,wakeTask:chatRuntime.wakeChatScriptDraftTask},
+  scriptDraft:{readCurrentScript:chatRuntime.readCurrentScript,prepareDraft:chatRuntime.prepareChatScriptDraftTask,wakeTask:chatRuntime.wakeChatScriptDraftTask},
   scriptPatch:{resolveSelection:(c,input)=>chatRuntime.resolveCurrentScriptSelection!(c,input)},
   videoEdit:{prepareVideoEdit:chatRuntime.prepareVideoEdit},
   local:{detectTools:chatRuntime.detectTools,listAuthorizedDirs:chatRuntime.listAuthorizedDirs},

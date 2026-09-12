@@ -1,4 +1,4 @@
-import {clampExtraBrief,resolveScriptDraftSourceSnapshots,resolveVerbatimSource,type VerbatimSource,type ScriptDraftSourceSnapshot} from "./chat-tools";
+import {buildScriptDraftInstruction,clampExtraBrief,resolveScriptDraftSourceSnapshots,resolveVerbatimSource,type VerbatimSource,type ScriptDraftSourceSnapshot} from "./chat-tools";
 import {prepareScriptImportAuthorization,parseSemanticVerbatimSelection} from "./chat-script-import-authorization";
 
 export interface ScriptDraftGenerateInput {
@@ -25,13 +25,14 @@ export function prepareScriptDraftInput(args:Record<string,unknown>,sources:read
    ...(typeof startAnchor==="string" && startAnchor?{suggestedStartAnchor:startAnchor}:{}),
    ...(typeof endAnchor==="string" && endAnchor?{suggestedEndAnchor:endAnchor}:{})})};
  }
+ const preservedInstruction=buildScriptDraftInstruction(instruction,latestUserInstruction,sourceRefs);
  return {mode:"generate",dispatchInput:{
+  ...(preservedInstruction?{instruction:preservedInstruction}:{}),
   topic:typeof topic==="string" && topic.trim()?topic.trim():undefined,
   angle:typeof angle==="string" && angle.trim()?angle.trim():undefined,
   targetDurationSeconds:typeof targetDurationSeconds==="number"?targetDurationSeconds:undefined,
   extraBrief:clampExtraBrief(extraBrief),
   ...(Array.isArray(sourceRefs) && sourceRefs.length>0?{
-   instruction:typeof instruction==="string" && instruction.trim()?instruction.trim().slice(0,4000):(()=>{throw new Error("基于资料创作时需要保留用户本轮调整方向，请重新发起。");})(),
    sourceSnapshots:resolveScriptDraftSourceSnapshots(sources,sourceRefs),
   }:{}),
  }};

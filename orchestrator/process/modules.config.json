@@ -1182,6 +1182,42 @@
           "node orchestrator/process/boundary-scan.mjs"
         ]
       }
+    },
+    "T-959": {
+      "task_id": "T-959",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t959-ai-blockers.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "write_set": [
+        "docs/features/t959-ai-blockers.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
     }
   }
 }

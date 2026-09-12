@@ -1,3 +1,5 @@
+import {createHash} from "node:crypto";
+import type {ChatStructuredToolPorts} from "./chat-structured-tool-host";
 import {ChatTaskPreparationFailure} from "../execution/execution-chat-task-submission.service";
 import {classifyLlmError} from "./llm/retry-policy";
 import type {RequestContext} from "@creatoros/contract";
@@ -11,6 +13,7 @@ import {buildChatTools,type ChatToolDeps} from "./chat-tools";
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {getChatToolApprovalDecider} from "./chat-tool-gate";
 export interface ChatScriptDraftTaskPorts {
+ readCurrentScript?:ChatStructuredToolPorts["readCurrentScript"];
  prepareDraft(context:RequestContext,input:Parameters<ReturnType<typeof createAiService>["prepareScriptDraftTaskCommit"]>[1]):ReturnType<ReturnType<typeof createAiService>["prepareScriptDraftTaskCommit"]>;
  wakeTask(context:RequestContext,taskId:string):Promise<void>;
 }
@@ -37,13 +40,25 @@ export function createChatScriptDraftTaskHost(reader:Pick<ReturnType<typeof crea
     }catch{return {status:"unavailable"};}
    },
    async prepareTask(context,input,scope){
+    // 在异步读取前冻结宿主输入，避免调用方修改影响本次任务。
+    const parsed=structuredClone(input) as Record<string,unknown>;
     const resolved=await current(context,scope.execution,scope.signal);if(!resolved)throw new Error("原任务未启用原子整稿提交");
     // 此参数只能由已核验模型回执的宿主文本节点传入，不能由普通工具 IPC 直达。
-    const parsed=input as Record<string,unknown>;
     const projectId=resolved.chatContext.projectId || "";
     const failure=(message:string)=>new ChatTaskPreparationFailure({status:"error",summary:message,evidence:[],data:{kind:"script.draft",draftMode:parsed.draftMode==="verbatim"?"verbatim":"generate",taskId:null,projectId:projectId||null,error:message},error:{code:"no_evidence",retryable:false,recovery:message},continuation:null,sideEffect:"none"});
     if(!projectId)throw failure("整稿要落进具体项目的稿面 —— 请在项目稿面右栏的编导对话里让我写脚本,我会把整稿写进这个项目。");
 
+    if(parsed.draftMode!=="verbatim" && ports.readCurrentScript){
+     const source=await ports.readCurrentScript(resolved.context,projectId,scope.signal);
+     scope.signal?.throwIfAborted();
+     if(source){
+      if(source.projectId!==projectId || !source.artifactId || !source.currentVersionId)throw failure("当前稿件归属或版本不完整，请刷新后重试。");
+      const selection=resolved.chatContext.selection;
+      if(selection?.kind==="script_section" && ((selection.artifactId && selection.artifactId!==source.artifactId) || (selection.versionId && selection.versionId!==source.currentVersionId)))throw failure("所选稿件版本已变化，请刷新后重试。");
+      const snapshots=Array.isArray(parsed.sourceSnapshots)?parsed.sourceSnapshots:[];
+      if(source.fullText.trim() && !snapshots.some(item=>item.sourceType==="project_text" && item.sourceId===`${source.artifactId}:${source.currentVersionId}`))parsed.sourceSnapshots=[...snapshots,{sourceType:"project_text",sourceId:`${source.artifactId}:${source.currentVersionId}`,label:"当前项目已确认稿",order:snapshots.length,charCount:source.fullText.length,sha256:createHash("sha256").update(source.fullText).digest("hex"),body:source.fullText,complete:true}];
+     }
+    }
     const topic=(typeof parsed.topic==="string"?parsed.topic.trim():"") || resolved.chatContext.selection?.label?.trim() || "";
     scope.signal?.throwIfAborted();
     let task:Awaited<ReturnType<ChatScriptDraftTaskPorts["prepareDraft"]>>;
