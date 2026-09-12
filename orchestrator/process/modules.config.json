@@ -1146,6 +1146,42 @@
           "node orchestrator/process/boundary-scan.mjs"
         ]
       }
+    },
+    "T-957": {
+      "task_id": "T-957",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "build"
+      ],
+      "read_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "write_set": [
+        "docs/features/t957-ai-real-acceptance.md",
+        "contract/**",
+        "backend/**",
+        "frontend/src/**",
+        "ai-worker/**"
+      ],
+      "step_write_set": {
+        "review": []
+      },
+      "verify_commands": {
+        "review": "node orchestrator/process/research-gate.mjs audit",
+        "build": [
+          "pnpm -C frontend exec tsc --noEmit --pretty false",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      }
     }
   }
 }

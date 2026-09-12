@@ -1018,3 +1018,4 @@
 {"ts":"2026-09-11T11:34:40.649Z","actor":"taskctl","action":"start","task":"T-955","sha_before":"08165342ab9e","sha_after":"0d90e96deada"}
 {"ts":"2026-09-11T11:50:25.897Z","actor":"taskctl","action":"complete","task":"T-955","evidence":"39c5749e本地1.1.0已安装启动PID85188；42打包测试、hdiutil VALID、codesign、首页HTTP200通过；1800数据库文件备份校验一致。真实模型效果未验收，保留T916全局233旧漂移；详见docs/verification/t955-local-package.md","sha_before":"0d90e96deada","sha_after":"a1b972cce7a2"}
 {"ts":"2026-09-11T16:12:25.483Z","actor":"taskctl","action":"start","task":"T-956","sha_before":"91a3f229e33b","sha_after":"d5ec0d8d962b"}
+{"ts":"2026-09-11T17:01:48.806Z","actor":"taskctl","action":"start","task":"T-957","sha_before":"e14b60196070","sha_after":"d13f0041f1a5"}
