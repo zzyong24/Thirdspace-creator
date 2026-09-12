@@ -17,6 +17,7 @@ import type { ArtifactType } from "@/types/domain";
 
 /** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
 export type AiErrorCode =
+  | "result_unconfirmed"
   | "model_not_configured"
   | "positioning_required"
   | "model_not_found"
@@ -53,6 +54,15 @@ interface AiErrorRule {
  * MiniMax 平台码参考:1026=输入敏感,1027=输出敏感,1008=余额不足,1002/1039=限流。
  */
 export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
+  {
+    // SEMANTIC_BOUNDARY_ALLOW: 翻译服务端由 unknown_result 产生的稳定码；旧文本仅兼容已打开的旧连接。
+    pattern: /\bCHAT_RESULT_UNCONFIRMED\b|本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。/,
+    human: {
+      code: "result_unconfirmed",
+      message: "本次结果尚未确认，输入和已完成内容已保留。请在原任务中刷新状态、核对结果，暂勿重新提交。",
+      suggestSwitchModel: false,
+    },
+  },
   {
     // 受管平台额度状态必须先于通用模型方余额规则，不能误导用户去改模型配置。
     pattern:

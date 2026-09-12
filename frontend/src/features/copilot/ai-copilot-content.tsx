@@ -1191,8 +1191,9 @@ export function AICopilotContent({
     const suggestOpenCredits = human?.suggestOpenCredits ?? false;
     const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
     const isMissingModel = human?.code === "model_not_configured";
+    const resultUnconfirmed = human?.code === "result_unconfirmed";
     return {
-      title: suggestOpenCredits
+      title: resultUnconfirmed ? "结果尚待核对" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1204,7 +1205,7 @@ export function AICopilotContent({
                 ? "这次局部改写已结束"
                 : "这次没有生成成功",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: suggestOpenCredits
+      message: resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
@@ -1217,6 +1218,7 @@ export function AICopilotContent({
       suggestOpenCredits,
       suggestOpenPositioning,
       canRetry:
+        !resultUnconfirmed &&
         !terminalScriptSelectionError &&
         !suggestOpenCredits &&
         !suggestOpenPositioning &&

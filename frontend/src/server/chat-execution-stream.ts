@@ -27,7 +27,7 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
        const task=await runtime.get(ctx,input.executionTaskId);
        send({type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行需要你处理权限、登录或模型配置，处理后再继续。'});
       }
-      if(page.status!=='waiting_user')send({type:'error',errorText:page.status==='unknown_result'?'本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。':'本次执行已暂停，请在任务中心继续。'});
+      if(page.status!=='waiting_user')send({type:'error',errorText:page.status==='unknown_result'?'CHAT_RESULT_UNCONFIRMED':'本次执行已暂停，请在任务中心继续。'});
       break;
      }
      if(page.status==='failed'){

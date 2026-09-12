@@ -1190,6 +1190,17 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(regenerate).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["CHAT_RESULT_UNCONFIRMED", "本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。"])("[T-957] 原任务结果未知时不显示重新提交按钮：%s", (message) => {
+    mockError = new Error(message);
+    mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", text: "复盘当前作品" }] }];
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("结果尚待核对")).toBeInTheDocument();
+    expect(screen.getByText(/请在原任务中刷新状态、核对结果/)).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    expect(screen.queryByText("刚才输入的内容还在，可以直接再试一次。")).not.toBeInTheDocument();
+    expect(regenerate).not.toHaveBeenCalled();
+  });
+
   it("[T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试", () => {
     mockError = new Error("LlmCredentialError: 无可用 LLM 凭据");
     mockMessages = [
