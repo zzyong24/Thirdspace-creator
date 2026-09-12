@@ -7,8 +7,8 @@ export interface ReviewTask { id: string; projectId: string | null; inputData: R
 // 把 CreativeContext 映射成 review.insights 模板的 facets(占位化原 buildReviewPrompt 的上下文块）。
 // subject(本次复盘对象)是必需 facet。
 // T-039a:复盘要「就这一条作品」提炼经验而非账号级泛论 —— subject 优先用作品真标题(reviewTitle),
-// 并把本作品的真文案/数据/评论各拼成一个整块注入(有内容才带标题行,读不到就空串 → prompt 里该块省略,
-// 不硬塞空占位、不喂噪声)。三个块与 subject 真标题一起让模型扣住真实材料归因,而不是空谈。
+// 并把本作品的真文案/数据/评论各拼成一个整块注入。缺稿或缺指标明确标注证据边界，
+// 三个块与 subject 真标题一起让模型只依据实际材料分析。
 // `overrideSubject`:chat 路径模型可能显式传了 subject(用户在对话里指定的复盘对象),优先于 reviewTitle。
 // [T-081①] `extraBrief`(选填第三参,签名 additive):对话中获得的补充指令/洞察,注入模板
 // {{extraBrief}} 占位(优先级高于既有档案);空则整段省略,后台 task 路径不传、行为不变。
@@ -33,13 +33,13 @@ export function reviewFacets(
     subject: subject
       ? subject
       : "（未指定具体内容,按这个账号的整体表现提炼)",
-    // 三个整块:有真内容才拼「标题行 + 内容」,空则空串(bindPrompt 把空占位替换掉 → 该块消失)。
+    // 有内容传真实材料；缺稿或缺指标时明确限制可分析范围。
     reviewScriptBlock: context.reviewScript
       ? `\n【本次复盘作品·文案】\n${context.reviewScript}\n`
-      : "",
+      : "\n【本次复盘作品·文案】未取得真实稿件，不能评价具体开头台词、段落或叙事结构。\n",
     reviewMetricsBlock: context.reviewMetrics
       ? `\n【本次复盘作品·真实数据】${context.reviewMetrics}\n`
-      : "",
+      : "\n【本次复盘作品·真实数据】未取得发布指标，不能归因传播或成交效果。\n",
     reviewCommentsBlock: context.reviewComments
       ? `\n【本次复盘作品·观众评论】\n${context.reviewComments}\n`
       : "",
@@ -69,10 +69,16 @@ export function normalizeLearnings(
 }
 
 
+/** 只检查真实证据是否存在，不评判内容质量；聊天和持久复盘共享同一门。 */
+export function assertReviewEvidence(context: Pick<CreativeContext,"reviewScript"|"reviewMetrics"|"reviewComments">): void {
+  if (![context.reviewScript,context.reviewMetrics,context.reviewComments].some(value=>value.trim()))
+    throw new Error("review-runner: missing current-project evidence；没有真实逐字稿、指标或评论，请同步本作品资料");
+}
+
 export async function prepareReviewContext(ctx: RequestContext, task: Pick<ReviewTask,"projectId"|"inputData">, deps: ContextDeps): Promise<Record<string, string | undefined>> {
   const topic = typeof task.inputData.topic === "string" ? task.inputData.topic : "";
   const context = await assembleCreativeContext(ctx, { projectId: task.projectId, topic }, deps);
-  if (!context.reviewScript.trim() && !context.reviewMetrics.trim() && !context.reviewComments.trim()) throw new Error("review-runner: missing current-project post-publish metrics/comments");
+  assertReviewEvidence(context);
   return reviewFacets(context);
 }
 export function projectReviewCandidate(_inputData: Record<string, unknown>, object: unknown): RecordCandidateInput {

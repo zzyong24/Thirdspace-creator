@@ -88,12 +88,13 @@ return ((): ReviewSubjectReader => ({
             }
           }
         }
-        let trafficSummary='';
+        let trafficSummary='';let hasTrafficValues=false;
         try{const result=await ports.trafficService?.getProject(c,projectId);trafficSummary=(result?.items??[]).map(row=>{
-         const data=row.data;if(!data)return `作品 ${row.externalId}：流量来源暂无（${row.status}）`;
+         const data=row.data;if(data?.entries.some(entry=>typeof entry.percentage==='number'&&Number.isFinite(entry.percentage)))hasTrafficValues=true;if(!data)return `作品 ${row.externalId}：流量来源暂无（${row.status}）`;
          return `作品 ${row.externalId}：${data.app}，统计窗口：${data.windowLabel??'平台未说明'}，采集于 ${row.capturedAt}，来源${data.complete?'':'未展开完整'}：${data.entries.map(e=>`${e.label} ${e.percentage===null?'暂无':e.percentage+'%'}`).join('、')}。当前读取状态 ${row.status}；投放数据未知。占比不是曝光数，不可凭它单独判断限流。`;
         }).join('\n');}catch{/* 可选流量失败不丢已有基础数据 */}
-        if (merged.size === 0) return trafficSummary;
+        // 队列状态/缺值不是指标证据；真实0仍有效。不能用状态文本的非空替代数值。
+        if (merged.size === 0) return hasTrafficValues?trafficSummary:"";
         // 播放量归一(views/plays 同义合并,只呈现一次;views 真采集优先)。
         if (merged.has("views") && merged.has("plays")) merged.delete("plays");
         const LABELS: Record<string, string> = {

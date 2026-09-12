@@ -9,14 +9,16 @@ import {createChatBusinessGenerationPreparation} from '../../modules/ai-runtime/
 const ctx:RequestContext={userId:'user',accountId:'account',requestId:'test',source:'user'};
 const stamp='2026-09-11T00:00:00.000Z';const closers:Array<()=>Promise<unknown>>=[];
 afterEach(async()=>{for(const close of closers.splice(0))await close();});
-async function fixture(){
+async function fixture(trafficMode:'values'|'pending'|'missing-values'|'zero'='values'){
  const f=await createDb();closers.push(()=>f.client.close());
  const publication={id:'publication',userId:'user',accountId:'account',contentOutputId:'output',externalId:'video',platform:'douyin',hiddenAt:null,status:'published',accountReference:'account',createdAt:stamp,updatedAt:stamp};
  await f.db.insert(publications).values(publication);
  const publishing={getPublication:async()=>publication,listPublicationIdsByProject:async()=>['publication'],listPublicationsForUser:async()=>[publication]};
  const trafficService=createTrafficService(f.db,{now:()=>stamp,publishing:publishing as never});
  const payload:TrafficSourcePayload={app:'抖音 App',windowLabel:null,complete:false,entries:[{label:'推荐页',percentage:0},{label:'新来源',percentage:null},{label:'搜索',percentage:12.3}]};
- await trafficService.enqueueProject(ctx,'project');await trafficService.settle(ctx,(await trafficService.pending(ctx))[0]!,{data:payload},'task');
+ if(trafficMode==='missing-values')payload.entries=[{label:'推荐页',percentage:null}];
+ if(trafficMode==='zero')payload.entries=[{label:'推荐页',percentage:0}];
+ await trafficService.enqueueProject(ctx,'project');if(trafficMode!=='pending')await trafficService.settle(ctx,(await trafficService.pending(ctx))[0]!,{data:payload},'task');
  const getTraffic=vi.fn(trafficService.getProject);
  const ports={trafficService:{getProject:getTraffic},projectsService:{getProject:async()=>({title:'当前作品'}),listOutputIdsByProject:async()=>['output']},publishingService:{listPublications:async()=>[publication]},analyticsService:{getPublicationAnalytics:vi.fn(async()=>({rows:[{capturedAt:stamp,rawMetrics:{views:100,plays:100,likes:0}}]}))},candidateService:{listCommentsForPublication:async()=>[]},artifactsService:{listProjectArtifacts:async()=>[],listVersions:async()=>[]},selectReadableProjectScriptArtifact:()=>null,readProjectRadarDraftSeed:async()=>'先展示当前演示，再解释操作。'};
  const reader=createReviewSubjectContext(ports as never);
@@ -42,11 +44,27 @@ it('同一reader的真实来源口径进入持久复盘与聊天生成facets，�
  expect(chat.facets.reviewMetricsBlock).toContain('新来源 暂无');expect(chat.facets.reviewMetricsBlock).toContain('统计窗口：平台未说明');
  expect(deps.assertProject).toHaveBeenCalledWith(ctx,'project');
 });
-it('聊天无指标有稿仍可准备内容诊断；无稿与越权仍拒绝',async()=>{
+it('聊天无指标有稿仍可准备内容诊断；证据全空与越权仍拒绝',async()=>{
  const f=await fixture();const reader={...f.reader,getMetricsSummary:async()=>'',getComments:async()=>[],getScript:vi.fn(async()=>'真实稿件')};
  const assertProject=vi.fn(async()=>{});const deps={reviewSubject:reader,positioning:{getPositioningCenter:async()=>({profile:null,currentStatement:null})},assertProject,readTrend:async()=>({brief:'',sourceCount:0,signalCount:0,note:null})};
  const chat=createChatBusinessGenerationPreparation(deps as never);
- expect((await chat.prepareReview(ctx,{projectId:'project'})).facets).toMatchObject({reviewScriptBlock:'\n【本次复盘作品·文案】\n真实稿件\n',reviewMetricsBlock:''});
+ expect((await chat.prepareReview(ctx,{projectId:'project'})).facets).toMatchObject({reviewScriptBlock:'\n【本次复盘作品·文案】\n真实稿件\n',reviewMetricsBlock:expect.stringContaining('未取得发布指标')});
  reader.getScript.mockResolvedValue('');await expect(chat.prepareReview(ctx,{projectId:'project'})).rejects.toThrow('真实逐字稿');
  reader.getScript.mockClear();assertProject.mockRejectedValueOnce(new Error('not owned'));await expect(chat.prepareReview(ctx,{projectId:'foreign'})).rejects.toThrow('not owned');expect(reader.getScript).not.toHaveBeenCalled();
+});
+
+it.each(['pending','missing-values','zero'] as const)('仅流量%s时两入口按真实数值判断，不把状态当发布证据',async(mode)=>{
+ const f=await fixture(mode);f.ports.analyticsService.getPublicationAnalytics.mockResolvedValue({rows:[]});
+ const reader={...f.reader,getScript:async()=>''};
+ const deps={reviewSubject:reader,positioning:{getPositioningCenter:async()=>({profile:null,currentStatement:null})},assertProject:async()=>{},readTrend:async()=>({brief:'',sourceCount:0,signalCount:0,note:null})};
+ const chat=createChatBusinessGenerationPreparation(deps as never);
+ if(mode==='zero'){
+  expect(await reader.getMetricsSummary(ctx,'project')).toContain('推荐页 0%');
+  expect((await chat.prepareReview(ctx,{projectId:'project'})).facets.reviewMetricsBlock).toContain('推荐页 0%');
+  expect((await prepareReviewContext(ctx,{projectId:'project',inputData:{}},deps as never)).reviewMetricsBlock).toContain('推荐页 0%');
+ }else{
+  expect(await reader.getMetricsSummary(ctx,'project')).toBe('');
+  await expect(chat.prepareReview(ctx,{projectId:'project'})).rejects.toThrow('missing current-project');
+  await expect(prepareReviewContext(ctx,{projectId:'project',inputData:{}},deps as never)).rejects.toThrow('missing current-project');
+ }
 });

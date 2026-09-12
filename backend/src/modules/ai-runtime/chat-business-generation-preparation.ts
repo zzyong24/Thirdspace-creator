@@ -4,7 +4,7 @@ import {EXTRA_BRIEF_HEADING} from "@creatoros/ai-worker/chat";
 import {prepareTopicGenerateContext,type TopicGeneratePrepareDeps} from "./topic-business-adapter";
 import {assembleCreativeContext} from "./creative-context";
 import {renderSignalQualityBrief} from "./signal-quality";
-import {reviewFacets} from "./review-context";
+import {reviewFacets,assertReviewEvidence} from "./review-context";
 import type {ChatStructuredToolPorts} from "./chat-structured-tool-host";
 
 /** 真值读取和提示准备，不执行模型；联网端口也只能返回真实来源与片段。 */
@@ -34,8 +34,7 @@ export function createChatBusinessGenerationPreparation(deps:TopicGeneratePrepar
    await deps.assertProject(owner,args.projectId);
    const creative=await assembleCreativeContext(owner,{projectId:args.projectId,topic:args.subject??""},deps);
    signal?.throwIfAborted();
-   if(!creative.reviewScript.trim())throw new Error("没读到这条作品的真实逐字稿；请先抓取逐字稿或补充真实文稿，再重新复盘");
-   // 无发布数据仍可诊断真实稿件；复盘模板区分内容观察与效果假设，不补造指标。
+   assertReviewEvidence(creative);
    return {facets:reviewFacets(creative,args.subject,args.extraBrief)};
   },
  };
