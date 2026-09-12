@@ -4,8 +4,9 @@ import type {RequestContext} from "@creatoros/contract";
 export function createCalibrationDiagnoseReaders(ports:{projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getPublication" | "listRevisions">;
 calibrationService: Pick<ReturnType<typeof import("../../modules/calibration").createCalibrationService>,"getCurrentRubricVersion">;
+readCurrentScript:(ctx:RequestContext,projectId:string)=>ReturnType<ReturnType<typeof import("./current-artifact").createCurrentArtifactReader>>;
 canonicalRubricIdFor:(ctx:RequestContext)=>string;}){
-const {projectsService,publishingService,calibrationService,canonicalRubricIdFor}=ports;
+const {projectsService,publishingService,calibrationService,canonicalRubricIdFor,readCurrentScript}=ports;
 return {
               subject: {
                 get: async (
@@ -31,10 +32,10 @@ return {
                       scriptText: rev?.description ?? "",
                     };
                   }
-                  // content_output → its title (the storyboard/文稿 plumbing lands later; the
-                  // agent grounds on title + positioning + rubric for Slice 1).
                   const output = await projectsService.getOutput(c, subjectId);
-                  return { title: output.title, scriptText: "" };
+                  const current = await readCurrentScript(c, output.projectId);
+                  if(current && current.projectId!==output.projectId)throw new Error("诊断原稿与作品项目不符");
+                  return { title: output.title, scriptText: current?.fullText ?? "" };
                 },
               },
               rubric: {

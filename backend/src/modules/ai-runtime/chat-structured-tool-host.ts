@@ -13,6 +13,7 @@ import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {prepareChatPositioning,prepareChatTopicEnrich,type PreparedChatStructuredNode} from "./chat-structured-tool-nodes";
 
 export interface ChatStructuredToolPorts {
+ readCurrentScript?: (context:RequestContext,projectId:string,signal?:AbortSignal)=>Promise<{projectId:string;artifactId:string;currentVersionId:string;contentHash:string;fullText:string}|null>;
  business?: {
   prepareTopic(context:RequestContext,input:{basis:"positioning"|"comments"|"knowledge"|"trend";extraBrief?:string;projectId?:string},signal?:AbortSignal):Promise<{facets:Record<string,string|undefined>;trendNote?:string|null}>;
   prepareReview(context:RequestContext,input:{projectId:string;subject?:string;extraBrief?:string},signal?:AbortSignal):Promise<{facets:Record<string,string|undefined>}>;
@@ -96,8 +97,20 @@ export function createChatStructuredTaskToolHost(
      }
      if(definition.name==="calibration.diagnose"){
       const args=resolved.input as {title?:string;script?:string;extraBrief?:string};
-      const node=prepareChatDiagnosis(resolved.creative,resolved.restored.hostContext.chatContext.selection?.label?.trim()||"",{...args,extraBrief:clampExtraBrief(args.extraBrief)});
-      return {node,discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
+      const chat=resolved.restored.hostContext.chatContext,selection=chat.selection;
+      const projectId=(selection?.kind==="project"?selection.ids[0]:undefined)||chat.projectId;
+      let script=args.script;
+      let source:Awaited<ReturnType<NonNullable<ChatStructuredToolPorts["readCurrentScript"]>>>=null;
+      if(!script?.trim() && projectId){
+       if(!ports.readCurrentScript)throw new Error("诊断当前稿读取端口未装配");
+       source=await ports.readCurrentScript(structuredClone(resolved.restored.context),projectId,scope.signal);
+       scope.signal?.throwIfAborted();
+       if(source && source.projectId!==projectId)throw new Error("诊断原稿与目标项目不符");
+       if(selection?.kind==="script_section" && (!source || selection.artifactId!==source.artifactId || selection.versionId!==source.currentVersionId))throw new Error("诊断选中稿件版本已变化，请重新读取当前稿");
+       script=source?.fullText;
+      }
+      const node=prepareChatDiagnosis(resolved.creative,selection?.label?.trim()||"",{...args,script,extraBrief:clampExtraBrief(args.extraBrief)});
+      return {node:{...node,facets:{...node.facets,...(source?{__diagnosisSource:JSON.stringify({projectId:source.projectId,artifactId:source.artifactId,currentVersionId:source.currentVersionId,contentHash:source.contentHash})}:{})}},discovery:null,maxOutputTokens:resolved.config.maxOutputTokens};
      }
      const prepared=await preparePositioningToolInput(resolved.input as PositioningToolInput,async sessionId=>{
       scope.signal?.throwIfAborted();

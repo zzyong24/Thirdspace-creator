@@ -13,6 +13,7 @@ type ProductionDeps=Parameters<typeof createChatProductionRuntime>[1];
 /** 仅包含装配所需的既有业务服务，保持与 frontend ChatRuntime 结构兼容。 */
 export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
  context:ContextDeps;
+ readCurrentScript?:RequiredTaskPorts["structured"]["readCurrentScript"];
  contextReaders:Parameters<typeof createChatTaskToolHost>[1];
  wakeChatCoverTask:RequiredTaskPorts["cover"]["wakeTask"];
  wakeChatResearchTask:RequiredTaskPorts["agenticResearch"]["wakeTask"];
@@ -63,6 +64,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   local:{detectTools:chatRuntime.detectTools,listAuthorizedDirs:chatRuntime.listAuthorizedDirs},
   localRead:{readLocalFile:chatRuntime.readLocalFile,decideLocalReadAccess:chatRuntime.decideLocalReadAccess},
   structured:{
+    readCurrentScript:chatRuntime.readCurrentScript,
     business:createChatBusinessGenerationPreparation({
       ...chatRuntime.context,
       sourceReader:{listEnabledSources:deps.trend.listEnabledSources},

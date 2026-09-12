@@ -732,6 +732,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
   ai: AiService;
   // [T-513] 每轮对话在服务端按当前 user/account 解析不可变 Effective Skill。
@@ -4632,7 +4633,7 @@ FAVORITES_PROMOTE_PER_RUN
             : null;
         },
       };
-  const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,canonicalRubricIdFor});
+  const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,canonicalRubricIdFor,readCurrentScript:(c,projectId)=>createCurrentArtifactReader({projectsService,artifactsService})(c,projectId,"output_script")});
   const calibrationScoreReaders = createCalibrationScoreReaders({projectsService,publishingService,analyticsService,calibrationService});
   const dailyTopicRuns=createDailyTopicRunService(db,{now:deps.now});
   const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
@@ -5404,6 +5405,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const chatRuntime: ChatRuntime = {
+    readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
     ai: aiService,
     resolveEffectiveSkillSnapshot: async (ctx, requiredSkillIds) => {
