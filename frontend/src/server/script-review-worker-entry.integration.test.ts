@@ -18,10 +18,12 @@ describe("生产文稿审核 Worker 入口",()=>{
     const script=semantic==="keyboard" ? "按QQ键释放技能，再移动角色。" : semantic==="contact" ? "加我QQ领取资料，再联系报名。" : "这是实际待审的原文，供创作者了解技术实践。";
     // Fixture 只模拟语义模型输出，公共入口、冻结上下文、Worker 和报告落库均为实际链路。
     const generated=semantic==="keyboard" ? {verdict:"pass",summary:"按键操作无站外联络意图",findings:[]} : semantic==="contact" ? {verdict:"block",summary:"明确引导站外联系",findings:[{quote:"加我QQ领取资料",category:"导流",severity:"block",reason:"要求站外联系领取资料",suggestion:null,ruleRef:"公约34"}]} : {verdict:"risk",summary:"需要复核原文表述",findings:[]};
-    const server=createServer((req,res)=>{req.on("data",chunk=>{requestBody+=chunk.toString();});req.on("end",()=>{requests++;if(retry && requests===1){res.writeHead(503,{"content-type":"application/json"});res.end(JSON.stringify({error:{message:"temporary unavailable",type:"server_error"}}));return;}res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"review-fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});});
+    const server=createServer((req,res)=>{req.on("data",chunk=>{requestBody+=chunk.toString();});req.on("end",()=>{requests++;if(retry && requests===1){res.writeHead(503,{"content-type":"application/json"});res.end(JSON.stringify({error:{message:"temporary unavailable",type:"server_error"}}));return;}// Pi provider 的 doGenerate 也读取流，fixture 必须模拟实际 SSE 协议。
+    res.writeHead(200,{"content-type":"text/event-stream"});res.end(`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"review-fixture",choices:[{index:0,delta:{role:"assistant",content:JSON.stringify(generated)},finish_reason:null}]})}\n\ndata: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"review-fixture",choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}})}\n\ndata: [DONE]\n\n`);});});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
     try{
       const project=await call("projects.create",undefined,{title:"隔离审核测试"});
+      if(semantic!=="neutral")await call("reviewRules.create",undefined,{tier:"official_hard",category:"导流",matchType:"word",pattern:"QQ",note:"复核是否引导站外联系",source:"manual",status:"active"});
       const artifact=await call("artifacts.create",{projectId:project.id},{title:"待审原稿",artifactType:"master_script",stage:"script"});
       const version=await call("artifacts.versions.create",{artifactId:artifact.id},{contentText:script});
       const task=entry==="scriptReviews.trigger" ? await call(entry,{projectId:project.id}) : await call(entry,undefined,{taskType:"script.review",projectId:project.id,attemptId:"review-worker-entry",inputData:{projectId:project.id,artifactId:artifact.id,artifactVersion:version.versionNumber}});
@@ -36,7 +38,8 @@ describe("生产文稿审核 Worker 入口",()=>{
       await call("artifacts.versions.create",{artifactId:artifact.id},{contentText:"用户已经改成另一版。"});
       expect(await call("scriptReviews.getLatest",{projectId:project.id})).toMatchObject({id:report.id,artifactVersion:version.versionNumber});
     }finally{
-      await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});
+      await (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence?.();__resetPersistenceForTests();
+      server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));vi.unstubAllEnvs();rmSync(directory,{recursive:true,force:true});
     }
   },40000);
 });
