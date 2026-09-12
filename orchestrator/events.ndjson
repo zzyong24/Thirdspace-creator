@@ -1019,3 +1019,4 @@
 {"ts":"2026-09-11T11:50:25.897Z","actor":"taskctl","action":"complete","task":"T-955","evidence":"39c5749e本地1.1.0已安装启动PID85188；42打包测试、hdiutil VALID、codesign、首页HTTP200通过；1800数据库文件备份校验一致。真实模型效果未验收，保留T916全局233旧漂移；详见docs/verification/t955-local-package.md","sha_before":"0d90e96deada","sha_after":"a1b972cce7a2"}
 {"ts":"2026-09-11T16:12:25.483Z","actor":"taskctl","action":"start","task":"T-956","sha_before":"91a3f229e33b","sha_after":"d5ec0d8d962b"}
 {"ts":"2026-09-11T17:01:48.806Z","actor":"taskctl","action":"start","task":"T-957","sha_before":"e14b60196070","sha_after":"d13f0041f1a5"}
+{"ts":"2026-09-12T08:53:21.395Z","actor":"taskctl","action":"block","task":"T-957","reason":"修复已安装9901cf2f；真实旧稿复测ai-task-24509a92-64反复retry_wait（供应商明确拒绝），未得到候选；保留原任务，不重复提交。","sha_before":"d13f0041f1a5","sha_after":"ecfed1ee8e03"}

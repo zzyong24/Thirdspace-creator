@@ -1,0 +1,54 @@
+[
+  {
+    "case": "review-metrics-only",
+    "sourceTaskId": "ai-task-c7dc03ce-67",
+    "functional": "succeeded",
+    "quality": "failed",
+    "observed": [
+      "收藏66、点赞163被描述成接近1:1，实际约0.405",
+      "单变量实验建议同时改变选题与开场",
+      "仅凭平均播放时长与5s完播率推断中后段流失集中"
+    ],
+    "expected": [
+      "比值计算正确或不报派生数",
+      "一次实验明确只变一个变量",
+      "没有时点留存曲线时不能定位具体流失区段"
+    ]
+  },
+  {
+    "case": "script-diagnosis",
+    "sourceTaskId": "ai-task-9cd24147-10954",
+    "functional": "succeeded",
+    "quality": "failed",
+    "observed": [
+      "将中段叙述直接定为完播率低的核心拖累段"
+    ],
+    "expected": [
+      "没有实验或逐秒留存证据时，只能给内容判断及待验证假设"
+    ]
+  },
+  {
+    "case": "topic-candidates",
+    "sourceTaskId": "ai-task-c7dc03ce-75",
+    "functional": "succeeded",
+    "quality": "needs_review",
+    "observed": [
+      "候选标题先使用两小时压到半小时，再在正文要求补真实计时证据"
+    ],
+    "expected": [
+      "待核实数字使用明确占位或条件标题，不先写成既成事实"
+    ]
+  },
+  {
+    "case": "legacy-script-patch",
+    "sourceTaskId": "ai-task-c7dc03ce-83",
+    "functional": "failed",
+    "quality": "not_scored",
+    "observed": [
+      "tool-script_patch两次error后主任务仍succeeded，最终仅正文建议"
+    ],
+    "expected": [
+      "得到绑定真实版本与唯一原文的可应用候选才算该工具功能通过"
+    ]
+  }
+]

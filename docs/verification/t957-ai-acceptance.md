@@ -29,3 +29,16 @@
 已从干净候选 `4b04c1bd` 构建并安装 `/Applications/CreatorOS.app`，PID69785，CLI自动full访问。DMG `/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg` SHA-256 `6345e9a78ac0f71c1e77004d87693466bbc32446c53e916ea25cb85b70377f13`，hdiutil verify VALID、codesign deep strict通过，本地ad-hoc未公证。安装二进制SHA-256 `1d560a13681ef2a0beed5540885252534f631c78c2f5992c1fcb1ea84c2f82de`。
 
 主稿仍为 `artifactversion-185382ce-678`，没有采纳候选或覆盖稿件。全局reconcile仍为既有233 errors，不宣称全绿。
+
+
+## 2026-09-12 旧稿兼容安装复测
+
+候选 `9901cf2f` 已安装启动（PID86401，CLI full）。独立实现评审 PASS；6文件264测试通过，主树11项公共链回归通过；frontend/ai-worker类型检查通过，backend仍14条既有测试错误。边界扫描仍7条，包含此前已存在的live-chat-session两条超基线；没有宣称全局通过。
+
+支持三种旧正文存储，以真实版本/hash/唯一原文构造局部候选，采纳时严格版本和CAS保护；隔离测试覆盖公共采纳、重读、撤销、并发覆盖与归属拒绝。真实用户稿未采纳，读回仍 `artifactversion-185382ce-678`。
+
+42项打包检查通过，DMG和签名校验通过。本地ad-hoc未公证，DMG `/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg` SHA-256 `1cdc1f91905932feecfc84953d919ec313abed6911528fc05ebeb74aa265de6e`；安装二进制SHA-256 `495ff5d28f296d7a0f0c4cb7609d57c2ce6ff69876056594db97c5b42ecd60f1`。安装前备份 `~/.creatoros/backups/t957-legacy-20260912/app-data`，1808个数据库文件逐一hash一致。
+
+真实复测会话 `ai-conv-24509a92-48`，任务 `ai-task-24509a92-64`，执行 `execution-task-24509a92-65`：已提交后反复进入retry_wait，公开错误为“供应商明确拒绝，等待重试时间到达”，暂未返回助手候选。没有另建任务或更换幂等键。不得记旧稿安装版真实模型验收PASS。
+
+同时启动日志记录 `CLIENT_CONFIG_ACCESS_CHANGED`（startup/bootstrap配置同步被阻止）；代码将授权绑定不匹配或渠道不可用映射为此码。尚无证据证明它就是本次模型拒绝原因，不把两者直接作因果关联，也未重置激活或修改凭据。原截图两个unknown任务继续保留。T-957待同一真实任务结果或服务侧拒绝原因确认后再验收；T-954仍承担已记录的内容质量失败样本。
