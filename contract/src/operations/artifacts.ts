@@ -73,6 +73,8 @@ export const artifactsOperations = {
     params: artifactParams,
     body: z.object({
       expectedVersionId: id,
+      // 宿主提供的结构段 ID，或 script-text-range:<sha256>:<start>:<end> 纯文范围锚点。
+      // 纯文范围只允许原版本的唯一精确局部原文；服务端重验 hash/范围并 CAS 追加版本。
       sectionId: id,
       expectedOriginalText: z.string().min(1).max(12_000),
       replacementText: z.string().min(1).max(12_000),

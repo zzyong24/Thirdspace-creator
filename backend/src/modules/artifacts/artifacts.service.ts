@@ -1,3 +1,4 @@
+import {extractLegacyScriptText, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";
 import type { RequestContext } from "@creatoros/contract";
 import { requireAccountId, type Db } from "@creatoros/backend";
 import {
@@ -324,6 +325,27 @@ export function createArtifactsService(deps: ServiceDeps): ArtifactsService {
           : {};
       const rawSections = Array.isArray(data.sections) ? data.sections : [];
       const sections = canonicalizeScriptSectionRecords(rawSections);
+      if (input.sectionId.startsWith(LEGACY_SCRIPT_RANGE_PREFIX)) {
+        if (artifact.artifactType !== "output_script" || sections.length > 0 || (await repo.getScriptSections(current.id)).some(row => row.content?.trim()) || current.id !== expected.id) {
+          throw new ConflictError("纯文稿补丁的版本或稿件结构已改变，请重新读取当前稿");
+        }
+        let contentText: string;
+        try {
+          contentText = applyLegacyScriptRange(extractLegacyScriptText(current.contentText, current.contentData), input.sectionId, input.expectedOriginalText, input.replacementText);
+        } catch (error) {
+          throw new ConflictError(error instanceof Error ? error.message : "纯文稿补丁锚点无效");
+        }
+        const contentData = {...data};
+        // 同义正文必须同步，避免下一次读取或旧展示把新稿覆盖；其余元数据原样保留。
+        if (typeof contentData.transcript === "string") contentData.transcript = contentText;
+        if (typeof contentData.body === "string") contentData.body = contentText;
+        delete contentData.html;
+        const version = await service.createVersion(ctx, artifactId, {
+          expectedCurrentVersionId: current.id, contentText, contentData,
+          changeSummary: input.changeSummary?.trim() || "Copilot 局部改稿", createdByType: "user",
+        });
+        return {...version, previousVersionId: current.id};
+      }
       const targetIndex = sections.findIndex(
         (section) => section.id === input.sectionId,
       );

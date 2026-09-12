@@ -52,3 +52,5 @@ export {
   type ArtifactVersionResource,
   type ArtifactRelationResource,
 } from "./artifacts.schema";
+
+export {extractLegacyScriptText, legacyScriptHash, createLegacyScriptRange, applyLegacyScriptRange, LEGACY_SCRIPT_RANGE_PREFIX} from "./legacy-script-patch";

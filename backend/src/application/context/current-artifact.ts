@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import type {RequestContext} from "@creatoros/contract";
-import {canonicalizeScriptSectionRecords,type ArtifactsService} from "../../modules/artifacts";
+import {extractLegacyScriptText,canonicalizeScriptSectionRecords,type ArtifactsService} from "../../modules/artifacts";
 import type {ProjectsService} from "../../modules/projects";
 export function extractArtifactText(
   contentText: string | null | undefined,
@@ -33,17 +33,7 @@ export function extractArtifactText(
       .join("\n\n");
     if (joined.trim()) return joined;
   }
-  if (data && typeof data.transcript === "string" && data.transcript.trim()) {
-    return data.transcript;
-  }
-  if (typeof contentText === "string" && contentText.trim()) {
-    return contentText;
-  }
-  // 兜底:contentData.body 纯文本字段。
-  if (data && typeof data.body === "string" && data.body.trim()) {
-    return data.body;
-  }
-  return "";
+  return extractLegacyScriptText(contentText, contentData);
 }
 
 /** 当前版本、规范正文与稳定段落引用的共享只读源。 */

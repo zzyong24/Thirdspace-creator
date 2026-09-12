@@ -1,3 +1,4 @@
+import {createLegacyScriptRange, legacyScriptHash} from "../artifacts";
 import { buildChatToolResultReader, buildChatHistoryReader, type ChatHistoryReader, type ChatToolResultReader } from "./chat-tool-result-reader";
 import { buildChatSkillReadTool, type ChatSkillLibrary } from "./chat-skill-library";
 import {prepareMaterialGeneration,type MaterialGenerationInput} from "./material-generation-preparation";
@@ -2162,12 +2163,18 @@ const SCRIPT_PATCH_BOUND_PARAMS = jsonSchema<{
  * sections[].sectionRef 中选一个。sectionRef 不代表授权，execute 会重读 currentVersion 校验。
  */
 const SCRIPT_PATCH_CONTEXT_PARAMS = jsonSchema<{
-  sectionRef: string;
+  sectionRef?: string;
+  originalText?: string;
+  expectedVersionId?: string;
+  contentHash?: string;
   replacementText: string;
   summary?: string;
 }>({
   type: "object",
   properties: {
+    originalText: {type: "string", minLength: 1, maxLength: 12000, description: "仅纯文稿无 sections 时：从 fullText 逐字复制要改的唯一原文片段，不能复制整篇。"},
+    expectedVersionId: {type: "string", minLength: 1, description: "纯文稿必须逐字抄本轮 context.artifact.text 的 currentVersionId，不要猜或让用户提供 ID。"},
+    contentHash: {type: "string", minLength: 64, maxLength: 64, description: "纯文稿必须逐字抄本轮 context.artifact.text 的 contentHash，不要猜或让用户提供。"},
     sectionRef: {
       type: "string",
       minLength: 1,
@@ -2178,7 +2185,7 @@ const SCRIPT_PATCH_CONTEXT_PARAMS = jsonSchema<{
       type: "string",
       minLength: 1,
       maxLength: 12000,
-      description: "按用户要求改写后的目标段完整正文。只返回这一段。",
+      description: "只放目标片段改写后的新正文，不含原文、标题、解释或 Markdown 对照。说明放 summary 或聊天；不得把整篇诊断说明放进来。",
     },
     summary: {
       type: "string",
@@ -2186,7 +2193,7 @@ const SCRIPT_PATCH_CONTEXT_PARAMS = jsonSchema<{
       description: "本次局部修改的一句话说明。",
     },
   },
-  required: ["sectionRef", "replacementText"],
+  required: ["replacementText"],
   additionalProperties: false,
 });
 
@@ -3220,10 +3227,11 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
     : boundProjectId && deps.getArtifactText
       ? defineChatTool("script.patch", {
           description:
-            "按用户自然语言修改当前项目稿件中的一个段落。必须先调用 context.artifact.text 读取 output_script，再由你根据用户语义从 sections 中选择唯一 sectionRef；不要猜引用，不要让用户提供技术 ID。工具会在执行时重读当前版本并校验引用，只返回局部候选，用户采纳后才写入。若目标不唯一，先在对话里澄清，不要调用本工具。",
+            "按用户自然语言修改当前项目稿件中的一个段落。必须先调用 context.artifact.text 读取 output_script，再由你根据用户语义从 sections 中选择唯一 sectionRef；不要猜引用，不要让用户提供技术 ID。工具会在执行时重读当前版本并校验引用，只返回局部候选，用户采纳后才写入。纯文稿 sections 为空时，不要虚构 sectionRef：改用 originalText（逐字唯一的局部原文）、expectedVersionId 和 contentHash；只改该片段并保留全文其他部分。若目标不唯一，先在对话里澄清，不要调用本工具。",
           inputSchema: SCRIPT_PATCH_CONTEXT_PARAMS,
           execute: async ({
             sectionRef,
+            originalText, expectedVersionId, contentHash,
             replacementText,
             summary,
           }): Promise<ScriptPatchToolResult> => {
@@ -3231,7 +3239,19 @@ export function allChatTools(deps: ChatToolDeps): Record<string, Tool> {
               projectId: boundProjectId,
               artifactType: "output_script",
             });
-            const ref = sectionRef.trim();
+            if (raw?.artifactId && raw.currentVersionId && raw.artifactType === "output_script" && raw.sections?.length === 0 && !sectionRef) {
+              if (expectedVersionId !== raw.currentVersionId || !contentHash || contentHash !== raw.contentHash || contentHash !== legacyScriptHash(raw.fullText) || typeof originalText !== "string") {
+                throw new Error("纯文稿补丁必须使用刚读取的当前版本、内容校验值和精确原文片段");
+              }
+              const sectionId = createLegacyScriptRange(raw.fullText, originalText);
+              const next = replacementText.trim();
+              return {kind: "script.patch", artifactId: raw.artifactId, versionId: raw.currentVersionId,
+                sectionId, originalText, replacementText: next,
+                summary: summary?.trim().slice(0, 120) || "Copilot 纯文稿局部改稿",
+                ...(normalizePatchText(next) === normalizePatchText(originalText) ? {error: "这次建议稿与原文相同，没有产生可采纳的修改。"} : {}),
+              };
+            }
+            const ref = sectionRef?.trim() ?? "";
             const matches = (raw?.sections ?? []).filter(
               (section) => section.sectionRef === ref,
             );
