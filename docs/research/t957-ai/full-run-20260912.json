@@ -1,0 +1,357 @@
+[
+  {
+    "case": "cover",
+    "taskId": "ai-task-24509a92-12880",
+    "conversationId": "ai-conv-24509a92-12876",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_project_lifecycle",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-cover_generate",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12890"
+      }
+    ]
+  },
+  {
+    "case": "diagnosis",
+    "taskId": "ai-task-24509a92-12456",
+    "conversationId": "ai-conv-24509a92-12452",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-review_script",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12668"
+      },
+      {
+        "tool": "tool-calibration_diagnose",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "draft",
+    "taskId": "ai-task-24509a92-12416",
+    "conversationId": "ai-conv-24509a92-12411",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_project_lifecycle",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifacts",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-script_draft",
+        "state": "output-available",
+        "error": "资料引用已失效：artifact-185382ce-678。请重新选择或上传。",
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-script_draft",
+        "state": "output-available",
+        "error": "资料引用已失效：output_script:project-185382ce-364。请重新选择或上传。",
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-script_draft",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12516"
+      },
+      {
+        "tool": "tool-tool_result_read",
+        "state": "output-available",
+        "error": "读取未完成，可检查权限与目标状态后继续",
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "enrich-hooks",
+    "taskId": "ai-task-24509a92-12440",
+    "conversationId": "ai-conv-24509a92-12436",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_artifacts",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_project_lifecycle",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-topic_enrich",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-script_hooks",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "image",
+    "taskId": "ai-task-24509a92-12494",
+    "conversationId": "ai-conv-24509a92-12489",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-material_generate",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12765"
+      }
+    ]
+  },
+  {
+    "case": "knowledge",
+    "taskId": "ai-task-24509a92-12472",
+    "conversationId": "ai-conv-24509a92-12468",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-knowledge_distill",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "planning",
+    "taskId": "ai-task-24509a92-12448",
+    "conversationId": "ai-conv-24509a92-12444",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_project_lifecycle",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-planning_thesis",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12622"
+      },
+      {
+        "tool": "tool-brief_fill",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "positioning",
+    "taskId": "ai-task-24509a92-12464",
+    "conversationId": "ai-conv-24509a92-12460",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_positioning_detail",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_learnings",
+        "state": "output-available",
+        "error": {
+          "code": "invalid_input",
+          "recovery": "请按工具schema修正参数后发起新调用：根参数 (unrecognized_keys)",
+          "retryable": false
+        },
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_candidates",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_learnings",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_publications",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-positioning_generate",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "publish",
+    "taskId": "ai-task-24509a92-12481",
+    "conversationId": "ai-conv-24509a92-12477",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-context_artifacts",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-context_artifact_text",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-publish_package",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12762"
+      }
+    ]
+  },
+  {
+    "case": "research",
+    "taskId": "ai-task-24509a92-12510",
+    "conversationId": "ai-conv-24509a92-12506",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-web_read",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      },
+      {
+        "tool": "tool-material_gather",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "review",
+    "taskId": "ai-task-24509a92-12424",
+    "conversationId": "ai-conv-24509a92-12420",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-review_analyze",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "topics",
+    "taskId": "ai-task-24509a92-12407",
+    "conversationId": "ai-conv-24509a92-12403",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-topic_generate",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": null
+      }
+    ]
+  },
+  {
+    "case": "video",
+    "taskId": "ai-task-24509a92-12502",
+    "conversationId": "ai-conv-24509a92-12498",
+    "status": "succeeded",
+    "runtimeStatus": "succeeded",
+    "tools": [
+      {
+        "tool": "tool-material_generate",
+        "state": "output-available",
+        "error": null,
+        "childTaskId": "ai-task-24509a92-12768"
+      }
+    ]
+  }
+]

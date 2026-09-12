@@ -1022,3 +1022,4 @@
 {"ts":"2026-09-12T08:53:21.395Z","actor":"taskctl","action":"block","task":"T-957","reason":"修复已安装9901cf2f；真实旧稿复测ai-task-24509a92-64反复retry_wait（供应商明确拒绝），未得到候选；保留原任务，不重复提交。","sha_before":"d13f0041f1a5","sha_after":"ecfed1ee8e03"}
 {"ts":"2026-09-12T09:45:38.813Z","actor":"taskctl","action":"start","task":"T-958","sha_before":"3b8181504b28","sha_after":"0d84849bde83"}
 {"ts":"2026-09-12T09:45:38.933Z","actor":"taskctl","action":"complete","task":"T-958","evidence":"三份日志完整解密；按同一reference去重，识别3次工具成功后HTTP400及额度/超时/网络事件；分析报告保留未确定根因，不修改产品代码。","sha_before":"0d84849bde83","sha_after":"20cf0ae9e711"}
+{"ts":"2026-09-12T12:46:01.570Z","actor":"taskctl","action":"resume","task":"T-957","reason":"用户确认模型额度恢复并授权全量测试；原ai-task-24509a92-64已succeeded并读回合法script.patch候选。","sha_before":"20cf0ae9e711","sha_after":"7d3fdd1900e6"}
