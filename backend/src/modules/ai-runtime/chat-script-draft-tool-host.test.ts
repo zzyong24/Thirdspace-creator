@@ -11,7 +11,7 @@ async function fixture(current:NonNullable<ChatScriptDraftTaskPorts["readCurrent
  const restored={context:ctx,modelInput:{tools},hostContext:{chatContext:{projectId:"project"}}};
  const prepareDraft=vi.fn(async(_ctx:unknown,input:unknown)=>input);
  const resolve=createChatScriptDraftTaskHost({read:async()=>structuredClone(restored)} as never,{readCurrentScript:current,prepareDraft,wakeTask:async()=>{}} as unknown as ChatScriptDraftTaskPorts);
- const host=await resolve(ctx,{} as never,execution,undefined);
+ const host=await resolve(ctx,{} as never,execution,new AbortController().signal);
  return {ctx,restored,prepareDraft,tool:host["script.draft"]!,scope:{execution,callId:"call",attemptId:"attempt",signal:new AbortController().signal}};
 }
 const source={projectId:"project",artifactId:"artifact",currentVersionId:"v2",contentHash:"unused",fullText:"WASD移动，QQ恢复生命值，自动射击。"};
