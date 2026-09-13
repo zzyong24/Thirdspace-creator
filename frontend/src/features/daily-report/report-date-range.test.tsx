@@ -1,0 +1,11 @@
+import {afterEach,describe,expect,it,vi} from "vitest";
+import {fireEvent,render,screen} from "@testing-library/react";
+import {ReportDateRange,reportPreset,shiftReportDate} from "./report-date-range";
+import {beijingToday} from "@/components/ui/creator-date-picker";
+vi.mock("@/components/ui/creator-date-picker",async()=>{const actual=await vi.importActual<typeof import("@/components/ui/creator-date-picker")>("@/components/ui/creator-date-picker");return {...actual,CreatorDatePicker:(props:any)=><button onClick={()=>props.onChange(props.mode==="date"?"2026-09-09":{startDate:"2026-09-07",endDate:"2026-09-13"})}>{props.label}</button>};});
+afterEach(()=>vi.useRealTimers());
+describe("报表日期范围",()=>{
+ it("默认今天取北京时间，跨月/跨年/闰日日期运算不受本地时区影响",()=>{expect(beijingToday(new Date("2026-09-13T18:00:00Z"))).toBe("2026-09-14");expect(reportPreset(7,"2026-01-03")).toEqual({startDate:"2025-12-27",endDate:"2026-01-02"});expect(shiftReportDate("2024-03-01",-1)).toBe("2024-02-29");});
+ it("快捷昨天/近7天/近30天均返回含首尾日的真实范围",()=>{vi.useFakeTimers();vi.setSystemTime(new Date("2026-09-13T18:00:00Z"));const onChange=vi.fn();render(<ReportDateRange value={{startDate:"2026-09-13",endDate:"2026-09-13"}} onChange={onChange}/>);fireEvent.click(screen.getByRole("button",{name:"近 7 天"}));expect(onChange).toHaveBeenLastCalledWith({startDate:"2026-09-07",endDate:"2026-09-13"});expect(screen.getByRole("button",{name:"自定义"})).toHaveAttribute("aria-pressed","true");fireEvent.click(screen.getByRole("button",{name:"近 30 天"}));expect(onChange).toHaveBeenLastCalledWith({startDate:"2026-08-15",endDate:"2026-09-13"});fireEvent.click(screen.getByRole("button",{name:"昨天"}));expect(onChange).toHaveBeenLastCalledWith({startDate:"2026-09-13",endDate:"2026-09-13"});});
+ it("切换周/月模式只切控件不提交伪造范围，具体选择再提交",()=>{const onChange=vi.fn();render(<ReportDateRange value={{startDate:"2026-09-13",endDate:"2026-09-13"}} onChange={onChange}/>);fireEvent.click(screen.getByRole("button",{name:"周"}));expect(onChange).not.toHaveBeenCalled();fireEvent.click(screen.getByRole("button",{name:"报表周"}));expect(onChange).toHaveBeenLastCalledWith({startDate:"2026-09-07",endDate:"2026-09-13"});fireEvent.click(screen.getByRole("button",{name:"月"}));expect(screen.getByRole("button",{name:"报表月份"})).toBeInTheDocument();});
+});
