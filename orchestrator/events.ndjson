@@ -1051,3 +1051,5 @@
 {"ts":"2026-09-13T15:01:17.344Z","actor":"taskctl","action":"complete","task":"T-970","evidence":"f1c8fdd6；80项针对性回归、42项打包预检通过；安装版真实 ai-task-92f97c71-63 succeeded，RedFox 20组热点与后续分析可回读，见 docs/verification/t970-redfox-live.md。全局既有 backend 测试类型漂移和 live-chat-session 边界违规保留；reconcile 本轮尚未返回，不计全绿。","sha_before":"784be5cadb3e","sha_after":"5970046204d5"}
 {"ts":"2026-09-13T15:18:32.261Z","actor":"taskctl","action":"start","task":"T-971","sha_before":"37e853c52acf","sha_after":"a6c6d58c1813"}
 {"ts":"2026-09-13T15:48:37.989Z","actor":"taskctl","action":"complete","task":"T-971","evidence":"d915c5d2；日报40+后端13+打包42测试通过，tsc通过；真实12作品验图，49作品3页ZIP；本机安装启动与DMG校验成功。全局reconcile233项既有漂移归T-916，Windows未实机验证。","sha_before":"a6c6d58c1813","sha_after":"a5e148a9eaab"}
+{"ts":"2026-09-13T16:04:53.392Z","actor":"taskctl","action":"start","task":"T-972","sha_before":"bc8ef7f3a714","sha_after":"7b5c9b98bc71"}
+{"ts":"2026-09-13T16:20:01.440Z","actor":"taskctl","action":"complete","task":"T-972","evidence":"7e163219；副本精确复现旧全量查询破坏协议状态；任务9+雷达29+打包42通过，tsc通过；新安装版1615条内容与12条周期作品连续查询成功，浏览器雷达页面验图通过。全局233项既有漂移归T-916。","sha_before":"7b5c9b98bc71","sha_after":"c70c9927e058"}

@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-972 | 修复内容雷达安装版页面加载失败 | ✅ 待办 | — | — | [SPEC](docs/features/t972-radar-page-failure.md) | 根据错误479389334追踪真实日志，修复整页阻断并验证安装版。 |
 | T-971 | 重设计分享战报与复盘话术【先文生图】 | ✅ 待办 | — | — | [SPEC](docs/features/t971-report-visual-redesign.md) | 先生成视觉稿；精简日期与导出文案、全作品播放柱与关注折线、账号定位和主页二维码，再实现 UI。 |
 | T-970 | 修复 RedFox 工具准备阶段参数校验导致聊天中断【新版复现】 | ✅ 待办 | — | — | [SPEC](docs/features/t970-redfox-tool-validation.md) | 以安装版 prepareChatRedfox ZodError 为证据，统一参数契约，验证真实工具循环与最终结果。 |
 | T-969 | 修复 AI 助手 RedFox 热点任务空配置卡死【用户截图】 | ✅ 待办 | — | — | [SPEC](docs/features/t969-redfox-chat-recovery.md) | 空模型不得创建未知结果任务；区分模型配置、RedFox 密钥和真实工具结果，保留原任务不重提。 |
