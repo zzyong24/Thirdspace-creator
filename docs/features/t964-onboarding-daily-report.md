@@ -36,3 +36,16 @@ flowchart LR
 截图见 docs/research/t964/home.png 与 daily-report.png。日报按北京时间、选定发布日期作品的最新累计指标展示，不冒充当日增量；语义结论经AI助手生成，图表不伪造归因。
 
 全局工程对账与历史边界债务沿T-916保留，不能将本次局部验证描述为全库全绿。打包及安装证据待补。
+
+## 本地安装交付
+
+源码候选 b123419c45bad5093a883539dc74de4d7b360b54；独立干净工作树 Thirdspace-creator-t964-package 固定入口构建成功，4文件42项打包检查通过。版本四处一致1.1.0，新提交凭据模式扫描0匹配。DMG镜像校验VALID，源应用和安装应用codesign --deep --strict通过；为本地ad-hoc包，未公证，未触发公开发布。
+
+产物 /Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg
+SHA256 5639aa3cab22640da827feeb180978c62c823ec1d82c87f7594d839c52fb2b73
+
+退出旧App及sidecar后备份到 /Users/zyongzhu/.creatoros/backups/t964-20260913-002637/app-data，共3187文件逐一SHA256核对。官方安装函数替换 /Applications/CreatorOS.app 并启动PID65871，sidecar65997，端口52106。安装二进制与本轮产物SHA256同为8fbc18ba4079f16928de7d40888a38644b9bf7abb5a97544537b3f3939c9e501。
+
+真实安装版CLI连接成功、完整访问自动恢复；动态发现并调用settings.onboarding.get成功，迁移新表可读。pages.dailyReport.get对唯一真实账号 acct-ae1a8346-9 返回2026-09-12、Asia/Shanghai、1条作品、warnings为空。只读验收未修改真实账号引导选择。安装版 / 和 /daily-report 均HTTP200，首页实际HTML含 /daily-report 入口及运营日报文字。
+
+浏览器下载PNG由macOS Vision解码确认 https://buy.aitongban.cloud/，图片1440×1988（隔离1作品样本）。工程pmem sync已运行；reconcile仍233项既有历史漂移，归T-916，不属于本次通过的引导/日报/打包检查。
