@@ -156,3 +156,5 @@ export {createEmbeddingIoService} from "./embedding-io.service";
 export {createModelProbeIoService} from "./model-probe-io.service";
 
 export {resolveSubmittedChatToolParameters} from "./chat-submitted-tool-parameters";
+
+export {createChatRedfoxTaskToolHost} from "./chat-redfox-tool-host";

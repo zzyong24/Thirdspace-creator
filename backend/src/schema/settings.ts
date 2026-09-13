@@ -216,6 +216,8 @@ export type AccountSkillOverlayVersionRow = InferSelectModel<
 //   - model_config_user_capability: the (user_id, capability) unique upsert key
 //     putModel's ON CONFLICT DO UPDATE targets.
 export const SETTINGS_DDL = `
+CREATE TABLE IF NOT EXISTS redfox_submissions (user_id text NOT NULL, input_hash text NOT NULL, fingerprint text NOT NULL, call_id text NOT NULL, task_id text, observation jsonb, PRIMARY KEY(user_id,input_hash));
+CREATE TABLE IF NOT EXISTS integration_credentials (user_id text NOT NULL, provider text NOT NULL, encrypted_secret text NOT NULL, updated_at text NOT NULL, PRIMARY KEY(user_id,provider));
 CREATE TABLE IF NOT EXISTS user_preferences (
   user_id TEXT PRIMARY KEY,
   default_home TEXT NOT NULL,

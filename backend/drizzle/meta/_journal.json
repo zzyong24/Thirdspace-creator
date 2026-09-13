@@ -666,6 +666,13 @@
       "when": 1789084800000,
       "tag": "0094_publication_traffic",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1789257600000,
+      "tag": "0095_redfox_credentials",
+      "breakpoints": true
     }
   ]
 }

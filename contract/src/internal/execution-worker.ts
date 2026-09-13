@@ -1,3 +1,5 @@
+import {redfoxObservationSchema} from "./redfox";
+export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
 import {videoPortInputSchemas} from "./execution-video";
 export {videoPortInputSchemas,videoFrozenSchema,videoSkillSchema} from "./execution-video";
@@ -76,6 +78,7 @@ export const workerPortSchema = z.enum([
   "reserveAsrRequest", "startAsrRequest", "settleAsrRequest",
   "resolveAssetCredential", "settleAssetCall", "reserveAssetCall", "startAssetCall", "saveAssetResult", "recoverAssetResult", "readAssetProviderJob", "recordAssetProviderJob",
   "resolveChatWebReadSearch", "readChatWebReadCache", "failChatWebRead", "prepareChatWebRead", "observeChatWebRead", "restoreChatWebRead", "completeChatWebRead", "readChatWebReadSession", "saveChatWebReadSession",
+  "prepareChatRedfox", "settleChatRedfox",
   "prepareChatResearch", "settleChatResearch",
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatScriptDraft", "restoreChatScriptDraft", "prepareChatScriptDraft", "reserveChatScriptDraftModel", "startChatScriptDraftModel", "settleChatScriptDraftModel", "completeChatScriptDraft",
@@ -160,6 +163,8 @@ export const workerPortInputSchemas = {
   completeChatWebRead:chatWebReadCallSchema,
   readChatWebReadSession:chatWebReadCallSchema,
   saveChatWebReadSession:chatWebReadSessionSaveSchema,
+  prepareChatRedfox:z.object({callId:operationKeySchema}).strict(),
+  settleChatRedfox:z.object({callId:operationKeySchema,observation:redfoxObservationSchema}).strict(),
   prepareChatResearch:z.object({callId:operationKeySchema}).strict(),
   settleChatResearch:z.object({callId:operationKeySchema,observation:chatResearchObservationSchema}).strict(),
   failChatGeneration:z.object({callId:operationKeySchema,outcome:z.enum(["retry_wait","waiting_user","failed"]),errorCode:z.string().min(1).max(128),retryAfterMs:z.number().finite().nonnegative().optional()}).strict(),

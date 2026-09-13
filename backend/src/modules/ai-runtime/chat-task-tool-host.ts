@@ -1,3 +1,4 @@
+import {createChatRedfoxTaskToolHost} from "./chat-redfox-tool-host";
 import {createChatCoverTaskHost,type ChatCoverTaskPorts} from "./chat-cover-task-host";
 import {createChatAgenticResearchTaskHost,type ChatAgenticResearchTaskPorts} from "./chat-agentic-research-task-host";
 import {createChatPublishTaskHost,type ChatPublishTaskPorts} from "./chat-publish-task-host";
@@ -31,6 +32,7 @@ export function createChatTaskToolHost(
  const webRead=ports.webRead?createChatWebReadTaskToolHost(reader):null;
  const videoEdit=ports.videoEdit?createChatVideoEditTaskToolHost(reader,ports.videoEdit):null;
  const localRead=ports.localRead?createChatLocalReadTaskToolHost(reader,ports.localRead):null;
+ const redfox=createChatRedfoxTaskToolHost(reader);
  const research=ports.research?createChatResearchTaskToolHost(reader):null;
  const structured=ports.structured?createChatStructuredTaskToolHost(reader,ports.structured):null;
  const review=ports.review?createChatReviewTaskHost(reader,ports.review):null;
@@ -40,7 +42,7 @@ export function createChatTaskToolHost(
  const cover=ports.cover?createChatCoverTaskHost(reader,readers,ports.cover):null;
  const material=ports.material?createChatMaterialTaskHost(reader,readers,ports.material):null;
  return async(context,input,execution,signal)=>{
-  const groups=await Promise.all([cover?.(context,input,execution,signal)??{},agenticResearch?.(context,input,execution,signal)??{},review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
+  const groups=await Promise.all([redfox(context,input,execution,signal),cover?.(context,input,execution,signal)??{},agenticResearch?.(context,input,execution,signal)??{},review?.(context,input,execution,signal)??{},scriptPatch(context,input,execution,signal),webRead?.(context,input,execution,signal)??{},localRead?.(context,input,execution,signal)??{},research?.(context,input,execution,signal)??{},read(context,input,execution,signal),hooks(context,input,execution,signal),candidates(context,input,execution,signal),planning?.(context,input,execution,signal)??{},material?.(context,input,execution,signal)??{},local?.(context,input,execution,signal)??{},structured?.(context,input,execution,signal)??{}]);
   groups.push(await publish?.(context,input,execution,signal)??{});
   groups.push(await scriptDraft?.(context,input,execution,signal)??{});
   groups.push(await videoEdit?.(context,input,execution,signal)??{});

@@ -14,7 +14,11 @@ import {
 // SPEC §13 "设置" group. `GET /settings` is the singleton settings view for the
 // authenticated user (not a collection); the remaining operations mutate the
 // user's preferences, per-capability model config, and agent configs.
+const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
 export const settingsOperations = {
+ getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
+ putRedfox:defineEndpoint({id:"settings.redfox.put",method:"PUT",path:"/settings/redfox",body:z.object({secret:z.string().trim().min(1).max(4096)}).strict(),response:redfoxStatus,fr:["FR-REDFOX"]}),
+ deleteRedfox:defineEndpoint({id:"settings.redfox.delete",method:"DELETE",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
   getSettings: defineEndpoint({
     id: "settings.get",
     method: "GET",

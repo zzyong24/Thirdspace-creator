@@ -12,6 +12,7 @@ type RequiredTaskPorts=Required<TaskPorts>;
 type ProductionDeps=Parameters<typeof createChatProductionRuntime>[1];
 /** 仅包含装配所需的既有业务服务，保持与 frontend ChatRuntime 结构兼容。 */
 export interface ChatProductionServicePorts extends ChatIngestionToolPorts {
+ resolveRedfoxCredential?:ProductionDeps["resolveRedfoxCredential"];
  context:ContextDeps;
  readCurrentScript?:RequiredTaskPorts["structured"]["readCurrentScript"];
  contextReaders:Parameters<typeof createChatTaskToolHost>[1];
@@ -77,6 +78,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   },
  });
  return createChatProductionRuntime(db,{
+  resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,
   budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
   assertProject:deps.assertProject,

@@ -26,6 +26,7 @@ import type {
 // PERSISTED_OPS from SETTINGS_OP_IDS (adding the module = registering it).
 
 export const SETTINGS_OP_IDS = [
+  "settings.redfox.get", "settings.redfox.put", "settings.redfox.delete",
   "settings.get",
   // `PATCH /me` (identity.profile.patch) is served HERE rather than by a bare
   // Identity route because Identity owns no dispatch transport — the Settings
@@ -62,6 +63,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export function createSettingsTransport(
   serviceFactory: (ctx: RequestContext) => SettingsService,
+  integrations?: ReturnType<typeof import("./integration-credentials").createIntegrationCredentials>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -73,6 +75,11 @@ export function createSettingsTransport(
       const { params, body } = (input ?? {}) as Input;
 
       switch (endpoint.id) {
+        case "settings.redfox.get": case "settings.redfox.put": case "settings.redfox.delete": {
+          if(!integrations)throw Error("REDFOX_SETTINGS_UNAVAILABLE");
+          const data=endpoint.id==="settings.redfox.get"?await integrations.status(ctx):endpoint.id==="settings.redfox.delete"?await integrations.remove(ctx):await integrations.save(ctx,(body as {secret:string}).secret);
+          return {data,meta:{requestId:ctx.requestId}};
+        }
         case "settings.get": {
           const data = await service.getAccount(ctx);
           return { data, meta: { requestId: ctx.requestId } };
