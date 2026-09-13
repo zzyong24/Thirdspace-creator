@@ -298,3 +298,22 @@ describe("publishing.repository — strict account isolation (T-332 S2)", () => 
     ).resolves.toBeNull();
   });
 });
+
+describe("日报发布窗口窄读", () => {
+  it("只返回当前用户当前账号已发布可见作品，按真实时间过滤，1000条历史不返回", async () => {
+    const base = await repoA.createPublication("out-window", {platform:"douyin", accountReference:"@a"});
+    await repoA.seedPublications([
+      ...Array.from({length:1005}, (_,i)=>({...base,id:`history-${i}`,status:"published",publishedAt:"2025-12-01T00:00:00Z"})),
+      {...base,id:"start",status:"published",publishedAt:"2026-02-28T00:00:00+08:00"},
+      {...base,id:"inside",status:"published",publishedAt:"2026-02-28T15:59:59Z"},
+      {...base,id:"end",status:"published",publishedAt:"2026-03-01T00:00:00+08:00"},
+      {...base,id:"draft",publishedAt:"2026-02-28T12:00:00Z"},
+      {...base,id:"hidden",status:"published",hiddenAt:NOW,publishedAt:"2026-02-28T12:00:00Z"},
+      {...base,id:"removed",status:"published",removedAt:NOW,publishedAt:"2026-02-28T12:00:00Z"},
+      {...base,id:"other-account",accountId:"acct-2",status:"published",publishedAt:"2026-02-28T12:00:00Z"},
+      {...base,id:"other-user",userId:B,status:"published",publishedAt:"2026-02-28T12:00:00Z"},
+    ]);
+    const result=await repoA.listPublishedInWindow({start:"2026-02-27T16:00:00Z",end:"2026-02-28T16:00:00Z"});
+    expect(result.map(p=>p.id)).toEqual(["inside","start"]);
+  });
+});

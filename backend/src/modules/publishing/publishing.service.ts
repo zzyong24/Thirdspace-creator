@@ -139,6 +139,7 @@ export interface PublishingService {
    * 组合层批量读取指定 outputs 的 canonical publication 事实；按联合归属收窄，
    * 且不因 hidden/platformStatus 丢失历史已发布事实。
    */
+  listPublishedInWindow(ctx: RequestContext, window: {start: string; end: string}): Promise<PublicationRow[]>;
   listPublicationsByOutputIds(
     ctx: RequestContext,
     outputIds: ReadonlyArray<string>,
@@ -430,6 +431,11 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       return repoFor(ctx).listPublicationsForUser(pagination);
     },
 
+    async listPublishedInWindow(ctx, window) {
+      const start = Date.parse(window.start), end = Date.parse(window.end);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) throw new Error("日期范围无效");
+      return repoFor(ctx).listPublishedInWindow({start: new Date(start).toISOString(), end: new Date(end).toISOString()});
+    },
     async listPublicationsByOutputIds(ctx, outputIds) {
       return repoFor(ctx).listPublicationsByOutputs(outputIds);
     },

@@ -402,6 +402,7 @@ export interface ProjectsService {
   /**
    * 组合层批量读取一页项目的 output 引用；所有行由 Projects 模块按联合归属收窄。
    */
+  listOutputRefsByOutputIds(ctx: RequestContext, outputIds: ReadonlyArray<string>): Promise<Array<{projectId: string; outputId: string; title: string; contentType: string; status: string}>>;
   listOutputRefsByProjects(
     ctx: RequestContext,
     projectIds: ReadonlyArray<string>,
@@ -1611,6 +1612,10 @@ export function createProjectsService(
       return { project, stages, outputs, activities };
     },
 
+    async listOutputRefsByOutputIds(ctx, outputIds) {
+      requireAccountId(ctx.accountId, "projects.listOutputRefsByOutputIds");
+      return repo.listOutputRefsByOutputIds(ctx, outputIds);
+    },
     async listOutputRefsByProjects(ctx, projectIds) {
       requireAccountId(ctx.accountId, "projects.listOutputRefsByProjects");
       return repo.listOutputRefsByProjects(ctx, projectIds);

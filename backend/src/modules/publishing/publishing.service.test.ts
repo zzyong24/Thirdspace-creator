@@ -93,6 +93,9 @@ describe("service — 未选号 ctx → AccountRequiredError (T-332 S2)", () => 
   });
 
   it("读路径(listPublicationsForUser / getPublication)未选号同样禁读", async () => {
+    await expect(service.listPublishedInWindow(noAcctCtx, {start:"2026-09-01T00:00:00Z",end:"2026-09-02T00:00:00Z"})).rejects.toBeInstanceOf(AccountRequiredError);
+    await expect(service.listPublishedInWindow(ctx, {start:"invalid",end:"2026-09-02T00:00:00Z"})).rejects.toThrow("日期范围无效");
+    await expect(service.listPublishedInWindow(ctx, {start:"2026-09-02T00:00:00Z",end:"2026-09-01T00:00:00Z"})).rejects.toThrow("日期范围无效");
     await expect(
       service.listPublicationsForUser(noAcctCtx, { limit: 10, offset: 0 }),
     ).rejects.toBeInstanceOf(AccountRequiredError);

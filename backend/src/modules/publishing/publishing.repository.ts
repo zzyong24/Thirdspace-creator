@@ -94,6 +94,7 @@ export interface PublishingRepository {
    * 当前联合归属下，批量读取指定 output 的发布事实。T-595 后可见性已在
    * 采集边界归一，本窄读不再接受或实现第二份 visibility 条件。
    */
+  listPublishedInWindow(window: {start: string; end: string}): Promise<PublicationRow[]>;
   listPublicationsByOutputs(
     outputIds: ReadonlyArray<string>,
   ): Promise<PublicationRow[]>;
@@ -321,6 +322,16 @@ export function createPublishingRepository(
         )
         .limit(page.limit)
         .offset(page.offset);
+    },
+
+    async listPublishedInWindow(window) {
+      // SEMANTIC_BOUNDARY_ALLOW: 时间窗与归属过滤，不做选题或效果判断。
+      return db.select().from(publications).where(and(
+        eq(publications.userId, userId), accountGate,
+        eq(publications.status, "published"), isNull(publications.hiddenAt), isNull(publications.removedAt),
+        sql`${publications.publishedAt}::timestamptz >= ${window.start}::timestamptz`,
+        sql`${publications.publishedAt}::timestamptz < ${window.end}::timestamptz`,
+      )).orderBy(desc(sql`${publications.publishedAt}::timestamptz`));
     },
 
     async listPublicationsByOutputs(outputIds) {

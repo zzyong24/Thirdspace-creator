@@ -308,6 +308,11 @@ describe("ProjectRepository — per-account strict isolation (T-332 S2)", () => 
       updatedAt: NOW,
     });
 
+    const bounded = await repo.listOutputRefsByOutputIds(ctxA1, ["o_P1", "o_P2_batch", "missing"]);
+    expect(bounded).toHaveLength(1);
+    expect(bounded[0]).toMatchObject({outputId: "o_P1", projectId: "P1", title: (await repo.get(ctxA1,"P1")).title});
+    expect(await repo.listOutputRefsByOutputIds(ctxB, ["o_P1"])).toEqual([]);
+    await expect(repo.listOutputRefsByOutputIds(ctxNoAcct, [])).rejects.toMatchObject({name:"AccountRequiredError"});
     await expect(
       repo.listOutputRefsByProjects(ctxA1, ["P1", "P2"]),
     ).resolves.toEqual([
