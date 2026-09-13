@@ -487,6 +487,19 @@ describe("[T-513] snapshot serialization", () => {
 
 
 describe("T-944 官方编导方法到聊天读取链路", () => {
+  it("T-962 新聊天可发现并读取 RedFox 研究和运营复盘方法", async () => {
+    const bases = listOfficialSkillBases();
+    const resolver = createEffectiveSkillSnapshotResolver(deps(bases));
+    for (const surface of ["project", "review", "topics"]) {
+      const snapshot = await resolver(ctx, requiredSkillIdsForTask("chat.sync", {surface}));
+      const library = createChatSkillLibrary(snapshot, ctx);
+      for (const skillId of ["method.redfox.topic-research", "method.redfox.benchmark", "method.operations.review"]) {
+        expect(library.catalog).toContain(skillId);
+        const base = bases.find(item => item.skillId === skillId)!;
+        expect(library.read({skillId}).text).toBe([base.methodSystem, base.template].join("\n\n"));
+      }
+    }
+  });
   it("按真实官方注册表冻结后，目录可发现找对标方法，正文逐字来自同一官方版本", async () => {
     const bases = listOfficialSkillBases();
     const resolver = createEffectiveSkillSnapshotResolver(deps(bases));

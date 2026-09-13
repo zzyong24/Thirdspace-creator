@@ -1238,6 +1238,38 @@
       "verify_commands": {
         "design": "node orchestrator/process/research-gate.mjs audit"
       }
+    },
+    "T-962": {
+      "task_id": "T-962",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "research",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**"
+      ],
+      "write_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/research/t962/**",
+        "docs/research/t960-daily-report/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "research": "node orchestrator/process/research-gate.mjs audit",
+        "implementation": "node orchestrator/process/boundary-scan.mjs"
+      }
     }
   }
 }

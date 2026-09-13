@@ -58,6 +58,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
       ctx,
       { externalSourceId: "src1" },
       expect.any(Function),
+      { taskId: "task1" },
     );
 
     // markRunning → recordStep(合成 step,文案含新增条数)→ markSucceeded
@@ -248,6 +249,7 @@ describe("runScheduledCollection(确定性采集 runner)", () => {
       ctx,
       { externalSourceId: "src1" },
       expect.any(Function),
+      { taskId: "task1" },
     );
     // 合成 step 文案含明细源标签 + 新增条数
     const stepArg = (deps.ai.recordStep as ReturnType<typeof vi.fn>).mock.calls[0]![2];
