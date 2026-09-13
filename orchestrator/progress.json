@@ -1607,6 +1607,49 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-962",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-962",
+      "tasks": [
+        {
+          "step": "research",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/research/t962/**",
+        "docs/research/t960-daily-report/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "read_set": [
+        "docs/features/t962-operations-sync-redfox.md",
+        "backend/src/**",
+        "contract/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     }
   ],
   "leases": {}
