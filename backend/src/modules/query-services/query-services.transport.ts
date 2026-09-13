@@ -27,6 +27,7 @@ import type {
 
 export const QUERY_SERVICES_OP_IDS = [
   "pages.dashboard.get",
+  "pages.dailyReport.get",
   "pages.projectOverview.get",
   "pages.search.get",
 ] as const;
@@ -35,6 +36,7 @@ type Input = { params?: unknown; query?: unknown; body?: unknown };
 
 export interface QueryServicesTransportDeps {
   dashboard: DashboardQueryService;
+  dailyReport?: {getDailyReport(ctx: RequestContext, date?: string): Promise<unknown>};
   overview: ProjectOverviewQueryService;
   search: GlobalSearchQueryService;
 }
@@ -51,6 +53,11 @@ export function createQueryServicesTransport(
       const { params, query } = (input ?? {}) as Input;
 
       switch (endpoint.id) {
+        case "pages.dailyReport.get": {
+          if (!deps.dailyReport) throw new UnsupportedOperationError(endpoint.id);
+          const q = (query ?? {}) as {date?: string};
+          return wrap(await deps.dailyReport.getDailyReport(ctx, q.date), ctx);
+        }
         case "pages.dashboard.get": {
           const data = await deps.dashboard.getDashboard(ctx);
           return wrap(data, ctx);

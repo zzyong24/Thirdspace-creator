@@ -1270,6 +1270,33 @@
         "research": "node orchestrator/process/research-gate.mjs audit",
         "implementation": "node orchestrator/process/boundary-scan.mjs"
       }
+    },
+    "T-964": {
+      "task_id": "T-964",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t964-onboarding-daily-report.md",
+        "docs/research/t964/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-data.test.ts src/features/onboarding/onboarding-steps.test.ts"
+      }
     }
   }
 }

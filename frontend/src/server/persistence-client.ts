@@ -38,6 +38,7 @@ import { createChatEvidenceReaders } from "@creatoros/backend/application/chat/e
 import { createChatLifecycleReaders } from "@creatoros/backend/application/chat/lifecycle-readers";
 import { createChatProjectsReaders } from "@creatoros/backend/application/chat/projects-readers";
 import { createProjectOverviewApplication } from "@creatoros/backend/application/queries/project-overview";
+import { createDailyReportApplication } from "@creatoros/backend/application/queries/daily-report";
 import { createDashboardApplication } from "@creatoros/backend/application/queries/dashboard";
 import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
 import { createRecoveryWakeCoordinator } from "@creatoros/backend/application/recovery-wake";
@@ -120,7 +121,7 @@ type HybridSearchHit } from "@creatoros/backend/modules/search";
 
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import { createIntegrationCredentials, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
+import { createOnboardingState, createIntegrationCredentials, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
@@ -4331,7 +4332,26 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
 
+  const dailyReportQuery = createDailyReportApplication({
+    now: deps.now, projectsService, publishingService, analyticsService, trafficService,
+    readAccountName: async ctx => ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
+    readScript: async (ctx, projectId) => {
+      const rows = await artifactsService.listProjectArtifacts(ctx, projectId);
+      const artifact = selectReadableProjectScriptArtifact(rows);
+      if (artifact?.currentVersionId) {
+        const current = await readCurrentArtifactTruth(ctx, projectId, artifact.artifactType);
+        return current?.fullText ?? null;
+      }
+      return readProjectRadarDraftSeed(ctx, projectId);
+    },
+    readPositioning: async ctx => {
+      const center = await positioningService.readPositioningCenter(ctx);
+      const profile = center.profile;
+      return [center.currentStatement?.oneLiner, profile?.field, profile?.audience, profile?.differentiation].filter(Boolean).join("\n") || null;
+    },
+  });
   const queryServices = createQueryServicesTransport({
+    dailyReport: dailyReportQuery,
     dashboard: dashboardQuery,
     overview: overviewQuery,
     search: searchQuery,
@@ -4539,7 +4559,8 @@ FAVORITES_PROMOTE_PER_RUN
   );
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
-  const settings = createSettingsTransport(() => settingsService, redfoxCredentials);
+  const onboardingState = createOnboardingState(db, (ctx, id) => platformAccountService.getAccount(ctx, id));
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials, onboardingState);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {

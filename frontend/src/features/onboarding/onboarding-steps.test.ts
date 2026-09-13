@@ -44,7 +44,7 @@ describe("[T-637] 新手引导主线", () => {
     expect(steps.map((item) => item.order)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it("已有作品账号必须先查看并确认导入项目，才解锁定位", () => {
+  it("历史作品确认单独完成，不用引导锁阻断定位", () => {
     const waiting: OnboardingState = {
       douyinLoggedIn: true,
       origin: "existing",
@@ -52,29 +52,29 @@ describe("[T-637] 新手引导主线", () => {
       hasReviewedImportedProjects: false,
     };
     expect(step(waiting, "review-imported-projects")?.done).toBe(false);
-    expect(step(waiting, "positioning-profile")?.blocked).toBe(true);
+    expect(step(waiting, "positioning-profile")?.blocked).toBe(false);
 
     const imported = { ...waiting, hasImportedWorks: true };
     expect(step(imported, "review-imported-projects")?.done).toBe(false);
-    expect(step(imported, "positioning-profile")?.blocked).toBe(true);
+    expect(step(imported, "positioning-profile")?.blocked).toBe(false);
 
     const confirmed = { ...imported, hasReviewedImportedProjects: true };
     expect(step(confirmed, "review-imported-projects")?.done).toBe(true);
     expect(step(confirmed, "positioning-profile")?.blocked).toBe(false);
   });
 
-  it("对标监控、对标选题和新建项目逐级解锁", () => {
+  it("引导提供建议但不阻断直接访问对标选题和项目", () => {
     const base: OnboardingState = {
       douyinLoggedIn: true,
       origin: "fresh",
       hasPositioningProfile: true,
     };
     expect(step(base, "benchmark-monitor")?.blocked).toBe(false);
-    expect(step(base, "benchmark-topic")?.blocked).toBe(true);
+    expect(step(base, "benchmark-topic")?.blocked).toBe(false);
 
     const monitored = { ...base, hasBenchmarkMonitor: true };
     expect(step(monitored, "benchmark-topic")?.blocked).toBe(false);
-    expect(step(monitored, "first-project")?.blocked).toBe(true);
+    expect(step(monitored, "first-project")?.blocked).toBe(false);
 
     const converted = { ...monitored, hasBenchmarkTopic: true };
     expect(step(converted, "first-project")?.blocked).toBe(false);
@@ -90,6 +90,11 @@ describe("[T-637] 新手引导主线", () => {
     };
     expect(step({ ...base, hasCreatedProject: false }, "first-project")?.done).toBe(false);
     expect(step({ ...base, hasCreatedProject: true }, "first-project")?.done).toBe(true);
+  });
+
+  it("暂时缺少业务信号不会撤销已保存的历史里程碑", () => {
+    expect(step({completedSteps: ["import-account", "first-project"]}, "import-account")?.done).toBe(true);
+    expect(step({completedSteps: ["first-project"], hasCreatedProject: false}, "first-project")?.done).toBe(true);
   });
 
   it("完整路径完成后进度为全满", () => {

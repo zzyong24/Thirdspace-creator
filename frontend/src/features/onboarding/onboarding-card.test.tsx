@@ -1,132 +1,40 @@
-import * as React from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
-
-vi.mock("next/link", () => ({
-  default: ({
-    children,
-    href,
-    ...rest
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
-}));
-
-const clientMock = vi.hoisted(() => ({
-  listProjects: vi.fn(async () => [] as unknown[]),
-  statusDouyin: vi.fn(async () => ({ loggedIn: false }) as unknown),
-  getPositioningCenter: vi.fn(async () => ({ profile: null }) as unknown),
-  getIntelligenceWorkspace: vi.fn(async () => ({ sources: [] }) as unknown),
-  listIntelligenceItems: vi.fn(async () => [] as unknown[]),
-}));
-const readCurrentAccountId = vi.hoisted(() => vi.fn(() => "account-1"));
-
-vi.mock("@/lib/contract-client", () => ({ client: clientMock }));
-vi.mock("@/lib/http-transport", () => ({ readCurrentAccountId }));
-
-import {
-  OnboardingCard,
-  requestOnboardingReopen,
-} from "./onboarding-card";
-
-const ORIGIN_KEY = "creatoros:onboarding:origin";
-const REVIEWED_KEY =
-  "creatoros:onboarding:reviewed-imported-projects:account-1";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  window.localStorage.clear();
-  readCurrentAccountId.mockReturnValue("account-1");
-  clientMock.listProjects.mockResolvedValue([]);
-  clientMock.statusDouyin.mockResolvedValue({ loggedIn: false });
-  clientMock.getPositioningCenter.mockResolvedValue({ profile: null });
-  clientMock.getIntelligenceWorkspace.mockResolvedValue({ sources: [] });
-  clientMock.listIntelligenceItems.mockResolvedValue([]);
-});
-
+import * as React from 'react';
+import {beforeEach,afterEach,describe,it,expect,vi} from 'vitest';
+import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+vi.mock('next/link',()=>({default:({children,...props}:React.AnchorHTMLAttributes<HTMLAnchorElement>)=><a {...props}>{children}</a>}));
+const loadState=vi.hoisted(()=>vi.fn());const saveOnboarding=vi.hoisted(()=>vi.fn());const current=vi.hoisted(()=>vi.fn(()=> 'a'));
+vi.mock('./onboarding-data',()=>({loadState,saveOnboarding}));
+vi.mock('@/lib/http-transport',()=>({readCurrentAccountId:current}));
+import {OnboardingCard,requestOnboardingReopen} from './onboarding-card';
+const keys=['import-account','confirm-origin','review-imported-projects','positioning-profile','benchmark-monitor','benchmark-topic','first-project'];
+const pref=()=>({accountId:'a',origin:'existing' as const,hidden:false,collapsed:true,completedSteps:['import-account','confirm-origin'],updatedAt:'2026-09-13'});
+let preferences= pref();
+beforeEach(()=>{vi.clearAllMocks();current.mockReturnValue('a');preferences=pref();loadState.mockImplementation(async()=>({accountId:current(),origin:preferences.origin,preferences,completedSteps:preferences.completedSteps,hasImportedWorks:true}));saveOnboarding.mockImplementation(async(_id,patch)=>{preferences={...preferences,...patch,completedSteps:[...new Set([...preferences.completedSteps,...(patch.completedSteps??[])])]};return preferences;});});
 afterEach(cleanup);
-
-describe("[T-637] OnboardingCard", () => {
-  it("首屏只展示创作成果主线，不展示自动化或模型配置", async () => {
-    render(<OnboardingCard />);
-    await waitFor(() =>
-      expect(document.querySelector('[data-slot="onboarding-card"]')).not.toBeNull(),
-    );
-    expect(document.body.textContent).toContain("绑定你的抖音号");
-    expect(document.body.textContent).not.toContain("自动化");
-    expect(document.body.textContent).not.toContain("配置文本模型");
-  });
-
-  it("已有作品出现后，点击“查看并确认”按账号记录确认并解锁定位", async () => {
-    window.localStorage.setItem(ORIGIN_KEY, "existing");
-    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
-    clientMock.listProjects.mockResolvedValue([
-      { id: "old", source: "imported" },
-    ]);
-    render(<OnboardingCard />);
-
-    const link = await waitFor(() => {
-      const node = document.querySelector<HTMLAnchorElement>(
-        '[data-step-key="review-imported-projects"] a',
-      );
-      expect(node).not.toBeNull();
-      return node!;
-    });
-    expect(link.getAttribute("href")).toBe("/projects");
-    fireEvent.click(link);
-    expect(window.localStorage.getItem(REVIEWED_KEY)).toBe("1");
-    await waitFor(() =>
-      expect(
-        document
-          .querySelector('[data-step-key="review-imported-projects"]')
-          ?.getAttribute("data-done"),
-      ).toBe("true"),
-    );
-  });
-
-  it("全部完成时默认隐藏，但设置页发重新打开事件后立即显示", async () => {
-    window.localStorage.setItem(ORIGIN_KEY, "fresh");
-    clientMock.statusDouyin.mockResolvedValue({ loggedIn: true });
-    clientMock.listProjects.mockResolvedValue([
-      { id: "new", source: "topic" },
-    ]);
-    clientMock.getPositioningCenter.mockResolvedValue({
-      profile: { id: "profile-1" },
-    });
-    clientMock.getIntelligenceWorkspace.mockResolvedValue({
-      sources: [
-        { id: "source-1", type: "creator_profile", monitorEnabled: true, status: "active" },
-      ],
-    });
-    clientMock.listIntelligenceItems.mockResolvedValue([
-      { item: { id: "item-1" } },
-    ]);
-
-    render(<OnboardingCard />);
-    await waitFor(() =>
-      expect(clientMock.listProjects).toHaveBeenCalled(),
-    );
-    expect(document.querySelector('[data-slot="onboarding-card"]')).toBeNull();
-
-    requestOnboardingReopen();
-    await waitFor(() =>
-      expect(document.querySelector('[data-slot="onboarding-card"]')).not.toBeNull(),
-    );
-    expect(
-      document.querySelector('[data-slot="onboarding-reopened-complete"]')
-        ?.textContent,
-    ).toContain("引导已重新打开");
-  });
-
-  it("重新打开会覆盖旧的“不再显示”偏好", async () => {
-    window.localStorage.setItem("creatoros:onboarding:hidden", "1");
-    requestOnboardingReopen();
-    expect(window.localStorage.getItem("creatoros:onboarding:hidden")).toBeNull();
-    expect(window.localStorage.getItem("creatoros:onboarding:force-open")).toBe("1");
-  });
+describe('T-964 引导确认与退出',()=>{
+ it('显示已完成计数，默认仅展示下一步，查看链接不冒充确认',async()=>{
+  render(<OnboardingCard/>);await screen.findByText('已完成 2 / 7');expect(document.querySelectorAll('[data-slot="onboarding-step"]')).toHaveLength(1);
+  const link=screen.getByRole('link',{name:'查看历史作品'});expect(link.getAttribute('href')).toBe('/projects');fireEvent.click(link);expect(saveOnboarding).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'已查看，完成这一步'}));await screen.findByText('已完成 3 / 7');expect(saveOnboarding).toHaveBeenCalledWith('a',{completedSteps:['review-imported-projects']});
+ });
+ it('结束引导真正保存，重新挂载不再出现',async()=>{
+  const view=render(<OnboardingCard/>);fireEvent.click(await screen.findByRole('button',{name:'结束引导'}));await waitFor(()=>expect(document.querySelector('[data-slot="onboarding-card"]')).toBeNull());view.unmount();render(<OnboardingCard/>);await waitFor(()=>expect(loadState).toHaveBeenCalledTimes(2));expect(screen.queryByText('上手引导')).toBeNull();expect(preferences.hidden).toBe(true);
+ });
+ it('关闭失败保留引导并提示，可再次尝试',async()=>{
+  saveOnboarding.mockRejectedValueOnce(Error('offline'));render(<OnboardingCard/>);fireEvent.click(await screen.findByRole('button',{name:'结束引导'}));await screen.findByText('进度未保存，请再试一次。当前操作尚未完成。');expect(screen.getByText('上手引导')).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'结束引导'}));await waitFor(()=>expect(screen.queryByText('上手引导')).toBeNull());
+ });
+ it('完成后自动隐藏，显式重看不清掉完成记录',async()=>{
+  preferences.completedSteps=[...keys];render(<OnboardingCard/>);await waitFor(()=>expect(loadState).toHaveBeenCalledTimes(1));expect(screen.queryByText('上手引导')).toBeNull();await requestOnboardingReopen();await screen.findByText('已完成全部引导，可以随时回看。');expect(preferences.completedSteps).toEqual(keys);
+ });
+ it('旧账号保存悬挂不锁住新账号，迟到响应不覆盖新账号',async()=>{
+  let finish!:(v:unknown)=>void;saveOnboarding.mockReturnValueOnce(new Promise(r=>finish=r));
+  render(<OnboardingCard/>);fireEvent.click(await screen.findByRole('button',{name:'结束引导'}));
+  current.mockReturnValue('b');preferences={...pref(),accountId:'b'};window.dispatchEvent(new CustomEvent('creatoros:accounts-changed'));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'结束引导'}).hasAttribute('disabled')).toBe(false));
+  fireEvent.click(screen.getByRole('button',{name:'结束引导'}));await waitFor(()=>expect(saveOnboarding).toHaveBeenCalledWith('b',{hidden:true}));
+  finish({...pref(),hidden:false});await waitFor(()=>expect(screen.queryByText('上手引导')).toBeNull());
+ });
+ it('切号后旧请求晚到不能把旧引导显示在新账号',async()=>{
+  let resolve!:(v:unknown)=>void;loadState.mockReturnValueOnce(new Promise(r=>resolve=r));render(<OnboardingCard/>);current.mockReturnValue('b');loadState.mockResolvedValue({accountId:'b',origin:'fresh',preferences:{...pref(),accountId:'b',hidden:true}});window.dispatchEvent(new CustomEvent('creatoros:accounts-changed'));await waitFor(()=>expect(loadState).toHaveBeenCalledTimes(2));resolve({accountId:'a',origin:'existing',preferences:pref()});await waitFor(()=>expect(screen.queryByText('上手引导')).toBeNull());
+ });
 });

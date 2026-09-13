@@ -1,111 +1,37 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const listProjects = vi.hoisted(() => vi.fn());
-const statusDouyin = vi.hoisted(() => vi.fn());
-const getPositioningCenter = vi.hoisted(() => vi.fn());
-const getIntelligenceWorkspace = vi.hoisted(() => vi.fn());
-const listIntelligenceItems = vi.hoisted(() => vi.fn());
-const readCurrentAccountId = vi.hoisted(() => vi.fn());
-
-vi.mock("@/lib/contract-client", () => ({
-  client: {
-    listProjects,
-    statusDouyin,
-    getPositioningCenter,
-    getIntelligenceWorkspace,
-    listIntelligenceItems,
-  },
-}));
-vi.mock("@/lib/http-transport", () => ({ readCurrentAccountId }));
-
-import {
-  loadProjectSignals,
-  loadRadarSignals,
-  loadState,
-  readReviewedImportedProjects,
-  writeReviewedImportedProjects,
-} from "./onboarding-data";
-
-describe("[T-637] onboarding data", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    window.localStorage.clear();
-    readCurrentAccountId.mockReturnValue("account-1");
-    listProjects.mockResolvedValue([]);
-    statusDouyin.mockResolvedValue({ loggedIn: false });
-    getPositioningCenter.mockResolvedValue({ profile: null });
-    getIntelligenceWorkspace.mockResolvedValue({ sources: [] });
-    listIntelligenceItems.mockResolvedValue([]);
-  });
-
-  it("一次项目读取同时区分历史导入与用户创建", async () => {
-    listProjects.mockResolvedValue([
-      { id: "old", source: "imported" },
-      { id: "new", source: "topic" },
-    ]);
-    await expect(loadProjectSignals()).resolves.toEqual({
-      hasImportedWorks: true,
-      hasCreatedProject: true,
-    });
-  });
-
-  it("只有 imported 项目时，不算完成首个创作项目", async () => {
-    listProjects.mockResolvedValue([{ id: "old", source: "imported" }]);
-    await expect(loadProjectSignals()).resolves.toEqual({
-      hasImportedWorks: true,
-      hasCreatedProject: false,
-    });
-  });
-
-  it("对标监控与已转选题来自内容雷达真值", async () => {
-    getIntelligenceWorkspace.mockResolvedValue({
-      sources: [
-        { id: "source-1", type: "creator_profile", monitorEnabled: true, status: "active" },
-      ],
-    });
-    listIntelligenceItems.mockResolvedValue([{ item: { id: "item-1" } }]);
-    await expect(loadRadarSignals()).resolves.toEqual({
-      hasBenchmarkMonitor: true,
-      hasBenchmarkTopic: true,
-    });
-    expect(listIntelligenceItems).toHaveBeenCalledWith(
-      expect.objectContaining({
-        query: expect.objectContaining({ topicState: "converted" }),
-      }),
-    );
-  });
-
-  it("历史项目确认按账号隔离", () => {
-    expect(readReviewedImportedProjects("account-1")).toBe(false);
-    writeReviewedImportedProjects("account-1");
-    expect(readReviewedImportedProjects("account-1")).toBe(true);
-    expect(readReviewedImportedProjects("account-2")).toBe(false);
-  });
-
-  it("loadState 不再读取模型配置，并装配新的成果信号", async () => {
-    listProjects.mockResolvedValue([
-      { id: "old", source: "imported" },
-      { id: "new", source: "manual" },
-    ]);
-    statusDouyin.mockResolvedValue({ loggedIn: true });
-    getPositioningCenter.mockResolvedValue({ profile: { id: "profile-1" } });
-    getIntelligenceWorkspace.mockResolvedValue({
-      sources: [
-        { id: "source-1", type: "creator_profile", monitorEnabled: true, status: "active" },
-      ],
-    });
-    listIntelligenceItems.mockResolvedValue([{ item: { id: "item-1" } }]);
-    writeReviewedImportedProjects("account-1");
-
-    await expect(loadState()).resolves.toMatchObject({
-      origin: "existing",
-      douyinLoggedIn: true,
-      hasImportedWorks: true,
-      hasReviewedImportedProjects: true,
-      hasPositioningProfile: true,
-      hasBenchmarkMonitor: true,
-      hasBenchmarkTopic: true,
-      hasCreatedProject: true,
-    });
-  });
+import {beforeEach,describe,expect,it,vi} from "vitest";
+const current=vi.hoisted(()=>vi.fn(()=>"a"));
+const client=vi.hoisted(()=>({getOnboarding:vi.fn(),patchOnboarding:vi.fn(),getAccount:vi.fn(),listProjects:vi.fn(),getPositioningCenter:vi.fn(),getIntelligenceWorkspace:vi.fn(),listIntelligenceItems:vi.fn(),statusDouyin:vi.fn()}));
+vi.mock("@/lib/contract-client",()=>({client}));
+vi.mock("@/lib/http-transport",()=>({readCurrentAccountId:current}));
+import {loadState,loadProjectSignals,saveOnboarding} from './onboarding-data';
+const record=()=>({accountId:"a",origin:null,hidden:false,collapsed:true,completedSteps:[] as string[],updatedAt:null});
+beforeEach(()=>{vi.clearAllMocks();window.localStorage.clear();current.mockReturnValue('a');client.getOnboarding.mockResolvedValue(record());client.patchOnboarding.mockImplementation(async({body})=>({...record(),...body}));client.getAccount.mockResolvedValue({id:'a'});client.listProjects.mockResolvedValue([]);client.getPositioningCenter.mockResolvedValue({profile:null});client.getIntelligenceWorkspace.mockResolvedValue({sources:[]});client.listIntelligenceItems.mockResolvedValue([]);});
+describe('T-964 引导真实数据与持久进度',()=>{
+ it('绑定来自账号记录，登录探测不参与，端口存储清空不撤销后端里程碑',async()=>{
+  client.getOnboarding.mockResolvedValue({...record(),completedSteps:['import-account','first-project'],updatedAt:'2026-09-13'});
+  const s=await loadState();expect(s.douyinLoggedIn).toBe(true);expect(s.completedSteps).toContain('first-project');expect(client.statusDouyin).not.toHaveBeenCalled();
+ });
+ it('实际全量返回的1005件作品不重复请求且能发现尾部手动项目',async()=>{
+  client.listProjects.mockResolvedValue([...Array.from({length:1004},()=>({source:'imported'})),{source:'manual'}]);
+  await expect(loadProjectSignals()).resolves.toEqual({hasImportedWorks:true,hasCreatedProject:true});expect(client.listProjects).toHaveBeenCalledTimes(1);
+ });
+ it('1005件全历史作品也只读取一次，不陷入翻页循环',async()=>{
+  client.listProjects.mockResolvedValue(Array.from({length:1005},()=>({source:'imported'})));
+  await expect(loadProjectSignals()).resolves.toEqual({hasImportedWorks:true,hasCreatedProject:false});expect(client.listProjects).toHaveBeenCalledTimes(1);
+ });
+ it('永久关闭后不再启动信号扫描',async()=>{
+  client.getOnboarding.mockResolvedValue({...record(),hidden:true});expect((await loadState()).preferences?.hidden).toBe(true);expect(client.listProjects).not.toHaveBeenCalled();
+ });
+ it('切换账号的旧读取不得写入新账号',async()=>{
+  let resolve!:(v:unknown)=>void;client.listProjects.mockReturnValue(new Promise(r=>{resolve=r;}));const pending=loadState();await vi.waitFor(()=>expect(client.listProjects).toHaveBeenCalled());current.mockReturnValue('b');resolve([{source:'manual'}]);await expect(pending).rejects.toThrow('ACCOUNT_CHANGED');expect(client.patchOnboarding).not.toHaveBeenCalled();await expect(saveOnboarding('a',{hidden:true})).rejects.toThrow('ACCOUNT_CHANGED');
+ });
+ it('数据读取失败不撤销已完成步骤',async()=>{
+  client.getOnboarding.mockResolvedValue({...record(),completedSteps:['first-project'],updatedAt:'2026-09-13'});client.listProjects.mockRejectedValue(Error('offline'));expect((await loadState()).completedSteps).toContain('first-project');
+ });
+ it('保存失败可识别且不假称落库',async()=>{
+  client.patchOnboarding.mockRejectedValue(Error('offline'));expect((await loadState()).persistenceError).toContain('暂未保存');
+ });
+ it('旧全局偏好仅迁入第一个当前账号',async()=>{
+  window.localStorage.setItem('creatoros:onboarding:hidden','1');expect((await loadState()).preferences?.hidden).toBe(true);expect(window.localStorage.getItem('creatoros:onboarding:legacy-migrated-account')).toBe('a');current.mockReturnValue('b');client.getOnboarding.mockResolvedValue({...record(),accountId:'b'});client.getAccount.mockResolvedValue({id:'b'});client.patchOnboarding.mockImplementation(async({body})=>({...record(),accountId:'b',...body}));expect((await loadState()).preferences?.hidden).toBe(false);
+ });
 });

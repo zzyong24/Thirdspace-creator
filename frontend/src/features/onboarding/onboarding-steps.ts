@@ -5,10 +5,16 @@
  * 绑定账号 →（识别是否有历史作品）→ 查看历史项目 → 定位 → 对标监控 → 对标选题 → 项目。
  */
 
+type StepKey = import("@creatoros/contract").OnboardingStateResource["completedSteps"][number];
+
 export type OnboardingOrigin = "fresh" | "existing" | null;
 export type StepBranch = "all" | "existing";
 
 export interface OnboardingState {
+  readonly accountId?: string | null;
+  readonly completedSteps?: readonly StepKey[];
+  readonly preferences?: import("./onboarding-data").OnboardingRecord;
+  readonly persistenceError?: string;
   readonly origin?: OnboardingOrigin;
   readonly douyinLoggedIn?: boolean;
   readonly hasImportedWorks?: boolean;
@@ -20,7 +26,7 @@ export interface OnboardingState {
 }
 
 export interface GuidedStep {
-  readonly key: string;
+  readonly key: StepKey;
   readonly order: number;
   readonly branch: StepBranch;
   readonly title: string;
@@ -33,7 +39,7 @@ export interface GuidedStep {
 }
 
 interface GuidedStepSpec {
-  readonly key: string;
+  readonly key: StepKey;
   readonly order: number;
   readonly branch: StepBranch;
   readonly title: string;
@@ -73,14 +79,14 @@ export const GUIDED_STEP_SET: readonly GuidedStepSpec[] = [
     order: 3,
     branch: "existing",
     title: "查看已发布的历史项目",
-    why: "作品同步完成后，先去项目中心看一遍历史作品是否齐全；确认后再进入定位。",
-    ctaLabel: "查看并确认",
+    why: "先查看已同步的作品，回来后点击「已查看，完成这一步」。也可以稍后处理。",
+    ctaLabel: "查看历史作品",
     href: "/projects",
     isDone: (state) =>
       state.hasImportedWorks === true &&
       state.hasReviewedImportedProjects === true,
     isBlocked: (state) => state.hasImportedWorks !== true,
-    blockedReason: "历史作品正在后台同步，出现项目后即可查看。",
+    blockedReason: "尚未同步历史作品，可以先到项目中心查看。",
   },
   {
     key: "positioning-profile",
@@ -148,10 +154,10 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
     isVisible(spec, state.origin ?? null),
   );
   const out: GuidedStep[] = [];
-  let previousDone = true;
   for (const spec of visible) {
-    const done = spec.isDone(state);
-    const blocked = !previousDone || (spec.isBlocked?.(state) ?? false);
+    const done = state.completedSteps?.includes(spec.key) === true || spec.isDone(state);
+    // 引导只建议下一步，不代替业务权限或阻断用户直接访问功能。
+    const blocked = false;
     out.push({
       key: spec.key,
       // 分支过滤后重新编号，避免新号看到 1、2、4、5 这种断号。
@@ -165,7 +171,6 @@ export function deriveGuidedSteps(state: OnboardingState): GuidedStep[] {
       blockedReason: blocked ? spec.blockedReason : "",
       href: spec.href,
     });
-    previousDone = done;
   }
   return out;
 }

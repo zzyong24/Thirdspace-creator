@@ -1609,6 +1609,8 @@ function PreferenceSettingsCard({
 }) {
   const router = useRouter();
   const initial = viewModel.preferences;
+  const [reopenError, setReopenError] = React.useState<string | null>(null);
+  const [reopening, setReopening] = React.useState(false);
   const [defaultCreationMode, setDefaultCreationMode] =
     React.useState<CreationMode>(initial.defaultCreationMode);
   const [autosaveEnabled, setAutosaveEnabled] = React.useState<boolean>(
@@ -1694,13 +1696,17 @@ function PreferenceSettingsCard({
             variant="outline"
             size="sm"
             data-slot="pref-reopen-onboarding"
-            onClick={() => {
-              requestOnboardingReopen();
-              router.replace("/");
+            disabled={reopening}
+            onClick={async () => {
+              setReopening(true); setReopenError(null);
+              try { await requestOnboardingReopen(); router.replace("/"); }
+              catch { setReopenError("引导未能打开，请重试。"); }
+              finally { setReopening(false); }
             }}
           >
             重新打开新手引导
           </Button>
+          {reopenError ? <p role="status" className="text-xs text-destructive">{reopenError}</p> : null}
         </SettingsFormRow>
       </div>
     </SectionCard>

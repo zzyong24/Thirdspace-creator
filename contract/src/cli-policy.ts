@@ -79,6 +79,7 @@ const READ_OPERATIONS = [
   "outputs.production.get",
   "outputs.publications.list",
   "pages.dashboard.get",
+  "pages.dailyReport.get",
   "pages.positioning.get",
   "pages.projectOverview.get",
   "pages.search.get",

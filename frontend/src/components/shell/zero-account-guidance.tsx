@@ -17,6 +17,7 @@ import Link from "next/link";
  * 其余 (creator) 路径视为 per-account 创作域,0 号 → 引导。
  */
 const ZERO_ACCOUNT_ALLOWED_PREFIXES = [
+  "/daily-report", // 日报自身展示无账号空态。
   "/accounts", // 账号管理:绑定入口本体,绝不能拦
   "/settings", // 设置:模型配置等 user 级共享配置(C-01 裁决:模型配置共享)
   // [T-663] 知识库默认入口是随包课程,课程不依赖账号；用户切到
