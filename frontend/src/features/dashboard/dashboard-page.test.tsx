@@ -38,6 +38,7 @@ vi.mock("next/navigation", () => ({
 // Stub `next/link` so we can assert href values without the Next.js
 // runtime mounting a router.
 vi.mock("next/link", () => ({
+  useLinkStatus:()=>({pending:false}),
   default: ({
     children,
     href,
@@ -344,3 +345,5 @@ describe("[T-348] DashboardPage — 0 号降级(未绑号,诚实空态)", () => 
     ).not.toBeNull();
   });
 });
+
+it("首页提供真实运营日报路由",async()=>{await renderDashboard();expect(screen.getByRole("link",{name:/运营日报/})).toHaveAttribute("href","/daily-report");});
