@@ -1351,6 +1351,33 @@
       "verify_commands": {
         "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
       }
+    },
+    "T-967": {
+      "task_id": "T-967",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t967-week-share-clarity.md",
+        "docs/research/t967/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
+      }
     }
   }
 }
