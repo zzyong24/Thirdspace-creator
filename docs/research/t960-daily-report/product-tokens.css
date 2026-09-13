@@ -1,0 +1,57 @@
+:root {
+  --creatoros-canvas: #f8f9fc;
+  --creatoros-surface: #ffffff;
+  --creatoros-surface-subtle: #f5f6fa;
+  --creatoros-brand: #6d4aff;
+  --creatoros-brand-hover: #5b38eb;
+  --creatoros-brand-soft: #f2efff;
+  /* [UI 修真] brand 上的前景 —— 白色,压在饱和紫上高对比(此前缺失致按钮字回退成深色)。 */
+  --creatoros-brand-foreground: #ffffff;
+  --creatoros-text: #171a25;
+  --creatoros-text-muted: #667085;
+  --creatoros-text-subtle: #98a2b3;
+  --creatoros-border: #e6e8f0;
+  --creatoros-border-strong: #d5d9e3;
+  --creatoros-success: #12b76a;
+  --creatoros-success-soft: #ecfdf3;
+  --creatoros-warning: #f79009;
+  --creatoros-warning-soft: #fffaeb;
+  --creatoros-danger: #f04438;
+  --creatoros-danger-soft: #fef3f2;
+  --creatoros-info: #2e90fa;
+  --creatoros-info-soft: #eff8ff;
+
+  --creatoros-sidebar-width: 224px;
+  --creatoros-header-height: 72px;
+  --creatoros-page-gutter: 24px;
+  --creatoros-section-gap: 20px;
+  --creatoros-card-gap: 16px;
+  --creatoros-radius-control: 8px;
+  --creatoros-radius-card: 12px;
+  --creatoros-radius-panel: 16px;
+
+  --creatoros-font-sans:
+    "Noto Sans SC Variable", "Noto Sans SC", ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --creatoros-text-xs: 12px;
+  --creatoros-text-sm: 14px;
+  --creatoros-text-md: 16px;
+  --creatoros-text-lg: 18px;
+  --creatoros-text-xl: 24px;
+  --creatoros-text-2xl: 32px;
+
+  --creatoros-shadow-card:
+    0 1px 3px rgb(16 24 40 / 0.06), 0 1px 2px rgb(16 24 40 / 0.04);
+  --creatoros-shadow-popover:
+    0 12px 24px rgb(16 24 40 / 0.12), 0 4px 8px rgb(16 24 40 / 0.06);
+  --creatoros-z-header: 20;
+  --creatoros-z-sidebar: 30;
+  --creatoros-z-overlay: 50;
+  --creatoros-z-dialog: 60;
+
+  --creatoros-chart-1: #6d4aff;
+  --creatoros-chart-2: #4f7cff;
+  --creatoros-chart-3: #12b76a;
+  --creatoros-chart-4: #f79009;
+  --creatoros-chart-5: #c840d8;
+}

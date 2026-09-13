@@ -6,7 +6,7 @@
     3280
   ],
   "decodedQr": "https://buy.aitongban.cloud/",
-  "pngSha256": "7485fbdc04474a2601cc855a14e6bf166a1a11cd4ea1d5a60fcbd9505c5f79a0",
+  "pngSha256": "a5cf8c187c7365d07aee39adfefd8b81793a75c5f1b1fd56307e80b9c473bd7a",
   "desktopHorizontalOverflow": false,
   "mobileHorizontalOverflow": false,
   "mobileWidth": 390,
@@ -21,5 +21,13 @@
   "globalReconcile": {
     "errors": 233,
     "preexistingTask": "T-916"
+  },
+  "styleRevision": {
+    "task": "T-961",
+    "tokens": "frontend/src/styles/tokens.css",
+    "homepageEntryBrowserVerified": true,
+    "mobileHomeWidth": 390,
+    "mobileHomeScrollWidth": 390,
+    "pngReExportedAndQrDecoded": true
   }
 }
