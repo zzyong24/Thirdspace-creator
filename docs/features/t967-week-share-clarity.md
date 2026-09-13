@@ -22,3 +22,10 @@ flowchart LR
 - 安装版公共CLI真实账号读取9/7–9/13共5作品；9/1–9/13共6作品。证据/tmp/t967-real-week.json，不提交私有完整数据。
 - 分享页真实点击保存获得2160×3636 PNG，已目视检查，Vision识别二维码为https://buy.aitongban.cloud/。公开模型及导出测试覆盖内部分析不泄漏、缺值/0区分、长标题。
 - 旧分析机械标签翻译已测试；新提示词本轮未做真实模型效果验收，不将之描述为模型复盘质量已完全验收。
+- 全局reconcile仍233项既有错误，边界5项，保留T-916；本任务测试通过不冒充全局全绿。
+- 使用公共CLI真实周数据经同一生产canvas渲染，5作品、23,329播放、作品关注25、互动651；图片2160×4704已目视校验并扫码验证。/tmp/t967-real-week-share.png未含内部复盘。
+
+## 本地安装包
+候选35659f2fc7573f2da529e992f3bd03d478192af6（含分享改造ed5e9be6、c5c7bf7c）。干净worktree冻结，四项基础测试42通过，版本均1.1.0，固定desktop:package-local成功，真实sidecar冒烟通过。DMG: /Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg；SHA256 3b5dbca54b711619a0f31e4328c7220a52c0a315c2ff4c330fb61310ec939052。hdiutil verify VALID，codesign deep strict通过，本地ad-hoc未公证。无远端推送/正式Release/Windows构建。
+退出旧app及sidecar后备份/Users/zyongzhu/.creatoros/backups/t967-20260913-022909/app-data，70603文件逐文件SHA校验零差异。固定installAndLaunchLocalMacApp成功更新/Applications/CreatorOS.app并启动。
+安装后真实验证：CLI installed/full，app PID5355；公开pages.dailyReport.get回读账号月明水清深、2026-09-07至2026-09-13，作品数5。/tmp/t967-installed-week.json。原始资料保留。安装版WebView无法自动驱动的边界保留；浏览器交互验收为同代码隔离开发页，安装版数据验收为公共CLI。

@@ -1040,3 +1040,4 @@
 {"ts":"2026-09-13T08:34:27.481Z","actor":"taskctl","action":"start","task":"T-966","sha_before":"f3d2ad1154d9","sha_after":"b0401b0c3a10"}
 {"ts":"2026-09-13T08:54:35.418Z","actor":"taskctl","action":"complete","task":"T-966","evidence":"9e493939; 前端90/后端20/打包42通过；两份真实旧分析恢复；新安装版traffic任务succeeded并读回6类来源；真实周期6作品；reconcile233既有T916失败保留","sha_before":"b0401b0c3a10","sha_after":"3230a41cd3ab"}
 {"ts":"2026-09-13T09:10:27.534Z","actor":"taskctl","action":"start","task":"T-967","sha_before":"75abcfb3a1b0","sha_after":"f5b170d3412d"}
+{"ts":"2026-09-13T09:32:34.453Z","actor":"taskctl","action":"complete","task":"T-967","evidence":"35659f2f；报表36测试+tsc、打包42测试通过；浏览器周点击/PNG真下载与二维码；安装版CLI周5作品；DMG 3b5dbca5；备份70603文件一致。全局233既有对账错误保留T-916，本任务验收通过。","sha_before":"f5b170d3412d","sha_after":"6ae3ce4734af"}
