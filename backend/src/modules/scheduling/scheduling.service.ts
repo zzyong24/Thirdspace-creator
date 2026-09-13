@@ -1,3 +1,4 @@
+import {operationsSyncSchema,DEFAULT_OPERATIONS_SYNC} from '@creatoros/contract';
 import { createScheduledRunIntentService } from "./daily-topic-run-intent.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
@@ -178,8 +179,8 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
         name: input.name,
         prompt: input.prompt ?? "",
         sourceKind: input.sourceKind,
-        target: input.target ?? {},
-        schedule: input.schedule,
+        target: input.sourceKind === "self.metrics" ? {...(input.target??{}),operationsSync:operationsSyncSchema.parse(input.target?.operationsSync??DEFAULT_OPERATIONS_SYNC)} : input.target ?? {},
+        schedule: input.sourceKind === "self.metrics" ? "0 */2 * * *" : input.schedule,
         toolGrants: input.toolGrants ?? [],
         // [T-359] 分层启用透传(缺省 undefined → repo 默认 true,旧调用方零变)。
         enabled: input.enabled,
@@ -200,24 +201,26 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
 
     async updateJob(ctx, jobId, patch) {
       const current = await repoFor(ctx).getJob(jobId);
+      if ((current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中编辑对应能力");
       if (retiredSourceKinds.has(current.sourceKind)) {
         throw new ValidationError("该兼容任务已退役，只保留历史记录");
       }
       if (
         current.sourceKind === "intelligence.sync" &&
         Object.entries(patch).some(
-          ([key, value]) => key !== "enabled" && value !== undefined,
+          ([key, value]) => !["enabled","name","prompt","schedule"].includes(key) && value !== undefined,
         )
       ) {
         throw new ValidationError(
-          "内容雷达自动同步只允许启用、停用和立即检查",
+          "内容雷达只能修改名称、描述、时间及启用状态，不能改变来源或工具授权",
         );
       }
+      if(current.sourceKind === "self.metrics" && patch.target?.operationsSync !== undefined)operationsSyncSchema.parse(patch.target.operationsSync);
       const row = await repoFor(ctx).updateJob(jobId, {
         name: patch.name,
         prompt: patch.prompt,
-        schedule: patch.schedule,
-        target: patch.target,
+        schedule: current.sourceKind === "self.metrics" ? "0 */2 * * *" : patch.schedule,
+        target: patch.target===undefined?undefined:current.sourceKind==="self.metrics"?{...patch.target,operationsSync:operationsSyncSchema.parse(patch.target.operationsSync??(current.target as Record<string,unknown>)?.operationsSync??DEFAULT_OPERATIONS_SYNC)}:patch.target,
         toolGrants: patch.toolGrants,
         enabled: patch.enabled,
       });
@@ -225,6 +228,8 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async setEnabled(ctx, jobId, enabled) {
+      const current=await repoFor(ctx).getJob(jobId);
+      if(enabled&&(current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中开启对应能力");
       if (enabled) {
         const current = await repoFor(ctx).getJob(jobId);
         if (retiredSourceKinds.has(current.sourceKind)) {

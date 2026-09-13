@@ -1,3 +1,4 @@
+import {syncIntervalMs} from './sync-policy';
 import {publicationTrafficResource,trafficSourcePayloadSchema,type RequestContext,type TrafficSourcePayload} from '@creatoros/contract';
 import type {Db} from '@creatoros/backend';
 import {createTrafficRepository} from './traffic.repository';
@@ -19,11 +20,11 @@ export function createTrafficService(db:Db,ports:{now:()=>string;publishing:Pick
    for(const id of ids){const p=await ports.publishing.getPublication(ctx,id);if(p.accountId!==account(ctx))throw new OwnershipError('作品归属不符');if(p.platform!=='douyin'||!p.externalId||p.hiddenAt||p.status!=='published')continue;if(await repo.enqueue(ctx.userId,account(ctx),id,p.externalId!,ports.now(),true))queued++;}
    return queued;
   },
-  async enqueueVisible(ctx:RequestContext,visibleIds:ReadonlySet<string>){
+  async enqueueVisible(ctx:RequestContext,visibleIds?:ReadonlySet<string>){
    let queued=0;for(let offset=0;;offset+=200){
     const rows=await ports.publishing.listPublicationsForUser(ctx,{limit:200,offset});
-    for(const p of rows){if(p.platform!=='douyin'||!p.externalId||!visibleIds.has(p.externalId)||p.hiddenAt||p.status!=='published')continue;
-     await assertPublication(ctx,p.id);if(await repo.enqueue(ctx.userId,account(ctx),p.id,p.externalId,ports.now(),false))queued++;
+    for(const p of rows){if(p.platform!=='douyin'||!p.externalId||(visibleIds&&!visibleIds.has(p.externalId))||p.hiddenAt||p.status!=='published')continue;
+     await assertPublication(ctx,p.id);if(await repo.enqueue(ctx.userId,account(ctx),p.id,p.externalId,ports.now(),false,syncIntervalMs(p.publishedAt,ports.now())))queued++;
     }if(rows.length<200)break;
    }return queued;
   },

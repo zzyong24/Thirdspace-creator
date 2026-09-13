@@ -2073,6 +2073,7 @@ async function scrapeCommentsForWork(
   gateway: DouyinChannelGate = instantNoopGateway,
   // [T-177 增量化] 库里该作品已知评论的 externalId 集(倒序 early-break 锚)。空集 → 退化全量。
   watermark: Set<string> = new Set<string>(),
+  onCompletion?: (complete:boolean)=>void,
 ): Promise<CommentRecord[]> {
   const commentJsons: unknown[] = [];
   const seenIds = new Set<string>();
@@ -2158,6 +2159,7 @@ async function scrapeCommentsForWork(
         byId.set(c.commentId, c);
       }
     }
+    onCompletion?.(commentJsons.length>0 && (reachedWatermark || staleRounds>=3));
     return [...byId.values()];
   } finally {
     // 多作品复用 page 时,摘掉本作品监听,避免监听在 page 上累积/后续作品 XHR 被重复解析。
@@ -2205,6 +2207,8 @@ export async function fetchDouyinComments(
 }
 
 export interface FetchCommentsForWorksResult {
+  /** false 表示没有确认读完，部分结果可保存但不推进成功水位。 */
+  complete?: boolean;
   awemeId: string;
   records: CommentRecord[];
 }
@@ -2263,11 +2267,12 @@ export async function fetchDouyinCommentsForWorks(
       try {
         // [gate-F7 插装点④] **每作品 acquire 一次** creator-center(把 72 作品逐个导航真正限速);
         // 作品内翻页再由 scrapeCommentsForWork 内部 acquire(插装点③),两层正交、均串行到 creator-center。
+        let complete=false;
         const records = await withDouyinChannel(gateway, "creator-center", () =>
           // 同一 context / 同一 page 逐作品导航抓取(评论管理页每作品 item_id 过滤,goto 会换页)。
-          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark),
+          scrapeCommentsForWork(page, awemeId, maxPages, gateway, watermark,value=>{complete=value;}),
         );
-        const work = { awemeId, records };
+        const work = { awemeId, records, complete };
         out.push(work);
         await deps.onWorkComplete?.(work, {
           processed: out.length,

@@ -1,3 +1,4 @@
+import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
 import {startTrafficCollection} from "@creatoros/backend/application/scheduling/traffic-start";
 import { recoverTrafficQueues } from "@creatoros/backend/application/scheduling/traffic-wake";
 import {triggerScheduledJob} from '@creatoros/backend/modules/ai-runtime';
@@ -129,7 +130,7 @@ import { createAssetRepository, createAssetsService, createWebDocumentCacheServi
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
-import { createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
@@ -2052,7 +2053,8 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     },
   });
   const trafficService=createTrafficService(db,{now:deps.now,publishing:publishingService});
-  const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{},schedule:'0 0 * * *',enabled:false,systemManaged:true});
+  const publicationSyncService=createPublicationSyncService(db,{now:deps.now,assertPublication:(c,id)=>trafficService.assertPublication(c,id)});
+  const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{mergedIntoSelfMetrics:true},schedule:'0 0 * * *',enabled:false,systemManaged:true});
   const startTrafficJob=async(ctx:RequestContext)=>{
     return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
@@ -3861,19 +3863,11 @@ dispatchIntelligenceRun});
             : `已统一调度 ${enqueued} 个来源`,
       };
     },
-    // 自己主页作品+指标：self.metrics 与旧 self.detail 统一进入同一个 canonical
-    // visible-only collector。采集先在内存确认公开性，再写项目/发布/指标并运行重活。
-    "self.metrics": async (ctx, target, report) => {
-      // [T-595] 旧 self.metrics 不再拥有“先写全量指标”的旁路；兼容旧调度记录但统一
-      // 委托 self.detail 的 canonical visible-only collector。对象在任务真正执行前已完成
-      // 构造，不存在初始化期递归；同账号调度仍由 gate-F5 串行与 run 幂等键兜底。
-      return scheduledCollectors["self.detail"]!(ctx, target, report);
-    },
     // 评论:fetchDouyinComments(target)→ ingestComments(D2 的纯 ports 落库:建 run → 逐条经
     // ux_ingestion_records_run_key 去重 → candidateService.ingestAudienceSignal(source=
     // "comment",带 ingestionRunId,C-4)→ completeRun)。itemsNew=written(新写信号数);
     // 评论只新写不更新 → itemsUpdated 恒 0。
-    comments: createCommentsCollector({db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,
+    comments: createCommentsCollector({sync:publicationSyncService,db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,
 readComments: async (ctx,awemeId,options)=>(await loadDouyinCdp()).fetchDouyinComments({awemeId,maxPages:options.maxPages,authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId)},{gateway:douyinGateway,commentWatermark:options.commentWatermark}),
 readCommentsForWorks:async(ctx,awemeIds,options)=>(await loadDouyinCdp()).fetchDouyinCommentsForWorks(awemeIds,{authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),maxPages:options.maxPages},{gateway:douyinGateway,commentWatermark:options.commentWatermark,onWorkComplete:options.onWorkComplete})}),
     // 作品明细导出(T-030-D8a,SPEC §9b):fetchDouyinWorkListExport(headless 复用 .auth/ →
@@ -3884,7 +3878,7 @@ readCommentsForWorks:async(ctx,awemeIds,options)=>(await loadDouyinCdp()).fetchD
     // 未登录 → DouyinNotLoggedInError(runner catch → needs_reconnect,§6);导出非 xlsx →
     // DouyinExportError(普通失败)。itemsNew=真写入快照数;明细快照 append-only → itemsUpdated 0。
     "self.traffic":createTrafficCollector({service:trafficService,checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,read:async(ctx,awemeId)=>(await loadDouyinCdp()).fetchDouyinTraffic({awemeId,authDir:await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId),signal:scheduledSignals.getStore(),gateway:douyinGateway})}),
-    "self.detail": createSelfCollector({projectsService,
+    "self.detail": createSelfCollector({sync:publicationSyncService,resolvePublication:(c,externalId)=>publishingService.resolvePublication(c,{platform:"douyin",externalId}),projectsService,
  enqueueTraffic:async(ctx,ids)=>{await ensureTrafficJob(ctx);await trafficService.enqueueVisible(ctx,ids);if((await trafficService.pending(ctx,1)).length)await startTrafficJob(ctx);},
 publishingService,
 analyticsService,
@@ -4022,6 +4016,14 @@ isNotLoggedInError: error => error instanceof DouyinNotLoggedInError,
 FAVORITES_PROMOTE_PER_RUN
 }),
   };
+
+  scheduledCollectors["self.metrics"]=createOperationsSyncCollector({
+    failures:(c,capabilities)=>publicationSyncService.failures(c,capabilities),
+    metrics:(c,t,r,e)=>scheduledCollectors["self.detail"]!(c,t,r,e),
+    comments:(c,t,r,e)=>scheduledCollectors.comments!(c,t,r,e),
+    traffic:async(c,t,r,e)=>{await trafficService.enqueueVisible(c);return scheduledCollectors["self.traffic"]!(c,t,r,e);},
+    checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,
+  });
 
   // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
   // (fire-and-forget,concurrency=1)。forward-declared 于 ai transport 之上;dispatch 分支 +

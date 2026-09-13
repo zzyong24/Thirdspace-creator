@@ -1,3 +1,4 @@
+import {DEFAULT_OPERATIONS_SYNC} from "@creatoros/contract";
 import type { RequestContext } from "@creatoros/contract";
 
 // 绑定抖音 → 组合根 bootstrap(T-189a/T-595/T-598):扫码绑定成功后,为该账号幂等建立
@@ -37,17 +38,10 @@ export interface CollectionJobDefault {
 export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   {
     sourceKind: "self.metrics",
-    name: "我的作品数据同步",
-    prompt: "每天抓我主页的新作品和最新指标",
-    schedule: "0 9 * * *",
+    name: "作品自动同步",
+    prompt: "按作品发布时间同步指标、评论、流量来源和内容",
+    schedule: "0 */2 * * *",
     enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
-  },
-  {
-    sourceKind: "comments",
-    name: "我的作品评论同步",
-    prompt: "每天抓我所有作品的最新评论",
-    schedule: "20 9 * * *",
-    enabledByDefault: false, // [T-359] 用户拍板后放:有导入作品后手动开
   },
   // [T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点 brief)→ topic.generate 同模板
   //   出题 → T-212d 护栏排序(探索位防茧房)→ 候选落 pool(防灌库 ≤N/天,默认 5)。错峰 9:40
@@ -65,7 +59,7 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     sourceKind: "intelligence.sync",
     name: "内容雷达自动同步",
     prompt: "检查内容雷达中已到期的来源并同步",
-    schedule: "*/15 * * * *",
+    schedule: "0 */2 * * *",
     // 来源自身的 monitorEnabled/syncPolicy 决定是否采集；账号级聚合作业无需用户二次开启。
     enabledByDefault: true,
   },
@@ -122,7 +116,7 @@ export interface CollectionBootstrapDeps {
   listJobsBySourceKind: (
     ctx: RequestContext,
     sourceKind: string,
-  ) => Promise<{ id: string; accountId?: string | null }[]>;
+  ) => Promise<{ id: string; accountId?: string | null; enabled?:boolean;target?:Record<string,unknown> }[]>;
   /** 建一个采集 job。host 绑 schedulingService.createJob(内部从 ctx.accountId stamp 属主号)。 */
   createJob: (
     ctx: RequestContext,
@@ -197,10 +191,10 @@ export async function ensureCollectionJobs(
   ctx: RequestContext,
   deps: EnsureCollectionJobsDeps,
 ): Promise<EnsureCollectionJobsResult> {
-  const target = deps.target ?? {};
   const created: string[] = [];
   const jobsInOrder: EnsureCollectionJobsResult["jobsInOrder"] = [];
   for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
+    const target=tpl.sourceKind === "self.metrics"?{...(deps.target??{}),operationsSync:DEFAULT_OPERATIONS_SYNC}:deps.target??{};
     try {
       const existing = await deps.listJobsBySourceKind(ctx, tpl.sourceKind);
       if (existing.length > 0) {
@@ -210,9 +204,9 @@ export async function ensureCollectionJobs(
         jobsInOrder.push({
           id: existing[0]!.id,
           sourceKind: tpl.sourceKind,
-          target,
+          target:existing[0]!.target??target,
           accountId: existing[0]!.accountId ?? ctx.accountId ?? null,
-          enabledByDefault: tpl.enabledByDefault,
+          enabledByDefault: existing[0]!.enabled??tpl.enabledByDefault,
         });
         continue;
       }

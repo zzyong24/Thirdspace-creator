@@ -93,7 +93,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   const modelInput=scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:task.taskType.slice('scheduled.'.length),jobId:raw.jobId,jobRunId:run.id,target:raw.target??{},skillSnapshot:snapshot});
   const [job]=await db.select().from(scheduledJobs).where(eq(scheduledJobs.id,modelInput.jobId));
   if(run?.aiTaskId!==task.id||run?.jobId!==modelInput.jobId||run?.userId!==ctx.userId||job?.userId!==ctx.userId||job?.accountId!==ctx.accountId||job?.sourceKind!==modelInput.sourceKind)throw new Error('原调度运行归属不符');
-  return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:modelInput.sourceKind==='self.traffic'?createContinuousExecutionBudget():deps.budget});
+  return authority.bindAiTask(ctx,aiTaskId,{requestFingerprint:task.requestFingerprint,modelInput,budget:['self.traffic','self.metrics'].includes(modelInput.sourceKind)?createContinuousExecutionBudget():deps.budget});
  },
  async run(ctx:RequestContext,aiTaskId:string,collector:ScheduledFlywheelCollector){const bound=await service.prepare(ctx,aiTaskId),claim=await tasks.claimTask({taskId:bound.executionTaskId,workerId:`flywheel:${randomUUID()}`,leaseSeconds:300});if(claim)await track(consume(claim,collector));return bound;},
  async drain(collector:ScheduledFlywheelCollector,maxTasks=10){let processed=0;while(!abort.signal.aborted&&processed<maxTasks){const claim=await tasks.claimNext({kinds:['ai_task'],executionMode:'scheduled.flywheel',workerId:`flywheel-drain:${randomUUID()}`,leaseSeconds:300});if(!claim)break;await track(consume(claim,collector));processed++;}return processed;},
@@ -116,7 +116,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
   };
   const ai:ScheduledCollectionAiPort={async deferCollection(c,id){
    checkInput(c,id);await verify();
-   if(bound.input.sourceKind!=='self.traffic')throw new Error('仅流量分批采集可交还执行权');
+   if(!['self.traffic','self.metrics'].includes(bound.input.sourceKind))throw new Error('仅流量分批采集可交还执行权');
    await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(executionTasks).set({status:'queued',retryAt:new Date(Date.parse(now())+2000).toISOString(),leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now()}).where(eq(executionTasks.id,ref.executionTaskId));});
    finished=true;throw new ScheduledFlywheelSuspended(ref.executionTaskId,'queued');
   },async markWaitingUser(c,id){

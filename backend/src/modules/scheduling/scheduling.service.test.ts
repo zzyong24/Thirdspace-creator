@@ -82,7 +82,7 @@ describe("scheduling service", () => {
     });
   });
 
-  it("[T-598] intelligence.sync 只能由系统创建，用户只能开关不能编辑定义", async () => {
+  it("[T-598] intelligence.sync 只能由系统创建，用户可编辑计划但不能修改来源授权", async () => {
     await expect(
       svc.createJob(ctxA, {
         name: "伪造雷达任务",
@@ -98,7 +98,7 @@ describe("scheduling service", () => {
       systemManaged: true,
     });
     await expect(
-      svc.updateJob(ctxA, job.id, { schedule: "* * * * *" }),
+      svc.updateJob(ctxA, job.id, { target: { sourceId: "forged" } }),
     ).rejects.toBeInstanceOf(ValidationError);
     await expect(svc.setEnabled(ctxA, job.id, false)).resolves.toMatchObject({
       enabled: false,
@@ -190,7 +190,7 @@ describe("scheduling service", () => {
     expect(updated).toMatchObject({
       name: "renamed",
       prompt: "去主页抓",
-      schedule: "30 9 * * *",
+      schedule: "0 */2 * * *",
       target: { externalSourceId: "src-9" },
       toolGrants: ["browser.navigate"],
       enabled: false,

@@ -723,3 +723,7 @@ describe('T956 流量准备失败与拒绝传播',()=>{
   const result=await triggerScheduledJob(ctx,job,deps);await expect(result.completion).rejects.toBe(failure);
  });
 });
+it('统一同步跨天等待登录复用原任务，不新建第二个producer',async()=>{
+ const deps=makeTriggerDeps([{id:'old-run',aiTaskId:'old-task',status:'needs_reconnect',startedAt:'2026-06-30T00:00:00.000Z'}]);
+ const result=await triggerScheduledJob(ctx,{...job,target:{operationsSync:{version:1}}},deps);expect(result).toMatchObject({jobRunId:'old-run',aiTaskId:'old-task',deduped:true});expect(deps._createTask).not.toHaveBeenCalled();
+});

@@ -181,6 +181,7 @@ export async function triggerScheduledJob(
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
+  const continuous=job.sourceKind === "self.traffic" || (job.sourceKind === "self.metrics" && typeof job.target.operationsSync === "object" && job.target.operationsSync !== null);
 
   // [T-200 → T-332 S2] 采集 runtime ctx:userId 保持调用方(cron=canonical / bind/runNow=请求
   //   user,均正确),accountId 由 job.account_id 派生(ISO-06)—— cron 系统 ctx 无 accountId,
@@ -218,9 +219,9 @@ export async function triggerScheduledJob(
   });
   let inflight: (typeof recent.rows)[number] | undefined;
   for(const candidate of recent.rows){
-    if(!(candidate.status==='running'||(job.sourceKind==='self.traffic'&&candidate.status==='needs_reconnect')))continue;
-    if(job.sourceKind!=='self.traffic' && dayKeyOf(candidate.startedAt)!==today)continue;
-    if(job.sourceKind==='self.traffic' && candidate.aiTaskId && deps.getTaskState){
+    if(!(candidate.status==='running'||(continuous&&candidate.status==='needs_reconnect')))continue;
+    if(!continuous && dayKeyOf(candidate.startedAt)!==today)continue;
+    if(continuous && candidate.aiTaskId && deps.getTaskState){
       const state=await deps.getTaskState(collectionCtx,candidate.aiTaskId);
       if(['failed','cancelled'].includes(state.status) && (!state.executionTaskId || ['failed','cancelled'].includes(state.runtimeStatus??''))){
         await deps.runs.updateRun(collectionCtx,candidate.id,{status:'failed',finishedAt:nowIso,error:'原采集任务已失败或取消，请查看原任务错误'});

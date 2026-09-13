@@ -278,3 +278,4 @@ export * from "./chat-tool-labels";
 export { agenticProposal, knowledgeProposal, assetTagProposal, agenticProposalSource,
   type AgenticProposal, type KnowledgeProposal, type AssetTagProposal } from "./resources/agentic-proposal";
 export {trafficSourcePayloadSchema,publicationTrafficResource,type TrafficSourcePayload,type PublicationTrafficResource} from './resources/analytics';
+export {operationsSyncSchema,DEFAULT_OPERATIONS_SYNC,type OperationsSync} from './operations-sync';

@@ -45,3 +45,6 @@ export {
 } from "./analytics.schema";
 export {parseTrafficTables} from './traffic-parser';
 export {createTrafficService,type TrafficService} from './traffic.service';
+
+export {createPublicationSyncService,type PublicationSyncService} from './sync-state.service';
+export {syncIntervalMs,isSyncDue,type SyncCapability} from './sync-policy';

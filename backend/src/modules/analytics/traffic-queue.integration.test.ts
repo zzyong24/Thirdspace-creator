@@ -79,3 +79,7 @@ it('启动失败仅结算冻结的待采条目，保留成功数据和后续新�
  const rows=(await f.service.getProject(ctx,'project')).items;
  expect(rows[0]).toMatchObject({status:'failed',data,error:TRAFFIC_START_FAILURE});expect(rows[1]).toMatchObject({status:'pending',data,error:null});
 });
+it('自动入队按作品年龄2/6/24小时刷新，失败退避不清空旧数据',async()=>{
+ const f=await fixture(3);Object.assign(f.pubs[0]!,{publishedAt:stamp});Object.assign(f.pubs[1]!,{publishedAt:'2026-08-30T00:00:00Z'});Object.assign(f.pubs[2]!,{publishedAt:'2026-08-01T00:00:00Z'});
+ expect(await f.service.enqueueVisible(ctx)).toBe(3);await run(f.collector());f.setNow('2026-09-11T02:00:00Z');expect(await f.service.enqueueVisible(ctx)).toBe(1);await run(f.collector());f.setNow('2026-09-11T06:00:00Z');expect(await f.service.enqueueVisible(ctx)).toBe(2);
+});

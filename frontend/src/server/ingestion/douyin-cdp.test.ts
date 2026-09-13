@@ -1267,6 +1267,15 @@ function makeFakeCommentContext(loggedIn: boolean) {
   return { calls, gotoUrls, openContext };
 }
 
+it("评论翻页上限不能冒充读完；稳定结束才返回complete",async()=>{
+ const short=makeFakeCommentContext(true);
+ const limited=await fetchDouyinCommentsForWorks(["7401"],{authDir:"/fake/.auth",maxPages:1},{openContext:short.openContext});
+ expect(limited.works[0]?.complete).toBe(false);expect(limited.works[0]?.records).toHaveLength(1);
+ const full=makeFakeCommentContext(true);
+ const completed=await fetchDouyinCommentsForWorks(["7401"],{authDir:"/fake/.auth",maxPages:4},{openContext:full.openContext});
+ expect(completed.works[0]?.complete).toBe(true);
+});
+
 describe("fetchDouyinCommentsForWorks 复用单 context 跨作品(T-033b)", () => {
   it("openContext 开一次 → 循环 N 作品各 parse → close 一次", async () => {
     const { calls, gotoUrls, openContext } = makeFakeCommentContext(true);

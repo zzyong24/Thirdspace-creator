@@ -10,7 +10,7 @@ import {
 } from "./collection-bootstrap";
 import type { RequestContext } from "@creatoros/contract";
 
-// T-189a/T-600 —— 绑定抖音成功后幂等建立四个不重复的产品任务，
+// T-189a/T-600 —— 绑定抖音成功后幂等建立三个不重复的产品任务，
 //   按序初始化触发一次拉全量。纯编排 + 注入端口,零成本单测(不碰真抖音/不建真 job)。
 // [T-332 S2] claimOrphans/hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
 //   绑定 = 只建号绑定 job + 初始化触发,零 claim;本文件的「绑定链零 claim」用例是该裁决的守护。
@@ -93,14 +93,13 @@ function makeDeps(
 }
 
 describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
-  it("① 全新绑定 → 建 4 个不重复的系统 job", async () => {
+  it("① 全新绑定 → 建 3 个不重复的系统 job", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    expect(deps._createJob).toHaveBeenCalledTimes(3);
     expect(res.created).toEqual([
       "self.metrics",
-      "comments",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -110,23 +109,14 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const bySource = new Map(
       deps.createdJobs.map((j) => [j.sourceKind, j.schedule]),
     );
-    expect(bySource.get("self.metrics")).toBe(staggeredSchedule("0 9 * * *", "acct-1"));
-    expect(bySource.get("comments")).toBe(staggeredSchedule("20 9 * * *", "acct-1"));
+    expect(bySource.get("self.metrics")).toBe("0 */2 * * *");
     expect(bySource.get("topic.daily")).toBe(staggeredSchedule("40 9 * * *", "acct-1"));
-    expect(bySource.get("intelligence.sync")).toBe("*/15 * * * *");
+    expect(bySource.get("intelligence.sync")).toBe("0 */2 * * *");
     // 每条都是"每天"(dom/month/dow 全 *):
     for (const [, cron] of bySource) {
       const [, , dom, mon, dow] = cron.split(/\s+/);
       expect([dom, mon, dow]).toEqual(["*", "*", "*"]);
     }
-    // 每日任务继续错峰；内容雷达使用独立的 15 分钟系统检查周期。
-    const minuteOfDay = (cron: string) => {
-      const [m, h] = cron.split(/\s+/);
-      return Number(h) * 60 + Number(m);
-    };
-    const base = minuteOfDay(bySource.get("self.metrics")!);
-    expect(minuteOfDay(bySource.get("comments")!) - base).toBe(20);
-    expect(minuteOfDay(bySource.get("topic.daily")!) - base).toBe(40);
   });
 
   it("② 已有同 sourceKind job → 不重建(幂等)", async () => {
@@ -151,9 +141,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._createJob).toHaveBeenCalledTimes(3);
+    expect(deps._createJob).toHaveBeenCalledTimes(2);
     expect(res.created).toEqual([
-      "comments",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -190,10 +179,10 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
 
   it("单源建 job 失败 → 不阻断其余源(best-effort)", async () => {
     const deps = makeDeps();
-    // 让 comments 建失败，验其余任务仍建且 canonical collector 仍触发。
+    // 让 topic.daily 建失败，验其余任务仍建且 canonical collector 仍触发。
     deps._createJob.mockImplementation(
       async (_c: RequestContext, input: { sourceKind: string }) => {
-        if (input.sourceKind === "comments") {
+        if (input.sourceKind === "topic.daily") {
           throw new Error("boom");
         }
         return { id: `job-${input.sourceKind}` };
@@ -202,7 +191,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
     expect(res.created).toEqual([
       "self.metrics",
-      "topic.daily",
       "intelligence.sync",
     ]);
     expect(res.triggered).toEqual(["self.metrics"]);
@@ -238,11 +226,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(secondBindCtx, deps);
 
     // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
-    expect(res.created).toHaveLength(4);
+    expect(res.created).toHaveLength(3);
     // 初始化只触发 canonical self.metrics。
     expect(res.triggered).toHaveLength(1);
-    expect(deps._listJobs).toHaveBeenCalledTimes(4);
-    expect(deps._createJob).toHaveBeenCalledTimes(4);
+    expect(deps._listJobs).toHaveBeenCalledTimes(3);
+    expect(deps._createJob).toHaveBeenCalledTimes(3);
     expect(deps._trigger).toHaveBeenCalledTimes(1);
   });
 
@@ -256,7 +244,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       ]),
     );
     expect(byKind.get("self.metrics")).toBe(true);
-    expect(byKind.get("comments")).toBe(false);
+    expect(byKind.has("comments")).toBe(false);
     expect(byKind.get("topic.daily")).toBe(false);
     expect(byKind.get("intelligence.sync")).toBe(true);
   });
@@ -271,7 +259,6 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(res.created).toEqual(["topic.daily", "intelligence.sync"]);
     expect(res.jobsInOrder.map((j) => j.sourceKind)).toEqual([
       "self.metrics",
-      "comments",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -288,10 +275,9 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps2._createJob).not.toHaveBeenCalled();
   });
 
-  it("[T-600] 默认任务只保留四个不重复的产品语义", () => {
+  it("[T-600] 默认任务只保留三个不重复的产品语义", () => {
     expect(DAILY_COLLECTION_JOB_DEFAULTS.map((t) => t.sourceKind)).toEqual([
       "self.metrics",
-      "comments",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -300,7 +286,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
         (job) => job.sourceKind === "intelligence.sync",
       ),
     ).toMatchObject({
-      schedule: "*/15 * * * *",
+      schedule: "0 */2 * * *",
       enabledByDefault: true,
     });
   });
@@ -365,4 +351,9 @@ describe("[T-433 S3] 跨账号错峰(staggeredSchedule / deterministicAccountOff
     expect(staggeredSchedule("0 9 * *", "acct-1")).toBe("0 9 * *"); // 段数不对
     expect(staggeredSchedule("", "acct-1")).toBe("");
   });
+});
+
+it('重新绑定不触发用户已经关闭的统一同步，保留已存能力选择',async()=>{
+ const deps=makeDeps();deps._listJobs.mockImplementation(async(_c,kind)=>kind==='self.metrics'?[{id:'saved',accountId:'acct-1',enabled:false,target:{operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:false,content:true}}}}]:[]);
+ const result=await bootstrapDouyinCollectionJobs(ctx,deps);expect(result.triggered).toEqual([]);expect(deps._trigger).not.toHaveBeenCalled();
 });

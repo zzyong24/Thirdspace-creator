@@ -506,7 +506,7 @@ export function createPersistentTaskService(
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
-            (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || (asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind==='self.traffic')) ? 'paused' : commandTarget(
+            (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
               row.attempt,

@@ -100,12 +100,12 @@ it('最终回填端口异常时，已完成执行的运行记录仍能结束',as
  await f.service.stop();
 });
 
-it('流量补采跨多批、等待登录、暂停和进程恢复仍使用原任务',async()=>{
- const f=await trigger('self.traffic');await f.result.completion;
+it.each(['self.traffic','self.metrics'])('%s 跨多批、等待登录、暂停和进程恢复仍使用原任务',async(kind)=>{
+ const f=await trigger(kind);await f.result.completion;
  const tasks=createPersistentTaskService(db,{now});
  const [task]=await db.select().from(aiTasks).where(eq(aiTasks.id,f.result.aiTaskId));
  const id=task!.executionTaskId!;let batches=0;
- const collect:ScheduledFlywheelCollector=async(c,t,scope)=>runScheduledCollection(c,t,{ai:scope.ai,runs:f.scheduling,isNotLoggedInError:(e)=>e instanceof Error&&e.message==='login',collectors:{'self.traffic':async()=>{batches++;if(batches===5)throw new Error('login');return {itemsNew:0,itemsUpdated:batches*20,continueCollection:batches<8};}},now});
+ const collect:ScheduledFlywheelCollector=async(c,t,scope)=>runScheduledCollection(c,t,{ai:scope.ai,runs:f.scheduling,isNotLoggedInError:(e)=>e instanceof Error&&e.message==='login',collectors:{[kind]:async()=>{batches++;if(batches===5)throw new Error('login');return {itemsNew:0,itemsUpdated:batches*20,continueCollection:batches<8};}},now});
  for(let i=0;i<5;i++){expect(await f.service.drain(collect,1)).toBe(1);tick+=3000;}
  expect((await tasks.get(ctx,id)).runtimeStatus).toBe('waiting_user');
  await tasks.command(ctx,{taskIds:[id],command:'resume',idempotencyKey:'login-restored'});

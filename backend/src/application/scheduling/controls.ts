@@ -93,7 +93,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
           offset: 0,
         });
         // [T-200] 带既有 job 属主号:复用既有 job 时把号带给 trigger(触发采集 ctx 由此派生)。
-        return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null }));
+        return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null,enabled:r.enabled,target:r.target??{} }));
       },
       createJob: async (c, input) => {
         const job = await schedulingService.createJob(c, {

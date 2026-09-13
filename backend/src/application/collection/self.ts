@@ -1,3 +1,4 @@
+import {readAllPublicationPages} from './publication-pages';
 import { createCollectedWorkAttribution } from "./attribution";
 import { ENDPOINTS, type RequestContext, type Transport } from "@creatoros/contract";
 import { OwnershipError } from "../../modules/projects";
@@ -8,6 +9,8 @@ import { runDouyinHeavyBackfill } from "./douyin-heavy-backfill";
 
 /** 同账号公开作品采集：确认可见性后写入，再按原任务补齐封面和归因。 */
 export function createSelfCollector(ports:{
+sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle">;
+resolvePublication?:(ctx:RequestContext,externalId:string)=>Promise<{id:string}|null>;
 projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getRecentPublicationsWithTitle" | "listPublicationsMissingCover" | "setCover">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics" | "getDashboardRollup">;
@@ -40,7 +43,7 @@ const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutpu
 const recentVisibleCollections=new Map<string,{completedAtMs:number;result:Awaited<ReturnType<ScheduledCollector>>}>();
 const attributeCollectedWorks=createCollectedWorkAttribution({projectsService,publishingService,analyticsService,topicAttributionService,candidateService,learningsService,positioningService,models,assertAttributionConfigured,makeReviewSubjectReader,configuration});
 return async (ctx, target, report) => {
-      const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}`;
+      const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}:${target.__skipHeavyBackfill===true}:${target.__skipMetricRefresh===true}`;
       const cached = recentVisibleCollections.get(collectionCacheKey);
       if (cached && Date.now() - cached.completedAtMs < 30 * 60_000) {
         report({
@@ -74,6 +77,8 @@ return async (ctx, target, report) => {
       //   同步→明细落库整段包 try:任一抛错只 console.error + 报一条 export 降级,**不**
       //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
       let trafficVisibleIds=new Set<string>();
+      const attemptedMetricIds:string[]=[];
+      const contentPublicationByProject=new Map<string,string>();
       let detailWritten = 0;
       let metricsWritten = 0;
       try {
@@ -104,9 +109,8 @@ return async (ctx, target, report) => {
         //    L3004 dossier 装配同款回退:revision title 空时取 content_output 真实标题(导入时落在
         //    projects/content_output 上)。不回退 → 72 条采集作品 catalog title 恒空 → xlsx 明细
         //    永远匹配不上 → items_new 恒 0(断裂根因)。
-        const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
-          limit: 500,
-        });
+        const pubs = await readAllPublicationPages(page=>publishingService.getRecentPublicationsWithTitle(ctx,page));
+        const existingByExternalId=new Map(pubs.map(p=>[p.externalId,p]));
         const catalogByExternalId = new Map<string, PublicationCatalogEntry>();
         for (const record of rawBatch.records) {
           catalogByExternalId.set(record.externalId, {
@@ -172,10 +176,16 @@ return async (ctx, target, report) => {
           });
         }
         checkScheduledSignal();
+      const dueRecords=[];
+      for(const record of decision.visibleRecords){
+        const existing=existingByExternalId.get(record.externalId);
+        if(!existing || (target.__skipMetricRefresh!==true&&(!ports.sync||await ports.sync.due(ctx,existing.id,"metrics")))){dueRecords.push(record);if(existing)attemptedMetricIds.push(existing.id);}
+      }
+      const dueExternalIds=new Set(dueRecords.map(r=>r.externalId));
       const metricsRun = await ingestionService.ingestApprovedDouyinBatch(ctx, {
           externalSourceId,
           capturedAt,
-          records: decision.visibleRecords,
+          records: dueRecords,
           identity: rawBatch.identity,
         });
         metricsWritten = metricsRun.recordsWritten;
@@ -258,7 +268,7 @@ return async (ctx, target, report) => {
           matches,
           (pubId) => {
             const externalId = externalIdById.get(pubId) ?? null;
-            return externalId && visibleExternalIds.has(externalId)
+            return externalId && visibleExternalIds.has(externalId) && dueExternalIds.has(externalId)
               ? externalId
               : null;
           },
@@ -293,6 +303,9 @@ return async (ctx, target, report) => {
             message: `已落库 ${result.recordsWritten} 条明细`,
           });
           detailWritten = result.recordsWritten;
+          if(ports.sync&&ports.resolvePublication&&result.recordsWritten===records.length){
+            for(const record of records){const p=await ports.resolvePublication(ctx,record.externalId);if(p)await ports.sync.settle(ctx,p.id,"metrics",{success:true});}
+          }
         }
         // [T-202] 落库条数落 console:与上面 export/visibility 三行拼成完整链路证据
         //   (导出 N 行 → 匹配 M 条 → 落库 detailWritten 条),真机一眼定位断点。
@@ -300,6 +313,8 @@ return async (ctx, target, report) => {
           `[douyin-detail-ingest] 明细落库 ${detailWritten} 条快照(匹配上 ${records.length} 条 record)`,
         );
       } catch (detailErr) {
+        checkScheduledSignal();
+        if(ports.sync)for(const id of attemptedMetricIds)await ports.sync.settle(ctx,id,"metrics",{success:false,error:detailErr instanceof Error?detailErr.message:"作品指标同步失败"});
         // [T-595] 可见性闸门失败必须 fail-closed：不入新作品、不按缺失状态清理，也不继续
         // 跑封面/逐字稿等重活。旧“吞错后继续”会把 unknown 当可见，已正式退役。
         console.error(
@@ -315,7 +330,7 @@ return async (ctx, target, report) => {
         throw detailErr;
       }
       // 明细另起持久任务；只排已核实公开集合，失败不改变基础采集结果。
-      if(ports.enqueueTraffic&&trafficVisibleIds.size){try{await ports.enqueueTraffic(ctx,trafficVisibleIds);}catch(error){checkScheduledSignal();console.error('[traffic-enqueue] 基础指标已保存，流量补采可在复盘页重试',error);}}
+      if(target.__operationsSync!==true&&ports.enqueueTraffic&&trafficVisibleIds.size){try{await ports.enqueueTraffic(ctx,trafficVisibleIds);}catch(error){checkScheduledSignal();console.error('[traffic-enqueue] 基础指标已保存，流量补采可在复盘页重试',error);}}
       if (rawBatch.incomplete) return {itemsNew:metricsWritten+detailWritten,itemsUpdated:0,incomplete:true,message:`本轮已保存可确认的作品数据，但目录尚未采完，请继续采集；已取回 ${rawBatch.records.length} 条目录记录`};
       // 5) 已确认公开并落库后再跑初始化重活：①封面回填 ②逐字稿 + 重建排队。
       //    隐藏/未知作品从未进入本轮写集合，重活天然只看到公开作品。
@@ -373,11 +388,15 @@ return async (ctx, target, report) => {
             });
           },
           // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
-          listImportedWorks: (c) => projectsService.listImportedWorks(c),
+          listImportedWorks: async(c) => {
+            const works=await projectsService.listImportedWorks(c);if(!ports.sync||!ports.resolvePublication)return works;
+            const due=[];for(const w of works){const p=await ports.resolvePublication(c,w.externalId);if(p){contentPublicationByProject.set(w.projectId,p.id);if(await ports.sync.due(c,p.id,"content"))due.push(w);}}
+            return due;
+          },
           // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
           //   ai.tasks.create → runTranscribe;直调 service 会死链)。
           enqueueTranscribe: async (c, awemeIds) => {
-            await ai.request(
+            try{await ai.request(
               ENDPOINTS.createAITask,
               {
                 params: undefined,
@@ -389,7 +408,11 @@ return async (ctx, target, report) => {
                 },
               },
               c,
-            );
+            );}catch(error){
+              checkScheduledSignal();
+              if(ports.sync&&ports.resolvePublication)for(const id of awemeIds){const p=await ports.resolvePublication(c,id);if(p)await ports.sync.settle(c,p.id,"content",{success:false,error:error instanceof Error?error.message:"视频内容同步未能启动"});}
+              throw error;
+            }
           },
           // 依赖闸：只有真实 ASR 逐字稿才允许重建；图集占位锚不能喂给重建模型。
           hasReconstructableTranscript: async (c, projectId) => {
@@ -409,6 +432,8 @@ return async (ctx, target, report) => {
                 typeof data?.transcript === "string" &&
                 data.transcript.trim().length > 0
               ) {
+                const pubId=contentPublicationByProject.get(projectId);
+                if(ports.sync&&pubId)await ports.sync.settle(c,pubId,"content",{success:true});
                 return true;
               }
             }

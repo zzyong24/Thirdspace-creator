@@ -1,3 +1,4 @@
+import {readAllPublicationPages} from './publication-pages';
 import type { RequestContext } from "@creatoros/contract";
 import type { Collector as ScheduledCollector } from "../../modules/ai-runtime";
 import { createIngestionRepository } from "../../modules/ingestion";
@@ -7,13 +8,14 @@ interface CommentReadOptions {maxPages?:number;commentWatermark:(awemeId:string)
 /** 评论增量读取、原入库去重账本与进度组合。 */
 export function createCommentsCollector(ports:{db: import("../../db").Db;
 deps: {now:()=>string;nextId:(prefix:string)=>string};
+sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle">;
 checkScheduledSignal:()=>void;
 ingestionService: Pick<ReturnType<typeof import("../../modules/ingestion").createIngestionService>,"ensureDouyinSource"|"createRun"|"completeRun">;
 candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>,"ingestAudienceSignal"|"listCommentsForPublication">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"resolvePublication"|"getRecentPublicationsWithTitle">;
 analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").createAnalyticsService>,"getPublicationAnalytics">;
 readComments:(ctx:RequestContext,awemeId:string,options:CommentReadOptions)=>Promise<CommentRecord[]>;
-readCommentsForWorks:(ctx:RequestContext,awemeIds:string[],options:CommentReadOptions & {onWorkComplete:(work:{awemeId:string;records:CommentRecord[]},progress:{processed:number;total:number})=>Promise<void>})=>Promise<{works:Array<{awemeId:string;records:CommentRecord[]}>;truncated:boolean;cooldownRemainMs:number}>;}):ScheduledCollector {
+readCommentsForWorks:(ctx:RequestContext,awemeIds:string[],options:CommentReadOptions & {onWorkComplete:(work:{awemeId:string;records:CommentRecord[];complete?:boolean},progress:{processed:number;total:number})=>Promise<void>})=>Promise<{works:Array<{awemeId:string;records:CommentRecord[];complete?:boolean}>;truncated:boolean;cooldownRemainMs:number}>;}):ScheduledCollector {
 const {db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,readComments,readCommentsForWorks}=ports;
 return async (ctx, target, report) => {
       // [T-152] 阶段①:登录校验 + 确保采集源(抓评论前 fetchDouyinComments* 内先校验登录态)。
@@ -156,12 +158,12 @@ return async (ctx, target, report) => {
         });
         return { itemsNew: written, itemsUpdated: 0 };
       }
-      const pubs = await publishingService.getRecentPublicationsWithTitle(ctx, {
-        limit: 500,
-      });
-      const douyinPubs = pubs.filter(
-        (p) => p.platform === "douyin" && p.externalId,
-      );
+      const pubs = await readAllPublicationPages(page=>publishingService.getRecentPublicationsWithTitle(ctx,page));
+      const visiblePubs = pubs.filter(p=>p.platform === "douyin" && p.externalId && !p.hiddenAt && p.status === "published");
+      const douyinPubs=[];
+      for(const pub of visiblePubs){if(!ports.sync||await ports.sync.due(ctx,pub.id,"comments"))douyinPubs.push(pub);}
+
+      if(!douyinPubs.length)return {itemsNew:0,itemsUpdated:0,message:"评论数据尚未到更新时间"};
       // [T-232 断点续采] 逐作品预取 watermark:一石二鸟 ——「已采与否」的判据(非空 = 采过,
       //   复用 T-177 既有机制不新造持久锚)+ 直接喂给抓取层做增量 early-break(免每作品双读)。
       const watermarks = new Map<string, Set<string>>();
@@ -213,16 +215,21 @@ return async (ctx, target, report) => {
         message: `抓取 ${awemeIds.length} 个作品的评论(未采/爆款优先)`,
       });
       let total = 0;
+      const completedDuringRead=new Set<string>();
+      const pubByExternalId=new Map(douyinPubs.map(p=>[p.externalId,p]));
       // [T-232 额度断点] 抓取层撞 DouyinCooldownActiveError → 立即停剩余作品,带回部分结果
       //   (truncated=true);不再逐作品白撞冷却。
-      const batch = await readCommentsForWorks(ctx, awemeIds, {
+      let batch;
+      try { batch = await readCommentsForWorks(ctx, awemeIds, {
           maxPages,
           // [T-177] 每作品增量 early-break(预取缓存版;缺失键退化空集全量)。
           commentWatermark: async (aweme) =>
             watermarks.get(aweme) ?? new Set<string>(),
           // T-616：抓完一个作品立即落库并上报，不再等 51 个作品整批返回后才从 0 跳到 N。
-          onWorkComplete: async ({ awemeId, records }, progress) => {
+          onWorkComplete: async ({ awemeId, records,complete }, progress) => {
             total += await ingestRecordsForWork(awemeId, records);
+            const pub=pubByExternalId.get(awemeId);
+            if(ports.sync&&pub&&complete!==false){await ports.sync.settle(ctx,pub.id,"comments",{success:true});completedDuringRead.add(awemeId);}
             report({
               stage: "comments",
               processed: progress.processed,
@@ -233,6 +240,19 @@ return async (ctx, target, report) => {
             });
           },
         });
+      } catch(error){
+        checkScheduledSignal();
+        if(ports.sync)for(const pub of douyinPubs)if(!completedDuringRead.has(pub.externalId!))await ports.sync.settle(ctx,pub.id,"comments",{success:false,error:error instanceof Error?error.message:"评论同步失败"});
+        throw error;
+      }
+      if(ports.sync){
+        const completed=new Set(batch.works.filter(w=>w.complete!==false).map(w=>w.awemeId));
+        for(const pub of douyinPubs){
+          if(completedDuringRead.has(pub.externalId!))continue;
+          // 截断可能落在当前作品内部，保留结果但不把部分评论误记整作品成功。
+          await ports.sync.settle(ctx,pub.id,"comments",completed.has(pub.externalId!)?{success:true}:{success:false,error:"评论未完整读完，等待重试"});
+        }
+      }
       // [T-232 run 诚实] 全量完成 vs 额度截断,message 走 CollectResult.message(T-235a 既有
       //   机制,runner 拼进合成 step 文本供运行详情展示);itemsNew 照实,不假装全量。
       const coverageMessage = buildCommentCoverageMessage({
@@ -247,6 +267,6 @@ return async (ctx, target, report) => {
         total: awemeIds.length,
         message: coverageMessage,
       });
-      return { itemsNew: total, itemsUpdated: 0, message: coverageMessage };
+      return { itemsNew: total, itemsUpdated: 0, incomplete:batch.truncated||batch.works.some(w=>w.complete===false), message: coverageMessage };
     };
 }

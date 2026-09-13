@@ -1,5 +1,6 @@
 import {
   pgTable,
+  uniqueIndex,
   text,
   integer,
   jsonb,
@@ -151,3 +152,8 @@ export const publicationTraffic = pgTable('publication_traffic',{
  publicationId:text('publication_id').primaryKey(),userId:text('user_id').notNull(),accountId:text('account_id').notNull(),externalId:text('external_id').notNull(),
  lastTaskId:text('last_task_id'),requestedAt:text('requested_at').notNull(),attemptedAt:text('attempted_at'),capturedAt:text('captured_at'),status:text('status').notNull(),error:text('error'),data:jsonb('data'),
 });
+
+/** 各作品/能力成功水位；不以最后尝试时间冒充新鲜度。 */
+export const publicationSyncState=pgTable('publication_sync_state',{
+ userId:text('user_id').notNull(),accountId:text('account_id').notNull(),publicationId:text('publication_id').notNull(),capability:text('capability').notNull(),externalId:text('external_id').notNull(),lastSucceededAt:text('last_succeeded_at'),attemptedAt:text('attempted_at').notNull(),retryAt:text('retry_at'),failures:integer('failures').notNull().default(0),error:text('error'),
+},t=>({scope:uniqueIndex('publication_sync_state_scope').on(t.userId,t.accountId,t.publicationId,t.capability)}));
