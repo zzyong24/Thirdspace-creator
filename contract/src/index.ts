@@ -283,3 +283,4 @@ export {operationsSyncSchema,DEFAULT_OPERATIONS_SYNC,type OperationsSync} from '
 export { onboardingStepKey, onboardingPatchResource, onboardingStateResource, type OnboardingPatch, type OnboardingStateResource } from "./resources/settings";
 
 export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
+export {dailyReportAnalysis,type DailyReportAnalysis} from "./pages/daily-report-analysis";

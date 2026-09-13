@@ -7,12 +7,7 @@ export function totals(report:DailyReport){return METRICS.map(m=>{const values=r
 export function displayNumber(value:number|null){return value===null?"暂无":value.toLocaleString("zh-CN");}
 export function beijingTime(value:string){return new Date(value).toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});}
 
-export type DailyReportAnalysis = {
- headline:string; summary:string;
- positioning:{observation:string;suggestion:string};
- works:Array<{publicationId:string;observation:string;hypothesis:string;experiment:string}>;
- experiments:Array<{title:string;action:string;variable:string;metric:string;prerequisite:string}>;
-};
+export type {DailyReportAnalysis} from "@creatoros/contract";
 export type ReportWork = DailyReport["works"][number];
 export type RecentWork = Pick<ReportWork,"publicationId"|"projectId"|"title"|"publishedAt"|"capturedAt"|"metrics">;
 export function recentWorks(report:DailyReport):RecentWork[]{return (report as DailyReport & {recentWorks?:RecentWork[]}).recentWorks??[];}

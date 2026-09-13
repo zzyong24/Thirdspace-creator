@@ -1297,6 +1297,33 @@
       "verify_commands": {
         "implementation": "pnpm -C frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-data.test.ts src/features/onboarding/onboarding-steps.test.ts"
       }
+    },
+    "T-965": {
+      "task_id": "T-965",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "frontend/src/**",
+        "backend/src/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t965-daily-report-parity-performance.md",
+        "docs/research/t965/**",
+        "frontend/src/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "contract/src/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/onboarding/onboarding-card.test.tsx src/features/onboarding/onboarding-data.test.ts src/features/onboarding/onboarding-steps.test.ts"
+      }
     }
   }
 }

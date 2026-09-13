@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { CreatorDatePicker } from "@/components/ui/creator-date-picker";
 import {
   Popover,
   PopoverContent,
@@ -182,15 +182,13 @@ export function ProjectScheduleControl({
 
           <label className="flex flex-col gap-1.5 text-xs font-medium text-foreground">
             计划发布日期
-            <Input
-              type="date"
-              aria-label="计划发布日期"
-              min={referenceDateKey}
+            <CreatorDatePicker
+              label="计划发布日期"
+              minDate={referenceDateKey}
               value={draftDate}
               disabled={pending}
-              aria-invalid={error ? true : undefined}
-              onChange={(event) => {
-                setDraftDate(event.target.value);
+              onChange={(value) => {
+                setDraftDate(value??"");
                 setError(null);
               }}
               className="tabular-nums"

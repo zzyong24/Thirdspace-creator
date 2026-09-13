@@ -1035,3 +1035,4 @@
 {"ts":"2026-09-13T06:33:00.542Z","actor":"taskctl","action":"complete","task":"T-963","evidence":"冻结3ec60d26官方本地构建安装成功；42基础测试、生产类型、真实sidecar/hydration、DMG VALID、codesign通过；1811数据库文件快照哈希一致；已安装PID48827，首页/自动化/设置200，DMG SHA256 2decad8708307ee0202f29473df8f058409f32196f8a42c5e60699b5d5cc9853。本地ad-hoc未公证；pmem同步，reconcile233范围外既有债务保留T-916，详见SPEC。","sha_before":"3d8d4fa0d1d1","sha_after":"69150f5070f1"}
 {"ts":"2026-09-13T06:55:20.520Z","actor":"taskctl","action":"start","task":"T-964","sha_before":"0e0f21fb78a7","sha_after":"4fa50f795143"}
 {"ts":"2026-09-13T07:28:52.652Z","actor":"taskctl","action":"complete","task":"T-964","evidence":"b123419c；前端94项及最终71项通过、tsc通过；隔离浏览器确认/结束/重开与日报PNG实测；42项打包检查、DMG校验及本机真实启动/日报CLI通过。全局reconcile233项历史漂移归T-916保留。","sha_before":"4fa50f795143","sha_after":"b8975e21e653"}
+{"ts":"2026-09-13T07:33:58.736Z","actor":"taskctl","action":"start","task":"T-965","sha_before":"c15ff767515f","sha_after":"0460ff83e378"}

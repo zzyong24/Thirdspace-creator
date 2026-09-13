@@ -8,6 +8,9 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// 排期保存行为使用日期控件边界；真实中文日历交互在 creator-date-picker-antd.test.tsx 覆盖。
+vi.mock("@/components/ui/creator-date-picker",()=>({CreatorDatePicker:({label,value,onChange,disabled,minDate}:any)=><input aria-label={label} value={value??""} disabled={disabled} min={minDate} onChange={e=>onChange(e.target.value)}/> }));
+
 const mockRouter = { refresh: vi.fn() };
 vi.mock("next/navigation", () => ({
   useRouter: () => mockRouter,
@@ -70,7 +73,6 @@ describe("ProjectScheduleControl", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "为夏季栏目排期" }));
     const input = screen.getByLabelText("计划发布日期");
-    expect(input).toHaveAttribute("type", "date");
     expect(input).toHaveAttribute("min", "2026-07-29");
 
     fireEvent.change(input, { target: { value: "2026-08-03" } });
