@@ -40,7 +40,13 @@ export default function CreatorDatePickerAntd(props:CreatorDatePickerAntdProps){
   }
   const renderPicker=()=>{
     if(props.mode==="range")return <DatePicker.RangePicker {...common} id={props.id?{start:props.id,end:`${props.id}-end`}:undefined} value={range?[dayjs(range.startDate),dayjs(range.endDate)]:null} defaultPickerValue={[dayjs(range?.startDate??beijingToday()),dayjs(range?.endDate??beijingToday())]} format="YYYY-MM-DD" placeholder={["开始日期","结束日期"]} onChange={dates=>{const value:CreatorDateRange|null=dates?.[0]&&dates[1]?{startDate:dates[0].format("YYYY-MM-DD"),endDate:dates[1].format("YYYY-MM-DD")}:null;props.onChange(value);}}/>;
-    if(props.mode==="week"||props.mode==="month")return <DatePicker {...common} id={props.id} picker={props.mode} value={selected?dayjs(selected):null} defaultPickerValue={dayjs(selected??beijingToday())} format={props.mode==="month"?"YYYY年MM月":date=>`${date.startOf("week").format("MM月DD日")} 至 ${date.endOf("week").format("MM月DD日")}`} placeholder={props.mode==="week"?"选择一周":"选择月份"} onChange={changePeriod}/>;
+    if(props.mode==="week"||props.mode==="month"){
+      const anchor=dayjs(selected??beijingToday()).locale("zh-cn");
+      // 只有首尾覆盖完整自然周期才视为已选中。自定义范围切换模式时，
+      // 保留原日期作为面板锚点，但不能让 Ant 吞掉“选择同月/同周”的确认。
+      const isCompletePeriod=range?.startDate===anchor.startOf(props.mode).format("YYYY-MM-DD")&&range?.endDate===anchor.endOf(props.mode).format("YYYY-MM-DD");
+      return <DatePicker {...common} id={props.id} picker={props.mode} value={isCompletePeriod?anchor:null} defaultPickerValue={anchor} format={props.mode==="month"?"YYYY年MM月":date=>`${date.startOf("week").format("MM月DD日")} 至 ${date.endOf("week").format("MM月DD日")}`} placeholder={props.mode==="week"?"选择一周":"选择月份"} onChange={changePeriod}/>;
+    }
     return <DatePicker {...common} id={props.id} value={selected?dayjs(selected):null} defaultPickerValue={dayjs(selected??beijingToday())} showNow={false} format="YYYY-MM-DD" placeholder={props.placeholder??"选择日期"} onChange={date=>{if(props.mode===undefined||props.mode==="date")props.onChange(date?date.format("YYYY-MM-DD"):null);}}/>;
   };
   return <ConfigProvider locale={zhCN} theme={{algorithm:colors.dark?theme.darkAlgorithm:theme.defaultAlgorithm,token:{colorPrimary:colors.brand,colorBgContainer:colors.surface,colorBgElevated:colors.surface,colorText:colors.text,colorTextPlaceholder:colors.muted,colorBorder:colors.border,borderRadius:8,fontFamily:"inherit"},components:{DatePicker:{zIndexPopup:1100}}}}>{renderPicker()}</ConfigProvider>;
