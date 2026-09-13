@@ -1,0 +1,25 @@
+{
+  "reportDate": "2026-09-12",
+  "timezone": "Asia/Shanghai",
+  "pngSize": [
+    2160,
+    3280
+  ],
+  "decodedQr": "https://buy.aitongban.cloud/",
+  "pngSha256": "7485fbdc04474a2601cc855a14e6bf166a1a11cd4ea1d5a60fcbd9505c5f79a0",
+  "desktopHorizontalOverflow": false,
+  "mobileHorizontalOverflow": false,
+  "mobileWidth": 390,
+  "recentRows": 6,
+  "actualBrowserDownloads": [
+    "json",
+    "png"
+  ],
+  "independentReview": "no mandatory factual correction",
+  "productionImplementation": false,
+  "dailyAutomationCreated": false,
+  "globalReconcile": {
+    "errors": 233,
+    "preexistingTask": "T-916"
+  }
+}

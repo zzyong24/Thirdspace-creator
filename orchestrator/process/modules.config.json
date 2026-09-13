@@ -1218,6 +1218,26 @@
           "node orchestrator/process/boundary-scan.mjs"
         ]
       }
+    },
+    "T-960": {
+      "task_id": "T-960",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "design"
+      ],
+      "read_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "write_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "verify_commands": {
+        "design": "node orchestrator/process/research-gate.mjs audit"
+      }
     }
   }
 }

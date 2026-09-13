@@ -4,11 +4,11 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 38,
-    "tasks_done": 33,
-    "tasks_total": 123,
+    "verticals": 39,
+    "tasks_done": 34,
+    "tasks_total": 124,
     "tasks_pending": 90,
-    "verticals_complete": 0
+    "verticals_complete": 1
   },
   "verticals": [
     {
@@ -1575,6 +1575,35 @@
       "step_write_set": {
         "review": []
       },
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-960",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-960",
+      "tasks": [
+        {
+          "step": "design",
+          "status": "done"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "read_set": [
+        "docs/features/t960-director-daily-report.md",
+        "docs/research/t960-daily-report/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}

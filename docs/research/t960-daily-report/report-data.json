@@ -1,0 +1,238 @@
+{
+  "reportDate": "2026-09-12",
+  "timezone": "Asia/Shanghai",
+  "capturedAt": "2026-09-13T12:50:17+08:00",
+  "account": {
+    "name": "月明水清深",
+    "platform": "抖音",
+    "id": "acct-ae1a8346-9",
+    "followers": 4233
+  },
+  "scope": "昨日新发布作品的当前累计表现，不是昨日账号增量",
+  "yesterday": {
+    "id": "project-ed64285a-63",
+    "title": "孩子不记录也会长大，那为什么还要记录？ 孩子不记录也会长大，那为什么还要记录？传",
+    "publishedAt": "2026-09-12T03:42:54.000Z",
+    "metrics": {
+      "genre": "1-3min视频",
+      "likes": 33,
+      "plays": 997,
+      "shares": 0,
+      "comments": 2,
+      "favorites": 0,
+      "finish_rate": 0.62,
+      "follower_gain": 0,
+      "bounce_2s_rate": 52.48,
+      "finish_5s_rate": 19.08,
+      "profile_visits": 9,
+      "avg_duration_sec": 4.5
+    },
+    "theme": "家庭 AI · 记录价值"
+  },
+  "recent": [
+    {
+      "id": "project-ed64285a-63",
+      "title": "孩子不记录也会长大，那为什么还要记录？ 孩子不记录也会长大，那为什么还要记录？传",
+      "publishedAt": "2026-09-12T03:42:54.000Z",
+      "metrics": {
+        "genre": "1-3min视频",
+        "likes": 33,
+        "plays": 997,
+        "shares": 0,
+        "comments": 2,
+        "favorites": 0,
+        "finish_rate": 0.62,
+        "follower_gain": 0,
+        "bounce_2s_rate": 52.48,
+        "finish_5s_rate": 19.08,
+        "profile_visits": 9,
+        "avg_duration_sec": 4.5
+      },
+      "theme": "家庭 AI · 记录价值"
+    },
+    {
+      "id": "project-9cd24147-83",
+      "title": "AI时代，我想从孩子出生的第一天开始，为他保存上下文 #AI应用 #育儿记录 #",
+      "publishedAt": "2026-09-10T08:30:50.000Z",
+      "metrics": {
+        "ctr": 62.5,
+        "genre": "长图文",
+        "likes": 13,
+        "plays": 1153,
+        "shares": 3,
+        "comments": 2,
+        "favorites": 5,
+        "finish_rate": 1.8,
+        "follower_gain": 1,
+        "bounce_2s_rate": 0,
+        "finish_5s_rate": 0,
+        "profile_visits": 12,
+        "avg_duration_sec": 0
+      },
+      "theme": "家庭 AI · 上下文"
+    },
+    {
+      "id": "project-9cd24147-100",
+      "title": "AI时代，孩子的上下文从出生开始 我给宝宝禾安做了一个AI成长日记。说一句话，或",
+      "publishedAt": "2026-09-10T05:14:22.000Z",
+      "metrics": {
+        "genre": "1min-视频",
+        "likes": 186,
+        "plays": 13485,
+        "shares": 70,
+        "comments": 61,
+        "favorites": 83,
+        "finish_rate": 13.77,
+        "follower_gain": 12,
+        "bounce_2s_rate": 28.52,
+        "finish_5s_rate": 52.16,
+        "profile_visits": 354,
+        "avg_duration_sec": 13.6
+      },
+      "theme": "家庭 AI · 应用演示"
+    },
+    {
+      "id": "project-9cd24147-117",
+      "title": "人人都用AI，公司为什么没变快？ 公司给员工开通 AI，个人产出更快，组织协作却",
+      "publishedAt": "2026-09-09T16:11:09.000Z",
+      "metrics": {
+        "genre": "1-3min视频",
+        "likes": 50,
+        "plays": 3410,
+        "shares": 7,
+        "comments": 5,
+        "favorites": 40,
+        "finish_rate": 1.88,
+        "follower_gain": 2,
+        "bounce_2s_rate": 40.29,
+        "finish_5s_rate": 37.17,
+        "profile_visits": 34,
+        "avg_duration_sec": 12.7
+      },
+      "theme": "组织协作 · 工作效率"
+    },
+    {
+      "id": "project-185382ce-364",
+      "title": "一张图，半小时做成2D游戏 从一张参考图出发，用 Codex 和 Blender",
+      "publishedAt": "2026-09-07T05:08:32.000Z",
+      "metrics": {
+        "genre": "1-3min视频",
+        "likes": 46,
+        "plays": 4177,
+        "shares": 11,
+        "comments": 4,
+        "favorites": 29,
+        "finish_rate": 1.64,
+        "follower_gain": 10,
+        "bounce_2s_rate": 36.15,
+        "finish_5s_rate": 31.4,
+        "profile_visits": 69,
+        "avg_duration_sec": 9.6
+      },
+      "theme": "创作实践 · 图到游戏"
+    },
+    {
+      "id": "project-185382ce-381",
+      "title": "装了很多 Skill，为什么 AI 还是临时工？ 我给 Codex 写过提示词，",
+      "publishedAt": "2026-09-06T07:32:14.000Z",
+      "metrics": {
+        "ctr": 36.36,
+        "genre": "3-5min视频",
+        "likes": 62,
+        "plays": 3315,
+        "shares": 13,
+        "comments": 4,
+        "favorites": 55,
+        "finish_rate": 1.33,
+        "follower_gain": 6,
+        "bounce_2s_rate": 48.23,
+        "finish_5s_rate": 29.79,
+        "profile_visits": 46,
+        "avg_duration_sec": 10.7
+      },
+      "theme": "Agent 实践 · 工作方式"
+    }
+  ],
+  "traffic": {
+    "status": "unavailable",
+    "reason": "浏览器登录档案被其他任务占用"
+  },
+  "transcript": null,
+  "inquiries": null,
+  "sales": null,
+  "purchaseUrl": "https://buy.aitongban.cloud/",
+  "analysis": {
+    "status": "运营分析候选",
+    "judgment": "先验证表达，不急着调整定位。",
+    "observation": "昨日新发1条视频。2秒跳出52.48%，5秒留存19.08%，主页访问9，涨粉0。",
+    "hypothesis": "观众收益或结果展示可能没有及时被看见；缺逐字稿、画面和来源，尚不能确认原因。",
+    "experiment": "核对原视频；若结果没有前置，下一条同母题仅调整开场结果展示，比较发布24小时后的2秒跳出与5秒留存。"
+  },
+  "positioning": {
+    "saved": {
+      "updatedAt": "2026-09-09T03:48:52.129Z",
+      "summary": "AI产品0到1的实战操盘手，真实过程与可执行步骤"
+    },
+    "researchCandidate": {
+      "date": "2026-09-12",
+      "status": "未采纳",
+      "summary": "亲手验证AI如何改变个人能力、一门生意的经营和一个组织的协作"
+    },
+    "decision": "不凭单条表现否定家庭AI场景，先明确该内容承担人物信任还是获客任务"
+  },
+  "evidence": {
+    "publicationId": "pub-ed64285a-78",
+    "metricSnapshotId": "ms-ed64285a-218",
+    "textKind": "发布文案，非视频逐字稿",
+    "traffic": "失败，登录档案占用",
+    "commentsCount": 2,
+    "commentsTextAvailable": false,
+    "dailyAccountIncrement": null,
+    "productionDateCoverage": "未接入，不把导入时间当作制作时间"
+  },
+  "experiments": [
+    {
+      "title": "先看原片，再测结果前置",
+      "condition": "原视频未在开场展示真实结果时",
+      "variable": "开场结果展示",
+      "keepFixed": [
+        "母题",
+        "主体",
+        "时长",
+        "CTA"
+      ],
+      "metrics": [
+        "2秒跳出",
+        "5秒留存"
+      ],
+      "window": "相同发布24小时窗口",
+      "status": "建议，未执行"
+    },
+    {
+      "title": "明确家庭AI栏目的内容任务",
+      "variable": "唯一观众收益",
+      "evidenceNeeded": [
+        "真实功能",
+        "操作素材",
+        "逐字稿"
+      ],
+      "metrics": [
+        "具体提问",
+        "收藏",
+        "关注"
+      ],
+      "status": "建议，未执行"
+    },
+    {
+      "title": "让业务承接可观测",
+      "condition": "本条明确以获客为目标时",
+      "variable": "一个与展示能力一致的承接入口",
+      "metrics": [
+        "主页访问",
+        "入口访问",
+        "有效咨询"
+      ],
+      "status": "建议，未执行"
+    }
+  ]
+}
