@@ -12,6 +12,7 @@ export const dailyReportQuery = z.object({date:calendarDate.optional(),startDate
 export type DailyReportQuery=z.infer<typeof dailyReportQuery>;
 export const dailyReportPage = z.object({
  date:z.string(),startDate:calendarDate.optional(),endDate:calendarDate.optional(),timeZone:z.literal("Asia/Shanghai"),generatedAt:z.string(),accountId:z.string().nullable(),accountName:z.string().nullable().default(null),
+ accountProfileUrl:z.string().url().nullable().optional(),positioningOneLiner:z.string().nullable().optional(),
  positioning:z.string().nullable(),warnings:z.array(z.string()),
  recentWorks:z.array(z.object({publicationId:z.string(),projectId:z.string(),title:z.string(),publishedAt:z.string(),capturedAt:z.string().nullable(),metrics:z.record(z.string(),z.number())})).optional().default([]),
  works:z.array(z.object({publicationId:z.string(),projectId:z.string(),title:z.string(),publishedAt:z.string(),capturedAt:z.string().nullable(),script:z.string().nullable(),

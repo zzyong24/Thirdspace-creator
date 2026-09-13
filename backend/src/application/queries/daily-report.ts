@@ -10,6 +10,8 @@ export interface DailyReportPorts {
   analyticsService: Pick<Analytics, "listLatestSnapshotsByPublicationIds">;
   trafficService: Pick<import("../../modules/analytics").TrafficService, "getProject">;
   readAccountName?: (ctx: RequestContext) => Promise<string | null>;
+  readAccountProfileUrl?: (ctx: RequestContext) => Promise<string | null>;
+  readPositioningOneLiner?: (ctx: RequestContext) => Promise<string | null>;
   readScript: (ctx: RequestContext, projectId: string) => Promise<string | null>;
   readPositioning: (ctx: RequestContext) => Promise<string | null>;
 }
@@ -29,7 +31,7 @@ export function createDailyReportApplication(ports: DailyReportPorts) {
     const startDate = query.startDate ?? query.date ?? yesterdayBeijing(generatedAt).date;
     const endDate = query.endDate ?? startDate;
     const window = {date:startDate, start:Date.parse(startDate + "T00:00:00+08:00"), end:Date.parse(endDate + "T00:00:00+08:00") + DAY};
-    const report: DailyReportPage = { date: window.date, startDate, endDate, timeZone: "Asia/Shanghai", generatedAt, accountId: ctx.accountId ?? null, accountName: null, positioning: null, warnings: [], works: [], recentWorks: [] };
+    const report: DailyReportPage = { date: window.date, startDate, endDate, timeZone: "Asia/Shanghai", generatedAt, accountId: ctx.accountId ?? null, accountName: null, accountProfileUrl: null, positioningOneLiner: null, positioning: null, warnings: [], works: [], recentWorks: [] };
     if (!ctx.accountId) return report;
     const recentStart = window.end - 7 * DAY;
     const queryStart = Math.min(window.start, recentStart);
@@ -42,6 +44,8 @@ export function createDailyReportApplication(ports: DailyReportPorts) {
     let snapshots: Awaited<ReturnType<Analytics["listLatestSnapshotsByPublicationIds"]>> = [];
     const optionalReads = [
       (async () => { try { report.accountName = await ports.readAccountName?.(ctx) ?? null; } catch { report.warnings.push("账号名称暂时读取失败"); } })(),
+      (async () => { try { report.accountProfileUrl = await ports.readAccountProfileUrl?.(ctx) ?? null; } catch { report.warnings.push("账号主页暂时读取失败"); } })(),
+      (async () => { try { report.positioningOneLiner = await ports.readPositioningOneLiner?.(ctx) ?? null; } catch { report.warnings.push("一句话定位暂时读取失败"); } })(),
       (async () => { try { report.positioning = await ports.readPositioning(ctx); } catch { report.warnings.push("定位暂时读取失败"); } })(),
       (async () => { try { snapshots = selected.length ? await ports.analyticsService.listLatestSnapshotsByPublicationIds(ctx, selected.map(p => p.id)) : []; } catch { report.warnings.push("作品指标暂时读取失败"); } })(),
     ];

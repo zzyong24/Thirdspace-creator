@@ -15,10 +15,11 @@ export function buildShareModel(report: DailyReport) {
  }
  return {
   accountName: report.accountName ?? '我的创作', period: reportPeriodLabel(report), generatedAt: report.generatedAt,
+  positioningOneLiner: report.positioningOneLiner ?? null, profileUrl: report.accountProfileUrl ?? null,
   count: works.length,
   views: aggregate(works.map(work=>work.views), works.length),
   followers: aggregate(works.map(work=>work.followers), works.length),
   interactions: aggregate(works.flatMap(work=>work.interactions), works.length*4),
-  highlights: [...works].sort((a,b)=>(b.views??-Infinity)-(a.views??-Infinity)).slice(0,3).map(({title,views,followers})=>({title,views,followers})),
+  highlights: [...works].sort((a,b)=>(b.views??-Infinity)-(a.views??-Infinity)).map(({title,views,followers})=>({title,views,followers})),
  };
 }

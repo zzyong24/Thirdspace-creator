@@ -11,3 +11,7 @@
 .share{display:flex;flex-direction:column;max-width:760px;margin:0 auto}.shareActions{order:-1;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;width:100%;padding:16px;border:1px solid var(--creatoros-border);border-radius:12px}.shareActions h2{font-size:15px}.shareActions p{font-size:12px}.shareActions .button{margin-left:auto}
 
 .headline{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.summary{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.explanation{font-size:14px;line-height:1.9;margin:12px 0}.explanation summary{cursor:pointer;color:var(--creatoros-brand)}
+/* 已确认的分享成绩视觉：工具栏紧凑，海报保持浅色以供跨主题分享。 */
+.share{max-width:960px;gap:20px;padding:24px;background:var(--creatoros-surface);border:1px solid var(--creatoros-border);border-radius:18px;width:100%}
+.shareActions{padding:0 0 18px;border:0;border-bottom:1px solid var(--creatoros-border);border-radius:0;gap:16px}.shareActions h2{font-size:20px;margin:0 0 4px}.shareActions p{font-size:13px}.poster{max-width:720px;margin:0 auto;border-radius:14px;box-shadow:0 12px 40px #4b348b0d}.headline{max-width:34em}.explanation p{max-width:68em}
+@media(max-width:700px){.share{padding:14px}.shareActions .button{margin-left:0}.shareActions{gap:10px}.poster{border-radius:10px}}

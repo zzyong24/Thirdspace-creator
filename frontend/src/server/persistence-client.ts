@@ -4335,6 +4335,14 @@ FAVORITES_PROMOTE_PER_RUN
   const dailyReportQuery = createDailyReportApplication({
     now: deps.now, projectsService, publishingService, analyticsService, trafficService,
     readAccountName: async ctx => ctx.accountId ? (await platformAccountService.getAccount(ctx, ctx.accountId)).accountHandle : null,
+    readAccountProfileUrl: async ctx => {
+      if (!ctx.accountId) return null;
+      const account = await platformAccountService.getAccount(ctx, ctx.accountId);
+      // SEMANTIC_BOUNDARY_ALLOW: 按已绑定平台及真实 sec_uid 构建公开主页地址，不推测账号或内容。
+      return account.platform === "douyin" && account.externalAccountId?.trim()
+        ? `https://www.douyin.com/user/${encodeURIComponent(account.externalAccountId.trim())}` : null;
+    },
+    readPositioningOneLiner: async ctx => (await positioningService.readPositioningCenter(ctx)).currentStatement?.oneLiner?.trim() || null,
     readScript: async (ctx, projectId) => {
       const rows = await artifactsService.listProjectArtifacts(ctx, projectId);
       const artifact = selectReadableProjectScriptArtifact(rows);

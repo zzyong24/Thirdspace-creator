@@ -39,6 +39,22 @@ it("缺失分析指标可降级，核心发布查询失败仍需重试",async()=
 });
 
 it("旧日报响应缺少recentWorks仍可解析为空列表",async()=>{const {app}=setup();const {recentWorks,...legacy}=await app.getDailyReport(ctx);expect(pagesOperations.getDailyReport.response.parse(legacy).recentWorks).toEqual([]);});
+it("公开身份字段可缺省，旧报告可解析且不从完整定位拼接分享简介",async()=>{
+ const {app}=setup();const report=await app.getDailyReport(ctx);
+ expect(report.accountProfileUrl).toBeNull();expect(report.positioningOneLiner).toBeNull();expect(report.positioning).toBe("真实定位");
+ const {accountProfileUrl,positioningOneLiner,...legacy}=report;
+ expect(pagesOperations.getDailyReport.response.safeParse(legacy).success).toBe(true);
+ expect(pagesOperations.getDailyReport.response.safeParse({...report,accountProfileUrl:"不是URL"}).success).toBe(false);
+});
+it("公开主页和一句话定位仅从当前账号端口读取，缺账号不触发",async()=>{
+ const {ports}=setup();const profile=vi.fn(async()=>"https://www.douyin.com/user/real-sec-uid"),oneLiner=vi.fn(async()=>"分享真实AI产品开发过程");
+ const app=createDailyReportApplication({...ports,readAccountProfileUrl:profile,readPositioningOneLiner:oneLiner} as unknown as DailyReportPorts);
+ const empty=await app.getDailyReport({...ctx,accountId:null});expect(profile).not.toHaveBeenCalled();expect(oneLiner).not.toHaveBeenCalled();expect(empty.accountProfileUrl).toBeNull();
+ const report=await app.getDailyReport(ctx);expect(profile).toHaveBeenCalledExactlyOnceWith(ctx);expect(oneLiner).toHaveBeenCalledExactlyOnceWith(ctx);
+ expect(report.accountProfileUrl).toBe("https://www.douyin.com/user/real-sec-uid");expect(report.positioningOneLiner).toBe("分享真实AI产品开发过程");
+ profile.mockRejectedValue(Error("offline"));oneLiner.mockRejectedValue(Error("offline"));
+ const partial=await app.getDailyReport(ctx);expect(partial.works).toHaveLength(1);expect(partial.accountProfileUrl).toBeNull();expect(partial.positioningOneLiner).toBeNull();
+});
 it("日期范围首尾均包含且近七天独立以结束日计算",async()=>{
  const {ports,app}=setup();const base=(await ports.publishingService.listPublishedInWindow())[0]!;
  ports.publishingService.listPublishedInWindow.mockClear().mockResolvedValue([

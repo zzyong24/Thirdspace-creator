@@ -4,7 +4,7 @@ import {PURCHASE_QR,PURCHASE_URL} from "./purchase-qr";
 import type {DailyReport} from "./report-metrics";
 const report:DailyReport={date:"2026-10-01",timeZone:"Asia/Shanghai",generatedAt:"2026-10-02T00:00:00Z",accountId:"a",accountName:"真实账号",positioning:null,warnings:[],recentWorks:[],works:[{publicationId:"pub",projectId:"p",title:"真实作品",publishedAt:"2026-10-01T00:00:00Z",capturedAt:null,metrics:{views:0,finish_5s_rate:20},script:null,traffic:[]}]};
 it("导出与预览同一绘制入口，仅公开真实成绩，排除内部分析并保留购买码",async()=>{
- const context={scale:vi.fn(),fillRect:vi.fn(),fillText:vi.fn(),measureText:vi.fn((s:string)=>({width:s.length*12})),font:"",fillStyle:""};
+ const context={beginPath:vi.fn(),roundRect:vi.fn(),fill:vi.fn(),moveTo:vi.fn(),lineTo:vi.fn(),stroke:vi.fn(),arc:vi.fn(),createLinearGradient:vi.fn(()=>({addColorStop:vi.fn()})),scale:vi.fn(),fillRect:vi.fn(),fillText:vi.fn(),measureText:vi.fn((s:string)=>({width:s.length*12})),font:"",fillStyle:""};
  vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(context as any);
  vi.spyOn(HTMLCanvasElement.prototype,"toBlob").mockImplementation(cb=>cb(new Blob(["png"],{type:"image/png"})));
  Object.defineProperty(document,"fonts",{configurable:true,value:{ready:Promise.resolve()}});
@@ -14,7 +14,7 @@ it("导出与预览同一绘制入口，仅公开真实成绩，排除内部分�
  context.fillText.mockClear();await exportDailyReport(report,options);expect(context.fillText.mock.calls.map(call=>call[0])).toEqual(preview);expect(PURCHASE_URL).toBe("https://buy.aitongban.cloud/");expect(PURCHASE_QR.length).toBeGreaterThan(400);expect(click).toHaveBeenCalledOnce();vi.restoreAllMocks();
 });
 it("超长作品标题限制两行，完整标题仍在原报告中，海报不会被撑开",async()=>{
- const context={scale:vi.fn(),fillRect:vi.fn(),fillText:vi.fn(),measureText:vi.fn((s:string)=>({width:s.length*12})),font:"",fillStyle:""};
+ const context={beginPath:vi.fn(),roundRect:vi.fn(),fill:vi.fn(),moveTo:vi.fn(),lineTo:vi.fn(),stroke:vi.fn(),arc:vi.fn(),createLinearGradient:vi.fn(()=>({addColorStop:vi.fn()})),scale:vi.fn(),fillRect:vi.fn(),fillText:vi.fn(),measureText:vi.fn((s:string)=>({width:s.length*12})),font:"",fillStyle:""};
  vi.spyOn(HTMLCanvasElement.prototype,"getContext").mockReturnValue(context as any);
  Object.defineProperty(document,"fonts",{configurable:true,value:{ready:Promise.resolve()}});
  const normal=await renderDailyReportCanvas(report);
@@ -31,4 +31,21 @@ it("CSV 使用 UTF-8 BOM、中文列名和标准双引号转义；缺失指标�
  expect(csv).toContain('"12"');
  expect(csv).toContain('""');
  expect(csv).not.toContain('undefined');
+});
+it("49条作品完整导出三张图，双轴尺度跨页一致，缺失指标仍为空",async()=>{
+ const {posterCount,chartMaximum}=await import('./share-poster');
+ const large:DailyReport={...report,works:Array.from({length:49},(_,i)=>({...report.works[0],publicationId:`pub-${i}`,title:`作品编号${i+1}`,metrics:(i===3?{views:i+1}:{views:i+1,follower_gain:i%9}) as Record<string,number>}))};
+ expect(posterCount(large)).toBe(3);expect(chartMaximum([null,0,13628])).toBe(20000);expect(chartMaximum([null,0])).toBe(1);
+ const context={beginPath:vi.fn(),roundRect:vi.fn(),fill:vi.fn(),moveTo:vi.fn(),lineTo:vi.fn(),stroke:vi.fn(),arc:vi.fn(),createLinearGradient:vi.fn(()=>({addColorStop:vi.fn()})),scale:vi.fn(),fillRect:vi.fn(),fillText:vi.fn(),measureText:vi.fn((s:string)=>({width:s.length*12})),font:"",fillStyle:""};
+ vi.spyOn(HTMLCanvasElement.prototype,'getContext').mockReturnValue(context as any);
+ vi.spyOn(HTMLCanvasElement.prototype,'toBlob').mockImplementation(cb=>cb({arrayBuffer:async()=>new Uint8Array([137,80,78,71]).buffer} as Blob));
+ Object.defineProperty(document,'fonts',{configurable:true,value:{ready:Promise.resolve()}});
+ const blobs:Blob[]=[];Object.defineProperty(URL,'createObjectURL',{configurable:true,value:vi.fn((blob:Blob)=>{blobs.push(blob);return 'blob:test'})});Object.defineProperty(URL,'revokeObjectURL',{configurable:true,value:vi.fn()});
+ vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ await exportDailyReport(large);
+ const titles=context.fillText.mock.calls.map(c=>c[0]).filter(s=>String(s).startsWith('作品编号'));
+ expect(new Set(titles).size).toBe(49);expect(titles).toHaveLength(49);expect(blobs).toHaveLength(1);expect(blobs[0].type).toBe('application/zip');
+ const bytes=await new Promise<ArrayBuffer>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result as ArrayBuffer);reader.onerror=reject;reader.readAsArrayBuffer(blobs[0]);});
+ const {unzipSync}=await import('fflate');expect(Object.keys(unzipSync(new Uint8Array(bytes)))).toHaveLength(3);
+ vi.restoreAllMocks();
 });
