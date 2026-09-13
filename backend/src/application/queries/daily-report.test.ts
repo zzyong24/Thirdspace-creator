@@ -39,3 +39,37 @@ it("缺失分析指标可降级，核心发布查询失败仍需重试",async()=
 });
 
 it("旧日报响应缺少recentWorks仍可解析为空列表",async()=>{const {app}=setup();const {recentWorks,...legacy}=await app.getDailyReport(ctx);expect(pagesOperations.getDailyReport.response.parse(legacy).recentWorks).toEqual([]);});
+it("日期范围首尾均包含且近七天独立以结束日计算",async()=>{
+ const {ports,app}=setup();const base=(await ports.publishingService.listPublishedInWindow())[0]!;
+ ports.publishingService.listPublishedInWindow.mockClear().mockResolvedValue([
+  {...base,id:"first",publishedAt:"2026-08-31T16:00:00Z"},
+  {...base,id:"middle",publishedAt:"2026-09-05T15:59:59Z"},
+  {...base,id:"recent-start",publishedAt:"2026-09-06T16:00:00Z"},
+  {...base,id:"last",publishedAt:"2026-09-13T15:59:59Z"},
+  {...base,id:"after",publishedAt:"2026-09-13T16:00:00Z"},
+  {...base,id:"before",publishedAt:"2026-08-31T15:59:59Z"},
+  {...base,id:"other",accountId:"b"},
+ ]);
+ const r=await app.getDailyReport(ctx,{startDate:"2026-09-01",endDate:"2026-09-13"});
+ expect(r.works.map(w=>w.publicationId)).toEqual(["last","recent-start","middle","first"]);
+ expect(r.recentWorks.map(w=>w.publicationId)).toEqual(["last","recent-start"]);
+ expect(r).toMatchObject({date:"2026-09-01",startDate:"2026-09-01",endDate:"2026-09-13"});
+ expect(ports.publishingService.listPublishedInWindow).toHaveBeenCalledExactlyOnceWith(ctx,{start:"2026-08-31T16:00:00.000Z",end:"2026-09-13T16:00:00.000Z"});
+});
+it("短范围只为所选作品读详情，同时一次查询保留最近七天",async()=>{
+ const {ports,app}=setup();const base=(await ports.publishingService.listPublishedInWindow())[0]!;
+ ports.publishingService.listPublishedInWindow.mockClear().mockResolvedValue([base,{...base,id:"old",contentOutputId:"old-o",publishedAt:"2026-09-07T12:00:00Z"}]);
+ ports.projectsService.listOutputRefsByOutputIds.mockResolvedValue([{outputId:"o",projectId:"p",title:"稿"},{outputId:"old-o",projectId:"old-p",title:"旧稿"}]);
+ const r=await app.getDailyReport(ctx,{startDate:"2026-09-12",endDate:"2026-09-13"});
+ expect(r.works).toHaveLength(1);expect(r.recentWorks).toHaveLength(2);expect(ports.readScript).toHaveBeenCalledExactlyOnceWith(ctx,"p");
+ expect(ports.publishingService.listPublishedInWindow).toHaveBeenCalledExactlyOnceWith(ctx,{start:"2026-09-06T16:00:00.000Z",end:"2026-09-13T16:00:00.000Z"});
+});
+it("日期契约拒绝缺少一端、混用、非法及反向区间，但不限制合法跨度",async()=>{
+ const {app}=setup();const query=pagesOperations.getDailyReport.query!;
+ for(const input of [{startDate:"2026-09-01"},{endDate:"2026-09-01"},{date:"2026-09-01",startDate:"2026-09-01",endDate:"2026-09-02"},{startDate:"2026-02-30",endDate:"2026-03-01"},{startDate:"2026-09-02",endDate:"2026-09-01"}]){
+  expect(query.safeParse(input).success).toBe(false);await expect(app.getDailyReport(ctx,input)).rejects.toThrow();
+ }
+ expect(query.safeParse({startDate:"2020-01-01",endDate:"2026-09-13"}).success).toBe(true);
+ expect(query.safeParse({startDate:"2024-02-29",endDate:"2024-02-29"}).success).toBe(true);
+ const r=await app.getDailyReport(ctx,"2026-09-13");expect(r).toMatchObject({date:"2026-09-13",startDate:"2026-09-13",endDate:"2026-09-13"});
+});

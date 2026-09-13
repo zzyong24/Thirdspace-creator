@@ -1,4 +1,4 @@
-import { dailyReportPage } from "../pages/daily-report";
+import { dailyReportPage, dailyReportQuery } from "../pages/daily-report";
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import { id } from "../primitives";
@@ -14,7 +14,7 @@ export { publishingCenterPage } from "../pages/publishing-center";
 // PAGE composition DTO read endpoints. These responses are view-specific
 // projections built by selectors, not raw resources.
 export const pagesOperations = {
-  getDailyReport: defineEndpoint({id:"pages.dailyReport.get",method:"GET",path:"/analytics/daily-report",query:z.object({date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>!Number.isNaN(Date.parse(v+"T00:00:00Z"))&&new Date(v+"T00:00:00Z").toISOString().slice(0,10)===v,"日期无效").optional()}),response:dailyReportPage,fr:["FR-PAGE-DAILY-REPORT"]}),
+  getDailyReport: defineEndpoint({id:"pages.dailyReport.get",method:"GET",path:"/analytics/daily-report",query:dailyReportQuery,response:dailyReportPage,fr:["FR-PAGE-DAILY-REPORT"]}),
   getProjectOverview: defineEndpoint({
     id: "pages.projectOverview.get",
     method: "GET",

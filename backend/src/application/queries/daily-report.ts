@@ -1,4 +1,4 @@
-import type { RequestContext, ENDPOINTS } from "@creatoros/contract";
+import { dailyReportQuery, type DailyReportQuery, type RequestContext, type ENDPOINTS } from "@creatoros/contract";
 type DailyReportPage = typeof ENDPOINTS.getDailyReport.response["_output"];
 type Projects = ReturnType<typeof import("../../modules/projects").createProjectsService>;
 type Publishing = ReturnType<typeof import("../../modules/publishing").createPublishingService>;
@@ -23,16 +23,19 @@ export function yesterdayBeijing(now: string) {
 }
 
 export function createDailyReportApplication(ports: DailyReportPorts) {
-  return { async getDailyReport(ctx: RequestContext, date?: string): Promise<DailyReportPage> {
+  return { async getDailyReport(ctx: RequestContext, input?: string | DailyReportQuery): Promise<DailyReportPage> {
     const generatedAt = ports.now();
-    const window = date ? { date, start: Date.parse(date + "T00:00:00+08:00"), end: Date.parse(date + "T00:00:00+08:00") + DAY } : yesterdayBeijing(generatedAt);
-    if (date && (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(window.start) || new Date(date + "T00:00:00Z").toISOString().slice(0, 10) !== date)) throw new Error("日期无效");
-    const report: DailyReportPage = { date: window.date, timeZone: "Asia/Shanghai", generatedAt, accountId: ctx.accountId ?? null, accountName: null, positioning: null, warnings: [], works: [], recentWorks: [] };
+    const query = dailyReportQuery.parse(typeof input === "string" ? {date:input} : input ?? {});
+    const startDate = query.startDate ?? query.date ?? yesterdayBeijing(generatedAt).date;
+    const endDate = query.endDate ?? startDate;
+    const window = {date:startDate, start:Date.parse(startDate + "T00:00:00+08:00"), end:Date.parse(endDate + "T00:00:00+08:00") + DAY};
+    const report: DailyReportPage = { date: window.date, startDate, endDate, timeZone: "Asia/Shanghai", generatedAt, accountId: ctx.accountId ?? null, accountName: null, positioning: null, warnings: [], works: [], recentWorks: [] };
     if (!ctx.accountId) return report;
-    const recentStart = window.start - 6 * DAY;
-    // 从发布事实收窄到七天，避免先读取账号全部项目与产物。
-    const pubs = await ports.publishingService.listPublishedInWindow(ctx, { start: new Date(recentStart).toISOString(), end: new Date(window.end).toISOString() });
-    const visible = pubs.filter(p => p.accountId === ctx.accountId && p.status === "published" && !p.hiddenAt && !p.removedAt && p.publishedAt && Date.parse(p.publishedAt) >= recentStart && Date.parse(p.publishedAt) < window.end);
+    const recentStart = window.end - 7 * DAY;
+    const queryStart = Math.min(window.start, recentStart);
+    // 一次查询所选范围与截至结束日最近七天的并集，避免读取账号全部项目与产物。
+    const pubs = await ports.publishingService.listPublishedInWindow(ctx, { start: new Date(queryStart).toISOString(), end: new Date(window.end).toISOString() });
+    const visible = pubs.filter(p => p.accountId === ctx.accountId && p.status === "published" && !p.hiddenAt && !p.removedAt && p.publishedAt && Date.parse(p.publishedAt) >= queryStart && Date.parse(p.publishedAt) < window.end);
     const refs = await ports.projectsService.listOutputRefsByOutputIds(ctx, [...new Set(visible.map(p => p.contentOutputId))]);
     const byOutput = new Map(refs.map(r => [r.outputId, r]));
     const selected = visible.filter(p => byOutput.has(p.contentOutputId));
@@ -63,7 +66,7 @@ export function createDailyReportApplication(ports: DailyReportPorts) {
       const ref = byOutput.get(pub.contentOutputId)!, snapshot = byPublication.get(pub.id), metrics: Record<string, number> = {};
       for (const [key, value] of Object.entries(snapshot?.rawMetrics ?? {})) if (typeof value === "number" && Number.isFinite(value)) metrics[key] = value;
       const work = { publicationId: pub.id, projectId: ref.projectId, title: ref.title || "未命名作品", publishedAt: pub.publishedAt!, capturedAt: snapshot?.capturedAt ?? null, metrics };
-      report.recentWorks.push(work);
+      if (Date.parse(pub.publishedAt!) >= recentStart) report.recentWorks.push(work);
       if (Date.parse(pub.publishedAt!) >= window.start) {
         const detail = projectData.get(ref.projectId)!;
         report.works.push({ ...work, script: detail.script, traffic: detail.traffic.filter(t => t.publicationId === pub.id) });

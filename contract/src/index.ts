@@ -281,3 +281,5 @@ export {trafficSourcePayloadSchema,publicationTrafficResource,type TrafficSource
 export {operationsSyncSchema,DEFAULT_OPERATIONS_SYNC,type OperationsSync} from './operations-sync';
 
 export { onboardingStepKey, onboardingPatchResource, onboardingStateResource, type OnboardingPatch, type OnboardingStateResource } from "./resources/settings";
+
+export { dailyReportQuery, type DailyReportQuery } from "./pages/daily-report";
