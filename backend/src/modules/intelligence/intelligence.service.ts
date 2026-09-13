@@ -2372,7 +2372,10 @@ export function createIntelligenceService(
               ),
             ),
           ),
-        deps.tasks.list(ctx, { limit: 1_000, offset: 0 }),
+        // 工作台只需要状态计数，不加载历史任务的输入、稿件与执行载荷。
+        db.select({status: executionTasks.status}).from(executionTasks).where(and(
+          eq(executionTasks.userId, ctx.userId), eq(executionTasks.accountId, accountId),
+        )),
         db
           .select()
           .from(intelligenceSyncRuns)
@@ -2419,18 +2422,19 @@ export function createIntelligenceService(
             failedCount: latest?.failedCount ?? 0,
           };
         }),
-        pendingCount: taskRows.rows.filter((task) =>
+        pendingCount: taskRows.filter((task) =>
           (
             [
               "queued",
               "running",
               "pause_requested",
+              "retry_wait",
               "paused",
               "cancel_requested",
-            ] as PersistentTaskStatus[]
+            ] as string[]
           ).includes(task.status)
         ).length,
-        blockedCount: taskRows.rows.filter((task) => task.status === "blocked")
+        blockedCount: taskRows.filter((task) => ["blocked", "waiting_user", "unknown_result"].includes(task.status))
           .length,
       };
     },

@@ -447,17 +447,16 @@ export function createPersistentTaskService(
         };
         filters.push(inArray(executionTasks.status, projectedStatuses[query.status] ?? [query.status]));
       }
-      const all = await db
-        .select()
-        .from(executionTasks)
-        .where(and(...filters))
-        .orderBy(desc(executionTasks.priority), desc(executionTasks.createdAt));
       const offset = Math.max(0, query.offset ?? 0);
       const limit = Math.max(1, query.limit ?? 20);
-      return {
-        rows: all.slice(offset, offset + limit).map(toResource),
-        total: all.length,
-      };
+      // 在数据库分页，避免历史任务 payload 撑坏 PGlite 的单次协议响应。
+      const [rows, totals] = await Promise.all([
+        db.select().from(executionTasks).where(and(...filters))
+          .orderBy(desc(executionTasks.priority), desc(executionTasks.createdAt), asc(executionTasks.id))
+          .limit(limit).offset(offset),
+        db.select({total: sql<number>`count(*)::int`}).from(executionTasks).where(and(...filters)),
+      ]);
+      return { rows: rows.map(toResource), total: totals[0]?.total ?? 0 };
     },
 
     async command(ctx, input) {

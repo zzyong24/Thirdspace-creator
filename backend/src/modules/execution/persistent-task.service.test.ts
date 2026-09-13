@@ -50,6 +50,19 @@ async function enqueue(
   });
 }
 
+it("大量历史任务分页不会读出全部payload并破坏后续数据库查询", async () => {
+ const {db,client}=await createDb();const service=createPersistentTaskService(db);
+ try {
+  const seed=await enqueue(service);
+  const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,seed.id));
+  for(let batch=0;batch<6;batch++)await db.insert(executionTasks).values(Array.from({length:50},(_,i)=>({...row!,id:`large-${batch}-${i}`,ownerId:`large-${batch}-${i}`,idempotencyKey:`large-${batch}-${i}`,payload:{content:"中文历史任务".repeat(5000)}})));
+  await enqueue(service,ctxB,"other-account");
+  const result=await service.list(ctxA,{limit:2,offset:1});
+  expect(result.rows).toHaveLength(2);expect(result.total).toBe(301);
+  expect((await client.query("select 1 as healthy")).rows).toEqual([{healthy:1}]);
+ } finally {await client.close().catch(()=>{});}
+},30000);
+
 describe("T-482 持久执行任务状态机", () => {
   it("研究恢复水位不可由入队调用者注入，宿主恢复后原入队请求仍幂等",async()=>{
     const {db,client}=await createDb();const service=createPersistentTaskService(db);
