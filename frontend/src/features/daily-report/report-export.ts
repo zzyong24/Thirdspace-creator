@@ -1,10 +1,10 @@
-import {reportPeriodLabel,reportFileDate} from "./report-period";
+import {reportFileDate} from "./report-period";
 import {beijingTime,displayNumber,type DailyReport,type DailyReportAnalysis} from "./report-metrics";
 import {buildShareModel} from "./share-model";
 import {PURCHASE_QR,PURCHASE_URL} from "./purchase-qr";
 export type ReportShareOptions={analysis?:DailyReportAnalysis|null;rawAnalysis?:string|null;selectedPublicationId?:string;sourceGeneratedAt?:string|null;stale?:boolean};
 /** 页面分享预览和 PNG 共用此绘制入口，仅使用公开作品成绩，不消费内部分析。 */
-export async function renderDailyReportCanvas(report:DailyReport,options:ReportShareOptions={}){
+export async function renderDailyReportCanvas(report:DailyReport,_options:ReportShareOptions={}){
  await document.fonts.ready;
  const canvas=document.createElement("canvas"),context=canvas.getContext("2d");if(!context)throw new Error("当前环境无法生成图片");const c=context;
  const commands:Array<()=>void>=[],width=720,pad=42;
