@@ -1,13 +1,13 @@
 import {redfoxInputSchema,type RedfoxInput,redfoxObservationSchema} from "@creatoros/contract/execution-worker";
 /** 固定官方域名和端点；模型无法指定 API URL/请求头。 */
 export async function queryRedfox(input:RedfoxInput,key:string,signal:AbortSignal,fetcher:typeof fetch=fetch){
- const q=redfoxInputSchema.parse(input);let path:string;let body:unknown;
+ const parsed=redfoxInputSchema.safeParse(input);if(!parsed.success)return redfoxObservationSchema.parse({status:"error",code:"REDFOX_INPUT_INVALID"});const q=parsed.data;let path:string;let body:unknown;
  switch(q.action){
- case "hotspots":{const a=Date.parse(q.startDate.replace(" ","T")+(q.startDate.length===10?"T00:00:00+08:00":"+08:00")),b=Date.parse(q.endDate.replace(" ","T")+(q.endDate.length===10?"T00:00:00+08:00":"+08:00"));if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>30*86400000)throw Error("REDFOX_DATE_RANGE_INVALID");path="/story/api/hotKeyword/list";body={startDate:q.startDate,endDate:q.endDate};break;}
+ case "hotspots":{const a=Date.parse(q.startDate.replace(" ","T")+(q.startDate.length===10?"T00:00:00+08:00":"+08:00")),b=Date.parse(q.endDate.replace(" ","T")+(q.endDate.length===10?"T00:00:00+08:00":"+08:00"));if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a||b-a>30*86400000)return redfoxObservationSchema.parse({status:"error",code:"REDFOX_DATE_RANGE_INVALID"});path="/story/api/hotKeyword/list";body={startDate:q.startDate,endDate:q.endDate};break;}
  case "search":path="/story/api/dy/data/searchWork";body={keyword:q.keyword,pageNum:q.page,pageSize:20};break;
- case "accountWorks":{const u=new URL(q.authorUrl);if(u.protocol!=="https:"||u.hostname!=="www.douyin.com"||!u.pathname.startsWith("/user/"))throw Error("REDFOX_AUTHOR_URL_INVALID");path="/story/api/dyData/queryWorkList";body={authorUrl:q.authorUrl,offset:q.offset,sortType:"2"};break;}
+ case "accountWorks":{const u=new URL(q.authorUrl);if(u.protocol!=="https:"||u.hostname!=="www.douyin.com"||!u.pathname.startsWith("/user/"))return redfoxObservationSchema.parse({status:"error",code:"REDFOX_AUTHOR_URL_INVALID"});path="/story/api/dyData/queryWorkList";body={authorUrl:q.authorUrl,offset:q.offset,sortType:"2"};break;}
  case "detail":path="/story/api/dyData/queryWork";body={workId:q.workId};break;
- case "transcriptSubmit":{const u=new URL(q.url);if(u.protocol!=="https:"||!["www.douyin.com","v.douyin.com"].includes(u.hostname))throw Error("REDFOX_VIDEO_URL_INVALID");path="/story/api/parseWork/audioTextExtract/submit/douyin";body={url:q.url};break;}
+ case "transcriptSubmit":{const u=new URL(q.url);if(u.protocol!=="https:"||!["www.douyin.com","v.douyin.com"].includes(u.hostname))return redfoxObservationSchema.parse({status:"error",code:"REDFOX_VIDEO_URL_INVALID"});path="/story/api/parseWork/audioTextExtract/submit/douyin";body={url:q.url};break;}
  case "transcriptResult":path="/story/api/parseWork/audioTextExtract/result/douyin";body={taskId:q.taskId};break;
  }
  const submit=q.action==="transcriptSubmit";

@@ -1,7 +1,7 @@
 import {
   tool,
   type Tool,
-  type Schema,
+  type FlexibleSchema,
   type ToolApprovalStatus,
   type ToolSet,
 } from "ai";
@@ -461,7 +461,7 @@ export function defineChatTool<INPUT, OUTPUT extends { kind: string }>(
   config: {
     description: string;
     /** jsonSchema<INPUT>(...) —— 泛型携带入参类型,execute 的解构参数由此获得上下文类型(与直调 tool() 等价)。 */
-    inputSchema: Schema<INPUT>;
+    inputSchema: FlexibleSchema<INPUT>;
     execute: (input: INPUT, callOptions?: unknown) => Promise<OUTPUT> | OUTPUT;
     /** [T-263] 授权判定器(可选)—— 有则该工具走 HITL 授权门(user-approval 时挂起等确认)。 */
     needsApproval?: ChatToolApprovalDecider<INPUT>;
