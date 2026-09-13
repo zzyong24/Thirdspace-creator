@@ -7,9 +7,16 @@ CREATE TABLE IF NOT EXISTS publication_sync_state (
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS publication_sync_state_scope ON publication_sync_state(user_id,account_id,publication_id,capability);
 --> statement-breakpoint
--- 为仅存评论/流量兼容作业的账号建立统一入口，不删除任何执行历史。
+-- 仅存兼容作业时直接写入各能力真值，不能把聚合总开关当作旧指标开关。
+-- self.detail 旧采集器包含作品指标及内容；不替它开启评论和流量。
 INSERT INTO scheduled_job (id,user_id,account_id,name,prompt,source_kind,target,schedule,tool_grants,enabled,created_at,updated_at)
-SELECT 'ops-'||md5(j.user_id||':'||j.account_id),j.user_id,j.account_id,'作品自动同步','按作品发布时间同步指标、评论、流量来源和内容','self.metrics','{}'::jsonb,'0 */2 * * *','[]'::jsonb,bool_or(j.enabled),min(j.created_at),max(j.updated_at)
+SELECT 'ops-'||md5(j.user_id||':'||j.account_id),j.user_id,j.account_id,'作品自动同步','按作品发布时间同步指标、评论、流量来源和内容','self.metrics',
+ jsonb_build_object('operationsSync',jsonb_build_object('version',1,'capabilities',jsonb_build_object(
+  'metrics',bool_or(j.enabled AND j.source_kind='self.detail'),
+  'content',bool_or(j.enabled AND j.source_kind='self.detail'),
+  'comments',bool_or(j.enabled AND j.source_kind='comments'),
+  'traffic',bool_or(j.enabled AND j.source_kind='self.traffic')))),
+ '0 */2 * * *','[]'::jsonb,bool_or(j.enabled),min(j.created_at),max(j.updated_at)
 FROM scheduled_job j WHERE j.source_kind IN ('comments','self.traffic','self.detail')
 AND NOT EXISTS (SELECT 1 FROM scheduled_job m WHERE m.user_id=j.user_id AND m.account_id=j.account_id AND m.source_kind='self.metrics')
 GROUP BY j.user_id,j.account_id ON CONFLICT DO NOTHING;

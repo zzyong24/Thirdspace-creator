@@ -20,3 +20,20 @@ it('真实迁移保留关闭意图和历史，重复执行不会把关项开回�
  const [off]=await f.db.select().from(scheduledJobs).where(eq(scheduledJobs.id,'all-off'));expect(off).toMatchObject({enabled:false,target:{operationsSync:{capabilities:{metrics:false,content:false,comments:false,traffic:false}}}});
  const old=await f.db.select().from(scheduledJobs).where(eq(scheduledJobs.id,'c'));expect(old[0]).toMatchObject({enabled:false,target:{mergedIntoSelfMetrics:true,enabledBeforeMerge:true}});
 });
+it.each([
+ ['comments',true,{metrics:false,content:false,comments:true,traffic:false}],
+ ['self.traffic',true,{metrics:false,content:false,comments:false,traffic:true}],
+ ['self.detail',true,{metrics:true,content:true,comments:false,traffic:false}],
+ ['comments',false,{metrics:false,content:false,comments:false,traffic:false}],
+] as const)('仅存兼容任务 %s enabled=%s 只迁移它原有能力，不默认开启其他能力',async(sourceKind,enabled,capabilities)=>{
+ const f=await createDb();closes.push(()=>f.client.close());const stamp='2026-09-13T00:00:00Z';
+ await f.db.insert(scheduledJobs).values({id:'orphan',sourceKind,enabled,userId:'u',accountId:'orphan-account',name:'旧任务',prompt:'',target:{},schedule:'0 9 * * *',createdAt:stamp,updatedAt:stamp});
+ const {readFile}=await import('node:fs/promises');const sql=await readFile(new URL('../../../drizzle/0096_publication_sync_state.sql',import.meta.url),'utf8');
+ for(let attempt=0;attempt<2;attempt++){
+  await f.client.exec(sql);
+  const rows=await f.db.select().from(scheduledJobs).where(eq(scheduledJobs.accountId,'orphan-account'));
+  const parents=rows.filter(r=>r.sourceKind==='self.metrics');expect(parents).toHaveLength(1);
+  expect(parents[0]).toMatchObject({enabled,target:{operationsSync:{version:1,capabilities}}});
+  expect(rows.find(r=>r.id==='orphan')).toMatchObject({enabled:false,target:{mergedIntoSelfMetrics:true,enabledBeforeMerge:enabled}});
+ }
+});
