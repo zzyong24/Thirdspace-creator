@@ -3,6 +3,7 @@ import Script from "next/script";
 import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
+import { ThemeSync } from "@/components/shell/theme-sync";
 import { ExternalLinkOpener } from "@/components/shell/external-link-opener";
 import { PACKAGE_BRAND_NAME } from "@/lib/package-brand";
 import { isDesktopRuntime } from "@/server/activation/is-desktop";
@@ -67,6 +68,7 @@ export default function RootLayout({
         <PreHydrationScripts />
         {/* [T-257] 全局挂外链处理:覆盖 /activate 等 (creator) 外的所有页面(桌面运行时才生效)。 */}
         <ExternalLinkOpener />
+        <ThemeSync />
         {children}
       </body>
     </html>

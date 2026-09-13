@@ -119,7 +119,7 @@ type HybridSearchHit } from "@creatoros/backend/modules/search";
 
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
 // [T-050 ⑦] 搜索索引真数据投影要直读六张表(根包导出,别名防与本文件局部变量撞名)。
-import { createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
+import { createIntegrationCredentials, createSettingsRepository, createSettingsService, createSettingsTransport, type SettingsService } from "@creatoros/backend/modules/settings";
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 // T-147 P5 桌面激活授权 —— 装配一机一码激活门(桌面拦/web 跳);门控/激活页经 bundle 取用。
 import { assembleActivationService, type ActivationService } from "./activation";
@@ -732,6 +732,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
   ai: AiService;
@@ -4499,6 +4500,7 @@ FAVORITES_PROMOTE_PER_RUN
   // 注入 settings repo 后 model_configurations.secret_value 静态加密(AES-256-GCM),
   // 读出透明解密。web 路径永不崩(降级 key)。
   const settingsRepo = createSettingsRepository(db, { ...deps, masterKey });
+  const redfoxCredentials = createIntegrationCredentials(db, masterKey);
   const settingsService = createSettingsService(
     () => settingsRepo,
     (ctx) => identity.getCurrentUser(ctx),
@@ -4535,7 +4537,7 @@ FAVORITES_PROMOTE_PER_RUN
   );
   readStoredChannelModelCredential = (ctx, scopeId, serviceId) =>
     settingsService.getChannelModelCredential(ctx, scopeId, serviceId);
-  const settings = createSettingsTransport(() => settingsService);
+  const settings = createSettingsTransport(() => settingsService, redfoxCredentials);
   resolveEffectiveSkillSnapshotForRuntime =
     createEffectiveSkillSnapshotResolver({
       officialSkills: {
@@ -5405,6 +5407,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const chatRuntime: ChatRuntime = {
+    resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
     ai: aiService,

@@ -104,7 +104,6 @@ import {
   type CollectionTemplate,
   type SourceKind,
   COLLECTION_TEMPLATES,
-  classifyIntent,
 } from "./intent";
 
 // 用户可创建入口只覆盖 self.metrics/comments；self.detail 仅为历史详情兼容，
@@ -436,7 +435,7 @@ export function JobRow({
       data-enabled={job.enabled}
       data-needs-reconnect={needsReconnect}
       className={cn(
-        "grid grid-cols-1 items-center gap-4 px-5 py-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_auto]",
+        "grid grid-cols-1 items-center gap-4 px-5 py-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_208px]",
         needsReconnect && "bg-amber-50/60",
       )}
     >
@@ -525,6 +524,7 @@ export function JobRow({
           <Clock className="size-3.5 text-muted-foreground" />
           {formatScheduleFriendly(job.schedule)}
         </span>
+        {job.sourceKind === "self.metrics" && (job.target as {operationsSync?:{version?:number}})?.operationsSync?.version === 1 ? <span className="text-[11px] text-muted-foreground">近 7 天：2 小时 · 7–30 天：6 小时<br/>30 天以上：每天；只更新到期内容</span> : null}
         <span
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
@@ -575,7 +575,7 @@ export function JobRow({
 
       {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
-        {job.sourceKind !== "intelligence.sync" ? (
+        {(
           <button
             type="button"
             data-slot="automation-edit"
@@ -587,7 +587,7 @@ export function JobRow({
             <Pencil className="size-3.5" />
             编辑
           </button>
-        ) : null}
+        )}
         {needsReconnect ? (
           <button
             type="button"
@@ -975,6 +975,8 @@ export function CreateJobDialog({
   const [cadenceUnresolved, setCadenceUnresolved] = React.useState(false);
   const [targetValue, setTargetValue] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [syncCapabilities, setSyncCapabilities] = React.useState({metrics:true,comments:true,traffic:true,content:true});
+  const unifiedSync = (isEdit ? job?.sourceKind === "self.metrics" && (job.target as {operationsSync?:{version?:number;capabilities?:Partial<Record<"metrics"|"comments"|"traffic"|"content",boolean>>}})?.operationsSync?.version === 1 : sourceKind === "self.metrics");
 
   const meta = SOURCE_META[sourceKind];
   // [T-258] target 字段可见性:仅「有 per-job 手动 target」的源(SOURCE_META 覆盖的 3 个)才显示。
@@ -984,7 +986,7 @@ export function CreateJobDialog({
   const showTargetField = isEdit
     ? !!(job && SOURCE_META[job.sourceKind as SourceKind])
     : Boolean(meta);
-  const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved;
+  const canSubmit = name.trim().length > 0 && !submitting && (unifiedSync || !cadenceUnresolved);
 
   // 打开弹窗时应用一次预填(模板卡 / 空白新建 / 编辑预填)。open 由 false→true 触发。
   const prevOpenRef = React.useRef(false);
@@ -995,6 +997,8 @@ export function CreateJobDialog({
         // 降级:编辑器落回缺省值 + 标记 unresolved(UI 提示重选,重选前禁保存)。
         // eslint-disable-next-line react-hooks/set-state-in-effect -- 弹窗由关闭转打开时按外部 job/prefill 快照初始化表单
         setName(job.name);
+        const savedSync = (job.target as {operationsSync?:{version?:number;capabilities?:Partial<Record<"metrics"|"comments"|"traffic"|"content",boolean>>}})?.operationsSync?.capabilities;
+        setSyncCapabilities({metrics:savedSync?.metrics !== false,comments:savedSync?.comments !== false,traffic:savedSync?.traffic !== false,content:savedSync?.content !== false});
         setPrompt(job.prompt ?? "");
         const known = SOURCE_META[job.sourceKind as SourceKind];
         setSourceKind(known ? (job.sourceKind as SourceKind) : "self.metrics");
@@ -1008,6 +1012,7 @@ export function CreateJobDialog({
       } else {
         // 新建:按 prefill 初始化(无 prefill = 空白)。
         setName(prefill?.name ?? "");
+        setSyncCapabilities({metrics:true,comments:true,traffic:true,content:true});
         setPrompt(prefill?.prompt ?? "");
         setSourceKind(prefill?.sourceKind ?? "self.metrics");
         setCadence(prefill?.cadence ?? { ...DEFAULT_CADENCE });
@@ -1018,35 +1023,24 @@ export function CreateJobDialog({
     prevOpenRef.current = open;
   }, [open, prefill, isEdit, job]);
 
-  // freeform prompt 无模板显式意图时的辅助分类(确定性,仅当用户改了 prompt 后给弱提示)。
-  // 主路径仍是下拉(显式即用户意图);这里只在下拉与 prompt 语义明显不符时提示。
-  const intentHint = React.useMemo(() => {
-    if (isEdit) return null; // 编辑模式源不可改 → 意图提示无意义,不显。
-    const p = prompt.trim();
-    if (p.length === 0) return null;
-    const c = classifyIntent(p);
-    if (c.confidence === "high" && c.sourceKind !== sourceKind) {
-      return c.sourceKind;
-    }
-    return null;
-  }, [prompt, sourceKind, isEdit]);
-
   const submit = React.useCallback(async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
       // 友好频率 → cron(内部实现,不露用户)。
-      const schedule = compileCadenceToCron(cadence);
+      const schedule = unifiedSync ? "0 */2 * * *" : compileCadenceToCron(cadence);
       // target 按源装配:self.metrics → {externalSourceId?}, comments → {awemeId}。
       // 空值不塞 key(service default {}),让"抓主页全部"这类无参源保持干净。
       // 无 per-job target 的源(登记源驱动的 benchmark/topic.daily/favorites,或 edit 模式系统作业)
       // → target=undefined:create 时下游落 {},edit 时本次不改原 target。
       let target: Record<string, unknown> | undefined;
       if (showTargetField && meta) {
-        target = {};
+        target = isEdit ? {...(job?.target ?? {})} : {};
+        delete target[meta.targetKey];
         const trimmed = targetValue.trim();
         if (trimmed) target[meta.targetKey] = trimmed;
       }
+      if (unifiedSync) target = {...(target ?? job?.target ?? {}), operationsSync:{version:1,capabilities:syncCapabilities}};
       await onCreate({
         name: name.trim(),
         sourceKind,
@@ -1060,6 +1054,9 @@ export function CreateJobDialog({
     }
   }, [
     canSubmit,
+    unifiedSync,
+    syncCapabilities,
+    job,
     cadence,
     targetValue,
     meta,
@@ -1093,9 +1090,7 @@ export function CreateJobDialog({
             {isEdit ? "编辑采集任务" : "新建采集任务"}
           </DialogTitle>
           <DialogDescription>
-            {isEdit
-              ? "修改任务的名称、描述、频率或目标,保存后按新配置调度(抓取内容不可改)。"
-              : "用大白话说你想定时抓什么,选个频率就行 —— 到点自动跑、数据落库,供 Dashboard 与选题消费。"}
+            {unifiedSync ? "选择要更新的内容，系统会按作品发布时间安排同步。" : "设置任务内容和执行时间，保存后按计划运行。"}
           </DialogDescription>
         </DialogHeader>
 
@@ -1155,31 +1150,21 @@ export function CreateJobDialog({
                 <SelectValue placeholder="选择抓取内容" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="self.metrics">自己作品(指标快照)</SelectItem>
-                <SelectItem value="comments">评论</SelectItem>
+                <SelectItem value="self.metrics">作品自动同步</SelectItem>
                 <SelectItem value="topic.daily">
                   每日自动选题(需配文本模型)
                 </SelectItem>
               </SelectContent>
             </Select>
-            {intentHint ? (
-              <button
-                type="button"
-                data-slot="automation-intent-hint"
-                onClick={() => {
-                  setSourceKind(intentHint);
-                  setTargetValue("");
-                }}
-                className="w-fit text-[11px] text-amber-600 hover:underline"
-              >
-                你的描述像是要抓「{sourceLabel(intentHint)}」—— 点此切换
-              </button>
-            ) : null}
+
           </label>
           )}
 
-          {/* 友好频率(去裸 cron)。用户一改频率即解除编辑降级锁(已重选)。 */}
-          <div className="flex flex-col gap-1.5">
+          {unifiedSync ? <div className="rounded-control border border-border bg-surface-subtle p-3 text-sm">
+            <p className="font-medium">按作品发布时间自动更新</p>
+            <p className="mt-1 text-xs text-muted-foreground">近 7 天每 2 小时 · 7–30 天每 6 小时 · 30 天以上每天。已有完整视频内容不重复提取。</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">{([['metrics','作品指标'],['comments','评论'],['traffic','流量来源'],['content','视频内容']] as const).map(([key,label])=><label key={key} className="flex items-center justify-between gap-2 text-xs">{label}<Switch aria-label={`同步${label}`} checked={syncCapabilities[key]} onCheckedChange={checked=>setSyncCapabilities(current=>({...current,[key]:checked}))}/></label>)}</div>
+          </div> : <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">频率</span>
             <CadenceEditor
               cadence={cadence}
@@ -1200,9 +1185,10 @@ export function CreateJobDialog({
             ) : null}
           </div>
 
+          }
           {/* target(按源)。仅「有 per-job 手动 target」的源显示;登记源驱动源(benchmark/
               topic.daily/favorites)与 edit 模式系统作业 → 隐藏,不改 target。 */}
-          {showTargetField && meta ? (
+          {showTargetField && !unifiedSync && meta ? (
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-foreground">
                 {meta.targetLabel}
@@ -1546,7 +1532,7 @@ export function TemplateCards({
           从常用任务开始
         </span>
       </div>
-      <div className="grid gap-2 lg:grid-cols-3">
+      <div className="grid gap-2 lg:grid-cols-2">
         {COLLECTION_TEMPLATES.map((tpl) => {
           const Icon =
             SOURCE_META[tpl.sourceKind]?.icon ??
@@ -1992,7 +1978,7 @@ export function AutomationsIsland({
               {/* [T-332 S4·§6.2] 新号诚实空态:绑号 bootstrap 会自动建好该号的日常采集
                   任务;这里为空通常是「还没绑号/没选号」,给对应引导而不是干瘪的 0。 */}
               {currentAccount
-                ? "绑定抖音号时系统会自动建好该号的日常采集任务;也可从上方模板一键新建,或自定义一个任务周期性抓取「自己作品指标」或「评论」。到点自动跑、数据落库,供 Dashboard 与选题消费。"
+                ? "从上方开启作品自动同步，持续更新指标、评论、流量来源和视频内容；也可以安排每日选题。"
                 : "任务按抖音号隔离。先在左下角切换器绑定/选择一个抖音号 —— 绑号时系统会自动建好该号的日常采集任务。"}
             </p>
           </div>
@@ -2011,7 +1997,7 @@ export function AutomationsIsland({
           aria-label="调度作业列表"
           className="overflow-hidden rounded-card border border-border bg-surface"
         >
-          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_auto] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground xl:grid">
+          <div className="hidden grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,0.8fr)_208px] gap-4 border-b border-border bg-surface-subtle px-5 py-3 text-xs font-medium text-muted-foreground xl:grid">
             <span>任务</span>
             <span>执行计划</span>
             <span>状态</span>

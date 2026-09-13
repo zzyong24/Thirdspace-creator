@@ -84,13 +84,13 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
   const CLASSIFIER_KINDS = ["self.metrics", "comments"] as const;
 
   it("[T-598] 通用模板只保留非内容雷达重复入口", () => {
-    expect(COLLECTION_TEMPLATES).toHaveLength(3);
+    expect(COLLECTION_TEMPLATES).toHaveLength(2);
 
     const byId = Object.fromEntries(
       COLLECTION_TEMPLATES.map((t) => [t.id, t]),
     );
     expect(byId["daily-self-metrics"]?.sourceKind).toBe("self.metrics");
-    expect(byId["daily-comments"]?.sourceKind).toBe("comments");
+    expect(byId["daily-comments"]).toBeUndefined();
     expect(byId["daily-topic"]?.sourceKind).toBe("topic.daily");
     expect(byId["daily-detail"]).toBeUndefined();
     expect(byId["daily-benchmark"]).toBeUndefined();
@@ -112,7 +112,7 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
 
   it("每个模板都带默认频率 cadence(每天)", () => {
     for (const t of COLLECTION_TEMPLATES) {
-      expect(t.cadence.mode).toBe("period");
+      expect(t.cadence.mode).toBe(t.sourceKind === "self.metrics" ? "interval" : "period");
     }
   });
 
@@ -134,14 +134,7 @@ describe("COLLECTION_TEMPLATES — 模板定义", () => {
     }
   });
 
-  it("分类器覆盖域内的模板 prompt 经分类器映射回自身 sourceKind(自洽)", () => {
-    // 仅对 3 个分类器覆盖的源做自洽校验;登记源驱动源(benchmark/topic.daily/favorites)是显式源,
-    // 分类器不覆盖(prompt 里含「作品」等词会被分到 self.metrics,属预期,不参与自洽)。
-    for (const t of COLLECTION_TEMPLATES) {
-      if (!CLASSIFIER_KINDS.includes(t.sourceKind as (typeof CLASSIFIER_KINDS)[number])) {
-        continue;
-      }
-      expect(classifyIntent(t.prompt).sourceKind).toBe(t.sourceKind);
-    }
+  it("统一同步模板以用户选择的类型为准，描述不触发关键词改路由",()=>{
+    expect(COLLECTION_TEMPLATES.find(t=>t.sourceKind==="self.metrics")?.cadence).toEqual({mode:"interval",unit:"hours",every:2});
   });
 });

@@ -204,6 +204,15 @@ function renderDialog(vm: SettingsViewModel = VM) {
 }
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
+  it("打开设置不接管根布局的主题", async () => {
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("creatoros.settings.theme", "system");
+    vi.spyOn(window, "matchMedia").mockReturnValue({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()} as unknown as MediaQueryList);
+    renderDialog();
+    await new Promise(resolve=>setTimeout(resolve,20));
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
+    localStorage.removeItem("creatoros.settings.theme");
+  });
   describe("[T-733] 本地文本模型状态", () => {
     it("本地文本模型已保存可用时不渲染渠道权威状态", () => {
       render(

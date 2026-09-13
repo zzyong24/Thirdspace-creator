@@ -82,6 +82,36 @@ afterEach(() => {
 });
 
 describe("T-248 — 任务编辑弹窗", () => {
+  it("统一同步的旧cron无需反解即可保存分档策略", async()=>{
+    render(<AutomationsIsland jobs={[makeJob({schedule:"0 0,6,12,18 * * *",target:{operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:true,content:true}}}})]}/>);
+    fireEvent.click(screen.getByTestId("automation-edit"));
+    await waitFor(()=>expect(screen.getByText("保存修改")).not.toBeDisabled());
+    fireEvent.click(screen.getByText("保存修改"));
+    await waitFor(()=>expect(mockClient.updateScheduledJob).toHaveBeenCalled());
+    expect(mockClient.updateScheduledJob.mock.calls[0]![0]).toMatchObject({body:{schedule:"0 */2 * * *"}});
+  });
+  it("统一同步保存能力开关且保留其他目标字段", async () => {
+    render(<AutomationsIsland jobs={[makeJob({target:{externalSourceId:"ext-1",operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:true,content:true}}}})]}/>);
+    fireEvent.click(screen.getByTestId("automation-edit"));
+    await waitFor(()=>expect(screen.getByRole("switch",{name:"同步评论"})).toBeInTheDocument());
+    expect(screen.getByRole("switch",{name:"同步评论"})).toHaveAttribute("aria-checked","false");
+    fireEvent.click(screen.getByRole("switch",{name:"同步流量来源"}));
+    fireEvent.click(screen.getByText("保存修改"));
+    await waitFor(()=>expect(mockClient.updateScheduledJob).toHaveBeenCalled());
+    expect(mockClient.updateScheduledJob.mock.calls[0]![0]).toMatchObject({body:{schedule:"0 */2 * * *",target:{externalSourceId:"ext-1",operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:false,content:true}}}}});
+  });
+
+  it("内容雷达可编辑频率，保存不修改系统目标", async () => {
+    render(<AutomationsIsland jobs={[makeJob({sourceKind:"intelligence.sync",schedule:"0 */2 * * *",target:{accountId:"acct-a"}})]} />);
+    fireEvent.click(screen.getByTestId("automation-edit"));
+    await waitFor(()=>expect(screen.getByText("编辑采集任务")).toBeInTheDocument());
+    expect(screen.queryByPlaceholderText(/externalSourceId/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("保存修改"));
+    await waitFor(()=>expect(mockClient.updateScheduledJob).toHaveBeenCalled());
+    const arg = mockClient.updateScheduledJob.mock.calls[0]![0] as {body:Record<string,unknown>};
+    expect(arg.body.schedule).toBe("0 */2 * * *");
+    expect(arg.body).not.toHaveProperty("target");
+  });
   it("行内有「编辑」入口;点击 → 打开编辑弹窗并预填 name/prompt/target/友好频率", async () => {
     render(<AutomationsIsland jobs={[makeJob()]} />);
     const editBtn = screen.getByTestId("automation-edit");
@@ -261,7 +291,7 @@ describe("T-248 — 模板死分支删除(D8a 已翻真)", () => {
     const cards = Array.from(
       document.querySelectorAll('[data-slot="automation-template-card"]'),
     ) as HTMLButtonElement[];
-    expect(cards.length).toBeGreaterThanOrEqual(3);
+    expect(cards.length).toBe(2);
     for (const card of cards) {
       expect(card.disabled).toBe(false);
       expect(card.hasAttribute("data-disabled")).toBe(false);
@@ -273,7 +303,7 @@ describe("T-248 — 模板死分支删除(D8a 已翻真)", () => {
     // 点仍在产品范围内的评论同步模板卡 → onPick 正常回调。
     fireEvent.click(
       document.querySelector(
-        '[data-template-id="daily-comments"]',
+        '[data-template-id="daily-self-metrics"]',
       ) as HTMLButtonElement,
     );
     expect(onPick).toHaveBeenCalledTimes(1);

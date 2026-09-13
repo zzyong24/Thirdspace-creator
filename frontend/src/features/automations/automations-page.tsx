@@ -72,7 +72,8 @@ export async function AutomationsPage({
     (job) =>
       job.sourceKind !== "self.detail" &&
       job.sourceKind !== "benchmark" &&
-      job.sourceKind !== "favorites",
+      job.sourceKind !== "favorites" &&
+      !(job.target as Record<string, unknown>)?.mergedIntoSelfMetrics,
   );
 
   // [T-332 S4·§6.3] 解析当前号 handle(user 级读,不需要当前号)→ badge。读失败/
@@ -122,7 +123,7 @@ export async function AutomationsPage({
           data-slot="automations-subtitle"
           className="text-sm text-muted-foreground"
         >
-          让作品数据、评论和每日选题按计划自动更新。
+          让作品指标、评论、流量来源和视频内容按需更新，持续支持选题与复盘。
         </p>
         {multiAccount ? (
           <p

@@ -21,7 +21,7 @@
  */
 
 import { scheduledJobSourceKind } from "@creatoros/contract";
-import type { PeriodCadence } from "./cadence";
+import type { Cadence, PeriodCadence } from "./cadence";
 
 // [T-258] SourceKind **从 contract 枚举 derive**(单一真值在 contract/src/primitives.ts 的
 // scheduledJobSourceKind),避免这里再手抄漂移(历史上只列 3 个,漏了 benchmark/topic.daily/favorites)。
@@ -108,7 +108,7 @@ export interface CollectionTemplate {
   /** 预填的自然语言提示词(承接 scheduled_job.prompt)。 */
   readonly prompt: string;
   /** 预填的友好频率(编译成 cron 存 schedule)。 */
-  readonly cadence: PeriodCadence;
+  readonly cadence: Cadence;
 }
 
 // [T-258] 每天定时的错峰时刻常量。与后端 collection-bootstrap 的 DAILY_COLLECTION_JOB_DEFAULTS
@@ -133,19 +133,11 @@ const CADENCE_DAILY_940: PeriodCadence = { ...CADENCE_DAILY_9, minute: 40 };
 export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   {
     id: "daily-self-metrics",
-    title: "我的作品数据同步",
-    description: "每天定时刷新主页作品与播放/点赞/评论等指标快照,喂 Dashboard 与选题。",
+    title: "作品自动同步",
+    description: "合并更新指标、评论、流量来源与视频内容，按作品发布时间自动调整频率。",
     sourceKind: "self.metrics",
-    prompt: "每天抓我主页的新作品和最新指标",
-    cadence: CADENCE_DAILY_9,
-  },
-  {
-    id: "daily-comments",
-    title: "我的作品评论同步",
-    description: "每天定时拉取作品最新评论,落库供复盘与受众洞察消费。",
-    sourceKind: "comments",
-    prompt: "每天抓我所有作品的最新评论",
-    cadence: CADENCE_DAILY_9,
+    prompt: "增量更新作品指标、评论、流量来源及缺失的视频内容",
+    cadence: { mode: "interval", unit: "hours", every: 2 },
   },
   {
     // [T-258/T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点)→ 护栏排序 → 候选落

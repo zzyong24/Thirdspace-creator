@@ -3,6 +3,7 @@
 /** 设置入口负责页签与账号、外观、存储；模型配置由独立区域维护。 */
 
 import { SettingsFormRow } from "./settings-form-row";
+import { RedfoxConfiguration } from "./redfox-configuration";
 import { SettingsModelRegion } from "./settings-model-region";
 import { useSettingsMutation } from "./use-settings-mutation";
 
@@ -174,6 +175,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
   { id: "preferences", label: "偏好", icon: SlidersHorizontal },
   { id: "appearance", label: "外观", icon: Palette },
   { id: "models", label: "模型配置", icon: Cpu },
+  { id: "data-services", label: "数据服务", icon: KeyRound },
   // T-077a:技能管理页签(SPEC 2026-07-03 §1.1)—— 列出 REGISTRY 全部 Skill,查看/定制
   // system/template(settings.prompts.put 热生效)。
   { id: "skills", label: "技能", icon: Sparkles },
@@ -184,6 +186,7 @@ const SETTINGS_DIALOG_TABS: ReadonlyArray<SettingsTabDef> = [
 // /settings?highlight=<stepKey>,弹窗据此先切到对应页签、再滚动+高亮那张卡。未列出的
 // stepKey(或缺省 highlight)→ 无副作用(不切页签、不报错)。
 const HIGHLIGHT_TAB: Record<string, string> = {
+  "redfox": "data-services",
   "text-model": "models",
   "image-model": "models",
   "video-model": "models",
@@ -363,6 +366,9 @@ export function SettingsDialog({
             </SettingsPanel>
             <SettingsPanel tabId="models" active={tab}>
               <SettingsModelRegion viewModel={viewModel} modelAuthority={modelAuthority} highlight={highlight} />
+            </SettingsPanel>
+            <SettingsPanel tabId="data-services" active={tab}>
+              {tab === "data-services" && <div data-highlight="redfox"><RedfoxConfiguration /></div>}
             </SettingsPanel>
             <SettingsPanel tabId="skills" active={tab}>
               <SkillsSection
@@ -1742,7 +1748,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
       );
       setTheme(storedTheme);
       setDensity(storedDensity);
-      applyTheme(storedTheme);
+      // 根级 ThemeSync 统一维护主题；进入设置不重新解析系统外观。
       applyDensity(storedDensity);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -1752,6 +1758,7 @@ function SystemSettingsCard({ viewModel }: { viewModel: SettingsViewModel }) {
     setTheme(next);
     writeStored(THEME_STORAGE_KEY, next);
     applyTheme(next);
+    window.dispatchEvent(new Event("creatoros:theme-change"));
   }, []);
 
   const onDensityChange = React.useCallback((next: Density) => {
