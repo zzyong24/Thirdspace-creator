@@ -1038,3 +1038,4 @@
 {"ts":"2026-09-13T07:33:58.736Z","actor":"taskctl","action":"start","task":"T-965","sha_before":"c15ff767515f","sha_after":"0460ff83e378"}
 {"ts":"2026-09-13T08:16:44.930Z","actor":"taskctl","action":"complete","task":"T-965","evidence":"53ce5d56; 前端41/后端11/打包42测试；真实月份交互与PNG二维码通过；本机安装+CLI日/周/月读回通过；reconcile233既有T916失败保留，旧chat29失败基线一致；真实模型成功未验证","sha_before":"0460ff83e378","sha_after":"95ac1016205c"}
 {"ts":"2026-09-13T08:34:27.481Z","actor":"taskctl","action":"start","task":"T-966","sha_before":"f3d2ad1154d9","sha_after":"b0401b0c3a10"}
+{"ts":"2026-09-13T08:54:35.418Z","actor":"taskctl","action":"complete","task":"T-966","evidence":"9e493939; 前端90/后端20/打包42通过；两份真实旧分析恢复；新安装版traffic任务succeeded并读回6类来源；真实周期6作品；reconcile233既有T916失败保留","sha_before":"b0401b0c3a10","sha_after":"3230a41cd3ab"}

@@ -24,3 +24,11 @@ flowchart LR
 真实安装版CLI重试用户原作品project-ed64285a-63成功：任务ai-task-147356b4-351 succeeded；traffic.get于2026-09-13T08:39:54.350Z读回推荐页90.3%、朋友页3.3%、主页3.1%、关注页2.5%、消息/搜索各0.4%。证明此次不是永久旧宿主锁。跨重启随机宿主遗留锁仍需停止证明，未扩大到无证据清锁。
 
 通过公开CLI读回两份真实已生成分析（chat:ai-msg-147356b4-69、chat:ai-msg-147356b4-73），一份前言加裸JSON、一份前言加围栏JSON；新解析均通过账号/日期/源快照/作品ID校验并恢复1张作品卡，不发新模型请求。协议红测3失败后修复，前端10文件90测试通过，frontend tsc通过。原始用户全文仅存/tmp、不提交仓库。
+
+## 新安装版实测与交付
+
+候选9e49393951e714a63339509044eb4968fbc06bf3，独立干净工作树固定官方本地入口构建；版本四处1.1.0，打包42测试及生产编译/类型/混淆后真实启动、hydration通过。新DMG `/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`，SHA256 `3dcdfe46239dce110fff3cdc2f40564bb0d6d614ac06adc9f632e9e2c2e635d3`；hdiutil VALID、codesign deep strict通过，仅本地ad-hoc未公证。
+
+已替换并启动 `/Applications/CreatorOS.app`，PID92468、sidecar92587；CLI full access正常。安装后真实刷新任务ai-task-6fa4a22b-58 succeeded，2026-09-13T08:53:29.781Z请求→08:53:34.801Z完整读回推荐页90.3%等6类来源，error=null；不是仅排队即成功。真实周期9/1–9/13返回6作品。SSR核对独立运营导航位于自动化之前，首页卡片移除。
+
+备份 `/Users/zyongzhu/.creatoros/backups/t966-20260913-015033/app-data`，70556文件逐一SHA256一致；原模型结果保留不重算。全局reconcile仍233项T916既有失败，不宣称全仓绿；本任务前端90/后端20/打包42均通过。

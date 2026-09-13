@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-966 | 修复运营周期作品、分析结构化与流量采集占用并独立导航 | 🔨 待办 | — | — | [SPEC](docs/features/t966-operations-period-recovery.md) | 所选周期统一作品与指标；运营分析独立导航；恢复已有JSON结果；解决流量采集档案占用。 |
+| T-966 | 修复运营周期作品、分析结构化与流量采集占用并独立导航 | ✅ 待办 | — | — | [SPEC](docs/features/t966-operations-period-recovery.md) | 所选周期统一作品与指标；运营分析独立导航；恢复已有JSON结果；解决流量采集档案占用。 |
 | T-965 | 修复运营日报打开卡顿并对齐已确认预览 | ✅ 待办 | — | — | [SPEC](docs/features/t965-daily-report-parity-performance.md) | 对照真实安装版与预览，修复加载瓶颈与布局偏离，验证同数据视觉与导航性能并更新本机。 |
 | T-964 | 修复上手引导反复触发与确认闭环，接入真实首页运营日报 | ✅ 待办 | — | — | [SPEC](docs/features/t964-onboarding-daily-report.md) | 按账号持久保存引导完成/隐藏，修复状态矛盾和历史作品确认；首页提供可用日报入口，保留旧数据。 |
 | T-963 | 构建并安装运营同步与RedFox新版本地包 | ✅ 待办 | — | — | [SPEC](docs/verification/t963-local-package.md) | 冻结已提交的T-962源码，官方本地入口构建、校验并安装启动；保护旧数据。 |
