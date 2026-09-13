@@ -60,7 +60,7 @@ describe("真实独立 Worker 进程", () => {
       },
     }});
     try {
-      expect(await supervisor.start()).toEqual(["model.generate", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
       expect(await supervisor.run(execution, Date.now()+10000)).toBe("completed");
       expect(requestCount).toBe(1);
       expect(submitted).toMatchObject({outcome: "succeeded", text: "真实子进程结果"});
@@ -85,6 +85,30 @@ describe("真实独立 Worker 进程", () => {
     }});
     try{expect(await supervisor.run(execution,Date.now()+10000)).toBe("waiting_user");expect(calls).not.toContain("startCall");}
     finally{await supervisor.stop();}
+  });
+
+  it("未配置模型的 LlmCredentialError 也进入等待用户，不伪装成未知结果",async()=>{
+    const calls:string[]=[];
+    const checkpoint=checkpointFixture();
+    const supervisor=createWorkerSupervisor({entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),ports:{
+      async validate(){},async invoke(_ref,port,data){
+        calls.push(port);
+        const checkpointReply=checkpoint(port,data);if(checkpointReply!==undefined)return checkpointReply;
+        if(port==="readTaskContext")return {kind:"model.generate",prompt:"测试",capability:"script",maxOutputTokens:128,operationKey:"credential-missing"};
+        if(port==="reserveCall")return {callId:"credential-call",status:"reserved"};
+        if(port==="resolveModelCredential"){
+          const error=new Error("private model configuration detail");
+          error.name="LlmCredentialError";
+          throw error;
+        }
+        return {};
+      },
+    }});
+    try{
+      expect(await supervisor.run(execution,Date.now()+10000)).toBe("waiting_user");
+      expect(calls).not.toContain("startCall");
+      expect(calls).not.toContain("settleCall");
+    } finally{await supervisor.stop();}
   });
 
   it("旧租约在获取凭据之前被拒绝", async () => {
@@ -180,7 +204,7 @@ describe("真实独立 Worker 进程", () => {
       expect(calls.filter(x => x.port === "commitResult")).toHaveLength(0);
       expect(calls.find(x => x.port === "settleCall")?.data).toMatchObject({status: "unknown"});
       await supervisor.stop();
-      expect(await supervisor.start()).toEqual(["model.generate", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
+      expect(await supervisor.start()).toEqual(["model.generate", "transcribe.douyin", "asset.generate", "model.structured", "chat.run", "chat.script-draft", "chat.hooks", "chat.structured", "chat.research", "chat.web-read"]);
     } finally {
       await supervisor.stop(); server.closeAllConnections();
       await new Promise<void>(resolve => server.close(() => resolve()));

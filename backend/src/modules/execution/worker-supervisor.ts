@@ -118,7 +118,16 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
               const failureMessage=error instanceof Error?error.message:"";
               const diagnostic=["INTELLIGENCE_PORTS_CLOSED","INTELLIGENCE_CLAIM_MISMATCH","INTELLIGENCE_CAPABILITY_MISMATCH","INTELLIGENCE_GENERATION_OWNER_MISMATCH","INTELLIGENCE_OPERATION_MISMATCH","INTELLIGENCE_MODEL_BUDGET_INVALID","INTELLIGENCE_MODEL_INPUT_TOO_LARGE","INTELLIGENCE_RESULT_RECEIPT_INVALID","INTELLIGENCE_COMMIT_MISMATCH","INTELLIGENCE_PORT_UNAVAILABLE","MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE","STALE_EXECUTION"].includes(failureMessage)?failureMessage:"HOST_PORT_REJECTED";
               console.error(`[execution-worker-port] task=${message.execution.executionTaskId} port=${message.port} category=${name} code=${diagnostic}`);
-              const errorCode=message.port==="reserveTopicRead" && error && typeof error==="object" && (error as {budgetCode?:unknown}).budgetCode==="EXECUTION_BUDGET_EXHAUSTED" ? "EXECUTION_BUDGET_EXHAUSTED" : message.port==="resolveModelCredential" && typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "HOST_PORT_REJECTED";
+              // 凭据解析发生在任何供应商调用之前。LlmCredentialError 没有稳定的
+              // `code` 字段，若把它压成 HOST_PORT_REJECTED，Worker 会把一条尚未
+              // 发起模型调用的聊天误标为未知结果，前端只能让用户反复“核对”。
+              // 这里仅按异常类别翻译为协议码，不读取或返回其消息（其中可能含配置细节）。
+              const credentialUnavailable =
+                message.port === "resolveModelCredential" &&
+                (code === "MODEL_AUTHORITY_CHANGED" ||
+                  code === "MODEL_CREDENTIAL_UNAVAILABLE" ||
+                  (error instanceof Error && error.name === "LlmCredentialError"));
+              const errorCode=message.port==="reserveTopicRead" && error && typeof error==="object" && (error as {budgetCode?:unknown}).budgetCode==="EXECUTION_BUDGET_EXHAUSTED" ? "EXECUTION_BUDGET_EXHAUSTED" : credentialUnavailable ? typeof code === "string" && ["MODEL_AUTHORITY_CHANGED","MODEL_CREDENTIAL_UNAVAILABLE"].includes(code) ? code : "MODEL_CREDENTIAL_UNAVAILABLE" : "HOST_PORT_REJECTED";
               return {version:1,type:"reply",requestId:message.requestId,ok:false,errorCode};
             }
           })();

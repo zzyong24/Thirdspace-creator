@@ -18,7 +18,8 @@ export async function queryRedfox(input:RedfoxInput,key:string,signal:AbortSigna
    if(response.status===429||response.status>=500){if(submit)return redfoxObservationSchema.parse({status:"unknown",code:"REDFOX_SUBMIT_UNKNOWN"});if(attempt<2){await pause(attempt,signal);continue;}return redfoxObservationSchema.parse({status:"error",code:response.status===429?"REDFOX_RATE_LIMIT":"REDFOX_UPSTREAM_UNAVAILABLE"});}
    if(!response.ok)return redfoxObservationSchema.parse({status:"error",code:"REDFOX_HTTP_"+response.status});
    const text=await response.text();if(text.length>500000)throw Error("REDFOX_RESPONSE_TOO_LARGE");const envelope=JSON.parse(text);
-   if(envelope.code!==2000)return redfoxObservationSchema.parse({status:"error",code:[401,4001].includes(envelope.code)?"REDFOX_AUTH_INVALID":"REDFOX_BUSINESS_"+(typeof envelope.code==="number"?String(envelope.code):"INVALID_CODE")});
+   // SEMANTIC_BOUNDARY_ALLOW: 仅翻译 RedFox 已定义的额度协议码，供对话明确告知用户补充额度；不参与内容判断。
+   if(envelope.code!==2000)return redfoxObservationSchema.parse({status:"error",code:[401,4001].includes(envelope.code)?"REDFOX_AUTH_INVALID":envelope.code===3201?"REDFOX_QUOTA_EXHAUSTED":"REDFOX_BUSINESS_"+(typeof envelope.code==="number"?String(envelope.code):"INVALID_CODE")});
    if(submit && (typeof envelope.data?.taskId!=="string" || !envelope.data.taskId.trim()))return redfoxObservationSchema.parse({status:"unknown",code:"REDFOX_SUBMIT_RECEIPT_INVALID"});
    // SEMANTIC_BOUNDARY_ALLOW: 凭据字段和签名URL按协议清理，只控制泄露，不做内容选择。
    const clean=(v:unknown):unknown=>{if(typeof v==="string")return v.includes(key)?"[已隐藏]":v.startsWith("http")&&/[?&](token|sign|signature|auth|key|expires)=/i.test(v)?"[临时媒体地址已隐藏]":v;if(Array.isArray(v))return v.map(clean);if(v&&typeof v==="object")return Object.fromEntries(Object.entries(v).filter(([k])=>!/(api.?key|secret|authorization|cookie|token)/i.test(k)).map(([k,val])=>[k,clean(val)]));return v;};
