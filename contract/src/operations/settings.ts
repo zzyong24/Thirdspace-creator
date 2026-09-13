@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
 import {
+  onboardingPatchResource,
+  onboardingStateResource,
   userResource,
   userPreferenceResource,
   modelConfigurationResource,
@@ -16,6 +18,8 @@ import {
 // user's preferences, per-capability model config, and agent configs.
 const redfoxStatus=z.object({provider:z.literal("redfox"),configured:z.boolean(),updatedAt:z.string().nullable()});
 export const settingsOperations = {
+ getOnboarding: defineEndpoint({id:"settings.onboarding.get",method:"GET",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
+ patchOnboarding: defineEndpoint({id:"settings.onboarding.patch",method:"PATCH",path:"/settings/onboarding/:accountId",params:z.object({accountId:z.string().min(1)}).strict(),body:onboardingPatchResource,response:onboardingStateResource,fr:["FR-ONBOARDING"]}),
  getRedfox:defineEndpoint({id:"settings.redfox.get",method:"GET",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),
  putRedfox:defineEndpoint({id:"settings.redfox.put",method:"PUT",path:"/settings/redfox",body:z.object({secret:z.string().trim().min(1).max(4096)}).strict(),response:redfoxStatus,fr:["FR-REDFOX"]}),
  deleteRedfox:defineEndpoint({id:"settings.redfox.delete",method:"DELETE",path:"/settings/redfox",response:redfoxStatus,fr:["FR-REDFOX"]}),

@@ -78,3 +78,5 @@ export {
 
 export {createIntegrationCredentials,INTEGRATION_CREDENTIALS_DDL} from "./integration-credentials";
 export {createRedfoxSubmissions} from "./redfox-submissions";
+
+export { createOnboardingState, type OnboardingAccountReader } from "./onboarding-state";

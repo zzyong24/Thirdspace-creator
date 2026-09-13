@@ -252,3 +252,25 @@ export const agentConfigurationResource = z.object({
 export type AgentConfigurationResource = z.infer<
   typeof agentConfigurationResource
 >;
+
+// 上手引导只记录历史里程碑；不代表当前连接或业务权限。
+export const onboardingStepKey = z.enum([
+  "import-account", "confirm-origin", "review-imported-projects",
+  "positioning-profile", "benchmark-monitor", "benchmark-topic", "first-project",
+]);
+export const onboardingPatchResource = z.object({
+  origin: z.enum(["fresh", "existing"]).nullable().optional(),
+  hidden: z.boolean().optional(),
+  collapsed: z.boolean().optional(),
+  completedSteps: z.array(onboardingStepKey).max(7).optional(),
+}).strict();
+export const onboardingStateResource = z.object({
+  accountId: z.string().min(1),
+  origin: z.enum(["fresh", "existing"]).nullable(),
+  hidden: z.boolean(),
+  collapsed: z.boolean(),
+  completedSteps: z.array(onboardingStepKey),
+  updatedAt: z.string().nullable(),
+});
+export type OnboardingPatch = z.infer<typeof onboardingPatchResource>;
+export type OnboardingStateResource = z.infer<typeof onboardingStateResource>;

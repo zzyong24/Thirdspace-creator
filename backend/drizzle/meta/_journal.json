@@ -680,6 +680,13 @@
       "when": 1789257600001,
       "tag": "0096_publication_sync_state",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1789257600002,
+      "tag": "0097_onboarding_state",
+      "breakpoints": true
     }
   ]
 }
