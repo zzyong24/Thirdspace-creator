@@ -1,5 +1,5 @@
 import {it,expect,vi} from "vitest";
-import {exportDailyReport,renderDailyReportCanvas} from "./report-export";
+import {dailyReportCsv,exportDailyReport,renderDailyReportCanvas} from "./report-export";
 import {PURCHASE_QR,PURCHASE_URL} from "./purchase-qr";
 import type {DailyReport} from "./report-metrics";
 const report:DailyReport={date:"2026-10-01",timeZone:"Asia/Shanghai",generatedAt:"2026-10-02T00:00:00Z",accountId:"a",accountName:"真实账号",positioning:null,warnings:[],recentWorks:[],works:[{publicationId:"pub",projectId:"p",title:"真实作品",publishedAt:"2026-10-01T00:00:00Z",capturedAt:null,metrics:{views:0,finish_5s_rate:20},script:null,traffic:[]}]};
@@ -22,4 +22,13 @@ it("超长作品标题限制两行，完整标题仍在原报告中，海报不�
  expect(long.height).toBe(normal.height);const lines=context.fillText.mock.calls.map(call=>call[0]).filter(text=>String(text).includes('标题'));
  expect(lines).toHaveLength(2);expect(lines[1]).toMatch(/…$/);expect(lines.join('')).not.toContain(longTitle);
  vi.restoreAllMocks();
+});
+it("CSV 使用 UTF-8 BOM、中文列名和标准双引号转义；缺失指标保持为空",()=>{
+ const csv=dailyReportCsv({...report,accountName:'账号,"甲"',works:[{...report.works[0],title:'标题,"乙"',metrics:{views:12} as any}]});
+ expect(csv.startsWith("\uFEFF\"账号\",\"统计周期\"")).toBe(true);
+ expect(csv).toContain('"账号,""甲"""');
+ expect(csv).toContain('"标题,""乙"""');
+ expect(csv).toContain('"12"');
+ expect(csv).toContain('""');
+ expect(csv).not.toContain('undefined');
 });

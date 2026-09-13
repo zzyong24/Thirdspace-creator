@@ -99,6 +99,7 @@ tar = "0.4"
 #   obfstr 编译期字符串/字节常量混淆(灭静态 grep 靶点)。
 secmem-proc = "0.3.8"
 obfstr = "0.4.6"
+tauri-plugin-dialog = "2.0.0-rc.8"
 
 # [T-427] dev 工具门控 feature —— 默认关闭。正式 `tauri build`(不带 --features logtools)时,
 #   下面两个 [[bin]] 的 required-features 不满足 → cargo **根本不编译**它们 → target/release 无

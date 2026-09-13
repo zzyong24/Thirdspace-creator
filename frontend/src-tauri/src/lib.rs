@@ -41,6 +41,7 @@ use base64::Engine as _;
 use secrecy::{ExposeSecret, SecretString};
 use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
+use tauri_plugin_dialog::DialogExt;
 use zeroize::Zeroize as _;
 // [T-172] CommandChild / CommandEvent / ShellExt 只在非 macOS(走 tauri sidecar externalBin)分支用;
 //   macOS 走 std::process 直接 spawn server.app(Dock 隐身),不引这些,故按平台条件 import,免 macOS
@@ -137,6 +138,40 @@ fn runtime_system_info() -> RuntimeSystemInfo {
         os: std::env::consts::OS,
         arch: runtime_host_arch(),
     }
+}
+
+/// 运营分析 CSV 只能由用户刚刚确认的原生保存面板落盘；前端不获得任意路径写入能力。
+#[tauri::command]
+async fn export_daily_report_csv(
+    app: AppHandle,
+    content: String,
+    suggested_name: String,
+) -> Result<bool, String> {
+    if content.len() > 10 * 1024 * 1024 {
+        return Err("导出数据过大，请缩短日期范围后重试。".to_string());
+    }
+    if suggested_name.is_empty()
+        || suggested_name.len() > 160
+        || suggested_name.contains(['/', '\\'])
+        || !suggested_name.to_ascii_lowercase().ends_with(".csv")
+    {
+        return Err("导出文件名无效。".to_string());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let selected = app
+            .dialog()
+            .file()
+            .add_filter("CSV 数据文件", &["csv"])
+            .set_file_name(suggested_name)
+            .blocking_save_file();
+        let Some(selected) = selected else { return Ok(false); };
+        let path = selected.into_path().map_err(|_| "无法读取所选保存位置。".to_string())?;
+        if !path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("csv")) {
+            return Err("请选择 CSV 文件。".to_string());
+        }
+        std::fs::write(path, content).map_err(|_| "保存 CSV 失败，请检查目录权限后重试。".to_string())?;
+        Ok(true)
+    }).await.map_err(|_| "保存 CSV 未完成，请重试。".to_string())?
 }
 
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
@@ -1885,6 +1920,7 @@ pub fn run() {
             }
         }))
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         // [T-241] 外链转系统浏览器(webview 默认吞 target=_blank 新窗口请求)。
         .plugin(tauri_plugin_opener::init())
         // T-147 P6 —— updater 插件(签名更新包校验;pubkey 在 tauri.conf.json)。
@@ -1910,6 +1946,7 @@ pub fn run() {
             // [T-568] 反馈诊断必须来自原生层，禁止 navigator.platform 把 Apple Silicon
             // 兼容性标识 `MacIntel` 当作实体芯片。
             runtime_system_info,
+            export_daily_report_csv,
             cli_access::cli_access_status,
             cli_access::cli_access_enable,
             cli_access::cli_access_revoke

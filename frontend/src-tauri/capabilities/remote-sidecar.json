@@ -11,6 +11,7 @@
     "updater:default",
     "process:default",
     "opener:default",
+    "allow-export-daily-report-csv",
     "allow-license-activate",
     "allow-license-check",
     "allow-license-reset-local",

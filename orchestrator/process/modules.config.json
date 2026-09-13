@@ -1352,6 +1352,32 @@
         "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
       }
     },
+    "T-968": {
+      "task_id": "T-968",
+      "archetype": ["orchestration"],
+      "tasks": ["implementation"],
+      "read_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/src-tauri/**"
+      ],
+      "write_set": [
+        "docs/features/t968-report-export-schedule.md",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/features/projects/**",
+        "frontend/src/components/ui/**",
+        "frontend/package.json",
+        "pnpm-lock.yaml",
+        "frontend/src-tauri/**",
+        "frontend/src-tauri/capabilities/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/features/projects/project-schedule-control.test.tsx src/components/ui/creator-date-picker-antd.test.tsx && pnpm -C frontend exec tsc --noEmit"
+      }
+    },
     "T-967": {
       "task_id": "T-967",
       "archetype": [

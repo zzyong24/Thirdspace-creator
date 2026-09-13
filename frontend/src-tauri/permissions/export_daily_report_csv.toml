@@ -1,0 +1,9 @@
+[[permission]]
+identifier = "allow-export-daily-report-csv"
+description = "允许 CreatorOS 远程侧栏页面经原生保存对话框导出运营数据 CSV。"
+commands.allow = ["export_daily_report_csv"]
+
+[[permission]]
+identifier = "deny-export-daily-report-csv"
+description = "拒绝导出运营数据 CSV。"
+commands.deny = ["export_daily_report_csv"]

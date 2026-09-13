@@ -1,4 +1,4 @@
-.page{margin-top:56px;display:flex;flex-direction:column;gap:24px;min-width:0;color:var(--creatoros-text)}
+.page{margin-top:0;display:flex;flex-direction:column;gap:24px;min-width:0;color:var(--creatoros-text)}
 .header,.actions,.sectionHead,.tabs,.workHeader{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .header h1{font-size:28px;font-weight:650;margin:8px 0}.muted,.subtitle{color:var(--creatoros-text-muted);font-size:13px;line-height:1.8}.subtitle{margin:0}.actions{justify-content:flex-start;gap:8px}
 .button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--creatoros-border);background:var(--creatoros-surface);padding:9px 15px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap}.button:hover{background:var(--creatoros-surface-subtle)}.button:disabled{opacity:.55;cursor:default}.primary{background:var(--creatoros-brand);border-color:var(--creatoros-brand);color:white}.primary:hover{background:var(--creatoros-brand-hover)}.button:focus-visible,.tab:focus-visible{outline:2px solid var(--creatoros-brand);outline-offset:3px}

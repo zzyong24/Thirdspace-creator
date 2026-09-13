@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-968 | 修复日报留白、CSV 本地导出与项目排期日期回归 | 🔨 待办 | — | — | [SPEC](docs/features/t968-report-export-schedule.md) | 收紧日报页首留白；桌面端原生目录选择导出 CSV，网页安全降级；修复空日期触发 Invalid Date。 |
 | T-967 | 修复周月切换并重设计朋友圈成绩战报与用户话术 | ✅ 待办 | — | — | [SPEC](docs/features/t967-week-share-clarity.md) | 周月按钮真实切范围；移除面包屑/重复保存；分享只展示真实成绩汇总，分析去内部术语。 |
 | T-966 | 修复运营周期作品、分析结构化与流量采集占用并独立导航 | ✅ 待办 | — | — | [SPEC](docs/features/t966-operations-period-recovery.md) | 所选周期统一作品与指标；运营分析独立导航；恢复已有JSON结果；解决流量采集档案占用。 |
 | T-965 | 修复运营日报打开卡顿并对齐已确认预览 | ✅ 待办 | — | — | [SPEC](docs/features/t965-daily-report-parity-performance.md) | 对照真实安装版与预览，修复加载瓶颈与布局偏离，验证同数据视觉与导航性能并更新本机。 |

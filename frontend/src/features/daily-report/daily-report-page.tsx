@@ -6,7 +6,7 @@ import {useRouter} from "next/navigation";
 import {ReportDateRange} from "./report-date-range";
 import {reportPeriod,reportPeriodLabel} from "./report-period";
 import {beijingTime,overviewMetrics,type DailyReport} from "./report-metrics";
-import {exportDailyReportJson} from "./report-export";
+import {exportDailyReportCsv} from "./report-export";
 import {useDailyReportAnalysis} from "./use-daily-report-analysis";
 import {ReportCoverage,ReportExperiments,ReportPositioning,ReportPeriodWorks,ReportRetention,ReportWorks} from "./report-details";
 import {ReportShare} from "./report-share";
@@ -19,12 +19,11 @@ export function DailyReportPage({report}:{report:DailyReport}){
  const state={...originalState,analysis:userFacingAnalysis(originalState.analysis,report),rawAnalysis:originalState.rawAnalysis?reportUserText(originalState.rawAnalysis,report):null};
  const [tab,setTab]=React.useState<"daily"|"share">("daily"),[selectedId,setSelectedId]=React.useState(report.works[0]?.publicationId),[error,setError]=React.useState<string|null>(null);
  const selectedWork=report.works.find(work=>work.publicationId===selectedId)??report.works[0];
- const options={analysis:state.analysis,rawAnalysis:state.rawAnalysis,selectedPublicationId:selectedWork?.publicationId,sourceGeneratedAt:state.sourceGeneratedAt,stale:state.stale};
  async function act(action:()=>void|Promise<void>){setError(null);try{await action();}catch(e){setError(e instanceof Error?e.message:"操作未完成，请重试");}}
  const running=state.status==="running",hasAnalysis=Boolean(state.analysis||state.rawAnalysis);
  const actions=<div className={styles.actions}>{running?<><span role="status" className={styles.muted}>正在分析，数据仍可查看</span><button className={styles.button} onClick={()=>void act(state.cancel)}>停止分析</button><button className={styles.button} onClick={()=>void act(state.refresh)}>刷新状态</button></>:<button className={`${styles.button} ${styles.primary}`} disabled={state.status==="loading"||!report.works.length} onClick={()=>void act(state.start)}>{state.status==="loading"?"读取分析状态…":hasAnalysis?"重新分析":"生成运营分析"}</button>}{state.status==="failed"&&<button className={styles.button} onClick={()=>void act(state.refresh)}>刷新状态</button>}</div>;
  return <main data-page="daily-report" className={styles.page}>
-  <header className={styles.header}><div><h1>运营分析</h1><p className={styles.subtitle}>{report.accountName??"当前账号"} · {reportPeriodLabel(report)} · 北京时间 · 所选期间发布作品的累计表现</p></div><div className={styles.actions}><button className={styles.button} onClick={()=>void act(()=>exportDailyReportJson(report,options))}>导出数据</button></div></header>
+  <header className={styles.header}><div><h1>运营分析</h1><p className={styles.subtitle}>{report.accountName??"当前账号"} · {reportPeriodLabel(report)} · 北京时间 · 所选期间发布作品的累计表现</p></div><div className={styles.actions}><button className={styles.button} onClick={()=>void act(async()=>{await exportDailyReportCsv(report);})}>导出 CSV</button></div></header>
   <ReportDateRange value={period} disabled={changing} onChange={range=>startTransition(()=>{const query=new URLSearchParams(range.startDate===range.endDate?{date:range.startDate}:range);router.push(`/daily-report?${query}`,{scroll:false});})}/>
   {changing&&<p role="status" className={styles.muted}>正在读取所选期间…</p>}
   <div className={styles.tabs} role="tablist" aria-label="运营分析视图"><button id="daily-tab" role="tab" aria-controls="daily-panel" aria-selected={tab==="daily"} className={styles.tab} onClick={()=>setTab("daily")}>运营复盘</button><button id="share-tab" role="tab" aria-controls="share-panel" aria-selected={tab==="share"} className={styles.tab} onClick={()=>setTab("share")}>分享战报</button></div>

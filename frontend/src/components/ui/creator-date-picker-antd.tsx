@@ -25,7 +25,8 @@ export default function CreatorDatePickerAntd(props:CreatorDatePickerAntdProps){
   const [colors,setColors]=React.useState(readTheme);
   React.useEffect(()=>{const observer=new MutationObserver(()=>setColors(readTheme()));observer.observe(document.documentElement,{attributes:true,attributeFilter:["class","data-theme","style"]});return()=>observer.disconnect();},[]);
   const range=typeof props.value==="object"?props.value:null;
-  const selected=typeof props.value==="string"?props.value:range?.startDate;
+  // 空字符串是表单“尚未选择”的内部表示，不能传给 Dayjs；否则 Ant 会把整张月历渲染成 Invalid Date。
+  const selected=(typeof props.value==="string"?props.value:range?.startDate)||null;
   const common={
     open:props.open,onOpenChange:props.onOpenChange,disabled:props.disabled,allowClear:props.allowClear??false,
     minDate:props.minDate?dayjs(props.minDate):undefined,maxDate:props.maxDate?dayjs(props.maxDate):undefined,
@@ -47,7 +48,7 @@ export default function CreatorDatePickerAntd(props:CreatorDatePickerAntdProps){
       const isCompletePeriod=range?.startDate===anchor.startOf(props.mode).format("YYYY-MM-DD")&&range?.endDate===anchor.endOf(props.mode).format("YYYY-MM-DD");
       return <DatePicker {...common} id={props.id} picker={props.mode} value={isCompletePeriod?anchor:null} defaultPickerValue={anchor} format={props.mode==="month"?"YYYY年MM月":date=>`${date.startOf("week").format("MM月DD日")} 至 ${date.endOf("week").format("MM月DD日")}`} placeholder={props.mode==="week"?"选择一周":"选择月份"} onChange={changePeriod}/>;
     }
-    return <DatePicker {...common} id={props.id} value={selected?dayjs(selected):null} defaultPickerValue={dayjs(selected??beijingToday())} showNow={false} format="YYYY-MM-DD" placeholder={props.placeholder??"选择日期"} onChange={date=>{if(props.mode===undefined||props.mode==="date")props.onChange(date?date.format("YYYY-MM-DD"):null);}}/>;
+    return <DatePicker {...common} id={props.id} value={selected?dayjs(selected):null} defaultPickerValue={dayjs(selected||beijingToday())} showNow={false} format="YYYY-MM-DD" placeholder={props.placeholder??"选择日期"} onChange={date=>{if(props.mode===undefined||props.mode==="date")props.onChange(date?date.format("YYYY-MM-DD"):null);}}/>;
   };
   return <ConfigProvider locale={zhCN} theme={{algorithm:colors.dark?theme.darkAlgorithm:theme.defaultAlgorithm,token:{colorPrimary:colors.brand,colorBgContainer:colors.surface,colorBgElevated:colors.surface,colorText:colors.text,colorTextPlaceholder:colors.muted,colorBorder:colors.border,borderRadius:8,fontFamily:"inherit"},components:{DatePicker:{zIndexPopup:1100}}}}>{renderPicker()}</ConfigProvider>;
 }
