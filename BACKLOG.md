@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-965 | 修复运营日报打开卡顿并对齐已确认预览 | 🔨 待办 | — | — | [SPEC](docs/features/t965-daily-report-parity-performance.md) | 对照真实安装版与预览，修复加载瓶颈与布局偏离，验证同数据视觉与导航性能并更新本机。 |
+| T-965 | 修复运营日报打开卡顿并对齐已确认预览 | ✅ 待办 | — | — | [SPEC](docs/features/t965-daily-report-parity-performance.md) | 对照真实安装版与预览，修复加载瓶颈与布局偏离，验证同数据视觉与导航性能并更新本机。 |
 | T-964 | 修复上手引导反复触发与确认闭环，接入真实首页运营日报 | ✅ 待办 | — | — | [SPEC](docs/features/t964-onboarding-daily-report.md) | 按账号持久保存引导完成/隐藏，修复状态矛盾和历史作品确认；首页提供可用日报入口，保留旧数据。 |
 | T-963 | 构建并安装运营同步与RedFox新版本地包 | ✅ 待办 | — | — | [SPEC](docs/verification/t963-local-package.md) | 冻结已提交的T-962源码，官方本地入口构建、校验并安装启动；保护旧数据。 |
 | T-962 | 完善运营增量同步、复盘与RedFox助手能力并修复布局主题 | ✅ 待办 | — | — | [SPEC](docs/features/t962-operations-sync-redfox.md) | 合并作品同步按2/6/24小时增量执行；修复主题与排版，独立RedFox密钥和场景Skill。 |

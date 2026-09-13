@@ -1036,3 +1036,4 @@
 {"ts":"2026-09-13T06:55:20.520Z","actor":"taskctl","action":"start","task":"T-964","sha_before":"0e0f21fb78a7","sha_after":"4fa50f795143"}
 {"ts":"2026-09-13T07:28:52.652Z","actor":"taskctl","action":"complete","task":"T-964","evidence":"b123419c；前端94项及最终71项通过、tsc通过；隔离浏览器确认/结束/重开与日报PNG实测；42项打包检查、DMG校验及本机真实启动/日报CLI通过。全局reconcile233项历史漂移归T-916保留。","sha_before":"4fa50f795143","sha_after":"b8975e21e653"}
 {"ts":"2026-09-13T07:33:58.736Z","actor":"taskctl","action":"start","task":"T-965","sha_before":"c15ff767515f","sha_after":"0460ff83e378"}
+{"ts":"2026-09-13T08:16:44.930Z","actor":"taskctl","action":"complete","task":"T-965","evidence":"53ce5d56; 前端41/后端11/打包42测试；真实月份交互与PNG二维码通过；本机安装+CLI日/周/月读回通过；reconcile233既有T916失败保留，旧chat29失败基线一致；真实模型成功未验证","sha_before":"0460ff83e378","sha_after":"95ac1016205c"}

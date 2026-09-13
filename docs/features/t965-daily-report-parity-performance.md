@@ -31,3 +31,11 @@ flowchart LR
 前端10文件41测试通过（日期真实Ant交互、排期保存、分析协议/恢复/竞态、渲染导出）；后端日报11测试通过，frontend tsc通过。实际浏览器测试自定义区间切自然月，最终URL为2026-09-01至2026-09-30；真实下载PNG2160×3747，Vision二维码识别为https://buy.aitongban.cloud/。截图使用独立布局验证账号/测试数据，不冒充用户真实抓取；安装版真实数据CLI此前单日读取0.299/0.258/0.262秒。开发环境重复范围GET97ms，仅是开发读页测量，不当作安装版整段性能。
 
 真实dev接口已验证提交review场景、持久任务与失败恢复：隔离测试账号模型凭据不可用，任务失败后数据与导出仍可用。本轮未获得真实模型成功生成证据，不宣称AI端到端全绿。旧chat route测试在T964冻结工作树复跑同为29失败/21通过，与当前一致，属于既有测试迁移欠债。全局reconcile及边界既有债务仍按T916记录，不改旧断言洗绿。
+
+## 本地交付证据
+
+候选53ce5d56cad5710e57db290900e513aaff5133ec，从独立干净工作树固定入口构建；版本四处均1.1.0，打包四文件42测试通过，生产编译/类型检查/混淆后真启动与hydration通过。DMG：`/Users/zyongzhu/Downloads/CreatorOS-1.1.0.dmg`，SHA256 `de72140683ac2f73bc0dca00b0cd97f04e5d678602e5ff22058e04695e1bf8da`；hdiutil verify VALID、codesign deep strict通过。仅本地ad-hoc，未公证，未公开发布。
+
+已安装 `/Applications/CreatorOS.app`，PID81524、sidecar81620正常，CLI full access可用。真实账号显式绑定读回：9/12单日1作品+近7天6作品，9/6–9/12范围6作品，9/1–9/30范围6作品；CLI耗时0.267/0.310/0.306秒（不是整页渲染计时）。旧版单日publicationId集合与新版本一致。安装版首页、范围报表HTTP200，SSR包含日期范围与快捷控件。
+
+退出旧进程后备份到 `/Users/zyongzhu/.creatoros/backups/t965-20260913-011339/app-data`，70546文件逐一SHA256一致。旧数据未删除。全局reconcile仍233项既有T916欠债；chat route旧测试29失败已在T964候选复现一致。本任务不伪称全仓门禁或真实AI成功生成全绿。
