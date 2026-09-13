@@ -346,4 +346,4 @@ describe("[T-348] DashboardPage — 0 号降级(未绑号,诚实空态)", () => 
   });
 });
 
-it("首页提供真实运营日报路由",async()=>{await renderDashboard();expect(screen.getByRole("link",{name:/运营日报/})).toHaveAttribute("href","/daily-report");});
+it("运营分析迁入独立导航，首页不再重复展示入口",async()=>{await renderDashboard();expect(document.querySelector('[data-slot="daily-report-entry"]')).toBeNull();expect(screen.getAllByRole("link",{name:"运营分析"})).toHaveLength(1);expect(within(screen.getByRole("navigation",{name:"主要导航"})).getByRole("link",{name:"运营分析"})).toBeInTheDocument();});

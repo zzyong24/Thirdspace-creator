@@ -176,6 +176,7 @@ const PRIMARY_NAV: ReadonlyArray<NavEntry> = [
   // [FE-M03] `/calendar`(内容日历)是发布中心的子面(shell-router 标题即「内容日历(发布中心)」),
   // 故其高亮跟随「发布中心」。`/accounts`、`/search` 无对应导航项 → 不高亮任何项(见 findActiveNav)。
   { id: "publishing", label: "发布中心", href: "/publishing", icon: creatorIcons.publishing, match: (pathname) => pathname === "/publishing" || pathname === "/calendar" },
+  { id: "operations", label: "运营分析", href: "/daily-report", icon: creatorIcons.operations, match: matchPrefix("/daily-report") },
   // 自动化 — 七步下游数据采集(T-007, data-source-pipeline §9 D6): 周期抓「自己作品指标/评论」
   // 的调度作业, 数据落库供 Dashboard/选题消费. 归在运营/采集类, 紧跟发布中心.
   { id: "automations", label: "自动化", href: "/automations", icon: creatorIcons.automations, match: matchPrefix("/automations") },

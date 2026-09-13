@@ -9,8 +9,6 @@ export function beijingTime(value:string){return new Date(value).toLocaleString(
 
 export type {DailyReportAnalysis} from "@creatoros/contract";
 export type ReportWork = DailyReport["works"][number];
-export type RecentWork = Pick<ReportWork,"publicationId"|"projectId"|"title"|"publishedAt"|"capturedAt"|"metrics">;
-export function recentWorks(report:DailyReport):RecentWork[]{return (report as DailyReport & {recentWorks?:RecentWork[]}).recentWorks??[];}
 // SEMANTIC_BOUNDARY_ALLOW: 已归一化的百分数及其补数，只作图表展示，不作内容优劣判断。
 export function percentage(raw:Record<string,number>,key:string){const n=metricValue(raw,[key]);return n!==null&&n>=0&&n<=100?n:null;}
 export function displayRate(n:number|null){return n===null?"暂无":`${n.toLocaleString("zh-CN",{maximumFractionDigits:2})}%`;}

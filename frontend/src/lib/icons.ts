@@ -1,5 +1,6 @@
 import {
   ArrowUpDown,
+  ChartNoAxesCombined,
   Bell,
   BookOpen,
   CalendarClock,
@@ -34,6 +35,7 @@ export type CreatorIconKey =
   | "knowledge"
   | "assets"
   | "publishing"
+  | "operations"
   | "automations"
   | "experience"
   | "settings"
@@ -59,6 +61,7 @@ export const creatorIcons = Object.freeze({
   knowledge: BookOpen,
   assets: Images,
   publishing: Send,
+  operations: ChartNoAxesCombined,
   automations: CalendarClock,
   experience: Lightbulb,
   settings: Settings,

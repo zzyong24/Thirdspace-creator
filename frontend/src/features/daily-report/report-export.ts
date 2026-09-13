@@ -21,7 +21,7 @@ export async function renderDailyReportCanvas(report:DailyReport,options:ReportS
  y+=wrap(headline,pad,y,636,31,46,4,"#20222e",650);y+=12;
  const summary=analysis?.summary??options.rawAnalysis??"已汇总真实作品与表现数据。生成分析后，建议会出现在这里。";
  y+=wrap(summary,pad,y,636,19,31,6,"#667085");y+=12;
- if(options.rawAnalysis&&!analysis){text("分析全文节选 · 完整内容请查看日报",pad,y,14,"#667085");y+=27;}
+ if(options.rawAnalysis&&!analysis){text("分析全文节选 · 完整内容请查看运营分析",pad,y,14,"#667085");y+=27;}
  if(options.sourceGeneratedAt){text(`分析依据：${beijingTime(options.sourceGeneratedAt)} 的数据${options.stale?" · 数据已有更新":""}`,pad,y,14,"#667085");y+=30;}
  const metrics=overviewMetrics(report,work);
  metrics.forEach((m,i)=>{const x=pad+(i%2)*328,top=y+Math.floor(i/2)*119;box(x,top,308,102,"#ffffff");text(m.label,x+16,top+29,17,"#667085");text(m.value,x+16,top+70,29,"#20222e",600);});y+=260;
@@ -31,7 +31,7 @@ export async function renderDailyReportCanvas(report:DailyReport,options:ReportS
  y+=21;
  const experiment=analysis?.experiments[0];
  if(experiment){y+=40;y+=wrap(experiment.title,pad+21,y,594,24,35,3,"#20222e",600);y+=10;y+=wrap(experiment.action,pad+21,y,594,20,32,6);y+=12;y+=wrap(`只改：${experiment.variable}\n观察：${experiment.metric}\n前置：${experiment.prerequisite}`,pad+21,y,594,16,26,6,"#667085");y+=20;}
- else {text("下一步行动",pad,y,25,"#20222e",600);y+=38;y+=wrap(options.rawAnalysis?"请在日报中查看完整分析。":"生成运营分析后，查看针对性的下一步建议。",pad,y,636,20,32,3,"#667085");y+=20;}
+ else {text("下一步行动",pad,y,25,"#20222e",600);y+=38;y+=wrap(options.rawAnalysis?"请在运营分析中查看完整分析。":"生成运营分析后，查看针对性的下一步建议。",pad,y,636,20,32,3,"#667085");y+=20;}
  y+=33;box(pad,y,636,1,"#e6e8f0");y+=52;
  text("让每一条内容，都有下一步。",pad,y,25,"#20222e",600);y+=43;text("CreatorOS 编导 / 运营智能体",pad,y,19,"#667085");y+=35;text("扫码了解产品",pad,y,18);y+=30;text(PURCHASE_URL,pad,y,16,"#667085");
  const top=y-111,left=556,scale=4;box(left-16,top-16,148,148,"#ffffff");for(const [x,qy]of PURCHASE_QR)box(left+x*scale,top+qy*scale,scale,scale,"#7953ff");
@@ -39,5 +39,5 @@ export async function renderDailyReportCanvas(report:DailyReport,options:ReportS
  canvas.width=width*3;canvas.height=y*3;c.scale(3,3);c.fillStyle="#f8f9fc";c.fillRect(0,0,width,y);commands.forEach(draw=>draw());return canvas;
 }
 export function downloadReportBlob(blob:Blob,filename:string){const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-export async function exportDailyReport(report:DailyReport,options:ReportShareOptions={}){const canvas=await renderDailyReportCanvas(report,options);const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("图片生成失败")),"image/png"));downloadReportBlob(blob,`CreatorOS-运营日报-${reportFileDate(report)}.png`);}
-export function exportDailyReportJson(report:DailyReport,options:ReportShareOptions={}){downloadReportBlob(new Blob([JSON.stringify({report,...options},null,2)],{type:"application/json;charset=utf-8"}),`CreatorOS-运营日报-${reportFileDate(report)}.json`);}
+export async function exportDailyReport(report:DailyReport,options:ReportShareOptions={}){const canvas=await renderDailyReportCanvas(report,options);const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("图片生成失败")),"image/png"));downloadReportBlob(blob,`CreatorOS-运营分析-${reportFileDate(report)}.png`);}
+export function exportDailyReportJson(report:DailyReport,options:ReportShareOptions={}){downloadReportBlob(new Blob([JSON.stringify({report,...options},null,2)],{type:"application/json;charset=utf-8"}),`CreatorOS-运营分析-${reportFileDate(report)}.json`);}

@@ -174,6 +174,7 @@ describe("AppShell", () => {
       "知识库",
       "素材中心",
       "发布中心",
+      "运营分析",
       "自动化",
       "设置",
     ]);
@@ -196,6 +197,13 @@ describe("AppShell", () => {
     const active = within(nav).getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("href", "/knowledge");
     expect(active.textContent?.trim()).toBe("知识库");
+  });
+
+  it("运营分析直接打开周期报表并正确高亮", async () => {
+    await renderShell({ pathname: "/daily-report" });
+    const nav = screen.getByRole("navigation", { name: "主要导航" });
+    expect(within(nav).getByRole("link", { current: "page" })).toHaveAttribute("href", "/daily-report");
+    expect(within(nav).getByRole("link", { name: "运营分析" })).toHaveAttribute("aria-current", "page");
   });
 
   it("falls back to the dashboard nav item for the root pathname", async () => {

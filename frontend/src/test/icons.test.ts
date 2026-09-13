@@ -15,6 +15,7 @@ const requiredCreatorIconKeys = [
   "assets",
   "publishing",
   "radar",
+  "operations",
   "automations",
   "experience",
   "settings",

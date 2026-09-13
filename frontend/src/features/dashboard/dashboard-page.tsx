@@ -113,7 +113,6 @@ export async function DashboardPage({
         </p>
       </header>
 
-      <Link href="/daily-report" data-slot="daily-report-entry" className="flex items-center justify-between rounded-card border border-brand/20 bg-brand-soft px-5 py-4 text-brand"><span><strong className="block text-sm">运营日报</strong><span className="text-xs">查看昨日作品、数据与下一步建议</span></span><span aria-hidden="true">→</span></Link>
 
       <SummaryMetrics metrics={vm.metrics} />
       <DashboardGrid vm={vm} />
