@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-973 | V1.2双端正式流水线与稳定性速度审查 | 🔨 待办 | — | — | [SPEC](docs/features/t973-release-1.2.md) | 统一1.2.0、运行Mac和Windows构建并下载验收；旁路审查性能，不修改冻结流水线。 |
+| T-973 | V1.2双端正式流水线与稳定性速度审查 | ⏸️ 待办 | — | — | [SPEC](docs/features/t973-release-1.2.md) | 统一1.2.0、运行Mac和Windows构建并下载验收；旁路审查性能，不修改冻结流水线。 |
 | T-972 | 修复内容雷达安装版页面加载失败 | ✅ 待办 | — | — | [SPEC](docs/features/t972-radar-page-failure.md) | 根据错误479389334追踪真实日志，修复整页阻断并验证安装版。 |
 | T-971 | 重设计分享战报与复盘话术【先文生图】 | ✅ 待办 | — | — | [SPEC](docs/features/t971-report-visual-redesign.md) | 先生成视觉稿；精简日期与导出文案、全作品播放柱与关注折线、账号定位和主页二维码，再实现 UI。 |
 | T-970 | 修复 RedFox 工具准备阶段参数校验导致聊天中断【新版复现】 | ✅ 待办 | — | — | [SPEC](docs/features/t970-redfox-tool-validation.md) | 以安装版 prepareChatRedfox ZodError 为证据，统一参数契约，验证真实工具循环与最终结果。 |

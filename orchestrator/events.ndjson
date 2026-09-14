@@ -1054,3 +1054,4 @@
 {"ts":"2026-09-13T16:04:53.392Z","actor":"taskctl","action":"start","task":"T-972","sha_before":"bc8ef7f3a714","sha_after":"7b5c9b98bc71"}
 {"ts":"2026-09-13T16:20:01.440Z","actor":"taskctl","action":"complete","task":"T-972","evidence":"7e163219；副本精确复现旧全量查询破坏协议状态；任务9+雷达29+打包42通过，tsc通过；新安装版1615条内容与12条周期作品连续查询成功，浏览器雷达页面验图通过。全局233项既有漂移归T-916。","sha_before":"7b5c9b98bc71","sha_after":"c70c9927e058"}
 {"ts":"2026-09-14T00:45:39.697Z","actor":"taskctl","action":"start","task":"T-973","sha_before":"a8b6a54da180","sha_after":"d67c420492b4"}
+{"ts":"2026-09-14T01:01:30.801Z","actor":"taskctl","action":"block","task":"T-973","reason":"双端已触发：Mac更新凭据后仍Apple401；Windows文件预算失败。待有效Apple认证和Windows独立修复授权，详见SPEC及流水线34793812788。","sha_before":"d67c420492b4","sha_after":"7eca5a3c3e12"}
