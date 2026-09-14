@@ -1063,3 +1063,4 @@
 {"ts":"2026-09-14T04:51:39.285Z","actor":"taskctl","action":"complete","task":"T-975","evidence":"c4b37745/run34806574251 Mac成功；46预检通过；本机DMG元数据实际解析确认背景/图标/800x500窗口，stapler通过。reconcile233项既有错误保留。docs/research/evidence/t975/dmg-layout.json","sha_before":"767374e3b379","sha_after":"d0170f7b05a2"}
 {"ts":"2026-09-14T05:40:42.472Z","actor":"taskctl","action":"start","task":"T-976","sha_before":"b379234a89ff","sha_after":"922a9110e23b"}
 {"ts":"2026-09-14T06:34:19.070Z","actor":"taskctl","action":"start","task":"T-977","sha_before":"654b1004bf85","sha_after":"90b94ce51e30"}
+{"ts":"2026-09-14T06:59:55.673Z","actor":"taskctl","action":"complete","task":"T-977","evidence":"d5834440；前端76测、tsc通过；生产页面受控2秒RSC延迟实验2778ms→39ms/0 RSC，返回前进通过；保留全局reconcile 233项既有失败，安装包尚未更新","sha_before":"90b94ce51e30","sha_after":"0233b2a0adc9"}
