@@ -51,7 +51,7 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
-import { AutomationsIsland, TemplateCards } from "./automations-island";
+import { AutomationsIsland, TemplateCards, CreateJobDialog } from "./automations-island";
 import type { ScheduledJobResource } from "@creatoros/backend/modules/scheduling";
 
 function makeJob(over: Partial<ScheduledJobResource> = {}): ScheduledJobResource {
@@ -81,24 +81,48 @@ afterEach(() => {
   cleanup();
 });
 
+it.each(['self.metrics','self.traffic','comments','self.detail'] as const)('独立%s编辑保留类型和目标标记，取消不提交',async sourceKind=>{
+ const onCreate=vi.fn(async(_input:unknown)=>{}),onOpenChange=vi.fn();
+ const target={externalSourceId:'ext-1',__skipHeavyBackfill:sourceKind==='self.metrics',...(sourceKind==='self.detail'?{__backfillOnly:true,__skipMetricRefresh:true}:{})};
+ const job=makeJob({sourceKind,target,schedule:'0 */2 * * *'});
+ const first=render(<CreateJobDialog open mode="edit" job={job} onCreate={onCreate} onOpenChange={onOpenChange}/>);
+ expect(screen.queryByRole('switch',{name:'同步评论'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByText('取消'));expect(onCreate).not.toHaveBeenCalled();expect(onOpenChange).toHaveBeenCalledWith(false);first.unmount();
+ render(<CreateJobDialog open mode="edit" job={job} onCreate={onCreate} onOpenChange={onOpenChange}/>);
+ fireEvent.click(screen.getByText('保存修改'));await waitFor(()=>expect(onCreate).toHaveBeenCalled());
+ expect(onCreate.mock.calls[0]?.[0]).toMatchObject({sourceKind,schedule:'0 */2 * * *',target});
+});
+
+it('四类采集分别显示优先说明与启用开关，只切换指定作业',async()=>{
+ const jobs=(['self.metrics','self.traffic','comments','self.detail'] as const).map((sourceKind,i)=>makeJob({id:`split-${i}`,name:`独立任务${i}`,sourceKind,target:sourceKind==='self.detail'?{__backfillOnly:true}:{},schedule:'0 */2 * * *'}));
+ render(<AutomationsIsland jobs={jobs}/>);
+ for(const label of ['作品优先','流量其次','评论后台','封面与内容后台'])expect(screen.getByText(label)).toBeInTheDocument();
+ expect(screen.getAllByTestId('automation-edit')).toHaveLength(4);
+ fireEvent.click(screen.getByRole('switch',{name:'独立任务2 启用开关'}));await waitFor(()=>expect(mockClient.setScheduledJobEnabled).toHaveBeenCalledTimes(1));
+ expect(mockClient.setScheduledJobEnabled.mock.calls[0]?.[0]).toMatchObject({params:{jobId:'split-2'},body:{enabled:false}});
+});
+
+it.each(['self.traffic','self.detail'] as const)('普通新建不能用%s预填绕过系统创建边界',sourceKind=>{
+ const onCreate=vi.fn(async(_input:unknown)=>{});
+ render(<CreateJobDialog open prefill={{name:'系统采集',sourceKind}} onCreate={onCreate} onOpenChange={vi.fn()}/>);
+ expect(screen.getByText('创建任务')).toBeDisabled();fireEvent.click(screen.getByText('创建任务'));expect(onCreate).not.toHaveBeenCalled();
+});
+
 describe("T-248 — 任务编辑弹窗", () => {
-  it("统一同步的旧cron无需反解即可保存分档策略", async()=>{
+  it("旧复杂cron仍需重选频率，不因采集类型绕过校验", async()=>{
     render(<AutomationsIsland jobs={[makeJob({schedule:"0 0,6,12,18 * * *",target:{operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:true,content:true}}}})]}/>);
     fireEvent.click(screen.getByTestId("automation-edit"));
-    await waitFor(()=>expect(screen.getByText("保存修改")).not.toBeDisabled());
-    fireEvent.click(screen.getByText("保存修改"));
-    await waitFor(()=>expect(mockClient.updateScheduledJob).toHaveBeenCalled());
-    expect(mockClient.updateScheduledJob.mock.calls[0]![0]).toMatchObject({body:{schedule:"0 */2 * * *"}});
+    await waitFor(()=>expect(screen.getByText("保存修改")).toBeDisabled());
+    expect(mockClient.updateScheduledJob).not.toHaveBeenCalled();
   });
-  it("统一同步保存能力开关且保留其他目标字段", async () => {
-    render(<AutomationsIsland jobs={[makeJob({target:{externalSourceId:"ext-1",operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:true,content:true}}}})]}/>);
+  it("独立作品同步可编辑频率，并保留原目标标记", async () => {
+    render(<AutomationsIsland jobs={[makeJob({schedule:'0 */2 * * *',target:{externalSourceId:"ext-1",__skipHeavyBackfill:true}})]}/>);
     fireEvent.click(screen.getByTestId("automation-edit"));
-    await waitFor(()=>expect(screen.getByRole("switch",{name:"同步评论"})).toBeInTheDocument());
-    expect(screen.getByRole("switch",{name:"同步评论"})).toHaveAttribute("aria-checked","false");
-    fireEvent.click(screen.getByRole("switch",{name:"同步流量来源"}));
+    expect(screen.queryByRole("switch",{name:"同步评论"})).not.toBeInTheDocument();
+    fireEvent.change(document.querySelector('[data-slot="automation-cadence-interval-every"]')!,{target:{value:'6'}});
     fireEvent.click(screen.getByText("保存修改"));
     await waitFor(()=>expect(mockClient.updateScheduledJob).toHaveBeenCalled());
-    expect(mockClient.updateScheduledJob.mock.calls[0]![0]).toMatchObject({body:{schedule:"0 */2 * * *",target:{externalSourceId:"ext-1",operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:false,content:true}}}}});
+    expect(mockClient.updateScheduledJob.mock.calls[0]![0]).toMatchObject({body:{schedule:"0 */6 * * *",target:{externalSourceId:"ext-1",__skipHeavyBackfill:true}}});
   });
 
   it("内容雷达可编辑频率，保存不修改系统目标", async () => {
@@ -150,7 +174,7 @@ describe("T-248 — 任务编辑弹窗", () => {
     expect(
       dialog.querySelector('[data-slot="automation-field-source-readonly"]')
         ?.textContent,
-    ).toContain("自己作品");
+    ).toContain("作品数据");
     expect(
       dialog.querySelector('[data-slot="automation-field-source"]'),
     ).toBeNull();
@@ -291,7 +315,7 @@ describe("T-248 — 模板死分支删除(D8a 已翻真)", () => {
     const cards = Array.from(
       document.querySelectorAll('[data-slot="automation-template-card"]'),
     ) as HTMLButtonElement[];
-    expect(cards.length).toBe(2);
+    expect(cards.length).toBe(3);
     for (const card of cards) {
       expect(card.disabled).toBe(false);
       expect(card.hasAttribute("data-disabled")).toBe(false);

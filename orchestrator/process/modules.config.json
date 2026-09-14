@@ -18,6 +18,17 @@
     ]
   },
   "modules": {
+    "T-983": {
+      "task_id": "T-983",
+      "archetype": ["orchestration"],
+      "tasks": ["review", "implementation"],
+      "read_set": ["docs/features/t983-separate-collection.md", "docs/verification/t982-collection-logs.md", "backend/**", "contract/**", "frontend/src/features/automations/**", "frontend/src/server/**", "ai-worker/src/runtime/browser/**"],
+      "write_set": ["docs/features/t983-separate-collection.md", "docs/verification/t983-collection-split.md", "backend/drizzle/**", "backend/src/modules/scheduling/**", "backend/src/modules/ai-runtime/**", "backend/src/modules/analytics/sync-policy.ts", "backend/src/modules/execution/**", "backend/src/application/scheduling/**", "backend/src/application/collection/**", "contract/src/internal/execution-worker.ts", "frontend/src/features/automations/**", "frontend/src/server/**", "ai-worker/src/runtime/browser/**", "orchestrator/DECISION_LOG.md", "orchestrator/LESSON_LEDGER.md"],
+      "verify_commands": {
+        "review": "git diff --check",
+        "implementation": "pnpm -C backend exec vitest run src/modules/scheduling/separate-collection-migration.test.ts src/modules/scheduling/collection-run-state.service.test.ts src/modules/ai-runtime/collection-bootstrap.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000"
+      }
+    },
     "T-915": {
       "task_id": "T-915",
       "archetype": [

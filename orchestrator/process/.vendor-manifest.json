@@ -1,6 +1,6 @@
 {
   "schema": "orchestrator-engine-vendor/v1",
-  "skill_version": "3.27.1",
+  "skill_version": "3.27.2",
   "files": {
     "anti-check.mjs": "96ffbbace4cdf3645643b8847d3e953c3a97e6b2c8e0cf1b9db1921ad8f415b8",
     "asset-check.config.example.json": "9f2309013bfe95b9960b891ccd74c40571645f0166c43d3b788c9b07bc4d54bc",

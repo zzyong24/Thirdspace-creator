@@ -161,6 +161,19 @@ describe("Windows 分支(platform=win32)", () => {
     stop();
   });
 
+  it('Windows停机哨兵等待自建浏览器关闭及租约释放，再flush和退出',async()=>{
+    const {createBrowserHostDisposer}=await import('./browser-host-dispose');
+    const {createBrowserShutdownScope}=await import('../../../ai-worker/src/runtime/browser/browser-shutdown-scope');
+    const {guardedLaunch}=await import('../../../ai-worker/src/runtime/browser/chromium-guard');
+    const scope=createBrowserShutdownScope(),events:string[]=[];let release!:()=>void;
+    const lease=new Promise<void>(resolve=>release=resolve),proc=makeProc(100,{platform:'win32'});
+    await guardedLaunch('/windows-shutdown/owned',async()=>({close:async()=>{events.push('browser');}}),{shutdownScope:scope,onStopped:async()=>{await lease;events.push('lease');}},{listProfileProcesses:async()=>[],killPid:async()=>{},removeFile:async()=>{}});
+    (globalThis as {__creatorosDisposePersistence?:()=>Promise<void>}).__creatorosDisposePersistence=createBrowserHostDisposer({browser:scope,stopWorkers:async()=>{},disposeDatabase:async()=>{events.push('database');}});
+    const stop=installSidecarLifecycle(proc,()=>{});proc.stdinHandlers.get('data')!(Buffer.from(`${SHUTDOWN_SENTINEL}\n`));
+    await vi.waitFor(()=>expect(events).toContain('browser'));expect(events).not.toContain('database');expect(proc.exited).toEqual([]);
+    release();await vi.waitFor(()=>expect(proc.exited).toEqual([0]));expect(events).toEqual(['browser','lease','database']);expect(proc.killed).toEqual([]);stop();
+  });
+
   it("stdin 普通数据(非哨兵)不触发退出", async () => {
     const proc = makeProc(100, { platform: "win32" });
     const stop = installSidecarLifecycle(proc, () => {});

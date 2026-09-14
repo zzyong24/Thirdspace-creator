@@ -156,7 +156,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     expect(screen.getByText("每天抓我的主页指标")).toBeInTheDocument();
     expect(screen.getByText("抓评论")).toBeInTheDocument();
     // source_kind 中文映射
-    expect(screen.getAllByText("自己作品").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("作品数据").length).toBeGreaterThan(0);
     expect(screen.getAllByText("评论").length).toBeGreaterThan(0);
     // 列表页把 `0 9 * * *` 反解成友好中文「每天 09:00」—— 不露裸 cron
     expect(screen.getAllByText("每天 09:00").length).toBeGreaterThan(0);
@@ -376,7 +376,7 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
       screen.getByPlaceholderText(/每天抓我主页的新作品/),
       { target: { value: "每天抓我主页的新作品指标" } },
     );
-    expect(screen.queryByPlaceholderText(/externalSourceId/)).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/externalSourceId/)).toBeInTheDocument();
     fireEvent.click(screen.getByText("创建任务"));
     await waitFor(() => expect(onCreate).toHaveBeenCalledTimes(1));
     const arg = onCreate.mock.calls[0]![0] as unknown as {
@@ -391,7 +391,7 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
     // 默认频率(每天 09:00)编译成 cron —— UI 从不出现裸 cron,提交时才编译。
     expect(arg.schedule).toBe("0 */2 * * *");
     expect(arg.prompt).toBe("每天抓我主页的新作品指标");
-    expect(arg.target).toEqual({ operationsSync:{version:1,capabilities:{metrics:true,comments:true,traffic:true,content:true}} });
+    expect(arg.target).toEqual({});
   });
 
   it("弹窗不出现裸 cron 输入框,而是友好频率控件", () => {
@@ -402,8 +402,8 @@ describe("CreateJobDialog — 新建表单组装(友好频率 + 自然语言 pro
     ).toBeNull();
     expect(screen.queryByPlaceholderText(/0 9 \* \* \*/)).not.toBeInTheDocument();
     expect(screen.queryByText(/cron/i)).not.toBeInTheDocument();
-    expect(screen.getByText("按作品发布时间自动更新")).toBeInTheDocument();
-    expect(screen.getAllByRole("switch")).toHaveLength(4);
+    expect(screen.getByText("频率")).toBeInTheDocument();
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
   });
 
   it("切到「按间隔 · 每 6 小时」→ onCreate 收到 `0 */6 * * *`", async () => {
@@ -482,12 +482,12 @@ describe("TemplateCards — 从模板入手", () => {
     const onPick = vi.fn();
     render(<TemplateCards onPick={onPick} />);
     expect(screen.getByText("快速创建")).toBeInTheDocument();
-    expect(screen.getByText("作品自动同步")).toBeInTheDocument();
-    expect(screen.getByText("作品自动同步")).toBeInTheDocument();
-    // 点“作品自动同步”模板卡
+    expect(screen.getByText("作品数据同步")).toBeInTheDocument();
+    expect(screen.getByText("作品数据同步")).toBeInTheDocument();
+    // 点“作品数据同步”模板卡
     fireEvent.click(
       screen
-        .getByText("作品自动同步")
+        .getByText("作品数据同步")
         .closest("button") as HTMLButtonElement,
     );
     expect(onPick).toHaveBeenCalledTimes(1);
@@ -628,7 +628,7 @@ describe("AutomationsIsland — 新建接线", () => {
     );
     fireEvent.click(
       screen
-        .getByText("作品自动同步")
+        .getByText("作品数据同步")
         .closest("button") as HTMLButtonElement,
     );
     // 给微任务队列一拍:无 create、无 setEnabled(只定位既有行)。
@@ -637,12 +637,12 @@ describe("AutomationsIsland — 新建接线", () => {
     expect(mockClient.setScheduledJobEnabled).not.toHaveBeenCalled();
   });
 
-  it("点模板卡“作品自动同步”→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {
+  it("点模板卡“作品评论同步”→ 弹窗预填并可直接创建(sourceKind=comments)", async () => {
     render(<AutomationsIsland jobs={[]} />);
     // 点模板卡(TemplateCards 在列表页顶部)
     fireEvent.click(
       screen
-        .getByText("作品自动同步")
+        .getByText("作品评论同步")
         .closest("button") as HTMLButtonElement,
     );
     // 弹窗预填了 name/prompt
@@ -653,7 +653,7 @@ describe("AutomationsIsland — 新建接线", () => {
             "例:每天抓我的主页指标",
           ) as HTMLInputElement
         ).value,
-      ).toBe("作品自动同步"),
+      ).toBe("作品评论同步"),
     );
     fireEvent.click(screen.getByText("创建任务"));
     await waitFor(() =>
@@ -662,7 +662,7 @@ describe("AutomationsIsland — 新建接线", () => {
     const arg = mockClient.createScheduledJob.mock.calls[0]![0] as unknown as {
       body: { sourceKind: string; schedule: string; prompt: string };
     };
-    expect(arg.body.sourceKind).toBe("self.metrics");
+    expect(arg.body.sourceKind).toBe("comments");
     expect(arg.body.schedule).toBe("0 */2 * * *");
     expect(arg.body.prompt.length).toBeGreaterThan(0);
   });

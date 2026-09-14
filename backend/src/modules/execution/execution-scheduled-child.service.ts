@@ -57,7 +57,7 @@ export function createExecutionScheduledChildService(db:Db,deps:{now?:()=>string
 export async function findScheduledParent(tx:Parameters<Parameters<Db['transaction']>[0]>[0],child:Row):Promise<Row|undefined>{
  if(child.kind!=='ai_task')return undefined;
  const [ai]=await tx.select().from(aiTasks).where(eq(aiTasks.id,String(payload(child).aiTaskId??'')));
- if(!ai||!['scheduled.topic.daily','scheduled.benchmark','scheduled.self.detail','scheduled.self.metrics','scheduled.self.traffic','scheduled.favorites'].includes(ai.taskType))return undefined;
+ if(!ai||!['scheduled.topic.daily','scheduled.benchmark','scheduled.self.detail','scheduled.self.metrics','scheduled.self.traffic','scheduled.comments','scheduled.favorites'].includes(ai.taskType))return undefined;
  const input=payload(child).modelInput as {kind?:string;sourceKind?:string};
  if(ai.taskType!=='scheduled.topic.daily'&&(input?.kind!=='scheduled.flywheel'||ai.taskType!==`scheduled.${input.sourceKind}`))return undefined;
  if(ai.executionTaskId!==child.id||ai.userId!==child.userId||ai.accountId!==child.accountId)throw new ConflictError('每日子任务归属无效');

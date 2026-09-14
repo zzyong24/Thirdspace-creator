@@ -1,3 +1,4 @@
+import {isBrowserProfileBusy,BROWSER_PROFILE_RETRY_MS} from "../../modules/ai-runtime/scheduled-collection-runner";
 import {readAllPublicationPages} from './publication-pages';
 import type { RequestContext } from "@creatoros/contract";
 import type { Collector as ScheduledCollector } from "../../modules/ai-runtime";
@@ -17,7 +18,7 @@ analyticsService: Pick<ReturnType<typeof import("../../modules/analytics").creat
 readComments:(ctx:RequestContext,awemeId:string,options:CommentReadOptions)=>Promise<CommentRecord[]>;
 readCommentsForWorks:(ctx:RequestContext,awemeIds:string[],options:CommentReadOptions & {onWorkComplete:(work:{awemeId:string;records:CommentRecord[];complete?:boolean},progress:{processed:number;total:number})=>Promise<void>})=>Promise<{works:Array<{awemeId:string;records:CommentRecord[];complete?:boolean}>;truncated:boolean;cooldownRemainMs:number}>;}):ScheduledCollector {
 const {db,deps,checkScheduledSignal,ingestionService,candidateService,publishingService,analyticsService,readComments,readCommentsForWorks}=ports;
-return async (ctx, target, report) => {
+return async (ctx, target, report, execution) => {
       // [T-152] 阶段①:登录校验 + 确保采集源(抓评论前 fetchDouyinComments* 内先校验登录态)。
       report({ stage: "login", processed: 0, total: null, message: "校验抖音登录态" });
       const externalSourceId =
@@ -203,7 +204,12 @@ return async (ctx, target, report) => {
       }
       // [T-232] 顺序 = 未采优先(断点续采:上轮截断后下轮自动从未采作品继续)→ 组内评论数
       //   降序(爆款优先)。已采作品排后,额度富余时增量补新评论(watermark early-break 保便宜)。
-      const awemeIds = orderCommentCollection(candidates);
+      const ordered = orderCommentCollection(candidates);
+      // 分批只限制本次占用资源，不限制任务总作品数；成功水位使下一批续采。
+      const awemeIds = execution ? ordered.slice(0,20) : ordered;
+      const batchIds=new Set(awemeIds);
+      const batchPubs=douyinPubs.filter(p=>batchIds.has(p.externalId!));
+      const hasMore=ordered.length>awemeIds.length;
       // 复用单 context 一次性抓完所有作品评论(未登录 → 一次性抛 DouyinNotLoggedInError,
       // runner catch → needs_reconnect),再逐作品 ingestComments 落库(落库逻辑不变)。
       // [gate-F7 插装点③④] creator-center:每作品 acquire 一次 + 作品内翻页每页 acquire(注真单例)。
@@ -242,12 +248,13 @@ return async (ctx, target, report) => {
         });
       } catch(error){
         checkScheduledSignal();
-        if(ports.sync)for(const pub of douyinPubs)if(!completedDuringRead.has(pub.externalId!))await ports.sync.settle(ctx,pub.id,"comments",{success:false,error:error instanceof Error?error.message:"评论同步失败"});
+        if(isBrowserProfileBusy(error))return {itemsNew:total,itemsUpdated:0,continueCollection:true,retryAfterMs:BROWSER_PROFILE_RETRY_MS,message:"浏览器正在使用，评论保留进度等待继续"};
+        if(ports.sync)for(const pub of batchPubs)if(!completedDuringRead.has(pub.externalId!))await ports.sync.settle(ctx,pub.id,"comments",{success:false,error:error instanceof Error?error.message:"评论同步失败"});
         throw error;
       }
       if(ports.sync){
         const completed=new Set(batch.works.filter(w=>w.complete!==false).map(w=>w.awemeId));
-        for(const pub of douyinPubs){
+        for(const pub of batchPubs){
           if(completedDuringRead.has(pub.externalId!))continue;
           // 截断可能落在当前作品内部，保留结果但不把部分评论误记整作品成功。
           await ports.sync.settle(ctx,pub.id,"comments",completed.has(pub.externalId!)?{success:true}:{success:false,error:"评论未完整读完，等待重试"});
@@ -267,6 +274,6 @@ return async (ctx, target, report) => {
         total: awemeIds.length,
         message: coverageMessage,
       });
-      return { itemsNew: total, itemsUpdated: 0, incomplete:batch.truncated||batch.works.some(w=>w.complete===false), message: coverageMessage };
+      return { itemsNew: total, itemsUpdated: 0, continueCollection:execution ? hasMore||batch.truncated : undefined, ...(execution&&batch.truncated&&batch.cooldownRemainMs>0?{retryAfterMs:Math.min(86_400_000,Math.max(2000,batch.cooldownRemainMs))}:{}), incomplete:batch.truncated||batch.works.some(w=>w.complete===false), message: coverageMessage };
     };
 }

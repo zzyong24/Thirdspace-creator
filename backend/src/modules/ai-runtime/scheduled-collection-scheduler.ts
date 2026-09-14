@@ -89,7 +89,9 @@ export interface TriggerDeps {
   //   号不存在 / 越权 / 查失败 → null（组合根用 .catch(()=>null) 兜底）。**未绑此端口 → 不查、保持原行为跑**
   //   （诚实降级：绝不因查号失败而误停已在跑的采集）。见 triggerScheduledJob 的 gate。
   /** 流量历史run复用前核对真实任务；失败读取不能推断为终态。 */
-  getTaskState?: (ctx:RequestContext,id:string)=>Promise<{status:string;executionTaskId?:string;runtimeStatus?:string}>;
+  getTaskState?: (ctx:RequestContext,id:string)=>Promise<{status:string;executionTaskId?:string;runtimeStatus?:string;inputData?:Record<string,unknown>|null}>;
+  /** 仅在识别到旧合并任务后按需读取真实计划；null代表原手动任务。 */
+  getRunScheduledFor?: (ctx:RequestContext,runId:string)=>Promise<string|null>;
   getAccountStatus?: (
     ctx: RequestContext,
     accountId: string,
@@ -181,7 +183,7 @@ export async function triggerScheduledJob(
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
-  const continuous=job.sourceKind === "self.traffic" || (job.sourceKind === "self.metrics" && typeof job.target.operationsSync === "object" && job.target.operationsSync !== null);
+  const continuous=["self.traffic","self.metrics","comments","self.detail"].includes(job.sourceKind);
 
   // [T-200 → T-332 S2] 采集 runtime ctx:userId 保持调用方(cron=canonical / bind/runNow=请求
   //   user,均正确),accountId 由 job.account_id 派生(ISO-06)—— cron 系统 ctx 无 accountId,
@@ -217,12 +219,36 @@ export async function triggerScheduledJob(
     limit: 20,
     offset: 0,
   });
+  const taskStates=new Map<string,Awaited<ReturnType<NonNullable<TriggerDeps['getTaskState']>>>>();
+  const readTaskState=async(id:string)=>{
+    const cached=taskStates.get(id);if(cached)return cached;
+    const state=await deps.getTaskState!(collectionCtx,id);taskStates.set(id,state);return state;
+  };
+  const distinctCombinedRuns=new Set<string>();
+  const plannedAt=options?.scheduledFor===undefined?NaN:Date.parse(options.scheduledFor);
+  // SEMANTIC_BOUNDARY_ALLOW: 仅核对已冻结协议版本和真实计划时刻，不判断内容或改旧任务状态。
+  if(continuous&&job.target.collectionSplitVersion===1&&job.target.operationsSync===undefined&&Number.isFinite(plannedAt)&&deps.getTaskState&&deps.getRunScheduledFor){
+    for(const candidate of recent.rows){
+      if(!candidate.aiTaskId)continue;
+      const state=await readTaskState(candidate.aiTaskId),target=state.inputData?.target;
+      if(!target||typeof target!=='object'||Array.isArray(target))continue;
+      const combined=(target as Record<string,unknown>).operationsSync;
+      if(!combined||typeof combined!=='object'||Array.isArray(combined)||(combined as Record<string,unknown>).version!==1)continue;
+      const anchor=await deps.getRunScheduledFor(collectionCtx,candidate.id);
+      const previousAt=typeof anchor==='string'?Date.parse(anchor):NaN;
+      // 同一真实计划先于其它inflight命中；旧paused/unknown即使投影failed也不能重提。
+      if(Number.isFinite(previousAt)&&previousAt===plannedAt)return {jobRunId:candidate.id,aiTaskId:candidate.aiTaskId,deduped:true};
+      // 缺失端口/非法时刻不能推断成不同计划；null明确表示原手动运行。
+      if(anchor===null||Number.isFinite(previousAt))distinctCombinedRuns.add(candidate.id);
+    }
+  }
   let inflight: (typeof recent.rows)[number] | undefined;
   for(const candidate of recent.rows){
+    if(distinctCombinedRuns.has(candidate.id))continue;
     if(!(candidate.status==='running'||(continuous&&candidate.status==='needs_reconnect')))continue;
     if(!continuous && dayKeyOf(candidate.startedAt)!==today)continue;
     if(continuous && candidate.aiTaskId && deps.getTaskState){
-      const state=await deps.getTaskState(collectionCtx,candidate.aiTaskId);
+      const state=await readTaskState(candidate.aiTaskId);
       if(['failed','cancelled'].includes(state.status) && (!state.executionTaskId || ['failed','cancelled'].includes(state.runtimeStatus??''))){
         await deps.runs.updateRun(collectionCtx,candidate.id,{status:'failed',finishedAt:nowIso,error:'原采集任务已失败或取消，请查看原任务错误'});
         continue;
@@ -250,13 +276,13 @@ export async function triggerScheduledJob(
     // cron 用 scheduledFor 分钟锚；立即运行用本次 nowIso。相同计划重放仍命中同一 attempt。
     attemptId: scheduledAttemptId(
       job.id,
-      job.sourceKind === "self.traffic" ? trafficAnchor : options?.scheduledFor ?? nowIso,
+      options?.scheduledFor ?? (job.sourceKind === "self.traffic" ? trafficAnchor : nowIso),
     ),
     inputData: {
       idempotencyKey,
       jobId: job.id,
-      target: options?.skipHeavyBackfill ? {...job.target,__skipHeavyBackfill:true} : job.target,
-      ...(["topic.daily","self.metrics","self.traffic","self.detail","benchmark","favorites"].includes(job.sourceKind) ? {scheduledRun:{version:1,scheduledFor:job.sourceKind === "self.traffic" ? null : options?.scheduledFor ?? null}} : {}),
+      target: {...job.target,...(options?.skipHeavyBackfill?{__skipHeavyBackfill:true}:{}),...(job.sourceKind==='self.traffic'&&options?.scheduledFor?{__refreshDueTraffic:true}:{})},
+      ...(["topic.daily","self.metrics","self.traffic","self.detail","comments","benchmark","favorites"].includes(job.sourceKind) ? {scheduledRun:{version:1,scheduledFor:options?.scheduledFor ?? null}} : {}),
     },
   });
   if (task.status !== "queued" && task.status !== "running") {
@@ -271,7 +297,7 @@ export async function triggerScheduledJob(
     jobId: job.id,
     aiTaskId: task.id,
     status: "running",
-    scheduledFor: job.sourceKind === "self.traffic" ? null : options?.scheduledFor ?? null,
+    scheduledFor: options?.scheduledFor ?? null,
   });
 
   const dispatchInput = {

@@ -9,3 +9,8 @@ it('已迁移的旧同步隐藏，未迁移评论仍可管理，统一作业保�
  const html=renderToStaticMarkup(await AutomationsPage({jobs}));
  expect(html).toContain('unified');expect(html).toContain('legacy-comments');expect(html).not.toContain('merged-comments');expect(html).not.toContain('merged-traffic');
 });
+it('迁移后四类独立任务可见，仅显式内容补全detail可见，未知旧detail仍隐藏',async()=>{
+ const jobs=[{id:'metrics',sourceKind:'self.metrics',target:{}},{id:'comments',sourceKind:'comments',target:{}},{id:'traffic',sourceKind:'self.traffic',target:{}},{id:'backfill',sourceKind:'self.detail',target:{__backfillOnly:true}},{id:'old-detail',sourceKind:'self.detail',target:{}}] as ScheduledJobResource[];
+ const html=renderToStaticMarkup(await AutomationsPage({jobs}));
+ for(const id of ['metrics','comments','traffic','backfill'])expect(html).toContain(id);expect(html).not.toContain('old-detail');
+});

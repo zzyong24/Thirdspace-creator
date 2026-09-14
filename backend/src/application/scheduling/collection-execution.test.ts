@@ -12,7 +12,7 @@ function fixture(bound=false){
  scheduledFlywheel:{prepare:async()=>{scheduledFlywheelTaskInputSchema.parse({kind:'scheduled.flywheel',sourceKind:'self.traffic',jobId:'j',jobRunId:'r',target:{},skillSnapshot:null});throw new Error('unreachable');}},
  schedulingService:{getRun:vi.fn(async()=>({id:'r',aiTaskId:'t',jobId:'j',status:'running'})),updateRun},
  aiService:{getTask:async()=>({status,...(bound?{executionTaskId:'e'}:{})}),markFailed},
- deps:{now:()=> '2026-09-11T00:00:00.000Z'},enqueueCollectionRun:async(fn:()=>Promise<void>)=>fn(),wakeScheduledFlywheel:wake,prepareDailyTopic:async()=>({executionTaskId:'e'}),runTaskWithEffectiveSkillSnapshot:async()=>{},isNotLoggedInError:()=>false};
+ deps:{now:()=> '2026-09-11T00:00:00.000Z'},wakeScheduledFlywheel:wake,prepareDailyTopic:async()=>({executionTaskId:'e'}),runTaskWithEffectiveSkillSnapshot:async()=>{},isNotLoggedInError:()=>false};
  return {runner:createCollectionExecution(ports as unknown as Parameters<typeof createCollectionExecution>[0]),updateRun,markFailed,wake,ports};
 }
 it('公开dispatch的真实契约异常结算原task和run，并保留拒绝供入口显示',async()=>{
@@ -50,9 +50,9 @@ it('真实持久恢复入口：无内存jobRunId的prepare失败同步原run和�
   const ports={scheduledCollectors:{},scheduledSignals:new AsyncLocalStorage<AbortSignal>(),flywheelSourceKinds:new Set(['self.traffic']),scheduledFlywheel:service,schedulingService:scheduling,
    aiService:{getTask,markFailed:async()=>{await f.db.update(aiTasks).set({status:'failed'}).where(eq(aiTasks.id,'recover-task'));}},
    trafficQueue:{snapshot:async()=>{const rows=await queue.pending('u','a',20);await f.db.update(publicationTraffic).set({requestedAt:later}).where(eq(publicationTraffic.publicationId,'new'));return rows;},fail:async(_c:unknown,rows:Parameters<typeof queue.failPending>[2],message:string)=>queue.failPending('u','a',rows,stamp,message)},
-   deps:{now},enqueueCollectionRun:async(fn:()=>Promise<void>)=>fn(),wakeScheduledFlywheel:vi.fn(),prepareDailyTopic:async()=>({executionTaskId:'never'}),runTaskWithEffectiveSkillSnapshot:async()=>{},isNotLoggedInError:()=>false};
+   deps:{now},wakeScheduledFlywheel:vi.fn(),prepareDailyTopic:async()=>({executionTaskId:'never'}),runTaskWithEffectiveSkillSnapshot:async()=>{},isNotLoggedInError:()=>false};
   const execution=createCollectionExecution(ports as unknown as Parameters<typeof createCollectionExecution>[0]);
-  await expect(execution.recoverQueuedCollection()).rejects.toThrow('恢复准备失败');
+  await expect(execution.recoverQueuedCollection()).rejects.toThrow('部分旧采集任务未能恢复');
   expect(await getTask()).toMatchObject({status:'failed',executionTaskId:null});
   expect((await f.db.select().from(jobRuns).where(eq(jobRuns.id,run.id)))[0]).toMatchObject({status:'failed'});
   const rows=await queue.list('u','a',['old','new']);expect(rows.find(r=>r.publicationId==='old')).toMatchObject({status:'failed',data:savedData,capturedAt:stamp});expect(rows.find(r=>r.publicationId==='new')).toMatchObject({status:'pending',requestedAt:later});

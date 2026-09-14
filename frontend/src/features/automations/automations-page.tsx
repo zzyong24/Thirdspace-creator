@@ -67,10 +67,10 @@ export async function AutomationsPage({
       rows = [];
     }
   }
-  // T-600：旧 self.detail/benchmark/favorites 只保留数据库历史，不再作为独立任务展示。
+  // 旧 detail/benchmark/favorites 保留历史；显式后台内容补全作业可独立管理。
   rows = rows.filter(
     (job) =>
-      job.sourceKind !== "self.detail" &&
+      (job.sourceKind !== "self.detail" || (job.target as Record<string,unknown>)?.__backfillOnly===true) &&
       job.sourceKind !== "benchmark" &&
       job.sourceKind !== "favorites" &&
       !(job.target as Record<string, unknown>)?.mergedIntoSelfMetrics,

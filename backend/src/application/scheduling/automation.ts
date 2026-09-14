@@ -3,9 +3,10 @@ import {triggerScheduledJob,closeRunningJobRunOnError,createAutomationHandlerReg
 /** 自动化任务枚举、原运行对账与父子执行挂接；驱动仍复用唯一持久任务权威。 */
 export function createSchedulingAutomation(ports:{
   aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"listRunningTasksSystem"|"getTask"|"markFailed">;
-  schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun"|"listRunningRuns"|"listJobsSystem"|"listRunsByJob"|"getRun">;
+  schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"updateRun"|"listRunningRuns"|"listJobsSystem"|"listRunsByJob"|"getRun"|"getRunScheduledFor">;
   schedulerCtx:RequestContext;
   syncDailyExecutionRuns:ReturnType<typeof import("../../modules/scheduling").createDailyTopicRunService>["syncExecutionRuns"];
+  syncCollectionExecutionRuns:ReturnType<typeof import("../../modules/scheduling").createCollectionRunStateService>["syncExecutionRuns"];
   staleJobRunMs:number;
   deps:{now:()=>string};
   triggerDeps:TriggerDeps;
@@ -15,7 +16,7 @@ export function createSchedulingAutomation(ports:{
   scheduledChildren:Parameters<typeof startAutomationDriver>[0]["scheduledChildren"];
   wakeDelegated:()=>void;
 }){
-const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,staleJobRunMs,deps,triggerDeps,flywheelSourceKinds,dispatchScheduledCollection,persistentTaskService,scheduledChildren,wakeDelegated}=ports;
+const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncCollectionExecutionRuns,staleJobRunMs,deps,triggerDeps,flywheelSourceKinds,dispatchScheduledCollection,persistentTaskService,scheduledChildren,wakeDelegated}=ports;
   const sweepStaleJobRuns = async (): Promise<number> => {
     try {
       const activeTaskIds = new Set(
@@ -24,6 +25,9 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,staleJobR
       const dailySync=await syncDailyExecutionRuns(schedulerCtx);
       for(const id of dailySync.activeAiTaskIds)activeTaskIds.add(id);
       for(const item of dailySync.inconsistencies)console.error("[scheduler] 每日选题回执不一致",item);
+      const collectionSync=await syncCollectionExecutionRuns(schedulerCtx);
+      for(const id of collectionSync.activeAiTaskIds)activeTaskIds.add(id);
+      for(const item of collectionSync.inconsistencies)console.error("[scheduler] 采集运行回执不一致",item);
       return await sweepStaleRuns({
         runs: {
           // sweep 只用 updateRun；其余端口为窄接口占位。
@@ -105,8 +109,10 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,staleJobR
           triggerDeps,
           { scheduledFor: input.scheduledFor },
         );
-        if (result.skippedReason) throw new Error(result.skippedReason);
+        if (result.skippedReason) return;
         if(input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind)){
+          // 新计划撞上旧在途运行，只跳过；原计划恢复才允许挂接原子任务。
+          if(result.deduped && (await schedulingService.getRunScheduledFor(c,result.jobRunId))!==input.scheduledFor)return;
           const child=result.deduped
             ? await dispatchScheduledCollection(c,{id:result.aiTaskId,taskType:`scheduled.${input.job.sourceKind}`,inputData:{jobId:input.job.id,jobRunId:result.jobRunId,target:input.job.target}})
             : await result.completion;
@@ -142,7 +148,11 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,staleJobR
       } catch (error) {
         if((input.job.sourceKind==="topic.daily"||flywheelSourceKinds.has(input.job.sourceKind))&&result?.aiTaskId){
           const existing=await aiService.getTask(c,result.aiTaskId);
-          if(existing.executionTaskId)return {executionTaskId:existing.executionTaskId};
+          if(existing.executionTaskId){
+            const scheduledFor=await schedulingService.getRunScheduledFor(c,result.jobRunId);
+            if(scheduledFor!==input.scheduledFor)return;
+            return {executionTaskId:existing.executionTaskId};
+          }
           await aiService.markFailed(c,result.aiTaskId,error instanceof Error?error.message:String(error));
         }
         // runner 进入后会在 finally 自己收口；这里兜住“终态 task 无法 claim / snapshot

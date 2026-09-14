@@ -9,7 +9,7 @@ import { runDouyinHeavyBackfill } from "./douyin-heavy-backfill";
 
 /** 同账号公开作品采集：确认可见性后写入，再按原任务补齐封面和归因。 */
 export function createSelfCollector(ports:{
-sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle">;
+sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle"|"read">;
 resolvePublication?:(ctx:RequestContext,externalId:string)=>Promise<{id:string}|null>;
 projectsService: Pick<ReturnType<typeof import("../../modules/projects").createProjectsService>,"reconcilePlatformWork" | "listImportedWorks" | "getOutput">;
 publishingService: Pick<ReturnType<typeof import("../../modules/publishing").createPublishingService>,"getRecentPublicationsWithTitle" | "listPublicationsMissingCover" | "setCover">;
@@ -42,7 +42,160 @@ const {projectsService,publishingService,analyticsService,ingestionService,asset
 const readOutput = (ctx: RequestContext, id: string) => projectsService.getOutput(ctx, id);
 const recentVisibleCollections=new Map<string,{completedAtMs:number;result:Awaited<ReturnType<ScheduledCollector>>}>();
 const attributeCollectedWorks=createCollectedWorkAttribution({projectsService,publishingService,analyticsService,topicAttributionService,candidateService,learningsService,positioningService,models,assertAttributionConfigured,makeReviewSubjectReader,configuration});
+
+const runBackfill = async (ctx:RequestContext,report:Parameters<ScheduledCollector>[2],separate=false) => {
+  const contentPublicationByProject=new Map<string,string>();
+  return await runDouyinHeavyBackfill(
+        ctx,
+        {
+          // ── 封面回填 host ──────────────────────────────────────────────────
+          listPublicationsMissingCover: async (c, limit) => {
+            const rows=await publishingService.listPublicationsMissingCover(c,{platform:"douyin",limit:separate?2147483647:limit});
+            const due=[];
+            for(const p of rows){if(!separate||!ports.sync||await ports.sync.due(c,p.id,"cover"))due.push({id:p.id,externalId:p.externalId??null,contentOutputId:p.contentOutputId??null});if(due.length>=limit)break;}
+            return due;
+          },
+          onCoverSettled:separate&&ports.sync?(id,result)=>ports.sync!.settle(ctx,id,"cover",result):undefined,
+          // [T-862/gate-F7] 封面复用组合入口：匿名 iesdouyin 解析失败时才按当前账号
+          //   登录态回落 detail；网络/HTTP/冷却错误不双路重试。两条路继续走真网关单例。
+          fetchVideoUrl: async (awemeId) =>
+            readCover(ctx, awemeId),
+          downloadImage: (url) => downloadDouyinImage(url),
+          createImageAsset: (c, input) =>
+            assetsService.createGeneratedAsset(c, {
+              assetType: "image",
+              name: input.name,
+              bytes: input.bytes,
+              mimeType: input.mimeType,
+            }),
+          setCover: async (c, publicationId, coverAssetId) => {
+            await publishingService.setCover(c, publicationId, coverAssetId);
+          },
+          // [T-151 缺口 B] 封面绑作品所属项目:contentOutputId → getOutput().projectId →
+          //   materialLinksService().create(entityType='asset')。素材中心「按项目」可见该封面。
+          //   解析不到 project → 诚实跳过;建边失败由本 host 独立吞掉(封面已落是真的)。
+          bindCoverToProjectByOutput: async (c, { contentOutputId, coverAssetId }) => {
+            const output = await readOutput(c, contentOutputId);
+            const projectId = output.projectId;
+            if (!projectId) return;
+            await materialLinksService().create(c, {
+              projectId,
+              contentOutputId,
+              entityType: "asset",
+              entityId: coverAssetId,
+              role: "cover",
+              stage: "publishing",
+              addedByType: "ingestion",
+            });
+          },
+          // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
+          listImportedWorks: async(c) => {
+            const works=await projectsService.listImportedWorks(c);if(!ports.sync||!ports.resolvePublication)return works;
+            const due=[];for(const w of works){const p=await ports.resolvePublication(c,w.externalId);if(p){contentPublicationByProject.set(w.projectId,p.id);if(await ports.sync.due(c,p.id,"content"))due.push(w);}}
+            return due;
+          },
+          // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
+          //   ai.tasks.create → runTranscribe;直调 service 会死链)。
+          enqueueTranscribe: async (c, awemeIds) => {
+            try{await ai.request(
+              ENDPOINTS.createAITask,
+              {
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "transcribe.douyin",
+                  attemptId: createAiTaskAttemptId(),
+                  inputData: { awemeIds },
+                },
+              },
+              c,
+            );}catch(error){
+              checkScheduledSignal();
+              if(ports.sync&&ports.resolvePublication)for(const id of awemeIds){const p=await ports.resolvePublication(c,id);if(p)await ports.sync.settle(c,p.id,"content",{success:false,error:error instanceof Error?error.message:"视频内容同步未能启动"});}
+              throw error;
+            }
+          },
+          // 依赖闸：只有真实 ASR 逐字稿才允许重建；图集占位锚不能喂给重建模型。
+          hasReconstructableTranscript: async (c, projectId) => {
+            const rows = await artifactsService.listProjectArtifacts(c, projectId);
+            for (const row of rows) {
+              if (row.artifactType !== "output_script" || !row.currentVersionId) {
+                continue;
+              }
+              const versions = await artifactsService.listVersions(c, row.id);
+              const current = versions.find((v) => v.id === row.currentVersionId);
+              const data = current?.contentData as
+                | Record<string, unknown>
+                | null
+                | undefined;
+              if (
+                data?.source !== "image-album" &&
+                typeof data?.transcript === "string" &&
+                data.transcript.trim().length > 0
+              ) {
+                const pubId=contentPublicationByProject.get(projectId);
+                if(ports.sync&&pubId)await ports.sync.settle(c,pubId,"content",{success:true});
+                return true;
+              }
+            }
+            return false;
+          },
+          // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。
+          hasReconstructedArtifact: async (c, projectId) => {
+            const rows = await artifactsService.listProjectArtifacts(c, projectId);
+            return rows.some((r) => r.origin === "reconstructed");
+          },
+          // 重建:经 ai transport 的 ai.tasks.create 起 reconstruct.project(dispatch 链后台跑;
+          //   service 从 inputData.projectId 派生幂等键去重 IN-FLIGHT 重复)。
+          enqueueReconstruct: async (c, projectId) => {
+            await ai.request(
+              ENDPOINTS.createAITask,
+              {
+                params: undefined,
+                query: undefined,
+                body: {
+                  taskType: "reconstruct.project",
+                  attemptId: createAiTaskAttemptId(),
+                  inputData: { projectId },
+                },
+              },
+              c,
+            );
+          },
+        },
+        {
+          checkSignal:checkScheduledSignal,
+          coverLimit: separate?Math.min(10,Math.max(1,resolveCoverBackfillLimit())):resolveCoverBackfillLimit(),
+          transcribeBatchLimit: (() => {
+            const raw = Number(
+              configuration.CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT,
+            );
+            return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 5;
+          })(),
+          // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
+          onCoverProgress: (doneN, totalN) =>
+            report({
+              stage: "cover_backfill",
+              processed: doneN,
+              total: totalN,
+              message: `回填封面 ${doneN}/${totalN}`,
+            }),
+        },
+      );
+};
 return async (ctx, target, report) => {
+      if(target.__backfillOnly===true){
+        checkScheduledSignal();
+        const heavy=await runBackfill(ctx,report,true);
+        const remaining=await publishingService.listPublicationsMissingCover(ctx,{platform:"douyin",limit:2147483647});
+        let retryAt=Infinity;
+        for(const p of remaining){
+          if(!ports.sync||await ports.sync.due(ctx,p.id,"cover")){retryAt=Date.parse(now())+2000;break;}
+          const state=await ports.sync.read(ctx,p.id,"cover");const at=Date.parse(state?.retryAt??'');if(Number.isFinite(at))retryAt=Math.min(retryAt,at);
+        }
+        return {itemsNew:0,itemsUpdated:heavy.coversFilled,continueCollection:remaining.length>0,...(remaining.length?{retryAfterMs:Number.isFinite(retryAt)?Math.max(2000,retryAt-Date.parse(now())):60000}:{}),message:remaining.length?`已保存本批封面，剩余 ${remaining.length} 条等待继续`:"封面与内容补全本批已处理"};
+      }
+
       const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}:${target.__skipHeavyBackfill===true}:${target.__skipMetricRefresh===true}`;
       const cached = recentVisibleCollections.get(collectionCacheKey);
       if (cached && Date.now() - cached.completedAtMs < 30 * 60_000) {
@@ -78,7 +231,6 @@ return async (ctx, target, report) => {
       //   rethrow,让控制流继续到下方 runDouyinHeavyBackfill(封面回填不依赖导出结果,§④修点 A)。
       let trafficVisibleIds=new Set<string>();
       const attemptedMetricIds:string[]=[];
-      const contentPublicationByProject=new Map<string,string>();
       let detailWritten = 0;
       let metricsWritten = 0;
       try {
@@ -340,146 +492,7 @@ return async (ctx, target, report) => {
       const heavy = (target as { __skipHeavyBackfill?: boolean })
         .__skipHeavyBackfill
         ? { coversFilled: 0 }
-        : await runDouyinHeavyBackfill(
-        ctx,
-        {
-          // ── 封面回填 host ──────────────────────────────────────────────────
-          listPublicationsMissingCover: async (c, limit) =>
-            (
-              await publishingService.listPublicationsMissingCover(c, {
-                platform: "douyin",
-                limit,
-              })
-            ).map((p) => ({
-              id: p.id,
-              externalId: p.externalId ?? null,
-              contentOutputId: p.contentOutputId ?? null,
-            })),
-          // [T-862/gate-F7] 封面复用组合入口：匿名 iesdouyin 解析失败时才按当前账号
-          //   登录态回落 detail；网络/HTTP/冷却错误不双路重试。两条路继续走真网关单例。
-          fetchVideoUrl: async (awemeId) =>
-            readCover(ctx, awemeId),
-          downloadImage: (url) => downloadDouyinImage(url),
-          createImageAsset: (c, input) =>
-            assetsService.createGeneratedAsset(c, {
-              assetType: "image",
-              name: input.name,
-              bytes: input.bytes,
-              mimeType: input.mimeType,
-            }),
-          setCover: async (c, publicationId, coverAssetId) => {
-            await publishingService.setCover(c, publicationId, coverAssetId);
-          },
-          // [T-151 缺口 B] 封面绑作品所属项目:contentOutputId → getOutput().projectId →
-          //   materialLinksService().create(entityType='asset')。素材中心「按项目」可见该封面。
-          //   解析不到 project → 诚实跳过;建边失败由本 host 独立吞掉(封面已落是真的)。
-          bindCoverToProjectByOutput: async (c, { contentOutputId, coverAssetId }) => {
-            const output = await readOutput(c, contentOutputId);
-            const projectId = output.projectId;
-            if (!projectId) return;
-            await materialLinksService().create(c, {
-              projectId,
-              contentOutputId,
-              entityType: "asset",
-              entityId: coverAssetId,
-              role: "cover",
-              stage: "publishing",
-              addedByType: "ingestion",
-            });
-          },
-          // ── 逐字稿 + 重建排队 host ─────────────────────────────────────────
-          listImportedWorks: async(c) => {
-            const works=await projectsService.listImportedWorks(c);if(!ports.sync||!ports.resolvePublication)return works;
-            const due=[];for(const w of works){const p=await ports.resolvePublication(c,w.externalId);if(p){contentPublicationByProject.set(w.projectId,p.id);if(await ports.sync.due(c,p.id,"content"))due.push(w);}}
-            return due;
-          },
-          // 逐字稿:一批 awemeId 经 ai transport 排一个 transcribe.douyin(dispatch 链拦
-          //   ai.tasks.create → runTranscribe;直调 service 会死链)。
-          enqueueTranscribe: async (c, awemeIds) => {
-            try{await ai.request(
-              ENDPOINTS.createAITask,
-              {
-                params: undefined,
-                query: undefined,
-                body: {
-                  taskType: "transcribe.douyin",
-                  attemptId: createAiTaskAttemptId(),
-                  inputData: { awemeIds },
-                },
-              },
-              c,
-            );}catch(error){
-              checkScheduledSignal();
-              if(ports.sync&&ports.resolvePublication)for(const id of awemeIds){const p=await ports.resolvePublication(c,id);if(p)await ports.sync.settle(c,p.id,"content",{success:false,error:error instanceof Error?error.message:"视频内容同步未能启动"});}
-              throw error;
-            }
-          },
-          // 依赖闸：只有真实 ASR 逐字稿才允许重建；图集占位锚不能喂给重建模型。
-          hasReconstructableTranscript: async (c, projectId) => {
-            const rows = await artifactsService.listProjectArtifacts(c, projectId);
-            for (const row of rows) {
-              if (row.artifactType !== "output_script" || !row.currentVersionId) {
-                continue;
-              }
-              const versions = await artifactsService.listVersions(c, row.id);
-              const current = versions.find((v) => v.id === row.currentVersionId);
-              const data = current?.contentData as
-                | Record<string, unknown>
-                | null
-                | undefined;
-              if (
-                data?.source !== "image-album" &&
-                typeof data?.transcript === "string" &&
-                data.transcript.trim().length > 0
-              ) {
-                const pubId=contentPublicationByProject.get(projectId);
-                if(ports.sync&&pubId)await ports.sync.settle(c,pubId,"content",{success:true});
-                return true;
-              }
-            }
-            return false;
-          },
-          // 闸:该项目是否已有 origin='reconstructed' 的 artifact(重建过了不重跑)。
-          hasReconstructedArtifact: async (c, projectId) => {
-            const rows = await artifactsService.listProjectArtifacts(c, projectId);
-            return rows.some((r) => r.origin === "reconstructed");
-          },
-          // 重建:经 ai transport 的 ai.tasks.create 起 reconstruct.project(dispatch 链后台跑;
-          //   service 从 inputData.projectId 派生幂等键去重 IN-FLIGHT 重复)。
-          enqueueReconstruct: async (c, projectId) => {
-            await ai.request(
-              ENDPOINTS.createAITask,
-              {
-                params: undefined,
-                query: undefined,
-                body: {
-                  taskType: "reconstruct.project",
-                  attemptId: createAiTaskAttemptId(),
-                  inputData: { projectId },
-                },
-              },
-              c,
-            );
-          },
-        },
-        {
-          coverLimit: resolveCoverBackfillLimit(),
-          transcribeBatchLimit: (() => {
-            const raw = Number(
-              configuration.CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT,
-            );
-            return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 5;
-          })(),
-          // [T-152] 封面回填阶段逐条上报进度(M/N;runner 节流到每 ~1.5s 写一次库)。
-          onCoverProgress: (doneN, totalN) =>
-            report({
-              stage: "cover_backfill",
-              processed: doneN,
-              total: totalN,
-              message: `回填封面 ${doneN}/${totalN}`,
-            }),
-        },
-      );
+        : await runBackfill(ctx,report);
       // 6) [T-235d/T-513] 明细落库后 **best-effort** 触发正向归因回流；必须 await 到当前
       //    scheduled task 的 snapshot/lease 内（失败仍 catch，不把采集主结果改成失败）：
       //    对「有新指标 + 有真逐字稿 + 未归因」
@@ -488,7 +501,7 @@ return async (ctx, target, report) => {
       //    幂等锚 publication_id;未配文本模型 / 无稿 / 无指标各态诚实跳过(runner 内计数)。
       //    本轮 enqueueTranscribe 排的新逐字稿要到下一轮 self.detail 才可归因(异步,诚实滞后)。
       //    [gate-F1] 与 learnings 零接触:由发布实绩触发,独立表,不互相触发。
-      await attributeCollectedWorks(ctx).catch((err) => {
+      if(target.__skipHeavyBackfill!==true)await attributeCollectedWorks(ctx).catch((err) => {
         if(err instanceof ScheduledFlywheelSuspended)throw err;
         console.error(
           "[topic-attribution] 归因回流触发失败(best-effort,不影响明细采集):",

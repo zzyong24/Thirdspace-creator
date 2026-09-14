@@ -1073,3 +1073,4 @@
 {"ts":"2026-09-14T11:35:17.628Z","actor":"taskctl","action":"complete","task":"T-981","evidence":"按任务与SPEC提炼7组用户功能，内置image_gen生成并目检；性能独立重点卡，最终图docs/design/t981/creatoros-v1.2-upgrade.png，提示词与来源归档。仅营销图片不更改冻结代码。","sha_before":"f612215d6fbb","sha_after":"06000239e8ea"}
 {"ts":"2026-09-14T14:33:32.043Z","actor":"taskctl","action":"start","task":"T-982","sha_before":"3003286369b9","sha_after":"90c24af49e25"}
 {"ts":"2026-09-14T14:45:56.108Z","actor":"taskctl","action":"complete","task":"T-982","evidence":"五份解密日志与官方 CLI 原任务只读对照，见 docs/verification/t982-collection-logs.md；确认采集误判超时与旧任务恢复缺陷。仅诊断，未修复未重放；全局既有 T-916 欠债未纳入。","sha_before":"90c24af49e25","sha_after":"138249d3e198"}
+{"ts":"2026-09-14T14:49:12.976Z","actor":"taskctl","action":"start","task":"T-983","sha_before":"b628afa8c0fe","sha_after":"63657fa06628"}

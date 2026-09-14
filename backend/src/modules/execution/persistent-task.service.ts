@@ -115,6 +115,8 @@ export interface PersistentTaskService {
     kinds?: PersistentTaskKind[];
     executionMode?: "model.generate" | "model" | "agentic.run" | "chat.run" | "scheduled.flywheel" | "benchmark.transcribe";
     leaseSeconds?: number;
+    /** 仅 worker 内部入场协调：跳过本消费者正在执行的精确属主。 */
+    excludeAccounts?: ReadonlyArray<{userId:string;accountId:string}>;
   }): Promise<PersistentTaskClaim | null>;
   claimTask(input: {
     taskId: string;
@@ -572,6 +574,10 @@ export function createPersistentTaskService(
       if (input.kinds && input.kinds.length === 0) return null;
       return db.transaction(async (tx) => {
         const filters = [claimableAt(stamp)];
+        for(const owner of input.excludeAccounts??[]){
+          if(!owner.userId||!owner.accountId)throw new ExecutionValidationError("排除账号必须有完整属主");
+          filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${executionTasks.accountId} = ${owner.accountId})`);
+        }
         if (input.executionMode === "benchmark.transcribe") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'benchmark.transcribe'`);
         if (input.executionMode === "scheduled.flywheel") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'scheduled.flywheel'`);
         if (input.executionMode === "chat.run") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'chat.run'`);

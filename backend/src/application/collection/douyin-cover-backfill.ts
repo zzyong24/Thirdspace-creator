@@ -1,3 +1,4 @@
+import {isBrowserProfileBusy} from "../../modules/ai-runtime/scheduled-collection-runner";
 
 
 // 作品封面回填(T-078)。
@@ -44,6 +45,7 @@ export interface CoverBackfillResult {
 
 export interface CoverBackfillPorts {
   /** 缺封面候选集(host 绑 publishingService.listPublicationsMissingCover)。 */
+  onSettled?(publicationId:string,result:{success:true}|{success:false;error:string}):Promise<void>;
   listMissingCover(limit: number): Promise<MissingCoverPublication[]>;
   /** 封面组合解析(host 绑 fetchDouyinCoverUrl + 当前账号登录态 + 真限流网关)。 */
   fetchVideoUrl(awemeId: string): Promise<{ coverUrl?: string }>;
@@ -78,6 +80,7 @@ export async function backfillDouyinCovers(
   ports: CoverBackfillPorts,
   opts?: {
     limit?: number;
+    checkSignal?:()=>void;
     // [T-152] 逐封面进度回调(可选):每处理完一条作品调一次(done=已处理数,total=候选总数)。
     //   best-effort:回调抛错不阻断回填(内部吞)。用于采集器把封面回填阶段进度上报 job_run。
     onProgress?: (done: number, total: number) => void;
@@ -104,11 +107,13 @@ export async function backfillDouyinCovers(
   for (let index = 0; index < missing.length; index += 1) {
     const pub = missing[index]!;
     try {
+      opts?.checkSignal?.();
       const { coverUrl } = await ports.fetchVideoUrl(pub.externalId);
       if (!coverUrl) {
         // 分享页可解析但无 cover(图集等)—— 诚实跳过,下一轮还会是候选;
         // 不造占位 asset。
         result.skipped += 1;
+        await ports.onSettled?.(pub.publicationId,{success:false,error:"暂未获取到作品封面"});
       } else {
         const { bytes, mimeType } = await ports.downloadImage(coverUrl);
         const ext = mimeType.includes("png")
@@ -135,9 +140,11 @@ export async function backfillDouyinCovers(
             );
           }
         }
+        await ports.onSettled?.(pub.publicationId,{success:true});
         result.filled += 1;
       }
     } catch (err) {
+      opts?.checkSignal?.();
       if (err instanceof Error && err.name === "DouyinCooldownActiveError" && "remainMs" in err && typeof err.remainMs === "number") {
         // 共享网关已明确告诉我们本轮不可继续。当前项没有真正发出请求，连同剩余项
         // 一起留到下轮；继续循环只会放大日志、任务时长和 CPU/网络负载。
@@ -148,6 +155,8 @@ export async function backfillDouyinCovers(
         break;
       }
       // ③ 单作品降级:记日志继续,绝不抛出拖垮整批(整批的 best-effort 兜底在调用方)。
+      if(isBrowserProfileBusy(err))throw err;
+      await ports.onSettled?.(pub.publicationId,{success:false,error:err instanceof Error?err.message:"封面获取失败"});
       result.failed += 1;
       console.error(
         `[douyin-cover-backfill] 作品 ${pub.externalId} 封面回填失败:`,

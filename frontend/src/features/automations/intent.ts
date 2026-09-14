@@ -127,18 +127,19 @@ const CADENCE_DAILY_940: PeriodCadence = { ...CADENCE_DAILY_9, minute: 40 };
  * 用户可创建/调整的系统预设。内容雷达 `intelligence.sync` 由系统按账号幂等建立，
  * 不进入通用新建模板；旧 benchmark/favorites 已并入内容雷达来源，不再暴露第二入口。
  * 绑定 T-189a / 启动兜底 T-227 共用)一一对齐,让用户有「手动补建」这些定时采集 job 的入口。
- * `self.metrics/comments/topic.daily` 是用户可管理模板；`self.detail`、benchmark、favorites
- * 只保留历史枚举，均不再形成独立入口。
+ * `self.metrics/comments/topic.daily` 是普通创建模板；流量和内容补全由系统建立后编辑，
+ * 不通过新建表单授予系统任务创建权限。
  */
 export const COLLECTION_TEMPLATES: readonly CollectionTemplate[] = [
   {
     id: "daily-self-metrics",
-    title: "作品自动同步",
-    description: "合并更新指标、评论、流量来源与视频内容，按作品发布时间自动调整频率。",
+    title: "作品数据同步",
+    description: "优先更新已发布作品与表现数据，按作品发布时间增量同步。",
     sourceKind: "self.metrics",
-    prompt: "增量更新作品指标、评论、流量来源及缺失的视频内容",
+    prompt: "增量更新已发布作品和表现数据",
     cadence: { mode: "interval", unit: "hours", every: 2 },
   },
+  {id:"daily-comments",title:"作品评论同步",description:"在后台更新作品评论，为选题与复盘积累观众反馈。",sourceKind:"comments",prompt:"增量同步我的作品评论",cadence:{mode:"interval",unit:"hours",every:2}},
   {
     // [T-258/T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点)→ 护栏排序 → 候选落
     //   pool(防灌库 ≤N/天)。纯 AI + 库内数据,无 per-job target;未配文本模型时诚实跳过。错峰 9:40。

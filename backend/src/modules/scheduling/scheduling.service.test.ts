@@ -190,7 +190,7 @@ describe("scheduling service", () => {
     expect(updated).toMatchObject({
       name: "renamed",
       prompt: "去主页抓",
-      schedule: "0 */2 * * *",
+      schedule: "30 9 * * *",
       target: { externalSourceId: "src-9" },
       toolGrants: ["browser.navigate"],
       enabled: false,
@@ -334,5 +334,15 @@ describe("scheduling service", () => {
       "2026-06-21T09:00:00.000Z",
     );
     expect((await repo.getRun(manual.id)).scheduledFor).toBeNull();
+    expect(await svc.getRunScheduledFor(ctxA,anchored.id)).toBe("2026-06-21T09:00:00.000Z");
+    expect(await svc.getRunScheduledFor(ctxA,manual.id)).toBeNull();
+    expect(await svc.getRun(ctxA,anchored.id)).not.toHaveProperty('scheduledFor');
+    expect(await svc.getRun(ctxA,manual.id)).not.toHaveProperty('scheduledFor');
+    await expect(svc.getRunScheduledFor(ctxA2,anchored.id)).rejects.toBeInstanceOf(OwnershipError);
+    await expect(svc.getRunScheduledFor(ctxB,anchored.id)).rejects.toBeInstanceOf(OwnershipError);
+    // 沿用内部系统 sweep 的用户范围读取契约；指定账号的调用仍严格隔离。
+    expect(await svc.getRunScheduledFor({...ctxNoAcct,source:'ingestion'},anchored.id)).toBe("2026-06-21T09:00:00.000Z");
+    await expect(svc.getRunScheduledFor({...ctxB,accountId:undefined,source:'ingestion'},anchored.id)).rejects.toBeInstanceOf(OwnershipError);
+    await expect(svc.getRunScheduledFor(ctxA,'missing-run')).rejects.toBeInstanceOf(OwnershipError);
   });
 });

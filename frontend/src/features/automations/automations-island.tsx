@@ -106,8 +106,7 @@ import {
   COLLECTION_TEMPLATES,
 } from "./intent";
 
-// 用户可创建入口只覆盖 self.metrics/comments；self.detail 仅为历史详情兼容，
-// topic.daily 无 per-job target。其余历史 kind 不进入新建下拉。
+// 普通创建仅作品、评论和每日选题。流量与内容补全由系统补建，可编辑既有作业。
 const SOURCE_META: Partial<
   Record<
     SourceKind,
@@ -115,7 +114,7 @@ const SOURCE_META: Partial<
   >
 > = {
   "self.metrics": {
-    label: "自己作品",
+    label: "作品数据",
     icon: BarChart3,
     targetLabel: "作品来源标识",
     targetKey: "externalSourceId",
@@ -128,9 +127,9 @@ const SOURCE_META: Partial<
     targetKey: "awemeId",
     targetPlaceholder: "awemeId(要抓评论的作品 id)",
   },
-  // 历史 self.detail 行只用于旧运行详情兼容；页面入口已由 T-600 过滤。
+  // 仅 __backfillOnly 的新内容补全作业进入列表，未知旧 detail 行仍隐藏。
   "self.detail": {
-    label: "作品明细",
+    label: "封面与内容补全",
     icon: Gauge,
     targetLabel: "作品来源标识",
     targetKey: "externalSourceId",
@@ -144,7 +143,9 @@ const EXTRA_SOURCE_LABELS: Record<string, string> = {
   "topic.daily": "每日选题",
   favorites: "收藏夹跟拍",
   "intelligence.sync": "内容雷达",
+  "self.traffic": "流量来源",
 };
+const COLLECTION_PRIORITY_LABELS:Record<string,string>={"self.metrics":"作品优先","self.traffic":"流量其次",comments:"评论后台","self.detail":"封面与内容后台"};
 
 // [T-258] 登记源驱动源的模板卡图标(SOURCE_META 无 icon 时兜底,让 6 张卡视觉可辨)。
 const EXTRA_SOURCE_ICONS: Record<string, LucideIcon> = {
@@ -524,7 +525,7 @@ export function JobRow({
           <Clock className="size-3.5 text-muted-foreground" />
           {formatScheduleFriendly(job.schedule)}
         </span>
-        {job.sourceKind === "self.metrics" && (job.target as {operationsSync?:{version?:number}})?.operationsSync?.version === 1 ? <span className="text-[11px] text-muted-foreground">近 7 天：2 小时 · 7–30 天：6 小时<br/>30 天以上：每天；只更新到期内容</span> : null}
+        {COLLECTION_PRIORITY_LABELS[job.sourceKind] ? <><span className="text-[11px] font-medium text-brand">{COLLECTION_PRIORITY_LABELS[job.sourceKind]}</span><span className="text-[11px] text-muted-foreground">成功同步后，近 7 天每 2 小时更新<br/>7–30 天每 6 小时，30 天以上每天更新</span></> : null}
         <span
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
@@ -970,13 +971,11 @@ export function CreateJobDialog({
   const [name, setName] = React.useState("");
   const [prompt, setPrompt] = React.useState("");
   const [sourceKind, setSourceKind] = React.useState<SourceKind>("self.metrics");
-  const [cadence, setCadence] = React.useState<Cadence>({ ...DEFAULT_CADENCE });
+  const [cadence, setCadence] = React.useState<Cadence>({mode:"interval",unit:"hours",every:2});
   // T-248 编辑降级锁:job.schedule 反解失败时为 true —— 提示重选,重选前禁保存。
   const [cadenceUnresolved, setCadenceUnresolved] = React.useState(false);
   const [targetValue, setTargetValue] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
-  const [syncCapabilities, setSyncCapabilities] = React.useState({metrics:true,comments:true,traffic:true,content:true});
-  const unifiedSync = (isEdit ? job?.sourceKind === "self.metrics" && (job.target as {operationsSync?:{version?:number;capabilities?:Partial<Record<"metrics"|"comments"|"traffic"|"content",boolean>>}})?.operationsSync?.version === 1 : sourceKind === "self.metrics");
 
   const meta = SOURCE_META[sourceKind];
   // [T-258] target 字段可见性:仅「有 per-job 手动 target」的源(SOURCE_META 覆盖的 3 个)才显示。
@@ -984,9 +983,9 @@ export function CreateJobDialog({
   //   或下拉手动选)meta 缺 → 隐藏 target(它们无 per-job target,信号靠各自登记页配);
   //   edit 模式按被编辑作业的源是否在已知集合判(系统作业隐藏 target,提交不改 target)。
   const showTargetField = isEdit
-    ? !!(job && SOURCE_META[job.sourceKind as SourceKind])
-    : Boolean(meta);
-  const canSubmit = name.trim().length > 0 && !submitting && (unifiedSync || !cadenceUnresolved);
+    ? !!(job && ['self.metrics','comments'].includes(job.sourceKind))
+    : ['self.metrics','comments'].includes(sourceKind);
+  const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved && (isEdit||['self.metrics','comments','topic.daily'].includes(sourceKind));
 
   // 打开弹窗时应用一次预填(模板卡 / 空白新建 / 编辑预填)。open 由 false→true 触发。
   const prevOpenRef = React.useRef(false);
@@ -997,11 +996,9 @@ export function CreateJobDialog({
         // 降级:编辑器落回缺省值 + 标记 unresolved(UI 提示重选,重选前禁保存)。
         // eslint-disable-next-line react-hooks/set-state-in-effect -- 弹窗由关闭转打开时按外部 job/prefill 快照初始化表单
         setName(job.name);
-        const savedSync = (job.target as {operationsSync?:{version?:number;capabilities?:Partial<Record<"metrics"|"comments"|"traffic"|"content",boolean>>}})?.operationsSync?.capabilities;
-        setSyncCapabilities({metrics:savedSync?.metrics !== false,comments:savedSync?.comments !== false,traffic:savedSync?.traffic !== false,content:savedSync?.content !== false});
         setPrompt(job.prompt ?? "");
         const known = SOURCE_META[job.sourceKind as SourceKind];
-        setSourceKind(known ? (job.sourceKind as SourceKind) : "self.metrics");
+        setSourceKind(job.sourceKind as SourceKind);
         const parsed = compileCronToCadence(job.schedule);
         setCadence(parsed ?? { ...DEFAULT_CADENCE });
         setCadenceUnresolved(parsed == null);
@@ -1012,10 +1009,9 @@ export function CreateJobDialog({
       } else {
         // 新建:按 prefill 初始化(无 prefill = 空白)。
         setName(prefill?.name ?? "");
-        setSyncCapabilities({metrics:true,comments:true,traffic:true,content:true});
         setPrompt(prefill?.prompt ?? "");
         setSourceKind(prefill?.sourceKind ?? "self.metrics");
-        setCadence(prefill?.cadence ?? { ...DEFAULT_CADENCE });
+        setCadence(prefill?.cadence ?? {mode:"interval",unit:"hours",every:2});
         setCadenceUnresolved(false);
         setTargetValue("");
       }
@@ -1028,19 +1024,18 @@ export function CreateJobDialog({
     setSubmitting(true);
     try {
       // 友好频率 → cron(内部实现,不露用户)。
-      const schedule = unifiedSync ? "0 */2 * * *" : compileCadenceToCron(cadence);
+      const schedule = compileCadenceToCron(cadence);
       // target 按源装配:self.metrics → {externalSourceId?}, comments → {awemeId}。
       // 空值不塞 key(service default {}),让"抓主页全部"这类无参源保持干净。
       // 无 per-job target 的源(登记源驱动的 benchmark/topic.daily/favorites,或 edit 模式系统作业)
       // → target=undefined:create 时下游落 {},edit 时本次不改原 target。
-      let target: Record<string, unknown> | undefined;
+      let target: Record<string, unknown> | undefined = isEdit&&['self.metrics','self.traffic','comments','self.detail'].includes(sourceKind)?{...(job?.target??{})}:undefined;
       if (showTargetField && meta) {
         target = isEdit ? {...(job?.target ?? {})} : {};
         delete target[meta.targetKey];
         const trimmed = targetValue.trim();
         if (trimmed) target[meta.targetKey] = trimmed;
       }
-      if (unifiedSync) target = {...(target ?? job?.target ?? {}), operationsSync:{version:1,capabilities:syncCapabilities}};
       await onCreate({
         name: name.trim(),
         sourceKind,
@@ -1054,8 +1049,6 @@ export function CreateJobDialog({
     }
   }, [
     canSubmit,
-    unifiedSync,
-    syncCapabilities,
     job,
     cadence,
     targetValue,
@@ -1090,7 +1083,7 @@ export function CreateJobDialog({
             {isEdit ? "编辑采集任务" : "新建采集任务"}
           </DialogTitle>
           <DialogDescription>
-            {unifiedSync ? "选择要更新的内容，系统会按作品发布时间安排同步。" : "设置任务内容和执行时间，保存后按计划运行。"}
+            设置任务内容和执行时间，保存后按计划运行。
           </DialogDescription>
         </DialogHeader>
 
@@ -1150,7 +1143,8 @@ export function CreateJobDialog({
                 <SelectValue placeholder="选择抓取内容" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="self.metrics">作品自动同步</SelectItem>
+                <SelectItem value="self.metrics">作品数据同步</SelectItem>
+                <SelectItem value="comments">作品评论同步</SelectItem>
                 <SelectItem value="topic.daily">
                   每日自动选题(需配文本模型)
                 </SelectItem>
@@ -1160,11 +1154,7 @@ export function CreateJobDialog({
           </label>
           )}
 
-          {unifiedSync ? <div className="rounded-control border border-border bg-surface-subtle p-3 text-sm">
-            <p className="font-medium">按作品发布时间自动更新</p>
-            <p className="mt-1 text-xs text-muted-foreground">近 7 天每 2 小时 · 7–30 天每 6 小时 · 30 天以上每天。已有完整视频内容不重复提取。</p>
-            <div className="mt-3 grid grid-cols-2 gap-3">{([['metrics','作品指标'],['comments','评论'],['traffic','流量来源'],['content','视频内容']] as const).map(([key,label])=><label key={key} className="flex items-center justify-between gap-2 text-xs">{label}<Switch aria-label={`同步${label}`} checked={syncCapabilities[key]} onCheckedChange={checked=>setSyncCapabilities(current=>({...current,[key]:checked}))}/></label>)}</div>
-          </div> : <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">频率</span>
             <CadenceEditor
               cadence={cadence}
@@ -1185,10 +1175,9 @@ export function CreateJobDialog({
             ) : null}
           </div>
 
-          }
           {/* target(按源)。仅「有 per-job 手动 target」的源显示;登记源驱动源(benchmark/
               topic.daily/favorites)与 edit 模式系统作业 → 隐藏,不改 target。 */}
-          {showTargetField && !unifiedSync && meta ? (
+          {showTargetField && meta ? (
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-foreground">
                 {meta.targetLabel}

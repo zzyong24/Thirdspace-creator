@@ -605,16 +605,42 @@ export async function ensureChromiumInstalled(): Promise<void> {
 }
 
 // 用户 Chrome 不稳)。headless=false 用于扫码登录;true 用于复刷抓取。
-async function openContext(authDir: string, headless: boolean, signal?: AbortSignal) {
+type ReadBrowserSession = import('@creatoros/ai-worker/browser/shared-read-browser-session').ReadBrowserSession;
+type ExclusiveBrowserSession = import('@creatoros/ai-worker/browser/shared-read-browser-session').ExclusiveBrowserSession;
+const readSessionKey = Symbol.for('creatoros.douyinReadSessionPool');
+const readSessionRegistry = globalThis as typeof globalThis & {
+  [readSessionKey]?: Promise<ReturnType<typeof import('@creatoros/ai-worker/browser/shared-read-browser-session').createSharedReadBrowserSessionPool>>;
+};
+async function openContext(authDir: string, headless: false, signal?: AbortSignal): Promise<ExclusiveBrowserSession>;
+async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession>;
+async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession> {
   signal?.throwIfAborted();
-  const {acquireHostBrowserProfile}=await import('./host-browser-profile-lifecycle');
-  const {openDouyinProfileContext}=await import('@creatoros/ai-worker/browser/douyin-profile-context');
-  const lease=await acquireHostBrowserProfile(authDir,signal);
-  return openDouyinProfileContext(lease.authDir,headless,{signal,onStopped:lease.onStopped});
+  if (!readSessionRegistry[readSessionKey]) {
+    const pending = (async () => {
+      const { acquireHostBrowserProfile, resolveHostBrowserProfile } = await import('./host-browser-profile-lifecycle');
+      const { openDouyinProfileContext } = await import('@creatoros/ai-worker/browser/douyin-profile-context');
+      const { createSharedReadBrowserSessionPool } = await import('@creatoros/ai-worker/browser/shared-read-browser-session');
+      return createSharedReadBrowserSessionPool({
+        authorize: resolveHostBrowserProfile, open: async (identity, headless, hostSignal) => {
+          const lease = await acquireHostBrowserProfile(identity.authDir, hostSignal);
+          return openDouyinProfileContext(lease.authDir, headless, {
+            signal: hostSignal, onStopped: lease.onStopped
+          });
+        }
+      });
+    })();
+    readSessionRegistry[readSessionKey] = pending;
+    void pending.catch(() => {
+      if (readSessionRegistry[readSessionKey] === pending)
+        delete readSessionRegistry[readSessionKey];
+    });
+  }
+  const pool = await readSessionRegistry[readSessionKey]!;
+  return headless ? pool.checkoutRead(authDir, signal) : pool.checkoutExclusive(authDir, signal);
 }
 
 async function isLoggedIn(
-  ctx: import("@playwright/test").BrowserContext,
+  ctx: Pick<import("@playwright/test").BrowserContext,'cookies'>,
 ): Promise<boolean> {
   const cookies = await ctx.cookies(CREATOR_LOGIN_HOME);
   return cookies.some((c) => c.name === "sessionid" || c.name === "sessionid_ss");

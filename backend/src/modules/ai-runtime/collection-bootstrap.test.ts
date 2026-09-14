@@ -10,7 +10,7 @@ import {
 } from "./collection-bootstrap";
 import type { RequestContext } from "@creatoros/contract";
 
-// T-189a/T-600 —— 绑定抖音成功后幂等建立三个不重复的产品任务，
+// T-189a/T-600 —— 绑定抖音成功后幂等建立六个不重复的产品任务，
 //   按序初始化触发一次拉全量。纯编排 + 注入端口,零成本单测(不碰真抖音/不建真 job)。
 // [T-332 S2] claimOrphans/hasOtherActiveDouyinAccount(T-200/T-331)已全链退役(SPEC §4.4):
 //   绑定 = 只建号绑定 job + 初始化触发,零 claim;本文件的「绑定链零 claim」用例是该裁决的守护。
@@ -93,13 +93,16 @@ function makeDeps(
 }
 
 describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
-  it("① 全新绑定 → 建 3 个不重复的系统 job", async () => {
+  it("① 全新绑定 → 建 6 个不重复的系统 job", async () => {
     const deps = makeDeps();
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._createJob).toHaveBeenCalledTimes(3);
+    expect(deps._createJob).toHaveBeenCalledTimes(6);
     expect(res.created).toEqual([
       "self.metrics",
+      "self.traffic",
+      "comments",
+      "self.detail",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -124,6 +127,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const deps = makeDeps({
       "self.metrics": [{ id: "existing-metrics" }],
       comments: [{ id: "existing-comments" }],
+      "self.traffic": [{id: "existing-traffic"}],
+      "self.detail": [{id: "existing-detail"}],
       "topic.daily": [{ id: "existing-topic-daily" }],
       "intelligence.sync": [{ id: "existing-intelligence-sync" }],
     });
@@ -141,8 +146,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     });
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
 
-    expect(deps._createJob).toHaveBeenCalledTimes(2);
+    expect(deps._createJob).toHaveBeenCalledTimes(5);
     expect(res.created).toEqual([
+      "self.traffic",
+      "comments",
+      "self.detail",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -191,6 +199,9 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(ctx, deps);
     expect(res.created).toEqual([
       "self.metrics",
+      "self.traffic",
+      "comments",
+      "self.detail",
       "intelligence.sync",
     ]);
     expect(res.triggered).toEqual(["self.metrics"]);
@@ -226,11 +237,11 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const res = await bootstrapDouyinCollectionJobs(secondBindCtx, deps);
 
     // 二绑照常建 job + 触发(strict 门下 listJobs 只见 acct-2 的 job → 全量补建)。
-    expect(res.created).toHaveLength(3);
+    expect(res.created).toHaveLength(6);
     // 初始化只触发 canonical self.metrics。
     expect(res.triggered).toHaveLength(1);
-    expect(deps._listJobs).toHaveBeenCalledTimes(3);
-    expect(deps._createJob).toHaveBeenCalledTimes(3);
+    expect(deps._listJobs).toHaveBeenCalledTimes(6);
+    expect(deps._createJob).toHaveBeenCalledTimes(6);
     expect(deps._trigger).toHaveBeenCalledTimes(1);
   });
 
@@ -244,7 +255,7 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       ]),
     );
     expect(byKind.get("self.metrics")).toBe(true);
-    expect(byKind.has("comments")).toBe(false);
+    expect(byKind.get("comments")).toBe(true);
     expect(byKind.get("topic.daily")).toBe(false);
     expect(byKind.get("intelligence.sync")).toBe(true);
   });
@@ -256,9 +267,12 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
       comments: [{ id: "existing-comments", accountId: "acct-1" }],
     });
     const res = await ensureCollectionJobs(ctx, deps);
-    expect(res.created).toEqual(["topic.daily", "intelligence.sync"]);
+    expect(res.created).toEqual(["self.traffic", "self.detail", "topic.daily", "intelligence.sync"]);
     expect(res.jobsInOrder.map((j) => j.sourceKind)).toEqual([
       "self.metrics",
+      "self.traffic",
+      "comments",
+      "self.detail",
       "topic.daily",
       "intelligence.sync",
     ]);
@@ -267,6 +281,8 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     const deps2 = makeDeps({
       "self.metrics": [{ id: "j1" }],
       comments: [{ id: "j2" }],
+      "self.traffic": [{id: "j5"}],
+      "self.detail": [{id: "j6"}],
       "topic.daily": [{ id: "j3" }],
       "intelligence.sync": [{ id: "j4" }],
     });
@@ -275,9 +291,12 @@ describe("bootstrapDouyinCollectionJobs (T-189a)", () => {
     expect(deps2._createJob).not.toHaveBeenCalled();
   });
 
-  it("[T-600] 默认任务只保留三个不重复的产品语义", () => {
+  it("[T-600] 默认任务只保留六个不重复的产品语义", () => {
     expect(DAILY_COLLECTION_JOB_DEFAULTS.map((t) => t.sourceKind)).toEqual([
       "self.metrics",
+      "self.traffic",
+      "comments",
+      "self.detail",
       "topic.daily",
       "intelligence.sync",
     ]);

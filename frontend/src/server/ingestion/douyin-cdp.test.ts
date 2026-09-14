@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import type { ExclusiveBrowserSession } from "@creatoros/ai-worker/browser/shared-read-browser-session";
 import {
   parseWorkList,
   parseSelfIdentity,
@@ -116,7 +117,7 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
     >;
     const openContext: OpenContext = async (authDir) => {
       calls.authDirs.push(authDir);
-      return context as unknown as Awaited<ReturnType<OpenContext>>;
+      return context as unknown as ExclusiveBrowserSession;
     };
     return { calls, openContext };
   }
@@ -224,6 +225,7 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
       async cookies() {
         return [];
       },
+      async clearCookies() {},
       request: {
         async get() {
           throw new Error("session probe should not run without cookies");
@@ -237,7 +239,7 @@ describe("[T-567/T-571] 抖音重新登录以页面内服务端会话为准", ()
       NonNullable<Parameters<typeof loginDouyin>[1]>["openContext"]
     >;
     const openContext: OpenContext = async () =>
-      context as unknown as Awaited<ReturnType<OpenContext>>;
+      context as unknown as ExclusiveBrowserSession;
 
     await expect(
       loginDouyin(

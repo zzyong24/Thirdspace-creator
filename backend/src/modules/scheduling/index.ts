@@ -49,3 +49,4 @@ export {
 export {createDailyTopicRunService,type DailyTopicRunRef} from "./daily-topic-run.service";
 
 export {createDailyTopicRunIntentService} from "./daily-topic-run-intent.service";
+export {createCollectionRunStateService} from "./collection-run-state.service";

@@ -20,6 +20,8 @@
 // 横幅消失;linux 沙箱依赖 setuid helper,保留 Playwright 默认(禁用)不冒险。
 
 /** 浏览器启动失败(人话 message,直接可渲给用户)。 */
+import {hostBrowserShutdownScope,type BrowserShutdownScope} from './browser-shutdown-scope';
+
 export class BrowserLaunchError extends Error {
   readonly code?: string;
 
@@ -188,6 +190,8 @@ interface Closable {
 }
 
 export interface GuardedLaunchOptions {
+  /** 仅作用于当前宿主自建资源；测试可注入独立生命周期。 */
+  shutdownScope?: BrowserShutdownScope;
   /** 宿主预先持有的资源租约：仅实际停止后释放；失败时保持本地占用，可重试。 */
   onStopped?: () => Promise<void>;
   /** 取消排队或等待启动；已启动但尚未关闭的资源继续持有占用。 */
@@ -233,6 +237,13 @@ export async function guardedLaunch<T extends Closable>(
   opts: GuardedLaunchOptions = {},
   deps: ChromiumGuardDeps = {},
 ): Promise<T> {
+  const scope=opts.shutdownScope??hostBrowserShutdownScope;
+  const signal=opts.signal?AbortSignal.any([opts.signal,scope.signal]):scope.signal;
+  return scope.trackPending(runGuardedLaunch(profileDir,launch,{...opts,signal,shutdownScope:scope},deps));
+}
+
+async function runGuardedLaunch<T extends Closable>(profileDir:string|null,launch:()=>Promise<T>,opts:GuardedLaunchOptions,deps:ChromiumGuardDeps):Promise<T>{
+  const shutdownScope=opts.shutdownScope!;
   const timeoutMs = opts.timeoutMs ?? DEFAULT_LAUNCH_TIMEOUT_MS;
   const label = opts.label ?? "浏览器",signal=opts.signal;
   let resourceUnresolved=false;
@@ -248,15 +259,18 @@ export async function guardedLaunch<T extends Closable>(
     }
     return stopPending;
   };
+  let forgetCleanup:(()=>void)|undefined;
   const finishStopped = async (): Promise<void> => {
+    forgetCleanup??=shutdownScope.register(finishStopped);
     registerCleanup(finishStopped);
-    try { await notifyStopped(); releaseQueue(); }
+    try { await notifyStopped(); releaseQueue(); forgetCleanup(); }
     catch { registerCleanup(finishStopped); throw new BrowserCleanupPendingError(finishStopped); }
   };
   if (signal?.aborted) { await finishStopped(); signal.throwIfAborted(); }
   const track=(ctx:T):T=>{
     if(profileDir)liveContexts.set(profileDir,liveContextCount(profileDir)+1);
     let released=false;
+    let forgetContext=()=>{};
     let releasePending: Promise<void> | undefined;
     const release=(): Promise<void> => {
       if (released) return Promise.resolve();
@@ -265,6 +279,7 @@ export async function guardedLaunch<T extends Closable>(
           released=true;resourceUnresolved=false;
           if(profileDir)liveContexts.set(profileDir,Math.max(0,liveContextCount(profileDir)-1));
           releaseQueue();
+          forgetContext();
         });
         registerCleanup(release);
         void releasePending.catch(() => { releasePending = undefined; });
@@ -272,7 +287,13 @@ export async function guardedLaunch<T extends Closable>(
       return releasePending;
     };
     const close=ctx.close.bind(ctx);
-    ctx.close=async()=>{await close();await release();};
+    let closing:Promise<void>|undefined;
+    ctx.close=()=>{
+      if(released)return Promise.resolve();
+      if(!closing){closing=(async()=>{await close();await release();})();void closing.catch(()=>{closing=undefined;});}
+      return closing;
+    };
+    forgetContext=shutdownScope.register(()=>ctx.close());
     try{ctx.on?.('close',()=>{void release().catch(()=>{});});}catch{/* 无事件时以 close 成功作为关闭证据。 */}
     return ctx;
   };
@@ -284,6 +305,7 @@ export async function guardedLaunch<T extends Closable>(
     let onAbort:(()=>void)|undefined;
     resourceUnresolved=true;
     const launching=Promise.resolve().then(()=>{signal?.throwIfAborted();return launch();}).then(track,error=>{resourceUnresolved=false;throw error;});
+    shutdownScope.trackPending(launching);
     try{
       return await Promise.race([
         launching,

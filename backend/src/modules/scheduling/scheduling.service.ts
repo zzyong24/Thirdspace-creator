@@ -1,4 +1,3 @@
-import {operationsSyncSchema,DEFAULT_OPERATIONS_SYNC} from '@creatoros/contract';
 import { createScheduledRunIntentService } from "./daily-topic-run-intent.service";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
@@ -124,6 +123,8 @@ export interface SchedulingService {
     },
   ): Promise<JobRunResource>;
   getRun(ctx: RequestContext, runId: string): Promise<JobRunResource>;
+  /** 内部计划归属校验，读取持久scheduledFor，不依赖UI投影。 */
+  getRunScheduledFor(ctx:RequestContext,runId:string):Promise<string|null>;
   listRunsByJob(
     ctx: RequestContext,
     jobId: string,
@@ -142,6 +143,14 @@ export interface SchedulingService {
 export function createSchedulingService(deps: ServiceDeps): SchedulingService {
   const { db, now, nextId } = deps;
   const retiredSourceKinds = new Set(["self.detail", "benchmark", "favorites"]);
+  const splitKinds = new Set(["self.metrics","self.traffic","comments","self.detail"]);
+  const isBackfill=(sourceKind:string,target:Record<string,unknown>|null|undefined)=>sourceKind==='self.detail'&&target?.__backfillOnly===true;
+  const separateTarget=(sourceKind:string,raw:Record<string,unknown>|undefined)=>{
+    const target={...(raw??{})};delete target.operationsSync;delete target.mergedIntoSelfMetrics;
+    if(sourceKind==='self.metrics')return {...target,__skipHeavyBackfill:true,__operationsSync:true};
+    if(sourceKind==='self.detail')return {...target,__backfillOnly:true,__skipMetricRefresh:true,__operationsSync:true};
+    return target;
+  };
 
   function repoFor(ctx: RequestContext): SchedulingRepository {
     // [T-332 S2] accountId 透传进 repo(strict 双维门在 repo 内落地:用户路径未选号 → 抛
@@ -162,25 +171,25 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     },
 
     async createJob(ctx, input) {
-      if (retiredSourceKinds.has(input.sourceKind)) {
+      if (retiredSourceKinds.has(input.sourceKind)&&!(input.systemManaged===true&&isBackfill(input.sourceKind,input.target))) {
         throw new ValidationError(
           "该兼容任务已退役，请使用作品数据同步或内容雷达",
         );
       }
       if (
-        ["intelligence.sync","self.traffic"].includes(input.sourceKind) &&
+        ["intelligence.sync","self.traffic","self.detail"].includes(input.sourceKind) &&
         input.systemManaged !== true
       ) {
         throw new ValidationError(
-          "内容雷达自动同步由系统按账号管理，不能手动新建",
+          "该采集任务由系统按账号管理，不能手动新建",
         );
       }
       const row = await repoFor(ctx).createJob({
         name: input.name,
         prompt: input.prompt ?? "",
         sourceKind: input.sourceKind,
-        target: input.sourceKind === "self.metrics" ? {...(input.target??{}),operationsSync:operationsSyncSchema.parse(input.target?.operationsSync??DEFAULT_OPERATIONS_SYNC)} : input.target ?? {},
-        schedule: input.sourceKind === "self.metrics" ? "0 */2 * * *" : input.schedule,
+        target: splitKinds.has(input.sourceKind)?separateTarget(input.sourceKind,input.target):input.target??{},
+        schedule: input.schedule,
         toolGrants: input.toolGrants ?? [],
         // [T-359] 分层启用透传(缺省 undefined → repo 默认 true,旧调用方零变)。
         enabled: input.enabled,
@@ -202,7 +211,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
     async updateJob(ctx, jobId, patch) {
       const current = await repoFor(ctx).getJob(jobId);
       if ((current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中编辑对应能力");
-      if (retiredSourceKinds.has(current.sourceKind)) {
+      if (retiredSourceKinds.has(current.sourceKind)&&!isBackfill(current.sourceKind,current.target as Record<string,unknown>)) {
         throw new ValidationError("该兼容任务已退役，只保留历史记录");
       }
       if (
@@ -215,12 +224,12 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
           "内容雷达只能修改名称、描述、时间及启用状态，不能改变来源或工具授权",
         );
       }
-      if(current.sourceKind === "self.metrics" && patch.target?.operationsSync !== undefined)operationsSyncSchema.parse(patch.target.operationsSync);
+      if(isBackfill(current.sourceKind,current.target as Record<string,unknown>)&&patch.target!==undefined&&patch.target.__backfillOnly!==true)throw new ValidationError('内容补全任务不能更改采集类型');
       const row = await repoFor(ctx).updateJob(jobId, {
         name: patch.name,
         prompt: patch.prompt,
-        schedule: current.sourceKind === "self.metrics" ? "0 */2 * * *" : patch.schedule,
-        target: patch.target===undefined?undefined:current.sourceKind==="self.metrics"?{...patch.target,operationsSync:operationsSyncSchema.parse(patch.target.operationsSync??(current.target as Record<string,unknown>)?.operationsSync??DEFAULT_OPERATIONS_SYNC)}:patch.target,
+        schedule: patch.schedule,
+        target: patch.target===undefined?undefined:splitKinds.has(current.sourceKind)?separateTarget(current.sourceKind,patch.target):patch.target,
         toolGrants: patch.toolGrants,
         enabled: patch.enabled,
       });
@@ -232,7 +241,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
       if(enabled&&(current.target as Record<string,unknown>)?.mergedIntoSelfMetrics === true)throw new ValidationError("此任务已合并，请在作品自动同步中开启对应能力");
       if (enabled) {
         const current = await repoFor(ctx).getJob(jobId);
-        if (retiredSourceKinds.has(current.sourceKind)) {
+        if (retiredSourceKinds.has(current.sourceKind)&&!isBackfill(current.sourceKind,current.target as Record<string,unknown>)) {
           throw new ValidationError("该兼容任务已退役，不能重新启用");
         }
       }
@@ -257,6 +266,7 @@ export function createSchedulingService(deps: ServiceDeps): SchedulingService {
       return toJobRunDto(row);
     },
 
+    async getRunScheduledFor(ctx,runId){return (await repoFor(ctx).getRun(runId)).scheduledFor??null;},
     async getRun(ctx, runId) {
       return toJobRunDto(await repoFor(ctx).getRun(runId));
     },

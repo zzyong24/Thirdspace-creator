@@ -687,6 +687,13 @@
       "when": 1789257600002,
       "tag": "0097_onboarding_state",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1789344000000,
+      "tag": "0098_separate_collection_jobs",
+      "breakpoints": true
     }
   ]
 }

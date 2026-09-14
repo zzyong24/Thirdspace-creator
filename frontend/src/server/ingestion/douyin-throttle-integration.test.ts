@@ -16,8 +16,8 @@ import {
 } from "./douyin-request-gateway";
 
 // T-038b 限流网关集成冒烟测(确定性,注入 spy/instant gateway,不真抓、不起 Chromium)。
-// 覆盖 [gate-F7] 5 个插装点各调 acquire(正确 channel) + 结束 report + 错误→classify 映射 +
-// [gate-F5] dispatch 采集串行闸(concurrency 1)。全程用 spy gateway 记录调用序列(acquire=
+// 覆盖 [gate-F7] 5 个插装点各调 acquire(正确 channel) + 结束 report + 错误→classify 映射。
+// 账号并发由 backend 的真实队列与持久任务回归覆盖。全程用 spy gateway 记录调用序列(acquire=
 // 立即 resolve,不真等;既有 40 douyin-cdp 测不传 gateway → 用 instantNoopGateway,零回归)。
 
 // ── spy gateway:记录 acquire/report 调用序列(acquire 立即放行,不节流)────────────
@@ -696,71 +696,6 @@ function makeExportNeverDownloadNoToast() {
   const readFile = async () => new Uint8Array([0x50, 0x4b, 0x03, 0x04]);
   return { openContext, readFile };
 }
-
-// ── [gate-F5] dispatch 采集串行闸(concurrency 1)──────────────────────────────────
-// 复刻 persistence-client 的 module 级 collectionRunTail 串行闸模式:并发投 2 个采集 →
-// 断言第二个等第一个跑完才开始(同时只跑一个采集 job)。
-
-/** 与 persistence-client enqueueCollectionRun 同款:一条 promise 链尾,concurrency=1。 */
-function makeSerialGate() {
-  let tail: Promise<void> = Promise.resolve();
-  const enqueue = (run: () => Promise<void>): void => {
-    tail = tail.then(
-      () => run(),
-      () => run(),
-    );
-    tail = tail.catch(() => {});
-  };
-  return { enqueue };
-}
-
-describe("[gate-F5] dispatch 采集串行闸 concurrency=1", () => {
-  it("并发投 2 个采集 job → 第二个等第一个跑完(同时只跑一个)", async () => {
-    const { enqueue } = makeSerialGate();
-    const events: string[] = [];
-    let releaseFirst!: () => void;
-    const firstGate = new Promise<void>((r) => {
-      releaseFirst = r;
-    });
-
-    // job A:进入后挂起(等 releaseFirst),证明它"在跑"时 B 还没开始。
-    enqueue(async () => {
-      events.push("A:start");
-      await firstGate;
-      events.push("A:end");
-    });
-    // job B:紧接着投递。
-    enqueue(async () => {
-      events.push("B:start");
-      events.push("B:end");
-    });
-
-    // 让微任务推进:此刻 A 已 start 并挂起,B 绝不能 start(串行闸)。
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(events).toEqual(["A:start"]); // B 尚未开始 —— 串行闸挡住
-
-    // 放行 A → A 完成后 B 才开始。
-    releaseFirst();
-    // 等链尾结算(多轮 flush)。
-    for (let i = 0; i < 10; i++) await Promise.resolve();
-    expect(events).toEqual(["A:start", "A:end", "B:start", "B:end"]);
-  });
-
-  it("第一个 job 抛错也不堵死后续(链尾 catch 兜底)", async () => {
-    const { enqueue } = makeSerialGate();
-    const events: string[] = [];
-    enqueue(async () => {
-      events.push("A:throw");
-      throw new Error("A 采集失败");
-    });
-    enqueue(async () => {
-      events.push("B:ran"); // A 失败后 B 仍应跑(fire-and-forget 不堵死)
-    });
-    for (let i = 0; i < 10; i++) await Promise.resolve();
-    expect(events).toEqual(["A:throw", "B:ran"]);
-  });
-});
 
 // ── withDouyinChannel 直测(报告后仍抛 + instant no-op 不节流)────────────────────
 describe("withDouyinChannel 语义", () => {

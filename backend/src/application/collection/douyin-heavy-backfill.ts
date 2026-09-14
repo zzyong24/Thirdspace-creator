@@ -1,3 +1,4 @@
+import {isBrowserProfileBusy} from "../../modules/ai-runtime/scheduled-collection-runner";
 import type { RequestContext } from "@creatoros/contract";
 import { backfillDouyinCovers as realBackfillDouyinCovers, type CoverBackfillPorts } from "./douyin-cover-backfill";
 import { enqueueReconstructForImported as realEnqueueReconstructForImported, type ReconstructEnqueuePorts, type ImportedWork } from "./reconstruct-enqueue";
@@ -36,6 +37,7 @@ export interface HeavyBackfillPubRow {
  * 候选装配 / outputId→project 映射由本模块内部完成,host 只提供**原始**读写能力。
  */
 export interface DouyinHeavyBackfillHost {
+  onCoverSettled?(publicationId:string,result:{success:true}|{success:false;error:string}):Promise<void>;
   // ── 封面回填 ────────────────────────────────────────────────────────────
   /** 缺封面的已发布抖音 publication 原始行(host 绑 publishingService.listPublicationsMissingCover)。 */
   listPublicationsMissingCover(
@@ -87,6 +89,7 @@ export interface DouyinHeavyBackfillHost {
 }
 
 export interface DouyinHeavyBackfillOptions {
+  checkSignal?:()=>void;
   /** 每轮封面回填上限(host 从 env CREATOROS_COVER_BACKFILL_LIMIT 解析)。 */
   coverLimit: number;
   /** 封面回填逐条进度回调(host 绑 job_run 进度上报;best-effort,子 helper 内吞错)。 */
@@ -129,6 +132,7 @@ export async function runDouyinHeavyBackfill(
   // publicationId → contentOutputId 映射(listMissingCover 里填,bindCoverToProject 里消费)。
   const outputIdByPublication = new Map<string, string>();
   const coverPorts: CoverBackfillPorts = {
+    onSettled:host.onCoverSettled,
     listMissingCover: async (limit) =>
       (await host.listPublicationsMissingCover(ctx, limit))
         .filter((p) => typeof p.externalId === "string" && p.externalId)
@@ -154,6 +158,7 @@ export async function runDouyinHeavyBackfill(
   };
   try {
     const backfill = await impl.backfillDouyinCovers(coverPorts, {
+      checkSignal:opts.checkSignal,
       limit: opts.coverLimit,
       onProgress: opts.onCoverProgress,
     });
@@ -164,6 +169,7 @@ export async function runDouyinHeavyBackfill(
       );
     }
   } catch (err) {
+    opts.checkSignal?.();if(isBrowserProfileBusy(err))throw err;
     // 封面是锦上添花:回填整批失败绝不拖垮明细采集(run 仍 succeeded)。
     console.error("[douyin-cover-backfill] 封面回填整批失败(明细不受影响):", err);
   }

@@ -1,4 +1,6 @@
 import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
+import {hostBrowserShutdownScope} from '@creatoros/ai-worker/browser/browser-shutdown-scope';
+import {createBrowserHostDisposer} from './browser-host-dispose';
 import {startTrafficCollection} from "@creatoros/backend/application/scheduling/traffic-start";
 import { recoverTrafficQueues } from "@creatoros/backend/application/scheduling/traffic-wake";
 import {triggerScheduledJob} from '@creatoros/backend/modules/ai-runtime';
@@ -59,7 +61,7 @@ import { createScriptDraftTargetService } from "@creatoros/backend/modules/artif
 import { createVideoEditCandidatePreparer } from "@creatoros/backend/modules/ai-runtime";
 import { createSubmittedTaskPreparationService } from "@creatoros/backend/modules/execution";
 import { createAiTaskSubmissionService } from "@creatoros/backend/modules/ai";
-import { createDailyTopicRunService, createDailyTopicRunIntentService } from "@creatoros/backend/modules/scheduling";
+import { createDailyTopicRunService, createCollectionRunStateService, createDailyTopicRunIntentService } from "@creatoros/backend/modules/scheduling";
 import { countCandidatesForDay, lockCandidateSupply } from "@creatoros/backend/modules/candidate";
 import { createBrowserProfileAuthority, lockAccountForSupply } from "@creatoros/backend/modules/platform-account";
 
@@ -1124,7 +1126,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
-    async () => { await stopExecutionWorker?.(); await dispose(); };
+    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{await stopExecutionWorker?.();},disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
   // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
@@ -1162,7 +1164,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     nodePath.join(process.cwd(), ".auth", "douyin");
   const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase);
   const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile});
-  configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire);
+  configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire,profileAuthority.resolveProfile);
   const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal,userId?:string): Promise<string> => {
     if(!accountId){
       if(!userId)throw new Error("旧登录目录缺少当前用户授权");
@@ -1302,22 +1304,6 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       };
     }),
   });
-
-  // [gate-F5] 采集 job/进程级串行闸(与 gateway 的请求级节奏正交):一条 module 级 promise 链,
-  // concurrency=1 —— 同时只跑一个采集 job,防两个 Chromium 各打一 channel 并存(gateway 每 channel
-  // 并发=1 拦不住 job-A 抓 creator-center + job-B 抓 iesdouyin 两进程并存)。轻量:一条 promise
-  // 链尾串行,无需 p-queue。fire-and-forget 的 dispatch 把 runScheduledCollection 挂到链尾。
-  let collectionRunTail: Promise<void> = Promise.resolve();
-  const enqueueCollectionRun = (run: () => Promise<void>): Promise<void> => {
-    // 串到链尾:上一个采集跑完(无论成败)才开始本次;链尾用 catch 吞错防一次失败堵死后续。
-    const pending = collectionRunTail.then(
-      () => run(),
-      () => run(),
-    );
-    // 兜底:链尾自身的 reject 不外溢(fire-and-forget;每个 run 内部已 try/catch 落终态)。
-    collectionRunTail = pending.catch(() => {});
-    return pending;
-  };
 
   // Projects (module 05): one user-scoped repository over the shared db (every
   // query filters eq(userId, ctx.userId) / ownership-checks via the parent). The
@@ -2055,7 +2041,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   const trafficService=createTrafficService(db,{now:deps.now,publishing:publishingService});
   const publicationSyncService=createPublicationSyncService(db,{now:deps.now,assertPublication:(c,id)=>trafficService.assertPublication(c,id)});
-  const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{mergedIntoSelfMetrics:true},schedule:'0 0 * * *',enabled:false,systemManaged:true});
+  const ensureTrafficJob=(ctx:RequestContext)=>schedulingService.createJob(ctx,{name:'作品流量来源补采',sourceKind:'self.traffic',target:{},schedule:'0 */2 * * *',enabled:false,systemManaged:true});
   const startTrafficJob=async(ctx:RequestContext)=>{
     return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
@@ -3829,7 +3815,7 @@ dispatchIntelligenceRun});
     budget:{maxCalls:6144,maxTokens:8_000_000,deadlineMs:1_800_000},now:deps.now,
     createFavoritesAsr:runWorker=>createScheduledFavoritesAsrService(db,{...asrResourceDeps,runWorker}),
   });
-  const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","self.traffic","favorites"]);
+  const flywheelSourceKinds=new Set(["benchmark","self.detail","self.metrics","self.traffic","comments","favorites"]);
 
   intelligenceTranscriptRunnerDeps = {tasks:persistentTaskService,intelligence:intelligenceService,transcript:intelligenceTranscriptBridge.transcript,sourceRecovery:transcriptSourceRecovery};
 
@@ -4026,13 +4012,10 @@ FAVORITES_PROMOTE_PER_RUN
     checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,
   });
 
-  // dispatchScheduledCollection 实体:装 runner deps 后经 [gate-F5] 采集串行闸挂到链尾
-  // (fire-and-forget,concurrency=1)。forward-declared 于 ai transport 之上;dispatch 分支 +
-  // 调度器共用。**串行闸让同时只跑一个采集 job**(防两个 Chromium 各打一 channel 并存),与
-  // gateway 的请求级节奏正交(SPEC §4.4 [gate-F5])。runScheduledCollection 内部已 try/catch/
-  // finally 落 job_run 终态,链尾再 catch 兜底,一次失败不堵死后续采集。
+  // 后端统一协调同账号串行与跨账号入场；此处仅装配采集器和唤醒入口。
+  // 请求网关继续独立限制每次网络请求的并发与节奏。
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,enqueueCollectionRun,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
+  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -4131,6 +4114,7 @@ FAVORITES_PROMOTE_PER_RUN
   const {start:startUnifiedAutomationDriver}=createSchedulingAutomation({
     aiService,schedulingService,schedulerCtx,
     syncDailyExecutionRuns:(ctx)=>dailyTopicRuns.syncExecutionRuns(ctx),
+    syncCollectionExecutionRuns:(ctx)=>collectionRunState.syncExecutionRuns(ctx),
     staleJobRunMs:envMsOf("CREATOROS_STALE_JOB_RUN_MS",30*60*1000),
     deps,triggerDeps,flywheelSourceKinds,dispatchScheduledCollection,persistentTaskService,
     scheduledChildren:createExecutionScheduledChildService(db,{now:deps.now}),
@@ -4481,7 +4465,7 @@ FAVORITES_PROMOTE_PER_RUN
               target: input.target,
               // [T-359] 启动兜底补建同样分层:默认关的补建即 disabled。
               enabled: input.enabled,
-              systemManaged: input.sourceKind === "intelligence.sync",
+              systemManaged: input.systemManaged === true || input.sourceKind === "intelligence.sync",
             });
             return { id: job.id };
           },
@@ -4669,6 +4653,7 @@ FAVORITES_PROMOTE_PER_RUN
   const calibrationDiagnoseReaders = createCalibrationDiagnoseReaders({projectsService,publishingService,calibrationService,canonicalRubricIdFor,readCurrentScript:(c,projectId)=>createCurrentArtifactReader({projectsService,artifactsService})(c,projectId,"output_script")});
   const calibrationScoreReaders = createCalibrationScoreReaders({projectsService,publishingService,analyticsService,calibrationService});
   const dailyTopicRuns=createDailyTopicRunService(db,{now:deps.now});
+  const collectionRunState=createCollectionRunStateService(db,{now:deps.now});
   const dailyTopicRunIntents=createDailyTopicRunIntentService(db,deps);
   const dailyTopicAdapter=createDailyTopicBusinessAdapter({
         positioning: {
@@ -5756,7 +5741,7 @@ FAVORITES_PROMOTE_PER_RUN
         hasPending:async ctx=>(await trafficService.pending(ctx,1)).length>0,
         start:ctx=>startTrafficJob(ctx),shouldStop:control.shouldStop,
       });},
-      async flywheel(control){if(control.shouldStop())return;await recoverQueuedCollection();if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5);},
+      async flywheel(control){if(control.shouldStop())return;await recoverQueuedCollection();if(!control.shouldStop())await scheduledFlywheel.drain(collectFlywheel,5,{waitForCompletion:false});},
     },
     onError:(kind,error)=>console.error(`[recovery-wake] ${kind} 恢复失败`,kind==="flywheel"?error:error instanceof Error?error.name:"UnknownError"),
   });

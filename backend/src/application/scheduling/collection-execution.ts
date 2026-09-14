@@ -1,3 +1,4 @@
+import {createAccountCollectionQueue} from './account-collection-queue';
 import type {RequestContext} from "@creatoros/contract";
 import {runScheduledCollection,type Collector as ScheduledCollector,type ScheduledFlywheelCollector} from "../../modules/ai-runtime";
 /** 原调度任务绑定与串行采集；不持有第二任务权威。 */
@@ -12,19 +13,19 @@ trafficQueue?:{
  fail:(ctx:RequestContext,rows:Array<{publicationId:string;externalId:string;requestedAt:string}>,message:string)=>Promise<unknown>;
 };
 deps:{now:()=>string};
-enqueueCollectionRun:(run:()=>Promise<void>)=>Promise<void>;
 wakeScheduledFlywheel:()=>void;
 prepareDailyTopic:(ctx:RequestContext,id:string)=>Promise<{executionTaskId:string}>;
 runTaskWithEffectiveSkillSnapshot:(ctx:RequestContext,id:string,run:(signal:AbortSignal)=>void|Promise<void>)=>Promise<void>;
 isNotLoggedInError:(error:unknown)=>boolean;}){
-const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,enqueueCollectionRun,wakeScheduledFlywheel,prepareDailyTopic,runTaskWithEffectiveSkillSnapshot,isNotLoggedInError}=ports;
-  const collectFlywheel:ScheduledFlywheelCollector=(ctx,task,scope)=>enqueueCollectionRun(()=>scheduledSignals.run(scope.signal,async()=>{
+const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic,runTaskWithEffectiveSkillSnapshot,isNotLoggedInError}=ports;
+  const enqueueCollectionRun=createAccountCollectionQueue();
+  const collectFlywheel:ScheduledFlywheelCollector=(ctx,task,scope)=>enqueueCollectionRun(ctx,()=>scheduledSignals.run(scope.signal,async()=>{
     scope.signal.throwIfAborted();
     await runScheduledCollection(ctx,task,{
       ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
       collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report,execution)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);},execution);scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:isNotLoggedInError,now:deps.now,
     });
-  }));
+  }),scope.signal);
 
   const dispatchScheduledCollection = async (ctx: RequestContext, task: {
     id: string;
@@ -70,8 +71,8 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
       const bound=await prepareDailyTopic(ctx,task.id);
       return {executionTaskId:bound.executionTaskId};
     }
-    return runTaskWithEffectiveSkillSnapshot(ctx, task.id, () =>
-      enqueueCollectionRun(() =>
+    return runTaskWithEffectiveSkillSnapshot(ctx, task.id, signal =>
+      enqueueCollectionRun(ctx, () =>
         runScheduledCollection(ctx, task, {
           ai: {
             markRunning: (c, id) => aiService.markRunning(c, id),
@@ -88,6 +89,7 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
           isNotLoggedInError: isNotLoggedInError,
           now: deps.now,
         }),
+        signal,
       ),
     );
   };

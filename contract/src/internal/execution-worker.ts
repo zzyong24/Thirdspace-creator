@@ -320,11 +320,11 @@ export const structuredGenerationInputSchema=z.object({
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
 /** 原调度业务任务的执行标记；模型阶段只由后端固定能力端口准备。 */
-// 纯浏览器补采没有模型阶段；仅这个显式 sourceKind 允许真实 resolver 的空 Skill 清单。
+// 纯浏览器流量/评论采集没有模型阶段；仅这些显式 sourceKind 允许真实 resolver 的空 Skill 清单。
 // 其他调度/结构化/聊天路径继续使用 workerSkillSnapshotSchema 的 min(1)。
 const trafficSkillSnapshotSchema=workerSkillSnapshotSchema.extend({skills:z.array(workerSkillSnapshotSchema.shape.skills.element)});
 export const scheduledFlywheelSnapshotSchema=z.discriminatedUnion("sourceKind",[
- z.object({sourceKind:z.literal("self.traffic"),skillSnapshot:trafficSkillSnapshotSchema}).strict(),
+ z.object({sourceKind:z.enum(["self.traffic","comments"]),skillSnapshot:trafficSkillSnapshotSchema}).strict(),
  z.object({sourceKind:z.enum(["benchmark","self.detail","self.metrics","favorites"]),skillSnapshot:workerSkillSnapshotSchema}).strict(),
 ]);
 const scheduledFlywheelTaskBaseSchema=z.object({kind:z.literal("scheduled.flywheel"),jobId:z.string().min(1),jobRunId:z.string().min(1),target:z.record(z.string(),z.json())}).strict();

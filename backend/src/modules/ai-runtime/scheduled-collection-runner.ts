@@ -25,15 +25,29 @@ import type { RequestContext } from "@creatoros/contract";
 export interface CollectResult {
   itemsNew: number;
   itemsUpdated: number;
+  /** 默认是本批计数；流量队列等返回整项累计值时显式标注。 */
+  countMode?: "batch" | "cumulative";
+  /** 旧合并任务各采集器统计独立累计，避免混加流量累计数与评论本批数。 */
+  countsBySource?: Record<string,{itemsNew:number;itemsUpdated:number;countMode?:"batch"|"cumulative"}>;
   message?: string;
   incomplete?: boolean;
   continueCollection?: boolean;
+  /** 共享资源暂不可用时保留原执行，避免立即再采同一批。 */
+  retryAfterMs?: number;
+}
+
+export const BROWSER_PROFILE_RETRY_MS = 60_000;
+// SEMANTIC_BOUNDARY_ALLOW: 只识别浏览器资源协议码，不判断内容或创作选择。
+export function isBrowserProfileBusy(error: unknown): boolean {
+  return typeof error === 'object' && error !== null &&
+    'code' in error && error.code === 'BROWSER_PROFILE_BUSY';
 }
 
 /** runner 需要的 AI 生命周期窄端口(host 绑 aiService;测试注 fake)。不产候选,故无
  *  recordCandidate —— 只 markRunning / recordStep / markSucceeded / markFailed。 */
 export interface ScheduledCollectionAiPort {
-  deferCollection?(ctx:RequestContext,taskId:string):Promise<never>;
+  recordCollectionResult?(ctx:RequestContext,taskId:string,result:Pick<CollectResult,"itemsNew"|"itemsUpdated"|"countMode"|"countsBySource">):Promise<void>;
+  deferCollection?(ctx:RequestContext,taskId:string,retryAfterMs?:number):Promise<never>;
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
   recordStep(
     ctx: RequestContext,
@@ -252,9 +266,14 @@ export async function runScheduledCollection(
     // 确定性采集(collector 内:抓真 XHR/DOM 抽值 → ingestion 落库 → 返回新鲜度统计)。
     // 绝不调 LLM —— 数值程序化抽取(SPEC §2 铁律①)。
     // [T-152] 传入 report:采集器在关键阶段上报进度(runner 节流 + best-effort 写 job_run)。
-    const result = await collector(ctx, target, report,{taskId:task.id});
+    const result: CollectResult = await collector(ctx, target, report,{taskId:task.id}).catch(error => {
+      if (!isBrowserProfileBusy(error)) throw error;
+      return {itemsNew:0,itemsUpdated:0,continueCollection:true,retryAfterMs:BROWSER_PROFILE_RETRY_MS,
+        message:'浏览器正在被其他操作使用，稍后继续原任务；已保存的数据保留'};
+    });
     itemsNew = result.itemsNew;
     itemsUpdated = result.itemsUpdated;
+    await deps.ai.recordCollectionResult?.(ctx,task.id,result);
 
     // 合成 step 写 ai_task_steps(经现有 recordStep;自动化运行详情复用窗口步骤日志渲染)。
     // [T-235a] collector 的诚实一句话说明(如「未配文本模型,跳过出题」)拼进 step 文本。
@@ -267,8 +286,8 @@ export async function runScheduledCollection(
       toolCalls: [],
     });
 
-    if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id);
-    if (result.continueCollection) throw new Error("流量补采尚未完成，请继续原任务");
+    if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id,result.retryAfterMs);
+    if (result.continueCollection) throw new Error("采集尚未完成，请继续原任务");
     if (result.incomplete) throw new Error(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
     await deps.ai.markSucceeded(ctx, task.id);
     runStatus = "succeeded";
@@ -308,8 +327,7 @@ export async function runScheduledCollection(
       try {
         await deps.runs.updateRun(ctx, jobRunId, {
           status: runStatus,
-          itemsNew,
-          itemsUpdated,
+          ...(deps.ai.recordCollectionResult ? {} : {itemsNew,itemsUpdated}),
           error: runError,
           finishedAt: deps.now(),
           // [T-152] 终态清空进度(null):running 态的阶段/条数进度条让位给终态结果文案

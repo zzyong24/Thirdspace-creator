@@ -50,6 +50,15 @@ function makeTriggerDeps(
 }
 
 describe("triggerScheduledJob(幂等双闸)", () => {
+  it('独立流量cron保留父计划锚，手动流量仍使用空计划',async()=>{
+    const traffic={...job,sourceKind:'self.traffic'};
+    const deps=makeTriggerDeps();const scheduledFor='2026-07-01T08:40:00.000Z';
+    await triggerScheduledJob(ctx,traffic,deps,{scheduledFor});
+    expect(deps._createTask.mock.calls[0]![1].inputData.scheduledRun.scheduledFor).toBe(scheduledFor);
+    expect(deps._createRun.mock.calls[0]![1].scheduledFor).toBe(scheduledFor);
+    const manual=makeTriggerDeps();await triggerScheduledJob(ctx,traffic,manual);
+    expect(manual._createRun.mock.calls[0]![1].scheduledFor).toBeNull();
+  });
   it("首次触发:产 ai_task + job_run + dispatch,deduped=false", async () => {
     const deps = makeTriggerDeps([]);
     const res = await triggerScheduledJob(ctx, job, deps);
@@ -181,13 +190,13 @@ describe("triggerScheduledJob(幂等双闸)", () => {
     expect(deps._dispatch.mock.calls[0]![0]).toMatchObject({ accountId: "acct-req" });
   });
 
-  it("昨天的 run 不算数(自然日锚)→ 今天仍会新产", async () => {
+  it("跨天采集仍在运行时保持原任务，不重新生成", async () => {
     const deps = makeTriggerDeps([
       { id: "run-yesterday", status: "running", startedAt: "2026-06-30T09:00:00.000Z", aiTaskId: "t0" },
     ]);
     const res = await triggerScheduledJob(ctx, job, deps);
-    expect(res.deduped).toBe(false);
-    expect(deps._createTask).toHaveBeenCalledTimes(1);
+    expect(res).toMatchObject({deduped:true,jobRunId:"run-yesterday",aiTaskId:"t0"});
+    expect(deps._createTask).not.toHaveBeenCalled();
   });
 });
 
@@ -726,4 +735,62 @@ describe('T956 流量准备失败与拒绝传播',()=>{
 it('统一同步跨天等待登录复用原任务，不新建第二个producer',async()=>{
  const deps=makeTriggerDeps([{id:'old-run',aiTaskId:'old-task',status:'needs_reconnect',startedAt:'2026-06-30T00:00:00.000Z'}]);
  const result=await triggerScheduledJob(ctx,{...job,target:{operationsSync:{version:1}}},deps);expect(result).toMatchObject({jobRunId:'old-run',aiTaskId:'old-task',deduped:true});expect(deps._createTask).not.toHaveBeenCalled();
+});
+
+describe('T983 新拆分计划与旧合并执行隔离',()=>{
+ const oldAnchor='2026-06-30T09:00:00.000Z',newAnchor='2026-07-01T09:00:00.000Z';
+ const splitJob={...job,target:{collectionSplitVersion:1}};
+ const oldRun={id:'combined-run',status:'running',startedAt:oldAnchor,aiTaskId:'combined-task'};
+ const combinedInput={target:{operationsSync:{version:1}}};
+ it.each(['paused','unknown_result','retry_wait'])('旧合并%s不阻止新的作品计划入队，保留旧执行',async runtimeStatus=>{
+  const deps=makeTriggerDeps([oldRun]);
+  deps.getTaskState=async()=>({status:'running',executionTaskId:'combined-execution',runtimeStatus,inputData:combinedInput});
+  deps.getRunScheduledFor=vi.fn(async()=>oldAnchor);
+  const result=await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:newAnchor});
+  await result.completion;
+  expect(result).toMatchObject({deduped:false,aiTaskId:'task1',jobRunId:'run1'});
+  expect(deps._createTask).toHaveBeenCalledTimes(1);expect(deps._dispatch).toHaveBeenCalledTimes(1);
+  expect(deps.runs.updateRun).not.toHaveBeenCalled();
+  expect(deps.getRunScheduledFor).toHaveBeenCalledWith({...ctx,accountId:null},oldRun.id);
+ });
+ it.each(['running','failed'])('旧合并同计划重放保持原task，即使run投影为%s且前面有新split运行',async status=>{
+  const deps=makeTriggerDeps([{id:'split-run',status:'running',startedAt:newAnchor,aiTaskId:'split-task'},{...oldRun,status}]);
+  deps.getTaskState=async(_c,id)=>({status:'running',executionTaskId:`execution-${id}`,runtimeStatus:'paused',inputData:id==='combined-task'?combinedInput:{target:{collectionSplitVersion:1}}});
+  deps.getRunScheduledFor=vi.fn(async()=>oldAnchor);
+  const result=await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:oldAnchor});
+  expect(result).toMatchObject({deduped:true,aiTaskId:'combined-task',jobRunId:'combined-run'});
+  expect(deps._createTask).not.toHaveBeenCalled();expect(deps._dispatch).not.toHaveBeenCalled();
+ });
+ it('旧合并不同计划可跳过，新split自身仍保持inflight去重且无需逐行读计划',async()=>{
+  const deps=makeTriggerDeps([oldRun,{id:'split-run',status:'running',startedAt:newAnchor,aiTaskId:'split-task'}]);
+  deps.getTaskState=async(_c,id)=>({status:'running',executionTaskId:`execution-${id}`,runtimeStatus:'retry_wait',inputData:id==='combined-task'?combinedInput:{target:{collectionSplitVersion:1}}});
+  deps.getRunScheduledFor=vi.fn(async()=>oldAnchor);
+  const result=await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:newAnchor});
+  expect(result).toMatchObject({deduped:true,aiTaskId:'split-task',jobRunId:'split-run'});expect(deps._createTask).not.toHaveBeenCalled();
+  expect(deps.getRunScheduledFor).toHaveBeenCalledTimes(1);expect(deps.getRunScheduledFor).toHaveBeenCalledWith({...ctx,accountId:null},'combined-run');
+ });
+ it.each(['missing-port','missing-input','unversioned-split','manual-new','invalid-old-time'])('缺少明确迁移和计划证据时保留原去重：%s',async mode=>{
+  const deps=makeTriggerDeps([oldRun]);
+  deps.getTaskState=async()=>({status:'running',executionTaskId:'combined-execution',runtimeStatus:'paused',...(mode==='missing-input'?{}:{inputData:combinedInput})});
+  if(mode!=='missing-port')deps.getRunScheduledFor=vi.fn(async()=>mode==='invalid-old-time'?'invalid':oldAnchor);
+  const result=await triggerScheduledJob(ctx,mode==='unversioned-split'?job:splitJob,deps,mode==='manual-new'?undefined:{scheduledFor:newAnchor});
+  expect(result).toMatchObject({deduped:true,aiTaskId:'combined-task'});expect(deps._createTask).not.toHaveBeenCalled();
+  if(mode==='missing-input'||mode==='unversioned-split'||mode==='manual-new')expect(deps.getRunScheduledFor).not.toHaveBeenCalled();
+ });
+ it('旧手动合并任务的真实null计划与新cron计划不同',async()=>{
+  const deps=makeTriggerDeps([oldRun]);deps.getTaskState=async()=>({status:'running',inputData:combinedInput});deps.getRunScheduledFor=async()=>null;
+  const result=await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:newAnchor});expect(result.deduped).toBe(false);
+ });
+ it('新计划attempt继续按真实时间隔离，重复新计划稳定，旧同锚不会改名重提',async()=>{
+  const old=makeTriggerDeps();await triggerScheduledJob(ctx,{...job,target:combinedInput.target},old,{scheduledFor:oldAnchor});
+  const first=makeTriggerDeps([oldRun]),again=makeTriggerDeps([oldRun]);
+  for(const deps of [first,again]){deps.getTaskState=async()=>({status:'running',inputData:combinedInput});deps.getRunScheduledFor=async()=>oldAnchor;await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:newAnchor});}
+  const attempt=(deps:ReturnType<typeof makeTriggerDeps>)=>deps._createTask.mock.calls[0]![1].attemptId;
+  expect(attempt(first)).toBe(attempt(again));expect(attempt(first)).not.toBe(attempt(old));
+ });
+ it('跨作业的旧合并检查不再有权跳过当前新计划',async()=>{
+  const deps={...makeTriggerDeps(),hasActiveCombinedRun:vi.fn(async()=>true)};
+  const result=await triggerScheduledJob(ctx,splitJob,deps,{scheduledFor:newAnchor});
+  expect(result).toMatchObject({deduped:false,aiTaskId:'task1'});expect(deps.hasActiveCombinedRun).not.toHaveBeenCalled();
+ });
 });

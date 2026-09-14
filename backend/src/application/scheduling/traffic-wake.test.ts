@@ -16,3 +16,9 @@ describe('流量持久队列补偿唤醒',()=>{
   const start=vi.fn(async()=>{});await recoverTrafficQueues(ctx,{listJobs:async()=>({rows:[{id:'j',accountId:'a'}],total:1}),listRuns:async()=>({rows:[]}),hasPending:async()=>true,start,shouldStop:()=>false});expect(start).toHaveBeenCalledOnce();
  });
 });
+
+it('用户关闭流量同步后，补偿唤醒不绕过开关',async()=>{
+ const start=vi.fn(async()=>{}),hasPending=vi.fn(async()=>true);
+ await recoverTrafficQueues(ctx,{listJobs:async()=>({rows:[{id:'off',accountId:'a',enabled:false}],total:1}),listRuns:async()=>({rows:[]}),hasPending,start,shouldStop:()=>false});
+ expect(start).not.toHaveBeenCalled();expect(hasPending).not.toHaveBeenCalled();
+});

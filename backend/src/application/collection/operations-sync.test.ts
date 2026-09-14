@@ -18,3 +18,17 @@ it('旧冻结任务无operationsSync只恢复旧作品采集，不把关闭能�
  const metrics=vi.fn(async()=>({itemsNew:2,itemsUpdated:0})),comments=vi.fn(),traffic=vi.fn();
  const collector=createOperationsSyncCollector({metrics,comments,traffic,checkSignal:()=>{},isNotLoggedIn:()=>false});await collector(ctx,{},()=>{},{taskId:'old'});expect(metrics).toHaveBeenCalledOnce();expect(comments).not.toHaveBeenCalled();expect(traffic).not.toHaveBeenCalled();
 });
+it.each(['metrics','comments'])('共享档案在%s占用时停止后续能力，保留已完成结果',async blocked=>{
+ const ok={itemsNew:3,itemsUpdated:2};const busy=Object.assign(new Error('档案占用'),{code:'BROWSER_PROFILE_BUSY'});
+ const metrics=vi.fn(async()=>{if(blocked==='metrics')throw busy;return ok;});
+ const comments=vi.fn(async()=>{throw busy;});const traffic=vi.fn(async()=>ok);
+ const collect=createOperationsSyncCollector({metrics,comments,traffic,checkSignal:()=>{},isNotLoggedIn:()=>false});
+ const result=await collect(ctx,{operationsSync:{version:1,capabilities:{metrics:true,comments:true,traffic:true,content:true}}},()=>{},{taskId:'original'});
+ expect(result).toMatchObject({itemsNew:blocked==='metrics'?0:3,itemsUpdated:blocked==='metrics'?0:2,continueCollection:true,retryAfterMs:60000});
+ expect(traffic).not.toHaveBeenCalled();if(blocked==='metrics')expect(comments).not.toHaveBeenCalled();
+});
+it('合并同步保留流量返回的共享资源等待时长',async()=>{
+ const noop=async()=>({itemsNew:0,itemsUpdated:0});
+ const collect=createOperationsSyncCollector({metrics:noop,comments:noop,traffic:async()=>({itemsNew:0,itemsUpdated:2,continueCollection:true,retryAfterMs:60000}),checkSignal:()=>{},isNotLoggedIn:()=>false});
+ expect(await collect(ctx,{operationsSync:{version:1,capabilities:{metrics:true,comments:true,traffic:true,content:true}}},()=>{},{taskId:'original'})).toMatchObject({continueCollection:true,retryAfterMs:60000,itemsUpdated:2});
+});

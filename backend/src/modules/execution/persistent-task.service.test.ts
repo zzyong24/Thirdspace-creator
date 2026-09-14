@@ -361,3 +361,20 @@ describe("T-482 持久执行任务状态机", () => {
     }
   });
 });
+
+it("领取过滤精确到用户和账号，剩余任务仍按真实优先级领取",async()=>{
+ const {db,client}=await createDb();const tasks=createPersistentTaskService(db);
+ try{
+  const a=await enqueue(tasks,ctxA,'exclude-a');
+  const b=await enqueue(tasks,ctxB,'lower-b');
+  const other={...ctxA,userId:'other-user'};
+  const high=await enqueue(tasks,other,'high-other-owner');
+  await db.update(executionTasks).set({priority:50}).where(eq(executionTasks.id,high.id));
+  const filter={workerId:'filtered',excludeAccounts:[{userId:ctxA.userId,accountId:ctxA.accountId!}]};
+  expect((await tasks.claimNext(filter))?.task.id).toBe(high.id);
+  expect((await tasks.claimNext(filter))?.task.id).toBe(b.id);
+  expect(await tasks.claimNext(filter)).toBeNull();
+  expect((await tasks.get(ctxA,a.id)).status).toBe('queued');
+  await expect(tasks.claimNext({...filter,excludeAccounts:[{userId:ctxA.userId,accountId:''}]})).rejects.toThrow('完整属主');
+ }finally{await client.close();}
+});
