@@ -633,6 +633,14 @@ jobs:
           }
           trap detach EXIT
           hdiutil attach "$dmg" -readonly -nobrowse -mountpoint "$mountpoint"
+          # T-975: 运行归档可清 Finder 元数据，DMG 根目录的布局文件必须保留。
+          # 引导缺失单独报告，不把仍可安全安装的应用判为不可用。
+          if test -s "$mountpoint/.DS_Store" && test -L "$mountpoint/Applications" &&
+             test -s "$mountpoint/.background/creatoros-install-background@2x.png"; then
+            echo "[T-975] ✓ DMG 安装引导布局、背景与应用程序入口存在"
+          else
+            echo "::warning::[T-975] DMG 安装引导不完整；应用可安装，但不得声称引导验收通过"
+          fi
           mounted_app="$(find "$mountpoint" -maxdepth 1 -type d -name '*.app' -print -quit)"
           test -n "$mounted_app" || {
             echo "::error::[T-709] DMG 内没有应用"
