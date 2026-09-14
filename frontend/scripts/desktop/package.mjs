@@ -497,6 +497,9 @@ if (!isFullRelease) {
 }
 step("tauri build(含 updater 签名/占位)", process.execPath, tauriBuildArgs, {
   ...pathEnv,
+  // T-975: Tauri 在 CI=true 时默认跳过 Finder 布局，背景虽入包却无法显示。
+  // 仅覆盖 DMG 的布局分支，保留 CI 对其他构建步骤的语义。
+  ...(platform === "darwin" ? { TAURI_BUNDLER_DMG_IGNORE_CI: "true" } : {}),
   CREATOROS_SKIP_SIDECAR_REBUILD: "1",
   CREATOROS_ALLOW_VERDICT_SIGNING_KEY: "1",
 });

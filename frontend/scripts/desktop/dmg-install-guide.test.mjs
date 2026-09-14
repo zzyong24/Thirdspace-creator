@@ -41,6 +41,11 @@ describe("CreatorOS macOS DMG 安装引导", () => {
     expect(source).toContain("03");
   });
 
+  it("正式 CI 构建保留 Finder 安装引导，不受 Tauri 默认跳过逻辑影响", () => {
+    const source = readFileSync(join(frontendRoot, "scripts/desktop/package.mjs"), "utf8");
+    expect(source).toContain('...(platform === "darwin" ? { TAURI_BUNDLER_DMG_IGNORE_CI: "true" } : {})');
+  });
+
   it("渠道包显式关闭官方 CreatorOS 背景，避免安装阶段串品牌", () => {
     const override = buildChannelTauriOverride({
       manifest: {
