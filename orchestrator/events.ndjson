@@ -1067,3 +1067,4 @@
 {"ts":"2026-09-14T07:09:58.442Z","actor":"taskctl","action":"start","task":"T-978","sha_before":"cfbaca833a91","sha_after":"f4fb82586ec5"}
 {"ts":"2026-09-14T07:20:12.540Z","actor":"taskctl","action":"complete","task":"T-978","evidence":"4项红测复现→6文件116项通过；frontend tsc与diff检查通过；pmem sync完成；reconcile LED-047通过，保留范围外既有233项全局错误；自动化轮询风险登记T-979；源码修复尚未打包。","sha_before":"a35af81cb582","sha_after":"71d7749fac50"}
 {"ts":"2026-09-14T07:22:36.739Z","actor":"taskctl","action":"start","task":"T-980","sha_before":"e02a3a6f62a3","sha_after":"a8b8ccd6a4af"}
+{"ts":"2026-09-14T07:23:00.917Z","actor":"taskctl","action":"block","task":"T-980","reason":"干净隔离候选合并origin/main出现5处任务/规则/记录冲突；按官方打包Skill停止并已abort，未触发流水线；等待独立合并冲突处理。","sha_before":"a8b8ccd6a4af","sha_after":"baf02e47ec46"}
