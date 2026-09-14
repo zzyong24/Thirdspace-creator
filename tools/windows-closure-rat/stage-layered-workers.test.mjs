@@ -17,6 +17,9 @@ test('按依赖图复制并复用同版本包，缺必需包仍失败', () => {
   assert.equal(existsSync(join(dest,'a/node_modules')),false);
   assert.equal(JSON.parse(readFileSync(join(dest,'b/package.json'),'utf8')).version,'1');
   assert.equal(stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']}).length,0);
+  rmSync(join(dest,'a/index.js'));
+  stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']});
+  assert.equal(existsSync(join(dest,'a/index.js')),true,'已有manifest不能掩盖缺失入口文件');
   rmSync(join(dest,'b'),{recursive:true});
   assert.deepEqual(stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']}).map(p=>p.name),['b']);
   assert.throws(()=>stageMissingDependencies({from:source,vendorRoot:dest,packages:['missing']}),/Cannot find module/);
