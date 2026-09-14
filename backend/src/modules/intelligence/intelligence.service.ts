@@ -28,6 +28,7 @@ import {
   isNull,
   lte,
   or,
+  sql,
   sourceSnapshots,
   trendSources,
   type Db,
@@ -3420,6 +3421,46 @@ export function createIntelligenceService(
         .where(eq(intelligenceSyncRunEvents.runId, runId))
         .orderBy(asc(intelligenceSyncRunEvents.occurredAt));
       return { run: toRun(run), events: events.map(toEvent) };
+    },
+
+    /** 只读复用当前账号已保存的作品封面，不触发采集或加载来源/评论等关联数据。 */
+    async findCachedCovers(
+      ctx: RequestContext,
+      input: { platform: string; externalIds: readonly string[] },
+    ): Promise<Array<{ externalId: string; coverUrl: string; itemId: string }>> {
+      const accountId = await account(ctx, "intelligence.cachedCovers.read");
+      const externalIds = [...new Set(input.externalIds.filter((id) => id.length > 0))];
+      if (externalIds.length === 0) return [];
+      const rows = await db
+        .select({
+          externalId: intelligenceItems.externalId,
+          coverUrl: intelligenceItems.coverUrl,
+          itemId: intelligenceItems.id,
+        })
+        .from(intelligenceItems)
+        .where(and(
+          eq(intelligenceItems.userId, ctx.userId),
+          eq(intelligenceItems.accountId, accountId),
+          eq(intelligenceItems.platform, input.platform),
+          eq(intelligenceItems.type, "video"),
+          inArray(intelligenceItems.externalId, externalIds),
+          sql`${intelligenceItems.availability} <> 'archived'`,
+          sql`${intelligenceItems.coverUrl} IS NOT NULL AND ${intelligenceItems.coverUrl} <> ''`,
+        ))
+        .orderBy(desc(intelligenceItems.updatedAt), asc(intelligenceItems.id));
+      // SEMANTIC_BOUNDARY_ALLOW: 仅按真实作品身份去重及缓存时间择新，不做内容判断。
+      // 正常库有身份唯一约束；仍兼容旧数据重复与最新记录只有空白 URL 的情况。
+      const latest = new Map<string, { externalId: string; coverUrl: string; itemId: string }>();
+      for (const row of rows) {
+        const coverUrl = row.coverUrl?.trim();
+        if (row.externalId && coverUrl && !latest.has(row.externalId)) {
+          latest.set(row.externalId, { externalId: row.externalId, coverUrl, itemId: row.itemId });
+        }
+      }
+      return externalIds.flatMap((id) => {
+        const cover = latest.get(id);
+        return cover ? [cover] : [];
+      });
     },
 
     async listItems(
