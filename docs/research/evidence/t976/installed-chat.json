@@ -1,0 +1,52 @@
+{
+  "executionTaskId": "execution-task-c503daa8-a938-4b50-ada0-5cf202d28713",
+  "conversationId": "ai-conv-fb487003-158",
+  "request": "结合redfox热点和我的定位，帮我推荐选题",
+  "entry": "正在运行的1.2.0安装版 /api/chat（当前授权连接）",
+  "tools": [
+    {
+      "toolName": "redfox_query",
+      "toolCallId": "call_b013c2152b8b4a26859f4aec",
+      "status": "error",
+      "errorCode": "invalid_input"
+    },
+    {
+      "toolName": "context_comments",
+      "toolCallId": "call_5db1ed6fc91c439a8f7dbf08",
+      "status": "returned",
+      "errorCode": null
+    },
+    {
+      "toolName": "redfox_query",
+      "toolCallId": "call_9f7ea16be7b843a3bde2828e",
+      "status": "ok",
+      "errorCode": null
+    },
+    {
+      "toolName": "redfox_query",
+      "toolCallId": "call_2d1a175c1f1d4ec69a17c325",
+      "status": "error",
+      "errorCode": "invalid_input"
+    },
+    {
+      "toolName": "topic_generate",
+      "toolCallId": "call_71243af703b54238b090c734",
+      "status": "returned",
+      "errorCode": null
+    }
+  ],
+  "finish": {
+    "type": "finish",
+    "finishReason": "stop",
+    "messageMetadata": {
+      "chatTaskId": "ai-task-bcaa52b9-f80e-4e54-ace5-279d748321fb",
+      "stopReason": "stop",
+      "actualEngine": "pi",
+      "completeness": "completed",
+      "checkpointRef": 9,
+      "sourceMessageId": "ai-msg-fb487003-159"
+    }
+  },
+  "containsTerminalError": false,
+  "note": "改动前安装版真实全链路成功；不作为修复后安装包UI验收。原历史模型异常未保留，无法恢复具体原因。"
+}

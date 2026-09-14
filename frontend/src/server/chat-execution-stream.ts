@@ -27,7 +27,11 @@ export function chatExecutionResponse(runtime:ChatRuntime['durable'],ctx:Request
        const task=await runtime.get(ctx,input.executionTaskId);
        send({type:'error',errorText:humanizeAiError(new Error(task.errorMessage??task.errorCode??''))?.message??'本次执行需要你处理权限、登录或模型配置，处理后再继续。'});
       }
-      if(page.status!=='waiting_user')send({type:'error',errorText:page.status==='unknown_result'?'CHAT_RESULT_UNCONFIRMED':'本次执行已暂停，请在任务中心继续。'});
+      if(page.status==='unknown_result'){
+       const task=await runtime.get(ctx,input.executionTaskId);
+       // 模型未返回完整回复与外部操作回执未知不同；不让用户到任务中心查账。
+       send({type:'error',errorText:task?.errorCode==='MODEL_RESULT_UNKNOWN'?'CHAT_MODEL_RESPONSE_INTERRUPTED':'CHAT_RESULT_UNCONFIRMED'});
+      }else if(page.status!=='waiting_user')send({type:'error',errorText:'本次对话已停止，已完成内容已保留。'});
       break;
      }
      if(page.status==='failed'){

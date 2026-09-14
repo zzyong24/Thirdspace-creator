@@ -340,6 +340,7 @@ interface WireTask {
     | "cancelled";
   readonly executionTaskId?:string|null;
   readonly runtimeStatus?:string|null;
+  readonly inputData?: Readonly<Record<string, unknown>>;
   readonly requestedAt: string;
   // [T-239g] 失败通知需诚实带原因 —— ai.tasks.list 返回 aiTaskResource 已含 errorMessage,
   // 此前 WireTask cast 未取(feed 用不到);通知卡要读它,故在此补齐(老调用侧零影响)。
@@ -469,7 +470,9 @@ function parentDirOf(p: string): string {
 // (scheduled.*)是后台巡航噪音,已有自动化页承载,这里过滤掉,避免首屏被
 // 「作品明细采集 ×N」刷屏、真正的创作任务(出题/诊断/复盘…)被挤出视野。
 function isCreativeTask(t: WireTask): boolean {
-  return !t.taskType.startsWith("scheduled.");
+  // 聊天回合的进度和错误由当前对话展示，不再重复通知用户去后台刷新核对。
+  // SEMANTIC_BOUNDARY_ALLOW: 按服务端任务协议 kind 分配展示位置，不判断内容语义。
+  return !t.taskType.startsWith("scheduled.") && t.inputData?.kind !== "chat.run";
 }
 
 // 历史会话的时间戳 → 简洁本地时间(YYYY-MM-DD HH:mm)。非法/空串回退原串,不抛。
@@ -1192,8 +1195,9 @@ export function AICopilotContent({
     const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
     const isMissingModel = human?.code === "model_not_configured";
     const resultUnconfirmed = human?.code === "result_unconfirmed";
+    const modelInterrupted = human?.code === "model_response_interrupted";
     return {
-      title: resultUnconfirmed ? "结果尚待核对" : suggestOpenCredits
+      title: modelInterrupted ? "模型回复中断" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1205,7 +1209,7 @@ export function AICopilotContent({
                 ? "这次局部改写已结束"
                 : "这次没有生成成功",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: resultUnconfirmed ? human!.message : suggestOpenCredits
+      message: resultUnconfirmed || modelInterrupted ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
@@ -1218,7 +1222,7 @@ export function AICopilotContent({
       suggestOpenCredits,
       suggestOpenPositioning,
       canRetry:
-        !resultUnconfirmed &&
+        !resultUnconfirmed && !modelInterrupted &&
         !terminalScriptSelectionError &&
         !suggestOpenCredits &&
         !suggestOpenPositioning &&

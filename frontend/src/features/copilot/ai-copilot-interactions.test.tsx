@@ -1194,8 +1194,8 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     mockError = new Error(message);
     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", text: "复盘当前作品" }] }];
     render(<AICopilotContent viewModel={VM} />);
-    expect(screen.getByText("结果尚待核对")).toBeInTheDocument();
-    expect(screen.getByText(/请在原任务中刷新状态、核对结果/)).toBeInTheDocument();
+    expect(screen.getByText("本轮对话已停止")).toBeInTheDocument();
+    expect(screen.getByText(/外部操作未返回确认结果/)).toBeInTheDocument();
     expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
     expect(screen.queryByText("刚才输入的内容还在，可以直接再试一次。")).not.toBeInTheDocument();
     expect(regenerate).not.toHaveBeenCalled();
@@ -1595,6 +1595,26 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
       mockStatus = "ready";
       rerender(<AICopilotContent viewModel={VM} />);
     }
+
+    it("[T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知", async () => {
+      listTasks.mockResolvedValue([
+        wireTask({ id: "chat-turn", taskType: "copilot.assist", inputData: { kind: "chat.run" }, executionTaskId: "chat-exec", runtimeStatus: "unknown_result" }),
+        wireTask({ id: "draft", status: "running" }),
+      ]);
+      const { rerender } = render(<AICopilotContent viewModel={VM} />);
+      await waitFor(() => expect(listTasks).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 0));
+      expect(document.querySelector('[data-task-id="chat-turn"]')).toBeNull();
+      expect(screen.queryByText("刷新状态")).not.toBeInTheDocument();
+
+      listTasks.mockResolvedValue([
+        wireTask({ id: "chat-turn", taskType: "copilot.assist", inputData: { kind: "chat.run" }, executionTaskId: "chat-exec", status: "failed" }),
+        wireTask({ id: "draft", status: "succeeded" }),
+      ]);
+      await driveStreamingEnd(rerender);
+      await waitFor(() => expect(document.querySelector('[data-slot="task-notification"][data-task-id="draft"]')).not.toBeNull());
+      expect(document.querySelector('[data-task-id="chat-turn"]')).toBeNull();
+    });
 
     it("首帧已是终态的历史任务不推通知(只播种)", async () => {
       listTasks.mockResolvedValue([wireTask({ status: "succeeded" })]);

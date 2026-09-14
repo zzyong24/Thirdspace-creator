@@ -1,6 +1,7 @@
 import { createModels,createProvider,lazyApi,envApiKeyAuth,type Model,type Api,type AssistantMessageEvent } from "@earendil-works/pi-ai";
 import type { LanguageModelV4,LanguageModelV4CallOptions,LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import type { ModelSpec } from "./provider-factory";
+import { piProviderDiagnostic } from "./pi-provider-diagnostic";
 import { providerIdentityFor } from "./provider-identity";
 import { toPiContext,fromPiMessage,piPayload } from "./pi-provider-codec";
 
@@ -33,6 +34,7 @@ export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{
           if(event.error.errorMessage==="Provider finish_reason: content_filter"){
             yield {type:"done" as const,reason:"stop" as const,message:{...event.error,stopReason:"stop" as const}};continue;
           }
+          console.warn(piProviderDiagnostic(spec,event.error.errorMessage??"供应商未返回完整模型结果",{statusCode:response?.statusCode,output}));
           if(!output && response && response.statusCode>=400){
             // 原错误文字只进入受控分类器，不能挂在 cause/响应字段泄露给调用方。
             if(classifyRejection)throw classifyRejection({...response,message:event.error.errorMessage??""});

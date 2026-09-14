@@ -18,6 +18,7 @@ import type { ArtifactType } from "@/types/domain";
 /** 稳定错误分类：渲染层可依赖 code 决定动作，不必反向解析人话文案。 */
 export type AiErrorCode =
   | "result_unconfirmed"
+  | "model_response_interrupted"
   | "model_not_configured"
   | "positioning_required"
   | "model_not_found"
@@ -55,11 +56,19 @@ interface AiErrorRule {
  */
 export const AI_ERROR_HUMAN_RULES: readonly AiErrorRule[] = [
   {
+    pattern: /\bCHAT_MODEL_RESPONSE_INTERRUPTED\b/,
+    human: {
+      code: "model_response_interrupted",
+      message: "模型回复中断，没有返回完整答案。当前对话已停止，输入和已完成内容已保留。",
+      suggestSwitchModel: false,
+    },
+  },
+  {
     // SEMANTIC_BOUNDARY_ALLOW: 翻译服务端由 unknown_result 产生的稳定码；旧文本仅兼容已打开的旧连接。
     pattern: /\bCHAT_RESULT_UNCONFIRMED\b|本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。/,
     human: {
       code: "result_unconfirmed",
-      message: "本次结果尚未确认，输入和已完成内容已保留。请在原任务中刷新状态、核对结果，暂勿重新提交。",
+      message: "外部操作未返回确认结果，本轮对话已停止。已完成内容已保留，为避免重复执行，暂不重新提交该操作。",
       suggestSwitchModel: false,
     },
   },

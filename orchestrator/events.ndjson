@@ -1061,3 +1061,4 @@
 {"ts":"2026-09-14T04:14:33.614Z","actor":"taskctl","action":"complete","task":"T-973","evidence":"正式提交6147d380，run34802836581双端success；Windows27项消费者及安装启动卸载通过，Mac公证与本地stapler验证通过；证据docs/research/evidence/t974/release-verification.json。全局reconcile仍233项既有错误，无新增，不宣称全绿。","sha_before":"d51810a125cb","sha_after":"3b8bf1047055"}
 {"ts":"2026-09-14T04:30:39.660Z","actor":"taskctl","action":"start","task":"T-975","sha_before":"1e9755c7bdfb","sha_after":"767374e3b379"}
 {"ts":"2026-09-14T04:51:39.285Z","actor":"taskctl","action":"complete","task":"T-975","evidence":"c4b37745/run34806574251 Mac成功；46预检通过；本机DMG元数据实际解析确认背景/图标/800x500窗口，stapler通过。reconcile233项既有错误保留。docs/research/evidence/t975/dmg-layout.json","sha_before":"767374e3b379","sha_after":"d0170f7b05a2"}
+{"ts":"2026-09-14T05:40:42.472Z","actor":"taskctl","action":"start","task":"T-976","sha_before":"b379234a89ff","sha_after":"922a9110e23b"}
