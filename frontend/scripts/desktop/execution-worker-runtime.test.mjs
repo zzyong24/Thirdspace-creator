@@ -24,7 +24,7 @@ describe("随包Worker入口资源",()=>{
     const root=mkdtempSync(join(tmpdir(),"layered-worker-"));
     try {
       mkdirSync(join(root,"frontend/runtime"),{recursive:true});
-      if(process.platform==="win32"){mkdirSync(join(root,"layers/core/bin"),{recursive:true});copyFileSync(process.execPath,join(root,"layers/core/bin/creatoros-server.exe"));}
+      if(process.platform==="win32"){mkdirSync(join(root,"cli"),{recursive:true});copyFileSync(process.execPath,join(root,"cli/node.exe"));}
       copyFileSync(resolve("../tools/windows-closure-rat/creatoros-module-resolver.cjs"),join(root,"frontend/creatoros-module-resolver.cjs"));
       for(const name of workerExternalPackages){const dir=join(root,"frontend/.next/vendor",name);mkdirSync(dir,{recursive:true});writeFileSync(join(dir,"package.json"),JSON.stringify({name,main:"index.js"}));writeFileSync(join(dir,"index.js"),"module.exports={}");}
       expect(()=>assertWorkerExternalPackages(root)).not.toThrow();
