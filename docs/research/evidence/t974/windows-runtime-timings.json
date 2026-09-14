@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "steps": [
+    {
+      "name": "Next adapter production build",
+      "status": "passed",
+      "durationMs": 170121
+    },
+    {
+      "name": "prepare Next bootstrap",
+      "status": "passed",
+      "durationMs": 799
+    },
+    {
+      "name": "NCC Next bootstrap",
+      "status": "passed",
+      "durationMs": 79995
+    },
+    {
+      "name": "bundle Pi engine",
+      "status": "passed",
+      "durationMs": 2518
+    },
+    {
+      "name": "materialize traced closure",
+      "status": "passed",
+      "durationMs": 55912
+    },
+    {
+      "name": "finalize NCC core",
+      "status": "passed",
+      "durationMs": 958
+    },
+    {
+      "name": "assemble five runtime layers",
+      "status": "passed",
+      "durationMs": 15436
+    },
+    {
+      "name": "bake verdict public key",
+      "status": "passed",
+      "durationMs": 70
+    },
+    {
+      "name": "runtime file inventory",
+      "status": "passed",
+      "durationMs": 5721
+    },
+    {
+      "name": "runtime consumer smoke",
+      "status": "passed",
+      "durationMs": 43234
+    },
+    {
+      "name": "prepare Tauri packaged runtime",
+      "status": "passed",
+      "durationMs": 5822
+    }
+  ]
+}

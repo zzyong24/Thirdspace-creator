@@ -15,3 +15,7 @@ Actions运行34793812788：Windows在运行文件预算检查失败（runtime414
 ## Apple 认证已恢复（后续实测）
 用户生成并更新App专用密码后，run34793812788第4次尝试的Mac job103837137091成功。候选33dad57a，Developer ID签名、notary Accepted、staple、Gatekeeper及真启动均通过。下载产物：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0-mac-official/CreatorOS_1.2.0_aarch64.dmg`，SHA256 `504d0fc83b24958938a0e467dae9bfc69a927673e0684badb5dc27b6d8a6e90f`。本机hdiutil verify与stapler validate通过，未安装。
 Windows独立优化已获用户授权并在T-974执行；不能将仅Mac成功表述为双端成功。Windows仍待新候选真安装验收。
+
+## 最终完成
+
+T-974修复完成后，main与正式候选6147d380f1cbad066d1756bab625dcabc3d8e227一致触发run34802836581，Mac/Windows均success。四处版本1.2.0，冻结前42项预检通过。新安装包下载至 `/Users/zyongzhu/Downloads/CreatorOS-1.2.0-6147d380/`；Mac本地hdiutil/stapler均通过；Windows未签名（已接受）。哈希和CI证据见docs/research/evidence/t974/release-verification.json。未创建tag/Release、未公开分发、未修改生产更新配置。

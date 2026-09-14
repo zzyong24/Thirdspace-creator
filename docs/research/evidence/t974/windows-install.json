@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "setupBytes": 555803970,
+  "installMilliseconds": 26124,
+  "runtimeFiles": 6262,
+  "runtimeBytes": 1348333599.0,
+  "nodeModulesDirectories": 0,
+  "linksOrReparsePoints": 0,
+  "firstLaunchMilliseconds": 53161,
+  "mainPageLoadFinished": true,
+  "cliHelpVerified": true
+}
