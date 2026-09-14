@@ -1,6 +1,6 @@
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {randomUUID} from 'node:crypto';
-import {and,asc,eq,inArray,isNull,requireAccountId,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
+import {and,asc,desc,eq,inArray,isNull,requireAccountId,aiTasks,aiTaskSteps,executionTasks,jobRuns,scheduledJobs,type Db} from '@creatoros/backend';
 import {createContinuousExecutionBudget,scheduledFlywheelTaskInputSchema,scheduledFlywheelSnapshotSchema,type ExecutionRef} from '@creatoros/contract/execution-worker';
 import type {RequestContext} from '@creatoros/contract';
 import {createExecutionAuthorityService} from '../execution/execution-authority.service';
@@ -182,7 +182,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
    const state=await ledger.inspect(ref);if(state.calls.some(row=>row.status==='started'||row.status==='unknown')){const result=await outcomes.recordFailure(ref,{outcome:'unknown_result',errorCode:'FLYWHEEL_CALL_REQUIRES_RECONCILIATION'});throw new ScheduledFlywheelSuspended(ref.executionTaskId,result.status);}
    const original=state.calls.find(row=>row.id===current.retryOfCallId),latest=original?state.calls.filter(row=>row.operationKey===original.operationKey).at(-1):undefined;
    if(status==='succeeded'&&original&&latest?.status!=='settled'){const result=await outcomes.recordFailure(ref,{outcome:'waiting_user',errorCode:'FLYWHEEL_RETRY_SOURCE_UNAVAILABLE'});throw new ScheduledFlywheelSuspended(ref.executionTaskId,result.status);}
-   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(aiTasks).set({status,completedAt:now(),errorMessage:errorMessage??null}).where(eq(aiTasks.id,task.id));await scope.tx.update(jobRuns).set({status,error:errorMessage??null,finishedAt:now()}).where(eq(jobRuns.id,bound.input.jobRunId));await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now(),lastErrorMessage:errorMessage??null}).where(eq(executionTasks.id,ref.executionTaskId));});finished=true;
+   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(aiTasks).set({status,completedAt:now(),errorMessage:errorMessage??null}).where(eq(aiTasks.id,task.id));await scope.tx.update(jobRuns).set({status,error:errorMessage??null,finishedAt:now(),progress:null}).where(eq(jobRuns.id,bound.input.jobRunId));await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now(),lastErrorMessage:errorMessage??null}).where(eq(executionTasks.id,ref.executionTaskId));});finished=true;
   };
   const ai:ScheduledCollectionAiPort={async recordCollectionResult(c,id,result){
    checkInput(c,id);
@@ -206,18 +206,35 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
     // 仅保存统计回执以防重复累加；任务执行权仍由 execution_tasks 管理。
     await scope.tx.update(aiTasks).set({runtimeData:{...runtime,collectionResultReceipt:{executionId:ref.executionTaskId,attempt:ref.attempt,bySource}}}).where(eq(aiTasks.id,id));
    });
-  },async deferCollection(c,id,retryAfterMs=2000){
+  },async deferCollection(c,id,retryAfterMs=2000,message){
    checkInput(c,id);await verify();
    if(!['self.traffic','self.metrics','comments','self.detail'].includes(bound.input.sourceKind))throw new Error('仅作品、流量、评论与封面分批采集可交还执行权');
    if(!Number.isSafeInteger(retryAfterMs)||retryAfterMs<2000||retryAfterMs>86400000)throw new Error('采集重试等待时长须为2秒至24小时');
-   await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(executionTasks).set({status:'queued',retryAt:new Date(Date.parse(now())+retryAfterMs).toISOString(),leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:now()}).where(eq(executionTasks.id,ref.executionTaskId));});
+   await leases.withLease(ref,'admission',async scope=>{
+    const current=await bindScheduledFlywheel(scope);signal.throwIfAborted();
+    const stamp=now(),retryAt=new Date(Date.parse(stamp)+retryAfterMs).toISOString();
+    const [run]=await scope.tx.select().from(jobRuns).where(eq(jobRuns.id,current.input.jobRunId)).for('update');
+    if(!run)throw new Error('原采集运行记录不存在');
+    await scope.tx.update(jobRuns).set({status:'running',error:null,finishedAt:null,progress:{stage:'waiting',processed:run.itemsNew+run.itemsUpdated,total:null,message:message||'本批已保存，等待继续采集',retryAt,updatedAt:stamp}}).where(eq(jobRuns.id,run.id));
+    await scope.tx.update(executionTasks).set({status:'queued',retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,updatedAt:stamp}).where(eq(executionTasks.id,ref.executionTaskId));
+   });
    finished=true;throw new ScheduledFlywheelSuspended(ref.executionTaskId,'queued');
   },async markWaitingUser(c,id){
    checkInput(c,id);await verify();
    const state=await ledger.inspect(ref),unknown=state.calls.some(call=>call.status==='started'||call.status==='unknown');
    await outcomes.recordFailure(ref,{outcome:unknown?'unknown_result':'waiting_user',errorCode:unknown?'FLYWHEEL_CALL_REQUIRES_RECONCILIATION':'FLYWHEEL_LOGIN_REQUIRED'});
    finished=true;
-  },async markRunning(c,id){checkInput(c,id);await verify();},async recordStep(c,id,input){checkInput(c,id);await leases.withLease(ref,'admission',async scope=>{await bindScheduledFlywheel(scope);signal.throwIfAborted();const stepId=`flywheel-step:${task.id}:${input.stepNo}`;await scope.tx.insert(aiTaskSteps).values({id:stepId,aiTaskId:task.id,...input,createdAt:now()}).onConflictDoNothing();});},async markSucceeded(c,id){checkInput(c,id);await finish('succeeded');},async markFailed(c,id,message){checkInput(c,id);await finish('failed',message);}};
+  },async markRunning(c,id){
+   checkInput(c,id);await leases.withLease(ref,'admission',async scope=>{const current=await bindScheduledFlywheel(scope);signal.throwIfAborted();await scope.tx.update(jobRuns).set({progress:{stage:'starting',processed:0,total:null,message:'正在准备采集',updatedAt:now()}}).where(eq(jobRuns.id,current.input.jobRunId));});
+  },async recordStep(c,id,input){
+   checkInput(c,id);await leases.withLease(ref,'admission',async scope=>{
+    await bindScheduledFlywheel(scope);signal.throwIfAborted();
+    // 同一批次幂等，不丢弃续跑批次；执行行锁保证步骤顺序，保留旧版本已有步骤。
+    const stepId=`flywheel-step:${task.id}:${ref.attempt}:${input.stepNo}`;
+    const [last]=await scope.tx.select({stepNo:aiTaskSteps.stepNo}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,task.id)).orderBy(desc(aiTaskSteps.stepNo)).limit(1);
+    await scope.tx.insert(aiTaskSteps).values({...input,id:stepId,aiTaskId:task.id,stepNo:(last?.stepNo??0)+1,createdAt:now()}).onConflictDoNothing();
+   });
+  },async markSucceeded(c,id){checkInput(c,id);await finish('succeeded');},async markFailed(c,id,message){checkInput(c,id);await finish('failed',message);}};
   const timer=setInterval(()=>{if(finished||checking)return;checking=true;void verify().then(()=>tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300})).catch(()=>control.abort()).finally(()=>{checking=false;});},10000);
   try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
   catch(error){

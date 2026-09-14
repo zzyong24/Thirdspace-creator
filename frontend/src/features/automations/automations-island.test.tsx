@@ -1012,3 +1012,32 @@ describe("T-032b — 采集反馈结果文案分档", () => {
 
 // D4 needs_reconnect 行的「登录抖音」按钮已在上面「D4」describe 覆盖(latestRun=needs_reconnect
 // → 换按钮),这里的结果文案测与之互补。
+
+describe('T985 等待与真实运行时间',()=>{
+ it('资源等待不显示抓取旋转和虚假进度条',()=>{
+  renderJobRow({...jobRowBase,latestRun:makeRun({status:'running',finishedAt:null,progress:{stage:'waiting',processed:0,total:null,updatedAt:'2026-06-30T09:00:00.000Z',message:'浏览器正在使用，稍后继续原任务',retryAt:'2026-06-30T09:01:00.000Z'}} as Partial<JobRunResource>)});
+  const bar=screen.getByTestId('automation-run-progress');
+  expect(bar.textContent).toContain('等待继续');expect(bar.querySelector('.animate-spin')).toBeNull();expect(bar.querySelector('.animate-pulse')).toBeNull();
+ });
+ it('作业旧时间字段为空时仍显示最新真实运行时间',()=>{
+  renderJobRow({...jobRowBase,job:makeJob({lastRunAt:null}),latestRun:makeRun({startedAt:'2026-06-30T09:00:00.000Z',status:'succeeded'})});
+  expect(screen.queryByText('上次：尚未运行')).toBeNull();
+  expect(document.querySelector('[data-slot="automation-last-run"]')?.textContent).toMatch(/06.?30/);
+ });
+});
+
+it('T985 封面只有更新时仍显示实际更新条数',async()=>{
+ mockClient.listJobRunsByJob.mockResolvedValueOnce([makeRun({status:'succeeded',itemsNew:0,itemsUpdated:3})]);
+ render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+ await waitFor(()=>expect(screen.getByText(/更新 3 条/)).toBeInTheDocument());
+ expect(screen.queryByText(/无新数据/)).toBeNull();
+});
+
+it('T985 运行详情等待状态没有运行中的旋转图标',async()=>{
+ mockClient.listJobRunsByJob.mockResolvedValueOnce([makeRun({status:'running',finishedAt:null,progress:{stage:'waiting',processed:3,total:null,updatedAt:'2026-06-30T09:00:00.000Z',message:'等待浏览器'}} as Partial<JobRunResource>)]);
+ render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
+ await waitFor(()=>expect(screen.getByText('等待继续')).toBeInTheDocument());
+ const item=document.querySelector('[data-slot="automation-run-item"]');
+ expect(item?.querySelector('.animate-spin')).toBeNull();
+ expect(item?.textContent).not.toContain('采集进行中');
+});

@@ -432,3 +432,17 @@ it('T-951 部分采集保留已写数量，终态不伪报全量成功',async()=
  expect(deps.ai.markFailed).toHaveBeenCalledWith(ctx,baseTask.id,expect.stringContaining('已保存1200条'));
  expect(deps.runs.updateRun).toHaveBeenCalledWith(ctx,'run1',expect.objectContaining({status:'failed',itemsNew:1200}));
 });
+
+it.each(['defer','terminal'])('T985 延迟fetch写入不能覆盖%s，收口后的进度回调也不可回写',async mode=>{
+ const {ScheduledFlywheelSuspended}=await import('./scheduled-flywheel-suspension');
+ let release!:()=>void;const gate=new Promise<void>(r=>{release=r;});
+ let started!:()=>void;const entered=new Promise<void>(r=>{started=r;});
+ const writes:string[]=[];let lateReport:(p:import('./scheduled-collection-runner').CollectProgress)=>void=()=>{};
+ const deps=makeDeps({collectors:{'self.metrics':async(_c,_t,report)=>{lateReport=report;report({stage:'fetch',processed:0,total:null});return {itemsNew:0,itemsUpdated:0,continueCollection:mode==='defer'};}},runs:{updateRun:async(_c,_id,p)=>{if(p.progress){started();await gate;writes.push('fetch');}else writes.push('terminal');return {};}}});
+ deps.ai.deferCollection=async()=>{writes.push('waiting');throw new ScheduledFlywheelSuspended('exec-original','queued');};
+ const pending=runScheduledCollection(ctx,baseTask,deps).catch(e=>{if(!(e instanceof ScheduledFlywheelSuspended))throw e;});
+ await entered;await new Promise(r=>setTimeout(r,10));
+ const before=[...writes];release();await pending;
+ lateReport({stage:'late',processed:1,total:1});await new Promise(r=>setTimeout(r,5));
+ expect(before).toEqual([]);expect(writes).toEqual(['fetch',mode==='defer'?'waiting':'terminal']);
+});

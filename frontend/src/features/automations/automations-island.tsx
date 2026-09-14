@@ -196,6 +196,8 @@ function runStatusMeta(status: string) {
 
 // 采集阶段 key → 中文可读标签(采集器上报的 stage 键)。未知 key 原样显示(诚实降级)。
 const PROGRESS_STAGE_LABELS: Record<string, string> = {
+  waiting: "等待继续",
+  starting: "准备采集",
   login: "校验登录态",
   fetch: "抓取作品",
   cover_backfill: "回填封面",
@@ -245,6 +247,7 @@ function progressPercent(p: RunProgress): number | null {
 
 // running 态进度条(total 已知 → 定长填充;未知 → 不定长脉冲条 + 阶段文案)。
 function RunProgressBar({ progress }: { readonly progress: RunProgress }) {
+  const waiting = progress.stage === "waiting";
   const pct = progressPercent(progress);
   return (
     <div
@@ -254,10 +257,10 @@ function RunProgressBar({ progress }: { readonly progress: RunProgress }) {
       className="mt-1 flex flex-col gap-1"
     >
       <div className="flex items-center gap-1.5 text-[11px] text-brand">
-        <Loader2 className="size-3 animate-spin" />
+        {waiting ? <Clock className="size-3" /> : <Loader2 className="size-3 animate-spin" />}
         <span className="truncate">{progressText(progress)}</span>
       </div>
-      <div className="h-1 w-full overflow-hidden rounded-full bg-brand-soft">
+      {!waiting && <div className="h-1 w-full overflow-hidden rounded-full bg-brand-soft">
         {pct != null ? (
           // total 已知:定长填充条(百分比)。
           <div
@@ -268,7 +271,7 @@ function RunProgressBar({ progress }: { readonly progress: RunProgress }) {
           // total 未知(抖音翻页 has_more 才知有无下一页):不定长脉冲条(诚实不假造百分比)。
           <div className="h-full w-1/3 animate-pulse rounded-full bg-brand" />
         )}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -288,7 +291,7 @@ function runResultText(run: {
       // 已登录、跑完:有新数据报新增;0 条是正常结果(作品本就可能没新增/无新评论),不显得像失败。
       return run.itemsNew > 0
         ? `✅ 新增 ${run.itemsNew} 条${run.itemsUpdated > 0 ? ` · 更新 ${run.itemsUpdated} 条` : ""}`
-        : "✅ 已完成 · 无新数据";
+        : run.itemsUpdated > 0 ? `✅ 更新 ${run.itemsUpdated} 条` : "✅ 已完成 · 无新数据";
     case "needs_reconnect":
       return "⚠️ 需重连抖音 —— 去扫码登录";
     case "failed":
@@ -423,6 +426,7 @@ export function JobRow({
   // [T-152] 最近一次 run 正在跑 → 行内显实时进度(阶段 + 累计条数)。进度详情在运行详情抽屉
   //   持续 2s 轮询;此处行级是挂载/刷新时的快照(点作业名进抽屉看实时刷新)。
   const running = latestRun?.status === "running";
+  const lastRunAt = latestRun?.startedAt ?? job.lastRunAt;
   const rowProgress = running
     ? readRunProgress((latestRun as { progress?: unknown } | null)?.progress)
     : null;
@@ -530,7 +534,7 @@ export function JobRow({
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
         >
-          上次：{job.lastRunAt ? formatDateTime(job.lastRunAt) : "尚未运行"}
+          上次：{lastRunAt ? formatDateTime(lastRunAt) : "尚未运行"}
         </span>
         <span
           data-slot="automation-next-run"
@@ -1367,7 +1371,8 @@ export function RunDetailDialog({
           ) : (
             <div className="flex flex-col gap-2">
               {runs.map((run) => {
-                const sm = runStatusMeta(run.status);
+                const waiting = run.status === "running" && readRunProgress(run.progress)?.stage === "waiting";
+                const sm = waiting ? {label:"等待继续",icon:Clock,tone:"text-muted-foreground"} : runStatusMeta(run.status);
                 const StatusIcon = sm.icon;
                 const isSelected = run.id === selectedRunId;
                 return (
@@ -1387,7 +1392,7 @@ export function RunDetailDialog({
                           className={cn(
                             "size-4 shrink-0",
                             sm.tone,
-                            run.status === "running" && "animate-spin",
+                            run.status === "running" && !waiting && "animate-spin",
                           )}
                         />
                         <span className={cn("text-xs font-medium", sm.tone)}>
@@ -1407,7 +1412,7 @@ export function RunDetailDialog({
                                 : "text-muted-foreground",
                           )}
                         >
-                          {runResultText(run)}
+                          {waiting ? "到时自动继续，已保存进度保留" : runResultText(run)}
                         </span>
                       </div>
                       {/* [T-152] running 态:实时采集进度条(阶段 + 累计条数)。轮询 2s 刷新。

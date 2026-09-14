@@ -47,7 +47,7 @@ export function isBrowserProfileBusy(error: unknown): boolean {
  *  recordCandidate —— 只 markRunning / recordStep / markSucceeded / markFailed。 */
 export interface ScheduledCollectionAiPort {
   recordCollectionResult?(ctx:RequestContext,taskId:string,result:Pick<CollectResult,"itemsNew"|"itemsUpdated"|"countMode"|"countsBySource">):Promise<void>;
-  deferCollection?(ctx:RequestContext,taskId:string,retryAfterMs?:number):Promise<never>;
+  deferCollection?(ctx:RequestContext,taskId:string,retryAfterMs?:number,message?:string):Promise<never>;
   markRunning(ctx: RequestContext, taskId: string): Promise<void>;
   recordStep(
     ctx: RequestContext,
@@ -220,12 +220,16 @@ export async function runScheduledCollection(
 
   // [T-152] 实时进度上报器(采集器阶段推进时调 report → 节流 + best-effort 写 job_run.progress)。
   //   节流:同一 stage 内两次写库至少间隔 throttleMs;stage 变化立即写(阶段推进要立即可见)。
-  //   best-effort:写库失败(catch 吞)绝不阻断采集;fire-and-forget(不 await,不拖慢抓取)。
+  //   best-effort:写库失败不阻断采集；顺序排队，收口后不允许旧进度盖回等待或终态。
   //   幂等/不阻断:jobRunId 缺失(异常输入)→ report 直接 no-op。
   const throttleMs = deps.progressThrottleMs ?? 1500;
   let lastStage: string | null = null;
   let lastWriteAt = 0;
+  let progressWrites:Promise<void> = Promise.resolve();
+  let acceptingProgress = true;
+  const flushProgress = async () => { acceptingProgress = false; await progressWrites; };
   const report: ReportProgress = (p) => {
+    if (!acceptingProgress) return;
     if (!jobRunId) return; // 无处可写(异常输入),静默丢弃,不影响采集
     const nowMs = Date.now();
     const stageChanged = p.stage !== lastStage;
@@ -242,10 +246,10 @@ export async function runScheduledCollection(
       updatedAt: deps.now(),
     };
     if (p.message) progress.message = p.message;
-    // fire-and-forget:进度写库不 await(不拖慢抓取);失败吞掉(采集主流程绝不受影响)。
-    void Promise.resolve(
-      deps.runs.updateRun(ctx, jobRunId, { progress }),
-    ).catch((e) => {
+    // 采集过程不阻塞；进度按提交顺序写，等待/终态之前收口，禁止迟到快照反写。
+    progressWrites = progressWrites.then(async () => {
+      await deps.runs.updateRun(ctx, jobRunId, { progress });
+    }).catch((e) => {
       console.error(
         `[scheduled-collection-runner] 进度写库失败(不影响采集,run ${jobRunId}):`,
         e,
@@ -271,6 +275,7 @@ export async function runScheduledCollection(
       return {itemsNew:0,itemsUpdated:0,continueCollection:true,retryAfterMs:BROWSER_PROFILE_RETRY_MS,
         message:'浏览器正在被其他操作使用，稍后继续原任务；已保存的数据保留'};
     });
+    await flushProgress();
     itemsNew = result.itemsNew;
     itemsUpdated = result.itemsUpdated;
     await deps.ai.recordCollectionResult?.(ctx,task.id,result);
@@ -286,13 +291,14 @@ export async function runScheduledCollection(
       toolCalls: [],
     });
 
-    if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id,result.retryAfterMs);
+    if (result.continueCollection && deps.ai.deferCollection) await deps.ai.deferCollection(ctx,task.id,result.retryAfterMs,result.message);
     if (result.continueCollection) throw new Error("采集尚未完成，请继续原任务");
     if (result.incomplete) throw new Error(result.message ?? "采集尚未完成，已保存本轮可确认的数据，请继续采集");
     await deps.ai.markSucceeded(ctx, task.id);
     runStatus = "succeeded";
     runError = null;
   } catch (err) {
+    await flushProgress();
     if(err instanceof ScheduledFlywheelSuspended){suspended=true;throw err;}
     if (deps.isNotLoggedInError(err)) {
       // 登录阻断保留原持久任务等待恢复；旧执行入口保留既有失败投影。
