@@ -57,7 +57,7 @@ export function stageLayeredWorkers({repoRoot,runtimeRoot}) {
   for(const entry of readdirSync(workers).filter(name=>name.endsWith('.cjs'))) {
     const path=join(workers,entry);
     // 宿主 fork 使用 execArgv:[]；随包入口自己加载固定的相邻解析器，不继承 NODE_OPTIONS。
-    writeFileSync(path,'require("../creatoros-module-resolver.cjs");\n'+readFileSync(path,'utf8'));
+    writeFileSync(path,'process.env.CREATOROS_RUNTIME_ROOT = require("node:path").resolve(__dirname, "../..");\nrequire("../creatoros-module-resolver.cjs");\n'+readFileSync(path,'utf8'));
   }
   const added=stageMissingDependencies({
     from:join(repoRoot,'ai-worker'),

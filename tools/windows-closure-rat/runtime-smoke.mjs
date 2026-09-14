@@ -107,7 +107,7 @@ assertExecutionWorkerRuntime(runtimeRoot);
 for (const filename of readdirSync(resolve(runtimeRoot,"frontend/runtime")).filter(name=>name.endsWith("-worker.cjs"))) {
   await smokeWorker({
     entry:resolve(runtimeRoot,"frontend/runtime",filename), execPath:smokeNode, cwd:runtimeRoot,
-    env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:runtimeRoot},
+    env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot},
   });
   record(`worker-ready:${filename}`);
 }
