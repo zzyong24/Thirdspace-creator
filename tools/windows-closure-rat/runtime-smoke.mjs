@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -11,7 +12,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { delimiter, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
-import { spawn, spawnSync } from "node:child_process";
+import { fork, spawn, spawnSync } from "node:child_process";
 import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
 
 import { reportCapacity } from "./runtime-diagnostics.mjs";
@@ -99,6 +100,35 @@ for (const required of [
 }
 
 
+// 从真正随包入口启动所有 Worker，execArgv 与宿主一致为空；不能靠测试预加载掩盖遗漏。
+const { assertExecutionWorkerRuntime } = await import("../../frontend/scripts/desktop/execution-worker-runtime.mjs");
+assertExecutionWorkerRuntime(runtimeRoot);
+for (const filename of readdirSync(resolve(runtimeRoot,"frontend/runtime")).filter(name=>name.endsWith("-worker.cjs"))) {
+  const child = fork(resolve(runtimeRoot,"frontend/runtime",filename), [], {
+    execPath:smokeNode, execArgv:[], cwd:runtimeRoot,
+    env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:runtimeRoot},
+    stdio:["ignore","ignore","pipe","ipc"],
+  });
+  let stderr="";
+  child.stderr.on("data",chunk=>{stderr=(stderr+chunk).slice(-4000);});
+  const exited=new Promise(resolveExit=>child.once("exit",resolveExit));
+  try {
+    await new Promise((resolveReady,reject)=>{
+      const timer=setTimeout(()=>reject(new Error(`${filename} 未就绪`)),30000);
+      child.once("message",message=>{clearTimeout(timer);message?.type==="ready" ? resolveReady() : reject(new Error(`${filename} 非法握手`));});
+      child.once("error",error=>{clearTimeout(timer);reject(error);});
+      child.once("exit",code=>{clearTimeout(timer);reject(new Error(`${filename} 提前退出 ${code}: ${stderr}`));});
+    });
+  } finally {
+    if(child.connected) child.disconnect();
+    let stopTimer;
+    const stopped=await Promise.race([exited.then(()=>true),new Promise(r=>{stopTimer=setTimeout(()=>r(false),5000);})]);
+    clearTimeout(stopTimer);
+    if(!stopped) {child.kill("SIGKILL");await exited;}
+  }
+  record(`worker-ready:${filename}`);
+}
+
 const zod3 = await import("zod/v3");
 const zod4 = await import("zod/v4");
 if (
@@ -136,6 +166,15 @@ if (queryResult.rows[0]?.ok !== 1 || queryResult.rows[0]?.value !== "中文路�
 }
 await db.close();
 record("pglite-query");
+
+const { createRequire: createWorkerRequire } = await import("node:module");
+const workerRequire = createWorkerRequire(resolve(runtimeRoot,"frontend/runtime/execution-worker.cjs"));
+for (const name of ["jsdom","@mozilla/readability","mammoth","pdf-parse","@napi-rs/canvas"]) {
+  const resolved=workerRequire.resolve(name);
+  if (!resolved.startsWith(`${runtimeRoot}${sep}`)) throw new Error(`Worker ${name} 解析到了包外`);
+  await import(pathToFileURL(resolved).href);
+  record(`worker-dependency:${name}`);
+}
 
 const transformers = await import("@xenova/transformers");
 if (typeof transformers.pipeline !== "function") {

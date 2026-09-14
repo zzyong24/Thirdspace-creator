@@ -228,3 +228,12 @@ test("materializer physically excludes traced engineering inputs without changin
   assert.doesNotMatch(materializer, /runtime\.files\s*>/);
   assert.doesNotMatch(materializer, /core\.files\s*>/);
 });
+
+test("Windows 分层入口必须装配 Worker 并由公共 smoke 真握手", () => {
+  const assembly=readFileSync(resolve(HERE,"assemble-runtime-layers.mjs"),"utf8");
+  const smoke=readFileSync(resolve(HERE,"runtime-smoke.mjs"),"utf8");
+  assert.match(assembly,/stageLayeredWorkers\(\{repoRoot, runtimeRoot: closureRoot\}\)/);
+  assert.match(smoke,/assertExecutionWorkerRuntime\(runtimeRoot\)/);
+  assert.match(smoke,/execArgv:\[\]/);
+  assert.match(smoke,/worker-ready:/);
+});

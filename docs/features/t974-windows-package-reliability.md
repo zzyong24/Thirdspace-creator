@@ -22,3 +22,7 @@
 最后成功 run32232852628/head ed4346b6：runtime3093/core1069/browser1910/media2/localAi110；失败运行 runtime4145/core2121，新增1052全部在core。Next registeredAssets3815→4837（+1022）。尚无历史逐文件清单，不声明具体依赖是根因；本次补asset-sources和完整清单供CI定位。
 用户确认 DEC-T974：数量/体积参考超限告警，所有功能安全门不变；中文空格安装路径测试；固定本次已验证Node25.9.0，增加可重建编译/媒体缓存，保持最终运行包每次重建和验证。
 前置 reconcile 实测235项既有错误，见 /tmp/t974-reconcile-before.log；本轮不借打包治理修改既有产品和全局门配置。
+
+## 首次 Windows 候选验收
+run34799573634/c982bd53：15项运行消费者通过（数据库写读、浏览器、真实视频3277bytes、Next主页72178bytes、优雅退出等），prepare-package成功。随后NSIS beforeBuild发现execution-worker.cjs漏包，正确失败，不作为可用安装包。根因：精简Windows入口未调用全量Mac入口已有的stageExecutionWorkerRuntime，且Worker独有mammoth/readability/pdf-parse未被Next追踪。属于本任务缺依赖根治范围，补统一Worker装配、固定相邻resolver预加载、声明依赖图（同版本复用，冲突拒绝）与真实fork就绪检查。
+本轮清单typebox1.1.38包含669文件仅833657bytes；不能用文件数认定无用。新增诊断耗时5239ms，纯消费者smoke28299ms。由于历史无逐文件清单，尚不声称所有1052文件精确归因。

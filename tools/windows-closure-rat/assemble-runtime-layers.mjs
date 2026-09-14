@@ -18,6 +18,8 @@ import { homedir } from "node:os";
 import { ensureFfmpegStatic, ensureFfprobeStatic } from "../../frontend/scripts/desktop/fetch-ffmpeg.mjs";
 import { playwrightBrowsersCacheRoot } from "../../frontend/scripts/desktop/platform-paths.mjs";
 
+import { stageLayeredWorkers } from "./stage-layered-workers.mjs";
+
 const [closureArg, piBundleArg] = process.argv.slice(2);
 if (!closureArg || !piBundleArg) {
   throw new Error(
@@ -482,6 +484,8 @@ const runtimeNode = resolve(
 );
 copyFileSync(process.execPath, runtimeNode);
 if (process.platform !== "win32") chmodSync(runtimeNode, 0o755);
+
+stageLayeredWorkers({repoRoot, runtimeRoot: closureRoot});
 
 function treeStats(root) {
   if (!existsSync(root)) return { files: 0, bytes: 0, symlinks: 0 };
