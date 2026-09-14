@@ -17,6 +17,8 @@ test('按依赖图复制并复用同版本包，缺必需包仍失败', () => {
   assert.equal(existsSync(join(dest,'a/node_modules')),false);
   assert.equal(JSON.parse(readFileSync(join(dest,'b/package.json'),'utf8')).version,'1');
   assert.equal(stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']}).length,0);
+  rmSync(join(dest,'b'),{recursive:true});
+  assert.deepEqual(stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']}).map(p=>p.name),['b']);
   assert.throws(()=>stageMissingDependencies({from:source,vendorRoot:dest,packages:['missing']}),/Cannot find module/);
   writeFileSync(join(dest,'a/package.json'),JSON.stringify({name:'a',version:'2'}));
   assert.throws(()=>stageMissingDependencies({from:source,vendorRoot:dest,packages:['a']}),/版本不一致/);

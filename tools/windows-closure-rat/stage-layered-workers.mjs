@@ -38,12 +38,12 @@ export function stageMissingDependencies({from, vendorRoot, existingVendorRoots=
     if(existing) {
       const existingManifest=JSON.parse(readFileSync(join(existing,'package.json'),'utf8'));
       if(existingManifest.version!==manifest.version) throw new Error(`Worker 依赖 ${name} 与运行包版本不一致`);
-      return;
-    }
+    } else {
     const destination=join(vendorRoot,name);
     mkdirSync(dirname(destination),{recursive:true});
     cpSync(source,destination,{recursive:true,dereference:true,filter:path=>path===source || path.split(/[\\/]/).at(-1)!=='node_modules'});
     added.push({name,version:manifest.version});
+    }
     const optionalDeps=manifest.optionalDependencies ?? {};
     for(const dep of Object.keys({...manifest.dependencies,...optionalDeps})) visit(source,dep,Object.hasOwn(optionalDeps,dep));
   }

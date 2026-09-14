@@ -111,7 +111,7 @@ for (const filename of readdirSync(resolve(runtimeRoot,"frontend/runtime")).filt
   });
   let stderr="";
   child.stderr.on("data",chunk=>{stderr=(stderr+chunk).slice(-4000);});
-  const exited=new Promise(resolveExit=>child.once("exit",resolveExit));
+  const exited=new Promise(resolveExit=>{child.once("close",resolveExit);child.once("error",resolveExit);});
   try {
     await new Promise((resolveReady,reject)=>{
       const timer=setTimeout(()=>reject(new Error(`${filename} 未就绪`)),30000);
@@ -124,7 +124,12 @@ for (const filename of readdirSync(resolve(runtimeRoot,"frontend/runtime")).filt
     let stopTimer;
     const stopped=await Promise.race([exited.then(()=>true),new Promise(r=>{stopTimer=setTimeout(()=>r(false),5000);})]);
     clearTimeout(stopTimer);
-    if(!stopped) {child.kill("SIGKILL");await exited;}
+    if(!stopped) {
+      child.kill("SIGKILL");
+      await Promise.race([exited,new Promise(r=>{stopTimer=setTimeout(r,5000);})]);
+      clearTimeout(stopTimer);
+      throw new Error(`${filename} IPC断开后未正常退出`);
+    }
   }
   record(`worker-ready:${filename}`);
 }
