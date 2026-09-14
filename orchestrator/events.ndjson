@@ -1074,3 +1074,8 @@
 {"ts":"2026-09-14T14:33:32.043Z","actor":"taskctl","action":"start","task":"T-982","sha_before":"3003286369b9","sha_after":"90c24af49e25"}
 {"ts":"2026-09-14T14:45:56.108Z","actor":"taskctl","action":"complete","task":"T-982","evidence":"五份解密日志与官方 CLI 原任务只读对照，见 docs/verification/t982-collection-logs.md；确认采集误判超时与旧任务恢复缺陷。仅诊断，未修复未重放；全局既有 T-916 欠债未纳入。","sha_before":"90c24af49e25","sha_after":"138249d3e198"}
 {"ts":"2026-09-14T14:49:12.976Z","actor":"taskctl","action":"start","task":"T-983","sha_before":"b628afa8c0fe","sha_after":"63657fa06628"}
+{"ts":"2026-09-14T16:21:20.322Z","actor":"taskctl","action":"start","task":"T-984","sha_before":"60ba9514d957","sha_after":"eafccb95101e"}
+{"ts":"2026-09-14T16:41:54.525Z","actor":"taskctl","action":"block","task":"T-984","reason":"本地1.2.0安装包已生成、校验、安装并启动；真实采集验收待用户开启本次启动CLI访问，公开CLI返回CONNECTION_NOT_FOUND，未绕过授权。","sha_before":"eafccb95101e","sha_after":"52e18d792b4e"}
+{"ts":"2026-09-14T16:54:07.589Z","actor":"taskctl","action":"resume","task":"T-984","reason":"用户确认CLI自动开启；本轮status和access status均为ok true/full，PID41438。","sha_before":"52e18d792b4e","sha_after":"eafccb95101e"}
+{"ts":"2026-09-14T17:01:14.969Z","actor":"taskctl","action":"block","task":"T-984","reason":"安装版实测FAIL：封面任务零候选即成功，但3张有记录的旧封面公开下载404；旧合并任务仍running/queued且浏览器状态报占用。证据docs/verification/t984-local-collection.md；冻结包不扩改。","sha_before":"eafccb95101e","sha_after":"52e18d792b4e"}
+{"ts":"2026-09-14T17:05:00.897Z","actor":"taskctl","action":"start","task":"T-985","sha_before":"1fead761aaa3","sha_after":"d029212245dd"}

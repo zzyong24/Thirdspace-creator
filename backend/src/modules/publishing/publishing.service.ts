@@ -86,6 +86,8 @@ export interface ServiceDeps {
   /** Post-commit notification (NotificationsService.notify). */
   notify?: NotifyPublished;
   /** Optional cover validation seam (AssetsService.getAsset) — SPEC §15. */
+  /** 由 Assets service 检查实际文件，不能把数据库引用当图片可用。 */
+  isCoverAvailable?: (ctx: RequestContext, assetId: string) => Promise<boolean>;
   assertCoverOwned?: (ctx: RequestContext, assetId: string) => Promise<unknown>;
   /**
    * Project→ContentOutput-ids resolver (ProjectsService.listOutputIdsByProject).
@@ -268,7 +270,7 @@ export interface PublishingService {
   listPublicationsMissingCover(
     ctx: RequestContext,
     input: { platform: string; limit?: number },
-  ): Promise<PublicationRow[]>;
+  ): Promise<Array<PublicationRow & {coverCheckError?: string}>>;
   // [T-078] 封面落账:给 publication 的当前 revision 补 coverAssetId。revision 是
   // append-only(绝不 UPDATE 旧行)—— 复制当前 revision 字段追加一版带 cover 的新
   // revision 并置 current;导入作品(无 revision)铸一版空标题 revision 只带 cover
@@ -908,10 +910,24 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
     },
 
     async listPublicationsMissingCover(ctx, input) {
-      return repoFor(ctx).listMissingCoverPublications(
-        input.platform,
-        input.limit ?? 100,
-      );
+      const repo = repoFor(ctx), limit = input.limit ?? 100;
+      if (!deps.isCoverAvailable) return repo.listMissingCoverPublications(input.platform, limit);
+      const missing: Array<PublicationRow & {coverCheckError?: string}> = [];
+      // 只在后台补全扫描；分批读元数据，本地探测不解码图片、不影响页面首屏。
+      for (let offset = 0; missing.length < limit; offset += 100) {
+        const rows = await repo.listMissingCoverPublications(input.platform, 100, true, offset);
+        for (const row of rows) {
+          try {
+            if (!row.coverAssetId || !(await deps.isCoverAvailable(ctx, row.coverAssetId))) missing.push(row);
+          } catch {
+            // 未知不是丢失：保留原封面，本项交给逐作品重试，不阻断其它明确缺失项。
+            missing.push({...row, coverCheckError: "暂时无法检查封面文件，保留原封面待重试"});
+          }
+          if (missing.length >= limit) break;
+        }
+        if (rows.length < 100) break;
+      }
+      return missing;
     },
 
     async setCover(ctx, publicationId, coverAssetId) {
@@ -919,7 +935,10 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       await repo.getPublication(publicationId); // ownership gate(cross-user → 404)
       const current = await repo.getCurrentRevision(publicationId);
       // 幂等:已有封面(用户手选或上一轮回填)→ 不动,原样返回。
-      if (current?.coverAssetId) return current;
+      if (current?.coverAssetId && (!deps.isCoverAvailable || await deps.isCoverAvailable(ctx, current.coverAssetId))) return current;
+      if (deps.isCoverAvailable && !(await deps.isCoverAvailable(ctx, coverAssetId))) {
+        throw new ValidationError("新封面文件不可用，保留已有作品版本");
+      }
       // 封面归属校验(SPEC §15 同 createRevision):cover 必须是本用户的 asset。
       if (deps.assertCoverOwned) {
         try {
@@ -944,7 +963,7 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
           unknown
         >,
       });
-      await repo.setCurrentRevision(publicationId, rev.id);
+      await repo.setCurrentRevision(publicationId, rev.id, current?.id ?? null);
       return rev;
     },
 

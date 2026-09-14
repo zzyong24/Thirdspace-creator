@@ -24,6 +24,7 @@ import { enqueueReconstructForImported as realEnqueueReconstructForImported, typ
 
 /** self.detail 用来判可见性的最小 publication 行(缺封面候选 + 明细已标的两列)。 */
 export interface HeavyBackfillPubRow {
+  coverCheckError?: string;
   /** publication id(= CoverBackfillPorts 的 publicationId)。 */
   id: string;
   /** 抖音 aweme_id(为空的候选不参与回填,诚实跳)。 */
@@ -140,7 +141,7 @@ export async function runDouyinHeavyBackfill(
           if (typeof p.contentOutputId === "string" && p.contentOutputId) {
             outputIdByPublication.set(p.id, p.contentOutputId);
           }
-          return { publicationId: p.id, externalId: p.externalId as string };
+          return { publicationId: p.id, externalId: p.externalId as string, coverCheckError:p.coverCheckError };
         }),
     fetchVideoUrl: (awemeId) => host.fetchVideoUrl(awemeId),
     downloadImage: (url) => host.downloadImage(url),

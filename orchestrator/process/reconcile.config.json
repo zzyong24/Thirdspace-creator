@@ -256,7 +256,7 @@
     {
       "led": "LED-048",
       "what": "合并采集互相阻断、长任务被误清理、跨计划误绑定及浏览器占用反复失败",
-      "check": "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/scheduling/traffic-wake.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000 --retry=0",
+      "check": "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/scheduling/traffic-wake.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts src/modules/ai-runtime/scheduled-flywheel-execution.service.test.ts src/application/collection/cover-file-repair.test.ts src/application/collection/self-backfill.test.ts src/modules/execution/host-browser-profile-lifecycle.test.ts src/modules/execution/host-browser-process-recovery.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000 --retry=0",
       "onFail": "保留原执行与成功进度，修复独立优先调度、按账号资源管理及各源计数；禁止总时长误杀、TTL抢锁、关闭开关后自动新建任务或盲目重试。"
     }
   ],

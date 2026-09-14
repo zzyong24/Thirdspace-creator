@@ -242,6 +242,18 @@ export function createLocalFsObjectStorage(
       ]);
     },
 
+    async objectExists(storageKey) {
+      const absKey = safeJoin(cfg.rootPath, storageKey);
+      try {
+        const handle = await fs.open(absKey, "r");
+        try { const stat = await handle.stat(); return stat.isFile() && stat.size > 0; }
+        finally { await handle.close(); }
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+        throw error;
+      }
+    },
+
     async headObject(storageKey) {
       const absKey = safeJoin(cfg.rootPath, storageKey);
       // Real on-disk size (the bytes the FE PUT) is the source of truth.

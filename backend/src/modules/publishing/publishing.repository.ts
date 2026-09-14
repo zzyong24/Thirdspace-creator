@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNull, or, sql, type Db } from "@creatoros/backend";
 import { publications, publicationRevisions } from "./publishing.db-schema";
-import { OwnershipError } from "./publishing.errors";
+import { ConflictError, OwnershipError } from "./publishing.errors";
 
 // Publishing repository (foundation §5.2) — user-scoped queries ONLY. `user_id`
 // lives on EVERY owned row; every read/write filters `eq(table.userId,
@@ -110,6 +110,7 @@ export interface PublishingRepository {
   setCurrentRevision(
     publicationId: string,
     revisionId: string,
+    expectedRevisionId?: string | null,
   ): Promise<PublicationRow>;
   getCurrentRevision(
     publicationId: string,
@@ -163,7 +164,9 @@ export interface PublishingRepository {
   listMissingCoverPublications(
     platform: string,
     limit: number,
-  ): Promise<PublicationRow[]>;
+    includeExisting?: boolean,
+    offset?: number,
+  ): Promise<Array<PublicationRow & { coverAssetId?: string | null }>>;
 }
 
 export function createPublishingRepository(
@@ -408,17 +411,20 @@ export function createPublishingRepository(
       return rows[0]!;
     },
 
-    async setCurrentRevision(publicationId, revisionId) {
+    async setCurrentRevision(publicationId, revisionId, expectedRevisionId) {
       await getPublicationRowById(publicationId); // ownership gate
-      await db
+      const changed = await db
         .update(publications)
         .set({ currentRevisionId: revisionId, updatedAt: deps.now() })
         .where(
           and(
             eq(publications.id, publicationId),
             eq(publications.userId, userId),
+            accountGate,
+            expectedRevisionId === undefined ? undefined : expectedRevisionId === null ? isNull(publications.currentRevisionId) : eq(publications.currentRevisionId, expectedRevisionId),
           ),
-        );
+        ).returning({ id: publications.id });
+      if (!changed.length) throw new ConflictError("封面更新期间作品版本已变化，请重新读取后重试");
       return getPublicationRowById(publicationId);
     },
 
@@ -527,12 +533,12 @@ export function createPublishingRepository(
       return getPublicationRowById(publicationId);
     },
 
-    async listMissingCoverPublications(platform, limit) {
+    async listMissingCoverPublications(platform, limit, includeExisting = false, offset = 0) {
       // [T-078] left join 当前 revision:currentRevisionId 为 null(导入作品)或
       // 该 revision 的 cover_asset_id 为 null 都算「缺封面」。join 键是本用户行上的
       // currentRevisionId,天然 user-scoped(revision 表不需再过滤 userId)。
       const rows = await db
-        .select({ pub: publications })
+        .select({ pub: publications, coverAssetId: publicationRevisions.coverAssetId })
         .from(publications)
         .leftJoin(
           publicationRevisions,
@@ -545,7 +551,7 @@ export function createPublishingRepository(
             eq(publications.platform, platform),
             eq(publications.status, "published"),
             sql`${publications.externalId} is not null`,
-            or(
+            includeExisting ? undefined : or(
               isNull(publications.currentRevisionId),
               isNull(publicationRevisions.coverAssetId),
             ),
@@ -555,9 +561,10 @@ export function createPublishingRepository(
           desc(
             sql`coalesce(${publications.publishedAt}, ${publications.createdAt})`,
           ),
+          desc(publications.id),
         )
-        .limit(limit);
-      return rows.map((r) => r.pub);
+        .limit(limit).offset(offset);
+      return rows.map((r) => ({...r.pub, coverAssetId: r.coverAssetId}));
     },
 
     async findByExternalKey(platform, externalId) {

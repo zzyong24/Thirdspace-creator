@@ -52,7 +52,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { createScheduledFavoritesAsrService } from "@creatoros/backend/modules/favorites";
 import { createKnowledgeApplication } from "@creatoros/backend/application/knowledge";
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
-import { createHostBrowserProfileLifecycle } from "@creatoros/backend/modules/execution";
+import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
 import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
@@ -1163,7 +1163,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
     process.env.CREATOROS_DOUYIN_AUTH_DIR ??
     nodePath.join(process.cwd(), ".auth", "douyin");
   const profileAuthority=createBrowserProfileAuthority(db,douyinAuthDirBase);
-  const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile});
+  const hostProfileLifecycle=createHostBrowserProfileLifecycle(db,{resolveProfile:profileAuthority.resolveProfile,recovery:createDesktopHostProcessRecovery()});
   configureHostBrowserProfileLifecycle(hostProfileLifecycle.acquire,profileAuthority.resolveProfile);
   const douyinAuthDirFor = async (accountId?: string | null, signal?: AbortSignal,userId?:string): Promise<string> => {
     if(!accountId){
@@ -1986,6 +1986,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
         entityType: input.entityType === "publication" ? "video" : input.entityType,
       }),
     assertCoverOwned: (ctx, id) => assetsService.getAsset(ctx, id),
+    isCoverAvailable: (ctx, id) => assetsService.isAssetFileAvailable(ctx, id),
     // Project→ContentOutput-ids resolver — drives Analytics' project metric read
     // (publishing.listPublicationIdsByProject → analytics.projects.get) without an
     // Analytics cross-module join. The project-ownership gate lives in Projects.

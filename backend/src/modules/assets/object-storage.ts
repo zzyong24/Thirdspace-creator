@@ -76,6 +76,8 @@ export interface ObjectStoragePort {
   deleteObject?(storageKey: string): Promise<void>;
   // Inspect a stored object's metadata (phase-2 validation source).
   headObject(storageKey: string): Promise<HeadObjectResult>;
+  /** 轻量检查实际字节是否可读；本地不能触发 ffprobe 或整文件哈希。 */
+  objectExists?(storageKey: string): Promise<boolean>;
   // [T-055h asset.classify] SERVER-SIDE read: fetch the stored bytes for a key the
   // service already owns (VLM 归类要看图)。与 putObject 对称;keeps AssetsService
   // the SOLE storage caller —— runner 经 service 端口拿字节,不直接 fs.readFile。

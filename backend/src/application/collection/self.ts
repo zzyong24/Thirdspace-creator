@@ -52,7 +52,7 @@ const runBackfill = async (ctx:RequestContext,report:Parameters<ScheduledCollect
           listPublicationsMissingCover: async (c, limit) => {
             const rows=await publishingService.listPublicationsMissingCover(c,{platform:"douyin",limit:separate?2147483647:limit});
             const due=[];
-            for(const p of rows){if(!separate||!ports.sync||await ports.sync.due(c,p.id,"cover"))due.push({id:p.id,externalId:p.externalId??null,contentOutputId:p.contentOutputId??null});if(due.length>=limit)break;}
+            for(const p of rows){if(!separate||!ports.sync||await ports.sync.due(c,p.id,"cover"))due.push({id:p.id,externalId:p.externalId??null,contentOutputId:p.contentOutputId??null,coverCheckError:p.coverCheckError});if(due.length>=limit)break;}
             return due;
           },
           onCoverSettled:separate&&ports.sync?(id,result)=>ports.sync!.settle(ctx,id,"cover",result):undefined,

@@ -111,6 +111,7 @@ export interface AssetsService {
   ): Promise<{ url: string; fileName: string }>;
   // [T-055h asset.classify] VLM 归类的两个端口:读当前文件字节(看图)+ 回写 AI 注解
   // (一句话描述进 mediaMetadata.aiDescription)。runner 经这里,service 仍是唯一 storage 调用方。
+  isAssetFileAvailable(ctx: RequestContext, assetId: string): Promise<boolean>;
   getAssetBytes(
     ctx: RequestContext,
     assetId: string,
@@ -435,6 +436,24 @@ export function createAssetsService(
         existingExt ?? stripped + (extForMime(current.mimeType) ?? "");
       return { url, fileName };
     },
+    async isAssetFileAvailable(ctx, assetId) {
+      const accountId = requireAccountId(ctx.accountId, "assets.isAssetFileAvailable");
+      const asset = await repo.getAsset(ctx.userId, assetId, accountId);
+      if (!asset || asset.status !== "active" || !asset.currentFileId) return false;
+      const files = await repo.listAssetFiles(ctx.userId, assetId, accountId);
+      const current = files.find(file => file.id === asset.currentFileId);
+      if (!current) return false;
+      const storage = await objectStorageForCtx(ctx);
+      try {
+        if (storage.objectExists) return await storage.objectExists(current.storageKey);
+        return (await storage.headObject(current.storageKey)).fileSize > 0;
+      } catch (error) {
+        const e = error as {code?:string;name?:string;$metadata?:{httpStatusCode?:number}};
+        if (e.code === "ENOENT" || e.name === "NotFound" || e.name === "NoSuchKey" || e.$metadata?.httpStatusCode === 404) return false;
+        throw error; // 权限或存储故障是未知，不能当作图片丢失。
+      }
+    },
+
     async getAssetBytes(ctx, assetId) {
       const accountId = requireAccountId(ctx.accountId, "assets.getAssetBytes");
       const asset = await requireAsset(ctx, assetId);

@@ -635,6 +635,51 @@ describe("setVisibilityByExternalKey ([T-073] 平台侧可见性)", () => {
 
 // [T-078] 封面回填的读侧(缺封面候选集)与落账(setCover append-only 幂等)。
 describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () => {
+  it("封面记录存在但文件丢失时重新进入候选，并追加可用封面版本", async () => {
+    const readable = new Set(["old-cover", "repaired-cover"]);
+    const repairing = createPublishingService({ db, now: () => NOW, nextId: (p) => `${p}-repair-${Math.random()}`,
+      isCoverAvailable: async (_ctx, id) => readable.has(id),
+    });
+    const pub = await repairing.createImportedPublication(ctx, "output-1", {platform: "douyin", externalId: "lost-cover"});
+    const old = await repairing.setCover(ctx, pub.id, "old-cover");
+    readable.delete("old-cover");
+    expect((await repairing.listPublicationsMissingCover(ctx, {platform: "douyin"})).map(p => p.id)).toEqual([pub.id]);
+    const repaired = await repairing.setCover(ctx, pub.id, "repaired-cover");
+    expect(repaired.coverAssetId).toBe("repaired-cover");
+    expect(repaired.id).not.toBe(old.id);
+    expect(await repairing.listPublicationsMissingCover(ctx, {platform: "douyin"})).toEqual([]);
+  });
+
+  it("检查不可用不能覆盖仍可用的用户封面，存储故障也不能当丢失", async () => {
+    const repairing = createPublishingService({ db, now: () => NOW, nextId: (p) => `${p}-check-${Math.random()}`,
+      isCoverAvailable: async (_ctx, id) => { if (id === "unknown") throw new Error("storage unavailable"); return true; },
+    });
+    const pub = await repairing.createImportedPublication(ctx, "output-1", {platform: "douyin", externalId: "good-cover"});
+    const current = await repairing.setCover(ctx, pub.id, "user-picked");
+    expect((await repairing.setCover(ctx, pub.id, "collector")).id).toBe(current.id);
+    await service.createRevision(ctx, pub.id, {title:"keep", coverAssetId:"unknown"});
+    const missing = await repairing.createImportedPublication(ctx, "output-2", {platform:"douyin", externalId:"missing-file"});
+    const rows = await repairing.listPublicationsMissingCover(ctx, {platform:"douyin"});
+    expect(rows.map(row=>row.id)).toEqual(expect.arrayContaining([pub.id, missing.id]));
+    expect(rows.find(row=>row.id===pub.id)?.coverCheckError).toContain("待重试");
+    await expect(repairing.setCover(ctx,pub.id,"collector")).rejects.toThrow("storage unavailable");
+    expect((await repairing.setCover(ctx,missing.id,"collector")).coverAssetId).toBe("collector");
+  });
+
+  it("补采过程中用户更新版本时不覆盖用户新稿", async () => {
+    const pub = await service.createImportedPublication(ctx,"output-1",{platform:"douyin",externalId:"cover-race"});
+    await service.createRevision(ctx,pub.id,{title:"old",coverAssetId:"lost"});
+    let pickedId = "";
+    const repairing = createPublishingService({db,now:()=>NOW,nextId:p=>`${p}-race-${Math.random()}`,
+      isCoverAvailable:async(_ctx,id)=>{
+        if(id==="replacement") pickedId=(await service.createRevision(ctx,pub.id,{title:"用户刚改的稿子",coverAssetId:"picked"})).id;
+        return id!=="lost";
+      },
+    });
+    await expect(repairing.setCover(ctx,pub.id,"replacement")).rejects.toThrow("作品版本已变化");
+    expect((await service.getPublication(ctx,pub.id)).currentRevisionId).toBe(pickedId);
+  });
+
   it("导入作品(无 revision)进候选集;setCover 后离开候选集(幂等的根)", async () => {
     const pub = await service.createImportedPublication(ctx, "output-1", {
       platform: "douyin",

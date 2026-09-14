@@ -25,6 +25,8 @@ import {isBrowserProfileBusy} from "../../modules/ai-runtime/scheduled-collectio
 
 /** 一条缺封面的作品(publication + 可拼 iesdouyin 分享页的 aweme_id)。 */
 export interface MissingCoverPublication {
+  /** 文件探测未知时保留原封面，单项记录待重试，不调用外部下载。 */
+  coverCheckError?: string;
   publicationId: string;
   /** 抖音 aweme_id(候选集查询已过滤 external_id 非空)。 */
   externalId: string;
@@ -108,6 +110,7 @@ export async function backfillDouyinCovers(
     const pub = missing[index]!;
     try {
       opts?.checkSignal?.();
+      if (pub.coverCheckError) throw new Error(pub.coverCheckError);
       const { coverUrl } = await ports.fetchVideoUrl(pub.externalId);
       if (!coverUrl) {
         // 分享页可解析但无 cover(图集等)—— 诚实跳过,下一轮还会是候选;
