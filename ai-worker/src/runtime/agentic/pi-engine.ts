@@ -359,6 +359,13 @@ async function loadPiSdk(): Promise<PiSdk | null> {
   if (testSdkOverride !== undefined) return testSdkOverride; // null → 强制「未就绪」路径
   if (cachedSdk) return cachedSdk;
   try {
+    let loaded: PiSdk;
+    const runtimeRoot = process.env.CREATOROS_RUNTIME_ROOT;
+    const packagedBundle = runtimeRoot ? path.join(runtimeRoot, "layers/core/pi/pi-bundle.mjs") : null;
+    if (packagedBundle && await fs.stat(packagedBundle).then(s => s.isFile()).catch(() => false)) {
+      // Windows分层包已把SDK打成单一入口，不再要求开发机node_modules布局。
+      loaded = await import(/* webpackIgnore: true */ pathToFileURL(packagedBundle).href) as unknown as PiSdk;
+    } else {
     const coreDir = await locatePiCoreDir();
     if (!coreDir) return null;
     const imp = (f: string): Promise<Record<string, unknown>> =>
@@ -372,13 +379,14 @@ async function loadPiSdk(): Promise<PiSdk | null> {
       imp("session-manager.js"),
       imp("resource-loader.js"), // RT-H02/H03:受控 ResourceLoader 隔离用
     ]);
-    const loaded = {
+    loaded = {
       createAgentSession: sdk.createAgentSession,
       ModelRegistry: mr.ModelRegistry,
       AuthStorage: as.AuthStorage,
       SessionManager: sm.SessionManager,
       DefaultResourceLoader: rl.DefaultResourceLoader,
     } as unknown as PiSdk;
+    }
     if (
       typeof loaded.createAgentSession !== "function" ||
       !loaded.ModelRegistry ||

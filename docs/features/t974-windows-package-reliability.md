@@ -26,3 +26,5 @@
 ## 首次 Windows 候选验收
 run34799573634/c982bd53：15项运行消费者通过（数据库写读、浏览器、真实视频3277bytes、Next主页72178bytes、优雅退出等），prepare-package成功。随后NSIS beforeBuild发现execution-worker.cjs漏包，正确失败，不作为可用安装包。根因：精简Windows入口未调用全量Mac入口已有的stageExecutionWorkerRuntime，且Worker独有mammoth/readability/pdf-parse未被Next追踪。属于本任务缺依赖根治范围，补统一Worker装配、固定相邻resolver预加载、声明依赖图（同版本复用，冲突拒绝）与真实fork就绪检查。
 本轮清单typebox1.1.38包含669文件仅833657bytes；不能用文件数认定无用。新增诊断耗时5239ms，纯消费者smoke28299ms。由于历史无逐文件清单，尚不声称所有1052文件精确归因。
+
+本地补充验证发现两处布局适配缺口：tar前Worker外置依赖检查仍用普通node_modules解析；Pi Agent loader也仅搜索node_modules。修复分别沿用随包固定resolver、读取受控runtimeRoot下固定pi-bundle入口，Mac普通布局保留原路径，不改变模型/API/业务契约。Pi分层加载测试先实测false红测，再修复后与durable-pi-stream共16项通过。Worker握手/崩溃/卡死/Node缺失共5项真子进程回归纳入29项闭包测试；打包相关46项通过。run34800995360因本地发现Node IPC close事件不可依赖而主动取消，不记为构建失败或PASS。
