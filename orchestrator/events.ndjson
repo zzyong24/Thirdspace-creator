@@ -1066,3 +1066,4 @@
 {"ts":"2026-09-14T06:59:55.673Z","actor":"taskctl","action":"complete","task":"T-977","evidence":"d5834440；前端76测、tsc通过；生产页面受控2秒RSC延迟实验2778ms→39ms/0 RSC，返回前进通过；保留全局reconcile 233项既有失败，安装包尚未更新","sha_before":"90b94ce51e30","sha_after":"0233b2a0adc9"}
 {"ts":"2026-09-14T07:09:58.442Z","actor":"taskctl","action":"start","task":"T-978","sha_before":"cfbaca833a91","sha_after":"f4fb82586ec5"}
 {"ts":"2026-09-14T07:20:12.540Z","actor":"taskctl","action":"complete","task":"T-978","evidence":"4项红测复现→6文件116项通过；frontend tsc与diff检查通过；pmem sync完成；reconcile LED-047通过，保留范围外既有233项全局错误；自动化轮询风险登记T-979；源码修复尚未打包。","sha_before":"a35af81cb582","sha_after":"71d7749fac50"}
+{"ts":"2026-09-14T07:22:36.739Z","actor":"taskctl","action":"start","task":"T-980","sha_before":"e02a3a6f62a3","sha_after":"a8b8ccd6a4af"}
