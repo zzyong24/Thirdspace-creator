@@ -27,6 +27,8 @@ import {isBrowserProfileBusy} from "../../modules/ai-runtime/scheduled-collectio
 export interface MissingCoverPublication {
   /** 文件探测未知时保留原封面，单项记录待重试，不调用外部下载。 */
   coverCheckError?: string;
+  /** 同账号同平台同作品已保存的CDN地址，不需要再次请求作品解析接口。 */
+  cachedCoverUrl?: string;
   publicationId: string;
   /** 抖音 aweme_id(候选集查询已过滤 external_id 非空)。 */
   externalId: string;
@@ -108,19 +110,29 @@ export async function backfillDouyinCovers(
     `[douyin-cover-backfill] 开始回填:候选 ${missing.length} 条缺封面作品(串行,受 iesdouyin 限流节奏)`,
   );
   let done = 0;
+  let sourceCooling=false;
   for (let index = 0; index < missing.length; index += 1) {
     const pub = missing[index]!;
     try {
       opts?.checkSignal?.();
       if (pub.coverCheckError) throw new Error(pub.coverCheckError);
-      const { coverUrl } = await ports.fetchVideoUrl(pub.externalId);
-      if (!coverUrl) {
+      let downloaded:Awaited<ReturnType<CoverBackfillPorts["downloadImage"]>>|undefined;
+      if(pub.cachedCoverUrl){
+        try{downloaded=await ports.downloadImage(pub.cachedCoverUrl);}
+        catch{opts?.checkSignal?.();} // 过期地址回落原解析器，其网关仍负责冷却与限流。
+      }
+      if(!downloaded){
+        if(sourceCooling){result.deferred+=1;continue;}
+        const {coverUrl}=await ports.fetchVideoUrl(pub.externalId);
+        if(coverUrl)downloaded=await ports.downloadImage(coverUrl);
+      }
+      if (!downloaded) {
         // 分享页可解析但无 cover(图集等)—— 诚实跳过,下一轮还会是候选;
         // 不造占位 asset。
         result.skipped += 1;
         await ports.onSettled?.(pub.publicationId,{success:false,error:"暂未获取到作品封面"});
       } else {
-        const { bytes, mimeType } = await ports.downloadImage(coverUrl);
+        const { bytes, mimeType } = downloaded;
         const ext = mimeType.includes("png")
           ? "png"
           : mimeType.includes("webp")
@@ -153,8 +165,11 @@ export async function backfillDouyinCovers(
       if (err instanceof Error && err.name === "DouyinCooldownActiveError" && "remainMs" in err && typeof err.remainMs === "number") {
         // 共享网关已明确告诉我们本轮不可继续。当前项没有真正发出请求，连同剩余项
         // 一起留到下轮；继续循环只会放大日志、任务时长和 CPU/网络负载。
-        result.deferred = missing.length - index;
+        sourceCooling=true;
         if(Number.isFinite(err.remainMs)&&err.remainMs>=0)result.retryAfterMs=Math.ceil(err.remainMs);
+        // 不再请求冷却来源；本批若还有已有CDN地址，仍可完成这些本地元数据的下载。
+        if(missing.slice(index+1).some(row=>!!row.cachedCoverUrl)){result.deferred+=1;continue;}
+        result.deferred += missing.length - index;
         console.warn(
           `[douyin-cover-backfill] 抖音冷却中,本轮提前结束:已处理 ${done}/${missing.length},延后 ${result.deferred} 条,约 ${Math.ceil(err.remainMs / 1000)}s 后可重试`,
         );

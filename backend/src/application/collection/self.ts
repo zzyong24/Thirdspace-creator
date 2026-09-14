@@ -35,6 +35,7 @@ readMetrics:(ctx:RequestContext,capturedAt:string)=>Promise<{incomplete?:boolean
 enqueueTraffic?:(ctx:RequestContext,visibleIds:ReadonlySet<string>)=>Promise<unknown>;
 readExport:(ctx:RequestContext)=>Promise<Uint8Array>;
 readCover:(ctx:RequestContext,awemeId:string)=>Promise<{coverUrl?:string}>;
+readCachedCovers?:(ctx:RequestContext,externalIds:string[])=>Promise<Array<{externalId:string;coverUrl:string}>>;
 downloadDouyinImage:(url:string)=>Promise<{bytes:Uint8Array;mimeType:string}>;
 parseDouyinWorkListXlsx:(bytes:Uint8Array)=>Promise<import("./douyin-work-detail").DouyinWorkDetail[]>;
 }):ScheduledCollector {
@@ -52,8 +53,15 @@ const runBackfill = async (ctx:RequestContext,report:Parameters<ScheduledCollect
           listPublicationsMissingCover: async (c, limit) => {
             const rows=await publishingService.listPublicationsMissingCover(c,{platform:"douyin",limit:separate?2147483647:limit});
             const due=[];
-            for(const p of rows){if(!separate||!ports.sync||await ports.sync.due(c,p.id,"cover"))due.push({id:p.id,externalId:p.externalId??null,contentOutputId:p.contentOutputId??null,coverCheckError:p.coverCheckError});if(due.length>=limit)break;}
-            return due;
+            for(const p of rows){if(!separate||!ports.sync||await ports.sync.due(c,p.id,"cover"))due.push({id:p.id,externalId:p.externalId??null,contentOutputId:p.contentOutputId??null,coverCheckError:p.coverCheckError});if(!ports.readCachedCovers&&due.length>=limit)break;}
+            let cached=new Map<string,string>();
+            if(ports.readCachedCovers&&due.length){
+              try{cached=new Map((await ports.readCachedCovers(c,due.flatMap(p=>p.externalId?[p.externalId]:[]))).map(p=>[p.externalId,p.coverUrl]));}
+              catch{checkScheduledSignal();console.warn('[douyin-cover-backfill] 已有封面地址暂不可读，按原采集路径继续');}
+            }
+            // SEMANTIC_BOUNDARY_ALLOW: 仅按已有文件地址安排资源读取顺序，不评价或选择内容。
+            return due.map(p=>({...p,cachedCoverUrl:cached.get(p.externalId??'')}))
+              .sort((a,b)=>Number(!!b.cachedCoverUrl)-Number(!!a.cachedCoverUrl)).slice(0,limit);
           },
           onCoverSettled:separate&&ports.sync?(id,result)=>ports.sync!.settle(ctx,id,"cover",result):undefined,
           // [T-862/gate-F7] 封面复用组合入口：匿名 iesdouyin 解析失败时才按当前账号

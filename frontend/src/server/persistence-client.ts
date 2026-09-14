@@ -3899,6 +3899,7 @@ readExport: async (ctx: RequestContext) => (await loadDouyinCdp()).fetchDouyinWo
           { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
           { gateway: douyinGateway },
         ),
+readCachedCovers: (ctx,externalIds)=>intelligenceService.findCachedCovers(ctx,{platform:"douyin",externalIds}),
 readCover: async (ctx: RequestContext, awemeId: string) => (await loadDouyinCdp()).fetchDouyinCoverUrl({
               signal:scheduledSignals.getStore(),
               awemeId,

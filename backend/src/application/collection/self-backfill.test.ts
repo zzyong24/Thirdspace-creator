@@ -1,14 +1,14 @@
 import {expect,it,vi} from 'vitest';
 import {createSelfCollector} from './self';
 const ctx={userId:'u',accountId:'a',requestId:'t983',source:'user' as const};
-function fixture(){
+function fixture(extra:Record<string,unknown>={}){
  let tick=0;let fail:'none'|'busy'|'bad'|'cooldown'='none';const stamp=()=>new Date(Date.parse('2026-09-14T00:00:00Z')+tick).toISOString();
  const missing=new Map(Array.from({length:12},(_,i)=>[`p${i}`,{id:`p${i}`,externalId:`v${i}`,contentOutputId:null}]));
  const states=new Map<string,{retryAt:string|null}>();
  const metrics=vi.fn(async()=>{throw new Error('独立封面不得重新采集指标');});
  const read=vi.fn(async(_c:unknown,id:string)=>{if(id==='v2'&&fail==='cooldown')throw Object.assign(new Error('平台冷却'),{name:'DouyinCooldownActiveError',remainMs:3_592_000});if(id==='v0'&&(fail==='busy'||fail==='bad'))throw Object.assign(new Error(fail),{code:fail==='busy'?'BROWSER_PROFILE_BUSY':'NETWORK_ERROR'});return {coverUrl:'https://example.test/cover.jpg'};});
  const settle=vi.fn(async(_c:unknown,id:string,cap:string,result:{success:boolean})=>{expect(cap).toBe('cover');states.set(id,{retryAt:result.success?null:new Date(Date.parse(stamp())+900000).toISOString()});});
- const collector=createSelfCollector({sync:{due:async(_c:unknown,id:string)=>!states.get(id)?.retryAt||Date.parse(states.get(id)!.retryAt!)<=Date.parse(stamp()),read:async(_c:unknown,id:string)=>states.get(id),settle},projectsService:{listImportedWorks:async()=>[]},publishingService:{listPublicationsMissingCover:async(_c:unknown,opts:{limit:number})=>[...missing.values()].slice(0,opts.limit),setCover:async(_c:unknown,id:string)=>{missing.delete(id);}},assetsService:{createGeneratedAsset:async()=>({id:'saved-asset'})},readMetrics:metrics,readExport:metrics,readCover:read,downloadDouyinImage:async()=>({bytes:new Uint8Array([1]),mimeType:'image/jpeg'}),resolveCoverBackfillLimit:()=>10,now:stamp,checkScheduledSignal:()=>{},configuration:{}} as never);
+ const collector=createSelfCollector({sync:{due:async(_c:unknown,id:string)=>!states.get(id)?.retryAt||Date.parse(states.get(id)!.retryAt!)<=Date.parse(stamp()),read:async(_c:unknown,id:string)=>states.get(id),settle},projectsService:{listImportedWorks:async()=>[]},publishingService:{listPublicationsMissingCover:async(_c:unknown,opts:{limit:number})=>[...missing.values()].slice(0,opts.limit),setCover:async(_c:unknown,id:string)=>{missing.delete(id);}},assetsService:{createGeneratedAsset:async()=>({id:'saved-asset'})},readMetrics:metrics,readExport:metrics,readCover:read,downloadDouyinImage:async()=>({bytes:new Uint8Array([1]),mimeType:'image/jpeg'}),resolveCoverBackfillLimit:()=>10,now:stamp,checkScheduledSignal:()=>{},configuration:{},...extra} as never);
  return {collector,metrics,read,settle,missing,fail:(value:typeof fail)=>{fail=value;},advance:()=>{tick+=900000;}};
 }
 it('独立封面每批10，12条两批完成，不读取指标、导出或调用归因模型',async()=>{
@@ -36,4 +36,20 @@ it('真实self→heavy→cover链路保留已补2张，3592秒冷却原样传给
  f.advance();f.advance();f.advance();f.advance();f.fail('none');
  const second=await f.collector(ctx,{__backfillOnly:true},()=>{});
  expect(second).toMatchObject({itemsUpdated:10,continueCollection:false});expect(f.missing.size).toBe(0);expect(f.settle).toHaveBeenCalledTimes(12);
+});
+
+it('已保存的封面地址优先补齐，冷却来源不挡排在后面的缓存作品',async()=>{
+ const cached=vi.fn(async()=>[9,10,11].map(i=>({externalId:`v${i}`,coverUrl:`https://example.test/cached-${i}.jpg`})));
+ const f=fixture({readCachedCovers:cached});f.read.mockImplementation(async()=>{throw Object.assign(new Error('平台冷却'),{name:'DouyinCooldownActiveError',remainMs:3592000});});
+ const result=await f.collector(ctx,{__backfillOnly:true},()=>{});
+ expect(result).toMatchObject({itemsUpdated:3,continueCollection:true,retryAfterMs:3592000});
+ expect(f.missing.has('p9')).toBe(false);expect(f.missing.has('p10')).toBe(false);expect(f.missing.has('p11')).toBe(false);
+ expect(cached).toHaveBeenCalledOnce();expect(f.read).toHaveBeenCalledOnce();
+});
+it('过期缓存地址只回落既有解析器，遇冷却仍可下载本批其它已有地址',async()=>{
+ const f=fixture({readCachedCovers:async()=>[9,10,11].map(i=>({externalId:`v${i}`,coverUrl:`https://example.test/cached-${i}.jpg`})),downloadDouyinImage:async(url:string)=>{if(url.includes('cached-9'))throw new Error('缓存地址已过期');return{bytes:new Uint8Array([1]),mimeType:'image/jpeg'};}});
+ f.read.mockImplementation(async()=>{throw Object.assign(new Error('平台冷却'),{name:'DouyinCooldownActiveError',remainMs:3592000});});
+ const result=await f.collector(ctx,{__backfillOnly:true},()=>{});
+ expect(result).toMatchObject({itemsUpdated:2,continueCollection:true,retryAfterMs:3592000});
+ expect(f.missing.has('p9')).toBe(true);expect(f.missing.has('p10')).toBe(false);expect(f.missing.has('p11')).toBe(false);expect(f.read).toHaveBeenCalledOnce();
 });
