@@ -1,3 +1,4 @@
+import { smokeWorker } from "./worker-smoke.mjs";
 import {
   copyFileSync,
   existsSync,
@@ -12,7 +13,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { delimiter, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
-import { fork, spawn, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
 
 import { reportCapacity } from "./runtime-diagnostics.mjs";
@@ -104,33 +105,10 @@ for (const required of [
 const { assertExecutionWorkerRuntime } = await import("../../frontend/scripts/desktop/execution-worker-runtime.mjs");
 assertExecutionWorkerRuntime(runtimeRoot);
 for (const filename of readdirSync(resolve(runtimeRoot,"frontend/runtime")).filter(name=>name.endsWith("-worker.cjs"))) {
-  const child = fork(resolve(runtimeRoot,"frontend/runtime",filename), [], {
-    execPath:smokeNode, execArgv:[], cwd:runtimeRoot,
+  await smokeWorker({
+    entry:resolve(runtimeRoot,"frontend/runtime",filename), execPath:smokeNode, cwd:runtimeRoot,
     env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:runtimeRoot},
-    stdio:["ignore","ignore","pipe","ipc"],
   });
-  let stderr="";
-  child.stderr.on("data",chunk=>{stderr=(stderr+chunk).slice(-4000);});
-  const exited=new Promise(resolveExit=>{child.once("close",resolveExit);child.once("error",resolveExit);});
-  try {
-    await new Promise((resolveReady,reject)=>{
-      const timer=setTimeout(()=>reject(new Error(`${filename} 未就绪`)),30000);
-      child.once("message",message=>{clearTimeout(timer);message?.type==="ready" ? resolveReady() : reject(new Error(`${filename} 非法握手`));});
-      child.once("error",error=>{clearTimeout(timer);reject(error);});
-      child.once("exit",code=>{clearTimeout(timer);reject(new Error(`${filename} 提前退出 ${code}: ${stderr}`));});
-    });
-  } finally {
-    if(child.connected) child.disconnect();
-    let stopTimer;
-    const stopped=await Promise.race([exited.then(()=>true),new Promise(r=>{stopTimer=setTimeout(()=>r(false),5000);})]);
-    clearTimeout(stopTimer);
-    if(!stopped) {
-      child.kill("SIGKILL");
-      await Promise.race([exited,new Promise(r=>{stopTimer=setTimeout(r,5000);})]);
-      clearTimeout(stopTimer);
-      throw new Error(`${filename} IPC断开后未正常退出`);
-    }
-  }
   record(`worker-ready:${filename}`);
 }
 

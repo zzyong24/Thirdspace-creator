@@ -234,6 +234,7 @@ test("Windows 分层入口必须装配 Worker 并由公共 smoke 真握手", () 
   const smoke=readFileSync(resolve(HERE,"runtime-smoke.mjs"),"utf8");
   assert.match(assembly,/stageLayeredWorkers\(\{repoRoot, runtimeRoot: closureRoot\}\)/);
   assert.match(smoke,/assertExecutionWorkerRuntime\(runtimeRoot\)/);
-  assert.match(smoke,/execArgv:\[\]/);
+  assert.match(smoke,/await smokeWorker\(/);
+  assert.match(readFileSync(resolve(HERE,"worker-smoke.mjs"),"utf8"),/execArgv:\[\]/);
   assert.match(smoke,/worker-ready:/);
 });
