@@ -47,13 +47,58 @@ export async function readHostProcessSnapshot(platform:NodeJS.Platform=process.p
  if(!rows.length)throw Error('process-snapshot-invalid');return rows;
 }
 const officialHost=(r:HostProcessRecord)=>/(?:^|[\\/])creatoros-server(?:\.exe)?$/i.test(r.executable);
+/** 随包CLI只经HTTP转发；完整exe、同一sidecar根的入口脚本、完整命令三项同时匹配。
+ * 不能仅凭含有creatoros.cjs/mcp字样排除宿主，未知选项/预加载脚本继续保留占用。
+ */
+function knownCliRelay(row:HostProcessRecord,platform:NodeJS.Platform):boolean{
+ if(!row.command)return false;
+ const paths=platform==='win32'?path.win32:path.posix;
+ const exe=row.executable;
+ const suffix=platform==='darwin'?'/server.app/Contents/MacOS/creatoros-server':platform==='win32'?'\\cli\\node.exe':'/cli/node';
+ const comparable=(value:string)=>platform==='win32'?value.toLowerCase():value;
+ if(!comparable(exe).endsWith(comparable(suffix)))return false;
+ const script=paths.join(exe.slice(0,-suffix.length),'frontend','cli','creatoros.cjs');
+ const consume=(command:string,argument:string)=>{
+  for(const candidate of [argument,`"${argument}"`,`'${argument}'`]){
+   if(comparable(command).startsWith(comparable(candidate))&&/^\s/.test(command.slice(candidate.length)))return command.slice(candidate.length).trimStart();
+  }
+  return null;
+ };
+ const rest=consume(row.command,exe);if(rest===null)return false;
+ const args=consume(rest,script);return args!==null&&/^mcp\s+serve$/.test(args.trim());
+}
 function belongsToCurrentHost(row:HostProcessRecord,rows:HostProcessRecord[],pid:number):boolean{
  const visited=new Set<number>();let parent=row.ppid;
  while(parent&& !visited.has(parent)){if(parent===pid)return true;visited.add(parent);parent=rows.find(r=>r.pid===parent)?.ppid;}
  return false;
 }
 const browser=(r:HostProcessRecord)=>/(?:chrome|chromium|msedge)/i.test(r.executable);
-const possibleHost=(r:HostProcessRecord)=>officialHost(r)||/next-server/i.test(r.executable)||(/(?:^|[\\/])(?:node|bun|deno)(?:\.exe)?$/i.test(r.executable)&&(!r.command||/(?:server\.[cm]?js|next-server|next[\\/]|next\s+(?:start|dev))/i.test(r.command)));
+function runtimeScope(executable:string,platform:NodeJS.Platform):string{
+ const value=executable.replace(/\\/g,'/'),runtime=value.match(/^(.*\/runtime)\/[^/]+\/sidecar\//);
+ if(runtime)return platform==='win32'?runtime[1]!.toLowerCase():runtime[1]!;
+ const sidecar=value.lastIndexOf('/sidecar/');
+ const root=sidecar>=0?value.slice(0,sidecar+8):value.slice(0,value.lastIndexOf('/'));
+ return platform==='win32'?root.toLowerCase():root;
+}
+function referencesScope(value:string,scope:string,platform:NodeJS.Platform):boolean{
+ if(!scope)return false;
+ const normalized=platform==='win32'?value.replace(/\\/g,'/').toLowerCase():value;
+ let start=0;
+ while((start=normalized.indexOf(scope,start))>=0){
+  const before=start===0?'':normalized[start-1]!,after=normalized[start+scope.length]??'';
+  if((!before||/[\s"'=(:]/.test(before))&&(!after||/[\s"'\/]/.test(after)))return true;
+  start+=scope.length;
+ }
+ return false;
+}
+function possibleHost(r:HostProcessRecord,scope:string,platform:NodeJS.Platform):boolean{
+ if(officialHost(r)||/^next-server(?:\s+\(v[^)]+\))?$/i.test(r.executable))return true;
+ if(!/(?:^|[\\/])(?:node|bun|deno)(?:\.exe)?$/i.test(r.executable))return false;
+ // 安装版只从受控runtime启动。Next start-server.js在业务初始化前已将标题设为
+ // next-server；不能让其它项目的任意Node工具变成整机全局锁。范围内未知载入选项仍挡。
+ return referencesScope(r.executable,scope,platform)||!!r.command&&referencesScope(r.command,scope,platform);
+}
+
 function profileArgument(command:string):string|null{
  const match=command.match(/(?:^|\s)--user-data-dir(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(.+?))(?=\s+--[\w-]+(?:=|\s|$)|$)/);
  if(!match||(command.match(/(?:^|\s)--user-data-dir(?:=|\s)/g)?.length??0)!==1)return null;
@@ -66,12 +111,17 @@ function profileArgument(command:string):string|null{
  * SEMANTIC_BOUNDARY_ALLOW: OS进程/完整路径/启动身份比较只确认资源占用，不作内容或创作选择。
  * 不杀进程，不删除Singleton文件，不以租约年龄作为停止证据。
  */
-export function createDesktopHostProcessRecovery(deps:{pid?:number;platform?:NodeJS.Platform;desktop?:boolean;snapshot?:()=>Promise<HostProcessRecord[]>}={}):HostProcessRecovery{
+export function createDesktopHostProcessRecovery(deps:{pid?:number;execPath?:string;platform?:NodeJS.Platform;desktop?:boolean;snapshot?:()=>Promise<HostProcessRecord[]>}={}):HostProcessRecovery{
  const pid=deps.pid??process.pid,platform=deps.platform??process.platform,desktop=deps.desktop??process.env.CREATOROS_DESKTOP==='1';
  const snapshot=deps.snapshot??(()=>readHostProcessSnapshot(platform));
  const normalize=(value:string)=>platform==='win32'?path.win32.resolve(value).toLowerCase():path.posix.resolve(value);
  const canonicalProfile=async(value:string)=>{try{return normalize(await realpath(value));}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return normalize(value);throw error;}};
- const selfFrom=(rows:HostProcessRecord[])=>{const self=rows.find(r=>r.pid===pid);if(!desktop||!self||!officialHost(self)||!self.started)throw Error('desktop-host-unverified');return self;};
+ const selfFrom=(rows:HostProcessRecord[])=>{
+  const self=rows.find(r=>r.pid===pid),ownExecutable=deps.execPath??(pid===process.pid?process.execPath:undefined);
+  // Next会通过process.title覆写Mac ps的comm/args；仅当前进程的真实execPath可补证。
+  const verified=!!self&&(officialHost(self)||!!ownExecutable&&officialHost({...self,executable:ownExecutable}));
+  if(!desktop||!self||!verified||!self.started)throw Error('desktop-host-unverified');return self;
+ };
  return {
   async createHostInstanceId(){
    let id:string;
@@ -82,7 +132,8 @@ export function createDesktopHostProcessRecovery(deps:{pid?:number;platform?:Nod
   async isPreviousHostStopped({hostInstanceId,authDir}){
    if(currentProcessHostIds.has(`${pid}:${hostInstanceId}`))return {stopped:false,reason:'current-process-owner'};
    try{
-    const rows=await snapshot();selfFrom(rows);
+    const rows=await snapshot(),self=selfFrom(rows);
+    const scope=runtimeScope(deps.execPath??(pid===process.pid?process.execPath:self.executable),platform);
     const encoded=hostInstanceId.match(/^host-v1:(\d+):([A-Za-z0-9_-]+):[a-f0-9-]+$/);
     if(hostInstanceId.startsWith('host-v1:')&&!encoded)return {stopped:false,reason:'host-identity-invalid'};
     if(encoded){
@@ -92,7 +143,7 @@ export function createDesktopHostProcessRecovery(deps:{pid?:number;platform?:Nod
     for(const row of rows){
      if(row.pid===pid)continue;
      // 同一旧宿主仍可能尚未启动浏览器；不能只查Chrome就夺租约。
-     if(possibleHost(row)&&!belongsToCurrentHost(row,rows,pid))return {stopped:false,reason:'another-host-running'};
+     if(possibleHost(row,scope,platform)&&!belongsToCurrentHost(row,rows,pid)&&!knownCliRelay(row,platform))return {stopped:false,reason:'another-host-running'};
      if(!browser(row))continue;
      if(!row.command)return {stopped:false,reason:'browser-command-unavailable'};
      const profile=profileArgument(row.command);
