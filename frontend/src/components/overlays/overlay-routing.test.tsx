@@ -112,6 +112,7 @@ function flushNextTick(): void {
   for (const listener of listeners) listener();
 }
 
+let nativeReplace: ReturnType<typeof vi.spyOn>;
 function resetNext(initial?: Partial<NextNavState>) {
   mockNext.state.pathname = initial?.pathname ?? "/projects";
   mockNext.state.searchParams = initial?.searchParams ?? new URLSearchParams();
@@ -122,6 +123,13 @@ function resetNext(initial?: Partial<NextNavState>) {
     act(() => {
       flushNextTick();
     });
+  });
+  nativeReplace?.mockRestore();
+  nativeReplace = vi.spyOn(window.history, "replaceState").mockImplementation((_data, _unused, url) => {
+    const [pathname, query] = String(url).split("?");
+    if (pathname) mockNext.state.pathname = pathname;
+    mockNext.state.searchParams = new URLSearchParams(query ?? "");
+    act(() => { flushNextTick(); });
   });
   mockNext.state.back = vi.fn();
   mockNext.state.push = vi.fn();
@@ -167,6 +175,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   document.body.replaceChildren();
+  nativeReplace?.mockRestore();
 });
 
 // ---------------------------------------------------------------------------
@@ -306,12 +315,13 @@ describe("OverlayController", () => {
     const close = screen.getByTestId("copilot-close");
     await userEvent.click(close);
 
-    expect(mockNext.state.replace).toHaveBeenCalledTimes(1);
-    const [target, opts] = mockNext.state.replace.mock.calls[0] ?? [];
+    expect(nativeReplace).toHaveBeenCalledTimes(1);
+    expect(mockNext.state.replace).not.toHaveBeenCalled();
+    const [, , target] = nativeReplace.mock.calls[0] ?? [];
     // `copilot` is removed but the other approved param `filter=active`
     // must survive (SPEC §5: "Closing removes only `copilot`").
     expect(target).toBe("/projects?filter=active");
-    expect(opts).toMatchObject({ scroll: false });
+    expect(mockNext.state.push).not.toHaveBeenCalled();
   });
 
   it("[T-096 矩阵#6 / T-080 回归] 关闭清掉全部深链伴生参数(surface/fn/prefill/selKind/selId/scope),无残参", async () => {
@@ -337,7 +347,7 @@ describe("OverlayController", () => {
 
     await userEvent.click(screen.getByTestId("copilot-close-deep"));
 
-    const [target] = mockNext.state.replace.mock.calls[0] ?? [];
+    const [, , target] = nativeReplace.mock.calls[0] ?? [];
     expect(target).toBe("/projects?filter=active");
   });
 
@@ -363,7 +373,7 @@ describe("OverlayController", () => {
 
     await userEvent.click(screen.getByTestId("copilot-close-2"));
 
-    const [target] = mockNext.state.replace.mock.calls[0] ?? [];
+    const [, , target] = nativeReplace.mock.calls[0] ?? [];
     expect(target).toBe("/projects");
   });
 
@@ -382,7 +392,8 @@ describe("OverlayController", () => {
     );
 
     await userEvent.keyboard("{Escape}");
-    expect(mockNext.state.replace).toHaveBeenCalledTimes(1);
+    expect(nativeReplace).toHaveBeenCalledTimes(1);
+    expect(mockNext.state.replace).not.toHaveBeenCalled();
   });
 
   it("traps focus inside the open overlay and restores focus to the trigger on close", async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import {getLiveChatSession} from "./live-chat-session";
+import { ChatToolTrace } from "./chat-tool-trace";
 
 /**
  * Copilot 页面负责输入、流式消息、候选卡与原任务控制。
@@ -636,7 +637,7 @@ const MD_COMPONENTS: Components = {
   hr: () => <hr className="my-2 border-border" />,
 };
 
-function ChatMarkdown({ text }: { text: string }) {
+const ChatMarkdown = React.memo(function ChatMarkdown({ text }: { text: string }) {
   // [T-055b SPEC §5.3] 对话正文 14px、行高 1.7(原 11px 用户反馈「字体太小看的累」)。
   return (
     <div data-slot="copilot-markdown" className="text-sm leading-[1.7] text-muted-foreground">
@@ -645,7 +646,7 @@ function ChatMarkdown({ text }: { text: string }) {
       </ReactMarkdown>
     </div>
   );
-}
+});
 
 /**
  * [T-473] 深链/稿面请求里的 functionKey 是一次性命令，不是会话永久上下文。
@@ -2439,21 +2440,7 @@ export function AICopilotContent({
                     // [T-060②] 已完成 trace 行:可折叠展开看入参/结果摘要;后面若有产物卡
                     // 则卡随其后。纯读工具(context.*)也留痕 —— 用户能看见 AI 读了什么。
                     const traceRow = (
-                      <details
-                        key={`${key}-trace`}
-                        data-slot="copilot-tool-trace"
-                        className="mt-1 rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5"
-                      >
-                        <summary className="cursor-pointer select-none text-xs text-muted-foreground">
-                          <span className="text-success">✓</span> 已调用 {traceLabel}
-                          {typeof (out as { total?: number }).total === "number"
-                            ? `（共 ${(out as { total?: number }).total} 条）`
-                            : ""}
-                        </summary>
-                        <pre className="mt-1.5 max-h-48 overflow-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-relaxed text-text-subtle">
-                          {`入参 ${JSON.stringify(part.input ?? {}, null, 1).slice(0, 400)}\n结果 ${JSON.stringify(out, null, 1).slice(0, 800)}`}
-                        </pre>
-                      </details>
+                      <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
                     );
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){
                       const research=out as {taskId?:string|null;error?:string|null};

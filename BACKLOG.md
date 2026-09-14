@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-977 | 修复 AI 助手打开卡顿 | 🔨 待办 | — | — | [SPEC](docs/features/t977-copilot-open-latency.md) | 实测入口导航、数据读取与历史渲染耗时，修复阻塞打开链路，保留会话与原任务。 |
 | T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |
 | T-975 | 恢复正式 Mac DMG 拖拽安装引导 | ✅ 待办 | — | — | [SPEC](docs/features/t975-dmg-install-guide.md) | 排查正式包缺Finder布局，恢复既有安装引导并验证产物，不盲目重跑。 |
 | T-974 | 根治 Windows 打包文件膨胀与数量门误阻断 | ✅ 待办 | — | — | [SPEC](docs/features/t974-windows-package-reliability.md) | 用户认可独立优化：依赖清单与增长诊断、数量告警、真实安装运行硬门，修复后重跑1.2流水线。 |

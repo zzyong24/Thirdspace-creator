@@ -537,6 +537,7 @@ function SidebarContextualCard({ variant, userDisplayName }: SidebarContextualCa
           延续全局会话 + 历史只列全局(修「左下角每次新建对话」根因)。 */}
       <Link
         href="?copilot=open&scope=global"
+        prefetch={false}
         className="text-brand underline-offset-4 hover:underline"
       >
         打开 AI 助手
