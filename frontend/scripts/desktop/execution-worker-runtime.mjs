@@ -24,6 +24,23 @@ export function stageExecutionWorkerRuntime({repoRoot,runtimeRoot}){
 /** 只解析依赖，不执行解析器；拒绝借构建机祖先 node_modules 假装随包齐全。 */
 export function assertWorkerExternalPackages(runtimeRoot) {
   const root = realpathSync(runtimeRoot);
+  const resolver = join(root,"frontend/creatoros-module-resolver.cjs");
+  if (existsSync(resolver)) {
+    // 分层安装包沿用实际解析器，不能用构建机node_modules判断随包完整性。
+    const node = process.platform === "win32" ? join(root,"layers/core/bin/creatoros-server.exe") : process.execPath;
+    const check = `const fs=require('node:fs'),path=require('node:path'),{createRequire}=require('node:module');
+      const root=fs.realpathSync(process.argv[1]),req=createRequire(path.join(root,'frontend/runtime/execution-worker.cjs'));
+      for(const name of JSON.parse(process.argv[2])) {
+        const local=path.relative(root,fs.realpathSync(req.resolve(name)));
+        if(local==='..'||local.startsWith('../')||local.startsWith('..\\\\')||path.isAbsolute(local))throw new Error('Worker依赖解析到包外:'+name);
+      }`;
+    const result=spawnSync(node,["--require",resolver,"-e",check,root,JSON.stringify(workerExternalPackages)],{
+      cwd:root,encoding:"utf8",timeout:30000,
+      env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,CREATOROS_RUNTIME_ROOT:root},
+    });
+    if(result.error || result.status!==0) throw new Error(`Worker分层依赖验证失败: ${result.error?.message ?? result.stderr}`);
+    return;
+  }
   const requireFromWorker = createRequire(join(root, "frontend/runtime/execution-worker.cjs"));
   for (const name of workerExternalPackages) {
     const resolved = realpathSync(requireFromWorker.resolve(name));
