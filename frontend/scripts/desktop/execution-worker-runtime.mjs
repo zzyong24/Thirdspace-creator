@@ -27,7 +27,11 @@ export function assertWorkerExternalPackages(runtimeRoot) {
   const resolver = join(root,"frontend/creatoros-module-resolver.cjs");
   if (existsSync(resolver)) {
     // 分层安装包沿用实际解析器，不能用构建机node_modules判断随包完整性。
-    const node = process.platform === "win32" ? join(root,"layers/core/bin/creatoros-server.exe") : process.execPath;
+    // prepare步骤把主Node移交Tauri，保留的CLI Node也是同一随包二进制。
+    const node = process.platform === "win32"
+      ? [join(root,"cli/node.exe"),join(root,"layers/core/bin/creatoros-server.exe")].find(existsSync)
+      : process.execPath;
+    if(!node) throw new Error("Worker分层依赖验证失败: 缺少随包Node");
     const check = `const fs=require('node:fs'),path=require('node:path'),{createRequire}=require('node:module');
       const root=fs.realpathSync(process.argv[1]),req=createRequire(path.join(root,'frontend/runtime/execution-worker.cjs'));
       for(const name of JSON.parse(process.argv[2])) {
