@@ -297,7 +297,9 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("id: runtime-cache");
     expect(workflow).toContain("steps.runtime-cache.outputs.cache-hit != 'true'");
     expect(workflow).toContain("steps.runtime-cache.outputs.cache-primary-key");
-    expect(workflow).not.toContain("restore-keys:");
+    const runtimeRestore = workflow.slice(workflow.indexOf("id: runtime-cache"), workflow.indexOf("CACHE_HIT:"));
+    expect(runtimeRestore).not.toContain("restore-keys:");
+    expect(workflow).toContain("path: frontend/.next/cache");
   });
 
   it("缓存键隔离平台、架构、Node ABI 和所有 runtime 输入", () => {
@@ -416,7 +418,7 @@ describe("桌面正式构建的 Runtime Image 缓存契约", () => {
     expect(workflow).toContain("$cliHelpPayload.usage -notmatch '^creatoros '");
     expect(workflow).not.toContain("$cliHelp -notmatch '用法: creatoros'");
     expect(workflow).toContain('Test-Path (Join-Path $installDir "sidecar.tar.gz")');
-    expect(workflow).toContain("CreatorOS RAT02 Space");
+    expect(workflow).toContain("CreatorOS 中文 RAT02 Space");
     expect(workflow).toContain("Windows 主动卸载清理冒烟(T-557)");
     expect(workflow).toContain('$uninstaller = Join-Path $installDir "uninstall.exe"');
     expect(workflow).toContain("主动卸载后仍残留 runtime-images");

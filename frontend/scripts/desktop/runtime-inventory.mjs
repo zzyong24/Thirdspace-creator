@@ -28,6 +28,8 @@ const slash = (value) => value.replace(/\\/g, "/");
 
 export function classifyRuntimeOwner(relativePath) {
   const path = slash(relativePath).replace(/^\.\/+/, "");
+  const layer = /^layers\/(core|browser|media|local-ai)\//.exec(path)?.[1];
+  if (layer) return layer;
   if (
     path.startsWith("frontend/browsers/") ||
     path.includes("/playwright/.local-browsers/")

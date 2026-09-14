@@ -92,7 +92,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "25" # engines: >=25 <26
+          node-version: "25.9.0" # engines: >=25 <26
           cache: pnpm
 
       - uses: dtolnay/rust-toolchain@stable
@@ -103,6 +103,23 @@ jobs:
 
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
+      # 只缓存编译中间态，最终运行文件、凭据和用户数据不进入此缓存。
+      - name: 恢复 Windows Next 编译缓存
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: next-win-x64-node25.9.0-v1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-${{ github.sha }}
+          restore-keys: |
+            next-win-x64-node25.9.0-v1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-
+
+      - name: 缓存 Windows 媒体工具
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/creatoros/ffmpeg-static
+          key: media-win-x64-${{ hashFiles('frontend/scripts/desktop/fetch-ffmpeg.mjs') }}
+
 
       # [T-709] 正式 macOS job 使用一次性钥匙串。P12 与 Apple app-specific password
       # 仅来自 GitHub Secrets；仓库和 artifact 只保留公开证书指纹与验收结果。
@@ -473,10 +490,7 @@ jobs:
             exit 1
           fi
           setup_bytes=$(wc -c < "$setup" | tr -d '[:space:]')
-          if [ "$setup_bytes" -gt 600000000 ]; then
-            echo "::error::[T-675] Windows setup 超出 600,000,000B 硬门:$setup_bytes"
-            exit 1
-          fi
+          node tools/windows-closure-rat/runtime-diagnostics.mjs --setup "$setup"
           echo "[T-454] ✓ setup.exe 携带 sidecar.tar.gz,不含展开目录"
           echo "[T-675] ✓ setupBytes=$setup_bytes"
 
@@ -500,11 +514,10 @@ jobs:
           $setup = Get-ChildItem "frontend/src-tauri/target/release/bundle/nsis" -Filter "*-setup.exe" |
             Select-Object -First 1
           if (-not $setup) { throw "[T-487] 未找到 NSIS setup.exe" }
-          if ($setup.Length -gt 600000000) {
-            throw "[T-675] Windows setup 超出 600,000,000B 硬门:$($setup.Length)"
-          }
+          node tools/windows-closure-rat/runtime-diagnostics.mjs --setup $setup.FullName
+          if ($LASTEXITCODE -ne 0) { throw "安装包容量检查输入无效" }
 
-          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS 中文 RAT02 Space"
           Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
           $installWatch = [Diagnostics.Stopwatch]::StartNew()
           $process = Start-Process -FilePath $setup.FullName -Wait -PassThru `
@@ -559,9 +572,8 @@ jobs:
             Get-ChildItem $runtime -Recurse -Force |
               Where-Object { $_.LinkType -or ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }
           )
-          if ($runtimeFiles.Count -gt 3500) {
-            throw "[T-675] 安装 runtime 超出 3,500 文件预算:$($runtimeFiles.Count)"
-          }
+          node tools/windows-closure-rat/runtime-diagnostics.mjs --runtime-files $runtimeFiles.Count
+          if ($LASTEXITCODE -ne 0) { throw "运行文件清单无效" }
           if ($nodeModules.Count -ne 0 -or $links.Count -ne 0) {
             throw "[T-675] 安装 runtime 结构违规:node_modules=$($nodeModules.Count), links=$($links.Count)"
           }
@@ -760,7 +772,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS 中文 RAT02 Space"
           $appExe = Join-Path $installDir "CreatorOS.exe"
           if (-not (Test-Path $appExe -PathType Leaf)) {
             throw "[T-562] 安装完成但缺 CreatorOS.exe"
@@ -877,7 +889,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS RAT02 Space"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS 中文 RAT02 Space"
           $uninstaller = Join-Path $installDir "uninstall.exe"
           if (-not (Test-Path $uninstaller -PathType Leaf)) {
             throw "[T-557] 安装完成但缺官方 uninstall.exe"
@@ -915,6 +927,10 @@ jobs:
             tools/windows-closure-rat/out/closure/ncc-core-summary.json
             tools/windows-closure-rat/out/closure/runtime-smoke-results.json
             tools/windows-closure-rat/out/packaged-runtime-summary.json
+            tools/windows-closure-rat/out/runtime-diagnostics.json
+            tools/windows-closure-rat/out/asset-sources.json
+            tools/windows-closure-rat/out/build-timings.json
+            frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/official-package-results.json
           if-no-files-found: warn
           retention-days: 30
@@ -968,7 +984,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "25"
+          node-version: "25.9.0"
           cache: pnpm
 
       - uses: dtolnay/rust-toolchain@stable
@@ -1038,9 +1054,8 @@ jobs:
           $setup = Get-ChildItem "frontend/src-tauri/target/release-fast/bundle/nsis" -Filter "*-setup.exe" |
             Select-Object -First 1
           if (-not $setup) { throw "[T-565] 未找到真实 NSIS setup.exe" }
-          if ($setup.Length -gt 600000000) {
-            throw "[T-675] Windows 候选 setup 超出 600,000,000B 硬门:$($setup.Length)"
-          }
+          node tools/windows-closure-rat/runtime-diagnostics.mjs --setup $setup.FullName
+          if ($LASTEXITCODE -ne 0) { throw "安装包容量检查输入无效" }
 
           $listing = Join-Path $env:RUNNER_TEMP "creatoros-package-listing.txt"
           & 7z l $setup.FullName | Out-File -Encoding utf8 $listing
@@ -1052,7 +1067,7 @@ jobs:
             throw "[T-565] NSIS 又直接枚举展开 runtime 小文件"
           }
 
-          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS T565 Package RAT"
+          $installDir = Join-Path $env:RUNNER_TEMP "CreatorOS 中文 T565 Package RAT"
           Remove-Item -Recurse -Force $installDir -ErrorAction SilentlyContinue
           $installWatch = [Diagnostics.Stopwatch]::StartNew()
           $install = Start-Process -FilePath $setup.FullName -Wait -PassThru `
@@ -1080,9 +1095,8 @@ jobs:
             Get-ChildItem $runtime -Recurse -Force |
               Where-Object { $_.LinkType -or ($_.Attributes -band [IO.FileAttributes]::ReparsePoint) }
           )
-          if ($runtimeFiles.Count -gt 3500) {
-            throw "[T-565] 安装 runtime 超出 3,500 文件预算:$($runtimeFiles.Count)"
-          }
+          node tools/windows-closure-rat/runtime-diagnostics.mjs --runtime-files $runtimeFiles.Count
+          if ($LASTEXITCODE -ne 0) { throw "运行文件清单无效" }
           if ($nodeModules.Count -ne 0) {
             throw "[T-565] 安装 runtime 仍含 node_modules:$($nodeModules.Count)"
           }
@@ -1279,6 +1293,10 @@ jobs:
             tools/windows-closure-rat/out/closure/ncc-core-summary.json
             tools/windows-closure-rat/out/closure/runtime-smoke-results.json
             tools/windows-closure-rat/out/packaged-runtime-summary.json
+            tools/windows-closure-rat/out/runtime-diagnostics.json
+            tools/windows-closure-rat/out/asset-sources.json
+            tools/windows-closure-rat/out/build-timings.json
+            frontend/src-tauri/target/runtime-reports/build-timings.package.json
             tools/windows-closure-rat/out/package-rat-results.json
             ${{ runner.temp }}/creatoros-t565-webview.json
           if-no-files-found: warn

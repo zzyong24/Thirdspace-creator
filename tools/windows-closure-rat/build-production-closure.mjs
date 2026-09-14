@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readPackageBrandBuildEnv } from "../../frontend/scripts/desktop/package-flavor.mjs";
@@ -112,6 +112,12 @@ export function productionClosurePlan({
       ],
     },
     {
+      name: "runtime file inventory",
+      command: process.execPath,
+      args: [resolve(SCRIPT_DIR, "runtime-diagnostics.mjs"), "--root", CLOSURE_ROOT,
+        "--out", resolve(OUT_ROOT, "runtime-diagnostics.json")],
+    },
+    {
       name: "runtime consumer smoke",
       command: resolve(
         CLOSURE_ROOT,
@@ -188,12 +194,23 @@ export function buildProductionClosure({ preparePackage = false } = {}) {
     process.env.CREATOROS_PACKAGE_BRAND_INPUT_PATH,
   );
   rmSync(OUT_ROOT, { recursive: true, force: true });
+  mkdirSync(OUT_ROOT, {recursive:true});
+  const timings = [];
   for (const step of productionClosurePlan({
     preparePackage,
     packageBrandInputPath: packageBrand?.inputPath,
     packageBrandBuildEnv: packageBrand?.buildEnv,
-  })) runStep(step);
-  if (!existsSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json"))) {
+  })) {
+    const started = Date.now();
+    let status = "failed";
+    try { runStep(step); status = "passed"; }
+    finally {
+      timings.push({name:step.name,status,durationMs:Date.now()-started});
+      writeFileSync(resolve(OUT_ROOT,"build-timings.json"), JSON.stringify({schemaVersion:1,steps:timings},null,2)+"\n");
+    }
+  }
+  if (!existsSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json")) ||
+      JSON.parse(readFileSync(resolve(CLOSURE_ROOT, "runtime-smoke-results.json"), "utf8")).status !== "passed") {
     throw new Error("[T-675] production closure 缺 runtime smoke 证据");
   }
   if (

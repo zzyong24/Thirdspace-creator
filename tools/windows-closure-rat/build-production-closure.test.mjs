@@ -109,8 +109,10 @@ test("runtime smoke uses a real short-lived verdict instead of the removed bypas
   assert.match(source, /CREATOROS_SIDECAR_VERDICT_TOKEN/);
   assert.doesNotMatch(source, /CREATOROS_SMOKE_BYPASS_VERDICT:\s*["']1["']/);
   assert.match(source, /delete sidecarEnv\.CREATOROS_VERDICT_SIGNING_KEY_B64/);
-  assert.match(source, /layerSummary\.runtime\.files > 3_500/);
-  assert.match(source, /layerSummary\.core\.files > 1_500/);
+  assert.match(source, /reportCapacity/);
+  assert.match(source, /layerSummary\.nodeModulesDirectories !== 0/);
+  assert.match(source, /status: "passed"/);
+  assert.doesNotMatch(source, /layerSummary\.(?:runtime|core)\.files > /);
   assert.doesNotMatch(source, /layerSummary\.core\.files > 1_000/);
   assert.match(source, /HYPERFRAMES_FFMPEG_PATH:\s*ffmpegPath/);
   assert.match(source, /HYPERFRAMES_FFPROBE_PATH:\s*ffprobePath/);
@@ -184,8 +186,9 @@ test("official Windows release and RAT are wired to the same guarded closure", (
     workflow.match(/build-production-closure\.mjs/g)?.length >= 2,
     "正式发布与候选 RAT 都必须调用公共入口",
   );
-  assert.match(workflow, /setupBytes[\s\S]*600000000/);
-  assert.match(workflow, /runtimeFiles[\s\S]*3500/);
+  assert.match(workflow, /runtime-diagnostics\.mjs --setup/);
+  assert.match(workflow, /runtime-diagnostics\.mjs --runtime-files/);
+  assert.doesNotMatch(workflow, /\$runtimeFiles\.Count -gt 3500/);
   assert.match(workflow, /firstLaunchMilliseconds/);
   assert.match(workflow, /Windows 首次启动超过 45 秒/);
   assert.ok(

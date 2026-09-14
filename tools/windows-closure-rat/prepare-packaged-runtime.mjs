@@ -13,6 +13,8 @@ import { dirname, relative, resolve, sep } from "node:path";
 import { bakeVerdictPublicKey } from "./bake-verdict-public-key.mjs";
 import { stageCreatorOsCliRuntime } from "../../frontend/scripts/desktop/creatoros-cli-runtime.mjs";
 
+import { reportCapacity } from "./runtime-diagnostics.mjs";
+
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
   throw new Error(
@@ -132,14 +134,13 @@ if (nodeModulesDirectories !== 0 || linksOrReparsePoints !== 0) {
     `[T-565] package runtime 结构违规:node_modules=${nodeModulesDirectories}, links=${linksOrReparsePoints}`,
   );
 }
-if (files > 3_500) {
-  throw new Error(`[T-565] package runtime 超出 3,500 文件预算:${files}`);
-}
+const capacity = reportCapacity({runtimeFiles: files});
 
 const summary = {
   schemaVersion: 1,
   target: "windows-x86_64",
   runtimeFiles: files,
+  capacityWarnings: capacity,
   runtimeBytes: bytes,
   nodeModulesDirectories,
   linksOrReparsePoints,

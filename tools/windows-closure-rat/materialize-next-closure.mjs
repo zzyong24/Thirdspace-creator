@@ -78,6 +78,14 @@ registerAsset(
   "frontend/.next/standalone/frontend/server.js",
 );
 
+// 记录追踪来源，失败时可定位是哪些构建输入进入运行包；不复制源文件内容。
+writeFileSync(resolve(safeOutputBase, "asset-sources.json"), JSON.stringify({
+  schemaVersion: 1,
+  candidate: process.env.GITHUB_SHA ?? null,
+  assets: [...assetSources].map(([destination, source]) => ({destination, source})),
+  excludedNonRuntimeAssets: [...excludedNonRuntimeAssets].sort(),
+}, null, 2) + "\n");
+
 rmSync(outputRoot, { recursive: true, force: true });
 mkdirSync(outputRoot, { recursive: true });
 

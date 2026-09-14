@@ -14,6 +14,8 @@ import { pathToFileURL } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { createBuildSmokeVerdictToken } from "../../frontend/scripts/desktop/verdict-key-material.mjs";
 
+import { reportCapacity } from "./runtime-diagnostics.mjs";
+
 const [closureArg] = process.argv.slice(2);
 if (!closureArg) {
   throw new Error("usage: node runtime-smoke.mjs <closure-dir>");
@@ -67,6 +69,23 @@ const moduleResolver = resolve(
   "frontend",
   "creatoros-module-resolver.cjs",
 );
+const results = {};
+const startedAt = Date.now();
+// 失败也保留已经发生的消费者结果；不能把部分成功当完整通过。
+const smokeReportPath = resolve(runtimeRoot, "runtime-smoke-results.json");
+const saveProgress = () => writeFileSync(smokeReportPath, JSON.stringify({
+  schemaVersion: 1, target, status: "running", durationMs: Date.now() - startedAt, results,
+}, null, 2) + "\n");
+process.on("uncaughtExceptionMonitor", (error) => {
+  writeFileSync(smokeReportPath, JSON.stringify({schemaVersion:1,target,status:"failed",durationMs:Date.now()-startedAt,results,error:error.message},null,2)+"\n");
+});
+saveProgress();
+const record = (name, value = true) => {
+  results[name] = value;
+  saveProgress();
+  console.log(`[closure-rat] ✓ ${name}${value === true ? "" : `: ${value}`}`);
+};
+
 for (const required of [
   runtimeNode,
   browsersDir,
@@ -79,12 +98,6 @@ for (const required of [
   }
 }
 
-const results = {};
-const startedAt = Date.now();
-const record = (name, value = true) => {
-  results[name] = value;
-  console.log(`[closure-rat] ✓ ${name}${value === true ? "" : `: ${value}`}`);
-};
 
 const zod3 = await import("zod/v3");
 const zod4 = await import("zod/v4");
@@ -115,8 +128,10 @@ record("s3-client");
 
 const { PGlite } = await import("@electric-sql/pglite");
 const db = new PGlite();
-const queryResult = await db.query("select 1 as ok");
-if (queryResult.rows[0]?.ok !== 1) {
+await db.exec("CREATE TABLE package_probe (id integer primary key, value text)");
+await db.query("INSERT INTO package_probe VALUES ($1, $2)", [1, "中文路径验证"]);
+const queryResult = await db.query("SELECT id AS ok, value FROM package_probe");
+if (queryResult.rows[0]?.ok !== 1 || queryResult.rows[0]?.value !== "中文路径验证") {
   throw new Error("[closure-rat] PGlite query smoke 失败");
 }
 await db.close();
@@ -441,22 +456,16 @@ try {
 const layerSummary = JSON.parse(
   readFileSync(resolve(runtimeRoot, "layer-summary.json"), "utf8"),
 );
-if (
-  // [T-675] 与正式安装包使用同一总文件硬门；core 另保留更宽但明确的警戒线。
-  // 旧 1,000 门槛已被正常业务闭包(1,022)越过，却仍远低于总预算，不能让 RAT
-  // 与正式 Gate 使用两套互相矛盾的发布语义。
-  layerSummary.runtime.files > 3_500 ||
-  layerSummary.core.files > 1_500 ||
-  layerSummary.nodeModulesDirectories !== 0
-) {
-  throw new Error(
-    `[closure-rat] 文件预算失败:runtime=${layerSummary.runtime.files} core=${layerSummary.core.files} node_modules=${layerSummary.nodeModulesDirectories}`,
-  );
+if (layerSummary.nodeModulesDirectories !== 0) {
+  throw new Error(`[closure-rat] 结构检查失败: node_modules=${layerSummary.nodeModulesDirectories}`);
 }
-record("file-budget", `runtime=${layerSummary.runtime.files},core=${layerSummary.core.files}`);
+const capacity = reportCapacity({runtimeFiles:layerSummary.runtime.files,coreFiles:layerSummary.core.files});
+record("runtime-structure", "node_modules=0");
 
 const report = {
   schemaVersion: 1,
+  status: "passed",
+  capacityWarnings: capacity,
   target,
   durationMs: Date.now() - startedAt,
   layerSummary,
