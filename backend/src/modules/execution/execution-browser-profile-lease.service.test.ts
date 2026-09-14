@@ -166,3 +166,23 @@ it('真实守卫关闭证明绑定同一宿主租约：关闭失败保留，关�
     await ctx.close();
     expect((await service.acquireProfile(worker.ref, host.domain, host.profileKey)).leaseId).not.toBe(receipt.leaseId);
 });
+it('旧host恢复仅释放观察到的完整receipt，租约换owner后不误释放',async()=>{
+ const service=createExecutionBrowserProfileLeaseService(db,{now});
+ const old={userId:'recovery-user',domain:'douyin.com',profileKey:'8'.repeat(64),hostInstanceId:'old',hostOperationId:'op'};
+ const receipt=await service.acquireForHost(old);
+ const scope={userId:old.userId,domain:old.domain,profileKey:old.profileKey};
+ const observed=await service.getHeldHostLease(scope);expect(observed?.leaseId).toBe(receipt.leaseId);
+ expect(await service.getHeldHostLease({...scope,userId:'other-user'})).toBeNull();
+ expect(await service.releaseVerifiedStoppedHost({...observed!,hostOperationId:'forged'})).toBe(false);
+ await service.releaseAfterHostStopped(old,receipt.leaseId);
+ const current={...old,hostInstanceId:'new',hostOperationId:'new-op'},newReceipt=await service.acquireForHost(current);
+ expect(await service.releaseVerifiedStoppedHost(observed!)).toBe(false);
+ expect((await service.getHeldHostLease(scope))?.leaseId).toBe(newReceipt.leaseId);
+ expect(await service.releaseVerifiedStoppedHost({...current,leaseId:newReceipt.leaseId})).toBe(true);
+ expect(await service.releaseVerifiedStoppedHost({...current,leaseId:newReceipt.leaseId})).toBe(false);
+});
+it('宿主恢复读端口不暴露worker物理档案租约',async()=>{
+ const service=createExecutionBrowserProfileLeaseService(db,{now}),worker=await owner('recover-worker','recover-worker-user');
+ const profileKey='7'.repeat(64);await service.acquireProfile(worker.ref,'douyin.com',profileKey);
+ expect(await service.getHeldHostLease({userId:'recover-worker-user',domain:'douyin.com',profileKey})).toBeNull();
+});

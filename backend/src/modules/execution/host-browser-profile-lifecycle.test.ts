@@ -38,3 +38,17 @@ it('另一宿主的租约也仅在原owner真实释放后排队继续',async()=>
  const nextPromise=other.acquire('/test/e');setTimeout(()=>void first.onStopped(),20);
  const next=await nextPromise;await next.onStopped();
 });
+it('跨启动旧宿主停止证明允许续跑，当前宿主仍持有时不回收',async()=>{
+ const key='f',first=lifecycle(key);await first.acquire('/test/f');
+ const checks:string[]=[];
+ const next=createHostBrowserProfileLifecycle(db,{resolveProfile:async()=>({userId:'u',authDir:'/test/f',profileKey:key.repeat(64)}),hostInstanceId:'new-host',waitTimeoutMs:30,pollIntervalMs:5,recovery:{createHostInstanceId:async()=> 'new-host',isPreviousHostStopped:async i=>{checks.push(i.hostInstanceId);return {stopped:true,reason:'test-stopped'};}}});
+ const recovered=await next.acquire('/test/f');expect(checks).toHaveLength(1);
+ await expect(next.acquire('/test/f')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});expect(checks).toHaveLength(1);
+ await recovered.onStopped();
+});
+it('跨启动无法证明停止仍保留原租约及原owner释放能力',async()=>{
+ const key='9',first=lifecycle(key),held=await first.acquire('/test/9');
+ const next=createHostBrowserProfileLifecycle(db,{resolveProfile:async()=>({userId:'u',authDir:'/test/9',profileKey:key.repeat(64)}),hostInstanceId:'unknown-host',waitTimeoutMs:30,pollIntervalMs:5,recovery:{createHostInstanceId:async()=> 'unknown-host',isPreviousHostStopped:async()=>({stopped:false,reason:'process-query-unavailable'})}});
+ await expect(next.acquire('/test/9')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});await held.onStopped();
+ const recovered=await next.acquire('/test/9');await recovered.onStopped();
+});

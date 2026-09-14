@@ -184,3 +184,4 @@ export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
+export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';

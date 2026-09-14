@@ -100,6 +100,26 @@ export function createExecutionBrowserProfileLeaseService(
       const host = hostSchema.parse(rawHost), domain = canonical(host.domain);
       return db.transaction(tx => acquireInTransaction(tx, host.userId, domain, host.profileKey, hostOwner(host)));
     },
+    /** 只供宿主授权适配器诊断；不注册到 Worker IPC 或公开 RPC。 */
+    async getHeldHostLease(rawScope: {userId:string;domain:string;profileKey:string}) {
+      const scope=z.object({userId:z.string().min(1),domain:z.string(),profileKey:z.string().regex(/^[a-f0-9]{64}$/)}).strict().parse(rawScope);
+      const [held]=await db.select().from(executionBrowserProfileLeases).where(and(
+        eq(executionBrowserProfileLeases.userId,scope.userId),eq(executionBrowserProfileLeases.domain,canonical(scope.domain)),
+        eq(executionBrowserProfileLeases.profileKey,scope.profileKey),isNull(executionBrowserProfileLeases.releasedAt),
+        isNull(executionBrowserProfileLeases.ownerExecutionTaskId),
+      ));
+      return held?.hostInstanceId&&held.hostOperationId?{...scope,domain:canonical(scope.domain),leaseId:held.leaseId,hostInstanceId:held.hostInstanceId,hostOperationId:held.hostOperationId}:null;
+    },
+    /** 调用方必须已从 OS 得到停止证据；事务只释放被检查的旧 host receipt，绝不覆盖新owner。 */
+    async releaseVerifiedStoppedHost(rawExpected: HostOwner & {leaseId:string}) {
+      const {leaseId,...rawHost}=rawExpected,host=hostSchema.parse(rawHost);
+      z.string().min(1).parse(leaseId);
+      return db.transaction(async tx=>{
+        const [held]=await tx.select().from(executionBrowserProfileLeases).where(eq(executionBrowserProfileLeases.leaseId,leaseId)).for('update');
+        if(!held||held.releasedAt!==null||held.userId!==host.userId||held.domain!==canonical(host.domain)||held.profileKey!==host.profileKey||!sameOwner(held,hostOwner(host)))return false;
+        await tx.update(executionBrowserProfileLeases).set({releasedAt:now()}).where(eq(executionBrowserProfileLeases.leaseId,leaseId));return true;
+      });
+    },
     /** 仅在宿主确认实际 context/子树停止后调用，不以 TTL 或 Worker 自报关闭替代证明。 */
     async releaseAfterHostStopped(rawHost: HostOwner, leaseId: string): Promise<boolean> {
       const host = hostSchema.parse(rawHost), domain = canonical(host.domain);
