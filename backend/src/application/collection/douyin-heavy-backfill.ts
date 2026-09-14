@@ -108,6 +108,8 @@ export interface DouyinHeavyBackfillImpl {
 export interface DouyinHeavyBackfillResult {
   /** 本轮真回填的封面数(诚实,子 helper 返回)。 */
   coversFilled: number;
+  /** 封面共享网关要求等待，保留给外层同一任务继续执行。 */
+  retryAfterMs?: number;
 }
 
 /**
@@ -128,6 +130,7 @@ export async function runDouyinHeavyBackfill(
   },
 ): Promise<DouyinHeavyBackfillResult> {
   let coversFilled = 0;
+  let retryAfterMs:number|undefined;
 
   // ── ① 封面回填(只对可见作品) ──────────────────────────────────────────────
   // publicationId → contentOutputId 映射(listMissingCover 里填,bindCoverToProject 里消费)。
@@ -164,6 +167,7 @@ export async function runDouyinHeavyBackfill(
       onProgress: opts.onCoverProgress,
     });
     coversFilled = backfill.filled;
+    retryAfterMs = backfill.retryAfterMs;
     if (backfill.attempted > 0) {
       console.log(
         `[douyin-cover-backfill] 候选 ${backfill.attempted},回填 ${backfill.filled},跳过 ${backfill.skipped},失败 ${backfill.failed},延后 ${backfill.deferred}`,
@@ -204,5 +208,5 @@ export async function runDouyinHeavyBackfill(
     );
   }
 
-  return { coversFilled };
+  return { coversFilled, ...(retryAfterMs===undefined?{}:{retryAfterMs}) };
 }

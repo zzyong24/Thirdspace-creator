@@ -164,6 +164,7 @@ describe("backfillDouyinCovers", () => {
       skipped: 0,
       failed: 0,
       deferred: 3,
+      retryAfterMs: 16 * 60_000,
     });
   });
 

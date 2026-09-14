@@ -43,6 +43,8 @@ export interface CoverBackfillResult {
   failed: number;
   /** 共享抖音网关处于长冷却时，本轮未再尝试、留待下轮处理的作品数。 */
   deferred: number;
+  /** 本批因网关冷却停止时的真实剩余等待时长，交由原任务持久调度。 */
+  retryAfterMs?: number;
 }
 
 export interface CoverBackfillPorts {
@@ -152,6 +154,7 @@ export async function backfillDouyinCovers(
         // 共享网关已明确告诉我们本轮不可继续。当前项没有真正发出请求，连同剩余项
         // 一起留到下轮；继续循环只会放大日志、任务时长和 CPU/网络负载。
         result.deferred = missing.length - index;
+        if(Number.isFinite(err.remainMs)&&err.remainMs>=0)result.retryAfterMs=Math.ceil(err.remainMs);
         console.warn(
           `[douyin-cover-backfill] 抖音冷却中,本轮提前结束:已处理 ${done}/${missing.length},延后 ${result.deferred} 条,约 ${Math.ceil(err.remainMs / 1000)}s 后可重试`,
         );

@@ -193,7 +193,10 @@ return async (ctx, target, report) => {
           if(!ports.sync||await ports.sync.due(ctx,p.id,"cover")){retryAt=Date.parse(now())+2000;break;}
           const state=await ports.sync.read(ctx,p.id,"cover");const at=Date.parse(state?.retryAt??'');if(Number.isFinite(at))retryAt=Math.min(retryAt,at);
         }
-        return {itemsNew:0,itemsUpdated:heavy.coversFilled,continueCollection:remaining.length>0,...(remaining.length?{retryAfterMs:Number.isFinite(retryAt)?Math.max(2000,retryAt-Date.parse(now())):60000}:{}),message:remaining.length?`已保存本批封面，剩余 ${remaining.length} 条等待继续`:"封面与内容补全本批已处理"};
+        const dueDelay=Number.isFinite(retryAt)?Math.max(2000,retryAt-Date.parse(now())):60000;
+        // 网关冷却优先于作品到期时间；只交还原任务，不提前请求或改动平台限流。
+        const retryAfterMs=heavy.retryAfterMs===undefined?dueDelay:Math.max(dueDelay,heavy.retryAfterMs);
+        return {itemsNew:0,itemsUpdated:heavy.coversFilled,continueCollection:remaining.length>0,...(remaining.length?{retryAfterMs}:{}),message:remaining.length?(heavy.retryAfterMs===undefined?`已保存本批封面，剩余 ${remaining.length} 条等待继续`:`抖音正在冷却，已保存本批封面，剩余 ${remaining.length} 条将在冷却结束后继续`):"封面与内容补全本批已处理"};
       }
 
       const collectionCacheKey = `${ctx.userId}:${ctx.accountId ?? "none"}:${target.__skipHeavyBackfill===true}:${target.__skipMetricRefresh===true}`;
