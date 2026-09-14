@@ -38,3 +38,24 @@ test('真实文件清单支持中文空格路径、依赖来源和重复数据�
     assert.equal(report.baseline, null);
   } finally { rmSync(root,{recursive:true,force:true}); }
 });
+
+test('公共 smoke 入口缺关键资源仍失败，并保存 failed 证据', async () => {
+  const {spawnSync} = await import('node:child_process');
+  const {fileURLToPath} = await import('node:url');
+  const {dirname,resolve} = await import('node:path');
+  const {readFileSync} = await import('node:fs');
+  const here=dirname(fileURLToPath(import.meta.url));
+  const output=join(here,'out');
+  mkdirSync(output,{recursive:true});
+  const root=mkdtempSync(join(output,'缺资源 测试-'));
+  try {
+    const result=spawnSync(process.execPath,[join(here,'runtime-smoke.mjs'),root],{
+      cwd:resolve(here,'../..'),encoding:'utf8',env:{PATH:process.env.PATH},
+    });
+    assert.notEqual(result.status,0);
+    const report=JSON.parse(readFileSync(join(root,'runtime-smoke-results.json'),'utf8'));
+    assert.equal(report.status,'failed');
+    assert.deepEqual(report.results,{});
+    assert.match(report.error,/smoke 输入缺失/);
+  } finally {rmSync(root,{recursive:true,force:true});}
+});
