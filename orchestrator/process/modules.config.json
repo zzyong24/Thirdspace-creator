@@ -1354,8 +1354,12 @@
     },
     "T-968": {
       "task_id": "T-968",
-      "archetype": ["orchestration"],
-      "tasks": ["implementation"],
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
       "read_set": [
         "docs/features/t968-report-export-schedule.md",
         "frontend/src/features/daily-report/**",
@@ -1403,6 +1407,31 @@
       ],
       "verify_commands": {
         "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
+      }
+    },
+    "T-974": {
+      "task_id": "T-974",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/**",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "write_set": [
+        "docs/features/t974-windows-package-reliability.md",
+        "tools/windows-closure-rat/**",
+        "frontend/scripts/desktop/runtime-inventory.mjs",
+        "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+        ".github/workflows/desktop-release.yml"
+      ],
+      "verify_commands": {
+        "implementation": "node --test tools/windows-closure-rat/*.test.mjs"
       }
     }
   }
