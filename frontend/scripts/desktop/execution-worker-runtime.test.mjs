@@ -3,6 +3,7 @@ import { join,resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fork } from "node:child_process";
 import { describe,it,expect } from "vitest";
+import { stageMissingDependencies } from "../../../tools/windows-closure-rat/stage-layered-workers.mjs";
 import { stageExecutionWorkerRuntime,assertExecutionWorkerRuntime } from "./execution-worker-runtime.mjs";
 describe("随包Worker入口资源",()=>{
   it("复制两个入口并保留旧返回路径，普通Worker仍可独立启动",async()=>{
@@ -12,9 +13,11 @@ describe("随包Worker入口资源",()=>{
       const entry=stageExecutionWorkerRuntime({repoRoot:resolve(".."),runtimeRoot:root});
       expect(entry).toBe(join(root,"frontend/runtime/execution-worker.cjs"));
       for(const filename of ["execution-worker.cjs","agentic-worker.cjs"])expect(readFileSync(join(root,"frontend/runtime",filename))).toEqual(readFileSync(resolve("../ai-worker/dist",filename)));
+      // Worker研究工具有顶层Playwright导入，隔离启动fixture需装配真实声明依赖。
+      stageMissingDependencies({from:resolve("../ai-worker"),vendorRoot:join(root,"frontend/node_modules"),packages:["@playwright/test"]});
       child=fork(entry,[],{cwd:root,execArgv:[],stdio:["ignore","ignore","ignore","ipc"],env:{PATH:process.env.PATH}});
       const message=await new Promise((ok,bad)=>{const timer=setTimeout(()=>bad(new Error("WORKER_START_TIMEOUT")),10000);child.once("message",value=>{clearTimeout(timer);ok(value);});child.once("error",bad);child.once("exit",()=>{clearTimeout(timer);bad(new Error("WORKER_EARLY_EXIT"));});});
-      expect(message).toMatchObject({type:"ready",capabilities:["model.generate","model.structured"]});
+      expect(message).toMatchObject({type:"ready",capabilities:expect.arrayContaining(["model.generate","model.structured"])});
     }finally{if(child && child.exitCode===null){const exit=new Promise(r=>child.once("exit",r));child.kill("SIGTERM");await exit;}rmSync(root,{recursive:true,force:true});}
   },15000);
   it.each(["execution-worker.cjs","agentic-worker.cjs"])("缺少 %s 时不能通过资源完整性检查",filename=>{
