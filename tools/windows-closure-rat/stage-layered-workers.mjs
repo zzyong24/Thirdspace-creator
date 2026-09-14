@@ -1,6 +1,6 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, relative } from 'node:path';
 import { stageExecutionWorkerRuntime } from '../../frontend/scripts/desktop/execution-worker-runtime.mjs';
 
 function packageRoot(from, name) {
@@ -38,12 +38,19 @@ export function stageMissingDependencies({from, vendorRoot, existingVendorRoots=
     if(existing) {
       const existingManifest=JSON.parse(readFileSync(join(existing,'package.json'),'utf8'));
       if(existingManifest.version!==manifest.version) throw new Error(`Worker 依赖 ${name} 与运行包版本不一致`);
-    } else {
-    const destination=join(vendorRoot,name);
-    mkdirSync(dirname(destination),{recursive:true});
-    cpSync(source,destination,{recursive:true,dereference:true,filter:path=>path===source || path.split(/[\\/]/).at(-1)!=='node_modules'});
-    added.push({name,version:manifest.version});
     }
+    const destination=existing ?? join(vendorRoot,name);
+    mkdirSync(dirname(destination),{recursive:true});
+    let copied=false;
+    // Next只追踪某一种入口；补齐同版本包的遗漏文件，但保留已有转换文件。
+    cpSync(source,destination,{recursive:true,dereference:true,force:false,errorOnExist:false,filter:path=>{
+      if(path!==source && path.split(/[\\/]/).at(-1)==='node_modules') return false;
+      if(statSync(path).isDirectory()) return true;
+      if(existsSync(join(destination,relative(source,path)))) return false;
+      copied=true;
+      return true;
+    }});
+    if(copied) added.push({name,version:manifest.version});
     const optionalDeps=manifest.optionalDependencies ?? {};
     for(const dep of Object.keys({...manifest.dependencies,...optionalDeps})) visit(source,dep,Object.hasOwn(optionalDeps,dep));
   }
