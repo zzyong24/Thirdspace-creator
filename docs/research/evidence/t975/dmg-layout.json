@@ -1,0 +1,20 @@
+{
+  "run": 34806574251,
+  "sha": "c4b377459eed034f2980bd8310ef96eae3c7a03e",
+  "dsStoreBytes": 10244,
+  "windowBounds": "{{200, 148}, {800, 500}}",
+  "backgroundType": 2,
+  "backgroundAliasPresent": true,
+  "icons": {
+    "CreatorOS.app": [
+      225,
+      245
+    ],
+    "Applications": [
+      575,
+      245
+    ]
+  },
+  "applicationsTarget": "/Applications",
+  "backgroundMatchesSource": true
+}
