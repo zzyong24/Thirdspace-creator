@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "pipeline": "desktop:package",
+  "startedAt": "2026-09-14T03:40:09.226Z",
+  "generatedAt": "2026-09-14T04:03:21.653Z",
+  "summary": {
+    "stepCount": 11,
+    "passed": 11,
+    "failed": 0,
+    "totalDurationMs": 1390563
+  },
+  "steps": [
+    {
+      "name": "sidecar 二进制化",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:40:11.042Z",
+      "endedAt": "2026-09-14T03:40:11.152Z",
+      "durationMs": 110
+    },
+    {
+      "name": "sidecar JS 混淆(§3.1)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:40:11.173Z",
+      "endedAt": "2026-09-14T03:47:16.587Z",
+      "durationMs": 425414
+    },
+    {
+      "name": "sidecar 反 AI 诱饵注入(T-399a)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:47:16.589Z",
+      "endedAt": "2026-09-14T03:47:17.024Z",
+      "durationMs": 435
+    },
+    {
+      "name": "sidecar 版权/专有声明盖章",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:47:17.025Z",
+      "endedAt": "2026-09-14T03:47:17.797Z",
+      "durationMs": 772
+    },
+    {
+      "name": "混淆后运行时冒烟(真起 sidecar)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:47:17.798Z",
+      "endedAt": "2026-09-14T03:47:55.791Z",
+      "durationMs": 37993
+    },
+    {
+      "name": "tauri build(含 updater 签名/占位)",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T03:47:55.793Z",
+      "endedAt": "2026-09-14T04:03:10.005Z",
+      "durationMs": 914212
+    },
+    {
+      "name": "T-656 verdict 最终产物泄漏扫描",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T04:03:10.022Z",
+      "endedAt": "2026-09-14T04:03:20.774Z",
+      "durationMs": 10752
+    },
+    {
+      "name": "最终安装包 TLS 自包含校验",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T04:03:20.775Z",
+      "endedAt": "2026-09-14T04:03:20.775Z",
+      "durationMs": 0
+    },
+    {
+      "name": "代码签名",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T04:03:20.776Z",
+      "endedAt": "2026-09-14T04:03:20.978Z",
+      "durationMs": 202
+    },
+    {
+      "name": "公证",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T04:03:20.979Z",
+      "endedAt": "2026-09-14T04:03:21.039Z",
+      "durationMs": 60
+    },
+    {
+      "name": "T-635 ProductManifest 与 release attestation",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-09-14T04:03:21.040Z",
+      "endedAt": "2026-09-14T04:03:21.653Z",
+      "durationMs": 613
+    }
+  ]
+}

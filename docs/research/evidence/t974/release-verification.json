@@ -1,0 +1,32 @@
+{
+  "candidate": "6147d380f1cbad066d1756bab625dcabc3d8e227",
+  "version": "1.2.0",
+  "run": "https://github.com/zzyong24/Thirdspace-creator/actions/runs/34802836581",
+  "conclusion": "success",
+  "mac": {
+    "jobId": 103848809911,
+    "sha256": "6732ab6b59239ab2c4f3728614d17fbf7828cb85bbc91c6c8e5babbbf53d5efa",
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0-6147d380/mac/CreatorOS_1.2.0_aarch64.dmg",
+    "notarized": true,
+    "ciStartupPassed": true,
+    "localHdiutilVerified": true,
+    "localStaplerVerified": true
+  },
+  "windows": {
+    "jobId": 103848809901,
+    "sha256": "8e6241c18b93cad695189e023f4f01940a917bc966711422aebbfc6f12726ad7",
+    "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0-6147d380/windows/CreatorOS_1.2.0_x64-setup.exe",
+    "authenticodeSigned": false,
+    "runtimeChecksPassed": 27,
+    "installPassed": true,
+    "startupPassed": true,
+    "cliPassed": true,
+    "uninstallPassed": true
+  },
+  "globalReconcile": {
+    "errorsBefore": 235,
+    "errorsAfter": 233,
+    "newErrorEntries": 0,
+    "taskRegressionLED046": "passed"
+  }
+}

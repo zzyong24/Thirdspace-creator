@@ -240,6 +240,12 @@
       "what": "内容雷达再次把首屏 pageSize/items.length 当成全部内容总量，100 条后的真实作品不可见",
       "check": "pnpm --dir contract exec vitest run tests/client.test.ts && pnpm --dir backend exec vitest run src/modules/intelligence/intelligence.contract.test.ts && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx",
       "onFail": "分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。"
+    },
+    {
+      "led": "LED-046",
+      "what": "Windows精简包漏Worker、只保留一种依赖入口或仍使用旧运行目录，网页能启动但后台不可用",
+      "check": "node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs",
+      "onFail": "修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。"
     }
   ],
   "program_completion_required": false,

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "capacityWarnings": [
+    "运行文件数 6252 超过容量参考值 3500；请查看文件清单与安装运行验收。",
+    "核心文件数 3798 超过容量参考值 1500；请查看文件清单与安装运行验收。"
+  ],
+  "target": "win32-x64",
+  "durationMs": 34159,
+  "layerSummary": {
+    "schemaVersion": 1,
+    "target": "win32-x64",
+    "triple": "x86_64-pc-windows-msvc",
+    "chromiumRevisions": {
+      "chromium": "1223",
+      "chromium-headless-shell": "1223"
+    },
+    "movedPackages": 53,
+    "removedSharpHeaders": 2,
+    "copiedSharpDlls": 4,
+    "removedUnusedPgliteFiles": 90,
+    "core": {
+      "files": 3798,
+      "bytes": 351381185
+    },
+    "browser": {
+      "files": 2293,
+      "bytes": 745643159,
+      "symlinks": 0
+    },
+    "media": {
+      "files": 2,
+      "bytes": 162105856,
+      "symlinks": 0
+    },
+    "localAi": {
+      "files": 157,
+      "bytes": 54089529,
+      "symlinks": 0
+    },
+    "runtime": {
+      "files": 6252,
+      "bytes": 1313220638,
+      "symlinks": 0
+    },
+    "nodeModulesDirectories": 0
+  },
+  "results": {
+    "worker-ready:agentic-worker.cjs": true,
+    "worker-ready:embedding-worker.cjs": true,
+    "worker-ready:execution-worker.cjs": true,
+    "worker-ready:flywheel-generation-worker.cjs": true,
+    "worker-ready:intelligence-generation-worker.cjs": true,
+    "worker-ready:intelligence-transcript-worker.cjs": true,
+    "worker-ready:model-probe-worker.cjs": true,
+    "zod-v3-v4": true,
+    "opentelemetry": true,
+    "s3-client": true,
+    "pglite-query": true,
+    "worker-dependency:jsdom": true,
+    "worker-dependency:@mozilla/readability": true,
+    "worker-dependency:mammoth": true,
+    "worker-dependency:pdf-parse": true,
+    "worker-dependency:@napi-rs/canvas": true,
+    "local-ai-native": true,
+    "whisper-worker-module-load": true,
+    "pi-bundle": true,
+    "hyperframes-cli": true,
+    "ffmpeg-binary": true,
+    "ffprobe-binary": true,
+    "bundled-chromium": true,
+    "hyperframes-render": "3277 bytes",
+    "next-main-page": "CreatorOS, 72178 bytes",
+    "windows-stdin-shutdown": "sentinel",
+    "runtime-structure": "node_modules=0"
+  }
+}

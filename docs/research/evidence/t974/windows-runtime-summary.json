@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "candidate": "6147d380f1cbad066d1756bab625dcabc3d8e227",
+  "platform": "win32",
+  "arch": "x64",
+  "node": "v25.9.0",
+  "warnings": [
+    "运行文件数 6254 超过容量参考值 3500；请查看文件清单与安装运行验收。"
+  ],
+  "inventorySummary": {
+    "directoryCount": 878,
+    "fileCount": 6254,
+    "symlinkCount": 0,
+    "totalBytes": 1313221479,
+    "duplicateGroupCount": 237,
+    "duplicateBytes": 105157169,
+    "duplicateRatioPct": 8.01,
+    "byOwner": {
+      "app-code": {
+        "files": 3752,
+        "symlinks": 0,
+        "bytes": 198318331
+      },
+      "browser": {
+        "files": 2293,
+        "symlinks": 0,
+        "bytes": 745643159
+      },
+      "core": {
+        "files": 11,
+        "symlinks": 0,
+        "bytes": 135073362
+      },
+      "local-ai": {
+        "files": 157,
+        "symlinks": 0,
+        "bytes": 54089529
+      },
+      "media": {
+        "files": 2,
+        "symlinks": 0,
+        "bytes": 162105856
+      },
+      "runtime-other": {
+        "files": 39,
+        "symlinks": 0,
+        "bytes": 17991242
+      }
+    }
+  },
+  "largestFileCountDependencies": [
+    {
+      "name": "typebox",
+      "version": "1.1.38",
+      "path": "frontend/.next/vendor/typebox/",
+      "files": 669,
+      "bytes": 833657
+    },
+    {
+      "name": "jsdom",
+      "version": "29.1.1",
+      "path": "layers/browser/vendor/jsdom/",
+      "files": 652,
+      "bytes": 7033222
+    },
+    {
+      "name": "underscore",
+      "version": "1.13.8",
+      "path": "frontend/.next/vendor/underscore/",
+      "files": 505,
+      "bytes": 908033
+    },
+    {
+      "name": "pdfjs-dist",
+      "version": "5.4.296",
+      "path": "frontend/.next/vendor/pdfjs-dist/",
+      "files": 387,
+      "bytes": 36624782
+    },
+    {
+      "name": "css-tree",
+      "version": "3.2.1",
+      "path": "layers/browser/vendor/css-tree/",
+      "files": 278,
+      "bytes": 1362649
+    },
+    {
+      "name": "undici",
+      "version": "7.27.2",
+      "path": "layers/browser/vendor/undici/",
+      "files": 210,
+      "bytes": 1613306
+    },
+    {
+      "name": "mammoth",
+      "version": "1.12.0",
+      "path": "frontend/.next/vendor/mammoth/",
+      "files": 117,
+      "bytes": 2166337
+    },
+    {
+      "name": "openai",
+      "version": "6.26.0",
+      "path": "frontend/.next/vendor/openai/",
+      "files": 116,
+      "bytes": 350819
+    },
+    {
+      "name": "pdf-parse",
+      "version": "2.4.5",
+      "path": "frontend/.next/vendor/pdf-parse/",
+      "files": 110,
+      "bytes": 21255998
+    },
+    {
+      "name": "playwright-core",
+      "version": "1.60.0",
+      "path": "layers/browser/vendor/playwright-core/",
+      "files": 101,
+      "bytes": 10641038
+    },
+    {
+      "name": "next",
+      "version": "16.2.9",
+      "path": "frontend/.next/vendor/next/",
+      "files": 93,
+      "bytes": 1367102
+    },
+    {
+      "name": "lru-cache",
+      "version": "11.5.1",
+      "path": "frontend/.next/vendor/lru-cache/",
+      "files": 89,
+      "bytes": 2731124
+    },
+    {
+      "name": "tldts-core",
+      "version": "7.4.2",
+      "path": "frontend/.next/vendor/tldts-core/",
+      "files": 77,
+      "bytes": 371857
+    },
+    {
+      "name": "@exodus/bytes",
+      "version": "1.15.1",
+      "path": "layers/local-ai/vendor/@exodus/bytes/",
+      "files": 75,
+      "bytes": 429869
+    },
+    {
+      "name": "@anthropic-ai/sdk",
+      "version": "0.91.1",
+      "path": "frontend/.next/vendor/@anthropic-ai/sdk/",
+      "files": 66,
+      "bytes": 287521
+    }
+  ]
+}

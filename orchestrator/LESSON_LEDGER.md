@@ -723,3 +723,13 @@
 - **Outcome(T+N)**: T-870 红测证明第二次 promotion 原先抛错；修复后 service 与 contract 重放均返回
   同一 promotion，Project 创建调用仍恰好一次。
 - **Ref**: T-870；DEC-RADAR-047。
+
+## LED-046 — 网页追踪完整，不等于独立 Worker 的安装依赖完整
+
+- **Date**: 2026-09-14 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: Windows精简包漏Worker入口；随后Pi旧目录加载、PDF只含ESM不含CJS逐项阻断。只验证主页面无法发现后台不可用，抢跑双端构建造成额外取消。
+- **RootCause**: 网页追踪、Worker装配、搬移Node及运行时解析约定未一起验证；把manifest存在误当作依赖完整。
+- **GuardRule**: 同一装配入口必须包含全部Worker；在最终布局下真实握手并正常退出，验证外置消费者；同版本依赖补缺失文件且保留已有转换内容。数量只告警，缺依赖和实际执行失败继续阻断。候选完整验证前不抢跑正式双端，不将确定性缺依赖当网络错误重试。
+- **GuardCheck**: `node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs`。
+- **Outcome(T+N)**: 6147d380对应run34802836581 Windows消费者、安装、启动、卸载通过；Mac公证与真启动通过。运行级证据不代表已登录抖音或真实模型业务全量E2E。
+- **Ref**: T-974；docs/research/t974-pipeline-root-cause.md。
