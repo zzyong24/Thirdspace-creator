@@ -657,7 +657,7 @@ describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () =>
     const pub = await repairing.createImportedPublication(ctx, "output-1", {platform: "douyin", externalId: "good-cover"});
     const current = await repairing.setCover(ctx, pub.id, "user-picked");
     expect((await repairing.setCover(ctx, pub.id, "collector")).id).toBe(current.id);
-    await service.createRevision(ctx, pub.id, {title:"keep", coverAssetId:"unknown"});
+    await service.createRevision(ctx, pub.id, {title:"keep", description:"", coverAssetId:"unknown"});
     const missing = await repairing.createImportedPublication(ctx, "output-2", {platform:"douyin", externalId:"missing-file"});
     const rows = await repairing.listPublicationsMissingCover(ctx, {platform:"douyin"});
     expect(rows.map(row=>row.id)).toEqual(expect.arrayContaining([pub.id, missing.id]));
@@ -668,11 +668,11 @@ describe("listPublicationsMissingCover / setCover ([T-078] 作品封面)", () =>
 
   it("补采过程中用户更新版本时不覆盖用户新稿", async () => {
     const pub = await service.createImportedPublication(ctx,"output-1",{platform:"douyin",externalId:"cover-race"});
-    await service.createRevision(ctx,pub.id,{title:"old",coverAssetId:"lost"});
+    await service.createRevision(ctx,pub.id,{title:"old",description:"",coverAssetId:"lost"});
     let pickedId = "";
     const repairing = createPublishingService({db,now:()=>NOW,nextId:p=>`${p}-race-${Math.random()}`,
       isCoverAvailable:async(_ctx,id)=>{
-        if(id==="replacement") pickedId=(await service.createRevision(ctx,pub.id,{title:"用户刚改的稿子",coverAssetId:"picked"})).id;
+        if(id==="replacement") pickedId=(await service.createRevision(ctx,pub.id,{title:"用户刚改的稿子",description:"",coverAssetId:"picked"})).id;
         return id!=="lost";
       },
     });
