@@ -154,12 +154,14 @@ function filledCard(): CandidateResource["card"] {
   };
 }
 
+let localPush: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
+  localPush=vi.spyOn(window.history,"pushState").mockImplementation(()=>{});
   mockRouter.refresh.mockClear();
   mockRouter.push.mockClear();
   for (const fn of Object.values(mockClient)) fn.mockClear();
 });
-afterEach(() => cleanup());
+afterEach(() => {localPush.mockRestore();cleanup();});
 
 describe("topics view (pure render, deterministic)", () => {
   it("renders the three columns and the AI band (4 buttons + basis panel), with NO funnel ([T-242])", () => {
@@ -393,8 +395,9 @@ describe("topics islands (needs-backend wiring)", () => {
     expect(cArg.body).toMatchObject({ title: "副业避坑指南", source: "idea" });
     // 第二步:打开 Copilot 深链(surface=topics, fn=topic.enrich, selection=刚建的候选)—— 补全进对话,
     // 不再后台 createAITask 轮询。
-    await waitFor(() => expect(mockRouter.push).toHaveBeenCalledTimes(1));
-    const href = mockRouter.push.mock.calls[0]![0] as string;
+    await waitFor(() => expect(localPush).toHaveBeenCalledTimes(1));
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    const href = localPush.mock.calls[0]![2] as string;
     expect(href).toContain("copilot=open");
     expect(href).toContain("surface=topics");
     expect(href).toContain("fn=topic.enrich");

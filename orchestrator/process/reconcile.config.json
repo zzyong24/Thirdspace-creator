@@ -246,6 +246,12 @@
       "what": "Windows精简包漏Worker、只保留一种依赖入口或仍使用旧运行目录，网页能启动但后台不可用",
       "check": "node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs",
       "onFail": "修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。"
+    },
+    {
+      "led": "LED-047",
+      "what": "同页助手入口触发服务端导航、折叠详情提前序列化或慢请求轮询叠加，导致打开卡顿与状态无法更新",
+      "check": "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx --retry=0",
+      "onFail": "使用共享本地弹层入口，展开后才处理详情；轮询限制在途请求并保留过期与卸载保护。修复回归，不删除历史或阻断合法操作。"
     }
   ],
   "program_completion_required": false,

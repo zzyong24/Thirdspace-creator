@@ -733,3 +733,13 @@
 - **GuardCheck**: `node --test tools/windows-closure-rat/*.test.mjs && pnpm --dir ai-worker exec vitest run src/runtime/agentic/pi-packaged-runtime.test.ts && pnpm --dir frontend exec vitest run scripts/desktop/execution-worker-runtime.test.mjs`。
 - **Outcome(T+N)**: 6147d380对应run34802836581 Windows消费者、安装、启动、卸载通过；Mac公证与真启动通过。运行级证据不代表已登录抖音或真实模型业务全量E2E。
 - **Ref**: T-974；docs/research/t974-pipeline-root-cause.md。
+
+## LED-047 — 打开弹层不应等待整页加载，慢轮询不能互相作废
+
+- **Date**: 2026-09-14 · **Stage**: BUILD · **Severity**: high · **Status**: active
+- **WhatFailed**: AI 助手打开慢；优化链接后，AI 蒸馏和补全选题按钮仍绕回服务端导航。任务请求超过 8 秒时继续发新请求，旧结果不断被判过期。
+- **RootCause**: 只覆盖链接未覆盖程序化入口；折叠工具详情提前处理大对象；固定间隔轮询缺少在途保护。
+- **GuardRule**: 同页弹层通过共享本地导航打开，保留深链与浏览器前进后退；真实切页和筛选继续使用路由。隐藏详情展开后再序列化；慢轮询限制在途请求，保留过期和卸载保护。不得通过删除历史或质量门拒绝任务解决性能问题。
+- **GuardCheck**: reconcile.config.json 的 LED-047 执行助手、知识蒸馏、选题、弹层导航、工具详情六组回归。
+- **Outcome(T+N)**: T-978 先复现 4 项失败（包括慢请求累计 5 次），修复后 116 项通过；T-977 同页模拟慢导航由 2778ms 降至 39ms。后者为旧安装页面注入候选导航代码验证，不代表新安装包已验收。
+- **Ref**: T-977、T-978；docs/features/t978-ui-performance-guard.md。自动化页面历史与步骤轮询仍需专项修复，不声称全站性能问题已清零。

@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import {openCopilotLocally} from "@/lib/copilot-navigation";
 import { useRouter } from "next/navigation";
 import {
   CircleCheck,
@@ -204,9 +205,10 @@ export function KnowledgeDumpZone() {
   }, []);
 
   // [T-094] 「AI 蒸馏」→ 深链打开 Copilot(knowledge-distill 隔离桶):原文短则 prefill 带上,
-  // 长则带引导话术在对话里粘。query-only href 用 router.push 就地开浮层(不跳页,bug #3 语义)。
+  // 长则带引导话术在对话里粘。query-only href 使用本地历史就地开浮层(不跳页,bug #3 语义)。
   const handleDistill = React.useCallback(() => {
-    router.push(distillCopilotHref(content));
+    const href=distillCopilotHref(content);
+    if(!openCopilotLocally(href))router.push(href);
   }, [router, content]);
 
   // 手动补录(不想走 AI / AI 不可用的降级路径):title + type + 正文直接存。

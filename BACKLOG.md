@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-978 | 排查同类界面性能问题并建立防回归规则 | ✅ 待办 | — | — | [SPEC](docs/features/t978-ui-performance-guard.md) | 覆盖同页弹层入口、折叠详情和慢请求轮询；修复确认缺陷，教训账本与自动检查同步落地。 |
+| T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | T-978 排查发现运行历史、步骤和列表轮询未限制在途请求；补慢网与切换对象回归，修复请求堆积及旧响应覆盖风险。 |
 | T-977 | 修复 AI 助手打开卡顿 | ✅ 待办 | — | — | [SPEC](docs/features/t977-copilot-open-latency.md) | 实测入口导航、数据读取与历史渲染耗时，修复阻塞打开链路，保留会话与原任务。 |
 | T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |
 | T-975 | 恢复正式 Mac DMG 拖拽安装引导 | ✅ 待办 | — | — | [SPEC](docs/features/t975-dmg-install-guide.md) | 排查正式包缺Finder布局，恢复既有安装引导并验证产物，不盲目重跑。 |

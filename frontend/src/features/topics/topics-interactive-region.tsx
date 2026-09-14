@@ -28,6 +28,7 @@
  */
 
 import * as React from "react";
+import {openCopilotLocally} from "@/lib/copilot-navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MessageSquare, Headphones, BookOpen, Flame, TrendingUp, RotateCcw, Lightbulb, Eye, Plus, Sparkles, HeartPulse, FileText, Rocket, Trash2, Search, FlaskConical, ExternalLink, type LucideIcon } from "lucide-react";
@@ -1310,17 +1311,11 @@ export function IdeaDraftForm({
         if (cancelledRef.current) return;
         // 深链:surface=topics,fn=topic.enrich,selection=刚建的候选(免编导索要 id/标题),预填
         // 话术(不自动发)。query-only href → 就地开 Copilot 浮层不跳页;补全的 enrich 卡对话内采纳。
-        const href = preserveTopicsState(
-          copilotDeepLink(
-            "topics",
-            "topic.enrich",
-            { kind: "candidate", id: created.id, title },
-            TOPIC_ENRICH_PREFILL,
-          ),
-          sort,
-          sourceFilter,
+        const href = copilotDeepLink(
+          "topics", "topic.enrich",
+          { kind: "candidate", id: created.id, title }, TOPIC_ENRICH_PREFILL,
         );
-        router.push(href);
+        if(!openCopilotLocally(href))router.push(preserveTopicsState(href,sort,sourceFilter));
         if (!cancelledRef.current) {
           setIdea("");
           setPhase("idle");

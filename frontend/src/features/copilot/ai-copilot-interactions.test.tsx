@@ -11,7 +11,7 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -1700,4 +1700,21 @@ it.each(["output-error","output-denied","approval-responded"])("失败或拒绝�
   expect(container.querySelector('[data-slot="copilot-tool-running"]')).toBeNull();
   expect(screen.getByText(state==="output-error"?/工具参数无效/:/已拒绝/)).toBeInTheDocument();
   expect(sendMessage).not.toHaveBeenCalled();
+});
+
+it("慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询",async()=>{
+ vi.useFakeTimers();
+ let resolveRead!:(rows:unknown[])=>void;
+ const row={id:"slow-task",projectId:null,taskType:"script.draft",status:"running",requestedAt:"2026-09-14T00:00:00Z"};
+ listTasks.mockResolvedValueOnce([row]).mockImplementationOnce(()=>new Promise(r=>{resolveRead=r;}));
+ const view=render(<AICopilotContent viewModel={VM}/>);
+ try{
+  await act(async()=>{});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(8000);});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(24000);});
+  expect(listTasks).toHaveBeenCalledTimes(2);
+  await act(async()=>{resolveRead([{...row,status:"succeeded"}]);});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(24000);});
+  expect(listTasks).toHaveBeenCalledTimes(2);
+ }finally{view.unmount();vi.useRealTimers();}
 });

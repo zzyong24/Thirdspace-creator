@@ -1,0 +1,30 @@
+red
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 86 passed (90)
+   Start at  00:12:03
+   Duration  7.07s (transform 3.92s, setup 540ms, import 5.98s, tests 3.22s, environment 1.38s)
+
+
+green
+(node:85926) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+
+ Test Files  6 passed (6)
+      Tests  116 passed (116)
+   Start at  00:17:30
+   Duration  6.25s (transform 4.45s, setup 949ms, import 6.44s, tests 3.09s, environment 3.52s)
+
+
+tsc
+exit 0, no diagnostics

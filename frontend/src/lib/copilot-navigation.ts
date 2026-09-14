@@ -20,3 +20,9 @@ export function handleCopilotLocalClick(event:MouseEvent){
  // Next 的 native history 集成会同步 useSearchParams，不请求服务端页面。
  window.history.pushState(null,'',target);
 }
+
+/** 按钮等程序化入口与链接复用同一条本地打开路径。 */
+export function openCopilotLocally(href:string):boolean{
+ const target=copilotLocalTarget(href,window.location.href);if(!target)return false;
+ window.history.pushState(null,'',target);return true;
+}

@@ -1774,7 +1774,11 @@ export function AICopilotContent({
   // [T-248B①] 拉取逻辑抽成可复用回调:首屏 useEffect 用它,任务「取消」成功后也用它
   // 重拉刷新 feed(与本文件其它「变更后重拉」模式一致,不引入第二套刷新机制)。
   const tasksFetchEpochRef = React.useRef(0);
+  const tasksFetchPendingRef = React.useRef(false);
   const refreshRecentTasks = React.useCallback(() => {
+    // 慢请求尚未返回时不叠加轮询，否则不断推进epoch会令所有结果过期。
+    if (tasksFetchPendingRef.current) return;
+    tasksFetchPendingRef.current = true;
     const epoch = ++tasksFetchEpochRef.current;
     void (async () => {
       try {
@@ -1810,6 +1814,8 @@ export function AICopilotContent({
         // Feed unavailable (e.g. unauthenticated dispatch) — fall back to an empty,
         // honest feed rather than fixture rows.
         if (epoch === tasksFetchEpochRef.current) setRecentTasks([]);
+      } finally {
+        if (epoch === tasksFetchEpochRef.current) tasksFetchPendingRef.current = false;
       }
     })();
   }, []);
@@ -1818,6 +1824,7 @@ export function AICopilotContent({
     return () => {
       // 卸载后推进 epoch,使在途请求的 setState 失效(等价于原 active 标记)。
       tasksFetchEpochRef.current += 1;
+      tasksFetchPendingRef.current = false;
     };
   }, [refreshRecentTasks]);
 

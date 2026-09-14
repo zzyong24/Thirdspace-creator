@@ -62,7 +62,9 @@ import {
 
 const fetchMock = vi.fn();
 
+let localPush: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
+  localPush=vi.spyOn(window.history,"pushState").mockImplementation(()=>{});
   mockRouter.refresh.mockClear();
   mockRouter.push.mockClear();
   createKnowledge.mockClear();
@@ -76,6 +78,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  localPush.mockRestore();
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -94,7 +97,7 @@ describe("archiveTitleOf(原文存档标题;经 knowledge-atom-gate 再导出,�
 describe("distillCopilotHref — 蒸馏 Copilot 深链(纯函数)", () => {
   it("短原文 → prefill 直接带原文;surface + scope 钉死 knowledge-distill 隔离桶", () => {
     const href = distillCopilotHref("  一段创作心得原文  ");
-    const params = new URLSearchParams(href.slice(1));
+    const params = new URL(href,window.location.origin).searchParams;
     expect(params.get("copilot")).toBe("open");
     expect(params.get("surface")).toBe("knowledge-distill");
     expect(params.get("scope")).toBe("surface:knowledge-distill");
@@ -114,16 +117,17 @@ describe("distillCopilotHref — 蒸馏 Copilot 深链(纯函数)", () => {
 });
 
 describe("KnowledgeDumpZone — 蒸馏入口 Copilot 化(T-094)", () => {
-  it("点「AI 蒸馏」→ router.push 深链(带输入区原文 prefill),不再 POST 旧蒸馏路由、不渲内联确认门", () => {
+  it("点「AI 蒸馏」→ 本地打开深链(带输入区原文 prefill),不再 POST 旧蒸馏路由、不渲内联确认门", () => {
     const { container } = render(<KnowledgeDumpZone />);
     fireEvent.change(q<HTMLTextAreaElement>(container, "knowledge-dump-input")!, {
       target: { value: "一段创作心得原文" },
     });
     fireEvent.click(q<HTMLButtonElement>(container, "knowledge-distill")!);
 
-    expect(mockRouter.push).toHaveBeenCalledTimes(1);
-    const href = mockRouter.push.mock.calls[0]![0] as string;
-    const params = new URLSearchParams(href.slice(1));
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    expect(localPush).toHaveBeenCalledTimes(1);
+    const href = localPush.mock.calls[0]![2] as string;
+    const params = new URL(href,window.location.origin).searchParams;
     expect(params.get("copilot")).toBe("open");
     expect(params.get("surface")).toBe("knowledge-distill");
     expect(params.get("scope")).toBe("surface:knowledge-distill");
@@ -139,8 +143,8 @@ describe("KnowledgeDumpZone — 蒸馏入口 Copilot 化(T-094)", () => {
     const btn = q<HTMLButtonElement>(container, "knowledge-distill")!;
     expect(btn.disabled).toBe(false);
     fireEvent.click(btn);
-    const href = mockRouter.push.mock.calls[0]![0] as string;
-    expect(new URLSearchParams(href.slice(1)).get("prefill")).toBe(
+    const href = localPush.mock.calls[0]![2] as string;
+    expect(new URL(href,window.location.origin).searchParams.get("prefill")).toBe(
       DISTILL_GUIDE_PREFILL,
     );
   });
