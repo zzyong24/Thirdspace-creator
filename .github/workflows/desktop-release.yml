@@ -996,6 +996,24 @@ jobs:
           workspaces: frontend/src-tauri
           cache-on-failure: true
 
+      # 只缓存编译中间态，最终运行文件、凭据和用户数据不进入此缓存。
+      - name: 恢复 Windows Next 编译缓存
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: frontend/.next/cache
+          key: next-win-x64-node25.9.0-v1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-${{ github.sha }}
+          restore-keys: |
+            next-win-x64-node25.9.0-v1-${{ hashFiles('pnpm-lock.yaml', 'frontend/next.config.*', 'tools/windows-closure-rat/**', 'frontend/scripts/desktop/package-flavor.mjs') }}-
+
+      - name: 缓存 Windows 媒体工具
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/creatoros/ffmpeg-static
+          key: media-win-x64-${{ hashFiles('frontend/scripts/desktop/fetch-ffmpeg.mjs') }}
+
+
       - name: 安装锁定依赖与 Chromium
         run: |
           pnpm install --frozen-lockfile

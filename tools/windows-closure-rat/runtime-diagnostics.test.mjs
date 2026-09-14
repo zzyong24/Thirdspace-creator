@@ -27,8 +27,10 @@ test('真实文件清单支持中文空格路径、依赖来源和重复数据�
       writeFileSync(join(root,p,'package.json'),JSON.stringify({name:'pkg',version:'1.0.0'}));
       writeFileSync(join(root,p,'index.js'),'module.exports = 1');
     }
+    mkdirSync(join(root,'frontend/.next/vendor/pkg/esm'),{recursive:true});
+    writeFileSync(join(root,'frontend/.next/vendor/pkg/esm/package.json'),'{}');
     const report = await buildClosureDiagnostics(root);
-    assert.equal(report.inventory.summary.fileCount,4);
+    assert.equal(report.inventory.summary.fileCount,5);
     assert.equal(report.dependencies.length,2);
     assert.equal(report.dependencies[0].version,'1.0.0');
     assert.equal(report.inventory.summary.byOwner.browser.files,2);
