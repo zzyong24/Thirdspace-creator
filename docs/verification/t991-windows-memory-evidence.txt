@@ -1,0 +1,9 @@
+2026-09-15T06:06:53.5470020Z [production-closure] build memory: host=8186 MiB, effective=8186 MiB, V8 old-space=4864 MiB; TypeScript enabled
+2026-09-15T06:08:39.5727541Z ✓ Compiled successfully in 91s
+2026-09-15T06:09:37.8959538Z   Finished TypeScript in 58s ...
+2026-09-15T06:13:11.5508483Z [T-675] ✓ verdict 验签公钥已烘焙:D:\a\Thirdspace-creator\Thirdspace-creator\tools\windows-closure-rat\out\closure\frontend\.next\server\verdict-verify-key.json
+2026-09-15T06:14:06.6352694Z [T-675] ✓ verdict 验签公钥已烘焙:D:\a\Thirdspace-creator\Thirdspace-creator\tools\windows-closure-rat\out\closure\frontend\.next\server\verdict-verify-key.json
+2026-09-15T06:30:06.7466339Z [T-675] ✓ setupBytes=555862213
+2026-09-15T06:31:06.8882096Z [T-675] ✓ 原生安装期物化通过: D:\a\_temp\CreatorOS 中文 RAT02 Space\runtime-images\1.2.0-16f24e446b12\sidecar\frontend\server.js
+2026-09-15T06:31:55.7888738Z [T-675] ✓ 已安装 CreatorOS 真启动并完成主页面加载:00:00:45.3530884
+2026-09-15T06:31:58.4945485Z [T-557] ✓ 官方卸载器已清理 runtime 与安装目录

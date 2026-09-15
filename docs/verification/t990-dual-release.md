@@ -20,3 +20,7 @@ job104264011297失败，未生成可安装exe。Next源码编译90秒成功，Ru
 ## 全局边界
 
 本轮reconcile LED047/048/049/050通过，保留既有T916共233条工件漂移。未创建tag/Release，未修改生产下载或Growth/Activity配置，未公开分发。此次没有新的Windows安装产物，不可把旧包当本次结果。
+
+## T991 后续解除阻断
+
+用户明确授权独立修复后，Windows构建内存预算修复5a5f61dd，run34935220088最终success，实际类型检查58秒完成，安装/启动/卸载通过。详见[t991验证](t991-windows-memory.md)。原run34932675118仍是Mac成功/Windows失败的历史结果，不改写；双端产物源SHA分别为7e279603（Mac）与5a5f61dd（Windows）。
