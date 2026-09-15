@@ -64,6 +64,7 @@ export interface SchedulerRunsPort {
 /** job 的最小投影(triggerScheduledJob 只吃这些字段)。 */
 export interface SchedulableJob {
   id: string;
+  enabled?: boolean;
   sourceKind: string; // self.metrics | comments
   target: Record<string, unknown>;
   // [T-200] job 的属主号(建 job 时 stamp)。触发时采集 runtime ctx.accountId 由此派生,使
@@ -179,7 +180,7 @@ export async function triggerScheduledJob(
   // [T-332 S2 · GAP-08] options.scheduledFor:cron 到点触发传该 tick 的分钟 ISO(写入
   //   job_run.scheduled_for,让 (job_id, scheduled_for) 部分唯一约束真生效,根治「先查再建」
   //   竞态重复触发);「立即运行」(runJobNow)与绑定初始化触发不带锚(即时动作,无计划 tick)。
-  options?: { scheduledFor?: string; skipHeavyBackfill?: boolean },
+  options?: { scheduledFor?: string; skipHeavyBackfill?: boolean; manual?: boolean },
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
@@ -219,6 +220,15 @@ export async function triggerScheduledJob(
     limit: 20,
     offset: 0,
   });
+  // 手动入口以当前服务端运行状态为准；历史数量或跨日不能隐藏仍在排队的任务。
+  // 只取轻量run投影；已成功/已取消的历史无需再次装载AI上下文。
+  if(options?.manual){
+    for(let offset=recent.rows.length;offset<recent.total;){
+      const page=await deps.runs.listRunsByJob(collectionCtx,job.id,{limit:100,offset});
+      if(!page.rows.length)break;
+      recent.rows.push(...page.rows);offset+=page.rows.length;
+    }
+  }
   const taskStates=new Map<string,Awaited<ReturnType<NonNullable<TriggerDeps['getTaskState']>>>>();
   const readTaskState=async(id:string)=>{
     const cached=taskStates.get(id);if(cached)return cached;
@@ -245,6 +255,20 @@ export async function triggerScheduledJob(
   let inflight: (typeof recent.rows)[number] | undefined;
   for(const candidate of recent.rows){
     if(distinctCombinedRuns.has(candidate.id))continue;
+    if(options?.manual){
+      if(['succeeded','cancelled'].includes(candidate.status))continue;
+      if(candidate.aiTaskId&&deps.getTaskState){
+        const state=await readTaskState(candidate.aiTaskId);
+        // 执行账本优先于旧AI/run投影。缺少执行状态不能推断成已结束再重提。
+        const status=state.executionTaskId?state.runtimeStatus:state.status;
+        if(status&&['succeeded','partial','failed','cancelled'].includes(status))continue;
+        inflight=candidate;break;
+      }
+      if(['running','queued','waiting','needs_reconnect','paused','unknown_result'].includes(candidate.status)){
+        inflight=candidate;break;
+      }
+      continue;
+    }
     if(!(candidate.status==='running'||(continuous&&candidate.status==='needs_reconnect')))continue;
     if(!continuous && dayKeyOf(candidate.startedAt)!==today)continue;
     if(continuous && candidate.aiTaskId && deps.getTaskState){
@@ -257,6 +281,7 @@ export async function triggerScheduledJob(
     inflight=candidate;break;
   }
   if (inflight) {
+    if(options?.manual&&!inflight.aiTaskId)throw new Error('当前运行缺少关联任务，请查看运行记录，不能重复启动');
     return {
       jobRunId: inflight.id,
       aiTaskId: inflight.aiTaskId ?? "",
@@ -264,19 +289,23 @@ export async function triggerScheduledJob(
     };
   }
 
+  if(options?.manual&&job.enabled===false)throw new Error('任务已关闭，请先启用后再运行');
+
   const taskType = `scheduled.${job.sourceKind}`;
   const trafficAnchor = `traffic-after:${recent.rows[0]?.id ?? "initial"}`;
-  const idempotencyKey = job.sourceKind === "self.traffic" ? `${job.id}:${trafficAnchor}` : `${job.id}:${today}`;
+  // 同一轮提交稳定，上一条运行结束后自然换锚；不依赖毫秒时间或自然日吞掉用户新一次运行。
+  const manualAnchor = `manual-after:${createHash("sha256").update(JSON.stringify(recent.rows.map(row=>row.id).sort())).digest("hex")}`;
+  const idempotencyKey = options?.manual ? `${job.id}:${manualAnchor}` : job.sourceKind === "self.traffic" ? `${job.id}:${trafficAnchor}` : `${job.id}:${today}`;
 
   // 闸②(createTask 层):idempotencyKey 走 inputData,命中 in-flight task 返回既有
   //   (ai_tasks_user_idempotency,SPEC §5 复用既有幂等,不自造)。ctx 带派生号 → ai_task 落正确号。
   const task = await deps.ai.createTask(collectionCtx, {
     taskType,
     // T-616：幂等身份属于“本次计划触发”，不能再只按自然日复用同一天已终态的 task。
-    // cron 用 scheduledFor 分钟锚；立即运行用本次 nowIso。相同计划重放仍命中同一 attempt。
+    // cron 用 scheduledFor 分钟锚；立即运行用已有运行集合锚，相同时间内结束后仍可再运行。
     attemptId: scheduledAttemptId(
       job.id,
-      options?.scheduledFor ?? (job.sourceKind === "self.traffic" ? trafficAnchor : nowIso),
+      options?.scheduledFor ?? (options?.manual ? manualAnchor : job.sourceKind === "self.traffic" ? trafficAnchor : nowIso),
     ),
     inputData: {
       idempotencyKey,
@@ -337,11 +366,18 @@ export interface RunNowJobPort {
     jobId: string,
   ): Promise<{
     id: string;
+    enabled?: boolean;
     sourceKind: string;
     target: Record<string, unknown>;
     accountId?: string | null; // [T-200] 触发采集 ctx 由此派生
   }>;
 }
+
+// 桌面单backend的短提交锁；仅合并同一时刻的点击，不存储任务状态、不覆盖持久账本。
+// HMR/重复装配共享锁，多窗口仍分别经过getJob归属校验。采集不在锁内等待。
+const manualSubmissionKey=Symbol.for('creatoros.scheduling.manual-submissions.v1');
+const manualGlobals=globalThis as typeof globalThis&{[manualSubmissionKey]?:Map<string,Promise<TriggerResult>>};
+const manualSubmissions=manualGlobals[manualSubmissionKey]??=new Map<string,Promise<TriggerResult>>();
 
 /**
  * 「立即运行」手动触发(D5,SPEC §5/§9)。绕过 cron:查 job(ownership gate)→ triggerScheduledJob
@@ -354,16 +390,27 @@ export async function runJobNow(
   deps: TriggerDeps & { job: RunNowJobPort },
 ): Promise<TriggerResult> {
   const job = await deps.job.getJob(ctx, jobId); // requireJob ownership gate（越权 → 抛）
-  return triggerScheduledJob(
+  const key=JSON.stringify([ctx.userId,job.accountId??ctx.accountId??null,job.id]);
+  const pending=manualSubmissions.get(key);
+  if(pending){
+    const result=await pending;
+    return {...result,deduped:!!result.jobRunId||result.deduped};
+  }
+  const submission=triggerScheduledJob(
     ctx,
     {
       id: job.id,
+      enabled: job.enabled,
       sourceKind: job.sourceKind,
-      target: job.target,
+      target: job.sourceKind === "self.traffic" ? {...job.target,__refreshDueTraffic:true} : job.target,
       accountId: job.accountId ?? null,
     },
     deps,
+    {manual:true},
   );
+  manualSubmissions.set(key,submission);
+  try{return await submission;}
+  finally{if(manualSubmissions.get(key)===submission)manualSubmissions.delete(key);}
 }
 
 /**

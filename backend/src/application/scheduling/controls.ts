@@ -143,6 +143,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
               // [T-200] 带 job 属主号:触发采集 ctx.accountId 由此派生(与 cron/bind 三路统一)。
               return {
                 id: j.id,
+                enabled: j.enabled,
                 sourceKind: j.sourceKind,
                 target: j.target,
                 accountId: j.accountId ?? null,
