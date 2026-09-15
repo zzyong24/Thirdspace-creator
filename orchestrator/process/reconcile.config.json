@@ -270,6 +270,12 @@
       "what": "首页连点重复导航与先展开全部作品再截断导致排队卡顿",
       "check": "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0 && pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --maxWorkers=1 --retry=0",
       "onFail": "按真实过渡完成token合并同目标、先筛选再展开；保留不同导航与失败重试，不缓存整页动态待办。"
+    },
+    {
+      "led": "LED-051",
+      "what": "Windows 类型检查子进程默认堆不足造成重复构建失败",
+      "check": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
+      "onFail": "检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。"
     }
   ],
   "program_completion_required": false,

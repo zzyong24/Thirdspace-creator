@@ -772,3 +772,10 @@
 执行：reconcile LED-050覆盖真实useTransition/Suspense失败和连点、指标缓存隔离失效、近期作品SQL次数上限以及动态待办读取。
 
 T988安装验证补充：Next可能在数据未返回时先提交骨架并结束transition，防重还需识别同一完整URL的可见route-loading；Activity隐藏的旧骨架不得阻断。公共及运营分析独立骨架均纳入，回归覆盖可见/隐藏与不同筛选。
+
+
+## LED-051 — 构建子进程默认堆不足不能靠重复跑流水线解决
+
+T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗尽，exit134。先分清主机内存和子进程堆上限，再为构建阶段设置有限预算：按有效主机容量最多 60%、至少保留 2 GiB、上限 6 GiB。用真实 Next Worker 验证继承；保留类型检查，禁止全局环境污染安装后运行时。记录实际机器容量与预算，最终以 Windows 安装、启动、卸载验证为准，不原样重试或跳过类型错误。
+
+执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。

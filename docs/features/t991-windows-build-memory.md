@@ -17,3 +17,10 @@ flowchart LR
  C --> D[组装安装包]
  D --> E[Windows真实安装与启动验证]
 ```
+
+## 实现与已发生验证
+
+- Next 16.2.9 的类型检查使用 `Worker`，`isolatedMemory:false`、`numWorkers:1`、`maxRetries:0`，保留 NODE_OPTIONS 堆配置。
+- 仅 Next 构建步骤附加预算；7 GiB 主机提供 4 GiB 堆，16 GiB 主机上限 6 GiB；容器约束优先，至少保留 2 GiB 和 40% 给其他进程及 native 内存。不修改全局 process.env。
+- 红测真实执行：新模块缺失导致测试失败，证据 `/tmp/t991-red.log`；修复后真实 Next Worker 探针（两种旧堆参数写法）及闭包回归 15/15。探针只读取 V8 上限，不伪造 Windows 真机验收。
+- 打包四项基础测试 42/42。Windows 正式构建、安装、启动、卸载仍待实际流水线结果。

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { buildMemoryEnvironment } from "./build-memory.mjs";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
@@ -21,6 +22,7 @@ export function productionClosurePlan({
   const steps = [
     {
       name: "Next adapter production build",
+      buildMemory: true,
       command: "pnpm",
       args: ["-C", "frontend", "build"],
       env: {
@@ -156,9 +158,14 @@ function runStep(step) {
   console.log(
     `[production-closure]   $ ${step.command} ${step.args.join(" ")}`,
   );
+  const baseEnv = { ...process.env, ...(step.env ?? {}) };
+  const memory = step.buildMemory ? buildMemoryEnvironment({ env: baseEnv }) : null;
+  if (memory) {
+    console.log(`[production-closure] build memory: host=${memory.totalMiB} MiB, effective=${memory.effectiveMiB} MiB, V8 old-space=${memory.heapMiB} MiB; TypeScript enabled`);
+  }
   const result = spawnSync(step.command, step.args, {
     cwd: REPO_ROOT,
-    env: { ...process.env, ...(step.env ?? {}) },
+    env: memory?.env ?? baseEnv,
     stdio: "inherit",
     shell: process.platform === "win32" && step.command === "pnpm",
   });
