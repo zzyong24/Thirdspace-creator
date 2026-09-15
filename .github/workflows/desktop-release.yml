@@ -373,6 +373,10 @@ jobs:
         if: runner.os == 'Windows'
         run: pnpm -C frontend exec playwright install chromium
 
+      - name: 验证 Windows runtime 被占用时仍可安全启动(T-992)
+        if: runner.os == 'Windows'
+        run: cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features
+
       - name: 构建并接入 Windows production closure(T-675)
         if: runner.os == 'Windows'
         env:

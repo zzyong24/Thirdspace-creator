@@ -779,3 +779,11 @@ T988安装验证补充：Next可能在数据未返回时先提交骨架并结束
 T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗尽，exit134。先分清主机内存和子进程堆上限，再为构建阶段设置有限预算：按有效主机容量最多 60%、至少保留 2 GiB、上限 6 GiB。用真实 Next Worker 验证继承；保留类型检查，禁止全局环境污染安装后运行时。记录实际机器容量与预算，最终以 Windows 安装、启动、卸载验证为准，不原样重试或跳过类型错误。
 
 执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。
+
+## LED-052 — 干净安装通过不代表 Windows 保留目录下的首次启动可用
+
+T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行环境。新包完整解压后，目录切换仍可能因暂时占用返回拒绝访问；干净 CI 没有这类现场状态，把原子改名失败直接作为启动失败会让合法安装无法使用。
+
+防复发：安装期继续严格写入并校验正式运行目录；启动期只有在解压已经完成、版本标记匹配、入口哈希和完整性检查全部通过时，才允许从隔离目录继续运行。后续启动可复用重新校验通过的隔离目录，损坏候选必须跳过。诊断保留操作阶段、来源、目标、原始系统错误和回滚结果。Windows 流水线必须用原生独占文件句柄复现拒绝访问，并继续执行安装、启动、首页加载和卸载验收；禁止靠清空 AppData、关闭校验或重复构建掩盖问题。
+
+执行：`cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features`，正式 Windows 流水线运行同一测试组并包含仅 Windows 编译的原生锁测试。

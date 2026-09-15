@@ -1195,7 +1195,7 @@ fn materialize_windows_runtime(install_dir: &std::path::Path) -> Result<PathBuf,
         } else {
             format!("sha256:{tar_hash}")
         };
-        extract_sidecar_tarball(&tarball, &staged_sidecar, &stamp)?;
+        extract_sidecar_tarball(&tarball, &staged_sidecar, &stamp, false, |_| false)?;
         verify_direct_sidecar_dir_with_hash(
             &staged_sidecar,
             env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
@@ -1493,19 +1493,102 @@ fn runtime_progress(message: &str) {
 }
 
 /// tar 兜底平台的原子解压：先在同盘临时目录完成并校验，再 rename 切换；失败绝不留下半成品。
+fn promote_extracted_sidecar_with<F>(
+    temp: &std::path::Path,
+    dest: &std::path::Path,
+    backup: &std::path::Path,
+    allow_session_fallback: bool,
+    rename: F,
+) -> Result<PathBuf, String>
+where
+    F: Fn(&std::path::Path, &std::path::Path) -> std::io::Result<()>,
+{
+    if dest.exists() {
+        if let Err(error) = rename(dest, backup) {
+            if allow_session_fallback && error.kind() == std::io::ErrorKind::PermissionDenied {
+                eprintln!(
+                    "[shell] runtime 目录暂存被拒绝: from={} to={} raw_os_error={:?}",
+                    dest.display(),
+                    backup.display(),
+                    error.raw_os_error()
+                );
+                return Ok(temp.to_path_buf());
+            }
+            return Err(format!(
+                "暂存旧 sidecar runtime 失败 {}: {error}",
+                dest.display()
+            ));
+        }
+    }
+    if let Err(error) = rename(temp, dest) {
+        let mut rollback_succeeded = true;
+        if backup.exists() {
+            rollback_succeeded = rename(backup, dest).is_ok();
+        }
+        if allow_session_fallback && error.kind() == std::io::ErrorKind::PermissionDenied {
+            eprintln!(
+                "[shell] runtime 目录提交被拒绝: from={} to={} raw_os_error={:?} rollback_succeeded={rollback_succeeded}",
+                temp.display(),
+                dest.display(),
+                error.raw_os_error()
+            );
+            return Ok(temp.to_path_buf());
+        }
+        return Err(format!(
+            "原子切换 sidecar runtime 失败 {}: {error}",
+            dest.display()
+        ));
+    }
+    let _ = std::fs::remove_dir_all(backup);
+    Ok(dest.to_path_buf())
+}
+
+fn find_completed_sidecar_extraction<F>(
+    parent: &std::path::Path,
+    name: &str,
+    stamp_value: &str,
+    validate: F,
+) -> Option<PathBuf>
+where
+    F: Fn(&std::path::Path) -> bool,
+{
+    let prefix = format!("{name}.extracting-");
+    let mut candidates = std::fs::read_dir(parent)
+        .ok()?
+        .flatten()
+        .filter_map(|entry| {
+            let path = entry.path();
+            let entry_name = entry.file_name().to_string_lossy().to_string();
+            if !path.is_dir() || !entry_name.starts_with(&prefix) {
+                return None;
+            }
+            let marker = path.join("frontend").join("server.js");
+            let stamp = std::fs::read_to_string(path.join(".tarball-stamp")).ok()?;
+            (marker.is_file() && stamp == stamp_value && validate(&path)).then_some(path)
+        })
+        .collect::<Vec<_>>();
+    candidates.sort();
+    candidates.pop()
+}
+
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
     dest: &std::path::Path,
     stamp_value: &str,
-) -> Result<bool, String> {
+    allow_session_fallback: bool,
+    validate_existing: impl Fn(&std::path::Path) -> bool,
+) -> Result<(PathBuf, bool), String> {
     if !tarball.is_file() {
         return Err(format!("sidecar.tar.gz 不存在: {}", tarball.display()));
     }
     let marker = dest.join("frontend").join("server.js");
     let stamp = dest.join(".tarball-stamp");
     let stamped = std::fs::read_to_string(&stamp).ok();
-    if marker.is_file() && stamped.as_deref() == Some(stamp_value) {
-        return Ok(false);
+    if marker.is_file()
+        && stamped.as_deref() == Some(stamp_value)
+        && (!allow_session_fallback || validate_existing(dest))
+    {
+        return Ok((dest.to_path_buf(), false));
     }
 
     let parent = dest
@@ -1517,6 +1600,17 @@ fn extract_sidecar_tarball(
         .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or("sidecar");
+    if allow_session_fallback {
+        if let Some(existing) =
+            find_completed_sidecar_extraction(parent, name, stamp_value, &validate_existing)
+        {
+            eprintln!(
+                "[shell] 复用上次已完整解压的隔离 runtime: {}",
+                existing.display()
+            );
+            return Ok((existing, false));
+        }
+    }
     let temp = parent.join(format!("{name}.extracting-{}", std::process::id()));
     let backup = parent.join(format!("{name}.previous-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&temp);
@@ -1577,27 +1671,26 @@ fn extract_sidecar_tarball(
         return Err(format!("写 sidecar 完成标记失败，已清理临时目录: {e}"));
     }
 
-    if dest.exists() {
-        if let Err(e) = std::fs::rename(dest, &backup) {
+    match promote_extracted_sidecar_with(
+        &temp,
+        dest,
+        &backup,
+        allow_session_fallback,
+        |from, to| std::fs::rename(from, to),
+    ) {
+        Ok(selected) => {
+            if selected != dest {
+                eprintln!(
+                    "[shell] Windows 暂时无法提交 runtime 目录，使用已完整解压的隔离目录启动"
+                );
+            }
+            Ok((selected, true))
+        }
+        Err(error) => {
             let _ = std::fs::remove_dir_all(&temp);
-            return Err(format!(
-                "暂存旧 sidecar runtime 失败 {}，已清理临时目录: {e}",
-                dest.display()
-            ));
+            Err(error)
         }
     }
-    if let Err(e) = std::fs::rename(&temp, dest) {
-        if backup.exists() {
-            let _ = std::fs::rename(&backup, dest);
-        }
-        let _ = std::fs::remove_dir_all(&temp);
-        return Err(format!(
-            "原子切换 sidecar runtime 失败 {}: {e}",
-            dest.display()
-        ));
-    }
-    let _ = std::fs::remove_dir_all(&backup);
-    Ok(true)
 }
 
 /// [T-460/T-562] 更新静态 splash 页面状态文案。
@@ -1714,8 +1807,34 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
         format!("sha256:{expected}")
     };
     splash_status(app, "正在展开首启资源(约 1GB,5-10 分钟,仅首次启动)…");
-    if extract_sidecar_tarball(&tarball, &dest, &stamp_value)? {
-        eprintln!("[shell] sidecar 原子解压完成→ {}", dest.display());
+    let machine_id = resolve_machine_id(app).unwrap_or_default();
+    let (selected_sidecar, changed) = extract_sidecar_tarball(
+        &tarball,
+        &dest,
+        &stamp_value,
+        cfg!(target_os = "windows"),
+        |candidate| {
+            #[cfg(windows)]
+            {
+                verify_direct_sidecar_dir_with_hash(
+                    candidate,
+                    env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+                )
+                .and_then(|_| integrity_sample_verify(candidate, &machine_id))
+                .is_ok()
+            }
+            #[cfg(not(windows))]
+            {
+                let _ = candidate;
+                false
+            }
+        },
+    )?;
+    if changed {
+        eprintln!(
+            "[shell] sidecar 解压完成→ {}",
+            selected_sidecar.display()
+        );
     }
     splash_status(app, "资源展开完成,正在启动服务…");
 
@@ -1723,15 +1842,19 @@ fn resolve_sidecar_dir(app: &AppHandle) -> Result<PathBuf, String> {
     //   .tarball-stamp 复用机制让攻击者可直接 patch 已解压的 .jsc,下次启动 stamp 命中
     //   跳过重解压 → hash 完全绕过。补抽样(每次启动都跑),把「解压后的运行时目录」也纳入
     //   完整性防线。开销 §调研 §5:冷 66-360ms,热 12-18ms。
-    let machine_id = resolve_machine_id(app).unwrap_or_default();
-    integrity_sample_verify(&dest, &machine_id)?;
+    #[cfg(windows)]
+    verify_direct_sidecar_dir_with_hash(
+        &selected_sidecar,
+        env!("CREATOROS_SIDECAR_ENTRY_SHA256"),
+    )?;
+    integrity_sample_verify(&selected_sidecar, &machine_id)?;
 
     let runtime_root = data_dir.join("runtime");
     let keep = version.clone();
     std::thread::spawn(move || {
         cleanup_stale_runtimes(&runtime_root, &keep);
     });
-    Ok(dest)
+    Ok(selected_sidecar)
 }
 
 /// [T-663] 定位随包 sidecar tarball。
@@ -3535,7 +3658,10 @@ mod runtime_cleanup_tests {
         let root = temp_runtime_root("extract-failure");
         let missing_tar = root.join("missing.tar.gz");
         let dest = root.join("0.1.0").join("sidecar");
-        let result = super::extract_sidecar_tarball(&missing_tar, &dest, "sha256:missing");
+        let result =
+            super::extract_sidecar_tarball(&missing_tar, &dest, "sha256:missing", false, |_| {
+                false
+            });
         assert!(result.is_err());
         assert!(!dest.exists());
         assert!(!dest.join(".tarball-stamp").exists());
@@ -3557,8 +3683,9 @@ mod runtime_cleanup_tests {
 
         let dest = root.join("runtime").join("0.1.0").join("sidecar");
         assert_eq!(
-            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test").unwrap(),
-            true
+            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test", false, |_| false)
+                .unwrap(),
+            (dest.clone(), true)
         );
         assert_eq!(
             std::fs::read_to_string(dest.join("frontend").join("server.js")).unwrap(),
@@ -3569,8 +3696,102 @@ mod runtime_cleanup_tests {
             "sha256:test"
         );
         assert_eq!(
-            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test").unwrap(),
-            false
+            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test", false, |_| false)
+                .unwrap(),
+            (dest.clone(), false)
+        );
+        std::fs::write(dest.join("frontend").join("server.js"), "corrupt").unwrap();
+        assert_eq!(
+            super::extract_sidecar_tarball(&tarball, &dest, "sha256:test", true, |candidate| {
+                std::fs::read_to_string(candidate.join("frontend").join("server.js"))
+                    .is_ok_and(|content| content == "ready")
+            })
+            .unwrap(),
+            (dest.clone(), true)
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend").join("server.js")).unwrap(),
+            "ready"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_目录切换暂时拒绝访问时保留已解压目录供本次启动() {
+        let root = temp_runtime_root("extract-access-denied-fallback");
+        let temp = root.join("sidecar.extracting-42");
+        let dest = root.join("sidecar");
+        let backup = root.join("sidecar.previous-42");
+        std::fs::create_dir_all(temp.join("frontend")).unwrap();
+        std::fs::write(temp.join("frontend/server.js"), "ready").unwrap();
+
+        let selected = super::promote_extracted_sidecar_with(
+            &temp,
+            &dest,
+            &backup,
+            true,
+            |_, _| Err(std::io::Error::from(std::io::ErrorKind::PermissionDenied)),
+        )
+        .unwrap();
+
+        assert_eq!(selected, temp);
+        assert!(selected.join("frontend/server.js").is_file());
+        assert!(!dest.exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_真实文件句柄占用时从隔离目录继续启动() {
+        use std::os::windows::fs::OpenOptionsExt as _;
+
+        let root = temp_runtime_root("extract-native-lock-fallback");
+        let temp = root.join("sidecar.extracting-42");
+        let dest = root.join("sidecar");
+        let backup = root.join("sidecar.previous-42");
+        std::fs::create_dir_all(temp.join("frontend")).unwrap();
+        let entry = temp.join("frontend/server.js");
+        std::fs::write(&entry, "ready").unwrap();
+        let locked = std::fs::OpenOptions::new()
+            .read(true)
+            .share_mode(0)
+            .open(&entry)
+            .unwrap();
+
+        let selected = super::promote_extracted_sidecar_with(
+            &temp,
+            &dest,
+            &backup,
+            true,
+            |from, to| std::fs::rename(from, to),
+        )
+        .unwrap();
+
+        assert_eq!(selected, temp);
+        drop(locked);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn windows_后续启动复用已完成的隔离解压目录() {
+        let root = temp_runtime_root("reuse-completed-extraction");
+        let completed = root.join("sidecar.extracting-42");
+        std::fs::create_dir_all(completed.join("frontend")).unwrap();
+        std::fs::write(completed.join("frontend/server.js"), "ready").unwrap();
+        std::fs::write(completed.join(".tarball-stamp"), "sha256:test").unwrap();
+        let corrupt = root.join("sidecar.extracting-99");
+        std::fs::create_dir_all(corrupt.join("frontend")).unwrap();
+        std::fs::write(corrupt.join("frontend/server.js"), "corrupt").unwrap();
+        std::fs::write(corrupt.join(".tarball-stamp"), "sha256:test").unwrap();
+
+        assert_eq!(
+            super::find_completed_sidecar_extraction(
+                &root,
+                "sidecar",
+                "sha256:test",
+                |candidate| candidate == completed,
+            ),
+            Some(completed.clone())
         );
         let _ = std::fs::remove_dir_all(&root);
     }

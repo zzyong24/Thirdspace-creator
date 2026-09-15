@@ -276,6 +276,12 @@
       "what": "Windows 类型检查子进程默认堆不足造成重复构建失败",
       "check": "node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs",
       "onFail": "检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。"
+    },
+    {
+      "led": "LED-052",
+      "what": "Windows 干净安装验证遗漏保留 AppData 时运行环境目录切换拒绝访问",
+      "check": "cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features",
+      "onFail": "保留完整性校验并修复已完成隔离目录的安全复用；禁止清空用户 AppData、放宽入口校验或无依据重试。"
     }
   ],
   "program_completion_required": false,
