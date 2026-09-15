@@ -1068,6 +1068,7 @@
 {"ts":"2026-09-14T07:20:12.540Z","actor":"taskctl","action":"complete","task":"T-978","evidence":"4项红测复现→6文件116项通过；frontend tsc与diff检查通过；pmem sync完成；reconcile LED-047通过，保留范围外既有233项全局错误；自动化轮询风险登记T-979；源码修复尚未打包。","sha_before":"a35af81cb582","sha_after":"71d7749fac50"}
 {"ts":"2026-09-14T07:22:36.739Z","actor":"taskctl","action":"start","task":"T-980","sha_before":"e02a3a6f62a3","sha_after":"a8b8ccd6a4af"}
 {"ts":"2026-09-14T07:23:00.917Z","actor":"taskctl","action":"block","task":"T-980","reason":"干净隔离候选合并origin/main出现5处任务/规则/记录冲突；按官方打包Skill停止并已abort，未触发流水线；等待独立合并冲突处理。","sha_before":"a8b8ccd6a4af","sha_after":"baf02e47ec46"}
+{"ts":"2026-09-14T07:38:28.173Z","actor":"taskctl","action":"resume","task":"T-980","reason":"用户明确授权合并，5处记录冲突已保留新证据与双方历史解决，无产品代码冲突。","sha_before":"baf02e47ec46","sha_after":"a8b8ccd6a4af"}
 {"ts":"2026-09-14T07:40:54.397Z","actor":"taskctl","action":"resume","task":"T-980","reason":"用户授权合并，干净候选fe5332cd已合并记录冲突并通过42项打包预检，正式双端run34818903334运行中。","sha_before":"baf02e47ec46","sha_after":"a8b8ccd6a4af"}
 {"ts":"2026-09-14T11:32:12.369Z","actor":"taskctl","action":"start","task":"T-981","sha_before":"9856c5ab27c2","sha_after":"f612215d6fbb"}
 {"ts":"2026-09-14T11:35:17.628Z","actor":"taskctl","action":"complete","task":"T-981","evidence":"按任务与SPEC提炼7组用户功能，内置image_gen生成并目检；性能独立重点卡，最终图docs/design/t981/creatoros-v1.2-upgrade.png，提示词与来源归档。仅营销图片不更改冻结代码。","sha_before":"f612215d6fbb","sha_after":"06000239e8ea"}
