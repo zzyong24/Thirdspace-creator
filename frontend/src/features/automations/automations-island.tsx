@@ -620,10 +620,10 @@ export function JobRow({
             type="button"
             data-slot="automation-run-now"
             data-testid="automation-run-now"
-            disabled={pendingRunNow || !job.enabled}
+            disabled={pendingRunNow || (!job.enabled && !running)}
             onClick={onRunNow}
             title={
-              job.enabled
+              running ? "查看正在进行的运行" : job.enabled
                 ? "立即手动触发一次采集(不等 cron 到点)"
                 : "作业已停用 —— 先启用才能立即运行"
             }
@@ -634,7 +634,7 @@ export function JobRow({
             ) : (
               <PlayCircle className="size-3.5" />
             )}
-            立即运行
+            {running ? "查看运行" : "立即运行"}
           </button>
         )}
       </div>
@@ -1229,113 +1229,55 @@ export function CreateJobDialog({
 
 // ── 运行详情抽屉(读 jobRuns.listByJob + 选中 run 的 ai_task_steps)───────────────
 
-export function RunDetailDialog({
-  job,
-  open,
-  onOpenChange,
-}: {
-  readonly job: ScheduledJobResource | null;
-  readonly open: boolean;
-  readonly onOpenChange: (v: boolean) => void;
+export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null}: {
+ readonly job: ScheduledJobResource|null;
+ readonly open: boolean;
+ readonly onOpenChange:(v:boolean)=>void;
+ readonly preferredRunId?:string|null;
+ readonly pending?:boolean;
+ readonly requestError?:string|null;
 }) {
-  const [runs, setRuns] = React.useState<JobRunResource[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [selectedRunId, setSelectedRunId] = React.useState<string | null>(null);
-  const [steps, setSteps] = React.useState<TaskStep[]>([]);
-  const [stepsLoading, setStepsLoading] = React.useState(false);
-  const cancelledRef = React.useRef(false);
-
-  React.useEffect(() => {
-    cancelledRef.current = false;
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
-
-  // 读该作业历史 run(jobRuns.listByJob);showSpinner=false 用于轮询静默重拉。
-  const loadRuns = React.useCallback(
-    async (jobId: string, showSpinner: boolean) => {
-      if (showSpinner) setLoading(true);
-      try {
-        const rows = (await client.listJobRunsByJob({
-          params: { jobId },
-          query: { page: 1, pageSize: 50 },
-          body: undefined,
-        })) as unknown as JobRunResource[];
-        if (!cancelledRef.current) setRuns(Array.isArray(rows) ? rows : []);
-      } catch {
-        if (showSpinner && !cancelledRef.current) setRuns([]);
-      } finally {
-        if (showSpinner && !cancelledRef.current) setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // 打开或换作业 → 首读历史 run。
-  React.useEffect(() => {
-    if (!open || !job) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- 切换外部作业时先清除上一作业的运行明细，避免串行展示
-    setRuns([]);
-    setSelectedRunId(null);
-    setSteps([]);
-    void loadRuns(job.id, true);
-  }, [open, job, loadRuns]);
-
-  // D5 轮询:抽屉打开且存在 running run(立即运行刚触发)→ 每 2s 静默重拉 runs,让状态
-  // (running→succeeded/needs_reconnect)+ 新鲜度计数实时翻篇。无 running run 即停(省轮询)。
-  const hasRunning = runs.some((r) => r.status === "running");
-  React.useEffect(() => {
-    if (!open || !job || !hasRunning) return;
-    const t = setInterval(() => {
-      void loadRuns(job.id, false);
-    }, 2000);
-    return () => clearInterval(t);
-  }, [open, job, hasRunning, loadRuns]);
-
-  // 读某 ai_task 的步骤(showSpinner=false 用于轮询静默重拉)。
-  const loadSteps = React.useCallback(
-    async (aiTaskId: string, showSpinner: boolean) => {
-      if (showSpinner) setStepsLoading(true);
-      try {
-        const rows = (await client.listTaskSteps({
-          params: { taskId: aiTaskId },
-          query: undefined,
-          body: undefined,
-        })) as unknown as TaskStep[];
-        if (!cancelledRef.current) setSteps(Array.isArray(rows) ? rows : []);
-      } catch {
-        if (showSpinner && !cancelledRef.current) setSteps([]);
-      } finally {
-        if (showSpinner && !cancelledRef.current) setStepsLoading(false);
-      }
-    },
-    [],
-  );
-
-  // 选中某 run → 读其 ai_task_id 对应 ai_task_steps(复用 listTaskSteps 范式)。
-  const selectRun = React.useCallback(
-    async (run: JobRunResource) => {
-      setSelectedRunId(run.id);
-      setSteps([]);
-      if (!run.aiTaskId) return; // 该 run 未产 ai_task(理论不该,诚实兜空)
-      await loadSteps(run.aiTaskId, true);
-    },
-    [loadSteps],
-  );
-
-  // D5 轮询:选中的 run 仍 running → 每 2s 静默重拉其步骤(步骤逐条落地实时可见)。
-  const selectedRun = runs.find((r) => r.id === selectedRunId) ?? null;
-  const selectedRunning =
-    selectedRun?.status === "running" && !!selectedRun.aiTaskId;
-  React.useEffect(() => {
-    if (!open || !selectedRunning || !selectedRun?.aiTaskId) return;
-    const t = setInterval(() => {
-      void loadSteps(selectedRun.aiTaskId!, false);
-    }, 2000);
-    return () => clearInterval(t);
-  }, [open, selectedRunning, selectedRun, loadSteps]);
-
+ const [runs,setRuns]=React.useState<JobRunResource[]>([]);
+ const [loading,setLoading]=React.useState(false);
+ const [selectedRunId,setSelectedRunId]=React.useState<string|null>(null);
+ const [steps,setSteps]=React.useState<TaskStep[]>([]);
+ const [stepsLoading,setStepsLoading]=React.useState(false);
+ const [readError,setReadError]=React.useState<string|null>(null);
+ // LED-047: 完成后再安排下次读取，慢请求不会重叠或被定时器作废。
+ React.useEffect(()=>{
+  if(!open||!job)return;
+  let active=true,timer:ReturnType<typeof setTimeout>|undefined;
+  setRuns([]);setSelectedRunId(preferredRunId);setSteps([]);setLoading(true);setReadError(null);
+  async function read(){
+   try {
+    const value=await client.listJobRunsByJob({params:{jobId:job!.id},query:{page:1,pageSize:50},body:undefined});
+    if(!active)return;
+    const rows=(Array.isArray(value)?value:[]) as JobRunResource[];
+    if(preferredRunId&&!rows.some(r=>r.id===preferredRunId)){
+     const requested=await client.getJobRun({params:{runId:preferredRunId},query:undefined,body:undefined});
+     if(!active)return;
+     if(requested.jobId===job!.id)rows.unshift(requested as JobRunResource);
+    }
+    setRuns(rows.filter(r=>r.jobId===job!.id));setLoading(false);setReadError(null);
+    if(rows.some(r=>r.status==='running')||(preferredRunId&&!rows.some(r=>r.id===preferredRunId)))timer=setTimeout(read,2000);
+   }catch{if(active){setLoading(false);setReadError('运行记录读取失败，正在重试');timer=setTimeout(read,4000);}}
+  }
+  void read();return()=>{active=false;clearTimeout(timer);};
+ },[open,job?.id,preferredRunId]);
+ const selectedRun=runs.find(r=>r.id===selectedRunId)??null;
+ React.useEffect(()=>{
+  setSteps([]);setStepsLoading(false);
+  if(!open||!selectedRun?.aiTaskId)return;
+  let active=true,timer:ReturnType<typeof setTimeout>|undefined;
+  const taskId=selectedRun.aiTaskId,running=selectedRun.status==='running';
+  setStepsLoading(true);
+  async function read(){try{
+   const rows=await client.listTaskSteps({params:{taskId},query:undefined,body:undefined});
+   if(active){setSteps(Array.isArray(rows)?rows as TaskStep[]:[]);setStepsLoading(false);if(running)timer=setTimeout(read,2000);}
+  }catch{if(active){setStepsLoading(false);if(running)timer=setTimeout(read,4000);}}}
+  void read();return()=>{active=false;clearTimeout(timer);};
+ },[open,job?.id,selectedRun?.id,selectedRun?.aiTaskId,selectedRun?.status]);
+ const selectRun=(run:JobRunResource)=>setSelectedRunId(run.id);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -1348,11 +1290,13 @@ export function RunDetailDialog({
             运行详情{job ? ` · ${job.name}` : ""}
           </DialogTitle>
           <DialogDescription>
-            历史触发记录(job_run)与每次运行的步骤日志(ai_task_steps)。
+            查看本次进度和历史运行记录。
           </DialogDescription>
         </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {(requestError||readError)&&<p role="alert" className="mb-3 text-sm text-destructive">{requestError||readError}</p>}
+          {pending&&<p role="status" className="mb-3 text-sm text-muted-foreground">正在确认运行，请稍候…</p>}
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin text-brand" />
@@ -1365,7 +1309,7 @@ export function RunDetailDialog({
             >
               <Inbox className="size-8 text-muted-foreground/60" />
               <p className="text-sm text-muted-foreground">
-                还没有运行记录。作业到点触发(D3 采集接线后)或点「立即运行」(D5)才会产生 job_run。
+                还没有运行记录。任务到点或手动运行后会在这里显示。
               </p>
             </div>
           ) : (
@@ -1613,6 +1557,16 @@ export function AutomationsIsland({
     null,
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [detailRunId,setDetailRunId]=React.useState<string|null>(null);
+  const [runError,setRunError]=React.useState<string|null>(null);
+  const pendingRequests=React.useRef(new Set<string>());
+  const detailEpoch=React.useRef(0);
+  const alive=React.useRef(true);
+  const accountKey=currentAccount?.id??jobs.map(j=>j.id).join('|');
+  const accountRef=React.useRef(accountKey);accountRef.current=accountKey;
+  React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;detailEpoch.current++;};},[]);
+  React.useEffect(()=>{detailEpoch.current++;setDetailOpen(false);setDetailJob(null);setDetailRunId(null);setPendingRunNowId(null);setRunError(null);},[accountKey]);
+  const changeDetailOpen=React.useCallback((value:boolean)=>{if(!value)detailEpoch.current++;setDetailOpen(value);},[]);
   // T-248 编辑弹窗:被编辑作业 + 开关(复用 CreateJobDialog 的 edit 模式)。
   const [editJob, setEditJob] = React.useState<ScheduledJobResource | null>(
     null,
@@ -1659,39 +1613,16 @@ export function AutomationsIsland({
     return Object.fromEntries(entries);
   }, [jobs]);
 
-  // 挂载 / jobs 变化(router.refresh 重传)即重拉,保证登录恢复/立即运行后行状态刷新。
-  React.useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const next = await fetchLatestRuns();
-      if (!cancelled) setLatestRuns(next);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchLatestRuns]);
-
-  // [T-152] 行级实时进度轮询:任一 job 最近一次 run 仍 running → 每 2s 静默重拉 latestRuns,
-  //   让列表行的进度条(阶段 + 累计条数)实时翻篇。无 running 即停(省轮询);与抽屉内轮询正交
-  //   (抽屉拉某 job 的历史 run,行级拉全 job 最近 run)。
-  const anyRunning = React.useMemo(
-    () => Object.values(latestRuns).some((r) => r?.status === "running"),
-    [latestRuns],
-  );
-  React.useEffect(() => {
-    if (!anyRunning) return;
-    let cancelled = false;
-    const t = setInterval(() => {
-      void (async () => {
-        const next = await fetchLatestRuns();
-        if (!cancelled) setLatestRuns(next);
-      })();
-    }, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(t);
-    };
-  }, [anyRunning, fetchLatestRuns]);
+  // LED-047: 列表单一读取循环；完成后再轮询，能发现后台启动的新运行。
+  React.useEffect(()=>{
+   let active=true,timer:ReturnType<typeof setTimeout>|undefined;
+   async function read(){
+    const next=await fetchLatestRuns();
+    if(active){setLatestRuns(next);timer=setTimeout(read,4000);}
+   }
+   setLatestRuns({});void read();
+   return()=>{active=false;clearTimeout(timer);};
+  },[fetchLatestRuns]);
 
   // T-038c:挂载时拉一次两个 channel 的限流退避快照(只读 op,读网关内存镜像)。jobs 变化
   // (router.refresh 重传)即重拉,让登录恢复/立即运行后限流态也刷新。失败/未配网关 → 静默空
@@ -1833,30 +1764,26 @@ export function AutomationsIsland({
   }, []);
 
   const openDetail = React.useCallback((job: ScheduledJobResource) => {
+    detailEpoch.current++;setDetailRunId(null);setRunError(null);
     setDetailJob(job);
     setDetailOpen(true);
   }, []);
 
-  // D5「立即运行」:手动触发 scheduledJobs.runNow(产 ai_task + job_run,fire-and-forget)→
-  // 打开该作业运行详情抽屉(轮询 ai_task_steps)→ refresh 让行状态/上次运行刷新。
-  const runNow = React.useCallback(
-    async (job: ScheduledJobResource) => {
-      setPendingRunNowId(job.id);
-      try {
-        await client.runScheduledJobNow({
-          params: { jobId: job.id },
-          query: undefined,
-          body: {},
-        });
-        setDetailJob(job);
-        setDetailOpen(true); // 抽屉轮询 job_run + ai_task_steps
-        router.refresh();
-      } finally {
-        setPendingRunNowId(null);
-      }
-    },
-    [router],
-  );
+  // 服务端原子判断是否复用活跃运行，前端锁仅防本窗口重复点击。
+  const runNow = React.useCallback(async (job:ScheduledJobResource)=>{
+   if(pendingRequests.current.has(job.id))return;
+   pendingRequests.current.add(job.id);
+   const epoch=++detailEpoch.current,account=accountRef.current;
+   const current=()=>alive.current&&accountRef.current===account&&detailEpoch.current===epoch;
+   setPendingRunNowId(job.id);setRunError(null);setDetailRunId(null);setDetailJob(job);setDetailOpen(true);
+   try {
+    const response=await client.runScheduledJobNow({params:{jobId:job.id},query:undefined,body:{}});
+    if(!current())return;
+    if(!response.jobRunId)throw Error('尚未取得运行记录，请查看历史运行后再试');
+    setDetailRunId(response.jobRunId);
+   }catch(error){if(current())setRunError(error instanceof Error?error.message:'运行未能开始，请重试');}
+   finally{pendingRequests.current.delete(job.id);if(alive.current&&accountRef.current===account)setPendingRunNowId(id=>id===job.id?null:id);}
+  },[]);
 
   // D4「登录抖音」恢复(SPEC §6):某 job 最近 run 是 needs_reconnect → 弹 Chromium 扫码
   // (ingestion.douyin.login,复用 calibration 现成登录链)→ 成功后 runNow 触发一次恢复。
@@ -2041,7 +1968,10 @@ export function AutomationsIsland({
       <RunDetailDialog
         job={detailJob}
         open={detailOpen}
-        onOpenChange={setDetailOpen}
+        onOpenChange={changeDetailOpen}
+        preferredRunId={detailRunId}
+        pending={pendingRunNowId===detailJob?.id}
+        requestError={runError}
       />
     </section>
   );

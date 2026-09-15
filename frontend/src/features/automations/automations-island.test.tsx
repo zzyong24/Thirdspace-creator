@@ -198,7 +198,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     expect(runNow).not.toBeDisabled();
   });
 
-  it("D5:立即运行点击 → runScheduledJobNow(jobId) + router.refresh", async () => {
+  it("T983:立即运行本地打开详情，不触发整页刷新", async () => {
     render(<AutomationsIsland jobs={[makeJob({ id: "job-9", enabled: true })]} />);
     fireEvent.click(
       screen.getByText("立即运行").closest("button") as HTMLButtonElement,
@@ -210,7 +210,8 @@ describe("AutomationsIsland — 列表渲染", () => {
       params: { jobId: string };
     };
     expect(arg.params.jobId).toBe("job-9");
-    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalled());
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });
 
