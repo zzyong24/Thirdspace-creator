@@ -11,7 +11,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-990 | 纳入采集与页面性能修复运行 V1.2 双端流水线 | ⏸️ 待办 | — | — | [SPEC](docs/features/t990-dual-release.md) | 冻结已提交T983/T985/T987/T988修复，预检并运行Windows/macOS正式构建，核验并下载产物。 |
 | T-988 | 修复首页与连续点击导航卡顿并清理界面技术话术 | ✅ 待办 | — | — | [SPEC](docs/features/t988-home-navigation-copy.md) | 复现首页与连点请求，立即响应并合并重复导航；清理PATCH/真持久等用户界面术语，保护实时数据并本机验证。 |
-| T-991 | 修复 Windows 构建类型检查内存耗尽 | 📋 待办 | — | — | [SPEC](docs/features/t991-windows-build-memory.md) | T990 run34932675118源码编译后TypeScript检查约2GB堆耗尽exit134；独立核定构建内存与诊断，不原样重试。 |
+| T-991 | 修复 Windows 构建类型检查内存耗尽 | 🔨 待办 | — | — | [SPEC](docs/features/t991-windows-build-memory.md) | T990 run34932675118源码编译后TypeScript检查约2GB堆耗尽exit134；独立核定构建内存与诊断，不原样重试。 |
 | T-989 | 校正知识图谱错误提示的既有回归断言 | 📋 待办 | — | — | [SPEC](docs/features/t989-knowledge-error-test.md) | T988扩展验证发现原af62ddda及当前均1/9失败；核对错误提示契约后修正，未改该行为。 |
 | T-987 | 修复自动化与发布中心等主页面打开卡顿 | ✅ 待办 | — | — | [SPEC](docs/features/t987-page-navigation-performance.md) | 实测首次/返回导航、公共查询和缓存失效，修复实际阻塞并保护实时状态与账号隔离，补性能防复发。 |
 | T-985 | 修复失效封面漏补与旧采集任务恢复转圈 | ✅ 待办 | — | — | [SPEC](docs/features/t985-collection-regression.md) | 按用户授权修复T984实测失败；原任务安全恢复、封面真实可读、重新本地打包并验证。 |

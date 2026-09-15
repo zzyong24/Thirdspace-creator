@@ -1095,3 +1095,4 @@
 {"ts":"2026-09-15T05:15:24.717Z","actor":"taskctl","action":"complete","task":"T-988","evidence":"源码9095f5a9；首页5连点1请求/424.5ms（旧4027.3ms），可见骨架追加3点仍1请求；本机安装CLI full与6计划保留，DMG VALID；回归LED047/048/049/050通过、tsc通过；全局233条T916历史漂移及T989既有断言失败保留，详见docs/verification/t988-home-navigation.md","sha_before":"fa79f23688d0","sha_after":"2e399df4f916"}
 {"ts":"2026-09-15T05:23:04.269Z","actor":"taskctl","action":"start","task":"T-990","sha_before":"1057350d65f9","sha_after":"219e77f30ee3"}
 {"ts":"2026-09-15T05:46:40.786Z","actor":"taskctl","action":"block","task":"T-990","reason":"run34932675118完成：Mac签名公证/引导/启动通过，DMG已下载且SHA256一致+hdiutil VALID；Windows TypeScript检查约2GB堆耗尽exit134，未生成exe，未重试；T991已登记独立修复，详见docs/verification/t990-dual-release.md。","sha_before":"613a10cc67d0","sha_after":"32df2fb0f667"}
+{"ts":"2026-09-15T05:52:57.863Z","actor":"taskctl","action":"start","task":"T-991","sha_before":"32df2fb0f667","sha_after":"0d675e878094"}
