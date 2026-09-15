@@ -1,6 +1,6 @@
 import {expect,it,vi} from 'vitest';
 import type {RequestContext} from '@creatoros/contract';
-import {runJobNow,type TriggerDeps,type RunNowJobPort} from './scheduled-collection-scheduler';
+import {runJobNow,triggerScheduledJob,type TriggerDeps,type RunNowJobPort} from './scheduled-collection-scheduler';
 
 const ctx:RequestContext={userId:'run-now-user',accountId:'account-a',requestId:'one-window',source:'user'};
 type Row={id:string;aiTaskId:string|null;status:string;startedAt:string};
@@ -78,4 +78,24 @@ it.each(['succeeded','partial','failed','cancelled'])('运行投影仍running但
 it('执行ID存在但当前执行状态缺失时保留原运行，不猜终态',async()=>{
  const f=fixture();f.active();f.states.set('old-task',{status:'failed',executionTaskId:'old-execution'});
  expect(await runJobNow(ctx,'job',f.deps)).toMatchObject({jobRunId:'old-run',deduped:true});expect(f.dispatch).not.toHaveBeenCalled();
+});
+
+it('首个提交异常后释放队列，下个定向流量触发保持自己的范围',async()=>{
+ const f=fixture();f.currentJob.sourceKind='self.traffic';let release!:()=>void,entered!:()=>void;
+ const gate=new Promise<void>(r=>{release=r;}),started=new Promise<void>(r=>{entered=r;});
+ f.createTask.mockImplementationOnce(async()=>{entered();await gate;throw Error('write failed');});
+ const first=runJobNow(ctx,'job',f.deps);const failed=expect(first).rejects.toThrow('write failed');await started;
+ const target={publicationId:'one-publication'};
+ const next=triggerScheduledJob(ctx,{...f.currentJob,target},f.deps);
+ release();await failed;await next;
+ expect(f.dispatch).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({inputData:expect.objectContaining({target})}));
+ expect(f.dispatch).toHaveBeenCalledOnce();
+ const create=f.createTask.mock.calls as unknown as Array<[RequestContext,{inputData:{target:unknown}}]>;
+ expect(create[1]![1].inputData.target).toEqual(target);
+});
+it('采集尚未完成也释放短提交锁，后续点击立即返回同一原运行',async()=>{
+ const f=fixture();let finish!:()=>void;const collecting=new Promise<void>(r=>{finish=r;});f.dispatch.mockImplementationOnce(()=>collecting);
+ const first=await runJobNow(ctx,'job',f.deps);
+ try{expect(await runJobNow(ctx,'job',f.deps)).toMatchObject({jobRunId:first.jobRunId,deduped:true});expect(f.dispatch).toHaveBeenCalledOnce();}
+ finally{finish();await first.completion;}
 });

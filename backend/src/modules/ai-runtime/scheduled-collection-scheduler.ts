@@ -173,14 +173,35 @@ export function scheduledAttemptId(jobId: string, triggerAnchor: string): string
  * 触发一次调度采集(一个 job 到点 / 「立即运行」)。纯逻辑、无副作用外泄(所有 IO 经注入端口),
  * 可直接单测。幂等:同 (job, 自然日) 重复调只产一条 task + 一条 run(见文件头双闸)。
  */
-export async function triggerScheduledJob(
+// 桌面单backend按账号/作业串行提交，cron、手动、定向触发共用；不锁采集执行。
+// HMR/重复装配共享队列。排队者重新读持久状态，不直接复制上一请求结果或target。
+const submissionKey=Symbol.for('creatoros.scheduling.submission-queue.v1');
+const submissionGlobals=globalThis as typeof globalThis&{[submissionKey]?:Map<string,Promise<void>>};
+const submissions=submissionGlobals[submissionKey]??=new Map<string,Promise<void>>();
+type TriggerOptions={scheduledFor?:string;skipHeavyBackfill?:boolean;manual?:boolean};
+export async function triggerScheduledJob(ctx:RequestContext,job:SchedulableJob,deps:TriggerDeps,options?:TriggerOptions):Promise<TriggerResult>{
+  const key=JSON.stringify([ctx.userId,job.accountId??ctx.accountId??null,job.id]);
+  const previous=submissions.get(key);
+  let release!:()=>void;
+  const settled=new Promise<void>(resolve=>{release=resolve;});
+  submissions.set(key,settled);
+  try{
+    await previous;
+    return await submitScheduledJob(ctx,job,deps,options);
+  }finally{
+    release();
+    if(submissions.get(key)===settled)submissions.delete(key);
+  }
+}
+
+async function submitScheduledJob(
   ctx: RequestContext,
   job: SchedulableJob,
   deps: TriggerDeps,
   // [T-332 S2 · GAP-08] options.scheduledFor:cron 到点触发传该 tick 的分钟 ISO(写入
   //   job_run.scheduled_for,让 (job_id, scheduled_for) 部分唯一约束真生效,根治「先查再建」
   //   竞态重复触发);「立即运行」(runJobNow)与绑定初始化触发不带锚(即时动作,无计划 tick)。
-  options?: { scheduledFor?: string; skipHeavyBackfill?: boolean; manual?: boolean },
+  options?: TriggerOptions,
 ): Promise<TriggerResult> {
   const nowIso = deps.now();
   const today = dayKeyOf(nowIso);
@@ -373,12 +394,6 @@ export interface RunNowJobPort {
   }>;
 }
 
-// 桌面单backend的短提交锁；仅合并同一时刻的点击，不存储任务状态、不覆盖持久账本。
-// HMR/重复装配共享锁，多窗口仍分别经过getJob归属校验。采集不在锁内等待。
-const manualSubmissionKey=Symbol.for('creatoros.scheduling.manual-submissions.v1');
-const manualGlobals=globalThis as typeof globalThis&{[manualSubmissionKey]?:Map<string,Promise<TriggerResult>>};
-const manualSubmissions=manualGlobals[manualSubmissionKey]??=new Map<string,Promise<TriggerResult>>();
-
 /**
  * 「立即运行」手动触发(D5,SPEC §5/§9)。绕过 cron:查 job(ownership gate)→ triggerScheduledJob
  * (同一条幂等双闸 + fire-and-forget,与调度器共用 deps)。返回触发结果 { jobRunId, aiTaskId, deduped }。
@@ -390,13 +405,7 @@ export async function runJobNow(
   deps: TriggerDeps & { job: RunNowJobPort },
 ): Promise<TriggerResult> {
   const job = await deps.job.getJob(ctx, jobId); // requireJob ownership gate（越权 → 抛）
-  const key=JSON.stringify([ctx.userId,job.accountId??ctx.accountId??null,job.id]);
-  const pending=manualSubmissions.get(key);
-  if(pending){
-    const result=await pending;
-    return {...result,deduped:!!result.jobRunId||result.deduped};
-  }
-  const submission=triggerScheduledJob(
+  return triggerScheduledJob(
     ctx,
     {
       id: job.id,
@@ -408,9 +417,6 @@ export async function runJobNow(
     deps,
     {manual:true},
   );
-  manualSubmissions.set(key,submission);
-  try{return await submission;}
-  finally{if(manualSubmissions.get(key)===submission)manualSubmissions.delete(key);}
 }
 
 /**

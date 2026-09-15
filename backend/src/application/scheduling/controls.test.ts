@@ -5,6 +5,7 @@ import {createAiService} from '../../modules/ai/ai.service';
 import {createSchedulingService} from '../../modules/scheduling/scheduling.service';
 import {createScheduledRunIntentService} from '../../modules/scheduling/daily-topic-run-intent.service';
 import {createSchedulingControls} from './controls';
+import {triggerScheduledJob} from '../../modules/ai-runtime/scheduled-collection-scheduler';
 const ctx:RequestContext={userId:'controls-user',accountId:'controls-account',requestId:'window-one',source:'user'};
 let db:Db,close:()=>Promise<void>,seq=0;
 const now=()=> '2026-09-15T00:00:00.000Z',nextId=(prefix:string)=>`${prefix}-controls-${++seq}`;
@@ -21,7 +22,7 @@ async function fixture(){
   const result=await controls.schedulingWithRunNow.request(ENDPOINTS.runScheduledJobNow,{params:{jobId:job.id},query:undefined,body:{}},c) as {data:unknown};
   return ENDPOINTS.runScheduledJobNow.response.parse(result.data);
  };
- return{ctx:owner,job,aiService,schedulingService,dispatch,run};
+ return{ctx:owner,controls,job,aiService,schedulingService,dispatch,run};
 }
 it('公共runNow组合真实AI幂等与run intent：多窗口一次、结束后三次同毫秒均可新建',async()=>{
  const f=await fixture();
@@ -44,4 +45,20 @@ it('公共runNow透传关闭状态和归属：活跃可查看，关闭无活跃�
  expect(await f.run()).toEqual({...first,deduped:true});expect(f.dispatch).toHaveBeenCalledOnce();
  await expect(f.run({...f.ctx,accountId:'other-account'})).rejects.toThrow();
  expect(f.dispatch).toHaveBeenCalledOnce();
+});
+
+it.each(['manual','cron'])('公共组合%s先进入：立即运行与到点同时查空只产一次真实task/run',async firstKind=>{
+ const f=await fixture();let release!:()=>void,entered!:()=>void;
+ const gate=new Promise<void>(r=>{release=r;}),started=new Promise<void>(r=>{entered=r;});
+ const original=f.aiService.createTask.bind(f.aiService);
+ vi.spyOn(f.aiService,'createTask').mockImplementationOnce(async(...args)=>{entered();await gate;return original(...args);});
+ const cron=()=>triggerScheduledJob({...f.ctx,source:'ingestion'},f.job,f.controls.triggerDeps,{scheduledFor:now()});
+ const first=firstKind==='manual'?f.run():cron();await started;
+ const second=firstKind==='manual'?cron():f.run();
+ await new Promise(r=>setTimeout(r,10));release();
+ const results=await Promise.all([first,second]);
+ expect(results[0]!.jobRunId).toBe(results[1]!.jobRunId);expect(f.dispatch).toHaveBeenCalledOnce();
+ expect((await f.schedulingService.listRunsByJob(f.ctx,f.job.id,{limit:20,offset:0})).total).toBe(1);
+ const scheduledFor=await f.schedulingService.getRunScheduledFor(f.ctx,results[0]!.jobRunId);
+ expect(scheduledFor).toBe(firstKind==='cron'?now():null);
 });
