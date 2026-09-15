@@ -274,4 +274,14 @@ T-459 已加护栏 `requiresSerializableFunctionSource(code)`(regex 检测 `.eva
 
 **正解**(T-466):改 `installMode: "both"`。Tauri v2 NSIS 双模式下**自动**:①弹"仅当前用户 / 所有用户"选择页(选后者需 UAC 提升,装 `C:\Program Files\`);②弹 InstallDirPage 让用户选路径。**教训**:Tauri v2 提供的选项级功能(installMode)不是"技术选择"是"用户体验选择",技术团队顺手写的 `currentUser` 隐含限制了终端用户的自主权——**默认选保守值(both)不选最简(currentUser)**,除非有明确理由。
 
+## CI 步骤插在产物生成之前 → tauri_build 资源校验必然 panic(T-992,2026-09-15)
 
+**坑**:为守护 T-992 的启动容忍分支,往 `desktop-release.yml` 里加了一步 `cargo test --lib runtime_cleanup_tests::windows_ --no-default-features`,插在 `安装 Windows production closure 的 Chromium` 之后、`构建并接入 Windows production closure(T-675)` 之前。Windows job 直接挂:`build.rs:404` panic `tauri_build 失败: resource path binaries\creatoros-server-x86_64-pc-windows-msvc.exe doesn't exist`,exit 101(run 34942593764)。**不是测试失败,是这一步根本编译不起来**。原因:`binaries/` 被 gitignore,该 exe 在 Windows 上由 `prepare-packaged-runtime.mjs` 写出,而它只在 `build-production-closure.mjs --prepare-package` 里被调用 —— 也就是紧跟其后那一步;另一条会填充该目录的 `build-sidecar.mjs` 挂着 `runner.os != 'Windows'`,Windows 上不跑。
+
+**`--no-default-features` 挡不住**:cargo 编译 lib 前**必先执行 build.rs**,`tauri_build::try_build` 会校验 `tauri.conf.json` 的 `externalBin` / `resources` 声明的路径是否存在。feature flag 管不到 build script。即任何 cargo 命令(test/check/clippy 都算)在 sidecar 产出前跑,都会被这道资源校验拦死。
+
+**信号识别**:CI 报 `resource path ... doesn't exist` 且路径指向 `binaries/` 或 `sidecar.tar.gz` → 看该步在 workflow 里的**位置**,不是看测试内容。开发机复现不出来是因为本地 `binaries/` 里已躺着上次构建的产物(mac 上是 `creatoros-server-aarch64-apple-darwin`),build.rs 不 panic —— **本机绿 ≠ CI 绿,差别就是这个 gitignored 目录**。干净 worktree 能复现:panic 换成 darwin 那个文件名。
+
+**正解**(T-992):撤掉该步。这组测试是纯 `std` 临时目录测试,不需要真实 Windows 也不需要发布流水线,留在本地 / reconcile LED-052 guard 即可。若确实要进 CI,必须排在 closure 构建**之后**。**同时**:撤步后要回头改 LESSON_LEDGER 里「Windows 流水线必须用原生独占文件句柄复现」那句 —— 步骤没了,声明就成了假的;`reconcile.config.json` 那条同名 check 也脆(任何没有 `binaries/` + `sidecar.tar.gz` 的干净检出跑它都会 panic,reconcile 会报 "LED-052 RECURRED" 假红)。
+
+**教训**:**给一个修复加守护时,守护自身的依赖前置条件要跟着排序**。「加个测试步骤总不会错」是错的 —— 在有构建产物依赖的流水线里,步骤位置和测试内容同等重要。另一条:**声明和机制要同步改**。ledger / config 里写「流水线必须 X」,当 X 被撤掉时那句话不会自己失效,它会变成一条误导后人的假证据。
