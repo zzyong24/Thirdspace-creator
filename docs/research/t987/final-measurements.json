@@ -1,0 +1,178 @@
+{
+  "candidate": "af62ddda79d05b2b7e2e1d7768fea9f6d9dad6ab",
+  "measurement": "同一账号本地安装版完整HTTP响应，不是WebView点击到可交互",
+  "previous": {
+    "automations": [
+      {
+        "ms": 70.4,
+        "bytes": 92486,
+        "status": 200
+      },
+      {
+        "ms": 26.6,
+        "bytes": 92486,
+        "status": 200
+      },
+      {
+        "ms": 25.5,
+        "bytes": 92486,
+        "status": 200
+      },
+      {
+        "ms": 22.6,
+        "bytes": 92486,
+        "status": 200
+      },
+      {
+        "ms": 23.0,
+        "bytes": 92486,
+        "status": 200
+      }
+    ],
+    "publishing": [
+      {
+        "ms": 132.0,
+        "bytes": 146564,
+        "status": 200
+      },
+      {
+        "ms": 119.2,
+        "bytes": 146564,
+        "status": 200
+      },
+      {
+        "ms": 118.8,
+        "bytes": 146564,
+        "status": 200
+      },
+      {
+        "ms": 243.5,
+        "bytes": 146564,
+        "status": 200
+      },
+      {
+        "ms": 157.8,
+        "bytes": 146564,
+        "status": 200
+      }
+    ]
+  },
+  "assetsBeforeBatchFix": [
+    {
+      "ms": 813.8,
+      "bytes": 493661,
+      "status": 200
+    },
+    {
+      "ms": 1143.1,
+      "bytes": 493661,
+      "status": 200
+    }
+  ],
+  "after": {
+    "automations": [
+      {
+        "ms": 309.2,
+        "bytes": 92486,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 26.0,
+        "bytes": 92486,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 25.4,
+        "bytes": 92486,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 24.3,
+        "bytes": 92486,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 22.8,
+        "bytes": 92486,
+        "status": 200,
+        "pageError": false
+      }
+    ],
+    "publishing": [
+      {
+        "ms": 276.8,
+        "bytes": 89566,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 24.7,
+        "bytes": 89566,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 23.2,
+        "bytes": 89566,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 24.9,
+        "bytes": 89566,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 24.9,
+        "bytes": 89566,
+        "status": 200,
+        "pageError": false
+      }
+    ],
+    "assets": [
+      {
+        "ms": 258.1,
+        "bytes": 493661,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 144.8,
+        "bytes": 493661,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 186.3,
+        "bytes": 493661,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 101.4,
+        "bytes": 493661,
+        "status": 200,
+        "pageError": false
+      },
+      {
+        "ms": 128.0,
+        "bytes": 493661,
+        "status": 200,
+        "pageError": false
+      }
+    ]
+  },
+  "coldStartup": {
+    "startupSlowReads": {
+      "pages.dashboard.get": 2
+    },
+    "assetUsageSlowReadCount": 0,
+    "errorMarkers": 0
+  },
+  "dmgSha256": "8f1ab46e7fcc1f1ea51a6305f0d5d6e6ccef6d73ee7615c3deada53562c8d68b"
+}
