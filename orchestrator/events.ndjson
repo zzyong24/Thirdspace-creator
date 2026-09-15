@@ -1092,3 +1092,4 @@
 {"ts":"2026-09-15T03:48:31.408Z","actor":"research-gate","action":"research_open","task":"T-988","research_task":"T-988","card":"docs/research/t988/research.md","failure_family":"page-navigation-read-amplification","trigger_kind":"repeated-failure-family"}
 {"ts":"2026-09-15T03:48:47.018Z","actor":"research-gate","action":"research_resume","task":"T-988","card":"docs/research/t988/research.md","card_sha256":"5fafcdcf1268b19f5d69ff9de3af2e6e2354b81be21b4ae0beb15a9393cc2d82","decisions":[]}
 {"ts":"2026-09-15T03:48:47.152Z","actor":"taskctl","action":"start","task":"T-988","sha_before":"536b9dfed7ec","sha_after":"6eb277700ca3"}
+{"ts":"2026-09-15T05:15:24.717Z","actor":"taskctl","action":"complete","task":"T-988","evidence":"源码9095f5a9；首页5连点1请求/424.5ms（旧4027.3ms），可见骨架追加3点仍1请求；本机安装CLI full与6计划保留，DMG VALID；回归LED047/048/049/050通过、tsc通过；全局233条T916历史漂移及T989既有断言失败保留，详见docs/verification/t988-home-navigation.md","sha_before":"fa79f23688d0","sha_after":"2e399df4f916"}

@@ -1,0 +1,53 @@
+{
+  "sourceCommit": "9095f5a9cf319d922e2c89a53dd0aef7e8a9ea37",
+  "browser": "ego-browser Chromium, installed sidecar; not native WKWebView",
+  "finalHome": {
+    "navigation": "five-home-clicks-final-selected-account",
+    "elapsedMs": 424.5,
+    "requests": [
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 16405.29999998212,
+        "status": 200,
+        "ms": 10.300000011920929
+      },
+      {
+        "path": "/api/v1/dispatch",
+        "rsc": false,
+        "start": 16798.5
+      }
+    ],
+    "metric": "总播放量64.3 万总点赞1.5 万总粉丝4,237平均完播率5.1%总分享3,413"
+  },
+  "finalSkeleton": {
+    "probe": {
+      "observed": true,
+      "requestsBefore": 1
+    },
+    "requests": [
+      {
+        "path": "/settings",
+        "rsc": true,
+        "start": 41254.39999997616,
+        "status": 200,
+        "ms": 64.40000000596046
+      },
+      {
+        "path": "/api/v1/dispatch",
+        "rsc": false,
+        "start": 41776.5
+      },
+      {
+        "path": "/api/web-session",
+        "rsc": false,
+        "start": 41777.19999998808
+      }
+    ],
+    "copyClean": true,
+    "visibleLoading": false
+  },
+  "jobsPreserved": true,
+  "jobCount": 6,
+  "baselineHomeMs": 4027.3
+}
