@@ -784,6 +784,6 @@ T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗�
 
 T992：Windows 卸载会保留 AppData 中的业务数据和可再生成运行环境。新包完整解压后，目录切换仍可能因暂时占用返回拒绝访问；干净 CI 没有这类现场状态，把原子改名失败直接作为启动失败会让合法安装无法使用。
 
-防复发：安装期继续严格写入并校验正式运行目录；启动期只有在解压已经完成、版本标记匹配、入口哈希和完整性检查全部通过时，才允许从隔离目录继续运行。后续启动可复用重新校验通过的隔离目录，损坏候选必须跳过。诊断保留操作阶段、来源、目标、原始系统错误和回滚结果。Windows 流水线必须用原生独占文件句柄复现拒绝访问，并继续执行安装、启动、首页加载和卸载验收；禁止靠清空 AppData、关闭校验或重复构建掩盖问题。
+防复发：安装期继续严格写入并校验正式运行目录；启动期只有在解压已经完成、版本标记匹配、入口哈希和完整性检查全部通过时，才允许从隔离目录继续运行。后续启动可复用重新校验通过的隔离目录，损坏候选必须跳过。诊断保留操作阶段、来源、目标、原始系统错误和回滚结果。跨平台容忍路径由 `runtime_cleanup_tests::windows_*` 守护；原生独占句柄复现带 `#[cfg(target_os = "windows")]`，只在 Windows 开发机上编译进这组测试，macOS 上不参与。该组测试不进发布流水线——它在 sidecar 与 externalBin 产出前会让 tauri_build 资源校验 panic。Windows 流水线继续执行安装、启动、首页加载和卸载验收；禁止靠清空 AppData、关闭校验或重复构建掩盖问题。
 
-执行：`cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features`，正式 Windows 流水线运行同一测试组并包含仅 Windows 编译的原生锁测试。
+执行：`cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib runtime_cleanup_tests::windows_ --no-default-features`（本地/reconcile guard）。前置条件:`frontend/src-tauri/binaries/` 与 `sidecar.tar.gz` 必须已存在,否则 build.rs 在 tauri_build 资源校验处 panic,与测试本身无关。
