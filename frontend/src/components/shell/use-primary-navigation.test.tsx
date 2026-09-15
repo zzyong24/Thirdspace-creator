@@ -2,6 +2,7 @@ import { Component, Suspense, use, useState, type ReactNode } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { usePrimaryNavigation } from "./use-primary-navigation";
+import PageLoading from "@/app/(creator)/loading";
 
 const router = vi.hoisted(() => ({push:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>router}));
@@ -18,6 +19,16 @@ function Harness({gates}:{gates:Map<string,Promise<void>>}) {
   return <><output>{nav.pendingHref??'idle'}</output>{['/','/b','/fail','/?filter=new'].map(href=><button key={href} onClick={()=>nav.navigate(href)}>{href}</button>)}<Suspense fallback={<p>加载</p>}><RouteBoundary key={route.key}><Content pending={route.promise}/></RouteBoundary></Suspense></>;
 }
 beforeEach(()=>router.push.mockReset());
+it("已提交且可见的页面骨架继续防重，隐藏残留骨架和不同筛选不阻断",async()=>{
+ const view=render(<><PageLoading/><Harness gates={new Map()}/></>);
+ const marker=screen.getByRole('status',{name:'正在打开页面'});
+ const visible=vi.spyOn(marker,'getClientRects').mockReturnValue([{}] as unknown as DOMRectList);
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'/'})));expect(router.push).not.toHaveBeenCalled();
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'/?filter=new'})));expect(router.push).toHaveBeenCalledWith('/?filter=new');
+ visible.mockReturnValue([] as unknown as DOMRectList);
+ await act(async()=>fireEvent.click(screen.getByRole('button',{name:'/'})));expect(router.push).toHaveBeenCalledTimes(2);
+ visible.mockRestore();view.unmount();
+});
 it("首次立即执行，同一目标同步5次及等待中的再次点击只发一次，完成后可重新进入",async()=>{
  const gate=deferred();render(<Harness gates={new Map([['/',gate.promise]])}/>);
  await act(async()=>{for(let i=0;i<5;i++)fireEvent.click(screen.getByRole('button',{name:'/'}))});

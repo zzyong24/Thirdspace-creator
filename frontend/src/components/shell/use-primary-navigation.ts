@@ -21,6 +21,10 @@ export function usePrimaryNavigation() {
   const navigate = useCallback((href:string)=>{
     // SEMANTIC_BOUNDARY_ALLOW: 仅完整地址相等判断，不选择内容或改变用户导航意图。
     const target = new URL(href,window.location.href).href;
+    // Next 可先提交 loading 边界并结束 transition；此时同页仍在读取，不能再次刷新。
+    // Activity 会保留旧页DOM，必须排除隐藏骨架。真实错误页无此标记，仍可重试。
+    if(target===window.location.href && Array.from(document.querySelectorAll('[data-slot="route-loading"]'))
+      .some(node=>node.getClientRects().length>0)) return;
     if(latest.current?.target===target) return;
     const token=++sequence.current;
     setError(null);

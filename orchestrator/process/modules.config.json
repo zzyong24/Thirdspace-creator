@@ -52,7 +52,9 @@
         "frontend/src/server/dashboard-query-projection.test.ts",
         "frontend/src/server/persistence-client.ts",
         "frontend/src/features/intelligence/collection-import-dialogs.tsx",
-        "frontend/src/features/knowledge/knowledge-graph-view.tsx"
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx",
+        "frontend/src/app/(creator)/loading.tsx",
+        "frontend/src/app/(creator)/daily-report/loading.tsx"
       ],
       "verify_commands": {
         "diagnosis": [
