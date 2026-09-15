@@ -4,13 +4,54 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 39,
+    "verticals": 40,
     "tasks_done": 34,
-    "tasks_total": 124,
-    "tasks_pending": 90,
+    "tasks_total": 126,
+    "tasks_pending": 92,
     "verticals_complete": 1
   },
   "verticals": [
+    {
+      "id": "T-987",
+      "archetype": [
+        "derived-computed"
+      ],
+      "task_id": "T-987",
+      "tasks": [
+        {
+          "step": "diagnosis",
+          "status": "pending"
+        },
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/research/t987/**",
+        "docs/verification/t987-page-performance.md"
+      ],
+      "read_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/features/t941-navigation-latency.md",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/publishing/**",
+        "frontend/src/**",
+        "frontend/next.config.ts",
+        "contract/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
     {
       "task_id": "T-930",
       "archetype": [

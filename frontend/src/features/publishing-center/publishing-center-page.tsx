@@ -165,7 +165,7 @@ export function PublishingCenterPage({
             ) : performanceState === "error" ? (
               <ErrorState error={vm.error} />
             ) : (
-              <PublishingCenterSummaryRail viewModel={vm} />
+              <PublishingCenterSummaryRail viewModel={{ metrics: vm.metrics, platformComparison: vm.platformComparison, trend: vm.trend }} />
             )}
           </section>
         </div>
@@ -180,7 +180,7 @@ export function PublishingCenterPage({
           ) : performanceState === "error" ? (
             null
           ) : (
-            <PublishingCenterTopContent viewModel={vm} />
+            <PublishingCenterTopContent viewModel={{ topContent: vm.topContent }} />
           )}
         </section>
       </div>

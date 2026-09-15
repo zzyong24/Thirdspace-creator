@@ -47,6 +47,10 @@ export async function AutomationsPage({
   client = defaultClient,
   currentAccountId = null,
 }: AutomationsPageProps = {}) {
+  // 独立读并发启动；账号失败沿用原来的诚实降级，运行配置仍实时。
+  const accountsPromise = currentAccountId
+    ? client.listAccounts({ params: undefined, query: { page: 1, pageSize: 100, platform: "douyin" }, body: undefined }).catch(() => [])
+    : Promise.resolve([]);
   // 读:page -> await client.listScheduledJobs -> composite transport -> pglite -> DTO。
   // `jobs?` 是测试覆盖缝(fixture,sync);生产读拉全部 enabled+disabled 作业(自动化
   // 两态都展示),按创建时刻的自然顺序(service 默认)。
@@ -84,11 +88,7 @@ export async function AutomationsPage({
   let multiAccount = false;
   if (currentAccountId) {
     try {
-      const accounts = (await client.listAccounts({
-        params: undefined,
-        query: { page: 1, pageSize: 100, platform: "douyin" },
-        body: undefined,
-      })) as unknown as ReadonlyArray<{
+      const accounts = (await accountsPromise) as unknown as ReadonlyArray<{
         id: string;
         accountHandle: string;
         status: "active" | "archived";

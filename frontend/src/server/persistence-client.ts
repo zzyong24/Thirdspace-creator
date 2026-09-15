@@ -5827,6 +5827,7 @@ FAVORITES_PROMOTE_PER_RUN
           projects: projectsService,
           publishing: publishingService,
           analytics: analyticsService,
+          readRevision: createPageReadRevisionReader(db),
         },
         ctx,
         month,
@@ -5922,7 +5923,12 @@ export async function getPublishingScheduleProjection(
   ctx: RequestContext,
   month?: string,
 ): Promise<PublishingScheduleProjection> {
-  return (await getBundle()).publishingScheduleProjection(ctx, month);
+  const started = performance.now();
+  try { return await (await getBundle()).publishingScheduleProjection(ctx, month); }
+  finally {
+    const durationMs = Math.round(performance.now() - started);
+    if (durationMs >= 200) console.info(`[page-read] projection=publishing durationMs=${durationMs}`);
+  }
 }
 
 /**

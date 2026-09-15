@@ -335,26 +335,31 @@ export function createAnalyticsRepository(
       // 当日新增播放。第一天没有前日基线,不产点;有效点 < 2 → 空(上层显引导)。
       // 空集语义:当前号无快照 → rows 空 → 返回 [](JS 差分,无 SQL NULL 风险)。
       if (publicationIds && publicationIds.length === 0) return [];
+      // SEMANTIC_BOUNDARY_ALLOW: 仅收窄既有时间/快照读取，保持最近采样日与差分口径，不做内容判断。
+      const scope = and(
+        eq(metricSnapshots.userId, userId),
+        eq(metricSnapshots.accountId, accountId),
+        publicationIds ? inArray(metricSnapshots.publicationId, [...publicationIds]) : undefined,
+      );
+      const dayKey = sql<string>`left(${metricSnapshots.capturedAt}, 10)`;
+      // 一条 SQL 使用同一数据库快照；稀疏历史数据不能偷换成 now - days。
+      const recentDays = db.selectDistinct({ day: dayKey.as("day") })
+        .from(metricSnapshots).where(scope).orderBy(desc(dayKey)).limit(days + 1);
       const rows = await db
-        .select()
+        .selectDistinctOn([metricSnapshots.publicationId, dayKey], {
+          publicationId: metricSnapshots.publicationId,
+          capturedAt: metricSnapshots.capturedAt,
+          rawMetrics: sql<Record<string, unknown>>`jsonb_build_object('views', ${metricSnapshots.rawMetrics}->'views', 'plays', ${metricSnapshots.rawMetrics}->'plays')`,
+        })
         .from(metricSnapshots)
-        .where(
-          and(
-            eq(metricSnapshots.userId, userId),
-            // [T-332 S2] strict 按号门(只见当前号;lenient OR-IS-NULL 已退役)。
-            eq(metricSnapshots.accountId, accountId),
-            publicationIds
-              ? inArray(metricSnapshots.publicationId, [...publicationIds])
-              : undefined,
-          ),
-        )
-        .orderBy(desc(metricSnapshots.capturedAt));
+        .where(and(scope, inArray(dayKey, recentDays)))
+        .orderBy(asc(metricSnapshots.publicationId), asc(dayKey), desc(metricSnapshots.capturedAt), desc(metricSnapshots.id));
       const numOf = (m: Record<string, unknown>, key: string): number => {
         const v = m[key];
         const n = typeof v === "number" ? v : Number(v);
         return Number.isFinite(n) ? n : 0;
       };
-      // (publicationId, day) → 当日最新累计播放(rows DESC,首见即最新)。
+      // (publicationId, day) → SQL 已选出的当日最新累计播放。
       const byPubDay = new Map<string, number>();
       const daysSeen = new Set<string>();
       for (const row of rows) {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
   createAnalyticsRepository,
@@ -398,4 +398,39 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
       expect(page).toEqual({ rows: [], total: 0 });
     });
   });
+});
+
+
+it("T987 历史快照增多时仅返回最近采样日每日最后值，保持稀疏日期和账号隔离", async () => {
+  const { db, client } = await createDb();
+  try {
+    const repo = makeRepo(db, "trend-perf");
+    const rows: MetricSnapshotRow[] = [];
+    for (let day = 1; day <= 20; day++) {
+      for (let tick = 0; tick < 10; tick++) {
+        for (const pub of ["a", "b"]) {
+          rows.push(snapshotRow({id:`t987-${day}-${tick}-${pub}`,userId:"user-a",publicationId:pub,
+            capturedAt:`2025-01-${String(day).padStart(2,"0")}T${String(tick).padStart(2,"0")}:00:00.000Z`,
+            rawMetrics:{[pub === "a" ? "views" : "plays"]:String(day*100+tick), irrelevant:"x".repeat(2048)}}));
+        }
+      }
+    }
+    rows.push(snapshotRow({id:"other-account",userId:"user-a",accountId:"other",publicationId:"a",capturedAt:"2026-09-01T00:00:00.000Z",rawMetrics:{views:999999}}));
+    await repo.seedSnapshots(rows);
+    const original = client.query.bind(client);
+    const payloads: unknown[][] = [];
+    const spy = vi.spyOn(client,"query").mockImplementation(async (...args: any[]) => {
+      const result = await (original as any)(...args);
+      if (String(args[0]).includes('from "metric_snapshots"')) payloads.push(result.rows);
+      return result;
+    });
+    const trend = await repo.getDailyPlayTrend("user-a",ACCT,undefined,7);
+    expect(trend).toEqual(Array.from({length:7},(_,i)=>({day:`2025-01-${14+i}`,plays:200})));
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0]).toHaveLength(16);
+    expect(JSON.stringify(payloads)).not.toContain("irrelevant");
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,["a"],7)).toEqual(trend.map(p=>({...p,plays:100})));
+    spy.mockClear();expect(await repo.getDailyPlayTrend("user-a",ACCT,[],7)).toEqual([]);expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  } finally { await client.close(); }
 });

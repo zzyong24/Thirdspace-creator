@@ -258,6 +258,12 @@
       "what": "合并采集互相阻断、长任务被误清理、跨计划误绑定及浏览器占用反复失败",
       "check": "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/scheduling/traffic-wake.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts src/modules/ai-runtime/scheduled-flywheel-execution.service.test.ts src/application/collection/cover-file-repair.test.ts src/application/collection/self-backfill.test.ts src/modules/execution/host-browser-profile-lifecycle.test.ts src/modules/execution/host-browser-process-recovery.test.ts src/application/scheduling/controls.test.ts src/modules/ai-runtime/scheduled-run-now.test.ts src/modules/ai-runtime/collection-stagger.test.ts src/modules/scheduling/stagger-collection-migration.test.ts src/modules/analytics/traffic-queue.integration.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000 --retry=0",
       "onFail": "保留原执行与成功进度，修复独立优先调度、按账号资源管理及各源计数；禁止总时长误杀、TTL抢锁、关闭开关后自动新建任务或盲目重试。"
+    },
+    {
+      "led": "LED-049",
+      "what": "展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询",
+      "check": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx --retry=0 && pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts --maxWorkers=1 --retry=0",
+      "onFail": "修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。"
     }
   ],
   "program_completion_required": false,
@@ -290,6 +296,8 @@
     "ai-recovery-guidance:e2e": "CREATOROS_TEST_PORT=3441 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-recovery-guidance.spec.ts --project=e2e"
   },
   "research_verify_commands": {
+    "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
+    "t987-baseline-scope": "node docs/research/t987/verify-baseline.mjs scope",
     "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts"
   }
 }

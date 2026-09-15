@@ -18,6 +18,47 @@
     ]
   },
   "modules": {
+    "T-987": {
+      "task_id": "T-987",
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "diagnosis",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/features/t941-navigation-latency.md",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/publishing/**",
+        "frontend/src/**",
+        "frontend/next.config.ts",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t987-page-navigation-performance.md",
+        "docs/research/t987/**",
+        "docs/verification/t987-page-performance.md",
+        "frontend/src/lib/page-read-cache.server.ts",
+        "frontend/src/lib/page-read-cache.test.ts",
+        "frontend/src/server/publishing-schedule-projection.ts",
+        "frontend/src/server/publishing-schedule-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/features/publishing-center/**",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/scheduling/scheduling.repository.ts"
+      ],
+      "verify_commands": {
+        "diagnosis": "git diff --check",
+        "implementation": "git diff --check"
+      }
+    }
+,
     "T-983": {
       "task_id": "T-983",
       "archetype": ["orchestration"],

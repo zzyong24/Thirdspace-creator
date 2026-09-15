@@ -176,3 +176,29 @@ describe("[T-599] publishing schedule batch projection", () => {
     expect(result.performance.error?.message).toContain("analytics down");
   });
 });
+
+it('T987 返回和切月复用表现，日历仍读最新；版本/账号/日期变化重查',async()=>{
+ const {deps,calls}=stubs();let revision='t987-r1';deps.readRevision=async()=>revision;
+ const scope={...ctx,userId:'t987-cache'};
+ const first=await buildPublishingScheduleProjection(deps,scope,'2026-07');
+ const second=await buildPublishingScheduleProjection(deps,scope,'2026-08');
+ expect(second.performance).toEqual(first.performance);
+ expect(calls.listProjectsForComposition).toHaveBeenCalledTimes(1);
+ expect(calls.getCalendarRequestContext).toHaveBeenCalledTimes(2);
+ expect(calls.listCalendar).toHaveBeenCalledTimes(2);
+ revision='t987-r2';await buildPublishingScheduleProjection(deps,scope,'2026-08');
+ expect(calls.listProjectsForComposition).toHaveBeenCalledTimes(2);
+ await buildPublishingScheduleProjection(deps,{...scope,accountId:'other'},'2026-08');
+ expect(calls.listProjectsForComposition).toHaveBeenCalledTimes(3);
+ calls.getCalendarRequestContext.mockResolvedValueOnce({referenceInstant:'2026-07-30T01:00:00.000Z',effectiveTimezone:'Asia/Shanghai',today:'2026-07-30'});
+ await buildPublishingScheduleProjection(deps,scope,'2026-08');
+ expect(calls.listProjectsForComposition).toHaveBeenCalledTimes(4);
+});
+it('T987 汇总失败不缓存，下一次仍能恢复',async()=>{
+ const {deps,calls}=stubs();deps.readRevision=async()=>'failure-test';
+ calls.getDailyPlayTrend.mockRejectedValueOnce(new Error('temporary'));
+ const scope={...ctx,userId:'t987-failure'};
+ expect((await buildPublishingScheduleProjection(deps,scope)).performance.scenario).toBe('error');
+ expect((await buildPublishingScheduleProjection(deps,scope)).performance.scenario).toBe('default');
+ expect(calls.getDailyPlayTrend).toHaveBeenCalledTimes(2);
+});

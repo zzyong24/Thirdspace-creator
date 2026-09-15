@@ -1,4 +1,5 @@
 import "server-only";
+import { readCachedPageValue } from "@/lib/page-read-cache.server";
 
 import type { RequestContext } from "@creatoros/contract";
 import type {
@@ -26,6 +27,8 @@ export interface PublishingScheduleProjectionDeps {
   projects: ProjectsService;
   publishing: PublishingService;
   analytics: AnalyticsService;
+  /** 仅展示投影使用；日历与时区每次读取。 */
+  readRevision?: () => Promise<string>;
 }
 
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -232,16 +235,13 @@ function nextMonth(month: string): string {
   return value.toISOString().slice(0, 7);
 }
 
-function dateInTimezone(instant: string, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date(instant));
-  const value = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  return `${value("year")}-${value("month")}-${value("day")}`;
+function createDateFormatter(timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+  return (instant: string): string => {
+    const parts = formatter.formatToParts(new Date(instant));
+    const value = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value ?? "";
+    return `${value("year")}-${value("month")}-${value("day")}`;
+  };
 }
 
 function num(raw: Record<string, unknown>, key: string): number {
@@ -313,6 +313,7 @@ export async function buildPublishingScheduleProjection(
     contextError = error instanceof Error ? error : new Error("读取日历上下文失败");
   }
 
+  const dateInTimezone = createDateFormatter(calendarContext?.effectiveTimezone ?? "UTC");
   const month =
     monthParam && MONTH_PATTERN.test(monthParam)
       ? monthParam
@@ -328,8 +329,8 @@ export async function buildPublishingScheduleProjection(
         .then((page) => page.rows)
     : Promise.reject(contextError ?? new Error("日历上下文不可用"));
 
-  const performancePromise = (async () => {
-    const projects = await deps.projects.listProjectsForComposition(ctx);
+  const readPerformance = async () => {
+    const projects = (await deps.projects.listProjectsForComposition(ctx)).map(({ id, title }) => ({ id, title }));
     const projectById = new Map(projects.map((project) => [project.id, project]));
     const outputs = await deps.projects.listOutputRefsByProjects(
       ctx,
@@ -411,7 +412,7 @@ export async function buildPublishingScheduleProjection(
         platformLabel: platformLabel(publication.platform),
         publishedAt: when,
         publishedAtLabel: calendarContext
-          ? dateInTimezone(when, calendarContext.effectiveTimezone)
+          ? dateInTimezone(when)
           : when.slice(0, 10),
         status,
         statusLabel: STATUS_LABELS[status],
@@ -446,7 +447,17 @@ export async function buildPublishingScheduleProjection(
             : rows.filter((row) => row.contentType === tab.id).length,
       })),
     };
-  })();
+  };
+  const performancePromise = deps.readRevision && calendarContext
+    ? readCachedPageValue({
+        ctx,
+        key: ["projection", "publishing-performance", calendarContext.effectiveTimezone, calendarContext.today],
+        readRevision: deps.readRevision,
+        read: readPerformance,
+        isCacheable: value => !value.projectionError,
+        maxAgeMs: 30_000,
+      })
+    : readPerformance();
 
   const [calendarResult, performanceResult] = await Promise.allSettled([
     calendarEntriesPromise,
@@ -524,17 +535,11 @@ export async function buildPublishingScheduleProjection(
         publications: publishedRows
           .filter(
             (row) =>
-              dateInTimezone(
-                row.publishedAt,
-                calendarContext.effectiveTimezone,
-              ).slice(0, 7) === month,
+              dateInTimezone(row.publishedAt).slice(0, 7) === month,
           )
           .map((row) => ({
             id: row.id,
-            dateKey: dateInTimezone(
-              row.publishedAt,
-              calendarContext.effectiveTimezone,
-            ),
+            dateKey: dateInTimezone(row.publishedAt),
             title: row.contentTitle.replace(
               new RegExp(` · ${platformLabel(row.platform)}$`),
               "",

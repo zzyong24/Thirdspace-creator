@@ -14,3 +14,10 @@ it('迁移后四类独立任务可见，仅显式内容补全detail可见，未�
  const html=renderToStaticMarkup(await AutomationsPage({jobs}));
  for(const id of ['metrics','comments','traffic','backfill'])expect(html).toContain(id);expect(html).not.toContain('old-detail');
 });
+it('T987 作业慢读时账号读取已启动，不把独立查询串行',async()=>{
+ let resolveJobs!:(v:[])=>void;
+ const listAccounts=vi.fn(async()=>[]);
+ const read=AutomationsPage({currentAccountId:'a',client:{listScheduledJobs:()=>new Promise<[]>(r=>{resolveJobs=r;}),listAccounts} as any});
+ try { expect(listAccounts).toHaveBeenCalledTimes(1); }
+ finally {resolveJobs([]);await read;}
+});

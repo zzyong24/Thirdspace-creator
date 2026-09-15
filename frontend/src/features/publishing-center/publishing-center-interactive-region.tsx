@@ -37,7 +37,7 @@ export function PublishingCenterInteractiveRegion({
 export function PublishingCenterSummaryRail({
   viewModel,
 }: {
-  readonly viewModel: PublishingCenterViewModel;
+  readonly viewModel: Pick<PublishingCenterViewModel, "metrics" | "platformComparison" | "trend">;
 }) {
   return (
     <aside
@@ -55,7 +55,7 @@ export function PublishingCenterSummaryRail({
 export function PublishingCenterTopContent({
   viewModel,
 }: {
-  readonly viewModel: PublishingCenterViewModel;
+  readonly viewModel: Pick<PublishingCenterViewModel, "topContent">;
 }) {
   return <TopContentList items={viewModel.topContent} />;
 }

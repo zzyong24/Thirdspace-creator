@@ -22,3 +22,25 @@ it('切换运行步骤后旧慢结果不串入新运行，卸载后不续轮询'
 it('列表慢读取期间不会由轮询堆叠请求，卸载后不续发',async()=>{vi.useFakeTimers();const pending=deferred<any>();m.list.mockReturnValue(pending.promise);const view=render(<AutomationsIsland jobs={[job]}/>);await act(async()=>vi.advanceTimersByTimeAsync(12000));expect(m.list).toHaveBeenCalledTimes(1);await act(async()=>pending.resolve([run]));expect(screen.getByRole('button',{name:'查看运行'})).toBeEnabled();view.unmount();await act(async()=>vi.advanceTimersByTimeAsync(12000));expect(m.list).toHaveBeenCalledTimes(1);});
 it('步骤慢读取期间不堆叠轮询，完成后能显示，关闭后不续发',async()=>{vi.useFakeTimers();m.list.mockResolvedValue([run]);const pending=deferred<any>();m.steps.mockReturnValue(pending.promise);const view=render(<RunDetailDialog job={job} open preferredRunId="r" onOpenChange={vi.fn()}/>);await act(async()=>{});await act(async()=>vi.advanceTimersByTimeAsync(12000));expect(m.steps).toHaveBeenCalledTimes(1);await act(async()=>pending.resolve([{stepNo:1,kind:'note',text:'慢步骤正常返回'}]));expect(screen.getByText('慢步骤正常返回')).toBeInTheDocument();view.rerender(<RunDetailDialog job={job} open={false} preferredRunId="r" onOpenChange={vi.fn()}/>);await act(async()=>vi.advanceTimersByTimeAsync(12000));expect(m.steps).toHaveBeenCalledTimes(1);});
 it('按后端真实时区和分钟展示错峰计划',()=>{render(<AutomationsIsland jobs={[{...job,schedule:'15 */2 * * *',target:{scheduleTimezone:'Asia/Shanghai'}}]}/>);expect(screen.getByText('每 2 小时 · 15 分 · 北京时间')).toBeInTheDocument();});
+it('T987 空闲减频，隐藏不轮询，回到页面立即发现运行中任务',async()=>{
+ vi.useFakeTimers();let hidden=false;vi.spyOn(document,'hidden','get').mockImplementation(()=>hidden);
+ render(<AutomationsIsland jobs={[job]}/>);await act(async()=>{});expect(m.list).toHaveBeenCalledTimes(1);
+ await act(async()=>vi.advanceTimersByTimeAsync(14000));expect(m.list).toHaveBeenCalledTimes(1);
+ await act(async()=>vi.advanceTimersByTimeAsync(1000));expect(m.list).toHaveBeenCalledTimes(2);
+ hidden=true;fireEvent(document,new Event('visibilitychange'));
+ await act(async()=>vi.advanceTimersByTimeAsync(60000));expect(m.list).toHaveBeenCalledTimes(2);
+ m.list.mockResolvedValue([run]);hidden=false;await act(async()=>fireEvent(document,new Event('visibilitychange')));
+ expect(m.list).toHaveBeenCalledTimes(3);
+ await act(async()=>vi.advanceTimersByTimeAsync(4000));expect(m.list).toHaveBeenCalledTimes(4);
+ vi.restoreAllMocks();
+});
+it('T987 隐藏期间请求未完成，回来只合并一次刷新且不并发',async()=>{
+ vi.useFakeTimers();let hidden=false;vi.spyOn(document,'hidden','get').mockImplementation(()=>hidden);
+ const p=deferred<any>();m.list.mockReturnValueOnce(p.promise).mockResolvedValue([]);
+ const view=render(<AutomationsIsland jobs={[job]}/>);await act(async()=>{});
+ hidden=true;fireEvent(document,new Event('visibilitychange'));hidden=false;fireEvent(document,new Event('visibilitychange'));fireEvent(document,new Event('visibilitychange'));
+ expect(m.list).toHaveBeenCalledTimes(1);
+ await act(async()=>p.resolve([]));await act(async()=>vi.advanceTimersByTimeAsync(1));expect(m.list).toHaveBeenCalledTimes(2);
+ view.unmount();await act(async()=>vi.advanceTimersByTimeAsync(60000));expect(m.list).toHaveBeenCalledTimes(2);
+ vi.restoreAllMocks();
+});

@@ -1616,16 +1616,31 @@ export function AutomationsIsland({
     return Object.fromEntries(entries);
   }, [jobs]);
 
-  // LED-047: 列表单一读取循环；完成后再轮询，能发现后台启动的新运行。
-  React.useEffect(()=>{
-   let active=true,timer:ReturnType<typeof setTimeout>|undefined;
-   async function read(){
-    const next=await fetchLatestRuns();
-    if(active){setLatestRuns(next);timer=setTimeout(read,4000);}
-   }
-   setLatestRuns({});void read();
-   return()=>{active=false;clearTimeout(timer);};
-  },[fetchLatestRuns]);
+  // LED-047/T987: 单在途；隐藏页面暂停，回来立即刷新。空闲不持续抢占本地服务。
+  React.useEffect(() => {
+    let active = true, inFlight = false, refreshOnReturn = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    async function read() {
+      if (!active || document.hidden) return;
+      if (inFlight) { refreshOnReturn = true; return; }
+      inFlight = true;
+      const next = await fetchLatestRuns();
+      inFlight = false;
+      if (!active) return;
+      setLatestRuns(next);
+      if (document.hidden) return;
+      const delay = refreshOnReturn ? 0 : Object.values(next).some(run => run?.status === "running") ? 4000 : 15000;
+      refreshOnReturn = false;
+      timer = setTimeout(read, delay);
+    }
+    const onVisibility = () => {
+      clearTimeout(timer);
+      if (!document.hidden) void read();
+    };
+    setLatestRuns({}); void read();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { active = false; clearTimeout(timer); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [fetchLatestRuns]);
 
   // T-038c:挂载时拉一次两个 channel 的限流退避快照(只读 op,读网关内存镜像)。jobs 变化
   // (router.refresh 重传)即重拉,让登录恢复/立即运行后限流态也刷新。失败/未配网关 → 静默空

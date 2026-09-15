@@ -1,4 +1,4 @@
-import { and, desc, eq, type Db } from "@creatoros/backend";
+import { and, desc, eq, sql, type Db } from "@creatoros/backend";
 import { scheduledJobs, jobRuns } from "./scheduling.db-schema";
 import { OwnershipError, requireAccountId } from "./scheduling.errors";
 
@@ -407,8 +407,8 @@ export function createSchedulingRepository(
         .orderBy(desc(jobRuns.startedAt))
         .limit(limit)
         .offset(offset);
-      const all = await db.select({ id: jobRuns.id }).from(jobRuns).where(where);
-      return { rows, total: all.length };
+      const total = await db.select({ value: sql<number>`count(*)` }).from(jobRuns).where(where);
+      return { rows, total: Number(total[0]?.value ?? 0) };
     },
 
     async listRunsByStatus(status) {
