@@ -506,6 +506,24 @@ describe("scheduled → failed", () => {
 });
 
 describe("getRecentPublications", () => {
+  it("[T-988] 先筛选近期集合并取展示数量，再解析标题；空允许集不混入其他作品", async () => {
+    const pubs = [];
+    for (let i = 0; i < 12; i++) pubs.push(await service.createImportedPublication(ctx, `output-${i}`, {
+      platform: "douyin", externalId: `recent-${i}`, title: `作品${i}`,
+    }));
+    const allowed = pubs.slice(3).map(p => p.id);
+    const recent = await service.getRecentPublications(ctx, {limit:100});
+    const selects=vi.spyOn(db,"select");
+    const result = await service.getRecentPublicationsWithTitle(ctx, {
+      limit:100, publicationIds:allowed, displayLimit:5,
+    });
+    expect(result.map(p=>p.id)).toEqual(recent.filter(p=>allowed.includes(p.id)).slice(0,5).map(p=>p.id));
+    expect(result.every(p=>p.title.startsWith("作品"))).toBe(true);
+    // 1次集合读取 + 最多5条归属/版本各1次；条目增长不能退回逐条展开整个集合。
+    expect(selects.mock.calls.length).toBeLessThanOrEqual(11);
+    selects.mockRestore();
+    expect(await service.getRecentPublicationsWithTitle(ctx, {limit:100, publicationIds:[], displayLimit:5})).toEqual([]);
+  });
   it("returns the user's publications newest-first across outputs", async () => {
     await service.createPublication(ctx, "output-1", {
       platform: "bilibili",

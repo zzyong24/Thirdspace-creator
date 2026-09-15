@@ -1,0 +1,55 @@
+{
+  "environment": "af62ddda installed macOS server / ego-browser Chromium frontend; not native WKWebView",
+  "accountId": "acct-ae1a8346-9",
+  "browser": {
+    "navigation": "five-home-clicks-selected-account",
+    "elapsedMs": 4027.300000011921,
+    "requests": [
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 45874.5,
+        "status": 200,
+        "ms": 19.400000005960464
+      },
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 45874.69999998808,
+        "status": 200,
+        "ms": 805.9000000059605
+      },
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 45874.79999998212,
+        "status": 200,
+        "ms": 1572.4000000059605
+      },
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 45874.79999998212,
+        "status": 200,
+        "ms": 2441.100000023842
+      },
+      {
+        "path": "/",
+        "rsc": true,
+        "start": 45874.79999998212,
+        "status": 200,
+        "ms": 3103.600000023842
+      }
+    ],
+    "metric": "总播放量64.3 万总点赞1.5 万总粉丝4,237平均完播率5.1%总分享3,412"
+  },
+  "limitations": [
+    "普通浏览器未注入桌面鉴权；仅设置账号选择cookie读取SSR，侧栏账号及客户端RPC不作为验收",
+    "fetch耗时为响应头，不等于完整页面耗时；elapsed包含等待探针开销"
+  ],
+  "diagnosis": {
+    "sameTargetDedupMissing": true,
+    "titlesResolvedBefore100To5Filter": true,
+    "wholeHomeCacheUnsafeForLiveTodos": true
+  }
+}

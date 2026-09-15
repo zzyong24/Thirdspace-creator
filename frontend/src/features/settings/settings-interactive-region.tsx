@@ -509,7 +509,7 @@ function AccountInformationCard({
         <SettingsFormRow
           label="昵称"
           controlId="account-nickname"
-          help="显示名称，保存后立即生效（PATCH /me，真持久）。"
+          help="显示名称，保存后立即生效。"
         >
           <div className="flex w-full items-center gap-2">
             <Input

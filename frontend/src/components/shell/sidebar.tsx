@@ -22,7 +22,8 @@
 
 import * as React from "react";
 import Image from "next/image";
-import Link, {useLinkStatus} from "next/link";
+import Link from "next/link";
+import { usePrimaryNavigation } from "./use-primary-navigation";
 import {
   LoaderCircle,
   PanelLeftClose,
@@ -150,8 +151,7 @@ interface NavEntry {
   readonly match: (pathname: string) => boolean;
 }
 
-function PrimaryNavContents({icon:Icon,label,collapsed}:{icon:LucideIcon;label:string;collapsed:boolean}) {
-  const {pending}=useLinkStatus();
+function PrimaryNavContents({icon:Icon,label,collapsed,pending}:{icon:LucideIcon;label:string;collapsed:boolean;pending:boolean}) {
   return <>
     {pending?<LoaderCircle className="size-4 shrink-0 animate-spin text-primary" aria-hidden="true"/>:<Icon className="size-4 shrink-0" aria-hidden="true"/>}
     {!collapsed?<span>{label}</span>:null}
@@ -413,12 +413,14 @@ function PrimaryNav({
   activeId: string | null;
   collapsed: boolean;
 }) {
+  const {navigate,pendingHref,error}=usePrimaryNavigation();
   return (
     <nav
       data-slot="sidebar-primary-nav"
       aria-label="主要导航"
       className="flex flex-col gap-1"
     >
+      {error ? <p role="alert" className="text-xs text-destructive">{error}</p> : null}
       {PRIMARY_NAV.map((entry) => {
         const Icon = entry.icon;
         const isActive = entry.id === activeId;
@@ -427,6 +429,7 @@ function PrimaryNav({
             href={entry.href}
             // 桌面单进程服务：未点击页面不抢占当前页面的查询资源。
             prefetch={false}
+            onNavigate={(event)=>{event.preventDefault();navigate(entry.href)}}
             data-slot="sidebar-nav-item"
             data-active={isActive ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}
@@ -441,7 +444,7 @@ function PrimaryNav({
               isActive && "bg-brand-soft font-medium text-brand",
             )}
           >
-            <PrimaryNavContents icon={Icon} label={entry.label} collapsed={collapsed}/>
+            <PrimaryNavContents icon={Icon} label={entry.label} collapsed={collapsed} pending={pendingHref===entry.href}/>
           </Link>
         );
         if (!collapsed) {

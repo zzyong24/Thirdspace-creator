@@ -190,7 +190,7 @@ export interface PublishingService {
   // via Analytics (cross-module composition stays at the facade layer).
   getRecentPublicationsWithTitle(
     ctx: RequestContext,
-    opts: { limit: number; offset?: number },
+    opts: { limit: number; offset?: number; publicationIds?: readonly string[]; displayLimit?: number },
   ): Promise<
     Array<
       PublicationRow & {
@@ -666,10 +666,15 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
 
     async getRecentPublicationsWithTitle(ctx, opts) {
       const repo = repoFor(ctx);
-      const rows = await repo.listPublicationsForUser({
+      const fetched = await repo.listPublicationsForUser({
         limit: opts.limit,
         offset: opts.offset ?? 0,
       });
+      // SEMANTIC_BOUNDARY_ALLOW: 既有账号内近期集合按真实ID筛选，先限制展示数量再读取版本。
+      // 不改变排序/标题选择，不为不会展示的95条作品逐条读取归属和版本。
+      const allowed = opts.publicationIds === undefined ? null : new Set(opts.publicationIds);
+      const rows = (allowed ? fetched.filter(row=>allowed.has(row.id)) : fetched)
+        .slice(0,opts.displayLimit === undefined ? fetched.length : Math.max(0,opts.displayLimit));
       // Resolve each publication's display title from its revisions (prefer the
       // current revision, else the highest revisionNumber). A publication with no
       // revision keeps "" so the facade can fall back (output title / 未命名发布).

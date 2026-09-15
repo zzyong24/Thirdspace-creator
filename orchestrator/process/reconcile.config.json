@@ -264,6 +264,12 @@
       "what": "展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询",
       "check": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx src/features/assets/assets-data.test.ts src/components/shell/shell.test.tsx --retry=0 && pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts src/modules/material-links/material-links.service.test.ts --maxWorkers=1 --retry=0",
       "onFail": "修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。"
+    },
+    {
+      "led": "LED-050",
+      "what": "首页连点重复导航与先展开全部作品再截断导致排队卡顿",
+      "check": "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0 && pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --maxWorkers=1 --retry=0",
+      "onFail": "按真实过渡完成token合并同目标、先筛选再展开；保留不同导航与失败重试，不缓存整页动态待办。"
     }
   ],
   "program_completion_required": false,
@@ -298,6 +304,7 @@
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
     "t987-baseline-scope": "node docs/research/t987/verify-baseline.mjs scope",
-    "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts"
+    "t915-resource-guardian-probe": "node -e \"if(process.platform!=='darwin')process.exit(1)\" && pnpm --filter @creatoros/backend test src/modules/execution/browser-resource-guardian.probe.test.ts",
+    "t988-baseline": "node docs/research/t988/verify-baseline.mjs"
   }
 }

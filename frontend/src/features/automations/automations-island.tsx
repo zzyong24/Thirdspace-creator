@@ -204,7 +204,7 @@ const PROGRESS_STAGE_LABELS: Record<string, string> = {
   comments: "抓取评论",
   export: "导出明细",
   parse: "解析明细",
-  ingest: "落库",
+  ingest: "保存数据",
 };
 
 interface RunProgress {
@@ -626,7 +626,7 @@ export function JobRow({
             onClick={onRunNow}
             title={
               running ? "查看正在进行的运行" : job.enabled
-                ? "立即手动触发一次采集(不等 cron 到点)"
+                ? "立即采集一次，无需等待计划时间"
                 : "作业已停用 —— 先启用才能立即运行"
             }
             className="inline-flex h-8 items-center gap-1.5 rounded-control border border-border bg-surface px-3 text-xs font-medium text-foreground hover:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-60"
@@ -852,7 +852,7 @@ function CadenceEditor({
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            单次为近似:调度按「每年这天这时」触发一次(cron 无「仅一次」语义)。
+            将在每年指定日期运行；只需运行一次时，请在完成后关闭任务。
           </p>
         </div>
       ) : null}
@@ -1177,7 +1177,7 @@ export function CreateJobDialog({
                 data-testid="automation-cadence-unresolved"
                 className="text-[11px] font-medium text-amber-600"
               >
-                原频率({job?.schedule})无法反解为友好频率,请重新选择频率后再保存。
+                当前执行计划无法在这里编辑，请重新选择执行时间后保存。
               </p>
             ) : null}
           </div>
@@ -1416,7 +1416,7 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
                           </ol>
                         ) : (
                           <p className="text-xs text-muted-foreground">
-                            这次运行没有步骤日志(ai_task_steps 为空)。
+                            这次运行暂无详细步骤。
                           </p>
                         )}
                       </div>

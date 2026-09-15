@@ -20,13 +20,27 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
   let importedIds: Promise<string[]> | undefined;
   const resolveImportedPublicationIds = (_ctx: RequestContext) =>
     importedIds ??= ports.resolveImportedPublicationIds(ctx);
+  let importedState: Promise<boolean> | undefined;
+  const hasImportedProjects = (_ctx: RequestContext) => importedState ??= projectsService.hasImportedProjects(ctx);
   const dashboardQuery = createDashboardQueryService({
     projects: {
       // GAP-DASH-1 做真:继续创作 = 用户最近活跃的非归档项目;待办 = 该项目下真实
       // 未完成 task。数据来自 projectsService.getDashboardSummary(本模块 repo 组合,
       // 不跨模块);facade 只补 heading + 收窄类型。
       getDashboardSummary: async (ctx) => {
-        const s = await projectsService.getDashboardSummary(ctx);
+        const summaryRead = projectsService.getDashboardSummary(ctx);
+        const executionRead = executionService.list(ctx,{limit:30,offset:0}).catch(()=>({rows:[]}));
+        const scheduleRead = ctx.accountId ? (async()=>{
+          const [calendarContext,schedules,projects]=await Promise.all([
+            contentCalendarService.getCalendarRequestContext(ctx),
+            contentCalendarService.listActiveProjectSchedules(ctx,ctx.accountId!),
+            projectsService.listProjectsForComposition(ctx),
+          ]);
+          const outputRefs=await projectsService.listOutputRefsByProjects(ctx,projects.map(p=>p.id));
+          const publications=await publishingService.listPublicationsByOutputIds(ctx,outputRefs.map(o=>o.outputId));
+          return {calendarContext,schedules,projects,outputRefs,publications};
+        })().then(value=>({ok:true as const,value}),error=>({ok:false as const,error})) : null;
+        const s = await summaryRead;
         const clampPriority = (p: number): 1 | 2 | 3 | 4 | 5 =>
           Math.min(5, Math.max(1, Math.round(p))) as 1 | 2 | 3 | 4 | 5;
         // [T-302] 派生待办:待确认渲染(exec.video.render 处 awaiting_confirmation → 采纳成片)。
@@ -49,10 +63,7 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
           plannedDate: null;
         }> = [];
         try {
-          const { rows } = await executionService.list(ctx, {
-            limit: 30,
-            offset: 0,
-          });
+          const { rows } = await executionRead;
           derivedTodos = rows
             .filter(
               (t) =>
@@ -116,23 +127,9 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
         // “排期暂不可用”。只有已绑定账号后的真实读取异常才进入可重试错误态。
         if (scheduleAccountId) {
           try {
-            const [calendarContext, schedules, projects] = await Promise.all([
-              contentCalendarService.getCalendarRequestContext(ctx),
-              contentCalendarService.listActiveProjectSchedules(
-                ctx,
-                scheduleAccountId,
-              ),
-              projectsService.listProjectsForComposition(ctx),
-            ]);
-            const outputRefs = await projectsService.listOutputRefsByProjects(
-              ctx,
-              projects.map((project) => project.id),
-            );
-            const publications =
-              await publishingService.listPublicationsByOutputIds(
-                ctx,
-                outputRefs.map((output) => output.outputId),
-              );
+            const result = await scheduleRead!;
+            if(!result.ok) throw result.error;
+            const {calendarContext,schedules,projects,outputRefs,publications}=result.value;
             const projectIdByOutput = new Map(
               outputRefs.map((output) => [
                 output.outputId,
@@ -217,13 +214,13 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
         // 数据底座(SPEC §1.4):有 imported 真项目 → 只取真实导入作品的发布(演示 fixture
         //   发布让位,治 dy-pub-00 假标题/0 播放);无 imported → 全量(过渡期演示态)。
         //   先多取一些再按 imported 集过滤,保证过滤后仍能凑满前 5 条真发布。
-        const hasImported = await projectsService.hasImportedProjects(ctx);
+        const hasImported = await hasImportedProjects(ctx);
         const importedPubIds = hasImported
           ? new Set(await resolveImportedPublicationIds(ctx))
           : null;
         const fetched = await publishingService.getRecentPublicationsWithTitle(
           ctx,
-          { limit: importedPubIds ? 100 : 5 },
+          { limit: importedPubIds ? 100 : 5, ...(importedPubIds ? { publicationIds:[...importedPubIds] } : {}), displayLimit:5 },
         );
         const rows = (
           importedPubIds
@@ -293,12 +290,14 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
       getDashboardMetrics: async (ctx) => {
         // 数据底座(SPEC §1.4):有 imported 真项目 → 指标卡/趋势只汇总真实导入作品的
         //   快照(演示 fixture 让位);无 imported → 全量 user-scoped(过渡期演示态)。
-        const hasImported = await projectsService.hasImportedProjects(ctx);
-        const r = hasImported
-          ? await analyticsService.getDashboardRollup(ctx, {
-              publicationIds: await resolveImportedPublicationIds(ctx),
-            })
-          : await analyticsService.getDashboardRollup(ctx);
+        const hasImported = await hasImportedProjects(ctx);
+        const scope = hasImported ? {publicationIds:await resolveImportedPublicationIds(ctx)} : {};
+        const [r,accountsResult,dailyResult]=await Promise.all([
+          analyticsService.getDashboardRollup(ctx,scope),
+          platformAccountService.listAccounts(ctx,{limit:100,offset:0}).catch(()=>null),
+          analyticsService.getDailyPlayTrend(ctx,{...scope,days:7})
+            .then(value=>({ok:true as const,value}),error=>({ok:false as const,error})),
+        ]);
         if (r.snapshotCount === 0) return { metrics: [], trend: [] };
         const fmt = (v: number) =>
           v >= 10000
@@ -325,10 +324,8 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
           value: "—",
         };
         try {
-          const { rows: accounts } = await platformAccountService.listAccounts(
-            ctx,
-            { limit: 100, offset: 0 },
-          );
+          if(!accountsResult) throw new Error("accounts unavailable");
+          const { rows: accounts } = accountsResult;
           // [T-074 用户裁决] 总粉丝只统计抖音(B站 8400 系 seed 幻觉数据已清,
           // 用户:「不要统计B站」);未来接别的平台前不并入总数。
           // [T-358] 账号隔离:只取**当前选中号**的基线——T-071 单号时代的「全号求和」在多号下
@@ -373,12 +370,8 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
         ];
         // [T-071] 本周趋势改真逐日:快照按日聚合差分(替换旧「总量按固定形状分摊」的
         // 假曲线)。有效点 < 2 天 → 空 trend(composer 显引导),不编形状。
-        const daily = hasImported
-          ? await analyticsService.getDailyPlayTrend(ctx, {
-              publicationIds: await resolveImportedPublicationIds(ctx),
-              days: 7,
-            })
-          : await analyticsService.getDailyPlayTrend(ctx, { days: 7 });
+        if(!dailyResult.ok) throw dailyResult.error;
+        const daily=dailyResult.value;
         const trend =
           daily.length >= 2
             ? daily.map((d) => ({

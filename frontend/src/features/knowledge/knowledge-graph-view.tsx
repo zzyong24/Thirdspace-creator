@@ -592,7 +592,7 @@ export function KnowledgeGraphView({
                   className="inline-flex h-7 items-center rounded-md bg-brand px-2.5 text-[12px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
                 >
                   {busy === "adopting"
-                    ? "落库中…"
+                    ? "正在保存…"
                     : `采纳选中 ${selectedCount} 条`}
                 </button>
                 <button

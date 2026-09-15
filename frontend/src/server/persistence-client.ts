@@ -41,6 +41,7 @@ import { createChatLifecycleReaders } from "@creatoros/backend/application/chat/
 import { createChatProjectsReaders } from "@creatoros/backend/application/chat/projects-readers";
 import { createProjectOverviewApplication } from "@creatoros/backend/application/queries/project-overview";
 import { createDailyReportApplication } from "@creatoros/backend/application/queries/daily-report";
+import { withDashboardAnalyticsCache } from "./dashboard-query-projection";
 import { createDashboardApplication } from "@creatoros/backend/application/queries/dashboard";
 import { createPageReadRevisionReader } from "@creatoros/backend/application/page-read-revision";
 import { createRecoveryWakeCoordinator } from "@creatoros/backend/application/recovery-wake";
@@ -4275,7 +4276,7 @@ FAVORITES_PROMOTE_PER_RUN
     deps,
   );
 
-  const dashboardQuery = createDashboardApplication({projectsService,publishingService,analyticsService,learningsService,executionService,candidateService,platformAccountService,contentCalendarService,notificationsServiceForQuery,resolveImportedPublicationIds});
+  const dashboardQuery = createDashboardApplication({projectsService,publishingService,analyticsService:{...analyticsService,...withDashboardAnalyticsCache(analyticsService,createPageReadRevisionReader(db))},learningsService,executionService,candidateService,platformAccountService,contentCalendarService,notificationsServiceForQuery,resolveImportedPublicationIds});
 
   const overviewQuery = createProjectOverviewApplication({projectsService,publishingService,assetsService,artifactsService,materialLinksService});
 

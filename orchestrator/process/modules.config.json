@@ -18,6 +18,53 @@
     ]
   },
   "modules": {
+    "T-988": {
+      "task_id": "T-988",
+      "archetype": [
+        "derived-computed"
+      ],
+      "tasks": [
+        "diagnosis",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/features/t987-page-navigation-performance.md",
+        "frontend/src/**",
+        "backend/src/application/**",
+        "backend/src/modules/query-services/**",
+        "contract/src/**"
+      ],
+      "write_set": [
+        "docs/features/t988-home-navigation-copy.md",
+        "docs/research/t988/**",
+        "docs/verification/t988-home-navigation.md",
+        "frontend/src/components/shell/**",
+        "frontend/src/features/dashboard/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/dashboard-query-projection.ts",
+        "backend/src/application/queries/**",
+        "backend/src/modules/query-services/**",
+        "orchestrator/LESSON_LEDGER.md",
+        "backend/src/modules/publishing/publishing.service.ts",
+        "backend/src/modules/publishing/publishing.service.test.ts",
+        "frontend/src/server/dashboard-query-projection.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/intelligence/collection-import-dialogs.tsx",
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "node docs/research/t988/verify-baseline.mjs"
+        ],
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/components/shell/use-primary-navigation.test.tsx src/server/dashboard-query-projection.test.ts --retry=0",
+          "pnpm --dir backend exec vitest run src/application/queries/dashboard-read-performance.test.ts src/modules/publishing/publishing.service.test.ts --retry=0",
+          "pnpm --dir frontend exec tsc --noEmit"
+        ]
+      }
+    },
     "T-987": {
       "task_id": "T-987",
       "archetype": [
@@ -63,14 +110,42 @@
         "diagnosis": "git diff --check",
         "implementation": "git diff --check"
       }
-    }
-,
+    },
     "T-983": {
       "task_id": "T-983",
-      "archetype": ["orchestration"],
-      "tasks": ["review", "implementation"],
-      "read_set": ["docs/features/t983-separate-collection.md", "docs/verification/t982-collection-logs.md", "backend/**", "contract/**", "frontend/src/features/automations/**", "frontend/src/server/**", "ai-worker/src/runtime/browser/**"],
-      "write_set": ["docs/features/t983-separate-collection.md", "docs/verification/t983-collection-split.md", "backend/drizzle/**", "backend/src/modules/scheduling/**", "backend/src/modules/ai-runtime/**", "backend/src/modules/analytics/sync-policy.ts", "backend/src/modules/execution/**", "backend/src/application/scheduling/**", "backend/src/application/collection/**", "contract/src/internal/execution-worker.ts", "frontend/src/features/automations/**", "frontend/src/server/**", "ai-worker/src/runtime/browser/**", "orchestrator/DECISION_LOG.md", "orchestrator/LESSON_LEDGER.md"],
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review",
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t982-collection-logs.md",
+        "backend/**",
+        "contract/**",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**"
+      ],
+      "write_set": [
+        "docs/features/t983-separate-collection.md",
+        "docs/verification/t983-collection-split.md",
+        "backend/drizzle/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/execution/**",
+        "backend/src/application/scheduling/**",
+        "backend/src/application/collection/**",
+        "contract/src/internal/execution-worker.ts",
+        "frontend/src/features/automations/**",
+        "frontend/src/server/**",
+        "ai-worker/src/runtime/browser/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md"
+      ],
       "verify_commands": {
         "review": "git diff --check",
         "implementation": "pnpm -C backend exec vitest run src/modules/scheduling/separate-collection-migration.test.ts src/modules/scheduling/collection-run-state.service.test.ts src/modules/ai-runtime/collection-bootstrap.test.ts src/modules/ai-runtime/scheduled-collection-scheduler.test.ts src/modules/ai-runtime/scheduled-flywheel-concurrency.test.ts src/modules/ai-runtime/scheduled-flywheel-binding.test.ts --maxWorkers=1 --testTimeout=30000 --hookTimeout=30000"
