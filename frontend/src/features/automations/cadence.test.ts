@@ -201,3 +201,12 @@ describe("DEFAULT_CADENCE / describeCadence", () => {
     ).toBe("每 30 分钟");
   });
 });
+
+it('错峰小时计划解析、展示和保存保留实际分钟',()=>{
+ for(const minute of [15,30,45]){
+  const cron=`${minute} */2 * * *`,cadence=compileCronToCadence(cron)!;
+  expect(cadence).toMatchObject({mode:'interval',unit:'hours',every:2,minute});
+  expect(compileCadenceToCron(cadence)).toBe(cron);
+  expect(describeCadence(cadence)).toBe(`每 2 小时 · ${minute} 分`);
+ }
+});

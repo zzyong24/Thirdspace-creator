@@ -41,6 +41,8 @@ export interface IntervalCadence {
   readonly unit: "hours" | "minutes";
   /** 间隔步长(≥1)。 */
   readonly every: number;
+  /** 每小时周期实际触发分钟，缺省为整点。 */
+  readonly minute?: number;
 }
 
 /** 单次频率:某月某日的 HH:mm(cron 近似,见文件头)。 */
@@ -108,7 +110,7 @@ export function compileCadenceToCron(cadence: Cadence): string {
       const every = clampInt(cadence.every, 1, cadence.unit === "hours" ? 23 : 59);
       if (cadence.unit === "hours") {
         // 每 N 小时:分固定 0,时用 */N。
-        return `0 */${every} * * *`;
+        return `${clampInt(cadence.minute ?? 0, 0, 59)} */${every} * * *`;
       }
       // 每 N 分钟:分用 */N。
       return `*/${every} * * * *`;
@@ -128,7 +130,7 @@ export function compileCadenceToCron(cadence: Cadence): string {
 
 const RE_DAILY = /^(\d{1,2}) (\d{1,2}) \* \* \*$/; // 每天 HH:mm
 const RE_WEEKLY = /^(\d{1,2}) (\d{1,2}) \* \* (\d)$/; // 每周某天 HH:mm
-const RE_EVERY_HOURS = /^0 \*\/(\d{1,2}) \* \* \*$/; // 每 N 小时
+const RE_EVERY_HOURS = /^(\d{1,2}) \*\/(\d{1,2}) \* \* \*$/; // 每 N 小时
 const RE_EVERY_MINUTES = /^\*\/(\d{1,2}) \* \* \* \*$/; // 每 N 分钟
 const RE_ONCE = /^(\d{1,2}) (\d{1,2}) (\d{1,2}) (\d{1,2}) \*$/; // 单次近似 mm hh dd MM *
 
@@ -160,9 +162,9 @@ export function compileCronToCadence(cron: string): Cadence | null {
 
   const everyH = RE_EVERY_HOURS.exec(s);
   if (everyH) {
-    const every = Number(everyH[1]);
-    if (inRange(every, 1, 23)) {
-      return { mode: "interval", unit: "hours", every };
+    const minute = Number(everyH[1]), every = Number(everyH[2]);
+    if (inRange(every, 1, 23) && inRange(minute, 0, 59)) {
+      return { mode: "interval", unit: "hours", every, ...(minute ? {minute} : {}) };
     }
   }
 
@@ -215,7 +217,7 @@ export function describeCadence(cadence: Cadence): string {
           )}`;
     case "interval":
       return cadence.unit === "hours"
-        ? `每 ${clampInt(cadence.every, 1, 23)} 小时`
+        ? `每 ${clampInt(cadence.every, 1, 23)} 小时${cadence.minute ? ` · ${String(clampInt(cadence.minute,0,59)).padStart(2,"0")} 分` : ""}`
         : `每 ${clampInt(cadence.every, 1, 59)} 分钟`;
     case "once":
       return `${clampInt(cadence.month, 1, 12)} 月 ${clampInt(

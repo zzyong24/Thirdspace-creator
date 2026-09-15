@@ -352,10 +352,11 @@ function throttleBannerText(t: ChannelThrottle): string {
 
 // ── 时间格式(与项目列表页一致的紧凑相对时刻,但这里给绝对更适合"下次运行")──────
 
-function formatDateTime(iso: string | null): string {
+function formatDateTime(iso: string | null, timeZone?: string): string {
   if (!iso) return "—";
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return "—";
+  if(timeZone==="Asia/Shanghai")return new Intl.DateTimeFormat("zh-CN",{timeZone,month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(t));
   const d = new Date(t);
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
@@ -365,9 +366,10 @@ function formatDateTime(iso: string | null): string {
 }
 
 // 列表页把 cron 反解成友好中文(SPEC §8.1「cron 绝不显示给用户」)。不可解则降级显示原 cron。
-function formatScheduleFriendly(cron: string): string {
+function formatScheduleFriendly(cron: string, timeZone?: unknown): string {
   const cadence = compileCronToCadence(cron);
-  return cadence ? describeCadence(cadence) : cron;
+  const text=cadence ? describeCadence(cadence) : cron;
+  return timeZone==="Asia/Shanghai" ? `${text}${cadence?.mode==="interval"&&cadence.unit==="hours"&&!cadence.minute?" · 00 分":""} · 北京时间` : text;
 }
 
 // ── ai_task_steps 行(复用选题弹窗步骤渲染范式)────────────────────────────────
@@ -527,14 +529,14 @@ export function JobRow({
           title={job.schedule}
         >
           <Clock className="size-3.5 text-muted-foreground" />
-          {formatScheduleFriendly(job.schedule)}
+          {formatScheduleFriendly(job.schedule,job.target.scheduleTimezone)}
         </span>
         {COLLECTION_PRIORITY_LABELS[job.sourceKind] ? <><span className="text-[11px] font-medium text-brand">{COLLECTION_PRIORITY_LABELS[job.sourceKind]}</span><span className="text-[11px] text-muted-foreground">成功同步后，近 7 天每 2 小时更新<br/>7–30 天每 6 小时，30 天以上每天更新</span></> : null}
         <span
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
         >
-          上次：{lastRunAt ? formatDateTime(lastRunAt) : "尚未运行"}
+          上次：{lastRunAt ? formatDateTime(lastRunAt,job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined) : "尚未运行"}
         </span>
         <span
           data-slot="automation-next-run"
@@ -542,7 +544,7 @@ export function JobRow({
         >
           下次：
           {job.nextRunAt
-            ? formatDateTime(job.nextRunAt)
+            ? formatDateTime(job.nextRunAt,job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined)
             : job.enabled
               ? "等待调度"
               : "等待启用"}
@@ -803,6 +805,7 @@ function CadenceEditor({
               <SelectItem value="minutes">分钟</SelectItem>
             </SelectContent>
           </Select>
+          {cadence.unit === "hours" && <label className="flex items-center gap-1 text-xs text-muted-foreground">在 <Input aria-label="触发分钟" type="number" min={0} max={59} value={cadence.minute??0} onChange={e=>onChange({...cadence,minute:clampField(Number(e.target.value),0,59)})} className="w-16"/> 分运行</label>}
         </div>
       ) : null}
 
@@ -1343,7 +1346,7 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
                           {sm.label}
                         </span>
                         <span className="text-xs text-muted-foreground tabular-nums">
-                          {formatDateTime(run.startedAt)}
+                          {formatDateTime(run.startedAt,job?.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined)}
                         </span>
                         <span
                           data-slot="automation-run-result"
