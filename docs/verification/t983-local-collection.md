@@ -51,3 +51,5 @@
 - 另发现新绑定模板systemManaged透传既有缺口，登记T986，本轮不扩展修复。
 
 临时原始证据：`/tmp/t983-traffic-before.json`、`/tmp/t983-dom-live-probe.json`、`/tmp/t983-live-trigger.json`、`/tmp/t983-live-reuse.json`、`/tmp/t983-live-run.json`、`/tmp/t983-package.log`与各回归日志。不提交密钥、完整私人日志、签名URL或用户文案。
+
+独立证据复核：逐publicationId对比、37条尝试时间前进、历史data/capturedAt保持、4条真实刷新、三层终态、去重回执、安装计划及两个SHA均与原始回执一致；本轮范围可验收，保留文中未验证边界。
