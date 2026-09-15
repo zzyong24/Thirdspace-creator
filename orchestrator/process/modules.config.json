@@ -51,7 +51,13 @@
         "frontend/src/features/publishing-center/**",
         "backend/src/modules/analytics/analytics.repository.ts",
         "backend/src/modules/analytics/analytics.repository.integration.test.ts",
-        "backend/src/modules/scheduling/scheduling.repository.ts"
+        "backend/src/modules/scheduling/scheduling.repository.ts",
+        "backend/src/modules/material-links/material-links.repository.ts",
+        "backend/src/modules/material-links/material-links.service.test.ts",
+        "frontend/src/features/assets/assets-data.ts",
+        "frontend/src/features/assets/assets-data.test.ts",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/shell.test.tsx"
       ],
       "verify_commands": {
         "diagnosis": "git diff --check",

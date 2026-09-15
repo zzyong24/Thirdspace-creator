@@ -57,6 +57,28 @@ describe("material-links service", () => {
     expect(listed.rows[0]?.id).toBe(link.id);
   });
 
+  it("[T-987] 同时间戳关联跨页稳定完整，保留用户与项目边界", async () => {
+    const ids: string[] = [];
+    for (let index = 0; index < 201; index += 1) {
+      const row = await svc.create(ctxA, {
+        projectId: index % 2 ? "proj-1" : "proj-2", entityType: "asset", entityId: `a-${index}`,
+      });
+      ids.push(row.id);
+    }
+    await svc.create(ctxB, { projectId: "proj-1", entityType: "asset", entityId: "b-1" });
+    const pages = [];
+    for (let page = 1; page <= 3; page += 1) {
+      const result = await svc.list(ctxA, { page, pageSize: 100 });
+      expect(result.total).toBe(201);
+      pages.push(...result.rows.map((row) => row.id));
+    }
+    expect(pages).toEqual(ids.sort().reverse());
+    const project = await svc.list(ctxA, { projectId: "proj-1", page: 1, pageSize: 100 });
+    expect(project.total).toBe(100);
+    expect(project.rows.every((row) => row.projectId === "proj-1")).toBe(true);
+    expect((await svc.list(ctxB, { page: 1, pageSize: 100 })).rows).toHaveLength(1);
+  });
+
   it("同一项目/实体/角色/阶段重复保存返回同一条 link", async () => {
     const first = await svc.create(ctxA, {
       projectId: "proj-1",

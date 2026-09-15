@@ -70,12 +70,14 @@ vi.mock("next/link", () => ({
   default: ({
     children,
     href,
+    prefetch,
     ...rest
   }: {
     children: React.ReactNode;
     href: string;
+    prefetch?: boolean;
   }) => (
-    <a href={href} {...rest}>
+    <a href={href} data-prefetch={String(prefetch)} {...rest}>
       {children}
     </a>
   ),
@@ -178,6 +180,21 @@ describe("AppShell", () => {
       "自动化",
       "设置",
     ]);
+  });
+
+  it("[T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接", async () => {
+    await renderShell();
+    const assertLinks = () => {
+      const links = within(screen.getByRole("navigation", { name: "主要导航" })).getAllByRole("link");
+      expect(links).toHaveLength(11);
+      for (const link of links) {
+        expect(link).toHaveAttribute("data-prefetch", "false");
+        expect(link.getAttribute("href")).toMatch(/^\//);
+      }
+    };
+    assertLinks();
+    fireEvent.click(screen.getByRole("button", { name: "收起侧栏" }));
+    assertLinks();
   });
 
   it("[T-912] 点击页面入口保持稳定文案，不制造“打开中”假等待态", async () => {

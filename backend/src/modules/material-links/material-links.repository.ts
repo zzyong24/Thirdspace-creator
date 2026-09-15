@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, type Db } from "@creatoros/backend";
+import { and, count, desc, eq, isNull, type Db } from "@creatoros/backend";
 import { materialLinks } from "./material-links.db-schema";
 import { OwnershipError } from "./material-links.errors";
 
@@ -69,14 +69,14 @@ export function createMaterialLinkRepository(
         .select()
         .from(materialLinks)
         .where(where)
-        .orderBy(desc(materialLinks.createdAt))
+        .orderBy(desc(materialLinks.createdAt), desc(materialLinks.id))
         .limit(limit)
         .offset(offset);
-      const all = await db
-        .select({ id: materialLinks.id })
+      const totals = await db
+        .select({ total: count() })
         .from(materialLinks)
         .where(where);
-      return { rows, total: all.length };
+      return { rows, total: totals[0]?.total ?? 0 };
     },
 
     async create(input) {

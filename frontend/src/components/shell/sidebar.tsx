@@ -425,6 +425,8 @@ function PrimaryNav({
         const link = (
           <Link
             href={entry.href}
+            // 桌面单进程服务：未点击页面不抢占当前页面的查询资源。
+            prefetch={false}
             data-slot="sidebar-nav-item"
             data-active={isActive ? "true" : "false"}
             aria-current={isActive ? "page" : undefined}

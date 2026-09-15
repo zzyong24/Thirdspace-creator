@@ -30,10 +30,8 @@ import { collectAllPages } from "@/lib/complete-pagination";
  *                              and that link surfaces here as a usage row.
  *
  * What is REAL vs 规划中 (INTERACTION_SPEC GAP-AST-1 决策表):
- *   - 用料历史:    REAL via assets.usage.list (用料反查, Option B — GAP-AST). The
- *                  by-assetId reverse-lookup op returns the 用料链 edges that
- *                  reference each asset directly (no N-project walk). projects.list
- *                  is still read to resolve each edge's project title.
+ *   - 用料历史: REAL via materialLinks.list，按页批量读取当前用户关联，
+ *                  仅映射当前账号画廊内素材；projects.list 解析项目标题。
  *   - 存储 (已用 + 容量): [T-115] REAL via settings.storage.get — 与设置页 /
  *                  sidebar 卡同一真实源。usedBytes = Σ asset_files.file_size,
  *                  totalBytes = rootPath 所在磁盘真实容量 (fs.statfs)。不再用前端自算 Σ、
@@ -54,7 +52,7 @@ import { collectAllPages } from "@/lib/complete-pagination";
  *                                    whole fixture VM on a real read failure —
  *                                    dressing a failure as fake data is the bug
  *                                    this lane removes.
- * Secondary reads (projects, per-asset usage, storage) stay independently
+ * Secondary reads (projects, usage history, storage) stay independently
  * guarded: a failure there contributes no rows but never downgrades the gallery
  * to error. [T-115] 存储 used/total 均取 settings.storage.get 真值 (与设置页一致);
  * 该读失败仅降级存储块 (used 0 / 无分母),不影响画廊三态。
@@ -95,7 +93,7 @@ export interface AssetsDataClient {
   }): Promise<unknown>;
   listMaterialLinks(input: {
     params: undefined;
-    query: { page: number; pageSize: number; projectId: string };
+    query: { page: number; pageSize: number; projectId?: string };
     body: undefined;
   }): Promise<unknown>;
   // 用料反查 (GAP-AST usage): the by-assetId reverse lookup — which 创作 (用料链
@@ -166,52 +164,36 @@ function isoDay(iso: string): string {
 }
 
 /**
- * Read the 用料链 edges that reference each asset (用料反查) and map them to
- * `AssetUsageRow`. Option B (GAP-AST): the by-assetId reverse-lookup op
- * `assets.usage.list({ assetId })` — one read per asset, no N-project walk, no
- * per-project filter. A per-asset read that throws contributes no rows (never
- * throws upward). The detail panel filters these by the selected `assetId` and
- * renders an honest 「尚未被项目引用」 empty state when none match.
- *
- * The edge carries `projectId` but not the title; we resolve the human title
- * from the `projects.list` map (falls back to the raw id when unknown).
+ * 复用已归属校验的 materialLinks.list，避免逐素材调用挤满本地服务。
+ * 只显示当前画廊素材的关联；单个素材详情仍可使用 assets.usage.list。
  */
 async function assembleUsageHistory(
   client: AssetsDataClient,
   assetIds: ReadonlyArray<string>,
   projects: ReadonlyArray<ProjectDto>,
 ): Promise<ReadonlyArray<AssetUsageRow>> {
-  const projectTitleById = new Map<string, string>();
-  for (const project of projects) projectTitleById.set(project.id, project.title);
-
-  const perAsset = await Promise.all(
-    assetIds.map(async (assetId) => {
-      let links: ReadonlyArray<MaterialLinkDto>;
-      try {
-        links = (await client.listAssetUsage({
-          params: { assetId },
-          query: undefined,
-          body: undefined,
-        })) as ReadonlyArray<MaterialLinkDto>;
-      } catch {
-        return [] as ReadonlyArray<AssetUsageRow>;
-      }
-      return links.map<AssetUsageRow>((link) => ({
-        id: link.id,
-        assetId: link.entityId,
-        projectId: link.projectId,
-        projectTitle: projectTitleById.get(link.projectId) ?? link.projectId,
-        // 用料链 role/stage as the human note (e.g. "clip · production").
-        note: [link.role, link.stage].filter(Boolean).join(" · "),
-        dateLabel: isoDay(link.createdAt),
-      }));
-    }),
-  );
-
-  // Newest first so the most recent usage shows at the top of the panel list.
-  return perAsset
-    .flat()
-    .slice()
+  if (assetIds.length === 0) return [];
+  const projectTitleById = new Map(projects.map((project) => [project.id, project.title]));
+  const currentAssetIds = new Set(assetIds);
+  const links = await collectAllPages<MaterialLinkDto>({
+    pageSize: 100,
+    getKey: (link) => link.id,
+    fetchPage: async (page, pageSize) =>
+      (await client.listMaterialLinks({
+        params: undefined, query: { page, pageSize }, body: undefined,
+      })) as ReadonlyArray<MaterialLinkDto>,
+  });
+  // SEMANTIC_BOUNDARY_ALLOW: 真实资源类型和归属ID过滤，不做素材创作匹配或选择。
+  return links
+    .filter((link) => link.entityType === "asset" && currentAssetIds.has(link.entityId))
+    .map<AssetUsageRow>((link) => ({
+      id: link.id,
+      assetId: link.entityId,
+      projectId: link.projectId,
+      projectTitle: projectTitleById.get(link.projectId) ?? link.projectId,
+      note: [link.role, link.stage].filter(Boolean).join(" · "),
+      dateLabel: isoDay(link.createdAt),
+    }))
     .sort((a, b) => b.dateLabel.localeCompare(a.dateLabel));
 }
 
@@ -347,10 +329,10 @@ export async function buildAssetsViewModelReal(
     projects = [];
   }
 
-  // --- 用料历史 (REAL assets.usage.list, Option B) ------------------------
+  // --- 用料历史 (REAL materialLinks.list，批量读取) ------------------------
   // The gallery read already succeeded, so usage is a SECONDARY read: a
   // wholesale assembly failure degrades to NO rows (honest empty 用料历史),
-  // never to fabricated fixture rows. Per-asset failures already degrade to [].
+  // never to fabricated fixture rows.
   let usageHistory: ReadonlyArray<AssetUsageRow>;
   try {
     usageHistory = await assembleUsageHistory(

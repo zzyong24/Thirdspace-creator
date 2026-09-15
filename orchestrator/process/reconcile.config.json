@@ -262,7 +262,7 @@
     {
       "led": "LED-049",
       "what": "展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询",
-      "check": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx --retry=0 && pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts --maxWorkers=1 --retry=0",
+      "check": "pnpm --dir frontend exec vitest run src/lib/page-read-cache.test.ts src/server/publishing-schedule-projection.test.ts src/features/automations/automations-page.test.tsx src/features/automations/run-controls.test.tsx src/features/publishing-center/publishing-center-page.test.tsx src/features/assets/assets-data.test.ts src/components/shell/shell.test.tsx --retry=0 && pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/scheduling/scheduling.repository.integration.test.ts src/modules/material-links/material-links.service.test.ts --maxWorkers=1 --retry=0",
       "onFail": "修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。"
     }
   ],

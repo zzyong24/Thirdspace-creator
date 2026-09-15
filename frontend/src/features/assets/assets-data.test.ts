@@ -3,12 +3,12 @@
  *
  * Locks the 读侧做真 contract of `buildAssetsViewModelReal`:
  *   - gallery summaries come from REAL `assets.list` rows,
- *   - 用料历史 (usageHistory) is the REAL `assets.usage.list` asset edges,
- *     read per asset by id (用料反查, Option B), title resolved from projects.list,
+ *   - 用料历史 (usageHistory) is the REAL `materialLinks.list` asset edges,
+ *     paginated once for the gallery, title resolved from projects.list,
  *   - [T-115] 存储 used/total come from REAL `settings.storage.get` (与设置页同源);
  *     a getStorage read failure degrades honestly (used 0 / no 分母), NOT to a
  *     fixture 50GB cap,
- *   - a per-asset usage read failure contributes no usage rows (never throws),
+ *   - a usage-history read failure contributes no usage rows (never throws),
  *   - a SUCCESSFUL-but-empty assets read returns the honest empty VM (NOT seed),
  *   - an outright assets-read FAILURE returns the error tri-state (state:"error",
  *     empty placeholder VM) — it does NOT fabricate the whole fixture VM.
@@ -50,7 +50,8 @@ interface FakeData {
     | "throw";
   readonly projects?: ReadonlyArray<{ id: string; title: string }> | "throw";
   readonly trashedAssets?: FakeData["assets"];
-  // Per-assetId usage edges (用料反查); a value of "throw" simulates a failed read.
+  readonly usageReadFailure?: boolean;
+  // 按素材组织的测试关联数据；批量接口返回同一组边。
   readonly usage?: Record<
     string,
     | ReadonlyArray<{
@@ -62,7 +63,6 @@ interface FakeData {
         stage: string;
         createdAt: string;
       }>
-    | "throw"
   >;
   // [T-115] settings.storage.get 真值; "throw" simulates a failed read (→ honest
   // degrade). Omit to leave getStorage unimplemented (also → throw → degrade).
@@ -87,14 +87,15 @@ function fakeClient(data: FakeData): AssetsDataClient {
       const start = (query.page - 1) * query.pageSize;
       return rows.slice(start, start + query.pageSize);
     },
-    // listMaterialLinks remains on the client surface but is no longer used by
-    // the usage assembly (kept for interface parity); return empty.
-    async listMaterialLinks() {
-      return [];
+    async listMaterialLinks({ query }) {
+      if (data.usageReadFailure) throw new Error("usage read failed");
+      const rows = Object.values(data.usage ?? {}).flat();
+      const start = (query.page - 1) * query.pageSize;
+      return rows.slice(start, start + query.pageSize);
     },
     async listAssetUsage({ params }) {
       const rows = data.usage?.[params.assetId];
-      if (rows === "throw") throw new Error("usage read failed");
+      if (data.usageReadFailure) throw new Error("usage read failed");
       return rows ?? [];
     },
     async getStorage() {
@@ -107,6 +108,40 @@ function fakeClient(data: FakeData): AssetsDataClient {
 }
 
 describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
+  it("[T-987] 1000 条素材批量读取全部关联，禁止逐素材查询风暴", async () => {
+    const assets = Array.from({ length: 1000 }, (_, index) => ({
+      id: `asset-${index}`, currentFileId: firstFile.id, assetType: "image" as const,
+      name: `素材 ${index}`, description: "", updatedAt: "2026-06-01T00:00:00Z",
+    }));
+    const links = Array.from({ length: 201 }, (_, index) => ({
+      id: `link-${index}`, entityId: `asset-${index}`, entityType: "asset",
+      projectId: "proj-ok", role: "clip", stage: "production",
+      createdAt: "2026-06-05T00:00:00Z",
+    }));
+    const rows = [...links,
+      { ...links[0]!, id: "knowledge-link", entityType: "knowledge" },
+      { ...links[0]!, id: "other-account-asset", entityId: "not-in-gallery" },
+    ];
+    const client = fakeClient({ assets, projects: [{ id: "proj-ok", title: "项目" }] });
+    const perAsset = vi.spyOn(client, "listAssetUsage");
+    const batch = vi.spyOn(client, "listMaterialLinks").mockImplementation(async ({ query }) =>
+      rows.slice((query.page - 1) * query.pageSize, query.page * query.pageSize));
+    const { state, viewModel } = await buildAssetsViewModelReal(client);
+    expect(state).toBe("ready");
+    expect(viewModel.assets).toHaveLength(1000);
+    expect(viewModel.usageHistory).toHaveLength(201);
+    expect(viewModel.usageHistory.at(-1)).toMatchObject({ id: "link-200", projectTitle: "项目" });
+    expect(batch).toHaveBeenCalledTimes(3);
+    expect(perAsset).not.toHaveBeenCalled();
+  });
+
+  it("[T-987] 空素材库不扫描关联", async () => {
+    const client = fakeClient({ assets: [] });
+    const batch = vi.spyOn(client, "listMaterialLinks");
+    await buildAssetsViewModelReal(client);
+    expect(batch).not.toHaveBeenCalled();
+  });
+
   it("超过 200 条素材和 100 个项目时完整分页加载", async () => {
     const assets = Array.from({ length: 205 }, (_, index) => ({
       id: `asset-page-${index}`,
@@ -175,7 +210,7 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
     expect(viewModel.assets[0]!.name).toBe("真实素材");
   });
 
-  it("assembles 用料历史 from assets.usage.list edges (title resolved from projects)", async () => {
+  it("assembles 用料历史 from materialLinks.list edges (title resolved from projects)", async () => {
     const { viewModel } = await buildAssetsViewModelReal(
       fakeClient({
         assets: [
@@ -277,9 +312,10 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
     expect(viewModel.storage.totalLabel).toBe("");
   });
 
-  it("a per-asset usage read failure contributes no usage rows (never throws)", async () => {
+  it("a usage-history read failure contributes no usage rows (never throws)", async () => {
     const { viewModel } = await buildAssetsViewModelReal(
       fakeClient({
+        usageReadFailure: true,
         assets: [
           {
             id: firstAsset.id,
@@ -311,12 +347,11 @@ describe("buildAssetsViewModelReal (GAP-AST-1 读侧做真)", () => {
               createdAt: "2026-06-05T00:00:00.000Z",
             },
           ],
-          "asset-bad": "throw",
         },
       }),
     );
-    expect(viewModel.usageHistory).toHaveLength(1);
-    expect(viewModel.usageHistory[0]!.assetId).toBe(firstAsset.id);
+    expect(viewModel.assets).toHaveLength(2);
+    expect(viewModel.usageHistory).toEqual([]);
   });
 
   it("returns honest EMPTY (not seed) when the assets read succeeds with no rows", async () => {
