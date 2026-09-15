@@ -83,3 +83,13 @@ it('自动入队按作品年龄2/6/24小时刷新，失败退避不清空旧数�
  const f=await fixture(3);Object.assign(f.pubs[0]!,{publishedAt:stamp});Object.assign(f.pubs[1]!,{publishedAt:'2026-08-30T00:00:00Z'});Object.assign(f.pubs[2]!,{publishedAt:'2026-08-01T00:00:00Z'});
  expect(await f.service.enqueueVisible(ctx)).toBe(3);await run(f.collector());f.setNow('2026-09-11T02:00:00Z');expect(await f.service.enqueueVisible(ctx)).toBe(1);await run(f.collector());f.setNow('2026-09-11T06:00:00Z');expect(await f.service.enqueueVisible(ctx)).toBe(2);
 });
+it('平台未提供来源不伪报失败或新数据，保留历史并按正常间隔再次检查',async()=>{
+ const f=await fixture();Object.assign(f.pubs[0]!,{publishedAt:'2026-01-01T00:00:00Z'});
+ await f.service.enqueueProject(ctx,'project');await run(f.collector());
+ f.setNow('2026-09-12T00:00:00.000Z');await f.service.enqueueProject(ctx,'project');
+ const result=await run(f.collector(async()=>{const e=new Error('平台暂未提供该作品的流量来源数据');e.name='DouyinTrafficUnavailableError';throw e;}),'empty');
+ expect(result).toMatchObject({itemsUpdated:0,incomplete:false,continueCollection:false});
+ expect((await f.service.getProject(ctx,'project')).items[0]).toMatchObject({status:'unavailable',data,capturedAt:stamp,attemptedAt:'2026-09-12T00:00:00.000Z'});
+ f.setNow('2026-09-12T02:00:00.000Z');expect(await f.service.enqueueVisible(ctx)).toBe(0);
+ f.setNow('2026-09-13T00:00:00.000Z');expect(await f.service.enqueueVisible(ctx)).toBe(1);
+});

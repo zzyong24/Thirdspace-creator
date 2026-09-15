@@ -72,7 +72,7 @@ export const trafficSourcePayloadSchema = z.object({
 export type TrafficSourcePayload = z.infer<typeof trafficSourcePayloadSchema>;
 export const publicationTrafficResource = z.object({
   publicationId:id,externalId:z.string(),
-  status:z.enum(['pending','succeeded','failed','needs_reconnect']),
+  status:z.enum(['pending','succeeded','failed','needs_reconnect','unavailable']),
   requestedAt:iso8601,capturedAt:iso8601.nullable(),attemptedAt:iso8601.nullable(),
   error:z.string().nullable(),data:trafficSourcePayloadSchema.nullable(),
 });

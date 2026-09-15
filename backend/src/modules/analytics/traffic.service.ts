@@ -38,7 +38,7 @@ export function createTrafficService(db:Db,ports:{now:()=>string;publishing:Pick
   async failPending(ctx:RequestContext,rows:readonly {publicationId:string;externalId:string;requestedAt:string}[],message:string){return repo.failPending(ctx.userId,account(ctx),rows,ports.now(),message);},
   async summary(ctx:RequestContext,taskId:string){return repo.summary(ctx.userId,account(ctx),taskId);},
   async reconnect(ctx:RequestContext){return repo.reconnect(ctx.userId,account(ctx));},
-  async settle(ctx:RequestContext,row:{publicationId:string;requestedAt:string},result:{data:TrafficSourcePayload}|{error:string;status:'failed'|'needs_reconnect'},taskId:string){
+  async settle(ctx:RequestContext,row:{publicationId:string;requestedAt:string},result:{data:TrafficSourcePayload}|{error:string;status:'failed'|'needs_reconnect'|'unavailable'},taskId:string){
    if('data' in result){await assertPublication(ctx,row.publicationId);trafficSourcePayloadSchema.parse(result.data);}
    return repo.settle(ctx.userId,account(ctx),row.publicationId,row.requestedAt,ports.now(),taskId,result);
   },

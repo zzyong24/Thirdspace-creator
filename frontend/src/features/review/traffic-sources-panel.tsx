@@ -4,7 +4,7 @@ import type {PublicationTrafficResource} from '@creatoros/contract';
 import {client} from '@/lib/contract-client';
 import {readCurrentAccountId} from '@/lib/http-transport';
 import {describeUserError} from '@/lib/ai-error-humanize';
-const statuses={pending:'后台补采中',succeeded:'已采集',failed:'读取失败，可重试',needs_reconnect:'需重新连接抖音'};
+const statuses={pending:'后台补采中',succeeded:'已采集',failed:'读取失败，可重试',needs_reconnect:'需重新连接抖音',unavailable:'平台暂未提供来源数据'};
 export function TrafficSourcesPanel({projectId}:{projectId:string}){
  const [items,setItems]=React.useState<PublicationTrafficResource[]>([]),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null);
  const [accountId,setAccountId]=React.useState<string|null>(()=>readCurrentAccountId());
@@ -64,7 +64,7 @@ export function TrafficSourcesPanel({projectId}:{projectId:string}){
   {items.length===0?<p className="mt-3 text-xs text-text-subtle">暂无流量来源数据。已发布抖音作品可补采，当前仍可查看基础指标和诊断内容。</p>:items.map(row=><div key={row.publicationId} className="mt-4 border-t border-border pt-3">
    <div className="flex flex-wrap justify-between gap-2 text-xs"><a href={`https://www.douyin.com/video/${row.externalId}`} target="_blank" rel="noreferrer" className="text-brand underline">查看对应作品</a><span>{statuses[row.status]}</span></div>
    {row.data?<><p className="my-2 text-[11px] text-text-subtle">{row.data.app} · 统计窗口：{row.data.windowLabel??'平台未说明'} · 采集于 {row.capturedAt?.replace('T',' ').slice(0,19)} UTC{row.data.complete?'':' · 来源未展开完整'}{row.status==='succeeded'?'':' · 以下保留上次成功数据'}</p><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{row.data.entries.map(entry=><div key={entry.label} className="flex justify-between gap-2 rounded-control bg-surface-subtle px-3 py-2 text-xs"><span>{entry.label}</span><strong>{entry.percentage===null?'暂无':`${entry.percentage}%`}</strong></div>)}</div></>:<p className="mt-2 text-xs text-text-subtle">尚未取得来源比例。</p>}
-   {row.error?<p className="mt-2 text-xs text-destructive">{row.error}</p>:null}
+   {row.error?<p className={`mt-2 text-xs ${row.status==='unavailable'?'text-text-subtle':'text-destructive'}`}>{row.error}</p>:null}
   </div>)}
  </section>;
 }

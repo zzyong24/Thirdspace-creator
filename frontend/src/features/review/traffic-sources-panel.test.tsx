@@ -9,6 +9,12 @@ const row=(status='pending',label='推荐页')=>({publicationId:'pub-1',external
 const settle=()=>act(async()=>{await Promise.resolve();});
 beforeEach(()=>{vi.useFakeTimers();vi.resetAllMocks();mocks.account='account-1';mocks.get.mockResolvedValue({items:[]});mocks.refresh.mockResolvedValue({jobRunId:'run-1'});});
 afterEach(()=>{cleanup();vi.useRealTimers();});
+it('平台未提供来源时保留历史及原采集时间，不显示读取失败或伪造比例',async()=>{
+ mocks.get.mockResolvedValue({items:[{...row('unavailable','历史来源'),error:'平台暂未提供该作品的流量来源数据'}]});
+ render(<TrafficSourcesPanel projectId="p1"/>);await settle();
+ expect(screen.getByText('平台暂未提供来源数据')).toBeTruthy();expect(screen.getByText('历史来源')).toBeTruthy();
+ expect(screen.getByText(/以下保留上次成功数据/)).toBeTruthy();expect(screen.queryByText('读取失败，可重试')).toBeNull();
+});
 it('初始没有待采任务，手动补采后持续轮询直到成功，真实零保留',async()=>{
  render(<TrafficSourcesPanel projectId="p1"/>);await settle();
  mocks.get.mockResolvedValueOnce({items:[row()]}).mockResolvedValue({items:[row('succeeded')]});

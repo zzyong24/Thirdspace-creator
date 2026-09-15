@@ -3433,6 +3433,6 @@ export async function fetchDouyinTraffic(opts:{authDir:string;awemeId:string;sig
   if(!await isLoggedIn(ctx))throw new DouyinNotLoggedInError();
   const page=ctx.pages()[0]??await ctx.newPage();
   const {readDouyinTrafficPage}=await import('./douyin-traffic');
-  return await withDouyinChannel(opts.gateway??instantNoopGateway,'creator-center',()=>readDouyinTrafficPage(page,opts.awemeId,opts.signal),()=>({kind:'net-timeout',consecutiveTimeouts:1}),opts.signal);
+  return await withDouyinChannel(opts.gateway??instantNoopGateway,'creator-center',()=>readDouyinTrafficPage(page,opts.awemeId,opts.signal),error=>({kind:error instanceof Error&&error.name==='DouyinTrafficUnavailableError'?'ok':'net-timeout',consecutiveTimeouts:1}),opts.signal);
  }finally{await lifetime.close();}
 }
