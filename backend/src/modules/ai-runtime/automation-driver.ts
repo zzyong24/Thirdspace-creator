@@ -103,8 +103,8 @@ function minuteAnchor(iso: string): string {
 }
 
 /**
- * `self.metrics` 是按本机自然日执行的每日任务。CreatorOS 关闭或事件循环阻塞时可能错过
- * 精确 cron 分钟；此处把简单的 `M H * * *` 计划还原成当天本地时间锚。当天计划之后
+ * `self.metrics` 的每日自定义计划在 CreatorOS 关闭或事件循环阻塞时可能错过
+ * 精确 cron 分钟；此处把简单的 `M H * * *` 计划按其时区还原为当天时间锚。当天计划之后
  * 已经出现过任意 run（成功/失败/手动初始化均算一次尝试）就不再自动补，避免分钟级重试。
  */
 function missedDailyRunAnchor(
@@ -119,7 +119,13 @@ function missedDailyRunAnchor(
   if (minute < 0 || minute > 59 || hour < 0 || hour > 23) return null;
 
   const scheduled = new Date(now);
-  scheduled.setHours(hour, minute, 0, 0);
+  if (job.target.scheduleTimezone === "Asia/Shanghai") {
+    // 与精确 cron 匹配使用同一时区，不能由本机日期提前补跑。
+    const beijing = new Date(now.getTime() + 8 * 60 * 60 * 1_000);
+    scheduled.setTime(Date.UTC(beijing.getUTCFullYear(), beijing.getUTCMonth(), beijing.getUTCDate(), hour - 8, minute));
+  } else {
+    scheduled.setHours(hour, minute, 0, 0);
+  }
   if (now.getTime() < scheduled.getTime()) return null;
 
   if (job.lastRunStartedAt) {
@@ -202,7 +208,7 @@ export async function runAutomationDriverTick(
   for (const job of jobs) {
     const validSchedule = deps.cron.validate(job.schedule);
     const scheduleMatches =
-      validSchedule && cronMatchesMinute(job.schedule, now);
+      validSchedule && cronMatchesMinute(job.schedule, now, job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined);
     const startupRecovery =
       deps.startupRecovery === true &&
       job.sourceKind === "intelligence.sync";

@@ -32,8 +32,8 @@ export interface CollectionJobDefault {
 
 // 默认系统 job。对标主页、收藏夹已经归内容雷达来源管理，不再建立 benchmark/favorites
 // 第二 producer；intelligence.sync 每两小时只检查该账号是否有到期来源。
-// 每日采集任务继续按账号应用确定性偏移(staggeredSchedule)，避免多个账号同时争用同一
-// gateway；intelligence.sync 的 15 分钟表达式保持原样，不参与每日错峰。
+// 四类自有作品任务按北京时间偶数小时 00/15/30/45 分执行；每日选题保留账号偏移。
+// cron 仅决定入队时刻，同账号执行仍受资源队列和既有优先级保护。
 export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
   {
     sourceKind: "self.metrics",
@@ -42,9 +42,9 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
     schedule: "0 */2 * * *",
     enabledByDefault: true, // [T-359] 绑号即有意义(自己作品)
   },
-  {sourceKind:"self.traffic",name:"作品流量来源同步",prompt:"增量同步作品流量来源",schedule:"0 */2 * * *",enabledByDefault:true},
-  {sourceKind:"comments",name:"作品评论同步",prompt:"增量同步作品评论",schedule:"0 */2 * * *",enabledByDefault:true},
-  {sourceKind:"self.detail",name:"作品内容补全",prompt:"后台补全视频内容与封面",schedule:"0 */2 * * *",enabledByDefault:true},
+  {sourceKind:"self.traffic",name:"作品流量来源同步",prompt:"增量同步作品流量来源",schedule:"15 */2 * * *",enabledByDefault:true},
+  {sourceKind:"comments",name:"作品评论同步",prompt:"增量同步作品评论",schedule:"30 */2 * * *",enabledByDefault:true},
+  {sourceKind:"self.detail",name:"作品内容补全",prompt:"后台补全视频内容与封面",schedule:"45 */2 * * *",enabledByDefault:true},
   // [T-235a] 每天自动出题:多依据合并(定位+评论信号+知识库+热点 brief)→ topic.generate 同模板
   //   出题 → T-212d 护栏排序(探索位防茧房)→ 候选落 pool(防灌库 ≤N/天,默认 5)。错峰 9:40
   //   (排 benchmark 9:30 后:当天新拆解的对标爆款已入库,可作出题引用)。未配文本模型 → 诚实
@@ -197,7 +197,11 @@ export async function ensureCollectionJobs(
   const created: string[] = [];
   const jobsInOrder: EnsureCollectionJobsResult["jobsInOrder"] = [];
   for (const tpl of DAILY_COLLECTION_JOB_DEFAULTS) {
-    const target=tpl.sourceKind === "self.metrics"?{...(deps.target??{}),__skipHeavyBackfill:true,__operationsSync:true}:tpl.sourceKind==='self.detail'?{...(deps.target??{}),__backfillOnly:true,__skipMetricRefresh:true,__operationsSync:true}:deps.target??{};
+    const target: Record<string, unknown> = tpl.sourceKind === "self.metrics"?{...(deps.target??{}),__skipHeavyBackfill:true,__operationsSync:true}:tpl.sourceKind==='self.detail'?{...(deps.target??{}),__backfillOnly:true,__skipMetricRefresh:true,__operationsSync:true}:{...(deps.target??{})};
+    if (["self.metrics", "self.traffic", "comments", "self.detail"].includes(tpl.sourceKind)) {
+      // 时区写进计划，避免跟随运行设备时区而在错误小时触发。
+      target.scheduleTimezone = "Asia/Shanghai";
+    }
     try {
       const existing = await deps.listJobsBySourceKind(ctx, tpl.sourceKind);
       if (existing.length > 0) {

@@ -370,7 +370,7 @@ export async function runJobNow(
  * 判一个 5 段 cron 表达式是否匹配给定分钟(minute hour dom month dow)。支持 `*`、逗号列表、
  * 步长(星号斜杠 n)、区间(a-b)。够覆盖"每天 HH:MM / 每小时 / 每 N 分钟"这类调度;不做秒级/L/#。
  */
-export function cronMatchesMinute(expr: string, when: Date): boolean {
+export function cronMatchesMinute(expr: string, when: Date, timezone?: "Asia/Shanghai"): boolean {
   const parts = expr.trim().split(/\s+/);
   if (parts.length !== 5) return false;
   const [min, hr, dom, mon, dow] = parts;
@@ -379,11 +379,13 @@ export function cronMatchesMinute(expr: string, when: Date): boolean {
     mon === undefined || dow === undefined
   )
     return false;
-  const m = when.getMinutes();
-  const h = when.getHours();
-  const d = when.getDate();
-  const mo = when.getMonth() + 1; // 1-12
-  const wd = when.getDay(); // 0-6 (Sun=0)
+  // 只有明确带北京时间的计划使用固定 UTC+8；其余旧/自定义计划维持原时区语义。
+  const beijing = timezone === "Asia/Shanghai" ? new Date(when.getTime() + 8 * 60 * 60 * 1_000) : null;
+  const m = beijing ? beijing.getUTCMinutes() : when.getMinutes();
+  const h = beijing ? beijing.getUTCHours() : when.getHours();
+  const d = beijing ? beijing.getUTCDate() : when.getDate();
+  const mo = (beijing ? beijing.getUTCMonth() : when.getMonth()) + 1;
+  const wd = beijing ? beijing.getUTCDay() : when.getDay();
   return (
     fieldMatches(min, m, 0, 59) &&
     fieldMatches(hr, h, 0, 23) &&
