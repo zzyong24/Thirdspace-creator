@@ -12,7 +12,7 @@
 | T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 区分 provider 适配器(合理)与业务逻辑硬编码(抽配置)；cover-runner、channel-model-config、prompt 模板里散落的模型名收敛为可配。 |
 | T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-runtime 分层；依赖下沉或改走端口，不新增跨层穿透。 |
 | T-996 | 消除 review/reviews 双模块命名混淆 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | review/(review-gate 审核门)与 reviews/(复盘评论领域)职责不同但命名极易混；重命名对齐并更新跨模块引用。 |
-| T-995 | 归置顶层目录散落文件与截图 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 根目录 5 张授权 PNG、ui/(16 张截图)、website/、output/、outputs/、tmp/、__artifacts__/、backups/、tools/ 混杂；归置进 docs/ 或 gitignore，不删有效产物。 |
+| T-995 | 归置顶层目录散落文件与截图 | ✅ 完成 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 根目录 6 张零引用 lark 二维码 + docs/ 顶层 7 张与 legacy/ 脱敏版重复的散落图(含 5 张未脱敏原图)已删；ui/website/output(s)/tmp/tools/__artifacts__ 经查均为已跟踪有效产物，不动。 |
 | T-994 | 清理 ai-worker 死代码目录与误导命名 | ✅ 完成 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | run-topic-task.ts 零调用却被 barrel index.ts:154 死导出，整个 orchestrate/ 是 T-930 漏删的 Phase-3 编排；agent-run.ts 的 parseJsonArray 零调用(仅注释提及)；删死目录+死导出。 |
 | T-993 | 同步 main 分支到最新(落后 origin/main 573 提交) | 📋 待办 | — | — | — | 本地 main=f330473f 落后 origin/main(77eabca3)573 提交；核清原因后同步，保留 codex/t793-local-package 进行中未提交改动。 |
 | T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。 |
