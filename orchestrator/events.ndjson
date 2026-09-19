@@ -1104,3 +1104,4 @@
 {"ts":"2026-09-19T13:19:36.835Z","actor":"taskctl","action":"start","task":"T-1000","sha_before":"27fd0b07447b","sha_after":"a1a200f5e78c"}
 {"ts":"2026-09-19T13:35:53.638Z","actor":"taskctl","action":"complete","task":"T-1000","evidence":"日报9个测试文件45项通过；frontend/contract typecheck通过；git diff --check通过；全局reconcile既有233项漂移（含未改动模块的边界/语义门），本任务未新增相关违规；未做真实模型在线生成与桌面包验收","sha_before":"a1a200f5e78c","sha_after":"2be2b0a65a7c"}
 {"ts":"2026-09-19T13:41:08.669Z","actor":"taskctl","action":"start","task":"T-1001","sha_before":"5ed14340b353","sha_after":"97759a4421e7"}
+{"ts":"2026-09-19T14:00:15.685Z","actor":"taskctl","action":"complete","task":"T-1001","evidence":"候选565d253e；本地官方包/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg；SHA256=1beba78499b7acecbbf83a53ea09f381b5c2af66acd7274fbc3eb778429e17ff；打包四文件42项测试通过、sidecar冒烟、hdiutil verify、ad-hoc codesign、安装进程及GET / 200通过；全局reconcile既有233项漂移未清；未公证未公开发布","sha_before":"97759a4421e7","sha_after":"503d050b4ed3"}
