@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1000 | 丰富周期运营建议与内容战略方向 | ✅ 待办 | — | — | [SPEC](docs/features/t1000-operations-strategy.md) | 周/月复盘从一句建议扩展为有数据依据的内容方向、取舍和下一步验证；旧报告兼容，不编造结论。 |
 | T-999 | 试用 guizang-product-video-skill 为 CreatorOS 制作产品宣传片 | ✅ 完成 | — | — | — | 已安装 skill 并走全流程：repo 风格接入真实组件(SectionCard/TagChip/Card/icons/canonical)、Tailwind 编译 tokens、47s 8 镜头分镜、代码原创配乐+7 音效 cue 混音、导出 renders/final.mp4(1920×1080@30fps h264+aac)，check_delivery ok。工程在 video-promo/。 |
 | T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 区分 provider 适配器(合理)与业务逻辑硬编码(抽配置)；cover-runner、channel-model-config、prompt 模板里散落的模型名收敛为可配。 |
 | T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | ai/script-partial-adoption.service.ts 反向 import ai-runtime，打破 ai 与 ai-runtime 分层；依赖下沉或改走端口，不新增跨层穿透。 |

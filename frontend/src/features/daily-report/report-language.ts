@@ -13,5 +13,5 @@ export function reportUserText(text:string,report:DailyReport):string{
 }
 export function userFacingAnalysis(analysis:DailyReportAnalysis|null,report:DailyReport):DailyReportAnalysis|null{
  if(!analysis)return null;const t=(value:string)=>reportUserText(value,report);
- return {...analysis,headline:t(analysis.headline),summary:t(analysis.summary),positioning:{observation:t(analysis.positioning.observation),suggestion:t(analysis.positioning.suggestion)},works:analysis.works.map(w=>({...w,observation:t(w.observation),hypothesis:t(w.hypothesis),experiment:t(w.experiment)})),experiments:analysis.experiments.map(e=>({...e,title:t(e.title),action:t(e.action),variable:t(e.variable),metric:t(e.metric),prerequisite:t(e.prerequisite)}))};
+ return {...analysis,headline:t(analysis.headline),summary:t(analysis.summary),directions:analysis.directions?.map(d=>({...d,title:t(d.title),evidence:t(d.evidence),recommendation:t(d.recommendation),nextStep:t(d.nextStep),signal:t(d.signal)})),positioning:{observation:t(analysis.positioning.observation),suggestion:t(analysis.positioning.suggestion)},works:analysis.works.map(w=>({...w,observation:t(w.observation),hypothesis:t(w.hypothesis),experiment:t(w.experiment)})),experiments:analysis.experiments.map(e=>({...e,title:t(e.title),action:t(e.action),variable:t(e.variable),metric:t(e.metric),prerequisite:t(e.prerequisite)}))};
 }

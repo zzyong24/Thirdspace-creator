@@ -3,6 +3,7 @@ import {z} from "zod";
 export const dailyReportAnalysis = z.object({
  format:z.literal("creatoros.daily-report.v1"),date:z.string(),startDate:z.string().optional(),endDate:z.string().optional(),accountId:z.string(),sourceGeneratedAt:z.string(),
  headline:z.string().min(1),summary:z.string(),
+ directions:z.array(z.object({title:z.string(),evidence:z.string(),recommendation:z.string(),nextStep:z.string(),signal:z.string()})).optional(),
  positioning:z.object({observation:z.string(),suggestion:z.string()}),
  works:z.array(z.object({publicationId:z.string(),observation:z.string(),hypothesis:z.string(),experiment:z.string()})),
  experiments:z.array(z.object({title:z.string(),action:z.string(),variable:z.string(),metric:z.string(),prerequisite:z.string()})),
