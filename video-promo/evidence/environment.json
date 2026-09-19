@@ -1,0 +1,70 @@
+{
+  "ready": false,
+  "cached": false,
+  "engine": "browser",
+  "missing": [
+    "browser-launch"
+  ],
+  "warnings": [
+    "browserType.launch: Executable doesn't exist at /Users/zyongzhu/Library/Caches/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-mac-arm64/chrome-headless-shell\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+  ],
+  "fingerprint": "974bc88006153a07e58e5463b439cf6a9ac7d789aa62b9266f0a6f34c9cf9b68",
+  "details": {
+    "schema": 2,
+    "engine": "browser",
+    "platform": "macOS-26.2-arm64-arm-64bit",
+    "versions": {
+      "python": {
+        "path": "/opt/homebrew/opt/python@3.12/bin/python3.12",
+        "version": "3.12.13"
+      },
+      "node": {
+        "path": "/opt/homebrew/opt/node/bin/node",
+        "version": "v25.9.0"
+      },
+      "npm": {
+        "path": "/opt/homebrew/opt/node/bin/npm",
+        "version": "11.12.1"
+      },
+      "ffmpeg": {
+        "path": "/opt/homebrew/bin/ffmpeg",
+        "version": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers"
+      },
+      "ffprobe": {
+        "path": "/opt/homebrew/bin/ffprobe",
+        "version": "ffprobe version 9.0.1 Copyright (c) 2007-2026 the FFmpeg developers"
+      }
+    },
+    "packages": {
+      "playwright": {
+        "version": "1.58.1",
+        "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/video-promo/node_modules/playwright/package.json"
+      },
+      "esbuild": {
+        "version": "0.27.3",
+        "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/video-promo/node_modules/esbuild/package.json"
+      },
+      "react": {
+        "version": "19.2.3",
+        "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/video-promo/node_modules/react/package.json"
+      },
+      "react-dom": {
+        "version": "19.2.3",
+        "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/video-promo/node_modules/react-dom/package.json"
+      }
+    },
+    "manifests": {
+      "package.json": "3f6cea066519aa7348c4a47b23bc15a067e227fc3edad3b2d7ecae430bf9ce61",
+      "package-lock.json": "f2872adb377021018a0cfd60333402d7c9be63b7c49ed5f55ecf4d49d4f07043"
+    },
+    "browserEnv": {
+      "PLAYWRIGHT_BROWSERS_PATH": null,
+      "HYPERFRAMES_CHROME_PATH": null
+    }
+  },
+  "browser": {
+    "launched": false,
+    "playwrightVersion": "1.58.1"
+  },
+  "next": "Read references/onboarding.md for only the reported engine/platform gaps, install them, then rerun with --force."
+}

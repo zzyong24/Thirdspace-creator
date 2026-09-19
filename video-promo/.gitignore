@@ -1,0 +1,12 @@
+# 视频工程产物与依赖(可复现:配乐脚本固定种子、渲染命令可重建)
+node_modules/
+.build/
+dist/
+evidence/*.png
+evidence/*.jpg
+assets/music.wav
+assets/music-raw.wav
+assets/master.wav
+assets/sfx-stem.wav
+assets/music-ducked.wav
+assets/sfx/
