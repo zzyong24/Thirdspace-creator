@@ -26,3 +26,11 @@ flowchart LR
 Mac arm64 官方 CfT 解包后的 `.app` 执行 `codesign --verify --deep --strict` 返回“code has no resources but signature indicates they must be present”；同机现有 Playwright CfT 缓存也返回相同结果。浏览器二进制本身 `--version` 可运行，但这不是安装包签名/公证或网页操作通过的证据；正式发布前仍须在最终包内核实签名链和浏览器启动。
 
 Rust Hub/Lane、独立浏览器 IPC、浏览器二进制随包及 Mac/Windows 安装实测仍未完成。旧采集单元回归：`douyin-cdp`、`douyin-traffic`、`collection-abort` 共 144/144；后端 profile lease、旧宿主生命周期、dispatcher 与新准入在补交接测试前共 29/29。作品/评论/封面/流量的真实采集与错峰验收仍待执行。不能把适配器测试或依赖包独立编译等同于 T-1008 验收。
+
+## 2026-09-20 前端私有宿主接线
+
+桌面 Mac 仅在 Tauri 提供独立浏览器私有 socket 时注册 `browser.open/status/navigate/observe/extract/screenshot/act/close`；Windows 和普通网页不展示虚假的可执行能力。模型只能选择 Lane、主身份或匿名模式及站点域，不能提交账号或物理 profile 路径。宿主先核对原任务当前 attempt/fence/账号，再向 Rust 查询将实际使用的目录摘要，并经旧采集共用的数据库租约领取；每次动作前再次核对执行租约。Node 已校验导航目标在声明域内；Rust 对导航及跳转的复核仍待隔离候选合入与实测。重要页面操作作为外部写入效果走原工具门控。主身份当前是独立受管档案，`legacyIdentityImported=false`、登录状态为 `unverified`，没有冒称旧采集登录态已经迁移。
+
+`browser.close` 或原生 `open` 失败后，仅在 Rust 返回相同 profileKey 和 leaseId 的实际停止证明时释放数据库占用。私有 socket 报文限制大小并绑定 operationId；已发出但连接断开记未知结果，原占用保持，待对账。当前内存 Lane 索引仍缺进程重启后的持久恢复；Rust 候选接线、真实浏览器页面动作、取消清理、旧采集真机交接与双平台安装版验证尚未完成。故本节只证明 Node 宿主契约，T-1008 继续进行中。
+
+当场验证：`frontend` 浏览器 socket/宿主测试 8/8、原生文件宿主与现有持久化组合 17/17、前端 `tsc --noEmit` 通过；后端工作台能力宿主与计划集成 7/7。测试中的 socket 是本地协议夹具，不是浏览器 E2E。
