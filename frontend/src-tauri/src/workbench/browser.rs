@@ -1815,4 +1815,130 @@ mod tests {
         assert!(closed["stopProof"]["profileKey"].as_str().is_some());
         assert_eq!(closed["stopProof"]["profileStopped"], true, "{closed}");
     }
+
+    #[test]
+    #[ignore = "requires a locally verified fixed Chrome for Testing binary"]
+    fn real_chromium_two_tasks_keep_independent_lanes() {
+        let bundled = PathBuf::from(
+            std::env::var("CREATOROS_TEST_CFT_ROOT").expect("set CREATOROS_TEST_CFT_ROOT"),
+        );
+        assert!(BrowserHost::packaged_chrome_available(&bundled));
+        let root = std::env::temp_dir().join(format!(
+            "creatoros-browser-concurrent-{}",
+            rand::random::<u64>()
+        ));
+        let host = BrowserHost::new(root.clone(), bundled);
+        let mut first = receipt("account-one");
+        first.expires_at_ms = now_ms() + 120_000;
+        let mut second = first.clone();
+        second.task_id = "task-two".into();
+        second.fence_token = "fence-two".into();
+        second.profile_lease_id = "lease-two".into();
+        for admission in [&mut first, &mut second] {
+            let location = host
+                .profile_location(
+                    &admission.user_id,
+                    &admission.account_id,
+                    &admission.task_id,
+                    IdentityChoice::Anonymous,
+                )
+                .unwrap();
+            admission.profile_key = location["profileKey"].as_str().unwrap().to_owned();
+        }
+        assert_ne!(first.profile_key, second.profile_key);
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let outcome = runtime.block_on(async {
+            let open = |operation_id: &str, admission: BrowserAdmission| BrowserRequest {
+                operation_id: operation_id.into(),
+                admission,
+                identity_mode: IdentityChoice::Anonymous,
+                action: BrowserAction::Open,
+            };
+            let (first_open, second_open) =
+                tokio::time::timeout(std::time::Duration::from_secs(60), async {
+                    tokio::join!(
+                        host.dispatch(open("concurrent-open-one", first.clone())),
+                        host.dispatch(open("concurrent-open-two", second.clone()))
+                    )
+                })
+                .await
+                .map_err(|_| "concurrent browser opens timed out".to_owned())?;
+            let first_open = first_open.map_err(|error| error.code.to_owned())?;
+            let second_open = second_open.map_err(|error| error.code.to_owned())?;
+            let lane = |opened: &Value| -> Result<(String, u64), String> {
+                Ok((
+                    opened["lane"]["lane_id"]
+                        .as_str()
+                        .ok_or_else(|| format!("missing lane id: {opened}"))?
+                        .to_owned(),
+                    opened["lane"]["browser_epoch"]
+                        .as_u64()
+                        .ok_or_else(|| format!("missing browser epoch: {opened}"))?,
+                ))
+            };
+            let (first_lane, first_epoch) = lane(&first_open)?;
+            let (second_lane, second_epoch) = lane(&second_open)?;
+            assert_ne!(first_lane, second_lane);
+            let status =
+                |operation_id: &str, admission: BrowserAdmission, lane_id: String| BrowserRequest {
+                    operation_id: operation_id.into(),
+                    admission,
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Status { lane_id },
+                };
+            let close = |operation_id: &str,
+                         admission: BrowserAdmission,
+                         lane_id: String,
+                         expected_browser_epoch: u64| BrowserRequest {
+                operation_id: operation_id.into(),
+                admission,
+                identity_mode: IdentityChoice::Anonymous,
+                action: BrowserAction::Close {
+                    lane_id,
+                    expected_browser_epoch,
+                },
+            };
+            host.dispatch(status("first-status", first.clone(), first_lane.clone()))
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            host.dispatch(status("second-status", second.clone(), second_lane.clone()))
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            assert!(host
+                .dispatch(close(
+                    "old-cannot-close-new",
+                    first.clone(),
+                    second_lane.clone(),
+                    second_epoch,
+                ))
+                .await
+                .is_err());
+            let first_close = host
+                .dispatch(close("first-close", first, first_lane, first_epoch))
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            let second_status = host
+                .dispatch(status(
+                    "second-still-running",
+                    second.clone(),
+                    second_lane.clone(),
+                ))
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            let second_close = host
+                .dispatch(close("second-close", second, second_lane, second_epoch))
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            Ok::<_, String>((first_close, second_status, second_close))
+        });
+        runtime.block_on(host.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+        let (first_close, second_status, second_close) = outcome.unwrap();
+        assert_eq!(first_close["stopProof"]["profileStopped"], true);
+        assert!(second_status["browser_epoch"].as_u64().is_some());
+        assert_eq!(second_close["stopProof"]["profileStopped"], true);
+    }
 }
