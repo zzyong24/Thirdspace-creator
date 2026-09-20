@@ -4561,7 +4561,12 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
    if(node.type==="boolean")return false;
    return null;
   };
-  const legal=sample(schema);expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  // redfox.query 用 action 判别联合；把所有动作的字段塞进同一对象是非法样本。
+  const legal=name==="redfox.query"
+   ? {action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02"}
+   : sample(schema);
+  expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  if(name==="redfox.query")expect(parameters.safeParse({action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02",keyword:"跨动作字段"}).success).toBe(false);
   expect(parameters.safeParse("非对象").success,name).toBe(false);
   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);

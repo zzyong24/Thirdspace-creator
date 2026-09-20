@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { executionTaskResourceV2 } from "@creatoros/contract";
 
 import {
   IntelligenceWorkbench,
@@ -2835,9 +2836,9 @@ describe("T-482 内容雷达工作区", () => {
       screen.getByRole("button", { name: "确认生成" }),
     );
 
-    expect(
-      await screen.findByText("模型没有返回可解析的选题结构"),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "模型没有返回可解析的选题结构",
+    );
     expect(screen.getByText("错误代码：MODEL_PROTOCOL_ERROR")).toBeInTheDocument();
     expect(
       screen.queryByText("候选仍在后台生成"),
@@ -3060,8 +3061,8 @@ describe("T-482 内容雷达工作区", () => {
         screen.getByDisplayValue("这是一版已经成功但用户想重试的改写稿。"),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "确认写入选题池" }),
-      ).toBeDisabled();
+        screen.queryByRole("button", { name: "确认写入选题池" }),
+      ).not.toBeInTheDocument();
       expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
       expect(
         screen.queryByRole("button", { name: "重新生成改写稿" }),
@@ -3109,6 +3110,30 @@ describe("T-482 内容雷达工作区", () => {
 
   it("可选择分类粘贴分享文本单条建档，且不会自动发起转写", async () => {
     const stub = api();
+    vi.mocked(stub.importDouyinShare).mockResolvedValue({
+      task: executionTaskResourceV2.parse({
+        id: "share-import-1",
+        userId: "user-1",
+        accountId: "account-1",
+        kind: "share_import",
+        ownerType: "item_import",
+        ownerId: "share-import-1",
+        status: "queued",
+        priority: 0,
+        idempotencyKey: "share-import-1",
+        checkpoint: null,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        attempt: 0,
+        maxAttempts: 3,
+        errorCode: null,
+        errorMessage: null,
+        costEstimate: null,
+        createdAt: "2026-09-20T00:00:00.000Z",
+        updatedAt: "2026-09-20T00:00:00.000Z",
+      }),
+    });
     render(
       <IntelligenceWorkbench
         accountId="account-1"
@@ -3142,6 +3167,7 @@ describe("T-482 内容雷达工作区", () => {
       }),
     );
     expect(stub.enqueueTranscript).not.toHaveBeenCalled();
-    expect(refresh).toHaveBeenCalled();
+    expect(await screen.findByText("已排队")).toBeInTheDocument();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

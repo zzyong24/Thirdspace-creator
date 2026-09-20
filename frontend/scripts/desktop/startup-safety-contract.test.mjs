@@ -22,6 +22,14 @@ const douyinCdp = readFileSync(
   join(process.cwd(), "src", "server", "ingestion", "douyin-cdp.ts"),
   "utf8",
 );
+const douyinProfileContext = readFileSync(
+  join(process.cwd(), "..", "ai-worker", "src", "runtime", "browser", "douyin-profile-context.ts"),
+  "utf8",
+);
+const browserLaunch = readFileSync(
+  join(process.cwd(), "..", "ai-worker", "src", "runtime", "browser", "browser-launch.ts"),
+  "utf8",
+);
 
 describe("T-535 desktop startup safety contract", () => {
   it("生产 sidecar 不存在构建冒烟旁路，只有非生产开发模式可跳过 token", () => {
@@ -113,8 +121,16 @@ describe("T-535 desktop startup safety contract", () => {
       /async function openContext\([\s\S]*?\n}\n\nasync function isLoggedIn/,
     )?.[0];
     expect(openContext).toBeTruthy();
-    expect(openContext).toContain("launchWithBrowser((selection)");
+    expect(openContext).toContain("acquireHostBrowserProfile(identity.authDir, hostSignal)");
+    expect(openContext).toContain("openDouyinProfileContext(lease.authDir, headless");
     expect(openContext).not.toContain("ensureChromiumInstalled()");
+    expect(douyinProfileContext).toContain("guardedLaunch(authDir");
+    expect(douyinProfileContext).toContain("launchWithBrowser(selection=>chromium.launchPersistentContext");
+    expect(browserLaunch).toContain('run({ channel: "chrome" })');
+    expect(browserLaunch).toContain("resolveBundledExecutable()");
+    expect(browserLaunch.indexOf('run({ channel: "chrome" })')).toBeLessThan(
+      browserLaunch.indexOf("resolveBundledExecutable()"),
+    );
 
     const ensureChromium = douyinCdp.match(
       /export async function ensureChromiumInstalled\([\s\S]*?\n}\n/,

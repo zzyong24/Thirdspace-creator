@@ -230,7 +230,7 @@ describe("SettingsPage", () => {
   // The settings content now lives in a centered Dialog (Radix Portal → body),
   // so dialog-internal queries go through `document` rather than the render
   // container. The dialog opens by default.
-  it("renders the settings dialog with 6 vertical tabs in the approved order", async () => {
+  it("renders the settings dialog with 7 vertical tabs in the approved order", async () => {
     await renderSettings();
     const tabs = document.querySelector('[data-slot="settings-tabs"]');
     expect(tabs).not.toBeNull();
@@ -242,6 +242,7 @@ describe("SettingsPage", () => {
       "偏好",
       "外观",
       "模型配置",
+      "数据服务",
       // T-077a:技能管理页签(SPEC 2026-07-03 §1.1)。
       "技能",
       "存储",

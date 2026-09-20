@@ -76,7 +76,7 @@
     {
       "led": "LED-009",
       "what": "用写死词表、关键词分数或字符串相似度替代 Skill 做创作语义判断",
-      "check": "node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
+      "check": "node --test orchestrator/process/semantic-boundary-scan.test.mjs && node orchestrator/process/semantic-boundary-scan.mjs && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts",
       "onFail": "语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。"
     },
     {
