@@ -11,7 +11,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
 | T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
-| T-1016 | 核对前端聊天会话 SDK 物理边界 | 🔨 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
+| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1005 | 实现多步计划、连续执行与原任务续跑 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
 | T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
