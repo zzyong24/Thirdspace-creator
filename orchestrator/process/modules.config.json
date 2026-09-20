@@ -26,18 +26,18 @@
       "verify_commands": {"implementation": ["pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0"]}
     },
     "T-1006": {
-      "task_id": "T-1006", "archetype": ["orchestration"], "tasks": ["implementation"],
+      "task_id": "T-1006", "archetype": ["orchestration"], "tasks": ["implementation", "integration"],
       "depends_on": ["T-1004:implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "backend/src/modules/ai-runtime/**", "ai-worker/src/execution/**"],
-      "write_set": ["ai-worker/src/capabilities/gateway.ts", "ai-worker/src/capabilities/gateway.test.ts", "ai-worker/src/capabilities/result-pages.ts", "ai-worker/src/capabilities/result-pages.test.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.ts", "backend/src/modules/ai-runtime/chat-tool-gate.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts", "docs/verification/t1006-gateway.md"],
-      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/gateway.test.ts src/capabilities/result-pages.test.ts --retry=0"]}
+      "write_set": ["ai-worker/src/capabilities/gateway.ts", "ai-worker/src/capabilities/gateway.test.ts", "ai-worker/src/capabilities/result-pages.ts", "ai-worker/src/capabilities/result-pages.test.ts", "ai-worker/src/execution/chat-worker-run.ts", "ai-worker/src/execution/worker-runtime.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.ts", "backend/src/modules/ai-runtime/chat-tool-gate.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts", "backend/src/modules/ai-runtime/chat-turn-preparation.ts", "backend/src/modules/ai-runtime/chat-production-composition.ts", "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts", "backend/src/modules/ai-runtime/chat-workbench-capability-host.test.ts", "backend/src/modules/execution/model-worker-dispatcher.ts", "backend/src/modules/execution/execution-chat-tool-ports.service.ts", "contract/src/internal/chat-worker.ts", "contract/src/internal/execution-worker.ts", "frontend/src/server/prepare-chat-reply.ts", "docs/verification/t1006-gateway.md"],
+      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/gateway.test.ts src/capabilities/result-pages.test.ts --retry=0"], "integration": ["pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-workbench-capability-host.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/capabilities/gateway.test.ts --retry=0"]}
     },
     "T-1007": {
-      "task_id": "T-1007", "archetype": ["orchestration"], "tasks": ["implementation"],
+      "task_id": "T-1007", "archetype": ["orchestration"], "tasks": ["implementation", "desktop-integration"],
       "depends_on": ["T-1004:implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "ai-worker/src/runtime/browser/**", "frontend/src-tauri/**"],
-      "write_set": ["ai-worker/src/capabilities/task-files.ts", "ai-worker/src/capabilities/task-files.test.ts", "ai-worker/src/capabilities/command-host.ts", "ai-worker/src/capabilities/command-host.test.ts", "frontend/src-tauri/src/workbench/**", "frontend/src-tauri/Cargo.toml", "docs/verification/t1007-files-command.md"],
-      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/task-files.test.ts src/capabilities/command-host.test.ts --retry=0"]}
+      "write_set": ["ai-worker/src/capabilities/task-files.ts", "ai-worker/src/capabilities/task-files.test.ts", "ai-worker/src/capabilities/command-host.ts", "ai-worker/src/capabilities/command-host.test.ts", "frontend/src-tauri/src/workbench/**", "frontend/src-tauri/src/lib.rs", "frontend/src-tauri/Cargo.toml", "docs/verification/t1007-files-command.md"],
+      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/task-files.test.ts src/capabilities/command-host.test.ts --retry=0"], "desktop-integration": ["RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked --quiet"]}
     },
     "T-1004": {
       "task_id": "T-1004",
