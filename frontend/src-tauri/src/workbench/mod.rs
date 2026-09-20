@@ -12,10 +12,10 @@ pub mod command;
 pub mod command_windows;
 #[cfg(windows)]
 pub use command_windows as command;
-pub mod files;
 #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
 pub mod browser;
 #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
 pub mod browser_ipc;
+pub mod files;
 #[cfg(target_os = "macos")]
 pub mod ipc;

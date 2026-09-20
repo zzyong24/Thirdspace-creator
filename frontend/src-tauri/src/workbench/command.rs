@@ -216,6 +216,12 @@ impl CommandHost {
             files.base(),
             &self.runtimes.read_roots,
         )?;
+        if request.runtime_id == "bundled-node" {
+            // The bundled Node can otherwise load its build-machine OpenSSL
+            // config from /opt/homebrew before executing any user script.
+            // Keep startup within the task sandbox and use Node's built-in CA.
+            command.arg("--openssl-config=/dev/null");
+        }
         let outputs = files
             .output_dir()
             .map_err(|_| CommandError::Unavailable("输出目录不可用".into()))?;
@@ -515,6 +521,12 @@ fn confined_command(
         return Err(CommandError::InvalidInput);
     }
     let mut extra = String::new();
+    // Node resolves a script by lstat'ing every ancestor of its absolute
+    // task path. Grant those directory entries only; sibling contents stay
+    // outside the sandbox's file-read and file-write roots.
+    for ancestor in root.ancestors().skip(1).filter(|p| *p != Path::new("/")) {
+        extra.push_str(&format!(" (literal {})", quoted(ancestor)));
+    }
     let mut canonical_roots = Vec::new();
     for path in read_roots {
         let path = fs::canonicalize(path)?;
@@ -806,6 +818,57 @@ mod tests {
             host.read_output("other", "read", "stdout", 0, 100),
             Err(CommandError::InvalidInput)
         ));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
+    #[ignore = "requires CREATOROS_TEST_PACKAGED_RUNTIME_ROOT from a locally inspected Mac runtime"]
+    fn mac_packaged_node_runs_script_inside_task_sandbox() {
+        let runtime_root = PathBuf::from(
+            std::env::var("CREATOROS_TEST_PACKAGED_RUNTIME_ROOT")
+                .expect("set CREATOROS_TEST_PACKAGED_RUNTIME_ROOT"),
+        );
+        let root =
+            std::env::temp_dir().join(format!("creatoros-command-node-{}", rand::random::<u64>()));
+        let files = TaskFiles::new(&root, "u", "a", "t").unwrap();
+        files.write("probe.js", b"process.stdout.write('bundled-node-ok:' + require('node:tls').rootCertificates.length)", 0).unwrap();
+        let host = CommandHost::new(RuntimeRegistry::from_sidecar(&runtime_root).unwrap());
+        host.run(
+            &files,
+            files.scope_key(),
+            "packaged-node",
+            CommandRequest {
+                argv: vec!["probe.js".into()],
+                cwd: ".".into(),
+                runtime_id: "bundled-node".into(),
+                timeout_ms: 10_000,
+                stdin_ref: None,
+            },
+        )
+        .unwrap();
+        let mut receipt = host.status(files.scope_key(), "packaged-node").unwrap();
+        for _ in 0..100 {
+            if receipt.state != "running" {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+            receipt = host.status(files.scope_key(), "packaged-node").unwrap();
+        }
+        assert_eq!(
+            receipt.state, "succeeded",
+            "packaged Node failed: {receipt:?}"
+        );
+        let output = host
+            .read_output(files.scope_key(), "packaged-node", "stdout", 0, 100)
+            .unwrap()
+            .0;
+        let count = String::from_utf8(output)
+            .unwrap()
+            .strip_prefix("bundled-node-ok:")
+            .unwrap()
+            .parse::<usize>()
+            .unwrap();
+        assert!(count > 0, "bundled Node lost its built-in CA certificates");
         fs::remove_dir_all(root).unwrap();
     }
     #[cfg(target_os = "macos")]

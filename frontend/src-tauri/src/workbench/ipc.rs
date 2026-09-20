@@ -595,7 +595,7 @@ mod tests {
             std::process::id(),
             base.clone(),
             RuntimeRegistry {
-                bundled_node: PathBuf::from("/bin/echo"),
+                bundled_node: PathBuf::from("/usr/bin/true"),
                 bundled_python: PathBuf::from("/bin/echo"),
                 approved_program: PathBuf::from("/bin/sleep"),
                 read_roots: vec![],
@@ -604,7 +604,7 @@ mod tests {
         let run = call(
             &socket,
             request(
-                json!({"kind":"command_run","argv":["hello"],"cwd":".","runtimeId":"bundled-node","timeoutMs":10000}),
+                json!({"kind":"command_run","argv":["hello"],"cwd":".","runtimeId":"bundled-python","timeoutMs":10000}),
             ),
         );
         assert_eq!(run["ok"], true, "{run}");
@@ -638,7 +638,7 @@ mod tests {
         let other_account = call(
             &socket,
             json!({"operationId":"op-1","scope":{"userId":"u","accountId":"a2","taskId":"t","attempt":1,"fenceToken":"f"},
-            "action":{"kind":"command_run","argv":["other"],"cwd":".","runtimeId":"bundled-node","timeoutMs":10000}}),
+            "action":{"kind":"command_run","argv":["other"],"cwd":".","runtimeId":"bundled-python","timeoutMs":10000}}),
         );
         assert_eq!(
             other_account["ok"], true,
@@ -656,6 +656,68 @@ mod tests {
         );
         assert_eq!(cancel["value"]["state"], "cancelled", "{cancel}");
         drop(running);
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    #[ignore = "requires CREATOROS_TEST_PACKAGED_RUNTIME_ROOT from a locally inspected Mac runtime"]
+    fn private_socket_runs_a_real_packaged_node_task_script() {
+        let runtime_root = PathBuf::from(
+            std::env::var("CREATOROS_TEST_PACKAGED_RUNTIME_ROOT")
+                .expect("set CREATOROS_TEST_PACKAGED_RUNTIME_ROOT"),
+        );
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let base = temp_base();
+        let _running = bridge.start(
+            std::process::id(),
+            base.clone(),
+            RuntimeRegistry::from_sidecar(&runtime_root).unwrap(),
+        );
+        let script =
+            "process.stdout.write('private-node:' + require('node:tls').rootCertificates.length)";
+        let write = call(
+            &socket,
+            request(json!({"kind":"write","path":"probe.js",
+            "contentBase64":base64::engine::general_purpose::STANDARD.encode(script),"expectedVersion":0})),
+        );
+        assert_eq!(write["ok"], true, "{write}");
+        let run = call(
+            &socket,
+            request(json!({"kind":"command_run","argv":["probe.js"],
+            "cwd":".","runtimeId":"bundled-node","timeoutMs":10000})),
+        );
+        assert_eq!(run["ok"], true, "{run}");
+        let mut status = Value::Null;
+        for _ in 0..100 {
+            status = call(
+                &socket,
+                json!({"operationId":"status-node","scope":{"userId":"u",
+                "accountId":"a","taskId":"t","attempt":1,"fenceToken":"f"},
+                "action":{"kind":"command_status","targetOperationId":"op-1"}}),
+            );
+            if status["value"]["state"] != "running" {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(status["value"]["state"], "succeeded", "{status}");
+        let output = call(
+            &socket,
+            request(json!({"kind":"command_read","targetOperationId":"op-1",
+            "stream":"stdout","offset":0,"limit":100})),
+        );
+        assert_eq!(output["ok"], true, "{output}");
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(output["value"]["contentBase64"].as_str().unwrap())
+            .unwrap();
+        let text = String::from_utf8(bytes).unwrap();
+        let count = text
+            .strip_prefix("private-node:")
+            .unwrap()
+            .parse::<usize>()
+            .unwrap();
+        assert!(count > 0, "bundled Node lost its built-in CA certificates");
         fs::remove_dir_all(base).unwrap();
     }
 }

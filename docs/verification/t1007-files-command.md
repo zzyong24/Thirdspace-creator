@@ -108,3 +108,13 @@ flowchart LR
 T-1008 将浏览器模块接入 `workbench/mod.rs` 后，T-1007 独立 Rust 测试包在 macOS 上缺 NomiFun 依赖而无法编译。现将浏览器模块改为正向 `workbench-browser` feature：桌面主包默认开启，独立文件/命令测试包不启用；主包默认、`--no-default-features`、`--all-features` 的源码检查均通过（仅用临时 Tauri 资源覆盖，不代表安装包）。
 
 原独立测试并行偶发 `Broken pipe` / 空 JSON 的根因也已实测定位：Mac 非阻塞监听 socket 接受的连接继承 `O_NONBLOCK`，客户端稍晚写入时服务端 `read_until` 返回 `EAGAIN`（os error 35），连接在回复前关闭。服务端现对**已接受的连接**切回阻塞模式并保留 10 秒读写超时；增加“先连接、100 毫秒后才写请求”的确定性回归。修复前 20 项并行测试在第 14 次复测时再次失败，带诊断运行记录到 `EAGAIN`；修复后原 20 项连续并行运行 **30/30 次整组通过**，加入延迟写入用例后独立门卫 **21/21**。浏览器私有 socket 同样修复了该继承问题并通过对应延迟写入测试。Windows 文件/命令实际隔离和安装包仍未验收，T-1007 继续进行中。
+
+## 2026-09-20 已安装 Mac Node runtime 的实际脚本探针
+
+对本机已安装的 `runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server` 增加显式 opt-in 的 Rust 宿主回归：测试通过真实 `TaskFiles` 写入 `probe.js`，由 `CommandHost` 在原 `sandbox-exec` 内运行随包 Node，并回读 stdout。第一次红测在 Node 启动阶段失败：OpenSSL 试图读取打包机路径 `/opt/homebrew/etc/openssl@3/openssl.cnf`，被沙箱拒绝；固定传入 `--openssl-config=/dev/null` 后 `-e` 探针通过。将探针改为**真实任务目录脚本文件**后再次红测：Node 对 `/private` 祖先执行 `lstat` 被拒。沙箱现只为任务目录的祖先目录项增加 `literal` 读取，任务根的读写规则仍限在本任务内。最终脚本回执为 `succeeded`，stdout 含 `bundled-node-ok` 和正数的 Node 内置 CA 证书数量；独立 Rust 全套 **21/21**（另 1 项显式安装 runtime 探针忽略）通过，原任务外文件读取拒绝测试仍通过。主 Tauri 包在临时资源覆盖下源码检查通过；覆盖不代表打包验收。
+
+同一已安装 runtime 的第二条 opt-in 回归经过 `0700` 私有目录、`0600` Unix socket、PID 准入，实际完成文件写入 → `command_run` → `command_status` → `command_read`，stdout 再次核对 Node 内置 CA 数量为正，**1/1** 通过。此夹具以测试进程 PID 作为允许的调用者，证明私有传输和原生命令路径连通；它尚未经过真实 Node sidecar 的数据库 execution lease/admission，也不是安装版 UI E2E。
+
+最终独立 Rust 常规测试 **21/21**、两个需要本机已安装 runtime 的 opt-in 测试各 **1/1**；后两项在无环境变量的常规测试中明确忽略。`cargo fmt --check`、临时资源覆盖的主 Tauri `cargo check --locked --offline`、`git diff --check` 通过。
+
+本次在现有 `runtime/1.2.0` 上验证了随包 Node 脚本能力及 Rust 私有 IPC 路径，没有新安装包。Python 与 approved program 尚未装包；Windows 命令和私有通道仍不可用。T-1007 保持进行中。
