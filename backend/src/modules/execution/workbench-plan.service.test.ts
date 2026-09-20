@@ -54,6 +54,11 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     expect(await f.plan.read(ctx, f.task.id)).toEqual(revised);
     await expect(f.plan.save(f.ref, {expectedRevision: 3, steps: revised.steps})).rejects.toMatchObject({name: "ConflictError"});
     await expect(f.plan.status(f.ref)).rejects.toMatchObject({name: "ConflictError"});
+    const claimed = await f.tasks.claimTask({taskId: f.task.id, workerId: "plan-worker-new"});
+    if (!claimed) throw new Error("resumed task was not claimable");
+    const resumed = {executionTaskId: f.task.id, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken};
+    expect((await f.plan.status(resumed))?.revision).toBe(3);
+    expect((await f.plan.save(resumed, {expectedRevision: 3, steps: [...revised.steps, step("verify", {dependsOn: ["report"]})]})).steps[0]).toEqual(completed.steps[0]);
   });
 
   it("拒绝不存在或成环的依赖", async () => {
