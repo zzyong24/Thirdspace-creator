@@ -44,3 +44,11 @@ Mac 桌面壳已接入冻结的 NomiFun `ManagedEngineHostFactory` 和 `BrowserS
 另以环境变量 `CREATOROS_TEST_CFT_ROOT=/tmp/t1008-chrome-stage` 显式运行仓库内忽略的 `real_chromium_anonymous_lane_opens_and_closes`：本机已核验的固定 CfT 149 真正启动匿名 Chromium，导航 `https://example.com`，observe 成功，extract 的实际页面文本含 “Example Domain”，screenshot 返回非空 `image/png` 数据；close 后 `stopProof.profileStopped=true`。测试 1/1 通过，整个测试约 3.4 秒，关闭与 `shutdown` 后清除临时档案。此项没有经过应用安装包、Node socket、模型或旧采集调用，不能替代对应 E2E。
 
 剩余风险：当前 Pi 回执尚无可信图片引用解析端口，模型没有看到上述 PNG；截图模型可见性与下载交付需接 T-1009 产物通道。旧采集真实登录档案交接、同账号跨任务/跨账号双浏览器实测、任务取消和 sidecar 重启后旧租约对账、重定向请求发出前的站点隔离，以及 Mac/Windows 安装包都未验收。T-1008 继续进行中。
+
+## 2026-09-20 停止证明与旧租约恢复复测
+
+Node 宿主已增加数据库旧租约对账：新 `browser.open` 遇到物理 profile 被占用时，只读取对应的旧 Worker 租约；当前仍运行的旧任务不能被回收。它以旧 attempt/fence/leaseId 让 Rust 清理对应档案，并要求 `profileStopped=true`、同一 `profileKey` 和 `profileLeaseId`，随后再次核对数据库旧记录未变，才释放旧占用并重试领取。协议夹具覆盖仍运行的旧任务、证明为假时保留占用、证明为真后新任务接管。后端 profile/admission 22/22、前端 browser client/host 9/9、前端 `tsc --noEmit` 通过。这些夹具不能证明已安装应用的跨进程恢复。
+
+Rust 在宿主重启后可对无内存 Hub 状态的旧租约提供停止证明，但还会检查系统进程的 `--user-data-dir` 和真实档案目录下打开的文件；检查失败或发现存活进程时拒绝释放。匿名 Chromium 正常关闭会删掉临时档案目录：确认系统中没有该目录的浏览器进程后，目录不存在可作为停止条件；实际目录存在时仍须 `lsof` 无打开文件。此前真实冒烟因对已删除目录执行 `lsof +D` 而误报未停止，修正后 `workbench::browser` Rust 单元 19/19（另 1 项忽略）与固定 CfT 149 的真实匿名页面冒烟 1/1 再次通过；关闭回复立即返回 `stopProof.profileStopped=true`。重启恢复的 Rust 测试以 `ps`/`lsof` 核对非空真实目录及错误持有者，未用假停止证明替代系统检查。
+
+仍缺 Node↔Rust↔数据库的真实重启对账、旧 Playwright 采集进程的真实交接、双任务并发及双账号隔离、最终安装包的浏览器启动。此时不能将 T-1008 标为完成。

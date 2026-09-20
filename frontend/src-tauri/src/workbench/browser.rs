@@ -364,6 +364,14 @@ impl BrowserHost {
         {
             return false;
         }
+        // Anonymous profiles are ephemeral: a successful close removes the
+        // directory. A later owner creates a different inode at this path.
+        // No process advertising this user-data-dir remains (checked above).
+        match std::fs::symlink_metadata(path) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return true,
+            Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {}
+            _ => return false,
+        }
         let Ok(open_files) = Command::new("/usr/sbin/lsof")
             .args(["-n", "-P", "-F0", "+D"])
             .arg(path)
@@ -1474,7 +1482,8 @@ mod tests {
         child.kill().unwrap();
         child.wait().unwrap();
         assert!(BrowserHost::os_profile_process_absent(&path));
-        std::fs::remove_dir(path).unwrap();
+        std::fs::remove_dir(&path).unwrap();
+        assert!(BrowserHost::os_profile_process_absent(&path));
     }
 
     #[test]
