@@ -85,7 +85,7 @@ function withinDomain(url:string,domain:string){
 
 /** 浏览器能力仅在真正有 Mac 私有 socket 时装配；不从模型输入接受账号、目录或 profileKey。 */
 export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string;
- now?:()=>string}={}):(Host&{reconcileStoppedProfiles():Promise<void>;dispose():void})|undefined{
+ now?:()=>string}={}):(Host&{reconcileStoppedProfiles():Promise<void>;dispose():Promise<void>})|undefined{
  const platform=options.platform??process.platform,desktop=options.desktop??process.env.CREATOROS_DESKTOP==="1";
  const socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_BROWSER_SOCKET;
  if(platform!=="darwin"||!desktop||!socketPath)return undefined;
@@ -167,7 +167,10 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
  }
  const key=(taskId:string,laneId:string)=>`${taskId}\0${laneId}`;
  return {catalog,platform:"macos",capabilities:["task.browser"],reconcileStoppedProfiles,
-  dispose(){disposed=true;if(timer){clearTimeout(timer);timer=undefined;}},
+  async dispose(){disposed=true;if(timer){clearTimeout(timer);timer=undefined;}
+   // 数据库关闭前等本轮可能正在写入的租约对账结算；失败时原租约仍保留。
+   await reconciling?.catch(()=>{});
+  },
   async dispatch(rawCall,{signal}){
    signal.throwIfAborted();const call=workbenchHostCallSchema.parse(rawCall);
    const name=call.invocation.name as BrowserTool;

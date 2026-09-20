@@ -17,10 +17,10 @@ afterAll(async()=>close?.());
 afterEach(async()=>{if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));if(directory)await rm(directory,{recursive:true,force:true});server=undefined;directory=undefined;});
 
 async function socket(received:Array<Record<string,unknown>>,failOpen=false,cleanupStopped=()=>true,
- stopProofStopped=()=>true){
+ stopProofStopped=()=>true,cleanupReply?:Promise<void>){
  directory=await mkdtemp(join(tmpdir(),"wb-browser-host-"));const path=join(directory,"browser.sock");
  server=createServer(connection=>{
-  let body="";connection.on("data",chunk=>{
+  let body="";connection.on("data",async chunk=>{
    body+=chunk.toString();const end=body.indexOf("\n");if(end<0)return;
    const request=JSON.parse(body.slice(0,end)) as Record<string,unknown>;received.push(request);
    const action=request.action as {kind:string};
@@ -37,6 +37,7 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false,clea
     : action.kind==="cleanup"?{profileStopped:cleanupStopped(),profileKey:"a".repeat(64),
       profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
     : {laneId:"native-lane",browserEpoch:1,result:{ok:true}};
+   if(action.kind==="cleanup")await cleanupReply;
    connection.end(`${JSON.stringify({ok:true,operationId:request.operationId,value})}\n`);
   });
  });
@@ -147,7 +148,37 @@ it("reconciles a cancelled task without waiting for another task to claim its pr
  expect(await profiles.listOwned(ref)).toEqual([]);
  expect(received.at(-1)?.admission).toMatchObject({taskId:task.id,attempt:ref.attempt,
   fenceToken:ref.fenceToken,profileLeaseId:lease!.leaseId});
- host.dispose();
+ await host.dispose();
+});
+
+it("waits for in-flight profile reconciliation before disposing the database owner",async()=>{
+ const nonce=randomUUID(),tasks=createPersistentTaskService(db),received:Array<Record<string,unknown>>=[];
+ const task=await tasks.enqueue({userId:`drain-${nonce}`,accountId:`account-${nonce}`,requestId:nonce,source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:nonce,idempotencyKey:nonce,payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:`worker-${nonce}`}))!;
+ let reply!:()=>void;
+ const gate=new Promise<void>(resolveGate=>{reply=resolveGate;});
+ const path=await socket(received,false,()=>true,()=>true,gate);
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const context={userId:`drain-${nonce}`,accountId:`account-${nonce}`,taskId:task.id,
+  attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:`worker-${nonce}`};
+ expect((await host.dispatch({context:{...context,operationId:randomUUID()},invocation:{name:"browser.open",schemaVersion:1,
+  input:{laneId:"research",mode:"primary",domain:"example.com"}}},
+  {signal:AbortSignal.timeout(10_000),onProgress:()=>{}})).status).toBe("succeeded");
+ await tasks.command({userId:context.userId,accountId:context.accountId,requestId:`cancel-${nonce}`,source:"user"},
+  {taskIds:[task.id],command:"cancel",idempotencyKey:`cancel-${nonce}`});
+ const sweep=host.reconcileStoppedProfiles();
+ await vi.waitFor(()=>expect(received.some(request=>(request.action as {kind:string}).kind==="cleanup")).toBe(true));
+ let disposed=false;
+ const draining=host.dispose().then(()=>{disposed=true;});
+ await Promise.resolve();
+ expect(disposed).toBe(false);
+ reply();
+ await Promise.all([sweep,draining]);
+ expect(disposed).toBe(true);
+ const profiles=createExecutionBrowserProfileLeaseService(db);
+ expect(await profiles.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,
+  fenceToken:claim.lease.fenceToken})).toEqual([]);
 });
 
 it("open obtains the Rust physical profile and binds it to the current DB task before native dispatch",async()=>{
