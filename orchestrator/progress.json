@@ -252,6 +252,8 @@
         "frontend/src/server/workbench-preview-policy.ts",
         "frontend/src/server/workbench-preview-read.ts",
         "frontend/src/server/workbench-preview-read.test.ts",
+        "frontend/src/server/workbench-artifact-render.ts",
+        "frontend/src/server/workbench-artifact-render.test.ts",
         "frontend/src/components/workbench-preview-frame.tsx",
         "frontend/src/components/workbench-preview-frame.test.tsx",
         "frontend/src/features/copilot/workbench-artifact-export.ts",
@@ -263,7 +265,8 @@
         "contract/tests/agent-workbench.test.ts",
         "docs/verification/t1009-artifacts.md",
         "docs/verification/t1009-preview.md",
-        "docs/verification/t1009-native-export.md"
+        "docs/verification/t1009-native-export.md",
+        "docs/verification/t1009-html-export-chain.md"
       ],
       "read_set": [
         "docs/features/t1003-agent-workbench.md",

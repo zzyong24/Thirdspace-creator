@@ -10,7 +10,7 @@ let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
 afterAll(async()=>close?.());
 
-it("私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",async()=>{
+it.each(["darwin","win32"] as const)("%s 私有宿主把真实任务文件登记为可回读的 HTML 版本，不向模型泄露存储键",async platform=>{
  const nonce=randomUUID(),userId=`artifact-user-${nonce}`,accountId=`artifact-account-${nonce}`;
  const tasks=createPersistentTaskService(db);
  const task=await tasks.enqueue({userId,accountId,requestId:nonce,source:"user"},
@@ -32,7 +32,8 @@ it("私有宿主把真实任务文件登记为可回读的 HTML 版本，不向�
    total:bytes.byteLength,version:1};
   throw new Error("unexpected native action");
  });
- const host=createWorkbenchArtifactHost(db,{platform:"darwin",desktop:true,socketPath:"private.sock",blobs,filePort})!;
+ const host=createWorkbenchArtifactHost(db,{platform,desktop:true,socketPath:platform==="win32"?"\\\\.\\pipe\\creatoros-test":"private.sock",blobs,filePort})!;
+ expect(host.platform).toBe(platform==="win32"?"windows":"macos");
  expect(host.catalog.map(tool=>tool.name)).toEqual(["artifact.register","artifact.read"]);
  const context={userId,accountId,taskId:task.id,attempt:claim.lease.attempt,
   fenceToken:claim.lease.fenceToken,leaseId:workerId};

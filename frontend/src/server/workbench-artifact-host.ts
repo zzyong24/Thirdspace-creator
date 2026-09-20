@@ -16,10 +16,10 @@ const catalog=[
  workbenchCapabilitySchema.parse({name:"artifact.register",schemaVersion:1,description:"把当前任务中的真实文件保存为可回读的产物版本，返回产物引用。",
   inputSchema:{type:"object",properties:{path:{type:"string",minLength:1,maxLength:2048},mime:{type:"string",enum:["text/html","text/markdown","text/csv","image/png","application/pdf"]},
    artifactId:{type:"string"},expectedVersion:{type:"integer",minimum:0},provenance:{type:"array",items:{type:"string"}}},required:["path","mime"],additionalProperties:false},
-  resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos"]}),
+  resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
  workbenchCapabilitySchema.parse({name:"artifact.read",schemaVersion:1,description:"按版本分页读取本任务已保存的产物。",
   inputSchema:{type:"object",properties:{artifactId:{type:"string"},version:{type:"integer",minimum:1},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:128000}},required:["artifactId","version"],additionalProperties:false},
-  resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.artifacts"],platforms:["macos"]}),
+  resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
 ];
 const failed=(operationId:string,code:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
  error:{code,retryable:false,dispatched:false,nextAction:"fix_input"}});
@@ -41,12 +41,12 @@ function decodePage(value:unknown):Uint8Array{
  return bytes;
 }
 
-/** 仅在 Mac 私有文件宿主存在时装配；所有身份从当前 execution lease 读取。 */
+/** 仅在桌面私有文件宿主存在时装配；所有身份从当前 execution lease 读取。 */
 export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string;
  now?:()=>string;blobs:WorkbenchArtifactBlobPort;filePort?:FilePort}):(Host&{verifyArtifacts:ReturnType<typeof createWorkbenchArtifactService>["verifyArtifacts"]})|undefined{
  const platform=options.platform??process.platform,desktop=options.desktop??process.env.CREATOROS_DESKTOP==="1";
  const socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_SOCKET;
- if(platform!=="darwin"||!desktop||!socketPath)return undefined;
+ if(!["darwin","win32"].includes(platform)||!desktop||!socketPath)return undefined;
  const leases=createExecutionLeaseService(db,{now:options.now});
  const client=createWorkbenchNativeClient({withLease:(ref,mode,action)=>leases.withLease(ref,mode,async({task,context})=>{
   if(!context.accountId||context.accountId!==task.accountId)throw new NativeFileError("ACCOUNT_SCOPE_INVALID",false);
@@ -71,7 +71,7 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
    return {bytes,version};
   },
  });
- return {catalog,platform:"macos",capabilities:["task.artifacts"],verifyArtifacts:artifacts.verifyArtifacts,
+ return {catalog,platform:platform==="win32"?"windows":"macos",capabilities:["task.artifacts"],verifyArtifacts:artifacts.verifyArtifacts,
   async dispatch(rawCall,{signal}){
    signal.throwIfAborted();
    const call=workbenchHostCallSchema.parse(rawCall),{context,invocation}=call;

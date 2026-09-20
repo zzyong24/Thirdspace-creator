@@ -23,3 +23,6 @@
 - HTML 相对资产映射、活动图表安全降级；Mac/Windows 安装版 PDF 预览。
 - Mac/Windows 原生选址导出及取消、覆盖行为；HTML 转 PNG/PDF。
 - Windows 文件宿主和已安装包端到端验证。
+# 2026-09-20 Windows 产物登记接线
+
+Windows 私有文件通道接入后，产物宿主也在该通道存在时开放 `artifact.register/read`。登记仍由后端原执行租约与账号核实，并从当前任务文件逐页回读、复核版本后保存；Windows 目录中只开放文件和产物工具，不因本接线开放命令或浏览器。Mac/Windows 两个平台使用同一真实任务账本测试登记、回读、跨账号拒绝和文件版本变化；Windows 用例以注入的文件端口模拟 Native Pipe，**不是 Windows 真机 Named Pipe 或安装包实测**。
