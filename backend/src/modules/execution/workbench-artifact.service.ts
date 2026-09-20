@@ -20,9 +20,9 @@ export interface WorkbenchArtifactFilePort {
  (scope:Scope,path:string):Promise<{bytes:Uint8Array;version:number}>;
 }
 const digest=(value:Uint8Array|string)=>createHash("sha256").update(value).digest("hex");
-function records(payload:unknown):Stored[]{
+function records(payload:unknown,key:"workbenchArtifactVersions"|"workbenchArtifactPending"="workbenchArtifactVersions"):Stored[]{
  if(!payload||typeof payload!=="object"||Array.isArray(payload))throw new ConflictError("任务载荷已损坏");
- const raw=(payload as Record<string,unknown>).workbenchArtifactVersions;
+ const raw=(payload as Record<string,unknown>)[key];
  if(raw===undefined)return [];
  if(!Array.isArray(raw)||raw.length>1000)throw new ConflictError("任务产物索引已损坏");
  return raw.map(item=>{
@@ -67,7 +67,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    const preflight=await leases.withLease(ref,"admission",async({task})=>{
     if(task.kind!=="ai_task"||!task.accountId)throw new ConflictError("当前任务不支持产物登记");
     const existing=records(task.payload).find(row=>row.operationId===operationId);
-    return {scope:{userId:task.userId,accountId:task.accountId,taskId:task.id,ref},existing};
+    const pending=records(task.payload,"workbenchArtifactPending").find(row=>row.operationId===operationId);
+    return {scope:{userId:task.userId,accountId:task.accountId,taskId:task.id,ref},existing,pending};
    });
    const ctx={userId:preflight.scope.userId,accountId:preflight.scope.accountId,
     requestId:operationId,source:"ai"} satisfies RequestContext;
@@ -76,37 +77,78 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     await verified(preflight.existing,ctx);
     return preflight.existing.metadata;
    }
-   if(!deps.readTaskFile)throw new ConflictError("当前宿主不支持产物登记");
-   const snapshot=await deps.readTaskFile(preflight.scope,input.path);
-   if(!Number.isSafeInteger(snapshot.version)||snapshot.version<1||snapshot.bytes.byteLength<1||
-      snapshot.bytes.byteLength>MAX_ARTIFACT_BYTES)throw new ConflictError("任务文件为空、过大或版本无效");
-   const expectedHash=digest(snapshot.bytes);
+   const filePort=deps.readTaskFile;
+   if(!filePort)throw new ConflictError("当前宿主不支持产物登记");
+   let snapshot:Awaited<ReturnType<WorkbenchArtifactFilePort>>|undefined;
+   if(!preflight.pending){
+    snapshot=await filePort(preflight.scope,input.path);
+    if(!Number.isSafeInteger(snapshot.version)||snapshot.version<1||snapshot.bytes.byteLength<1||
+       snapshot.bytes.byteLength>MAX_ARTIFACT_BYTES)throw new ConflictError("任务文件为空、过大或版本无效");
+   }
+   // 先在原任务账本提交待登记摘要；崩溃后同键只能恢复这份字节，不能改认后来的工作文件。
+   const prepared:{status:"existing"|"pending";row:Stored}=preflight.pending?
+    {status:"pending",row:preflight.pending}:await leases.withLease(ref,"admission",async({tx,task})=>{
+     if(task.kind!=="ai_task"||task.userId!==preflight.scope.userId||task.accountId!==preflight.scope.accountId)
+      throw new ConflictError("任务归属已改变");
+     const prior=records(task.payload),pending=records(task.payload,"workbenchArtifactPending");
+     const retry=prior.find(row=>row.operationId===operationId);
+     if(retry){
+      if(retry.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的产物参数已改变");
+      return {status:"existing" as const,row:retry};
+     }
+     const pendingRetry=pending.find(row=>row.operationId===operationId);
+     if(pendingRetry){
+      if(pendingRetry.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的产物参数已改变");
+      return {status:"pending" as const,row:pendingRetry};
+     }
+     if(prior.length+pending.length>=1000)throw new ConflictError("任务产物版本数量已达上限");
+     const artifactId=input.artifactId??`wa-${digest(JSON.stringify([task.id,operationId])).slice(0,32)}`;
+     if(pending.some(row=>row.metadata.artifactId===artifactId))throw new ConflictError("当前产物已有待完成登记");
+     const versions=prior.filter(row=>row.metadata.artifactId===artifactId);
+     const current=versions.length?Math.max(...versions.map(row=>row.metadata.version)):0;
+     if(input.artifactId&&current===0)throw new ConflictError("产物 ID 不属于当前任务");
+     if(current!==(input.expectedVersion??0))throw new ConflictError("产物版本已改变，请重新读取");
+     for(const sourceId of input.provenance){
+      const [source]=await tx.select({id:executionCalls.id}).from(executionCalls).where(and(
+       eq(executionCalls.id,sourceId),eq(executionCalls.executionTaskId,task.id)));
+      if(!source)throw new ConflictError("产物来源引用不属于当前任务");
+     }
+     const metadata=workbenchArtifactSchema.parse({artifactId,version:current+1,mime:input.mime,
+      size:snapshot!.bytes.byteLength,hash:digest(snapshot!.bytes),relativePath:input.path,taskId:task.id,provenance:input.provenance});
+     const row={metadata,operationId,requestDigest};
+     await tx.update(executionTasks).set({payload:{...task.payload as Record<string,unknown>,
+      workbenchArtifactPending:[...pending,row]}}).where(eq(executionTasks.id,task.id));
+     return {status:"pending" as const,row};
+    });
+   if(prepared.row.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的产物参数已改变");
+   if(prepared.status==="existing"){
+    await verified(prepared.row,ctx);return prepared.row.metadata;
+   }
+   try{await verified(prepared.row,ctx);}catch{
+    snapshot??=await filePort(preflight.scope,input.path);
+    assertBytes(snapshot.bytes,prepared.row.metadata.hash,prepared.row.metadata.size);
+    const saved=await deps.blobs.submit(ctx,{taskId:preflight.scope.taskId,operationId,
+     mime:input.mime,bytes:snapshot.bytes});
+    if(saved.hash!==prepared.row.metadata.hash||saved.size!==prepared.row.metadata.size)
+     throw new ConflictError("产物存储回执与待登记摘要不一致");
+   }
    return leases.withLease(ref,"admission",async({tx,task})=>{
-    if(task.kind!=="ai_task"||task.userId!==preflight.scope.userId||task.accountId!==preflight.scope.accountId)
+    if(task.userId!==preflight.scope.userId||task.accountId!==preflight.scope.accountId)
      throw new ConflictError("任务归属已改变");
     const prior=records(task.payload),retry=prior.find(row=>row.operationId===operationId);
     if(retry){
      if(retry.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的产物参数已改变");
      await verified(retry,ctx);return retry.metadata;
     }
-    if(prior.length>=1000)throw new ConflictError("任务产物版本数量已达上限");
-    const artifactId=input.artifactId??`wa-${digest(JSON.stringify([task.id,operationId])).slice(0,32)}`;
-    const versions=prior.filter(row=>row.metadata.artifactId===artifactId);
-    const current=versions.length?Math.max(...versions.map(row=>row.metadata.version)):0;
-    if(input.artifactId&&current===0)throw new ConflictError("产物 ID 不属于当前任务");
-    if(current!==(input.expectedVersion??0))throw new ConflictError("产物版本已改变，请重新读取");
-    for(const sourceId of input.provenance){
-     const [source]=await tx.select({id:executionCalls.id}).from(executionCalls).where(and(
-      eq(executionCalls.id,sourceId),eq(executionCalls.executionTaskId,task.id)));
-     if(!source)throw new ConflictError("产物来源引用不属于当前任务");
-    }
-    const saved=await deps.blobs.submit(ctx,{taskId:task.id,operationId,mime:input.mime,bytes:snapshot.bytes});
-    if(saved.hash!==expectedHash||saved.size!==snapshot.bytes.byteLength)throw new ConflictError("产物存储回执与任务文件不一致");
-    const metadata=workbenchArtifactSchema.parse({artifactId,version:current+1,mime:input.mime,
-     size:saved.size,hash:saved.hash,relativePath:input.path,taskId:task.id,provenance:input.provenance});
+    const pending=records(task.payload,"workbenchArtifactPending");
+    const row=pending.find(item=>item.operationId===operationId);
+    if(!row||row.requestDigest!==requestDigest||JSON.stringify(row.metadata)!==JSON.stringify(prepared.row.metadata))
+     throw new ConflictError("待登记产物已改变");
+    await verified(row,ctx);
     await tx.update(executionTasks).set({payload:{...task.payload as Record<string,unknown>,
-     workbenchArtifactVersions:[...prior,{metadata,operationId,requestDigest}]}}).where(eq(executionTasks.id,task.id));
-    return metadata;
+     workbenchArtifactPending:pending.filter(item=>item.operationId!==operationId),
+     workbenchArtifactVersions:[...prior,row]}}).where(eq(executionTasks.id,task.id));
+    return row.metadata;
    });
   },
   async read(ctx:RequestContext,taskId:string,artifactId:string,version:number,offset:number,limit:number){

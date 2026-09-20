@@ -57,4 +57,13 @@ it("私有宿主把真实任务文件登记为可回读的 HTML 版本，不向�
   invocation:{name:"artifact.register",schemaVersion:1,input:{path:"报告/分析.html",mime:"text/html"}}},
   {signal:new AbortController().signal,onProgress:()=>{}});
  expect(foreign.status).toBe("failed");
+ let stats=0;
+ filePort.mockImplementation(async (_ref:unknown,_operationId:string,action:NativeFileAction)=>{
+  if(action.kind==="stat")return {isDirectory:false,size:bytes.byteLength,version:++stats};
+  if(action.kind==="read")return {contentBase64:bytes.toString("base64"),total:bytes.byteLength,version:1};
+  throw new Error("unexpected native action");
+ });
+ const changed=await dispatch("artifact.register",{path:"报告/分析.html",mime:"text/html"});
+ expect(changed.status).not.toBe("succeeded");
+ expect(objects.size).toBe(1);
 });

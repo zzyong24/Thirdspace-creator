@@ -17,7 +17,7 @@ async function setup(){
  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const ctx={userId,accountId,requestId:nonce,source:"user" as const};
  const files=new Map<string,{bytes:Uint8Array;version:number}>();
- const objects=new Map<string,Uint8Array>();let writes=0;
+ const objects=new Map<string,Uint8Array>();let writes=0,failStoredReads=0;
  const service=createWorkbenchArtifactService(db,{
   async readTaskFile(scope,path){
    expect(scope).toMatchObject({userId,accountId,taskId:task.id,ref});
@@ -34,11 +34,12 @@ async function setup(){
    },
    async read(_ctx,input){
     const bytes=objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);
+    if(bytes&&failStoredReads>0){failStoredReads--;throw new Error("TRANSIENT_BLOB_READ_FAILURE");}
     if(!bytes)throw new Error("BLOB_NOT_FOUND");return new Uint8Array(bytes);
    },
   },
  });
- return {task,ref,ctx,files,objects,service,getWrites:()=>writes};
+ return {task,ref,ctx,files,objects,service,getWrites:()=>writes,failNextStoredRead:()=>{failStoredReads++;}};
 }
 
 it("把真实任务文件登记为不可变版本，修改原文件后仍能读回旧版并核对计划引用",async()=>{
@@ -113,4 +114,20 @@ it("只读交付端口可回读已登记版本，无需装配任务文件宿主"
  });
  const page=await readOnly.read(scope.ctx,scope.task.id,saved.artifactId,1,0,100);
  expect(Buffer.from(page.bytes).toString()).toBe("<h1>已保存</h1>");
+});
+
+it("登记中断后按原操作摘要恢复，工作文件变化不冒充旧回执",async()=>{
+ const scope=await setup();
+ const original=Buffer.from("<h1>原报告：0</h1>");
+ scope.files.set("report.html",{bytes:original,version:1});
+ scope.failNextStoredRead();
+ await expect(scope.service.register(scope.ref,"interrupted-register",{path:"report.html",mime:"text/html"}))
+  .rejects.toThrow("TRANSIENT_BLOB_READ_FAILURE");
+ expect(scope.getWrites()).toBe(1);
+ scope.files.set("report.html",{bytes:Buffer.from("<h1>新报告：1</h1>"),version:2});
+ const recovered=await scope.service.register(scope.ref,"interrupted-register",{path:"report.html",mime:"text/html"});
+ expect(recovered.version).toBe(1);
+ expect(scope.getWrites()).toBe(1);
+ const page=await scope.service.read(scope.ctx,scope.task.id,recovered.artifactId,1,0,100);
+ expect(Buffer.from(page.bytes)).toEqual(original);
 });
