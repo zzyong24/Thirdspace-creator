@@ -196,10 +196,19 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     }
     if(name==="browser.close"){
      sessions.delete(key(ref.executionTaskId,input.laneId));
-     const proof=(native.value as {stopProof?:{profileStopped?:boolean}})?.stopProof;
-     if(proof?.profileStopped===true){
-      try {if(await admission.releaseAfterProfileStopped(ref,receipt.leaseId))held.delete(receipt.leaseId);}
-      catch {/* 宿主停止证明不充分时保留租约，后续对账。 */}
+     const sameProfileLane=[...sessions.values()].some(other=>sameRef(other.ref,ref)&&
+      other.receipt.leaseId===receipt.leaseId);
+     if(!sameProfileLane){
+      // Chromium 关窗后的子进程/文件句柄可能比 close 回复晚一点消失。
+      // 数据库释放仍逐次要求 Rust 的新停止证明；最后一条 Lane 未证实时回 unknown。
+      let released=false;
+      for(let attempt=0;attempt<4;attempt++){
+       try {if(await admission.releaseAfterProfileStopped(ref,receipt.leaseId)){
+        held.delete(receipt.leaseId);released=true;break;
+       }}catch {/* 未证明停止时仍持有物理租约。 */}
+       if(attempt<3)await new Promise(resolve=>setTimeout(resolve,100*(attempt+1)));
+      }
+      if(!released)return failed(call.context.operationId,"BROWSER_RESULT_UNKNOWN",true);
      }
     }
     return result(call.context.operationId,native.value);
