@@ -31,8 +31,14 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false,clea
    const value=action.kind==="profile_location"
     ? {profileKey:"a".repeat(64),managedProfileRoot:"/app-data/workbench/profile",
       identityMode:(action as {identityMode?:string}).identityMode,legacyIdentityImported:false,primaryLoginState:"unverified"}
-    : action.kind==="open"?{lane:{lane_id:"native-lane",browser_epoch:1}}
-    : action.kind==="close"?{close:{},stopProof:{profileStopped:true}}
+    : action.kind==="open"?{lane:{lane_id:"native-lane",browser_epoch:1,
+      caller:{user_id:"private-user"},lane_key:"private-runtime-key"},
+      managedProfileRoot:"/app-data/workbench/profile",profileKey:"a".repeat(64)}
+    : action.kind==="status"?{lane_id:"native-lane",browser_epoch:1,lifecycle_state:"running",
+      queue:null,caller:{user_id:"private-user",owner_lease_id:"private-lease"},
+      managedProfileRoot:"/app-data/workbench/profile"}
+    : action.kind==="close"?{close:{caller:{user_id:"private-user"}},stopProof:{profileStopped:true,
+      profileKey:"a".repeat(64),profileLeaseId:"private-lease",managedProfileRoot:"/app-data/workbench/profile"}}
     : action.kind==="stop_proof"?{profileStopped:stopProofStopped(),profileKey:"a".repeat(64),
       profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
     : action.kind==="cleanup"?{profileStopped:cleanupStopped(),profileKey:"a".repeat(64),
@@ -194,6 +200,10 @@ it("open obtains the Rust physical profile and binds it to the current DB task b
   invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"research",mode:"primary",domain:"example.com"}}};
  const result=await host.dispatch(call,{signal:new AbortController().signal,onProgress:()=>{}});
  expect(result.status).toBe("succeeded");
+ if(result.status!=="succeeded")throw new Error("browser.open did not succeed");
+ const openContent=result.content[0];
+ if(openContent?.type!=="text")throw new Error("browser.open returned no text");
+ expect(JSON.parse(openContent.text)).toEqual({lane:{lane_id:"native-lane",browser_epoch:1}});
  expect(received).toHaveLength(2);
  expect(received[0]!.action).toMatchObject({kind:"profile_location",userId:"browser-user",accountId:"browser-account",taskId:task.id,identityMode:"primary"});
  expect(received[1]!.admission).toMatchObject({userId:"browser-user",accountId:"browser-account",taskId:task.id,
@@ -222,10 +232,23 @@ it("open obtains the Rust physical profile and binds it to the current DB task b
  expect(navigated.status).toBe("succeeded");
  expect(received[3]!.action).toMatchObject({kind:"execute",laneId:"native-lane",expectedBrowserEpoch:1,action:"navigate",
   input:{url:"https://news.example.com/page"}});
+ const status=await host.dispatch({...call,context:{...call.context,operationId:"status-1"},invocation:{
+  name:"browser.status",schemaVersion:1,input:{laneId:"native-lane"}}},
+  {signal:new AbortController().signal,onProgress:()=>{}});
+ expect(status.status).toBe("succeeded");
+ if(status.status!=="succeeded")throw new Error("browser.status did not succeed");
+ const statusContent=status.content[0];
+ if(statusContent?.type!=="text")throw new Error("browser.status returned no text");
+ expect(JSON.parse(statusContent.text)).toEqual({lane_id:"native-lane",browser_epoch:1,
+  lifecycle_state:"running",queue_position:null});
  const closed=await host.dispatch({...call,context:{...call.context,operationId:"close-1"},invocation:{
   name:"browser.close",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},
   {signal:new AbortController().signal,onProgress:()=>{}});
  expect(closed.status).toBe("succeeded");
+ if(closed.status!=="succeeded")throw new Error("browser.close did not succeed");
+ const closeContent=closed.content[0];
+ if(closeContent?.type!=="text")throw new Error("browser.close returned no text");
+ expect(JSON.parse(closeContent.text)).toEqual({laneId:"native-lane",closed:true,profileStopped:true});
  expect(received.at(-1)!.action).toMatchObject({kind:"stop_proof"});
  const profiles=createExecutionBrowserProfileLeaseService(db);
  expect(await profiles.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken})).toEqual([]);
@@ -368,7 +391,7 @@ realTest("Node/DB leases use the PID-bound Rust socket and real Chromium",async(
   expect(extracted.result.output.message).toContain("Example Domain");
   const closed=await call("browser.close",{laneId,browserEpoch});
   console.info("[browser-real] lane closed");
-  expect(closed.stopProof.profileStopped).toBe(true);
+  expect(closed.profileStopped).toBe(true);
   const leases=createExecutionBrowserProfileLeaseService(db);
   expect(await leases.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,
    fenceToken:claim.lease.fenceToken})).toEqual([]);
@@ -426,7 +449,7 @@ realTest("a restarted Rust host proves a stopped old DB lease before a new task 
   expect(await readFile(retained,"utf8")).toBe("kept across restart");
   const closed=await dispatch("browser.close",{laneId:opened.lane.lane_id,
    browserEpoch:opened.lane.browser_epoch});
-  expect(closed.stopProof.profileStopped).toBe(true);
+  expect(closed.profileStopped).toBe(true);
   const newRef={executionTaskId:next.id,attempt:nextClaim.lease.attempt,
    fenceToken:nextClaim.lease.fenceToken};
   expect(await profiles.listOwned(newRef)).toEqual([]);

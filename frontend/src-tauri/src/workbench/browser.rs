@@ -978,16 +978,25 @@ impl BrowserHost {
                     .await
                     .map_err(BrowserHostError::from_platform)?;
                 state.proof_state.store(3, Ordering::Release);
-                Ok(
-                    json!({"lane": outcome.lane(), "managedProfileRoot": self.canonical_profile(&key)?}),
-                )
+                let lane = outcome.lane();
+                Ok(json!({"lane": {
+                    "lane_id": lane.lane_id,
+                    "browser_epoch": lane.browser_epoch,
+                    "lifecycle_state": lane.lifecycle_state,
+                    "queue_position": lane.queue.as_ref().map(|queue| queue.position),
+                }}))
             }
             BrowserAction::Status { lane_id: raw } => {
                 let lane = client
                     .status(&lane_id(raw)?)
                     .await
                     .map_err(BrowserHostError::from_platform)?;
-                serde_json::to_value(lane).map_err(|_| BrowserHostError::platform())
+                Ok(json!({
+                    "lane_id": lane.lane_id,
+                    "browser_epoch": lane.browser_epoch,
+                    "lifecycle_state": lane.lifecycle_state,
+                    "queue_position": lane.queue.as_ref().map(|queue| queue.position),
+                }))
             }
             BrowserAction::Execute {
                 lane_id: raw,
@@ -1706,6 +1715,8 @@ mod tests {
             .await
             .map_err(|_| "browser open timed out".to_owned())?
             .map_err(|error| error.code.to_owned())?;
+            assert!(opened.get("managedProfileRoot").is_none(), "{opened}");
+            assert!(opened["lane"].get("caller").is_none(), "{opened}");
             let lane_id = opened["lane"]["lane_id"]
                 .as_str()
                 .ok_or_else(|| format!("missing lane_id: {opened}"))?
@@ -1822,6 +1833,7 @@ mod tests {
         std::fs::remove_dir_all(root).unwrap();
         let (status, navigated, observed, extracted, screenshot, closed) = outcome.unwrap();
         assert!(status["browser_epoch"].as_u64().is_some());
+        assert!(status.get("caller").is_none(), "{status}");
         assert!(navigated["laneId"].as_str().is_some(), "{navigated}");
         assert!(observed["result"].is_object(), "{observed}");
         assert!(extracted["result"].is_object(), "{extracted}");

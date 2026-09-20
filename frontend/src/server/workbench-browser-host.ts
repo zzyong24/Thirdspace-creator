@@ -77,6 +77,17 @@ function failed(operationId:string,code:string,dispatched=false):WorkbenchResult
    nextAction:dispatched?"reconcile":code==="BROWSER_PROFILE_BUSY"?"wait":"fix_input"}});
 }
 function sameRef(a:ExecutionRef,b:ExecutionRef){return a.executionTaskId===b.executionTaskId&&a.attempt===b.attempt&&a.fenceToken===b.fenceToken;}
+function visibleLane(raw:unknown){
+ if(!raw||typeof raw!=="object"||Array.isArray(raw))return null;
+ const lane=raw as Record<string,unknown>,laneId=lane.lane_id,epoch=lane.browser_epoch;
+ if(typeof laneId!=="string"||!validId(laneId)||!Number.isSafeInteger(epoch)||Number(epoch)<0)return null;
+ const states=["queued","starting","running","frozen","stopping","failed"];
+ const queue=lane.queue&&typeof lane.queue==="object"&&!Array.isArray(lane.queue)?lane.queue as Record<string,unknown>:null;
+ const position=lane.queue_position??queue?.position;
+ return {lane_id:laneId,browser_epoch:epoch,
+  ...(typeof lane.lifecycle_state==="string"&&states.includes(lane.lifecycle_state)?{lifecycle_state:lane.lifecycle_state}:{}),
+  ...("queue" in lane||"queue_position" in lane?{queue_position:Number.isSafeInteger(position)&&Number(position)>=0?position:null}:{})};
+}
 function withinDomain(url:string,domain:string,mode:ManagedBrowserMode){
  try {const parsed=new URL(url),authority=url.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)/i)?.[1];
   return (parsed.protocol==="https:"||(mode==="anonymous"&&parsed.protocol==="http:"))&&
@@ -226,16 +237,22 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
       admission:nativeAdmission,identityMode:bound.mode,action},call.context.operationId,signal),bound};
     });
     if(name==="browser.open"){
-     const value=native.value as {lane?:{lane_id?:unknown;browser_epoch?:unknown}};
-     const laneId=value?.lane?.lane_id;
-     if(typeof laneId!=="string"||!laneId||!Number.isSafeInteger(value?.lane?.browser_epoch))
+     const value=native.value as {lane?:unknown};
+     const lane=visibleLane(value?.lane);
+     if(!lane)
       return failed(call.context.operationId,"INVALID_BROWSER_REPLY",true);
-     sessions.set(key(ref.executionTaskId,laneId),native.bound);
+     sessions.set(key(ref.executionTaskId,lane.lane_id),native.bound);
+     return result(call.context.operationId,{lane});
+    }
+    if(name==="browser.status"){
+     const lane=visibleLane(native.value);
+     return lane?result(call.context.operationId,lane):failed(call.context.operationId,"INVALID_BROWSER_REPLY",true);
     }
     if(name==="browser.close"){
      sessions.delete(key(ref.executionTaskId,input.laneId));
      const sameProfileLane=[...sessions.values()].some(other=>sameRef(other.ref,ref)&&
       other.receipt.leaseId===receipt.leaseId);
+     let profileStopped=false;
      if(!sameProfileLane){
       // Chromium 关窗后的子进程/文件句柄可能比 close 回复晚一点消失。
       // 数据库释放仍逐次要求 Rust 的新停止证明；最后一条 Lane 未证实时回 unknown。
@@ -247,7 +264,9 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
        if(attempt<3)await new Promise(resolve=>setTimeout(resolve,100*(attempt+1)));
       }
       if(!released)return failed(call.context.operationId,"BROWSER_RESULT_UNKNOWN",true);
+      profileStopped=true;
      }
+     return result(call.context.operationId,{laneId:input.laneId,closed:true,profileStopped});
     }
     return result(call.context.operationId,native.value);
    }catch(error){
