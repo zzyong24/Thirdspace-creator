@@ -184,6 +184,7 @@ struct DomainState {
     profile_lease_id: String,
     clients: Arc<Mutex<HashMap<String, BoundClient>>>,
     registered_scopes: Arc<Mutex<HashSet<String>>>,
+    // 0: pre-existing profile, no launch attempted by this host;
     // 1: empty physical directory, no launch attempted by this host;
     // 2: launch outcome uncertain; 3: vendor accepted launch and owns cleanup.
     proof_state: Arc<AtomicU8>,
@@ -344,7 +345,8 @@ impl BrowserHost {
 
     fn os_profile_process_absent(path: &Path) -> bool {
         // The host only launches this profile with an explicit user-data-dir.
-        // A failed or incomplete OS process listing cannot establish absence.
+        // Also check open files: a surviving child need not carry that flag.
+        // A failed or incomplete OS listing cannot establish absence.
         let Ok(output) = Command::new("/bin/ps")
             .args(["-ww", "-axo", "command="])
             .output()
@@ -355,10 +357,25 @@ impl BrowserHost {
             return false;
         }
         let marker = format!("--user-data-dir={}", path.display());
-        !output
+        if output
             .stdout
             .windows(marker.len())
             .any(|window| window == marker.as_bytes())
+        {
+            return false;
+        }
+        let Ok(open_files) = Command::new("/usr/sbin/lsof")
+            .args(["-n", "-P", "-F0", "+D"])
+            .arg(path)
+            .output()
+        else {
+            return false;
+        };
+        // lsof exits 1 with no output when no file beneath this directory is
+        // open. Any partial listing, warning, or failed scan is inconclusive.
+        open_files.status.code() == Some(1)
+            && open_files.stdout.is_empty()
+            && open_files.stderr.is_empty()
     }
 
     pub fn profile_key_for(&self, domain: &DomainKey) -> Result<String, BrowserHostError> {
@@ -543,7 +560,7 @@ impl BrowserHost {
             }
             let overview = previous.hub.overview().await;
             if !previous.retired.load(Ordering::Acquire)
-                || !matches!(previous.proof_state.load(Ordering::Acquire), 1 | 3)
+                || !matches!(previous.proof_state.load(Ordering::Acquire), 0 | 1 | 3)
                 || previous.in_flight_opens.load(Ordering::Acquire) != 0
                 || overview.total_lanes != 0
                 || !overview.hosts.is_empty()
@@ -762,7 +779,7 @@ impl BrowserHost {
         let in_flight_opens = state.in_flight_opens.load(Ordering::Acquire);
         let profile = self.profile_path(&domain, false)?;
         let os_process_absent = Self::os_profile_process_absent(&profile);
-        let profile_stopped = matches!(proof_state, 1 | 3)
+        let profile_stopped = matches!(proof_state, 0 | 1 | 3)
             && in_flight_opens == 0
             && overview.total_lanes == 0
             && overview.hosts.is_empty()
@@ -776,7 +793,12 @@ impl BrowserHost {
             "profileLeaseId": admission.profile_lease_id,
             "managedProfileRoot": profile,
             "profileStopped": profile_stopped,
-            "proofBasis": match proof_state { 1 => "never_launched_os_checked", 3 => "managed_hub_os_checked", _ => "unverified" },
+            "proofBasis": match (proof_state, profile_stopped) {
+                (0, true) => "recovered_os_absence",
+                (1, _) => "never_launched_os_checked",
+                (3, _) => "managed_hub_os_checked",
+                _ => "unverified",
+            },
             "osProcessAbsent": os_process_absent,
             "remainingLaneCount": overview.total_lanes,
             "inFlightOpenCount": in_flight_opens,
@@ -1440,6 +1462,8 @@ mod tests {
     fn os_process_scan_blocks_stop_proof_for_the_exact_profile_argument() {
         let path =
             std::env::temp_dir().join(format!("creatoros-browser-process-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&path);
+        std::fs::create_dir(&path).unwrap();
         let marker = format!("--user-data-dir={}", path.display());
         let mut child = Command::new("/usr/bin/yes")
             .arg(marker)
@@ -1450,14 +1474,16 @@ mod tests {
         child.kill().unwrap();
         child.wait().unwrap();
         assert!(BrowserHost::os_profile_process_absent(&path));
+        std::fs::remove_dir(path).unwrap();
     }
 
     #[test]
-    fn existing_profile_after_host_restart_has_no_unearned_stop_proof() {
+    fn restarted_host_recovers_only_exact_stopped_lease_for_nonempty_profile() {
         let root =
             std::env::temp_dir().join(format!("creatoros-browser-existing-{}", std::process::id()));
-        let host = BrowserHost::new(root.clone(), PathBuf::from("/missing/cft"));
-        let location = host
+        let _ = std::fs::remove_dir_all(&root);
+        let old_host = BrowserHost::new(root.clone(), PathBuf::from("/missing/cft"));
+        let location = old_host
             .profile_location(
                 "user-one",
                 "account-one",
@@ -1465,35 +1491,92 @@ mod tests {
                 IdentityChoice::Primary,
             )
             .unwrap();
-        std::fs::write(
-            PathBuf::from(location["managedProfileRoot"].as_str().unwrap()).join("existing-state"),
-            b"kept",
-        )
-        .unwrap();
+        let profile = PathBuf::from(location["managedProfileRoot"].as_str().unwrap());
+        let existing_file = profile.join("existing-state");
+        std::fs::write(&existing_file, b"kept").unwrap();
         let mut admission = receipt("account-one");
         admission.profile_key = location["profileKey"].as_str().unwrap().to_owned();
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap();
-        let request = |action| BrowserRequest {
-            operation_id: "proof".into(),
-            admission: admission.clone(),
-            identity_mode: IdentityChoice::Primary,
-            action,
+        runtime.block_on(old_host.shutdown());
+        drop(old_host);
+        let host = BrowserHost::new(root.clone(), PathBuf::from("/missing/cft"));
+        assert!(host.domains.lock().unwrap().is_empty());
+        let call = |admission: BrowserAdmission, action: BrowserAction| {
+            runtime.block_on(host.dispatch(BrowserRequest {
+                operation_id: "recovered-proof".into(),
+                admission,
+                identity_mode: IdentityChoice::Primary,
+                action,
+            }))
         };
+        let mut wrong_key = admission.clone();
+        wrong_key.profile_key = "a".repeat(64);
         assert_eq!(
-            runtime
-                .block_on(host.dispatch(request(BrowserAction::Open)))
+            call(wrong_key, BrowserAction::StopProof).unwrap_err().code,
+            "INVALID_ADMISSION"
+        );
+        // A surviving process holding any profile file blocks recovery even
+        // when its argv has no --user-data-dir flag.
+        let held_file = std::fs::File::open(&existing_file).unwrap();
+        let proof = call(admission.clone(), BrowserAction::StopProof).unwrap();
+        assert_eq!(proof["profileStopped"], false);
+        assert_eq!(proof["osProcessAbsent"], false);
+        assert_eq!(proof["proofBasis"], "unverified");
+        let mut wrong_owner = admission.clone();
+        wrong_owner.profile_lease_id = "other-owner".into();
+        assert_eq!(
+            call(wrong_owner.clone(), BrowserAction::Cleanup)
+                .unwrap_err()
+                .code,
+            "INVALID_ADMISSION"
+        );
+        drop(held_file);
+        let mut active_browser = Command::new("/usr/bin/yes")
+            .arg(format!("--user-data-dir={}", profile.display()))
+            .stdout(std::process::Stdio::null())
+            .spawn()
+            .unwrap();
+        let active_proof = call(admission.clone(), BrowserAction::StopProof).unwrap();
+        assert_eq!(active_proof["profileStopped"], false);
+        assert_eq!(active_proof["osProcessAbsent"], false);
+        active_browser.kill().unwrap();
+        active_browser.wait().unwrap();
+        let proof = call(admission.clone(), BrowserAction::Cleanup).unwrap();
+        assert_eq!(proof["profileStopped"], true);
+        assert_eq!(proof["proofBasis"], "recovered_os_absence");
+        assert_eq!(proof["profileKey"], admission.profile_key);
+        assert_eq!(proof["profileLeaseId"], admission.profile_lease_id);
+        assert_eq!(proof["osProcessAbsent"], true);
+        // Once a later lease takes the domain, old cleanup cannot reach it.
+        assert_eq!(
+            call(wrong_owner.clone(), BrowserAction::Open)
                 .unwrap_err()
                 .code,
             "BROWSER_UNAVAILABLE"
         );
-        let proof = runtime
-            .block_on(host.dispatch(request(BrowserAction::StopProof)))
+        let domain = host
+            .domain_for(&wrong_owner, IdentityChoice::Primary)
             .unwrap();
-        assert_eq!(proof["profileStopped"], false);
-        assert_eq!(proof["proofBasis"], "unverified");
+        let state = host.domains.lock().unwrap().get(&domain).cloned().unwrap();
+        state.in_flight_opens.store(1, Ordering::Release);
+        assert_eq!(
+            call(admission.clone(), BrowserAction::Cleanup)
+                .unwrap_err()
+                .code,
+            "INVALID_ADMISSION"
+        );
+        assert_eq!(
+            call(wrong_owner.clone(), BrowserAction::StopProof).unwrap()["profileStopped"],
+            false
+        );
+        state.in_flight_opens.store(0, Ordering::Release);
+        assert_eq!(
+            call(wrong_owner, BrowserAction::StopProof).unwrap()["profileStopped"],
+            true
+        );
         std::fs::remove_dir_all(root).unwrap();
     }
 
