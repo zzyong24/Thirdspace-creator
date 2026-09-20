@@ -6,6 +6,7 @@ import { isTrustedLocalRequest, loopbackForbidden } from "@/lib/loopback-guard.s
 import { getWorkbenchPreviewRuntime } from "@/server/persistence-client";
 import { readRegisteredWorkbenchPreview, renderRegisteredHtmlPreview, MAX_WORKBENCH_RAW_BYTES, WorkbenchPreviewIntegrityError, WorkbenchPreviewTooLargeError } from "@/server/workbench-preview-read";
 import { WORKBENCH_PREVIEW_RESPONSE_CSP } from "@/server/workbench-preview-policy";
+import { renderTrustedWorkbenchHtml, WorkbenchHtmlRenderError } from "@/server/workbench-artifact-render";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +51,11 @@ export async function GET(
   const version = Number(rawVersion);
   if (!Number.isSafeInteger(version)) return failure(400, "产物版本无效");
   const formats = new URL(req.url).searchParams.getAll("format");
-  if (formats.length > 1 || (formats.length === 1 && formats[0] !== "raw")) {
+  if (formats.length > 1 || (formats.length === 1 && !["raw", "png", "pdf"].includes(formats[0]))) {
     return failure(400, "预览格式无效");
   }
-  const raw = formats[0] === "raw";
+  const format = formats[0];
+  const raw = format === "raw";
 
   let ctx;
   try {
@@ -74,11 +76,28 @@ export async function GET(
       port, ctx, taskId, artifactId, version,
       raw ? MAX_WORKBENCH_RAW_BYTES : undefined,
     );
-    const mime = result.metadata.mime;
-    const bytes = !raw && mime === "text/html"
-      ? Buffer.from(await renderRegisteredHtmlPreview(port, ctx, taskId, result.metadata,
-        Buffer.from(result.bytes).toString("utf8")), "utf8")
-      : result.bytes;
+    if ((format === "png" || format === "pdf") && result.metadata.mime !== "text/html") {
+      return failure(415, "仅 HTML 产物支持 PNG/PDF 导出");
+    }
+    let sourceHtml: string | null = null;
+    if (result.metadata.mime === "text/html" && !raw) {
+      try {
+        sourceHtml = format === "png" || format === "pdf"
+          ? new TextDecoder("utf-8", { fatal: true }).decode(result.bytes)
+          : Buffer.from(result.bytes).toString("utf8");
+      } catch {
+        return failure(422, "HTML 字节不是有效 UTF-8，无法导出");
+      }
+    }
+    const sourceHash = result.metadata.hash;
+    const safeHtml = sourceHtml !== null
+      ? await renderRegisteredHtmlPreview(port, ctx, taskId, result.metadata,
+        sourceHtml)
+      : null;
+    const bytes = format === "png" || format === "pdf"
+      ? await renderTrustedWorkbenchHtml({ html: safeHtml!, format })
+      : safeHtml === null ? result.bytes : Buffer.from(safeHtml, "utf8");
+    const mime = format === "png" ? "image/png" : format === "pdf" ? "application/pdf" : result.metadata.mime;
     const contentType = !raw && (mime === "text/markdown" || mime === "text/csv")
       ? "text/plain; charset=utf-8"
       : mime.startsWith("text/") ? `${mime}; charset=utf-8` : mime;
@@ -94,12 +113,19 @@ export async function GET(
         "X-Workbench-Filename": encodeURIComponent(filename),
         "X-Workbench-Hash": createHash("sha256").update(bytes).digest("hex"),
         "X-Workbench-Size": String(bytes.byteLength),
+        "X-Workbench-Source-Hash": sourceHash,
       },
     });
   } catch (error) {
     if (isOwnershipError(error)) return failure(404, "产物不存在");
     if (error instanceof WorkbenchPreviewTooLargeError) return failure(413, "产物超过读取大小上限");
     if (error instanceof WorkbenchPreviewIntegrityError) return failure(409, "产物预览校验失败");
+    if (error instanceof WorkbenchHtmlRenderError) {
+      return failure(error.code === "INVALID_INPUT" ? 422 : error.code === "RENDER_BUSY" ? 429 : 503,
+        error.code === "BROWSER_RUNTIME_UNAVAILABLE" ? "桌面版缺少 HTML 导出所需的 Chromium 运行时" :
+          error.code === "RENDER_BUSY" ? "HTML 导出正在处理，请稍后重试" :
+            error.code === "INVALID_INPUT" ? "HTML 内容无效，无法导出" : "HTML 导出失败，请重试");
+    }
     return failure(503, "产物暂时无法预览");
   }
 }

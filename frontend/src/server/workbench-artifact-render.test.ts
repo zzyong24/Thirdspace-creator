@@ -62,3 +62,13 @@ it("运行时缺失时明确失败，不返回伪图像",async()=>{
   if(originalRuntime===undefined)delete process.env.CREATOROS_RUNTIME_ROOT;else process.env.CREATOROS_RUNTIME_ROOT=originalRuntime;
  }
 });
+
+it("并发渲染超过固定预算时拒绝额外请求",async()=>{
+ const html="<h1>有限并发</h1>";
+ const first=renderTrustedWorkbenchHtml({html,format:"png"});
+ const second=renderTrustedWorkbenchHtml({html,format:"png"});
+ await expect(renderTrustedWorkbenchHtml({html,format:"png"}))
+  .rejects.toMatchObject({code:"RENDER_BUSY"} satisfies Partial<WorkbenchHtmlRenderError>);
+ const outputs=await Promise.all([first,second]);
+ expect(outputs.every(bytes=>bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))).toBe(true);
+},60_000);

@@ -8,10 +8,12 @@ import {WORKBENCH_PREVIEW_DOCUMENT_CSP} from "./workbench-preview-policy";
 const DOCUMENT_URL="https://creatoros-render.invalid/";
 const MAX_HTML_BYTES=20*1024*1024;
 const MAX_RESULT_BYTES=20*1024*1024;
+const MAX_CONCURRENT_RENDERS=2;
+let activeRenders=0;
 const RENDER_CSP=`sandbox; ${WORKBENCH_PREVIEW_DOCUMENT_CSP}`;
 
 export class WorkbenchHtmlRenderError extends Error {
- constructor(readonly code:"INVALID_INPUT"|"BROWSER_RUNTIME_UNAVAILABLE"|"RENDER_FAILED",message:string,cause?:unknown){
+ constructor(readonly code:"INVALID_INPUT"|"BROWSER_RUNTIME_UNAVAILABLE"|"RENDER_FAILED"|"RENDER_BUSY",message:string,cause?:unknown){
   super(message,{cause});this.name="WorkbenchHtmlRenderError";
  }
 }
@@ -72,6 +74,14 @@ export async function renderTrustedWorkbenchHtml(input:{html:string|Uint8Array;f
  const html=decodeHtml(input.html);
  if(input.format!=="png"&&input.format!=="pdf")
   throw new WorkbenchHtmlRenderError("INVALID_INPUT","只支持 PNG 或 PDF 导出");
+ if(activeRenders>=MAX_CONCURRENT_RENDERS)
+  throw new WorkbenchHtmlRenderError("RENDER_BUSY","同时进行的 HTML 导出过多");
+ activeRenders++;
+ try{return await renderHtmlWithinSlot(html,input.format);}
+ finally{activeRenders--;}
+}
+
+async function renderHtmlWithinSlot(html:string,format:"png"|"pdf"):Promise<Buffer>{
  const {chromium}=await import("@playwright/test").catch(error=>{
   throw new WorkbenchHtmlRenderError("BROWSER_RUNTIME_UNAVAILABLE","Chromium 控制运行时不可用",error);
  });
@@ -101,11 +111,11 @@ export async function renderTrustedWorkbenchHtml(input:{html:string|Uint8Array;f
   });
   const response=await page.goto(DOCUMENT_URL,{waitUntil:"load",timeout:15_000});
   if(!response||response.status()!==200)throw new Error("受控文档加载失败");
-  const bytes=input.format==="png"
+  const bytes=format==="png"
    ?await page.screenshot({type:"png",fullPage:true,animations:"disabled",timeout:20_000})
    :await within(page.pdf({format:"A4",printBackground:true}),20_000);
   const output=Buffer.from(bytes);
-  const valid=input.format==="png"
+  const valid=format==="png"
    ?output.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&output.subarray(-8,-4).toString()==="IEND"
    :output.subarray(0,5).toString()==="%PDF-"&&/%%EOF\s*$/.test(output.subarray(-1024).toString());
   if(!valid||output.byteLength<64||output.byteLength>MAX_RESULT_BYTES)
