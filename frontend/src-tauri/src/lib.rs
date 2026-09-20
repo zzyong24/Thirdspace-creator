@@ -34,6 +34,11 @@ mod win_job;
 mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
+// T-1007: compile the task-local native module into the desktop host. No
+// WebView command is registered: a private sidecar transport must first prove
+// the current backend execution lease and fence on every operation.
+#[allow(dead_code)]
+mod workbench;
 
 use base64::Engine as _;
 // [T-391 H-key] master key 传递加固:SecretString 包裹 base64 key(Drop 时 zeroize,不进 Debug/log),
