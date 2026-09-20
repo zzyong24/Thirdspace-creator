@@ -1,0 +1,305 @@
+
+── orchestrator reconcile ─────────────────────────────
+✗ [ERROR] autonomy preflight: L2/L3/L4 prose claim requires reconcile.config execution_mode=autonomous + autonomy_level; otherwise downgrade to interactive
+✗ [ERROR] autonomy preflight: projects: missing write_set
+✗ [ERROR] autonomy preflight: projects:repo missing verify command
+✗ [ERROR] autonomy preflight: projects:flow missing verify command
+✗ [ERROR] autonomy preflight: projects:frontend missing verify command
+✗ [ERROR] autonomy preflight: projects:e2e missing verify command
+✗ [ERROR] autonomy preflight: knowledge: missing write_set
+✗ [ERROR] autonomy preflight: knowledge:repo missing verify command
+✗ [ERROR] autonomy preflight: knowledge:data-source missing verify command
+✗ [ERROR] autonomy preflight: knowledge:frontend missing verify command
+✗ [ERROR] autonomy preflight: knowledge:e2e missing verify command
+✗ [ERROR] autonomy preflight: assets: missing write_set
+✗ [ERROR] autonomy preflight: assets:repo missing verify command
+✗ [ERROR] autonomy preflight: assets:data-source missing verify command
+✗ [ERROR] autonomy preflight: assets:frontend missing verify command
+✗ [ERROR] autonomy preflight: assets:e2e missing verify command
+✗ [ERROR] autonomy preflight: artifacts: missing write_set
+✗ [ERROR] autonomy preflight: artifacts:repo missing verify command
+✗ [ERROR] autonomy preflight: artifacts:data-source missing verify command
+✗ [ERROR] autonomy preflight: artifacts:flow missing verify command
+✗ [ERROR] autonomy preflight: artifacts:frontend missing verify command
+✗ [ERROR] autonomy preflight: artifacts:e2e missing verify command
+✗ [ERROR] autonomy preflight: production: missing write_set
+✗ [ERROR] autonomy preflight: production:repo missing verify command
+✗ [ERROR] autonomy preflight: production:flow missing verify command
+✗ [ERROR] autonomy preflight: production:frontend missing verify command
+✗ [ERROR] autonomy preflight: production:e2e missing verify command
+✗ [ERROR] autonomy preflight: publishing: missing write_set
+✗ [ERROR] autonomy preflight: publishing:repo missing verify command
+✗ [ERROR] autonomy preflight: publishing:flow missing verify command
+✗ [ERROR] autonomy preflight: publishing:frontend missing verify command
+✗ [ERROR] autonomy preflight: publishing:e2e missing verify command
+✗ [ERROR] autonomy preflight: analytics: missing write_set
+✗ [ERROR] autonomy preflight: analytics:repo missing verify command
+✗ [ERROR] autonomy preflight: analytics:data-source missing verify command
+✗ [ERROR] autonomy preflight: analytics:frontend missing verify command
+✗ [ERROR] autonomy preflight: analytics:e2e missing verify command
+✗ [ERROR] autonomy preflight: reviews: missing write_set
+✗ [ERROR] autonomy preflight: reviews:repo missing verify command
+✗ [ERROR] autonomy preflight: reviews:flow missing verify command
+✗ [ERROR] autonomy preflight: reviews:frontend missing verify command
+✗ [ERROR] autonomy preflight: reviews:e2e missing verify command
+✗ [ERROR] autonomy preflight: learnings: missing write_set
+✗ [ERROR] autonomy preflight: learnings:repo missing verify command
+✗ [ERROR] autonomy preflight: learnings:data-source missing verify command
+✗ [ERROR] autonomy preflight: learnings:frontend missing verify command
+✗ [ERROR] autonomy preflight: learnings:e2e missing verify command
+✗ [ERROR] autonomy preflight: notifications: missing write_set
+✗ [ERROR] autonomy preflight: notifications:repo missing verify command
+✗ [ERROR] autonomy preflight: notifications:data-source missing verify command
+✗ [ERROR] autonomy preflight: notifications:frontend missing verify command
+✗ [ERROR] autonomy preflight: notifications:e2e missing verify command
+✗ [ERROR] autonomy preflight: search: missing write_set
+✗ [ERROR] autonomy preflight: search:repo missing verify command
+✗ [ERROR] autonomy preflight: search:data-source missing verify command
+✗ [ERROR] autonomy preflight: search:frontend missing verify command
+✗ [ERROR] autonomy preflight: search:e2e missing verify command
+✗ [ERROR] autonomy preflight: settings: missing write_set
+✗ [ERROR] autonomy preflight: settings:repo missing verify command
+✗ [ERROR] autonomy preflight: settings:frontend missing verify command
+✗ [ERROR] autonomy preflight: settings:e2e missing verify command
+✗ [ERROR] autonomy preflight: taxonomy: missing write_set
+✗ [ERROR] autonomy preflight: taxonomy:repo missing verify command
+✗ [ERROR] autonomy preflight: taxonomy:frontend missing verify command
+✗ [ERROR] autonomy preflight: taxonomy:e2e missing verify command
+✗ [ERROR] autonomy preflight: ingestion: missing write_set
+✗ [ERROR] autonomy preflight: ingestion:repo missing verify command
+✗ [ERROR] autonomy preflight: ingestion:data-source missing verify command
+✗ [ERROR] autonomy preflight: ingestion:flow missing verify command
+✗ [ERROR] autonomy preflight: ingestion:frontend missing verify command
+✗ [ERROR] autonomy preflight: ingestion:e2e missing verify command
+✗ [ERROR] autonomy preflight: ai: missing write_set
+✗ [ERROR] autonomy preflight: ai:repo missing verify command
+✗ [ERROR] autonomy preflight: ai:data-source missing verify command
+✗ [ERROR] autonomy preflight: ai:flow missing verify command
+✗ [ERROR] autonomy preflight: ai:frontend missing verify command
+✗ [ERROR] autonomy preflight: ai:e2e missing verify command
+✗ [ERROR] autonomy preflight: candidate: missing write_set
+✗ [ERROR] autonomy preflight: candidate:repo missing verify command
+✗ [ERROR] autonomy preflight: candidate:data-source missing verify command
+✗ [ERROR] autonomy preflight: candidate:flow missing verify command
+✗ [ERROR] autonomy preflight: candidate:frontend missing verify command
+✗ [ERROR] autonomy preflight: candidate:e2e missing verify command
+✗ [ERROR] autonomy preflight: calibration: missing write_set
+✗ [ERROR] autonomy preflight: calibration:repo missing verify command
+✗ [ERROR] autonomy preflight: calibration:data-source missing verify command
+✗ [ERROR] autonomy preflight: calibration:flow missing verify command
+✗ [ERROR] autonomy preflight: calibration:frontend missing verify command
+✗ [ERROR] autonomy preflight: calibration:e2e missing verify command
+✗ [ERROR] autonomy preflight: monetization: missing write_set
+✗ [ERROR] autonomy preflight: monetization:repo missing verify command
+✗ [ERROR] autonomy preflight: monetization:data-source missing verify command
+✗ [ERROR] autonomy preflight: monetization:flow missing verify command
+✗ [ERROR] autonomy preflight: monetization:frontend missing verify command
+✗ [ERROR] autonomy preflight: monetization:e2e missing verify command
+✗ [ERROR] autonomy preflight: positioning: missing write_set
+✗ [ERROR] autonomy preflight: positioning:repo missing verify command
+✗ [ERROR] autonomy preflight: positioning:flow missing verify command
+✗ [ERROR] autonomy preflight: positioning:frontend missing verify command
+✗ [ERROR] autonomy preflight: positioning:e2e missing verify command
+✗ [ERROR] autonomy preflight: platform-account: missing write_set
+✗ [ERROR] autonomy preflight: platform-account:repo missing verify command
+✗ [ERROR] autonomy preflight: platform-account:frontend missing verify command
+✗ [ERROR] autonomy preflight: platform-account:e2e missing verify command
+✗ [ERROR] autonomy preflight: content-calendar: missing write_set
+✗ [ERROR] autonomy preflight: content-calendar:repo missing verify command
+✗ [ERROR] autonomy preflight: content-calendar:flow missing verify command
+✗ [ERROR] autonomy preflight: content-calendar:frontend missing verify command
+✗ [ERROR] autonomy preflight: content-calendar:e2e missing verify command
+✗ [ERROR] boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.
+✗ [ERROR] backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.
+✗ [ERROR] review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+✗ [ERROR] review receipt: T-859: 任务 T-859 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md
+✗ [ERROR] review receipt: T-858: 任务 T-858 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md
+✗ [ERROR] review receipt: T-843: 任务 T-843 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md
+✗ [ERROR] review receipt: T-824: 任务 T-824 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md
+✗ [ERROR] review receipt: T-819: 任务 T-819 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md
+✗ [ERROR] review receipt: T-816: 任务 T-816 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md
+✗ [ERROR] review receipt: T-768: 任务 T-768 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md
+✗ [ERROR] review receipt: T-730: 任务 T-730 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md
+✗ [ERROR] review receipt: T-726: 任务 T-726 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md
+✗ [ERROR] review receipt: T-707: 任务 T-707 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md
+✗ [ERROR] review receipt: T-703: 任务 T-703 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-05-video-production-editing-loop.md
+✗ [ERROR] review receipt: T-691: 任务 T-691 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md
+✗ [ERROR] review receipt: T-694: 任务 T-694 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md
+✗ [ERROR] review receipt: T-656: 任务 T-656 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md
+✗ [ERROR] review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工
+✗ [ERROR] review receipt: T-645: 任务 T-645 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md
+✗ [ERROR] review receipt: T-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md
+✗ [ERROR] review receipt: T-635: 任务 T-635 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md
+✗ [ERROR] frontend receipt: T-913: receipt commit 之后 watched_paths 代码已变化，receipt 失效:
+frontend/src/features/copilot/ai-copilot-content.tsx
+frontend/src/features/copilot/ai-copilot-interactions.test.tsx
+frontend/src/features/copilot/chat-publish-package-card.tsx
+frontend/src/features/intelligence/intelligence-workbench.tsx
+frontend/src/lib/ai-error-humanize.ts
+✗ [ERROR] frontend receipt: T-912: receipt commit 之后 watched_paths 代码已变化，receipt 失效:
+frontend/src/components/shell/shell.test.tsx
+frontend/src/components/shell/sidebar.tsx
+✗ [ERROR] frontend receipt: T-909: receipt commit 之后 watched_paths 代码已变化，receipt 失效:
+backend/src/modules/positioning/positioning.service.ts
+frontend/src/components/shell/account-switcher.test.tsx
+frontend/src/components/shell/account-switcher.tsx
+frontend/src/components/shell/shell.test.tsx
+frontend/src/components/shell/sidebar.tsx
+frontend/src/features/automations/automations-island.tsx
+✗ [ERROR] frontend receipt: T-900: receipt commit 之后 watched_paths 代码已变化，receipt 失效:
+backend/src/modules/intelligence/intelligence.contract.test.ts
+backend/src/modules/intelligence/intelligence.service.ts
+backend/src/modules/intelligence/topic-preview-runner.test.ts
+contract/src/operations/intelligence.ts
+frontend/src/features/intelligence/intelligence-workbench.test.tsx
+frontend/src/features/intelligence/intelligence-workbench.tsx
+frontend/src/server/persistence-client.ts
+✗ [ERROR] frontend receipt: T-893: contract.watched_paths 指向不存在的实现路径: ai-worker/src/runtime/agent-runtime.ts
+✗ [ERROR] frontend receipt: T-881: receipt commit 之后 watched_paths 代码已变化，receipt 失效:
+backend/src/modules/ai-runtime/video-decisions-runner.ts
+backend/src/modules/production/production.service.ts
+frontend/src/features/production/assemble-video-render-props.ts
+frontend/src/features/production/production-workbench.tsx
+✗ [ERROR] frontend receipt: T-626: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-577: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-565: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-524: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-519: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-525: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-517: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-516: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-510: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-506: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-502: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-497: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-451: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-449: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-448: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-433 S2: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-433 S4: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-433 S5: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-426: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-425W: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-413: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-417: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-418: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-420: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-399: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-399c: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-409: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-372 W-spike: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-372 W-ci: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-391 H-econ: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-393: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-401: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-406: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-407: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-396: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-398: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-366c: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-361: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-352: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-320c: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-350c: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-351: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-349d: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-339: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-328: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-332R: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-336: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-335: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337a: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337b: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337c: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337d: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337e: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337f: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-337g: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-334: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-324: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-340: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-315: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-316: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-317: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-318: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-319: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-312: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-307: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-306: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-301: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-302: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-261: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-249: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-250: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-255b: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-185R: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-136R: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-100: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-087: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] frontend receipt: T-045: strict 项目 BACKLOG 缺少「验收」列
+✗ [ERROR] lesson LED-044 RECURRED — 竖屏真人常驻门回归：有真实 talking-head 时人物 beat 全幅，card/B-roll 时间窗固定左下 PiP；旧 hidden 必须安全兼容，素材可读区避开人物与字幕；横屏和 visual-only 不受影响。
+✗ [ERROR] lesson LED-003 RECURRED — 门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。
+✗ [ERROR] lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。
+✗ [ERROR] lesson LED-007 RECURRED — 模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。
+✗ [ERROR] lesson LED-008 RECURRED — 渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。
+✗ [ERROR] lesson LED-009 RECURRED — 语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。
+✗ [ERROR] lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。
+✗ [ERROR] lesson LED-016 RECURRED — 信息密度门回归：无真实素材场景必须按时长形成 2/3/4 个原文可溯信息节拍，连续视觉空档不得超过 7 秒；信息卡必须使用固定可读主舞台，不能依内容收缩成角落标签。
+✗ [ERROR] lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。
+✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。
+✗ [ERROR] lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。
+✗ [ERROR] lesson LED-023 RECURRED — 外部能力稳定性门回归：结构化与纯文本节点都必须有调用方按真实耗时设置的有限上界并中止 provider；长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。
+✗ [ERROR] lesson LED-024 RECURRED — 内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。
+✗ [ERROR] lesson LED-025 RECURRED — 主视觉与时序门回归：需要阅读结构/文字的静态图必须由 material.match 选为 large_stage；主图期间信息卡只能成为舞台外短标注；新卡以 AI 选择的 srtLineIndex 映射真实起秒，禁止大卡遮图与上一段内容跨字幕滞留。
+✗ [ERROR] lesson LED-028 RECURRED — H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。
+✗ [ERROR] lesson LED-032 RECURRED — 竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。
+✗ [ERROR] lesson LED-035 RECURRED — 信息卡局部恢复门回归：关键枚举或 sceneIdx/at 非法只丢该张卡，可选 motion/visualPlan 的静态或根级动态协议非法只降级可选字段；根级 custom issue 逐卡交回同一动态 schema，不猜错误消息路径，恢复后仍须经过原 schema、可溯校验和导演审核，不得增加模型重试。
+✗ [ERROR] lesson LED-038 RECURRED — 内容雷达持久任务消费门回归：启动恢复必须让每种持久 kind 都有对应消费者，持续处理到队列为空，并以固定小并发或顺序消费保护外部模型、取流、ASR 与本地数据库；不得只 recover lease 不 drain，也不得按积压数量同时调用外部服务。
+✗ [ERROR] lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] parsed 42 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library integrity clean.
+✓ [OK] research-gate: no open technical blocker.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-08-11) is >= newest decision (2026-08-09).
+✓ [OK] lesson LED-045: guard holds (官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放)
+✓ [OK] lesson LED-043: guard holds (新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败)
+✓ [OK] lesson LED-001: guard holds (.env.local(含真实密钥)被提交进 git)
+✓ [OK] lesson LED-005: guard holds (长输入 AI 节点退回单次调用或丢失分块失败/覆盖真相)
+✓ [OK] lesson LED-010: guard holds (CreatorOS 本机验收包退回手工拼接环境变量)
+✓ [OK] lesson LED-011: guard holds (AI 已选素材但成片仍把录屏/截图缩成不可读小卡，竖屏人物被正方形 contain 再次缩小)
+✓ [OK] lesson LED-012: guard holds (主画面素材使用居中大卡压住人物，只露半张脸，且没有成片级视觉审核发现问题)
+✓ [OK] lesson LED-013: guard holds (人工选材仍沿用旧时间线，竖图被拉伸，编辑器场景标签被烧进成片)
+✓ [OK] lesson LED-015: guard holds (本地验收包再次暴露架构/任务/时间戳后缀，或把安装备份留给用户辨认)
+✓ [OK] lesson LED-022: guard holds (跨平台桌面能力再次在调用点内联单平台命令，或素材中心文案写死 Finder/访达)
+✓ [OK] lesson LED-027: guard holds (局部改稿采纳或撤销退回先检查版本、后无条件移动当前指针，或响应上一版由 transport 提前读取)
+✓ [OK] lesson LED-029: guard holds (基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台)
+✓ [OK] lesson LED-031: guard holds (Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook)
+✓ [OK] lesson LED-034: guard holds (图片编辑 multipart 再次发送字符串 n，导致严格上游按整数 schema 返回 400)
+✓ [OK] lesson LED-036: guard holds (本稿专属 AI 素材再次被标成人工素材，或 material.match 空数组冒充自动分镜成功并生成逐条手选控件)
+✓ [OK] lesson LED-039: guard holds (总导演自动补位再次按计划游标前进，插点被吸附或去重后仍留下真实时间洞并取消整套分镜)
+✓ [OK] lesson LED-040: guard holds (用户剔除 B-roll 再次只改页面候选，旧 editing plan、失败回退或旧渲染任务继续复活素材)
+✓ [OK] lesson LED-041: guard holds (Windows 分层包再次只验证主线程可加载 Xenova，而真实 Whisper worker 没有消费 resolver/runtime root)
+✓ [OK] lesson LED-046: guard holds (Windows精简包漏Worker、只保留一种依赖入口或仍使用旧运行目录，网页能启动但后台不可用)
+✓ [OK] lesson LED-047: guard holds (同页助手入口触发服务端导航、折叠详情提前序列化或慢请求轮询叠加，导致打开卡顿与状态无法更新)
+✓ [OK] lesson LED-048: guard holds (合并采集互相阻断、长任务被误清理、跨计划误绑定及浏览器占用反复失败)
+✓ [OK] lesson LED-049: guard holds (展示缓存漏接、全历史快照与计数读取放大、闲置列表持续轮询)
+✓ [OK] lesson LED-050: guard holds (首页连点重复导航与先展开全部作品再截断导致排队卡顿)
+✓ [OK] lesson LED-051: guard holds (Windows 类型检查子进程默认堆不足造成重复构建失败)
+───────────────────────────────────────────────────────
+233 error(s), 0 warning(s).
+✗ DRIFT: manifest does not reconcile with reality.
