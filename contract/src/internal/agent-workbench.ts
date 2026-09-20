@@ -6,6 +6,32 @@ const relativePath = z.string().min(1).max(2048).refine((path) => {
   return path.split("/").every((part) => part !== "" && part !== "." && part !== ".." && !part.includes(":"));
 }, "只允许任务根目录内的相对路径；符号链接仍须宿主按真实文件系统验证");
 const jsonShape = z.record(z.string(), z.unknown());
+// Rust 浏览器私有 socket 单条回复上限 4,000,000 B；2 MiB 经 base64 和 JSON 包装后仍可容纳。
+export const WORKBENCH_SCREENSHOT_MAX_BYTES = 2 * 1024 * 1024;
+/** 逐字节检查大块 base64，避免对大图片使用正则导致栈溢出。 */
+export function isCanonicalBase64(value: string): boolean {
+  if (!value || value.length % 4 !== 0) return false;
+  const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
+  const end = value.length - padding;
+  if (end < 2 || (padding === 1 && end % 4 !== 3) || (padding === 2 && end % 4 !== 2)) return false;
+  let last = 0;
+  for (let i = 0; i < end; i++) {
+    const code = value.charCodeAt(i);
+    last = code >= 65 && code <= 90 ? code - 65
+      : code >= 97 && code <= 122 ? code - 71
+      : code >= 48 && code <= 57 ? code + 4
+      : code === 43 ? 62 : code === 47 ? 63 : -1;
+    if (last < 0) return false;
+  }
+  return (padding === 2 && (last & 15) === 0) ||
+    (padding === 1 && (last & 3) === 0) || padding === 0;
+}
+export const workbenchScreenshotResolvedSchema = z.object({
+  mimeType: z.literal("image/png"),
+  data: z.string().max(Math.ceil(WORKBENCH_SCREENSHOT_MAX_BYTES / 3) * 4)
+    .refine((value) => isCanonicalBase64(value) &&
+      value.length / 4 * 3 - (value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0) <= WORKBENCH_SCREENSHOT_MAX_BYTES),
+}).strict();
 
 /** 目录是可信宿主装配数据；模型只可提交 invocation，不能声明权限。 */
 export const workbenchCapabilitySchema = z.object({

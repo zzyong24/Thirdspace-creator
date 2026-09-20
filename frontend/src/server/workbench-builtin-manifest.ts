@@ -42,7 +42,7 @@ export const workbenchBuiltins: readonly Builtin[] = [
     tools: [
       { name: "browser.open", effect: "process" }, { name: "browser.status", effect: "read" },
       { name: "browser.navigate", effect: "read" }, { name: "browser.observe", effect: "read" },
-      { name: "browser.extract", effect: "read" }, { name: "browser.act", effect: "external_write" },
+      { name: "browser.extract", effect: "read" }, { name: "browser.screenshot", effect: "read" }, { name: "browser.act", effect: "external_write" },
       { name: "browser.close", effect: "process" },
     ],
   },

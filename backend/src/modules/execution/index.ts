@@ -184,6 +184,7 @@ export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-
 
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
 export {createWorkbenchArtifactService,createWorkbenchArtifactReadService,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
+export {createWorkbenchScreenshotMediaService} from './workbench-screenshot-media.service';
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
 export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';

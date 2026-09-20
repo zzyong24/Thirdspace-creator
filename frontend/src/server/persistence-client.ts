@@ -152,7 +152,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactReadService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactReadService, createWorkbenchScreenshotMediaService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -5436,7 +5436,8 @@ FAVORITES_PROMOTE_PER_RUN
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
   const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
   const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:createWorkbenchBlobService(objectStorageForCtx)}):undefined;
-  const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now});
+  const screenshotMedia=createWorkbenchScreenshotMediaService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
+  const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now,media:screenshotMedia});
   disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
   const workbenchHosts=[fileWorkbenchHost,artifactWorkbenchHost,browserWorkbenchHost]
     .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
@@ -5740,6 +5741,7 @@ FAVORITES_PROMOTE_PER_RUN
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
       ...(workbenchHost?{workbenchHost}:{}),
+      ...(browserWorkbenchHost?{resolveWorkbenchScreenshot:screenshotMedia.resolve}:{}),
       ...(artifactWorkbenchHost?{verifyWorkbenchArtifacts:artifactWorkbenchHost.verifyArtifacts}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),

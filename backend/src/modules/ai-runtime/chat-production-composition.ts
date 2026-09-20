@@ -50,6 +50,7 @@ export interface ChatProductionCompositionDeps {
  webRead:ProductionDeps["webRead"];
  onError?:ProductionDeps["onError"];
  workbenchHost?:ChatWorkbenchCapabilityHost;
+ resolveWorkbenchScreenshot?:ProductionDeps["resolveWorkbenchScreenshot"];
  verifyWorkbenchArtifacts?: (scope:{userId:string;accountId:string;taskId:string},refs:string[])=>Promise<boolean>;
 }
 /** 装配原持久聊天运行时与全部真实工具；不增加运行时或任务账本。 */
@@ -96,6 +97,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
   resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),await planTools(c,input,ref,signal),workbenchTools?await workbenchTools(c,input,ref,signal):{}),
   webRead:deps.webRead,
+  resolveWorkbenchScreenshot:deps.resolveWorkbenchScreenshot,
  onError:deps.onError,
  });
  // 提交准备与执行解析共用同一装配对象；未注入时没有可冻结的生产能力。

@@ -18,7 +18,7 @@ afterAll(async()=>close?.());
 afterEach(async()=>{if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));if(directory)await rm(directory,{recursive:true,force:true});server=undefined;directory=undefined;});
 
 async function socket(received:Array<Record<string,unknown>>,failOpen=false,cleanupStopped=()=>true,
- stopProofStopped=()=>true,cleanupReply?:Promise<void>){
+ stopProofStopped=()=>true,cleanupReply?:Promise<void>,screenshotOutput?:unknown){
  directory=await mkdtemp(join(tmpdir(),"wb-browser-host-"));const path=join(directory,"browser.sock");
  server=createServer(connection=>{
   let body="";connection.on("data",async chunk=>{
@@ -44,7 +44,9 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false,clea
       profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
     : action.kind==="cleanup"?{profileStopped:cleanupStopped(),profileKey:"a".repeat(64),
       profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
-    : {laneId:"native-lane",browserEpoch:1,result:{ok:true}};
+    : action.kind==="execute"&&(action as {action?:string}).action==="screenshot"
+      ? {laneId:"native-lane",browserEpoch:1,result:{output:screenshotOutput}}
+      : {laneId:"native-lane",browserEpoch:1,result:{ok:true}};
    if(action.kind==="cleanup")await cleanupReply;
    connection.end(`${JSON.stringify({ok:true,operationId:request.operationId,value})}\n`);
   });
@@ -58,8 +60,45 @@ it("only a desktop Mac with private socket advertises browser tools",()=>{
  expect(createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:""})).toBeUndefined();
  const catalog=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:"private.sock"})!.catalog;
  expect(catalog.some(tool=>tool.name==="browser.open")).toBe(true);
- // Pi 尚无可信媒体引用解析端口；只在截图真正能供模型查看后冻结该能力。
+ // 无可信存储端口的独立宿主不能向 Pi 公布截图。
  expect(catalog.some(tool=>tool.name==="browser.screenshot")).toBe(false);
+});
+
+it("截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64",async()=>{
+ const png="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==";
+ const tasks=createPersistentTaskService(db),task=await tasks.enqueue({userId:"screen-user",accountId:"screen-account",requestId:"screen-task",source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:"screen-task",idempotencyKey:"screen-task",payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:"screen-worker"}))!;
+ const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const received:Array<Record<string,unknown>>=[];
+ const path=await socket(received,false,()=>true,()=>true,undefined,{media_type:"image/png",data:png});
+ const submit=vi.fn(async()=>"wm1-"+"a".repeat(64));
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path,media:{submit}})!;
+ expect(host.catalog.some(tool=>tool.name==="browser.screenshot")).toBe(true);
+ const context={userId:"screen-user",accountId:"screen-account",taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:"screen-worker"};
+ const open=await host.dispatch({context:{...context,operationId:"screen-open"},invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"research",mode:"anonymous",domain:"example.com"}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}});
+ expect(open.status).toBe("succeeded");
+ const shot=await host.dispatch({context:{...context,operationId:"screen-call"},invocation:{name:"browser.screenshot",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}});
+ expect(shot.status).toBe("succeeded");
+ if(shot.status!=="succeeded")throw Error("screenshot failed");
+ expect(shot.content.at(-1)).toEqual({type:"image",mediaType:"image/png",dataRef:"wm1-"+"a".repeat(64)});
+ expect(JSON.stringify(shot)).not.toContain(png);
+ expect(submit).toHaveBeenCalledWith(ref,"screen-call",Buffer.from(png,"base64"));
+ expect((await host.dispatch({context:{...context,operationId:"screen-close"},invocation:{name:"browser.close",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}})).status).toBe("succeeded");
+});
+
+it.each([["错 MIME",{media_type:"image/jpeg",data:"abc"}],["损坏",{media_type:"image/png",data:"broken"}],
+ ["过大",{media_type:"image/png",data:"A".repeat(3*1024*1024)}]] as const)("拒绝%s截图",async(_name,output)=>{
+ const tasks=createPersistentTaskService(db),key=randomUUID();
+ const task=await tasks.enqueue({userId:key,accountId:key,requestId:key,source:"user"},{kind:"ai_task",ownerType:"ai_task",ownerId:key,idempotencyKey:key,payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:key}))!;
+ const received:Array<Record<string,unknown>>=[],path=await socket(received,false,()=>true,()=>true,undefined,output);
+ const submit=vi.fn(async()=>"wm1-"+"a".repeat(64)),host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path,media:{submit}})!;
+ const context={userId:key,accountId:key,taskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:key};
+ await host.dispatch({context:{...context,operationId:`open-${key}`},invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"research",mode:"anonymous",domain:"example.com"}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}});
+ const shot=await host.dispatch({context:{...context,operationId:`shot-${key}`},invocation:{name:"browser.screenshot",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}});
+ expect(shot.status).not.toBe("succeeded");expect(submit).not.toHaveBeenCalled();
+ expect((await host.dispatch({context:{...context,operationId:`close-${key}`},invocation:{name:"browser.close",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}})).status).toBe("succeeded");
 });
 
 it("native open failure releases the claimed profile only after stop proof",async()=>{

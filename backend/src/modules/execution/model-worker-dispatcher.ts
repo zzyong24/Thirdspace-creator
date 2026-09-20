@@ -63,7 +63,7 @@ interface WorkerDispatcherDeps {
   recoverPendingPreparation?(signal:AbortSignal):Promise<void>;
 }
 export interface ModelWorkerDispatcherDeps extends WorkerDispatcherDeps, ExecutionCandidateDeps {assetProcessing?:Parameters<typeof createExecutionAssetProcessingService>[1];video?:Pick<Parameters<typeof createExecutionVideoService>[1],"resolveModelSpec">;transcribeWorkflow?:Omit<TranscribeWorkflowDeps,"now">;transcribeSource?:TranscribeSourceDeps;cover?:CoverExecutionPorts;transcribePostprocess?:Pick<Parameters<typeof createExecutionTranscribePostprocessService>[1],"resolveModelSpec"|"readContext"|"maxOutputTokens">;transcribePreparation?:Pick<Parameters<typeof createExecutionTranscribePreparationService>[1],"resolveSpec"|"prepareSpec">;transcribeAudioStorage?:Parameters<typeof createExecutionTranscribeAudioService>[1]["objectStorageForCtx"];resolveAssetCredential?:Parameters<typeof createExecutionAssetPorts>[0]["resolveCredential"];assetStorage?:Parameters<typeof createExecutionAssetPorts>[0]["objectStorageForCtx"];browserSessions?:Pick<BrowserSessionsService,"getStateVersioned"|"saveStateVersioned">;dailyTopicPorts?:DailyTopicCompletionPorts}
-export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"]} & (
+export type ChatWorkerDispatcherDeps = WorkerDispatcherDeps & {resolveRedfoxCredential?:Parameters<typeof createExecutionChatToolPorts>[1]["resolveRedfoxCredential"];resolveFallbackModelCredential?(context:RequestContext):Promise<unknown|null>;webRead?:Parameters<typeof createExecutionChatToolPorts>[1]["webRead"];resolveWorkbenchScreenshot?(ref:ExecutionRef,input:{callId:string;dataRef:string}):Promise<{mimeType:"image/png";data:string}>} & (
  {tools:Record<string,ChatBackendTool>;resolveTools?:never} |
  {tools?:never;resolveTools(context:RequestContext,input:Awaited<ReturnType<typeof readExecutionChatTask>>["input"],execution:ExecutionRef,signal:AbortSignal):Promise<Record<string,ChatBackendTool>>}
 );
@@ -260,6 +260,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
       if(port==="readWorkbenchPlan")return workbenchPlans.status(ref);
       if(port==="saveWorkbenchPlan")return workbenchPlans.save(ref,workerPortInputSchemas.saveWorkbenchPlan.parse(raw));
+      if(port==="resolveWorkbenchScreenshot"&&deps.executionMode==="chat.run"){
+        if(!deps.resolveWorkbenchScreenshot)throw new Error("SCREENSHOT_MEDIA_UNAVAILABLE");
+        return deps.resolveWorkbenchScreenshot(ref,workerPortInputSchemas.resolveWorkbenchScreenshot.parse(raw));
+      }
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
       if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));
