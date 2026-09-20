@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1002 | 审查 Agent 规划执行与通用工具扩展方案 | ✅ 待办 | — | — | [调研](docs/research/t1002-agent-capabilities.md) | 核对 Pi 双入口与 NomiFun 工具、browser_use 实现，提出文件产物、规划执行及能力迁移架构；本任务不修改运行时。 |
 | T-1001 | 本地打包 CreatorOS 1.2.0 并验证安装包 | ✅ 待办 | — | — | [本地打包流程](.agents/skills/packaging-creatoros-release/SKILL.md) | 从已提交的 T-1000 候选在干净工作树打 macOS 安装包，校验 DMG 与本机安装启动，不公开发布。 |
 | T-1000 | 丰富周期运营建议与内容战略方向 | ✅ 待办 | — | — | [SPEC](docs/features/t1000-operations-strategy.md) | 周/月复盘从一句建议扩展为有数据依据的内容方向、取舍和下一步验证；旧报告兼容，不编造结论。 |
 | T-999 | 试用 guizang-product-video-skill 为 CreatorOS 制作产品宣传片 | ✅ 完成 | — | — | — | 已安装 skill 并走全流程：repo 风格接入真实组件(SectionCard/TagChip/Card/icons/canonical)、Tailwind 编译 tokens、47s 8 镜头分镜、代码原创配乐+7 音效 cue 混音、导出 renders/final.mp4(1920×1080@30fps h264+aac)，check_delivery ok。工程在 video-promo/。 |
