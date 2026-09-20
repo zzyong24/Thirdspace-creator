@@ -153,10 +153,13 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  const {buildChatTools}=await import("../ai-runtime/chat-tools");
  const {prepareChatToolDefinitions}=await import("../ai-runtime/chat-tool-definitions");
  const {getChatToolNativeExecutor}=await import("../ai-runtime/chat-tool-gate");
+ const {getOfficialSkillBase}=await import("@creatoros/ai-worker");
  const {createChatHostContextReader}=await import("./chat-host-context.service");
  const {createPersistentTaskService}=await import("../execution/persistent-task.service");
  const f=await fixture(),frozen=hostContext(f.ctx);
- frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:"v1",overlayRevision:null,overlayVersion:null,effective:{methodSystem:"提交时产品说明",template:"模板",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
+ const official=getOfficialSkillBase("creatoros.guide");
+ if(!official)throw new Error("缺少官方 creatoros.guide 基础快照");
+ frozen.skillSnapshot.skills.push({skillId:"creatoros.guide",baseVersion:official.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:official.methodSystem,template:"模板",tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}});
  const prototypes=buildChatTools(["creatoros.guide","context.projects"],{} as Parameters<typeof buildChatTools>[1]);
  const definitions=(await prepareChatToolDefinitions(prototypes)).definitions;
  const service=createChatTurnSubmissionService(db,{now,nextId,assemble:async(ctx,snapshot)=>({...await f.assemble(ctx,snapshot),tools:definitions,hostContext:frozen})});
@@ -170,7 +173,7 @@ it("真实租约恢复只读工具，使用冻结产品说明及当前账号数�
  expect(Object.keys(tools)).toEqual(["creatoros.guide","context.projects"]);
  expect(listProjects).not.toHaveBeenCalled();
  const guide=await getChatToolNativeExecutor(tools["creatoros.guide"]!)!({},{});
- expect(JSON.stringify(guide)).toContain("提交时产品说明");expect(JSON.stringify(guide)).not.toContain("后来的配置");
+ expect(guide).toMatchObject({guide:official.methodSystem});expect(JSON.stringify(guide)).not.toContain("后来的配置");
  await getChatToolNativeExecutor(tools["context.projects"]!)!({},{});
  expect(listProjects).toHaveBeenLastCalledWith(expect.objectContaining({accountId:f.ctx.accountId}),expect.anything());
  await expect(resolve({...f.ctx,accountId:"other"},ref)).rejects.toThrow();
