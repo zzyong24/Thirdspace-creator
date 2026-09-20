@@ -1,7 +1,8 @@
 import "server-only";
 import {randomUUID} from "node:crypto";
 import type {Db} from "@creatoros/backend";
-import {createExecutionLeaseService,createWorkbenchBrowserAdmissionService} from "@creatoros/backend/modules/execution";
+import {BrowserProfileBusyError,createExecutionBrowserProfileLeaseService,createExecutionLeaseService,
+ createWorkbenchBrowserAdmissionService} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
 import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
@@ -86,7 +87,9 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
  const platform=options.platform??process.platform,desktop=options.desktop??process.env.CREATOROS_DESKTOP==="1";
  const socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_BROWSER_SOCKET;
  if(platform!=="darwin"||!desktop||!socketPath)return undefined;
+ const trustedSocketPath=socketPath;
  const leases=createExecutionLeaseService(db,{now:options.now});
+ const profiles=createExecutionBrowserProfileLeaseService(db,{now:options.now});
  const sessions=new Map<string,Session>(),held=new Map<string,Session>();
  const admission=createWorkbenchBrowserAdmissionService(db,{now:options.now,
   async resolveProfile(context,request,ref,signal){
@@ -104,6 +107,32 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    }catch{return false;}
   },
  });
+ async function recoverStoppedProfile(profileKey:string):Promise<boolean>{
+  const old=await profiles.getRecoverableWorkerProfile(profileKey);
+  if(!old)return false;
+  let mode:ManagedBrowserMode|undefined;
+  for(const choice of ["primary","anonymous"] as const){
+   try {const location=await resolveManagedBrowserProfile(trustedSocketPath,{userId:old.userId,
+    accountId:old.accountId,taskId:old.ref.executionTaskId},choice,AbortSignal.timeout(10_000));
+    if(location.profileKey===old.profileKey){mode=choice;break;}
+   }catch {/* 不能解析旧物理目录时保留占用。 */}
+  }
+  if(!mode)return false;
+  const operationId=randomUUID();
+  const nativeAdmission:NativeAdmission={userId:old.userId,accountId:old.accountId,
+   taskId:old.ref.executionTaskId,attempt:old.ref.attempt,fenceToken:old.ref.fenceToken,
+   domain:old.domain,profileKey:old.profileKey,profileLeaseId:old.leaseId,
+   laneName:"recovery",expiresAtMs:Date.now()+30_000};
+  let proof:Record<string,unknown>;
+  try {proof=await exchangeBrowserSocket(trustedSocketPath,{operationId,admission:nativeAdmission,
+   identityMode:mode,action:{kind:"cleanup"}},operationId,AbortSignal.timeout(15_000)) as Record<string,unknown>;
+  }catch{return false;}
+  if(proof?.profileStopped!==true||proof.profileKey!==old.profileKey||proof.profileLeaseId!==old.leaseId)return false;
+  const fresh=await profiles.getRecoverableWorkerProfile(profileKey);
+  if(!fresh||fresh.leaseId!==old.leaseId||!sameRef(fresh.ref,old.ref))return false;
+  try {return await profiles.releaseAfterWorkerStopped(old.ref,old.leaseId);}
+  catch {return false;}
+ }
  const key=(taskId:string,laneId:string)=>`${taskId}\0${laneId}`;
  return {catalog,platform:"macos",capabilities:["task.browser"],
   async dispatch(rawCall,{signal}){
@@ -126,8 +155,17 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     return failed(call.context.operationId,"DOMAIN_NOT_ALLOWED");
    let acquired:Receipt|undefined;
    try {
-    const receipt=await admission.acquire(ref,{laneId:session?.receipt.laneId??input.laneId,
-     mode:session?.mode??input.mode,domain:session?.receipt.domain??input.domain},signal);
+    const request={laneId:session?.receipt.laneId??input.laneId,
+     mode:session?.mode??input.mode,domain:session?.receipt.domain??input.domain};
+    let receipt:Receipt;
+    try {receipt=await admission.acquire(ref,request,signal);}
+    catch(error){
+     if(!(error instanceof BrowserProfileBusyError)||name!=="browser.open")throw error;
+     const location=await resolveManagedBrowserProfile(socketPath,{userId:call.context.userId,
+      accountId:call.context.accountId!,taskId:ref.executionTaskId},input.mode!,signal);
+     if(!await recoverStoppedProfile(location.profileKey))throw error;
+     receipt=await admission.acquire(ref,request,signal);
+    }
     acquired=receipt;
     if(session&&receipt.leaseId!==session.receipt.leaseId)return failed(call.context.operationId,"STALE_BROWSER_PROFILE_LEASE");
     const native=await leases.withLease(ref,"admission",async({context,task})=>{

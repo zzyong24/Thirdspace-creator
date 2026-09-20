@@ -3,7 +3,7 @@ import {createServer,type Server} from "node:net";
 import {mkdtemp,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {createDb,type Db} from "@creatoros/backend";
+import {createDb,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createPersistentTaskService,createExecutionBrowserProfileLeaseService} from "@creatoros/backend/modules/execution";
 import {createWorkbenchBrowserHost} from "./workbench-browser-host";
 
@@ -13,7 +13,7 @@ beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.
 afterAll(async()=>close?.());
 afterEach(async()=>{if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));if(directory)await rm(directory,{recursive:true,force:true});server=undefined;directory=undefined;});
 
-async function socket(received:Array<Record<string,unknown>>,failOpen=false){
+async function socket(received:Array<Record<string,unknown>>,failOpen=false,cleanupStopped=()=>true){
  directory=await mkdtemp(join(tmpdir(),"wb-browser-host-"));const path=join(directory,"browser.sock");
  server=createServer(connection=>{
   let body="";connection.on("data",chunk=>{
@@ -29,6 +29,8 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false){
     : action.kind==="open"?{lane:{lane_id:"native-lane",browser_epoch:1}}
     : action.kind==="close"?{close:{},stopProof:{profileStopped:true}}
     : action.kind==="stop_proof"?{profileStopped:true,profileKey:"a".repeat(64),
+      profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
+    : action.kind==="cleanup"?{profileStopped:cleanupStopped(),profileKey:"a".repeat(64),
       profileLeaseId:(request.admission as {profileLeaseId:string}).profileLeaseId}
     : {laneId:"native-lane",browserEpoch:1,result:{ok:true}};
    connection.end(`${JSON.stringify({ok:true,operationId:request.operationId,value})}\n`);
@@ -59,6 +61,49 @@ it("native open failure releases the claimed profile only after stop proof",asyn
  expect(received.map(request=>(request.action as {kind:string}).kind)).toEqual(["profile_location","open","stop_proof"]);
  const profiles=createExecutionBrowserProfileLeaseService(db);
  expect(await profiles.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken})).toEqual([]);
+});
+
+it("a new host only reconciles a stopped old owner before reusing the same physical profile",async()=>{
+ const tasks=createPersistentTaskService(db);
+ const old=await tasks.enqueue({userId:"recovery-user",accountId:"recovery-account",requestId:"old-browser",source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:"old-browser",idempotencyKey:"old-browser",payload:{}});
+ const oldClaim=(await tasks.claimTask({taskId:old.id,workerId:"old-worker"}))!;
+ const received:Array<Record<string,unknown>>=[];let stopped=false;
+ const path=await socket(received,false,()=>stopped);
+ const oldHost=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const oldCall={context:{userId:"recovery-user",accountId:"recovery-account",taskId:old.id,
+  attempt:oldClaim.lease.attempt,fenceToken:oldClaim.lease.fenceToken,leaseId:"old-worker",operationId:"old-open"},
+  invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"old",mode:"primary",domain:"example.com"}}};
+ expect((await oldHost.dispatch(oldCall,{signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("succeeded");
+ const oldRef={executionTaskId:old.id,attempt:oldClaim.lease.attempt,fenceToken:oldClaim.lease.fenceToken};
+ const profiles=createExecutionBrowserProfileLeaseService(db);
+ const [oldLease]=await profiles.listOwned(oldRef);
+ const next=await tasks.enqueue({userId:"recovery-user",accountId:"recovery-account",requestId:"new-browser",source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:"new-browser",idempotencyKey:"new-browser",payload:{}});
+ const nextClaim=(await tasks.claimTask({taskId:next.id,workerId:"next-worker"}))!;
+ const newHost=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const nextCall={context:{userId:"recovery-user",accountId:"recovery-account",taskId:next.id,
+  attempt:nextClaim.lease.attempt,fenceToken:nextClaim.lease.fenceToken,leaseId:"next-worker",operationId:"blocked-open"},
+  invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"new",mode:"primary",domain:"example.com"}}};
+ expect((await newHost.dispatch(nextCall,{signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("failed");
+ expect(received.some(request=>(request.action as {kind:string}).kind==="cleanup")).toBe(false);
+ expect(await profiles.listOwned(oldRef)).toHaveLength(1);
+ await db.update(executionTasks).set({status:"paused"}).where(eq(executionTasks.id,old.id));
+ expect((await newHost.dispatch({...nextCall,context:{...nextCall.context,operationId:"unproven-open"}},
+  {signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("failed");
+ expect(await profiles.listOwned(oldRef)).toHaveLength(1);
+ stopped=true;
+ const resumed=await newHost.dispatch({...nextCall,context:{...nextCall.context,operationId:"recovered-open"}},
+  {signal:new AbortController().signal,onProgress:()=>{}});
+ expect(resumed.status).toBe("succeeded");
+ expect(received.find(request=>(request.action as {kind:string}).kind==="cleanup")?.admission)
+  .toMatchObject({taskId:old.id,profileLeaseId:oldLease!.leaseId,fenceToken:oldRef.fenceToken});
+ expect(await profiles.listOwned(oldRef)).toEqual([]);
+ expect((await profiles.listOwned({executionTaskId:next.id,attempt:nextClaim.lease.attempt,
+  fenceToken:nextClaim.lease.fenceToken}))[0]?.leaseId).not.toBe(oldLease!.leaseId);
+ expect((await newHost.dispatch({...nextCall,context:{...nextCall.context,operationId:"recovered-close"},
+  invocation:{name:"browser.close",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},
+  {signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("succeeded");
 });
 
 it("open obtains the Rust physical profile and binds it to the current DB task before native dispatch",async()=>{
