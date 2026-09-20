@@ -3,9 +3,13 @@
   "entries": [
     {
       "task_id": "T-1006",
-      "files": ["ai-worker/src/execution/worker-runtime.ts"],
+      "files": [
+        "ai-worker/src/execution/worker-runtime.ts"
+      ],
       "file_sha256": "969b73cf7ff1229e316f74d3297a68053a14250523ac40a3846edbbe47ff141d",
-      "categories": ["ipc"],
+      "categories": [
+        "ipc"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
@@ -14,42 +18,65 @@
     },
     {
       "task_id": "T-1007",
-      "files": ["frontend/src-tauri/src/lib.rs"],
-      "file_sha256": "f26bf4fb0cb9577bed955c121e74161845146444175f246ab60a9e2d1e9f5a2a",
-      "categories": ["credential_store", "installer_deploy", "ipc", "language_toolchain", "os_signing"],
+      "files": [
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "file_sha256": "aedc662f0dd2ec3b7042f146ab58992106775bf694fa11b92c3971851d2c8a53",
+      "categories": [
+        "credential_store",
+        "installer_deploy",
+        "ipc",
+        "language_toolchain",
+        "os_signing"
+      ],
       "disposition": "baseline-migrated",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
-      "reason": "桌面 lib.rs 的既有凭据、安装、签名和 IPC 复杂度按集成前哈希登记。T-1007 只允许加入受租约验证的 workbench 模块与命令，不改原保管或签名策略；修改后的哈希需复核。",
-      "acceptance": "此项不证明 Windows 隔离、安装包运行时或真实模型端到端通过。"
+      "reason": "T-1007 当前候选含 Mac 私有 PID 校验 IPC、任务文件宿主和 Windows handle 文件实现；此哈希对应当前实际源码。",
+      "acceptance": "Mac 定向测试与 Windows 交叉检查已运行；Windows 真机、命令通道和双端安装仍未验收。"
     },
     {
       "task_id": "T-1007",
-      "files": ["frontend/src-tauri/Cargo.toml"],
-      "file_sha256": "b3ec2f52d50d5248acc25dd28bb0ef9cb230c5e22e78a73830f3f5c2de3e26f3",
-      "categories": ["credential_store", "language_toolchain"],
+      "files": [
+        "frontend/src-tauri/Cargo.toml"
+      ],
+      "file_sha256": "e3b675fb956feb396f2e1f4441ec515857472bf744ef0601f4a2592e78107684",
+      "categories": [
+        "credential_store",
+        "language_toolchain"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
-      "reason": "T-1007 已按用户授权增补受控文件和进程宿主的 Rust 依赖；本项锁定本次修改后的精确文件哈希。",
-      "acceptance": "此项不证明命令 OS 隔离或双端安装通过。"
+      "reason": "T-1007 当前候选含 Mac 私有 PID 校验 IPC、任务文件宿主和 Windows handle 文件实现；此哈希对应当前实际源码。",
+      "acceptance": "Mac 定向测试与 Windows 交叉检查已运行；Windows 真机、命令通道和双端安装仍未验收。"
     },
     {
       "task_id": "T-1007",
-      "files": ["docs/verification/t1007-files-command.md"],
-      "file_sha256": "fc14ac1d29159121d410014c21d95fe3be1d850683d9ce7f66d6fdca5dd6d605",
-      "categories": ["ipc", "language_toolchain"],
+      "files": [
+        "docs/verification/t1007-files-command.md"
+      ],
+      "file_sha256": "bbc3367c9a5ce14eb13a59bc5252584acff2df487bb675d64a2d5754d67ea175",
+      "categories": [
+        "ipc",
+        "language_toolchain"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
-      "reason": "T-1007 验证记录需如实描述 Rust 文件、命令宿主与可信 IPC 的边界及未接线状态。",
-      "acceptance": "仅为验证记录登记复杂度；不表示跨端或安装版通过。"
+      "reason": "T-1007 当前候选含 Mac 私有 PID 校验 IPC、任务文件宿主和 Windows handle 文件实现；此哈希对应当前实际源码。",
+      "acceptance": "Mac 定向测试与 Windows 交叉检查已运行；Windows 真机、命令通道和双端安装仍未验收。"
     },
     {
       "task_id": "T-1007",
-      "files": ["frontend/src-tauri/src/workbench/command.rs"],
+      "files": [
+        "frontend/src-tauri/src/workbench/command.rs"
+      ],
       "file_sha256": "526b9f3afb4f30ab982b23bb6edc7b8c89c65abd16c3a75b0b6e261c263c9440",
-      "categories": ["credential_store", "installer_deploy"],
+      "categories": [
+        "credential_store",
+        "installer_deploy"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
@@ -58,20 +85,28 @@
     },
     {
       "task_id": "T-1007",
-      "files": ["frontend/src-tauri/src/workbench/mod.rs"],
-      "file_sha256": "5c93a144ed69a448d6d76e06980d114e6b896e13122f39e7c10bded013c5438d",
-      "categories": ["ipc"],
+      "files": [
+        "frontend/src-tauri/src/workbench/mod.rs"
+      ],
+      "file_sha256": "c126cddbc6e0e1f008b863992c2a8f36355791d24ea92c3d256da78cdeb19510",
+      "categories": [
+        "ipc"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
-      "reason": "T-1007 原生模块声明了仅供未来可信宿主装配的边界；当前尚未暴露桌面命令。",
-      "acceptance": "只登记源码复杂度，不视为 IPC 集成通过。"
+      "reason": "T-1007 当前候选含 Mac 私有 PID 校验 IPC、任务文件宿主和 Windows handle 文件实现；此哈希对应当前实际源码。",
+      "acceptance": "Mac 定向测试与 Windows 交叉检查已运行；Windows 真机、命令通道和双端安装仍未验收。"
     },
     {
       "task_id": "T-1004",
-      "files": ["docs/verification/t1004-nomifun-dependency.md"],
+      "files": [
+        "docs/verification/t1004-nomifun-dependency.md"
+      ],
       "file_sha256": "15a863aae658a5ca07ff84ce39c8f263d341f94be3618091e530186a448a2eec",
-      "categories": ["language_toolchain"],
+      "categories": [
+        "language_toolchain"
+      ],
       "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
@@ -1915,6 +1950,83 @@
       "scope_source": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
       "reason": "沿用原模型端口与账本，图片字节在请求中编码为base64，保持原附件范围而不引入新协议通道。",
       "acceptance": "仅记录实现复杂度，不代表运行验收；用户暂缓测试。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": [
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "file_sha256": "0f8d90515e10ff195332293726d437266ee3e17ec6e2fec385b51f212882a353",
+      "categories": [
+        "credential_store",
+        "language_toolchain",
+        "native_executable"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
+      "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": [
+        "frontend/src/server/workbench-native-client.ts"
+      ],
+      "file_sha256": "591bc37e85d8c99b77d9e5a43cbb923d2e341e3f70fc0f65ea09c4eb1e2365cb",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
+      "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": [
+        "frontend/src/server/workbench-native-host.ts"
+      ],
+      "file_sha256": "194e88092608751ee597b0cf9eded895d4281f1fbbfb1e92a3a19a946174a24b",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
+      "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": [
+        "frontend/src-tauri/src/workbench/ipc.rs"
+      ],
+      "file_sha256": "5320e646dace004fec618ff6c5ac39fc54a0cb2e48efb4ab5e75e30f0655acb0",
+      "categories": [
+        "ipc"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
+      "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": [
+        "frontend/src-tauri/src/workbench/files_windows.rs"
+      ],
+      "file_sha256": "7b91edb59159e8a6f402276ee925b235790bede2676f340ca776ea056092600f",
+      "categories": [
+        "language_toolchain"
+      ],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 在既有桌面 sidecar 与执行租约边界内接入任务文件；身份来自原任务，WebView 不得调用原生端口。",
+      "acceptance": "只登记本次源码与复杂度；Mac 定向测试不代表 Windows 真机、命令隔离或安装版验收。"
     }
   ],
   "historical_baselines": []
