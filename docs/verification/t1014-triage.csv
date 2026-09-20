@@ -1,0 +1,234 @@
+﻿序号,原始告警,分类,处置,证据或承接
+1,autonomy preflight: L2/L3/L4 prose claim requires reconcile.config execution_mode=autonomous + autonomy_level; otherwise downgrade to interactive,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+2,autonomy preflight: projects: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+3,autonomy preflight: projects:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+4,autonomy preflight: projects:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+5,autonomy preflight: projects:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+6,autonomy preflight: projects:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+7,autonomy preflight: knowledge: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+8,autonomy preflight: knowledge:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+9,autonomy preflight: knowledge:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+10,autonomy preflight: knowledge:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+11,autonomy preflight: knowledge:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+12,autonomy preflight: assets: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+13,autonomy preflight: assets:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+14,autonomy preflight: assets:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+15,autonomy preflight: assets:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+16,autonomy preflight: assets:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+17,autonomy preflight: artifacts: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+18,autonomy preflight: artifacts:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+19,autonomy preflight: artifacts:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+20,autonomy preflight: artifacts:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+21,autonomy preflight: artifacts:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+22,autonomy preflight: artifacts:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+23,autonomy preflight: production: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+24,autonomy preflight: production:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+25,autonomy preflight: production:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+26,autonomy preflight: production:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+27,autonomy preflight: production:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+28,autonomy preflight: publishing: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+29,autonomy preflight: publishing:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+30,autonomy preflight: publishing:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+31,autonomy preflight: publishing:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+32,autonomy preflight: publishing:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+33,autonomy preflight: analytics: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+34,autonomy preflight: analytics:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+35,autonomy preflight: analytics:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+36,autonomy preflight: analytics:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+37,autonomy preflight: analytics:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+38,autonomy preflight: reviews: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+39,autonomy preflight: reviews:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+40,autonomy preflight: reviews:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+41,autonomy preflight: reviews:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+42,autonomy preflight: reviews:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+43,autonomy preflight: learnings: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+44,autonomy preflight: learnings:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+45,autonomy preflight: learnings:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+46,autonomy preflight: learnings:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+47,autonomy preflight: learnings:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+48,autonomy preflight: notifications: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+49,autonomy preflight: notifications:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+50,autonomy preflight: notifications:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+51,autonomy preflight: notifications:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+52,autonomy preflight: notifications:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+53,autonomy preflight: search: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+54,autonomy preflight: search:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+55,autonomy preflight: search:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+56,autonomy preflight: search:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+57,autonomy preflight: search:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+58,autonomy preflight: settings: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+59,autonomy preflight: settings:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+60,autonomy preflight: settings:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+61,autonomy preflight: settings:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+62,autonomy preflight: taxonomy: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+63,autonomy preflight: taxonomy:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+64,autonomy preflight: taxonomy:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+65,autonomy preflight: taxonomy:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+66,autonomy preflight: ingestion: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+67,autonomy preflight: ingestion:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+68,autonomy preflight: ingestion:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+69,autonomy preflight: ingestion:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+70,autonomy preflight: ingestion:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+71,autonomy preflight: ingestion:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+72,autonomy preflight: ai: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+73,autonomy preflight: ai:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+74,autonomy preflight: ai:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+75,autonomy preflight: ai:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+76,autonomy preflight: ai:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+77,autonomy preflight: ai:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+78,autonomy preflight: candidate: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+79,autonomy preflight: candidate:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+80,autonomy preflight: candidate:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+81,autonomy preflight: candidate:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+82,autonomy preflight: candidate:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+83,autonomy preflight: candidate:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+84,autonomy preflight: calibration: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+85,autonomy preflight: calibration:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+86,autonomy preflight: calibration:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+87,autonomy preflight: calibration:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+88,autonomy preflight: calibration:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+89,autonomy preflight: calibration:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+90,autonomy preflight: monetization: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+91,autonomy preflight: monetization:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+92,autonomy preflight: monetization:data-source missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+93,autonomy preflight: monetization:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+94,autonomy preflight: monetization:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+95,autonomy preflight: monetization:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+96,autonomy preflight: positioning: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+97,autonomy preflight: positioning:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+98,autonomy preflight: positioning:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+99,autonomy preflight: positioning:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+100,autonomy preflight: positioning:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+101,autonomy preflight: platform-account: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+102,autonomy preflight: platform-account:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+103,autonomy preflight: platform-account:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+104,autonomy preflight: platform-account:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+105,autonomy preflight: content-calendar: missing write_set,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+106,autonomy preflight: content-calendar:repo missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+107,autonomy preflight: content-calendar:flow missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+108,autonomy preflight: content-calendar:frontend missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+109,autonomy preflight: content-calendar:e2e missing verify command,历史模式误判,已修正,历史DEC澄清+当前interactive配置；auditAutonomy为空
+110,"boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.",架构边界,保留待核实,UI Chat客户端依赖是否应获例外需架构核查；不增加基线
+111,"backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.",看板容量,已减重，仍超硬限,归档98条完成记录，原文保留；未关闭未完成任务
+112,review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156,SPEC回执,保留待核实,T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+113,review receipt: T-859: 任务 T-859 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md,SPEC回执,保留待核实,T-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9
+114,review receipt: T-858: 任务 T-858 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md,SPEC回执,保留待核实,T-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62
+115,review receipt: T-843: 任务 T-843 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md,SPEC回执,已修正,恢复真实SPEC链接；现有回执验证通过
+116,review receipt: T-824: 任务 T-824 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md,SPEC回执,保留待核实,T-824: review receipt 已过期：constitution hash 已变化
+117,review receipt: T-819: 任务 T-819 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md,SPEC回执,保留待核实,T-819: review receipt 已过期：SPEC hash 4c0f39c41f58 != d89d457083d1
+118,review receipt: T-816: 任务 T-816 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md,SPEC回执,保留待核实,T-816: review receipt 已过期：SPEC hash b532db470f69 != b9490f4fac3f
+119,review receipt: T-768: 任务 T-768 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md,SPEC回执,保留待核实,T-768: review receipt 已过期：constitution hash 已变化
+120,review receipt: T-730: 任务 T-730 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md,SPEC回执,已修正,恢复真实SPEC链接；现有回执验证通过
+121,review receipt: T-726: 任务 T-726 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md,SPEC回执,保留待核实,T-726: review receipt 已过期：constitution hash 已变化
+122,review receipt: T-707: 任务 T-707 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md,SPEC回执,已修正,恢复真实SPEC链接；现有回执验证通过
+123,review receipt: T-703: 任务 T-703 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-05-video-production-editing-loop.md,SPEC回执,保留待核实,T-703: review receipt 已过期：SPEC hash 6ecdc3a00c87 != 70e49d3ae5a3
+124,review receipt: T-691: 任务 T-691 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md,SPEC回执,保留待核实,T-691: review receipt 已过期：constitution hash 已变化
+125,review receipt: T-694: 任务 T-694 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md,SPEC回执,保留待核实,T-694: review receipt 已过期：SPEC hash 678f818f2d18 != 6ea31e784c68
+126,review receipt: T-656: 任务 T-656 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md,SPEC回执,保留待核实,T-656: review receipt 已过期：constitution hash 已变化
+127,review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工,SPEC回执,保留待核实,T-652: 审核列为「待审」；存在未销账问题，不得开工
+128,review receipt: T-645: 任务 T-645 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md,SPEC回执,保留待核实,T-645: review receipt 已过期：SPEC hash 24659d7d13f3 != c693c9a4ad11
+129,review receipt: T-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md,SPEC回执,保留待核实,T-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md
+130,review receipt: T-635: 任务 T-635 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md,SPEC回执,保留待核实,T-635: review receipt 已过期：constitution hash 已变化
+131,frontend receipt: T-913: receipt commit 之后 watched_paths 代码已变化，receipt 失效:,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+132,frontend receipt: T-912: receipt commit 之后 watched_paths 代码已变化，receipt 失效:,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+133,frontend receipt: T-909: receipt commit 之后 watched_paths 代码已变化，receipt 失效:,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+134,frontend receipt: T-900: receipt commit 之后 watched_paths 代码已变化，receipt 失效:,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+135,frontend receipt: T-893: contract.watched_paths 指向不存在的实现路径: ai-worker/src/runtime/agent-runtime.ts,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+136,frontend receipt: T-881: receipt commit 之后 watched_paths 代码已变化，receipt 失效:,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+137,frontend receipt: T-626: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+138,frontend receipt: T-577: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+139,frontend receipt: T-565: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+140,frontend receipt: T-524: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+141,frontend receipt: T-519: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+142,frontend receipt: T-525: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+143,frontend receipt: T-517: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+144,frontend receipt: T-516: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+145,frontend receipt: T-510: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+146,frontend receipt: T-506: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+147,frontend receipt: T-502: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+148,frontend receipt: T-497: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+149,frontend receipt: T-451: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+150,frontend receipt: T-449: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+151,frontend receipt: T-448: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+152,frontend receipt: T-433 S2: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+153,frontend receipt: T-433 S4: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+154,frontend receipt: T-433 S5: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+155,frontend receipt: T-426: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+156,frontend receipt: T-425W: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+157,frontend receipt: T-413: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+158,frontend receipt: T-417: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+159,frontend receipt: T-418: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+160,frontend receipt: T-420: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+161,frontend receipt: T-399: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+162,frontend receipt: T-399c: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+163,frontend receipt: T-409: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+164,frontend receipt: T-372 W-spike: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+165,frontend receipt: T-372 W-ci: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+166,frontend receipt: T-391 H-econ: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+167,frontend receipt: T-393: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+168,frontend receipt: T-401: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+169,frontend receipt: T-406: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+170,frontend receipt: T-407: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+171,frontend receipt: T-396: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+172,frontend receipt: T-398: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+173,frontend receipt: T-366c: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+174,frontend receipt: T-361: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+175,frontend receipt: T-352: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+176,frontend receipt: T-320c: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+177,frontend receipt: T-350c: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+178,frontend receipt: T-351: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+179,frontend receipt: T-349d: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+180,frontend receipt: T-339: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+181,frontend receipt: T-328: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+182,frontend receipt: T-332R: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+183,frontend receipt: T-336: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+184,frontend receipt: T-335: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+185,frontend receipt: T-337: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+186,frontend receipt: T-337a: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+187,frontend receipt: T-337b: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+188,frontend receipt: T-337c: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+189,frontend receipt: T-337d: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+190,frontend receipt: T-337e: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+191,frontend receipt: T-337f: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+192,frontend receipt: T-337g: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+193,frontend receipt: T-334: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+194,frontend receipt: T-324: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+195,frontend receipt: T-340: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+196,frontend receipt: T-315: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+197,frontend receipt: T-316: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+198,frontend receipt: T-317: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+199,frontend receipt: T-318: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+200,frontend receipt: T-319: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+201,frontend receipt: T-312: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+202,frontend receipt: T-307: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+203,frontend receipt: T-306: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+204,frontend receipt: T-301: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+205,frontend receipt: T-302: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+206,frontend receipt: T-261: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+207,frontend receipt: T-249: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+208,frontend receipt: T-250: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+209,frontend receipt: T-255b: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+210,frontend receipt: T-185R: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+211,frontend receipt: T-136R: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+212,frontend receipt: T-100: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+213,frontend receipt: T-087: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+214,frontend receipt: T-045: strict 项目 BACKLOG 缺少「验收」列,历史验收台账,已修正或归档,78项搁置补列待验；6项已完成历史回执归档；当前frontend audit为空
+215,lesson LED-044 RECURRED — 竖屏真人常驻门回归：有真实 talking-head 时人物 beat 全幅，card/B-roll 时间窗固定左下 PiP；旧 hidden 必须安全兼容，素材可读区避开人物与字幕；横屏和 visual-only 不受影响。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+216,"lesson LED-003 RECURRED — 门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。",教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+217,lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+218,lesson LED-007 RECURRED — 模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+219,lesson LED-008 RECURRED — 渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+220,lesson LED-009 RECURRED — 语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+221,lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+222,lesson LED-016 RECURRED — 信息密度门回归：无真实素材场景必须按时长形成 2/3/4 个原文可溯信息节拍，连续视觉空档不得超过 7 秒；信息卡必须使用固定可读主舞台，不能依内容收缩成角落标签。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+223,lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+224,lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+225,lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+226,lesson LED-023 RECURRED — 外部能力稳定性门回归：结构化与纯文本节点都必须有调用方按真实耗时设置的有限上界并中止 provider；长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+227,lesson LED-024 RECURRED — 内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+228,lesson LED-025 RECURRED — 主视觉与时序门回归：需要阅读结构/文字的静态图必须由 material.match 选为 large_stage；主图期间信息卡只能成为舞台外短标注；新卡以 AI 选择的 srtLineIndex 映射真实起秒，禁止大卡遮图与上一段内容跨字幕滞留。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+229,lesson LED-028 RECURRED — H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+230,lesson LED-032 RECURRED — 竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+231,lesson LED-035 RECURRED — 信息卡局部恢复门回归：关键枚举或 sceneIdx/at 非法只丢该张卡，可选 motion/visualPlan 的静态或根级动态协议非法只降级可选字段；根级 custom issue 逐卡交回同一动态 schema，不猜错误消息路径，恢复后仍须经过原 schema、可溯校验和导演审核，不得增加模型重试。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+232,lesson LED-038 RECURRED — 内容雷达持久任务消费门回归：启动恢复必须让每种持久 kind 都有对应消费者，持续处理到队列为空，并以固定小并发或顺序消费保护外部模型、取流、ASR 与本地数据库；不得只 recover lease 不 drain，也不得按积压数量同时调用外部服务。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015
+233,lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。,教训回归,保留待核实,t1014-lesson-diagnostics.json；T-1015

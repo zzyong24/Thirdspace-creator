@@ -1,0 +1,212 @@
+[
+  {
+    "lesson": "LED-044",
+    "exit": 1,
+    "seconds": 1.5,
+    "failures": [
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-003",
+    "exit": 1,
+    "seconds": 0.2,
+    "failures": []
+  },
+  {
+    "lesson": "LED-006",
+    "exit": 1,
+    "seconds": 1.8,
+    "failures": [
+      "FAIL  scripts/desktop/startup-safety-contract.test.mjs > T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight",
+      "AssertionError: expected 'async function openContext(authDir: s…' to contain 'launchWithBrowser((selection)'"
+    ]
+  },
+  {
+    "lesson": "LED-007",
+    "exit": 1,
+    "seconds": 3.6,
+    "failures": [
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — 文本模型(default) > 复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ { apiFormat: 'openai_chat', …(4) } ]",
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — 文本模型(default) > openai_responses 同样交给正式模型工厂，不在测试层手拼 /responses",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ ObjectContaining{…} ]",
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — image.generate(真实最小生图) > openai 兼容 provider → 同走真实最小生图,spec 原样透传",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ { provider: 'openai', …(3) } ]"
+    ]
+  },
+  {
+    "lesson": "LED-008",
+    "exit": 1,
+    "seconds": 5.2,
+    "failures": [
+      "FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders the settings dialog with 6 vertical tabs in the approved order",
+      "AssertionError: expected [ '账户', '偏好', '外观', '模型配置', …(3) ] to deeply equal [ Array(6) ]",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影",
+      "AssertionError: expected { authority: 'local', …(3) } to deeply equal { authority: 'channel', …(3) }",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值",
+      "AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'channel', …(1) }",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest",
+      "AssertionError: expected 'local' to be 'channel' // Object.is equality",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 坏签名、额外 envelope 字段和未知产品协议均 fail-closed",
+      "AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地",
+      "FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界"
+    ]
+  },
+  {
+    "lesson": "LED-009",
+    "exit": 1,
+    "seconds": 0.2,
+    "failures": [
+      "语义职责边界门失败：",
+      "- backend/src/modules/ai-runtime/video-decisions-runner.ts 未调用 material.match Skill"
+    ]
+  },
+  {
+    "lesson": "LED-014",
+    "exit": 1,
+    "seconds": 12.6,
+    "failures": [
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 鉴权门 > 无 session cookie → 200 直通本机主用户(T-046,装配照常)",
+      "AssertionError: expected 400 to be 200 // Object.is equality",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-813] 全文阅读动作规范化并绑定用户点击的 URL",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > 有 cookie → 持久化会话+用户消息,委派 runChatStream,透传流式响应 + 会话头",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > 缺 chatContext.surface → 默认 topics(选题编导)",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128] onFinish 把 assistant 文本 + 完整 parts(含 tool-result 卡)落 appendAssistantMessage",
+      "AssertionError: expected undefined to be type of 'function'",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128/T-464] 纯空轮 → 落一条兜底提示 assistant 消息(而非静默空气泡)",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-464] 中断轮空 → 仍不落库(用户主动停,本就该空)",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)",
+      "FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-096] 非法 scope 声明(文法不符)按未声明处理:不触发续接校验,lazy 建回落推导"
+    ]
+  },
+  {
+    "lesson": "LED-016",
+    "exit": 1,
+    "seconds": 1.4,
+    "failures": [
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-017",
+    "exit": 1,
+    "seconds": 2.5,
+    "failures": [
+      "FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及selected改稿变体可建立真实宿主校验",
+      "FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及project改稿变体可建立真实宿主校验",
+      "AssertionError: redfox.query: expected false to be true // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-018",
+    "exit": 1,
+    "seconds": 3.4,
+    "failures": [
+      "FAIL  scripts/desktop/startup-safety-contract.test.mjs > T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight",
+      "AssertionError: expected 'async function openContext(authDir: s…' to contain 'launchWithBrowser((selection)'"
+    ]
+  },
+  {
+    "lesson": "LED-020",
+    "exit": 1,
+    "seconds": 2.4,
+    "failures": [
+      "FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及selected改稿变体可建立真实宿主校验",
+      "FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及project改稿变体可建立真实宿主校验",
+      "AssertionError: redfox.query: expected false to be true // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-023",
+    "exit": 1,
+    "seconds": 1.6,
+    "failures": [
+      "FAIL  src/nodes/structured-node.test.ts > runStructuredNode 跨模型健壮性 > 交互调用显式 maxRetries=0 时文本兜底只请求一次，避免失败路径成倍放大",
+      "AssertionError: expected 3 to be 2 // Object.is equality",
+      "FAIL  src/nodes/structured-node.test.ts > runStructuredNode 跨模型健壮性 > 默认也只做一次结构化尝试和一次文本降级，避免所有工具隐式六次调用"
+    ]
+  },
+  {
+    "lesson": "LED-024",
+    "exit": 1,
+    "seconds": 1.2,
+    "failures": [
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-025",
+    "exit": 1,
+    "seconds": 1.3,
+    "failures": [
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-028",
+    "exit": 1,
+    "seconds": 3.2,
+    "failures": [
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — 文本模型(default) > 复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ { apiFormat: 'openai_chat', …(4) } ]",
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — 文本模型(default) > openai_responses 同样交给正式模型工厂，不在测试层手拼 /responses",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ ObjectContaining{…} ]",
+      "FAIL  src/server/settings-model-test-wrap.test.ts > runModelConnectionTest — image.generate(真实最小生图) > openai 兼容 provider → 同走真实最小生图,spec 原样透传",
+      "AssertionError: expected \"vi.fn()\" to be called with arguments: [ { provider: 'openai', …(3) } ]"
+    ]
+  },
+  {
+    "lesson": "LED-032",
+    "exit": 1,
+    "seconds": 2.0,
+    "failures": [
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-035",
+    "exit": 1,
+    "seconds": 1.4,
+    "failures": [
+      "FAIL  src/nodes/structured-node.test.ts > runStructuredNode 跨模型健壮性 > 交互调用显式 maxRetries=0 时文本兜底只请求一次，避免失败路径成倍放大",
+      "AssertionError: expected 3 to be 2 // Object.is equality",
+      "FAIL  src/nodes/structured-node.test.ts > runStructuredNode 跨模型健壮性 > 默认也只做一次结构化尝试和一次文本降级，避免所有工具隐式六次调用",
+      "FAIL  src/prompt/templates/video-decisions.test.ts > VIDEO_CARDS_TEMPLATE 视觉覆盖底线 > 设置页 official Skill 与运行时共用 v7 单一真值，可恢复到同一版本",
+      "AssertionError: expected 'v7+methods-operations-2026-09-13' to be 'v7' // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-038",
+    "exit": 1,
+    "seconds": 6.0,
+    "failures": [
+      "FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止",
+      "AssertionError: expected 10 to be 25 // Object.is equality"
+    ]
+  },
+  {
+    "lesson": "LED-042",
+    "exit": 1,
+    "seconds": 15.6,
+    "failures": [
+      "FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-900] 只有改写初稿时也可写入选题池或一键升级项目",
+      "FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-579] 生成任务失败后停止假进度，显示真实错误并允许重新生成",
+      "FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 成功但未采纳 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳",
+      "FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 已采纳且下游选题已淘汰 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳",
+      "FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > 可选择分类粘贴分享文本单条建档，且不会自动发起转写",
+      "AssertionError: expected \"vi.fn()\" to be called at least once"
+    ]
+  }
+]
