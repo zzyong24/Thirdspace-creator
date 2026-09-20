@@ -9,6 +9,7 @@ import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submissio
 import {createChatWorkerDispatcher} from "../modules/execution/model-worker-dispatcher";
 import {createExecutionLeaseService} from "../modules/execution/execution-lease.service";
 import {createExecutionStreamService} from "../modules/execution/execution-stream.service";
+import {createPersistentTaskService} from "../modules/execution/persistent-task.service";
 import {createChatWorkbenchCapabilityHost,type ChatWorkbenchCapabilityHost} from "../modules/ai-runtime/chat-workbench-capability-host";
 import {defineWorkbenchChatTool} from "../modules/ai-runtime/chat-tool-gate";
 import {prepareChatToolDefinitions} from "../modules/ai-runtime/chat-tool-definitions";
@@ -71,5 +72,42 @@ it("真实子进程通过原调用账本执行可信宿主；长回执完整保�
   const page=await stream.read(ctx,submitted.executionTaskId,{afterSequence:0,limit:128});
   expect(page.events.some(event=>event.chunk.type==="data-workbench-progress" && event.callId===tool!.id)).toBe(true);
   await expect(stream.read({...ctx,accountId:"other"},submitted.executionTaskId,{afterSequence:0})).rejects.toThrow();
+ }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(ok=>server.close(()=>ok()));}
+},30000);
+
+it("取消在途宿主调用会传递信号，原调用保留且不会重复派发",async()=>{
+ const ctx={userId:"gateway-cancel-user",accountId:"gateway-cancel-account",requestId:"test",source:"user" as const};
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-gateway-cancel`});
+ const conversation=await repo.createConversation({title:"取消网关调用",projectId:null,scope:"global"});
+ const source=await repo.createMessage(conversation.id,{role:"user",content:"读取任务文件",attachments:[],modelMetadata:{}});
+ const prototype=defineWorkbenchChatTool(descriptor,async()=>{throw Error("unused");});
+ const [definition]=(await prepareChatToolDefinitions({"files.read":prototype},{workbenchCapabilities:[descriptor]})).definitions;
+ const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"使用文件工具",messages:[{role:"user",content:"读取任务文件"}],maxSteps:4,maxOutputTokens:256,tools:[definition!],workbenchCapabilities:[descriptor],workbenchPlatform:"macos"})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ let requests=0,dispatches=0,aborted=false;
+ const server=createServer((_req,res)=>{
+  requests++;
+  const chunks=[{choices:[{index:0,delta:{tool_calls:[{index:0,id:"cancel-file-call",type:"function",function:{name:"files_read",arguments:JSON.stringify({path:"a.md"})}}]},finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:"tool_calls"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });
+ await new Promise<void>(ok=>server.listen(0,"127.0.0.1",ok));
+ const leases=createExecutionLeaseService(db);
+ const available:ChatWorkbenchCapabilityHost={catalog:[descriptor],platform:"macos",capabilities:["task.files"],dispatch:async(_call,{signal})=>{
+  dispatches++;
+  await new Promise<void>((_resolve,reject)=>signal.addEventListener("abort",()=>{aborted=true;reject(Error("cancelled"));},{once:true}));
+  throw Error("unreachable");
+ }};
+ const tools=createChatWorkbenchCapabilityHost(available,
+  ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
+ const worker=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"gateway-cancel",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},pollMs:100,modelConcurrency:1,resolveTools:tools,
+  resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ try{
+  worker.start();
+  await expect.poll(()=>dispatches,{timeout:15000}).toBe(1);
+  await createPersistentTaskService(db).command(ctx,{taskIds:[submitted.executionTaskId],command:"cancel",idempotencyKey:"cancel-gateway"});
+  await expect.poll(()=>aborted,{timeout:15000}).toBe(true);
+  await expect.poll(async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status,{timeout:15000}).toBe("cancelled");
+  const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
+  expect(rows.filter(row=>row.kind==="tool")).toHaveLength(1);
+  expect(requests).toBe(1);expect(dispatches).toBe(1);
  }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(ok=>server.close(()=>ok()));}
 },30000);
