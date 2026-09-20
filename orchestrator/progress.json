@@ -55,7 +55,7 @@
       "tasks": [
         {
           "step": "implementation",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -83,7 +83,9 @@
       "step_write_set": {},
       "step_read_set": {},
       "step_exclusive_resources": {},
-      "commits": {}
+      "commits": {
+        "implementation": "2b102729"
+      }
     },
     {
       "id": "T-1007",
@@ -2299,16 +2301,6 @@
     }
   ],
   "leases": {
-    "T-1006:implementation": {
-      "agent": "t1006-gateway",
-      "since": "2026-09-20T03:59:53.559Z",
-      "isolation_kind": "worktree",
-      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1006-gateway/Thirdspace-creator",
-      "branch": "codex/t1006-gateway",
-      "base_sha": "c9fd5a6f956fe9ac0ea24350a7393b74133ac23e",
-      "wave_id": "aw-foundation",
-      "merge_index": 0
-    },
     "T-1007:implementation": {
       "agent": "t1007-files-command",
       "since": "2026-09-20T04:00:30.210Z",
