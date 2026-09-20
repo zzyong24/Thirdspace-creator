@@ -15,4 +15,6 @@ it.each([null,'probe-project'])('公开聊天实际装配接受默认场景并�
  expect(result.hostContext.chatContext.surface).toBe(projectId?'project':'topics');
  expect(result.tools.map(t=>t.name)).toEqual(expect.arrayContaining(['skill.read','history.read','web.read','material.gather']));
  expect(result.hostContext.skillSnapshot.skills.map(s=>s.skillId)).toContain('method.research');
+ expect(result.hostContext.skillSnapshot.skills.map(s=>s.skillId)).toContain('method.report');
+ expect(result.system).toContain('method.report');
 });

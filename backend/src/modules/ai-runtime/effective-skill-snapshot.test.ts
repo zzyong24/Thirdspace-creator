@@ -236,6 +236,7 @@ describe("[T-513] requiredSkillIdsForTask 确定性注册表", () => {
   });
 
   it("执行节点和聊天纯方法共同覆盖 official registry，纯方法不冒充独立任务", () => {
+    expect(CHAT_METHOD_SKILL_IDS).toContain("method.report");
     for (const skillId of [...CHAT_METHOD_SKILL_IDS, "research.plan"]) {
       expect(() => requiredSkillIdsForTask(skillId, {})).toThrow("SKILL_TASK_MAPPING_MISSING");
     }
@@ -507,13 +508,18 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     const snapshot = await resolver(ctx, ids);
     const library = createChatSkillLibrary(snapshot, ctx);
     expect(library.catalog).toContain("method.research: 【找对标与素材研究】");
-    for (const id of ["method.research", "method.writing", "method.review"]) {
+    for (const id of ["method.research", "method.writing", "method.review", "method.report"]) {
       const base = bases.find(item => item.skillId === id)!;
       const result = library.read({skillId: id});
       expect(result.text).toBe([base.methodSystem, base.template].join("\n\n"));
       expect(result.version).toBe(base.baseVersion);
       expect(result.hasMore).toBe(false);
     }
+    expect(library.catalog).toContain("method.report");
+    expect(library.read({skillId:"method.report"}).text).toContain("HTML");
+    expect(bases.find(item=>item.skillId==="method.report")).toMatchObject({
+      baseVersion:"workbench-report-2026-09-20",tools:[],editableFields:["system","template"],
+    });
   });
   it("新基线保留账号自定义写法，已冻结任务不随后续修改漂移", async () => {
     const rows = [row("method.writing", {system: "账号自定义写法：先讲维修现场"}, {observedBaseVersion: "v1"})];
