@@ -194,3 +194,28 @@ flowchart LR
 - `boundary-scan.mjs`：仍报 2 条新增 R2，均为未修改的 `frontend/src/features/copilot/live-chat-session.ts` 导入；全局门未过。本独立工作树没有安装前端依赖，尝试定向 Vitest 得到 `Command "vitest" not found`，因此没有本轮前端测试结果。
 
 **未验与开放门槛：** 需在 Windows 真机用真实随包 Node 运行上述 opt-in 用例，覆盖 Unicode/空格、任务外读写、私有文件与凭据、loopback/外网、句柄继承、子孙进程、超时/崩溃/宿主退出和重解析点；完成限额快照导入与按 `expectedVersion` 写回、stdout/stderr/status/cancel 的 IPC 接线，再跑数据库租约→PID-bound Named Pipe→受限进程→文件回读的真实链路与安装版验证。任何环节未证实，Windows `execution.*` 继续保持 fail-closed。T-1007 不执行 `taskctl complete`。
+
+## 2026-09-20 Windows 命令测试通道接线（独立工作树）
+
+Windows 命令候选现有一条**仅 Rust 测试构建**可用的通路。普通 `PendingBridge::start` 仍只处理任务文件；测试专用 `start_test_commands` 必须同时满足 `cfg(test)` 和 `CREATOROS_T1007_WINDOWS_COMMAND_PROBE=1`，否则不启动。它沿原 Named Pipe 的显式 DACL、内核报告的 sidecar PID 准入，解析 `command_run/status/cancel/read`，并以 `user/account/task + attempt + fence` 的完整范围索引命令。旧 fence 或另一任务无法查询、取消、回读旧操作。发布构建不包含测试启动器或 AppContainer 命令候选；Windows JS 客户端继续拒绝 `command_*`，能力目录仍只公布 `files.*`。
+
+```mermaid
+flowchart LR
+  P[PID 绑定私有 Pipe] --> S[仅测试构建的命令入口]
+  S --> F[TaskFiles 限额文件快照与版本]
+  F --> A[每次新建 AppContainer 私有 task 目录]
+  A --> J[固定随包程序 argv 与 Job Object]
+  J --> V[结束后终止剩余子进程并核对版本]
+  V --> W[TaskFiles 按 expectedVersion 原子回写]
+```
+
+每次快照最多 128 个文件、总计 16 MB、单文件 1 MB，拒绝越界路径和超额输入。子进程只看到私有 `task` 副本，原任务文件树不直接授予 AppContainer。主进程退出后先终止整个 Job，并查询 [Microsoft 的活动进程计数](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information)确认无成员存活，再扫描候选输出；计数查询或等待失败时回执为 `unknown`，不回写。拒绝重解析点、特殊节点、超额文件和删除原输入文件。回写前逐项核对原任务文件版本；改变的旧文件与新增文件分别按快照版本或 0 调用 `TaskFiles::write`。任一回写调用可能已提交但返回错误时，回执置 `unknown`，不自动重跑。stdout/stderr 分别最多保留 1 MB，预览最多 4096 字节，分页回读按任务和 fence 限定；超时及取消终止进程树。
+
+真实 RED：先新增快照与版本回写测试，再运行 `CARGO_TARGET_DIR=/tmp/creatoros-t1007-winwire-red cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked command_windows::tests::snapshot_import -- --nocapture`，编译因 `collect_snapshot`、`plan_import`、`VersionConflict` 缺失而失败（5 处）。补实现后同一测试 2/2 通过，覆盖嵌套中文路径、改变与新增文件的版本回写、源版本变化拒绝以及符号链接输出拒绝。Windows 专属 Pipe 往返测试已编译、默认忽略，需真机显式运行；该测试不等于本机已通过。
+
+- Mac 独立 Rust 全套：`CARGO_TARGET_DIR=/tmp/creatoros-t1007-winwire-red RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked --quiet`：**24 通过、4 个外部探针忽略**。
+- Windows MSVC 独立模块源码检查：`CARGO_TARGET_DIR=/tmp/creatoros-t1007-winwire-target cargo check --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --target x86_64-pc-windows-msvc --tests --offline --locked` 及不带 `--tests` 的发布配置均通过；**没有执行 Windows 二进制**。
+- `cargo fmt --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --check` 与 `git diff --check`：通过。没有改动 JS 文件；独立工作树无前端 Vitest 依赖，本轮也没有新的 JS 测试结果。
+- 全局 `boundary-scan.mjs` 仍被未修改的 `frontend/src/features/copilot/live-chat-session.ts` 两条 R2 导入阻断；`semantic-boundary-scan.mjs` 仍被未修改的 `backend/src/modules/ai-runtime/video-decisions-runner.ts` 的 `material.match` 缺口阻断。本写集未覆盖这些旧问题，不写成全绿。
+
+Windows 真机运行入口：先设置 `CREATOROS_T1007_WINDOWS_COMMAND_PROBE=1` 和 `CREATOROS_TEST_PACKAGED_RUNTIME_ROOT=<已核验的随包 sidecar 目录>`，再运行 `cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml real_windows_candidate_pipe_command_roundtrip -- --ignored --nocapture`，并运行两个既有 AppContainer / Job Object 真机隔离探针。仍需检验任务外文件、用户凭据、网络、句柄继承、重解析点、并发修改、子进程取消、超时、宿主崩溃、Unicode/空格路径及 Windows 安装包中的 Node/Python。完整 Tauri Windows 交叉构建此前在本机受 MSVC `assert.h` 缺失阻断，本轮未重试；真实数据库租约→真实 sidecar PID→Pipe→隔离命令也尚未执行。**因此生产 Windows 命令继续 fail-closed，T-1007 保持进行中。**
