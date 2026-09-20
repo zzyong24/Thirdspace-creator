@@ -12,6 +12,15 @@ export const CHAT_FINAL_RECOVERY = "[宿主生成的最终回复恢复，不是�
 export class ChatFinalRecoveryError extends Error {
   constructor(readonly code: "CHAT_FINAL_RECOVERY_EMPTY" | "CHAT_FINAL_RECOVERY_INCOMPLETE" | "CHAT_FINAL_RECOVERY_TOOL_CALL") { super(code); this.name = "ChatFinalRecoveryError"; }
 }
+export class ChatPlanProgressError extends Error {
+  constructor(readonly code: "CHAT_PLAN_NO_PROGRESS" | "CHAT_PLAN_REQUIRES_USER", readonly stepTitles: string[]) { super(`${code}: ${stepTitles.join("、")}`); this.name = "ChatPlanProgressError"; }
+}
+export interface ChatPlanStatus {
+  revision: number;
+  /** 可信宿主根据已保存计划与调用回执生成；同一令牌表示没有新进展。 */
+  progressToken: string;
+  steps: Array<{stepId:string;title:string;status:"pending"|"running"|"waiting_user"|"succeeded"|"failed"|"cancelled"|"skipped"}>;
+}
 interface Definition {name:string;description:string;parameters:Record<string,unknown>}
 export interface ChatPiLoopOptions {
   contextPolicyVersion?:2;
@@ -23,6 +32,8 @@ export interface ChatPiLoopOptions {
   forcedTool?:string;forcedToolSequence?:string[];
   /** 仅由宿主冻结的新运行策略启用；旧账本回放必须沿用原请求序列。 */
   recoverMissingFinal?:boolean;
+  /** 由宿主读取原 execution_tasks 计划，不能由模型文本推断完成。 */
+  readPlanStatus?():Promise<ChatPlanStatus|null>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
 }
 /**
@@ -34,6 +45,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
   let agent:ChatPiAgent;
   let failure:unknown,awaitingApproval=false,finishReason="stop",turn=0;
   let completedTool=false,finalRecovery=false,lastMessageHasFile=false;
+  let planStatus:ChatPlanStatus|null=null,lastPlanProgress:string|null=null,stalledTurns=0;
   const history:ModelMessage[]=[...options.messages];
   const parts:UIMessage["parts"]=[];
   const definitions=sanitizeToolNames(Object.fromEntries(options.definitions.map(def=>[def.name,def])));
@@ -104,6 +116,12 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         message.usage={...message.usage,input:usage.inputTokens??0,output:usage.outputTokens??0,totalTokens:usage.totalTokens??0};
         message.stopReason=message.content.some(part=>part.type==="toolCall")?"toolUse":finishReason==="length"?"length":"stop";
         if(finishReason==="error" || finishReason==="unknown")throw Error("CHAT_MODEL_FINISH_UNKNOWN");
+        planStatus=null;
+        if(!recoveryRequest && message.stopReason==="stop" && options.readPlanStatus){
+          planStatus=await options.readPlanStatus();
+          const waiting=planStatus?.steps.filter(step=>step.status==="waiting_user")??[];
+          if(waiting.length)throw new ChatPlanProgressError("CHAT_PLAN_REQUIRES_USER",waiting.map(step=>step.title));
+        }
         if(recoveryRequest){
           if(!text.trim())throw new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");
           if(finishReason!=="stop")throw new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_INCOMPLETE");
@@ -142,6 +160,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
           if(part){part.state="output-available";part.output=output;}
         }
         completedTool=true;
+        lastPlanProgress=null;stalledTurns=0;
         history.push({role:"tool",content:[{type:"tool-result",toolCallId,toolName:name,output:{type:"json",value:JSON.parse(JSON.stringify(output??null))}}]});
         return {content:[{type:"text" as const,text:JSON.stringify(output??null)}],details:output};
       }catch(error){failure??=error;agent.abort();throw error;}
@@ -152,7 +171,8 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
       const length=event.message?.stopReason==="length";
       // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
       const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !(options.recoverMissingFinal?lastMessageHasFile:parts.some(part=>part.type==="file"));
-      if(!length && !empty)return;
+      const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running")??[] : [];
+      if(!length && !empty && !unfinished.length)return;
       if(options.recoverMissingFinal && empty && completedTool){
         // 缺终稿只补一次只读答复，绝不重开工具策略或重复已执行动作。
         if(finalRecovery){failure??=new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");agent.abort();return;}
@@ -161,7 +181,15 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         agent.followUp({role:"user",content:CHAT_FINAL_RECOVERY,timestamp:0});
         return;
       }
-      const continuation=length?CHAT_LENGTH_CONTINUATION:"上一轮响应没有可见正文或工具行动。请继续当前用户请求，执行所需工具或交付实际结果。";
+      if(!length && unfinished.length){
+        const token=`${planStatus!.revision}:${planStatus!.progressToken}`;
+        stalledTurns=token===lastPlanProgress?stalledTurns+1:0;
+        lastPlanProgress=token;
+        if(stalledTurns>=2){failure??=new ChatPlanProgressError("CHAT_PLAN_NO_PROGRESS",unfinished.map(step=>step.title));agent.abort();return;}
+      }
+      const continuation=length?CHAT_LENGTH_CONTINUATION:unfinished.length
+        ? `当前已接受计划仍有未完成步骤：${unfinished.map(step=>step.title).join("、")}。请沿原任务继续调用必要工具，核对回执与文件后再交付；不要仅凭上轮正文宣称完成。`
+        :"上一轮响应没有可见正文或工具行动。请继续当前用户请求，执行所需工具或交付实际结果。";
       history.push({role:"user",content:continuation});
       agent.followUp({role:"user",content:continuation,timestamp:0});
     }

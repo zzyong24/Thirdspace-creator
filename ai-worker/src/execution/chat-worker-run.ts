@@ -11,7 +11,7 @@ import {
   agenticToolReservationSchema, agenticToolOutcomeSchema, type WorkerPort, type WorkerProviderReceipt,
 } from "@creatoros/contract/execution-worker";
 import { modelFor } from "../runtime/provider-factory";
-import { runChatPiLoop, ChatFinalRecoveryError } from "../runtime/chat/chat-pi-loop";
+import { runChatPiLoop, ChatFinalRecoveryError, ChatPlanProgressError, type ChatPlanStatus } from "../runtime/chat/chat-pi-loop";
 import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
@@ -25,6 +25,7 @@ export interface ChatWorkerPorts {
   /** 判定必须来自宿主对真实工具调用的授权，不能由模型参数自行决定。 */
   approve(input:{modelCallId:string;toolCallId:string},signal:AbortSignal):Promise<ToolApprovalStatus>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
+  readPlanStatus?(signal:AbortSignal):Promise<ChatPlanStatus|null>;
 }
 /** 执行回合而不提交业务终态；调用方须把返回消息/授权状态与任务原子保存。 */
 export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof workerModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){
@@ -176,13 +177,18 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      readPlanStatus:ports.readPlanStatus?()=>ports.readPlanStatus!(signal):undefined,
       approve:(name,args,options)=>toolApproval[name]!(args,options),
       approvalId:toolCallId=>`chat-approval:${modelForTool.get(toolCallId)!}:${toolCallId}`,
       execute:async(name,args,options)=>{
         const executable=tools[name] as unknown as {execute:(input:unknown,options:{toolCallId:string;messages:ModelMessage[];abortSignal:AbortSignal})=>Promise<unknown>};
         return executable.execute(args,{...options,messages:[],abortSignal:signal});
       },
-    }).catch(error=>{if(error instanceof ChatFinalRecoveryError)throw new GenerationFailure("failed",error.code);throw error;});
+    }).catch(error=>{
+      if(error instanceof ChatFinalRecoveryError)throw new GenerationFailure("failed",error.code);
+      if(error instanceof ChatPlanProgressError)throw new GenerationFailure(error.code==="CHAT_PLAN_REQUIRES_USER"?"waiting_user":"failed",error.code);
+      throw error;
+    });
     await checkpointTail;
     if(failure)throw failure;
     parentSignal.throwIfAborted();
