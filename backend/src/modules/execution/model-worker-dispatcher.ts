@@ -14,6 +14,7 @@ import {createExecutionTranscribeAudioService} from "./execution-transcribe-audi
 import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
+import {createWorkbenchPlanService} from "./workbench-plan.service";
 import {createExecutionModelIdentityService} from "./execution-model-identity.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
@@ -78,6 +79,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   if(!Number.isInteger(concurrency) || concurrency<1 || concurrency>8)throw new Error("MODEL_CONCURRENCY_INVALID");
   const now=deps.now ?? (()=>new Date().toISOString());
   const leases=createExecutionLeaseService(db,{now});
+  const workbenchPlans=createWorkbenchPlanService(db,{now});
   const modelIdentity=createExecutionModelIdentityService(db,{now});
   const chatFallback=deps.executionMode==="chat.run"?createExecutionChatFallbackService(db,{now,resolve:c=>deps.resolveFallbackModelCredential?.(c)??Promise.resolve(null)}):null;
   const tasks=createPersistentTaskService(db,{now});
@@ -256,6 +258,8 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
+      if(port==="readWorkbenchPlan")return workbenchPlans.status(ref);
+      if(port==="saveWorkbenchPlan")return workbenchPlans.save(ref,workerPortInputSchemas.saveWorkbenchPlan.parse(raw));
       if(port==="appendStreamEvents")return streamEvents.append(ref,raw);
       if(port==="completeDailyTopicSkip"&&dailyTopics){workerPortInputSchemas.completeDailyTopicSkip.parse(raw);return dailyTopics.completeDailyTopicSkip(ref);}
       if(port==="commitDailyTopicResult"&&dailyTopics)return dailyTopics.commitResult(ref,workerPortInputSchemas.commitDailyTopicResult.parse(raw));

@@ -35,6 +35,18 @@ export function createWorkbenchPlanService(db: Db, deps: {
   const now = deps.now ?? (() => new Date().toISOString());
   const leases = createExecutionLeaseService(db, {now});
   return {
+    async status(ref: ExecutionRef) {
+      return leases.withLease(ref, "admission", async ({task}) => {
+        if (task.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
+        const plan = storedPlan(task.payload);
+        return plan ? {
+          revision: plan.planRevision,
+          // 计划的全部持久化事实参与令牌，避免只变更回执时误判无进展。
+          progressToken: JSON.stringify(plan),
+          steps: plan.steps.map(({title, status}) => ({title, status})),
+        } : null;
+      });
+    },
     async save(ref: ExecutionRef, input: {expectedRevision: number; steps: Step[]}): Promise<WorkbenchPlan> {
       if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw new ConflictError("计划版本无效");
       const proposed = workbenchPlanSchema.parse({planRevision: input.expectedRevision + 1, steps: input.steps});

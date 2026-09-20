@@ -1,4 +1,5 @@
 import {redfoxObservationSchema} from "./redfox";
+import {workbenchPlanSchema} from "./agent-workbench";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
 import {videoPortInputSchemas} from "./execution-video";
@@ -83,7 +84,7 @@ export const workerPortSchema = z.enum([
   "failChatGeneration", "restoreChatGeneration", "resolveChatGenerationCredential", "prepareChatGeneration", "reserveChatGenerationModel", "startChatGenerationModel", "settleChatGenerationModel", "completeChatGeneration",
   "failChatScriptDraft", "restoreChatScriptDraft", "prepareChatScriptDraft", "reserveChatScriptDraftModel", "startChatScriptDraftModel", "settleChatScriptDraftModel", "completeChatScriptDraft",
   "failChatHooks", "restoreChatHooks", "prepareChatHooks", "reserveChatHooksModel", "startChatHooksModel", "settleChatHooksModel", "completeChatHooks",
-  "appendStreamEvents", "commitChatResult", "checkChatToolApproval",
+  "appendStreamEvents", "commitChatResult", "checkChatToolApproval", "readWorkbenchPlan", "saveWorkbenchPlan",
   "completeDailyTopicSkip", "commitDailyTopicResult",
   "reserveTopicRead", "startTopicRead", "settleTopicRead", "readTopicRead", "readTopicBrowserSession", "saveTopicBrowserSession",
   "readTaskContext", "resolveModelCredential", "resolveChatFallbackCredential", "reserveCall", "startCall", "settleCall",
@@ -128,6 +129,8 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   ...videoPortInputSchemas,
+  readWorkbenchPlan:emptyPortInput,
+  saveWorkbenchPlan:z.object({expectedRevision:z.number().int().nonnegative(),steps:workbenchPlanSchema.shape.steps}).strict(),
   readProcessingAsset:emptyPortInput,saveMaterialExtraction:materialExtractionSchema,completeAssetProcessing:assetProcessingCompleteSchema,
   ...transcribeWorkflowPortSchemas,
   ...coverPortInputSchemas,
