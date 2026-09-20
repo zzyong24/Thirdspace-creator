@@ -361,4 +361,40 @@ mod tests {
         assert!(status.success());
         drop(running);
     }
+
+    #[test]
+    #[ignore = "external Node/DB integration fixture; requires fixed CfT and explicit environment"]
+    fn external_node_host_fixture() {
+        let expected_pid: u32 = std::env::var("CREATOROS_BROWSER_E2E_NODE_PID")
+            .expect("set CREATOROS_BROWSER_E2E_NODE_PID")
+            .parse()
+            .unwrap();
+        let ready = PathBuf::from(
+            std::env::var("CREATOROS_BROWSER_E2E_READY_FILE")
+                .expect("set CREATOROS_BROWSER_E2E_READY_FILE"),
+        );
+        let done = PathBuf::from(
+            std::env::var("CREATOROS_BROWSER_E2E_DONE_FILE")
+                .expect("set CREATOROS_BROWSER_E2E_DONE_FILE"),
+        );
+        let profile_root = PathBuf::from(
+            std::env::var("CREATOROS_BROWSER_E2E_PROFILE_ROOT")
+                .expect("set CREATOROS_BROWSER_E2E_PROFILE_ROOT"),
+        );
+        let bundled = PathBuf::from(
+            std::env::var("CREATOROS_TEST_CFT_ROOT").expect("set CREATOROS_TEST_CFT_ROOT"),
+        );
+        assert!(BrowserHost::packaged_chrome_available(&bundled));
+        let pending = PendingBrowserBridge::bind().unwrap();
+        let socket = pending.socket_path();
+        let running = pending.start(expected_pid, profile_root, bundled);
+        fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(180);
+        while !done.exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+        let completed = done.exists();
+        drop(running);
+        assert!(completed, "Node integration did not release the fixture");
+    }
 }
