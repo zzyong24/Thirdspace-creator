@@ -6,6 +6,12 @@
 //! Windows command execution stays closed pending native isolation and IPC.
 #[cfg(unix)]
 pub mod command;
+// Compile the fail-closed Windows host on its target, and exercise its
+// admission tests on the development host even without a Windows runner.
+#[cfg(any(windows, test))]
+pub mod command_windows;
+#[cfg(windows)]
+pub use command_windows as command;
 pub mod files;
 #[cfg(target_os = "macos")]
 pub mod browser;

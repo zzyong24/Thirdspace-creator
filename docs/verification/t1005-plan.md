@@ -19,3 +19,59 @@ Pi 循环新增可信 `readPlanStatus` 端口：模型输出正文时若计划�
 暂停／恢复补测：真实子进程在计划首次保存后进入第二次模型流，宿主请求暂停并中断该流。计划 revision 1 与首个已结算工具回执保留；恢复后原检查点明确转为 `unknown_result` / `CHAT_CHECKPOINT_REQUIRES_RECONCILIATION`，模型请求数仍为 2，未重发未知流，也未伪造计划完成。该行为是当前原执行链的安全停止边界；尚需后续人工或自动对账后继续能力，不能把它说成自动恢复完成。集成测试 2/2 通过。
 
 已知回执路径另用计划服务测试验证：暂停后原 attempt/fence 拒绝再次写入，resume 后新领取同一 taskId 得到新 fence，可读取 revision 3 并继续增补步骤；成功步骤和原回执保持不变。该测试与上述在途未知分支分别覆盖可安全续跑与须对账的两种情况。
+
+## 2026-09-20 隔离树余项候选
+
+本次只改计划服务、Pi 循环、Worker 入口、对应两份测试和本文。沿用原 `executionTaskId`、调用账本与租约。人能读懂的恢复分支如下：
+
+```mermaid
+flowchart LR
+ A[原任务领取新租约] --> B{读取原检查点}
+ B -->|已结算回执| C[按原 operationKey 回放]
+ C --> D[继续未完成计划]
+ B -->|未知或不能恢复的在途调用| E[要求先对账]
+ E --> F[不准派发新模型或工具]
+```
+
+改动：已记录到步骤上的操作/产物引用不可在重规划时抹掉；`supersedes` 必须指向旧步骤；新引用要核对本任务真实工具调用或由产物端口核验，步骤成功还要重新核对回执与产物。声明未知副作用或错误的工具回执不能支撑成功。无进展令牌只计回执引用和成功状态，改标题、改 revision、运行态摆动或反复调用无成果工具不会无限续跑。计划未完成时，空回复继续原循环，不进入只读最终答复恢复；失败步骤也不能被正文宣称完成。Worker 对未知调用和未列入可恢复清单的 started 调用先阻断，即使检查点的 `recovery` 字段误报 ready。
+
+### 当场红测
+
+安装本独立树锁文件依赖后，先写测试再改运行代码；以下均为真实运行观察：
+
+最初的重复工具调用红测没有夹具请求上限，曾挂起；停止其父进程后，遗留孤儿 Vitest worker PID 47082，2026-09-20 已单独终止。该挂起运行不计 PASS。随后在夹具加入第 9 次请求上限，得到下表的可结束红测；修复后用 `--testTimeout=4000` 重跑整份协议测试，14/14 于 1.33 秒完成，进程检查无遗留 Vitest worker。
+
+| 命令 | 修复前结果 |
+|---|---|
+| `pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts --retry=0` | 5 例中 2 例失败：运行中步骤可抹掉 `operationRefs`；仅改标题和状态也改变进展令牌。 |
+| `pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts -t '计划未完成时空响应' --retry=0 --testTimeout=4000` | `CHAT_FINAL_RECOVERY_TOOL_CALL`：未完成计划误入只读最终答复。 |
+| `pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts -t '重复工具调用' --retry=0 --testTimeout=4000` | 测试夹具第 9 次请求报 `FIXTURE_UNBOUNDED_LOOP`，未触发 `CHAT_PLAN_NO_PROGRESS`。 |
+| `pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts -t '计划步骤失败' --retry=0` | 正文直接返回完成，没有预期的无进展错误。 |
+| `pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts -t '未知副作用' --retry=0` | 声称 `sideEffect: unknown` 的回执仍可把步骤标成功。 |
+| `pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts -t '重启前未知在途调用' --retry=0` | `recovery: ready` 与未知调用不一致时，Worker 仍进入 `reserveGenerationCall`。 |
+
+### 修复后验证与证据边界
+
+| 命令 | 结果 |
+|---|---|
+| `pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts --retry=0` | 7/7 PASS；PGlite 真账本、停止/恢复新 fence、未知工具不补成功也不换键重发。 |
+| `pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0` | 14/14 PASS；实际 Pi core + SDK，内存供应商流。两次启动沿同一 operationKey 回放已结算模型流及工具回执，只新增未完成步骤的调用；不把它写成真实供应商或进程重启。 |
+| `pnpm --dir backend exec vitest run src/integration/chat-workbench-plan.integration.test.ts --retry=0` | 2/2 PASS；真实打包 Worker 子进程 + PGlite + 本地模型协议夹具。其暂停/恢复样例处于未知模型流，正确转 `unknown_result`，未重发。 |
+| `pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-workbench-plan-tool-host.test.ts --retry=0` | 1/1 PASS。 |
+| `pnpm --dir ai-worker typecheck` | PASS。 |
+| `pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts --retry=0` | 32/32 PASS。 |
+| `pnpm --dir ai-worker exec vitest run src/execution/chat-web-read-recovery.test.ts src/execution/worker-runtime.test.ts --retry=0` | 32 通过、2 失败。两例旧网页恢复测试的输入均未声明 `executionEngine: "pi"`，而 HEAD 原有 Worker 守卫已返回 `CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED`；已用 `git show HEAD` 核对守卫和测试输入，属于本写集外既有测试失配，不计本任务 PASS。 |
+| `pnpm --dir backend typecheck` | FAIL，仍为 14 处既有测试源码错误；错误都不在 T-1005 写集，见本文件前述基线。不可称 backend 全量类型检查通过。 |
+| `node orchestrator/process/boundary-scan.mjs` | FAIL：7 条，基线 5 条；新增 2 条均指向写集之外的 `frontend/src/features/copilot/live-chat-session.ts`，由 T-1016 跟进。本候选没有修改该文件。 |
+
+**尚未验收：** 官方/自配真实模型凭据与调用没有在本次取得，故未做真实模型测试；安全续跑目前有同一操作键协议测试与 PGlite 租约测试，尚无真实进程在安全边界停止后再启动并完成原任务的非夹具证据。完整业务读取、网页、文件、产物登记与安装版交付属于后续任务，不能将本地模型夹具或 PGlite 测试冒充 AC-AW-01/03 全链路 PASS。未知外部动作必须先依据原调用对账；本候选没有自动判定其成功或重派。未推送、未发布，也未改主控制面任务状态。
+
+## 2026-09-20 安全检查点的真实子进程重启补证
+
+在 `workbench-plan.service.test.ts` 增加可运行测试，使用真实打包的 `execution-worker.cjs`、两个先后创建并分别关闭的 `WorkerSupervisor` 子进程、PGlite 原任务/租约/计划/检查点/调用账本，以及本地 HTTP 模型协议夹具。宿主端口由测试接到现有 backend service；外部动作由测试工具记录实际执行次数。第一进程在第二条模型回复**已结算且已存检查点**之后，经 `readWorkbenchPlan` 端口核对 `recovery: ready`、`ledgerSequence: 3`、消息顺序为模型→工具→模型、`pendingCalls: []`，才请求暂停并取消进程。不存在靠固定睡眠猜测安全窗口。
+
+暂停时原任务三条调用均为 `settled`，其中外部工具只执行一次；原计划 revision 1 仍待完成，已确认模型用量为 10 tokens。关闭第一子进程后，原 taskId 经 pause→acknowledge→resume 由新 worker 领取，attempt 增加、fence 改变。第二子进程回放前三条原调用，不再次访问供应商或执行外部工具；随后新增模型调用和 `plan.update`，以原工具 `operationRef` 将步骤标为成功。最终同一 taskId 成功，供应商请求总数由 2 增至 4、外部工具执行数仍为 1，原三条调用的 ID、operationKey、完整回执和用量逐字段不变；六条调用均已结算，累计模型用量由 10 增至 20 tokens，未重复计入回放。这里的“费用”证据是现有调用账本的 token 用量；本地夹具没有真实供应商价格，不能换算成货币费用。
+
+新测试在 `ce03759a` 原运行代码上首次执行即通过；本轮只补证据与测试，没有虚构失败红测或修改运行时。`pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts src/integration/chat-workbench-plan.integration.test.ts --retry=0 --testTimeout=30000` 为 **10/10 PASS**，其中既有未知模型流暂停/恢复测试仍要求对账、不重发。`pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 --testTimeout=4000` 为 **14/14 PASS**，`pnpm --dir ai-worker typecheck` 通过。`pnpm --dir backend typecheck` 仍仅有前述 14 处写集外既有错误，新测试无 TypeScript 错误。
+
+证据边界：这是本地模型协议夹具和测试接线的真实 Worker 子进程重启，证明原任务安全检查点续跑；未使用官方/自配真实模型，也未经过完整生产 dispatcher 调度、真实外部平台、文件产物和安装版。未知在途分支仍按既有真实子进程/PGlite 集成测试及 Worker 协议测试 fail closed；不能把安全分支的通过解释为未知动作自动对账完成。未推送或发布，T-1005 控制面状态未改。

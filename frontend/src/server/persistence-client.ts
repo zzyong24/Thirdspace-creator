@@ -79,6 +79,7 @@ import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligen
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
+import { createWorkbenchBrowserHost } from "./workbench-browser-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 
@@ -5427,7 +5428,15 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
-  const workbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now});
+  const workbenchHost=fileWorkbenchHost&&browserWorkbenchHost?{
+    catalog:[...fileWorkbenchHost.catalog,...browserWorkbenchHost.catalog],
+    platform:"macos" as const,
+    capabilities:[...new Set([...fileWorkbenchHost.capabilities,...browserWorkbenchHost.capabilities])],
+    dispatch:(call:Parameters<typeof fileWorkbenchHost.dispatch>[0],options:Parameters<typeof fileWorkbenchHost.dispatch>[1])=>
+      call.invocation.name.startsWith("browser.")?browserWorkbenchHost.dispatch(call,options):fileWorkbenchHost.dispatch(call,options),
+  }:fileWorkbenchHost??browserWorkbenchHost;
   const chatRuntime: ChatRuntime = {
     ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),

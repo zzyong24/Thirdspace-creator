@@ -163,7 +163,6 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
           if(part){part.state="output-available";part.output=output;}
         }
         completedTool=true;
-        lastPlanProgress=null;stalledTurns=0;
         const presented=await options.presentToolResult?.(def.name,output,toolCallId);
         const content=presented??[{type:"text" as const,text:JSON.stringify(output??null)}];
         history.push({role:"tool",content:[{type:"tool-result",toolCallId,toolName:name,output:presented?{type:"content" as const,value:content.map(item=>item.type==="image"?{type:"file" as const,data:{type:"data" as const,data:item.data},mediaType:item.mimeType}:item)}:{type:"json" as const,value:JSON.parse(JSON.stringify(output??null))}}]});
@@ -176,9 +175,9 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
       const length=event.message?.stopReason==="length";
       // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
       const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !(options.recoverMissingFinal?lastMessageHasFile:parts.some(part=>part.type==="file"));
-      const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running")??[] : [];
+      const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running" || step.status==="failed")??[] : [];
       if(!length && !empty && !unfinished.length)return;
-      if(options.recoverMissingFinal && empty && completedTool){
+      if(options.recoverMissingFinal && empty && completedTool && !unfinished.length){
         // 缺终稿只补一次只读答复，绝不重开工具策略或重复已执行动作。
         if(finalRecovery){failure??=new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");agent.abort();return;}
         finalRecovery=true;
@@ -187,7 +186,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         return;
       }
       if(!length && unfinished.length){
-        const token=`${planStatus!.revision}:${planStatus!.progressToken}`;
+        const token=planStatus!.progressToken;
         stalledTurns=token===lastPlanProgress?stalledTurns+1:0;
         lastPlanProgress=token;
         if(stalledTurns>=2){failure??=new ChatPlanProgressError("CHAT_PLAN_NO_PROGRESS",unfinished.map(step=>step.title));agent.abort();return;}

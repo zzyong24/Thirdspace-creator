@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { it } from 'vitest';
 import {runChatPiLoop} from './chat-pi-loop';
+import {createDurableStreamModel} from '../../execution/durable-stream-model';
+import {runChatInWorker} from '../../execution/chat-worker-run';
 const usage={inputTokens:{total:1,noCache:1,cacheRead:0,cacheWrite:0},outputTokens:{total:1,text:1,reasoning:0}};
 // 真实Pi core与SDK协议，供应商流及工具回执均来自内存，不涉及外部IO。
 it.each(['success','empty','tool','legacy'])("缺final恢复协议：%s", async mode => {
@@ -37,6 +39,72 @@ it('计划未推进且模型重复宣称完成时给具体步骤错误，停止�
  }};
  await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'读取'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'stalled',readPlanStatus:async()=>({revision:1,progressToken:'same',steps:[{stepId:'read',title:'读取资料',status:'pending'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
  assert.equal(calls,3);
+});
+
+it('计划未完成时空响应继续原任务并允许下一步工具，不能进入只读最终答复恢复', async () => {
+ let calls=0,executions=0;const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);calls++;
+  const content:any[]=calls===1||calls===3?[{type:'tool-call',toolCallId:`tool-${calls}`,toolName:'read',input:'{}'}]:calls===4?[{type:'text-start',id:'t'},{type:'text-delta',id:'t',delta:'已按回执交付'},{type:'text-end',id:'t'}]:[];
+  const reason=calls===1||calls===3?'tool-calls':'stop';
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'继续计划',messages:[{role:'user',content:'完成两步'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>({status:'ok',count:++executions}),approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'empty-plan',recoverMissingFinal:true,readPlanStatus:async()=>({revision:executions+1,progressToken:String(executions),steps:[{stepId:'read',title:'读取资料',status:executions<2?'pending':'succeeded'}]})});
+ assert.equal(calls,4);assert.equal(executions,2);assert.match(result.text,/已按回执交付/);
+ assert.ok(requests[2].tools?.length>0);
+});
+
+it('重复工具调用不重置计划无进展计数', async () => {
+ let calls=0,executions=0;
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
+  calls++;if(calls>8)throw Error('FIXTURE_UNBOUNDED_LOOP');const isTool=calls%2===1;const content:any[]=isTool?[{type:'tool-call',toolCallId:`loop-${calls}`,toolName:'read',input:'{}'}]:[{type:'text-start',id:'t'},{type:'text-delta',id:'t',delta:'已完成'},{type:'text-end',id:'t'}];
+  const reason=isTool?'tool-calls':'stop';return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};
+ }};
+ await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'读取'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>({status:'ok',count:++executions}),approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'tool-stall',readPlanStatus:async()=>({revision:1,progressToken:'unchanged',steps:[{stepId:'read',title:'读取资料',status:'pending'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
+ assert.equal(calls,6);assert.equal(executions,3);
+});
+
+it('计划步骤失败时不能把模型正文当作完成，须继续处理或以无进展退出', async () => {
+ let calls=0;
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
+  calls++;if(calls>4)throw Error('FIXTURE_UNBOUNDED_LOOP');return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:'完成'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};
+ }};
+ await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'完成失败步骤'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-plan',readPlanStatus:async()=>({revision:1,progressToken:'failed-receipt',steps:[{stepId:'read',title:'读取失败',status:'failed'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
+ assert.equal(calls,3);
+});
+
+it('停止后沿原操作键回放已结算模型与工具回执，再继续同一计划', async () => {
+ const taskId='original-task';const receipts=new Map<string,unknown>();const toolReceipts=new Map<string,unknown>();
+ let supplierCalls=0,dispatches=0;
+ const provider={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
+  supplierCalls++;const isTool=supplierCalls===1||supplierCalls===3;
+  const content:any[]=isTool?[{type:'tool-call',toolCallId:`tool-${supplierCalls}`,toolName:'read',input:'{}'}]:[{type:'text-start',id:'t'},{type:'text-delta',id:'t',delta:supplierCalls===2?'还需检查':'计划已核验'},{type:'text-end',id:'t'}];
+  const reason=isTool?'tool-calls':'stop';return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};
+ }};
+ const model=()=>createDurableStreamModel({model:provider as never,operationKey:taskId,ports:{
+  reserve:async(request:any)=>({callId:request.operationKey,status:receipts.has(request.operationKey)?'settled':'reserved',...(receipts.has(request.operationKey)?{providerResult:receipts.get(request.operationKey)}:{})}),
+  start:async()=>{},settle:async(callId:string,value:any)=>{assert.equal(value.status,'settled');receipts.set(callId,value.providerResult);},
+ }});
+ const execute=async(_name:string,_input:unknown,{toolCallId}:{toolCallId:string})=>{
+  if(!toolReceipts.has(toolCallId)){dispatches++;toolReceipts.set(toolCallId,{status:'ok',operationId:`${taskId}:${toolCallId}`});}
+  return toolReceipts.get(toolCallId);
+ };
+ const controller=new AbortController();
+ const options={system:'完成原计划',messages:[{role:'user' as const,content:'执行后检查'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute,approve:async()=> 'approved' as const,approvalId:()=> 'approval',maxOutputTokens:256,messageId:taskId,
+  readPlanStatus:async()=>({revision:dispatches+1,progressToken:String(dispatches),steps:[{stepId:'work',title:'处理并检查',status:dispatches===2?'succeeded' as const:'pending' as const}]})};
+ await assert.rejects(runChatPiLoop({...options,model:model(),signal:controller.signal,readPlanStatus:async()=>{controller.abort(new Error('TEST_STOP_AFTER_SETTLED_RECEIPTS'));return options.readPlanStatus();}}));
+ assert.equal(controller.signal.aborted,true);assert.equal(supplierCalls,2);assert.equal(dispatches,1);
+ const resumed=await runChatPiLoop({...options,model:model(),signal:AbortSignal.timeout(10000)});
+ assert.equal(supplierCalls,4);assert.equal(dispatches,2);assert.equal(receipts.size,4);assert.equal(toolReceipts.size,2);
+ assert.match(resumed.text,/计划已核验/);
+});
+
+it.each([{recovery:'requires_reconciliation',status:'unknown'},{recovery:'ready',status:'unknown'},{recovery:'ready',status:'started'}] as const)('重启前未知在途调用由 Worker 原检查点阻断（$recovery/$status），不进入供应商或工具', async ({recovery,status}) => {
+ const calls:string[]=[];
+ const input={kind:'chat.run' as const,executionEngine:'pi' as const,operationKey:'original-task',capability:'copilot.assist',userId:'u',accountId:'a',conversationId:'c',sourceMessageId:'m',system:'执行',messages:[{role:'user' as const,content:'继续原任务'}],maxSteps:4,maxOutputTokens:256,tools:[]};
+ const spec={apiFormat:'openai_chat' as const,baseUrl:null,model:'fixture',token:'fixture'};
+ await assert.rejects(runChatInWorker(input,spec,new AbortController().signal,{call:async(port)=>{calls.push(port);if(port==='readCheckpoint')return {revision:1,ledgerSequence:2,messages:[{role:'assistant',callId:'settled-model'}],uncheckpointedReceipts:[],pendingCalls:[{callId:'in-flight-tool',status}],recovery};throw Error('FORBIDDEN_REDISPATCH');},approve:async()=>{throw Error('FORBIDDEN_APPROVAL');}}),{outcome:'unknown_result',errorCode:'CHAT_CHECKPOINT_REQUIRES_RECONCILIATION'});
+ assert.deepEqual(calls,['readCheckpoint']);
 });
 
 it('已结算长结果只把分页投影送回模型，UI仍持有完整结果',async()=>{

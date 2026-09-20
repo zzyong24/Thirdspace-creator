@@ -24,7 +24,7 @@ const profileSchema=z.object({
  */
 export function createWorkbenchBrowserAdmissionService(db:Db,deps:{
  now?:()=>string;
- resolveProfile(context:RequestContext,request:OpenRequest,signal?:AbortSignal):Promise<{accountId:string;domain:string;profileKey:string}>;
+ resolveProfile(context:RequestContext,request:OpenRequest,ref:ExecutionRef,signal?:AbortSignal):Promise<{accountId:string;domain:string;profileKey:string}>;
  /** 宿主按实际 Chromium/profile 进程身份提供停止证明；不能由模型或 Worker 自报。 */
  verifyProfileStopped(scope:{ref:ExecutionRef;leaseId:string;profileKey:string;domain:string;userId:string}):Promise<boolean>;
 }){
@@ -36,7 +36,7 @@ export function createWorkbenchBrowserAdmissionService(db:Db,deps:{
    signal?.throwIfAborted();
    const context=await leases.withLease(ref,"admission",async({context})=>context);
    if(!context.accountId)throw new ConflictError("浏览器任务缺少账号归属");
-   const profile=profileSchema.parse(await deps.resolveProfile(context,request,signal));
+   const profile=profileSchema.parse(await deps.resolveProfile(context,request,ref,signal));
    signal?.throwIfAborted();
    if(profile.accountId!==context.accountId)throw new ConflictError("浏览器档案与当前账号不符");
    // acquireProfile 在同一行锁下再次验证 attempt/fence/停止状态；解析期间失效则不占档案。

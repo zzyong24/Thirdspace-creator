@@ -19,7 +19,7 @@ import { GenerationFailure } from "./generation-error";
 import { projectReceiptForPi } from "../capabilities/result-pages";
 import { createWorkbenchGateway, toAgenticToolOutcome } from "../capabilities/gateway";
 import { workbenchResultSchema } from "@creatoros/contract/agent-workbench";
-const checkpointSchema=z.object({pendingCalls:z.array(z.object({status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+const checkpointSchema=z.object({pendingCalls:z.array(z.object({callId:z.string().optional(),status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -46,7 +46,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   // 旧协议任务保留账本与历史，但升级后不再启动已退役的执行器。
   // 未知回执继续要求对账；其余旧任务明确等待用户另建任务，不自动重发动作。
   if(input.executionEngine!=="pi")throw new GenerationFailure((initial.recovery==="requires_reconciliation" || initial.pendingCalls.some(call=>call.status==="started" || call.status==="unknown"))?"unknown_result":"waiting_user","CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED");
-  if(initial.recovery==="requires_reconciliation")throw new GenerationFailure("unknown_result","CHAT_CHECKPOINT_REQUIRES_RECONCILIATION");
+  const recoverableCalls=new Set([...initial.replayableScriptDraftToolCallIds,...initial.replayableWebReadToolCallIds,...initial.replayableGenerationToolCallIds,...initial.completableToolCallIds,...initial.resumableToolCallIds]);
+  if(initial.recovery==="requires_reconciliation" || initial.pendingCalls.some(call=>call.status==="unknown" || (call.status==="started" && !recoverableCalls.has(call.callId??""))))throw new GenerationFailure("unknown_result","CHAT_CHECKPOINT_REQUIRES_RECONCILIATION");
   const restoreHooks=async(callId:string)=>{
     const receipt=workerStartReceiptSchema.parse(await ports.call("restoreChatHooks",{callId},signal));
     if(receipt.callId!==callId)throw new GenerationFailure("unknown_result","CHAT_HOOKS_RESTORE_RECEIPT_UNKNOWN");
