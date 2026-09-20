@@ -96,3 +96,62 @@ describe("private native file client", () => {
     await expect(client.file(ref, "ledger-op", { kind: "list" })).rejects.toEqual(new NativeFileError("UNSUPPORTED_PLATFORM", false));
   });
 });
+
+describe("private native command client", () => {
+  it("uses the current locked task identity and a distinct target operation for status", async () => {
+    let inLease = false;
+    const path = await socket((request, reply) => {
+      expect(inLease).toBe(true);
+      expect(request.scope).toEqual({ userId: "db-user", accountId: "db-account", taskId: "task-1", attempt: 2, fenceToken: "fence-2" });
+      expect(request.operationId).toBe("status-call");
+      expect(request.action).toEqual({ kind: "command_status", targetOperationId: "run-call" });
+      reply({ ok: true, operationId: "status-call", value: { operationId: "run-call", state: "running" } });
+    });
+    const lease: NativeLeasePort = { async withLease(current, mode, action) {
+      expect(current).toEqual(ref);
+      expect(mode).toBe("admission");
+      inLease = true;
+      try { return await action(scope); } finally { inLease = false; }
+    } };
+    const client = createWorkbenchNativeClient(lease, { platform: "darwin", desktop: true, socketPath: path });
+    await expect(client.command(ref, "status-call", { kind: "command_status", targetOperationId: "run-call" })).resolves.toMatchObject({ state: "running" });
+    expect(inLease).toBe(false);
+  });
+
+  it("rejects a stale fence and Windows before dispatch", async () => {
+    const path = await socket(() => { throw new Error("must not connect"); });
+    const lease: NativeLeasePort = { async withLease(_ref, _mode, action) {
+      return action({ ...scope, task: { ...scope.task, fenceToken: "new-fence" } });
+    } };
+    await expect(createWorkbenchNativeClient(lease, { platform: "darwin", desktop: true, socketPath: path })
+      .command(ref, "run-call", { kind: "command_run", argv: ["-e", "1"], cwd: ".", runtimeId: "bundled-node", timeoutMs: 1000 }))
+      .rejects.toMatchObject({ code: "STALE_LEASE", dispatched: false });
+    await expect(createWorkbenchNativeClient(lease, { platform: "win32", desktop: true, socketPath: path })
+      .command(ref, "run-call", { kind: "command_cancel", targetOperationId: "run-call" }))
+      .rejects.toMatchObject({ code: "UNSUPPORTED_PLATFORM", dispatched: false });
+  });
+
+  it("cancels the admitted process after the user stops its lease", async () => {
+    let stopped = false;
+    let cancelled!: () => void;
+    const cancelSeen = new Promise<void>(resolve => { cancelled = resolve; });
+    const path = await socket((request, reply) => {
+      const action = request.action as {kind:string;targetOperationId?:string};
+      if (action.kind === "command_run") reply({ok:true,operationId:"run-1",value:{operationId:"run-1",state:"running"}});
+      if (action.kind === "command_cancel") {
+        expect(action.targetOperationId).toBe("run-1");
+        expect(request.scope).toMatchObject({userId:"db-user",accountId:"db-account",taskId:"task-1"});
+        reply({ok:true,operationId:request.operationId as string,value:{operationId:"run-1",state:"cancelled"}});
+        cancelled();
+      }
+    });
+    const lease:NativeLeasePort={async withLease(_ref,_mode,action){
+      if(stopped)throw new Error("stopped");
+      return action(scope);
+    }};
+    const client=createWorkbenchNativeClient(lease,{platform:"darwin",desktop:true,socketPath:path});
+    await client.command(ref,"run-1",{kind:"command_run",argv:["-e","1"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000});
+    stopped=true;
+    await Promise.race([cancelSeen,new Promise((_resolve,reject)=>setTimeout(()=>reject(new Error("cancel not sent")),3000))]);
+  });
+});

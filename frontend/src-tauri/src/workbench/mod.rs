@@ -2,7 +2,8 @@
 //! Native task capabilities never enter Tauri's WebView command registry.
 //! On macOS the private socket accepts only the exact spawned Node sidecar PID;
 //! that sidecar holds the backend execution row lock across each file request.
-//! Windows and command execution remain closed until separately verified.
+//! macOS commands use the same PID-bound socket and a packaged runtime path.
+//! Windows command execution stays closed pending native isolation and IPC.
 #[cfg(unix)]
 pub mod command;
 pub mod files;

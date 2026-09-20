@@ -3,6 +3,7 @@
 //! The Node caller must keep the backend admission transaction open until the reply.
 #![cfg(target_os = "macos")]
 
+use super::command::{CommandError, CommandHost, CommandRequest, RuntimeRegistry};
 use super::files::{FileError, TaskFiles};
 use base64::Engine as _;
 use rand::RngCore as _;
@@ -36,12 +37,12 @@ struct Scope {
 struct Request {
     operation_id: String,
     scope: Scope,
-    action: FileAction,
+    action: Action,
 }
 
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-enum FileAction {
+enum Action {
     List {
         path: Option<String>,
     },
@@ -55,8 +56,35 @@ enum FileAction {
     },
     Write {
         path: String,
+        #[serde(rename = "contentBase64")]
         content_base64: String,
+        #[serde(rename = "expectedVersion")]
         expected_version: u64,
+    },
+    CommandRun {
+        argv: Vec<String>,
+        cwd: String,
+        #[serde(rename = "runtimeId")]
+        runtime_id: String,
+        #[serde(rename = "timeoutMs")]
+        timeout_ms: u64,
+        #[serde(rename = "stdinRef")]
+        stdin_ref: Option<String>,
+    },
+    CommandStatus {
+        #[serde(rename = "targetOperationId")]
+        target_operation_id: String,
+    },
+    CommandCancel {
+        #[serde(rename = "targetOperationId")]
+        target_operation_id: String,
+    },
+    CommandRead {
+        #[serde(rename = "targetOperationId")]
+        target_operation_id: String,
+        stream: String,
+        offset: u64,
+        limit: usize,
     },
 }
 
@@ -76,7 +104,18 @@ fn file_error(error: FileError) -> Value {
     }
 }
 
-fn execute(base: &Path, request: Request) -> Value {
+fn command_error(error: CommandError) -> Value {
+    let code = match error {
+        CommandError::InvalidInput => "INVALID_COMMAND",
+        CommandError::Unavailable(_) => "COMMAND_UNAVAILABLE",
+        CommandError::Io(_) => "COMMAND_IO_ERROR",
+        CommandError::WrongScope => "WRONG_SCOPE",
+        CommandError::AlreadyRunning => "ALREADY_RUNNING",
+    };
+    json!({"ok": false, "code": code})
+}
+
+fn execute(base: &Path, commands: &CommandHost, request: Request) -> Value {
     let Scope {
         user_id,
         account_id,
@@ -99,11 +138,13 @@ fn execute(base: &Path, request: Request) -> Value {
         Ok(files) => files,
         Err(error) => return file_error(error),
     };
-    let result: Result<Value, FileError> = match request.action {
-        FileAction::List { path } => files
+    let scope = files.scope_key();
+    let result: Result<Value, Value> = match request.action {
+        Action::List { path } => files
             .list(path.as_deref())
-            .map(|entries| json!({"entries": entries})),
-        FileAction::Read {
+            .map(|entries| json!({"entries": entries}))
+            .map_err(file_error),
+        Action::Read {
             path,
             offset,
             limit,
@@ -116,14 +157,18 @@ fn execute(base: &Path, request: Request) -> Value {
                     "version": version,
                 }),
                 None => Value::Null,
-            }),
-        FileAction::Stat { path } => files.stat(&path).map(|stat| match stat {
-            Some((is_dir, size, version)) => {
-                json!({"isDirectory": is_dir, "size": size, "version": version})
-            }
-            None => Value::Null,
-        }),
-        FileAction::Write {
+            })
+            .map_err(file_error),
+        Action::Stat { path } => files
+            .stat(&path)
+            .map(|stat| match stat {
+                Some((is_dir, size, version)) => {
+                    json!({"isDirectory": is_dir, "size": size, "version": version})
+                }
+                None => Value::Null,
+            })
+            .map_err(file_error),
+        Action::Write {
             path,
             content_base64,
             expected_version,
@@ -133,12 +178,78 @@ fn execute(base: &Path, request: Request) -> Value {
                 .map(|version| json!({"version": version})),
             Ok(_) => Err(FileError::TooLarge),
             Err(_) => Err(FileError::InvalidPath),
-        },
+        }
+        .map_err(file_error),
+        Action::CommandRun {
+            argv,
+            cwd,
+            runtime_id,
+            timeout_ms,
+            stdin_ref,
+        } => commands
+            .run(
+                &files,
+                &scope,
+                &request.operation_id,
+                CommandRequest {
+                    argv,
+                    cwd,
+                    runtime_id,
+                    timeout_ms,
+                    stdin_ref,
+                },
+            )
+            .map(|receipt| receipt_value(receipt))
+            .map_err(command_error),
+        Action::CommandStatus {
+            target_operation_id,
+        } => {
+            if !valid_id(&target_operation_id) {
+                Err(command_error(CommandError::InvalidInput))
+            } else {
+                commands
+                    .status(&scope, &target_operation_id)
+                    .map(receipt_value)
+                    .map_err(command_error)
+            }
+        }
+        Action::CommandCancel {
+            target_operation_id,
+        } => {
+            if !valid_id(&target_operation_id) {
+                Err(command_error(CommandError::InvalidInput))
+            } else {
+                commands
+                    .cancel(&scope, &target_operation_id)
+                    .map(receipt_value)
+                    .map_err(command_error)
+            }
+        }
+        Action::CommandRead {
+            target_operation_id,
+            stream,
+            offset,
+            limit,
+        } => {
+            if !valid_id(&target_operation_id) || limit > 512_000 {
+                Err(command_error(CommandError::InvalidInput))
+            } else {
+                commands.read_output(&scope, &target_operation_id, &stream, offset, limit)
+                .map(|(bytes, more)| json!({"contentBase64": base64::engine::general_purpose::STANDARD.encode(&bytes), "more": more, "nextOffset": offset + bytes.len() as u64}))
+                .map_err(command_error)
+            }
+        }
     };
     match result {
         Ok(value) => json!({"ok": true, "operationId": request.operation_id, "value": value}),
-        Err(error) => file_error(error),
+        Err(error) => error,
     }
+}
+
+fn receipt_value(receipt: super::command::CommandReceipt) -> Value {
+    json!({"operationId":receipt.operation_id,"state":receipt.state,"exitCode":receipt.exit_code,
+        "stdoutRef":receipt.stdout_ref,"stderrRef":receipt.stderr_ref,
+        "stdoutPreview":receipt.stdout_preview,"stderrPreview":receipt.stderr_preview,"truncated":receipt.truncated})
 }
 
 fn peer_is_sidecar(stream: &UnixStream, expected_pid: u32) -> io::Result<bool> {
@@ -168,7 +279,12 @@ fn peer_is_sidecar(stream: &UnixStream, expected_pid: u32) -> io::Result<bool> {
         && pid as u32 == expected_pid)
 }
 
-fn serve_one(mut stream: UnixStream, expected_pid: u32, base: &Path) -> io::Result<()> {
+fn serve_one(
+    mut stream: UnixStream,
+    expected_pid: u32,
+    base: &Path,
+    commands: &CommandHost,
+) -> io::Result<()> {
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     stream.set_write_timeout(Some(Duration::from_secs(10)))?;
     if !peer_is_sidecar(&stream, expected_pid)? {
@@ -181,7 +297,7 @@ fn serve_one(mut stream: UnixStream, expected_pid: u32, base: &Path) -> io::Resu
         json!({"ok": false, "code": "INVALID_REQUEST"})
     } else {
         match serde_json::from_slice::<Request>(&body) {
-            Ok(request) => execute(base, request),
+            Ok(request) => execute(base, commands, request),
             Err(_) => json!({"ok": false, "code": "INVALID_REQUEST"}),
         }
     };
@@ -236,19 +352,33 @@ impl PendingBridge {
         self.directory.as_ref().unwrap().join("workbench.sock")
     }
 
-    pub fn start(mut self, expected_pid: u32, base: PathBuf) -> RunningBridge {
+    pub fn start(
+        mut self,
+        expected_pid: u32,
+        base: PathBuf,
+        runtimes: RuntimeRegistry,
+    ) -> RunningBridge {
         let stop = Arc::new(AtomicBool::new(false));
         let stop_thread = stop.clone();
         let directory = self.directory.take().unwrap();
         let listener = self.listener.take().unwrap();
+        let commands = Arc::new(CommandHost::new(runtimes));
+        let thread_commands = commands.clone();
         let thread = std::thread::spawn(move || {
+            let mut idle_polls = 0u8;
             while !stop_thread.load(Ordering::Acquire) {
                 match listener.accept() {
                     Ok((stream, _)) => {
-                        let _ = serve_one(stream, expected_pid, &base);
+                        idle_polls = 0;
+                        let _ = serve_one(stream, expected_pid, &base, &thread_commands);
                     }
                     Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                         std::thread::sleep(Duration::from_millis(20));
+                        idle_polls = idle_polls.wrapping_add(1);
+                        if idle_polls >= 10 {
+                            thread_commands.reap();
+                            idle_polls = 0;
+                        }
                     }
                     Err(_) => break,
                 }
@@ -258,6 +388,7 @@ impl PendingBridge {
             stop,
             thread: Some(thread),
             directory,
+            _commands: commands,
         }
     }
 }
@@ -275,6 +406,7 @@ pub struct RunningBridge {
     stop: Arc<AtomicBool>,
     thread: Option<JoinHandle<()>>,
     directory: PathBuf,
+    _commands: Arc<CommandHost>,
 }
 
 impl Drop for RunningBridge {
@@ -283,6 +415,7 @@ impl Drop for RunningBridge {
         if let Some(thread) = self.thread.take() {
             let _ = thread.join();
         }
+        // Dropping _commands after this method terminates any remaining groups.
         let _ = fs::remove_file(self.directory.join("workbench.sock"));
         let _ = fs::remove_dir(&self.directory);
     }
@@ -311,6 +444,9 @@ mod tests {
         fs::create_dir(&path).unwrap();
         path
     }
+    fn test_runtimes(base: &Path) -> RuntimeRegistry {
+        RuntimeRegistry::from_sidecar(base).unwrap()
+    }
 
     #[test]
     fn authenticated_peer_can_write_read_and_cannot_escape_task() {
@@ -329,11 +465,11 @@ mod tests {
             0o700
         );
         let base = temp_base();
-        let _running = bridge.start(std::process::id(), base.clone());
+        let _running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
         let write = call(
             &socket,
             request(
-                json!({"kind":"write","path":"draft/report.html","content_base64":"aGVsbG8=","expected_version":0}),
+                json!({"kind":"write","path":"draft/report.html","contentBase64":"aGVsbG8=","expectedVersion":0}),
             ),
         );
         assert_eq!(write["value"]["version"], 1);
@@ -345,19 +481,26 @@ mod tests {
         let conflict = call(
             &socket,
             request(
-                json!({"kind":"write","path":"draft/report.html","content_base64":"Yg==","expected_version":0}),
+                json!({"kind":"write","path":"draft/report.html","contentBase64":"Yg==","expectedVersion":0}),
             ),
         );
         assert_eq!(conflict["code"], "VERSION_CONFLICT");
         let escape = call(
             &socket,
             request(
-                json!({"kind":"write","path":"../outside","content_base64":"Yg==","expected_version":0}),
+                json!({"kind":"write","path":"../outside","contentBase64":"Yg==","expectedVersion":0}),
             ),
         );
         assert_eq!(escape["code"], "INVALID_PATH");
         let command = call(&socket, request(json!({"kind":"run","argv":["/bin/sh"]})));
         assert_eq!(command["code"], "INVALID_REQUEST");
+        let missing_python = call(
+            &socket,
+            request(
+                json!({"kind":"command_run","argv":["-V"],"cwd":".","runtimeId":"bundled-python","timeoutMs":1000}),
+            ),
+        );
+        assert_eq!(missing_python["code"], "COMMAND_UNAVAILABLE");
         assert!(!base.join("outside").exists());
         fs::remove_dir_all(base).unwrap();
     }
@@ -398,7 +541,7 @@ mod tests {
             .env("CREATOROS_IPC_TEST_AUTHORIZED_SOCKET", &socket)
             .spawn()
             .unwrap();
-        let _running = bridge.start(child.id(), base.clone());
+        let _running = bridge.start(child.id(), base.clone(), test_runtimes(&base));
         assert!(child.wait().unwrap().success());
         fs::remove_dir_all(base).unwrap();
     }
@@ -408,13 +551,88 @@ mod tests {
         let bridge = PendingBridge::bind().unwrap();
         let socket = bridge.socket_path();
         let base = temp_base();
-        let _running = bridge.start(std::process::id(), base.clone());
+        let _running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
         let status = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "ipc::tests::unauthorized_child_probe"])
             .env("CREATOROS_IPC_TEST_SOCKET", &socket)
             .status()
             .unwrap();
         assert!(status.success());
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn private_socket_runs_reads_and_cancels_mac_process_for_same_task_only() {
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let base = temp_base();
+        // Unit fixture uses system binaries to test IPC/sandbox mechanics;
+        // production RuntimeRegistry::from_sidecar never selects these paths.
+        let running = bridge.start(
+            std::process::id(),
+            base.clone(),
+            RuntimeRegistry {
+                bundled_node: PathBuf::from("/bin/echo"),
+                bundled_python: PathBuf::from("/bin/echo"),
+                approved_program: PathBuf::from("/bin/sleep"),
+                read_roots: vec![],
+            },
+        );
+        let run = call(
+            &socket,
+            request(
+                json!({"kind":"command_run","argv":["hello"],"cwd":".","runtimeId":"bundled-node","timeoutMs":10000}),
+            ),
+        );
+        assert_eq!(run["ok"], true, "{run}");
+        assert_eq!(run["value"]["operationId"], "op-1");
+        let mut status = Value::Null;
+        for _ in 0..100 {
+            status = call(
+                &socket,
+                json!({"operationId":"status-1","scope":{"userId":"u","accountId":"a","taskId":"t","attempt":1,"fenceToken":"f"},
+                "action":{"kind":"command_status","targetOperationId":"op-1"}}),
+            );
+            if status["value"]["state"] != "running" {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(status["value"]["state"], "succeeded", "{status}");
+        let output = call(
+            &socket,
+            request(
+                json!({"kind":"command_read","targetOperationId":"op-1","stream":"stdout","offset":0,"limit":100}),
+            ),
+        );
+        assert_eq!(output["value"]["contentBase64"], "aGVsbG8K");
+        let wrong = call(
+            &socket,
+            json!({"operationId":"foreign","scope":{"userId":"u","accountId":"a2","taskId":"t","attempt":1,"fenceToken":"f"},
+            "action":{"kind":"command_cancel","targetOperationId":"op-1"}}),
+        );
+        assert_eq!(wrong["code"], "INVALID_COMMAND");
+        let other_account = call(
+            &socket,
+            json!({"operationId":"op-1","scope":{"userId":"u","accountId":"a2","taskId":"t","attempt":1,"fenceToken":"f"},
+            "action":{"kind":"command_run","argv":["other"],"cwd":".","runtimeId":"bundled-node","timeoutMs":10000}}),
+        );
+        assert_eq!(
+            other_account["ok"], true,
+            "same operation ID must not collide across accounts: {other_account}"
+        );
+        let run_sleep = call(
+            &socket,
+            json!({"operationId":"sleep-op","scope":{"userId":"u","accountId":"a","taskId":"t","attempt":1,"fenceToken":"f"},
+            "action":{"kind":"command_run","argv":["10"],"cwd":".","runtimeId":"approved-program","timeoutMs":20000}}),
+        );
+        assert_eq!(run_sleep["ok"], true, "{run_sleep}");
+        let cancel = call(
+            &socket,
+            request(json!({"kind":"command_cancel","targetOperationId":"sleep-op"})),
+        );
+        assert_eq!(cancel["value"]["state"], "cancelled", "{cancel}");
+        drop(running);
         fs::remove_dir_all(base).unwrap();
     }
 }
