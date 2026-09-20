@@ -5,11 +5,12 @@
 #[cfg(unix)]
 use std::{
     ffi::CString,
+    fs::File,
+    io::{Read, Seek, Write},
     os::fd::{AsRawFd, FromRawFd, RawFd},
 };
 use std::{
-    fs::File,
-    io::{self, Read, Seek, Write},
+    io,
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
@@ -40,12 +41,43 @@ pub fn validate_relative(path: &str) -> Result<Vec<String>, FileError> {
     }
     let normalized: String = path.nfc().collect();
     let parts: Vec<_> = normalized.split('/').map(str::to_string).collect();
-    if parts.iter().any(|p| {
-        p.is_empty() || p == "." || p == ".." || p.contains(':') || p.starts_with(".creatoros-")
-    }) {
+    if parts.iter().any(|p| invalid_component(p)) {
         return Err(FileError::InvalidPath);
     }
     Ok(parts)
+}
+fn invalid_component(part: &str) -> bool {
+    // SEMANTIC_BOUNDARY_ALLOW: these are filesystem/protocol safety checks;
+    // they make no choice about the meaning or destination of user content.
+    if part.is_empty()
+        || part == "."
+        || part == ".."
+        || part
+            .get(..11)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(".creatoros-"))
+        || part.ends_with([' ', '.'])
+        || part
+            .chars()
+            .any(|c| c.is_control() || "<>:\"|?*".contains(c))
+    {
+        return true;
+    }
+    // Windows treats device names as reserved even with an extension. Superscript
+    // digits are also recognized by Win32 for COM/LPT aliases. Reject on every
+    // host so a task moved between macOS and Windows keeps the same path meaning.
+    let stem = part.split('.').next().unwrap_or("").to_ascii_uppercase();
+    matches!(
+        stem.as_str(),
+        "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+    ) || ["COM", "LPT"].iter().any(|prefix| {
+        stem.strip_prefix(prefix).is_some_and(|suffix| {
+            suffix.chars().count() == 1
+                && suffix
+                    .chars()
+                    .next()
+                    .is_some_and(|c| matches!(c, '1'..='9' | '¹' | '²' | '³'))
+        })
+    })
 }
 fn key(id: &str) -> Result<String, FileError> {
     if id.is_empty() || id.len() > 160 || id.contains('\0') {
@@ -505,5 +537,41 @@ mod tests {
         assert!(validate_relative("../x").is_err());
         assert!(validate_relative("C:/x").is_err());
         std::fs::remove_dir_all(temp).unwrap();
+    }
+    #[test]
+    fn portable_paths_reject_windows_aliases_and_private_state() {
+        for path in [
+            "CON",
+            "con.txt",
+            "PRN.md",
+            "AUX",
+            "NUL.log",
+            "COM1",
+            "com9.py",
+            "LPT1.txt",
+            "LPT³",
+            "CONIN$",
+            "CONOUT$.txt",
+            "name.",
+            "name ",
+            "bad<name",
+            "bad|name",
+            "bad?name",
+            "bad*name",
+            "bad\nname",
+            ".CreatorOS-state",
+            "folder/.CREATOROS-tmp",
+            "C:/escape",
+            "a\\b",
+            "//server/share",
+            "../escape",
+        ] {
+            assert!(validate_relative(path).is_err(), "accepted {path:?}");
+        }
+        assert_eq!(
+            validate_relative("资料/空 格/é.txt").unwrap(),
+            ["资料", "空 格", "é.txt"]
+        );
+        assert_eq!(validate_relative("e\u{301}.txt").unwrap(), ["é.txt"]);
     }
 }
