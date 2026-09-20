@@ -2324,26 +2324,5 @@
       "commits": {}
     }
   ],
-  "leases": {
-    "T-1006:integration": {
-      "agent": "t1006-integration",
-      "since": "2026-09-20T04:35:53.598Z",
-      "isolation_kind": "worktree",
-      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1006-integration/Thirdspace-creator",
-      "branch": "codex/t1006-integration",
-      "base_sha": "7b7621bfc58cddab65e2debdb7366472ea18f889",
-      "wave_id": "aw-integration",
-      "merge_index": 0
-    },
-    "T-1007:desktop-integration": {
-      "agent": "t1007-desktop",
-      "since": "2026-09-20T04:36:28.533Z",
-      "isolation_kind": "worktree",
-      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1007-desktop/Thirdspace-creator",
-      "branch": "codex/t1007-desktop",
-      "base_sha": "7b7621bfc58cddab65e2debdb7366472ea18f889",
-      "wave_id": "aw-integration",
-      "merge_index": 1
-    }
-  }
+  "leases": {}
 }
