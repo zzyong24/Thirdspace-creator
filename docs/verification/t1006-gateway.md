@@ -69,3 +69,16 @@ flowchart LR
 本工作树先写宿主与冻结目录测试；首次 Packet 测试命令因本工作树缺 `node_modules` 在启动前报 `vitest not found`。随后在 `/tmp` 的隔离测试副本借用既有依赖运行：Packet 指定的 backend 宿主 4/4、ai-worker 网关 7/7 通过；额外的 backend 定义与计划、Worker 分页与持久工具、frontend 准备测试通过。ai-worker、contract、frontend 的 `tsc --noEmit` 通过；backend 类型检查仍报 14 条位于本 write_set 外的既有测试文件错误，本候选文件没有类型报错。扩展的 `durable-chat-tool-ledger.test.ts` 在本候选和 HEAD 对照副本的 `completed` 案例均报 `MODEL_RESULT_UNKNOWN`，未作为通过证据。
 
 `boundary-scan.mjs` 在本候选和 HEAD 归档均报同样两条相对旧基线的新违规，位于未修改的 `frontend/src/features/copilot/live-chat-session.ts`（`@ai-sdk/react`、`ai` 导入）；本候选引入 0 条边界违规。Packet 禁止改该文件与 baseline，因此全局命令不能记为通过。
+
+## 原任务进度持久化候选（独立工作树）
+
+宿主运行时的文字进度现在由 backend 的可信回调进入 `execution_stream_events`。写入时，后端在同一任务行锁事务中核验当前 attempt/fence、未停止且未过期的 lease、属于该任务且已有 Host 领取凭证的顶层 `started` 工具调用，以及该调用的 `startedAttempt`。事件固定构造成 AI SDK 可识别的 `data-workbench-progress` 块，只有 `operationId`、`progressCursor` 和受 4 KiB 限制的文字内容；宿主传来的任意 chunk 类型、账号和任务 ID 均不会照搬。Worker 原 `appendStreamEvents` 在聊天任务里仍只准写模型展示内容，不能写入工具进度。相同进度的重投按调用 ID 与内容去重；跨调用、未领取、旧 fence、停止、超限和结算后新增均拒绝。
+
+生产组合器已将后端进度回调接入通用能力宿主。宿主调度中的进度按顺序落库，订阅断开后可由原 `sequence` 继续读取；进度写入或观察回调故障被局部吸收，不把已经成功的工具回执改成失败。`execution_tasks.status` 仍是唯一终态来源，进度事件只负责展示。聊天 HTTP 入口会按原持久订阅发送该 `data-*` 块；具体卡片渲染属于 T-1011。
+
+- 红测：新增事件服务两个用例因 `appendWorkbenchProgress is not a function` 失败；宿主测试因持久回调从未调用失败。
+- 实际 Host 执行链复核：初版校验错误地拒绝 `toolExecutionClaimId`，将测试改成真实领取状态后重新红测（2 个用例失败），修正为必须存在领取凭证后复绿。
+- 绿测：`pnpm --dir backend exec vitest run src/modules/execution/execution-stream.service.test.ts src/modules/ai-runtime/chat-workbench-capability-host.test.ts src/integration/chat-tool-authority.test.ts --retry=0`，3 个文件、31 个测试通过。覆盖断线按 sequence 续读、同进度重投、跨账号读取/调用、旧 fence、坏载荷、停止与已结算调用，以及持久写入故障不覆盖工具成功。
+- backend 类型检查仍有 14 条写集外既有测试错误；本候选没有新增类型诊断。`boundary-scan.mjs` 仍为 7 条，其中相对配置基线多出的 2 条位于未改动的 `live-chat-session.ts`；本候选新增 0 条。
+
+生产尚未注入真实 `workbenchHost`，所以当前安装版不会触发通用宿主进度；文件、浏览器能力接入与真实模型/费用/停止恢复的端到端验收仍待后续任务。进度写入失败时工具可成功，但该条进度不可回放；不能据此宣称进度零丢失。
