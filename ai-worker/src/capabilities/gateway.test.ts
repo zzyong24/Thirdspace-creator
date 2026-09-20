@@ -72,4 +72,15 @@ describe("可信能力网关", () => {
     const cancelled = createWorkbenchGateway([capability], { platform: "macos", capabilities: ["task.files"], dispatch: async () => { controller.abort(); throw Error("cancelled"); } });
     await expect(cancelled.invoke(call, controller.signal)).rejects.toThrow("cancelled");
   });
+
+  it("Worker 只发送模型 invocation 与原预留 ID，后端回执须同键且不自动重发", async () => {
+    const dispatchReserved = vi.fn(async (_invocation, operationId) => ({ ...success, operationId }));
+    const gateway = createWorkbenchGateway([capability], { platform: "macos", capabilities: ["task.files"], dispatch: async () => { throw Error("unreachable"); }, dispatchReserved });
+    expect(await gateway.invokeReserved(call.invocation, "reserved-1", new AbortController().signal)).toMatchObject({ status: "succeeded", operationId: "reserved-1" });
+    expect(dispatchReserved).toHaveBeenCalledWith(call.invocation, "reserved-1", expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    const lost = createWorkbenchGateway([capability], { platform: "macos", capabilities: ["task.files"], dispatch: async () => { throw Error("unreachable"); }, dispatchReserved: async () => { throw Error("lost"); } });
+    expect(await lost.invokeReserved(call.invocation, "reserved-2", new AbortController().signal)).toMatchObject({ status: "unknown", operationId: "reserved-2", error: { retryable: false, nextAction: "reconcile" } });
+    await expect(gateway.invokeReserved({ ...call.invocation, input: { path: "x", accountId: "forged" } }, "reserved-3", new AbortController().signal)).rejects.toThrow("GATEWAY_INPUT_INVALID");
+    expect(dispatchReserved).toHaveBeenCalledOnce();
+  });
 });

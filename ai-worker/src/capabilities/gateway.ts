@@ -2,12 +2,14 @@ import Ajv, { type ValidateFunction } from "ajv";
 import {
   workbenchCapabilitySchema,
   workbenchHostCallSchema,
+  workbenchInvocationSchema,
   workbenchResultSchema,
   type WorkbenchCapability,
   type WorkbenchHostCall,
+  type WorkbenchInvocation,
   type WorkbenchResult,
 } from "@creatoros/contract/agent-workbench";
-import { agenticToolOutcomeSchema, type AgenticToolOutcome } from "@creatoros/contract/execution-worker";
+import { workbenchToolOutcome, type AgenticToolOutcome } from "@creatoros/contract/execution-worker";
 import { boundProgressText } from "./result-pages";
 
 type Platform = WorkbenchCapability["platforms"][number];
@@ -15,6 +17,8 @@ type Progress = Extract<WorkbenchResult, { status: "running" }>;
 export interface WorkbenchGatewayPort {
   /** 后端在当前 execution lease 下构造 host call，并由原工具回执端口结算。 */
   dispatch(call: WorkbenchHostCall, options: { signal: AbortSignal; onProgress: (update: WorkbenchResult) => void }): Promise<WorkbenchResult>;
+  /** Worker 只传模型 invocation；后端从原调用与当前租约恢复身份。 */
+  dispatchReserved?(invocation: WorkbenchInvocation, operationId: string, options: { signal: AbortSignal; onProgress: (update: WorkbenchResult) => void }): Promise<WorkbenchResult>;
 }
 export interface WorkbenchGatewayOptions extends WorkbenchGatewayPort {
   platform: Platform;
@@ -42,6 +46,38 @@ export function createWorkbenchGateway(catalog: readonly WorkbenchCapability[], 
   return {
     catalog(): WorkbenchCapability[] {
       return [...entries.values()].filter(available).map(entry => structuredClone(entry.descriptor));
+    },
+    async invokeReserved(rawInvocation: WorkbenchInvocation, operationId: string, signal: AbortSignal, onProgress?: (update: Progress) => void): Promise<WorkbenchResult> {
+      if (!options.dispatchReserved) throw new Error("GATEWAY_RESERVED_PORT_UNAVAILABLE");
+      signal.throwIfAborted();
+      const invocation = workbenchInvocationSchema.parse(rawInvocation);
+      const entry = entries.get(invocation.name);
+      if (!entry || !available(entry)) throw new Error("GATEWAY_CAPABILITY_UNAVAILABLE");
+      if (invocation.schemaVersion !== entry.descriptor.schemaVersion) throw new Error("GATEWAY_SCHEMA_VERSION_MISMATCH");
+      if (!entry.input(invocation.input)) throw new Error("GATEWAY_INPUT_INVALID");
+      if (!operationId || operationId.length > 160) throw new Error("GATEWAY_OPERATION_INVALID");
+      let active = true;
+      try {
+        const raw = await options.dispatchReserved(structuredClone(invocation), operationId, {
+          signal, onProgress: update => {
+            try {
+              if (!active || signal.aborted) return;
+              const parsed = workbenchResultSchema.parse(update);
+              if (parsed.status !== "running" || parsed.operationId !== operationId) return;
+              onProgress?.({ ...parsed, content: parsed.content.map(item => ({ type: "text", text: boundProgressText(item.text) })) });
+            } catch { /* 非关键进度不改变原调用结算。 */ }
+          },
+        });
+        signal.throwIfAborted();
+        const result = workbenchResultSchema.parse(raw);
+        if (result.operationId !== operationId) throw new Error("GATEWAY_OPERATION_MISMATCH");
+        if (result.status === "succeeded" && !entry.result(result)) throw new Error("GATEWAY_RESULT_INVALID");
+        return result;
+      } catch (error) {
+        if (signal.aborted) throw error;
+        return { operationId, status: "unknown", artifactRefs: [], progressCursor: null,
+          error: { code: "GATEWAY_RESULT_UNKNOWN", retryable: false, dispatched: true, nextAction: "reconcile" } };
+      } finally { active = false; }
     },
     async invoke(rawCall: WorkbenchHostCall, signal: AbortSignal, onProgress?: (update: Progress) => void): Promise<WorkbenchResult> {
       signal.throwIfAborted();
@@ -85,30 +121,5 @@ export function createWorkbenchGateway(catalog: readonly WorkbenchCapability[], 
 
 /** 转入原 AgenticToolOutcome 回执；费用、重放和取消仍由原执行链处理。 */
 export function toAgenticToolOutcome(result: WorkbenchResult, descriptor: WorkbenchCapability): AgenticToolOutcome {
-  workbenchCapabilitySchema.parse(descriptor);
-  workbenchResultSchema.parse(result);
-  if (result.status === "running") throw new Error("GATEWAY_RUNNING_RESULT_NOT_SETTLEABLE");
-  const unknown = result.status === "unknown" || (result.status === "failed" && result.error.dispatched);
-  const sideEffect = unknown ? "unknown" : result.status === "succeeded"
-    ? descriptor.effects.some(effect => effect === "external_write" || effect === "process" || effect === "task_write") ? "committed"
-      : descriptor.effects.includes("domain_candidate") ? "proposal" : "none"
-    : "none";
-  const summary = result.status === "succeeded"
-    ? (result.content.find(part => part.type === "text")?.text ?? "工具已完成").slice(0, 10000)
-    : `工具${unknown ? "回执待核对" : "调用失败"}：${result.error.code}`;
-  const errorCode = result.status === "succeeded" ? null : unknown ? "unknown_commit"
-    : result.error.nextAction === "fix_input" ? "invalid_input"
-    : result.error.nextAction === "login" ? "needs_login"
-    : result.error.nextAction === "contact_support" ? "no_evidence" : "transient";
-  const outcome: AgenticToolOutcome = {
-    status: result.status === "succeeded" ? "ok" : errorCode === "needs_login" ? "blocked" : "error",
-    summary, evidence: [], data: { workbench: result },
-    error: result.status === "succeeded" ? null : {
-      code: errorCode!,
-      retryable: !unknown && result.error.retryable,
-      recovery: unknown ? "按原 operationId 核对回执后继续；不要重新执行。" : `按 ${result.error.nextAction} 处理`,
-    },
-    continuation: null, sideEffect,
-  };
-  return agenticToolOutcomeSchema.parse(outcome);
+  return workbenchToolOutcome(result, descriptor);
 }

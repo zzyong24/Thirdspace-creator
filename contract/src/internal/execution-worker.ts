@@ -1,5 +1,5 @@
 import {redfoxObservationSchema} from "./redfox";
-import {workbenchPlanSchema} from "./agent-workbench";
+import {workbenchCapabilitySchema,workbenchPlanSchema,workbenchResultSchema,type WorkbenchCapability,type WorkbenchResult} from "./agent-workbench";
 export {redfoxInputSchema,redfoxObservationSchema,type RedfoxInput} from "./redfox";
 export {transcribeProfileSchema,transcribeSourceFailureSchema} from "./transcribe-workflow";
 import {videoPortInputSchemas} from "./execution-video";
@@ -33,6 +33,19 @@ import { agenticWorkerInputSchema, reserveAgenticModelSchema } from "./agentic-w
 export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitReceiptSchema } from "./agentic-worker";
 import { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolOutcomeSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
+
+/** 通用能力进入原工具账本时的唯一回执转换；未知提交永不自动重试。 */
+export function workbenchToolOutcome(rawResult:WorkbenchResult,rawDescriptor:WorkbenchCapability){
+ const descriptor=workbenchCapabilitySchema.parse(rawDescriptor),result=workbenchResultSchema.parse(rawResult);
+ if(result.status==="running")throw new Error("GATEWAY_RUNNING_RESULT_NOT_SETTLEABLE");
+ const unknown=result.status==="unknown" || (result.status==="failed" && result.error.dispatched);
+ const sideEffect=unknown?"unknown":result.status==="succeeded"
+  ? descriptor.effects.some(effect=>["external_write","process","task_write"].includes(effect))?"committed":descriptor.effects.includes("domain_candidate")?"proposal":"none"
+  :"none";
+ const summary=result.status==="succeeded"?(result.content.find(part=>part.type==="text")?.text??"工具已完成").slice(0,10000):`工具${unknown?"回执待核对":"调用失败"}：${result.error.code}`;
+ const code=result.status==="succeeded"?null:unknown?"unknown_commit":result.error.nextAction==="fix_input"?"invalid_input":result.error.nextAction==="login"?"needs_login":result.error.nextAction==="contact_support"?"no_evidence":"transient";
+ return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
+}
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
 import { z } from "zod";
