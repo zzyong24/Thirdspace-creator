@@ -128,7 +128,9 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
   }
   async function invoke(ref: ExecutionRef, operationId: string, action: NativeFileAction | NativeCommandAction,
     onVerified?: (scope:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string})=>void): Promise<unknown> {
-    if (platform !== "darwin") throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
+    if (platform !== "darwin" && platform !== "win32") throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
+    if (platform === "win32" && action.kind.startsWith("command_"))
+      throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
     if (!desktop || !socketPath) throw new NativeFileError("NATIVE_UNAVAILABLE", false);
     if (!operationId || operationId.length > 160 || /[\x00-\x1f]/.test(operationId)) {
       throw new NativeFileError("INVALID_OPERATION_ID", false);

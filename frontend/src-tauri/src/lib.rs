@@ -34,7 +34,7 @@ mod win_job;
 mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
-// T-1007: native files are reached only through a PID-bound Unix socket on macOS.
+// T-1007: native files use PID-bound private IPC on macOS and Windows.
 // No workbench command is registered in generate_handler (WebView remains out).
 mod workbench;
 
@@ -2124,6 +2124,8 @@ pub fn run() {
             let handle = app.handle().clone();
             #[cfg(target_os = "macos")]
             app.manage(workbench::ipc::BridgeState::default());
+            #[cfg(windows)]
+            app.manage(workbench::ipc_windows::BridgeState::default());
             #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
             app.manage(workbench::browser_ipc::BrowserBridgeState::default());
 
@@ -2842,6 +2844,14 @@ pub fn run() {
 
             #[cfg(not(target_os = "macos"))]
             {
+                #[cfg(windows)]
+                let private_bridge = match workbench::ipc_windows::PendingBridge::bind() {
+                    Ok(bridge) => Some(bridge),
+                    Err(error) => {
+                        eprintln!("[shell] Windows workbench private pipe unavailable: {error}");
+                        None
+                    }
+                };
                 let sidecar = app
                     .shell()
                     .sidecar("creatoros-server")
@@ -2943,6 +2953,11 @@ pub fn run() {
                     Some(t) => sidecar.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t),
                     None => sidecar,
                 };
+                #[cfg(windows)]
+                let sidecar = match &private_bridge {
+                    Some(bridge) => sidecar.env("CREATOROS_WORKBENCH_SOCKET", bridge.pipe_name()),
+                    None => sidecar,
+                };
 
                 // [T-259] spawn 失败也落日志再 panic(打包态排障)。
                 let (mut rx, mut child) = match sidecar.spawn() {
@@ -2954,6 +2969,12 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar 失败: {e}");
                     }
                 };
+                #[cfg(windows)]
+                if let Some(bridge) = private_bridge {
+                    let running = bridge.start(child.pid(), app_data_dir.join("workbench"));
+                    app.state::<workbench::ipc_windows::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar。写完立即
                 //   zeroize 临时明文 buffer。注意:tauri-plugin-shell 的 CommandChild 不暴露关闭 stdin
@@ -2992,6 +3013,8 @@ pub fn run() {
                 // (打包态排障)。terminated 亦落盘(sidecar 意外退出的死因)。
                 let logger = logger.clone();
                 let startup_tx_events = startup_tx.clone();
+                #[cfg(windows)]
+                let bridge_handle = handle.clone();
                 tauri::async_runtime::spawn(async move {
                     while let Some(event) = rx.recv().await {
                         match event {
@@ -3015,6 +3038,9 @@ pub fn run() {
                                 }
                             }
                             CommandEvent::Terminated(payload) => {
+                                #[cfg(windows)]
+                                bridge_handle.state::<workbench::ipc_windows::BridgeState>()
+                                    .0.lock().unwrap().take();
                                 eprintln!("[sidecar] terminated: {payload:?}");
                                 if let Some(l) = &logger {
                                     l.log("shell", &format!("sidecar terminated: {payload:?}"));
@@ -3159,6 +3185,9 @@ pub fn run() {
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
                 #[cfg(target_os = "macos")]
                 app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();
+                #[cfg(windows)]
+                app_handle.state::<workbench::ipc_windows::BridgeState>()
+                    .0.lock().unwrap().take();
                 #[cfg(all(target_os = "macos", feature = "workbench-browser"))]
                 app_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
                     .0.lock().unwrap().take();

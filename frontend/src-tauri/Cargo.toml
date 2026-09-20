@@ -149,6 +149,8 @@ windows-sys = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
   # CreateJobObjectW 的签名引用 SECURITY_ATTRIBUTES → windows-sys 把它门在 Win32_Security 后。
   "Win32_Security",
+  "Win32_Security_Authorization",
+  "Win32_System_Pipes",
 ] }
 
 # 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。

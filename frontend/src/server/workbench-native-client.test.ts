@@ -90,10 +90,12 @@ describe("private native file client", () => {
       .rejects.toMatchObject({ code: "NATIVE_RESULT_UNKNOWN", dispatched: true });
   });
 
-  it("keeps Windows closed", async () => {
-    const client = createWorkbenchNativeClient({ async withLease() { throw new Error("must not run"); } },
-      { platform: "win32", desktop: true, socketPath: "unused" });
-    await expect(client.file(ref, "ledger-op", { kind: "list" })).rejects.toEqual(new NativeFileError("UNSUPPORTED_PLATFORM", false));
+  it("Windows 文件调用先核验原任务 lease；命令即使有管道仍拒绝", async () => {
+    const client = createWorkbenchNativeClient({ async withLease() { throw new Error("lease expired"); } },
+      { platform: "win32", desktop: true, socketPath: "\\\\.\\pipe\\creatoros-test" });
+    await expect(client.file(ref, "ledger-op", { kind: "list" })).rejects.toThrow("lease expired");
+    await expect(client.command(ref,"run",{kind:"command_run",argv:["-e","1"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000}))
+      .rejects.toEqual(new NativeFileError("UNSUPPORTED_PLATFORM", false));
   });
 });
 
