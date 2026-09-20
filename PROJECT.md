@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1004-agent-workbench @ 8a704a4f
+LAST_SYNCED: codex/t1004-agent-workbench @ 84a78ca1
 
 ## 这是什么(定位)
 
@@ -23,10 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-1015 核实剩余教训失败并校准过期回归断言
-- [open] T-1017 按持久执行链重建聊天路由回归
-- [open] T-1018 核实并修正竖屏动效时间线超出约束
-- [open] T-1019 恢复成功候选确认写入选题池入口
+- [wip] T-1017 按持久执行链重建聊天路由回归
 - [wip] T-1005 实现多步计划、连续执行与原任务续跑
 - [wip] T-1007 补齐任务文件空间与受控命令执行
 - [wip] T-1008 迁移 NomiFun 浏览器能力并协调既有采集
