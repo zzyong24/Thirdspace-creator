@@ -303,6 +303,35 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     });
   });
 
+  it("同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用",async()=>{
+    window.localStorage.setItem("creatoros:current-account","account-1");
+    const plan={planRevision:1,steps:[{stepId:"report",title:"生成 HTML 报告",dependsOn:[],status:"succeeded",
+      operationRefs:["call-1"],artifactRefs:["wa-valid@1"]}]};
+    const artifact={artifactId:"wa-valid",version:1,mime:"text/html",size:12,hash:"a".repeat(64),
+      relativePath:"报告/分析.html",taskId:"task-1",provenance:[]};
+    const result=(operationId:string,payload:unknown,refs:string[]=[])=>({status:"succeeded",operationId,
+      artifactRefs:refs,progressCursor:null,content:[{type:"text",text:JSON.stringify(payload)}]});
+    mockMessages=[{id:"workbench-1",role:"assistant",parts:[
+      {type:"data-workbench-progress",id:"artifact-1",data:{operationId:"artifact-1",progressCursor:"p1",
+        content:[{type:"text",text:"正在整理旧快照"}]}},
+      {type:"data-workbench-progress",id:"artifact-1",data:{operationId:"artifact-1",progressCursor:"p2",
+        content:[{type:"text",text:"正在保存报告"}]}},
+      {type:"tool-plan.update",toolCallId:"plan-1",state:"output-available",input:{},
+        output:{status:"ok",data:{workbench:result("plan-1",plan)}}},
+      {type:"tool-artifact.register",toolCallId:"artifact-1",state:"output-available",input:{path:"报告/分析.html"},
+        output:{kind:"workbench.result",result:result("artifact-1",artifact,["wa-valid@1"])}},
+      {type:"tool-artifact.register",toolCallId:"artifact-forged",state:"output-available",input:{path:"假.html"},
+        output:{kind:"workbench.result",result:result("artifact-forged",{...artifact,artifactId:"wa-forged"},["wa-other@1"])}},
+    ]}];
+    render(<AICopilotContent viewModel={VM}/>);
+    expect(screen.getByText("生成 HTML 报告")).toBeTruthy();
+    expect(screen.getByText("已完成 1/1 步")).toBeTruthy();
+    expect(screen.getByText("正在保存报告")).toBeTruthy();
+    expect(screen.queryByText("正在整理旧快照")).toBeNull();
+    expect(screen.getByRole("region",{name:"产物 分析.html 第 1 版"})).toBeTruthy();
+    expect(screen.getAllByRole("button",{name:"预览"})).toHaveLength(1);
+  });
+
   it("[T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定", async () => {
     const user = userEvent.setup();
     mockMessages = [

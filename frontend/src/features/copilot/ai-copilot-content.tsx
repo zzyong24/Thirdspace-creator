@@ -13,6 +13,8 @@ import { ChatToolTrace } from "./chat-tool-trace";
 
 import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime-actions";
 import {ExecutionTaskCard} from "./execution-task-card";
+import {WorkbenchPlanCard} from "./workbench-plan-card";
+import {WorkbenchArtifactCard} from "./workbench-artifact-card";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -116,6 +118,7 @@ import {
   CHAT_TOOL_LABELS,
   SCHEDULED_TASK_TYPE_LABELS,
 } from "@creatoros/contract";
+import {workbenchArtifactSchema,workbenchPlanSchema,workbenchResultSchema} from "@creatoros/contract/agent-workbench";
 
 /**
  * [T-439 配套] 工具名还原 —— **卡片能不能渲出来全靠它**。
@@ -131,6 +134,34 @@ import {
  */
 function getToolName(part: Parameters<typeof sdkGetToolName>[0]): string {
   return String(sdkGetToolName(part)).replace(/_/g, ".");
+}
+
+function workbenchResultOf(output:unknown){
+ if(!output||typeof output!=="object"||Array.isArray(output))return null;
+ const record=output as Record<string,unknown>;
+ const data=record.data&&typeof record.data==="object"&&!Array.isArray(record.data)?record.data as Record<string,unknown>:null;
+ const parsed=workbenchResultSchema.safeParse(record.result??record.workbench??data?.workbench);
+ return parsed.success?parsed.data:null;
+}
+function workbenchPayload(result:ReturnType<typeof workbenchResultOf>):unknown{
+ if(!result||result.status!=="succeeded")return null;
+ const text=result.content.find(part=>part.type==="text")?.text;
+ if(!text)return null;
+ try{return JSON.parse(text);}catch{return null;}
+}
+function visibleWorkbenchProgress(parts:readonly unknown[]){
+ const latest=new Map<string,string>();
+ for(const part of parts){
+  if(!part||typeof part!=="object"||Array.isArray(part))continue;
+  const item=part as Record<string,unknown>;
+  if(item.type!=="data-workbench-progress"||!item.data||typeof item.data!=="object"||Array.isArray(item.data))continue;
+  const data=item.data as Record<string,unknown>;
+  if(typeof data.operationId!=="string"||!data.operationId||data.operationId.length>160||!Array.isArray(data.content))continue;
+  const line=data.content.find(entry=>entry&&typeof entry==="object"&&!Array.isArray(entry)&&
+   (entry as Record<string,unknown>).type==="text"&&typeof (entry as Record<string,unknown>).text==="string") as {text:string}|undefined;
+  if(line){latest.delete(data.operationId);latest.set(data.operationId,line.text.slice(0,240));}
+ }
+ return [...latest].slice(-3);
 }
 
 /**
@@ -2359,6 +2390,10 @@ export function AICopilotContent({
                       </div>
                     );
                   })()}
+                  {visibleWorkbenchProgress(message.parts).map(([operationId,line])=><div key={`${message.id}-progress-${operationId}`}
+                   role="status" className="rounded-md border border-border/60 bg-surface-subtle/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+                   {line}
+                  </div>)}
                   {/* generative UI:首波 5 工具结果 → 对话内候选卡(逐条/整条采纳走 confirm 门)。
                       工具结果按 kind 分发到对应卡:选题候选 / 选题卡 / 维度诊断 / 复盘经验 / 定位提案。 */}
                   {message.parts.map((part, idx) => {
@@ -2449,6 +2484,19 @@ export function AICopilotContent({
                     const traceRow = (
                       <ChatToolTrace key={`${key}-trace`} label={traceLabel} input={part.input} output={out} />
                     );
+                    if(name==="plan.update"){
+                      const result=workbenchResultOf(out);
+                      const plan=workbenchPlanSchema.safeParse(workbenchPayload(result));
+                      return <React.Fragment key={key}>{traceRow}{plan.success?<WorkbenchPlanCard plan={plan.data}/>:null}</React.Fragment>;
+                    }
+                    if(name==="artifact.register"){
+                      const result=workbenchResultOf(out);
+                      const artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+                      const reference=artifact.success?`${artifact.data.artifactId}@${artifact.data.version}`:null;
+                      return <React.Fragment key={key}>{traceRow}{artifact.success&&result?.status==="succeeded"&&
+                       reference&&result.artifactRefs.includes(reference)&&sessionAccountId?
+                       <WorkbenchArtifactCard artifact={artifact.data} accountId={sessionAccountId}/>:null}</React.Fragment>;
+                    }
                     if(name==="research.autonomous" && out.kind==="research.autonomous"){
                       const research=out as {taskId?:string|null;error?:string|null};
                       return <React.Fragment key={key}>{traceRow}{research.taskId?<ExecutionTaskCard taskId={research.taskId}/>:<div className="text-sm text-error">{research.error||"自主调研任务未提交，请重试。"}</div>}</React.Fragment>;
