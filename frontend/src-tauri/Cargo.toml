@@ -143,6 +143,7 @@ windows-sys = { version = "0.61", features = [
   "Win32_Foundation",
   "Win32_Storage_FileSystem",
   "Win32_System_IO",
+  "Win32_System_Com",
   "Win32_System_JobObjects",
   "Win32_System_Registry",
   "Win32_System_Threading",
@@ -150,7 +151,9 @@ windows-sys = { version = "0.61", features = [
   # CreateJobObjectW 的签名引用 SECURITY_ATTRIBUTES → windows-sys 把它门在 Win32_Security 后。
   "Win32_Security",
   "Win32_Security_Authorization",
+  "Win32_Security_Isolation",
   "Win32_System_Pipes",
+  "Win32_System_SystemInformation",
 ] }
 
 # 发布体积:release 用 opt-level=s + LTO + strip(桌面壳求小)。
