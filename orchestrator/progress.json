@@ -61,7 +61,7 @@
         },
         {
           "step": "integration",
-          "status": "pending"
+          "status": "done"
         }
       ],
       "blocked_reason": null,
@@ -101,7 +101,8 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {
-        "implementation": "2b102729"
+        "implementation": "2b102729",
+        "integration": "21479378"
       }
     },
     {
