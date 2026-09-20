@@ -306,7 +306,10 @@
         "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
         "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
         "backend/src/modules/settings/settings.service.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
         "frontend/src/server/prepare-chat-reply.test.ts",
+        "frontend/src/server/workbench-builtin-manifest.ts",
+        "frontend/src/server/workbench-builtin-manifest.test.ts",
         "docs/verification/t1010-workbench-skills.md"
       ],
       "read_set": [

@@ -57,8 +57,8 @@
       "task_id": "T-1010", "archetype": ["orchestration"], "tasks": ["implementation"],
       "depends_on": ["T-1005:implementation", "T-1006:integration", "T-1007:desktop-integration", "T-1008:implementation", "T-1009:implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "ai-worker/src/prompt/**", "backend/src/modules/ai-runtime/chat-skill-library.ts", "frontend/src/server/prepare-chat-reply.ts"],
-      "write_set": ["ai-worker/src/prompt/business-methods.ts", "ai-worker/src/prompt/registry.ts", "backend/src/modules/ai-runtime/effective-skill-snapshot.ts", "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts", "backend/src/modules/settings/settings.service.ts", "frontend/src/server/prepare-chat-reply.test.ts", "docs/verification/t1010-workbench-skills.md"],
-      "verify_commands": {"implementation": ["pnpm --dir backend exec vitest run src/modules/ai-runtime/effective-skill-snapshot.test.ts --retry=0", "pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/prompt/effective-skill-runtime.test.ts --retry=0"]}
+      "write_set": ["ai-worker/src/prompt/business-methods.ts", "ai-worker/src/prompt/registry.ts", "backend/src/modules/ai-runtime/effective-skill-snapshot.ts", "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts", "backend/src/modules/settings/settings.service.ts", "frontend/src/server/prepare-chat-reply.ts", "frontend/src/server/prepare-chat-reply.test.ts", "frontend/src/server/workbench-builtin-manifest.ts", "frontend/src/server/workbench-builtin-manifest.test.ts", "docs/verification/t1010-workbench-skills.md"],
+      "verify_commands": {"implementation": ["pnpm --dir backend exec vitest run src/modules/ai-runtime/effective-skill-snapshot.test.ts --retry=0", "pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/server/workbench-builtin-manifest.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/prompt/effective-skill-runtime.test.ts --retry=0"]}
     },
     "T-1011": {
       "task_id": "T-1011", "archetype": ["orchestration"], "tasks": ["implementation"],

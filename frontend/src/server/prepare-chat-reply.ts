@@ -8,6 +8,7 @@ import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 import type { ChatRuntime } from "./persistence-client";
 import { attachmentIdsOf, withAttachmentContext, MAX_CHAT_ATTACHMENT_TOTAL_BYTES } from "./chat-attachments";
+import { selectBuiltinWorkbenchCapabilities } from "./workbench-builtin-manifest";
 
 /** 两个公开入口共用冻结方法、工具定义与模型消息装配。 */
 export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,snapshot:ChatTurnSnapshot,input?:{
@@ -27,9 +28,7 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
  }
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
  const workbenchHost=(runtime.durable as (ChatRuntime["durable"] & {workbenchHost?:{catalog:readonly WorkbenchCapability[];platform:WorkbenchCapability["platforms"][number];capabilities:readonly string[];dispatch:Function}}) | undefined)?.workbenchHost;
- const workbenchCapabilities=workbenchHost && typeof workbenchHost.dispatch==="function"
-  ? workbenchHost.catalog.filter(item=>item.platforms.includes(workbenchHost.platform) && item.requiredCapabilities.every(capability=>workbenchHost.capabilities.includes(capability))).map(item=>structuredClone(item))
-  : [];
+ const workbenchCapabilities=selectBuiltinWorkbenchCapabilities(workbenchHost);
  const prepared=await prepareDurableChatTurn(owner,{messages,chatContext,trustedScriptSources:sources,abortSignal:input?.abortSignal},{...runtime.context,humanizeError:humanizeAiError,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,listRecentTasksPort:runtime.listRecentTasks},workerSkillSnapshotSchema.parse(skillSnapshot),{
  workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,workbenchPlans:true,workbenchCapabilities,workbenchPlatform:workbenchHost?.platform,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
  });
