@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 59,
+    "verticals": 60,
     "tasks_done": 39,
-    "tasks_total": 152,
-    "tasks_pending": 113,
+    "tasks_total": 153,
+    "tasks_pending": 114,
     "verticals_complete": 4
   },
   "verticals": [
@@ -272,6 +272,48 @@
         "backend/src/modules/execution/**",
         "frontend/src/server/workbench-native-host.ts",
         "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1010",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1010",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1005:implementation",
+        "T-1006:integration",
+        "T-1007:desktop-integration",
+        "T-1008:implementation",
+        "T-1009:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "ai-worker/src/prompt/business-methods.ts",
+        "ai-worker/src/prompt/registry.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "frontend/src/server/prepare-chat-reply.test.ts",
+        "docs/verification/t1010-workbench-skills.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "ai-worker/src/prompt/**",
+        "backend/src/modules/ai-runtime/chat-skill-library.ts",
+        "frontend/src/server/prepare-chat-reply.ts"
       ],
       "exclusive_resources": [],
       "step_write_set": {},
