@@ -13,21 +13,23 @@ export function WorkbenchArtifactCard({artifact,accountId}:{artifact:WorkbenchAr
  const [message,setMessage]=React.useState<string|null>(null);
  const scope=JSON.stringify([accountId,artifact.taskId,artifact.artifactId,artifact.version]);
  const exportController=React.useRef<AbortController|null>(null);
+ const saving=React.useRef(false);
  React.useEffect(()=>{setDesktop(isDesktopRuntimeClient());},[]);
  React.useEffect(()=>{setOpen(false);setBusy(false);setMessage(null);
-  return ()=>{exportController.current?.abort();exportController.current=null;};
+  return ()=>{exportController.current?.abort();exportController.current=null;saving.current=false;};
  },[scope]);
  const base=`/api/v1/workbench-preview/${encodeURIComponent(artifact.taskId)}/${encodeURIComponent(artifact.artifactId)}/${artifact.version}`;
  const fileName=artifact.relativePath.split("/").at(-1)??"产物";
  const save=async()=>{
-  if(!desktop||busy)return;
+  if(!desktop||saving.current)return;
+  saving.current=true;
   const controller=new AbortController();exportController.current=controller;
   setBusy(true);setMessage(null);
   try{
    const result=await exportWorkbenchArtifact(`${base}?format=raw`,artifact,accountId,controller.signal);
    if(!controller.signal.aborted)setMessage(result==="saved"?"文件已保存":"已取消保存");
   }catch(error){if(!controller.signal.aborted)setMessage(error instanceof Error?error.message:"导出失败，请重试");}
-  finally{if(exportController.current===controller)exportController.current=null;
+  finally{if(exportController.current===controller){exportController.current=null;saving.current=false;}
    if(!controller.signal.aborted)setBusy(false);}
  };
  return <section aria-label={`产物 ${fileName} 第 ${artifact.version} 版`} className="rounded-xl border border-neutral-200 bg-white p-3">

@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from "vitest";
-import {fireEvent,render,screen,waitFor} from "@testing-library/react";
+import {act,fireEvent,render,screen,waitFor} from "@testing-library/react";
 import {WorkbenchArtifactCard} from "./workbench-artifact-card";
 
 const mocks=vi.hoisted(()=>({exportArtifact:vi.fn(),desktop:true}));
@@ -28,4 +28,18 @@ it("网页环境只提供真实预览，不显示无法使用的原生导出按�
  render(<WorkbenchArtifactCard artifact={artifact} accountId="account-1"/>);
  expect(screen.getByRole("button",{name:"预览"})).toBeTruthy();
  expect(screen.queryByRole("button",{name:"导出文件"})).toBeNull();
+});
+
+it("同一批次连点导出只发起一次请求，卸载时取消在途请求",async()=>{
+ let finish!: (value:"saved")=>void;
+ mocks.exportArtifact.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+ const view=render(<WorkbenchArtifactCard artifact={artifact} accountId="account-1"/>);
+ const button=screen.getByRole("button",{name:"导出文件"});
+ act(()=>{fireEvent.click(button);fireEvent.click(button);});
+ expect(mocks.exportArtifact).toHaveBeenCalledTimes(1);
+ const signal=mocks.exportArtifact.mock.calls[0]?.[3] as AbortSignal;
+ expect(signal.aborted).toBe(false);
+ view.unmount();
+ expect(signal.aborted).toBe(true);
+ finish("saved");
 });
