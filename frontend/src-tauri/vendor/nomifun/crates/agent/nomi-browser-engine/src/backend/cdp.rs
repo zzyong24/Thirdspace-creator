@@ -13145,6 +13145,42 @@ mod tests {
         assert_eq!(released["sessionId"], "S-egress");
     }
 
+    #[tokio::test]
+    async fn creatoros_strict_document_scope_blocks_redirect_before_network_continue() {
+        let config = crate::firewall::FirewallConfig {
+            allowed_document_domains: vec!["example.com".to_owned()],
+            https_only_documents: true,
+            ..Default::default()
+        };
+        for url in [
+            "https://other.test/",
+            "https://example.com.evil.test/",
+            "http://example.com/",
+            "https://example.com:8443/",
+        ] {
+            let paused = paused_event_fixture(
+                "REQ-strict-nav",
+                url,
+                "GET",
+                serde_json::json!({}),
+                "Document",
+                false,
+            );
+            let released = drive_paused_request(config.clone(), None, paused, &PublicIpResolver).await;
+            assert_eq!(released["method"], "Fetch.failRequest", "{url}: {released}");
+        }
+        let allowed = paused_event_fixture(
+            "REQ-allowed-nav",
+            "https://www.example.com/page",
+            "GET",
+            serde_json::json!({}),
+            "Document",
+            false,
+        );
+        let released = drive_paused_request(config, None, allowed, &PublicIpResolver).await;
+        assert_eq!(released["method"], "Fetch.continueRequest", "{released}");
+    }
+
     /// **F6 白屏回归修**：无审批通道时，跨域 POST-body 门控命中的 GatePost 同样放行留痕
     /// （E5 pre-approval 姿态：检测+留痕，审批接线前放行），绝不 failRequest。
     #[tokio::test]

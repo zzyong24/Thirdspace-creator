@@ -63,7 +63,7 @@ e008c6e615bbd417acc66004e71572f6793549aa3bf713fa8b49ea07ab5037da  crates/agent/n
 54275c493e8361a0e795992b206ba8d889cfbc4b67246a30d547019ca07bc1a0  crates/agent/nomi-browser-engine/src/actionability.rs
 2cf672a85069ba8bcd2988efb7387e234a3f0e797db8e4a8367d54b97e38d9ed  crates/agent/nomi-browser-engine/src/actions.rs
 5fed91e55cc28a253b7422c6ad1ce75f3b027f2ee52de27d7b2026384aa31bf7  crates/agent/nomi-browser-engine/src/aria_ref.rs
-80c584cb490e7ffbcc423036c05ed07966165dfc506cf1ac1fd54968bdd230c3  crates/agent/nomi-browser-engine/src/backend/cdp.rs
+b08fe23b240eb7cc343308b32a9e7c2c7dffbbfc6a3502fa18c1762eb3da52f3  crates/agent/nomi-browser-engine/src/backend/cdp.rs
 63bc9795ea70337547c788f90322d0d2979a5fac4d5f26151b3499bb48044241  crates/agent/nomi-browser-engine/src/backend/mod.rs
 f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da  crates/agent/nomi-browser-engine/src/debug_capture.rs
 9d71565e85b5eace32603a3769e11434b6d28eaf9822d7722e0a465f7d41471c  crates/agent/nomi-browser-engine/src/display.rs
@@ -72,7 +72,7 @@ f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da  crates/agent/n
 adb9fefe9d982ae97421cd16b68759620397e1711865cea2ca4a3a80987522fe  crates/agent/nomi-browser-engine/src/engine.rs
 0641df6d9b48e1f34ab7fc4b0f89f0c6c8a96e82733477eae92a73be122fa794  crates/agent/nomi-browser-engine/src/errmap.rs
 34dfbf28c9ef37c3187d71c35c96fdb72eae5da137c6759644c1d077ffc5e771  crates/agent/nomi-browser-engine/src/evaluate.rs
-1de4413782b6c860fc18ed71a88c592357daa13ebb414e69e78ab5df66fa14c7  crates/agent/nomi-browser-engine/src/firewall.rs
+170ad8a062b6adc7de5f8ae88151fffd2c3f04dd9f3273fa53727ee74f079c50  crates/agent/nomi-browser-engine/src/firewall.rs
 db64a3923cd9f8181832e743a8a886ea959161c03c5ba7e41b8317a476887d78  crates/agent/nomi-browser-engine/src/host.rs
 5f45172f5de21784d195df7105e51522d6bc8e2363aeb7377305b3fe5e8c534d  crates/agent/nomi-browser-engine/src/injected.rs
 e145e3030e13dea650080b39d6221cc6e6b37894060fd46a1b58ae4a34f2ac62  crates/agent/nomi-browser-engine/src/input.rs

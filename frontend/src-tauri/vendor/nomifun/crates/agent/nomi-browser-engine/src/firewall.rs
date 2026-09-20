@@ -40,6 +40,7 @@ use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 /// 出口防火墙配置。
 ///
@@ -71,6 +72,13 @@ pub struct FirewallConfig {
     /// [`FirewallDecision::Block`]（即便同时在 allowlist 内也阻断）。空 = 无黑名单。条目按 eTLD+1 归一
     /// （同 [`Self::allow_etld1`]）。
     pub deny_etld1: Vec<String>,
+    /// CreatorOS opt-in: every intercepted Document request, including a
+    /// redirect, must stay on one of these exact hosts or its subdomains.
+    /// Empty preserves NomiFun's normal unrestricted navigation behavior.
+    pub allowed_document_domains: Vec<String>,
+    /// Require HTTPS for the opt-in Document scope. Anonymous public browsing
+    /// may explicitly set this to false while still enforcing domain scope.
+    pub https_only_documents: bool,
 }
 
 impl Default for FirewallConfig {
@@ -81,6 +89,8 @@ impl Default for FirewallConfig {
             // D1：默认空域名策略 = 不限制出口域（现行为，零回归）。真值由 X2 从 secret 灌入。
             allow_etld1: Vec::new(),
             deny_etld1: Vec::new(),
+            allowed_document_domains: Vec::new(),
+            https_only_documents: false,
         }
     }
 }
@@ -496,6 +506,29 @@ fn domain_policy(config: &FirewallConfig, req: &RequestInfo<'_>) -> Option<Firew
 /// 留痕**（E5 范围：检测 + 预览）；F1 把它接到 Exec tier approval pipeline 的人在回路审批（批准才
 /// `continueRequest`，否则 `failRequest`）。
 pub fn decide(config: &FirewallConfig, req: &RequestInfo<'_>) -> FirewallDecision {
+    // CreatorOS confines Document requests at Fetch.requestPaused, before
+    // continueRequest sends a redirect target to the network. NomiFun's
+    // general allow_etld1 intentionally exempts Document navigation.
+    if req.is_top_level_navigation && !config.allowed_document_domains.is_empty() {
+        let allowed = Url::parse(req.target_url).ok().is_some_and(|url| {
+            let scheme_ok = url.scheme() == "https"
+                || (!config.https_only_documents && url.scheme() == "http");
+            scheme_ok
+                && url.port().is_none()
+                && url.username().is_empty()
+                && url.password().is_none()
+                && url.host_str().is_some_and(|host| {
+                    config.allowed_document_domains.iter().any(|domain| {
+                        host == domain || host.ends_with(&format!(".{domain}"))
+                    })
+                })
+        });
+        if !allowed {
+            return FirewallDecision::Block {
+                reason: "Document request left the trusted browser domain".to_owned(),
+            };
+        }
+    }
     // 1) IP 封禁（最高优先，硬 SSRF 防护）。
     if config.block_private_ips
         && let Some(ip) = req.resolved_ip

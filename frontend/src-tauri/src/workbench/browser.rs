@@ -632,8 +632,11 @@ impl BrowserHost {
                 config.storage_state = None;
                 config.evaluate_persistent_login = false;
                 // Vendor's allowlist gates cross-domain subrequests. Its top-level
-                // Document navigation exemption is handled separately below.
+                // Document exemption is narrowed by the CreatorOS opt-in patch,
+                // so redirects are blocked before any off-domain request.
                 config.firewall.allow_etld1 = vec![domain.clone()];
+                config.firewall.allowed_document_domains = vec![domain.clone()];
+                config.firewall.https_only_documents = !anonymous;
                 Ok(config)
             }));
             DomainState {

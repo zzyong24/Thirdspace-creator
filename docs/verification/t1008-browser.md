@@ -56,3 +56,7 @@ Rust 在宿主重启后可对无内存 Hub 状态的旧租约提供停止证明�
 补充固定 CfT 的双任务真机测试 `real_chromium_two_tasks_keep_independent_lanes`：同账号的两个不同任务同时打开匿名 Lane，实际生成不同物理 profile key；两者分别可查状态，任务一用自身身份关闭任务二 Lane 被拒；关闭任务一后任务二仍可查状态，随后各自关闭均获得实际停止证明。本机 1/1 通过，使用与前述源码检查相同的临时 Tauri 资源覆盖。该测试覆盖 Rust Hub 内的并发和隔离；双账号主身份和安装包仍未验收。
 
 补充跨 Node/数据库/Rust/Chromium 的显式本机集成用例（`workbench-browser-host.test.ts` 中由固定 CfT 环境变量启用）：测试 Node 进程领取真实数据库任务租约，Rust 测试夹具只授权该 Node PID 的私有 socket；Node 宿主解析物理匿名档案并领数据库 profile 租约，实际打开固定 CfT，导航 `https://example.com`、提取 “Example Domain”、关闭 Lane，最后数据库同 attempt/fence 的 profile 占用为空。前端该用例 1/1、`tsc --noEmit` 通过。第一次新夹具编译时 Vitest 报 180 秒超时；Rust 编译缓存建立后同一用例重跑 1/1（约 15 秒）。该用例仍是测试夹具，未经过安装版、旧 Playwright 采集，也没有注入进程重启。
+
+## 2026-09-20 文档请求预发拦截
+
+冻结 NomiFun 的 `allow_etld1` 有意豁免 `Document` 请求，所以宿主原先的最终 URL 检查无法阻止重定向请求先发出。现为该来源包登记 CreatorOS 本地补丁（原始与当前哈希见 `frontend/src-tauri/vendor/nomifun/SOURCE.md`）：新增默认关闭的文档域限制，只由 CreatorOS 当前 Lane 配置注入。CDP 的 `Fetch.requestPaused` 在 `continueRequest` 前对域外、伪子域、主身份 HTTPS 降级及非默认端口返回 `Fetch.failRequest`；合法子域继续，NomiFun 默认行为保留。先运行新测试得到预期的缺字段编译失败（E0560）；实现后 CDP 定向测试 1/1、原防火墙单元 60/60、真实固定 CfT 匿名页面冒烟 1/1、Node/数据库/Rust/Chromium 宿主测试 5/5。当前 CDP `Document` 标记包括内嵌文档；普通子资源与跨域出口仍按上游策略处理，不能把此补丁称为所有网络请求的完整域隔离。安装版、旧采集与真实第三方跳转页面尚未验收。
