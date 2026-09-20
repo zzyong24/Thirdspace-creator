@@ -6,7 +6,8 @@ import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {createDb,executionTasks,eq,type Db} from "@creatoros/backend";
-import {createPersistentTaskService,createExecutionBrowserProfileLeaseService} from "@creatoros/backend/modules/execution";
+import {createPersistentTaskService,createExecutionBrowserProfileLeaseService,
+ createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
 import {resolveManagedBrowserProfile} from "./workbench-browser-client";
 import {createWorkbenchBrowserHost} from "./workbench-browser-host";
 
@@ -523,6 +524,60 @@ realTest("two accounts keep separate primary profiles and one cancellation leave
   await dispatch(second,"browser.close",{laneId:secondLane,browserEpoch:secondEpoch});
   expect(await profiles.listOwned(second.ref)).toEqual([]);
  }finally{
+  if(bridge)await bridge.finish();
+  await rm(root,{recursive:true,force:true});
+ }
+},180_000);
+
+realTest("a live legacy Playwright profile blocks Rust until the real context stops",async()=>{
+ const root=await mkdtemp(join(tmpdir(),"wb-browser-playwright-handoff-"));
+ const nonce=randomUUID(),userId=`handoff-user-${nonce}`,accountId=`handoff-account-${nonce}`;
+ const tasks=createPersistentTaskService(db),profiles=createExecutionBrowserProfileLeaseService(db);
+ let bridge:Awaited<ReturnType<typeof startRealRustBridge>>|undefined;
+ let oldContext:Awaited<ReturnType<typeof import("@creatoros/ai-worker/browser/douyin-profile-context")["openDouyinProfileContext"]>>|undefined;
+ try {
+  bridge=await startRealRustBridge(root,join(root,"profiles"),"handoff");
+  const task=await tasks.enqueue({userId,accountId,requestId:`handoff-${nonce}`,source:"user"},
+   {kind:"ai_task",ownerType:"ai_task",ownerId:`handoff-${nonce}`,idempotencyKey:`handoff-${nonce}`,payload:{}});
+  const workerId=`handoff-worker-${nonce}`;
+  const claim=(await tasks.claimTask({taskId:task.id,workerId}))!;
+  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  const location=await resolveManagedBrowserProfile(bridge.socketPath,
+   {userId,accountId,taskId:task.id},"primary",AbortSignal.timeout(10_000));
+  const legacy=createHostBrowserProfileLifecycle(db,{hostInstanceId:`legacy-${nonce}`,
+   resolveProfile:async()=>({userId,authDir:location.managedProfileRoot,profileKey:location.profileKey})});
+  const oldLease=await legacy.acquire(location.managedProfileRoot);
+  const {openDouyinProfileContext}=await import("@creatoros/ai-worker/browser/douyin-profile-context");
+  oldContext=await openDouyinProfileContext(oldLease.authDir,true,{onStopped:oldLease.onStopped});
+  const oldPage=await oldContext.newPage();
+  await oldPage.goto("data:text/html,<title>legacy profile alive</title>");
+  expect(await oldPage.title()).toBe("legacy profile alive");
+  expect(await profiles.getHeldHostLease({userId,domain:"douyin.com",profileKey:location.profileKey})).not.toBeNull();
+  const marker=join(location.managedProfileRoot,"legacy-marker");
+  await writeFile(marker,"preserved after handoff");
+  const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:bridge.socketPath})!;
+  const context={userId,accountId,taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:workerId};
+  const dispatch=(name:string,input:Record<string,unknown>)=>host.dispatch({context:{...context,operationId:randomUUID()},
+   invocation:{name,schemaVersion:1,input}},{signal:AbortSignal.timeout(45_000),onProgress:()=>{}});
+  const blocked=await dispatch("browser.open",{laneId:"same-profile",mode:"primary",domain:"example.com"});
+  expect(blocked).toMatchObject({status:"failed",error:{code:"browser_profile_busy"}});
+  expect(await oldPage.title()).toBe("legacy profile alive");
+  expect(await profiles.listOwned(ref)).toEqual([]);
+  await oldContext.close();oldContext=undefined;
+  expect(await profiles.getHeldHostLease({userId,domain:"douyin.com",profileKey:location.profileKey})).toBeNull();
+  const opened=await dispatch("browser.open",{laneId:"same-profile",mode:"primary",domain:"example.com"});
+  expect(opened.status,JSON.stringify(opened)).toBe("succeeded");
+  if(opened.status!=="succeeded")throw new Error(JSON.stringify(opened));
+  const text=opened.content.find(part=>part.type==="text");
+  if(!text)throw new Error("Browser result has no text payload");
+  const lane=JSON.parse(text.text).lane as {lane_id:string;browser_epoch:number};
+  expect(await readFile(marker,"utf8")).toBe("preserved after handoff");
+  const closed=await dispatch("browser.close",{laneId:lane.lane_id,browserEpoch:lane.browser_epoch});
+  expect(closed.status).toBe("succeeded");
+  expect(await profiles.listOwned(ref)).toEqual([]);
+  await host.dispose();
+ }finally{
+  await oldContext?.close();
   if(bridge)await bridge.finish();
   await rm(root,{recursive:true,force:true});
  }
