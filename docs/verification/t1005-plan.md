@@ -65,3 +65,13 @@ flowchart LR
 | `node orchestrator/process/boundary-scan.mjs` | FAIL：7 条，基线 5 条；新增 2 条均指向写集之外的 `frontend/src/features/copilot/live-chat-session.ts`，由 T-1016 跟进。本候选没有修改该文件。 |
 
 **尚未验收：** 官方/自配真实模型凭据与调用没有在本次取得，故未做真实模型测试；安全续跑目前有同一操作键协议测试与 PGlite 租约测试，尚无真实进程在安全边界停止后再启动并完成原任务的非夹具证据。完整业务读取、网页、文件、产物登记与安装版交付属于后续任务，不能将本地模型夹具或 PGlite 测试冒充 AC-AW-01/03 全链路 PASS。未知外部动作必须先依据原调用对账；本候选没有自动判定其成功或重派。未推送、未发布，也未改主控制面任务状态。
+
+## 2026-09-20 安全检查点的真实子进程重启补证
+
+在 `workbench-plan.service.test.ts` 增加可运行测试，使用真实打包的 `execution-worker.cjs`、两个先后创建并分别关闭的 `WorkerSupervisor` 子进程、PGlite 原任务/租约/计划/检查点/调用账本，以及本地 HTTP 模型协议夹具。宿主端口由测试接到现有 backend service；外部动作由测试工具记录实际执行次数。第一进程在第二条模型回复**已结算且已存检查点**之后，经 `readWorkbenchPlan` 端口核对 `recovery: ready`、`ledgerSequence: 3`、消息顺序为模型→工具→模型、`pendingCalls: []`，才请求暂停并取消进程。不存在靠固定睡眠猜测安全窗口。
+
+暂停时原任务三条调用均为 `settled`，其中外部工具只执行一次；原计划 revision 1 仍待完成，已确认模型用量为 10 tokens。关闭第一子进程后，原 taskId 经 pause→acknowledge→resume 由新 worker 领取，attempt 增加、fence 改变。第二子进程回放前三条原调用，不再次访问供应商或执行外部工具；随后新增模型调用和 `plan.update`，以原工具 `operationRef` 将步骤标为成功。最终同一 taskId 成功，供应商请求总数由 2 增至 4、外部工具执行数仍为 1，原三条调用的 ID、operationKey、完整回执和用量逐字段不变；六条调用均已结算，累计模型用量由 10 增至 20 tokens，未重复计入回放。这里的“费用”证据是现有调用账本的 token 用量；本地夹具没有真实供应商价格，不能换算成货币费用。
+
+新测试在 `ce03759a` 原运行代码上首次执行即通过；本轮只补证据与测试，没有虚构失败红测或修改运行时。`pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts src/integration/chat-workbench-plan.integration.test.ts --retry=0 --testTimeout=30000` 为 **10/10 PASS**，其中既有未知模型流暂停/恢复测试仍要求对账、不重发。`pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 --testTimeout=4000` 为 **14/14 PASS**，`pnpm --dir ai-worker typecheck` 通过。`pnpm --dir backend typecheck` 仍仅有前述 14 处写集外既有错误，新测试无 TypeScript 错误。
+
+证据边界：这是本地模型协议夹具和测试接线的真实 Worker 子进程重启，证明原任务安全检查点续跑；未使用官方/自配真实模型，也未经过完整生产 dispatcher 调度、真实外部平台、文件产物和安装版。未知在途分支仍按既有真实子进程/PGlite 集成测试及 Worker 协议测试 fail closed；不能把安全分支的通过解释为未知动作自动对账完成。未推送或发布，T-1005 控制面状态未改。

@@ -1,8 +1,27 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createDb, executionTasks, eq, type Db } from "@creatoros/backend";
+import { createServer } from "node:http";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
+import { z } from "zod";
+import { createDb, executionCalls, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createWorkbenchPlanService } from "./workbench-plan.service";
+import { createExecutionCheckpointService } from "./execution-checkpoint.service";
+import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
+import { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
+import { createExecutionStreamService } from "./execution-stream.service";
+import { createExecutionLeaseService } from "./execution-lease.service";
+import { createExecutionChatToolPorts, readExecutionChatTask } from "./execution-chat-tool-ports.service";
+import { createWorkerSupervisor } from "./worker-supervisor";
+import { createAiRepository } from "../ai/ai.repository";
+import { createChatTurnSubmissionService } from "../ai/chat-turn-submission.service";
+import { createChatTurnCompletionService } from "../ai/chat-turn-completion.service";
+import { createChatWorkbenchPlanToolHost } from "../ai-runtime/chat-workbench-plan-tool-host";
+import { chatWorkbenchPlanCapability } from "../ai-runtime/chat-workbench-plan-tool";
+import { defineWorkbenchChatTool } from "../ai-runtime/chat-tool-gate";
+import { prepareChatToolDefinitions } from "../ai-runtime/chat-tool-definitions";
+import type { ExecutionRef, WorkerPort } from "@creatoros/contract/execution-worker";
 import type { WorkbenchPlan } from "@creatoros/contract/agent-workbench";
 
 const now = () => "2026-09-19T00:00:00.000Z";
@@ -116,4 +135,144 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     await ledger.settle(f.ref, call.id, {status: "settled", usage: {totalTokens: 0}, resultText: '{"status":"ok","sideEffect":"unknown","error":{"code":"unknown_commit"}}'});
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("external", {status: "succeeded", operationRefs: [call.id]})]})).rejects.toMatchObject({name: "ConflictError"});
   });
+
+  it("真实子进程在安全检查点停止后由新进程沿原任务续跑，已结算外部调用与费用不重复", async () => {
+    execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], {stdio: "pipe"});
+    const liveNow = () => new Date().toISOString();
+    const owner = {userId: "restart-plan-user", accountId: "restart-plan-account", requestId: "restart-plan", source: "user" as const};
+    const repo = createAiRepository(db, {userId: owner.userId, accountId: owner.accountId, now: liveNow, nextId: prefix => `${prefix}-restart-plan`});
+    const conversation = await repo.createConversation({title: "续跑", projectId: null, scope: "global"});
+    const source = await repo.createMessage(conversation.id, {role: "user", content: "执行外部调用并核对", attachments: [], modelMetadata: {}});
+    const prototype = defineWorkbenchChatTool(chatWorkbenchPlanCapability, async () => {throw new Error("unused");});
+    const [planDefinition] = (await prepareChatToolDefinitions({"plan.update": prototype}, {workbenchCapabilities: [chatWorkbenchPlanCapability]})).definitions;
+    const submission = await createChatTurnSubmissionService(db, {now: liveNow, assemble: async () => ({
+      capability: "copilot.assist", system: "执行计划并凭原回执完成", messages: [{role: "user", content: "执行外部调用并核对"}],
+      maxSteps: 8, maxOutputTokens: 256, tools: [planDefinition!, {name: "external.submit", version: "1", effect: "committed", description: "提交外部动作", parameters: {type: "object", properties: {}, additionalProperties: false}}],
+    })}).submit(owner, {conversationId: conversation.id, sourceMessageId: source.id});
+    const tasks = createPersistentTaskService(db, {now: liveNow});
+    const firstClaim = await tasks.claimTask({taskId: submission.executionTaskId, workerId: "restart-worker-1"});
+    if (!firstClaim) throw new Error("first claim missing");
+    const firstRef: ExecutionRef = {executionTaskId: submission.executionTaskId, attempt: firstClaim.lease.attempt, fenceToken: firstClaim.lease.fenceToken};
+    const plans = createWorkbenchPlanService(db, {now: liveNow});
+    await plans.save(firstRef, {expectedRevision: 0, steps: [step("external", {title: "提交后核对"})]});
+    const budget = {maxCalls: 16, maxTokens: 1_000_000, deadlineMs: 60_000};
+    const ledger = createExecutionCallLedgerService(db, {now: liveNow, budget});
+    const checkpoints = createExecutionCheckpointService(db, {now: liveNow});
+    const generation = createExecutionGenerationPorts(db, {now: liveNow, budget});
+    const workerCalls = createExecutionWorkerCallPorts(db, {now: liveNow, budget});
+    const streams = createExecutionStreamService(db, {now: liveNow});
+    const leases = createExecutionLeaseService(db, {now: liveNow});
+    const replies = createChatTurnCompletionService(db, {now: liveNow});
+    const {context, input} = await readExecutionChatTask(db, firstRef, liveNow);
+    const planTools = await createChatWorkbenchPlanToolHost(db)(context, input, firstRef, new AbortController().signal);
+    let externalCalls = 0, supplierCalls = 0;
+    const externalTool = {version: "1", effect: "committed" as const, parameters: z.object({}).strict(),
+      approve: async () => ({status: "not-applicable" as const}),
+      execute: async () => {externalCalls++; return {status: "ok" as const, summary: "外部动作已提交", evidence: [], data: {receipt: "external-once"}, error: null, continuation: null, sideEffect: "committed" as const};},
+    };
+    const modelSpec = {apiFormat: "openai_chat" as const, baseUrl: "", model: "fixture", token: "fixture"};
+    const chatTools = createExecutionChatToolPorts(db, {now: liveNow, budget, tools: {...planTools, "external.submit": externalTool}, resolveGenerationCredential: async () => modelSpec});
+    await chatTools.validateTask(firstRef);
+    const server = createServer((req, res) => {let body = ""; req.on("data", chunk => body += chunk); req.on("end", () => {
+      supplierCalls++;
+      let name: string | null = null, args: Record<string, unknown> = {};
+      if (supplierCalls === 1) name = "external_submit";
+      if (supplierCalls === 3) {
+        const receiptId = body.match(/原工具调用 ID: (call_[^；\]]+)/)?.[1];
+        if (!receiptId) {res.writeHead(500); res.end("missing original receipt"); return;}
+        name = "plan_update";
+        args = {expectedRevision: 1, steps: [step("external", {title: "提交后核对", status: "succeeded", operationRefs: [receiptId]})]};
+      }
+      if (supplierCalls > 4) {res.writeHead(500); res.end("duplicate supplier call"); return;}
+      const delta = name ? {tool_calls: [{index: 0, id: `fixture-call-${supplierCalls}`, type: "function", function: {name, arguments: JSON.stringify(args)}}]} : {content: supplierCalls === 2 ? "还需核对原计划。" : "已凭原回执完成。"};
+      const chunks = [{choices: [{index: 0, delta, finish_reason: null}]}, {choices: [{index: 0, delta: {}, finish_reason: name ? "tool_calls" : "stop"}], usage: {prompt_tokens: 2, completion_tokens: 3, total_tokens: 5}}];
+      res.writeHead(200, {"content-type": "text/event-stream"});
+      res.end(chunks.map(chunk => `data: ${JSON.stringify({id: "fixture", object: "chat.completion.chunk", created: 1, model: "fixture", ...chunk})}\n\n`).join("") + "data: [DONE]\n\n");
+    });});
+    await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
+    modelSpec.baseUrl = `http://127.0.0.1:${(server.address() as {port: number}).port}/v1`;
+    let safeCheckpoint: Awaited<ReturnType<typeof checkpoints.read>> | null = null;
+    const makeSupervisor = (pauseAtCheckpoint: boolean) => {
+      let supervisor: ReturnType<typeof createWorkerSupervisor>;
+      supervisor = createWorkerSupervisor({entryPath: resolve("../ai-worker/dist/execution-worker.cjs"), ports: {
+        async validate(ref, mode) {await leases.withLease(ref, mode, async () => {});},
+        async invoke(ref, port: WorkerPort, raw) {
+          if (port === "readTaskContext") return workerCalls.readTaskContext(ref);
+          if (port === "resolveModelCredential") return modelSpec;
+          if (port === "readCheckpoint") return checkpoints.read(ref);
+          if (port === "saveCheckpoint") return checkpoints.save(ref, raw);
+          if (port === "reserveGenerationCall") return generation.reserveGenerationCall(ref, raw);
+          if (port === "startCall") return workerCalls.startCall(ref, raw);
+          if (port === "settleGenerationCall") return generation.settleGenerationCall(ref, raw);
+          if (port === "appendStreamEvents") return streams.append(ref, raw);
+          if (port === "reserveAgenticTool") return chatTools.reserve(ref, raw);
+          if (port === "startAgenticTool") return chatTools.start(ref, raw);
+          if (port === "executeAgenticTool") return chatTools.execute(ref, raw);
+          if (port === "settleAgenticTool") return chatTools.settle(ref, raw);
+          if (port === "checkChatToolApproval") return chatTools.check(ref, raw);
+          if (port === "readWorkbenchPlan") {
+            const status = await plans.status(ref);
+            if (pauseAtCheckpoint) {
+              pauseAtCheckpoint = false;
+              safeCheckpoint = await checkpoints.read(ref);
+              expect(safeCheckpoint.recovery).toBe("ready");
+              expect(safeCheckpoint.pendingCalls).toHaveLength(0);
+              expect(safeCheckpoint.ledgerSequence).toBe(3);
+              expect(safeCheckpoint.messages.map(message => message.role)).toEqual(["assistant", "tool", "assistant"]);
+              await tasks.command(owner, {taskIds: [submission.executionTaskId], command: "pause", idempotencyKey: "safe-pause"});
+              supervisor.cancel(ref);
+            }
+            return status;
+          }
+          if (port === "commitChatResult") return replies.commitResult(ref, raw);
+          if (port === "resolveChatFallbackCredential") return null;
+          if (port === "heartbeat") return tasks.heartbeat({taskId: ref.executionTaskId, workerId: ref.attempt === firstRef.attempt ? "restart-worker-1" : "restart-worker-2", attempt: ref.attempt});
+          throw new Error(`unexpected worker port: ${port}`);
+        },
+      }});
+      return supervisor;
+    };
+    const firstWorker = makeSupervisor(true);
+    let secondWorker: ReturnType<typeof createWorkerSupervisor> | undefined;
+    try {
+      expect(await firstWorker.run(firstRef, Date.now() + 15_000)).toBe("cancelled");
+      expect(safeCheckpoint).toMatchObject({recovery: "ready"});
+      expect(supplierCalls).toBe(2);
+      expect(externalCalls).toBe(1);
+      const before = (await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId, submission.executionTaskId))).sort((a, b) => a.sequence - b.sequence);
+      expect(before.map(call => call.status)).toEqual(["settled", "settled", "settled"]);
+      const originalTool = before.find(call => call.kind === "tool")!;
+      const spentBefore = before.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0);
+      expect(spentBefore).toBe(10);
+      expect((await ledger.inspect(firstRef)).spentTokens).toBe(spentBefore);
+      await firstWorker.stop();
+      await tasks.acknowledgeControl({taskId: submission.executionTaskId, workerId: "restart-worker-1", attempt: firstRef.attempt});
+      await tasks.command(owner, {taskIds: [submission.executionTaskId], command: "resume", idempotencyKey: "safe-resume"});
+      const nextClaim = await tasks.claimTask({taskId: submission.executionTaskId, workerId: "restart-worker-2"});
+      if (!nextClaim) throw new Error("second claim missing");
+      const nextRef: ExecutionRef = {executionTaskId: submission.executionTaskId, attempt: nextClaim.lease.attempt, fenceToken: nextClaim.lease.fenceToken};
+      expect(nextRef.executionTaskId).toBe(firstRef.executionTaskId);
+      expect(nextRef.attempt).toBeGreaterThan(firstRef.attempt);
+      expect(nextRef.fenceToken).not.toBe(firstRef.fenceToken);
+      expect((await checkpoints.read(nextRef)).recovery).toBe("ready");
+      secondWorker = makeSupervisor(false);
+      expect(await secondWorker.run(nextRef, Date.now() + 15_000)).toBe("completed");
+      const after = (await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId, submission.executionTaskId))).sort((a, b) => a.sequence - b.sequence);
+      expect(after.slice(0, before.length)).toEqual(before);
+      expect(after.every(call => call.status === "settled")).toBe(true);
+      expect(after.map(call => call.operationKey)).toEqual([...before.map(call => call.operationKey), `${input.operationKey}/model/3`, expect.any(String), `${input.operationKey}/model/4`]);
+      expect(new Set(after.map(call => call.operationKey)).size).toBe(after.length);
+      expect(after.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0)).toBe(spentBefore + 10);
+      expect(after.find(call => call.id === originalTool.id)?.resultText).toBe(originalTool.resultText);
+      expect((await plans.read(owner, submission.executionTaskId))?.steps[0]).toMatchObject({status: "succeeded", operationRefs: [originalTool.id]});
+      expect(supplierCalls).toBe(4);
+      expect(externalCalls).toBe(1);
+      const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, submission.executionTaskId));
+      expect(task?.status).toBe("succeeded");
+    } finally {
+      await Promise.allSettled([firstWorker.stop(), secondWorker?.stop()]);
+      server.closeAllConnections();
+      await new Promise<void>(done => server.close(() => done()));
+    }
+  }, 30_000);
 });
