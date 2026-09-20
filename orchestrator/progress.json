@@ -2324,5 +2324,16 @@
       "commits": {}
     }
   ],
-  "leases": {}
+  "leases": {
+    "T-1007:desktop-integration": {
+      "agent": "t1007-command",
+      "since": "2026-09-20T05:23:13.573Z",
+      "isolation_kind": "worktree",
+      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1007-command/Thirdspace-creator",
+      "branch": "codex/t1007-command",
+      "base_sha": "865274a136687b3cdad230689d1981ddf7100eec",
+      "wave_id": "aw-native-command",
+      "merge_index": 0
+    }
+  }
 }
