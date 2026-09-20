@@ -183,7 +183,7 @@ export {createExecutionTranscribePreparationService} from "./execution-transcrib
 export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
 
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
-export {createWorkbenchArtifactService,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
+export {createWorkbenchArtifactService,createWorkbenchArtifactReadService,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
 export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';

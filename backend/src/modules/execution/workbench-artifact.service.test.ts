@@ -2,7 +2,7 @@ import {afterAll,beforeAll,expect,it} from "vitest";
 import {randomUUID} from "node:crypto";
 import {createDb,type Db} from "@creatoros/backend";
 import {createPersistentTaskService} from "./persistent-task.service";
-import {createWorkbenchArtifactService} from "./workbench-artifact.service";
+import {createWorkbenchArtifactService,createWorkbenchArtifactReadService} from "./workbench-artifact.service";
 
 let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
@@ -98,4 +98,19 @@ it("拒绝模型自造的产物 ID 与来源引用",async()=>{
  await expect(scope.service.register(scope.ref,"made-up-source",{
   path:"report.html",mime:"text/html",provenance:["forged-call"]})).rejects.toThrow();
  expect(scope.getWrites()).toBe(0);
+});
+
+it("只读交付端口可回读已登记版本，无需装配任务文件宿主",async()=>{
+ const scope=await setup();
+ scope.files.set("report.html",{bytes:Buffer.from("<h1>已保存</h1>"),version:1});
+ const saved=await scope.service.register(scope.ref,"readonly-report",{path:"report.html",mime:"text/html"});
+ const readOnly=createWorkbenchArtifactReadService(db,{
+  blobs:{
+   async submit(){throw new Error("READ_ONLY");},
+   async read(_ctx,input){const bytes=scope.objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);
+    if(!bytes)throw new Error("MISSING_BLOB");return bytes;},
+  },
+ });
+ const page=await readOnly.read(scope.ctx,scope.task.id,saved.artifactId,1,0,100);
+ expect(Buffer.from(page.bytes).toString()).toBe("<h1>已保存</h1>");
 });

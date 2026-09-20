@@ -45,7 +45,7 @@ function assertBytes(bytes:Uint8Array,hash:string,size:number){
 }
 
 /** 产物元数据属于原 execution task；字节只经 assets 服务端口存取。 */
-export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile:WorkbenchArtifactFilePort;blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
+export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:WorkbenchArtifactFilePort;blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
  const leases=createExecutionLeaseService(db,{now:deps.now});
  async function owned(ctx:RequestContext,taskId:string){
   const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),
@@ -76,6 +76,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile:Workbenc
     await verified(preflight.existing,ctx);
     return preflight.existing.metadata;
    }
+   if(!deps.readTaskFile)throw new ConflictError("当前宿主不支持产物登记");
    const snapshot=await deps.readTaskFile(preflight.scope,input.path);
    if(!Number.isSafeInteger(snapshot.version)||snapshot.version<1||snapshot.bytes.byteLength<1||
       snapshot.bytes.byteLength>MAX_ARTIFACT_BYTES)throw new ConflictError("任务文件为空、过大或版本无效");
@@ -135,4 +136,10 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile:Workbenc
    }catch{return false;}
   },
  };
+}
+
+/** 预览、导出入口只注入读端口，不装配任务文件读取能力。 */
+export function createWorkbenchArtifactReadService(db:Db,deps:{blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
+ const service=createWorkbenchArtifactService(db,deps);
+ return {read:service.read,verifyArtifacts:service.verifyArtifacts};
 }
