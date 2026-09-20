@@ -1,0 +1,68 @@
+[workspace]
+resolver = "3"
+members = ["crates/agent/nomi-browser", "crates/agent/nomi-browser-engine", "crates/agent/nomi-compact", "crates/agent/nomi-config", "crates/shared/nomi-process-runtime", "crates/agent/nomi-protocol", "crates/shared/nomi-redact", "crates/agent/nomi-tools", "crates/agent/nomi-types", "crates/backend/nomifun-browser-platform", "crates/backend/nomifun-common", "crates/shared/nomifun-net"]
+
+[workspace.package]
+version = "0.7.2"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/nomifun/nomifun-desktop"
+
+[workspace.dependencies]
+nomifun-common = { path = "crates/backend/nomifun-common" }
+nomifun-browser-platform = { path = "crates/backend/nomifun-browser-platform" }
+nomifun-net = { path = "crates/shared/nomifun-net" }
+nomi-redact = { path = "crates/shared/nomi-redact" }
+nomi-process-runtime = { path = "crates/shared/nomi-process-runtime" }
+nomi-types = { path = "crates/agent/nomi-types" }
+nomi-protocol = { path = "crates/agent/nomi-protocol" }
+nomi-compact = { path = "crates/agent/nomi-compact" }
+nomi-config = { path = "crates/agent/nomi-config" }
+nomi-tools = { path = "crates/agent/nomi-tools" }
+nomi-browser-engine = { path = "crates/agent/nomi-browser-engine" }
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7" }
+axum = { version = "0.8", features = ["multipart", "ws"] }
+futures-util = "0.3"
+sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+jsonschema = { version = "0.47", default-features = false }
+ts-rs = "12.0.1"
+async-trait = "0.1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "registry"] }
+aes-gcm = "0.10"
+psl = "2"
+uuid = { version = "1", features = ["v7"] }
+reqwest = { version = "0.12", features = ["json", "multipart", "stream", "gzip", "rustls-tls", "socks", "system-proxy"], default-features = false }
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-native-roots"] }
+dirs = "6"
+regex = "1"
+zip = "2"
+fs2 = "0.4"
+glob = "0.3"
+globset = "0.4"
+dunce = "1"
+chrono = { version = "0.4", features = ["serde"] }
+portable-pty = "0.8"
+which = "7"
+sha2 = "0.10"
+hmac = "0.12"
+base64 = "0.22"
+getrandom = "0.2"
+hex = "0.4"
+libc = "0.2"
+lru = "0.18"
+url = "2"
+unicode-normalization = "0.1"
+image = { version = "0.25", default-features = false, features = ["png"] }
+chromiumoxide = { version = "0.9" }
+tempfile = "3"
+tokio-test = "0.4"
+rstest = "0.26"
+serial_test = "3"
+insta = { version = "1.48", features = ["yaml", "json", "redactions"] }
