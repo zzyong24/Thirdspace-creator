@@ -4,13 +4,46 @@
     {
       "task_id": "T-1007",
       "files": ["frontend/src-tauri/Cargo.toml"],
-      "file_sha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "file_sha256": "b3ec2f52d50d5248acc25dd28bb0ef9cb230c5e22e78a73830f3f5c2de3e26f3",
       "categories": ["credential_store", "language_toolchain"],
-      "disposition": "baseline-migrated",
+      "disposition": "in-budget",
       "decision": "DEC-AW-1004",
       "scope_source": "docs/features/t1003-agent-workbench.md",
-      "reason": "当前 Cargo.toml 既有 Rust 与 keyring 依赖的精确哈希基线，登记以允许 T-1007 在授权范围内增补受控文件和进程宿主；实际内容一旦改变需按新哈希重评。",
+      "reason": "T-1007 已按用户授权增补受控文件和进程宿主的 Rust 依赖；本项锁定本次修改后的精确文件哈希。",
       "acceptance": "此项不证明命令 OS 隔离或双端安装通过。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": ["docs/verification/t1007-files-command.md"],
+      "file_sha256": "fc14ac1d29159121d410014c21d95fe3be1d850683d9ce7f66d6fdca5dd6d605",
+      "categories": ["ipc", "language_toolchain"],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 验证记录需如实描述 Rust 文件、命令宿主与可信 IPC 的边界及未接线状态。",
+      "acceptance": "仅为验证记录登记复杂度；不表示跨端或安装版通过。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": ["frontend/src-tauri/src/workbench/command.rs"],
+      "file_sha256": "526b9f3afb4f30ab982b23bb6edc7b8c89c65abd16c3a75b0b6e261c263c9440",
+      "categories": ["credential_store", "installer_deploy"],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "受控命令宿主明确清空继承环境并要求已安装 runtime 绝对路径；本项锁定 T-1007 候选源码。",
+      "acceptance": "不代表当前桌面 IPC 已接线、Windows 隔离或安装版 runtime 可用。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": ["frontend/src-tauri/src/workbench/mod.rs"],
+      "file_sha256": "5c93a144ed69a448d6d76e06980d114e6b896e13122f39e7c10bded013c5438d",
+      "categories": ["ipc"],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1007 原生模块声明了仅供未来可信宿主装配的边界；当前尚未暴露桌面命令。",
+      "acceptance": "只登记源码复杂度，不视为 IPC 集成通过。"
     },
     {
       "task_id": "T-1004",
