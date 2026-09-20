@@ -152,7 +152,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactReadService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -626,6 +626,7 @@ interface PersistenceBundle {
   // [T-255a] 执行层 transport(execution.tasks.*,存储复用 ai_tasks)。
   execution: Transport;
   browserTaskAuthorizationRuntime: { grant(ctx:RequestContext,taskId:string,input:unknown):Promise<{status:"granted"|"denied"}>; prepare(ctx:RequestContext,taskId:string):Promise<void> };
+  workbenchPreviewRuntime: ReturnType<typeof createWorkbenchArtifactReadService>;
   executionPreviewRuntime: {
     readVideo(
       ctx: RequestContext,
@@ -5433,6 +5434,7 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
   const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:createWorkbenchBlobService(objectStorageForCtx)}):undefined;
   const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now});
   disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
@@ -5834,6 +5836,7 @@ FAVORITES_PROMOTE_PER_RUN
         return result;
       },
     },
+    workbenchPreviewRuntime,
     executionPreviewRuntime: {
       readVideo: (ctx, taskId, artifactPath) =>
         executionService.previewArtifact(ctx, taskId, artifactPath),
@@ -6035,6 +6038,11 @@ export async function getLocalFileRuntime(): Promise<
   PersistenceBundle["localFileRuntime"]
 > {
   return (await getBundle()).localFileRuntime;
+}
+
+/** T-1009：已登记任务产物的只读预览，复用公共归属和版本校验服务。 */
+export async function getWorkbenchPreviewRuntime(): Promise<PersistenceBundle["workbenchPreviewRuntime"]> {
+  return (await getBundle()).workbenchPreviewRuntime;
 }
 
 /** T-703：待确认执行产物的只读临时预览，采纳/丢弃后 service 自动返回 404。 */
