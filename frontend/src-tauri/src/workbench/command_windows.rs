@@ -1,20 +1,32 @@
 //! Windows candidate for the controlled command host.
 //!
-//! A Job Object can terminate a process tree, but it does not restrict file
-//! access. Until the child is launched with a tested restricted token or
-//! AppContainer and task-root ACLs, execution must fail before spawning.
+//! Production remains fail-closed until the AppContainer, private Pipe and
+//! versioned import path pass on a real Windows installation. Tests can opt
+//! into the candidate without exposing it to the shipping desktop binary.
+#[cfg(test)]
+use super::files::FileError;
 use super::files::{validate_relative, TaskFiles};
+#[cfg(all(windows, test))]
+use sha2::{Digest, Sha256};
+#[cfg(test)]
+use std::collections::HashMap;
 use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+#[cfg(all(windows, test))]
+use std::{
+    sync::{Arc, Mutex},
+    time::{Duration, Instant},
+};
 
-#[cfg(windows)]
+#[cfg(all(windows, test))]
 #[path = "command_windows_sandbox.rs"]
 mod sandbox;
 
 // CommandLineToArgvW-compatible escaping. The application path is passed
 // separately to CreateProcessW; this encodes argv only, never a shell line.
+#[cfg(test)]
 fn quote_windows_arg(value: &str) -> String {
     if !value.is_empty() && !value.chars().any(|c| c.is_whitespace() || c == '"') {
         return value.to_owned();
@@ -117,10 +129,204 @@ pub struct CommandReceipt {
 #[derive(Debug)]
 pub enum CommandError {
     InvalidInput,
+    VersionConflict,
+    ResultUnknown,
     Unavailable(String),
     Io(io::Error),
     WrongScope,
     AlreadyRunning,
+}
+
+#[cfg(test)]
+const MAX_SNAPSHOT_FILES: usize = 128;
+#[cfg(test)]
+const MAX_SNAPSHOT_BYTES: usize = 16_000_000;
+#[cfg(test)]
+const MAX_SINGLE_FILE_BYTES: u64 = 1_000_000;
+
+#[cfg(test)]
+#[derive(Clone)]
+struct SnapshotFile {
+    path: String,
+    bytes: Vec<u8>,
+    version: u64,
+}
+#[cfg(test)]
+struct ImportFile {
+    path: String,
+    bytes: Vec<u8>,
+    expected_version: u64,
+}
+
+#[cfg(test)]
+fn file_state(files: &TaskFiles, path: &str) -> Result<Option<(bool, u64, u64)>, CommandError> {
+    match files.stat(path) {
+        Ok(state) => Ok(state),
+        Err(FileError::Io(error)) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(CommandError::Unavailable(format!(
+            "任务文件状态不可用: {error:?}"
+        ))),
+    }
+}
+
+#[cfg(test)]
+fn collect_snapshot(files: &TaskFiles) -> Result<Vec<SnapshotFile>, CommandError> {
+    fn visit(
+        files: &TaskFiles,
+        dir: Option<&str>,
+        out: &mut Vec<SnapshotFile>,
+        total: &mut usize,
+        seen: &mut usize,
+    ) -> Result<(), CommandError> {
+        let names = files.list(dir).map_err(|_| CommandError::InvalidInput)?;
+        for name in names {
+            *seen += 1;
+            if *seen > MAX_SNAPSHOT_FILES * 2 {
+                return Err(CommandError::Unavailable("任务快照条目超出上限".into()));
+            }
+            let path = match dir {
+                Some(parent) => format!("{parent}/{name}"),
+                None => name,
+            };
+            validate_relative(&path).map_err(|_| CommandError::InvalidInput)?;
+            let (is_dir, size, version) =
+                file_state(files, &path)?.ok_or(CommandError::VersionConflict)?;
+            if is_dir {
+                visit(files, Some(&path), out, total, seen)?;
+                continue;
+            }
+            if out.len() >= MAX_SNAPSHOT_FILES
+                || size > MAX_SINGLE_FILE_BYTES
+                || size as usize > MAX_SNAPSHOT_BYTES.saturating_sub(*total)
+            {
+                return Err(CommandError::Unavailable("任务快照超出受限命令上限".into()));
+            }
+            let (bytes, read_version) = files
+                .read(&path)
+                .map_err(|_| CommandError::VersionConflict)?
+                .ok_or(CommandError::VersionConflict)?;
+            if read_version != version || bytes.len() as u64 != size {
+                return Err(CommandError::VersionConflict);
+            }
+            *total += bytes.len();
+            out.push(SnapshotFile {
+                path,
+                bytes,
+                version,
+            });
+        }
+        Ok(())
+    }
+    let mut out = Vec::new();
+    visit(files, None, &mut out, &mut 0, &mut 0)?;
+    Ok(out)
+}
+
+#[cfg(test)]
+fn scan_output(root: &Path) -> Result<HashMap<String, Vec<u8>>, CommandError> {
+    fn visit(
+        dir: &Path,
+        relative: &str,
+        out: &mut HashMap<String, Vec<u8>>,
+        total: &mut usize,
+        seen: &mut usize,
+    ) -> Result<(), CommandError> {
+        for entry in fs::read_dir(dir)? {
+            *seen += 1;
+            if *seen > MAX_SNAPSHOT_FILES * 2 {
+                return Err(CommandError::Unavailable("命令输出条目超出上限".into()));
+            }
+            let entry = entry?;
+            let name = entry
+                .file_name()
+                .into_string()
+                .map_err(|_| CommandError::InvalidInput)?;
+            let path = if relative.is_empty() {
+                name
+            } else {
+                format!("{relative}/{name}")
+            };
+            validate_relative(&path).map_err(|_| CommandError::InvalidInput)?;
+            let meta = fs::symlink_metadata(entry.path())?;
+            #[cfg(windows)]
+            let reparse = {
+                use std::os::windows::fs::MetadataExt;
+                meta.file_attributes()
+                    & windows_sys::Win32::Storage::FileSystem::FILE_ATTRIBUTE_REPARSE_POINT
+                    != 0
+            };
+            #[cfg(not(windows))]
+            let reparse = meta.file_type().is_symlink();
+            if reparse {
+                return Err(CommandError::InvalidInput);
+            }
+            if meta.is_dir() {
+                visit(&entry.path(), &path, out, total, seen)?;
+            } else if meta.is_file() {
+                if out.len() >= MAX_SNAPSHOT_FILES
+                    || meta.len() > MAX_SINGLE_FILE_BYTES
+                    || meta.len() as usize > MAX_SNAPSHOT_BYTES.saturating_sub(*total)
+                {
+                    return Err(CommandError::Unavailable("命令输出超出回写上限".into()));
+                }
+                let bytes = fs::read(entry.path())?;
+                if bytes.len() as u64 != meta.len() {
+                    return Err(CommandError::ResultUnknown);
+                }
+                *total += bytes.len();
+                out.insert(path, bytes);
+            } else {
+                return Err(CommandError::InvalidInput);
+            }
+        }
+        Ok(())
+    }
+    let mut out = HashMap::new();
+    visit(root, "", &mut out, &mut 0, &mut 0)?;
+    Ok(out)
+}
+
+#[cfg(test)]
+fn plan_import(
+    files: &TaskFiles,
+    snapshot: &[SnapshotFile],
+    root: &Path,
+) -> Result<Vec<ImportFile>, CommandError> {
+    let output = scan_output(root)?;
+    let originals: HashMap<&str, &SnapshotFile> = snapshot
+        .iter()
+        .map(|item| (item.path.as_str(), item))
+        .collect();
+    for item in snapshot {
+        let current = file_state(files, &item.path)?.ok_or(CommandError::VersionConflict)?;
+        if current.0 || current.2 != item.version || current.1 != item.bytes.len() as u64 {
+            return Err(CommandError::VersionConflict);
+        }
+        if !output.contains_key(&item.path) {
+            return Err(CommandError::InvalidInput);
+        }
+    }
+    let mut planned = Vec::new();
+    for (path, bytes) in output {
+        let original = originals.get(path.as_str());
+        if original.is_some_and(|item| item.bytes == bytes) {
+            continue;
+        }
+        let current = file_state(files, &path)?;
+        let expected_version = original.map_or(0, |item| item.version);
+        if current.is_some_and(|(is_dir, _, version)| is_dir || version != expected_version)
+            || (current.is_none() && original.is_some())
+        {
+            return Err(CommandError::VersionConflict);
+        }
+        planned.push(ImportFile {
+            path,
+            bytes,
+            expected_version,
+        });
+    }
+    planned.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(planned)
 }
 impl From<io::Error> for CommandError {
     fn from(error: io::Error) -> Self {
@@ -136,26 +342,39 @@ fn confinement_unavailable() -> CommandError {
 
 pub struct CommandHost {
     runtimes: RuntimeRegistry,
+    #[cfg(all(windows, test))]
+    entries: Mutex<HashMap<(String, String), CandidateEntry>>,
+}
+
+#[cfg(all(windows, test))]
+struct CandidateEntry {
+    files: Arc<TaskFiles>,
+    process: sandbox::SandboxedProcess,
+    snapshot: Vec<SnapshotFile>,
+    started: Instant,
+    timeout: Duration,
+    receipt: CommandReceipt,
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
 }
 
 impl CommandHost {
     pub fn new(runtimes: RuntimeRegistry) -> Self {
-        Self { runtimes }
+        Self {
+            runtimes,
+            #[cfg(all(windows, test))]
+            entries: Mutex::new(HashMap::new()),
+        }
     }
-    pub fn run(
+    fn validate_request(
         &self,
         files: &TaskFiles,
-        scope: &str,
         operation_id: &str,
-        request: CommandRequest,
-    ) -> Result<CommandReceipt, CommandError> {
-        if scope != files.scope_key() {
-            return Err(CommandError::WrongScope);
-        }
-        if scope.is_empty()
-            || operation_id.is_empty()
+        request: &CommandRequest,
+    ) -> Result<(PathBuf, Vec<u8>, PathBuf), CommandError> {
+        if operation_id.is_empty()
             || operation_id.len() > 160
-            || operation_id.contains('\0')
+            || operation_id.chars().any(char::is_control)
             || request.argv.is_empty()
             || request.argv.len() > 128
             || request
@@ -189,21 +408,38 @@ impl CommandHost {
         {
             return Err(CommandError::InvalidInput);
         }
-        if let Some(path) = request.stdin_ref.as_deref() {
+        let stdin = if let Some(path) = request.stdin_ref.as_deref() {
             validate_relative(path).map_err(|_| CommandError::InvalidInput)?;
-            if !files
-                .stat(path)
+            files
+                .read(path)
                 .map_err(|_| CommandError::InvalidInput)?
-                .is_some_and(|(is_dir, _, _)| !is_dir)
-            {
-                return Err(CommandError::InvalidInput);
-            }
+                .ok_or(CommandError::InvalidInput)?
+                .0
+        } else {
+            Vec::new()
+        };
+        let runtime = self.runtimes.runtime(&request.runtime_id)?;
+        let relative_cwd = if request.cwd == "." {
+            PathBuf::from(".")
+        } else {
+            PathBuf::from(&request.cwd)
+        };
+        Ok((runtime, stdin, relative_cwd))
+    }
+    pub fn run(
+        &self,
+        files: &TaskFiles,
+        scope: &str,
+        operation_id: &str,
+        request: CommandRequest,
+    ) -> Result<CommandReceipt, CommandError> {
+        if scope != files.scope_key() {
+            return Err(CommandError::WrongScope);
         }
-        self.runtimes.runtime(&request.runtime_id)?;
+        self.validate_request(files, operation_id, &request)?;
         // SEMANTIC_BOUNDARY_ALLOW: this is an OS authorization check, not a
-        // creative choice. The separate AppContainer launcher has no Windows
-        // runtime proof or version-safe task-file import yet. A cwd check,
-        // clean environment and Job Object alone do not authorize execution.
+        // creative choice. The test-only AppContainer/import candidate still
+        // lacks Windows installation proof; no production operation is admitted.
         // No operation is dispatched or reserved; retry has no side effect.
         Err(confinement_unavailable())
     }
@@ -236,10 +472,317 @@ impl CommandHost {
     pub fn reap(&self) {}
 }
 
+#[cfg(all(windows, test))]
+impl CommandHost {
+    /// This entry point is absent from production binaries. Windows test runners
+    /// must also set CREATOROS_T1007_WINDOWS_COMMAND_PROBE=1 explicitly.
+    pub(crate) fn run_candidate(
+        &self,
+        files: Arc<TaskFiles>,
+        scope: &str,
+        operation_id: &str,
+        request: CommandRequest,
+    ) -> Result<CommandReceipt, CommandError> {
+        if std::env::var("CREATOROS_T1007_WINDOWS_COMMAND_PROBE")
+            .ok()
+            .as_deref()
+            != Some("1")
+        {
+            return Err(confinement_unavailable());
+        }
+        if !scope.starts_with(&format!("{}|", files.scope_key()))
+            || scope.chars().any(char::is_control)
+        {
+            return Err(CommandError::WrongScope);
+        }
+        let (runtime, _, cwd) = self.validate_request(&files, operation_id, &request)?;
+        let snapshot = collect_snapshot(&files)?;
+        let stdin = if let Some(path) = request.stdin_ref.as_deref() {
+            let canonical = validate_relative(path)
+                .map_err(|_| CommandError::InvalidInput)?
+                .join("/");
+            snapshot
+                .iter()
+                .find(|item| item.path == canonical)
+                .ok_or(CommandError::VersionConflict)?
+                .bytes
+                .clone()
+        } else {
+            Vec::new()
+        };
+        let staged: Vec<_> = snapshot
+            .iter()
+            .map(|item| (PathBuf::from(&item.path), item.bytes.clone()))
+            .collect();
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|_| CommandError::ResultUnknown)?;
+        let key = (scope.to_owned(), operation_id.to_owned());
+        if entries.contains_key(&key) {
+            return Err(CommandError::AlreadyRunning);
+        }
+        if entries.len() >= 128 {
+            return Err(CommandError::Unavailable("命令并发上限".into()));
+        }
+        let process = sandbox::launch(&runtime, &request.argv, &staged, &stdin, &cwd)?;
+        let output_key = format!("{:x}", Sha256::digest(operation_id.as_bytes()));
+        let receipt = CommandReceipt {
+            operation_id: operation_id.to_owned(),
+            state: "running".into(),
+            exit_code: None,
+            stdout_ref: format!("command:{output_key}:stdout"),
+            stderr_ref: format!("command:{output_key}:stderr"),
+            stdout_preview: String::new(),
+            stderr_preview: String::new(),
+            truncated: false,
+        };
+        entries.insert(
+            key,
+            CandidateEntry {
+                files,
+                process,
+                snapshot,
+                started: Instant::now(),
+                timeout: Duration::from_millis(request.timeout_ms),
+                receipt: receipt.clone(),
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            },
+        );
+        Ok(receipt)
+    }
+
+    fn settle(entry: &mut CandidateEntry) -> Result<(), CommandError> {
+        if entry.receipt.state != "running" {
+            return Ok(());
+        }
+        let exit = match entry.process.wait(0) {
+            Ok(exit) => exit,
+            Err(error) => {
+                entry.receipt.state = "unknown".into();
+                entry.receipt.stderr_preview = format!("进程状态待核对: {error}");
+                return Ok(());
+            }
+        };
+        if exit.is_none() && entry.started.elapsed() < entry.timeout {
+            return Ok(());
+        }
+        if let Err(error) = entry.process.cancel() {
+            entry.receipt.state = "unknown".into();
+            entry.receipt.stderr_preview = format!("进程树状态待核对: {error}");
+            return Ok(());
+        }
+        if exit.is_none() {
+            entry.receipt.state = "timed_out".into();
+        } else {
+            // Parent exit is not enough: a descendant could still mutate the
+            // snapshot. Terminate the whole Job before inspecting any output.
+            entry.receipt.exit_code = exit;
+            entry.receipt.state = if exit == Some(0) {
+                "succeeded"
+            } else {
+                "failed"
+            }
+            .into();
+        }
+        let (stdout, stdout_more) = match read_bounded(&entry.process.work().join("stdout.bin")) {
+            Ok(output) => output,
+            Err(error) => {
+                entry.receipt.state = "unknown".into();
+                entry.receipt.stderr_preview = format!("stdout 回读待核对: {error:?}");
+                return Ok(());
+            }
+        };
+        let (stderr, stderr_more) = match read_bounded(&entry.process.work().join("stderr.bin")) {
+            Ok(output) => output,
+            Err(error) => {
+                entry.receipt.state = "unknown".into();
+                entry.receipt.stderr_preview = format!("stderr 回读待核对: {error:?}");
+                return Ok(());
+            }
+        };
+        entry.receipt.stdout_preview =
+            String::from_utf8_lossy(&stdout[..stdout.len().min(4096)]).into_owned();
+        entry.receipt.stderr_preview =
+            String::from_utf8_lossy(&stderr[..stderr.len().min(4096)]).into_owned();
+        entry.receipt.truncated = stdout_more || stderr_more;
+        entry.stdout = stdout;
+        entry.stderr = stderr;
+        if entry.receipt.state == "succeeded" {
+            match plan_import(&entry.files, &entry.snapshot, &entry.process.task_work()) {
+                Ok(planned) => {
+                    for item in planned {
+                        if let Err(error) =
+                            entry
+                                .files
+                                .write(&item.path, &item.bytes, item.expected_version)
+                        {
+                            // A failed atomic write may already have committed bytes.
+                            // Never retry automatically or claim all outputs landed.
+                            entry.receipt.state = "unknown".into();
+                            entry.receipt.stderr_preview =
+                                format!("版本安全回写结果待核对: {error:?}");
+                            break;
+                        }
+                    }
+                }
+                Err(CommandError::VersionConflict) => {
+                    entry.receipt.state = "failed".into();
+                    entry.receipt.stderr_preview = "任务文件版本冲突，隔离输出未回写".into();
+                }
+                Err(error) => {
+                    entry.receipt.state = if matches!(error, CommandError::ResultUnknown) {
+                        "unknown"
+                    } else {
+                        "failed"
+                    }
+                    .into();
+                    entry.receipt.stderr_preview = format!("隔离输出未回写: {error:?}");
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn entry<'a>(
+        entries: &'a mut HashMap<(String, String), CandidateEntry>,
+        scope: &str,
+        operation_id: &str,
+    ) -> Result<&'a mut CandidateEntry, CommandError> {
+        entries
+            .get_mut(&(scope.to_owned(), operation_id.to_owned()))
+            .ok_or(CommandError::WrongScope)
+    }
+    pub(crate) fn status_candidate(
+        &self,
+        scope: &str,
+        operation_id: &str,
+    ) -> Result<CommandReceipt, CommandError> {
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|_| CommandError::ResultUnknown)?;
+        let entry = Self::entry(&mut entries, scope, operation_id)?;
+        Self::settle(entry)?;
+        Ok(entry.receipt.clone())
+    }
+    pub(crate) fn cancel_candidate(
+        &self,
+        scope: &str,
+        operation_id: &str,
+    ) -> Result<CommandReceipt, CommandError> {
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|_| CommandError::ResultUnknown)?;
+        let entry = Self::entry(&mut entries, scope, operation_id)?;
+        if entry.receipt.state == "running" {
+            entry.process.cancel()?;
+            entry.receipt.state = "cancelled".into();
+        }
+        Ok(entry.receipt.clone())
+    }
+    pub(crate) fn read_candidate(
+        &self,
+        scope: &str,
+        operation_id: &str,
+        stream: &str,
+        offset: u64,
+        limit: usize,
+    ) -> Result<(Vec<u8>, u64, bool), CommandError> {
+        if !matches!(stream, "stdout" | "stderr") || limit == 0 || limit > 512_000 {
+            return Err(CommandError::InvalidInput);
+        }
+        let mut entries = self
+            .entries
+            .lock()
+            .map_err(|_| CommandError::ResultUnknown)?;
+        let entry = Self::entry(&mut entries, scope, operation_id)?;
+        Self::settle(entry)?;
+        let bytes = if stream == "stdout" {
+            &entry.stdout
+        } else {
+            &entry.stderr
+        };
+        let start = usize::try_from(offset)
+            .unwrap_or(usize::MAX)
+            .min(bytes.len());
+        let end = start.saturating_add(limit).min(bytes.len());
+        Ok((
+            bytes[start..end].to_vec(),
+            bytes.len() as u64,
+            entry.receipt.truncated,
+        ))
+    }
+}
+
+#[cfg(all(windows, test))]
+fn read_bounded(path: &Path) -> Result<(Vec<u8>, bool), CommandError> {
+    use std::io::Read;
+    let file = fs::File::open(path)?;
+    let mut bytes = Vec::new();
+    file.take(1_000_001).read_to_end(&mut bytes)?;
+    let more = bytes.len() > 1_000_000;
+    bytes.truncate(1_000_000);
+    Ok((bytes, more))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
+
+    #[test]
+    fn snapshot_import_preserves_versions_and_rejects_changed_source() {
+        let (base, files, _host) = fixture();
+        files.write("数据/原稿.txt", b"one", 0).unwrap();
+        let snapshot = collect_snapshot(&files).unwrap();
+        assert_eq!(snapshot.len(), 1);
+        assert_eq!(snapshot[0].path, "数据/原稿.txt");
+        assert_eq!(snapshot[0].version, 1);
+        let work = base.join("isolated-output");
+        fs::create_dir_all(work.join("数据")).unwrap();
+        fs::write(work.join("数据/原稿.txt"), b"two").unwrap();
+        fs::write(work.join("数据/新稿.txt"), b"new").unwrap();
+        let planned = plan_import(&files, &snapshot, &work).unwrap();
+        assert_eq!(planned.len(), 2);
+        for item in planned {
+            files
+                .write(&item.path, &item.bytes, item.expected_version)
+                .unwrap();
+        }
+        assert_eq!(
+            files.read("数据/原稿.txt").unwrap().unwrap(),
+            (b"two".to_vec(), 2)
+        );
+        assert_eq!(
+            files.read("数据/新稿.txt").unwrap().unwrap(),
+            (b"new".to_vec(), 1)
+        );
+        assert!(matches!(
+            plan_import(&files, &snapshot, &work),
+            Err(CommandError::VersionConflict)
+        ));
+        fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    fn snapshot_import_rejects_output_links() {
+        let (base, files, _host) = fixture();
+        #[cfg(not(unix))]
+        let _ = &files;
+        let work = base.join("isolated-output");
+        fs::create_dir_all(&work).unwrap();
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&files.root, work.join("escape")).unwrap();
+        #[cfg(unix)]
+        assert!(matches!(
+            plan_import(&files, &[], &work),
+            Err(CommandError::InvalidInput)
+        ));
+        fs::remove_dir_all(base).unwrap();
+    }
 
     #[test]
     fn argv_is_quoted_without_a_shell_or_argument_merging() {
@@ -285,11 +828,12 @@ setTimeout(() => { console.log(outside + ':timeout:' + env); socket.destroy(); }
             ],
             &[(PathBuf::from("probe.js"), script.to_vec())],
             &[],
+            Path::new("."),
         )
         .unwrap();
         assert_eq!(process.wait(10_000).unwrap(), Some(0));
         assert_eq!(
-            fs::read_to_string(process.work().join("inside.txt")).unwrap(),
+            fs::read_to_string(process.task_work().join("inside.txt")).unwrap(),
             "inside"
         );
         assert_eq!(
@@ -325,12 +869,13 @@ setTimeout(() => {}, 3000);
             &["probe.js".into()],
             &[(PathBuf::from("probe.js"), script.to_vec())],
             &[],
+            Path::new("."),
         )
         .unwrap();
         std::thread::sleep(Duration::from_millis(300));
         process.cancel().unwrap();
         std::thread::sleep(Duration::from_millis(1600));
-        assert!(!process.work().join("escaped.txt").exists());
+        assert!(!process.task_work().join("escaped.txt").exists());
     }
 
     fn fixture() -> (PathBuf, TaskFiles, CommandHost) {
