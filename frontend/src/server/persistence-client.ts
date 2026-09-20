@@ -5441,7 +5441,7 @@ FAVORITES_PROMOTE_PER_RUN
   const workbenchHosts=[fileWorkbenchHost,artifactWorkbenchHost,browserWorkbenchHost]
     .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
   const workbenchHost:ChatProductionCompositionDeps["workbenchHost"]=workbenchHosts.length?{
-    catalog:workbenchHosts.flatMap(host=>host.catalog),platform:"macos",
+    catalog:workbenchHosts.flatMap(host=>host.catalog),platform:workbenchHosts[0].platform,
     capabilities:[...new Set(workbenchHosts.flatMap(host=>host.capabilities))],
     dispatch:(call,options)=>{
       const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));

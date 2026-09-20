@@ -166,3 +166,5 @@ flowchart LR
 - 整体 Tauri Windows 交叉 `cargo check --lib`：受阻于本机缺 MSVC C 头文件，`ring` 编译报 `assert.h file not found`，尚未检查到完整桌面壳 Windows 目标；这不等于源码错误或 Windows 构建通过。
 
 **确切未验：** Windows 真机的 Named Pipe DACL、`GetNamedPipeClientProcessId` 运行时返回值、Node↔Rust 文件读写/断线/并发、重解析点与 Unicode 文件系统行为、sidecar 崩溃后的清理；Windows 整体 Tauri 编译和安装包；真实模型任务从页面经数据库租约到文件落盘。Windows `command_windows.rs` 的受限 token/AppContainer 与任务目录 ACL 仍缺失，因此命令继续 fail-closed。T-1007 保持进行中。
+
+主树合入时修正了组合宿主的平台投影：聊天冻结能力目录现在取当前实际文件/浏览器宿主的平台，Windows 文件通道不会再被标成 macOS。该改动只影响模型可见的平台标签；Windows 真机与安装版证据仍如上所述缺失。
