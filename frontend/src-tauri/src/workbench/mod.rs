@@ -8,4 +8,8 @@
 pub mod command;
 pub mod files;
 #[cfg(target_os = "macos")]
+pub mod browser;
+#[cfg(target_os = "macos")]
+pub mod browser_ipc;
+#[cfg(target_os = "macos")]
 pub mod ipc;
