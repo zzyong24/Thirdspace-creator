@@ -36,7 +36,7 @@
       "task_id": "T-1007", "archetype": ["orchestration"], "tasks": ["implementation", "desktop-integration"],
       "depends_on": ["T-1004:implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "ai-worker/src/runtime/browser/**", "frontend/src-tauri/**"],
-      "write_set": ["ai-worker/src/capabilities/task-files.ts", "ai-worker/src/capabilities/task-files.test.ts", "ai-worker/src/capabilities/command-host.ts", "ai-worker/src/capabilities/command-host.test.ts", "frontend/src-tauri/src/workbench/**", "frontend/src-tauri/src/lib.rs", "frontend/src-tauri/Cargo.toml", "docs/verification/t1007-files-command.md"],
+      "write_set": ["ai-worker/src/capabilities/task-files.ts", "ai-worker/src/capabilities/task-files.test.ts", "ai-worker/src/capabilities/command-host.ts", "ai-worker/src/capabilities/command-host.test.ts", "frontend/src-tauri/src/workbench/**", "frontend/src-tauri/src/lib.rs", "frontend/src-tauri/Cargo.toml", "frontend/src/server/workbench-native-client.ts", "frontend/src/server/workbench-native-client.test.ts", "frontend/src/server/workbench-native-host.ts", "frontend/src/server/workbench-native-host.test.ts", "frontend/src/server/persistence-client.ts", "docs/verification/t1007-files-command.md"],
       "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/task-files.test.ts src/capabilities/command-host.test.ts --retry=0"], "desktop-integration": ["RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked --quiet"]}
     },
     "T-1004": {

@@ -55,7 +55,7 @@ import { createKnowledgeApplication } from "@creatoros/backend/application/knowl
 import { configureHostBrowserProfileLifecycle } from "./ingestion/host-browser-profile-lifecycle";
 import { createHostBrowserProfileLifecycle, createDesktopHostProcessRecovery } from "@creatoros/backend/modules/execution";
 import { createAgenticCollectionTools } from "@creatoros/backend/modules/ai-runtime";
-import { composeChatProduction, createChatProductionRuntime } from "@creatoros/backend/modules/ai-runtime";
+import { composeChatProduction, createChatProductionRuntime, type ChatProductionCompositionDeps } from "@creatoros/backend/modules/ai-runtime";
 import { resolveDouyinProfileIdentity } from "@creatoros/ai-worker/browser/profile-directory";
 
 import { createScriptDraftTargetService } from "@creatoros/backend/modules/artifacts";
@@ -78,6 +78,7 @@ import { createGeneratedAssetAdoptionService, createStructuredTargetAdoptionServ
 import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligence";
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
+import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
 
@@ -737,6 +738,7 @@ interface PersistenceBundle {
 // context readers (assembleChatAssembly reads them for 数据层注入). The readers are bound
 // to the same public services the topic.generate trigger uses (no cross-module repo import).
 export interface ChatRuntime {
+  workbenchHost?: ChatProductionCompositionDeps["workbenchHost"];
   resolveRedfoxCredential: ReturnType<typeof createIntegrationCredentials>["resolve"];
   readCurrentScript?: (ctx:RequestContext,projectId:string,signal?:AbortSignal)=>ReturnType<ReturnType<typeof createCurrentArtifactReader>>;
   durable: ReturnType<typeof createChatProductionRuntime>;
@@ -5425,7 +5427,9 @@ FAVORITES_PROMOTE_PER_RUN
       return task;
     },
   });
+  const workbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
   const chatRuntime: ChatRuntime = {
+    ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
     readCurrentScript: async (c,projectId,signal) => {signal?.throwIfAborted();const result=await readCurrentArtifactTruth(c,projectId,"output_script");signal?.throwIfAborted();return result;},
     get durable(){if(!chatWorker)throw new Error("CHAT_RUNTIME_UNAVAILABLE");return chatWorker;},
@@ -5714,6 +5718,7 @@ FAVORITES_PROMOTE_PER_RUN
   if(workerEntry){
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
+      ...(workbenchHost?{workbenchHost}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,
