@@ -277,6 +277,28 @@ mod tests {
         fs::remove_dir_all(base).unwrap();
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn executable_packaged_runtime_is_not_spawned() {
+        use std::os::unix::fs::PermissionsExt;
+        let (base, files, host) = fixture();
+        let node = base.join("sidecar/cli/node.exe");
+        fs::write(&node, b"#!/bin/sh\nprintf touched > \"$1\"\n").unwrap();
+        fs::set_permissions(&node, fs::Permissions::from_mode(0o700)).unwrap();
+        let marker = base.join("spawned-outside-task");
+        let mut req = request();
+        req.argv = vec![marker.to_string_lossy().into_owned()];
+        assert!(matches!(
+            host.run(&files, files.scope_key(), "op", req),
+            Err(CommandError::Unavailable(_))
+        ));
+        assert!(
+            !marker.exists(),
+            "Windows candidate spawned an unconfined child"
+        );
+        fs::remove_dir_all(base).unwrap();
+    }
+
     #[test]
     fn only_fixed_packaged_runtime_is_eligible() {
         let (base, files, host) = fixture();
