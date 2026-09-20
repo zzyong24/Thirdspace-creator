@@ -77,9 +77,10 @@ function failed(operationId:string,code:string,dispatched=false):WorkbenchResult
    nextAction:dispatched?"reconcile":code==="BROWSER_PROFILE_BUSY"?"wait":"fix_input"}});
 }
 function sameRef(a:ExecutionRef,b:ExecutionRef){return a.executionTaskId===b.executionTaskId&&a.attempt===b.attempt&&a.fenceToken===b.fenceToken;}
-function withinDomain(url:string,domain:string){
- try {const parsed=new URL(url);return (parsed.protocol==="https:"||parsed.protocol==="http:")&&
-  !parsed.username&&!parsed.password&&(!parsed.port||parsed.port==="443"||parsed.port==="80")&&
+function withinDomain(url:string,domain:string,mode:ManagedBrowserMode){
+ try {const parsed=new URL(url),authority=url.match(/^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)/i)?.[1];
+  return (parsed.protocol==="https:"||(mode==="anonymous"&&parsed.protocol==="http:"))&&
+  !!authority&&!authority.includes(":")&&!parsed.username&&!parsed.password&&!parsed.port&&
   (parsed.hostname===domain||parsed.hostname.endsWith(`.${domain}`));}catch{return false;}
 }
 
@@ -187,7 +188,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     session=sessions.get(key(ref.executionTaskId,input.laneId));
     if(!session||!sameRef(session.ref,ref))return failed(call.context.operationId,"LANE_NOT_FOUND");
    }
-   if(name==="browser.navigate"&&!withinDomain(input.url!,session!.receipt.domain))
+   if(name==="browser.navigate"&&!withinDomain(input.url!,session!.receipt.domain,session!.mode))
     return failed(call.context.operationId,"DOMAIN_NOT_ALLOWED");
    let acquired:Receipt|undefined;
    try {

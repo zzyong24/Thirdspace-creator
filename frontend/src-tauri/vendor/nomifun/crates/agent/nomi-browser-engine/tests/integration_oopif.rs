@@ -70,6 +70,7 @@ async fn cross_origin_oopif_child_session_armed() {
         gate_cross_origin_post: false,
         allow_etld1: vec![],
         deny_etld1: vec![],
+        ..Default::default()
     };
     // headless Chrome 默认不对 localhost/127.0.0.1 做站点隔离 → 用 --host-resolver-rules 把两个
     // **不同 registrable site**（a.nomitest / b.nomitest）映射到 127.0.0.1,再 --site-per-process 强制

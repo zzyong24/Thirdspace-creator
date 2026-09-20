@@ -510,7 +510,14 @@ pub fn decide(config: &FirewallConfig, req: &RequestInfo<'_>) -> FirewallDecisio
     // continueRequest sends a redirect target to the network. NomiFun's
     // general allow_etld1 intentionally exempts Document navigation.
     if req.is_top_level_navigation && !config.allowed_document_domains.is_empty() {
-        let allowed = Url::parse(req.target_url).ok().is_some_and(|url| {
+        // Url normalizes :443/:80 away. Inspect the raw authority before
+        // parsing or an explicit default port bypasses this no-port rule.
+        let no_explicit_port = req
+            .target_url
+            .split_once("://")
+            .and_then(|(_, rest)| rest.split(|ch| matches!(ch, '/' | '?' | '#' | '\\')).next())
+            .is_some_and(|authority| !authority.is_empty() && !authority.contains(':'));
+        let allowed = no_explicit_port && Url::parse(req.target_url).ok().is_some_and(|url| {
             let scheme_ok = url.scheme() == "https"
                 || (!config.https_only_documents && url.scheme() == "http");
             scheme_ok

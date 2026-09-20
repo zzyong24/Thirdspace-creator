@@ -13156,6 +13156,7 @@ mod tests {
             "https://other.test/",
             "https://example.com.evil.test/",
             "http://example.com/",
+            "https://example.com:443/",
             "https://example.com:8443/",
         ] {
             let paused = paused_event_fixture(

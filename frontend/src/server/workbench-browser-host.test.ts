@@ -29,7 +29,8 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false,clea
     return;
    }
    const value=action.kind==="profile_location"
-    ? {profileKey:"a".repeat(64),managedProfileRoot:"/app-data/workbench/profile",identityMode:"primary",legacyIdentityImported:false,primaryLoginState:"unverified"}
+    ? {profileKey:"a".repeat(64),managedProfileRoot:"/app-data/workbench/profile",
+      identityMode:(action as {identityMode?:string}).identityMode,legacyIdentityImported:false,primaryLoginState:"unverified"}
     : action.kind==="open"?{lane:{lane_id:"native-lane",browser_epoch:1}}
     : action.kind==="close"?{close:{},stopProof:{profileStopped:true}}
     : action.kind==="stop_proof"?{profileStopped:stopProofStopped(),profileKey:"a".repeat(64),
@@ -208,6 +209,13 @@ it("open obtains the Rust physical profile and binds it to the current DB task b
   name:"browser.navigate",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1,url:"https://other.example/page"}}},
   {signal:new AbortController().signal,onProgress:()=>{}})).resolves.toMatchObject({status:"failed"});
  expect(received).toHaveLength(2);
+ for(const [operationId,url] of [["primary-http","http://example.com/page"],
+  ["explicit-port","https://example.com:443/page"]]){
+  await expect(host.dispatch({...call,context:{...call.context,operationId},invocation:{
+   name:"browser.navigate",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1,url}}},
+   {signal:new AbortController().signal,onProgress:()=>{}})).resolves.toMatchObject({status:"failed",error:{code:"domain_not_allowed"}});
+  expect(received).toHaveLength(2);
+ }
  const navigated=await host.dispatch({...call,context:{...call.context,operationId:"navigate-1"},invocation:{
   name:"browser.navigate",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1,url:"https://news.example.com/page"}}},
   {signal:new AbortController().signal,onProgress:()=>{}});
@@ -221,6 +229,19 @@ it("open obtains the Rust physical profile and binds it to the current DB task b
  expect(received.at(-1)!.action).toMatchObject({kind:"stop_proof"});
  const profiles=createExecutionBrowserProfileLeaseService(db);
  expect(await profiles.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken})).toEqual([]);
+ const anonymous=await host.dispatch({...call,context:{...call.context,operationId:"anonymous-open"},invocation:{
+  name:"browser.open",schemaVersion:1,input:{laneId:"anon",mode:"anonymous",domain:"example.com"}}},
+  {signal:new AbortController().signal,onProgress:()=>{}});
+ expect(anonymous.status).toBe("succeeded");
+ const http=await host.dispatch({...call,context:{...call.context,operationId:"anonymous-http"},invocation:{
+  name:"browser.navigate",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1,url:"http://example.com/page"}}},
+  {signal:new AbortController().signal,onProgress:()=>{}});
+ expect(http.status).toBe("succeeded");
+ expect(received.at(-1)?.action).toMatchObject({kind:"execute",action:"navigate",
+  input:{url:"http://example.com/page"}});
+ expect((await host.dispatch({...call,context:{...call.context,operationId:"anonymous-close"},invocation:{
+  name:"browser.close",schemaVersion:1,input:{laneId:"native-lane",browserEpoch:1}}},
+  {signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("succeeded");
 });
 it("close waits for a transient native stop proof before releasing its physical profile",async()=>{
  const nonce=randomUUID(),tasks=createPersistentTaskService(db),received:Array<Record<string,unknown>>=[];

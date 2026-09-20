@@ -469,6 +469,19 @@ impl BrowserHost {
         if raw == "about:blank" {
             return true;
         }
+        // url::Url canonicalizes an explicit default port (e.g. :443) to
+        // None. Check the raw authority before parsing so the no-port policy
+        // also applies to default ports and cannot drift from the Node gate.
+        let Some((_, after_scheme)) = raw.split_once("://") else {
+            return false;
+        };
+        let authority = after_scheme
+            .split(|byte| matches!(byte, '/' | '?' | '#' | '\\'))
+            .next()
+            .unwrap_or("");
+        if authority.is_empty() || authority.contains(':') {
+            return false;
+        }
         let Ok(url) = Url::parse(raw) else {
             return false;
         };
@@ -1284,6 +1297,7 @@ mod tests {
             "https://example.com.evil.test/",
             "https://evil-example.com/",
             "https://user@example.com/",
+            "https://example.com:443/",
             "https://example.com:8443/",
             "http://example.com/",
             "file:///tmp/secret",
