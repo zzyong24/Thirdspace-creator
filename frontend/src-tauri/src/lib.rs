@@ -1960,6 +1960,8 @@ pub fn run() {
             let handle = app.handle().clone();
             #[cfg(target_os = "macos")]
             app.manage(workbench::ipc::BridgeState::default());
+            #[cfg(target_os = "macos")]
+            app.manage(workbench::browser_ipc::BrowserBridgeState::default());
 
             // [T-457] **头部立即建主窗口 + splash + 注入 handshake token** —— 移到 setup 头部,
             //   先于所有慢操作(sidecar tarball 首启解压 5-15min / master key 生成 / DB 迁移 /
@@ -2428,6 +2430,28 @@ pub fn run() {
                         None
                     }
                 };
+                // Advertise this capability only when the pinned CfT executable
+                // for this Mac target can actually be launched. NomiFun's binary
+                // override would bypass that guarantee, so reject it here too.
+                let workbench_cft_root =
+                    sidecar_dir.join("layers/browser/workbench-cft/149.0.7827.155");
+                let private_browser_bridge = if workbench::browser::BrowserHost::packaged_chrome_available(
+                    &workbench_cft_root,
+                ) && std::env::var_os("NOMIFUN_CHROME_BINARY").is_none()
+                {
+                    // This PID-bound socket grants no file/command authorization
+                    // and is never registered as a WebView command.
+                    match workbench::browser_ipc::PendingBrowserBridge::bind() {
+                        Ok(bridge) => Some(bridge),
+                        Err(error) => {
+                            eprintln!("[shell] browser private socket unavailable: {error}");
+                            None
+                        }
+                    }
+                } else {
+                    eprintln!("[shell] pinned workbench CfT unavailable; browser bridge disabled");
+                    None
+                };
 
                 // server.app 内层二进制(build-sidecar.mjs 在 sidecar/server.app 里产出;随 tarball 解压到位)。
                 let inner_bin = sidecar_dir
@@ -2549,6 +2573,9 @@ pub fn run() {
                 if let Some((bridge, _)) = &private_bridge {
                     cmd.env("CREATOROS_WORKBENCH_SOCKET", bridge.socket_path());
                 }
+                if let Some(bridge) = &private_browser_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_BROWSER_SOCKET", bridge.socket_path());
+                }
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -2563,6 +2590,15 @@ pub fn run() {
                 if let Some((bridge, runtimes)) = private_bridge {
                     let running = bridge.start(child.id(), app_data_dir.join("workbench"), runtimes);
                     app.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
+                if let Some(bridge) = private_browser_bridge {
+                    let running = bridge.start(
+                        child.id(),
+                        app_data_dir.join("nomifun-browser"),
+                        workbench_cft_root,
+                    );
+                    app.state::<workbench::browser_ipc::BrowserBridgeState>()
                         .0.lock().unwrap().replace(running);
                 }
 
@@ -2621,6 +2657,8 @@ pub fn run() {
                     };
                     // Close the listener before the child PID could ever be reused.
                     bridge_handle.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().take();
+                    bridge_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
                         .0.lock().unwrap().take();
                     let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
                 });
@@ -2952,6 +2990,9 @@ pub fn run() {
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
                 #[cfg(target_os = "macos")]
                 app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();
+                #[cfg(target_os = "macos")]
+                app_handle.state::<workbench::browser_ipc::BrowserBridgeState>()
+                    .0.lock().unwrap().take();
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }

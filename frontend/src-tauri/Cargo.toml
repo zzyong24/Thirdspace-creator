@@ -122,6 +122,13 @@ name = "creatoros-logkeygen"
 path = "src/bin/creatoros-logkeygen.rs"
 required-features = ["logtools"]
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# T-1008: locked NomiFun source closure for the PID-bound macOS browser host.
+nomi-browser = { path = "vendor/nomifun/crates/agent/nomi-browser" }
+nomi-browser-engine = { path = "vendor/nomifun/crates/agent/nomi-browser-engine" }
+nomifun-browser-platform = { path = "vendor/nomifun/crates/backend/nomifun-browser-platform" }
+tokio = { version = "1", features = ["rt-multi-thread", "time"] }
+
 # [T-372 W-core W3] Windows 进程树杀 —— Job Object(KILL_ON_JOB_CLOSE):壳退出/句柄
 # 关闭 → sidecar 整棵进程树(node + Playwright Chrome + ffmpeg)内核级必死,是 T-365
 # 「防孤儿进程并发写库致 WAL 半写损坏」防线的 Windows 等价(Win 无 POSIX 进程组/killpg)。
