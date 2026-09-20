@@ -4,13 +4,29 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 40,
-    "tasks_done": 34,
-    "tasks_total": 126,
+    "verticals": 41,
+    "tasks_done": 35,
+    "tasks_total": 127,
     "tasks_pending": 92,
-    "verticals_complete": 1
+    "verticals_complete": 2
   },
   "verticals": [
+    {
+      "id": "T-1003",
+      "task_id": "T-1003",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "review",
+          "status": "done",
+          "evidence": "SPEC review PASS 2a4b24cc771e; docs/verification/t1003-spec.md"
+        }
+      ],
+      "depends_on": [],
+      "blocked_reason": null
+    },
     {
       "id": "T-987",
       "archetype": [

@@ -825,3 +825,15 @@ open_items:
     owner: "user+agent"
     revisit_trigger: "Before release: user authorizes a real New API model call, or explicitly accepts the external E2E risk."
     status: "open"
+
+# T-1003 局部规格不改变全局历史阶段结论。
+agent_workbench_change:
+  task_id: T-1003
+  spec: docs/features/t1003-agent-workbench.md
+  status: passed
+  gate_status: pass
+  review: docs/features/t1003-agent-workbench.review.md
+  implementation_status: not-started
+  acceptance_status: not-started
+  global_reconcile: "fail: 233 existing errors; docs/verification/t1003-reconcile.log; T-916 tracks governance drift"
+  notes: "用户已确认多步执行与NomiFun迁移方向；本轮仅SPEC和任务拆分，独立规格评审PASS（hash回执见review文件），不是实现验收通过。"

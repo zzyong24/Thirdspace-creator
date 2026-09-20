@@ -9,6 +9,17 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1003 | 制定多步 Agent 与 NomiFun 能力迁移 SPEC 并拆分任务 | ✅ 待办 | PASS[REV:2a4b24cc771e] | — | [SPEC](docs/features/t1003-agent-workbench.md) | 用户要求先完成完整规格、依赖任务和独立评审；不改运行时。 |
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+| T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
+| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+| T-1007 | 补齐任务文件空间与受控命令执行 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。 |
+| T-1008 | 迁移 NomiFun 浏览器能力并协调既有采集 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。 |
+| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |
+| T-1010 | 装配研究创作报告 Skill 与兼容扩展 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1007/1008/1009；按需方法包、锁定版本，自主选工具完成目标。 |
+| T-1011 | 实现对话内计划进度与文件交付交互 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1009；同对话查看修改导出，停止/恢复与性能防复发。 |
+| T-1012 | 验收完整多步 Agent 与旧功能兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1008/1010/1011；真实模型工具文件全链路、故障恢复、采集及性能。 |
+| T-1013 | 验证双端安装包多步 Agent 与升级兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1012；Mac/Windows安装实测，无NomiFun前置，数据升级保留。 |
 | T-1002 | 审查 Agent 规划执行与通用工具扩展方案 | ✅ 待办 | — | — | [调研](docs/research/t1002-agent-capabilities.md) | 核对 Pi 双入口与 NomiFun 工具、browser_use 实现，提出文件产物、规划执行及能力迁移架构；本任务不修改运行时。 |
 | T-1001 | 本地打包 CreatorOS 1.2.0 并验证安装包 | ✅ 待办 | — | — | [本地打包流程](.agents/skills/packaging-creatoros-release/SKILL.md) | 从已提交的 T-1000 候选在干净工作树打 macOS 安装包，校验 DMG 与本机安装启动，不公开发布。 |
 | T-1000 | 丰富周期运营建议与内容战略方向 | ✅ 待办 | — | — | [SPEC](docs/features/t1000-operations-strategy.md) | 周/月复盘从一句建议扩展为有数据依据的内容方向、取舍和下一步验证；旧报告兼容，不编造结论。 |

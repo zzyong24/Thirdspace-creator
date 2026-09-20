@@ -3360,3 +3360,7 @@ T983来源状态补充：真实页面对照证明部分旧作品只有正常指�
 ## DEC-T1000 · 周期运营方向的可选结构化扩展
 
 用户明确要求周/月运营分析提供更多建议和战略方向。保留原有日报协议版本及缓存键，增加可选 `directions` 字段，旧缓存无需迁移；模型根据所选周期真实作品决定条数与内容，证据不足不凑数。页面将阶段内容取舍与单条实验分开展示；仅内部复盘使用，不进入分享战报或数据导出。实现和验收见 `docs/features/t1000-operations-strategy.md`。
+
+## DEC-AW-1003 — 多步 Agent 与 NomiFun 能力迁移规格
+
+用户明确确认 CreatorOS 应接受目标后连续执行，不需逐步“继续”，并要求参考自己参与开发的 NomiFun 工具及 browser_use。本轮只编写规格、拆任务与评审。保留 Pi core 与 execution_tasks；新增通用工具适配和产物链路，复用版本化 NomiFun 浏览器实现，账号隔离与 profile 唯一所有者不可绕过。具体实施选择及验证触发见 docs/features/t1003-agent-workbench.md；未批准发布或修改 NomiFun 源仓。

@@ -1568,6 +1568,25 @@
       "verify_commands": {
         "implementation": "node --test tools/windows-closure-rat/*.test.mjs"
       }
+    },
+    "T-1003": {
+      "task_id": "T-1003",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "review"
+      ],
+      "read_set": [
+        "docs/产品定位.md",
+        "docs/features/t1003-agent-workbench.md"
+      ],
+      "write_set": [
+        "orchestrator/reviews/T-1003-round-*.json"
+      ],
+      "verify_commands": {
+        "review": "node orchestrator/process/reviewctl.mjs context T-1003"
+      }
     }
   }
 }
