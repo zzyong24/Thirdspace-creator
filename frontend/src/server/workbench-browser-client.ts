@@ -1,5 +1,7 @@
 import "server-only";
 import {createConnection} from "node:net";
+import {randomUUID} from "node:crypto";
+import {isAbsolute} from "node:path";
 
 const MAX_REQUEST_BYTES=1_400_000;
 const MAX_REPLY_BYTES=16_000_000;
@@ -50,4 +52,27 @@ export function exchangeBrowserSocket(socketPath:string,request:object,operation
   socket.once("error",()=>fail(dispatched?"BROWSER_RESULT_UNKNOWN":"BROWSER_UNAVAILABLE"));
   socket.once("close",()=>fail(dispatched?"BROWSER_RESULT_UNKNOWN":"BROWSER_UNAVAILABLE"));
  });
+}
+
+export type ManagedBrowserMode="primary"|"anonymous";
+export type ManagedBrowserLocation={profileKey:string;managedProfileRoot:string;identityMode:ManagedBrowserMode;
+ legacyIdentityImported:boolean;primaryLoginState:string};
+
+/** Rust 只返回它真实将打开的物理目录摘要；调用方仍须从后端 execution lease 取得 scope。 */
+export async function resolveManagedBrowserProfile(socketPath:string,
+ scope:{userId:string;accountId:string;taskId:string},mode:ManagedBrowserMode,signal?:AbortSignal):Promise<ManagedBrowserLocation>{
+ if(![scope.userId,scope.accountId,scope.taskId].every(value=>value && value.length<=160 && !/[\x00-\x1f]/.test(value)))
+  throw new BrowserSocketError("INVALID_BROWSER_PROFILE_LOCATION",false);
+ const operationId=randomUUID();
+ const raw=await exchangeBrowserSocket(socketPath,{operationId,action:{kind:"profile_location",userId:scope.userId,
+  accountId:scope.accountId,taskId:scope.taskId,identityMode:mode}},operationId,signal);
+ if(!raw || typeof raw!=="object" || Array.isArray(raw))
+  throw new BrowserSocketError("INVALID_BROWSER_PROFILE_LOCATION",true);
+ const location=raw as Record<string,unknown>;
+ if(typeof location.profileKey!=="string" || !/^[a-f0-9]{64}$/.test(location.profileKey) ||
+    typeof location.managedProfileRoot!=="string" || !isAbsolute(location.managedProfileRoot) ||
+    location.identityMode!==mode || typeof location.legacyIdentityImported!=="boolean" ||
+    typeof location.primaryLoginState!=="string")
+  throw new BrowserSocketError("INVALID_BROWSER_PROFILE_LOCATION",true);
+ return location as ManagedBrowserLocation;
 }

@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 
 vi.mock("server-only",()=>({}));
-import {exchangeBrowserSocket,BrowserSocketError} from "./workbench-browser-client";
+import {exchangeBrowserSocket,resolveManagedBrowserProfile,BrowserSocketError} from "./workbench-browser-client";
 
 let server:Server|undefined,directory:string|undefined;
 async function listen(handle:(request:Record<string,unknown>,reply:(value:object)=>void,disconnect:()=>void)=>void){
@@ -53,4 +53,22 @@ it("aborted request is rejected before connecting",async()=>{
  await expect(exchangeBrowserSocket(path,{operationId:"open-3"},"open-3",controller.signal))
   .rejects.toEqual(new BrowserSocketError("BROWSER_ABORTED",false));
  expect(connections).toBe(0);
+});
+
+it("profile location is queried with the locked task identity and validates the native reply",async()=>{
+ const path=await listen((request,reply)=>{
+  expect(request.action).toEqual({kind:"profile_location",userId:"u",accountId:"a",taskId:"t",identityMode:"primary"});
+  reply({ok:true,operationId:request.operationId,value:{profileKey:"a".repeat(64),
+   managedProfileRoot:"/app-data/workbench/profile",identityMode:"primary",legacyIdentityImported:false,primaryLoginState:"unverified"}});
+ });
+ await expect(resolveManagedBrowserProfile(path,{userId:"u",accountId:"a",taskId:"t"},"primary"))
+  .resolves.toMatchObject({profileKey:"a".repeat(64),identityMode:"primary",legacyIdentityImported:false});
+});
+
+it("rejects a native location for a different identity mode before leasing a profile",async()=>{
+ const path=await listen((request,reply)=>reply({ok:true,operationId:request.operationId,value:{
+  profileKey:"a".repeat(64),managedProfileRoot:"/app-data/workbench/profile",identityMode:"anonymous",
+  legacyIdentityImported:false,primaryLoginState:"unverified"}}));
+ await expect(resolveManagedBrowserProfile(path,{userId:"u",accountId:"a",taskId:"t"},"primary"))
+  .rejects.toMatchObject({code:"INVALID_BROWSER_PROFILE_LOCATION",dispatched:true});
 });
