@@ -55,4 +55,4 @@ Rust 在宿主重启后可对无内存 Hub 状态的旧租约提供停止证明�
 
 补充固定 CfT 的双任务真机测试 `real_chromium_two_tasks_keep_independent_lanes`：同账号的两个不同任务同时打开匿名 Lane，实际生成不同物理 profile key；两者分别可查状态，任务一用自身身份关闭任务二 Lane 被拒；关闭任务一后任务二仍可查状态，随后各自关闭均获得实际停止证明。本机 1/1 通过，使用与前述源码检查相同的临时 Tauri 资源覆盖。该测试覆盖 Rust Hub 内的并发和隔离；双账号主身份和安装包仍未验收。
 
-补充跨 Node/数据库/Rust/Chromium 的显式本机集成用例 `workbench-browser-host.real.test.ts`：测试 Node 进程领取真实数据库任务租约，Rust 测试夹具只授权该 Node PID 的私有 socket；Node 宿主解析物理匿名档案并领数据库 profile 租约，实际打开固定 CfT，导航 `https://example.com`、提取 “Example Domain”、关闭 Lane，最后数据库同 attempt/fence 的 profile 占用为空。前端该用例 1/1、`tsc --noEmit` 通过。第一次新夹具编译时 Vitest 报 180 秒超时；Rust 编译缓存建立后同一用例重跑 1/1（约 15 秒）。该用例仍是测试夹具，未经过安装版、旧 Playwright 采集，也没有注入进程重启。
+补充跨 Node/数据库/Rust/Chromium 的显式本机集成用例（`workbench-browser-host.test.ts` 中由固定 CfT 环境变量启用）：测试 Node 进程领取真实数据库任务租约，Rust 测试夹具只授权该 Node PID 的私有 socket；Node 宿主解析物理匿名档案并领数据库 profile 租约，实际打开固定 CfT，导航 `https://example.com`、提取 “Example Domain”、关闭 Lane，最后数据库同 attempt/fence 的 profile 占用为空。前端该用例 1/1、`tsc --noEmit` 通过。第一次新夹具编译时 Vitest 报 180 秒超时；Rust 编译缓存建立后同一用例重跑 1/1（约 15 秒）。该用例仍是测试夹具，未经过安装版、旧 Playwright 采集，也没有注入进程重启。
