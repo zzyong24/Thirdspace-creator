@@ -4,11 +4,11 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 56,
-    "tasks_done": 38,
-    "tasks_total": 149,
+    "verticals": 57,
+    "tasks_done": 39,
+    "tasks_total": 150,
     "tasks_pending": 111,
-    "verticals_complete": 3
+    "verticals_complete": 4
   },
   "verticals": [
     {
@@ -85,6 +85,10 @@
         "backend/src/modules/ai-runtime/chat-workbench-capability-host.test.ts",
         "backend/src/modules/execution/model-worker-dispatcher.ts",
         "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+        "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+        "backend/src/modules/execution/execution-stream.service.ts",
+        "backend/src/modules/execution/execution-stream.service.test.ts",
+        "backend/src/integration/chat-workbench-gateway.integration.test.ts",
         "contract/src/internal/chat-worker.ts",
         "contract/src/internal/execution-worker.ts",
         "frontend/src/server/prepare-chat-reply.ts",
@@ -134,6 +138,11 @@
         "frontend/src-tauri/src/workbench/**",
         "frontend/src-tauri/src/lib.rs",
         "frontend/src-tauri/Cargo.toml",
+        "frontend/src/server/workbench-native-client.ts",
+        "frontend/src/server/workbench-native-client.test.ts",
+        "frontend/src/server/workbench-native-host.ts",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
         "docs/verification/t1007-files-command.md"
       ],
       "read_set": [
@@ -149,6 +158,63 @@
       "commits": {
         "implementation": "18d89f35"
       }
+    },
+    {
+      "id": "T-1008",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1008",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1004:implementation",
+        "T-1006:integration"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/src-tauri/vendor/nomifun/**",
+        "frontend/src-tauri/Cargo.toml",
+        "frontend/src-tauri/Cargo.lock",
+        "frontend/src-tauri/src/workbench/**",
+        "frontend/src-tauri/src/lib.rs",
+        "backend/src/modules/execution/execution-browser-profile-lease.service.ts",
+        "backend/src/modules/execution/execution-browser-profile-lease.service.test.ts",
+        "backend/src/modules/execution/host-browser-profile-lifecycle.ts",
+        "backend/src/modules/execution/host-browser-profile-lifecycle.test.ts",
+        "backend/src/modules/execution/workbench-browser-admission.service.ts",
+        "backend/src/modules/execution/workbench-browser-admission.service.test.ts",
+        "frontend/src/server/workbench-browser-client.ts",
+        "frontend/src/server/workbench-browser-client.test.ts",
+        "frontend/src/server/workbench-browser-host.ts",
+        "frontend/src/server/workbench-browser-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/ingestion/douyin-cdp.ts",
+        "frontend/src/server/ingestion/douyin-cdp.test.ts",
+        "frontend/src/server/ingestion/douyin-traffic.ts",
+        "frontend/src/server/ingestion/douyin-traffic.test.ts",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/scripts/desktop/runtime-inventory.mjs",
+        "docs/verification/t1008-browser.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "docs/verification/t1004-nomifun-dependency.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/ingestion/**",
+        "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
     },
     {
       "id": "T-1004",
@@ -2325,16 +2391,5 @@
       "commits": {}
     }
   ],
-  "leases": {
-    "T-1007:desktop-integration": {
-      "agent": "t1007-command",
-      "since": "2026-09-20T05:23:13.573Z",
-      "isolation_kind": "worktree",
-      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1007-command/Thirdspace-creator",
-      "branch": "codex/t1007-command",
-      "base_sha": "865274a136687b3cdad230689d1981ddf7100eec",
-      "wave_id": "aw-native-command",
-      "merge_index": 0
-    }
-  }
+  "leases": {}
 }
