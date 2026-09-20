@@ -1,0 +1,60 @@
+NomiFun
+Copyright 2025-2026 NomiFun (nomifun.com)
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+----------------------------------------------------------------------
+Third-party attributions
+----------------------------------------------------------------------
+
+The bundled agent runtime is based on:
+
+  Pi coding agent
+  https://github.com/earendil-works/pi
+  Version: 0.83.0
+  Copyright (c) 2025 Mario Zechner
+  Licensed under the MIT License. The license text is distributed at
+  apps/pi-sidecar/THIRD_PARTY_LICENSES/PI-MIT.txt and inside application
+  bundles under pi-runtime/PI-MIT.txt.
+
+The bundled Pi-to-NomiFun tool bridge uses:
+
+  Model Context Protocol TypeScript SDK
+  https://github.com/modelcontextprotocol/typescript-sdk
+  Version: 1.30.0
+  Copyright (c) 2024 Anthropic, PBC
+  Licensed under the MIT License. The license text is distributed at
+  apps/pi-sidecar/THIRD_PARTY_LICENSES/MCP-SDK-MIT.txt and inside application
+  bundles under pi-runtime/MCP-SDK-MIT.txt.
+
+This file includes third-party attribution for the AionUi project where
+applicable:
+
+  AionUi
+  https://github.com/iOfficeAI/AionUi
+  Copyright iOfficeAI
+  Licensed under the Apache License, Version 2.0.
+
+The UI interaction of the creative studio for this product is referenced from :
+
+  infinite-canvas
+  https://github.com/tigerowo/infinite-canvas
+  Reference revision: ef7303d7bd66a7a62e300559ce878d0c06863875
+  Copyright (c) 2026 tigerowo
+  Root license at the reference revision: MIT License.
+
+
+The Windows installer template is derived from:
+
+  Tauri
+  https://github.com/tauri-apps/tauri
+  Template tag: tauri-cli-v2.11.2
+  Template revision: 499df79be65ef8c0670abc0207cd9e37b55d8491
+  Copyright 2019-2026 Tauri Programme within The Commons Conservancy
+  Licensed under the Apache License, Version 2.0.
+
+The vendored template carries a prominent modification notice and preserves
+its exact upstream revision and checksum in apps/desktop/nsis/installer.nsi.
+
+Our sincere thanks to the maintainers and communities of the open-source
+projects NomiFun uses.
