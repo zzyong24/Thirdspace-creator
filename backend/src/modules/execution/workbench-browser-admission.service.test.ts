@@ -3,6 +3,7 @@ import {createDb,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createPersistentTaskService} from "./persistent-task.service";
 import {createExecutionBrowserProfileLeaseService} from "./execution-browser-profile-lease.service";
 import {createWorkbenchBrowserAdmissionService} from "./workbench-browser-admission.service";
+import {createHostBrowserProfileLifecycle} from "./host-browser-profile-lifecycle";
 
 const stamp="2026-09-20T00:00:00.000Z",now=()=>stamp;
 let db:Db,close:()=>Promise<void>;
@@ -59,4 +60,24 @@ it("解析器不能重绑账号；过期或停止的原执行租约不能新增�
  await db.update(executionTasks).set({status:"cancel_requested"}).where(eq(executionTasks.id,one.task.id));
  await expect(valid.acquire(one.ref,{laneId:"lane",mode:"isolated",domain:"example.com"})).rejects.toThrow();
  await expect(valid.acquire({...one.ref,fenceToken:"old-fence"},{laneId:"lane",mode:"isolated",domain:"example.com"})).rejects.toThrow();
+});
+
+it("原采集器的宿主生命周期与新浏览器准入按同一物理档案交接",async()=>{
+ const profileKey="d".repeat(64),authDir="/test/t1008-legacy-handoff";
+ const legacy=createHostBrowserProfileLifecycle(db,{
+  hostInstanceId:"legacy-handoff",waitTimeoutMs:25,pollIntervalMs:5,
+  resolveProfile:async()=>({userId:"handoff-user",authDir,profileKey}),
+ });
+ const first=await legacy.acquire(authDir);
+ const one=await owner("wb-legacy-lifecycle","handoff-user","handoff-account");
+ const admission=createWorkbenchBrowserAdmissionService(db,{now,
+  resolveProfile:async(context)=>({accountId:context.accountId!,domain:"douyin.com",profileKey}),
+  verifyProfileStopped:async()=>true});
+ await expect(admission.acquire(one.ref,{laneId:"lane",mode:"primary",domain:"douyin.com"})).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+ await first.onStopped();
+ const second=await admission.acquire(one.ref,{laneId:"lane",mode:"primary",domain:"douyin.com"});
+ await expect(legacy.acquire(authDir)).rejects.toMatchObject({code:"BROWSER_PROFILE_BUSY"});
+ expect(await admission.releaseAfterProfileStopped(one.ref,second.leaseId)).toBe(true);
+ const third=await legacy.acquire(authDir);
+ await third.onStopped();
 });
