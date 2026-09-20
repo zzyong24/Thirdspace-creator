@@ -120,3 +120,27 @@ T-1008 将浏览器模块接入 `workbench/mod.rs` 后，T-1007 独立 Rust 测�
 另用同一随包 Node 在原任务沙箱内尝试连接由测试进程预先建立、且已由测试进程实际连通的本机 TCP 服务：脚本得到 `blocked`，没有连上服务，显式 opt-in 网络隔离探针 **1/1** 通过。最终常规套件仍为 **21/21**，三个需要本机 runtime 的探针在默认运行中忽略。该证据只覆盖本机 loopback 连接，不代表所有网络协议或 Windows 命令隔离。
 
 本次在现有 `runtime/1.2.0` 上验证了随包 Node 脚本能力及 Rust 私有 IPC 路径，没有新安装包。Python 与 approved program 尚未装包；Windows 命令和私有通道仍不可用。T-1007 保持进行中。
+
+## 2026-09-20 真实数据库租约 → Node 宿主 → Mac 文件 IPC → HTML
+
+在独立工作树 `codex/t1007-html-files` 增加显式 opt-in 的跨层集成。`workbench-native-host.test.ts` 用内存 PGlite 的真实 `execution_tasks` 创建并领取两个任务，宿主每次经 `createExecutionLeaseService.withLease(admission)` 重读任务、attempt 和 fence；Rust 独立测试包的 `external_node_files_host_fixture` 以测试 Node 的真实 PID 启动 0700 目录、0600 socket，并用本机已安装 `runtime/1.2.0/sidecar` 的固定 Node 路径配置命令宿主。fixture 只在设置 `CREATOROS_T1007_REAL_FILES=1` 与 `CREATOROS_TEST_PACKAGED_RUNTIME_ROOT` 时运行，普通测试明确跳过；不使用浏览器文件或共享配置。
+
+```mermaid
+flowchart LR
+  DB[真实 execution_tasks 租约] --> H[Node 文件宿主]
+  H --> S[PID 绑定 Mac 私有 socket]
+  S --> F[Rust TaskFiles 任务目录]
+  F --> N[随包 Node 读取 HTML 并计算哈希]
+```
+
+同一任务对实际 `交付/报告.html` 调用 `files.write/read/stat`：UTF-8 内容逐字一致，版本 1，size 等于字节数；Rust fixture 结束前再次直接从该任务的 `TaskFiles` 读取磁盘文件核对内容。随后在任务沙箱内用随包 Node 执行 `check.js`，读取该 HTML 输出 SHA-256，和 Node 测试侧计算值一致。另一真实任务对同一路径 read/stat 返回空，不能读到首个任务的内容；把第二任务的 fence 配首个 taskId、或使用失效 fence，均在数据库 admission 处拒绝，未派发到 socket；另一任务也不能查询首个任务的命令回执。
+
+首次真链路红测在另一任务读取嵌套路径时失败：其目录尚不存在，`TaskFiles::read_page/stat` 将父目录 `NotFound` 上报 `FILE_IO_ERROR`（Vitest 1/7 失败，默认重试 2 次均同因失败）。现仅将父目录缺失视为文件不存在并返回空，其他 IO 错误、符号链接和越界仍拒绝；Rust 单元回归覆盖同一缺失嵌套路径。
+
+- `CREATOROS_T1007_REAL_FILES=1 CREATOROS_TEST_PACKAGED_RUNTIME_ROOT='<本机已安装 runtime/1.2.0/sidecar>' CARGO_TARGET_DIR=/tmp/creatoros-t1007-mac-target pnpm --dir frontend exec vitest run src/server/workbench-native-host.test.ts --retry=0 --reporter=verbose`：**7/7 通过**，其中真实跨层用例 1/1。
+- 不设置 opt-in 环境变量运行同一 Vitest 文件：**6 通过、1 跳过**，避免普通开发环境误称已完成真宿主验收。
+- `CARGO_TARGET_DIR=/tmp/creatoros-t1007-rust-verify RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --locked --offline --quiet`：常规 **21/21 通过**，4 项外部探针明确忽略。
+- `pnpm --dir frontend exec tsc --noEmit --pretty false`、`cargo fmt --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --check`、`git diff --check`：通过。
+- `node orchestrator/process/context-plan.mjs --root . --task T-1007 --json` 路由 `4-build/desktop-integration`；`research-gate.mjs audit` 无开放研究门。`boundary-scan.mjs` 报 7 条及 2 条相对旧基线新增的 R2（均位于未改的 `frontend/src/features/copilot/live-chat-session.ts`，与本写集无关），因此全局边界门未通过，不能记为全绿。
+
+本证据覆盖 Mac 本机测试 Node、真实数据库租约和真实 Rust 私有 socket，也执行了已安装 Node；尚未从安装版 UI 发起完整模型任务，未登记 T-1009 产物或验证导出。没有 Windows 真机、Windows 私有 IPC 或 Windows OS 命令隔离证据；T-1007 全任务继续进行中，不执行 `taskctl complete`。

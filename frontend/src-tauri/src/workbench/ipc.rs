@@ -720,4 +720,65 @@ mod tests {
         assert!(count > 0, "bundled Node lost its built-in CA certificates");
         fs::remove_dir_all(base).unwrap();
     }
+
+    #[test]
+    #[ignore = "external Node/database file host fixture; requires the installed Mac runtime"]
+    fn external_node_files_host_fixture() {
+        let expected_pid: u32 = std::env::var("CREATOROS_FILES_E2E_NODE_PID")
+            .expect("set CREATOROS_FILES_E2E_NODE_PID")
+            .parse()
+            .unwrap();
+        let ready = PathBuf::from(
+            std::env::var("CREATOROS_FILES_E2E_READY_FILE")
+                .expect("set CREATOROS_FILES_E2E_READY_FILE"),
+        );
+        let done = PathBuf::from(
+            std::env::var("CREATOROS_FILES_E2E_DONE_FILE")
+                .expect("set CREATOROS_FILES_E2E_DONE_FILE"),
+        );
+        let base = PathBuf::from(
+            std::env::var("CREATOROS_FILES_E2E_TASK_ROOT")
+                .expect("set CREATOROS_FILES_E2E_TASK_ROOT"),
+        );
+        let runtime_root = PathBuf::from(
+            std::env::var("CREATOROS_TEST_PACKAGED_RUNTIME_ROOT")
+                .expect("set CREATOROS_TEST_PACKAGED_RUNTIME_ROOT"),
+        );
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(
+            expected_pid,
+            base.clone(),
+            RuntimeRegistry::from_sidecar(&runtime_root).unwrap(),
+        );
+        fs::write(&ready, socket.to_string_lossy().as_bytes()).unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(120);
+        while !done.exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+        assert!(
+            done.exists(),
+            "Node file host integration did not release the fixture"
+        );
+        let evidence: Value = serde_json::from_slice(&fs::read(&done).unwrap()).unwrap();
+        assert_ne!(
+            evidence["abort"], true,
+            "Node file host integration aborted"
+        );
+        let files = TaskFiles::new(
+            &base,
+            evidence["userId"].as_str().unwrap(),
+            evidence["accountId"].as_str().unwrap(),
+            evidence["taskId"].as_str().unwrap(),
+        )
+        .unwrap();
+        let (actual, version) = files.read("交付/报告.html").unwrap().unwrap();
+        assert_eq!(version, 1);
+        assert_eq!(
+            String::from_utf8(actual).unwrap(),
+            evidence["html"].as_str().unwrap()
+        );
+        drop(running);
+        fs::remove_dir_all(base).unwrap();
+    }
 }

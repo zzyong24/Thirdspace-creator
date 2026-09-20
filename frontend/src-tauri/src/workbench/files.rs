@@ -286,7 +286,13 @@ impl TaskFiles {
         }
         let path = validate_relative(path)?.join("/");
         let _lock = self.lock()?;
-        let (parent, name) = self.parent(&path, false)?;
+        let (parent, name) = match self.parent(&path, false) {
+            Ok(parent) => parent,
+            Err(FileError::Io(error)) if error.kind() == io::ErrorKind::NotFound => {
+                return Ok(None)
+            }
+            Err(error) => return Err(error),
+        };
         let mut file = match open_file_at(parent.as_raw_fd(), &name, libc::O_RDONLY, 0) {
             Ok(file) => file,
             Err(FileError::Io(e)) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -405,7 +411,13 @@ impl TaskFiles {
     pub fn stat(&self, path: &str) -> Result<Option<(bool, u64, u64)>, FileError> {
         let path = validate_relative(path)?.join("/");
         let _lock = self.lock()?;
-        let (parent, name) = self.parent(&path, false)?;
+        let (parent, name) = match self.parent(&path, false) {
+            Ok(parent) => parent,
+            Err(FileError::Io(error)) if error.kind() == io::ErrorKind::NotFound => {
+                return Ok(None)
+            }
+            Err(error) => return Err(error),
+        };
         let mut fd = match open_file_at(parent.as_raw_fd(), &name, libc::O_RDONLY, 0) {
             Ok(f) => f,
             Err(FileError::Io(e)) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -538,6 +550,8 @@ mod tests {
         a.write("x", b"secret", 0).unwrap();
         assert!(b.read("x").unwrap().is_none());
         assert!(c.read("x").unwrap().is_none());
+        assert!(b.read("交付/报告.html").unwrap().is_none());
+        assert!(b.stat("交付/报告.html").unwrap().is_none());
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink("/etc/passwd", a.root.join("link")).unwrap();

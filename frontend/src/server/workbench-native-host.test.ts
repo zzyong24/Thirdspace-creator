@@ -1,8 +1,16 @@
 import {describe,expect,it,vi} from "vitest";
-import type {Db} from "@creatoros/backend";
+import {spawn} from "node:child_process";
+import {createHash,randomUUID} from "node:crypto";
+import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join,resolve} from "node:path";
+import {createDb,type Db} from "@creatoros/backend";
+import {createPersistentTaskService} from "@creatoros/backend/modules/execution";
 import type {WorkbenchHostCall} from "@creatoros/contract/agent-workbench";
 import {NativeFileError,type NativeCommandAction} from "./workbench-native-client";
 import {createNativeFilesWorkbenchHost,nativeFileCapabilities} from "./workbench-native-host";
+
+vi.mock("server-only",()=>({}));
 
 const db={} as Db;
 const options={platform:"darwin" as const,desktop:true,socketPath:"/tmp/test-workbench.sock"};
@@ -90,3 +98,100 @@ describe("Mac 受控命令能力",()=>{
     expect(await uncertain.dispatch(invocation,control)).toMatchObject({status:"unknown",error:{dispatched:true,retryable:false,nextAction:"reconcile"}});
   });
 });
+
+const realMacFiles=process.platform==="darwin" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT
+  && process.env.CREATOROS_T1007_REAL_FILES==="1" ? it : it.skip;
+
+realMacFiles("真实租约经 Node 宿主和 Mac 私有 socket 写读查 HTML，跨任务与失效 fence 拒绝",async()=>{
+  const directory=await mkdtemp(join(tmpdir(),"t1007-html-host-"));
+  const ready=join(directory,"ready"),done=join(directory,"done"),taskRoot=join(directory,"tasks");
+  const projectRoot=resolve(import.meta.dirname,"../../..");
+  const rust=spawn("cargo",["test","--manifest-path","frontend/src-tauri/src/workbench/Cargo.toml",
+    "--locked","--offline","external_node_files_host_fixture","--","--ignored","--nocapture"],{
+    cwd:projectRoot,
+    env:{...process.env,CREATOROS_FILES_E2E_NODE_PID:String(process.pid),CREATOROS_FILES_E2E_READY_FILE:ready,
+      CREATOROS_FILES_E2E_DONE_FILE:done,CREATOROS_FILES_E2E_TASK_ROOT:taskRoot},
+    stdio:["ignore","pipe","pipe"],
+  });
+  let output="",exited:number|null|undefined;
+  rust.stdout.on("data",chunk=>{output+=String(chunk);});
+  rust.stderr.on("data",chunk=>{output+=String(chunk);});
+  const exit=new Promise<number|null>((resolveExit,rejectExit)=>{
+    rust.once("exit",code=>{exited=code;resolveExit(code);});
+    rust.once("error",rejectExit);
+  });
+  let closeDb:(()=>Promise<void>)|undefined;
+  try {
+    let socketPath:string|undefined;
+    const deadline=Date.now()+90_000;
+    while(Date.now()<deadline&&exited===undefined){
+      try {socketPath=(await readFile(ready,"utf8")).trim();break;}catch{/* Rust fixture is compiling. */}
+      await new Promise(resolveWait=>setTimeout(resolveWait,100));
+    }
+    if(!socketPath)throw new Error(`Rust file fixture did not become ready: ${output}`);
+    const opened=await createDb();const realDb=opened.db;closeDb=()=>opened.client.close();
+    const tasks=createPersistentTaskService(realDb);
+    const nonce=randomUUID(),userId=`html-user-${nonce}`,accountId=`html-account-${nonce}`;
+    const makeTask=async(suffix:string)=>{
+      const task=await tasks.enqueue({userId,accountId,requestId:`${nonce}-${suffix}`,source:"user"},
+        {kind:"ai_task",ownerType:"ai_task",ownerId:`${nonce}-${suffix}`,idempotencyKey:`${nonce}-${suffix}`,payload:{}});
+      const workerId=`html-worker-${suffix}`;
+      const claim=await tasks.claimTask({taskId:task.id,workerId,leaseSeconds:120});
+      if(!claim)throw new Error(`claim missing for ${suffix}`);
+      return {task,context:{userId,accountId,taskId:task.id,attempt:claim.lease.attempt,
+        fenceToken:claim.lease.fenceToken,leaseId:workerId}};
+    };
+    const owner=await makeTask("owner"),other=await makeTask("other");
+    const host=createNativeFilesWorkbenchHost(realDb,{platform:"darwin",desktop:true,socketPath})!;
+    const invoke=(context:typeof owner.context,name:string,input:Record<string,unknown>,operationId=randomUUID())=>
+      host.dispatch({context:{...context,operationId},invocation:{name,schemaVersion:1,input}},
+        {signal:AbortSignal.timeout(20_000),onProgress:()=>{}});
+    const value=(reply:Awaited<ReturnType<typeof invoke>>)=>{
+      expect(reply.status,JSON.stringify(reply)).toBe("succeeded");
+      if(reply.status!=="succeeded")throw new Error(JSON.stringify(reply));
+      const content=reply.content[0];
+      expect(content?.type).toBe("text");
+      return JSON.parse((content as {type:"text";text:string}).text) as Record<string,unknown>|null;
+    };
+    const html="<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>真实任务报告</title><body><h1>事实 0</h1></body></html>";
+    const file="交付/报告.html";
+    expect(value(await invoke(owner.context,"files.write",{path:file,content:html,expectedVersion:0}))).toEqual({version:1});
+    const read=value(await invoke(owner.context,"files.read",{path:file,offset:0,limit:4096}));
+    expect(read).toMatchObject({text:html,version:1,encoding:"utf8",total:Buffer.byteLength(html)});
+    expect(value(await invoke(owner.context,"files.stat",{path:file}))).toMatchObject({isDirectory:false,size:Buffer.byteLength(html),version:1});
+    expect(value(await invoke(other.context,"files.read",{path:file}))).toBeNull();
+    expect(value(await invoke(other.context,"files.stat",{path:file}))).toBeNull();
+    await expect(invoke({...other.context,taskId:owner.task.id},"files.read",{path:file}))
+      .rejects.toMatchObject({name:"ConflictError"});
+    await expect(invoke({...owner.context,fenceToken:"stale-fence"},"files.stat",{path:file}))
+      .rejects.toMatchObject({name:"ConflictError"});
+    const expectedHash=createHash("sha256").update(html).digest("hex");
+    const script="const fs=require('node:fs');const crypto=require('node:crypto');"+
+      "process.stdout.write(crypto.createHash('sha256').update(fs.readFileSync('交付/报告.html')).digest('hex'))";
+    expect(value(await invoke(owner.context,"files.write",{path:"check.js",content:script,expectedVersion:0}))).toEqual({version:1});
+    const commandId=randomUUID();
+    expect(value(await invoke(owner.context,"execution.run",{argv:["check.js"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000},commandId)))
+      .toMatchObject({operationId:commandId});
+    let state="running";
+    for(let index=0;index<100 && state==="running";index++){
+      const receipt=value(await invoke(owner.context,"execution.status",{targetOperationId:commandId}));
+      state=String(receipt?.state);
+      if(state==="running")await new Promise(resolveWait=>setTimeout(resolveWait,50));
+    }
+    expect(state).toBe("succeeded");
+    expect(value(await invoke(owner.context,"execution.read",{targetOperationId:commandId,stream:"stdout",offset:0,limit:256})))
+      .toMatchObject({text:expectedHash,encoding:"utf8"});
+    expect(await invoke(other.context,"execution.status",{targetOperationId:commandId}))
+      .toMatchObject({status:"failed",error:{code:"invalid_command"}});
+    await writeFile(done,JSON.stringify({userId,accountId,taskId:owner.task.id,html}));
+    expect(await exit,output).toBe(0);
+  } finally {
+    await closeDb?.();
+    if(exited===undefined){
+      await writeFile(done,JSON.stringify({abort:true})).catch(()=>{});
+      await Promise.race([exit.catch(()=>null),new Promise(resolveWait=>setTimeout(resolveWait,5000))]);
+      if(exited===undefined){rust.kill();await exit.catch(()=>{});}
+    }
+    await rm(directory,{recursive:true,force:true});
+  }
+},180_000);
