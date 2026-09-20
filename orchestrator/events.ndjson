@@ -1123,3 +1123,5 @@
 {"ts":"2026-09-20T16:29:40.447Z","actor":"taskctl","action":"start","task":"T-1010","sha_before":"e6d8218b9740","sha_after":"8877e096048a"}
 {"ts":"2026-09-20T17:19:23.277Z","actor":"taskctl","action":"start","task":"T-1016","sha_before":"8877e096048a","sha_after":"83b03ba6c5d5"}
 {"ts":"2026-09-20T17:27:12.390Z","actor":"taskctl","action":"complete","task":"T-1016","evidence":"bd824135；会话复用1/1、frontend typecheck、LED-047 157/157、boundary-scan 新增0；pmem sync；reconcile 仍有范围外16评审+18教训错误及1告警，分别由T-916/T-1015承接","sha_before":"83b03ba6c5d5","sha_after":"c0916fc1c5c6"}
+{"ts":"2026-09-20T17:48:42.060Z","actor":"taskctl","action":"start","task":"T-1015","sha_before":"c0916fc1c5c6","sha_after":"bbd609b36844"}
+{"ts":"2026-09-20T17:56:22.979Z","actor":"taskctl","action":"complete","task":"T-1015","evidence":"8a704a4f；19条原教训逐项核实，旧断言校准；主树语义门卫7/7、Worker33/33、backend213/213、启动安全11/11；pmem sync+reconcile 仍22错误/1告警：16旧评审T-916、6有效红门T-1017/1018/1019及T-1013承接，不宣称全绿","sha_before":"68f855d6042f","sha_after":"6e80991e92a2"}
