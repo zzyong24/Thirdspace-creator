@@ -77,3 +77,31 @@ flowchart LR
 新测试在 `ce03759a` 原运行代码上首次执行即通过；本轮只补证据与测试，没有虚构失败红测或修改运行时。`pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts src/integration/chat-workbench-plan.integration.test.ts --retry=0 --testTimeout=30000` 为 **10/10 PASS**，其中既有未知模型流暂停/恢复测试仍要求对账、不重发。`pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 --testTimeout=4000` 为 **14/14 PASS**，`pnpm --dir ai-worker typecheck` 通过。`pnpm --dir backend typecheck` 仍仅有前述 14 处写集外既有错误，新测试无 TypeScript 错误。
 
 证据边界：这是本地模型协议夹具和测试接线的真实 Worker 子进程重启，证明原任务安全检查点续跑；未使用官方/自配真实模型，也未经过完整生产 dispatcher 调度、真实外部平台、文件产物和安装版。未知在途分支仍按既有真实子进程/PGlite 集成测试及 Worker 协议测试 fail closed；不能把安全分支的通过解释为未知动作自动对账完成。未推送或发布，T-1005 控制面状态未改。
+
+## 2026-09-20 连续文件能力的协议补证（独立分支）
+
+新增 `backend/src/integration/chat-workbench-plan.integration.test.ts` 用例，复用既有真实打包 Worker 子进程、PGlite、原聊天提交服务、原任务账本、`plan.update` 宿主和本地 HTTP 模型协议夹具。模型夹具在同一轮按以下顺序回复：
+
+```mermaid
+flowchart LR
+ A[模型建立两步计划] --> B[调用 files.write 第一份]
+ B --> C[调用 files.write 第二份]
+ C --> D[模型读取两条原工具 ID]
+ D --> E[plan.update 引用两条已结算回执]
+ E --> F[同一 executionTaskId 成功]
+```
+
+两次 `files.write` 都经过 Worker 工具分发到测试注入的宿主端口，参数符合冻结的 `workbenchFileRequestSchema` 中 `operation: "write"` 形状，夹具回执经过 `workbenchResultSchema` 校验。测试核对两次参数与调用顺序、发起第二次文件调用时模型已见第一次调用 ID、完成计划前模型已见第二次调用 ID、计划两个步骤各引用对应已结算工具调用、原任务终态为 `succeeded`。模型协议请求数为 5，工具已结算回执数为 4（建计划、两次文件能力、完成计划）。
+
+**验证范围：仅是文件能力调用协议。** 当前分支的聊天装配没有连接 T-1007 的生产文件宿主；测试端口只记录参数并返回明确写着“未连接文件宿主”的夹具回执，`sideEffect` 为 `none`，没有创建文件、计算文件 hash 或登记产物。计划服务可验证原任务已结算工具回执，不能仅凭该回执证明文件真实落盘。因此此用例不构成 AC-AW-01 文件交付、AC-AW-02 文件/产物、T-1007 文件隔离或安装版验收证据。真实文件事实需由后续生产宿主接线测试验证写后读、hash、路径归属与产物登记；本次没有跨越 T-1007/T-1009 写集。
+
+当场测试记录：新增用例首次运行失败，任务为 `retry_wait`、错误码 `http_500`。原因是模型历史中同时含建计划和两次文件调用 ID，测试夹具误取全部三条，拒绝第 4 次请求；当时两次文件调用已到达测试端口。这是夹具解析错误，不是运行时红测或产品缺陷。过滤为两条实际文件调用 ID 后，单用例通过；本轮未改运行时代码，也没有可诚实记录的运行时 RED。
+
+| 命令 | 当场结果 |
+|---|---|
+| `pnpm --dir backend exec vitest run src/integration/chat-workbench-plan.integration.test.ts -t '两次文件写入协议' --retry=0 --testTimeout=30000` | 1/1 PASS。 |
+| `pnpm --dir backend exec vitest run src/integration/chat-workbench-plan.integration.test.ts src/modules/execution/workbench-plan.service.test.ts src/modules/ai-runtime/chat-workbench-plan-tool-host.test.ts --retry=0 --testTimeout=30000` | 12/12 PASS。 |
+| `pnpm --dir backend typecheck` | FAIL，14 处错误均在写集外既有测试文件；新增测试文件无 TS 错误。 |
+| `node orchestrator/process/boundary-scan.mjs` | FAIL，7 条对基线 5 条；新增 2 条均在写集外 `frontend/src/features/copilot/live-chat-session.ts`，由 T-1016 跟进。 |
+
+任务继续保持进行中。没有官方/自配真实模型、生产文件宿主、真实文件落盘或安装版证据；未推送、未发布，也没有修改共享 contract、配置或其它任务文件。
