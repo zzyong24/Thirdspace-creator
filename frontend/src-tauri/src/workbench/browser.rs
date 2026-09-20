@@ -1554,4 +1554,173 @@ mod tests {
         // A restarted/unknown host cannot assert OS process stop for a DB lease.
         assert_eq!(proof.unwrap_err().code, "BROWSER_UNAVAILABLE");
     }
+
+    #[test]
+    #[ignore = "requires a locally verified fixed Chrome for Testing binary"]
+    fn real_chromium_anonymous_lane_opens_and_closes() {
+        let bundled = PathBuf::from(
+            std::env::var("CREATOROS_TEST_CFT_ROOT").expect("set CREATOROS_TEST_CFT_ROOT"),
+        );
+        assert!(BrowserHost::packaged_chrome_available(&bundled));
+        let root =
+            std::env::temp_dir().join(format!("creatoros-browser-real-{}", rand::random::<u64>()));
+        let host = BrowserHost::new(root.clone(), bundled);
+        let location = host
+            .profile_location(
+                "user-one",
+                "account-one",
+                "task-one",
+                IdentityChoice::Anonymous,
+            )
+            .unwrap();
+        let mut admission = receipt("account-one");
+        admission.profile_key = location["profileKey"].as_str().unwrap().to_owned();
+        admission.expires_at_ms = now_ms() + 120_000;
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let outcome = runtime.block_on(async {
+            let opened = tokio::time::timeout(
+                std::time::Duration::from_secs(45),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-open".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Open,
+                }),
+            )
+            .await
+            .map_err(|_| "browser open timed out".to_owned())?
+            .map_err(|error| error.code.to_owned())?;
+            let lane_id = opened["lane"]["lane_id"]
+                .as_str()
+                .ok_or_else(|| format!("missing lane_id: {opened}"))?
+                .to_owned();
+            let browser_epoch = opened["lane"]["browser_epoch"]
+                .as_u64()
+                .ok_or_else(|| format!("missing browser_epoch: {opened}"))?;
+            let status = host
+                .dispatch(BrowserRequest {
+                    operation_id: "real-status".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Status {
+                        lane_id: lane_id.clone(),
+                    },
+                })
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            let navigated = tokio::time::timeout(
+                std::time::Duration::from_secs(45),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-navigate".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "navigate".into(),
+                        input: json!({"url":"https://example.com"}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: None,
+                    },
+                }),
+            )
+            .await
+            .map_err(|_| "browser navigation timed out".to_owned())?
+            .map_err(|error| error.code.to_owned())?;
+            let observed = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-observe".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "observe".into(),
+                        input: json!({}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: None,
+                    },
+                }),
+            )
+            .await
+            .map_err(|_| "browser observe timed out".to_owned())?
+            .map_err(|error| error.code.to_owned())?;
+            let extracted = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-extract".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "extract".into(),
+                        input: json!({}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: None,
+                    },
+                }),
+            )
+            .await
+            .map_err(|_| "browser extract timed out".to_owned())?
+            .map_err(|error| error.code.to_owned())?;
+            let screenshot = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-screenshot".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "screenshot".into(),
+                        input: json!({}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: None,
+                    },
+                }),
+            )
+            .await
+            .map_err(|_| "browser screenshot timed out".to_owned())?
+            .map_err(|error| error.code.to_owned())?;
+            let closed = host
+                .dispatch(BrowserRequest {
+                    operation_id: "real-close".into(),
+                    admission,
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Close {
+                        lane_id,
+                        expected_browser_epoch: browser_epoch,
+                    },
+                })
+                .await
+                .map_err(|error| error.code.to_owned())?;
+            Ok::<_, String>((status, navigated, observed, extracted, screenshot, closed))
+        });
+        runtime.block_on(host.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+        let (status, navigated, observed, extracted, screenshot, closed) = outcome.unwrap();
+        assert!(status["browser_epoch"].as_u64().is_some());
+        assert!(navigated["laneId"].as_str().is_some(), "{navigated}");
+        assert!(observed["result"].is_object(), "{observed}");
+        assert!(extracted["result"].is_object(), "{extracted}");
+        assert_eq!(extracted["result"]["output"]["success"], true);
+        assert!(extracted["result"]["output"]["message"]
+            .as_str()
+            .is_some_and(|text| text.contains("Example Domain")));
+        assert_eq!(screenshot["result"]["output"]["media_type"], "image/png");
+        assert!(screenshot["result"]["output"]["data"]
+            .as_str()
+            .is_some_and(|data| data.len() > 100));
+        assert!(closed["stopProof"]["profileKey"].as_str().is_some());
+        assert_eq!(closed["stopProof"]["profileStopped"], true, "{closed}");
+    }
 }
