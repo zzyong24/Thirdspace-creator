@@ -5,6 +5,8 @@ import {prepareChatToolDefinitions} from "./chat-tool-definitions";
 import {prepareChatAssembly} from "./chat-assembly";
 import {latestUserText,detectCopilotMediaRoute,isScratchPositioningConversation} from "./chat-assembly-context";
 import {prepareChatModelMessages} from "./chat-model-messages";
+import {defineWorkbenchChatTool} from "./chat-tool-gate";
+import {chatWorkbenchPlanCapability} from "./chat-workbench-plan-tool";
 /** 新执行入口共用既有上下文、白名单、可信来源和历史转换；此步骤不取主模型凭据。 */
 export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,deps:AssembleChatDeps,options:NonNullable<Parameters<typeof prepareChatToolDefinitions>[1]>={}){
  const frozenOptions={...options};
@@ -13,6 +15,9 @@ export async function prepareChatTurn(ctx:RequestContext,input:ChatTurnInput,dep
   verbatimSources:input.trustedScriptSources??[],
   latestUserInstruction:latestUserText(input.messages),
  });
+ if(options.workbenchCapabilities?.some(capability=>capability.name===chatWorkbenchPlanCapability.name)){
+  assembly.tools[chatWorkbenchPlanCapability.name]=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("PLAN_EXECUTION_REQUIRES_ORIGINAL_TASK_LEASE");});
+ }
  const preparedTools=await prepareChatToolDefinitions(assembly.tools,frozenOptions);
  return {assembly,toolParameters:preparedTools.parameters,toolDefinitions:preparedTools.definitions,modelMessages:await prepareChatModelMessages(input.messages,assembly)};
 }
@@ -23,7 +28,7 @@ export async function prepareDurableChatTurn(
  input: ChatTurnInput,
  deps: AssembleChatDeps,
  skillSnapshot: ChatHostContext["skillSnapshot"],
- options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
+ options: {atomicCoverGenerate?:boolean;atomicAgenticResearch?:boolean;workerScriptDraft?:boolean;workerWebRead?:boolean;workerResearch?:boolean;atomicMaterialGenerate?:boolean;atomicScriptReview?:boolean;atomicPublishPackage?:boolean;workbenchPlans?:boolean;scriptHooksGeneration?:ChatHostContext["scriptHooksGeneration"];structuredGeneration?:ChatHostContext["structuredGeneration"]} = {},
 ) {
  // 必须在首个 await 前复制，工具闭包也不能持有调用方可变的账号/选区对象。
  const context=structuredClone(ctx), messages=structuredClone(input.messages), abortSignal=input.abortSignal;
@@ -49,7 +54,7 @@ export async function prepareDurableChatTurn(
  const prepared=await runWithEffectiveSkillSnapshot(hostContext.skillSnapshot,()=>prepareChatTurn(context,{
   messages,chatContext:hostContext.chatContext,trustedScriptSources:hostContext.trustedScriptSources,
   abortSignal,
- },deps,{atomicCoverGenerate,atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration)}));
+ },deps,{atomicCoverGenerate,atomicAgenticResearch,workerScriptDraft,workerWebRead,workerResearch,atomicMaterialGenerate,atomicScriptReview,atomicPublishPackage,workerScriptHooks:Boolean(scriptHooksGeneration),atomicPlanningThesis:true,workerStructuredNodes:Boolean(structuredGeneration),...(options.workbenchPlans?{workbenchCapabilities:[chatWorkbenchPlanCapability]}:{})}));
  if(structuredGeneration && prepared.toolDefinitions.some(tool=>tool.execution==="worker.structured-node" && !hostContext.skillSnapshot.skills.some(skill=>skill.skillId===(tool.name==="review.analyze"?"review.insights":tool.name))))throw new Error("原任务缺少生成节点 Skill");
  // 返回独立副本；调用方更改待持久化对象不会改变已建立的工具闭包。
  const completeHostContext=validateChatHostContext({

@@ -6,4 +6,8 @@ Pi 循环新增可信 `readPlanStatus` 端口：模型输出正文时若计划�
 
 本轮先执行缺模块／缺继续行为红测，再通过：`workbench-plan.service.test.ts` 3/3、`chat-pi-loop.protocol.test.ts` 6/6、ai-worker 类型检查。backend 全量类型检查仍有既存测试源码错误，当前 T-1005 文件未报新错。
 
-**尚未验收：**后端计划服务尚未通过真实聊天 Worker port 装配，模型也尚无可调用的计划工具；因此当前代码不构成 AC-AW-01 的产品闭环。T-1006 网关合并后接线、做真实模型/停止恢复回归，再按 taskctl 关闭本任务。
+## 后续接线
+
+已加 `readWorkbenchPlan`/`saveWorkbenchPlan` 命名端口；实际 worker 对话在每轮结束时经当前 `ExecutionRef` 读取原任务计划。生产聊天装配可选的 `plan.update`，定义在提交时冻结，宿主工具经原 `reserveAgenticTool`/`startAgenticTool`/`executeAgenticTool` 链与同一租约保存计划。其参数无身份字段，成功状态仅由后端核对已结算工具回执/产物。旧冻结任务不追加工具。测试：`worker-runtime.test.ts` 32/32、`workbench-plan.service.test.ts` 3/3、`chat-workbench-plan-tool-host.test.ts` 1/1。`chat-assembly.test.ts` 新增的可选冻结用例通过；全文件运行 89 例中 26 例历史断言失败，未将其计作本任务通过。
+
+**尚未验收：** `plan.update` 还未经过真实模型与原聊天完整工具账本集成测试；停止恢复、重规划、产物核验及多步最终交付仍需验证，不能把上述单测写成 AC-AW-01 PASS。backend 全量类型检查仍为相同的 14 处既有错误。T-1005 保持进行中。

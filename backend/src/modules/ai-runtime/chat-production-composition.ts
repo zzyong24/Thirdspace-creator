@@ -2,6 +2,7 @@ import type {Db} from "@creatoros/backend";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
+import {createChatWorkbenchPlanToolHost} from "./chat-workbench-plan-tool-host";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
@@ -77,6 +78,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
   },
  });
+ const planTools=createChatWorkbenchPlanToolHost(db);
  return createChatProductionRuntime(db,{
   resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,
@@ -84,7 +86,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   assertProject:deps.assertProject,
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
-  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal)),
+  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),await planTools(c,input,ref,signal)),
   webRead:deps.webRead,
   onError:deps.onError,
  });
