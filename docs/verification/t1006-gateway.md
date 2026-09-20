@@ -82,3 +82,13 @@ flowchart LR
 - backend 类型检查仍有 14 条写集外既有测试错误；本候选没有新增类型诊断。`boundary-scan.mjs` 仍为 7 条，其中相对配置基线多出的 2 条位于未改动的 `live-chat-session.ts`；本候选新增 0 条。
 
 生产尚未注入真实 `workbenchHost`，所以当前安装版不会触发通用宿主进度；文件、浏览器能力接入与真实模型/费用/停止恢复的端到端验收仍待后续任务。进度写入失败时工具可成功，但该条进度不可回放；不能据此宣称进度零丢失。
+
+## 主工作树真实子进程集成（2026-09-19）
+
+上述独立候选的“生产未注入”仅描述当时状态。现已通过 `frontend/src/server/workbench-native-host.ts` 将 Mac 桌面私有 socket 的文件能力接入正式 `persistence-client.ts` 组合；仅真实 socket、桌面环境和授予的能力同时存在时才发布 `files.list/read/stat/write/edit`。每次调用在 Node client 重读原任务租约并验证身份。浏览器、媒体解析、Windows 宿主仍未接入。
+
+新增 `chat-workbench-gateway.integration.test.ts` 使用实际打包的 ai-worker 子进程、PGlite 原任务与调用账本、假 OpenAI 流及可信宿主端口走完整调用链。首次运行在模型前被 `WORKBENCH_FROZEN_DEFINITION_MISMATCH` 拒绝：数据库反序列化后 JSON 对象键顺序改变，导致动态能力版本散列不同。改为只对 Workbench 定义使用稳定 JSON 序列化后，第二次运行在工具已结算时进入 `TOOL_REQUIRES_RECONCILIATION`：进度事件占据了工具调用的 `callIndex=0`，最终卡片投影将其误判为冲突。现在投影保留进度的序号，并从其后写入最终卡片；再次投影仍逐项比对原回执，不能覆写已有卡片。
+
+修正后该集成用例通过：宿主只执行一次，20,004 字符文本完整保存在原工具回执，下一次模型输入只含有界投影，原调用 ID 可供后续 `tool.result.read` 回读；两次模型调用各记录 5 tokens，进度可按原 stream sequence 重连读取，跨账号读取被拒绝。另跑动态定义、宿主与流服务测试，合计 4 个文件、24 个测试通过。这里的 token 数来自假模型回传的 usage，用于验证原账本没有重复计费，不代表真实供应商费用实测。
+
+后端类型检查仍有 14 条此前已记录的写集外错误，本次新增文件修正后无新增诊断。未验证真实模型定价、图片 `dataRef` 对模型可见、超过 100 万字符的原回执、真实取消与安装版跨平台 E2E；这些不能记为 T-1006 全部验收通过。

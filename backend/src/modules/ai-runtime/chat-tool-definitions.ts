@@ -5,6 +5,7 @@ import type { chatWorkerInputSchema } from "@creatoros/contract/execution-worker
 import { workbenchCapabilitySchema, type WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 import { getChatToolNativeExecutor, getChatToolRegisteredName, getChatToolWorkbenchCapability } from "./chat-tool-gate";
 import { prepareChatToolParameters } from "./chat-tool-parameters";
+import { canonicalJson } from "../ai/canonical-json";
 type Definition = z.infer<typeof chatWorkerInputSchema>["tools"][number];
 /** 最大可能副作用，不代表每次执行均已写入。实现语义变化时必须提升此版本。 */
 const IMPLEMENTATION_REVISION = "chat-tools-v1";
@@ -90,7 +91,9 @@ export async function prepareChatToolDefinitions(tools: ToolSet, options:{worker
     // 绑定真实schema变体与描述，避免不同上下文的同名工具共用错误版本。
     const execution=name==="redfox.query"?"worker.redfox" as const:options.workerScriptDraft && name==="script.draft" ? "worker.script-draft" as const : options.workerWebRead && name==="web.read" ? "worker.web-read" as const : options.workerResearch && name==="material.gather" ? "worker.research" as const : options.workerStructuredNodes && ["topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.analyze","knowledge.distill"].includes(name) ? "worker.structured-node" as const : (options.atomicCoverGenerate && name==="cover.generate") || (options.atomicAgenticResearch && name==="research.autonomous") || (options.atomicPlanningThesis && name==="planning.thesis") || (options.atomicMaterialGenerate && name==="material.generate") || (options.atomicScriptReview && name==="review.script") || (options.atomicPublishPackage && name==="publish.package") ? "host.task-submit" as const : workerScriptHooks && name==="script.hooks" ? "worker.script-hooks" as const : undefined;
     const revision=descriptor?`workbench-v${descriptor.schemaVersion}`:name==="redfox.query"?"chat-tools-worker-redfox-v1":name==="script.patch"?"chat-tools-script-patch-v2":execution==="worker.script-draft"?"chat-tools-worker-script-draft-v2":execution==="worker.web-read"?"chat-tools-worker-web-read-v1":execution==="worker.research"?"chat-tools-worker-research-v2":execution==="worker.structured-node"?(name==="calibration.diagnose"?"chat-tools-calibration-diagnose-v2":"chat-tools-worker-structured-v1"):execution==="host.task-submit"?(name==="cover.generate"?"chat-tools-atomic-cover-v1":name==="research.autonomous"?"chat-tools-atomic-agentic-research-v1":name==="material.generate"?"chat-tools-atomic-material-v1":"chat-tools-atomic-planning-v1"):execution?"chat-tools-worker-hooks-v1":(name==="local.tools"||name==="local.workspace")?"chat-tools-local-host-v2":IMPLEMENTATION_REVISION;
-    const version = `${revision}:${createHash("sha256").update(JSON.stringify({ name, effect, description: tool.description, parameters: prepared.schema, ...(descriptor ? { descriptor } : {}) })).digest("hex")}`;
+    const versionInput={ name, effect, description: tool.description, parameters: prepared.schema, ...(descriptor ? { descriptor } : {}) };
+    // Workbench 能力经契约/数据库反序列化会重排对象键；冻结版本按 JSON 值核对。
+    const version = `${revision}:${createHash("sha256").update(descriptor?canonicalJson(versionInput):JSON.stringify(versionInput)).digest("hex")}`;
     const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema),...(execution?{execution}:{}) };
     return { name, prepared, definition };
   }));
