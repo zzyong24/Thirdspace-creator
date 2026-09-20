@@ -16,6 +16,8 @@ import { sanitizeToolName } from "../runtime/chat/tool-names";
 import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
+import { projectReceiptForPi } from "../capabilities/result-pages";
+import { workbenchResultSchema } from "@creatoros/contract/agent-workbench";
 const checkpointSchema=z.object({pendingCalls:z.array(z.object({status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
@@ -33,6 +35,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   const stop=new AbortController(),signal=AbortSignal.any([parentSignal,stop.signal]);
   let failure:GenerationFailure|undefined,lastModelCallId:string|undefined;
   const modelForTool=new Map<string,string>(),toolCallIds=new Set<string>();
+  const outcomesForProjection=new Map<string,{callId:string;outcome:z.infer<typeof agenticToolOutcomeSchema>}>();
   const fail=(error:unknown,code:string)=>{
     const result=error instanceof GenerationFailure?error:new GenerationFailure("unknown_result",code);
     failure??=result;stop.abort();return result;
@@ -143,6 +146,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         }});
         if(!reservedCallId)throw Error("tool receipt missing");
         toolCallIds.add(reservedCallId);await checkpoint();
+        outcomesForProjection.set(options.toolCallId,{callId:reservedCallId,outcome:output});
         if(!initial.acknowledgedBlockedCallIds.includes(reservedCallId) && (output.error?.code==="needs_login" || output.error?.code==="captcha" || output.error?.code==="permission"))throw new GenerationFailure("waiting_user","CHAT_TOOL_REQUIRES_USER");
         return (input as typeof input & {executionEngine?:"pi"}).executionEngine==="pi" && output.error ? output : output.data??output;
       }catch(error){throw fail(error,"CHAT_TOOL_RESULT_UNKNOWN");}
@@ -178,6 +182,16 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
       readPlanStatus:ports.readPlanStatus?()=>ports.readPlanStatus!(signal):undefined,
+      presentToolResult:async(_name,_visible,toolCallId)=>{
+        const receipt=outcomesForProjection.get(toolCallId);
+        if(!receipt)return null;
+        const record=receipt.outcome.data && typeof receipt.outcome.data==="object" && !Array.isArray(receipt.outcome.data) ? receipt.outcome.data as Record<string,unknown> : {};
+        const workbench=workbenchResultSchema.safeParse(record.workbench??record.result);
+        // 图片必须由可信宿主解析原 dataRef；未装配时保留原卡片，不能把路径冒充可见截图。
+        if(workbench.success && workbench.data.status==="succeeded" && workbench.data.content.some(item=>item.type==="image"))return null;
+        if(JSON.stringify(receipt.outcome).length<=12_000)return null;
+        return (await projectReceiptForPi(receipt.outcome,receipt.callId,{})).content;
+      },
       approve:(name,args,options)=>toolApproval[name]!(args,options),
       approvalId:toolCallId=>`chat-approval:${modelForTool.get(toolCallId)!}:${toolCallId}`,
       execute:async(name,args,options)=>{

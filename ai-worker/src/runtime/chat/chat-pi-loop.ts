@@ -5,6 +5,7 @@ import { loadChatPiAgent, type ChatPiAgent } from "./chat-pi-core";
 import { windowChatPiMessages } from "./chat-pi-context";
 import { sanitizeToolNames, sanitizeToolName, sanitizeSystemToolReferences } from "./tool-names";
 import { buildForcedToolInstruction, buildForcedToolSequenceInstruction } from "./chat-loop-policy";
+import type { PiResultContent } from "../../capabilities/result-pages";
 
 /** 协议续接文字不决定业务完成；完成判断来自冻结的业务 Skill。 */
 export const CHAT_LENGTH_CONTINUATION = "上一次输出达到单次长度上限。请在当前任务与已有结果基础上继续未完成部分，不重复已成功的操作，直到交付满足本轮用户意图。";
@@ -26,6 +27,8 @@ export interface ChatPiLoopOptions {
   contextPolicyVersion?:2;
   model:LanguageModel; system:string;messages:ModelMessage[];definitions:Definition[];
   execute(name:string,input:unknown,options:{toolCallId:string}):Promise<unknown>;
+  /** 原回执已结算后，仅投影给模型；UI 卡片继续使用完整业务结果。 */
+  presentToolResult?(name:string,output:unknown,toolCallId:string):Promise<PiResultContent[]|null>;
   approve(name:string,input:unknown,options:{toolCallId:string}):Promise<ToolApprovalStatus>;
   approvalId(toolCallId:string):string;
   signal:AbortSignal;maxOutputTokens:number;messageId:string;
@@ -161,8 +164,10 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         }
         completedTool=true;
         lastPlanProgress=null;stalledTurns=0;
-        history.push({role:"tool",content:[{type:"tool-result",toolCallId,toolName:name,output:{type:"json",value:JSON.parse(JSON.stringify(output??null))}}]});
-        return {content:[{type:"text" as const,text:JSON.stringify(output??null)}],details:output};
+        const presented=await options.presentToolResult?.(def.name,output,toolCallId);
+        const content=presented??[{type:"text" as const,text:JSON.stringify(output??null)}];
+        history.push({role:"tool",content:[{type:"tool-result",toolCallId,toolName:name,output:presented?{type:"content" as const,value:content.map(item=>item.type==="image"?{type:"file" as const,data:{type:"data" as const,data:item.data},mediaType:item.mimeType}:item)}:{type:"json" as const,value:JSON.parse(JSON.stringify(output??null))}}]});
+        return {content,details:output};
       }catch(error){failure??=error;agent.abort();throw error;}
     },
   }))},streamFn,toolExecution:"sequential"});

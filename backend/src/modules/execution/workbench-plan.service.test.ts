@@ -29,7 +29,7 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     expect(retry).toEqual(first);
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("different")]})).rejects.toMatchObject({name: "ConflictError"});
     expect(await f.plan.read(ctx, f.task.id)).toEqual(first);
-    expect(await f.plan.status(f.ref)).toEqual({revision: 1, progressToken: JSON.stringify(first), steps: [{title: "research", status: "pending"}]});
+    expect(await f.plan.status(f.ref)).toEqual({revision: 1, progressToken: JSON.stringify(first), steps: [{stepId: "research", title: "research", status: "pending"}]});
     await expect(f.plan.read({...ctx, accountId: "foreign"}, f.task.id)).rejects.toThrow();
     const [stored] = await db.select().from(executionTasks).where(eq(executionTasks.id, f.task.id));
     expect(stored?.payload).toMatchObject({source: "original", workbenchPlan: first});

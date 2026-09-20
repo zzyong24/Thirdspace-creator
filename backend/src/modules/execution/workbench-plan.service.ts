@@ -43,7 +43,7 @@ export function createWorkbenchPlanService(db: Db, deps: {
           revision: plan.planRevision,
           // 计划的全部持久化事实参与令牌，避免只变更回执时误判无进展。
           progressToken: JSON.stringify(plan),
-          steps: plan.steps.map(({title, status}) => ({title, status})),
+          steps: plan.steps.map(({stepId, title, status}) => ({stepId, title, status})),
         } : null;
       });
     },

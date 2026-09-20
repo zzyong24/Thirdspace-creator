@@ -38,3 +38,17 @@ it('计划未推进且模型重复宣称完成时给具体步骤错误，停止�
  await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'读取'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'stalled',readPlanStatus:async()=>({revision:1,progressToken:'same',steps:[{stepId:'read',title:'读取资料',status:'pending'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
  assert.equal(calls,3);
 });
+
+it('已结算长结果只把分页投影送回模型，UI仍持有完整结果',async()=>{
+ let calls=0;const requests:any[]=[];const original={text:'证据'.repeat(8000)};
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);calls++;
+  const content:any[]=calls===1?[{type:'tool-call',toolCallId:'tool-page',toolName:'read',input:'{}'}]:[{type:'text-start',id:'t'},{type:'text-delta',id:'t',delta:'根据证据完成。'},{type:'text-end',id:'t'}];
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:calls===1?'tool-calls':'stop',raw:calls===1?'tool-calls':'stop'}});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'读取',messages:[{role:'user',content:'读取资料'}],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>original,presentToolResult:async()=>[{type:'text',text:'证据首段 [调用 tool.result.read 继续读取]'}],approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'page'});
+ assert.equal(calls,2);
+ assert.ok(JSON.stringify(requests[1]).includes('tool.result.read'));
+ assert.ok(!JSON.stringify(requests[1]).includes('证据'.repeat(200)));
+ assert.equal((result.message.parts.find(part=>'toolCallId' in part) as any).output.text,original.text);
+});
