@@ -192,13 +192,17 @@ it('工作台恢复只读取非当前运行 attempt 的精确物理租约',async
  const profileKey='9'.repeat(64);
  const receipt=await service.acquireProfile(old.ref,'example.com',profileKey);
  expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+ await db.update(executionTasks).set({status:'waiting_user'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
+ await db.update(executionTasks).set({status:'unknown_result'}).where(eq(executionTasks.id,old.task.id));
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
  await db.update(executionTasks).set({status:'paused'}).where(eq(executionTasks.id,old.task.id));
  expect(await service.getRecoverableWorkerProfile(profileKey)).toEqual({
   ref:old.ref,accountId:'recover-managed-account',userId:'recover-managed-user',
-  domain:'example.com',profileKey,leaseId:receipt.leaseId,
+  domain:'example.com',profileKey,leaseId:receipt.leaseId,taskStatus:'paused',currentAttempt:true,
  });
  await db.update(executionTasks).set({status:'running',attempt:old.ref.attempt+1,fenceToken:'new-fence'}).where(eq(executionTasks.id,old.task.id));
- expect((await service.getRecoverableWorkerProfile(profileKey))?.ref).toEqual(old.ref);
+ expect(await service.getRecoverableWorkerProfile(profileKey)).toMatchObject({ref:old.ref,taskStatus:'running',currentAttempt:false});
  await service.releaseAfterWorkerStopped(old.ref,receipt.leaseId);
  expect(await service.getRecoverableWorkerProfile(profileKey)).toBeNull();
 });

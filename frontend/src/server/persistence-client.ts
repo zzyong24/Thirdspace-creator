@@ -1125,12 +1125,15 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   // 主动调(singleton 跟随进程生命周期),保留以备未来显式 teardown。
   const { db, driver, dispose } = await createConfiguredDb();
   let stopExecutionWorker: (()=>Promise<void>) | undefined;
+  let disposeWorkbenchBrowserHost: (()=>void) | undefined;
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
-    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{await stopExecutionWorker?.();},disposeDatabase:dispose});
+    createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
+      await stopExecutionWorker?.();disposeWorkbenchBrowserHost?.();
+    },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
   // (reset-preserve.ts 单一真值:users/sessions/模型配置/skill 定制/激活态…)从最新
@@ -5430,6 +5433,7 @@ FAVORITES_PROMOTE_PER_RUN
   });
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
   const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now});
+  disposeWorkbenchBrowserHost=()=>browserWorkbenchHost?.dispose();
   const workbenchHost=fileWorkbenchHost&&browserWorkbenchHost?{
     catalog:[...fileWorkbenchHost.catalog,...browserWorkbenchHost.catalog],
     platform:"macos" as const,

@@ -85,7 +85,7 @@ function withinDomain(url:string,domain:string){
 
 /** 浏览器能力仅在真正有 Mac 私有 socket 时装配；不从模型输入接受账号、目录或 profileKey。 */
 export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string;
- now?:()=>string}={}):Host|undefined{
+ now?:()=>string}={}):(Host&{reconcileStoppedProfiles():Promise<void>;dispose():void})|undefined{
  const platform=options.platform??process.platform,desktop=options.desktop??process.env.CREATOROS_DESKTOP==="1";
  const socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_BROWSER_SOCKET;
  if(platform!=="darwin"||!desktop||!socketPath)return undefined;
@@ -93,6 +93,20 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
  const leases=createExecutionLeaseService(db,{now:options.now});
  const profiles=createExecutionBrowserProfileLeaseService(db,{now:options.now});
  const sessions=new Map<string,Session>(),held=new Map<string,Session>();
+ let timer:NodeJS.Timeout|undefined,reconciling:Promise<void>|undefined,disposed=false;
+ function scheduleReconciliation(){
+  if(disposed||timer||!held.size)return;
+  timer=setTimeout(()=>{
+   timer=undefined;
+   void reconcileStoppedProfiles().catch(()=>{/* 数据库或原生宿主暂不可用时保留物理租约，下次重试。 */});
+  },5_000);
+  timer.unref();
+ }
+ function forgetLease(leaseId:string){
+  held.delete(leaseId);
+  for(const [laneId,session] of sessions)if(session.receipt.leaseId===leaseId)sessions.delete(laneId);
+  if(!held.size&&timer){clearTimeout(timer);timer=undefined;}
+ }
  const admission=createWorkbenchBrowserAdmissionService(db,{now:options.now,
   async resolveProfile(context,request,ref,signal){
    if(!context.accountId || (request.mode!=="primary"&&request.mode!=="anonymous"))throw new BrowserSocketError("INVALID_BROWSER_MODE",false);
@@ -132,11 +146,28 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
   if(proof?.profileStopped!==true||proof.profileKey!==old.profileKey||proof.profileLeaseId!==old.leaseId)return false;
   const fresh=await profiles.getRecoverableWorkerProfile(profileKey);
   if(!fresh||fresh.leaseId!==old.leaseId||!sameRef(fresh.ref,old.ref))return false;
-  try {return await profiles.releaseAfterWorkerStopped(old.ref,old.leaseId);}
+  try {const released=await profiles.releaseAfterWorkerStopped(old.ref,old.leaseId);
+   if(released)forgetLease(old.leaseId);
+   return released;}
   catch {return false;}
  }
+ async function reconcileStoppedProfiles():Promise<void>{
+  if(reconciling)return reconciling;
+  const work=(async()=>{
+   for(const [leaseId,session] of [...held]){
+    const candidate=await profiles.getRecoverableWorkerProfile(session.receipt.profileKey);
+    if(!candidate||candidate.leaseId!==leaseId||!sameRef(candidate.ref,session.ref))continue;
+    const stopped=["cancel_requested","cancelled","pause_requested","paused","succeeded","failed","partial"].includes(candidate.taskStatus);
+    if(!stopped&&candidate.currentAttempt)continue;
+    await recoverStoppedProfile(session.receipt.profileKey);
+   }
+  })();
+  reconciling=work;
+  try {await work;}finally{reconciling=undefined;scheduleReconciliation();}
+ }
  const key=(taskId:string,laneId:string)=>`${taskId}\0${laneId}`;
- return {catalog,platform:"macos",capabilities:["task.browser"],
+ return {catalog,platform:"macos",capabilities:["task.browser"],reconcileStoppedProfiles,
+  dispose(){disposed=true;if(timer){clearTimeout(timer);timer=undefined;}},
   async dispatch(rawCall,{signal}){
    signal.throwIfAborted();const call=workbenchHostCallSchema.parse(rawCall);
    const name=call.invocation.name as BrowserTool;
@@ -178,6 +209,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
       attempt:task.attempt,fenceToken:task.fenceToken,domain:receipt.domain,profileKey:receipt.profileKey,
       profileLeaseId:receipt.leaseId,laneName:session?.admission.laneName??input.laneId,expiresAtMs:Date.now()+30_000};
      const bound:Session={ref,receipt,mode:session?.mode??input.mode!,admission:nativeAdmission};held.set(receipt.leaseId,bound);
+     scheduleReconciliation();
      const action=name==="browser.open"?{kind:"open"}:name==="browser.status"?{kind:"status",laneId:input.laneId}
       :name==="browser.close"?{kind:"close",laneId:input.laneId,expectedBrowserEpoch:input.browserEpoch}
       :{kind:"execute",laneId:input.laneId,expectedBrowserEpoch:input.browserEpoch,
@@ -206,7 +238,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
       let released=false;
       for(let attempt=0;attempt<4;attempt++){
        try {if(await admission.releaseAfterProfileStopped(ref,receipt.leaseId)){
-        held.delete(receipt.leaseId);released=true;break;
+        forgetLease(receipt.leaseId);released=true;break;
        }}catch {/* 未证明停止时仍持有物理租约。 */}
        if(attempt<3)await new Promise(resolve=>setTimeout(resolve,100*(attempt+1)));
       }
@@ -217,7 +249,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    }catch(error){
     if(acquired){
      // Open 可能已拿到数据库租约，却在原生宿主启动前失败。仅实际停机证明可释放。
-     try {if(await admission.releaseAfterProfileStopped(ref,acquired.leaseId))held.delete(acquired.leaseId);}
+     try {if(await admission.releaseAfterProfileStopped(ref,acquired.leaseId))forgetLease(acquired.leaseId);}
      catch {/* 原生状态不明时保留占用，禁止下一个持有者抢占。 */}
     }
     if(signal.aborted)throw error;

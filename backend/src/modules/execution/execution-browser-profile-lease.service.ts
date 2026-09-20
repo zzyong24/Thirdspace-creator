@@ -94,9 +94,11 @@ export function createExecutionBrowserProfileLeaseService(
       if(!held?.ownerExecutionTaskId || held.attempt===null || !held.fenceToken)return null;
       const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,held.ownerExecutionTaskId));
       if(!task || task.userId!==held.userId || !task.accountId ||
-          (task.status==="running" && task.attempt===held.attempt && task.fenceToken===held.fenceToken))return null;
+          (["running","waiting_user","unknown_result"].includes(task.status) &&
+           task.attempt===held.attempt && task.fenceToken===held.fenceToken))return null;
       return {ref:{executionTaskId:task.id,attempt:held.attempt,fenceToken:held.fenceToken},
-        accountId:task.accountId,userId:task.userId,domain:held.domain,profileKey:held.profileKey,leaseId:held.leaseId};
+        accountId:task.accountId,userId:task.userId,domain:held.domain,profileKey:held.profileKey,leaseId:held.leaseId,
+        taskStatus:task.status,currentAttempt:task.attempt===held.attempt&&task.fenceToken===held.fenceToken};
     },
     async acquire(ref: ExecutionRef, rawDomain: string) {
       return (await acquireMany(ref, [rawDomain]))[0]!;

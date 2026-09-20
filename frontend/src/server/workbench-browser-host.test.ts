@@ -114,6 +114,42 @@ it("a new host only reconciles a stopped old owner before reusing the same physi
   {signal:new AbortController().signal,onProgress:()=>{}})).status).toBe("succeeded");
 });
 
+it("reconciles a cancelled task without waiting for another task to claim its profile",async()=>{
+ const nonce=randomUUID(),tasks=createPersistentTaskService(db),received:Array<Record<string,unknown>>=[];
+ const task=await tasks.enqueue({userId:`cancel-${nonce}`,accountId:`account-${nonce}`,requestId:nonce,source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:nonce,idempotencyKey:nonce,payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:`worker-${nonce}`}))!;
+ let stopped=false;
+ const path=await socket(received,false,()=>stopped);
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const context={userId:`cancel-${nonce}`,accountId:`account-${nonce}`,taskId:task.id,
+  attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:`worker-${nonce}`};
+ const open=await host.dispatch({context:{...context,operationId:randomUUID()},invocation:{name:"browser.open",
+  schemaVersion:1,input:{laneId:"research",mode:"primary",domain:"example.com"}}},
+  {signal:AbortSignal.timeout(10_000),onProgress:()=>{}});
+ expect(open.status).toBe("succeeded");
+ const profiles=createExecutionBrowserProfileLeaseService(db);
+ const [lease]=await profiles.listOwned(ref);
+ expect(lease).toBeDefined();
+ await host.reconcileStoppedProfiles();
+ expect(received.some(request=>(request.action as {kind:string}).kind==="cleanup")).toBe(false);
+ await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,task.id));
+ await host.reconcileStoppedProfiles();
+ expect(received.some(request=>(request.action as {kind:string}).kind==="cleanup")).toBe(false);
+ await tasks.command({userId:context.userId,accountId:context.accountId,requestId:`cancel-${nonce}`,source:"user"},
+  {taskIds:[task.id],command:"cancel",idempotencyKey:`cancel-${nonce}`});
+ await host.reconcileStoppedProfiles();
+ expect(received.at(-1)?.action).toMatchObject({kind:"cleanup"});
+ expect(await profiles.listOwned(ref)).toHaveLength(1);
+ stopped=true;
+ await vi.waitFor(async()=>expect(await profiles.listOwned(ref)).toEqual([]),{timeout:7_500,interval:100});
+ expect(await profiles.listOwned(ref)).toEqual([]);
+ expect(received.at(-1)?.admission).toMatchObject({taskId:task.id,attempt:ref.attempt,
+  fenceToken:ref.fenceToken,profileLeaseId:lease!.leaseId});
+ host.dispose();
+});
+
 it("open obtains the Rust physical profile and binds it to the current DB task before native dispatch",async()=>{
  const tasks=createPersistentTaskService(db);
  const task=await tasks.enqueue({userId:"browser-user",accountId:"browser-account",requestId:"host-open",source:"user"},
@@ -348,7 +384,7 @@ realTest("a restarted Rust host proves a stopped old DB lease before a new task 
  }
 },180_000);
 
-realTest("two accounts keep separate primary profiles and one close leaves the other running",async()=>{
+realTest("two accounts keep separate primary profiles and one cancellation leaves the other running",async()=>{
  const root=await mkdtemp(join(tmpdir(),"wb-browser-accounts-"));
  const profileRoot=join(root,"profiles"),nonce=randomUUID(),userId=`browser-accounts-${nonce}`;
  const tasks=createPersistentTaskService(db),profiles=createExecutionBrowserProfileLeaseService(db);
@@ -382,7 +418,7 @@ realTest("two accounts keep separate primary profiles and one close leaves the o
   const opened=await Promise.all(scopes.map(scope=>dispatch(scope,"browser.open",
    {laneId:scope.label,mode:"primary",domain:"example.com"})));
   const first=scopes[0]!,second=scopes[1]!;
-  const firstLane=opened[0]!.lane.lane_id as string,firstEpoch=opened[0]!.lane.browser_epoch as number;
+  const firstLane=opened[0]!.lane.lane_id as string;
   const secondLane=opened[1]!.lane.lane_id as string,secondEpoch=opened[1]!.lane.browser_epoch as number;
   expect(firstLane).not.toBe(secondLane);
   const [firstLease]=await profiles.listOwned(first.ref),[secondLease]=await profiles.listOwned(second.ref);
@@ -396,7 +432,12 @@ realTest("two accounts keep separate primary profiles and one close leaves the o
    invocation:{name:"browser.status",schemaVersion:1,input:{laneId:secondLane}}},
    {signal:AbortSignal.timeout(10_000),onProgress:()=>{}});
   expect(foreign).toMatchObject({status:"failed",error:{code:"lane_not_found"}});
-  await dispatch(first,"browser.close",{laneId:firstLane,browserEpoch:firstEpoch});
+  await tasks.command({userId,accountId:first.context.accountId,requestId:`cancel-${nonce}`,source:"user"},
+   {taskIds:[first.context.taskId],command:"cancel",idempotencyKey:`cancel-${nonce}`});
+  await vi.waitFor(async()=>{
+   await host.reconcileStoppedProfiles();
+   expect(await profiles.listOwned(first.ref)).toEqual([]);
+  },{timeout:20_000,interval:250});
   expect(await profiles.listOwned(first.ref)).toEqual([]);
   expect(await profiles.listOwned(second.ref)).toHaveLength(1);
   await dispatch(second,"browser.navigate",{laneId:secondLane,browserEpoch:secondEpoch,
