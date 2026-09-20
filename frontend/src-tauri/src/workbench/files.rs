@@ -1,7 +1,10 @@
 //! T-1007 task-local file authority. On Unix every path component is opened relative
 //! to a directory descriptor with O_NOFOLLOW; user text is never joined onto an
-//! ambient filesystem path. Windows is fail-closed until equivalent handle walking
-//! is integrated and verified on a Windows host.
+//! ambient filesystem path. Windows uses the same rule with directory-relative
+//! native handles and rejects every reparse point before using an opened handle.
+#[cfg(windows)]
+#[path = "files_windows.rs"]
+mod windows;
 #[cfg(unix)]
 use std::{
     ffi::CString,
@@ -96,6 +99,10 @@ pub struct TaskFiles {
     // This sibling directory is outside the writable command sandbox.
     #[cfg(unix)]
     state: File,
+    #[cfg(windows)]
+    task: std::fs::File,
+    #[cfg(windows)]
+    state: std::fs::File,
 }
 impl TaskFiles {
     /// `base` is provisioned by the desktop host, and IDs come only from the
@@ -134,7 +141,11 @@ impl TaskFiles {
                 state,
             });
         }
-        #[cfg(not(unix))]
+        #[cfg(windows)]
+        {
+            Self::new_windows(base, user, account, task)
+        }
+        #[cfg(not(any(unix, windows)))]
         {
             let _ = (base, user, account, task);
             Err(FileError::UnsupportedPlatform)
