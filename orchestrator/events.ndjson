@@ -1113,3 +1113,6 @@
 {"ts":"2026-09-20T03:31:51.028Z","actor":"taskctl","action":"complete","task":"T-1014","evidence":"233项逐条分类CSV；196项治理误报消除，1项容量降WARN，36项原有效失败保留；全量reconcile 37 errors/1warning后修复新归档误报LED043并完整回归通过。保留原任务状态/回执，不动运行时；残余T916/T1015承接，详见docs/verification/t1014-reconcile-triage.md。","sha_before":"afd7a9bac823","sha_after":"147acb6f9025"}
 {"ts":"2026-09-20T03:38:18.292Z","actor":"taskctl","action":"start","task":"T-1004","sha_before":"147acb6f9025","sha_after":"8abe9e06c862"}
 {"ts":"2026-09-20T03:54:43.232Z","actor":"taskctl","action":"complete","task":"T-1004","evidence":"8525ddff; contract agent-workbench 5/5 and typecheck; locked NomiFun e27bd5de Mac cargo check PASS, Windows dependency resolution PASS/native build unverified; reconcile 36 historical errors/1 warning per T-1014","sha_before":"8abe9e06c862","sha_after":"2d1ec956b8ec"}
+{"ts":"2026-09-20T03:58:30.924Z","actor":"taskctl","action":"start","task":"T-1005","sha_before":"2d1ec956b8ec","sha_after":"62564b077fa4"}
+{"ts":"2026-09-20T03:58:31.042Z","actor":"taskctl","action":"start","task":"T-1006","sha_before":"62564b077fa4","sha_after":"3822896b03b7"}
+{"ts":"2026-09-20T03:58:31.166Z","actor":"taskctl","action":"start","task":"T-1007","sha_before":"3822896b03b7","sha_after":"f9584331d1fc"}

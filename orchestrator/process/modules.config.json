@@ -18,12 +18,33 @@
     ]
   },
   "modules": {
+    "T-1005": {
+      "task_id": "T-1005", "archetype": ["orchestration"], "tasks": ["implementation"],
+      "depends_on": ["T-1004:implementation"],
+      "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "backend/src/modules/execution/**", "ai-worker/src/runtime/chat/**"],
+      "write_set": ["backend/src/modules/execution/workbench-plan.service.ts", "backend/src/modules/execution/workbench-plan.service.test.ts", "ai-worker/src/runtime/chat/chat-pi-loop.ts", "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts", "ai-worker/src/execution/chat-worker-run.ts", "docs/verification/t1005-plan.md"],
+      "verify_commands": {"implementation": ["pnpm --dir backend exec vitest run src/modules/execution/workbench-plan.service.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0"]}
+    },
+    "T-1006": {
+      "task_id": "T-1006", "archetype": ["orchestration"], "tasks": ["implementation"],
+      "depends_on": ["T-1004:implementation"],
+      "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "backend/src/modules/ai-runtime/**", "ai-worker/src/execution/**"],
+      "write_set": ["ai-worker/src/capabilities/gateway.ts", "ai-worker/src/capabilities/gateway.test.ts", "ai-worker/src/capabilities/result-pages.ts", "ai-worker/src/capabilities/result-pages.test.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.ts", "backend/src/modules/ai-runtime/chat-tool-gate.ts", "backend/src/modules/ai-runtime/chat-tool-definitions.test.ts", "docs/verification/t1006-gateway.md"],
+      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/gateway.test.ts src/capabilities/result-pages.test.ts --retry=0"]}
+    },
+    "T-1007": {
+      "task_id": "T-1007", "archetype": ["orchestration"], "tasks": ["implementation"],
+      "depends_on": ["T-1004:implementation"],
+      "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/internal/agent-workbench.ts", "ai-worker/src/runtime/browser/**", "frontend/src-tauri/**"],
+      "write_set": ["ai-worker/src/capabilities/task-files.ts", "ai-worker/src/capabilities/task-files.test.ts", "ai-worker/src/capabilities/command-host.ts", "ai-worker/src/capabilities/command-host.test.ts", "frontend/src-tauri/src/workbench/**", "frontend/src-tauri/Cargo.toml", "docs/verification/t1007-files-command.md"],
+      "verify_commands": {"implementation": ["pnpm --dir ai-worker exec vitest run src/capabilities/task-files.test.ts src/capabilities/command-host.test.ts --retry=0"]}
+    },
     "T-1004": {
       "task_id": "T-1004",
       "archetype": ["orchestration"],
       "tasks": ["implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/**", "frontend/src-tauri/**", "orchestrator/SYSTEM_ARCHITECTURE.md"],
-      "write_set": ["contract/src/**", "contract/tests/**", "docs/verification/t1004-nomifun-dependency.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "orchestrator/process/boundaries.config.json", "orchestrator/process/modules.config.json", "orchestrator/progress.json"],
+      "write_set": ["contract/src/internal/agent-workbench.ts", "contract/tests/agent-workbench.test.ts", "docs/verification/t1004-nomifun-dependency.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "orchestrator/process/boundaries.config.json", "orchestrator/process/modules.config.json", "orchestrator/progress.json"],
       "verify_commands": {"implementation": ["pnpm --dir contract test", "node orchestrator/process/boundary-scan.mjs"]}
     },
     "T-988": {
@@ -1590,7 +1611,7 @@
         "docs/features/t1003-agent-workbench.md"
       ],
       "write_set": [
-        "orchestrator/reviews/T-1003-round-*.json"
+        "orchestrator/reviews/T-1003-round-1.json"
       ],
       "verify_commands": {
         "review": "node orchestrator/process/reviewctl.mjs context T-1003"

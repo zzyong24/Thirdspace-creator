@@ -2,6 +2,17 @@
   "schema": "complexity-ledger/v1",
   "entries": [
     {
+      "task_id": "T-1004",
+      "files": ["docs/verification/t1004-nomifun-dependency.md"],
+      "file_sha256": "15a863aae658a5ca07ff84ce39c8f263d341f94be3618091e530186a448a2eec",
+      "categories": ["language_toolchain"],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "用户已授权锁定 NomiFun 浏览器 Rust 依赖并评估双端编译；T-1004 仅冻结闭包和可信宿主端口，安装交接与原生验证仍由后续子任务完成。",
+      "acceptance": "仅登记已授权的工程复杂度；不代表浏览器迁移或双端安装验收通过。"
+    },
+    {
       "task_id": "T-915",
       "files": [
         "ai-worker/src/execution/worker-entry.ts"
