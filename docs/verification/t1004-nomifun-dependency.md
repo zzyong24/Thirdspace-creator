@@ -25,5 +25,6 @@
 - 首次直接对参考仓工作区 `cargo check` 仅为环境探针；因该工作区有未提交改动，不作为锁定提交证据。
 - 本机有 Rust `1.98.0`、`aarch64-apple-darwin` 与 `x86_64-pc-windows-msvc` target。锁定提交快照上执行 `CARGO_TARGET_DIR=/tmp/t1004-nomifun-target cargo check --manifest-path /tmp/t1004-nomifun-e27bd5de/Cargo.toml -p nomifun-browser-platform -p nomi-browser-engine -p nomi-browser --target aarch64-apple-darwin --locked -q`，退出码 0。Windows 目标 `cargo tree --locked -p nomi-browser --edges normal --target x86_64-pc-windows-msvc` 可解析（输出 886 行）；Mac 上对 Windows MSVC target 的 `cargo check` 被 `ring`/`bzip2-sys` 的 C 编译阻断（缺 Windows SDK/MSVC 头文件），不能据此判断 Windows 源码失败，也不等于 Windows 原生编译通过。
 - `pnpm --dir contract test` 的旧基线有 4 项失败（chat-worker、registry、assets、cli-policy）；`boundary-scan` 的旧基线有 2 条 `live-chat-session.ts` R2 新告警，T-1014 已记录，由 T-1015 承接。两者不是本次协议测试的 PASS 证据。
+- `node orchestrator/process/pmem.mjs sync` 已执行；本次 `reconcile` 返回 **36 error、1 warning**，与 T-1014 清理后的历史剩余数量一致。逐项没有 T-1004 新协议或门卫 R5 的失败；原错误继续保留，不改基线或关闭检查。`semantic-boundary-scan` 的 `material.match` 失败也在 T-1014 旧清单中。
 
 T-1004 仅冻结协议与依赖闭包；Rust 宿主接入、受管 Playwright 交接、真实双端编译和安装版验收在 T-1008/T-1013 完成，不提前标 PASS。

@@ -23,7 +23,7 @@
       "archetype": ["orchestration"],
       "tasks": ["implementation"],
       "read_set": ["docs/features/t1003-agent-workbench.md", "contract/src/**", "frontend/src-tauri/**", "orchestrator/SYSTEM_ARCHITECTURE.md"],
-      "write_set": ["contract/src/**", "contract/tests/**", "docs/verification/t1004-*.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "orchestrator/process/boundaries.config.json", "orchestrator/process/modules.config.json", "orchestrator/progress.json"],
+      "write_set": ["contract/src/**", "contract/tests/**", "docs/verification/t1004-nomifun-dependency.md", "orchestrator/SYSTEM_ARCHITECTURE.md", "orchestrator/process/boundaries.config.json", "orchestrator/process/modules.config.json", "orchestrator/progress.json"],
       "verify_commands": {"implementation": ["pnpm --dir contract test", "node orchestrator/process/boundary-scan.mjs"]}
     },
     "T-988": {
