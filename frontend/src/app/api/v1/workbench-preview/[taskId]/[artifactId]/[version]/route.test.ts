@@ -3,6 +3,8 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
+import { PNG } from "pngjs";
+import { PDFParse } from "pdf-parse";
 import { createDb, type Db } from "@creatoros/backend";
 import { createWorkbenchArtifactReadService, createWorkbenchArtifactService, createPersistentTaskService } from "@creatoros/backend/modules/execution";
 import { createLocalFsObjectStorage, createWorkbenchBlobService } from "@creatoros/backend/modules/assets";
@@ -77,6 +79,12 @@ function call(taskId: string, artifactId: string, version: number) {
     params: Promise.resolve({ taskId, artifactId, version: String(version) }),
   });
 }
+function callFormat(taskId:string,artifactId:string,version:number,format:string){
+ const base=request(taskId,artifactId,version);
+ return GET(new Request(`${base.url}?format=${format}`,{headers:base.headers}),{
+  params:Promise.resolve({taskId,artifactId,version:String(version)}),
+ });
+}
 
 async function findDataFiles(directory = root): Promise<string[]> {
   const files: string[] = [];
@@ -89,6 +97,68 @@ async function findDataFiles(directory = root): Promise<string[]> {
 }
 
 describe("T-1009 已登记产物 HTTP 预览", () => {
+  it("从同账号已验真 HTML 和已登记相对 PNG 生成真实 PNG/PDF，响应元数据对应交付字节", async () => {
+    const chartImage=new PNG({width:1,height:1});chartImage.data.set([0,200,0,255]);
+    const chart=PNG.sync.write(chartImage);
+    const html='<img src="./chart.png" style="position:absolute;left:0;top:0;width:40px;height:40px"><h1 style="margin-top:100px">真实报告 2026</h1><script>document.body.textContent="伪造"</script>';
+    const item=await registered("text/html",Buffer.from(html));
+    await item.registerMore("chart.png","image/png",chart);
+    for(const format of ["png","pdf"] as const){
+      const res=await callFormat(item.task.id,item.artifact.artifactId,1,format);
+      expect(res.status).toBe(200);
+      const bytes=Buffer.from(await res.arrayBuffer());
+      expect(res.headers.get("content-type")).toBe(format==="png"?"image/png":"application/pdf");
+      expect(res.headers.get("x-workbench-source-hash")).toBe(item.artifact.hash);
+      expect(res.headers.get("x-workbench-hash")).toBe(createHash("sha256").update(bytes).digest("hex"));
+      expect(res.headers.get("x-workbench-size")).toBe(String(bytes.byteLength));
+      expect(decodeURIComponent(res.headers.get("x-workbench-filename")!)).toBe(`report.${format}`);
+      if(format==="png"){
+        const image=PNG.sync.read(bytes);
+        expect(image.width).toBe(1280);
+        const pixel=image.data.subarray((20*image.width+20)*4,(20*image.width+20)*4+4);
+        expect([...pixel]).toEqual([0,200,0,255]);
+      }else{
+        const parser=new PDFParse({data:bytes});
+        try{const parsed=await parser.getText();expect(parsed.text).toContain("真实报告 2026");
+          expect(parsed.text).not.toContain("伪造");}
+        finally{await parser.destroy();}
+      }
+    }
+    const raw=await callFormat(item.task.id,item.artifact.artifactId,1,"raw");
+    expect(await raw.text()).toBe(html);
+    const preview=await call(item.task.id,item.artifact.artifactId,1);
+    expect(await preview.text()).toContain("data:image/png;base64,");
+    mocks.ctx={...item.ctx,accountId:"other-account"};
+    expect((await callFormat(item.task.id,item.artifact.artifactId,1,"png")).status).toBe(404);
+  },120_000);
+
+  it("非 HTML 与无效格式在渲染前拒绝",async()=>{
+    const item=await registered("text/markdown",Buffer.from("# 内容"));
+    expect((await callFormat(item.task.id,item.artifact.artifactId,1,"png")).status).toBe(415);
+    expect((await callFormat(item.task.id,item.artifact.artifactId,1,"pdf")).status).toBe(415);
+    expect((await callFormat(item.task.id,item.artifact.artifactId,1,"jpeg")).status).toBe(400);
+  });
+
+  it("错误编码和缺少随包浏览器时明确失败，不返回伪 PNG",async()=>{
+    const invalid=await registered("text/html",Uint8Array.from([0xff,0xfe]));
+    expect((await callFormat(invalid.task.id,invalid.artifact.artifactId,1,"png")).status).toBe(422);
+    const item=await registered("text/html",Buffer.from("<h1>报告</h1>"));
+    const originalDesktop=process.env.CREATOROS_DESKTOP;
+    const originalBrowsers=process.env.CREATOROS_BROWSERS_DIR;
+    const originalRuntime=process.env.CREATOROS_RUNTIME_ROOT;
+    process.env.CREATOROS_DESKTOP="1";
+    process.env.CREATOROS_BROWSERS_DIR="/missing/t1009-browsers";
+    process.env.CREATOROS_RUNTIME_ROOT="/missing/t1009-runtime";
+    try{
+      const res=await callFormat(item.task.id,item.artifact.artifactId,1,"png");
+      expect(res.status).toBe(503);
+      expect(await res.text()).toContain("缺少 HTML 导出所需的 Chromium");
+    }finally{
+      if(originalDesktop===undefined)delete process.env.CREATOROS_DESKTOP;else process.env.CREATOROS_DESKTOP=originalDesktop;
+      if(originalBrowsers===undefined)delete process.env.CREATOROS_BROWSERS_DIR;else process.env.CREATOROS_BROWSERS_DIR=originalBrowsers;
+      if(originalRuntime===undefined)delete process.env.CREATOROS_RUNTIME_ROOT;else process.env.CREATOROS_RUNTIME_ROOT=originalRuntime;
+    }
+  });
   it("真实登记的相对 PNG 随 HTML 一同离线预览，跨账号及坏图片安全跳过", async () => {
     const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9GmS8AAAAASUVORK5CYII=", "base64");
     const html = '<h1>真实报告</h1><img src="./chart.png"><img src="./bad.png"><img src="./foreign.png"><img src="../secret.png"><img src="/api/v1/private"><img src="https://evil.test/x.png">';
