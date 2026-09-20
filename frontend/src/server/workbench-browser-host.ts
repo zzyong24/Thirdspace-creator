@@ -36,7 +36,7 @@ function parseInput(name:BrowserTool,raw:unknown):BrowserInput|null{
  return input as BrowserInput;
 }
 const description:Record<BrowserTool,string>={
- "browser.open":"为当前任务打开受控浏览器 Lane。仅支持已验证的主身份或独立匿名身份。",
+ "browser.open":"为当前任务打开受控浏览器 Lane。主身份使用当前账号的独立档案，登录状态须实际验证。",
  "browser.status":"查看当前任务浏览器 Lane 的状态。",
  "browser.navigate":"在已授权站点域内导航当前 Lane。",
  "browser.observe":"读取当前 Lane 的页面结构并取得新元素引用。",
@@ -124,9 +124,11 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    }
    if(name==="browser.navigate"&&!withinDomain(input.url!,session!.receipt.domain))
     return failed(call.context.operationId,"DOMAIN_NOT_ALLOWED");
+   let acquired:Receipt|undefined;
    try {
     const receipt=await admission.acquire(ref,{laneId:session?.receipt.laneId??input.laneId,
      mode:session?.mode??input.mode,domain:session?.receipt.domain??input.domain},signal);
+    acquired=receipt;
     if(session&&receipt.leaseId!==session.receipt.leaseId)return failed(call.context.operationId,"STALE_BROWSER_PROFILE_LEASE");
     const native=await leases.withLease(ref,"admission",async({context,task})=>{
      if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
@@ -163,7 +165,13 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
      }
     }
     return result(call.context.operationId,native.value);
-   }catch(error){if(signal.aborted)throw error;
+   }catch(error){
+    if(acquired){
+     // Open 可能已拿到数据库租约，却在原生宿主启动前失败。仅实际停机证明可释放。
+     try {if(await admission.releaseAfterProfileStopped(ref,acquired.leaseId))held.delete(acquired.leaseId);}
+     catch {/* 原生状态不明时保留占用，禁止下一个持有者抢占。 */}
+    }
+    if(signal.aborted)throw error;
     if(error instanceof BrowserSocketError)return failed(call.context.operationId,error.code,error.dispatched);
     const code=error&&typeof error==="object"&&"code" in error?String((error as {code:unknown}).code):"BROWSER_ADMISSION_FAILED";
     return failed(call.context.operationId,code);

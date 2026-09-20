@@ -13,13 +13,17 @@ beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.
 afterAll(async()=>close?.());
 afterEach(async()=>{if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));if(directory)await rm(directory,{recursive:true,force:true});server=undefined;directory=undefined;});
 
-async function socket(received:Array<Record<string,unknown>>){
+async function socket(received:Array<Record<string,unknown>>,failOpen=false){
  directory=await mkdtemp(join(tmpdir(),"wb-browser-host-"));const path=join(directory,"browser.sock");
  server=createServer(connection=>{
   let body="";connection.on("data",chunk=>{
    body+=chunk.toString();const end=body.indexOf("\n");if(end<0)return;
    const request=JSON.parse(body.slice(0,end)) as Record<string,unknown>;received.push(request);
    const action=request.action as {kind:string};
+   if(failOpen&&action.kind==="open"){
+    connection.end(`${JSON.stringify({ok:false,operationId:request.operationId,code:"BROWSER_UNAVAILABLE"})}\n`);
+    return;
+   }
    const value=action.kind==="profile_location"
     ? {profileKey:"a".repeat(64),managedProfileRoot:"/app-data/workbench/profile",identityMode:"primary",legacyIdentityImported:false,primaryLoginState:"unverified"}
     : action.kind==="open"?{lane:{lane_id:"native-lane",browser_epoch:1}}
@@ -37,6 +41,24 @@ it("only a desktop Mac with private socket advertises browser tools",()=>{
  expect(createWorkbenchBrowserHost(db,{platform:"win32",desktop:true,socketPath:"pipe"})).toBeUndefined();
  expect(createWorkbenchBrowserHost(db,{platform:"darwin",desktop:false,socketPath:"pipe"})).toBeUndefined();
  expect(createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:""})).toBeUndefined();
+});
+
+it("native open failure releases the claimed profile only after stop proof",async()=>{
+ const tasks=createPersistentTaskService(db);
+ const task=await tasks.enqueue({userId:"browser-user",accountId:"browser-account",requestId:"failed-open",source:"user"},
+  {kind:"ai_task",ownerType:"ai_task",ownerId:"failed-open",idempotencyKey:"failed-open",payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:"browser-worker"}))!;
+ const received:Array<Record<string,unknown>>=[];
+ const path=await socket(received,true);
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const outcome=await host.dispatch({context:{userId:"browser-user",accountId:"browser-account",taskId:task.id,
+  attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:"browser-worker",operationId:"failed-open"},
+  invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"research",mode:"primary",domain:"example.com"}}},
+  {signal:new AbortController().signal,onProgress:()=>{}});
+ expect(outcome.status).toBe("failed");
+ expect(received.map(request=>(request.action as {kind:string}).kind)).toEqual(["profile_location","open","stop_proof"]);
+ const profiles=createExecutionBrowserProfileLeaseService(db);
+ expect(await profiles.listOwned({executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken})).toEqual([]);
 });
 
 it("open obtains the Rust physical profile and binds it to the current DB task before native dispatch",async()=>{
