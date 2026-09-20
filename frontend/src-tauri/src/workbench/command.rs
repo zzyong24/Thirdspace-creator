@@ -873,6 +873,60 @@ mod tests {
     }
     #[cfg(target_os = "macos")]
     #[test]
+    #[ignore = "requires CREATOROS_TEST_PACKAGED_RUNTIME_ROOT from a locally inspected Mac runtime"]
+    fn mac_packaged_node_cannot_connect_to_a_reachable_local_service() {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let address = listener.local_addr().unwrap();
+        let probe = std::net::TcpStream::connect(address).unwrap();
+        let (accepted, _) = listener.accept().unwrap();
+        drop((probe, accepted));
+        let runtime_root = PathBuf::from(
+            std::env::var("CREATOROS_TEST_PACKAGED_RUNTIME_ROOT")
+                .expect("set CREATOROS_TEST_PACKAGED_RUNTIME_ROOT"),
+        );
+        let root =
+            std::env::temp_dir().join(format!("creatoros-command-net-{}", rand::random::<u64>()));
+        let files = TaskFiles::new(&root, "u", "a", "t").unwrap();
+        let script = format!("const s=require('node:net').connect({},'127.0.0.1');s.once('connect',()=>{{process.stdout.write('connected');s.destroy()}});s.once('error',e=>process.stdout.write('blocked:'+e.code))",address.port());
+        files.write("net.js", script.as_bytes(), 0).unwrap();
+        let host = CommandHost::new(RuntimeRegistry::from_sidecar(&runtime_root).unwrap());
+        host.run(
+            &files,
+            files.scope_key(),
+            "network-probe",
+            CommandRequest {
+                argv: vec!["net.js".into()],
+                cwd: ".".into(),
+                runtime_id: "bundled-node".into(),
+                timeout_ms: 5_000,
+                stdin_ref: None,
+            },
+        )
+        .unwrap();
+        let mut receipt = host.status(files.scope_key(), "network-probe").unwrap();
+        for _ in 0..100 {
+            if receipt.state != "running" {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+            receipt = host.status(files.scope_key(), "network-probe").unwrap();
+        }
+        assert_eq!(
+            receipt.state, "succeeded",
+            "network probe failed before connect: {receipt:?}"
+        );
+        let output = host
+            .read_output(files.scope_key(), "network-probe", "stdout", 0, 100)
+            .unwrap()
+            .0;
+        assert!(
+            String::from_utf8(output).unwrap().starts_with("blocked:"),
+            "task sandbox connected to a reachable local service"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
     fn mac_cancel_terminates_spawned_descendant() {
         let python = PathBuf::from("/opt/homebrew/bin/python3");
         if !python.is_file() {

@@ -117,4 +117,6 @@ T-1008 将浏览器模块接入 `workbench/mod.rs` 后，T-1007 独立 Rust 测�
 
 最终独立 Rust 常规测试 **21/21**、两个需要本机已安装 runtime 的 opt-in 测试各 **1/1**；后两项在无环境变量的常规测试中明确忽略。`cargo fmt --check`、临时资源覆盖的主 Tauri `cargo check --locked --offline`、`git diff --check` 通过。
 
+另用同一随包 Node 在原任务沙箱内尝试连接由测试进程预先建立、且已由测试进程实际连通的本机 TCP 服务：脚本得到 `blocked`，没有连上服务，显式 opt-in 网络隔离探针 **1/1** 通过。最终常规套件仍为 **21/21**，三个需要本机 runtime 的探针在默认运行中忽略。该证据只覆盖本机 loopback 连接，不代表所有网络协议或 Windows 命令隔离。
+
 本次在现有 `runtime/1.2.0` 上验证了随包 Node 脚本能力及 Rust 私有 IPC 路径，没有新安装包。Python 与 approved program 尚未装包；Windows 命令和私有通道仍不可用。T-1007 保持进行中。
