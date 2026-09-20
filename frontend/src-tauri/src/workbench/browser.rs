@@ -308,10 +308,14 @@ impl BrowserHost {
             }
             Ok(_) => {}
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                DirBuilder::new()
-                    .mode(0o700)
-                    .create(path)
-                    .map_err(|_| BrowserHostError::unavailable())?;
+                match DirBuilder::new().mode(0o700).create(path) {
+                    Ok(()) => {}
+                    // Two account opens can create a shared parent at once.
+                    // Recheck the winner's inode below; a symlink or file is
+                    // still rejected, rather than treating this as success.
+                    Err(race) if race.kind() == std::io::ErrorKind::AlreadyExists => {}
+                    Err(_) => return Err(BrowserHostError::unavailable()),
+                }
             }
             Err(_) => return Err(BrowserHostError::unavailable()),
         }

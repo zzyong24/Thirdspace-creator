@@ -356,9 +356,7 @@ realTest("two accounts keep separate primary profiles and one close leaves the o
  try {
   bridge=await startRealRustBridge(root,profileRoot,"accounts");
   const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:bridge.socketPath})!;
-  const scopes=[] as Array<{label:string;context:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string;leaseId:string};
-   location:Awaited<ReturnType<typeof resolveManagedBrowserProfile>>;ref:{executionTaskId:string;attempt:number;fenceToken:string}}>;
-  for(const label of ["first","second"]){
+  const scopes=await Promise.all(["first","second"].map(async label=>{
    const accountId=`${label}-${nonce}`;
    const task=await tasks.enqueue({userId,accountId,requestId:`${label}-${nonce}`,source:"user"},
     {kind:"ai_task",ownerType:"ai_task",ownerId:`${label}-${nonce}`,idempotencyKey:`${label}-${nonce}`,payload:{}});
@@ -369,8 +367,8 @@ realTest("two accounts keep separate primary profiles and one close leaves the o
    const location=await resolveManagedBrowserProfile(bridge!.socketPath,
     {userId,accountId,taskId:task.id},"primary",AbortSignal.timeout(10_000));
    const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-   scopes.push({label,context,location,ref});
-  }
+   return {label,context,location,ref};
+  }));
   expect(scopes[0]!.location.profileKey).not.toBe(scopes[1]!.location.profileKey);
   expect(scopes[0]!.location.managedProfileRoot).not.toBe(scopes[1]!.location.managedProfileRoot);
   const dispatch=async(scope:typeof scopes[number],name:string,input:Record<string,unknown>)=>{
