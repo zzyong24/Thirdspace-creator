@@ -187,10 +187,15 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         if(!receipt)return null;
         const record=receipt.outcome.data && typeof receipt.outcome.data==="object" && !Array.isArray(receipt.outcome.data) ? receipt.outcome.data as Record<string,unknown> : {};
         const workbench=workbenchResultSchema.safeParse(record.workbench??record.result);
-        // 图片必须由可信宿主解析原 dataRef；未装配时保留原卡片，不能把路径冒充可见截图。
-        if(workbench.success && workbench.data.status==="succeeded" && workbench.data.content.some(item=>item.type==="image"))return null;
-        if(JSON.stringify(receipt.outcome).length<=12_000)return null;
-        return (await projectReceiptForPi(receipt.outcome,receipt.callId,{})).content;
+        const hasImage=workbench.success && workbench.data.status==="succeeded" && workbench.data.content.some(item=>item.type==="image");
+        const reference=`[原工具调用 ID: ${receipt.callId}；完成计划步骤时引用此 operationRef。]`;
+        // 图片须由可信宿主按 dataRef 解析。解析端口接入前只显示可核对的引用，绝不声称模型看过截图。
+        if(hasImage){
+          const text=JSON.stringify(receipt.outcome);
+          return [{type:"text",text:`${reference}\n${text.slice(0,12_000)}${text.length>12_000?"\n[结果未显示完，调用 tool.result.read 回读原调用。]":""}`}];
+        }
+        const projected=await projectReceiptForPi(receipt.outcome,receipt.callId,{});
+        return projected.content.map(item=>item.type==="text"?{...item,text:`${reference}\n${item.text}`}:item);
       },
       approve:(name,args,options)=>toolApproval[name]!(args,options),
       approvalId:toolCallId=>`chat-approval:${modelForTool.get(toolCallId)!}:${toolCallId}`,

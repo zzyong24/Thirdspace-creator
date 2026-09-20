@@ -10,4 +10,6 @@ Pi 循环新增可信 `readPlanStatus` 端口：模型输出正文时若计划�
 
 已加 `readWorkbenchPlan`/`saveWorkbenchPlan` 命名端口；实际 worker 对话在每轮结束时经当前 `ExecutionRef` 读取原任务计划。生产聊天装配可选的 `plan.update`，定义在提交时冻结，宿主工具经原 `reserveAgenticTool`/`startAgenticTool`/`executeAgenticTool` 链与同一租约保存计划。其参数无身份字段，成功状态仅由后端核对已结算工具回执/产物。旧冻结任务不追加工具。测试：`worker-runtime.test.ts` 32/32、`workbench-plan.service.test.ts` 3/3、`chat-workbench-plan-tool-host.test.ts` 1/1。`chat-assembly.test.ts` 新增的可选冻结用例通过；全文件运行 89 例中 26 例历史断言失败，未将其计作本任务通过。
 
-**尚未验收：** `plan.update` 还未经过真实模型与原聊天完整工具账本集成测试；停止恢复、重规划、产物核验及多步最终交付仍需验证，不能把上述单测写成 AC-AW-01 PASS。backend 全量类型检查仍为相同的 14 处既有错误。T-1005 保持进行中。
+**尚未验收：** `plan.update` 还未经过官方/自配真实模型实测；停止恢复、重规划、产物核验及完整业务交付仍需验证，不能把上述单测写成 AC-AW-01 PASS。backend 全量类型检查仍为相同的 14 处既有错误。T-1005 保持进行中。
+
+2026-09-19 补充：`chat-workbench-plan.integration.test.ts` 使用**真实打包子进程 + 本地模型协议夹具 + 真实数据库**，完成「模型建计划 → 读取工具 → 模型引用原工具 `operationRef` 完成计划 → 原聊天终态 succeeded」，1/1 通过；`executionCalls` 中的被引用回执确为已结算工具。它验证接线与账本，不等同于官方/自配真实模型实测。停止与恢复及跨进程故障注入仍待补；故仍保持进行中。
