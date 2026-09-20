@@ -31,6 +31,7 @@ it("仅公布宿主真实提供且平台、能力、效果和契约版本匹配�
   expect(selected[0]).not.toBe(files);
   expect(selectBuiltinWorkbenchCapabilities({...host,capabilities:[]})).toEqual([]);
   expect(selectBuiltinWorkbenchCapabilities({...host,dispatch:null as never})).toEqual([]);
+  expect(selectBuiltinWorkbenchCapabilities({...host,platform:"macos"}).map(item=>item.name)).toEqual(["files.read","artifact.read","browser.open","browser.screenshot"]);
 });
 
 it("重复描述或效果漂移时不向模型公布该工具", () => {

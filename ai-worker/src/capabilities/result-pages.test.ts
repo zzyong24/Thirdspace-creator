@@ -29,4 +29,13 @@ describe("原回执分页投影", () => {
     await expect(projectReceiptForPi(receipt("x"), "c", {})).rejects.toThrow(/MEDIA_RESOLVER/);
     expect(Buffer.byteLength(boundProgressText("字".repeat(10000)), "utf8")).toBeLessThanOrEqual(4096);
   });
+
+  it("旧的纯文本回执恢复时保留原结果和分页，不注入历史图片",async()=>{
+    const old:AgenticToolOutcome={status:"ok",summary:"旧截图记录",evidence:[],data:{workbench:{operationId:"old",status:"succeeded",content:[{type:"text",text:JSON.stringify({result:{output:{media_type:"image/png",data:"legacy"}}})}],artifactRefs:[],progressCursor:null}},error:null,continuation:null,sideEffect:"none"};
+    const projected=await projectReceiptForPi(old,"old-call",{});
+    expect(projected.content).toHaveLength(1);
+    expect(projected.content[0]?.type).toBe("text");
+    expect(projected.details.toolCallId).toBe("old-call");
+    expect(JSON.stringify(projected.content)).toContain("legacy");
+  });
 });

@@ -1,9 +1,8 @@
-import { workbenchResultSchema } from "@creatoros/contract/agent-workbench";
+import { workbenchResultSchema,workbenchScreenshotResolvedSchema } from "@creatoros/contract/agent-workbench";
 import type { AgenticToolOutcome } from "@creatoros/contract/execution-worker";
 
 const PAGE_CHARACTERS = 12_000; // 与 backend 现有 pageChatToolResult 的原 JSON 字符索引一致。
 const MAX_PROGRESS_BYTES = 4096;
-const MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
 export type PiResultContent = { type: "text"; text: string } | { type: "image"; mimeType: string; data: string };
 export interface PiReceiptProjection {
   content: PiResultContent[];
@@ -47,9 +46,8 @@ export async function projectReceiptForPi(outcome: AgenticToolOutcome, toolCallI
       if (item.type !== "image") continue;
       if (!ports.resolveImage) throw new Error("MEDIA_RESOLVER_UNAVAILABLE");
       const media = await ports.resolveImage(item.dataRef);
-      if (media.mimeType !== item.mediaType || !media.mimeType.startsWith("image/") ||
-          !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(media.data) ||
-          Buffer.byteLength(media.data, "base64") > MAX_INLINE_IMAGE_BYTES) throw new Error("MEDIA_RESULT_INVALID");
+      if (media.mimeType !== item.mediaType || !workbenchScreenshotResolvedSchema.safeParse(media).success)
+        throw new Error("MEDIA_RESULT_INVALID");
       content.push({ type: "image", mimeType: media.mimeType, data: media.data });
     }
   }

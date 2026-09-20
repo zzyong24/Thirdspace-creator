@@ -1,10 +1,11 @@
 import "server-only";
 import {randomUUID} from "node:crypto";
+import {PNG} from "pngjs";
 import type {Db} from "@creatoros/backend";
 import {BrowserProfileBusyError,createExecutionBrowserProfileLeaseService,createExecutionLeaseService,
  createWorkbenchBrowserAdmissionService} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
-import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
+import {WORKBENCH_SCREENSHOT_MAX_BYTES,isCanonicalBase64,workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
 import {BrowserSocketError,exchangeBrowserSocket,resolveManagedBrowserProfile,type ManagedBrowserMode} from "./workbench-browser-client";
 
@@ -57,9 +58,7 @@ const inputSchema:Record<BrowserTool,Record<string,unknown>>={
  "browser.act":{type:"object",properties:{...properties,action:{type:"string",enum:["click","hover","type","set_value","select_option","press_key","scroll"]},input:{type:"object"},targetId:properties.laneId,frameId:properties.laneId,refGeneration:{type:"integer",minimum:0}},required:["laneId","browserEpoch","action","input"],additionalProperties:false},
  "browser.close":{type:"object",properties,required:["laneId","browserEpoch"],additionalProperties:false},
 };
-// 截图目前只有原生 PNG 回执，Pi 尚无账号/任务绑定的媒体引用解析端口。
-// 保留宿主动作供端到端验证；T-1009 接通可信媒体交付后再向模型开放。
-const catalog=browserTools.filter(name=>name!=="browser.screenshot").map(name=>workbenchCapabilitySchema.parse({name,schemaVersion:1,
+const catalog=browserTools.map(name=>workbenchCapabilitySchema.parse({name,schemaVersion:1,
  description:description[name],inputSchema:inputSchema[name],resultSchema:{type:"object"},
  effects:[name==="browser.act"?"external_write":name==="browser.open"||name==="browser.close"?"process":"read"],
  requiredCapabilities:["task.browser"],platforms:["macos"]}));
@@ -68,8 +67,8 @@ type Receipt=Awaited<ReturnType<ReturnType<typeof createWorkbenchBrowserAdmissio
 type NativeAdmission={userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string;domain:string;
  profileKey:string;profileLeaseId:string;laneName:string;expiresAtMs:number};
 type Session={ref:ExecutionRef;receipt:Receipt;mode:ManagedBrowserMode;admission:NativeAdmission};
-function result(operationId:string,value:unknown):WorkbenchResult{return workbenchResultSchema.parse({operationId,status:"succeeded",
- artifactRefs:[],progressCursor:null,content:[{type:"text",text:JSON.stringify(value??null)}]});}
+function result(operationId:string,value:unknown,dataRef?:string):WorkbenchResult{return workbenchResultSchema.parse({operationId,status:"succeeded",
+ artifactRefs:[],progressCursor:null,content:[{type:"text",text:JSON.stringify(value??null)},...(dataRef?[{type:"image" as const,mediaType:"image/png",dataRef}]:[])]});}
 function failed(operationId:string,code:string,dispatched=false):WorkbenchResult{
  const unknown=dispatched && code==="BROWSER_RESULT_UNKNOWN";
  return workbenchResultSchema.parse({operationId,status:unknown?"unknown":"failed",artifactRefs:[],progressCursor:null,
@@ -97,7 +96,7 @@ function withinDomain(url:string,domain:string,mode:ManagedBrowserMode){
 
 /** 浏览器能力仅在真正有 Mac 私有 socket 时装配；不从模型输入接受账号、目录或 profileKey。 */
 export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string;
- now?:()=>string}={}):(Host&{reconcileStoppedProfiles():Promise<void>;dispose():Promise<void>})|undefined{
+ now?:()=>string;media?:{submit(ref:ExecutionRef,operationId:string,bytes:Uint8Array):Promise<string>}}={}):(Host&{reconcileStoppedProfiles():Promise<void>;dispose():Promise<void>})|undefined{
  const platform=options.platform??process.platform,desktop=options.desktop??process.env.CREATOROS_DESKTOP==="1";
  const socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_BROWSER_SOCKET;
  if(platform!=="darwin"||!desktop||!socketPath)return undefined;
@@ -178,7 +177,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
   try {await work;}finally{reconciling=undefined;scheduleReconciliation();}
  }
  const key=(taskId:string,laneId:string)=>`${taskId}\0${laneId}`;
- return {catalog,platform:"macos",capabilities:["task.browser"],reconcileStoppedProfiles,
+ return {catalog:options.media?catalog:catalog.filter(tool=>tool.name!=="browser.screenshot"),platform:"macos",capabilities:["task.browser"],reconcileStoppedProfiles,
   async dispose(){disposed=true;if(timer){clearTimeout(timer);timer=undefined;}
    // 数据库关闭前等本轮可能正在写入的租约对账结算；失败时原租约仍保留。
    await reconciling?.catch(()=>{});
@@ -267,6 +266,26 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
       profileStopped=true;
      }
      return result(call.context.operationId,{laneId:input.laneId,closed:true,profileStopped});
+    }
+    if(name==="browser.screenshot"){
+     if(!options.media)return failed(call.context.operationId,"SCREENSHOT_MEDIA_UNAVAILABLE");
+     const value=native.value as {result?:{output?:{media_type?:unknown;data?:unknown}}};
+     const output=value?.result?.output;
+     if(output?.media_type!=="image/png"||typeof output.data!=="string"||
+       output.data.length>Math.ceil(WORKBENCH_SCREENSHOT_MAX_BYTES/3)*4||
+       !isCanonicalBase64(output.data))
+      return failed(call.context.operationId,"SCREENSHOT_MEDIA_INVALID",true);
+     const bytes=Buffer.from(output.data,"base64");
+     try {const width=bytes.readUInt32BE(16),height=bytes.readUInt32BE(20);
+      if(bytes.byteLength<45||bytes.byteLength>WORKBENCH_SCREENSHOT_MAX_BYTES||width<1||height<1||width*height>20_000_000||
+        PNG.sync.read(bytes).width!==width)
+      return failed(call.context.operationId,"SCREENSHOT_MEDIA_INVALID",true);}
+     catch {return failed(call.context.operationId,"SCREENSHOT_MEDIA_INVALID",true);}
+     let dataRef:string;
+     try {dataRef=await options.media.submit(ref,call.context.operationId,bytes);}
+     catch {return failed(call.context.operationId,"SCREENSHOT_MEDIA_RESULT_UNKNOWN",true);}
+     // 原生原始字节不能进入 JSON 工具回执；稳定引用由服务端原任务/原调用解析。
+     return result(call.context.operationId,{...value,result:{...value.result,output:{media_type:"image/png",dataRef}}},dataRef);
     }
     return result(call.context.operationId,native.value);
    }catch(error){

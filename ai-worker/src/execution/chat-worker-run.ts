@@ -18,7 +18,7 @@ import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
 import { projectReceiptForPi } from "../capabilities/result-pages";
 import { createWorkbenchGateway, toAgenticToolOutcome } from "../capabilities/gateway";
-import { workbenchResultSchema } from "@creatoros/contract/agent-workbench";
+import { workbenchResultSchema,workbenchScreenshotResolvedSchema } from "@creatoros/contract/agent-workbench";
 const checkpointSchema=z.object({pendingCalls:z.array(z.object({callId:z.string().optional(),status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
@@ -207,12 +207,10 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         const workbench=workbenchResultSchema.safeParse(record.workbench??record.result);
         const hasImage=workbench.success && workbench.data.status==="succeeded" && workbench.data.content.some(item=>item.type==="image");
         const reference=`[原工具调用 ID: ${receipt.callId}；完成计划步骤时引用此 operationRef。]`;
-        // 图片须由可信宿主按 dataRef 解析。解析端口接入前只显示可核对的引用，绝不声称模型看过截图。
-        if(hasImage){
-          const text=JSON.stringify(receipt.outcome);
-          return [{type:"text",text:`${reference}\n${text.slice(0,12_000)}${text.length>12_000?"\n[结果未显示完，调用 tool.result.read 回读原调用。]":""}`}];
-        }
-        const projected=await projectReceiptForPi(receipt.outcome,receipt.callId,{});
+        // 原回执已先结算。只解析本轮工具结果中的图片，恢复历史文本保持分页但不重复注入媒体。
+        const projected=await projectReceiptForPi(receipt.outcome,receipt.callId,hasImage?{
+          resolveImage:async dataRef=>workbenchScreenshotResolvedSchema.parse(await ports.call("resolveWorkbenchScreenshot",{callId:receipt.callId,dataRef},signal)),
+        }:{});
         return projected.content.map(item=>item.type==="text"?{...item,text:`${reference}\n${item.text}`}:item);
       },
       approve:(name,args,options)=>toolApproval[name]!(args,options),

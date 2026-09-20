@@ -3,7 +3,25 @@ import { it } from 'vitest';
 import {runChatPiLoop} from './chat-pi-loop';
 import {createDurableStreamModel} from '../../execution/durable-stream-model';
 import {runChatInWorker} from '../../execution/chat-worker-run';
+import {projectReceiptForPi} from '../../capabilities/result-pages';
 const usage={inputTokens:{total:1,noCache:1,cacheRead:0,cacheWrite:0},outputTokens:{total:1,text:1,reasoning:0}};
+it('截图回执经可信解析后以 image 内容进入 Pi 下一次模型请求',async()=>{
+ const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==';
+ const outcome={status:'ok' as const,summary:'截图',evidence:[],data:{workbench:{operationId:'screen-call',status:'succeeded',artifactRefs:[],progressCursor:null,content:[{type:'image',mediaType:'image/png',dataRef:'wm1-'+ 'a'.repeat(64)}]}},error:null,continuation:null,sideEffect:'none' as const};
+ const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);const first=requests.length===1;
+  const content=first?[{type:'tool-call',toolCallId:'screen-call',toolName:'browser_screenshot',input:'{}'}]:[{type:'text-start',id:'t'},{type:'text-delta',id:'t',delta:'我已查看截图。'},{type:'text-end',id:'t'}];
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:first?'tool-calls':'stop',raw:first?'tool-calls':'stop'}});c.close();}})};
+ }};
+ let resolved=0;
+ await runChatPiLoop({model:model as never,system:'查看页面',messages:[{role:'user',content:'截图'}],definitions:[{name:'browser.screenshot',description:'截图',parameters:{type:'object',properties:{}}}],execute:async()=>outcome,
+  presentToolResult:async()=>{const projected=await projectReceiptForPi(outcome,'screen-call',{resolveImage:async()=>{resolved++;return {mimeType:'image/png',data:png};}});return projected.content;},
+  approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'screenshot'});
+ assert.equal(resolved,1);assert.equal(requests.length,2);
+ assert.ok(JSON.stringify(requests[1]).includes(png));
+ assert.ok(!JSON.stringify(requests[0]).includes(png));
+});
 // 真实Pi core与SDK协议，供应商流及工具回执均来自内存，不涉及外部IO。
 it.each(['success','empty','tool','legacy'])("缺final恢复协议：%s", async mode => {
  let calls=0,executions=0;const requests:any[]=[];
