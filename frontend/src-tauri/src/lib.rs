@@ -260,13 +260,19 @@ enum NativeArtifactExportOutcome {
     Cancelled,
 }
 
+fn validate_artifact_export_size(size: usize) -> Result<(), String> {
+    if size > MAX_ARTIFACT_EXPORT_BYTES {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    Ok(())
+}
+
 fn prepare_artifact_export(
-    content_base64: &str,
-    mime_type: &str,
+    bytes_base64: &str,
+    mime: &str,
     suggested_name: &str,
-    expected_size: u64,
 ) -> Result<NativeArtifactPayload, String> {
-    let format = NativeArtifactFormat::from_mime(mime_type)?;
+    let format = NativeArtifactFormat::from_mime(mime)?;
     let portable_name =
         workbench::files::validate_relative(suggested_name).is_ok_and(|parts| parts.len() == 1);
     if suggested_name.is_empty()
@@ -277,17 +283,13 @@ fn prepare_artifact_export(
     {
         return Err("导出文件名或扩展名无效。".to_string());
     }
-    if expected_size > MAX_ARTIFACT_EXPORT_BYTES as u64
-        || content_base64.len() > MAX_ARTIFACT_EXPORT_BYTES.div_ceil(3) * 4
-    {
+    if bytes_base64.len() > MAX_ARTIFACT_EXPORT_BYTES.div_ceil(3) * 4 {
         return Err("产物超过单次导出大小限制。".to_string());
     }
     let bytes = base64::engine::general_purpose::STANDARD
-        .decode(content_base64)
+        .decode(bytes_base64)
         .map_err(|_| "产物 base64 内容无效。".to_string())?;
-    if bytes.len() as u64 != expected_size {
-        return Err("产物字节数与声明大小不一致。".to_string());
-    }
+    validate_artifact_export_size(bytes.len())?;
     Ok(NativeArtifactPayload {
         format,
         suggested_name: suggested_name.to_string(),
@@ -312,15 +314,13 @@ fn write_selected_artifact(
 
 /// 用户在系统保存面板中选址后，原样写出已校验的产物字节；取消不落盘。
 #[tauri::command]
-async fn export_artifact_bytes(
+async fn export_workbench_artifact(
     app: AppHandle,
-    content_base64: String,
-    mime_type: String,
+    bytes_base64: String,
+    mime: String,
     suggested_name: String,
-    expected_size: u64,
 ) -> Result<NativeArtifactExportOutcome, String> {
-    let payload =
-        prepare_artifact_export(&content_base64, &mime_type, &suggested_name, expected_size)?;
+    let payload = prepare_artifact_export(&bytes_base64, &mime, &suggested_name)?;
     tauri::async_runtime::spawn_blocking(move || {
         let selected = app
             .dialog()
@@ -2113,7 +2113,7 @@ pub fn run() {
             // 兼容性标识 `MacIntel` 当作实体芯片。
             runtime_system_info,
             export_daily_report_csv,
-            export_artifact_bytes,
+            export_workbench_artifact,
             cli_access::cli_access_status,
             cli_access::cli_access_enable,
             cli_access::cli_access_revoke
@@ -3843,24 +3843,23 @@ mod tests {
             ("application/pdf", "图.pdf", b"%PDF-1.7\n".as_slice()),
         ] {
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
-            let payload =
-                prepare_artifact_export(&encoded, mime, name, bytes.len() as u64).unwrap();
+            let payload = prepare_artifact_export(&encoded, mime, name).unwrap();
             assert_eq!(payload.bytes, bytes);
         }
         let encoded = base64::engine::general_purpose::STANDARD.encode(b"content");
-        for (mime, name, size) in [
-            ("application/octet-stream", "report.html", 7),
-            ("text/html", "report.pdf", 7),
-            ("text/html", "../report.html", 7),
-            ("text/html", "CON.html", 7),
-            ("text/html", "COM¹.html", 7),
-            ("image/png; charset=utf-8", "image.png", 7),
-            ("text/html", "report.html", 8),
-            ("text/html", "report.html", 101 * 1024 * 1024),
+        for (mime, name) in [
+            ("application/octet-stream", "report.html"),
+            ("text/html", "report.pdf"),
+            ("text/html", "../report.html"),
+            ("text/html", "CON.html"),
+            ("text/html", "COM¹.html"),
+            ("image/png; charset=utf-8", "image.png"),
         ] {
-            assert!(prepare_artifact_export(&encoded, mime, name, size).is_err());
+            assert!(prepare_artifact_export(&encoded, mime, name).is_err());
         }
-        assert!(prepare_artifact_export("%%%", "text/html", "report.html", 2).is_err());
+        assert!(prepare_artifact_export("%%%", "text/html", "report.html").is_err());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES).is_ok());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES + 1).is_err());
     }
 
     #[test]
@@ -3871,7 +3870,6 @@ mod tests {
             &base64::engine::general_purpose::STANDARD.encode(b"new"),
             "text/html",
             "report.html",
-            3,
         )
         .unwrap();
         let target = root.join("report.html");

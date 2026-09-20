@@ -14,14 +14,22 @@ flowchart LR
 
 ## 原生接口与边界
 
-新增 Tauri command `export_artifact_bytes`，参数为 `contentBase64`、`mimeType`、`suggestedName`、`expectedSize`；返回字符串 `saved` 或 `cancelled`，失败走 Tauri command 错误。白名单为 HTML `text/html`（`.html/.htm`）、Markdown `text/markdown`（`.md/.markdown`）、CSV `text/csv`（`.csv`）、PNG `image/png`（`.png`）、PDF `application/pdf`（`.pdf`）。文本类型另接受 `; charset=utf-8`；其他 MIME 参数拒绝。检查标准 base64、解码后字节数与 `expectedSize` 一致，单次上限 100 MiB；写盘不重新编码。文件名复用 Rust `TaskFiles` 的跨平台相对路径校验，只允许一个安全的文件名组件；系统面板返回后仍检查真实选中路径的扩展名。
+最终 Tauri command 为 `export_workbench_artifact`，供 TS 调用的参数是 `{ bytesBase64, mime, suggestedName }`；返回字符串 `"saved" | "cancelled"`，校验或写盘失败走 Tauri command reject。白名单为 HTML `text/html`（`.html/.htm`）、Markdown `text/markdown`（`.md/.markdown`）、CSV `text/csv`（`.csv`）、PNG `image/png`（`.png`）、PDF `application/pdf`（`.pdf`）。文本类型另接受 `; charset=utf-8`；其他 MIME 参数拒绝。Rust 检查标准 base64 与解码后大小，单次上限 100 MiB；写盘不重新编码。调用方应在读取后端产物时自行核对 artifact 的声明大小与 hash。文件名复用 Rust `TaskFiles` 的跨平台相对路径校验，只允许一个安全的文件名组件；系统面板返回后仍检查真实选中路径的扩展名。
+
+```ts
+const outcome = await invoke<"saved" | "cancelled">("export_workbench_artifact", {
+  bytesBase64,
+  mime,
+  suggestedName,
+});
+```
 
 复用现有 `export_daily_report_csv` 所用的 Tauri `blocking_save_file`。取消返回 `cancelled` 并且不调用写盘；已有文件是否选作目的地由用户在原生面板决定，选中后才写入。Tauri [dialog 文档](https://v2.tauri.app/plugin/dialog/)说明该 API；Windows 的原生 Save dialog 默认带已有文件覆盖提示，见 [Microsoft 文档](https://learn.microsoft.com/en-us/windows/win32/shell/common-file-dialog)；macOS 使用 [NSSavePanel](https://developer.apple.com/documentation/appkit/nssavepanel)。本机未实际操作 Windows 面板，因此这些平台行为仍需安装版真机复核。
 
 ## 已执行验证
 
 - 先添加 Rust 用例，再执行 `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}' cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib native_artifact_export --offline --locked --no-default-features`：预期红测，编译报 `prepare_artifact_export`、`write_selected_artifact`、`NativeArtifactExportOutcome` 尚不存在。该资源覆盖只供隔离工作树源码验证，不代表安装包资源齐全。
-- 实现后重跑同一过滤测试：**2/2 通过**。覆盖五种格式的原始字节往返、MIME/后缀/非法文件名/大小/base64 拒绝、取消无文件、已选中的既有文件覆盖、选中错误扩展名不写、写入失败不返回成功，以及 `saved/cancelled` 序列化。
+- 实现后重跑同一过滤测试：**2/2 通过**。覆盖五种格式的原始字节往返、MIME/后缀/非法文件名/大小上限/base64 拒绝、取消无文件、已选中的既有文件覆盖、选中错误扩展名不写、写入失败不返回成功，以及 `saved/cancelled` 序列化。主线 UI 接口要求将原四参数命令收敛为上述三参数；保持相同大小上限并重跑针对性验证。
 - `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}' cargo check --manifest-path frontend/src-tauri/Cargo.toml --lib --offline --locked --quiet`：Mac 桌面壳默认 feature 源码检查通过。`git diff --check` 通过；新增代码块与 `rustfmt` 输出一致。全量 `cargo fmt --check` 会报未改的 `cli_access.rs` 等既有格式差异，本候选没有修改写集外文件。
 - Windows 目标 `x86_64-pc-windows-msvc` 的同包 `cargo check --no-default-features` **未进入本模块检查**：本机缺 Windows MSVC C 头文件，`ring 0.17.14` 在编译 `curve25519.c` 时以 `assert.h file not found` 失败。不能据此声称 Windows 已编译或可用。
 - `node orchestrator/process/context-plan.mjs --root . --task T-1009 --json` 路由 BUILD；`research-gate.mjs audit` 无开放研究门。
