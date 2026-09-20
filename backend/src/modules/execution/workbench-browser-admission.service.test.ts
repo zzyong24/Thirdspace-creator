@@ -20,7 +20,8 @@ async function owner(id:string,userId="browser-user",accountId="browser-account"
 it("可信解析器按当前账号绑定物理 profile；模型不能自报账号或目录摘要",async()=>{
  const one=await owner("wb-open-one","wb-user","wb-account-a");
  const seen:string[]=[];
- const admission=createWorkbenchBrowserAdmissionService(db,{now,resolveProfile:async(context,request)=>{
+ const admission=createWorkbenchBrowserAdmissionService(db,{now,resolveProfile:async(context,request,ref)=>{
+  expect(ref).toEqual(one.ref);
   seen.push(`${context.userId}/${context.accountId}/${request.mode}/${request.domain}`);
   return {accountId:context.accountId!,domain:"douyin.com",profileKey:"a".repeat(64)};
  },verifyProfileStopped:async()=>true});
