@@ -27,10 +27,10 @@ flowchart LR
 
 1. `reserve` 在当前任务 admission 与谱系行锁内完成。相同 operationId、相同入参摘要返回原占位或正式版本；相同键不同摘要拒绝。不同 operationId 即使传相同 `expectedVersion`，若已有占位则返回 `revision_busy`，不得开始 Blob 上传。无占位时 CAS 比较 `expectedVersion === currentVersion`，记录下一版本号、当前任务文件的版本/哈希与本任务待登记回执，才释放事务锁。首次登记也创建谱系行并遵守同一规则。
 2. `store` 用占位中的同一 operationId 与任务范围对象键提交 Blob，并逐字节校验大小/哈希。重复请求先读同键 Blob；存在且一致则跳过上传。失败或超时为未知，不换操作键，不释放占位。
-3. `commit` 在一个数据库事务中锁谱系、任务和原 `executionCalls` 工具行，核对原调用已启动、仍是同一 operationId、入参摘要、当前 taskId/attempt 与占位、Blob 哈希；同时把版本写入索引、任务 payload 正式回执，并把**原工具调用**结算为成功。只有三者都持久化才对模型返回成功与 artifactRef；不能先公布版本再留下未知调用。若原任务停止但 fence 未换，可沿原 settlement 权限完成已启动调用；fence 已换或进程重启时由 backend 专用 `reconcileArtifactOperation` 读取原调用、占位、Blob 和任务映射后完成同一事务，不开放新 admission 或生成新操作 ID。
-4. 若 Blob 状态不明，原调用与占位保持 `unknown`，当前谱系拒绝下一版本，用户可看到待对账而旧版仍可用。只有 Blob 服务确认同键没有字节、原文件版本/哈希不再可恢复且原进程已停止，后台对账才把原调用结算为**已确认失败结果**、占位标为 `failed_confirmed` 并释放；已派发的调用不能标成“未执行拒绝”。晚到同键 Blob 必须先再次核查。不能凭租约过期或固定时间自动释放。确认失败后其他回合需重新读 `currentVersion`、用新 operationId 提交，不重用旧回执。
+3. `operationId` **恒等于**原 `executionCalls.id`（已有 Workbench Host 的 `scope.callId`），不是模型自选键。原工具执行端口先领取 `toolExecutionClaimId`，冻结绑定已记录 `toolCallId`、工具名、参数摘要与效果；产物宿主只准备占位和 Blob，不单独公布正式版本。`execution-agentic-tool-ports` 为 `artifact.register/copy` 增加专用 `commitAndSettleArtifact` 分支：在原调用的 settlement 权限内锁谱系、任务与原调用，复核领取凭证、冻结入参、同一 operationId/摘要、占位和 Blob 哈希，并用 `workerToolResultReceiptSchema` 生成唯一正式回执；同一事务写入索引正式版、任务 payload 与原 `executionCalls` 的 `settled/resultText`。只有该事务成功后才返回 `AgenticToolOutcome` 与 artifactRef。外层 Worker 随后已有的 `settleAgenticTool` 是**精确相同回执的幂等确认**：比对原 callId、toolCallId、规范化结果摘要后返回原 settled 行，任何差异拒绝；不会再次写版本或费用。若 commit 已成功但 ACK 丢失，Worker 的 unknown 尝试不得覆盖 settled，重新 reserve 原 callId 回放同一回执。
+4. 若 Blob 状态不明，原调用与占位保持 `unknown`，当前谱系拒绝下一版本，用户可看到待对账而旧版仍可用。原 fence 未换时可由原 settlement 路径核对；fence 已换或进程重启时仅 backend 专用 `reconcileArtifactOperation` 可按原 callId、冻结绑定、claimId、占位、Blob 与任务映射完成**同一** commit-and-settle，不开放新 admission 或生成新操作 ID。只有 Blob 服务给出权威“同键无字节”、原 writer 确认停止且再次检查没有晚到字节，后台才能结算为已确认失败并释放占位。已派发的调用不能标成“未执行拒绝”；为此需扩展 `workbenchResult` 错误契约，表达 `dispatched=true, confirmedNoCommit=true` 的后端证明，并让 `workbenchToolOutcome` 将其映射为 `status:error, sideEffect:none` 的已结算错误回执。无法取得证明就维持 unknown，不按租约过期或固定时间自动释放。确认失败后其他回合需重新读 `currentVersion`、用新 operationId 提交，不重用旧回执。
 
-旧版兼容：迁移只影响**跨回合谱系发现与修订**。旧预览/导出 URL 始终走原 task payload + Blob 的账号归属和哈希校验，不依赖新索引，故补录失败时旧版仍可读。补录按同一对话内原任务顺序逐版核对 artifactId、版本连续性、hash 与 Blob；原子写入全谱系或全部回滚，不补半截。发现同号冲突、任务映射损坏或 Blob 不符时，标记该谱系 `migration_blocked` 并暂停跨回合操作，不修改旧任务、旧链接或其它正常谱系。修复后同键幂等重试补录。
+旧版兼容：迁移只影响**跨回合谱系发现与修订**。旧预览/导出 URL 始终走原 task payload + Blob 的账号归属和哈希校验，不依赖新索引，故补录失败时旧版仍可读。补录按同一对话内原任务顺序逐版核对 artifactId、版本连续性、hash、Blob、原 `operationId → executionCalls` 映射与该工具调用的正式回执；只有原调用 `settled`、回执中的 artifactRef 和元数据一致才原子补入整个谱系。旧代码可能已把正式版本写入 task payload，却尚未结算工具：这种 `started/unknown` 调用先走原操作 ID 的专用对账；缺调用、回执不符或对账无法确认时，标记该谱系 `migration_blocked` 并暂停**跨回合**发现/修订，不把 task payload 单方面事实升级为“已结算谱系”。原子写入全谱系或全部回滚，不补半截，不修改旧任务、旧链接或其它正常谱系；修复后同键幂等重试补录。
 
 ## 读取、修订与来源
 
@@ -41,7 +41,7 @@ flowchart LR
 ### 工具与服务端口形状
 
 - `artifact.read({artifactId,version,offset=0,limit≤128000})`：聊天任务从当前冻结会话解析源 task；非聊天任务继续只读当前 task。返回原 MIME、哈希、总字节数、分页字节、nextOffset 与**版本所属 taskId**，不返回存储键。执行时重查当前用户/账号/任务租约和两端冻结消息映射；旧任务无需领取新租约。
-- `artifact.versions({artifactId,cursor?,limit≤50})`：只列当前对话内、当前账号和用户可见的正式版本，按版本倒序分页，返回 `artifactId/version/taskId/mime/size/hash/relativePath` 与 nextCursor；pending/迁移受阻项只给明确状态，不伪装完成版本。非聊天任务只列本 task 的已有版本。UI 也走同一后端只读服务，不能信任模型写入的卡片 JSON。
+- `artifact.versions({artifactId?,cursor?,limit≤50})`：`artifactId` 省略时分页列出当前冻结对话的全部谱系与正式版本，提供无需预知 ID 的发现；提供 ID 时只列该谱系。后端由当前任务映射取得会话，按用户/账号/会话过滤，按 `(artifactId,version)` 稳定分页，返回 `artifactId/version/taskId/mime/size/hash/relativePath` 与绑定该会话的 nextCursor；pending/迁移受阻项只给明确状态，不伪装完成版本。非聊天任务只列本 task 的已有版本。UI 走同一后端只读服务，以页面已验证的 conversationId 取全会话列表；不能信任模型写入的卡片 JSON。
 - `artifact.register({path,mime,artifactId?,expectedVersion?,baseArtifactRef?,provenance?})`：首次登记不得传旧版本字段；同对话修订必须三者同时传 `artifactId`、`expectedVersion`、`baseArtifactRef={artifactId,version}`，且 base 等于当前最新正式版。文件只读当前任务路径，`provenance` 仍仅允许当前任务的真实调用；返回当前 taskId 的新版本元数据。非聊天任务沿原同任务注册规则，不强制 base 字段。
 - `artifact.copy({sourceArtifactId,sourceVersion,targetPath})`：仅复制当前冻结对话内正式登记的 PNG，源字节≤2 MiB，目标路径须为当前任务的合法相对 `.png` 路径。后端验证旧版哈希和两端归属后，将同字节经当前任务 Blob 端口登记成当前任务的新 PNG 产物，返回新 `artifactId/version/taskId/hash/relativePath` 及已验证源引用；同一 operationId 幂等，目标同路径冲突拒绝。这是受审查的已登记字节复制例外，不能谎称读取了当前任务工作文件；它不读取任意旧任务文件、不把源调用 ID 写成本任务 provenance。预览仍最多内联 12 张、总计 2 MiB；复制失败可省略图片交付静态正文。
 
