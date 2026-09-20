@@ -29,7 +29,7 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     expect(retry).toEqual(first);
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("different")]})).rejects.toMatchObject({name: "ConflictError"});
     expect(await f.plan.read(ctx, f.task.id)).toEqual(first);
-    expect(await f.plan.status(f.ref)).toEqual({revision: 1, progressToken: JSON.stringify(first), steps: [{stepId: "research", title: "research", status: "pending"}]});
+    expect(await f.plan.status(f.ref)).toEqual({revision: 1, progressToken: "[]", steps: [{stepId: "research", title: "research", status: "pending"}]});
     await expect(f.plan.read({...ctx, accountId: "foreign"}, f.task.id)).rejects.toThrow();
     const [stored] = await db.select().from(executionTasks).where(eq(executionTasks.id, f.task.id));
     expect(stored?.payload).toMatchObject({source: "original", workbenchPlan: first});
@@ -65,5 +65,55 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     const f = await fixture("graph");
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("a", {dependsOn: ["missing"]})]})).rejects.toThrow();
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("a", {dependsOn: ["b"]}), step("b", {dependsOn: ["a"]})]})).rejects.toThrow();
+  });
+
+  it("重规划不能擦除已有操作引用，替换步骤必须指向旧步骤", async () => {
+    const f = await fixture("replan-receipts");
+    const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});
+    const call = await ledger.reserve(f.ref, {operationKey: "research", kind: "tool", inputDigest: "sha256:" + "b".repeat(64), reservedTokens: 0});
+    await ledger.start(f.ref, call.id);
+    await ledger.settle(f.ref, call.id, {status: "settled", usage: {totalTokens: 0}, resultText: '{"status":"ok"}'});
+    const first = await f.plan.save(f.ref, {expectedRevision: 0, steps: [step("research", {status: "running", operationRefs: [call.id]})]});
+    await expect(f.plan.save(f.ref, {expectedRevision: 1, steps: [step("research"), step("retry", {supersedes: "research"})]})).rejects.toMatchObject({name: "ConflictError"});
+    await expect(f.plan.save(f.ref, {expectedRevision: 1, steps: [first.steps[0]!, step("retry", {supersedes: "missing"})]})).rejects.toMatchObject({name: "ConflictError"});
+    const revised = await f.plan.save(f.ref, {expectedRevision: 1, steps: [first.steps[0]!, step("retry", {supersedes: "research"})]});
+    expect(revised.steps[0]?.operationRefs).toEqual([call.id]);
+  });
+
+  it("重命名和状态摆动不计为计划执行进展", async () => {
+    const f = await fixture("progress-facts");
+    await f.plan.save(f.ref, {expectedRevision: 0, steps: [step("research")]});
+    const before = await f.plan.status(f.ref);
+    await f.plan.save(f.ref, {expectedRevision: 1, steps: [step("research", {title: "新的标题", status: "running"})]});
+    const after = await f.plan.status(f.ref);
+    expect(after?.revision).toBe(2);
+    expect(after?.progressToken).toBe(before?.progressToken);
+  });
+
+  it("未知在途工具在停止恢复后不能补写成功或换操作键重发", async () => {
+    const f = await fixture("unknown-action");
+    const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});
+    await f.plan.save(f.ref, {expectedRevision: 0, steps: [step("external", {status: "running"})]});
+    const call = await ledger.reserve(f.ref, {operationKey: "external-write", kind: "tool", inputDigest: "sha256:" + "c".repeat(64), reservedTokens: 0});
+    await ledger.start(f.ref, call.id);
+    await ledger.settle(f.ref, call.id, {status: "unknown"});
+    await f.tasks.command(ctx, {taskIds: [f.task.id], command: "pause", idempotencyKey: "pause-unknown"});
+    await f.tasks.acknowledgeControl({taskId: f.task.id, workerId: "plan-worker", attempt: f.ref.attempt});
+    await f.tasks.command(ctx, {taskIds: [f.task.id], command: "resume", idempotencyKey: "resume-unknown"});
+    const claimed = await f.tasks.claimTask({taskId: f.task.id, workerId: "plan-worker-new"});
+    if (!claimed) throw new Error("resumed task was not claimable");
+    const resumed = {executionTaskId: f.task.id, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken};
+    await expect(f.plan.save(resumed, {expectedRevision: 1, steps: [step("external", {status: "succeeded", operationRefs: [call.id]})]})).rejects.toMatchObject({name: "ConflictError"});
+    await expect(ledger.reserve(resumed, {operationKey: "external-write-again", kind: "tool", inputDigest: "sha256:" + "d".repeat(64), reservedTokens: 0})).rejects.toMatchObject({name: "ConflictError"});
+    expect((await f.plan.read(ctx, f.task.id))?.steps[0]?.status).toBe("running");
+  });
+
+  it("已结算但声明未知副作用的回执不能支撑成功步骤", async () => {
+    const f = await fixture("unknown-receipt");
+    const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});
+    const call = await ledger.reserve(f.ref, {operationKey: "suspicious", kind: "tool", inputDigest: "sha256:" + "e".repeat(64), reservedTokens: 0});
+    await ledger.start(f.ref, call.id);
+    await ledger.settle(f.ref, call.id, {status: "settled", usage: {totalTokens: 0}, resultText: '{"status":"ok","sideEffect":"unknown","error":{"code":"unknown_commit"}}'});
+    await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("external", {status: "succeeded", operationRefs: [call.id]})]})).rejects.toMatchObject({name: "ConflictError"});
   });
 });
