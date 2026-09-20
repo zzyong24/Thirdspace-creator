@@ -18,7 +18,7 @@ import {WorkbenchArtifactCard} from "./workbench-artifact-card";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useChat } from "@ai-sdk/react";
+import { Chat, useChat } from "@ai-sdk/react";
 import { useForegroundActivity } from "@/lib/foreground-activity";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -27,6 +27,7 @@ import {
   isToolUIPart,
   getToolName as sdkGetToolName,
   lastAssistantMessageIsCompleteWithApprovalResponses,
+  type ChatTransport,
   type UIMessage,
 } from "ai";
 import { ChatCandidateCard, type ChatTopicCandidate } from "./chat-candidate-card";
@@ -820,7 +821,23 @@ export function AICopilotContent({
   });
   const sessionAccountId = readCurrentAccountId();
   const liveSessionKey = JSON.stringify([sessionAccountId, scope]);
-  const liveSession = getLiveChatSession(liveSessionKey);
+  const liveSession = getLiveChatSession<Chat<UIMessage>, ChatTransport<UIMessage>, UIMessage>(
+    liveSessionKey,
+    session => new Chat<UIMessage>({
+      id: liveSessionKey,
+      transport: {
+        sendMessages: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.sendMessages(options);
+        },
+        reconnectToStream: options => {
+          if (!session.transport) throw new Error("聊天连接尚未就绪");
+          return session.transport.reconnectToStream(options);
+        },
+      },
+      sendAutomaticallyWhen: input => session.shouldResume?.(input) ?? false,
+    }),
+  );
   const liveSessionRef = React.useRef(liveSession);
   liveSessionRef.current = liveSession;
   // [T-055b] 上下文可摘:用户点掉 chip 后,本面板实例不再注入这份选中态(会话继续,
