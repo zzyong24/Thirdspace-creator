@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1004-agent-workbench @ 21479378
+LAST_SYNCED: codex/t1004-agent-workbench @ 3d5dc732
 
 ## 这是什么(定位)
 
@@ -27,7 +27,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 - [open] T-1016 核对前端聊天会话 SDK 物理边界
 - [wip] T-1005 实现多步计划、连续执行与原任务续跑
 - [wip] T-1007 补齐任务文件空间与受控命令执行
-- [open] T-1008 迁移 NomiFun 浏览器能力并协调既有采集
+- [wip] T-1008 迁移 NomiFun 浏览器能力并协调既有采集
 - [open] T-1009 实现产物版本、隔离预览与原生导出
 - [open] T-1010 装配研究创作报告 Skill 与兼容扩展
 - [open] T-1011 实现对话内计划进度与文件交付交互
