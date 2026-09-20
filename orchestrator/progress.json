@@ -12,6 +12,14 @@
   },
   "verticals": [
     {
+      "id": "T-1004",
+      "task_id": "T-1004",
+      "archetype": ["orchestration"],
+      "tasks": [{"step": "implementation", "status": "pending"}],
+      "depends_on": ["T-1003"],
+      "blocked_reason": null
+    },
+    {
       "id": "T-1003",
       "task_id": "T-1003",
       "archetype": [
