@@ -2,6 +2,28 @@
   "schema": "complexity-ledger/v1",
   "entries": [
     {
+      "task_id": "T-1006",
+      "files": ["ai-worker/src/execution/worker-runtime.ts"],
+      "file_sha256": "969b73cf7ff1229e316f74d3297a68053a14250523ac40a3846edbbe47ff141d",
+      "categories": ["ipc"],
+      "disposition": "in-budget",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "T-1006 在原 Worker 命名端口接通可信能力网关，沿用原执行租约与工具账本；本项锚定集成前准确源码哈希。",
+      "acceptance": "仅准许本任务的原执行链扩展，不代表真实模型、费用或双端安装验收通过。"
+    },
+    {
+      "task_id": "T-1007",
+      "files": ["frontend/src-tauri/src/lib.rs"],
+      "file_sha256": "f26bf4fb0cb9577bed955c121e74161845146444175f246ab60a9e2d1e9f5a2a",
+      "categories": ["credential_store", "installer_deploy", "ipc", "language_toolchain", "os_signing"],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "桌面 lib.rs 的既有凭据、安装、签名和 IPC 复杂度按集成前哈希登记。T-1007 只允许加入受租约验证的 workbench 模块与命令，不改原保管或签名策略；修改后的哈希需复核。",
+      "acceptance": "此项不证明 Windows 隔离、安装包运行时或真实模型端到端通过。"
+    },
+    {
       "task_id": "T-1007",
       "files": ["frontend/src-tauri/Cargo.toml"],
       "file_sha256": "b3ec2f52d50d5248acc25dd28bb0ef9cb230c5e22e78a73830f3f5c2de3e26f3",
