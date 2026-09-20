@@ -7,6 +7,9 @@ publish = false
 [lib]
 path = "mod.rs"
 
+[features]
+workbench-browser = []
+
 [dependencies]
 libc = "0.2"
 rand = "0.8"

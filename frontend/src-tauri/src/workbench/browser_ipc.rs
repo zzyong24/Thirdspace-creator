@@ -64,6 +64,9 @@ fn serve_one(
     host: &BrowserHost,
     runtime: &tokio::runtime::Runtime,
 ) -> io::Result<()> {
+    // Accepted sockets may inherit O_NONBLOCK from this bridge's listener.
+    // The request deadline below is the intended bound; avoid transient EAGAIN.
+    stream.set_nonblocking(false)?;
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     stream.set_write_timeout(Some(Duration::from_secs(120)))?;
     if !peer_is_sidecar(&stream, expected_pid)? {
@@ -278,6 +281,41 @@ mod tests {
         let mut line = String::new();
         BufReader::new(stream).read_line(&mut line).unwrap();
         serde_json::from_str(&line).unwrap()
+    }
+
+    #[test]
+    fn browser_socket_waits_for_delayed_authorized_request_bytes() {
+        let pending = PendingBrowserBridge::bind().unwrap();
+        let socket = pending.socket_path();
+        let root = std::env::temp_dir().join(format!(
+            "creatoros-browser-delayed-{}",
+            rand::random::<u64>()
+        ));
+        let running = pending.start(
+            std::process::id(),
+            root.clone(),
+            PathBuf::from("/missing/cft"),
+        );
+        let mut stream = UnixStream::connect(&socket).unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+        stream
+            .write_all(
+                format!(
+                    "{}\n",
+                    json!({"operationId":"delayed-location", "action":{
+                        "kind":"profile_location", "userId":"user-one", "accountId":"account-one",
+                        "taskId":"task-one", "identityMode":"anonymous"
+                    }})
+                )
+                .as_bytes(),
+            )
+            .unwrap();
+        let mut line = String::new();
+        BufReader::new(stream).read_line(&mut line).unwrap();
+        let reply: Value = serde_json::from_str(&line).unwrap();
+        assert_eq!(reply["ok"], true, "{reply}");
+        drop(running);
+        fs::remove_dir_all(root).unwrap();
     }
 
     #[test]

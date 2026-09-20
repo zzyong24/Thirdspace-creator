@@ -107,7 +107,9 @@ tauri-plugin-dialog = "2.0.0-rc.8"
 #   creatoros-logdec.exe/creatoros-logkeygen.exe(解密工具+密钥生成工具暴露给用户)。原因=line 80
 #   老注释只写「不进分发包」的意图、无机制,cargo 照编照打包。
 [features]
+default = ["workbench-browser"]
 logtools = []
+workbench-browser = []
 
 # [T-391 H-log] 开发者本地工具(**默认不编译、不进分发包**;解密 .enc 日志 + 生成 X25519 日志密钥对)。
 #   开发/测试解密日志:`cargo run --features logtools --bin creatoros-logdec …` /

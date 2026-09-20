@@ -102,3 +102,9 @@ flowchart LR
 - `CARGO_TARGET_DIR=/tmp/creatoros-t1007-mac-target RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked command_windows::tests -- --nocapture`：Windows 候选的跨主机准入测试 **5/5 通过**。其中可执行脚本仅在 macOS 测试环境下使用。
 - 同一 Mac 独立包全套并行测试两次均为 **19/20**，既有 `ipc::tests::private_socket_runs_reads_and_cancels_mac_process_for_same_task_only` 分别出现 `EOF while parsing a value` 和 `Broken pipe`；该测试单独重跑通过，全套加 `-- --test-threads=1` **20/20 通过**。这仅表明串行路径通过；并行 socket 偶发失败仍未解决，本候选没有修改 Mac IPC。
 - 尝试整包 `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}' cargo check --manifest-path frontend/src-tauri/Cargo.toml --lib --target x86_64-pc-windows-msvc --offline --locked`，在依赖 `ring 0.17.14` 的 C 构建中失败：交叉编译器缺 Windows MSVC C 头文件 `assert.h`。独立 workbench Windows Rust 模块通过不等于整包通过；本机缺完整 Windows C/MSVC 工具链，且资源覆盖不代表真实打包。
+
+## 2026-09-20 独立门卫与 Mac IPC 并行故障修复
+
+T-1008 将浏览器模块接入 `workbench/mod.rs` 后，T-1007 独立 Rust 测试包在 macOS 上缺 NomiFun 依赖而无法编译。现将浏览器模块改为正向 `workbench-browser` feature：桌面主包默认开启，独立文件/命令测试包不启用；主包默认、`--no-default-features`、`--all-features` 的源码检查均通过（仅用临时 Tauri 资源覆盖，不代表安装包）。
+
+原独立测试并行偶发 `Broken pipe` / 空 JSON 的根因也已实测定位：Mac 非阻塞监听 socket 接受的连接继承 `O_NONBLOCK`，客户端稍晚写入时服务端 `read_until` 返回 `EAGAIN`（os error 35），连接在回复前关闭。服务端现对**已接受的连接**切回阻塞模式并保留 10 秒读写超时；增加“先连接、100 毫秒后才写请求”的确定性回归。修复前 20 项并行测试在第 14 次复测时再次失败，带诊断运行记录到 `EAGAIN`；修复后原 20 项连续并行运行 **30/30 次整组通过**，加入延迟写入用例后独立门卫 **21/21**。浏览器私有 socket 同样修复了该继承问题并通过对应延迟写入测试。Windows 文件/命令实际隔离和安装包仍未验收，T-1007 继续进行中。

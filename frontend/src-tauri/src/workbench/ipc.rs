@@ -285,6 +285,10 @@ fn serve_one(
     base: &Path,
     commands: &CommandHost,
 ) -> io::Result<()> {
+    // macOS may inherit O_NONBLOCK from the listener. Each accepted request
+    // uses read/write deadlines instead, so a client still writing cannot
+    // turn an early EAGAIN into an empty or broken IPC reply.
+    stream.set_nonblocking(false)?;
     stream.set_read_timeout(Some(Duration::from_secs(10)))?;
     stream.set_write_timeout(Some(Duration::from_secs(10)))?;
     if !peer_is_sidecar(&stream, expected_pid)? {
@@ -438,6 +442,25 @@ mod tests {
         let mut line = String::new();
         BufReader::new(stream).read_line(&mut line).unwrap();
         serde_json::from_str(&line).unwrap()
+    }
+    #[test]
+    fn accepted_socket_waits_for_the_authorized_child_to_finish_writing() {
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let base = temp_base();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let mut stream = UnixStream::connect(&socket).unwrap();
+        // Let the nonblocking listener accept before the client sends bytes.
+        std::thread::sleep(Duration::from_millis(100));
+        stream
+            .write_all(format!("{}\n", request(json!({"kind":"list"}))).as_bytes())
+            .unwrap();
+        let mut line = String::new();
+        BufReader::new(stream).read_line(&mut line).unwrap();
+        let reply: Value = serde_json::from_str(&line).unwrap();
+        assert_eq!(reply["ok"], true, "{reply}");
+        drop(running);
+        fs::remove_dir_all(base).unwrap();
     }
     fn temp_base() -> PathBuf {
         let path = std::env::temp_dir().join(format!("cw-test-{}", rand::random::<u64>()));

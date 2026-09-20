@@ -13,9 +13,9 @@ pub mod command_windows;
 #[cfg(windows)]
 pub use command_windows as command;
 pub mod files;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "workbench-browser"))]
 pub mod browser;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "workbench-browser"))]
 pub mod browser_ipc;
 #[cfg(target_os = "macos")]
 pub mod ipc;

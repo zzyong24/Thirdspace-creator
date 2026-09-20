@@ -68,3 +68,5 @@ Rust 在宿主重启后可对无内存 Hub 状态的旧租约提供停止证明�
 该实测首次发现：原生 close 回复已有 `profileStopped=true` 时，Node 随后的一次全新停止证明可能短暂未通过，导致 close 返回成功而数据库新租约仍占用。为此增加最后一条 Lane 关闭后的有界重新核验：最多四次只接受 Rust 新停止证明，成功才释放精确数据库 lease；始终无法证明时返回 `unknown` 并保留占用，供后续对账。先添加协议测试，修复前因只查一次而失败；修复后短暂未就绪和始终未就绪两条路径均通过。固定 CfT 环境下 `workbench-browser-host.test.ts` **8/8**（含匿名页面与上述真实重启主身份窗口）、前端 `tsc --noEmit` 通过。跨宿主恢复仍未覆盖旧 Chromium 进程在崩溃后存活、旧 Playwright 采集、双账号主身份同时登录及安装包。
 
 任务要求的现有采集单元回归当场重跑：`douyin-cdp.test.ts` 与 `douyin-traffic.test.ts` **132/132**；后端 profile lease、旧宿主生命周期和新准入 **29/29**。它们不证明作品、评论、封面、流量的真账号现场采集。`boundary-scan` 仍为 7 条（基线 5）：新增的 2 条均在本任务写集外的 `frontend/src/features/copilot/live-chat-session.ts`，已由 T-1016 登记；本轮未改该文件，也未称全局门卫通过。T-1008 继续进行中。
+
+另补 Mac 浏览器私有 socket 的非阻塞继承修复：监听仍为非阻塞，接受的单个连接切回阻塞并保留读写超时，避免客户端稍晚写完请求时 `EAGAIN` 导致未知回执。确定性延迟写入 IPC 测试通过；浏览器 IPC 测试 **6/6**（另 1 项显式外部夹具忽略），固定 CfT 下跨 Node/数据库/Rust/Chromium 宿主回归 **8/8**。此改动与 T-1007 的同根因修复共用桌面主包，未放宽 PID 身份检查。
