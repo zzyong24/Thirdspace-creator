@@ -189,6 +189,7 @@
         "backend/src/modules/execution/host-browser-profile-lifecycle.test.ts",
         "backend/src/modules/execution/workbench-browser-admission.service.ts",
         "backend/src/modules/execution/workbench-browser-admission.service.test.ts",
+        "backend/src/modules/execution/index.ts",
         "frontend/src/server/workbench-browser-client.ts",
         "frontend/src/server/workbench-browser-client.test.ts",
         "frontend/src/server/workbench-browser-host.ts",

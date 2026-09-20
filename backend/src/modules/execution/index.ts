@@ -168,6 +168,7 @@ export { DEFAULT_AGENTIC_SYSTEM_PROMPT } from "./agentic/default-system-prompt";
 export { createExecutionScriptCheckpointService } from "./execution-script-checkpoint.service";
 
 export { createExecutionBrowserProfileLeaseService, BrowserProfileBusyError } from "./execution-browser-profile-lease.service";
+export { createWorkbenchBrowserAdmissionService } from "./workbench-browser-admission.service";
 
 export {createExecutionScheduledChildService} from "./execution-scheduled-child.service";
 
