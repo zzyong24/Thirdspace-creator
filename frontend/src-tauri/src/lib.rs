@@ -177,6 +177,169 @@ async fn export_daily_report_csv(
     }).await.map_err(|_| "保存 CSV 未完成，请重试。".to_string())?
 }
 
+const MAX_ARTIFACT_EXPORT_BYTES: usize = 100 * 1024 * 1024;
+
+#[derive(Clone, Copy)]
+enum NativeArtifactFormat {
+    Html,
+    Markdown,
+    Csv,
+    Png,
+    Pdf,
+}
+
+impl NativeArtifactFormat {
+    fn from_mime(mime: &str) -> Result<Self, String> {
+        let mut parts = mime.split(';');
+        let media = parts.next().unwrap_or("").trim();
+        let format = if media.eq_ignore_ascii_case("text/html") {
+            Self::Html
+        } else if media.eq_ignore_ascii_case("text/markdown") {
+            Self::Markdown
+        } else if media.eq_ignore_ascii_case("text/csv") {
+            Self::Csv
+        } else if media.eq_ignore_ascii_case("image/png") {
+            Self::Png
+        } else if media.eq_ignore_ascii_case("application/pdf") {
+            Self::Pdf
+        } else {
+            return Err("不支持的产物类型。".to_string());
+        };
+        if let Some(parameter) = parts.next() {
+            if parts.next().is_some()
+                || !matches!(format, Self::Html | Self::Markdown | Self::Csv)
+                || !parameter.trim().eq_ignore_ascii_case("charset=utf-8")
+            {
+                return Err("产物 MIME 参数无效。".to_string());
+            }
+        }
+        Ok(format)
+    }
+
+    fn extensions(self) -> &'static [&'static str] {
+        match self {
+            Self::Html => &["html", "htm"],
+            Self::Markdown => &["md", "markdown"],
+            Self::Csv => &["csv"],
+            Self::Png => &["png"],
+            Self::Pdf => &["pdf"],
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Html => "HTML 网页",
+            Self::Markdown => "Markdown 文档",
+            Self::Csv => "CSV 数据文件",
+            Self::Png => "PNG 图片",
+            Self::Pdf => "PDF 文档",
+        }
+    }
+
+    fn accepts_path(self, path: &Path) -> bool {
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| {
+                self.extensions()
+                    .iter()
+                    .any(|allowed| extension.eq_ignore_ascii_case(allowed))
+            })
+    }
+}
+
+struct NativeArtifactPayload {
+    format: NativeArtifactFormat,
+    suggested_name: String,
+    bytes: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+enum NativeArtifactExportOutcome {
+    Saved,
+    Cancelled,
+}
+
+fn validate_artifact_export_size(size: usize) -> Result<(), String> {
+    if size > MAX_ARTIFACT_EXPORT_BYTES {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    Ok(())
+}
+
+fn prepare_artifact_export(
+    bytes_base64: &str,
+    mime: &str,
+    suggested_name: &str,
+) -> Result<NativeArtifactPayload, String> {
+    let format = NativeArtifactFormat::from_mime(mime)?;
+    let portable_name =
+        workbench::files::validate_relative(suggested_name).is_ok_and(|parts| parts.len() == 1);
+    if suggested_name.is_empty()
+        || suggested_name.chars().count() > 160
+        || suggested_name.trim() != suggested_name
+        || !portable_name
+        || !format.accepts_path(Path::new(suggested_name))
+    {
+        return Err("导出文件名或扩展名无效。".to_string());
+    }
+    if bytes_base64.len() > MAX_ARTIFACT_EXPORT_BYTES.div_ceil(3) * 4 {
+        return Err("产物超过单次导出大小限制。".to_string());
+    }
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(bytes_base64)
+        .map_err(|_| "产物 base64 内容无效。".to_string())?;
+    validate_artifact_export_size(bytes.len())?;
+    Ok(NativeArtifactPayload {
+        format,
+        suggested_name: suggested_name.to_string(),
+        bytes,
+    })
+}
+
+fn write_selected_artifact(
+    selected: Option<PathBuf>,
+    payload: &NativeArtifactPayload,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let Some(path) = selected else {
+        return Ok(NativeArtifactExportOutcome::Cancelled);
+    };
+    if !path.is_absolute() || !payload.format.accepts_path(&path) {
+        return Err("请选择与产物类型一致的文件扩展名。".to_string());
+    }
+    std::fs::write(&path, &payload.bytes)
+        .map_err(|_| "保存产物失败，请检查目录权限后重试。".to_string())?;
+    Ok(NativeArtifactExportOutcome::Saved)
+}
+
+/// 用户在系统保存面板中选址后，原样写出已校验的产物字节；取消不落盘。
+#[tauri::command]
+async fn export_workbench_artifact(
+    app: AppHandle,
+    bytes_base64: String,
+    mime: String,
+    suggested_name: String,
+) -> Result<NativeArtifactExportOutcome, String> {
+    let payload = prepare_artifact_export(&bytes_base64, &mime, &suggested_name)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let selected = app
+            .dialog()
+            .file()
+            .add_filter(payload.format.label(), payload.format.extensions())
+            .set_file_name(payload.suggested_name.clone())
+            .blocking_save_file();
+        let path = selected
+            .map(|file| {
+                file.into_path()
+                    .map_err(|_| "无法读取所选保存位置。".to_string())
+            })
+            .transpose()?;
+        write_selected_artifact(path, &payload)
+    })
+    .await
+    .map_err(|_| "保存产物未完成，请重试。".to_string())?
+}
+
 /// [T-391 H-key] `.master-key` 文件兜底的**混淆存储**。SPEC §9:未签名下 keychain 不持久,文件兜底
 /// 不可少(否则每启动重生成 key → 激活码/model key 全解不开、每次重激活),但**不许明文落盘**。
 ///
@@ -1950,6 +2113,7 @@ pub fn run() {
             // 兼容性标识 `MacIntel` 当作实体芯片。
             runtime_system_info,
             export_daily_report_csv,
+            export_workbench_artifact,
             cli_access::cli_access_status,
             cli_access::cli_access_enable,
             cli_access::cli_access_revoke
@@ -3664,6 +3828,75 @@ mod runtime_cleanup_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn native_artifact_export_preserves_bytes_and_checks_format_size() {
+        for (mime, name, bytes) in [
+            (
+                "text/html; charset=utf-8",
+                "报告.html",
+                b"<h1>0</h1>".as_slice(),
+            ),
+            ("text/markdown", "笔记.md", b"# 0".as_slice()),
+            ("text/csv", "数据.csv", b"count,0\n".as_slice()),
+            ("image/png", "图.png", b"\x89PNG\r\n\x1a\n".as_slice()),
+            ("application/pdf", "图.pdf", b"%PDF-1.7\n".as_slice()),
+        ] {
+            let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+            let payload = prepare_artifact_export(&encoded, mime, name).unwrap();
+            assert_eq!(payload.bytes, bytes);
+        }
+        let encoded = base64::engine::general_purpose::STANDARD.encode(b"content");
+        for (mime, name) in [
+            ("application/octet-stream", "report.html"),
+            ("text/html", "report.pdf"),
+            ("text/html", "../report.html"),
+            ("text/html", "CON.html"),
+            ("text/html", "COM¹.html"),
+            ("image/png; charset=utf-8", "image.png"),
+        ] {
+            assert!(prepare_artifact_export(&encoded, mime, name).is_err());
+        }
+        assert!(prepare_artifact_export("%%%", "text/html", "report.html").is_err());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES).is_ok());
+        assert!(validate_artifact_export_size(MAX_ARTIFACT_EXPORT_BYTES + 1).is_err());
+    }
+
+    #[test]
+    fn native_artifact_export_cancel_overwrite_and_write_failure_are_distinct() {
+        let root = std::env::temp_dir().join(format!("creatoros-t1009-{}", rand::random::<u64>()));
+        std::fs::create_dir(&root).unwrap();
+        let payload = prepare_artifact_export(
+            &base64::engine::general_purpose::STANDARD.encode(b"new"),
+            "text/html",
+            "report.html",
+        )
+        .unwrap();
+        let target = root.join("report.html");
+        assert_eq!(
+            write_selected_artifact(None, &payload).unwrap(),
+            NativeArtifactExportOutcome::Cancelled
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Cancelled).unwrap(),
+            "\"cancelled\""
+        );
+        assert!(!target.exists());
+        std::fs::write(&target, b"old").unwrap();
+        assert_eq!(
+            write_selected_artifact(Some(target.clone()), &payload).unwrap(),
+            NativeArtifactExportOutcome::Saved
+        );
+        assert_eq!(
+            serde_json::to_string(&NativeArtifactExportOutcome::Saved).unwrap(),
+            "\"saved\""
+        );
+        assert_eq!(std::fs::read(&target).unwrap(), b"new");
+        assert!(write_selected_artifact(Some(root.join("wrong.pdf")), &payload).is_err());
+        assert!(!root.join("wrong.pdf").exists());
+        assert!(write_selected_artifact(Some(root.clone()), &payload).is_err());
+        std::fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn bundled_resource_candidates_follow_installed_app_layout() {
