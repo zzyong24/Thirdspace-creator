@@ -17,6 +17,7 @@ import { createDurableStreamModel } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
 import { projectReceiptForPi } from "../capabilities/result-pages";
+import { createWorkbenchGateway, toAgenticToolOutcome } from "../capabilities/gateway";
 import { workbenchResultSchema } from "@creatoros/contract/agent-workbench";
 const checkpointSchema=z.object({pendingCalls:z.array(z.object({status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
@@ -118,6 +119,16 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     },
   }});
   const research=input.tools.some(tool=>tool.execution==="worker.research")?await createChatResearchResources(signal,ports.call):undefined;
+  const workbenchCatalog=input.workbenchCapabilities??[];
+  const workbenchGateway=workbenchCatalog.length?createWorkbenchGateway(workbenchCatalog,{
+    platform:input.workbenchPlatform!,capabilities:[...new Set(workbenchCatalog.flatMap(item=>item.requiredCapabilities))],
+    dispatch:async()=>{throw new Error("WORKBENCH_HOST_CONTEXT_IS_BACKEND_ONLY");},
+    dispatchReserved:async(_invocation,operationId,{signal:dispatchSignal})=>{
+      const output=agenticToolOutcomeSchema.parse(await ports.call("executeAgenticTool",{callId:operationId},dispatchSignal));
+      const data=output.data && typeof output.data==="object" && !Array.isArray(output.data)?output.data as Record<string,unknown>:{};
+      return workbenchResultSchema.parse(data.workbench);
+    },
+  }):null;
   let webRead:ReturnType<typeof createChatWebReadResources>|undefined;
   try{
   if(input.tools.some(tool=>tool.execution==="worker.web-read"))webRead=createChatWebReadResources(signal,ports.call);
@@ -134,7 +145,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
             reservedCallId=reservation.callId;
           }
           return result;
-        },execute:async()=>{
+        },execute:async(_reservedName,reservationInput)=>{
           if(!reservedCallId)throw Error("tool reservation missing");
           if(definition.execution==="worker.web-read"){if(!webRead)throw Error("网页读取尚未装配");return webRead.run(reservedCallId,signal);}
           if(definition.execution==="worker.redfox")return runChatRedfoxInWorker(reservedCallId,signal,ports.call);
@@ -142,6 +153,12 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
           if(definition.execution==="worker.structured-node")return runChatGenerationInWorker(reservedCallId,signal,ports.call);
           if(definition.execution==="worker.script-draft")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,ports.call,"script-draft");
           if(definition.execution==="worker.script-hooks")return runChatTextNodeInWorker(reservedCallId,modelFor(spec),signal,(port,data,portSignal)=>ports.call(port,data,portSignal));
+          const descriptor=workbenchCatalog.find(item=>item.name===definition.name);
+          if(descriptor){
+            if(!workbenchGateway)throw Error("WORKBENCH_GATEWAY_UNAVAILABLE");
+            const result=await workbenchGateway.invokeReserved({name:definition.name,schemaVersion:descriptor.schemaVersion,input:reservationInput as Record<string,unknown>},reservedCallId,signal);
+            return toAgenticToolOutcome(result,descriptor);
+          }
           return agenticToolOutcomeSchema.parse(await ports.call("executeAgenticTool",{callId:reservedCallId},signal));
         }});
         if(!reservedCallId)throw Error("tool receipt missing");

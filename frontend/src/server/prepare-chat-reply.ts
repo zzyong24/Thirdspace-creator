@@ -3,6 +3,7 @@ import type { RequestContext } from "@creatoros/contract";
 import type { ChatTurnSnapshot } from "@creatoros/backend/modules/ai";
 import { prepareDurableChatTurn, requiredSkillIdsForTask, type ChatContext, type VerbatimSource } from "@creatoros/backend/modules/ai-runtime";
 import { workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 import { resolveChatMaxSteps } from "@creatoros/ai-worker/chat";
 import { humanizeAiError } from "@/lib/ai-error-humanize";
 import type { ChatRuntime } from "./persistence-client";
@@ -25,9 +26,13 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
    for(const a of attachments)if(a.extractedText?.trim())sources.push({ref:`attachment:${a.assetId}`,label:`文本附件：${a.name}`,text:a.extractedText,truncated:false,sourceType:"attachment",sourceId:a.assetId});
  }
  const skillSnapshot=await runtime.resolveEffectiveSkillSnapshot(owner,[...requiredSkillIdsForTask("chat.sync",{surface:chatContext.surface}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]);
+ const workbenchHost=(runtime.durable as (ChatRuntime["durable"] & {workbenchHost?:{catalog:readonly WorkbenchCapability[];platform:WorkbenchCapability["platforms"][number];capabilities:readonly string[];dispatch:Function}}) | undefined)?.workbenchHost;
+ const workbenchCapabilities=workbenchHost && typeof workbenchHost.dispatch==="function"
+  ? workbenchHost.catalog.filter(item=>item.platforms.includes(workbenchHost.platform) && item.requiredCapabilities.every(capability=>workbenchHost.capabilities.includes(capability))).map(item=>structuredClone(item))
+  : [];
  const prepared=await prepareDurableChatTurn(owner,{messages,chatContext,trustedScriptSources:sources,abortSignal:input?.abortSignal},{...runtime.context,humanizeError:humanizeAiError,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,listRecentTasksPort:runtime.listRecentTasks},workerSkillSnapshotSchema.parse(skillSnapshot),{
- workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,workbenchPlans:true,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
+ workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,workbenchPlans:true,workbenchCapabilities,workbenchPlatform:workbenchHost?.platform,scriptHooksGeneration:{version:1,maxOutputTokens:4096},structuredGeneration:{version:1,maxOutputTokens:8192},
  });
  input?.abortSignal?.throwIfAborted();
- return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens:8192,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
+ return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,workbenchCapabilities:prepared.workbenchCapabilities,...(prepared.workbenchCapabilities.length?{workbenchPlatform:prepared.workbenchPlatform}:{}),maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens:8192,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
 }

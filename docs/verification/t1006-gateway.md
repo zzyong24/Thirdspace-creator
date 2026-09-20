@@ -1,5 +1,7 @@
 # T-1006 统一工具网关与长结果回读候选
 
+> 下方初版记录保留当时的证据与未闭合点；本次 integration 的现状与检查结果见文末“集成候选”。
+
 ## 已实现的边界
 
 本候选在指定 write_set 内提供能力网关、原回执分页投影和 backend 动态工具定义接口。网关按冻结 `workbenchCapabilitySchema` 校验目录、平台、宿主授予的能力、版本、参数与结果。模型参数只含 `invocation`；完整 `WorkbenchHostCall` 应由 backend 从当前执行租约构造。进入宿主端口后若回执丢失，返回 `unknown/reconcile`，保留 `operationId`，不自动重试。进度受 4 KiB 字节预算约束；取消信号交回原执行链。`toAgenticToolOutcome` 将明确未派发失败、登录要求和未知提交映射到原回执错误码。
@@ -44,3 +46,26 @@ flowchart LR
 已把超过 12,000 字符的原工具回执投影接入 Pi 同一循环，分页文本包含 `tool.result.read` 的原调用 ID；完整结果仍保留在 UI 卡片和原工具账本。`chat-pi-loop.protocol.test.ts` 的长结果用例验证模型后续输入只含首段，UI 卡仍有原值；ai-worker 类型检查通过。尚未把图片 `dataRef` 接到后端可信解析端口；遇图片时目前沿原卡片协议保留引用，不能写成“截图已被模型看见”。可信能力目录的生产装配、超 100 万字符结果的外置回读、真实取消/费用 E2E 仍待闭合，T-1006 保持进行中。
 
 参考来源：NomiFun `e27bd5de` 的 `apps/pi-sidecar/src/nomifun-gateway.ts`。该提交不含 `tool-result-adapter.ts`；本机参考仓该路径为未跟踪文件，仅用于理解分页及媒体预算，没有修改参考仓，也未将其文件状态算作冻结提交证据。
+
+## 集成候选（独立工作树）
+
+聊天提交时，从与正式聊天运行时共用的 `workbenchHost` 装配对象读取目录；按平台与宿主授予能力过滤后，将描述、schema、版本和最大副作用冻结进原 `modelInput`。模型只提交 invocation；Worker 网关按冻结目录校验，backend 在执行前重读当前租约并填入 userId、accountId、taskId、attempt、fenceToken、leaseId 与原 operationId。宿主返回结果经 backend 自身的 schema 校验后沿原 `reserve/start/settle` 工具账本结算。长文本沿原 toolCallId 回读，未知提交不自动重发。
+
+```mermaid
+flowchart LR
+  A[聊天提交 冻结可信目录] --> B[模型 invocation]
+  B --> C[原工具账本 reserve/start]
+  C --> D[Worker 网关校验]
+  D --> E[backend 重读租约与身份]
+  E --> F[注入的宿主 dispatch]
+  F --> G[原工具账本 settle]
+  G --> H[原 toolCallId 分页回读]
+```
+
+当前生产 `persistence-client.ts` 的 `composeChatProduction` 调用没有传入 `workbenchHost`，因此通用能力目录在生产为空。可注入的 fake 验证了通用接线；**文件与浏览器生产能力尚未装配**，T-1007/T-1008 的宿主工作不在本候选范围。
+
+**未验收：生产进度回读。** `host.progress?` 目前只是进程内回调，未持久化到原 execution stream，也未证明应用重启后可回读。fake 宿主进度测试仅证明回调边界。真实模型、费用、停止恢复和取消全链路仍需端到端验证；此处只确认通用调用复用原工具账本，不把单测等同生产费用验收。超过原 `agenticToolOutcomeSchema` 100 万字符上限的结果仍需原账本之外的受控持久化与回读扩展。
+
+本工作树先写宿主与冻结目录测试；首次 Packet 测试命令因本工作树缺 `node_modules` 在启动前报 `vitest not found`。随后在 `/tmp` 的隔离测试副本借用既有依赖运行：Packet 指定的 backend 宿主 4/4、ai-worker 网关 7/7 通过；额外的 backend 定义与计划、Worker 分页与持久工具、frontend 准备测试通过。ai-worker、contract、frontend 的 `tsc --noEmit` 通过；backend 类型检查仍报 14 条位于本 write_set 外的既有测试文件错误，本候选文件没有类型报错。扩展的 `durable-chat-tool-ledger.test.ts` 在本候选和 HEAD 对照副本的 `completed` 案例均报 `MODEL_RESULT_UNKNOWN`，未作为通过证据。
+
+`boundary-scan.mjs` 在本候选和 HEAD 归档均报同样两条相对旧基线的新违规，位于未修改的 `frontend/src/features/copilot/live-chat-session.ts`（`@ai-sdk/react`、`ai` 导入）；本候选引入 0 条边界违规。Packet 禁止改该文件与 baseline，因此全局命令不能记为通过。

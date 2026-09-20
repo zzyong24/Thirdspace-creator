@@ -3,6 +3,8 @@ import {createChatHostContextReader} from "../ai/chat-host-context.service";
 import {createChatProductionRuntime} from "./chat-production-runtime";
 import {createChatTaskToolHost} from "./chat-task-tool-host";
 import {createChatWorkbenchPlanToolHost} from "./chat-workbench-plan-tool-host";
+import {createChatWorkbenchCapabilityHost,type ChatWorkbenchCapabilityHost} from "./chat-workbench-capability-host";
+import {createExecutionLeaseService} from "../execution/execution-lease.service";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
@@ -46,6 +48,7 @@ export interface ChatProductionCompositionDeps {
  trend:ChatTrendReadDeps;
  webRead:ProductionDeps["webRead"];
  onError?:ProductionDeps["onError"];
+ workbenchHost?:ChatWorkbenchCapabilityHost;
 }
 /** 装配原持久聊天运行时与全部真实工具；不增加运行时或任务账本。 */
 export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
@@ -79,15 +82,19 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
   },
  });
  const planTools=createChatWorkbenchPlanToolHost(db);
- return createChatProductionRuntime(db,{
+ const leases=createExecutionLeaseService(db,{now:deps.now});
+ const workbenchTools=deps.workbenchHost?createChatWorkbenchCapabilityHost(deps.workbenchHost,ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!}))):null;
+ const durable=createChatProductionRuntime(db,{
   resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,
   budget:{maxCalls:48,maxTokens:1000000,deadlineMs:600000},modelConcurrency:2,
   assertProject:deps.assertProject,
   resolveModelCredential:deps.resolveModelCredential,
   resolveFallbackModelCredential:deps.resolveFallbackModelCredential,
-  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),await planTools(c,input,ref,signal)),
+  resolveTools:async(c,input,ref,signal)=>Object.assign({},await taskTools(c,input,ref,signal),await ingestionTools(c,input,ref,signal),await planTools(c,input,ref,signal),workbenchTools?await workbenchTools(c,input,ref,signal):{}),
   webRead:deps.webRead,
-  onError:deps.onError,
+ onError:deps.onError,
  });
+ // 提交准备与执行解析共用同一装配对象；未注入时没有可冻结的生产能力。
+ return Object.assign(durable,{workbenchHost:deps.workbenchHost});
 }

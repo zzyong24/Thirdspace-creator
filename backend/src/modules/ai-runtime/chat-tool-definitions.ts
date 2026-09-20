@@ -94,5 +94,6 @@ export async function prepareChatToolDefinitions(tools: ToolSet, options:{worker
     const definition: Definition = { name, version, description: tool.description, effect, parameters: structuredClone(prepared.schema),...(execution?{execution}:{}) };
     return { name, prepared, definition };
   }));
+  for (const name of workbench.keys()) if (!Object.hasOwn(tools, name)) throw new Error(`Workbench 能力未装配执行入口：${name}`);
   return { definitions: entries.map(entry => entry.definition), parameters: Object.fromEntries(entries.map(entry => [entry.name, entry.prepared])) };
 }

@@ -82,3 +82,10 @@ it("Workbench 副作用按声明最大值映射，未知效果不被默认为只
   const prepared = await prepareChatToolDefinitions({ "files.write": built }, { workbenchCapabilities: [write] });
   expect(prepared.definitions[0]!.effect).toBe("committed");
 });
+
+it("已装配的通用能力与冻结目录一致，未装配的目录项不暴露", async () => {
+  const built = defineWorkbenchChatTool(workbenchCapability, async () => workbenchResult);
+  const prepared = await prepareChatToolDefinitions({ "files.read": built }, { workbenchCapabilities: [workbenchCapability] });
+  expect(prepared.definitions[0]).toMatchObject({ name: "files.read", effect: "none", parameters: workbenchCapability.inputSchema });
+  await expect(prepareChatToolDefinitions({}, { workbenchCapabilities: [workbenchCapability] })).rejects.toThrow();
+});
