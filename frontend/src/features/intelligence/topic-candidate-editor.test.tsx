@@ -37,3 +37,18 @@ it("已确认卡片展示原推荐和现选值，不允许产生未保存改选�
   rerender(<TopicCandidateEditor {...props} transform={{ ...transform, outputSnapshot: { title: "旧卡" } }} />);
   expect(screen.getByText("原推荐：未推荐")).toBeInTheDocument();
 });
+
+it("成功且已有改写初稿时可以确认写入选题池，进行中的任务不重复提交", async () => {
+  const onConfirm = vi.fn();
+  const props = { sourceTranscript: "原文", busy: false, retryDisabled: false, onRetry: vi.fn(), onConfirm, onUpgradeProject: vi.fn() };
+  const base = { id: "ready-transform", status: "candidate" as const, targetTopicId: null, outputSnapshot: snapshot };
+  const { rerender } = render(<TopicCandidateEditor {...props} transform={{ ...base, taskStatus: "running" }} />);
+  expect(screen.queryByRole("button", { name: "确认写入选题池" })).not.toBeInTheDocument();
+
+  rerender(<TopicCandidateEditor {...props} transform={{ ...base, taskStatus: "succeeded" }} />);
+  await userEvent.click(screen.getByRole("button", { name: "确认写入选题池" }));
+  expect(onConfirm).toHaveBeenCalledWith("ready-transform", expect.objectContaining({
+    title: snapshot.title,
+    adaptedDraft: snapshot.adaptedDraft,
+  }));
+});

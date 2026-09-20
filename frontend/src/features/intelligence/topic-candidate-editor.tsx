@@ -318,12 +318,12 @@ export function TopicCandidateEditor({
         </Button>
       ) : null}
       <div className="grid gap-2 sm:grid-cols-2">
-        {!confirmed&&canRetryTopicTask(topicTaskStatus(transform)) ? (
+        {!confirmed && !retrying ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            disabled={busy || retrying || incomplete}
+            disabled={busy || incomplete}
             onClick={() => onConfirm(transform.id, candidate)}
             className="w-full"
           >
@@ -353,4 +353,3 @@ export function TopicCandidateEditor({
     </div>
   );
 }
-
