@@ -11,6 +11,8 @@ export interface PiReceiptProjection {
 export interface PiMediaResolver {
   /** 后端按当前账号、任务和租约解析 dataRef；本模块不直接访问文件或数据库。 */
   resolveImage?: (dataRef: string) => Promise<{ mimeType: string; data: string }>;
+  /** 已结算回执的可选降级：媒体回读故障时继续交付原文字并明确标记图片不可见。 */
+  fallbackToText?: boolean;
 }
 
 function utf8Prefix(text: string, maxBytes: number): string {
@@ -44,11 +46,16 @@ export async function projectReceiptForPi(outcome: AgenticToolOutcome, toolCallI
     const result = workbenchResultSchema.parse(rawWorkbench);
     if (result.status === "succeeded") for (const item of result.content) {
       if (item.type !== "image") continue;
-      if (!ports.resolveImage) throw new Error("MEDIA_RESOLVER_UNAVAILABLE");
-      const media = await ports.resolveImage(item.dataRef);
-      if (media.mimeType !== item.mediaType || !workbenchScreenshotResolvedSchema.safeParse(media).success)
-        throw new Error("MEDIA_RESULT_INVALID");
-      content.push({ type: "image", mimeType: media.mimeType, data: media.data });
+      try {
+        if (!ports.resolveImage) throw new Error("MEDIA_RESOLVER_UNAVAILABLE");
+        const media = await ports.resolveImage(item.dataRef);
+        if (media.mimeType !== item.mediaType || !workbenchScreenshotResolvedSchema.safeParse(media).success)
+          throw new Error("MEDIA_RESULT_INVALID");
+        content.push({ type: "image", mimeType: media.mimeType, data: media.data });
+      } catch (error) {
+        if (!ports.fallbackToText) throw error;
+        content.push({ type: "text", text: `截图媒体暂不可用，模型未看到图片。原回执仍可用 tool.result.read 按原 toolCallId=${toolCallId} 回读文字；可用 browser.observe 或 browser.extract 获取页面信息。` });
+      }
     }
   }
   return { content, details: { toolCallId, totalCharacters: text.length, nextOffset } };

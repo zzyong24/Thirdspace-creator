@@ -210,7 +210,9 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         // 原回执已先结算。只解析本轮工具结果中的图片，恢复历史文本保持分页但不重复注入媒体。
         const projected=await projectReceiptForPi(receipt.outcome,receipt.callId,hasImage?{
           resolveImage:async dataRef=>workbenchScreenshotResolvedSchema.parse(await ports.call("resolveWorkbenchScreenshot",{callId:receipt.callId,dataRef},signal)),
+          fallbackToText:true,
         }:{});
+        signal.throwIfAborted();
         return projected.content.map(item=>item.type==="text"?{...item,text:`${reference}\n${item.text}`}:item);
       },
       approve:(name,args,options)=>toolApproval[name]!(args,options),
