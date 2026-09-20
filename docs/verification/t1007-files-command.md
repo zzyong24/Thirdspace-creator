@@ -166,3 +166,29 @@ flowchart LR
 - 整体 Tauri Windows 交叉 `cargo check --lib`：受阻于本机缺 MSVC C 头文件，`ring` 编译报 `assert.h file not found`，尚未检查到完整桌面壳 Windows 目标；这不等于源码错误或 Windows 构建通过。
 
 **确切未验：** Windows 真机的 Named Pipe DACL、`GetNamedPipeClientProcessId` 运行时返回值、Node↔Rust 文件读写/断线/并发、重解析点与 Unicode 文件系统行为、sidecar 崩溃后的清理；Windows 整体 Tauri 编译和安装包；真实模型任务从页面经数据库租约到文件落盘。Windows `command_windows.rs` 的受限 token/AppContainer 与任务目录 ACL 仍缺失，因此命令继续 fail-closed。T-1007 保持进行中。
+
+## 2026-09-20 Windows 命令隔离候选（独立工作树）
+
+本轮在 `command_windows_sandbox.rs` 落入真实 Windows API 调用，但**尚未开放命令**。原 `CommandHost::run/status/cancel/read_output` 仍返回 `COMMAND_UNAVAILABLE`，Windows Named Pipe 不解析命令 action，JS 能力目录仍只列 `files.*`。新隔离器是待 Windows 真机验证和文件回写接线的候选，不能称为已交付的 Windows `execution.*`。
+
+```mermaid
+flowchart LR
+  F[任务文件] --> S[待接线：限额快照]
+  S --> A[每次随机 AppContainer 身份与私有目录]
+  A --> P[显式打包程序路径和 argv]
+  P --> J[先挂 Job Object 再恢复执行]
+  J --> O[stdout stderr 与候选文件]
+  O --> V[待接线：版本核对后写回]
+```
+
+候选启动器每次调用 `CreateAppContainerProfile` 创建新身份，不复用旧 profile；无网络 capability，使用系统颁发的低权限 AppContainer 令牌。工作目录放在此 profile 的私有本地目录，仅对该目录增加 package SID 的继承 ACL，绝不修改原任务目录或其它账号的 ACL。执行程序从已验证的路径复制入私有目录；`CreateProcessW` 使用显式程序路径、逐参数转义、纯净环境及仅三个标准流句柄的继承白名单，不经 shell 或 PATH。进程以 `CREATE_SUSPENDED` 创建，先挂入带 `KILL_ON_JOB_CLOSE`、最多 16 进程及 512 MiB 内存限制的 Job Object，再恢复主线程；取消和宿主释放均终止整个 Job。若任一创建、ACL、属性、挂 Job 步骤失败则在恢复前拒绝执行。该实现依据 [Microsoft AppContainer 启动说明](https://learn.microsoft.com/en-us/windows/win32/secauthz/implementing-an-appcontainer)、[AppContainer 隔离边界](https://learn.microsoft.com/en-us/windows/win32/secauthz/appcontainer-isolation)；API 设计依据不代替真机运行结果。
+
+真实 RED：新增 Windows argv 边界测试后，`cargo test ... command_windows::tests::argv_is_quoted_without_a_shell_or_argument_merging` 在原实现上编译失败，报 `cannot find function quote_windows_arg` 5 处。补实现后同一测试通过。Windows opt-in 用例检查私有目录内写入、原任务外文件读取拒绝、loopback 网络拒绝、宿主环境变量不继承、Job 取消后子进程不能继续写文件；本机仅对这些 Windows 测试做 MSVC 目标源码检查，没有运行。
+
+- `CARGO_TARGET_DIR=/tmp/creatoros-t1007-wincommand-target cargo check --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --target x86_64-pc-windows-msvc --tests --offline --locked`：通过，包含隔离器及 Windows opt-in 测试源码。
+- Mac 独立 Rust 全套第一次并行运行 22 通过、4 个外部探针忽略；与 Windows 交叉检查同时运行的并行复测为 21 通过、1 失败、4 忽略，失败落在未改的 `ipc::tests::different_real_process_is_rejected_even_with_socket_path`，其子进程报告 `Broken pipe`。同一套件串行重跑 22 通过、4 忽略；脱离交叉编译单独并行重跑也为 22 通过、4 忽略。并行偶发故障未消除，不能记全绿。
+- `cargo fmt --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --check`、`git diff --check`：通过。
+- 尝试完整 Tauri `cargo check --lib --target x86_64-pc-windows-msvc --offline --locked`：停在依赖 `ring 0.17.14` 的 C 编译，本机缺 MSVC 头文件 `assert.h`；未进入桌面壳源码检查，不能写成整包 Windows 通过。
+- `boundary-scan.mjs`：仍报 2 条新增 R2，均为未修改的 `frontend/src/features/copilot/live-chat-session.ts` 导入；全局门未过。本独立工作树没有安装前端依赖，尝试定向 Vitest 得到 `Command "vitest" not found`，因此没有本轮前端测试结果。
+
+**未验与开放门槛：** 需在 Windows 真机用真实随包 Node 运行上述 opt-in 用例，覆盖 Unicode/空格、任务外读写、私有文件与凭据、loopback/外网、句柄继承、子孙进程、超时/崩溃/宿主退出和重解析点；完成限额快照导入与按 `expectedVersion` 写回、stdout/stderr/status/cancel 的 IPC 接线，再跑数据库租约→PID-bound Named Pipe→受限进程→文件回读的真实链路与安装版验证。任何环节未证实，Windows `execution.*` 继续保持 fail-closed。T-1007 不执行 `taskctl complete`。

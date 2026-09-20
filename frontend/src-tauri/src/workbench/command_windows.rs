@@ -9,6 +9,38 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[cfg(windows)]
+#[path = "command_windows_sandbox.rs"]
+mod sandbox;
+
+// CommandLineToArgvW-compatible escaping. The application path is passed
+// separately to CreateProcessW; this encodes argv only, never a shell line.
+fn quote_windows_arg(value: &str) -> String {
+    if !value.is_empty() && !value.chars().any(|c| c.is_whitespace() || c == '"') {
+        return value.to_owned();
+    }
+    let mut encoded = String::from("\"");
+    let mut slashes = 0;
+    for ch in value.chars() {
+        match ch {
+            '\\' => slashes += 1,
+            '"' => {
+                encoded.extend(std::iter::repeat_n('\\', slashes * 2 + 1));
+                encoded.push('"');
+                slashes = 0;
+            }
+            _ => {
+                encoded.extend(std::iter::repeat_n('\\', slashes));
+                encoded.push(ch);
+                slashes = 0;
+            }
+        }
+    }
+    encoded.extend(std::iter::repeat_n('\\', slashes * 2));
+    encoded.push('"');
+    encoded
+}
+
 #[derive(Clone)]
 pub struct RuntimeRegistry {
     root: PathBuf,
@@ -169,11 +201,10 @@ impl CommandHost {
         }
         self.runtimes.runtime(&request.runtime_id)?;
         // SEMANTIC_BOUNDARY_ALLOW: this is an OS authorization check, not a
-        // creative choice. A cwd check, env_clear and Job Object together do
-        // not stop a child from opening other files as the desktop user. With
-        // no restricted token/AppContainer plus task-root ACL in this file's
-        // write set, admission has no safe path. No operation is dispatched or
-        // reserved, so identical (scope, operationId) retries have no effects.
+        // creative choice. The separate AppContainer launcher has no Windows
+        // runtime proof or version-safe task-file import yet. A cwd check,
+        // clean environment and Job Object alone do not authorize execution.
+        // No operation is dispatched or reserved; retry has no side effect.
         Err(confinement_unavailable())
     }
     /// No command is admitted until execution confinement exists.
@@ -209,6 +240,98 @@ impl CommandHost {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[test]
+    fn argv_is_quoted_without_a_shell_or_argument_merging() {
+        assert_eq!(quote_windows_arg("plain"), "plain");
+        assert_eq!(quote_windows_arg("含 空格"), "\"含 空格\"");
+        assert_eq!(quote_windows_arg(""), "\"\"");
+        assert_eq!(quote_windows_arg("a\"b"), "\"a\\\"b\"");
+        assert_eq!(quote_windows_arg("a b\\"), "\"a b\\\\\"");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires a real Windows runner and CREATOROS_T1007_WINDOWS_PACKAGED_NODE"]
+    fn real_appcontainer_rejects_other_files_and_loopback() {
+        use std::net::TcpListener;
+        let node = PathBuf::from(
+            std::env::var_os("CREATOROS_T1007_WINDOWS_PACKAGED_NODE")
+                .expect("set the verified installed Node runtime path"),
+        );
+        let outside =
+            std::env::temp_dir().join(format!("creatoros-secret-{}", rand::random::<u64>()));
+        fs::write(&outside, b"secret").unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let script = br#"
+const fs = require('fs'), net = require('net');
+fs.writeFileSync('inside.txt', 'inside');
+let outside = 'blocked';
+try { fs.readFileSync(process.argv[2]); outside = 'escaped'; } catch {}
+const env = process.env.CREATOROS_T1007_WINDOWS_PACKAGED_NODE === undefined ? 'clean' : 'leaked';
+const socket = net.connect(Number(process.argv[3]), '127.0.0.1');
+socket.on('connect', () => { console.log(outside + ':connected:' + env); socket.destroy(); });
+socket.on('error', () => console.log(outside + ':blocked:' + env));
+setTimeout(() => { console.log(outside + ':timeout:' + env); socket.destroy(); }, 1000).unref();
+"#;
+        let process = sandbox::launch(
+            &node,
+            &[
+                "probe.js".into(),
+                outside.to_string_lossy().into_owned(),
+                port.to_string(),
+            ],
+            &[(PathBuf::from("probe.js"), script.to_vec())],
+            &[],
+        )
+        .unwrap();
+        assert_eq!(process.wait(10_000).unwrap(), Some(0));
+        assert_eq!(
+            fs::read_to_string(process.work().join("inside.txt")).unwrap(),
+            "inside"
+        );
+        assert_eq!(
+            fs::read_to_string(process.work().join("stdout.bin"))
+                .unwrap()
+                .trim(),
+            "blocked:blocked:clean"
+        );
+        assert!(
+            listener.accept().is_err(),
+            "AppContainer reached the loopback listener"
+        );
+        drop(process);
+        fs::remove_file(outside).unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    #[ignore = "requires a real Windows runner and CREATOROS_T1007_WINDOWS_PACKAGED_NODE"]
+    fn real_job_cancel_kills_descendant_before_it_can_write() {
+        use std::time::Duration;
+        let node = PathBuf::from(
+            std::env::var_os("CREATOROS_T1007_WINDOWS_PACKAGED_NODE")
+                .expect("set the verified installed Node runtime path"),
+        );
+        let script = br#"
+const cp = require('child_process');
+cp.spawn(process.execPath, ['-e', "setTimeout(() => require('fs').writeFileSync('escaped.txt', 'bad'), 1500)"]);
+setTimeout(() => {}, 3000);
+"#;
+        let process = sandbox::launch(
+            &node,
+            &["probe.js".into()],
+            &[(PathBuf::from("probe.js"), script.to_vec())],
+            &[],
+        )
+        .unwrap();
+        std::thread::sleep(Duration::from_millis(300));
+        process.cancel().unwrap();
+        std::thread::sleep(Duration::from_millis(1600));
+        assert!(!process.work().join("escaped.txt").exists());
+    }
 
     fn fixture() -> (PathBuf, TaskFiles, CommandHost) {
         let base =
