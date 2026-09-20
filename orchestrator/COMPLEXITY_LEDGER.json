@@ -2,6 +2,17 @@
   "schema": "complexity-ledger/v1",
   "entries": [
     {
+      "task_id": "T-1007",
+      "files": ["frontend/src-tauri/Cargo.toml"],
+      "file_sha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "categories": ["credential_store", "language_toolchain"],
+      "disposition": "baseline-migrated",
+      "decision": "DEC-AW-1004",
+      "scope_source": "docs/features/t1003-agent-workbench.md",
+      "reason": "当前 Cargo.toml 既有 Rust 与 keyring 依赖的精确哈希基线，登记以允许 T-1007 在授权范围内增补受控文件和进程宿主；实际内容一旦改变需按新哈希重评。",
+      "acceptance": "此项不证明命令 OS 隔离或双端安装通过。"
+    },
+    {
       "task_id": "T-1004",
       "files": ["docs/verification/t1004-nomifun-dependency.md"],
       "file_sha256": "15a863aae658a5ca07ff84ce39c8f263d341f94be3618091e530186a448a2eec",
