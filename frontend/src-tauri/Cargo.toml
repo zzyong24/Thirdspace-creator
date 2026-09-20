@@ -156,3 +156,8 @@ inherits = "release"
 lto = "thin"
 codegen-units = 16
 # opt-level=s / panic=abort / strip 从 release 继承,不动。
+
+# T-1007 standalone workbench tests: lib.rs integration is owned by the parent task.
+[[test]]
+name = "workbench"
+path = "src/workbench/mod.rs"
