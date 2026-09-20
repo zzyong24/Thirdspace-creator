@@ -26,3 +26,14 @@
 # 2026-09-20 Windows 产物登记接线
 
 Windows 私有文件通道接入后，产物宿主也在该通道存在时开放 `artifact.register/read`。登记仍由后端原执行租约与账号核实，并从当前任务文件逐页回读、复核版本后保存；Windows 目录中只开放文件和产物工具，不因本接线开放命令或浏览器。Mac/Windows 两个平台使用同一真实任务账本测试登记、回读、跨账号拒绝和文件版本变化；Windows 用例以注入的文件端口模拟 Native Pipe，**不是 Windows 真机 Named Pipe 或安装包实测**。
+
+## 2026-09-20 Mac 真实生产宿主链路补验
+
+- 环境：macOS 26.2（25C56）、arm64；Node v25.9.0、Rust 1.98.0；独立工作树 `codex/t1009-host-chain`。使用本机已安装的 `~/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar`，其中 `server.app/Contents/MacOS/creatoros-server` 的 SHA-256 为 `5ed0e129e708e36048981aed983f7302b0c18139f5a174e4b8d5fabbacb6d59d`。运行时仅被 fixture 读取，测试不改安装目录或用户数据。
+- 可选开关：仅 Mac、`CREATOROS_TEST_PACKAGED_RUNTIME_ROOT` 非空且 `CREATOROS_T1009_REAL_HOST=1`（兼容原 `CREATOROS_T1007_REAL_FILES=1`）时运行真实用例；普通测试跳过。Rust fixture 临时启动 0700 私有目录与 0600 socket，限定测试 Node PID；测试任务、任务文件和本地 Blob 均位于临时目录，结束后清理。
+- 实际命令：`CREATOROS_T1009_REAL_HOST=1 CREATOROS_TEST_PACKAGED_RUNTIME_ROOT="$HOME/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar" CARGO_TARGET_DIR=/tmp/creatoros-t1007-mac-target pnpm --dir frontend exec vitest run src/server/workbench-native-host.test.ts src/server/workbench-artifact-host.test.ts --retry=0 --reporter=verbose`。结果 **10/10 通过**，包含真实 socket 用例 1/1；其余产物宿主用例仍为注入文件端口的测试。
+- 真实用例在 PGlite `execution_tasks` 中领取租约，`files.write/read/stat` 经 Node 客户端和 Rust socket 操作两个 HTML 文件；通过 `execution.run/status/read` 使用随包 Node 对原文件计算 SHA-256。`artifact.register` 从同一 socket 读取文件，经 backend 产物服务与 assets 的本地文件 Blob 端口保存两个正式版本；`artifact.read` 与后端 `readAll` 回读旧版和新版。真实文件回读值、命令结果、Blob 字节和各自登记 hash 一致。跨任务和另一账号无法读到原任务文件或产物；伪造另一账号上下文与旧 fence 的产物读/登记均被拒绝，后端跨账号版本回读也被拒绝。
+- 首次运行在前端测试默认 JSDOM 环境中出现 `artifact_result_unknown`，定位到该环境的 `Buffer` 未通过 Blob 端口的 `Uint8Array` 类型检查；这是测试 realm 与生产 Node 不同。将这份宿主测试设为 Node 环境后按同一真实链路重跑通过，没有修改生产代码。失败记录不计作生产链路 PASS。
+- 不设可选开关时，同两份测试 **9 通过、1 跳过**，确认不会无意触发真实 runtime；`pnpm --dir frontend exec tsc --noEmit --pretty false`、定向 ESLint 与 `git diff --check` 均通过。
+
+本次证明的是 **Mac 本机真实 Rust socket + Node 宿主 + 租约 + 文件 + 后端 Blob** 的测试运行链路，并非已安装 CreatorOS 界面、原生保存面板或完整用户对话实测。Windows Named Pipe 真机、Mac/Windows 安装版导出及模型自主生成仍待各自验收。

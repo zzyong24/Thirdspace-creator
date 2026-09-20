@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {describe,expect,it,vi} from "vitest";
 import {spawn} from "node:child_process";
 import {createHash,randomUUID} from "node:crypto";
@@ -5,10 +6,12 @@ import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {createDb,type Db} from "@creatoros/backend";
-import {createPersistentTaskService} from "@creatoros/backend/modules/execution";
+import {createLocalFsObjectStorage,createWorkbenchBlobService} from "@creatoros/backend/modules/assets";
+import {createPersistentTaskService,createWorkbenchArtifactReadService} from "@creatoros/backend/modules/execution";
 import type {WorkbenchHostCall} from "@creatoros/contract/agent-workbench";
 import {NativeFileError,type NativeCommandAction} from "./workbench-native-client";
 import {createNativeFilesWorkbenchHost,nativeFileCapabilities} from "./workbench-native-host";
+import {createWorkbenchArtifactHost} from "./workbench-artifact-host";
 
 vi.mock("server-only",()=>({}));
 
@@ -113,9 +116,9 @@ describe("Mac 受控命令能力",()=>{
 });
 
 const realMacFiles=process.platform==="darwin" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT
-  && process.env.CREATOROS_T1007_REAL_FILES==="1" ? it : it.skip;
+  && (process.env.CREATOROS_T1007_REAL_FILES==="1" || process.env.CREATOROS_T1009_REAL_HOST==="1") ? it : it.skip;
 
-realMacFiles("真实租约经 Node 宿主和 Mac 私有 socket 写读查 HTML，跨任务与失效 fence 拒绝",async()=>{
+realMacFiles("真实 Mac socket + 租约写文件、登记双版本 Blob，跨账号与旧 fence 拒绝",async()=>{
   const directory=await mkdtemp(join(tmpdir(),"t1007-html-host-"));
   const ready=join(directory,"ready"),done=join(directory,"done"),taskRoot=join(directory,"tasks");
   const projectRoot=resolve(import.meta.dirname,"../../..");
@@ -145,16 +148,17 @@ realMacFiles("真实租约经 Node 宿主和 Mac 私有 socket 写读查 HTML，
     const opened=await createDb();const realDb=opened.db;closeDb=()=>opened.client.close();
     const tasks=createPersistentTaskService(realDb);
     const nonce=randomUUID(),userId=`html-user-${nonce}`,accountId=`html-account-${nonce}`;
-    const makeTask=async(suffix:string)=>{
-      const task=await tasks.enqueue({userId,accountId,requestId:`${nonce}-${suffix}`,source:"user"},
+    const makeTask=async(suffix:string,taskAccountId=accountId)=>{
+      const task=await tasks.enqueue({userId,accountId:taskAccountId,requestId:`${nonce}-${suffix}`,source:"user"},
         {kind:"ai_task",ownerType:"ai_task",ownerId:`${nonce}-${suffix}`,idempotencyKey:`${nonce}-${suffix}`,payload:{}});
       const workerId=`html-worker-${suffix}`;
       const claim=await tasks.claimTask({taskId:task.id,workerId,leaseSeconds:120});
       if(!claim)throw new Error(`claim missing for ${suffix}`);
-      return {task,context:{userId,accountId,taskId:task.id,attempt:claim.lease.attempt,
+      return {task,context:{userId,accountId:taskAccountId,taskId:task.id,attempt:claim.lease.attempt,
         fenceToken:claim.lease.fenceToken,leaseId:workerId}};
     };
     const owner=await makeTask("owner"),other=await makeTask("other");
+    const foreign=await makeTask("foreign",`html-other-account-${nonce}`);
     const host=createNativeFilesWorkbenchHost(realDb,{platform:"darwin",desktop:true,socketPath})!;
     const invoke=(context:typeof owner.context,name:string,input:Record<string,unknown>,operationId=randomUUID())=>
       host.dispatch({context:{...context,operationId},invocation:{name,schemaVersion:1,input}},
@@ -174,11 +178,65 @@ realMacFiles("真实租约经 Node 宿主和 Mac 私有 socket 写读查 HTML，
     expect(value(await invoke(owner.context,"files.stat",{path:file}))).toMatchObject({isDirectory:false,size:Buffer.byteLength(html),version:1});
     expect(value(await invoke(other.context,"files.read",{path:file}))).toBeNull();
     expect(value(await invoke(other.context,"files.stat",{path:file}))).toBeNull();
+    expect(value(await invoke(foreign.context,"files.read",{path:file}))).toBeNull();
     await expect(invoke({...other.context,taskId:owner.task.id},"files.read",{path:file}))
       .rejects.toMatchObject({name:"ConflictError"});
     await expect(invoke({...owner.context,fenceToken:"stale-fence"},"files.stat",{path:file}))
       .rejects.toMatchObject({name:"ConflictError"});
-    const expectedHash=createHash("sha256").update(html).digest("hex");
+    const expectedHash=createHash("sha256").update(String(read?.text)).digest("hex");
+    const storage=createLocalFsObjectStorage({rootPath:join(directory,"blobs"),publicBaseUrl:"/blob"},
+      {nextKey:()=>{throw new Error("产物必须使用确定性存储键");}});
+    const blobs=createWorkbenchBlobService(async()=>storage);
+    const artifactHost=createWorkbenchArtifactHost(realDb,{platform:"darwin",desktop:true,socketPath,blobs})!;
+    const artifactReader=createWorkbenchArtifactReadService(realDb,{blobs});
+    const artifactCall=(context:typeof owner.context,name:string,input:Record<string,unknown>)=>
+      artifactHost.dispatch({context:{...context,operationId:randomUUID()},invocation:{name,schemaVersion:1,input}},
+        {signal:AbortSignal.timeout(20_000),onProgress:()=>{}});
+    const registered=async(context:typeof owner.context,input:Record<string,unknown>)=>{
+      const reply=await artifactCall(context,"artifact.register",input);
+      expect(reply.status,JSON.stringify(reply)).toBe("succeeded");
+      if(reply.status!=="succeeded")throw new Error(JSON.stringify(reply));
+      const text=reply.content.find(part=>part.type==="text");
+      expect(text?.type).toBe("text");
+      return JSON.parse((text as {type:"text";text:string}).text) as
+        {artifactId:string;version:number;hash:string;size:number;relativePath:string};
+    };
+    const version1=await registered(owner.context,{path:file,mime:"text/html"});
+    expect(version1).toMatchObject({version:1,relativePath:file,size:Buffer.byteLength(html),hash:expectedHash});
+    const secondFile="交付/修订.html",secondHtml=html.replace("事实 0","事实 1");
+    expect(value(await invoke(owner.context,"files.write",{path:secondFile,content:secondHtml,expectedVersion:0})))
+      .toEqual({version:1});
+    const secondRead=value(await invoke(owner.context,"files.read",{path:secondFile,offset:0,limit:4096}));
+    expect(secondRead).toMatchObject({text:secondHtml,version:1});
+    const version2=await registered(owner.context,{path:secondFile,mime:"text/html",
+      artifactId:version1.artifactId,expectedVersion:1});
+    const secondHash=createHash("sha256").update(String(secondRead?.text)).digest("hex");
+    expect(version2).toMatchObject({artifactId:version1.artifactId,version:2,relativePath:secondFile,
+      size:Buffer.byteLength(secondHtml),hash:secondHash});
+    const artifactContext={userId,accountId,requestId:randomUUID(),source:"ai" as const};
+    const firstBlob=await artifactReader.readAll(artifactContext,owner.task.id,version1.artifactId,1);
+    const secondBlob=await artifactReader.readAll(artifactContext,owner.task.id,version1.artifactId,2);
+    expect(Buffer.from(firstBlob.bytes).toString("utf8")).toBe(html);
+    expect(Buffer.from(secondBlob.bytes).toString("utf8")).toBe(secondHtml);
+    expect(createHash("sha256").update(firstBlob.bytes).digest("hex")).toBe(version1.hash);
+    expect(createHash("sha256").update(secondBlob.bytes).digest("hex")).toBe(version2.hash);
+    const artifactRead=await artifactCall(owner.context,"artifact.read",{artifactId:version1.artifactId,
+      version:1,offset:0,limit:4096});
+    expect(artifactRead).toMatchObject({status:"succeeded",artifactRefs:[`${version1.artifactId}@1`]});
+    expect(artifactRead.status==="succeeded"&&artifactRead.content[0]?.type==="text"&&
+      JSON.parse(artifactRead.content[0].text).hash).toBe(version1.hash);
+    expect(await artifactCall({...owner.context,accountId:"foreign-account"},"artifact.read",
+      {artifactId:version1.artifactId,version:1})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    expect(await artifactCall(other.context,"artifact.read",{artifactId:version1.artifactId,version:1}))
+      .toMatchObject({status:"failed"});
+    expect(await artifactCall(foreign.context,"artifact.read",{artifactId:version1.artifactId,version:1}))
+      .toMatchObject({status:"failed"});
+    expect(await artifactCall({...owner.context,fenceToken:"stale-fence"},"artifact.register",
+      {path:file,mime:"text/html"})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    expect(await artifactCall({...owner.context,fenceToken:"stale-fence"},"artifact.read",
+      {artifactId:version1.artifactId,version:1})).toMatchObject({status:"failed",error:{code:"artifact_scope_invalid"}});
+    await expect(artifactReader.readAll({...artifactContext,accountId:"foreign-account"},owner.task.id,
+      version1.artifactId,1)).rejects.toThrow();
     const script="const fs=require('node:fs');const crypto=require('node:crypto');"+
       "process.stdout.write(crypto.createHash('sha256').update(fs.readFileSync('交付/报告.html')).digest('hex'))";
     expect(value(await invoke(owner.context,"files.write",{path:"check.js",content:script,expectedVersion:0}))).toEqual({version:1});
