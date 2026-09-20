@@ -129,7 +129,11 @@ required-features = ["logtools"]
 # target 限定 cfg(windows) → macOS/Linux 构建完全不编译、不下载。
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = [
+  "Wdk_Foundation",
+  "Wdk_Storage_FileSystem",
   "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_System_IO",
   "Win32_System_JobObjects",
   "Win32_System_Registry",
   "Win32_System_Threading",
