@@ -1,6 +1,6 @@
 # T-1007 任务文件与受控命令验证记录
 
-> 本文前半保留初期候选的原始证据；合并后的最新状态见文末“Mac 私有通道与 Windows 文件候选”。
+> 本文前半保留初期候选的原始证据；最新状态见文末按日期追加的验证记录。
 
 ## 本次候选实现
 
@@ -144,3 +144,25 @@ flowchart LR
 - `node orchestrator/process/context-plan.mjs --root . --task T-1007 --json` 路由 `4-build/desktop-integration`；`research-gate.mjs audit` 无开放研究门。`boundary-scan.mjs` 报 7 条及 2 条相对旧基线新增的 R2（均位于未改的 `frontend/src/features/copilot/live-chat-session.ts`，与本写集无关），因此全局边界门未通过，不能记为全绿。
 
 本证据覆盖 Mac 本机测试 Node、真实数据库租约和真实 Rust 私有 socket，也执行了已安装 Node；尚未从安装版 UI 发起完整模型任务，未登记 T-1009 产物或验证导出。没有 Windows 真机、Windows 私有 IPC 或 Windows OS 命令隔离证据；T-1007 全任务继续进行中，不执行 `taskctl complete`。
+
+## 2026-09-20 Windows 私有任务文件 IPC（独立工作树）
+
+Windows 壳在启动 sidecar 前绑定随机 Named Pipe，并给管道设置仅当前用户和 SYSTEM 可访问的显式 DACL，同时拒绝远程连接。Node sidecar 只拿到管道地址；Rust 每次连接都调用系统 `GetNamedPipeClientProcessId`，核对壳层实际 `child.pid()` 后才读取请求。管道名、页面握手 token、请求体中的 user/account/task 都不单独授予权限。Node 宿主沿用原 `execution_tasks` 的 `withLease(admission)`：它持有行锁直到文件 IPC 回包，并从锁内当前任务派生 user、account、task、attempt、fence。Rust 只接受 list/read/stat/write，继续由现有 Windows `TaskFiles` 逐级句柄与版本边界落盘；命令 action 解析失败，Windows JS 能力目录也不列出 `execution.*`。
+
+```mermaid
+flowchart LR
+  L[原 execution lease 行锁] --> N[Node 文件宿主]
+  N --> P[Windows Named Pipe 显式 DACL]
+  P --> K[内核核对实际 sidecar PID]
+  K --> F[Windows TaskFiles]
+  F --> N
+```
+
+连接按原 Mac JSON 行协议限制请求 1.4 MB，读写有 10 秒超时；sidecar 退出或壳退出时关闭 bridge，避免旧 PID 继续获得文件访问。Windows Rust 单测已写：错误 PID 拒绝且不建任务根、正确 PID 写 Unicode/空格路径、命令请求拒绝；该单测仅被 Windows 目标**编译**，没有在 Windows 运行。本机实际验证：
+
+- 独立 workbench 包 `cargo check --target x86_64-pc-windows-msvc --tests --offline --locked`：通过，覆盖 Windows IPC、文件模块和 Windows 测试源码的类型检查。
+- Mac 独立 workbench 包常规 `cargo test --offline --locked --quiet`：21 通过、4 个需外部 runtime 的探针忽略；`cargo fmt --check` 通过。
+- 前端 `workbench-native-client.test.ts`、`workbench-native-host.test.ts`：15 通过、1 个需安装 runtime 的 Mac 用例跳过；`tsc --noEmit` 通过。Windows 用例验证 lease 先于连接、只列文件能力、命令仍拒绝；真实 Named Pipe 通信不在本机模拟。
+- 整体 Tauri Windows 交叉 `cargo check --lib`：受阻于本机缺 MSVC C 头文件，`ring` 编译报 `assert.h file not found`，尚未检查到完整桌面壳 Windows 目标；这不等于源码错误或 Windows 构建通过。
+
+**确切未验：** Windows 真机的 Named Pipe DACL、`GetNamedPipeClientProcessId` 运行时返回值、Node↔Rust 文件读写/断线/并发、重解析点与 Unicode 文件系统行为、sidecar 崩溃后的清理；Windows 整体 Tauri 编译和安装包；真实模型任务从页面经数据库租约到文件落盘。Windows `command_windows.rs` 的受限 token/AppContainer 与任务目录 ACL 仍缺失，因此命令继续 fail-closed。T-1007 保持进行中。

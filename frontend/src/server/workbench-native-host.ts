@@ -25,7 +25,7 @@ const descriptor = (name: string, effect: "read" | "task_write", properties: Rec
       "files.edit": "按 expectedVersion 修改当前任务文件，冲突时返回当前版本。",
     }[name],
     inputSchema: { type: "object", properties, required, additionalProperties: false },
-    resultSchema: { type: "object" }, effects: [effect], requiredCapabilities: ["task.files"], platforms: ["macos"],
+    resultSchema: { type: "object" }, effects: [effect], requiredCapabilities: ["task.files"], platforms: ["macos", "windows"],
   });
 
 export const nativeFileCapabilities = [
@@ -105,7 +105,7 @@ function projectRead(value: unknown) {
   }
 }
 
-/** Only a running macOS desktop with a private native socket advertises files. */
+/** Only a running desktop with a private native transport advertises files. */
 export function createNativeFilesWorkbenchHost(db: Db, options: {
   now?: () => string;
   platform?: NodeJS.Platform;
@@ -117,7 +117,7 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
   const platform = options.platform ?? process.platform;
   const desktop = options.desktop ?? process.env.CREATOROS_DESKTOP === "1";
   const socketPath = options.socketPath ?? process.env.CREATOROS_WORKBENCH_SOCKET;
-  if (platform !== "darwin" || !desktop || !socketPath) return undefined;
+  if ((platform !== "darwin" && platform !== "win32") || !desktop || !socketPath) return undefined;
   const leases=createExecutionLeaseService(db,{now:options.now});
   const nativeClient = createWorkbenchNativeClient({
     withLease:(ref,mode,action)=>leases.withLease(ref,mode,async ({task,context})=>{
@@ -128,12 +128,14 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
   const native = options.filePort ?? nativeClient.file;
   const nativeCommand = options.commandPort ?? nativeClient.command;
   return {
-    catalog: [...nativeFileCapabilities,...nativeCommandCapabilities], platform:"macos", capabilities:["task.files","task.command"],
+    catalog: platform === "darwin" ? [...nativeFileCapabilities,...nativeCommandCapabilities] : [...nativeFileCapabilities],
+    platform: platform === "darwin" ? "macos" : "windows",
+    capabilities: platform === "darwin" ? ["task.files","task.command"] : ["task.files"],
     async dispatch(rawCall, {signal}) {
       signal.throwIfAborted();
       const call = workbenchHostCallSchema.parse(rawCall);
       const ref={executionTaskId:call.context.taskId,attempt:call.context.attempt,fenceToken:call.context.fenceToken};
-      if (nativeCommandCapabilities.some(capability=>capability.name===call.invocation.name)) {
+      if (platform === "darwin" && nativeCommandCapabilities.some(capability=>capability.name===call.invocation.name)) {
         const input=call.invocation.input;
         let action:NativeCommandAction;
         if (call.invocation.name==="execution.run") {

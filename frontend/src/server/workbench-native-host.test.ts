@@ -21,11 +21,24 @@ const call=(name:string,input:Record<string,unknown>):WorkbenchHostCall=>({
 const control={signal:new AbortController().signal,onProgress:()=>{}};
 
 describe("桌面任务文件宿主",()=>{
-  it("没有私有 Mac 桌面通道时目录不向模型开放，读写副作用分别冻结",()=>{
+  it("没有私有桌面通道时目录不向模型开放，读写副作用分别冻结",()=>{
     expect(createNativeFilesWorkbenchHost(db,{...options,socketPath:""})).toBeUndefined();
-    expect(createNativeFilesWorkbenchHost(db,{...options,platform:"win32"})).toBeUndefined();
+    expect(createNativeFilesWorkbenchHost(db,{...options,platform:"win32",socketPath:""})).toBeUndefined();
     expect(nativeFileCapabilities.find(item=>item.name==="files.read")?.effects).toEqual(["read"]);
     expect(nativeFileCapabilities.find(item=>item.name==="files.write")?.effects).toEqual(["task_write"]);
+  });
+
+  it("Windows 私有通道只开放文件能力，命令继续拒绝",async()=>{
+    const filePort=vi.fn(async()=>({version:1}));
+    const host=createNativeFilesWorkbenchHost(db,{...options,platform:"win32",socketPath:"\\\\.\\pipe\\creatoros-test",filePort})!;
+    expect(host).toBeDefined();
+    expect(host.platform).toBe("windows");
+    expect(host.capabilities).toEqual(["task.files"]);
+    expect(host.catalog.map(item=>item.name)).toEqual(nativeFileCapabilities.map(item=>item.name));
+    expect(await host.dispatch(call("files.write",{path:"报告.html",content:"你好"}),control)).toMatchObject({status:"succeeded"});
+    expect(filePort).toHaveBeenCalledOnce();
+    await expect(host.dispatch(call("execution.run",{argv:["-e","1"],cwd:".",runtimeId:"bundled-node",timeoutMs:1000}),control))
+      .rejects.toThrow("NATIVE_FILE_CAPABILITY_UNAVAILABLE");
   });
 
   it("只把宿主上下文中的 task/fence 与经过验证的相对路径交给原生端口",async()=>{
