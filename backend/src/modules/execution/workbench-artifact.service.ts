@@ -161,6 +161,13 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    return {metadata:row.metadata,total:bytes.byteLength,bytes:bytes.slice(offset,offset+limit),
     nextOffset:offset+limit<bytes.byteLength?offset+limit:null};
   },
+  async readAll(ctx:RequestContext,taskId:string,artifactId:string,version:number){
+   if(!Number.isSafeInteger(version)||version<1)throw new ConflictError("产物版本无效");
+   const task=await owned(ctx,taskId);
+   const row=records(task.payload).find(item=>item.metadata.artifactId===artifactId&&item.metadata.version===version);
+   if(!row)throw new OwnershipError("产物不存在");
+   return {metadata:row.metadata,bytes:await verified(row,ctx)};
+  },
   async verifyArtifacts(scope:{userId:string;accountId:string;taskId:string},refs:string[]):Promise<boolean>{
    if(!refs.length||refs.length>100)return false;
    try{
@@ -183,5 +190,5 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
 /** 预览、导出入口只注入读端口，不装配任务文件读取能力。 */
 export function createWorkbenchArtifactReadService(db:Db,deps:{blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
  const service=createWorkbenchArtifactService(db,deps);
- return {read:service.read,verifyArtifacts:service.verifyArtifacts};
+ return {read:service.read,readAll:service.readAll,verifyArtifacts:service.verifyArtifacts};
 }
