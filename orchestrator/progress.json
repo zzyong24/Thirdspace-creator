@@ -2324,5 +2324,16 @@
       "commits": {}
     }
   ],
-  "leases": {}
+  "leases": {
+    "T-1006:integration": {
+      "agent": "t1006-progress",
+      "since": "2026-09-20T05:05:59.588Z",
+      "isolation_kind": "worktree",
+      "workspace_root": "/Users/zyongzhu/.codex/worktrees/t1006-progress/Thirdspace-creator",
+      "branch": "codex/t1006-progress",
+      "base_sha": "e4b5ffef40909bc503cd159d4ae922963ef453d6",
+      "wave_id": "aw-progress",
+      "merge_index": 0
+    }
+  }
 }
