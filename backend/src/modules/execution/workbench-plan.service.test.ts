@@ -14,7 +14,7 @@ import { createExecutionStreamService } from "./execution-stream.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionChatToolPorts, readExecutionChatTask } from "./execution-chat-tool-ports.service";
 import { createWorkerSupervisor } from "./worker-supervisor";
-import { createAiRepository } from "../ai/ai.repository";
+import { createAiService } from "../ai/ai.service";
 import { createChatTurnSubmissionService } from "../ai/chat-turn-submission.service";
 import { createChatTurnCompletionService } from "../ai/chat-turn-completion.service";
 import { createChatWorkbenchPlanToolHost } from "../ai-runtime/chat-workbench-plan-tool-host";
@@ -140,9 +140,15 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     execFileSync(process.execPath, [resolve("../ai-worker/scripts/build.mjs")], {stdio: "pipe"});
     const liveNow = () => new Date().toISOString();
     const owner = {userId: "restart-plan-user", accountId: "restart-plan-account", requestId: "restart-plan", source: "user" as const};
-    const repo = createAiRepository(db, {userId: owner.userId, accountId: owner.accountId, now: liveNow, nextId: prefix => `${prefix}-restart-plan`});
-    const conversation = await repo.createConversation({title: "续跑", projectId: null, scope: "global"});
-    const source = await repo.createMessage(conversation.id, {role: "user", content: "执行外部调用并核对", attachments: [], modelMetadata: {}});
+    let nextId = 0;
+    const unused = async ():Promise<never> => {throw new Error("unused AI service port");};
+    const ai = createAiService({db,now:liveNow,nextId:prefix=>`${prefix}-restart-plan-${++nextId}`,
+      artifacts:{createVersion:unused},knowledge:{createKnowledge:unused},
+      candidate:{createFromAIResult:unused,enrichCard:unused},learnings:{createLearning:unused},
+      publishing:{createPublicationFromDraft:unused},materialLinks:{link:unused},
+      positioning:{upsertProfile:unused,createStatementVersion:unused},calibration:{createDraftPrediction:unused}});
+    const conversation = await ai.createConversation(owner, {title: "续跑", projectId: null, scope: "global"});
+    const source = await ai.createMessage(owner, conversation.id, {content: "执行外部调用并核对", attachments: []});
     const prototype = defineWorkbenchChatTool(chatWorkbenchPlanCapability, async () => {throw new Error("unused");});
     const [planDefinition] = (await prepareChatToolDefinitions({"plan.update": prototype}, {workbenchCapabilities: [chatWorkbenchPlanCapability]})).definitions;
     const submission = await createChatTurnSubmissionService(db, {now: liveNow, assemble: async () => ({
