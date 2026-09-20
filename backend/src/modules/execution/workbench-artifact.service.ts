@@ -168,6 +168,14 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    if(!row)throw new OwnershipError("产物不存在");
    return {metadata:row.metadata,bytes:await verified(row,ctx)};
   },
+  async readRelativeImage(ctx:RequestContext,taskId:string,relativePath:string){
+   if(!relativePath||relativePath.length>2048)throw new ConflictError("图片相对路径无效");
+   const task=await owned(ctx,taskId);
+   // 只查正式登记的当前任务版本；待登记文件及工作目录均不能成为预览资源。
+   const row=records(task.payload).filter(item=>item.metadata.taskId===taskId&&
+    item.metadata.mime==="image/png"&&item.metadata.relativePath===relativePath).at(-1);
+   return row?{metadata:row.metadata,bytes:await verified(row,ctx)}:null;
+  },
   async verifyArtifacts(scope:{userId:string;accountId:string;taskId:string},refs:string[]):Promise<boolean>{
    if(!refs.length||refs.length>100)return false;
    try{
@@ -190,5 +198,6 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
 /** 预览、导出入口只注入读端口，不装配任务文件读取能力。 */
 export function createWorkbenchArtifactReadService(db:Db,deps:{blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
  const service=createWorkbenchArtifactService(db,deps);
- return {read:service.read,readAll:service.readAll,verifyArtifacts:service.verifyArtifacts};
+ return {read:service.read,readAll:service.readAll,readRelativeImage:service.readRelativeImage,
+  verifyArtifacts:service.verifyArtifacts};
 }

@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createDb, type Db } from "@creatoros/backend";
 import { createWorkbenchArtifactReadService, createWorkbenchArtifactService, createPersistentTaskService } from "@creatoros/backend/modules/execution";
 import { createLocalFsObjectStorage, createWorkbenchBlobService } from "@creatoros/backend/modules/assets";
@@ -59,7 +59,13 @@ async function registered(mime: "text/html" | "text/markdown" | "text/csv" | "im
   const artifact = await writer.register({ executionTaskId: task.id, attempt: claim.lease.attempt,
     fenceToken: claim.lease.fenceToken }, `operation-${nonce}`, { path: "report", mime });
   mocks.ctx = ctx;
-  return { ctx, task, artifact };
+  async function registerMore(path: string, mime: "image/png", content: Uint8Array) {
+    const next = createWorkbenchArtifactService(db, { blobs,
+      readTaskFile: async () => ({ bytes: Uint8Array.from(content), version: 1 }) });
+    return next.register({ executionTaskId: task.id, attempt: claim.lease.attempt,
+      fenceToken: claim.lease.fenceToken }, `operation-${randomUUID()}`, { path, mime });
+  }
+  return { ctx, task, artifact, registerMore };
 }
 function request(taskId: string, artifactId: string, version: number) {
   return new Request(`http://localhost:3000/api/v1/workbench-preview/${taskId}/${artifactId}/${version}`, {
@@ -83,12 +89,53 @@ async function findDataFiles(directory = root): Promise<string[]> {
 }
 
 describe("T-1009 已登记产物 HTTP 预览", () => {
+  it("真实登记的相对 PNG 随 HTML 一同离线预览，跨账号及坏图片安全跳过", async () => {
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9GmS8AAAAASUVORK5CYII=", "base64");
+    const html = '<h1>真实报告</h1><img src="./chart.png"><img src="./bad.png"><img src="./foreign.png"><img src="../secret.png"><img src="/api/v1/private"><img src="https://evil.test/x.png">';
+    const item = await registered("text/html",Buffer.from(html));
+    await item.registerMore("chart.png","image/png",png);
+    await item.registerMore("bad.png","image/png",Buffer.from("not-a-png"));
+    const other=await registered("text/html",Buffer.from("<p>其他账号</p>"));
+    await other.registerMore("foreign.png","image/png",png);
+    mocks.ctx=item.ctx;
+    const res=await call(item.task.id,item.artifact.artifactId,1);
+    expect(res.status).toBe(200);
+    const body=await res.text();
+    expect(body).toContain("真实报告");
+    expect(res.headers.get("x-workbench-hash")).toBe(createHash("sha256").update(body).digest("hex"));
+    expect(body).toContain(`data:image/png;base64,${png.toString("base64")}`);
+    expect(body).not.toContain("bad.png");
+    expect(body).not.toContain("foreign.png");
+    expect(body).not.toContain("secret.png");
+    expect(body).not.toContain("/api/v1/private");
+    expect(body).not.toContain("evil.test");
+    const candidates = (await findDataFiles()).filter(path => path.includes(`/${item.ctx.accountId}/`));
+    const storedChart = (await Promise.all(candidates.map(async path =>
+      ({ path, bytes: await readFile(path) })))).find(entry => entry.bytes.equals(png));
+    expect(storedChart).toBeDefined();
+    await writeFile(storedChart!.path,"corrupted");
+    const afterDamage = await call(item.task.id,item.artifact.artifactId,1);
+    expect(afterDamage.status).toBe(200);
+    const damagedBody=await afterDamage.text();
+    expect(damagedBody).toContain("真实报告");
+    expect(damagedBody).not.toContain("data:image/png");
+    mocks.ctx={...item.ctx,accountId:"other-account"};
+    expect((await call(item.task.id,item.artifact.artifactId,1)).status).toBe(404);
+  });
   it("真实登记与 local-fs HTML 回读带 opaque sandbox 和离线 CSP", async () => {
     const html = "<style>h1{color:red}</style><h1>真实报告</h1><script>window.parent.secret=1</script>";
     const item = await registered("text/html", Buffer.from(html));
     const res = await call(item.task.id, item.artifact.artifactId, 1);
     expect(res.status).toBe(200);
-    expect(await res.text()).toBe(html);
+    const preview = await res.text();
+    expect(preview).toContain("真实报告");
+    expect(preview).not.toContain("<script");
+    expect(preview).not.toContain("window.parent.secret");
+    const rawRequest=request(item.task.id,item.artifact.artifactId,1);
+    const rawResponse=await GET(new Request(`${rawRequest.url}?format=raw`,{headers:rawRequest.headers}),{
+      params:Promise.resolve({taskId:item.task.id,artifactId:item.artifact.artifactId,version:"1"}),
+    });
+    expect(await rawResponse.text()).toBe(html);
     const csp = res.headers.get("content-security-policy")!;
     expect(csp).toContain("sandbox;");
     expect(csp).not.toContain("allow-same-origin");

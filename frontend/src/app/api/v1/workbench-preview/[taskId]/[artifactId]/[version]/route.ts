@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { readSessionCookie } from "@/app/api/v1/auth/_session";
 import { isAuthError, isOwnershipError, readRequestAccountId, resolveRequestContext } from "@/lib/request-context.server";
 import { isTrustedLocalRequest, loopbackForbidden } from "@/lib/loopback-guard.server";
 import { getWorkbenchPreviewRuntime } from "@/server/persistence-client";
-import { readRegisteredWorkbenchPreview, MAX_WORKBENCH_RAW_BYTES, WorkbenchPreviewIntegrityError, WorkbenchPreviewTooLargeError } from "@/server/workbench-preview-read";
+import { readRegisteredWorkbenchPreview, renderRegisteredHtmlPreview, MAX_WORKBENCH_RAW_BYTES, WorkbenchPreviewIntegrityError, WorkbenchPreviewTooLargeError } from "@/server/workbench-preview-read";
 import { WORKBENCH_PREVIEW_RESPONSE_CSP } from "@/server/workbench-preview-policy";
 
 export const dynamic = "force-dynamic";
@@ -68,26 +69,31 @@ export async function GET(
   if (!ctx.accountId) return failure(404, "产物不存在");
 
   try {
+    const port = await getWorkbenchPreviewRuntime();
     const result = await readRegisteredWorkbenchPreview(
-      await getWorkbenchPreviewRuntime(), ctx, taskId, artifactId, version,
+      port, ctx, taskId, artifactId, version,
       raw ? MAX_WORKBENCH_RAW_BYTES : undefined,
     );
     const mime = result.metadata.mime;
+    const bytes = !raw && mime === "text/html"
+      ? Buffer.from(await renderRegisteredHtmlPreview(port, ctx, taskId, result.metadata,
+        Buffer.from(result.bytes).toString("utf8")), "utf8")
+      : result.bytes;
     const contentType = !raw && (mime === "text/markdown" || mime === "text/csv")
       ? "text/plain; charset=utf-8"
       : mime.startsWith("text/") ? `${mime}; charset=utf-8` : mime;
     const filename = suggestedFilename(result.metadata.relativePath, mime, version);
-    return new Response(Uint8Array.from(result.bytes).buffer, {
+    return new Response(Uint8Array.from(bytes).buffer, {
       status: 200,
       headers: {
         ...COMMON_HEADERS,
         "Content-Type": contentType,
-        "Content-Length": String(result.bytes.byteLength),
+        "Content-Length": String(bytes.byteLength),
         "Content-Disposition": `inline; filename="artifact-${version}.${EXTENSION[mime]}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         "X-Workbench-Mime": mime,
         "X-Workbench-Filename": encodeURIComponent(filename),
-        "X-Workbench-Hash": result.metadata.hash,
-        "X-Workbench-Size": String(result.bytes.byteLength),
+        "X-Workbench-Hash": createHash("sha256").update(bytes).digest("hex"),
+        "X-Workbench-Size": String(bytes.byteLength),
       },
     });
   } catch (error) {
