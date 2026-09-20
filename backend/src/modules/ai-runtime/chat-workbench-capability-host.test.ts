@@ -10,6 +10,7 @@ const descriptor: WorkbenchCapability = {
   resultSchema: { type: "object" }, effects: ["read"], requiredCapabilities: ["task.files"], platforms: ["macos"],
 };
 const result: WorkbenchResult = { status: "succeeded", operationId: "call-1", content: [{ type: "text", text: "ok" }], artifactRefs: [], progressCursor: null };
+const noProgress = async () => undefined;
 
 describe("通用能力宿主", () => {
   it("仅冻结真实装配且当前平台获授权的能力", () => {
@@ -23,7 +24,7 @@ describe("通用能力宿主", () => {
     const dispatch = vi.fn(async () => result);
     const prepared = await prepareChatToolDefinitions({ "files.read": defineWorkbenchChatTool(descriptor, async () => result) }, { workbenchCapabilities: [descriptor] });
     const host = createChatWorkbenchCapabilityHost({ catalog: [descriptor], platform: "macos", capabilities: ["task.files"], dispatch },
-      async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" }));
+      async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" }),noProgress);
     const tools = await host({ userId: "user", accountId: "account" } as never, { tools: prepared.definitions, workbenchCapabilities: [descriptor] } as never, { executionTaskId: "task", attempt: 2, fenceToken: "fence" }, new AbortController().signal);
     expect(Object.keys(tools)).toEqual(["files.read"]);
     const output = await tools["files.read"]!.execute!({ userId: "user", accountId: "account" } as never, { path: "a.txt" }, { execution: { executionTaskId: "task", attempt: 2, fenceToken: "fence" }, callId: "call-1", signal: new AbortController().signal } as never);
@@ -39,7 +40,7 @@ describe("通用能力宿主", () => {
     });
     const prepared = await prepareChatToolDefinitions({ "files.read": defineWorkbenchChatTool(descriptor, async () => result) }, { workbenchCapabilities: [descriptor] });
     const host = createChatWorkbenchCapabilityHost({ catalog: [descriptor], platform: "macos", capabilities: ["task.files"], dispatch, progress },
-      async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" }));
+      async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" }),noProgress);
     const tools = await host({ userId: "user", accountId: "account" } as never, { tools: prepared.definitions, workbenchCapabilities: [descriptor] } as never, { executionTaskId: "task", attempt: 2, fenceToken: "fence" }, new AbortController().signal);
     const output = await tools["files.read"]!.execute!({ userId: "user", accountId: "account" } as never, { path: "a.txt" }, { execution: { executionTaskId: "task", attempt: 2, fenceToken: "fence" }, callId: "call-1", signal: new AbortController().signal } as never);
     expect(progress).toHaveBeenCalledOnce();
@@ -50,16 +51,36 @@ describe("通用能力宿主", () => {
     expect(dispatch).toHaveBeenCalledOnce();
   });
 
+  it("真实执行回调等待持久写入，坏进度和写入故障不覆盖已成功回执", async () => {
+    const persist = vi.fn(async () => { throw Error("subscriber storage unavailable"); });
+    const progress = vi.fn(() => { throw Error("subscriber disconnected"); });
+    const dispatch = vi.fn(async (call, options) => {
+      options.onProgress({ status: "running", operationId: "forged", content: [{type:"text",text:"假进度"}], artifactRefs: [], progressCursor: null });
+      options.onProgress({ status: "running", operationId: call.context.operationId, content: [{type:"text",text:"可信进度"}], artifactRefs: [], progressCursor: "one" });
+      return result;
+    });
+    const prepared = await prepareChatToolDefinitions({ "files.read": defineWorkbenchChatTool(descriptor, async () => result) }, { workbenchCapabilities: [descriptor] });
+    const host = createChatWorkbenchCapabilityHost({ catalog: [descriptor], platform: "macos", capabilities: ["task.files"], dispatch, progress },
+      async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" }),persist);
+    const ref = { executionTaskId: "task", attempt: 2, fenceToken: "fence" };
+    const tools = await host({ userId: "user", accountId: "account" } as never, { tools: prepared.definitions, workbenchCapabilities: [descriptor] } as never, ref, new AbortController().signal);
+    const output = await tools["files.read"]!.execute!({ userId: "user", accountId: "account" } as never, { path: "a.txt" }, { execution: ref, callId: "call-1", signal: new AbortController().signal } as never);
+    expect(persist).toHaveBeenCalledOnce();
+    expect(persist).toHaveBeenCalledWith(ref,"call-1",expect.objectContaining({status:"running",progressCursor:"one"}));
+    expect(progress).toHaveBeenCalledOnce();
+    expect(output).toMatchObject({status:"ok",data:{workbench:result}});
+  });
+
   it("目录版本漂移和结果 schema 损坏均不能冒充成功", async () => {
     const strict = { ...descriptor, resultSchema: { type: "object", properties: { confirmed: { type: "boolean" } }, required: ["confirmed"] } };
     const prepared = await prepareChatToolDefinitions({ "files.read": defineWorkbenchChatTool(strict, async () => result) }, { workbenchCapabilities: [strict] });
     const frozen = { tools: prepared.definitions, workbenchCapabilities: [strict] } as never;
     const ref = { executionTaskId: "task", attempt: 2, fenceToken: "fence" };
     const lease = async () => ({ userId: "user", accountId: "account", taskId: "task", attempt: 2, fenceToken: "fence", leaseId: "lease" });
-    const changed = createChatWorkbenchCapabilityHost({ catalog: [descriptor], platform: "macos", capabilities: ["task.files"], dispatch: async () => result }, lease);
+    const changed = createChatWorkbenchCapabilityHost({ catalog: [descriptor], platform: "macos", capabilities: ["task.files"], dispatch: async () => result }, lease,noProgress);
     await expect(changed({ userId: "user", accountId: "account" } as never, frozen, ref, new AbortController().signal)).rejects.toThrow("WORKBENCH_FROZEN_CAPABILITY_UNAVAILABLE");
     const dispatch = vi.fn(async () => result);
-    const host = createChatWorkbenchCapabilityHost({ catalog: [strict], platform: "macos", capabilities: ["task.files"], dispatch }, lease);
+    const host = createChatWorkbenchCapabilityHost({ catalog: [strict], platform: "macos", capabilities: ["task.files"], dispatch }, lease,noProgress);
     const tools = await host({ userId: "user", accountId: "account" } as never, frozen, ref, new AbortController().signal);
     const outcome = await tools["files.read"]!.execute!({ userId: "user", accountId: "account" } as never, { path: "a.txt" }, { execution: ref, callId: "call-1", signal: new AbortController().signal } as never);
     expect(dispatch).toHaveBeenCalledOnce();

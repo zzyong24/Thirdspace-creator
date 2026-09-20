@@ -5,6 +5,7 @@ import {createChatTaskToolHost} from "./chat-task-tool-host";
 import {createChatWorkbenchPlanToolHost} from "./chat-workbench-plan-tool-host";
 import {createChatWorkbenchCapabilityHost,type ChatWorkbenchCapabilityHost} from "./chat-workbench-capability-host";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
+import {createExecutionStreamService} from "../execution/execution-stream.service";
 import {createChatIngestionTaskToolHost,type ChatIngestionToolPorts} from "./chat-ingestion-tool-host";
 import {createChatBusinessGenerationPreparation} from "./chat-business-generation-preparation";
 import {createChatTrendRead,type ChatTrendReadDeps} from "./chat-trend-read";
@@ -83,7 +84,8 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
  });
  const planTools=createChatWorkbenchPlanToolHost(db);
  const leases=createExecutionLeaseService(db,{now:deps.now});
- const workbenchTools=deps.workbenchHost?createChatWorkbenchCapabilityHost(deps.workbenchHost,ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!}))):null;
+ const workbenchProgress=createExecutionStreamService(db,{now:deps.now});
+ const workbenchTools=deps.workbenchHost?createChatWorkbenchCapabilityHost(deps.workbenchHost,ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),(ref,callId,progress)=>workbenchProgress.appendWorkbenchProgress(ref,callId,progress)):null;
  const durable=createChatProductionRuntime(db,{
   resolveRedfoxCredential:chatRuntime.resolveRedfoxCredential,
   entryPath:deps.entryPath,workerId:`chat-worker-${process.pid}`,

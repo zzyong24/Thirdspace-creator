@@ -38,6 +38,7 @@ type LeaseContext = Omit<WorkbenchHostContext, "operationId">;
 export function createChatWorkbenchCapabilityHost(
   host: ChatWorkbenchCapabilityHost,
   readLease: (ref: ExecutionRef) => Promise<LeaseContext>,
+  persistProgress: (ref: ExecutionRef, callId: string, progress: Extract<WorkbenchResult, {status:"running"}>) => Promise<unknown>,
 ): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
   return async (owner, input, _ref, signal) => {
     signal.throwIfAborted();
@@ -67,18 +68,29 @@ export function createChatWorkbenchCapabilityHost(
           const parsed = prepared.parameters[definition.name]!.parameters.parse(raw) as Record<string, unknown>;
           const call = workbenchHostCallSchema.parse({ context: { ...identity, operationId: scope.callId }, invocation: { name: definition.name, schemaVersion: descriptor.schemaVersion, input: parsed } });
           let result: WorkbenchResult;
+          let pendingProgress = Promise.resolve();
+          let dispatchSettled = false;
           try {
             const returned = await host.dispatch(call, { signal: scope.signal, onProgress: rawProgress => {
-              // 进度仅是观察投影；坏进度或订阅者退出不能覆写最终回执。
+              // 仅可信宿主端口能进入持久事件；坏进度与观察者故障不得覆写工具终态。
               const progress = workbenchResultSchema.safeParse(rawProgress);
-              if (progress.success && progress.data.status === "running" && progress.data.operationId === scope.callId && !scope.signal.aborted) {
-                try { host.progress?.(call, progress.data); } catch { /* 观察者故障不覆盖最终回执。 */ }
+              if (progress.success && progress.data.status === "running" && progress.data.operationId === scope.callId &&
+                  Buffer.byteLength(JSON.stringify(progress.data),"utf8") <= 4096 && !scope.signal.aborted && !dispatchSettled) {
+                const update = progress.data;
+                pendingProgress = pendingProgress.then(async () => {
+                  try { await persistProgress(scope.execution,scope.callId,update); } catch { /* 进度写入故障不改变工具回执。 */ }
+                  try { host.progress?.(call, update); } catch { /* 订阅者故障不改变工具回执。 */ }
+                });
               }
             } });
+            dispatchSettled = true;
+            await pendingProgress;
             scope.signal.throwIfAborted();
             result = workbenchResultSchema.parse(returned);
             if (result.operationId !== scope.callId || result.status === "running" || (result.status === "succeeded" && !resultByName.get(definition.name)!.safeParse(result).success)) throw new Error("WORKBENCH_RESULT_INVALID");
           } catch (error) {
+            dispatchSettled = true;
+            await pendingProgress;
             if (scope.signal.aborted) throw error;
             result = { operationId: scope.callId, status: "unknown", artifactRefs: [], progressCursor: null,
               error: { code: "WORKBENCH_RESULT_UNKNOWN", retryable: false, dispatched: true, nextAction: "reconcile" } };
