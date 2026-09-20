@@ -343,3 +343,69 @@ realTest("a restarted Rust host proves a stopped old DB lease before a new task 
   await rm(root,{recursive:true,force:true});
  }
 },180_000);
+
+realTest("two accounts keep separate primary profiles and one close leaves the other running",async()=>{
+ const root=await mkdtemp(join(tmpdir(),"wb-browser-accounts-"));
+ const profileRoot=join(root,"profiles"),nonce=randomUUID(),userId=`browser-accounts-${nonce}`;
+ const tasks=createPersistentTaskService(db),profiles=createExecutionBrowserProfileLeaseService(db);
+ let bridge:Awaited<ReturnType<typeof startRealRustBridge>>|undefined;
+ try {
+  bridge=await startRealRustBridge(root,profileRoot,"accounts");
+  const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:bridge.socketPath})!;
+  const scopes=[] as Array<{label:string;context:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string;leaseId:string};
+   location:Awaited<ReturnType<typeof resolveManagedBrowserProfile>>;ref:{executionTaskId:string;attempt:number;fenceToken:string}}>;
+  for(const label of ["first","second"]){
+   const accountId=`${label}-${nonce}`;
+   const task=await tasks.enqueue({userId,accountId,requestId:`${label}-${nonce}`,source:"user"},
+    {kind:"ai_task",ownerType:"ai_task",ownerId:`${label}-${nonce}`,idempotencyKey:`${label}-${nonce}`,payload:{}});
+   const workerId=`${label}-worker-${nonce}`;
+   const claim=(await tasks.claimTask({taskId:task.id,workerId}))!;
+   const context={userId,accountId,taskId:task.id,attempt:claim.lease.attempt,
+    fenceToken:claim.lease.fenceToken,leaseId:workerId};
+   const location=await resolveManagedBrowserProfile(bridge!.socketPath,
+    {userId,accountId,taskId:task.id},"primary",AbortSignal.timeout(10_000));
+   const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+   scopes.push({label,context,location,ref});
+  }
+  expect(scopes[0]!.location.profileKey).not.toBe(scopes[1]!.location.profileKey);
+  expect(scopes[0]!.location.managedProfileRoot).not.toBe(scopes[1]!.location.managedProfileRoot);
+  const dispatch=async(scope:typeof scopes[number],name:string,input:Record<string,unknown>)=>{
+   const outcome=await host.dispatch({context:{...scope.context,operationId:randomUUID()},
+    invocation:{name,schemaVersion:1,input}},{signal:AbortSignal.timeout(45_000),onProgress:()=>{}});
+   if(outcome.status!=="succeeded")throw new Error(JSON.stringify(outcome));
+   const content=outcome.content.find(part=>part.type==="text");
+   if(!content)throw new Error("Browser result has no text payload");
+   return JSON.parse(content.text) as Record<string,any>;
+  };
+  const opened=await Promise.all(scopes.map(scope=>dispatch(scope,"browser.open",
+   {laneId:scope.label,mode:"primary",domain:"example.com"})));
+  const first=scopes[0]!,second=scopes[1]!;
+  const firstLane=opened[0]!.lane.lane_id as string,firstEpoch=opened[0]!.lane.browser_epoch as number;
+  const secondLane=opened[1]!.lane.lane_id as string,secondEpoch=opened[1]!.lane.browser_epoch as number;
+  expect(firstLane).not.toBe(secondLane);
+  const [firstLease]=await profiles.listOwned(first.ref),[secondLease]=await profiles.listOwned(second.ref);
+  expect(firstLease?.profileKey).toBe(first.location.profileKey);
+  expect(secondLease?.profileKey).toBe(second.location.profileKey);
+  const firstMarker=join(first.location.managedProfileRoot,"first-account-only");
+  await writeFile(firstMarker,"private account state");
+  await expect(readFile(join(second.location.managedProfileRoot,"first-account-only"),"utf8"))
+   .rejects.toMatchObject({code:"ENOENT"});
+  const foreign=await host.dispatch({context:{...first.context,operationId:randomUUID()},
+   invocation:{name:"browser.status",schemaVersion:1,input:{laneId:secondLane}}},
+   {signal:AbortSignal.timeout(10_000),onProgress:()=>{}});
+  expect(foreign).toMatchObject({status:"failed",error:{code:"lane_not_found"}});
+  await dispatch(first,"browser.close",{laneId:firstLane,browserEpoch:firstEpoch});
+  expect(await profiles.listOwned(first.ref)).toEqual([]);
+  expect(await profiles.listOwned(second.ref)).toHaveLength(1);
+  await dispatch(second,"browser.navigate",{laneId:secondLane,browserEpoch:secondEpoch,
+   url:"https://example.com"});
+  const extracted=await dispatch(second,"browser.extract",{laneId:secondLane,browserEpoch:secondEpoch});
+  expect(extracted.result.output.message).toContain("Example Domain");
+  expect(await readFile(firstMarker,"utf8")).toBe("private account state");
+  await dispatch(second,"browser.close",{laneId:secondLane,browserEpoch:secondEpoch});
+  expect(await profiles.listOwned(second.ref)).toEqual([]);
+ }finally{
+  if(bridge)await bridge.finish();
+  await rm(root,{recursive:true,force:true});
+ }
+},180_000);

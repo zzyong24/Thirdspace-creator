@@ -70,3 +70,9 @@ Rust 在宿主重启后可对无内存 Hub 状态的旧租约提供停止证明�
 任务要求的现有采集单元回归当场重跑：`douyin-cdp.test.ts` 与 `douyin-traffic.test.ts` **132/132**；后端 profile lease、旧宿主生命周期和新准入 **29/29**。它们不证明作品、评论、封面、流量的真账号现场采集。`boundary-scan` 仍为 7 条（基线 5）：新增的 2 条均在本任务写集外的 `frontend/src/features/copilot/live-chat-session.ts`，已由 T-1016 登记；本轮未改该文件，也未称全局门卫通过。T-1008 继续进行中。
 
 另补 Mac 浏览器私有 socket 的非阻塞继承修复：监听仍为非阻塞，接受的单个连接切回阻塞并保留读写超时，避免客户端稍晚写完请求时 `EAGAIN` 导致未知回执。确定性延迟写入 IPC 测试通过；浏览器 IPC 测试 **6/6**（另 1 项显式外部夹具忽略），固定 CfT 下跨 Node/数据库/Rust/Chromium 宿主回归 **8/8**。此改动与 T-1007 的同根因修复共用桌面主包，未放宽 PID 身份检查。
+
+## 2026-09-20 双账号主身份档案隔离实测
+
+新增仅在显式配置固定 CfT 149 时运行的本机集成用例：同一个 CreatorOS 用户下创建两个不同账号任务，分别从 PID 绑定 Rust 宿主取得真实主身份档案位置，并发执行两个 `browser.open`。实测物理目录摘要、数据库 profile 租约及 Lane ID 均不同；账号 A 不能读取账号 B 的 Lane。向 A 的档案写入测试标记后，B 的档案中不存在该文件。关闭 A 的 Lane 后，A 的数据库占用释放，B 的占用和 Chromium Lane 仍在；B 继续导航并提取 `https://example.com` 的真实 “Example Domain” 文本，A 的标记未被 B 的操作删除；关闭 B 后其占用释放。
+
+固定 CfT 下 `workbench-browser-host.test.ts` **9/9**、前端 `tsc --noEmit` 通过。该用例证明当前 Mac 测试夹具中的双账号主身份目录和 Lane 隔离，**没有**验证两个真实网站账号同时登录、旧 Playwright 身份迁移、Windows 或安装包。模型截图可见性仍依赖 T-1009 的可信媒体引用解析；当前 Pi 只看到回执文本，不能据此声称看过画面。T-1008 保持进行中。
