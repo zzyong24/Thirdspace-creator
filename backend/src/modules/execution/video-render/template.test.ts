@@ -170,7 +170,7 @@ describe("generateVideoRenderHtml", () => {
         startSec: 0,
         endSec: 60,
         role: "body",
-        cards: [{ kind: "quote", at: 59.8, text: "片尾信息" }],
+        cards: [{ kind: "quote", at: 59.8, text: "片尾信息", tone: "accent" }],
       }],
     });
     expect(html).toMatch(/tl\.to\("#th",\{[^\n]*duration:0\.20[^\n]*\},59\.80\);/);
