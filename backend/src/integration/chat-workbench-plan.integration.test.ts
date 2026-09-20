@@ -3,6 +3,7 @@ import {execFileSync} from "node:child_process";
 import {resolve} from "node:path";
 import {afterAll,beforeAll,expect,it} from "vitest";
 import {z} from "zod";
+import {workbenchFileRequestSchema,workbenchResultSchema,type WorkbenchCapability} from "@creatoros/contract/agent-workbench";
 import {createDb,executionCalls,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createAiRepository} from "../modules/ai/ai.repository";
 import {createChatTurnSubmissionService} from "../modules/ai/chat-turn-submission.service";
@@ -57,6 +58,84 @@ it("真实子进程连续规划、读取与凭回执完成原任务",async()=>{
   const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
   expect(rows.find(row=>row.id===plan!.steps[0]!.operationRefs[0])).toMatchObject({kind:"tool",status:"settled"});
   expect(bodies[2]).toContain("原工具调用 ID:");
+ }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
+},30000);
+
+it("真实子进程连续调用两次文件写入协议后，凭两条已结算回执完成原计划和原任务",async()=>{
+ const ctx={userId:"plan-files-user",accountId:"plan-files-account",requestId:"test",source:"user" as const};
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-plan-files`});
+ const conversation=await repo.createConversation({title:"文件写入协议",projectId:null,scope:"global"});
+ const source=await repo.createMessage(conversation.id,{role:"user",content:"连续调用两次文件写入能力并核对调用回执",attachments:[],modelMetadata:{}});
+ const fileCapability:WorkbenchCapability={
+  name:"files.write",schemaVersion:1,description:"写入任务文件的协议夹具；本测试不连接文件宿主。",
+  inputSchema:{type:"object",additionalProperties:false,properties:{operation:{type:"string",enum:["write"]},path:{type:"string"},content:{type:"string"}},required:["operation","path","content"]},
+  resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["workbench.files"],platforms:["macos","windows","linux"],
+ };
+ const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
+ const filePrototype=defineWorkbenchChatTool(fileCapability,async()=>{throw new Error("unused");});
+ const definitions=(await prepareChatToolDefinitions({"plan.update":prototype,"files.write":filePrototype},{workbenchCapabilities:[chatWorkbenchPlanCapability,fileCapability]})).definitions;
+ const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({
+  capability:"copilot.assist",system:"先建立计划，依次调用两次 files.write，最后只凭两次原工具调用 ID 完成计划。",
+  messages:[{role:"user",content:"连续调用两次文件写入能力并核对调用回执"}],maxSteps:10,maxOutputTokens:256,tools:definitions,
+ })}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ let requestCount=0;
+ const bodies:string[]=[];
+ const writes:Array<{path:string;content:string;callId:string}>=[];
+ const server=createServer((req,res)=>{let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{
+  bodies.push(body);requestCount++;
+  if(requestCount>5){res.writeHead(500);res.end("FIXTURE_UNBOUNDED_LOOP");return;}
+  let toolName:string|null=null,args:Record<string,unknown>={};
+  if(requestCount===1){toolName="plan_update";args={expectedRevision:0,steps:[
+   {stepId:"first",title:"调用第一项文件写入能力",dependsOn:[],status:"pending",operationRefs:[],artifactRefs:[]},
+   {stepId:"second",title:"调用第二项文件写入能力",dependsOn:["first"],status:"pending",operationRefs:[],artifactRefs:[]},
+  ]};}
+  if(requestCount===2){toolName="files_write";args={operation:"write",path:"notes/first.md",content:"第一份协议内容"};}
+  if(requestCount===3){toolName="files_write";args={operation:"write",path:"notes/second.md",content:"第二份协议内容"};}
+  if(requestCount===4){
+   const refs=[...body.matchAll(/原工具调用 ID: ([^；\]]+)/g)].map(match=>match[1]).filter(ref=>writes.some(write=>write.callId===ref));
+   if(refs.length!==2 || refs[0]===refs[1]){res.writeHead(500);res.end("missing distinct file call refs");return;}
+   toolName="plan_update";args={expectedRevision:1,steps:[
+    {stepId:"first",title:"调用第一项文件写入能力",dependsOn:[],status:"succeeded",operationRefs:[refs[0]],artifactRefs:[]},
+    {stepId:"second",title:"调用第二项文件写入能力",dependsOn:["first"],status:"succeeded",operationRefs:[refs[1]],artifactRefs:[]},
+   ]};
+  }
+  const delta=toolName?{tool_calls:[{index:0,id:`file-call-${requestCount}`,type:"function",function:{name:toolName,arguments:JSON.stringify(args)}}]}:{content:"两次文件能力的协议回执已核对；未验证文件落盘。"};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:toolName?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ });});
+ await new Promise<void>(resolve=>server.listen(0,"127.0.0.1",resolve));
+ const planHost=createChatWorkbenchPlanToolHost(db);
+ const host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"plan-files",budget:{maxCalls:15,maxTokens:100000,deadlineMs:60000},pollMs:100,modelConcurrency:1,
+  resolveTools:async(c,input,ref,signal)=>({...await planHost(c,input,ref,signal),"files.write":{
+   version:definitions.find(item=>item.name==="files.write")!.version,effect:"committed" as const,
+   parameters:z.object({operation:z.literal("write"),path:z.string(),content:z.string()}).strict(),approve:async()=>({status:"not-applicable" as const}),
+   execute:async(_ctx,raw,scope)=>{
+    const parsed=workbenchFileRequestSchema.parse(raw);
+    if(parsed.operation!=="write")throw new Error("预期文件写入请求");
+    // 只记录宿主端口接到的调用；不写文件，也不把夹具回执称为落盘证据。
+    writes.push({path:parsed.path,content:parsed.content,callId:scope.callId});
+    return {status:"ok" as const,summary:"文件能力协议夹具已接收",data:{kind:"workbench.result",result:workbenchResultSchema.parse({status:"succeeded",operationId:scope.callId,content:[{type:"text",text:"仅协议回执；未连接文件宿主"}],artifactRefs:[],progressCursor:null})},evidence:[],error:null,continuation:null,sideEffect:"none" as const};
+   },
+  }}),
+  resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"}),
+ });
+ try{
+  host.start();
+  try{await expect.poll(async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId)))[0]?.status,{timeout:15000}).toBe("succeeded");}
+  catch(error){const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));throw new Error(JSON.stringify({status:task?.status,lastErrorCode:task?.lastErrorCode,lastErrorMessage:task?.lastErrorMessage,requestCount,writes}),{cause:error});}
+  expect(requestCount).toBe(5);
+  expect(writes).toMatchObject([{path:"notes/first.md",content:"第一份协议内容"},{path:"notes/second.md",content:"第二份协议内容"}]);
+  expect(bodies[2]).toContain(writes[0]!.callId);
+  expect(bodies[3]).toContain(writes[1]!.callId);
+  const plan=await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId);
+  expect(plan).toMatchObject({planRevision:2,steps:[{status:"succeeded"},{status:"succeeded"}]});
+  const rows=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
+  for(const [index,step] of plan!.steps.entries()){
+   expect(step.operationRefs).toEqual([writes[index]!.callId]);
+   expect(rows.find(row=>row.id===step.operationRefs[0])).toMatchObject({kind:"tool",status:"settled"});
+  }
+  expect(bodies[3]).toContain("原工具调用 ID:");
+  expect(rows.filter(row=>row.kind==="tool"&&row.status==="settled")).toHaveLength(4);
  }finally{await host.stop();server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}
 },30000);
 
