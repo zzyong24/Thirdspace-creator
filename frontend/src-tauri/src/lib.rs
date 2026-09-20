@@ -34,10 +34,8 @@ mod win_job;
 mod sidecar_process;
 // [T-332 S5] 「重置工作区」启动期归档:检测 reset-pending 标记 → db/.auth 归档改名 → 清标记。
 mod workspace_reset;
-// T-1007: compile the task-local native module into the desktop host. No
-// WebView command is registered: a private sidecar transport must first prove
-// the current backend execution lease and fence on every operation.
-#[allow(dead_code)]
+// T-1007: native files are reached only through a PID-bound Unix socket on macOS.
+// No workbench command is registered in generate_handler (WebView remains out).
 mod workbench;
 
 use base64::Engine as _;
@@ -1960,6 +1958,8 @@ pub fn run() {
         .manage(cli_access::CliAccessState::default())
         .setup(|app| {
             let handle = app.handle().clone();
+            #[cfg(target_os = "macos")]
+            app.manage(workbench::ipc::BridgeState::default());
 
             // [T-457] **头部立即建主窗口 + splash + 注入 handshake token** —— 移到 setup 头部,
             //   先于所有慢操作(sidecar tarball 首启解压 5-15min / master key 生成 / DB 迁移 /
@@ -2412,6 +2412,17 @@ pub fn run() {
                 use std::io::{BufRead, BufReader};
                 use std::process::Stdio;
 
+                // A fresh 0700 directory contains this 0600 socket. The pathname
+                // grants no authority: the listener also checks LOCAL_PEERPID
+                // against the actual Child returned by spawn below.
+                let private_bridge = match workbench::ipc::PendingBridge::bind() {
+                    Ok(bridge) => Some(bridge),
+                    Err(error) => {
+                        eprintln!("[shell] task file private socket unavailable: {error}");
+                        None
+                    }
+                };
+
                 // server.app 内层二进制(build-sidecar.mjs 在 sidecar/server.app 里产出;随 tarball 解压到位)。
                 let inner_bin = sidecar_dir
                     .join("server.app")
@@ -2529,6 +2540,9 @@ pub fn run() {
                 if let Some(t) = &verdict_token {
                     cmd.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t);
                 }
+                if let Some(bridge) = &private_bridge {
+                    cmd.env("CREATOROS_WORKBENCH_SOCKET", bridge.socket_path());
+                }
 
                 // [T-259] spawn 失败也落日志(排障用)再 panic —— 打包态用户拿不到 stderr,靠文件看死因。
                 let mut child = match cmd.spawn() {
@@ -2540,6 +2554,11 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar(server.app 内层二进制)失败: {e}");
                     }
                 };
+                if let Some(bridge) = private_bridge {
+                    let running = bridge.start(child.id(), app_data_dir.join("workbench"));
+                    app.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().replace(running);
+                }
 
                 // [T-391 H-key] 把 master key(base64)+ 换行经 ChildStdin 写给 sidecar,然后**关闭
                 //   stdin(drop → EOF)**,node 侧读到换行/ EOF 即停。写完立即 zeroize 临时明文 buffer。
@@ -2588,11 +2607,15 @@ pub fn run() {
                     std::sync::Arc::new(sidecar_process::OwnedSidecar::new(child));
                 let watched_child = shared_child.clone();
                 let startup_tx_exit = startup_tx.clone();
+                let bridge_handle = handle.clone();
                 std::thread::spawn(move || {
                     let reason = match watched_child.watch_exit() {
                         Ok(()) => "sidecar 已退出，受控进程组已停止".to_string(),
                         Err(error) => format!("sidecar 退出状态读取失败({error})"),
                     };
+                    // Close the listener before the child PID could ever be reused.
+                    bridge_handle.state::<workbench::ipc::BridgeState>()
+                        .0.lock().unwrap().take();
                     let _ = startup_tx_exit.send(StartupSignal::Exited(reason));
                 });
 
@@ -2921,6 +2944,8 @@ pub fn run() {
             //   sidecar 侧孤儿自检(instrumentation 轮询 ppid==1 优雅自退)兜底,双保险。
             if matches!(event, RunEvent::ExitRequested { .. } | RunEvent::Exit) {
                 cli_access::revoke_on_exit(&app_handle.state::<cli_access::CliAccessState>());
+                #[cfg(target_os = "macos")]
+                app_handle.state::<workbench::ipc::BridgeState>().0.lock().unwrap().take();
                 if let Some(child) = app_handle.state::<SidecarHandle>().0.lock().unwrap().take() {
                     child.kill();
                 }
