@@ -57,7 +57,9 @@ const inputSchema:Record<BrowserTool,Record<string,unknown>>={
  "browser.act":{type:"object",properties:{...properties,action:{type:"string",enum:["click","hover","type","set_value","select_option","press_key","scroll"]},input:{type:"object"},targetId:properties.laneId,frameId:properties.laneId,refGeneration:{type:"integer",minimum:0}},required:["laneId","browserEpoch","action","input"],additionalProperties:false},
  "browser.close":{type:"object",properties,required:["laneId","browserEpoch"],additionalProperties:false},
 };
-const catalog=browserTools.map(name=>workbenchCapabilitySchema.parse({name,schemaVersion:1,
+// 截图目前只有原生 PNG 回执，Pi 尚无账号/任务绑定的媒体引用解析端口。
+// 保留宿主动作供端到端验证；T-1009 接通可信媒体交付后再向模型开放。
+const catalog=browserTools.filter(name=>name!=="browser.screenshot").map(name=>workbenchCapabilitySchema.parse({name,schemaVersion:1,
  description:description[name],inputSchema:inputSchema[name],resultSchema:{type:"object"},
  effects:[name==="browser.act"?"external_write":name==="browser.open"||name==="browser.close"?"process":"read"],
  requiredCapabilities:["task.browser"],platforms:["macos"]}));

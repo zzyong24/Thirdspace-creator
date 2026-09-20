@@ -47,6 +47,10 @@ it("only a desktop Mac with private socket advertises browser tools",()=>{
  expect(createWorkbenchBrowserHost(db,{platform:"win32",desktop:true,socketPath:"pipe"})).toBeUndefined();
  expect(createWorkbenchBrowserHost(db,{platform:"darwin",desktop:false,socketPath:"pipe"})).toBeUndefined();
  expect(createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:""})).toBeUndefined();
+ const catalog=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:"private.sock"})!.catalog;
+ expect(catalog.some(tool=>tool.name==="browser.open")).toBe(true);
+ // Pi 尚无可信媒体引用解析端口；只在截图真正能供模型查看后冻结该能力。
+ expect(catalog.some(tool=>tool.name==="browser.screenshot")).toBe(false);
 });
 
 it("native open failure releases the claimed profile only after stop proof",async()=>{
