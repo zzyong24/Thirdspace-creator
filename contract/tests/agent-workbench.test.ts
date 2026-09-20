@@ -9,6 +9,8 @@ import {
   workbenchCommandRequestSchema,
   workbenchBrowserLeaseSchema,
   workbenchArtifactSchema,
+  workbenchArtifactRegisterRequestSchema,
+  workbenchArtifactReadRequestSchema,
 } from "../src/internal/agent-workbench";
 
 describe("T-1004 共享能力协议", () => {
@@ -59,5 +61,13 @@ describe("T-1004 共享能力协议", () => {
     const artifact = { artifactId: "artifact", version: 1, mime: "text/html", size: 12, hash: "a".repeat(64), relativePath: "report.html", taskId: "task", provenance: ["op-1"] };
     expect(workbenchArtifactSchema.safeParse(artifact).success).toBe(true);
     expect(workbenchArtifactSchema.safeParse({ ...artifact, relativePath: "../report.html" }).success).toBe(false);
+  });
+
+  it("产物登记只接受任务相对路径，读取范围不得越界或自报归属", () => {
+    expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"报告/分析.html",mime:"text/html"}).success).toBe(true);
+    expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"../secret.html",mime:"text/html"}).success).toBe(false);
+    expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"report.html",mime:"text/html",accountId:"other"}).success).toBe(false);
+    expect(workbenchArtifactReadRequestSchema.safeParse({artifactId:"wa-123",version:1,offset:0,limit:128_000}).success).toBe(true);
+    expect(workbenchArtifactReadRequestSchema.safeParse({artifactId:"wa-123",version:1,offset:0,limit:128_001}).success).toBe(false);
   });
 });
