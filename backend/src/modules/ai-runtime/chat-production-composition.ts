@@ -50,6 +50,7 @@ export interface ChatProductionCompositionDeps {
  webRead:ProductionDeps["webRead"];
  onError?:ProductionDeps["onError"];
  workbenchHost?:ChatWorkbenchCapabilityHost;
+ verifyWorkbenchArtifacts?: (scope:{userId:string;accountId:string;taskId:string},refs:string[])=>Promise<boolean>;
 }
 /** 装配原持久聊天运行时与全部真实工具；不增加运行时或任务账本。 */
 export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
@@ -82,7 +83,7 @@ export function composeChatProduction(db:Db,deps:ChatProductionCompositionDeps){
     getPositioningDiscovery:(c,id)=>chatRuntime.getPositioningDiscovery(c,id),
   },
  });
- const planTools=createChatWorkbenchPlanToolHost(db);
+ const planTools=createChatWorkbenchPlanToolHost(db,{verifyArtifacts:deps.verifyWorkbenchArtifacts});
  const leases=createExecutionLeaseService(db,{now:deps.now});
  const workbenchProgress=createExecutionStreamService(db,{now:deps.now});
  const workbenchTools=deps.workbenchHost?createChatWorkbenchCapabilityHost(deps.workbenchHost,ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),(ref,callId,progress)=>workbenchProgress.appendWorkbenchProgress(ref,callId,progress)):null;

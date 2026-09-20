@@ -79,6 +79,7 @@ import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligen
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
+import { createWorkbenchArtifactHost } from "./workbench-artifact-host";
 import { createWorkbenchBrowserHost } from "./workbench-browser-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
 import "server-only";
@@ -132,7 +133,7 @@ import { createOnboardingState, createIntegrationCredentials, createSettingsRepo
 import { assembleActivationService, type ActivationService } from "./activation";
 import { createRadarProjectService, createProjectRepository, createProjectsService, createProjectsTransport, createTranscriptArtifactService, createProjectTranscriptionTargetService, type StageGateReadersRef } from "@creatoros/backend/modules/projects";
 import { createKnowledgeRepository, createKnowledgeService } from "@creatoros/backend/modules/knowledge";
-import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
+import { createAssetRepository, createAssetsService, createWebDocumentCacheService, createAssetsTransport, createMockObjectStorage, createS3ObjectStorage, createLocalFsObjectStorage, createWorkbenchBlobService, ensureBucket, type ObjectStorageForCtx } from "@creatoros/backend/modules/assets";
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
@@ -5432,15 +5433,20 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:createWorkbenchBlobService(objectStorageForCtx)}):undefined;
   const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now});
   disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
-  const workbenchHost=fileWorkbenchHost&&browserWorkbenchHost?{
-    catalog:[...fileWorkbenchHost.catalog,...browserWorkbenchHost.catalog],
-    platform:"macos" as const,
-    capabilities:[...new Set([...fileWorkbenchHost.capabilities,...browserWorkbenchHost.capabilities])],
-    dispatch:(call:Parameters<typeof fileWorkbenchHost.dispatch>[0],options:Parameters<typeof fileWorkbenchHost.dispatch>[1])=>
-      call.invocation.name.startsWith("browser.")?browserWorkbenchHost.dispatch(call,options):fileWorkbenchHost.dispatch(call,options),
-  }:fileWorkbenchHost??browserWorkbenchHost;
+  const workbenchHosts=[fileWorkbenchHost,artifactWorkbenchHost,browserWorkbenchHost]
+    .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
+  const workbenchHost:ChatProductionCompositionDeps["workbenchHost"]=workbenchHosts.length?{
+    catalog:workbenchHosts.flatMap(host=>host.catalog),platform:"macos",
+    capabilities:[...new Set(workbenchHosts.flatMap(host=>host.capabilities))],
+    dispatch:(call,options)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host)throw new Error("WORKBENCH_CAPABILITY_UNAVAILABLE");
+      return host.dispatch(call,options);
+    },
+  }:undefined;
   const chatRuntime: ChatRuntime = {
     ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),
@@ -5732,6 +5738,7 @@ FAVORITES_PROMOTE_PER_RUN
     chatWorker=composeChatProduction(db,{
       entryPath:workerEntry,runtime:chatRuntime,now:deps.now,
       ...(workbenchHost?{workbenchHost}:{}),
+      ...(artifactWorkbenchHost?{verifyWorkbenchArtifacts:artifactWorkbenchHost.verifyArtifacts}:{}),
       assertProject:(c,id)=>projectsService.getProjectOverviewCore(c,id),
       resolveModelCredential:(c,capability)=>resolveModelSpec(c,capability),
       resolveFallbackModelCredential:resolveChatFallbackCredential,

@@ -1118,3 +1118,4 @@
 {"ts":"2026-09-20T03:58:31.166Z","actor":"taskctl","action":"start","task":"T-1007","sha_before":"3822896b03b7","sha_after":"f9584331d1fc"}
 {"ts":"2026-09-20T05:44:32.594Z","actor":"taskctl","action":"complete","task":"T-1006","evidence":"21479378；backend 宿主/真实子进程 7/7、ai-worker 网关/分页 10/10、进度重连/取消/费用账本通过。全局 reconcile 仍 36 ERROR+1 WARN：旧评审 T-916、历史教训 T-1015、前端 R2 T-1016，均非本任务写集；图片解析、>100万字符外置、真机/真实模型由 T-1008/1009/1012/1013 验收。","sha_before":"8d2fa0cac929","sha_after":"1a753444c1b3"}
 {"ts":"2026-09-20T05:46:12.450Z","actor":"taskctl","action":"start","task":"T-1008","sha_before":"1a753444c1b3","sha_after":"3367205bf487"}
+{"ts":"2026-09-20T15:25:47.933Z","actor":"taskctl","action":"start","task":"T-1009","sha_before":"3367205bf487","sha_after":"ebb83a8705ab"}

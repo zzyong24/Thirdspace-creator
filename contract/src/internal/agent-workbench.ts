@@ -131,6 +131,20 @@ export const workbenchArtifactSchema = z.object({
   provenance: z.array(reference),
 }).strict();
 
+export const workbenchArtifactRegisterRequestSchema = z.object({
+  path: relativePath,
+  mime: z.enum(["text/html", "text/markdown", "text/csv", "image/png", "application/pdf"]),
+  artifactId: reference.optional(),
+  expectedVersion: z.number().int().nonnegative().optional(),
+  provenance: z.array(reference).max(100).optional(),
+}).strict();
+export const workbenchArtifactReadRequestSchema = z.object({
+  artifactId: reference,
+  version: z.number().int().positive(),
+  offset: z.number().int().nonnegative().default(0),
+  limit: z.number().int().positive().max(128_000).default(128_000),
+}).strict();
+
 export type WorkbenchCapability = z.infer<typeof workbenchCapabilitySchema>;
 export type WorkbenchInvocation = z.infer<typeof workbenchInvocationSchema>;
 export type WorkbenchHostContext = z.infer<typeof workbenchHostContextSchema>;

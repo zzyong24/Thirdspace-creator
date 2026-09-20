@@ -84,3 +84,13 @@ export {
 export {createWebDocumentCacheService,type WebDocumentCachePreparation} from "./web-document-cache.service";
 
 export {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate,verifyGeneratedAssetCandidate} from "./generated-asset-candidate.service";
+
+export {
+  createWorkbenchBlobService,
+  WORKBENCH_BLOB_MAX_BYTES,
+  type WorkbenchBlobService,
+  type WorkbenchBlobMime,
+  type WorkbenchBlobInput,
+  type WorkbenchBlobRef,
+  type WorkbenchBlobReceipt,
+} from "./workbench-blob.service";

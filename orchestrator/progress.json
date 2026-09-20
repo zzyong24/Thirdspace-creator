@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 57,
+    "verticals": 58,
     "tasks_done": 39,
-    "tasks_total": 150,
-    "tasks_pending": 111,
+    "tasks_total": 151,
+    "tasks_pending": 112,
     "verticals_complete": 4
   },
   "verticals": [
@@ -209,6 +209,52 @@
         "contract/src/internal/agent-workbench.ts",
         "backend/src/modules/execution/**",
         "frontend/src/server/ingestion/**",
+        "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1009",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1009",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1006:integration",
+        "T-1007:desktop-integration"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "orchestrator/process/modules.config.json",
+        "backend/src/modules/assets/assets.service.ts",
+        "backend/src/modules/assets/assets.service.test.ts",
+        "backend/src/modules/execution/workbench-artifact.service.ts",
+        "backend/src/modules/execution/workbench-artifact.service.test.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/execution/model-worker-dispatcher.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
+        "frontend/src/server/workbench-artifact-host.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "contract/src/internal/agent-workbench.ts",
+        "docs/verification/t1009-artifacts.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/internal/agent-workbench.ts",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/workbench-native-host.ts",
         "frontend/src-tauri/src/workbench/**"
       ],
       "exclusive_resources": [],

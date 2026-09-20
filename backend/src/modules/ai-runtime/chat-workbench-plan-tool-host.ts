@@ -8,8 +8,8 @@ import { defineWorkbenchChatTool } from "./chat-tool-gate";
 import { prepareChatToolDefinitions } from "./chat-tool-definitions";
 
 /** 在原聊天账本与租约内保存计划；模型只能提交计划内容，不能自报身份或完成事实。 */
-export function createChatWorkbenchPlanToolHost(db: Db): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
-  const plans = createWorkbenchPlanService(db);
+export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof createWorkbenchPlanService>[1] = {}): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
+  const plans = createWorkbenchPlanService(db, deps);
   return async (_context, input, _ref, signal) => {
     signal.throwIfAborted();
     const frozen = input.tools.find(item => item.name === chatWorkbenchPlanCapability.name);
