@@ -116,6 +116,25 @@ it("只读交付端口可回读已登记版本，无需装配任务文件宿主"
  expect(Buffer.from(page.bytes).toString()).toBe("<h1>已保存</h1>");
 });
 
+it("相对图片只从本账号原任务已登记索引中查找，并验回读哈希",async()=>{
+ const scope=await setup();
+ scope.files.set("报告/chart.png",{bytes:Buffer.from("registered-image"),version:1});
+ const image=await scope.service.register(scope.ref,"registered-chart",{path:"报告/chart.png",mime:"image/png"});
+ const reader=createWorkbenchArtifactReadService(db,{blobs:{
+  async submit(){throw new Error("READ_ONLY");},
+  async read(_ctx,input){const bytes=scope.objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);
+   if(!bytes)throw new Error("MISSING_BLOB");return bytes;},
+ }});
+ const found=await reader.readRelativeImage(scope.ctx,scope.task.id,"报告/chart.png");
+ expect(found?.metadata).toEqual(image);
+ expect(Buffer.from(found!.bytes)).toEqual(Buffer.from("registered-image"));
+ expect(await reader.readRelativeImage(scope.ctx,scope.task.id,"报告/missing.png")).toBeNull();
+ await expect(reader.readRelativeImage({...scope.ctx,accountId:"other-account"},scope.task.id,"报告/chart.png"))
+  .rejects.toThrow();
+ scope.objects.clear();
+ await expect(reader.readRelativeImage(scope.ctx,scope.task.id,"报告/chart.png")).rejects.toThrow();
+});
+
 it("登记中断后按原操作摘要恢复，工作文件变化不冒充旧回执",async()=>{
  const scope=await setup();
  const original=Buffer.from("<h1>原报告：0</h1>");
