@@ -80,3 +80,25 @@ Mac runtime 目录来自壳层已经解析的绝对 `sidecar_dir`，固定节点
 一次探索性测试把 `/bin/echo` 复制为伪装的 `server.app` 二进制后，macOS 将该**测试副本**进程置为不可中断状态；对其 PID/进程组发送 SIGKILL 仍未退出。随后删除该运行方式，正式测试使用系统二进制作为**测试夹具**，生产解析仍严格限于随包目录；取消代码已改为有界等待，遇内核无法回收的进程返回未知。该遗留测试进程及安装版命令运行仍须单独核实，不能把本候选称为“零残留”真机验收。
 
 尚未验收：安装版 Node 在该沙箱中实际执行脚本、随包 Python/approved program、应用或机器异常强杀后的进程身份恢复、Windows 私有 IPC 与 OS 命令隔离、Windows 真机、任务完成后的输出与产物持久登记、完整模型任务。T-1007 继续进行中。
+
+## Windows 命令隔离复核（隔离工作树候选，2026-09-20）
+
+目前不能安全开放 Windows 命令。Windows 文件 API 的逐级句柄检查只保护宿主自己的文件操作；如果命令进程继承桌面用户身份，它仍可直接打开任务目录外的用户文件。Job Object 可以管理和终止进程树，不能改变进程访问文件时使用的身份和授权。仅有 `cwd`、清空环境变量、固定 runtime 路径和 Job Object，不满足 FR-AW-04 的文件、网络及进程隔离。
+
+```mermaid
+flowchart LR
+  R[已核验任务租约] --> H[Windows 命令宿主]
+  H --> G{任务专属 OS 隔离已实测?}
+  G -- 否 --> U[COMMAND_UNAVAILABLE，无子进程]
+  G -- 是 --> P[受限身份和任务目录授权]
+  P --> J[无逃逸 Job Object 中的命令]
+```
+
+**精确阻断点。** 本候选没有为每个任务创建 AppContainer 或受限 token，也没有为该身份配置仅任务目录可写、所需安装包文件只读的 ACL；没有证明网络默认拒绝、句柄不继承和派生进程不能越权。`command_windows.rs` 因此在解析请求和固定 runtime 后返回 `COMMAND_UNAVAILABLE`，不预占 operationId、不创建输出、不启动进程。Windows 桌面壳也尚无通过原执行租约验证的私有 IPC，不能把 WebView 可见 token 当成授权通道。微软的 [AppContainer 说明](https://learn.microsoft.com/en-us/windows/win32/secauthz/implementing-an-appcontainer)明确了包身份、能力 SID 与文件 DACL 的双重授权及无网络能力时的网络限制；[受限 token 说明](https://learn.microsoft.com/en-us/windows/win32/secauthz/restricted-tokens)明确了双重访问检查；[Job Object 说明](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects)只承诺进程组管理和限制。微软另有 [实验性 CreateProcessInSandbox API](https://learn.microsoft.com/en-us/windows/win32/secauthz/createprocessinsandbox)，最低客户端为 Windows 11、接口须动态加载；本候选没有以该实验接口代替产品所需的已验证 Windows 路径。
+
+**本轮实际可执行证据。** 之前的交叉检查遗漏了未接入的 `command_windows.rs`。现在 `workbench/mod.rs` 将它接入 Windows 编译；macOS 测试构建也编译并运行其准入测试。独立 Rust 测试中的可执行脚本夹具在任务目录外放置触发标记，合法形状的调用返回 `Unavailable`，标记不存在；这是“当前候选未派发”的证据，**不是 Windows 内核沙箱通过**。本机装有 `x86_64-pc-windows-msvc` target，但 Docker 命令报告无法连接 daemon，且无 Wine；没有 Windows 真机或远端 runner。后续必须在 Windows 上用真实打包 runtime 验证任务内读写、任务外读写拒绝、网络拒绝、继承句柄拒绝、派生/取消/超时/宿主退出零残留以及 Unicode/空格与重解析点路径，再接入私有租约 IPC。任何一项失败继续保持拒绝执行。
+
+- `CARGO_TARGET_DIR=/tmp/creatoros-t1007-win-target cargo check --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --target x86_64-pc-windows-msvc --tests --offline --locked`：通过；编译了 Windows 模块及其测试，**未执行 Windows 二进制**。
+- `CARGO_TARGET_DIR=/tmp/creatoros-t1007-mac-target RUSTFLAGS='-A dead_code' cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml --offline --locked command_windows::tests -- --nocapture`：Windows 候选的跨主机准入测试 **5/5 通过**。其中可执行脚本仅在 macOS 测试环境下使用。
+- 同一 Mac 独立包全套并行测试两次均为 **19/20**，既有 `ipc::tests::private_socket_runs_reads_and_cancels_mac_process_for_same_task_only` 分别出现 `EOF while parsing a value` 和 `Broken pipe`；该测试单独重跑通过，全套加 `-- --test-threads=1` **20/20 通过**。这仅表明串行路径通过；并行 socket 偶发失败仍未解决，本候选没有修改 Mac IPC。
+- 尝试整包 `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}' cargo check --manifest-path frontend/src-tauri/Cargo.toml --lib --target x86_64-pc-windows-msvc --offline --locked`，在依赖 `ring 0.17.14` 的 C 构建中失败：交叉编译器缺 Windows MSVC C 头文件 `assert.h`。独立 workbench Windows Rust 模块通过不等于整包通过；本机缺完整 Windows C/MSVC 工具链，且资源覆盖不代表真实打包。
