@@ -26,3 +26,7 @@
 # 2026-09-20 Windows 产物登记接线
 
 Windows 私有文件通道接入后，产物宿主也在该通道存在时开放 `artifact.register/read`。登记仍由后端原执行租约与账号核实，并从当前任务文件逐页回读、复核版本后保存；Windows 目录中只开放文件和产物工具，不因本接线开放命令或浏览器。Mac/Windows 两个平台使用同一真实任务账本测试登记、回读、跨账号拒绝和文件版本变化；Windows 用例以注入的文件端口模拟 Native Pipe，**不是 Windows 真机 Named Pipe 或安装包实测**。
+
+## 跨回合反馈的版本缺口
+
+`chat-turn-submission.service.ts` 以每条新用户消息建立新的 execution task；`workbench-artifact.service.ts` 的登记、读取和版本列表只在当前 taskId 的 payload 内查找。因此，现有同任务 `artifactId + expectedVersion` 修改可产生版本，但用户在同一对话下一回合反馈时，新任务不能读取旧任务产物，也不能把旧 artifactId 登记为版本 2。AC-AW-02 的“反馈后新版本、旧版可找回”尚未通过。修复需要在保持账号与会话归属校验下确定跨任务产物谱系及读取契约；未完成前方法提示只允许在当前任务实际回读旧版后宣称修订成功。
