@@ -2415,10 +2415,16 @@ pub fn run() {
                 // A fresh 0700 directory contains this 0600 socket. The pathname
                 // grants no authority: the listener also checks LOCAL_PEERPID
                 // against the actual Child returned by spawn below.
-                let private_bridge = match workbench::ipc::PendingBridge::bind() {
-                    Ok(bridge) => Some(bridge),
+                let private_bridge = match workbench::command::RuntimeRegistry::from_sidecar(&sidecar_dir) {
+                    Ok(runtimes) => match workbench::ipc::PendingBridge::bind() {
+                        Ok(bridge) => Some((bridge, runtimes)),
+                        Err(error) => {
+                            eprintln!("[shell] workbench private socket unavailable: {error}");
+                            None
+                        }
+                    },
                     Err(error) => {
-                        eprintln!("[shell] task file private socket unavailable: {error}");
+                        eprintln!("[shell] workbench runtime unavailable: {error:?}");
                         None
                     }
                 };
@@ -2540,7 +2546,7 @@ pub fn run() {
                 if let Some(t) = &verdict_token {
                     cmd.env("CREATOROS_SIDECAR_VERDICT_TOKEN", t);
                 }
-                if let Some(bridge) = &private_bridge {
+                if let Some((bridge, _)) = &private_bridge {
                     cmd.env("CREATOROS_WORKBENCH_SOCKET", bridge.socket_path());
                 }
 
@@ -2554,8 +2560,8 @@ pub fn run() {
                         panic!("启动 creatoros-server sidecar(server.app 内层二进制)失败: {e}");
                     }
                 };
-                if let Some(bridge) = private_bridge {
-                    let running = bridge.start(child.id(), app_data_dir.join("workbench"));
+                if let Some((bridge, runtimes)) = private_bridge {
+                    let running = bridge.start(child.id(), app_data_dir.join("workbench"), runtimes);
                     app.state::<workbench::ipc::BridgeState>()
                         .0.lock().unwrap().replace(running);
                 }

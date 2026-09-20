@@ -63,3 +63,20 @@ flowchart LR
 Windows 候选已补 `TaskFiles` 的逐级目录 HANDLE 打开、重解析点和硬链接拒绝、同目录临时文件换名及版本冲突；设备名与 Unicode 路径校验共用合同。它通过 Windows MSVC 目标的独立包交叉检查，**尚无 Windows 真机文件系统测试**，也没有 Windows 私有 IPC 或受限命令隔离，不能作为桌面功能交付。
 
 主工作树在合并 Mac/Windows 候选后实测：独立 Rust workbench **12/12**、Windows `x86_64-pc-windows-msvc` 独立包 `cargo check --offline --locked` 通过；Node 私有客户端与生产文件宿主测试 **8/8**，frontend 类型检查通过。Mac 测试包含真实子进程准入、其他进程拒绝、越界与版本冲突。原 Tauri 全包、安装版 Node/Python runtime、Windows 真实重解析点与进程树、命令 IPC、任务文件与产物登记的完整链路仍待验证。T-1007 保持进行中。
+
+## Mac 受控命令私有通道候选（T-1007 子任务）
+
+沿用文件操作的 0700 目录、0600 Unix socket 与 `LOCAL_PEERPID`：实际启动的 Node sidecar PID 才能调用 Rust `CommandHost`；未向 WebView 注册 Tauri command。原生产聊天宿主在当前 `execution_tasks` admission 行锁内注入用户、账号、任务、attempt、fence 及本次 tool call ID。`execution.run/status/cancel/read` 分别提供启动、状态、进程树取消和 stdout/stderr 分页回读。查询和取消传入的是目标原操作 ID，本次工具回执仍使用当前 tool call ID；Rust 命令表按账号任务范围和原操作 ID 联合索引，不泄露别的账号是否存在同名操作。
+
+Mac runtime 目录来自壳层已经解析的绝对 `sidecar_dir`，固定节点为 `server.app/Contents/MacOS/creatoros-server`。Python 和 approved program 只看该 runtime 下的固定路径；当前打包脚本未交付二者，因此返回 `COMMAND_UNAVAILABLE`，不会查 PATH、Homebrew 或系统程序。子进程 `env_clear`，只设置任务目录 HOME/TMPDIR 与空 PATH；继续由 `sandbox-exec` 限制文件读取和任务内写入。Rust 定期检查超时；Node 在租约失效时用该次已核验的 scope 和操作 ID 向同一 socket 请求取消，Rust 宿主销毁时也终止仍在运行的进程组。输出写在任务可写根目录之外的私有目录。文件写入 IPC 的 JSON 字段同时纠正为与 Node 一致的 `contentBase64`、`expectedVersion`，补上原先不同语言的字段名错位。
+
+先添加 Node 失败用例：命令方法缺失 2 条、生产目录缺失 1 条；实跑 **3 失败、其余 8 通过**。实现后实跑：
+
+- Mac Rust 独立模块 `cargo test --offline --locked`：**15/15 通过**，包含真实进程、OS 沙箱拒绝任务外读取、派生进程取消、无模型轮询时到期进程自动清理、sidecar PID 准入/其他进程拒绝、命令输出回读、跨账号相同 operation ID 隔离、缺 Python 明确 unavailable。并行执行时曾有一次 socket 测试 `Broken pipe`；单测重跑及整组再跑通过，故保留该偶发失败记录。
+- Node 私有客户端与生产宿主 Vitest：**14/14 通过**；含租约行锁内调用、旧 fence 拒绝、用户停止后自动请求取消、独立命令目录、输出分页 metadata、缺失 runtime 与已分发断联的结果区分，以及无效输入拒绝。
+- `pnpm --dir frontend typecheck`：通过。`TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}' cargo check --manifest-path frontend/src-tauri/Cargo.toml --lib --offline --locked --quiet`：通过。该配置仅跳过隔离工作树中缺失的 sidecar 资源，用于桌面壳 Rust 源码编译，**不是安装包通过**。
+- `git diff --check`：通过。`boundary-scan` 仍为 7 条、其中 2 条既有 R2 位于未修改的 `frontend/src/features/copilot/live-chat-session.ts`；本候选未增加违规。
+
+一次探索性测试把 `/bin/echo` 复制为伪装的 `server.app` 二进制后，macOS 将该**测试副本**进程置为不可中断状态；对其 PID/进程组发送 SIGKILL 仍未退出。随后删除该运行方式，正式测试使用系统二进制作为**测试夹具**，生产解析仍严格限于随包目录；取消代码已改为有界等待，遇内核无法回收的进程返回未知。该遗留测试进程及安装版命令运行仍须单独核实，不能把本候选称为“零残留”真机验收。
+
+尚未验收：安装版 Node 在该沙箱中实际执行脚本、随包 Python/approved program、应用或机器异常强杀后的进程身份恢复、Windows 私有 IPC 与 OS 命令隔离、Windows 真机、任务完成后的输出与产物持久登记、完整模型任务。T-1007 继续进行中。

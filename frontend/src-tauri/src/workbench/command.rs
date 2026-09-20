@@ -22,6 +22,25 @@ pub struct RuntimeRegistry {
     pub approved_program: PathBuf,
     pub read_roots: Vec<PathBuf>,
 }
+impl RuntimeRegistry {
+    /// Only fixed paths beneath the verified, extracted sidecar runtime are
+    /// candidates. Missing optional runtimes remain unavailable; never search
+    /// PATH, Homebrew, or the host operating system.
+    pub fn from_sidecar(sidecar_dir: &Path) -> Result<Self, CommandError> {
+        let root = fs::canonicalize(sidecar_dir)?;
+        if !root.is_dir() {
+            return Err(CommandError::Unavailable(
+                "安装包 runtime 目录不存在".into(),
+            ));
+        }
+        Ok(Self {
+            bundled_node: root.join("server.app/Contents/MacOS/creatoros-server"),
+            bundled_python: root.join("layers/local-ai/bin/python3"),
+            approved_program: root.join("layers/workbench/bin/approved-program"),
+            read_roots: vec![root],
+        })
+    }
+}
 #[derive(Clone)]
 pub struct CommandRequest {
     pub argv: Vec<String>,
@@ -67,7 +86,7 @@ struct Entry {
 }
 pub struct CommandHost {
     runtimes: RuntimeRegistry,
-    entries: Mutex<HashMap<String, Entry>>,
+    entries: Mutex<HashMap<(String, String), Entry>>,
 }
 impl CommandHost {
     pub fn new(runtimes: RuntimeRegistry) -> Self {
@@ -92,6 +111,19 @@ impl CommandHost {
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_ascii_lowercase();
+        let bundled = self
+            .runtimes
+            .read_roots
+            .iter()
+            .any(|root| canonical.starts_with(root));
+        // Standalone module tests exercise the sandbox with macOS fixtures.
+        // Production always has a sidecar read root; it can never enter this arm.
+        let test_system_fixture = cfg!(test)
+            && self.runtimes.read_roots.is_empty()
+            && (canonical.starts_with("/bin") || canonical.starts_with("/usr/bin"));
+        if !bundled && !test_system_fixture {
+            return Err(CommandError::Unavailable("runtime 不在安装包内".into()));
+        }
         if id == "approved-program"
             && matches!(
                 basename.as_str(),
@@ -137,7 +169,8 @@ impl CommandHost {
             .entries
             .lock()
             .map_err(|_| CommandError::Unavailable("命令表锁失败".into()))?;
-        if entries.contains_key(operation_id) {
+        let key = (scope.to_owned(), operation_id.to_owned());
+        if entries.contains_key(&key) {
             return Err(CommandError::AlreadyRunning);
         }
         let cwd = if request.cwd == "." {
@@ -209,7 +242,7 @@ impl CommandHost {
             .env_clear()
             .env("HOME", &files.root)
             .env("TMPDIR", &files.root)
-            .env("PATH", "/usr/bin:/bin")
+            .env("PATH", "")
             .stdin(if stdin.is_some() {
                 Stdio::piped()
             } else {
@@ -261,7 +294,7 @@ impl CommandHost {
             truncated: false,
         };
         entries.insert(
-            operation_id.into(),
+            key,
             Entry {
                 scope: scope.into(),
                 child,
@@ -282,7 +315,7 @@ impl CommandHost {
             .lock()
             .map_err(|_| CommandError::Unavailable("命令表锁失败".into()))?;
         let entry = entries
-            .get_mut(operation_id)
+            .get_mut(&(scope.to_owned(), operation_id.to_owned()))
             .ok_or(CommandError::InvalidInput)?;
         if entry.scope != scope {
             return Err(CommandError::WrongScope);
@@ -325,7 +358,7 @@ impl CommandHost {
             .lock()
             .map_err(|_| CommandError::Unavailable("命令表锁失败".into()))?;
         let entry = entries
-            .get_mut(operation_id)
+            .get_mut(&(scope.to_owned(), operation_id.to_owned()))
             .ok_or(CommandError::InvalidInput)?;
         if entry.scope != scope {
             return Err(CommandError::WrongScope);
@@ -370,7 +403,7 @@ impl CommandHost {
             .lock()
             .map_err(|_| CommandError::Unavailable("命令表锁失败".into()))?;
         let entry = entries
-            .get(operation_id)
+            .get(&(scope.to_owned(), operation_id.to_owned()))
             .ok_or(CommandError::InvalidInput)?;
         if entry.scope != scope {
             return Err(CommandError::WrongScope);
@@ -391,13 +424,32 @@ impl CommandHost {
         }
         Ok((bytes, more))
     }
+    /// Drive deadlines even when the model never asks for status again.
+    pub fn reap(&self) {
+        let ids = match self.entries.lock() {
+            Ok(entries) => entries
+                .iter()
+                .filter(|(_, entry)| entry.receipt.state == "running")
+                .map(|((scope, id), _)| (id.clone(), scope.clone()))
+                .collect::<Vec<_>>(),
+            Err(_) => return,
+        };
+        for (id, scope) in ids {
+            let _ = self.status(&scope, &id);
+        }
+    }
 }
 impl Drop for CommandHost {
     fn drop(&mut self) {
         if let Ok(mut entries) = self.entries.lock() {
             for entry in entries.values_mut() {
                 if entry.receipt.state == "running" {
-                    let _ = terminate_tree(&mut entry.child);
+                    if terminate_tree(&mut entry.child).is_err() {
+                        // A kernel-stuck process cannot be joined safely here.
+                        // Leave its output collectors detached and let teardown
+                        // continue; the caller's cancellation stays unknown.
+                        continue;
+                    }
                 }
                 let _ = finish_output(entry);
             }
@@ -407,6 +459,13 @@ impl Drop for CommandHost {
 fn finish_output(entry: &mut Entry) -> Result<(), CommandError> {
     for handle in [&mut entry.stdout_reader, &mut entry.stderr_reader] {
         if let Some(join) = handle.take() {
+            let deadline = Instant::now() + Duration::from_secs(2);
+            while !join.is_finished() && Instant::now() < deadline {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            if !join.is_finished() {
+                return Err(CommandError::Unavailable("命令输出采集未结束".into()));
+            }
             join.join()
                 .map_err(|_| CommandError::Unavailable("输出采集线程崩溃".into()))??;
         }
@@ -507,8 +566,16 @@ fn terminate_tree(child: &mut Child) -> Result<(), CommandError> {
     unsafe {
         libc::killpg(pgid, libc::SIGKILL);
     }
-    child.wait()?;
-    Ok(())
+    let deadline = Instant::now() + Duration::from_secs(2);
+    loop {
+        if child.try_wait()?.is_some() {
+            return Ok(());
+        }
+        if Instant::now() >= deadline {
+            return Err(CommandError::Unavailable("进程树取消后仍未退出".into()));
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
 fn exit_ready(child: &Child) -> Result<bool, CommandError> {
     let mut info: libc::siginfo_t = unsafe { std::mem::zeroed() };
@@ -569,6 +636,39 @@ mod tests {
     }
     #[cfg(target_os = "macos")]
     #[test]
+    fn sidecar_registry_uses_only_fixed_bundle_paths_and_missing_optional_runtimes_fail() {
+        let root =
+            std::env::temp_dir().join(format!("creatoros-runtime-{}", rand::random::<u64>()));
+        let node = root.join("server.app/Contents/MacOS/creatoros-server");
+        fs::create_dir_all(node.parent().unwrap()).unwrap();
+        fs::copy("/bin/echo", &node).unwrap();
+        let registry = RuntimeRegistry::from_sidecar(&root).unwrap();
+        assert_eq!(
+            registry.bundled_node,
+            fs::canonicalize(&root)
+                .unwrap()
+                .join("server.app/Contents/MacOS/creatoros-server")
+        );
+        let host = CommandHost::new(registry);
+        assert!(host.runtime("bundled-node").is_ok());
+        assert!(matches!(
+            host.runtime("bundled-python"),
+            Err(CommandError::Unavailable(_))
+        ));
+        assert!(matches!(
+            host.runtime("approved-program"),
+            Err(CommandError::Unavailable(_))
+        ));
+        fs::remove_file(&node).unwrap();
+        std::os::unix::fs::symlink("/bin/echo", &node).unwrap();
+        assert!(matches!(
+            host.runtime("bundled-node"),
+            Err(CommandError::Unavailable(_))
+        ));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
     fn mac_sandbox_runs_and_tree_cancel() {
         let root =
             std::env::temp_dir().join(format!("creatoros-command-{}", rand::random::<u64>()));
@@ -589,11 +689,44 @@ mod tests {
         host.run(&files, files.scope_key(), "op", req).unwrap();
         assert!(matches!(
             host.cancel("wrong", "op"),
-            Err(CommandError::WrongScope)
+            Err(CommandError::InvalidInput)
         ));
         assert_eq!(
             host.cancel(files.scope_key(), "op").unwrap().state,
             "cancelled"
+        );
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn mac_deadline_reaper_stops_unpolled_process() {
+        let root =
+            std::env::temp_dir().join(format!("creatoros-command-{}", rand::random::<u64>()));
+        let files = TaskFiles::new(&root, "u", "a", "t").unwrap();
+        let host = CommandHost::new(RuntimeRegistry {
+            bundled_node: PathBuf::from("/bin/sleep"),
+            bundled_python: PathBuf::from("/bin/sleep"),
+            approved_program: PathBuf::from("/bin/sleep"),
+            read_roots: vec![],
+        });
+        host.run(
+            &files,
+            files.scope_key(),
+            "deadline",
+            CommandRequest {
+                argv: vec!["10".into()],
+                cwd: ".".into(),
+                runtime_id: "approved-program".into(),
+                timeout_ms: 20,
+                stdin_ref: None,
+            },
+        )
+        .unwrap();
+        std::thread::sleep(Duration::from_millis(30));
+        host.reap();
+        assert_eq!(
+            host.status(files.scope_key(), "deadline").unwrap().state,
+            "timed_out"
         );
         fs::remove_dir_all(root).unwrap();
     }
@@ -671,7 +804,7 @@ mod tests {
         );
         assert!(matches!(
             host.read_output("other", "read", "stdout", 0, 100),
-            Err(CommandError::WrongScope)
+            Err(CommandError::InvalidInput)
         ));
         fs::remove_dir_all(root).unwrap();
     }

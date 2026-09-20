@@ -1,5 +1,6 @@
 import "server-only";
 import { createConnection } from "node:net";
+import { randomUUID } from "node:crypto";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
 
 export type NativeFileAction =
@@ -7,6 +8,11 @@ export type NativeFileAction =
   | { kind: "read"; path: string; offset: number; limit: number }
   | { kind: "stat"; path: string }
   | { kind: "write"; path: string; contentBase64: string; expectedVersion: number };
+
+export type NativeCommandAction =
+  | { kind: "command_run"; argv: string[]; cwd: string; runtimeId: "bundled-node" | "bundled-python" | "approved-program"; timeoutMs: number; stdinRef?: string }
+  | { kind: "command_status" | "command_cancel"; targetOperationId: string }
+  | { kind: "command_read"; targetOperationId: string; stream: "stdout" | "stderr"; offset: number; limit: number };
 
 type VerifiedScope = {
   context: { userId: string; accountId: string };
@@ -80,24 +86,87 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
   const platform = options.platform ?? process.platform;
   const desktop = options.desktop ?? process.env.CREATOROS_DESKTOP === "1";
   const socketPath = options.socketPath ?? process.env.CREATOROS_WORKBENCH_SOCKET;
-  return {
-    async file(ref: ExecutionRef, operationId: string, action: NativeFileAction): Promise<unknown> {
-      if (platform !== "darwin") throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
-      if (!desktop || !socketPath) throw new NativeFileError("NATIVE_UNAVAILABLE", false);
-      if (!operationId || operationId.length > 160 || /[\x00-\x1f]/.test(operationId)) {
-        throw new NativeFileError("INVALID_OPERATION_ID", false);
-      }
-      return lease.withLease(ref, "admission", async ({ context, task }) => {
-        if (!task.fenceToken || task.id !== ref.executionTaskId || task.attempt !== ref.attempt || task.fenceToken !== ref.fenceToken) {
-          throw new NativeFileError("STALE_LEASE", false);
+  const watchers = new Map<string, ReturnType<typeof setInterval>>();
+  const stopWatching = (targetOperationId: string) => {
+    const timer = watchers.get(targetOperationId);
+    if (timer) clearInterval(timer);
+    watchers.delete(targetOperationId);
+  };
+  function watch(ref: ExecutionRef, targetOperationId: string, scope: { userId:string; accountId:string; taskId:string; attempt:number; fenceToken:string }) {
+    if (!socketPath || watchers.has(targetOperationId)) return;
+    let busy = false;
+    const timer = setInterval(async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        try {
+          await lease.withLease(ref, "admission", async ({context,task}) => {
+            if (context.userId!==scope.userId || context.accountId!==scope.accountId || task.id!==scope.taskId ||
+              task.attempt!==scope.attempt || task.fenceToken!==scope.fenceToken) throw new NativeFileError("STALE_LEASE",false);
+          });
+        } catch {
+          // The exact admitted operation may be cancelled after its lease is
+          // revoked. No new model action or account scope is accepted here.
+          try {
+            const cancelId=randomUUID();
+            await send(socketPath, {operationId:cancelId,scope,action:{kind:"command_cancel",targetOperationId}}, cancelId, true);
+            stopWatching(targetOperationId);
+          } catch { /* Retry until the native bridge closes or acknowledges. */ }
+          return;
         }
-        return send(socketPath, {
-          operationId,
-          scope: { userId: context.userId, accountId: context.accountId,
-            taskId: task.id, attempt: task.attempt, fenceToken: task.fenceToken },
-          action,
-        }, operationId, action.kind === "write");
-      });
+        try {
+          const statusId=randomUUID();
+          const check = await send(socketPath, {operationId:statusId,scope,action:{kind:"command_status",targetOperationId}}, statusId, false);
+          if (check && typeof check==="object" && "state" in check && check.state!=="running") stopWatching(targetOperationId);
+        } catch (error) {
+          if (error instanceof NativeFileError && error.code==="INVALID_COMMAND") stopWatching(targetOperationId);
+        }
+      } finally { busy = false; }
+    }, 500);
+    timer.unref();
+    watchers.set(targetOperationId,timer);
+  }
+  async function invoke(ref: ExecutionRef, operationId: string, action: NativeFileAction | NativeCommandAction,
+    onVerified?: (scope:{userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string})=>void): Promise<unknown> {
+    if (platform !== "darwin") throw new NativeFileError("UNSUPPORTED_PLATFORM", false);
+    if (!desktop || !socketPath) throw new NativeFileError("NATIVE_UNAVAILABLE", false);
+    if (!operationId || operationId.length > 160 || /[\x00-\x1f]/.test(operationId)) {
+      throw new NativeFileError("INVALID_OPERATION_ID", false);
+    }
+    if ("targetOperationId" in action && (!action.targetOperationId || action.targetOperationId.length > 160 || /[\x00-\x1f/\\]/.test(action.targetOperationId))) {
+      throw new NativeFileError("INVALID_OPERATION_ID", false);
+    }
+    return lease.withLease(ref, "admission", async ({ context, task }) => {
+      if (!task.fenceToken || task.id !== ref.executionTaskId || task.attempt !== ref.attempt || task.fenceToken !== ref.fenceToken) {
+        throw new NativeFileError("STALE_LEASE", false);
+      }
+      const scope={ userId: context.userId, accountId: context.accountId,
+        taskId: task.id, attempt: task.attempt, fenceToken: task.fenceToken };
+      onVerified?.(scope);
+      return send(socketPath, {
+        operationId,
+        scope,
+        action,
+      }, operationId, action.kind === "write" || action.kind === "command_run" || action.kind === "command_cancel");
+    });
+  }
+  return {
+    file: (ref: ExecutionRef, operationId: string, action: NativeFileAction) => invoke(ref, operationId, action),
+    async command(ref: ExecutionRef, operationId: string, action: NativeCommandAction) {
+      let verified: {userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string}|undefined;
+      try {
+        const value=await invoke(ref,operationId,action,scope=>{verified=scope;});
+        if (action.kind==="command_run" && verified && value && typeof value==="object" && "state" in value && value.state==="running")
+          watch(ref,operationId,verified);
+        if (action.kind==="command_cancel") stopWatching(action.targetOperationId);
+        if (action.kind==="command_status" && value && typeof value==="object" && "state" in value && value.state!=="running")
+          stopWatching(action.targetOperationId);
+        return value;
+      } catch(error) {
+        if (action.kind==="command_run" && verified && error instanceof NativeFileError &&
+            error.dispatched && error.code==="NATIVE_RESULT_UNKNOWN") watch(ref,operationId,verified);
+        throw error;
+      }
     },
   };
 }
