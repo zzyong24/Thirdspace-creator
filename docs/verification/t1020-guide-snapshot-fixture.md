@@ -11,3 +11,5 @@ flowchart LR
 ```
 
 修复前该单测失败，错误为 `CREATOROS_GUIDE_UNAVAILABLE`，原因为 `version`。修复后 `chat-turn-submission.service.test.ts` **23/23** 通过，原测试对账号、旧租约、工具版本和参数篡改的拒绝断言仍执行。backend typecheck 仍有 13 处写集外既有测试错误；本次夹具及 T-1018 测试修正没有新增类型错误。未放宽 `chat-guide-snapshot.ts` 的运行时校验。
+
+`pmem sync` 已完成；本轮全局 `reconcile` 为 **17 error、1 warning**，T-1020 测试通过。17 项均为 16 条历史评审回执（T-916）及桌面浏览器交付门 LED-018（T-1013）；BACKLOG 体积告警保留。

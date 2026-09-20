@@ -35,7 +35,8 @@ flowchart LR
 - LED-014/017/020 前端命令涉及的 10 个不重复文件合并运行：**175/175 通过**。
 - 三条 LED 后端命令涉及的文件合并运行：**296/296 通过**。另加 `chat-turn-completion.service.test.ts` 的扩大运行中，相关完成事务用例通过。
 - `pnpm --dir frontend exec tsc --noEmit --pretty false`：通过。`node orchestrator/process/boundary-scan.mjs`：5 条既有基线，无新增。`git diff --check`：通过。
-- `node orchestrator/process/reconcile.mjs`：**19 error、1 warning**；其中 LED-014/017/020 均显示 `guard holds`。其余为 16 条旧评审回执、LED-018/024/042 与 BACKLOG 体积告警，均非本写集问题。本次对账生成的 `.lessons-stats.json` 已恢复，未作为候选提交。
+- 独立候选工作树的 `reconcile` 为 **19 error、1 warning**；其中 LED-014/017/020 均显示 `guard holds`。其余为 16 条旧评审回执、LED-018/024/042 与 BACKLOG 体积告警。本次对账生成的 `.lessons-stats.json` 已恢复，未作为候选提交。
+- 合入主分支后重跑路由 **54/54**、frontend typecheck 与 boundary-scan，均通过；主分支完整 `reconcile` 为 **17 error、1 warning**，LED-014/017/020/024/042 均通过。剩余 16 条旧评审回执由 T-916 跟踪，LED-018 由 T-1013 跟踪。
 
 扩大后端运行把写集外 `chat-turn-submission.service.test.ts` 也纳入后，结果 **349/350**：该文件“真实租约恢复只读工具，使用冻结产品说明及当前账号数据”一例因未冻结 `creatoros.guide@v1` 失败。它不在 LED-014/017/020 的既定命令中，本轮没有修改该测试或把失败写成通过。
 
