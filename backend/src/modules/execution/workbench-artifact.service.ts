@@ -17,7 +17,7 @@ type RegisterInput=typeof inputSchema._input;
 type Stored={metadata:WorkbenchArtifact;operationId:string;requestDigest:string};
 type Scope={userId:string;accountId:string;taskId:string;ref:ExecutionRef};
 type ConversationScope=Scope&{conversationId:string};
-type OperationBinding={toolCallId:string;toolName:string;claimId:string;executionAttempt?:number;executionFenceToken?:string;absentObservedAt?:string};
+type OperationBinding={toolCallId:string;toolName:string;receiptToolName:string;claimId:string;executionAttempt?:number;executionFenceToken?:string;absentObservedAt?:string};
 type PendingSource=({kind:"register";path:string;fileVersion:number;hash:string;baseArtifactRef?:{artifactId:string;version:number}}|
  {kind:"copy";sourceArtifactId:string;sourceVersion:number;sourceTaskId:string;sourceHash:string;targetPath:string})&OperationBinding;
 export interface WorkbenchArtifactBlobPort {
@@ -113,7 +113,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     const frozen=tools.filter(item=>typeof object(item).name==="string"&&chatToolProviderName(String(object(item).name))===proposed.data.toolName);
     const toolName=frozen.length===1?String(object(frozen[0]).name):"";
     if(toolName!==expected)throw new ConflictError("产物工具调用与冻结定义不符");
-    return {toolCallId:proposed.data.toolCallId,toolName,claimId:call.toolExecutionClaimId!};
+    return {toolCallId:proposed.data.toolCallId,toolName,receiptToolName:proposed.data.toolName,claimId:call.toolExecutionClaimId!};
    }
   }
   throw new ConflictError("产物工具调用来源缺失");
@@ -190,7 +190,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     await tx.insert(workbenchArtifactLineages).values({id:lineageId,userId:chat.userId,accountId:chat.accountId,conversationId:chat.conversationId,artifactId,currentVersion:prepared.length,state:"committed",lastOperationId:prepared.at(-1)?.row.operationId??null,createdAt:stamp,updatedAt:stamp});
     for(const item of prepared){
      if(item.binding){
-      const outcome=artifactOutcome({...item.row,metadata:item.metadata}),receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:item.binding.toolCallId,toolName:item.binding.toolName,output:outcome});
+      const outcome=artifactOutcome({...item.row,metadata:item.metadata}),receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:item.binding.toolCallId,toolName:item.binding.receiptToolName,output:outcome});
       await tx.update(executionCalls).set({status:"settled",usage:{totalTokens:0},totalTokens:0,resultText:JSON.stringify(receipt),updatedAt:stamp}).where(eq(executionCalls.id,item.call.id));
      }
      await tx.insert(workbenchArtifactLineageVersions).values({id:`wav-${digest(JSON.stringify([lineageId,item.metadata.version])).slice(0,40)}`,lineageId,artifactId,version:item.metadata.version,taskId:item.task.id,operationId:item.row.operationId,requestDigest:item.row.requestDigest,metadata:item.metadata,source:{kind:"migration",legacy:true},htmlResources:item.metadata.htmlResources??[],createdAt:stamp});
@@ -449,7 +449,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     const [lineage]=await tx.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,input.operationId)).for("update");
     if(!lineage)return;
     const frozen=object(lineage.pendingSource);
-    if(frozen.claimId!==input.claimId||frozen.toolCallId!==input.toolCallId||frozen.toolName!==input.toolName)
+    if(frozen.claimId!==input.claimId||frozen.toolCallId!==input.toolCallId||
+     (frozen.receiptToolName??chatToolProviderName(String(frozen.toolName)))!==input.toolName)
      throw new ConflictError("产物未知状态与冻结工具调用不符");
     await tx.update(workbenchArtifactLineages).set({state:"unknown",lastErrorCode:"artifact_result_unknown",
      pendingSource:frozen,updatedAt:now()})
@@ -459,8 +460,9 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
   async reconcileArtifactOperation(ref:ExecutionRef,operationId:string,reconciliationClaimId?:string){
    const [lineage]=await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,operationId));
    if(!lineage)return {status:"committed" as const};
-   const binding=object(lineage.pendingSource),toolCallId=binding.toolCallId,toolName=binding.toolName,claimId=binding.claimId;
-   if(typeof toolCallId!=="string"||typeof toolName!=="string"||typeof claimId!=="string")return {status:"unknown" as const};
+   const binding=object(lineage.pendingSource),toolCallId=binding.toolCallId,toolName=binding.toolName,
+    receiptToolName=binding.receiptToolName??(typeof toolName==="string"?chatToolProviderName(toolName):undefined),claimId=binding.claimId;
+   if(typeof toolCallId!=="string"||typeof toolName!=="string"||typeof receiptToolName!=="string"||typeof claimId!=="string")return {status:"unknown" as const};
    const row=pendingRow(lineage),ctx={userId:lineage.userId,accountId:lineage.accountId,requestId:operationId,source:"ai" as const};
    if(reconciliationClaimId&&(lineage.reconciliationClaimId!==reconciliationClaimId||!lineage.reconciliationLeaseExpiresAt||Date.parse(lineage.reconciliationLeaseExpiresAt)<=Date.parse(now())))
     throw new ConflictError("产物对账领取凭证已失效");
@@ -488,7 +490,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
       if(currentSource.executionFenceToken===task.fenceToken||typeof currentSource.absentObservedAt!=="string"||Date.parse(now())-Date.parse(currentSource.absentObservedAt)<30_000)throw new ConflictError("产物无提交证明尚未满足复核间隔");
       const workbench=workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,error:{code:"artifact_blob_absent",retryable:true,dispatched:true,confirmedNoCommit:true,nextAction:"retry"}});
       const outcome=workbenchToolOutcome(workbench,{name:toolName,schemaVersion:1,description:"持久产物原操作对账",inputSchema:{},resultSchema:{},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]});
-      const receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId,toolName,output:outcome}),stamp=now();
+      const receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId,toolName:receiptToolName,output:outcome}),stamp=now();
       await tx.update(executionCalls).set({status:"settled",usage:{totalTokens:0},totalTokens:0,resultText:JSON.stringify(receipt),updatedAt:stamp}).where(eq(executionCalls.id,call.id));
       await tx.update(workbenchArtifactLineages).set({state:"failed_confirmed",pendingOperationId:null,pendingTaskId:null,pendingRequestDigest:null,pendingMetadata:null,pendingSource:null,pendingHtmlResources:null,
        reconciliationClaimId:null,reconciliationLeaseExpiresAt:null,lastOperationId:operationId,lastErrorCode:"artifact_blob_absent",updatedAt:stamp}).where(eq(workbenchArtifactLineages.id,current.id));
@@ -524,7 +526,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     if(!call||call.kind!=="tool")throw new ConflictError("原工具调用不存在");
     if(call.status==="settled"){
      const saved=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??""));
-     if(saved.toolCallId!==input.toolCallId||saved.toolName!==input.toolName||JSON.stringify(saved.output)!==JSON.stringify(outcome))
+     if(saved.toolCallId!==input.toolCallId||saved.toolName!==chatToolProviderName(input.toolName)||JSON.stringify(saved.output)!==JSON.stringify(outcome))
       throw new ConflictError("已结算产物回执不能改写");
      return agenticToolOutcomeSchema.parse(saved.output);
     }
@@ -555,7 +557,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     }
     const prior=records(task.payload),pending=records(task.payload,"workbenchArtifactPending");
     if(prior.some(item=>item.operationId===input.operationId))throw new ConflictError("新协议任务出现旧路径双写");
-    const stamp=now(),receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:input.toolCallId,toolName:input.toolName,output:outcome});
+    const receiptToolName=typeof frozenBinding.receiptToolName==="string"?frozenBinding.receiptToolName:chatToolProviderName(input.toolName);
+    const stamp=now(),receipt=workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:input.toolCallId,toolName:receiptToolName,output:outcome});
     await tx.insert(workbenchArtifactLineageVersions).values({id:`wav-${digest(JSON.stringify([lineage.id,row.metadata.version])).slice(0,40)}`,
      lineageId:lineage.id,artifactId:row.metadata.artifactId,version:row.metadata.version,taskId:task.id,operationId:input.operationId,
      requestDigest:row.requestDigest,metadata:row.metadata,source:lineage.pendingSource??{},htmlResources:lineage.pendingHtmlResources??[],createdAt:stamp});

@@ -143,7 +143,7 @@ it("HTML 冻结登记时的精确图片版本，同路径图片后来更新也�
 it("Blob 已准备但正式结算未知时保持占位，版本列表不把它伪装成完成版",async()=>{
  const f=await fixture(),turn=await f.turn("未知提交");f.files.set(`${turn.taskId}:报告.md`,{bytes:Buffer.from("待核对"),version:1});
  const pending=await f.service.register(turn.ref,turn.operationId,{path:"报告.md",mime:"text/markdown"});
- await f.service.markUnknown(turn.ref,{operationId:turn.operationId,claimId:turn.claimId,toolCallId:turn.toolCallId,toolName:"artifact.register"});
+ await f.service.markUnknown(turn.ref,{operationId:turn.operationId,claimId:turn.claimId,toolCallId:turn.toolCallId,toolName:"artifact_register"});
  const listing=await f.service.versions(f.ctx,turn.taskId,{limit:50});expect(listing.items).toEqual([]);
  expect(listing.lineages).toEqual([expect.objectContaining({artifactId:pending.artifactId,currentVersion:0,status:"unknown",lastErrorCode:"artifact_result_unknown"})]);
  const next=await f.operation(turn.taskId,turn.ref,2);f.files.set(`${turn.taskId}:报告.md`,{bytes:Buffer.from("另一次"),version:2});
@@ -173,7 +173,7 @@ it("权威无 Blob 需在旧 writer 失权后复核两次，才以 confirmedNoCo
  f.files.set(`${turn.taskId}:失败.md`,{bytes:Buffer.from("不会落库"),version:1});f.failedSubmits.add(turn.operationId);
  await expect(f.service.register(turn.ref,turn.operationId,{path:"失败.md",mime:"text/markdown"})).rejects.toThrow("STORE_RESULT_LOST");
  const [pendingLineage]=await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,turn.operationId)),pending=pendingLineage!.pendingMetadata as {artifactId:string};
- await f.service.markUnknown(turn.ref,{operationId:turn.operationId,claimId:turn.claimId,toolCallId:turn.toolCallId,toolName:"artifact.register"});
+ await f.service.markUnknown(turn.ref,{operationId:turn.operationId,claimId:turn.claimId,toolCallId:turn.toolCallId,toolName:"artifact_register"});
  await db.update(executionTasks).set({fenceToken:`replacement-${randomUUID()}`}).where(eq(executionTasks.id,turn.taskId));
  const reconciler=startWorkbenchArtifactReconciler(db,f.service,{now:()=>new Date(clock.value),intervalMs:60_000,startImmediately:false});
  expect(await reconciler.scan()).toBe(1);

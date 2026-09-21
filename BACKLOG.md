@@ -16,6 +16,7 @@
 | T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |
 | T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |
 | T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |
+| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1005 | 实现多步计划、连续执行与原任务续跑 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |
 | T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |

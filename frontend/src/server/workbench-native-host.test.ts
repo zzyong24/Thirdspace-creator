@@ -275,7 +275,12 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     const leases=createExecutionLeaseService(realDb,{now});
     const available={catalog:descriptors,platform:"macos" as const,capabilities:["task.files","task.artifacts"],
       dispatch:(call:Parameters<typeof host.dispatch>[0],dispatchControl:Parameters<typeof host.dispatch>[1])=>
-        call.invocation.name==="files.write"?host.dispatch(call,dispatchControl):artifactHost.dispatch(call,dispatchControl)};
+        call.invocation.name==="files.write"?host.dispatch(call,dispatchControl):artifactHost.dispatch(call,dispatchControl),
+      // 聊天任务使用 artifactProtocolVersion=2；真实组合宿主必须保留产物专用的原子结算与未知态端口。
+      commitAndSettle:(call:Parameters<NonNullable<typeof artifactHost.commitAndSettle>>[0],input:Parameters<NonNullable<typeof artifactHost.commitAndSettle>>[1])=>
+        artifactHost.commitAndSettle!(call,input),
+      markUnknown:(call:Parameters<NonNullable<typeof artifactHost.markUnknown>>[0],input:Parameters<NonNullable<typeof artifactHost.markUnknown>>[1])=>
+        artifactHost.markUnknown!(call,input)};
     const resolveTools=createChatWorkbenchCapabilityHost(available,
       ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,
         taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
@@ -300,6 +305,7 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
       const terminal=(await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
       const calls=await realDb.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
       expect(terminal.status,JSON.stringify({error:terminal.lastErrorCode,calls:calls.map(row=>({kind:row.kind,status:row.status}))})).toBe("succeeded");
+      expect((terminal.payload as Record<string,unknown>).artifactProtocolVersion).toBe(2);
       if(!realModel)expect(modelRequests).toBe(3);
       expect(calls.filter(row=>row.kind==="tool").map(row=>row.status)).toEqual(["settled","settled"]);
       const registeredModel=calls.map(row=>row.resultText??"").join(" ").match(/wa-[a-f0-9]{32}@1/);

@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 60,
+    "verticals": 61,
     "tasks_done": 39,
-    "tasks_total": 153,
-    "tasks_pending": 114,
+    "tasks_total": 154,
+    "tasks_pending": 115,
     "verticals_complete": 4
   },
   "verticals": [
@@ -237,17 +237,31 @@
       "step_depends_on": {},
       "write_set": [
         "orchestrator/process/modules.config.json",
+        "backend/drizzle/0101_workbench_artifact_lineage.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/db.ts",
+        "backend/src/index.ts",
+        "backend/src/schema/workbench-artifacts.ts",
         "backend/src/modules/assets/workbench-blob.service.ts",
         "backend/src/modules/assets/workbench-blob.service.test.ts",
         "backend/src/modules/assets/index.ts",
+        "backend/src/modules/execution/agentic-tool-binding.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
         "backend/src/modules/execution/workbench-artifact.service.ts",
         "backend/src/modules/execution/workbench-artifact.service.test.ts",
+        "backend/src/modules/execution/workbench-artifact-lineage.service.test.ts",
+        "backend/src/modules/execution/workbench-artifact-reconciler.ts",
         "backend/src/modules/execution/index.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.test.ts",
         "backend/src/modules/ai-runtime/chat-production-composition.ts",
         "backend/src/modules/ai-runtime/chat-workbench-plan-tool-host.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
         "frontend/src/server/workbench-artifact-host.ts",
         "frontend/src/server/workbench-artifact-host.test.ts",
         "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/api/v1/workbench-artifacts/**",
         "frontend/src/app/api/v1/workbench-preview/**",
         "frontend/src/server/workbench-preview-policy.ts",
         "frontend/src/server/workbench-preview-read.ts",
@@ -256,17 +270,24 @@
         "frontend/src/server/workbench-artifact-render.test.ts",
         "frontend/src/components/workbench-preview-frame.tsx",
         "frontend/src/components/workbench-preview-frame.test.tsx",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/workbench-artifact-history.tsx",
+        "frontend/src/features/copilot/workbench-artifact-history.test.tsx",
         "frontend/src/features/copilot/workbench-artifact-export.ts",
         "frontend/src/features/copilot/workbench-artifact-export.test.ts",
         "frontend/src/features/copilot/workbench-artifact-card.tsx",
         "frontend/src/features/copilot/workbench-artifact-card.test.tsx",
+        "frontend/src/server/workbench-builtin-manifest.ts",
+        "frontend/src/server/workbench-builtin-manifest.test.ts",
         "frontend/src-tauri/src/lib.rs",
         "contract/src/internal/agent-workbench.ts",
+        "contract/src/internal/execution-worker.ts",
         "contract/tests/agent-workbench.test.ts",
         "docs/verification/t1009-artifacts.md",
         "docs/verification/t1009-preview.md",
         "docs/verification/t1009-native-export.md",
-        "docs/verification/t1009-html-export-chain.md"
+        "docs/verification/t1009-html-export-chain.md",
+        "docs/verification/t1009-cross-turn-lineage.md"
       ],
       "read_set": [
         "docs/features/t1003-agent-workbench.md",
@@ -274,6 +295,42 @@
         "backend/src/modules/assets/**",
         "backend/src/modules/execution/**",
         "frontend/src/server/workbench-native-host.ts",
+        "frontend/src-tauri/src/workbench/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "id": "T-1021",
+      "archetype": [
+        "orchestration"
+      ],
+      "task_id": "T-1021",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [
+        "T-1009:implementation"
+      ],
+      "step_depends_on": {},
+      "write_set": [
+        "orchestrator/process/modules.config.json",
+        "frontend/src/server/workbench-native-host.test.ts",
+        "docs/verification/t1021-t1009-full-acceptance.md"
+      ],
+      "read_set": [
+        "docs/features/t1003-agent-workbench.md",
+        "docs/features/t1009-artifact-lineage-proposal.md",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "frontend/src/server/workbench-artifact-host.ts",
         "frontend/src-tauri/src/workbench/**"
       ],
       "exclusive_resources": [],

@@ -26,6 +26,15 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    if(original.toolExecutionClaimId && !claimId && original.status!=="settled")throw new ConflictError("Host执行回执只能由实际执行者结算");
    if(claimId && original.toolExecutionClaimId!==claimId)throw new ConflictError("工具执行领取凭证不符");
    const bound=await leases.withLease(ref,"settlement",async({task})=>bindingForCall(task,state.calls,original));
+   if(original.status==="settled"){
+    if(request.status==="unknown")return {callId:original.id,status:original.status};
+    const saved=workerToolResultReceiptSchema.parse(JSON.parse(original.resultText??""));
+    const savedOutput=JSON.parse(JSON.stringify(saved.output)),incomingOutput=JSON.parse(JSON.stringify(request.output));
+    if(saved.toolCallId!==bound.toolCallId||saved.toolName!==bound.toolName||!isDeepStrictEqual(savedOutput,incomingOutput)){
+     throw new ConflictError("已确认工具回执不能改写");
+    }
+    return {callId:original.id,status:original.status};
+   }
    if(bound.validationOutcome && request.status==="settled" && hash(request.output)!==hash(bound.validationOutcome))throw new ConflictError("非法参数只能结算后端确定的校验回执");
    const unknown=request.status==="unknown" || request.output.sideEffect==="unknown" || request.output.error?.code==="unknown_commit";
    if(request.status==="settled" && !unknown && bound.dryRun && request.output.sideEffect!=="none")throw new ConflictError("预演任务不能结算真实副作用");
