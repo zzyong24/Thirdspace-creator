@@ -320,5 +320,12 @@
     "firstRedAt": null,
     "registeredAt": "2026-09-21T16:24:09.025Z",
     "deterrence": false
+  },
+  "LED-054": {
+    "fireCount": 0,
+    "lastFiredAt": null,
+    "firstRedAt": null,
+    "registeredAt": "2026-09-21T18:53:36.332Z",
+    "deterrence": false
   }
 }

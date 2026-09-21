@@ -8,7 +8,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-|T-1024|根治聊天生成占用数据通道与重启后 unknown_result 卡死|🔨|—|—|[SPEC](docs/features/t1024-chat-runtime-liveness.md)|真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。|
+|T-1025|重新核验 constitution 变更后的历史评审与前端验收回执|📋|—|—|[SPEC](docs/features/t1025-receipt-drift-revalidation.md)|reconcile 已确认运行门全部通过，但 T-703/T-691/T-656/T-645/T-635 的旧评审回执和 T-1022 前端验收回执已因当前真相变化失效；按现状重新评审，禁止补拍历史 PASS。|
+|T-1024|根治聊天生成占用数据通道与重启后 unknown_result 卡死|✅|—|—|[SPEC](docs/features/t1024-chat-runtime-liveness.md)|真实安装版生成期间查询被阻塞，重启后原任务停在 unknown_result；释放长调用期间的数据通道，并让 agent loop 沿原任务安全恢复或明确收口。|
 |T-1023|根治 AI 助手自动恢复无限卡死并证明后台进展|✅|—|PASS:87c802e61bbe|[SPEC](docs/features/t1023-agent-recovery-liveness.md)|区分已持久化任务续跑与提交前网络失败；恢复必须有进展证据，持续无进展自动收口为可继续操作的状态，禁止永久转圈。|
 |T-1022|禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复|✅|—|PASS:06eb90bb86b5|[SPEC](docs/features/t1022-nonblocking-agent-recovery.md)|覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。|
 |T-1005|实现多步计划、连续执行与原任务续跑|🔨|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。|
