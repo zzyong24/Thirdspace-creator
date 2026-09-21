@@ -13,13 +13,13 @@
   "task_id": "T-1022",
   "contract_path": "docs/features/t1022-nonblocking-agent-recovery.md",
   "contract_sha": "5eb3f4069a9e",
-  "commit_sha": "bc6064f8c351a992d672b975f8d74b2860b82da6",
-  "observed_at": "2026-09-21T15:21:45Z",
+  "commit_sha": "f2fcbb87",
+  "observed_at": "2026-09-21T16:16:08Z",
   "run": {
     "verify_key": "ai-nonblocking-recovery:e2e",
     "command": "CREATOROS_TEST_PORT=3442 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-nonblocking-recovery.spec.ts --project=e2e",
     "exit_code": 0,
-    "output_ref": "真实 Next.js + Chrome 旅程 2/2；临时 503 后自动恢复并交付完整候选"
+    "output_ref": "真实 Next.js + Chrome 文件 4/4；T-1022 的模型缺失与临时 503 同轮恢复旅程均再次通过"
   },
   "environment": {
     "surface": "desktop-web",
@@ -58,7 +58,7 @@
   ],
   "visible_copy": {
     "artifact_path": "orchestrator/evidence/T-1022-visible-copy.json",
-    "artifact_sha256": "3f8a4c5dcc999b16338adf9f464e582bab0f1418c650e74b02d7fef94df1ad29"
+    "artifact_sha256": "5a811beb775c60fe4d74d9c0c8dbdea6d0470904d6e071ef54e83c2cecf89a1e"
   },
   "tdd_red_ref": "2026-09-21 首次真实 Chrome 回归按旧 T-913 契约运行时，E2E-T913-04 因页面已显示‘正在恢复本轮生成’而不再显示旧‘手动重试’文案，按预期失败；随后更新回归并新增 T-1022 同轮恢复旅程。T-1022 专属旅程创建后首次即通过，未补写不存在的实现前红测。",
   "open_defects": [],

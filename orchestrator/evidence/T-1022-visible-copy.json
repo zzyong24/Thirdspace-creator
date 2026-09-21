@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-1022",
-  "commit_sha": "bc6064f8c351a992d672b975f8d74b2860b82da6",
+  "commit_sha": "f2fcbb87",
   "captures": [
     {
       "checkpoint": "missing-model-regular",
