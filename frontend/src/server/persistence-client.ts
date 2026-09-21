@@ -152,7 +152,7 @@ import { createAiService, createAiTransport, createAiRepository, buildAiModelCon
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
 // [T-255a] 执行层(脑手分离):execution.tasks 5 op + 沙箱 + executor 注册表 + live
 // dispatch 编排。存储复用 ai_tasks(taskType `exec.*`),模块本体零 db 依赖(端口注入)。
-import { createWorkbenchArtifactReadService, createWorkbenchScreenshotMediaService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
+import { createWorkbenchArtifactService,createWorkbenchArtifactReadService,startWorkbenchArtifactReconciler,createWorkbenchScreenshotMediaService, createExecutionService, createPersistentTaskService, createExecutionTransport, createExecutorRegistry, registerBuiltinExecutors, runExecutionTask, abortExecutionTask, resolveWorkspacesRoot, sweepInterruptedRenderFrames, sweepOrphanSandboxes } from "@creatoros/backend/modules/execution";
 import { createTranscriptSourceRecoveryService, createRadarProjectQueueService, createIntelligenceService, createIntelligenceTransport, createProjectIntelligenceReferenceService, createIntelligenceTranscriptBridge, createIntelligenceGenerationBridge, createProjectScriptCandidateService, drainProjectScriptCandidateQueue, runIntelligenceSourceTask, drainIntelligenceSourceQueue, drainIntelligenceTranscriptQueue, type IntelligenceTranscriptRunnerDeps, drainIntelligenceTopicPreviewQueue } from "@creatoros/backend/modules/intelligence";
 import { createIntelligenceSourceAdapter } from "@/server/intelligence/source-adapter";
 import { drainDouyinShareImportQueue } from "@creatoros/backend/modules/intelligence";
@@ -627,6 +627,7 @@ interface PersistenceBundle {
   execution: Transport;
   browserTaskAuthorizationRuntime: { grant(ctx:RequestContext,taskId:string,input:unknown):Promise<{status:"granted"|"denied"}>; prepare(ctx:RequestContext,taskId:string):Promise<void> };
   workbenchPreviewRuntime: ReturnType<typeof createWorkbenchArtifactReadService>;
+  workbenchArtifactRecoveryRuntime: {reconcile:ReturnType<typeof startWorkbenchArtifactReconciler>["reconcile"]};
   executionPreviewRuntime: {
     readVideo(
       ctx: RequestContext,
@@ -1128,13 +1129,14 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const { db, driver, dispose } = await createConfiguredDb();
   let stopExecutionWorker: (()=>Promise<void>) | undefined;
   let disposeWorkbenchBrowserHost: (()=>Promise<void>) | undefined;
+  let stopWorkbenchArtifactReconciler:(()=>void)|undefined;
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
   //   → 下次启动判损坏」(2026-07-16 数据事故根因)。挂 global 是刻意的:instrumentation
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
     createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
-      await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();
+      stopWorkbenchArtifactReconciler?.();await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();
     },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
@@ -5434,8 +5436,11 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
-  const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
-  const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:createWorkbenchBlobService(objectStorageForCtx)}):undefined;
+  const workbenchBlobs=createWorkbenchBlobService(objectStorageForCtx);
+  const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
+  const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
+  const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{onError:()=>{}});
+  stopWorkbenchArtifactReconciler=()=>artifactReconciler.stop();
   const screenshotMedia=createWorkbenchScreenshotMediaService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
   const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now,media:screenshotMedia});
   disposeWorkbenchBrowserHost=async()=>{await browserWorkbenchHost?.dispose();};
@@ -5448,6 +5453,15 @@ FAVORITES_PROMOTE_PER_RUN
       const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
       if(!host)throw new Error("WORKBENCH_CAPABILITY_UNAVAILABLE");
       return host.dispatch(call,options);
+    },
+    commitAndSettle:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      if(!host?.commitAndSettle)throw new Error("WORKBENCH_ATOMIC_COMMIT_UNAVAILABLE");
+      return host.commitAndSettle(call,input);
+    },
+    markUnknown:async(call,input)=>{
+      const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));
+      await host?.markUnknown?.(call,input);
     },
   }:undefined;
   const chatRuntime: ChatRuntime = {
@@ -5839,6 +5853,7 @@ FAVORITES_PROMOTE_PER_RUN
       },
     },
     workbenchPreviewRuntime,
+    workbenchArtifactRecoveryRuntime:{reconcile:artifactReconciler.reconcile},
     executionPreviewRuntime: {
       readVideo: (ctx, taskId, artifactPath) =>
         executionService.previewArtifact(ctx, taskId, artifactPath),
@@ -6045,6 +6060,11 @@ export async function getLocalFileRuntime(): Promise<
 /** T-1009：已登记任务产物的只读预览，复用公共归属和版本校验服务。 */
 export async function getWorkbenchPreviewRuntime(): Promise<PersistenceBundle["workbenchPreviewRuntime"]> {
   return (await getBundle()).workbenchPreviewRuntime;
+}
+
+/** T-1009：按原 operationId 触发持久对账，不创建新工具调用。 */
+export async function getWorkbenchArtifactRecoveryRuntime(): Promise<PersistenceBundle["workbenchArtifactRecoveryRuntime"]> {
+  return (await getBundle()).workbenchArtifactRecoveryRuntime;
 }
 
 /** T-703：待确认执行产物的只读临时预览，采纳/丢弃后 service 自动返回 404。 */

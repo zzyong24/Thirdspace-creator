@@ -70,6 +70,8 @@ export const workbenchErrorSchema = z.object({
   code: reference,
   retryable: z.boolean(),
   dispatched: z.boolean(),
+  /** 后端已证明本次派发没有留下提交；只有这种失败才可安全发起新 operationId。 */
+  confirmedNoCommit: z.boolean().optional(),
   nextAction: z.enum(["fix_input", "retry", "reconcile", "login", "wait", "contact_support"]),
 }).strict();
 const resultBase = z.object({
@@ -83,8 +85,8 @@ export const workbenchResultSchema = z.discriminatedUnion("status", [
     z.object({ type: z.literal("image"), mediaType: z.string(), dataRef: reference }).strict(),
   ]))}).strict(),
   resultBase.extend({status: z.literal("running"), content: z.array(z.object({ type: z.literal("text"), text: z.string() }).strict())}).strict(),
-  resultBase.extend({status: z.literal("failed"), error: workbenchErrorSchema.refine((error) => !error.dispatched || error.nextAction === "reconcile")}).strict(),
-  resultBase.extend({status: z.literal("unknown"), error: workbenchErrorSchema.refine((error) => error.dispatched && error.nextAction === "reconcile" && !error.retryable)}).strict(),
+  resultBase.extend({status: z.literal("failed"), error: workbenchErrorSchema.refine((error) => !error.dispatched || error.nextAction === "reconcile" || error.confirmedNoCommit === true)}).strict(),
+  resultBase.extend({status: z.literal("unknown"), error: workbenchErrorSchema.refine((error) => error.dispatched && error.nextAction === "reconcile" && !error.retryable && error.confirmedNoCommit !== true)}).strict(),
 ]);
 
 export const workbenchPlanSchema = z.object({
@@ -155,6 +157,16 @@ export const workbenchArtifactSchema = z.object({
   relativePath,
   taskId: reference,
   provenance: z.array(reference),
+  baseArtifactRef: z.object({artifactId:reference,version:z.number().int().positive()}).strict().optional(),
+  copiedFrom: z.object({artifactId:reference,version:z.number().int().positive(),taskId:reference,hash:z.string().regex(/^[a-f0-9]{64}$/)}).strict().optional(),
+  htmlResources: z.array(z.object({
+    path: relativePath,
+    artifactId: reference,
+    version: z.number().int().positive(),
+    taskId: reference,
+    hash: z.string().regex(/^[a-f0-9]{64}$/),
+    size: z.number().int().nonnegative(),
+  }).strict()).max(12).optional(),
 }).strict();
 
 export const workbenchArtifactRegisterRequestSchema = z.object({
@@ -162,13 +174,28 @@ export const workbenchArtifactRegisterRequestSchema = z.object({
   mime: z.enum(["text/html", "text/markdown", "text/csv", "image/png", "application/pdf"]),
   artifactId: reference.optional(),
   expectedVersion: z.number().int().nonnegative().optional(),
+  baseArtifactRef: z.object({artifactId:reference,version:z.number().int().positive()}).strict().optional(),
   provenance: z.array(reference).max(100).optional(),
-}).strict();
+}).strict().superRefine((value,ctx)=>{
+  if(value.baseArtifactRef && (!value.artifactId || value.expectedVersion===undefined ||
+    value.baseArtifactRef.artifactId!==value.artifactId || value.baseArtifactRef.version!==value.expectedVersion))
+    ctx.addIssue({code:"custom",path:["baseArtifactRef"],message:"来源版本必须等于待修订产物的当前版本"});
+});
 export const workbenchArtifactReadRequestSchema = z.object({
   artifactId: reference,
   version: z.number().int().positive(),
   offset: z.number().int().nonnegative().default(0),
   limit: z.number().int().positive().max(128_000).default(128_000),
+}).strict();
+export const workbenchArtifactVersionsRequestSchema = z.object({
+  artifactId: reference.optional(),
+  cursor: reference.optional(),
+  limit: z.number().int().positive().max(50).default(50),
+}).strict();
+export const workbenchArtifactCopyRequestSchema = z.object({
+  sourceArtifactId: reference,
+  sourceVersion: z.number().int().positive(),
+  targetPath: relativePath.refine(path=>path.toLowerCase().endsWith(".png"),"复制目标必须是 PNG"),
 }).strict();
 
 export type WorkbenchCapability = z.infer<typeof workbenchCapabilitySchema>;
@@ -181,3 +208,5 @@ export type WorkbenchFileRequest = z.infer<typeof workbenchFileRequestSchema>;
 export type WorkbenchCommandRequest = z.infer<typeof workbenchCommandRequestSchema>;
 export type WorkbenchBrowserLease = z.infer<typeof workbenchBrowserLeaseSchema>;
 export type WorkbenchArtifact = z.infer<typeof workbenchArtifactSchema>;
+export type WorkbenchArtifactVersionsRequest = z.infer<typeof workbenchArtifactVersionsRequestSchema>;
+export type WorkbenchArtifactCopyRequest = z.infer<typeof workbenchArtifactCopyRequestSchema>;

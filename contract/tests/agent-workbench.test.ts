@@ -11,6 +11,8 @@ import {
   workbenchArtifactSchema,
   workbenchArtifactRegisterRequestSchema,
   workbenchArtifactReadRequestSchema,
+  workbenchArtifactVersionsRequestSchema,
+  workbenchArtifactCopyRequestSchema,
 } from "../src/internal/agent-workbench";
 
 describe("T-1004 共享能力协议", () => {
@@ -41,6 +43,8 @@ describe("T-1004 共享能力协议", () => {
     expect(workbenchResultSchema.safeParse({ ...base, status: "failed", error: { code: "BAD_INPUT", retryable: false, dispatched: false, nextAction: "fix_input" } }).success).toBe(true);
     expect(workbenchResultSchema.safeParse({ ...base, status: "unknown", error: { code: "RECEIPT_UNKNOWN", retryable: false, dispatched: true, nextAction: "reconcile" } }).success).toBe(true);
     expect(workbenchResultSchema.safeParse({ ...base, status: "unknown", error: { code: "RECEIPT_UNKNOWN", retryable: true, dispatched: false, nextAction: "retry" } }).success).toBe(false);
+    expect(workbenchResultSchema.safeParse({ ...base, status: "failed", error: { code: "NO_COMMIT", retryable: false, dispatched: true, confirmedNoCommit: true, nextAction: "retry" } }).success).toBe(true);
+    expect(workbenchResultSchema.safeParse({ ...base, status: "failed", error: { code: "UNPROVEN", retryable: false, dispatched: true, confirmedNoCommit: false, nextAction: "retry" } }).success).toBe(false);
   });
 
   it("计划步骤引用真实操作与产物且版本正整数", () => {
@@ -69,5 +73,11 @@ describe("T-1004 共享能力协议", () => {
     expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"report.html",mime:"text/html",accountId:"other"}).success).toBe(false);
     expect(workbenchArtifactReadRequestSchema.safeParse({artifactId:"wa-123",version:1,offset:0,limit:128_000}).success).toBe(true);
     expect(workbenchArtifactReadRequestSchema.safeParse({artifactId:"wa-123",version:1,offset:0,limit:128_001}).success).toBe(false);
+    expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"报告/分析.html",mime:"text/html",artifactId:"wa-123",expectedVersion:1,baseArtifactRef:{artifactId:"wa-123",version:1}}).success).toBe(true);
+    expect(workbenchArtifactRegisterRequestSchema.safeParse({path:"报告/分析.html",mime:"text/html",baseArtifactRef:{artifactId:"other",version:1}}).success).toBe(false);
+    expect(workbenchArtifactVersionsRequestSchema.safeParse({limit:50}).success).toBe(true);
+    expect(workbenchArtifactVersionsRequestSchema.safeParse({limit:51}).success).toBe(false);
+    expect(workbenchArtifactCopyRequestSchema.safeParse({sourceArtifactId:"wa-123",sourceVersion:1,targetPath:"报告/chart.png"}).success).toBe(true);
+    expect(workbenchArtifactCopyRequestSchema.safeParse({sourceArtifactId:"wa-123",sourceVersion:1,targetPath:"../chart.png"}).success).toBe(false);
   });
 });

@@ -22,16 +22,17 @@ it("锁定已打包的 Pi 和 NomiFun 来源版本，内置清单的工具名唯
 it("仅公布宿主真实提供且平台、能力、效果和契约版本匹配的内置工具", () => {
   const files = descriptor("files.read", "task.files", "read", ["macos", "windows"]);
   const artifact = descriptor("artifact.read", "task.artifacts", "read", ["macos", "windows"]);
+  const versions = descriptor("artifact.versions", "task.artifacts", "read", ["macos", "windows"]);
   const browser = descriptor("browser.open", "task.browser", "process");
   const screenshot = descriptor("browser.screenshot", "task.browser", "read");
   const unknown = descriptor("thirdparty.run", "task.files", "read");
-  const host = {catalog:[files,artifact,browser,screenshot,unknown],platform:"windows" as const,capabilities:["task.files","task.artifacts","task.browser"],dispatch:()=>null};
+  const host = {catalog:[files,artifact,versions,browser,screenshot,unknown],platform:"windows" as const,capabilities:["task.files","task.artifacts","task.browser"],dispatch:()=>null};
   const selected = selectBuiltinWorkbenchCapabilities(host);
-  expect(selected.map(item => item.name)).toEqual(["files.read","artifact.read"]);
+  expect(selected.map(item => item.name)).toEqual(["files.read","artifact.read","artifact.versions"]);
   expect(selected[0]).not.toBe(files);
   expect(selectBuiltinWorkbenchCapabilities({...host,capabilities:[]})).toEqual([]);
   expect(selectBuiltinWorkbenchCapabilities({...host,dispatch:null as never})).toEqual([]);
-  expect(selectBuiltinWorkbenchCapabilities({...host,platform:"macos"}).map(item=>item.name)).toEqual(["files.read","artifact.read","browser.open","browser.screenshot"]);
+  expect(selectBuiltinWorkbenchCapabilities({...host,platform:"macos"}).map(item=>item.name)).toEqual(["files.read","artifact.read","artifact.versions","browser.open","browser.screenshot"]);
 });
 
 it("重复描述或效果漂移时不向模型公布该工具", () => {

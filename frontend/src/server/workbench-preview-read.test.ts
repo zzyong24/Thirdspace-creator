@@ -51,7 +51,7 @@ describe("HTML 相对图片解析", () => {
     expect(output).toContain("<h1>报告</h1>");
     expect(output).toContain(`src="data:image/png;base64,${png.toString("base64")}"`);
     expect(output).not.toContain("srcset");
-    expect(reader.readRelativeImage).toHaveBeenCalledWith(ctx,"task","reports/chart&one.png");
+    expect(reader.readRelativeImage).toHaveBeenCalledWith(ctx,"task","reports/chart&one.png",htmlMeta);
   });
   it("路径穿越、远程 URL、未登记图片及脚本均被跳过，正文保留", async () => {
     const reader={readRelativeImage:vi.fn(async()=>null)};

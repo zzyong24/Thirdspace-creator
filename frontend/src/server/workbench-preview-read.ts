@@ -107,7 +107,7 @@ export async function renderRegisteredHtmlPreview(
       const path = imagePath(metadata.relativePath, source);
       if (!path || ++count > MAX_RELATIVE_IMAGES) continue;
       try {
-        const found = await port.readRelativeImage(ctx, taskId, path);
+        const found = await port.readRelativeImage(ctx, taskId, path, metadata);
         if (!found || found.metadata.taskId !== taskId || found.metadata.relativePath !== path ||
             found.metadata.mime !== "image/png" || found.metadata.size !== found.bytes.byteLength ||
             found.bytes.byteLength > MAX_RELATIVE_IMAGE_BYTES - totalBytes || !isPng(found.bytes)) continue;

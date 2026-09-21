@@ -143,6 +143,18 @@ export function createWorkbenchBlobService(objectStorageForCtx: ObjectStorageFor
         throw error;
       }
     },
+
+    /** 对账专用三态查询：只有对象存储明确 404 才返回 absent，其它异常都保持 unknown。 */
+    async inspect(ctx: RequestContext, ref: WorkbenchBlobRef): Promise<"present" | "absent" | "unknown"> {
+      const key = scopedKey(ctx, ref, ref.hash);
+      try {
+        const storage = await objectStorageForCtx(ctx);
+        await verify(storage, key, ref.hash, ref.mime);
+        return "present";
+      } catch (error) {
+        return isMissing(error) ? "absent" : "unknown";
+      }
+    },
   };
 }
 

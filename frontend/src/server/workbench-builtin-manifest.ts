@@ -49,7 +49,7 @@ export const workbenchBuiltins: readonly Builtin[] = [
   {
     id: "creatoros.artifacts", version: "1", platforms: ["macos", "windows"], capability: "task.artifacts",
     dependencies: [{ id: "pi-coding-agent", version: workbenchDependencyLock.piCodingAgent }],
-    tools: [{ name: "artifact.register", effect: "task_write" }, { name: "artifact.read", effect: "read" }],
+    tools: [{ name: "artifact.register", effect: "task_write" }, { name: "artifact.read", effect: "read" }, {name:"artifact.versions",effect:"read"}, {name:"artifact.copy",effect:"task_write"}],
   },
 ];
 

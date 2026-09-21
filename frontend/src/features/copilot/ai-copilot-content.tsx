@@ -15,6 +15,7 @@ import {TaskRuntimeActions,taskRuntimeStatus} from "@/components/ai/task-runtime
 import {ExecutionTaskCard} from "./execution-task-card";
 import {WorkbenchPlanCard} from "./workbench-plan-card";
 import {WorkbenchArtifactCard} from "./workbench-artifact-card";
+import {WorkbenchArtifactHistory} from "./workbench-artifact-history";
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -1164,6 +1165,15 @@ export function AICopilotContent({
     return out;
   }, [messages]);
   const hasPendingApproval = pendingLocalReads.length > 0;
+  const visibleArtifactRefs=React.useMemo(()=>{
+    const refs=new Set<string>();
+    for(const message of messages)for(const part of message.parts){
+      if(!isToolUIPart(part)||part.state!=="output-available"||!["artifact.register","artifact.copy"].includes(getToolName(part)))continue;
+      const result=workbenchResultOf(part.output),artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
+      if(artifact.success&&result?.status==="succeeded")refs.add(`${artifact.data.artifactId}@${artifact.data.version}`);
+    }
+    return refs;
+  },[messages]);
 
   // [T-276] 目录授权批量放行:一张卡点「总是允许该目录」→ 服务端已把该文件所在目录落进授权表,
   //   把**直接父目录相同**的其它待决 local.read 卡一并批准(读文件夹的多文件读共享父目录)。
@@ -2372,6 +2382,7 @@ export function AICopilotContent({
           data-slot="copilot-message-scroll"
           className="min-h-[120px] min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-2xl border border-border bg-surface-subtle/40 p-3"
         >
+          <WorkbenchArtifactHistory conversationId={conversationId} accountId={sessionAccountId??""} excludeRefs={visibleArtifactRefs}/>
           {messages.length > 0 ? (
             <ol
               data-slot="copilot-messages"
@@ -2506,7 +2517,7 @@ export function AICopilotContent({
                       const plan=workbenchPlanSchema.safeParse(workbenchPayload(result));
                       return <React.Fragment key={key}>{traceRow}{plan.success?<WorkbenchPlanCard plan={plan.data}/>:null}</React.Fragment>;
                     }
-                    if(name==="artifact.register"){
+                    if(name==="artifact.register"||name==="artifact.copy"){
                       const result=workbenchResultOf(out);
                       const artifact=workbenchArtifactSchema.safeParse(workbenchPayload(result));
                       const reference=artifact.success?`${artifact.data.artifactId}@${artifact.data.version}`:null;

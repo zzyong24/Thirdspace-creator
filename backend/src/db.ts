@@ -47,6 +47,7 @@ import * as intelligenceSchema from "./schema/intelligence";
 import * as executionBrowserProfileLeasesSchema from "./schema/execution-browser-profile-leases";
 import * as proposalAdoptionsSchema from "./schema/proposal-adoptions";
 import * as cliInvocationsSchema from "./schema/cli-invocations";
+import * as workbenchArtifactsSchema from "./schema/workbench-artifacts";
 import { Pool } from "pg";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
@@ -104,6 +105,7 @@ const schema = {
   ...cliInvocationsSchema,
   ...proposalAdoptionsSchema,
   ...executionBrowserProfileLeasesSchema,
+  ...workbenchArtifactsSchema,
 };
 
 export type Db = PgliteDatabase<typeof schema>;

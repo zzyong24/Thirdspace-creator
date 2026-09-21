@@ -4,7 +4,7 @@ import {
   workbenchCapabilitySchema, workbenchHostCallSchema, workbenchResultSchema,
   type WorkbenchCapability, type WorkbenchHostContext, type WorkbenchHostCall, type WorkbenchResult,
 } from "@creatoros/contract/agent-workbench";
-import { workbenchToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { workbenchToolOutcome, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import type { ChatWorkerDispatcherDeps } from "../execution/model-worker-dispatcher";
 import { defineWorkbenchChatTool } from "./chat-tool-gate";
 import { prepareChatToolDefinitions } from "./chat-tool-definitions";
@@ -17,6 +17,9 @@ export interface ChatWorkbenchCapabilityHost {
   capabilities: readonly string[];
   /** 未注入此端口即未装配。文件、浏览器等能力不能靠目录声明自行启用。 */
   dispatch(call: WorkbenchHostCall, options: { signal: AbortSignal; onProgress: (result: WorkbenchResult) => void }): Promise<WorkbenchResult>;
+  /** 需要与原 execution call 原子落库的能力使用此端口；普通能力不得伪造结算。 */
+  commitAndSettle?(call:WorkbenchHostCall,input:{claimId:string;toolCallId:string;outcome:AgenticToolOutcome}):Promise<AgenticToolOutcome>;
+  markUnknown?(call:WorkbenchHostCall,input:{claimId:string;toolCallId:string;toolName:string}):Promise<void>;
   progress?(call: WorkbenchHostCall, update: Extract<WorkbenchResult, { status: "running" }>): void;
 }
 
@@ -97,6 +100,21 @@ export function createChatWorkbenchCapabilityHost(
           }
           return workbenchToolOutcome(result, descriptor);
         },
+        ...(host.commitAndSettle&&["artifact.register","artifact.copy"].includes(definition.name)?{async commitAndSettle(context:RequestContext,raw:unknown,outcome:AgenticToolOutcome,scope:{execution:ExecutionRef;callId:string;toolCallId:string;claimId:string}){
+          const identity=await readLease(scope.execution);
+          if(identity.userId!==owner.userId||identity.accountId!==owner.accountId||identity.userId!==context.userId||identity.accountId!==context.accountId||identity.taskId!==scope.execution.executionTaskId)
+            throw new Error("WORKBENCH_LEASE_IDENTITY_CHANGED");
+          const parsed=prepared.parameters[definition.name]!.parameters.parse(raw) as Record<string,unknown>;
+          const call=workbenchHostCallSchema.parse({context:{...identity,operationId:scope.callId},invocation:{name:definition.name,schemaVersion:descriptor.schemaVersion,input:parsed}});
+          return host.commitAndSettle!(call,{claimId:scope.claimId,toolCallId:scope.toolCallId,outcome});
+        }}:{}),
+        ...(host.markUnknown&&["artifact.register","artifact.copy"].includes(definition.name)?{async markUnknown(context:RequestContext,scope:{execution:ExecutionRef;callId:string;toolCallId:string;claimId:string;toolName:string}){
+          const identity=await readLease(scope.execution);
+          if(identity.userId!==context.userId||identity.accountId!==context.accountId||identity.taskId!==scope.execution.executionTaskId)
+           throw new Error("WORKBENCH_LEASE_IDENTITY_CHANGED");
+          const call=workbenchHostCallSchema.parse({context:{...identity,operationId:scope.callId},invocation:{name:definition.name,schemaVersion:descriptor.schemaVersion,input:{}}});
+          return host.markUnknown!(call,{claimId:scope.claimId,toolCallId:scope.toolCallId,toolName:scope.toolName});
+        }}:{}),
       }];
     }));
     signal.throwIfAborted();

@@ -34,7 +34,7 @@ it.each(["darwin","win32"] as const)("%s 私有宿主把真实任务文件登记
  });
  const host=createWorkbenchArtifactHost(db,{platform,desktop:true,socketPath:platform==="win32"?"\\\\.\\pipe\\creatoros-test":"private.sock",blobs,filePort})!;
  expect(host.platform).toBe(platform==="win32"?"windows":"macos");
- expect(host.catalog.map(tool=>tool.name)).toEqual(["artifact.register","artifact.read"]);
+ expect(host.catalog.map(tool=>tool.name)).toEqual(["artifact.register","artifact.read","artifact.versions","artifact.copy"]);
  const context={userId,accountId,taskId:task.id,attempt:claim.lease.attempt,
   fenceToken:claim.lease.fenceToken,leaseId:workerId};
  const dispatch=(name:string,input:Record<string,unknown>)=>host.dispatch({context:{...context,operationId:randomUUID()},

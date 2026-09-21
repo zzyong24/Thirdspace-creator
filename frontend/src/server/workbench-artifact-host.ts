@@ -3,8 +3,8 @@ import {randomUUID} from "node:crypto";
 import type {Db} from "@creatoros/backend";
 import {createExecutionLeaseService,createWorkbenchArtifactService,type WorkbenchArtifactBlobPort} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
-import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,workbenchArtifactRegisterRequestSchema,workbenchArtifactReadRequestSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
-import type {ExecutionRef} from "@creatoros/contract/execution-worker";
+import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,workbenchArtifactRegisterRequestSchema,workbenchArtifactReadRequestSchema,workbenchArtifactVersionsRequestSchema,workbenchArtifactCopyRequestSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
+import {agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {createWorkbenchNativeClient,NativeFileError,type NativeFileAction} from "./workbench-native-client";
 
 type Host=NonNullable<ChatProductionCompositionDeps["workbenchHost"]>;
@@ -12,19 +12,30 @@ type FilePort=(ref:ExecutionRef,operationId:string,action:NativeFileAction)=>Pro
 const MAX_BYTES=20*1024*1024;
 const registerSchema=workbenchArtifactRegisterRequestSchema;
 const readSchema=workbenchArtifactReadRequestSchema;
+const versionsSchema=workbenchArtifactVersionsRequestSchema;
+const copySchema=workbenchArtifactCopyRequestSchema;
 const catalog=[
- workbenchCapabilitySchema.parse({name:"artifact.register",schemaVersion:1,description:"把当前任务中的真实文件保存为可回读的产物版本，返回产物引用。",
+ workbenchCapabilitySchema.parse({name:"artifact.register",schemaVersion:1,description:"把当前任务中的真实文件保存为可回读版本；修订已有产物时同时提交 artifactId、expectedVersion 和相同的 baseArtifactRef。",
   inputSchema:{type:"object",properties:{path:{type:"string",minLength:1,maxLength:2048},mime:{type:"string",enum:["text/html","text/markdown","text/csv","image/png","application/pdf"]},
-   artifactId:{type:"string"},expectedVersion:{type:"integer",minimum:0},provenance:{type:"array",items:{type:"string"}}},required:["path","mime"],additionalProperties:false},
+   artifactId:{type:"string"},expectedVersion:{type:"integer",minimum:0},baseArtifactRef:{type:"object",properties:{artifactId:{type:"string"},version:{type:"integer",minimum:1}},required:["artifactId","version"],additionalProperties:false},
+   provenance:{type:"array",items:{type:"string"}}},required:["path","mime"],additionalProperties:false},
   resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
- workbenchCapabilitySchema.parse({name:"artifact.read",schemaVersion:1,description:"按版本分页读取本任务已保存的产物。",
+ workbenchCapabilitySchema.parse({name:"artifact.read",schemaVersion:1,description:"按版本分页读取当前对话已保存的产物。",
   inputSchema:{type:"object",properties:{artifactId:{type:"string"},version:{type:"integer",minimum:1},offset:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:128000}},required:["artifactId","version"],additionalProperties:false},
   resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
+ workbenchCapabilitySchema.parse({name:"artifact.versions",schemaVersion:1,description:"列出当前对话中已正式保存的产物版本。",
+  inputSchema:{type:"object",properties:{artifactId:{type:"string"},cursor:{type:"string"},limit:{type:"integer",minimum:1,maximum:50}},additionalProperties:false},
+  resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
+ workbenchCapabilitySchema.parse({name:"artifact.copy",schemaVersion:1,description:"把当前对话中已登记的 PNG 精确版本复制到本任务，供新版 HTML 安全引用。",
+  inputSchema:{type:"object",properties:{sourceArtifactId:{type:"string"},sourceVersion:{type:"integer",minimum:1},targetPath:{type:"string"}},required:["sourceArtifactId","sourceVersion","targetPath"],additionalProperties:false},
+  resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
 ];
 const failed=(operationId:string,code:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
  error:{code,retryable:false,dispatched:false,nextAction:"fix_input"}});
 const unknown=(operationId:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"unknown",artifactRefs:[],progressCursor:null,
  error:{code:"artifact_result_unknown",retryable:false,dispatched:true,nextAction:"reconcile"}});
+const confirmedNoCommit=(operationId:string,code:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
+ error:{code,retryable:true,dispatched:true,confirmedNoCommit:true,nextAction:"retry"}});
 function record(value:unknown):Record<string,unknown>{
  if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("INVALID_NATIVE_FILE_REPLY");
  return value as Record<string,unknown>;
@@ -94,8 +105,25 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
     }catch(error){
      if(signal.aborted)throw error;
      if(error instanceof NativeFileError&&!error.dispatched)return failed(context.operationId,error.code.toLowerCase());
+     try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit")return confirmedNoCommit(context.operationId,"artifact_not_committed");}catch{}
      return unknown(context.operationId);
     }
+   }
+   if(invocation.name==="artifact.copy"){
+    const input=copySchema.safeParse(invocation.input);if(!input.success)return failed(context.operationId,"invalid_input");
+    try{
+     const metadata=await artifacts.copy(ref,context.operationId,input.data);signal.throwIfAborted();
+     return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`],progressCursor:null,
+      content:[{type:"text",text:JSON.stringify(metadata)}]});
+    }catch(error){if(signal.aborted)throw error;try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit")return confirmedNoCommit(context.operationId,"artifact_not_committed");}catch{}return unknown(context.operationId);}
+   }
+   if(invocation.name==="artifact.versions"){
+    const input=versionsSchema.safeParse(invocation.input);if(!input.success)return failed(context.operationId,"invalid_input");
+    try{
+     const listing=await artifacts.versions({userId:context.userId,accountId:context.accountId,requestId:context.operationId,source:"ai"},context.taskId,input.data);
+     return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:listing.items.map(item=>`${item.artifactId}@${item.version}`),progressCursor:listing.nextCursor,
+      content:[{type:"text",text:JSON.stringify(listing)}]});
+    }catch(error){if(signal.aborted)throw error;return failed(context.operationId,"artifact_versions_failed");}
    }
    const input=readSchema.safeParse(invocation.input);
    if(!input.success)return failed(context.operationId,"invalid_input");
@@ -111,6 +139,19 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
     return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${page.metadata.artifactId}@${page.metadata.version}`],progressCursor:null,
      content:[{type:"text",text:JSON.stringify({mime:page.metadata.mime,hash:page.metadata.hash,total:page.total,nextOffset:page.nextOffset,...content})}]});
    }catch(error){if(signal.aborted)throw error;return failed(context.operationId,"artifact_read_failed");}
+  },
+  async commitAndSettle(rawCall,input){
+   const call=workbenchHostCallSchema.parse(rawCall),outcome=agenticToolOutcomeSchema.parse(input.outcome);
+   if(!["artifact.register","artifact.copy"].includes(call.invocation.name))throw new Error("ARTIFACT_ATOMIC_COMMIT_UNSUPPORTED");
+   const ref={executionTaskId:call.context.taskId,attempt:call.context.attempt,fenceToken:call.context.fenceToken};
+   return artifacts.commitAndSettleArtifact(ref,{operationId:call.context.operationId,claimId:input.claimId,
+    toolName:call.invocation.name,toolCallId:input.toolCallId,outcome});
+  },
+  async markUnknown(rawCall,input){
+   const call=workbenchHostCallSchema.parse(rawCall);
+   if(!["artifact.register","artifact.copy"].includes(call.invocation.name))return;
+   const ref={executionTaskId:call.context.taskId,attempt:call.context.attempt,fenceToken:call.context.fenceToken};
+   await artifacts.markUnknown(ref,{operationId:call.context.operationId,claimId:input.claimId,toolCallId:input.toolCallId,toolName:input.toolName});
   },
  };
 }

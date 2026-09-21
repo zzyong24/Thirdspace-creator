@@ -116,6 +116,15 @@ describe("T-1009 工作台产物字节窄端口", () => {
     expect(put).not.toHaveBeenCalled();
   });
 
+  it("对账三态只把权威不存在认作 absent，坏对象保持 unknown", async () => {
+    const bytes = new TextEncoder().encode("待核对"), hash = digest(bytes), ref = { ...scope, hash, mime: "text/markdown" as const };
+    expect(await service().inspect(ctx, ref)).toBe("absent");
+    await service().submit(ctx, { ...scope, mime: "text/markdown", bytes });
+    expect(await service().inspect(ctx, ref)).toBe("present");
+    const key = (await objectKeys())[0]!;await writeFile(join(root, key), "损坏");
+    expect(await service().inspect(ctx, ref)).toBe("unknown");
+  });
+
   it("拒绝错 MIME、超限、空字节和未选号，不触及存储", async () => {
     const bytes = new TextEncoder().encode("正文");
     await expect(service().submit(ctx, { ...scope, mime: "text/plain" as WorkbenchBlobMime, bytes })).rejects.toThrow();

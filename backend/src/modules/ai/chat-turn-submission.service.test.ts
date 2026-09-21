@@ -26,7 +26,7 @@ it("同源消息并发提交只产生一个完整绑定，冻结真实历史且�
   expect(a.taskId).toBe(b.taskId);expect(a.executionTaskId).toBe(b.executionTaskId);expect([a.replayed,b.replayed].sort()).toEqual([false,true]);
   const state=await f.rows();expect(state.tasks).toHaveLength(1);expect(state.executions).toHaveLength(1);
   expect(state.tasks[0]).toMatchObject({executionTaskId:a.executionTaskId,taskType:"copilot.assist",status:"queued",inputData:{sourceMessageId:f.source.id}});
-  expect(state.executions[0]).toMatchObject({ownerId:a.taskId,status:"queued",payload:{aiTaskId:a.taskId,modelInput:{kind:"chat.run",userId:f.ctx.userId,accountId:f.ctx.accountId,sourceMessageId:f.source.id,messages:[{role:"user",content:"历史问题"},{role:"assistant",content:"历史回答"},{role:"user",content:"本轮问题"}]}}});
+  expect(state.executions[0]).toMatchObject({ownerId:a.taskId,status:"queued",payload:{aiTaskId:a.taskId,artifactProtocolVersion:2,modelInput:{kind:"chat.run",userId:f.ctx.userId,accountId:f.ctx.accountId,sourceMessageId:f.source.id,messages:[{role:"user",content:"历史问题"},{role:"assistant",content:"历史回答"},{role:"user",content:"本轮问题"}]}}});
   const [saved]=await db.select().from(aiMessages).where(eq(aiMessages.id,f.source.id));expect(saved!.modelMetadata).toEqual({existing:"保留",chatTaskId:a.taskId});
   const count=f.assemble.mock.calls.length;expect(await f.service.submit(f.ctx,f.request)).toMatchObject({...a,replayed:true});expect(f.assemble).toHaveBeenCalledTimes(count);
 });

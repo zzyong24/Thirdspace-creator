@@ -38,7 +38,7 @@ export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservati
 export function workbenchToolOutcome(rawResult:WorkbenchResult,rawDescriptor:WorkbenchCapability){
  const descriptor=workbenchCapabilitySchema.parse(rawDescriptor),result=workbenchResultSchema.parse(rawResult);
  if(result.status==="running")throw new Error("GATEWAY_RUNNING_RESULT_NOT_SETTLEABLE");
- const unknown=result.status==="unknown" || (result.status==="failed" && result.error.dispatched);
+ const unknown=result.status==="unknown" || (result.status==="failed" && result.error.dispatched && result.error.confirmedNoCommit!==true);
  const sideEffect=unknown?"unknown":result.status==="succeeded"
   ? descriptor.effects.some(effect=>["external_write","process","task_write"].includes(effect))?"committed":descriptor.effects.includes("domain_candidate")?"proposal":"none"
   :"none";
