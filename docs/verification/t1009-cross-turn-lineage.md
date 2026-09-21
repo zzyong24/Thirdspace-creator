@@ -40,4 +40,11 @@ flowchart LR
 
 ## 安装版与发布边界
 
-本任务获得的是本地实现、重装和验收授权。安装包复验结果在最终打包后补入本节；没有公开发布、生产放量或修改外部仓库。
+本任务获得的是本地实现、重装和验收授权。`pnpm -C frontend desktop:package-local` 已通过，并完成以下安装后复验：
+
+- `/Applications/CreatorOS.app` 已替换并启动，版本与构建号均为 `1.2.0`，验收进程 PID 为 `91031`。
+- `codesign --verify --deep --strict` 通过；本地包使用 ad hoc 签名且未公证，所以 Gatekeeper `spctl` 拒绝属于该本地流程的预期结果。
+- `/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg` 通过 `hdiutil verify`，SHA-256 为 `a6e8627d838452f1e725781771ebd6ded11d3d76fb4d35c0c6e684daf4392b31`。
+- 应用启动完成后，`creatoros status` 自动返回 `connected=true, access=full`；`creatoros access status` 返回 `enabled=true, access=full`。无需手动开启本次启动的 CLI 权限。
+
+没有公开发布、生产放量或修改外部仓库。
