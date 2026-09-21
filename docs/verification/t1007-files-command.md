@@ -219,3 +219,11 @@ flowchart LR
 - 全局 `boundary-scan.mjs` 仍被未修改的 `frontend/src/features/copilot/live-chat-session.ts` 两条 R2 导入阻断；`semantic-boundary-scan.mjs` 仍被未修改的 `backend/src/modules/ai-runtime/video-decisions-runner.ts` 的 `material.match` 缺口阻断。本写集未覆盖这些旧问题，不写成全绿。
 
 Windows 真机运行入口：先设置 `CREATOROS_T1007_WINDOWS_COMMAND_PROBE=1` 和 `CREATOROS_TEST_PACKAGED_RUNTIME_ROOT=<已核验的随包 sidecar 目录>`，再运行 `cargo test --manifest-path frontend/src-tauri/src/workbench/Cargo.toml real_windows_candidate_pipe_command_roundtrip -- --ignored --nocapture`，并运行两个既有 AppContainer / Job Object 真机隔离探针。仍需检验任务外文件、用户凭据、网络、句柄继承、重解析点、并发修改、子进程取消、超时、宿主崩溃、Unicode/空格路径及 Windows 安装包中的 Node/Python。完整 Tauri Windows 交叉构建此前在本机受 MSVC `assert.h` 缺失阻断，本轮未重试；真实数据库租约→真实 sidecar PID→Pipe→隔离命令也尚未执行。**因此生产 Windows 命令继续 fail-closed，T-1007 保持进行中。**
+
+## 2026-09-20 同一真实文件产物的两版渲染补验
+
+把上述真实 Mac socket 测试接到现有隔离 HTML 渲染端口：从同一任务经 Rust TaskFiles 写入的 `事实 0` 与 `事实 1` 两个文件分别登记为版本 1、2，后端从 Blob 按各自版本回读并复核哈希；再由真实 Chromium 分别生成 PDF。PDF 解析结果中旧版只含 `事实 0`，新版只含 `事实 1`；新版还生成有合法 PNG 签名的图片。这样验证了同一任务的旧版字节没有因后续登记改变。
+
+随后在同一 opt-in 用例中加入本地 OpenAI Chat 协议夹具：真实聊天提交创建 execution task，真实 Worker 收到夹具给出的 `files.write → artifact.register → 完成` 三次响应，透过原调用账本、数据库租约和 Rust 私有 socket 写入 HTML，登记 Blob 后按回执引用回读原字节并用 Chromium 渲染 PDF。两个工具调用均为 `settled`，任务终态 `succeeded`，PDF 包含报告正文。首次新增测试在 PDF 文本提取处失败：字体映射把“工”输出为 Unicode 兼容字形“⼯”；仅对提取文本做 NFKC 规范化后复测通过，HTML 原字节、注册哈希与运行时未改。
+
+`CREATOROS_T1009_REAL_HOST=1 CREATOROS_TEST_PACKAGED_RUNTIME_ROOT='<本机已安装 runtime/1.2.0/sidecar>' CARGO_TARGET_DIR=/tmp/creatoros-t1007-mac-target pnpm --dir frontend exec vitest run src/server/workbench-native-host.test.ts -t '真实 Mac socket' --retry=0 --reporter=verbose`：真实用例 **1/1 通过**，其余 7 例因定向过滤跳过；frontend typecheck、`git diff --check` 通过。模型响应来自确定性本地协议夹具，证明 Worker/工具协议和宿主链路连通，**不证明真实模型自主选工具的效果**。此链路没有经过已安装应用界面或原生保存面板；真实模型效果与安装版仍由 T-1012/T-1013 验收。跨回合版本另受 [待确认的补充规格](../features/t1009-artifact-lineage-proposal.md)约束，本测试不声称其通过。

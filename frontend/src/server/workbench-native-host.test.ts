@@ -1,17 +1,21 @@
 // @vitest-environment node
 import {describe,expect,it,vi} from "vitest";
-import {spawn} from "node:child_process";
+import {execFileSync,spawn} from "node:child_process";
 import {createHash,randomUUID} from "node:crypto";
+import {createServer} from "node:http";
 import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
-import {createDb,type Db} from "@creatoros/backend";
+import {createDb,eq,executionCalls,executionTasks,type Db} from "@creatoros/backend";
 import {createLocalFsObjectStorage,createWorkbenchBlobService} from "@creatoros/backend/modules/assets";
+import {createAiRepository,createChatTurnSubmissionService} from "@creatoros/backend/modules/ai";
 import {createPersistentTaskService,createWorkbenchArtifactReadService} from "@creatoros/backend/modules/execution";
 import type {WorkbenchHostCall} from "@creatoros/contract/agent-workbench";
 import {NativeFileError,type NativeCommandAction} from "./workbench-native-client";
 import {createNativeFilesWorkbenchHost,nativeFileCapabilities} from "./workbench-native-host";
 import {createWorkbenchArtifactHost} from "./workbench-artifact-host";
+import {renderTrustedWorkbenchHtml} from "./workbench-artifact-render";
+import {PDFParse} from "pdf-parse";
 
 vi.mock("server-only",()=>({}));
 
@@ -118,7 +122,7 @@ describe("Mac 受控命令能力",()=>{
 const realMacFiles=process.platform==="darwin" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT
   && (process.env.CREATOROS_T1007_REAL_FILES==="1" || process.env.CREATOROS_T1009_REAL_HOST==="1") ? it : it.skip;
 
-realMacFiles("真实 Mac socket + 租约写文件、登记双版本 Blob，跨账号与旧 fence 拒绝",async()=>{
+realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝",async()=>{
   const directory=await mkdtemp(join(tmpdir(),"t1007-html-host-"));
   const ready=join(directory,"ready"),done=join(directory,"done"),taskRoot=join(directory,"tasks");
   const projectRoot=resolve(import.meta.dirname,"../../..");
@@ -220,6 +224,77 @@ realMacFiles("真实 Mac socket + 租约写文件、登记双版本 Blob，跨�
     expect(Buffer.from(secondBlob.bytes).toString("utf8")).toBe(secondHtml);
     expect(createHash("sha256").update(firstBlob.bytes).digest("hex")).toBe(version1.hash);
     expect(createHash("sha256").update(secondBlob.bytes).digest("hex")).toBe(version2.hash);
+    const firstPdf=await renderTrustedWorkbenchHtml({html:firstBlob.bytes,format:"pdf"});
+    const secondPdf=await renderTrustedWorkbenchHtml({html:secondBlob.bytes,format:"pdf"});
+    for(const [pdf,expected,unexpected] of [[firstPdf,"事实 0","事实 1"],[secondPdf,"事实 1","事实 0"]] as const){
+      expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+      const parser=new PDFParse({data:pdf});
+      try{const text=(await parser.getText()).text;expect(text).toContain(expected);expect(text).not.toContain(unexpected);}
+      finally{await parser.destroy();}
+    }
+    const secondPng=await renderTrustedWorkbenchHtml({html:secondBlob.bytes,format:"png"});
+    expect(secondPng.subarray(0,8)).toEqual(Buffer.from([137,80,78,71,13,10,26,10]));
+    // 模型协议夹具选择工具；写入、登记与渲染仍经过真实 Worker、租约和 Mac 宿主。
+    const modelHtml="<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><body><h1>模型工具链报告</h1></body></html>";
+    const modelFile="交付/模型报告.html",now=()=>new Date().toISOString();
+    const modelContext={userId,accountId,requestId:`${nonce}-model`,source:"user" as const};
+    const repo=createAiRepository(realDb,{userId,accountId,now,nextId:prefix=>`${prefix}-${randomUUID()}`});
+    const conversation=await repo.createConversation({title:"真实文件交付验证",projectId:null,scope:"global"});
+    const source=await repo.createMessage(conversation.id,{role:"user",content:"制作 HTML 报告",attachments:[],modelMetadata:{}});
+    const {defineWorkbenchChatTool}=await import("../../../backend/src/modules/ai-runtime/chat-tool-gate");
+    const {prepareChatToolDefinitions}=await import("../../../backend/src/modules/ai-runtime/chat-tool-definitions");
+    const {createChatWorkbenchCapabilityHost}=await import("../../../backend/src/modules/ai-runtime/chat-workbench-capability-host");
+    const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
+    const {createExecutionLeaseService}=await import("../../../backend/src/modules/execution/execution-lease.service");
+    const descriptors=[host.catalog.find(item=>item.name==="files.write")!,artifactHost.catalog.find(item=>item.name==="artifact.register")!];
+    const prototypes=Object.fromEntries(descriptors.map(item=>[item.name,defineWorkbenchChatTool(item,async()=>{throw Error("unused");})]));
+    const definitions=(await prepareChatToolDefinitions(prototypes,{workbenchCapabilities:descriptors})).definitions;
+    const submitted=await createChatTurnSubmissionService(realDb,{now,assemble:async()=>({
+      capability:"copilot.assist",system:"先写报告，再登记产物。",messages:[{role:"user",content:"制作 HTML 报告"}],
+      maxSteps:6,maxOutputTokens:256,tools:definitions,workbenchCapabilities:descriptors,workbenchPlatform:"macos",
+    })}).submit(modelContext,{conversationId:conversation.id,sourceMessageId:source.id});
+    execFileSync(process.execPath,[resolve(projectRoot,"ai-worker/scripts/build.mjs")],{cwd:projectRoot,stdio:"pipe"});
+    let modelRequests=0;
+    const server=createServer((request,response)=>{request.resume();request.on("end",()=>{
+      modelRequests++;
+      const calls=[
+        {name:"files_write",arguments:{path:modelFile,content:modelHtml,expectedVersion:0}},
+        {name:"artifact_register",arguments:{path:modelFile,mime:"text/html"}},
+      ];
+      const next=calls[modelRequests-1];
+      const delta=next?{tool_calls:[{index:0,id:`model-call-${modelRequests}`,type:"function",function:{name:next.name,arguments:JSON.stringify(next.arguments)}}]}:{content:"报告已交付。"};
+      const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:next?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+      response.writeHead(200,{"content-type":"text/event-stream"});
+      response.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+    });});
+    await new Promise<void>(ready=>server.listen(0,"127.0.0.1",ready));
+    const leases=createExecutionLeaseService(realDb,{now});
+    const available={catalog:descriptors,platform:"macos" as const,capabilities:["task.files","task.artifacts"],
+      dispatch:(call:Parameters<typeof host.dispatch>[0],dispatchControl:Parameters<typeof host.dispatch>[1])=>
+        call.invocation.name==="files.write"?host.dispatch(call,dispatchControl):artifactHost.dispatch(call,dispatchControl)};
+    const resolveTools=createChatWorkbenchCapabilityHost(available,
+      ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,
+        taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
+    const worker=createChatWorkerDispatcher(realDb,{entryPath:resolve(projectRoot,"ai-worker/dist/execution-worker.cjs"),
+      workerId:`html-model-${nonce}`,budget:{maxCalls:8,maxTokens:100000,deadlineMs:60000},pollMs:100,modelConcurrency:1,
+      resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+    try{
+      worker.start();
+      await expect.poll(async()=>["succeeded","failed","waiting_user","unknown_result"].includes(
+        (await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status??""),{timeout:30000}).toBe(true);
+      const terminal=(await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
+      const calls=await realDb.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
+      expect(terminal.status,JSON.stringify({error:terminal.lastErrorCode,calls})).toBe("succeeded");
+      expect(modelRequests).toBe(3);
+      expect(calls.filter(row=>row.kind==="tool").map(row=>row.status)).toEqual(["settled","settled"]);
+      const registeredModel=calls.map(row=>row.resultText??"").join(" ").match(/wa-[a-f0-9]{32}@1/);
+      expect(registeredModel).not.toBeNull();
+      const modelBlob=await artifactReader.readAll(modelContext,submitted.executionTaskId,registeredModel![0].split("@")[0]!,1);
+      expect(Buffer.from(modelBlob.bytes).toString("utf8")).toBe(modelHtml);
+      const modelPdf=await renderTrustedWorkbenchHtml({html:modelBlob.bytes,format:"pdf"});
+      const parser=new PDFParse({data:modelPdf});
+      try{expect((await parser.getText()).text.normalize("NFKC")).toContain("模型工具链报告");}finally{await parser.destroy();}
+    }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(closed=>server.close(()=>closed()));}
     const artifactRead=await artifactCall(owner.context,"artifact.read",{artifactId:version1.artifactId,
       version:1,offset:0,limit:4096});
     expect(artifactRead).toMatchObject({status:"succeeded",artifactRefs:[`${version1.artifactId}@1`]});
