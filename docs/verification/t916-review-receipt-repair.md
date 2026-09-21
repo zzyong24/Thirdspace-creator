@@ -2,7 +2,7 @@
 
 - 日期：2026-09-21
 - 范围：`reviewctl audit` 最初报告的 16 个历史任务，以及共享 SPEC 联动影响的 T-707
-- 任务状态：T-916 继续保持进行中；本文只证明本轮规格回执、审查工具和相关台账修复，不冒充旧任务的真机、发布或业务效果验收
+- 任务状态：T-916 收尾证据；本文证明规格回执、审查工具和任务台账修复，不冒充旧任务的真机、发布或业务效果验收
 
 ## 1. 已修复的问题
 
@@ -12,7 +12,8 @@
 4. 修正审查中确认的规格矛盾，包括：视频时间线和素材真值、当前稿件归属、自然语言改单段、ASR 回退、定位候选幂等与纯人设边界、渠道模型所有权与计费幂等、桌面 verdict 私钥传播、正式包身份 attestation 与存量迁移门。
 5. 更新现行桌面激活指南，移除手工创建 `test` 项目和正式包运行时覆盖身份的旧说明，并恢复当前严格验签边界。
 6. `pmem sync` 后 PROJECT.md 仅改变 `LAST_SYNCED` 生成元数据；受影响任务使用绑定旧哈希与 `PMEM-SYNC` 的新周期能力重新完整审查。
-7. 使用 `backlog-compact.mjs --all` 将 11 条已完成任务迁入 `BACKLOG-archive.md`，主看板从 46.4KB 降至 43.0KB。
+7. 使用 `backlog-compact.mjs --all` 将 11 条已完成任务迁入 `BACKLOG-archive.md`；随后压缩活动行和暂停池索引，主看板从 46.4KB 降至 25.5KB，消除 30KB 硬错误和全部超长行，并保留严格回执所需的审核、验收和文档列。
+8. 补齐 `backlog-compact.mjs --squeeze`、七列归档格式和幂等测试；`backlog-health.mjs` 新增执行任务 ID 唯一性及归档复用检查，避免后续再次积累不可见的台账漂移。
 
 ## 2. 最终回执
 
@@ -45,17 +46,20 @@ node --test orchestrator/process/reviewctl.test.mjs
 node orchestrator/process/reviewctl.mjs audit
 review receipts + event chain PASS
 
-node orchestrator/process/pmem.mjs sync
-PROJECT.md sync PASS
+node --test orchestrator/process/backlog-health.test.mjs orchestrator/process/backlog-compact.test.mjs orchestrator/process/taskctl-extension.test.mjs
+9 tests, 9 pass, 0 fail
+
+node orchestrator/process/backlog-health.mjs
+0 errors；25.5KB，低于 30KB 硬上限；无超长行；执行任务 ID 唯一且未复用归档 ID
 
 node orchestrator/process/reconcile.mjs
 0 errors, Manifest reconciles with reality
 ```
 
-`reconcile` 的边界扫描、孤儿扫描、前端验证、知识层检查和 LED-001～LED-051 已全部通过。唯一保留项是非阻断的 BACKLOG 体积警告：机械归档已完成，但 130 个开放任务仍使主看板为 43.0KB，高于 30KB 维护阈值；后续需要在 T-916 中继续压缩活动任务行，不能通过删除任务或改低阈值伪造通过。
+`reconcile` 的边界扫描、孤儿扫描、前端验证、知识层检查和 LED-001～LED-051 已全部通过。主看板已低于 30KB 硬上限；看板仍保存 222 个执行/暂停任务索引，因此高于 15KB 软提示线，属于队列数量带来的非阻断提示，任务内容与状态未因压缩丢失。
 
 ## 4. 证据边界
 
 - 本轮修改的是审查工具、规格、审查回执、威胁模型、运营文档和治理台账。
 - 本轮没有把仍标为“待验”的历史业务任务写成真机通过，也没有补拍历史 TDD、安装包或生产发布证据。
-- T-916 仍承接更广泛的工程对账与活动看板压缩，因此不在本轮标记完成。
+- 历史归档保留 5 个早期任务撞号；执行看板没有重复 ID，也没有复用归档 ID。该历史事实不改写，后续新任务会被健康检查阻止再次撞号。

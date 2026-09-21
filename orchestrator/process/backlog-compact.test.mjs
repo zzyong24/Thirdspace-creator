@@ -63,7 +63,8 @@ test("--squeeze 把长详情和暂停恢复条件外置，主看板仍保留任�
   const detailsOnce = fs.readFileSync(path.join(root, "BACKLOG-details.md"), "utf8");
   assert.match(once, /T-003.*🔨/);
   assert.match(once, /T-001.*⏸️/);
-  assert.match(once, /\| ID \| 搁置 \| 文档 \|/);
+  assert.match(once, /\|ID\|状态\|审核\|验收\|文档\|/);
+  assert.match(once, /T-001\|⏸️\|—\|—\|\[详情\]/);
   assert.doesNotMatch(once, /PAUSED\.md/);
   assert.doesNotMatch(once, /长范围。{2,}/);
   assert.match(detailsOnce, /<a id="t-003"><\/a>/);

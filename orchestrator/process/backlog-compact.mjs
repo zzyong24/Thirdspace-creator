@@ -33,11 +33,13 @@ const REPO = path.resolve(HERE, "..", "..");
 const argv = process.argv.slice(2);
 const DRY = argv.includes("--dry-run");
 const ALL = argv.includes("--all");
+const SQUEEZE = argv.includes("--squeeze");
 const keepIdx = argv.indexOf("--keep");
 const KEEP = keepIdx >= 0 ? Math.max(0, parseInt(argv[keepIdx + 1], 10) || 5) : 5;
 const explicit = argv.find((a, i) => !a.startsWith("-") && (keepIdx < 0 || i !== keepIdx + 1));
 const BACKLOG = explicit ? path.resolve(process.cwd(), explicit) : path.resolve(REPO, "BACKLOG.md");
 const ARCHIVE = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
+const DETAILS = path.join(path.dirname(BACKLOG), "BACKLOG-details.md");
 
 if (!existsSync(BACKLOG)) {
   console.log(`· backlog-compact:未找到 ${path.relative(process.cwd(), BACKLOG)} — 无事可做。`);
@@ -92,7 +94,7 @@ if (activeDone.length) {
   console.log(`  确认它们真收口了就再跑一次加 --all;或手动把它们移进 \`## ✅\` 区段。`);
 }
 
-if (!toArchive.length) {
+if (!toArchive.length && !SQUEEZE) {
   console.log("✓ 无可归档行 — 台账已是紧凑态(或先建 `## ✅` 完成区段)。");
   process.exit(0);
 }
@@ -103,19 +105,64 @@ if (DRY) {
 }
 
 // 写归档(只进不改,按日期分节;新文件补头)
-let head = "";
-if (!existsSync(ARCHIVE)) {
-  head = `# BACKLOG 归档(只进不改)\n\n> 由 \`backlog-compact.mjs\` 从 BACKLOG.md 迁入的 ✅ 完成行。考古用;不进 SessionStart 注入。\n`;
+if (toArchive.length) {
+  let head = "";
+  if (!existsSync(ARCHIVE)) {
+    head = `# BACKLOG 归档(只进不改)\n\n> 由 \`backlog-compact.mjs\` 从 BACKLOG.md 迁入的 ✅ 完成行。考古用;不进 SessionStart 注入。\n`;
+  }
+  const block = `${head}\n## 归档于 ${today}\n\n| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |\n|---|---|---|---|---|---|---|\n${toArchive.map((r) => r.line).join("\n")}\n`;
+  appendFileSync(ARCHIVE, block);
 }
-const block = `${head}\n## 归档于 ${today}\n\n| ID | 任务 | 状态 | 文档 | 一句话 |\n|---|---|---|---|---|\n${toArchive.map((r) => r.line).join("\n")}\n`;
-appendFileSync(ARCHIVE, block);
 
 // 重写主文件(删除已归档行)
 const gone = new Set(toArchive.map((r) => r.idx));
-const out = lines.filter((_, i) => !gone.has(i)).join("\n");
+let outLines = lines.filter((_, i) => !gone.has(i));
+let squeezed = 0;
+let detailText = existsSync(DETAILS) ? readFileSync(DETAILS, "utf8") : "# BACKLOG 任务详情\n";
+const detailBlocks = [];
+
+if (SQUEEZE) {
+  let pausedTable = false;
+  outLines = outLines.map((line) => {
+    if (/^##\s+/.test(line)) pausedTable = line.includes("⏸️");
+    if (pausedTable && /^\|\s*ID\s*\|/.test(line)) return "|ID|状态|审核|验收|文档|";
+    if (pausedTable && /^\|(?:\s*:?-+:?\s*\|)+\s*$/.test(line)) return "|---|---|---|---|---|";
+    if (!/^\|\s*T-/.test(line)) return line;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    const id = cells[0];
+    const anchor = id.toLowerCase().replace(/\s+/g, "-");
+    const detailLink = `[详情](BACKLOG-details.md#${anchor})`;
+
+    if (pausedTable) {
+      if (cells.length === 5 && cells.at(-1)?.includes(`BACKLOG-details.md#${anchor}`)) return line;
+      const [task = "", status = "⏸️", document = "—", recovery = "—"] = cells.slice(1);
+      if (!detailText.includes(`<a id="${anchor}"></a>`)) {
+        detailBlocks.push(`\n<a id="${anchor}"></a>\n### ${id} · ${task}\n\n- 原文档：${document}\n- 暂停原因/恢复条件：${recovery}\n`);
+      }
+      squeezed++;
+      return `|${id}|${status.startsWith("⏸️") ? "⏸️" : status}|—|—|${detailLink}|`;
+    }
+
+    if (cells.length !== 7 || (line.length <= 300 && (cells[6] ?? "").length <= 150)) return line;
+    if (!detailText.includes(`<a id="${anchor}"></a>`)) {
+      detailBlocks.push(`\n<a id="${anchor}"></a>\n### ${id} · ${cells[1]}\n\n- 原文档：${cells[5]}\n- 任务详情：${cells[6]}\n`);
+    }
+    cells[5] = cells[5] === "—" ? detailLink : `${cells[5]} ${detailLink}`;
+    cells[6] = "见详情。";
+    squeezed++;
+    return `| ${cells.join(" | ")} |`;
+  });
+}
+
+const out = outLines.join("\n");
 writeFileSync(BACKLOG, out);
+if (detailBlocks.length) {
+  detailText = `${detailText.trimEnd()}\n${detailBlocks.join("")}\n`;
+  writeFileSync(DETAILS, detailText);
+}
 
 const newKB = (Buffer.byteLength(out) / 1024).toFixed(1);
-console.log(`✓ 归档 ${toArchive.length} 行 → ${path.relative(process.cwd(), ARCHIVE)}`);
+if (toArchive.length) console.log(`✓ 归档 ${toArchive.length} 行 → ${path.relative(process.cwd(), ARCHIVE)}`);
+if (SQUEEZE) console.log(`✓ 外置 ${squeezed} 条长详情/暂停恢复条件 → ${path.relative(process.cwd(), DETAILS)}`);
 console.log(`✓ 主文件 ${(Buffer.byteLength(src) / 1024).toFixed(1)}KB → ${newKB}KB。git diff 复核后连同归档文件一起提交。`);
 console.log(`  剩余超长 📋/🔨 行属语义压缩(agent 的活):node orchestrator/process/backlog-health.mjs 查看清单。`);
