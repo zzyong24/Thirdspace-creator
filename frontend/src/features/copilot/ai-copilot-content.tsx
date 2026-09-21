@@ -1142,6 +1142,27 @@ export function AICopilotContent({
     finally{setStopPending(false);}
   };
   const streaming = status === "streaming" || status === "submitted";
+  const recoveryAttemptsRef = React.useRef(0);
+  const recoveryTurnKeyRef = React.useRef("");
+  const [recoveryStalled, setRecoveryStalled] = React.useState(false);
+  const recoveryTurnKey = [...messages]
+    .reverse()
+    .find((message) => message.role === "user")?.id ?? "";
+  const hasDurableTaskReceipt = taskControl.current.currentTaskId() !== null;
+  const resetRecoveryBudget = React.useCallback(() => {
+    recoveryAttemptsRef.current = 0;
+    setRecoveryStalled(false);
+  }, []);
+  React.useEffect(() => {
+    if (recoveryTurnKeyRef.current === recoveryTurnKey) return;
+    recoveryTurnKeyRef.current = recoveryTurnKey;
+    resetRecoveryBudget();
+  }, [recoveryTurnKey, resetRecoveryBudget]);
+  React.useEffect(() => {
+    if (!error && !composerLifecycleError && status === "ready") {
+      resetRecoveryBudget();
+    }
+  }, [composerLifecycleError, error, resetRecoveryBudget, status]);
   // [T-332 S4] AI 流式生成中 = 进行中的前台操作:登记进 foreground-activity 注册表,
   // 账号切换器切号前会据此弹确认「有进行中的操作,切号会离开当前页面」(SPEC §6.1)。
   useForegroundActivity("AI 编导正在生成回复", streaming);
@@ -1220,6 +1241,19 @@ export function AICopilotContent({
   const chatError = React.useMemo(() => {
     if (!error && !composerLifecycleError) return null;
     if (!error && composerLifecycleError) {
+      if (recoveryStalled) {
+        return {
+          title: "自动恢复暂未取得进展",
+          message: hasDurableTaskReceipt
+            ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+            : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。",
+          suggestSwitchModel: false,
+          suggestOpenCredits: false,
+          suggestOpenPositioning: false,
+          canRetry: true,
+          autoRecover: false,
+        };
+      }
       return {
         title: "正在恢复本轮生成",
         message: "输入和已完成内容已保留，系统正在沿原任务补全结果。",
@@ -1256,13 +1290,14 @@ export function AICopilotContent({
     const isMissingModel = human?.code === "model_not_configured";
     const resultUnconfirmed = human?.code === "result_unconfirmed";
     const autoRecover =
+      !recoveryStalled &&
       !resultUnconfirmed &&
       !terminalScriptSelectionError &&
       !suggestOpenCredits &&
       !suggestOpenPositioning &&
       !suggestSwitchModel;
     return {
-      title: autoRecover ? "正在恢复本轮生成" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
+      title: recoveryStalled ? "自动恢复暂未取得进展" : autoRecover ? "正在恢复本轮生成" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1274,7 +1309,11 @@ export function AICopilotContent({
                 ? "这次局部改写已结束"
                 : "本轮生成需要处理",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: resultUnconfirmed ? human!.message : suggestOpenCredits
+      message: recoveryStalled
+        ? hasDurableTaskReceipt
+          ? "后台任务和已完成内容都已保留。连接暂未恢复，你可以稍后回来，或继续恢复当前轮次。"
+          : "输入和已完成内容已保留，但后台任务尚未建立。你可以继续恢复当前轮次。"
+        : resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
@@ -1288,13 +1327,15 @@ export function AICopilotContent({
       suggestSwitchModel,
       suggestOpenCredits,
       suggestOpenPositioning,
-      canRetry: false,
+      canRetry: recoveryStalled,
       autoRecover,
     };
   }, [
     composerLifecycleError,
     error,
+    hasDurableTaskReceipt,
     pendingComposerRequest?.functionKey,
+    recoveryStalled,
     retryableScriptPatchRequest?.functionKey,
     terminalScriptSelectionError,
   ]);
@@ -1457,19 +1498,27 @@ export function AICopilotContent({
     return regenerate();
   }, [messages, regenerate]);
 
-  // T-1022：regenerate 会复用后端已保存的 sourceMessageId，因此这里是在重连/续跑原任务，
-  // 不是创建一条重复生成。只要错误仍存在就指数退避继续；需要设置、额度、定位、人工核对
-  // 或明确停止的状态不会进入这个循环。
+  const continueRecovery = React.useCallback(() => {
+    resetRecoveryBudget();
+    return retryLastTurn();
+  }, [resetRecoveryBudget, retryLastTurn]);
+
+  // T-1022/T-1023：regenerate 会复用后端已保存的 sourceMessageId。前端只负责把请求可靠交给
+  // 持久 Agent，连续三次仍没有新流事件就结束自动请求并给出“继续恢复”；已有 executionTaskId
+  // 的后台任务不会被取消，用户离开页面后仍由其自身 retry_wait/检查点推进。
   React.useEffect(() => {
     if (!chatError?.autoRecover || streaming || messages.length === 0) return;
     let cancelled = false;
-    let attempt = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const continueOriginalTurn = () => {
-      const delay = Math.min(1_000 * 2 ** Math.min(attempt, 5), 30_000);
+      if (recoveryAttemptsRef.current >= 3) {
+        setRecoveryStalled(true);
+        return;
+      }
+      const delay = 1_000 * 2 ** recoveryAttemptsRef.current;
       timer = setTimeout(() => {
         if (cancelled) return;
-        attempt += 1;
+        recoveryAttemptsRef.current += 1;
         void Promise.resolve(retryLastTurn())
           .catch(() => undefined)
           .finally(() => {
@@ -3139,10 +3188,10 @@ export function AICopilotContent({
                       <button
                         type="button"
                         data-slot="copilot-error-retry"
-                        onClick={() => void retryLastTurn()}
+                        onClick={() => void continueRecovery()}
                         className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
-                        重试
+                        {recoveryStalled ? "继续恢复" : "重试"}
                       </button>
                     ) : null}
                   </div>

@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-053",
+      "what": "内置工具约束再次阻断整轮聊天装配，或前端在没有任务回执和进展时无限自动恢复",
+      "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",
+      "onFail": "恢复真实内置工具装配回归与有限恢复预算：已支持约束必须实际校验，未知约束 fail-closed；没有持久任务时连续三次无进展即停止自动请求并保留同轮继续入口。"
+    },
+    {
       "led": "LED-052",
       "what": "模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放",
       "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",

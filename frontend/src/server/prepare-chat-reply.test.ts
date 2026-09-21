@@ -11,8 +11,9 @@ it.each([null,'probe-project'])('公开聊天实际装配接受默认场景并�
   context:{positioning:{getPositioningCenter:async()=>({profile:null,currentStatement:null})},learnings:{getSuggestions:async()=>[]},signals:{list:async()=>[]},knowledge:{list:async()=>[]},accounts:{list:async()=>[]}},
   contextReaders:{getProjectDetail:async()=>({id:projectId,title:'项目',stage:'planning',status:'active',publish:{published:false,platform:null,publishedAt:null},brief:{},artifacts:[]})},
   searchWeb:async()=>{throw Error('不得在装配时调用网络');},
-  durable:{workbenchHost:{platform:'windows',capabilities:['task.files'],dispatch:async()=>null,catalog:[
+  durable:{workbenchHost:{platform:'macos',capabilities:['task.files','task.browser'],dispatch:async()=>null,catalog:[
    workbenchCapabilitySchema.parse({name:'files.read',schemaVersion:1,description:'读取当前任务文件',inputSchema:{type:'object'},resultSchema:{type:'object'},effects:['read'],requiredCapabilities:['task.files'],platforms:['macos','windows']}),
+   workbenchCapabilitySchema.parse({name:'browser.navigate',schemaVersion:1,description:'在已授权站点域内导航当前 Lane',inputSchema:{type:'object',properties:{laneId:{type:'string',minLength:1,maxLength:128},browserEpoch:{type:'integer',minimum:1},url:{type:'string',format:'uri',maxLength:4096}},required:['laneId','browserEpoch','url'],additionalProperties:false},resultSchema:{type:'object'},effects:['read'],requiredCapabilities:['task.browser'],platforms:['macos']}),
    workbenchCapabilitySchema.parse({name:'unexpected.read',schemaVersion:1,description:'未审查工具',inputSchema:{type:'object'},resultSchema:{type:'object'},effects:['read'],requiredCapabilities:['task.files'],platforms:['windows']}),
   ]}},
  };
@@ -22,5 +23,5 @@ it.each([null,'probe-project'])('公开聊天实际装配接受默认场景并�
  expect(result.hostContext.skillSnapshot.skills.map(s=>s.skillId)).toContain('method.research');
  expect(result.hostContext.skillSnapshot.skills.map(s=>s.skillId)).toContain('method.report');
  expect(result.system).toContain('method.report');
- expect(result.workbenchCapabilities.map(item=>item.name)).toEqual(['files.read']);
+ expect(result.workbenchCapabilities.map(item=>item.name)).toEqual(['files.read','browser.navigate']);
 });

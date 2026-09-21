@@ -8,7 +8,7 @@ const CURRENT_ACCOUNT_KEY = "creatoros:current-account";
 const CURRENT_ACCOUNT_COOKIE = "creatoros_current_account";
 const visibleCopyPath = resolve(
   process.cwd(),
-  "../orchestrator/evidence/T-1022-visible-copy.json",
+  "../orchestrator/evidence/T-1023-visible-copy.json",
 );
 let accountSequence = 0;
 const visibleCopyCaptures: Array<{
@@ -31,7 +31,7 @@ test.afterAll(() => {
     `${JSON.stringify(
       {
         schema: "frontend-visible-copy/v1",
-        task_id: "T-1022",
+        task_id: "T-1023",
         commit_sha: commitSha,
         captures: visibleCopyCaptures,
       },
@@ -134,7 +134,7 @@ test("E2E-T1022-01 没有模型时保留输入并直达模型设置", async ({ p
   await captureVisibleCopy(page, "missing-model-regular", ["AC-T1022-MISSING-MODEL"]);
 });
 
-test("E2E-T1022-02 临时失败沿同一轮自动恢复并交付完整结果", async ({ page, baseURL }) => {
+test("E2E-T1022-02 / E2E-T1023-01 临时失败沿同一轮自动恢复并交付完整结果", async ({ page, baseURL }) => {
   let attempts = 0;
   const userMessageIds: string[] = [];
   await page.route("**/api/chat", async (route) => {
@@ -178,6 +178,7 @@ test("E2E-T1022-02 临时失败沿同一轮自动恢复并交付完整结果", a
   await captureVisibleCopy(page, "transient-failure-auto-recovery-minimum", [
     "AC-T1022-AUTO-RECOVERY",
     "AC-T1022-SAME-TURN",
+    "AC-T1023-TRANSIENT-RECOVERS",
   ]);
 
   await expect(page.getByText("完整候选已自动恢复")).toBeVisible();
@@ -186,4 +187,94 @@ test("E2E-T1022-02 临时失败沿同一轮自动恢复并交付完整结果", a
   expect(userMessageIds).toHaveLength(2);
   expect(userMessageIds[1]).toBe(userMessageIds[0]);
   await captureVisibleCopy(page, "recovered-result-minimum", ["AC-T1022-COMPLETE"]);
+});
+
+test("E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继续恢复仍沿原轮完成", async ({ page, baseURL }) => {
+  test.setTimeout(30_000);
+  let attempts = 0;
+  const userMessageIds: string[] = [];
+  await page.route("**/api/chat", async (route) => {
+    attempts += 1;
+    const body = route.request().postDataJSON() as {
+      messages?: Array<{ id?: string; role?: string }>;
+    };
+    const userMessage = [...(body.messages ?? [])]
+      .reverse()
+      .find((message) => message.role === "user");
+    if (userMessage?.id) userMessageIds.push(userMessage.id);
+    if (attempts <= 4) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "temporary upstream failure" }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "content-type": "text/event-stream",
+        "x-vercel-ai-ui-message-stream": "v1",
+        "x-conversation-id": "conversation-t1023",
+        "x-execution-task-id": "execution-t1023",
+      },
+      body: recoveredStream("继续恢复后已完成"),
+    });
+  });
+
+  await selectFreshAccount(page, baseURL);
+  await page.setViewportSize({ width: 900, height: 600 });
+  await openAssistant(page);
+  await sendPrompt(page, "生成播放量可视化文件");
+
+  const card = page.locator('[data-slot="copilot-error"]');
+  await expect(card).toContainText("正在恢复本轮生成");
+  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 12_000 });
+  await expect(card.getByRole("button", { name: "继续恢复" })).toBeVisible();
+  await expect(card.locator('[data-slot="copilot-error-auto-recovery"]')).toHaveCount(0);
+  expect(attempts).toBe(4);
+
+  await page.waitForTimeout(2_000);
+  expect(attempts).toBe(4);
+  await captureVisibleCopy(page, "recovery-stalled-actionable", [
+    "AC-T1023-NO-INFINITE-SPINNER",
+  ]);
+
+  await card.getByRole("button", { name: "继续恢复" }).click();
+  await expect(page.getByText("继续恢复后已完成")).toBeVisible();
+  await expect(card).toHaveCount(0);
+  expect(attempts).toBe(5);
+  expect(new Set(userMessageIds).size).toBe(1);
+  await captureVisibleCopy(page, "recovery-manual-continue", [
+    "AC-T1023-SAME-TURN-CONTINUE",
+  ]);
+});
+
+test("E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后台任务", async ({ page, baseURL }) => {
+  test.setTimeout(20_000);
+  let attempts = 0;
+  await page.route("**/api/chat", async (route) => {
+    attempts += 1;
+    await route.fulfill({
+      status: 503,
+      headers: { "x-execution-task-id": "execution-t1023-durable" },
+      contentType: "application/json",
+      body: JSON.stringify({ error: "temporary event connection failure" }),
+    });
+  });
+
+  await selectFreshAccount(page, baseURL);
+  await page.setViewportSize({ width: 900, height: 600 });
+  await openAssistant(page);
+  await sendPrompt(page, "生成长篇分析并保留后台任务");
+
+  const card = page.locator('[data-slot="copilot-error"]');
+  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 12_000 });
+  await expect(card).toContainText("后台任务和已完成内容都已保留");
+  expect(attempts).toBe(4);
+  await page.waitForTimeout(1_000);
+  expect(attempts).toBe(4);
+  await captureVisibleCopy(page, "durable-task-remains-active", [
+    "AC-T1023-DURABLE-TASK-WAITS",
+  ]);
 });

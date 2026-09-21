@@ -11,7 +11,7 @@
  */
 
 import * as React from "react";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -75,6 +75,7 @@ let mockStatus = "ready";
 // [T-231⑩] error/regenerate 可注入:断言「出错 → 重试按钮 → regenerate()」通路。
 const regenerate = vi.fn();
 let mockError: Error | null = null;
+let mockCurrentTaskId: string | null = null;
 let initialChatTransport: { body?: unknown } | null = null;
 // T-954：真实组件已改用持久 Chat 会话；替身仍保留首个 transport 检查发送时上下文。
 let mockedLiveSession: object | null = null;
@@ -82,7 +83,11 @@ vi.mock("./live-chat-session", () => ({
   getLiveChatSession: () => {
     mockedLiveSession ??= {
       chat: { messages: [], status: "ready" },
-      control: { fetch: vi.fn(), cancel: vi.fn(async () => {}) },
+      control: {
+        fetch: vi.fn(),
+        cancel: vi.fn(async () => {}),
+        currentTaskId: vi.fn(() => mockCurrentTaskId),
+      },
       conversationId: null,
       epoch: 0,
       get transport() { return initialChatTransport; },
@@ -161,6 +166,7 @@ beforeEach(() => {
   mockSearch = "copilot=open";
   regenerate.mockReset();
   mockError = null;
+  mockCurrentTaskId = null;
   initialChatTransport = null;
   // 每个用例从干净的会话存档起步(前一个用例可能写过 localStorage)。
   try {
@@ -1228,6 +1234,73 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
     expect(regenerate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("[T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("temporary upstream failure");
+    mockMessages = [
+      { id: "u-stalled", role: "user", parts: [{ type: "text", text: "生成可视化文件" }] },
+    ];
+    regenerate.mockResolvedValue(undefined);
+
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(7_100);
+    });
+
+    expect(regenerate).toHaveBeenCalledTimes(3);
+    expect(screen.getByText("自动恢复暂未取得进展")).toBeInTheDocument();
+    const continueButton = screen.getByRole("button", { name: "继续恢复" });
+    expect(continueButton).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-auto-recovery"]')).toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(regenerate).toHaveBeenCalledTimes(3);
+
+    fireEvent.click(continueButton);
+    expect(regenerate).toHaveBeenCalledTimes(4);
+    vi.useRealTimers();
+  });
+
+  it("[TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败", async () => {
+    vi.useFakeTimers();
+    mockCurrentTaskId = "execution-original";
+    mockError = new Error("聊天事件连接中断，已完成内容仍保存在原任务中。");
+    mockMessages = [
+      { id: "u-durable", role: "user", parts: [{ type: "text", text: "继续生成报告" }] },
+    ];
+    regenerate.mockResolvedValue(undefined);
+
+    render(<AICopilotContent viewModel={VM} />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(7_100);
+    });
+
+    expect(screen.getByText("自动恢复暂未取得进展")).toBeInTheDocument();
+    expect(screen.getByText(/后台任务和已完成内容都已保留/)).toBeInTheDocument();
+    expect(screen.queryByText(/任务失败/)).not.toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
+  it("[T-1023] 组件卸载后清理恢复计时器，不在后台继续发请求", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("temporary upstream failure");
+    mockMessages = [
+      { id: "u-unmount", role: "user", parts: [{ type: "text", text: "生成报告" }] },
+    ];
+    const view = render(<AICopilotContent viewModel={VM} />);
+    view.unmount();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60_000);
+    });
+    expect(regenerate).not.toHaveBeenCalled();
     vi.useRealTimers();
   });
 
