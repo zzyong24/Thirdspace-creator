@@ -21,7 +21,7 @@
 | T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
 | T-1007 | 补齐任务文件空间与受控命令执行 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。 |
 | T-1008 | 迁移 NomiFun 浏览器能力并协调既有采集 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。 |
-| T-1009 | 实现产物版本、隔离预览与原生导出 | 🔨 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
+| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
 | T-1010 | 装配研究创作报告 Skill 与兼容扩展 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1007/1008/1009；按需方法包、锁定版本，自主选工具完成目标。 |
 | T-1011 | 实现对话内计划进度与文件交付交互 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1009；同对话查看修改导出，停止/恢复与性能防复发。 |
 | T-1012 | 验收完整多步 Agent 与旧功能兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1008/1010/1011；真实模型工具文件全链路、故障恢复、采集及性能。 |
