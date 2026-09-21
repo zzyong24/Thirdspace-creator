@@ -38,3 +38,11 @@ Mac/Windows 安装版的 CfT 路径、原生保存对话框取消/覆盖、实�
 在 [T-1007 记录](t1007-files-command.md#2026-09-20-同一真实文件产物的两版渲染补验)所述 opt-in 用例中，先由真实数据库租约和 Mac Rust 私有 socket 写入两个 HTML 文件，登记同一产物的版本 1、2；Blob 按版本回读的字节和哈希分别正确，Chromium 导出的 PDF 保留各自版本正文，新版 PNG 签名有效。随后本地模型协议夹具经真实 Worker 依次请求 `files.write`、`artifact.register`，两个工具调用均结算，真实任务文件登记成 Blob，PDF 含其正文。定向用例 **1/1 通过**，frontend typecheck 通过。
 
 该夹具验证模型调用协议到真实 Mac 宿主、产物和渲染的连接，不代表真实模型自主选择工具，也未触发安装版 UI 或原生保存面板。跨回合版本仍待补充规格的用户确认与实施。
+
+## 2026-09-20 真实模型单回合尝试与实际阻断
+
+同一 opt-in 用例另提供 `CREATOROS_T1012_REAL_MODEL=1`：真实 Worker 使用显式模型配置发起请求，模型需自行选择 `files.write` 与 `artifact.register`，之后仍核对原调用账本、临时任务文件、Blob 和 PDF。测试只用随机测试账号与临时目录；密钥从环境变量读取，不写入文件或输出。
+
+本机 `MINIMAX_API_KEY` 存在，但以仓库已用的 MiniMax-M3 Anthropic 兼容配置尝试中国区与全球区端点各一次，均得到供应商 `auth_401`。任务终态 `waiting_user`，原账本仅有一条 `model/rejected`，**没有工具调用、文件登记或可验收的真实模型产物**。因此不能宣称真实模型自主执行通过，也不能把认证失败误判为工具链失败。安装版公开 CLI 同时返回 `CONNECTION_EXPIRED`，需在应用设置中重新开启本次访问后才能做安装版业务验收。
+
+测试入口现允许显式设置 `CREATOROS_T1012_MODEL_TOKEN`、`CREATOROS_T1012_MODEL_BASE_URL`、`CREATOROS_T1012_MODEL_NAME` 与 `CREATOROS_T1012_MODEL_API_FORMAT`；未提供时使用环境中的 `MINIMAX_API_KEY` 和 MiniMax-M3 全球端点。获得有效且匹配区域的测试凭据后，复用同一用例即可取得真实模型工具账本与产物证据。恢复本地协议夹具后，Mac socket 定向用例 **1/1 通过**，frontend typecheck 通过。跨回合实现仍待用户确认，未在此轮修改。

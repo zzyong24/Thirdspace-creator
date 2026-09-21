@@ -119,10 +119,13 @@ describe("Mac 受控命令能力",()=>{
   });
 });
 
+const realModel=process.env.CREATOROS_T1012_REAL_MODEL==="1";
 const realMacFiles=process.platform==="darwin" && process.env.CREATOROS_TEST_PACKAGED_RUNTIME_ROOT
-  && (process.env.CREATOROS_T1007_REAL_FILES==="1" || process.env.CREATOROS_T1009_REAL_HOST==="1") ? it : it.skip;
+  && (process.env.CREATOROS_T1007_REAL_FILES==="1" || process.env.CREATOROS_T1009_REAL_HOST==="1" || realModel) ? it : it.skip;
 
 realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出，跨账号与旧 fence 拒绝",async()=>{
+  if(realModel && !(process.env.CREATOROS_T1012_MODEL_TOKEN??process.env.MINIMAX_API_KEY))
+    throw Error("真实模型验收需要 CREATOROS_T1012_MODEL_TOKEN 或 MINIMAX_API_KEY");
   const directory=await mkdtemp(join(tmpdir(),"t1007-html-host-"));
   const ready=join(directory,"ready"),done=join(directory,"done"),taskRoot=join(directory,"tasks");
   const projectRoot=resolve(import.meta.dirname,"../../..");
@@ -240,7 +243,8 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     const modelContext={userId,accountId,requestId:`${nonce}-model`,source:"user" as const};
     const repo=createAiRepository(realDb,{userId,accountId,now,nextId:prefix=>`${prefix}-${randomUUID()}`});
     const conversation=await repo.createConversation({title:"真实文件交付验证",projectId:null,scope:"global"});
-    const source=await repo.createMessage(conversation.id,{role:"user",content:"制作 HTML 报告",attachments:[],modelMetadata:{}});
+    const request="制作一份简短 HTML 报告，正文包含“模型工具链报告”，保存到交付/模型报告.html，并登记为可预览产物。完成后告诉我已交付。";
+    const source=await repo.createMessage(conversation.id,{role:"user",content:request,attachments:[],modelMetadata:{}});
     const {defineWorkbenchChatTool}=await import("../../../backend/src/modules/ai-runtime/chat-tool-gate");
     const {prepareChatToolDefinitions}=await import("../../../backend/src/modules/ai-runtime/chat-tool-definitions");
     const {createChatWorkbenchCapabilityHost}=await import("../../../backend/src/modules/ai-runtime/chat-workbench-capability-host");
@@ -250,12 +254,12 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     const prototypes=Object.fromEntries(descriptors.map(item=>[item.name,defineWorkbenchChatTool(item,async()=>{throw Error("unused");})]));
     const definitions=(await prepareChatToolDefinitions(prototypes,{workbenchCapabilities:descriptors})).definitions;
     const submitted=await createChatTurnSubmissionService(realDb,{now,assemble:async()=>({
-      capability:"copilot.assist",system:"先写报告，再登记产物。",messages:[{role:"user",content:"制作 HTML 报告"}],
-      maxSteps:6,maxOutputTokens:256,tools:definitions,workbenchCapabilities:descriptors,workbenchPlatform:"macos",
+      capability:"copilot.assist",system:"使用可用工具完成用户的文件交付目标；交付前核对工具回执。",messages:[{role:"user",content:request}],
+      maxSteps:6,maxOutputTokens:realModel?1024:256,tools:definitions,workbenchCapabilities:descriptors,workbenchPlatform:"macos",
     })}).submit(modelContext,{conversationId:conversation.id,sourceMessageId:source.id});
     execFileSync(process.execPath,[resolve(projectRoot,"ai-worker/scripts/build.mjs")],{cwd:projectRoot,stdio:"pipe"});
     let modelRequests=0;
-    const server=createServer((request,response)=>{request.resume();request.on("end",()=>{
+    const server=realModel?undefined:createServer((request,response)=>{request.resume();request.on("end",()=>{
       modelRequests++;
       const calls=[
         {name:"files_write",arguments:{path:modelFile,content:modelHtml,expectedVersion:0}},
@@ -267,7 +271,7 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
       response.writeHead(200,{"content-type":"text/event-stream"});
       response.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
     });});
-    await new Promise<void>(ready=>server.listen(0,"127.0.0.1",ready));
+    if(server)await new Promise<void>(ready=>server.listen(0,"127.0.0.1",ready));
     const leases=createExecutionLeaseService(realDb,{now});
     const available={catalog:descriptors,platform:"macos" as const,capabilities:["task.files","task.artifacts"],
       dispatch:(call:Parameters<typeof host.dispatch>[0],dispatchControl:Parameters<typeof host.dispatch>[1])=>
@@ -276,25 +280,38 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
       ref=>leases.withLease(ref,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,
         taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
     const worker=createChatWorkerDispatcher(realDb,{entryPath:resolve(projectRoot,"ai-worker/dist/execution-worker.cjs"),
-      workerId:`html-model-${nonce}`,budget:{maxCalls:8,maxTokens:100000,deadlineMs:60000},pollMs:100,modelConcurrency:1,
-      resolveTools,resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+      workerId:`html-model-${nonce}`,budget:{maxCalls:8,maxTokens:100000,deadlineMs:realModel?90_000:60_000},pollMs:100,modelConcurrency:1,
+      resolveTools,resolveModelCredential:async()=>{
+        if(realModel){
+          const token=(process.env.CREATOROS_T1012_MODEL_TOKEN??process.env.MINIMAX_API_KEY)!;
+          const format=process.env.CREATOROS_T1012_MODEL_API_FORMAT??"anthropic";
+          if(format!=="anthropic"&&format!=="openai_chat"&&format!=="openai_responses")
+            throw Error("CREATOROS_T1012_MODEL_API_FORMAT 无效");
+          return {apiFormat:format,authStyle:"bearer" as const,
+            baseUrl:process.env.CREATOROS_T1012_MODEL_BASE_URL??"https://api.minimax.io/anthropic",
+            model:process.env.CREATOROS_T1012_MODEL_NAME??"MiniMax-M3",token};
+        }
+        return {apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server!.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"};
+      }});
     try{
       worker.start();
       await expect.poll(async()=>["succeeded","failed","waiting_user","unknown_result"].includes(
-        (await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status??""),{timeout:30000}).toBe(true);
+        (await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]?.status??""),{timeout:realModel?100_000:30_000}).toBe(true);
       const terminal=(await realDb.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)))[0]!;
       const calls=await realDb.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submitted.executionTaskId));
-      expect(terminal.status,JSON.stringify({error:terminal.lastErrorCode,calls})).toBe("succeeded");
-      expect(modelRequests).toBe(3);
+      expect(terminal.status,JSON.stringify({error:terminal.lastErrorCode,calls:calls.map(row=>({kind:row.kind,status:row.status}))})).toBe("succeeded");
+      if(!realModel)expect(modelRequests).toBe(3);
       expect(calls.filter(row=>row.kind==="tool").map(row=>row.status)).toEqual(["settled","settled"]);
       const registeredModel=calls.map(row=>row.resultText??"").join(" ").match(/wa-[a-f0-9]{32}@1/);
       expect(registeredModel).not.toBeNull();
       const modelBlob=await artifactReader.readAll(modelContext,submitted.executionTaskId,registeredModel![0].split("@")[0]!,1);
-      expect(Buffer.from(modelBlob.bytes).toString("utf8")).toBe(modelHtml);
+      const deliveredHtml=Buffer.from(modelBlob.bytes).toString("utf8");
+      if(realModel){expect(deliveredHtml).toContain("模型工具链报告");expect(deliveredHtml).toMatch(/<html\b/i);}
+      else expect(deliveredHtml).toBe(modelHtml);
       const modelPdf=await renderTrustedWorkbenchHtml({html:modelBlob.bytes,format:"pdf"});
       const parser=new PDFParse({data:modelPdf});
       try{expect((await parser.getText()).text.normalize("NFKC")).toContain("模型工具链报告");}finally{await parser.destroy();}
-    }finally{await worker.stop();server.closeAllConnections();await new Promise<void>(closed=>server.close(()=>closed()));}
+    }finally{await worker.stop();if(server){server.closeAllConnections();await new Promise<void>(closed=>server.close(()=>closed()));}}
     const artifactRead=await artifactCall(owner.context,"artifact.read",{artifactId:version1.artifactId,
       version:1,offset:0,limit:4096});
     expect(artifactRead).toMatchObject({status:"succeeded",artifactRefs:[`${version1.artifactId}@1`]});
