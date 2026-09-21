@@ -21,8 +21,8 @@
 - 验证日期：2026-09-21；候选提交：`cb2422cf134eb705960ed432f7527a8f8202fe7d`。
 - `pnpm -C frontend desktop:package-local` 成功：前端静态页 27/27、sidecar 内置课程与依赖闭包自检、混淆后真起 sidecar、`GET / = 200`、浏览器 hydration 均通过；Tauri `release-fast` 构建成功。
 - 唯一验收包：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`；SHA-256 为 `32124eae561e7a87be1aef220513110a2d0ea4405cc04afcc2ab4448abfdcce8`；`hdiutil verify` 返回 `VALID`。
-- 已覆盖安装并真实启动 `/Applications/CreatorOS.app`；`CFBundleShortVersionString` 与 `CFBundleVersion` 均为 `1.2.0`，`codesign --verify --deep --strict` 通过，安装版进程 PID 为 `85385`。
-- CLI 自动开启并连接安装版：`creatoros status` 返回 `mode=installed`、`connected=true`、`access=full`、PID `85385`；`creatoros access status` 返回完整访问；公开契约暴露 258 个操作。
+- 已覆盖安装并真实启动 `/Applications/CreatorOS.app`；`CFBundleShortVersionString` 与 `CFBundleVersion` 均为 `1.2.0`，`codesign --verify --deep --strict` 通过。打包脚本首次启动 PID 为 `85385`；最终复查发现桌面进程已退出后再次正常启动为 PID `93353`。
+- CLI 自动开启并连接安装版：首次及最终重启后 `creatoros status` 均返回 `mode=installed`、`connected=true`、`access=full`；最终重启约 4 秒后自动恢复完整访问，10 秒复查仍在线，无需重新开启权限；公开契约暴露 258 个操作。
 - 使用唯一账号 `acct-ae1a8346-9` 做只读冒烟：`settings.models.list` 成功回读默认文本模型 `minimax / MiniMax-M3` 且 `hasSecret=true`；`execution.tasks.list` 成功回读最近 10 个 `topic_preview` 任务，最新任务为 `succeeded`。本轮没有修改账号、模型或业务数据。
 - LED-052 最终回归重新执行并通过：AI Worker 35/35、Backend 87/87、Frontend 112/112。
 - `pmem sync` 成功；全局 `reconcile` 中 LED-052、物理边界、孤儿扫描、资产、文档和其余 lesson 门卫均通过。全局命令最终返回失败，仅因为 T-703、T-691、T-656、T-645、T-635 五个旧任务的 review receipt 在 constitution hash 变化后过期；该既有治理债务不属于 T-1022 验收范围。
