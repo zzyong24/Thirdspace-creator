@@ -29,7 +29,7 @@ import { AddCollectionDialog,ImportDouyinShareDialog } from "./collection-import
 import { transcriptSaveErrorMessage } from "./intelligence-errors";
 import { operationKey } from "./radar-operation-key";
 import { AddSourceDialog } from "./source-setup-dialog";
-import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
+import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskNeedsModelSetup,topicTaskStatus } from "./topic-task-state";
 import { useSourceRuns } from "./use-source-runs";
 import { useTopicPreview } from "./use-topic-preview";
 import { useTranscriptRefresh } from "./use-transcript-refresh";
@@ -1793,6 +1793,7 @@ function ItemDetail({
       ? rawTopicSnapshot
       : null;
   const topicTaskTerminalFailure=Boolean(topicTaskAttention(topicTaskStatus(latestTransform)));
+  const topicTaskModelSetup=topicTaskNeedsModelSetup(latestTransform);
   const topicTaskUnavailable =
     latestTransform !== null &&
     latestTransform.outputSnapshot === null &&
@@ -1942,7 +1943,9 @@ function ItemDetail({
               className="mt-3 rounded-xl border border-destructive/25 bg-destructive/[0.045] p-4"
             >
               <p className="text-xs font-semibold text-foreground">
-                {topicTaskAttention(topicTaskStatus(latestTransform))
+                {topicTaskModelSetup
+                  ? "完成 AI 设置后继续"
+                  : topicTaskAttention(topicTaskStatus(latestTransform))
                   ? topicTaskAttention(topicTaskStatus(latestTransform))
                   : topicTaskUnavailable
                     ? "生成状态不可用"
@@ -1954,12 +1957,20 @@ function ItemDetail({
                     ? "旧任务没有可读取的执行状态，可以直接重新生成。"
                     : "任务已经结束，不会继续假装“生成中”。请检查定位与模型配置后重试。")}
               </p>
-              {latestTransform?.taskErrorCode ? (
+              {latestTransform?.taskErrorCode && !topicTaskModelSetup ? (
                 <p className="mt-1 text-[10px] text-muted-foreground">
                   错误代码：{latestTransform.taskErrorCode}
                 </p>
               ) : null}
-              {topicTaskUnavailable||canRetryTopicTask(topicTaskStatus(latestTransform))?(
+              {topicTaskModelSetup ? (
+                <Link
+                  href="/settings?highlight=text-model"
+                  data-slot="radar-model-settings-link"
+                  className="mt-3 inline-flex h-8 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-primary-foreground"
+                >
+                  去设置 AI 模型
+                </Link>
+              ) : topicTaskUnavailable||canRetryTopicTask(topicTaskStatus(latestTransform))?(
               <Button
                 type="button"
                 size="sm"

@@ -143,13 +143,15 @@ export function createDurableStreamModel(input: {
           params.abortSignal?.throwIfAborted();
           result = await doStream();
         } catch (error) {
-          const failure = generationFailure(error, false);
+          const failure = generationFailure(error, false, {allowUnconfirmedModelRetry:true});
           const fallbackEligible=failure.outcome==="retry_wait" && Boolean(input.fallbackModel);
           try {
             await input.ports.settle(
               reservation.callId,
               failure.outcome === "unknown_result"
                 ? { status: "unknown" }
+                : failure.outcome === "retry_wait" && !fallbackEligible
+                  ? {status:"superseded"}
                 : { status: "rejected",...(fallbackEligible?{rejectionCode:"CHAT_MODEL_RETRYABLE_REJECTION" as const}:{}) },
             );
           } catch {
@@ -175,19 +177,19 @@ export function createDurableStreamModel(input: {
           stopped = false,
           defer = false,
           cancelled = false;
-        const unknown = async () => {
+        const stop = async (status:"unknown"|"superseded") => {
           if (settled || settling || stopped) return;
           stopped = true;
           await events?.close().catch(()=>{});
           await input.ports
-            .settle(reservation.callId, { status: "unknown" })
+            .settle(reservation.callId, { status })
             .catch(() => {});
         };
         const accept = (part: LanguageModelV4StreamPart) => {
           if (part.type === "error")
             throw new GenerationFailure(
-              "unknown_result",
-              "MODEL_RESULT_UNKNOWN",
+              "retry_wait",
+              "MODEL_STREAM_INTERRUPTED",
             );
           if (part.type === "raw") return;
           const encoded = encode(part);
@@ -252,7 +254,7 @@ export function createDurableStreamModel(input: {
                   const next = await reader.read();
                   if (next.done) {
                     if (!finish || active.size)
-                      throw Error("STREAM_INCOMPLETE");
+                      throw new GenerationFailure("retry_wait","MODEL_STREAM_INCOMPLETE");
                     const receipt = workerProviderReceiptSchema.parse(
                       JSON.parse(
                         JSON.stringify({
@@ -317,18 +319,14 @@ export function createDurableStreamModel(input: {
                   return;
                 }
               } catch (error) {
-                await unknown();
+                const aborted=params.abortSignal?.aborted || cancelled;
+                const failure=error instanceof GenerationFailure ? error : generationFailure(error,parts.length>0,{allowUnconfirmedModelRetry:true});
+                await stop(!aborted && failure.outcome==="retry_wait" ? "superseded" : "unknown");
                 await reader.cancel().catch(() => {});
                 if (!cancelled) {
                   controller.enqueue({
                     type: "error",
-                    error:
-                      error instanceof GenerationFailure
-                        ? error
-                        : new GenerationFailure(
-                            "unknown_result",
-                            "MODEL_RESULT_UNKNOWN",
-                          ),
+                    error: aborted ? new GenerationFailure("unknown_result","MODEL_CANCELLED") : failure,
                   });
                   controller.close();
                 }
@@ -336,7 +334,7 @@ export function createDurableStreamModel(input: {
             },
             async cancel() {
               cancelled = true;
-              await unknown();
+              await stop("unknown");
               await reader.cancel().catch(() => {});
             },
           }),

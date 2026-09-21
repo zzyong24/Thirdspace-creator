@@ -26,7 +26,7 @@ export function createExecutionAgenticModelPorts(db:Db,deps:Parameters<typeof cr
     const messages:unknown[]=[{role:"user",content:[{type:"text",text:input.goal}],timestamp:0}];
     const pending=new Map<string,string>();
     for(const previous of calls){
-     if(previous.status==="rejected")continue;
+     if(previous.status==="rejected" || previous.status==="superseded")continue;
      if(previous.status!=="settled")throw new ConflictError("已有未确认调用，不能规划新回合");
      if(previous.kind==="model"){
       if(pending.size)throw new ConflictError("工具回合尚未闭合");

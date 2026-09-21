@@ -16,3 +16,6 @@ export function topicTaskAttention(status:Status):string|null{
  }
 }
 export function canRetryTopicTask(status:Status){return ["failed","blocked","cancelled"].includes(status??"");}
+export function topicTaskNeedsModelSetup(transform:Transform|null|undefined){
+ return topicTaskStatus(transform)==="waiting_user"&&transform?.taskErrorCode==="MODEL_CONFIGURATION_REQUIRED";
+}

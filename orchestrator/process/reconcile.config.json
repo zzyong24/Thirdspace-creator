@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-052",
+      "what": "模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放",
+      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "onFail": "恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。"
+    },
+    {
       "led": "LED-045",
       "what": "官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/asset-generate-runner.test.ts",

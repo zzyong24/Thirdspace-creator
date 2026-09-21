@@ -26,7 +26,7 @@ export async function generateIntelligenceInWorker(input:z.infer<typeof structur
  let lastCallId:string|undefined;
  // 本地模型适配器初始化失败尚未预留或启动供应商调用，不能记成结果未知。
  let model:ReturnType<typeof createDurableGenerationModel>;
- try { model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
+ try { model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,allowUnconfirmedModelRetry:input.facets.continuousRecovery==="true",ports:{
   async reserve(request){const receipt=workerReservationSchema.parse(await call("reserveGenerationCall",JSON.parse(JSON.stringify(request)),signal));lastCallId=receipt.callId;return receipt;},
   async start(callId){const receipt=workerStartReceiptSchema.parse(await call("startCall",{callId},signal));if(receipt.callId!==callId)throw new Error("INTELLIGENCE_CALL_MISMATCH");},
   async settle(callId,settlement){await call("settleGenerationCall",{callId,...settlement});},

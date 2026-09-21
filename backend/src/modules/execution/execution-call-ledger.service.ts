@@ -19,6 +19,7 @@ const reservationSchema = z.object({
 const settlementSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("settled"), usage: workerUsageSchema, resultRef: z.string().min(1).max(512).optional(), resultText: z.string().min(1).max(2_000_000).optional(), providerResult: workerProviderReceiptSchema.optional()}).strict(),
   z.object({status: z.literal("unknown")}).strict(),
+  z.object({status: z.literal("superseded")}).strict(),
   z.object({status: z.literal("rejected"), rejectionCode: z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION","ASR_HTTP_400","ASR_HTTP_401","ASR_HTTP_402","ASR_HTTP_403","ASR_HTTP_404","ASR_HTTP_405","ASR_HTTP_413","ASR_HTTP_415","ASR_HTTP_422","ASR_HTTP_429"]).optional()}).strict(),
 ]);
 type Call = typeof executionCalls.$inferSelect;
@@ -88,8 +89,8 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
             throw new ConflictError("同一操作键不能改换调用内容");
           }
           if (!input.retryOfCallId || previous.retryOfCallId === input.retryOfCallId) return previous;
-          if (previous.id !== input.retryOfCallId || previous.status !== "rejected") {
-            throw new ConflictError("只有明确拒绝的调用可按原操作键重试");
+          if (previous.id !== input.retryOfCallId || !["rejected","superseded"].includes(previous.status) || (previous.status === "superseded" && previous.kind !== "model")) {
+            throw new ConflictError("只有明确拒绝或已废弃的模型调用可按原操作键重试");
           }
         } else if (input.retryOfCallId) throw new ConflictError("重试来源不存在");
         assertParent(calls, input, ref.attempt);
@@ -153,14 +154,15 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
       return leases.withLease(ref, "settlement", async ({tx, task}) => {
         const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
         if (!call || call.status === "reserved") throw new ConflictError("只能结算已有启动事实的调用");
-        if (call.providerJob !== null && input.status === "rejected") throw new ConflictError("供应商已经接受任务，不能标记为提交被拒绝");
+        if (call.providerJob !== null && ["rejected","superseded"].includes(input.status)) throw new ConflictError("供应商已经接受任务，不能标记为可重试终态");
+        if (input.status === "superseded" && call.kind !== "model") throw new ConflictError("只有无副作用的模型生成可废弃续跑");
         validate?.(call);
         if (validateTree) validateTree(await readCalls(tx, task.id), task);
         if(input.status==="unknown" && call.kind==="tool" && !call.toolExecutionClaimId && ["waiting_user","retry_wait","failed"].includes(task.status)){
           const children=(await readCalls(tx,task.id)).filter(child=>child.parentCallId===call.id);
           // 结构修复可有已结算前缀；挂起事实已经确认尾调用被拒绝，迟到 ACK 不能擦掉它。
-          const confirmed=children.every(child=>child.status==="rejected" || (child.kind==="model" && child.status==="settled" && child.totalTokens!==null && workerProviderReceiptSchema.safeParse(child.providerResult).success));
-          if(children.length && confirmed && children.at(-1)!.status==="rejected" && (children.at(-1)!.id===task.retryOfCallId || task.status==="failed"))throw new ConflictError("明确拒绝已挂起，不能因回执丢失改成未知");
+          const confirmed=children.every(child=>["rejected","superseded"].includes(child.status) || (child.kind==="model" && child.status==="settled" && child.totalTokens!==null && workerProviderReceiptSchema.safeParse(child.providerResult).success));
+          if(children.length && confirmed && ["rejected","superseded"].includes(children.at(-1)!.status) && (children.at(-1)!.id===task.retryOfCallId || task.status==="failed"))throw new ConflictError("可恢复失败已挂起，不能因回执丢失改成未知");
         }
         if (input.status === "rejected" && call.kind === "tool" && (await readCalls(tx, task.id)).some(child => child.parentCallId === call.id)) throw new ConflictError("已有子调用的父工具不能标记为未执行拒绝");
         if (input.status === "settled" && (call.kind === "tool" || call.parentCallId)) {
@@ -168,15 +170,19 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
           assertParent(calls, call);
           if (call.parentCallId && !(input.providerResult ?? call.providerResult)) throw new ConflictError("子模型成功缺少供应商回执");
           const children = calls.filter(child => child.parentCallId === call.id);
-          if (children.some(child => child.status !== "rejected" && (child.status !== "settled" || child.totalTokens === null || !child.providerResult))) throw new ConflictError("父工具仍有未确认的子模型调用");
+          if (children.some(child => !["rejected","superseded"].includes(child.status) && (child.status !== "settled" || child.totalTokens === null || !child.providerResult))) throw new ConflictError("父工具仍有未确认的子模型调用");
         }
         if (call.status === "settled" && input.status === "unknown") return call;
-        if (call.status === "settled" && input.status === "rejected") throw new ConflictError("已确认结果不能变成拒绝");
+        if (call.status === "settled" && ["rejected","superseded"].includes(input.status)) throw new ConflictError("已确认结果不能变成可重试终态");
         if (call.status === "rejected") {
           if (input.status !== "rejected" || (input.rejectionCode && input.rejectionCode !== call.rejectionCode)) throw new ConflictError("已确认拒绝不能改写");
           return call;
         }
-        if (input.status === "rejected" && call.status !== "started") throw new ConflictError("未知提交不能变成可重试拒绝");
+        if (call.status === "superseded") {
+          if (input.status !== "superseded") throw new ConflictError("已废弃模型调用不能改写");
+          return call;
+        }
+        if (["rejected","superseded"].includes(input.status) && call.status !== "started") throw new ConflictError("未知提交不能变成可重试终态");
         const previousUsage = call.usage === null ? null : workerUsageSchema.parse(call.usage);
         const usage = input.status === "settled" ? {...(previousUsage ?? {})} : null;
         if (usage && input.status === "settled") {

@@ -23,7 +23,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         let retryAt:string|null=null;
         let retryOfCallId:string|null=null;
         if(input.outcome === "retry_wait") {
-          if(!last || last.status !== "rejected")throw new ConflictError("没有明确拒绝事实，禁止自动重试");
+          if(!last || !["rejected","superseded"].includes(last.status) || (last.status === "superseded" && last.kind !== "model"))throw new ConflictError("没有可安全续跑的模型失败事实，禁止自动重试");
           const budget=task.executionBudget === null ? null : executionBudgetSchema.parse(task.executionBudget);
           const delay=Math.max(input.retryAfterMs ?? 0,computeBackoffMs(last.sequence,deps.random));
           const next=Date.parse(now())+delay;
@@ -47,7 +47,7 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         }
         const [updated]=await tx.update(executionTasks).set({status,retryAt,retryOfCallId,
           leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,lastErrorCode: status === "failed" && input.outcome === "retry_wait" ? "RETRY_BUDGET_EXHAUSTED" : input.errorCode,
-          lastErrorMessage:input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
+          lastErrorMessage:input.errorCode === "CHAT_LEGACY_RUNTIME_UPGRADE_REQUIRED" ? "该任务使用已退役的聊天执行协议，无法自动续跑。原回执和历史已保留，请新建任务继续；未知调用须先对账。" : status === "retry_wait" ? (input.outcome==="unknown_result"?"原视频查询暂时失败，等待续查同一任务":last?.status==="superseded"?"模型连接中断，原任务正在自动续跑":"供应商明确拒绝，等待重试时间到达") : status === "unknown_result" ? "服务尚未返回完整结果，任务已暂停，已完成内容保留" : "执行停止，等待恢复或诊断",
           updatedAt:now(),
         }).where(and(eq(executionTasks.id,task.id),eq(executionTasks.fenceToken,ref.fenceToken))).returning();
         return {status:updated!.status,retryAt:updated!.retryAt};

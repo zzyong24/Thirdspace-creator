@@ -1221,12 +1221,13 @@ export function AICopilotContent({
     if (!error && !composerLifecycleError) return null;
     if (!error && composerLifecycleError) {
       return {
-        title: "这次没有生成成功",
-        message: composerLifecycleError,
+        title: "正在恢复本轮生成",
+        message: "输入和已完成内容已保留，系统正在沿原任务补全结果。",
         suggestSwitchModel: false,
         suggestOpenCredits: false,
         suggestOpenPositioning: false,
-        canRetry: true,
+        canRetry: false,
+        autoRecover: true,
       };
     }
     if (!error) return null;
@@ -1254,9 +1255,14 @@ export function AICopilotContent({
     const suggestOpenPositioning = human?.suggestOpenPositioning ?? false;
     const isMissingModel = human?.code === "model_not_configured";
     const resultUnconfirmed = human?.code === "result_unconfirmed";
-    const modelInterrupted = human?.code === "model_response_interrupted";
+    const autoRecover =
+      !resultUnconfirmed &&
+      !terminalScriptSelectionError &&
+      !suggestOpenCredits &&
+      !suggestOpenPositioning &&
+      !suggestSwitchModel;
     return {
-      title: modelInterrupted ? "模型回复中断" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
+      title: autoRecover ? "正在恢复本轮生成" : resultUnconfirmed ? "本轮对话已停止" : suggestOpenCredits
         ? "AI 额度需要补充"
         : suggestOpenPositioning
           ? "先完成账号定位"
@@ -1266,26 +1272,24 @@ export function AICopilotContent({
               ? "检查 AI 设置后继续"
               : terminalScriptSelectionError
                 ? "这次局部改写已结束"
-                : "这次没有生成成功",
+                : "本轮生成需要处理",
       // 可恢复状态只讲用户下一步，不把版本、渠道、凭据或供应商细节露在主界面。
-      message: resultUnconfirmed || modelInterrupted ? human!.message : suggestOpenCredits
+      message: resultUnconfirmed ? human!.message : suggestOpenCredits
         ? "刚才输入的内容已经保留。补充额度后，回来即可继续。"
         : suggestOpenPositioning
           ? "刚才输入的内容已经保留。保存一版定位后，回来即可继续。"
           : suggestSwitchModel
             ? "刚才输入的内容已经保留。完成设置后，回来即可继续。"
+            : autoRecover
+              ? "输入和已完成内容已保留，系统正在沿原任务自动恢复。"
             : terminalScriptSelectionError || localPatchWasPreserved || chatApiPublicError
               ? publicMessage
               : "刚才输入的内容还在，可以直接再试一次。",
       suggestSwitchModel,
       suggestOpenCredits,
       suggestOpenPositioning,
-      canRetry:
-        !resultUnconfirmed && !modelInterrupted &&
-        !terminalScriptSelectionError &&
-        !suggestOpenCredits &&
-        !suggestOpenPositioning &&
-        !suggestSwitchModel,
+      canRetry: false,
+      autoRecover,
     };
   }, [
     composerLifecycleError,
@@ -1414,7 +1418,7 @@ export function AICopilotContent({
       }
       finishComposerRequest(inFlight.nonce);
       setComposerLifecycleError(
-        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留。请直接重试。",
+        "本轮回复没有生成可采纳的局部改稿候选，稿面未被修改，目标段落已保留，系统将沿原任务继续补全。",
       );
       console.warn("[T-716][script.patch] assistant finished without candidate", {
         nonce: inFlight.nonce,
@@ -1452,6 +1456,33 @@ export function AICopilotContent({
     }
     return regenerate();
   }, [messages, regenerate]);
+
+  // T-1022：regenerate 会复用后端已保存的 sourceMessageId，因此这里是在重连/续跑原任务，
+  // 不是创建一条重复生成。只要错误仍存在就指数退避继续；需要设置、额度、定位、人工核对
+  // 或明确停止的状态不会进入这个循环。
+  React.useEffect(() => {
+    if (!chatError?.autoRecover || streaming || messages.length === 0) return;
+    let cancelled = false;
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const continueOriginalTurn = () => {
+      const delay = Math.min(1_000 * 2 ** Math.min(attempt, 5), 30_000);
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        attempt += 1;
+        void Promise.resolve(retryLastTurn())
+          .catch(() => undefined)
+          .finally(() => {
+            if (!cancelled) continueOriginalTurn();
+          });
+      }, delay);
+    };
+    continueOriginalTurn();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [chatError?.autoRecover, messages.length, retryLastTurn, streaming]);
 
   // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
   // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
@@ -3093,7 +3124,15 @@ export function AICopilotContent({
                     ) : null}
                   {/* [T-231⑩] 出错不再只让用户「请重试」却无处可点:regenerate() 重发
                       最后一条用户消息(@ai-sdk/react 现成 API,不手搓重放)。流式中不渲。 */}
-                    {chatError.canRetry &&
+                    {chatError.autoRecover ? (
+                      <span
+                        data-slot="copilot-error-auto-recovery"
+                        role="status"
+                        className="inline-flex h-8 items-center rounded-md bg-primary/10 px-3 text-[11px] font-medium text-primary"
+                      >
+                        自动恢复中
+                      </span>
+                    ) : chatError.canRetry &&
                     !chatError.suggestOpenCredits &&
                     !streaming &&
                     messages.length > 0 ? (

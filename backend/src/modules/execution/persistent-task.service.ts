@@ -769,17 +769,21 @@ export function createPersistentTaskService(
     async finish(input) {
       const current = await getWorkerRow(input);
       if(input.status==='waiting_user'||input.status==='retry_wait'){
-        // 非模型等待门：来源读取，或只串联持久子任务的雷达父项；有调用账本一律不走此门。
+        // 无调用账本等待门：来源读取、雷达父项，以及尚未发出模型调用的连续生成任务。
+        // 生成一旦有调用事实，必须走 execution-worker-outcome 的拒绝/未知判定，不能绕账本重试。
         return db.transaction(async tx=>{
           const [row]=await tx.select().from(executionTasks).where(eq(executionTasks.id,input.taskId)).for('update');
           const stamp=now();
-          if(!row||!((row.kind==='share_import'&&row.ownerType==='item_import')||(row.kind==='radar_project_upgrade'&&row.ownerType==='item'))||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
+          const sourceRead=row?.kind==='share_import'&&row.ownerType==='item_import';
+          const radarParent=row?.kind==='radar_project_upgrade'&&row.ownerType==='item';
+          const continuousGeneration=Boolean(row&&((row.kind==='topic_preview'&&row.ownerType==='transform')||(row.kind==='script_candidate'&&row.ownerType==='project'))&&isContinuousExecutionBudget(row.executionBudget));
+          if(!row||!(sourceRead||radarParent||continuousGeneration)||row.status!=='running'||!input.fenceToken||row.fenceToken!==input.fenceToken||row.leaseOwner!==input.workerId||row.attempt!==input.attempt||!row.leaseExpiresAt||Date.parse(row.leaseExpiresAt)<=Date.parse(stamp))throw new ConflictError('任务等待恢复缺少当前执行凭证');
           const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).limit(1);
           if(calls.length)throw new ConflictError('存在调用账本的任务不能走无副作用读取重试');
           let status:string=input.status,retryAt:string|null=null;
           if(input.status==='retry_wait'){
             if(input.retryAfterMs!==undefined&&(!Number.isFinite(input.retryAfterMs)||input.retryAfterMs<0))throw new ConflictError('任务恢复等待时间非法');
-            const delay=row.kind==='radar_project_upgrade'?Math.max(1000,input.retryAfterMs??2000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
+            const delay=row.kind==='radar_project_upgrade'||continuousGeneration?Math.max(1000,input.retryAfterMs??1000):Math.max(2000*2**Math.min(row.attempt-1,8),input.retryAfterMs??0);
             const next=Date.parse(stamp)+delay;
             const maxCalls=(row.executionBudget as {maxCalls?:number}|null)?.maxCalls;
             const limit=typeof maxCalls==='number'&&Number.isInteger(maxCalls)&&maxCalls>0?Math.min(row.maxAttempts,maxCalls):row.maxAttempts;
@@ -787,8 +791,8 @@ export function createPersistentTaskService(
             else retryAt=new Date(next).toISOString();
           }
           const [updated]=await tx.update(executionTasks).set({status,retryAt,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,
-            lastErrorCode:status==='failed'?'SHARE_READ_RETRY_EXHAUSTED':input.errorCode??null,
-            lastErrorMessage:status==='failed'?'分享读取重试次数已用尽，请检查网络或原链接':input.errorMessage??null,updatedAt:stamp,
+            lastErrorCode:status==='failed'?(continuousGeneration?'GENERATION_RECOVERY_EXHAUSTED':'SHARE_READ_RETRY_EXHAUSTED'):input.errorCode??null,
+            lastErrorMessage:status==='failed'?(continuousGeneration?'生成恢复策略已停止，请保留原任务并查看诊断':'分享读取重试次数已用尽，请检查网络或原链接'):input.errorMessage??null,updatedAt:stamp,
           }).where(and(eq(executionTasks.id,row.id),eq(executionTasks.fenceToken,input.fenceToken))).returning();
           if(!updated)throw new ConflictError('分享读取恢复时执行凭证已变化');return toResource(updated);
         });

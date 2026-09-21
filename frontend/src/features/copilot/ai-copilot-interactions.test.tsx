@@ -744,15 +744,15 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     ];
     mockError = new Error("provider stream interrupted");
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
-    expect(await screen.findByText(/目标段落已保留/)).toBeInTheDocument();
+    expect(await screen.findByText(/沿原任务自动恢复/)).toBeInTheDocument();
     expect(
       document.querySelector(
         '[data-slot="context-chip"][data-kind="script_section"]',
       ),
     ).not.toBeNull();
 
-    await user.click(screen.getByRole("button", { name: "重试" }));
-    expect(regenerate).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument();
+    await waitFor(() => expect(regenerate).toHaveBeenCalledTimes(1), { timeout: 2_000 });
     const retryResolver = initialChatTransport?.body;
     expect(typeof retryResolver).toBe("function");
     const retryBody = await (
@@ -863,7 +863,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     ];
     mockError = new Error("provider stream interrupted");
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
-    expect(await screen.findByText(/目标段落已保留/)).toBeInTheDocument();
+    expect(await screen.findByText(/沿原任务自动恢复/)).toBeInTheDocument();
 
     const textarea = screen.getByLabelText("我能帮你做什么");
     await user.type(textarea, "先不要改这一段，改为生成完整稿。");
@@ -923,7 +923,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
 
     expect(
-      await screen.findByText(/没有生成可采纳的局部改稿候选/),
+      await screen.findByText(/沿原任务补全结果/),
     ).toBeInTheDocument();
     expect(
       document.querySelector(
@@ -978,7 +978,7 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     rerender(<AICopilotContent viewModel={VM} embed={embed} />);
     await waitFor(() =>
       expect(
-        screen.queryByText(/没有生成可采纳的局部改稿候选/),
+        screen.queryByText(/沿原任务补全结果/),
       ).not.toBeInTheDocument(),
     );
     await waitFor(() =>
@@ -1202,21 +1202,33 @@ describe("AI Copilot composer behavior (useChat-driven, T-004)", () => {
     expect(sendMessage).not.toHaveBeenCalled();
   });
 
-  it("[T-231⑩] 对话出错 → 渲「重试」按钮,点击走 regenerate()(重发最后一轮)", async () => {
-    const user = userEvent.setup();
+  it("[T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户", async () => {
+    vi.useFakeTimers();
     mockError = new Error("boom");
     mockMessages = [
       { id: "u1", role: "user", parts: [{ type: "text", text: "你好" }] },
     ];
     render(<AICopilotContent viewModel={VM} />);
-    expect(screen.getByText("这次没有生成成功")).toBeInTheDocument();
-    expect(screen.getByText("刚才输入的内容还在，可以直接再试一次。")).toBeInTheDocument();
-    const retry = document.querySelector(
-      '[data-slot="copilot-error-retry"]',
-    ) as HTMLButtonElement;
-    expect(retry).not.toBeNull();
-    await user.click(retry);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+    expect(screen.getByText("输入和已完成内容已保留，系统正在沿原任务自动恢复。")).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    expect(document.querySelector('[data-slot="copilot-error-auto-recovery"]')).not.toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
     expect(regenerate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("[T-1022] 模型断流沿原任务自动恢复", async () => {
+    vi.useFakeTimers();
+    mockError = new Error("CHAT_MODEL_RESPONSE_INTERRUPTED");
+    mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", text: "继续生成" }] }];
+    render(<AICopilotContent viewModel={VM} />);
+    expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+    expect(screen.getByText(/系统正在沿原任务自动恢复/)).toBeInTheDocument();
+    expect(document.querySelector('[data-slot="copilot-error-retry"]')).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+    expect(regenerate).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it.each(["CHAT_RESULT_UNCONFIRMED", "本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。"])("[T-957] 原任务结果未知时不显示重新提交按钮：%s", (message) => {

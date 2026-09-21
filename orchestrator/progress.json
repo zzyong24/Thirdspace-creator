@@ -4,13 +4,61 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 61,
+    "verticals": 62,
     "tasks_done": 39,
-    "tasks_total": 154,
-    "tasks_pending": 115,
+    "tasks_total": 156,
+    "tasks_pending": 117,
     "verticals_complete": 4
   },
   "verticals": [
+    {
+      "id": "T-1022",
+      "archetype": [
+        "orchestration",
+        "ai-generated"
+      ],
+      "task_id": "T-1022",
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        },
+        {
+          "step": "acceptance",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "docs/features/t1022-nonblocking-agent-recovery.md",
+        "docs/verification/t1022-nonblocking-agent-recovery.md",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/intelligence/**",
+        "ai-worker/src/execution/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/intelligence/**",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "read_set": [
+        "docs/features/t1022-nonblocking-agent-recovery.md",
+        "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+        "docs/features/t1003-agent-workbench.md",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/intelligence/**",
+        "ai-worker/src/execution/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/intelligence/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
     {
       "id": "T-1005",
       "archetype": [
@@ -322,6 +370,10 @@
       "step_depends_on": {},
       "write_set": [
         "orchestrator/process/modules.config.json",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/workbench-artifact.service.ts",
+        "backend/src/modules/execution/workbench-artifact-lineage.service.test.ts",
+        "backend/src/modules/execution/execution-agentic-tool-host.test.ts",
         "frontend/src/server/workbench-native-host.test.ts",
         "docs/verification/t1021-t1009-full-acceptance.md"
       ],

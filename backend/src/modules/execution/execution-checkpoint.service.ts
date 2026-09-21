@@ -49,7 +49,7 @@ function reconstruct(refs:MessageRef[], calls:Call[]) {
     if (!call || call.id !== ref.callId || (ref.role === "assistant" ? call.kind !== "model" : call.kind !== "tool")) {
       throw new ConflictError("检查点消息不匹配当前任务的已确认调用顺序");
     }
-    if (roots.some(previous=>previous.sequence<call.sequence && previous.status!=="rejected" && !hasReceipt(previous))) {
+    if (roots.some(previous=>previous.sequence<call.sequence && !["rejected","superseded"].includes(previous.status) && !hasReceipt(previous))) {
       throw new ConflictError("不能越过较早的未确定调用保存消息");
     }
     if (ref.role === "assistant") {

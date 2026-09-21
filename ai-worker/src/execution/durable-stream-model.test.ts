@@ -130,7 +130,7 @@ it("模型回执保存失败不能放出工具调用，也不能标为可重试�
   expect(f.states).not.toContain("rejected");
 });
 it.each(["missing-finish", "error"])(
-  "流中%s记结果未知，不把半段正文当完成回执",
+  "流中%s废弃当前模型调用并让原任务续跑，不把半段正文当完成回执",
   async (mode) => {
     const f = fixture([
         ...textParts.slice(0, -1),
@@ -147,11 +147,29 @@ it.each(["missing-finish", "error"])(
         errors.push(e.error);
       },
     }).consumeStream();
-    expect(f.states).toEqual(["start", "unknown"]);
+    expect(f.states).toEqual(["start", "superseded"]);
     expect(errors.length).toBeGreaterThan(0);
+    expect((errors[0] as {outcome?:string}).outcome).toBe("retry_wait");
   },
 );
-it("供应商明确429拒绝进入重试等待，网络提交未知禁止重提", async () => {
+it("流已输出部分正文后网络断开，废弃半成品并由原任务重试",async()=>{
+  const f=fixture([]);
+  vi.mocked(f.provider.doStream).mockResolvedValueOnce({
+    stream:new ReadableStream<LanguageModelV4StreamPart>({
+      start(controller){
+        controller.enqueue({type:"stream-start",warnings:[]});
+        controller.enqueue({type:"text-start",id:"t"});
+        controller.enqueue({type:"text-delta",id:"t",delta:"半段"});
+        controller.error(Error("connection closed"));
+      },
+    }),
+  });
+  const errors:unknown[]=[];
+  await streamText({model:f.model(),prompt:"问题",maxRetries:0,onError:event=>{errors.push(event.error);}}).consumeStream();
+  expect(f.states).toEqual(["start","superseded"]);
+  expect(errors).toEqual([expect.objectContaining({outcome:"retry_wait"})]);
+});
+it("供应商429或网络断开都废弃本次模型候选并由原任务重试", async () => {
   for (const error of [
     Object.assign(Error("rate limit"), {
       statusCode: 429,
@@ -170,13 +188,8 @@ it("供应商明确429拒绝进入重试等待，网络提交未知禁止重提"
         errors.push(e.error);
       },
     }).consumeStream();
-    expect(f.states).toEqual([
-      "start",
-      "statusCode" in error ? "rejected" : "unknown",
-    ]);
-    expect(errors[0]?.outcome).toBe(
-      "statusCode" in error ? "retry_wait" : "unknown_result",
-    );
+    expect(f.states).toEqual(["start", "superseded"]);
+    expect(errors[0]?.outcome).toBe("retry_wait");
     expect(f.provider.doStream).toHaveBeenCalledTimes(1);
   }
 });

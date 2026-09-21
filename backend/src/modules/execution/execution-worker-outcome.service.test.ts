@@ -47,6 +47,12 @@ describe("持久重试调度",()=>{
     await expect(f.tasks.command(ctx,{taskIds:[f.ref.executionTaskId],command:"retry",idempotencyKey:"blind"})).rejects.toMatchObject({name:"ConflictError"});
     expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"next"})).toBeNull();
   });
+  it("模型连接中断废弃本次候选后，原任务自动进入重试等待",async()=>{
+    const f=await fixture("superseded");const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});
+    await f.ports.startCall(f.ref,{callId:call.callId});await f.ports.settleCall(f.ref,{callId:call.callId,status:"superseded"});
+    expect(await f.outcomes.recordFailure(f.ref,{outcome:"retry_wait",errorCode:"MODEL_STREAM_INTERRUPTED"})).toMatchObject({status:"retry_wait"});
+    expect(await f.tasks.get(ctx,f.ref.executionTaskId)).toMatchObject({status:"queued",runtimeStatus:"retry_wait"});
+  });
   it("等待登录或配置不会被自动领取，显式恢复后才允许领取",async()=>{
     const f=await fixture("login");
     const call=await f.ports.reserveCall(f.ref,{operationKey:"generate",maxOutputTokens:128});

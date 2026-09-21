@@ -26,6 +26,7 @@ import type {ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {ConflictError} from "./execution.errors";
 const preparationSchema=z.object({node:chatStructuredNodeSchema,discovery:z.object({sessionId:z.string().min(1),candidateId:z.string().min(1),candidateRevision:z.number().int()}).strict().nullable(),maxOutputTokens:z.number().int().positive().max(65536),skillSnapshot:workerSkillSnapshotSchema}).strict();
 type Call=typeof executionCalls.$inferSelect;
+const recoverableModelFailure=(call:Call)=>call.status==="superseded" || (call.status==="rejected" && call.rejectionCode!=="STRUCTURED_PROTOCOL_UNSUPPORTED");
 const parentRequest=workerPortInputSchemas.prepareChatGeneration;
 /** 有限共享生成协议：真实父工具确定输入，原节点回放确定每次模型请求和最终候选。 */
 export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{
@@ -50,7 +51,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   const frozen=await reader.read(ref);
   const state=await leases.withLease(ref,"admission",async({tx,task})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
-   const found=find(task,calls,callId);current(calls,found);const retry=calls.find(call=>call.id===task.retryOfCallId && call.parentCallId===callId && call.status==="rejected");return {...found,...(retry?{retryOfCallId:retry.id,retryOperationKey:retry.operationKey}:{})};
+   const found=find(task,calls,callId);current(calls,found);const retry=calls.find(call=>call.id===task.retryOfCallId && call.parentCallId===callId && recoverableModelFailure(call));return {...found,...(retry?{retryOfCallId:retry.id,retryOperationKey:retry.operationKey}:{})};
   });
   const approval=await deps.check(ref,{modelCallId:state.bound.modelCallId,toolCallId:state.bound.toolCallId},signal);
   if(approval.status!=="not-applicable")throw new ConflictError("生成未取得真实宿主授权");
@@ -80,7 +81,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    if(index===result.length+1){if(child.retryOfCallId)throw new ConflictError("新逻辑调用不能冒用重试来源");result.push([child]);}
    else if(index===result.length && result.length){
     const previous=result[index-1]!.at(-1)!;
-    if(previous.status!=="rejected" || previous.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED" || child.retryOfCallId!==previous.id || child.inputDigest!==previous.inputDigest)throw new ConflictError("子模型重试链不连续");
+    if(!recoverableModelFailure(previous) || child.retryOfCallId!==previous.id || child.inputDigest!==previous.inputDigest)throw new ConflictError("子模型重试链不连续");
     result[index-1]!.push(child);
    }else throw new ConflictError("生成逻辑调用序号不连续");
   }
@@ -97,10 +98,10 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
  async function replay(value:Awaited<ReturnType<typeof prepared>>,recorded:GenerationReplayReceipt[],signal?:AbortSignal,captureNodeFailure=false){
   return runWithEffectiveSkillSnapshot(value.skillSnapshot,()=>replayGenerationNode({...providerIdentityFor(value.identity),structuredOutputMode:structuredModeForIdentity(value.identity),receipts:recorded,signal,captureNodeFailure},model=>runChatStructuredSequence(value.node,model,value.maxOutputTokens,signal)));
  }
- function rejectedTail(calls:Call[],callId:string,key:string){
+ function recoverableTail(calls:Call[],callId:string,key:string){
   const tree=groups(calls,callId,key),last=tree.result.at(-1)?.at(-1);
   receipts(tree.result.slice(0,-1));
-  if(!last || last.status!=="rejected" || last.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED")throw new ConflictError("缺少可恢复的明确拒绝");
+  if(!last || !recoverableModelFailure(last))throw new ConflictError("缺少可恢复的模型失败");
   return last;
  }
  return {
@@ -110,7 +111,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
     if(!["waiting_user","retry_wait","failed"].includes(task.status))return null;
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const found=find(task,calls,callId),last=calls.at(-1);
-    if(found.parent.status!=="started" || last?.parentCallId!==callId || last.status!=="rejected" || last.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原生成");
+    if(found.parent.status!=="started" || last?.parentCallId!==callId || !recoverableModelFailure(last) || last.startedAttempt!==ref.attempt)throw new ConflictError("挂起回执不匹配原生成");
     const exhausted=task.status==="failed" && failure.outcome==="retry_wait" && task.lastErrorCode==="RETRY_BUDGET_EXHAUSTED";
     if(!exhausted && (task.status!==failure.outcome || task.lastErrorCode!==failure.errorCode || (task.status!=="failed" && task.retryOfCallId!==last.id)))throw new ConflictError("挂起事实不符");
     return {status:task.status,retryAt:task.retryAt};
@@ -119,7 +120,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    const value=await prepared(ref,{callId},signal);
    return createExecutionWorkerOutcomeService(db,deps).recordFailure(ref,failure,(calls,task)=>{
     const found=find(task,calls,callId);current(calls,found);
-    const last=rejectedTail(calls,callId,value.operationKey);
+    const last=recoverableTail(calls,callId,value.operationKey);
     if(found.parent.startedAttempt!==ref.attempt || last.startedAttempt!==ref.attempt || last.id!==[...calls].sort((a,b)=>a.sequence-b.sequence).at(-1)?.id)throw new ConflictError("失败不属于当前生成尝试");
     return [callId];
    });
@@ -155,7 +156,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    const call=await ledger.reserve(ref,{kind:"model",operationKey:input.operationKey,parentCallId:input.callId,inputDigest:generationRequestDigest(input.request),reservedTokens:Buffer.byteLength(JSON.stringify(input.request))+1024+value.maxOutputTokens,...(input.retryOfCallId?{retryOfCallId:input.retryOfCallId}:{})},(calls,task)=>{
     const found=find(task,calls,input.callId);current(calls,found);
     if(found.bound.inputDigest!==value.bound.inputDigest || !isDeepStrictEqual(groups(calls,input.callId,value.operationKey).result.slice(0,index-1),tree.result.slice(0,index-1)))throw new ConflictError("预留前生成调用事实改变");
-    if(input.retryOfCallId){const previous=tree.result[index-1]?.at(-1);if(task.retryOfCallId!==input.retryOfCallId || previous?.id!==input.retryOfCallId || previous.status!=="rejected" || previous.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED" || previous.startedAttempt===ref.attempt || found.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得原任务恢复许可");}
+    if(input.retryOfCallId){const previous=tree.result[index-1]?.at(-1);if(task.retryOfCallId!==input.retryOfCallId || previous?.id!==input.retryOfCallId || !recoverableModelFailure(previous) || previous.startedAttempt===ref.attempt || found.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得原任务恢复许可");}
    });
    return {callId:call.id,status:call.status,...(call.providerResult?{providerResult:call.providerResult}:{}),...(call.rejectionCode?{rejectionCode:call.rejectionCode}:{})};
   },
@@ -203,9 +204,9 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
      }
     }
    }
-   const failureMessage="模型未返回符合要求的候选，请重试；原始输入已保留";
+   const failureMessage="模型未返回符合要求的候选，Agent 正在调整生成策略";
    const failureData=value.node.capability==="knowledge.distill"?{kind:"knowledge.distill",atoms:[],suggestedTags:[],originalText:value.node.originalText,coverage:value.node.coverage,error:failureMessage,suggestSwitchModel:false}:value.node.capability==="review.analyze"?{kind:"review.learnings",items:[],error:failureMessage}:value.node.capability==="topic.generate"?{kind:"topic.candidates",items:[],trendNote:failureMessage}:undefined;
-   const output=agenticToolOutcomeSchema.parse(result.status==="failed" || data===null?{status:"error",summary:"模型未返回符合要求的候选",evidence:[],...(failureData?{data:failureData}:{}),error:{code:"no_evidence",retryable:false,recovery:"检查返回格式后重新生成"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
+   const output=agenticToolOutcomeSchema.parse(result.status==="failed" || data===null?{status:"error",summary:"模型未返回符合要求的候选，继续当前任务",evidence:[],...(failureData?{data:failureData}:{}),error:{code:"transient",retryable:true,recovery:"在当前 Agent loop 中调整生成策略并继续原任务"},continuation:null,sideEffect:"none"}:{status:"ok",summary:"生成候选已完成，等待用户采纳",evidence:[],data:JSON.parse(JSON.stringify(data)),error:null,continuation:null,sideEffect:"proposal"});
    const resultText=JSON.stringify(workerToolResultReceiptSchema.parse({schemaVersion:1,kind:"tool",toolCallId:value.bound.toolCallId,toolName:value.bound.toolName,output}));
    await ledger.settle(ref,callId,{status:"settled",usage:{totalTokens:0},resultText},undefined,(calls,task)=>{
     const found=find(task,calls,callId);current(calls,found);

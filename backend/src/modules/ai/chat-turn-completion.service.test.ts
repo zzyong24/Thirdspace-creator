@@ -22,6 +22,7 @@ async function fixture(options: {
     finishReason?: string;
     checkpoint?: boolean;
     unknownUsage?: boolean;
+    supersededPrefix?: boolean;
 } = {}) {
     const ctx = { userId: "chat-completion-u", accountId: `chat-completion-a-${++sequence}`, requestId: "test", source: "user" as const };
     const repo = createAiRepository(db, { userId: ctx.userId, accountId: ctx.accountId, now, nextId: prefix => `${prefix}-${++sequence}` });
@@ -35,14 +36,20 @@ async function fixture(options: {
         modelInput: unknown;
     }).modelInput);
     const ledger = createExecutionCallLedgerService(db, { now, budget }), generation = createExecutionGenerationPorts(db, { now, budget });
+    let supersededCallId:string|undefined;
+    if(options.supersededPrefix){
+        const first=await generation.reserveGenerationCall(ref,{operationKey:`${frozen.operationKey}/model/1`,request:{maxOutputTokens:128}});
+        await ledger.start(ref,first.callId);await generation.settleGenerationCall(ref,{callId:first.callId,status:"superseded"});
+        supersededCallId=first.callId;await db.update(executionTasks).set({retryOfCallId:first.callId}).where(eq(executionTasks.id,submit.executionTaskId));
+    }
     const call = await generation.reserveGenerationCall(ref, { operationKey: `${frozen.operationKey}/model/1`, request: { maxOutputTokens: 128 } });
     await ledger.start(ref, call.callId);
     await generation.settleGenerationCall(ref, { callId: call.callId, status: "settled", providerResult: { content: options.content ?? [{ type: "text", text: options.text ?? "真实回复" }], finishReason: { unified: options.finishReason ?? "stop" }, usage: { inputTokens: options.unknownUsage ? {} : { total: 2 }, outputTokens: options.unknownUsage ? {} : { total: 3 } }, warnings: [] }, usage: options.unknownUsage ? {} : { inputTokens: 2, outputTokens: 3 } });
     if (options.checkpoint !== false)
-        await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: 1, messages: [{ role: "assistant", callId: call.callId }] });
+        await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: options.supersededPrefix?2:1, messages: [{ role: "assistant", callId: call.callId }] });
     const service = createChatTurnCompletionService(db, { now }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
     const rows = async () => ({ messages: await repo.listMessages(conversation.id), results: await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, submit.taskId)), business: (await db.select().from(aiTasks).where(eq(aiTasks.id, submit.taskId)))[0]!, task: (await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId)))[0]!, call: (await db.select().from(executionCalls).where(eq(executionCalls.id, call.callId)))[0]! });
-    return { ctx, repo, source, conversation, submit, ref, task: task!, call, service, request, rows, ledger, generation, frozen };
+    return { ctx, repo, source, conversation, submit, ref, task: task!, call, supersededCallId, service, request, rows, ledger, generation, frozen };
 }
 it("同一完成请求并发或回放只有一条消息，消息/任务/回执一起完成", async () => {
     const f = await fixture();
@@ -58,6 +65,12 @@ it("同一完成请求并发或回放只有一条消息，消息/任务/回执�
     const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id));
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({callId:f.call.callId,callIndex:0,sequence:1,chunk:{type:"finish",finishReason:"stop",messageMetadata:rows.messages[1]!.modelMetadata}});
+});
+it("模型断流后的废弃调用不阻断重试结果提交",async()=>{
+    const f=await fixture({supersededPrefix:true});
+    expect(f.supersededCallId).toBeTruthy();
+    await expect(f.service.commitResult(f.ref,f.request)).resolves.toMatchObject({outcome:"succeeded"});
+    expect((await f.rows()).messages.at(-1)).toMatchObject({content:"真实回复"});
 });
 it("长度截断保留真实回复并投影 partial；未知用量保留 null", async () => {
     const f = await fixture({ finishReason: "length", unknownUsage: true });

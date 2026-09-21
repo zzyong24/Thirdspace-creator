@@ -110,6 +110,18 @@ describe("T-915 持久调用账本", () => {
     await expect(f.ledger.reserve(f.ref,{...input,retryOfCallId:a.id})).rejects.toMatchObject({name:"ConflictError"});
   });
 
+  it("模型断流可废弃后沿同一操作键重试，预算仍保守占用；工具调用不能伪装废弃", async () => {
+    const f=await fixture("superseded-retry",{maxCalls:3,maxTokens:100,deadlineMs:60000});
+    const call=await f.ledger.reserve(f.ref,input);await f.ledger.start(f.ref,call.id);
+    await f.ledger.settle(f.ref,call.id,{status:"superseded"});
+    expect(await f.ledger.inspect(f.ref)).toMatchObject({reservedTokens:20,unknownUsage:false});
+    const retry=await f.ledger.reserve(f.ref,{...input,retryOfCallId:call.id});
+    expect(retry.id).not.toBe(call.id);expect(retry.retryOfCallId).toBe(call.id);
+    const tool=await f.ledger.reserve(f.ref,{...input,operationKey:"tool",kind:"tool",reservedTokens:0});
+    await f.ledger.start(f.ref,tool.id);
+    await expect(f.ledger.settle(f.ref,tool.id,{status:"superseded"})).rejects.toMatchObject({name:"ConflictError"});
+  });
+
   it("实际超额结算保留真值，并阻止已经预留的下一次调用启动", async () => {
     const f = await fixture("overrun");
     const a = await f.ledger.reserve(f.ref,input);

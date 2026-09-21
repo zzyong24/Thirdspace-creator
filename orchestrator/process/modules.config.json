@@ -18,6 +18,18 @@
     ]
   },
   "modules": {
+    "T-1022": {
+      "task_id": "T-1022",
+      "archetype": ["orchestration", "ai-generated"],
+      "tasks": ["implementation", "acceptance"],
+      "depends_on": [],
+      "read_set": ["docs/features/t1022-nonblocking-agent-recovery.md", "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md", "docs/features/t1003-agent-workbench.md", "contract/src/internal/execution-worker.ts", "backend/src/modules/execution/**", "backend/src/modules/intelligence/**", "backend/src/modules/ai/**", "ai-worker/src/execution/**", "ai-worker/src/runtime/retry-policy.ts", "frontend/src/features/copilot/**", "frontend/src/features/intelligence/**", "frontend/src/lib/ai-error-humanize.ts", "frontend/src/server/chat-execution-stream.test.ts"],
+      "write_set": ["docs/features/t1022-nonblocking-agent-recovery.md", "docs/verification/t1022-nonblocking-agent-recovery.md", "contract/src/internal/execution-worker.ts", "backend/src/modules/execution/**", "backend/src/modules/intelligence/**", "backend/src/modules/ai/chat-turn-completion.service.ts", "backend/src/modules/ai/chat-turn-completion.service.test.ts", "ai-worker/src/execution/**", "ai-worker/src/runtime/retry-policy.ts", "frontend/src/features/copilot/**", "frontend/src/features/intelligence/**", "frontend/src/lib/ai-error-humanize.ts", "frontend/src/server/chat-execution-stream.test.ts", "orchestrator/DECISION_LOG.md", "orchestrator/LESSON_LEDGER.md", "orchestrator/process/reconcile.config.json"],
+      "verify_commands": {
+        "implementation": ["pnpm --dir contract typecheck", "pnpm --dir backend exec vitest run src/modules/intelligence/topic-preview-runner.test.ts src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts --retry=0", "pnpm --dir ai-worker exec vitest run src/execution/intelligence-generation-worker.test.ts src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts --retry=0", "pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0"],
+        "acceptance": ["pnpm --dir ai-worker typecheck", "pnpm --dir frontend typecheck", "node orchestrator/process/reconcile.mjs"]
+      }
+    },
     "T-1005": {
       "task_id": "T-1005", "archetype": ["orchestration"], "tasks": ["implementation"],
       "depends_on": ["T-1004:implementation"],

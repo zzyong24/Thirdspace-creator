@@ -33,7 +33,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                     throw new ConflictError("会话来源已变化");
                 const calls = await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)).orderBy(asc(executionCalls.sequence));
                 const {roots}=partitionExecutionCalls(calls);
-                const confirmed = calls.filter(call => call.status !== "rejected"), rootConfirmed=roots.filter(call=>call.status!=="rejected"), lastModel = rootConfirmed.filter(call => call.kind === "model").at(-1);
+                const confirmed = calls.filter(call => !["rejected","superseded"].includes(call.status)), rootConfirmed=roots.filter(call=>!["rejected","superseded"].includes(call.status)), lastModel = rootConfirmed.filter(call => call.kind === "model").at(-1);
                 if (!lastModel || lastModel.id !== request.lastModelCallId || confirmed.some(call => call.status !== "settled") || JSON.stringify(confirmed.filter(call => call.kind === "tool").map(call => call.id).sort()) !== JSON.stringify([...request.toolCallIds].sort()))
                     throw new ConflictError("聊天调用回执不完整");
                 const checkpoint = executionCheckpointSchema.parse(task.checkpoint);

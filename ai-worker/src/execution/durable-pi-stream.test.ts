@@ -67,10 +67,10 @@ describe("Pi 持久模型流",()=>{
     await expect(stream.result()).rejects.toMatchObject({outcome:"unknown_result"});expect(events.some(e=>e.type==="done")).toBe(false);
     expect(f.native).toHaveBeenCalledOnce();expect(f.onSettled).not.toHaveBeenCalled();
   });
-  it("明确429按rejected结算并保留retry_wait分类，不自行重试",async()=>{
+  it("明确429废弃本次模型候选并保留retry_wait分类，不自行重试",async()=>{
     const f=fixture();f.native.mockImplementation(()=>{throw Object.assign(new Error("private"),{statusCode:429});});
     await expect(f.run().result()).rejects.toMatchObject({outcome:"retry_wait"});
-    expect(f.call.mock.calls.at(-1)).toEqual(["settleGenerationCall",{callId:"c1",status:"rejected"}]);
+    expect(f.call.mock.calls.at(-1)).toEqual(["settleGenerationCall",{callId:"c1",status:"superseded"}]);
     expect(f.onFailure).toHaveBeenCalledWith(expect.objectContaining({outcome:"retry_wait"}));expect(f.native).toHaveBeenCalledOnce();
   });
   it("取消会终止不响应signal的流等待，结算unknown且不发done",async()=>{

@@ -129,6 +129,7 @@ export type WorkerProviderReceipt = z.infer<typeof workerProviderReceiptSchema>;
 const generationSettlementSchema=z.discriminatedUnion("status", [
  z.object({callId:operationKeySchema,status:z.literal("settled"),providerResult:workerProviderReceiptSchema,usage:workerUsageSchema}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("rejected"),rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional()}).strict(),
+ z.object({callId:operationKeySchema,status:z.literal("superseded")}).strict(),
  z.object({callId:operationKeySchema,status:z.literal("unknown")}).strict(),
 ]);
 
@@ -158,6 +159,7 @@ export const workerPortInputSchemas = {
     generationSettlementSchema.options[0].extend({awemeId:z.string().min(1).max(128)}).strict(),
     generationSettlementSchema.options[1].extend({awemeId:z.string().min(1).max(128)}).strict(),
     generationSettlementSchema.options[2].extend({awemeId:z.string().min(1).max(128)}).strict(),
+    generationSettlementSchema.options[3].extend({awemeId:z.string().min(1).max(128)}).strict(),
   ]),
   selectTranscribeLocalFallback:z.object({awemeId:z.string().min(1).max(128)}).strict(),
   prepareTranscribeAsr:z.object({awemeId:z.string().min(1).max(128)}).strict(),
@@ -237,7 +239,7 @@ export const workerPortInputSchemas = {
   startCall: z.object({callId: operationKeySchema}).strict(),
   settleCall: z.discriminatedUnion("status", [
     z.object({callId: operationKeySchema, status: z.literal("settled"), usage: workerUsageSchema, text: z.string().min(1).max(2_000_000)}).strict(),
-    z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected"])}).strict(),
+    z.object({callId: operationKeySchema, status: z.enum(["unknown", "rejected", "superseded"])}).strict(),
   ]),
   readCheckpoint: emptyPortInput,
   saveCheckpoint: saveExecutionCheckpointSchema,
@@ -250,7 +252,7 @@ export const workerPortInputSchemas = {
 } satisfies Record<WorkerPort, z.ZodType>;
 export const workerReservationSchema = z.object({
   callId: operationKeySchema,
-  status: z.enum(["reserved", "started", "settled", "unknown", "rejected"]),
+  status: z.enum(["reserved", "started", "settled", "unknown", "rejected", "superseded"]),
   providerResult:workerProviderReceiptSchema.optional(),
   rejectionCode:z.enum(["STRUCTURED_PROTOCOL_UNSUPPORTED","CHAT_MODEL_RETRYABLE_REJECTION"]).optional(),
   resultText: z.string().min(1).max(2_000_000).optional(),
