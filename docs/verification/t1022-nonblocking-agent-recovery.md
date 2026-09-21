@@ -28,3 +28,11 @@
 - `pmem sync` 成功；全局 `reconcile` 中 LED-052、物理边界、孤儿扫描、资产、文档和其余 lesson 门卫均通过。全局命令最终返回失败，仅因为 T-703、T-691、T-656、T-645、T-635 五个旧任务的 review receipt 在 constitution hash 变化后过期；该既有治理债务不属于 T-1022 验收范围。
 - 当前电脑控制接口未暴露 CreatorOS 原生窗口，因此没有补拍人工页面点击证据；安装版真实进程、内嵌 sidecar 启动与 hydration、公开 CLI 业务读取，以及可控故障注入回归共同作为本次安装版验收证据。
 - 本地包为 ad-hoc 签名且未公证，release manifest 如实记录 `signed:false`、`notarized:false`；仅用于本机安装验证，不作为对外正式发布包。
+
+## 真实页面旅程
+
+- 验收提交：`bc6064f8c351a992d672b975f8d74b2860b82da6`；严格回执：[T1022-FRONTEND-VALIDATION.md](../../orchestrator/T1022-FRONTEND-VALIDATION.md)。
+- 新增真实 Next.js + Chrome 旅程 2/2：1280×720 下验证未配置模型时保留输入并直达设置；900×600 下先注入 503，验证自动恢复状态与无手动重试按钮，再返回完整 UI message stream，确认原对话收到完整候选。
+- 两次恢复请求的最后一条用户消息 ID 完全相同，请求总数为 2；证明页面沿同一轮续跑，没有新建重复用户轮次。
+- 旧 `ai-recovery-guidance` 旅程从“未知故障手动重试”同步为自动恢复后重新执行，4/4 通过。
+- `taskctl complete T-1022` 依据该旅程重新执行 allowlist 命令并通过，记录 4 项 acceptance check、3 份可见文案捕获，任务状态已更新为 ✅。

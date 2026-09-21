@@ -8,7 +8,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-|T-1022|禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复|🔨|—|待验|[SPEC](docs/features/t1022-nonblocking-agent-recovery.md)|覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。|
+|T-1022|禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复|✅|—|PASS:06eb90bb86b5|[SPEC](docs/features/t1022-nonblocking-agent-recovery.md)|覆盖内容雷达与 AI 助手；仅无可用模型时引导配置，其他可恢复失败沿原任务自动续跑、修复或降级。|
 |T-1005|实现多步计划、连续执行与原任务续跑|🔨|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。|
 |T-1007|补齐任务文件空间与受控命令执行|🔨|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。|
 |T-1008|迁移 NomiFun 浏览器能力并协调既有采集|🔨|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。|
