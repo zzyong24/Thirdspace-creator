@@ -9,7 +9,7 @@ type ArtifactService=Pick<ReturnType<typeof createWorkbenchArtifactService>,"rec
  * 持久扫描未终结占位。对账领取的是谱系自己的短租约，因此 execution fence 已换、原执行租约
  * 已过期或进程重启后仍能按原 operationId 接管；它不会新建调用，也不会重传未知 Blob。
  */
-export function startWorkbenchArtifactReconciler(db:Db,service:ArtifactService,options:{now?:()=>Date;intervalMs?:number;batchSize?:number;claimLeaseMs?:number;startImmediately?:boolean;onError?:(error:unknown)=>void}={}){
+export function startWorkbenchArtifactReconciler(db:Db,service:ArtifactService,options:{now?:()=>Date;intervalMs?:number;batchSize?:number;claimLeaseMs?:number;startImmediately?:boolean;afterReconciled?:(taskId:string)=>Promise<void>;onError?:(error:unknown)=>void}={}){
  const now=options.now??(()=>new Date()),intervalMs=options.intervalMs??5000,batchSize=options.batchSize??20,claimLeaseMs=options.claimLeaseMs??30_000;
  let stopped=false,running=false;
  async function claim(lineageId:string){
@@ -26,7 +26,11 @@ export function startWorkbenchArtifactReconciler(db:Db,service:ArtifactService,o
  }
  async function handle(lineageId:string){
   const owned=await claim(lineageId);if(!owned)return false;
-  try{await service.reconcileArtifactOperation(owned.ref,owned.operationId,owned.claimId);return true;}
+  try{
+   await service.reconcileArtifactOperation(owned.ref,owned.operationId,owned.claimId);
+   await options.afterReconciled?.(owned.ref.executionTaskId);
+   return true;
+  }
   catch(error){options.onError?.(error);return false;}
  }
  const scan=async()=>{

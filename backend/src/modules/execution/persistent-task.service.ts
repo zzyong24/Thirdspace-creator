@@ -885,9 +885,10 @@ export function createPersistentTaskService(
             recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
             completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
           }
-          // 已经诚实停在 unknown_result 的旧任务只在确定完成安全模型恢复时改写；
-          // 外部副作用未知继续保持原状态，且不在每次轮询中刷新时间。
-          if(row.status==="unknown_result"&&!recoveredModels)continue;
+          // 外部副作用仍有 started/unknown 回执时继续等待专用对账。专用对账已经把原调用
+          // 结算后，允许同一任务重新入队；否则产物虽已恢复，Agent loop 仍会永久停住。
+          const unresolvedCalls=calls.some(call=>call.status==="started"||call.status==="unknown");
+          if(row.status==="unknown_result"&&!recoveredModels&&unresolvedCalls)continue;
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {

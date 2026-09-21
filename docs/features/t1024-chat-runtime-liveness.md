@@ -62,7 +62,20 @@ flowchart LR
   `superseded`，沿原任务与原 operation key 续跑；外部工具未知回执保持 `unknown_result`。
 - 模型 `length` 截断自动续写两次；持续截断后提交已生成内容为 `partial`，不保留永久 `running`。
 - 动态工具装配受运行预算和业务截止时间监督，即使解析器不响应 AbortSignal 也能结束原等待。
+- 产物自动对账先在事务外读取 Blob 和存储设置，事务内只复核已验证快照；修复 PGlite 根连接查询
+  排在自身事务之后造成的永久自锁。
+- 原工具调用完成同键对账后立即扫描安全未知结果；所有未知调用均已结算时，把同一执行任务重新入队，
+  由 Agent loop 从既有 checkpoint 继续，不创建替代任务。
+- 新增真实存储设置读取探针：对账期间并发任务读取在 1 秒内完成，原调用变为 `settled`，原任务由
+  `unknown_result` 回到 `queued`。
 - 自动化结果：前端 85 passed / 4 skipped；后端账本与恢复 19 passed；Worker 协议 17 passed；
   正式 Worker/Workbench 集成 26 passed；非阻断恢复 Playwright 4 passed；前端与 AI Worker 类型检查、
   物理边界、语义边界均通过。
-- 安装版与公开 CLI 证据在本地包安装后补录。
+- macOS 本地包已重新构建并覆盖安装到 `/Applications/CreatorOS.app`；安装包为
+  `/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA-256
+  `f60f6d9f4e1a8dcae785bb3069a5039a54520247c913243661c76344f5fa61c7`，ad-hoc 深度验签通过。
+- 公开 CreatorOS CLI 对原 `ai-task-1899afca-690`、`execution-task-1899afca-691` 和
+  `ai-conv-1899afca-423` 验收：执行 attempt 从 1 恢复到 2，checkpoint 从 22 推进到 24，两个任务均
+  `succeeded`；原 `call_bc0f2282-a190-4b39-8be6-b7a30ad0c9ec` 结算为成功，登记
+  `wa-0a48435928f5cdcd787f7344e180fdf5@1`（12,004 bytes），助手完整回复写回原对话，未创建替代任务。
+- 安装版同一任务连续 5 次公开 CLI 读取耗时 0.19–0.33 秒，未再出现数据库阻断或无限恢复。

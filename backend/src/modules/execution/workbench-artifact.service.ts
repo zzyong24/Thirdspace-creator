@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import {isDeepStrictEqual} from "node:util";
 import {posix} from "node:path";
 import {and,asc,eq,aiConversations,aiMessages,aiTasks,executionCalls,executionTasks,workbenchArtifactLineages,
  workbenchArtifactLineageVersions,OwnershipError,type Db} from "@creatoros/backend";
@@ -508,6 +509,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    if(outcome.status!=="ok"||outcome.sideEffect!=="committed"||!workbench.success||workbench.data.status!=="succeeded"||
     workbench.data.operationId!==input.operationId)throw new ConflictError("产物正式回执与宿主结果不符");
    const [before]=await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,input.operationId));
+   let verifiedRow:Stored|undefined;
    if(before){
    const row=pendingRow(before),ctx={userId:before.userId,accountId:before.accountId,requestId:input.operationId,source:"ai" as const};
     if(!workbench.data.artifactRefs.includes(`${row.metadata.artifactId}@${row.metadata.version}`))throw new ConflictError("产物引用与占位不符");
@@ -518,6 +520,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
       item.metadata.mime==="image/png"&&item.metadata.hash===resource.hash&&item.metadata.size===resource.size);
      if(!source)throw new ConflictError("HTML 图片清单来源已改变");await verified(source,ctx);
     }
+    verifiedRow=row;
    }
    return leases.withLease(ref,"settlement",async({tx,task})=>{
     const store=tx as unknown as Db,chat=await conversationScope(store,task);
@@ -538,6 +541,10 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     if(input.reconciliationClaimId&&(lineage.reconciliationClaimId!==input.reconciliationClaimId||!lineage.reconciliationLeaseExpiresAt||Date.parse(lineage.reconciliationLeaseExpiresAt)<=Date.parse(now())))
      throw new ConflictError("产物对账领取凭证已失效");
     const row=pendingRow(lineage);
+    // Blob 回读会先经 objectStorageForCtx 读取存储设置。PGlite 的事务会独占全部公开查询，
+    // 因此字节校验必须在租约事务外完成；锁内只复核占位与刚才校验的快照完全一致。
+    // 否则这里经根 db 读取设置会排在当前事务后，造成整个应用永久自锁。
+    if(!verifiedRow||!isDeepStrictEqual(row,verifiedRow))throw new ConflictError("待结算产物在字节校验后发生变化");
     const frozenBinding=object(lineage.pendingSource);
     if(frozenBinding.claimId!==input.claimId||frozenBinding.toolCallId!==input.toolCallId||frozenBinding.toolName!==input.toolName)
      throw new ConflictError("产物正式回执与冻结工具调用不符");
@@ -548,12 +555,10 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     const receiptContent=workbench.data.status==="succeeded"?workbench.data.content:[];
     if(outcome.summary!==expectedSummary||receiptContent.length!==1||receiptContent[0]?.type!=="text"||receiptContent[0].text!==expectedSummary)
      throw new ConflictError("产物正式回执正文与冻结元数据不符");
-    const commitCtx={userId:chat.userId,accountId:chat.accountId,requestId:input.operationId,source:"ai" as const};
-    await verified(row,commitCtx);
     for(const resource of row.metadata.htmlResources??[]){
      const [sourceTask]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,resource.taskId),eq(executionTasks.userId,chat.userId),eq(executionTasks.accountId,chat.accountId)));
      const source=sourceTask&&records(sourceTask.payload).find(item=>item.metadata.artifactId===resource.artifactId&&item.metadata.version===resource.version&&item.metadata.taskId===resource.taskId&&item.metadata.relativePath===resource.path&&item.metadata.mime==="image/png"&&item.metadata.hash===resource.hash&&item.metadata.size===resource.size);
-     if(!source)throw new ConflictError("HTML 图片清单来源已改变");await verified(source,commitCtx);
+     if(!source)throw new ConflictError("HTML 图片清单来源已改变");
     }
     const prior=records(task.payload),pending=records(task.payload,"workbenchArtifactPending");
     if(prior.some(item=>item.operationId===input.operationId))throw new ConflictError("新协议任务出现旧路径双写");

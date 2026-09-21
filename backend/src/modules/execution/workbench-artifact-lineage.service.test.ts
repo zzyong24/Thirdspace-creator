@@ -13,7 +13,7 @@ afterAll(async()=>close?.());
 
 const sha=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 
-async function fixture(clock?:{value:string}){
+async function fixture(clock?:{value:string},options:{dbBackedBlobRead?:boolean}={}){
  const nonce=randomUUID(),ctx={userId:`lineage-u-${nonce}`,accountId:`lineage-a-${nonce}`,requestId:nonce,source:"user" as const};
  const currentNow=()=>clock?.value??new Date().toISOString();
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:currentNow,nextId:prefix=>`${prefix}-${randomUUID()}`}),conversation=await repo.createConversation({title:"跨回合产物",projectId:null,scope:"global"});
@@ -21,7 +21,12 @@ async function fixture(clock?:{value:string}){
  const failedSubmits=new Set<string>();
  const service=createWorkbenchArtifactService(db,{async readTaskFile(scope,path){const file=files.get(`${scope.taskId}:${path}`);if(!file)throw Error("FILE_NOT_FOUND");return {bytes:new Uint8Array(file.bytes),version:file.version};},blobs:{
   async submit(_ctx,input){if(failedSubmits.has(input.operationId))throw Error("STORE_RESULT_LOST");const hash=sha(input.bytes);objects.set(`${input.taskId}:${input.operationId}:${hash}`,new Uint8Array(input.bytes));return {hash,size:input.bytes.byteLength};},
-  async read(_ctx,input){const bytes=objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);if(!bytes)throw Error("BLOB_NOT_FOUND");return new Uint8Array(bytes);},
+  async read(_ctx,input){
+   // 正式 objectStorageForCtx 会先从根 db 读取存储设置；此探针复现相同边界，防止
+   // commit/reconcile 再把 Blob 回读放进 PGlite 独占事务。
+   if(options.dbBackedBlobRead)await db.select({id:executionTasks.id}).from(executionTasks).limit(1);
+   const bytes=objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);if(!bytes)throw Error("BLOB_NOT_FOUND");return new Uint8Array(bytes);
+  },
   async inspect(_ctx,input){return objects.has(`${input.taskId}:${input.operationId}:${input.hash}`)?"present" as const:"absent" as const;},
  },now:currentNow});
  async function operation(taskId:string,ref:{executionTaskId:string;attempt:number;fenceToken:string},sequence:number,toolName="artifact.register"){
@@ -152,6 +157,30 @@ it("Blob 已准备但正式结算未知时保持占位，版本列表不把它�
  await db.update(workbenchArtifactLineages).set({state:"reconciling",reconciliationClaimId:"dead-process",reconciliationLeaseExpiresAt:"2020-01-01T00:00:00.000Z"}).where(eq(workbenchArtifactLineages.pendingOperationId,turn.operationId));
  const reconciler=startWorkbenchArtifactReconciler(db,f.service,{intervalMs:60_000,startImmediately:false});expect(await reconciler.scan()).toBe(1);reconciler.stop();
  const recovered=await f.service.versions(f.ctx,turn.taskId,{limit:50});expect(recovered.items).toEqual([expect.objectContaining({artifactId:pending.artifactId,version:1,status:"ready"})]);
+});
+
+it("产物自动对账的存储设置读取在事务外完成，前台数据库读取不会被永久阻塞",async()=>{
+ const f=await fixture(undefined,{dbBackedBlobRead:true}),turn=await f.turn("恢复数据库活性");
+ f.files.set(`${turn.taskId}:播放量报告.html`,{bytes:Buffer.from("<h1>真实报告</h1>"),version:1});
+ const pending=await f.service.register(turn.ref,turn.operationId,{path:"播放量报告.html",mime:"text/html"});
+ await f.service.markUnknown(turn.ref,{operationId:turn.operationId,claimId:turn.claimId,toolCallId:turn.toolCallId,toolName:"artifact_register"});
+ await db.update(executionTasks).set({status:"unknown_result",fenceToken:`replacement-${randomUUID()}`,leaseOwner:null,leaseExpiresAt:"2020-01-01T00:00:00.000Z"}).where(eq(executionTasks.id,turn.taskId));
+ await db.update(workbenchArtifactLineages).set({state:"reconciling",reconciliationClaimId:"dead-process",reconciliationLeaseExpiresAt:"2020-01-01T00:00:00.000Z"}).where(eq(workbenchArtifactLineages.pendingOperationId,turn.operationId));
+ const tasks=createPersistentTaskService(db);
+ const reconciler=startWorkbenchArtifactReconciler(db,f.service,{intervalMs:60_000,startImmediately:false,
+  afterReconciled:async()=>{await tasks.recoverExpiredLeases({includeSafeUnknownResults:true});}});
+ const recovery=reconciler.scan();
+ await expect(Promise.race([
+  db.select({id:executionTasks.id}).from(executionTasks).where(eq(executionTasks.id,turn.taskId)),
+  new Promise((_,reject)=>setTimeout(()=>reject(new Error("DB_READ_STALLED")),1000)),
+ ])).resolves.toHaveLength(1);
+ await expect(recovery).resolves.toBe(1);reconciler.stop();
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,turn.operationId));
+ expect(call).toMatchObject({status:"settled",toolExecutionClaimId:turn.claimId});
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,turn.taskId));
+ expect(task).toMatchObject({status:"queued",leaseOwner:null,leaseExpiresAt:null});
+ const recovered=await f.service.versions(f.ctx,turn.taskId,{limit:50});
+ expect(recovered.items).toEqual([expect.objectContaining({artifactId:pending.artifactId,version:1,status:"ready"})]);
 });
 
 it("升级时逐谱系核对旧回执；started 原调用按同一 ID 结算，坏回执只显示旧版只读卡",async()=>{

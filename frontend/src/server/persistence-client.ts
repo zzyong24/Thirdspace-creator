@@ -5441,7 +5441,10 @@ FAVORITES_PROMOTE_PER_RUN
   const workbenchBlobs=createWorkbenchBlobService(objectStorageForCtx);
   const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
   const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
-  const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{onError:()=>{}});
+  const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{
+    afterReconciled:async()=>{await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});},
+    onError:()=>{},
+  });
   stopWorkbenchArtifactReconciler=()=>artifactReconciler.stop();
   const screenshotMedia=createWorkbenchScreenshotMediaService(db,{blobs:createWorkbenchBlobService(objectStorageForCtx),now:deps.now});
   const browserWorkbenchHost=createWorkbenchBrowserHost(db,{now:deps.now,media:screenshotMedia});

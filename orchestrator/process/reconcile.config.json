@@ -21,9 +21,9 @@
   "lessons": [
     {
       "led": "LED-054",
-      "what": "外部浏览器或本机 I/O 再次占住 PGlite 事务，或纯模型未知结果永久阻断原任务",
-      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
-      "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；纯模型未知只可在同任务、同 operation key 和原预算内续跑，外部副作用未知保持对账。"
+      "what": "外部 I/O 或产物存储设置读取再次占住 PGlite 事务，或完成对账后原任务仍永久阻断",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+      "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。"
     },
     {
       "led": "LED-053",
