@@ -4,14 +4,15 @@
 > 只影响**桌面壳**(Tauri);web/dev 完全不受激活门影响。
 > 设计与 API 契约详见 SPEC:`docs/superpowers/specs/2026-07-06-p5-activation-gate-design.md`。
 
-## 1. 一次性:在 activation-manager 后台建项目
+## 1. 商品与项目身份
 
-**接入前必须先建项目**,否则所有激活/校验请求返 HTTP 400「项目不存在: test」(源码坐实:`resolveProject` 对未知/停用 projectKey 抛错)。
+CreatorOS 正式商品统一在 Growth 创建，`projectKey` 固定为 **`creatoros`**；Growth 按已签名合同把
+商品身份同步到 Activity。运营人员不得登录 Activity 为 CreatorOS 手工创建 `test/default` 项目，也不得
+通过运行时环境变量把正式安装包切到另一个产品。
 
-1. 登录后台 `https://license.aitongban.cloud/admin`(凭据见部署文档,不落此处)。
-2. 新建项目,`projectKey` 填 **`test`**(CreatorOS 客户端默认认这个;可用 env 改)。
-3. 为该项目生成**时间型(TIME)**激活码:设有效天数 `validDays`(年卡 = 365),`cardType` 可标「年卡」。
-4. 把激活码发给最终用户。**测试激活码绝不提交进 git**(用 `.env.local` / 手动输入)。
+1. 在 Growth 创建或选择 CreatorOS 商品，并确认返回的 `projectKey` exact 为 `creatoros`。
+2. 由 Growth 的正式流程生成和交付授权；Activity 仅作为下游授权服务，不作为运营配置入口。
+3. 测试激活码绝不提交进 git，只能通过 `.env.local` 或手动输入用于本地 debug 验证。
 
 ## 2. 配置(env,均有默认)
 
@@ -20,7 +21,7 @@
 | env | 默认 | 说明 |
 |---|---|---|
 | `CREATOROS_LICENSE_BASE_URL` | `https://license.aitongban.cloud` | 授权服务地址 |
-| `CREATOROS_LICENSE_PROJECT_KEY` | `test` | 项目标识(须先在后台建过) |
+| `CREATOROS_LICENSE_PROJECT_KEY` | 正式包编译期固定 `creatoros` | 仅 debug/`tauri dev` 可显式使用本地 key；可分发包运行时不可覆盖 |
 | `CREATOROS_ACTIVATION_GRACE_DAYS` | `7` | 离线宽限天数 |
 | `CREATOROS_MACHINE_ID` | (Rust 注入) | 机器指纹;桌面壳自动注入,手动测可覆盖 |
 | `CREATOROS_TEST_CODE` | — | **仅 `.env.local`** 的本地测试激活码,绝不提交 |
@@ -78,9 +79,12 @@ pnpm -C frontend desktop:activation activate --code <你的激活码>
 
 ## 7. 加固边界(诚实)
 
-- **响应无密码学签名(服务端不支持)**:已读 activation-manager 源码坐实,`/api/license/*` 与 `/api/verify` 的响应体**无任何 signature/sig/token 字段**;客户端**只能校布尔值**(`success`/`valid`)+ HTTPS 传输。可改 hosts / 起假服务端返回 `{success:true}` 绕过 —— 这是所有单机授权对拥有整机的攻击者的固有弱点,非本实现缺陷。
-- **Ed25519 强验签 = P5+**:需 activation-manager 服务端**先加签名能力**(授权结果私钥签名 + 客户端内置公钥验签),客户端才能做。**当前未做,不假装**;客户端未内置验签(如实标注)。
-- 现阶段真正的防线是**商业层**:一机一码 + 后台可吊销/统计 + 码泄露可追溯。
+- **正式响应严格验签**：可分发包内置受信公钥，对 Activity 返回的授权事实执行 Ed25519 严格验签；
+  缺签名、坏签名、过期、请求绑定或项目身份不一致都 fail-closed，运行时环境变量不能关闭。
+- **客户端边界**：本机所有者仍可能 patch 二进制、attach debugger 或 dump 运行时内存；当前签名链
+  保证未持有服务端私钥的一方不能仅靠伪造 HTTP 布尔响应获得可信授权，不宣称抵抗对客户端自身的
+  任意修改。
+- **服务端终判**：付费模型请求仍由 Growth/中转站执行服务端授权与额度终判，本地 verdict 不替代它。
 - machineId 可伪造(§3);离线宽限(§4)是可用性与防盗版的折中,窗越大越宽松。
 
 ## 8. reset 与激活态

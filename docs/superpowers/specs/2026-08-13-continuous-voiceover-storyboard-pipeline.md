@@ -45,6 +45,9 @@ flowchart LR
 
 ## 3. 执行与数据边界
 
+0. ai-worker 只通过 Pi 执行两阶段模型调用并返回结构化候选结果，不打开 PG、Drizzle 或 repository。
+   Backend service 按可信 RequestContext 独占 execution task、server-only runtimeData、checkpoint、候选、
+   采纳投影和任务结算的读写；Worker 与 Backend 只经受控 service port 交换请求、检查点和候选结果。
 1. `script.draft` 任务创建时冻结 `script.voiceover.compose`、`script.storyboard.segment` 和兼容用的
    `script.draft` 三份 effective Skill 快照，重试不得读取任务开始后的新配置。runner 对任务输入、
    已装配创作上下文和三份 Skill 快照计算 `inputFingerprint`；只有指纹一致的恢复任务可复用断点。
@@ -61,12 +64,20 @@ flowchart LR
 4. 每次调用第二阶段前先原子递增并保存 `storyboardAttemptCount`；进程崩溃后按持久计数继续，不以
    重启清零。第二阶段返回后，代码执行确定性逐字拼接与 hash 校验。该校验只做协议完整性，不判断创作质量：
    `SEMANTIC_BOUNDARY_ALLOW: storyboard voiceover integrity only`。
+   两阶段调用、断点提交和 `recordCandidate` 都使用 Backend 注入的
+   `taskId + operationId + attempt + fence`：同一 operationId 重放返回既有结算，旧 fence 的迟到结果
+   不得写 checkpoint、候选或终态，也不得重复计费；成功候选与任务结算共用稳定幂等键。
 5. 首次拼接不一致时，只允许带明确“逐字切分失败”原因重做一次分镜阶段；不得重跑已成功的连续
    口播，也不得用代码猜测缺句或自动改稿。第二次仍不一致则任务失败，不记录半成品候选。
-6. 两阶段均使用已有有界模型超时、文本 JSON 兼容和 schema 校验；第一阶段或第二阶段失败都进入
-   真实终态。只有两阶段及完整性校验全部通过后，才调用既有 `recordCandidate`。
+6. 两阶段均使用已有有界模型超时、文本 JSON 兼容和 schema 校验。口播增删改、断点损坏或不存在安全
+   输出路径时进入真实失败终态；单个可选 assetId 删除、越界或归属失效时，Backend 先移除该素材绑定，
+   保留 Skill 生成的画面描述并走既有无素材/基础视觉路径，记录降级而不阻断完整口播和其余合法 shots。
+   只有两阶段、文字完整性及当前真值校验通过后，才调用既有 `recordCandidate`。
 7. 最终候选继续使用现有 `artifact_version`、`sections` 和 `contentData.sections`；只增加内部
    `generationPipeline` 与 `voiceoverSha256` 诊断元数据，不改变采纳接口。
+8. 调用第二阶段前和 `recordCandidate` 前，Backend service port 必须按当前 RequestContext 重读项目、
+   候选根实体及全部 assetId，校验 user/account/project、版本、存在性和归属。能唯一重绑时使用当前资源；
+   否则明确冲突或按第 6 条降级，禁止把已删除、旧版本或跨项目素材写入候选。
 
 ## 4. 账号自定义兼容
 
@@ -107,11 +118,16 @@ flowchart LR
 5. 第一阶段失败不调用第二阶段；第一阶段完成后必须先持久化 `voiceover_complete` 断点。第二阶段
    provider 失败、超时、进程重领或显式重试只从合法断点恢复，不重跑第一阶段；残缺/篡改/指纹不符
    断点失败关闭，任何失败都不留下可采纳半成品。
+   故障注入同时覆盖并发重领、断点保存后崩溃、候选写入后崩溃和旧调用迟到；同键只结算一次，旧 fence
+   不能写入或重复计费。
 6. 旧 `script.draft` 有账号覆盖时执行兼容单阶段，覆盖内容与 schema 不被新 Skill 偷换；清除覆盖后
    新任务才切换两阶段。
 7. 聚焦单测覆盖 registry、snapshot 映射、两阶段顺序、hash、server-only 断点写读、同任务重领、
    `retryOfTaskId`、持久重做预算、残缺/错指纹失败关闭、legacy overlay、候选结构和 token/步骤元数据；
-   backend、ai-worker 类型检查与物理/语义边界 Gate 通过。
-8. 本地验收包使用真实 DeepSeek Harness 主题和至少一个不同关系主题生成新稿；用户只看拼接后的
-   完整口播做主观验收，并确认核心判断是否前置、前半段是否仍退化为资料目录。未得到用户确认前，
-   T-824 保持“待验”，不把自动化绿冒充文稿质量 PASS。
+   backend、ai-worker 类型检查与物理/语义边界 Gate 通过；真实 service-port 测试证明 Worker 不打开库，
+   checkpoint、候选和采纳投影只由 Backend 写入。素材删除、换版本、跨项目引用和单项视觉降级均覆盖。
+8. 本地验收包通过正式 `script.draft` 公共链路，用真实 DeepSeek Harness 主题和至少一个不同关系主题
+   产生真实 task 与候选，核对冻结口播 hash 与 shots 拼接一致，完成采纳、刷新，并生成至少一个可查看的
+   视频短预览或等价真实下游产物。证据记录 taskId、candidateId、artifact version、真实素材引用和预览
+   产物；用户再对完整口播做主观验收并确认核心判断是否前置。未得到用户确认前，T-824 保持“待验”，
+   不把自动化绿冒充文稿质量 PASS。

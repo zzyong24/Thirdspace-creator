@@ -1,4 +1,23 @@
 {
   "schema": "threat-model/v1",
-  "threats": []
+  "threats": [
+    {
+      "id": "THREAT-REL-001",
+      "status": "approved",
+      "owner": "user",
+      "actor": "取得 CDN 写权限或 Tauri updater 私钥、但不持有离线 root 私钥的外部攻击者",
+      "assets": [
+        "CreatorOS 渠道包的离线信任根",
+        "用户安装的应用壳与 runtime"
+      ],
+      "capabilities": [
+        "替换在线更新元数据或 Tauri 更新制品",
+        "使用已泄露的 updater 私钥签名恶意更新"
+      ],
+      "acceptance_ids": [
+        "AC-694-08"
+      ],
+      "approval_ref": "DEC-REL-036；用户于 2026-09-21 明确确认全部发行安全边界"
+    }
+  ]
 }

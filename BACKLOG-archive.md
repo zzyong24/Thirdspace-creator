@@ -1003,3 +1003,19 @@
 | T-876 | 根治横版成片在无主视觉时保留右侧窄人物并暴露大面积空舞台【用户成片截图·2026-08-17】 | ✅ 待办 | — | — | 复用 [T-858 SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md) 与 [T-859 SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md) | 以真实 94.7 秒、1920×1080 成片 `ai-task-5b4809a2-1507` 为失败证据：每个口播时间窗必须由真实素材或语义内容动效连续承接，高级 Scene Graph 失败只能降级为基础内容动效而不能静止；横屏竖版人物保持稳定侧栏，异常缝隙用可溯原句动效补足主舞台，禁止把人物居中放大；侧栏人物与空舞台同时出现必须在计划与渲染层双重失败，并用真实时间线短样片与成片抽帧验证。 |
 | T-875 | 为 CreatorOS macOS DMG 增加 Retina 高清拖动安装引导【安装体验·用户截图确认 2026-08-17】 | ✅ 待办 | — | — | [构建验证](orchestrator/T875-BUILD-VALIDATION.md) | 官方 macOS 安装盘使用高分辨率品牌背景、清晰 CreatorOS 图标、Applications 入口与拖动箭头，明确“拖动到应用程序”三步引导；使用 2× 像素资产并验证最终 DMG Finder 布局，不影响 Windows、渠道包或应用运行时。 |
 | T-873 | TC流量中心渠道专属本地包候选（绿色左侧主题、产品名与图标已确认）【渠道打包·用户确认 2026-08-17】 | ✅ 待办 | — | — | [详情](BACKLOG-details.md#t-873) | 已在 Growth 创建并回读饶文贤名下的 `partner-p501444c-tc-flow-center`；侧栏主题改为通用 PackageManifest 可选颜色配置，TC 清单填写深青绿，官方包及未配置渠道保持原配色，共享组件不识别渠道名；渠道专属购买/续费/下载/反馈/客服链接统一不填并走官方反馈入口；macOS 本地包已基于新候选重建、安装并启动验证；Windows 正式包走独立 `channel-package` workflow，完成 NSIS 真安装、启动、卸载验证，签名边界记录为 `unsigned-accepted-risk`。 |
+
+## 归档于 2026-09-21
+
+| ID | 任务 | 状态 | 文档 | 一句话 |
+|---|---|---|---|---|
+| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
+| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
+| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |
+| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |
+| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |
+| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |
+| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |

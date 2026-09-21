@@ -3376,3 +3376,360 @@ T983来源状态补充：真实页面对照证明部分旧作品只有正常指�
 ## DEC-AW-1009 — 同一对话跨回合产物版本谱系
 
 用户在补充规格独立评审 `PASS[REV:825f3a6d65da]` 后明确“都确认”，批准按 `docs/features/t1009-artifact-lineage-proposal.md` 实施同一对话跨回合修订。产物谱系归属用户、账号和对话；每个版本继续绑定真实任务、原工具调用和 Blob，旧版本保留。新增后端唯一谱系索引、原调用同事务结算、未知 Blob 持久对账、旧任务保守迁移、HTML 精确图片版本清单以及新旧协议排他切换。不同对话或账号不得串联；迁移受阻时旧版只读且不伪造新版本。该确认授权实现与本地验收，不包含公开发布、生产放量或修改外部仓库。
+
+
+## T-916 历史规格回执复核授权（2026-09-21）
+
+用户要求继续修复当前 reconcile 暴露的问题。以下一次性能力仅允许对绑定任务的当前 SPEC 与当前宪法执行独立复核；不得改写历史事件、跳过审查或冒充既有 PASS。
+
+```text
+ID: DEC-015
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce
+Previous-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ff11bd90-4588-44ed-85e4-498b9f5f1121
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-016
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-859
+Previous-Spec-SHA256: e6fe3ad73fa90859a3850b09e4ffd11fd82efdc1da7e1ee27899839d045981c5
+Previous-Constitution-SHA256: e84f83b7e65a415ba7a2a4639188bc2fd2d682f42d3220107a119abdc39d2a77
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 03366bd3-4852-44ba-9e39-a33c08dfa26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-017
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-858
+Previous-Spec-SHA256: ab768b979e62ab63199ee8d1014c993dcac7f51dfa92f15e627dacb33b2ceed1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: e7266c6d-fe58-4215-9a56-d1c82be92e71
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-018
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-824
+Previous-Spec-SHA256: 58355a1e3ae9f12a57279dfb67ba05d7e950b2aec1f3284aecaf8764339950c6
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: c2d657d0-27b9-4fb8-97fc-6e3ee65ea71b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-019
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-819
+Previous-Spec-SHA256: d89d457083d1d2d0dd132429b3f65b8a8470f3feca2f44284080833b4754eecb
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ca9488d5-e93a-4c60-9f58-f9812be0bb00
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-020
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-816
+Previous-Spec-SHA256: b9490f4fac3f5f00ff1c32d26609e48d82b94b615ab3580f0b0d2a5df955548d
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 10f7f1c9-b65d-4c68-bf59-cff752140c5d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-021
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-768
+Previous-Spec-SHA256: f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 7ae1d4fe-b06e-497d-8f2c-7e531e85087d
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-022
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-726
+Previous-Spec-SHA256: 7e2e8d6b672ee2cea8f84c346ac23373f2fb15069bd8f32ab560370687b3e7c1
+Previous-Constitution-SHA256: 871570cc600267be82e2e1fbfa79d730fc51121810b8de262c5a49c876029b66
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 35a3a05d-46f1-456d-bf72-025205408349
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-023
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 70e49d3ae5a3e418fad77e80fa0a61054c42de5c0634cc20881cfd7a4f005320
+Previous-Constitution-SHA256: 2afb9684d1ef531f56c5def2185c6cc7086c00aa3105bff0ce87fc5c81fc5fad
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2adcb180-5753-4ea0-a0c7-90fe3a81e26a
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-024
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: 6a04d0b0fa6c123f7990f02685afeed38858494cc2501ec4bfbc742050ab97fd
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: ac8673b6-158e-4b68-9431-6ec807c855d5
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-025
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: ca037dafc7b21ab04ce3ffe20502e7cc8862f14dc342a1e3db2437a67887f40e
+Previous-Constitution-SHA256: d01469220b22455024bd58473a6ca9f307162b1317ba0fa5fe036b148f90362a
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: fabb442c-61e4-4776-b796-dfdc6fceac56
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-026
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: c693c9a4ad1175d831512f493aabd4782603a21dda58f92fdca6c76e45989c4b
+Previous-Constitution-SHA256: 76e9fa0fa2408bd5f512b640d01ad5a0c550702875abeeb4ddb648a07e0e6bca
+Allowed-Change-IDs: SPEC-DRIFT,CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 2564bde3-ee0e-4e82-b317-a784d856ceb2
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-027
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-642
+Previous-Spec-SHA256: e8c4568adfcd8dcf82c91468cd1dfde4c46899e128d1388c00001eddcb9b1442
+Previous-Constitution-SHA256: 07c9b61b58ca970feff57f1647c30a32c4af4fc92063c9a87952771403376950
+Allowed-Change-IDs: REV-002,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: e9eec361-0bb6-41fb-aee9-1e0ebdd4b713
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-028
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: f00d4d7c0ecf1f7821fd336ce9278a12a168e1593417b1630527d458bcc929a3
+Previous-Constitution-SHA256: 89a36038833bdaed0d6de3ca353725643aff8aa53e6e0c53933b7ebdf4b1ad9b
+Allowed-Change-IDs: CONSTITUTION-DRIFT
+Max-Cycles: 1
+Nonce: 29cc5a99-7d6d-4301-bb87-c33c1124d26b
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-029
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-652
+Previous-Spec-SHA256: 381393efb2d2f63029b4d6df27522836b5bcbb7205429b9df13ccbd6d96f513e
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-004,REV-005,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 21ee04c8-f878-41cb-9555-69ebd0454f44
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-030
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-694
+Previous-Spec-SHA256: 6ea31e784c68e7498c99f4bfd89f8231d3d4e545c345127acd6eeee961a3192b
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: SPEC-DRIFT,THREAT-MODEL-BINDING
+Max-Cycles: 1
+Nonce: d4f103ce-f2e9-4f0e-9f08-e599a5dca694
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-031
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-707
+Previous-Spec-SHA256: 274348c049ec609de8c6fd85ff5e1c35ccd888c4d3862a744e0167f8270d3c98
+Previous-Constitution-SHA256: 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800
+Allowed-Change-IDs: REV-003,REV-004,SPEC-DRIFT
+Max-Cycles: 1
+Nonce: 653e2dc9-8565-443c-8e94-d4a39c653707
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-032
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-656
+Previous-Spec-SHA256: a6a56eb9bdb5c7b19e59fee6bef2c8f8fdbca2d4276f1b49d7a9c7ea049bc1ac
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 9135a313-e798-4475-b983-f80300305656
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-033
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-635
+Previous-Spec-SHA256: 5849ba840ce1352b97eb47a8d72b77397737242621d7e32170e2cd9e2a8d9402
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 439e493a-98a7-42a6-8d4c-adc7b2fa0635
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-034
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-703
+Previous-Spec-SHA256: 1624f50bb9f70d475bec8c633a7cc6f46d0d94f8fe4e01ecf6abfced36420460
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: 51b2872d-f6c4-43df-b41a-c1a6f8741703
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-035
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-691
+Previous-Spec-SHA256: a4a57d75e372b01db3c0880f6791b98971a98d0abb44a3b29c07c1723752e232
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: e7356b91-2d2f-477f-a909-bf225c156691
+Owner: user
+Status: active
+```
+
+```text
+ID: DEC-036
+Date: 2026-09-21
+Stage: process-review
+Type: review-cycle-capability
+Authorization-Kind: process-review-cycle
+Task-ID: T-645
+Previous-Spec-SHA256: d2e9fbef2dcb8228b3652d5f269024eada6cafbf62c03ec61ba26ad6e4418fd1
+Previous-Constitution-SHA256: d6611dbad51dc439d17e638fc2cab9283ad6a0d5557c183f82dad0aaedb05c28
+Allowed-Change-IDs: PMEM-SYNC
+Max-Cycles: 1
+Nonce: ef51bc98-82f0-463f-b6bb-ecde96654645
+Owner: user
+Status: active
+```

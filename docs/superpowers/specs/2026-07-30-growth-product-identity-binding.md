@@ -23,6 +23,10 @@
 - `build.rs` 从同一个已验证 canonical input 同时生成
   `CREATOROS_BUILTIN_LICENSE_PROJECT_KEY` 和 ProductManifest；Rust license、entitlement claim、
   config、feedback resolver 不得各自维护 project key 默认值。
+- 受控发布构建判定由单一共享 Gate 实现，并覆盖当前全部可分发入口：`desktop:package`、
+  package-local、desktop-release、Windows NSIS、渠道包装器以及后续新增的非 debug 安装包入口。
+  新入口必须登记进同一验收矩阵后才能产物；不能靠入口名称或调用者自报绕过 canonical input、
+  strict verify、claim=0、manifest 与 attestation 检查。
 
 ## 3. 运行时安全
 
@@ -40,7 +44,8 @@
   `CREATOROS_ENTITLEMENT_CLAIM_ENABLED=0`；运行时环境变量不能打开。
 - 本地 identity receipt 只证明 T-635 BUILD 的三仓 `projectKey` 一致，绝不授权把 claim 改为 1。
 - 只有 T-575 的 release program-gate GO 才能另行变更：该 GO 必须绑定三仓实际 release commit、
-  HTTPS 部署、正式密钥和 live entitlement journey，不能由本地 receipt 替代。
+  HTTPS 部署、正式密钥、live entitlement journey 与 §5 的 migration-inventory receipt，不能由
+  本地 receipt 替代。
 - 当前 workflow 中 hardcode `1` 的配置和相应“必须为 1”测试失效，改为 fail-closed 验收。
 
 ## 5. 存量 `test/default` 迁移门
@@ -51,6 +56,10 @@
 - 四类存量全为零才可切换；任一非零则保持现有发布不动、claim 关闭，另建明确 alias/双读迁移
   和回滚契约。
 - 本任务不猜测 `test → creatoros`，不修改既有授权事实，也不把本地 E2E 当作生产零存量证据。
+- 发布门只接受 `migration-inventory/v1` 机读回执。回执逐项记录 Activity Project、code、grant 与
+  已发布 CreatorOS 本地授权的权威查询接口或只读查询、生产环境标识、`asOf` 时间、计数、结果摘要、
+  执行身份和查询结果 SHA-256，并绑定本次 release identity。任一计数非零、查询失败、回执过期、
+  环境或 release identity 不一致都 fail-closed；T-575 GO 必须引用该回执摘要。
 
 ## 6. 非秘密 ProductManifest
 
@@ -67,16 +76,26 @@
 - manifest 是身份清单而非授权凭据，不包含服务密钥、激活码、claimToken、deviceSecret 或用户事实。
 - release attestation 绑定 manifest digest、安装包 digest、release profile 和三仓 commit；
   避免 manifest 写 `creatoros` 而二进制内置另一 key 的假绿。
+- release attestation 使用 `creatoros-release-attestation/v1`：包含最终可分发包 SHA-256、
+  ProductManifest SHA-256、release profile、workflow run、CreatorOS/Growth/Activity 三仓 repo identity、
+  commit、dirty 状态、各仓产品身份权威文件路径与 SHA-256，以及 migration-inventory receipt SHA-256。
+  三仓字段只能从受信 checkout 读取；dirty 或 repo identity 不符拒绝生成。attestation 在签名、公证、
+  封装完成后针对最终文件生成并签名，验证器重算每个摘要和权威文件中的 exact `creatoros`，不得接受
+  构建脚本自报 commit 或对中间包预签。
 
 ## 7. 验收
 
-1. release workflow 和受控打包脚本不再出现 `projectKey=test`。
-2. `release`、`release-fast` 分别拒绝 missing、非法、`test` 和其他合法 key，只接受 exact
-   `creatoros`；debug 仍可显式使用本地 key。
+1. release workflow、受控打包脚本、当前运营/激活指南、示例命令和环境变量表不再指导使用
+   `projectKey=test/default`、手工在 Activity 建 CreatorOS 项目或在可分发包运行时覆盖身份；旧流程
+   只能保留在明确标注历史、不可执行的归档 SPEC。
+2. `release`、`release-fast` 及 §2 验收矩阵内每个可分发入口分别拒绝 missing、非法、`test`、
+   其他合法 key、`STRICT_VERIFY=0` 与 claim=1，只接受 exact `creatoros`；debug 仍可显式使用本地 key。
 3. 可分发包运行时即使注入另一 project key 或 `STRICT_VERIFY=0`，仍使用内置 `creatoros`
    并保持严格验签。
 4. 可分发包 claim 固定关闭且运行时无法开启；本地 receipt 不改变该结论。
 5. Rust license/claim/config/feedback 与 manifest 读取同一 canonical identity。
-6. artifact inspection 不含 Growth→Activity secret，并证明 manifest digest 与安装包 digest
-   同属当前 release attestation。
-7. T-575 live program-gate GO 之前不发布身份切换安装包。
+6. 双平台最终 artifact inspection 不含 Growth→Activity secret，并验证
+   `creatoros-release-attestation/v1` 中最终包、manifest、profile、workflow run、三仓 commit/权威文件
+   与 migration receipt 的全部绑定；篡改任一 commit、权威文件、manifest、receipt 或最终包都失败。
+7. T-575 live program-gate GO 必须绑定新鲜且四类计数均为零的 `migration-inventory/v1`；查询失败、
+   非零、过期或环境不一致都不发布身份切换安装包。

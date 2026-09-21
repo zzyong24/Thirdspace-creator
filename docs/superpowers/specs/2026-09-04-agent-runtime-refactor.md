@@ -173,9 +173,9 @@ Worker ready 返回协议版本和真实 capabilities；父进程有限并发调
 
 `web.read` 保留 needLogin、blocked、alternates；正文通过 evidenceRef/offset/maxChars 继续读，用户/账号/任务归属校验与有效期由服务端控制。搜索、浏览器池排队、fallback 搜索、导航和读取全部传 signal/deadline，复用局部恢复但共享总预算。被取消的 checkout 必须从队列删除，不能之后拿到资源再执行。
 
-浏览器接口：observe(sessionId) 返回 observationId、URL、标题、文本窗口与可操作元素引用；act(sessionId,observationId,action,targetRef,value) 仅支持导航/点击/填写/等待明确状态/提取，返回新 observation 与事实结果。过期观察返回 stale_observation 和新观察，不继续旧目标。每次动作后重新观察；模型判断是否达成业务目标。DOM 等外部内容作为不可信证据，不能改变工具权限。副作用动作沿用用户已有授权和工具 effect，未知提交先核实，不能自动重复提交表单。
+浏览器接口：observe(sessionId) 返回 observationId、URL、标题、文本窗口与可操作元素引用；act(sessionId,observationId,action,targetRef,value) 仅支持导航/点击/填写/等待明确状态/提取，返回新 observation 与事实结果。过期观察返回 stale_observation 和新观察，不继续旧目标。每次动作后重新观察；模型判断是否达成业务目标。DOM 等外部内容作为不可信证据，不能改变工具权限。浏览器 session 必须绑定服务端持久化的 task authority 与工具 effect；每次副作用动作前由 backend 核对当前 user/account、任务控制状态、授权范围和稳定 operationKey。只读授权拒绝提交/发布类动作，超出范围进入 `waiting_user`；恢复后只能沿用原授权快照，未知提交按原 operationKey 对账，不能自动重复提交表单。
 
-现有登录保管库真实归属是 user+domain，本次保持该数据归属，不宣称按 account 加密隔离。浏览器执行 session 绑定 task/user/account，上下文切换不得挪用任务页面；同一底层登录 profile 的动作串行。登录/captcha 等待用户并提供现有登录入口，恢复后新建观察，不能循环尝试绕过。重启后关闭遗留页并重新取得受控租约。
+现有登录保管库真实归属是 user+domain，本次保持该数据归属，不宣称按 account 加密隔离。浏览器执行 session 绑定 task/user/account，上下文切换不得挪用任务页面；同一底层登录 profile 的动作串行。领取 profile 或执行首个读取/写入动作前，必须从页面可验证的外部账号身份回读并与目标 account 的显式绑定核对；无法证明或不匹配时进入 `waiting_user`，不得继续读取或操作。该绑定随 session/evidence/checkpoint 保存，恢复后重新验证，不能仅相信旧页面或模型描述。登录/captcha 等待用户并提供现有登录入口，恢复后新建观察，不能循环尝试绕过。重启后关闭遗留页并重新取得受控租约。
 
 ### R-05 结果与兼容路径
 
@@ -194,10 +194,10 @@ Worker ready 返回协议版本和真实 capabilities；父进程有限并发调
 | AC-03 | 瞬断、429、格式错误、登录、未知提交 | transient 有界恢复；局部结构修复；登录进入 waiting_user；未知提交同键对账，无第二次不可幂等副作用 |
 | AC-04 | 多工具一轮、预算已耗尽、取消后迟到 Worker | 调用前拦截；预算不可重置；旧 fence 不能启动动作、写候选或覆盖终态；已执行调用仍可结算 |
 | AC-05 | 杀 Worker/父进程、检查点与提交窗口中断 | 恢复消息/预算/工具事实；无重复候选；ai/execution 投影一致；浏览器重新观察；旧 sweep 不判死新任务；暂停中无新 admission，在途调用可结算；暂停后重启不自启，恢复保持预算/重试额度/deadline/operationKey |
-| AC-06 | 浏览器过期定位、排队取消、登录阻断 | 新观察后改目标；取消排队不启动；搜索取消不启动后续 fallback；动作后回读证据；登录不反复撞墙 |
+| AC-06 | 浏览器过期定位、排队取消、登录阻断、授权与同域多账号 | 新观察后改目标；取消排队不启动；搜索取消不启动后续 fallback；动作后回读证据；登录不反复撞墙；只读授权拒绝提交，越权等待用户，恢复沿用原授权，未知提交同键核实；两个同 user/domain、不同 account 的 session、evidence、恢复和副作用动作不会串用外部登录身份 |
 | AC-07 | Pi 异常/缺失、partial、纯诊断 | actualEngine 真实；可用部分保留；诊断不冒充成功；有效旧路径安全降级 |
 | AC-08 | 所有 R-05 入口及旧数据 | 每入口路由至唯一执行权；正常生成无额外规划模型；流式卡片、采纳、取消与选区改稿兼容；迁移可重跑 |
-| AC-09 | 性能基线与故障样本 | R-03 同条件 P50/P95 和模型调用数；全部故障分类符合预期；重复副作用为 0，取消生效后的新 admission 为 0 |
+| AC-09 | 性能基线与故障样本 | R-03 同条件 P50/P95 和模型调用数；全部故障分类符合预期；重复副作用为 0，取消生效后的新 admission 为 0；运行 LED-047 定向回归：同页弹层走本地打开路径，真实页面导航保留路由，折叠大对象按需渲染，每个轮询源限制在途请求，切换 user/account/project/task 或卸载后迟到响应不得回写，且不删除合法历史或阻断正常任务来换取性能结果 |
 | AC-10 | 正式装配、边界与旧路径退役 | 无生产 mock 发布/transport 和默认身份；backend 不 import frontend；SDK 只在 worker/runtime；Worker 不打开 DB；手工登记回归 |
 | AC-11 | macOS/Windows 分发包与供应商兼容 | Worker 真启动、Pi 能力真实、退出无残留、停止与重启恢复；anthropic/openai_chat/openai_responses 同源配置；真实验证与 fixture 明确分列 |
 

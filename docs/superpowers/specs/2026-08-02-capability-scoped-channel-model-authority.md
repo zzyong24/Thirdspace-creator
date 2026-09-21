@@ -90,12 +90,17 @@ SHA-256，输出 64 位小写十六进制。保存、列表、测试、同步调
 本轮正式输入是 Growth 已发布的 `services + connections + models` 图。对 capability `C`，只有
 下列条件全部成立才返回 `managed`：
 
-1. `models[C]` 是非空数组，恰有一项 `isDefault=true`；默认项有非空 `id/name/model/connectionId`；
-2. `connectionId` 精确命中唯一 connection；connection 有非空 `serviceId/provider/baseURL/apiFormat`；
+1. `models[C]` 是非空数组，恰有一项 `isDefault=true`；数组内每一项都有非空且唯一的
+   `id/name/model/connectionId`，`settings` 为当前版本可解析的对象；
+2. 每一项的 `connectionId` 都精确命中唯一 connection；connection 有非空
+   `serviceId/provider/baseURL/apiFormat`；
 3. `serviceId` 精确命中唯一 service；service credential 为
    `type=api_key, source=user_input`；
 4. URL 是无用户名密码的 HTTPS；settings 是对象；ID 与引用无重复或歧义；
-5. 当前 CreatorOS 有该能力所需的协议/adapter。
+5. 每一项引用的协议、settings 与 adapter 都被当前 CreatorOS 支持。
+
+任一非默认项缺字段、重复 ID、断引用、未知 adapter 或非法 settings 时，整个 capability 判为
+`local` 并返回脱敏诊断；客户端不得静默剔除坏项后改写 Growth 已验签白名单，也不得展示不可调用项。
 
 本轮支持矩阵：
 
@@ -216,6 +221,8 @@ resolve(capability):
   后仍选中第二项。
 - `TC-T645-14`：Growth 更新白名单并移除当前选择后，CreatorOS 只回退到唯一默认项并显示明确
   提示；旧模型既不能在 UI 中选择，也不能通过篡改请求调用。
+- `TC-T645-15`：任一非默认模型缺字段、断 connection/service 引用、重复 ID、未知 adapter 或
+  非法 settings 时，整个 capability 判 `local` 并只给脱敏诊断；不得静默过滤后仍判 managed。
 
 ## 9. 范围边界
 
@@ -243,6 +250,12 @@ resolve(capability):
   `GET /api/client-config/managed-credentials/current?serviceId=omnihi-main`；完整 token 只从
   `private, no-store` 响应直接写入本机加密凭据库，不能进入公开 bundle、client-config cache、
   Web DTO、日志或明文数据库。
+- 上述“server-only”的唯一物理属主是 backend service port：frontend 只能通过 contract client
+  发起同步、模型选择与状态查询；backend 的 settings/ai-runtime service 使用当前
+  `RequestContext` 校验已验签 authority，持久化长期凭据和模型选择，并申请单次 lease。
+  `frontend/src/server/activation/client-config.server.ts` 只保留无数据库写权、无凭据持有权的兼容
+  适配与签名输入转交；ai-worker 只通过受控私有端口接收本次内存 token，不直连数据库、不申请或
+  续租 lease。同步、设置页和 worker resolver 必须读取 backend 同一真值。
 - 设置页只显示“受管 Key 已就绪/等待同步”，不渲染用户填写 Key 的输入框。凭据缺失时 fail
   closed 并提示重新确认激活权益/同步，绝不误导用户手填四套 Key，也绝不回退本地模型。
 
@@ -282,6 +295,8 @@ settings 当成权威。
   原值保存，下一次调用携带其 `model/connection/settings`。
 - 新登录后的桌面壳后台触发一次配置/凭据同步；web 部署不请求本机 loopback 接口，业务页面不
   因同步网络耗时阻塞。
+- 跨层测试证明 frontend 只能经 contract client 调 backend service port，长期凭据、模型选择和
+  lease/intent 幂等状态只有 backend 可写；ai-worker 无数据库连接且不能自行申请或续租。
 - Growth/Activity live HTTPS 与真实 OmniHi 子 Key端到端仍需真实环境验收；本地测试不得伪造
   成已完成的线上验收证据。
 
@@ -334,6 +349,10 @@ T-679 / T-715，**不创建第二套模型配置任务**；API-282 已稳定，C
   提示或走本地 Whisper。
 - 同一次转写意图生成并复用稳定 `Idempotency-Key`。网络断连、响应丢失或重进页面不得换 key
   绕过单 active lease；同 key 重试只允许按 Growth 合同重放。
+- 转写意图固定标识为当前 `accountId + transcriptionTaskId + audioSha256 + attemptId`。backend 在任何
+  lease 请求前，先在同一事务中为该持久任务 attempt 生成并保存随机 `Idempotency-Key`；并发双击、
+  请求前崩溃、请求后响应丢失、页面重进和进程重启都只能读回该 key。只有用户明确创建新的转写
+  attempt 才能生成新 key；同一 attempt 不得因执行器重建、错误重试或 UI 会话变化而换 key。
 - `ASR_LEASE_EXPIRED` 表示原授权已过期，不能隐式重签；`ASR_LEASE_PROVIDER_UNKNOWN` 表示
   provider 结果未知且处于隔离期，不能换新 key 再申请。两者都可以明确改走本地 Whisper，但不得
   再申请另一枚 token 或造成二次扣费。
@@ -346,11 +365,13 @@ T-679 / T-715，**不创建第二套模型配置任务**；API-282 已稳定，C
 
 实现严格对照 Growth 已发布的 request/response schema 与错误枚举，写集锁定在：
 
-- `frontend/src/server/activation/client-config.server.ts` 及测试：验签并解析 lifecycle 与精确双 service；
-- 新增 server-only lease client 及测试：只传合同允许的 closed body，持有稳定幂等键，响应
-  `no-store`，不把 token 投影到 Web DTO；
+- `frontend/src/server/activation/client-config.server.ts` 及测试：只做已验签输入的兼容适配并经 contract
+  client 转交 backend，无数据库、凭据或 lease 写权；
+- backend settings/ai-runtime service port 及测试：校验 `RequestContext` 与 authority，持久化长期凭据、
+  模型选择和 intent 幂等键；lease client 只传合同允许的 closed body，响应 `no-store`，不把 token
+  投影到 Web DTO；
 - `backend/src/modules/ai-runtime/channel-model-config.ts`、`multimodal/resolve.ts`、
-  `transcribe-runner.ts` 及测试：区分 persistent/per_request、前置限额、错误分流与 Whisper 回退；
+  `transcribe-runner.ts` 及测试：区分 persistent/per_request、前置限额、幂等恢复、错误分流与 Whisper 回退；
 - `ai-worker/src/runtime/multimodal-factory.ts`、`multimodal-qwen-asr.ts` 及测试：只接收单次内存凭据并
   固定签名 origin/model，禁止自行续租；
 - `frontend/src/features/settings/*` 与逐字稿入口测试：删除受管 ASR Key/provider/Base URL 配置，
@@ -360,7 +381,8 @@ T-679 / T-715，**不创建第二套模型配置任务**；API-282 已稳定，C
 
 - 旧 bundle 缺 lifecycle 仍按 persistent 兼容；新 bundle 只接受精确双 service，非法第三 service、
   mixed `user_input`、错误 provider/apiFormat 全部失败关闭。
-- 超限文件在 lease 前拒绝；同一 intent 的所有重试复用同一个 `Idempotency-Key`；
+- 超限文件在 lease 前拒绝；同一持久 intent/attempt 的并发双击、请求前崩溃、响应丢失、页面重进和
+  进程重启都复用同一个 `Idempotency-Key`，只有用户明确新建 attempt 才生成新 key；
   `provider_unknown/expired` 不生成新 key、不重复申请。
 - token 只在内存；UI、HTML、日志、数据库、系统密钥库、URL、埋点与崩溃报告扫描不到实现术语和
   临时 token。
@@ -383,18 +405,24 @@ CreatorOS 已从 Growth 正式合同确认 API-282 精确响应和错误字段�
   `authorization_changed`、`blocked` 或 `security_error`，也不得继续请求 Growth。
 - 上述兼容只覆盖这个精确、已验签错误码。坏签名、响应结构漂移、撤权、过期、绑定变化、locator
   不一致、版本降级与碰撞仍按原安全规则失败关闭，不得因本地模型存在而吞掉真实安全事件。
+- 这类 authority 安全失败冻结渠道路径，保持可见 `security_error/blocked`，且 ticket、Growth、lease、
+  provider 调用均为 0。逐字稿可独立尝试一次本地 Whisper，但本地成功不得清除、降级或冒充渠道
+  安全状态，也不得记录为 `channel-managed`；设置页仍显示需要重新校验权益的真实状态。
 - 已保存本地文本模型凭据且当前 authority 为 `local` 时，设置页不再渲染渠道状态提示；模型卡自身
   继续显示并允许编辑、保存和测试。本地文本模型尚未配置，或当前 authority 确为 `channel` 时，仍
   显示对当前操作有帮助的真实状态。
 - 回归必须覆盖：不适用票据从既有误阻断态恢复为 `not_configured` 且不触达 Growth；真正撤权仍保存
-  blocked 并抛错；本地模型有凭据时两行误报警均不存在，本地未配置或渠道已接管时状态仍可见。
+  blocked 并抛错，ticket/Growth/lease/provider 调用均为 0；独立 Whisper 成功仍保留该安全状态且
+  不记为渠道成功；本地模型有凭据时两行误报警均不存在，本地未配置或渠道已接管时状态仍可见。
 
 ## 13. T-768 ASR 全故障本地兜底覆盖（2026-08-11）
 
 - 本节只覆盖 `transcribe.audio` 的失败恢复，不放宽文本、图片、视频受管凭据的失败关闭边界。
-- 未配置、未绑定额度账户、额度不足、lease 拒绝/过期/供应商未知、签名配置不可用、鉴权、限流、
-  网络、超时、上游错误、响应结构异常、调用异常或云端返回空文本，都不得阻断逐字稿；当前云端路径
-  立即作废，并对同一音频只尝试一次本地 Whisper。
+- 在已建立有效 authority 后，未配置、未绑定额度账户、额度不足、lease 拒绝/过期/供应商未知、
+  provider 鉴权、限流、网络、超时、上游错误、响应结构异常、调用异常或云端返回空文本，都不得
+  阻断逐字稿；当前云端路径立即作废，并对同一音频只尝试一次本地 Whisper。签名配置坏签名、撤权、
+  scope/locator/版本绑定异常属于 §12 的 authority 安全失败，按零出网与状态保留规则处理，不能归类成
+  普通 provider 故障；其独立本地 Whisper 成功也不改变该安全状态。
 - 回退不得申请第二枚 lease、不得更换幂等键、不得造成第二次云端扣费；当前已是本地 Whisper 时禁止
   递归回退。只有本地 Whisper 自身失败时才向用户显示稳定的“本地转写失败，请重试。”，不得泄露
   ffmpeg、ONNX、模型缓存路径、临时 token 或云端内部错误。

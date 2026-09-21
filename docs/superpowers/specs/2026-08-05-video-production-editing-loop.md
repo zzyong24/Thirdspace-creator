@@ -42,16 +42,16 @@ flowchart LR
 - **FR-703-15 编辑结构不烧进成片**：`scene.title/summary`、`SCENE N`、`分镜 N` 只用于编辑器回顾与 AI 推理，渲染模板不得默认上屏。真正上屏文字只来自 `video.cards` 明确选择的短标题、数字、对比、清单、代码或金句；不得逐字复述整段口播。动画按语义选择计数、生长、依次揭示、建立后推翻或局部隐喻，禁止整块淡入的 PPT 式模板和同时堆叠多个强视觉。
 - **FR-703-16 竖版不是横版模板旋转**：竖屏交付中，无主视觉时口播人物必须铺满 9:16 主画布，普通信息卡与 `special` 不得仅因数量增加就把人物缩成角落小窗。横图、方图或横屏录屏作为主视觉时，原素材继续 `contain` 保持完整比例，同时由同源模糊氛围层填满对应竖屏舞台；同源氛围层只作装饰，可裁切，不能替代可读的完整前景。只有 `large_stage` 才把人物切到底部独立安全区。需要新生成的图片/视频必须在视觉需求中显式携带本次 `9:16/16:9` 构图，不得先生成横图再靠渲染补救。本轮按用户最终确认保留 CreatorOS 既有视觉风格，只修复横竖屏布局、比例、遮挡、录屏可读性和时间线互斥，不绑定外部 Skill 的固定风格，也不重做整体视觉体系。
 - **FR-703-17A 信息卡连续承接**：信息卡承担两段真实素材之间的视觉接力时，必须持续展示到下一张信息卡、下一段主视觉或场景结束；禁止用固定秒数提前熄灭，制造长时间黑场。信息卡使用主舞台的可读面积而非左上角标签尺寸，但图片卡保持原比例与适度尺寸，不冒充文字信息卡铺满画面。
-- **FR-703-17B 真实模型回归环**：工程提供单命令回归入口，先确认 CreatorOS 已退出，再自动复制真实数据库到 `/tmp`、关闭后台驱动、读取当前已配置模型，依次执行 `video.decisions → 确定性边界审计 → video.render → ffprobe → 12 宫格联系表`。回归不得写用户真实数据库，不得在输出中记录主密钥、机器种子或模型密钥；模型负责素材语义与分镜，代码只审计真实 ID、唯一性、时间线、比例和版式边界。
+- **FR-703-17B 真实模型与本地包回归环**：工程提供单命令回归入口，先确认 CreatorOS 已退出，再自动复制真实数据库到 `/tmp`、关闭后台驱动、读取当前已配置模型，依次执行 `video.decisions → 确定性边界审计 → video.render → ffprobe → 12 宫格联系表`。随后在隔离数据的本地测试包公开入口完成“确认分镜 → Range 预览 → 对话调剪候选 → 用户确认重渲染 → 采纳成片 → 重新分镜/重新生成并保留旧成片”。回归不得写用户真实数据库，不得在输出中记录主密钥、机器种子或模型密钥；模型负责素材语义与分镜，代码只审计真实 ID、唯一性、时间线、比例和版式边界。源码 CLI 结果不能替代本地包路由、Worker、文件权限、播放器和采纳读回证据。
 - **FR-703-17C 成片物理安全门**：回归必须自动拒绝静态图或普通视频全屏、全屏录屏缺失左下人物画中画、封面进入时间线、同一素材跨场重复、非 overlay 主视觉重叠。用户素材包中的真实录屏应由模型结合文件名、媒体元数据和场景语义选择，禁止在生产代码中硬编码业务文件名；具体素材 ID 只能存在于回归 fixture。
 - **FR-703-17D 双画幅独立回归**：真实模型回归默认连续执行横屏与竖屏两套 `video.decisions → video.render → ffprobe → 联系表`，各自保存独立产物和报告。横屏交付必须为 1920×1080，竖屏交付必须为 1080×1920；任一画幅的模型分镜、确定性审计、编码尺寸或视觉抽帧未通过，都不得用另一画幅结果替代验收或固定实现。
-- **FR-703-17 总导演统筹审片**：分场、信息卡、真人主画面、用户素材/B-roll 与字幕先作为独立候选节点产出，每个节点先通过自身结构契约、真实 assetId 与时间边界审核，再由唯一 `video.director` 读取完整候选时间线与真实素材库，统一检查叙事逻辑、长段画面承接、人物安全区、用户素材优先级、信息卡质量、构图、字幕与时间冲突。首轮进入时间线的素材即形成当前方案绑定，总导演不得删除或要求用户重选。审核发现问题后必须在当前方案内自动收口素材时长、安排素材接力，并用口播原文信息卡补足全部视觉空档，再执行有界复审；最终只向用户交付可渲染候选和最终过目入口，不存在“缺素材/阻断后让用户重新配分镜”的产品状态。总导演模型暂不可用时，由确定性修片层完成时间边界、字幕真值和信息卡兜底，禁止无限重试或为了通过而编造素材。
+- **FR-703-17 总导演统筹审片**：分场、信息卡、真人主画面、用户素材/B-roll 与字幕先作为独立候选节点产出，每个节点先通过自身结构契约、真实 assetId 与时间边界审核，再由唯一 `video.director` 读取完整候选时间线与真实素材库，统一检查叙事逻辑、长段画面承接、人物安全区、用户素材优先级、信息卡质量、构图、字幕与时间冲突。首轮进入时间线的素材形成当前方案绑定；全局冲突按“用户人工硬绑定 > authored assetRef > 模型选择”确定唯一规范绑定，同一素材跨场重复时保留最高优先级的一处，其他重复项折叠并记录原因，用人物主画面或合规信息卡补空档，不删除用户唯一有效选择，也不要求用户重选。审核发现问题后必须在当前方案内自动收口素材时长、安排素材接力，并用口播原文信息卡补足全部视觉空档，再执行有界复审；最终只向用户交付可渲染候选和最终过目入口，不存在“缺素材/阻断后让用户重新配分镜”的产品状态。总导演模型暂不可用时，由确定性修片层完成时间边界、字幕真值和信息卡兜底，禁止无限重试或为了通过而编造素材。
 ## 3. 数据与服务闭环
 
 | 数据 | 来源 | 存储/状态 | 读回 |
 | --- | --- | --- | --- |
 | authored 分镜素材 | 当前 `output_script` 版本的 `visual.assetRefs` | 仍归 artifact；决策 runner 只读 | `readStoryboard` + 当前项目素材 inventory |
-| 当前已确认剪辑方案 | 用户确认后的编辑版 `VideoDecisions` + `VideoRenderProps` | 复用 Production 的 `recordingConfig.videoEditingPlan`；由 `outputs.production.put` 写入，禁止 AI 直写 | `outputs.production.get`，制作页与 Copilot lifecycle 同源读取 |
+| 当前已确认剪辑方案 | 用户确认后的编辑版 `VideoDecisions` + `VideoRenderProps`，并冻结 source artifactId/currentVersionId/contentHash 与素材身份/文件版本摘要 | 复用 Production 的 `recordingConfig.videoEditingPlan`；由 `outputs.production.put` 写入，禁止 AI 直写 | `outputs.production.get`，制作页与 Copilot lifecycle 同源读取 |
 | 临时成片 | execution workspace `out/` + manifest | 状态 `awaiting_confirmation`，不属于素材库 | 新增只读临时预览 route；先经 execution service 校验 task 归属，再校验 path 属于 manifest 且位于 sandbox/out |
 | 正式成片 | 用户点击采纳 | 既有 `execution.tasks.confirm` → Assets active → material link role=final → export/output | 既有资产签名 URL 与 Production ready 状态 |
 | 对话调整 | 用户自然语言 + 当前 editing plan | AI 只产候选/重跑意图；用户确认后调用既有服务 | 制作页刷新 current plan 和新 execution task |
@@ -59,7 +59,16 @@ flowchart LR
 
 `recordingConfig` 是现有 Production 的自由 JSON 配置字段，本任务只增加 namespaced 键，不改表、不迁移。新增窄写操作 `productions.editing-plan.confirm`，入参含 `outputId`、`expectedRevision`、完整 plan；后端在同一条带 revision 条件的更新中只替换 `recordingConfig.videoEditingPlan`，保留全部 sibling keys，成功后 revision +1。revision 不匹配返回 conflict，零写入；禁止客户端用“先 GET、整块合并、再 PUT”模拟原子更新。用户首次确认和对话调整都走此窄写口。
 
-确认顺序唯一：① `editing-plan.confirm` 成功；② 立即 `outputs.production.get` 读回并核对 revision/sourceTaskId/renderProps 摘要；③ 才创建 `video.render`。任一步失败都保留确认卡并显示可重试，绝不先渲染后 best-effort 记账。临时预览不得返回绝对路径，不得允许任意 workspace 文件读取。
+“确认方案并创建 render”是一个 Backend 编排操作，绑定稳定 `operationKey`：确认前和 render admission
+都按当前 RequestContext 重读 source artifact/version/hash、素材存在性、文件版本和归属。源稿已变化时
+冲突并要求重新分镜；素材删除、换版或归属变化时执行可解释的安全重编排或保持未采用，禁止消费旧快照。
+编排内部顺序唯一：① `editing-plan.confirm`；② 读回核对 revision/sourceTaskId/renderProps；③ 创建
+`video.render`；并持久化确认意图与结果。任一提交窗口崩溃或响应丢失后，同一 operationKey 返回同一
+plan revision 与 render taskId，不新增 revision、任务或计费。任一步失败都保留确认卡并显示可重试，
+绝不先渲染后 best-effort 记账。临时预览不得返回绝对路径，不得允许任意 workspace 文件读取。
+
+`execution.tasks.confirm` 同样按原任务与稳定 operationKey 幂等返回同一正式 Asset、material link 和
+current final 切换；双击、响应未知或恢复重放只结算一次。
 
 对话调整工具固定为 `video.edit.render`：输入 `{projectId?, expectedPlanRevision, sourceRenderTaskId?, instruction, patch}`；`patch` 仅允许对现有 plan 做有界差异（替换/移除某场 B-roll、移除信息卡、调整素材出现时刻），不能携带整份新项目真值。工具先读取当前 Production plan，校验项目/账号与 revision，将 patch 确定性应用并用 `videoRenderProps.parse` 验证；随后记录 `video_edit_plan` AI 候选并返回 taskId。候选卡展示具体差异；用户点“确认调整并重渲染”后才调用 `productions.editing-plan.confirm` 写新 revision，再创建带 `retryOf/sourceRenderTaskId` 的 `video.render`。确认响应必须返回新 plan revision 与新 render taskId，页面和 lifecycle 可读回。仅带 `retryFeedback` 而 props 未变化不算调整成功。
 
@@ -76,7 +85,7 @@ flowchart LR
 ## 5. 确定性约束
 
 - authored assetRefs 只在资产仍存在、属于当前账号/项目且未被用户剔除时补入；同 asset/scene 去重。
-- 对齐优先用分镜段序号映射 scene 序号。段数不一致时，权威文本固定为 storyboard `narration` 与每个 scene 时间窗内拼接的原始 `srtLines.text`；两边统一 Unicode NFKC、转小写、去空白和标点后，按连续中文 2-gram + ASCII token 计算 Jaccard。唯一最高分且分数 `>=0.35` 才命中；最高分并列、低于阈值或零 token 均标记“无法唯一对齐”，不猜时间。一段最多命中一场，一场可承接多个按原段序排列的素材。
+- 对齐优先用分镜段序号映射 scene 序号。段数不一致时，权威文本固定为 storyboard `narration` 与每个 scene 时间窗内拼接的原始 `srtLines.text`；两边统一 Unicode NFKC、转小写、去空白和标点后，按连续中文 2-gram + ASCII token 计算 Jaccard。唯一最高分且分数 `>=0.35` 才命中；最高分并列、低于阈值或零 token 均标记“无法唯一对齐”，不猜时间。一段最多命中一场，一场可承接多个按原段序排列的素材。`SEMANTIC_BOUNDARY_ALLOW: authored section-to-scene structural recovery only`；该算法只恢复用户已明确绑定的 authored section 与生成 scene 的结构关系，不选择素材、不判断创作语义、不改变用户选择，必须保留唯一命中与歧义失败测试并通过 semantic-boundary-scan。
 - B-roll 渲染层不输出 `label` 文本；`label` 仅用于编辑器 `alt/title`。
 - 临时预览 route 的唯一输入为 taskId + manifest artifact path；依次校验 RequestContext 用户/账号、task.projectId 归属、task.status=`awaiting_confirmation`、path 精确属于最新 manifest、MIME 为 `video/*`、sandbox/out 内真实常规文件且 realpath 不逃逸（含 symlink 拒绝），全部成立才流式返回。任一失败统一 404，不泄露存在性；响应 `Cache-Control: no-store`。支持 Range：合法区间 206，完整读取 200，越界/非法区间 416。discard/confirm 清沙箱后旧 URL 必须 404。
 - 修改意见重跑必须保留 projectId、原 taskId、当前 props 与用户意见；不得把全项目资料复制成新真值。
@@ -87,8 +96,11 @@ flowchart LR
 - **AC-703-1**：构造 AI 返回空 broll、分镜第 2 段点名录屏的 fixture，最终 render props 仍含该 asset，且落在第 2 场合法时间内；另覆盖段数不一致的唯一命中、并列冲突、低分/零命中、被剔除，不能对齐时确认卡显示原因。
 - **AC-703-2**：渲染模板快照不包含 `.mov/.png` 文件名、assetId、`生成图`/`AI 生成`，但媒体元素仍存在。
 - **AC-703-3**：确认方案后 UI 仍可展开查看；刷新后从 Production 回读相同 scenes/cards/broll/subtitles。并发 sibling 配置更新仍保留 plan，陈旧 expectedRevision 返回 conflict；plan 写入或读回失败时不得创建 render 任务。
+  覆盖候选生成后切换稿件版本、删除/替换素材，以及确认写入后、建任务后、响应前崩溃；同一 operationKey
+  始终只增加一个 revision、一个 render task 和一次计费。
 - **AC-703-4**：拖文件到 B-roll 区会 `preventDefault` 并调用上传；拖入不支持文件显示错误；不会触发页面导航。
 - **AC-703-5**：execution 为 `awaiting_confirmation` 时播放器可 Range 播放临时 MP4、Assets 列表仍无该文件；采纳后同一成片进入素材库并关联项目。逐项覆盖跨用户/跨账号/跨项目、非 manifest path、路径穿越、symlink、非视频、非 awaiting 状态、discard 后旧 URL，以及 200/206/416。
+  采纳双击、响应未知和恢复重放只创建一个 Asset、一个 material link 并切换一次 current final。
 - **AC-703-6**：项目对话读取 current editing plan 后，针对“第 2 段换成录屏 A”产生绑定 revision 的真实候选；确认后新 render 的 props 中该场 assetId 确实变化，并可回读新 plan/task。无计划时明确引导先完成分场，不虚构已剪辑。
 - **AC-703-7**：聚焦单测、contract/backend/frontend 集成测试、boundary scan 通过；本地测试包成功，报告绝对路径与 SHA-256，不公证。
 - **AC-703-8**：构造“模型把相近词改成口播稿中不存在的词”与“ASR 错字按口播稿改回”两组字幕 fixture；前者回退原 SRT、后者保留正确校正，且两组时间轴完全不变。
@@ -104,6 +116,10 @@ flowchart LR
 - **AC-703-18**：以 `objkey-0f5e0fdc-1531.mp4` 与对应完整素材包构造真实回归：`material.match` 使用 CreatorOS 当前配置模型给每项候选返回 `visualRole`；只有 `screen_recording` 可被组装为 `full_frame + pip_bottom_left`，静态图片和普通实拍即使模型误给 `full_frame` 也必须被协议收口到 `large_stage`，封面不得进入时间线。两个有重叠时长的非 `overlay` B-roll 会在下一主素材开始处切断前者；主素材进场会结束或遮蔽旧信息卡。
 - **AC-703-19**：聚焦测试覆盖节点 schema 审核、超过 8 秒无信息卡/素材的长场识别、素材 id/插点/字幕时间轴冲突、AI 总导演 ready/revise 结论、审片暂不可用时的确定性降级；`revise` 必须触发内部自动修片与复审，保留全部有效素材绑定并用口播原文信息卡补位，最终候选只能是 `ready`，前端不得再出现“阻断后请用户重新配分镜”的常规链路。
 - **AC-703-20**：提供可重复的视频回归入口，输入真实素材包与基准成片，复用 CreatorOS 当前配置模型完成素材角色判断和分镜；每轮保存素材清单、模型决策、render props、确定性 Gate 报告、成片与抽帧图。Gate 至少断言：静态图全屏数为 0、非录屏全屏数为 0、全屏录屏均保留左下画中画、封面入时间线数为 0、非 overlay 主视觉无重叠、全部 assetId 可追溯。不得用 fixture 或本会话模型冒充真实模型回归。
+  同一回归还必须在隔离数据的本地测试包公开入口完成确认、Range 预览、对话调剪、确认重渲、成片
+  采纳与再次制作；逐步回读 Production、Execution、Assets 和 current final，保存安装包 SHA-256、任务 ID、
+  模型回执、预览/成片及页面证据，并证明新候选采纳前旧成片持续可用。首轮重复素材、重叠硬绑定和
+  素材不足 fixture 必须按优先级收口并仍有安全可渲染路径。
 
 ## 7. 非目标
 

@@ -1,0 +1,115 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "新周期审查发现 4 个 major：云端 unknown 与本地回退冲突、跨重启执行账本、运行时所有权和执行时账号归属未闭合。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-768-01",
+        "quote": "在线阶段任一失败都必须改走本地 Whisper"
+      },
+      "acceptance_anchor": {
+        "id": "AC-768-01",
+        "quote": "网络、限流、超时和普通异常均调用本地 adapter"
+      },
+      "where": "超时/5xx/响应丢失可能是已发出但结果 unknown，与禁止未知在线重放冲突。",
+      "failure_mode": "无条件回退会丢失云端未知计费事实；停在 unknown 又违背本地兜底承诺。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-768 SPEC §2/§3/AC-768-01；SYSTEM_ARCHITECTURE unknown_result",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "保留云端 unknown 计费事实并永久禁止在线重放；用独立稳定 operationKey 执行本地兜底，结果标记来源和未知云端状态。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-唯一执行权",
+        "quote": "execution_tasks 是执行权、费用与恢复真相"
+      },
+      "acceptance_anchor": {
+        "id": "AC-768-04",
+        "quote": "回退不重新申请或重复扣费"
+      },
+      "where": "未定义在线调用、回退选择、本地调用和逐字稿保存的持久状态。",
+      "failure_mode": "各崩溃窗口可能重复扣费/推理、覆盖终态或丢结果。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-768 SPEC §3/§4；SYSTEM_ARCHITECTURE T-915/T-1004",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "同一 execution_task 冻结音频摘要、身份、operationKey、attempt/fence 与 calls 状态；恢复优先回放 settled，旧 fence/取消后禁新调用。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-运行时所有权",
+        "quote": "Worker 承载模型寿命，经 IPC 调 backend；frontend 只做 UI"
+      },
+      "acceptance_anchor": {
+        "id": "AC-768-05",
+        "quote": "双平台本地 ASR 运行时与真转写"
+      },
+      "where": "未声明凭据、模型缓存、推理/ffmpeg 进程和数据库状态的唯一 owner。",
+      "failure_mode": "旧宿主、Worker、frontend 多 owner 可重复下载、争用缓存、留下子进程和第二任务路径。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-768 SPEC FR-768-03/§3/AC-768-05；SYSTEM_ARCHITECTURE",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "Backend 独占 RequestContext/凭据/账本/结果，Worker 独占 adapter/pipeline/模型/ffmpeg，frontend 仅 RPC；模型准备单飞并清理。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-004",
+      "status": "open",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-当下真值",
+        "quote": "执行前按当前 RequestContext 重读归属、版本、状态和幂等"
+      },
+      "acceptance_anchor": {
+        "id": "AC-768-02/03",
+        "quote": "云端与受管 ASR 同兜底，本地成功保存真实文本"
+      },
+      "where": "未绑定 user/account/task/audio 当前归属，缺跨账号、切换、旧 fence 验收。",
+      "failure_mode": "旧 Worker 或伪造 accountId 可串用配置、音频、回执并投影到错误任务。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-768 SPEC §3/AC；SYSTEM_ARCHITECTURE §2.2/§3",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "身份只由 Backend 从 execution_task/RequestContext 恢复；凭据、音频、回执和保存前重查归属，覆盖跨账号、删除、旧 fence 和伪造参数。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

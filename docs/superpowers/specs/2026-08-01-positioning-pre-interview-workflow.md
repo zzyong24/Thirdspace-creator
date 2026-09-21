@@ -250,7 +250,7 @@ Copilot 每次只显示与当前问题相关的 2～4 个回答建议，建议�
 
 模块仍遵循简单场景路由：有现成产品信息先让用户核对；产品与人群不匹配先处理冲突；核心人群缺场景再追问一个；证据够用后生成卡片。不得一次生成十几个人群、复杂标签树或强制完整商业画布。
 
-用户在卡片上点击“调整”时，回到 Copilot 并自动带入该字段上下文；确认后的卡片写入当前 discovery session 的同一 `revision`，不是另建一套产品数据库或聊天摘要。
+用户在卡片上点击“调整”时，回到 Copilot 并自动带入该字段上下文；确认后的卡片写入当前 discovery session 的同一 `revision`，不是另建一套产品数据库或聊天摘要。候选采纳时，服务端把该 revision 的结构确定性映射为 `PositioningProductAudienceSnapshot`：`primaryOffer`、`coreAudience`、`growthAudiences[]`、`excludedAudiences[]`、`scenarios[]`、`painChain[]`、`alternatives[]`、`objections[]`、`proofs[]`、`contentHandoff[]` 与逐字段确认状态。该 snapshot 与 statement/master snapshot 同一事务写成不可变版本；当前版本切换、历史恢复、跨账号读取和所有下游都按 statementId 读取同一 snapshot，禁止继续读取可变 discovery draft 或把结构压回一段自由文本。
 
 ## 5. 作品逐字稿证据怎么用
 
@@ -370,6 +370,7 @@ Copilot 每次只显示与当前问题相关的 2～4 个回答建议，建议�
 - `PositioningDiscoverySession`：账号、本次起点、路由状态、必要字段状态、草稿结论、`revision`；
 - `PositioningDiscoveryEvidence`：用户回答、作品/逐字稿引用、AI 推断、用户确认状态及证据版本；
 - `PositioningProductAudienceDraft`：当前主推产品、核心/高潜/暂不服务人群、场景、痛点链、顾虑、证明和内容承接，归属同一 session/revision；
+- `PositioningProductAudienceSnapshot`：上述 draft 在采纳时按固定字段映射冻结到不可变 statement/master snapshot；它与 statement 共用 user/account/version 归属和恢复边界，不是独立可变真相；
 - `PositioningDirectionCandidate`：方向候选与依据快照；
 - 正式真相仍是现有 profile + statement/version；只有用户采纳候选后才写入。
 
@@ -379,13 +380,21 @@ Copilot 每次只显示与当前问题相关的 2～4 个回答建议，建议�
 - `positioning.discovery.answer`
 - `positioning.discovery.prepare-evidence`（可选、异步，不阻断）
 - `positioning.discovery.next-scene`（给建议，不授予生成资格）
-- `positioning.generate`（任意对话阶段可调用；可选绑定 session/revision）
+- `positioning.generate`（任意对话阶段可调用；请求必须携带稳定 `idempotencyKey`；调用者可不提供 session，但 backend 必须为当前账号原子创建或复用最小 discovery session，并始终返回 `sessionId + candidateId + candidateRevision`）
 - `positioning.discovery.confirm`
 - `positioning.discovery.abandon`
 
 作品、逐字稿、指标和评论通过现有 backend service port 读取；逐字稿复用现有自动化队列与执行器，只增加任务优先级和来源标识；AI worker 不直连数据库。
 
 场景路由必须由 backend 根据持久化的 session/evidence 状态确定，前端和模型都不能各自维护另一份“当前第几题”。`next-scene` 返回场景类型、当前观察/问题、回答建议、引用证据和 `sessionId/revision`；用户回答后 revision 单调递增，刷新或重启从服务端最新 revision 恢复。前端本地缓存只用于未发送输入，不能覆盖服务端已确认内容。`draft/ready` 只能表示信息覆盖程度，不能控制 `positioning.generate` 或候选采纳权限。
+
+无 session 调用 `positioning.generate` 时，backend 在生成候选前按当前 user/account 与当前 statement
+原子创建或复用一个最小 discovery session，冻结 `expectedCurrentStatementId` 和当次 input manifest；生成结果
+必须归属该 session/revision，并返回 `sessionId + candidateId + candidateRevision`。后续统一走现有
+`positioning.discovery.confirm`，不得临时分步写 profile/statement。生成幂等键以 `userId + accountId +
+idempotencyKey` 为作用域，并绑定规范化 input manifest 指纹：同键同输入（含双击、超时重试和响应未知后的
+回读）返回同一 `sessionId + candidateId + candidateRevision`，只调用一次模型；同键不同输入返回明确幂等
+冲突，不生成第二个 session revision 或候选。跨账号候选、过期 statement 或并发切换按既有确认冲突规则拒绝。
 
 ### 10.1 工具门禁统一规则
 
@@ -404,6 +413,9 @@ Copilot 每次只显示与当前问题相关的 2～4 个回答建议，建议�
 - 若当前母版已经被另一候选切换，过期确认返回明确冲突并要求刷新比较，不能覆盖较新的母版；
 - 追加不可变 statement、写完整 profile/master snapshot、推进当前母版和标记候选已采纳属于同一
   事务；任一步失败全部回滚，旧母版继续生效，不留下部分采纳版本；
+- 适用产品/服务场景时，同一事务还必须把候选 revision 的 `PositioningProductAudienceDraft` 按固定字段
+  映射为该 statement 的不可变 `PositioningProductAudienceSnapshot`；恢复旧 statement 同时恢复其 snapshot，
+  缺失或归属不符时不得切换成半套母版；
 - 两个页面交错确认时至多一个候选成功，另一个得到可恢复的冲突状态。
 
 ## 11. 与“新建定位母版”旧语义的冲突
@@ -439,10 +451,10 @@ Copilot 每次只显示与当前问题相关的 2～4 个回答建议，建议�
     保持完整，不产生半采纳记录。
 16. 场景路由由 backend 的持久化状态确定，模型不得自行循环追问；同一 `sessionId/revision` 重试返回相同场景，不重复创建回答或候选。
 17. 后台逐字稿完成后只增量刷新未确认的作品推断；用户已确认的决定保持不变，除非新证据形成明确冲突并由用户重新选择。
-18. 用户在任意阶段要求生成时，由当前 Copilot 直接调用 `positioning.generate` 并返回可采纳定位卡；有 discovery session 时绑定最新 `sessionId/revision`，没有时也可生成，不通过复制大段前采文本、独立 Copilot 弹窗或人工口令续接。
+18. 用户在任意阶段要求生成时，由当前 Copilot 直接调用 `positioning.generate` 并返回可采纳定位卡；有 discovery session 时绑定最新 `sessionId/revision`，没有时由 backend 原子创建或复用当前账号的最小 session，并返回 `sessionId + candidateId + candidateRevision` 后统一走 confirm，不通过复制大段前采文本、独立 Copilot 弹窗或人工口令续接。验收覆盖无 session 生成后采纳、重复确认、并发 statement 冲突和跨账号候选拒绝；还必须覆盖同一 `idempotencyKey` 的双击、超时重试与响应未知回读只创建一个最小 session revision、一个候选且只调用一次模型，以及同键不同 input manifest 明确冲突。
 19. 有产品/服务或获客/成交目标时，定位中心展示“产品与人群”结构化模块；所有内容由 Copilot 对话采集但刷新后仍可见、可编辑，不能只存在于聊天消息。
 20. 仅当用户已确认存在产品/服务，或目标包含获客/成交时，至少形成一个核心人群和最多两个高潜人群；每个人群包含真实场景、问题、当前替代、未满足原因和期望结果，禁止只保存年龄/职业标签。纯人设、个人表达、作品集或纯影响力账号不适用此项，也不得为通过验收虚构产品、人群或场景；尚未确认的字段允许为空或标“待验证”，不阻断候选生成与采纳。
-21. 采纳定位后，选题、写稿、审核、项目 Copilot 均从同一定位版本读取产品、人群、痛点、顾虑和证明；聚焦测试必须证明这些字段真实进入下游请求，而不是只在定位页展示。
+21. 仅在用户已确认存在产品/服务，或目标包含获客/成交时，采纳定位后由选题、写稿、审核、项目 Copilot 按同一 statementId 读取不可变 `PositioningProductAudienceSnapshot` 中的产品、人群、痛点、顾虑和证明；聚焦测试必须证明这些字段真实进入下游请求，而不是只在定位页展示。验收同时覆盖采纳映射、恢复旧版本、跨账号不可见及各下游请求字段一致。纯人设、个人表达、作品集或纯影响力定位继续只读取同一 statement/master snapshot，不创建或填充虚构的产品人群 snapshot；聚焦测试必须覆盖该空缺是合法不适用状态。
 
 ## 13. 已确认决策
 

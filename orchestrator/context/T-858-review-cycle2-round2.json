@@ -1,0 +1,169 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-004 至 REV-009 均已由当前 changed_line_refs 销账：生产链路具备安全降级，资源引用按当前真值重读，Worker 与 Backend 所有权明确，重试具备幂等栅栏，beat 错误处理不再矛盾；未发现改动引入新的 blocker 或 major。",
+  "findings": [
+    {
+      "id": "REV-004",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "FR-858-2",
+        "quote": "重试后仍为空则该次决策任务明确失败"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-5",
+        "quote": "前端“生成分镜 → 确认 → 生成短预览”的真实生产旅程"
+      },
+      "where": "FR-858-2、§3.2 与 §5 把全片没有合法 emphasis 设为整个决策任务失败。",
+      "failure_mode": "重点词是可选视觉增强，字幕原文和安全基础样式仍可输出；当前规则却会阻断整个分镜候选和后续预览。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 46–51、138–140、166–169 行；AGENTS.md 关键链路降级可用性规则",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "无 emphasis 时保留真实字幕和安全基础样式，记录增强未完成且不得作为 AC-858-3 通过样例，不阻断候选或预览。",
+      "resolution_evidence": "SPEC-LINE:51:45a5abe98d9bef27",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-005",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "FR-858-3",
+        "quote": "横版内容完整 contain，竖屏承接层覆盖完整画布"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-2",
+        "quote": "素材完整 contain；主视觉接管期间人物完全不可见"
+      },
+      "where": "§5 将无法同时满足 contain、字幕安全区或人物回位的情况统一规定为渲染前失败关闭。",
+      "failure_mode": "局部布局冲突仍有移除辅助层、跳过问题素材、降级单卡或回到人物基底等安全输出路径，当前规则会错误阻断整单渲染。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 67–70、148–153、166–172 行；AGENTS.md 关键链路降级可用性规则",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "规定逐级安全降级顺序，只有输入损坏、归属错误或所有安全输出路径都不存在时整单失败。",
+      "resolution_evidence": "SPEC-LINE:183:62ea11d164500f09",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-006",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "FR-858-1",
+        "quote": "每拍声明真实引用"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-1",
+        "quote": "抽查每拍 ref、场景、时间、stage 和回位均能指向真实候选对象"
+      },
+      "where": "§3.1、§3.2、§3.3 的 card ordinal 与 broll asset 引用。",
+      "failure_mode": "执行前未要求 Backend 按当前 RequestContext 重读候选、素材、版本和归属，旧 ordinal 或已删除、跨项目 assetId 仍可能进入渲染。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 88–96、130–142、146–148 行；SYSTEM_ARCHITECTURE §2.2",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "引用绑定不可变候选版本和真实资源 ID；落盘、预览和 render 前均由 Backend service port 重读并校验账号、项目、版本、存在性和归属。",
+      "resolution_evidence": "SPEC-LINE:135:d10ee3ae86aec06c",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-007",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-§3",
+        "quote": "worker 不直连库，经 backend service port 写"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-5",
+        "quote": "通过 contract 与 frontend 类型检查、聚焦单测、boundary、semantic、diff-check"
+      },
+      "where": "§3.1、§3.2 及预期改动面未定义跨进程提交与持久化所有者。",
+      "failure_mode": "规格允许 Worker 直写候选或 checkpoint、Backend 持有模型调用，或两侧各存一份状态，形成第二份任务与候选真相。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 126、141–142、203–212 行；SYSTEM_ARCHITECTURE §1、§3、T-930",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "明确 ai-worker 只产结构化候选并经受控端口返回；Backend service 唯一持久化 checkpoint、候选、采纳投影和 render 请求。",
+      "resolution_evidence": "SPEC-LINE:128:360b1e9b446a5c54",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-008",
+      "status": "resolved",
+      "severity": "major",
+      "category": "data-integrity",
+      "requirement_anchor": {
+        "id": "SYSTEM_ARCHITECTURE-T-1004",
+        "quote": "execution_tasks 仍持有唯一任务权、费用与恢复真相"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-5",
+        "quote": "先红后绿覆盖 prompt/schema、runner、组装器、模板几何、字幕切片和旧候选兼容"
+      },
+      "where": "FR-858-2、§3.2、§5 的模型重试和 checkpoint 恢复。",
+      "failure_mode": "缺少 operationId、attempt 和 fence，崩溃恢复或并发重试可能重复扣费、生成多个候选，旧 attempt 迟到结果也可能覆盖新 checkpoint。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 49–51、141–142、164–169 行；SYSTEM_ARCHITECTURE T-915、T-1004",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "director、subtitles、候选落盘和 render 请求共享 Backend 注入的 taskId、operationId、attempt 与 fence；同键重放返回既有结果，旧 fence 不得写入。",
+      "resolution_evidence": "SPEC-LINE:151:01a1d9f3829ae469",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-009",
+      "status": "resolved",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "FR-858-1",
+        "quote": "按时间排序的 beatGraph，每拍只有一个主视觉主体"
+      },
+      "acceptance_anchor": {
+        "id": "AC-858-4",
+        "quote": "主视觉交接时同一时刻只有一个主语"
+      },
+      "where": "§3.1、§3.2 的整份拒绝与 §5 的单 beat 丢弃规则。",
+      "failure_mode": "重叠 beat 既可被解释为整份 direction 无效，也可丢弃单项继续；后者还迫使代码替 AI 选择主视觉。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "T-858 SPEC 第 108–112、130–137、164–168 行",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "new-cycle full review",
+      "suggestion": "任何排序或重叠错误拒绝整份 direction 并进入有限重试或无 direction 降级；仅无语义选择时允许丢弃单个坏引用。",
+      "resolution_evidence": "SPEC-LINE:177:f0fcca50f702adac",
+      "parent_id": ""
+    }
+  ]
+}
