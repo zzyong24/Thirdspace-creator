@@ -39,7 +39,6 @@
 |T-933|安装并验收本轮Agent Runtime桌面版|🔨|—|—|[T-932交付](docs/verification/t932-runtime-alignment.md)|核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。|
 |T-919|定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞|🔨|—|—|复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆|
 |T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨|PASS[REV:ad76cf555129]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。|
-|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|历史 review receipt 已复核并恢复全局 reconcile；活动看板压缩等剩余治理继续承接|
 |T-917|记录 T-915 媒体测试事故并防止测试再次访问真实媒体根|📋|—|—|[事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md)|用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留|
 |T-908|真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复|📋|—|—|D|隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计|
 |T-906|放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆|⏸️|—|待验|—|AI 助手默认窗口应明显大于当前尺寸，用户可从右下角手柄拖拽调整大小；每次调整后的宽高保存在本机，下次启动自动恢复，并受最小尺寸与当前屏幕可见范围约束，避免内容不可用或换屏后窗口超出视口。|

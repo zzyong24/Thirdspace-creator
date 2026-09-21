@@ -1019,3 +1019,9 @@
 | T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
 | T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
 | T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
+
+## 归档于 2026-09-21
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|
