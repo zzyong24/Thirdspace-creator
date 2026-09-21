@@ -18,4 +18,13 @@
 
 ## 安装版验证
 
-待本机官方包构建、覆盖安装和 CreatorOS CLI/真机页面验证后回填。
+- 验证日期：2026-09-21；候选提交：`cb2422cf134eb705960ed432f7527a8f8202fe7d`。
+- `pnpm -C frontend desktop:package-local` 成功：前端静态页 27/27、sidecar 内置课程与依赖闭包自检、混淆后真起 sidecar、`GET / = 200`、浏览器 hydration 均通过；Tauri `release-fast` 构建成功。
+- 唯一验收包：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`；SHA-256 为 `32124eae561e7a87be1aef220513110a2d0ea4405cc04afcc2ab4448abfdcce8`；`hdiutil verify` 返回 `VALID`。
+- 已覆盖安装并真实启动 `/Applications/CreatorOS.app`；`CFBundleShortVersionString` 与 `CFBundleVersion` 均为 `1.2.0`，`codesign --verify --deep --strict` 通过，安装版进程 PID 为 `85385`。
+- CLI 自动开启并连接安装版：`creatoros status` 返回 `mode=installed`、`connected=true`、`access=full`、PID `85385`；`creatoros access status` 返回完整访问；公开契约暴露 258 个操作。
+- 使用唯一账号 `acct-ae1a8346-9` 做只读冒烟：`settings.models.list` 成功回读默认文本模型 `minimax / MiniMax-M3` 且 `hasSecret=true`；`execution.tasks.list` 成功回读最近 10 个 `topic_preview` 任务，最新任务为 `succeeded`。本轮没有修改账号、模型或业务数据。
+- LED-052 最终回归重新执行并通过：AI Worker 35/35、Backend 87/87、Frontend 112/112。
+- `pmem sync` 成功；全局 `reconcile` 中 LED-052、物理边界、孤儿扫描、资产、文档和其余 lesson 门卫均通过。全局命令最终返回失败，仅因为 T-703、T-691、T-656、T-645、T-635 五个旧任务的 review receipt 在 constitution hash 变化后过期；该既有治理债务不属于 T-1022 验收范围。
+- 当前电脑控制接口未暴露 CreatorOS 原生窗口，因此没有补拍人工页面点击证据；安装版真实进程、内嵌 sidecar 启动与 hydration、公开 CLI 业务读取，以及可控故障注入回归共同作为本次安装版验收证据。
+- 本地包为 ad-hoc 签名且未公证，release manifest 如实记录 `signed:false`、`notarized:false`；仅用于本机安装验证，不作为对外正式发布包。

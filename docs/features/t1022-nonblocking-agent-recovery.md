@@ -41,19 +41,56 @@ flowchart LR
 ## 4. 验收
 
 ```frontend-journey-contract
-task: T-1022
-journey: model-generation-nonblocking-recovery
-entry: 内容雷达作品详情与 AI 助手
-steps:
-  - 触发一次可控的模型输出截断，确认逐字稿拆解检查点保留且原任务自动继续
-  - 触发一次明确可重试的模型超时或 5xx，确认页面显示自动恢复且不出现手动重试终态
-  - 恢复模型响应，确认同一任务和同一对话收到完整候选，没有重复任务或重复候选
-  - 移除当前账号全部可用文本模型，确认输入保留并出现直达模型设置入口
-assertions:
-  - timeout/output_invalid/network 不产生用户可见 failed 终态
-  - 页面关闭再打开仍能观察原任务并收到结果
-  - 已完成检查点、账号归属、幂等键和调用账本保持一致
-  - 没有可用模型时不循环空跑
+{
+  "schema": "frontend-journey-contract/v2",
+  "task_id": "T-1022",
+  "journey": "模型临时失败沿原任务自动恢复，只有未配置模型时引导设置",
+  "entry": "CreatorOS AI 助手与内容雷达选题候选",
+  "watched_paths": [
+    "frontend/src/features/copilot/ai-copilot-content.tsx",
+    "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+    "frontend/src/features/intelligence/intelligence-workbench.tsx",
+    "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+    "frontend/src/server/chat-execution-stream.ts",
+    "frontend/src/server/chat-execution-stream.test.ts",
+    "frontend/tests/e2e/ai-nonblocking-recovery.spec.ts"
+  ],
+  "required_checks": [
+    {"id": "AC-T1022-MISSING-MODEL", "test_id": "E2E-T1022-01"},
+    {"id": "AC-T1022-AUTO-RECOVERY", "test_id": "E2E-T1022-02"},
+    {"id": "AC-T1022-SAME-TURN", "test_id": "E2E-T1022-02"},
+    {"id": "AC-T1022-COMPLETE", "test_id": "E2E-T1022-02"}
+  ],
+  "required_conditions": [
+    "regular-window",
+    "minimum-window",
+    "model-not-configured",
+    "transient-model-failure",
+    "same-turn-recovery",
+    "complete-result"
+  ],
+  "viewports": [
+    {"width": 1280, "height": 720},
+    {"width": 900, "height": 600}
+  ],
+  "coherence_groups": [],
+  "copy_guard": {"forbid_internal_ids": true},
+  "states": [
+    {"id": "model-missing", "visible": "完成 AI 设置后继续"},
+    {"id": "recovering", "visible": "正在恢复本轮生成 · 自动恢复中"},
+    {"id": "complete", "visible": "完整候选进入原对话"}
+  ],
+  "actions": [
+    {"from": "model-missing", "action": "点击去设置 AI 模型", "to": "settings-model-highlight"},
+    {"from": "recovering", "action": "系统沿同一用户消息自动续跑", "to": "complete"}
+  ],
+  "honesty": [
+    "只有没有可用文本模型时显示设置入口",
+    "临时失败不显示手动重试按钮",
+    "恢复沿同一用户消息与原持久任务，不创建重复候选",
+    "用户取消和外部副作用结果未知不自动重放"
+  ]
+}
 ```
 
 ## 5. 验证范围
