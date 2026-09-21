@@ -19,7 +19,7 @@ type VerifiedScope = {
   task: { id: string; attempt: number; fenceToken: string | null };
 };
 
-/** Pass createExecutionLeaseService(db).withLease. Its row lock spans the socket round trip. */
+/** Pass createExecutionLeaseService(db).withLease. Each callback must stay database-only and short. */
 export type NativeLeasePort = {
   withLease<T>(ref: ExecutionRef, mode: "admission", action: (scope: VerifiedScope) => Promise<T>): Promise<T>;
 };
@@ -75,8 +75,9 @@ function send(socketPath: string, request: object, operationId: string, isWrite:
 
 /**
  * Backend-only entry point. The lease port supplies identity from the current
- * execution row and holds its transaction lock until Rust returns. Never pass
- * identity from a model action, HTTP body, or WebView state.
+ * execution row. Native I/O runs between two short lease checks so a slow Rust
+ * reply cannot occupy PGlite's single connection. Never pass identity from a
+ * model action, HTTP body, or WebView state.
  */
 export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
   platform?: NodeJS.Platform;
@@ -138,19 +139,30 @@ export function createWorkbenchNativeClient(lease: NativeLeasePort, options: {
     if ("targetOperationId" in action && (!action.targetOperationId || action.targetOperationId.length > 160 || /[\x00-\x1f/\\]/.test(action.targetOperationId))) {
       throw new NativeFileError("INVALID_OPERATION_ID", false);
     }
-    return lease.withLease(ref, "admission", async ({ context, task }) => {
+    const verified=await lease.withLease(ref, "admission", async ({ context, task }) => {
       if (!task.fenceToken || task.id !== ref.executionTaskId || task.attempt !== ref.attempt || task.fenceToken !== ref.fenceToken) {
         throw new NativeFileError("STALE_LEASE", false);
       }
       const scope={ userId: context.userId, accountId: context.accountId,
         taskId: task.id, attempt: task.attempt, fenceToken: task.fenceToken };
-      onVerified?.(scope);
-      return send(socketPath, {
-        operationId,
-        scope,
-        action,
-      }, operationId, action.kind === "write" || action.kind === "command_run" || action.kind === "command_cancel");
+      return scope;
     });
+    onVerified?.(verified);
+    const mutating=action.kind === "write" || action.kind === "command_run" || action.kind === "command_cancel";
+    const value=await send(socketPath, {operationId,scope:verified,action}, operationId, mutating);
+    try {
+      await lease.withLease(ref,"admission",async({context,task})=>{
+        if(context.userId!==verified.userId || context.accountId!==verified.accountId || task.id!==verified.taskId ||
+          task.attempt!==verified.attempt || task.fenceToken!==verified.fenceToken)throw new NativeFileError("STALE_LEASE",true);
+      });
+    } catch(error) {
+      // A write/process may have committed after its lease stopped. Preserve the
+      // original operation for reconciliation instead of reporting false success.
+      if(mutating)throw new NativeFileError("NATIVE_RESULT_UNKNOWN",true);
+      if(error instanceof NativeFileError)throw error;
+      throw new NativeFileError("STALE_LEASE",true);
+    }
+    return value;
   }
   return {
     file: (ref: ExecutionRef, operationId: string, action: NativeFileAction) => invoke(ref, operationId, action),

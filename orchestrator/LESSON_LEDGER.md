@@ -13,6 +13,24 @@
 
 ---
 
+## LED-054 — 外部 I/O 不能占住任务数据库事务
+
+- **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule
+- **WhatFailed**: 聊天 Agent 调用浏览器或本机命令时，任务查询、心跳、取消和恢复全部等待；模型持续返回
+  长度截断时又无界续写。重启后原任务停在 `unknown_result`，页面长期显示“自动恢复中”。
+- **RootCause**: PGlite 使用单连接，宿主把 execution lease 数据库事务跨越到最长 125 秒的 socket/原生 I/O，
+  外部等待期间独占了数据库通道；纯模型进程退出后的未知候选也没有安全续跑路径。
+- **GuardRule**: 外部 I/O 必须使用“短事务读取可信身份 → 事务外调用 → 短事务复核租约”；禁止在 lease
+  回调内等待 socket、浏览器、命令或网络。无外部副作用且没有 provider job/回执的纯模型未知调用可标记
+  `superseded`，在同一任务、同一 operation key 和既有预算内续跑；长度截断有限续写后以已生成内容
+  `partial` 收口；工具副作用未知继续等待对账。
+- **GuardCheck**: `reconcile.config.json` 的 LED-054 运行数据库活性、租约复核和模型未知恢复回归。
+- **Outcome(T+N)**: 红测复现浏览器等待时 PGlite 查询阻塞；绿测验证浏览器/本机 I/O 期间任务读取可完成、
+  写入租约失效保持结果未知、纯模型旧 `unknown_result` 沿原任务重排，外部工具未知不重放。
+- **Ref**: T-1024。
+
+---
+
 ## LED-053 — 自动恢复必须有进展证据，内置工具必须经过真实聊天装配
 
 - **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule

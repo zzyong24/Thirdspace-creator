@@ -47,7 +47,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
   const Agent=await loadChatPiAgent();
   let agent:ChatPiAgent;
   let failure:unknown,awaitingApproval=false,finishReason="stop",turn=0;
-  let completedTool=false,finalRecovery=false,lastMessageHasFile=false;
+  let completedTool=false,finalRecovery=false,lastMessageHasFile=false,lengthContinuations=0;
   let planStatus:ChatPlanStatus|null=null,lastPlanProgress:string|null=null,stalledTurns=0;
   const history:ModelMessage[]=[...options.messages];
   const parts:UIMessage["parts"]=[];
@@ -185,6 +185,10 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         agent.followUp({role:"user",content:CHAT_FINAL_RECOVERY,timestamp:0});
         return;
       }
+      // 单次截断先在同一任务内自动续写；供应商若持续截断，有限次数后保留
+      // 已结算的全部正文并以 partial 收口，避免 Agent 永久占用运行态。
+      if(length && lengthContinuations>=2)return;
+      if(length)lengthContinuations++;
       if(!length && unfinished.length){
         const token=planStatus!.progressToken;
         stalledTurns=token===lastPlanProgress?stalledTurns+1:0;

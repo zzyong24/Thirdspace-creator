@@ -59,6 +59,24 @@ it('计划未推进且模型重复宣称完成时给具体步骤错误，停止�
  assert.equal(calls,3);
 });
 
+it('长度截断在原任务自动续写，持续截断时有限收口并保留 partial 内容', async () => {
+ let calls=0;
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
+  calls++;return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:`t-${calls}`});c.enqueue({type:'text-delta',id:`t-${calls}`,delta:`片段${calls}`});c.enqueue({type:'text-end',id:`t-${calls}`});c.enqueue({type:'finish',usage,finishReason:{unified:'length',raw:'length'}});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'完整回答',messages:[{role:'user',content:'生成长内容'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'length-bounded'});
+ assert.equal(calls,3);assert.equal(result.finishReason,'length');assert.equal(result.text,'片段1片段2片段3');
+});
+
+it('长度截断后模型完成时沿原任务正常收口', async () => {
+ let calls=0;
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
+  calls++;const reason=calls===1?'length':'stop';return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:`t-${calls}`});c.enqueue({type:'text-delta',id:`t-${calls}`,delta:calls===1?'前半':'后半'});c.enqueue({type:'text-end',id:`t-${calls}`});c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'完整回答',messages:[{role:'user',content:'生成长内容'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'length-complete'});
+ assert.equal(calls,2);assert.equal(result.finishReason,'stop');assert.equal(result.text,'前半后半');
+});
+
 it('计划未完成时空响应继续原任务并允许下一步工具，不能进入只读最终答复恢复', async () => {
  let calls=0,executions=0;const requests:any[]=[];
  const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{

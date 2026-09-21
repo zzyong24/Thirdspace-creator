@@ -215,7 +215,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     }
     acquired=receipt;
     if(session&&receipt.leaseId!==session.receipt.leaseId)return failed(call.context.operationId,"STALE_BROWSER_PROFILE_LEASE");
-    const native=await leases.withLease(ref,"admission",async({context,task})=>{
+    const prepared=await leases.withLease(ref,"admission",async({context,task})=>{
      if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
        task.leaseOwner!==call.context.leaseId||!task.fenceToken||!context.accountId)
       throw new BrowserSocketError("STALE_LEASE",false);
@@ -232,9 +232,19 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
        input:name==="browser.navigate"?{url:input.url}:name==="browser.act"?input.input:{},
        ...(input.targetId?{targetId:input.targetId}:{}),...(input.frameId?{frameId:input.frameId}:{}),
        ...(input.refGeneration!==undefined?{refGeneration:input.refGeneration}:{})};
-     return {value:await exchangeBrowserSocket(socketPath,{operationId:call.context.operationId,
-      admission:nativeAdmission,identityMode:bound.mode,action},call.context.operationId,signal),bound};
+     return {nativeAdmission,bound,action};
     });
+    // Chromium may navigate or wait for a page for minutes. Keep that I/O out
+    // of PGlite's single transaction channel so status, heartbeat and cancel
+    // requests remain live.
+    const value=await exchangeBrowserSocket(socketPath,{operationId:call.context.operationId,
+      admission:prepared.nativeAdmission,identityMode:prepared.bound.mode,action:prepared.action},call.context.operationId,signal);
+    await leases.withLease(ref,"admission",async({context,task})=>{
+      if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
+        task.leaseOwner!==call.context.leaseId||task.fenceToken!==ref.fenceToken)
+        throw new BrowserSocketError("BROWSER_RESULT_UNKNOWN",true);
+    });
+    const native={value,bound:prepared.bound};
     if(name==="browser.open"){
      const value=native.value as {lane?:unknown};
      const lane=visibleLane(value?.lane);

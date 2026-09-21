@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-054",
+      "what": "外部浏览器或本机 I/O 再次占住 PGlite 事务，或纯模型未知结果永久阻断原任务",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
+      "onFail": "恢复短事务读取可信身份→事务外 I/O→短事务复核租约；纯模型未知只可在同任务、同 operation key 和原预算内续跑，外部副作用未知保持对账。"
+    },
+    {
       "led": "LED-053",
       "what": "内置工具约束再次阻断整轮聊天装配，或前端在没有任务回执和进展时无限自动恢复",
       "check": "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0",

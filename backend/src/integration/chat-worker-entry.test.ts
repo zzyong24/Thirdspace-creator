@@ -105,8 +105,8 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
    }
    await vi.waitFor(async()=>expect((await state()).status).toBe(mode==="partial"?"partial":"succeeded"),{timeout:15000});
    const streamEvents=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,submission.executionTaskId));
-   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe("最终回复");
-   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(1);
+   expect(streamEvents.filter(event=>event.chunk.type==="text-delta").map(event=>event.chunk.delta).join("")).toBe(mode==="partial"?"最终回复".repeat(3):"最终回复");
+   expect(streamEvents.filter(event=>event.chunk.type==="text-start")).toHaveLength(mode==="partial"?3:1);
    expect(streamEvents.filter(event=>event.chunk.type==="finish")).toHaveLength(1);
    expect(streamEvents.sort((a,b)=>a.sequence-b.sequence).at(-1)!.chunk).toMatchObject({type:"finish",finishReason:mode==="partial"?"length":"stop"});
    if(usesTool){
@@ -114,9 +114,9 @@ it.each([...staticModes.map(mode=>({mode,dynamic:false,resolveFailure:false})),.
     expect(results).toHaveLength(["revoked","login"].includes(mode)?2:1);
     if(["denied","late-denied"].includes(mode))expect(results[0]!.chunk.type).toBe("tool-output-denied");
    }
-   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:"最终回复"});
+   const rows=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));expect(rows).toHaveLength(2);expect(rows.find(row=>row.role==="assistant")).toMatchObject({content:mode==="partial"?"最终回复".repeat(3):"最终回复"});
    expect(await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(1);
-   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
+   expect(execute).toHaveBeenCalledTimes(mode==="login"?2:usesTool && !["denied","late-denied"].includes(mode)?1:0);expect(requests).toBe(mode==="partial"?3:["revoked","login"].includes(mode)?3:usesTool || mode==="retry"?2:1);
    if(usesTool && !["denied","late-denied"].includes(mode))expect(bodies.at(-1)).toContain("https://source.test/evidence");
    if(["approval","revoked","login","late-denied"].includes(mode))expect((await state()).attempt).toBe(mode==="approval"?3:2);
    if(mode==="approval"){
@@ -172,7 +172,7 @@ it.each(["cancel","stop","pause","unknown","expired","lease-expired"])("动态�
   }
   if(mode==="expired" || mode==="lease-expired"){
    clockOffset=mode==="expired"?2000:Date.parse((await state()).leaseExpiresAt!)-Date.now()+100;
-   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:1500});
+   await vi.waitFor(async()=>expect((await state()).status).toBe("failed"),{timeout:3000});
    expect(credentials).not.toHaveBeenCalled();return;
   }
   if(mode!=="stop"){

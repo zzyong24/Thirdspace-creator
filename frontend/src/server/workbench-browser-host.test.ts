@@ -18,7 +18,7 @@ afterAll(async()=>close?.());
 afterEach(async()=>{if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));if(directory)await rm(directory,{recursive:true,force:true});server=undefined;directory=undefined;});
 
 async function socket(received:Array<Record<string,unknown>>,failOpen=false,cleanupStopped=()=>true,
- stopProofStopped=()=>true,cleanupReply?:Promise<void>,screenshotOutput?:unknown){
+ stopProofStopped=()=>true,cleanupReply?:Promise<void>,screenshotOutput?:unknown,operationReply?:Promise<void>){
  directory=await mkdtemp(join(tmpdir(),"wb-browser-host-"));const path=join(directory,"browser.sock");
  server=createServer(connection=>{
   let body="";connection.on("data",async chunk=>{
@@ -48,6 +48,7 @@ async function socket(received:Array<Record<string,unknown>>,failOpen=false,clea
       ? {laneId:"native-lane",browserEpoch:1,result:{output:screenshotOutput}}
       : {laneId:"native-lane",browserEpoch:1,result:{ok:true}};
    if(action.kind==="cleanup")await cleanupReply;
+   if(action.kind==="open"||action.kind==="execute")await operationReply;
    connection.end(`${JSON.stringify({ok:true,operationId:request.operationId,value})}\n`);
   });
  });
@@ -62,6 +63,27 @@ it("only a desktop Mac with private socket advertises browser tools",()=>{
  expect(catalog.some(tool=>tool.name==="browser.open")).toBe(true);
  // 无可信存储端口的独立宿主不能向 Pi 公布截图。
  expect(catalog.some(tool=>tool.name==="browser.screenshot")).toBe(false);
+});
+
+it("浏览器原生调用等待期间任务读取仍可完成，不占用 PGlite 事务通道",async()=>{
+ const nonce=randomUUID(),tasks=createPersistentTaskService(db),received:Array<Record<string,unknown>>=[];
+ const ctx={userId:`live-${nonce}`,accountId:`account-${nonce}`,requestId:nonce,source:"user" as const};
+ const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:nonce,idempotencyKey:nonce,payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:`worker-${nonce}`}))!;
+ let release!:()=>void;const gate=new Promise<void>(resolveGate=>{release=resolveGate;});
+ const path=await socket(received,false,()=>true,()=>true,undefined,undefined,gate);
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ const context={userId:ctx.userId,accountId:ctx.accountId,taskId:task.id,attempt:claim.lease.attempt,
+  fenceToken:claim.lease.fenceToken,leaseId:`worker-${nonce}`,operationId:`open-${nonce}`};
+ const pending=host.dispatch({context,invocation:{name:"browser.open",schemaVersion:1,
+  input:{laneId:"research",mode:"anonymous",domain:"example.com"}}},{signal:AbortSignal.timeout(10_000),onProgress:()=>{}});
+ await vi.waitFor(()=>expect(received.some(row=>(row.action as {kind:string}).kind==="open")).toBe(true));
+ const readable=await Promise.race([tasks.get(ctx,task.id),new Promise<"blocked">(resolve=>setTimeout(()=>resolve("blocked"),300))]);
+ expect(readable).not.toBe("blocked");
+ release();expect((await pending).status).toBe("succeeded");
+ expect((await host.dispatch({context:{...context,operationId:`close-${nonce}`},invocation:{name:"browser.close",schemaVersion:1,
+  input:{laneId:"native-lane",browserEpoch:1}}},{signal:AbortSignal.timeout(10_000),onProgress:()=>{}})).status).toBe("succeeded");
+ await host.dispose();
 });
 
 it("截图只写可信媒体引用，回执和 Pi 工具目录不含原始 base64",async()=>{

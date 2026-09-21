@@ -136,22 +136,26 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
     if(!scope.chatPorts)scope.chatPorts=(async()=>{
       const signal=scope.controller.signal;signal.throwIfAborted();
       if(staticChatTools)return staticChatTools;
-      const {context,input}=await readExecutionChatTask(db,ref,now);
-      await calls.readTaskContext(ref);
-      signal.throwIfAborted();
-      const work=deps.resolveTools!(structuredClone(context),structuredClone(input),{...ref},signal);
-      // 解析器只能构造端口；不响应取消的迟到解析不能阻塞退出或取得执行权。
-      const resolved=await new Promise<Record<string,ChatBackendTool>>((resolve,reject)=>{
-        const abort=()=>reject(signal.reason??new Error("CHAT_TOOL_RESOLUTION_CANCELLED"));
-        signal.addEventListener("abort",abort,{once:true});
-        work.then(value=>{signal.removeEventListener("abort",abort);resolve(value);},error=>{signal.removeEventListener("abort",abort);reject(error);});
-        if(signal.aborted)abort();
-      });
-      signal.throwIfAborted();
-      const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
-      const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead});
-      await ports.validateTask(ref);signal.throwIfAborted();
-      return ports;
+      const resolutionTimer=setTimeout(()=>scope.controller.abort(new Error("EXECUTION_DEADLINE")),deps.budget.deadlineMs);
+      resolutionTimer.unref?.();
+      try{
+        const {context,input}=await readExecutionChatTask(db,ref,now);
+        await calls.readTaskContext(ref);
+        signal.throwIfAborted();
+        const work=deps.resolveTools!(structuredClone(context),structuredClone(input),{...ref},signal);
+        // 解析器只能构造端口；不响应取消的迟到解析不能阻塞退出或取得执行权。
+        const resolved=await new Promise<Record<string,ChatBackendTool>>((resolve,reject)=>{
+          const abort=()=>reject(signal.reason??new Error("CHAT_TOOL_RESOLUTION_CANCELLED"));
+          signal.addEventListener("abort",abort,{once:true});
+          work.then(value=>{signal.removeEventListener("abort",abort);resolve(value);},error=>{signal.removeEventListener("abort",abort);reject(error);});
+          if(signal.aborted)abort();
+        });
+        signal.throwIfAborted();
+        const tools=Object.fromEntries(Object.entries(resolved).map(([name,tool])=>[name,{...tool}]));
+        const ports=createExecutionChatToolPorts(db,{now,budget:deps.budget,tools,resolveGenerationCredential,resolveRedfoxCredential:deps.resolveRedfoxCredential,webRead:deps.webRead});
+        await ports.validateTask(ref);signal.throwIfAborted();
+        return ports;
+      }finally{clearTimeout(resolutionTimer);}
     })();
     return scope.chatPorts;
   }
@@ -432,8 +436,15 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         let controlTimer:ReturnType<typeof setTimeout>|undefined;
         const watch=async()=>{
           try{
-            const status=await leases.withLease(ref,"settlement",async({task})=>task.status);
-            if(watching && (status==="pause_requested" || status==="cancel_requested")){toolScope.controller.abort();supervisor.cancel(ref);}
+            const state=await leases.withLease(ref,"settlement",async({task})=>({status:task.status,deadlineAt:task.deadlineAt}));
+            const deadlineReached=state.deadlineAt!==null&&Date.parse(state.deadlineAt)<=Date.parse(now());
+            if(watching && (state.status==="pause_requested" || state.status==="cancel_requested" || deadlineReached)){
+              // 工具目录尚未装配时还没有任何外部调用；截止时间到达可直接、诚实地
+              // 结束原任务，不能让一个不响应 AbortSignal 的解析器把任务留在 running。
+              if(deadlineReached&&!toolScope.chatReady)await tasks.finish({taskId:ref.executionTaskId,workerId:deps.workerId,
+                attempt:ref.attempt,fenceToken:ref.fenceToken,status:"failed",errorCode:"EXECUTION_DEADLINE",errorMessage:"原任务截止时间已到"});
+              toolScope.controller.abort(deadlineReached?new Error("EXECUTION_DEADLINE"):undefined);supervisor.cancel(ref);
+            }
             else if(watching && deps.executionMode==="chat.run" && !toolScope.chatReady)await leases.withLease(ref,"admission",async()=>{});
           }catch{if(watching){toolScope.controller.abort();try{supervisor.cancel(ref);}catch{/* 进程可能已经退出。 */}}}
           if(watching)controlTimer=setTimeout(()=>{void watch();},250);

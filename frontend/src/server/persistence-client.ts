@@ -3025,7 +3025,9 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   });
   // T-482 startup recovery：上次进程退出时仍持有租约的任务，按 checkpoint / attempt
   // 预算回到队列或诚实失败；控制请求则收敛到 paused / cancelled。
-  await persistentTaskService.recoverExpiredLeases();
+  // 启动时一次性把旧版本遗留的无副作用模型 unknown_result 沿原调用键续跑；
+  // 带外部副作用的未知调用仍保持待对账，不做盲重放。
+  await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});
   const executionBase = createExecutionTransport(
     () => executionService,
     () => persistentTaskService,

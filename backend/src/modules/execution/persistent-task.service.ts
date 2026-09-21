@@ -150,7 +150,7 @@ export interface PersistentTaskService {
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
-  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[]}): Promise<{
+  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[];includeSafeUnknownResults?:boolean}): Promise<{
     requeued: number;
     unknownResult: number;
     failed: number;
@@ -233,9 +233,10 @@ function claimableAt(stamp: string) {
     AND (${executionTasks.deadlineAt} IS NULL OR ${executionTasks.deadlineAt} > ${stamp})`;
 }
 
-function recoveryDueAt(stamp: string) {
-  return sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
+function recoveryDueAt(stamp: string, includeSafeUnknownResults=false) {
+  const due=sql`((${executionTasks.status} IN ('running','pause_requested','cancel_requested') AND ${executionTasks.leaseExpiresAt} < ${stamp})
     OR (${executionTasks.status} IN ('queued','retry_wait') AND ${executionTasks.deadlineAt} <= ${stamp}))`;
+  return includeSafeUnknownResults?sql`(${due} OR ${executionTasks.status} = 'unknown_result')`:due;
 }
 
 function commandTarget(
@@ -849,7 +850,7 @@ export function createPersistentTaskService(
           .select()
           .from(executionTasks)
           .where(
-            and(recoveryDueAt(stamp), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
+            and(recoveryDueAt(stamp,input.includeSafeUnknownResults), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
@@ -860,9 +861,33 @@ export function createPersistentTaskService(
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
           }
-          const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+          // 文本模型只产候选，没有业务副作用。进程退出时未能结算的模型调用可在
+          // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job
+          // 仍须保持未知并按原键对账。
+          const originalRetryOfCallId=row.retryOfCallId;
+          const safeModels=["running","unknown_result"].includes(row.status)?calls.filter(call=>
+            call.kind==="model" && ["started","unknown"].includes(call.status) && call.providerJob===null &&
+            call.providerResult===null && call.resultRef===null):[];
+          const safeModelStatuses=new Map(safeModels.map(call=>[call.id,call.status]));
+          const safeModelIds=new Set(safeModels.map(call=>call.id));
+          for(const call of safeModels)call.status="superseded";
+          if(safeModels.length)row.retryOfCallId=safeModels.sort((a,b)=>a.sequence-b.sequence).at(-1)!.id;
+          let recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
           const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
-          const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          let completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          const unsafeUnknown=calls.some(call=>(call.status==="started"||call.status==="unknown")&&!safeModelIds.has(call.id)&&!completedParents.includes(call.id));
+          const recoveredModels=safeModels.length>0&&!unsafeUnknown;
+          if(recoveredModels){
+            for(const call of safeModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }else if(safeModels.length){
+            for(const call of safeModels)call.status=safeModelStatuses.get(call.id)!;
+            row.retryOfCallId=originalRetryOfCallId;
+            recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
+            completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
+          }
+          // 已经诚实停在 unknown_result 的旧任务只在确定完成安全模型恢复时改写；
+          // 外部副作用未知继续保持原状态，且不在每次轮询中刷新时间。
+          if(row.status==="unknown_result"&&!recoveredModels)continue;
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
@@ -889,6 +914,7 @@ export function createPersistentTaskService(
               leaseOwner: null,
               leaseExpiresAt: null,
               heartbeatAt: null,
+              ...(target === "queued" && recoveredModels ? {retryOfCallId:row.retryOfCallId,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(target === "unknown_result" ? {lastErrorCode:"CALL_RESULT_UNKNOWN",lastErrorMessage:"已有调用提交结果未知，须同键对账"} : {}),
               ...(target === "failed"
                 ? {
@@ -903,7 +929,7 @@ export function createPersistentTaskService(
                 eq(executionTasks.id, row.id),
                 eq(executionTasks.status, row.status),
                 eq(executionTasks.attempt, row.attempt),
-                recoveryDueAt(stamp),
+                recoveryDueAt(stamp,input.includeSafeUnknownResults),
               ),
             ).returning({id: executionTasks.id});
           if (updated.length) {

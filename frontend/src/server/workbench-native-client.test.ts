@@ -38,10 +38,10 @@ afterEach(async () => {
 });
 
 describe("private native file client", () => {
-  it("holds the backend admission callback through the native reply and derives identity from the locked row", async () => {
+  it("derives identity in short admission checks and never holds the database callback through native I/O", async () => {
     let inLease = false;
     const path = await socket((request, reply) => {
-      expect(inLease).toBe(true);
+      expect(inLease).toBe(false);
       expect(request.scope).toEqual({ userId: "db-user", accountId: "db-account", taskId: "task-1", attempt: 2, fenceToken: "fence-2" });
       expect(request.operationId).toBe("ledger-op");
       reply({ ok: true, operationId: "ledger-op", value: { entries: ["report.html"] } });
@@ -90,6 +90,20 @@ describe("private native file client", () => {
       .rejects.toMatchObject({ code: "NATIVE_RESULT_UNKNOWN", dispatched: true });
   });
 
+  it("keeps a completed write unknown when the lease changes before revalidation", async () => {
+    const path = await socket((request, reply) => {
+      reply({ ok: true, operationId: request.operationId as string, value: { version: 1 } });
+    });
+    let checks = 0;
+    const lease: NativeLeasePort = { async withLease(_ref, _mode, action) {
+      checks++;
+      return action(checks === 1 ? scope : { ...scope, task: { ...scope.task, fenceToken: "next-fence" } });
+    } };
+    const client = createWorkbenchNativeClient(lease, { platform: "darwin", desktop: true, socketPath: path });
+    await expect(client.file(ref, "ledger-op", { kind: "write", path: "a", contentBase64: "YQ==", expectedVersion: 0 }))
+      .rejects.toMatchObject({ code: "NATIVE_RESULT_UNKNOWN", dispatched: true });
+  });
+
   it("Windows 文件调用先核验原任务 lease；命令即使有管道仍拒绝", async () => {
     const client = createWorkbenchNativeClient({ async withLease() { throw new Error("lease expired"); } },
       { platform: "win32", desktop: true, socketPath: "\\\\.\\pipe\\creatoros-test" });
@@ -100,10 +114,10 @@ describe("private native file client", () => {
 });
 
 describe("private native command client", () => {
-  it("uses the current locked task identity and a distinct target operation for status", async () => {
+  it("uses the current task identity and a distinct target operation for status without holding the database callback", async () => {
     let inLease = false;
     const path = await socket((request, reply) => {
-      expect(inLease).toBe(true);
+      expect(inLease).toBe(false);
       expect(request.scope).toEqual({ userId: "db-user", accountId: "db-account", taskId: "task-1", attempt: 2, fenceToken: "fence-2" });
       expect(request.operationId).toBe("status-call");
       expect(request.action).toEqual({ kind: "command_status", targetOperationId: "run-call" });
@@ -118,6 +132,27 @@ describe("private native command client", () => {
     const client = createWorkbenchNativeClient(lease, { platform: "darwin", desktop: true, socketPath: path });
     await expect(client.command(ref, "status-call", { kind: "command_status", targetOperationId: "run-call" })).resolves.toMatchObject({ state: "running" });
     expect(inLease).toBe(false);
+  });
+
+  it("keeps independent reads live while a native command reply is pending", async () => {
+    let release!:()=>void,received!:()=>void;
+    const gate=new Promise<void>(resolve=>{release=resolve;});
+    const arrived=new Promise<void>(resolve=>{received=resolve;});
+    const path=await socket(async(request,reply)=>{
+      received();await gate;
+      reply({ok:true,operationId:request.operationId as string,value:{operationId:"run-live",state:"running"}});
+    });
+    let active=false;
+    const lease:NativeLeasePort={async withLease(_ref,_mode,action){
+      if(active)throw new Error("database callback overlapped");
+      active=true;try{return await action(scope);}finally{active=false;}
+    }};
+    const client=createWorkbenchNativeClient(lease,{platform:"darwin",desktop:true,socketPath:path});
+    const pending=client.command(ref,"run-live",{kind:"command_run",argv:["job.js"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000});
+    await arrived;
+    await expect(lease.withLease(ref,"admission",async()=>"readable")).resolves.toBe("readable");
+    release();
+    await expect(pending).resolves.toMatchObject({state:"running"});
   });
 
   it("rejects a stale fence and Windows before dispatch", async () => {

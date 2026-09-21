@@ -10,7 +10,7 @@ export class BrowserSocketError extends Error {
  constructor(public readonly code:string,public readonly dispatched:boolean){super(code);this.name="BrowserSocketError";}
 }
 
-/** 仅供持有后端 admission 行锁的宿主适配器调用；身份、profile 和 Lane 不从模型输入拼接。 */
+/** 仅供完成后端 admission 短事务核验的宿主适配器调用；身份、profile 和 Lane 不从模型输入拼接。 */
 export function exchangeBrowserSocket(socketPath:string,request:object,operationId:string,signal?:AbortSignal):Promise<unknown>{
  if(signal?.aborted)return Promise.reject(new BrowserSocketError("BROWSER_ABORTED",false));
  if(!socketPath || !operationId || operationId.length>160 || /[\x00-\x1f/\\]/.test(operationId) ||
