@@ -54,3 +54,21 @@ flowchart LR
 浏览器实际双任务均能独立打开、导航、observe，但合法 scroll 与 click 在派发后进入 unknown。新增原生 Rust/真实 Chromium Act 复现与修复写域；保持域/身份/外部提交边界，不能为了通过验收把已派发的不确定外部动作伪报未执行。确定缺参数的 action 在派发前返回具体修复指导。Workbench 错误契约添加可选有界 recovery，未知动作仍固定要求沿原操作核对，不被可选文案覆盖。
 
 独立安全复核确认原生匿名Act故障来自继承crawl用途限制。任务专属anonymous Hub的可信装配仅启用公开声明的七类交互；默认采集与replica保持只读，禁止序列化开启和Act伪装Debug。DEC-T1026-ANONYMOUS-ACT记录范围。旧评论采集回归的矛盾完成文案与诊断缺口单独登记T-1027并行修复，T1026继续保留该失败实测。
+
+第三候选048fd032已安装。实际原任务续跑揭示 execution.run 在脚本改变后仍跨 operation 复用旧进程回执；扩展到 workbench capability host 的可信复用策略及正式host/ledger集成测试，保留同operation回放与未知调用阻断。公开pause已生效但撞上files.edit产生unknown，必须核对原生文件写回执并沿原operation恢复，不能重复写入或抹去未知事实。浏览器各动作已实际成功，但两任务时间窗口不重叠，暂不认作并发通过。
+
+## 第四轮：任务文件写入中断对账
+
+实际pause撞上files.edit后原调用114为unknown。现有原生文件工具只有版本CAS，没有原operationId持久写入回执，无法自动证明是否完成。补任务归属下、原operationId与请求摘要绑定的持久写入记录及只读查询，允许宿主锁外查询、backend锁内核对冻结工具/模型提案/callDigest/claim/租约后结算原调用。派发前、实际写入后、记录落盘前后、回执丢失、重启、相同键不同参数、暂停不唤醒、未知外部动作不恢复均须覆盖。禁止为对账重新调用write。
+
+新记录不能伪造旧版历史回执。旧任务仅在严格只读证据能证明请求目标状态、且原执行已停止时，考虑用明确标注的 `verified_current_state` 观察证据恢复；不得声称历史journal存在。需独立评审确认可行边界，证据不满足保留unknown。禁止仅凭路径、文本相似度或不可信Worker报告解除阻断。保留同任务、原账本及费用，不新建任务掩盖原失败。
+
+实际CLI浏览器串行对应生产dispatcher空队列启动的单槽退出窗口，已由正式service红测复现。使用共享全局空闲退出决定，保持原配置2槽；测试覆盖空队列后长A运行时新B准入、C排队、取消补位和stop收口，不提高并发上限。
+
+文件协议A细案独审有条件通过（详见docs/verification/t1026-file-recovery-protocol.md）：CAS/path/digest校验先于prepared；expectedVersion省略保持null，observedBaseVersion独立；prepared不重放、不凭相同内容提升committed；query只读。扩command.rs/command_windows.rs用于可信scope停写证明。协议B继续待物理quiescence评审，不能以paused、空进程表或computed version证明原提交；通过后观察结果必须保留不可变原unknown快照并显式historicalCommit=unproven。此为落实既有用户修复授权的实现选择，没有新用户确认消息，不得伪造历史确认。
+
+协议A公开入口独审通过：`workbench.files.reconcile` 使用当前账号ctx、taskId及原operationId，按CLI write/apply与gateway幂等执行；服务由冻结模型提案与原账本派生请求身份，锁外读取可信Native journal、锁内复核CAS，仅committed能结算原调用，暂停保持暂停。重复对账回读持久结果，保留旧unknown快照和费用。原99存在旧命令派发历史，现有事实不足以证明所有后代停止，协议B不能用于它；当前候选不引入OS重启状态机，不自动重启用户机器。旧任务维持原记录和暂停，不能用推断伪造恢复成功。
+
+沿现有 recoveryWake 的单在途 lane 自动扫描有界候选；真实 committed 回执结算后仅对该 task 运行既有恢复路径，unknown_result 可自动回原队列，paused 保持暂停。停止期间的Native晚返回不得继续结算或唤醒。没有journal、prepared、外部未知动作不被这条恢复路径视为成功。
+
+第三候选同会话补交付任务190又实测到命令协议纠错缺信息：模型反复使用绝对cwd和重复解释器argv，只收到泛化invalid_input。增加明确协议说明与无副作用参数修复建议，但不改冻结catalog、不自动改写argv或禁止名为node的合法脚本；新成功运行也说明实际operationId和参数含义。任务已由公开CLI暂停，等修复版沿原ID继续。

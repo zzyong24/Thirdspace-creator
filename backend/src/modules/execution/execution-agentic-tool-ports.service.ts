@@ -69,6 +69,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     const unknownMarker=(task.payload as Record<string,unknown>).artifactProtocolVersion===2?deps.tools[bound.executionToolName]?.markUnknown:undefined;
     if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
     let reuseCallId:string|undefined;
+    const reuseSettledResults=deps.tools[bound.executionToolName]?.reuseSettledResults!==false;
     // SEMANTIC_BOUNDARY_ALLOW: effect=none 只承诺无副作用，不承诺观察值不变。
     // 聊天端口关闭跨 operation 的读复用；同 callId 回放已在上方独立处理，写入防重放不受影响。
     if(bound.reuseWithinRound && !bound.validationOutcome && (bound.effect!=="none" || deps.reuseReadResults!==false)){
@@ -76,13 +77,14 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
       if(prior.sequence>=call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
       const previous=bindingForCall(task,calls,prior);
       if(previous.validationOutcome || previous.executionToolName!==bound.executionToolName || previous.effect!==bound.effect || !isDeepStrictEqual(previous.input,bound.input))continue;
-      if(prior.status==="settled" && !reusable(readOutput(prior)))continue;
+      // 新命令可跳过已结算旧进程，但未结算/unknown 同参操作仍须等待或对账。
+      if(prior.status==="settled" && (!reuseSettledResults || !reusable(readOutput(prior))))continue;
       reuseCallId=prior.id;break;
      }
     }
     const claimId=randomUUID();
     await tx.update(executionCalls).set({toolExecutionClaimId:claimId}).where(eq(executionCalls.id,callId));
-    return {kind:"owner" as const,claimId,bound,handler,committer,unknownMarker,context,aiTaskId:task.ownerId,reuseCallId};
+    return {kind:"owner" as const,claimId,bound,handler,committer,unknownMarker,context,aiTaskId:task.ownerId,reuseCallId,reuseSettledResults};
    });
    if(claimed.kind==="replay")return readOutput(claimed.call);
    if(claimed.kind==="waiting"){
@@ -112,7 +114,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
       signal.throwIfAborted();
       const prior=(await ledger.inspect(ref)).calls.find(row=>row.id===claimed.reuseCallId);
       if(!prior || prior.status==="unknown")throw new ConflictError("同参前序调用结果未知，不能重复执行");
-      if(prior.status==="settled"){const output=readOutput(prior);if(reusable(output))reused=output;break;}
+      if(prior.status==="settled"){const output=readOutput(prior);if(claimed.reuseSettledResults && reusable(output))reused=output;break;}
       if(prior.status==="rejected")break;
       await new Promise(resolve=>setTimeout(resolve,25));
      }

@@ -1,6 +1,7 @@
 //! macOS-only private sidecar transport. No Tauri command or HTTP route is registered.
 //! The kernel's LOCAL_PEERPID is compared with the child handle created by lib.rs.
-//! The Node caller must keep the backend admission transaction open until the reply.
+//! Native I/O runs outside the backend transaction; receipts are reconciled by
+//! the trusted sidecar against the original ledger identity.
 #![cfg(target_os = "macos")]
 
 use super::command::{CommandError, CommandHost, CommandRequest, RuntimeRegistry};
@@ -59,7 +60,18 @@ enum Action {
         #[serde(rename = "contentBase64")]
         content_base64: String,
         #[serde(rename = "expectedVersion")]
-        expected_version: u64,
+        expected_version: Option<u64>,
+    },
+    FileReceipt {
+        #[serde(rename = "targetOperationId")]
+        target_operation_id: String,
+        path: String,
+        #[serde(rename = "expectedVersion")]
+        expected_version: Option<u64>,
+        #[serde(rename = "contentSha256")]
+        content_sha256: String,
+        #[serde(rename = "byteLength")]
+        byte_length: u64,
     },
     CommandRun {
         argv: Vec<String>,
@@ -101,6 +113,9 @@ fn file_error(error: FileError) -> Value {
         FileError::TooLarge => json!({"ok": false, "code": "TOO_LARGE"}),
         FileError::UnsupportedPlatform => json!({"ok": false, "code": "UNSUPPORTED_PLATFORM"}),
         FileError::Io(_) => json!({"ok": false, "code": "FILE_IO_ERROR"}),
+        FileError::OperationConflict => json!({"ok":false,"code":"FILE_OPERATION_CONFLICT"}),
+        FileError::OperationPending => json!({"ok":false,"code":"FILE_OPERATION_PENDING"}),
+        FileError::InvalidRecord => json!({"ok":false,"code":"FILE_JOURNAL_INVALID"}),
     }
 }
 
@@ -174,12 +189,18 @@ fn execute(base: &Path, commands: &CommandHost, request: Request) -> Value {
             expected_version,
         } => match base64::engine::general_purpose::STANDARD.decode(content_base64) {
             Ok(bytes) if bytes.len() <= 1_000_000 => files
-                .write(&path, &bytes, expected_version)
+                .write_operation(&request.operation_id, attempt, &fence_token, &path, &bytes, expected_version)
                 .map(|version| json!({"version": version})),
             Ok(_) => Err(FileError::TooLarge),
             Err(_) => Err(FileError::InvalidPath),
         }
         .map_err(file_error),
+        Action::FileReceipt {target_operation_id,path,expected_version,content_sha256,byte_length} => files
+            .file_receipt(&target_operation_id,&path,expected_version,&content_sha256,byte_length)
+            .map(|record| match record {
+                Some(receipt)=>json!({"status":receipt.state,"receipt":receipt}),
+                None=>json!({"status":"absent"}),
+            }).map_err(file_error),
         Action::CommandRun {
             argv,
             cwd,
@@ -471,6 +492,72 @@ mod tests {
         RuntimeRegistry::from_sidecar(base).unwrap()
     }
 
+    // T-1026 RED: real authenticated IPC, isolated roots, no installed user data.
+    // The reply is deliberately discarded, then the host restarts. A durable
+    // operation receipt must survive; a VERSION_CONFLICT is not that receipt.
+    #[test]
+    fn file_journal_replays_original_operation_after_host_restart() {
+        let base = temp_base();
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let write = request(json!({"kind":"write","path":"report.html","contentBase64":"aGVsbG8=","expectedVersion":0}));
+        let first = call(&socket, write.clone());
+        drop(running);
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let mut resumed = write;
+        resumed["scope"]["attempt"] = json!(2);
+        resumed["scope"]["fenceToken"] = json!("new-fence");
+        let replay = call(&socket, resumed);
+        let current = call(&socket, request(json!({"kind":"read","path":"report.html","offset":0,"limit":100})));
+        drop(running);
+        fs::remove_dir_all(base).unwrap();
+        assert_eq!(first["value"]["version"], 1, "{first}");
+        assert_eq!(replay, first, "same operation must return its durable receipt");
+        assert_eq!(current["value"]["version"], 1);
+        assert_eq!(current["value"]["contentBase64"], "aGVsbG8=");
+    }
+
+    #[test]
+    fn file_journal_rejects_same_operation_with_changed_request_before_writing() {
+        let base = temp_base();
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let first = call(&socket, request(json!({"kind":"write","path":"report.html","contentBase64":"aGVsbG8=","expectedVersion":0})));
+        let collision = call(&socket, request(json!({"kind":"write","path":"report.html","contentBase64":"Yg==","expectedVersion":1})));
+        let current = call(&socket, request(json!({"kind":"read","path":"report.html","offset":0,"limit":100})));
+        drop(running);
+        fs::remove_dir_all(base).unwrap();
+        assert_eq!(first["value"]["version"], 1);
+        assert_eq!(collision["ok"], false, "operation ID cannot authorize different parameters: {collision}");
+        assert_eq!(current["value"]["version"], 1);
+        assert_eq!(current["value"]["contentBase64"], "aGVsbG8=");
+    }
+
+    #[test]
+    fn file_journal_replay_does_not_overwrite_a_later_version() {
+        let base = temp_base();
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(std::process::id(), base.clone(), test_runtimes(&base));
+        let write = request(json!({"kind":"write","path":"report.html","contentBase64":"aGVsbG8=","expectedVersion":0}));
+        let first = call(&socket, write.clone());
+        let mut next = request(json!({"kind":"write","path":"report.html","contentBase64":"Yg==","expectedVersion":1}));
+        next["operationId"] = json!("op-2");
+        let second = call(&socket, next);
+        let replay = call(&socket, write);
+        let current = call(&socket, request(json!({"kind":"read","path":"report.html","offset":0,"limit":100})));
+        drop(running);
+        fs::remove_dir_all(base).unwrap();
+        assert_eq!(second["value"]["version"], 2);
+        assert_eq!(replay, first, "historical receipt is independent of current bytes");
+        assert_eq!(current["value"]["version"], 2);
+        assert_eq!(current["value"]["contentBase64"], "Yg==");
+    }
+
     #[test]
     fn authenticated_peer_can_write_read_and_cannot_escape_task() {
         let bridge = PendingBridge::bind().unwrap();
@@ -507,7 +594,7 @@ mod tests {
                 json!({"kind":"write","path":"draft/report.html","contentBase64":"Yg==","expectedVersion":0}),
             ),
         );
-        assert_eq!(conflict["code"], "VERSION_CONFLICT");
+        assert_eq!(conflict["code"], "FILE_OPERATION_CONFLICT");
         let escape = call(
             &socket,
             request(
@@ -719,6 +806,25 @@ mod tests {
             .unwrap();
         assert!(count > 0, "bundled Node lost its built-in CA certificates");
         fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
+    #[ignore = "isolated Node/PGlite public file reconciliation fixture"]
+    fn external_node_file_journal_fixture() {
+        let pid = std::env::var("CREATOROS_FILES_E2E_NODE_PID").unwrap().parse().unwrap();
+        let ready = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_READY_FILE").unwrap());
+        let done = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_DONE_FILE").unwrap());
+        let base = PathBuf::from(std::env::var("CREATOROS_FILES_E2E_TASK_ROOT").unwrap());
+        let bridge = PendingBridge::bind().unwrap();
+        let socket = bridge.socket_path();
+        let running = bridge.start(pid, base.clone(), test_runtimes(&base));
+        fs::write(ready, socket.to_string_lossy().as_bytes()).unwrap();
+        let deadline = std::time::Instant::now() + Duration::from_secs(90);
+        while !done.exists() && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        drop(running);
+        assert!(done.exists(), "Node public reconciliation did not release isolated fixture");
     }
 
     #[test]

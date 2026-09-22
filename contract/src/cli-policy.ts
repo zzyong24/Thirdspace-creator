@@ -16,6 +16,7 @@ export type EndpointId = (typeof ENDPOINTS)[keyof typeof ENDPOINTS]["id"];
 // T-843: 这是 CLI effect 的契约真值，不在调用期按 HTTP method 或 operation 名猜。
 // 新 operation 没有进入 READ/MUTATION 两张穷尽表时，下方类型门与测试都会失败。
 const READ_OPERATIONS = [
+  "analytics.comments.failures.list",
   "workbench.tasks.inspect", "workbench.tasks.events", "workbench.capabilities.list",
   "workbench.artifacts.list", "workbench.artifacts.read", "workbench.artifacts.render",
   "analytics.traffic.get",
@@ -126,7 +127,9 @@ const READ_OPERATIONS = [
 ] as const satisfies readonly EndpointId[];
 
 const MUTATION_OPERATIONS = [
+  "analytics.comments.retry",
   "workbench.artifacts.reconcile",
+  "workbench.files.reconcile",
   "analytics.traffic.refresh",
   "accounts.archive",
   "accounts.cadence.upsert",

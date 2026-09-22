@@ -8,7 +8,7 @@ describe("新增 Agent 能力公开 CLI 契约",()=>{
   });
   it("只读投影和对账均可动态发现并有明确 effect",()=>{
     const ids=Object.values(ENDPOINTS).map(x=>x.id as string);
-    for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile"]){
+    for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"]){
       expect(ids).toContain(id);
       expect(getCliOperationPolicy(id as Parameters<typeof getCliOperationPolicy>[0])?.effect).toBe(id.endsWith("reconcile")?"write":"read");
     }
@@ -19,5 +19,11 @@ describe("新增 Agent 能力公开 CLI 契约",()=>{
     expect(read).toBeDefined();
     expect(read.params!.safeParse({taskId:"task",artifactId:"artifact",version:0}).success).toBe(false);
     expect(read.query!.safeParse({offset:0,limit:128001}).success).toBe(false);
+  });
+  it("文件对账只接受原callId，不能由公开请求指定scope或写入内容",()=>{
+    const endpoint=ENDPOINTS.reconcileWorkbenchFile;
+    expect(endpoint.body.parse({operationId:"call-original"})).toEqual({operationId:"call-original"});
+    for(const extra of [{scope:{userId:"foreign"}},{content:"rewrite"},{path:"report.html"},{expectedVersion:0},{fenceToken:"caller"}])
+      expect(endpoint.body.safeParse({operationId:"call-original",...extra}).success).toBe(false);
   });
 });

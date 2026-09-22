@@ -1,7 +1,7 @@
 //! Windows task-file host. All untrusted components are opened relative to a
 //! retained directory HANDLE. A path check followed by `root.join(path)` would
 //! permit junction/symlink swaps, so no task operation uses that pattern.
-use super::{validate_relative, FileError, TaskFiles};
+use super::{validate_relative, FileError, TaskFiles, FileWriteRecord, MAX_SAFE_VERSION};
 use std::{
     ffi::{c_void, OsString},
     fs::File,
@@ -376,6 +376,46 @@ fn delete_handle(file: &File) -> Result<(), FileError> {
 }
 
 impl TaskFiles {
+    pub(super) fn operation_lock(&self) -> Result<File, FileError> { self.lock_windows() }
+
+    pub(super) fn read_operation_bytes(&self, operation: &str) -> Result<Option<Vec<u8>>, FileError> {
+        let read = || -> Result<Vec<u8>, FileError> {
+            let dir = directory(&self.state, "file-operations")?;
+            let file = child(&dir, &super::key(operation)?, Kind::File, FILE_OPEN, READ_ACCESS, SHARE_ALL)?;
+            let mut bytes=Vec::new();file.take(16_385).read_to_end(&mut bytes)?;
+            if bytes.len()>16_384 {return Err(FileError::InvalidRecord);}
+            Ok(bytes)
+        };
+        match read() {Ok(value)=>Ok(Some(value)),Err(FileError::Io(e)) if e.kind()==io::ErrorKind::NotFound=>Ok(None),Err(e)=>Err(e)}
+    }
+
+    pub(super) fn save_operation_record(&self, record: &FileWriteRecord) -> Result<(), FileError> {
+        let dir=ensure_directory(&self.state,"file-operations")?;
+        // Flush only writable file handles. Windows directory handles do not
+        // provide Unix fsync semantics; crash/power-loss durability of directory
+        // entries still needs Windows validation, not a claimed Unix-equivalent guarantee.
+        let temp_name=format!(".creatoros-tmp-{}",rand::random::<u64>());
+        let mut temp=child(&dir,&temp_name,Kind::File,FILE_CREATE,TEMP_ACCESS,SHARE_ALL)?;
+        let saved=(|| -> Result<(),FileError> {
+            temp.write_all(&serde_json::to_vec(record).map_err(|_|FileError::InvalidRecord)?)?;
+            temp.sync_all()?;
+            rename_from_handle(&temp,&dir,&super::key(&record.operation_id)?)?;
+            temp.sync_all()?;
+            Ok(())
+        })();
+        // After rename, deleting the HANDLE would delete the actual WAL. Never
+        // remove a potentially installed prepared/committed record on error.
+        saved
+    }
+
+    pub(super) fn validate_write_locked(&self,path:&str,expected:Option<u64>)->Result<u64,FileError>{
+        let (parent,name)=self.parent_windows(path,true)?;
+        let hash=hash_at(&parent,&name)?;
+        let version=self.current_version_windows(path,hash.as_deref())?;
+        if version>=MAX_SAFE_VERSION {return Err(FileError::InvalidPath);}
+        if expected.map_or(hash.is_some()||version!=0,|v|v!=version){return Err(FileError::Conflict{current_version:version});}
+        Ok(version)
+    }
     pub(super) fn new_windows(
         base: &Path,
         user: String,
@@ -532,6 +572,9 @@ impl TaskFiles {
     ) -> Result<u64, FileError> {
         let path = validate_relative(path)?.join("/");
         let _lock = self.lock_windows()?;
+        self.write_locked(&path, content, expected_version)
+    }
+    pub(super) fn write_locked(&self, path:&str,content:&[u8],expected_version:u64)->Result<u64,FileError>{
         let (parent, name) = self.parent_windows(&path, true)?;
         let current = hash_at(&parent, &name)?;
         let version = self.current_version_windows(&path, current.as_deref())?;
@@ -565,6 +608,7 @@ impl TaskFiles {
             let _ = delete_handle(&temp);
             return Err(error);
         }
+        self.file_write_fault("data")?;
         // Data rename has committed. If the record step fails, the next read
         // detects the changed hash and projects `version + 1` for reconciliation.
         let versions = self.version_directory()?;

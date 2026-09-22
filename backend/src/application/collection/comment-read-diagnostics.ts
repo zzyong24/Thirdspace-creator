@@ -13,7 +13,7 @@ export interface CommentReadDiagnostics {
 export interface CommentDiagnosticWork {awemeId:string;complete?:boolean;diagnostics?:CommentReadDiagnostics}
 const count=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
 /** 每批最多列 20 个作品，长 ID 截至 80 字符；汇总覆盖整批，明确披露省略量和诊断缺失。 */
-export function formatCommentReadDiagnostics(works:readonly CommentDiagnosticWork[],ingestion:{receivedComments:number;writtenComments:number;skippedComments:number},unresolvedSyncFailures:number|null=null):string {
+export function formatCommentReadDiagnostics(works:readonly CommentDiagnosticWork[],ingestion:{receivedComments:number;writtenComments:number;skippedComments:number},unresolvedSyncFailures:number|null=null,selection?:{size:number;accountFailures:number|null}):string {
  const fields=['matchedResponses','validResponses','invalidResponses','parsedComments','pendingResponses','ignoredResponses'] as const;
  const totals:Record<string,number|null>={};
  for(const field of fields){
@@ -24,7 +24,8 @@ export function formatCommentReadDiagnostics(works:readonly CommentDiagnosticWor
  const reasonOf=(work:CommentDiagnosticWork)=>work.diagnostics&&COMMENT_READ_REASONS.includes(work.diagnostics.reason)?work.diagnostics.reason:'unavailable';
  const reasons:Record<string,number>={};for(const work of works){const reason=reasonOf(work);reasons[reason]=(reasons[reason]??0)+1;}
  return JSON.stringify({schemaVersion:1,scope:'batch',...totals,
-  unresolvedSyncFailures:{count:count(unresolvedSyncFailures),scope:'account.comments',source:'publicationSyncService.failures'},
+  unresolvedSyncFailures:{count:count(unresolvedSyncFailures),scope:selection?'selected_publications.comments':'account.comments',source:'publicationSyncService.failures'},
+  ...(selection?{selectionSize:selection.size,accountUnresolvedSyncFailures:{count:count(selection.accountFailures),scope:'account.comments',source:'publicationSyncService.failures'}}:{}),
   receivedComments:count(ingestion.receivedComments),writtenComments:count(ingestion.writtenComments),skippedComments:count(ingestion.skippedComments),
   reasons,works:works.slice(0,20).map(work=>({awemeId:work.awemeId.slice(0,80),complete:work.complete??null,
    ...Object.fromEntries(fields.map(field=>[field,count(work.diagnostics?.[field])])),reason:reasonOf(work)})),omittedWorks:Math.max(0,works.length-20)});

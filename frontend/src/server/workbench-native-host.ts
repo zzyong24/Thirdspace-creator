@@ -8,6 +8,8 @@ import {
 } from "@creatoros/contract/agent-workbench";
 import type { ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createWorkbenchNativeClient, NativeFileError, type NativeFileAction, type NativeCommandAction } from "./workbench-native-client";
+import { projectFileSuccess } from "./workbench-file-success";
+import { commandRunInvalidInput, projectCommandRunResult } from "./workbench-command-guidance";
 
 type Host = NonNullable<ChatProductionCompositionDeps["workbenchHost"]>;
 type FilePort = (ref: ExecutionRef, operationId: string, action: NativeFileAction) => Promise<unknown>;
@@ -64,7 +66,7 @@ function result(operationId: string, value: unknown): WorkbenchResult {
 function errorResult(operationId: string, action: NativeFileAction, error: unknown): WorkbenchResult {
   if (!(error instanceof NativeFileError)) throw error;
   const read = action.kind !== "write";
-  const conflict = error.code === "VERSION_CONFLICT";
+  const conflict = error.code === "VERSION_CONFLICT" || error.code === "FILE_OPERATION_CONFLICT";
   const invalid = ["INVALID_PATH", "TOO_LARGE", "INVALID_REQUEST", "INVALID_CONTEXT", "INVALID_OPERATION_ID"].includes(error.code);
   const unavailable = ["NATIVE_UNAVAILABLE", "UNSUPPORTED_PLATFORM", "UNAUTHORIZED_PEER", "STALE_LEASE"].includes(error.code);
   const unknown = !read && !conflict && !invalid && !unavailable && error.dispatched;
@@ -140,7 +142,7 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
         let action:NativeCommandAction;
         if (call.invocation.name==="execution.run") {
           const parsed=workbenchCommandRequestSchema.safeParse(input);
-          if (!parsed.success) return invalidInputResult(call.context.operationId);
+          if (!parsed.success) return commandRunInvalidInput(call.context.operationId);
           action={kind:"command_run",argv:parsed.data.argv,cwd:parsed.data.cwd,runtimeId:parsed.data.runtimeId,
             timeoutMs:parsed.data.timeoutMs,...(parsed.data.stdinRef?{stdinRef:parsed.data.stdinRef}:{})};
         } else {
@@ -158,7 +160,7 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
         }
         try { const value=await nativeCommand(ref,call.context.operationId,action);
           signal.throwIfAborted();
-          return result(call.context.operationId,action.kind==="command_read"?projectRead(value):value);
+          return result(call.context.operationId,action.kind==="command_read"?projectRead(value):action.kind==="command_run"?projectCommandRunResult(value):value);
         } catch(error) { if (signal.aborted) throw error; return commandErrorResult(call.context.operationId,action,error); }
       }
       const operation = call.invocation.name.split(".")[1];
@@ -174,11 +176,11 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
       const action: NativeFileAction = request.operation === "list" ? {kind:"list",...(request.path?{path:request.path}:{})}
         : request.operation === "read" ? {kind:"read",path:request.path,offset:request.offset??0,limit:Math.min(request.limit??32_000,128_000)}
         : request.operation === "stat" ? {kind:"stat",path:request.path}
-        : {kind:"write",path:request.path,contentBase64:Buffer.from(request.content,"utf8").toString("base64"),expectedVersion:request.expectedVersion??0};
+        : {kind:"write",path:request.path,contentBase64:Buffer.from(request.content,"utf8").toString("base64"),expectedVersion:request.expectedVersion??null};
       try {
         const value = await native(ref,call.context.operationId,action);
         signal.throwIfAborted();
-        return result(call.context.operationId,request.operation==="read"?projectRead(value):value);
+        return result(call.context.operationId,projectFileSuccess(action,request.operation==="read"?projectRead(value):value));
       } catch (error) {
         if (signal.aborted) throw error;
         return errorResult(call.context.operationId,action,error);

@@ -96,7 +96,18 @@ enum Action {
         #[serde(rename = "contentBase64")]
         content_base64: String,
         #[serde(rename = "expectedVersion")]
-        expected_version: u64,
+        expected_version: Option<u64>,
+    },
+    FileReceipt {
+        #[serde(rename = "targetOperationId")]
+        target_operation_id: String,
+        path: String,
+        #[serde(rename = "expectedVersion")]
+        expected_version: Option<u64>,
+        #[serde(rename = "contentSha256")]
+        content_sha256: String,
+        #[serde(rename = "byteLength")]
+        byte_length: u64,
     },
     #[cfg(test)]
     CommandRun {
@@ -169,6 +180,9 @@ fn file_error(error: FileError) -> Value {
         FileError::TooLarge => json!({"ok":false,"code":"TOO_LARGE"}),
         FileError::UnsupportedPlatform => json!({"ok":false,"code":"UNSUPPORTED_PLATFORM"}),
         FileError::Io(_) => json!({"ok":false,"code":"FILE_IO_ERROR"}),
+        FileError::OperationConflict => json!({"ok":false,"code":"FILE_OPERATION_CONFLICT"}),
+        FileError::OperationPending => json!({"ok":false,"code":"FILE_OPERATION_PENDING"}),
+        FileError::InvalidRecord => json!({"ok":false,"code":"FILE_JOURNAL_INVALID"}),
     }
 }
 fn execute(base: &std::path::Path, request: Request, commands: &CommandMode) -> Value {
@@ -211,9 +225,13 @@ fn execute(base: &std::path::Path, request: Request, commands: &CommandMode) -> 
         }).map_err(file_error),
         Action::Write { path, content_base64, expected_version } =>
             match base64::engine::general_purpose::STANDARD.decode(content_base64) {
-                Ok(bytes) if bytes.len() <= 1_000_000 => files.write(&path, &bytes, expected_version).map(|version| json!({"version":version})),
+                Ok(bytes) if bytes.len() <= 1_000_000 => files.write_operation(&request.operation_id,attempt,&fence_token,&path,&bytes,expected_version).map(|version| json!({"version":version})),
                 Ok(_) => Err(FileError::TooLarge), Err(_) => Err(FileError::InvalidPath),
             }.map_err(file_error),
+        Action::FileReceipt {target_operation_id,path,expected_version,content_sha256,byte_length} => files
+            .file_receipt(&target_operation_id,&path,expected_version,&content_sha256,byte_length)
+            .map(|record|match record {Some(receipt)=>json!({"status":receipt.state,"receipt":receipt}),None=>json!({"status":"absent"})})
+            .map_err(file_error),
         #[cfg(test)]
         Action::CommandRun { argv, cwd, runtime_id, timeout_ms, stdin_ref } => match commands {
             CommandMode::Probe(host) => host.run_candidate(Arc::new(files), &command_scope, &request.operation_id,

@@ -153,6 +153,7 @@ export {
 } from "./agentic";
 export { createExecutionAuthorityService, type PreparedModelExecution } from "./execution-authority.service";
 export { createExecutionLeaseService } from "./execution-lease.service";
+export { createWorkbenchFileRecoveryService } from "./workbench-file-recovery.service";
 export { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 export { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
 export { createExecutionWorkerOutcomeService } from "./execution-worker-outcome.service";

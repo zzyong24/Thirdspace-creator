@@ -7,6 +7,8 @@ type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
 export type AgenticBackendTool={version:string;parameters:z.ZodType;effect:"none"|"proposal"|"committed";execution?:"host"|"worker.redfox"|"worker.web-read"|"worker.research"|"worker.script-draft"|"worker.script-hooks"|"worker.structured-node"|"host.task-submit";
+ /** 可信宿主策略：false 时新 operation 不复用同参已结算结果；原 operation 回放与未知提交保护仍保留。 */
+ reuseSettledResults?:boolean;
  execute?(context:import("@creatoros/contract").RequestContext,input:z.infer<ReturnType<typeof z.json>>,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;signal:AbortSignal;executionSignal?:AbortSignal}):Promise<ToolOutcome>;
  commitAndSettle?(context:import("@creatoros/contract").RequestContext,input:z.infer<ReturnType<typeof z.json>>,outcome:ToolOutcome,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;claimId:string}):Promise<ToolOutcome>;
  markUnknown?(context:import("@creatoros/contract").RequestContext,scope:{execution:ExecutionRef;aiTaskId:string;callId:string;toolCallId:string;claimId:string;toolName:string}):Promise<void>;

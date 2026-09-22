@@ -13,6 +13,12 @@ import { schedulingOperations } from "../../src/operations/scheduling";
 // + 枚举校验 + 端点注册断言。两个 owned-root resource + 两个新枚举。
 
 describe("scheduling contract", () => {
+  it('T1027 runNow可选1–20个唯一真实作品ID，旧空body仍兼容',()=>{
+    const schema=schedulingOperations.runScheduledJobNow.body;
+    expect(schema.parse(undefined)).toBeUndefined();expect(schema.parse({})).toEqual({});
+    expect(schema.parse({publicationIds:['p1','p2']})).toEqual({publicationIds:['p1','p2']});
+    for(const input of [{publicationIds:[]},{publicationIds:['p1','p1']},{publicationIds:Array.from({length:21},(_,i)=>`p${i}`)},{publicationIds:['']},{publicationIds:['p'],force:true}])expect(schema.safeParse(input).success).toBe(false);
+  });
   it("parses a ScheduledJob resource (self.metrics 源)", () => {
     const job = scheduledJobResource.parse({
       id: "job-daily-metrics",

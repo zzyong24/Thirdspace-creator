@@ -54,7 +54,7 @@ describe("桌面任务文件宿主",()=>{
     const output=await host.dispatch(call("files.edit",{path:"草稿/报告.html",content:"你好",expectedVersion:2}),control);
     expect(filePort).toHaveBeenCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",
       {kind:"write",path:"草稿/报告.html",contentBase64:Buffer.from("你好").toString("base64"),expectedVersion:2});
-    expect(output).toMatchObject({status:"succeeded",operationId:"op",content:[{type:"text",text:'{"version":3}'}]});
+    expect(output).toMatchObject({status:"succeeded",operationId:"op",content:[{type:"text",text:expect.stringContaining('"version":3')}]});
     const invalid=await host.dispatch(call("files.write",{path:"../other",content:"x"}),control);
     expect(invalid).toMatchObject({status:"failed",error:{code:"invalid_input",dispatched:false,nextAction:"fix_input"}});
     expect(filePort).toHaveBeenCalledTimes(1);
@@ -192,7 +192,7 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     };
     const html="<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>真实任务报告</title><body><h1>事实 0</h1></body></html>";
     const file="交付/报告.html";
-    expect(value(await invoke(owner.context,"files.write",{path:file,content:html,expectedVersion:0}))).toEqual({version:1});
+    expect(value(await invoke(owner.context,"files.write",{path:file,content:html,expectedVersion:0}))).toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(html),hash:createHash("sha256").update(html).digest("hex")});
     const read=value(await invoke(owner.context,"files.read",{path:file,offset:0,limit:4096}));
     expect(read).toMatchObject({text:html,version:1,encoding:"utf8",total:Buffer.byteLength(html)});
     expect(value(await invoke(owner.context,"files.stat",{path:file}))).toMatchObject({isDirectory:false,size:Buffer.byteLength(html),version:1});
@@ -225,7 +225,7 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
     expect(version1).toMatchObject({version:1,relativePath:file,size:Buffer.byteLength(html),hash:expectedHash});
     const secondFile="交付/修订.html",secondHtml=html.replace("事实 0","事实 1");
     expect(value(await invoke(owner.context,"files.write",{path:secondFile,content:secondHtml,expectedVersion:0})))
-      .toEqual({version:1});
+      .toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(secondHtml),hash:createHash("sha256").update(secondHtml).digest("hex")});
     const secondRead=value(await invoke(owner.context,"files.read",{path:secondFile,offset:0,limit:4096}));
     expect(secondRead).toMatchObject({text:secondHtml,version:1});
     const version2=await registered(owner.context,{path:secondFile,mime:"text/html",
@@ -350,7 +350,7 @@ realMacFiles("真实 Mac socket + 模型工具调用、双版本 Blob 与导出�
       version1.artifactId,1)).rejects.toThrow();
     const script="const fs=require('node:fs');const crypto=require('node:crypto');"+
       "process.stdout.write(crypto.createHash('sha256').update(fs.readFileSync('交付/报告.html')).digest('hex'))";
-    expect(value(await invoke(owner.context,"files.write",{path:"check.js",content:script,expectedVersion:0}))).toEqual({version:1});
+    expect(value(await invoke(owner.context,"files.write",{path:"check.js",content:script,expectedVersion:0}))).toMatchObject({version:1,writeMode:"replace_all",size:Buffer.byteLength(script),hash:createHash("sha256").update(script).digest("hex")});
     const commandId=randomUUID();
     expect(value(await invoke(owner.context,"execution.run",{argv:["check.js"],cwd:".",runtimeId:"bundled-node",timeoutMs:10000},commandId)))
       .toMatchObject({operationId:commandId});

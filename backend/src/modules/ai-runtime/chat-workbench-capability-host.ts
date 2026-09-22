@@ -62,6 +62,9 @@ export function createChatWorkbenchCapabilityHost(
       if (!declared || declared.version !== definition.version || declared.effect !== definition.effect || declared.execution !== definition.execution) throw new Error("WORKBENCH_FROZEN_DEFINITION_MISMATCH");
       return [definition.name, {
         version: definition.version, effect: definition.effect,
+        // SEMANTIC_BOUNDARY_ALLOW: execution.run 的协议按 operationId 标识一次命令启动，
+        // 同 argv 不能标识同一进程；仅关闭新 operation 的结果复用，不扩展其他写入语义。
+        ...(definition.name==="execution.run"?{reuseSettledResults:false}:{}),
         parameters: prepared.parameters[definition.name]!.parameters,
         async approve() { return { status: "not-applicable" as const }; },
         async execute(context: RequestContext, raw: unknown, scope: { execution: ExecutionRef; callId: string; signal: AbortSignal }) {

@@ -129,3 +129,53 @@
 本轮最终契约43文件249项通过；host合并5文件44项通过、5项跳过。Skill冻结测试先复现1项旧版本断言失败，核对真实安装回执与官方模板后更新为实际新方法版本，13项通过。匿名Hub强化后策略4/4通过，拒绝Act伪装evaluate且保留七类交互；日志 `/tmp/t1026-anonymous-policy-final.XXXXXX.log`。以上仍不替代第三候选安装实测。
 
 T1027最终独立复核确认评论归属、明确未结束分页、同页瞬时失败恢复及混合归属页均已闭合；前端150项、后端28项通过，最终类型检查通过。安装前保留原真实评论失败，不宣称采集已恢复。第三候选将同时纳入T1026与T1027已冻结修复。
+
+## 第三候选安装实测（048fd0325aefe58dc419a8e9a28cfc0c8dc673e4）
+
+打包预检42项通过，规范本地入口成功并自动覆盖启动应用PID20293，CLI installed/full/connected；DMG SHA-256 `2ba2b0e5a8d05fe66d504047ef58152fe0daaa07e8b22520868a29afe0f7b02b`，hdiutil verify通过。本地ad-hoc，未公开发布。
+
+- 原修复任务99以attempt2恢复，截断提案以无副作用invalid_input结算；原前五条call的ID/status/resultText/totalTokens逐项不变。但同argv命令在脚本编辑后复用了旧进程回执，真实造成反复错误；CLI已pause到paused，114条回执中末条files.edit未知，继续修复与对账，不宣称原报告修好。
+- `execution-task-6dcd990f-64`：同会话空报告19回执成功。原 `wa-149a5f68f10f211d88281fd089e54a52@1` 保留；v2为673字节、hash `3e14ea78d9fd4dbcbddcf14dbd478ec7eb0b710d63994fc44690460f42918af5`，实际CLI导出有新增“版本二：空数据也已核验”。
+- `execution-task-6dcd990f-74`：77回执、planRevision2、10步骤全部succeeded，真实引用与登记产物存在。错误版本edit拒绝且read/stat仍v1；正确edit后新read/stat确为v2“版本二”。Node核验3样本、2已知、总30、均15、缺失1。三产物正式登记；HTML `wa-31af55ca2593f9411e7f744634ba4cdf@1` hash `b2dd5fbb856b5c9db7c6dab0a42fae0415dd04f8d3ab4af94043686e9c9546ac`。raw/PNG/PDF已CLI导出；实际PNG显示正确三行表格、两根柱与未知项，无脚本依赖。样本明确标为测试数据，不冒充账号业绩。
+- 浏览器E/F任务87/97各22回执全部工具ok、无error，open/navigate/observe/scroll/hover/click/extract/screenshot/status/close完整执行。实际E窗口04:38:09–04:39:00，F04:39:07–04:39:30（UTC），因此只能记两个独立成功链，**不是并发证据**。
+- 评论新run `run-79306813-484c-48d0-8a2a-dc1189022c72` 无due作品，0.6秒failed并如实报告当前账号62项历史同步失败；诊断works=[]。不能凭此定位网站根因或声称真实采集成功，正在核对公开失败重试入口。
+
+`execution-task-6dcd990f-168` 跨任务PNG复制与报告修订：18条回执成功，复制产物 `wa-324a34f3d777c66b65a7e4918382db12@1` 的70字节与原PNG逐字节相同，hash=`7d91c846b70d9450a30d1ea73dc15d2e7888dfa3b2a84b297bb5272ae23daf39`。报告 `wa-31af55ca2593f9411e7f744634ba4cdf@2` 为4240字节、hash=`b31a97b1eeca9ee80a86d20d2e2bf415527b82d96002a86fb66a94b447c5c07d`；htmlResources引用真实拷贝PNG，公开CLI导出含“跨回合复制已核验”，v1仍存在。
+
+第四轮调度红测在正式service+隔离HTTP供应商复现空队列启动只剩一个活动槽；共享idleExit修复后11/11通过，含上限2、第三项排队、取消补位与stop断开。独立复核通过；日志 `/tmp/t1026-dispatcher-empty-{red,green}.log`。第四候选安装前不宣称实际并发已经通过。
+
+### 第三轮证据独立审计
+
+Kuhn 实际逐项复核了 CLI 回执与导出文件：full3 的 seq58/60 是验证脚本真实执行且 exitCode=0；raw/PNG/PDF 摘要与回执一致，PNG 实际图表正确。空报告及完整报告 v1/v2 全量读取的字节摘要匹配，PNG 复制前后逐字节相同。文件版本冲突和正确编辑后读回均有真实依据。
+
+保留三项限制：计划十步状态虽均 succeeded、25个引用均存在，但 rpt-4 引用了 PNG 命令 exit1 的回执，而非实际版本冲突 seq14；因此只能确认计划持久化与收口机制，不能宣称引用语义全部正确。E/F 的 scroll 位移0、标题 click changed=false，未覆盖有效滚动/链接跳转或实际并发。PNG copy 的产物交付通过，不把目标 files.stat=null 当作命令工作目录可见性通过。原99的末条未知调用与同参数命令重跑仍待第四候选实测。
+
+第四轮补跑：真实隔离Worker的RedFox凭据/官方与自配协议8/8通过，Pi循环/网关/分页/命令/RedFox客户端40/40通过，日志 `/tmp/t1026-fourth-{redfox,protocol}-regression.log`。这些是本地隔离供应商协议测试，不冒充官方服务或自配服务的实际网络验收。新增评论和文件对账路由的registry精准回归3/3通过；首次只登记评论路径时，因并行新增文件对账路径而真实失败，补齐正式契约清单后转绿。
+
+CLI 全量5文件77/77、typecheck通过；离线实际 runCliCommand/buildTools 核对268个 operation 与 ENDPOINTS 一致、269个 MCP tools。三个新增入口的 describe、写操作 apply/幂等要求均实际验证，安装版网络调用仍待新包。日志 `/tmp/t1026-mcp-{all-tests,typecheck,new-ops-audit}.log`。
+
+### 最新能力结论（第四候选安装前）
+
+| 能力 | 最新已验证事实 | 仍需验证 |
+| --- | --- | --- |
+| 计划与Skill | 真实计划revision2、方法正文/版本读回 | 单一真实目标的全步骤及引用语义对应 |
+| files.list/write/read/stat/edit | 中文空格路径、冲突拒绝、编辑后新版读回 | 新写入回执中断恢复；Windows实际路径 |
+| execution.run/status/read/cancel | 真Node退出码/输出、read非空stdout/stderr、cancel后cancelled | 同参数编辑后重跑、输出分页跨offset；旧子孙进程不能仅凭根终态算停止 |
+| 浏览器8工具 | 两个独立完整链成功 | 实际重叠、取消隔离、有效滚动/链接；type/set_value/select_option/press_key |
+| artifact.register/read/versions/copy | HTML/CSV/PNG登记、真实PNG复制、同会话v2与v1保留 | 原用户报告静态图表交付仍缺 |
+| 预览和四格式导出 | 空数据及测试样本数字/图表正确，摘要与字节一致 | 原真实数据报告；原生保存对话框取消、Windows |
+| 原任务恢复 | 旧82原ID已续跑，99截断提案已安全纠正 | 99末文件写入unknown且无旧journal，不能宣称恢复通过 |
+| 评论 | 新诊断如实报告未完成，新增公开失败清单/重试有隔离证据 | 新包少量真实抓取，不能用works=[]通过 |
+| 模型/RedFox | 已配置真实模型多步运行；官方/自配/RedFox隔离协议通过 | 两种服务实际网络及真实RedFox长任务 |
+| UI/双端 | LED047自动化；Mac多次覆盖安装保留数据 | UI真实冷/热时延、关闭面板；Windows实机 |
+
+原99没有旧原生写入回执，当前安全事实不足以采用工作副本。第四候选仅实现可证明的journal协议A；观察协议B未实现、未通过，不自动重启机器或改写旧未知历史。后续即使在原会话另行修订产物，也不能被记作99恢复成功。
+
+第三安装版补交付试验 `execution-task-6dcd990f-190` 在原会话创建，已完整读取原v1并写入本任务CSV/脚本，但多次错误绝对cwd只得到泛化invalid_input；58条回执时公开pause成功，末条model为unknown，前57条保留。仍无v2，不能算交付完成。等待第四候选补命令纠错后沿190原ID继续；99仍独立paused/unknown。190生成期间三次公开inspect耗时0.293/0.250/0.240秒，是CLI查询可用性证据，不当作UI打开时延。
+
+### 第四候选冻结门
+
+- 文件恢复：独立Rust/真实CLI HTTP gateway与正式服务23/23（0 skip），含自动原task重新queued、原调用重放、暂停不唤醒、stop等待和迟到回写拒绝、absent/prepared保持unknown。日志 `/tmp/t1026-file-recovery-native-final.log`，细节见文件恢复协议。尚不声称安装版模型已续跑。
+- 命令纠错：真实红测5 failed/1 passed，修复后4文件24 passed/1既有skip；隔离Node实际运行脚本、`-e`和名为node的合法文件。冻结catalog、历史回执和argv均未改写。Wegener独审通过，frontend全类型检查通过。日志 `/tmp/t1026-command-guidance-{red,green,typecheck}.log`。
+- 最终contract43文件255/255，类型检查通过；boundary无新增违规（旧基线5）；本地包装四项42/42，四处版本均1.2.0。
+- 独审通过只针对实际实现的协议A；B未实现。原99不解锁，原190待新包resume，T1027少量真实抓取待验收。禁止把这些待验项改写为通过。

@@ -411,9 +411,10 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
       await tasks.recoverExpiredLeases();
       let activeCount=0;
       let pendingClaims=0;
+      let idleExit=false;
       const counts=await Promise.allSettled(supervisors.map(async supervisor=>{
       let count=0;
-      while(!stopping){
+      while(!stopping && !idleExit){
         recoverPreparation();
         if(stopping)break;
         pendingClaims++;
@@ -423,7 +424,9 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         if(stopping)break;
         if(!claim){
           // 空闲进程继续查看队列，避免新短任务被另一个长请求挡住。
-          if(activeCount===0 && pendingClaims===0)break;
+          // 全局空闲时让全部槽一起结束本轮，下一轮完整重建。
+          // 不能只退出最后一个 claim 返回空的槽，否则睡眠中的槽会独自接走后续长队列。
+          if(activeCount===0 && pendingClaims===0){idleExit=true;break;}
           await new Promise(resolve=>setTimeout(resolve,Math.max(100,deps.pollMs ?? 1000)));
           continue;
         }

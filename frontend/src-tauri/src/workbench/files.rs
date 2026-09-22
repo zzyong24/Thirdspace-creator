@@ -17,6 +17,35 @@ use std::{
     path::{Path, PathBuf},
 };
 use unicode_normalization::UnicodeNormalization;
+use serde::{Deserialize, Serialize};
+
+const MAX_SAFE_VERSION: u64 = 9_007_199_254_740_991;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FileWriteRecord {
+    pub schema_version: u32,
+    pub scope_key: String,
+    pub operation_id: String,
+    pub request_digest: String,
+    pub path: String,
+    pub expected_version: Option<u64>,
+    pub observed_base_version: u64,
+    pub content_sha256: String,
+    pub byte_length: u64,
+    pub admitted_attempt: u32,
+    pub fence_token: String,
+    pub state: String,
+    pub result_version: Option<u64>,
+}
+
+pub fn file_request_digest(scope: &str, operation: &str, path: &str, expected: Option<u64>, hash: &str, size: u64) -> String {
+    use sha2::{Digest, Sha256};
+    let encoded = serde_json::to_vec(&serde_json::json!([
+        "creatoros-file-write-v1", scope, operation, path, expected, hash, size
+    ])).expect("file identity is JSON");
+    format!("sha256:{:x}", Sha256::digest(encoded))
+}
 
 #[derive(Debug)]
 pub enum FileError {
@@ -25,6 +54,9 @@ pub enum FileError {
     Conflict { current_version: u64 },
     TooLarge,
     UnsupportedPlatform,
+    OperationConflict,
+    OperationPending,
+    InvalidRecord,
 }
 impl From<io::Error> for FileError {
     fn from(value: io::Error) -> Self {
@@ -105,6 +137,125 @@ pub struct TaskFiles {
     state: std::fs::File,
 }
 impl TaskFiles {
+    /// The ledger operation owns a durable receipt. Re-entry never retries a
+    /// prepared write; only a matching committed receipt can be replayed.
+    #[cfg(any(unix, windows))]
+    pub fn write_operation(&self, operation: &str, attempt: u32, fence: &str, path: &str,
+        content: &[u8], expected: Option<u64>) -> Result<u64, FileError> {
+        use sha2::{Digest, Sha256};
+        let path = validate_relative(path)?.join("/");
+        if operation.is_empty() || operation.len() > 160 || operation.chars().any(char::is_control) ||
+            attempt == 0 || fence.is_empty() || fence.len() > 160 || fence.chars().any(char::is_control) ||
+            expected.is_some_and(|v| v >= MAX_SAFE_VERSION) { return Err(FileError::InvalidPath); }
+        if content.len() > 1_000_000 { return Err(FileError::TooLarge); }
+        let hash = format!("sha256:{:x}", Sha256::digest(content));
+        let digest = file_request_digest(&self.scope_key, operation, &path, expected, &hash, content.len() as u64);
+        let _lock = self.operation_lock()?;
+        if let Some(record) = self.operation_record(operation)? {
+            if record.request_digest != digest { return Err(FileError::OperationConflict); }
+            return record.result_version.ok_or(FileError::OperationPending);
+        }
+        // Deterministic path/CAS rejection happens before the WAL is prepared.
+        let base = self.validate_write_locked(&path, expected)?;
+        let mut record = FileWriteRecord {schema_version:1, scope_key:self.scope_key.clone(), operation_id:operation.into(),
+            request_digest:digest, path:path.clone(), expected_version:expected, observed_base_version:base,
+            content_sha256:hash, byte_length:content.len() as u64, admitted_attempt:attempt, fence_token:fence.into(),
+            state:"prepared".into(), result_version:None};
+        self.save_operation_record(&record)?;
+        self.file_write_fault("prepared")?;
+        let version = self.write_locked(&path, content, base)?;
+        self.file_write_fault("metadata")?;
+        record.state = "committed".into();
+        record.result_version = Some(version);
+        self.save_operation_record(&record)?;
+        self.file_write_fault("committed")?;
+        Ok(version)
+    }
+
+    #[cfg(any(unix, windows))]
+    pub fn file_receipt(&self, operation: &str, path: &str, expected: Option<u64>, hash: &str, size: u64)
+        -> Result<Option<FileWriteRecord>, FileError> {
+        let path = validate_relative(path)?.join("/");
+        if operation.is_empty() || operation.len() > 160 || operation.chars().any(char::is_control) || size > 1_000_000 ||
+            expected.is_some_and(|v| v >= MAX_SAFE_VERSION) || hash.len()!=71 || !hash.starts_with("sha256:") ||
+            !hash[7..].bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) { return Err(FileError::InvalidPath); }
+        let _lock = self.operation_lock()?;
+        let record = self.operation_record(operation)?;
+        if record.as_ref().is_some_and(|r| r.request_digest != file_request_digest(&self.scope_key, operation, &path, expected, hash, size)) {
+            return Err(FileError::OperationConflict);
+        }
+        Ok(record)
+    }
+
+    #[cfg(any(unix, windows))]
+    fn operation_record(&self, operation: &str) -> Result<Option<FileWriteRecord>, FileError> {
+        let Some(bytes) = self.read_operation_bytes(operation)? else { return Ok(None); };
+        let r: FileWriteRecord = serde_json::from_slice(&bytes).map_err(|_| FileError::InvalidRecord)?;
+        let canonical = validate_relative(&r.path).map_err(|_| FileError::InvalidRecord)?.join("/");
+        if r.schema_version!=1 || r.scope_key!=self.scope_key || r.operation_id!=operation || canonical!=r.path ||
+            r.observed_base_version>=MAX_SAFE_VERSION || r.expected_version.is_some_and(|v| v>=MAX_SAFE_VERSION || v!=r.observed_base_version) ||
+            (r.expected_version.is_none() && r.observed_base_version!=0) || r.byte_length>1_000_000 ||
+            r.admitted_attempt==0 || r.fence_token.is_empty() || r.fence_token.len()>160 ||
+            r.content_sha256.len()!=71 || !r.content_sha256.starts_with("sha256:") ||
+            !r.content_sha256[7..].bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) ||
+            r.request_digest!=file_request_digest(&self.scope_key,operation,&r.path,r.expected_version,&r.content_sha256,r.byte_length) ||
+            !matches!((r.state.as_str(),r.result_version),("prepared",None)) &&
+            !(r.state=="committed" && r.result_version==Some(r.observed_base_version+1)) { return Err(FileError::InvalidRecord); }
+        Ok(Some(r))
+    }
+
+    fn file_write_fault(&self, _stage: &str) -> Result<(), FileError> {
+        #[cfg(test)]
+        if FILE_WRITE_FAULT.with(|point| point.borrow().as_deref()==Some(_stage)) {
+            return Err(io::Error::other(format!("isolated file write fault: {_stage}")).into());
+        }
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    fn operation_lock(&self) -> Result<File, FileError> { self.lock() }
+
+    #[cfg(unix)]
+    fn read_operation_bytes(&self, operation: &str) -> Result<Option<Vec<u8>>, FileError> {
+        let read = || -> Result<Vec<u8>, FileError> {
+            let dir = open_dir_at(self.state.as_raw_fd(), "file-operations")?;
+            let file = open_file_at(dir.as_raw_fd(), &key(operation)?, libc::O_RDONLY, 0)?;
+            let mut bytes = Vec::new();
+            file.take(16_385).read_to_end(&mut bytes)?;
+            if bytes.len()>16_384 {return Err(FileError::InvalidRecord);}
+            Ok(bytes)
+        };
+        match read() { Ok(value)=>Ok(Some(value)), Err(FileError::Io(e)) if e.kind()==io::ErrorKind::NotFound=>Ok(None), Err(e)=>Err(e) }
+    }
+
+    #[cfg(unix)]
+    fn save_operation_record(&self, record: &FileWriteRecord) -> Result<(), FileError> {
+        let dir = ensure_dir(self.state.as_raw_fd(), "file-operations")?;
+        self.state.sync_all()?; // includes the first creation of the journal directory
+        let temp = format!(".creatoros-tmp-{}", rand::random::<u64>());
+        let mut file = open_file_at(dir.as_raw_fd(), &temp, libc::O_WRONLY|libc::O_CREAT|libc::O_EXCL, 0o600)?;
+        let result = (|| -> Result<(), FileError> {
+            file.write_all(&serde_json::to_vec(record).map_err(|_| FileError::InvalidRecord)?)?;
+            file.sync_all()?;
+            rename_at(dir.as_raw_fd(), &temp, dir.as_raw_fd(), &key(&record.operation_id)?)?;
+            dir.sync_all()?;
+            Ok(())
+        })();
+        if result.is_err() { let _=unlink_at(dir.as_raw_fd(),&temp); }
+        result
+    }
+
+    #[cfg(unix)]
+    fn validate_write_locked(&self, path: &str, expected: Option<u64>) -> Result<u64, FileError> {
+        let (parent, name) = self.parent(path, true)?;
+        let hash = Self::hash_at(parent.as_raw_fd(), &name)?;
+        let version = self.current_version(path, hash.as_deref())?;
+        if version>=MAX_SAFE_VERSION {return Err(FileError::InvalidPath);}
+        if expected.map_or(hash.is_some() || version!=0, |v| v!=version) {
+            return Err(FileError::Conflict {current_version:version});
+        }
+        Ok(version)
+    }
     /// `base` is provisioned by the desktop host, and IDs come only from the
     /// backend execution lease. Never construct this from invocation input.
     pub fn new(
@@ -318,6 +469,10 @@ impl TaskFiles {
     ) -> Result<u64, FileError> {
         let path = validate_relative(path)?.join("/");
         let _lock = self.lock()?;
+        self.write_locked(&path, content, expected_version)
+    }
+    #[cfg(unix)]
+    fn write_locked(&self, path: &str, content: &[u8], expected_version: u64) -> Result<u64, FileError> {
         let (parent, name) = self.parent(&path, true)?;
         let current_hash = Self::hash_at(parent.as_raw_fd(), &name)?;
         let version = self.current_version(&path, current_hash.as_deref())?;
@@ -343,6 +498,7 @@ impl TaskFiles {
             tmp.sync_all()?;
             rename_at(parent.as_raw_fd(), &temp, parent.as_raw_fd(), &name)?;
             parent.sync_all()?;
+            self.file_write_fault("data")?;
             let versions = self.version_dir()?;
             let record = Self::record_name(&path);
             let meta_temp = format!(
@@ -436,6 +592,8 @@ impl TaskFiles {
         )))
     }
 }
+#[cfg(test)]
+thread_local! { static FILE_WRITE_FAULT: std::cell::RefCell<Option<String>> = const { std::cell::RefCell::new(None) }; }
 #[cfg(unix)]
 fn c(s: &str) -> Result<CString, FileError> {
     CString::new(s).map_err(|_| FileError::InvalidPath)
@@ -487,6 +645,11 @@ fn ensure_dir(dir: RawFd, name: &str) -> Result<File, FileError> {
                     return Err(err.into());
                 }
             }
+            // Persist the containing directory entry, including a concurrent
+            // creator's entry, before a descendant journal can claim commit.
+            if unsafe { libc::fsync(dir) } != 0 {
+                return Err(io::Error::last_os_error().into());
+            }
             open_dir_at(dir, name)
         }
         Err(e) => Err(e),
@@ -512,6 +675,60 @@ fn unlink_at(dir: RawFd, name: &str) -> Result<(), FileError> {
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
+    #[test]
+    fn file_journal_fault_windows_never_upgrade_prepared_from_matching_bytes() {
+        for stage in ["prepared", "data", "metadata", "committed"] {
+            let temp=std::env::temp_dir().join(format!("t1026-journal-{}",rand::random::<u64>()));
+            let files=TaskFiles::new(&temp,"u","a","t").unwrap();
+            FILE_WRITE_FAULT.with(|point| *point.borrow_mut()=Some(stage.into()));
+            let failed=files.write_operation("op",1,"f","report",b"hello",Some(0));
+            FILE_WRITE_FAULT.with(|point| *point.borrow_mut()=None);
+            assert!(failed.is_err());
+            drop(files);
+            let files=TaskFiles::new(&temp,"u","a","t").unwrap();
+            let hash=format!("sha256:{}",TaskFiles::digest(b"hello"));
+            let receipt=files.file_receipt("op","report",Some(0),&hash,5).unwrap().unwrap();
+            assert_eq!(receipt.state,if stage=="committed"{"committed"}else{"prepared"});
+            let before=files.read("report").unwrap();
+            let replay=files.write_operation("op",2,"new","report",b"hello",Some(0));
+            if stage=="committed" {assert_eq!(replay.unwrap(),1);} else {assert!(matches!(replay,Err(FileError::OperationPending)));}
+            assert_eq!(files.read("report").unwrap(),before);
+            std::fs::remove_dir_all(temp).unwrap();
+        }
+    }
+
+    #[test]
+    fn file_journal_null_identity_cas_before_prepare_and_scope() {
+        let temp=std::env::temp_dir().join(format!("t1026-journal-{}",rand::random::<u64>()));
+        let files=TaskFiles::new(&temp,"u","a","t").unwrap();
+        assert_eq!(files.write_operation("op",1,"f","e\u{301}.md",b"hello",None).unwrap(),1);
+        let hash=format!("sha256:{}",TaskFiles::digest(b"hello"));
+        let r=files.file_receipt("op","é.md",None,&hash,5).unwrap().unwrap();
+        assert_eq!((r.expected_version,r.observed_base_version,r.result_version),(None,0,Some(1)));
+        assert!(matches!(files.write_operation("op",2,"g","é.md",b"hello",Some(0)),Err(FileError::OperationConflict)));
+        assert!(matches!(files.write_operation("conflict",1,"f","é.md",b"hello",None),Err(FileError::Conflict{..})));
+        assert!(files.file_receipt("conflict","é.md",None,&hash,5).unwrap().is_none());
+        assert!(files.write_operation("invalid",1,"f","../escape",b"hello",None).is_err());
+        assert!(files.operation_record("invalid").unwrap().is_none());
+        assert!(files.write_operation("unsafe",1,"f","x",b"hello",Some(MAX_SAFE_VERSION)).is_err());
+        assert!(files.operation_record("unsafe").unwrap().is_none());
+        let foreign=TaskFiles::new(&temp,"u","other","t").unwrap();
+        assert!(foreign.file_receipt("op","é.md",None,&hash,5).unwrap().is_none());
+        let journal=files.state.as_raw_fd();
+        let dir=open_dir_at(journal,"file-operations").unwrap();
+        let mut corrupt=open_file_at(dir.as_raw_fd(),&key("op").unwrap(),libc::O_WRONLY|libc::O_TRUNC,0).unwrap();
+        corrupt.write_all(b"{broken").unwrap();
+        assert!(matches!(files.file_receipt("op","é.md",None,&hash,5),Err(FileError::InvalidRecord)));
+        assert!(matches!(files.write_operation("op",2,"g","é.md",b"hello",None),Err(FileError::InvalidRecord)));
+        std::fs::remove_dir_all(temp).unwrap();
+    }
+
+    #[test]
+    fn file_journal_utf8_digest_matches_typescript_vector() {
+        assert_eq!(file_request_digest("scope","op-甲","草稿/é.md",None,
+            "sha256:efd3cde8796eef45558bd5c45ab2a38800dcdc46a83842f30b1bb5bcdac66bd8",11),
+            "sha256:4ec40ad0265a71c7b3cbf3bead0c31cabf32b03cad663e485a943ccb5e633af9");
+    }
     #[test]
     fn unicode_space_version_and_conflict() {
         let temp = std::env::temp_dir().join(format!("creatoros-t1007-{}", rand::random::<u64>()));

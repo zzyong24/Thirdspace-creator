@@ -35,4 +35,8 @@ export const workbenchOperations={
     response:z.object({metadata:workbenchArtifactSchema,rendererPolicy:z.string(),diagnostics,format,mime:z.string(),filename:z.string(),size:z.number().int().nonnegative(),hash,sourceHash:hash,encoding:z.literal("base64"),data:z.string()}).strict(),fr}),
   reconcileWorkbenchArtifact:defineEndpoint({id:"workbench.artifacts.reconcile",method:"POST",path:"/workbench/conversations/:conversationId/artifacts/reconcile",params:conversationParams,
     body:z.object({operationId:id}).strict(),response:z.object({artifactId:id,status:z.string(),lastErrorCode:z.string().nullable()}).strict(),fr}),
+  reconcileWorkbenchFile:defineEndpoint({id:"workbench.files.reconcile",method:"POST",path:"/workbench/tasks/:taskId/files/reconcile",params:taskParams,
+    body:z.object({operationId:id}).strict(),response:z.object({taskId:id,operationId:id,status:z.enum(["settled","unknown"]),
+      verificationKind:z.literal("native_receipt").nullable(),version:z.number().int().nonnegative().nullable(),
+      hash:z.string().regex(/^sha256:[a-f0-9]{64}$/).nullable(),size:z.number().int().nonnegative().nullable()}).strict(),fr}),
 } as const;

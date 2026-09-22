@@ -82,6 +82,7 @@ import { createCollectionToolPorts } from "@creatoros/backend/modules/intelligen
 import { resolveExecutionWorkerPath, resolveAgenticWorkerPath, resolveIntelligenceGenerationWorkerPath, resolveIntelligenceTranscriptWorkerPath, resolveEmbeddingWorkerPath, resolveFlywheelWorkerPath, resolveModelProbeWorkerPath } from "./execution-worker-path";
 import { createExecutionScheduledChildService, createModelWorkerDispatcher, createAgenticWorkerDispatcher, DEFAULT_AGENTIC_SYSTEM_PROMPT } from "@creatoros/backend/modules/execution";
 import { createNativeFilesWorkbenchHost } from "./workbench-native-host";
+import { createNativeFileRecoveryService } from "./workbench-file-recovery";
 import { createWorkbenchArtifactHost } from "./workbench-artifact-host";
 import { createWorkbenchBrowserHost } from "./workbench-browser-host";
 import { createScriptSimilarityEvaluator, createTopicPreferenceSubmission, createArtifactContextReaders, createStructuredBusinessExecutionService } from "@creatoros/backend/modules/ai-runtime";
@@ -2068,7 +2069,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(!(await trafficService.pending(ctx,1)).length)return {queued,jobRunId:null,aiTaskId:null};
       const run=await startTrafficJob(ctx);return {queued,jobRunId:run.jobRunId||null,aiTaskId:run.aiTaskId||null};
     },
-  });
+  },publicationSyncService);
 
   // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It
@@ -4050,7 +4051,7 @@ FAVORITES_PROMOTE_PER_RUN
   // (D5,scheduledJobs.runNow)共用同一份执行端口。
   // ai.createTask/runs.*/dispatch 绑工厂内可见的 aiService/schedulingService/
   // dispatchScheduledCollection。
-  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
+  const {triggerDeps,bootstrapDouyinOnBind,schedulingWithRunNow}=createSchedulingControls({assertCommentPublications:async(ctx,ids)=>{for(const id of ids)await trafficService.assertPublication(ctx,id);},aiService,schedulingService,platformAccountService,dispatchScheduledCollection,deps,ensureDailyRun:(c,id)=>dailyTopicRunIntents.ensureRunForTask(c,id),ensureCollectionRun:(c,id)=>scheduledFlywheel.ensureRunForTask(c,id),ensureCanonicalRubricForAccount:id=>ensureCanonicalRubricForAccount(id),migrateProfile:async(ctx)=>{    if (ctx.accountId) {
       try {
         const fromDir = await douyinAuthDirFor(null,undefined,ctx.userId); // _default
         const toDir = await douyinAuthDirFor(ctx.accountId,undefined,ctx.userId);
@@ -5443,6 +5444,13 @@ FAVORITES_PROMOTE_PER_RUN
     },
   });
   const fileWorkbenchHost=createNativeFilesWorkbenchHost(db,{now:deps.now});
+  const fileRecovery=createNativeFileRecoveryService(db,{now:deps.now,shouldStop:()=>stoppingPreparation,
+    afterReconciled:async(taskId,control)=>{
+      if(stoppingPreparation||control?.shouldStop())return;
+      const report=await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});
+      if(report.requeued&&!stoppingPreparation&&!control?.shouldStop())chatWorker?.start();
+    },
+  });
   const workbenchBlobs=createWorkbenchBlobService(objectStorageForCtx);
   const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
   const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
@@ -5479,6 +5487,7 @@ FAVORITES_PROMOTE_PER_RUN
     capabilities:()=>({platform:workbenchHost?.platform??null,capabilities:selectBuiltinWorkbenchCapabilities(workbenchHost),builtins:workbenchBuiltins,dependencyLock:workbenchDependencyLock}),
     render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(workbenchPreviewRuntime,ctx,taskId,artifactId,version,format),
     reconcile:artifactReconciler.reconcile,
+    reconcileFile:fileRecovery.reconcile,
   });
   const chatRuntime: ChatRuntime = {
     ...(workbenchHost?{workbenchHost}:{}),
@@ -5790,6 +5799,7 @@ FAVORITES_PROMOTE_PER_RUN
   recoveryWake=createRecoveryWakeCoordinator({
     intervalMs:2000,
     lanes:{
+      workbench_files:control=>fileRecovery.scan(control),
       radar_project_upgrade: control => radarProjectQueue.tick(control),
       script_candidate:control=>drainProjectScriptCandidateQueue(projectScriptRunnerDeps,5,control),
       topic_preview:control=>drainIntelligenceTopicPreviewQueue(topicPreviewRunnerDeps,{...control,maxTasks:5}),

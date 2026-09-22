@@ -4,6 +4,7 @@ import {
   audienceSnapshotResource,
 } from "../../src/resources/analytics";
 import { analyticsOperations } from "../../src/operations/analytics";
+import type { Endpoint } from "../../src/endpoints";
 
 describe("analytics contract", () => {
   it("parses a MetricSnapshot resource", () => {
@@ -78,4 +79,50 @@ describe("analytics contract", () => {
       analyticsOperations.getPublicationAnalytics.fr.length,
     ).toBeGreaterThan(0);
   });
+});
+
+describe('T-1027 当前账号评论失败重试契约',()=>{
+ const endpoint=(id:string)=>{
+  const found=Object.values(analyticsOperations).find(operation=>operation.id===id);
+  expect(found,`缺少正式 operation ${id}`).toBeDefined();
+  return found as Endpoint;
+ };
+ const failureVersion=`sha256:${'a'.repeat(64)}`;
+ const failure={publicationId:'pub-real',externalId:'aweme-real',attemptedAt:'2026-09-22T04:00:00.000Z',retryAt:'2026-09-22T06:00:00.000Z',lastSucceededAt:'2026-09-22T03:00:00.000Z',failures:2,failureVersion};
+
+ it('分页失败清单返回真实作品与失败基线，不接受请求体账号覆盖',()=>{
+  const op=endpoint('analytics.comments.failures.list');
+  expect(op).toMatchObject({method:'GET',path:'/analytics/comments/failures',isList:true});
+  expect(op.query!.parse({})).toEqual({page:1,pageSize:20});
+  expect(op.query!.safeParse({pageSize:101}).success).toBe(false);
+  expect(op.response.parse(failure)).toEqual(failure);
+  expect(op.response.safeParse({...failure,failures:0}).success).toBe(false);
+  expect(op.response.safeParse({...failure,failureVersion:'invented'}).success).toBe(false);
+  expect(op.body).toBeUndefined();
+ });
+
+ it('重试只接受1–100个不重复的真实ID及失败基线，不接受清历史/成功水位/平台冷却参数',()=>{
+  const op=endpoint('analytics.comments.retry');
+  expect(op).toMatchObject({method:'POST',path:'/analytics/comments/retry',isList:false});
+  const body={items:[{publicationId:'pub-real',failureVersion}]};
+  expect(op.body!.parse(body)).toEqual(body);
+  for(const invalid of [
+   {items:[]},
+   {items:Array.from({length:101},(_,i)=>({publicationId:`pub-${i}`,failureVersion}))},
+   {items:[body.items[0],body.items[0]]},
+   {items:[{publicationId:'pub-real'}]},
+   {items:[{publicationId:'pub-real',failureVersion:'wrong'}]},
+   {...body,accountId:'other-account'},
+   {...body,resetGateway:true},
+   {...body,retryAt:'2000-01-01T00:00:00.000Z'},
+   {items:[{...body.items[0],failures:0,lastSucceededAt:null}]},
+  ])expect(op.body!.safeParse(invalid).success).toBe(false);
+ });
+
+ it('重试回执仅声明作品重试时间已调整，不冒充已抓取或成功',()=>{
+  const op=endpoint('analytics.comments.retry');
+  const response={items:[{publicationId:'pub-real',failureVersion,retryAt:'2026-09-22T04:30:00.000Z'}],updated:1};
+  expect(op.response.parse(response)).toEqual(response);
+  expect(op.response.safeParse({...response,status:'succeeded',itemsNew:1}).success).toBe(false);
+ });
 });

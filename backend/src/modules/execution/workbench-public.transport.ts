@@ -4,7 +4,7 @@ import type {createWorkbenchPublicService} from "./workbench-public.service";
 import type {createExecutionStreamService} from "./execution-stream.service";
 import type {createWorkbenchArtifactReadService} from "./workbench-artifact.service";
 
-export const WORKBENCH_OP_IDS=["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile"] as const;
+export const WORKBENCH_OP_IDS=["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const;
 export function createWorkbenchPublicTransport(deps:{
   tasks:ReturnType<typeof createWorkbenchPublicService>;
   stream:Pick<ReturnType<typeof createExecutionStreamService>,"read">;
@@ -12,6 +12,7 @@ export function createWorkbenchPublicTransport(deps:{
   capabilities:()=>unknown;
   render:(ctx:RequestContext,taskId:string,artifactId:string,version:number,format:"raw"|"preview"|"png"|"pdf")=>Promise<unknown>;
   reconcile:(ctx:RequestContext,conversationId:string,operationId:string)=>Promise<unknown>;
+  reconcileFile?:(ctx:RequestContext,taskId:string,operationId:string)=>Promise<unknown>;
 }):Transport{return {async request(endpoint,input,ctx){
   if(!ctx)throw new AuthenticationError();
   if(!ctx.accountId)throw new OwnershipError("当前账号不存在");
@@ -25,6 +26,7 @@ export function createWorkbenchPublicTransport(deps:{
     case "workbench.artifacts.read":{const p=ENDPOINTS.readWorkbenchArtifact.params.parse(i.params),q=ENDPOINTS.readWorkbenchArtifact.query.parse(i.query??{});const r=await deps.artifacts.read(ctx,p.taskId,p.artifactId,p.version,q.offset,q.limit);data={metadata:r.metadata,total:r.total,offset:q.offset,nextOffset:r.nextOffset,encoding:"base64",data:Buffer.from(r.bytes).toString("base64")};break;}
     case "workbench.artifacts.render":{const p=ENDPOINTS.renderWorkbenchArtifact.params.parse(i.params),q=ENDPOINTS.renderWorkbenchArtifact.query.parse(i.query??{});data=await deps.render(ctx,p.taskId,p.artifactId,p.version,q.format);break;}
     case "workbench.artifacts.reconcile":{const p=ENDPOINTS.reconcileWorkbenchArtifact.params.parse(i.params),b=ENDPOINTS.reconcileWorkbenchArtifact.body.parse(i.body);data=await deps.reconcile(ctx,p.conversationId,b.operationId);break;}
+    case "workbench.files.reconcile":{const p=ENDPOINTS.reconcileWorkbenchFile.params.parse(i.params),b=ENDPOINTS.reconcileWorkbenchFile.body.parse(i.body);if(!deps.reconcileFile)throw new UnsupportedOperationError(endpoint.id);data=await deps.reconcileFile(ctx,p.taskId,b.operationId);break;}
     default:throw new UnsupportedOperationError(endpoint.id);
   }
   return {data:endpoint.response.parse(data),meta:{requestId:ctx.requestId}};

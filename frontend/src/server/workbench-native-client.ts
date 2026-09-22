@@ -7,7 +7,12 @@ export type NativeFileAction =
   | { kind: "list"; path?: string }
   | { kind: "read"; path: string; offset: number; limit: number }
   | { kind: "stat"; path: string }
-  | { kind: "write"; path: string; contentBase64: string; expectedVersion: number };
+  | { kind: "write"; path: string; contentBase64: string; expectedVersion: number | null };
+
+export type NativeFileReceiptQuery = {
+  scope: {userId:string;accountId:string;taskId:string;attempt:number;fenceToken:string};
+  operationId:string;path:string;expectedVersion:number|null;contentSha256:string;byteLength:number;
+};
 
 export type NativeCommandAction =
   | { kind: "command_run"; argv: string[]; cwd: string; runtimeId: "bundled-node" | "bundled-python" | "approved-program"; timeoutMs: number; stdinRef?: string }
@@ -71,6 +76,18 @@ function send(socketPath: string, request: object, operationId: string, isWrite:
     socket.once("error", () => fail("NATIVE_UNAVAILABLE"));
     socket.once("close", () => fail("NATIVE_CONNECTION_CLOSED"));
   });
+}
+
+/** Named read-only recovery port. Scope is supplied by the owned backend snapshot,
+ * never by a model or a public request. No stale lease path can dispatch a write. */
+export function createNativeFileReceiptReader(options:{platform?:NodeJS.Platform;desktop?:boolean;socketPath?:string}={}) {
+  return async(query:NativeFileReceiptQuery):Promise<unknown>=>{
+    const platform=options.platform??process.platform,socketPath=options.socketPath??process.env.CREATOROS_WORKBENCH_SOCKET;
+    if(!["darwin","win32"].includes(platform)||!(options.desktop??process.env.CREATOROS_DESKTOP==="1")||!socketPath)
+      throw new NativeFileError("NATIVE_UNAVAILABLE",false);
+    const {scope,operationId,path,expectedVersion,contentSha256,byteLength}=query;
+    return send(socketPath,{operationId,scope,action:{kind:"file_receipt",targetOperationId:operationId,path,expectedVersion,contentSha256,byteLength}},operationId,false);
+  };
 }
 
 /**

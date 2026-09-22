@@ -79,3 +79,49 @@ flowchart LR
 独审追加发现“有效首屏 + 请求属于 B 但后页混合 A/B”会漏记后页未解决状态，并借首屏 stable_end 误报完成。新增未恢复/同页恢复两条用例，`mixed-page-red.log` 当场 1 failed / 143 passed。修复仅为当前作品请求页保留 `identityUnverified` 状态，同页较新有效响应可恢复；完全无关的 A 迟到请求仍只计忽略，不否决 B 合法成功。明确属于 B 的记录继续保留。
 
 最终前端 **150/150**：`/tmp/t1027-verification/mixed-page-green.log`；最终 frontend typecheck **通过**：`/tmp/t1027-verification/mixed-page-typecheck.log`。`git diff --check` 通过。
+
+## 公开 CLI 评论失败清单与重试
+
+安装第三候选 `048fd032` 的 run `run-79306813-484c-48d0-8a2a-dc1189022c72` 在 0.6 秒内因 62 项历史失败、无 due 作品结束，works=[]。这不是网站响应证据。动态读取当前安装 CLI 的 operations list/describe 确认没有失败清单/解除作品 backoff 的公开入口，未读用户数据库或连接文件。
+
+经用户授权与 Kuhn 方案评审，新增正式 `analytics.comments.failures.list` / `analytics.comments.retry`；具体 schema 见 SPEC。list 只返回真实可采集且 externalId 匹配的当前账号失败项，公开字段不含原异常；baseline 包含 retryAt 等完整失败状态和错误哈希。retry 1–100 唯一 ID，全批事务归属验证、行锁、baseline 比较及条件更新，只提前 retryAt，保留失败事实/成功水位/评论/原任务。CLI gateway 相同 key+输入先回原 receipt，旧 baseline 不破坏幂等；换输入冲突。
+
+新增回归证据（均在 `/tmp/t1027-verification/`）：
+
+| 日志 | 结果 |
+| --- | --- |
+| `cli-retry-contract-red.log` | 原始 contract 红测 4 failed / 9 passed |
+| `cli-retry-service-red.log` | 原始服务/到期判据红测 4 failed / 1 passed |
+| `cli-retry-contract-green.log` | 两文件 13/13 |
+| `cli-retry-backend-final.log` | 六文件 36/36 |
+| `cli-retry-frontend-final.log` | 三文件 152/152，含真实 HTTP POST dispatch + gateway + analytics transport + PGlite service |
+| `cli-retry-typecheck.log` | frontend typecheck 通过 |
+| `cli-retry-boundary.log` | 边界无新增违规，基线 5 |
+| `cli-retry-backend-types.log` | backend 全量仍有范围外类型错误；本次 analytics 文件无报错 |
+
+服务测试覆盖稳定分页/隐藏与 externalId 变化/跨账号拒绝/整批失败回滚/并发旧 baseline 只成功一次/并发新失败不被旧 retry 覆盖/只改 retryAt/成功水位新鲜但失败到期仍实际进入 collector.readCommentsForWorks。HTTP dispatch 测试在新失败改变 baseline 后使用原 key+输入，确实返回原 receipt；不同输入、新 key 携旧 baseline、缺 apply 均拒绝。真实 fetchDouyinCommentsForWorks 遇 gateway 冷却仍返回 truncated，未导航抓取并关闭浏览器资源。
+
+早期全 contract 的 `cli-retry-contract-all.log` 为 252 passed / 1 failed：当时唯一失败是 registry 显式清单未加入新路由。主线已补登记；当前包含 comments 与 file reconcile 新路由的全 contract 为 254/254，见 `scoped-contract-all.log`。
+
+## 少量作品运行范围与最终定向验证
+
+经主线登记写域、用户授权与 Kuhn 方案独审，已实现 `scheduledJobs.runNow.body.publicationIds`（1–20 个唯一真实 ID，仅 comments）。任务保存排序后的固定选择，不修改持久 job.target 或 cron。collector 仅处理选中且 due 的作品；原 job 的单作品 awemeId 不覆盖显式选择。诊断分别提供选中范围与当前账号失败数，其他作品历史失败不否决本次选中范围的成功。
+
+运行去重执行两层核对：result.deduped 返回时读取持久任务；ai.createTask 自身返回旧任务时，在 ensureRun/dispatch 前读取持久任务。只有 jobId 与选择完全一致才复用，范围不同或无法核实则冲突。回归覆盖全量/少量两个并发方向、同范围乱序、createTask 内部复用但外层未标 deduped、未知作品启动前拒绝，以及真实 controls → 持久 AI task/run → collector 链路。改变后续 job.target 不会扩大原任务范围。
+
+新增红测日志（均为当场执行）：`scoped-run-contract-red.log`（1 failed / 6 passed）、`scoped-run-service-red.log`（3 failed / 4 passed）、`scoped-collector-red.log`（1 failed / 10 passed，复现显式选择被原单作品 awemeId 覆盖）。
+
+| 命令 | 结果 | 日志（目录 `/tmp/t1027-verification/`） |
+| --- | --- | --- |
+| `pnpm --dir contract test` | 254/254 | `scoped-contract-all.log` |
+| `pnpm --dir backend exec vitest run src/application/scheduling/controls.test.ts src/application/collection/comments.test.ts src/application/collection/comments-public-diagnostics.test.ts src/modules/ai-runtime/scheduled-collection-runner.test.ts src/modules/analytics/comment-retry.integration.test.ts src/modules/analytics/sync-state.service.test.ts src/modules/analytics/sync-policy.test.ts` | 47/47 | `scoped-backend-final.log` |
+| `pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts src/server/ingestion/comment-collection-plan.test.ts src/server/ingestion/douyin-cdp-comment-retry.test.ts` | 152/152 | `scoped-frontend-final.log` |
+| `node orchestrator/process/boundary-scan.mjs` | 无新增违规，基线 5 | `scoped-boundary.log` |
+| `pnpm --dir backend exec tsc --noEmit --pretty false` | 范围外既有错误仍在，本次 comments/analytics/controls 文件无报错 | `scoped-backend-types.log` |
+| `pnpm --dir frontend typecheck` | 未通过；仅并行任务的 workbench-file-recovery.test.ts 两处 NativeLeasePort 账号类型错误，已交负责人修复 | `scoped-typecheck-final.log` |
+
+Kuhn 最终只读独审已明确通过、未发现 selected runNow 实现阻断缺陷。复核范围包括严格契约、两层持久范围去重、原任务固定选择、双向并发冲突、真实 task/run → collector 测试，以及上述 47/254/152 条原始绿测日志。独审未代替重跑类型检查；本项实现与测试冻结，全局前端类型检查尚欠并行文件测试修复。
+
+冻结交接补充：Carver 随后报告已修复其测试 NativeLeasePort 非空账号校验，`pnpm --dir frontend exec tsc --noEmit --pretty false` exit 0，日志 `/tmp/t1026-file-recovery-typecheck.log`；此为负责人回报，不改写上表本次实际失败日志。最终全局类型检查由主线统一执行。本项不修改 Carver 文件，不继续改代码，任务验收状态留待主线安装实测后收口。
+
+后续真实安装采集由主线在第四候选中经公开 CLI 选择少量失败 ID 执行。当前隔离测试不代替网站 E2E；作品 retry 不解除平台 cooldown，无 due/冷却返回也不证明网站根因或采集成功。未读取私有数据库或连接文件。
