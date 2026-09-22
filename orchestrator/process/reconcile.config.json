@@ -20,9 +20,15 @@
   ],
   "lessons": [
     {
+      "led": "LED-056",
+      "what": "宿主支持新工具版本，但真实内置目录筛选或新任务冻结丢掉该能力",
+      "check": "pnpm --dir frontend exec vitest run src/server/workbench-builtin-manifest.test.ts src/server/prepare-chat-reply.test.ts src/server/workbench-artifact-register.integration.test.ts --retry=0",
+      "onFail": "必须经正式selector、公开capabilities、prepareChatReply冻结与真实工具端口验收；精确声明各工具当前版本，保留旧任务冻结定义，不用直接注入host目录代替生产装配。"
+    },
+    {
       "led": "LED-055",
       "what": "历史stop续行读取当前计划，导致模型请求重放指纹变化或原任务再次阻断",
-      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts src/modules/execution/chat-model-retry-anchor.test.ts src/modules/execution/chat-model-pause-recovery.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
       "onFail": "恢复按原模型调用锚点读取已证明历史计划，保留严格请求摘要/原账本费用，不以最新状态替代历史或宽松忽略mismatch。"
     },
     {

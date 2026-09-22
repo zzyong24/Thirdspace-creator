@@ -26,13 +26,13 @@ it('真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同k
  shared.gateway=makeGateway();
  await store.db.insert(publications).values({id:'p',userId:'u',accountId:'a',externalId:'123',platform:'douyin',status:'published',contentOutputId:'out',accountReference:'account',createdAt:stamp,updatedAt:stamp});
  const publishing=createPublishingService({db:store.db,now:()=>stamp,nextId:()=>''});const traffic=createTrafficService(store.db,{now:()=>stamp,publishing});
- const pages:import('@playwright/test').Page[]=[];const open=vi.fn(async()=>{const context=await browser.newContext();await context.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<title>fixture</title><nav><a href="/creator-micro/interactive/comment" onclick="event.preventDefault();window.clicks=(window.clicks||0)+1;history.pushState({},\'\',this.href)">评论</a></nav><main><h1>受控页面</h1></main>'}));return {newPage:async()=>{const page=await context.newPage();pages.push(page);return page;},close:()=>context.close()};});
+ const pages:import('@playwright/test').Page[]=[];const open=vi.fn(async()=>{const context=await browser.newContext();await context.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<title>fixture</title><nav><button>top1</button><button>top2</button><button>top3</button></nav><nav><a href="/creator-micro/interactive/comment" onclick="event.preventDefault();window.clicks=(window.clicks||0)+1;history.pushState({},\'\',this.href)">评论</a></nav><main><h1>受控页面</h1></main>'}));return {newPage:async()=>{const page=await context.newPage();pages.push(page);return page;},close:()=>context.close()};});
  const acquire=vi.fn(async()=>{});const host=createCommentDiagnosisHost({open,acquire,throttled:vi.fn(),settleMs:20});
  const service=createCommentDiagnosisService({host,assertPublication:traffic.assertPublication});shared.transport=createAnalyticsTransport(()=>({}) as never,undefined,undefined,service);
  try{
   await expect(call({action:'start',publicationId:'p'},'bad-impact','a','not-account')).rejects.toThrow();expect(open).not.toHaveBeenCalled();
   await expect(call({action:'start',publicationId:'p'},'foreign','other')).rejects.toThrow();expect(open).not.toHaveBeenCalled();
-  const start=await call({action:'start',publicationId:'p'},'start');expect(start.data.ui.nodes.some(node=>node.intent==='enter_comments')).toBe(true);
+  const start=await call({action:'start',publicationId:'p'},'start');expect(start.data.ui.nodes.some(node=>node.intent==='enter_comments')).toBe(true);expect(start.data.ui.roots?.filter(root=>root.kind==='navigation')).toHaveLength(2);expect(start.data.ui.coverage?.discoveryComplete).toBe(true);
   const node=start.data.ui.nodes.find(node=>node.intent==='enter_comments')!;
   const input={action:'advance',diagnosisId:start.data.diagnosisId,expectedRevision:start.data.revision,observationId:start.data.ui.observationId,intent:'enter_comments',targetRef:node.targetRef};
   const first=await call(input,'click');shared.gateway=makeGateway();expect(await call(input,'click')).toEqual(first);expect(await pages[0]!.evaluate(()=>Reflect.get(window,'clicks'))).toBe(1);expect(acquire).toHaveBeenCalledTimes(2);

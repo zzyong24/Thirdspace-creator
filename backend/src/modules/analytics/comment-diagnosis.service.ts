@@ -46,7 +46,12 @@ export function createCommentDiagnosisService(ports:{assertPublication(ctx:Reque
    for(const item of output.networkEvidence.items){
     if(!item.pathTemplate.startsWith('/')||item.pathTemplate.slice(1).split('/').some(segment=>!segments.has(segment)))item.pathTemplate='/:opaque';
    }
-   while(Buffer.byteLength(JSON.stringify(output.ui))>12*1024&&output.ui.nodes.length){output.ui.nodes.pop();output.ui.truncated=true;}
+   while(Buffer.byteLength(JSON.stringify(output.ui))>12*1024&&output.ui.nodes.length){
+    const node=output.ui.nodes.pop()!;
+    for(const stats of [output.ui.roots?.find(root=>root.rootRef===node.rootRef),output.ui.groups.find(group=>group.group===node.group)])if(stats){stats.returned=Math.max(0,stats.returned-1);stats.omitted++;if(node.unavailable)stats.unsupported=Math.max(0,stats.unsupported-1);}
+    output.ui.truncated=true;if(output.ui.coverage&&!output.ui.coverage.limits.includes('output_limit'))output.ui.coverage.limits.push('output_limit');
+   }
+   output.allowedNext=[...new Set(output.ui.nodes.flatMap(node=>node.intent&&node.targetRef?[node.intent]:[]))];
    while(Buffer.byteLength(JSON.stringify(output))>48*1024&&output.networkEvidence.items.length){output.networkEvidence.items.pop();output.networkEvidence.omittedResponses++;output.networkEvidence.truncated=true;}
    return output;
   },

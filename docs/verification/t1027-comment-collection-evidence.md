@@ -150,3 +150,15 @@ Kuhn 最终只读独审已明确通过、未发现 selected runNow 实现阻断�
 Wegener终审在真实隔离Chromium复现：带不安全href的aria-controls展开anchor仍可点击、dialog内status正文漏出、重复关闭旧session误释放新session占用。另补重复响应只采首条却未标sampled。真实红4失败后最小修复：展开anchor只允许无href/当前片段与精确控件关系，safe/scan共同排除native/role dialog，释放occupied按diagnosisId做CAS，重复响应明确sampled。定点3文件19/19（含5类不安全链接及3类合法展开、正式CLI与封闭TLS）通过，Wegener再次独审PASS并冻结；日志`/tmp/t1027-diagnose-review-{red,green,types}.log`。该次types实际退出码另由主线核对，真实平台验收仍待安装。
 
 主线已核对review-types日志中的实际`exit_code=0`，前端类型门通过。
+
+### 第八安装受控诊断实测
+
+首次start6.427秒返回busy且dispatched=false/closed。随后一次新key重试打开同profile主页，diagnosisId ecee92e5-3fb6-4f52-99c6-88427f13bf5a，revision1；start与observe均仅有顶部首页/AI分身/AI工坊3按钮，scanned74、truncated=false，navigation source=nav、view source=none、allowedNext空。网络39自然响应，27省略，12桶，未见目标请求或旧matcher，JSON多encoded/无长度，不能从未读取结构推断无评论。观察没有再次导航或新网络窗口。已公开close返回closed，未点击任何未知控件。证据/tmp/t1026-cli-evidence/diagnose8-*.json。
+
+首个nav读到顶部导航不证明页面仅此导航；继续评审最小多区域覆盖诊断，不盲目重复采集、不放宽动作权限或泄露列表/弹窗正文。
+
+### 第九候选多区域诊断回归
+
+真实双nav前置红4fail/17pass、补充嵌套菜单兼容红1fail；新多root覆盖仍受原总预算，包含完整document有界结构发现、区域下界/完成事实与按root轮转候选。Carver终审实际复现遗漏root被父root冒领并导致搬根旧ref仍可点击，以及深度裁剪漏计预算；真实红2fail23pass后最小修复。最终3文件30/30（含正式CLI→第二nav实际点击、旧ref/隐私/预算及封闭TLS），contract20/20、backend3/3、frontend完整types exit0。Carver最终独审PASS，未新增截图或平台动作权限。日志`/tmp/t1027-multiroot-{red,nested-red,green,review-red,review-green,review-types}.log`。实际安装多root仍待验。
+
+类型收尾：第7文件仅补隔离transport测试的params/query undefined，backend3/3通过。全backend最终exit2，但新3项消失，原24项逐条相同、本域0；不记全backend通过。Carver已定点核对该测试修正，全部生产/测试冻结。证据/tmp/t1027-multiroot-backend-final.log、backend-types-final.log及owned-types-summary.json。

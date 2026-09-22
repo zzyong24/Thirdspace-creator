@@ -225,3 +225,9 @@ body字段以backend二次白名单投影；UI与network总输出≤48KiB。任�
 7. 上述红绿与独审后，主线安装、同账号单publication执行一次受控流程；取得真实入口/候选接口事实才修改采集route/trigger/matcher。不得拿隔离SPA证明真实平台成功。
 
 候选预算进一步固定：home优先导航16+当前展开区4+视图标题/状态4；展开后优先真实aria-controls目标区域20+必要导航上下文4；picker阶段精确目标选择区域20+视图上下文4。普通全页非导航button不能消耗导航额度；各组去重后总24、12KiB，返回group来源/scanned/returned/omitted/unsupported与truncated。Socrates已确认该细化不改变原独审通过的边界。
+
+### 第八实际主页诊断后的覆盖修正
+
+公开CLI start/observe只显示顶部3button；源码确为只取首nav/main。现有回执没有root数量，不能断言真实存在第二导航。保持一次evaluate，补有界多nav/main发现、root覆盖与候选归属：结构发现最多1000次访问且共享总2000/50ms，最多8root（nav4/main2/结构补充2），nav候选轮转，总24/12KiB不增加。aside/complementary/menu/menubar仅给无文本结构事实，不发新动作token。rootRef关联节点并内绑定真实root对象，节点搬根即使原handle仍连着也必须stale。发现未完成只报数量下界与截断，不能用局部truncated=false宣称全页无侧栏。保持dialog/列表正文排除与原链接/控件许可，无截图、任意selector、JS或平台额外请求；不改collector/路由/matcher/网络读限。
+
+该方案是已授权“补CLI并实际测试”范围内的诊断覆盖修正，写域仍为现有诊断host/测试、analytics契约/测试及必要service二次投影。Wegener已完成本次前置独审PASS，Carver负责实现后的最终独审；真实双导航夹具先红，正式CLI链及旧token移动/隐私/预算回归通过后再安装一条作品验证。

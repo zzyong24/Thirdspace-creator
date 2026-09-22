@@ -2,6 +2,8 @@
 import {afterAll,beforeAll,expect,it,vi} from 'vitest';
 import {createHash,randomUUID} from 'node:crypto';
 import {createDb,type Db} from '@creatoros/backend';
+import {ENDPOINTS} from '@creatoros/contract';
+import {registerAllTemplates,getTemplate} from '@creatoros/ai-worker';
 import {createAiRepository,createChatTurnSubmissionService} from '@creatoros/backend/modules/ai';
 import {ConflictError,createPersistentTaskService,createExecutionCallLedgerService,createExecutionLeaseService,createWorkbenchArtifactReadService,type WorkbenchArtifactBlobPort} from '@creatoros/backend/modules/execution';
 import {PNG} from 'pngjs';
@@ -15,6 +17,9 @@ import {workbenchResultSchema,workbenchArtifactSchema} from '@creatoros/contract
 import type {AgenticToolOutcome} from '@creatoros/contract/execution-worker';
 import {createWorkbenchArtifactHost} from './workbench-artifact-host';
 import type {NativeFileAction} from './workbench-native-client';
+import {selectBuiltinWorkbenchCapabilities,workbenchBuiltins,workbenchDependencyLock} from './workbench-builtin-manifest';
+import {prepareChatReply} from './prepare-chat-reply';
+import {createWorkbenchPublicTransport,createWorkbenchPublicService,createWorkbenchPublicStreamService} from '@creatoros/backend/modules/execution';
 
 let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();},20000);
@@ -33,7 +38,7 @@ function textOf(outcome:AgenticToolOutcome){
 // 全链路经聊天提交、冻结目录、模型账本、正式聊天工具端口、宿主、原子结算、versions/read。
 // 不直接写查询数据库来建立或验收产物；只用隔离文件/Blob 端口替代磁盘和对象存储。
 type FixtureSession={ctx:{userId:string;accountId:string;requestId:string;source:'user'};conversationId?:string;objects:Map<string,Uint8Array>};
-async function fixture(session?:FixtureSession,legacy=false){
+async function fixture(session?:FixtureSession,legacy=false,productionPreparation=false){
  const nonce=randomUUID(),ctx=session?.ctx??{userId:`register-u-${nonce}`,accountId:`register-a-${nonce}`,requestId:nonce,source:'user' as const};
  const files=new Map<string,{bytes:Buffer;version:number}>();
  files.set('report-data.csv',{bytes:Buffer.from('名称,数量\n样本,42\n'),version:1});
@@ -57,15 +62,27 @@ async function fixture(session?:FixtureSession,legacy=false){
   return {contentBase64:source.bytes.subarray(action.offset,action.offset+action.limit).toString('base64'),total:source.bytes.length,version:source.version};
  });
  const host=createWorkbenchArtifactHost(db,{platform:'darwin',desktop:true,socketPath:'isolated-register.sock',blobs,filePort})!;
- const frozenCatalog=host.catalog.map(descriptor=>legacy&&descriptor.name==='artifact.copy'?host.legacyFrozenCapabilities![0]!:descriptor);
+ const frozenCatalog=selectBuiltinWorkbenchCapabilities(host).map(descriptor=>legacy&&descriptor.name==='artifact.copy'?host.legacyFrozenCapabilities![0]!:descriptor);
  const prepared=await prepareChatToolDefinitions(Object.fromEntries(frozenCatalog.map(descriptor=>[
   descriptor.name,defineWorkbenchChatTool(descriptor,async()=>{throw new Error('必须经正式宿主调用');}),
  ])),{workbenchCapabilities:[...frozenCatalog]});
  const repo=createAiRepository(db,{...ctx,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-${randomUUID()}`});
  const conversation=session?.conversationId?{id:session.conversationId}:await repo.createConversation({title:'登记身份纠错回归',projectId:null,scope:'global'});
  const source=await repo.createMessage(conversation.id,{role:'user',content:'生成并登记报告',attachments:[],modelMetadata:{}});
- const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:'copilot.assist',system:'按真实版本交付',messages:[{role:'user',content:'登记报告'}],
+ const runtime={durable:{workbenchHost:host},
+  resolveEffectiveSkillSnapshot:async(_ctx:unknown,ids:string[])=>({snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:source.createdAt,platformPolicyVersion:'1',platformPolicy:'平台规则',skills:[...new Set(ids)].sort().map(skillId=>{const t=getTemplate(skillId);return {skillId,baseVersion:t.version,overlayRevision:null,overlayVersion:null,effective:{methodSystem:t.system,template:t.template,tools:t.tools??[],requiredFacets:t.requiredFacets??[],contextRequirements:t.contextRequirements??[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}};})}),
+  context:{positioning:{getPositioningCenter:async()=>({profile:null,currentStatement:null})},learnings:{getSuggestions:async()=>[]},signals:{list:async()=>[]},knowledge:{list:async()=>[]},accounts:{list:async()=>[]}},
+  searchWeb:async()=>{throw Error('目录装配不得联网');},
+ };
+ if(productionPreparation)registerAllTemplates();
+ const submitted=await createChatTurnSubmissionService(db,{assemble:async(owner,snapshot)=>productionPreparation?prepareChatReply(runtime as never,owner,snapshot):({capability:'copilot.assist',system:'按真实版本交付',messages:[{role:'user',content:'登记报告'}],
   tools:prepared.definitions,workbenchCapabilities:[...frozenCatalog],workbenchPlatform:'macos',maxSteps:12,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const publicTransport=createWorkbenchPublicTransport({tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts:createWorkbenchArtifactReadService(db,{blobs}),
+  capabilities:()=>({platform:host.platform,capabilities:selectBuiltinWorkbenchCapabilities(host),builtins:workbenchBuiltins,dependencyLock:workbenchDependencyLock}),
+  render:async()=>{throw Error('目录测试不导出');},reconcile:async()=>{throw Error('目录测试不对账');},
+ });
+ const catalogResponse=await publicTransport.request(ENDPOINTS.listWorkbenchCapabilities,{params:undefined,query:undefined,body:undefined},ctx) as {data:unknown};
+ const publicCatalog=ENDPOINTS.listWorkbenchCapabilities.response.parse(catalogResponse.data);
  const workerId=`worker-${nonce}`,tasks=createPersistentTaskService(db),claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId}))!;
  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const leases=createExecutionLeaseService(db),signal=new AbortController().signal;
@@ -74,8 +91,22 @@ async function fixture(session?:FixtureSession,legacy=false){
  })),async()=>{});
  const {input}=await readExecutionChatTask(db,ref);
  const tools=await resolve(ctx,input,ref,signal);
+ // prepareChatReply 仍冻结全部正式工具；本测试只执行 artifact，其他业务端口必须零调用。
+ const unrelatedPort=vi.fn(async()=>{throw new Error('目录复制测试不得调用其他业务端口');});
+ if(productionPreparation)for(const definition of input.tools){
+  if(tools[definition.name])continue;
+  const execution=definition.execution??'host';
+  tools[definition.name]={version:definition.version,effect:definition.effect,execution,parameters:workbenchResultSchema.refine(()=>false),approve:unrelatedPort,
+   ...(execution==='host'?{execute:unrelatedPort}:{}),
+   ...(['host.task-submit','worker.script-draft'].includes(execution)?{prepareTask:unrelatedPort}:{}),
+   ...(execution==='worker.structured-node'?{prepareGeneration:unrelatedPort}:{}),
+  };
+ }
  const budget={maxCalls:100,maxTokens:100000,deadlineMs:60000};
- const ports=createExecutionChatToolPorts(db,{budget,tools}),ledger=createExecutionCallLedgerService(db,{budget});
+ const webRead=productionPreparation?{sessions:{getStateVersioned:unrelatedPort,saveStateVersioned:unrelatedPort},objectStorageForCtx:unrelatedPort,
+  assets:{getAsset:unrelatedPort,getDownloadUrl:unrelatedPort,listFilesByIds:unrelatedPort}}:undefined;
+ const ports=createExecutionChatToolPorts(db,{budget,tools,webRead}),ledger=createExecutionCallLedgerService(db,{budget});
+ await ports.validateTask(ref);
  async function invoke(name:string,args:Record<string,unknown>){
   const toolCallId=randomUUID(),model=await ledger.reserve(ref,{kind:'model',operationKey:`model-${toolCallId}`,inputDigest:`sha256:${'a'.repeat(64)}`,reservedTokens:1});
   await ledger.start(ref,model.id);
@@ -92,8 +123,22 @@ async function fixture(session?:FixtureSession,legacy=false){
   beforeNextStore=async operationId=>{announce(operationId);await released;};
   return {started,release};
  };
- return {host,invoke,files,filePort,blobs,ledger,ref,session:{ctx,conversationId:conversation.id,objects},pauseNextStore,setFileUnavailable:(value:boolean)=>{fileFailure=value?new Error('任务文件端口暂时不可用'):undefined;},setFileError:(error:Error)=>{fileFailure=error;},loseStoreReply:()=>{storeThenLoseReply=true;}};
+ return {host,input,publicCatalog,unrelatedPort,invoke,files,filePort,blobs,ledger,ref,session:{ctx,conversationId:conversation.id,objects},pauseNextStore,setFileUnavailable:(value:boolean)=>{fileFailure=value?new Error('任务文件端口暂时不可用'):undefined;},setFileError:(error:Error)=>{fileFailure=error;},loseStoreReply:()=>{storeThenLoseReply=true;}};
 }
+
+it('生产builtin目录→公共capabilities→prepareChatReply冻结→原工具端口真实复制保留copy@2',async()=>{
+ const first=await fixture();first.files.set('source.html',{bytes:Buffer.from('<h1>精确字节</h1>'),version:1});
+ const original=textOf((await first.invoke('artifact.register',{path:'source.html',mime:'text/html'})).outcome);
+ const target=await fixture(first.session,false,true),descriptor=target.host.catalog.find(item=>item.name==='artifact.copy')!;
+ expect.soft(target.publicCatalog.capabilities.filter(item=>item.name==='artifact.copy')).toEqual([descriptor]);
+ expect.soft(target.input.workbenchCapabilities?.filter(item=>item.name==='artifact.copy')).toEqual([descriptor]);
+ expect.soft(target.input.tools.filter(item=>item.name==='artifact.copy')).toHaveLength(1);
+ expect(descriptor.schemaVersion).toBe(2);
+ const copied=textOf((await target.invoke('artifact.copy',{sourceArtifactId:original.artifactId,sourceVersion:1,targetPath:'new/copied.html'})).outcome);
+ expect(copied).toMatchObject({version:1,hash:original.hash,mime:'text/html',copiedFrom:{artifactId:original.artifactId,version:1}});
+ expect(copied.artifactId).not.toBe(original.artifactId);expect(target.filePort).not.toHaveBeenCalled();
+ expect(target.unrelatedPort).not.toHaveBeenCalled();
+});
 
 it('空 versions 下自拟 ID 得到明确参数修复回执，且不读取文件或提交 Blob',async()=>{
  const f=await fixture();

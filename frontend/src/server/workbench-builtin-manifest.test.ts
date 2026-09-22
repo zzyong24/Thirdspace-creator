@@ -41,3 +41,16 @@ it("重复描述或效果漂移时不向模型公布该工具", () => {
     capabilities:["task.artifacts"],dispatch:()=>null};
   expect(selectBuiltinWorkbenchCapabilities(host)).toEqual([]);
 });
+
+it("仅artifact.copy精确开放v2，新任务不混旧v1且其他工具不放宽版本或权限",()=>{
+ const copy={...descriptor('artifact.copy','task.artifacts','task_write',['macos','windows']),schemaVersion:2};
+ const host={catalog:[copy],platform:'macos' as const,capabilities:['task.artifacts'],dispatch:()=>null};
+ expect(selectBuiltinWorkbenchCapabilities(host)).toEqual([copy]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,platform:'windows'})).toEqual([copy]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,capabilities:[]})).toEqual([]);
+ for(const schemaVersion of [1,3])expect(selectBuiltinWorkbenchCapabilities({...host,catalog:[{...copy,schemaVersion}]})).toEqual([]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,catalog:[copy,copy]})).toEqual([]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,catalog:[{...copy,effects:['read']}]})).toEqual([]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,catalog:[{...copy,requiredCapabilities:['task.files']}]})).toEqual([]);
+ expect(selectBuiltinWorkbenchCapabilities({...host,catalog:[{...descriptor('artifact.read','task.artifacts','read'),schemaVersion:2}]})).toEqual([]);
+});

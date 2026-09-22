@@ -130,3 +130,48 @@ it.each(['/logout','javascript:void(0)','https://outside.invalid/','/creator-mic
 it.each(['','#','#menu'])('合法无href/同页fragment展开仍可执行：%s',async href=>isolatedHost(`<nav><a ${href?`href="${href}"`:''} aria-expanded="false" aria-controls="menu" onclick="event.preventDefault();document.getElementById('menu').hidden=false;this.setAttribute('aria-expanded','true')">expand</a><div id="menu" hidden><a href="/creator-micro/interactive/comment">comments</a></div></nav>`,async host=>{
  const start=await host.start(identity);const next=await host.step(identity,advance(start,'expand_navigation'));expect(next.phase).toBe('navigation');expect(next.ui.nodes.some(node=>node.intent==='enter_comments')).toBe(true);
 }));
+
+it('多root红测：全document发现第二导航，首栏不能垄断候选额度，补充侧栏只结构',async()=>isolatedHost(`<nav>${Array.from({length:24},(_,i)=>`<button>top${i}</button>`).join('')}</nav><section><nav role="navigation"><a href="/creator-micro/interactive/comment">second comments</a></nav></section><aside><div>PRIVATE_ASIDE_BODY</div><button>PRIVATE_ASIDE_BUTTON</button></aside><main><h1>view</h1></main>`,async host=>{
+ const start=await host.start(identity);expect(start.ui.nodes.some(node=>node.text==='second comments'&&node.intent==='enter_comments')).toBe(true);
+ expect(start.ui.coverage).toMatchObject({discoveryScope:'document_structure',scanScope:'selected_roots',discoveredRootsLowerBound:4,discoveryComplete:true,scanComplete:true});
+ expect(start.ui.roots).toHaveLength(4);expect(start.ui.nodes.length).toBeLessThanOrEqual(24);expect(JSON.stringify(start.ui)).not.toContain('PRIVATE');
+ expect(start.ui.roots!.find(root=>root.kind==='supplementary')?.controlCounts.button).toBe(1);
+ const next=await host.step(identity,advance(start,'enter_comments'));expect(next.phase).toBe('comments');
+}));
+
+it('多root：根上限/发现预算给下界和不完整标记，零语义根不声称侧栏不存在',async()=>{
+ await isolatedHost(Array.from({length:10},()=>'<nav><button>top</button></nav>').join(''),async host=>{const report=await host.start(identity);expect(report.ui.roots!.length).toBeLessThanOrEqual(8);expect(report.ui.coverage).toMatchObject({discoveryComplete:false,discoveredRootsLowerBound:10,omittedRootsLowerBound:6});expect(report.ui.coverage!.limits).toContain('root_limit');expect(report.ui.truncated).toBe(true);});
+ await isolatedHost('<div>'+Array.from({length:1200},()=>'<span></span>').join('')+'</div><nav><a href="/creator-micro/interactive/comment">late</a></nav>',async host=>{const report=await host.start(identity);expect(report.ui.coverage).toMatchObject({discoveryComplete:false,discoveryVisited:1000});expect(report.ui.coverage!.limits).toContain('discovery_limit');expect(report.ui.scannedNodes).toBeLessThanOrEqual(2000);});
+ await isolatedHost('<div><div>PRIVATE_UNMARKED_SIDEBAR</div></div>',async host=>{const report=await host.start(identity);expect(report.ui.coverage).toMatchObject({discoveredRootsLowerBound:0,discoveryComplete:true});expect(report.ui.nodes).toEqual([]);expect(JSON.stringify(report)).not.toContain('PRIVATE');});
+});
+
+it('多root：节点搬到同标签/同祖先摘要的另root仍拒旧token；dialog根和正文不可发现',async()=>isolatedHost('<nav><a href="/creator-micro/interactive/comment">comments</a></nav><nav><button>other</button></nav><div role="dialog"><nav><a href="/creator-micro/interactive/comment">PRIVATE_DIALOG</a></nav></div><dialog open><aside>PRIVATE_NATIVE</aside></dialog><main><h1>public</h1></main>',async(host,contexts,acquire)=>{
+ const start=await host.start(identity);expect(start.ui.roots).toHaveLength(3);expect(JSON.stringify(start.ui)).not.toContain('PRIVATE');const input=advance(start,'enter_comments');
+ await contexts[0]!.pages()[0]!.evaluate(()=>document.querySelectorAll('nav')[1]!.appendChild(document.querySelector('nav a')!));
+ expect((await host.step(identity,input)).stopReason).toBe('observation_stale');expect(acquire).toHaveBeenCalledTimes(1);
+}));
+
+it('多root：native与role同元素不重复、嵌套导航各自归属，补充menu不泄漏表单/正文且不给token',async()=>isolatedHost('<nav role="navigation"><button>top</button><div role="navigation"><a href="/creator-micro/interactive/comment">nested</a></div></nav><aside><div role="menu"><button>PRIVATE_MENU</button></div><input value="PRIVATE_VALUE"><ul><li><button>PRIVATE_LIST</button></li></ul><div contenteditable><button>PRIVATE_EDITABLE</button></div><iframe srcdoc="PRIVATE_FRAME"></iframe></aside><div role="menubar"><button>PRIVATE_BAR</button></div>',async host=>{
+ const result=await host.start(identity);expect(result.ui.roots?.filter(root=>root.kind==='navigation')).toHaveLength(2);expect(result.ui.nodes.filter(node=>node.text==='nested')).toHaveLength(1);expect(JSON.stringify(result.ui)).not.toContain('PRIVATE');expect(result.ui.roots?.filter(root=>root.kind==='supplementary')).toHaveLength(2);expect(result.ui.coverage?.limits).toContain('root_limit');
+}));
+
+it('多root：共享12KiB输出限制后root/group数量仍与实际候选一致',async()=>isolatedHost(Array.from({length:4},()=>'<nav>'+Array.from({length:8},()=>'<button>'+('🙂'.repeat(120))+'</button>').join('')+'</nav>').join('')+'<main>'+Array.from({length:4},()=>'<h1>'+('🙂'.repeat(120))+'</h1>').join('')+'</main>',async host=>{
+ const report=await host.start(identity);expect(Buffer.byteLength(JSON.stringify(report.ui))).toBeLessThanOrEqual(12*1024);expect(report.ui.coverage?.limits).toContain('output_limit');
+ for(const root of report.ui.roots??[])expect(root.returned).toBe(report.ui.nodes.filter(node=>node.rootRef===root.rootRef).length);
+ for(const group of report.ui.groups)expect(group.returned).toBe(report.ui.nodes.filter(node=>node.group===group.group).length);
+}));
+
+it.each(['<div role="menu">','<aside>','<div role="complementary">','<div role="menubar">'])('多root不能让补充根吞掉既有nav内的合法入口：%s',async opening=>isolatedHost('<nav>'+opening+'<a href="/creator-micro/interactive/comment">nested comments</a>'+(opening==='<aside>'?'</aside>':'</div>')+'</nav>',async host=>{
+ const report=await host.start(identity);expect(report.ui.nodes.filter(node=>node.intent==='enter_comments')).toHaveLength(1);expect(report.ui.nodes.find(node=>node.intent==='enter_comments')?.rootRef).toBe(report.ui.roots?.find(root=>root.kind==='navigation')?.rootRef);
+}));
+
+it('终审红测：超额省略的导航仍是边界，父根不能发token或允许跨省略根移动',async()=>isolatedHost('<nav><nav></nav><nav></nav><nav></nav><nav id="A"><a href="/creator-micro/interactive/comment" onclick="event.preventDefault();window.badClicks=(window.badClicks||0)+1">omitted comments</a></nav><nav id="B"></nav></nav>',async(host,contexts)=>{
+ const report=await host.start(identity);const node=report.ui.nodes.find(item=>item.intent==='enter_comments');
+ if(node){await contexts[0]!.pages()[0]!.evaluate(()=>document.getElementById('B')!.appendChild(document.querySelector('#A a')!));expect((await host.step(identity,{action:'advance',diagnosisId:report.diagnosisId,expectedRevision:report.revision,observationId:report.ui.observationId!,intent:'enter_comments',targetRef:node.targetRef!})).stopReason).toBe('observation_stale');}
+ expect(node).toBeUndefined();expect(report.ui.coverage?.omittedRootsLowerBound).toBe(2);expect(await contexts[0]!.pages()[0]!.evaluate(()=>Reflect.get(window,'badClicks')??0)).toBe(0);
+}));
+
+it('终审预算红测：深度裁剪的宽兄弟也计入发现预算，不能无计费遍历整批',async()=>isolatedHost('<div>'.repeat(31)+'<span></span>'.repeat(5000)+'</div>'.repeat(31),async host=>{
+ const report=await host.start(identity);expect(report.ui.scannedNodes).toBeLessThanOrEqual(2000);expect(report.ui.coverage?.discoveryVisited).toBeLessThanOrEqual(1000);expect(report.ui.coverage?.limits).toContain('depth_limit');expect(report.ui.coverage?.discoveryComplete).toBe(false);
+ expect(report.ui.coverage?.limits.some(reason=>reason==='discovery_limit'||reason==='time_limit'||reason==='node_limit')).toBe(true);
+}));

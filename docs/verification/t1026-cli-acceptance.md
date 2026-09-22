@@ -291,3 +291,29 @@ Wegener已复现并修复历史stop读取最新计划污染冻结请求。正式
 全contract44文件261/261、contract类型检查、打包预检4文件42/42通过，边界无新增违规（旧5保留）。评论诊断定点独审发现的三项Chromium缺陷及聚合采样标记均取得真实红绿，最终3文件19/19、frontend完整类型检查exit0，Wegener独审通过；完整记录见T1027验收文档。`pmem sync`已运行；本轮全局reconcile与安装实测结果另记，不提前写成通过。
 
 全局reconcile本次exit1：T1025已登记的7项历史回执漂移仍在，另LED054失败；其余46条教训门（含LED052/055/047）通过。LED054拆分复跑前端25通过/5项既有实机门跳过、worker18通过，backend71通过/1失败。实际失败是旧unknown fixture以纯root model模拟外部未知操作，而第五候选已允许它在显式resume时superseded；单独重跑稳定，尚未进入worker/as-of。经Socrates独审，仅改集成测试：真实started tool仍unknown_result，增加model恢复对照，保留除updatedAt外原账本字段及费用、零凭据/新调用。backend最终4文件73/73、exit0，无skip，独审通过并冻结；不称新生产缺陷或新功能TDD红。日志`/tmp/t1026-eighth-reconcile.log`、`/tmp/t1026-eighth-led054-{frontend,worker,backend}.log`、`/tmp/t1026-led054-backend-fixture-corrected.log`。完整reconcile尚未在此修正后重跑，不能称全绿。
+
+## 第八候选安装实测（f53827410580da6ed774cc8f1b1f777d7b4cf6e5）
+
+规范本地包exit0，自动覆盖启动PID20982；CLI installed/full/connected，公开operation269项，新analytics.comments.diagnose已可describe。DMG SHA-256 `8f79b6a473c4c8d433e461c704d43663404c069a57d0807f33775577b5eb0a5c`，hdiutil verify通过；仍为本地ad-hoc、未公开发布。
+
+- 原joint256在安装重启后自动进入attempt4；再发resume因已running返回409，未增加一次实际重放。最终checkpoint282、283旧model仍superseded，无284；错误从CHAT_MODEL_REQUEST_REPLAY_MISMATCH变为MODEL_CALL_REQUIRES_RECONCILIATION，仍blocked。不能把错误变化视为原任务恢复成功。公开证据joint5-eighth-p3.json/execution.json。
+- 原v5复制新任务execution-task-63da866c-62只有7calls结束，未调用copy或交付新产物。真实capabilities仅20项、artifact.copy缺失；代码定位内置工具selector固定schemaVersion1，过滤了新v2，单独host集成未覆盖真实装配。继续补正式目录→新任务冻结→宿主链回归，旧v1冻结不改；暂不启动五MIME复制以免空耗模型。
+- 评论诊断首个start6.427秒busy/dispatched=false且closed；有界第二次start正常打开同profile主页，自然39响应、27省略、12桶，无目标请求，body多为encoded/unknown。start与后续observe均只读到首个顶部nav的3按钮、scanned74/truncated=false、无main及可执行ref；未点击任何未知控件，close真实closed。不能推断登录状态或评论不存在；继续补导航覆盖证据，旧采集算法不凭猜测改写。
+
+以上均为安装CLI实测失败或限制，代码测试通过不取代它们。
+
+第八安装的独立文档修订task113（execution-task-63da866c-113）实际65calls成功，未替代原256恢复。初次命令重复node参数、脚本语法和登记缺expectedVersion均由该loop收到具体回执后纠正；seq53真实exit0、stdout57项PASS，seq58/59沿原lineage登记HTML@4（8798B，hash `1ac3819ef07c4aadde792f17552133ba9d98c78b71787ce88467b5ebb622bbbb`）及MD@5（4245B，hash `15fe841acda31f075f079737db7189dd9021133170e6358a807820f780f7c785`）。旧版本/CSV保留。四格式HTML与MD原字节已全部公开CLI导出，实际PNG横轴改1–5、完整表格可见，不再长标题重叠。独立内容复核另记，不能仅采用模型57PASS自述；原始ledger为joint8-correct-final-combined.json。
+
+### 第九候选修复门
+
+copy真实装配缺口：仅按内置工具逐项指定当前版本（copy2、其余1），旧v1完整冻结保留。真实selector→公开capabilities→prepareChatReply冻结→正式工具端口/host/ledger的复制与同键重放通过；其他冻结工具仅fail-fast测试端口且零调用。三文件26/26、定向types/diff/boundary exit0，Socrates独审通过并冻结。中途unknown来自夹具未装齐冻结端口，不算生产红；有效目录/规则红另留。日志`/tmp/t1026-copy-catalog-{red,rule-red,green,types,boundary,diffcheck}.log`，LED056纳入持续门。
+
+模型retry锚：真实SDK+PGlite/正式服务链复现pause→resume→回放失败清锚→startup→原superseded无法续调。共享纯事实校验保留有效锚，并仅在正式resume/startup按冻结归属、完整checkpoint前缀、唯一安全逻辑尾重建缺失许可；无外部结果/待决工具，原摘要/预算/租约仍严格。独审修复早期continue反杀既有恢复、物理尾误当逻辑尾两处问题。有效前置红16fail4pass，审查追加红3fail；最终六文件110/110无skip，其中新测试28项。原已结算SDK前缀零额外模型请求，尾仅单一retry、同键幂等，旧calls连updatedAt也不变。Socrates最终独审PASS、代码冻结。首次红中FK错误fixture不计有效红。日志`/tmp/t1026-model-retry-anchor-{red-valid,review-red,final,types-final}.log`。全backend类型原24项既有错误与diagnosis测试3项新错误分开处理，不能记全绿；安装原256尚待验证。
+
+同会话最小勘误task147（execution-task-63da866c-147）18calls成功：HTML@5 8888B/hash `a97757d779ff1dcbfe6a5982c712e4d6073a9ef7f2979288fa51a2b538f18435`、MD@6 4275B/hash `975c825f722a0ef6b4fd28f37d5f630f6d9335ec3bf388865ffff5295993f986`。独审逐diff确认其余15行5全null+10已知、execution/provider ID区分已改正，原图表/数据/CSS/浏览器引用保留，无新增来源错误；实际四格式/MD导出hash一致。seq11为本轮66项PASS/exit0，覆盖结构数值与勘误；MD声称“原57条全重跑”措辞不精确，原57仅51项同名保留、6项替换，本记录按真实66项记载，不采信该句。原256仍需第九安装原地恢复。
+
+第九统一门：contract44文件262/262、打包预检4文件42/42、边界无新增（旧5）通过；pmem sync已运行。多root新增fixture的3项backend类型错已修，最终全backend诊断27→24，本域0且剩余24与原基线逐条相同（/tmp/t1027-multiroot-owned-types-summary.json）；frontend与contract类型通过。完整reconcile正在实际重跑，结果另记。
+
+第九完整reconcile实际exit1，共9项：7项仍为T1025历史回执漂移，新增LED055/054两门失败，其余46条教训门通过（含LED056/052/047）。精确日志复现本轮生产回归：新增全局unknown_result残余lease字段判断，误挡保留历史heartbeat的plan恢复和已过期lease的artifact对账后入队。未改旧fixture或断言，最小删除全局continue，仅在新retry锚专用helper保留严格租约证明。Socrates定点审通过。最终同一源码9文件183/183、exit0，覆盖完整LED055/054后端及新anchor28、checkpoint/ledger，前述两个旧成功场景恢复；worker52/52、frontend25通过/5项既有实机门跳过另已执行。日志`/tmp/t1026-ninth-recovery-final-combined.log`。
+
+保留中间`/tmp/t1026-ninth-led054-backend-scope-fix.log`的70通过3失败：先late-denied默认1秒等待未达waiting_user，随后两个动态用例失败；未确定该并行运行时序根因，也未改断言/生产超时，不能声称已专门修复。最终9文件一次合并通过，原全局9err记录不覆写，完整reconcile未再次重跑，故不描述全局全绿。

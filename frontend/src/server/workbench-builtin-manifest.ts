@@ -2,7 +2,7 @@ import type { WorkbenchCapability } from "@creatoros/contract/agent-workbench";
 
 type Platform = WorkbenchCapability["platforms"][number];
 type Effect = WorkbenchCapability["effects"][number];
-type Tool = { name: string; effect: Effect };
+type Tool = { name: string; effect: Effect; schemaVersion?: number };
 type Builtin = {
   id: string;
   version: string;
@@ -49,7 +49,7 @@ export const workbenchBuiltins: readonly Builtin[] = [
   {
     id: "creatoros.artifacts", version: "1", platforms: ["macos", "windows"], capability: "task.artifacts",
     dependencies: [{ id: "pi-coding-agent", version: workbenchDependencyLock.piCodingAgent }],
-    tools: [{ name: "artifact.register", effect: "task_write" }, { name: "artifact.read", effect: "read" }, {name:"artifact.versions",effect:"read"}, {name:"artifact.copy",effect:"task_write"}],
+    tools: [{ name: "artifact.register", effect: "task_write" }, { name: "artifact.read", effect: "read" }, {name:"artifact.versions",effect:"read"}, {name:"artifact.copy",effect:"task_write",schemaVersion:2}],
   },
 ];
 
@@ -61,16 +61,16 @@ export function selectBuiltinWorkbenchCapabilities(host?: {
   dispatch: Function;
 }): WorkbenchCapability[] {
   if (!host || typeof host.dispatch !== "function") return [];
-  const allowed = new Map<string, { capability: string; effect: Effect }>();
+  const allowed = new Map<string, { capability: string; effect: Effect; schemaVersion: number }>();
   for (const builtin of workbenchBuiltins) {
     if (!builtin.platforms.includes(host.platform) || !host.capabilities.includes(builtin.capability)) continue;
-    for (const tool of builtin.tools) allowed.set(tool.name, { capability: builtin.capability, effect: tool.effect });
+    for (const tool of builtin.tools) allowed.set(tool.name, { capability: builtin.capability, effect: tool.effect, schemaVersion: tool.schemaVersion ?? 1 });
   }
   const counts = new Map<string, number>();
   for (const item of host.catalog) counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
   return host.catalog.filter(item => {
     const rule = allowed.get(item.name);
-    return rule !== undefined && counts.get(item.name) === 1 && item.schemaVersion === 1 &&
+    return rule !== undefined && counts.get(item.name) === 1 && item.schemaVersion === rule.schemaVersion &&
       item.platforms.includes(host.platform) && item.requiredCapabilities.length === 1 &&
       item.requiredCapabilities[0] === rule.capability && item.effects.length === 1 &&
       item.effects[0] === rule.effect;

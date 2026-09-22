@@ -843,3 +843,15 @@ T988安装验证补充：Next可能在数据未返回时先提交骨架并结束
 T991：Windows 源码编译成功后，TypeScript 检查在约 2 GiB V8 堆耗尽，exit134。先分清主机内存和子进程堆上限，再为构建阶段设置有限预算：按有效主机容量最多 60%、至少保留 2 GiB、上限 6 GiB。用真实 Next Worker 验证继承；保留类型检查，禁止全局环境污染安装后运行时。记录实际机器容量与预算，最终以 Windows 安装、启动、卸载验证为准，不原样重试或跳过类型错误。
 
 执行：`node --test tools/windows-closure-rat/build-memory.test.mjs tools/windows-closure-rat/build-production-closure.test.mjs`。
+
+## LED-056 — 工具宿主有实现不代表新任务能调用
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: artifact.copy扩展到v2后，安装CLI能力目录只剩20项，真实新任务完全拿不到copy；宿主复制测试通过仍无法交付。
+- **RootCause**: 生产内置目录selector固定所有工具schemaVersion1，过滤了新copy@2；此前测试直接注入host.catalog，绕过实际装配。
+- **GuardRule**: 工具版本变更必须经过同一生产selector、公开capabilities投影、prepareChatReply与正式任务冻结、真实宿主/账本结算验收。各工具明确当前版本，不泛化接受未知版本，不把新定义伪装旧v1；旧任务完整冻结定义和历史执行语义保留。
+- **GuardCheck**: reconcile LED-056运行真实目录→新任务→copy@2执行/同键重放及旧v1兼容，非被测工具夹具明确fail-fast且零调用。
+- **Outcome(T+N)**: 第八安装实际失败已记录，精确目录红后绿；新包CLI复制仍待通过，不以回归存在或任务succeeded冒充交付。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
+LED055追加（第八实际恢复）：历史上下文修正后，原task256仍因MODEL_CALL_REQUIRES_RECONCILIATION停止。正式PGlite/SDK链确认后续unknown准备失败会清空既有安全根模型retry锚，启动恢复又未重建；不是再次摘要漂移。保留/重建锚必须持同任务锁，证明完整已确认前缀与唯一无外部结果逻辑尾，原reserve继续严格摘要/预算，不修改历史账本，不解除未知工具。LED055追加model retry-anchor与pause恢复门；第九安装原任务仍待复验。

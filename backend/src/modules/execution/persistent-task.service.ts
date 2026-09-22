@@ -5,7 +5,7 @@ import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
 import {recoverableBrowserObservationFailures} from "./workbench-browser-observation-recovery";
-import {unconfirmedModelCalls,resumableChatModelCalls} from "./model-call-recovery";
+import {unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryAnchor,isChatReplayRecoveryError} from "./model-call-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -510,17 +510,19 @@ export function createPersistentTaskService(
           }
         }
         const resumeModels=new Map<string,typeof executionCalls.$inferSelect[]>();
+        const resumeAnchors=new Map<string,string>();
         if(input.command==="resume"){
           for(const row of rows.filter(row=>effectiveIds.includes(row.id)&&["paused","unknown_result"].includes(row.status))){
             const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).orderBy(asc(executionCalls.sequence));
             const safe=resumableChatModelCalls(row,calls);
             if(safe.length)resumeModels.set(row.id,safe);
+            else {const anchor=recoverableChatModelRetryAnchor(row,calls);if(anchor)resumeAnchors.set(row.id,anchor.id);}
           }
         }
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
-            input.command==='resume' && row.status==='unknown_result' && resumeModels.has(row.id) ? 'queued' :
+            input.command==='resume' && row.status==='unknown_result' && (resumeModels.has(row.id)||resumeAnchors.has(row.id)) ? 'queued' :
             (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
@@ -559,6 +561,7 @@ export function createPersistentTaskService(
             .set({
               status: target,
               ...(recoveredModels ? {retryOfCallId:recoveredModels.at(-1)!.id,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(resumeAnchors.has(taskId)?{retryOfCallId:resumeAnchors.get(taskId)!,lastErrorCode:null,lastErrorMessage:null}:{}),
               ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
@@ -874,6 +877,13 @@ export function createPersistentTaskService(
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          // 丢锚路径在专用helper核验租约；不以该新增门替代计划/产物等既有专用恢复证明。
+          const retryAnchor=recoverableChatModelRetryAnchor(row,calls);
+          const lastPhysical=calls.slice().sort((a,b)=>a.sequence-b.sequence).at(-1);
+          const needsChatAnchor=(asPayload(row.payload).modelInput as {kind?:string}|undefined)?.kind==="chat.run"&&
+            (isChatReplayRecoveryError(row.lastErrorCode)||(lastPhysical?.kind==="model"&&lastPhysical.status==="superseded"));
+          // 已有started/unknown继续走下方原专用恢复；本门只处理不再有在途事实的丢锚族。
+          if(row.status==="unknown_result"&&needsChatAnchor&&!retryAnchor&&!calls.some(call=>call.status==="started"||call.status==="unknown"))continue;
           // Only proven observation protocols can close a missing read receipt.
           // Preserve the original call and unknown evidence; never repeat I/O.
           for(const recovered of await recoverableBrowserObservationFailures(row,calls,stamp)){
@@ -949,6 +959,7 @@ export function createPersistentTaskService(
               leaseExpiresAt: null,
               heartbeatAt: null,
               ...(target === "queued" && recoveredModels ? {retryOfCallId:row.retryOfCallId,lastErrorCode:null,lastErrorMessage:null} : {}),
+              ...(target === "queued" && retryAnchor ? {retryOfCallId:retryAnchor.id,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(target === "unknown_result" ? {lastErrorCode:"CALL_RESULT_UNKNOWN",lastErrorMessage:"已有调用提交结果未知，须同键对账"} : {}),
               ...(target === "failed"
                 ? {

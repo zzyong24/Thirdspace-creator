@@ -3779,3 +3779,7 @@ Socrates独立方案审查有条件通过：PNG既有2MiB守卫保留，其余�
 真实七包仍无评论响应，现有公开入口无法在同一个采集身份页面核验导航契约；用户已要求CLI缺口补齐并持续修复。采用新增`analytics.comments.diagnose`窄领域入口，单真实publication、同账号原采集profile/lease、固定主页及有界导航候选观察/选择/关闭。不开放任意URL、selector、JS或私有CDP；先看真实DOM证据，再由Agent判断并选择真实引用，代码仅守身份、生命周期、范围与幂等。
 
 Socrates已实际独审通过完整方案：close只依session归属、不被作品状态变化挡住；诊断只获取平台准入、不把观察成功report为采集成功或清退避；持久CLI gateway的pending/unknown重放不重新派发；observe原子换generation、旧ref拒绝。自然网络仅有界白名单协议证据，不返回凭据/评论正文/未知字段值；无法硬限读取的body明确unavailable。TTL本身不释放未确认停止资源，不把诊断可用等同平台采集通过。具体约束和红绿门在T1027 SPEC，未新增application空转发层。无额外用户确认消息，不冒称完成。
+
+### DEC-T1027-DIAGNOSIS-ROOT-COVERAGE
+
+第八安装CLI诊断只能观察首个顶部nav，不能据此判断评论入口不存在。沿用户既有全功能测试与修复授权，增加有界多语义root与覆盖事实；不增加任意动作或正文读取权限。具体预算/旧ref约束见T1027 SPEC追加段，经Wegener前置独审PASS后实现、Carver做最终复核。未收到新的用户确认消息，不把实现裁决写成新确认。

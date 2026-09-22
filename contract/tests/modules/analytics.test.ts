@@ -146,3 +146,15 @@ describe('T-1027 当前账号评论失败重试契约',()=>{
   expect(op.response.safeParse({...response,status:'succeeded',itemsNew:1}).success).toBe(false);
  });
 });
+
+it('诊断多根coverage明确下界/发现与扫描范围，根总额有界且禁止原DOM属性',()=>{
+ const schema=analyticsOperations.diagnoseComments.response.shape.ui;
+ const old={observationId:null,status:'observed',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[]};expect(schema.safeParse(old).success).toBe(true);
+ const coverage={discoveryScope:'document_structure',scanScope:'selected_roots',discoveredRootsLowerBound:0,omittedRootsLowerBound:0,discoveryVisited:1000,excludedSubtrees:0,discoveryComplete:false,scanComplete:true,limits:['discovery_limit']};
+ expect(schema.safeParse({...old,roots:[],coverage}).success).toBe(true);
+ for(const invalid of [{...coverage,totalRoots:0},{...coverage,discoveryVisited:1001},{...coverage,discoveryScope:'full_page_content'}])expect(schema.safeParse({...old,coverage:invalid}).success).toBe(false);
+ const root={rootRef:'r',scanStatus:'complete',kind:'supplementary',source:'native_aside',tag:'aside',role:'none',rect:{x:0,y:0,width:1,height:1},visited:1,scanned:0,returned:0,omitted:0,unsupported:0,controlCounts:{link:0,button:0,menuitem:0,tab:0,other:0}};
+ expect(schema.safeParse({...old,roots:Array.from({length:8},()=>root)}).success).toBe(true);
+ expect(schema.safeParse({...old,roots:Array.from({length:9},()=>root)}).success).toBe(false);
+ for(const key of ['text','html','id','className','href'])expect(schema.safeParse({...old,roots:[{...root,[key]:'PRIVATE'}]}).success).toBe(false);
+});

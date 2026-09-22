@@ -41,7 +41,7 @@ function modelToolCalls(call:Call,piChat=false) {
   if ((provider.finishReason?.unified==="tool-calls") !== (tools.length>0) && !(truncated && tools.length>0)) throw new ConflictError("模型结束原因与工具调用回执不一致");
   return tools;
 }
-function reconstruct(refs:MessageRef[], calls:Call[],piChat=false) {
+export function reconstructCheckpointMessages(refs:MessageRef[], calls:Call[],piChat=false) {
   const {roots} = partitionExecutionCalls(calls);
   const confirmed = roots.filter(hasReceipt);
   const pendingTools = new Map<string,string>();
@@ -97,7 +97,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
           throw new ConflictError("已保存消息不能删除或改写");
         }
         const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
-        reconstruct(input.messages,calls,chat.success && chat.data.executionEngine==="pi");
+        reconstructCheckpointMessages(input.messages,calls,chat.success && chat.data.executionEngine==="pi");
         const checkpoint=executionCheckpointSchema.parse({schemaVersion:1,revision:input.expectedRevision+1,expectedRevision:input.expectedRevision,requestDigest:digest,ledgerSequence:sequence,messages:input.messages});
         await tx.update(executionTasks).set({checkpoint,updatedAt:now()}).where(eq(executionTasks.id,task.id));
         return {revision:checkpoint.revision};
@@ -111,7 +111,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         const {roots,children}=partitionExecutionCalls(calls);
         const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
         const piChat=chat.success && chat.data.executionEngine==="pi";
-        const reconstructed=reconstruct(checkpoint?.messages ?? [],calls,piChat);
+        const reconstructed=reconstructCheckpointMessages(checkpoint?.messages ?? [],calls,piChat);
         // 每个操作键只暴露最新根模型调用；该查询已受当前任务账号及租约约束。
         const latestModels=new Map(roots.filter(call=>call.kind==="model").map(call=>[call.operationKey,call]));
         const modelReplayFingerprints=chatModelReplayFingerprintsSchema.parse(piChat?[...latestModels.values()]

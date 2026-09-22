@@ -5,6 +5,7 @@ import { workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/e
 import { computeBackoffMs } from "@creatoros/ai-worker/retry-policy";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
+import {provenChatModelRetryTail} from "./model-call-recovery";
 
 /** 后端保存等待时间和重试来源；调度 attempt 仅用于 fencing，不作为供应商调用次数。 */
 export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>string; random?:()=>number;allowedKinds?:readonly ("ai_task"|"topic_preview"|"script_candidate"|"transcribe")[]} = {}) {
@@ -21,7 +22,9 @@ export function createExecutionWorkerOutcomeService(db: Db, deps: {now?:()=>stri
         if(input.outcome!=="unknown_result" && calls.some(call=>call.status==="unknown" || (call.status==="started" && !allowedStarted.has(call.id))))throw new ConflictError("存在未确认调用，禁止改成可恢复失败");
         let status:string=input.outcome;
         let retryAt:string|null=null;
-        let retryOfCallId:string|null=null;
+        // 回放尚未到达原重试槽时，准备失败不能抹掉仍有完整物理证明的已授许可。
+        let retryOfCallId:string|null=input.outcome==="unknown_result"&&task.retryOfCallId!==null&&
+          provenChatModelRetryTail(task,calls)?.id===task.retryOfCallId?task.retryOfCallId:null;
         if(input.outcome === "retry_wait") {
           if(!last || !["rejected","superseded"].includes(last.status) || (last.status === "superseded" && last.kind !== "model"))throw new ConflictError("没有可安全续跑的模型失败事实，禁止自动重试");
           const budget=task.executionBudget === null ? null : executionBudgetSchema.parse(task.executionBudget);

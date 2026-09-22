@@ -10,20 +10,25 @@ type Ports={open(identity:CommentDiagnosisIdentity,signal:AbortSignal):Promise<S
 const HOME='https://creator.douyin.com/creator-micro/home';
 const ORIGIN='https://creator.douyin.com';
 const clone=<T>(value:T):T=>structuredClone(value);
-const emptyUi=():Report['ui']=>({observationId:null,status:'unavailable',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[]});
+const emptyUi=():Report['ui']=>({observationId:null,status:'unavailable',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[],roots:[],coverage:{discoveryScope:'document_structure',scanScope:'selected_roots',discoveredRootsLowerBound:0,omittedRootsLowerBound:0,discoveryVisited:0,excludedSubtrees:0,discoveryComplete:false,scanComplete:false,limits:[]}});
 const emptyNetwork=(revision:number):Report['networkEvidence']=>({stageRevision:revision,totalResponses:0,omittedResponses:0,truncated:false,items:[]});
 const blank=(id:string,now:number):Report=>({schemaVersion:1,diagnosisId:id,publicationId:null,revision:0,generation:0,phase:'closed',status:'expired',dispatched:false,expiresAt:new Date(now).toISOString(),ui:emptyUi(),networkEvidence:emptyNetwork(0),allowedNext:[],stopReason:'session_expired'});
 const sha=(value:string)=>createHash('sha256').update(value).digest('hex');
 
 /** SEMANTIC_BOUNDARY_ALLOW: 仅采结构/固定协议事实；由调用者选真实菜单，不以文案猜动作。 */
 function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|null}){
- type Internal={element:Element;candidate:Omit<Candidate,'targetRef'>;fingerprint:string};
- const ui:Report['ui']= {observationId:null,status:'unavailable',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[]};
+ type Internal={element:Element;rootElement:Element;candidate:Omit<Candidate,'targetRef'>;fingerprint:string};
+ const ui:Report['ui']= {observationId:null,status:'unavailable',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[],roots:[],coverage:{discoveryScope:'document_structure',scanScope:'selected_roots',discoveredRootsLowerBound:0,omittedRootsLowerBound:0,discoveryVisited:0,excludedSubtrees:0,discoveryComplete:false,scanComplete:false,limits:[]}};
  const entries:Internal[]=[];
  if(document.location.origin!=='https://creator.douyin.com'){ui.status='not_applicable';return {ui,entries};}
+ const coverage=ui.coverage!;
+ type RootRecord=NonNullable<Report['ui']['roots']>[number];
+ type Root={element:Element;record:RootRecord;group:Candidate['group']|null};
+ const roots:Root[]=[];
+ const limit=(reason:typeof coverage.limits[number])=>{ui.truncated=true;if(!coverage.limits.includes(reason))coverage.limits.push(reason);};
  const started=performance.now();let exhausted=false;
  const seen=new Set<Element>();
- const visit=()=>{if(ui.scannedNodes>=2000||performance.now()-started>=50){ui.truncated=true;exhausted=true;return false;}ui.scannedNodes++;return true;};
+ const visit=()=>{if(ui.scannedNodes>=2000||performance.now()-started>=50){limit(ui.scannedNodes>=2000?'node_limit':'time_limit');exhausted=true;return false;}ui.scannedNodes++;return true;};
  const roles=(el:Element)=>(el.getAttribute('role')??'').slice(0,128).trim().split(/\s+/);
  const role=(el:Element)=>roles(el)[0]??'';
  const short=(value:string)=>Array.from(value.slice(0,1024).replace(/(?:[a-z][a-z0-9+.-]*:\/\/|www\.|[?&][^\s=<>]+=[^\s<>]*)[^\s<>]*/gi,'[url]').replace(/\s+/gu,' ').trim()).slice(0,120).join('');
@@ -38,13 +43,13 @@ function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|n
    if(!nav&&( ['UL','OL','LI'].includes(current.tagName)||roles(current).some(value=>['list','feed','listitem'].includes(value))))return false;
    if(current===document.documentElement)return true;
   }
-  ui.truncated=true;return false;
+  limit('depth_limit');return false;
  };
  // 只读取控件短标签；不汇总dialog/列表/表单正文，Range排除未参与布局的light DOM。
  const label=(el:Element,nav:boolean)=>{
   let text='';
   const walk=(root:Node,depth:number)=>{
-   if(depth>8){ui.truncated=true;return;}
+   if(depth>8){limit('depth_limit');return;}
    for(let n=root.firstChild;n&&!exhausted;n=n.nextSibling){
     if(!visit())return;if(text.length>=1024){ui.truncated=true;return;}
     if(n.nodeType===Node.TEXT_NODE){const t=n as Text;const range=document.createRange();range.setStart(t,0);range.setEnd(t,Math.min(t.length,1024-text.length));const b=range.getBoundingClientRect();if(b.width&&b.height)text+=t.substringData(0,1024-text.length);}
@@ -58,8 +63,8 @@ function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|n
  };
  const navRoot=(el:Element)=>el.closest('nav,[role="navigation"]');
  const fingerprint=(el:Element)=>JSON.stringify([el.tagName,el.getAttribute('role'),el.getAttribute('href'),el.getAttribute('target'),el.getAttribute('aria-expanded'),el.getAttribute('aria-controls'),el.getAttribute('data-aweme-id'),el.getAttribute('data-item-id')]);
- const add=(el:Element,group:Candidate['group'],quota:number)=>{
-  const stats=ui.groups.find(item=>item.group===group)!;stats.scanned++;
+ const add=(el:Element,root:Root,quota:number)=>{
+  const group=root.group!;const stats=ui.groups.find(item=>item.group===group)!;stats.scanned++;root.record.scanned++;
   if(seen.has(el))return;seen.add(el);
   if(!safe(el,group==='navigation'||group==='expanded'))return;
   const rect=el.getBoundingClientRect();if(!rect.width||!rect.height)return;
@@ -85,37 +90,85 @@ function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|n
    else if(args.phase==='comments'&&native==='button'&&el.getAttribute('aria-haspopup')==='listbox'&&target&&role(target)==='listbox')intent='open_work_picker';
    else if(args.phase==='picker'&&group==='picker'&&r==='option'&&targetMatches===true&&el.closest('[role="listbox"]'))intent='select_target';
   }
-  if(stats.returned>=quota||entries.length>=24){stats.omitted++;ui.truncated=true;return;}
+  if(root.record.returned>=quota||entries.length>=24){stats.omitted++;root.record.omitted++;limit('candidate_limit');return;}
   const text=group==='picker'&&targetMatches!==true?'':label(el,group==='navigation'||group==='expanded');
   const ancestors:Candidate['ancestors']=[];for(let p=el.parentElement;p&&ancestors.length<8;p=p.parentElement){const pr=role(p);ancestors.push(p.tagName==='NAV'?'nav':pr==='navigation'?'navigation':pr==='listbox'?'listbox':pr==='dialog'?'dialog':p.tagName==='MAIN'||pr==='main'?'main':'other');}
   const tag=(['a','button','div','span','li','summary','h1','h2','h3'].includes(native)?native:'other') as Candidate['tag'];
   const publicRole=(['link','button','menuitem','tab','heading','status','alert','option'].includes(r)?r:native==='a'?'link':native==='button'?'button':/^h[1-6]$/.test(native)?'heading':'other') as Candidate['role'];
-  const candidate:Internal['candidate']={group,tag,role:publicRole,text,buttonType:native==='button'?(['button','submit','reset'].includes(el.getAttribute('type')??'')?el.getAttribute('type') as 'button'|'submit'|'reset':'implicit'):'not_applicable',disabled,inForm,expanded:expanded==='true'?true:expanded==='false'?false:null,controlsVerified,
+  const candidate:Internal['candidate']={rootRef:root.record.rootRef,group,tag,role:publicRole,text,buttonType:native==='button'?(['button','submit','reset'].includes(el.getAttribute('type')??'')?el.getAttribute('type') as 'button'|'submit'|'reset':'implicit'):'not_applicable',disabled,inForm,expanded:expanded==='true'?true:expanded==='false'?false:null,controlsVerified,
    targetMatches,rect:{x:rect.x,y:rect.y,width:rect.width,height:rect.height},ancestors,intent,unavailable:intent?null:dangerous?'unsafe_control':group==='picker'?'target_identity_unverified':'unsupported_control'};
-  entries.push({element:el,candidate,fingerprint:JSON.stringify([fingerprint(el),text,ancestors,group,controlsVerified,targetMatches])});stats.returned++;if(!intent)stats.unsupported++;
+  entries.push({element:el,rootElement:root.element,candidate,fingerprint:JSON.stringify([fingerprint(el),text,ancestors,group,controlsVerified,targetMatches])});stats.returned++;root.record.returned++;if(!intent){stats.unsupported++;root.record.unsupported++;}
  };
- const scan=(root:Element|null,group:Candidate['group'],quota:number)=>{
-  if(!root)return;
-  const walk=(el:Element,depth:number)=>{
-   if(!visit())return;if(depth>32){ui.truncated=true;return;}
-   if(banned.has(el.tagName)||(el as HTMLElement).isContentEditable||hidden(el)||roles(el).some(v=>bannedRoles.has(v)))return;
-   if(group==='picker'&&role(el)==='option'){add(el,group,quota);return;}
-   const candidate=el.matches('a,button,summary,[role="button"],[role="menuitem"],[role="tab"],[role="heading"],[role="alert"],[role="status"],h1,h2,h3');
-   // 未知导航div/span只观察自身直接短标签结构，不给执行token、不读取整个容器正文。
-   const unknown=(group==='navigation'||group==='expanded')&&['DIV','SPAN'].includes(el.tagName)&&el.childElementCount===0;
-   if(candidate||unknown)add(el,group,quota);
-   for(let child=el.firstElementChild;child&&!exhausted;child=child.nextElementSibling)walk(child,depth+1);
-  };walk(root,0);
+ // 全document只发现结构，不读取任意正文。发现和各root轮转共用visit/time总预算。
+ const excluded=(el:Element,inNav:boolean)=>banned.has(el.tagName)||(el as HTMLElement).isContentEditable||hidden(el)||roles(el).some(value=>bannedRoles.has(value))||(!inNav&&(['UL','OL','LI'].includes(el.tagName)||roles(el).some(value=>['list','listitem'].includes(value))));
+ function* walk(root:Element,depth=0,inNav=false,skipRoots=false,stopAtOption=false):Generator<Element>{
+  if(exhausted||(!skipRoots&&coverage.discoveryVisited>=1000))return;
+  // 裁剪转换也消耗预算；深层宽兄弟不能在一次next()里不受限遍历。
+  if(depth>32){if(!skipRoots)coverage.discoveryVisited++;visit();limit('depth_limit');return;}
+  const source=skipRoots?sourceOf(root):null;
+  const focusBoundary=skipRoots&&roots.some(candidate=>candidate.element===root&&(candidate.record.kind==='expanded'||candidate.record.kind==='picker'));
+  const originalNavSupplement=inNav&&!focusBoundary&&source!==null&&['native_aside','role_complementary','role_menu','role_menubar'].includes(source);
+  // 包含省略/未选中的语义根，不能由父根冒领它的控件；保留原nav内补充区域的既有控件归属。
+  if(skipRoots&&(knownRoots.has(root)||source)&&!originalNavSupplement){visit();return;}
+  yield root;
+  const withinNav=inNav||root.tagName==='NAV'||role(root)==='navigation';
+  if(excluded(root,withinNav)){coverage.excludedSubtrees++;return;}
+  if(stopAtOption&&role(root)==='option')return;
+  for(let child=root.firstElementChild;child&&!exhausted&&(skipRoots||coverage.discoveryVisited<1000);child=child.nextElementSibling)yield* walk(child,depth+1,withinNav,skipRoots,stopAtOption);
+ }
+
+ const sourceOf=(el:Element):RootRecord['source']|null=>el.tagName==='NAV'?'native_nav':role(el)==='navigation'?'role_navigation':el.tagName==='MAIN'?'native_main':role(el)==='main'?'role_main':el.tagName==='ASIDE'?'native_aside':role(el)==='complementary'?'role_complementary':role(el)==='menu'?'role_menu':role(el)==='menubar'?'role_menubar':null;
+ const knownRoots=new Set<Element>();
+ const addRoot=(el:Element,source:RootRecord['source'],kind:RootRecord['kind'],group:Root['group'])=>{
+  if(knownRoots.has(el))return;knownRoots.add(el);coverage.discoveredRootsLowerBound++;
+  const maximum=kind==='navigation'?4:kind==='view'||kind==='supplementary'?2:1;
+  if(roots.length>=8||roots.filter(root=>root.record.kind===kind).length>=maximum){coverage.omittedRootsLowerBound++;limit('root_limit');return;}
+  const b=el.getBoundingClientRect();const native=el.tagName.toLowerCase(),r=role(el);
+  const record:RootRecord={rootRef:'root-'+roots.length,scanStatus:'not_selected',source,kind,tag:(['nav','main','aside','div','ul','ol'].includes(native)?native:'other') as RootRecord['tag'],role:(['navigation','main','complementary','menu','menubar','listbox'].includes(r)?r:r?'other':'none') as RootRecord['role'],rect:{x:b.x,y:b.y,width:b.width,height:b.height},visited:0,scanned:0,returned:0,omitted:0,unsupported:0,controlCounts:{link:0,button:0,menuitem:0,tab:0,other:0}};
+  roots.push({element:el,record,group});ui.roots!.push(record);
  };
- ui.status='observed';
- const nav=document.querySelector('nav,[role="navigation"]');
- const view=document.querySelector('main,[role="main"]');
  const focus=args.focus?.isConnected?args.focus:null;
- const firstFocus=args.phase==='picker'||args.phase==='navigation';
- ui.groups=[{group:'navigation',source:nav?'nav':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'expanded',source:focus&&args.phase==='navigation'?'aria_controls':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'view',source:view?'comment_view':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'picker',source:focus&&args.phase==='picker'?'work_picker':'none',scanned:0,returned:0,omitted:0,unsupported:0}];
- if(firstFocus&&focus)scan(focus,args.phase==='picker'?'picker':'expanded',20);
- if(args.phase==='picker')scan(view,'view',4);else scan(nav,'navigation',firstFocus?4:16);
- if(!firstFocus){if(focus)scan(focus,'expanded',4);scan(view,'view',4);}
+ if(focus&&(args.phase==='navigation'||args.phase==='picker')&&safe(focus,args.phase==='navigation'))addRoot(focus,args.phase==='picker'?'work_picker':'aria_controls',args.phase==='picker'?'picker':'expanded',args.phase==='picker'?'picker':'expanded');
+ const discovery=walk(document.documentElement);let discoveryDone=false;
+ while(!exhausted&&coverage.discoveryVisited<1000){
+  const next=discovery.next();if(next.done){discoveryDone=true;break;}if(!visit())break;coverage.discoveryVisited++;
+  const el=next.value,source=sourceOf(el);if(!source)continue;
+  const kind:RootRecord['kind']=source==='native_nav'||source==='role_navigation'?'navigation':source==='native_main'||source==='role_main'?'view':'supplementary';
+  if(safe(el,kind==='navigation'))addRoot(el,source,kind,kind==='supplementary'?null:kind==='view'?'view':'navigation');
+ }
+ if(coverage.discoveryVisited>=1000)limit('discovery_limit');
+ coverage.discoveryComplete=discoveryDone&&!exhausted&&coverage.discoveryVisited<1000&&!coverage.omittedRootsLowerBound&&!coverage.limits.includes('depth_limit');
+ const hasNav=roots.some(root=>root.group==='navigation'),hasView=roots.some(root=>root.group==='view');
+ ui.groups=[{group:'navigation',source:hasNav?'nav':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'expanded',source:focus&&args.phase==='navigation'?'aria_controls':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'view',source:hasView?'comment_view':'none',scanned:0,returned:0,omitted:0,unsupported:0},{group:'picker',source:focus&&args.phase==='picker'?'work_picker':'none',scanned:0,returned:0,omitted:0,unsupported:0}];
+ const budgets:Record<Candidate['group'],number>={navigation:args.phase==='picker'?0:args.phase==='navigation'?4:16,expanded:args.phase==='navigation'?20:4,view:args.phase==='navigation'?0:4,picker:args.phase==='picker'?20:0};
+ const category=(el:Element):keyof RootRecord['controlCounts']|null=>el.tagName==='A'?'link':el.tagName==='BUTTON'||role(el)==='button'?'button':role(el)==='menuitem'?'menuitem':role(el)==='tab'?'tab':el.tagName==='SUMMARY'?'other':null;
+ const candidateOf=(el:Element)=>el.matches('a,button,summary,[role="button"],[role="menuitem"],[role="tab"],[role="heading"],[role="alert"],[role="status"],h1,h2,h3');
+ const scans=roots.filter(root=>root.group===null||budgets[root.group]>0).map(root=>{
+  const siblings=root.group===null?[]:roots.filter(other=>other.group===root.group);
+  const index=siblings.indexOf(root),total=root.group===null?0:budgets[root.group];
+  const quota=siblings.length?Math.floor(total/siblings.length)+(index<total%siblings.length?1:0):0;
+  function* nodes():Generator<Element>{
+   yield root.element;
+   if(excluded(root.element,root.group==='navigation'||root.group==='expanded'))return;
+   for(let child=root.element.firstElementChild;child&&!exhausted;child=child.nextElementSibling)yield* walk(child,1,root.group==='navigation'||root.group==='expanded',true,root.group==='picker');
+  }
+  return {root,quota,iterator:nodes(),done:false};
+ });
+ while(scans.some(scan=>!scan.done)&&!exhausted){for(const scan of scans){
+  if(scan.done||exhausted)continue;const next=scan.iterator.next();if(next.done){scan.done=true;continue;}if(!visit())break;
+  const el=next.value,root=scan.root;root.record.visited++;
+  const inNav=root.group==='navigation'||root.group==='expanded';
+  if(excluded(el,inNav))continue;
+  const categoryName=category(el);
+  if(root.group===null){if(categoryName&&safe(el,false)){const b=el.getBoundingClientRect();if(b.width&&b.height){root.record.controlCounts[categoryName]++;root.record.scanned++;root.record.unsupported++;}}continue;}
+  if(categoryName)root.record.controlCounts[categoryName]++;
+  if(root.group==='picker'&&role(el)==='option'){add(el,root,scan.quota);continue;}
+  const unknown=inNav&&['DIV','SPAN'].includes(el.tagName)&&el.childElementCount===0;
+  if(candidateOf(el)||unknown)add(el,root,scan.quota);
+ }}
+ for(const scan of scans)scan.root.record.scanStatus=scan.done&&!exhausted?'complete':'limited';
+ coverage.scanComplete=!exhausted&&scans.every(scan=>scan.done)&&!coverage.limits.includes('depth_limit');
+ ui.status='observed';
  const title=document.querySelector('title')?.firstChild;
  if(title?.nodeType===Node.TEXT_NODE)ui.title=short((title as Text).substringData(0,1024));
  return {ui,entries};
@@ -123,12 +176,12 @@ function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|n
 
 export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
  const now=ports.now??Date.now;
- type Token={handle:ElementHandle<Element>;fingerprint:string;intent:Intent};
+ type Token={handle:ElementHandle<Element>;root:ElementHandle<Element>;fingerprint:string;intent:Intent};
  type Session={identity:CommentDiagnosisIdentity;report:Report;context?:SessionContext;page?:Page;focus:ElementHandle<Element>|null;tokens:Map<string,Token>;abort:AbortController;idle?:ReturnType<typeof setTimeout>;life?:ReturnType<typeof setTimeout>;tail:Promise<unknown>;history:Map<string,Report>;counts:Map<Intent,number>;bodyReads:number;bodyBytes:number};
  const sessions=new Map<string,Session>();const occupied=new Map<string,string>();
  const ownerKey=(identity:CommentDiagnosisIdentity)=>JSON.stringify([identity.userId,identity.accountId]);
  const serial=<T>(s:Session,run:()=>Promise<T>):Promise<T>=>{const work=s.tail.then(run,run);s.tail=work.catch(()=>{});return work;};
- const invalidate=async(s:Session)=>{const tokens=[...s.tokens.values()];s.tokens.clear();await Promise.allSettled(tokens.map(token=>token.handle.dispose()));};
+ const invalidate=async(s:Session)=>{const tokens=[...s.tokens.values()];s.tokens.clear();await Promise.allSettled(tokens.flatMap(token=>[token.handle.dispose(),token.root.dispose()]));};
  const snapshot=(s:Session)=>clone(s.report);
  const close=async(s:Session,expired=false)=>{
   if(s.idle)clearTimeout(s.idle);if(s.life)clearTimeout(s.life);
@@ -155,18 +208,24 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
    const result=await inspect(s);
    try{
     const data=await result.evaluate(value=>({ui:value.ui,entries:value.entries.map(entry=>({candidate:entry.candidate,fingerprint:entry.fingerprint}))}));
+    const refs=new Map((data.ui.roots??[]).map(root=>[root.rootRef,randomUUID()]));
+    for(const root of data.ui.roots??[])root.rootRef=refs.get(root.rootRef)!;
     const entriesHandle=await result.getProperty('entries');
     try{
      for(const [index,entry] of data.entries.entries()){
       if(!active)throw Error('observation deadline');
-      const entryHandle=await entriesHandle.getProperty(String(index));const property=await entryHandle.getProperty('element');const element=property.asElement() as ElementHandle<Element>|null;await entryHandle.dispose();
+      const entryHandle=await entriesHandle.getProperty(String(index));const property=await entryHandle.getProperty('element');const element=property.asElement() as ElementHandle<Element>|null;const rootProperty=await entryHandle.getProperty('rootElement');const rootElement=rootProperty.asElement() as ElementHandle<Element>|null;await entryHandle.dispose();
       let targetRef:string|null=null;
-      if(element&&entry.candidate.intent&&allowActions&&active&&s.report.status!=='unknown'){targetRef=randomUUID();tokens.set(targetRef,{handle:element,intent:entry.candidate.intent,fingerprint:entry.fingerprint});}
-      else await property.dispose();
-      data.ui.nodes.push({...entry.candidate,targetRef,intent:targetRef?entry.candidate.intent:null});
+      if(element&&rootElement&&entry.candidate.intent&&allowActions&&active&&s.report.status!=='unknown'){targetRef=randomUUID();tokens.set(targetRef,{handle:element,root:rootElement,intent:entry.candidate.intent,fingerprint:entry.fingerprint});}
+      else{await property.dispose();await rootProperty.dispose();}
+      data.ui.nodes.push({...entry.candidate,rootRef:refs.get(entry.candidate.rootRef!),targetRef,intent:targetRef?entry.candidate.intent:null});
      }
     }finally{await entriesHandle.dispose();}
-    while(Buffer.byteLength(JSON.stringify(data.ui))>12*1024&&data.ui.nodes.length){const node=data.ui.nodes.pop()!;if(node.targetRef){await tokens.get(node.targetRef)?.handle.dispose();tokens.delete(node.targetRef);}data.ui.truncated=true;}
+    while(Buffer.byteLength(JSON.stringify(data.ui))>12*1024&&data.ui.nodes.length){
+     const node=data.ui.nodes.pop()!;if(node.targetRef){await tokens.get(node.targetRef)?.handle.dispose();await tokens.get(node.targetRef)?.root.dispose();tokens.delete(node.targetRef);}
+     for(const stats of [data.ui.roots?.find(root=>root.rootRef===node.rootRef),data.ui.groups.find(group=>group.group===node.group)])if(stats){stats.returned=Math.max(0,stats.returned-1);stats.omitted++;if(node.unavailable)stats.unsupported=Math.max(0,stats.unsupported-1);}
+     data.ui.truncated=true;if(data.ui.coverage&&!data.ui.coverage.limits.includes('output_limit'))data.ui.coverage.limits.push('output_limit');
+    }
     if(!active)throw Error('observation deadline');
     data.ui.observationId=randomUUID();s.report.ui=data.ui;s.tokens=tokens;
     s.report.allowedNext=[...new Set(data.ui.nodes.flatMap(node=>node.intent?[node.intent]:[]))];
@@ -174,7 +233,7 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
    }finally{await result.dispose();}
   };
   try{await Promise.race([work(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>{active=false;reject(Error('observation deadline'));},1000);})]);}
-  catch{active=false;await Promise.allSettled([...tokens.values()].map(token=>token.handle.dispose()));tokens.clear();s.report.ui=emptyUi();s.report.allowedNext=[];if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}}
+  catch{active=false;await Promise.allSettled([...tokens.values()].flatMap(token=>[token.handle.dispose(),token.root.dispose()]));tokens.clear();s.report.ui=emptyUi();s.report.allowedNext=[];if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}}
   finally{if(timer)clearTimeout(timer);}
  };
  // 每阶段监听自然响应，返回前冻结；下一阶段不会接收上一窗口迟到的JSON。
@@ -275,7 +334,7 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
     // 重跑同一生产结构校验，并以DOM对象身份核对；旧handle仍连接不代表仍是获准控件。
     const revalidate=async()=>{
      try{const inspection=await inspect(s);
-      try{return await inspection.evaluate((value,args)=>value.entries.some(entry=>entry.element===args.element&&entry.candidate.intent===args.intent&&entry.fingerprint===args.fingerprint),{element:token.handle,intent:token.intent,fingerprint:token.fingerprint});}finally{await inspection.dispose();}
+      try{return await inspection.evaluate((value,args)=>value.entries.some(entry=>entry.element===args.element&&entry.rootElement===args.root&&entry.candidate.intent===args.intent&&entry.fingerprint===args.fingerprint),{element:token.handle,root:token.root,intent:token.intent,fingerprint:token.fingerprint});}finally{await inspection.dispose();}
      }catch{return false;}
     };
     const valid=await revalidate();
