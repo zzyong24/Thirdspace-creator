@@ -6,6 +6,7 @@ import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/bac
 import {
   chatProviderNonTextSchema, executionCheckpointSchema, saveExecutionCheckpointSchema, checkpointToolCallSchema,
   workerToolResultReceiptSchema, type ExecutionRef,
+  chatWorkerInputSchema, chatModelReplayFingerprintsSchema,
 } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
@@ -20,7 +21,7 @@ function parseCheckpoint(raw:unknown) {
   if (!parsed.success) throw new ConflictError("历史检查点格式不兼容，须先对账");
   return parsed.data;
 }
-function modelToolCalls(call:Call) {
+function modelToolCalls(call:Call,piChat=false) {
   if (!call.providerResult) return [];
   const provider=call.providerResult as {content?:unknown[];finishReason?:{unified?:string}};
   if (!Array.isArray(provider.content)) throw new ConflictError("模型回执缺少规范内容");
@@ -35,10 +36,12 @@ function modelToolCalls(call:Call) {
       throw new ConflictError("模型回执存在尚不能恢复的内容类型");
     }
   }
-  if ((provider.finishReason?.unified==="tool-calls") !== (tools.length>0)) throw new ConflictError("模型结束原因与工具调用回执不一致");
+  // Pi 聊天截断提案仍是真实已结算事实；宿主工具绑定只允许结算无副作用错误。
+  const truncated=piChat && !call.parentCallId && provider.finishReason?.unified==="length";
+  if ((provider.finishReason?.unified==="tool-calls") !== (tools.length>0) && !(truncated && tools.length>0)) throw new ConflictError("模型结束原因与工具调用回执不一致");
   return tools;
 }
-function reconstruct(refs:MessageRef[], calls:Call[]) {
+function reconstruct(refs:MessageRef[], calls:Call[],piChat=false) {
   const {roots} = partitionExecutionCalls(calls);
   const confirmed = roots.filter(hasReceipt);
   const pendingTools = new Map<string,string>();
@@ -54,7 +57,7 @@ function reconstruct(refs:MessageRef[], calls:Call[]) {
     }
     if (ref.role === "assistant") {
       if (pendingTools.size) throw new ConflictError("前一模型回合尚有工具未完成");
-      for (const tool of modelToolCalls(call)) {
+      for (const tool of modelToolCalls(call,piChat)) {
         if (seenTools.has(tool.toolCallId)) throw new ConflictError("模型工具调用回执重复");
         seenTools.add(tool.toolCallId);
         pendingTools.set(tool.toolCallId,tool.toolName);
@@ -93,7 +96,8 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         if(previous && (input.messages.length<previous.messages.length || previous.messages.some((message,index)=>message.callId!==input.messages[index]?.callId || message.role!==input.messages[index]?.role))) {
           throw new ConflictError("已保存消息不能删除或改写");
         }
-        reconstruct(input.messages,calls);
+        const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
+        reconstruct(input.messages,calls,chat.success && chat.data.executionEngine==="pi");
         const checkpoint=executionCheckpointSchema.parse({schemaVersion:1,revision:input.expectedRevision+1,expectedRevision:input.expectedRevision,requestDigest:digest,ledgerSequence:sequence,messages:input.messages});
         await tx.update(executionTasks).set({checkpoint,updatedAt:now()}).where(eq(executionTasks.id,task.id));
         return {revision:checkpoint.revision};
@@ -105,7 +109,14 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         const checkpoint=parseCheckpoint(task.checkpoint);
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const {roots,children}=partitionExecutionCalls(calls);
-        const reconstructed=reconstruct(checkpoint?.messages ?? [],calls);
+        const chat=chatWorkerInputSchema.safeParse((task.payload as {modelInput?:unknown})?.modelInput);
+        const piChat=chat.success && chat.data.executionEngine==="pi";
+        const reconstructed=reconstruct(checkpoint?.messages ?? [],calls,piChat);
+        // 每个操作键只暴露最新根模型调用；该查询已受当前任务账号及租约约束。
+        const latestModels=new Map(roots.filter(call=>call.kind==="model").map(call=>[call.operationKey,call]));
+        const modelReplayFingerprints=chatModelReplayFingerprintsSchema.parse(piChat?[...latestModels.values()]
+          .filter(call=>call.status==="settled" || call.status==="reserved")
+          .map(call=>({callId:call.id,operationKey:call.operationKey,inputDigest:call.inputDigest,status:call.status})):[]);
         const acknowledged=(task.payload as {researchBlockedAcknowledgedCallIds?:unknown} | null)?.researchBlockedAcknowledgedCallIds;
         const acknowledgedIds=new Set(Array.isArray(acknowledged)?acknowledged.filter((id):id is string=>typeof id==="string"):[]);
         const acknowledgedBlockedCallIds=calls.filter(call=>acknowledgedIds.has(call.id) && isAcknowledgableResearchBlock(call)).map(call=>call.id);
@@ -117,7 +128,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         const incompleteReceipt=calls.some(call=>{
           if(call.status!=="settled")return false;
           if(!hasReceipt(call))return true;
-          if(call.kind==="model")try {modelToolCalls(call);}catch {return true;}
+          if(call.kind==="model")try {modelToolCalls(call,piChat);}catch {return true;}
           return false;
         });
         const knownSpentTokens=calls.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0);
@@ -129,7 +140,7 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";
         return {schemaVersion:1 as const,revision:checkpoint?.revision ?? 0,ledgerSequence:calls.at(-1)?.sequence ?? 0,
-          ...reconstructed,replayableScriptDraftToolCallIds,replayableWebReadToolCallIds,replayableGenerationToolCallIds,completableToolCallIds,resumableToolCallIds,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
+          ...reconstructed,modelReplayFingerprints,replayableScriptDraftToolCallIds,replayableWebReadToolCallIds,replayableGenerationToolCallIds,completableToolCallIds,resumableToolCallIds,pendingCalls,uncheckpointedReceipts,childCalls,recovery,acknowledgedBlockedCallIds,budget:task.executionBudget,deadlineAt:task.deadlineAt,
           knownSpentTokens,spentTokens:unknownUsage?null:knownSpentTokens,
           reservedTokens:calls.reduce((sum,call)=>sum+(call.status==="rejected" || call.totalTokens!==null?0:call.reservedTokens),0)};
       });

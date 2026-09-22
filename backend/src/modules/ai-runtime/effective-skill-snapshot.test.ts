@@ -518,7 +518,7 @@ describe("T-944 官方编导方法到聊天读取链路", () => {
     expect(library.catalog).toContain("method.report");
     expect(library.read({skillId:"method.report"}).text).toContain("HTML");
     expect(bases.find(item=>item.skillId==="method.report")).toMatchObject({
-      baseVersion:"workbench-report-2026-09-20",tools:[],editableFields:["system","template"],
+      baseVersion:"workbench-report-2026-09-21-diagnostics",tools:[],editableFields:["system","template"],
     });
   });
   it("新基线保留账号自定义写法，已冻结任务不随后续修改漂移", async () => {

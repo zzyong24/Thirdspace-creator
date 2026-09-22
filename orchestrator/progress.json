@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 62,
+    "verticals": 63,
     "tasks_done": 39,
-    "tasks_total": 156,
-    "tasks_pending": 117,
+    "tasks_total": 157,
+    "tasks_pending": 118,
     "verticals_complete": 4
   },
   "verticals": [
@@ -51,6 +51,47 @@
         "frontend/src/cli/**",
         "ai-worker/src/**"
       ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
+      "task_id": "T-1027",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "read_set": [
+        "docs/features/t1027-comment-collection-evidence.md",
+        "backend/src/application/collection/**",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner*",
+        "frontend/src/server/ingestion/**"
+      ],
+      "write_set": [
+        "docs/features/t1027-comment-collection-evidence.md",
+        "docs/verification/t1027*",
+        "backend/src/application/collection/**",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner*",
+        "frontend/src/server/ingestion/douyin-cdp*",
+        "frontend/src/server/ingestion/comment-collection-plan.test.ts"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "id": "T-1027",
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
       "exclusive_resources": [],
       "step_write_set": {},
       "step_read_set": {},

@@ -76,3 +76,56 @@
 - frontend 类型检查通过，打包四项42测试通过。安装版复测仍待进行。
 - 第二独立复核指出异常提案会遮住诊断、分页反复传输历史大参数；已修复并新增正式 transport 回归，公开读侧5/5通过。异常身份保留 null/invalid 标记；当前页参数查询保留跨页来源关联，历史仅扫描轻量身份。复核确认两项已闭合。
 - 最新 frontend/contract 类型检查通过；backend 全量类型错误仍为既有测试问题，新增测试中的两项类型错误已当场修复。边界门卫通过，无新增违规。
+
+## 第二轮安装实测（候选 a9e27bcb）
+
+已覆盖并启动 `/Applications/CreatorOS.app`（本次 PID 94166），CLI full/connected。DMG SHA-256 `c12d3306c6b7c860b3d93d36d65cf004a6ba8928e6c1e6e94ad27de198ad2daf`。原任务 `execution-task-2082997a-82` 自动以 attempt=2 恢复，最终72条已结算回执；这是恢复机制通过的证据，**不是目标全部完成的证据**。真实 Node 核对5行、总播放20,349、平均4,069.8、三文件存在；网页导航错误自行纠正后HTTP200，提取/截图/关闭完成。然而计划始终为空、登记失败，最终模型错误声称初始计划已保存，不能采信该文字作为验收。
+
+### 单独边界与导出验收
+
+`execution-task-cf2fc682-71`：44条回执。中文空格路径写入成功；错误版本更新拒绝、父目录写入拒绝；受控 Node 进程输出 `cancel-test`，主动 cancel 后 status=cancelled。空数据报告登记成功 `wa-149a5f68f10f211d88281fd089e54a52@1`，627字节，hash=`6a0f467d67e78f9cff82f0e8e623208ed5134d8e8f641ba25ba749a4aa5e2af0`；raw/preview/PNG/PDF导出通过，实际PNG正确显示样本0、总数0、平均不适用。4页200字节读取拼接后hash一致；同路径再次导出被EEXIST拒绝，原文件字节不变；原登记operation公开对账返回committed。
+
+同时发现：edit 返回版本2后，新 read/stat仍显示版本1与旧内容，需修复跨回合读取缓存，不能标文件更新读回通过。
+
+`execution-task-cf2fc682-92`：同会话复制/更新产物失败。输入真实旧artifactId与baseArtifactRef，copy返回invalid_input、register仍返回artifact_not_committed；仅旧版存在。登记功能不能因初次成功便标整个版本链通过。以上问题均保留原CLI证据并继续修复。
+
+### 追加真实回归与第三轮修复
+
+- 公开采集回归：指标 `run-4336889a-ca94-4f56-bfea-acf26920c341`、流量 `run-ec8d2770-8a52-4a07-9cb1-c49c14f621cd`、明细 `run-8e9cae86-5070-47cd-a27d-c128fafb6baf` 均 succeeded；流量更新8项。评论 `run-d1d19487-3e48-453f-9eb0-f0bb602b1cf8` 返回 failed，却显示“全量完成:已采9/9个作品”，尚不能判为通过，继续核查。
+- 浏览器两组独立任务均能打开/导航/observe；合法 scroll 也进入 TOOL_REQUIRES_RECONCILIATION，证明不能只归咎于首组 click 缺参数。四个验收任务经公开命令取消，保留原未知回执，不重放未知动作。实际并发 Act 尚未通过。
+- 文件新观察修复：跨操作不再复用旧 read/stat；同调用重放和写操作防重复保留。真实账本回归先6项红测，修复后相关4文件31项通过，安装复测待进行。
+- 根目录 list 的 `.` 仅在 list 规范成省略路径；越界和写入路径约束保留。浏览器缺必填 action 参数在派发前给具体格式说明，未知已派发操作仍只能对账。产物登记提供真实身份/版本/provenance纠错说明，只有服务确认没有提交时才能标为 invalid_input。
+- host第三轮合并回归：3文件34项通过、5项跳过；包含真实backend登记、同会话跨任务版本与PNG复制链。该证据属于自动化集成，不能代替安装版实际版本交付。
+
+- 方法工具安装实测：`execution-task-cf2fc682-347` succeeded，4条已结算回执。实际 skill.read 读到 method.report（workbench-report-2026-09-21-diagnostics，949字符）和 method.research（1463字符），两项hasMore=false且overlayRevision=null；无需把纯方法读取伪称为完整报告生成。
+- 模型截断恢复隔离集成：重现原5 calls/checkpoint4失败形态后，原task retry、新租约续跑succeeded；前五条账本不变。length工具提案只结算无副作用错误；旧长结果提示仅在完整请求digest匹配时回放，新请求保留provider ID。backend相关51项与Worker32项通过，安装原报告续跑尚待第三候选。
+- 原生浏览器实际CfT：scroll/click/hover、旧引用拒绝、双任务隔离2项通过；host20项、匿名策略3项、adapter32项通过。此为隔离原生测试，安装CLI Act仍待复测。额外Hub安全复核要求Act+evaluate拒绝，不能以工作台入口暂不可达省略边界。
+- 浏览器TS参数回归：补支持的timeout_ms与七类合法action完整租约/宿主透传后15项通过、4项显式实机跳过；额外字段及错误direction类型预检拒绝。
+
+## 按能力逐项核验（第三候选安装前）
+
+| 功能 | 安装版已取得证据 | 当前结论 |
+|---|---|---|
+| plan.update/计划进度 | 原任务72回执却plan=null | 未通过，已补真实版本与引用纠错，待复验 |
+| skill.read | 347任务两种方法及版本正文 | 读取通过；长正文分页另由夹具验证 |
+| files.list/write/read/stat | 空目录、中文空格路径、写读与stat真实发生 | 首次写读通过，编辑后观察未通过 |
+| files.edit | 错版本拒绝；正确更新得到新版本 | 更新回执通过，新read/stat旧缓存已修待安装 |
+| execution.run/status/cancel | Node精确计算；长进程输出后cancel/status cancelled | 本机通过，完整进程树回归另列Rust证据 |
+| browser.open/navigate/observe/extract/screenshot/status/close | 82及并发任务真实工具回执 | 基础工具已实测；全套并发Act闭环待复验 |
+| browser.act | 合法scroll变unknown | 未通过，原生限制已修待安装 |
+| artifact.register/read/versions | 空报告v1登记、读回、版本列表 | 初次通过；跨回合修改未通过 |
+| artifact.copy | HTML不是其支持输入族；PNG真实安装链待验 | 不能以HTML失败替代PNG验收 |
+| 产物公开列表/分页/原操作对账 | 空报告分页hash相同、对账committed | 通过 |
+| raw/preview/png/pdf导出 | 空报告四格式，PNG实际显示0/不适用；覆盖拒绝 | 空数据通过，原真实报告图表未通过 |
+| 原任务恢复/停止 | 82原ID attempt2续跑；四个unknown浏览器任务CLI取消 | 部分通过；99原报告恢复、暂停/继续待复验 |
+| 原采集兼容 | 指标/流量/明细succeeded，评论failed | 评论问题沿T1027继续修复 |
+| 页面打开/历史性能 | LED047自动化161项 | 真机UI时延未测，不用CLI接口时延冒充 |
+| 双端升级 | 两次本机覆盖安装且原任务/产物保留 | macOS已实测；Windows真机尚无环境证据 |
+
+### 第三候选冻结前收敛
+
+长历史兼容的独立复核曾复现19/18回合窗口差异导致合法旧请求无法回放；现改为重建完整legacy窗口并经同一SDK规范化，保留完整digest/callId/settled核验。真实Worker新增临界红测转绿，前41条账本与费用不变，新供应商请求仍使用provider ID；独立复核确认捕获SDK只返回本地流、不调用内层供应商/账本。相关backend52项、Worker35项通过。
+
+本轮最终契约43文件249项通过；host合并5文件44项通过、5项跳过。Skill冻结测试先复现1项旧版本断言失败，核对真实安装回执与官方模板后更新为实际新方法版本，13项通过。匿名Hub强化后策略4/4通过，拒绝Act伪装evaluate且保留七类交互；日志 `/tmp/t1026-anonymous-policy-final.XXXXXX.log`。以上仍不替代第三候选安装实测。
+
+T1027最终独立复核确认评论归属、明确未结束分页、同页瞬时失败恢复及混合归属页均已闭合；前端150项、后端28项通过，最终类型检查通过。安装前保留原真实评论失败，不宣称采集已恢复。第三候选将同时纳入T1026与T1027已冻结修复。

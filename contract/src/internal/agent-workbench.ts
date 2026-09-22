@@ -72,6 +72,8 @@ export const workbenchErrorSchema = z.object({
   dispatched: z.boolean(),
   /** 后端已证明本次派发没有留下提交；只有这种失败才可安全发起新 operationId。 */
   confirmedNoCommit: z.boolean().optional(),
+  /** 宿主生成的有界修复说明；不得透传包含凭据的原始异常。 */
+  recovery: z.string().max(4000).optional(),
   nextAction: z.enum(["fix_input", "retry", "reconcile", "login", "wait", "contact_support"]),
 }).strict();
 const resultBase = z.object({

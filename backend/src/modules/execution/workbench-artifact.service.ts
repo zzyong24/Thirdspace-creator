@@ -14,6 +14,13 @@ import {ConflictError} from "./execution.errors";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 
 const MAX_ARTIFACT_BYTES=20*1024*1024;
+/** 另一原操作持有占位；调用方应等待/核对该操作，不把合法参数误判为输入错误。 */
+export class WorkbenchArtifactPendingError extends ConflictError {
+ constructor(readonly pendingOperationId:string){
+  super("产物有另一操作待完成或核对");
+  this.name="WorkbenchArtifactPendingError";
+ }
+}
 // 附加诊断只作观测，不参与正式元数据和版本索引。未知策略须显式升级此边界。
 const rendererReceiptSchema=z.object({
  rendererPolicy:z.literal("static-offline-v1"),
@@ -256,7 +263,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     eq(workbenchArtifactLineages.userId,scope.userId),eq(workbenchArtifactLineages.accountId,scope.accountId),
     eq(workbenchArtifactLineages.conversationId,scope.conversationId),eq(workbenchArtifactLineages.artifactId,artifactId))).for("update");
    if(lineage?.pendingOperationId){
-    if(lineage.pendingOperationId!==operationId)throw new ConflictError("产物当前有待核对的修订，请稍后重试");
+    if(lineage.pendingOperationId!==operationId)throw new WorkbenchArtifactPendingError(lineage.pendingOperationId);
     const row=pendingRow(lineage);if(row.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的产物参数已改变");
     return row;
    }
@@ -403,7 +410,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
      }
      if(prior.length+pending.length>=1000)throw new ConflictError("任务产物版本数量已达上限");
      const artifactId=input.artifactId??`wa-${digest(JSON.stringify([task.id,operationId])).slice(0,32)}`;
-     if(pending.some(row=>row.metadata.artifactId===artifactId))throw new ConflictError("当前产物已有待完成登记");
+     const occupying=pending.find(row=>row.metadata.artifactId===artifactId);
+     if(occupying)throw new WorkbenchArtifactPendingError(occupying.operationId);
      const versions=prior.filter(row=>row.metadata.artifactId===artifactId);
      const current=versions.length?Math.max(...versions.map(row=>row.metadata.version)):0;
      if(input.artifactId&&current===0)throw new ConflictError("产物 ID 不属于当前任务");
@@ -475,7 +483,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     if(pending){const row=pendingRow(pending);if(row.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的复制参数已改变");return row;}
     if(records(task.payload).some(row=>row.metadata.relativePath===input.targetPath))throw new ConflictError("复制目标路径已被正式产物占用");
     const taskPending=await tx.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingTaskId,task.id));
-    if(taskPending.some(item=>workbenchArtifactSchema.safeParse(item.pendingMetadata).data?.relativePath===input.targetPath))throw new ConflictError("复制目标路径已有待核对产物");
+    const occupying=taskPending.find(item=>workbenchArtifactSchema.safeParse(item.pendingMetadata).data?.relativePath===input.targetPath);
+    if(occupying)throw new WorkbenchArtifactPendingError(pendingRow(occupying).operationId);
     const artifactId=`wa-${digest(JSON.stringify([scope.userId,scope.accountId,scope.conversationId,task.id,operationId])).slice(0,32)}`;
     const metadata=workbenchArtifactSchema.parse({artifactId,version:1,mime:"image/png",size:source.metadata.size,hash:source.metadata.hash,
      relativePath:input.targetPath,taskId:task.id,provenance:[],copiedFrom:{artifactId:source.metadata.artifactId,version:source.metadata.version,

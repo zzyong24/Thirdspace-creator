@@ -60,6 +60,19 @@ describe("桌面任务文件宿主",()=>{
     expect(filePort).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["darwin","win32"] as const)("%s 列举任务根目录接受点路径，但不开放绝对路径或父目录",async platform=>{
+    const filePort=vi.fn(async()=>["报告.md"]);
+    const host=createNativeFilesWorkbenchHost(db,{...options,platform,filePort})!;
+    expect(await host.dispatch(call("files.list",{path:"."}),control)).toMatchObject({status:"succeeded"});
+    expect(filePort).toHaveBeenLastCalledWith({executionTaskId:"task",attempt:2,fenceToken:"fence"},"op",{kind:"list"});
+    expect(await host.dispatch(call("files.list",{}),control)).toMatchObject({status:"succeeded"});
+    for(const path of ["/","..","../outside","./../outside"]){
+      expect(await host.dispatch(call("files.list",{path}),control)).toMatchObject({status:"failed",error:{dispatched:false}});
+    }
+    expect(await host.dispatch(call("files.write",{path:".",content:"x"}),control)).toMatchObject({status:"failed",error:{dispatched:false}});
+    expect(filePort).toHaveBeenCalledTimes(2);
+  });
+
   it("回读文本与冲突版本有确定结果，未知写入保留原 operationId 等待对账",async()=>{
     const filePort=vi.fn(async (_ref,_id,action)=>{
       if(action.kind==="read")return {contentBase64:Buffer.from("事实=0").toString("base64"),total:8,version:1};

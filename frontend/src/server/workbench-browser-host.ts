@@ -37,6 +37,25 @@ function parseInput(name:BrowserTool,raw:unknown):BrowserInput|null{
  }
  return input as BrowserInput;
 }
+/** SEMANTIC_BOUNDARY_ALLOW: 对齐原生 build_act_spec 的协议字段，校验发生在派发前；不选择目标元素或判断业务意图。 */
+function actionInputRecovery(action:string,raw:Record<string,unknown>):string|null{
+ const ref=()=>typeof raw.ref==="string"&&raw.ref.length>0&&raw.ref.length<=128;
+ const text=(key:string)=>typeof raw[key]==="string";
+ const shapes:Record<string,{keys:string[];valid:()=>boolean;help:string}>={
+  click:{keys:["ref"],valid:ref,help:'input={"ref":"最新 observe 返回的元素引用"}'},
+  hover:{keys:["ref"],valid:ref,help:'input={"ref":"最新 observe 返回的元素引用"}'},
+  type:{keys:["ref","text"],valid:()=>ref()&&text("text"),help:'input 必须包含 ref 和 text 字符串'},
+  set_value:{keys:["ref","value"],valid:()=>ref()&&text("value"),help:'input 必须包含 ref 和 value 字符串'},
+  select_option:{keys:["ref","options"],valid:()=>ref()&&Array.isArray(raw.options)&&raw.options.every(item=>typeof item==="string"),help:'input 必须包含 ref 和 options 字符串数组'},
+  press_key:{keys:["keys"],valid:()=>text("keys")&&String(raw.keys).length>0,help:'input={"keys":"Tab"}；使用实际需要的按键'},
+  scroll:{keys:["ref","direction","amount"],valid:()=>typeof raw.direction==="string"&&["up","down","left","right"].includes(raw.direction)&&(raw.ref===undefined||ref())&&(raw.amount===undefined||typeof raw.amount==="number"&&Number.isFinite(raw.amount)),help:'input={"direction":"down","amount":300}；省略 ref 表示当前视口'},
+ };
+ const shape=shapes[action];
+ const knownKeys=shape&&Object.keys(raw).every(key=>shape.keys.includes(key)||key==="timeout_ms");
+ const timeoutValid=raw.timeout_ms===undefined||(Number.isSafeInteger(raw.timeout_ms)&&Number(raw.timeout_ms)>=0);
+ return shape&&knownKeys&&timeoutValid&&shape.valid()?null:
+  `${shape?.help??"input 与 action 不匹配"}；额外参数仅支持非负整数 timeout_ms。元素 ref 放在 input.ref；targetId 是真实浏览器标签页 ID，不是元素 ref。本次未派发操作，修正后继续。`;
+}
 const description:Record<BrowserTool,string>={
  "browser.open":"为当前任务打开受控浏览器 Lane。主身份使用当前账号的独立档案，登录状态须实际验证。",
  "browser.status":"查看当前任务浏览器 Lane 的状态。",
@@ -188,6 +207,11 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    if(!browserTools.includes(name))return failed(call.context.operationId,"BROWSER_CAPABILITY_UNAVAILABLE");
    const input=parseInput(name,call.invocation.input);
    if(!input)return failed(call.context.operationId,"INVALID_BROWSER_INPUT");
+   if(name==="browser.act"){
+    const recovery=actionInputRecovery(input.action!,input.input!);
+    if(recovery)return workbenchResultSchema.parse({operationId:call.context.operationId,status:"failed",artifactRefs:[],progressCursor:null,
+     error:{code:"invalid_browser_action",dispatched:false,retryable:false,nextAction:"fix_input",recovery}});
+   }
    const ref={executionTaskId:call.context.taskId,attempt:call.context.attempt,fenceToken:call.context.fenceToken};
    try {await leases.withLease(ref,"admission",async({context,task})=>{
     if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||

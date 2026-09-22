@@ -9,17 +9,19 @@ import { z } from "zod";
 import {
   chatWorkerInputSchema, workerModelSpecSchema, workerReservationSchema, workerStartReceiptSchema,
   agenticToolReservationSchema, agenticToolOutcomeSchema, type WorkerPort, type WorkerProviderReceipt,
+  chatModelReplayFingerprintsSchema,
 } from "@creatoros/contract/execution-worker";
 import { modelFor } from "../runtime/provider-factory";
 import { runChatPiLoop, ChatFinalRecoveryError, ChatPlanProgressError, type ChatPlanStatus } from "../runtime/chat/chat-pi-loop";
 import { sanitizeToolName } from "../runtime/chat/tool-names";
-import { createDurableStreamModel } from "./durable-stream-model";
+import { createDurableStreamModel, type ToolResultProjectionText } from "./durable-stream-model";
 import { runDurableAgenticTool } from "./durable-agentic-tool";
 import { GenerationFailure } from "./generation-error";
 import { projectReceiptForPi } from "../capabilities/result-pages";
 import { createWorkbenchGateway, toAgenticToolOutcome } from "../capabilities/gateway";
 import { workbenchResultSchema,workbenchScreenshotResolvedSchema } from "@creatoros/contract/agent-workbench";
 const checkpointSchema=z.object({pendingCalls:z.array(z.object({callId:z.string().optional(),status:z.string()})).default([]),replayableScriptDraftToolCallIds:z.array(z.string()).default([]),replayableWebReadToolCallIds:z.array(z.string()).default([]),replayableGenerationToolCallIds:z.array(z.string()).default([]),completableToolCallIds:z.array(z.string()).default([]),resumableToolCallIds:z.array(z.string()).default([]),acknowledgedBlockedCallIds:z.array(z.string()).default([]),revision:z.number().int().nonnegative(),ledgerSequence:z.number().int().nonnegative(),
+  modelReplayFingerprints:chatModelReplayFingerprintsSchema.default([]),
   messages:z.array(z.object({role:z.enum(["assistant","tool"]),callId:z.string()})),
   uncheckpointedReceipts:z.array(z.object({kind:z.enum(["model","tool"]),callId:z.string(),sequence:z.number().int().positive()})),
   recovery:z.enum(["ready","pending","requires_replay","requires_reconciliation"])});
@@ -37,6 +39,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   let failure:GenerationFailure|undefined,lastModelCallId:string|undefined;
   const modelForTool=new Map<string,string>(),toolCallIds=new Set<string>();
   const outcomesForProjection=new Map<string,{callId:string;outcome:z.infer<typeof agenticToolOutcomeSchema>}>();
+  const legacyToolResultTexts=new Map<string,ToolResultProjectionText[]>();
+  let replayPrompt:(()=>Promise<unknown>)|undefined;
   const fail=(error:unknown,code:string)=>{
     const result=error instanceof GenerationFailure?error:new GenerationFailure("unknown_result",code);
     failure??=result;stop.abort();return result;
@@ -103,6 +107,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     await checkpoint();
   };
   const model=createDurableStreamModel({model:modelFor(spec),operationKey:input.operationKey,signal,
+    replayFingerprints:initial.modelReplayFingerprints,legacyPrompt:()=>replayPrompt?.()??Promise.resolve(undefined),
     fallbackModel:async operationKey=>{
       const raw=await ports.call("resolveChatFallbackCredential",{operationKey},signal);
       return raw===null?null:modelFor(workerModelSpecSchema.parse(raw));
@@ -199,6 +204,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      replayProjection:{original:legacyToolResultTexts,capture:build=>{replayPrompt=build;}},
       readPlanStatus:ports.readPlanStatus?()=>ports.readPlanStatus!(signal):undefined,
       presentToolResult:async(_name,_visible,toolCallId)=>{
         const receipt=outcomesForProjection.get(toolCallId);
@@ -209,10 +215,23 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         const reference=`[原工具调用 ID: ${receipt.callId}；完成计划步骤时引用此 operationRef。]`;
         // 原回执已先结算。只解析本轮工具结果中的图片，恢复历史文本保持分页但不重复注入媒体。
         // 分页 reader 按 provider toolCallId 找回执；计划引用和截图解析仍用 execution callId。
-        const projected=await projectReceiptForPi(receipt.outcome,toolCallId,hasImage?{
-          resolveImage:async dataRef=>workbenchScreenshotResolvedSchema.parse(await ports.call("resolveWorkbenchScreenshot",{callId:receipt.callId,dataRef},signal)),
+        // 两种投影共享同一次媒体解析；旧文字候选只能用于匹配已结算模型请求。
+        const media=new Map<string,Promise<z.infer<typeof workbenchScreenshotResolvedSchema>>>();
+        const projectionPorts=hasImage?{
+          resolveImage:(dataRef:string)=>{
+            let result=media.get(dataRef);
+            if(!result){result=ports.call("resolveWorkbenchScreenshot",{callId:receipt.callId,dataRef},signal).then(raw=>workbenchScreenshotResolvedSchema.parse(raw));media.set(dataRef,result);}
+            return result;
+          },
           fallbackToText:true,
-        }:{});
+        }:{};
+        const projected=await projectReceiptForPi(receipt.outcome,toolCallId,projectionPorts);
+        const legacy=await projectReceiptForPi(receipt.outcome,receipt.callId,projectionPorts);
+        legacyToolResultTexts.set(toolCallId,projected.content.flatMap((item,index)=>{
+          const previous=legacy.content[index];
+          return item.type==="text" && previous?.type==="text" && item.text!==previous.text
+            ? [{current:`${reference}\n${item.text}`,legacy:`${reference}\n${previous.text}`}]:[];
+        }));
         signal.throwIfAborted();
         return projected.content.map(item=>item.type==="text"?{...item,text:`${reference}\n${item.text}`}:item);
       },
@@ -223,6 +242,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         return executable.execute(args,{...options,messages:[],abortSignal:signal});
       },
     }).catch(error=>{
+      // 内部 stop.abort 不能遮掉先发生的账本/工具错误，否则 generic catch 会误报 interrupted。
+      if(failure)throw failure;
       if(error instanceof ChatFinalRecoveryError)throw new GenerationFailure("failed",error.code);
       if(error instanceof ChatPlanProgressError)throw new GenerationFailure(error.code==="CHAT_PLAN_REQUIRES_USER"?"waiting_user":"failed",error.code);
       throw error;

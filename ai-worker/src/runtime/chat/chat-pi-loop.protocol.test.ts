@@ -5,6 +5,37 @@ import {createDurableStreamModel} from '../../execution/durable-stream-model';
 import {runChatInWorker} from '../../execution/chat-worker-run';
 import {projectReceiptForPi} from '../../capabilities/result-pages';
 const usage={inputTokens:{total:1,noCache:1,cacheRead:0,cacheWrite:0},outputTokens:{total:1,text:1,reasoning:0}};
+it('完整 legacy 窗口只替换本轮宿主回执，冻结历史和用户/助手同文保持原样',async()=>{
+ const current='宿主投影 toolCallId=provider',legacy='宿主投影 toolCallId=execution';
+ let calls=0,buildLegacy:(()=>Promise<unknown>)|undefined,legacyPrompt:unknown;
+ const requests:unknown[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:unknown)=>{
+  requests.push(request);calls++;
+  if(calls===2)legacyPrompt=await buildLegacy!();
+  const first=calls===1;
+  return {stream:new ReadableStream({start(c){
+   c.enqueue({type:'stream-start',warnings:[]});
+   if(first)c.enqueue({type:'tool-call',toolCallId:'owned',toolName:'read',input:'{}'});
+   else{c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:'完成'});c.enqueue({type:'text-end',id:'t'});}
+   c.enqueue({type:'finish',usage,finishReason:{unified:first?'tool-calls':'stop',raw:first?'tool-calls':'stop'}});c.close();
+  }})};
+ }};
+ await runChatPiLoop({model:model as never,system:current,messages:[
+  {role:'user',content:current},
+  {role:'assistant',content:[{type:'text',text:current},{type:'tool-call',toolCallId:'frozen',toolName:'read',input:{text:current}}]},
+  {role:'tool',content:[{type:'tool-result',toolCallId:'frozen',toolName:'read',output:{type:'content',value:[{type:'text',text:current}]}}]},
+  {role:'user',content:'继续读取'},
+ ],definitions:[{name:'read',description:'读取',parameters:{type:'object',properties:{}}}],execute:async()=>({ok:true}),
+  presentToolResult:async()=>[{type:'text',text:current}],approve:async()=> 'approved',approvalId:()=> 'approval',
+  signal:AbortSignal.timeout(10000),maxOutputTokens:128,messageId:'projection',
+  replayProjection:{original:new Map(['owned','frozen'].map(id=>[id,[{current,legacy}]])),capture:build=>{buildLegacy=build;}},
+ });
+ const expected=structuredClone((requests[1] as {prompt:Array<{role:string;content:unknown}>}).prompt);
+ const last=expected.at(-1)! as {content:Array<{output:{value:Array<{text:string}>}}>};
+ last.content[0]!.output.value[0]!.text=legacy;
+ assert.deepEqual(legacyPrompt,expected);
+ assert.equal(calls,2); // 规范化模型不进入真正供应商 doStream。
+});
 it('截图回执经可信解析后以 image 内容进入 Pi 下一次模型请求',async()=>{
  const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWP4z8DwHwAFAAH/e+m+7wAAAABJRU5ErkJggg==';
  const outcome={status:'ok' as const,summary:'截图',evidence:[],data:{workbench:{operationId:'screen-call',status:'succeeded',artifactRefs:[],progressCursor:null,content:[{type:'image',mediaType:'image/png',dataRef:'wm1-'+ 'a'.repeat(64)}]}},error:null,continuation:null,sideEffect:'none' as const};

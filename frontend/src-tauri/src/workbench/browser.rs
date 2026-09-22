@@ -220,6 +220,10 @@ fn now_ms() -> u64 {
 impl BrowserHost {
     fn hub_config(key: &DomainKey) -> HubConfig {
         HubConfig {
+            // Each anonymous Hub/profile belongs to one trusted user/task.
+            // NomiFun's default Anonymous purpose is read-only shared crawl;
+            // the workbench also supports controlled interaction in this profile.
+            allow_anonymous_interactions: matches!(key, DomainKey::Anonymous { .. }),
             // Fresh Primary profiles have no verified login. A native window
             // lets the user authenticate directly; Anonymous stays headless.
             headful: matches!(key, DomainKey::Account { .. }),
@@ -1197,6 +1201,8 @@ mod tests {
         };
         assert!(BrowserHost::hub_config(&primary).headful);
         assert!(!BrowserHost::hub_config(&anonymous).headful);
+        assert!(!BrowserHost::hub_config(&primary).allow_anonymous_interactions);
+        assert!(BrowserHost::hub_config(&anonymous).allow_anonymous_interactions);
     }
 
     #[test]
@@ -1775,6 +1781,88 @@ mod tests {
             .await
             .map_err(|_| "browser observe timed out".to_owned())?
             .map_err(|error| error.code.to_owned())?;
+            let scrolled = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-scroll".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "scroll".into(),
+                        input: json!({"direction":"down","amount":200}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: None,
+                    },
+                }),
+            )
+            .await
+            .map_err(|_| "browser scroll timed out".to_owned())?
+            .map_err(|error| format!("browser scroll: {}", error.code))?;
+            let link_ref = observed["result"]["output"]["entries"]
+                .as_array().and_then(|entries| entries.iter().find(|entry| entry["role"] == "link"))
+                .and_then(|entry| entry["ref"].as_str())
+                .ok_or_else(|| "observed page has no link ref".to_owned())?;
+            let generation = observed["result"]["ref_generation"].as_u64()
+                .ok_or_else(|| "observe did not return a generation".to_owned())?;
+            let hover = |operation_id: &str, ref_generation| BrowserRequest {
+                operation_id: operation_id.into(),
+                admission: admission.clone(),
+                identity_mode: IdentityChoice::Anonymous,
+                action: BrowserAction::Execute {
+                    lane_id: lane_id.clone(), expected_browser_epoch: browser_epoch,
+                    action: "hover".into(), input: json!({"ref":link_ref}),
+                    target_id: None, frame_id: None, ref_generation: Some(ref_generation),
+                },
+            };
+            let stale = host.dispatch(hover("real-stale-hover", generation + 1)).await;
+            if stale.as_ref().err().map(|error| error.code) != Some("STALE_LANE_REF") {
+                return Err(format!("stale hover was not fenced: {stale:?}"));
+            }
+            let hovered = tokio::time::timeout(std::time::Duration::from_secs(30),
+                host.dispatch(hover("real-hover", generation)))
+                .await.map_err(|_| "browser hover timed out".to_owned())?
+                .map_err(|error| format!("browser hover: {}", error.code))?;
+            if hovered["result"]["output"]["success"] != true {
+                return Err(format!("browser hover failed: {hovered}"));
+            }
+            let heading_ref = observed["result"]["output"]["entries"]
+                .as_array().and_then(|entries| entries.iter().find(|entry|
+                    entry["role"] == "heading" && entry["name"] == "Example Domain"))
+                .and_then(|entry| entry["ref"].as_str())
+                .ok_or_else(|| "observed page has no Example Domain heading ref".to_owned())?;
+            // Click the observed heading, not the off-domain Learn more link.
+            // Exercise real CDP input and its before/after DOM anchors without
+            // publishing anything or changing an external account.
+            let clicked = tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                host.dispatch(BrowserRequest {
+                    operation_id: "real-click".into(),
+                    admission: admission.clone(),
+                    identity_mode: IdentityChoice::Anonymous,
+                    action: BrowserAction::Execute {
+                        lane_id: lane_id.clone(),
+                        expected_browser_epoch: browser_epoch,
+                        action: "click".into(),
+                        input: json!({"ref":heading_ref,"timeout_ms":5000}),
+                        target_id: None,
+                        frame_id: None,
+                        ref_generation: Some(generation),
+                    },
+                }),
+            ).await.map_err(|_| "browser click timed out".to_owned())?
+                .map_err(|error| format!("browser click: {}", error.code))?;
+            let click_output = &clicked["result"]["output"];
+            if click_output["success"] != true
+                || click_output["effect"]["before_anchor"]["text"] != "Example Domain"
+                || click_output["effect"]["after_anchor"]["text"] != "Example Domain"
+            {
+                return Err(format!("browser click missing real DOM confirmation: {clicked}"));
+            }
+            eprintln!("real scroll receipt: {}", scrolled["result"]["output"]);
+            eprintln!("real click receipt: {click_output}");
             let extracted = tokio::time::timeout(
                 std::time::Duration::from_secs(30),
                 host.dispatch(BrowserRequest {
@@ -1827,11 +1915,12 @@ mod tests {
                 })
                 .await
                 .map_err(|error| error.code.to_owned())?;
-            Ok::<_, String>((status, navigated, observed, extracted, screenshot, closed))
+            Ok::<_, String>((status, navigated, observed, scrolled, extracted, screenshot, closed))
         });
         runtime.block_on(host.shutdown());
         std::fs::remove_dir_all(root).unwrap();
-        let (status, navigated, observed, extracted, screenshot, closed) = outcome.unwrap();
+        let (status, navigated, observed, scrolled, extracted, screenshot, closed) = outcome.unwrap();
+        assert_eq!(scrolled["result"]["output"]["success"], true, "{scrolled}");
         assert!(status["browser_epoch"].as_u64().is_some());
         assert!(status.get("caller").is_none(), "{status}");
         assert!(navigated["laneId"].as_str().is_some(), "{navigated}");

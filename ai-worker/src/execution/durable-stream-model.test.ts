@@ -4,7 +4,8 @@ import type {
   LanguageModelV4,
   LanguageModelV4StreamPart,
 } from "@ai-sdk/provider";
-import { createDurableStreamModel } from "./durable-stream-model";
+import { createDurableStreamModel, selectChatReplayRequest } from "./durable-stream-model";
+import {createHash} from 'node:crypto';
 const usage = {
     inputTokens: { total: 2, noCache: 2, cacheRead: 0, cacheWrite: 0 },
     outputTokens: { total: 3, text: 3, reasoning: 0 },
@@ -330,4 +331,42 @@ it("展示流保存回执丢失不能先结算模型再重放供应商",async()=
  while(true){const next=await reader.read();if(next.done)break;if(next.value.type==="error")errors.push(next.value.error);}
  expect(errors).toHaveLength(1);expect(f.states).toEqual(["start","unknown"]);
  expect(f.provider.doStream).toHaveBeenCalledTimes(1);
+});
+
+it('完整旧窗口候选仍须匹配全请求摘要与 settled 状态',()=>{
+ const current='[结果未显示完 toolCallId=provider-id]',legacy='[结果未显示完 toolCallId=execution-id]';
+ const request={modelId:'fixture',provider:'fixture',prompt:[
+  {role:'user',content:[{type:'text',text:current}]},
+  {role:'assistant',content:[{type:'text',text:current}]},
+  {role:'tool',content:[{type:'tool-result',toolCallId:'owned',toolName:'read',output:{type:'content',value:[{type:'text',text:current}]}}]},
+ ]};
+ const original=structuredClone(request),old=structuredClone(request);
+ (old.prompt[2]!.content[0] as {output:{value:Array<{text:string}>}}).output.value[0]!.text=legacy;
+ const digest=(value:unknown)=>`sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
+ const fingerprint={callId:'model2',operationKey:'turn/model/2',status:'settled' as const,inputDigest:digest(old)};
+ const legacyPrompt=old.prompt;
+ expect(selectChatReplayRequest(request,fingerprint,legacyPrompt)).toEqual({request:old,replayOnly:true});
+ expect(request).toEqual(original);
+ expect(selectChatReplayRequest(request,undefined,legacyPrompt)).toEqual({request,replayOnly:false});
+ expect(selectChatReplayRequest(request,{...fingerprint,inputDigest:digest(request)},legacyPrompt)).toEqual({request,replayOnly:false});
+ // 旧 reserved 没有可回放响应，禁止用旧摘要为新供应商请求作掩护。
+ expect(()=>selectChatReplayRequest(request,{...fingerprint,status:'reserved'},legacyPrompt)).toThrow('CHAT_RESERVED_REQUEST_REPLAY_MISMATCH');
+ const forged=structuredClone(old),forgedUser=forged.prompt[0]!.content[0]!;
+ if('text' in forgedUser)forgedUser.text=legacy;
+ expect(()=>selectChatReplayRequest(request,{...fingerprint,inputDigest:digest(forged)},legacyPrompt)).toThrow('CHAT_MODEL_REQUEST_REPLAY_MISMATCH');
+ expect(()=>selectChatReplayRequest({...request,temperature:0.5},fingerprint,legacyPrompt)).toThrow('CHAT_MODEL_REQUEST_REPLAY_MISMATCH');
+ expect(()=>selectChatReplayRequest(request,fingerprint,[{role:'tool',content:[{type:'tool-result',toolCallId:'foreign',output:{type:'text',value:legacy}}]}])).toThrow('CHAT_MODEL_REQUEST_REPLAY_MISMATCH');
+});
+
+it.each(['reserved','foreign-call','missing-receipt'])('旧候选只允许读取原 settled 回执，错误 %s 回应不得触发供应商',async mode=>{
+ const f=fixture(textParts),current='当前投影',legacy='旧投影';
+ const prompt=[{role:'tool' as const,content:[{type:'tool-result' as const,toolCallId:'owned',toolName:'read',output:{type:'text' as const,value:current}}]}];
+ const oldRequest={prompt:[{...prompt[0],content:[{...prompt[0]!.content[0],output:{type:'text',value:legacy}}]}],modelId:'fixture',provider:'fixture'};
+ if(mode!=='reserved')f.ports.reserve.mockResolvedValue({callId:mode==='foreign-call'?'foreign':'call',status:'settled'});
+ const model=createDurableStreamModel({model:f.provider,operationKey:'chat',ports:f.ports,
+  replayFingerprints:[{callId:'call',operationKey:'chat/model/1',status:'settled',inputDigest:`sha256:${createHash('sha256').update(JSON.stringify(oldRequest)).digest('hex')}`}],
+  legacyPrompt:async()=>oldRequest.prompt,
+ });
+ await expect(model.doStream({prompt})).rejects.toMatchObject({errorCode:'CHAT_MODEL_REPLAY_RECEIPT_MISMATCH'});
+ expect(f.ports.reserve).toHaveBeenCalledTimes(1);expect(f.ports.start).not.toHaveBeenCalled();expect(f.provider.doStream).not.toHaveBeenCalled();
 });

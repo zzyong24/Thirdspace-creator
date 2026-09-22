@@ -1,10 +1,12 @@
 import {afterAll, beforeAll, expect, it} from "vitest";
-import {randomUUID} from "node:crypto";
+import {createHash,randomUUID} from "node:crypto";
+import {z} from "zod";
 import {createDb, aiTasks, executionTasks, executionCalls, eq, type Db} from "@creatoros/backend";
 import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {chatInputDigest} from "../ai/chat-turn-submission.service";
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionChatToolPorts} from "../execution/execution-chat-tool-ports.service";
+import {createWorkbenchArtifactService} from "../execution/workbench-artifact.service";
 import {createPersistentTaskService} from "../execution/persistent-task.service";
 import {createWorkbenchPlanService} from "../execution/workbench-plan.service";
 import {createChatWorkbenchPlanToolHost} from "./chat-workbench-plan-tool-host";
@@ -39,8 +41,8 @@ it("计划工具使用冻结版本与原租约，模型不能凭文本伪造完�
   await expect(tool.execute!(owner,{expectedRevision:1,steps:[step]},scope)).rejects.toThrow();
 });
 
-const planStep={stepId:"read",title:"读取资料",dependsOn:[],status:"pending",operationRefs:[],artifactRefs:[]};
-async function publicFixture(steps:unknown[]){
+const planStep={stepId:"read",title:"读取资料",dependsOn:[],status:"pending" as const,operationRefs:[],artifactRefs:[]};
+async function publicFixture(steps:unknown[],expectedRevision=0,maxCalls=10){
   const id=randomUUID(),owner={userId:id,accountId:id,requestId:id,source:"user" as const};
   const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
   const prepared=await prepareChatToolDefinitions({"plan.update":prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]});
@@ -49,10 +51,10 @@ async function publicFixture(steps:unknown[]){
   await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"copilot.assist",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:new Date().toISOString(),inputData:{modelInputDigest:chatInputDigest(input)}});
   const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const tools=await createChatWorkbenchPlanToolHost(db)(owner,input,ref,new AbortController().signal);
-  const budget={maxCalls:10,maxTokens:10000,deadlineMs:60000},ledger=createExecutionCallLedgerService(db,{budget});
+  const budget={maxCalls,maxTokens:10000,deadlineMs:60000},ledger=createExecutionCallLedgerService(db,{budget});
   const model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});
   await ledger.start(ref,model.id);
-  await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[{type:"tool-call",toolCallId:"plan",toolName:"plan_update",input:JSON.stringify({expectedRevision:0,steps})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
+  await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[{type:"tool-call",toolCallId:"plan",toolName:"plan_update",input:JSON.stringify({expectedRevision,steps})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
   const ports=createExecutionChatToolPorts(db,{budget,tools});
   const reserved=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"plan"});await ports.start(ref,{callId:reserved.callId});
   return {owner,task,ref,ports,tools,ledger,callId:reserved.callId,input,budget};
@@ -72,6 +74,108 @@ it.each([
   expect(call.status).toBe("settled");expect(JSON.parse(call.resultText!).output).toEqual(result);
   expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);
   expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(2);
+});
+
+const feedbackSchema=z.object({
+  currentRevision:z.number(),currentPlan:z.object({planRevision:z.number(),steps:z.array(z.unknown())}).nullable(),
+  referenceRules:z.object({operationRefs:z.string(),artifactRefs:z.string(),unexecutedSteps:z.string()}),
+  recentSuccessfulOperations:z.array(z.object({operationRef:z.string(),toolName:z.string()})),
+  registeredArtifacts:z.array(z.object({artifactRef:z.string(),relativePath:z.string()})),
+});
+
+it("计划不存在且模型猜版本时直接返回真实 0/null，按反馈修正即可在原任务首次保存",async()=>{
+  const f=await publicFixture([{...planStep,operationRefs:["files_write"]}],3);
+  // 安装版原任务冻结版本；新增反馈不得改变定义摘要而阻断原工具调用重放。
+  expect(f.input.tools[0]!.version).toBe("workbench-v1:4d67e4b8da7b9d6ce9fc87a9a7df4a98be435cc0ab30599f3e96cc79430986af");
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",error:{code:"invalid_input"},data:{currentRevision:0,currentPlan:null}});
+  const feedback=feedbackSchema.parse(result.data);
+  expect(feedback.referenceRules.operationRefs).toContain("call_");
+  expect(feedback.referenceRules.operationRefs).toContain("工具名(call_id)");
+  expect(feedback.referenceRules.artifactRefs).toContain("artifactId@version");
+  expect(feedback.referenceRules.artifactRefs).toContain("文件名");
+  expect(feedback.referenceRules.unexecutedSteps).toContain("[]");
+  expect(result.error?.recovery).toContain("expectedRevision=0");
+  expect(feedback.recentSuccessfulOperations).toEqual([]);expect(feedback.registeredArtifacts).toEqual([]);
+  const model=await f.ledger.reserve(f.ref,{kind:"model",operationKey:"repair-model",inputDigest:"sha256:"+"b".repeat(64),reservedTokens:20});
+  await f.ledger.start(f.ref,model.id);
+  await f.ledger.settle(f.ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[{type:"tool-call",toolCallId:"repair-plan",toolName:"plan_update",input:JSON.stringify({expectedRevision:feedback.currentRevision,steps:[planStep]})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
+  const call=await f.ports.reserve(f.ref,{modelCallId:model.id,toolCallId:"repair-plan"});await f.ports.start(f.ref,{callId:call.callId});
+  expect(await f.ports.execute(f.ref,{callId:call.callId})).toMatchObject({status:"ok",sideEffect:"committed"});
+  expect(await createWorkbenchPlanService(db).read(f.owner,f.task.id)).toEqual({planRevision:1,steps:[planStep]});
+  expect((await f.ledger.inspect(f.ref)).calls.every(call=>call.status==="settled")).toBe(true);
+  expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result); // 已结算旧回执不被新版本覆盖。
+});
+
+it("版本冲突反馈携带服务端现存完整计划，保留原步骤与回执供模型自行修订",async()=>{
+  const f=await publicFixture([{...planStep,title:"请求中的旧标题"}]);
+  const plans=createWorkbenchPlanService(db),saved=await plans.save(f.ref,{expectedRevision:0,steps:[{...planStep,title:"服务端当前标题"}]});
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentRevision:1,currentPlan:saved}});
+  expect(result.error?.recovery).toContain("expectedRevision=1");
+  expect(await plans.read(f.owner,f.task.id)).toEqual(saved);
+});
+
+it("巨大历史计划的错误反馈明确标注摘要，不能因反馈超过回执上限变成 unknown",async()=>{
+  const f=await publicFixture([planStep]),plans=createWorkbenchPlanService(db);
+  const steps=Array.from({length:1600},(_,i)=>({...planStep,stepId:`step-${i}`,title:"原".repeat(500)}));
+  const saved=await plans.save(f.ref,{expectedRevision:0,steps});
+  expect(JSON.stringify(saved).length).toBeGreaterThan(800_000);
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentRevision:1,currentPlanComplete:false,currentPlan:{planRevision:1,stepCount:1600,truncated:true}}});
+  expect(result.error?.recovery).toContain("不得据摘要覆盖或删除旧步骤");
+  expect((await f.ledger.inspect(f.ref)).calls.find(call=>call.id===f.callId)?.status).toBe("settled");
+  expect(await plans.read(f.owner,f.task.id)).toEqual(saved);
+});
+
+it("反馈仅列本任务真实成功调用和登记产物，限制数量且不在事务内读 Blob",async()=>{
+  const f=await publicFixture([{...planStep,operationRefs:["files_write(call_fake)"],artifactRefs:["report.md"]}],0,40);
+  const operationRefs:string[]=[];
+  for(let i=0;i<23;i++){
+    const call=await f.ledger.reserve(f.ref,{kind:"tool",operationKey:`evidence-${i}`,inputDigest:"sha256:"+"c".repeat(64),reservedTokens:0});
+    await f.ledger.start(f.ref,call.id);
+    const output={status:i===21?"error":"ok",summary:"私有正文不必进入引用提示",evidence:[],error:i===21?{code:"invalid_input",retryable:false,recovery:"修正"}:null,continuation:null,sideEffect:i===22?"unknown":"none"};
+    await f.ledger.settle(f.ref,call.id,{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify({schemaVersion:1,kind:"tool",toolCallId:`model-tool-${i}`,toolName:"files_read",output})});
+    if(i<21)operationRefs.push(call.id);
+  }
+  const foreign=await publicFixture([planStep]);await foreign.ports.execute(foreign.ref,{callId:foreign.callId});
+  let bytes:Uint8Array|undefined,blobReads=0;
+  const artifacts=createWorkbenchArtifactService(db,{readTaskFile:async()=>({bytes:Buffer.from("已登记报告"),version:1}),blobs:{
+    async submit(_ctx,input){bytes=input.bytes.slice();return {hash:createHash("sha256").update(bytes).digest("hex"),size:bytes.byteLength};},
+    async read(){blobReads++;if(!bytes)throw new Error("缺少 Blob");return bytes.slice();},
+  }});
+  const artifact=await artifacts.register(f.ref,"register-report",{path:"report.md",mime:"text/markdown"});
+  const readsBefore=blobReads;
+  const result=await f.ports.execute(f.ref,{callId:f.callId}),feedback=feedbackSchema.parse(result.data);
+  expect(result).toMatchObject({status:"error",sideEffect:"none"});
+  expect(feedback.recentSuccessfulOperations).toEqual(operationRefs.slice(-20).reverse().map(operationRef=>({operationRef,toolName:"files_read"})));
+  expect(feedback.registeredArtifacts).toEqual([{artifactRef:`${artifact.artifactId}@1`,relativePath:"report.md"}]);
+  expect(JSON.stringify(feedback)).not.toContain(foreign.callId);
+  expect(JSON.stringify(feedback)).not.toContain("私有正文");
+  expect(blobReads).toBe(readsBefore);
+  expect(await createWorkbenchPlanService(db).read(f.owner,f.task.id)).toBeNull();
+});
+
+it("错误反馈在租约内读取最新计划；反馈查询失败仍保持 unknown",async()=>{
+  const f=await publicFixture([planStep],3),plans=createWorkbenchPlanService(db);
+  await plans.save(f.ref,{expectedRevision:0,steps:[planStep]});
+  let changed=false;
+  const advanceBeforeFeedback=new Proxy(db,{get(target,key,receiver){
+    if(key==="transaction")return async(...args:Parameters<Db["transaction"]>)=>{
+      if(!changed){changed=true;await plans.save(f.ref,{expectedRevision:1,steps:[{...planStep,title:"并发修改后的计划"}]});}
+      return target.transaction(...args);
+    };
+    return Reflect.get(target,key,receiver);
+  }});
+  const tools=await createChatWorkbenchPlanToolHost(advanceBeforeFeedback)(f.owner,f.input,f.ref,new AbortController().signal);
+  const result=await createExecutionChatToolPorts(db,{budget:f.budget,tools}).execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({data:{currentRevision:2,currentPlan:{planRevision:2,steps:[{...planStep,title:"并发修改后的计划"}]}}});
+
+  const failure=await publicFixture([planStep],4);
+  const brokenFeedback=new Proxy(db,{get(target,key,receiver){if(key==="transaction")return async()=>{throw new Error("读取当前计划时数据库断连");};return Reflect.get(target,key,receiver);}});
+  const brokenTools=await createChatWorkbenchPlanToolHost(brokenFeedback)(failure.owner,failure.input,failure.ref,new AbortController().signal);
+  await expect(createExecutionChatToolPorts(db,{budget:failure.budget,tools:brokenTools}).execute(failure.ref,{callId:failure.callId})).rejects.toThrow("未确认");
+  expect((await failure.ledger.inspect(failure.ref)).calls.find(call=>call.id===failure.callId)).toMatchObject({status:"unknown",resultText:null});
 });
 
 it.each([new Error("数据库连接中断"),Object.assign(new Error("网络响应丢失"),{name:"ConflictError"})])("底层异常 %s 仍为 unknown，不能伪装零副作用校验失败",async error=>{

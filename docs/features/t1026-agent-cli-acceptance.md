@@ -42,3 +42,15 @@ flowchart LR
 安装候选235888df的真实任务 `execution-task-2082997a-82` 在第一次计划参数纠错后，下一工具进入unknown_result，计划尚未保存。公开events端点用展示层状态枚举解析真实runtime状态，导致读取400。扩展计划host校验与恢复的实现/集成测试写域；计划可预见校验失败必须明确无写入并交回loop，保存前后崩溃按原键幂等恢复。公开账本增加有界工具名/参数投影，以免未知调用缺少诊断证据；不返回模型凭据或完整请求上下文。
 
 同一轮安装实测还确认长回执分页提示误传 execution callId，而 reader 按 provider toolCallId 查找。修复仅纠正模型分页提示的身份；计划 operationRef 与截图解析仍保留 execution ID。通过真实 Worker/Pi 投影到 backend reader 的回归验证，并拒绝跨任务回读。原报告修复任务末次普通异常仍待新版公开账本提供 finishReason/工具提案后复现，禁止凭总 token 数或耗时猜测。
+
+## 第二轮安装实测追加修复
+
+候选 a9e27bcb 安装后，原卡住任务沿同一 ID 自动进入 attempt=2，72条回执最终结束。浏览器纠错导航/提取/截图/关闭、文件写读及 Node 精确核对已实测，但计划仍为空、3份产物登记失败，因此本任务不视作整体验收通过。模型自拟新 artifactId 的确定性身份错误被误标为 transient/retry；计划错误要求读当前版本却不提供可用读回；文件根目录 `files.list(path=".")` 不兼容常见规范。修正错误类型和具体可执行反馈，并只将 list 的点路径规范为省略路径，不放宽写入或越界权限。
+
+原报告修复末次公开账本已确认 finishReason=length，工具提案为 files_write，仅带 path、缺 content。针对该同形回执建立真实 Worker/持久账本回放红测后修复；保留已结算费用，不重放已发生工具副作用。扩展写域至 chat-pi-loop、durable-stream-model 与对应集成测试，范围仍为原非阻断生成与新增能力验收。
+
+追加边界实测还发现跨回合新 read/stat 返回写入前旧回执，扩展修复至 chat tool 复用边界：同一 callId 的历史重放保留，新读取不能永久复用任务早期观察；命令状态、浏览器观察同样必须检查可变性。另有真实同会话 artifact.copy 与 v2 登记失败，验收范围包含完整版本修改公共链路，不能仅验证初次登记。
+
+浏览器实际双任务均能独立打开、导航、observe，但合法 scroll 与 click 在派发后进入 unknown。新增原生 Rust/真实 Chromium Act 复现与修复写域；保持域/身份/外部提交边界，不能为了通过验收把已派发的不确定外部动作伪报未执行。确定缺参数的 action 在派发前返回具体修复指导。Workbench 错误契约添加可选有界 recovery，未知动作仍固定要求沿原操作核对，不被可选文案覆盖。
+
+独立安全复核确认原生匿名Act故障来自继承crawl用途限制。任务专属anonymous Hub的可信装配仅启用公开声明的七类交互；默认采集与replica保持只读，禁止序列化开启和Act伪装Debug。DEC-T1026-ANONYMOUS-ACT记录范围。旧评论采集回归的矛盾完成文案与诊断缺口单独登记T-1027并行修复，T1026继续保留该失败实测。

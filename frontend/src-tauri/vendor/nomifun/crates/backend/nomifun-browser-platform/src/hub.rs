@@ -213,6 +213,12 @@ impl AnonymousProfilePolicy {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct HubConfig {
     pub resource_policy: ResourcePolicy,
+    /// Trusted composition only: enable interactive Act calls in a task-owned
+    /// anonymous Hub. Shared crawl Hubs remain read-only by default. This is
+    /// never accepted from serialized caller/model input and grants no caller
+    /// capability, Debug access, replica writes or approval bypass.
+    #[serde(skip)]
+    pub allow_anonymous_interactions: bool,
     #[serde(default)]
     pub anonymous_profile_policy: AnonymousProfilePolicy,
     #[serde(default)]
@@ -234,6 +240,7 @@ impl Default for HubConfig {
     fn default() -> Self {
         Self {
             resource_policy: ResourcePolicy::default(),
+            allow_anonymous_interactions: false,
             anonymous_profile_policy: AnonymousProfilePolicy::default(),
             primary_profile_policy: PrimaryProfilePolicy::default(),
             owner_lease_ttl_ms: 5 * 60_000,
@@ -7519,7 +7526,11 @@ impl BrowserSessionHub {
             )
         };
         let dispatch_epoch = context.browser_epoch;
-        if let Err(error) = require_lane_operation(identity_mode, &operation) {
+        if let Err(error) = require_lane_operation(
+            identity_mode,
+            &operation,
+            self.inner.config.read().await.allow_anonymous_interactions,
+        ) {
             return Err(error.for_lane(lane_id.clone()));
         }
         if identity_mode == BrowserIdentityMode::Primary
@@ -13134,8 +13145,9 @@ fn replica_operation_requires_primary(operation: &BrowserOperation) -> bool {
 
 /// Identity mode is also an immutable Lane purpose boundary.
 ///
-/// Anonymous and authenticated-replica lanes exist only for bounded crawl
-/// workloads.  A model may learn their owner-scoped `lane_id` from a crawl
+/// Anonymous lanes default to bounded crawl workloads; a trusted composition
+/// may enable Act for a task-owned anonymous Hub. Authenticated replicas remain
+/// read-only regardless of that setting. A model may learn a `lane_id` from a crawl
 /// result, but that handle must not turn the lane into an interactive browser
 /// by selecting a different operation kind on a later call.  Cleanup and
 /// management stay outside this dispatch classifier, so lifecycle authority
@@ -13143,10 +13155,20 @@ fn replica_operation_requires_primary(operation: &BrowserOperation) -> bool {
 fn require_lane_operation(
     identity_mode: BrowserIdentityMode,
     operation: &BrowserOperation,
+    allow_anonymous_interactions: bool,
 ) -> Result<(), BrowserPlatformError> {
     match identity_mode {
         BrowserIdentityMode::Anonymous => {
-            if anonymous_operation_not_allowed(operation) {
+            // SEMANTIC_BOUNDARY_ALLOW: exact native protocol allowlist, matching
+            // the workbench host; this authorizes actions, not creative choices.
+            let interactive = allow_anonymous_interactions
+                && operation.kind == BrowserOperationKind::Act
+                && matches!(
+                    operation.action.as_str(),
+                    "click" | "hover" | "type" | "set_value" | "select_option"
+                        | "press_key" | "scroll"
+                );
+            if !interactive && anonymous_operation_not_allowed(operation) {
                 return Err(crawl_lane_operation_error(identity_mode));
             }
         }
@@ -17426,6 +17448,127 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(harness.probe.entries.load(Ordering::Acquire), 2);
+    }
+
+    #[test]
+    fn anonymous_lane_interaction_policy_cannot_be_enabled_by_serialized_input() {
+        let mut config = serde_json::to_value(HubConfig::default()).unwrap();
+        config["allow_anonymous_interactions"] = json!(true);
+        let decoded: HubConfig = serde_json::from_value(config).unwrap();
+        assert!(!decoded.allow_anonymous_interactions);
+        assert!(!HubConfig::default().allow_anonymous_interactions);
+    }
+
+    #[tokio::test]
+    async fn anonymous_lane_interactions_preserve_capability_epoch_and_replica_guards() {
+        let harness = harness_with_config(HubConfig {
+            allow_anonymous_interactions: true,
+            ..HubConfig::default()
+        });
+        let client = client_for_surface(
+            &harness, "runtime-interactive-anonymous", BrowserSurface::Native,
+            BTreeSet::from([BrowserOperationKind::Manage, BrowserOperationKind::Crawl,
+                BrowserOperationKind::Act, BrowserOperationKind::Debug]),
+        );
+        let lane = client.open(Some("interactive"), BrowserIdentityMode::Anonymous, None)
+            .await.unwrap().lane().clone();
+        let scroll = || BrowserOperation {
+            kind: BrowserOperationKind::Act, action: "scroll".into(),
+            input: json!({"direction":"down","amount":200}),
+            expected_browser_epoch: Some(lane.browser_epoch),
+            target_id: None, frame_id: None, ref_generation: None,
+            may_modify_identity: true,
+        };
+        let mut stale = scroll();
+        stale.expected_browser_epoch = Some(lane.browser_epoch + 1);
+        assert_eq!(client.execute(&lane.lane_id, stale).await.unwrap_err().code,
+            BrowserErrorCode::StaleBrowserEpoch);
+        let mut debug = scroll();
+        debug.kind = BrowserOperationKind::Debug;
+        debug.action = "evaluate".into();
+        assert_eq!(client.execute(&lane.lane_id, debug).await.unwrap_err().code,
+            BrowserErrorCode::OperationNotAllowed);
+        let read_only_lane = harness.client.open(Some("no-act-capability"),
+            BrowserIdentityMode::Anonymous, None).await.unwrap().lane().clone();
+        assert_eq!(harness.client.execute(&read_only_lane.lane_id, scroll()).await.unwrap_err().code,
+            BrowserErrorCode::OperationNotAllowed);
+        assert!(harness.client.execute(&lane.lane_id, scroll()).await.is_err());
+        assert_eq!(require_lane_operation(BrowserIdentityMode::AuthenticatedReplica,
+            &scroll(), true).unwrap_err().code, BrowserErrorCode::NeedsPrimaryIdentity);
+        assert_eq!(harness.probe.entries.load(Ordering::Acquire), 0);
+        harness.probe.releases.add_permits(1);
+        tokio::time::timeout(Duration::from_secs(5), client.execute(&lane.lane_id, scroll()))
+            .await.expect("authorized Act must reach driver promptly").unwrap();
+        assert_eq!(harness.probe.entries.load(Ordering::Acquire), 1);
+    }
+
+    #[tokio::test]
+    async fn anonymous_lane_interactions_only_dispatch_seven_native_actions() {
+        let harness = harness_with_config(HubConfig {
+            allow_anonymous_interactions: true,
+            ..HubConfig::default()
+        });
+        let client = client_for_surface(
+            &harness,
+            "runtime-anonymous-native-actions",
+            BrowserSurface::Native,
+            BTreeSet::from([
+                BrowserOperationKind::Manage,
+                BrowserOperationKind::Crawl,
+                BrowserOperationKind::Act,
+            ]),
+        );
+        assert!(!client.caller().allows(BrowserOperationKind::Debug));
+        let lane = client
+            .open(Some("native-actions"), BrowserIdentityMode::Anonymous, None)
+            .await.unwrap().lane().clone();
+        let operation = |kind, action: &str, input| BrowserOperation {
+            kind,
+            action: action.to_owned(),
+            input,
+            expected_browser_epoch: Some(lane.browser_epoch),
+            target_id: None,
+            frame_id: None,
+            ref_generation: None,
+            may_modify_identity: false,
+        };
+        // A permit makes accidental dispatch fail deterministically instead of hanging.
+        harness.probe.releases.add_permits(1);
+        for action in ["evaluate", "upload_file", "download", "reload", "switch_tab", "", "Click"] {
+            let error = tokio::time::timeout(
+                Duration::from_secs(5),
+                client.execute(&lane.lane_id, operation(
+                    BrowserOperationKind::Act, action, json!({"script": "1 + 1"}),
+                )),
+            ).await.expect("unsupported action must be rejected promptly").unwrap_err();
+            assert_eq!(error.code, BrowserErrorCode::OperationNotAllowed, "{action}");
+            assert_eq!(harness.probe.entries.load(Ordering::Acquire), 0, "{action}");
+        }
+        let native_actions = [
+            ("click", json!({"ref": "f0e1"})),
+            ("hover", json!({"ref": "f0e1"})),
+            ("type", json!({"ref": "f0e1", "text": "hello"})),
+            ("set_value", json!({"ref": "f0e1", "value": "hello"})),
+            ("select_option", json!({"ref": "f0e1", "options": ["one"]})),
+            ("press_key", json!({"keys": "Enter"})),
+            ("scroll", json!({"direction": "down", "amount": 200})),
+        ];
+        // A supported action name does not grant permission under another kind.
+        for (action, input) in &native_actions {
+            let error = client.execute(&lane.lane_id, operation(
+                BrowserOperationKind::Crawl, action, input.clone(),
+            )).await.unwrap_err();
+            assert_eq!(error.code, BrowserErrorCode::OperationNotAllowed, "{action}");
+        }
+        assert_eq!(harness.probe.entries.load(Ordering::Acquire), 0);
+        harness.probe.releases.add_permits(native_actions.len() - 1);
+        for (index, (action, input)) in native_actions.into_iter().enumerate() {
+            let mut native = operation(BrowserOperationKind::Act, action, input);
+            native.may_modify_identity = true;
+            tokio::time::timeout(Duration::from_secs(5), client.execute(&lane.lane_id, native))
+                .await.expect("native Act must reach driver promptly").unwrap();
+            assert_eq!(harness.probe.entries.load(Ordering::Acquire), index + 1, "{action}");
+        }
     }
 
     #[tokio::test]

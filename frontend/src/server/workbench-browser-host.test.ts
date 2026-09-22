@@ -643,3 +643,36 @@ realTest("a live legacy Playwright profile blocks Rust until the real context st
   await rm(root,{recursive:true,force:true});
  }
 },180_000);
+
+it('browser.act 的实际参数缺失在原生派发前明确拒绝并给出修复说明',async()=>{
+ const host=createWorkbenchBrowserHost(db,{platform:'darwin',desktop:true,socketPath:'/not-used.sock'})!;
+ const context={userId:'u',accountId:'a',taskId:'task',attempt:1,fenceToken:'f',leaseId:'w',operationId:'bad-act'};
+ const cases=[{action:'click',input:{button:'primary'},targetId:'f0e6'},{action:'type',input:{ref:'f0e6'}},{action:'set_value',input:{ref:'f0e6'}},{action:'select_option',input:{ref:'f0e6',options:[1]}},{action:'press_key',input:{}},{action:'scroll',input:{deltaY:300}},{action:'click',input:{ref:'f0e6',button:'right'}},{action:'scroll',input:{direction:['down']}},{action:'scroll',input:{direction:'down',timeout_ms:'100'}}];
+ for(const item of cases){
+  const value=await host.dispatch({context,invocation:{name:'browser.act',schemaVersion:1,input:{laneId:'lane',browserEpoch:1,...item}}},{signal:AbortSignal.timeout(1000),onProgress:()=>{}});
+  expect(value).toMatchObject({status:'failed',error:{code:'invalid_browser_action',dispatched:false,nextAction:'fix_input',recovery:expect.stringContaining('input')}});
+ }
+ await host.dispose();
+});
+
+it('七类合法 action 及 timeout_ms 经任务租约完整传至原生宿主',async()=>{
+ const isolated=await createDb(),actDb=isolated.db;
+ const nonce=randomUUID(),tasks=createPersistentTaskService(actDb),received:Array<Record<string,unknown>>=[];
+ const ctx={userId:`act-${nonce}`,accountId:`account-${nonce}`,requestId:nonce,source:'user' as const};
+ const task=await tasks.enqueue(ctx,{kind:'ai_task',ownerType:'ai_task',ownerId:nonce,idempotencyKey:nonce,payload:{}});
+ const claim=(await tasks.claimTask({taskId:task.id,workerId:`worker-${nonce}`}))!;
+ const path=await socket(received);
+ const host=createWorkbenchBrowserHost(actDb,{platform:'darwin',desktop:true,socketPath:path})!;
+ const context={userId:ctx.userId,accountId:ctx.accountId,taskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:`worker-${nonce}`};
+ const dispatch=(name:string,input:Record<string,unknown>)=>host.dispatch({context:{...context,operationId:randomUUID()},invocation:{name,schemaVersion:1,input}},{signal:AbortSignal.timeout(10000),onProgress:()=>{}});
+ const opened=await dispatch('browser.open',{laneId:'act',mode:'anonymous',domain:'example.com'});
+ expect(opened.status,JSON.stringify(opened)).toBe('succeeded');
+ const cases=[{action:'click',input:{ref:'f0e6'}},{action:'hover',input:{ref:'f0e6'}},{action:'type',input:{ref:'f0e6',text:'中文'}},{action:'set_value',input:{ref:'f0e6',value:''}},{action:'select_option',input:{ref:'f0e6',options:['a']}},{action:'press_key',input:{keys:'Tab'}},{action:'scroll',input:{direction:'down',amount:200}}];
+ try{
+  for(const item of cases){
+   const input={...item.input,timeout_ms:1000};
+   expect((await dispatch('browser.act',{laneId:'native-lane',browserEpoch:1,action:item.action,input})).status).toBe('succeeded');
+   expect(received.at(-1)?.action).toMatchObject({kind:'execute',action:item.action,input});
+  }
+ }finally{await dispatch('browser.close',{laneId:'native-lane',browserEpoch:1});await host.dispose();await isolated.client.close();}
+});

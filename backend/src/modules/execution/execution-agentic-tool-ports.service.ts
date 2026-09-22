@@ -12,7 +12,7 @@ const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).d
 type Call=typeof executionCalls.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
 /** 工具名、参数和允许副作用来自后端冻结定义与已结算模型回执，不接受Worker自报。 */
-export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{tools:Record<string,AgenticBackendTool>;waitForResultMs?:number}){
+export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof createExecutionCallLedgerService>[1]&{tools:Record<string,AgenticBackendTool>;waitForResultMs?:number;reuseReadResults?:boolean}){
  const leases=createExecutionLeaseService(db,deps);const ledger=createExecutionCallLedgerService(db,deps);
  const {bind:binding,forCall:bindingForCall}=createAgenticToolBinding(deps.tools);
  const readOutput=(call:Call)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText ?? "")).output);
@@ -69,7 +69,9 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     const unknownMarker=(task.payload as Record<string,unknown>).artifactProtocolVersion===2?deps.tools[bound.executionToolName]?.markUnknown:undefined;
     if(!handler && !bound.validationOutcome && !(bound.dryRun && bound.effect!=="none"))throw new ConflictError("工具没有后端执行端口");
     let reuseCallId:string|undefined;
-    if(bound.reuseWithinRound && !bound.validationOutcome){
+    // SEMANTIC_BOUNDARY_ALLOW: effect=none 只承诺无副作用，不承诺观察值不变。
+    // 聊天端口关闭跨 operation 的读复用；同 callId 回放已在上方独立处理，写入防重放不受影响。
+    if(bound.reuseWithinRound && !bound.validationOutcome && (bound.effect!=="none" || deps.reuseReadResults!==false)){
      for(const prior of [...calls].reverse()){
       if(prior.sequence>=call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
       const previous=bindingForCall(task,calls,prior);

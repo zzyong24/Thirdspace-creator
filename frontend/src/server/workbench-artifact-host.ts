@@ -2,7 +2,7 @@ import "server-only";
 import {createHash,randomUUID} from "node:crypto";
 import {workbenchRendererDiagnostics} from "./workbench-html-diagnostics";
 import type {Db} from "@creatoros/backend";
-import {createExecutionLeaseService,createWorkbenchArtifactService,type WorkbenchArtifactBlobPort} from "@creatoros/backend/modules/execution";
+import {ConflictError,OwnershipError,WorkbenchArtifactPendingError,createExecutionLeaseService,createWorkbenchArtifactService,type WorkbenchArtifactBlobPort} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
 import {workbenchCapabilitySchema,workbenchHostCallSchema,workbenchResultSchema,workbenchArtifactRegisterRequestSchema,workbenchArtifactReadRequestSchema,workbenchArtifactVersionsRequestSchema,workbenchArtifactCopyRequestSchema,type WorkbenchResult} from "@creatoros/contract/agent-workbench";
 import {agenticToolOutcomeSchema,type ExecutionRef} from "@creatoros/contract/execution-worker";
@@ -15,6 +15,8 @@ const registerSchema=workbenchArtifactRegisterRequestSchema;
 const readSchema=workbenchArtifactReadRequestSchema;
 const versionsSchema=workbenchArtifactVersionsRequestSchema;
 const copySchema=workbenchArtifactCopyRequestSchema;
+const REGISTER_GUIDANCE="新建产物请省略 artifactId、expectedVersion 和 baseArtifactRef，由服务生成 ID；修订先调用 artifact.versions/artifact.read，使用真实 artifactId、当前 expectedVersion 及匹配的 baseArtifactRef。provenance 可省略；填写时仅传本任务已结算调用的真实 execution callId，不传工具名或说明文字。修正参数后再调用，不要原样重试。";
+const COPY_GUIDANCE="artifact.copy 仅复制同会话已登记且不超过 2 MiB 的 PNG，targetPath 须以 .png 结尾；HTML/Markdown/CSV 修订请先 artifact.read 回读指定版本，经 files.write 写入当前任务，再 artifact.register 提交真实 artifactId、expectedVersion 和匹配的 baseArtifactRef。修正参数后再调用，不要原样重试。";
 const catalog=[
  workbenchCapabilitySchema.parse({name:"artifact.register",schemaVersion:1,description:"把当前任务中的真实文件保存为可回读版本；修订已有产物时同时提交 artifactId、expectedVersion 和相同的 baseArtifactRef。",
   inputSchema:{type:"object",properties:{path:{type:"string",minLength:1,maxLength:2048},mime:{type:"string",enum:["text/html","text/markdown","text/csv","image/png","application/pdf"]},
@@ -37,6 +39,13 @@ const unknown=(operationId:string):WorkbenchResult=>workbenchResultSchema.parse(
  error:{code:"artifact_result_unknown",retryable:false,dispatched:true,nextAction:"reconcile"}});
 const confirmedNoCommit=(operationId:string,code:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
  error:{code,retryable:true,dispatched:true,confirmedNoCommit:true,nextAction:"retry"}});
+const invalidArtifactInput=(operationId:string,recovery:string,dispatched=false):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
+ error:{code:"invalid_input",recovery,retryable:false,dispatched,...(dispatched?{confirmedNoCommit:true}:{}),nextAction:"fix_input"}});
+const invalidRegister=(operationId:string,reason:string,dispatched=false)=>invalidArtifactInput(operationId,`${reason}。${REGISTER_GUIDANCE}`,dispatched);
+const invalidCopy=(operationId:string,reason:string,dispatched=false)=>invalidArtifactInput(operationId,`${reason}。${COPY_GUIDANCE}`,dispatched);
+const pendingArtifact=(operationId:string,error:WorkbenchArtifactPendingError):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
+ error:{code:"artifact_revision_pending",retryable:false,dispatched:true,confirmedNoCommit:true,nextAction:"wait",
+  recovery:`本次操作未提交；另一操作 ${error.pendingOperationId} 正在登记或等待核对。先通过 artifact.versions 查看该 pendingOperationId 并等待；如需对账，请核对上述原操作。待其完成后，用 artifact.versions/artifact.read 获取最新版本，再决定是否继续修订或复制。`}});
 function record(value:unknown):Record<string,unknown>{
  if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("INVALID_NATIVE_FILE_REPLY");
  return value as Record<string,unknown>;
@@ -97,7 +106,11 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
    }catch{return failed(context.operationId,"artifact_scope_invalid");}
    if(invocation.name==="artifact.register"){
     const input=registerSchema.safeParse(invocation.input);
-    if(!input.success)return failed(context.operationId,"invalid_input");
+    if(!input.success)return invalidRegister(context.operationId,"登记参数格式或来源版本不匹配");
+    if(input.data.artifactId&&input.data.expectedVersion===undefined)
+     return invalidRegister(context.operationId,"提供 artifactId 代表修订已有产物，必须声明当前 expectedVersion");
+    if(!input.data.artifactId&&input.data.expectedVersion!==undefined)
+     return invalidRegister(context.operationId,"新建产物不得声明 expectedVersion");
     try{
      const metadata=await artifacts.register(ref,context.operationId,input.data);
      signal.throwIfAborted();
@@ -117,17 +130,33 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
     }catch(error){
      if(signal.aborted)throw error;
      if(error instanceof NativeFileError&&!error.dispatched)return failed(context.operationId,error.code.toLowerCase());
-     try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit")return confirmedNoCommit(context.operationId,"artifact_not_committed");}catch{}
+     try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit"){
+      // 只在服务证明没有 pending/committed 写入后转换确定性身份/版本校验失败。
+      // 已提交或待核对的异常仍走 unknown，不能误报无写入后重复执行。
+      if(error instanceof WorkbenchArtifactPendingError)return pendingArtifact(context.operationId,error);
+      if(error instanceof ConflictError||error instanceof OwnershipError)
+       return invalidRegister(context.operationId,"产物身份、版本或来源引用未通过登记校验",true);
+      return confirmedNoCommit(context.operationId,"artifact_not_committed");
+     }}catch{}
      return unknown(context.operationId);
     }
    }
    if(invocation.name==="artifact.copy"){
-    const input=copySchema.safeParse(invocation.input);if(!input.success)return failed(context.operationId,"invalid_input");
+    const input=copySchema.safeParse(invocation.input);if(!input.success)return invalidCopy(context.operationId,"复制参数不符合要求");
     try{
      const metadata=await artifacts.copy(ref,context.operationId,input.data);signal.throwIfAborted();
      return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`],progressCursor:null,
       content:[{type:"text",text:JSON.stringify(metadata)}]});
-    }catch(error){if(signal.aborted)throw error;try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit")return confirmedNoCommit(context.operationId,"artifact_not_committed");}catch{}return unknown(context.operationId);}
+    }catch(error){
+     if(signal.aborted)throw error;
+     try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit"){
+      if(error instanceof WorkbenchArtifactPendingError)return pendingArtifact(context.operationId,error);
+      if(error instanceof ConflictError||error instanceof OwnershipError)
+       return invalidCopy(context.operationId,"来源图片、版本或目标路径未通过复制校验",true);
+      return confirmedNoCommit(context.operationId,"artifact_not_committed");
+     }}catch{}
+     return unknown(context.operationId);
+    }
    }
    if(invocation.name==="artifact.versions"){
     const input=versionsSchema.safeParse(invocation.input);if(!input.success)return failed(context.operationId,"invalid_input");

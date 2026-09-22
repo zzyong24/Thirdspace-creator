@@ -44,7 +44,7 @@ export function workbenchToolOutcome(rawResult:WorkbenchResult,rawDescriptor:Wor
   :"none";
  const summary=result.status==="succeeded"?(result.content.find(part=>part.type==="text")?.text??"工具已完成").slice(0,10000):`工具${unknown?"回执待核对":"调用失败"}：${result.error.code}`;
  const code=result.status==="succeeded"?null:unknown?"unknown_commit":result.error.nextAction==="fix_input"?"invalid_input":result.error.nextAction==="login"?"needs_login":result.error.nextAction==="contact_support"?"no_evidence":"transient";
- return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
+ return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":result.status==="failed"&&result.error.recovery?result.error.recovery:`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
 }
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";
@@ -107,6 +107,14 @@ export const workerPortSchema = z.enum([
 export type WorkerPort = z.infer<typeof workerPortSchema>;
 const emptyPortInput = z.object({}).strict();
 const operationKeySchema = z.string().min(1).max(256);
+/** 仅由 owned checkpoint 返回；无正文/凭据，不能替代 reserve 的完整身份校验。 */
+export const chatModelReplayFingerprintsSchema = z.array(z.object({
+  callId: operationKeySchema,
+  operationKey: operationKeySchema,
+  inputDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+  status: z.enum(["settled", "reserved"]),
+}).strict()).max(10000);
+export type ChatModelReplayFingerprint = z.infer<typeof chatModelReplayFingerprintsSchema>[number];
 const tokenCountSchema = z.number().int().nonnegative().optional();
 export const workerUsageSchema = z.object({
   inputTokens: tokenCountSchema, outputTokens: tokenCountSchema, totalTokens: tokenCountSchema,

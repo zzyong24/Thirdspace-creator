@@ -183,7 +183,7 @@ export {createExecutionTranscribePreparationService} from "./execution-transcrib
 export {createExecutionCoverService,type CoverExecutionPorts} from "./execution-cover.service";
 
 export {createHostBrowserProfileLifecycle,type HostBrowserProfileIdentity} from './host-browser-profile-lifecycle';
-export {createWorkbenchArtifactService,createWorkbenchArtifactReadService,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
+export {createWorkbenchArtifactService,createWorkbenchArtifactReadService,WorkbenchArtifactPendingError,type WorkbenchArtifactBlobPort,type WorkbenchArtifactFilePort} from './workbench-artifact.service';
 export {startWorkbenchArtifactReconciler} from './workbench-artifact-reconciler';
 export {createWorkbenchScreenshotMediaService} from './workbench-screenshot-media.service';
 

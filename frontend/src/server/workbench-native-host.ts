@@ -164,7 +164,11 @@ export function createNativeFilesWorkbenchHost(db: Db, options: {
       const operation = call.invocation.name.split(".")[1];
       if (!nativeFileCapabilities.some(capability=>capability.name===call.invocation.name)) throw new Error("NATIVE_FILE_CAPABILITY_UNAVAILABLE");
       if (Object.hasOwn(call.invocation.input,"operation")) return invalidInputResult(call.context.operationId);
-      const parsed=workbenchFileRequestSchema.safeParse({...call.invocation.input,operation});
+      const fileInput:Record<string,unknown>={...call.invocation.input,operation};
+      // SEMANTIC_BOUNDARY_ALLOW: list 的点路径只表示当前任务根，规范为省略路径；
+      // 不扩展其他操作或父目录/绝对路径的权限，也不做内容选择。
+      if(operation==="list" && fileInput.path===".")delete fileInput.path;
+      const parsed=workbenchFileRequestSchema.safeParse(fileInput);
       if (!parsed.success) return invalidInputResult(call.context.operationId);
       const request=parsed.data;
       const action: NativeFileAction = request.operation === "list" ? {kind:"list",...(request.path?{path:request.path}:{})}

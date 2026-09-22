@@ -29,7 +29,8 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   if(!model || model.parentCallId || model.kind!=="model" || model.status!=="settled" || !model.providerResult)throw new ConflictError("工具缺少已确认模型调用");
   const receipt=model.providerResult as {content:unknown[];finishReason:{unified:string}};
   const matching=receipt.content.filter(part=>part && typeof part==="object" && "toolCallId" in part && part.toolCallId===request.toolCallId);
-  if(matching.length!==1 || receipt.finishReason.unified!=="tool-calls")throw new ConflictError("模型工具调用不唯一或不完整");
+  const truncated=chat.success && chat.data.executionEngine==="pi" && receipt.finishReason.unified==="length";
+  if(matching.length!==1 || (receipt.finishReason.unified!=="tool-calls" && !truncated))throw new ConflictError("模型工具调用不唯一或不完整");
   const proposed=checkpointToolCallSchema.parse(matching[0]);
   const definitions=frozen.tools.filter(tool=>(chat.success ? chatToolProviderName(tool.name) : tool.name)===proposed.toolName);
   const toolName=definitions[0]?.name;
@@ -41,9 +42,10 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const jsonInput=z.json().safeParse(raw);
   if(!jsonInput.success)jsonError=true;
   const checked=jsonError?null:definition.parameters.safeParse(raw);
-  const validationOutcome:ToolOutcome|undefined=jsonError || !checked?.success ? agenticToolOutcomeSchema.parse({
-   status:"error",summary:"工具参数不符合定义，本次没有执行操作",evidence:[],
-   error:{code:"invalid_input",retryable:false,recovery:jsonError?"请生成合法JSON参数，修正后发起新的工具调用。":`请按工具schema修正参数后发起新调用：${checked && !checked.success?checked.error.issues.slice(0,20).map(issue=>`${issue.path.map(String).join(".").slice(0,160) || "根参数"} (${issue.code})`).join("；"):"参数格式错误"}`},
+  // SEMANTIC_BOUNDARY_ALLOW: 供应商 length 是协议截断事实，不能把表面合法的半成品当作执行授权。
+  const validationOutcome:ToolOutcome|undefined=truncated || jsonError || !checked?.success ? agenticToolOutcomeSchema.parse({
+   status:"error",summary:truncated?"模型输出达到长度上限，工具提案未执行":"工具参数不符合定义，本次没有执行操作",evidence:[],
+   error:{code:"invalid_input",retryable:false,recovery:truncated?"本次截断提案没有执行。请根据已结算结果生成完整参数并发起新调用，不重复已成功操作。":jsonError?"请生成合法JSON参数，修正后发起新的工具调用。":`请按工具schema修正参数后发起新调用：${checked && !checked.success?checked.error.issues.slice(0,20).map(issue=>`${issue.path.map(String).join(".").slice(0,160) || "根参数"} (${issue.code})`).join("；"):"参数格式错误"}`},
    continuation:null,sideEffect:"none",
   }):undefined;
   const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);

@@ -1,5 +1,6 @@
+import type { LanguageModelV4, LanguageModelV4CallOptions } from "@ai-sdk/provider";
 import { windowChatContextV2 } from "./chat-context-window-v2";
-import { streamText, jsonSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk, type LanguageModel } from "ai";
+import { streamText, wrapLanguageModel, jsonSchema, type ModelMessage, type ToolApprovalStatus, type UIMessage, type UIMessageChunk, type LanguageModel } from "ai";
 import { createAssistantMessageEventStream, type AssistantMessage } from "@earendil-works/pi-ai";
 import { loadChatPiAgent, type ChatPiAgent } from "./chat-pi-core";
 import { windowChatPiMessages } from "./chat-pi-context";
@@ -38,6 +39,10 @@ export interface ChatPiLoopOptions {
   /** 由宿主读取原 execution_tasks 计划，不能由模型文本推断完成。 */
   readPlanStatus?():Promise<ChatPlanStatus|null>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
+  replayProjection?:{
+    original:ReadonlyMap<string,readonly {current:string;legacy:string}[]>;
+    capture(build:()=>Promise<LanguageModelV4CallOptions["prompt"]>):void;
+  };
 }
 /**
  * Pi 是唯一的工具执行与会话循环。streamText 只适配一次供应商调用到既有 V4 账本，
@@ -74,14 +79,49 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         lastMessageHasFile=false;
         const forced=options.forcedToolSequence?.[step]??(step===0?options.forcedTool:undefined);
         // 单步协议适配：工具没有 execute，SDK 不会规划下一步或执行副作用。
-        const window=options.contextPolicyVersion===2 ? windowChatContextV2(history,system,options.definitions,240000,options.messages.length) : windowChatPiMessages(history);
-        const response=streamText({model:options.model,
-          system:window.shortened?`${system}\n\n[传输上下文窗口] ${options.contextPolicyVersion===2?"较早消息与长结果可能省略，这不是语义摘要。需要原用户约束时先调用 history.read（不传索引）获取冻结历史目录再分页读回；工具结果调用 tool.result.read（不传toolCallId）获取已结算结果目录，禁止重做原操作。":"较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。"}`:system,
-          messages:window.messages,tools:recoveryRequest?{}:tools,maxRetries:0,
-
-          maxOutputTokens:options.maxOutputTokens,abortSignal:AbortSignal.any([options.signal,idle.signal]),
-          ...(recoveryRequest?{toolChoice:"none" as const}:forced?{toolChoice:{type:"tool" as const,toolName:sanitizeToolName(forced)}}:{}),
-        });
+        const projectWindow=(messages:ModelMessage[])=>options.contextPolicyVersion===2 ? windowChatContextV2(messages,system,options.definitions,240000,options.messages.length) : windowChatPiMessages(messages);
+        const window=projectWindow(history);
+        const windowSystem=(value:typeof window)=>value.shortened?`${system}\n\n[传输上下文窗口] ${options.contextPolicyVersion===2?"较早消息与长结果可能省略，这不是语义摘要。需要原用户约束时先调用 history.read（不传索引）获取冻结历史目录再分页读回；工具结果调用 tool.result.read（不传toolCallId）获取已结算结果目录，禁止重做原操作。":"较早的助手/工具回合已按时间省略，长工具结果可能仅展示片段；这不是摘要，也不代表原任务或资料被删除。用户原始要求仍保留，需要原证据时请继续读取。"}`:system;
+        const requestOptions={tools:recoveryRequest?{}:tools,maxRetries:0,maxOutputTokens:options.maxOutputTokens,
+          abortSignal:AbortSignal.any([options.signal,idle.signal]),
+          ...(recoveryRequest?{toolChoice:"none" as const}:forced?{toolChoice:{type:"tool" as const,toolName:sanitizeToolName(forced)}}:{})};
+        if(options.replayProjection){
+          // 仅改本轮宿主投影，冻结的用户/助手/工具历史不参与替换。
+          // 两个候选走同一个窗口算法，长 JSON 再次裁剪后仍能做完整摘要匹配。
+          const legacyHistory=history.map((message,index):ModelMessage=>{
+            if(index<options.messages.length || message.role!=="tool")return message;
+            return {...message,content:message.content.map(part=>{
+              if(part.type!=="tool-result" || part.output.type!=="content")return part;
+              const pairs=options.replayProjection!.original.get(part.toolCallId);
+              if(!pairs)return part;
+              return {...part,output:{...part.output,value:part.output.value.map(item=>item.type==="text"
+                ? {...item,text:pairs.find(pair=>pair.current===item.text)?.legacy??item.text}:item)}};
+            })};
+          });
+          const legacyWindow=projectWindow(legacyHistory);
+          // notice 长度可能改变整回合保留集合与 shortened/system 后缀。
+          // 完整旧窗口走同一个 SDK 的规范化；捕获模型绝不进入账本或供应商。
+          options.replayProjection.capture(async()=>{
+            let prompt:LanguageModelV4CallOptions["prompt"]|undefined;
+            if(typeof options.model==="string")throw Error("CHAT_REPLAY_REQUIRES_RESOLVED_MODEL");
+            const captureModel=wrapLanguageModel({model:options.model as LanguageModelV4,middleware:{
+              specificationVersion:"v4",
+              wrapGenerate:async()=>{throw Error("CHAT_REPLAY_REQUIRES_STREAM");},
+              wrapStream:async({params})=>{
+                prompt=params.prompt;
+                return {stream:new ReadableStream({start(controller){
+                  controller.enqueue({type:"finish",finishReason:{unified:"stop",raw:"stop"},usage:{inputTokens:{total:0,noCache:0,cacheRead:0,cacheWrite:0},outputTokens:{total:0,text:0,reasoning:0}}});
+                  controller.close();
+                }})};
+              },
+            }});
+            const normalized=streamText({...requestOptions,model:captureModel,system:windowSystem(legacyWindow),messages:legacyWindow.messages});
+            for await(const event of normalized.fullStream)if(event.type==="error")throw event.error;
+            if(!prompt)throw Error("CHAT_REPLAY_PROMPT_UNAVAILABLE");
+            return prompt;
+          });
+        }
+        const response=streamText({...requestOptions,model:options.model,system:windowSystem(window),messages:window.messages});
         parts.push({type:"step-start"});
         events.push({type:"start",partial:message});
         let text="",reasoning="";
