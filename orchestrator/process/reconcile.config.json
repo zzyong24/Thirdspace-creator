@@ -20,6 +20,12 @@
   ],
   "lessons": [
     {
+      "led": "LED-055",
+      "what": "历史stop续行读取当前计划，导致模型请求重放指纹变化或原任务再次阻断",
+      "check": "pnpm --dir backend exec vitest run src/modules/execution/workbench-plan-history.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/execution/durable-stream-model.test.ts src/execution/worker-runtime.test.ts src/execution/chat-plan-history-replay.test.ts --retry=0",
+      "onFail": "恢复按原模型调用锚点读取已证明历史计划，保留严格请求摘要/原账本费用，不以最新状态替代历史或宽松忽略mismatch。"
+    },
+    {
       "led": "LED-054",
       "what": "外部 I/O 或产物存储设置读取再次占住 PGlite 事务，或完成对账后原任务仍永久阻断",
       "check": "pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0",
@@ -34,7 +40,7 @@
     {
       "led": "LED-052",
       "what": "模型断流、超时或候选不完整再次变成用户手动重试终态，或外部副作用被盲目重放",
-      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
+      "check": "pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0",
       "onFail": "恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。"
     },
     {

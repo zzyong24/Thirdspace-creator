@@ -43,9 +43,10 @@ describe("工作台预览完整回读", () => {
 describe("HTML 相对图片解析", () => {
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9GmS8AAAAASUVORK5CYII=", "base64");
   const htmlMeta = {...metadata,relativePath:"reports/index.html"};
+  const pngHash=createHash("sha256").update(png).digest("hex");
   it("解析 HTML 属性与实体，并映射已登记 PNG", async () => {
     const reader={readRelativeImage:vi.fn(async (_ctx:unknown,_task:string,path:string)=>path==="reports/chart&one.png"
-      ? {metadata:{...metadata,mime:"image/png",relativePath:path,size:png.byteLength},bytes:png}:null)};
+      ? {metadata:{...metadata,mime:"image/png",relativePath:path,size:png.byteLength,hash:pngHash},bytes:png}:null)};
     const html='<h1>报告</h1><img alt="图" src="./chart&amp;one.png" srcset="https://evil.test/x.png 2x">';
     const output=await renderRegisteredHtmlPreview(reader,ctx,"task",htmlMeta,html);
     expect(output).toContain("<h1>报告</h1>");
@@ -68,7 +69,7 @@ describe("HTML 相对图片解析", () => {
   it("限制引用数和总图片字节，超额图片仅失去 src", async () => {
     const large = Buffer.concat([png,Buffer.alloc(1_200_000)]);
     const reader={readRelativeImage:vi.fn(async (_ctx:unknown,_task:string,path:string)=>({
-      metadata:{...metadata,mime:"image/png",relativePath:path,size:large.byteLength},bytes:large,
+      metadata:{...metadata,mime:"image/png",relativePath:path,size:large.byteLength,hash:createHash("sha256").update(large).digest("hex")},bytes:large,
     }))};
     const html=`<p>预算测试</p>${Array.from({length:14},(_,i)=>`<img alt="图${i}" src="./${i}.png">`).join("")}`;
     const output=await renderRegisteredHtmlPreview(reader,ctx,"task",htmlMeta,html);
@@ -85,5 +86,18 @@ describe("HTML 相对图片解析", () => {
     expect(output).toContain(`data:image/png;base64,${encoded}`);
     expect(output).not.toContain("YmFk");
     expect(reader.readRelativeImage).not.toHaveBeenCalled();
+  });
+  it("跨任务复制按原基准与每个冻结tuple验图，不接受同路径其他版本或伪hash",async()=>{
+    const image={...metadata,artifactId:'image',version:2,taskId:'source',relativePath:'old/chart.png',mime:'image/png',size:png.length,hash:pngHash};
+    const copied={...htmlMeta,relativePath:'new/copy.html',htmlResourceBasePath:'old/index.html',htmlResources:[{path:image.relativePath,artifactId:image.artifactId,version:image.version,taskId:image.taskId,hash:image.hash,size:image.size}]};
+    const reader={readRelativeImage:vi.fn(async()=>({metadata:image,bytes:png}))};
+    expect(await renderRegisteredHtmlPreview(reader,ctx,'task',copied,'<img src="./chart.png">')).toContain('data:image/png;base64,');
+    expect(reader.readRelativeImage).toHaveBeenCalledWith(ctx,'task','old/chart.png',copied);
+    for(const patch of [{version:3},{taskId:'task'},{artifactId:'other'},{hash:'b'.repeat(64)},{size:png.length+1},{relativePath:'new/chart.png'}]){
+      const wrong={readRelativeImage:vi.fn(async()=>({metadata:{...image,...patch},bytes:png}))};
+      expect(await renderRegisteredHtmlPreview(wrong,ctx,'task',copied,'<p>正文</p><img src="./chart.png">')).not.toContain('data:image/png;base64,');
+    }
+    const badBytes=Buffer.from(png);badBytes[badBytes.length-1]^=1;
+    expect(await renderRegisteredHtmlPreview({readRelativeImage:async()=>({metadata:image,bytes:badBytes})},ctx,'task',copied,'<img src="./chart.png">')).not.toContain('data:image/png;base64,');
   });
 });

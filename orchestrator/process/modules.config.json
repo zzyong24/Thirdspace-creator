@@ -52,11 +52,17 @@
         "backend/src/integration/t1026-tool-result-read.integration.test.ts",
         "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
         "backend/src/modules/ai-runtime/chat-workbench-capability-host.ts",
+        "backend/src/modules/ai-runtime/chat-workbench-capability-host.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/runtime/pi-provider.ts",
+        "ai-worker/src/runtime/pi-provider-http.test.ts",
+        "ai-worker/src/execution/chat-tool-input-liveness.test.ts",
         "ai-worker/src/runtime/chat/chat-pi-loop.ts",
         "ai-worker/src/runtime/chat/chat-pi-loop.protocol.test.ts",
         "ai-worker/src/execution/durable-stream-model.ts",
         "backend/src/integration/t1026-truncated-tool.integration.test.ts",
         "backend/src/integration/t1026-model-pause-worker.integration.test.ts",
+        "backend/src/integration/chat-worker-entry.test.ts",
         "frontend/src-tauri/src/workbench/browser.rs",
         "frontend/src-tauri/src/workbench/browser_ipc.rs",
         "frontend/src-tauri/src/workbench/files.rs",
@@ -73,6 +79,8 @@
         "docs/features/t1026-agent-cli-acceptance.md",
         "docs/verification/t1026*",
         "orchestrator/DECISION_LOG.md",
+        "orchestrator/LESSON_LEDGER.md",
+        "orchestrator/process/reconcile.config.json",
         "orchestrator/process/modules.config.json",
         "mcp-server/**",
         "orchestrator/progress.json",
@@ -119,7 +127,10 @@
         "backend/src/application/scheduling/controls.ts",
         "backend/src/application/scheduling/controls.test.ts",
         "backend/src/modules/analytics/**",
-        "frontend/src/server/persistence-client.ts"
+        "frontend/src/server/persistence-client.ts",
+        "mcp-server/**/*.test.ts",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json"
       ],
       "verify_commands": {
         "implementation": [

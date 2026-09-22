@@ -16,7 +16,10 @@ const readSchema=workbenchArtifactReadRequestSchema;
 const versionsSchema=workbenchArtifactVersionsRequestSchema;
 const copySchema=workbenchArtifactCopyRequestSchema;
 const REGISTER_GUIDANCE="新建产物请省略 artifactId、expectedVersion 和 baseArtifactRef，由服务生成 ID；修订先调用 artifact.versions/artifact.read，使用真实 artifactId、当前 expectedVersion 及匹配的 baseArtifactRef。provenance 可省略；填写时仅传本任务已结算调用的真实 execution callId，不传工具名或说明文字。修正参数后再调用，不要原样重试。";
-const COPY_GUIDANCE="artifact.copy 仅复制同会话已登记且不超过 2 MiB 的 PNG，targetPath 须以 .png 结尾；HTML/Markdown/CSV 修订请先 artifact.read 回读指定版本，经 files.write 写入当前任务，再 artifact.register 提交真实 artifactId、expectedVersion 和匹配的 baseArtifactRef。修正参数后再调用，不要原样重试。";
+const COPY_GUIDANCE="artifact.copy 使用同会话真实 sourceArtifactId/sourceVersion 精确复制已登记字节为独立新 artifact@1；不写任务文件，也不生成原产物下一版。targetPath 后缀须与源 MIME 匹配：HTML .html、Markdown .md、CSV .csv、PDF .pdf、PNG .png。PNG 上限 2 MiB，其他已支持 MIME 上限 20 MiB。无需转写正文或 base64；修正参数后再调用，不要原样重试。";
+const legacyCopy=workbenchCapabilitySchema.parse({name:"artifact.copy",schemaVersion:1,description:"把当前对话中已登记的 PNG 精确版本复制到本任务，供新版 HTML 安全引用。",
+ inputSchema:{type:"object",properties:{sourceArtifactId:{type:"string"},sourceVersion:{type:"integer",minimum:1},targetPath:{type:"string"}},required:["sourceArtifactId","sourceVersion","targetPath"],additionalProperties:false},
+ resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]});
 const catalog=[
  workbenchCapabilitySchema.parse({name:"artifact.register",schemaVersion:1,description:"把当前任务中的真实文件保存为可回读版本；修订已有产物时同时提交 artifactId、expectedVersion 和相同的 baseArtifactRef。",
   inputSchema:{type:"object",properties:{path:{type:"string",minLength:1,maxLength:2048},mime:{type:"string",enum:["text/html","text/markdown","text/csv","image/png","application/pdf"]},
@@ -29,9 +32,7 @@ const catalog=[
  workbenchCapabilitySchema.parse({name:"artifact.versions",schemaVersion:1,description:"列出当前对话中已正式保存的产物版本。",
   inputSchema:{type:"object",properties:{artifactId:{type:"string"},cursor:{type:"string"},limit:{type:"integer",minimum:1,maximum:50}},additionalProperties:false},
   resultSchema:{type:"object"},effects:["read"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
- workbenchCapabilitySchema.parse({name:"artifact.copy",schemaVersion:1,description:"把当前对话中已登记的 PNG 精确版本复制到本任务，供新版 HTML 安全引用。",
-  inputSchema:{type:"object",properties:{sourceArtifactId:{type:"string"},sourceVersion:{type:"integer",minimum:1},targetPath:{type:"string"}},required:["sourceArtifactId","sourceVersion","targetPath"],additionalProperties:false},
-  resultSchema:{type:"object"},effects:["task_write"],requiredCapabilities:["task.artifacts"],platforms:["macos","windows"]}),
+ workbenchCapabilitySchema.parse({...legacyCopy,schemaVersion:2,description:COPY_GUIDANCE}),
 ];
 const failed=(operationId:string,code:string):WorkbenchResult=>workbenchResultSchema.parse({operationId,status:"failed",artifactRefs:[],progressCursor:null,
  error:{code,retryable:false,dispatched:false,nextAction:"fix_input"}});
@@ -92,11 +93,11 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
    return {bytes,version};
   },
  });
- return {catalog,platform:platform==="win32"?"windows":"macos",capabilities:["task.artifacts"],verifyArtifacts:artifacts.verifyArtifacts,
+ return {catalog,legacyFrozenCapabilities:[legacyCopy],platform:platform==="win32"?"windows":"macos",capabilities:["task.artifacts"],verifyArtifacts:artifacts.verifyArtifacts,
   async dispatch(rawCall,{signal}){
    signal.throwIfAborted();
    const call=workbenchHostCallSchema.parse(rawCall),{context,invocation}=call;
-   if(!catalog.some(item=>item.name===invocation.name)||invocation.schemaVersion!==1)return failed(context.operationId,"invalid_capability");
+   if(![...catalog,legacyCopy].some(item=>item.name===invocation.name&&item.schemaVersion===invocation.schemaVersion))return failed(context.operationId,"invalid_capability");
    const ref={executionTaskId:context.taskId,attempt:context.attempt,fenceToken:context.fenceToken};
    try{
     await leases.withLease(ref,"admission",async({task})=>{
@@ -143,16 +144,25 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
    }
    if(invocation.name==="artifact.copy"){
     const input=copySchema.safeParse(invocation.input);if(!input.success)return invalidCopy(context.operationId,"复制参数不符合要求");
+    if(invocation.schemaVersion===1&&!input.data.targetPath.toLowerCase().endsWith(".png"))return invalidCopy(context.operationId,"此任务冻结的旧版复制工具仅支持 PNG");
     try{
-     const metadata=await artifacts.copy(ref,context.operationId,input.data);signal.throwIfAborted();
+     const metadata=await artifacts.copy(ref,context.operationId,input.data,invocation.schemaVersion as 1|2);signal.throwIfAborted();
+     let rendering=workbenchRendererDiagnostics(metadata.mime,metadata.hash);
+     if(metadata.mime==="text/html")try{
+      const bytes=await options.blobs.read({userId:context.userId,accountId:context.accountId,requestId:context.operationId,source:"ai"},
+       {taskId:metadata.taskId,operationId:context.operationId,hash:metadata.hash,mime:"text/html"});
+      if(bytes.byteLength===metadata.size&&createHash("sha256").update(bytes).digest("hex")===metadata.hash)
+       rendering=workbenchRendererDiagnostics(metadata.mime,metadata.hash,bytes);
+     }catch{/* 诊断缺失不改写精确复制结果。 */}
+     signal.throwIfAborted();
      return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`],progressCursor:null,
-      content:[{type:"text",text:JSON.stringify(metadata)}]});
+      content:[{type:"text",text:JSON.stringify(metadata)},...(invocation.schemaVersion===2?[{type:"text" as const,text:JSON.stringify(rendering)}]:[])]});
     }catch(error){
      if(signal.aborted)throw error;
      try{if(await artifacts.inspectOperation(ref,context.operationId)==="confirmed_no_commit"){
       if(error instanceof WorkbenchArtifactPendingError)return pendingArtifact(context.operationId,error);
       if(error instanceof ConflictError||error instanceof OwnershipError)
-       return invalidCopy(context.operationId,"来源图片、版本或目标路径未通过复制校验",true);
+       return invalidCopy(context.operationId,"来源产物、版本、图片依赖或目标路径未通过复制校验",true);
       return confirmedNoCommit(context.operationId,"artifact_not_committed");
      }}catch{}
      return unknown(context.operationId);

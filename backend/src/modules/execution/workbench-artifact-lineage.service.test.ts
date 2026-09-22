@@ -21,12 +21,14 @@ async function fixture(clock?:{value:string},options:{dbBackedBlobRead?:boolean}
  const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:currentNow,nextId:prefix=>`${prefix}-${randomUUID()}`}),conversation=await repo.createConversation({title:"跨回合产物",projectId:null,scope:"global"});
  const files=new Map<string,{bytes:Uint8Array;version:number}>(),objects=new Map<string,Uint8Array>();
  const failedSubmits=new Set<string>();
+ let onRead:((input:{taskId:string;operationId:string;hash:string})=>Promise<void>)|undefined;
  const service=createWorkbenchArtifactService(db,{async readTaskFile(scope,path){const file=files.get(`${scope.taskId}:${path}`);if(!file)throw Error("FILE_NOT_FOUND");return {bytes:new Uint8Array(file.bytes),version:file.version};},blobs:{
   async submit(_ctx,input){if(failedSubmits.has(input.operationId))throw Error("STORE_RESULT_LOST");const hash=sha(input.bytes);objects.set(`${input.taskId}:${input.operationId}:${hash}`,new Uint8Array(input.bytes));return {hash,size:input.bytes.byteLength};},
   async read(_ctx,input){
    // 正式 objectStorageForCtx 会先从根 db 读取存储设置；此探针复现相同边界，防止
    // commit/reconcile 再把 Blob 回读放进 PGlite 独占事务。
    if(options.dbBackedBlobRead)await db.select({id:executionTasks.id}).from(executionTasks).limit(1);
+   await onRead?.(input);
    const bytes=objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);if(!bytes)throw Error("BLOB_NOT_FOUND");return new Uint8Array(bytes);
   },
   async inspect(_ctx,input){return objects.has(`${input.taskId}:${input.operationId}:${input.hash}`)?"present" as const:"absent" as const;},
@@ -56,14 +58,15 @@ async function fixture(clock?:{value:string},options:{dbBackedBlobRead?:boolean}
   const outcome={status:"ok" as const,summary:JSON.stringify(metadata),evidence:[],data:{workbench},error:null,continuation:null,sideEffect:"committed" as const};
   return service.commitAndSettleArtifact(t.ref,{operationId:t.operationId,claimId:t.claimId,toolName,toolCallId:t.toolCallId,outcome});
  };
- return {ctx,repo,conversation,files,objects,failedSubmits,service,turn,operation,finish};
+ return {ctx,repo,conversation,files,objects,failedSubmits,service,turn,operation,finish,setReadHook:(hook:typeof onRead)=>{onRead=hook;}};
 }
 
-async function legacyArtifact(f:Awaited<ReturnType<typeof fixture>>,label:string,content:string,settlement:"settled"|"started"|"mismatch"){
+async function legacyArtifact(f:Awaited<ReturnType<typeof fixture>>,label:string,content:string,settlement:"settled"|"started"|"mismatch",mime:"text/markdown"|"text/html"|"image/png"="text/markdown"){
  const turn=await f.turn(label),[task]=await db.select().from(executionTasks).where(eq(executionTasks.id,turn.taskId)),payload=task!.payload as Record<string,unknown>;
  await db.update(executionTasks).set({payload:{...payload,artifactProtocolVersion:1}}).where(eq(executionTasks.id,turn.taskId));
- f.files.set(`${turn.taskId}:${label}.md`,{bytes:Buffer.from(content),version:1});
- const metadata=await f.service.register(turn.ref,turn.operationId,{path:`${label}.md`,mime:"text/markdown"});
+ const path=`${label}.${mime==="text/html"?"html":mime==="image/png"?"png":"md"}`;
+ f.files.set(`${turn.taskId}:${path}`,{bytes:Buffer.from(content),version:1});
+ const metadata=await f.service.register(turn.ref,turn.operationId,{path,mime});
  if(settlement!=="started"){
   const workbench={operationId:turn.operationId,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`],progressCursor:null,content:[{type:"text",text:JSON.stringify(metadata)}]};
   const output={status:"ok",summary:JSON.stringify(metadata),evidence:[],data:{workbench},error:null,continuation:null,sideEffect:"committed"};
@@ -229,6 +232,127 @@ function readOnlyFor(f:Awaited<ReturnType<typeof fixture>>){
   },
  }});
 }
+
+it("精确HTML复制沿原图片tuple与解析基准跨任务换目录及嵌套复制，不触及原lineage",async()=>{
+ const f=await fixture(undefined,{dbBackedBlobRead:true}),first=await f.turn("精确HTML源");
+ const png=Buffer.from("frozen-image-one"),htmlBytes=Buffer.from('<p>原字节\r\n中文</p><img src="./chart.png">');
+ f.files.set(`${first.taskId}:原目录/chart.png`,{bytes:png,version:1});
+ const image=await f.service.register(first.ref,first.operationId,{path:"原目录/chart.png",mime:"image/png"});await f.finish(first,image);
+ const htmlCall=await f.operation(first.taskId,first.ref,2);f.files.set(`${first.taskId}:原目录/index.html`,{bytes:htmlBytes,version:1});
+ const source=await f.service.register(first.ref,htmlCall.operationId,{path:"原目录/index.html",mime:"text/html"});await f.finish(htmlCall,source);
+ const before=await db.select().from(workbenchArtifactLineageVersions);
+ const copiedTurn=await f.turn("精确HTML副本",f.conversation.id,"artifact.copy");
+ const input={sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:"副本/report.html"};
+ const copied=await f.service.copy(copiedTurn.ref,copiedTurn.operationId,input);await f.finish(copiedTurn,copied,"artifact.copy");
+ expect(copied).toMatchObject({version:1,hash:source.hash,htmlResourceBasePath:"原目录/index.html",htmlResources:source.htmlResources});
+ expect(await f.service.copy(copiedTurn.ref,copiedTurn.operationId,input)).toEqual(copied);
+ await expect(f.service.copy(copiedTurn.ref,copiedTurn.operationId,{...input,targetPath:"other.html"})).rejects.toThrow();
+ const nestedTurn=await f.turn("精确HTML嵌套",f.conversation.id,"artifact.copy");
+ const nested=await f.service.copy(nestedTurn.ref,nestedTurn.operationId,{sourceArtifactId:copied.artifactId,sourceVersion:1,targetPath:"另处/nested.html"});await f.finish(nestedTurn,nested,"artifact.copy");
+ expect(nested).toMatchObject({htmlResourceBasePath:"原目录/index.html",htmlResources:source.htmlResources});
+ expect(Buffer.from((await readOnlyFor(f).readAll(f.ctx,nestedTurn.taskId,nested.artifactId,1)).bytes)).toEqual(htmlBytes);
+ expect(Buffer.from((await readOnlyFor(f).readRelativeImage(f.ctx,nestedTurn.taskId,"原目录/chart.png",nested))!.bytes)).toEqual(png);
+ const after=await db.select().from(workbenchArtifactLineageVersions);expect(after.filter(row=>before.some(old=>old.id===row.id))).toEqual(before);
+ expect([...f.files.keys()].some(key=>key.startsWith(copiedTurn.taskId)||key.startsWith(nestedTurn.taskId))).toBe(false);
+});
+
+async function rewriteArtifact(metadata:Awaited<ReturnType<ReturnType<typeof createWorkbenchArtifactService>["register"]>>){
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,metadata.taskId));
+ const payload=task!.payload as {workbenchArtifactVersions:Array<{metadata:typeof metadata}>};
+ await db.update(executionTasks).set({payload:{...payload,workbenchArtifactVersions:payload.workbenchArtifactVersions.map(row=>row.metadata.artifactId===metadata.artifactId&&row.metadata.version===metadata.version?{...row,metadata}:row)}}).where(eq(executionTasks.id,metadata.taskId));
+ const rows=await db.select().from(workbenchArtifactLineageVersions).where(eq(workbenchArtifactLineageVersions.artifactId,metadata.artifactId));
+ for(const row of rows.filter(row=>row.version===metadata.version))await db.update(workbenchArtifactLineageVersions).set({metadata}).where(eq(workbenchArtifactLineageVersions.id,row.id));
+}
+
+it("旧HTML无manifest精确复制不补猜图片，伪造读入metadata不能授权任意同账号图片",async()=>{
+ const f=await fixture(),sourceTurn=await f.turn("旧无清单HTML");f.files.set(`${sourceTurn.taskId}:old.html`,{bytes:Buffer.from('<img src="./chart.png">'),version:1});
+ const source=await f.service.register(sourceTurn.ref,sourceTurn.operationId,{path:"old.html",mime:"text/html"});await f.finish(sourceTurn,source);
+ const {htmlResources:_manifest,...legacy}=source;await rewriteArtifact(legacy);
+ const target=await f.turn("旧无清单复制",f.conversation.id,"artifact.copy"),copy=await f.service.copy(target.ref,target.operationId,{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:"copy.html"});await f.finish(target,copy,"artifact.copy");
+ expect(copy.htmlResources).toBeUndefined();expect(await readOnlyFor(f).readRelativeImage(f.ctx,target.taskId,"chart.png",copy)).toBeNull();
+ await expect(readOnlyFor(f).readRelativeImage(f.ctx,target.taskId,"chart.png",{...copy,htmlResources:[{path:"chart.png",artifactId:"fake",version:1,taskId:sourceTurn.taskId,hash:"a".repeat(64),size:1}]})).rejects.toThrow("正式版本");
+});
+
+it.each(["root","image","tuple","foreign","during_read"] as const)("复制来源 %s 核验失败不产生目标占位或版本",async(fault)=>{
+ const f=await fixture(),first=await f.turn("损坏来源"),png=Buffer.from('original-image');
+ f.files.set(`${first.taskId}:chart.png`,{bytes:png,version:1});const image=await f.service.register(first.ref,first.operationId,{path:"chart.png",mime:"image/png"});await f.finish(first,image);
+ const htmlCall=await f.operation(first.taskId,first.ref,2);f.files.set(`${first.taskId}:root.html`,{bytes:Buffer.from('<img src="./chart.png">'),version:1});
+ const source=await f.service.register(first.ref,htmlCall.operationId,{path:"root.html",mime:"text/html"});await f.finish(htmlCall,source);
+ if(fault==="root")f.objects.set(`${first.taskId}:${htmlCall.operationId}:${source.hash}`,Buffer.from('bad'));
+ if(fault==="image")f.objects.set(`${first.taskId}:${first.operationId}:${image.hash}`,Buffer.from('bad'));
+ if(fault==="tuple")await rewriteArtifact({...source,htmlResources:source.htmlResources!.map(item=>({...item,size:item.size+1}))});
+ if(fault==="foreign"){
+  const other=await f.repo.createConversation({title:"其他会话",projectId:null,scope:"global"}),turn=await f.turn("外部图片",other.id);
+  f.files.set(`${turn.taskId}:chart.png`,{bytes:png,version:1});const foreign=await f.service.register(turn.ref,turn.operationId,{path:"chart.png",mime:"image/png"});await f.finish(turn,foreign);
+  await rewriteArtifact({...source,htmlResources:[{path:"chart.png",artifactId:foreign.artifactId,version:1,taskId:foreign.taskId,hash:foreign.hash,size:foreign.size}]});
+ }
+ if(fault==="during_read")f.setReadHook(async input=>{if(input.operationId===htmlCall.operationId){f.setReadHook(undefined);await rewriteArtifact({...source,relativePath:"changed.html"});}});
+ const target=await f.turn("拒绝不确定复制",f.conversation.id,"artifact.copy");
+ await expect(f.service.copy(target.ref,target.operationId,{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:"copy.html"})).rejects.toThrow();
+ expect(await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,target.operationId))).toHaveLength(0);
+ expect(await db.select().from(workbenchArtifactLineageVersions).where(eq(workbenchArtifactLineageVersions.taskId,target.taskId))).toHaveLength(0);
+});
+
+it("HTML复制Blob已写未结算由原对账提交同call一次，源版本和未知费用不改",async()=>{
+ const f=await fixture(undefined,{dbBackedBlobRead:true}),first=await f.turn("HTML故障源");f.files.set(`${first.taskId}:root.html`,{bytes:Buffer.from('<h1>stable</h1>'),version:1});
+ const source=await f.service.register(first.ref,first.operationId,{path:"root.html",mime:"text/html"});await f.finish(first,source);
+ const target=await f.turn("HTML失联",f.conversation.id,"artifact.copy"),args={sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:"copy.html"};
+ const pending=await f.service.copy(target.ref,target.operationId,args);
+ await f.service.markUnknown(target.ref,{operationId:target.operationId,claimId:target.claimId,toolCallId:target.toolCallId,toolName:"artifact_copy"});
+ await db.update(executionTasks).set({status:"paused",leaseOwner:null,leaseExpiresAt:null,fenceToken:`revoked-${randomUUID()}`}).where(eq(executionTasks.id,target.taskId));
+ const reconciler=startWorkbenchArtifactReconciler(db,f.service,{startImmediately:false,intervalMs:60000});
+ try{const done=await reconciler.reconcile(f.ctx,f.conversation.id,target.operationId);expect(done.status).toBe('committed');expect(await reconciler.reconcile(f.ctx,f.conversation.id,target.operationId)).toEqual(done);}finally{reconciler.stop();}
+ const rows=await db.select().from(workbenchArtifactLineageVersions).where(eq(workbenchArtifactLineageVersions.taskId,target.taskId));expect(rows).toHaveLength(1);expect(rows[0]!.metadata).toEqual(pending);
+ const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,target.taskId));expect(task!.status).toBe('paused');
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,target.operationId));expect(call).toMatchObject({status:'settled',toolExecutionClaimId:target.claimId});
+});
+it.each([{mime:"image/png" as const,extension:"png",limit:2*1024*1024},{mime:"text/markdown" as const,extension:"md",limit:20*1024*1024}])("精确复制 $mime 保留大小边界且超限不占位",async({mime,extension,limit})=>{
+ const f=await fixture(),sourceTurn=await f.turn("大小边界"),bytes=Buffer.alloc(limit,65),path=`source.${extension}`;
+ f.files.set(`${sourceTurn.taskId}:${path}`,{bytes,version:1});const source=await f.service.register(sourceTurn.ref,sourceTurn.operationId,{path,mime});await f.finish(sourceTurn,source);
+ const target=await f.turn("上限精确复制",f.conversation.id,"artifact.copy"),copy=await f.service.copy(target.ref,target.operationId,{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:`copy.${extension}`});await f.finish(target,copy,"artifact.copy");
+ expect(copy.size).toBe(limit);expect(copy.hash).toBe(sha(bytes));expect(Buffer.from((await readOnlyFor(f).readAll(f.ctx,target.taskId,copy.artifactId,1)).bytes).equals(bytes)).toBe(true);
+ await rewriteArtifact({...source,size:limit+1});const tooLarge=await f.turn("超限拒绝",f.conversation.id,"artifact.copy");
+ await expect(f.service.copy(tooLarge.ref,tooLarge.operationId,{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:`large.${extension}`})).rejects.toThrow("大小");
+ expect(await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,tooLarge.operationId))).toHaveLength(0);
+ expect([...f.objects.keys()].some(key=>key.startsWith(tooLarge.taskId))).toBe(false);
+});
+
+it("正式迁移旧HTML只允许空清单规范化差异，源历史不变且其他差异仍拒绝",async()=>{
+ const f=await fixture(),old=await legacyArtifact(f,"迁移HTML",'<img src="./chart.png">',"settled","text/html");
+ const target=await f.turn("复制迁移HTML",f.conversation.id,"artifact.copy");
+ await f.service.versions(f.ctx,target.taskId,{limit:50});
+ const before=await artifactDatabaseSnapshot();
+ const copied=await f.service.copy(target.ref,target.operationId,{sourceArtifactId:old.metadata.artifactId,sourceVersion:1,targetPath:"copy.html"});await f.finish(target,copied,"artifact.copy");
+ expect(copied.htmlResources).toEqual([]);expect(copied.htmlResourceBasePath).toBe(old.metadata.relativePath);
+ const after=await artifactDatabaseSnapshot();expect(after.tasks.find(t=>t.id===old.turn.taskId)).toEqual(before.tasks.find(t=>t.id===old.turn.taskId));
+ expect(after.versions.filter(v=>v.taskId===old.turn.taskId)).toEqual(before.versions.filter(v=>v.taskId===old.turn.taskId));
+ const [saved]=await db.select().from(workbenchArtifactLineageVersions).where(eq(workbenchArtifactLineageVersions.artifactId,old.metadata.artifactId));
+ await db.update(workbenchArtifactLineageVersions).set({metadata:{...saved!.metadata as object,htmlResourceBasePath:"forged.html"}}).where(eq(workbenchArtifactLineageVersions.id,saved!.id));
+ const next=await f.turn("拒绝扩大迁移等价",f.conversation.id,"artifact.copy");
+ await expect(f.service.copy(next.ref,next.operationId,{sourceArtifactId:old.metadata.artifactId,sourceVersion:1,targetPath:"other.html"})).rejects.toThrow("索引不匹配");
+});
+
+it("旧v1冻结复制保留正式迁移PNG路径，新v2不会迁移未登记正式版本",async()=>{
+ const f=await fixture(),old=await legacyArtifact(f,"旧PNG",'legacy PNG',"settled","image/png"),target=await f.turn("旧复制",f.conversation.id,"artifact.copy");
+ const input={sourceArtifactId:old.metadata.artifactId,sourceVersion:1,targetPath:"copy.png"};
+ await expect(f.service.copy(target.ref,target.operationId,input,2)).rejects.toThrow("正式产物版本不存在");
+ const copy=await f.service.copy(target.ref,target.operationId,input,1);await f.finish(target,copy,"artifact.copy");expect(copy.hash).toBe(old.metadata.hash);
+});
+
+it.each(["remove_snapshot","change_kind"] as const)("结算锁外核验期间%s不可降级复制冻结来源检查",async(change)=>{
+ const f=await fixture(),sourceTurn=await f.turn("快照不可降级" );f.files.set(`${sourceTurn.taskId}:root.html`,{bytes:Buffer.from('<h1>safe</h1>'),version:1});
+ const source=await f.service.register(sourceTurn.ref,sourceTurn.operationId,{path:"root.html",mime:"text/html"});await f.finish(sourceTurn,source);
+ const target=await f.turn("降级失败",f.conversation.id,"artifact.copy"),copy=await f.service.copy(target.ref,target.operationId,{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:"copy.html"});
+ f.setReadHook(async input=>{if(input.operationId!==target.operationId)return;f.setReadHook(undefined);
+  const [row]=await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,target.operationId)),binding={...row!.pendingSource as Record<string,unknown>};
+  if(change==="remove_snapshot")delete binding.sourceSnapshot;else binding.kind="taskFile";
+  await db.update(workbenchArtifactLineages).set({pendingSource:binding}).where(eq(workbenchArtifactLineages.id,row!.id));
+ });
+ await expect(f.finish(target,copy,"artifact.copy")).rejects.toThrow();
+ expect(await db.select().from(workbenchArtifactLineageVersions).where(eq(workbenchArtifactLineageVersions.taskId,target.taskId))).toHaveLength(0);
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,target.operationId));expect(call!.status).toBe("started");
+});
+
 async function artifactDatabaseSnapshot(){
  return {
   tasks:await db.select().from(executionTasks),calls:await db.select().from(executionCalls),

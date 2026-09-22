@@ -130,7 +130,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
         const result=await deps.runChat(input,model,signal,{
           call:(port,data,portSignal)=>call(execution,port,data,portSignal),
-          readPlanStatus:async(planSignal)=>call(execution,"readWorkbenchPlan",{},planSignal) as ReturnType<NonNullable<Parameters<typeof deps.runChat>[3]["readPlanStatus"]>>,
+          readPlanStatus:async(modelCallId,planSignal)=>call(execution,"readWorkbenchPlan",{modelCallId},planSignal) as ReturnType<NonNullable<Parameters<typeof deps.runChat>[3]["readPlanStatus"]>>,
           approve:async(request,approvalSignal)=>{
             const decision=chatToolApprovalReceiptSchema.parse(await call(execution,"checkChatToolApproval",request,approvalSignal));
             if(decision.status==="unavailable")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_UNAVAILABLE");

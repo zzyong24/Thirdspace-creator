@@ -160,7 +160,7 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
   ...videoPortInputSchemas,
-  readWorkbenchPlan:emptyPortInput,
+  readWorkbenchPlan:z.object({modelCallId:operationKeySchema}).strict(),
   saveWorkbenchPlan:z.object({expectedRevision:z.number().int().nonnegative(),steps:workbenchPlanSchema.shape.steps}).strict(),
   resolveWorkbenchScreenshot:z.object({callId:operationKeySchema,dataRef:z.string().regex(/^wm1-[a-f0-9]{64}$/)}).strict(),
   readProcessingAsset:emptyPortInput,saveMaterialExtraction:materialExtractionSchema,completeAssetProcessing:assetProcessingCompleteSchema,

@@ -3,9 +3,10 @@ import { createHash } from "node:crypto";
 import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { workbenchArtifactSchema, workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
-import { executionRefSchema, workerReservationSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { executionRefSchema, workerPortInputSchemas, workerReservationSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
+import { workbenchPlanAtModel } from "./workbench-plan-history";
 
 type Step = WorkbenchPlan["steps"][number];
 const stepFields = ["title", "status", "dependsOn", "operationRefs", "artifactRefs", "supersedes"] as const;
@@ -140,10 +141,13 @@ export function createWorkbenchPlanService(db: Db, deps: {
   const now = deps.now ?? (() => new Date().toISOString());
   const leases = createExecutionLeaseService(db, {now});
   return {
-    async status(ref: ExecutionRef) {
-      return leases.withLease(ref, "admission", async ({task}) => {
+    async status(ref: ExecutionRef, historical?: unknown) {
+      const anchor = historical === undefined ? undefined : workerPortInputSchemas.readWorkbenchPlan.parse(historical);
+      return leases.withLease(ref, "admission", async ({tx, task}) => {
         if (task.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
-        const plan = storedPlan(task.payload);
+        const current = storedPlan(task.payload);
+        const plan = anchor ? await workbenchPlanAtModel(task,
+          await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)), anchor.modelCallId, current) : current;
         return plan ? {
           revision: plan.planRevision,
           progressToken: planProgressToken(plan),

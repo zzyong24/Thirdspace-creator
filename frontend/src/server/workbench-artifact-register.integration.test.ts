@@ -3,7 +3,10 @@ import {afterAll,beforeAll,expect,it,vi} from 'vitest';
 import {createHash,randomUUID} from 'node:crypto';
 import {createDb,type Db} from '@creatoros/backend';
 import {createAiRepository,createChatTurnSubmissionService} from '@creatoros/backend/modules/ai';
-import {ConflictError,createPersistentTaskService,createExecutionCallLedgerService,createExecutionLeaseService,type WorkbenchArtifactBlobPort} from '@creatoros/backend/modules/execution';
+import {ConflictError,createPersistentTaskService,createExecutionCallLedgerService,createExecutionLeaseService,createWorkbenchArtifactReadService,type WorkbenchArtifactBlobPort} from '@creatoros/backend/modules/execution';
+import {PNG} from 'pngjs';
+import {PDFParse} from 'pdf-parse';
+import {createWorkbenchArtifactRepresentation} from './workbench-artifact-representation';
 import {createExecutionChatToolPorts,readExecutionChatTask} from '../../../backend/src/modules/execution/execution-chat-tool-ports.service';
 import {createChatWorkbenchCapabilityHost} from '../../../backend/src/modules/ai-runtime/chat-workbench-capability-host';
 import {defineWorkbenchChatTool} from '../../../backend/src/modules/ai-runtime/chat-tool-gate';
@@ -30,7 +33,7 @@ function textOf(outcome:AgenticToolOutcome){
 // 全链路经聊天提交、冻结目录、模型账本、正式聊天工具端口、宿主、原子结算、versions/read。
 // 不直接写查询数据库来建立或验收产物；只用隔离文件/Blob 端口替代磁盘和对象存储。
 type FixtureSession={ctx:{userId:string;accountId:string;requestId:string;source:'user'};conversationId?:string;objects:Map<string,Uint8Array>};
-async function fixture(session?:FixtureSession){
+async function fixture(session?:FixtureSession,legacy=false){
  const nonce=randomUUID(),ctx=session?.ctx??{userId:`register-u-${nonce}`,accountId:`register-a-${nonce}`,requestId:nonce,source:'user' as const};
  const files=new Map<string,{bytes:Buffer;version:number}>();
  files.set('report-data.csv',{bytes:Buffer.from('名称,数量\n样本,42\n'),version:1});
@@ -54,14 +57,15 @@ async function fixture(session?:FixtureSession){
   return {contentBase64:source.bytes.subarray(action.offset,action.offset+action.limit).toString('base64'),total:source.bytes.length,version:source.version};
  });
  const host=createWorkbenchArtifactHost(db,{platform:'darwin',desktop:true,socketPath:'isolated-register.sock',blobs,filePort})!;
- const prepared=await prepareChatToolDefinitions(Object.fromEntries(host.catalog.map(descriptor=>[
+ const frozenCatalog=host.catalog.map(descriptor=>legacy&&descriptor.name==='artifact.copy'?host.legacyFrozenCapabilities![0]!:descriptor);
+ const prepared=await prepareChatToolDefinitions(Object.fromEntries(frozenCatalog.map(descriptor=>[
   descriptor.name,defineWorkbenchChatTool(descriptor,async()=>{throw new Error('必须经正式宿主调用');}),
- ])),{workbenchCapabilities:[...host.catalog]});
+ ])),{workbenchCapabilities:[...frozenCatalog]});
  const repo=createAiRepository(db,{...ctx,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-${randomUUID()}`});
  const conversation=session?.conversationId?{id:session.conversationId}:await repo.createConversation({title:'登记身份纠错回归',projectId:null,scope:'global'});
  const source=await repo.createMessage(conversation.id,{role:'user',content:'生成并登记报告',attachments:[],modelMetadata:{}});
  const submitted=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:'copilot.assist',system:'按真实版本交付',messages:[{role:'user',content:'登记报告'}],
-  tools:prepared.definitions,workbenchCapabilities:[...host.catalog],workbenchPlatform:'macos',maxSteps:12,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  tools:prepared.definitions,workbenchCapabilities:[...frozenCatalog],workbenchPlatform:'macos',maxSteps:12,maxOutputTokens:128})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
  const workerId=`worker-${nonce}`,tasks=createPersistentTaskService(db),claim=(await tasks.claimTask({taskId:submitted.executionTaskId,workerId}))!;
  const ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const leases=createExecutionLeaseService(db),signal=new AbortController().signal;
@@ -218,19 +222,36 @@ it('复现真实跨任务修订：合法 ID/base 下描述性或旧任务 proven
  expect(textOf((await second.invoke('artifact.register',input)).outcome)).toMatchObject({artifactId:original.artifactId,version:2});
 },20000);
 
-it('HTML 不能当 PNG 复制，错误指引通过 read→files.write→register 修订且不产生副作用',async()=>{
+it('HTML 不能伪装成 PNG 复制，错误反馈不产生副作用',async()=>{
  const first=await fixture();
  first.files.set('empty-report.html',{bytes:Buffer.from('<p>样本数 0</p>'),version:1});
  const original=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:'empty-report.html',mime:'text/html'})).outcome));
  const second=await fixture(first.session);
- for(const targetPath of ['empty-report-v2.html','empty-report.png']){
+ for(const targetPath of ['empty-report.png']){
   const {outcome}=await second.invoke('artifact.copy',{sourceArtifactId:original.artifactId,sourceVersion:1,targetPath});
   expect(outcome).toMatchObject({status:'error',sideEffect:'none',error:{code:'invalid_input',retryable:false}});
   expect(outcome.error?.recovery).toContain('PNG');
-  expect(outcome.error?.recovery).toContain('artifact.read');
-  expect(outcome.error?.recovery).toContain('files.write');
+  expect(outcome.error?.recovery).toContain('targetPath');
  }
  expect(second.blobs.submit).not.toHaveBeenCalled();expect(second.filePort).not.toHaveBeenCalled();
+},20000);
+
+it.each([
+ ['text/html','html'],['text/markdown','md'],['text/csv','csv'],['application/pdf','pdf'],
+] as const)('精确复制 %s：正式host原子结算新artifact@1，不转写源字节或任务文件',async(mime,extension)=>{
+ const first=await fixture(),bytes=Buffer.from(mime==='application/pdf'?'%PDF-1.4\r\n精确二进制\u0000\u00ff':`中文原字节\r\n${'不经模型转写'.repeat(1600)}\r\n`);
+ first.files.set(`source.${extension}`,{bytes,version:1});
+ const source=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:`source.${extension}`,mime})).outcome));
+ const second=await fixture(first.session);
+ const {outcome}=await second.invoke('artifact.copy',{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:`新目录/exact.${extension}`});
+ expect(outcome).toMatchObject({status:'ok',sideEffect:'committed'});
+ const copied=workbenchArtifactSchema.parse(textOf(outcome));
+ expect(copied).toMatchObject({version:1,mime,hash:source.hash,size:bytes.length,taskId:second.ref.executionTaskId,
+  copiedFrom:{artifactId:source.artifactId,version:1,taskId:source.taskId,hash:source.hash}});
+ expect(copied.artifactId).not.toBe(source.artifactId);expect(copied.baseArtifactRef).toBeUndefined();
+ expect(second.filePort).not.toHaveBeenCalled();
+ const stored=[...second.session.objects.values()].filter(value=>Buffer.from(value).equals(bytes));expect(stored).toHaveLength(2);
+ expect(textOf((await first.invoke('artifact.versions',{artifactId:source.artifactId})).outcome).items).toEqual([expect.objectContaining({artifactId:source.artifactId,version:1,hash:source.hash})]);
 },20000);
 
 it('同账号不同会话和其他账号均不能读取、修订或复制来源产物',async()=>{
@@ -324,3 +345,43 @@ it('copy 目标被另一 operation 占位时返回等待原操作；A 完成后�
  expect(after.outcome).toMatchObject({sideEffect:'none',error:{code:'invalid_input',retryable:false}});
  expect(target.blobs.submit).toHaveBeenCalledTimes(1);
 },20000);
+
+it('旧冻结PNG目录在新host保持原定义可执行，HTML伪装PNG仍无提交拒绝',async()=>{
+ const first=await fixture();first.files.set('source.png',{bytes:Buffer.from('registered-png'),version:1});
+ const png=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:'source.png',mime:'image/png'})).outcome));
+ first.files.set('source.html',{bytes:Buffer.from('<p>old frozen scope</p>'),version:1});
+ const html=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:'source.html',mime:'text/html'})).outcome));
+ const old=await fixture(first.session,true);
+ expect((await old.invoke('artifact.copy',{sourceArtifactId:png.artifactId,sourceVersion:1,targetPath:'old-copy.png'})).outcome.status).toBe('ok');
+ for(const targetPath of ['wrong.png','new.html'])expect((await old.invoke('artifact.copy',{sourceArtifactId:html.artifactId,sourceVersion:1,targetPath})).outcome)
+  .toMatchObject({status:'error',sideEffect:'none',error:{code:'invalid_input'}});
+ expect(old.blobs.submit).toHaveBeenCalledTimes(1);expect(old.filePort).not.toHaveBeenCalled();
+},20000);
+
+it('HTML精确闭包正式host跨任务换目录/嵌套复制，旧PNG版本实际像素与PDF正文保持',async()=>{
+ const first=await fixture(),image=new PNG({width:30,height:20});
+ for(let i=0;i<image.data.length;i+=4){image.data[i]=223;image.data[i+1]=40;image.data[i+2]=40;image.data[i+3]=255;}
+ const png=PNG.sync.write(image);first.files.set('old/chart.png',{bytes:png,version:1});
+ const pngMeta=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:'old/chart.png',mime:'image/png'})).outcome));
+ const bytes=Buffer.from('<!doctype html>\r\n<style>body{margin:0}</style><img src="./chart.png" width="120" height="80"><h1>Exact copy 42</h1>');
+ first.files.set('old/report.html',{bytes,version:1});
+ const source=workbenchArtifactSchema.parse(textOf((await first.invoke('artifact.register',{path:'old/report.html',mime:'text/html'})).outcome));
+ first.files.set('old/chart.png',{bytes:Buffer.from('new incompatible image'),version:2});
+ await first.invoke('artifact.register',{path:'old/chart.png',mime:'image/png',artifactId:pngMeta.artifactId,expectedVersion:1,baseArtifactRef:{artifactId:pngMeta.artifactId,version:1}});
+ const second=await fixture(first.session),copiedResult=await second.invoke('artifact.copy',{sourceArtifactId:source.artifactId,sourceVersion:1,targetPath:'new/copy.html'});
+ const copied=workbenchArtifactSchema.parse(textOf(copiedResult.outcome));
+ expect(copied).toMatchObject({htmlResourceBasePath:'old/report.html',htmlResources:source.htmlResources,hash:source.hash});
+ expect(resultOf(copiedResult.outcome)).toMatchObject({content:[{type:'text'}, {type:'text',text:expect.stringContaining(source.hash)}]});
+ const third=await fixture(first.session),nested=workbenchArtifactSchema.parse(textOf((await third.invoke('artifact.copy',{sourceArtifactId:copied.artifactId,sourceVersion:1,targetPath:'nested/final.html'})).outcome));
+ expect(nested.htmlResourceBasePath).toBe('old/report.html');expect(nested.htmlResources).toEqual(source.htmlResources);
+ const reader=createWorkbenchArtifactReadService(db,{blobs:third.blobs});
+ for(const format of ['raw','preview','png','pdf'] as const){
+  const result=await createWorkbenchArtifactRepresentation(reader,third.session.ctx,nested.taskId,nested.artifactId,1,format),output=Buffer.from(result.data,'base64');
+  expect(result.sourceHash).toBe(source.hash);
+  if(format==='raw')expect(output).toEqual(bytes);
+  if(format==='preview')expect(output.toString()).toContain(png.toString('base64'));
+  if(format==='png'){const rendered=PNG.sync.read(output),offset=(20*rendered.width+20)*4;expect([...rendered.data.subarray(offset,offset+4)]).toEqual([223,40,40,255]);}
+  if(format==='pdf'){const parser=new PDFParse({data:output});try{expect((await parser.getText()).text).toContain('Exact copy 42');}finally{await parser.destroy();}}
+ }
+ expect(second.filePort).not.toHaveBeenCalled();expect(third.filePort).not.toHaveBeenCalled();
+},60000);

@@ -14,6 +14,7 @@ import {ConflictError} from "./execution.errors";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 
 const MAX_ARTIFACT_BYTES=20*1024*1024;
+const COPY_EXTENSIONS:Record<string,string>={"text/html":".html","text/markdown":".md","text/csv":".csv","image/png":".png","application/pdf":".pdf"};
 /** 另一原操作持有占位；调用方应等待/核对该操作，不把合法参数误判为输入错误。 */
 export class WorkbenchArtifactPendingError extends ConflictError {
  constructor(readonly pendingOperationId:string){
@@ -47,7 +48,7 @@ type Scope={userId:string;accountId:string;taskId:string;ref:ExecutionRef};
 type ConversationScope=Scope&{conversationId:string};
 type OperationBinding={toolCallId:string;toolName:string;receiptToolName:string;claimId:string;executionAttempt?:number;executionFenceToken?:string;absentObservedAt?:string};
 type PendingSource=({kind:"register";path:string;fileVersion:number;hash:string;baseArtifactRef?:{artifactId:string;version:number}}|
- {kind:"copy";sourceArtifactId:string;sourceVersion:number;sourceTaskId:string;sourceHash:string;targetPath:string})&OperationBinding;
+ {kind:"copy";sourceArtifactId:string;sourceVersion:number;sourceTaskId:string;sourceHash:string;targetPath:string;sourceSnapshot?:Stored})&OperationBinding;
 export interface WorkbenchArtifactBlobPort {
  submit(ctx:RequestContext,input:{taskId:string;operationId:string;mime:WorkbenchBlobMime;bytes:Uint8Array}):Promise<{hash:string;size:number}>;
  read(ctx:RequestContext,input:{taskId:string;operationId:string;hash:string;mime:WorkbenchBlobMime}):Promise<Uint8Array>;
@@ -109,6 +110,35 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    hash:row.metadata.hash,mime:row.metadata.mime as WorkbenchBlobMime});
   assertBytes(bytes,row.metadata.hash,row.metadata.size);
   return bytes;
+ }
+ // 精确复制只读正式版本，不触发旧谱系迁移；数据库读取与 Blob 验证分离。
+ async function exactConversationVersion(store:Db,chat:Pick<ConversationScope,"userId"|"accountId"|"conversationId">,artifactId:string,version:number):Promise<Stored>{
+  const [lineage]=await store.select().from(workbenchArtifactLineages).where(and(eq(workbenchArtifactLineages.userId,chat.userId),
+   eq(workbenchArtifactLineages.accountId,chat.accountId),eq(workbenchArtifactLineages.conversationId,chat.conversationId),eq(workbenchArtifactLineages.artifactId,artifactId)));
+  const [saved]=lineage?await store.select().from(workbenchArtifactLineageVersions).where(and(eq(workbenchArtifactLineageVersions.lineageId,lineage.id),eq(workbenchArtifactLineageVersions.version,version))):[];
+  if(!saved)throw new OwnershipError("可复制的正式产物版本不存在");
+  const metadata=workbenchArtifactSchema.parse(saved.metadata);
+  const [task]=await store.select().from(executionTasks).where(and(eq(executionTasks.id,metadata.taskId),eq(executionTasks.userId,chat.userId),eq(executionTasks.accountId,chat.accountId)));
+  if(!task||(await mappedConversationScope(store,task)).conversationId!==chat.conversationId||metadata.artifactId!==artifactId||metadata.version!==version||saved.taskId!==metadata.taskId)
+   throw new ConflictError("产物源版本归属不匹配");
+  const row={metadata,operationId:saved.operationId,requestDigest:saved.requestDigest};
+  if(!records(task.payload).some(item=>{
+   if(isDeepStrictEqual(item,row))return true;
+   // 正式旧版迁移只补空 HTML 清单，不回写历史 task payload。仅识别此唯一规范化。
+   return isDeepStrictEqual(saved.source,{kind:"migration",legacy:true})&&item.metadata.mime==="text/html"&&
+    item.metadata.htmlResources===undefined&&isDeepStrictEqual({...item,metadata:{...item.metadata,htmlResources:[]}},row);
+  }))throw new ConflictError("产物源版本索引不匹配");
+  return row;
+ }
+ async function exactHtmlResources(store:Db,chat:Pick<ConversationScope,"userId"|"accountId"|"conversationId">,metadata:WorkbenchArtifact){
+  const rows:Stored[]=[],paths=new Set<string>();let size=0;
+  for(const resource of metadata.htmlResources??[]){
+   const row=await exactConversationVersion(store,chat,resource.artifactId,resource.version),image=row.metadata;
+   if(paths.has(resource.path)||image.taskId!==resource.taskId||image.relativePath!==resource.path||image.hash!==resource.hash||image.size!==resource.size||image.mime!=="image/png"||
+    (size+=resource.size)>2*1024*1024)throw new ConflictError("HTML 图片清单来源不匹配");
+   paths.add(resource.path);rows.push(row);
+  }
+  return rows;
  }
  async function conversationScope(store:Db,task:typeof executionTasks.$inferSelect):Promise<ConversationScope|null>{
   const payload=object(task.payload);
@@ -459,16 +489,22 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     return row.metadata;
    });
   },
-  async copy(ref:ExecutionRef,operationId:string,raw:unknown):Promise<WorkbenchArtifact>{
+  async copy(ref:ExecutionRef,operationId:string,raw:unknown,copySchemaVersion:1|2=2):Promise<WorkbenchArtifact>{
    if(!operationId||operationId.length>160)throw new ConflictError("产物操作 ID 无效");
    const input=workbenchArtifactCopyRequestSchema.parse(raw),requestDigest=digest(JSON.stringify(input));
    const scope=await leases.withLease(ref,"admission",async({tx,task})=>{
     const chat=await conversationScope(tx as unknown as Db,task);if(!chat)throw new ConflictError("旧产物协议不支持跨任务复制");return {...chat,ref};
    });
    const ctx={userId:scope.userId,accountId:scope.accountId,requestId:operationId,source:"ai"} satisfies RequestContext;
-   const source=await conversationVersion(ctx,scope.taskId,input.sourceArtifactId,input.sourceVersion);
-   if(!source||source.metadata.mime!=="image/png"||source.metadata.size>2*1024*1024)throw new OwnershipError("可复制图片不存在或超过大小限制");
+   if(copySchemaVersion===1)await ensureLegacyMigration(scope,input.sourceArtifactId);
+   const source=await exactConversationVersion(db,scope,input.sourceArtifactId,input.sourceVersion);
+   const extension=COPY_EXTENSIONS[source.metadata.mime];
+   if(!extension||!input.targetPath.toLowerCase().endsWith(extension)||source.metadata.size<1||
+    source.metadata.size>(source.metadata.mime==="image/png"?2*1024*1024:MAX_ARTIFACT_BYTES)||
+    (copySchemaVersion===1&&source.metadata.mime!=="image/png"))throw new ConflictError("复制来源 MIME、大小或目标后缀不匹配");
+   const resources=await exactHtmlResources(db,scope,source.metadata);
    const sourceBytes=await verified(source,ctx);
+   for(const resource of resources)await verified(resource,ctx);
    const existing=await db.select().from(workbenchArtifactLineageVersions).where(and(eq(workbenchArtifactLineageVersions.taskId,scope.taskId),eq(workbenchArtifactLineageVersions.operationId,operationId)));
    if(existing[0]){
     if(existing[0].requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的复制参数已改变");
@@ -479,26 +515,31 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     const [call]=await tx.select().from(executionCalls).where(and(eq(executionCalls.id,operationId),eq(executionCalls.executionTaskId,task.id))).for("update");
     if(!call||call.kind!=="tool"||call.status!=="started"||!call.toolExecutionClaimId)throw new ConflictError("产物复制必须绑定已领取的原工具调用");
     const binding=await operationBinding(tx as unknown as Db,task,call,"artifact.copy");
+    if(!isDeepStrictEqual(await exactConversationVersion(tx as unknown as Db,scope,input.sourceArtifactId,input.sourceVersion),source)||
+     !isDeepStrictEqual(await exactHtmlResources(tx as unknown as Db,scope,source.metadata),resources))throw new ConflictError("复制来源在字节校验后改变");
     const [pending]=await tx.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,operationId)).for("update");
-    if(pending){const row=pendingRow(pending);if(row.requestDigest!==requestDigest)throw new ConflictError("同一操作 ID 的复制参数已改变");return row;}
+    if(pending){const row=pendingRow(pending);if(row.requestDigest!==requestDigest||pending.pendingTaskId!==task.id||
+      (object(pending.pendingSource).sourceSnapshot&&!isDeepStrictEqual(object(pending.pendingSource).sourceSnapshot,source)))throw new ConflictError("同一操作 ID 的复制参数或来源已改变");return row;}
     if(records(task.payload).some(row=>row.metadata.relativePath===input.targetPath))throw new ConflictError("复制目标路径已被正式产物占用");
     const taskPending=await tx.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingTaskId,task.id));
     const occupying=taskPending.find(item=>workbenchArtifactSchema.safeParse(item.pendingMetadata).data?.relativePath===input.targetPath);
     if(occupying)throw new WorkbenchArtifactPendingError(pendingRow(occupying).operationId);
     const artifactId=`wa-${digest(JSON.stringify([scope.userId,scope.accountId,scope.conversationId,task.id,operationId])).slice(0,32)}`;
-    const metadata=workbenchArtifactSchema.parse({artifactId,version:1,mime:"image/png",size:source.metadata.size,hash:source.metadata.hash,
+    const metadata=workbenchArtifactSchema.parse({artifactId,version:1,mime:source.metadata.mime,size:source.metadata.size,hash:source.metadata.hash,
      relativePath:input.targetPath,taskId:task.id,provenance:[],copiedFrom:{artifactId:source.metadata.artifactId,version:source.metadata.version,
-      taskId:source.metadata.taskId,hash:source.metadata.hash}});
+      taskId:source.metadata.taskId,hash:source.metadata.hash},...(source.metadata.mime==="text/html"?{
+       htmlResourceBasePath:source.metadata.htmlResourceBasePath??source.metadata.relativePath,
+       ...(source.metadata.htmlResources!==undefined?{htmlResources:source.metadata.htmlResources}:{})}: {})});
     const stamp=now(),lineageId=`wal-${digest(JSON.stringify([scope.userId,scope.accountId,scope.conversationId,artifactId])).slice(0,40)}`;
     const frozen:PendingSource={kind:"copy",sourceArtifactId:source.metadata.artifactId,sourceVersion:source.metadata.version,...binding,executionAttempt:task.attempt,executionFenceToken:task.fenceToken!,
-     sourceTaskId:source.metadata.taskId,sourceHash:source.metadata.hash,targetPath:input.targetPath};
+     sourceTaskId:source.metadata.taskId,sourceHash:source.metadata.hash,targetPath:input.targetPath,sourceSnapshot:source};
     await tx.insert(workbenchArtifactLineages).values({id:lineageId,userId:scope.userId,accountId:scope.accountId,conversationId:scope.conversationId,
      artifactId,currentVersion:0,state:"pending_blob",pendingOperationId:operationId,pendingTaskId:task.id,pendingRequestDigest:requestDigest,
-     pendingMetadata:metadata,pendingSource:frozen,pendingHtmlResources:[],createdAt:stamp,updatedAt:stamp});
+     pendingMetadata:metadata,pendingSource:frozen,pendingHtmlResources:metadata.htmlResources??[],createdAt:stamp,updatedAt:stamp});
     return {metadata,operationId,requestDigest};
    });
    try{await verified(prepared,ctx);}catch{
-    const saved=await deps.blobs.submit(ctx,{taskId:scope.taskId,operationId,mime:"image/png",bytes:sourceBytes});
+    const saved=await deps.blobs.submit(ctx,{taskId:scope.taskId,operationId,mime:source.metadata.mime as WorkbenchBlobMime,bytes:sourceBytes});
     if(saved.hash!==prepared.metadata.hash||saved.size!==prepared.metadata.size)throw new ConflictError("复制存储回执与来源摘要不一致");
    }
    await verified(prepared,ctx);return prepared.metadata;
@@ -571,10 +612,20 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     workbench.data.operationId!==input.operationId)throw new ConflictError("产物正式回执与宿主结果不符");
    const [before]=await db.select().from(workbenchArtifactLineages).where(eq(workbenchArtifactLineages.pendingOperationId,input.operationId));
    let verifiedRow:Stored|undefined;
+   let verifiedCopySource:Stored|undefined,verifiedCopyResources:Stored[]|undefined;
    if(before){
    const row=pendingRow(before),ctx={userId:before.userId,accountId:before.accountId,requestId:input.operationId,source:"ai" as const};
     if(!workbench.data.artifactRefs.includes(`${row.metadata.artifactId}@${row.metadata.version}`))throw new ConflictError("产物引用与占位不符");
     await verified(row,ctx);
+    const frozen=object(before.pendingSource);
+    if(frozen.kind==="copy"&&frozen.sourceSnapshot){
+     const chat={userId:before.userId,accountId:before.accountId,conversationId:before.conversationId};
+     verifiedCopySource=await exactConversationVersion(db,chat,String(frozen.sourceArtifactId),Number(frozen.sourceVersion));
+     if(!isDeepStrictEqual(verifiedCopySource,frozen.sourceSnapshot))throw new ConflictError("复制源快照已改变");
+     await verified(verifiedCopySource,ctx);
+     verifiedCopyResources=await exactHtmlResources(db,chat,row.metadata);
+     for(const resource of verifiedCopyResources)await verified(resource,ctx);
+    }
     for(const resource of row.metadata.htmlResources??[]){
      const sourceTask=await owned(ctx,resource.taskId),source=records(sourceTask.payload).find(item=>item.metadata.artifactId===resource.artifactId&&
       item.metadata.version===resource.version&&item.metadata.taskId===resource.taskId&&item.metadata.relativePath===resource.path&&
@@ -607,6 +658,12 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     // 否则这里经根 db 读取设置会排在当前事务后，造成整个应用永久自锁。
     if(!verifiedRow||!isDeepStrictEqual(row,verifiedRow))throw new ConflictError("待结算产物在字节校验后发生变化");
     const frozenBinding=object(lineage.pendingSource);
+    if(!before||!isDeepStrictEqual(lineage.pendingSource,before.pendingSource))throw new ConflictError("产物冻结来源在字节校验后改变");
+    if(frozenBinding.kind==="copy"&&frozenBinding.sourceSnapshot){
+     if(!verifiedCopySource||!isDeepStrictEqual(frozenBinding.sourceSnapshot,verifiedCopySource)||
+      !isDeepStrictEqual(await exactConversationVersion(store,chat,verifiedCopySource.metadata.artifactId,verifiedCopySource.metadata.version),verifiedCopySource)||
+      !isDeepStrictEqual(await exactHtmlResources(store,chat,row.metadata),verifiedCopyResources))throw new ConflictError("复制源或图片清单在核验期间改变");
+    }
     if(frozenBinding.claimId!==input.claimId||frozenBinding.toolCallId!==input.toolCallId||frozenBinding.toolName!==input.toolName)
      throw new ConflictError("产物正式回执与冻结工具调用不符");
     if(row.metadata.version!==lineage.currentVersion+1||row.metadata.taskId!==task.id||
@@ -710,9 +767,13 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    const task=await owned(ctx,taskId);
    if(htmlMetadata){
     if(htmlMetadata.taskId!==taskId||htmlMetadata.mime!=="text/html")throw new ConflictError("HTML 图片清单归属无效");
+    const registered=await conversationVersion(ctx,taskId,htmlMetadata.artifactId,htmlMetadata.version)??records(task.payload).find(row=>row.metadata.artifactId===htmlMetadata.artifactId&&row.metadata.version===htmlMetadata.version);
+    if(!registered||!isDeepStrictEqual(registered.metadata,htmlMetadata))throw new ConflictError("HTML 图片清单与正式版本不符");
     if(htmlMetadata.htmlResources!==undefined){
      const resource=htmlMetadata.htmlResources.find(item=>item.path===relativePath);if(!resource)return null;
      const sourceTask=resource.taskId===task.id?task:await owned(ctx,resource.taskId);
+     if(resource.taskId!==task.id&&(await mappedConversationScope(db,sourceTask)).conversationId!==(await mappedConversationScope(db,task)).conversationId)
+      throw new ConflictError("HTML 图片清单跨会话");
      const exact=records(sourceTask.payload).find(item=>item.metadata.artifactId===resource.artifactId&&item.metadata.version===resource.version&&
       item.metadata.taskId===resource.taskId&&item.metadata.relativePath===resource.path&&item.metadata.mime==="image/png"&&
       item.metadata.hash===resource.hash&&item.metadata.size===resource.size);

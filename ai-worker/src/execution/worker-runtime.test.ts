@@ -26,7 +26,7 @@ it("对话计划读取使用当前执行租约的命名端口",async()=>{
  const input={kind:"chat.run",executionEngine:"pi",operationKey:"plan",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"执行",messages:[{role:"user",content:"做一份报告"}],maxSteps:4,maxOutputTokens:100,tools:[]};
  const expected={revision:1,progressToken:"saved",steps:[{title:"读取",status:"pending"}]};
  const runChat=vi.fn(async(_input,_spec,_signal,ports)=>{
-   expect(await ports.readPlanStatus?.(new AbortController().signal)).toEqual(expected);
+   expect(await ports.readPlanStatus?.("settled-stop-model",new AbortController().signal)).toEqual(expected);
    throw new GenerationFailure("waiting_user","TEST_PLAN_PORT_REACHED");
  });
  const worker=createExecutionWorker({generate:vi.fn(),runChat,send(message){
@@ -37,7 +37,7 @@ it("对话计划读取使用当前执行租约的命名端口",async()=>{
    worker.receive({version:1,type:"run",requestId:"plan-run",execution,deadlineAt:Date.now()+10000});
    await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
    expect(runChat).toHaveBeenCalledTimes(1);
-   expect(messages.find(message=>message.type==="call"&&message.port==="readWorkbenchPlan")).toMatchObject({execution,data:{}});
+   expect(messages.find(message=>message.type==="call"&&message.port==="readWorkbenchPlan")).toMatchObject({execution,data:{modelCallId:"settled-stop-model"}});
  }finally{worker.close();}
 });
 

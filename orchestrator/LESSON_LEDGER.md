@@ -13,6 +13,16 @@
 
 ---
 
+## LED-055 — 回放历史模型请求不能混入最新计划
+
+- **Date**: 2026-09-22 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: active
+- **WhatFailed**: 原综合任务重启续跑时，模型未知已安全superseded，但没有下一次新调用，最终CHAT_MODEL_REQUEST_REPLAY_MISMATCH。
+- **RootCause**: 宿主在历史stop之后生成的续行读了当前计划；当年rev3的文本被当前rev4多出的步骤改变，完整模型请求指纹因此不再一致。真实Pi/durable/SDK脱敏回放已复现。
+- **GuardRule**: 参与模型请求的宿主派生上下文必须按该历史模型调用读取当时已证明的快照；顺序和真实结算事实均须校验。不得用最新状态替代历史，不得忽略digest或覆盖旧费用/回执；历史证据缺失必须明确诊断，不能编造。新增证据门同时覆盖历史成功公共链，避免不相关未来状态反杀可用性。
+- **GuardCheck**: reconcile LED-055覆盖正式plan历史读取、原请求严格匹配与worker续行回放；具体运行结果另记当前验收，不以门存在代表已通过。
+- **Outcome(T+N)**: 第七安装实测发现，修复与新安装原任务复验进行中。
+- **Ref**: T-1026；docs/verification/t1026-cli-acceptance.md。
+
 ## LED-054 — 外部 I/O 不能占住任务数据库事务
 
 - **Date**: 2026-09-21 · **Stage**: BUILD→SHIP · **Severity**: critical · **Status**: rule

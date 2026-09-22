@@ -13,6 +13,27 @@ const result: WorkbenchResult = { status: "succeeded", operationId: "call-1", co
 const noProgress = async () => undefined;
 
 describe("通用能力宿主", () => {
+  it("旧目录仅完整匹配可信descriptor，执行/结算/未知回调均使用选中旧版本",async()=>{
+    const old:WorkbenchCapability={...descriptor,name:'artifact.copy',effects:['task_write']},current={...old,schemaVersion:2,description:'新版'};
+    const dispatch=vi.fn(async()=>result),commitAndSettle=vi.fn(async(_call,input)=>input.outcome),markUnknown=vi.fn(async()=>{});
+    const base={catalog:[current],legacyFrozenCapabilities:[old],platform:'macos' as const,capabilities:['task.files'],dispatch,commitAndSettle,markUnknown};
+    const prepared=await prepareChatToolDefinitions({'artifact.copy':defineWorkbenchChatTool(old,async()=>result)},{workbenchCapabilities:[old]});
+    const frozen={tools:prepared.definitions,workbenchCapabilities:[old]},owner={userId:'user',accountId:'account'} as never;
+    const ref={executionTaskId:'task',attempt:2,fenceToken:'fence'},signal=new AbortController().signal;
+    const lease=async()=>({userId:'user',accountId:'account',taskId:'task',attempt:2,fenceToken:'fence',leaseId:'lease'});
+    const resolve=(host=base,input=frozen)=>createChatWorkbenchCapabilityHost(host,lease,noProgress)(owner,input as never,ref,signal);
+    const tools=await resolve(),tool=tools['artifact.copy']!,scope={execution:ref,callId:'call-1',signal,claimId:'claim',toolCallId:'provider',toolName:'artifact_copy'};
+    const outcome=await tool.execute!(owner,{path:'a.png'},scope as never);
+    await tool.commitAndSettle!(owner,{path:'a.png'},outcome,scope as never);await tool.markUnknown!(owner,scope as never);
+    for(const fn of [dispatch,commitAndSettle,markUnknown])expect(fn.mock.calls[0]![0]).toMatchObject({invocation:{schemaVersion:1}});
+    expect(availableWorkbenchCapabilities(base)).toEqual([current]);
+    for(const changed of [{...old,description:'篡改'},{...old,effects:['read']},{...old,requiredCapabilities:[]},{...old,schemaVersion:3}])
+      await expect(resolve(base,{...frozen,workbenchCapabilities:[changed as WorkbenchCapability]})).rejects.toThrow('WORKBENCH_FROZEN_CAPABILITY_UNAVAILABLE');
+    await expect(resolve({...base,capabilities:[]})).rejects.toThrow();
+    await expect(resolve({...base,legacyFrozenCapabilities:[old,old]})).rejects.toThrow();
+    await expect(resolve({...base,catalog:[old]})).rejects.toThrow();
+    await expect(resolve(base,{...frozen,tools:prepared.definitions.map(tool=>({...tool,version:'wrong'}))})).rejects.toThrow('WORKBENCH_FROZEN_DEFINITION_MISMATCH');
+  });
   it("仅冻结真实装配且当前平台获授权的能力", () => {
     const host = { catalog: [descriptor], platform: "macos" as const, capabilities: ["task.files"], dispatch: vi.fn(async () => result) };
     expect(availableWorkbenchCapabilities(host).map(item => item.name)).toEqual(["files.read"]);

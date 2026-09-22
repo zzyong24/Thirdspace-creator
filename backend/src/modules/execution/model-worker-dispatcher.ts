@@ -262,7 +262,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
       }
       if(port==="commitChatResult")return chatReplies.commitResult(ref,raw);
-      if(port==="readWorkbenchPlan")return workbenchPlans.status(ref);
+      if(port==="readWorkbenchPlan")return workbenchPlans.status(ref,raw);
       if(port==="saveWorkbenchPlan")return workbenchPlans.save(ref,workerPortInputSchemas.saveWorkbenchPlan.parse(raw));
       if(port==="resolveWorkbenchScreenshot"&&deps.executionMode==="chat.run"){
         if(!deps.resolveWorkbenchScreenshot)throw new Error("SCREENSHOT_MEDIA_UNAVAILABLE");

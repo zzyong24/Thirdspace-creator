@@ -134,3 +134,19 @@ Kuhn 最终只读独审已明确通过、未发现 selected runNow 实现阻断�
 因此第七候选只在同一个采集Page、同一次既有readyState evaluate内追加有限可见角色证据，不新增平台请求或私有访问。标题及角色短文本可能包含账号显示名，范围在SPEC明确；不声称绝无个人信息。登录/验证码仍null，零节点与truncated不能解释成页面无该状态。安装后只选一项再验，真实采集仍待通过。
 
 第七候选被动UI实现冻结：前端真实Chromium与采集链4文件171/171，后端2文件35/35，frontend全量与backend定向类型检查通过。Wegener独审发现并亲自复现外层status读取子dialog正文，三项真实红后改为跳过子dialog正文、只独立采允许角色和heading；shadow隐藏lightDOM与ARIA输入排除也已覆盖。原生产evaluate次数不变，off后迟到响应不改变完成结果。原始红绿日志`/tmp/t1027-ui-*.log`；真实网站单项复验待新包。
+
+### 受控诊断开发测试的隔离偏差
+
+新增TLS网络夹具的Chromium host-resolver-rules未生效。Kuhn新建无凭据browser.newContext曾访问真实公开创作者首页；本地TLS server请求数组为空，失败日志显示公开页面标题/自然user-info请求，因无候选未点击菜单。首次失败缺细节，第二次详细回跑才识别；已停止原DNS映射方案。未使用安装版连接、已有profile、cookie或账号登录态，此结果不得算作隔离测试通过或实际账号采集证据。
+
+后续网络夹具改显式封闭localhost CONNECT代理，目标仅本机TLS server，未知域直接拒绝，并先断言本地hit；最终代理证据及重跑结果待记录。正式CLI→dispatch→持久CLI ledger→Chromium route.fulfill是另一条链，不得用其通过掩盖本项失败。实际用户采集仍只由主线公开CLI执行。
+
+### 第八候选受控诊断回归
+
+封闭代理最终证据`/tmp/t1027-diagnose-isolation-proof.json`确认：只监听127.0.0.1，唯一上游为127.0.0.1上的本次TLS随机端口，未知CONNECT拒绝1次；先核对本地页面title/hit，再观察10个自然请求。真实TLS响应的字节限与body结构读取成立，新阶段不收旧阶段迟到XHR。此通过不改写上面的失败记录。
+
+最终前端7文件179/179（包括公开CLI→正式HTTP dispatch→PGlite CLI幂等账本→真实Chromium及封闭TLS链），后端3/3、定向contract19/19、CLI78/78；frontend/CLI/contract类型检查exit0。日志`/tmp/t1027-diagnose-{frontend-final,backend,contract-green,cli-green,frontend-types,cli-types,contract-types}.log`。独立最终审查与真实安装版单作品流程尚待完成，仍不能认作评论采集成功。
+
+Wegener终审在真实隔离Chromium复现：带不安全href的aria-controls展开anchor仍可点击、dialog内status正文漏出、重复关闭旧session误释放新session占用。另补重复响应只采首条却未标sampled。真实红4失败后最小修复：展开anchor只允许无href/当前片段与精确控件关系，safe/scan共同排除native/role dialog，释放occupied按diagnosisId做CAS，重复响应明确sampled。定点3文件19/19（含5类不安全链接及3类合法展开、正式CLI与封闭TLS）通过，Wegener再次独审PASS并冻结；日志`/tmp/t1027-diagnose-review-{red,green,types}.log`。该次types实际退出码另由主线核对，真实平台验收仍待安装。
+
+主线已核对review-types日志中的实际`exit_code=0`，前端类型门通过。

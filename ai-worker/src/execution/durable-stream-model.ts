@@ -331,7 +331,8 @@ export function createDurableStreamModel(input: {
                     part.type === "finish"
                   )
                     defer = true;
-                  if (defer) {
+                  // 后续工具仍可能持续生成参数；仅前送参数流活性，完整调用等结算后释放。
+                  if (defer && !["tool-input-start", "tool-input-delta", "tool-input-end"].includes(part.type)) {
                     deferred.push(part);
                     continue;
                   }

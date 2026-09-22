@@ -127,6 +127,7 @@ const READ_OPERATIONS = [
 ] as const satisfies readonly EndpointId[];
 
 const MUTATION_OPERATIONS = [
+  "analytics.comments.diagnose",
   "analytics.comments.retry",
   "workbench.artifacts.reconcile",
   "workbench.files.reconcile",
@@ -312,6 +313,7 @@ const DESTRUCTIVE_OPERATIONS = new Set<EndpointId>([
 ]);
 
 const EXTERNAL_OPERATIONS = new Set<EndpointId>([
+  "analytics.comments.diagnose",
   "analytics.traffic.refresh",
   "ai.conversations.messages.create",
   "ai.tasks.create",

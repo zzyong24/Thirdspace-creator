@@ -33,15 +33,15 @@
 
 | 验收项 | 安装版状态 | 证据/剩余条件 |
 |---|---|---|
-| 01 一次目标多步执行 | 待验收 | 计划、数据、网页、文件、核验全部回执 |
-| 02 数据图表、修改与版本 | 待验收 | 导出原始/静态预览/PNG/PDF及数字核对 |
-| 03 重试、停止、重启 | 待验收 | 原任务恢复和取消；不重放未知外部动作 |
-| 04 浏览器并发与隔离 | 待验收 | 两任务、profile协调与跨账号夹具；当前实际仅一账号 |
-| 05 原采集兼容 | 待验收 | 当前安装版及独立源回归；千条规模不得伪造 |
-| 06 文件边界与命令取消 | 夹具通过，安装待验收 | 越界、冲突、进程树、导出取消；Windows实机未验收 |
-| 07 打开/历史/轮询性能 | 待验收 | LED-047与安装版冷/热延迟 |
-| 08 模型/RedFox/Skill兼容 | 待验收 | 已配置模型真实循环、方法包和供应商适配 |
-| 09 双端安装与升级 | 待验收 | 当前机器仅macOS；Windows实机未取得 |
+| 01 一次目标多步执行 | 未通过，继续修复 | 已有实际数据/浏览器/文件/检查；综合256出现计划循环及重启请求漂移 |
+| 02 数据图表、修改与版本 | 多项通过，当前交付待修复 | v5四格式/数字与柱高通过，v6质量回退；补精确复制避免模型转写 |
+| 03 重试、停止、重启 | 部分通过 | 原99/190实际恢复及取消隔离通过；256请求漂移与旧G unknown仍待解决 |
+| 04 浏览器并发与隔离 | 本机主要项通过，有边界未验 | K/L真实重叠取消隔离、J长页与重复动作通过；临时第二账号授权隔离通过，真实双登录/旧G重启仍未通过 |
+| 05 原采集兼容 | 未通过 | 作品/流量已有实际回执；评论单项反复无匹配响应，千条与封面完整兼容尚不能全绿 |
+| 06 文件边界与命令取消 | 本机项与夹具通过 | 越界/CAS/命令取消与重复参数/分页实测；Windows实机路径仍未验收 |
+| 07 打开/历史/轮询性能 | 回归通过，实机时延待验 | LED-047八文件161项通过；安装UI冷/热时延未测 |
+| 08 模型/RedFox/Skill兼容 | 部分通过，外部限制保留 | 自配模型/Skill真实循环通过；RedFox额度不足，官方模型独立实测未取得 |
+| 09 双端安装与升级 | macOS本机通过，Windows待验 | 七次规范本地包覆盖安装、原数据与产物保留；Windows实机未取得 |
 
 ## 本轮发现并修复
 
@@ -257,3 +257,37 @@ CLI 全量5文件77/77、typecheck通过；离线实际 runCliCommand/buildTools
 评论UI六文件经Wegener独审放行，真实Chromium有效红后绿，最终frontend171/171、backend35/35，frontend全量与backend定向类型检查通过。独审复现的外层status读到子dialog正文已三项红绿修正；shadow不可见lightDOM不输出，DOM/字节/时间预算及覆盖限制显式保留。日志`/tmp/t1027-ui-{frontend-final,backend-final,frontend-types-final,backend-types,nested-dialog-red,shadow-red}.log`。未把这些夹具视作真实评论已完成。
 
 全contract43文件256/256及类型检查通过，打包预检4文件42/42，boundary无新增违规（旧5保留）。原99最终与恢复前前113条公开回执逐项完全一致，原call114保留ID真实settled；审计`original99-sixth-final-audit.json`。
+
+## 第七候选安装实测（025c2acd2b72b888c68bfe6b6774267097f1f293）
+
+规范本地包成功自动覆盖启动PID94335，公开CLI installed/full/connected。DMG SHA-256 `d467109c75cce6f911ffffcd1a3205f7ed9092c45b0ef4ca1ea4a5b6efe06aea`，hdiutil verify通过，未公开发布。原综合256沿同IDresume至attempt3，但原283从unknown变superseded后无新284调用，最终`CHAT_MODEL_REQUEST_REPLAY_MISMATCH`、公开blocked。17百余原事件末仍是暂停前文字；不能宣称新计划纠错已被该任务实际使用。继续按具体冻结请求漂移复现修复，不能忽略digest门。
+
+报告精确恢复子任务242在两次模型superseded且未写文件后，由公开CLI取消。新分块子任务261跨安装恢复至attempt2，42calls结束，但只生成两个临时base64块、其中第二块转写错误，未合并/未登记新报告；模型最后自行声称“Stop signal”，不是用户要求停止，也不是用户数据损坏的可信证据。任务succeeded不能当验收通过，当前v6仍未被替换。已核验正确v5四格式导出保留；沿DEC补现有artifact.copy精确复制其他格式，让模型只传真实源版本，不再负责复制长字节。
+
+评论单项run-2045376d-859e-4822-aab5-22cc21933094实际61.923秒failed，1处理/0确认、匹配0、247响应。新UI证据真实读到创作者中心标题及作品发布/首页/AI分身/AI工坊四按钮，scanned414、truncated=true、mainSeen/dialogSeen=false；这不证明无主区或无需登录。独立源代码/历史核对发现旧item_id深链曾有失效记录，当前假Page夹具会直接注入旧接口，因此不证明真实SPA会触发它。暂停无信息重复重试，准备同采集profile的有界公开诊断入口以确定实际导航/响应协议，未操作primary冒充同采集身份。
+
+### 第八候选：精确复制修复门
+
+现有artifact.copy v2扩到已支持的5种MIME，生成独立新产物；旧v1完整descriptor按可信白名单精确匹配，执行/结算/unknown均使用被选择的冻结版本，旧任务仍PNG-only。HTML保留原字节、源图片tuple与宿主冻结相对基准，换目录/嵌套复制经同一representation渲染。Socrates独审发现并用4项真实红覆盖的迁移HTML、旧v1迁移兼容、pendingSource snapshot/kind降级已修复。
+
+最终backend35/35、frontend30/30、contract7/7，三个定向类型检查及边界通过。真实隔离Chromium核对红色图片像素与PDF正文，源/输出hash对应，source PNG仍为原冻结tuple。最初四MIME公共host红、HTML谱系红和四项审查红都有原始日志；测试曾用20MiB deepEqual耗堆，改为同字节Buffer.equals后正常通过，未提高内存或超时。Socrates最终独审通过、代码冻结；日志`/tmp/t1026-artifact-copy-{red,html-red,review-red,backend-final,frontend-final,contract,backend-types,frontend-types,contract-types,boundary}.log`。这仍是隔离file/blob端口与真实Chromium，安装CLI复制原v5/5种MIME待新包验证。
+
+### 第八候选：历史计划恢复门
+
+Wegener已复现并修复历史stop读取最新计划污染冻结请求。正式历史读取严格绑定同task已结算root model、冻结工具/提案/原调用身份、回执及真实结算时间；保留完整摘要拒绝，不按语义近似匹配。Socrates复核发现未来plan已保存但回执未结算的正常恢复窗口会反杀早先历史读取，新增真实host after-save故障红测后修复：只用锚点后最新模型对应、唯一正式reserved原plan的既有恢复资格及完全一致current/proposal证明尾部，既不把尾部写入历史，也不伪造结算。实际recoverExpiredLeases→新claim→旧stop读取→原call结算通过。
+
+最终backend4文件85/85、worker4文件70/70、contract1/1；worker类型检查通过，backend全量仍24项旧错误、本次文件无错，boundary旧5无新增。Socrates最终独审放行并冻结。原combined失败来自旧fixture直接save计划无正式回执，改为正式host/ledger先建立计划再跑真实子进程暂停恢复，保留原调用/费用断言，无skip。红测backend14、edge3、recovery1、worker-red2的1项有效；首次worker-red夹具缺ack不是有效红测。日志`/tmp/t1026-plan-history-{backend-red,edge-red,recovery-red,worker-red2,backend-final,worker-green,contract,worker-types-final,backend-types-final,boundary}.log`。LED055挂完整两stop/rev3→4真实Pi/SDK回放，模型/旧工具零重发并保留全部旧用量；安装原256恢复仍待验证。
+
+### 第八候选：工具参数流活性门
+
+实际Pi provider→真实SDK→durable→chat的隔离SSE及虚拟时间复现：单tool持续参数片段、以及第一tool完整后第二tool持续片段，旧桥仍触发CHAT_MODEL_IDLE_TIMEOUT。恢复规范tool-input-start/delta/end；defer仅允许这三种可选进度前送，完整tool-call/approval/finish仍待真实模型结算，断流/取消零执行。两工具在结算挂起前均零执行，结算完成各执行一次，原canonical与用量保持。
+
+独审另外实际复现空字符串delta会续命、OpenAI合法晚到工具ID/name会被新增校验误杀。最终空delta精确忽略（不trim），晚到身份不新hard-fail、不猜ID或缓存原始参数：在身份前已有非空参数时省略该call可选进度，最终完整call仍沿旧路径。对这类少见输入保留旧活性限制，不能夸为全无边界。三个文件31/31、定向类型/边界/diffcheck均exit0，Socrates最终独审PASS并冻结。日志`/tmp/t1026-tool-input-{red,double-red,empty-red,late-id-red,final,types,boundary}.log`；LED052追加此回归。
+
+242公开回执缺细粒度失败原因，因此上述隔离缺陷不得冒称242已证实根因；也未修改供应商配置、扩大timeout或增加盲目retry。
+
+### 第八候选统一门
+
+全contract44文件261/261、contract类型检查、打包预检4文件42/42通过，边界无新增违规（旧5保留）。评论诊断定点独审发现的三项Chromium缺陷及聚合采样标记均取得真实红绿，最终3文件19/19、frontend完整类型检查exit0，Wegener独审通过；完整记录见T1027验收文档。`pmem sync`已运行；本轮全局reconcile与安装实测结果另记，不提前写成通过。
+
+全局reconcile本次exit1：T1025已登记的7项历史回执漂移仍在，另LED054失败；其余46条教训门（含LED052/055/047）通过。LED054拆分复跑前端25通过/5项既有实机门跳过、worker18通过，backend71通过/1失败。实际失败是旧unknown fixture以纯root model模拟外部未知操作，而第五候选已允许它在显式resume时superseded；单独重跑稳定，尚未进入worker/as-of。经Socrates独审，仅改集成测试：真实started tool仍unknown_result，增加model恢复对照，保留除updatedAt外原账本字段及费用、零凭据/新调用。backend最终4文件73/73、exit0，无skip，独审通过并冻结；不称新生产缺陷或新功能TDD红。日志`/tmp/t1026-eighth-reconcile.log`、`/tmp/t1026-eighth-led054-{frontend,worker,backend}.log`、`/tmp/t1026-led054-backend-fixture-corrected.log`。完整reconcile尚未在此修正后重跑，不能称全绿。

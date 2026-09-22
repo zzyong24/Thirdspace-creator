@@ -256,7 +256,6 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     if (!firstClaim) throw new Error("first claim missing");
     const firstRef: ExecutionRef = {executionTaskId: submission.executionTaskId, attempt: firstClaim.lease.attempt, fenceToken: firstClaim.lease.fenceToken};
     const plans = createWorkbenchPlanService(db, {now: liveNow});
-    await plans.save(firstRef, {expectedRevision: 0, steps: [step("external", {title: "提交后核对"})]});
     const budget = {maxCalls: 16, maxTokens: 1_000_000, deadlineMs: 60_000};
     const ledger = createExecutionCallLedgerService(db, {now: liveNow, budget});
     const checkpoints = createExecutionCheckpointService(db, {now: liveNow});
@@ -278,15 +277,16 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     const server = createServer((req, res) => {let body = ""; req.on("data", chunk => body += chunk); req.on("end", () => {
       supplierCalls++;
       let name: string | null = null, args: Record<string, unknown> = {};
-      if (supplierCalls === 1) name = "external_submit";
-      if (supplierCalls === 3) {
-        const receiptId = body.match(/原工具调用 ID: (call_[^；\]]+)/)?.[1];
+      if (supplierCalls === 1) {name = "plan_update"; args = {expectedRevision: 0, steps: [step("external", {title: "提交后核对"})]};}
+      if (supplierCalls === 2) name = "external_submit";
+      if (supplierCalls === 4) {
+        const receiptId = [...body.matchAll(/原工具调用 ID: (call_[^；\]]+)/g)].at(-1)?.[1];
         if (!receiptId) {res.writeHead(500); res.end("missing original receipt"); return;}
         name = "plan_update";
         args = {expectedRevision: 1, steps: [step("external", {title: "提交后核对", status: "succeeded", operationRefs: [receiptId]})]};
       }
-      if (supplierCalls > 4) {res.writeHead(500); res.end("duplicate supplier call"); return;}
-      const delta = name ? {tool_calls: [{index: 0, id: `fixture-call-${supplierCalls}`, type: "function", function: {name, arguments: JSON.stringify(args)}}]} : {content: supplierCalls === 2 ? "还需核对原计划。" : "已凭原回执完成。"};
+      if (supplierCalls > 5) {res.writeHead(500); res.end("duplicate supplier call"); return;}
+      const delta = name ? {tool_calls: [{index: 0, id: `fixture-call-${supplierCalls}`, type: "function", function: {name, arguments: JSON.stringify(args)}}]} : {content: supplierCalls === 3 ? "还需核对原计划。" : "已凭原回执完成。"};
       const chunks = [{choices: [{index: 0, delta, finish_reason: null}]}, {choices: [{index: 0, delta: {}, finish_reason: name ? "tool_calls" : "stop"}], usage: {prompt_tokens: 2, completion_tokens: 3, total_tokens: 5}}];
       res.writeHead(200, {"content-type": "text/event-stream"});
       res.end(chunks.map(chunk => `data: ${JSON.stringify({id: "fixture", object: "chat.completion.chunk", created: 1, model: "fixture", ...chunk})}\n\n`).join("") + "data: [DONE]\n\n");
@@ -313,14 +313,14 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
           if (port === "settleAgenticTool") return chatTools.settle(ref, raw);
           if (port === "checkChatToolApproval") return chatTools.check(ref, raw);
           if (port === "readWorkbenchPlan") {
-            const status = await plans.status(ref);
+            const status = await plans.status(ref, raw);
             if (pauseAtCheckpoint) {
               pauseAtCheckpoint = false;
               safeCheckpoint = await checkpoints.read(ref);
               expect(safeCheckpoint.recovery).toBe("ready");
               expect(safeCheckpoint.pendingCalls).toHaveLength(0);
-              expect(safeCheckpoint.ledgerSequence).toBe(3);
-              expect(safeCheckpoint.messages.map(message => message.role)).toEqual(["assistant", "tool", "assistant"]);
+              expect(safeCheckpoint.ledgerSequence).toBe(5);
+              expect(safeCheckpoint.messages.map(message => message.role)).toEqual(["assistant", "tool", "assistant", "tool", "assistant"]);
               await tasks.command(owner, {taskIds: [submission.executionTaskId], command: "pause", idempotencyKey: "safe-pause"});
               supervisor.cancel(ref);
             }
@@ -339,13 +339,13 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     try {
       expect(await firstWorker.run(firstRef, Date.now() + 15_000)).toBe("cancelled");
       expect(safeCheckpoint).toMatchObject({recovery: "ready"});
-      expect(supplierCalls).toBe(2);
+      expect(supplierCalls).toBe(3);
       expect(externalCalls).toBe(1);
       const before = (await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId, submission.executionTaskId))).sort((a, b) => a.sequence - b.sequence);
-      expect(before.map(call => call.status)).toEqual(["settled", "settled", "settled"]);
-      const originalTool = before.find(call => call.kind === "tool")!;
+      expect(before.map(call => call.status)).toEqual(Array(5).fill("settled"));
+      const originalTool = before.filter(call => call.kind === "tool").at(-1)!;
       const spentBefore = before.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0);
-      expect(spentBefore).toBe(10);
+      expect(spentBefore).toBe(15);
       expect((await ledger.inspect(firstRef)).spentTokens).toBe(spentBefore);
       await firstWorker.stop();
       await tasks.acknowledgeControl({taskId: submission.executionTaskId, workerId: "restart-worker-1", attempt: firstRef.attempt});
@@ -362,12 +362,12 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
       const after = (await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId, submission.executionTaskId))).sort((a, b) => a.sequence - b.sequence);
       expect(after.slice(0, before.length)).toEqual(before);
       expect(after.every(call => call.status === "settled")).toBe(true);
-      expect(after.map(call => call.operationKey)).toEqual([...before.map(call => call.operationKey), `${input.operationKey}/model/3`, expect.any(String), `${input.operationKey}/model/4`]);
+      expect(after.map(call => call.operationKey)).toEqual([...before.map(call => call.operationKey), `${input.operationKey}/model/4`, expect.any(String), `${input.operationKey}/model/5`]);
       expect(new Set(after.map(call => call.operationKey)).size).toBe(after.length);
       expect(after.reduce((sum, call) => sum + (call.totalTokens ?? 0), 0)).toBe(spentBefore + 10);
       expect(after.find(call => call.id === originalTool.id)?.resultText).toBe(originalTool.resultText);
       expect((await plans.read(owner, submission.executionTaskId))?.steps[0]).toMatchObject({status: "succeeded", operationRefs: [originalTool.id]});
-      expect(supplierCalls).toBe(4);
+      expect(supplierCalls).toBe(5);
       expect(externalCalls).toBe(1);
       const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, submission.executionTaskId));
       expect(task?.status).toBe("succeeded");

@@ -616,6 +616,12 @@ const readSessionKey = Symbol.for('creatoros.douyinReadSessionPool');
 const readSessionRegistry = globalThis as typeof globalThis & {
   [readSessionKey]?: Promise<ReturnType<typeof import('@creatoros/ai-worker/browser/shared-read-browser-session').createSharedReadBrowserSessionPool>>;
 };
+/** T1027：同采集profile的排他诊断会话，仅暴露本次Page与确认停止清理。 */
+export async function openCommentDiagnosisSession(authDir:string,signal:AbortSignal){
+  const context=await openContext(authDir,false,signal);
+  return {newPage:()=>context.newPage(),close:()=>context.close()};
+}
+
 async function openContext(authDir: string, headless: false, signal?: AbortSignal): Promise<ExclusiveBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession>;
 async function openContext(authDir: string, headless: boolean, signal?: AbortSignal): Promise<ReadBrowserSession> {

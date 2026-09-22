@@ -13,6 +13,8 @@ import { canonicalJson } from "../ai/canonical-json";
 
 export interface ChatWorkbenchCapabilityHost {
   catalog: readonly WorkbenchCapability[];
+  /** 仅供旧任务精确匹配，不向新任务目录公开；仍受当前平台和授权约束。 */
+  legacyFrozenCapabilities?: readonly WorkbenchCapability[];
   platform: WorkbenchCapability["platforms"][number];
   capabilities: readonly string[];
   /** 未注入此端口即未装配。文件、浏览器等能力不能靠目录声明自行启用。 */
@@ -46,10 +48,15 @@ export function createChatWorkbenchCapabilityHost(
   return async (owner, input, _ref, signal) => {
     signal.throwIfAborted();
     const available = new Map(availableWorkbenchCapabilities(host).map(item => [item.name, item]));
+    const legacy=availableWorkbenchCapabilities({...host,catalog:host.legacyFrozenCapabilities??[]});
     const frozen = input.workbenchCapabilities ?? [];
+    const selected=new Map<string,WorkbenchCapability>();
     const tools = Object.fromEntries(frozen.map(descriptor => {
       const installed = available.get(descriptor.name);
-      if (!installed || canonicalJson(installed) !== canonicalJson(descriptor)) throw new Error("WORKBENCH_FROZEN_CAPABILITY_UNAVAILABLE");
+      const matches=[...(installed?[installed]:[]),...legacy.filter(item=>item.name===descriptor.name)]
+        .filter(item=>canonicalJson(item)===canonicalJson(descriptor));
+      if (!installed || matches.length!==1 || selected.has(descriptor.name)) throw new Error("WORKBENCH_FROZEN_CAPABILITY_UNAVAILABLE");
+      selected.set(descriptor.name,descriptor);
       return [descriptor.name, defineWorkbenchChatTool(descriptor, async () => { throw new Error("WORKBENCH_REQUIRES_ORIGINAL_TASK_LEASE"); })];
     }));
     if (!frozen.length) return {};
@@ -57,7 +64,7 @@ export function createChatWorkbenchCapabilityHost(
     const resultValidators = await Promise.all(frozen.map(async descriptor => [descriptor.name, (await prepareChatToolParameters(jsonSchema(descriptor.resultSchema))).parameters] as const));
     const resultByName = new Map(resultValidators);
     const bindings = Object.fromEntries(prepared.definitions.map(definition => {
-      const descriptor = available.get(definition.name)!;
+      const descriptor = selected.get(definition.name)!;
       const declared = input.tools.find(tool => tool.name === definition.name);
       if (!declared || declared.version !== definition.version || declared.effect !== definition.effect || declared.execution !== definition.execution) throw new Error("WORKBENCH_FROZEN_DEFINITION_MISMATCH");
       return [definition.name, {

@@ -48,3 +48,4 @@ export {createTrafficService,type TrafficService} from './traffic.service';
 
 export {createPublicationSyncService,type PublicationSyncService} from './sync-state.service';
 export {syncIntervalMs,isSyncDue,type SyncCapability} from './sync-policy';
+export {createCommentDiagnosisService,type CommentDiagnosisHost,type CommentDiagnosisIdentity,type CommentDiagnosisInput,type CommentDiagnosisReport} from './comment-diagnosis.service';

@@ -104,12 +104,16 @@ export async function renderRegisteredHtmlPreview(
         image.setAttribute("src", source);
         continue;
       }
-      const path = imagePath(metadata.relativePath, source);
+      const path = imagePath(metadata.htmlResourceBasePath??metadata.relativePath, source);
       if (!path || ++count > MAX_RELATIVE_IMAGES) continue;
       try {
         const found = await port.readRelativeImage(ctx, taskId, path, metadata);
-        if (!found || found.metadata.taskId !== taskId || found.metadata.relativePath !== path ||
+        const frozen=metadata.htmlResources?.find(item=>item.path===path);
+        if (!found || (metadata.htmlResources!==undefined ? !frozen||found.metadata.artifactId!==frozen.artifactId||
+            found.metadata.version!==frozen.version||found.metadata.taskId!==frozen.taskId||found.metadata.hash!==frozen.hash||found.metadata.size!==frozen.size
+            : found.metadata.taskId!==taskId) || found.metadata.relativePath !== path ||
             found.metadata.mime !== "image/png" || found.metadata.size !== found.bytes.byteLength ||
+            createHash("sha256").update(found.bytes).digest("hex")!==found.metadata.hash ||
             found.bytes.byteLength > MAX_RELATIVE_IMAGE_BYTES - totalBytes || !isPng(found.bytes)) continue;
         totalBytes += found.bytes.byteLength;
         image.setAttribute("src", `data:image/png;base64,${Buffer.from(found.bytes).toString("base64")}`);

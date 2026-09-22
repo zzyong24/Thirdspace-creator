@@ -3,8 +3,28 @@ import {
   metricSnapshotResource,
   audienceSnapshotResource,
 } from "../../src/resources/analytics";
-import { analyticsOperations } from "../../src/operations/analytics";
+import { ENDPOINTS as analyticsOperations } from "../../src/endpoints";
 import type { Endpoint } from "../../src/endpoints";
+import { getCliOperationPolicy } from '../../src/cli-policy';
+
+describe('T1027 同账号单作品受控评论诊断',()=>{
+ const operation=()=>{const op=Object.values(analyticsOperations).find(op=>op.id==='analytics.comments.diagnose');expect(op).toBeDefined();return op as Endpoint;};
+ it('正式operation与CLI external幂等门，不冒充采集task',()=>{
+  const op=operation();expect(op).toMatchObject({method:'POST',path:'/analytics/comments/diagnose'});
+  expect(getCliOperationPolicy(op.id)).toEqual({effect:'external',confirmation:'confirm_impact',asyncTask:false,idempotency:'gateway'});
+ });
+ it('只接受固定阶段与一个publication，禁止selector/脚本/目录/URL与通用动作',()=>{
+  const schema=operation().body!;
+  expect(schema.parse({action:'start',publicationId:'publication-real'})).toEqual({action:'start',publicationId:'publication-real'});
+  for(const invalid of [{action:'start',publicationIds:['a','b']},{action:'click',selector:'button'},...['selector','url','script','authDir','accountId','headers'].map(key=>({action:'start',publicationId:'p',[key]:'PRIVATE'})),{action:'advance',diagnosisId:'d',expectedRevision:0,observationId:'o',intent:'submit',targetRef:'r'}])expect(schema.safeParse(invalid).success).toBe(false);
+ });
+ it('advance必须携带当前revision与observation，close不依赖publication存续',()=>{
+  const schema=operation().body!;
+  expect(schema.safeParse({action:'advance',diagnosisId:'d',expectedRevision:1,observationId:'o',intent:'expand_navigation',targetRef:'r'}).success).toBe(true);
+  expect(schema.safeParse({action:'advance',diagnosisId:'d',intent:'enter_comments',targetRef:'r'}).success).toBe(false);
+  expect(schema.parse({action:'close',diagnosisId:'d'})).toEqual({action:'close',diagnosisId:'d'});
+ });
+});
 
 describe("analytics contract", () => {
   it("parses a MetricSnapshot resource", () => {

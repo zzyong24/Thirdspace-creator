@@ -30,7 +30,7 @@ export interface ChatWorkerPorts {
   /** 判定必须来自宿主对真实工具调用的授权，不能由模型参数自行决定。 */
   approve(input:{modelCallId:string;toolCallId:string},signal:AbortSignal):Promise<ToolApprovalStatus>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
-  readPlanStatus?(signal:AbortSignal):Promise<ChatPlanStatus|null>;
+  readPlanStatus?(modelCallId:string,signal:AbortSignal):Promise<ChatPlanStatus|null>;
 }
 /** 执行回合而不提交业务终态；调用方须把返回消息/授权状态与任务原子保存。 */
 export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSchema>,rawSpec:z.infer<typeof workerModelSpecSchema>,parentSignal:AbortSignal,ports:ChatWorkerPorts){
@@ -205,7 +205,11 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
       recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
       replayProjection:{original:legacyToolResultTexts,capture:build=>{replayPrompt=build;}},
-      readPlanStatus:ports.readPlanStatus?()=>ports.readPlanStatus!(signal):undefined,
+      readPlanStatus:ports.readPlanStatus?async()=>{
+        if(!lastModelCallId)throw fail(new Error("model receipt missing"),"CHAT_PLAN_HISTORY_UNPROVEN");
+        try{return await ports.readPlanStatus!(lastModelCallId,signal);}
+        catch(error){throw fail(error,"CHAT_PLAN_HISTORY_UNPROVEN");}
+      }:undefined,
       presentToolResult:async(_name,_visible,toolCallId)=>{
         const receipt=outcomesForProjection.get(toolCallId);
         if(!receipt)return null;

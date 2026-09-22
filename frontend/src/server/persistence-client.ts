@@ -141,7 +141,8 @@ import { createAssetRepository, createAssetsService, createWebDocumentCacheServi
 import { createArtifactsService, createArtifactsTransport } from "@creatoros/backend/modules/artifacts";
 import { createProductionService, createProductionTransport } from "@creatoros/backend/modules/production";
 import { createPublishingService, createPublishingTransport, createUnavailablePublisher } from "@creatoros/backend/modules/publishing";
-import { createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
+import { createCommentDiagnosisHost } from "./ingestion/douyin-cdp-comment-diagnosis";
+import { createCommentDiagnosisService, createPublicationSyncService, createTrafficService, createAnalyticsRepository, createAnalyticsService, createAnalyticsTransport } from "@creatoros/backend/modules/analytics";
 import { createIngestionService, createIngestionTransport } from "@creatoros/backend/modules/ingestion";
 import { createReviewsService, createReviewsTransport } from "@creatoros/backend/modules/reviews";
 // T-086 文案审核门(review_rules + script_review_reports)。
@@ -1133,6 +1134,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const { db, driver, dispose } = await createConfiguredDb();
   let stopExecutionWorker: (()=>Promise<void>) | undefined;
   let disposeWorkbenchBrowserHost: (()=>Promise<void>) | undefined;
+  let disposeCommentDiagnosisHost: (()=>Promise<void>) | undefined;
   let stopWorkbenchArtifactReconciler:(()=>void)|undefined;
   // [T-365/T-362] 把库的优雅关闭(PGlite client.close() = flush WAL)挂到 global,供
   //   sidecar-lifecycle 在 SIGTERM/孤儿自检退出时调用 —— 防「进程死于写库中途 → WAL 半写
@@ -1140,7 +1142,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   //   不能 import 本模块(会在启动钩子里触发整个 persistence 装配)。
   (globalThis as { __creatorosDisposePersistence?: () => Promise<void> }).__creatorosDisposePersistence =
     createBrowserHostDisposer({browser:hostBrowserShutdownScope,stopWorkers:async()=>{
-      stopWorkbenchArtifactReconciler?.();await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();
+      stopWorkbenchArtifactReconciler?.();await stopExecutionWorker?.();await disposeWorkbenchBrowserHost?.();await disposeCommentDiagnosisHost?.();
     },disposeDatabase:dispose});
 
   // [T-363] 重置工作区(T-332 S5 Rust 整目录归档)后的首次启动:把 PRESERVE 清单表
@@ -2061,6 +2063,13 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   const startTrafficJob=async(ctx:RequestContext)=>{
     return startTrafficCollection(ctx,{snapshot:()=>trafficService.pending(ctx,2147483647),trigger:async()=>{const job=await ensureTrafficJob(ctx);return triggerScheduledJob(ctx,{...job,target:job.target??{}},triggerDeps);},fail:(rows,message)=>trafficService.failPending(ctx,rows,message)});
   };
+  const commentDiagnosisHost=createCommentDiagnosisHost({
+    open:async(identity,signal)=>(await loadDouyinCdp()).openCommentDiagnosisSession(await douyinAuthDirFor(identity.accountId,signal,identity.userId),signal),
+    acquire:()=>douyinGateway.acquire('creator-center'),
+    throttled:()=>douyinGateway.report('creator-center','throttled'),
+  });
+  disposeCommentDiagnosisHost=()=>commentDiagnosisHost.dispose();
+  const commentDiagnosisService=createCommentDiagnosisService({host:commentDiagnosisHost,assertPublication:(ctx,id)=>trafficService.assertPublication(ctx,id)});
   const analytics = createAnalyticsTransport(() => analyticsService,{
     getProject:(ctx,id)=>trafficService.getProject(ctx,id),
     refresh:async(ctx,id)=>{
@@ -2069,7 +2078,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       if(!(await trafficService.pending(ctx,1)).length)return {queued,jobRunId:null,aiTaskId:null};
       const run=await startTrafficJob(ctx);return {queued,jobRunId:run.jobRunId||null,aiTaskId:run.aiTaskId||null};
     },
-  },publicationSyncService);
+  },publicationSyncService,commentDiagnosisService);
 
   // Ingestion (module 12): the service builds a per-ctx user-scoped repo over the
   // shared db (the repo bakes userId in; the service mints one per request). It
@@ -5466,6 +5475,7 @@ FAVORITES_PROMOTE_PER_RUN
     .filter((host):host is NonNullable<ChatProductionCompositionDeps["workbenchHost"]>=>Boolean(host));
   const workbenchHost:ChatProductionCompositionDeps["workbenchHost"]=workbenchHosts.length?{
     catalog:workbenchHosts.flatMap(host=>host.catalog),platform:workbenchHosts[0].platform,
+    legacyFrozenCapabilities:workbenchHosts.flatMap(host=>host.legacyFrozenCapabilities??[]),
     capabilities:[...new Set(workbenchHosts.flatMap(host=>host.capabilities))],
     dispatch:(call,options)=>{
       const host=workbenchHosts.find(candidate=>candidate.catalog.some(tool=>tool.name===call.invocation.name));

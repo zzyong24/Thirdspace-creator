@@ -3767,3 +3767,15 @@ Status: active
 ## DEC-T1026-FILE-RECEIPT（2026-09-21）
 
 沿用户要求补公开 `workbench.files.reconcile`（taskId、原operationId；write/apply/gateway幂等），只用可信Native持久committed记录结算原文件调用，保留旧unknown快照、原键和费用。独审Wegener已放行协议A及生产自动恢复：复用已有单在途recoveryWake lane，有界轮转，停止时等待并拒绝迟到回写，只定点恢复该unknown_result任务，paused保持暂停。缺记录/prepared不伪报成功；观察协议B未实现、未通过，原99不解锁。新同会话后续修订可在独立task目录读取不可变v1并登记v2，不能作为99恢复通过的证据。Windows实机与断电持久性仍无实证。
+
+## DEC-T1026-EXACT-ARTIFACT-COPY（2026-09-22）
+
+按用户“所有新增功能通过CLI验收，缺入口补齐，生成问题继续修复”的既有授权，补现有`artifact.copy`对已登记HTML/Markdown/CSV/PDF的精确字节复制；沿同会话/账号、真实源版本、租约和原调用身份创建独立新artifact@1，原lineage与源任务文件不动。真实子任务242/261已证明让模型转写18KB报告会超时或抄错，不能把这种搬运当可靠恢复手段。此为确定性协议能力，不替模型做内容创作或替用户挑选源版本。
+
+Socrates独立方案审查有条件通过：PNG既有2MiB守卫保留，其余支持格式沿登记20MiB；HTML必须冻结并逐项校验源依赖闭包及宿主生成的原相对路径基准，嵌套copy保留原基准。渲染不得扩大图片归属、网络或脚本权限。旧冻结工具目录不回写，新任务才采用扩展。真实红绿及完整公共调用链验收仍待完成；这不是已发布或已通过的记录。未发生额外用户确认消息，不伪造确认。
+
+## DEC-T1027-CONTROLLED-DIAGNOSIS（2026-09-22）
+
+真实七包仍无评论响应，现有公开入口无法在同一个采集身份页面核验导航契约；用户已要求CLI缺口补齐并持续修复。采用新增`analytics.comments.diagnose`窄领域入口，单真实publication、同账号原采集profile/lease、固定主页及有界导航候选观察/选择/关闭。不开放任意URL、selector、JS或私有CDP；先看真实DOM证据，再由Agent判断并选择真实引用，代码仅守身份、生命周期、范围与幂等。
+
+Socrates已实际独审通过完整方案：close只依session归属、不被作品状态变化挡住；诊断只获取平台准入、不把观察成功report为采集成功或清退避；持久CLI gateway的pending/unknown重放不重新派发；observe原子换generation、旧ref拒绝。自然网络仅有界白名单协议证据，不返回凭据/评论正文/未知字段值；无法硬限读取的body明确unavailable。TTL本身不释放未确认停止资源，不把诊断可用等同平台采集通过。具体约束和红绿门在T1027 SPEC，未新增application空转发层。无额外用户确认消息，不冒称完成。

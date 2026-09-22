@@ -161,6 +161,8 @@ export const workbenchArtifactSchema = z.object({
   provenance: z.array(reference),
   baseArtifactRef: z.object({artifactId:reference,version:z.number().int().positive()}).strict().optional(),
   copiedFrom: z.object({artifactId:reference,version:z.number().int().positive(),taskId:reference,hash:z.string().regex(/^[a-f0-9]{64}$/)}).strict().optional(),
+  /** 宿主冻结的原 HTML 路径（含文件名），仅用于复制后解析既有相对图片。 */
+  htmlResourceBasePath: relativePath.optional(),
   htmlResources: z.array(z.object({
     path: relativePath,
     artifactId: reference,
@@ -197,7 +199,7 @@ export const workbenchArtifactVersionsRequestSchema = z.object({
 export const workbenchArtifactCopyRequestSchema = z.object({
   sourceArtifactId: reference,
   sourceVersion: z.number().int().positive(),
-  targetPath: relativePath.refine(path=>path.toLowerCase().endsWith(".png"),"复制目标必须是 PNG"),
+  targetPath: relativePath.refine(path=>/\.(html|md|csv|png|pdf)$/i.test(path),"复制目标须使用已支持的 .html/.md/.csv/.png/.pdf 后缀"),
 }).strict();
 
 export type WorkbenchCapability = z.infer<typeof workbenchCapabilitySchema>;

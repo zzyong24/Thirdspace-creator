@@ -20,6 +20,7 @@ import type { MetricSnapshotResource } from "./analytics.schema";
 // PERSISTED_OPS from ANALYTICS_OP_IDS (adding the module = registering it).
 
 export const ANALYTICS_OP_IDS = [
+  "analytics.comments.diagnose",
   "analytics.comments.failures.list",
   "analytics.comments.retry",
   "analytics.publications.get",
@@ -55,6 +56,7 @@ export function createAnalyticsTransport(
   serviceFactory: () => AnalyticsService,
   traffic?: {getProject:import('./traffic.service').TrafficService['getProject'];refresh:(ctx:RequestContext,projectId:string)=>Promise<{queued:number;jobRunId:string|null;aiTaskId:string|null}>},
   comments?:Pick<import('./sync-state.service').PublicationSyncService,'listCommentFailures'|'retryComments'>,
+  diagnosis?:ReturnType<typeof import('./comment-diagnosis.service').createCommentDiagnosisService>,
 ): Transport {
   return {
     async request(endpoint: Endpoint, input, ctx) {
@@ -71,6 +73,9 @@ export function createAnalyticsTransport(
       const { page, pageSize } = paginationFrom(query);
 
       switch (endpoint.id) {
+        case 'analytics.comments.diagnose':
+          if(!diagnosis)throw new Error('评论诊断服务尚未接入');
+          return {data:await diagnosis.diagnose(ctx,body),meta:{requestId}};
         case 'analytics.comments.failures.list':{
           if(!comments)throw new Error('评论重试服务尚未接入');
           const paging=analyticsOperations.listCommentFailures.query.parse(query??{});

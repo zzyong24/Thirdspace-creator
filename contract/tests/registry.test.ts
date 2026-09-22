@@ -101,6 +101,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   // T-1027 公开失败清单与保留历史的作品重试。
   ["GET", "/analytics/comments/failures"],
   ["POST", "/analytics/comments/retry"],
+  ["POST", "/analytics/comments/diagnose"],
   ["POST", "/projects/:projectId/reviews"],
   // [T-053 断点③] 复盘记录列表读(复盘页「复盘记录」区)。
   ["GET", "/projects/:projectId/reviews"],

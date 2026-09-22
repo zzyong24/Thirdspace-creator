@@ -16,6 +16,15 @@ import {
 } from "../src/internal/agent-workbench";
 
 describe("T-1004 共享能力协议", () => {
+  it("精确复制只接收已支持后缀，源 MIME 与依赖基准不能由请求注入",()=>{
+    for(const extension of ['html','md','csv','pdf','png'])expect(workbenchArtifactCopyRequestSchema.safeParse({sourceArtifactId:'a',sourceVersion:1,targetPath:`新目录/a.${extension}`}).success).toBe(true);
+    for(const extra of [{mime:'text/html'},{htmlResourceBasePath:'old/index.html'},{htmlResources:[]},{baseArtifactRef:{artifactId:'a',version:1}}])
+      expect(workbenchArtifactCopyRequestSchema.safeParse({sourceArtifactId:'a',sourceVersion:1,targetPath:'copy.html',...extra}).success).toBe(false);
+    for(const path of ['../a.html','/a.html','a.exe','a.html?x'])expect(workbenchArtifactCopyRequestSchema.safeParse({sourceArtifactId:'a',sourceVersion:1,targetPath:path}).success).toBe(false);
+    const metadata={artifactId:'copy',version:1,mime:'text/html',size:1,hash:'a'.repeat(64),relativePath:'new/index.html',taskId:'new',provenance:[],htmlResourceBasePath:'old/index.html'};
+    expect(workbenchArtifactSchema.parse(metadata)).toEqual(metadata);
+    expect(workbenchArtifactSchema.safeParse({...metadata,htmlResourceBasePath:'../escape.html'}).success).toBe(false);
+  });
   it("工具目录声明版本、影响、平台及输入输出形状", () => {
     const descriptor = {
       name: "files.read", schemaVersion: 1, description: "读取任务文件",
