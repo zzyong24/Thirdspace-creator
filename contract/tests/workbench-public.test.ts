@@ -26,4 +26,12 @@ describe("新增 Agent 能力公开 CLI 契约",()=>{
     for(const extra of [{scope:{userId:"foreign"}},{content:"rewrite"},{path:"report.html"},{expectedVersion:0},{fenceToken:"caller"}])
       expect(endpoint.body.safeParse({operationId:"call-original",...extra}).success).toBe(false);
   });
+  it("文件重新准入只报告历史准入事实，不能声称有Native回执或已写版本",()=>{
+    const response=ENDPOINTS.reconcileWorkbenchFile.response;
+    const value={taskId:"task",operationId:"call",status:"readmitted",verificationKind:"predispatch_readmission",auditDigest:"sha256:"+"a".repeat(64),version:null,hash:null,size:null};
+    expect(response.parse(value)).toEqual(value);
+    for(const patch of [{version:4},{verificationKind:"native_receipt"},{status:"settled"},{auditDigest:undefined},{claimId:"secret"}])
+      expect(response.safeParse({...value,...patch}).success).toBe(false);
+    expect(ENDPOINTS.reconcileWorkbenchFile.body.safeParse({operationId:"call",sourceVersion:"048fd032"}).success).toBe(false);
+  });
 });

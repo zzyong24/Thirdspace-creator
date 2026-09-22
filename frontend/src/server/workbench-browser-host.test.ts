@@ -4,7 +4,7 @@ import {randomUUID} from "node:crypto";
 import {createServer,type Server} from "node:net";
 import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join,resolve} from "node:path";
+import {dirname,join,resolve} from "node:path";
 import {createDb,executionTasks,eq,type Db} from "@creatoros/backend";
 import {createPersistentTaskService,createExecutionBrowserProfileLeaseService,
  createHostBrowserProfileLifecycle} from "@creatoros/backend/modules/execution";
@@ -365,14 +365,17 @@ it("close reports unknown and keeps the lease when native stop cannot be proven"
   fenceToken:claim.lease.fenceToken})).toHaveLength(1);
 });
 const realTest=process.platform==="darwin"&&process.env.CREATOROS_TEST_CFT_ROOT?it:it.skip;
-async function startRealRustBridge(directory:string,profileRoot:string,label:string){
+async function startRealRustBridge(directory:string,profileRoot:string,label:string,abruptExit=false){
  const ready=join(directory,`${label}-ready`),done=join(directory,`${label}-done`);
  const projectRoot=resolve(import.meta.dirname,"../../..");
- const rust=spawn("cargo",["test","--manifest-path","frontend/src-tauri/Cargo.toml","--locked","--offline","--lib",
-  "external_node_host_fixture","--","--ignored","--nocapture"],{
+ const binary=process.env.CREATOROS_TEST_BROWSER_FIXTURE_BINARY;
+ const rust=spawn(binary??"cargo",binary?["browser_ipc::tests::external_node_host_fixture","--exact","--ignored","--nocapture"]:
+  ["test","--manifest-path","frontend/src-tauri/Cargo.toml","--locked","--offline","--features","workbench-browser","--test","workbench",
+  "browser_ipc::tests::external_node_host_fixture","--","--exact","--ignored","--nocapture"],{
   cwd:projectRoot,env:{...process.env,TAURI_CONFIG:JSON.stringify({bundle:{resources:[],externalBin:[]}}),
    CREATOROS_BROWSER_E2E_NODE_PID:String(process.pid),CREATOROS_BROWSER_E2E_READY_FILE:ready,
-   CREATOROS_BROWSER_E2E_DONE_FILE:done,CREATOROS_BROWSER_E2E_PROFILE_ROOT:profileRoot},
+   CREATOROS_BROWSER_E2E_DONE_FILE:done,CREATOROS_BROWSER_E2E_PROFILE_ROOT:profileRoot,
+   CREATOROS_BROWSER_E2E_ABRUPT_EXIT:abruptExit?"1":"0"},
   stdio:["ignore","pipe","pipe"],
  });
  let output="",exited:number|null|undefined;
@@ -392,8 +395,61 @@ async function startRealRustBridge(directory:string,profileRoot:string,label:str
   const code=await Promise.race([exit,new Promise<null>(resolveTimeout=>setTimeout(()=>resolveTimeout(null),15_000))]);
   if(code===null&&exited===undefined)rust.kill();
   expect(code,output).toBe(0);
+  if(abruptExit)await rm(dirname(socketPath),{recursive:true,force:true});
  }};
 }
+
+realTest("interrupted real Chromium host recovers the same task profile on attempt two",async()=>{
+ const root=await mkdtemp(join(tmpdir(),"wb-browser-interrupted-")),profileRoot=join(root,"profiles"),nonce=randomUUID();
+ const ctx={userId:`interrupted-${nonce}`,accountId:`account-${nonce}`,requestId:nonce,source:"user" as const};
+ const tasks=createPersistentTaskService(db),profiles=createExecutionBrowserProfileLeaseService(db);
+ let bridge:Awaited<ReturnType<typeof startRealRustBridge>>|undefined;
+ let first:ReturnType<typeof createWorkbenchBrowserHost>,second:ReturnType<typeof createWorkbenchBrowserHost>;
+ try{
+  bridge=await startRealRustBridge(root,profileRoot,"first",true);
+  const task=await tasks.enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:nonce,idempotencyKey:nonce,payload:{}});
+  const oldWorker=`first-${nonce}`,oldClaim=(await tasks.claimTask({taskId:task.id,workerId:oldWorker}))!;
+  const oldRef={executionTaskId:task.id,attempt:oldClaim.lease.attempt,fenceToken:oldClaim.lease.fenceToken};
+  first=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:bridge.socketPath})!;
+  const invoke=(host:NonNullable<typeof first>,ref:typeof oldRef,worker:string,name:string,input:Record<string,unknown>)=>host.dispatch({
+   context:{userId:ctx.userId,accountId:ctx.accountId,taskId:task.id,attempt:ref.attempt,fenceToken:ref.fenceToken,leaseId:worker,operationId:randomUUID()},
+   invocation:{name,schemaVersion:1,input}},{signal:AbortSignal.timeout(45_000),onProgress:()=>{}});
+  const open=await invoke(first,oldRef,oldWorker,"browser.open",{laneId:"original-alias",mode:"anonymous",domain:"example.com"});
+  expect(open.status,JSON.stringify(open)).toBe("succeeded");
+  if(open.status!=="succeeded"||open.content[0]?.type!=="text")throw Error("No open receipt");
+  const oldLane=JSON.parse(open.content[0].text).lane;
+  const oldOwned=await profiles.listOwned(oldRef);expect(oldOwned).toHaveLength(1);
+  const location=await resolveManagedBrowserProfile(bridge.socketPath,{userId:ctx.userId,accountId:ctx.accountId,taskId:task.id},"anonymous",AbortSignal.timeout(10_000));
+  const retained=join(location.managedProfileRoot,"retained-state");await writeFile(retained,"keep this profile");
+  // Dispose only the Node timer. The fixture then exits without native Drop.
+  await first.dispose();await bridge.finish();bridge=undefined;
+  await tasks.command(ctx,{taskIds:[task.id],command:"pause",idempotencyKey:randomUUID()});
+  await tasks.acknowledgeControl({taskId:task.id,workerId:oldWorker,attempt:oldRef.attempt});
+  await tasks.command(ctx,{taskIds:[task.id],command:"resume",idempotencyKey:randomUUID()});
+  const worker=`second-${nonce}`,claim=(await tasks.claimTask({taskId:task.id,workerId:worker}))!;
+  const ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+  expect(ref.attempt).toBe(oldRef.attempt+1);
+  bridge=await startRealRustBridge(root,profileRoot,"second");
+  second=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:bridge.socketPath})!;
+  expect(await invoke(second,ref,worker,"browser.status",{laneId:oldLane.lane_id})).toMatchObject({status:"failed",error:{code:"lane_not_found",dispatched:false}});
+  const reopened=await invoke(second,ref,worker,"browser.open",{laneId:"reopened-alias",mode:"anonymous",domain:"example.com"});
+  expect(reopened.status,JSON.stringify(reopened)).toBe("succeeded");
+  if(reopened.status!=="succeeded"||reopened.content[0]?.type!=="text")throw Error("No reopen receipt");
+  const lane=JSON.parse(reopened.content[0].text).lane;
+  expect(lane.lane_id).not.toBe(oldLane.lane_id);expect(lane.browser_epoch).toBeGreaterThan(0);
+  expect(await profiles.listOwned(oldRef)).toEqual([]);
+  expect((await profiles.listOwned(ref))[0]?.leaseId).not.toBe(oldOwned[0]!.leaseId);
+  expect(await readFile(retained,"utf8")).toBe("keep this profile");
+  expect((await invoke(second,ref,worker,"browser.status",{laneId:lane.lane_id})).status).toBe("succeeded");
+  const closed=await invoke(second,ref,worker,"browser.close",{laneId:lane.lane_id,browserEpoch:lane.browser_epoch});
+  expect(closed.status,JSON.stringify(closed)).toBe("succeeded");
+  expect(await profiles.listOwned(ref)).toEqual([]);
+ }finally{
+  await first?.dispose();await second?.dispose();
+  if(bridge)await bridge.finish();
+  await rm(root,{recursive:true,force:true});
+ }
+},180_000);
 realTest("Node/DB leases use the PID-bound Rust socket and real Chromium",async()=>{
  const directory=await mkdtemp(join(tmpdir(),"wb-browser-real-"));
  const ready=join(directory,"ready"),done=join(directory,"done"),profileRoot=join(directory,"profiles");

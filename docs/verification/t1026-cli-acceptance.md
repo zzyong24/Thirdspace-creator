@@ -208,3 +208,32 @@ CLI 全量5文件77/77、typecheck通过；离线实际 runCliCommand/buildTools
 - 最终contract43文件255/255、打包预检42/42。第五包尚未安装，以上不替代真实任务190/G/H恢复或原报告交付验收。
 
 第五轮最终边界门已修复跨模块集成测试归属：测试移至backend/src/integration，正文不变，实际Worker1/1与专用类型检查通过；boundary无新增违规、旧基线5保留。未修改baseline或扫描规则。
+
+## 第五候选安装实测（87607e901c6c67c73bd583a42006e2fcbf91fb89）
+
+本地规范打包成功、自动覆盖启动PID65287；CLI自启动full/connected/installed，目录268项。DMG SHA-256 `513f9533c484dcedffae0169287da0ddc477fa8d3e1205d1fbb25002423add89`，hdiutil verify通过；本地ad-hoc，未公开发布。
+
+- 原190在启动恢复后沿同ID attempt3、64calls succeeded，原前57条ID/status/resultText/totalTokens/operationKey逐项不变；末未知model变superseded且用量仍null。原HTML同artifactId成功登记v2：11954字节、hash `3c33caf68335ffa1a54b9f88220aa0ea6d7f5b0850a07f6f5f7369db33d31ffa`，v1保留。四格式CLI导出实际完成，表格37行/15已知/22未知/总62297经独立解析一致。但v2只是div片段，SVG最后一条被截，未真实跑Node且残留错误运行器说明，所以恢复机制通过，完整报告质量未通过；同会话提交v3具体修订（task execution-task-91ea746a-120），不称原99恢复。
+- G/H旧observe均按原调用保留未知证据并收口读取错误，原ID自动续跑。重启后旧lane已不存在；H最终只回复未完成（18calls succeeded不等于浏览器目标通过）；G在重新open时seq15再unknown，原错误细码仍无公开证据，正隔离复现。不能将本轮认作长页完整验收。
+- 原99实际公开固定reason为EXECUTION_CLAIM_MISSING，仍paused114calls，末files.edit unknown。此为原任务首次真实证据，Native仍未查询；进入严格派发前claim恢复方案评审，不采用B或猜测当前内容。
+- 评论仅选1项，run-58029507-db24-4cd2-a929-c0060b1d7cd8实际28.32秒failed：expected_comment路由、导航200、readycomplete，244响应（239个2xx、5个3xx）、commentList0，三次滚动无错。尚无登录/验证码证据。外层错误误把诊断navigationStatus识别成加载超时，继续修正类型并补有限脱敏路由分布。
+
+所有结果由公开CLI读回；原始证据`/tmp/t1026-cli-evidence/`，本轮独立报告核验`original190-fifth-audit.json`。
+
+### 第五候选追加验收
+
+- 原报告同会话修订task120实际Node首次exit1（验证脚本把SVG命名空间误认远程资源、主图与Top5混计），原loop纠正脚本后exit0并登记v3、CSV。独立图像审查继续发现轴刻度与柱高尺度不一致，后续task189用真实CSV与Node统一生成，70calls完成v4后又自纠正登记v5。当前v5为18218字节，hash `df0705e60cc82fcd2b36c8c4d51d54bce96f3ed8ad20ff490a4bb036f194b2d4`，v1-v4仍存在。实际CLI四格式全部导出；独立XML逐柱核对value/16000*280及每一刻度位置误差<0.1，15柱/37行/15已知/22未知/总62297全部符合，PNG实际可见无原先裁切。证据`original-v5-independent-audit.json`，报告交付不等于原99已恢复。
+- J task158真实43calls完成RFC长页navigate/observe/extract/screenshot/status/close，两次相同参数scroll分别0→600、600→1200；长页与新操作不复用旧回执的安装正向通过。I因重复使用自拟lane别名而未完成，补准确返回ID指导，不能把I的succeeded当全目标通过。
+- 真实临时本地账号acct-91ea746a-200（无外部绑定）测试：跨账号tasks.inspect/artifacts.read/artifacts.list/files.reconcile均404；export被拒且未产生输出文件，原99账本保持。测试后该临时账号已通过公开CLI归档。证据`isolation-*.json`；只覆盖同用户不同账号授权边界，不冒称另一用户凭证环境。
+- 综合task256实际取得5作品指标、Skill与RFC浏览器回执；RedFox两次明确REDFOX_QUOTA_EXHAUSTED，无法取得真实检索结果。计划把失败RedFox回执误标成功导致循环；已公开pause至paused、71calls、revision2，保留原ID及费用，补指明具体step与receipt的确定性纠错，六包后继续。无充值、无配置修改，不能宣称RedFox实际查询成功。
+
+浏览器取消隔离正式安装实测通过：K=execution-task-91ea746a-290、L=execution-task-91ea746a-302，两lane及Node等待命令实际重叠。06:44:07.581Z只取消K（取消前两命令最近status均running），K最终cancelled25calls；L在此后继续status、真实exit0、observe/extract/screenshot/status/close，53calls succeeded。证据`browsers5-short-overlap-before-cancel.json`、`browser-k-cancel-during-overlap.json`与两份`*-cancel-isolation-result-combined.json`。不以该任务状态证明不可见的全部孙进程已停止，进程树另用隔离测试。
+
+### 第六候选修复门（安装前）
+
+- 原文件缺claim派发前恢复54/54及定向类型检查通过，Wegener最终独审放行；公开readmitted仅说明原call重获准入，保留原unknown审计、原CAS、费用与paused，不声称已提交。详情见文件恢复协议。
+- 浏览器重启：真实Native中断/正常对照2/2，精确profile安全4/4，native host15/15、5项指定未开实机门忽略；正式Nodehost→真实Rust IPC→CfT中断→同task attempt2重开风险门1/1（19项仅按名称过滤）。profile数据哨兵保留，旧lease不能清新lease，无未知open重放。Kuhn独审放行，日志`/tmp/t1026-fifth-browser-node-native.log`等。该隔离证据不反推第五G具体失败码。
+- TS浏览器新操作的真实ID指导、postflight lease失效不误报未派发、固定阶段公开events：50通过4项原有实机门跳过，类型检查通过，Kuhn独审放行。G历史unknown未改，不伪造已恢复。
+- 评论明确未完成异常类型与16桶脱敏路由分布：后端真实红6→33绿，前端红3→159绿，frontend全量与backend本域类型检查通过；backend全量仍有既有24项其他文件错误。无新增平台请求，六包真实单项抓取待验。
+
+计划诊断最终4文件通过Socrates独审：有效红10项→绿10项；相邻回归48通过1既有worker子进程测试未重跑，前端完整与backend本域类型检查均exit0。原joint未操作。最终contract43文件256/256、边界无新增违规、打包预检42/42。

@@ -2,7 +2,7 @@ import {afterAll, beforeAll, expect, it} from "vitest";
 import {createHash,randomUUID} from "node:crypto";
 import {z} from "zod";
 import {createDb, aiTasks, executionTasks, executionCalls, eq, type Db} from "@creatoros/backend";
-import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
+import {chatWorkerInputSchema, type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {chatInputDigest} from "../ai/chat-turn-submission.service";
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionChatToolPorts} from "../execution/execution-chat-tool-ports.service";
@@ -42,23 +42,79 @@ it("计划工具使用冻结版本与原租约，模型不能凭文本伪造完�
 });
 
 const planStep={stepId:"read",title:"读取资料",dependsOn:[],status:"pending" as const,operationRefs:[],artifactRefs:[]};
-async function publicFixture(steps:unknown[],expectedRevision=0,maxCalls=10){
+async function publicFixture(steps:unknown[]|((ref:ExecutionRef,ledger:ReturnType<typeof createExecutionCallLedgerService>,ports:ReturnType<typeof createExecutionChatToolPorts>)=>Promise<unknown[]>),expectedRevision=0,maxCalls=10){
   const id=randomUUID(),owner={userId:id,accountId:id,requestId:id,source:"user" as const};
   const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
   const prepared=await prepareChatToolDefinitions({"plan.update":prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]});
-  const input=chatWorkerInputSchema.parse({kind:"chat.run",executionEngine:"pi",recoverMissingFinal:true,operationKey:"turn",capability:"copilot.assist",userId:id,accountId:id,conversationId:id,sourceMessageId:id,system:"计划",messages:[{role:"user",content:"建立计划"}],maxSteps:4,maxOutputTokens:128,tools:prepared.definitions});
+  const evidenceDefinitions=typeof steps==="function"?["diagnostic.read","diagnostic.lookup"].map(name=>({name,version:"1",effect:"none",execution:"host",description:"隔离证据工具",parameters:{type:"object",properties:{},additionalProperties:false}})):[];
+  const input=chatWorkerInputSchema.parse({kind:"chat.run",executionEngine:"pi",recoverMissingFinal:true,operationKey:"turn",capability:"copilot.assist",userId:id,accountId:id,conversationId:id,sourceMessageId:id,system:"计划",messages:[{role:"user",content:"建立计划"}],maxSteps:4,maxOutputTokens:128,tools:[...prepared.definitions,...evidenceDefinitions]});
   const tasks=createPersistentTaskService(db),task=await tasks.enqueue(owner,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{aiTaskId:id,modelInput:input}});
   await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"copilot.assist",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:new Date().toISOString(),inputData:{modelInputDigest:chatInputDigest(input)}});
   const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
   const tools=await createChatWorkbenchPlanToolHost(db)(owner,input,ref,new AbortController().signal);
+  for(const definition of evidenceDefinitions)tools[definition.name]={version:"1",effect:"none",parameters:z.object({}).strict(),async approve(){return {status:"not-applicable"};},async execute(){
+    const success=definition.name==="diagnostic.read";
+    return {status:success?"ok":"error",summary:"SECRET_BODY",evidence:[],data:{private:"SECRET_DATA"},error:success?null:{code:"no_evidence",retryable:false,recovery:"SECRET_PROVIDER_TEXT"},continuation:null,sideEffect:"none"};
+  }};
   const budget={maxCalls,maxTokens:10000,deadlineMs:60000},ledger=createExecutionCallLedgerService(db,{budget});
+  const ports=createExecutionChatToolPorts(db,{budget,tools});
+  if(typeof steps==="function")steps=await steps(ref,ledger,ports);
   const model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:20});
   await ledger.start(ref,model.id);
   await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[{type:"tool-call",toolCallId:"plan",toolName:"plan_update",input:JSON.stringify({expectedRevision,steps})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
-  const ports=createExecutionChatToolPorts(db,{budget,tools});
   const reserved=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"plan"});await ports.start(ref,{callId:reserved.callId});
   return {owner,task,ref,ports,tools,ledger,callId:reserved.callId,input,budget};
 }
+
+it("T1026 失败引用定位精确；保留失败步骤并显式重规划后能保存，旧回执与费用不变",async()=>{
+  let failedRef="",goodRef="";
+  const plans=createWorkbenchPlanService(db);
+  const first={...planStep,stepId:"read"},failed={...planStep,stepId:"lookup"},report={...planStep,stepId:"report",dependsOn:["read","lookup"]};
+  const f=await publicFixture(async(ref,ledger,ports)=>{
+    for(const success of [true,false]){
+      const model=await ledger.reserve(ref,{kind:"model",operationKey:success?"read":"lookup",inputDigest:"sha256:"+(success?"c":"d").repeat(64),reservedTokens:10});
+      await ledger.start(ref,model.id);
+      await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:2},providerResult:{content:[{type:"tool-call",toolCallId:"evidence",toolName:success?"diagnostic_read":"diagnostic_lookup",input:"{}"}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
+      const call=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"evidence"});await ports.start(ref,{callId:call.callId});
+      expect(await ports.execute(ref,{callId:call.callId})).toMatchObject({status:success?"ok":"error"});
+      if(success)goodRef=call.callId;else failedRef=call.callId;
+    }
+    await plans.save(ref,{expectedRevision:0,steps:[first,failed,report]});
+    const completed={...first,status:"succeeded" as const,operationRefs:[goodRef]};
+    await plans.save(ref,{expectedRevision:1,steps:[completed,failed,report]});
+    return [completed,{...failed,status:"succeeded",operationRefs:[failedRef]},report];
+  },2,20);
+  const before=await f.ledger.inspect(f.ref),original=await plans.read(f.owner,f.task.id);
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentRevision:2,validationIssue:{
+    code:"operation_not_successful",stepId:"lookup",currentStepStatus:"pending",requestedStatus:"succeeded",operationRef:failedRef,
+    ledgerStatus:"settled",receiptStatus:"error",receiptHasError:true,sideEffect:"none",
+  },statusRules:{allowedStatuses:["pending","running","waiting_user","succeeded","failed","cancelled","skipped"]}}});
+  expect(result.error?.recovery).toContain('"stepId":"lookup"');expect(result.error?.recovery).toContain(failedRef);
+  expect(result.error?.recovery).toContain("expectedRevision=2");
+  const feedback=result.data as Record<string,unknown>,rules=feedback.statusRules as Record<string,unknown>;
+  expect(rules.failedSteps).toEqual(expect.stringContaining("failed"));
+  expect(rules.replan).toEqual(expect.stringContaining("dependsOn"));
+  expect(rules.replan).toEqual(expect.stringContaining("supersedes"));
+  expect(JSON.stringify(result)).not.toContain("SECRET");
+  expect(await plans.read(f.owner,f.task.id)).toEqual(original);
+  const failedStep={...failed,status:"failed" as const,operationRefs:[failedRef]};
+  // 保留失败事实；只有模型显式提交合法新依赖才继续，宿主不替模型修改计划。
+  const repaired=[original!.steps[0]!,failedStep,{...report,dependsOn:["read"]}];
+  const model=await f.ledger.reserve(f.ref,{kind:"model",operationKey:"replan-model",inputDigest:"sha256:"+"e".repeat(64),reservedTokens:20});
+  await f.ledger.start(f.ref,model.id);
+  await f.ledger.settle(f.ref,model.id,{status:"settled",usage:{totalTokens:7},providerResult:{content:[{type:"tool-call",toolCallId:"replan",toolName:"plan_update",input:JSON.stringify({expectedRevision:2,steps:repaired})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:4},outputTokens:{total:3}},warnings:[]}});
+  const call=await f.ports.reserve(f.ref,{modelCallId:model.id,toolCallId:"replan"});await f.ports.start(f.ref,{callId:call.callId});
+  expect(await f.ports.execute(f.ref,{callId:call.callId})).toMatchObject({status:"ok",sideEffect:"committed"});
+  expect(await plans.read(f.owner,f.task.id)).toEqual({planRevision:3,steps:repaired});
+  await expect(plans.save(f.ref,{expectedRevision:3,steps:[original!.steps[0]!,{...failedStep,operationRefs:[]},repaired[2]!]})).rejects.toThrow("已有步骤回执不可移除");
+  await expect(plans.save(f.ref,{expectedRevision:3,steps:[original!.steps[0]!,failedStep,{...report,status:"succeeded",operationRefs:[goodRef]}]})).rejects.toThrow("前置步骤尚未成功");
+  const after=(await f.ledger.inspect(f.ref)).calls;
+  for(const prior of before.calls.filter(row=>row.id!==f.callId))expect(after.find(row=>row.id===prior.id)).toEqual(prior);
+  expect(after.reduce((sum,row)=>sum+(row.totalTokens??0),0)).toBe(16);
+  expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);
+  expect(f.input.tools[0]!.version).toBe("workbench-v1:4d67e4b8da7b9d6ce9fc87a9a7df4a98be435cc0ab30599f3e96cc79430986af");
+});
 
 it.each([
   ["伪造 operationRefs",[{...planStep,status:"succeeded",operationRefs:["invented"]}]],

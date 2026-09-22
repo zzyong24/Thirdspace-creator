@@ -3,9 +3,9 @@ import {randomUUID,createHash} from "node:crypto";
 import {spawn} from "node:child_process";
 import {mkdtemp,readFile,writeFile,rm,readdir,mkdir} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join,resolve} from "node:path";
+import {join,resolve,dirname} from "node:path";
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
-import {createDb,createCliInvocationService,aiTasks,executionCalls,executionTasks,eq,asc,type Db} from "@creatoros/backend";
+import {createDb,createCliInvocationService,aiTasks,executionCalls,executionTasks,executionStreamEvents,eq,asc,sql,type Db} from "@creatoros/backend";
 import {ENDPOINTS,type Transport,type RequestContext} from "@creatoros/contract";
 import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {createPersistentTaskService} from "../../../backend/src/modules/execution/persistent-task.service";
@@ -19,6 +19,7 @@ import {nativeFileCapabilities,createNativeFilesWorkbenchHost} from "./workbench
 import {createWorkbenchNativeClient,NativeFileError,type NativeLeasePort} from "./workbench-native-client";
 import {createNativeFileRecoveryService} from "./workbench-file-recovery";
 import {createExecutionLeaseService} from "../../../backend/src/modules/execution/execution-lease.service";
+import {createWorkbenchPlanService} from "../../../backend/src/modules/execution/workbench-plan.service";
 import {createChatWorkbenchCapabilityHost} from "../../../backend/src/modules/ai-runtime/chat-workbench-capability-host";
 import {chatInputDigest} from "../../../backend/src/modules/ai/chat-turn-submission.service";
 import {POST} from "../app/api/v1/dispatch/route";
@@ -34,7 +35,7 @@ beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();
 afterAll(async()=>close?.());
 const hash=(v:string)=>createHash("sha256").update(v).digest("hex");
 const budget={maxCalls:20,maxTokens:100000,deadlineMs:60000};
-async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused",pauseBeforeClaim=false){
+async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused",pauseBeforeClaim=false,priorSameParameters=false){
  const id=randomUUID(),ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
  const cap=nativeFileCapabilities.find(c=>c.name==="files.edit")!;
  const setup=await prepareChatToolDefinitions({"files.edit":defineWorkbenchChatTool(cap,async()=>{throw Error("unused");})},{workbenchCapabilities:[cap]});
@@ -45,8 +46,8 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
  const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const ledger=createExecutionCallLedgerService(db,{budget}),model=await ledger.reserve(ref,{kind:"model",operationKey:"model",inputDigest:"sha256:"+"a".repeat(64),reservedTokens:10});
  await ledger.start(ref,model.id);
- await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[{type:"tool-call",toolCallId:"write",toolName:"files_edit",input:JSON.stringify({path:"报告.html",content:"完整目标🙂",expectedVersion:3})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
- const write=vi.fn(async()=>{throw Error("reply lost after Native write");});
+ await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:5},providerResult:{content:[...(priorSameParameters?[{type:"tool-call",toolCallId:"prior",toolName:"files_edit",input:JSON.stringify({path:"报告.html",content:"完整目标🙂",expectedVersion:3})}]:[]),{type:"tool-call",toolCallId:"write",toolName:"files_edit",input:JSON.stringify({path:"报告.html",content:"完整目标🙂",expectedVersion:3})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:3},outputTokens:{total:2}},warnings:[]}});
+ const write=vi.fn(async()=>{if(priorSameParameters)return {status:"ok" as const,summary:"同参旧操作已确认",evidence:[],error:null,continuation:null,sideEffect:"committed" as const};throw Error("reply lost after Native write");});
  const leases=createExecutionLeaseService(db);
  const nativeOptions={platform:"darwin" as const,desktop:true,socketPath};
  const nativeLease:NativeLeasePort={withLease:(ref,mode,action)=>leases.withLease(ref,mode,async({task,context})=>{
@@ -61,7 +62,7 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
   // client's post-I/O lease check. Every write below uses the real private IPC fixture.
   let checks=0;
   const interrupted=createWorkbenchNativeClient({withLease:async(ref,mode,action)=>{
-   if(++checks===2){
+   if(++checks===2&&!pauseBeforeClaim){
     if(stopMode==="unknown_result")throw new NativeFileError("NATIVE_RESULT_UNKNOWN",true);
     await tasks.command(ctx,{taskIds:[task.id],command:"pause",idempotencyKey:randomUUID()});
    }
@@ -72,11 +73,12 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
   tools=await resolveTools(ctx,input,ref,new AbortController().signal);
  }
  const ports=createExecutionChatToolPorts(db,{budget,tools});
+ if(priorSameParameters){const prior=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"prior"});await ports.start(ref,{callId:prior.callId});await ports.execute(ref,{callId:prior.callId});}
  const call=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"write"});await ports.start(ref,{callId:call.callId});
  if(pauseBeforeClaim)await tasks.command(ctx,{taskIds:[task.id],command:"pause",idempotencyKey:randomUUID()});
  await expect(ports.execute(ref,{callId:call.callId})).rejects.toThrow();
  if(pauseBeforeClaim){
-  expect(write).not.toHaveBeenCalled();
+  expect(write).toHaveBeenCalledTimes(priorSameParameters?1:0);
   await ports.settle(ref,{callId:call.callId,status:"unknown"});
   await tasks.acknowledgeControl({taskId:task.id,workerId:id,attempt:ref.attempt});
  }
@@ -91,7 +93,7 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
  }
  const calls=()=>db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
  const readTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
- expect((await calls())[1]).toMatchObject({status:"unknown",toolExecutionClaimId:pauseBeforeClaim?null:expect.any(String)});
+ expect((await calls()).find(row=>row.id===call.callId)).toMatchObject({status:"unknown",toolExecutionClaimId:pauseBeforeClaim?null:expect.any(String)});
  return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native};
 }
 function committed(q:FileReceiptQuery){
@@ -145,6 +147,7 @@ it.each([
    field==="startedMissing"?{startedAttempt:null}:field==="startedAhead"?{startedAttempt:99}:field==="providerJob"?{providerJob:{secret}}:
    field==="providerResult"?{providerResult:{secret}}:field==="reservedTokens"?{reservedTokens:7}:field==="accountingBasis"?{accountingBasis:"requests"}:{[field!]:secret};
   await db.update(executionCalls).set(patch).where(eq(executionCalls.id,call.id));
+  if(field==="toolExecutionClaimId")await db.update(executionTasks).set({status:"unknown_result"}).where(eq(executionTasks.id,f.task.id));
  }
  const before=await f.calls(),task=await f.readTask(),read=vi.fn(async(q:FileReceiptQuery)=>committed(q));
  const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:read});
@@ -154,7 +157,7 @@ it.each([
  expect(read).not.toHaveBeenCalled();expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
 });
 
-it("真实start→pause→未领claim的execute被拒→Worker结算unknown：HTTP409不代表已派发Native",async()=>{
+it("真实start→pause→缺claim unknown：公开CLI重新准入原call，永久审计且paused不wake",async()=>{
  const f=await fixture(undefined,"paused",true),before=await f.calls(),task=await f.readTask(),read=vi.fn(async(q:FileReceiptQuery)=>committed(q));
  expect(before[1]).toMatchObject({status:"unknown",startedAttempt:f.ref.attempt,toolExecutionClaimId:null,parentCallId:null,reservedTokens:0,accountingBasis:"tokens"});
  const recovery=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:read});
@@ -163,11 +166,22 @@ it("真实start→pause→未领claim的execute被拒→Worker结算unknown：HT
  const cli=await startLoopbackCliFixture({post:POST,accessToken:"isolated-diagnostic"});
  const args=["call","workbench.files.reconcile","--input",JSON.stringify({params:{taskId:f.task.id},body:{operationId:f.callId}}),"--account",f.ctx.accountId,"--apply","--idempotency-key","identity-reason"];
  try{
-  await expect(cli.run(args)).rejects.toMatchObject({status:409,message:expect.stringContaining("[EXECUTION_CLAIM_MISSING]")});
+  const result=await cli.run(args);
+  expect(result).toMatchObject({data:{status:"readmitted",verificationKind:"predispatch_readmission",version:null,hash:null,size:null,auditDigest:expect.stringMatching(/^sha256:/)}});
+  expect(await cli.run(args)).toEqual(result);
+  const nextArgs=[...args];nextArgs[8]="readmission-replay";
+  expect(await cli.run(nextArgs)).toMatchObject({data:(result as {data:unknown}).data});
   const foreign=[...args];foreign[5]="another-account";foreign[8]="foreign-key";
   await expect(cli.run(foreign)).rejects.toMatchObject({status:404,message:expect.not.stringContaining("EXECUTION_CLAIM_MISSING")});
  }finally{await cli.close();}
- expect(read).not.toHaveBeenCalled();expect(f.write).not.toHaveBeenCalled();expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
+ expect(read).not.toHaveBeenCalled();expect(f.write).not.toHaveBeenCalled();
+ const after=await f.calls(),saved=await f.readTask();
+ expect(after).toEqual([before[0],{...before[1],status:"reserved",startedAttempt:null,updatedAt:expect.any(String)}]);
+ const audit=(saved.payload as any).filePredispatchRecoveries[f.callId];
+ expect(audit.originalCall).toEqual(before[1]);expect(audit.historicalCommit).toBe("unproven");
+ expect(saved).toEqual({...task,payload:{...task.payload as object,filePredispatchRecoveries:{[f.callId]:audit}},updatedAt:expect.any(String)});
+ await expect(f.ports.settle(f.ref,{callId:f.callId,status:"unknown"})).rejects.toThrow();
+ expect(await f.calls()).toEqual(after);
 });
 
 it.each(["absent","prepared","native-failed"])("%s不产生回执、不写文件、不解除unknown",async mode=>{
@@ -269,10 +283,11 @@ it("轮转有界扫描跳过absent/prepared，不能解开另一未知动作；C
 it.skipIf(process.platform!=="darwin"||!process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE)("真实Rust journal→正式装配→公共对账：pause撞已提交写，原call结算后resume不重复写",async()=>{
  const dir=await mkdtemp(join(tmpdir(),"t1026-file-public-")),ready=join(dir,"ready"),done=join(dir,"done"),root=join(dir,"tasks");
  await mkdir(root);
- const depsDir=resolve("src-tauri/target/debug/deps");
+ const chosen=process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE!;
+ const depsDir=chosen.includes("/")?dirname(resolve(chosen)):resolve("src-tauri/target/debug/deps");
  const binaries=(await readdir(depsDir)).filter(name=>/^workbench-[a-f0-9]+$/.test(name));
  // The caller supplies the just-built Cargo test executable; never use an installed bridge.
- const binary=process.env.CREATOROS_TEST_FILE_JOURNAL_NATIVE!;
+ const binary=chosen.split("/").at(-1)!;
  expect(binaries).toContain(binary);
  const child=spawn(join(depsDir,binary),["ipc::tests::external_node_file_journal_fixture","--exact","--ignored","--nocapture"],{env:{...process.env,
   CREATOROS_FILES_E2E_NODE_PID:String(process.pid),CREATOROS_FILES_E2E_READY_FILE:ready,CREATOROS_FILES_E2E_DONE_FILE:done,CREATOROS_FILES_E2E_TASK_ROOT:root},stdio:["ignore","pipe","pipe"]});
@@ -317,6 +332,36 @@ it.skipIf(process.platform!=="darwin"||!process.env.CREATOROS_TEST_FILE_JOURNAL_
   const autoLease=(await automatic.tasks.claimTask({taskId:automatic.task.id,workerId:"automatic-resume"}))!;
   expect(await automatic.ports.execute({executionTaskId:automatic.task.id,attempt:autoLease.lease.attempt,fenceToken:autoLease.lease.fenceToken},{callId:automatic.callId})).toEqual(JSON.parse(autoAfter[1]!.resultText!).output);
   expect(await automatic.calls()).toEqual(autoAfter);
+  // 同一真实Rust fixture覆盖缺claim重新准入；reconcile本身不触及Native，resume后才按原CAS执行。
+  for(const conflict of [false,true]){
+   const pre=await fixture(socket,"paused",true),original=await pre.calls();
+   shared.ctx=pre.ctx;
+   const preArgs=["call","workbench.files.reconcile","--input",JSON.stringify({params:{taskId:pre.task.id},body:{operationId:pre.callId}}),"--account",pre.ctx.accountId,"--apply","--idempotency-key",`predispatch-${conflict}`];
+   const initial=await cli.run(preArgs);
+   expect(initial).toMatchObject({data:{status:"readmitted",verificationKind:"predispatch_readmission"}});
+   const proof=(await pre.readTask()).payload;
+   expect((await pre.readTask()).status).toBe("paused");expect(recoveredIds).not.toContain(pre.task.id);
+   const prePath=join(root,"users",hash(pre.ctx.userId),"accounts",hash(pre.ctx.accountId),hash(pre.task.id),"报告.html");
+   expect(await readFile(prePath,"utf8")).toBe("v3");
+   await expect(pre.ports.settle(pre.ref,{callId:pre.callId,status:"unknown"})).rejects.toThrow();
+   await pre.tasks.command(pre.ctx,{taskIds:[pre.task.id],command:"resume",idempotencyKey:"resume"});
+   const lease=(await pre.tasks.claimTask({taskId:pre.task.id,workerId:"predispatch-resume"}))!.lease;
+   const next={executionTaskId:pre.task.id,attempt:lease.attempt,fenceToken:lease.fenceToken};
+   if(conflict)await pre.native.file(next,"concurrent-update",{kind:"write",path:"报告.html",expectedVersion:3,contentBase64:Buffer.from("其他真实写入").toString("base64")});
+   const replay=await pre.ports.reserve(next,{modelCallId:original[0]!.id,toolCallId:"write"});expect(replay.callId).toBe(pre.callId);
+   await pre.ports.start(next,{callId:pre.callId});
+   const outcome=await pre.ports.execute(next,{callId:pre.callId});
+   expect(outcome.sideEffect).toBe(conflict?"none":"committed");expect(outcome.status).toBe(conflict?"error":"ok");
+   expect(await readFile(prePath,"utf8")).toBe(conflict?"其他真实写入":"完整目标🙂");
+   const settled=await pre.calls();expect(settled[0]).toEqual(original[0]);expect(settled[1]).toMatchObject({id:pre.callId,operationKey:original[1]!.operationKey,inputDigest:original[1]!.inputDigest,status:"settled"});
+   expect((await pre.readTask()).payload).toEqual(proof);
+   await expect(pre.ports.settle(pre.ref,{callId:pre.callId,status:"unknown"})).rejects.toThrow();
+   expect(await pre.calls()).toEqual(settled);
+   const repeat=[...preArgs];repeat[8]=`predispatch-replay-${conflict}`;
+   expect(await cli.run(repeat)).toMatchObject({data:(initial as {data:unknown}).data});
+   expect((await pre.readTask()).payload).toEqual(proof);
+  }
+  shared.ctx=f.ctx;
   // Kill the isolated bridge before a repeat: idempotent public reconciliation
   // must return stored evidence even when Native is no longer reachable.
   await writeFile(done,"done");expect(await exited,log).toBe(0);
@@ -324,7 +369,7 @@ it.skipIf(process.platform!=="darwin"||!process.env.CREATOROS_TEST_FILE_JOURNAL_
   expect((await request("another-key")).data).toEqual(result.data);expect(await f.calls()).toEqual(after);
   const changed=[...args];changed[3]=JSON.stringify({params:{taskId:f.task.id},body:{operationId:"foreign-call"}});
   await expect(cli.run([...changed,"--apply","--idempotency-key","original-key"])).rejects.toThrow();
-  expect(cli.requests()).toBe(4);
+  expect(cli.requests()).toBe(8);
   await f.tasks.command(f.ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:randomUUID()});
   const resumed=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resume"}))!;
   expect(await f.ports.execute({executionTaskId:f.task.id,attempt:resumed.lease.attempt,fenceToken:resumed.lease.fenceToken},{callId:f.callId})).toEqual(receipt.output);
@@ -338,3 +383,76 @@ it.skipIf(process.platform!=="darwin"||!process.env.CREATOROS_TEST_FILE_JOURNAL_
   await exited.catch(()=>{});clearTimeout(timer);await rm(dir,{recursive:true,force:true});
  }
 },60000);
+
+it("普通enqueue不能注入filePredispatchRecoveries审计，即便值为空",async()=>{
+ const f=await fixture(undefined,"paused",true),task=await f.readTask();
+ await expect(f.tasks.enqueue(f.ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:task.ownerId,idempotencyKey:randomUUID(),payload:{...task.payload as object,filePredispatchRecoveries:{}}})).rejects.toThrow("宿主运行字段");
+});
+
+it.each(["audit-malformed","audit-conflict","other-unknown","other-reserved","progress","later-model","lease","frozen-platform","business"])("缺claim恢复拒绝%s且账本/审计不部分推进",async variant=>{
+ const f=await fixture(undefined,"paused",true),task=await f.readTask(),calls=await f.calls();
+ if(variant.startsWith("audit"))await db.update(executionTasks).set({payload:{...task.payload as object,filePredispatchRecoveries:variant==="audit-malformed"?[]:{[f.callId]:{schemaVersion:99}}}}).where(eq(executionTasks.id,f.task.id));
+ else if(variant==="other-unknown"||variant==="other-reserved"||variant==="later-model")await db.insert(executionCalls).values({...calls[variant==="later-model"?0:1]!,id:randomUUID(),sequence:3,operationKey:randomUUID(),status:variant==="other-reserved"?"reserved":variant==="later-model"?"settled":"unknown"});
+ else if(variant==="lease")await db.update(executionTasks).set({leaseOwner:"active",leaseExpiresAt:new Date(Date.now()+60000).toISOString()}).where(eq(executionTasks.id,f.task.id));
+ else if(variant==="frozen-platform")await db.update(executionTasks).set({payload:{...task.payload as any,modelInput:{...(task.payload as any).modelInput,workbenchPlatform:"windows"}}}).where(eq(executionTasks.id,f.task.id));
+ else if(variant==="business")await db.update(aiTasks).set({inputData:{modelInputDigest:"wrong"}}).where(eq(aiTasks.id,task.ownerId));
+ else await db.insert(executionStreamEvents).values({executionTaskId:f.task.id,sequence:1,callId:f.callId,callIndex:0,chunk:{type:"data-workbench-progress",data:{operationId:f.callId}},createdAt:new Date().toISOString()});
+ const before=await f.calls(),saved=await f.readTask(),reader=vi.fn();
+ const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:reader});
+ await expect(service.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow();
+ expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(saved);expect(reader).not.toHaveBeenCalled();expect(f.write).not.toHaveBeenCalled();
+});
+
+it("真实host/ledger同参旧success存在时不得readmit或冒用旧operation回执",async()=>{
+ const f=await fixture(undefined,"paused",true,true),before=await f.calls(),task=await f.readTask(),reader=vi.fn();
+ expect(before).toHaveLength(3);expect(before[1]).toMatchObject({status:"settled",toolExecutionClaimId:expect.any(String)});expect(f.write).toHaveBeenCalledOnce();
+ const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:reader});
+ await expect(service.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow("PREDISPATCH");
+ expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);expect(reader).not.toHaveBeenCalled();expect(f.write).toHaveBeenCalledOnce();
+});
+
+it("准入audit写失败或停止时原call重置同事务回滚，不留下半笔事实",async()=>{
+ const f=await fixture(undefined,"paused",true),before=await f.calls(),task=await f.readTask();
+ await db.execute(sql`CREATE FUNCTION t1026_reject_readmission() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.payload ? 'filePredispatchRecoveries' THEN RAISE EXCEPTION 'isolated audit write failure'; END IF; RETURN NEW; END $$`);
+ await db.execute(sql`CREATE TRIGGER t1026_reject_readmission BEFORE UPDATE ON execution_tasks FOR EACH ROW EXECUTE FUNCTION t1026_reject_readmission()`);
+ try{
+  const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:vi.fn()});
+  await expect(service.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow();
+  expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
+ }finally{await db.execute(sql`DROP TRIGGER t1026_reject_readmission ON execution_tasks`);await db.execute(sql`DROP FUNCTION t1026_reject_readmission()`);}
+ let checks=0;
+ const stopped=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:vi.fn(),shouldStop:()=>++checks>=3});
+ await expect(stopped.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow("FILE_RECOVERY_STOPPED");
+ expect(checks).toBe(3);expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
+});
+
+it("并发重新准入只append一次；幂等enqueue和后续payload更新保留audit；损坏audit拒绝覆盖",async()=>{
+ const f=await fixture(undefined,"paused",true),task=await f.readTask(),before=await f.calls();
+ const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:vi.fn()});
+ const [a,b]=await Promise.all([service.reconcile(f.ctx,f.task.id,f.callId),service.reconcile(f.ctx,f.task.id,f.callId)]);expect(a).toEqual(b);
+ const saved=await f.readTask();expect(Object.keys((saved.payload as any).filePredispatchRecoveries)).toEqual([f.callId]);
+ await expect(f.tasks.enqueue(f.ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:task.ownerId,idempotencyKey:task.idempotencyKey,payload:task.payload as Record<string,unknown>})).resolves.toMatchObject({id:task.id});
+ expect((saved.payload as any).filePredispatchRecoveries[f.callId].originalCall).toEqual(before[1]);
+  await f.tasks.command(f.ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"r"});
+  expect((await f.readTask()).payload).toEqual(saved.payload);
+  const lease=(await f.tasks.claimTask({taskId:f.task.id,workerId:"audit-preservation"}))!.lease;
+  await createWorkbenchPlanService(db,{}).save({executionTaskId:f.task.id,attempt:lease.attempt,fenceToken:lease.fenceToken},{expectedRevision:0,steps:[{stepId:"pending",title:"继续原文件",status:"pending",dependsOn:[],operationRefs:[],artifactRefs:[]}]});
+  expect((await f.readTask()).payload).toMatchObject({filePredispatchRecoveries:(saved.payload as any).filePredispatchRecoveries});
+ const damaged=structuredClone(saved.payload) as any;damaged.filePredispatchRecoveries[f.callId].originalCall.operationKey="tampered";
+ await db.update(executionTasks).set({payload:damaged}).where(eq(executionTasks.id,f.task.id));
+ const damagedCalls=await f.calls();await expect(service.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow("PREDISPATCH");
+ expect(await f.calls()).toEqual(damagedCalls);expect((await f.readTask()).payload).toEqual(damaged);
+});
+
+it("只有严格null claim可准入；已有claim走原Native核对，后台source不能准入paused",async()=>{
+ const f=await fixture(undefined,"paused",true),task=await f.readTask(),before=await f.calls();
+ const read=vi.fn(async()=>({status:"absent"}));
+ const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:read});
+ await expect(service.reconcile({...f.ctx,source:"ai"},f.task.id,f.callId)).rejects.toThrow("EXECUTION_CLAIM_MISSING");
+ expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);expect(read).not.toHaveBeenCalled();
+ await db.update(executionCalls).set({toolExecutionClaimId:""}).where(eq(executionCalls.id,f.callId));
+ await expect(service.reconcile(f.ctx,f.task.id,f.callId)).rejects.toThrow("EXECUTION_CLAIM_MISSING");expect(read).not.toHaveBeenCalled();
+ await db.update(executionCalls).set({toolExecutionClaimId:"non-null-claim"}).where(eq(executionCalls.id,f.callId));
+ expect(await service.reconcile(f.ctx,f.task.id,f.callId)).toMatchObject({status:"unknown",verificationKind:null});
+ expect(read).toHaveBeenCalledOnce();expect(await f.readTask()).toEqual(task);expect((await f.calls())[1]).toMatchObject({status:"unknown",toolExecutionClaimId:"non-null-claim"});
+});

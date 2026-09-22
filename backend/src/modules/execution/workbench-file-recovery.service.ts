@@ -9,6 +9,7 @@ import {createAgenticToolBinding} from "./agentic-tool-binding";
 import {ConflictError,OwnershipError} from "./execution.errors";
 import {defineWorkbenchChatTool} from "../ai-runtime/chat-tool-gate";
 import {prepareChatToolDefinitions} from "../ai-runtime/chat-tool-definitions";
+import {readmitUnclaimedFile} from "./workbench-file-predispatch-recovery";
 
 const sha=(value:string|Buffer)=>createHash("sha256").update(value).digest("hex");
 const hash=z.string().regex(/^sha256:[a-f0-9]{64}$/);
@@ -30,7 +31,7 @@ export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:read
  const capabilities=deps.capabilities.filter(cap=>["files.write","files.edit"].includes(cap.name));
  const prepared=prepareChatToolDefinitions(Object.fromEntries(capabilities.map(cap=>[cap.name,defineWorkbenchChatTool(cap,async()=>{throw Error("RECOVERY_CANNOT_WRITE");})])),{workbenchCapabilities:capabilities});
  type Tx=Parameters<Parameters<Db["transaction"]>[0]>[0];
- async function snapshot(tx:Tx,ctx:RequestContext,taskId:string,operationId:string){
+ async function snapshot(tx:Tx,ctx:RequestContext,taskId:string,operationId:string,readmission?:{check():void}){
   if(!ctx.accountId)throw new OwnershipError("当前账号不存在");
   const [task]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId))).for("update");
   if(!task)throw new OwnershipError("任务不存在");
@@ -46,6 +47,11 @@ export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:read
   const definition=setup.definitions.find(def=>def.name===bound.executionToolName);
   const frozen=input.data.tools.filter(def=>def.name===bound.executionToolName);
   const model=calls.find(row=>row.id===bound.modelCallId);
+  const savedReadmissions=payload.filePredispatchRecoveries;
+  const hasReadmission=savedReadmissions&&typeof savedReadmissions==="object"&&Object.hasOwn(savedReadmissions,call.id);
+  if(readmission && ((task.status==="paused"&&call.toolExecutionClaimId===null)||(hasReadmission&&!(call.toolExecutionClaimId&&["unknown","started"].includes(call.status))))){
+   return {replayed:await readmitUnclaimedFile({tx,task,calls,call,tools,definition,capability:capabilities.find(cap=>cap.name==="files.edit"),stamp:now(),check:readmission.check})};
+  }
   // Keep the original predicates and short-circuit order. Only fixed diagnostic
   // labels may leave this gate: never values, schema issues, claims or receipts.
   const reason=!definition?"TOOL_DEFINITION_MISSING":frozen.length!==1?"FROZEN_TOOL_NOT_UNIQUE":
@@ -96,7 +102,7 @@ export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:read
  async function reconcile(ctx:RequestContext,taskId:string,operationId:string,control?:RecoveryControl){
   check(control);
   await prepared;
-  const before=await db.transaction(tx=>snapshot(tx,ctx,taskId,operationId));
+  const before=await db.transaction(tx=>snapshot(tx,ctx,taskId,operationId,ctx.source==="user"&&!control?{check:()=>check(control)}:undefined));
   check(control);
   if(before.replayed)return finish(before.replayed,taskId,control);
   const unknown={taskId,operationId,status:"unknown" as const,verificationKind:null,version:null,hash:null,size:null};

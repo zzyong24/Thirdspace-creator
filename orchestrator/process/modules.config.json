@@ -75,7 +75,9 @@
         "orchestrator/DECISION_LOG.md",
         "orchestrator/process/modules.config.json",
         "mcp-server/**",
-        "orchestrator/progress.json"
+        "orchestrator/progress.json",
+        "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/profile.rs",
+        "frontend/src/server/workbench-browser-host.ts"
       ],
       "verify_commands": {
         "implementation": [

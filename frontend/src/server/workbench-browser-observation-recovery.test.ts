@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {afterAll,beforeAll,expect,it,vi} from "vitest";
 import {createDb,aiTasks,executionTasks,executionCalls,eq,asc,type Db} from "@creatoros/backend";
-import {createPersistentTaskService,createExecutionLeaseService,createExecutionCallLedgerService} from "@creatoros/backend/modules/execution";
+import {createPersistentTaskService,createExecutionLeaseService,createExecutionCallLedgerService,createWorkbenchPublicStreamService as createExecutionStreamService} from "@creatoros/backend/modules/execution";
 import {createExecutionChatToolPorts} from "../../../backend/src/modules/execution/execution-chat-tool-ports.service";
 import {createChatWorkbenchCapabilityHost} from "../../../backend/src/modules/ai-runtime/chat-workbench-capability-host";
 import {prepareChatToolDefinitions} from "../../../backend/src/modules/ai-runtime/chat-tool-definitions";
@@ -25,7 +25,7 @@ type Mode="failure"|"unknown"|"throw"|"oversized"|"invalid"|"success";
 async function fixture(name="browser.observe",legacy=false,nativeHost?:NonNullable<ReturnType<typeof createWorkbenchBrowserHost>>,allBrowser=false){
  const id=randomUUID(),ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
  const descriptor=catalog.find(c=>c.name===name)!;
- const capabilities=allBrowser?catalog:[descriptor];
+ const capabilities=allBrowser?(nativeHost?.catalog??catalog):[descriptor];
  const setup=await prepareChatToolDefinitions(Object.fromEntries(capabilities.map(cap=>[cap.name,defineWorkbenchChatTool(cap,async()=>{throw Error("unused");})])),{workbenchCapabilities:capabilities});
  const input=chatWorkerInputSchema.parse({kind:"chat.run",executionEngine:"pi",operationKey:id,capability:"copilot.assist",userId:id,accountId:id,conversationId:id,sourceMessageId:id,
   system:"读取页面",messages:[{role:"user",content:"读取页面"}],maxSteps:12,maxOutputTokens:128,tools:setup.definitions,workbenchCapabilities:capabilities,workbenchPlatform:"macos"});
@@ -40,8 +40,8 @@ async function fixture(name="browser.observe",legacy=false,nativeHost?:NonNullab
   if(mode==="oversized"||mode==="success")return {...base,status:"succeeded",content:[{type:"text",text:mode==="oversized"?"x".repeat(1_000_001):"fresh page"}]};
   return {...base,status:mode==="unknown"?"unknown":"failed",error:{code:"browser_driver_failed",dispatched:true,retryable:false,nextAction:"reconcile"}};
  });
- const leases=createExecutionLeaseService(db),resolve=createChatWorkbenchCapabilityHost(nativeHost??{catalog:capabilities,platform:"macos",capabilities:["task.browser"],dispatch},
-  r=>leases.withLease(r,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async()=>{});
+ const leases=createExecutionLeaseService(db),streams=createExecutionStreamService(db),resolve=createChatWorkbenchCapabilityHost(nativeHost??{catalog:capabilities,platform:"macos",capabilities:["task.browser"],dispatch},
+  r=>leases.withLease(r,"admission",async({task,context})=>({userId:context.userId,accountId:context.accountId!,taskId:task.id,attempt:task.attempt,fenceToken:task.fenceToken!,leaseId:task.leaseOwner!})),async(r,id,progress)=>{await streams.appendWorkbenchProgress(r,id,progress);});
  const tools=await resolve(ctx,input,ref,new AbortController().signal);
  if(legacy)tools[name]!.execute=async()=>{throw Error("legacy observation receipt lost");};
  const ports=createExecutionChatToolPorts(db,{budget,tools}),ledger=createExecutionCallLedgerService(db,{budget});
@@ -57,8 +57,131 @@ async function fixture(name="browser.observe",legacy=false,nativeHost?:NonNullab
  async function reserve(toolName=name,supplied:Record<string,unknown>=params){return (await reserveBatch(toolName,supplied,1))[0]!.callId;}
  const calls=()=>db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
  const readTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
- return {ctx,task,ref,descriptor,ports,tasks,reserve,reserveBatch,ledger,calls,readTask,dispatch,setMode:(m:Mode)=>{mode=m;}};
+ return {ctx,task,ref,descriptor,ports,tasks,reserve,reserveBatch,ledger,streams,calls,readTask,dispatch,setMode:(m:Mode)=>{mode=m;}};
 }
+
+it.each(["profile_location","open","invalid_reply","unknown_code"])("open %s失败沿正式公开events保留有界阶段事实，原调用仍unknown",async fault=>{
+ const dir=await mkdtemp(join(tmpdir(),"t1026-open-diagnostic-")),path=join(dir,"browser.sock"),profileKey=randomUUID().replaceAll("-","").repeat(2);
+ let opens=0;
+ const server=createServer(socket=>{let buffer="";socket.on("data",chunk=>{
+  buffer+=chunk.toString();if(!buffer.includes("\n"))return;
+  const request=JSON.parse(buffer.split("\n")[0]!),kind=request.action.kind;
+  if(kind==="open")opens++;
+  if((fault==="profile_location"&&kind==="profile_location")||(fault!=="profile_location"&&fault!=="invalid_reply"&&kind==="open")){
+   socket.end(JSON.stringify({ok:false,operationId:request.operationId,code:fault==="unknown_code"?"SECRET_PROVIDER_VALUE":"BROWSER_UNAVAILABLE",message:"SECRET_MESSAGE"})+"\n");return;
+  }
+  const value=kind==="profile_location"?{profileKey,managedProfileRoot:"/SECRET_PATH",identityMode:"anonymous",legacyIdentityImported:false,primaryLoginState:"unverified"}:
+   kind==="stop_proof"?{profileStopped:false}:{lane:{lane_id:"SECRET_INVALID",browser_epoch:"bad"},secret:"SECRET_VALUE"};
+  socket.end(JSON.stringify({ok:true,operationId:request.operationId,value})+"\n");
+ });});
+ await new Promise<void>(resolve=>server.listen(path,resolve));
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ try{
+  const f=await fixture("browser.open",false,host),id=await f.reserve();
+  await expect(f.ports.execute(f.ref,{callId:id})).rejects.toThrow("须按原调用对账");
+  expect((await f.calls()).at(-1)).toMatchObject({id,status:"unknown",resultText:null});
+  const page=await f.streams.read(f.ctx,f.task.id,{afterSequence:0,limit:100});
+  const progress=page.events.filter(event=>event.callId===id&&event.chunk.type==="data-workbench-progress");
+  const details=progress.map(event=>JSON.parse((event.chunk.data as {content:{text:string}[]}).content[0]!.text));
+  expect(details.at(-1)).toMatchObject({kind:"browser_open_diagnostic",observation:"stage_error",terminalOutcome:"unproven",
+   stage:fault==="profile_location"?"profile_admission":fault==="invalid_reply"?"reply_validation":"native_open",
+   code:fault==="unknown_code"?"unknown_code":fault==="invalid_reply"?"INVALID_BROWSER_REPLY":"BROWSER_UNAVAILABLE",
+   openDispatched:fault!=="profile_location"});
+  expect(opens).toBe(fault==="profile_location"?0:1);
+  expect(JSON.stringify(progress)).not.toContain("SECRET");expect(JSON.stringify(progress)).not.toContain(f.ref.fenceToken);
+  expect(progress.length).toBeLessThanOrEqual(10);
+  await expect(f.ports.execute(f.ref,{callId:id})).rejects.toThrow("须对账");expect(opens).toBe(fault==="profile_location"?0:1);
+  await expect(f.streams.read({...f.ctx,accountId:"other"},f.task.id,{})).rejects.toThrow();
+ }finally{await host.dispose();await new Promise<void>(resolve=>server.close(()=>resolve()));await rm(dir,{recursive:true,force:true});}
+});
+
+it("同task新attempt的正式host清理精确旧profile后reopen；诊断观察者抛错不改变成功",async()=>{
+ const dir=await mkdtemp(join(tmpdir(),"t1026-open-attempt-")),path=join(dir,"browser.sock"),profileKey=randomUUID().replaceAll("-","").repeat(2),requests:Array<{kind:string;attempt?:number}>=[];
+ let opens=0;
+ const server=createServer(socket=>{let buffer="";socket.on("data",chunk=>{
+  buffer+=chunk.toString();if(!buffer.includes("\n"))return;const request=JSON.parse(buffer.split("\n")[0]!),kind=request.action.kind;
+  requests.push({kind,attempt:request.admission?.attempt});
+  const value=kind==="profile_location"?{profileKey:request.action.identityMode==="anonymous"?profileKey:"b".repeat(64),managedProfileRoot:"/isolated/profile",identityMode:request.action.identityMode,legacyIdentityImported:false,primaryLoginState:"unverified"}:
+   kind==="open"?{lane:{lane_id:`native-${++opens}`,browser_epoch:1}}:
+   {profileStopped:true,profileKey,profileLeaseId:request.admission.profileLeaseId};
+  socket.end(JSON.stringify({ok:true,operationId:request.operationId,value})+"\n");
+ });});
+ await new Promise<void>(resolve=>server.listen(path,resolve));
+ const options={platform:"darwin" as const,desktop:true,socketPath:path},first=createWorkbenchBrowserHost(db,options)!;
+ let second:ReturnType<typeof createWorkbenchBrowserHost>;
+ try{
+  const f=await fixture("browser.open",false,first),id=await f.reserve();expect(await f.ports.execute(f.ref,{callId:id})).toMatchObject({status:"ok"});
+  await f.tasks.command(f.ctx,{taskIds:[f.task.id],command:"pause",idempotencyKey:randomUUID()});
+  await f.tasks.acknowledgeControl({taskId:f.task.id,workerId:f.ctx.userId,attempt:f.ref.attempt});await first.dispose();
+  await f.tasks.command(f.ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:randomUUID()});
+  const claim=(await f.tasks.claimTask({taskId:f.task.id,workerId:"new-worker"}))!;
+  second=createWorkbenchBrowserHost(db,options)!;
+  const context={userId:f.ctx.userId,accountId:f.ctx.accountId,taskId:f.task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken,leaseId:"new-worker",operationId:randomUUID()};
+  expect(await second.dispatch({context,invocation:{name:"browser.status",schemaVersion:1,input:{laneId:"native-1"}}},{signal:new AbortController().signal,onProgress:()=>{}})).toMatchObject({status:"failed",error:{code:"lane_not_found",dispatched:false}});
+  const observer=vi.fn(()=>{throw Error("observer is unavailable");});
+  const reopened=await second.dispatch({context:{...context,operationId:randomUUID()},invocation:{name:"browser.open",schemaVersion:1,input:{laneId:"acceptance-browser-g-v2",mode:"anonymous",domain:"example.com"}}},{signal:new AbortController().signal,onProgress:observer});
+  expect(reopened).toMatchObject({status:"succeeded"});expect(JSON.stringify(reopened)).toContain("native-2");expect(observer).toHaveBeenCalled();
+  expect(requests.filter(row=>row.kind==="cleanup")).toEqual([{kind:"cleanup",attempt:1}]);
+  expect(requests.filter(row=>row.kind==="open")).toEqual([{kind:"open",attempt:1},{kind:"open",attempt:2}]);
+ }finally{await first.dispose();await second?.dispose();await new Promise<void>(resolve=>server.close(()=>resolve()));await rm(dir,{recursive:true,force:true});}
+});
+
+it("open成功给真实lane协议指导；alias仍拒绝，真实ID成功，同call回放和catalog不改",async()=>{
+ const dir=await mkdtemp(join(tmpdir(),"t1026-lane-guidance-")),path=join(dir,"browser.sock"),profileKey=randomUUID().replaceAll("-","").repeat(2),actions:string[]=[];
+ const server=createServer(socket=>{let buffer="";socket.on("data",chunk=>{
+  buffer+=chunk.toString();if(!buffer.includes("\n"))return;const request=JSON.parse(buffer.split("\n")[0]!),kind=request.action.kind;actions.push(kind);
+  const lane={lane_id:"real-native-lane",browser_epoch:1};
+  const value=kind==="profile_location"?{profileKey,managedProfileRoot:"/isolated/profile",identityMode:"anonymous",legacyIdentityImported:false,primaryLoginState:"unverified"}:
+   kind==="open"?{lane}:lane;
+  socket.end(JSON.stringify({ok:true,operationId:request.operationId,value})+"\n");
+ });});
+ await new Promise<void>(resolve=>server.listen(path,resolve));
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!,before=JSON.stringify(host.catalog);
+ try{
+  const f=await fixture("browser.open",false,host,true),id=await f.reserve("browser.open",{laneId:"requested-alias",mode:"anonymous",domain:"example.com"});
+  const opened=await f.ports.execute(f.ref,{callId:id});
+  const data=opened.data as {workbench:{content:{type:string;text:string}[]}};
+  expect(data.workbench.content[0]).toEqual({type:"text",text:JSON.stringify({lane:{lane_id:"real-native-lane",browser_epoch:1}})});
+  expect(data.workbench.content[1]?.text).toContain("lane.lane_id");expect(data.workbench.content[1]?.text).toContain("lane.browser_epoch");
+  const wrong=await f.reserve("browser.status",{laneId:"requested-alias"}),denied=await f.ports.execute(f.ref,{callId:wrong});
+  expect(denied).toMatchObject({status:"error",sideEffect:"none",error:{code:"invalid_input",recovery:expect.stringContaining("lane.lane_id")},data:{workbench:{error:{code:"lane_not_found",dispatched:false}}}});
+  expect(denied.error?.recovery).toContain("unknown");expect(actions.filter(action=>action==="status")).toHaveLength(0);
+  const correct=await f.reserve("browser.status",{laneId:"real-native-lane"});expect(await f.ports.execute(f.ref,{callId:correct})).toMatchObject({status:"ok"});
+  expect(actions.filter(action=>action==="status")).toHaveLength(1);
+  expect(await f.ports.execute(f.ref,{callId:id})).toEqual(opened);expect(actions.filter(action=>action==="open")).toHaveLength(1);
+  expect(JSON.stringify(host.catalog)).toBe(before);
+ }finally{await host.dispose();await new Promise<void>(resolve=>server.close(()=>resolve()));await rm(dir,{recursive:true,force:true});}
+});
+
+it.each(["lease","abort"])("open原生回覆后%s失效不回写新诊断，派发可能性保留且仍unknown",async fault=>{
+ const dir=await mkdtemp(join(tmpdir(),"t1026-open-fence-")),path=join(dir,"browser.sock"),profileKey=randomUUID().replaceAll("-","").repeat(2);
+ const controller=new AbortController();let invalidate=async()=>{},opens=0,invalidationError:unknown;
+ const server=createServer(socket=>{socket.on("error",()=>{});let buffer="";socket.on("data",async chunk=>{
+  buffer+=chunk.toString();if(!buffer.includes("\n"))return;const request=JSON.parse(buffer.split("\n")[0]!),kind=request.action.kind;
+  if(kind==="open"){opens++;await invalidate();}
+  const value=kind==="profile_location"?{profileKey,managedProfileRoot:"/isolated/profile",identityMode:"anonymous",legacyIdentityImported:false,primaryLoginState:"unverified"}:
+   kind==="open"?{lane:{lane_id:"native",browser_epoch:1}}:{profileStopped:false};
+  socket.end(JSON.stringify({ok:true,operationId:request.operationId,value})+"\n");
+ });});
+ await new Promise<void>(resolve=>server.listen(path,resolve));
+ const host=createWorkbenchBrowserHost(db,{platform:"darwin",desktop:true,socketPath:path})!;
+ try{
+  const f=await fixture("browser.open",false,host),id=await f.reserve();
+  invalidate=async()=>{
+   // Wait for earlier stage facts, then invalidate before the Native reply.
+   try{await vi.waitFor(async()=>{expect(JSON.stringify((await f.streams.read(f.ctx,f.task.id,{})).events)).toContain("native_open");});}
+   catch(error){invalidationError=error;}
+   if(fault==="abort")controller.abort();else await db.update(executionTasks).set({status:"paused",leaseOwner:null,leaseExpiresAt:null}).where(eq(executionTasks.id,f.task.id));
+  };
+  await expect(f.ports.execute(f.ref,{callId:id},controller.signal)).rejects.toThrow();expect(opens).toBe(1);
+  if(invalidationError)throw invalidationError;
+  expect((await f.calls()).at(-1)).toMatchObject({status:"unknown",resultText:null});
+  const page=await f.streams.read(f.ctx,f.task.id,{}),last=page.events.at(-1)!;
+  const detail=JSON.parse((last.chunk.data as {content:{text:string}[]}).content[0]!.text);
+  expect(detail).toMatchObject({stage:"native_open",observation:"stage_enter",terminalOutcome:"unproven",openDispatched:null});
+  expect(page.events.some(event=>JSON.stringify(event.chunk).includes("stage_error"))).toBe(false);
+ }finally{await host.dispose();await new Promise<void>(resolve=>server.close(()=>resolve()));await rm(dir,{recursive:true,force:true});}
+});
 
 it.each(["browser.observe","browser.extract","browser.status","browser.screenshot"])("%s已派发观察失败保持事实，原call回放错误，新call真正重新观察",async name=>{
  const f=await fixture(name),id=await f.reserve();

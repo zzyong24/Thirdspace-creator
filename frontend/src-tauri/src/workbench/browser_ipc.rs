@@ -403,6 +403,12 @@ mod tests {
     #[test]
     #[ignore = "external Node/DB integration fixture; requires fixed CfT and explicit environment"]
     fn external_node_host_fixture() {
+        let abrupt_exit = std::env::var("CREATOROS_BROWSER_E2E_ABRUPT_EXIT").as_deref() == Ok("1");
+        if abrupt_exit {
+            // Give the interrupted fixture its own owner process group so
+            // later absence proof cannot overlap the invoking Node test.
+            assert_eq!(unsafe { libc::setpgid(0, 0) }, 0);
+        }
         let expected_pid: u32 = std::env::var("CREATOROS_BROWSER_E2E_NODE_PID")
             .expect("set CREATOROS_BROWSER_E2E_NODE_PID")
             .parse()
@@ -432,6 +438,11 @@ mod tests {
             std::thread::sleep(Duration::from_millis(100));
         }
         let completed = done.exists();
+        if completed && abrupt_exit {
+            // Test only: close the real CDP pipes without host/engine Drop,
+            // leaving genuine ownership records for the next host to recover.
+            std::process::exit(0);
+        }
         drop(running);
         assert!(completed, "Node integration did not release the fixture");
     }

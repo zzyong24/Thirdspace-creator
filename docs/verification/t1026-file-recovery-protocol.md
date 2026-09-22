@@ -191,3 +191,49 @@ pnpm --dir backend exec vitest run src/integration/t1026-model-pause-worker.inte
 本轮类型检查：专用`/tmp/t1026-model-recovery-tsconfig.json`覆盖新增model helper/两份tests、文件恢复service及递归生产依赖，`pnpm --dir backend exec tsc --project /tmp/t1026-model-recovery-tsconfig.json --pretty false` exit0，日志`/tmp/t1026-model-recovery-scoped-types.log`。backend全量tsc exit2，报未改动的transcribe-runner/asset-business-execution/chat-assembly等旧tests类型错误，日志`/tmp/t1026-model-pause-types.log`；不能记为全量通过。frontend全量tsc该次exit2仅报并行comments域`douyin-cdp-page-evidence.test.ts`泛型fixture错误，已通知负责代理，日志`/tmp/t1026-file-reason-model-typecheck.log`；本轮文件reason测试未报类型错误。主线收口以其最终全局gate结果为准。
 
 最终boundary收口：真实Worker测试迁至允许跨模块装配的`backend/src/integration/t1026-model-pause-worker.integration.test.ts`，仅调整静态相对导入；已逐字核对测试正文未变。模块write_set仅登记该新路径，未改boundary baseline/扫描规则，未用动态导入。迁移后Worker1/1通过，`/tmp/t1026-model-pause-worker-boundary-green.log`；boundary exit0、无新增违规（保留基线内5条），`/tmp/t1026-model-pause-boundary-final.log`；迁移后的定向tsc exit0，`/tmp/t1026-model-pause-relocated-types.log`；diffcheck通过。至此本轮文件再次冻结。
+
+## G. 第五安装缺claim确认与严格重新准入（第六候选）
+
+第五87607e90安装的公开CLI证据`/tmp/t1026-cli-evidence/fifth-original99-file-reconcile.json`实际返回409 `EXECUTION_CLAIM_MISSING`，历时0.614秒。原99仍paused、114calls，未查询Native，不是absent证据。本轮不操作原99/安装环境，由主线下一候选统一验证。原190已自行继续，本轮不修改model恢复代码。
+
+### 来源证明与独审
+
+本协议不接受调用方传sourceVersion/build/lease/fence或“从未提交”声明。在可信正式安装与既有数据库完整性边界内，依据精确冻结files.edit定义和正式历史实现的共同不变量证明可重新准入；不声称抵御任意手改或回滚损坏数据库。
+
+- claim列与先commit claim再handler的宿主执行协议始于`75552326`；`git merge-base --is-ancestor 75552326 a0396b5f`实际exit0。
+- Native files首次生产接入`a0396b5f`时，通用host已在行71写claim、事务返回后行110才执行handler。后续相关历史`c8e1da1d`（进度）、`eaba6cbb`（命令）、`34d7bb75`（Windows）、`8718370e`（产物）、`526070b3`（回执）、`6f474258`（Native锁外I/O）、`048fd032`（读复用）、`860edd61`（journal/命令复用）、`87607e90`（browser复用）逐patch核对均未改变files.edit的claim-first顺序。
+- Worker端口只进入dispatcher→chat wrapper→通用host；files.edit不满足host.task-submit分支。动态解析仅构造handler，真正dispatch仍位于claim提交之后。静态host入口也共用通用host。
+- 生产Native client消费者只有file host和artifact host；artifact只stat/read。公共transport没有任意dispatch；Rust只接受指定sidecar peer，但Rust自身不查DB claim，因此证明严格限定上述冻结协议与受信入口。
+- claim清除只有严格plan恢复，冻结工具名/提案/摘要不能将files.edit匹配为plan。账本结算与pause不清claim。workspace reset/restore保留清单没有execution_calls/execution_tasks；claim迁移早于任何该files冻结协议的合法调用。
+- 当前允许精确`workbench-v1:69ccc70b44aa540ab7f05ac58e2fda12371a585193df0ac6eb88cfc987066d2a`、macOS、files.edit。完整frozen capability/definition和业务aiTask映射/modelInputDigest同时校验；新定义不自动纳入。
+
+Wegener在上述全历史来源方法、payload保留键及最严拒绝边界明确后放行红测与实现。每attempt不存在的build号不作为新增前提；当前安装号、创建时间、单独null claim都不是充分证据。
+
+### 状态与审计
+
+公开入口仍为原`workbench.files.reconcile`，body仍只允许原callId。首次重新准入仅限显式user调用、owned paused任务、无租约、原unknown/严格null claim/合法startedAttempt；冻结CAS必须含expectedVersion。拒绝其他reserved/started/unknown、子调用、目标既有进度、后续model、同键重复、任何同参非rejected前序候选、错误业务映射及损坏/冲突审计。该分支不进入自动scan、不读Native、不读当前文件字节、不唤醒paused。
+
+同任务锁事务中，将完整原call快照保存到后端保留`payload.filePredispatchRecoveries[callId]`，并将同call改为reserved/startedAttempt=null；字段键、摘要、sequence、预算和费用保持。audit包含冻结输入摘要、模型/提案身份、原attempt/调用、原expectedVersion、content摘要、固定协议锚、时间与canonical auditDigest，`historicalCommit:"unproven"`。普通enqueue拒绝传该键；既存审计只读回放，损坏不覆盖，后续resultText不能擦除它。幂等enqueue仅在拒绝incoming保留键之后剔除已存派生键比较；计划保存等payload spread保留审计。
+
+公开响应`status:"readmitted"`只报告历史准入事实，`verificationKind:"predispatch_readmission"`和auditDigest可回读；version/hash/size均null。不暴露内部payload、claim、fence、正文或路径，不声称当前仍reserved，更不声称已提交或存在Native receipt。原call后来再次取得claim但结果unknown时，继续走A的真实Native journal对账，不让旧准入事实遮蔽新未知写入。
+
+主线resume获得新fence后，正式端口仅启动原call/原operationKey/原冻结参数，执行原CAS并使用新journal。若版本已变，正常返回无副作用冲突，不能采用当前文件状态。旧fence迟到结算被租约/原reserved状态拒绝。其他未知外部动作仍阻断。这里不推断旧command树已经停止，B仍未实现。
+
+### 本轮实测
+
+- 实现前红测2失败：缺claim CLI未能readmit、普通enqueue可注入审计保留键，`/tmp/t1026-file-predispatch-red.log`。
+- 文件恢复54例全部执行通过，`/tmp/t1026-file-predispatch-native.log`：CLI→正式HTTP gateway→service→真实隔离Rust；新lease通过正式Worker工具端口重放原call、成功CAS及版本冲突不覆盖；这是正式端口集成，不冒充完整runChatInWorker循环或安装99验收。
+- 覆盖同参旧成功真实host/ledger拒绝、其他pending/progress/业务与冻结身份错拒绝、foreign404、并发只存一次audit、原unknown全字段永久快照、幂等enqueue和计划payload保存保留audit、损坏audit不覆盖。
+- PGlite临时trigger在审计写入时抛错，验证原call重置一起回滚；stop在两项写入后触发，同样整笔回滚。未新增生产故障入口。
+- Rust复用已编译的隔离测试binary`/tmp/t1008-rust-check/debug/deps/workbench-9a6b58899c2aa61e`；用户清理repo debug后，fixture支持显式绝对测试binary路径，不查安装bridge。
+
+```sh
+CREATOROS_TEST_FILE_JOURNAL_NATIVE=/tmp/t1008-rust-check/debug/deps/workbench-9a6b58899c2aa61e pnpm --dir frontend exec vitest run src/server/workbench-file-recovery.test.ts --retry 0
+pnpm --dir contract exec vitest run tests/workbench-public.test.ts
+node orchestrator/process/boundary-scan.mjs
+pnpm --dir frontend exec tsc --noEmit --pretty false
+```
+
+本轮不提交、不打包、不恢复原99，不扩大到B/Windows/断电或未知browser动作。最终独审及类型门以本轮后续收口结果为准。
+
+本轮收口门：文件54/54（含真实隔离Rust，零skip）、contract8/8（`/tmp/t1026-file-predispatch-contract.log`）、frontend tsc exit0（`/tmp/t1026-file-predispatch-types.log`）、boundary exit0无新增（`/tmp/t1026-file-predispatch-boundary.log`）、diffcheck通过。Wegener最终独审无阻断，允许冻结；其已核helper/service入口、enqueue保留键、契约及54例真实隔离链证据。原99实机资格及完整chatWorker续跑仍待主线，不扩大为B。

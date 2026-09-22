@@ -36,7 +36,9 @@ export const workbenchOperations={
   reconcileWorkbenchArtifact:defineEndpoint({id:"workbench.artifacts.reconcile",method:"POST",path:"/workbench/conversations/:conversationId/artifacts/reconcile",params:conversationParams,
     body:z.object({operationId:id}).strict(),response:z.object({artifactId:id,status:z.string(),lastErrorCode:z.string().nullable()}).strict(),fr}),
   reconcileWorkbenchFile:defineEndpoint({id:"workbench.files.reconcile",method:"POST",path:"/workbench/tasks/:taskId/files/reconcile",params:taskParams,
-    body:z.object({operationId:id}).strict(),response:z.object({taskId:id,operationId:id,status:z.enum(["settled","unknown"]),
-      verificationKind:z.literal("native_receipt").nullable(),version:z.number().int().nonnegative().nullable(),
-      hash:z.string().regex(/^sha256:[a-f0-9]{64}$/).nullable(),size:z.number().int().nonnegative().nullable()}).strict(),fr}),
+    body:z.object({operationId:id}).strict(),response:z.object({taskId:id,operationId:id,status:z.enum(["settled","unknown","readmitted"]),
+      verificationKind:z.enum(["native_receipt","predispatch_readmission"]).nullable(),auditDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/).optional(),version:z.number().int().nonnegative().nullable(),
+      hash:z.string().regex(/^sha256:[a-f0-9]{64}$/).nullable(),size:z.number().int().nonnegative().nullable()}).strict().refine(value=>value.status==="readmitted"
+        ?value.verificationKind==="predispatch_readmission"&&value.auditDigest!==undefined&&value.version===null&&value.hash===null&&value.size===null
+        :value.auditDigest===undefined&&value.verificationKind===(value.status==="settled"?"native_receipt":null)),fr}),
 } as const;

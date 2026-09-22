@@ -92,9 +92,15 @@ function failed(operationId:string,code:string,dispatched=false):WorkbenchResult
  const unknown=dispatched && code==="BROWSER_RESULT_UNKNOWN";
  return workbenchResultSchema.parse({operationId,status:unknown?"unknown":"failed",artifactRefs:[],progressCursor:null,
   error:{code:code.toLowerCase().slice(0,160),dispatched,retryable:false,
-   nextAction:dispatched?"reconcile":code==="BROWSER_PROFILE_BUSY"?"wait":"fix_input"}});
+   nextAction:dispatched?"reconcile":code==="BROWSER_PROFILE_BUSY"?"wait":"fix_input",
+   ...(code==="LANE_NOT_FOUND"&&!dispatched?{recovery:"请核对本任务当前租约中最近一次成功 browser.open 的返回值：后续 laneId 必须使用 lane.lane_id，browserEpoch 使用 lane.browser_epoch。open 请求中的 laneId 只是命名，不能替代返回的真实 ID。若已确认没有有效 Lane，请用新调用 browser.open 后使用新返回值；若此前 open 为 unknown，必须先按原调用对账，不能另开来绕过未知状态。"}:{})}});
 }
 function sameRef(a:ExecutionRef,b:ExecutionRef){return a.executionTaskId===b.executionTaskId&&a.attempt===b.attempt&&a.fenceToken===b.fenceToken;}
+type OpenStage="task_admission"|"profile_admission"|"recovery_resolution"|"profile_recovery"|"native_preparation"|"native_open"|"postflight"|"reply_validation";
+const openDiagnosticCodes=new Set(["STALE_LEASE","BROWSER_PROFILE_BUSY","BROWSER_UNAVAILABLE","BROWSER_RESULT_UNKNOWN",
+ "BROWSER_ABORTED","INVALID_BROWSER_REQUEST","INVALID_BROWSER_PROFILE_LOCATION","INVALID_BROWSER_REPLY",
+ "INVALID_ADMISSION","BROWSER_PLATFORM_ERROR","OPERATION_NOT_ALLOWED","DOMAIN_SCOPE_VIOLATION",
+ "OWNER_LEASE_EXPIRED","BROWSER_CAPACITY_QUEUED","BROWSER_ADMISSION_FAILED"]);
 function visibleLane(raw:unknown){
  if(!raw||typeof raw!=="object"||Array.isArray(raw))return null;
  const lane=raw as Record<string,unknown>,laneId=lane.lane_id,epoch=lane.browser_epoch;
@@ -201,12 +207,23 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    // 数据库关闭前等本轮可能正在写入的租约对账结算；失败时原租约仍保留。
    await reconciling?.catch(()=>{});
   },
-  async dispatch(rawCall,{signal}){
+  async dispatch(rawCall,{signal,onProgress}){
    signal.throwIfAborted();const call=workbenchHostCallSchema.parse(rawCall);
    const name=call.invocation.name as BrowserTool;
    if(!browserTools.includes(name))return failed(call.context.operationId,"BROWSER_CAPABILITY_UNAVAILABLE");
    const input=parseInput(name,call.invocation.input);
    if(!input)return failed(call.context.operationId,"INVALID_BROWSER_INPUT");
+   const openState:{stage:OpenStage;dispatched:boolean|null}={stage:"task_admission",dispatched:false};
+   // SEMANTIC_BOUNDARY_ALLOW: 固定执行阶段事实，不推断操作成功，不透传原错/路径/租约/Native数据。
+   const diagnostic=(observation:"stage_enter"|"stage_error",code?:string,phaseSocketDispatched:boolean|null=null)=>{
+    if(name!=="browser.open"||signal.aborted)return;
+    const data={kind:"browser_open_diagnostic",stage:openState.stage,observation,terminalOutcome:"unproven",openDispatched:openState.dispatched,phaseSocketDispatched,
+     ...(code?{code:openDiagnosticCodes.has(code)?code:"unknown_code"}:{})};
+    try{onProgress({operationId:call.context.operationId,status:"running",artifactRefs:[],
+     progressCursor:`browser-open:${openState.stage}:${observation}`,content:[{type:"text",text:JSON.stringify(data)}]});}
+    catch{/* 诊断观察者不能改变浏览器执行或回执。 */}
+   };
+   const enter=(next:OpenStage)=>{openState.stage=next;diagnostic("stage_enter");};
    if(name==="browser.act"){
     const recovery=actionInputRecovery(input.action!,input.input!);
     if(recovery)return workbenchResultSchema.parse({operationId:call.context.operationId,status:"failed",artifactRefs:[],progressCursor:null,
@@ -216,7 +233,7 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
    try {await leases.withLease(ref,"admission",async({context,task})=>{
     if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
       task.leaseOwner!==call.context.leaseId||!context.accountId)throw new BrowserSocketError("STALE_LEASE",false);
-   });}catch{return failed(call.context.operationId,"STALE_LEASE");}
+   });}catch{diagnostic("stage_error","STALE_LEASE");return failed(call.context.operationId,"STALE_LEASE");}
    let session:Session|undefined;
    if(name!=="browser.open"){
     session=sessions.get(key(ref.executionTaskId,input.laneId));
@@ -229,16 +246,21 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     const request={laneId:session?.receipt.laneId??input.laneId,
      mode:session?.mode??input.mode,domain:session?.receipt.domain??input.domain};
     let receipt:Receipt;
+    enter("profile_admission");
     try {receipt=await admission.acquire(ref,request,signal);}
     catch(error){
      if(!(error instanceof BrowserProfileBusyError)||name!=="browser.open")throw error;
+     enter("recovery_resolution");
      const location=await resolveManagedBrowserProfile(socketPath,{userId:call.context.userId,
       accountId:call.context.accountId!,taskId:ref.executionTaskId},input.mode!,signal);
+     enter("profile_recovery");
      if(!await recoverStoppedProfile(location.profileKey))throw error;
+     enter("profile_admission");
      receipt=await admission.acquire(ref,request,signal);
     }
     acquired=receipt;
     if(session&&receipt.leaseId!==session.receipt.leaseId)return failed(call.context.operationId,"STALE_BROWSER_PROFILE_LEASE");
+    enter("native_preparation");
     const prepared=await leases.withLease(ref,"admission",async({context,task})=>{
      if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
        task.leaseOwner!==call.context.leaseId||!task.fenceToken||!context.accountId)
@@ -261,21 +283,28 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     // Chromium may navigate or wait for a page for minutes. Keep that I/O out
     // of PGlite's single transaction channel so status, heartbeat and cancel
     // requests remain live.
+    if(name==="browser.open"){openState.dispatched=null;enter("native_open");}
     const value=await exchangeBrowserSocket(socketPath,{operationId:call.context.operationId,
       admission:prepared.nativeAdmission,identityMode:prepared.bound.mode,action:prepared.action},call.context.operationId,signal);
-    await leases.withLease(ref,"admission",async({context,task})=>{
+    if(name==="browser.open"){openState.dispatched=true;enter("postflight");}
+    try{await leases.withLease(ref,"admission",async({context,task})=>{
       if(context.userId!==call.context.userId||context.accountId!==call.context.accountId||
         task.leaseOwner!==call.context.leaseId||task.fenceToken!==ref.fenceToken)
         throw new BrowserSocketError("BROWSER_RESULT_UNKNOWN",true);
-    });
+    });}catch{throw new BrowserSocketError("BROWSER_RESULT_UNKNOWN",true);}
     const native={value,bound:prepared.bound};
     if(name==="browser.open"){
+     openState.stage="reply_validation";
      const value=native.value as {lane?:unknown};
      const lane=visibleLane(value?.lane);
-     if(!lane)
+     if(!lane){
+      diagnostic("stage_error","INVALID_BROWSER_REPLY");
       return failed(call.context.operationId,"INVALID_BROWSER_REPLY",true);
+     }
      sessions.set(key(ref.executionTaskId,lane.lane_id),native.bound);
-     return result(call.context.operationId,{lane});
+     const opened=result(call.context.operationId,{lane});
+     if(opened.status==="succeeded")opened.content.push({type:"text",text:"后续浏览器调用请使用上一条 JSON 返回的真实标识：laneId = lane.lane_id，browserEpoch = lane.browser_epoch（browser.status 仅需 laneId）。browser.open 请求中的 laneId 只是命名；不要将该命名或旧租约的 Lane ID 用于后续调用。"});
+     return opened;
     }
     if(name==="browser.status"){
      const lane=visibleLane(native.value);
@@ -323,6 +352,10 @@ export function createWorkbenchBrowserHost(db:Db,options:{platform?:NodeJS.Platf
     }
     return result(call.context.operationId,native.value);
    }catch(error){
+    const errorCode=error instanceof BrowserSocketError?error.code:
+     error instanceof BrowserProfileBusyError?error.code:"BROWSER_ADMISSION_FAILED";
+    if(name==="browser.open"&&openState.stage==="native_open"&&error instanceof BrowserSocketError)openState.dispatched=error.dispatched;
+    diagnostic("stage_error",errorCode,error instanceof BrowserSocketError?error.dispatched:null);
     if(acquired){
      // Open 可能已拿到数据库租约，却在原生宿主启动前失败。仅实际停机证明可释放。
      try {if(await admission.releaseAfterProfileStopped(ref,acquired.leaseId))forgetLease(acquired.leaseId);}

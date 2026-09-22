@@ -47,6 +47,8 @@ it('被动页面证据沿真实collector/runner公开且仅投影固定字段',a
  expect(f.detail().works[0].pageEvidence).toMatchObject({finalRoute:'creator_home',navigationStatus:200,cookieEvidence:'cookie_present_only',loginVisible:null,captchaVisible:null,network:{totalResponses:2}});
  expect(JSON.stringify(f.steps)).not.toContain('SECRET');
  expect(f.ai.markSucceeded).not.toHaveBeenCalled();expect(f.settle.mock.calls[0]![3].success).toBe(false);
+ expect(f.runs.at(-1)).toMatchObject({status:'failed',error:expect.stringContaining('no_matching_response')});
+ expect(JSON.stringify(f.runs)).not.toContain('网络或页面加载超时');
 });
 
 it('旧端口无页面证据为null；拒绝自由文本/异常数值和未验证登录结论',()=>{
@@ -55,6 +57,25 @@ it('旧端口无页面证据为null；拒绝自由文本/异常数值和未验�
  const values=JSON.parse(publicText).works;
  expect(values[0].pageEvidence).toMatchObject({finalRoute:'unknown',navigationStatus:null,readyState:null,pageClosed:null,observation:'unavailable',cookieEvidence:null,loginVisible:null,captchaVisible:null,scroll:{attempts:null},network:{totalResponses:null}});
  expect(values[1].pageEvidence).toBeNull();expect(publicText).not.toContain('SECRET');
+});
+
+it('route公开层再次限制模板/枚举/桶数，不透传前端伪造的原路径和字段',()=>{
+ const base={host:'creator',method:'GET',resourceType:'fetch',pathTemplate:'/api/comment/list',pathTruncated:false,count:1,status:{status2xx:1,status3xx:0,status4xx:0,status5xx:0,statusOther:0,statusUnknown:0}};
+ const routeDistribution={scope:'response_window',omittedResponses:0,overflowResponses:2,items:[
+  {...base,rawUrl:'SECRET_QUERY',headers:'SECRET_HEADER'},
+  {...base,pathTemplate:'/api/SECRET_TOKEN'},
+  {...base,host:'SECRET_HOST',method:'SECRET_METHOD',resourceType:'SECRET_TYPE',pathTemplate:'https://secret/?token=SECRET_QUERY'},
+  ...Array.from({length:20},()=>base),
+ ]};
+ const work={awemeId:'v0',complete:false,diagnostics:{...diagnostics(false),pageEvidence:{routeDistribution}}};
+ const text=formatCommentReadDiagnostics([work as unknown as Work],{receivedComments:0,writtenComments:0,skippedComments:0});
+ const distribution=JSON.parse(text).works[0].pageEvidence.routeDistribution;
+ expect(distribution.items).toHaveLength(16);
+ expect(distribution.items[0]).toEqual(base);
+ expect(distribution.items[1].pathTemplate).toBeNull();
+ expect(distribution.items[2]).toMatchObject({host:'unknown',method:'unknown',resourceType:'unknown',pathTemplate:null});
+ expect(distribution.omittedBuckets).toBe(7);
+ expect(text).not.toContain('SECRET');
 });
 
 it('复现 20/20/20/9 四批零新增：公开步骤保存有效响应/解析/未完成原因，最终不冒充成功',async()=>{

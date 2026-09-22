@@ -1,9 +1,10 @@
-import {COMMENT_NETWORK_COUNTS,type CommentPageEvidence} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {COMMENT_NETWORK_COUNTS,COMMENT_ROUTE_MAX_BUCKETS,COMMENT_ROUTE_MAX_SEGMENTS,COMMENT_ROUTE_SEGMENTS,COMMENT_ROUTE_STATUS_COUNTS,type CommentPageEvidence,type CommentRouteBucket} from '@creatoros/backend/application/collection/comment-read-diagnostics';
 
 type Page={url?():string;isClosed?():boolean;evaluate<R>(fn:()=>R):Promise<R>};
 export function createCommentPageEvidence():CommentPageEvidence {
  return {finalRoute:'unknown',navigationStatus:null,readyState:null,pageClosed:null,observation:'unavailable',cookieEvidence:'cookie_present_only',loginVisible:null,captchaVisible:null,
-  scroll:{attempts:0,evaluateErrors:0,wheelErrors:0},network:Object.fromEntries(COMMENT_NETWORK_COUNTS.map(key=>[key,0])) as CommentPageEvidence['network']};
+  scroll:{attempts:0,evaluateErrors:0,wheelErrors:0},network:Object.fromEntries(COMMENT_NETWORK_COUNTS.map(key=>[key,0])) as CommentPageEvidence['network'],
+  routeDistribution:{scope:'response_window',items:[],omittedResponses:0,overflowResponses:0}};
 }
 
 export function commentHttpStatus(response:unknown):number|null {
@@ -26,13 +27,41 @@ function classifyRoute(raw:string):CommentPageEvidence['finalRoute'] {
  }catch{return 'unknown';}
 }
 
-export function observeCommentResponse(evidence:CommentPageEvidence,response:{url():string;status?():number}):void {
+type CommentResponseMetadata={url():string;status?():number;request?():{method?():string;resourceType?():string}};
+/** Cached Playwright metadata only. No request, headers, body or URL strings are retained. */
+function observeRoute(evidence:CommentPageEvidence,response:CommentResponseMetadata,url:URL|null,statusKey:typeof COMMENT_ROUTE_STATUS_COUNTS[number]):void {
+ const distribution=evidence.routeDistribution;if(!distribution)return;
+ let request:ReturnType<NonNullable<CommentResponseMetadata['request']>>|undefined;
+ try{request=response.request?.();}catch{/* 老端口或metadata不可用仍记录unknown。 */}
+ let method:CommentRouteBucket['method']='unknown',resourceType:CommentRouteBucket['resourceType']='unknown';
+ try{const value=request?.method?.();if(typeof value==='string')method=value==='GET'||value==='POST'?value:'OTHER';}catch{/* 不传播原始错误。 */}
+ try{const value=request?.resourceType?.();if(typeof value==='string')resourceType=value==='xhr'||value==='fetch'||value==='document'?value:'other';}catch{/* 不传播原始错误。 */}
+ const host:CommentRouteBucket['host']=!url?'unknown':url.hostname==='creator.douyin.com'?'creator':url.hostname==='www.douyin.com'?'douyin_web':url.hostname.endsWith('.douyin.com')?'douyin_other':'external';
+ const knownApi=url&&host!=='external'&&['/aweme/','/creator/pc/','/api/'].some(prefix=>url.pathname.startsWith(prefix));
+ if(resourceType!=='xhr'&&resourceType!=='fetch'&&!knownApi){distribution.omittedResponses++;return;}
+ // SEMANTIC_BOUNDARY_ALLOW: only a fixed protocol vocabulary can be public.
+ // Dynamic host/path/query/fragment/credentials and unknown encoded/cased segments never escape.
+ const segments=url&&host!=='external'?url.pathname.split('/').filter(Boolean):[];
+ const pathTemplate=segments.length?'/'+segments.slice(0,COMMENT_ROUTE_MAX_SEGMENTS).map(segment=>COMMENT_ROUTE_SEGMENTS.some(allowed=>allowed===segment)?segment:':opaque').join('/'):'/:opaque';
+ const pathTruncated=segments.length>COMMENT_ROUTE_MAX_SEGMENTS;
+ let bucket=distribution.items.find(item=>item.host===host&&item.method===method&&item.resourceType===resourceType&&item.pathTemplate===pathTemplate&&item.pathTruncated===pathTruncated);
+ if(!bucket){
+  if(distribution.items.length>=COMMENT_ROUTE_MAX_BUCKETS){distribution.overflowResponses++;return;}
+  bucket={host,method,resourceType,pathTemplate,pathTruncated,count:0,status:Object.fromEntries(COMMENT_ROUTE_STATUS_COUNTS.map(key=>[key,0])) as CommentRouteBucket['status']};
+  distribution.items.push(bucket);
+ }
+ bucket.count++;bucket.status[statusKey]++;
+}
+
+export function observeCommentResponse(evidence:CommentPageEvidence,response:CommentResponseMetadata):void {
  const network=evidence.network;
  network.totalResponses++;
  let category:'commentList'|'creatorOther'|'other'|'unknown'='unknown';
+ let observedUrl:URL|null=null;
  try{
   const url=new URL(response.url());
   if(url.protocol==='https:'||url.protocol==='http:'){
+   observedUrl=url;
    category=url.hostname==='creator.douyin.com'
     ?url.pathname==='/aweme/v1/web/comment/list/'?'commentList':'creatorOther':'other';
   }
@@ -41,6 +70,7 @@ export function observeCommentResponse(evidence:CommentPageEvidence,response:{ur
  const status=commentHttpStatus(response);
  const key=status===null?'statusUnknown':status>=500?'status5xx':status>=400?'status4xx':status>=300?'status3xx':status>=200?'status2xx':'statusOther';
  network[key]++;
+ observeRoute(evidence,response,observedUrl,key);
 }
 
 /** 单次被动读取，无导航/网络探针；老测试端口没有页面观察能力时诚实标不可用。 */

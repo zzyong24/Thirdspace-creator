@@ -800,6 +800,7 @@ impl BrowserHost {
         &self,
         admission: &BrowserAdmission,
         mode: IdentityChoice,
+        recover_ownership: bool,
     ) -> Result<Value, BrowserHostError> {
         let (domain, state, _client) = self.bound_state_and_client(admission, mode)?;
         // A successful proof retires this exact physical lease. An Open takes
@@ -811,13 +812,21 @@ impl BrowserHost {
         let in_flight_opens = state.in_flight_opens.load(Ordering::Acquire);
         let profile = self.profile_path(&domain, false)?;
         let os_process_absent = Self::os_profile_process_absent(&profile);
-        let profile_stopped = matches!(proof_state, 0 | 1 | 3)
+        let mut profile_stopped = matches!(proof_state, 0 | 1 | 3)
             && in_flight_opens == 0
             && overview.total_lanes == 0
             && overview.hosts.is_empty()
             && overview.pending_cleanup_count == 0
             && process_ids.is_empty()
             && os_process_absent;
+        if profile_stopped && recover_ownership && mode == IdentityChoice::Anonymous {
+            // Only explicit cleanup of this bound old lease may reconcile its
+            // fixed ownership records. StopProof remains a read-only OS proof.
+            profile_stopped = !matches!(
+                nomi_browser_engine::profile::recover_stopped_profile_ownership(&profile),
+                nomi_browser_engine::profile::StoppedProfileOwnershipRecovery::Unverified
+            );
+        }
         if profile_stopped {
             state.retired.store(true, Ordering::Release);
         }
@@ -920,7 +929,8 @@ impl BrowserHost {
                 }
             }
             return self
-                .stop_proof(&request.admission, request.identity_mode)
+                .stop_proof(&request.admission, request.identity_mode,
+                    matches!(&request.action, BrowserAction::Cleanup))
                 .await;
         }
         if matches!(&request.action, BrowserAction::Close { .. })
@@ -1117,7 +1127,7 @@ impl BrowserHost {
                     .await
                     .map_err(BrowserHostError::from_platform)?;
                 let proof = self
-                    .stop_proof(&request.admission, request.identity_mode)
+                    .stop_proof(&request.admission, request.identity_mode, false)
                     .await?;
                 Ok(json!({"close": result, "stopProof": proof}))
             }
@@ -1936,6 +1946,148 @@ mod tests {
             .is_some_and(|data| data.len() > 100));
         assert!(closed["stopProof"]["profileKey"].as_str().is_some());
         assert_eq!(closed["stopProof"]["profileStopped"], true, "{closed}");
+    }
+
+    #[test]
+    fn anonymous_cleanup_preserves_unverified_ownership_without_retiring_lease() {
+        let root = std::env::temp_dir().join(format!("creatoros-unverified-{}", rand::random::<u64>()));
+        let host = BrowserHost::new(root.clone(), PathBuf::from("/missing/cft"));
+        let mut admission = receipt("account-one");
+        let location = host.profile_location("user-one", "account-one", "task-one", IdentityChoice::Anonymous).unwrap();
+        admission.profile_key = location["profileKey"].as_str().unwrap().to_owned();
+        let marker = PathBuf::from(location["managedProfileRoot"].as_str().unwrap())
+            .join(nomi_browser_engine::profile::OWNERSHIP_MARKER_FILE);
+        std::fs::write(&marker, b"corrupt-ownership").unwrap();
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let proof = runtime.block_on(host.dispatch(BrowserRequest {
+            operation_id: "corrupt-cleanup".into(), admission: admission.clone(),
+            identity_mode: IdentityChoice::Anonymous, action: BrowserAction::Cleanup,
+        })).unwrap();
+        assert_eq!(proof["osProcessAbsent"], true);
+        assert_eq!(proof["profileStopped"], false);
+        let domain = host.domain_for(&admission, IdentityChoice::Anonymous).unwrap();
+        assert!(!host.domains.lock().unwrap().get(&domain).unwrap().retired.load(Ordering::Acquire));
+        assert_eq!(std::fs::read(marker).unwrap(), b"corrupt-ownership");
+        runtime.block_on(host.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    #[ignore = "requires fixed CfT; isolated process exit and ownership recovery probe"]
+    fn real_chromium_reopens_after_interrupted_owner_process() {
+        use std::os::unix::process::CommandExt;
+        const ROOT_ENV: &str = "CREATOROS_TEST_INTERRUPTED_BROWSER_ROOT";
+        let bundled = PathBuf::from(std::env::var("CREATOROS_TEST_CFT_ROOT").unwrap());
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let request = |operation: &str, admission: BrowserAdmission, action: BrowserAction| BrowserRequest {
+            operation_id: operation.into(), admission, identity_mode: IdentityChoice::Anonymous, action,
+        };
+        if let Some(root) = std::env::var_os(ROOT_ENV) {
+            let root = PathBuf::from(root);
+            let host = BrowserHost::new(root.clone(), bundled);
+            let mut admission = receipt("account-one");
+            admission.domain = "www.rfc-editor.org".into();
+            admission.profile_key = host.profile_location("user-one", "account-one", "task-one", IdentityChoice::Anonymous)
+                .unwrap()["profileKey"].as_str().unwrap().to_owned();
+            let opened = runtime.block_on(host.dispatch(request("interrupted-open", admission.clone(), BrowserAction::Open))).unwrap();
+            eprintln!("child opened: {opened}");
+            std::fs::write(root.join("test-admission.json"), serde_json::to_vec(&admission).unwrap()).unwrap();
+            // Real process exit closes CDP pipes without running host/engine Drop or shutdown.
+            // Only this fixture's newly created anonymous profile is involved.
+            std::process::exit(0);
+        }
+        let root = std::env::temp_dir().join(format!("creatoros-interrupted-{}", rand::random::<u64>()));
+        let child = Command::new(std::env::current_exe().unwrap())
+            .args(["browser::tests::real_chromium_reopens_after_interrupted_owner_process", "--exact", "--ignored", "--nocapture"])
+            .env(ROOT_ENV, &root).process_group(0).output().unwrap();
+        eprintln!("child stderr: {}", String::from_utf8_lossy(&child.stderr));
+        assert!(child.status.success());
+        let admission: BrowserAdmission = serde_json::from_slice(&std::fs::read(root.join("test-admission.json")).unwrap()).unwrap();
+        let host = BrowserHost::new(root.clone(), bundled);
+        let profile = host.profile_root(&host.domain_for(&admission, IdentityChoice::Anonymous).unwrap());
+        for _ in 0..50 {
+            if BrowserHost::os_profile_process_absent(&profile) { break; }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        assert!(BrowserHost::os_profile_process_absent(&profile), "isolated child browser still present; preserve profile {}", profile.display());
+        let marker_path = profile.join(nomi_browser_engine::profile::COMMITTED_OWNERSHIP_RECORD_FILE);
+        let original_marker = std::fs::read(&marker_path).unwrap();
+        let retained = profile.join("test-retained-data");
+        std::fs::write(&retained, b"preserve existing profile data").unwrap();
+        let outcome = runtime.block_on(async {
+            let read_only_proof = host.dispatch(request("interrupted-proof", admission.clone(), BrowserAction::StopProof)).await?;
+            assert_eq!(read_only_proof["profileStopped"], true);
+            assert_eq!(std::fs::read(&marker_path).unwrap(), original_marker);
+            let proof = host.dispatch(request("interrupted-cleanup", admission.clone(), BrowserAction::Cleanup)).await?;
+            eprintln!("interrupted cleanup: {proof}");
+            assert_eq!(proof["profileStopped"], true);
+            assert_eq!(std::fs::read(&retained).unwrap(), b"preserve existing profile data");
+            let repeated = host.dispatch(request("interrupted-cleanup-repeat", admission.clone(), BrowserAction::Cleanup)).await?;
+            assert_eq!(repeated["profileStopped"], true);
+            let mut fresh = admission.clone();
+            fresh.attempt = 2;
+            fresh.fence_token = "fence-two".into();
+            fresh.profile_lease_id = "lease-two".into();
+            fresh.lane_name = "acceptance-browser-g-v2".into();
+            let opened = host.dispatch(request("interrupted-reopen", fresh, BrowserAction::Open)).await;
+            eprintln!("interrupted reopen: {opened:?}");
+            if opened.is_ok() {
+                assert_eq!(host.dispatch(request("old-lease-cleanup", admission, BrowserAction::Cleanup)).await.unwrap_err().code,
+                    "INVALID_ADMISSION");
+            }
+            opened
+        });
+        runtime.block_on(host.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+        outcome.expect("a physically stopped interrupted owner must be recoverable");
+    }
+
+    #[test]
+    #[ignore = "requires fixed CfT; isolated restart and lease recovery probe"]
+    fn real_chromium_reopens_anonymous_profile_after_host_restart() {
+        let bundled = PathBuf::from(std::env::var("CREATOROS_TEST_CFT_ROOT").unwrap());
+        assert!(BrowserHost::packaged_chrome_available(&bundled));
+        let root = std::env::temp_dir().join(format!("creatoros-reopen-{}", rand::random::<u64>()));
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let first = BrowserHost::new(root.clone(), bundled.clone());
+        let mut admission = receipt("account-one");
+        admission.domain = "www.rfc-editor.org".into();
+        admission.lane_name = "acceptance-browser-g".into();
+        admission.profile_key = first.profile_location("user-one", "account-one", "task-one", IdentityChoice::Anonymous)
+            .unwrap()["profileKey"].as_str().unwrap().to_owned();
+        let request = |operation: &str, admission: BrowserAdmission, action: BrowserAction| BrowserRequest {
+            operation_id: operation.into(), admission, identity_mode: IdentityChoice::Anonymous, action,
+        };
+        let opened = runtime.block_on(first.dispatch(request("before-restart", admission.clone(), BrowserAction::Open)));
+        eprintln!("initial open: {opened:?}");
+        runtime.block_on(first.shutdown());
+        drop(first);
+        let second = BrowserHost::new(root.clone(), bundled);
+        let outcome = runtime.block_on(async {
+            let opened = opened?;
+            let old_lane = opened["lane"]["lane_id"].as_str().unwrap().to_owned();
+            let proof = second.dispatch(request("recover-old", admission.clone(), BrowserAction::Cleanup)).await?;
+            eprintln!("restarted cleanup: {proof}");
+            assert_eq!(proof["profileStopped"], true);
+            let mut fresh = admission.clone();
+            fresh.attempt = 2;
+            fresh.fence_token = "fence-two".into();
+            fresh.profile_lease_id = "lease-two".into();
+            fresh.lane_name = "acceptance-browser-g-v2".into();
+            let reopened = second.dispatch(request("after-restart", fresh.clone(), BrowserAction::Open)).await?;
+            eprintln!("restarted open: {reopened}");
+            let lane = reopened["lane"]["lane_id"].as_str().unwrap().to_owned();
+            assert_ne!(lane, old_lane);
+            let status = second.dispatch(request("after-restart-status", fresh, BrowserAction::Status {
+                lane_id: lane,
+            })).await?;
+            assert_eq!(status["lifecycle_state"], "running");
+            eprintln!("restarted status: {status}");
+            Ok::<_, BrowserHostError>(())
+        });
+        runtime.block_on(second.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+        outcome.expect("a recovered stopped anonymous profile must reopen");
     }
 
     #[test]

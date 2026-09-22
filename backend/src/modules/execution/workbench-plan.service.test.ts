@@ -86,6 +86,54 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("a", {dependsOn: ["b"]}), step("b", {dependsOn: ["a"]})]})).rejects.toThrow();
   });
 
+  it("T1026 成功缺证据明确定位步骤，拒绝后版本和步骤保持原值", async () => {
+    const f = await fixture("diagnostic-missing-evidence");
+    const saved = await f.plan.save(f.ref, {expectedRevision: 0, steps: [step("needs-evidence")]});
+    await expect(f.plan.save(f.ref, {expectedRevision: 1, steps: [step("needs-evidence", {status: "succeeded"})]})).rejects.toMatchObject({
+      name: "ConflictError", issue: {code: "success_evidence_missing", stepId: "needs-evidence", currentStepStatus: "pending", requestedStatus: "succeeded",
+        operationRef: null, ledgerStatus: null, receiptStatus: null, receiptHasError: null, sideEffect: null},
+    });
+    expect(await f.plan.read(ctx, f.task.id)).toEqual(saved);
+  });
+
+  it.each([
+    ["failed", JSON.stringify({output: {status: "error", error: {code: "SECRET_CODE", message: "SECRET_BODY"}, sideEffect: "none"}}), "settled", "error", true, "none"],
+    ["partial", JSON.stringify({output: {status: "partial", error: null, sideEffect: "none"}}), "settled", "partial", false, "none"],
+    ["unknown-effect", JSON.stringify({status: "ok", error: null, sideEffect: "unknown"}), "settled", "ok", false, "unknown"],
+    ["malformed", "SECRET_INVALID_JSON", "settled", "invalid", null, null],
+    ["missing", null, "settled", "missing", null, null],
+    ["started", null, "started", "missing", null, null],
+    ["unknown", null, "unknown", "missing", null, null],
+  ] as const)("T1026 %s回执诊断仅固定状态且成功门保持", async (suffix, resultText, ledgerStatus, receiptStatus, receiptHasError, sideEffect) => {
+    const f = await fixture(`diagnostic-${suffix}`);
+    const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});
+    const call = await ledger.reserve(f.ref, {kind: "tool", operationKey: "evidence", inputDigest: "sha256:" + "f".repeat(64), reservedTokens: 0});
+    await ledger.start(f.ref, call.id);
+    if (ledgerStatus === "settled") await ledger.settle(f.ref, call.id, {status: "settled", usage: {totalTokens: 0}, ...(resultText ? {resultText} : {})});
+    if (ledgerStatus === "unknown") await ledger.settle(f.ref, call.id, {status: "unknown"});
+    const before = (await ledger.inspect(f.ref)).calls;
+    const error = await f.plan.save(f.ref, {expectedRevision: 0, steps: [step("target", {status: "succeeded", operationRefs: [call.id]})]}).catch(error => error);
+    expect(error).toMatchObject({name: "ConflictError", issue: {code: "operation_not_successful", stepId: "target", currentStepStatus: null, requestedStatus: "succeeded",
+      operationRef: call.id, ledgerStatus, receiptStatus, receiptHasError, sideEffect}});
+    expect(JSON.stringify(error.issue)).not.toContain("SECRET");
+    expect(await f.plan.read(ctx, f.task.id)).toBeNull();
+    expect((await ledger.inspect(f.ref)).calls).toEqual(before);
+  });
+
+  it("T1026 外任务、不存在及model引用统一不披露账本或回执状态", async () => {
+    const foreign = await fixture("diagnostic-foreign");
+    const f = await fixture("diagnostic-owner");
+    const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});
+    const other = await ledger.reserve(foreign.ref, {kind: "tool", operationKey: "other", inputDigest: "sha256:" + "a".repeat(64), reservedTokens: 0});
+    const model = await ledger.reserve(f.ref, {kind: "model", operationKey: "model", inputDigest: "sha256:" + "b".repeat(64), reservedTokens: 1});
+    for (const operationRef of [other.id, model.id, "call_not_present"]) {
+      await expect(f.plan.save(f.ref, {expectedRevision: 0, steps: [step("target", {status: "succeeded", operationRefs: [operationRef]})]})).rejects.toMatchObject({
+        issue: {code: "operation_not_found", stepId: "target", operationRef, ledgerStatus: null, receiptStatus: null, receiptHasError: null, sideEffect: null},
+      });
+    }
+    expect(await f.plan.read(ctx, f.task.id)).toBeNull();
+  });
+
   it("重规划不能擦除已有操作引用，替换步骤必须指向旧步骤", async () => {
     const f = await fixture("replan-receipts");
     const ledger = createExecutionCallLedgerService(db, {now, budget: {maxCalls: 10, maxTokens: 1000, deadlineMs: 60000}});

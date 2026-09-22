@@ -3,11 +3,55 @@ import { createHash } from "node:crypto";
 import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { workbenchArtifactSchema, workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
-import { executionRefSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { executionRefSchema, workerReservationSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
 type Step = WorkbenchPlan["steps"][number];
+const receiptStatuses = ["ok", "partial", "blocked", "error", "succeeded", "running", "failed", "unknown"] as const;
+const sideEffects = ["none", "proposal", "committed", "unknown"] as const;
+type PlanValidationIssue = {
+  code: "success_evidence_missing" | "operation_not_found" | "operation_not_successful";
+  stepId: string;
+  currentStepStatus: Step["status"] | null;
+  requestedStatus: Step["status"];
+  operationRef: string | null;
+  ledgerStatus: typeof workerReservationSchema._output.status | null;
+  receiptStatus: typeof receiptStatuses[number] | "missing" | "invalid" | null;
+  receiptHasError: boolean | null;
+  sideEffect: typeof sideEffects[number] | null;
+};
+/** 固定校验事实，仍是写入前的 ConflictError；不携带原回执正文或供应商异常。 */
+export class WorkbenchPlanValidationError extends ConflictError {
+  constructor(readonly issue: PlanValidationIssue) {
+    super({success_evidence_missing: "步骤成功缺少真实回执或产物", operation_not_found: "步骤引用的工具调用不存在",
+      operation_not_successful: "步骤引用的工具回执未确认成功"}[issue.code]);
+  }
+}
+function planValidationError(code: PlanValidationIssue["code"], step: Step, earlier?: Step, operationRef: string | null = null,
+  call?: Pick<typeof executionCalls.$inferSelect, "status" | "resultText">): WorkbenchPlanValidationError {
+  const issue: PlanValidationIssue = {code, stepId: step.stepId, currentStepStatus: earlier?.status ?? null, requestedStatus: step.status,
+    operationRef, ledgerStatus: null, receiptStatus: null, receiptHasError: null, sideEffect: null};
+  // SEMANTIC_BOUNDARY_ALLOW: 只投影本任务校验失败处的固定状态，不解释错误正文或判断步骤语义。
+  if (call) {
+    const status = workerReservationSchema.shape.status.safeParse(call.status);
+    issue.ledgerStatus = status.success ? status.data : null;
+    issue.receiptStatus = call.resultText ? "invalid" : "missing";
+    try {
+      const parsed: unknown = JSON.parse(call.resultText ?? "");
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const record = parsed as Record<string, unknown>;
+        // 与 successfulToolReceipt 完全相同的 outer/output 选择；诊断不参与成功判定。
+        const candidate = record.output && typeof record.output === "object" && !Array.isArray(record.output)
+          ? record.output as Record<string, unknown> : record;
+        issue.receiptStatus = receiptStatuses.find(value => value === candidate.status) ?? "invalid";
+        issue.receiptHasError = candidate.error != null;
+        issue.sideEffect = sideEffects.find(value => value === candidate.sideEffect) ?? null;
+      }
+    } catch { /* 损坏的回执只报告 invalid，不回传原文。 */ }
+  }
+  return new WorkbenchPlanValidationError(issue);
+}
 function artifactsToVerify(step: Step, earlier?: Step): string[] {
   return step.status === "succeeded" && earlier?.status !== "succeeded"
     ? step.artifactRefs : step.artifactRefs.filter(ref => !earlier?.artifactRefs.includes(ref));
@@ -120,12 +164,12 @@ export function createWorkbenchPlanService(db: Db, deps: {
         for (const step of proposed.steps) {
           const earlier = old.get(step.stepId);
           if (step.supersedes && (!old.has(step.supersedes) || step.supersedes === step.stepId)) throw new ConflictError("替换步骤须引用已有步骤");
-          if (step.status === "succeeded" && !step.operationRefs.length && !step.artifactRefs.length) throw new ConflictError("步骤成功缺少真实回执或产物");
+          if (step.status === "succeeded" && !step.operationRefs.length && !step.artifactRefs.length) throw planValidationError("success_evidence_missing", step, earlier);
           for (const callId of step.operationRefs) {
             if (earlier?.operationRefs.includes(callId) && step.status !== "succeeded") continue;
             const [call] = await tx.select().from(executionCalls).where(and(eq(executionCalls.id, callId), eq(executionCalls.executionTaskId, task.id)));
-            if (!call || call.kind !== "tool") throw new ConflictError("步骤引用的工具调用不存在");
-            if (step.status === "succeeded" && (call.status !== "settled" || !successfulToolReceipt(call.resultText))) throw new ConflictError("步骤引用的工具回执未确认成功");
+            if (!call || call.kind !== "tool") throw planValidationError("operation_not_found", step, earlier, callId);
+            if (step.status === "succeeded" && (call.status !== "settled" || !successfulToolReceipt(call.resultText))) throw planValidationError("operation_not_successful", step, earlier, callId, call);
           }
           if (step.status !== "succeeded" || earlier?.status === "succeeded") continue;
           if (step.dependsOn.some(dependency => next.get(dependency)?.status !== "succeeded")) throw new ConflictError("前置步骤尚未成功");

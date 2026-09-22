@@ -5,7 +5,7 @@ import {fetchDouyinCommentsForWorks} from './douyin-cdp';
 import {formatCommentReadDiagnostics} from '@creatoros/backend/application/collection/comment-read-diagnostics';
 import {createCommentPageEvidence,finishCommentPageEvidence} from './douyin-cdp-page-evidence';
 
-type Response={url():string;status():number;json():Promise<unknown>};
+type Response={url():string;status():number;json():Promise<unknown>;request?():{method():string;resourceType():string}};
 function fixture(options:{route?:string;status?:number;closed?:boolean;domError?:boolean;scrollError?:boolean;responses?:Response[];complete?:boolean}={}){
  const handlers=new Set<(response:Response)=>void>();
  const route=options.route??'https://creator.douyin.com/creator-micro/interactive/comment?item_id=v&token=SECRET_QUERY';
@@ -90,4 +90,55 @@ it('诊断期间迟到评论不延长监听窗口，不改变原pending/完成�
  const result=await f.run();
  expect(evaluations).toBe(4);
  expect(result.works[0]).toMatchObject({complete:false,records:[],diagnostics:{reason:'no_matching_response',matchedResponses:0,pageEvidence:{network:{totalResponses:0}}}});
+});
+
+function routeResponse(url:string,{status=200,method='GET',resourceType='fetch',broken=false}={}):Response {
+ return {url:()=>url,status:()=>status,json:async()=>{throw new Error('非匹配API不得读取正文');},request:()=>{
+  if(broken)throw new Error('SECRET_REQUEST_ERROR');
+  return {method:()=>method,resourceType:()=>resourceType};
+ }};
+}
+
+it('被动route模板区分API分布并合并query，未知path/第三方域不泄露；不增加请求或改变完成条件',async()=>{
+ const f=fixture({responses:[
+  routeResponse('https://creator.douyin.com/aweme/v2/creator/comments/list/?token=SECRET_A'),
+  routeResponse('https://creator.douyin.com/aweme/v2/creator/comments/list/?token=SECRET_B',{status:302}),
+  routeResponse('https://www.douyin.com/aweme/v1/web/comment/reply/123456/SECRET_TOKEN',{method:'POST'}),
+  routeResponse('https://SECRET_HOST.douyin.com/api/SECRET_VALUE/%63omment/COMMENT'),
+  routeResponse('https://SECRET_EXTERNAL.test/api/secret',{method:'PUT'}),
+  routeResponse('https://creator.douyin.com/static/SECRET.js',{resourceType:'script'}),
+ ]});
+ const result=await f.run();
+ const output=JSON.parse(formatCommentReadDiagnostics(result.works,{receivedComments:0,writtenComments:0,skippedComments:0}));
+ expect(output.works[0]).toMatchObject({complete:false,reason:'no_matching_response',pageEvidence:{network:{totalResponses:6},routeDistribution:{scope:'response_window',omittedResponses:1,overflowResponses:0,items:[
+  {host:'creator',method:'GET',resourceType:'fetch',pathTemplate:'/aweme/v2/creator/comments/list',pathTruncated:false,count:2,status:{status2xx:1,status3xx:1}},
+  {host:'douyin_web',method:'POST',resourceType:'fetch',pathTemplate:'/aweme/v1/web/comment/reply/:opaque/:opaque',count:1},
+  {host:'douyin_other',method:'GET',resourceType:'fetch',pathTemplate:'/api/:opaque/:opaque/:opaque',count:1},
+  {host:'external',method:'OTHER',resourceType:'fetch',pathTemplate:'/:opaque',count:1},
+ ]}}});
+ expect(JSON.stringify(output)).not.toContain('SECRET');expect(JSON.stringify(output)).not.toContain('123456');
+ expect(f.page.goto).toHaveBeenCalledOnce();expect(f.page.waitForTimeout).toHaveBeenCalledTimes(4);
+});
+
+it('route最多16桶；满后仍累计已知桶，overflow/omitted与原网络总量守恒',async()=>{
+ const paths=['aweme','v1','v2','web','creator','pc','api','comment','comments','list','reply','interaction','user','info','item','work_list','search','query'];
+ const responses=paths.map(segment=>routeResponse(`https://creator.douyin.com/api/${segment}`));
+ responses.push(routeResponse('https://creator.douyin.com/api/aweme'));
+ const f=fixture({responses});const result=await f.run();
+ const publicText=formatCommentReadDiagnostics(result.works,{receivedComments:0,writtenComments:0,skippedComments:0});
+ const evidence=JSON.parse(publicText).works[0].pageEvidence;
+ expect(evidence.routeDistribution.items).toHaveLength(16);
+ expect(evidence.routeDistribution.items[0]).toMatchObject({pathTemplate:'/api/aweme',count:2});
+ expect(evidence.routeDistribution).toMatchObject({overflowResponses:2,omittedResponses:0});
+ expect(evidence.routeDistribution.items.reduce((sum:number,item:{count:number})=>sum+item.count,0)+evidence.routeDistribution.overflowResponses+evidence.routeDistribution.omittedResponses).toBe(evidence.network.totalResponses);
+});
+
+it('request accessor失败不反杀采集，固定API前缀仍计未知类型；长path明确截断',async()=>{
+ const f=fixture({responses:[routeResponse('https://creator.douyin.com/api/comment/list',{broken:true}),routeResponse('https://creator.douyin.com/api/'+Array(12).fill('SECRET').join('/'))]});
+ const result=await f.run();
+ const evidence=JSON.parse(formatCommentReadDiagnostics(result.works,{receivedComments:0,writtenComments:0,skippedComments:0})).works[0].pageEvidence;
+ expect(evidence.routeDistribution.items[0]).toMatchObject({method:'unknown',resourceType:'unknown',pathTemplate:'/api/comment/list',count:1});
+ expect(evidence.routeDistribution.items[1]).toMatchObject({pathTemplate:'/api/:opaque/:opaque/:opaque/:opaque/:opaque/:opaque/:opaque',pathTruncated:true,count:1});
+ expect(result.works[0]).toMatchObject({complete:false,diagnostics:{reason:'no_matching_response'}});
+ expect(JSON.stringify(evidence)).not.toContain('SECRET');
 });

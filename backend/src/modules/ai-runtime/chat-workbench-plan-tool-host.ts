@@ -4,7 +4,7 @@ import { agenticToolOutcomeSchema, workerToolResultReceiptSchema } from "@creato
 import { workbenchArtifactSchema, workbenchPlanSchema } from "@creatoros/contract/agent-workbench";
 import { workerPortInputSchemas } from "@creatoros/contract/execution-worker";
 import type { ChatWorkerDispatcherDeps } from "../execution/model-worker-dispatcher";
-import { createWorkbenchPlanService } from "../execution/workbench-plan.service";
+import { createWorkbenchPlanService, WorkbenchPlanValidationError } from "../execution/workbench-plan.service";
 import { createExecutionLeaseService } from "../execution/execution-lease.service";
 import { ConflictError } from "../execution/execution.errors";
 import { chatWorkbenchPlanCapability } from "./chat-workbench-plan-tool";
@@ -19,6 +19,11 @@ export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof 
     operationRefs: "只填本任务工具回执的原调用 ID（call_ 开头），逐字复制；不要填工具名、工具名(call_id) 或模型生成的 toolCallId。成功步骤只能引用已结算且确认成功的回执。",
     artifactRefs: "只填已正式登记的 artifactId@version（version 为正整数），逐字复制；文件名、文件路径、尚未登记的文件均不是产物引用。列出的登记元数据仍须在保存时核验字节。",
     unexecutedSteps: "尚未执行、没有真实回执的步骤使用 pending，operationRefs 和 artifactRefs 都填 []，不要用空字符串占位；不能标为 succeeded。已有步骤及回执必须保留，已成功步骤不可改写。",
+  };
+  const statusRules = {
+    allowedStatuses: workbenchPlanSchema.shape.steps.element.shape.status.options,
+    failedSteps: "已明确失败的步骤使用 failed 并保留原 stepId、operationRefs 和 artifactRefs；记录失败不等于 succeeded。未确认结果须先按原调用对账，不能改成成功或换键重发。",
+    replan: "由模型依据用户目标显式重规划：未成功步骤可以修改 dependsOn，或新增步骤用 supersedes 指向已有旧步骤；旧步骤及其回执仍须保留。已成功步骤不可改写。supersedes 不会自动解除依赖或将旧失败变成功；依赖仍须存在、无环，新成功步骤的所有 dependsOn 必须 succeeded。不能用无关成功回执替代失败证据。",
   };
   return async (_context, input, _ref, signal) => {
     signal.throwIfAborted();
@@ -73,7 +78,9 @@ export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof 
             }
             // 错误反馈本身不能因巨型历史计划超过回执上限而变为 unknown；绝不伪装完整计划。
             const currentPlanComplete = currentPlan === null || JSON.stringify(currentPlan).length <= 800_000;
-            return {kind: "workbench.plan.validation", currentRevision: currentPlan?.planRevision ?? 0, referenceRules,
+            return {kind: "workbench.plan.validation", currentRevision: currentPlan?.planRevision ?? 0, referenceRules, statusRules,
+              // 单条为保存校验当时的首个失败点；不扫描或猜测其他步骤的语义。
+              validationIssue: error instanceof WorkbenchPlanValidationError ? error.issue : null,
               currentPlan: currentPlanComplete ? currentPlan : {planRevision: currentPlan!.planRevision, stepCount: currentPlan!.steps.length, truncated: true},
               currentPlanComplete, recentSuccessfulOperations, registeredArtifacts,
               referenceScope: "仅当前任务；列出最近 50 条已结算工具中的最多 20 条成功回执，以及最近最多 20 个登记产物。不代表全部历史；是否支撑某个步骤由模型依据实际结果判断，后端仍校验真实引用。"};
@@ -81,12 +88,12 @@ export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof 
           scope.signal.throwIfAborted();
           const reason = error instanceof ZodError
             ? error.issues.slice(0, 20).map(issue => `${issue.path.map(String).join(".") || "计划"}：${issue.message}`).join("；")
-            : error.message;
+            : error instanceof WorkbenchPlanValidationError ? `${error.message}；校验定位=${JSON.stringify(error.issue)}` : error.message;
           const planInstruction = feedback.currentPlanComplete
             ? "使用本回执的 currentPlan 修订"
             : "当前计划过大，本回执仅含摘要；取得完整计划前不得据摘要覆盖或删除旧步骤";
           return agenticToolOutcomeSchema.parse({status: "error", summary: `计划未保存；当前版本 ${feedback.currentRevision}，下一次 expectedRevision=${feedback.currentRevision}，失败不会增加版本。`, evidence: [], data: feedback,
-            error: {code: "invalid_input", retryable: false, recovery: `${reason.slice(0, 6000)}。${planInstruction}，下一次 expectedRevision=${feedback.currentRevision}，不要猜测或递增。${referenceRules.operationRefs}${referenceRules.artifactRefs}${referenceRules.unexecutedSteps}`},
+            error: {code: "invalid_input", retryable: false, recovery: `${reason.slice(0, 6000)}。${planInstruction}，下一次 expectedRevision=${feedback.currentRevision}，不要猜测或递增。可用步骤状态：${statusRules.allowedStatuses.join(", ")}。${referenceRules.operationRefs}${referenceRules.artifactRefs}${referenceRules.unexecutedSteps}${statusRules.failedSteps}${statusRules.replan}`},
             continuation: null, sideEffect: "none"});
         }
         scope.signal.throwIfAborted();

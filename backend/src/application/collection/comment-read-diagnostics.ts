@@ -3,6 +3,29 @@ export const COMMENT_READ_REASONS=["stable_end","pagination_exhausted","more_pag
 export type CommentReadReason=typeof COMMENT_READ_REASONS[number];
 export const COMMENT_PAGE_ROUTES=['expected_comment','creator_home','other_creator','external','unknown'] as const;
 export const COMMENT_NETWORK_COUNTS=['totalResponses','commentList','creatorOther','other','unknown','status2xx','status3xx','status4xx','status5xx','statusOther','statusUnknown'] as const;
+export const COMMENT_ROUTE_HOSTS=['creator','douyin_web','douyin_other','external','unknown'] as const;
+export const COMMENT_ROUTE_METHODS=['GET','POST','OTHER','unknown'] as const;
+export const COMMENT_ROUTE_TYPES=['xhr','fetch','document','other','unknown'] as const;
+export const COMMENT_ROUTE_STATUS_COUNTS=['status2xx','status3xx','status4xx','status5xx','statusOther','statusUnknown'] as const;
+export const COMMENT_ROUTE_MAX_BUCKETS=16;
+export const COMMENT_ROUTE_MAX_SEGMENTS=8;
+/** SEMANTIC_BOUNDARY_ALLOW: 仅供路径隐私投影；不靠这些协议词判断页面内容/登录或接口是否变更。 */
+export const COMMENT_ROUTE_SEGMENTS=['aweme','v1','v2','web','creator','pc','api','comment','comments','list','reply','interaction','user','info','item','work_list','search','query'] as const;
+export interface CommentRouteBucket {
+ host:typeof COMMENT_ROUTE_HOSTS[number];
+ method:typeof COMMENT_ROUTE_METHODS[number];
+ resourceType:typeof COMMENT_ROUTE_TYPES[number];
+ pathTemplate:string;
+ pathTruncated:boolean;
+ count:number;
+ status:Record<typeof COMMENT_ROUTE_STATUS_COUNTS[number],number>;
+}
+export interface CommentRouteDistribution {
+ scope:'response_window';
+ items:CommentRouteBucket[];
+ omittedResponses:number;
+ overflowResponses:number;
+}
 export interface CommentPageEvidence {
  finalRoute:typeof COMMENT_PAGE_ROUTES[number];
  navigationStatus:number|null;
@@ -16,6 +39,7 @@ export interface CommentPageEvidence {
  captchaVisible:null;
  scroll:{attempts:number;evaluateErrors:number;wheelErrors:number};
  network:Record<typeof COMMENT_NETWORK_COUNTS[number],number>;
+ routeDistribution?:CommentRouteDistribution;
 }
 export interface CommentReadDiagnostics {
  matchedResponses:number;
@@ -30,6 +54,27 @@ export interface CommentReadDiagnostics {
 export interface CommentDiagnosticWork {awemeId:string;complete?:boolean;diagnostics?:CommentReadDiagnostics}
 const count=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
 const record=(value:unknown):Record<string,unknown>=>value!==null&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
+function publicRouteTemplate(value:unknown):string|null {
+ if(typeof value!=='string'||value.length>160||!value.startsWith('/'))return null;
+ const segments=value.slice(1).split('/');
+ return segments.length<=COMMENT_ROUTE_MAX_SEGMENTS&&segments.every(segment=>segment===':opaque'||COMMENT_ROUTE_SEGMENTS.some(allowed=>segment===allowed))?value:null;
+}
+function publicRouteDistribution(value:unknown){
+ const item=record(value);
+ if(item.scope!=='response_window'||!Array.isArray(item.items))return null;
+ return {scope:'response_window',omittedResponses:count(item.omittedResponses),overflowResponses:count(item.overflowResponses),
+  omittedBuckets:Math.max(0,item.items.length-COMMENT_ROUTE_MAX_BUCKETS),
+  items:item.items.slice(0,COMMENT_ROUTE_MAX_BUCKETS).map(raw=>{
+   const bucket=record(raw),status=record(bucket.status);
+   return {host:COMMENT_ROUTE_HOSTS.find(host=>host===bucket.host)??'unknown',
+    method:COMMENT_ROUTE_METHODS.find(method=>method===bucket.method)??'unknown',
+    resourceType:COMMENT_ROUTE_TYPES.find(type=>type===bucket.resourceType)??'unknown',
+    pathTemplate:publicRouteTemplate(bucket.pathTemplate),pathTruncated:typeof bucket.pathTruncated==='boolean'?bucket.pathTruncated:null,count:count(bucket.count),
+    status:Object.fromEntries(COMMENT_ROUTE_STATUS_COUNTS.map(key=>[key,count(status[key])])),
+   };
+  }),
+ };
+}
 /** SEMANTIC_BOUNDARY_ALLOW: 仅允许固定事实字段和枚举，阻断URL/正文/异常透传，不推断登录或内容语义。 */
 function publicPageEvidence(value:unknown){
  if(value===null||typeof value!=='object'||Array.isArray(value))return null;
@@ -44,6 +89,7 @@ function publicPageEvidence(value:unknown){
   loginVisible:null,captchaVisible:null,
   scroll:Object.fromEntries(['attempts','evaluateErrors','wheelErrors'].map(key=>[key,count(scroll[key])])),
   network:Object.fromEntries(COMMENT_NETWORK_COUNTS.map(key=>[key,count(network[key])])),
+  routeDistribution:publicRouteDistribution(item.routeDistribution),
  };
 }
 /** 每批最多列 20 个作品，长 ID 截至 80 字符；汇总覆盖整批，明确披露省略量和诊断缺失。 */

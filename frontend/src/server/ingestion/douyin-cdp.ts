@@ -2033,6 +2033,7 @@ export interface FetchCommentsTarget {
 type CommentResponseHandler = (resp: {
   url(): string;
   status?(): number;
+  request?(): {method?():string;resourceType?():string};
   json(): Promise<unknown>;
 }) => void;
 

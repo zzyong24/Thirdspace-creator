@@ -78,3 +78,9 @@ flowchart LR
 真实CfT复现RFC9110有9450个引用，超过2048上限后整代引用被清空并折叠成权限错误。扩展vendored engine.rs/backend/cdp.rs/injected.rs，以typed容量原因和有界完整行前缀降级，保留实际DOM引用、显式truncated、一次原子新generation，旧引用仍拒绝；不提高cap，不用字符串匹配错误消息，不伪造元素。实现前独审，真实长页及旧generation/有效action验证后才能验收。
 
 正式host回归另外复现相同参数的新browser.act被旧成功回执吞掉；可信复用策略仅对browser.open/act/close关闭跨新operation复用，保留同call幂等和未知阻断。Kuhn独审与实派发计数回归通过，不修改目录或其他业务写入策略。
+
+第五安装G重启后新open仍unknown且无具体阶段证据，增加既有公开events的固定阶段/错误诊断，不改未知结算。真实隔离子进程退出留下profile ownership后，旧lease Cleanup证明OS停止、attempt2 Open仍失败；扩vendor profile.rs精确profile恢复API及测试。只在原lease已有可信停止证明并再次核验owner/browser均Missing、树absent时清已过期的精确ownership marker；PID复用/活owner/损坏记录保持拒绝，不发信号、不扫描或删除profile数据，独审后实施。该隔离红测不直接等同安装G确诊。
+
+原99第五CLI确定缺EXECUTION_CLAIM；对初版Native文件host以来历史核验claim先提交后派发，并严格绑定冻结files.edit定义/模型提案/输入摘要。方案独审允许新增派发前恢复：task锁内保存不可变旧unknown快照，再使原call可重新准入；公开readmitted不代表已写入（版本/hash/size为空），保持paused、不自动唤醒，其他pending/有claim/旧同参数候选均不解锁。与已派发的文件journal协议A分离，不实现B。
+
+综合安装task256真实遭RedFox额度耗尽，错误已如实返回；模型错误将失败查询记成功并在plan.update循环。现有通用拒绝不指具体step，新增确定性诊断只指明本任务错误stepId、operationRef和回执状态及合法状态/重规划规则，保留成功判据、不自动改写计划、不替模型决定跳过。原任务已公开暂停，补回归后沿原ID继续，RedFox额度不足不伪造网络查询成功或擅自充值。

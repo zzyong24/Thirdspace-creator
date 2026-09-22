@@ -4814,6 +4814,87 @@ fn record_unresolved_recovery_scan_errors(
     }
 }
 
+/// Bounded outcome of exact stopped-profile ownership recovery.
+#[cfg(unix)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StoppedProfileOwnershipRecovery {
+    Unowned,
+    Recovered,
+    Unverified,
+}
+
+/// Recover only the fixed ownership records of one trusted canonical profile.
+/// The caller must already hold its original lease's stop/launch exclusion gate.
+/// This never scans descendants, signals processes, or removes profile data.
+#[cfg(unix)]
+pub fn recover_stopped_profile_ownership(profile: &Path) -> StoppedProfileOwnershipRecovery {
+    recover_stopped_profile_ownership_with(profile, &mut SystemProcessControl)
+}
+
+#[cfg(unix)]
+fn recover_stopped_profile_ownership_with(
+    profile: &Path,
+    control: &mut dyn ProcessControl,
+) -> StoppedProfileOwnershipRecovery {
+    let mut recover = || -> Result<StoppedProfileOwnershipRecovery, String> {
+        let parent = profile.parent().ok_or("profile has no parent")?;
+        if std::fs::canonicalize(parent).map_err(|_| "unverified parent")? != parent {
+            return Err("profile parent is not canonical".into());
+        }
+        match std::fs::symlink_metadata(profile) {
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(StoppedProfileOwnershipRecovery::Unowned);
+            }
+            Err(_) => return Err("unverified profile".into()),
+            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
+                return Err("profile is not a regular directory".into());
+            }
+            Ok(_) => {}
+        }
+        let claim = ProfileOperationClaim::acquire(profile)?;
+        if claim.profile_dir != profile {
+            return Err("profile is not canonical".into());
+        }
+        claim.validates(profile)?;
+        let mut marked = false;
+        for path in [ownership_marker_path(profile), committed_ownership_record_path(profile)] {
+            match std::fs::symlink_metadata(path) {
+                Ok(_) => marked = true,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(_) => return Err("ownership record presence unverified".into()),
+            }
+        }
+        if !marked {
+            claim.validates(profile)?;
+            return Ok(StoppedProfileOwnershipRecovery::Unowned);
+        }
+        let records = read_ownership_record_set(profile)?;
+        let marker = &records.active;
+        for identity in [&marker.owner_app, &marker.browser] {
+            if !matches!(control.lookup(identity.pid), ProcessLookup::Missing)
+                || !control.confirm_tree_absent(identity)?
+            {
+                return Err("ownership process absence unverified".into());
+            }
+        }
+        for identity in [&marker.owner_app, &marker.browser] {
+            if !matches!(control.lookup(identity.pid), ProcessLookup::Missing) {
+                return Err("ownership process identity changed".into());
+            }
+        }
+        claim.validates(profile)?;
+        let current = read_ownership_record_set(profile)?;
+        if current.active != records.active || current.active_path != records.active_path
+            || current.provisional_predecessor != records.provisional_predecessor
+        {
+            return Err("ownership records changed".into());
+        }
+        cleanup_recovered_profile(profile, &claim, ProfileRecoveryMode::PreserveStableProfile, marker)?;
+        Ok(StoppedProfileOwnershipRecovery::Recovered)
+    };
+    recover().unwrap_or(StoppedProfileOwnershipRecovery::Unverified)
+}
+
 /// Recover marker-owned browser processes below one application-owned root.
 ///
 /// This function never uses directory mtime. Unmarked, malformed, live-owner,
@@ -5821,6 +5902,115 @@ mod tests {
             terminate_identities: Vec::new(),
             absence_identities: Vec::new(),
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn exact_stopped_ownership_recovers_only_fixed_records_and_preserves_data() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let profile = root.join("target");
+        let adjacent = root.join("other-task");
+        write_test_marker(&profile, identity(101, "old-app"), identity(102, "old-browser"));
+        write_test_marker(&adjacent, identity(103, "other-app"), identity(104, "other-browser"));
+        let adjacent_marker = std::fs::read(ownership_marker_path(&adjacent)).unwrap();
+        std::fs::write(profile.join("Cookies"), b"existing-data").unwrap();
+        // A nested malformed marker is not part of this exact recovery scope.
+        std::fs::create_dir(profile.join("nested")).unwrap();
+        std::fs::write(profile.join("nested").join(OWNERSHIP_MARKER_FILE), b"untouched").unwrap();
+        let mut control = fake_control(identity(999, "current"), HashMap::new());
+        assert_eq!(recover_stopped_profile_ownership_with(&profile, &mut control), StoppedProfileOwnershipRecovery::Recovered);
+        assert_eq!(std::fs::read(profile.join("Cookies")).unwrap(), b"existing-data");
+        assert_eq!(std::fs::read(profile.join("nested").join(OWNERSHIP_MARKER_FILE)).unwrap(), b"untouched");
+        assert_eq!(std::fs::read(ownership_marker_path(&adjacent)).unwrap(), adjacent_marker);
+        assert_eq!(recover_stopped_profile_ownership_with(&profile, &mut control), StoppedProfileOwnershipRecovery::Unowned);
+        assert_eq!(control.terminate_calls, 0);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn exact_stopped_ownership_preserves_live_reused_unverified_and_corrupt_records() {
+        for case in ["live-owner", "live-browser", "reused-owner", "reused-browser", "unverified", "tree-present", "corrupt", "symlink"] {
+            let tmp = tempfile::TempDir::new().unwrap();
+            let profile = tmp.path().canonicalize().unwrap().join("target");
+            let owner = identity(101, "old-app");
+            let browser = identity(102, "old-browser");
+            write_test_marker(&profile, owner.clone(), browser.clone());
+            let mut control = fake_control(identity(999, "current"), HashMap::new());
+            match case {
+                "live-owner" => { control.processes.insert(owner.pid, ProcessLookup::Found(owner)); }
+                "live-browser" => { control.processes.insert(browser.pid, ProcessLookup::Found(browser)); }
+                "reused-owner" => { control.processes.insert(owner.pid, ProcessLookup::Found(identity(owner.pid, "replacement"))); }
+                "reused-browser" => { control.processes.insert(browser.pid, ProcessLookup::Found(identity(browser.pid, "replacement"))); }
+                "unverified" => { control.processes.insert(owner.pid, ProcessLookup::Unverified("unavailable".into())); }
+                "tree-present" => control.absence_result = Ok(false),
+                "corrupt" => std::fs::write(ownership_marker_path(&profile), b"broken").unwrap(),
+                "symlink" => {
+                    let original = profile.join("original");
+                    std::fs::rename(ownership_marker_path(&profile), &original).unwrap();
+                    std::os::unix::fs::symlink(&original, ownership_marker_path(&profile)).unwrap();
+                }
+                _ => unreachable!(),
+            }
+            let before = std::fs::read(ownership_marker_path(&profile)).unwrap();
+            assert_eq!(recover_stopped_profile_ownership_with(&profile, &mut control), StoppedProfileOwnershipRecovery::Unverified, "{case}");
+            assert_eq!(std::fs::read(ownership_marker_path(&profile)).unwrap(), before, "{case}");
+            assert_eq!(control.terminate_calls, 0, "{case}");
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn exact_stopped_ownership_rechecks_records_after_process_absence() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let profile = tmp.path().canonicalize().unwrap().join("target");
+        let marker = write_test_marker(&profile, identity(101, "old-app"), identity(102, "old-browser"));
+        let mut replacement = marker;
+        replacement.app_instance_id = nomifun_common::generate_id();
+        let mut control = SequencedLookupControl {
+            current: identity(999, "current"), lookups: Default::default(),
+            terminate_calls: 0, absence_calls: 0, terminate_identities: vec![], absence_identities: vec![],
+            absence_result: Ok(true), replace_marker_on_absence: Some((profile.clone(), replacement.clone())),
+        };
+        assert_eq!(recover_stopped_profile_ownership_with(&profile, &mut control), StoppedProfileOwnershipRecovery::Unverified);
+        assert_eq!(read_ownership_record_set(&profile).unwrap().active, replacement);
+        assert_eq!(control.terminate_calls, 0);
+        let link = profile.with_file_name("linked-profile");
+        std::os::unix::fs::symlink(&profile, &link).unwrap();
+        assert_eq!(recover_stopped_profile_ownership_with(&link, &mut control), StoppedProfileOwnershipRecovery::Unverified);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn exact_stopped_ownership_preserves_replaced_directory() {
+        struct ReplaceDirectory {
+            profile: PathBuf,
+            moved: PathBuf,
+            swapped: bool,
+        }
+        impl ProcessControl for ReplaceDirectory {
+            fn current_process(&mut self) -> Result<ProcessIdentity, String> { Ok(identity(999, "current")) }
+            fn lookup(&mut self, _: u32) -> ProcessLookup { ProcessLookup::Missing }
+            fn confirm_tree_absent(&mut self, _: &ProcessIdentity) -> Result<bool, String> {
+                if !self.swapped {
+                    std::fs::rename(&self.profile, &self.moved).unwrap();
+                    std::fs::create_dir(&self.profile).unwrap();
+                    std::fs::copy(ownership_marker_path(&self.moved), ownership_marker_path(&self.profile)).unwrap();
+                    self.swapped = true;
+                }
+                Ok(true)
+            }
+            fn terminate_tree(&mut self, _: &ProcessIdentity) -> Result<(), String> { panic!("must never signal") }
+        }
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        let profile = root.join("target");
+        write_test_marker(&profile, identity(101, "old-app"), identity(102, "old-browser"));
+        let original = std::fs::read(ownership_marker_path(&profile)).unwrap();
+        let mut control = ReplaceDirectory { profile: profile.clone(), moved: root.join("old-target"), swapped: false };
+        assert_eq!(recover_stopped_profile_ownership_with(&profile, &mut control), StoppedProfileOwnershipRecovery::Unverified);
+        assert_eq!(std::fs::read(ownership_marker_path(&profile)).unwrap(), original);
+        assert_eq!(std::fs::read(ownership_marker_path(&control.moved)).unwrap(), original);
     }
 
     #[cfg(not(windows))]

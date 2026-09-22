@@ -322,7 +322,7 @@ export function createPersistentTaskService(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
-      if (Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
+      if (Object.hasOwn(input.payload, "filePredispatchRecoveries") || Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
         throw new ExecutionValidationError("宿主运行字段不能由入队请求指定");
       }
       const maxAttempts = input.maxAttempts ?? 3;
@@ -404,6 +404,7 @@ export function createPersistentTaskService(
       // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
       const existingRequestPayload = {...asPayload(existing?.payload)};
       delete existingRequestPayload.modelIdentity;
+      delete existingRequestPayload.filePredispatchRecoveries;
       delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
       delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
       delete existingRequestPayload.__scheduledChild;
