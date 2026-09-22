@@ -36,11 +36,11 @@ it("聊天完成端口只接收账本引用，拒绝自报消息、身份和终�
 });
 
 import {chatSubmittedTaskType} from "../src/internal/execution-worker";
-it.each([["planning.thesis","planning.thesis"],["material.generate","asset.generate"]])("%s 只映射明确的原子子任务类型",(name,taskType)=>{
+it.each([["planning.thesis","planning.thesis"],["material.generate","asset.generate"],["cover.generate","cover.generate"]])("%s 只映射明确的原子子任务类型",(name,taskType)=>{
  expect(chatSubmittedTaskType(name)).toBe(taskType);
  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version:"v1",description:"test",parameters:{type:"object"},effect:"committed",execution:"host.task-submit"}]}).success).toBe(true);
 });
-it.each(["asset.generate","cover.generate","arbitrary.task","__proto__","constructor"])("%s 不能冒充已迁移的事务工具",name=>{
+it.each(["asset.generate","arbitrary.task","__proto__","constructor"])("%s 不能冒充已迁移的事务工具",name=>{
  expect(chatSubmittedTaskType(name)).toBeNull();
  expect(chatWorkerInputSchema.safeParse({...input,tools:[{name,version:"v1",description:"test",parameters:{type:"object"},effect:"committed",execution:"host.task-submit"}]}).success).toBe(false);
 });

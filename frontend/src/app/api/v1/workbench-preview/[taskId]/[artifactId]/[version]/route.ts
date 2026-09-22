@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { createHash } from "node:crypto";
+import {createWorkbenchArtifactRepresentation,WorkbenchArtifactFormatError} from "@/server/workbench-artifact-representation";
 import { readSessionCookie } from "@/app/api/v1/auth/_session";
 import { isAuthError, isOwnershipError, readRequestAccountId, resolveRequestContext } from "@/lib/request-context.server";
 import { isTrustedLocalRequest, loopbackForbidden } from "@/lib/loopback-guard.server";
 import { getWorkbenchPreviewRuntime } from "@/server/persistence-client";
-import { readRegisteredWorkbenchPreview, renderRegisteredHtmlPreview, MAX_WORKBENCH_RAW_BYTES, WorkbenchPreviewIntegrityError, WorkbenchPreviewTooLargeError } from "@/server/workbench-preview-read";
+import { WorkbenchPreviewIntegrityError, WorkbenchPreviewTooLargeError } from "@/server/workbench-preview-read";
 import { WORKBENCH_PREVIEW_RESPONSE_CSP } from "@/server/workbench-preview-policy";
-import { renderTrustedWorkbenchHtml, WorkbenchHtmlRenderError } from "@/server/workbench-artifact-render";
+import { WorkbenchHtmlRenderError } from "@/server/workbench-artifact-render";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +27,6 @@ const EXTENSION: Record<string, string> = {
   "image/png": "png", "application/pdf": "pdf",
 };
 
-/** 只生成建议名；绝不把产物相对路径当作磁盘导出路径。 */
-function suggestedFilename(relativePath: string, mime: string, version: number): string {
-  const last = relativePath.split(/[/\\]/).at(-1) ?? "";
-  const stem = last.replace(/\.[^.]+$/, "").replace(/[\x00-\x1f\x7f<>:"|?*]/g, "_").trim().slice(0, 100);
-  return `${stem || `artifact-${version}`}.${EXTENSION[mime]}`;
-}
 
 function failure(status: number, message: string): Response {
   return NextResponse.json({ error: message }, { status, headers: COMMON_HEADERS });
@@ -72,52 +66,29 @@ export async function GET(
 
   try {
     const port = await getWorkbenchPreviewRuntime();
-    const result = await readRegisteredWorkbenchPreview(
-      port, ctx, taskId, artifactId, version,
-      raw ? MAX_WORKBENCH_RAW_BYTES : undefined,
-    );
-    if ((format === "png" || format === "pdf") && result.metadata.mime !== "text/html") {
-      return failure(415, "仅 HTML 产物支持 PNG/PDF 导出");
-    }
-    let sourceHtml: string | null = null;
-    if (result.metadata.mime === "text/html" && !raw) {
-      try {
-        sourceHtml = format === "png" || format === "pdf"
-          ? new TextDecoder("utf-8", { fatal: true }).decode(result.bytes)
-          : Buffer.from(result.bytes).toString("utf8");
-      } catch {
-        return failure(422, "HTML 字节不是有效 UTF-8，无法导出");
-      }
-    }
-    const sourceHash = result.metadata.hash;
-    const safeHtml = sourceHtml !== null
-      ? await renderRegisteredHtmlPreview(port, ctx, taskId, result.metadata,
-        sourceHtml)
-      : null;
-    const bytes = format === "png" || format === "pdf"
-      ? await renderTrustedWorkbenchHtml({ html: safeHtml!, format })
-      : safeHtml === null ? result.bytes : Buffer.from(safeHtml, "utf8");
-    const mime = format === "png" ? "image/png" : format === "pdf" ? "application/pdf" : result.metadata.mime;
-    const contentType = !raw && (mime === "text/markdown" || mime === "text/csv")
-      ? "text/plain; charset=utf-8"
-      : mime.startsWith("text/") ? `${mime}; charset=utf-8` : mime;
-    const filename = suggestedFilename(result.metadata.relativePath, mime, version);
+    const representation=await createWorkbenchArtifactRepresentation(port,ctx,taskId,artifactId,version,format as "raw"|"png"|"pdf"|undefined);
+    const {mime,filename,hash,sourceHash,size}=representation;
+    const bytes=Buffer.from(representation.data,"base64");
+    const contentType=!raw && (mime==="text/markdown"||mime==="text/csv") ? "text/plain; charset=utf-8" : mime.startsWith("text/") ? `${mime}; charset=utf-8` : mime;
     return new Response(Uint8Array.from(bytes).buffer, {
       status: 200,
       headers: {
         ...COMMON_HEADERS,
         "Content-Type": contentType,
-        "Content-Length": String(bytes.byteLength),
+        "Content-Length": String(size),
         "Content-Disposition": `inline; filename="artifact-${version}.${EXTENSION[mime]}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         "X-Workbench-Mime": mime,
         "X-Workbench-Filename": encodeURIComponent(filename),
-        "X-Workbench-Hash": createHash("sha256").update(bytes).digest("hex"),
-        "X-Workbench-Size": String(bytes.byteLength),
+        "X-Workbench-Hash": hash,
+        "X-Workbench-Size": String(size),
         "X-Workbench-Source-Hash": sourceHash,
+        "X-Workbench-Renderer-Policy": representation.rendererPolicy,
+        "X-Workbench-Degraded": String(representation.diagnostics.degraded),
       },
     });
   } catch (error) {
     if (isOwnershipError(error)) return failure(404, "产物不存在");
+    if (error instanceof WorkbenchArtifactFormatError) return failure(415, "仅 HTML 产物支持 PNG/PDF 导出");
     if (error instanceof WorkbenchPreviewTooLargeError) return failure(413, "产物超过读取大小上限");
     if (error instanceof WorkbenchPreviewIntegrityError) return failure(409, "产物预览校验失败");
     if (error instanceof WorkbenchHtmlRenderError) {

@@ -1,3 +1,6 @@
+import {createWorkbenchPublicService,createWorkbenchPublicTransport,createWorkbenchPublicStreamService,WORKBENCH_OP_IDS} from "@creatoros/backend/modules/execution";
+import {selectBuiltinWorkbenchCapabilities,workbenchBuiltins,workbenchDependencyLock} from "./workbench-builtin-manifest";
+import {createWorkbenchArtifactRepresentation} from "./workbench-artifact-representation";
 import {createOperationsSyncCollector} from '@creatoros/backend/application/collection/operations-sync';
 import {hostBrowserShutdownScope} from '@creatoros/ai-worker/browser/browser-shutdown-scope';
 import {createBrowserHostDisposer} from './browser-host-dispose';
@@ -3430,8 +3433,10 @@ dispatchIntelligenceRun});
 
   // live dispatch 范式(MEMORY 铁律):create 落 queued 后 fire-and-forget 后台编排,
   // HTTP 立即返回,UI 轮询 execution.tasks.get / ai.tasks.steps.list。
+  let workbenchPublic:Transport;
   const execution: Transport = {
     async request(endpoint, input, ctx) {
+      if((WORKBENCH_OP_IDS as readonly string[]).includes(endpoint.id))return workbenchPublic.request(endpoint,input,ctx);
       const res = await executionBase.request(endpoint, input, ctx);
       if(endpoint.id==="execution.tasks.command")recoveryWake?.wake();
       if (endpoint.id === "execution.tasks.create" && ctx) {
@@ -5442,7 +5447,7 @@ FAVORITES_PROMOTE_PER_RUN
   const workbenchPreviewRuntime=createWorkbenchArtifactReadService(db,{blobs:workbenchBlobs,now:deps.now});
   const artifactWorkbenchHost=fileWorkbenchHost?createWorkbenchArtifactHost(db,{now:deps.now,blobs:workbenchBlobs}):undefined;
   const artifactReconciler=startWorkbenchArtifactReconciler(db,createWorkbenchArtifactService(db,{blobs:workbenchBlobs,now:deps.now}),{
-    afterReconciled:async()=>{await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true});},
+    afterReconciled:async(taskId)=>{await persistentTaskService.recoverExpiredLeases({includeSafeUnknownResults:true,taskId});recoveryWake?.wake();},
     onError:()=>{},
   });
   stopWorkbenchArtifactReconciler=()=>artifactReconciler.stop();
@@ -5469,6 +5474,12 @@ FAVORITES_PROMOTE_PER_RUN
       await host?.markUnknown?.(call,input);
     },
   }:undefined;
+  workbenchPublic=createWorkbenchPublicTransport({
+    tasks:createWorkbenchPublicService(db),stream:createWorkbenchPublicStreamService(db),artifacts:workbenchPreviewRuntime,
+    capabilities:()=>({platform:workbenchHost?.platform??null,capabilities:selectBuiltinWorkbenchCapabilities(workbenchHost),builtins:workbenchBuiltins,dependencyLock:workbenchDependencyLock}),
+    render:(ctx,taskId,artifactId,version,format)=>createWorkbenchArtifactRepresentation(workbenchPreviewRuntime,ctx,taskId,artifactId,version,format),
+    reconcile:artifactReconciler.reconcile,
+  });
   const chatRuntime: ChatRuntime = {
     ...(workbenchHost?{workbenchHost}:{}),
     resolveRedfoxCredential: ctx => redfoxCredentials.resolve(ctx),

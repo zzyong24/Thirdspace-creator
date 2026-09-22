@@ -61,7 +61,7 @@ const METHODS = {
  report: `【研究、写作与离线报告交付】
 先理解用户要回答的问题、读者、时间范围和交付格式，按当前任务可用工具选择必要步骤。能直接读取的真实账号数据与用户资料先读；需要外部证据时检索并读原文，记录来源、日期、统计口径和不确定性。缺项保持空值或说明缺口，不补造数字、案例、引文或图片。
 把研究结论与写稿组织成可编辑的 Markdown、CSV 或 HTML 文件。图表的数值必须能对应已核对的数据；没有数值就改用文字或表格。HTML 使用静态 CSS、内联 SVG/data 图片或同任务已登记的相对 PNG，保证离线可阅读；不依赖远程 CDN、活动脚本或未登记的本机文件。优先让基础内容可交付，可选图层、截图或排版检查失败时修正或降级，不取消可用正文。
-用当前任务文件工具写入或按版本编辑，回读核对内容、来源和图表数字，再登记真实文件版本。登记成功后的 artifactId、version 与哈希才是交付依据；工作目录里的未登记文件不能声称已经交付。用户提出“把第二部分精简、换柱状图”等反馈时，先核对本轮能否回读原产物与源数据；只有当前任务拥有旧版且实际回读后，才能在其上登记新版本并保留旧版。跨任务读不到旧版时说明具体缺口，不复用旧回执冒充新文件。导出位置由用户在桌面端选择；保存取消不算成功。能力缺失时明确指出不可执行的环节，同时交付已完成且可核验的部分。`,
+用当前任务文件工具写入或按版本编辑，回读核对内容、来源和图表数字，再登记真实文件版本。登记成功后必须检查 rendererPolicy 和 diagnostics；static-offline-v1 的预览、PNG/PDF 不执行脚本或加载外网资源。diagnostics.status=unavailable 表示未完成核验；degraded=true 时不能仅说成功，必须在当前 agent loop 中回读原版和源数据，核对动态图表是否有完整静态后备。结构计数不能代替这个判断。若无后备，保留原版和可用正文，以纯 SVG/CSS/静态表格生成下一版本，逐项验证数值与来源，再登记并验证预览、PNG/PDF；安全的现有输出继续交付。登记成功后的 artifactId、version 与哈希才是交付依据；工作目录里的未登记文件不能声称已经交付。用户提出“把第二部分精简、换柱状图”等反馈时，先核对本轮能否回读原产物与源数据；只有当前任务拥有旧版且实际回读后，才能在其上登记新版本并保留旧版。跨任务读不到旧版时说明具体缺口，不复用旧回执冒充新文件。导出位置由用户在桌面端选择；保存取消不算成功。能力缺失时明确指出不可执行的环节，同时交付已完成且可核验的部分。`,
 } as const;
 type Method = keyof typeof METHODS;
 /** 纯方法的用途说明也是冻结方法正文的一部分；目录无需猜测正文语义。 */
@@ -85,7 +85,7 @@ function methodBody(method: Method): string {
 }
 export const BUSINESS_METHOD_TEMPLATES: readonly PromptTemplate[] = (Object.keys(METHODS) as Method[]).map(method => ({
  id: `method.${method}`,
- version: method === 'report' ? 'workbench-report-2026-09-20' : BUSINESS_METHOD_VERSION,
+ version: method === 'report' ? 'workbench-report-2026-09-21-diagnostics' : BUSINESS_METHOD_VERSION,
  system: `${METHODS[method].split('\n')[0]}\n用途：${METHOD_PURPOSES[method]}\n\n${methodBody(method)}`,
  template: '按当前意图使用本方法；只使用本轮实际工具与已知内容，产出仍遵守调用节点的原契约。',
  requiredFacets: [],

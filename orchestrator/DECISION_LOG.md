@@ -3747,3 +3747,9 @@ Nonce: ef51bc98-82f0-463f-b6bb-ecde96654645
 Owner: user
 Status: active
 ```
+
+## DEC-T1026-CLI（2026-09-21）公开验收入口
+
+用户明确要求所有新增功能可通过 CLI 验证，授权补齐缺失入口、修复问题和本机覆盖安装。增加 `workbench.tasks.inspect/events`、`workbench.capabilities.list`、`workbench.artifacts.list/read/render/reconcile`；CLI 导出仅写用户指定本地路径并校验 SHA-256。复用现有账号鉴权、持久任务、产物服务及预览渲染，不增加执行权或数据库归属。
+
+独立审查（Wegener，本轮实际发生）认可方向，指出读取隐式迁移、对账重试/跨任务回收、锁顺序和计划产物校验死锁；本任务修复并验证这些合入条件。只读入口不迁移账本，原操作对账可重复回读，恢复只限定目标任务。HTML 诊断报告实际降级，登记成功不等于图表完整。历史未验收项目继续保留缺口，Windows 无实机不得记 PASS。

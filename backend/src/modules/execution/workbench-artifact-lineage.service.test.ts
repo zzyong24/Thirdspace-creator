@@ -1,14 +1,16 @@
 import {afterAll,beforeAll,expect,it} from "vitest";
 import {createHash,randomUUID} from "node:crypto";
-import {createDb,aiMessages,executionCalls,executionTasks,workbenchArtifactLineages,eq,type Db} from "@creatoros/backend";
+import {drizzle} from "drizzle-orm/pglite";
+import {createDb,aiMessages,executionCalls,executionTasks,workbenchArtifactLineages,workbenchArtifactLineageVersions,eq,type Db} from "@creatoros/backend";
 import {createAiRepository,createChatTurnSubmissionService} from "../ai";
 import {createPersistentTaskService} from "./persistent-task.service";
-import {createWorkbenchArtifactService} from "./workbench-artifact.service";
+import {createWorkbenchArtifactService,createWorkbenchArtifactReadService} from "./workbench-artifact.service";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 import {startWorkbenchArtifactReconciler} from "./workbench-artifact-reconciler";
 
 let db:Db,close:()=>Promise<void>;
-beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
+const queries:string[]=[];
+beforeAll(async()=>{const opened=await createDb();db=drizzle(opened.client,{logger:{logQuery(query){queries.push(query);}}}) as Db;close=()=>opened.client.close();});
 afterAll(async()=>close?.());
 
 const sha=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
@@ -141,8 +143,10 @@ it("HTML 冻结登记时的精确图片版本，同路径图片后来更新也�
  const image2Call=await f.operation(turn.taskId,turn.ref,3);f.files.set(`${turn.taskId}:报告/chart.png`,{bytes:image2,version:2});
  const png2=await f.service.register(turn.ref,image2Call.operationId,{path:"报告/chart.png",mime:"image/png",artifactId:png1.artifactId,
   expectedVersion:1,baseArtifactRef:{artifactId:png1.artifactId,version:1}});await f.finish(image2Call,png2);
- const frozen=await f.service.readRelativeImage(f.ctx,turn.taskId,"报告/chart.png",html);
+ const before=await artifactDatabaseSnapshot();
+ const frozen=await readOnlyFor(f).readRelativeImage(f.ctx,turn.taskId,"报告/chart.png",html);
  expect(Buffer.from(frozen!.bytes)).toEqual(image1);expect(frozen!.metadata.version).toBe(1);
+ expect(await artifactDatabaseSnapshot()).toEqual(before);
 });
 
 it("Blob 已准备但正式结算未知时保持占位，版本列表不把它伪装成完成版",async()=>{
@@ -213,4 +217,122 @@ it("权威无 Blob 需在旧 writer 失权后复核两次，才以 confirmedNoCo
  expect(call?.status).toBe("settled");expect(receipt.output).toMatchObject({status:"error",sideEffect:"none",data:{workbench:{status:"failed",error:{dispatched:true,confirmedNoCommit:true}}}});
  const retry=await f.turn("重新修订");f.files.set(`${retry.taskId}:失败.md`,{bytes:Buffer.from("安全重试"),version:1});
  const recovered=await f.service.register(retry.ref,retry.operationId,{path:"失败.md",mime:"text/markdown",artifactId:pending.artifactId,expectedVersion:0});expect(recovered.version).toBe(1);
+});
+
+function readOnlyFor(f:Awaited<ReturnType<typeof fixture>>){
+ return createWorkbenchArtifactReadService(db,{blobs:{
+  async submit(){throw new Error("只读端口不得提交对象");},
+  async read(_ctx,input){
+   await db.select({id:executionTasks.id}).from(executionTasks).limit(1);
+   const bytes=f.objects.get(`${input.taskId}:${input.operationId}:${input.hash}`);
+   if(!bytes)throw new Error("BLOB_NOT_FOUND");return new Uint8Array(bytes);
+  },
+ }});
+}
+async function artifactDatabaseSnapshot(){
+ return {
+  tasks:await db.select().from(executionTasks),calls:await db.select().from(executionCalls),
+  lineages:await db.select().from(workbenchArtifactLineages),versions:await db.select().from(workbenchArtifactLineageVersions),
+ };
+}
+
+it("T1026 只读列表及跨回合字节读取兼容 legacy，不迁移或结算原调用",async()=>{
+ const f=await fixture(),old=await legacyArtifact(f,"只读旧版","原字节","started"),current=await f.turn("只读新回合"),reader=readOnlyFor(f);
+ const before=await artifactDatabaseSnapshot();
+ const listed=await reader.listConversation(f.ctx,f.conversation.id,{limit:1});
+ const taskListed=await reader.versions(f.ctx,current.taskId,{limit:1});
+ const page=await reader.read(f.ctx,current.taskId,old.metadata.artifactId,1,0,100);
+ const all=await reader.readAll(f.ctx,current.taskId,old.metadata.artifactId,1);
+ expect(await artifactDatabaseSnapshot()).toEqual(before);
+ expect(listed.legacyItems).toEqual([expect.objectContaining({artifactId:old.metadata.artifactId,status:"legacyReadOnly"})]);
+ expect(taskListed.items).toEqual([]);
+ expect(Buffer.from(page.bytes).toString()).toBe("原字节");expect(all.metadata).toEqual(old.metadata);
+ await expect(reader.readAll({...f.ctx,accountId:"other"},current.taskId,old.metadata.artifactId,1)).rejects.toThrow();
+ const other=await f.repo.createConversation({title:"不可串会话",projectId:null,scope:"global"}),foreign=await f.turn("另一会话",other.id);
+ await expect(reader.readAll(f.ctx,foreign.taskId,old.metadata.artifactId,1)).rejects.toThrow();
+ await expect(reader.listConversation({...f.ctx,accountId:"other"},f.conversation.id,{limit:1})).rejects.toThrow();
+ // 既有写工作流仍可迁移并结算，不能由只读修复悄悄移除。
+ await f.service.versions(f.ctx,current.taskId,{limit:50});
+ const [call]=await db.select().from(executionCalls).where(eq(executionCalls.id,old.turn.operationId));expect(call?.status).toBe("settled");
+});
+
+it("T1026 只读列表混合新旧版本分页，坏 Blob 不伪装为旧版可读产物",async()=>{
+ const f=await fixture(),a=await legacyArtifact(f,"旧 A","A","settled"),b=await legacyArtifact(f,"旧 B","B","mismatch"),missing=await legacyArtifact(f,"旧缺字节","缺失","started");
+ f.objects.delete(`${missing.turn.taskId}:${missing.turn.operationId}:${missing.metadata.hash}`);
+ const turn=await f.turn("新版"),reader=readOnlyFor(f);f.files.set(`${turn.taskId}:新.md`,{bytes:Buffer.from("新"),version:1});
+ const current=await f.service.register(turn.ref,turn.operationId,{path:"新.md",mime:"text/markdown"});await f.finish(turn,current);
+ const before=await artifactDatabaseSnapshot(),seen:string[]=[];let cursor:string|undefined,firstCursor:string|undefined;
+ do{
+  const page=await reader.listConversation(f.ctx,f.conversation.id,{limit:1,...(cursor?{cursor}:{})});
+  const items=[...page.items,...page.legacyItems];expect(items.length).toBeLessThanOrEqual(1);
+  seen.push(...items.map(item=>item.artifactId));cursor=page.nextCursor??undefined;firstCursor??=cursor;
+ }while(cursor);
+ expect(await artifactDatabaseSnapshot()).toEqual(before);
+ expect(seen.sort()).toEqual([a.metadata.artifactId,b.metadata.artifactId,current.artifactId].sort());
+ await expect(reader.listConversation(f.ctx,f.conversation.id,{limit:1,cursor:firstCursor,artifactId:a.metadata.artifactId})).rejects.toThrow("游标");
+ await expect(reader.readAll(f.ctx,turn.taskId,missing.metadata.artifactId,1)).rejects.toThrow("BLOB_NOT_FOUND");
+});
+
+it("T1026 对账按原 operationId 重读成功版本，后续版本和新占位不改变旧结果",async()=>{
+ const f=await fixture(),first=await f.turn("对账第一版");f.files.set(`${first.taskId}:报告.md`,{bytes:Buffer.from("一"),version:1});
+ const v1=await f.service.register(first.ref,first.operationId,{path:"报告.md",mime:"text/markdown"});
+ const reconciler=startWorkbenchArtifactReconciler(db,f.service,{startImmediately:false,intervalMs:60_000});
+ try{
+  const firstResult=await reconciler.reconcile(f.ctx,f.conversation.id,first.operationId);
+  expect(firstResult).toMatchObject({artifactId:v1.artifactId,status:"committed",lastErrorCode:null});
+  expect(await reconciler.reconcile(f.ctx,f.conversation.id,first.operationId)).toEqual(firstResult);
+  const second=await f.turn("对账第二版");f.files.set(`${second.taskId}:报告.md`,{bytes:Buffer.from("二"),version:1});
+  const v2=await f.service.register(second.ref,second.operationId,{path:"报告.md",mime:"text/markdown",artifactId:v1.artifactId,expectedVersion:1,baseArtifactRef:{artifactId:v1.artifactId,version:1}});
+  expect(await reconciler.reconcile(f.ctx,f.conversation.id,first.operationId)).toEqual(firstResult);
+  await f.finish(second,v2);
+  const before=await artifactDatabaseSnapshot();
+  expect(await reconciler.reconcile(f.ctx,f.conversation.id,first.operationId)).toEqual(firstResult);
+  expect(await artifactDatabaseSnapshot()).toEqual(before);
+  await expect(reconciler.reconcile({...f.ctx,accountId:"other"},f.conversation.id,first.operationId)).rejects.toThrow();
+  const other=await f.repo.createConversation({title:"另一会话",projectId:null,scope:"global"});
+  await expect(reconciler.reconcile(f.ctx,other.id,first.operationId)).rejects.toThrow();
+ }finally{reconciler.stop();}
+});
+
+it("T1026 PGlite 对账领取的真实 SQL 先锁任务再锁谱系",async()=>{
+ const f=await fixture(),turn=await f.turn("锁顺序");f.files.set(`${turn.taskId}:报告.md`,{bytes:Buffer.from("锁顺序"),version:1});
+ await f.service.register(turn.ref,turn.operationId,{path:"报告.md",mime:"text/markdown"});
+ const reconciler=startWorkbenchArtifactReconciler(db,f.service,{startImmediately:false,intervalMs:60_000});
+ try{
+  const start=queries.length;await reconciler.reconcile(f.ctx,f.conversation.id,turn.operationId);
+  const locks=queries.slice(start).filter(query=>query.includes('for update'));
+  expect(locks[0]).toContain('from "execution_tasks"');
+  expect(locks[1]).toContain('from "workbench_artifact_lineages"');
+ }finally{reconciler.stop();}
+});
+
+it("T1026 并发对账只领取原操作一次，成功重放不重复触发恢复回调",async()=>{
+ const f=await fixture(),turn=await f.turn("并发对账");f.files.set(`${turn.taskId}:报告.md`,{bytes:Buffer.from("并发"),version:1});
+ await f.service.register(turn.ref,turn.operationId,{path:"报告.md",mime:"text/markdown"});
+ let entered!:()=>void,release!:()=>void,calls=0,recovered=0;
+ const started=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});
+ const reconciler=startWorkbenchArtifactReconciler(db,{async reconcileArtifactOperation(...args){calls++;entered();await gate;return f.service.reconcileArtifactOperation(...args);}},
+  {startImmediately:false,intervalMs:60_000,afterReconciled:async()=>{recovered++;}});
+ const first=reconciler.reconcile(f.ctx,f.conversation.id,turn.operationId);
+ try{
+  await started;
+  expect(await reconciler.reconcile(f.ctx,f.conversation.id,turn.operationId)).toMatchObject({status:"reconciling"});
+  expect(calls).toBe(1);release();
+  const result=await first;expect(result.status).toBe("committed");
+  expect(await reconciler.reconcile(f.ctx,f.conversation.id,turn.operationId)).toEqual(result);
+  expect(calls).toBe(1);expect(recovered).toBe(1);
+ }finally{release();await first;reconciler.stop();}
+});
+
+it("T1026 旧任务图片只读兼容：原图可取，无冻结清单的 HTML 不猜测图片版本",async()=>{
+ const f=await fixture(),turn=await f.turn("旧图片"),[task]=await db.select().from(executionTasks).where(eq(executionTasks.id,turn.taskId));
+ await db.update(executionTasks).set({payload:{...task!.payload as Record<string,unknown>,artifactProtocolVersion:1}}).where(eq(executionTasks.id,turn.taskId));
+ f.files.set(`${turn.taskId}:报告/chart.png`,{bytes:Buffer.from("旧登记图"),version:1});
+ const png=await f.service.register(turn.ref,turn.operationId,{path:"报告/chart.png",mime:"image/png"});
+ const htmlCall=await f.operation(turn.taskId,turn.ref,2);f.files.set(`${turn.taskId}:报告/index.html`,{bytes:Buffer.from('<img src="./chart.png">'),version:1});
+ const html=await f.service.register(turn.ref,htmlCall.operationId,{path:"报告/index.html",mime:"text/html"}),reader=readOnlyFor(f),before=await artifactDatabaseSnapshot();
+ expect((await reader.readRelativeImage(f.ctx,turn.taskId,"报告/chart.png"))?.metadata).toEqual(png);
+ expect(await reader.readRelativeImage(f.ctx,turn.taskId,"报告/chart.png",html)).toBeNull();
+ expect((await reader.readAll(f.ctx,turn.taskId,html.artifactId,1)).metadata).toEqual(html);
+ expect(await artifactDatabaseSnapshot()).toEqual(before);
 });

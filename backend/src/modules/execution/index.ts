@@ -189,3 +189,6 @@ export {createWorkbenchScreenshotMediaService} from './workbench-screenshot-medi
 
 export {isTaskDrainStopping,type TaskDrainControl} from "./task-drain-control";
 export {createDesktopHostProcessRecovery,type HostProcessRecovery} from './host-browser-process-recovery';
+export {createWorkbenchPublicService} from "./workbench-public.service";
+export {createWorkbenchPublicTransport,WORKBENCH_OP_IDS} from "./workbench-public.transport";
+export {createExecutionStreamService as createWorkbenchPublicStreamService} from "./execution-stream.service";

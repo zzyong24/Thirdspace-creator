@@ -1,5 +1,6 @@
 import "server-only";
-import {randomUUID} from "node:crypto";
+import {createHash,randomUUID} from "node:crypto";
+import {workbenchRendererDiagnostics} from "./workbench-html-diagnostics";
 import type {Db} from "@creatoros/backend";
 import {createExecutionLeaseService,createWorkbenchArtifactService,type WorkbenchArtifactBlobPort} from "@creatoros/backend/modules/execution";
 import type {ChatProductionCompositionDeps} from "@creatoros/backend/modules/ai-runtime";
@@ -100,8 +101,19 @@ export function createWorkbenchArtifactHost(db:Db,options:{platform?:NodeJS.Plat
     try{
      const metadata=await artifacts.register(ref,context.operationId,input.data);
      signal.throwIfAborted();
+     // register 已离开租约事务；只按不可变 operation/hash 回读，不读可变任务路径。
+     // 诊断失败不撤销已完成登记，也不把未知计数伪装为通过。
+     let rendering=workbenchRendererDiagnostics(metadata.mime,metadata.hash);
+     if(metadata.mime==="text/html")try{
+      const bytes=await options.blobs.read({userId:context.userId,accountId:context.accountId,requestId:context.operationId,source:"ai"},
+       {taskId:metadata.taskId,operationId:context.operationId,hash:metadata.hash,mime:"text/html"});
+      if(bytes.byteLength===metadata.size&&createHash("sha256").update(bytes).digest("hex")===metadata.hash)
+       rendering=workbenchRendererDiagnostics(metadata.mime,metadata.hash,bytes);
+     }catch{/* 安全正文与已登记版本继续可交付。 */}
+     signal.throwIfAborted();
+     // 首条正文保持 strict artifact schema 和既有工具 summary；诊断独立附加给 Agent。
      return workbenchResultSchema.parse({operationId:context.operationId,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`],progressCursor:null,
-      content:[{type:"text",text:JSON.stringify(metadata)}]});
+      content:[{type:"text",text:JSON.stringify(metadata)},{type:"text",text:JSON.stringify(rendering)}]});
     }catch(error){
      if(signal.aborted)throw error;
      if(error instanceof NativeFileError&&!error.dispatched)return failed(context.operationId,error.code.toLowerCase());

@@ -1,12 +1,32 @@
 import { isDeepStrictEqual } from "node:util";
+import { createHash } from "node:crypto";
 import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
-import type { ExecutionRef } from "@creatoros/contract/execution-worker";
+import { workbenchArtifactSchema, workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
+import { executionRefSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
 type Step = WorkbenchPlan["steps"][number];
+function artifactsToVerify(step: Step, earlier?: Step): string[] {
+  return step.status === "succeeded" && earlier?.status !== "succeeded"
+    ? step.artifactRefs : step.artifactRefs.filter(ref => !earlier?.artifactRefs.includes(ref));
+}
+function artifactIdentity(payload: unknown, refs: string[]): string {
+  const rows = (payload as Record<string, unknown>).workbenchArtifactVersions;
+  if (!Array.isArray(rows)) throw new ConflictError("步骤引用的产物尚未核实");
+  // SEMANTIC_BOUNDARY_ALLOW: 只比较产物版本、存储定位和登记摘要，不做内容或创作判断。
+  const identities = refs.map(ref => {
+    const match = /^(.+)@([1-9][0-9]*)$/.exec(ref);
+    if (!match) throw new ConflictError("步骤引用的产物尚未核实");
+    const matches = rows.filter(row => row?.metadata?.artifactId === match[1] && row?.metadata?.version === Number(match[2]));
+    const row = matches[0], metadata = workbenchArtifactSchema.safeParse(row?.metadata);
+    if (matches.length !== 1 || !metadata.success || typeof row.operationId !== "string" || !row.operationId ||
+        typeof row.requestDigest !== "string" || !/^[a-f0-9]{64}$/.test(row.requestDigest)) throw new ConflictError("步骤引用的产物尚未核实");
+    return {metadata: metadata.data, operationId: row.operationId, requestDigest: row.requestDigest};
+  });
+  return createHash("sha256").update(JSON.stringify(identities)).digest("hex");
+}
 function storedPlan(payload: unknown): WorkbenchPlan | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new ConflictError("任务载荷已损坏");
   const value = (payload as Record<string, unknown>).workbenchPlan;
@@ -59,11 +79,36 @@ export function createWorkbenchPlanService(db: Db, deps: {
     async save(ref: ExecutionRef, input: {expectedRevision: number; steps: Step[]}): Promise<WorkbenchPlan> {
       if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) throw new ConflictError("计划版本无效");
       const proposed = workbenchPlanSchema.parse({planRevision: input.expectedRevision + 1, steps: input.steps});
+      const execution = executionRefSchema.parse(ref);
+      const [snapshot] = await db.select().from(executionTasks).where(and(eq(executionTasks.id, execution.executionTaskId),
+        eq(executionTasks.attempt, execution.attempt), eq(executionTasks.fenceToken, execution.fenceToken)));
+      if (!snapshot) throw new ConflictError("执行凭证已失效");
+      if (snapshot.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
+      const snapshotPlan = storedPlan(snapshot.payload);
+      const verified = new Map<string, {refs: string[]; identity: string}>();
+      if (!isDeepStrictEqual(snapshotPlan, proposed)) {
+        if ((snapshotPlan?.planRevision ?? 0) !== input.expectedRevision) throw new ConflictError("计划版本已改变，请重新读取");
+        const old = new Map(snapshotPlan?.steps.map(step => [step.stepId, step]) ?? []);
+        // 核验端口会经根 db 和 Blob 读取字节；PGlite 租约事务独占查询通道，不能在其中 await 核验。
+        // 先冻结身份，再做锁外 I/O；最终事务重新核验租约、计划 CAS 和这些身份后才允许写入。
+        for (const step of proposed.steps) {
+          const refs = artifactsToVerify(step, old.get(step.stepId));
+          if (refs.length) verified.set(step.stepId, {refs, identity: artifactIdentity(snapshot.payload, refs)});
+        }
+        for (const {refs} of verified.values()) {
+          if (!(await deps.verifyArtifacts?.({userId: snapshot.userId, accountId: snapshot.accountId, taskId: snapshot.id}, refs)))
+            throw new ConflictError("步骤引用的产物尚未核实");
+        }
+      }
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         if (task.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
+        if (task.userId !== snapshot.userId || task.accountId !== snapshot.accountId) throw new ConflictError("任务归属已改变");
+        for (const {refs, identity} of verified.values()) {
+          if (artifactIdentity(task.payload, refs) !== identity) throw new ConflictError("步骤引用的产物在字节核验期间已改变");
+        }
         const previous = storedPlan(task.payload);
         if (previous?.planRevision === proposed.planRevision && isDeepStrictEqual(previous, proposed)) return previous;
-        if ((previous?.planRevision ?? 0) !== input.expectedRevision) throw new ConflictError("计划版本已改变，请重新读取");
+        if ((previous?.planRevision ?? 0) !== input.expectedRevision || !isDeepStrictEqual(previous, snapshotPlan)) throw new ConflictError("计划版本已改变，请重新读取");
         const old = new Map(previous?.steps.map(step => [step.stepId, step]) ?? []);
         const next = new Map(proposed.steps.map(step => [step.stepId, step]));
         for (const [id, step] of old) {
@@ -82,8 +127,6 @@ export function createWorkbenchPlanService(db: Db, deps: {
             if (!call || call.kind !== "tool") throw new ConflictError("步骤引用的工具调用不存在");
             if (step.status === "succeeded" && (call.status !== "settled" || !successfulToolReceipt(call.resultText))) throw new ConflictError("步骤引用的工具回执未确认成功");
           }
-          const artifactsToVerify = step.status === "succeeded" && earlier?.status !== "succeeded" ? step.artifactRefs : step.artifactRefs.filter(ref => !earlier?.artifactRefs.includes(ref));
-          if (artifactsToVerify.length && !(await deps.verifyArtifacts?.({userId: task.userId, accountId: task.accountId, taskId: task.id}, artifactsToVerify))) throw new ConflictError("步骤引用的产物尚未核实");
           if (step.status !== "succeeded" || earlier?.status === "succeeded") continue;
           if (step.dependsOn.some(dependency => next.get(dependency)?.status !== "succeeded")) throw new ConflictError("前置步骤尚未成功");
         }

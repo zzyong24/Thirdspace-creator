@@ -150,7 +150,7 @@ export interface PersistentTaskService {
     errorCode?: string | null;
     errorMessage?: string | null;
   }): Promise<ExecutionTaskResourceV2>;
-  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[];includeSafeUnknownResults?:boolean}): Promise<{
+  recoverExpiredLeases(input?: {kinds?: PersistentTaskKind[];includeSafeUnknownResults?:boolean;taskId?:string}): Promise<{
     requeued: number;
     unknownResult: number;
     failed: number;
@@ -850,7 +850,7 @@ export function createPersistentTaskService(
           .select()
           .from(executionTasks)
           .where(
-            and(recoveryDueAt(stamp,input.includeSafeUnknownResults), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
+            and(recoveryDueAt(stamp,input.includeSafeUnknownResults), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined, input.taskId ? eq(executionTasks.id,input.taskId) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";

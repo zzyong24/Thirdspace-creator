@@ -12,6 +12,52 @@
   },
   "verticals": [
     {
+      "id": "T-1026",
+      "task_id": "T-1026",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "contract/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "frontend/src/cli/**",
+        "frontend/src/app/api/v1/workbench-preview/**",
+        "frontend/src/app/api/v1/workbench-artifacts/**",
+        "frontend/src/features/copilot/**",
+        "ai-worker/src/prompt/**",
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/verification/t1026*",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "mcp-server/**",
+        "orchestrator/progress.json"
+      ],
+      "read_set": [
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "frontend/src/cli/**",
+        "ai-worker/src/**"
+      ],
+      "exclusive_resources": [],
+      "step_write_set": {},
+      "step_read_set": {},
+      "step_exclusive_resources": {},
+      "commits": {}
+    },
+    {
       "id": "T-1022",
       "archetype": [
         "orchestration",

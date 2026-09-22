@@ -18,6 +18,48 @@
     ]
   },
   "modules": {
+    "T-1026": {
+      "task_id": "T-1026",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/features/t1003-agent-workbench.md",
+        "contract/src/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "ai-worker/src/**",
+        "mcp-server/**"
+      ],
+      "write_set": [
+        "contract/**",
+        "backend/src/modules/execution/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/v1/workbench-preview/**",
+        "frontend/src/app/api/v1/workbench-artifacts/**",
+        "frontend/src/features/copilot/**",
+        "ai-worker/src/prompt/**",
+        "ai-worker/src/execution/*.test.ts",
+        "docs/features/t1026-agent-cli-acceptance.md",
+        "docs/verification/t1026*",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "mcp-server/**",
+        "orchestrator/progress.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir contract typecheck",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "creatoros status"
+        ]
+      }
+    },
     "T-1022": {
       "task_id": "T-1022",
       "archetype": ["orchestration", "ai-generated"],

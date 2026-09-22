@@ -1,7 +1,8 @@
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {posix} from "node:path";
-import {and,asc,eq,aiConversations,aiMessages,aiTasks,executionCalls,executionTasks,workbenchArtifactLineages,
+import {z} from "zod";
+import {and,asc,eq,inArray,aiConversations,aiMessages,aiTasks,executionCalls,executionTasks,workbenchArtifactLineages,
  workbenchArtifactLineageVersions,OwnershipError,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import {workbenchArtifactSchema,workbenchArtifactRegisterRequestSchema,workbenchArtifactVersionsRequestSchema,workbenchArtifactCopyRequestSchema,workbenchResultSchema,
@@ -13,6 +14,25 @@ import {ConflictError} from "./execution.errors";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 
 const MAX_ARTIFACT_BYTES=20*1024*1024;
+// 附加诊断只作观测，不参与正式元数据和版本索引。未知策略须显式升级此边界。
+const rendererReceiptSchema=z.object({
+ rendererPolicy:z.literal("static-offline-v1"),
+ diagnostics:z.object({
+  schemaVersion:z.literal(1),status:z.enum(["analyzed","unavailable","not_applicable"]),
+  sourceHash:z.string().regex(/^[a-f0-9]{64}$/),
+  scriptCount:z.number().int().nonnegative(),externalResourceCount:z.number().int().nonnegative(),
+  staticSvgCount:z.number().int().nonnegative(),staticTableCount:z.number().int().nonnegative(),
+  staticImgCount:z.number().int().nonnegative(),degraded:z.boolean(),repairAdvice:z.array(z.string()),
+ }).strict(),
+}).strict();
+function rendererReceiptMatches(part:unknown,hash:string):boolean{
+ const text=object(part);
+ if(text.type!=="text"||typeof text.text!=="string")return false;
+ try{
+  const parsed=rendererReceiptSchema.safeParse(JSON.parse(text.text));
+  return parsed.success&&parsed.data.diagnostics.sourceHash===hash;
+ }catch{return false;}
+}
 const inputSchema=workbenchArtifactRegisterRequestSchema;
 type RegisterInput=typeof inputSchema._input;
 type Stored={metadata:WorkbenchArtifact;operationId:string;requestDigest:string};
@@ -69,7 +89,7 @@ function htmlImagePaths(bytes:Uint8Array,htmlPath:string):string[]{
 }
 
 /** 产物元数据属于原 execution task；字节只经 assets 服务端口存取。 */
-export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:WorkbenchArtifactFilePort;blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
+export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:WorkbenchArtifactFilePort;blobs:WorkbenchArtifactBlobPort;now?:()=>string;readOnly?:boolean}){
  const leases=createExecutionLeaseService(db,{now:deps.now}),now=deps.now??(()=>new Date().toISOString());
  async function owned(ctx:RequestContext,taskId:string){
   const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),
@@ -288,14 +308,46 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
  }
  async function conversationVersion(ctx:RequestContext,currentTaskId:string,artifactId:string,version:number):Promise<Stored|null>{
   const current=await owned(ctx,currentTaskId),chat=await conversationScope(db,current);if(!chat)return null;
-  await ensureLegacyMigration(chat,artifactId);
+  if(!deps.readOnly)await ensureLegacyMigration(chat,artifactId);
   const [lineage]=await db.select().from(workbenchArtifactLineages).where(and(eq(workbenchArtifactLineages.userId,chat.userId),
    eq(workbenchArtifactLineages.accountId,chat.accountId),eq(workbenchArtifactLineages.conversationId,chat.conversationId),
    eq(workbenchArtifactLineages.artifactId,artifactId)));
-  if(!lineage)return null;
-  const [stored]=await db.select().from(workbenchArtifactLineageVersions).where(and(eq(workbenchArtifactLineageVersions.lineageId,lineage.id),eq(workbenchArtifactLineageVersions.version,version)));
-  if(!stored)return null;
-  return {metadata:workbenchArtifactSchema.parse(stored.metadata),operationId:stored.operationId,requestDigest:stored.requestDigest};
+  if(lineage){
+   const [stored]=await db.select().from(workbenchArtifactLineageVersions).where(and(eq(workbenchArtifactLineageVersions.lineageId,lineage.id),eq(workbenchArtifactLineageVersions.version,version)));
+   if(stored)return {metadata:workbenchArtifactSchema.parse(stored.metadata),operationId:stored.operationId,requestDigest:stored.requestDigest};
+  }
+  if(!deps.readOnly)return null;
+  // 只读取已登记的旧字节；不推断调用成功、不创建谱系。同名歧义必须明确拒绝。
+  const legacy=(await legacyRows(chat)).filter(item=>item.row.metadata.artifactId===artifactId&&item.row.metadata.version===version);
+  if(legacy.length>1)throw new ConflictError("旧产物版本来源不唯一，请按原任务读取");
+  return legacy[0]?.row??null;
+ }
+ async function listConversationReadOnly(ctx:RequestContext,conversationId:string,input:ReturnType<typeof workbenchArtifactVersionsRequestSchema.parse>){
+  const chat={userId:ctx.userId,accountId:ctx.accountId!,conversationId};
+  const lineages=await db.select().from(workbenchArtifactLineages).where(and(eq(workbenchArtifactLineages.userId,chat.userId),
+   eq(workbenchArtifactLineages.accountId,chat.accountId),eq(workbenchArtifactLineages.conversationId,conversationId),
+   ...(input.artifactId?[eq(workbenchArtifactLineages.artifactId,input.artifactId)]:[])));
+  const versions=lineages.length?await db.select().from(workbenchArtifactLineageVersions)
+   .where(inArray(workbenchArtifactLineageVersions.lineageId,lineages.map(row=>row.id))):[];
+  const all:Array<{metadata:WorkbenchArtifact;legacy:boolean}>=versions.map(row=>({metadata:workbenchArtifactSchema.parse(row.metadata),legacy:false}));
+  const identity=(item:WorkbenchArtifact)=>JSON.stringify([item.artifactId,item.version,item.taskId]);
+  const seen=new Set(all.map(item=>identity(item.metadata)));
+  for(const {row} of await legacyRows(chat)){
+   if(input.artifactId&&row.metadata.artifactId!==input.artifactId||seen.has(identity(row.metadata)))continue;
+   try{await verified(row,ctx);}catch{continue;}
+   seen.add(identity(row.metadata));all.push({metadata:row.metadata,legacy:true});
+  }
+  all.sort((a,b)=>a.metadata.artifactId.localeCompare(b.metadata.artifactId)||a.metadata.version-b.metadata.version||a.metadata.taskId.localeCompare(b.metadata.taskId));
+  const scope=`readonly:${chat.userId}:${chat.accountId}:${conversationId}:filter:${input.artifactId??"*"}`;
+  const cursorFor=(item:typeof all[number])=>pageCursor(`${scope}:task:${item.metadata.taskId}`,item.metadata.artifactId,item.metadata.version);
+  const index=input.cursor?all.findIndex(item=>cursorFor(item)===input.cursor):-1;
+  if(input.cursor&&index<0)throw new ConflictError("产物列表游标无效或不属于当前会话");
+  const start=input.cursor?index+1:0,page=all.slice(start,start+input.limit);
+  return {items:page.filter(item=>!item.legacy).map(item=>({...item.metadata,status:"ready" as const})),
+   legacyItems:page.filter(item=>item.legacy).map(item=>({...item.metadata,status:"legacyReadOnly" as const})),
+   nextCursor:start+page.length<all.length?cursorFor(page.at(-1)!):null,
+   lineages:lineages.map(row=>({artifactId:row.artifactId,currentVersion:row.currentVersion,status:row.state==="committed"?"ready":row.state==="pending_blob"?"pending":row.state,
+    pendingOperationId:row.pendingOperationId,lastOperationId:row.lastOperationId,lastErrorCode:row.lastErrorCode,migrationReason:row.migrationReason}))};
  }
  return {
   async inspectOperation(ref:ExecutionRef,operationId:string){
@@ -553,7 +605,8 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
      throw new ConflictError("待结算产物版本已改变");
     const expectedSummary=JSON.stringify(row.metadata);
     const receiptContent=workbench.data.status==="succeeded"?workbench.data.content:[];
-    if(outcome.summary!==expectedSummary||receiptContent.length!==1||receiptContent[0]?.type!=="text"||receiptContent[0].text!==expectedSummary)
+    if(outcome.summary!==expectedSummary||![1,2].includes(receiptContent.length)||receiptContent[0]?.type!=="text"||receiptContent[0].text!==expectedSummary||
+     (receiptContent.length===2&&!rendererReceiptMatches(receiptContent[1],row.metadata.hash)))
      throw new ConflictError("产物正式回执正文与冻结元数据不符");
     for(const resource of row.metadata.htmlResources??[]){
      const [sourceTask]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,resource.taskId),eq(executionTasks.userId,chat.userId),eq(executionTasks.accountId,chat.accountId)));
@@ -587,6 +640,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
     const page=all.slice(start,start+input.limit);
     return {items:page.map(row=>({...row.metadata,status:"ready" as const})),nextCursor:start+page.length<all.length?pageCursor(taskScope,page.at(-1)!.metadata.artifactId,page.at(-1)!.metadata.version):null};
    }
+   if(deps.readOnly)return listConversationReadOnly(ctx,chat.conversationId,input);
    await ensureLegacyMigration(chat,input.artifactId);
    const lineages=await db.select().from(workbenchArtifactLineages).where(and(eq(workbenchArtifactLineages.userId,chat.userId),
     eq(workbenchArtifactLineages.accountId,chat.accountId),eq(workbenchArtifactLineages.conversationId,chat.conversationId)));
@@ -605,7 +659,9 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
    const accountId=ctx.accountId??"";if(!conversationId||!accountId)throw new OwnershipError("会话不存在");
    const [conversation]=await db.select().from(aiConversations).where(and(eq(aiConversations.id,conversationId),eq(aiConversations.userId,ctx.userId),eq(aiConversations.accountId,accountId)));
    if(!conversation)throw new OwnershipError("会话不存在");
-   const input=workbenchArtifactVersionsRequestSchema.parse(raw);await ensureLegacyMigration({userId:ctx.userId,accountId,conversationId},input.artifactId);
+   const input=workbenchArtifactVersionsRequestSchema.parse(raw);
+   if(deps.readOnly)return listConversationReadOnly(ctx,conversationId,input);
+   await ensureLegacyMigration({userId:ctx.userId,accountId,conversationId},input.artifactId);
    const lineages=(await db.select().from(workbenchArtifactLineages).where(and(
     eq(workbenchArtifactLineages.userId,ctx.userId),eq(workbenchArtifactLineages.accountId,accountId),eq(workbenchArtifactLineages.conversationId,conversationId))))
     .filter(row=>!input.artifactId||row.artifactId===input.artifactId),ids=new Set(lineages.map(row=>row.id));
@@ -682,7 +738,7 @@ export function createWorkbenchArtifactService(db:Db,deps:{readTaskFile?:Workben
 
 /** 预览、导出入口只注入读端口，不装配任务文件读取能力。 */
 export function createWorkbenchArtifactReadService(db:Db,deps:{blobs:WorkbenchArtifactBlobPort;now?:()=>string}){
- const service=createWorkbenchArtifactService(db,deps);
- return {read:service.read,readAll:service.readAll,readRelativeImage:service.readRelativeImage,listConversation:service.listConversation,
+ const service=createWorkbenchArtifactService(db,{...deps,readOnly:true});
+ return {read:service.read,readAll:service.readAll,readRelativeImage:service.readRelativeImage,listConversation:service.listConversation,versions:service.versions,
   verifyArtifacts:service.verifyArtifacts};
 }
