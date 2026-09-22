@@ -3,6 +3,7 @@ import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -860,6 +861,13 @@ export function createPersistentTaskService(
           for(const callId of atomicPending){
             await tx.update(executionCalls).set({status:"reserved",startedAttempt:null,updatedAt:stamp}).where(eq(executionCalls.id,callId));
             calls.find(call=>call.id===callId)!.status="reserved";
+          }
+          // 计划只有本地 CAS 写入；严格核对冻结定义、原模型提案与现存计划后，
+          // 由新租约沿原调用重放。清除旧执行 claim，其他未知工具保持待对账。
+          for(const callId of await recoverableWorkbenchPlanCalls(row,calls,stamp)){
+            const patch={status:"reserved",startedAttempt:null,toolExecutionClaimId:null,updatedAt:stamp};
+            await tx.update(executionCalls).set(patch).where(eq(executionCalls.id,callId));
+            Object.assign(calls.find(call=>call.id===callId)!,patch);
           }
           // 文本模型只产候选，没有业务副作用。进程退出时未能结算的模型调用可在
           // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job

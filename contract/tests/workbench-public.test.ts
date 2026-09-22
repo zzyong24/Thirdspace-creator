@@ -3,6 +3,9 @@ import {ENDPOINTS} from "../src/endpoints";
 import {getCliOperationPolicy} from "../src/cli-policy";
 
 describe("新增 Agent 能力公开 CLI 契约",()=>{
+  it.each(["unknown_result","retry_wait","waiting_user","partial"])("持久进度保留真实 %s 状态，不用展示枚举阻断读取",status=>{
+    expect(ENDPOINTS.readWorkbenchEvents.response.parse({events:[],nextSequence:0,hasMore:false,status,attempt:1}).status).toBe(status);
+  });
   it("只读投影和对账均可动态发现并有明确 effect",()=>{
     const ids=Object.values(ENDPOINTS).map(x=>x.id as string);
     for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile"]){

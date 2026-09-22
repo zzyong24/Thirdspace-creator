@@ -55,3 +55,24 @@
 - Worker：4 文件、26 测试通过；网页恢复旧夹具另扩成6项正反回归，无生产行为变更。
 - frontend/contract 类型检查通过。
 - 第二独立审查（Kuhn）未发现可复现产品阻断缺陷，任务/事件12项、装配与route15项通过。另一个临时探针受依赖导出方式限制未完成，不当作全链路通过证据；安装版仍待实测。
+
+## 第一轮安装实测（候选 235888df764c77aac3390e405039c19606937807）
+
+本机覆盖安装成功，公开 CLI 发现 265 个 operation，真实工作台目录返回 21 项能力。DMG 为 `/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA-256 `80882f7beb14d4e18e2706727bd67874d390c377a96bec1e945f0c595343f433`；hdiutil verify 通过。本地 ad-hoc 包，未公开发布。
+
+- 升级后原任务 `execution-task-1899afca-691` 保持 succeeded、attempt=2、24 条账本，原产物 `wa-0a48435928f5cdcd787f7344e180fdf5@1` 保留，原字节 SHA-256 `5ed7d11123e80e30ed7d586a1e43d3c5a1a3f5b6d4439295c71bdc103db742fc`。
+- 公开 CLI 的 raw/preview/PNG/PDF 导出均成功，hash/size 校验通过。但实际查看 PNG 确认图表空白、汇总卡缺数字、表格无数据行。诊断正确识别 2 个 script、1 个外链、0 个静态 SVG；**导出成功不算内容验收通过**。旧文件实际包含 37 行、15 条已知播放、22 条缺失；已知总播放 62,297，原文“20 条样本”不符合原始数据。
+- 新增验收会话的原执行 `execution-task-2082997a-82`：第一轮非法产物引用收到 invalid_input；随后计划调用成为 unknown，计划仍为空。另发现 events 端点拒绝 runtime 的 unknown_result 状态。修复与原任务恢复复测尚未完成。
+- 原会话报告修复任务 `execution-task-2082997a-99`：artifact.read 成功；长回执提示给错 ID 导致续读失败；其后模型回执已结算，但任务因 WORKER_EXECUTION_INTERRUPTED 停止。尚无 v2。末次中断根因待补充诊断，不把前一续读错误直接当作全部根因。
+- 实测原始 CLI 回执和导出位于 `/tmp/t1026-cli-evidence/`，包含账号内容，仅留本机；本报告不复制用户完整数据。
+- 打包后受管 runtime 独立测试：mac_packaged 两项、private_socket 一项、real_chromium 两项通过。浏览器测试最终使用精确 CfT 版本根路径；早先父目录路径错误的尝试未算 PASS。这些属于实际二进制/浏览器回归，不冒充安装版 CLI 多任务验收。
+
+当前结论：安装与公开观察/导出入口可用，核心目标执行仍发现阻断，继续修复；AC 矩阵暂不批量改为通过。
+
+### 第二轮代码回归
+
+- 计划纠错、原调用崩溃恢复、长回执分页完整链路：4 文件39项通过。before/after/validation 恢复均经过真实 `recoverExpiredLeases`，原调用、费用和预算保留。
+- 持久任务与公开投影：2 文件15项通过；契约全量42文件248项通过。
+- frontend 类型检查通过，打包四项42测试通过。安装版复测仍待进行。
+- 第二独立复核指出异常提案会遮住诊断、分页反复传输历史大参数；已修复并新增正式 transport 回归，公开读侧5/5通过。异常身份保留 null/invalid 标记；当前页参数查询保留跨页来源关联，历史仅扫描轻量身份。复核确认两项已闭合。
+- 最新 frontend/contract 类型检查通过；backend 全量类型错误仍为既有测试问题，新增测试中的两项类型错误已当场修复。边界门卫通过，无新增违规。

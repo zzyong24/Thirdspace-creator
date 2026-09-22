@@ -19,6 +19,47 @@ let db:Db,close:()=>Promise<void>;
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();execFileSync(process.execPath,[resolve("../ai-worker/scripts/build.mjs")],{stdio:"pipe"});},30000);
 afterAll(async()=>close?.());
 
+it("真实 Worker 遇到非法产物引用和伪造计划回执后收到 invalid_input，自动纠错完成原任务",async()=>{
+ const ctx={userId:"plan-repair-user",accountId:"plan-repair-account",requestId:"test",source:"user" as const};
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now:()=>new Date().toISOString(),nextId:prefix=>`${prefix}-plan-repair`});
+ const conversation=await repo.createConversation({title:"计划纠错",projectId:null,scope:"global"});
+ const source=await repo.createMessage(conversation.id,{role:"user",content:"创建并核验计划",attachments:[],modelMetadata:{}});
+ const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
+ const [definition]=(await prepareChatToolDefinitions({"plan.update":prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]})).definitions;
+ const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:"根据工具错误修正参数，保留原任务。",messages:[{role:"user",content:"创建并核验计划"}],maxSteps:8,maxOutputTokens:256,tools:[definition!]})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const step={stepId:"plan",title:"建立计划",dependsOn:[],status:"pending",operationRefs:[],artifactRefs:[]};
+ let requests=0;const bodies:string[]=[],plansBeforeRepair:unknown[]=[];
+ const server=createServer((req,res)=>{let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{void(async()=>{
+  requests++;bodies.push(body);
+  if(requests===2||requests===3)plansBeforeRepair.push(await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId));
+  if(requests>5)throw new Error("计划纠错不应重复调用");
+  let args:Record<string,unknown>|null={expectedRevision:0,steps:[step]};
+  if(requests===1)args={expectedRevision:0,steps:[{...step,artifactRefs:[null]}]};
+  if(requests===2)args={expectedRevision:0,steps:[{...step,status:"succeeded",operationRefs:["invented"]}]};
+  if(requests===4){
+   const ref=[...body.matchAll(/原工具调用 ID: ([^；\]]+)/g)].at(-1)?.[1];
+   if(!ref)throw new Error("纠错后的真实计划调用回执缺失");
+   args={expectedRevision:1,steps:[{...step,status:"succeeded",operationRefs:[ref]}]};
+  }
+  if(requests===5)args=null;
+  const delta=args?{tool_calls:[{index:0,id:`repair-${requests}`,type:"function",function:{name:"plan_update",arguments:JSON.stringify(args)}}]}:{content:"已按真实回执修正并完成计划。"};
+  const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:args?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
+  res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"fixture",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
+ })().catch(error=>{res.writeHead(500);res.end(String(error));});});});
+ await new Promise<void>(done=>server.listen(0,"127.0.0.1",done));
+ const host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"plan-repair",budget:{maxCalls:12,maxTokens:100000,deadlineMs:60000},pollMs:100,modelConcurrency:1,resolveTools:createChatWorkbenchPlanToolHost(db),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+ try{
+  host.start();
+  await expect.poll(async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId)))[0]?.status,{timeout:15000}).toBe("succeeded");
+  expect(requests).toBe(5);expect(plansBeforeRepair).toEqual([null,null]);
+  expect(bodies[1]).toContain("invalid_input");expect(bodies[2]).toContain("invalid_input");
+  const calls=(await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId))).sort((a,b)=>a.sequence-b.sequence);
+  const tools=calls.filter(call=>call.kind==="tool");expect(tools).toHaveLength(4);expect(calls.every(call=>call.status==="settled")).toBe(true);
+  for(const call of tools.slice(0,2))expect(JSON.parse(call.resultText!).output).toMatchObject({status:"error",sideEffect:"none",error:{code:"invalid_input"}});
+  expect(await createWorkbenchPlanService(db).read(ctx,submission.executionTaskId)).toMatchObject({planRevision:2,steps:[{status:"succeeded",operationRefs:[tools[2]!.id]}]});
+ }finally{await host.stop();server.closeAllConnections();await new Promise<void>(done=>server.close(()=>done()));}
+},30000);
+
 it("真实子进程连续规划、读取与凭回执完成原任务",async()=>{
  const ctx={userId:"plan-e2e-user",accountId:"plan-e2e-account",requestId:"test",source:"user" as const};
  const now=()=>new Date().toISOString();

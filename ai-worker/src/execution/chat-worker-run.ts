@@ -208,7 +208,8 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
         const hasImage=workbench.success && workbench.data.status==="succeeded" && workbench.data.content.some(item=>item.type==="image");
         const reference=`[原工具调用 ID: ${receipt.callId}；完成计划步骤时引用此 operationRef。]`;
         // 原回执已先结算。只解析本轮工具结果中的图片，恢复历史文本保持分页但不重复注入媒体。
-        const projected=await projectReceiptForPi(receipt.outcome,receipt.callId,hasImage?{
+        // 分页 reader 按 provider toolCallId 找回执；计划引用和截图解析仍用 execution callId。
+        const projected=await projectReceiptForPi(receipt.outcome,toolCallId,hasImage?{
           resolveImage:async dataRef=>workbenchScreenshotResolvedSchema.parse(await ports.call("resolveWorkbenchScreenshot",{callId:receipt.callId,dataRef},signal)),
           fallbackToText:true,
         }:{});
