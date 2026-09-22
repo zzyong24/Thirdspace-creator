@@ -11,6 +11,18 @@ import { chatWorkbenchPlanCapability } from "./chat-workbench-plan-tool";
 import { defineWorkbenchChatTool } from "./chat-tool-gate";
 import { prepareChatToolDefinitions } from "./chat-tool-definitions";
 
+function schemaIssue(error: ZodError, raw: unknown) {
+  const path = error.issues[0]?.path ?? [];
+  const fields = ["stepId", "title", "dependsOn", "status", "operationRefs", "artifactRefs", "supersedes"];
+  const stepIndex = path[0] === "steps" && Number.isSafeInteger(path[1]) && Number(path[1]) >= 0 ? Number(path[1]) : null;
+  const field = stepIndex !== null && fields.includes(String(path[2])) && (path.length === 3 || path.length === 4 && Number.isSafeInteger(path[3]) && Number(path[3]) >= 0)
+    ? String(path[2]) : "root";
+  const request = raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
+  const parsed = stepIndex !== null && Array.isArray(request?.steps) ? workbenchPlanSchema.shape.steps.element.safeParse(request.steps[stepIndex]) : null;
+  return {code: "schema_invalid" as const, stepId: parsed?.success ? parsed.data.stepId : null, stepIndex,
+    field, fieldIndex: field !== "root" && path.length === 4 ? Number(path[3]) : null};
+}
+
 /** 在原聊天账本与租约内保存计划；模型只能提交计划内容，不能自报身份或完成事实。 */
 export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof createWorkbenchPlanService>[1] = {}): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
   const plans = createWorkbenchPlanService(db, deps);
@@ -77,10 +89,19 @@ export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof 
               if (registeredArtifacts.length === 20) break;
             }
             // 错误反馈本身不能因巨型历史计划超过回执上限而变为 unknown；绝不伪装完整计划。
-            const currentPlanComplete = currentPlan === null || JSON.stringify(currentPlan).length <= 800_000;
+            const currentPlanComplete = currentPlan === null || Buffer.byteLength(JSON.stringify(currentPlan), "utf8") <= 800_000;
+            const validationIssue = error instanceof WorkbenchPlanValidationError ? error.issue : error instanceof ZodError ? schemaIssue(error, raw) : null;
+            const currentStep = currentPlan?.steps.find(step => step.stepId === validationIssue?.stepId) ?? null;
+            const currentStepComplete = currentStep === null || Buffer.byteLength(JSON.stringify(currentStep), "utf8") <= 65_536;
+            // SEMANTIC_BOUNDARY_ALLOW: 仅枚举状态计数；全部终态不代表全部成功或用户目标已完成。
+            const counts = {pending: 0, running: 0, waiting_user: 0, succeeded: 0, failed: 0, cancelled: 0, skipped: 0};
+            for (const step of currentPlan?.steps ?? []) counts[step.status]++;
+            const planState = {counts, pendingStepCount: counts.pending,
+              allStepsTerminal: !!currentPlan?.steps.length && counts.pending === 0 && counts.running === 0 && counts.waiting_user === 0};
             return {kind: "workbench.plan.validation", currentRevision: currentPlan?.planRevision ?? 0, referenceRules, statusRules,
               // 单条为保存校验当时的首个失败点；不扫描或猜测其他步骤的语义。
-              validationIssue: error instanceof WorkbenchPlanValidationError ? error.issue : null,
+              validationIssue, validationIssueScope: error instanceof ZodError ? "request_schema" : "save_validation", currentStateScope: "feedback_lease_read",
+              currentStep: currentStepComplete ? currentStep : null, currentStepComplete, planState,
               currentPlan: currentPlanComplete ? currentPlan : {planRevision: currentPlan!.planRevision, stepCount: currentPlan!.steps.length, truncated: true},
               currentPlanComplete, recentSuccessfulOperations, registeredArtifacts,
               referenceScope: "仅当前任务；列出最近 50 条已结算工具中的最多 20 条成功回执，以及最近最多 20 个登记产物。不代表全部历史；是否支撑某个步骤由模型依据实际结果判断，后端仍校验真实引用。"};
@@ -89,12 +110,22 @@ export function createChatWorkbenchPlanToolHost(db: Db, deps: Parameters<typeof 
           const reason = error instanceof ZodError
             ? error.issues.slice(0, 20).map(issue => `${issue.path.map(String).join(".") || "计划"}：${issue.message}`).join("；")
             : error instanceof WorkbenchPlanValidationError ? `${error.message}；校验定位=${JSON.stringify(error.issue)}` : error.message;
-          const planInstruction = feedback.currentPlanComplete
+          const planInstruction = () => feedback.currentPlanComplete
             ? "使用本回执的 currentPlan 修订"
             : "当前计划过大，本回执仅含摘要；取得完整计划前不得据摘要覆盖或删除旧步骤";
-          return agenticToolOutcomeSchema.parse({status: "error", summary: `计划未保存；当前版本 ${feedback.currentRevision}，下一次 expectedRevision=${feedback.currentRevision}，失败不会增加版本。`, evidence: [], data: feedback,
-            error: {code: "invalid_input", retryable: false, recovery: `${reason.slice(0, 6000)}。${planInstruction}，下一次 expectedRevision=${feedback.currentRevision}，不要猜测或递增。可用步骤状态：${statusRules.allowedStatuses.join(", ")}。${referenceRules.operationRefs}${referenceRules.artifactRefs}${referenceRules.unexecutedSteps}${statusRules.failedSteps}${statusRules.replan}`},
+          const issue = feedback.validationIssue;
+          const location = issue ? `${issue.code}；stepId=${issue.stepId}；${issue.field ?? "operationRefs"}${issue.fieldIndex == null ? "" : `[${issue.fieldIndex}]`}；` : `${error instanceof ZodError ? "计划字段校验失败" : error.message}；`;
+          const outcome = () => ({status: "error", summary: `${location}计划未保存；当前版本 ${feedback.currentRevision}，下一次 expectedRevision=${feedback.currentRevision}，失败不会增加版本。`, evidence: [], data: feedback,
+            error: {code: "invalid_input", retryable: false, recovery: `${reason.slice(0, 6000)}。${planInstruction()}，下一次 expectedRevision=${feedback.currentRevision}，不要猜测或递增。可用步骤状态：${statusRules.allowedStatuses.join(", ")}。${referenceRules.operationRefs}${referenceRules.artifactRefs}${referenceRules.unexecutedSteps}${statusRules.failedSteps}${statusRules.replan}expectedRef/requestedRef仅是首个数组差异，不推荐替换为其他成功回执。currentStep与currentRevision是反馈重读时点，validationIssue是保存校验时点；currentStepComplete=false时不得据省略值覆盖步骤。allStepsTerminal只表示枚举终态，不代表目标完成。若没有新的实际工作，不必再次 plan.update；可交付已有产物并如实说明 failed 项。`},
             continuation: null, sideEffect: "none"});
+          let output = outcome();
+          // 留出原账本receipt包装余量。整个JSON过预算时只省略完整块，绝不截断引用或半个JSON。
+          if (Buffer.byteLength(JSON.stringify(output), "utf8") > 900_000 && feedback.currentPlan !== null) {
+            feedback.currentPlan = {planRevision: feedback.currentRevision, stepCount: Object.values(feedback.planState.counts).reduce((sum, count) => sum + count, 0), truncated: true};
+            feedback.currentPlanComplete = false;
+            output = outcome();
+          }
+          return agenticToolOutcomeSchema.parse(output);
         }
         scope.signal.throwIfAborted();
         return agenticToolOutcomeSchema.parse({

@@ -3,6 +3,7 @@ import {createHash,randomUUID} from "node:crypto";
 import {z} from "zod";
 import {createDb, aiTasks, executionTasks, executionCalls, eq, type Db} from "@creatoros/backend";
 import {chatWorkerInputSchema, type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {workbenchArtifactSchema} from "@creatoros/contract/agent-workbench";
 import {chatInputDigest} from "../ai/chat-turn-submission.service";
 import {createExecutionCallLedgerService} from "../execution/execution-call-ledger.service";
 import {createExecutionChatToolPorts} from "../execution/execution-chat-tool-ports.service";
@@ -42,7 +43,7 @@ it("计划工具使用冻结版本与原租约，模型不能凭文本伪造完�
 });
 
 const planStep={stepId:"read",title:"读取资料",dependsOn:[],status:"pending" as const,operationRefs:[],artifactRefs:[]};
-async function publicFixture(steps:unknown[]|((ref:ExecutionRef,ledger:ReturnType<typeof createExecutionCallLedgerService>,ports:ReturnType<typeof createExecutionChatToolPorts>)=>Promise<unknown[]>),expectedRevision=0,maxCalls=10){
+async function publicFixture(steps:unknown[]|((ref:ExecutionRef,ledger:ReturnType<typeof createExecutionCallLedgerService>,ports:ReturnType<typeof createExecutionChatToolPorts>)=>Promise<unknown[]>),expectedRevision=0,maxCalls=10,deps:Parameters<typeof createChatWorkbenchPlanToolHost>[1]={}){
   const id=randomUUID(),owner={userId:id,accountId:id,requestId:id,source:"user" as const};
   const prototype=defineWorkbenchChatTool(chatWorkbenchPlanCapability,async()=>{throw new Error("unused");});
   const prepared=await prepareChatToolDefinitions({"plan.update":prototype},{workbenchCapabilities:[chatWorkbenchPlanCapability]});
@@ -51,7 +52,7 @@ async function publicFixture(steps:unknown[]|((ref:ExecutionRef,ledger:ReturnTyp
   const tasks=createPersistentTaskService(db),task=await tasks.enqueue(owner,{kind:"ai_task",ownerType:"ai_task",ownerId:id,idempotencyKey:id,payload:{aiTaskId:id,modelInput:input}});
   await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"copilot.assist",status:"running",executionTaskId:task.id,idempotencyKey:id,requestedAt:new Date().toISOString(),inputData:{modelInputDigest:chatInputDigest(input)}});
   const claim=(await tasks.claimTask({taskId:task.id,workerId:id}))!,ref={executionTaskId:task.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
-  const tools=await createChatWorkbenchPlanToolHost(db)(owner,input,ref,new AbortController().signal);
+  const tools=await createChatWorkbenchPlanToolHost(db,deps)(owner,input,ref,new AbortController().signal);
   for(const definition of evidenceDefinitions)tools[definition.name]={version:"1",effect:"none",parameters:z.object({}).strict(),async approve(){return {status:"not-applicable"};},async execute(){
     const success=definition.name==="diagnostic.read";
     return {status:success?"ok":"error",summary:"SECRET_BODY",evidence:[],data:{private:"SECRET_DATA"},error:success?null:{code:"no_evidence",retryable:false,recovery:"SECRET_PROVIDER_TEXT"},continuation:null,sideEffect:"none"};
@@ -130,6 +131,108 @@ it.each([
   expect(call.status).toBe("settled");expect(JSON.parse(call.resultText!).output).toEqual(result);
   expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);
   expect((await f.ledger.inspect(f.ref)).calls).toHaveLength(2);
+});
+
+it.each(["reference", "title", "append", "remove"] as const)("T1026 round7 成功步骤%s精确反馈且原call重放不变，新提案显式保留旧步骤可保存",async variant=>{
+  const plans=createWorkbenchPlanService(db);
+  const f=await publicFixture(async(ref,ledger,ports)=>{
+    const refs:string[]=[];
+    for(let i=0;i<3;i++){
+      const model=await ledger.reserve(ref,{kind:"model",operationKey:`source-${i}`,inputDigest:"sha256:"+"b".repeat(64),reservedTokens:10});await ledger.start(ref,model.id);
+      await ledger.settle(ref,model.id,{status:"settled",usage:{totalTokens:1},providerResult:{content:[{type:"tool-call",toolCallId:`source-${i}`,toolName:"diagnostic_read",input:"{}"}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:1},outputTokens:{total:0}},warnings:[]}});
+      const c=await ports.reserve(ref,{modelCallId:model.id,toolCallId:`source-${i}`});await ports.start(ref,{callId:c.callId});
+      expect(await ports.execute(ref,{callId:c.callId})).toMatchObject({status:"ok"});refs.push(c.callId);
+    }
+    const completed={...planStep,stepId:"step6_node_assert",status:"succeeded" as const,operationRefs:refs};
+    const failed={...planStep,stepId:"lookup",status:"failed" as const};
+    await plans.save(ref,{expectedRevision:0,steps:[completed,failed]});
+    return variant==="remove"?[failed]:[{...completed,...(variant==="title"?{title:"改写旧成功标题"}:{operationRefs:variant==="append"?[...refs,"call_added"]:[...refs.slice(0,2),"call_mistyped"]})},failed];
+  },1,20);
+  const original=(await plans.read(f.owner,f.task.id))!,before=(await f.ledger.inspect(f.ref)).calls;
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  const field=variant==="title"?"title":variant==="remove"?"steps":"operationRefs";
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentRevision:1,currentStep:original.steps[0],currentStepComplete:true,
+    validationIssue:{code:"succeeded_step_changed",stepId:"step6_node_assert",field},
+    planState:{counts:{succeeded:1,failed:1,pending:0,running:0,waiting_user:0,cancelled:0,skipped:0},pendingStepCount:0,allStepsTerminal:true}},error:{code:"invalid_input"}});
+  if(variant==="reference")expect(result.data).toMatchObject({validationIssue:{fieldIndex:2,expectedRef:original.steps[0]!.operationRefs[2],requestedRef:"call_mistyped"}});
+  expect(result.summary).toContain("step6_node_assert");expect(result.summary).toContain(field);
+  expect(result.error?.recovery).toContain("若没有新的实际工作，不必再次 plan.update");
+  expect(await plans.read(f.owner,f.task.id)).toEqual(original);
+  expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(result);
+  const corrected=[...original.steps,{...planStep,stepId:"new-actual-work"}];
+  const model=await f.ledger.reserve(f.ref,{kind:"model",operationKey:"new-corrected-model",inputDigest:"sha256:"+"c".repeat(64),reservedTokens:10});await f.ledger.start(f.ref,model.id);
+  await f.ledger.settle(f.ref,model.id,{status:"settled",usage:{totalTokens:2},providerResult:{content:[{type:"tool-call",toolCallId:"corrected",toolName:"plan_update",input:JSON.stringify({expectedRevision:1,steps:corrected})}],finishReason:{unified:"tool-calls"},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
+  const c=await f.ports.reserve(f.ref,{modelCallId:model.id,toolCallId:"corrected"});await f.ports.start(f.ref,{callId:c.callId});
+  expect(await f.ports.execute(f.ref,{callId:c.callId})).toMatchObject({status:"ok",sideEffect:"committed"});
+  expect(await plans.read(f.owner,f.task.id)).toEqual({planRevision:2,steps:corrected});
+  const after=(await f.ledger.inspect(f.ref)).calls;
+  for(const prior of before.filter(row=>row.id!==f.callId))expect(after.find(row=>row.id===prior.id)).toEqual(prior);
+  expect(after.reduce((sum,row)=>sum+(row.totalTokens??0),0)).toBe(10);
+});
+
+it("T1026 round7 超大失败step不伪装完整，状态计数不将waiting_user当终态",async()=>{
+  const f=await publicFixture([{...planStep,title:"new"}],1),plans=createWorkbenchPlanService(db);
+  const huge={...planStep,status:"waiting_user" as const,operationRefs:Array.from({length:1800},()=>"界".repeat(160))};
+  // 模拟已存在的大型历史步骤；不以伪引用作为成功证据。
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.task.id));
+  await db.update(executionTasks).set({payload:{...task!.payload as object,workbenchPlan:{planRevision:1,steps:[huge]}}}).where(eq(executionTasks.id,f.task.id));
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentStep:null,currentStepComplete:false,currentPlanComplete:false,
+    validationIssue:{code:"receipt_removed",stepId:"read",field:"operationRefs",operationRef:"界".repeat(160)},
+    planState:{counts:{waiting_user:1},pendingStepCount:0,allStepsTerminal:false}}});
+  expect((await plans.read(f.owner,f.task.id))?.steps[0]).toEqual(huge);
+  expect((await f.ledger.inspect(f.ref)).calls.find(row=>row.id===f.callId)?.status).toBe("settled");
+  expect(Buffer.byteLength(JSON.stringify(result),"utf8")).toBeLessThan(900_000);
+});
+
+it.each(["dependency","shape","root"] as const)("T1026 round7 schema %s精确首字段，未经step验证的ID不回显",async mode=>{
+  const f=await publicFixture([planStep]);
+  const raw=mode==="root"?{expectedRevision:0,steps:[planStep],extra:"SECRET"}:
+    {expectedRevision:0,steps:[mode==="dependency"?{...planStep,dependsOn:["missing"]}:{...planStep,stepId:"SECRET_INVALID_STEP",title:42}]};
+  const tool=f.tools["plan.update"]!;
+  const result=await tool.execute!(f.owner,z.json().parse(raw),{execution:f.ref,aiTaskId:f.task.ownerId,callId:f.callId,toolCallId:"plan",signal:new AbortController().signal});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{validationIssue:{code:"schema_invalid",stepId:mode==="dependency"?"read":null,
+    field:mode==="root"?"root":mode==="dependency"?"dependsOn":"title",fieldIndex:null},planState:{allStepsTerminal:false,pendingStepCount:0}}});
+  expect(result.summary).toContain(mode==="root"?"root":mode==="dependency"?"dependsOn":"title");
+  expect(JSON.stringify(result)).not.toContain("SECRET_INVALID_STEP");
+});
+
+it("T1026 round7 校验事实与反馈重读时点分开，并发新revision不被诊断覆盖",async()=>{
+  const plans=createWorkbenchPlanService(db);let scope:ExecutionRef|undefined,reads=0;
+  const f=await publicFixture(async ref=>{
+    scope=ref;const bytes=Buffer.from("fixture");
+    const artifacts=createWorkbenchArtifactService(db,{readTaskFile:async()=>({bytes,version:1}),blobs:{
+      async submit(){return {hash:createHash("sha256").update(bytes).digest("hex"),size:bytes.length};},async read(){return bytes;},
+    }});
+    const metadata=await artifacts.register(ref,"artifact",{path:"report.md",mime:"text/markdown"});
+    await plans.save(ref,{expectedRevision:0,steps:[planStep]});
+    return [{...planStep,status:"succeeded",artifactRefs:[`${metadata.artifactId}@${metadata.version}`]}];
+  },1,10,{verifyArtifacts:async()=>{
+    if(++reads===1)await plans.save(scope!,{expectedRevision:1,steps:[{...planStep,title:"反馈前并发更新"}]});
+    return false;
+  }});
+  const result=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(result).toMatchObject({status:"error",sideEffect:"none",data:{currentRevision:2,currentStep:{title:"反馈前并发更新",status:"pending"},
+    validationIssueScope:"save_validation",currentStateScope:"feedback_lease_read",validationIssue:{code:"artifact_unverified",currentStepStatus:"pending",requestedStatus:"succeeded"}}});
+  expect((await plans.read(f.owner,f.task.id))?.planRevision).toBe(2);
+});
+
+it("T1026 round7 容量复核：单块均合法但总反馈超过schema上限时先降级再parse，账本仍settled",async()=>{
+  const f=await publicFixture([planStep]),plans=createWorkbenchPlanService(db);
+  const steps=Array.from({length:1300},(_,i)=>({...planStep,stepId:`step-${i}`,title:"a".repeat(490)}));
+  const saved=await plans.save(f.ref,{expectedRevision:0,steps});
+  const planBytes=Buffer.byteLength(JSON.stringify(saved));expect(planBytes).toBeLessThan(800_000);
+  const versions=Array.from({length:20},(_,i)=>({metadata:workbenchArtifactSchema.parse({artifactId:`artifact-${i}`,version:1,
+    mime:"text/markdown",size:1,hash:"a".repeat(64),relativePath:"\u0001".repeat(2048),taskId:f.task.id,provenance:[]})}));
+  expect(planBytes+Buffer.byteLength(JSON.stringify(versions.map(row=>({artifactRef:`${row.metadata.artifactId}@1`,relativePath:row.metadata.relativePath}))))).toBeGreaterThan(1_000_000);
+  const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.task.id));
+  await db.update(executionTasks).set({payload:{...task!.payload as object,workbenchArtifactVersions:versions}}).where(eq(executionTasks.id,f.task.id));
+  const output=await f.ports.execute(f.ref,{callId:f.callId});
+  expect(output).toMatchObject({status:"error",sideEffect:"none",data:{currentPlanComplete:false,currentPlan:{planRevision:1,stepCount:1300,truncated:true}}});
+  expect(Buffer.byteLength(JSON.stringify(output))).toBeLessThan(900_000);
+  expect((await f.ledger.inspect(f.ref)).calls.find(row=>row.id===f.callId)?.status).toBe("settled");
+  expect(await plans.read(f.owner,f.task.id)).toEqual(saved);
+  expect(await f.ports.execute(f.ref,{callId:f.callId})).toEqual(output);
 });
 
 const feedbackSchema=z.object({

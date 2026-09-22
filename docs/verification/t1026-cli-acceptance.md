@@ -237,3 +237,23 @@ CLI 全量5文件77/77、typecheck通过；离线实际 runCliCommand/buildTools
 - 评论明确未完成异常类型与16桶脱敏路由分布：后端真实红6→33绿，前端红3→159绿，frontend全量与backend本域类型检查通过；backend全量仍有既有24项其他文件错误。无新增平台请求，六包真实单项抓取待验。
 
 计划诊断最终4文件通过Socrates独审：有效红10项→绿10项；相邻回归48通过1既有worker子进程测试未重跑，前端完整与backend本域类型检查均exit0。原joint未操作。最终contract43文件256/256、边界无新增违规、打包预检42/42。
+
+## 第六候选安装实测（6ae526b61eee2e0ce65114d58f87dbec66518b9a）
+
+规范本地包自动安装并启动PID80791，CLI自启动installed/full/connected，目录268项。DMG SHA-256 `cacc8628f97030565c06d59ec28dac2f272266a6366da8cdb810321b5bcedd4d`，hdiutil verify通过；未公开发布。
+
+- 原99公开files.reconcile返回readmitted/predispatch_readmission，审计digest为`sha256:02bf47ee9b1714480e2cc272223cc10f2c4b2bc182c952466aa19b8afdb5f965`，版本/hash/size均null。前113条回执在该动作前后完全一致；原files.edit调用`call_7bb3e855-5799-4dd2-9772-187dc33967b5`随后在同task、attempt3真实执行成功，回执文件版本4、3259字节、hash `dfa79dc286024aeb0d979da77b65c205d523af9f6c86d02e59ed315d43175902`。原task最终233calls succeeded，恢复不再只是隔离推测。后续登记报告v6、四格式导出成功，但独立检查发现主图15641柱超过绘图区、未知项被画成满高灰柱，故v6质量不通过。已通过CLI在原会话提交精确恢复已核验v5字节为新版本的任务，旧版本全部保留，不把原99成功等同报告质量成功。
+- 综合task256沿同ID从revision2推进至4，完成真实CSV/HTML/Markdown、Node校验与RFC浏览器点击/滚动；RedFox额度耗尽如实记失败。随后又在成功步骤不可改/引用抄错/依赖等分支重复plan.update，283calls时公开暂停；第七候选补具体字段错误与全部步骤终态的真实反馈，不换新任务或代填成功。原始证据`joint5-sixth-paused-full-combined.json`。
+- 综合v1 HTML 9322字节、hash `3e700749cae1c671dbbb5c24b9da445aba1e2f10c0cad23c9de247d2b5094d4d`，CSV644字节、hash `cb0d30d461ccf43433bb555670d421a70d88d326206f5a13f06acf2c068e424f`，均CLI导出与回执一致。5条指标合计20617、均值4123.4；页面无脚本、5柱使用统一14000轴。文案声称仅已发布/已知值筛选、30天范围和部分回执大小，尚与真实查询契约不符，不能按自述报告全通过。正确provider toolCallId首次分页已成功，随后误页包装结果；同一原始长结果完整分页尚未证明。该任务未实际hover，hover由独立表单任务覆盖。
+- 评论仅重试1项，run-3fcc5bfb-af74-4fd3-a9a9-08125dadb0f4实际27.99秒failed，1已处理/0完整，账号62失败与选中1失败分开。245响应（240个2xx、5个3xx），comment匹配仍0；16桶134、省略98、溢出13计数和为245。原路由正确/导航200/document readyComplete不足以证明SPA登录与评论已加载。外层不再误报加载超时；第七候选仅在同一采集Page补有界可见语义节点证据，尚未通过真实评论抓取。
+- 默认自配置模型正式流式连接测试ok，copilot.assist返回“暂无内置连接测试”，并非模型生成失败；未修改模型配置。官方模型单独真实测试尚无证据，RedFox真实查询因额度不足未通过，未擅自充值。
+
+原始回执均由公开CLI取得并存于`/tmp/t1026-cli-evidence/`。以上不覆盖Windows真实安装、真实UI冷/热启动时延、旧G未知open恢复；既有全局reconcile回执漂移仍归T1025，不能写成全绿。
+
+### 第七候选冻结前回归
+
+计划四文件经Socrates独立复核放行。真实seq282误抄不可变operationRef及其他分支现在返回有界具体位置，状态计数只说明计划枚举事实。回归4文件97/97、frontend完整类型检查通过；backend仍24项既有范围外错误，本次四文件无错误。首次13fail有9个夹具问题不算有效前置红；修好夹具后对旧HEAD取得13个AssertionError属于实现后基线对照，明确不补拍前置。schema三项确有实现前红。独审追加总回执容量风险：实际host/ledger复现先parse再降级导致unknown的红测，修复为整体预算后唯一parse；绿测同时验证settled error/none、原计划不变与同call回放一致。日志`/tmp/t1026-plan-round7-{baseline-red,schema-red,capacity-red,final2,types-freeze,backend-types-final}.log`。
+
+评论UI六文件经Wegener独审放行，真实Chromium有效红后绿，最终frontend171/171、backend35/35，frontend全量与backend定向类型检查通过。独审复现的外层status读到子dialog正文已三项红绿修正；shadow不可见lightDOM不输出，DOM/字节/时间预算及覆盖限制显式保留。日志`/tmp/t1027-ui-{frontend-final,backend-final,frontend-types-final,backend-types,nested-dialog-red,shadow-red}.log`。未把这些夹具视作真实评论已完成。
+
+全contract43文件256/256及类型检查通过，打包预检4文件42/42，boundary无新增违规（旧5保留）。原99最终与恢复前前113条公开回执逐项完全一致，原call114保留ID真实settled；审计`original99-sixth-final-audit.json`。

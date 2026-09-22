@@ -89,3 +89,6 @@ Kuhn 独立方案评审已通过。服务/公共链路测试覆盖：跨账号�
 comments failures.list/retry 与 selected runNow 已完成，Kuhn 最终实现独审通过，无阻断发现。后端定向 47/47、全 contract 254/254、前端定向 152/152；红绿原始日志、命令和限制见 `docs/verification/t1027-comment-collection-evidence.md`。本项代码已冻结。主线统一类型检查并负责第四候选安装后公开 CLI 少量选集实测；未将隔离测试当成真实网站采集通过，也未将任务状态标成验收完成。
 
 第五安装真实单项出现页面200/readycomplete、244响应但评论匹配0，同时外层错误把诊断navigationStatus误当加载超时。扩展scheduled-collection-runner.ts及其测试：使用明确本地未完成错误类型保留诊断，不以序列化诊断里的词匹配网络故障；真实网络错误规则保持。沿原response监听增加有界脱敏路由分布以诊断接口族，不增加平台请求，不输出query、动态身份或正文，独审后红测实现。
+
+第六安装仍no_matching_response，路由分布不足以确定页面状态。新增最小同源被动UI证据，Wegener前置独审有条件通过，主线接受其全部边界：仅该reason且原监听已off、完成事实冻结后，扩既有同一次readyState evaluate；精确origin=https://creator.douyin.com，否则not_applicable不出文本。只采可见heading/tab/button/alert/status/dialog短文本与aria-selected，dialog仅可见标题，不取整段正文，不加main/div/p全文fallback、不读表单value/cookie/storage/URL属性。排除input/textarea/select/option/editable、脚本/iframe/shadow、ul/ol/li/table/article及list/feed/grid等正文子树与祖先。全局DOM访问≤2000次/50ms软预算，祖先≤32，复用1s超时，24节点/每类4/每项120Unicode字符，总JSON≤12KiB；覆盖与截断明确，backend再白名单校验。角色缺失或零节点不证明无评论/登录/验证码。
+这是用户已授权排障范围内的页面标题和角色UI短文本例外，可能含页面标题或账号显示名，不能声称绝无个人信息；不包含完整评论正文、凭据或表单value，统一遮蔽URL/query文字片段。登录/验证码仍null，由Agent结合实际UI证据理解，不用写死词表做语义判断。真实隔离Chromium跑生产evaluator验证有用状态/横幅/对话框与隐私边界、超时/巨文本/外域；真实fetchComments夹具验证没有新增evaluate或平台动作，完成判据不变。独审后红测实现，安装最多单项再次核真。

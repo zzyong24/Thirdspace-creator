@@ -1,4 +1,5 @@
-import {COMMENT_NETWORK_COUNTS,COMMENT_ROUTE_MAX_BUCKETS,COMMENT_ROUTE_MAX_SEGMENTS,COMMENT_ROUTE_SEGMENTS,COMMENT_ROUTE_STATUS_COUNTS,type CommentPageEvidence,type CommentRouteBucket} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {COMMENT_NETWORK_COUNTS,COMMENT_ROUTE_MAX_BUCKETS,COMMENT_ROUTE_MAX_SEGMENTS,COMMENT_ROUTE_SEGMENTS,COMMENT_ROUTE_STATUS_COUNTS,emptyCommentUiEvidence,publicCommentUiEvidence,type CommentPageEvidence,type CommentRouteBucket} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {readCommentPageUiEvidence} from './douyin-cdp-ui-evidence';
 
 type Page={url?():string;isClosed?():boolean;evaluate<R>(fn:()=>R):Promise<R>};
 export function createCommentPageEvidence():CommentPageEvidence {
@@ -74,15 +75,19 @@ export function observeCommentResponse(evidence:CommentPageEvidence,response:Com
 }
 
 /** 单次被动读取，无导航/网络探针；老测试端口没有页面观察能力时诚实标不可用。 */
-export async function finishCommentPageEvidence(page:Page,evidence:CommentPageEvidence):Promise<void> {
+export async function finishCommentPageEvidence(page:Page,evidence:CommentPageEvidence,reason?:string):Promise<void> {
+ const applicable=reason==='no_matching_response';
+ evidence.uiEvidence=emptyCommentUiEvidence(applicable?'unavailable':'not_applicable');
  try{if(page.url)evidence.finalRoute=classifyRoute(page.url());}catch{/* URL不可用。 */}
  try{if(page.isClosed)evidence.pageClosed=page.isClosed();}catch{/* 关闭状态未知。 */}
- if(evidence.pageClosed===true){evidence.observation='page_closed';return;}
+ if(evidence.pageClosed===true){evidence.observation='page_closed';if(applicable)evidence.uiEvidence=emptyCommentUiEvidence('page_closed');return;}
  if(!page.url||!page.isClosed)return;
  let timer:ReturnType<typeof setTimeout>|undefined;
  try{
-  // 诊断新增等待有界；只获取固定readyState，不读取页面正文/账号资料。
-  const state=await Promise.race([page.evaluate(()=>document.readyState),new Promise<null>(resolve=>{timer=setTimeout(()=>resolve(null),1000);})]);
+  // 扩原有同一次 evaluate；所有结果只在 race 胜出后赋值，迟到返回不会改写证据。
+  const result=await Promise.race([applicable?page.evaluate(readCommentPageUiEvidence):page.evaluate(()=>document.readyState),new Promise<null>(resolve=>{timer=setTimeout(()=>resolve(null),1000);})]);
+  const state=result&&typeof result==='object'?result.readyState:result;
+  if(applicable)evidence.uiEvidence=result===null?emptyCommentUiEvidence('timeout'):publicCommentUiEvidence(typeof result==='object'?result?.uiEvidence:undefined);
   if(state==='loading'||state==='interactive'||state==='complete'){
    evidence.readyState=state;evidence.observation='observed';
   }

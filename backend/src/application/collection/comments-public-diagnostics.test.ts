@@ -10,6 +10,38 @@ vi.mock('../../modules/ingestion',async importOriginal=>({...await importOrigina
 const ctx={userId:'u',accountId:'a',requestId:'r',source:'ingestion' as const};
 const task={id:'original-task',taskType:'scheduled.comments',inputData:{jobId:'job',jobRunId:'run',target:{}}};
 const diagnostics=(complete:boolean):CommentReadDiagnostics=>({matchedResponses:complete?1:0,validResponses:complete?1:0,invalidResponses:0,parsedComments:0,pendingResponses:0,reason:complete?'stable_end':'no_matching_response'});
+
+it('UI证据经真实collector/runner公开链再次白名单、截断、脱敏，不能改变未完成判据',async()=>{
+ const uiEvidence={schemaVersion:1,status:'observed',title:'评论管理 https://example.invalid/?secret=SECRET_TITLE',nodes:[
+  {kind:'status',region:'main',text:'暂无数据',selected:null,textTruncated:false,href:'SECRET_HREF'},
+  ...Array.from({length:40},()=>({kind:'button',region:'dialog',text:'😀'.repeat(5000),selected:'SECRET_SELECTED',textTruncated:false})),
+  {kind:'input',region:'main',text:'SECRET_VALUE'},
+ ],truncated:false,scannedNodes:9000,coverage:{mainSeen:true,dialogSeen:true,scanComplete:true},cookie:'SECRET_COOKIE'};
+ const work={awemeId:'v0',records:[],complete:false,diagnostics:{...diagnostics(false),pageEvidence:{uiEvidence}}} as unknown as Work;
+ const f=setup([work]);await f.run();const ui=f.detail().works[0].pageEvidence.uiEvidence;
+ expect(ui).toMatchObject({status:'observed',title:'评论管理 [url]',truncated:true,coverage:{scanComplete:false}});
+ expect(ui.nodes[0]).toEqual({kind:'status',region:'main',text:'暂无数据',selected:null,textTruncated:false});
+ expect(ui.nodes.filter((node:{kind:string})=>node.kind==='button')).toHaveLength(4);
+ expect(ui.nodes.every((node:{text:string})=>Array.from(node.text).length<=120)).toBe(true);
+ expect(ui.scannedNodes).toBeLessThanOrEqual(2000);expect(Buffer.byteLength(JSON.stringify(ui))).toBeLessThanOrEqual(12*1024);
+ expect(JSON.stringify(f.steps)).not.toContain('SECRET');expect(f.ai.markSucceeded).not.toHaveBeenCalled();
+ const variants=[{...work,diagnostics:{...work.diagnostics!,reason:'stable_end' as const}},{...work,diagnostics:{...work.diagnostics!,pageEvidence:{uiEvidence:{...uiEvidence,status:'timeout'}}}}] as unknown as Work[];
+ const projected=JSON.parse(formatCommentReadDiagnostics(variants,{receivedComments:0,writtenComments:0,skippedComments:0}));
+ expect(projected.works[0].pageEvidence.uiEvidence).toMatchObject({status:'not_applicable',title:null,nodes:[]});
+ expect(projected.works[1].pageEvidence.uiEvidence).toMatchObject({status:'timeout',title:null,nodes:[]});
+});
+
+it('UI的12KiB上限计UTF8和JSON转义，20作品公开上限240KiB，未知版本不能带出文本',()=>{
+ const nodes=['heading','tab','button','alert','status','dialog'].flatMap(kind=>Array.from({length:4},()=>({kind,region:'main',text:'\u0001'.repeat(120),selected:null,textTruncated:false})));
+ const uiEvidence={schemaVersion:1,status:'observed',title:'😀'.repeat(120),nodes,truncated:false,scannedNodes:300,coverage:{mainSeen:true,dialogSeen:false,scanComplete:true}};
+ const work={awemeId:'v0',complete:false,diagnostics:{...diagnostics(false),pageEvidence:{uiEvidence}}} as unknown as Work;
+ const result=JSON.parse(formatCommentReadDiagnostics(Array.from({length:21},()=>work),{receivedComments:0,writtenComments:0,skippedComments:0}));
+ expect(result.works).toHaveLength(20);expect(result.omittedWorks).toBe(1);
+ let bytes=0;for(const item of result.works){const ui=item.pageEvidence.uiEvidence;expect(ui).toMatchObject({truncated:true,coverage:{scanComplete:false}});const size=Buffer.byteLength(JSON.stringify(ui));expect(size).toBeLessThanOrEqual(12*1024);bytes+=size;}
+ expect(bytes).toBeLessThanOrEqual(240*1024);
+ const unknown={...work,diagnostics:{...work.diagnostics!,pageEvidence:{uiEvidence:{...uiEvidence,schemaVersion:2,title:'SECRET_TITLE'}}}} as unknown as Work;
+ const text=formatCommentReadDiagnostics([unknown],{receivedComments:0,writtenComments:0,skippedComments:0});expect(text).not.toContain('SECRET');expect(JSON.parse(text).works[0].pageEvidence.uiEvidence).toMatchObject({status:'unavailable',title:null,nodes:[]});
+});
 type Work={awemeId:string;records:CommentRecord[];complete?:boolean;diagnostics?:CommentReadDiagnostics};
 type CollectorPorts=Parameters<typeof createCommentsCollector>[0];
 function setup(works:Work[],options:{truncated?:boolean;inserted?:boolean;total?:number}={}){

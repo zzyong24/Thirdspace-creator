@@ -8,13 +8,24 @@ import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
 type Step = WorkbenchPlan["steps"][number];
+const stepFields = ["title", "status", "dependsOn", "operationRefs", "artifactRefs", "supersedes"] as const;
+type IssueField = typeof stepFields[number] | "steps";
 const receiptStatuses = ["ok", "partial", "blocked", "error", "succeeded", "running", "failed", "unknown"] as const;
 const sideEffects = ["none", "proposal", "committed", "unknown"] as const;
 type PlanValidationIssue = {
-  code: "success_evidence_missing" | "operation_not_found" | "operation_not_successful";
+  code: "success_evidence_missing" | "operation_not_found" | "operation_not_successful" | "succeeded_step_changed" | "step_removed" |
+    "receipt_removed" | "artifact_unverified" | "artifact_changed" | "dependency_not_successful" | "invalid_supersedes";
   stepId: string;
   currentStepStatus: Step["status"] | null;
-  requestedStatus: Step["status"];
+  requestedStatus: Step["status"] | null;
+  field?: IssueField;
+  fieldIndex?: number | null;
+  changedFields?: IssueField[];
+  expectedRef?: string | null;
+  requestedRef?: string | null;
+  artifactRef?: string | null;
+  dependencyRef?: string | null;
+  phase?: "metadata" | "bytes" | "batch_unverified" | "verification_limit" | "identity_recheck";
   operationRef: string | null;
   ledgerStatus: typeof workerReservationSchema._output.status | null;
   receiptStatus: typeof receiptStatuses[number] | "missing" | "invalid" | null;
@@ -25,13 +36,17 @@ type PlanValidationIssue = {
 export class WorkbenchPlanValidationError extends ConflictError {
   constructor(readonly issue: PlanValidationIssue) {
     super({success_evidence_missing: "步骤成功缺少真实回执或产物", operation_not_found: "步骤引用的工具调用不存在",
-      operation_not_successful: "步骤引用的工具回执未确认成功"}[issue.code]);
+      operation_not_successful: "步骤引用的工具回执未确认成功", succeeded_step_changed: "已成功步骤及回执不可改写",
+      step_removed: "旧步骤不可删除；替换时保留 supersedes 引用", receipt_removed: "已有步骤回执不可移除",
+      artifact_unverified: "步骤引用的产物尚未核实", artifact_changed: "步骤引用的产物在字节核验期间已改变",
+      dependency_not_successful: "前置步骤尚未成功", invalid_supersedes: "替换步骤须引用已有步骤"}[issue.code]);
   }
 }
 function planValidationError(code: PlanValidationIssue["code"], step: Step, earlier?: Step, operationRef: string | null = null,
-  call?: Pick<typeof executionCalls.$inferSelect, "status" | "resultText">): WorkbenchPlanValidationError {
+  call?: Pick<typeof executionCalls.$inferSelect, "status" | "resultText">, detail: Partial<Omit<PlanValidationIssue, "code" | "stepId">> = {}): WorkbenchPlanValidationError {
   const issue: PlanValidationIssue = {code, stepId: step.stepId, currentStepStatus: earlier?.status ?? null, requestedStatus: step.status,
-    operationRef, ledgerStatus: null, receiptStatus: null, receiptHasError: null, sideEffect: null};
+    operationRef, ledgerStatus: null, receiptStatus: null, receiptHasError: null, sideEffect: null,
+    field: code === "success_evidence_missing" ? "status" : "operationRefs", fieldIndex: operationRef === null ? null : step.operationRefs.indexOf(operationRef)};
   // SEMANTIC_BOUNDARY_ALLOW: 只投影本任务校验失败处的固定状态，不解释错误正文或判断步骤语义。
   if (call) {
     const status = workerReservationSchema.shape.status.safeParse(call.status);
@@ -50,23 +65,39 @@ function planValidationError(code: PlanValidationIssue["code"], step: Step, earl
       }
     } catch { /* 损坏的回执只报告 invalid，不回传原文。 */ }
   }
-  return new WorkbenchPlanValidationError(issue);
+  return new WorkbenchPlanValidationError({...issue, ...detail});
+}
+function stepChangeError(step: Step, revised?: Step) {
+  const changedFields: IssueField[] = revised ? stepFields.filter(field => !isDeepStrictEqual(step[field], revised[field])) : ["steps"];
+  const field = changedFields[0]!;
+  const before = step[field as keyof Step], after = revised?.[field as keyof Step];
+  let index: number | null = null;
+  if (Array.isArray(before) && Array.isArray(after)) for (let i = 0; i < Math.max(before.length, after.length); i++) {
+    if (before[i] !== after[i]) {index = i; break;}
+  }
+  return planValidationError("succeeded_step_changed", revised ?? step, step, null, undefined, {
+    requestedStatus: revised?.status ?? null, field, fieldIndex: index, changedFields,
+    expectedRef: index === null ? null : (before as string[])[index] ?? null,
+    requestedRef: index === null ? null : (after as string[])[index] ?? null,
+  });
 }
 function artifactsToVerify(step: Step, earlier?: Step): string[] {
   return step.status === "succeeded" && earlier?.status !== "succeeded"
     ? step.artifactRefs : step.artifactRefs.filter(ref => !earlier?.artifactRefs.includes(ref));
 }
-function artifactIdentity(payload: unknown, refs: string[]): string {
+function artifactIdentity(payload: unknown, refs: string[], step: Step, earlier?: Step, recheck = false): string {
   const rows = (payload as Record<string, unknown>).workbenchArtifactVersions;
-  if (!Array.isArray(rows)) throw new ConflictError("步骤引用的产物尚未核实");
+  const fail = (artifactRef: string): never => {throw planValidationError(recheck ? "artifact_changed" : "artifact_unverified", step, earlier, null, undefined,
+    {field: "artifactRefs", fieldIndex: step.artifactRefs.indexOf(artifactRef), artifactRef, phase: recheck ? "identity_recheck" : "metadata"});};
+  if (!Array.isArray(rows)) return fail(refs[0]!);
   // SEMANTIC_BOUNDARY_ALLOW: 只比较产物版本、存储定位和登记摘要，不做内容或创作判断。
   const identities = refs.map(ref => {
     const match = /^(.+)@([1-9][0-9]*)$/.exec(ref);
-    if (!match) throw new ConflictError("步骤引用的产物尚未核实");
+    if (!match) return fail(ref);
     const matches = rows.filter(row => row?.metadata?.artifactId === match[1] && row?.metadata?.version === Number(match[2]));
     const row = matches[0], metadata = workbenchArtifactSchema.safeParse(row?.metadata);
     if (matches.length !== 1 || !metadata.success || typeof row.operationId !== "string" || !row.operationId ||
-        typeof row.requestDigest !== "string" || !/^[a-f0-9]{64}$/.test(row.requestDigest)) throw new ConflictError("步骤引用的产物尚未核实");
+        typeof row.requestDigest !== "string" || !/^[a-f0-9]{64}$/.test(row.requestDigest)) return fail(ref);
     return {metadata: metadata.data, operationId: row.operationId, requestDigest: row.requestDigest};
   });
   return createHash("sha256").update(JSON.stringify(identities)).digest("hex");
@@ -129,7 +160,7 @@ export function createWorkbenchPlanService(db: Db, deps: {
       if (!snapshot) throw new ConflictError("执行凭证已失效");
       if (snapshot.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
       const snapshotPlan = storedPlan(snapshot.payload);
-      const verified = new Map<string, {refs: string[]; identity: string}>();
+      const verified = new Map<string, {step: Step; earlier?: Step; refs: string[]; identities: string[]}>();
       if (!isDeepStrictEqual(snapshotPlan, proposed)) {
         if ((snapshotPlan?.planRevision ?? 0) !== input.expectedRevision) throw new ConflictError("计划版本已改变，请重新读取");
         const old = new Map(snapshotPlan?.steps.map(step => [step.stepId, step]) ?? []);
@@ -137,18 +168,31 @@ export function createWorkbenchPlanService(db: Db, deps: {
         // 先冻结身份，再做锁外 I/O；最终事务重新核验租约、计划 CAS 和这些身份后才允许写入。
         for (const step of proposed.steps) {
           const refs = artifactsToVerify(step, old.get(step.stepId));
-          if (refs.length) verified.set(step.stepId, {refs, identity: artifactIdentity(snapshot.payload, refs)});
+          if (refs.length) verified.set(step.stepId, {step, earlier: old.get(step.stepId), refs,
+            identities: refs.map(ref => artifactIdentity(snapshot.payload, [ref], step, old.get(step.stepId)))});
         }
-        for (const {refs} of verified.values()) {
-          if (!(await deps.verifyArtifacts?.({userId: snapshot.userId, accountId: snapshot.accountId, taskId: snapshot.id}, refs)))
-            throw new ConflictError("步骤引用的产物尚未核实");
+        for (const {step, earlier, refs} of verified.values()) {
+          const scope = {userId: snapshot.userId, accountId: snapshot.accountId, taskId: snapshot.id};
+          if (!(await deps.verifyArtifacts?.(scope, refs))) {
+            // 原批次拒绝不可被后续观察转成成功；单项只读定位也不能绕过原端口100条上限。
+            let artifactRef: string | null = null;
+            if (refs.length <= 100 && deps.verifyArtifacts) {
+              try {for (const ref of refs) if (!(await deps.verifyArtifacts(scope, [ref]))) {artifactRef = ref; break;}}
+              catch { /* 已确认原批次失败，额外诊断不可将它升级成未知提交。 */ }
+            }
+            throw planValidationError("artifact_unverified", step, earlier, null, undefined, {field: "artifactRefs", artifactRef,
+              fieldIndex: artifactRef === null ? null : step.artifactRefs.indexOf(artifactRef),
+              phase: artifactRef !== null ? "bytes" : refs.length > 100 ? "verification_limit" : "batch_unverified"});
+          }
         }
       }
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         if (task.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
         if (task.userId !== snapshot.userId || task.accountId !== snapshot.accountId) throw new ConflictError("任务归属已改变");
-        for (const {refs, identity} of verified.values()) {
-          if (artifactIdentity(task.payload, refs) !== identity) throw new ConflictError("步骤引用的产物在字节核验期间已改变");
+        for (const {step, earlier, refs, identities} of verified.values()) {
+          for (const [index, ref] of refs.entries()) if (artifactIdentity(task.payload, [ref], step, earlier, true) !== identities[index])
+            throw planValidationError("artifact_changed", step, earlier, null, undefined,
+              {field: "artifactRefs", fieldIndex: step.artifactRefs.indexOf(ref), artifactRef: ref, phase: "identity_recheck"});
         }
         const previous = storedPlan(task.payload);
         if (previous?.planRevision === proposed.planRevision && isDeepStrictEqual(previous, proposed)) return previous;
@@ -156,14 +200,18 @@ export function createWorkbenchPlanService(db: Db, deps: {
         const old = new Map(previous?.steps.map(step => [step.stepId, step]) ?? []);
         const next = new Map(proposed.steps.map(step => [step.stepId, step]));
         for (const [id, step] of old) {
-          if (step.status === "succeeded" && !isDeepStrictEqual(next.get(id), step)) throw new ConflictError("已成功步骤及回执不可改写");
-          if (step.status !== "succeeded" && !next.has(id)) throw new ConflictError("旧步骤不可删除；替换时保留 supersedes 引用");
+          if (step.status === "succeeded" && !isDeepStrictEqual(next.get(id), step)) throw stepChangeError(step, next.get(id));
+          if (step.status !== "succeeded" && !next.has(id)) throw planValidationError("step_removed", step, step, null, undefined, {field: "steps", requestedStatus: null});
           const revised = next.get(id);
-          if (revised && (step.operationRefs.some(ref => !revised.operationRefs.includes(ref)) || step.artifactRefs.some(ref => !revised.artifactRefs.includes(ref)))) throw new ConflictError("已有步骤回执不可移除");
+          if (revised) for (const field of ["operationRefs", "artifactRefs"] as const) {
+            const index = step[field].findIndex(ref => !revised[field].includes(ref));
+            if (index !== -1) throw planValidationError("receipt_removed", revised, step, field === "operationRefs" ? step[field][index]! : null, undefined,
+              {field, fieldIndex: index, expectedRef: step[field][index]!, artifactRef: field === "artifactRefs" ? step[field][index]! : null});
+          }
         }
         for (const step of proposed.steps) {
           const earlier = old.get(step.stepId);
-          if (step.supersedes && (!old.has(step.supersedes) || step.supersedes === step.stepId)) throw new ConflictError("替换步骤须引用已有步骤");
+          if (step.supersedes && (!old.has(step.supersedes) || step.supersedes === step.stepId)) throw planValidationError("invalid_supersedes", step, earlier, null, undefined, {field: "supersedes", requestedRef: step.supersedes});
           if (step.status === "succeeded" && !step.operationRefs.length && !step.artifactRefs.length) throw planValidationError("success_evidence_missing", step, earlier);
           for (const callId of step.operationRefs) {
             if (earlier?.operationRefs.includes(callId) && step.status !== "succeeded") continue;
@@ -172,7 +220,9 @@ export function createWorkbenchPlanService(db: Db, deps: {
             if (step.status === "succeeded" && (call.status !== "settled" || !successfulToolReceipt(call.resultText))) throw planValidationError("operation_not_successful", step, earlier, callId, call);
           }
           if (step.status !== "succeeded" || earlier?.status === "succeeded") continue;
-          if (step.dependsOn.some(dependency => next.get(dependency)?.status !== "succeeded")) throw new ConflictError("前置步骤尚未成功");
+          const dependencyIndex = step.dependsOn.findIndex(dependency => next.get(dependency)?.status !== "succeeded");
+          if (dependencyIndex !== -1) throw planValidationError("dependency_not_successful", step, earlier, null, undefined,
+            {field: "dependsOn", fieldIndex: dependencyIndex, dependencyRef: step.dependsOn[dependencyIndex]!});
         }
         const payload = {...task.payload as Record<string, unknown>, workbenchPlan: proposed};
         await tx.update(executionTasks).set({payload, updatedAt: now()}).where(eq(executionTasks.id, task.id));

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import { createDb, executionCalls, executionTasks, eq, type Db } from "@creatoro
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createWorkbenchPlanService } from "./workbench-plan.service";
+import { createWorkbenchArtifactService } from "./workbench-artifact.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
 import { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
@@ -78,6 +80,52 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     const resumed = {executionTaskId: f.task.id, attempt: claimed.lease.attempt, fenceToken: claimed.lease.fenceToken};
     expect((await f.plan.status(resumed))?.revision).toBe(3);
     expect((await f.plan.save(resumed, {expectedRevision: 3, steps: [...revised.steps, step("verify", {dependsOn: ["report"]})]})).steps[0]).toEqual(completed.steps[0]);
+  });
+
+  it.each(["operationRefs","artifactRefs","steps","dependsOn","supersedes"] as const)("T1026 round7 %s拒绝给精确字段且不推进计划",async field=>{
+    const f=await fixture(`round7-${field}`),ledger=createExecutionCallLedgerService(db,{now,budget:{maxCalls:10,maxTokens:1000,deadlineMs:60000}});
+    const c=await ledger.reserve(f.ref,{kind:"tool",operationKey:"read",inputDigest:"sha256:"+"c".repeat(64),reservedTokens:0});await ledger.start(f.ref,c.id);
+    await ledger.settle(f.ref,c.id,{status:"settled",usage:{totalTokens:0},resultText:'{"status":"ok"}'});
+    const artifactRef="wa-existing@1",old=step("original",{operationRefs:[c.id],artifactRefs:[artifactRef]});
+    // 历史pending步骤保留既有refs；本测试不让该产物成为成功证据。
+    const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.task.id));
+    const saved={planRevision:1,steps:[old]};
+    await db.update(executionTasks).set({payload:{...task!.payload as object,workbenchPlan:saved}}).where(eq(executionTasks.id,f.task.id));
+    const requested=field==="steps"?[]:field==="dependsOn"?[old,step("report",{dependsOn:[old.stepId],status:"succeeded",operationRefs:[c.id]})]:
+      field==="supersedes"?[old,step("new",{supersedes:"absent"})]:[{...old,[field]:[]}];
+    await expect(f.plan.save(f.ref,{expectedRevision:1,steps:requested})).rejects.toMatchObject({issue:{
+      code:field==="steps"?"step_removed":field==="dependsOn"?"dependency_not_successful":field==="supersedes"?"invalid_supersedes":"receipt_removed",field,
+      stepId:field==="dependsOn"?"report":field==="supersedes"?"new":"original",
+      ...(field==="operationRefs"?{operationRef:c.id}:field==="artifactRefs"?{artifactRef}:field==="dependsOn"?{dependencyRef:"original"}:{}),
+    }});
+    expect(await f.plan.read(ctx,f.task.id)).toEqual(saved);
+  });
+
+  it.each(["metadata","bytes","batch","probe_error","limit","identity","missing_during"] as const)("T1026 round7 产物%s未核实准确定位，不泄漏Blob且批拒绝不能由单项成功绕过",async mode=>{
+    const f=await fixture(`round7-artifact-${mode}`),blobs=new Map<string,Uint8Array>();
+    const artifacts=createWorkbenchArtifactService(db,{now,readTaskFile:async()=>({bytes:Buffer.from("fixture bytes"),version:1}),blobs:{
+      async submit(_ctx,input){const hash=createHash("sha256").update(input.bytes).digest("hex");blobs.set(input.operationId,input.bytes);return {hash,size:input.bytes.length};},
+      async read(_ctx,input){return blobs.get(input.operationId)!;},
+    }});
+    const registered=await artifacts.register(f.ref,"registered-artifact",{path:"report.md",mime:"text/markdown"});
+    const good=`${registered.artifactId}@${registered.version}`,bad="wa-absent@1";
+    const refs=mode==="metadata"?[good,bad]:mode==="limit"?Array.from({length:101},()=>good):[good];
+    let singleReads=0;
+    const plans=createWorkbenchPlanService(db,{now,verifyArtifacts:async(scope,items)=>{
+      singleReads++;
+      if(mode==="bytes"){blobs.clear();return artifacts.verifyArtifacts(scope,items);}
+      if(mode==="identity"||mode==="missing_during"){
+        const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.task.id));
+        const payload=task!.payload as Record<string,unknown>,rows=payload.workbenchArtifactVersions as Array<Record<string,unknown>>;
+        await db.update(executionTasks).set({payload:{...payload,workbenchArtifactVersions:mode==="missing_during"?[]:rows.map(row=>({...row,requestDigest:"b".repeat(64)}))}}).where(eq(executionTasks.id,f.task.id));
+        return true;
+      }
+      if(mode==="probe_error"&&singleReads>1)throw Error("PRIVATE_DIAGNOSTIC_FAILURE");
+      return mode==="batch"&&singleReads>1;
+    }});
+    await expect(plans.save(f.ref,{expectedRevision:0,steps:[step("report",{status:"succeeded",artifactRefs:refs})]})).rejects.toMatchObject({issue:{code:mode==="identity"||mode==="missing_during"?"artifact_changed":"artifact_unverified",stepId:"report",field:"artifactRefs",artifactRef:["batch","probe_error","limit"].includes(mode)?null:mode==="metadata"?bad:good}});
+    if(mode==="limit")expect(singleReads).toBe(1);
+    expect(await f.plan.read(ctx,f.task.id)).toBeNull();
   });
 
   it("拒绝不存在或成环的依赖", async () => {

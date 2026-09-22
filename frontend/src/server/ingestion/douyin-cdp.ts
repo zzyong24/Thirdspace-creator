@@ -2224,7 +2224,7 @@ async function scrapeCommentsForWork(
     // 在原监听窗口终点固定结果，诊断读取不能延长采集或改变pending/完成判断。
     active=false;page.off("response",onResponse);
     const diagnostics:CommentReadDiagnostics={matchedResponses,validResponses,invalidResponses,parsedComments,pendingResponses,ignoredResponses,reason,pageEvidence};
-    await finishCommentPageEvidence(page,pageEvidence);
+    await finishCommentPageEvidence(page,pageEvidence,reason);
     onCompletion?.(reason==='watermark_reached'||reason==='stable_end'||reason==='pagination_exhausted',diagnostics);
     return [...byId.values()];
   } finally {

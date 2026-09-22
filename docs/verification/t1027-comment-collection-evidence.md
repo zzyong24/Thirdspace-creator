@@ -125,3 +125,12 @@ Kuhn 最终只读独审已明确通过、未发现 selected runNow 实现阻断�
 冻结交接补充：Carver 随后报告已修复其测试 NativeLeasePort 非空账号校验，`pnpm --dir frontend exec tsc --noEmit --pretty false` exit 0，日志 `/tmp/t1026-file-recovery-typecheck.log`；此为负责人回报，不改写上表本次实际失败日志。最终全局类型检查由主线统一执行。本项不修改 Carver 文件，不继续改代码，任务验收状态留待主线安装实测后收口。
 
 后续真实安装采集由主线在第四候选中经公开 CLI 选择少量失败 ID 执行。当前隔离测试不代替网站 E2E；作品 retry 不解除平台 cooldown，无 due/冷却返回也不证明网站根因或采集成功。未读取私有数据库或连接文件。
+
+
+## 第六安装真实单项复验
+
+`run-3fcc5bfb-af74-4fd3-a9a9-08125dadb0f4`处理1/1、确认0/1，27.99秒后failed，原失败并未修正文案就变成成功。公开诊断显示245响应、240个2xx与5个3xx，评论接口匹配0；选中范围1失败和账号62失败分开。同key retry回放一致。16桶/省略/溢出合计245，不能把未显示的路由推断为不存在。page路由正确、导航200、readycomplete不是登录或评论列表加载成功的证据。外层原来误识别navigationStatus为超时的问题本轮已消除。
+
+因此第七候选只在同一个采集Page、同一次既有readyState evaluate内追加有限可见角色证据，不新增平台请求或私有访问。标题及角色短文本可能包含账号显示名，范围在SPEC明确；不声称绝无个人信息。登录/验证码仍null，零节点与truncated不能解释成页面无该状态。安装后只选一项再验，真实采集仍待通过。
+
+第七候选被动UI实现冻结：前端真实Chromium与采集链4文件171/171，后端2文件35/35，frontend全量与backend定向类型检查通过。Wegener独审发现并亲自复现外层status读取子dialog正文，三项真实红后改为跳过子dialog正文、只独立采允许角色和heading；shadow隐藏lightDOM与ARIA输入排除也已覆盖。原生产evaluate次数不变，off后迟到响应不改变完成结果。原始红绿日志`/tmp/t1027-ui-*.log`；真实网站单项复验待新包。
