@@ -72,3 +72,9 @@ flowchart LR
 沿现有 recoveryWake 的单在途 lane 自动扫描有界候选；真实 committed 回执结算后仅对该 task 运行既有恢复路径，unknown_result 可自动回原队列，paused 保持暂停。停止期间的Native晚返回不得继续结算或唤醒。没有journal、prepared、外部未知动作不被这条恢复路径视为成功。
 
 第三候选同会话补交付任务190又实测到命令协议纠错缺信息：模型反复使用绝对cwd和重复解释器argv，只收到泛化invalid_input。增加明确协议说明与无副作用参数修复建议，但不改冻结catalog、不自动改写argv或禁止名为node的合法脚本；新成功运行也说明实际operationId和参数含义。任务已由公开CLI暂停，等修复版沿原ID继续。
+
+第四候选860edd61实际发现：两浏览器lane确实重叠并导航成功，但长页browser.observe成为unknown；任务190在暂停模型调用后resume仍因model unknown阻断。继续在本范围修复：仅精确四类纯观察observe/extract/status/screenshot的读取失败可以诚实结算为读取失败并由loop重新观察，保留派发事实；navigate即使目录标read也不得借此放宽，act/open/close同样保持原未知边界。严格冻结身份下的旧纯观察unknown可保留原快照并收口为错误，不伪造成功；过大结果的转换错误也需处理。该细案已由Kuhn独审通过，先红后绿。暂停模型恢复复用已有无外部副作用模型规则，不伪造用量。原99文件对账实际为身份409、Native尚未查询，增加固定reason诊断而不放宽身份条件。
+
+真实CfT复现RFC9110有9450个引用，超过2048上限后整代引用被清空并折叠成权限错误。扩展vendored engine.rs/backend/cdp.rs/injected.rs，以typed容量原因和有界完整行前缀降级，保留实际DOM引用、显式truncated、一次原子新generation，旧引用仍拒绝；不提高cap，不用字符串匹配错误消息，不伪造元素。实现前独审，真实长页及旧generation/有效action验证后才能验收。
+
+正式host回归另外复现相同参数的新browser.act被旧成功回执吞掉；可信复用策略仅对browser.open/act/close关闭跨新operation复用，保留同call幂等和未知阻断。Kuhn独审与实派发计数回归通过，不修改目录或其他业务写入策略。

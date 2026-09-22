@@ -62,9 +62,9 @@ export function createChatWorkbenchCapabilityHost(
       if (!declared || declared.version !== definition.version || declared.effect !== definition.effect || declared.execution !== definition.execution) throw new Error("WORKBENCH_FROZEN_DEFINITION_MISMATCH");
       return [definition.name, {
         version: definition.version, effect: definition.effect,
-        // SEMANTIC_BOUNDARY_ALLOW: execution.run 的协议按 operationId 标识一次命令启动，
-        // 同 argv 不能标识同一进程；仅关闭新 operation 的结果复用，不扩展其他写入语义。
-        ...(definition.name==="execution.run"?{reuseSettledResults:false}:{}),
+        // SEMANTIC_BOUNDARY_ALLOW: 命令启动和浏览器 open/act/close 按 operationId
+        // 标识一次操作，同参数不代表同一进程、Lane 或交互；保留原 call 重放及 unknown 防重发。
+        ...(["execution.run","browser.open","browser.act","browser.close"].includes(definition.name)?{reuseSettledResults:false}:{}),
         parameters: prepared.parameters[definition.name]!.parameters,
         async approve() { return { status: "not-applicable" as const }; },
         async execute(context: RequestContext, raw: unknown, scope: { execution: ExecutionRef; callId: string; signal: AbortSignal }) {
@@ -94,6 +94,9 @@ export function createChatWorkbenchCapabilityHost(
             scope.signal.throwIfAborted();
             result = workbenchResultSchema.parse(returned);
             if (result.operationId !== scope.callId || result.status === "running" || (result.status === "succeeded" && !resultByName.get(definition.name)!.safeParse(result).success)) throw new Error("WORKBENCH_RESULT_INVALID");
+            // The bounded ledger projection can reject an otherwise valid but
+            // oversized result. Keep it inside the same failure boundary.
+            return workbenchToolOutcome(result, descriptor);
           } catch (error) {
             dispatchSettled = true;
             await pendingProgress;

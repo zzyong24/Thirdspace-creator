@@ -179,3 +179,32 @@ CLI 全量5文件77/77、typecheck通过；离线实际 runCliCommand/buildTools
 - 命令纠错：真实红测5 failed/1 passed，修复后4文件24 passed/1既有skip；隔离Node实际运行脚本、`-e`和名为node的合法文件。冻结catalog、历史回执和argv均未改写。Wegener独审通过，frontend全类型检查通过。日志 `/tmp/t1026-command-guidance-{red,green,typecheck}.log`。
 - 最终contract43文件255/255，类型检查通过；boundary无新增违规（旧基线5）；本地包装四项42/42，四处版本均1.2.0。
 - 独审通过只针对实际实现的协议A；B未实现。原99不解锁，原190待新包resume，T1027少量真实抓取待验收。禁止把这些待验项改写为通过。
+
+## 第四候选安装实测（860edd6108e8f6f305cfb2e32c5b49f2cdc52973）
+
+规范本地构建完成，自动覆盖安装启动PID46797，CLI恢复installed/full/connected，动态目录268项且三个新增入口都存在。DMG SHA-256 `455bfd57d652bdf9562cf0c08513f4aa7ba6ebd7b4d315b566dcde8837e91344`，hdiutil verify VALID。构建期间代码保持冻结。安装后LED-047八文件161/161通过。
+
+### 本机已通过的新增细项
+
+- 命令同参数重跑 `execution-task-7b63e540-322`：42条回执后succeeded。seq9/24输入完全相同（同runtime/argv/cwd/timeout），实际操作分别为 `call_6d1b3c13-c809-499e-a415-d8886162b677` 与 `call_332d1a07-3fc0-4e10-ae5b-0050b2faffd2`；seq11/26均exit0，stdout从revision-one变为revision-two，stderr也从one变two。四组stdout/stderr分页均offset0→8、more=true→false，拼接无丢重；第二次执行后旧操作read仍是one。Markdown核验记录正式登记 `wa-65475906afa4376e5224eef6fee5dd2b@1`，2772字节，hash `5987c0169273edeebc1eafbcd5194deb854c256b1b9b920c1c9eb13c8dc31d00`，CLI全量导出校验一致。
+- 表单任务 `execution-task-7b63e540-306`：55回执后succeeded，官方测试页七种动作均有真实ok。type后值为CreatorOS验收input，set_value后值为replaced，select_option实际选中value=2，Tab有执行回执，scrollY从0变300；hover执行成功。click仅聚焦文本框、changed=false，不声称有链接跳转。extract/screenshot/status/close均执行，未提交表单。若干格式错误经过本任务反馈纠正，完整错误历史保留。
+- 评论公开失败清单选最多2项，本次确为2项；retry同key同输入回放数据相同。runNow target明确选中两项，实际只处理这两项；这些证明入口及选集生效，**不等于抓取成功**。
+
+### 仍在修复的真实失败
+
+- 浏览器G/H（`execution-task-7b63e540-63`/`73`）两lane确实重叠、各自navigate成功；随后browser.observe未知，两任务blocked，未能完成取消隔离。并发调度已产生重叠事实，整条浏览器验收仍不通过。隔离CfT复现根因是RFC9110的9450 refs超过2048 cap，被错误归为权限限制；不是125秒超时。正在有界截断与只读错误收口修复。
+- 原190在公开resume后attempt2、58条原账本保留，却因末条model unknown成为CHAT_CHECKPOINT_REQUIRES_RECONCILIATION；仍无新报告v2。暂停模型恢复逻辑继续修复，不换新任务掩盖。
+- 原99的公开files.reconcile返回409“文件恢复身份或调用证据不匹配”，Native尚未被查询。因此不能说本轮已经验证journal absent，更不能声称旧写入已提交。保持暂停，补固定reason诊断继续定位。
+- 评论 `run-f90afbe3-41ac-4b25-b4b5-527c0ac9fe06` 实际54.124秒failed，处理2/2、确认0/2，均no_matching_response。matched/valid/invalid等计数0，选中失败2与账号失败62明确区分。缺页面最终路由等被动事实，不能推断无评论、登录状态或限流；沿T1027补诊断后再少量复验。
+
+上述安装原始回执留在 `/tmp/t1026-cli-evidence/`。第四包运行成功和若干功能通过不能取代这些未通过项。
+
+### 第五候选冻结前修复与回归
+
+- 浏览器纯观察只针对observe/extract/status/screenshot读取失败，保留真实派发事实并交回loop；严格身份下的旧unknown只记读取不可用，不伪造页面或成功。正式host/PGlite/socket组合46通过、4项原有实机门跳过，新27项全部执行；contract7、backend42、frontend类型检查通过。新scroll调用先红（应2次实派发、实际1次）后绿；只为browser.open/act/close关闭跨新operation的旧成功复用，同call回放和unknown阻断保持。Kuhn独审通过，日志`/tmp/t1026-browser-observation-final.log`及`/tmp/t1026-browser-operation-reuse-green.log`。
+- 原生长页容量降级：真实CfT短页/RFC/双任务3/3，adapter33/33，parser/typed/wrapper12/12，真实注入1/1、多frame1/1（1504引用逐个实际DOM反解）。独审曾用slash名称内伪造ref复现错绑，修复后仅解析真实renderer尾部元数据，独立脚本通过。日志`/tmp/t1026-observe-real-final.log`、`/tmp/t1026-observe-multiframe.log`等。全engine测试792通过、1失败、9忽略、1筛选：唯一失败是未修改profile fixture创建深路径触发macOS OS63，不能记全量通过。
+- 评论被动证据：前端红测8失败、后端2失败8通过；修后前端156/156、后端10/10、frontend类型检查通过。只收集已有导航响应、网络计数、固定路由与readyState，不新增网络探针或重试；登录/验证码未经证实仍为null。Wegener独审通过，真实安装一项复验待进行。
+- 暂停模型原键恢复及文件409固定reason的回归详见文件恢复协议E/F；均保留账本与费用。原99缺claim目前只是可复现假说，没有原任务实际证据，没有放宽对账或实现B。
+- 最终contract43文件255/255、打包预检42/42。第五包尚未安装，以上不替代真实任务190/G/H恢复或原报告交付验收。
+
+第五轮最终边界门已修复跨模块集成测试归属：测试移至backend/src/integration，正文不变，实际Worker1/1与专用类型检查通过；boundary无新增违规、旧基线5保留。未修改baseline或扫描规则。

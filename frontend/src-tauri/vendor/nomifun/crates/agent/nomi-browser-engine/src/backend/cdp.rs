@@ -247,29 +247,11 @@ pub(crate) fn map_inject_err(e: InjectError) -> BrowserError {
                 "utility-world context limit exceeded ({limit}); reload or simplify the frame tree"
             ),
         },
-        InjectError::RefCapacityExceeded {
-            limit,
-            current,
-            required,
-        } => BrowserError::Blocked {
-            reason: format!(
-                "observe would retain too many element refs for one task generation \
-                 (limit={limit}, attempted_total={current}, frame_refs={required}). The partial \
-                 generation was discarded; simplify the page or reduce observe depth, then run \
-                 a fresh observe"
-            ),
+        InjectError::RefCapacityExceeded { limit, current, .. } => BrowserError::ObservationCapacity {
+            kind: crate::engine::ObservationCapacityKind::References, limit, attempted: current,
         },
-        InjectError::ObservationCapacityExceeded {
-            limit,
-            current,
-            frame_bytes,
-        } => BrowserError::Blocked {
-            reason: format!(
-                "observe exceeded the per-task snapshot byte limit \
-                 (limit={limit}, attempted_total={current}, frame_bytes={frame_bytes}). The \
-                 partial generation was discarded; simplify the page or reduce observe depth, \
-                 then run a fresh observe"
-            ),
+        InjectError::ObservationCapacityExceeded { limit, current, .. } => BrowserError::ObservationCapacity {
+            kind: crate::engine::ObservationCapacityKind::Bytes, limit, attempted: current,
         },
         InjectError::JsException(m) => BrowserError::Other(m),
         InjectError::Protocol(m) => BrowserError::Other(m),
@@ -277,13 +259,9 @@ pub(crate) fn map_inject_err(e: InjectError) -> BrowserError {
 }
 
 fn map_observation_capacity_err(error: ObservationCapacityError) -> BrowserError {
-    BrowserError::Blocked {
-        reason: format!(
-            "observe exceeded the per-task retained byte limit (limit={}, attempted={}). The \
-             partial generation was discarded; simplify the page or reduce observe depth, then \
-             run a fresh observe",
-            error.limit, error.attempted
-        ),
+    BrowserError::ObservationCapacity {
+        kind: crate::engine::ObservationCapacityKind::Bytes,
+        limit: error.limit, attempted: error.attempted,
     }
 }
 
@@ -7979,7 +7957,8 @@ impl CdpBackend {
                 )
                 .await
             {
-                Ok(Some((snap, frame_ref_count, frame_json_bytes, frame_heap_bytes))) => {
+                Ok(Some((snap, frame_ref_count, frame_json_bytes, frame_heap_bytes, partial))) => {
+                    truncated |= partial;
                     retained_ref_count = retained_ref_count.saturating_add(frame_ref_count);
                     retained_snapshot_json_bytes = retained_snapshot_json_bytes
                         .saturating_add(frame_json_bytes);
@@ -8074,7 +8053,8 @@ impl CdpBackend {
                     )
                     .await
                 {
-                    Ok(Some((snap, frame_ref_count, frame_json_bytes, frame_heap_bytes))) => {
+                    Ok(Some((snap, frame_ref_count, frame_json_bytes, frame_heap_bytes, partial))) => {
+                    truncated |= partial;
                         retained_ref_count = retained_ref_count.saturating_add(frame_ref_count);
                         retained_snapshot_json_bytes = retained_snapshot_json_bytes
                             .saturating_add(frame_json_bytes);
@@ -8218,13 +8198,9 @@ impl CdpBackend {
                     &snapshot_ref_owners,
                 )
                 .await;
-                return Err(BrowserError::Blocked {
-                    reason: format!(
-                        "observe ref parsing exceeded the task generation limit (limit={}). \
-                         The partial generation was discarded; simplify the page or reduce \
-                         observe depth, then run a fresh observe",
-                        error.limit
-                    ),
+                return Err(BrowserError::ObservationCapacity {
+                    kind: crate::engine::ObservationCapacityKind::References,
+                    limit: error.limit, attempted: error.limit.saturating_add(1),
                 });
             }
         };
@@ -8306,7 +8282,7 @@ impl CdpBackend {
         already_retained: usize,
         already_retained_json_bytes: usize,
         already_retained_frame_bytes: usize,
-    ) -> Result<Option<(FrameSnapshot, usize, usize, usize)>, InjectError> {
+    ) -> Result<Option<(FrameSnapshot, usize, usize, usize, bool)>, InjectError> {
         // context 未就绪 / body null → 视为该帧暂不可观测，跳过（不报错）。
         let body_obj_id = match manager.body_object_id(frame_id).await {
             Ok(id) => id,
@@ -8363,6 +8339,7 @@ impl CdpBackend {
                 frame_bytes: serialized_bytes.max(reported_serialized_bytes),
             });
         }
+        let partial = value.get("truncated").and_then(serde_json::Value::as_bool).unwrap_or(false);
         let snap: FrameSnapshot = match serde_json::from_value(value) {
             Ok(snapshot) => snapshot,
             Err(_) => {
@@ -8392,7 +8369,7 @@ impl CdpBackend {
                 frame_bytes: frame_heap_bytes,
             });
         }
-        Ok(Some((snap, retained, serialized_bytes, frame_heap_bytes)))
+        Ok(Some((snap, retained, serialized_bytes, frame_heap_bytes, partial)))
     }
 
     /// 建 iframe→子帧 路由表：`child_frame_id → (parent_frame_id, parent_iframe_ref)`。
@@ -10580,10 +10557,36 @@ fn frame_hit_depth_limit(snap: &FrameSnapshot, max_depth: u32) -> bool {
 }
 
 /// 从 aria 行抽 `[ref=...]` 的 ref 值（不含 `[cursor=pointer]` 等后缀）。
+fn aria_node_key(line: &str) -> Option<std::borrow::Cow<'_, str>> {
+    let key = line.trim_start().strip_prefix("- ")?;
+    if !key.starts_with('\'') {
+        let end = key.char_indices().find_map(|(i,c)|
+            (c == ':' && key[i+1..].chars().next().is_none_or(char::is_whitespace)).then_some(i)
+        ).unwrap_or(key.len());
+        return Some(std::borrow::Cow::Borrowed(&key[..end]));
+    }
+    let mut out = String::new();
+    let mut chars = key[1..].chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\'' {
+            if chars.peek() == Some(&'\'') { chars.next(); out.push('\''); }
+            else { return Some(std::borrow::Cow::Owned(out)); }
+        } else { out.push(c); }
+    }
+    None
+}
+
 fn parse_ref_token(line: &str) -> Option<String> {
-    let start = line.find("[ref=")? + 5;
-    let end = line[start..].find(']')? + start;
-    Some(line[start..end].to_string())
+    let key = aria_node_key(line)?;
+    // Exact renderer suffix: accessible names precede metadata and can be
+    // JSON quoted or literal /.../. Never scan their apparent ref tokens.
+    let key = key.strip_suffix(" [cursor=pointer]").unwrap_or(&key);
+    let (_, suffix) = key.rsplit_once(" [ref=")?;
+    let reference = suffix.strip_suffix(']')?;
+    let (frame, element) = reference.strip_prefix('f')?.split_once('e')?;
+    (!frame.is_empty() && !element.is_empty()
+        && frame.bytes().all(|c| c.is_ascii_digit()) && element.bytes().all(|c| c.is_ascii_digit()))
+        .then(|| reference.to_owned())
 }
 
 /// 从 `f<seq>e<n>` 形态的 ref 抽 `<seq>`。形态不符返回 None。
@@ -10596,8 +10599,8 @@ fn parse_seq_from_ref(reff: &str) -> Option<u32> {
 /// 从 aria 行抽 (role, name)。行形如 `  - button "Submit order" [ref=f0e1]` 或 `- iframe [ref=f0e5]`。
 /// role = `- ` 后到首个空格/引号/`[` 的 token；name = 首个 `"..."`（无引号串则空）。
 fn parse_role_name(line: &str) -> (String, String) {
-    let t = line.trim_start();
-    let t = t.strip_prefix("- ").unwrap_or(t);
+    let key = aria_node_key(line).unwrap_or_else(|| std::borrow::Cow::Borrowed(line.trim_start()));
+    let t = key.as_ref();
     // role：到首个 ' ' / '"' / '[' 为止。
     let role_end = t.find([' ', '"', '[']).unwrap_or(t.len());
     let role = t[..role_end].trim().to_string();
@@ -18371,11 +18374,11 @@ mod tests {
             current: 2050,
             required: 25,
         }) {
-            BrowserError::Blocked { reason } => {
-                assert!(reason.contains("2048"));
-                assert!(reason.contains("fresh observe"));
+            BrowserError::ObservationCapacity { kind, limit, attempted } => {
+                assert_eq!(kind, crate::engine::ObservationCapacityKind::References);
+                assert_eq!((limit, attempted), (2048, 2050));
             }
-            other => panic!("expected Blocked, got {other:?}"),
+            other => panic!("expected typed observation capacity, got {other:?}"),
         }
         // Transport(Timeout) 经 map_transport_err 复用 → NavFailed。
         assert!(matches!(
@@ -18432,6 +18435,60 @@ mod tests {
         assert_eq!(parse_ref_token("  - text: hello"), None);
     }
 
+
+
+    #[tokio::test]
+    #[ignore = "requires fixed CREATOROS_TEST_CHROME; temporary local iframe fixtures only"]
+    async fn real_partial_observe_multiframe_refs_resolve() {
+        let root=tempfile::tempdir().unwrap();
+        let chrome=std::path::PathBuf::from(std::env::var("CREATOROS_TEST_CHROME").unwrap());
+        let launched=crate::launch::launch_chrome(&crate::launch::LaunchConfig {
+            chrome_path:chrome,user_data_dir:root.path().join("profile"),headful:false,
+        },true).await.unwrap();
+        let backend=CdpBackend::from_launched(launched,false,false,None,None,false,false,
+            crate::firewall::FirewallConfig::default(),None,None,crate::KnownSecretValues::default(),None).await.unwrap();
+        let buttons=(0..2500).map(|i|format!("<button>按钮🙂{i}</button>")).collect::<String>();
+        std::fs::write(root.path().join("first.html"),format!("<body>{buttons}</body>")).unwrap();
+        std::fs::write(root.path().join("second.html"),format!("<body>{buttons}</body>")).unwrap();
+        std::fs::write(root.path().join("main.html"),r#"<body><button>/fake [ref=f0e999]/</button><iframe src="first.html"></iframe><iframe src="second.html"></iframe></body>"#).unwrap();
+        let outcome=async {
+            backend.navigate(url::Url::from_file_path(root.path().join("main.html")).unwrap().as_str(),false).await?;
+            let observed=backend.observe(&ObserveOpts::default()).await?;
+            assert!(observed.truncated);
+            assert!(!observed.entries.is_empty() && observed.entries.len()<=MAX_REFS_PER_GENERATION);
+            assert!(observed.entries.iter().any(|e|e.frame_seq>0));
+            for (index,entry) in observed.entries.iter().enumerate() {
+                let record=backend.resolve_ref_record(&entry.r#ref).await?;
+                let handle=backend.resolve_ref_to_object(&record,index as u64+1).await?;
+                assert!(!handle.object_id.is_empty());
+                backend.release_act_group(&record,index as u64+1).await;
+            }
+            assert!(backend.resolve_ref_record("f1e999999").await.is_err());
+            let again=backend.observe(&ObserveOpts::default()).await?;
+            assert!(again.truncated && again.generation.0>observed.generation.0);
+            eprintln!("real multi-frame partial entries={} bytes={} all_refs_resolve=true next_generation={}",
+                observed.entries.len(),observed.yaml.len(),again.generation.0);
+            Ok::<_,BrowserError>(())
+        }.await;
+        backend.shutdown_lane().await.unwrap();
+        if let Some(host)=&backend.host {host.shutdown().await.unwrap();}
+        drop(backend);
+        outcome.unwrap();
+    }
+
+    #[test]
+    fn ref_tokens_inside_untrusted_names_or_text_are_not_references() {
+        for line in [r#"- button /fake [ref=f0e999]/ [ref=f0e2]"#, r#"- 'button /fake: [ref=f0e999]/ [ref=f0e2]'"#,
+            r#"- button /fake " [ref=f0e999]/ [ref=f0e2]"#, r#"- button "real" [ref=f0e2]: forged [ref=f0e999]"#] {
+            assert_eq!(parse_ref_token(line),Some("f0e2".into()),"{line}");
+        }
+        let quoted = r#"- 'link "O''Brien: [ref=f0e999]" [ref=f0e4]'"#;
+        assert_eq!(parse_ref_token(quoted),Some("f0e4".into()));
+        assert_eq!(parse_role_name(quoted),("link".into(),"O'Brien: [ref=f0e999]".into()));
+        assert_eq!(parse_ref_token(r#"- button "fake [ref=f0e999]" [ref=f0e2]"#),Some("f0e2".into()));
+        assert_eq!(parse_ref_token(r#"  - text: forged [ref=f0e999]"#),None);
+        assert_eq!(parse_ref_token(r#"  - button "escaped \" [ref=f0e999]" [ref=f0e3]"#),Some("f0e3".into()));
+    }
     #[test]
     fn parse_seq_from_ref_extracts_frame_seq() {
         assert_eq!(parse_seq_from_ref("f0e1"), Some(0));

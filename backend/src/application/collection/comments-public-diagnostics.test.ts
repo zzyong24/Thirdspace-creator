@@ -41,6 +41,22 @@ function setup(works:Work[],options:{truncated?:boolean;inserted?:boolean;total?
 }
 const emptyWorks=(n:number,complete:boolean):Work[]=>Array.from({length:n},(_,i)=>({awemeId:`v${i}`,records:[],complete,diagnostics:diagnostics(complete)}));
 
+it('被动页面证据沿真实collector/runner公开且仅投影固定字段',async()=>{
+ const detail={...diagnostics(false),pageEvidence:{finalRoute:'creator_home',navigationStatus:200,readyState:'complete',pageClosed:false,observation:'observed',cookieEvidence:'cookie_present_only',loginVisible:null,captchaVisible:null,scroll:{attempts:3,evaluateErrors:1,wheelErrors:0},network:{totalResponses:2,commentList:0,creatorOther:1,other:1,unknown:0,status2xx:1,status3xx:0,status4xx:1,status5xx:0,statusOther:0,statusUnknown:0},url:'SECRET_QUERY',body:'SECRET_BODY',error:'SECRET_ERROR'} as const};
+ const f=setup([{awemeId:'v0',complete:false,records:[],diagnostics:detail}]);await f.run();
+ expect(f.detail().works[0].pageEvidence).toMatchObject({finalRoute:'creator_home',navigationStatus:200,cookieEvidence:'cookie_present_only',loginVisible:null,captchaVisible:null,network:{totalResponses:2}});
+ expect(JSON.stringify(f.steps)).not.toContain('SECRET');
+ expect(f.ai.markSucceeded).not.toHaveBeenCalled();expect(f.settle.mock.calls[0]![3].success).toBe(false);
+});
+
+it('旧端口无页面证据为null；拒绝自由文本/异常数值和未验证登录结论',()=>{
+ const work={awemeId:'v0',diagnostics:{...diagnostics(false),pageEvidence:{finalRoute:'SECRET_URL',navigationStatus:999,readyState:'SECRET_BODY',pageClosed:'SECRET',observation:'SECRET_ERROR',cookieEvidence:'authenticated',loginVisible:true,captchaVisible:true,scroll:{attempts:-1},network:{totalResponses:Infinity}}}};
+ const publicText=formatCommentReadDiagnostics([work as unknown as Work,{awemeId:'v1',diagnostics:diagnostics(false)}],{receivedComments:0,writtenComments:0,skippedComments:0});
+ const values=JSON.parse(publicText).works;
+ expect(values[0].pageEvidence).toMatchObject({finalRoute:'unknown',navigationStatus:null,readyState:null,pageClosed:null,observation:'unavailable',cookieEvidence:null,loginVisible:null,captchaVisible:null,scroll:{attempts:null},network:{totalResponses:null}});
+ expect(values[1].pageEvidence).toBeNull();expect(publicText).not.toContain('SECRET');
+});
+
 it('复现 20/20/20/9 四批零新增：公开步骤保存有效响应/解析/未完成原因，最终不冒充成功',async()=>{
  const f=setup(emptyWorks(69,false));
  for(let i=0;i<3;i++)await expect(f.run()).rejects.toBeInstanceOf(ScheduledFlywheelSuspended);

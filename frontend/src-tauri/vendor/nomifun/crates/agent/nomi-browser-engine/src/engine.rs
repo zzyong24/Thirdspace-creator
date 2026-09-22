@@ -202,6 +202,9 @@ pub enum BrowserError {
     SessionLost { recoverable: bool },
     #[error("blocked: {reason}")]
     Blocked { reason: String },
+    /// Mechanical observation capacity, never a security-policy rejection.
+    #[error("observation {kind:?} capacity exceeded (limit={limit}, attempted={attempted})")]
+    ObservationCapacity { kind: ObservationCapacityKind, limit: usize, attempted: usize },
     #[error("navigation failed: {kind}")]
     NavFailed { kind: String },
     #[error("node stale (generation={generation})")]
@@ -231,6 +234,12 @@ pub enum BrowserError {
     Detached { kind: DetachKind },
     #[error("{0}")]
     Other(String),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ObservationCapacityKind {
+    References,
+    Bytes,
 }
 
 /// 超时所处的相位。让 [`BrowserError::Timeout`] 携带「是哪一步没完成」而非笼统超时，

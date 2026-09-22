@@ -1939,6 +1939,62 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires fixed CfT and public RFC network access; isolated profile only"]
+    fn real_chromium_rfc_long_page_observe() {
+        let bundled = PathBuf::from(std::env::var("CREATOROS_TEST_CFT_ROOT").unwrap());
+        assert!(BrowserHost::packaged_chrome_available(&bundled));
+        let root = std::env::temp_dir().join(format!("creatoros-rfc-observe-{}", rand::random::<u64>()));
+        let host = BrowserHost::new(root.clone(), bundled);
+        let mut admission = receipt("account-one");
+        admission.domain = "www.rfc-editor.org".into();
+        admission.expires_at_ms = now_ms() + 120_000;
+        admission.profile_key = host.profile_location("user-one", "account-one", "task-one", IdentityChoice::Anonymous)
+            .unwrap()["profileKey"].as_str().unwrap().to_owned();
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        let outcome = runtime.block_on(async {
+            let opened = host.dispatch(BrowserRequest {operation_id:"rfc-open".into(), admission:admission.clone(),
+                identity_mode:IdentityChoice::Anonymous, action:BrowserAction::Open}).await.map_err(|e|e.code)?;
+            let lane_id = opened["lane"]["lane_id"].as_str().unwrap().to_owned();
+            let epoch = opened["lane"]["browser_epoch"].as_u64().unwrap();
+            let request = |action:&str,input:Value| BrowserRequest {operation_id:format!("rfc-{action}"),admission:admission.clone(),
+                identity_mode:IdentityChoice::Anonymous,action:BrowserAction::Execute {lane_id:lane_id.clone(),
+                    expected_browser_epoch:epoch,action:action.into(),input,target_id:None,frame_id:None,ref_generation:None}};
+            let navigated = host.dispatch(request("navigate",json!({"url":"https://www.rfc-editor.org/rfc/rfc9110.html"})))
+                .await.map_err(|e|e.code)?;
+            eprintln!("RFC navigate: {navigated}");
+            let started = std::time::Instant::now();
+            let observed = host.dispatch(request("observe",json!({}))).await;
+            let observed = observed.map_err(|e|e.code)?;
+            eprintln!("RFC observe elapsed_ms={} bytes={} entries={} truncated={}",started.elapsed().as_millis(),
+                serde_json::to_vec(&observed).unwrap().len(), observed["result"]["output"]["entries"].as_array().map_or(0,Vec::len),
+                observed["result"]["output"]["truncated"]);
+            assert!(observed["result"]["output"]["yaml"].as_str().unwrap().contains("HTTP Semantics"));
+            assert_eq!(observed["result"]["output"]["truncated"],true);
+            assert!(serde_json::to_vec(&observed).unwrap().len()<250_000);
+            let entries=observed["result"]["output"]["entries"].as_array().unwrap();
+            assert!(!entries.is_empty() && entries.len()<=2048);
+            let reference=entries.iter().find(|e|e["role"]=="link").unwrap()["ref"].as_str().unwrap();
+            let generation=observed["result"]["ref_generation"].as_u64().unwrap();
+            let hover = |generation| {
+                let mut req=request("hover",json!({"ref":reference}));
+                if let BrowserAction::Execute {ref mut ref_generation,..}=req.action { *ref_generation=Some(generation); }
+                req
+            };
+            let hovered=host.dispatch(hover(generation)).await.map_err(|e|e.code)?;
+            assert_eq!(hovered["result"]["output"]["success"],true);
+            let next=host.dispatch(request("observe",json!({}))).await.map_err(|e|e.code)?;
+            assert_eq!(next["result"]["output"]["truncated"],true);
+            assert!(next["result"]["ref_generation"].as_u64().unwrap()>generation);
+            assert_eq!(host.dispatch(hover(generation)).await.unwrap_err().code,"STALE_LANE_REF");
+            eprintln!("RFC partial refs usable: hover=true next_generation={} old_generation_rejected=true",next["result"]["ref_generation"]);
+            Ok::<_,&str>(observed)
+        });
+        runtime.block_on(host.shutdown());
+        std::fs::remove_dir_all(root).unwrap();
+        outcome.expect("RFC long page must remain observable");
+    }
+
+    #[test]
     #[ignore = "requires a locally verified fixed Chrome for Testing binary"]
     fn real_chromium_two_tasks_keep_independent_lanes() {
         let bundled = PathBuf::from(

@@ -1064,7 +1064,13 @@ impl ManagedEngineLaneDriver {
             | (BrowserOperationKind::Crawl, "observe") => {
                 self.select_target_if_requested(&operation, context).await?;
                 let options = observe_options(&operation.input);
-                let observation = self.observe_with_generation_fence(&options, context).await?;
+                let observation = match self.observe_with_generation_fence(&options, context).await {
+                    Ok(observation) => observation,
+                    Err(error) => {
+                        self.policy.invalidate_cached_observation();
+                        return Err(error);
+                    }
+                };
                 let generation = observation.generation.0;
                 let output = match serialize_observation(&observation) {
                     Ok(output) => output,
@@ -1661,9 +1667,9 @@ impl Serialize for ObservationJson<'_> {
 fn observation_capacity_error() -> BrowserPlatformError {
     BrowserPlatformError::new(
         BrowserErrorCode::OperationNotAllowed,
-        "The browser observation exceeded the per-task byte limit.",
+        "The browser observation exceeded its bounded capacity.",
         false,
-        "Simplify the page or reduce observe depth, then run a fresh observe.",
+        "Use a screenshot or a narrower page read, then run a fresh observe.",
     )
 }
 
@@ -1866,6 +1872,11 @@ fn map_engine_error(error: BrowserError) -> BrowserPlatformError {
                 error.with_metadata(json!({ "failure_scope": "host" }))
             }
         }
+        BrowserError::ObservationCapacity { kind, limit, attempted } => observation_capacity_error()
+            .with_metadata(json!({"code":"observation_capacity_exceeded", "kind":match kind {
+                nomi_browser_engine::engine::ObservationCapacityKind::References => "references",
+                nomi_browser_engine::engine::ObservationCapacityKind::Bytes => "bytes",
+            }, "limit":limit, "attempted":attempted})),
         BrowserError::Blocked { .. } => BrowserPlatformError::new(
             BrowserErrorCode::OperationNotAllowed,
             "The browser security policy blocked this operation.",
@@ -2156,6 +2167,7 @@ mod tests {
         observe_calls: AtomicUsize,
         next_observation_generation: AtomicU64,
         oversized_observation: AtomicBool,
+        observe_error: Mutex<Option<BrowserError>>,
         fail_with_private_error: AtomicBool,
         storage_origin: Mutex<Option<String>>,
         act_result: Mutex<Option<ActResult>>,
@@ -2177,6 +2189,7 @@ mod tests {
                 observe_calls: AtomicUsize::new(0),
                 next_observation_generation: AtomicU64::new(generation),
                 oversized_observation: AtomicBool::new(false),
+                observe_error: Mutex::new(None),
                 fail_with_private_error: AtomicBool::new(false),
                 storage_origin: Mutex::new(Some("https://example.test".to_owned())),
                 act_result: Mutex::new(None),
@@ -2231,6 +2244,7 @@ mod tests {
 
         async fn observe(&self, _opts: &ObserveOpts) -> Result<Observation, BrowserError> {
             self.observe_calls.fetch_add(1, Ordering::SeqCst);
+            if let Some(error)=self.observe_error.lock().unwrap().clone() { return Err(error); }
             let generation = self
                 .next_observation_generation
                 .fetch_add(1, Ordering::SeqCst);
@@ -2635,6 +2649,27 @@ mod tests {
             .await
             .unwrap_err();
         assert_eq!(error.code, BrowserErrorCode::OperationNotAllowed);
+    }
+
+    #[tokio::test]
+    async fn typed_observation_capacity_clears_old_policy_refs_without_downgrading_blocked() {
+        let engine=Arc::new(FakeEngine::new());
+        let driver=test_driver(engine.clone());
+        driver.execute(operation(BrowserOperationKind::Observe,"observe",json!({})),context()).await.unwrap();
+        assert!(driver.policy.last_snapshot.lock().unwrap().is_some());
+        *engine.observe_error.lock().unwrap()=Some(BrowserError::ObservationCapacity {
+            kind:nomi_browser_engine::engine::ObservationCapacityKind::References,limit:2048,attempted:9450,
+        });
+        let error=driver.execute(operation(BrowserOperationKind::Observe,"observe",json!({})),context()).await.unwrap_err();
+        assert_eq!(error.metadata["kind"],"references");
+        assert_eq!(error.metadata["attempted"],9450);
+        assert!(driver.policy.last_snapshot.lock().unwrap().is_none());
+        assert!(driver.policy.needs_re_observe());
+        *engine.observe_error.lock().unwrap()=Some(BrowserError::Blocked {reason:"private-policy-data".into()});
+        let blocked=driver.execute(operation(BrowserOperationKind::Observe,"observe",json!({})),context()).await.unwrap_err();
+        assert!(blocked.metadata.is_null());
+        assert!(!blocked.message.contains("private-policy-data"));
+        assert_eq!(engine.act_calls.load(Ordering::SeqCst),0);
     }
 
     #[tokio::test]

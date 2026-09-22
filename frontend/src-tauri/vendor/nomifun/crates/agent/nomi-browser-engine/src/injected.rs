@@ -122,6 +122,132 @@ pub enum InjectError {
     },
 }
 
+const BOUNDED_ARIA_SNAPSHOT_SCRIPT: &str = r#"function(node, options, maxRetained, alreadyRetained, maxBytes, alreadyBytes) {
+            const invalidate = () => {
+                const snap = this._lastAriaSnapshotForQuery;
+                if (snap) { snap.elements?.clear(); snap.refs?.clear(); snap.root = undefined; }
+                this._lastAriaSnapshotForTrack?.clear();
+                // Drop the InjectedScript -> Map edge as well.  Element
+                // expandos do not retain DOM nodes, and the next observe may
+                // safely overwrite/reuse them in its new Rust generation.
+                this._lastAriaSnapshotForQuery = undefined;
+            };
+            // JSON.stringify returns a UTF-16 JS string. Count the UTF-8 bytes
+            // CDP/serde will actually retain without allocating a TextEncoder
+            // buffer. Paired surrogates encode to four bytes; all other
+            // non-ASCII code units encode to two or three bytes.
+            const utf8Bytes = (text) => {
+                let bytes = 0;
+                for (let i = 0; i < text.length; i++) {
+                    const code = text.charCodeAt(i);
+                    if (code <= 0x7f) bytes += 1;
+                    else if (code <= 0x7ff) bytes += 2;
+                    else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
+                        const low = text.charCodeAt(i + 1);
+                        if (low >= 0xdc00 && low <= 0xdfff) {
+                            bytes += 4;
+                            i += 1;
+                        } else {
+                            bytes += 3;
+                        }
+                    } else {
+                        bytes += 3;
+                    }
+                }
+                return bytes;
+            };
+            // SEMANTIC_BOUNDARY_ALLOW: deterministic protocol/byte projection;
+            // never rank page content or choose a creative/semantic subset.
+            const renderedRef = (line) => {
+                line = line.trimStart();
+                if (!line.startsWith('- ')) return undefined;
+                line = line.slice(2);
+                if (line.startsWith("'")) {
+                    let key = '', closed = false;
+                    for (let i=1;i<line.length;i++) {
+                        if (line[i] === "'") {
+                            if (line[i+1] === "'") { key += "'"; i++; }
+                            else { closed = true; break; }
+                        } else key += line[i];
+                    }
+                    if (!closed) return undefined;
+                    line = key;
+                }
+                else {
+                    // The renderer quotes the entire YAML key if its name
+                    // contains a colon followed by whitespace. Only an
+                    // unquoted key's YAML delimiter may start inline text.
+                    line = line.split(/:(?:\s|$)/, 1)[0];
+                }
+                // createKey always appends ref last, before optional cursor.
+                // Names may be JSON quoted OR literal /.../ strings, so scan
+                // neither: only this final metadata suffix is authoritative.
+                return line.match(/ \[ref=(f\d+e\d+)\](?: \[cursor=pointer\])?$/)?.[1];
+            };
+            const finish = (snapshot) => {
+                const snap = this._lastAriaSnapshotForQuery;
+                const originalRetained = snap && snap.elements ? snap.elements.size : 0;
+                let serializedBytes = utf8Bytes(JSON.stringify(snapshot));
+                // Leave room for entries, redaction and downstream escaped JSON.
+                // This is a soft projection budget beneath the unchanged hard cap.
+                const remainingBytes = Math.max(0, Math.min(maxBytes - alreadyBytes, 65536 - alreadyBytes));
+                if (alreadyRetained + originalRetained > maxRetained || serializedBytes > remainingBytes) {
+                    const kept = new Map();
+                    const lines = [];
+                    let projected = {full:'', iframeRefs:[], iframeDepths:{}, truncated:true};
+                    for (const line of snapshot.full.split('\n')) {
+                        const ref = renderedRef(line);
+                        // A renderer token must still resolve in this exact new map.
+                        // Never retain guessed refs from accessible-name/text strings.
+                        if (ref && (!snap?.elements?.has(ref) ||
+                            (!kept.has(ref) && alreadyRetained + kept.size >= maxRetained))) break;
+                        const refs = new Set([...kept.keys(), ...(ref ? [ref] : [])]);
+                        const iframeRefs = (snapshot.iframeRefs || []).filter(r => refs.has(r));
+                        const iframeDepths = Object.fromEntries(Object.entries(snapshot.iframeDepths || {}).filter(([r]) => refs.has(r)));
+                        const candidate = {full:[...lines,line].join('\n'), iframeRefs, iframeDepths, truncated:true};
+                        if (utf8Bytes(JSON.stringify(candidate)) > remainingBytes) break;
+                        lines.push(line);
+                        if (ref) kept.set(ref, snap.elements.get(ref));
+                        projected = candidate;
+                    }
+                    if (!lines.length && alreadyRetained === 0 && alreadyBytes === 0) {
+                        invalidate();
+                        return {ok:false,error:'observation_capacity_exceeded',limit:Math.min(maxBytes,65536),current:alreadyBytes+serializedBytes,frameBytes:serializedBytes};
+                    }
+                    // Empty later frames mean the task already has a useful prefix.
+                    // Publish only this new map; no old tree/diff may revive omitted refs.
+                    if (snap) {
+                        snap.elements = kept;
+                        snap.refs = new Map([...kept].map(([ref,element]) => [element,ref]));
+                        snap.root = undefined;
+                        snap.iframeRefs = projected.iframeRefs;
+                    }
+                    this._lastAriaSnapshotForTrack?.clear();
+                    snapshot = projected;
+                    serializedBytes = utf8Bytes(JSON.stringify(snapshot));
+                }
+                const retained = snap && snap.elements ? snap.elements.size : 0;
+                const currentBytes = alreadyBytes + serializedBytes;
+                if (alreadyRetained + retained > maxRetained || !Number.isSafeInteger(currentBytes) || currentBytes > maxBytes) {
+                    invalidate();
+                    return {ok:false,error:'observation_capacity_exceeded',limit:maxBytes,current:currentBytes,frameBytes:serializedBytes};
+                }
+                return {ok:true,snapshot,retained,serializedBytes};
+            };
+            const fail = (error) => {
+                invalidate();
+                throw error;
+            };
+            try {
+                const result = this.incrementalAriaSnapshot(node, options);
+                if (result && typeof result.then === 'function')
+                    return result.then(finish, fail);
+                return finish(result);
+            } catch (error) {
+                return fail(error);
+            }
+        }"#;
+
 /// A spawned task is not owned until it has been committed into its durable
 /// parent.  Dropping Tokio's `JoinHandle` detaches, so every fallible
 /// initialization seam wraps a new task in this guard and calls `into_inner`
@@ -871,94 +997,7 @@ impl InjectionManager {
         already_retained: usize,
         already_retained_bytes: usize,
     ) -> Result<(Value, usize, usize), InjectError> {
-        let function_declaration = r#"function(node, options, maxRetained, alreadyRetained, maxBytes, alreadyBytes) {
-            const invalidate = () => {
-                const snap = this._lastAriaSnapshotForQuery;
-                if (snap && snap.elements) snap.elements.clear();
-                // Drop the InjectedScript -> Map edge as well.  Element
-                // expandos do not retain DOM nodes, and the next observe may
-                // safely overwrite/reuse them in its new Rust generation.
-                this._lastAriaSnapshotForQuery = undefined;
-            };
-            // JSON.stringify returns a UTF-16 JS string. Count the UTF-8 bytes
-            // CDP/serde will actually retain without allocating a TextEncoder
-            // buffer. Paired surrogates encode to four bytes; all other
-            // non-ASCII code units encode to two or three bytes.
-            const utf8Bytes = (text) => {
-                let bytes = 0;
-                for (let i = 0; i < text.length; i++) {
-                    const code = text.charCodeAt(i);
-                    if (code <= 0x7f) bytes += 1;
-                    else if (code <= 0x7ff) bytes += 2;
-                    else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
-                        const low = text.charCodeAt(i + 1);
-                        if (low >= 0xdc00 && low <= 0xdfff) {
-                            bytes += 4;
-                            i += 1;
-                        } else {
-                            bytes += 3;
-                        }
-                    } else {
-                        bytes += 3;
-                    }
-                }
-                return bytes;
-            };
-            const finish = (snapshot) => {
-                const snap = this._lastAriaSnapshotForQuery;
-                const retained = snap && snap.elements ? snap.elements.size : 0;
-                if (alreadyRetained + retained > maxRetained) {
-                    invalidate();
-                    return {
-                        ok: false,
-                        error: 'ref_capacity_exceeded',
-                        limit: maxRetained,
-                        current: alreadyRetained + retained,
-                        required: retained
-                    };
-                }
-                // This check runs in the renderer before `returnByValue` lets
-                // CDP materialize the snapshot in the Rust process. The prior
-                // frame total makes this one task-generation cap, not 4 MiB
-                // independently for every iframe.
-                let serialized;
-                try {
-                    serialized = JSON.stringify(snapshot);
-                } catch (error) {
-                    return fail(error);
-                }
-                const serializedBytes = utf8Bytes(serialized);
-                const currentBytes = alreadyBytes + serializedBytes;
-                if (!Number.isSafeInteger(currentBytes) || currentBytes > maxBytes) {
-                    invalidate();
-                    return {
-                        ok: false,
-                        error: 'observation_capacity_exceeded',
-                        limit: maxBytes,
-                        current: currentBytes,
-                        frameBytes: serializedBytes
-                    };
-                }
-                return {
-                    ok: true,
-                    snapshot: snapshot,
-                    retained: retained,
-                    serializedBytes: serializedBytes
-                };
-            };
-            const fail = (error) => {
-                invalidate();
-                throw error;
-            };
-            try {
-                const result = this.incrementalAriaSnapshot(node, options);
-                if (result && typeof result.then === 'function')
-                    return result.then(finish, fail);
-                return finish(result);
-            } catch (error) {
-                return fail(error);
-            }
-        }"#;
+        let function_declaration = BOUNDED_ARIA_SNAPSHOT_SCRIPT;
         let max_arg = CallArgument {
             value: Some(Value::from(crate::aria_ref::MAX_REFS_PER_GENERATION as u64)),
             ..Default::default()
@@ -1063,7 +1102,8 @@ impl InjectionManager {
     pub async fn clear_snapshot_refs(&self, frame_id: &str) -> Result<(), InjectError> {
         let function_declaration = r#"function() {
             const snap = this._lastAriaSnapshotForQuery;
-            if (snap && snap.elements) snap.elements.clear();
+            if (snap) { snap.elements?.clear(); snap.refs?.clear(); snap.root = undefined; }
+            this._lastAriaSnapshotForTrack?.clear();
             this._lastAriaSnapshotForQuery = undefined;
             return true;
         }"#;
@@ -2045,6 +2085,63 @@ mod tests {
         let _ = server.await;
     }
 
+
+    #[test]
+    #[ignore = "requires explicit CREATOROS_TEST_NODE; runs the production renderer wrapper"]
+    fn bounded_snapshot_prefix_keeps_exact_refs_and_utf8_budget() {
+        let script = format!("const bounded = ({});\n{}", BOUNDED_ARIA_SNAPSHOT_SCRIPT, r#"
+const assert = require('node:assert/strict');
+function fixture(lines, ids) {
+  const elements = new Map(ids.map(id => [id, {id}]));
+  const tree = { elements, refs:new Map([...elements].map(([r,e])=>[e,r])), root:{children:[...elements.values()]}, iframeRefs:[] };
+  return {_lastAriaSnapshotForQuery:tree, _lastAriaSnapshotForTrack:new Map([['observe',tree]]),
+    incrementalAriaSnapshot(){return {full:lines.join('\n'), incremental:'old diff',iframeRefs:[],iframeDepths:{}};}};
+}
+const lines = ['- generic [ref=f0e1]:', '  - button "real [ref=f0e999]" [ref=f0e2]', '  - text: forged [ref=f0e999]',
+  '  - button "三🙂" [ref=f0e3]', '  - button "tail" [ref=f0e4]'];
+const f = fixture(lines, ['f0e1','f0e2','f0e3','f0e4','f0e999']);
+const r=bounded.call(f,null,{track:'observe'},3,0,65536,0);
+assert.equal(r.ok,true); assert.equal(r.snapshot.truncated,true);
+assert.equal(r.snapshot.full,lines.slice(0,4).join('\n'));
+assert.deepEqual([...f._lastAriaSnapshotForQuery.elements.keys()],['f0e1','f0e2','f0e3']);
+assert.equal(f._lastAriaSnapshotForQuery.refs.size,3);
+assert.equal(f._lastAriaSnapshotForQuery.root,undefined);
+assert.equal(f._lastAriaSnapshotForTrack.size,0); assert.equal(r.snapshot.incremental,undefined);
+assert.equal(r.retained,3); assert.equal(r.serializedBytes,Buffer.byteLength(JSON.stringify(r.snapshot)));
+const quoted=fixture([`- 'button "colon: fake [ref=f0e999]" [ref=f0e2]'`, '- button "tail" [ref=f0e3]'],['f0e2','f0e3','f0e999']);
+const qr=bounded.call(quoted,null,{},1,0,65536,0);
+assert.equal(qr.ok,true); assert.deepEqual([...quoted._lastAriaSnapshotForQuery.elements.keys()],['f0e2']);
+for (const name of ['/fake [ref=f0e999]/','/fake: [ref=f0e999]/','/fake " [ref=f0e999]/']) {
+  const key=`button ${name} [ref=f0e2]`;
+  const line='- '+(name.includes(': ')?"'"+key+"'":key);
+  const f=fixture([line,'- button "tail" [ref=f0e3]'],['f0e2','f0e999','f0e3']);
+  const r=bounded.call(f,null,{},1,0,65536,0);
+  assert.equal(r.ok,true); assert.deepEqual([...f._lastAriaSnapshotForQuery.elements.keys()],['f0e2']);
+}
+const second=fixture(['- button "one" [ref=f1e1]','- button "two" [ref=f1e2]','- button "three" [ref=f1e3]'],['f1e1','f1e2','f1e3']);
+const sr=bounded.call(second,null,{},2048,2046,65536,0);
+assert.equal(sr.ok,true); assert.equal(sr.retained,2); assert.equal(sr.snapshot.truncated,true);
+const unicode=fixture(['- generic [ref=f0e1]:',...Array.from({length:100},(_,i)=>`  - button "${'三🙂'.repeat(8)}${i}" [ref=f0e${i+2}]`)],Array.from({length:101},(_,i)=>`f0e${i+1}`));
+const ur=bounded.call(unicode,null,{},2048,0,1500,0);
+assert.equal(ur.ok,true); assert.equal(ur.snapshot.truncated,true);
+assert(ur.serializedBytes<=1500); assert(!ur.snapshot.full.includes('\ufffd'));
+assert(ur.snapshot.full.split('\n').every(line=>line.endsWith(']')||line.endsWith(':')));
+const giant=fixture(['- button "'+ '三🙂'.repeat(5000)+'" [ref=f0e1]'],['f0e1']);
+const gr=bounded.call(giant,null,{},2048,0,100,0);
+assert.equal(gr.ok,false); assert.equal(gr.error,'observation_capacity_exceeded');
+assert.equal(giant._lastAriaSnapshotForQuery,undefined); assert.equal(giant._lastAriaSnapshotForTrack.size,0);
+const small=fixture(['- button "small" [ref=f0e1]'],['f0e1']);
+const sm=bounded.call(small,null,{},2048,0,65536,0);
+assert.equal(sm.ok,true); assert.equal(sm.snapshot.full,'- button "small" [ref=f0e1]');
+assert.equal(sm.snapshot.truncated,undefined); assert.equal(sm.snapshot.incremental,'old diff');
+console.log('bounded prefix: exact refs, forged text, aggregate budgets, UTF8, giant line, small page PASS');
+"#);
+        let output = std::process::Command::new(std::env::var("CREATOROS_TEST_NODE").expect("set CREATOROS_TEST_NODE"))
+            .arg("-e").arg(script).output().unwrap();
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+        eprintln!("{}", String::from_utf8_lossy(&output.stdout));
+    }
+
     // ── 端到端注入冒烟（#[ignore]，本机 Windows 实跑）─────────────────────────
     //
     // 验证混合架构 keystone：launch → connect → flatten auto-attach → page session →
@@ -2265,42 +2362,36 @@ mod tests {
         );
         assert_eq!(refused["value"]["reset"], false);
 
-        // 8) Initial observe itself is subject to the same generation budget.
-        // The bounded wrapper must discard an oversized vendor snapshot inside
-        // the same JS call, leaving no map that a later find could reuse.
-        let oversized_error = mgr
-            .incremental_aria_snapshot_bounded(
-                &frame_id,
-                CallArgument {
-                    object_id: Some(RemoteObjectId::new(body_obj_id)),
-                    ..Default::default()
-                },
-                CallArgument {
-                    value: Some(serde_json::json!({
-                        "mode": "ai",
-                        "refPrefix": "f0",
-                        "depth": 0,
-                        "track": ""
-                    })),
-                    ..Default::default()
-                },
-                0,
-                0,
-            )
-            .await
-            .expect_err("oversized initial observe must fail closed");
-        assert!(matches!(
-            oversized_error,
-            InjectError::RefCapacityExceeded {
-                limit: crate::aria_ref::MAX_REFS_PER_GENERATION,
-                current,
-                ..
-            } if current > crate::aria_ref::MAX_REFS_PER_GENERATION
-        ));
-        let after_oversized = mgr
-            .find_elements(&frame_id, ".capacity", "f0", 1)
-            .await
-            .expect("probe snapshot map after oversized observe");
-        assert_eq!(after_oversized["value"], "error:notobserved");
+        // 8) A fresh oversized observation publishes a bounded, real prefix.
+        let snapshot_request = || (CallArgument {
+            object_id: Some(RemoteObjectId::new(body_obj_id.clone())), ..Default::default()
+        }, CallArgument {
+            value: Some(serde_json::json!({"mode":"ai","refPrefix":"f0","depth":0,"track":"observe"})),
+            ..Default::default()
+        });
+        let (node, options) = snapshot_request();
+        let (partial, retained, bytes) = mgr.incremental_aria_snapshot_bounded(&frame_id,node,options,0,0)
+            .await.expect("oversized page keeps a real bounded prefix");
+        assert_eq!(partial["truncated"],true);
+        assert!(retained > 0 && retained <= crate::aria_ref::MAX_REFS_PER_GENERATION);
+        assert!(bytes <= 65_536);
+        let inspected = mgr.call_on_injected_handle(&frame_id,
+            "function(){ const s=this._lastAriaSnapshotForQuery; const first=[...s.elements][0]; return {size:s.elements.size,reverse:s.refs.size,tree:!!s.root,tracks:this._lastAriaSnapshotForTrack.size,firstConnected:first[1].isConnected,firstResolves:this.querySelector(this.parseSelector('aria-ref='+first[0]),document,false)===first[1]}; }",
+            vec![],None,true).await.unwrap();
+        assert_eq!(inspected["value"]["size"],retained);
+        assert_eq!(inspected["value"]["reverse"],retained);
+        assert_eq!(inspected["value"]["tree"],false);
+        assert_eq!(inspected["value"]["tracks"],0);
+        assert_eq!(inspected["value"]["firstConnected"],true);
+        assert_eq!(inspected["value"]["firstResolves"],true);
+        // A later frame shares the task budget. With 2046 already retained,
+        // this renderer may retain at most two, not another independent 2048.
+        let (node, options)=snapshot_request();
+        let (second, count, _)=mgr.incremental_aria_snapshot_bounded(&frame_id,node,options,2046,0).await.unwrap();
+        assert_eq!(second["truncated"],true);
+        assert!(count>0 && count<=2);
+        // No full diff tree from the first projection is reused on the next observe.
+        assert!(second.get("incremental").is_none());
+        eprintln!("real injected prefix refs={retained} bytes={bytes}; shared budget second refs={count}; DOM resolution=true; diff cleared=true");
     }
 }

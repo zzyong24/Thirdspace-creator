@@ -153,3 +153,41 @@ CLI测试环境变量必须指向本次Cargo生成的测试可执行文件名；
 独审结论：Wegener确认当前A无新阻断，可冻结mac候选。自动恢复证明到原task queued及新lease原call replay；chatWorker完整模型续跑与安装版验收由主线后续执行，不以wake spy冒充。B原99继续paused/unknown。
 
 冻结交接：本任务不提交、不打包、不继续增加测试或重构。主线负责commit/package及第四安装验收；原99只允许由主线通过公开files.reconcile验证absent仍unknown，不resume，不把该负向结果冒充A正向恢复通过。
+
+## E. 第四安装反馈与固定 reason 诊断（第五候选）
+
+第四安装860edd61实际公开调用原99的`files.reconcile`返回409“文件恢复身份或调用证据不匹配”，证据`/tmp/t1026-cli-evidence/fourth-original99-file-reconcile.json`。该错误发生在Native reader之前，**未验证absent**；原99仍paused/unknown。本节纠正前述冻结交接中尚待验证的absent预期，不将其记为实测结果。
+
+用户解除构建冻结后，本轮仅将原复合校验的首个失败项映射为固定reason。原谓词、短路顺序、ConflictError、归属权限与拒绝语义均未改变，不输出字段值、claim、schema异常或原请求内容。Wegener独审放行。
+
+公开`repair-third-paused-all-combined.json`可核对：call114为原files_edit unknown，parentCallId/retryOfCallId/resultRef/rejectionCode均null，startedAttempt=2；对应model113已settled有用量，原提案与tool input一致；由model ID和provider tool ID计算的operationKey、公开capability计算的工具version均相符，未见子调用。公开投影不含完整冻结定义、host claim、reservedTokens/accountingBasis等，无法据此判定复合条件究竟哪项失败。
+
+真实端口链核对：工具reserve固定reservedTokens=0，默认accountingBasis=tokens；根工具省略parent后落null。因此这些字段偏差不符合正常创建路径。另有已复现的合法竞态：ledger.start先持久started，host.execute在另一次admission中才持久claim；若pause发生于两者之间，execute可在claim之前拒绝，而Worker已进入调用阶段仍结算unknown。隔离fixture经真实start→pause→execute拒绝→settle unknown，Native执行计数0，claim为空，公开CLI/HTTP返回EXECUTION_CLAIM_MISSING。这只说明候选原因可发生，**不证明原99缺claim**；须第五包公开diagnostic实际返回确认。
+
+“缺claim而根本未派发”与“已派发但无旧Native journal”是两个不同分支。将来若真实reason确认缺claim，仍须核验原安装版本及所有入口均严格保证持久claim先于Native，以及冻结原call/intent/digest/attempt等证据，才可独审原键重新admit；本轮没有实现此恢复，不把null claim直接视为无提交。B current_state仍未实现，文件当前内容相同不构成历史receipt。
+
+验证：新增17个业务断言先红（`/tmp/t1026-file-recovery-reason-red.log`），修复后文件恢复40/40，包含CLI→HTTP→service→真实隔离Rust reader旧回归，`/tmp/t1026-file-recovery-reason-green.log`。其中真实pause-before-claim的公开409及跨账号404均在Native前，账本和任务不变。
+
+```sh
+CREATOROS_TEST_FILE_JOURNAL_NATIVE=workbench-d43fa32046a21f64 pnpm --dir frontend exec vitest run src/server/workbench-file-recovery.test.ts --retry 0
+```
+
+## F. 原190纯模型暂停恢复
+
+公开`/tmp/t1026-cli-evidence/original4-fourth-progress1-combined.json`显示原190沿paused resume进入attempt2，仍58calls：前57settled，末model unknown，错误CHAT_CHECKPOINT_REQUIRES_RECONCILIATION。根因是显式resume原先只将paused排队，没有复用既有safe unknown model恢复规则；Worker正确拒绝未对账checkpoint。
+
+修复在backend command持有owned task锁时完成：仅冻结Pi chat归属相符、无租约、所有pending均为无providerJob/providerResult/resultRef的合法attempt根model且无子调用时，将这些模型原记录标记superseded，保留原费用null、预留预算、操作键、摘要和全部既有回执；任务retryOfCallId指向最末原model，由正式端口在原operationKey上创建预算约束内的新调用。仅此严格范围允许unknown_result显式resume；其他unknown_result仍拒绝，paused混合未知工具不改账本。recoverExpiredLeases共享原模型筛选谓词，原规则不扩大。Wegener已独审通过command/helper与其browser恢复接点组合。
+
+- 实现前真实PGlite服务红测2失败/7通过：`/tmp/t1026-model-pause-red.log`。
+- 修复与边界测试14例，加已有checkpoint/worker-outcome/persistent43例，共57/57：`/tmp/t1026-model-pause-green.log`。57条前序记录逐字段保持、原model费用null/预留128保持、原键新调用成功；活跃lease/冻结归属错误/providerJob/providerResult/resultRef/children/混合工具均不解锁。
+- 真实Worker+SDK HTTP+Pi+正式chat submission/host/PGlite补充1/1：`/tmp/t1026-model-pause-worker.log`。隔离暂停发生于第二model start后；通过暂禁新helper的旧行为对照，Worker在新HTTP前准确复现checkpoint错误；正式失败记录后启用新resume，沿同operationKey及inputDigest完成，历史工具只执行一次，原未知费用不变。此Worker对照是修复后补做，不冒充实现前红测；前57账本规模由服务测试覆盖。
+- 未操作真实原190、未调用安装版模型、未读私有DB/socket；第五安装后由主线统一继续。隔离Worker完成不等于原190安装验收完成。
+
+```sh
+pnpm --dir backend exec vitest run src/modules/execution/chat-model-pause-recovery.test.ts src/modules/execution/execution-checkpoint.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts
+pnpm --dir backend exec vitest run src/integration/t1026-model-pause-worker.integration.test.ts
+```
+
+本轮类型检查：专用`/tmp/t1026-model-recovery-tsconfig.json`覆盖新增model helper/两份tests、文件恢复service及递归生产依赖，`pnpm --dir backend exec tsc --project /tmp/t1026-model-recovery-tsconfig.json --pretty false` exit0，日志`/tmp/t1026-model-recovery-scoped-types.log`。backend全量tsc exit2，报未改动的transcribe-runner/asset-business-execution/chat-assembly等旧tests类型错误，日志`/tmp/t1026-model-pause-types.log`；不能记为全量通过。frontend全量tsc该次exit2仅报并行comments域`douyin-cdp-page-evidence.test.ts`泛型fixture错误，已通知负责代理，日志`/tmp/t1026-file-reason-model-typecheck.log`；本轮文件reason测试未报类型错误。主线收口以其最终全局gate结果为准。
+
+最终boundary收口：真实Worker测试迁至允许跨模块装配的`backend/src/integration/t1026-model-pause-worker.integration.test.ts`，仅调整静态相对导入；已逐字核对测试正文未变。模块write_set仅登记该新路径，未改boundary baseline/扫描规则，未用动态导入。迁移后Worker1/1通过，`/tmp/t1026-model-pause-worker-boundary-green.log`；boundary exit0、无新增违规（保留基线内5条），`/tmp/t1026-model-pause-boundary-final.log`；迁移后的定向tsc exit0，`/tmp/t1026-model-pause-relocated-types.log`；diffcheck通过。至此本轮文件再次冻结。

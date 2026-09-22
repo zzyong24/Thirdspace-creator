@@ -1,5 +1,6 @@
 import {commentExternalId,type CommentRecord} from "@creatoros/backend/application/collection/comment-ingestion";
 import type {CommentReadDiagnostics,CommentReadReason} from '@creatoros/backend/application/collection/comment-read-diagnostics';
+import {commentHttpStatus,createCommentPageEvidence,finishCommentPageEvidence,observeCommentResponse} from './douyin-cdp-page-evidence';
 export {commentExternalId,ingestComments,type CommentRecord,type CommentIngestPorts,type IngestCommentsResult} from "@creatoros/backend/application/collection/comment-ingestion";
 import { fetchDouyinVideoUrlViaDetail as fetchWorkerDouyinVideoUrlViaDetail, AWEME_DETAIL_API, mapDetailErr } from "@creatoros/ai-worker/douyin-transcribe-detail";
 import {
@@ -2031,10 +2032,13 @@ export interface FetchCommentsTarget {
 // 结构上满足这两个接口(用作默认注入时的向上转型目标)。
 type CommentResponseHandler = (resp: {
   url(): string;
+  status?(): number;
   json(): Promise<unknown>;
 }) => void;
 
 interface CommentCapablePage {
+  url?(): string;
+  isClosed?(): boolean;
   on(event: "response", cb: CommentResponseHandler): void;
   // 多作品复用同一 page 时,每作品抓完必须摘掉本作品的 response 监听(否则监听在 page 上累积,
   // 后续作品的 XHR 会被历史 handler 重复解析,且泄漏监听器)。真实 Playwright Page 有 off。
@@ -2107,6 +2111,7 @@ async function scrapeCommentsForWork(
   const seenIds = new Set<string>();
   // [T-177] 某页评论全部已在 watermark(且非空)→ 倒序下已翻到老评论,提前停翻页。
   let reachedWatermark = false;
+  const pageEvidence=createCommentPageEvidence();
   let active=true,matchedResponses=0,validResponses=0,invalidResponses=0,parsedComments=0,pendingResponses=0,ignoredResponses=0;
   // 同一请求页的成功重试可以恢复；历史计数只用于诊断，不永久否决后续成功。
   type CommentPageState={sequence:number;invalid:boolean;unparseable:boolean;hasMore:boolean|null;watermark:boolean;identityUnverified?:boolean};
@@ -2117,6 +2122,7 @@ async function scrapeCommentsForWork(
     reachedWatermark=[...pageStates.values()].some(value=>!value.invalid&&value.watermark);
   };
   const onResponse: CommentResponseHandler = (resp) => {
+    observeCommentResponse(pageEvidence,resp);
     const url = resp.url();
     if (!COMMENT_LIST_HINTS.some((h) => url.includes(h))) return;
     const sequence=++matchedResponses;
@@ -2168,7 +2174,11 @@ async function scrapeCommentsForWork(
     // item_id 过滤 → 评论管理页只显示该作品的评论(对齐 crawler.py urls_to_try)。
     // [T-202] 导航加退避重试(瞬时超时自愈)。
     await gotoWithRetry(
-      page,
+      {goto:async(url,opts)=>{
+        const response=await page.goto(url,opts);
+        pageEvidence.navigationStatus=commentHttpStatus(response);
+        return response;
+      },waitForTimeout:ms=>page.waitForTimeout(ms)},
       `${CREATOR_COMMENT_MANAGE}?item_id=${encodeURIComponent(awemeId)}`,
       { timeoutMs: 60_000, label: `comment-manage(${awemeId})` },
     );
@@ -2182,6 +2192,7 @@ async function scrapeCommentsForWork(
       const before = seenIds.size;
       // [gate-F7 插装点③] 每翻一页 acquire 一次 creator-center(评论翻页真正限速)。
       await withDouyinChannel(gateway, "creator-center", async () => {
+        pageEvidence.scroll.attempts++;
         await page
           .evaluate(() => {
             // 窗口滚 + 内层可滚容器全滚到底(T-065 拉全:评论管理页列表是内层滚动容器,
@@ -2194,8 +2205,8 @@ async function scrapeCommentsForWork(
               }
             }
           })
-          .catch(() => {});
-        await page.mouse.wheel(0, 2000).catch(() => {});
+          .catch(() => {pageEvidence.scroll.evaluateErrors++;});
+        await page.mouse.wheel(0, 2000).catch(() => {pageEvidence.scroll.wheelErrors++;});
         await page.waitForTimeout(2000);
       });
       if (reachedWatermark) break; // [T-177] 本轮滚动加载的页全是老评论 → 停
@@ -2209,9 +2220,11 @@ async function scrapeCommentsForWork(
       (matchedResponses===0?'no_matching_response':ignoredResponses>0?'response_identity_unverified':'no_valid_response'):
       states.some(state=>state.invalid)?'invalid_response':states.some(state=>state.identityUnverified)?'response_identity_unverified':states.some(state=>state.unparseable)?'unparseable_records':
       reachedWatermark?'watermark_reached':latest?.hasMore===false?'pagination_exhausted':latest?.hasMore===true?'more_pages_pending':staleRounds>=3?'stable_end':'page_limit';
-    onCompletion?.(reason==='watermark_reached'||reason==='stable_end'||reason==='pagination_exhausted',{
-      matchedResponses,validResponses,invalidResponses,parsedComments,pendingResponses,ignoredResponses,reason,
-    });
+    // 在原监听窗口终点固定结果，诊断读取不能延长采集或改变pending/完成判断。
+    active=false;page.off("response",onResponse);
+    const diagnostics:CommentReadDiagnostics={matchedResponses,validResponses,invalidResponses,parsedComments,pendingResponses,ignoredResponses,reason,pageEvidence};
+    await finishCommentPageEvidence(page,pageEvidence);
+    onCompletion?.(reason==='watermark_reached'||reason==='stable_end'||reason==='pagination_exhausted',diagnostics);
     return [...byId.values()];
   } finally {
     // 多作品复用 page 时,摘掉本作品监听,避免监听在 page 上累积/后续作品 XHR 被重复解析。

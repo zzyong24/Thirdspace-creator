@@ -46,12 +46,21 @@ export function createWorkbenchFileRecoveryService(db:Db,deps:{capabilities:read
   const definition=setup.definitions.find(def=>def.name===bound.executionToolName);
   const frozen=input.data.tools.filter(def=>def.name===bound.executionToolName);
   const model=calls.find(row=>row.id===bound.modelCallId);
-  if(!definition||frozen.length!==1||!isDeepStrictEqual(frozen[0],definition)||bound.execution!=="host"||bound.effect!=="committed"||bound.validationOutcome||
-   !model||model.status!=="settled"||model.totalTokens===null||!workerProviderReceiptSchema.safeParse(model.providerResult).success||
-   call.parentCallId||!call.toolExecutionClaimId||call.startedAttempt===null||call.startedAttempt>task.attempt||
-   call.providerJob!==null||call.providerResult!==null||call.resultRef!==null||call.retryOfCallId!==null||call.rejectionCode!==null||
-   call.reservedTokens!==0||call.accountingBasis!=="tokens"||calls.some(c=>c.parentCallId===call.id)||calls.filter(c=>c.operationKey===call.operationKey).length!==1)
-   throw new ConflictError("文件恢复身份或调用证据不匹配");
+  // Keep the original predicates and short-circuit order. Only fixed diagnostic
+  // labels may leave this gate: never values, schema issues, claims or receipts.
+  const reason=!definition?"TOOL_DEFINITION_MISSING":frozen.length!==1?"FROZEN_TOOL_NOT_UNIQUE":
+   !isDeepStrictEqual(frozen[0],definition)?"FROZEN_TOOL_MISMATCH":bound.execution!=="host"?"TOOL_EXECUTION_MISMATCH":
+   bound.effect!=="committed"?"TOOL_EFFECT_MISMATCH":bound.validationOutcome?"PROPOSAL_NOT_EXECUTABLE":
+   !model?"MODEL_MISSING":model.status!=="settled"?"MODEL_NOT_SETTLED":model.totalTokens===null?"MODEL_USAGE_MISSING":
+   !workerProviderReceiptSchema.safeParse(model.providerResult).success?"MODEL_RECEIPT_INVALID":
+   call.parentCallId?"PARENT_CALL_NOT_ALLOWED":!call.toolExecutionClaimId?"EXECUTION_CLAIM_MISSING":
+   call.startedAttempt===null?"STARTED_ATTEMPT_MISSING":call.startedAttempt>task.attempt?"STARTED_ATTEMPT_AHEAD":
+   call.providerJob!==null?"PROVIDER_JOB_PRESENT":call.providerResult!==null?"PROVIDER_RESULT_PRESENT":
+   call.resultRef!==null?"RESULT_REF_PRESENT":call.retryOfCallId!==null?"RETRY_SOURCE_PRESENT":
+   call.rejectionCode!==null?"REJECTION_CODE_PRESENT":call.reservedTokens!==0?"RESERVED_TOKENS_MISMATCH":
+   call.accountingBasis!=="tokens"?"ACCOUNTING_BASIS_MISMATCH":calls.some(c=>c.parentCallId===call.id)?"CHILD_CALLS_PRESENT":
+   calls.filter(c=>c.operationKey===call.operationKey).length!==1?"OPERATION_NOT_UNIQUE":null;
+  if(reason)throw new ConflictError(`文件恢复身份或调用证据不匹配 [${reason}]`);
   const operation=bound.executionToolName==="files.edit"?"edit":"write";
   const request=workbenchFileRequestSchema.parse({...bound.input as object,operation});
   if(request.operation!=="write"&&request.operation!=="edit")throw new ConflictError("仅支持文件写入回执");

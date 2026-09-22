@@ -34,17 +34,26 @@ export { agenticWorkerInputSchema, reserveAgenticModelSchema, agenticCommitRecei
 import { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolOutcomeSchema } from "./agentic-tool-call";
 export { reserveAgenticToolSchema, settleAgenticToolSchema, agenticToolReservationSchema, agenticToolOutcomeSchema, type AgenticToolOutcome } from "./agentic-tool-call";
 
+/** SEMANTIC_BOUNDARY_ALLOW: 四种原生观察协议不产生外部提交；不能泛化 read（navigate 也声明 read）。 */
+export function isWorkbenchBrowserObservation(descriptor:WorkbenchCapability):boolean {
+ return ["browser.observe","browser.extract","browser.status","browser.screenshot"].includes(descriptor.name)&&
+  descriptor.schemaVersion===1&&descriptor.effects.length===1&&descriptor.effects[0]==="read"&&
+  descriptor.requiredCapabilities.length===1&&descriptor.requiredCapabilities[0]==="task.browser";
+}
+export const browserObservationRecovery="未取得有效的页面观察结果；这不表示页面操作已成功。请用新的工具调用重新观察，或选择提取文本、截图等替代观察；以新结果为准。若 Lane 已失效，先核对状态并按当前租约重新打开。不要重放未知的点击、导航、打开或关闭操作。截图存储可能已留下不可变字节，本回执不声明未写入存储。";
+
 /** 通用能力进入原工具账本时的唯一回执转换；未知提交永不自动重试。 */
 export function workbenchToolOutcome(rawResult:WorkbenchResult,rawDescriptor:WorkbenchCapability){
  const descriptor=workbenchCapabilitySchema.parse(rawDescriptor),result=workbenchResultSchema.parse(rawResult);
  if(result.status==="running")throw new Error("GATEWAY_RUNNING_RESULT_NOT_SETTLEABLE");
- const unknown=result.status==="unknown" || (result.status==="failed" && result.error.dispatched && result.error.confirmedNoCommit!==true);
+ const observationUnavailable=isWorkbenchBrowserObservation(descriptor)&&(result.status==="unknown"||(result.status==="failed"&&result.error.dispatched));
+ const unknown=!observationUnavailable&&(result.status==="unknown" || (result.status==="failed" && result.error.dispatched && result.error.confirmedNoCommit!==true));
  const sideEffect=unknown?"unknown":result.status==="succeeded"
   ? descriptor.effects.some(effect=>["external_write","process","task_write"].includes(effect))?"committed":descriptor.effects.includes("domain_candidate")?"proposal":"none"
   :"none";
  const summary=result.status==="succeeded"?(result.content.find(part=>part.type==="text")?.text??"工具已完成").slice(0,10000):`工具${unknown?"回执待核对":"调用失败"}：${result.error.code}`;
  const code=result.status==="succeeded"?null:unknown?"unknown_commit":result.error.nextAction==="fix_input"?"invalid_input":result.error.nextAction==="login"?"needs_login":result.error.nextAction==="contact_support"?"no_evidence":"transient";
- return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":result.status==="failed"&&result.error.recovery?result.error.recovery:`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
+ return agenticToolOutcomeSchema.parse({status:result.status==="succeeded"?"ok":code==="needs_login"?"blocked":"error",summary,evidence:[],data:{workbench:result},error:code?{code,retryable:false,recovery:unknown?"按原 operationId 核对回执后继续；不要重新执行。":observationUnavailable?browserObservationRecovery:result.status==="failed"&&result.error.recovery?result.error.recovery:`按 ${result.status==="failed"?result.error.nextAction:"reconcile"} 处理`}:null,continuation:null,sideEffect});
 }
 import { saveExecutionCheckpointSchema } from "./execution-checkpoint";
 export { saveExecutionCheckpointSchema, executionCheckpointSchema, checkpointToolCallSchema, workerToolResultReceiptSchema } from "./execution-checkpoint";

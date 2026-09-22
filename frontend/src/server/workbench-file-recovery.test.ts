@@ -34,7 +34,7 @@ beforeAll(async()=>{const f=await createDb();db=f.db;close=()=>f.client.close();
 afterAll(async()=>close?.());
 const hash=(v:string)=>createHash("sha256").update(v).digest("hex");
 const budget={maxCalls:20,maxTokens:100000,deadlineMs:60000};
-async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused"){
+async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="paused",pauseBeforeClaim=false){
  const id=randomUUID(),ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
  const cap=nativeFileCapabilities.find(c=>c.name==="files.edit")!;
  const setup=await prepareChatToolDefinitions({"files.edit":defineWorkbenchChatTool(cap,async()=>{throw Error("unused");})},{workbenchCapabilities:[cap]});
@@ -73,8 +73,14 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
  }
  const ports=createExecutionChatToolPorts(db,{budget,tools});
  const call=await ports.reserve(ref,{modelCallId:model.id,toolCallId:"write"});await ports.start(ref,{callId:call.callId});
+ if(pauseBeforeClaim)await tasks.command(ctx,{taskIds:[task.id],command:"pause",idempotencyKey:randomUUID()});
  await expect(ports.execute(ref,{callId:call.callId})).rejects.toThrow();
- if(socketPath&&stopMode==="paused")await tasks.acknowledgeControl({taskId:task.id,workerId:id,attempt:ref.attempt});
+ if(pauseBeforeClaim){
+  expect(write).not.toHaveBeenCalled();
+  await ports.settle(ref,{callId:call.callId,status:"unknown"});
+  await tasks.acknowledgeControl({taskId:task.id,workerId:id,attempt:ref.attempt});
+ }
+ else if(socketPath&&stopMode==="paused")await tasks.acknowledgeControl({taskId:task.id,workerId:id,attempt:ref.attempt});
  else if(socketPath){
   await db.update(executionTasks).set({leaseExpiresAt:new Date(0).toISOString()}).where(eq(executionTasks.id,task.id));
   expect(await tasks.recoverExpiredLeases({taskId:task.id})).toMatchObject({unknownResult:1,requeued:0});
@@ -85,7 +91,7 @@ async function fixture(socketPath?:string,stopMode:"paused"|"unknown_result"="pa
  }
  const calls=()=>db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
  const readTask=async()=>(await db.select().from(executionTasks).where(eq(executionTasks.id,task.id)))[0]!;
- expect((await calls())[1]).toMatchObject({status:"unknown",toolExecutionClaimId:expect.any(String)});
+ expect((await calls())[1]).toMatchObject({status:"unknown",toolExecutionClaimId:pauseBeforeClaim?null:expect.any(String)});
  return {ctx,task,ref,calls,readTask,callId:call.callId,write,ports,tasks,native};
 }
 function committed(q:FileReceiptQuery){
@@ -112,6 +118,56 @@ it("公开对账原调用幂等结算、暂停不唤醒、费用和claim不变�
  const next=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resume"}))!;
  expect(await f.ports.execute({executionTaskId:f.task.id,attempt:next.lease.attempt,fenceToken:next.lease.fenceToken},{callId:f.callId})).toEqual(receipt.output);
  expect(f.write).toHaveBeenCalledTimes(1);expect(await f.calls()).toEqual(after);
+});
+
+it.each([
+ ["frozen","FROZEN_TOOL_MISMATCH"],["modelUsage","MODEL_USAGE_MISSING"],["modelReceipt","MODEL_RECEIPT_INVALID"],
+ ["parentCallId","PARENT_CALL_NOT_ALLOWED"],["toolExecutionClaimId","EXECUTION_CLAIM_MISSING"],
+ ["startedMissing","STARTED_ATTEMPT_MISSING"],["startedAhead","STARTED_ATTEMPT_AHEAD"],
+ ["providerJob","PROVIDER_JOB_PRESENT"],["providerResult","PROVIDER_RESULT_PRESENT"],["resultRef","RESULT_REF_PRESENT"],
+ ["retryOfCallId","RETRY_SOURCE_PRESENT"],["rejectionCode","REJECTION_CODE_PRESENT"],
+ ["reservedTokens","RESERVED_TOKENS_MISMATCH"],["accountingBasis","ACCOUNTING_BASIS_MISMATCH"],
+ ["children","CHILD_CALLS_PRESENT"],["duplicate","OPERATION_NOT_UNIQUE"],
+])("身份诊断 %s只返回固定reason，原拒绝/Native零调用/账本不变",async(field,reason)=>{
+ const f=await fixture(),rows=await f.calls(),call=rows[1]!,model=rows[0]!;
+ expect(call).toMatchObject({parentCallId:null,reservedTokens:0,accountingBasis:"tokens",retryOfCallId:null,providerJob:null,providerResult:null});
+ const secret="private-value-must-not-leak";
+ if(field==="frozen"){
+  const payload=structuredClone((await f.readTask()).payload) as {modelInput:{tools:{description:string}[]}};
+  payload.modelInput.tools[0]!.description=secret;
+  await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,f.task.id));
+ }else if(field==="modelUsage"||field==="modelReceipt"){
+  await db.update(executionCalls).set(field==="modelUsage"?{totalTokens:null}:{providerResult:{...model.providerResult as object,warnings:secret}}).where(eq(executionCalls.id,model.id));
+ }else if(field==="children"||field==="duplicate"){
+  await db.insert(executionCalls).values({...call,id:randomUUID(),sequence:3,...(field==="children"?{parentCallId:call.id,operationKey:"child"}:{})});
+ }else{
+  const patch:Partial<typeof call>=field==="parentCallId"?{parentCallId:model.id}:field==="toolExecutionClaimId"?{toolExecutionClaimId:null}:
+   field==="startedMissing"?{startedAttempt:null}:field==="startedAhead"?{startedAttempt:99}:field==="providerJob"?{providerJob:{secret}}:
+   field==="providerResult"?{providerResult:{secret}}:field==="reservedTokens"?{reservedTokens:7}:field==="accountingBasis"?{accountingBasis:"requests"}:{[field!]:secret};
+  await db.update(executionCalls).set(patch).where(eq(executionCalls.id,call.id));
+ }
+ const before=await f.calls(),task=await f.readTask(),read=vi.fn(async(q:FileReceiptQuery)=>committed(q));
+ const service=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:read});
+ const api=createWorkbenchPublicTransport({reconcileFile:service.reconcile} as Parameters<typeof createWorkbenchPublicTransport>[0]);
+ await expect(api.request(ENDPOINTS.reconcileWorkbenchFile,{params:{taskId:f.task.id},query:undefined,body:{operationId:f.callId}},f.ctx))
+  .rejects.toMatchObject({code:"ConflictError",message:`文件恢复身份或调用证据不匹配 [${reason}]`});
+ expect(read).not.toHaveBeenCalled();expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
+});
+
+it("真实start→pause→未领claim的execute被拒→Worker结算unknown：HTTP409不代表已派发Native",async()=>{
+ const f=await fixture(undefined,"paused",true),before=await f.calls(),task=await f.readTask(),read=vi.fn(async(q:FileReceiptQuery)=>committed(q));
+ expect(before[1]).toMatchObject({status:"unknown",startedAttempt:f.ref.attempt,toolExecutionClaimId:null,parentCallId:null,reservedTokens:0,accountingBasis:"tokens"});
+ const recovery=createWorkbenchFileRecoveryService(db,{capabilities:nativeFileCapabilities,readReceipt:read});
+ shared.ctx=f.ctx;shared.transport=createWorkbenchPublicTransport({reconcileFile:recovery.reconcile} as Parameters<typeof createWorkbenchPublicTransport>[0]);
+ shared.gateway=createCliInvocationService({db,masterKey:Buffer.alloc(32,7),now:()=>new Date().toISOString(),nextId:()=>randomUUID()});
+ const cli=await startLoopbackCliFixture({post:POST,accessToken:"isolated-diagnostic"});
+ const args=["call","workbench.files.reconcile","--input",JSON.stringify({params:{taskId:f.task.id},body:{operationId:f.callId}}),"--account",f.ctx.accountId,"--apply","--idempotency-key","identity-reason"];
+ try{
+  await expect(cli.run(args)).rejects.toMatchObject({status:409,message:expect.stringContaining("[EXECUTION_CLAIM_MISSING]")});
+  const foreign=[...args];foreign[5]="another-account";foreign[8]="foreign-key";
+  await expect(cli.run(foreign)).rejects.toMatchObject({status:404,message:expect.not.stringContaining("EXECUTION_CLAIM_MISSING")});
+ }finally{await cli.close();}
+ expect(read).not.toHaveBeenCalled();expect(f.write).not.toHaveBeenCalled();expect(await f.calls()).toEqual(before);expect(await f.readTask()).toEqual(task);
 });
 
 it.each(["absent","prepared","native-failed"])("%s不产生回执、不写文件、不解除unknown",async mode=>{

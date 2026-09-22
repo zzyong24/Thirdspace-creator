@@ -4,6 +4,8 @@ import {executionEvidence} from "../../schema/intelligence";
 import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
+import {recoverableBrowserObservationFailures} from "./workbench-browser-observation-recovery";
+import {unconfirmedModelCalls,resumableChatModelCalls} from "./model-call-recovery";
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { randomUUID } from "node:crypto";
@@ -506,9 +508,18 @@ export function createPersistentTaskService(
             if(recovery?.mode==='review')throw new ConflictError('旧素材提交结果待核对，仅允许取消或采纳已有候选，不能继续或重试');
           }
         }
+        const resumeModels=new Map<string,typeof executionCalls.$inferSelect[]>();
+        if(input.command==="resume"){
+          for(const row of rows.filter(row=>effectiveIds.includes(row.id)&&["paused","unknown_result"].includes(row.status))){
+            const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).orderBy(asc(executionCalls.sequence));
+            const safe=resumableChatModelCalls(row,calls);
+            if(safe.length)resumeModels.set(row.id,safe);
+          }
+        }
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
+            input.command==='resume' && row.status==='unknown_result' && resumeModels.has(row.id) ? 'queued' :
             (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
@@ -524,6 +535,11 @@ export function createPersistentTaskService(
           const target = targetById.get(taskId);
           if (!target) throw new OwnershipError("Execution task not found");
           const previous = rows.find(row => row.id === taskId)!;
+          const recoveredModels=resumeModels.get(taskId);
+          // 不结算未知费用；保留原调用、预留预算及摘要，新租约通过 retryOfCallId 沿原操作键重试。
+          if(recoveredModels){
+            for(const call of recoveredModels)await tx.update(executionCalls).set({status:"superseded",updatedAt:stamp}).where(eq(executionCalls.id,call.id));
+          }
           if(input.command==='retry')await dailyRuns.reopenForExecutionRetry(ctx,taskId,tx);
           let acknowledgedPayload: Record<string, unknown> | undefined;
           if (input.command === "resume" && previous.status === "waiting_user") {
@@ -541,6 +557,7 @@ export function createPersistentTaskService(
             .update(executionTasks)
             .set({
               status: target,
+              ...(recoveredModels ? {retryOfCallId:recoveredModels.at(-1)!.id,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
@@ -856,6 +873,15 @@ export function createPersistentTaskService(
         for (const row of expired) {
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          // Only proven observation protocols can close a missing read receipt.
+          // Preserve the original call and unknown evidence; never repeat I/O.
+          for(const recovered of await recoverableBrowserObservationFailures(row,calls,stamp)){
+            const patch={status:"settled",resultText:recovered.resultText,totalTokens:0,usage:{totalTokens:0},updatedAt:stamp};
+            const [updated]=await tx.update(executionCalls).set(patch).where(and(eq(executionCalls.id,recovered.call.id),
+              eq(executionCalls.executionTaskId,row.id),eq(executionCalls.status,recovered.call.status),
+              eq(executionCalls.toolExecutionClaimId,recovered.call.toolExecutionClaimId!),eq(executionCalls.inputDigest,recovered.call.inputDigest))).returning();
+            if(updated)Object.assign(recovered.call,updated);
+          }
           const atomicPending=uncommittedChatTaskCalls(row,calls);
           // 子任务与回执严格同事务；只回收尚未提交的纯事务工具，不重置调用或预算。
           for(const callId of atomicPending){
@@ -873,9 +899,7 @@ export function createPersistentTaskService(
           // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job
           // 仍须保持未知并按原键对账。
           const originalRetryOfCallId=row.retryOfCallId;
-          const safeModels=["running","unknown_result"].includes(row.status)?calls.filter(call=>
-            call.kind==="model" && ["started","unknown"].includes(call.status) && call.providerJob===null &&
-            call.providerResult===null && call.resultRef===null):[];
+          const safeModels=["running","unknown_result"].includes(row.status)?unconfirmedModelCalls(calls):[];
           const safeModelStatuses=new Map(safeModels.map(call=>[call.id,call.status]));
           const safeModelIds=new Set(safeModels.map(call=>call.id));
           for(const call of safeModels)call.status="superseded";
