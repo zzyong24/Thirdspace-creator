@@ -235,8 +235,8 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
       const length=event.message?.stopReason==="length";
       // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
       const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !(options.recoverMissingFinal?lastMessageHasFile:parts.some(part=>part.type==="file"));
-      const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running" || step.status==="failed")??[] : [];
-      const failed=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="failed")??[] : [];
+      const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running" || step.status==="failed" || step.status==="cancelled" || step.status==="skipped")??[] : [];
+      const failed=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="failed" || step.status==="cancelled" || step.status==="skipped")??[] : [];
       const active=event.message?.role==="assistant" ? planStatus?.steps.some(step=>step.status==="pending" || step.status==="running" || step.status==="waiting_user")??false : false;
       if(!length && finishReason==="stop" && failed.length && !active && !planStatus?.hasSuccessor){terminalPlanFailureState.stepIds=failed.map(step=>step.stepId);return;}
       if(!length && !empty && !unfinished.length)return;

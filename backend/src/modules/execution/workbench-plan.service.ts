@@ -112,18 +112,19 @@ function storedPlan(payload: unknown): WorkbenchPlan | null {
   return parsed.data;
 }
 /** Execution-owned pure validation for the chat completion lease; no DB reads or nested lease. */
-export function validateTerminalPlanFailures(payload: unknown, candidateStepIds?: string[], requireFailureIds = false): string[] | null {
+export type TerminalPlanIssue = { stepId: string; title: string; status: "failed" | "cancelled" | "skipped" };
+export function validateTerminalPlanFailures(payload: unknown, candidateStepIds?: string[], requireFailureIds = false): TerminalPlanIssue[] | null {
   const plan = storedPlan(payload), steps = plan?.steps ?? [];
-  const failed = steps.filter(step => step.status === "failed");
+  const incomplete = steps.filter(step => step.status === "failed" || step.status === "cancelled" || step.status === "skipped");
   const active = steps.some(step => ["pending", "running", "waiting_user"].includes(step.status));
-  const terminalFailure = failed.length > 0 && !active;
+  const terminalFailure = incomplete.length > 0 && !active;
   if (!candidateStepIds) {
     if (terminalFailure && requireFailureIds) throw new ConflictError("终态失败计划缺少失败步骤引用");
-    return terminalFailure ? failed.map(step => step.title) : null;
+    return terminalFailure ? incomplete.map(({stepId,title,status}) => ({stepId,title,status:status as TerminalPlanIssue["status"]})) : null;
   }
-  if (!terminalFailure || JSON.stringify(candidateStepIds) !== JSON.stringify(failed.map(step => step.stepId)))
-    throw new ConflictError("失败步骤引用与当前计划不一致");
-  return failed.map(step => step.title);
+  if (!terminalFailure || JSON.stringify(candidateStepIds) !== JSON.stringify(incomplete.map(step => step.stepId)))
+    throw new ConflictError("未成功步骤引用与当前计划不一致");
+  return incomplete.map(({stepId,title,status}) => ({stepId,title,status:status as TerminalPlanIssue["status"]}));
 }
 type TerminalToolCall = {id:string;sequence:number;kind:string;status:string;parentCallId:string|null;inputDigest:string;resultText:string|null};
 export type TerminalToolFailure = {toolName:string;errorCode:string};

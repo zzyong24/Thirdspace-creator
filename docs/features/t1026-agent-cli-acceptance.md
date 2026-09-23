@@ -130,3 +130,11 @@ HTML复制必须保留原字节和明确依赖闭包：宿主生成可选`htmlRe
 继续跑协议回归时又发现：没有工具行动且模型连续返回空正文，会被 `message_end` 监听器无限追加“继续当前请求”，直到 180 秒空闲超时。所有冻结 `recoverMissingFinal` 的新任务现在对空答复只发起一次禁用工具的 `CHAT_FINAL_RECOVERY`；第二次仍为空时立即以 `CHAT_FINAL_RECOVERY_EMPTY` 失败，保留原任务、预算与所有已确认回执，不循环或报告 completed。新增无工具双空答复协议测试实际断言两次模型调用、第二次没有任何工具、快速失败。
 
 本轮定向证据：Pi 协议和 worker-runtime 2 文件55项通过；contract 44文件263项通过；backend 5个计划/完成/投影及真实截断工具链文件97项通过；contract 与 ai-worker 类型检查及 `git diff --check` 通过。backend 全量类型检查仍报24条既有测试源码错误，错误集中在无关测试的过期依赖/缺文件，不涉及本轮修改文件。`durable-chat-tool-ledger` 旧直连夹具适配实际 `appendStreamEvents` 后仍在 `assertCards` 确认处失败，不能计作本轮 PASS；真实 worker-entry 和安装 CLI 仍须继续验证。安装包、公开 CLI 复测结果待本次修复完成后追加，不能以源码测试代替。
+
+### 第十轮 CLI 验收：取消/跳过步骤被误报为完成
+
+已安装候选 `d2e85817` 的公开 CLI 真实对话 `ai-conv-b944fd09` 触发任务 `ai-task-b944fd09-84` / `execution-task-b944fd09-85`。模型先成功建立双步骤计划，随后真实调用 `plan.update` 将步骤置为 `cancelled` 与 `skipped`；公开 `tasks get` 和 `workbench.tasks.inspect` 却显示任务 `succeeded`、`completeness=completed`。最终模型文字还漏报额外的 `tool_result_read` 与第二次 `plan.update`，证明不能按其自述推断工作完成。
+
+修复使 Pi loop 将 `failed/cancelled/skipped` 均视作未成功步骤；当所有步骤终止且无后继 root 时提交真实步骤 ID。execution service 在同一完成租约内按当前计划顺序校验这些 ID 与可信标题/状态，assistant 结果、消息、任务和流事件原子投影为 `partial`。只有全部终态为 `failed` 时继续写“失败步骤”，含取消/跳过时写“未成功步骤”。不把有活动步骤或尚有后继模型 root 的计划提前收口。
+
+修复回归：Pi loop + worker-runtime 56 项、计划/聊天完成/投影 73 项、contract chat-worker 14 项、worker-entry + 截断工具集成 34 项通过；ai-worker 与 contract `tsc --noEmit` 通过。新版安装候选的 CLI partial 状态及消息回读仍待完成，不以旧安装版缺陷或源码测试替代新版安装验收。T-1026 其他功能矩阵、恢复、文件、浏览器、真实产物及旧功能兼容范围继续逐项验收。

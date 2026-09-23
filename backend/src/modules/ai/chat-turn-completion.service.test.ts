@@ -99,6 +99,15 @@ it("终态失败计划即使模型正文为空也原子保存可信partial说明
       {type:"finish",finishReason:"stop",messageMetadata:rows.messages[1]!.modelMetadata},
     ]);
 });
+it.each(["cancelled","skipped"] as const)("终态%s计划不能冒充完成，生成可信partial说明",async status=>{
+ const f=await fixture({content:[{type:"text",text:"计划状态已收口"}]}),plan={planRevision:1,steps:[{stepId:"abandoned",title:"交付报告",dependsOn:[],status,operationRefs:[],artifactRefs:[]}]};
+ await db.update(executionTasks).set({payload:{...(f.task.payload as Record<string,unknown>),workbenchPlan:plan}}).where(eq(executionTasks.id,f.task.id));
+ const request={...f.request,partialPlanFailureStepIds:["abandoned"]};
+ expect(await f.service.commitResult(f.ref,request)).toMatchObject({outcome:"partial"});
+ const rows=await f.rows();
+ expect(rows.messages[1]).toMatchObject({content:"计划状态已收口\n\n本次部分完成。未成功步骤：交付报告。",modelMetadata:{completeness:"partial",stopReason:"stop"}});
+ expect(rows.business.status).toBe("partial");expect(rows.task.status).toBe("partial");
+});
 it("v1终态失败缺ID或ID与计划不符时拒绝提交且不留半成品",async()=>{
  const f=await fixture({content:[]}),plan={planRevision:1,steps:[{stepId:"research",title:"来源检索失败",dependsOn:[],status:"failed",operationRefs:[],artifactRefs:[]}]};
  await db.update(executionTasks).set({payload:{...(f.task.payload as Record<string,unknown>),workbenchPlan:plan}}).where(eq(executionTasks.id,f.task.id));

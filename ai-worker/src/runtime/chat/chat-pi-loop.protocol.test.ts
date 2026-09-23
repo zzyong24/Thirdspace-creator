@@ -161,6 +161,12 @@ it('只有终态失败计划时不再请求模型或工具，只向后端提交�
  assert.equal(result.text,'已生成报告，检索步骤失败。');assert.deepEqual(result.terminalPlanFailureStepIds,['read']);assert.equal(result.finishReason,'stop');assert.equal(calls,1);assert.equal(executions,0);assert.equal(requests.length,1);
 });
 
+it('取消或跳过的终态计划不能让聊天任务冒充完成',async()=>{
+ let calls=0;const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{calls++;return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:'已结束'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};}};
+ const result=await runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'交付'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'cancelled-plan',readPlanStatus:async()=>({revision:2,progressToken:'terminal',steps:[{stepId:'cancelled',title:'已取消步骤',status:'cancelled'},{stepId:'skipped',title:'被跳过步骤',status:'skipped'},{stepId:'done',title:'已完成步骤',status:'succeeded'}]})});
+ assert.equal(calls,1);assert.equal(result.finishReason,'stop');assert.deepEqual(result.terminalPlanFailureStepIds,['cancelled','skipped']);
+});
+
 it('终态失败遇到length仍先按既有规则续写，只有stop才提交部分结果',async()=>{
  let calls=0;const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{calls++;const reason=calls===1?'length':'stop';return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:calls===1?'部分内容':'补全内容'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};}};
  const result=await runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'生成'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-length',readPlanStatus:async()=>({revision:1,progressToken:'failed',steps:[{stepId:'research',title:'来源检索失败',status:'failed'}]})});

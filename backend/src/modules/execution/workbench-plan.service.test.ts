@@ -33,9 +33,10 @@ const step = (stepId: string, overrides: Partial<WorkbenchPlan["steps"][number]>
 
 it("仅按execution当前计划顺序核验完整终态失败ID并返回可信标题", () => {
   const payload = {workbenchPlan:{planRevision:3,steps:[step("failed-a",{title:"来源读取失败",status:"failed"}),step("skipped",{status:"skipped"}),step("failed-b",{title:"报告校验失败",status:"failed"})]}};
-  expect(validateTerminalPlanFailures(payload,["failed-a","failed-b"])).toEqual(["来源读取失败","报告校验失败"]);
+  expect(validateTerminalPlanFailures(payload,["failed-a","skipped","failed-b"])).toEqual([{stepId:"failed-a",title:"来源读取失败",status:"failed"},{stepId:"skipped",title:"skipped",status:"skipped"},{stepId:"failed-b",title:"报告校验失败",status:"failed"}]);
   expect(()=>validateTerminalPlanFailures(payload,undefined,true)).toThrow();
-  for (const ids of [["failed-b","failed-a"],["failed-a"],["failed-a","foreign"]]) expect(()=>validateTerminalPlanFailures(payload,ids)).toThrow();
+  for (const ids of [["failed-b","skipped","failed-a"],["failed-a"],["failed-a","skipped","foreign"]]) expect(()=>validateTerminalPlanFailures(payload,ids)).toThrow();
+  for (const status of ["cancelled","skipped"] as const) expect(validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("stopped",{title:"停止的步骤",status})]}},["stopped"])).toEqual([{stepId:"stopped",title:"停止的步骤",status}]);
   expect(()=>validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("failed",{status:"failed"}),step("waiting",{status:"waiting_user"})]}},["failed"])).toThrow();
   expect(validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("pending")]}},undefined)).toBeNull();
 });

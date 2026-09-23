@@ -7,13 +7,13 @@ import { createAiRepository } from "./ai.repository";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
 import { projectChatReceipts,readChatApprovalFacts } from "./chat-receipt-projection";
 import { restoreHistoricalChatToolCards } from "./chat-historical-tool-stream.service";
-import type { TerminalToolFailure } from "../execution/workbench-plan.service";
+import type { TerminalPlanIssue, TerminalToolFailure } from "../execution/workbench-plan.service";
 import { isDeepStrictEqual } from "node:util";
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 同一事务提交聊天消息、业务结果、调用结果引用和执行终态。完成请求只含已有账本引用。 */
 export function createChatTurnCompletionService(db: Db, deps: {
     now?: () => string;
-    validateTerminalPlanFailures?(payload: unknown, candidateStepIds?: string[], requireFailureIds?: boolean): string[] | null;
+    validateTerminalPlanFailures?(payload: unknown, candidateStepIds?: string[], requireFailureIds?: boolean): TerminalPlanIssue[] | null;
     validateTerminalToolFailures?(calls:ReadonlyArray<typeof executionCalls.$inferSelect>,candidateCallIds?:string[],requireFailureIds?:boolean):TerminalToolFailure[]|null;
 } = {}) {
     const now = deps.now ?? (() => new Date().toISOString()), leases = createExecutionLeaseService(db, { now });
