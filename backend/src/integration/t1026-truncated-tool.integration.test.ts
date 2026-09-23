@@ -6,7 +6,7 @@ import {createDb,executionTasks,eq} from '@creatoros/backend';
 import {createAiRepository} from '../modules/ai/ai.repository';
 import {createChatTurnSubmissionService} from '../modules/ai/chat-turn-submission.service';
 import {createChatTurnCompletionService} from '../modules/ai/chat-turn-completion.service';
-import {validateTerminalPlanFailures} from '../modules/execution/workbench-plan.service';
+import {validateTerminalPlanFailures,validateTerminalToolFailures} from '../modules/execution/workbench-plan.service';
 import {chatWorkerInputSchema} from '@creatoros/contract/execution-worker';
 import {runChatInWorker,type ChatWorkerPorts} from '../../../ai-worker/src/execution/chat-worker-run';
 import {createPersistentTaskService} from '../modules/execution/persistent-task.service';
@@ -192,7 +192,7 @@ it.each(['{"path":"douyin-plays.html"}','{"path":','{"path":"douyin-plays.html",
     expect(requests).toBe(5);expect(writes).toHaveBeenCalledTimes(2);
     expect((await ledger.inspect(ref)).spentTokens).toBe(25);
     const result=actual.result!;
-    await expect(createChatTurnCompletionService(f.db,{validateTerminalPlanFailures}).commitResult(ref,{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds})).resolves.toMatchObject({outcome:'succeeded'});
+    await expect(createChatTurnCompletionService(f.db,{validateTerminalPlanFailures,validateTerminalToolFailures}).commitResult(ref,{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds})).resolves.toMatchObject({outcome:'succeeded'});
   }finally{
     server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));await f.client.close();
   }
@@ -330,7 +330,7 @@ it.each([{preserveLegacy:true,truncated:false,escaped:false},{preserveLegacy:fal
       expect(write.mock.calls[0]![1]).toEqual({path:'douyin-plays.html',content:'修复完成'});
       expect(JSON.parse(after.calls[5]!.resultText!)).toMatchObject({toolCallId:'provider-truncated',output:{status:'error',sideEffect:'none',error:{code:'invalid_input'}}});
       const last=resumed.result!;
-      await expect(createChatTurnCompletionService(f.db,{validateTerminalPlanFailures}).commitResult(ref,{lastModelCallId:last.lastModelCallId,toolCallIds:last.toolCallIds})).resolves.toMatchObject({outcome:'succeeded'});
+      await expect(createChatTurnCompletionService(f.db,{validateTerminalPlanFailures,validateTerminalToolFailures}).commitResult(ref,{lastModelCallId:last.lastModelCallId,toolCallIds:last.toolCallIds})).resolves.toMatchObject({outcome:'succeeded'});
       const [done]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
       expect(done!.status).toBe('succeeded');
     }

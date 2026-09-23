@@ -7,7 +7,7 @@ import { z } from "zod";
 import { createDb, executionCalls, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
-import { createWorkbenchPlanService, hasLaterChatRoot, validateTerminalPlanFailures } from "./workbench-plan.service";
+import { createWorkbenchPlanService, hasLaterChatRoot, validateTerminalPlanFailures, validateTerminalToolFailures } from "./workbench-plan.service";
 import { createWorkbenchArtifactService } from "./workbench-artifact.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
@@ -25,6 +25,7 @@ import { defineWorkbenchChatTool } from "../ai-runtime/chat-tool-gate";
 import { prepareChatToolDefinitions } from "../ai-runtime/chat-tool-definitions";
 import type { ExecutionRef, WorkerPort } from "@creatoros/contract/execution-worker";
 import type { WorkbenchPlan } from "@creatoros/contract/agent-workbench";
+import { agenticToolOutcomeSchema, workerToolResultReceiptSchema } from "@creatoros/contract/execution-worker";
 
 const now = () => "2026-09-19T00:00:00.000Z";
 const ctx = {userId: "plan-user", accountId: "plan-account", requestId: "test", source: "user" as const};
@@ -37,6 +38,17 @@ it("仅按execution当前计划顺序核验完整终态失败ID并返回可信�
   for (const ids of [["failed-b","failed-a"],["failed-a"],["failed-a","foreign"]]) expect(()=>validateTerminalPlanFailures(payload,ids)).toThrow();
   expect(()=>validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("failed",{status:"failed"}),step("waiting",{status:"waiting_user"})]}},["failed"])).toThrow();
   expect(validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("pending")]}},undefined)).toBeNull();
+});
+it("仅将真实账本中同工具同输入的重复不可重试错误作为终态工具失败",()=>{
+ const output={status:"error",summary:"参数错误",evidence:[],data:null,error:{code:"invalid_input",retryable:false,recovery:"补齐参数"},continuation:null,sideEffect:"none"};
+ const call=(id:string,digest="same")=>({id,sequence:id==="a"?1:2,kind:"tool",status:"settled",parentCallId:null,inputDigest:digest,resultText:JSON.stringify({schemaVersion:1,kind:"tool",toolCallId:`provider-${id}`,toolName:"plan_update",output})});
+ expect(agenticToolOutcomeSchema.safeParse(output).success).toBe(true);
+ expect(workerToolResultReceiptSchema.safeParse(JSON.parse(call("a").resultText)).success).toBe(true);
+ expect(validateTerminalToolFailures([call("a"),call("b")],["a","b"])).toEqual([{toolName:"plan_update",errorCode:"invalid_input"}]);
+ expect(()=>validateTerminalToolFailures([call("a"),call("b")],undefined,true)).toThrow();
+ expect(()=>validateTerminalToolFailures([call("a"),call("b")],["a"])).toThrow();
+ expect(validateTerminalToolFailures([call("a"),call("b","different")])).toBeNull();
+ expect(()=>validateTerminalToolFailures([call("a"),call("b","different")],["a","b"])).toThrow();
 });
 it("旧stop的历史提示将任意状态后继root计为后继，忽略工具子调用",()=>{
  for(const status of ["settled","rejected","superseded","reserved","started","unknown"]){
@@ -279,7 +291,7 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     const workerCalls = createExecutionWorkerCallPorts(db, {now: liveNow, budget});
     const streams = createExecutionStreamService(db, {now: liveNow});
     const leases = createExecutionLeaseService(db, {now: liveNow});
-    const replies = createChatTurnCompletionService(db, {now: liveNow, validateTerminalPlanFailures});
+    const replies = createChatTurnCompletionService(db, {now: liveNow, validateTerminalPlanFailures, validateTerminalToolFailures});
     const {context, input} = await readExecutionChatTask(db, firstRef, liveNow);
     const planTools = await createChatWorkbenchPlanToolHost(db)(context, input, firstRef, new AbortController().signal);
     let externalCalls = 0, supplierCalls = 0;

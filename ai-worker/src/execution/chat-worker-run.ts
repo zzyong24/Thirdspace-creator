@@ -203,7 +203,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
   // 所有可执行聊天只进入 Pi；旧非终态在任何工具恢复之前已明确暂停。
     const result=await runChatPiLoop({model,system:input.system,messages:input.messages.map(message=>modelMessageSchema.parse(message)) as ModelMessage[],
       definitions:input.tools,maxOutputTokens:input.maxOutputTokens,signal,messageId:`chat:${input.sourceMessageId}`,
-      recoverMissingFinal:input.recoverMissingFinal,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
+      recoverMissingFinal:input.recoverMissingFinal,terminalToolFailurePolicyVersion:input.terminalToolFailurePolicyVersion,contextPolicyVersion:input.contextPolicyVersion,forcedTool:input.forcedTool,forcedToolSequence:input.forcedToolSequence,onChunk:ports.onChunk,
       replayProjection:{original:legacyToolResultTexts,capture:build=>{replayPrompt=build;}},
       readPlanStatus:ports.readPlanStatus?async()=>{
         if(!lastModelCallId)throw fail(new Error("model receipt missing"),"CHAT_PLAN_HISTORY_UNPROVEN");
@@ -256,7 +256,9 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     if(failure)throw failure;
     parentSignal.throwIfAborted();
     if(!lastModelCallId)throw new GenerationFailure("unknown_result","CHAT_RESULT_RECEIPT_MISSING");
-    if(!result.awaitingApproval && !result.terminalPlanFailureStepIds?.length && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
-    return {...result,lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.terminalPlanFailureStepIds?.length || result.finishReason!=="stop"?"partial" as const:"completed" as const};
+    const terminalToolFailureCallIds=result.terminalToolFailureCallIds?.map(toolCallId=>outcomesForProjection.get(toolCallId)?.callId);
+    if(result.terminalToolFailureCallIds?.length && terminalToolFailureCallIds?.some(callId=>!callId))throw new GenerationFailure("unknown_result","CHAT_TERMINAL_TOOL_FAILURE_RECEIPT_MISSING");
+    if(!result.awaitingApproval && !result.terminalPlanFailureStepIds?.length && !terminalToolFailureCallIds?.length && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
+    return {...result,...(terminalToolFailureCallIds?.length?{terminalToolFailureCallIds:terminalToolFailureCallIds as string[]}:{}),lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.terminalPlanFailureStepIds?.length || terminalToolFailureCallIds?.length || result.finishReason!=="stop"?"partial" as const:"completed" as const};
   }finally{await Promise.all([research?.close(),webRead?.close()]);}
 }

@@ -7,7 +7,7 @@ import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "./ai.repository";
 import { createChatTurnSubmissionService } from "./chat-turn-submission.service";
 import { createChatTurnCompletionService } from "./chat-turn-completion.service";
-import { validateTerminalPlanFailures } from "../execution/workbench-plan.service";
+import { validateTerminalPlanFailures, validateTerminalToolFailures } from "../execution/workbench-plan.service";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../execution/execution-call-ledger.service";
 import { createExecutionGenerationPorts } from "../execution/execution-generation-ports.service";
@@ -48,7 +48,7 @@ async function fixture(options: {
     await generation.settleGenerationCall(ref, { callId: call.callId, status: "settled", providerResult: { content: options.content ?? [{ type: "text", text: options.text ?? "真实回复" }], finishReason: { unified: options.finishReason ?? "stop" }, usage: { inputTokens: options.unknownUsage ? {} : { total: 2 }, outputTokens: options.unknownUsage ? {} : { total: 3 } }, warnings: [] }, usage: options.unknownUsage ? {} : { inputTokens: 2, outputTokens: 3 } });
     if (options.checkpoint !== false)
         await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: options.supersededPrefix?2:1, messages: [{ role: "assistant", callId: call.callId }] });
-    const service = createChatTurnCompletionService(db, { now, validateTerminalPlanFailures }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
+    const service = createChatTurnCompletionService(db, { now, validateTerminalPlanFailures, validateTerminalToolFailures }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
     const rows = async () => ({ messages: await repo.listMessages(conversation.id), results: await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, submit.taskId)), business: (await db.select().from(aiTasks).where(eq(aiTasks.id, submit.taskId)))[0]!, task: (await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId)))[0]!, call: (await db.select().from(executionCalls).where(eq(executionCalls.id, call.callId)))[0]! });
     return { ctx, repo, source, conversation, submit, ref, task: task!, call, supersededCallId, service, request, rows, ledger, generation, frozen };
 }

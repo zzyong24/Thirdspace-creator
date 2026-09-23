@@ -22,3 +22,8 @@ it("误传内部回执时也不把内部正文或工具请求投影到聊天",()
  const result=projectChatReceipts(original,input);
  expect(result.content).toBe("已经解释输入问题");expect(JSON.stringify(result.parts)).not.toContain("内部候选");
 });
+it("连续相同的不可重试失败以可信宿主说明收口为partial",()=>{
+ const result=projectChatReceipts([],input,new Map(),undefined,[{toolName:"plan_update",errorCode:"invalid_input"}]);
+ expect(result.outcome).toBe("partial");
+ expect(result.content).toContain("本次部分完成。工具 plan_update 对相同参数连续返回不可重试错误（invalid_input），系统已停止重复调用。");
+});

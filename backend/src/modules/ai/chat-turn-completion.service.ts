@@ -7,12 +7,14 @@ import { createAiRepository } from "./ai.repository";
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
 import { projectChatReceipts,readChatApprovalFacts } from "./chat-receipt-projection";
 import { restoreHistoricalChatToolCards } from "./chat-historical-tool-stream.service";
+import type { TerminalToolFailure } from "../execution/workbench-plan.service";
 import { isDeepStrictEqual } from "node:util";
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 同一事务提交聊天消息、业务结果、调用结果引用和执行终态。完成请求只含已有账本引用。 */
 export function createChatTurnCompletionService(db: Db, deps: {
     now?: () => string;
     validateTerminalPlanFailures?(payload: unknown, candidateStepIds?: string[], requireFailureIds?: boolean): string[] | null;
+    validateTerminalToolFailures?(calls:ReadonlyArray<typeof executionCalls.$inferSelect>,candidateCallIds?:string[],requireFailureIds?:boolean):TerminalToolFailure[]|null;
 } = {}) {
     const now = deps.now ?? (() => new Date().toISOString()), leases = createExecutionLeaseService(db, { now });
     return { async commitResult(ref: ExecutionRef, raw: unknown) {
@@ -40,11 +42,15 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 const policyVersion=payload.terminalPlanFailurePolicyVersion;
                 if(policyVersion!==undefined && policyVersion!==1)throw new ConflictError("聊天终态失败策略版本不支持");
                 if(policyVersion===1 && !deps.validateTerminalPlanFailures)throw new ConflictError("execution计划校验端口未装配");
-                if(policyVersion!==1 && request.partialPlanFailureStepIds)throw new ConflictError("旧策略任务不能提交终态失败说明");
+                if(policyVersion===1 && !deps.validateTerminalToolFailures)throw new ConflictError("execution工具失败校验端口未装配");
+                if(policyVersion!==1 && (request.partialPlanFailureStepIds || request.terminalToolFailureCallIds))throw new ConflictError("旧策略任务不能提交终态失败说明");
+                if(request.partialPlanFailureStepIds && request.terminalToolFailureCallIds)throw new ConflictError("聊天终态失败说明不能混用计划与工具引用");
                 const providerFinishReason=workerProviderReceiptSchema.parse(lastModel.providerResult).finishReason.unified;
                 const latestSettledStop=latestRoot?.id===lastModel.id && latestRoot.status==="settled" && providerFinishReason==="stop";
                 let terminalFailureTitles=policyVersion===1?deps.validateTerminalPlanFailures!(payload,request.partialPlanFailureStepIds,latestSettledStop):null;
+                const terminalToolFailures=policyVersion===1?deps.validateTerminalToolFailures!(calls,request.terminalToolFailureCallIds,latestSettledStop):null;
                 if(terminalFailureTitles && request.partialPlanFailureStepIds && !latestSettledStop)throw new ConflictError("终态失败计划必须由最新settled stop回执收口");
+                if(terminalToolFailures && request.terminalToolFailureCallIds && !latestSettledStop)throw new ConflictError("终态工具失败必须由最新settled stop回执收口");
                 if(terminalFailureTitles && !request.partialPlanFailureStepIds){
                     if(latestRoot?.id===lastModel.id && latestRoot.status==="settled" && providerFinishReason!=="stop")terminalFailureTitles=null;
                     else throw new ConflictError("终态失败计划必须由最新settled stop回执收口");
@@ -53,7 +59,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 if (checkpoint.ledgerSequence !== calls.at(-1)?.sequence || JSON.stringify(checkpoint.messages) !== JSON.stringify(rootConfirmed.map(call => ({ role: call.kind === "model" ? "assistant" : "tool", callId: call.id }))))
                     throw new ConflictError("聊天检查点尚未确认全部调用");
                 const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
-                const projected = projectChatReceipts(rootConfirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk)),terminalFailureTitles??undefined), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
+                const projected = projectChatReceipts(rootConfirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk)),terminalFailureTitles??undefined,terminalToolFailures??undefined), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
                 const assertCards=()=>{
                 // 工具结算与补卡是不同事务；卡片未确认时保持原任务可恢复，不能先发布结束。
                 for(const part of projected.parts.filter(part=>typeof part.toolCallId==="string")){

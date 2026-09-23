@@ -38,6 +38,7 @@ export interface ChatPiLoopOptions {
   forcedTool?:string;forcedToolSequence?:string[];
   /** 仅由宿主冻结的新运行策略启用；旧账本回放必须沿用原请求序列。 */
   recoverMissingFinal?:boolean;
+  terminalToolFailurePolicyVersion?:1;
   /** 由宿主读取原 execution_tasks 计划，不能由模型文本推断完成。 */
   readPlanStatus?():Promise<ChatPlanStatus|null>;
   onChunk?(chunk:UIMessageChunk):Promise<void>;
@@ -56,6 +57,8 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
   let failure:unknown,awaitingApproval=false,finishReason="stop",turn=0;
   let completedTool=false,finalRecovery=false,lastMessageHasFile=false,lengthContinuations=0;
   const terminalPlanFailureState:{stepIds:string[]|null}={stepIds:null};
+  const terminalToolFailureState:{callIds:string[]|null}={callIds:null};
+  const nonRetryableToolFailures=new Map<string,{callIds:string[]}>();
   let planStatus:ChatPlanStatus|null=null,lastPlanProgress:string|null=null,stalledTurns=0;
   const history:ModelMessage[]=[...options.messages];
   const parts:UIMessage["parts"]=[];
@@ -78,6 +81,11 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
         options.signal.throwIfAborted();
         if(awaitingApproval)throw Error("CHAT_APPROVAL_PENDING");
         const step=turn++;
+        if(terminalToolFailureState.callIds && !finalRecovery){
+          // Pi 在工具回执后会自动请求下一轮；在该轮开始时切换成无工具收口，避免重复错误再次派发。
+          finalRecovery=true;
+          history.push({role:"user",content:CHAT_FINAL_RECOVERY});
+        }
         const recoveryRequest=finalRecovery;
         lastMessageHasFile=false;
         const forced=options.forcedToolSequence?.[step]??(step===0?options.forcedTool:undefined);
@@ -205,6 +213,15 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
           output=await options.execute(def.name,args,{toolCallId});
           if(part){part.state="output-available";part.output=output;}
         }
+        const failureRecord=output&&typeof output==="object"&&!Array.isArray(output)?output as Record<string,unknown>:{},errorRecord=failureRecord.error&&typeof failureRecord.error==="object"&&!Array.isArray(failureRecord.error)?failureRecord.error as Record<string,unknown>:{};
+        if(options.terminalToolFailurePolicyVersion===1 && failureRecord.status==="error" && failureRecord.sideEffect==="none" && errorRecord.retryable===false && typeof errorRecord.code==="string"){
+          const canonical=(value:unknown):unknown=>Array.isArray(value)?value.map(canonical):value&&typeof value==="object"?Object.fromEntries(Object.entries(value as Record<string,unknown>).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,canonical(item)])):value;
+          const signature=JSON.stringify([def.name,errorRecord.code,canonical(args)]);
+          const previous=nonRetryableToolFailures.get(signature);
+          const callIds=[...(previous?.callIds??[]),toolCallId];
+          nonRetryableToolFailures.set(signature,{callIds});
+          if(callIds.length>=2)terminalToolFailureState.callIds=callIds;
+        }
         completedTool=true;
         const presented=await options.presentToolResult?.(def.name,output,toolCallId);
         const content=presented??[{type:"text" as const,text:JSON.stringify(output??null)}];
@@ -223,8 +240,8 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
       const active=event.message?.role==="assistant" ? planStatus?.steps.some(step=>step.status==="pending" || step.status==="running" || step.status==="waiting_user")??false : false;
       if(!length && finishReason==="stop" && failed.length && !active && !planStatus?.hasSuccessor){terminalPlanFailureState.stepIds=failed.map(step=>step.stepId);return;}
       if(!length && !empty && !unfinished.length)return;
-      if(options.recoverMissingFinal && empty && completedTool && !unfinished.length){
-        // 缺终稿只补一次只读答复，绝不重开工具策略或重复已执行动作。
+      if(options.recoverMissingFinal && empty && !unfinished.length){
+        // 空答复只补一次无工具终稿；无论前面是否执行过工具，都不能无限续问。
         if(finalRecovery){failure??=new ChatFinalRecoveryError("CHAT_FINAL_RECOVERY_EMPTY");agent.abort();return;}
         finalRecovery=true;
         history.push({role:"user",content:CHAT_FINAL_RECOVERY});
@@ -257,6 +274,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
     options.signal.throwIfAborted();
     const message:UIMessage={id:options.messageId,role:"assistant",parts};
     const terminalPlanFailureStepIds=terminalPlanFailureState.stepIds;
-    return {message,text:parts.filter(part=>part.type==="text").map(part=>part.text).join(""),finishReason,awaitingApproval,...(terminalPlanFailureStepIds?{terminalPlanFailureStepIds}:{})};
+    const terminalToolFailureCallIds=terminalToolFailureState.callIds;
+    return {message,text:parts.filter(part=>part.type==="text").map(part=>part.text).join(""),finishReason,awaitingApproval,...(terminalPlanFailureStepIds?{terminalPlanFailureStepIds}:{}),...(terminalToolFailureCallIds?{terminalToolFailureCallIds}:{})};
   }finally{unsubscribe();options.signal.removeEventListener("abort",abort);}
 }

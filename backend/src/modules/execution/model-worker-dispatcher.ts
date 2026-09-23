@@ -14,7 +14,7 @@ import {createExecutionTranscribeAudioService} from "./execution-transcribe-audi
 import {createExecutionAsrPorts} from "./execution-asr-ports.service";
 import {createExecutionAssetPorts} from "./execution-asset-ports.service";
 import {createExecutionChatToolPorts,readExecutionChatTask,type ChatBackendTool} from "./execution-chat-tool-ports.service";
-import {createWorkbenchPlanService,validateTerminalPlanFailures} from "./workbench-plan.service";
+import {createWorkbenchPlanService,validateTerminalPlanFailures,validateTerminalToolFailures} from "./workbench-plan.service";
 import {createExecutionModelIdentityService} from "./execution-model-identity.service";
 import {createChatTurnCompletionService} from "../ai/chat-turn-completion.service";
 import {createExecutionStreamService} from "./execution-stream.service";
@@ -105,7 +105,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   const candidates=deps.executionMode==="model"?createExecutionCandidateService(db,deps):null;
   const dailyTopics=deps.executionMode==="model"&&deps.dailyTopicPorts?createDailyTopicCompletionService(db,{now,ports:deps.dailyTopicPorts}):null;
   const scriptFinalizer=deps.executionMode==="model"?createScriptPartialFinalizationService(db,{...deps,onRecoveryError:()=>report("SCRIPT_RESULT_RECOVERY_FAILED")}):null;
-  const chatReplies=createChatTurnCompletionService(db,{now,validateTerminalPlanFailures});
+  const chatReplies=createChatTurnCompletionService(db,{now,validateTerminalPlanFailures,validateTerminalToolFailures});
   const assetProcessing=deps.executionMode==="model"&&deps.assetProcessing?createExecutionAssetProcessingService(db,{...deps.assetProcessing,now}):null;
   const similarities=deps.executionMode==="model"?createScriptSimilarityCompletionService(db,{now}):null;
   const preferences=deps.executionMode==="model"?createTopicPreferenceCompletionService(db,{now}):null;

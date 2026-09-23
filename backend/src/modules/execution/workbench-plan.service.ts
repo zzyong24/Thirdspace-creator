@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { and, eq, executionCalls, executionTasks, OwnershipError, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { workbenchArtifactSchema, workbenchPlanSchema, type WorkbenchPlan } from "@creatoros/contract/agent-workbench";
-import { executionRefSchema, workerPortInputSchemas, workerReservationSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { agenticToolOutcomeSchema, executionRefSchema, workerPortInputSchemas, workerReservationSchema, workerToolResultReceiptSchema, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 import { workbenchPlanAtModel } from "./workbench-plan-history";
@@ -124,6 +124,26 @@ export function validateTerminalPlanFailures(payload: unknown, candidateStepIds?
   if (!terminalFailure || JSON.stringify(candidateStepIds) !== JSON.stringify(failed.map(step => step.stepId)))
     throw new ConflictError("失败步骤引用与当前计划不一致");
   return failed.map(step => step.title);
+}
+type TerminalToolCall = {id:string;sequence:number;kind:string;status:string;parentCallId:string|null;inputDigest:string;resultText:string|null};
+export type TerminalToolFailure = {toolName:string;errorCode:string};
+/** 只把相同冻结工具/输入的重复不可重试失败认作终态；不从模型正文判断交付完整性。 */
+export function validateTerminalToolFailures(calls:ReadonlyArray<TerminalToolCall>,candidateCallIds?:string[],requireFailureIds=false):TerminalToolFailure[]|null{
+ const groups=new Map<string,{callIds:string[];failure:TerminalToolFailure}>();
+ for(const call of calls){
+  if(call.kind!=="tool"||call.parentCallId!==null||call.status!=="settled"||!call.resultText)continue;
+  try{
+   const receipt=workerToolResultReceiptSchema.parse(JSON.parse(call.resultText)),output=agenticToolOutcomeSchema.parse(receipt.output);
+   if(output.status!=="error"||output.sideEffect!=="none"||output.error?.retryable!==false)continue;
+   const failure={toolName:receipt.toolName,errorCode:output.error.code},signature=JSON.stringify([receipt.toolName,call.inputDigest,failure.errorCode]);
+   const group=groups.get(signature)??{callIds:[],failure};group.callIds.push(call.id);groups.set(signature,group);
+  }catch{/* 未知或损坏回执不能转成终态失败摘要。 */}
+ }
+ const terminal=[...groups.values()].filter(group=>group.callIds.length>=2);
+ if(!candidateCallIds){if(terminal.length&&requireFailureIds)throw new ConflictError("重复不可重试工具失败缺少回执引用");return null;}
+ const match=terminal.find(group=>JSON.stringify(group.callIds)===JSON.stringify(candidateCallIds));
+ if(terminal.length!==1||!match)throw new ConflictError("终态工具失败引用与不可重试回执不一致");
+ return [match.failure];
 }
 export function hasLaterChatRoot(calls:ReadonlyArray<{kind:string;parentCallId:string|null;sequence:number;status?:string}>,anchorSequence:number):boolean{
   return calls.some(call=>call.kind==="model"&&call.parentCallId===null&&call.sequence>anchorSequence);

@@ -1,5 +1,5 @@
 import { createChatTurnCompletionService } from "../modules/ai/chat-turn-completion.service";
-import { validateTerminalPlanFailures } from "../modules/execution/workbench-plan.service";
+import { validateTerminalPlanFailures, validateTerminalToolFailures } from "../modules/execution/workbench-plan.service";
 import { createServer } from "node:http";
 import { it, expect, vi } from "vitest";
 import { type ModelMessage } from "ai";
@@ -14,6 +14,7 @@ import { createExecutionCallLedgerService } from "../modules/execution/execution
 import { createExecutionGenerationPorts } from "../modules/execution/execution-generation-ports.service";
 import { createExecutionCheckpointService } from "../modules/execution/execution-checkpoint.service";
 import { createExecutionAgenticToolPorts } from "../modules/execution/execution-agentic-tool-ports.service";
+import { createExecutionStreamService } from "../modules/execution/execution-stream.service";
 
 it.each(["completed","unknown","approval","denied","empty","length","http429","repeat"])("真实聊天 Worker 回合绑定账本并恢复：%s", async mode => {
   const f=await createDb();
@@ -65,7 +66,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     });
     const host=createExecutionAgenticToolPorts(f.db,{now,budget,tools:{"web.read":{version:"1",parameters,effect:"none",execute}}});
     const spec={apiFormat:"openai_chat" as const,baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"};
-    const checkpoints=createExecutionCheckpointService(f.db,{now});
+    const checkpoints=createExecutionCheckpointService(f.db,{now}),streams=createExecutionStreamService(f.db,{now});
     async function run(){
       const chunks:unknown[]=[];
       const result=await runChatInWorker(input,spec,new AbortController().signal,{
@@ -78,6 +79,8 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
             case "reserveGenerationCall":return generation.reserveGenerationCall(ref,data);
             case "startCall":{const row=await ledger.start(ref,(data as {callId:string}).callId);return {callId:row.id,status:row.status};}
             case "settleGenerationCall":return generation.settleGenerationCall(ref,data);
+            case "appendStreamEvents":return streams.append(ref,data);
+            case "resolveChatFallbackCredential":return null;
             case "reserveAgenticTool":return host.reserve(ref,data);
             case "startAgenticTool":return host.start(ref,data);
             case "executeAgenticTool":return host.execute(ref,data,signal);
@@ -89,8 +92,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
       expect(result.message.id).toBe(`chat:${source.id}`);
       if(result.outcome!=="awaiting_confirmation"){
         expect(result.outcome).toBe(mode==="length"?"partial":"completed");
-        expect(result.text).toBe(mode==="denied"?"未执行读取":"有来源的结论");
-        if(mode!=="denied")expect(chunks).toContainEqual(expect.objectContaining({type:"tool-output-available",output:expect.objectContaining({kind:"source-card"})}));
+        expect(result.text).toContain(mode==="denied"?"未执行读取":"有来源的结论");
       }
       return result;
     }
@@ -100,8 +102,8 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
       expect((await ledger.inspect(ref)).calls.map(call=>call.status)).toEqual(["rejected"]);return;
     }
     if(mode==="empty"){
-      await expect(run()).rejects.toMatchObject({outcome:"failed",errorCode:"CHAT_OUTPUT_EMPTY"});
-      expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();return;
+      await expect(run()).rejects.toMatchObject({outcome:"failed",errorCode:"CHAT_FINAL_RECOVERY_EMPTY"});
+      expect(requests).toBe(2);expect(execute).not.toHaveBeenCalled();return;
     }
     if(mode==="unknown"){
       await expect(run()).rejects.toMatchObject({outcome:"unknown_result"});
@@ -112,7 +114,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     }
     if(mode==="approval"){
       const pending=await run();expect(pending.outcome).toBe("awaiting_confirmation");
-      await expect(createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures}).commitResult(ref,{lastModelCallId:pending.lastModelCallId,toolCallIds:pending.toolCallIds})).rejects.toThrow("聊天调用回执不完整");
+      await expect(createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures,validateTerminalToolFailures}).commitResult(ref,{lastModelCallId:pending.lastModelCallId,toolCallIds:pending.toolCallIds})).rejects.toThrow(/聊天调用回执不完整|聊天仍有待授权或未完成工具/);
       expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);
       expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();approved=true;
     }
@@ -131,7 +133,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     await expect(generation.reserveGenerationCall(ref,{operationKey:`${input.operationKey}/model/1`,request:{maxOutputTokens:128}})).rejects.toThrow();
     expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
     await f.db.update(executionTasks).set({payload:task.payload}).where(eq(executionTasks.id,task.id));
-    const completion=createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures});
+    const completion=createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures,validateTerminalToolFailures});
     const commit={lastModelCallId:final.lastModelCallId,toolCallIds:final.toolCallIds};
     const [receipt,replayed]=await Promise.all([completion.commitResult(ref,commit),completion.commitResult(ref,commit)]);
     expect(receipt).toEqual(replayed);

@@ -122,3 +122,11 @@ HTML复制必须保留原字节和明确依赖闭包：宿主生成可选`htmlRe
 同一 completion lease/事务从可信标题构造固定“本次部分完成。失败步骤：……”说明；即使已确认模型/工具回执没有正文，这条宿主说明也足以成为可读结果。原子写入 assistant message、result completeness、AI task / execution task outcome、同一文案的 text-start/text-delta/text-end 流事件与 finish metadata。provider stop 回执和费用保留原值；模型和 Worker 都不能提交用户可见文案。重复提交必须得到相同消息、状态和文案，不重复追加。所有校验失败不得留下半提交。
 
 实现与验收须覆盖 settled/rejected/superseded/reserved/started/unknown successors、root 与 child 的区分、ID 缺失/重复/错序/不存在/跨任务、pending/running/waiting_user、非最新 stop、真实 stop、旧提示字节级回放、重复提交，以及消息/result/双 task/finish event 的事务原子性。安装版通过公开 CLI 沿原task核对时不得盲目恢复 seq453 未知调用；原调用仍需公开 reconciliation 给出安全结论。另用新隔离任务验证已安装版本对终态失败不再重复工具动作，并能持久读回 partial 和失败步骤。
+
+### 第九轮继续验收：重复不可重试工具失败与空答复收口
+
+安装版公开 CLI 创建的隔离对话复现：`plan.update` 对同一空参数连续返回 `invalid_input / retryable=false / sideEffect=none`，Pi 仍重复相同调用 5 次；底层任务却被标记为 completed，模型正文还宣称任务已完成。修复在新任务冻结的 `terminalToolFailurePolicyVersion=1` 下按工具名、规范化参数和错误码分组；相同不可重试错误最多重复一次，之后切换为无工具最终答复。Worker 只提交 provider toolCallId 对应的真实 settled execution call ID；execution service 从不可变账本回执重验工具、输入摘要、错误码和非重试属性，才将 assistant 结果标为 partial。历史任务不按当前软件版本追溯启用策略。此内部 completion 契约选择记作 DEC-T1026-TERMINAL-TOOL-FAILURE。
+
+继续跑协议回归时又发现：没有工具行动且模型连续返回空正文，会被 `message_end` 监听器无限追加“继续当前请求”，直到 180 秒空闲超时。所有冻结 `recoverMissingFinal` 的新任务现在对空答复只发起一次禁用工具的 `CHAT_FINAL_RECOVERY`；第二次仍为空时立即以 `CHAT_FINAL_RECOVERY_EMPTY` 失败，保留原任务、预算与所有已确认回执，不循环或报告 completed。新增无工具双空答复协议测试实际断言两次模型调用、第二次没有任何工具、快速失败。
+
+本轮定向证据：Pi 协议和 worker-runtime 2 文件55项通过；contract 44文件263项通过；backend 5个计划/完成/投影及真实截断工具链文件97项通过；contract 与 ai-worker 类型检查及 `git diff --check` 通过。backend 全量类型检查仍报24条既有测试源码错误，错误集中在无关测试的过期依赖/缺文件，不涉及本轮修改文件。`durable-chat-tool-ledger` 旧直连夹具适配实际 `appendStreamEvents` 后仍在 `assertCards` 确认处失败，不能计作本轮 PASS；真实 worker-entry 和安装 CLI 仍须继续验证。安装包、公开 CLI 复测结果待本次修复完成后追加，不能以源码测试代替。

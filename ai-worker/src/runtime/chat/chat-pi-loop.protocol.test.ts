@@ -81,6 +81,16 @@ it('接受的计划仍有未完成步骤时在原Pi循环继续，工具回执�
  assert.equal(calls,3);assert.equal(executions,1);assert.match(result.text,/已核实完成并交付/);assert.ok(JSON.stringify(requests[1]).includes('读取资料'));
 });
 
+it('没有工具行动的连续空答复只做一次无工具恢复并快速失败',async()=>{
+ let calls=0;const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);calls++;
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};
+ }};
+ await assert.rejects(runChatPiLoop({model:model as never,system:'回答用户',messages:[{role:'user',content:'生成分析'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:128,messageId:'empty-without-tools',recoverMissingFinal:true}),{code:'CHAT_FINAL_RECOVERY_EMPTY'});
+ assert.equal(calls,2);assert.equal(requests[1].toolChoice?.type,'none');assert.equal(Object.keys(requests[1].tools??{}).length,0);
+});
+
 it('计划未推进且模型重复宣称完成时给具体步骤错误，停止无限循环', async () => {
  let calls=0;
  const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
@@ -88,6 +98,17 @@ it('计划未推进且模型重复宣称完成时给具体步骤错误，停止�
  }};
  await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'读取'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'stalled',readPlanStatus:async()=>({revision:1,progressToken:'same',steps:[{stepId:'read',title:'读取资料',status:'pending'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
  assert.equal(calls,3);
+});
+
+it('相同不可重试工具错误最多重复一次，随后无工具生成部分答复',async()=>{
+ let calls=0,executions=0;const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);calls++;
+  const repeat=calls<=2,content=repeat?[{type:'tool-call',toolCallId:`bad-${calls}`,toolName:'plan_update',input:'{}'}]:[{type:'text-start',id:'final'},{type:'text-delta',id:'final',delta:'计划登记失败，检索未完成。'},{type:'text-end',id:'final'}],finish=repeat?'tool-calls':'stop';
+  return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});for(const part of content)c.enqueue(part);c.enqueue({type:'finish',usage,finishReason:{unified:finish,raw:finish}});c.close();}})};
+ }};
+ const result=await runChatPiLoop({model:model as never,system:'按请求工作',messages:[{role:'user',content:'执行两步任务'}],definitions:[{name:'plan.update',description:'更新计划',parameters:{type:'object',properties:{expectedRevision:{type:'integer'},steps:{type:'array'}}}}],execute:async()=>{executions++;return {status:'error',summary:'参数错误',error:{code:'invalid_input',retryable:false},sideEffect:'none'};},approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'duplicate-nonretryable',terminalToolFailurePolicyVersion:1});
+ assert.equal(calls,3,JSON.stringify(requests.map(request=>({toolChoice:request.toolChoice,tools:Object.keys(request.tools??{}),last:request.prompt?.at(-1)}))));assert.equal(executions,2);assert.equal(requests[2].toolChoice?.type,'none');assert.equal(Object.keys(requests[2].tools??{}).length,0);assert.match(JSON.stringify(requests[2].prompt),/宿主生成的最终回复恢复/);assert.match(result.text,/计划登记失败/);assert.deepEqual(result.terminalToolFailureCallIds,['bad-1','bad-2']);
 });
 
 it('长度截断在原任务自动续写，持续截断时有限收口并保留 partial 内容', async () => {
