@@ -256,7 +256,7 @@ export async function runChatInWorker(rawInput:z.infer<typeof chatWorkerInputSch
     if(failure)throw failure;
     parentSignal.throwIfAborted();
     if(!lastModelCallId)throw new GenerationFailure("unknown_result","CHAT_RESULT_RECEIPT_MISSING");
-    if(!result.awaitingApproval && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
-    return {...result,lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.finishReason==="stop"?"completed" as const:"partial" as const};
+    if(!result.awaitingApproval && !result.terminalPlanFailureStepIds?.length && !result.message.parts.some(part=>(part.type==="text" && part.text.trim()) || part.type==="file" || ("state" in part && part.state==="output-available")))throw new GenerationFailure("failed","CHAT_OUTPUT_EMPTY");
+    return {...result,lastModelCallId,toolCallIds:[...toolCallIds],outcome:result.awaitingApproval?"awaiting_confirmation" as const:result.terminalPlanFailureStepIds?.length || result.finishReason!=="stop"?"partial" as const:"completed" as const};
   }finally{await Promise.all([research?.close(),webRead?.close()]);}
 }

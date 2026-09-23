@@ -108,3 +108,17 @@ HTML复制必须保留原字节和明确依赖闭包：宿主生成可选`htmlRe
 第八安装实际catalog漏copy v2，需修正frontend workbench-builtin-manifest真实selector每工具明确版本规则，覆盖prepare-chat-reply新任务冻结而非直接注入host目录；旧任务完整v1定义仍按冻结白名单执行。原综合task256重放不再同一mismatch，转为MODEL_CALL_REQUIRES_RECONCILIATION，继续沿原283 superseded模型/检查点查明安全重试锚点，不直接重放外部未知、不另起任务掩盖。
 
 第八原256的新阻断已以真实PGlite service复现：显式resume设置的原superseded模型retry锚被后续回放mismatch的recordFailure清空，启动恢复又只检查started/unknown，导致原同请求再次取得superseded而非合法续调。安装公开接口不投影task.retryOfCallId，不能冒称实际读到了私有指针。精确修复方案先独审：失败记账仅保留经严格核验仍有效的同task根模型尾锚；已有损坏任务仅在正式resume/startup时，从Pi聊天冻结归属、唯一安全superseded逻辑尾、完整已确认checkpoint前缀、原operationKey/digest/tokens、无后继/子调用/任何在途工具或外部结果证明重建许可。只限已证两类回放错误，错误码本身不能作为充分条件；paused仅显式resume。保留原账本/费用/租约/预算，后续原reserve仍严格核摘要及参数，新call明确retryOf原ID；不在worker把superseded冒充reserved。写域backend execution既有model-call-recovery/persistent-task/worker-outcome及测试，worker只补真实重放回归。Socrates独审后实施，正反门覆盖错误摘要、归属、后继、外部未知与预算。
+
+### 第九安装后的终态失败续行回归
+
+原综合任务第九安装已通过原283严格锚点恢复到新284（retryOfCallId准确）；此前282除283状态/更新时间外保持不变。后续真实CLI账本发现另一持续循环：持久计划已无pending/running/waiting_user，存在明确failed步骤；模型stop后chat-pi-loop仍把failed当unfinished自动续行，重复调用已返回non-retryable额度失败的工具并重写已交付文件，revision持续前进因此旧同token无进展门不起效。主线经公开CLI pause收口，旧账本/已交付内容保留，task256 final attempt5 paused，453调用末尾未知模型调用原样保留。
+
+### 修订：终态失败由事务提交如实收口
+
+放弃新增模型收尾调用。Pi loop 仅在模型 stop、当前计划存在 failed 且没有 pending/running/waiting_user，并且该 stop 后不存在任何已创建的后继聊天 root 调用时，停止自动续行并返回严格受限的失败 step IDs。历史回放判断“是否存在后继”需包括所有状态的后续聊天 root（settled、rejected、superseded、reserved、started、unknown），避免旧 stop 在恢复时误判为终态；工具子调用不属于 root。找到任何后继时，必须沿原历史提示继续，保持模型请求摘要不变。
+
+后端只在候选提交模型调用是账本中最新聊天 root、状态为 settled、供应商 finishReason 为 stop，且所有调用和 checkpoint 均已确认时允许终态失败计划说明。任何后继 root（包括可重试的 rejected/superseded、reserved、started、unknown）都阻止该收口；现有 reconciliation 仍先处理 unknown。原有非 stop partial 路径（例如 length 截断）继续保存已产出的真实正文，不被失败计划规则反杀，也不冒充 stop 收口。新任务冻结 `terminalPlanFailurePolicyVersion=1`；该策略下最新 settled stop 的计划满足终态失败但 worker 未提供失败 IDs 时拒绝提交。字段缺失的旧任务一律保留 legacy v0 语义，不以当前软件版本推断或原地补写策略。T-1026 原 task256 的公开账本最新 call453 状态为 unknown，且任务 paused；它不符合部分提交条件，须原样保留并等待既有公开 reconciliation 明确安全结论。本轮新行为沿隔离新任务和安装 CLI 验收，不伪称修复/迁移了 task256。execution 模块以纯校验端口验证 ID 与当前同任务计划中全部 failed 项按计划顺序精确一致、无活动或等待项，并返回可信标题；AI 模块不解析计划语义。
+
+同一 completion lease/事务从可信标题构造固定“本次部分完成。失败步骤：……”说明；即使已确认模型/工具回执没有正文，这条宿主说明也足以成为可读结果。原子写入 assistant message、result completeness、AI task / execution task outcome、同一文案的 text-start/text-delta/text-end 流事件与 finish metadata。provider stop 回执和费用保留原值；模型和 Worker 都不能提交用户可见文案。重复提交必须得到相同消息、状态和文案，不重复追加。所有校验失败不得留下半提交。
+
+实现与验收须覆盖 settled/rejected/superseded/reserved/started/unknown successors、root 与 child 的区分、ID 缺失/重复/错序/不存在/跨任务、pending/running/waiting_user、非最新 stop、真实 stop、旧提示字节级回放、重复提交，以及消息/result/双 task/finish event 的事务原子性。安装版通过公开 CLI 沿原task核对时不得盲目恢复 seq453 未知调用；原调用仍需公开 reconciliation 给出安全结论。另用新隔离任务验证已安装版本对终态失败不再重复工具动作，并能持久读回 partial 和失败步骤。

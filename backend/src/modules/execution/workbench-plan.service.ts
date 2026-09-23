@@ -111,6 +111,23 @@ function storedPlan(payload: unknown): WorkbenchPlan | null {
   if (!parsed.success) throw new ConflictError("历史计划格式不兼容，须先核对");
   return parsed.data;
 }
+/** Execution-owned pure validation for the chat completion lease; no DB reads or nested lease. */
+export function validateTerminalPlanFailures(payload: unknown, candidateStepIds?: string[], requireFailureIds = false): string[] | null {
+  const plan = storedPlan(payload), steps = plan?.steps ?? [];
+  const failed = steps.filter(step => step.status === "failed");
+  const active = steps.some(step => ["pending", "running", "waiting_user"].includes(step.status));
+  const terminalFailure = failed.length > 0 && !active;
+  if (!candidateStepIds) {
+    if (terminalFailure && requireFailureIds) throw new ConflictError("终态失败计划缺少失败步骤引用");
+    return terminalFailure ? failed.map(step => step.title) : null;
+  }
+  if (!terminalFailure || JSON.stringify(candidateStepIds) !== JSON.stringify(failed.map(step => step.stepId)))
+    throw new ConflictError("失败步骤引用与当前计划不一致");
+  return failed.map(step => step.title);
+}
+export function hasLaterChatRoot(calls:ReadonlyArray<{kind:string;parentCallId:string|null;sequence:number;status?:string}>,anchorSequence:number):boolean{
+  return calls.some(call=>call.kind==="model"&&call.parentCallId===null&&call.sequence>anchorSequence);
+}
 function successfulToolReceipt(text: string | null): boolean {
   if (!text) return false;
   try {
@@ -146,12 +163,16 @@ export function createWorkbenchPlanService(db: Db, deps: {
       return leases.withLease(ref, "admission", async ({tx, task}) => {
         if (task.kind !== "ai_task") throw new ConflictError("当前任务不支持 Agent 计划");
         const current = storedPlan(task.payload);
-        const plan = anchor ? await workbenchPlanAtModel(task,
-          await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)), anchor.modelCallId, current) : current;
+        const calls = anchor ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)) : [];
+        const plan = anchor ? await workbenchPlanAtModel(task, calls, anchor.modelCallId, current) : current;
+        const anchorCall = anchor ? calls.find(call => call.id === anchor.modelCallId) : undefined;
+        if (anchor && (!anchorCall || anchorCall.kind !== "model" || anchorCall.status !== "settled")) throw new ConflictError("WORKBENCH_PLAN_HISTORY_UNPROVEN");
+        const hasSuccessor = !!anchorCall && hasLaterChatRoot(calls,anchorCall.sequence);
         return plan ? {
           revision: plan.planRevision,
           progressToken: planProgressToken(plan),
           steps: plan.steps.map(({stepId, title, status}) => ({stepId, title, status})),
+          ...(anchor ? {hasSuccessor} : {}),
         } : null;
       });
     },

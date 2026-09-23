@@ -11,7 +11,9 @@ vi.mock("../runtime/provider-factory", () => ({modelFor: factory.create}));
 // 无账号、产物、浏览器或真实供应商；唯一真实业务字段是造成漂移的两个步骤标题。
 const first = {stepId: "step3_redfox_ai_prog", title: "RedFox 检索公开“AI 编程”话题最多3条；QUOTA_EXHAUSTED如实记录", status: "failed" as const};
 const later = {stepId: "step3b_redfox_redo", title: "本轮重新核对 RedFox（search+hotspots）；再次 REDFOX_QUOTA_EXHAUSTED；产物记录使用新 toolCallId", status: "failed" as const};
-const plan3 = {revision: 3, progressToken: "rev3-facts", steps: [first]}, plan4 = {revision: 4, progressToken: "rev4-facts", steps: [first, later]};
+const active3 = {stepId: "report-v3", title: "核对报告v3", status: "pending" as const};
+const active4 = {stepId: "report-v4", title: "核对报告v4", status: "pending" as const};
+const plan3 = {revision: 3, progressToken: "rev3-facts", steps: [first, active3]}, plan4 = {revision: 4, progressToken: "rev4-facts", steps: [first, later, active4]};
 const digest = (value: unknown) => `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
 const input = chatWorkerInputSchema.parse({kind: "chat.run", executionEngine: "pi", operationKey: "redacted-task", capability: "copilot.assist",
   userId: "redacted-user", accountId: "redacted-account", conversationId: "redacted-conversation", sourceMessageId: "redacted-message",
@@ -73,7 +75,7 @@ async function historyFixture() {
         if (!options.replay) knownPlan.set(key, currentPlan);
         const result = options.replay && !options.liveOnly ? knownPlan.get(key) ?? currentPlan : currentPlan;
         if (stopModels.length === 3) stop.abort(new Error("TEST_PAUSE_AFTER_TWO_CONTINUATIONS"));
-        return result;
+        return result ? {...result, hasSuccessor: options.replay} : null;
       }});
     } catch (caught) {error = caught;}
     return {error, stopModels};

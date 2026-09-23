@@ -7,7 +7,7 @@ import { z } from "zod";
 import { createDb, executionCalls, executionTasks, eq, type Db } from "@creatoros/backend";
 import { createPersistentTaskService } from "./persistent-task.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
-import { createWorkbenchPlanService } from "./workbench-plan.service";
+import { createWorkbenchPlanService, hasLaterChatRoot, validateTerminalPlanFailures } from "./workbench-plan.service";
 import { createWorkbenchArtifactService } from "./workbench-artifact.service";
 import { createExecutionCheckpointService } from "./execution-checkpoint.service";
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
@@ -29,6 +29,22 @@ import type { WorkbenchPlan } from "@creatoros/contract/agent-workbench";
 const now = () => "2026-09-19T00:00:00.000Z";
 const ctx = {userId: "plan-user", accountId: "plan-account", requestId: "test", source: "user" as const};
 const step = (stepId: string, overrides: Partial<WorkbenchPlan["steps"][number]> = {}): WorkbenchPlan["steps"][number] => ({stepId, title: stepId, dependsOn: [], status: "pending", operationRefs: [], artifactRefs: [], ...overrides});
+
+it("仅按execution当前计划顺序核验完整终态失败ID并返回可信标题", () => {
+  const payload = {workbenchPlan:{planRevision:3,steps:[step("failed-a",{title:"来源读取失败",status:"failed"}),step("skipped",{status:"skipped"}),step("failed-b",{title:"报告校验失败",status:"failed"})]}};
+  expect(validateTerminalPlanFailures(payload,["failed-a","failed-b"])).toEqual(["来源读取失败","报告校验失败"]);
+  expect(()=>validateTerminalPlanFailures(payload,undefined,true)).toThrow();
+  for (const ids of [["failed-b","failed-a"],["failed-a"],["failed-a","foreign"]]) expect(()=>validateTerminalPlanFailures(payload,ids)).toThrow();
+  expect(()=>validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("failed",{status:"failed"}),step("waiting",{status:"waiting_user"})]}},["failed"])).toThrow();
+  expect(validateTerminalPlanFailures({workbenchPlan:{planRevision:1,steps:[step("pending")]}},undefined)).toBeNull();
+});
+it("旧stop的历史提示将任意状态后继root计为后继，忽略工具子调用",()=>{
+ for(const status of ["settled","rejected","superseded","reserved","started","unknown"]){
+  expect(hasLaterChatRoot([{kind:"model",parentCallId:null,sequence:12,status}],10)).toBe(true);
+ }
+ expect(hasLaterChatRoot([{kind:"model",parentCallId:"tool-parent",sequence:12}],10)).toBe(false);
+ expect(hasLaterChatRoot([{kind:"tool",parentCallId:null,sequence:12}],10)).toBe(false);
+});
 
 describe("T-1005 计划作为原 execution_tasks 的投影", () => {
   let db: Db; let close: () => Promise<void>;
@@ -263,7 +279,7 @@ describe("T-1005 计划作为原 execution_tasks 的投影", () => {
     const workerCalls = createExecutionWorkerCallPorts(db, {now: liveNow, budget});
     const streams = createExecutionStreamService(db, {now: liveNow});
     const leases = createExecutionLeaseService(db, {now: liveNow});
-    const replies = createChatTurnCompletionService(db, {now: liveNow});
+    const replies = createChatTurnCompletionService(db, {now: liveNow, validateTerminalPlanFailures});
     const {context, input} = await readExecutionChatTask(db, firstRef, liveNow);
     const planTools = await createChatWorkbenchPlanToolHost(db)(context, input, firstRef, new AbortController().signal);
     let externalCalls = 0, supplierCalls = 0;

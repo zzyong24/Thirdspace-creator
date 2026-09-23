@@ -11,7 +11,7 @@ type Call = {
 };
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 私有持久协议到既有聊天 parts 的投影；不执行模型、不采纳工具候选。 */
-export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>, approvals:ReadonlyMap<string,ChatApprovalFact>=new Map()) {
+export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>, approvals:ReadonlyMap<string,ChatApprovalFact>=new Map(), terminalFailureTitles?:string[]) {
     const parts: Record<string, Json>[] = [], pending = new Map<string, Record<string, Json>>(), seen = new Set<string>(), invalidInputs = new Set<string>();
     let finishReason = "", hasOutput = false;
     for (const call of calls) {
@@ -83,9 +83,11 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
     }
     if (pending.size)
         throw new ConflictError("聊天仍有待授权或未完成工具");
+    const partialNotice=terminalFailureTitles?.length?`\n\n本次部分完成。失败步骤：${terminalFailureTitles.join("、")}。`:undefined;
+    if(partialNotice){parts.push({type:"text",text:partialNotice,state:"done"});hasOutput=true;}
     if (!hasOutput)
         throw new ConflictError("聊天没有可保存产物");
-    return { parts, content: parts.filter(part => part.type === "text").map(part => part.text).join(""), finishReason, outcome: finishReason === "stop" ? "succeeded" as const : "partial" as const };
+    return { parts, content: parts.filter(part => part.type === "text").map(part => part.text).join(""), finishReason, outcome: finishReason === "stop" && !partialNotice ? "succeeded" as const : "partial" as const, ...(partialNotice?{partialNotice}:{}) };
 }
 
 /** 已确认工具结果到UI part的唯一规则；流事件和最终消息共用。 */

@@ -61,8 +61,8 @@ async function fixture() {
 it("两个历史stop分别读取rev3/rev4；更早的无计划状态可证明为null且不改账本费用", async () => {
   const f = await fixture(), before = await f.ledger.inspect(f.ref);
   expect(await f.plans.status(f.ref, {modelCallId: f.empty})).toBeNull();
-  expect(await f.plans.status(f.ref, {modelCallId: f.stop3})).toMatchObject({revision: 3, steps: [{stepId: "first"}]});
-  expect(await f.plans.status(f.ref, {modelCallId: f.stop4})).toMatchObject({revision: 4, steps: [{stepId: "first"}, {stepId: "later"}]});
+  expect(await f.plans.status(f.ref, {modelCallId: f.stop3})).toMatchObject({revision: 3, steps: [{stepId: "first"}], hasSuccessor: true});
+  expect(await f.plans.status(f.ref, {modelCallId: f.stop4})).toMatchObject({revision: 4, steps: [{stepId: "first"}, {stepId: "later"}], hasSuccessor: false});
   expect(await f.plans.status(f.ref)).toMatchObject({revision: 4});
   expect(await f.ledger.inspect(f.ref)).toEqual(before);
 });

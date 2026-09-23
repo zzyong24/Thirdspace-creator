@@ -176,6 +176,8 @@ function inspectUi(args:{phase:Report['phase'];externalId:string;focus:Element|n
 
 export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
  const now=ports.now??Date.now;
+ // 两层宿主截止共享私有身份；页面错误文本不能冒充宿主超时。
+ const observationDeadline=Symbol('observation deadline');
  type Token={handle:ElementHandle<Element>;root:ElementHandle<Element>;fingerprint:string;intent:Intent};
  type Session={identity:CommentDiagnosisIdentity;report:Report;context?:SessionContext;page?:Page;focus:ElementHandle<Element>|null;tokens:Map<string,Token>;abort:AbortController;idle?:ReturnType<typeof setTimeout>;life?:ReturnType<typeof setTimeout>;tail:Promise<unknown>;history:Map<string,Report>;counts:Map<Intent,number>;bodyReads:number;bodyBytes:number};
  const sessions=new Map<string,Session>();const occupied=new Map<string,string>();
@@ -198,14 +200,17 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
   let timedOut=false,timer:ReturnType<typeof setTimeout>|undefined;
   const work=s.page!.evaluateHandle(inspectUi,{phase:s.report.phase,externalId:s.identity.externalId,focus:s.focus});
   void work.then(handle=>{if(timedOut)void handle.dispose().catch(()=>{});},()=>{});
-  try{return await Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(Error('observation deadline'));},1000);})]);}finally{if(timer)clearTimeout(timer);}
+  try{return await Promise.race([work,new Promise<never>((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000);})]);}finally{if(timer)clearTimeout(timer);}
  };
  const observe=async(s:Session,allowActions=true)=>{
   await invalidate(s);s.report.generation++;s.report.ui=emptyUi();s.report.allowedNext=[];
-  if(!s.page||s.page.isClosed())return;
+  if(!s.page)return;
+  if(s.page.isClosed()){s.report.ui.observationFailure='page_closed';if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}return;}
   const tokens=new Map<string,Token>();let active=true,timer:ReturnType<typeof setTimeout>|undefined;
+  let stage:'evaluation_failed'|'projection_failed'='evaluation_failed';
   const work=async()=>{
    const result=await inspect(s);
+   stage='projection_failed';
    try{
     const data=await result.evaluate(value=>({ui:value.ui,entries:value.entries.map(entry=>({candidate:entry.candidate,fingerprint:entry.fingerprint}))}));
     const refs=new Map((data.ui.roots??[]).map(root=>[root.rootRef,randomUUID()]));
@@ -213,7 +218,7 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
     const entriesHandle=await result.getProperty('entries');
     try{
      for(const [index,entry] of data.entries.entries()){
-      if(!active)throw Error('observation deadline');
+      if(!active)throw observationDeadline;
       const entryHandle=await entriesHandle.getProperty(String(index));const property=await entryHandle.getProperty('element');const element=property.asElement() as ElementHandle<Element>|null;const rootProperty=await entryHandle.getProperty('rootElement');const rootElement=rootProperty.asElement() as ElementHandle<Element>|null;await entryHandle.dispose();
       let targetRef:string|null=null;
       if(element&&rootElement&&entry.candidate.intent&&allowActions&&active&&s.report.status!=='unknown'){targetRef=randomUUID();tokens.set(targetRef,{handle:element,root:rootElement,intent:entry.candidate.intent,fingerprint:entry.fingerprint});}
@@ -226,14 +231,18 @@ export function createCommentDiagnosisHost(ports:Ports):CommentDiagnosisHost {
      for(const stats of [data.ui.roots?.find(root=>root.rootRef===node.rootRef),data.ui.groups.find(group=>group.group===node.group)])if(stats){stats.returned=Math.max(0,stats.returned-1);stats.omitted++;if(node.unavailable)stats.unsupported=Math.max(0,stats.unsupported-1);}
      data.ui.truncated=true;if(data.ui.coverage&&!data.ui.coverage.limits.includes('output_limit'))data.ui.coverage.limits.push('output_limit');
     }
-    if(!active)throw Error('observation deadline');
+    if(!active)throw observationDeadline;
     data.ui.observationId=randomUUID();s.report.ui=data.ui;s.tokens=tokens;
     s.report.allowedNext=[...new Set(data.ui.nodes.flatMap(node=>node.intent?[node.intent]:[]))];
     if(s.report.status!=='unknown'){s.report.status=s.report.allowedNext.length?'awaiting_selection':data.ui.status==='observed'?'observed':'unavailable';s.report.stopReason=!allowActions?'publication_changed':s.report.allowedNext.length?'none':'navigation_unavailable';}
    }finally{await result.dispose();}
   };
-  try{await Promise.race([work(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>{active=false;reject(Error('observation deadline'));},1000);})]);}
-  catch{active=false;await Promise.allSettled([...tokens.values()].flatMap(token=>[token.handle.dispose(),token.root.dispose()]));tokens.clear();s.report.ui=emptyUi();s.report.allowedNext=[];if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}}
+  try{await Promise.race([work(),new Promise<never>((_,reject)=>{timer=setTimeout(()=>{active=false;reject(observationDeadline);},1000);})]);}
+  catch(error){
+   // 先冻结当下阶段事实，再清理；后续关闭/迟到promise不改变本次分类。
+   const failure:NonNullable<Report['ui']['observationFailure']>=error===observationDeadline?'observation_deadline':s.page.isClosed()?'page_closed':stage;
+   active=false;await Promise.allSettled([...tokens.values()].flatMap(token=>[token.handle.dispose(),token.root.dispose()]));tokens.clear();s.report.ui=emptyUi();s.report.ui.observationFailure=failure;s.report.allowedNext=[];if(s.report.status!=='unknown'){s.report.status='unavailable';s.report.stopReason='navigation_unavailable';}
+  }
   finally{if(timer)clearTimeout(timer);}
  };
  // 每阶段监听自然响应，返回前冻结；下一阶段不会接收上一窗口迟到的JSON。

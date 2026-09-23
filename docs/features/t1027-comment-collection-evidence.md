@@ -231,3 +231,11 @@ body字段以backend二次白名单投影；UI与network总输出≤48KiB。任�
 公开CLI start/observe只显示顶部3button；源码确为只取首nav/main。现有回执没有root数量，不能断言真实存在第二导航。保持一次evaluate，补有界多nav/main发现、root覆盖与候选归属：结构发现最多1000次访问且共享总2000/50ms，最多8root（nav4/main2/结构补充2），nav候选轮转，总24/12KiB不增加。aside/complementary/menu/menubar仅给无文本结构事实，不发新动作token。rootRef关联节点并内绑定真实root对象，节点搬根即使原handle仍连着也必须stale。发现未完成只报数量下界与截断，不能用局部truncated=false宣称全页无侧栏。保持dialog/列表正文排除与原链接/控件许可，无截图、任意selector、JS或平台额外请求；不改collector/路由/matcher/网络读限。
 
 该方案是已授权“补CLI并实际测试”范围内的诊断覆盖修正，写域仍为现有诊断host/测试、analytics契约/测试及必要service二次投影。Wegener已完成本次前置独审PASS，Carver负责实现后的最终独审；真实双导航夹具先红，正式CLI链及旧token移动/隐私/预算回归通过后再安装一条作品验证。
+
+### 第九安装诊断失败的可核验阶段
+
+第九安装公开start/observe均返回unavailable、无节点；仅凭总耗时和catch不能确定故障。工作区实际Next及混淆sidecar的9种模块已在禁止公网的真实Chromium夹具返回observed，未复现生成器hoist问题，不据猜测修改遍历或提高超时。
+
+沿原用户CLI测试修复授权，ui增加可选固定`observationFailure`：`page_closed | evaluation_failed | projection_failed | observation_deadline`；成功省略。仅按真实执行阶段、实际isClosed和两层自有deadline的私有marker分类，不解析raw异常，不公开页面正文/堆栈。catch入口冻结原因，晚到完成不得覆盖，未知动作的dispatched与unknown状态保留。backend二次白名单与contract拒绝未知值。1秒截止、导航权限及平台请求预算不变。
+
+Carver前置独审条件PASS；真实5例红测已覆盖evaluate拒绝、投影拒绝、两阶段截止及页面关闭，属于可观测性缺口红测而非安装版根因复现。写域仅原诊断host/测试、analytics contract/测试与service投影/测试。分类修复后独审、打包，仍须公开CLI取得真实失败阶段再修根因，不把新增诊断字段当采集成功。

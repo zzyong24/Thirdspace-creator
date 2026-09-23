@@ -41,6 +41,19 @@ it("对话计划读取使用当前执行租约的命名端口",async()=>{
  }finally{worker.close();}
 });
 
+it("终态失败步骤ID只沿受限聊天提交字段交给后端",async()=>{
+ const messages:WorkerMessage[]=[],input={kind:"chat.run",executionEngine:"pi",operationKey:"terminal",capability:"copilot.assist",userId:"u",accountId:"a",conversationId:"c",sourceMessageId:"m",system:"生成",messages:[{role:"user",content:"生成"}],maxSteps:4,maxOutputTokens:100,tools:[]};
+ const runChat=vi.fn(async()=>({message:{id:"chat:m",role:"assistant" as const,parts:[]},text:"",finishReason:"stop",awaitingApproval:false,lastModelCallId:"model-stop",toolCallIds:[],terminalPlanFailureStepIds:["step-failed"],outcome:"partial" as const}));
+ const worker=createExecutionWorker({generate:vi.fn(),runChat,send(message){
+  messages.push(message);if(message.type==="call")queueMicrotask(()=>worker.receive({version:1,type:"reply",requestId:message.requestId,ok:true,data:
+   message.port==="readTaskContext"?input:message.port==="readCheckpoint"?{pendingCalls:[],replayableScriptDraftToolCallIds:[],replayableWebReadToolCallIds:[],replayableGenerationToolCallIds:[],completableToolCallIds:[],resumableToolCallIds:[],acknowledgedBlockedCallIds:[],revision:0,ledgerSequence:0,modelReplayFingerprints:[],messages:[],uncheckpointedReceipts:[],recovery:"ready"}:message.port==="resolveModelCredential"?{apiFormat:"openai_chat",baseUrl:null,model:"test",token:"private"}:message.port==="commitChatResult"?{resultId:"result",aiTaskId:"task",messageId:"chat:m",outcome:"partial"}:{}}));
+ }});
+ try{worker.ready();worker.receive({version:1,type:"run",requestId:"terminal-run",execution,deadlineAt:Date.now()+10000});await vi.waitFor(()=>expect(messages.some(message=>message.type==="stopped")).toBe(true));
+  expect(messages.find(message=>message.type==="call"&&message.port==="commitChatResult")).toMatchObject({data:{lastModelCallId:"model-stop",toolCallIds:[],partialPlanFailureStepIds:["step-failed"]}});
+  expect(runChat).toHaveBeenCalledOnce();expect(messages.find(message=>message.type==="stopped")).toMatchObject({reason:"completed"});
+ }finally{worker.close();}
+});
+
 function fixture(generate = vi.fn(async (): Promise<{text:string;usage:unknown}> => ({text: "正文", usage: {inputTokens: 1, outputTokens: 2}})), rejectPort?: string, heartbeatMs?: number, reservationStatus = "reserved", recovery?: "requires_reconciliation") {
   const messages: WorkerMessage[] = [];
   let settled = false;

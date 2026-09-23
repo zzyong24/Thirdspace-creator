@@ -1,4 +1,5 @@
 import { createChatTurnCompletionService } from "../modules/ai/chat-turn-completion.service";
+import { validateTerminalPlanFailures } from "../modules/execution/workbench-plan.service";
 import { createServer } from "node:http";
 import { it, expect, vi } from "vitest";
 import { type ModelMessage } from "ai";
@@ -111,7 +112,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     }
     if(mode==="approval"){
       const pending=await run();expect(pending.outcome).toBe("awaiting_confirmation");
-      await expect(createChatTurnCompletionService(f.db,{now}).commitResult(ref,{lastModelCallId:pending.lastModelCallId,toolCallIds:pending.toolCallIds})).rejects.toThrow("待授权或未完成工具");
+      await expect(createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures}).commitResult(ref,{lastModelCallId:pending.lastModelCallId,toolCallIds:pending.toolCallIds})).rejects.toThrow("聊天调用回执不完整");
       expect(await f.db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,submission.taskId))).toHaveLength(0);
       expect(requests).toBe(1);expect(execute).not.toHaveBeenCalled();approved=true;
     }
@@ -130,7 +131,7 @@ it.each(["completed","unknown","approval","denied","empty","length","http429","r
     await expect(generation.reserveGenerationCall(ref,{operationKey:`${input.operationKey}/model/1`,request:{maxOutputTokens:128}})).rejects.toThrow();
     expect(execute).toHaveBeenCalledTimes(mode==="denied"?0:1);
     await f.db.update(executionTasks).set({payload:task.payload}).where(eq(executionTasks.id,task.id));
-    const completion=createChatTurnCompletionService(f.db,{now});
+    const completion=createChatTurnCompletionService(f.db,{now,validateTerminalPlanFailures});
     const commit={lastModelCallId:final.lastModelCallId,toolCallIds:final.toolCallIds};
     const [receipt,replayed]=await Promise.all([completion.commitResult(ref,commit),completion.commitResult(ref,commit)]);
     expect(receipt).toEqual(replayed);

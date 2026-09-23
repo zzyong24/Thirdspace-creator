@@ -317,3 +317,14 @@ copy真实装配缺口：仅按内置工具逐项指定当前版本（copy2、�
 第九完整reconcile实际exit1，共9项：7项仍为T1025历史回执漂移，新增LED055/054两门失败，其余46条教训门通过（含LED056/052/047）。精确日志复现本轮生产回归：新增全局unknown_result残余lease字段判断，误挡保留历史heartbeat的plan恢复和已过期lease的artifact对账后入队。未改旧fixture或断言，最小删除全局continue，仅在新retry锚专用helper保留严格租约证明。Socrates定点审通过。最终同一源码9文件183/183、exit0，覆盖完整LED055/054后端及新anchor28、checkpoint/ledger，前述两个旧成功场景恢复；worker52/52、frontend25通过/5项既有实机门跳过另已执行。日志`/tmp/t1026-ninth-recovery-final-combined.log`。
 
 保留中间`/tmp/t1026-ninth-led054-backend-scope-fix.log`的70通过3失败：先late-denied默认1秒等待未达waiting_user，随后两个动态用例失败；未确定该并行运行时序根因，也未改断言/生产超时，不能声称已专门修复。最终9文件一次合并通过，原全局9err记录不覆写，完整reconcile未再次重跑，故不描述全局全绿。
+
+## 第九安装 CLI 实测（da77cd61bd146b1338d3fbbc0d30096680f27cdf）
+
+规范本地包exit0并自动安装启动PID36901；CLI installed/full/connected，21能力项中artifact.copy v2真实出现。DMG SHA256 `1f7a47f5ea2977d665db8189c0bebe85288cf8db9e49249cee5d018580a45741`，hdiutil verify exit0。本地ad-hoc，未公开发布。
+
+- 原报告精确复制task `execution-task-e388a9ac-65` 5calls succeeded，真实copy+read交付独立 `wa-8159a1d1090b0750661d226cdf5f1105@1`，源仍 `wa-0a48435928f5cdcd787f7344e180fdf5@5`。四格式全由CLI导出，raw18218B与原v5逐字节相同，SHA256 `df0705e60cc82fcd2b36c8c4d51d54bce96f3ed8ad20ff490a4bb036f194b2d4`。实际PNG两SVG及37行表可见，15已知/22未知、总62297保持。没有声称原lineage生成v7。
+- 五MIME task `execution-task-e388a9ac-77` 44calls succeeded。PNG/MD/CSV/PDF/HTML源和副本共11产物，全部raw经CLI导出核对byte/size/hash一致；三个HTML均导出preview/PNG/PDF，原PNG冻结tuple和原路径基准保持，预览内嵌70B图片与源逐字节相同，实际PNG红块、PDF表格及数字可见。seq20仍复制原HTML而非副本，此次不算嵌套通过。
+- 随后真实补测task `execution-task-e388a9ac-157` 5calls succeeded：以第一次副本 `wa-4a979175ddf4de5b0ac92e7e6d135f38@1` 为source，生成 `wa-885a484b73a4764c98da3864ce2ad709@1`。四格式实际CLI导出，raw279B与原HTML相同；htmlResourceBasePath仍原`样例 文件/report.html`，图片仍原task77的wa25@1，不因跨任务/换目录丢失。最终独审另记。
+- 原综合256自动attempt5后，seq284真实新模型retryOf原283，已越过先前恢复阻断。前283对比旧六包快照，仅283的status/updatedAt按既有superseded改变；其余282完整字段不变。后续计划成功保存至revision8，产物已有新版本。但每轮模型stop后再次查询额度耗尽服务并重写报告，不能记为任务恢复完成。主线公开pause，最终453calls/paused，尾453model unknown保留，等待进一步定位续行机制；未直接改账本或盲目重复resume。
+
+本轮证据均在`/tmp/t1026-cli-evidence/`：original9-copy-byte-audit.json、original9-exact-copy.*、mime9-export-audit.json、mime9-nested-final.json、mime9-nested-artifacts.json及四导出、joint9-paused-full-combined.json、joint9-prefix-audit.json。原综合仍未通过、评论诊断仍失败、跨Windows实际验证仍缺，故T1026不完成。

@@ -162,3 +162,9 @@ Wegener终审在真实隔离Chromium复现：带不安全href的aria-controls展
 真实双nav前置红4fail/17pass、补充嵌套菜单兼容红1fail；新多root覆盖仍受原总预算，包含完整document有界结构发现、区域下界/完成事实与按root轮转候选。Carver终审实际复现遗漏root被父root冒领并导致搬根旧ref仍可点击，以及深度裁剪漏计预算；真实红2fail23pass后最小修复。最终3文件30/30（含正式CLI→第二nav实际点击、旧ref/隐私/预算及封闭TLS），contract20/20、backend3/3、frontend完整types exit0。Carver最终独审PASS，未新增截图或平台动作权限。日志`/tmp/t1027-multiroot-{red,nested-red,green,review-red,review-green,review-types}.log`。实际安装多root仍待验。
 
 类型收尾：第7文件仅补隔离transport测试的params/query undefined，backend3/3通过。全backend最终exit2，但新3项消失，原24项逐条相同、本域0；不记全backend通过。Carver已定点核对该测试修正，全部生产/测试冻结。证据/tmp/t1027-multiroot-backend-final.log、backend-types-final.log及owned-types-summary.json。
+
+### 第九安装失败与下一候选可观测性
+
+实际公开诊断cb8f569a-2f81-4492-8956-9a6cb5b62c22，start与observe均unavailable/navigation_unavailable、title为空、零root/零scanned，不能据此断定登录态或页面不存在。已公开close返回closed，未点击。原始diagnose9-*.json。实际workspace Next与混淆sidecar全部9种模块在禁止公网Chromium夹具observed，未复现hoist，不能据猜测改遍历或延长timeout。
+
+新增可选四enum observationFailure仅定位真实失败阶段，Carver前置与最终独审PASS，5文件freeze。真实分类红5/5（evaluate/projection/两层截止/page关闭）→绿；contract红1失败13通过→14通过。正式CLI→HTTP→持久ledger→Chromium的3文件34/34、Next SWC+实际混淆+Chromium6/6，frontend与contract类型实际exit0。私有timer标记、catch冻结原因、成功省略、unknown/dispatched及预算保持，不返回raw异常。日志`/tmp/t1027-diagnose9-{classification-red,contract-red,regression,transform-final,contract-green,review-types,contract-types}.log`。首次transform夹具ESM require loader失败不算产品红。该修复尚未安装，不能当第九根因已解决，仍需下一候选CLI读取固定阶段后继续。

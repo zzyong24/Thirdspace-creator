@@ -158,3 +158,11 @@ it('诊断多根coverage明确下界/发现与扫描范围，根总额有界且�
  expect(schema.safeParse({...old,roots:Array.from({length:9},()=>root)}).success).toBe(false);
  for(const key of ['text','html','id','className','href'])expect(schema.safeParse({...old,roots:[{...root,[key]:'PRIVATE'}]}).success).toBe(false);
 });
+
+it('观察失败仅接受四个固定阶段枚举，旧回执兼容且拒绝raw错误',()=>{
+ const schema=analyticsOperations.diagnoseComments.response.shape.ui;
+ const ui={observationId:null,status:'unavailable',title:null,nodes:[],scannedNodes:0,truncated:false,groups:[]};
+ expect(schema.safeParse(ui).success).toBe(true);
+ for(const observationFailure of ['page_closed','evaluation_failed','projection_failed','observation_deadline'])expect(schema.parse({...ui,observationFailure})).toEqual({...ui,observationFailure});
+ for(const invalid of [{observationFailure:'SECRET_ERROR'},{observationFailure:null},{observationFailure:'evaluation_failed',error:'SECRET_ERROR'}])expect(schema.safeParse({...ui,...invalid}).success).toBe(false);
+});

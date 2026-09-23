@@ -131,13 +131,25 @@ it('重复工具调用不重置计划无进展计数', async () => {
  assert.equal(calls,6);assert.equal(executions,3);
 });
 
-it('计划步骤失败时不能把模型正文当作完成，须继续处理或以无进展退出', async () => {
- let calls=0;
- const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{
-  calls++;if(calls>4)throw Error('FIXTURE_UNBOUNDED_LOOP');return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:'完成'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};
+it('只有终态失败计划时不再请求模型或工具，只向后端提交可信失败步骤ID', async () => {
+ let calls=0,executions=0;const requests:any[]=[];
+ const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{
+  requests.push(request);calls++;if(calls>2)throw Error('FIXTURE_UNBOUNDED_LOOP');return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:calls===1?'已生成报告，检索步骤失败。':'报告已交付；检索步骤仍失败，内容分析目标未完成。'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};
  }};
- await assert.rejects(runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'完成失败步骤'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-plan',readPlanStatus:async()=>({revision:1,progressToken:'failed-receipt',steps:[{stepId:'read',title:'读取失败',status:'failed'}]})}),{code:'CHAT_PLAN_NO_PROGRESS'});
- assert.equal(calls,3);
+ const result=await runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'完成失败步骤'}],definitions:[{name:'redfox_query',description:'检索',parameters:{type:'object',properties:{}}}],execute:async()=>{executions++;return {status:'error'};},approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-plan',readPlanStatus:async()=>({revision:1,progressToken:'failed-receipt',hasSuccessor:false,steps:[{stepId:'read',title:'读取失败',status:'failed'}]})});
+ assert.equal(result.text,'已生成报告，检索步骤失败。');assert.deepEqual(result.terminalPlanFailureStepIds,['read']);assert.equal(result.finishReason,'stop');assert.equal(calls,1);assert.equal(executions,0);assert.equal(requests.length,1);
+});
+
+it('终态失败遇到length仍先按既有规则续写，只有stop才提交部分结果',async()=>{
+ let calls=0;const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async()=>{calls++;const reason=calls===1?'length':'stop';return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:calls===1?'部分内容':'补全内容'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:reason,raw:reason}});c.close();}})};}};
+ const result=await runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'生成'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-length',readPlanStatus:async()=>({revision:1,progressToken:'failed',steps:[{stepId:'research',title:'来源检索失败',status:'failed'}]})});
+ assert.equal(calls,2);assert.equal(result.text,'部分内容补全内容');assert.deepEqual(result.terminalPlanFailureStepIds,['research']);
+});
+
+it('历史stop有后继时保留既有续行提示，再只对最新失败收口',async()=>{
+ let calls=0;const requests:any[]=[];const model={specificationVersion:'v4',provider:'fixture',modelId:'fixture',supportedUrls:{},doGenerate:async()=>{throw Error('forbidden')},doStream:async(request:any)=>{requests.push(request);calls++;return {stream:new ReadableStream({start(c){c.enqueue({type:'stream-start',warnings:[]});c.enqueue({type:'text-start',id:'t'});c.enqueue({type:'text-delta',id:'t',delta:'已有结果'});c.enqueue({type:'text-end',id:'t'});c.enqueue({type:'finish',usage,finishReason:{unified:'stop',raw:'stop'}});c.close();}})};}};
+ let reads=0;const result=await runChatPiLoop({model:model as never,system:'执行计划',messages:[{role:'user',content:'完成失败步骤'}],definitions:[],execute:async()=>null,approve:async()=> 'approved',approvalId:()=> 'approval',signal:AbortSignal.timeout(10000),maxOutputTokens:256,messageId:'failed-history',readPlanStatus:async()=>({revision:1,progressToken:'failed-receipt',hasSuccessor:++reads===1,steps:[{stepId:'read',title:'读取失败',status:'failed'}]})});
+ assert.equal(calls,2);assert.match(JSON.stringify(requests[1]),/当前已接受计划仍有未完成步骤：读取失败/);assert.deepEqual(result.terminalPlanFailureStepIds,['read']);assert.equal(result.finishReason,'stop');
 });
 
 it('停止后沿原操作键回放已结算模型与工具回执，再继续同一计划', async () => {

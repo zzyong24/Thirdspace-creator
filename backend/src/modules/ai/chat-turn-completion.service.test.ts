@@ -7,6 +7,7 @@ import { chatWorkerInputSchema } from "@creatoros/contract/execution-worker";
 import { createAiRepository } from "./ai.repository";
 import { createChatTurnSubmissionService } from "./chat-turn-submission.service";
 import { createChatTurnCompletionService } from "./chat-turn-completion.service";
+import { validateTerminalPlanFailures } from "../execution/workbench-plan.service";
 import { createPersistentTaskService } from "../execution/persistent-task.service";
 import { createExecutionCallLedgerService } from "../execution/execution-call-ledger.service";
 import { createExecutionGenerationPorts } from "../execution/execution-generation-ports.service";
@@ -47,7 +48,7 @@ async function fixture(options: {
     await generation.settleGenerationCall(ref, { callId: call.callId, status: "settled", providerResult: { content: options.content ?? [{ type: "text", text: options.text ?? "真实回复" }], finishReason: { unified: options.finishReason ?? "stop" }, usage: { inputTokens: options.unknownUsage ? {} : { total: 2 }, outputTokens: options.unknownUsage ? {} : { total: 3 } }, warnings: [] }, usage: options.unknownUsage ? {} : { inputTokens: 2, outputTokens: 3 } });
     if (options.checkpoint !== false)
         await createExecutionCheckpointService(db, { now }).save(ref, { expectedRevision: 0, expectedLedgerSequence: options.supersededPrefix?2:1, messages: [{ role: "assistant", callId: call.callId }] });
-    const service = createChatTurnCompletionService(db, { now }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
+    const service = createChatTurnCompletionService(db, { now, validateTerminalPlanFailures }), request = { lastModelCallId: call.callId, toolCallIds: [] as string[] };
     const rows = async () => ({ messages: await repo.listMessages(conversation.id), results: await db.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId, submit.taskId)), business: (await db.select().from(aiTasks).where(eq(aiTasks.id, submit.taskId)))[0]!, task: (await db.select().from(executionTasks).where(eq(executionTasks.id, submit.executionTaskId)))[0]!, call: (await db.select().from(executionCalls).where(eq(executionCalls.id, call.callId)))[0]! });
     return { ctx, repo, source, conversation, submit, ref, task: task!, call, supersededCallId, service, request, rows, ledger, generation, frozen };
 }
@@ -79,6 +80,39 @@ it("长度截断保留真实回复并投影 partial；未知用量保留 null", 
     expect(rows.messages[1]).toMatchObject({ content: "真实回复", inputTokens: null, outputTokens: null, cachedTokens: null, modelMetadata: { completeness: "partial", stopReason: "length" } });
     expect(rows.business.status).toBe("partial");
     expect(rows.task.status).toBe("partial");
+});
+it("终态失败计划即使模型正文为空也原子保存可信partial说明、流事件和task状态",async()=>{
+    const f=await fixture({content:[]});
+    const plan={planRevision:1,steps:[{stepId:"research",title:"来源检索失败",dependsOn:[],status:"failed",operationRefs:[],artifactRefs:[]}]};
+    await db.update(executionTasks).set({payload:{...(f.task.payload as Record<string,unknown>),workbenchPlan:plan}}).where(eq(executionTasks.id,f.task.id));
+    const request={...f.request,partialPlanFailureStepIds:["research"]};
+    const first=await f.service.commitResult(f.ref,request),second=await f.service.commitResult(f.ref,request);
+    expect(second).toEqual(first);expect(first.outcome).toBe("partial");
+    const rows=await f.rows(),expected="本次部分完成。失败步骤：来源检索失败。";
+    expect(rows.messages[1]).toMatchObject({content:`\n\n${expected}`,parts:[{type:"step-start"},{type:"text",text:`\n\n${expected}`,state:"done"}],modelMetadata:{completeness:"partial",stopReason:"stop"}});
+    expect(rows.business.status).toBe("partial");expect(rows.task.status).toBe("partial");
+    const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id)).orderBy(executionStreamEvents.sequence);
+    expect(events.map(event=>event.chunk)).toEqual([
+      {type:"text-start",id:`${f.call.callId}:terminal-partial`},
+      {type:"text-delta",id:`${f.call.callId}:terminal-partial`,delta:`\n\n${expected}`},
+      {type:"text-end",id:`${f.call.callId}:terminal-partial`},
+      {type:"finish",finishReason:"stop",messageMetadata:rows.messages[1]!.modelMetadata},
+    ]);
+});
+it("v1终态失败缺ID或ID与计划不符时拒绝提交且不留半成品",async()=>{
+ const f=await fixture({content:[]}),plan={planRevision:1,steps:[{stepId:"research",title:"来源检索失败",dependsOn:[],status:"failed",operationRefs:[],artifactRefs:[]}]};
+ await db.update(executionTasks).set({payload:{...(f.task.payload as Record<string,unknown>),workbenchPlan:plan}}).where(eq(executionTasks.id,f.task.id));
+ for(const request of [f.request,{...f.request,partialPlanFailureStepIds:["other"]}]){
+  await expect(f.service.commitResult(f.ref,request)).rejects.toThrow();
+  expect((await f.rows()).messages).toHaveLength(1);expect((await f.rows()).results).toHaveLength(0);
+  expect((await f.rows()).task.status).toBe("running");expect((await f.rows()).business.status).toBe("queued");
+ }
+});
+it("终态失败计划的length截断沿既有partial路径提交，不伪称 stop 收口",async()=>{
+ const f=await fixture({finishReason:"length"}),plan={planRevision:1,steps:[{stepId:"research",title:"来源检索失败",dependsOn:[],status:"failed",operationRefs:[],artifactRefs:[]}]};
+ await db.update(executionTasks).set({payload:{...(f.task.payload as Record<string,unknown>),workbenchPlan:plan}}).where(eq(executionTasks.id,f.task.id));
+ await expect(f.service.commitResult(f.ref,f.request)).resolves.toMatchObject({outcome:"partial"});
+ expect((await f.rows()).messages[1]).toMatchObject({content:"真实回复",modelMetadata:{completeness:"partial",stopReason:"length"}});
 });
 it.each(["cancelled", "pause_requested", "expired", "fence", "source", "account", "frozen", "missing-reference", "extra-reference", "unknown", "checkpoint"])("拒绝 %s，不留下半套回复", async (mode) => {
     const f = await fixture({ checkpoint: mode !== "checkpoint" });

@@ -3783,3 +3783,13 @@ Socrates已实际独审通过完整方案：close只依session归属、不被作
 ### DEC-T1027-DIAGNOSIS-ROOT-COVERAGE
 
 第八安装CLI诊断只能观察首个顶部nav，不能据此判断评论入口不存在。沿用户既有全功能测试与修复授权，增加有界多语义root与覆盖事实；不增加任意动作或正文读取权限。具体预算/旧ref约束见T1027 SPEC追加段，经Wegener前置独审PASS后实现、Carver做最终复核。未收到新的用户确认消息，不把实现裁决写成新确认。
+
+### DEC-T1027-OBSERVATION-FAILURE（2026-09-22）
+
+第九安装原诊断catch丢失阶段，实际构建模块隔离Chromium未复现该故障。落实用户持续修复与CLI验收授权，增加可选固定observationFailure四值，按阶段和自有timer来源分类，成功省略，禁止公开raw异常；保持原deadline/权限/平台预算。Carver前置条件PASS，具体约束与红测见T1027 SPEC。此为现有授权内的可观测性补齐，无额外用户确认消息，当前并未证明安装版失败根因或采集成功。
+
+### DEC-T1026-TERMINAL-FAILURE-FINALIZATION（2026-09-23）
+
+第九安装task256公开CLI真实453call快照显示：正常安全retry修复已创建准确284→retryOf283；随后plan已无pending/running，模型stop后因Pi将failed计划步骤纳入unfinished而继续自动loop，反复重试持久回执为额度耗尽的外部调用并重写报告。模型通常进展改变revision，旧相同progressToken停滞守卫未触发。主线已从正式CLI pause，未知453与全部既有费用/回执保留。原提案为增加一次工具禁用模型收尾调用；Hypatia独立复审指出其可能遗漏已有正文、不能跨重启持久化、摘要/历史可能不全且与强制工具序列冲突，故该提案废弃。
+
+修订方案不增加模型调用：Pi loop 在失败步骤已终态且无 pending/running/waiting_user 时仅返回失败 step IDs；后端在现有聊天完成事务中重验当前计划与账本，按固定可信标题写入持久 partial 回复。execution 模块通过纯校验端口拥有计划语义；新任务冻结策略版本，符合终态失败却漏传 IDs 必须拒绝。历史 stop 是否有后继按所有后续聊天 root 状态判断，以保留 rejected/superseded 的历史续行提示；提交资格要求候选是最新 settled root stop，任意后继都阻止部分提交。消息、completion、两个 task 状态、text-start/delta/end 流事件与 finish metadata 原子一致，重复提交幂等；没有模型正文时仍能由宿主说明完成。缺策略版本的旧任务保持legacy v0、不回填；公开CLI已确认task256仍paused，453 unknown，所以不迁移、不绕过checkpoint，以新隔离任务验收v1。Hypatia与Ptolemy独立复审均认可这些边界。具体验收见 T1026 SPEC。

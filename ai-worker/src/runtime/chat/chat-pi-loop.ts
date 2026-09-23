@@ -21,6 +21,8 @@ export interface ChatPlanStatus {
   revision: number;
   /** 可信宿主根据已保存计划与调用回执生成；同一令牌表示没有新进展。 */
   progressToken: string;
+  /** 历史模型停止点后已创建过聊天 root 调用（任意状态）；恢复时保持原续行提示。 */
+  hasSuccessor?: boolean;
   steps: Array<{stepId:string;title:string;status:"pending"|"running"|"waiting_user"|"succeeded"|"failed"|"cancelled"|"skipped"}>;
 }
 interface Definition {name:string;description:string;parameters:Record<string,unknown>}
@@ -53,6 +55,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
   let agent:ChatPiAgent;
   let failure:unknown,awaitingApproval=false,finishReason="stop",turn=0;
   let completedTool=false,finalRecovery=false,lastMessageHasFile=false,lengthContinuations=0;
+  const terminalPlanFailureState:{stepIds:string[]|null}={stepIds:null};
   let planStatus:ChatPlanStatus|null=null,lastPlanProgress:string|null=null,stalledTurns=0;
   const history:ModelMessage[]=[...options.messages];
   const parts:UIMessage["parts"]=[];
@@ -216,6 +219,9 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
       // SEMANTIC_BOUNDARY_ALLOW: 只识别供应商空响应，不判断内容质量或业务完成。
       const empty=finishReason==="stop" && event.message?.role==="assistant" && !event.message.content.some(part=>part.type==="toolCall" || (part.type==="text" && part.text.trim().length>0)) && !(options.recoverMissingFinal?lastMessageHasFile:parts.some(part=>part.type==="file"));
       const unfinished=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="pending" || step.status==="running" || step.status==="failed")??[] : [];
+      const failed=event.message?.role==="assistant" ? planStatus?.steps.filter(step=>step.status==="failed")??[] : [];
+      const active=event.message?.role==="assistant" ? planStatus?.steps.some(step=>step.status==="pending" || step.status==="running" || step.status==="waiting_user")??false : false;
+      if(!length && finishReason==="stop" && failed.length && !active && !planStatus?.hasSuccessor){terminalPlanFailureState.stepIds=failed.map(step=>step.stepId);return;}
       if(!length && !empty && !unfinished.length)return;
       if(options.recoverMissingFinal && empty && completedTool && !unfinished.length){
         // 缺终稿只补一次只读答复，绝不重开工具策略或重复已执行动作。
@@ -250,6 +256,7 @@ export async function runChatPiLoop(options:ChatPiLoopOptions){
     if(failure && !awaitingApproval)throw failure;
     options.signal.throwIfAborted();
     const message:UIMessage={id:options.messageId,role:"assistant",parts};
-    return {message,text:parts.filter(part=>part.type==="text").map(part=>part.text).join(""),finishReason,awaitingApproval};
+    const terminalPlanFailureStepIds=terminalPlanFailureState.stepIds;
+    return {message,text:parts.filter(part=>part.type==="text").map(part=>part.text).join(""),finishReason,awaitingApproval,...(terminalPlanFailureStepIds?{terminalPlanFailureStepIds}:{})};
   }finally{unsubscribe();options.signal.removeEventListener("abort",abort);}
 }

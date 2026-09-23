@@ -227,7 +227,7 @@ export const workerPortInputSchemas = {
   completeChatHooks:chatHooksParentRequestSchema,
   appendStreamEvents:appendExecutionStreamSchema,
   checkChatToolApproval:reserveAgenticToolSchema,
-  commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复")}).strict(),
+  commitChatResult:z.object({lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000).refine(ids=>new Set(ids).size===ids.length,"工具引用不能重复"),partialPlanFailureStepIds:z.array(operationKeySchema).min(1).max(10000).refine(ids=>new Set(ids).size===ids.length,"失败步骤引用不能重复").optional()}).strict(),
   completeDailyTopicSkip: emptyPortInput,
   commitDailyTopicResult: z.object({outcome:z.literal("succeeded"),callId:operationKeySchema,text:z.string().min(1).max(2_000_000)}).strict(),
   ...topicReadPortInputSchemas,

@@ -141,7 +141,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         signal.throwIfAborted();
         if(result.outcome==="awaiting_confirmation")throw new GenerationFailure("waiting_user","CHAT_APPROVAL_REQUIRED");
         committing=true;
-        const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitChatResult",{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds},signal));
+        const receipt=chatCommitReceiptSchema.parse(await call(execution,"commitChatResult",{lastModelCallId:result.lastModelCallId,toolCallIds:result.toolCallIds,...(result.terminalPlanFailureStepIds?.length?{partialPlanFailureStepIds:result.terminalPlanFailureStepIds}:{})},signal));
         if(receipt.messageId!==`chat:${input.sourceMessageId}`)throw new Error("CHAT_COMMIT_RECEIPT_MISMATCH");
         reason="completed";return;
       }

@@ -32,7 +32,13 @@ it('真实runCliCommand→HTTP正式dispatch→SQL幂等账本→Chromium：同k
  try{
   await expect(call({action:'start',publicationId:'p'},'bad-impact','a','not-account')).rejects.toThrow();expect(open).not.toHaveBeenCalled();
   await expect(call({action:'start',publicationId:'p'},'foreign','other')).rejects.toThrow();expect(open).not.toHaveBeenCalled();
-  const start=await call({action:'start',publicationId:'p'},'start');expect(start.data.ui.nodes.some(node=>node.intent==='enter_comments')).toBe(true);expect(start.data.ui.roots?.filter(root=>root.kind==='navigation')).toHaveLength(2);expect(start.data.ui.coverage?.discoveryComplete).toBe(true);
+  let start=await call({action:'start',publicationId:'p'},'start');expect(start.data.ui.nodes.some(node=>node.intent==='enter_comments')).toBe(true);expect(start.data.ui.roots?.filter(root=>root.kind==='navigation')).toHaveLength(2);expect(start.data.ui.coverage?.discoveryComplete).toBe(true);
+  const original=pages[0]!.evaluateHandle.bind(pages[0]!);
+  const evaluation=vi.spyOn(pages[0]!,'evaluateHandle').mockImplementationOnce(()=>original(()=>{throw Error('SECRET_OBSERVATION');}));
+  const observationInput={action:'observe',diagnosisId:start.data.diagnosisId,expectedRevision:start.data.revision};
+  const failed=await call(observationInput,'observation-failed');expect(failed.data).toMatchObject({dispatched:true,ui:{observationFailure:'evaluation_failed'},allowedNext:[]});expect(JSON.stringify(failed)).not.toContain('SECRET');
+  evaluation.mockRestore();expect(await call(observationInput,'observation-failed')).toEqual(failed);
+  start=await call(observationInput,'observation-recovered');expect(start.data.ui.status).toBe('observed');expect(start.data.ui).not.toHaveProperty('observationFailure');expect(acquire).toHaveBeenCalledTimes(1);
   const node=start.data.ui.nodes.find(node=>node.intent==='enter_comments')!;
   const input={action:'advance',diagnosisId:start.data.diagnosisId,expectedRevision:start.data.revision,observationId:start.data.ui.observationId,intent:'enter_comments',targetRef:node.targetRef};
   const first=await call(input,'click');shared.gateway=makeGateway();expect(await call(input,'click')).toEqual(first);expect(await pages[0]!.evaluate(()=>Reflect.get(window,'clicks'))).toBe(1);expect(acquire).toHaveBeenCalledTimes(2);
